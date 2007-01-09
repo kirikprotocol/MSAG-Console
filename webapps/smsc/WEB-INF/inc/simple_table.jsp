@@ -5,28 +5,32 @@
 
 <%
   if (bean instanceof SimpleTableBean) {
-
 %>
 
-<input type=hidden name=column>
-<input type=hidden name=selectedRow>
-<input type=hidden name=selectedColumn>
+<input type=hidden name=selectedCellId>
+<input type=hidden name=selectedColumnId>
+
+<%
+    for (int i = 0; i < bean.getSortOrder().length; i++) {
+      final SimpleTableBean.SortOrderElement element = bean.getSortOrder()[i];
+      if (element != null) {%>
+<input type=hidden name="<%=SimpleTableBean.SORT_ORDER_PREFIX + String.valueOf(i)%>" value="<%=(element.getOrderType() == OrderType.ASC ? "" : "-") + element.getColumnId()%>">
+<%    }
+    }%>
 
 <script type="text/javascript">
-function selectColumn(column) {
-	opForm.column.value = column;
-	opForm.submit();
-	return false;
-}
-</script>
+  function selectColumn(columnId) {
+	  opForm.selectedColumnId.value = columnId;
+	  opForm.submit();
+	  return false;
+  }
 
-<script type="text/javascript">
-function setSelectedCell(row, column) {
-  opForm.selectedRow.value = row;
-  opForm.selectedColumn.value = column;
-  opForm.submit();
-  return false;
-}
+  function selectCell(columnId, cellId) {
+    opForm.selectedColumnId.value = columnId;
+    opForm.selectedCellId.value = cellId;
+    opForm.submit();
+    return false;
+  }
 </script>
 
 
@@ -41,31 +45,28 @@ function setSelectedCell(row, column) {
   <thead>
     <tr>
     <% // SHOW COLUMNS HEADER
-      int colNum = 0;
       for (Iterator iter = bean.getColumns(); iter.hasNext();) {
         final Column column = (Column)iter.next(); %>
-      <th><%=TableRenderer.renderColumn(column, colNum)%></th>
-      <% colNum++;
-      } %>
+      <th><%=TableRenderer.renderColumn(column, bean.getOrderType(column.getId()))%></th>
+    <%} %>
     </tr>
   </thead>
 
     <!-- ------------------------------------------- TABLE BODY ---------------------------------------------------- -->
 
   <tbody>
-    <%int rowNum = 0;
-      for (Iterator rows = bean.getRows(); rows.hasNext();) {
+    <%for (Iterator rows = bean.getRows(); rows.hasNext();) {
         final Row row = (Row)rows.next(); %>
     <tr class=row<%=rowN++&1%>>
-    <%  colNum = 0;
+    <%
         for (Iterator cols = bean.getColumns(); cols.hasNext();) {
-          final Cell cell = row.getCell((Column)cols.next()); %>
-        <%=TableRenderer.renderCell(cell, rowNum, colNum)%>
-    <%     colNum++;
+          final Column column = (Column)cols.next();
+          final Cell cell = row.getCell(column); %>
+        <%=TableRenderer.renderCell(cell, column)%>
+    <%
         }%>
     </tr>
-    <%  rowNum++;
-      }%>
+    <%}%>
   </tbody>
 </table>
 <%

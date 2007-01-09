@@ -1,133 +1,145 @@
 package ru.novosoft.smsc.jsp.util.tables.table;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCJspException;
-import ru.novosoft.smsc.jsp.util.BeanWithTemporaryContent;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * User: artem
  * Date: 18.12.2006
  */
 
-public abstract class SimpleTableBean extends BeanWithTemporaryContent {
+public abstract class SimpleTableBean extends PageBean {
 
-  private ArrayList columns = new ArrayList();
-  private ArrayList rows = new ArrayList();
-  private ArrayList inputCells = new ArrayList();
+  public static final String SORT_ORDER_PREFIX = "sortOrderElement";
 
-  private int selectedColumn = -1;
-  private int selectedRow = -1;
+  private final ArrayList columns = new ArrayList();
+  private final ArrayList rows = new ArrayList();
 
-  private int column = -1;
+  private String selectedCellId = null;
+  private String selectedColumnId = null;
 
-  public final int processRequest(HttpServletRequest request) {
-    int result = RESULT_OK;
+  private SortOrderElement[] sortOrder = null;
 
-    if (hasTemporaryContent()) {
-      rows = (ArrayList)getFromTemporaryContent("rows");
-      inputCells = (ArrayList)getFromTemporaryContent("inputCells");
-    }
+  public final int process(HttpServletRequest request) {
+    int result = super.process(request);
+    if (result != RESULT_OK)
+      return result;
 
-    setDataToInputCells(request);
+    sortOrder = new SortOrderElement[columns.size()];
+    fillSortOrder(request);
 
     result = checkDataCellSelected(request);
-    if (result != RESULT_OK)
+
+    if (result != RESULT_OK && result != RESULT_ERROR)
       return result;
 
-    result = checkColumnSelected(request);
-    if (result != RESULT_OK)
+    if (result != RESULT_ERROR)
+      result = checkColumnSelected(request);
+
+    if (result != RESULT_OK && result != RESULT_ERROR)
       return result;
 
-    result = processRequestInternal(request);
-    if (result != RESULT_OK)
-      return result;
+    if (result != RESULT_ERROR)
+      result = processRequest(request);
+
+    selectedCellId = null;
+    selectedColumnId = null;
 
     try {
-      fillTable();
+      fillTable(request);
     } catch (AdminException e) {
       logger.error("Can't fill table", e);
       return _error(new SMSCJspException("Can't fill table", SMSCJspException.ERROR_CLASS_ERROR, e));
     }
-
-    addToTemporaryContent("rows", rows);
-    addToTemporaryContent("inputCells", inputCells);
 
     return result;
   }
 
   protected void clear() {
     rows.clear();
-    inputCells.clear();
-  }
-
-  private void setDataToInputCells(HttpServletRequest request) {
-    for(Iterator iter = inputCells.iterator(); iter.hasNext();) {
-      final InputCell inputCell = (InputCell)iter.next();
-      inputCell.setValue(request.getParameter(inputCell.getName()));
-    }
   }
 
   protected int checkDataCellSelected(HttpServletRequest request) {
-    int result = RESULT_OK;
-    if (selectedColumn >= 0 && selectedColumn < columns.size() && selectedRow >= 0 && selectedRow < rows.size()) {
-      final Column column = (Column)columns.get(selectedColumn);
-      final Row row = ((Row)rows.get(selectedRow));
-      final Cell cell = row.getCell(column);
-      System.out.println(cell);
-      if (cell instanceof DataCell)
-        result = onCellSelected(column, row, (DataCell)cell);
-    }
-
-    selectedColumn = -1;
-    selectedRow = -1;
-
-    return result;
+    return (selectedCellId != null && selectedColumnId != null) ? onCellSelected(request, selectedColumnId, selectedCellId) : RESULT_OK;
   }
 
   protected int checkColumnSelected(HttpServletRequest request) {
-    int result = RESULT_OK;
-    if (column >= 0 && column < columns.size())
-      result = onColumnSelected((Column)columns.get(column));
-
-    column = -1;
-    return result;
+    return (selectedColumnId != null && selectedCellId == null) ? onColumnSelected(request, selectedColumnId) : RESULT_OK;
   }
 
-  protected abstract int processRequestInternal(HttpServletRequest request);
+  protected abstract int processRequest(HttpServletRequest request);
 
-  protected abstract void fillTable() throws AdminException ;
+  protected abstract void fillTable(HttpServletRequest request) throws AdminException;
 
-  protected abstract int onCellSelected(final Column column, final Row row, final DataCell cell);
+  protected abstract int onCellSelected(final HttpServletRequest request, final String columnId, final String cellId);
 
-  protected abstract int onColumnSelected(final Column column);
+  protected int onColumnSelected(final HttpServletRequest request, final String columnId) {
+    setSort(columnId, null);
+    return RESULT_OK;
+  }
 
-  String addColumn(final Column column) {
-    if (column != null) {
-      columns.add(column);
-      return String.valueOf(columns.size());
+  protected void setSort(String columnId, OrderType orderType) {
+    if (columnId == null)
+      return;
+
+    final SortOrderElement[] newSortOrder = new SortOrderElement[columns.size()];
+    newSortOrder[0] = new SortOrderElement(columnId, (orderType == null) ? OrderType.ASC : orderType);
+
+    if (sortOrder.length > 0 && sortOrder[0] != null && sortOrder[0].getColumnId().equals(columnId))
+      newSortOrder[0].setOrderType((orderType == null) ? getOppositeOrderType(sortOrder[0].getOrderType()) : orderType);
+
+    int j = 1;
+    for (int i=0; i < sortOrder.length; i++) {
+      if (sortOrder[i] != null && !sortOrder[i].getColumnId().equals(columnId)) {
+        newSortOrder[j] = sortOrder[i];
+        j++;
+      }
     }
-    return null;
+
+    sortOrder = newSortOrder;
+  }
+
+  private OrderType getOppositeOrderType(OrderType orderType) {
+    return (orderType == OrderType.ASC) ? OrderType.DESC : OrderType.ASC;
+  }
+
+  private void fillSortOrder(HttpServletRequest request) {
+    for (Iterator iter = request.getParameterMap().keySet().iterator(); iter.hasNext();) {
+      final String key = (String)iter.next();
+      if (key.startsWith(SORT_ORDER_PREFIX)) {
+
+        final int num = Integer.parseInt(key.substring(SORT_ORDER_PREFIX.length()));
+        final String value = request.getParameter(key);
+        final int start = (value.startsWith("-")) ? 1 : 0;
+        final OrderType orderType = (start == 0) ? OrderType.ASC : OrderType.DESC;
+        final SortOrderElement element = new SortOrderElement(value.substring(start), orderType);
+        sortOrder[num] = element;
+      }
+    }
+  }
+
+  public OrderType getOrderType(String columnId) {
+    if (sortOrder.length == 0 || columnId == null)
+      return null;
+    final SortOrderElement element = (SortOrderElement)sortOrder[0];
+    return (element != null && element.getColumnId().equals(columnId)) ? element.getOrderType() : null;
+  }
+
+
+
+  void addColumn(final Column column) {
+    if (column != null)
+      columns.add(column);
   }
 
   public Iterator getColumns() {
     return columns.iterator();
   }
-
-  public List getCellsByColumn(Column column) {
-    final ArrayList result = new ArrayList();
-    for (int i = 0; i < rows.size(); i++) {
-      Row row = (Row) rows.get(i);
-      result.add(row.getCell(column));
-    }
-    return result;
-  }
-
-
 
   protected final Row createNewRow() {
     final Row row = new Row();
@@ -140,40 +152,42 @@ public abstract class SimpleTableBean extends BeanWithTemporaryContent {
   }
 
 
-  final void registerCell(final InputCell cell) {
-    if (cell != null && cell.getName() != null)
-      inputCells.add(cell);
-  }
-
   public int getSize() {
     return rows.size();
   }
 
 
-  public void setSelectedColumn(String column) {
-    try {
-      selectedColumn = Integer.parseInt(column);
-    } catch (NumberFormatException e) {
-      logger.error("Can't set selected column", e);
-      selectedColumn = -1;
-    }
+  public void setSelectedCellId(String selectedCellId) {
+    this.selectedCellId = selectedCellId;
   }
 
-  public void setSelectedRow(String row) {
-    try {
-      selectedRow = Integer.parseInt(row);
-    } catch (NumberFormatException e) {
-      logger.error("Can't set selected row", e);
-      selectedRow = -1;
-    }
+  public void setSelectedColumnId(String selectedColumnId) {
+    this.selectedColumnId = selectedColumnId;
   }
 
-  public void setColumn(String column) {
-    try {
-      this.column = Integer.parseInt(column);
-    } catch (NumberFormatException e) {
-      logger.error("Can't set column", e);
-      this.column = -1;
+  public SortOrderElement[] getSortOrder() {
+    return sortOrder;
+  }
+
+  public class SortOrderElement {
+    private final String columnId;
+    private OrderType orderType;
+
+    public SortOrderElement(String columnId, OrderType orderType) {
+      this.columnId = columnId;
+      this.orderType = orderType;
+    }
+
+    public String getColumnId() {
+      return columnId;
+    }
+
+    public OrderType getOrderType() {
+      return orderType;
+    }
+
+    public void setOrderType(OrderType orderType) {
+      this.orderType = orderType;
     }
   }
 

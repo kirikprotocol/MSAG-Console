@@ -1,8 +1,6 @@
 package ru.novosoft.smsc.jsp.util.tables.table;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.jsp.SMSCJspException;
-import ru.novosoft.smsc.jsp.util.tables.table.column.SortableColumn;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -16,14 +14,12 @@ public abstract class PagedTableBean extends SimpleTableBean {
   private int totalSize = 0;
   private int pageSize = 1;
 
-  protected String mbFilter = null;
+  private String mbFilter = null;
+  private boolean filterEnabled = false;
 
-  private boolean showFilter = false;
 
-  private SortableColumn sortedColumn = null;
-
-  protected final int processRequestInternal(HttpServletRequest request) {
-    if (showFilter && mbFilter != null) {
+  protected final int processRequest(HttpServletRequest request) {
+    if (filterEnabled && mbFilter != null) {
       mbFilter = null;
       return showFilter(request);
     }
@@ -32,54 +28,12 @@ public abstract class PagedTableBean extends SimpleTableBean {
 
   protected abstract int doProcess(HttpServletRequest request);
 
-  protected final void fillTable() throws AdminException {
-    clear();
-    fillTable(startPosition, pageSize);
+  protected final void fillTable(HttpServletRequest request) throws AdminException {
+    fillTable(request, startPosition, pageSize);
     totalSize = calculateTotalSize();
   }
 
-  protected final int onColumnSelected(final Column column) {
-    if (!(column instanceof SortableColumn))
-      return onColumnSelect(column);
-
-    if (sortedColumn == column)
-      sortedColumn.setOrderType(getOppositeOrderType(sortedColumn.getOrderType()));
-    else {
-      if (sortedColumn != null)
-        sortedColumn.setOrderType(null);
-      sortedColumn = (SortableColumn)column;
-      sortedColumn.setOrderType(OrderType.ASC);
-    }
-
-    try {
-      fillTable();
-    } catch (AdminException e) {
-      logger.error("Can't fill table", e);
-      return _error(new SMSCJspException("Can't fill table", SMSCJspException.ERROR_CLASS_ERROR, e));
-    }
-
-    return RESULT_DONE;
-  }
-
-  private OrderType getOppositeOrderType(OrderType orderType) {
-    return (orderType == OrderType.ASC) ? OrderType.DESC : OrderType.ASC;
-  }
-
-  public SortableColumn getSortedColumn() {
-    return sortedColumn;
-  }
-
-  protected void setSort(SortableColumn column) {
-    this.sortedColumn = column;
-    sortedColumn.setOrderType(getOppositeOrderType(sortedColumn.getOrderType()));
-  }
-
-  protected int onColumnSelect(Column column) {
-    return RESULT_OK;
-  }
-
-
-  protected abstract void fillTable(int start, int size) throws AdminException;
+  protected abstract void fillTable(HttpServletRequest request, int start, int size) throws AdminException;
 
   protected abstract int calculateTotalSize();
 
@@ -87,19 +41,13 @@ public abstract class PagedTableBean extends SimpleTableBean {
     return PRIVATE_RESULT;
   }
 
-  protected final void enableFilter() {
-    showFilter = true;
+  public boolean isFilterEnabled() {
+    return filterEnabled;
   }
 
-  protected final void disableFilter() {
-    showFilter = false;
+  public void setFilterEnabled(boolean filterEnabled) {
+    this.filterEnabled = filterEnabled;
   }
-
-  public boolean isShowFilter() {
-    return showFilter;
-  }
-
-
 
 
   public String getStartPosition() {
@@ -116,6 +64,10 @@ public abstract class PagedTableBean extends SimpleTableBean {
     } catch (NumberFormatException e) {
       this.startPosition = 0;
     }
+  }
+
+  protected void setStartPosition(int startPosition) {
+    this.startPosition = startPosition;
   }
 
 

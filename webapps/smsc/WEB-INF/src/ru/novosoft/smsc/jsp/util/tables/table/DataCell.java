@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.jsp.util.tables.table;
 
+
+
 /**
  * User: artem
  * Date: 18.12.2006
@@ -9,8 +11,8 @@ public class DataCell extends Cell{
 
   private final boolean selectable;
 
-  protected DataCell(final Object value, final boolean selectable) {
-    super(value);
+  protected DataCell(String id, final boolean selectable) {
+    super(id);
     this.selectable = selectable;
   }
 

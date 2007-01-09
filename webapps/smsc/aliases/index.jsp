@@ -17,8 +17,8 @@
             response.sendRedirect("aliasesAdd.jsp");
             return;
         case Index.RESULT_EDIT :
-            response.sendRedirect("aliasesEdit.jsp?alias=" + URLEncoder.encode((String)bean.getSelectedAlias().getValue("Alias")) + "&address=" +
-                    URLEncoder.encode((String)bean.getSelectedAlias().getValue("Address")) + "&hide=" + URLEncoder.encode(((Boolean)bean.getSelectedAlias().getValue("Hide")).toString()));
+            response.sendRedirect("aliasesEdit.jsp?alias=" + URLEncoder.encode((String)bean.getSelectedAlias().getAlias().getMask()) + "&address=" +
+                    URLEncoder.encode((String)bean.getSelectedAlias().getAddress().getMask()) + "&hide=" + URLEncoder.encode((String.valueOf(bean.getSelectedAlias().isHide()))));
             return;
         default :
             errorMessages.add(new SMSCJspException(ru.novosoft.smsc.jsp.SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -32,8 +32,6 @@
     MENU0_SELECTION = "MENU0_ALIASES";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
-
-
 
 <div class=content>
 
@@ -91,6 +89,8 @@
         </tr>
     </table>
 </div>
+
+<input type=hidden name=initialized value="<%=bean.isInitialized()%>">
 
 <%
     page_menu_begin(out);

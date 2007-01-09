@@ -37,12 +37,13 @@ public class AliasSet {
 
   /**
    *
+   * @aram config
    * @param smsc
    * @throws AdminException
    */
   public void init(Config config, Smsc smsc) throws AdminException {
     try {
-      aliasmanStorePath = config.getString(PARAM_NAME_FILE_NAME);
+      aliasmanStorePath = /*"/network/shulga/build/smsc/distr/services/SMSC/store/aliases.bin";//*/config.getString(PARAM_NAME_FILE_NAME);
       if (aliasmanStorePath == null || aliasmanStorePath.length() <= 0)
         throw new AdminException("store path is empty");
     } catch (Exception e) {
@@ -167,8 +168,8 @@ public class AliasSet {
 //  }
 
   private Alias createAliasByDataItem(DataItem dataItem) throws AdminException {
-    return new Alias(new Mask((String)dataItem.getValue(AliasDataSource.ALIAS_FIELD)),
-                     new Mask((String)dataItem.getValue(AliasDataSource.ADDRESS_FIELD)),
+    return new Alias(new Mask((String)dataItem.getValue(AliasDataSource.ADDRESS_FIELD)),
+                     new Mask((String)dataItem.getValue(AliasDataSource.ALIAS_FIELD)),
                      ((Boolean)dataItem.getValue(AliasDataSource.HIDE_FIELD)).booleanValue());
   }
 

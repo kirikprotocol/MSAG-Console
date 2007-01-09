@@ -121,7 +121,6 @@ public class AliasDataSource implements DataSource{
           if (isDecs)
             sortItem = sortItem.substring(1);
 
-          System.out.println(sortItem + " " + (String)item1.getValue(sortItem) + " ");
           int result = ((String)item1.getValue(sortItem)).compareTo((String)item2.getValue(sortItem));
           if (isDecs)
             result = -result;

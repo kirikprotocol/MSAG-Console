@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.jsp.util.tables.table.cell;
 
 import ru.novosoft.smsc.jsp.util.tables.table.InputCell;
-import ru.novosoft.smsc.jsp.util.tables.table.SimpleTableBean;
 
 /**
  * User: artem
@@ -11,8 +10,8 @@ public class CheckBoxCell extends InputCell{
 
   private boolean checked = false;
 
-  public CheckBoxCell(SimpleTableBean bean, Object object, boolean checked) {
-    super(bean, object);
+  public CheckBoxCell(String id, boolean checked) {
+    super(id);
     this.checked = checked;
   }
 

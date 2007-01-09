@@ -1,18 +1,22 @@
 package ru.novosoft.smsc.jsp.util.tables.table;
 
+
+
 /**
  * User: artem
  * Date: 20.12.2006
  */
 
 public class Cell {
-  private final Object object;
 
-  protected Cell(Object object) {
-    this.object = object;
+  private final String id;
+
+  protected Cell(String id) {
+    this.id = id;
   }
 
-  public Object getObject() {
-    return object;
+  public String getId() {
+    return id;
   }
+
 }
