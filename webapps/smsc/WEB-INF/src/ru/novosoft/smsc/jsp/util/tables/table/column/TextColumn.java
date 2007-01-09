@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.jsp.util.tables.table.column.sortable;
+package ru.novosoft.smsc.jsp.util.tables.table.column;
 
 import ru.novosoft.smsc.jsp.util.tables.table.SimpleTableBean;
 import ru.novosoft.smsc.jsp.util.tables.table.Column;

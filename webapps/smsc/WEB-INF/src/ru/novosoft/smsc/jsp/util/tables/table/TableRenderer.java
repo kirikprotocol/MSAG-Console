@@ -2,8 +2,9 @@ package ru.novosoft.smsc.jsp.util.tables.table;
 
 import ru.novosoft.smsc.jsp.util.tables.table.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.tables.table.cell.CheckBoxCell;
-import ru.novosoft.smsc.jsp.util.tables.table.column.sortable.TextColumn;
+import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.table.column.ImageColumn;
+import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
 import ru.novosoft.smsc.util.LocaleMessages;
 
 import java.util.ResourceBundle;

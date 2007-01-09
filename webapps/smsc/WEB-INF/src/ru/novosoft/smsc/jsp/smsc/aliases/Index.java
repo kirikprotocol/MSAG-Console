@@ -17,7 +17,8 @@ import ru.novosoft.smsc.jsp.util.tables.table.PagedTableBean;
 import ru.novosoft.smsc.jsp.util.tables.table.Row;
 import ru.novosoft.smsc.jsp.util.tables.table.cell.CheckBoxCell;
 import ru.novosoft.smsc.jsp.util.tables.table.cell.StringCell;
-import ru.novosoft.smsc.jsp.util.tables.table.column.sortable.TextColumn;
+import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
+import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
