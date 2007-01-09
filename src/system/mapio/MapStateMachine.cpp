@@ -1429,6 +1429,9 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     } else {
       dialog->state = MAPST_WaitUSSDNotifyOpenConf;
     }
+    string subsystem = ".5.0.ussd:";
+    subsystem += dialog->sms->getOriginatingAddress().value;
+    dialog->subsystem = subsystem;
     dialog->invokeId=0;
     ET96MAP_ADDRESS_T origRef;
     mkMapAddress( &origRef, dialog->sms->getOriginatingAddress() );
