@@ -5,8 +5,8 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCJspException;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
@@ -18,12 +18,12 @@ import ru.novosoft.smsc.jsp.util.tables.table.Row;
 import ru.novosoft.smsc.jsp.util.tables.table.cell.CheckBoxCell;
 import ru.novosoft.smsc.jsp.util.tables.table.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
-import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
+import ru.novosoft.smsc.jsp.util.SessionContentManager;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * User: artem
@@ -62,23 +62,20 @@ public class Index extends PagedTableBean {
 
     setPageSize(preferences.getAliasesPageSize());
 
-    try {
-      aliases = (aliases == null) ? new String[0] : MaskList.normalizeMaskList(Functions.trimStrings(aliases));
-      addresses = (addresses == null) ? new String[0] : MaskList.normalizeMaskList(Functions.trimStrings(addresses));
 
-    } catch (AdminException e) {
-      logger.error(e);
-      return _error(new SMSCJspException("Init error", SMSCJspException.ERROR_CLASS_ERROR, e));
-    }
     return RESULT_OK;
   }
 
   protected int doProcess(HttpServletRequest request) {
     int result = RESULT_OK;
 
+    result = readStoredContent(request);
+    if (result != RESULT_OK)
+      return result;
+
     if (mbAdd != null) {
       mbAdd = null;
-      result = processAdd();
+      result = processAdd(request);
 
     } else if (mbDelete != null) {
       mbDelete = null;
@@ -97,8 +94,37 @@ public class Index extends PagedTableBean {
     return result;
   }
 
-  private int processAdd() {
+  private int readStoredContent(HttpServletRequest request) {
+    try {
+      final TemporaryContent content = (TemporaryContent)SessionContentManager.getContentFromSession(request, SessionContentManager.SessionItemId.BEAN_TEMPORARY_CONTENT, this.getClass());
+      if (content != null) {
+        aliases = content.getAliases();
+        addresses = content.getAddresses();
+        hide = content.getHide();
+        setStartPosition(content.getStartPosition());
+        initialized = content.isInitialized();
+        SessionContentManager.removeContentFromSession(request, SessionContentManager.SessionItemId.BEAN_TEMPORARY_CONTENT, this.getClass());
+      }
+
+      aliases = (aliases == null) ? new String[0] : MaskList.normalizeMaskList(Functions.trimStrings(aliases));
+      addresses = (addresses == null) ? new String[0] : MaskList.normalizeMaskList(Functions.trimStrings(addresses));
+
+    } catch (AdminException e) {
+      logger.error(e);
+      return _error(new SMSCJspException("Init error", SMSCJspException.ERROR_CLASS_ERROR, e));
+    }
+
+    return RESULT_OK;
+  }
+
+  private void storeContent(HttpServletRequest request) {
+    final TemporaryContent content = new TemporaryContent(getStartPositionInt(), aliases, addresses, hide, initialized);
+    SessionContentManager.putContentIntoSession(request, SessionContentManager.SessionItemId.BEAN_TEMPORARY_CONTENT, this.getClass(), content);
+  }
+
+  private int processAdd(HttpServletRequest request) {
     aliasesList = null;
+    storeContent(request);
     return RESULT_ADD;
   }
 
@@ -130,21 +156,33 @@ public class Index extends PagedTableBean {
     return RESULT_OK;
   }
 
+  private int processEdit(HttpServletRequest request, String cellId) {
+    try {
+      selectedAlias = appContext.getSmsc().getAliases().get(new Mask(cellId).getMask());
+      storeContent(request);
+      return (selectedAlias != null ) ? RESULT_EDIT : _error(new SMSCJspException("Can't load alias", SMSCJspException.ERROR_CLASS_ERROR));
+    } catch (AdminException e) {
+      return _error(new SMSCJspException("Can't load alias", SMSCJspException.ERROR_CLASS_ERROR, e));
+    }
+  }
+
+
+
   private AliasQuery createQuery(AliasFilter filter) {
     return new AliasQuery(preferences.getMaxAliasesTotalSize()+1, filter, AliasDataSource.ALIAS_FIELD, 0);
   }
 
   protected void fillTable(HttpServletRequest request, int start, int size) throws AdminException {
-
     if (initialized) {
 
       final AliasFilter filter = new AliasFilter();
-
       filter.setAddresses(addresses);
       filter.setAliases(aliases);
       filter.setHide(hide);
+      System.out.println(hide);
 
       aliasesList = appContext.getSmsc().getAliases().query(createQuery(filter));
+      System.out.println(aliasesList.size());
       if (aliasesList.size() > preferences.getMaxAliasesTotalSize())
         _error(new SMSCJspException("Query results is very big. Show first " + String.valueOf(preferences.getMaxAliasesTotalSize()+1) + " records.", SMSCJspException.ERROR_CLASS_WARNING));
 
@@ -169,12 +207,7 @@ public class Index extends PagedTableBean {
   }
 
   protected int onCellSelected(HttpServletRequest request, String columnId, String cellId) {
-    try {
-      selectedAlias = appContext.getSmsc().getAliases().get(new Mask(cellId).getMask());
-      return (selectedAlias != null ) ? RESULT_EDIT : _error(new SMSCJspException("Can't load alias", SMSCJspException.ERROR_CLASS_ERROR));
-    } catch (AdminException e) {
-      return _error(new SMSCJspException("Can't load alias", SMSCJspException.ERROR_CLASS_ERROR, e));
-    }
+    return processEdit(request, cellId);
   }
 
   public Alias getSelectedAlias() {
@@ -262,7 +295,41 @@ public class Index extends PagedTableBean {
   }
 
 
+  private class TemporaryContent {
+    private final int startPosition;
+    private final String[] aliases;
+    private final String[] addresses;
+    private final byte hide;
+    private final boolean initialized;
 
+    public TemporaryContent(int startPosition, String[] aliases, String[] addresses, byte hide, boolean initialized) {
+      this.startPosition = startPosition;
+      this.aliases = aliases;
+      this.addresses = addresses;
+      this.hide = hide;
+      this.initialized = initialized;
+    }
+
+    public int getStartPosition() {
+      return startPosition;
+    }
+
+    public String[] getAliases() {
+      return aliases;
+    }
+
+    public String[] getAddresses() {
+      return addresses;
+    }
+
+    public boolean isInitialized() {
+      return initialized;
+    }
+
+    public byte getHide() {
+      return hide;
+    }
+  }
 }
 
 
