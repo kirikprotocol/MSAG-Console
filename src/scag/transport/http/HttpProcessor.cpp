@@ -232,7 +232,7 @@ bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const Placeme
             case PlacementType::URL:
             {
                 const char *p = url.c_str();
-                while((p = strstr(p, places[i].name.c_str())) && p > url.c_str() && p[-1] > 'A') p++;
+                while((p = strstr(p, places[i].name.c_str())) && p > url.c_str() && p[-1] >= 'A') p++;
                 
                 if(!p) break;
                 
@@ -406,7 +406,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
     }
     catch(RouteNotFoundException& e)
     {
-        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
+        smsc_log_warn(logger, "route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
     }
     catch(Exception& e)
     {

@@ -36,17 +36,19 @@ int ScagTask::Execute()
 
         smsc_log_debug(logger, "%p choosen for context %p", this, cx);
 
+        LongCallContext& lcmCtx = cx->command->getLongCallContext();
+        
         switch (cx->action) {
         case PROCESS_REQUEST:
             smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
-            st = processor.processRequest(cx->getRequest(), cx->continueExec);
+            st = processor.processRequest(cx->getRequest(), lcmCtx.continueExec);
             if (st == scag::re::STATUS_OK)
             {
                 smsc_log_info(logger, "%p: %p, request approved", this, cx);
                 cx->getRequest().serialize();
 //                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
                 cx->action = SEND_REQUEST;
-                cx->continueExec = false;
+                lcmCtx.continueExec = false;
                 manager.writers.process(cx);                               
                 break;
             }
@@ -85,7 +87,7 @@ int ScagTask::Execute()
 
             cx->getResponse().serialize();
             cx->action = SEND_RESPONSE;
-            cx->continueExec = false;
+            lcmCtx.continueExec = false;
             manager.writers.process(cx);       
             break;      
         case PROCESS_STATUS_RESPONSE:
