@@ -28,7 +28,7 @@ public class MessageFilter implements Filter
   }
 
   public Date getFromDate() {
-    return fromDate;
+    return fromDateEnabled ? fromDate : null;
   }
   public void setFromDate(Date fromDate) {
     this.fromDate = fromDate;
@@ -47,7 +47,7 @@ public class MessageFilter implements Filter
   }
 
   public Date getTillDate() {
-    return tillDate;
+    return tillDateEnabled ? tillDate : null;
   }
   public void setTillDate(Date tillDate) {
     this.tillDate = tillDate;
