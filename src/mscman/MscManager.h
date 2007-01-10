@@ -31,6 +31,7 @@ namespace mscman {
 
         bool                automaticRegistration;
         int                 failureLimit;
+        time_t              singleAttemptTimeout;
 
         MscManager(Manager& config)
             throw(ConfigException);

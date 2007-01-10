@@ -23,6 +23,7 @@ namespace smsc { namespace mscman
                 automaticLock(aLock), failureCount(fc)
             {
               offset=-1;
+              blockTime=0;
               setMscNum(msc);
             };
         MscInfo(const MscInfo& info)
@@ -32,6 +33,7 @@ namespace smsc { namespace mscman
             {
               setMscNum(info.mscNum);
               offset=info.offset;
+              blockTime=info.blockTime;
             };
 
         MscInfo& operator=(const MscInfo& info) {
@@ -40,6 +42,7 @@ namespace smsc { namespace mscman
             automaticLock = info.automaticLock;
             failureCount = info.failureCount;
             offset=info.offset;
+            blockTime=info.blockTime;
             return (*this);
         }
 
@@ -75,6 +78,7 @@ namespace smsc { namespace mscman
         bool    manualLock;
         bool    automaticLock;
         uint32_t     failureCount;
+        time_t blockTime;
         File::offset_type offset;
     };
 

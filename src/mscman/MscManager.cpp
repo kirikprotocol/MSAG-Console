@@ -130,6 +130,7 @@ MscManager::MscManager(Manager& config)
 {
     automaticRegistration = config.getBool("MscManager.automaticRegistration");
     failureLimit = config.getInt("MscManager.failureLimit");
+    singleAttemptTimeout = config.getInt("MscManager.singleAttemptTimeout");
 }
 MscManager::~MscManager()
 {
@@ -388,11 +389,20 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
         MscInfo& info=**infoptr;
         if(change.data)
         {
+          if(!info.automaticLock && info.failureCount==0 && !wasInsert)
+          {
+            break;
+          }
           info.automaticLock=false;
+          info.failureCount=0;
         }else
         {
           info.failureCount++;
-          info.automaticLock=info.failureCount>=failureLimit;
+          if(!info.automaticLock && info.failureCount>=failureLimit)
+          {
+            info.blockTime=time(NULL);
+            info.automaticLock=true;
+          }
         }
 
         if(wasInsert)
@@ -447,7 +457,17 @@ bool MscManagerImpl::check(const char* msc)
   MscInfo** infoptr=mscs.GetPtr(msc);
   if (!infoptr) return true;
   MscInfo& info = **infoptr;
-  return !(info.manualLock || info.automaticLock);
+  if(info.manualLock)return false;
+  if(info.automaticLock)
+  {
+    time_t now=time(NULL);
+    if(now-info.blockTime>singleAttemptTimeout)
+    {
+      info.blockTime=now;
+      return true;
+    }
+  }
+  return !info.automaticLock;
 }
 
 /* ------------------------ MscAdmin implementation ------------------------ */
