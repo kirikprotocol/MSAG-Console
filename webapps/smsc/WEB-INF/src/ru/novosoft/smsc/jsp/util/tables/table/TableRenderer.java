@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp.util.tables.table;
 
 import ru.novosoft.smsc.jsp.util.tables.table.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.tables.table.cell.CheckBoxCell;
+import ru.novosoft.smsc.jsp.util.tables.table.cell.ImageCell;
 import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
 import ru.novosoft.smsc.jsp.util.tables.table.column.ImageColumn;
 import ru.novosoft.smsc.jsp.util.tables.table.column.TextColumn;
@@ -42,6 +43,12 @@ public class TableRenderer {
         str = "&nbsp";
 
       buffer.append(str);
+    } else if (dataCell instanceof ImageCell) {
+      String image = ((ImageCell)dataCell).getImage();
+      if (image != null) {
+        buffer.append("<img src=\"").append(image).append("\">");
+      } else
+        buffer.append("&nbsp;");
     }
 
     if (dataCell.isSelectable())

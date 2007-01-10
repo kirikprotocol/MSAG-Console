@@ -107,12 +107,13 @@
 <div class=content>
   <%@ include file="/WEB-INF/inc/paged_table.jsp"%>
 </div>
-<%
-      page_menu_begin(out);
-      page_menu_button(session, out, "mbAdd", "aliases.add", "aliases.add");
-      page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
-      page_menu_space(out);
-      page_menu_end(out);
+<%    if (bean.isEditAllowed()) {
+        page_menu_begin(out);
+        page_menu_button(session, out, "mbAdd", "aliases.add", "aliases.add");
+        page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
+        page_menu_space(out);
+        page_menu_end(out);
+      }
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp" %>

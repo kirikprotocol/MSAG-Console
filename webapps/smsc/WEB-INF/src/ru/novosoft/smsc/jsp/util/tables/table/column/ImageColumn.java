@@ -17,14 +17,14 @@ public class ImageColumn extends Column {
     this.alt = alt;
   }
 
-  public ImageColumn(String uId, SimpleTableBean simpleTableBean, String image, String alt, boolean selectable) {
-    super(uId, simpleTableBean, selectable);
+  public ImageColumn(String uId, SimpleTableBean simpleTableBean, String image, String alt, boolean sortable) {
+    super(uId, simpleTableBean, sortable);
     this.image = image;
     this.alt = alt;
   }
 
-  public ImageColumn(String uId, SimpleTableBean simpleTableBean, String image, String alt, boolean selectable, int width) {
-    super(uId, simpleTableBean, selectable, width);
+  public ImageColumn(String uId, SimpleTableBean simpleTableBean, String image, String alt, boolean sortable, int width) {
+    super(uId, simpleTableBean, sortable, width);
     this.image = image;
     this.alt = alt;
   }
