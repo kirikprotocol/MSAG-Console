@@ -21,7 +21,14 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-class XHashInvalidKeyException{};
+class XHashInvalidKeyException: public std::exception
+{
+public:
+  const char* what()const throw()
+  {
+    return "XHashInvalidKeyException";
+  }
+};
 
 class DefXHashFunc{
 public:

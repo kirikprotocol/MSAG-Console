@@ -27,7 +27,14 @@ typedef char hashchar;
 typedef hashchar *phashstr;
 typedef const hashchar* pchashstr;
 
-class HashInvalidKeyException{};
+class HashInvalidKeyException: public std::exception
+{
+public:
+  const char* what()const throw()
+  {
+    return "HashInvalidKeyException";
+  }
+};
 
 namespace _hashinternall{
 
