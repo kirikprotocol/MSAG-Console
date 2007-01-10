@@ -1314,6 +1314,7 @@ public:
   }
   void handleError(int errorCode)
   {
+    __warning2__("SMPP::Error:%d",errorCode);
     pthread_kill(cfg::mainId,16);
   }
 
@@ -1710,14 +1711,22 @@ struct XBuffer{
   int freeSpace(){return size-offset;}
 };
 
+
+bool reconnectFlag=false;
+
 extern "C"  void disp(int sig)
 {
+  __trace__("disp");
+  reconnectFlag=true;
 }
 
 extern "C"  void ctrlc(int sig)
 {
   cfg::stopSme=1;
-  pthread_kill(cfg::mainId,16);
+  if(pthread_self()!=cfg::mainId)
+  {
+    pthread_kill(cfg::mainId,16);
+  }
 }
 
 
@@ -1958,12 +1967,22 @@ int main(int argc,char* argv[])
       break;
     }
     if(cfg::stopSme)break;
-    for(;;)
+    reconnectFlag=false;
+    while(!cfg::stopSme)
     {
-      __trace__("Waiting for connection");
+      if(reconnectFlag)
       {
+        __trace__("reconnecting");
+        break;
+      }
+      {
+        if(srv.canRead(2)<=0)continue;
         auto_ptr<Socket> clnt(srv.Accept());
-        if(!clnt.get())break;
+        if(!clnt.get() || reconnectFlag)
+        {
+          __trace__("reconnecting");
+          break;
+        }
         int sz;
         clnt->setTimeOut(10);
         __trace__("Got connection");
@@ -1989,6 +2008,7 @@ int main(int argc,char* argv[])
         clnt->WriteAll(&retcode,4);
       }
     }
+    __trace__("exiting loop, closing session");
     ss.close();
   }
   __trace__("exiting");
