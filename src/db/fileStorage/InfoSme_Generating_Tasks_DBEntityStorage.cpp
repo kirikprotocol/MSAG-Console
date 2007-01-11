@@ -1,11 +1,5 @@
 #include "InfoSme_Generating_Tasks_DBEntityStorage.hpp"
 
-// DEBUG
-# include <logger/Logger.h>
-
-static smsc::logger::Logger* logger=smsc::logger::Logger::getInstance("dbstrg");
-// END DEBUG
-
 #include <memory>
 #include "Exceptions.hpp"
 
@@ -35,7 +29,6 @@ bool
 InfoSme_Generating_Tasks_DBEntityStorage::findValue(const InfoSme_Generating_Tasks_Entity::TaskId_Key& key, InfoSme_Generating_Tasks_Entity* result)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  smsc_log_info(logger, "Enter into InfoSme_Generating_Tasks_DBEntityStorage::findValue: key=[%s] ###",key.toString().c_str());
   typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
 
   InfoSme_Generating_Tasks_Entity_Adapter record;
@@ -53,7 +46,6 @@ bool
 InfoSme_Generating_Tasks_DBEntityStorage::putValue(const InfoSme_Generating_Tasks_Entity& value)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  smsc_log_info(logger, "Enter into InfoSme_Generating_Tasks_DBEntityStorage::putValue: value=[%s] ###",value.toString().c_str());
   InfoSme_Generating_Tasks_Entity::TaskId_Key primaryKey(value);
 
   if ( !_uniq_index_by_taskid_key.isExist(primaryKey) ) {
