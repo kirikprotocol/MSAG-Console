@@ -479,7 +479,7 @@
                         </c:forEach>
                     </select>
                     </td>
-                    <td><img src="content/images/but_add.gif" onclick="addAbonentSubj()" style="cursor:hend;"></td>
+                    <td><img src="content/images/but_add.gif" onclick="addAbonentSubj()" style="cursor:hand;"></td>
                 </tr>
                 <tr>
                     <td><fmt:message>routes.edit.address</fmt:message></td>
@@ -564,7 +564,7 @@
                         <c:forEach items="${bean.sites}" var="i">
                             <c:set var="esite" value="${fn:escapeXml(i.host)}"/>
                             <c:set var="eport" value="${fn:escapeXml(i.port)}"/>
-                            <c:set var="esite_sub" value="${fn:substringBefore(esite,'.')}"/>
+                            <c:set var="esite_sub" value="${fn:replace(esite,'.','_')}"/>
                             <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
                             <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
 
@@ -586,10 +586,10 @@
 
                                     <tr>
                                         <td nowrap="true" align="right"><fmt:message>routes.edit.add.new.path</fmt:message>&nbsp;</td>
-                                        <td align="right"><input id="${esite_sub}_newPath" class="txt"
-                                                                 name="${esite_sub}_newPath"></td>
+                                        <td align="right"><input id="newPath_${esite_sub}" class="txt"
+                                                                 name="newPath_${esite_sub}"></td>
                                         <td><img src="content/images/but_add.gif" alt="Add new path"
-                                                 onclick="addPath(opForm.all.${esite_sub}_newPath, '${esite}', opForm.all.sitesp_table_${esite_sub}, '${esite_sub}')"
+                                                 onclick="addPath(opForm.all.newPath_${esite_sub}, '${esite}', opForm.all.sitesp_table_${esite_sub}, '${esite_sub}')"
                                                  style="cursor:hand;"></td>
                                     </tr>
                                     <c:set var="rowN" value="0"/>
