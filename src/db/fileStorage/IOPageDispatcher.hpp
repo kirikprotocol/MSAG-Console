@@ -88,7 +88,7 @@ private:
 class IOPageDispatcher {
 public:
   IOPageDispatcher(int fd);
-  ~IOPageDispatcher() {}
+  ~IOPageDispatcher();
   virtual IOPage getFirstIOPage();
   virtual IOPage getNextIOPage(const IOPage& currentPage);
   virtual IOPage getPreviousIOPage(const IOPage& currentPage);
@@ -110,6 +110,9 @@ protected:
   smsc::core::synchronization::Mutex _lastPageLock, _registredPagesLock;
 
   IOPage_impl* loadPageData(int pageNum, IOPage_impl* pagePtr=0);
+private:
+  IOPageDispatcher(const IOPageDispatcher& rhs);
+  IOPageDispatcher& operator=(const IOPageDispatcher& rhs);
 };
 
 #endif
