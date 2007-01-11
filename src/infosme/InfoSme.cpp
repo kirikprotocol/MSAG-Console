@@ -502,6 +502,7 @@ extern "C" static void atExitHandler(void)
 
 int main(void)
 {
+  try {
     int resultCode = 0;
 
     Logger::Init();
@@ -510,13 +511,14 @@ int main(void)
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());
     adminListener = adml.get();
 
+    atexit(atExitHandler);
+
     sigset_t set, old;
     sigemptyset(&set);
     sigprocmask(SIG_SETMASK, &set, &old);
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
-    //sigset(SIGINT, appSignalHandler);
-
-    atexit(atExitHandler);
+    sigset(SIGINT, appSignalHandler);
+    sigset(SIGPIPE, SIG_IGN);
 
     try
     {
@@ -560,6 +562,9 @@ int main(void)
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
 
+        sigfillset(&set);
+        sigprocmask(SIG_SETMASK, &set, &old);
+
         ConfigView adminConfig(manager, "InfoSme.Admin");
         adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
         bAdminListenerInited = true;
@@ -575,6 +580,8 @@ int main(void)
 
         while (!isNeedStop())
         {
+            sigprocmask(SIG_SETMASK, &old, NULL); // unlock all signals and deliver any pending signals
+            sigprocmask(SIG_SETMASK, &set, NULL); // lock all signals. any thread being started from this point has signal mask with all signals locked 
             InfoSmePduListener      listener(processor);
             SmppSession             session(cfg, &listener);
             InfoSmeMessageSender    sender(processor, &session);
@@ -607,12 +614,8 @@ int main(void)
                 continue;
             }
             smsc_log_info(logger, "Connected.");
-
-            sigemptyset(&set);
-            //sigaddset(&set, SIGINT);
-            sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-            sigprocmask(SIG_SETMASK, &set, &old);
-
+            sigprocmask(SIG_SETMASK, &old, NULL); // unlock all signals and deliver any pending signals
+            // in this point any signals was locked in all runnnig thread excepted for this main thread
             infoSmeWaitEvent.Wait(0);
             while (!isNeedStop() && !isNeedReconnect())
             {
@@ -665,4 +668,8 @@ int main(void)
 
     DataSourceLoader::unload();
     return resultCode;
+  } catch (std::exception& ex) {
+    fprintf(stderr, "catch unexpected exception[%s]\n",ex.what());
+    return -1;
+  }
 }
