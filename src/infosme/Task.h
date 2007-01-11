@@ -179,8 +179,8 @@ namespace smsc { namespace infosme
         time_t          lastMessagesCacheEmpty;
         
         void  doFinalization();
-        char* prepareSqlCall(const char* sql);
-        char* prepareDoubleSqlCall(const char* sql);
+        std::string prepareSqlCall(const char* sql);
+        std::string prepareDoubleSqlCall(const char* sql);
         void  trackIntegrity(bool clear=true, bool del=true, Connection* connection=0);
 
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
