@@ -130,7 +130,13 @@ MscManager::MscManager(Manager& config)
 {
     automaticRegistration = config.getBool("MscManager.automaticRegistration");
     failureLimit = config.getInt("MscManager.failureLimit");
-    singleAttemptTimeout = config.getInt("MscManager.singleAttemptTimeout");
+    try{
+      singleAttemptTimeout = config.getInt("MscManager.singleAttemptTimeout");
+    }catch(...)
+    {
+      singleAttemptTimeout=3600;
+      __warning2__("MscManager.singleAttemptTimeout not found in config, using default:%d",singleAttemptTimeout);
+    }
 }
 MscManager::~MscManager()
 {
