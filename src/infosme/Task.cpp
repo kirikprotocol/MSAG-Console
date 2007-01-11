@@ -72,29 +72,29 @@ Task::~Task()
         dsInt->closeRegisteredQueries(DELETE_GENERATING_STATEMENT_ID);
         */
         
-        std::auto_ptr<char> delNewMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(delNewMessagesId.get());
-        std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(newMessageId.get());
-        std::auto_ptr<char> clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(clearMessagesId.get());
-        std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(resetMessagesId.get());
-        std::auto_ptr<char> retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(retryMessageId.get());
-        std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(deleteMessageId.get());
-        std::auto_ptr<char> enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(enrouteMessageId.get());
-        std::auto_ptr<char> selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(selectMessageId.get());
-        std::auto_ptr<char> stateMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(stateMessageId.get());
+        std::string delNewMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(delNewMessagesId.c_str());
+        std::string newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(newMessageId.c_str());
+        std::string clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(clearMessagesId.c_str());
+        std::string resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(resetMessagesId.c_str());
+        std::string retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(retryMessageId.c_str());
+        std::string deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(deleteMessageId.c_str());
+        std::string enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(enrouteMessageId.c_str());
+        std::string selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(selectMessageId.c_str());
+        std::string stateMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
+        dsInt->closeRegisteredQueries(stateMessageId.c_str());
     }
     if (dsOwn)
     {
-        std::auto_ptr<char> userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
-        dsOwn->closeRegisteredQueries(userQueryId.get());
+        std::string userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
+        dsOwn->closeRegisteredQueries(userQueryId.c_str());
     }
 }
 
@@ -236,21 +236,25 @@ bool Task::shutdown()
     return result;
 }
 
-char* Task::prepareSqlCall(const char* sql)
+std::string Task::prepareSqlCall(const char* sql)
 {
     if (!sql || sql[0] == '\0') return 0;
     std::string tableName = info.tablePrefix+info.id;
     char* sqlCall = new char[strlen(sql)+tableName.length()+1];
     sprintf(sqlCall, sql, tableName.c_str());
-    return sqlCall;
+    std::string sqlStatement(sqlCall);
+    delete [] sqlCall;
+    return sqlStatement;
 }
-char* Task::prepareDoubleSqlCall(const char* sql)
+std::string Task::prepareDoubleSqlCall(const char* sql)
 {
     if (!sql || sql[0] == '\0') return 0;
     std::string tableName = info.tablePrefix+info.id;
     char* sqlCall = new char[strlen(sql)+tableName.length()*2+1];
     sprintf(sqlCall, sql, tableName.c_str(), tableName.c_str());
-    return sqlCall;
+    std::string sqlStatement(sqlCall);
+    delete [] sqlCall;
+    return sqlStatement;
 }
 
 void Task::trackIntegrity(bool clear, bool del, Connection* connection)
@@ -280,10 +284,10 @@ void Task::trackIntegrity(bool clear, bool del, Connection* connection)
             delGenerating->setString(1, info.id.c_str());
             if (delGenerating->executeUpdate() > 0 && del)
             {
-                std::auto_ptr<char> delGeneratedId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
-                std::auto_ptr<char> delGeneratedSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
-                Statement* delGenerated = connection->getStatement(delGeneratedId.get(),
-                                                                   delGeneratedSql.get());
+                std::string delGeneratedId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+                std::string delGeneratedSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
+                Statement* delGenerated = connection->getStatement(delGeneratedId.c_str(),
+                                                                   delGeneratedSql.c_str());
                 if (!delGenerated) 
                     throw Exception("Failed to obtain statement for track integrity.");
                 delGenerated->setUint8(1, MESSAGE_NEW_STATE);
@@ -336,24 +340,24 @@ void Task::createTable()
             throw Exception("Failed to obtain connection to internal data source.");
 
         {
-            std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
-            std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.get()));
+            std::string createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+            std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.c_str()));
             Statement* statement = statementGuard.get();
             if (!statement) 
                 throw Exception("Failed to create table statement.");
             statement->execute();  
         } 
         {
-            std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
-            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.get()));
+            std::string createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
+            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.c_str()));
             Statement* statement = statementGuard.get();
             if (!statement) 
                 throw Exception("Failed to create index1 statement.");
             statement->execute();
         }
         {
-            std::auto_ptr<char> createIndexSql(prepareDoubleSqlCall(NEW_AB_INDEX_STATEMENT_SQL));
-            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.get()));
+            std::string createIndexSql(prepareDoubleSqlCall(NEW_AB_INDEX_STATEMENT_SQL));
+            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.c_str()));
             Statement* statement = statementGuard.get();
             if (!statement) 
                 throw Exception("Failed to create index2 statement.");
@@ -409,8 +413,8 @@ void Task::dropTable()
 
         trackIntegrity(true, false, connection); // delete flag only
 
-        std::auto_ptr<char> dropTableSql(prepareSqlCall(DROP_TABLE_STATEMENT_SQL));
-        std::auto_ptr<Statement> statementGuard(connection->createStatement(dropTableSql.get()));
+        std::string dropTableSql(prepareSqlCall(DROP_TABLE_STATEMENT_SQL));
+        std::auto_ptr<Statement> statementGuard(connection->createStatement(dropTableSql.c_str()));
         Statement* statement = statementGuard.get();
         if (!statement) 
             throw Exception("Failed to create table statement.");
@@ -477,25 +481,25 @@ bool Task::beginGeneration(Statistics* statistics)
         
         trackIntegrity(false, false, intConnection); // insert flag
 
-        std::auto_ptr<char> userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
-        Statement* userQuery = ownConnection->getStatement(userQueryId.get(),
+        std::string userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
+        Statement* userQuery = ownConnection->getStatement(userQueryId.c_str(),
                                                            info.querySql.c_str());
         if (!userQuery)
             throw Exception("Failed to create user query statement on own data source.");
         
-        std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
-        std::auto_ptr<char> newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
-        Statement* newMessage = intConnection->getStatement(newMessageId.get(),
-                                                            newMessageSql.get());
+        std::string newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
+        std::string newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
+        Statement* newMessage = intConnection->getStatement(newMessageId.c_str(),
+                                                            newMessageSql.c_str());
         if (!newMessage)
             throw Exception("Failed to create statement for message generation.");
             
         Statement* clearMessages = 0;
         if (info.replaceIfPresent) {
-            std::auto_ptr<char> clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
-            std::auto_ptr<char> clearMessagesSql(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_SQL));
-            clearMessages = intConnection->getStatement(clearMessagesId.get(),
-                                                        clearMessagesSql.get());
+            std::string clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
+            std::string clearMessagesSql(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_SQL));
+            clearMessages = intConnection->getStatement(clearMessagesId.c_str(),
+                                                        clearMessagesSql.c_str());
             if (!clearMessages)
                 throw Exception("Failed to create statement for message(s) replace.");
         }
@@ -626,10 +630,10 @@ void Task::dropNewMessages(Statistics* statistics)
         if (!connection)
             throw Exception("Failed to obtain connection to internal data source.");
 
-        std::auto_ptr<char> deleteMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
-        std::auto_ptr<char> deleteMessagesSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
-        Statement* deleteMessages = connection->getStatement(deleteMessagesId.get(), 
-                                                             deleteMessagesSql.get());
+        std::string deleteMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
+        std::string deleteMessagesSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
+        Statement* deleteMessages = connection->getStatement(deleteMessagesId.c_str(), 
+                                                             deleteMessagesSql.c_str());
         if (!deleteMessages)
             throw Exception("Failed to create statement for messages access.");
 
@@ -684,10 +688,10 @@ void Task::resetWaiting(Connection* connection)
         if (!connection) 
             throw Exception("resetWaiting(): Failed to obtain connection");
         
-        std::auto_ptr<char> resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
-        std::auto_ptr<char> resetMessagesSql(prepareSqlCall(RESET_MESSAGES_STATEMENT_SQL));
-        Statement* resetMessages = connection->getStatement(resetMessagesId.get(), 
-                                                            resetMessagesSql.get());
+        std::string resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
+        std::string resetMessagesSql(prepareSqlCall(RESET_MESSAGES_STATEMENT_SQL));
+        Statement* resetMessages = connection->getStatement(resetMessagesId.c_str(), 
+                                                            resetMessagesSql.c_str());
         if (!resetMessages)
             throw Exception("resetWaiting(): Failed to create statement for messages access.");
         
@@ -739,10 +743,10 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
         if (!connection) 
             throw Exception("doRetry(): Failed to obtain connection");
 
-        std::auto_ptr<char> retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
-        std::auto_ptr<char> retryMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-        Statement* retryMessage = connection->getStatement(retryMessageId.get(), 
-                                                           retryMessageSql.get());
+        std::string retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+        std::string retryMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
+        Statement* retryMessage = connection->getStatement(retryMessageId.c_str(), 
+                                                           retryMessageSql.c_str());
         if (!retryMessage)
             throw Exception("doRetry(): Failed to create statement for messages access.");
         
@@ -811,9 +815,9 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* conne
         if (info.keepHistory)
         {
             // Was DO_STATE_MESSAGE_STATEMENT
-            std::auto_ptr<char> changeStateId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
-            std::auto_ptr<char> changeStateSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-            finalizeMessage = connection->getStatement(changeStateId.get(), changeStateSql.get());
+            std::string changeStateId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+            std::string changeStateSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
+            finalizeMessage = connection->getStatement(changeStateId.c_str(), changeStateSql.c_str());
             if (finalizeMessage) {
                 finalizeMessage->setUint8   (1, state);
                 finalizeMessage->setDateTime(2, time(NULL));
@@ -822,9 +826,9 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* conne
         }
         else
         {
-            std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
-            std::auto_ptr<char> deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
-            finalizeMessage = connection->getStatement(deleteMessageId.get(), deleteMessageSql.get());
+            std::string deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
+            std::string deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
+            finalizeMessage = connection->getStatement(deleteMessageId.c_str(), deleteMessageSql.c_str());
             if (finalizeMessage) finalizeMessage->setUint64(1, msgId);
         }
         
@@ -881,10 +885,10 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
         if (!connection) 
             throw Exception("enrouteMessage(): Failed to obtain connection");
         
-        std::auto_ptr<char> enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
-        std::auto_ptr<char> enrouteMessageSql(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_SQL));
-        Statement* enrouteMessage = connection->getStatement(enrouteMessageId.get(), 
-                                                             enrouteMessageSql.get());
+        std::string enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
+        std::string enrouteMessageSql(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_SQL));
+        Statement* enrouteMessage = connection->getStatement(enrouteMessageId.c_str(), 
+                                                             enrouteMessageSql.c_str());
         if (!enrouteMessage)
             throw Exception("doEnroute(): Failed to create statement for messages access.");
         
@@ -960,10 +964,10 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     int wdTimerId = -1;
     try
     {
-        std::auto_ptr<char> selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
-        std::auto_ptr<char> selectMessageSql(prepareSqlCall(SELECT_MESSAGES_STATEMENT_SQL));
-        Statement* selectMessage = connection->getStatement(selectMessageId.get(), 
-                                                            selectMessageSql.get());
+        std::string selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
+        std::string selectMessageSql(prepareSqlCall(SELECT_MESSAGES_STATEMENT_SQL));
+        Statement* selectMessage = connection->getStatement(selectMessageId.c_str(), 
+                                                            selectMessageSql.c_str());
         if (!selectMessage)
             throw Exception("Failed to create statement for messages access.");
 
@@ -992,10 +996,10 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             }
             Message fetchedMessage(msgId, msgAbonent, msgMessage);
 
-            std::auto_ptr<char> waitMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
-            std::auto_ptr<char> waitMessageSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
-            Statement* waitMessage = connection->getStatement(waitMessageId.get(), 
-                                                              waitMessageSql.get());
+            std::string waitMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
+            std::string waitMessageSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
+            Statement* waitMessage = connection->getStatement(waitMessageId.c_str(), 
+                                                              waitMessageSql.c_str());
             if (!waitMessage)
                 throw Exception("Failed to create statement for messages access.");
             
@@ -1098,10 +1102,10 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
   if (!intConnection)
     throw Exception("Failed to obtain connection to internal data source.");
 
-  std::auto_ptr<char> newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
-  std::auto_ptr<char> newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
-  Statement* newMessage = intConnection->getStatement(newMessageId.get(),
-                                                      newMessageSql.get());
+  std::string newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
+  std::string newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
+  Statement* newMessage = intConnection->getStatement(newMessageId.c_str(),
+                                                      newMessageSql.c_str());
   if (!newMessage)
     throw Exception("Failed to create statement for message generation.");
 
@@ -1135,10 +1139,10 @@ bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
     if (!intConnection)
       throw Exception("Failed to obtain connection to internal data source.");
 
-    std::auto_ptr<char> updateMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
-    std::auto_ptr<char> updateMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-    Statement* updateMessage = intConnection->getStatement(updateMessageId.get(), 
-                                                           updateMessageSql.get());
+    std::string updateMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
+    std::string updateMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
+    Statement* updateMessage = intConnection->getStatement(updateMessageId.c_str(), 
+                                                           updateMessageSql.c_str());
     if (!updateMessage)
       throw Exception("changeDeliveryMessageInfoByRecordId(): Failed to create statement for messages access.");
 
@@ -1176,10 +1180,10 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
   if (!intConnection)
     throw Exception("Failed to obtain connection to internal data source.");
 
-  std::auto_ptr<char> fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
-  std::auto_ptr<char> fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.get(), 
-                                                         fullTableScanMessageSql.get());
+  std::string fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
+  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.c_str(), 
+                                                         fullTableScanMessageSql.c_str());
   if (!selectMessage)
     throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
 
@@ -1238,10 +1242,10 @@ bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
   if (!intConnection)
     throw Exception("Failed to obtain connection to internal data source.");
 
-  std::auto_ptr<char> deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
-  std::auto_ptr<char> deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
-  Statement* deleteMessage = intConnection->getStatement(deleteMessageId.get(), 
-                                                         deleteMessageSql.get());
+  std::string deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
+  std::string deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
+  Statement* deleteMessage = intConnection->getStatement(deleteMessageId.c_str(), 
+                                                         deleteMessageSql.c_str());
 
   if (!deleteMessage)
     throw Exception("deleteDeliveryMessageByRecordId(): Failed to create statement for messages access.");
@@ -1261,10 +1265,10 @@ bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCrite
   if (!intConnection)
     throw Exception("Failed to obtain connection to internal data source.");
 
-  std::auto_ptr<char> fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
-  std::auto_ptr<char> fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.get(), 
-                                                         fullTableScanMessageSql.get());
+  std::string fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
+  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.c_str(), 
+                                                         fullTableScanMessageSql.c_str());
   if (!selectMessage)
     throw Exception("deleteDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
 
@@ -1359,10 +1363,10 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
   if (!intConnection)
     throw Exception("Failed to obtain connection to internal data source.");
 
-  std::auto_ptr<char> fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
-  std::auto_ptr<char> fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.get(), 
-                                                         fullTableScanMessageSql.get());
+  std::string fullTableScanMessageId(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID));
+  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  Statement* selectMessage = intConnection->getStatement(fullTableScanMessageId.c_str(), 
+                                                         fullTableScanMessageSql.c_str());
   if (!selectMessage)
     throw Exception("selectDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
 
