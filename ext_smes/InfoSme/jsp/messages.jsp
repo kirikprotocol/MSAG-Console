@@ -3,15 +3,13 @@
                  java.util.*, ru.novosoft.smsc.infosme.backend.Message,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.infosme.beans.Messages"%>
-<jsp:useBean id="infosme_messages_bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Messages" />
-<jsp:setProperty name="infosme_messages_bean" property="*"/>
+<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Messages" />
+<jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
-
-  final Messages bean = (Messages)infosme_messages_bean;
 
   int rowN = 0;
   int beanResult = bean.process(request);
