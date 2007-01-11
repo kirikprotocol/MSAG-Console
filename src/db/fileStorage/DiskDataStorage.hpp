@@ -131,6 +131,7 @@ private:
   public:
     StorableRecord() : _recordSz(0), _flg(0), _writingAppData(NULL), _readingAppData(NULL), _crc(0),_logger(smsc::logger::Logger::getInstance("dbstrg")) {}
     StorableRecord(const V* appData, uint8_t flg) : _recordSz(appData->getSize()),_writingAppData(appData), _readingAppData(NULL), _flg(flg), _logger(smsc::logger::Logger::getInstance("dbstrg")) {}
+    ~StorableRecord() { delete _readingAppData; }
     operation_status_t marshal(IOPage& ioPage, SimpleFileDispatcher<V>& fileDispatcher);
     operation_status_t unmarshal(IOPage& ioPage, SimpleFileDispatcher<V>& fileDispatcher);
     uint8_t getFlg() const { return _flg; }
