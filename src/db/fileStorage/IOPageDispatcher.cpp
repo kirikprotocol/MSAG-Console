@@ -16,6 +16,14 @@
 
 IOPageDispatcher::IOPageDispatcher(int fd) : _fd(fd), _firstPageOffset(0), _startByteOffset(::lseek(_fd, 0, SEEK_CUR)), _lastPageOffset(0) {}
 
+IOPageDispatcher::~IOPageDispatcher()
+{
+  while (!_registredPages.empty()) {
+    IOPage_impl* ioPage = _registredPages.begin()->second;
+    delete ioPage;
+  }
+}
+
 IOPage
 IOPageDispatcher::getFirstIOPage()
 {
