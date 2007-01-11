@@ -6,6 +6,9 @@
 class EntityStorable_Helper {
 public:
   EntityStorable_Helper(uint8_t* serializeBuf, uint16_t serializeBufSz);
+  EntityStorable_Helper(const EntityStorable_Helper& rhs);
+  EntityStorable_Helper& operator=(const EntityStorable_Helper&);
+
   virtual ~EntityStorable_Helper();
 
   uint32_t calcCrc(uint32_t crc=0) const;
@@ -14,7 +17,8 @@ public:
 protected:
   uint8_t* _serialize_buf;
   uint16_t _serialize_buf_size;
-
+private:
+  void make_copy(const EntityStorable_Helper& rhs);
 };
 
 #endif
