@@ -16,6 +16,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <exception>
 //#include "util/debug.h"
 namespace smsc{
 namespace core{
