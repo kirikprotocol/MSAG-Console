@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp.smsc.aliases;
 
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
@@ -166,7 +167,14 @@ public class Index extends PagedTableBean {
     }
   }
 
-
+  public boolean isEditAllowed() {
+    try {
+      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
+    } catch (AdminException e) {
+      logger.debug("Couldn't get SMSC service status", e);
+    }
+    return false;
+  }
 
   private AliasQuery createQuery(AliasFilter filter) {
     return new AliasQuery(preferences.getMaxAliasesTotalSize()+1, filter, AliasDataSource.ALIAS_FIELD, 0);
@@ -179,12 +187,13 @@ public class Index extends PagedTableBean {
       filter.setAddresses(addresses);
       filter.setAliases(aliases);
       filter.setHide(hide);
-      System.out.println(hide);
 
       aliasesList = appContext.getSmsc().getAliases().query(createQuery(filter));
-      System.out.println(aliasesList.size());
+
       if (aliasesList.size() > preferences.getMaxAliasesTotalSize())
         _error(new SMSCJspException("Query results is very big. Show first " + String.valueOf(preferences.getMaxAliasesTotalSize()+1) + " records.", SMSCJspException.ERROR_CLASS_WARNING));
+
+      boolean isEditAllowed = isEditAllowed();
 
       for (int i=start; i< aliasesList.size() && i < start + size; i++) {
         final DataItem item = (DataItem)aliasesList.get(i);
@@ -192,7 +201,7 @@ public class Index extends PagedTableBean {
         final Row row = createNewRow();
         final String aliasName = (String)item.getValue("Alias");
         row.addCell(checkColumn, new CheckBoxCell("chb" + aliasName, false));
-        row.addCell(aliasColumn, new StringCell(aliasName, aliasName, true));
+        row.addCell(aliasColumn, new StringCell(aliasName, aliasName, isEditAllowed));
         row.addCell(addressColumn, new StringCell(aliasName, (String)item.getValue("Address"), false));
 
         final boolean hide =((Boolean)item.getValue("Hide")).booleanValue();
