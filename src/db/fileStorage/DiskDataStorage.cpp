@@ -102,7 +102,11 @@ DataStorage_FileDispatcher<V>::DataStorage_FileDispatcher(const std::string& fil
   : _storageFileName(fileName) {}
 
 template <typename V>
-SimpleFileDispatcher<V>::~SimpleFileDispatcher() { close(); }
+SimpleFileDispatcher<V>::~SimpleFileDispatcher()
+{ 
+  close();
+  delete _ioPageDispatcher;
+}
 
 template <class V>
 typename DataStorage_FileDispatcher<V>::operation_status_t
@@ -169,10 +173,12 @@ template <typename V>
 typename DataStorage_FileDispatcher<V>::operation_status_t
 SimpleFileDispatcher<V>::close()
 {
-  if ( ::close(_fd) < 0 )
-    return DataStorage_FileDispatcher<V>::FATAL;
+  if ( _fd >= 0 ) {
+    if ( ::close(_fd) < 0 )
+      return DataStorage_FileDispatcher<V>::FATAL;
 
-  _fd = -1;
+    _fd = -1;
+  }
   return DataStorage_FileDispatcher<V>::OPERATION_OK;
 }
 
@@ -469,6 +475,7 @@ SimpleFileDispatcher<V>::StorableRecord::unmarshal(IOPage& ioPage, SimpleFileDis
   if ( _flg & RECORD_DELETED_FLAG )
     return DataStorage_FileDispatcher<V>::RECORD_DELETED;
   else {
+    delete _readingAppData;
     _readingAppData = new V(serialize_recordBuf);
 
     return DataStorage_FileDispatcher<V>::OPERATION_OK;
