@@ -48,7 +48,7 @@ int Registrator::Execute()
             si.dstType = true;
             strcpy(si.routeId, "route1");
             si.routeProviderId = 1;
-            si.event = counter;
+            si.event = 17 + counter;
             si.errCode = 1;
             sm->registerEvent(si);
         }
@@ -61,7 +61,7 @@ int Registrator::Execute()
             si.dstType = true;
             strcpy(si.routeId, "route3");
             si.routeProviderId = 3;
-            si.event = counter;
+            si.event = 17 + counter;
             si.errCode = 1;
             sm->registerEvent(si);
         }

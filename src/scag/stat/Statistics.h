@@ -286,8 +286,8 @@ using smsc::smeman::SmeRecord;
             const int SUBMIT_RESP_FAILED = 8;
             const int DELIVER_RESP_OK = 9;
             const int DELIVER_RESP_FAILED = 10;*/
-            const int RECEIPT_OK = 11;
-            const int RECEIPT_FAILED = 12;
+            const int RECEIPT_OK = 18;
+            const int RECEIPT_FAILED = 19;
 
             const int FAILED = 20;
             const int REJECTED = 21;

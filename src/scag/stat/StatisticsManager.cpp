@@ -964,7 +964,7 @@ void StatisticsManager::incSmppCounter(const char* systemId, bool sc, int index)
 void StatisticsManager::incSvcWapCounter(const char* systemId, int index)
 {
     index = indexByHttpCounter(index);
-    incSvcScCounter(systemId, index, PERF_HTTP_COUNT, svcWapCounters, svcCountersLock);
+    incSvcScCounter(systemId, index - 1, PERF_HTTP_COUNT, svcWapCounters, svcCountersLock);
 }
 
 void StatisticsManager::incSvcMmsCounter(const char* systemId, int index)
