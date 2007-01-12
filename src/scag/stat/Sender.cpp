@@ -73,7 +73,7 @@ int Registrator::Execute()
         hs.serviceId = 1;
         hs.event = httpCounter;
         hs.errCode = 1;
-        count =  7. * ( (double)random() / 2147483648. ) + 1;
+        count =  httpCounter; //7. * ( (double)random() / 2147483648. ) + 1;
         for(int i = 0; i<= count - 1; i++){            
             sm->registerEvent(hs);
         }
