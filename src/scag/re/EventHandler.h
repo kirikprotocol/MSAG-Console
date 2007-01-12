@@ -6,12 +6,8 @@
 
 
 #include "scag/re/actions/ActionFactory.h"
-<<<<<<< EventHandler.h
-#include "scag/re/actions/LongCallAction.h"
-=======
 #include "scag/lcm/LongCallManager.h"
 #include "scag/re/actions/LongCallAction.h"
->>>>>>> 1.22
 
 namespace scag { namespace re
 {
