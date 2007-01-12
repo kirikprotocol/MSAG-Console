@@ -77,7 +77,7 @@ void Operation::detachBill()
         return;
     }
 
-    smsc_log_debug(logger,"Operation: Bill (id=%d) dettached", billId);
+    smsc_log_debug(logger,"Operation: Bill (id=%d, ab=%s) dettached", billId, m_Owner->m_SessionKey.abonentAddr.toString().c_str());
     m_hasBill = false;
 }
 
@@ -137,18 +137,18 @@ void Operation::receiveNewResp(int currentIndex,int lastIndex)
 
 void Operation::attachBill(unsigned int BillId)
 { 
-    if (m_hasBill) throw SCAGException("Operation: Cannot attach bill - bill already attached!");
+    if (m_hasBill) throw SCAGException("Operation: (ab=%s) Cannot attach bill - bill already attached!", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
 
     m_hasBill = true;
     billId = BillId;
 
-    smsc_log_debug(logger,"Operation: Bill (id=%d) attached",BillId);
+    smsc_log_debug(logger,"Operation: Bill (id=%d) attached (ab=%s)",BillId, m_Owner->m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
 void Operation::rollbackAll()
 {
-    smsc_log_warn(logger,"Operation: Rollback all");
+    smsc_log_warn(logger,"Operation: Rollback all (ab=%s)", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
     
     if (m_hasBill) 
     {
@@ -237,7 +237,7 @@ void Session::DeserializeOperations(SessionBuffer& buff)
 
     for (int i=0; i < Count; i++) 
     {
-        operation = new Operation();
+        operation = new Operation(this);
 
         uint8_t temp;
 
@@ -547,7 +547,7 @@ void Session::expirePendingOperation()
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
         if (it->billID > 0) it->rollbackAll();
 
-        smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d)",it->billID, it->type);
+        smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d, ab=%s)",it->billID, it->type, m_SessionKey.abonentAddr.toString().c_str());
 
         PendingOperationList.pop_front();
         bChanged = true;
@@ -559,7 +559,7 @@ void Session::closeCurrentOperation()
 {
     if (!m_pCurrentOperation) return;
 
-    smsc_log_debug(logger,"Session: close current operation (id=%lld, type=)", currentOperationId, m_pCurrentOperation->type);
+    smsc_log_debug(logger,"Session: close current operation (id=%lld, type=%d, ab=%s)", currentOperationId, m_pCurrentOperation->type, m_SessionKey.abonentAddr.toString().c_str());
 
     /*delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
@@ -582,7 +582,7 @@ void Session::closeCurrentOperation()
 Operation * Session::setCurrentOperation(uint64_t operationId)
 {
     Operation ** operationPtr = OperationsHash.GetPtr(operationId);
-    if (!operationPtr) throw SCAGException("Cannot find operation (id=%lld)", operationId);
+    if (!operationPtr) throw SCAGException("Cannot find operation (id=%lld, ab=%s)", operationId, m_SessionKey.abonentAddr.toString().c_str());
 
 
     currentOperationId = operationId;
@@ -611,7 +611,7 @@ Operation * Session::setCurrentOperationByType(int operationType)
         }
     }
 
-    throw SCAGException("Session: Cannot find operation with type=%d", operationType);
+    throw SCAGException("Session: Cannot find operation with type=%d, ab=%s", operationType, m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
@@ -627,7 +627,7 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
 
             if (it->billID > 0) operation->attachBill(it->billID);
 
-            smsc_log_debug(logger,"** Session: pending closed (type=%d)", it->type);
+            smsc_log_debug(logger,"** Session: pending closed (type=%d, ab=%s)", it->type, m_SessionKey.abonentAddr.toString().c_str());
 
             PendingOperationList.erase(it);
             bChanged = true;
@@ -635,7 +635,7 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
             return operation;
         }
     }
-    throw SCAGException("Session: Cannot find pending operation (type=%d)", operationType);
+    throw SCAGException("Session: Cannot find pending operation (type=%d, ab=%s)", operationType, m_SessionKey.abonentAddr.toString().c_str());
 }
 
 
@@ -643,7 +643,7 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
 Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
 {
 
-    Operation * operation = new Operation();
+    Operation * operation = new Operation(this);
     operation->type = operationType;
 
     cmd.setOperationId(getNewOperationId());
@@ -653,7 +653,7 @@ Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
 
     bChanged = true;
 
-    smsc_log_debug(logger,"** Session: create new operation (id=%lld, type=%d)", currentOperationId, operationType);
+    smsc_log_debug(logger,"** Session: create new operation (id=%lld, type=%d, ab=%s)", currentOperationId, operationType, m_SessionKey.abonentAddr.toString().c_str());
 
     return operation;
 }

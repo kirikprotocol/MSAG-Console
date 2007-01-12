@@ -162,6 +162,8 @@ namespace scag { namespace sessions
         static uint32_t CalcHash(const COperationKey& key) { return XAddrHashFunc::CalcHash(key.destAddress);}
     };       */
 
+    class Session;
+
     class PendingOperation
     {
         friend class Session;
@@ -201,6 +203,7 @@ namespace scag { namespace sessions
         std::list<int> DependOperationList;
         std::list<int> DependPendingOperationList;
 
+        Session * m_Owner;
     public:
         uint8_t type;
         void attachBill(unsigned int BillId);
@@ -216,7 +219,8 @@ namespace scag { namespace sessions
         void setStatus(ICCOperationStatus status) {m_Status = status;}
 
         ~Operation() {}
-        Operation() : 
+        Operation(Session * Owner) : 
+            m_Owner(Owner),
             logger(0), 
             m_hasBill(false), 
             m_receivedResp(false), 
@@ -254,6 +258,7 @@ namespace scag { namespace sessions
     class Session : public PropertyManager
     {
 
+        friend class Operation;
         friend class SessionManagerImpl;
         friend class Comparator;
 
