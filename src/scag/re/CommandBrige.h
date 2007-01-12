@@ -91,6 +91,7 @@ private:
     static EventHandlerType getHTTPHandlerType(const SCAGCommand& command);
 
 public:
+    static DataSmDirection getPacketDirection(const SCAGCommand& command);
 
     static std::string getMessageBody(SmppCommand& command);
     //static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);

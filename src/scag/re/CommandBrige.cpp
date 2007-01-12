@@ -191,6 +191,31 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
 
 
 
+DataSmDirection CommandBrige::getPacketDirection(const SCAGCommand& command)
+{
+    SCAGCommand& _command = const_cast<SCAGCommand&>(command);
+
+    SmppCommand * smppCommand = dynamic_cast<SmppCommand *>(&_command);
+    if (!smppCommand) return dsdUnknown;
+
+    CommandId cmdid = (*smppCommand)->get_commandId();
+
+    switch (cmdid) 
+    {
+    case DELIVERY:
+    case SUBMIT:
+    case DATASM:
+        return (*smppCommand)->get_smsCommand().dir;
+
+    case DELIVERY_RESP:
+    case SUBMIT_RESP:
+    case DATASM_RESP:
+        return (*smppCommand)->get_resp()->get_dir();
+    }
+
+    return dsdUnknown;
+}
+
 CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
 {
 

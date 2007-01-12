@@ -903,7 +903,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,dsdSc2Srv);
+        property = new AdapterProperty(name,this,command->get_resp()->get_dir());
         break;
     case STATUS:
         property = new AdapterProperty(name,this,command->get_resp()->get_status());
@@ -934,7 +934,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const st
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,dsdSrv2Sc);
+        property = new AdapterProperty(name,this,command->get_resp()->get_dir());
         break;
     case STATUS:
         property = new AdapterProperty(name,this,command->get_resp()->get_status());
@@ -1256,7 +1256,7 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,dsdSrv2Sc);
+        property = new AdapterProperty(name,this,command->get_smsCommand().dir);
         break;
     case OA:
         property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());
@@ -1322,11 +1322,6 @@ AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsResp& smsResp,con
         property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
         break;
     case PACKET_DIRECTION:
-        if (smsResp.get_dir() == dsdSrv2Sc) 
-            property = new AdapterProperty(name,this, dsdSc2Srv);
-        else 
-            if (smsResp.get_dir() == dsdSc2Srv) property = new AdapterProperty(name,this, dsdSrv2Sc);
-        else
             property = new AdapterProperty(name,this, (int)smsResp.get_dir());
 
         break;
@@ -1410,7 +1405,7 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,dsdSc2Srv);
+        property = new AdapterProperty(name,this,command->get_smsCommand().dir);
         break;
     case OA:
         property = new AdapterProperty(name,this,data.getOriginatingAddress().toString().c_str());

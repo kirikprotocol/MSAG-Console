@@ -94,17 +94,22 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_DATA_SM))
     {
-
         ev.pMessageText.append(messageBody.data(), messageBody.size());
     }
 
     sessionPrimaryKey.toString(ev.pSessionKey);
 
-    if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP) || (propertyObject.HandlerId == EH_HTTP_REQUEST))
+    if ((commandProperty.direction == dsdSc2Srv) || (propertyObject.HandlerId == EH_HTTP_REQUEST) || (propertyObject.HandlerId == EH_HTTP_DELIVERY))
         ev.cDirection = 'I';
     else
         ev.cDirection = 'O';
 
+    /*
+    if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP) || (propertyObject.HandlerId == EH_HTTP_REQUEST))
+        ev.cDirection = 'I';
+    else
+        ev.cDirection = 'O';
+    */
     Statistics::Instance().registerSaccEvent(ev);
 }
 
