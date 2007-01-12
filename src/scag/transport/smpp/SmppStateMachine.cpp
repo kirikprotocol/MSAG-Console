@@ -211,6 +211,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
 
+    smscmd.dir = dsdSrv2Sc;
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
@@ -441,6 +442,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
+  cmd->get_resp()->set_dir(dsdSc2Srv);
 
   sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
   sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
@@ -517,6 +519,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
 
+    smscmd.dir = dsdSc2Srv;
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
@@ -725,6 +728,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
+  cmd->get_resp()->set_dir(dsdSrv2Sc);
+
   sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
   sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
@@ -996,7 +1001,13 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   SmsCommand& smscmd=orgCmd->get_smsCommand();
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);
-  cmd->get_resp()->set_dir(smscmd.dir);
+
+  if (smscmd.dir == dsdSrv2Sc) 
+      cmd->get_resp()->set_dir(dsdSc2Srv);
+  else if (smscmd.dir == dsdSc2Srv) 
+      cmd->get_resp()->set_dir(dsdSrv2Sc);
+  else
+      cmd->get_resp()->set_dir(smscmd.dir);
 
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());

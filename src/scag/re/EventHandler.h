@@ -20,12 +20,8 @@ using namespace scag::re::actions;
 using smsc::logger::Logger;
 using scag::lcm;
 
-<<<<<<< EventHandler.h
 
 class EventHandler : public IParserHandler, ComplexActionLongCallHelper
-=======
-class EventHandler : public IParserHandler, ComplexActionLongCallHelper
->>>>>>> 1.22
 {
     EventHandler(const EventHandler &);
 protected:
