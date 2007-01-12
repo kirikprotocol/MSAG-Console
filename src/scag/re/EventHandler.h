@@ -6,8 +6,12 @@
 
 
 #include "scag/re/actions/ActionFactory.h"
+<<<<<<< EventHandler.h
+#include "scag/re/actions/LongCallAction.h"
+=======
 #include "scag/lcm/LongCallManager.h"
 #include "scag/re/actions/LongCallAction.h"
+>>>>>>> 1.22
 
 namespace scag { namespace re
 {
@@ -16,7 +20,12 @@ using namespace scag::re::actions;
 using smsc::logger::Logger;
 using scag::lcm;
 
+<<<<<<< EventHandler.h
+
 class EventHandler : public IParserHandler, ComplexActionLongCallHelper
+=======
+class EventHandler : public IParserHandler, ComplexActionLongCallHelper
+>>>>>>> 1.22
 {
     EventHandler(const EventHandler &);
 protected:

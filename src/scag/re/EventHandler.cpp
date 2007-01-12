@@ -1,9 +1,11 @@
 #include "EventHandler.h"
+#include "scag/lcm/LongCallManager.h"
 //#include <util/Exception.hpp>
 
 namespace scag { namespace re {
 
 using namespace scag::util::properties;
+using namespace scag::lcm;
 
 
 EventHandler::~EventHandler()
