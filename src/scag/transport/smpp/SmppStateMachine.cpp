@@ -12,6 +12,7 @@ namespace smpp{
 
 namespace buf=smsc::core::buffers;
 using namespace scag::stat;
+using namespace scag::lcm;
 
 std::vector<int> StateMachine::allowedUnknownOptionals;
 
@@ -86,8 +87,9 @@ struct StateMachine::ResponseRegistry
     RegValue* ptr=reg.GetPtr(key);
     if (!log) log=smsc::logger::Logger::getInstance("respreg");
     smsc_log_debug(log, "get %d/%d - %s", uid, seq, (ptr) ? "ok":"not found");
-    if (!ptr) { // TODO: toList cleanup (find listValue by key & delete it)?
-        return false;
+    if (!ptr)
+    {
+      return false;
     }
     cmd = ptr->cmd;
     cmd->set_dialogId(ptr->dlgId);
@@ -96,7 +98,7 @@ struct StateMachine::ResponseRegistry
     return true;
   }
 
-  bool getExpiredCmd(SmppCommand& cmd)
+  bool getExpiredCmd(SmppCommand& cmd,int &uid)
   {
     sync::MutexGuard mg(mtx);
     if (toList.empty()) return false;
@@ -104,12 +106,14 @@ struct StateMachine::ResponseRegistry
     if ((now - toList.front().insTime) < timeout) return false;
     if(toList.front().expired)
     {
+      reg.Delete(toList.begin()->key);
       toList.erase(toList.begin());
       return false;
     }
     RegKey key = toList.front().key;
     RegValue* ptr = reg.GetPtr(key);
-    if (!ptr) {
+    if (!ptr)
+    {
        // toList cleanup (find listValue by key & delete it)?
        toList.erase(toList.begin());
        return false;
@@ -117,12 +121,17 @@ struct StateMachine::ResponseRegistry
     toList.front().expired=true;
     cmd = ptr->cmd;
     cmd->set_dialogId(key.seq);
+    uid=key.uid;
     return true;
   }
 
 };
 
 StateMachine::ResponseRegistry StateMachine::reg;
+
+sync::Mutex StateMachine::expMtx;
+bool StateMachine::expProc=false;
+
 
 int StateMachine::Execute()
 {
@@ -155,6 +164,14 @@ int StateMachine::Execute()
     }
   }
   return 0;
+}
+
+bool StateMachine::makeLongCall(SmppCommand& cx)
+{
+    LongCallContext& lcmCtx = cx.getLongCallContext();
+    lcmCtx.stateMachineContext = new SmppCommand(cx);
+
+    return LongCallManager::Instance().call(&lcmCtx);
 }
 
 void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode)
@@ -194,7 +211,6 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
 
-    smscmd.dir = dsdSrv2Sc;
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
@@ -337,6 +353,14 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     return;
   }
 
+  if(st.status == scag::re::STATUS_LONG_CALL)
+  {
+    smsc_log_info(log,"Submit: long call initiate");
+    makeLongCall(cmd);
+    sm.releaseSession(session);
+    return;
+  }
+  
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
@@ -357,6 +381,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         smsc_log_info(log,"Submit: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
         SubmitResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        session->closeCurrentOperation();        
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
       }
       else
@@ -374,6 +399,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   } catch(std::exception& e) {
     SubmitResp(cmd,smsc::system::Status::SYSFAILURE);
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
+    session->closeCurrentOperation();
     smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
   sm.releaseSession(session);
@@ -390,12 +416,18 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
   int srcUid = 0;
-  try { srcUid = src->getUid(); }
-  catch (std::exception& exc) {
-    smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
-                  src->getSystemId(), cmd->get_dialogId());
-    registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
-    return;
+  if(cmd->get_resp()->expiredResp)
+  {
+    srcUid=cmd->get_resp()->expiredUid;
+  }else
+  {
+    try { srcUid = src->getUid(); }
+    catch (std::exception& exc) {
+      smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
+                    src->getSystemId(), cmd->get_dialogId());
+      registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+      return;
+    }
   }
   if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
     smsc_log_warn(log,"Original submit for submit response not found. sid='%s',seq='%d'",
@@ -409,7 +441,6 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
-  cmd->get_resp()->set_dir(dsdSc2Srv);
 
   sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
   sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
@@ -486,7 +517,6 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
 
-    smscmd.dir = dsdSc2Srv;
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
@@ -608,6 +638,14 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     return;
   }
 
+  if(st.status == scag::re::STATUS_LONG_CALL)
+  {
+      smsc_log_debug(log,"Delivery: long call initiate");
+      makeLongCall(cmd);
+      scag::sessions::SessionManager::Instance().releaseSession(session);
+      return;
+  }
+  
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"Delivery: RuleEngine returned result=%d",st.result);
@@ -628,6 +666,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
         smsc_log_info(log,"Delivery: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
         DeliveryResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        session->closeCurrentOperation();        
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
       }
       else
@@ -646,6 +685,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   } catch(std::exception& e) {
     smsc_log_info(log,"Delivery: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     DeliveryResp(cmd,smsc::system::Status::SYSFAILURE);
+    session->closeCurrentOperation();    
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
   sm.releaseSession(session);
@@ -661,12 +701,18 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
   int srcUid = 0;
-  try { srcUid = src->getUid(); }
-  catch (std::exception& exc) {
-    smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
-                  src->getSystemId(), cmd->get_dialogId());
-    registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
-    return;
+  if(cmd->get_resp()->expiredResp)
+  {
+    srcUid=cmd->get_resp()->expiredUid;
+  }else
+  {
+    try { srcUid = src->getUid(); }
+    catch (std::exception& exc) {
+      smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
+                    src->getSystemId(), cmd->get_dialogId());
+      registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+      return;
+    }
   }
   if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
     smsc_log_warn(log,"Original delivery for delivery response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
@@ -679,8 +725,6 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
-  cmd->get_resp()->set_dir(dsdSrv2Sc);
-
   sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
   sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
@@ -868,6 +912,14 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     return;
   }
 
+  if(st.status == scag::re::STATUS_LONG_CALL)
+  {
+      smsc_log_debug(log,"DataSm: long call initiate");
+      makeLongCall(cmd);
+      scag::sessions::SessionManager::Instance().releaseSession(session);
+      return;
+  }
+  
   if(st.status != scag::re::STATUS_OK)
   {
     smsc_log_info(log,"DataSm: RuleEngine returned result=%d",st.result);
@@ -888,6 +940,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         smsc_log_info(log,"DataSm: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
         DataResp(cmd,smsc::system::Status::SMENOTCONNECTED);
+        session->closeCurrentOperation();        
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
       }
       else
@@ -905,6 +958,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   } catch(std::exception& e) {
     smsc_log_info(log,"DataSm: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
     DataResp(cmd,smsc::system::Status::SYSFAILURE);
+    session->closeCurrentOperation();
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
   sm.releaseSession(session);
@@ -919,12 +973,18 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
   int srcUid = 0;
-  try { srcUid = src->getUid(); }
-  catch (std::exception& exc) {
-    smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
-                  src->getSystemId(), cmd->get_dialogId());
-    registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
-    return;
+  if(cmd->get_resp()->expiredResp)
+  {
+    srcUid=cmd->get_resp()->expiredUid;
+  }else
+  {
+    try { srcUid = src->getUid(); }
+    catch (std::exception& exc) {
+      smsc_log_warn(log, "Src entity disconnected. sid='%s', seq='%d'",
+                    src->getSystemId(), cmd->get_dialogId());
+      registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+      return;
+    }
   }
   if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
     smsc_log_warn(log,"Original datasm for datasm response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
@@ -936,13 +996,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   SmsCommand& smscmd=orgCmd->get_smsCommand();
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);
-
-  if (smscmd.dir == dsdSrv2Sc) 
-      cmd->get_resp()->set_dir(dsdSc2Srv);
-  else if (smscmd.dir == dsdSc2Srv) 
-      cmd->get_resp()->set_dir(dsdSrv2Sc)
-  else
-      cmd->get_resp()->set_dir(smscmd.dir);
+  cmd->get_resp()->set_dir(smscmd.dir);
 
   cmd->set_serviceId(orgCmd->get_serviceId());
   cmd->set_operationId(orgCmd->get_operationId());
@@ -1010,25 +1064,32 @@ void StateMachine::processExpiredResps()
     expProc=true;
   }
   SmppCommand cmd;
-  while(reg.getExpiredCmd(cmd))
+  int uid;
+  while(reg.getExpiredCmd(cmd,uid))
   {
     switch(cmd->get_commandId())
     {
       case DELIVERY:
       {
         SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
+        resp->get_resp()->expiredResp=true;
+        resp->get_resp()->expiredUid=uid;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDeliveryResp(resp);
       }break;
       case SUBMIT:
       {
         SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false);
+        resp->get_resp()->expiredResp=true;
+        resp->get_resp()->expiredUid=uid;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processSubmitResp(resp);
       }break;
       case DATASM:
       {
         SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
+        resp->get_resp()->expiredResp=true;
+        resp->get_resp()->expiredUid=uid;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDataSmResp(resp);
       }break;
