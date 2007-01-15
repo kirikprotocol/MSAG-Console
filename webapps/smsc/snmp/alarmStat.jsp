@@ -10,7 +10,7 @@
 %>
 <jsp:setProperty name="alarmStatBean" property="*"/>
 <%
-    TITLE = getLocString("smsview.title");
+    TITLE = getLocString("smnp.alarm.title");
     MENU0_SELECTION = "MENU0_SMSVIEW";
 
     int beanResult = bean.process(request);
