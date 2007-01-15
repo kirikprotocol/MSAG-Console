@@ -165,13 +165,20 @@ public:
   }
   static void sigdisp(int sig)
   {
-  //  trace("got user signal");
+    if(StaticHolder<0>::olddisp!=SIG_HOLD && StaticHolder<0>::olddisp!=SIG_ERR)
+    {
+      StaticHolder<0>::olddisp(sig);
+    }
   }
   int Execute()
   {
     smsc_log_info(logrd,"smpp reader started");
+
 #ifndef _WIN32
-    sigset(16,sigdisp);
+    if(StaticHolder<0>::olddisp==0)
+    {
+      StaticHolder<0>::olddisp=sigset(16,sigdisp);
+    }
 #endif
     SmppHeader *pdu;
     running=true;
@@ -217,6 +224,11 @@ protected:
   smsc::logger::Logger* log;
   smsc::logger::Logger* logrd;
   volatile bool running;
+  template <int n>
+  struct StaticHolder
+  {
+    static void (*olddisp)(int);
+  };
 
   time_t lastUpdate;
   time_t lastTOCheck;
@@ -291,6 +303,9 @@ protected:
     return fetchSmppPdu(&s);
   }
 };
+
+template <int n>
+void (*SmppReader::StaticHolder<n>::olddisp)(int)=0;
 
 class SmppWriter:public SmppThread{
 protected:
