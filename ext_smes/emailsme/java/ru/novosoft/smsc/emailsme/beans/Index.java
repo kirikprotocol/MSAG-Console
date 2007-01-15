@@ -22,7 +22,6 @@ public class Index extends SmeBean
   private String mbStop = null;
 
   protected int init(List errors) {
-    System.out.println("My init!!!!!!!!!");
     return super.init(errors);
   }
 
