@@ -5,6 +5,9 @@ import ru.sibinco.lib.backend.applet.LabelGroup;
 import ru.sibinco.scag.perfmon.PerfSnap;
 import ru.sibinco.scag.util.RemoteResourceBundle;
 
+import javax.swing.*;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 import java.awt.*;
 import java.awt.event.*;
 import java.applet.*;
@@ -50,7 +53,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     CheckboxMenuItem menuDeliveredHTTP;
     CheckboxMenuItem menuFailedHTTP;
 
-    MenuItem statisticsMode;
+    //MenuItem statisticsMode;
     Menu menuIncrease;
     Menu menuDecrease;
     MenuItem menuIncrScale;
@@ -138,8 +141,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         popupMenu = new PopupMenu(localeText.getString("popup.options"));
         menuSwitch = new MenuItem(localeText.getString("popup.switch"));
         menuSwitch.addActionListener(this);
-        statisticsMode = new MenuItem(localeText.getString("popup.statistics_mode")+" "+ (statMode.equals(smppStatMode)?localeText.getString("popup.http"):localeText.getString("popup.smpp")));
-        statisticsMode.addActionListener(this);
+        //statisticsMode = new MenuItem(localeText.getString("popup.statistics_mode")+" "+ (statMode.equals(smppStatMode)?localeText.getString("popup.http"):localeText.getString("popup.smpp")));
+        //statisticsMode.addActionListener(this);
 
         menuInput = new CheckboxMenuItem(localeText.getString("popup.input"), viewInputEnabled);
         menuInput.addItemListener(this);
@@ -200,7 +203,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
         popupMenu.add(menuIncrease);
         popupMenu.add(menuDecrease);
-        popupMenu.add(statisticsMode);
+        //popupMenu.add(statisticsMode);
         popupMenu.add(menuSwitch);
         popupMenu.add(new MenuItem("-"));
         if (viewMode == VIEWMODE_IO) {
@@ -261,35 +264,105 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         gbc.fill = GridBagConstraints.HORIZONTAL;
         add(p, gbc);
 
-        lg = new LabelGroup();
-        lg.setLayout(new BorderLayout());
-        lg.add(perfbar, BorderLayout.CENTER);
+        final JTabbedPane jTabbedPane = new JTabbedPane();
+        jTabbedPane.addTab("SMPP", new SmppPanel());
+        jTabbedPane.addTab("HTTP", new HttpPanel());
+        jTabbedPane.addChangeListener(new ChangeListener() {
+           public void stateChanged(ChangeEvent e) {
+             CommonPanel selectedTab = (CommonPanel)jTabbedPane.getSelectedComponent();
+             for(int i = 0; i<jTabbedPane.getTabCount();i++)
+              ((CommonPanel)jTabbedPane.getComponentAt(i)).removeAll();
+             selectedTab.init();
+           }
+        });
 
-        gbc.gridy = 3;
+        gbc.gridy = 2;
         gbc.gridx = 1;
         gbc.gridwidth = 1;
-        gbc.weighty = 3;
+        gbc.weightx = 1;
+        gbc.weighty = 1;
         gbc.fill = GridBagConstraints.BOTH;
-        add(lg, gbc);
-
-        lg = new LabelGroup();
-        lg.setLayout(new BorderLayout());
-        lg.add(perfGraph, BorderLayout.CENTER);
-        gbc.gridx = 2;
-        gbc.weightx = 3;
-        add(lg, gbc);
-
-        lg = new LabelGroup(localeText.getString("glab.pinfo"), LabelGroup.NORTHWEST);
-        lg.setLayout(new BorderLayout());
-        lg.add(perfTable, BorderLayout.CENTER);
-
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        gbc.gridwidth = 2;
-        gbc.weighty = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        add(lg, gbc);
+        add(jTabbedPane, gbc);
         validate();
+    }
+
+    private abstract class CommonPanel extends JPanel {
+      public abstract void changeStatMode();
+
+      public void init() {
+          setLayout(new GridBagLayout());
+          LabelGroup lg = new LabelGroup();
+          lg.setLayout(new BorderLayout());
+          lg.add(perfbar, BorderLayout.CENTER);
+          GridBagConstraints gbc = new GridBagConstraints();
+
+          gbc.gridy = 2;
+          gbc.gridx = 1;
+          gbc.gridwidth = 1;
+          gbc.weighty = 3;
+          gbc.fill = GridBagConstraints.BOTH;
+          add(lg, gbc);
+
+          lg = new LabelGroup();
+          lg.setLayout(new BorderLayout());
+          lg.add(perfGraph, BorderLayout.CENTER);
+          gbc.gridx = 2;
+          gbc.weightx = 3;
+          add(lg, gbc);
+
+          lg = new LabelGroup(localeText.getString("glab.pinfo"), LabelGroup.NORTHWEST);
+          lg.setLayout(new BorderLayout());
+          lg.add(perfTable, BorderLayout.CENTER);
+
+          gbc.gridx = 1;
+          gbc.gridy = 3;
+          gbc.gridwidth = 2;
+          gbc.weighty = 0;
+          gbc.fill = GridBagConstraints.HORIZONTAL;
+          add(lg, gbc);
+          changeStatMode();
+      }
+    }
+
+    private class SmppPanel extends CommonPanel {
+        public SmppPanel() {
+           init();
+        }
+        public void changeStatMode() {
+            statMode = smppStatMode;
+            if (viewMode == VIEWMODE_SEPARATE) {
+                  popupMenu.remove(menuRequest);
+                  popupMenu.remove(menuRequestRejected);
+                  popupMenu.remove(menuResponse);
+                  popupMenu.remove(menuResponseRejected);
+                  popupMenu.remove(menuDeliveredHTTP);
+                  popupMenu.remove(menuFailedHTTP);
+                  popupMenu.add(menuAccepted);
+                  popupMenu.add(menuRejected);
+                  popupMenu.add(menuDelivered);
+                  popupMenu.add(menuGwRejected);
+                  popupMenu.add(menuFailed);
+             }
+        }
+    }
+
+    private class HttpPanel extends CommonPanel {
+        public void changeStatMode() {
+           statMode = httpStatMode;
+           if (viewMode == VIEWMODE_SEPARATE) {
+              popupMenu.remove(menuAccepted);
+              popupMenu.remove(menuRejected);
+              popupMenu.remove(menuDelivered);
+              popupMenu.remove(menuGwRejected);
+              popupMenu.remove(menuFailed);
+              popupMenu.add(menuRequest);
+              popupMenu.add(menuRequestRejected);
+              popupMenu.add(menuResponse);
+              popupMenu.add(menuResponseRejected);
+              popupMenu.add(menuDeliveredHTTP);
+              popupMenu.add(menuFailedHTTP);
+          }
+        }
     }
 
     boolean isStopping = false;
@@ -467,42 +540,6 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             if (pixPerSecond > 2) pixPerSecond--;
             perfbar.invalidate();
             perfGraph.invalidate();
-        } else if (e.getSource() == statisticsMode) {
-           synchronized(statisticsMode) {
-             if (statMode.equals(smppStatMode)) {
-                statMode = httpStatMode;
-                statisticsMode.setLabel(localeText.getString("popup.statistics_mode")+" "+localeText.getString("popup.smpp"));
-                if (viewMode == VIEWMODE_SEPARATE) {
-                  popupMenu.remove(menuAccepted);
-                  popupMenu.remove(menuRejected);
-                  popupMenu.remove(menuDelivered);
-                  popupMenu.remove(menuGwRejected);
-                  popupMenu.remove(menuFailed);
-                  popupMenu.add(menuRequest);
-                  popupMenu.add(menuRequestRejected);
-                  popupMenu.add(menuResponse);
-                  popupMenu.add(menuResponseRejected);
-                  popupMenu.add(menuDeliveredHTTP);
-                  popupMenu.add(menuFailedHTTP);
-                }
-             } else {
-                statMode = smppStatMode;
-                statisticsMode.setLabel(localeText.getString("popup.statistics_mode")+" "+localeText.getString("popup.http"));
-                if (viewMode == VIEWMODE_SEPARATE) {
-                  popupMenu.remove(menuRequest);
-                  popupMenu.remove(menuRequestRejected);
-                  popupMenu.remove(menuResponse);
-                  popupMenu.remove(menuResponseRejected);
-                  popupMenu.remove(menuDeliveredHTTP);
-                  popupMenu.remove(menuFailedHTTP);
-                  popupMenu.add(menuAccepted);
-                  popupMenu.add(menuRejected);
-                  popupMenu.add(menuDelivered);
-                  popupMenu.add(menuGwRejected);
-                  popupMenu.add(menuFailed);
-                }
-             }
-           }
         }
     }
 
@@ -555,5 +592,4 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         System.out.println("Destroying...");
         isStopping = true;
     }
-
 }

@@ -23,10 +23,10 @@ public class PerformanceGraph extends Canvas {
   //http
   private static final Color colorGraphRequest = Color.blue;
   private static final Color colorGraphRequestRejected = Color.white;
-  private static final Color colorGraphResponse = Color.green;
-  private static final Color colorGraphResponseRejected = Color.cyan;
-  private static final Color colorGraphDeliveredHTTP = Color.red;
-  private static final Color colorGraphFailedHTTP = Color.yellow;
+  private static final Color colorGraphResponse = Color.cyan;
+  private static final Color colorGraphResponseRejected = Color.yellow;
+  private static final Color colorGraphDeliveredHTTP = Color.green;
+  private static final Color colorGraphFailedHTTP = Color.red;
 
   Image offscreen;
   int numGrids = 1;

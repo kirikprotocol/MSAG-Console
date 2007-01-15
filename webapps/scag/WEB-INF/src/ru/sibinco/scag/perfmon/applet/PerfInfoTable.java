@@ -16,15 +16,25 @@ public class PerfInfoTable extends Canvas {
     static final Color shadowColor = SystemColor.controlShadow;
     static final Color lightShadowColor = SystemColor.controlLtHighlight;
     static final Color textColor = SystemColor.textText;
-    static final Color headsColor[] = {
-            new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift), // accepted || request
-            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // rejected || request rejected
-            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue()), // delivered || response
-            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // Gw rejected || response rejected
-            new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()), // Failed || deliveredHTTP
-            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()) // FailedHTTP
+    //smpp
+    static final Color headsColorSmpp[] = {
+            new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift), // accepted
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // rejected
+            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue()), // delivered
+            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // Gw rejected
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()), // Failed
+    };
+    //http
+    static final Color headsColorHttp[] = {
+            new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift), // request
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // request rejected
+            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // response
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()), // response rejected
+            new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue()), // deliveredHTTP
+            new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()) // FailedHTTP
     };
 
+    static Color headsColor[];
     PerfSnap snap;
     Dimension prefSize;
     Image offscreen;
@@ -47,6 +57,7 @@ public class PerfInfoTable extends Canvas {
 
     public void updateColumns() {
       numHeads = (PerfMon.statMode.equals(PerfMon.smppStatMode)?5:6);
+      headsColor = (PerfMon.statMode.equals(PerfMon.smppStatMode)?headsColorSmpp:headsColorHttp);
       heads = new String[numHeads];
       for (int i = 0; i < numHeads; i++) {
           heads[i] = PerfMon.localeText.getString("ptabh."+PerfMon.statMode+"."+i);

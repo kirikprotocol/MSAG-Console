@@ -65,12 +65,12 @@ public class PerformanceBar extends Canvas {
     Color colorBarRejected = Color.white;
     Color colorBarFailed = Color.red;
     //http
-    Color colorBarResponse = Color.green;
-    Color colorBarResponseRejected = Color.cyan;
+    Color colorBarResponse = Color.cyan;
+    Color colorBarResponseRejected = Color.yellow;
     Color colorBarRequest = Color.blue;
     Color colorBarRequestRejected = Color.white;
-    Color colorBarDeliveredHTTP = Color.red;
-    Color colorBarFailedHTTP = Color.yellow;
+    Color colorBarDeliveredHTTP = Color.green;
+    Color colorBarFailedHTTP = Color.red;
 
     public synchronized void paint(Graphics gg) {
         Dimension size = getSize();
@@ -195,7 +195,7 @@ public class PerformanceBar extends Canvas {
             int smallBarWidth;
             int barheight = 0;
             if (PerfMon.statMode.equals(PerfMon.smppStatMode)) {
-            numGraphs = 6;
+            numGraphs = 5;
             smallBarWidth = (barWidth - sepBarWidth * (numGraphs - 1)) / numGraphs;
 
             // last submit ok bar
@@ -244,7 +244,7 @@ public class PerformanceBar extends Canvas {
             g.fillRect(barposx, size.height - bottomSpace - barheight, smallBarWidth, barheight);
             barposx += smallBarWidth;
             } else {
-              numGraphs = 7;
+              numGraphs = 6;
               smallBarWidth = (barWidth - sepBarWidth * (numGraphs - 1)) / numGraphs;
 
               // last request bar
