@@ -320,7 +320,7 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
     
     using namespace Counters;
     
-    genStatHttp.inc(se.event);
+    genStatHttp.inc(indexByHttpCounter(se.event));
     
     if (se.routeId.length())
     {
@@ -964,7 +964,7 @@ void StatisticsManager::incSmppCounter(const char* systemId, bool sc, int index)
 void StatisticsManager::incSvcWapCounter(const char* systemId, int index)
 {
     index = indexByHttpCounter(index);
-    incSvcScCounter(systemId, index - 1, PERF_HTTP_COUNT, svcWapCounters, svcCountersLock);
+    incSvcScCounter(systemId, index, PERF_HTTP_COUNT, svcWapCounters, svcCountersLock);
 }
 
 void StatisticsManager::incSvcMmsCounter(const char* systemId, int index)
@@ -979,6 +979,7 @@ void StatisticsManager::incSvcMmsCounter(const char* systemId, int index)
 
 void StatisticsManager::incScWapCounter(const char* systemId, int index)
 {
+    index = indexByHttpCounter(index);
     incSvcScCounter(systemId, index, PERF_HTTP_COUNT, scWapCounters, scCountersLock);
 }
 
