@@ -229,6 +229,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     {
         rs.result = (*smppcommand)->status;
         rs.status = STATUS_FAILED;
+        session.closeCurrentOperation();
         return rs;
     }
 

@@ -424,11 +424,6 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
     else
         throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", key.serviceId);
 
-    if (rs.status == STATUS_FAILED)
-    {
-        session.closeCurrentOperation();
-    }
-
     return rs;
 }
 
