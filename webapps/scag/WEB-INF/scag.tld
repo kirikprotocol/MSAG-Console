@@ -47,7 +47,7 @@
     <description>Returns locale message for SMSC error code (optionally extended by errcode value).</description>
     <name>getErrorMessage</name>
     <function-class>ru.sibinco.scag.util.TagLibFunctions</function-class>
-    <function-signature>java.lang.String getErrorMessage(javax.servlet.http.HttpSession,int, boolean)</function-signature>
+    <function-signature>java.lang.String getErrorMessage(javax.servlet.http.HttpSession,int, boolean, java.lang.String)</function-signature>
   </function>
   <function>
     <description>Return complex rule id</description>

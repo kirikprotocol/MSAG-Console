@@ -244,6 +244,12 @@ public class HttpRoutingManager extends Manager{
         return new HttpSite(siteElem);
     }
 
+    public int getServiceIdByRouteId(final String routeId) throws SibincoException {
+      final HttpRoute route = (HttpRoute)routes.get(routeId);
+      if (route == null) return 0;
+      return route.getService().getId().intValue();
+    }
+
     public synchronized void save() throws SibincoException {
         saveToFile(HTTP_ROUTES_TEMPORAL_CONFIG);
         hsDaemon.store(msagConfFolder, HTTP_ROUTES_TEMPORAL_CONFIG);

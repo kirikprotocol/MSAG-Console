@@ -26,9 +26,12 @@
 %>
 	<applet code="ru.sibinco.scag.perfmon.applet.PerfMon.class" width="100%" height="100%" archive="perfmon.jar">
     <param name="resource_servlet_uri" value="<%=request.getContextPath()+"/resource/?"%>">
-		<param name="pixPerSecond" value="<%=monPrefs.get("perfmon.pixPerSecond")%>">
-		<param name="scale" value="<%=monPrefs.get("perfmon.scale")%>">
-		<param name="block" value="<%=monPrefs.get("perfmon.block")%>">
+		<param name="http.pixPerSecond" value="<%=monPrefs.get("perfmon.http.pixPerSecond")%>">
+		<param name="http.scale" value="<%=monPrefs.get("perfmon.http.scale")%>">
+		<param name="http.block" value="<%=monPrefs.get("perfmon.http.block")%>">
+    <param name="smpp.pixPerSecond" value="<%=monPrefs.get("perfmon.smpp.pixPerSecond")%>">
+		<param name="smpp.scale" value="<%=monPrefs.get("perfmon.smpp.scale")%>">
+		<param name="smpp.block" value="<%=monPrefs.get("perfmon.smpp.block")%>">
 		<param name="vLightGrid" value="<%=monPrefs.get("perfmon.vLightGrid")%>">
 		<param name="vMinuteGrid" value="<%=monPrefs.get("perfmon.vMinuteGrid")%>">
 		<param name="port" value="<%=port%>">

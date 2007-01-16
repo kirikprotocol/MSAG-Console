@@ -487,7 +487,7 @@ public class Stat {
             int currentProviderId = -1;
             int currentServiceId = -1;
 
-            currentServiceId = appContext.getScagRoutingManager().getServiceIdByRouteId(routeId);
+            currentServiceId = (transport == Transport.SMPP_TRANSPORT_ID)?appContext.getScagRoutingManager().getServiceIdByRouteId(routeId):appContext.getHttpRoutingManager().getServiceIdByRouteId(routeId);
             if (currentServiceId == 0) isNeedToCount = false;
             else {
               if (serviceId != -1) {

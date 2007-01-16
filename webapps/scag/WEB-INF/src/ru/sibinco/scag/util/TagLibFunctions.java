@@ -46,12 +46,12 @@ public class TagLibFunctions {
     return s1 + s2;
   }
 
-  public static final String getErrorMessage(HttpSession session, int errcode, boolean extended)
+  public static final String getErrorMessage(HttpSession session, int errcode, boolean extended, String statMode)
   {
     try {
-      String errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode."+errcode);
-      if (errMessage == null) errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode.unknown");
-      if (errMessage == null) return "! undefined error code "+ ((extended) ? ("("+errcode+") !"):"!");
+      String errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode."+statMode+"."+errcode);
+      if (errMessage.startsWith("???") && errMessage.endsWith("???")) errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode.unknown");
+      if (errMessage.startsWith("???") && errMessage.endsWith("???")) return "! undefined error code "+ ((extended) ? ("("+errcode+") !"):"!");
       if (extended) errMessage += " ("+errcode+")";
       return errMessage;
     } catch (Exception e) {

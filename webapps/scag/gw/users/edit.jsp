@@ -35,10 +35,21 @@
                           valueTitles="users.edit.checks.values.gw,users.edit.checks.values.super_admin,users.edit.checks.values.management,users.edit.checks.values.routing,users.edit.checks.values.stat"/>
             <sm-ep:property title="users.edit.property.preferences">
                   <sm-et:section title="Performance monitor" name="perfmon">
-                      <sm-et:properties>
+                     <sm-et:section title="smpp" name="smpp">
+                        <sm-et:properties>
                           <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
                           <sm-et:txt title="scale" name="scale" validation="positive"/>
                           <sm-et:txt title="block" name="block" validation="positive"/>
+                        </sm-et:properties>
+                      </sm-et:section>
+                     <sm-et:section title="http" name="http">
+                        <sm-et:properties>
+                          <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
+                          <sm-et:txt title="scale" name="scale" validation="positive"/>
+                          <sm-et:txt title="block" name="block" validation="positive"/>
+                        </sm-et:properties>
+                      </sm-et:section>
+                      <sm-et:properties>
                           <sm-et:txt title="vLightGrid" name="vLightGrid" validation="positive"/>
                           <sm-et:txt title="vMinuteGrid" name="vMinuteGrid" validation="positive"/>
                       </sm-et:properties>

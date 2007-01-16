@@ -72,6 +72,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     public static int block = 8;
     int vLightGrid = 4;
     int vMinuteGrid = 12;
+    ContextInfo contextInfo;
 
     public static int viewMode = VIEWMODE_IO;
     public static boolean viewInputEnabled = true;
@@ -98,18 +99,37 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         dateFormat = new SimpleDateFormat(localeText.getString("sctime"),locale);
         gridFormat = new SimpleDateFormat(localeText.getString("gridtime"),locale);
 
+        //http
         try {
-            pixPerSecond = Integer.valueOf(getParameter("pixPerSecond")).intValue();
+            pixPerSecond = Integer.valueOf(getParameter("http.pixPerSecond")).intValue();
         } catch (Exception ex) {
         }
         try {
-            scale = Integer.valueOf(getParameter("scale")).intValue();
+            scale = Integer.valueOf(getParameter("http.scale")).intValue();
         } catch (Exception ex) {
         }
         try {
-            block = Integer.valueOf(getParameter("block")).intValue();
+            block = Integer.valueOf(getParameter("http.block")).intValue();
         } catch (Exception ex) {
         }
+        contextInfo = new ContextInfo();
+        contextInfo.initHttp();
+
+        //smpp
+        try {
+            pixPerSecond = Integer.valueOf(getParameter("smpp.pixPerSecond")).intValue();
+        } catch (Exception ex) {
+        }
+        try {
+            scale = Integer.valueOf(getParameter("smpp.scale")).intValue();
+        } catch (Exception ex) {
+        }
+        try {
+            block = Integer.valueOf(getParameter("smpp.block")).intValue();
+        } catch (Exception ex) {
+        }
+
+        contextInfo.initSmpp();
         try {
             vLightGrid = Integer.valueOf(getParameter("vLightGrid")).intValue();
         } catch (Exception ex) {
@@ -273,6 +293,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
              for(int i = 0; i<jTabbedPane.getTabCount();i++)
               ((CommonPanel)jTabbedPane.getComponentAt(i)).removeAll();
              selectedTab.init();
+             selectedTab.changeStatMode();
            }
         });
 
@@ -320,7 +341,6 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
           gbc.weighty = 0;
           gbc.fill = GridBagConstraints.HORIZONTAL;
           add(lg, gbc);
-          changeStatMode();
       }
     }
 
@@ -330,6 +350,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         }
         public void changeStatMode() {
             statMode = smppStatMode;
+            contextInfo.setContextInfo(statMode,httpStatMode);
+            perfbar.invalidate();
+            perfGraph.invalidate();
             if (viewMode == VIEWMODE_SEPARATE) {
                   popupMenu.remove(menuRequest);
                   popupMenu.remove(menuRequestRejected);
@@ -349,6 +372,9 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     private class HttpPanel extends CommonPanel {
         public void changeStatMode() {
            statMode = httpStatMode;
+           contextInfo.setContextInfo(statMode,smppStatMode);
+           perfbar.invalidate();
+           perfGraph.invalidate();
            if (viewMode == VIEWMODE_SEPARATE) {
               popupMenu.remove(menuAccepted);
               popupMenu.remove(menuRejected);

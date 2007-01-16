@@ -242,7 +242,7 @@
                                         <tr class=row1>
                                             <th width="28px">&nbsp;</th>
                                             <td style="text-align:left"
-                                                nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true))}</td>
+                                                nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true , "http"))}</td>
                                             <td style="text-align:left">${routeErr.counter}</td>
                                             <td>&nbsp;</td>
                                         </tr>
@@ -306,7 +306,7 @@
                                     <tr class=row1>
                                         <th width="28px">&nbsp;</th>
                                         <td style="text-align:left"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true, "http"))}</td>
                                         <td style="text-align:left">${smeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
@@ -450,7 +450,7 @@
                                     <tr class=row1>
                                         <th width="28px">&nbsp;</th>
                                         <td style="text-align:left"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,routeErr.errcode, true , "smpp"))}</td>
                                         <td style="text-align:left">${routeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
@@ -512,7 +512,7 @@
                                     <tr class=row1>
                                         <th width="28px">&nbsp;</th>
                                         <td style="text-align:left"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smeErr.errcode, true, "smpp"))}</td>
                                         <td style="text-align:left">${smeErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>
@@ -574,7 +574,7 @@
                                     <tr class=row1>
                                         <th width="28px">&nbsp;</th>
                                         <td style="text-align:left"
-                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smscErr.errcode, true))}</td>
+                                            nowrap>${fn:escapeXml(smf:getErrorMessage(pageContext.session,smscErr.errcode, true , "smpp"))}</td>
                                         <td style="text-align:left">${smscErr.counter}</td>
                                         <td>&nbsp;</td>
                                     </tr>

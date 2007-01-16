@@ -18,9 +18,12 @@ public class UserPreferences {
   public UserPreferences() {
     //default values
     //performance monitor
-    monPrefs.put("perfmon.pixPerSecond","4");
-    monPrefs.put("perfmon.scale","80");
-    monPrefs.put("perfmon.block","8");
+    monPrefs.put("perfmon.http.pixPerSecond","4");
+    monPrefs.put("perfmon.http.scale","80");
+    monPrefs.put("perfmon.http.block","8");
+    monPrefs.put("perfmon.smpp.pixPerSecond","4");
+    monPrefs.put("perfmon.smpp.scale","80");
+    monPrefs.put("perfmon.smpp.block","8");
     monPrefs.put("perfmon.vLightGrid","4");
     monPrefs.put("perfmon.vMinuteGrid","6");
     //center monitor
