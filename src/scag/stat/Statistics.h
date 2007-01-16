@@ -380,7 +380,10 @@ using smsc::smeman::SmeRecord;
       int errCode;
       
       HttpStatEvent(int cnt=-1, const std::string& rId="", const uint32_t sId=0, int spId=0, const std::string _url = "", const std::string _path = "", int err=0)
-        : routeId(rId), serviceId(sId), serviceProviderId(spId), event(cnt), errCode(err), url(_url + "/" +_path), site(_url) {};
+        : routeId(rId), serviceId(sId), serviceProviderId(spId), event(cnt), errCode(err), url(_url), site(_url)
+       {
+            if(_path.length() && strcmp(_path.c_str(), "/")) url += "/" +_path;
+       };
 
       HttpStatEvent(const HttpStatEvent& cp)
         : routeId(cp.routeId), serviceId(cp.serviceId), serviceProviderId(cp.serviceProviderId), event(cp.event), errCode(cp.errCode), url(cp.url), site(cp.site) {};
