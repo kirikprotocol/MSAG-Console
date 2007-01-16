@@ -67,7 +67,7 @@ int Registrator::Execute()
         }
         //=================== http1 ====================
         if(++httpCounter == 7) httpCounter = 1;
-        hs.routeId = "route1";
+        hs.routeId = "1";
         hs.url = "yandex.ru/url1";
         hs.site = "yandex.ru";
         hs.serviceId = 1;
