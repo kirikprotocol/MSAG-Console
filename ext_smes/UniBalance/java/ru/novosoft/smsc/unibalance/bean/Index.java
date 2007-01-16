@@ -105,18 +105,16 @@ public class Index extends SmeBean {
     return getCurrencySectionParamName(num) + CURRENCY_NAME_PREFIX;
   }
 
-  private boolean requestHasCurrencyWithNumber(HttpServletRequest request, int number) {
-    return request.getParameter(getCurrencyCodeParamName(number)) != null && !request.getParameter(getCurrencyCodeParamName(number)).equals("");
-  }
-
   private void readBalanceCurrencyDescriptions(HttpServletRequest request) {
     balanceCurrencyDescriptions.clear();
-    int i=1;
-    while(requestHasCurrencyWithNumber(request, i)) {
+
+    int count = Integer.parseInt(request.getParameter("tableCounter"));
+    System.out.println(count);
+    for (int i=1; i<= count; i++) {
       final String currencyCode = request.getParameter(getCurrencyCodeParamName(i));
       final String currencyName = request.getParameter(getCurrencyNameParamName(i));
-      balanceCurrencyDescriptions.add(new BalanceCurrencyDescription(currencyCode, currencyName));
-      i++;
+      if (currencyCode != null)
+        balanceCurrencyDescriptions.add(new BalanceCurrencyDescription(currencyCode, currencyName));
     }
   }
 
