@@ -191,7 +191,10 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
+    {
+        if (smppDiscriptor.isResp) session.closeCurrentOperation();
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
+    }
 
     int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 
@@ -200,6 +203,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
                             providerId, 0, 0, session.getPrimaryKey().abonentAddr.toString(),
                             (propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM) ? 'I' : 'O');
         
+        if (smppDiscriptor.isResp) session.closeCurrentOperation();
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     }
 

@@ -191,10 +191,10 @@ public:
             switch (command->get_resp()->get_dir())
             {
             case dsdSc2Srv:
-                resultAddr = sms.originatingAddress;
+                resultAddr = sms.destinationAddress;
                 break;
             case dsdSrv2Sc:
-                resultAddr = sms.destinationAddress;
+                resultAddr = sms.originatingAddress;
                 break;
             }
             break;
