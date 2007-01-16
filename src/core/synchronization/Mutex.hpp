@@ -7,6 +7,8 @@
 #include <pthread.h>
 #endif
 
+#include "core/synchronization/MutexGuard.hpp"
+
 namespace smsc{
 namespace core{
 namespace synchronization{
@@ -67,19 +69,7 @@ protected:
   void operator=(const Mutex&);
 };//Mutex
 
-class MutexGuard{
-public:
-  MutexGuard(Mutex& _lock):lock(_lock)
-  {
-    lock.Lock();
-  }
-  ~MutexGuard()
-  {
-    lock.Unlock();
-  }
-protected:
-  Mutex& lock;
-};
+typedef MutexGuardTmpl<Mutex> MutexGuard;
 
 }//synchronization
 }//core
