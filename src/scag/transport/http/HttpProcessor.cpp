@@ -45,7 +45,7 @@ class HttpProcessorImpl : public HttpProcessor
         void setPlaces(const std::string& rs, const PlacementArray& places, HttpRequest& request, std::string& url);
         void setFields(HttpRequest& request, HttpRoute& r);
         bool parsePath(const std::string &path, HttpRequest& cx);
-        void registerEvent(int event, HttpCommand& cmd);
+        void registerEvent(int event, HttpCommand& cmd, bool delivery = false);
 };
 
 static bool  inited = false;
@@ -307,7 +307,8 @@ void HttpProcessorImpl::setFields(HttpRequest& request, HttpRoute& r)
     
     if(request.getSiteFileName().length())
         URLField = '/' + URLField;
-    request.setSiteFileName(request.getSiteFileName() + URLField);
+//    request.setSiteFileName(request.getSiteFileName() + URLField);
+    request.setURLField(URLField);
 }
 
 
@@ -492,7 +493,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             rs = RuleEngine::Instance().process(response, *se.Get());
             
             if(rs.status == scag::re::STATUS_OK && delivered)
-                registerEvent(scag::stat::events::http::DELIVERED, response);
+                registerEvent(scag::stat::events::http::DELIVERED, response, true);
 
             if((rs.status == scag::re::STATUS_OK && delivered) || rs.status == scag::re::STATUS_LONG_CALL)
             {
@@ -515,7 +516,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
 
-    registerEvent(scag::stat::events::http::FAILED, response);
+    registerEvent(scag::stat::events::http::FAILED, response, true);
     
     return scag::re::STATUS_FAILED;
 }
@@ -535,7 +536,7 @@ void HttpProcessorImpl::ReloadRoutes()
     router.getDefaultOutPlacement(defOutPlaces);
 }
 
-void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd)
+void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd, bool delivery)
 {
     char buf[15], buf1[20];
     std::string s = cmd.getSite();
@@ -546,7 +547,7 @@ void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd)
         s += buf;
     }
     buf1[19] = 0;
-    Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath(), cmd.getStatus()));
+    Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath() + cmd.getSiteFileName(), delivery ? cmd.getStatus() : 0 ));
 }
 
 }}}

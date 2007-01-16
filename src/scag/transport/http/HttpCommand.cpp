@@ -342,6 +342,7 @@ const std::string& HttpRequest::serialize()
         headers += SP;
         headers += getSitePath();
         headers += getSiteFileName();
+        headers += getURLField();        
 
         if (queryParameters.GetCount() && httpMethod == GET) {
             headers += '?';

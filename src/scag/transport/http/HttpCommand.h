@@ -287,8 +287,15 @@ public:
     const std::string& getSiteQuery() {
         return siteQuery;
     }
-    void setSiteQuery(const std::string& query) {
-        siteQuery = query;
+    void setSiteQuery(const std::string& p) {
+        URLField = p;
+    }
+    
+    const std::string& getURLField() {
+        return URLField;
+    }
+    void setURLField(const std::string& p) {
+        URLField = p;
     }
 
     void setInitial() {isInitialRequest = true;};
@@ -312,6 +319,7 @@ protected:
     std::string siteQuery;
     std::string siteFull;
     std::string paramValue;
+    std::string URLField;    
     
     bool isInitialRequest;
 };
