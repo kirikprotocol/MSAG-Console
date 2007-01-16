@@ -493,7 +493,7 @@ Hash<int> SmppCommandAdapter::InitRespFieldNames()
 
     hs["status_ok"]                     = STATUS_OK;
     hs["status_perm_error"]             = STATUS_PERM_ERROR;
-    hs["status_remp_error"]             = STATUS_TEMP_ERROR;
+    hs["status_temp_error"]             = STATUS_TEMP_ERROR;
 
     return hs;
 }
