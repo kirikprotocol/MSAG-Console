@@ -224,16 +224,8 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     } catch (SCAGException& e)
     {
         smsc_log_error(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
-        rs.result = smsc::system::Status::SYSFAILURE;
+        rs.result = smsc::system::Status::SMDELIFERYFAILURE;
         rs.status = STATUS_FAILED;
-        return rs;
-    }
-
-    if ((*smppcommand)->status > 0)
-    {
-        rs.result = (*smppcommand)->status;
-        rs.status = STATUS_FAILED;
-        session.closeCurrentOperation();
         return rs;
     }
 
@@ -249,6 +241,12 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     } catch (std::exception& e)
     {
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
+        rs.status = STATUS_FAILED;
+    }
+
+    if ((*smppcommand)->status > 0)
+    {
+        rs.result = (*smppcommand)->status;
         rs.status = STATUS_FAILED;
     }
 

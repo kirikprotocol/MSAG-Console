@@ -4,6 +4,7 @@
 
 #include "scag/util/encodings/Encodings.h"
 #include "logger/Logger.h"
+#include "system/status.h"
 
 
 namespace scag { namespace re { namespace smpp 
@@ -11,23 +12,21 @@ namespace scag { namespace re { namespace smpp
 
 using namespace scag::util::properties;
 using namespace scag::util::encodings;
+using namespace smsc::system::Status;
 
 
 Hash<int> SmppCommandAdapter::SubmitFieldNames = SmppCommandAdapter::InitSubmitFieldNames();
-Hash<int> SmppCommandAdapter::SubmitRespFieldNames = SmppCommandAdapter::InitSubmitRespFieldNames();
-Hash<int> SmppCommandAdapter::DeliverRespFieldNames = SmppCommandAdapter::InitDeliverRespFieldNames();
 Hash<int> SmppCommandAdapter::DeliverFieldNames = SmppCommandAdapter::InitDeliverFieldNames();
 
 Hash<int> SmppCommandAdapter::DataSmFieldNames = SmppCommandAdapter::InitDataSmFieldNames();
-Hash<int> SmppCommandAdapter::DataSmRespFieldNames = SmppCommandAdapter::InitDataSmRespFieldNames();
 
+Hash<int> SmppCommandAdapter::RespFieldNames = SmppCommandAdapter::InitRespFieldNames();
 
 IntHash<AccessType> SmppCommandAdapter::SubmitFieldsAccess = SmppCommandAdapter::InitSubmitAccess();
 IntHash<AccessType> SmppCommandAdapter::DeliverFieldsAccess = SmppCommandAdapter::InitDeliverAccess();
 IntHash<AccessType> SmppCommandAdapter::DataSmFieldsAccess = SmppCommandAdapter::InitDataSmAccess();
-IntHash<AccessType> SmppCommandAdapter::SubmitRespFieldsAccess = SmppCommandAdapter::InitSubmitRespAccess();
-IntHash<AccessType> SmppCommandAdapter::DeliverRespFieldsAccess = SmppCommandAdapter::InitDeliverRespAccess();
-IntHash<AccessType> SmppCommandAdapter::DataSmRespFieldsAccess = SmppCommandAdapter::InitDataSmRespAccess();
+
+IntHash<AccessType> SmppCommandAdapter::RespFieldsAccess = SmppCommandAdapter::InitRespAccess();
 
 
 AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& name)
@@ -37,6 +36,17 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 
     switch (handlerType) 
     {
+    case EH_DATA_SM:
+
+        pFieldId = DataSmFieldNames.GetPtr(name.c_str());
+
+        if (!pFieldId) return atNoAccess;
+
+        actype = DataSmFieldsAccess.GetPtr(*pFieldId);
+        if (actype) return *actype;
+
+        return atRead;
+        break;
     case EH_DELIVER_SM:
         pFieldId = DeliverFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return atNoAccess;
@@ -56,43 +66,14 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 
         if (actype) return *actype;
         return atRead;
+    case EH_DATA_SM_RESP:
     case EH_DELIVER_SM_RESP:
-        pFieldId = DeliverRespFieldNames.GetPtr(name.c_str());
-
-        if (!pFieldId) return atNoAccess;
-
-        actype = DeliverRespFieldsAccess.GetPtr(*pFieldId);
-        if (actype) return *actype;
-
-        return atRead;
-        break;
     case EH_SUBMIT_SM_RESP:
 
-        pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
-
+        pFieldId = RespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return atNoAccess;
 
-        actype = SubmitRespFieldsAccess.GetPtr(*pFieldId);
-        if (actype) return *actype;
- 
-        return atRead;
-        break;
-    case EH_DATA_SM:
-
-        pFieldId = DataSmFieldNames.GetPtr(name.c_str());
-
-        if (!pFieldId) return atNoAccess;
-
-        actype = DataSmFieldsAccess.GetPtr(*pFieldId);
-        if (actype) return *actype;
-
-        return atRead;
-        break;
-    case EH_DATA_SM_RESP:
-        pFieldId = DataSmRespFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return atNoAccess;
-
-        actype = DataSmRespFieldsAccess.GetPtr(*pFieldId);
+        actype = RespFieldsAccess.GetPtr(*pFieldId);
         if (actype) return *actype;
 
         return atRead;
@@ -100,35 +81,17 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
     }
 
 
-
     return atNoAccess;
 }
 
 
-IntHash<AccessType> SmppCommandAdapter::InitSubmitRespAccess()
+IntHash<AccessType> SmppCommandAdapter::InitRespAccess()
 {
     IntHash<AccessType> hs;
     hs.Insert(STATUS,atReadWrite);
 
     return hs;
 }
-
-IntHash<AccessType> SmppCommandAdapter::InitDeliverRespAccess()
-{
-    IntHash<AccessType> hs;
-    hs.Insert(STATUS,atReadWrite);
-
-    return hs;
-}
-
-IntHash<AccessType> SmppCommandAdapter::InitDataSmRespAccess()
-{
-    IntHash<AccessType> hs;
-    hs.Insert(STATUS,atReadWrite);
-
-    return hs;
-}
-
 
 
 IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
@@ -348,24 +311,6 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
     return hs;
 }
 
-Hash<int> SmppCommandAdapter::InitDataSmRespFieldNames()
-{
-    Hash<int> hs;
-
-    hs["OA"]                            = OA;
-    hs["DA"]                            = DA;
-
-    hs["packet_direction"]              = PACKET_DIRECTION;
-
-    hs["status"] = STATUS;
-
-    hs["message_id"] = MESSAGE_ID;
-    hs["ussd_dialog"] = USSD_DIALOG;
-
-
-    return hs;
-}
-
 
 Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 {
@@ -532,33 +477,23 @@ Tag::SMPP_USSD_SERVICE_OP //mask +
 }
 
 
-Hash<int> SmppCommandAdapter::InitSubmitRespFieldNames()
+Hash<int> SmppCommandAdapter::InitRespFieldNames()
 {
     Hash<int> hs;
+
+    hs["OA"]                            = OA;
+    hs["DA"]                            = DA;
 
     hs["packet_direction"]              = PACKET_DIRECTION;
 
     hs["status"] = STATUS;
+
     hs["message_id"] = MESSAGE_ID;
     hs["ussd_dialog"] = USSD_DIALOG;
 
-    hs["OA"] = OA;
-    hs["DA"] = DA;
-
-    return hs;
-}
-
-Hash<int> SmppCommandAdapter::InitDeliverRespFieldNames()
-{
-    Hash<int> hs;
-
-    hs["packet_direction"]              = PACKET_DIRECTION;
-
-    hs["status"] = STATUS;
-    hs["ussd_dialog"] = USSD_DIALOG;
-
-    hs["OA"] = OA;
-    hs["DA"] = DA;
+    hs["status_ok"] = STATUS_OK;
+    hs["status_perm_error"] = STATUS_PERM_ERROR;
+    hs["status_remp_error"] = STATUS_TEMP_ERROR;
 
     return hs;
 }
@@ -894,19 +829,18 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 }
 
 
-
-AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std::string& name,int FieldId)
+AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::string& name,int FieldId)
 {
-
+    
     AdapterProperty * property = 0;
 
     switch (FieldId) 
     {
-    case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,command->get_resp()->get_dir());
-        break;
     case STATUS:
         property = new AdapterProperty(name,this,command->get_resp()->get_status());
+        break;
+    case PACKET_DIRECTION:
+        property = new AdapterProperty(name,this,command->get_resp()->get_dir());
         break;
     case MESSAGE_ID:
         //TODO: Inmplement
@@ -920,39 +854,26 @@ AdapterProperty * SmppCommandAdapter::getSubmitRespProperty(SMS& data, const std
     case DA:
         property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
         break;
-
-    }
-
-    return property;
-}
-
-AdapterProperty * SmppCommandAdapter::getDeliverRespProperty(SMS& data, const std::string& name,int FieldId)
-{
-
-    AdapterProperty * property = 0;
-
-    switch (FieldId) 
-    {
-    case PACKET_DIRECTION:
-        property = new AdapterProperty(name,this,command->get_resp()->get_dir());
+    case STATUS_OK:
+        property = new AdapterProperty(name,this,(command->get_resp()->get_status() == 0));
         break;
-    case STATUS:
-        property = new AdapterProperty(name,this,command->get_resp()->get_status());
+    case STATUS_PERM_ERROR:
+        if (command->get_resp()->get_status() > 0) 
+            property = new AdapterProperty(name,this,isErrorPermanent(command->get_resp()->get_status()));
+        else
+            property = new AdapterProperty(name,this,0);
+
         break;
-    case USSD_DIALOG:
-        property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
-        break;
-    case OA:
-        property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
-        break;
-    case DA:
-        property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
+    case STATUS_TEMP_ERROR:
+        if (command->get_resp()->get_status() > 0) 
+            property = new AdapterProperty(name,this,!isErrorPermanent(command->get_resp()->get_status()));
+        else
+            property = new AdapterProperty(name,this,0);
         break;
     }
 
     return property;
 }
-
 
 
 AdapterProperty * SmppCommandAdapter::GetStrBitFromMask(SMS& data,const std::string& name,int tag,int mask)
@@ -1297,38 +1218,6 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     return property;
 }
 
-AdapterProperty * SmppCommandAdapter::getDataSmRespProperty(SmsResp& smsResp,const std::string& name,int FieldId)
-{
-    SMS * sms = smsResp.get_sms();
-    if (!sms) return 0;
-    
-    AdapterProperty * property = 0;
-
-    switch (FieldId) 
-    {
-    case STATUS:
-        property = new AdapterProperty(name,this,command->get_resp()->get_status());
-        break;
-    case MESSAGE_ID:
-        //TODO: Inmplement
-        break;
-    case USSD_DIALOG:
-        property = new AdapterProperty(name,this,sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
-        break;
-    case OA:
-        property = new AdapterProperty(name,this,CommandBrige::getAbonentAddr(command).toString());
-        break;
-    case DA:
-        property = new AdapterProperty(name,this,CommandBrige::getDestAddr(command).toString());
-        break;
-    case PACKET_DIRECTION:
-            property = new AdapterProperty(name,this, (int)smsResp.get_dir());
-
-        break;
-    }
-
-    return property;
-}
 
 AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId)
 {
@@ -1507,37 +1396,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
         property = getSubmitProperty(*sms,name,*pFieldId);
         break;
-    case DELIVERY_RESP:
 
-        pFieldId = DeliverRespFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
-
-        smsResp = command->get_resp();
-        if (!smsResp) return 0;
-        sms = smsResp->get_sms();
-
-        if (!sms) return 0;
-
-        property = getDeliverRespProperty(*sms, name,*pFieldId);
-        break;
-    case SUBMIT_RESP:
-
-        pFieldId = SubmitRespFieldNames.GetPtr(name.c_str());
-        if (!pFieldId) return 0;
-
-        propertyPtr = PropertyPul.GetPtr(*pFieldId);
-        if (propertyPtr) return (*propertyPtr);
-
-        smsResp = command->get_resp();
-        if (!smsResp) return 0;
-        sms = smsResp->get_sms();
-        if (!sms) return 0;
-
-        property = getSubmitRespProperty(*sms, name,*pFieldId);
-        break;
     case DATASM:
         smsCmd = command->get_smsCommand();
 
@@ -1549,9 +1408,12 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
         property = getDataSmProperty(smsCmd,name,*pFieldId);
         break;
+
+    case DELIVERY_RESP:
+    case SUBMIT_RESP:
     case DATASM_RESP:
 
-        pFieldId = DataSmRespFieldNames.GetPtr(name.c_str());
+        pFieldId = RespFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
@@ -1559,8 +1421,10 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
         smsResp = command->get_resp();
         if (!smsResp) return 0;
+        sms = smsResp->get_sms();
+        if (!sms) return 0;
 
-        property = getDataSmRespProperty(*smsResp,name,*pFieldId);
+        property = getRespProperty(*sms, name,*pFieldId);
         break;
     }
 
@@ -1607,19 +1471,6 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
 
         WriteSubmitField(*sms,*pFieldId,property);
         break;
-    case DELIVERY_RESP:
-
-        if (name!="status") return;
-        if (!command->get_resp()) return;
-
-        command->get_resp()->set_status(property.getInt());
-        break;
-    case SUBMIT_RESP:
-        if (name!="status") return;
-        if (!command->get_resp()) return;
-
-        command->get_resp()->set_status(property.getInt());
-        break;
     case DATASM:
         sms = command->get_sms();
         if (sms == 0) return;
@@ -1631,90 +1482,18 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
 
         break;
     case DATASM_RESP:
+    case DELIVERY_RESP:
+    case SUBMIT_RESP:
         if (name!= "status") return;
         if (!command->get_resp()) return;
 
         command->get_resp()->set_status(property.getInt());
         break;
 
-
-
-
     default:
         return;
     }
-    /*
-    AdapterProperty ** propertyPtr = PropertyPul.GetPtr(FieldId);
-    if (propertyPtr) (*propertyPtr)->setPureStr(property.getStr());*/
 }
 
-/*
-SMS& SmppCommandAdapter::getSMS()
-{
-    return CommandBrige::getSMS(command);
-}
-
-
-
-void SmppCommandAdapter::fillChargeOperation(smsc::inman::interaction::ChargeSms& op, TariffRec& tariffRec)
-{
-
-    SMS& sms = CommandBrige::getSMS(command);
-
-    char buff[128];
-    sprintf(buff,"%d", tariffRec.ServiceNumber);
-    std::string str(buff);
-    //op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
-    if (command->cmdid == DELIVERY) 
-    {
-        op.setDestinationSubscriberNumber(str);
-        op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
-    } else if (command->cmdid == SUBMIT)
-    {
-        op.setDestinationSubscriberNumber(str);
-        op.setCallingPartyNumber(sms.getDestinationAddress().toString());
-    }
-
-    op.setCallingIMSI(sms.getOriginatingDescriptor().imsi);
-    //op.setSMSCAddress(INManComm::scAddr.toString());
-    op.setSubmitTimeTZ(sms.getSubmitTime());
-    op.setTPShortMessageSpecificInfo(0x11);
-    op.setTPProtocolIdentifier(sms.getIntProperty(Tag::SMPP_PROTOCOL_ID));
-    op.setTPDataCodingScheme(sms.getIntProperty(Tag::SMPP_DATA_CODING));
-    op.setTPValidityPeriod(sms.getValidTime()-time(NULL));
-    op.setLocationInformationMSC(sms.getOriginatingDescriptor().msc);
-    op.setCallingSMEid(sms.getSourceSmeId());
-    op.setRouteId(sms.getRouteId());
-
-    op.setServiceId(command.getServiceId());
-
-    op.setUserMsgRef(sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1);
-    //op.setMsgId(id);
-    op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
-    op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
-
-    if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
-    {
-        unsigned len;
-        sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-        op.setMsgLength(len);
-    }else
-    {
-        unsigned len;
-        sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-        op.setMsgLength(len);
-    }
-}
-
-void SmppCommandAdapter::fillRespOperation(smsc::inman::interaction::DeliverySmsResult& op, TariffRec& tariffRec)
-{
- //   op.setDeliveryTime();
- //   op.setDestIMSI();
- //   op.setDestMSC();
- //   op.setDestSMEid();
- //   op.setDivertedAdr();
- //   op.setResultValue();
-}
-*/
 
 }}}
