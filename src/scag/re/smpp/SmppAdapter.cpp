@@ -486,14 +486,14 @@ Hash<int> SmppCommandAdapter::InitRespFieldNames()
 
     hs["packet_direction"]              = PACKET_DIRECTION;
 
-    hs["status"] = STATUS;
+    hs["status"]                        = STATUS;
 
-    hs["message_id"] = MESSAGE_ID;
-    hs["ussd_dialog"] = USSD_DIALOG;
+    hs["message_id"]                    = MESSAGE_ID;
+    hs["ussd_dialog"]                   = USSD_DIALOG;
 
-    hs["status_ok"] = STATUS_OK;
-    hs["status_perm_error"] = STATUS_PERM_ERROR;
-    hs["status_remp_error"] = STATUS_TEMP_ERROR;
+    hs["status_ok"]                     = STATUS_OK;
+    hs["status_perm_error"]             = STATUS_PERM_ERROR;
+    hs["status_remp_error"]             = STATUS_TEMP_ERROR;
 
     return hs;
 }
