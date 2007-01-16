@@ -191,8 +191,8 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
         cx.getResponse().httpVersion.assign(buf, pos - buf);
 
         pos++;
-        cx.getResponse().status = atoi(pos);
-        if (!cx.getResponse().status)
+        cx.getResponse().setStatus(atoi(pos));
+        if (!cx.getResponse().getStatus())
           return ERROR;
 
         while (isdigit(*pos))
@@ -257,7 +257,7 @@ StatusCode HttpParser::parseFirstLine(char *buf, unsigned int len, HttpContext& 
             path.erase(path.begin() + (end - pos), path.end());
           }
         }
-        cx.getRequest().sitePath = path;
+        cx.getRequest().setSitePath(path);
       }
   }
   return OK;

@@ -31,6 +31,12 @@ struct TransactionContext {
     uint32_t routeId;
     std::string abonent;
     std::string address;
+    int status;    
+    unsigned int sitePort;
+    std::string site;
+    std::string sitePath;    
+    std::string siteFileName;
+    
     int ruleId;
     uint16_t usr;
 
@@ -41,6 +47,8 @@ struct TransactionContext {
         ruleId = 0;
         routeId = 0;
         usr = 0;
+        status = 0;
+        sitePort = 80;
     }
 };
 
@@ -148,6 +156,42 @@ public:
     void setAddress(const std::string& address) {
         trc.address = address;
     }
+    
+    const std::string& getSitePath() {
+        return trc.sitePath;
+    }
+    void setSitePath(const std::string& path) {
+        trc.sitePath = path;
+    }    
+    
+    const std::string& getSiteFileName() {
+        return trc.siteFileName;
+    }
+    void setSiteFileName(const std::string& fn) {
+        trc.siteFileName = fn;
+    }
+    
+    const std::string& getSite() {
+        return trc.site;
+    }
+    void setSite(const std::string& s) {
+        trc.site = s;
+    }    
+    
+    unsigned int getSitePort() {    
+        return trc.sitePort;
+    }
+    void setSitePort(unsigned int port) {    
+        trc.sitePort = port;
+    }
+    
+    int getStatus() {
+        return trc.status;
+    }
+    void setStatus(int s) {
+        trc.status = s;
+    }
+    
     // ---------- Command context methods (end) ----------    
 
     // HTTP message header fields accessors
@@ -231,7 +275,7 @@ public:
     typedef StringHashIterator ParameterIterator;
 
     HttpRequest(TransactionContext& tcx) : HttpCommand(tcx, HTTP_REQUEST),
-        queryParametersIterator(queryParameters), sitePort(80), isInitialRequest(false) {}
+        queryParametersIterator(queryParameters), isInitialRequest(false) {}
 
     HttpMethod getMethod() {
         return httpMethod;
@@ -240,27 +284,6 @@ public:
         httpMethod = m;
     }
 
-    const std::string& getSite() {
-        return site;
-    }
-    void setSite(const std::string& s) {
-        site = s;
-    }    
-    
-    const std::string& getSitePath() {
-        return sitePath;
-    }
-    void setSitePath(const std::string& path) {
-        sitePath = path;
-    }    
-    
-    unsigned int getSitePort() {    
-        return sitePort;
-    }
-    void setSitePort(unsigned int port) {    
-        sitePort = port;
-    }
-        
     const std::string& getSiteQuery() {
         return siteQuery;
     }
@@ -268,13 +291,6 @@ public:
         siteQuery = query;
     }
 
-    const std::string& getSiteFileName() {
-        return siteFileName;
-    }
-    void setSiteFileName(const std::string& fn) {
-        siteFileName = fn;
-    }
-    
     void setInitial() {isInitialRequest = true;};
     bool isInitial() {return isInitialRequest;};
 
@@ -293,12 +309,8 @@ protected:
     StringHash queryParameters;
     ParameterIterator queryParametersIterator;
     HttpMethod httpMethod;    
-    unsigned int sitePort;
-    std::string site;
-    std::string sitePath;    
     std::string siteQuery;
     std::string siteFull;
-    std::string siteFileName;
     std::string paramValue;
     
     bool isInitialRequest;
@@ -313,13 +325,6 @@ class HttpResponse : public HttpCommand {
 public:
     HttpResponse(TransactionContext& tcx) : HttpCommand(tcx, HTTP_RESPONSE) {};
 
-    int getStatus() {
-        return status;
-    }
-    void setStatus(int s) {
-        status = s;
-    }
-    
     const std::string& getStatusLine() {
         return statusLine;
     }
@@ -337,7 +342,6 @@ public:
 protected:
     bool delivered;
     std::string statusLine;
-    int status;
 };
 
 }}}

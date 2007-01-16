@@ -340,8 +340,8 @@ const std::string& HttpRequest::serialize()
         
         headers = httpMethodNames[httpMethod];
         headers += SP;
-        headers += sitePath;
-        headers += siteFileName;
+        headers += getSitePath();
+        headers += getSiteFileName();
 
         if (queryParameters.GetCount() && httpMethod == GET) {
             headers += '?';
@@ -375,7 +375,7 @@ const std::string& HttpRequest::serialize()
             headers += CRLF;
         }
 
-        setHeaderField("host", site + ((sitePort != 80) ? ':' + std::string(lltostr(sitePort, buf + 19)) : ""));
+        setHeaderField("host", getSite() + ((getSitePort() != 80) ? ':' + std::string(lltostr(getSitePort(), buf + 19)) : ""));
 
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
@@ -403,7 +403,7 @@ void HttpResponse::serialize()
         headers = httpVersion;
         headers += SP;
 
-        headers += lltostr(status, buf + 19);
+        headers += lltostr(getStatus(), buf + 19);
         headers += SP;
         headers += statusLine;
         headers += CRLF;
@@ -458,7 +458,7 @@ void HttpResponse::fillFakeResponse(int s)
         break;
     }
 
-    status = s;
+    setStatus(s);
     statusLine = sl;
     
     if (httpVersion.empty())

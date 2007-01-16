@@ -45,8 +45,7 @@ class HttpProcessorImpl : public HttpProcessor
         void setPlaces(const std::string& rs, const PlacementArray& places, HttpRequest& request, std::string& url);
         void setFields(HttpRequest& request, HttpRoute& r);
         bool parsePath(const std::string &path, HttpRequest& cx);
-        void registerEvent(int event, HttpRequest& cmd);
-        void registerEvent(int event, HttpResponse& cmd);
+        void registerEvent(int event, HttpCommand& cmd);
 };
 
 static bool  inited = false;
@@ -536,7 +535,7 @@ void HttpProcessorImpl::ReloadRoutes()
     router.getDefaultOutPlacement(defOutPlaces);
 }
 
-void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)
+void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd)
 {
     char buf[15], buf1[20];
     std::string s = cmd.getSite();
@@ -547,14 +546,7 @@ void HttpProcessorImpl::registerEvent(int event, HttpRequest& cmd)
         s += buf;
     }
     buf1[19] = 0;
-    Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath(), 0));
-}
-
-void HttpProcessorImpl::registerEvent(int event, HttpResponse& cmd)
-{
-    char buf[20];
-    buf[19] = 0;
-    Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), "", "", cmd.getStatus()));
+    Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath(), cmd.getStatus()));
 }
 
 }}}
