@@ -18,7 +18,6 @@ using namespace std;
 using namespace smsc::router;
 using namespace smsc::smeman;
 using namespace smsc::alias;
-using namespace smsc::util::config::alias;
 using namespace smsc::core::buffers;
 
 namespace smsc{
