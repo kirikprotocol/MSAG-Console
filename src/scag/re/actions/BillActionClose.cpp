@@ -7,6 +7,7 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
 {
     logger = Logger::getInstance("scag.bill.actions");
 
+
     if (params.Exists("action")) 
     {
         std::string str = params["action"];
@@ -35,43 +36,79 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
 
 bool BillActionClose::run(ActionContext& context)
 {
+
     smsc_log_debug(logger, "Run Action 'bill:close'...");
+
+
 
     /////////////////////////////////////////////
     BillingManager& bm = BillingManager::Instance();
 
-    Operation * operation = context.GetCurrentOperation();
-    if (!operation)
+    if (actionCommit) 
     {
-        smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
-        SetBillingStatus(context, "operation from ActionContext is invalid", false);
-        return true;
-    }
+        Operation * operation = context.GetCurrentOperation();
+        if (!operation)
+        {
+            smsc_log_error(logger,"BillAction 'bill:close': Fatal error in action - operation from ActionContext is invalid");
+            SetBillingStatus(context, "operation from ActionContext is invalid", false);
+            return true;
+        }
 
-    if (!operation->hasBill()) 
-    {
-        smsc_log_error(logger,"Action 'bill:close': Fatal error in action - no bill is attached");
-        SetBillingStatus(context, "no bill is attached", false);
-        return true;
-    }
-    
-    try {
-        if(actionCommit)
+        if (!operation->hasBill()) 
+        {
+            smsc_log_error(logger,"Action 'bill:close': Fatal error in action - no bill is attached");
+            SetBillingStatus(context, "no bill is attached", false);
+            return true;
+        }
+
+
+        try
+        {
             bm.Commit(operation->getBillId());
-        else
-            bm.Rollback(operation->getBillId());
-    } catch (SCAGException& e)
-    {        
-        smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
-        SetBillingStatus(context,e.what(), false);
+        } catch (SCAGException& e)
+        {
+            smsc_log_error(logger,"Action 'bill:close' cannot process. Delails: %s", e.what());
+            SetBillingStatus(context, e.what(), false);
+
+            operation->detachBill();
+            return true;
+        }
+        
         operation->detachBill();
-        return true;
-    }   
-    
-    operation->detachBill();
-    SetBillingStatus(context,"", true);
-    if(actionCommit)        
-        smsc_log_debug(logger,"Action 'bill:close': transaction successfully commited");        
+
+        SetBillingStatus(context, "", true);
+        smsc_log_debug(logger,"Action 'bill:close': transaction successfully commited");
+    }
+    else
+    {
+        Operation * operation = context.GetCurrentOperation();
+        if (!operation)
+        {
+            smsc_log_error(logger,"BillAction 'bill:close' error: Operation from ActionContext is invalid");
+            SetBillingStatus(context,"operation from ActionContext is invalid", false);
+            return true;
+        }
+
+        if (!operation->hasBill())
+        {
+            smsc_log_error(logger,"BillAction 'bill:close' error: Bill is not attached to operation");
+            SetBillingStatus(context,"Bill is not attached to operation", false);
+            return true;
+        }
+
+
+        try {
+            bm.Rollback(operation->getBillId());
+        } catch (SCAGException& e)
+        {        
+            smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
+            SetBillingStatus(context,e.what(), false);
+            operation->detachBill();
+            return true;
+        }   
+        operation->detachBill();
+        SetBillingStatus(context,"", true);
+    }
 
     return true;
 }
@@ -111,6 +148,7 @@ void BillActionClose::SetBillingStatus(ActionContext& context, const char * erro
     }
 
     return;
+
 }
 
 
@@ -127,3 +165,4 @@ bool BillActionClose::FinishXMLSubSection(const std::string& name)
 
 
 }}}
+

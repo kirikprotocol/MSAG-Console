@@ -5,7 +5,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-class ActionBillMoveWait : public Action, ActionAbstractWait
+class ActionBillMoveWait : public ActionAbstractWait
 {
     ActionBillMoveWait(const ActionBillMoveWait&);
     std::string m_sStatus;

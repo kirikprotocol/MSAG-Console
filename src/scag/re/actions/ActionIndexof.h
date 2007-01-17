@@ -16,7 +16,6 @@ class ActionIndexof : public Action
 
     FieldType m_fVariableFieldType;
     FieldType m_fStringFieldType;
-    Logger * logger;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

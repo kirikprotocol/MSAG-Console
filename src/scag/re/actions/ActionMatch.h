@@ -27,7 +27,6 @@ class ActionMatch : public Action
     RegExp *re;
     bool m_Compiled;
     int m_type;
-    Logger * logger;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);

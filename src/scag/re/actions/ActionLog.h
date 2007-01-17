@@ -24,7 +24,6 @@ public:
     ActionLog (LogLevel l){ level = l; }
 
     virtual ~ActionLog();
-    Logger * logger;
 
 protected:
     ActionLog(const ActionLog&);

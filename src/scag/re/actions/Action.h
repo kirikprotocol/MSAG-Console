@@ -12,39 +12,16 @@ namespace scag { namespace re { namespace actions
 
 using smsc::logger::Logger;
 
-class ActionParameter
-{
-protected:
-    std::string m_strVariable;
-    Property * m_pProperty;
-
-    FieldType m_FieldType;
-    bool m_bReadOnly;
-    bool m_bExists;
-    Logger * m_pLogger;
-    std::string m_actionName;
-public:
-    bool prepareValue(ActionContext& context);
-    bool isReadOnly() {return m_bReadOnly;}
-    bool Exists() {return m_bExists;}
-
-    void setStrValue(std::string& value);
-    void setIntValue(int value);
-
-    std::string getStrValue();
-    int getIntValue();
-    ActionParameter(const SectionParams& params, PropertyObject& propertyObject, const std::string& actionName, const char * paramName, bool isRequired, bool readOnly, Logger * logger);
-};
-
 class Action : public IParserHandler
 {
+protected:
+    FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
+    Logger * logger;
 public:
-    Action() {};
-    virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
+    Action() : logger(0) {};
     virtual bool run(ActionContext& context) = 0;
-    static FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
+    virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
 };
-
 
 }}}
 

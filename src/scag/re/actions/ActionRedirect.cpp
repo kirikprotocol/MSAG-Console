@@ -10,7 +10,6 @@ void ActionRedirect::init(const SectionParams& params,PropertyObject propertyObj
     if ((propertyObject.HandlerId != EH_SUBMIT_SM)&&(propertyObject.HandlerId != EH_DELIVER_SM)&&(propertyObject.HandlerId != EH_DATA_SM))
         throw SCAGException("Action 'redirect' Error. Details: Action can be used only in 'SUBMIT_SM', 'DELIVER_SM' or 'DATA_SM' handler.");
 
-/*  
     m_fOAFieldType = CheckParameter(params, propertyObject, "redirect", "OA", false, true, strOA, m_bExistOA);
     m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "DA", false, true, strDA, m_bExistDA);
 
@@ -18,9 +17,7 @@ void ActionRedirect::init(const SectionParams& params,PropertyObject propertyObj
     if ((!m_bExistOA)&&(!m_bExistDA)) 
         throw SCAGException("Must exist at list one of 'OA' and 'DA' parameters");
 
-*/
-    paramOA = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "redirect", "OA", false, true, logger));
-    paramDA = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "redirect", "DA", false, true, logger));
+
 
     smsc_log_debug(logger,"Action 'redirect':: init");
 }
@@ -39,21 +36,9 @@ bool ActionRedirect::run(ActionContext& context)
         return true;
     }
     
-    if (paramOA->Exists()) 
-    {
-        if (!paramOA->prepareValue(context)) return true;
-        Address tmp(paramOA->getStrValue().c_str());
-        smppAdapter.setOA(tmp);
-    }
+    Address OA;
+    Address DA;
 
-    if (paramDA->Exists()) 
-    {
-        if (!paramDA->prepareValue(context)) return true;
-        Address tmp(paramDA->getStrValue().c_str());
-        smppAdapter.setDA(tmp);
-    }
-
-  /*
     //////////////OA////////
     if (m_bExistOA) 
     {
@@ -95,18 +80,16 @@ bool ActionRedirect::run(ActionContext& context)
         }
     }
 
-    if (m_bExistOA) smppAdapter.setOA(OA);
-    if (m_bExistDA) smppAdapter.setDA(DA);
-
-*/
-
-    
     RuleStatus rs;
     rs.status = STATUS_REDIRECT;
 
+    if (m_bExistOA) smppAdapter.setOA(OA);
+    if (m_bExistDA) smppAdapter.setDA(DA);
+
+
     context.setRuleStatus(rs);
-    
-    context.clearLongCallContext();         
+
+    context.clearLongCallContext();
     smsc_log_debug(logger,"Action 'redirect' finished");   
     return false;
 }

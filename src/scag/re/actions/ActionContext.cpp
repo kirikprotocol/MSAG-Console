@@ -24,6 +24,7 @@ CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Addres
     providerId = ProviderId;
     operatorId = OperatorId;
     msgRef = MsgRef;
+    direction = CommandBrige::getPacketDirection(command);
 }
 
 

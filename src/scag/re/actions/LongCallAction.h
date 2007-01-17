@@ -3,7 +3,9 @@
 
 #include "ActionContext.h"
 #include "Action.h"
+#include "scag/lcm/LongCallManager.h"
 
+using namespace scag::lcm;
 
 namespace scag { namespace re { namespace actions {
 

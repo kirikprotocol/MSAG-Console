@@ -15,7 +15,6 @@ class ActionBinOperation : public Action
 
     FieldType valueFieldType;
 protected:
-    Logger * logger;
     std::string m_ActionName;
     bool m_valueRequired;
 

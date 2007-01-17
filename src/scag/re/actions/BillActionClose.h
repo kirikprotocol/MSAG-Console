@@ -5,13 +5,6 @@
 
 namespace scag { namespace re {namespace actions {
 
-class BillCloseCallParams : public LongCallParams
-{
-public:
-    int BillId;
-    std::string exception;
-};
-
 
 class BillActionClose : public Action
 {
@@ -22,7 +15,6 @@ class BillActionClose : public Action
     bool m_MsgExist;
 
     bool actionCommit;
-    Logger * logger;
 
     void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
 protected:
@@ -38,3 +30,5 @@ public:
 
 
 #endif
+
+

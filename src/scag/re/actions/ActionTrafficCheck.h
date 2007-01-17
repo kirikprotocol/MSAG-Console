@@ -21,7 +21,6 @@ class ActionTrafficCheck : public Action
     PropertyObject propertyObject;
 
     bool StrToPeriod(CheckTrafficPeriod& _period, std::string& str);
-    Logger * logger;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
