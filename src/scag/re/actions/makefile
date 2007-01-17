@@ -4,7 +4,6 @@
 #
 #
 
-
 #CXXFLAGS := $(CXXFLAGS)
 PACKAGE := scag.re.actions
 
