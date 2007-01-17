@@ -538,7 +538,7 @@ void HttpProcessorImpl::ReloadRoutes()
 
 void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd, bool delivery)
 {
-    char buf[15], buf1[20];
+    char buf[20];
     std::string s = cmd.getSite();
     if(cmd.getSitePort() != 80)
     {
@@ -546,7 +546,7 @@ void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd, bool delivery
         sprintf(buf, "%d", cmd.getSitePort());
         s += buf;
     }
-    buf1[19] = 0;
+    buf[19] = 0;
     Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath() + cmd.getSiteFileName(), delivery ? cmd.getStatus() : 0 ));
 }
 
