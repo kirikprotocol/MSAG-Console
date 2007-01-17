@@ -403,6 +403,14 @@ public class HttpRoutingManager extends Manager{
         return (HttpSite) sites.get(name);
     }
 
+    public synchronized String getHttpRouteNameById(String id) {
+        HttpRoute route = (HttpRoute)routes.get(id);
+        if (route !=null)
+          return route.getName();
+        else
+          return "unknown";
+    }
+
     public Map getRoutes() {
         return routes;
     }

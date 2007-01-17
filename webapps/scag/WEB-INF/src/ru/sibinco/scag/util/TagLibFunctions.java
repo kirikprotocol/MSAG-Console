@@ -1,8 +1,10 @@
 package ru.sibinco.scag.util;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.SCAGAppContext;
 
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Created by IntelliJ IDEA.
@@ -62,5 +64,9 @@ public class TagLibFunctions {
 
   public static final String getComplexRuleId(String ruleId, String transport) {
     return Rule.composeComplexId(ruleId,transport);
+  }
+
+  public static final String getHttpRouteNameById(HttpServletRequest req,String id) {
+    return ((SCAGAppContext)req.getAttribute("appContext")).getHttpRoutingManager().getHttpRouteNameById(id);
   }
 }

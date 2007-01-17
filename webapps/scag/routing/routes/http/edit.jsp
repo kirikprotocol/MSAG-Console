@@ -575,7 +575,7 @@
                                     <col width="1%">
                                     <col width="99%">
                                     <tr>
-                                        <td width="100%"><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==esite}">checked</c:if> value="${esite}">&nbsp;${fn:escapeXml(i.host)}</td>
+                                        <td width="100%"><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==esite}">checked</c:if> value="${esite}">&nbsp;${fn:escapeXml(i.host)}:${fn:escapeXml(i.port)}</td>
                                         <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
                                                                               value="${esite}">
                                             <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>

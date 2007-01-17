@@ -143,7 +143,7 @@
             </sm-pm:menu>
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.http.routes_list</fmt:message></div>
-            <sm:http_route columns="checkbox,id,name,enabled,defaultRoute,transit" names="c,service.edit.table.http_route.id,service.edit.table.http_route.name,service.edit.table.http_route.enabled,service.edit.table.http_route.default,service.edit.table.http_route.transit" widths="1,60,20,20,39,59"
+            <sm:http_route columns="checkbox,name,id,enabled,defaultRoute,transit" names="c,service.edit.table.http_route.name,service.edit.table.http_route.id,service.edit.table.http_route.enabled,service.edit.table.http_route.default,service.edit.table.http_route.transit" widths="1,60,20,20,39,59"
                            child="/routing/routes/http" parentId="${bean.parentId}" edit="name" targetElemId="mbDeleteHttpRoute" defaultItemId="mbDefaultHttpRoute"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>

@@ -8,6 +8,7 @@ package ru.sibinco.scag.perfmon.applet;
  * To change this template use File | Settings | File Templates.
  */
 public class ContextInfo {
+    private String name;
     private int pixPerSecond;
     private int scale;
     private int block;
@@ -15,16 +16,19 @@ public class ContextInfo {
     private ContextInfo smpp;
 
     public ContextInfo() {
+      http = new ContextInfo("HTTP");
+      smpp = new ContextInfo("SMPP");
+    }
 
+    public ContextInfo(String name) {
+      this.name = name;
     }
 
     public void initHttp() {
-      http = new HttpContextInfo();
       http.store();
     }
 
     public void initSmpp() {
-      smpp = new SmppContextInfo();
       smpp.store();
     }
 
@@ -56,22 +60,9 @@ public class ContextInfo {
     }
 
     public String toString() {
-      return this.getClass().getName()+" : "+
+      return this.name +" : "+
              "pixPerSecond = " +this.pixPerSecond + " : " +
              "scale = " + this.scale + " : " +
              "block = " + this.block;
-    }
-
-    private class HttpContextInfo extends ContextInfo {
-      public HttpContextInfo() {
-
-      }
-
-    }
-
-    private class SmppContextInfo extends ContextInfo {
-      public SmppContextInfo() {
-
-      }
     }
 }

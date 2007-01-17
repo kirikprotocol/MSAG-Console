@@ -219,7 +219,7 @@
                         <tr class=row0>
                             <td style="cursor:hand;text-align:left"
                                 onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
-                                <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(routeStat.routeid)}</div>
+                                <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smf:getHttpRouteNameById(pageContext.request,routeStat.routeid))}</div>
                             </td>
                             <td style="text-align:left">${routeStat.request}</td>
                             <td style="text-align:left">${routeStat.requestRejected}</td>
