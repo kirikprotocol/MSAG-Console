@@ -282,7 +282,7 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
-  int idx=((VoidPtr2Int(ptr))>>5)%LH_HASHSIZE;
+  unsigned int idx=((unsigned int)((VoidPtr2Int(ptr))>>5))%LH_HASHSIZE;
   if(memcounts[idx]==memsizes[idx])
   {
     BlockInfo *tmp=(BlockInfo *)malloc(sizeof(BlockInfo)*memsizes[idx]*2);
@@ -325,7 +325,7 @@ int LeakHunter::RegisterDealloc(void* ptr)
 {
   smsc::core::synchronization::MutexGuard guard(m);
   if(!init)Init();
-  int idx=((VoidPtr2Int(ptr))>>5)%LH_HASHSIZE;
+  unsigned int idx=((unsigned int)((VoidPtr2Int(ptr))>>5))%LH_HASHSIZE;
   int i;
   for(i=memcounts[idx]-1;i>=0;i--)
   {
