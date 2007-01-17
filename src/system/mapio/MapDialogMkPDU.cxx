@@ -30,7 +30,15 @@ void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms,int atz)
   pdu_tm->sec.second  = tms->tm_sec%10;
   if ( tms->tm_isdst ) atz-=3600;
   atz = -atz/900;
-  pdu_tm->tz = atz;
+  if(atz<0)
+  {
+    atz=-atz;
+    pdu_tm->tz.first=0x8|(atz/10);
+  }else
+  {
+    pdu_tm->tz.first = atz/10;
+  }
+  pdu_tm->tz.second = atz%10;
 }
 
 ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false)

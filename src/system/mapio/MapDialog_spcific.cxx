@@ -232,7 +232,10 @@ struct MAP_TIMESTAMP{
     unsigned char second:4;
     unsigned char first:4;
   }sec;
-  unsigned char tz;
+  struct{
+    unsigned char second:4;
+    unsigned char first:4;
+  }tz;
 };
 
 inline void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
@@ -424,10 +427,10 @@ inline void ConvAddrIMSI2Smc(const ET96MAP_IMSI_T* ma,Address* sa)
   char *sa_ptr = sa_val;
   int i = 0;
   for ( ;i<(ma->imsiLen);i++){
-    *sa_ptr = (ma->imsi[i]&0x0f)+0x30; 
+    *sa_ptr = (ma->imsi[i]&0x0f)+0x30;
     if( *sa_ptr > 0x39 ) throw runtime_error("MAP::ConvAddrIMSI2Smc numeric address contains not digit.");
     sa_ptr++;
-    *sa_ptr = (ma->imsi[i]>>4)+0x30; 
+    *sa_ptr = (ma->imsi[i]>>4)+0x30;
     if( *sa_ptr == 0x0f+0x30 ) *sa_ptr = 0;
     else {
       if( *sa_ptr > 0x39 ) throw runtime_error("MAP::ConvAddrIMSI2Smc numeric address contains not digit.");
