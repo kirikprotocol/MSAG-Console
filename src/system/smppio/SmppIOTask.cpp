@@ -1113,6 +1113,7 @@ int SmppOutputThread::Execute()
         Socket *s=ss->getSocket();
         if(now-getSocketData(s).lastUpdateTime-inactivityTime>inactivityTimeOut*2)
         {
+          info2(log,"Closing socket %p: double inactivity timeout reached",s);
           s->Close();
         }
 
