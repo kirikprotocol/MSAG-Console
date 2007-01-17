@@ -708,6 +708,10 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         }
         j=m[0].end;
       }
+      if(j!=len)
+      {
+        __warning2__("tail of template '%s' arguments wasn't parsed:'%s'",tmplname.c_str(),buf+j);
+      }
       lastDirectiveSymbol=j;
       tmplstart=i;
       tmpllen=j-i;
@@ -3679,6 +3683,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
     sms.setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
   }
 
+  bool wasBillReport=false;
+
   if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
     bool final=
@@ -3713,6 +3719,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }else
         {
           smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
+          wasBillReport=true;
         }
       }catch(std::exception& e)
       {
@@ -3778,11 +3785,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
       info2(smsLog, "DLVRSP: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
       sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-      try{
-        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
-      }catch(std::exception& e)
+      if(!wasBillReport)
       {
-        smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+        try{
+          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
+        }catch(std::exception& e)
+        {
+          smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+        }
       }
       return EXPIRED_STATE;
     }
