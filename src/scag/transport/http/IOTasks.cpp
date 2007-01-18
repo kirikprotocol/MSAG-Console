@@ -55,6 +55,8 @@ void IOTask::killSocket(Socket *s) {
         }    
         if (flags & FAKE_RESP) {
             cx->action = PROCESS_RESPONSE;
+            if(cx->command == NULL)
+                cx->command = new HttpResponse(cx->getTransactionContext());                
             manager.scags.process(cx);  
         }
     }
@@ -178,17 +180,15 @@ int HttpReaderTask::Execute()
                 HttpContext *cx = HttpContext::getContext(s);
                 unsigned int unparsed_len;
                 int len;
-
                 unparsed_len = cx->loadUnparsed(buf);                
                 do
                     len = s->Read(buf + unparsed_len, READER_BUF_SIZE - unparsed_len);
                 while (len == -1 && errno == EINTR);
 
                 if (len > 0 || (len == 0 && cx->action == READ_RESPONSE)) {
-                    smsc_log_debug(logger, "%p: %p, data received", this, cx);
+                    smsc_log_debug(logger, "%p: %p, data received. len=%d", this, cx, len);
                     unparsed_len += len;
                     len = unparsed_len;
-
                     //printHex(buf, unparsed_len);
                     switch (HttpParser::parse(buf, unparsed_len, *cx)) {
                     case OK:
@@ -336,7 +336,7 @@ int HttpWriterTask::Execute()
                 const char *data;
                 unsigned int size;
                 int written_size;
-    
+
                 if (cx->flags == 0) {
                     // write headers
                     const std::string &headers = cx->command->getMessageHeaders();

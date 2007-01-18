@@ -7,7 +7,6 @@
 
 namespace scag { namespace transport { namespace http
 {
-
 const char HOST_FIELD[] = "host";
 const char CONTENT_TYPE_URL_ENCODED[] = "application/x-www-form-urlencoded";
 const char CHARSET[] = "charset";
@@ -40,10 +39,6 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
   unsigned int  local_len = len;
   StatusCode    rc = OK;
   HttpCommand   *command;
-
-  if (len == 0)
-    return OK;
-
   switch (cx.action) {
     case READ_REQUEST:
       if (cx.command == NULL)
@@ -56,8 +51,12 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
     default:
       return ERROR;
   }
+  
+  if (len == 0)
+    return OK;
+  
   command = cx.command;
-
+  
   do {
     if (cx.flags == 0) {
       rc = readLine(local_buf, local_len);
