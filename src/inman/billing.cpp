@@ -135,17 +135,6 @@ bool Billing::matchBillMode(void) const
             ) ? true : false;
 }
 
-std::string Billing::dpType(void) const
-{
-    std::string dps((cdr._bearer == CDRRecord::dpUSSD) ? "dpUSSD" : "dpSMS");
-    if (cdr._smsXSrvs) {
-        char buf[sizeof("(Extra: 0x%x)") + sizeof("FFFFFFFF") + 2];
-        snprintf(buf, sizeof(buf), "(Extra: 0x%x)", cdr._smsXSrvs);
-        dps += buf;
-    }
-    return dps;
-}
-
 void Billing::doCleanUp(void)
 {
     //check for pending query to AbonentProvider
@@ -205,7 +194,7 @@ void Billing::doFinalize(bool doReport/* = true*/)
 
     smsc_log_info(logger, "%s: %scomplete, %s --> %s(cause: %u),"
                           " abonent(%s), type %s, CDR(s) written: %u",
-                    _logId, BillComplete() ? "" : "IN", dpType().c_str(),
+                    _logId, BillComplete() ? "" : "IN", cdr.dpType().c_str(),
                     cdr._inBilled ? "SCF": "CDR", billErr, abNumber.getSignals(),
                     AbonentContractInfo::type2Str(abType), cdrs);
 
@@ -336,7 +325,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         return false;
     }
     smsc_log_info(logger, "%s: %s: Call.Adr <%s>, Dest.Adr <%s>", _logId,
-                    dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+                    cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
 
     uint32_t smsXSrvs = cdr._smsXSrvs & ~SMSX_RESERVED_MASK;
     if (smsXSrvs) {
@@ -492,7 +481,7 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
         state = Billing::bilContinued;
     }
     smsc_log_info(logger, "%s: <-- %s CHARGING_%s, abonent(%s) type: %s (%u)", _logId,
-                dpType().c_str(), reply.c_str(), abNumber.getSignals(),
+                cdr.dpType().c_str(), reply.c_str(), abNumber.getSignals(),
                 AbonentContractInfo::type2Str(abType), (unsigned)abType);
 
     SPckChargeSmsResult res;
@@ -587,8 +576,6 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 
     if (opaque_obj->val.ui == (unsigned)state) {
         //target operation doesn't complete yet.
-        smsc_log_debug(logger, "%s: operation is timed out at state: %u",
-                    _logId, (unsigned)state);
         if (state == Billing::bilStarted) {
             //abonent provider query is expired
             abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);

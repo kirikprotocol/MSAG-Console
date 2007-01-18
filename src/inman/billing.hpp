@@ -112,7 +112,6 @@ protected:
     void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
     bool ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
     bool matchBillMode(void) const;
-    std::string dpType(void) const;
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
