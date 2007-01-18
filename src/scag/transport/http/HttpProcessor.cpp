@@ -510,7 +510,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     }
     catch(...)
     {
-        smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
+        smsc_log_error( logger, "Unknown exception. http_status_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
     }
 
     if(se.Get())
