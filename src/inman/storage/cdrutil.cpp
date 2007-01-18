@@ -66,6 +66,15 @@ void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
     CSVFileEncoder::addUint8 (rec, cdr._inBilled ? 0x01 : 0x00, true);
 }
 
+std::string CDRRecord::dpType(void)
+{
+    char buf[sizeof("dpUSSD(X:%Xh)") + sizeof("FFFFFFFF") + 2];
+    int n = snprintf(buf, sizeof(buf)-1, "dp%s", (_bearer == dpUSSD) ? "USSD" : "SMS");
+    if (_smsXSrvs)
+        n += snprintf(buf + n, sizeof(buf)-1-n, "(X:%Xh)", _smsXSrvs);
+    buf[n] = 0;
+    return buf;
+}
 
 } //cdr
 } //inman
