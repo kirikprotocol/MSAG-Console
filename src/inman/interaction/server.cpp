@@ -26,7 +26,7 @@ Server::Server(const ServSocketCFG * in_cfg, Logger * uselog /*= NULL*/)
 Server::~Server()
 {
     _mutex.Lock();
-    removeAllListeners();
+    clearListeners();
     _mutex.Unlock();
 
     if (_runState != Server::lstStopped)
