@@ -682,16 +682,17 @@ int main(int argc, char** argv)
     smsc_log_info(inmanLogger,"* Config file: %s", cfgFile);
     smsc_log_info(inmanLogger,"******************************");
 
-    INManConfig cfg;
+    std::auto_ptr<INManConfig> pCfg(new INManConfig());
     try {
         Manager::init((const char *)cfgFile);
         Manager& manager = Manager::getInstance();
-        cfg.read(manager);
-        if (cfg.hasExtraConfig()) {
+        pCfg->read(manager);
+        const char * nm_xcfg = pCfg->hasExtraConfig();
+        if (nm_xcfg) {
             manager.deinit();
-            smsc_log_info(inmanLogger, "Reading smsExtra config %s ..", cfg.hasExtraConfig());
-            manager.init(cfg.hasExtraConfig());
-            cfg.readExtraConfig(manager);
+            smsc_log_info(inmanLogger, "Reading smsExtra config %s ..", nm_xcfg);
+            manager.init(nm_xcfg);
+            pCfg->readExtraConfig(manager);
         }
     } catch (ConfigException& exc) {
         smsc_log_error(inmanLogger, "Config: %s", exc.what());
@@ -704,7 +705,7 @@ int main(int argc, char** argv)
     );
 
     try {
-        g_pService = new Service(&cfg, inmanLogger);
+        g_pService = new Service(pCfg.release(), inmanLogger);
         assert(g_pService);
         _runService = 1;
         if (g_pService->start()) {

@@ -51,7 +51,8 @@ typedef struct {
 
 class Service : public ServerListenerITF, public ConnectListenerITF {
 public:
-    Service(const InService_CFG * in_cfg, Logger * uselog = NULL);
+    //Service takes ownership of in_cfg
+    Service(InService_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~Service();
 
     bool start();
@@ -82,7 +83,7 @@ private:
     TCAPDispatcher* disp;
     Server*         server;
     volatile bool   running;
-    InService_CFG   _cfg;
+    InService_CFG*  _cfg;
     InFileStorageRoller * roller;
 
     SessionsMap     sessions;
