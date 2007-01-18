@@ -8,7 +8,6 @@ static char const ident[] = "$Id$";
 
 #include "inman/common/adrutil.hpp"
 
-//#include "logger/Logger.h"
 #include "core/synchronization/Event.hpp"
 using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
@@ -19,9 +18,6 @@ using smsc::core::threads::Thread;
 
 #include "inman/common/console.hpp"
 using smsc::inman::common::Console;
-
-//#include "util/vformat.hpp"
-//using smsc::util::format;
 
 #include "inman/interaction/SerialSocket.hpp"
 using smsc::inman::interaction::SerialSocket;
@@ -125,7 +121,9 @@ public:
                 abn.imsi[0] ? abn.imsi : "none");
     }
 
-    unsigned getMaxAbId(void) const { return lastAbnId; }
+    inline unsigned getMaxAbId(void) const { return lastAbnId; }
+    inline unsigned nextId(unsigned ab_id) const { return (ab_id >= lastAbnId) ? 1 : ++ab_id; }
+
     const AbonentInfo * getAbnInfo(unsigned ab_id)
     {
         MutexGuard  grd(_sync);
@@ -371,9 +369,9 @@ class INDialog {
 public:
     typedef enum { dIdle = 0, dCharged = 1, dApproved, dReported } INState;
 
-    INDialog(unsigned int dlg_id, const INDialogCfg & use_cfg, bool batch_mode = false,
+    INDialog(unsigned int dlg_id, const INDialogCfg * use_cfg, bool batch_mode = false,
              uint32_t dlvr_res = 1016)
-        : did(dlg_id), cfg(use_cfg), batchMode(batch_mode), dlvrRes(dlvr_res)
+        : did(dlg_id), cfg(*use_cfg), batchMode(batch_mode), dlvrRes(dlvr_res)
         , state(INDialog::dIdle)
     {}
 
@@ -381,6 +379,7 @@ public:
     INState getState(void) const { return state; }
     uint32_t getDlvrResult(void) const { return dlvrRes; }
     bool    isBatchMode(void) const { return batchMode; }
+    const INDialogCfg * getConfig(void) const { return &cfg; }
 
 protected:
     unsigned int        did;
@@ -502,16 +501,18 @@ public:
     unsigned getNextDialogId(void) { return ++dialogId; }
 
     unsigned int initDialog(unsigned int did = 0, bool batch_mode = false,
-                            uint32_t delivery = 1016)
+                            uint32_t delivery = 1016, INDialogCfg * use_cfg = NULL)
     {
         if (!did)
             did = getNextDialogId();
-        if (!_abDB->getAbnInfo(_dlgCfg.abId)) {
-            smsc_log_error(logger, "WRN: unknown abId: %u, using #1", _dlgCfg.abId);
-            fprintf(stdout, "\nWRN: unknown abId: %u, using #1", _dlgCfg.abId);
-            _dlgCfg.abId = 1;
+        if (!use_cfg)
+            use_cfg = &_dlgCfg;
+        if (!_abDB->getAbnInfo(use_cfg->abId)) {
+            smsc_log_error(logger, "WRN: unknown abId: %u, using #1", use_cfg->abId);
+            fprintf(stdout, "\nWRN: unknown abId: %u, using #1", use_cfg->abId);
+            use_cfg->abId = 1;
         }
-        INDialog * dlg = new INDialog(did, _dlgCfg, batch_mode, delivery);
+        INDialog * dlg = new INDialog(did, use_cfg, batch_mode, delivery);
         _Dialogs.insert(INDialogsMap::value_type(did, dlg));
         return did;
     }
@@ -523,15 +524,15 @@ public:
     }
 
     // -- INMan commands composition and sending methods -- //
-    void composeChargeSms(ChargeSms& op)
+    void composeChargeSms(ChargeSms& op, const INDialogCfg * dlg_cfg)
     {
         static uint32_t _msg_ref = 0x0100;
         static uint64_t _msg_id = 0x010203040000;
 
-        const TonNpiAddress * dAdr = _adrDB->get(_dlgCfg.dstId);
+        const TonNpiAddress * dAdr = _adrDB->get(dlg_cfg->dstId);
         op.setDestinationSubscriberNumber(dAdr->toString());
 
-        const AbonentInfo * abi = _abDB->getAbnInfo(_dlgCfg.abId);
+        const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->addr.toString());
         op.setCallingIMSI(abi->imsi);
         
@@ -550,35 +551,53 @@ public:
         op.setServiceId(1234);
         op.setUserMsgRef(++_msg_ref);
         op.setMsgId(++_msg_id);
-        op.setServiceOp(_dlgCfg.ussdOp ? 0 : -1);
+        op.setServiceOp(dlg_cfg->ussdOp ? 0 : -1);
         op.setMsgLength(160);
 #ifdef SMSEXTRA
-        op.setSmsXSrvs(_dlgCfg.xsmsIds);
+        op.setSmsXSrvs(dlg_cfg->xsmsIds);
 #endif /* SMSEXTRA */
     }
 
-    void composeDeliverySmsResult(DeliverySmsResult& op)
+    void composeDeliverySmsResult(DeliverySmsResult& op, const INDialogCfg * dlg_cfg)
     {
         //fill fields for CDR creation
         op.setDestIMSI("250013901464251");
         op.setDestMSC(".1.1.79139860001");
         op.setDestSMEid("DST_MAP_PROXY");
-        op.setDivertedAdr(_adrDB->get(_dlgCfg.dstId)->toString());
+        op.setDivertedAdr(_adrDB->get(dlg_cfg->dstId)->toString());
         op.setDeliveryTime(time(NULL));
     }
 
-    void sendChargeSms(unsigned int dlgId)
+    void sendChargeSms(unsigned int dlgId, uint32_t num_bytes = 0)
     {
+        std::string msg;
+        const INDialogCfg * dlg_cfg = &_dlgCfg;
+        INDialog * dlg = findDialog(dlgId);
+        if (!dlg) {
+            msg =  format("WRN: Dialog[%u] is unknown!\n", dlgId);
+            prompt(msg);
+        } else {
+            dlg_cfg = dlg->getConfig();
+        }
         //compose ChargeSms
+        CDRRecord       cdr;
         SPckChargeSms   pck;
         pck.Hdr().dlgId = dlgId;
-        composeChargeSms(pck.Cmd());
+        composeChargeSms(pck.Cmd(), dlg_cfg);
+        pck.Cmd().export2CDR(cdr);
 
-        std::string msg = format("Sending ChargeSms [dlgId: %u] ..\n", dlgId);
-        prompt(msg);
-        pipe->sendPck(&pck);
-
-        INDialog * dlg = findDialog(dlgId);
+        if (!num_bytes) {
+            msg = format("--> Charge[%u] %s: %s -> %s ..\n", dlgId,
+                         cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+            prompt(msg);
+            pipe->sendPck(&pck);
+        } else {
+            msg = format("--> %u bytes of Charge[%u] %s: %s -> %s ..\n",
+                         num_bytes, dlgId, cdr.dpType().c_str(), cdr._srcAdr.c_str(),
+                         cdr._dstAdr.c_str());
+            prompt(msg);
+            sendPckPart(&pck, num_bytes);
+        }
         if (dlg) {
             if (dlg->getState() == INDialog::dIdle)
                 dlg->setState(INDialog::dCharged);
@@ -589,17 +608,34 @@ public:
         }
     }
 
-    void sendDeliverySmsResult(unsigned int dlgId, uint32_t deliveryStatus)
+    void sendDeliverySmsResult(unsigned int dlgId, uint32_t deliveryStatus, uint32_t num_bytes = 0)
     {
+        std::string msg;
+        const INDialogCfg * dlg_cfg = &_dlgCfg;
+        INDialog * dlg = findDialog(dlgId);
+        if (!dlg) {
+            msg =  format("WRN: Dialog[%u] is unknown!\n", dlgId);
+            prompt(msg);
+        } else {
+            dlg_cfg = dlg->getConfig();
+        }
+        //compose DeliverySmsResult
         SPckDeliverySmsResult   pck;
         pck.Hdr().dlgId = dlgId;
         pck.Cmd().setResultValue(deliveryStatus);
-        composeDeliverySmsResult(pck.Cmd());
+        composeDeliverySmsResult(pck.Cmd(), dlg_cfg);
 
-        std::string msg = format("Sending DeliverySmsResult: DELIVERY_%s [dlgId: %u]\n",
-                                 !deliveryStatus ? "SUCCEEDED" : "FAILED", dlgId);
-        prompt(msg);
-        INDialog * dlg = findDialog(dlgId);
+        if (!num_bytes) {
+            msg = format("--> DeliverySmsResult[%u]: DELIVERY_%s\n",
+                         dlgId, !deliveryStatus ? "SUCCEEDED" : "FAILED");
+            prompt(msg);
+            pipe->sendPck(&pck);
+        } else {
+            msg = format("--> %u bytes of DeliverySmsResult[%u]: DELIVERY_%s\n",
+                         num_bytes, dlgId, !deliveryStatus ? "SUCCEEDED" : "FAILED");
+            prompt(msg);
+            sendPckPart(&pck, num_bytes);
+        }
         if (dlg) {
             if (dlg->getState() == INDialog::dApproved)
                 dlg->setState(INDialog::dReported);
@@ -607,23 +643,18 @@ public:
                 msg =  format("WRN: Dialog[%u] state is %u!\n", dlg->getState());
                 prompt(msg);
             }
-        } else {
-            msg =  format("WRN: Dialog[%u] is inknown!\n", dlgId);
-            prompt(msg);
         }
-        pipe->sendPck(&pck);
     }
 
     //Customized variant of SerialSocket::sendObj(): it sends specified
     //number of bytes from ObjectBuffer
-//    int  sendPckPart(SerializableObject &obj, uint32_t num_bytes)
-    int  sendPckPart(INPPacketAC &pck, uint32_t num_bytes)
+    int  sendPckPart(INPPacketAC *pck, uint32_t num_bytes)
     {
         int             offs = 4;
         ObjectBuffer    buffer(1024);
 
         buffer.setPos(offs);
-        pck.serialize(buffer);
+        pck->serialize(buffer);
         //always SerialSocket::frmLengthPrefixed format
         {
             uint32_t len = htonl(num_bytes);
@@ -636,7 +667,7 @@ public:
     // -- INMan commands listening and handling methods -- //
     void onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)
     {
-        std::string msg = format("Dialog[%u] got ChargeSmsResult: CHARGING_%sPOSSIBLE", hdr->dlgId,
+        std::string msg = format("<-- ChargeSmsResult[%u]: CHARGING_%sPOSSIBLE", hdr->dlgId,
                 (result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) ?
                  "" : "NOT_");
         if (result->getCombinedError()) {
@@ -774,28 +805,28 @@ static Facade* _pFacade = 0;
 static void utl_multi_charge(const std::vector<std::string> &args, uint32_t delivery = 0)
 {
     if (_pFacade->isRunning()) {
-        if (args.size() < 2) {
+        unsigned int dnum = 10;
+        if ((args.size() > 1) && !(dnum = (unsigned int)atoi(args[1].c_str()))) {
             fprintf(stdout, "USAGE: %s num_of_dialogs!\n", args[0].c_str());
             return;
         }
-        unsigned int dnum = (unsigned int)atoi(args[1].c_str());
-        if (!dnum) {
-            fprintf(stdout, "ERR: bad number specified (%s)!\n", args[1].c_str());
-            return;
-        }
-        for (; dnum > 0; dnum--) {
-            unsigned int did = _pFacade->initDialog(0, true, delivery);
+        AbonentsDB * abDb = AbonentsDB::getInstance();
+        INDialogCfg  cfg = *(_pFacade->getDlgConfig());
+        for (; dnum > 0; dnum--, cfg.abId = abDb->nextId(cfg.abId)) {
+            unsigned int did = _pFacade->initDialog(0, true, delivery, &cfg);
             _pFacade->sendChargeSms(did);
         }
     } else
         throw ConnectionClosedException();
 }
-
+//USAGE: m_chargeOk [num_dialogs [dflt = 10]]
+//sends specified number of ChargeSMS requests with successfull delivery, iterating over abonentsDB.
 void cmd_multi_chargeOk(Console&, const std::vector<std::string> &args)
 {
     utl_multi_charge(args, 0);
 }
-
+//USAGE: m_chargeErr [num_dialogs [dflt = 10]]
+//sends specified number of ChargeSMS requests with failed delivery, iterating over abonentsDB.
 void cmd_multi_chargeErr(Console&, const std::vector<std::string> &args)
 {
     utl_multi_charge(args, 1016);
@@ -807,128 +838,94 @@ void cmd_charge(Console&, const std::vector<std::string> &args)
         unsigned int did = 0;
 
         if (args.size() > 1) {
-            did = (unsigned int)atoi(args[1].c_str());
-            if (!did) {
+            if (!(did = (unsigned int)atoi(args[1].c_str()))) {
                 fprintf(stdout, "ERR: bad dialog id specified (%s)!\n", args[1].c_str());
                 return;
             }
         }
-        if (!_pFacade->findDialog(did))
+        if (!did || !_pFacade->findDialog(did))
             did = _pFacade->initDialog(did);
         _pFacade->sendChargeSms(did);
     } else
         throw ConnectionClosedException();
 }
 
+static void utl_charge(const std::vector<std::string> &args, uint32_t delivery_status)
+{
+    if (_pFacade->isRunning()) {
+        unsigned int did = _pFacade->initDialog(0, true, delivery_status);
+        _pFacade->sendChargeSms(did);
+    } else
+        throw ConnectionClosedException();
+}
 void cmd_chargeOk(Console&, const std::vector<std::string> &args)
 {
-    if (_pFacade->isRunning()) {
-        unsigned int did = _pFacade->initDialog(0, true, 0);
-        _pFacade->sendChargeSms(did);
-    } else
-        throw ConnectionClosedException();
+    utl_charge(args, 0);
 }
-
 void cmd_chargeErr(Console&, const std::vector<std::string> &args)
 {
+    utl_charge(args, 1016);
+}
+
+static void utl_reportDlg(const std::vector<std::string> &args, uint32_t delivery_status)
+{
     if (_pFacade->isRunning()) {
-        unsigned int did = _pFacade->initDialog(0, true, 1016);
-        _pFacade->sendChargeSms(did);
+        unsigned int did = 0;
+
+        if (args.size() > 1)
+            did = (unsigned int)atoi(args[1].c_str());
+        if (!did) {
+            fprintf(stdout, "ERR: dialog id %s is bad or missed!\n",
+                    (args.size() > 1) ? args[1].c_str() : "");
+            return;
+        }
+        _pFacade->sendDeliverySmsResult(did, delivery_status);
     } else
         throw ConnectionClosedException();
 }
-
 void cmd_reportOk(Console&, const std::vector<std::string> &args)
 {
-    if (_pFacade->isRunning()) {
-        unsigned int did = 0;
-
-        if (args.size() > 1) //create new dialog
-            did = (unsigned int)atoi(args[1].c_str());
-
-        if (!did) {
-            fprintf(stdout, "ERR: dialog id %s is bad or missed!\n",
-                    (args.size() > 1) ? args[1].c_str() : "");
-            return;
-        }
-
-        if (!_pFacade->findDialog(did))
-            fprintf(stdout, "WRN: unknown dialog id specified (%s)!\n", args[1].c_str());
-
-        _pFacade->sendDeliverySmsResult(did, 0);
-    } else
-        throw ConnectionClosedException();
+    utl_reportDlg(args, 0);
 }
-
 void cmd_reportErr(Console&, const std::vector<std::string> &args)
 {
-    if (_pFacade->isRunning()) {
-        unsigned int did = 0;
-
-        if (args.size() > 1) //create new dialog
-            did = (unsigned int)atoi(args[1].c_str());
-
-        if (!did) {
-            fprintf(stdout, "ERR: dialog id %s is bad or missed!\n",
-                    (args.size() > 1) ? args[1].c_str() : "");
-            return;
-        }
-
-        if (!_pFacade->findDialog(did))
-            fprintf(stdout, "WRN: unknown dialog id specified (%s)!\n", args[1].c_str());
-
-        _pFacade->sendDeliverySmsResult(did, 1016);
-    } else
-        throw ConnectionClosedException();
+    utl_reportDlg(args, 1016);
 }
 
+static unsigned utl_cmdExc(const std::vector<std::string> &args, uint32_t & size)
+{
+    if (!_pFacade->isRunning())
+        throw ConnectionClosedException();
+    unsigned dlgId = 0;
+
+    size = 0;
+    if (args.size() > 1) {
+        if (!(size = (uint32_t)atoi(args[1].c_str()))) {
+            fprintf(stdout, "ERR: num_bytes %s is invalid!\n", args[1].c_str());
+            return 0;
+        }
+    }
+    if ((args.size() > 2) && !(dlgId = (unsigned)atoi(args[2].c_str())))
+        fprintf(stdout, "WRN: dialog id %s is invalid!\n", args[1].c_str());
+    if (!dlgId || !_pFacade->findDialog(dlgId))
+        dlgId = _pFacade->getNextDialogId();
+    return dlgId;
+}
 //USAGE: chargeExc [num_bytes] [dlgId]
 //sends specified number of bytes of ChargeSMS packet, causing exception on remote point
 void cmd_chargeExc(Console&, const std::vector<std::string> &args)
 {
-    if (_pFacade->isRunning()) {
-        uint32_t size = 8; //send prefix only by default
-        unsigned dlgId;
-
-        if (args.size() > 1)
-            size = (uint32_t)atoi(args[1].c_str());
-        if (args.size() > 2)
-            dlgId = (unsigned)atoi(args[2].c_str());
-        else
-            dlgId = _pFacade->getNextDialogId();
-
-        SPckChargeSms   pck;
-        pck.Hdr().dlgId = dlgId;
-        _pFacade->composeChargeSms(pck.Cmd());
-        _pFacade->sendPckPart(pck, size);
-        fprintf(stdout, "Sent %u bytes of ChargeSMS (dlgId: %u)\n", size, dlgId);
-    } else
-        throw ConnectionClosedException();
+    uint32_t size;
+    unsigned dlgId = utl_cmdExc(args, size);
+    _pFacade->sendChargeSms(dlgId, size ? size : 8); //send prefix only by default
 }
-
 //USAGE: dlvrExc [num_bytes] [dlgId]
 //sends specified number of bytes of DeliverySmsResult packet, causing exception on remote point
 void cmd_dlvrExc(Console&, const std::vector<std::string> &args)
 {
-    if (_pFacade->isRunning()) {
-        uint32_t size = 8;
-        unsigned dlgId;
-
-        if (args.size() > 1)
-            size = (uint32_t)atoi(args[1].c_str());
-        if (args.size() > 2)
-            dlgId = (unsigned)atoi(args[2].c_str());
-        else
-            dlgId = _pFacade->getNextDialogId();
-
-        SPckDeliverySmsResult   pck;
-        pck.Hdr().dlgId = dlgId;
-        pck.Cmd().setResultValue(1016);
-        _pFacade->composeDeliverySmsResult(pck.Cmd());
-        _pFacade->sendPckPart(pck, size);
-        fprintf(stdout, "Sent %u bytes of DeliverySmsResult (dlgId: %u)\n", size, dlgId);
-    } else
-        throw ConnectionClosedException();
+    uint32_t size;
+    unsigned dlgId = utl_cmdExc(args, size);
+    _pFacade->sendDeliverySmsResult(dlgId, 1179, size ? size : 8); //send prefix only by default
 }
 
 /* ************************************************************************** *
