@@ -34,7 +34,7 @@ struct AbonentRecord : public AbonentContractInfo {
     void reset(void)    { tm_queried = 0; AbonentContractInfo::Reset(); }
 
     inline bool isExpired(long interval) const
-    { return (bool)(time(NULL) >= (tm_queried + interval)); }
+    { return tm_queried ? (bool)(time(NULL) >= (tm_queried + interval)) : false; }
 
     AbonentRecord& operator= (const AbonentContractInfo & ab_info)
     {
