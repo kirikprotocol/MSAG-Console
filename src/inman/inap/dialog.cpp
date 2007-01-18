@@ -71,7 +71,12 @@ void Dialog::clearInvokes(void)
 void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
 {
     MutexGuard dtmp(dlgGrd);
-    releaseAllInvokes();
+    unsigned cnt = originating.size() + terminating.size();
+    if (cnt) {
+        smsc_log_warn(logger, "Dialog[0x%X]: resetting, %u invokes pending!",
+                      (unsigned)_dId, cnt);
+        releaseAllInvokes();
+    }
     _lastInvId = 0;
     _dId = new_id;
     _state.value = 0;
@@ -514,6 +519,12 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     for (ListenerList::iterator it = cpList.begin(); it != cpList.end(); it++) {
         DialogListener* ptr = *it;
         ptr->onDialogInvoke(&invoke, lastComp);
+    }
+    //if Dialog is remotedly ended, no LCancel will arise for invokes
+    {
+        MutexGuard tmp(dlgGrd);
+        if (_state.s.dlgREnded == TCAP_DLG_COMP_LAST)
+            clearInvokes();
     }
     return MSG_OK;
 }
