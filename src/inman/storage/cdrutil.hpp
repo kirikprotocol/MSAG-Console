@@ -21,7 +21,7 @@ struct CDRRecord {
     typedef enum { dpSMS = 0, dpUSSD } CDRBearerType;
     typedef enum { dpDeliveryOk = 0, dpDeliveryFailed = 1 } CDRDeliveryStatus;
 
-    std::string dpType(void);
+    std::string dpType(void) const;
 
     //basic info:
     uint64_t        _msgId;         //MSG_ID: system message identifier
