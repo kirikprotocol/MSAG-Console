@@ -392,27 +392,26 @@ void TimeWatcher::deactivateTimer(TimerID tmr)
 void TimeWatcher::dischargeTimer(TimerID tmr)
 {
     MutexGuard tmpGrd(_sync);
-    smsc_log_debug(logger, "TmWT: releasing timer[%u]", tmr->getId());
     TimersLIST::iterator it;
     if ((it = std::find(signaled.begin(), signaled.end(), tmr)) != signaled.end()) {
         signaled.erase(it);
         pool.push_back((StopWatch*)tmr);
-        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was signaled)", tmr->getId());
+        smsc_log_debug(logger, "TmWT: timer[%u] is released to pool (was signaled)", tmr->getId());
         return;
     }
     if ((it = std::find(started.begin(), started.end(), tmr)) != started.end()) {
         started.erase(it);
         pool.push_back((StopWatch*)tmr);
-        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was started)", tmr->getId());
+        smsc_log_debug(logger, "TmWT: timer[%u] is released to pool (was started)", tmr->getId());
         return;
     }
     if ((it = std::find(assigned.begin(), assigned.end(), tmr)) != assigned.end()) {
         assigned.erase(it);
         pool.push_back((StopWatch*)tmr);
-        smsc_log_debug(logger, "TmWT: timer[%u] moved to pool (was assigned)", tmr->getId());
+        smsc_log_debug(logger, "TmWT: timer[%u] is released to pool (was assigned)", tmr->getId());
         return;
     }
-    smsc_log_error(logger, "TmWT: timer[%u] is not assigned!", tmr->getId());
+    smsc_log_warn(logger, "TmWT: releasing unassigned timer[%u]!", tmr->getId());
     return;
 }
 
