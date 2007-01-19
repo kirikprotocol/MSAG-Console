@@ -17,7 +17,7 @@ const HexDumpCFG _HexDump_CVCS = { 1, 0, ",", "0x"}; //C Value Comma Separated
 
 static const char _HexChars[] = "0123456789ABCDEF";
 
-unsigned DumpHex(unsigned length, unsigned char * buf,
+unsigned DumpHex(unsigned length, const unsigned char * buf,
                 StreamAppenderITF * usr_print,
                 const HexDumpCFG & use_cfg/* = _HexDump_DFLT*/)
 {
@@ -56,7 +56,7 @@ unsigned DumpHex(unsigned length, unsigned char * buf,
     return printed;
 }
 
-std::string DumpHex(unsigned long length, unsigned char * buf,
+std::string DumpHex(unsigned long length, const unsigned char * buf,
                     const HexDumpCFG & use_cfg/* = _HexDump_DFLT*/)
 {
     StdStrAppender  p_str;
@@ -64,7 +64,7 @@ std::string DumpHex(unsigned long length, unsigned char * buf,
     return *(p_str.release());
 }
 
-std::string& DumpHex(std::string& fstr, unsigned long length, unsigned char * buf,
+std::string& DumpHex(std::string& fstr, unsigned long length, const unsigned char * buf,
                     const HexDumpCFG & use_cfg/* = _HexDump_DFLT*/)
 {
     StdStrAppender  p_str(&fstr);

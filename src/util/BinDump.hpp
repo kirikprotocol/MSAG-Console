@@ -39,12 +39,12 @@ extern const HexDumpCFG _HexDump_CVCS; //C Value Comma Separated
 extern const HexDumpCFG _HexDump_HG4S; //Hex octet Grouped by 4, Space delimited, all per Line
 #define _HexDump_DFLT   _HexDump_HG4S
 
-extern unsigned DumpHex(unsigned length, unsigned char * buf,
+extern unsigned DumpHex(unsigned length, const unsigned char * buf,
                         StreamAppenderITF * usr_print,
                         const HexDumpCFG & use_cfg = _HexDump_DFLT);
-extern std::string DumpHex(unsigned long length, unsigned char * buf,
+extern std::string DumpHex(unsigned long length, const unsigned char * buf,
                         const HexDumpCFG & use_cfg = _HexDump_DFLT);
-extern std::string& DumpHex(std::string& fstr, unsigned long length, unsigned char * buf,
+extern std::string& DumpHex(std::string& fstr, unsigned long length, const unsigned char * buf,
                         const HexDumpCFG & use_cfg = _HexDump_DFLT);
 
 /* ************************************************************************** *
