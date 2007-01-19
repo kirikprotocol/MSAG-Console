@@ -485,7 +485,7 @@ Property* Session::getProperty(const std::string& name)
     {
         if (!propertyPTR) 
         {
-            property = new AdapterProperty(name,this, m_pCurrentOperation->getStatus());
+            property = new AdapterProperty(name,this, m_SessionKey.USR);
             PropertyHash.Insert(name.c_str(),property);
             return property; 
         }
