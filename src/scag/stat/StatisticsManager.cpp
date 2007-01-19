@@ -347,8 +347,8 @@ void StatisticsManager::registerEvent(const HttpStatEvent& se)
         incSvcWapCounter(se.site.c_str(), se.event);
     }
     
-    if(se.errCode && se.errCode != 200 && routeSt)     incError(routeSt->errors, se.errCode);
-    if(se.errCode && se.errCode != 200 && urlSt)       incError(urlSt->errors, se.errCode);
+    if(se.errCode && (se.errCode < 200 || se.errCode > 299) && routeSt)     incError(routeSt->errors, se.errCode);
+    if(se.errCode && (se.errCode < 200 || se.errCode > 299) && urlSt)       incError(urlSt->errors, se.errCode);
     
     switch(se.event)
     {

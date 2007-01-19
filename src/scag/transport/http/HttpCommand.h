@@ -118,7 +118,7 @@ public:
     typedef StringHashIterator FieldIterator;
 
     HttpCommand(TransactionContext& tcx, uint8_t cmd) : trc(tcx), content(1), command_id(cmd),
-        contentLength(-1), /* totalHeadersSize(0), */
+        contentLength(-1), httpVersion("HTTP/1.1"),/* totalHeadersSize(0), */
         headerFieldsIterator(headerFields), charset(LATIN_1) {}
     virtual ~HttpCommand();
 
