@@ -527,7 +527,7 @@ function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
             + " </tr>"
             + " <tr>"
             + " <td nowrap=\"true\" align=\"right\">" + addPathStr + "&nbsp;</td>"
-            + " <td align=\"right\"><input id=\"newPath_" + siteName + "\" class=\"txt\" name=\"newPath_" + siteName + "\"></td>"
+            + " <td align=\"right\"><input id=\"newPath_" + siteName + "\" class=\"txt\" name=\"newPath_" + siteName + "\" onkeyup=\"resetValidation(this)\"></td>"
             + " <td><img src=\"content/images/but_add.gif\" alt=\"" + addPathStr + "\" "
             + "onclick=\"addPath(opForm.all.newPath_" + siteName + ", '" + siteFullName + "', opForm.all.sitesp_table_" + siteName + ", '" + siteName + "')\" "
             + "style=\"cursor:hand;\"></td>"

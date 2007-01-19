@@ -212,7 +212,7 @@
           <input type="hidden" name="transportId" value="${bean.transportId}">
           <input type="hidden" name="subjectType" value="${bean.subjectType}">
           <sm-pm:menu>
-              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
+              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title" onclick="return validateHttpSubj();"/>
               <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title" onclick="clickCancel()"/>
               <sm-pm:space/>
           </sm-pm:menu>
@@ -253,67 +253,10 @@
               </tr>
           </table>
             <hr>
-          <sm-et:section title="Sites List" opened="true"  name="allsites" width="40%">
-                <table id="div_site_table" cellpadding="0" cellspacing="0" class="properties_list">
-                    <tr><td>
-                        <c:forEach items="${bean.sites}" var="i">
-                            <c:set var="esite" value="${fn:escapeXml(i.host)}"/>
-                            <c:set var="eport" value="${fn:escapeXml(i.port)}"/>
-                            <c:set var="esite_sub" value="${fn:substringBefore(esite,'.')}"/>
-                            <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
-                            <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
-                            <c:set var="defaultSiteObjId" value="${fn:escapeXml(i.defaultSite)}"/>
-
-                            <div class="collapsing_tree_opened" id="${sectHeader}" style="width:100%;">
-                                 <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
-
-                                <table id="${esite_table}" cellpadding="0" cellspacing="0" class="properties_list">
-                                    <col width="1%">
-                                    <col width="99%">
-                                    <tr>
-                                        <td width="100%"><input type="radio" name="defaultSiteObjId" value="${esite}" <c:if test="${defaultSiteObjId}">checked</c:if>>&nbsp;${fn:escapeXml(i.host)}</td>
-                                        <td align="left" nowrap="true"><input type="hidden" name="sitesHost"  id="${esite}"
-                                                                              value="${esite}">
-                                            <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>
-                                        <td><img src="content/images/but_del.gif"
-                                                 onClick="removeSection('${esite_sub}')"
-                                                 style="cursor:hand;"></td>
-                                    </tr>
-
-                                    <tr>
-                                        <td nowrap="true"  align="right"><fmt:message>routes.edit.add.new.path</fmt:message>&nbsp;</td>
-                                        <td align="right"><input id="${esite_sub}_newPath" class="txt"
-                                                                 name="${esite_sub}_newPath"></td>
-                                        <td><img src="content/images/but_add.gif" alt="Add new path"
-                                                 onclick="addPath(opForm.all.${esite_sub}_newPath, '${esite}', opForm.all.sitesp_table_${esite_sub}, '${esite_sub}')"
-                                                 style="cursor:hand;"></td>
-                                    </tr>
-                                    <c:set var="rowN" value="0"/>
-                                    <c:forEach items="${i.pathLinks}" var="j">
-                                        <c:set var="epath" value="${fn:escapeXml(j)}"/>
-                                        <tr class="row${rowN%2}" id="pathRow_${esite_sub}_${epath}">
-                                            <td></td>
-                                            <td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${epath}<input type="hidden"
-                                                                                             name="pathLinks"
-                                                                                             value="${esite}^${epath}">
-                                            </td>
-                                            <td><img src="content/images/but_del.gif"
-                                                     onClick="removeRow(opForm.all.sitesp_table_${esite_sub}, 'pathRow_${esite_sub}_${epath}')"
-                                                     style="cursor:hand;"></td>
-                                        </tr>
-                                        <c:set var="rowN" value="${rowN+1}"/>
-                                    </c:forEach>
-                                </table>
-                            </div>
-                        </c:forEach>
-                    </td></tr>
-                    <tr><td valign="top">&nbsp;</td></tr>
-                  <tr><td colspan="2">&nbsp;</td></tr>
-                </table>
-            </sm-et:section>
+          <sm:sites_list type="subj" width="40%"/>
           <br>
           <sm-pm:menu>
-              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title"/>
+              <sm-pm:item name="mbSave" value="subjects.edit.item.mbsave.value" title="subjects.edit.item.mbsave.title" onclick="return validateHttpSite();"/>
               <sm-pm:item name="mbCancel" value="subjects.edit.item.mbcancel.value" title="subjects.edit.item.mbcancel.title"
                           onclick="clickCancel()"/>
               <sm-pm:space/>

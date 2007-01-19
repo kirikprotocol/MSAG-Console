@@ -335,7 +335,17 @@ public class HttpRoutingManager extends Manager{
                 "Subject", "Deleted subject site(s): " + checkedSet.toString() + "."));
     }
 
-    public synchronized void deleteSubjects(final String user, final Set checkedSet) {
+    public synchronized void deleteSubjects(final String user, final Set checkedSet) throws SCAGJspException{
+        String subj;
+        for (Iterator i=getRoutes().values().iterator();i.hasNext();) {
+          HttpRoute route = (HttpRoute)i.next();
+          Abonent abonent = route.getAbonent() ;
+          for(Iterator ii = checkedSet.iterator();ii.hasNext();) {
+            subj = (String)ii.next();
+            if (abonent.getSubjects().get(subj) !=null) throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_DELETE_SUBJECT_IS_BOUND," Subject \""+subj+"\" to route \""+route.getName()+"\"");
+          }
+        }
+
         getSubjects().keySet().removeAll(checkedSet);
         setRoutesChanged(true);
         addStatMessages(new StatMessage(user, "Subject", "Deleted http subject(s): " + checkedSet.toString() + "."));

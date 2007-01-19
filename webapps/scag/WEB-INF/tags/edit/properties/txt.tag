@@ -13,5 +13,6 @@
     <input class=txt type="${empty type ? 'text' : type}" maxlength="${maxlength}" style="width:${styleWidth}"
            name="${fn:escapeXml(name)}" value="${fn:escapeXml(bean[name])}"
     <c:if test="${readonly}"> readonly</c:if>
-    <c:if test="${!empty validation}"> validation="${validation}" onkeyup="resetValidation(this)"</c:if>>
+    <c:if test="${!empty validation}"> validation="${validation}" onkeyup="resetValidation(this)"</c:if>
+    onchange="this.value=trim(this.value);">
 </sm-ep:property>
