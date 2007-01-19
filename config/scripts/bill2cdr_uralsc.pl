@@ -17,7 +17,7 @@ my $header='';
 my $footer='';
 my $crc='0'x32;
 
-my $addrrx=qr'79126\d{6}|79122\d{6}|79123\d{6}|79124\d{6}|79125\d{6}|79127\d{6}|79128\d{6}|79129\d{6}|79193\d{6}|79194\d{6}|79195\d{6}|79199\d{6}|79191\d{6}|79197\d(6)';
+my $addrrx=qr'79126\d{6}|79122\d{6}|79123\d{6}|79124\d{6}|79125\d{6}|79127\d{6}|79128\d{6}|79129\d{6}|79193\d{6}|79194\d{6}|79195\d{6}|79199\d{6}|79191\d{6}|79197\d{6}';
 my $mscrx=qr'.*';
 
 my $eoln="\x0d\x0a";
@@ -58,9 +58,9 @@ my $eoln="\x0d\x0a";
 {field=>'PAYER_MSC',width=>21},                  #31 340
 );
 
-if(@ARGV!=4)
+if(@ARGV<4)
 {
-  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir\n";
+  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir [nobilldir]\n";
   exit;
 }
 
@@ -68,15 +68,17 @@ my $indir=$ARGV[0];
 my $outdir=$ARGV[1];
 my $tmpdir=$ARGV[2];
 my $arcdir=$ARGV[3];
-for($indir,$outdir,$tmpdir,$arcdir)
+my $nobilldir=$ARGV[4];
+for($indir,$outdir,$tmpdir,$arcdir,$nobilldir)
 {
-  if(! -d $_)
+  if($_ && ! -d $_)
   {
     die "error: $_ doesn't exists\n";
   }
 }
-for($indir,$outdir,$tmpdir,$arcdir)
+for($indir,$outdir,$tmpdir,$arcdir,$nobilldir)
 {
+  next unless $_;
   $_.='/' unless $_=~m!/$!;
 }
 opendir(D,$indir) or die "failed to read $indir";
@@ -149,8 +151,8 @@ for(@dir)
 sub outrow{
   my ($out,$fields)=@_;
 
-  return unless $fields->{PAYER_ADDR}=~/$addrrx/;
-  return unless $fields->{PAYER_MSC}=~/$mscrx/;
+  return 0 unless $fields->{PAYER_ADDR}=~/$addrrx/;
+  return 0 unless $fields->{PAYER_MSC}=~/$mscrx/;
 
   for my $f(@OUT_FIELDS)
   {
@@ -175,6 +177,7 @@ sub outrow{
   }
 
   $out->print($eoln);
+  return 1;
 }
 
 sub conv_addr{
@@ -213,6 +216,21 @@ sub datetotimestamp{
   };
 };
 
+sub getFileName{
+  my $path=shift;
+  if($path=~m!.*/([^/]+)!)
+  {
+    return $1;
+  }
+  return $path;
+}
+
+sub combine{
+  my ($csv,$arr)=@_;
+  $csv->combine(@$arr);
+  return $csv->string().$eoln;
+}
+
 sub process{
   my ($inf,$outf)=@_;
   print "Processing $inf\n";
@@ -223,6 +241,8 @@ sub process{
   $out->{footer}=$footer.$eoln;
   my $csv=Text::CSV_XS->new({'binary'=>1});
   my $hdr=$csv->getline($in);
+  my $nbout=$nobilldir?DelayedFile->new('>'.$nobilldir.getFileName($inf)):undef;
+  $nbout->{header}=combine($csv,$hdr) if $nbout;
   die "Input file parsing failed" unless $hdr;
   my $row;
   while($row=$csv->getline($in))
@@ -264,7 +284,10 @@ sub process{
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
     $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-    outrow($out,$outfields);
+    unless(outrow($out,$outfields))
+    {
+      $nbout->print(combine($csv,$row)) if $nbout;
+    }
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
       $outfields->{RECORD_TYPE}=20;
@@ -274,9 +297,15 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      outrow($out,$outfields);
+      unless(outrow($out,$outfields))
+      {
+        $nbout->print(combine($csv,$row)) if $nbout;
+      }
       $outfields->{RECORD_TYPE}=30;
-      outrow($out,$outfields);
+      unless(outrow($out,$outfields))
+      {
+        $nbout->print(combine($csv,$row)) if $nbout;
+      }
     }else
     {
       $outfields->{RECORD_TYPE}=20;
@@ -294,7 +323,10 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      outrow($out,$outfields);
+      unless(outrow($out,$outfields))
+      {
+        $nbout->print(combine($csv,$row)) if $nbout;
+      }
     }
   }
 }
