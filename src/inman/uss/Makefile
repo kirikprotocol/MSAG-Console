@@ -1,6 +1,7 @@
 #
 # $Id$
 #
+CXXFLAGS := -I../inap -I../util $(CXXFLAGS)
 
 PACKAGE := inman.uss
 

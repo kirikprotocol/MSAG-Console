@@ -63,9 +63,9 @@ public:
     enum {
         ussServiceResponse = 0xFF
     };
-    void requestSS(std::vector<unsigned char> & rq_data, unsigned char dcs,
+    void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const char * subsc_adr = NULL) throw (CustomException);
-    void requestSS(std::vector<unsigned char> & rq_data, unsigned char dcs,
+    void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const TonNpiAddress * subsc_adr = NULL) throw (CustomException);
 
     void endMapDlg(void);

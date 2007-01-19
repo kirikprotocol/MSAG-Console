@@ -124,7 +124,7 @@ void MapUSSDlg::endMapDlg(void)
 /* ------------------------------------------------------------------------ *
  * MAP-PROCESS-UNSTRUCTURED-SS-REQUEST interface
  * ------------------------------------------------------------------------ */
-void MapUSSDlg::requestSS(std::vector<unsigned char> & rq_data, unsigned char dcs,
+void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const char * subsc_adr/* = NULL*/) throw (CustomException)
 {
     TonNpiAddress msAdr;
@@ -133,7 +133,7 @@ void MapUSSDlg::requestSS(std::vector<unsigned char> & rq_data, unsigned char dc
     requestSS(rq_data, dcs, subsc_adr ? &msAdr : NULL);
 }
 
-void MapUSSDlg::requestSS(std::vector<unsigned char> & rq_data, unsigned char dcs,
+void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
 {
     //create TCAP Dialog
