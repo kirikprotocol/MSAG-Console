@@ -15,8 +15,20 @@ InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DBEntityStorage(DataStora
          ! _nonuniq_index_by_smscid_key.insertIndexedValue(InfoSme_Id_Mapping_Entity::SmscId_Key(record.getAdaptedObjRef()),
                                                            rid) )
       throw smsc::db::SQLException("InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DBEntityStorage::: can't load storage data");
-    else
+    else {
+      InfoSme_Id_Mapping_Entity::SmscId_Key smscIdKey(record.getAdaptedObjRef());
+
+      smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+                                  smsc::core::synchronization::Mutex> mutex =
+        InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(smscIdKey);
+      if ( !mutex.Get() ) {
+        InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.toRegisterObject
+          (smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+                                       smsc::core::synchronization::Mutex>(new smsc::core::synchronization::RecursiveMutex()), smscIdKey);
+      }
+
       opResult =_storage->extractNextRecord(&record, &rid, &nextRid);
+    }
   }
 
   if ( opResult != DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::NO_RECORD_FOUND &&
@@ -36,7 +48,6 @@ InfoSme_Id_Mapping_DBEntityStorage::findValue(const InfoSme_Id_Mapping_Entity::I
        DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::OPERATION_OK )
     return false;
   else {
-    //std::auto_ptr<InfoSme_Id_Mapping_Entity_Adapter> cleanupGuard(record);
     *result = record.getAdaptedObjRef();
     return true;
   }
@@ -102,9 +113,9 @@ InfoSme_Id_Mapping_DBEntityStorage::eraseValue(const InfoSme_Id_Mapping_Entity::
 {
   typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
 
+  smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   if ( _uniq_index_by_id_key.findIndexedValueByKey(key, &rid) ) {
     InfoSme_Id_Mapping_Entity_Adapter record;
-    std::auto_ptr<InfoSme_Id_Mapping_Entity_Adapter> cleanupGuard;
     if ( _storage->extractRecord(&record, rid) ==
          DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ) {
       _nonuniq_index_by_smscid_key.eraseIndexedValue(InfoSme_Id_Mapping_Entity::SmscId_Key(record.getAdaptedObjRef()), rid);
