@@ -7,6 +7,15 @@
 # include <string>
 # include <sstream>
 # include "EntityKey.hpp"
+# include <util/ObjectRegistry.hpp>
+# include <core/synchronization/Mutex.hpp>
+# include <core/synchronization/RecursiveMutex.hpp>
+# include <core/buffers/RefPtr.hpp>
+
+class SelectInfoSme_Id_Mapping_SmscId_criterion;
+class Insert_into_InfoSme_Id_Mapping;
+class Delete_from_InfoSme_Id_Mapping_By_SmscId;
+class InfoSme_Id_Mapping_DBEntityStorage;
 
 class InfoSme_Id_Mapping_Entity {
 public:
@@ -86,5 +95,15 @@ private:
   uint64_t _id;
   std::string _smsc_id;
   std::string _task_id;
+
+  friend class SelectInfoSme_Id_Mapping_SmscId_criterion;
+  friend class Insert_into_InfoSme_Id_Mapping;
+  friend class Delete_from_InfoSme_Id_Mapping_By_SmscId;
+  friend class InfoSme_Id_Mapping_DBEntityStorage;
+
+  //static smsc::util::ObjectRegistry<smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+  static smsc::util::RefObjectRegistry<smsc::core::synchronization::RecursiveMutex,
+                                       SmscId_Key> _mutexRegistry_ForSmscIdExAccess;
+  static smsc::core::synchronization::Mutex _mutexRegistryLock_ForSmscIdExAccess;
 };
 #endif
