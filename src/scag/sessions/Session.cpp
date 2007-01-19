@@ -7,6 +7,9 @@ namespace scag { namespace sessions {
 using namespace scag::exceptions;
 using namespace scag::re;
 
+////////////////////////////////////////////////STATIC FUNCTIONS//////////////////////////
+////////////////////////////////////////////////STATIC FUNCTIONS//////////////////////////
+
 Hash<int> Session::InitOperationTypesHash()
 {
     Hash<int> hs;
@@ -24,11 +27,32 @@ Hash<int> Session::InitOperationTypesHash()
     hs["DATA_SME_2_SME"] = CO_DATA_SME_2_SME;
     hs["DATA_SME_2_SC"] = CO_DATA_SME_2_SC;
 
+    return hs;
+}
+
+
+Hash<int> Session::OperationTypesHash = Session::InitOperationTypesHash();
+
+Hash<int> Session::InitReadOnlyPropertiesHash()
+{
+    Hash<int> hs;
+
+    hs["USR"]               = PROPERTY_USR;
+    hs["ICC_STATUS"]        = PROPERTY_ICC_STATUS;
 
     return hs;
 }
 
-Hash<int> Session::OperationTypesHash = Session::InitOperationTypesHash();
+Hash<int> Session::ReadOnlyPropertiesHash = Session::InitReadOnlyPropertiesHash();
+
+////////////////////////////////////////////////STATIC FUNCTIONS//////////////////////////
+////////////////////////////////////////////////STATIC FUNCTIONS//////////////////////////
+
+bool Session::isReadOnlyProperty(const char * name)
+{
+    return (ReadOnlyPropertiesHash.GetPtr(name));
+}
+
 
 int Session::getOperationType(std::string& str)
 {
@@ -438,36 +462,42 @@ void Session::changed(AdapterProperty& property)
 
 Property* Session::getProperty(const std::string& name)
 {
-    AdapterProperty ** propertyPTR = 0;
+    AdapterProperty ** propertyPTR = PropertyHash.GetPtr(name.c_str());
+    AdapterProperty * property = 0;
 
     if (name=="ICC_STATUS") 
     {
         if (!m_pCurrentOperation) return 0;
 
-        propertyPTR = PropertyHash.GetPtr(name.c_str());
-
         if (!propertyPTR) 
         {
-
-            AdapterProperty * property = new AdapterProperty(name,this, m_pCurrentOperation->getStatus());
+            property = new AdapterProperty(name,this, m_pCurrentOperation->getStatus());
             PropertyHash.Insert(name.c_str(),property);
             return property; 
         }
+
         (*propertyPTR)->setInt(m_pCurrentOperation->getStatus());
 
         return (*propertyPTR);
-
     }
 
-    propertyPTR = PropertyHash.GetPtr(name.c_str());
-
-    if (!propertyPTR) 
+    if (name=="USR") 
     {
-        AdapterProperty * property = new AdapterProperty(name,this,"");
-        PropertyHash.Insert(name.c_str(),property);
-        return property;
+        if (!propertyPTR) 
+        {
+            property = new AdapterProperty(name,this, m_pCurrentOperation->getStatus());
+            PropertyHash.Insert(name.c_str(),property);
+            return property; 
+        }
+
+        return (*propertyPTR);
     }
-    return (*propertyPTR);
+
+
+    property = new AdapterProperty(name,this,"");
+    PropertyHash.Insert(name.c_str(),property);
+
+    return property;
 }
 
 

@@ -262,6 +262,14 @@ namespace scag { namespace sessions
         friend class SessionManagerImpl;
         friend class Comparator;
 
+
+        enum ReadOnlyProperties
+        {
+            PROPERTY_USR = 1,
+            PROPERTY_ICC_STATUS = 2
+        };
+
+
         Logger * logger;
         std::list<PendingOperation> PendingOperationList;
         std::list<PendingOperation> PrePendingOperationList;
@@ -282,6 +290,7 @@ namespace scag { namespace sessions
 
         Hash<AdapterProperty *> PropertyHash;
         static Hash<int> OperationTypesHash;
+        static Hash<int> ReadOnlyPropertiesHash;
         /*
         COperationsHashPtr getOperationsHash()
         {
@@ -348,7 +357,8 @@ namespace scag { namespace sessions
 
         static int getOperationType(std::string& str);
         static Hash<int> Session::InitOperationTypesHash();
-
+        static Hash<int> Session::InitReadOnlyPropertiesHash();
+        static bool isReadOnlyProperty(const char * name);
     };
 
     typedef smsc::core::buffers::RefPtr<Session,smsc::core::synchronization::Mutex> SessionPtr;

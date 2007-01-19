@@ -45,7 +45,6 @@
 	
         <simpleType name="Command">
             <restriction base="scag:Command">
-		<enumeration value="#usr"/>
 	        <enumeration value="#status_ok"/>
 	        <enumeration value="#status_perm_error"/>
 	        <enumeration value="#status_temp_error"/>

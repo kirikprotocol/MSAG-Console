@@ -39,6 +39,14 @@ FieldType Action::CheckParameter(const SectionParams& params, PropertyObject& pr
 
             if ((fieldType == ftUnknown)&&(!isReadOnly)) 
                 throw SCAGException("Action '%s': cannot modify scalar constant '%s' for '%s' parameter", actionName, strParameter.c_str(), paramName);
+
+            if (fieldType == ftSession) 
+            {
+                bool bReadOnlyProperty = Session::isReadOnlyProperty(name);
+
+                if ((bReadOnlyProperty)&&(!isReadOnly))
+                    throw SCAGException("Action '%s': cannot write property '%s' for '%s' parameter - no access", actionName, strParameter.c_str(), paramName);
+            }
         }
 
     }
