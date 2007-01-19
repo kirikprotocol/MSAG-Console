@@ -87,8 +87,8 @@ namespace scag { namespace sessions
         CSessionSetIterator DeleteSession(CSessionSetIterator it);
 
 
-        int16_t getNewUSR(Address& address);
-        int16_t getLastUSR(Address& address);
+        uint16_t getNewUSR(Address& address);
+        uint16_t getLastUSR(Address& address);
 
     public:
         void configChanged();
@@ -144,10 +144,10 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
     //smsc_log_debug(logger,"SessionManager: Restoring session from store");
 
-    int16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
+    uint16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
     lastUSR++;
 
-    int16_t maxUSR;
+    uint16_t maxUSR;
 
     if (sessionKey.USR > lastUSR) maxUSR = sessionKey.USR;
     else maxUSR = lastUSR;
@@ -671,18 +671,18 @@ void SessionManagerImpl::closeSession(SessionPtr session)
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str());
 }
 
-int16_t SessionManagerImpl::getLastUSR(Address& address)
+uint16_t SessionManagerImpl::getLastUSR(Address& address)
 {
-    int16_t result = 0;
+    uint16_t result = 0;
 
     int * resultPtr = UMRHash.GetPtr(address);
     if (resultPtr) result = (*resultPtr);
     return result;
 }
 
-int16_t SessionManagerImpl::getNewUSR(Address& address)
+uint16_t SessionManagerImpl::getNewUSR(Address& address)
 {
-    int16_t result = 1;
+    uint16_t result = 1;
 
     int * resultPtr = UMRHash.GetPtr(address);
     if (resultPtr) result = ++(*resultPtr);

@@ -37,7 +37,7 @@ void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppC
 void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * operation = 0;
-    int16_t UMR;
+    uint16_t UMR;
 
     switch (smppDiscriptor.cmdType)
     {

@@ -148,10 +148,11 @@ void Operation::attachBill(unsigned int BillId)
 
 void Operation::rollbackAll()
 {
-    smsc_log_warn(logger,"Operation: Rollback all (ab=%s)", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
-    
+   
     if (m_hasBill) 
     {
+        smsc_log_warn(logger,"Operation: Rollback all (ab=%s)", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
+
         BillingManager& bm = BillingManager::Instance();
 
         try
@@ -568,7 +569,9 @@ void Session::closeCurrentOperation()
     Operation ** opPtr = OperationsHash.GetPtr(currentOperationId);
     if (opPtr) 
     {
+       (*opPtr)->rollbackAll();
         delete (*opPtr);
+
         OperationsHash.Delete(currentOperationId);
         m_pCurrentOperation = 0;
         smsc_log_debug(logger,"Session: current operation (id=%lld) released (count = %d)", currentOperationId, OperationsHash.Count());
@@ -625,7 +628,8 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
         {
             Operation * operation = AddNewOperationToHash(cmd, operationType);
 
-            if (it->billID > 0) operation->attachBill(it->billID);
+            if (it->billID > 0) 
+                operation->attachBill(it->billID);
 
             smsc_log_debug(logger,"** Session: pending closed (type=%d, ab=%s)", it->type, m_SessionKey.abonentAddr.toString().c_str());
 

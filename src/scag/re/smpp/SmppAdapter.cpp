@@ -33,7 +33,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 {
     int * pFieldId;
     AccessType * actype = 0;
-
+    
     switch (handlerType) 
     {
     case EH_DATA_SM:
@@ -207,6 +207,7 @@ IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
 Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
 {
     Hash<int> hs;
+    hs["usr"]                           = USR;
 
     hs["OA"]                            = OA;
     hs["DA"]                            = DA;
@@ -316,6 +317,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 {
     Hash<int> hs;
 
+    hs["usr"]                           = USR;
     hs["packet_direction"]              = PACKET_DIRECTION;
 
     hs["OA"]                            = OA;
@@ -481,6 +483,7 @@ Hash<int> SmppCommandAdapter::InitRespFieldNames()
 {
     Hash<int> hs;
 
+    hs["usr"]                           = USR;
     hs["OA"]                            = OA;
     hs["DA"]                            = DA;
 
@@ -503,6 +506,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 {
     Hash<int> hs;
 
+    hs["usr"]                           = USR;
     hs["packet_direction"]              = PACKET_DIRECTION;
 
     hs["OA"]                            = OA;
@@ -836,6 +840,9 @@ AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::strin
 
     switch (FieldId) 
     {
+    case USR:
+        property = new AdapterProperty(name,this,command.getUSR());
+        break;
     case STATUS:
         property = new AdapterProperty(name,this,command->get_resp()->get_status());
         break;
@@ -1176,6 +1183,9 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     } else
     switch (FieldId) 
     {
+    case USR:
+        property = new AdapterProperty(name,this,command.getUSR());
+        break;
     case PACKET_DIRECTION:
         property = new AdapterProperty(name,this,command->get_smsCommand().dir);
         break;
@@ -1293,6 +1303,9 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     } else
     switch (FieldId) 
     {
+    case USR:
+        property = new AdapterProperty(name,this,command.getUSR());
+        break;
     case PACKET_DIRECTION:
         property = new AdapterProperty(name,this,command->get_smsCommand().dir);
         break;

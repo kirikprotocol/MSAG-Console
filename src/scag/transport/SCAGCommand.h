@@ -35,6 +35,9 @@ using smsc::core::buffers::Hash;
       virtual uint8_t getCommandId() const = 0;
       
       virtual LongCallContext& getLongCallContext() = 0;
+
+      virtual uint16_t getUSR() = 0;
+      virtual void setUSR(uint16_t usr) = 0;
       
       virtual ~SCAGCommand() {};
     };

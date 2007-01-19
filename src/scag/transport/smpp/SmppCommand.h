@@ -406,8 +406,9 @@ struct _SmppCommand
   int priority;
   uint64_t opId;
   LongCallContext lcmCtx;
+  uint16_t usr;
 
-  _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority)
+  _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority), usr(0)
   {
   }
   ~_SmppCommand()
@@ -1326,6 +1327,17 @@ public:
    {
         return cmd->lcmCtx;
    }
+
+   uint16_t getUSR()
+   {
+       return cmd->usr;
+   }
+
+   void setUSR(uint16_t usr)
+   {
+       cmd->usr = usr;
+   }
+
 };
 
 } //smpp

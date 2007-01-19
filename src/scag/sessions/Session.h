@@ -124,7 +124,7 @@ namespace scag { namespace sessions
 
     struct CSessionKey
     {
-        int16_t             USR; // User Session Reference
+        uint16_t             USR; // User Session Reference
         smsc::sms::Address  abonentAddr;
 
         bool operator ==(const CSessionKey& sk) const
@@ -344,7 +344,7 @@ namespace scag { namespace sessions
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
         CSessionPrimaryKey& getPrimaryKey() {return m_SessionPrimaryKey;}
-        int16_t getUSR() { return m_SessionKey.USR; }
+        uint16_t getUSR() { return m_SessionKey.USR; }
 
         static int getOperationType(std::string& str);
         static Hash<int> Session::InitOperationTypesHash();

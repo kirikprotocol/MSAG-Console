@@ -92,7 +92,7 @@ namespace scag { namespace re { namespace smpp
             STATUS_OK               = 159,
             STATUS_PERM_ERROR       = 160,
             STATUS_TEMP_ERROR       = 161,
-
+            USR                     = 162,
 
             //Binary tags
             OPTIONAL_CHARGING                           = 0x4901,
