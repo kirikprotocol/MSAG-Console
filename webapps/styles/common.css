@@ -89,6 +89,11 @@ input.radio
   cursor: hand;
 }
 
+select.selectW
+{
+  width: 100%;
+}
+
 
 /*************************************************************************/
 div.page_subtitle,

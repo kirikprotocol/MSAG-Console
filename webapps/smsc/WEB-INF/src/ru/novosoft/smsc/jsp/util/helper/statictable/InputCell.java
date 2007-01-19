@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.jsp.util.tables.table;
+package ru.novosoft.smsc.jsp.util.helper.statictable;
 
 
 

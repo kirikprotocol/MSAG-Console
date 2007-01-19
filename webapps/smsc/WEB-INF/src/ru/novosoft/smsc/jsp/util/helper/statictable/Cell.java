@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.jsp.util.tables.table;
+package ru.novosoft.smsc.jsp.util.helper.statictable;
 
 
 
@@ -7,12 +7,12 @@ package ru.novosoft.smsc.jsp.util.tables.table;
  * Date: 20.12.2006
  */
 
-public class Cell {
+public abstract class Cell {
 
   private final String id;
 
   protected Cell(String id) {
-    this.id = id;
+    this.id = (id == null) ? "" : id;
   }
 
   public String getId() {

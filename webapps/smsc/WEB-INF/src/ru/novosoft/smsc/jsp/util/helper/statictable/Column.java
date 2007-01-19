@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.jsp.util.tables.table;
+package ru.novosoft.smsc.jsp.util.helper.statictable;
 
 /**
  * User: artem
@@ -11,16 +11,15 @@ public abstract class Column {
 
   private boolean sortable;
 
-  public Column(String uId, SimpleTableBean simpleTableBean) {
-    this(uId, simpleTableBean, false);
+  public Column(String uId) {
+    this(uId, false);
   }
 
-  public Column(String uId, SimpleTableBean simpleTableBean, boolean sortable) {
-    this(uId, simpleTableBean, sortable, 0);
+  public Column(String uId, boolean sortable) {
+    this(uId, sortable, 0);
   }
 
-  public Column(String uId, SimpleTableBean simpleTableBean, boolean sortable, int width) {
-    simpleTableBean.addColumn(this);
+  public Column(String uId, boolean sortable, int width) {
     this.id = uId;
     this.sortable = sortable;
     this.width = width;

@@ -1,7 +1,7 @@
-package ru.novosoft.smsc.jsp.util.tables.table;
+package ru.novosoft.smsc.jsp.util.helper.statictable;
 
-import ru.novosoft.smsc.jsp.util.tables.table.DataCell;
-import ru.novosoft.smsc.jsp.util.tables.table.Column;
+import ru.novosoft.smsc.jsp.util.helper.statictable.DataCell;
+import ru.novosoft.smsc.jsp.util.helper.statictable.Column;
 
 import java.util.HashMap;
 

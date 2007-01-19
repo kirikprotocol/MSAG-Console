@@ -1,0 +1,168 @@
+package ru.novosoft.smsc.jsp.util.helper.dynamictable;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+/**
+ * User: artem
+ * Date: 16.01.2007
+ */
+
+public abstract class DynamicTableHelper {
+
+  public static final String TOTAL_COUNT_PREFIX = "_total_count_prefix";
+  public static final String NEW_CELL_PREFIX = "_newcell_";
+  public static final String CELL_PREFIX = "_cell_";
+
+  private final ArrayList columns = new ArrayList();
+  private final ArrayList rows = new ArrayList();
+
+  private final String name;
+  private final String uid;
+  private boolean showColumnsTitle = true;
+  private boolean useBaseRowValue = true;
+  private boolean allowAddValues = true;
+
+  public DynamicTableHelper(String name, String uid) {
+    this.name = name;
+    this.uid = uid;
+  }
+
+
+//  Request processing =================================================================================================
+
+
+  public void processRequest(HttpServletRequest request) throws IncorrectValueException {
+    if (request.getParameter(getTotalCountPrefix()) == null)
+      return;
+
+    int totalCount = Integer.parseInt(request.getParameter(getTotalCountPrefix()));
+    for (int i = 0; i <= totalCount ; i++)
+      addRow(readRow(request, i));
+
+    if (useBaseRowValue)
+      addRow(readLastRow(request));
+  }
+
+  private void addRow(Row row) {
+    if (row != null && !row.isEmpty())
+      rows.add(row);
+  }
+
+  private Row readRow(HttpServletRequest request, int rowNum) throws IncorrectValueException {
+    final Row row = new Row();
+    for (int i=0; i< columns.size(); i++) {
+      final Column column = (Column)columns.get(i);
+      row.addValue(column, column.getValue(request.getParameter(getCellParameterName(column) + rowNum)));
+    }
+    return row;
+  }
+
+  private Row readLastRow(HttpServletRequest request) throws IncorrectValueException {
+    final Row row = new Row();
+    for (int i=0; i< columns.size(); i++) {
+      final Column column = (Column)columns.get(i);
+      row.addValue(column, column.getValue(request.getParameter(getNewCellParameterName(column))));
+    }
+    return row;
+  }
+
+
+//  Abstract ===========================================================================================================
+
+
+  protected abstract void fillTable();
+
+
+//  Methods ============================================================================================================
+
+
+  public void clear() {
+    rows.clear();
+  }
+
+  public void setShowColumnsTitle(boolean showColumnsTitle) {
+    this.showColumnsTitle = showColumnsTitle;
+  }
+
+  public boolean isShowColumnsTitle() {
+    return showColumnsTitle;
+  }
+
+  public boolean isUseBaseRowValue() {
+    return useBaseRowValue;
+  }
+
+  public void setUseBaseRowValue(boolean useBaseRowValue) {
+    this.useBaseRowValue = useBaseRowValue;
+  }
+
+  public boolean isAllowAddValues() {
+    return allowAddValues;
+  }
+
+  public void setAllowAddValues(boolean allowAddValues) {
+    this.allowAddValues = allowAddValues;
+  }
+
+
+//  Table creation =====================================================================================================
+
+
+  protected Row createNewRow() {
+    final Row newRow = new Row();
+    rows.add(newRow);
+    return newRow;
+  }
+
+  protected void addColumn(Column column) {
+    if (column != null)
+      columns.add(column);
+  }
+
+
+//  Prefixes ===========================================================================================================
+
+
+  public String getTotalCountPrefix() {
+    return uid + TOTAL_COUNT_PREFIX;
+  }
+
+  public String getNewCellParameterName(Column column) {
+    return uid + NEW_CELL_PREFIX + column.getUid();
+  }
+
+  public String getCellParameterName(Column column) {
+    return uid + CELL_PREFIX + column.getUid();
+  }
+
+
+//  Properties =========================================================================================================
+
+
+  public String getName() {
+    return name;
+  }
+
+  public String getUid() {
+    return uid;
+  }
+
+  public int getTotalCount() {
+    return rows.size();
+  }
+
+  public Iterator getColumns() {
+    return columns.iterator();
+  }
+
+  public int getColumnsCount() {
+    return columns.size();
+  }
+
+  protected Iterator getRows() {
+    return rows.iterator();
+  }
+
+}

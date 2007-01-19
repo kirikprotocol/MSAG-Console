@@ -1,6 +1,6 @@
-package ru.novosoft.smsc.jsp.util.tables.table.cell;
+package ru.novosoft.smsc.jsp.util.helper.statictable.cell;
 
-import ru.novosoft.smsc.jsp.util.tables.table.InputCell;
+import ru.novosoft.smsc.jsp.util.helper.statictable.InputCell;
 
 /**
  * User: artem

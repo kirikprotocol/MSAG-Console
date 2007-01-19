@@ -11,7 +11,6 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.jsp.util.tables.*;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasDataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -37,13 +36,12 @@ public class AliasSet {
 
   /**
    *
-   * @aram config
    * @param smsc
    * @throws AdminException
    */
   public void init(Config config, Smsc smsc) throws AdminException {
     try {
-      aliasmanStorePath = /*"/network/shulga/build/smsc/distr/services/SMSC/store/aliases.bin";//*/config.getString(PARAM_NAME_FILE_NAME);
+      aliasmanStorePath = config.getString(PARAM_NAME_FILE_NAME);
       if (aliasmanStorePath == null || aliasmanStorePath.length() <= 0)
         throw new AdminException("store path is empty");
     } catch (Exception e) {
