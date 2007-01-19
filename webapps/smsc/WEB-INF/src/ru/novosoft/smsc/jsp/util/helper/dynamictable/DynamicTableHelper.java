@@ -12,8 +12,6 @@ import java.util.Iterator;
 public abstract class DynamicTableHelper {
 
   public static final String TOTAL_COUNT_PREFIX = "_total_count_prefix";
-  public static final String NEW_CELL_PREFIX = "_newcell_";
-  public static final String CELL_PREFIX = "_cell_";
 
   private final ArrayList columns = new ArrayList();
   private final ArrayList rows = new ArrayList();
@@ -54,7 +52,7 @@ public abstract class DynamicTableHelper {
     final Row row = new Row();
     for (int i=0; i< columns.size(); i++) {
       final Column column = (Column)columns.get(i);
-      row.addValue(column, column.getValue(request.getParameter(getCellParameterName(column) + rowNum)));
+      row.addValue(column, column.getValue(request, rowNum));
     }
     return row;
   }
@@ -63,7 +61,7 @@ public abstract class DynamicTableHelper {
     final Row row = new Row();
     for (int i=0; i< columns.size(); i++) {
       final Column column = (Column)columns.get(i);
-      row.addValue(column, column.getValue(request.getParameter(getNewCellParameterName(column))));
+      row.addValue(column, column.getBaseValue(request));
     }
     return row;
   }
@@ -127,14 +125,6 @@ public abstract class DynamicTableHelper {
 
   public String getTotalCountPrefix() {
     return uid + TOTAL_COUNT_PREFIX;
-  }
-
-  public String getNewCellParameterName(Column column) {
-    return uid + NEW_CELL_PREFIX + column.getUid();
-  }
-
-  public String getCellParameterName(Column column) {
-    return uid + CELL_PREFIX + column.getUid();
   }
 
 

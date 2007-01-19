@@ -70,11 +70,11 @@ function validateTextColumnBaseElement(tableId) {
   return true;
 }
 
-function createTextColumnElement(tableId, newCount) {
+function createTextColumnElement(tableId, newRow, newCount) {
   var id = tableId + "_cell_" + this.columnId + newCount;
   var value = getColumnBaseElement(tableId, this.columnId).value;
   getColumnBaseElement(tableId, this.columnId).value = "";
-  return createInput(id, value, this.validation, !this.allowEditAfterAdd);
+  newRow.insertCell(newRow.cells.length).appendChild(createInput(id, value, this.validation, !this.allowEditAfterAdd));
 }
 
 
@@ -102,10 +102,10 @@ function validateSelectColumnBaseElement(tableId) {
   return true;
 }
 
-function createSelectColumnElement(tableId, newCount) {
+function createSelectColumnElement(tableId, newRow, newCount) {
   var id = tableId + "_cell_" + this.columnId + newCount;
   var value = getColumnBaseElement(tableId, this.columnId).value;
-  return createSelect(id, value, this.values, this.validation, !this.allowEditAfterAdd) ;
+  newRow.insertCell(newRow.cells.length).appendChild(createSelect(id, value, this.values, this.validation, !this.allowEditAfterAdd));
 }
 
 
@@ -124,14 +124,14 @@ function validateRowControlButtonColumnBaseElement(tableId) {
   return true;
 }
 
-function createRowControlButtonColumnElement(tableId, newCount) {
+function createRowControlButtonColumnElement(tableId, newRow, newCount) {
   if (!this.allowRemoveAddedRows)
     return document.createElement("th");
   var image = createImage("/images/but_del.gif");
   image.setAttribute('rownum', newCount);
   image.setAttribute('tableid', tableId);
   image.attachEvent("onclick", removeRow);
-  return image;
+  newRow.insertCell(newRow.cells.length).appendChild(image);
 }
 
 function removeRow() {
@@ -158,7 +158,7 @@ function addRow(tableId, countElementId, columns) {
       return;
   // Fill row
   for (var i = 0; i < columns.length; i++)
-    newRow.insertCell(i).appendChild(columns[i].createColumnElement(tableId, newCount));
+    columns[i].createColumnElement(tableId, newRow, newCount);
 
   document.getElementById(countElementId).value = newCount + 1;
 

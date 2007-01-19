@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.jsp.util.helper.dynamictable;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * User: artem
  * Date: 16.01.2007
@@ -7,16 +9,19 @@ package ru.novosoft.smsc.jsp.util.helper.dynamictable;
 
 public abstract class Column {
 
+  public static final String NEW_CELL_PREFIX = "_newcell_";
+  public static final String CELL_PREFIX = "_cell_";
+
   private final String name;
   private final String uid;
   private final int width;
-  private final Type type;
+  private final DynamicTableHelper tableHelper;
 
-  protected Column(Type type, String name, String uid, int width) {
+  protected Column(DynamicTableHelper tableHelper, String name, String uid, int width) {
+    this.tableHelper = tableHelper;
     this.name = name;
     this.uid = uid;
     this.width = width;
-    this.type = type;
   }
 
   public String getName() {
@@ -31,26 +36,16 @@ public abstract class Column {
     return width;
   }
 
-  public abstract Object getValue(String valueId) throws IncorrectValueException; 
-
-  Type getType() {
-    return type;
+  public String getNewCellParameterName() {
+    return tableHelper.getUid() + NEW_CELL_PREFIX + uid;
   }
 
-  protected static class Type {
-
-    public static final Type TEXT_COLUMN = new Type(1);
-    public static final Type ROW_CONTROL_BUTTON_COLUMN = new Type(2);
-    public static final Type SELECT_COLUMN = new Type(3);
-
-    private final int type;
-
-    private Type(int type) {
-      this.type = type;
-    }
-
-    public int getType() {
-      return type;
-    }
+  public String getCellParameterName(int rowNum) {
+    return tableHelper.getUid() + CELL_PREFIX + uid + rowNum;
   }
+
+  public abstract Object getValue(HttpServletRequest request, int rowNumber) throws IncorrectValueException;
+
+  public abstract Object getBaseValue(HttpServletRequest request) throws IncorrectValueException;
+
 }

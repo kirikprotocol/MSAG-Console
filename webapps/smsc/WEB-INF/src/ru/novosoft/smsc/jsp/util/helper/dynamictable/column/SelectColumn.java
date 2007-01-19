@@ -3,6 +3,9 @@ package ru.novosoft.smsc.jsp.util.helper.dynamictable.column;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.Column;
 import ru.novosoft.smsc.jsp.util.helper.dynamictable.IncorrectValueException;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper;
+
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * User: artem
@@ -14,8 +17,8 @@ public class SelectColumn extends Column {
   private final boolean allowEditAfterAdd;
   private final Validation validation;
 
-  public SelectColumn(String name, String uid, int width, boolean allowEditAfterAdd, Validation validation, Object[] values) {
-    super(Type.SELECT_COLUMN, name, uid, width);
+  public SelectColumn(DynamicTableHelper tableHelper, String name, String uid, int width, boolean allowEditAfterAdd, Validation validation, Object[] values) {
+    super(tableHelper, name, uid, width);
     this.allowEditAfterAdd = allowEditAfterAdd;
     this.validation = validation;
 
@@ -45,9 +48,17 @@ public class SelectColumn extends Column {
     return validation;
   }
 
-  public Object getValue(String value) throws IncorrectValueException {
+  public Object getValue(HttpServletRequest request, int rowNumber) throws IncorrectValueException {
     try {
-      return values[Integer.parseInt(value)];
+      return values[Integer.parseInt(request.getParameter(getCellParameterName(rowNumber)))];
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  public Object getBaseValue(HttpServletRequest request) throws IncorrectValueException {
+    try {
+      return values[Integer.parseInt(request.getParameter(getNewCellParameterName()))];
     } catch (Exception e) {
       return null;
     }

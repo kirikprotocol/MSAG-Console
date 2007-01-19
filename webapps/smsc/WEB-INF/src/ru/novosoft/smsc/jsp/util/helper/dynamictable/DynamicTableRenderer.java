@@ -78,8 +78,8 @@ public class DynamicTableRenderer extends HTMLRenderer {
     if (column instanceof TextColumn) {
       final TextColumn textColumn = (TextColumn)column;
       return textInput("txtW",
-                       tableHelper.getCellParameterName(column) + rowNum,
-                       tableHelper.getCellParameterName(column) + rowNum,
+                       column.getCellParameterName(rowNum),
+                       column.getCellParameterName(rowNum),
                        (row != null) ? (String)row.getValue(column) : "",
                        !textColumn.isAllowEditAfterAdd(),
                        textColumn.getMaxLength(), null,
@@ -93,8 +93,8 @@ public class DynamicTableRenderer extends HTMLRenderer {
     } else if (column instanceof SelectColumn) {
       final SelectColumn selectColumn = (SelectColumn)column;
       return select("selectW",
-                    tableHelper.getCellParameterName(column) + rowNum,
-                    tableHelper.getCellParameterName(column) + rowNum,
+                    column.getCellParameterName(rowNum),
+                    column.getCellParameterName(rowNum),
                     selectColumn.getValuesAsStrings(),
                     selectColumn.getValueId(row.getValue(column)),
                     !selectColumn.isAllowEditAfterAdd(),
@@ -160,8 +160,8 @@ public class DynamicTableRenderer extends HTMLRenderer {
     if (column instanceof TextColumn) {
       final TextColumn textColumn = (TextColumn)column;
       return textInput("txtW",
-                       tableHelper.getNewCellParameterName(column),
-                       tableHelper.getNewCellParameterName(column),
+                       column.getNewCellParameterName(),
+                       column.getNewCellParameterName(),
                        (row != null) ? (String)row.getValue(column) : "",
                        false,
                        textColumn.getMaxLength(), null,
@@ -175,8 +175,8 @@ public class DynamicTableRenderer extends HTMLRenderer {
     } else if (column instanceof SelectColumn) {
       final SelectColumn selectColumn = (SelectColumn)column;
       return select("selectW",
-                    tableHelper.getNewCellParameterName(column),
-                    tableHelper.getNewCellParameterName(column),
+                    column.getNewCellParameterName(),
+                    column.getNewCellParameterName(),
                     selectColumn.getValuesAsStrings(),
                     0,
                     false,

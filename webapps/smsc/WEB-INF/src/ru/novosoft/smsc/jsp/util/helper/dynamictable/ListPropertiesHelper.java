@@ -1,9 +1,8 @@
 package ru.novosoft.smsc.jsp.util.helper.dynamictable;
 
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.TextColumn;
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.RowControlButtonColumn;
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.SelectColumn;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.RowControlButtonColumn;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.column.TextColumn;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,8 +20,8 @@ public class ListPropertiesHelper extends DynamicTableHelper{
 
   public ListPropertiesHelper(String name, String uid, int width, Validation validation, boolean allowEditPropsAfterAdd) {
     super(name, uid);
-    props = new TextColumn(name, name, width, validation, allowEditPropsAfterAdd);
-    delColumn = new RowControlButtonColumn("", "delColumn");
+    props = new TextColumn(this, name, name, width, validation, allowEditPropsAfterAdd);
+    delColumn = new RowControlButtonColumn(this, "", "delColumn");
     addColumn(props);
     addColumn(delColumn);
   }
