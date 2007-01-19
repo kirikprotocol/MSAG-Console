@@ -10,7 +10,7 @@
 #include "router/route_manager.h"
 #include "smppgw/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
-#include "alias/aliasman.h"
+//#include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include "smppgw/performance.hpp"
