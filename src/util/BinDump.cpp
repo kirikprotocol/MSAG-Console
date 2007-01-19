@@ -59,9 +59,11 @@ unsigned DumpHex(unsigned length, const unsigned char * buf,
 std::string DumpHex(unsigned long length, const unsigned char * buf,
                     const HexDumpCFG & use_cfg/* = _HexDump_DFLT*/)
 {
-    StdStrAppender  p_str;
+    std::string    fstr;
+    StdStrAppender  p_str(&fstr);
     DumpHex(length, buf, &p_str, use_cfg);
-    return *(p_str.release());
+    p_str.release();
+    return fstr;
 }
 
 std::string& DumpHex(std::string& fstr, unsigned long length, const unsigned char * buf,
@@ -101,7 +103,7 @@ inline unsigned typeChar(const char & sym, StreamAppenderITF * &usr_print)
 }
 
 
-unsigned DumpDbg(unsigned length, unsigned char * buf, StreamAppenderITF * usr_print)
+unsigned DumpDbg(unsigned length, const unsigned char * buf, StreamAppenderITF * usr_print)
 {
     unsigned    octet = OCTETS_PER_LINE;
     unsigned    offset = 0, byteId = 0, printed = 0;
@@ -150,14 +152,16 @@ unsigned DumpDbg(unsigned length, unsigned char * buf, StreamAppenderITF * usr_p
     return printed;
 }
 
-std::string DumpDbg(unsigned long length, unsigned char * buf)
+std::string DumpDbg(unsigned long length, const unsigned char * buf)
 {
-    StdStrAppender  p_str;
+    std::string    fstr;
+    StdStrAppender  p_str(&fstr);
     DumpDbg(length, buf, &p_str);
-    return *(p_str.release());
+    p_str.release();
+    return fstr;
 }
 
-std::string& DumpDbg(std::string& fstr, unsigned long length, unsigned char * buf)
+std::string& DumpDbg(std::string& fstr, unsigned long length, const unsigned char * buf)
 {
     StdStrAppender  p_str(&fstr);
     DumpDbg(length, buf, &p_str);
