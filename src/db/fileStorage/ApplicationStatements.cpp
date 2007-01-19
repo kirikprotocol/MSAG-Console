@@ -1,4 +1,7 @@
+#include <core/synchronization/Mutex.hpp>
 #include "ApplicationStatements.hpp"
+
+#include <core/buffers/RefPtr.hpp>
 
 #ifdef _TEST_CASE_DBEntityStorageStatement_
 static smsc::logger::Logger*
@@ -469,6 +472,7 @@ Update_InfoSme_T_Set_StateAndSendDate_By_Id::executeUpdate()
 }
 
 //-----------------------------------------------------------------------------
+
 void
 SelectInfoSme_Id_Mapping_SmscId_criterion::setString(int pos, const char* str, bool null) 
   throw(SQLException)
@@ -483,8 +487,17 @@ SelectInfoSme_Id_Mapping_SmscId_criterion::executeQuery()
   throw(SQLException)
 {
   InfoSme_Id_Mapping_Entity::SmscId_Key key(_smscId);
-  DBEntityStorageResultSet* result = new SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet(_dataSource,key);
-  return result;
+  smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+                              smsc::core::synchronization::Mutex> mutex;
+  {
+    smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
+  
+    mutex = InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(key);
+  }
+  if ( mutex.Get() ) {
+    DBEntityStorageResultSet* result = new SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet(_dataSource,key,mutex);
+    return result;
+  } else return NULL;
 }
 
 bool
@@ -540,9 +553,18 @@ Insert_into_InfoSme_Id_Mapping::executeUpdate() throw(SQLException)
 {
   if ( _dataSource->putValue(InfoSme_Id_Mapping_Entity(_msgId,
                                                        _smscId,
-                                                       _taskId)) )
+                                                       _taskId)) ) {
+    smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
+    InfoSme_Id_Mapping_Entity::SmscId_Key smscIdKey(_smscId);
+    smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+                                smsc::core::synchronization::Mutex> mutex=InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(smscIdKey);
+    if ( !mutex.Get() ) {
+      InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.toRegisterObject
+        (smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+                                     smsc::core::synchronization::Mutex>(new smsc::core::synchronization::RecursiveMutex()), key);
+    }
     return 1;
-  else return 0;
+  } else return 0;
 }
 
 void Delete_from_InfoSme_Id_Mapping_By_SmscId::setString(int pos, const char* val, bool null)
@@ -561,13 +583,28 @@ Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate()
   InfoSme_Id_Mapping_Entity resultValue;
 
   int eraseRet;
-  while(_iterator->nextValue(&resultValue)) {
-    if (resultValue.getSmscId() == _smscId) {
-      eraseRet = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(resultValue.getId()));
-      if ( eraseRet < 0 )
-        throw SQLException("Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate::: can't delete record");
-      rowNum += eraseRet;
+
+  InfoSme_Id_Mapping_Entity::SmscId_Key smscid_key(_smscId);
+  smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex, smsc::core::synchronization::Mutex> mutex;
+  {
+    smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
+
+    mutex = InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(smscid_key);
+  }
+
+  if ( mutex.Get() ) {
+    {
+      smsc::core::synchronization::MutexGuard mutexGuard(mutex);
+      while(_iterator->nextValue(&resultValue)) {
+        if (resultValue.getSmscId() == _smscId) {
+          eraseRet = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(resultValue.getId()));
+          rowNum += eraseRet;
+        }
+      }
     }
+    smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
+    InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.toUnregisterObject(smscid_key);
+    
   }
   return rowNum;
 }
