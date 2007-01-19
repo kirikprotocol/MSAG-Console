@@ -8,13 +8,16 @@
 # include <db/fileStorage/Exceptions.hpp>
 
 # include <logger/Logger.h>
+# include <core/synchronization/Mutex.hpp>
+# include <core/synchronization/RecursiveMutex.hpp>
+# include <core/buffers/RefPtr.hpp>
 
 using smsc::logger::Logger;
 
 class SelectInfoSme_Id_Mapping_SmscId_criterion  : public DBEntityStorageStatement
 {
 public:
-  SelectInfoSme_Id_Mapping_SmscId_criterion(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("select1")) {}
+  SelectInfoSme_Id_Mapping_SmscId_criterion(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
   virtual void setString(int pos, const char* str, bool null=false) throw(SQLException);
 
   virtual ResultSet* executeQuery() throw(SQLException);
@@ -23,8 +26,11 @@ public:
   {
   public:
     InfoSme_Id_Mapping_ResultSet(InfoSme_Id_Mapping_DBEntityStorage* dataSource,
-                                 const InfoSme_Id_Mapping_Entity::SmscId_Key& key) : _dataSource(dataSource), _key(key), _beginFetch(true), _logger(Logger::getInstance("select1")) {}
+                                 const InfoSme_Id_Mapping_Entity::SmscId_Key& key,
+                                 smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex, smsc::core::synchronization::Mutex>& mutex) 
+      : _dataSource(dataSource), _key(key), _beginFetch(true), _mutex(mutex) { _mutex->Lock(); }
 
+    ~InfoSme_Id_Mapping_ResultSet() { _mutex->Unlock(); }
     virtual bool fetchNext() throw(SQLException);
 
     virtual uint64_t getUint64(int pos) throw(SQLException, InvalidArgumentException);
@@ -36,16 +42,14 @@ public:
     InfoSme_Id_Mapping_Entity::SmscId_Key _key;
     InfoSme_Id_Mapping_Entity _fetchedValue;
     bool _beginFetch;
-    // DEBUG
-    smsc::logger::Logger *_logger;
+    smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
+                                smsc::core::synchronization::Mutex> _mutex;
   };
 
 private:
   std::string _smscId;
 
   InfoSme_Id_Mapping_DBEntityStorage* _dataSource;
-  // DEBUG
-  smsc::logger::Logger *_logger;
 };
 
 #include "InfoSme_T_Entity.hpp"
@@ -141,7 +145,7 @@ private:
 class Insert_into_InfoSme_T  : public DBEntityStorageStatement
 {
 public:
-  Insert_into_InfoSme_T(InfoSme_T_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("insert1")) {}
+  Insert_into_InfoSme_T(InfoSme_T_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
 
   virtual void setUint8(int pos, uint8_t val, bool null=false) throw(SQLException);
 
@@ -162,8 +166,6 @@ private:
 
   static uint64_t getIdSequenceNumber();
   static uint64_t _idSequenceNumber;
-  // DEBUG
-  smsc::logger::Logger *_logger;
 };
 
 #include "InfoSme_Generating_Tasks_DBEntityStorage.hpp"
