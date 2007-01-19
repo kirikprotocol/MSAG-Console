@@ -59,9 +59,9 @@ extern std::string& DumpHex(std::string& fstr, unsigned long length, const unsig
   # 00000040:  2F 66 31 3E 3C 74 79 70 ¦ 65 3E 4E 55 4C 4C 3C 2F  /f1><type>NULL</
   # 00000050:  74 79 70 65 3E 3C 2F 54 ¦ 31 3E 20 20 0D 0A        type></T1>  ??
  * ************************************************************************** */
-extern unsigned DumpDbg(unsigned length, unsigned char * buf, StreamAppenderITF * usr_print);
-extern std::string DumpDbg(unsigned long length, unsigned char * buf);
-extern std::string& DumpDbg(std::string& fstr, unsigned long length, unsigned char * buf);
+extern unsigned DumpDbg(unsigned length, const unsigned char * buf, StreamAppenderITF * usr_print);
+extern std::string DumpDbg(unsigned long length, const unsigned char * buf);
+extern std::string& DumpDbg(std::string& fstr, unsigned long length, const unsigned char * buf);
 
 
 /* ************************************************************************** *
