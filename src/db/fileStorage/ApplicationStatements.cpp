@@ -561,7 +561,7 @@ Insert_into_InfoSme_Id_Mapping::executeUpdate() throw(SQLException)
     if ( !mutex.Get() ) {
       InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.toRegisterObject
         (smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
-                                     smsc::core::synchronization::Mutex>(new smsc::core::synchronization::RecursiveMutex()), key);
+         smsc::core::synchronization::Mutex>(new smsc::core::synchronization::RecursiveMutex()), smscIdKey);
     }
     return 1;
   } else return 0;
@@ -594,7 +594,7 @@ Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate()
 
   if ( mutex.Get() ) {
     {
-      smsc::core::synchronization::MutexGuard mutexGuard(mutex);
+      smsc::core::synchronization::RecursiveMutexGuard mutexGuard(*mutex);
       while(_iterator->nextValue(&resultValue)) {
         if (resultValue.getSmscId() == _smscId) {
           eraseRet = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(resultValue.getId()));
