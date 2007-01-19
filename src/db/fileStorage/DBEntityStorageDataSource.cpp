@@ -209,23 +209,22 @@ DBEntityStorageConnection::createRoutine(const char* call, bool func)
   throw SQLException("DBEntityStorageConnection::createRoutine::: not supported");
 }
 
-smsc::logger::Logger*
-StorageHelper::_logger = Logger::getInstance("dbStrgHlp");
-
 StorageHelper::storageMap_t StorageHelper::_storageMap;
 smsc::core::synchronization::Mutex StorageHelper::_storageMapLock;
 
 InfoSme_T_DBEntityStorage* StorageHelper::getInfoSme_T_Storage(const std::string& tableName)
 {
+  smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
+
   smsc::core::synchronization::MutexGuard lockGuard(_storageMapLock);
-  smsc_log_debug(_logger, "StorageHelper::getInfoSme_T_Storage::: find storage for tableName=[%s]", tableName.c_str());
+  smsc_log_debug(logger, "StorageHelper::getInfoSme_T_Storage::: find storage for tableName=[%s]", tableName.c_str());
   storageMap_t::iterator iter = _storageMap.find(tableName);
   if ( iter == _storageMap.end() ) {
     SimpleFileDispatcher<InfoSme_T_Entity_Adapter>* infoSme_T_Storage = new SimpleFileDispatcher<InfoSme_T_Entity_Adapter>(tableName + ".db");
     DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::operation_status_t
       st =infoSme_T_Storage->open();
     if ( st != DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK ) {
-      smsc_log_error(_logger, "StorageHelper::getInfoSme_T_Storage::: storage for tableName=[%s] not found", tableName.c_str());
+      smsc_log_error(logger, "StorageHelper::getInfoSme_T_Storage::: storage for tableName=[%s] not found", tableName.c_str());
       throw SQLException("StorageHelper::getInfoSme_T_Storage:: storage doesn't exist");
     }
     std::pair<storageMap_t::iterator,bool> insResult =
@@ -233,12 +232,12 @@ InfoSme_T_DBEntityStorage* StorageHelper::getInfoSme_T_Storage(const std::string
                                         new InfoSme_T_DBEntityStorage(infoSme_T_Storage)
                                         ));
     if ( insResult.second == false ) {
-      smsc_log_error(_logger, "StorageHelper::getInfoSme_T_Storage::: storage for tableName=[%s] not found", tableName.c_str());
+      smsc_log_error(logger, "StorageHelper::getInfoSme_T_Storage::: storage for tableName=[%s] not found", tableName.c_str());
       throw SQLException("StorageHelper::getInfoSme_T_Storage:: table doesn't exist");
     } else
       iter = insResult.first;
   }
-  smsc_log_debug(_logger, "StorageHelper::getInfoSme_T_Storage::: found storage for tableName=[%s]", tableName.c_str());
+  smsc_log_debug(logger, "StorageHelper::getInfoSme_T_Storage::: found storage for tableName=[%s]", tableName.c_str());
   return iter->second;
 }
 
@@ -246,8 +245,9 @@ InfoSme_T_DBEntityStorage* StorageHelper::getInfoSme_T_Storage(const std::string
 
 void StorageHelper::createInfoSme_T_Storage(const std::string& tableName)
 {
+  smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
   smsc::core::synchronization::MutexGuard lockGuard(_storageMapLock);
-  smsc_log_debug(_logger, "StorageHelper::createInfoSme_T_Storage::: create storage for tableName=[%s]", tableName.c_str());
+  smsc_log_debug(logger, "StorageHelper::createInfoSme_T_Storage::: create storage for tableName=[%s]", tableName.c_str());
   storageMap_t::iterator iter = _storageMap.find(tableName);
   if ( iter == _storageMap.end() ) {
     SimpleFileDispatcher<InfoSme_T_Entity_Adapter>* infoSme_T_Storage = new SimpleFileDispatcher<InfoSme_T_Entity_Adapter>(tableName + ".db");
@@ -262,23 +262,24 @@ void StorageHelper::createInfoSme_T_Storage(const std::string& tableName)
     _storageMap.insert(std::make_pair(tableName,
                                       new InfoSme_T_DBEntityStorage(infoSme_T_Storage)
                                       ));
-    smsc_log_debug(_logger, "StorageHelper::createInfoSme_T_Storage::: storage was created for tableName=[%s]", tableName.c_str());
+    smsc_log_debug(logger, "StorageHelper::createInfoSme_T_Storage::: storage was created for tableName=[%s]", tableName.c_str());
   } else {
-    smsc_log_debug(_logger, "StorageHelper::createInfoSme_T_Storage::: storage already exists for tableName=[%s]", tableName.c_str());
+    smsc_log_debug(logger, "StorageHelper::createInfoSme_T_Storage::: storage already exists for tableName=[%s]", tableName.c_str());
     throw SQLException("StorageHelper::createInfoSme_T_Storage:: table already exists");
   }
 }
 
 void StorageHelper::deleteInfoSme_T_Storage(const std::string& tableName)
 {
+  smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
   smsc::core::synchronization::MutexGuard lockGuard(_storageMapLock);
-  smsc_log_debug(_logger, "StorageHelper::deleteInfoSme_T_Storage::: delete storage for tableName=[%s]", tableName.c_str());
+  smsc_log_debug(logger, "StorageHelper::deleteInfoSme_T_Storage::: delete storage for tableName=[%s]", tableName.c_str());
   storageMap_t::iterator iter = _storageMap.find(tableName);
   if ( iter != _storageMap.end() ) {
     SimpleFileDispatcher<InfoSme_T_Entity_Adapter>(tableName + ".db").drop();
     delete iter->second;
     _storageMap.erase(iter);
-    smsc_log_debug(_logger, "StorageHelper::deleteInfoSme_T_Storage::: storage was deleted for tableName=[%s]", tableName.c_str());
+    smsc_log_debug(logger, "StorageHelper::deleteInfoSme_T_Storage::: storage was deleted for tableName=[%s]", tableName.c_str());
   }
 }
 
