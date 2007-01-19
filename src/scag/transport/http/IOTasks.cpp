@@ -119,13 +119,13 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray& error)
             HttpContext *cx = HttpContext::getContext(s);
                     
             if (cx->action == SEND_REQUEST)
-                cx->setDestiny(503, FAKE_RESP | DEL_SITE_SOCK); //503
+                cx->setDestiny(408, FAKE_RESP | DEL_SITE_SOCK); //503
             else if (cx->action == SEND_RESPONSE)
-                cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK); //500
+                cx->setDestiny(504, STAT_RESP | DEL_USER_SOCK); //500
             else if (cx->action == READ_REQUEST)
-                cx->setDestiny(503, DEL_CONTEXT); //503
+                cx->setDestiny(408, DEL_CONTEXT); //503
             else if (cx->action == READ_RESPONSE)
-                cx->setDestiny(503, FAKE_RESP); //503
+                cx->setDestiny(504, FAKE_RESP); //503
             error.Push(s);
         }
     }
