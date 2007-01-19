@@ -47,9 +47,24 @@ struct TransactionContext {
         ruleId = 0;
         routeId = 0;
         usr = 0;
-        status = 0;
+        status = 503;
         sitePort = 80;
     }
+/*    TransactionContext(TransactionContext& cp) {
+        operationId = cp.operationId;
+        serviceId = cp.serviceId;
+        providerId = cp.providerId;
+        ruleId = cp.ruleId;
+        routeId = cp.routeId;
+        usr = cp.usr;
+        status = cp.status;
+        sitePort = cp.sitePort;
+        site = cp.site;
+        sitePath = cp.sitePath;
+        siteFileName = cp.siteFileName;
+        abonent = cp.abonent;
+        address = cp.address;
+    }*/
 };
 
 /**
