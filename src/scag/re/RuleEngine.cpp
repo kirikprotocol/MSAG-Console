@@ -414,6 +414,7 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
     RuleKey key;
     key.transport = command.getType();
     key.serviceId = command.getServiceId();
+    command.setUSR(session.getUSR());
 
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
