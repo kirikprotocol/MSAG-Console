@@ -1,8 +1,12 @@
 #ident "$Id$"
+/* ************************************************************************* *
+ * Transaction Component: ROS::Invoke
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_INVOKE__
 #define __SMSC_INMAN_TCAP_INVOKE__
 
 #include "inman/inap/entity.hpp"
+#include <string>
 
 namespace smsc  {
 namespace inman {
@@ -10,7 +14,6 @@ namespace inap  {
 
 class InvokeListener;
 
-//Implemets ROS::Invoke over TCAP
 class Invoke : public TcapEntity {
 public:
     typedef enum { resWait = 0, resNotLast, resLast, resError, resLCancel
@@ -19,9 +22,9 @@ public:
     typedef enum { respNone = 0, respError, respResultOrError
     } InvokeResponse;
 
-    Invoke(UCHAR_T tId = 0, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0,
+    Invoke(UCHAR_T tId = 0, UCHAR_T tOpCode = 0,
            InvokeResponse resp = Invoke::respNone, InvokeListener * pListener = NULL)
-        : TcapEntity(tId, tTag, tOpCode), _iResHdl(pListener)
+        : TcapEntity(tId, TcapEntity::tceInvoke, tOpCode), _iResHdl(pListener)
         , _linkedTo(NULL), _timeout(0), _status(Invoke::resWait), _respType(resp)
     {}
 
@@ -30,17 +33,25 @@ public:
     //copies and takes ownership of original param
     void clone(Invoke * org) { *this = *org; org->setParam(NULL); }
 
-    InvokeStatus   getStatus(void) const { return _status; }
-    InvokeResponse getResultType(void) const { return _respType; }
+    inline InvokeStatus   getStatus(void) const { return _status; }
+    inline InvokeResponse getResultType(void) const { return _respType; }
     
-    void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
-    const Invoke * getLinkedTo(void) const { return _linkedTo; }
+    inline void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
+    inline const Invoke * getLinkedTo(void) const { return _linkedTo; }
 
-    void setTimeout(USHORT_T timeOut) { _timeout = timeOut; }
-    USHORT_T getTimeout(void) const   { return _timeout; }
+    inline void setTimeout(USHORT_T timeOut) { _timeout = timeOut; }
+    inline USHORT_T getTimeout(void) const   { return _timeout; }
 
     void notifyResultListener(TcapEntity* resp, InvokeStatus resKind);
-//    const InvokeListener * getListener(void) const { return _iResHdl; }
+
+    std::string strStatus(void)
+    {
+        char buf[sizeof("Invoke[%u]{%u}: respType: %u, status: %u") + (sizeof(unsigned)*3)*4];
+        int n = snprintf(buf, sizeof(buf)-1, "Invoke[%u]{%u}: respType: %u, status: %u",
+                         (unsigned)id, (unsigned)opcode, (unsigned)_respType, (unsigned)_status);
+        buf[n]=0;
+        return buf;
+    }
 
 protected:
     InvokeStatus     _status;   //

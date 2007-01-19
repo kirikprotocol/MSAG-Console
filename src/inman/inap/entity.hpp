@@ -1,4 +1,7 @@
 #ident "$Id$"
+/* ************************************************************************* *
+ * Transaction Component with local operation tag (no objId as opcode).
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_ENTITY__
 #define __SMSC_INMAN_TCAP_ENTITY__
 
@@ -13,25 +16,22 @@ namespace inap  {
 
 typedef std::vector<unsigned char> RawBuffer;
 
-//Component of TCAP Message
+//Transaction Component
 class TcapEntity {
-protected:
-    UCHAR_T     id;
-    UCHAR_T     opcode;
-    UCHAR_T     tag;
-    Component*	param;
-    bool        ownComp; //this Entity is owner of 'param'
-
 public:
-    TcapEntity(UCHAR_T tId, UCHAR_T tTag = 0, UCHAR_T tOpCode = 0)
-        : id(tId), tag(tTag), opcode(tOpCode), param(NULL), ownComp(false) { }
+    typedef enum {
+        tceNone = 0, tceInvoke, tceResult, tceResultNL, tceError
+    } TCEntityKind;
+
+    TcapEntity(UCHAR_T tId, TCEntityKind e_kind = tceNone, UCHAR_T tOpCode = 0)
+        : id(tId), ekind(e_kind), opcode(tOpCode), param(NULL), ownComp(false) { }
 
     virtual ~TcapEntity() { if (ownComp) delete param; }
 
-    USHORT_T    getId() const           { return id; }
-    UCHAR_T     getTag() const          { return tag; }
-    UCHAR_T     getOpcode() const       { return opcode; }
-    Component*  getParam() const        { return param; }
+    inline TCEntityKind kind() const           { return ekind; }
+    inline USHORT_T    getId() const           { return id; }
+    inline UCHAR_T     getOpcode() const       { return opcode; }
+    inline Component*  getParam() const        { return param; }
     //sets 'param' without passing ownership, it's caller responsibility to free Component
     void        setParam(Component* p)     { param = p; ownComp = false; }
     //grands the ownership of 'param', Component will be freed by ~TcapEntity()
@@ -45,6 +45,34 @@ public:
         if (param)
             param->encode(params);
     }
+
+protected:
+    UCHAR_T     id;
+    TCEntityKind ekind;
+    UCHAR_T     opcode;
+    Component*	param;
+    bool        ownComp; //this Entity is owner of 'param'
+};
+
+class TCResult : public TcapEntity {
+public:
+    TCResult(UCHAR_T tId, UCHAR_T tOpCode)
+        : TcapEntity(tId, TcapEntity::tceResult, tOpCode)
+    { }
+};
+
+class TCResultNL : public TcapEntity {
+public:
+    TCResultNL(UCHAR_T tId, UCHAR_T tOpCode)
+        : TcapEntity(tId, TcapEntity::tceResultNL, tOpCode)
+    { }
+};
+
+class TCError : public TcapEntity {
+public:
+    TCError(UCHAR_T tId, UCHAR_T tOpCode)
+        : TcapEntity(tId, TcapEntity::tceError, tOpCode)
+    { }
 };
 
 } //inap
