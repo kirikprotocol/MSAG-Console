@@ -146,7 +146,7 @@ InfoSme_T_DBEntityStorage::updateValue(const InfoSme_T_Entity::Id_Key& key, cons
         _nonuniq_index_by_state_and_sdate_key.insertIndexedValue(newKey, rid);
       }
       return 1;
-    }
+    } else return -1;
   } else return 0;
 }
 
