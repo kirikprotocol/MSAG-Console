@@ -341,7 +341,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
       {
         if(!infoptr)
         {
-          MscInfo* info = new MscInfo(change.mscNum, false, !automaticRegistration, 0);
+          MscInfo* info = new MscInfo(change.mscNum, false, false, 0);
           mscs.Insert(info->mscNum,info);
           insertToFile(*info);
         }
@@ -386,8 +386,13 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
         bool wasInsert=false;
         if(!infoptr)
         {
+          if(!automaticRegistration)
+          {
+            //do not create record at all
+            break;
+          }
           MscInfo* tmp=new MscInfo(change.mscNum);
-          if(!automaticRegistration)tmp->manualLock=true;
+          //if(!automaticRegistration)tmp->manualLock=true;
           infoptr=mscs.SetItem(change.mscNum,tmp);
           wasInsert=true;
         }
@@ -403,7 +408,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           info.failureCount=0;
         }else
         {
-          info.failureCount++;
+          if(automaticRegistration)info.failureCount++;
           if(!info.automaticLock && info.failureCount>=failureLimit)
           {
             info.blockTime=time(NULL);
