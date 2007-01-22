@@ -43,7 +43,6 @@ public:
 
 private:
   DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* _storage;
-  uint64_t _currentIdSeqNum;
   UniqueStorageIndex<InfoSme_T_Entity::Id_Key,
                      DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t> _uniq_index_by_id_key;
   NonUniqueStorageIndex<InfoSme_T_Entity::StateANDSDate_key,
