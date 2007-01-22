@@ -194,12 +194,12 @@ void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
                         "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                         "  Dialog[0x%X]\n"
                         "  PriOrder: 0x%X, QoS: 0x%X\n"
-                        "  Termination: 0x%X\n"
+                        "  Termination: %s\n"
                         "  App. context[%u]: %s\n"
                         "}",
                        dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
-                       termination, ac.acLen, DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str()
-                       );
+                       basicEnd ? "BASIC" : "PREARRANGED", ac.acLen, 
+                       DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str());
 
         USHORT_T result =
             EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
