@@ -444,6 +444,13 @@ Targets:
     </move>
   </target>
   
+  <target name="unibalance_update" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="unibalance_update"/>
+  </target>
+  <target name="unibalance_distr" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="unibalance_distr"/>
+  </target>
+
   <target name="smsx_update" >
     <ant dir="${SMSC_DIR}/ext_smes" target="smsx_update"/>
   </target>
