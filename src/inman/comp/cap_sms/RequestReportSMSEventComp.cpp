@@ -8,23 +8,11 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-class InternalRequestReportSMSEventArg
-{
-  public:
-    RequestReportSMSEventArg::SMSEventVector events;
-};
-
-
 RequestReportSMSEventArg::RequestReportSMSEventArg()
 {
-    comp = new InternalRequestReportSMSEventArg();
     compLogger = Logger::getInstance("smsc.inman.comp.RequestReportSMSEventArg");
 }
 
-RequestReportSMSEventArg::~RequestReportSMSEventArg()
-{
-    delete(comp);
-}
 
 void RequestReportSMSEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
@@ -37,27 +25,15 @@ void RequestReportSMSEventArg::decode(const std::vector<unsigned char>& buf) thr
     const asn_anonymous_sequence_ * list = _A_CSEQUENCE_FROM_VOID(&req->sMSEvents);
     
     for (int i = 0; i < list->count; i++) {
-        ::SMSEvent *elem = static_cast< ::SMSEvent* >(list->array[i]);
-        if (!elem) {
-        //internal->events[i].event = EventTypeSMS_t_NONE;
+        SMSEvent_t *elem = static_cast<SMSEvent_t*>(list->array[i]);
+        if (!elem)
             continue;
-        }
-
-        RequestReportSMSEventArg::SMSEvent smsEvent;
-
-        smsEvent.event = static_cast< EventTypeSMS_e >( elem->eventTypeSMS );
-        smsEvent.monitorType = static_cast< MonitorMode_e >( elem->monitorMode );
-
-        comp->events.push_back( smsEvent );
+        events.insert(SMSEventDPs::value_type(
+                            static_cast<EventTypeSMS_e>(elem->eventTypeSMS),
+                            static_cast<MonitorMode_e>(elem->monitorMode)));
     }
-
     smsc_log_component(compLogger, &asn_DEF_RequestReportSMSEventArg, req);
     asn_DEF_RequestReportSMSEventArg.free_struct(&asn_DEF_RequestReportSMSEventArg,req, 0);
-}
-
-const RequestReportSMSEventArg::SMSEventVector& RequestReportSMSEventArg::getSMSEvents()
-{
-    return comp->events;
 }
 
 }//namespace comps

@@ -10,8 +10,6 @@
 
 using smsc::logger::Logger;
 
-using std::map;
-
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
  */
@@ -84,6 +82,8 @@ typedef enum DeliveryMode {
     DeliveryMode_Terminating = 11 //EventTypeSMS_sms_DeliveryRequested
 } DeliveryMode_e;
 
+typedef std::map<EventTypeSMS_e, MonitorMode_e> SMSEventDPs;
+
 // Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Tidpsms
 // This operation is used after a TDP to indicate request for service.
 class PrivateInitialDPSMSArg;
@@ -151,26 +151,19 @@ private:
 //  This operation is used to request the gsmSSF or gprsSSF to monitor for a
 //  Short Message related event (FSM events such as submission, delivery or failure)
 //  and to send a notification to the gsmSCF when the event is detected.
-class InternalRequestReportSMSEventArg;
-// NOTE: Inman uses only SCF -> SSF
+//  NOTE: Inman uses only SCF -> SSF
 class RequestReportSMSEventArg: public Component { //SSF -> SCF, SCF -> SSF
 public:
-    struct SMSEvent {
-        EventTypeSMS_e event;
-        MonitorMode_e monitorType;
-    };
-    typedef std::vector<SMSEvent> SMSEventVector;
-
     RequestReportSMSEventArg();
-    ~RequestReportSMSEventArg();
+    ~RequestReportSMSEventArg() { }
 
-    const SMSEventVector& getSMSEvents();
+    const SMSEventDPs& SMSEvents(void) const { return events; }
 
     void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
-    InternalRequestReportSMSEventArg* comp;
-    Logger*  compLogger;
+    SMSEventDPs events;
+    Logger*     compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tconsms
