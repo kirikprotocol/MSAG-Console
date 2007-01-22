@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include "util/vformat.hpp"
 using smsc::util::format;
@@ -213,7 +215,7 @@ SSNSession::~SSNSession()
     smsc_log_debug(logger, "SSN[%u]: Closing %u dialogs ..",
                     (unsigned)_SSN, dialogs.size() + pending.size());
     if (dialogs.size()) {
-        for (DialogsMAP::iterator it = dialogs.begin(); it != dialogs.end(); it++) {
+        for (DialogsMAP::iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
             USHORT_T dId = (*it).first;
             Dialog* pDlg = (*it).second;
             if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK))
@@ -362,6 +364,29 @@ Dialog* SSNSession::findDialog(USHORT_T dId)
     return locateDialog(dId);
 }
 
+void SSNSession::releaseDialog(USHORT_T dId)
+{
+    MutexGuard tmp(mutex);
+    DialogsMAP::iterator it = dialogs.find(dId);
+    if (it == dialogs.end())
+        return;
+
+    Dialog* pDlg = (*it).second;
+    dialogs.erase(it);
+    if (pDlg){
+        if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
+            DlgTime     dtm;
+            gettimeofday(&dtm.tms, 0);
+            dtm.dlg = pDlg;
+            pending.insert(DlgTimesMAP::value_type(dId, dtm));
+            smsc_log_warn(logger,
+                "SSN[%u]: Pushed aside unterminated Dialog[0x%X](0x%x), %u invokes pending",
+                (unsigned)_SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
+        } else
+            dischargeDlg(pDlg);
+    }
+    return;
+}
 
 void SSNSession::releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid/* = 0*/)
 {
@@ -398,7 +423,7 @@ void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
     else
         smsc_log_debug(logger, "SSN[%u]: Releasing %s dialogs ..", (unsigned)_SSN, tc_suid->c_str());
 
-    for (DialogsMAP::iterator it = dialogs.begin(); it != dialogs.end(); it++) {
+    for (DialogsMAP::iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
         Dialog* pDlg = (*it).second;
         USHORT_T dId = (*it).first;
 
@@ -441,6 +466,31 @@ void SSNSession::markDialog(Dialog * p_dlg)
     MutexGuard tmp(mutex);
     dialogs.insert(DialogsMAP::value_type(p_dlg->getId(), p_dlg));
 }
+
+void SSNSession::noticeInd(USHORT_T dlg_id, USHORT_T rel_id, UCHAR_T reportCause)
+{
+    MutexGuard tmp(mutex);
+    TNoticeParms    parms(rel_id, reportCause);
+    ntcdDlgs.insert(NoticedDLGs::value_type(dlg_id, parms));
+    DialogsMAP::iterator it = dialogs.find(dlg_id);
+    if (it != dialogs.end())
+        smsc_log_error(logger, "SSN[%u]: SS7 assigned active dlgId(0x%x) to Notice Dialog!", dlg_id);
+    else //reserve dlg_id
+        dialogs.insert(DialogsMAP::value_type(dlg_id, NULL));
+}
+
+bool SSNSession::noticeParms(USHORT_T dlg_id, TNoticeParms & parms)
+{
+    MutexGuard tmp(mutex);
+    NoticedDLGs::iterator it = ntcdDlgs.find(dlg_id);
+    if (it != ntcdDlgs.end()) {
+        parms = (*it).second;
+        ntcdDlgs.erase(it);
+        return true;
+    }
+    return false;
+}
+
 /* ---------------------------------------------------------------------------------- *
  * Protected/Private methods:
  * NOTE: these methods are not the processing graph entries, so never lock Mutex,
@@ -519,7 +569,7 @@ void SSNSession::dumpDialogs(void)
         }
     }
     format(dump, "active(%u): ", dialogs.size());
-    for (DialogsMAP::const_iterator it = dialogs.begin(); it != dialogs.end(); it++) {
+    for (DialogsMAP::const_iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
         Dialog* pDlg = (*it).second;
         format(dump, "%u(0x%x) ", (*it).first, pDlg->getState().value);
     }

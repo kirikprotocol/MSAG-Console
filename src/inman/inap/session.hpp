@@ -30,6 +30,15 @@ class TCSessionSR;
 class TCSessionMR;
 class TCSessionMA;
 
+struct TNoticeParms {
+    USHORT_T    relId;
+    UCHAR_T     reportCause;
+
+    TNoticeParms(USHORT_T rel_id = 0, UCHAR_T report_cause = 0)
+        : relId(rel_id), reportCause(report_cause)
+    { }
+};
+
 /* ************************************************************************** *
  * class SSNSession (TCAP dialogs/sessions factory):
  * ************************************************************************** */
@@ -62,8 +71,13 @@ public:
     
     // -- TCAP Dialogs factory methods -- //
     Dialog* findDialog(USHORT_T did);
+    void    releaseDialog(USHORT_T dId);
     void    releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid = 0);
     void    releaseDialogs(const TCSessionSUID * tc_suid = 0);
+
+    //Special methods used only by TCAP API Callbacks
+    void    noticeInd(USHORT_T dlg_id, USHORT_T rel_id, UCHAR_T reportCause);
+    bool    noticeParms(USHORT_T dlg_id, TNoticeParms & parms);
 
 protected:
     friend class TCAPDispatcher;
@@ -91,8 +105,9 @@ private:
 
     typedef std::map<USHORT_T, Dialog*>      DialogsMAP;
     typedef std::map<USHORT_T, DlgTime>      DlgTimesMAP;
-    typedef std::map<std::string, TCSessionAC*> TCSessionsMAP;
     typedef std::list<TCSessionAC*>          TCSessionsLIST;
+    typedef std::map<std::string, TCSessionAC*> TCSessionsMAP;
+    typedef std::map<USHORT_T /*dlg_id*/, TNoticeParms> NoticedDLGs;
 
     void    dischargeDlg(Dialog * pDlg, const TCSessionSUID * tc_suid = 0);
     bool    nextDialogId(USHORT_T & dId);
@@ -101,6 +116,7 @@ private:
     void    dumpDialogs(void);
 
     DialogsMAP      dialogs;
+    NoticedDLGs     ntcdDlgs;
     DlgTimesMAP     pending; //released but not terminated Dialogs with timestamp
     TCSessionsMAP   tcSessions;
     TCSessionsLIST  deadSess;

@@ -59,6 +59,9 @@ public:
     virtual void onDialogPAbort(UCHAR_T abortCause) = 0;
     virtual void onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                                     USHORT_T userInfo_len, UCHAR_T *pUserInfo) = 0;
+    virtual void onDialogNotice(UCHAR_T reportCause,
+                                TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
+                                UCHAR_T invId = 0, UCHAR_T opCode = 0) = 0;
 };
 
 class Dialog {
@@ -122,6 +125,8 @@ public:
     USHORT_T handleResultError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
                                 const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
     USHORT_T handleLCancelInvoke(UCHAR_T invokeId);
+    USHORT_T handleNoticeInd(UCHAR_T reportCause, TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
+                             UCHAR_T invokeId = 0, USHORT_T oplen = 0, const UCHAR_T *op = NULL);
 
 protected:
     friend class TCSessionAC;

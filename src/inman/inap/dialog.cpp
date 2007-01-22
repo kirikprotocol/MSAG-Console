@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include <assert.h>
 #include <memory>
@@ -750,6 +752,27 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
         smsc_log_debug(logger, "Dialog[0x%X]: releasing %s", dlgId, invCp.strStatus().c_str());
     }
     return MSG_OK;
+}
+
+USHORT_T Dialog::handleNoticeInd(UCHAR_T reportCause,
+                TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
+                UCHAR_T invokeId/* = 0*/, USHORT_T oplen/* = 0*/, const UCHAR_T *op/* = NULL*/)
+{
+    //if component is returned, it must have only local operation tag
+    assert(!oplen || (oplen == 1));
+    ListenerList cpList;
+    {
+        MutexGuard dtmp(dlgGrd);
+        cpList = listeners;
+    }
+    //NOTE: calling onDialogNotice() may lead to ~Dialog()/reset() being called,
+    //so iterate over ListenerList copy.
+    for (ListenerList::iterator it = cpList.begin(); it != cpList.end(); it++) {
+        DialogListener* ptr = *it;
+        ptr->onDialogNotice(reportCause, comp_kind, invokeId, !oplen ? 0 : op[0]);
+    }
+    return MSG_OK;
+
 }
 
 } // namespace inap

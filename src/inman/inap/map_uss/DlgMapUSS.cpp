@@ -235,9 +235,9 @@ void MapUSSDlg::onInvokeLCancel(Invoke *op)
 }
 
 /* ------------------------------------------------------------------------ *
- * DialogListener interface
+ * DialogListener interface: remote point is SCF/HLR
  * ------------------------------------------------------------------------ */
-//SCF sent ContinueDialog.
+//remote point sent ContinueDialog.
 void MapUSSDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
@@ -247,8 +247,9 @@ void MapUSSDlg::onDialogContinue(bool compPresent)
     return;
 }
 
-//TCAP indicates DialogPAbort: either due to TC layer error on SCF/HLR side or
-//because of local TC dialog timeout is expired (no T_END_IND from HLR).
+//TC indicates DialogPAbort: either because of remote TC doesn't provide
+//requested service or because of local TC dialog timeout is expired
+//(no T_END_IND from remote point).
 void MapUSSDlg::onDialogPAbort(UCHAR_T abortCause)
 {
     {
@@ -260,7 +261,7 @@ void MapUSSDlg::onDialogPAbort(UCHAR_T abortCause)
     resHdl->onEndMapDlg(abortCause, smsc::inman::errTCAP);
 }
 
-//SCF sent DialogUAbort (some logic error on SCF side).
+//SCF/HLR sent DialogUAbort (some logic error on remote point).
 void MapUSSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                                     USHORT_T userInfo_len, UCHAR_T *pUserInfo)
 {
@@ -272,6 +273,30 @@ void MapUSSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
     }
     resHdl->onEndMapDlg((abortInfo_len == 1) ? *pAbortInfo : Dialog::tcUserGeneralError,
                        smsc::inman::errTCuser);
+}
+
+//Underlying layer unable to deliver message, just abort dialog
+void MapUSSDlg::onDialogNotice(UCHAR_T reportCause,
+                        TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
+                        UCHAR_T invId/* = 0*/, UCHAR_T opCode/* = 0*/)
+{
+    MutexGuard  grd(_sync);
+    dlgState.s.ctrAborted = 1;
+    std::string dstr;
+    if (comp_kind != TcapEntity::tceNone) {
+        format(dstr, ", Invoke[%u]", invId);
+        switch (comp_kind) {
+        case TcapEntity::tceError:      dstr += ".Error"; break;
+        case TcapEntity::tceResult:     dstr += ".Result"; break;
+        case TcapEntity::tceResultNL:   dstr += ".ResultNL"; break;
+        default:;
+        }
+        dstr += " not delivered.";
+    }
+    smsc_log_error(logger, "MapUSS[%u]: NOTICE_IND at state 0x%x%s", dlgId,
+                   dlgState.value, dstr.c_str());
+    endTCap();
+    resHdl->onEndMapDlg(reportCause, smsc::inman::errTCAP);
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,

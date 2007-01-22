@@ -1,8 +1,9 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-///////////////////////////////////////////////////////////////////////////////////////////
-/// Callbacks implementation
-///////////////////////////////////////////////////////////////////////////////////////////
-
+#endif /* MOD_IDENT_OFF */
+/* ************************************************************************* *
+ * EINSS7 TCAP API Callbacks implementation
+ * ************************************************************************* */
 #include <assert.h>
 
 #include "util/BinDump.hpp"
@@ -11,31 +12,38 @@ using smsc::util::format;
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/dialog.hpp"
+using smsc::inman::inap::TcapEntity;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSNSession;
+using smsc::inman::inap::TNoticeParms;
 using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::getTcapBindErrorMessage;
-
 
 #define tcapLogger TCAPDispatcher::getInstance()->TCAPLogger()
 
 //-------------------------------- Util functions --------------------------------
-static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
+static SSNSession* findSSNsession(UCHAR_T ssn)
 {
     TCAPDispatcher *dsp = TCAPDispatcher::getInstance();
     assert(dsp);
 
     SSNSession* pSession = dsp->findSession(ssn);
-    if (!pSession) {
-        smsc_log_warn( dsp->TCAPLogger(), "SS7CB: Invalid/inactive session, SSN: %u", ssn);
-        return 0;
+    if (!pSession)
+        smsc_log_warn(dsp->TCAPLogger(), "SS7TC: Invalid/inactive session, SSN[%u]", ssn);
+    return pSession;
+}
+static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
+{
+    Dialog* pDlg = NULL;
+    SSNSession* pSession = findSSNsession(ssn);
+    if (pSession) {
+        if (!(pDlg = pSession->findDialog(dialogueId)))
+            smsc_log_warn(tcapLogger, "SS7TC: Invalid(closed) Dialog[0x%X]", dialogueId);
     }
-    Dialog* pDlg = pSession->findDialog(dialogueId);
-    if (!pDlg)
-        smsc_log_warn(dsp->TCAPLogger(), "SS7CB: Invalid(closed) dialog ID: 0x%X", dialogueId);
     return pDlg;
 }
 
+//-------------------------------- Callbacks implementation -----------------------
 USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
                             EINSS7INSTANCE_T tcapInstanceId, UCHAR_T bindResult)
 {
@@ -182,11 +190,24 @@ USHORT_T EINSS7_I97TInvokeInd(UCHAR_T          ssn,
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
-
-    Dialog* dlg = findDialog(ssn, dialogueId);
-    if (dlg)
-        dlg->handleInvoke(invokeId, tag, opLength, op, paramLength, pm,
-                          lastComponent ? true : false);
+    SSNSession* pSession = findSSNsession(ssn);
+    if (pSession) {
+        Dialog* dlg = pSession->findDialog(dialogueId);
+        if (dlg)
+            dlg->handleInvoke(invokeId, tag, opLength, op, paramLength, pm, (bool)lastComponent);
+        else { //look in noticed dialogs
+            TNoticeParms    parms;
+            if (pSession->noticeParms(dialogueId, parms)) {
+                if ((dlg = pSession->findDialog(parms.relId))) {
+                    dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceInvoke,
+                                         invokeId, opLength, op);
+                }
+                EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
+                                  0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
+                pSession->releaseDialog(dialogueId);
+            }
+        }
+    }
     return MSG_OK;
 }
 
@@ -215,9 +236,24 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
-    Dialog* dlg = findDialog( ssn, dialogueId );
-    if (dlg)
-        dlg->handleResultNotLast(invokeId, tag, opLength, op, paramLength, pm);
+    SSNSession* pSession = findSSNsession(ssn);
+    if (pSession) {
+        Dialog* dlg = pSession->findDialog(dialogueId);
+        if (dlg)
+            dlg->handleResultNotLast(invokeId, tag, opLength, op, paramLength, pm);
+        else { //look in noticed dialogs
+            TNoticeParms    parms;
+            if (pSession->noticeParms(dialogueId, parms)) {
+                if ((dlg = pSession->findDialog(parms.relId))) {
+                    dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceResultNL,
+                                         invokeId, opLength, op);
+                }
+                EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
+                                  0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
+                pSession->releaseDialog(dialogueId);
+            }
+        }
+    }
     return MSG_OK;
 }
 
@@ -246,9 +282,24 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
-    Dialog* dlg = findDialog( ssn, dialogueId );
-    if (dlg)
-        return dlg->handleResultLast(invokeId, tag, opLength, op, paramLength, pm);
+    SSNSession* pSession = findSSNsession(ssn);
+    if (pSession) {
+        Dialog* dlg = pSession->findDialog(dialogueId);
+        if (dlg)
+            dlg->handleResultLast(invokeId, tag, opLength, op, paramLength, pm);
+        else { //look in noticed dialogs
+            TNoticeParms    parms;
+            if (pSession->noticeParms(dialogueId, parms)) {
+                if ((dlg = pSession->findDialog(parms.relId))) {
+                    dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceResult,
+                                         invokeId, opLength, op);
+                }
+                EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
+                                  0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
+                pSession->releaseDialog(dialogueId);
+            }
+        }
+    }
     return MSG_OK;
 }
 
@@ -277,9 +328,24 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                     (tag == 0x02 ? "LOCAL" : "GLOBAL"), 
                     paramLength, DumpHex(paramLength, pm).c_str()
                    );
-    Dialog* dlg = findDialog( ssn, dialogueId );
-    if (dlg)
-        dlg->handleResultError(invokeId, tag, opLength, op, paramLength, pm);
+    SSNSession* pSession = findSSNsession(ssn);
+    if (pSession) {
+        Dialog* dlg = pSession->findDialog(dialogueId);
+        if (dlg)
+            dlg->handleResultError(invokeId, tag, opLength, op, paramLength, pm);
+        else { //look in noticed dialogs
+            TNoticeParms    parms;
+            if (pSession->noticeParms(dialogueId, parms)) {
+                if ((dlg = pSession->findDialog(parms.relId))) {
+                    dlg->handleNoticeInd(parms.reportCause, TcapEntity::tceError,
+                                         invokeId, opLength, op);
+                }
+                EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
+                                  0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
+                pSession->releaseDialog(dialogueId);
+            }
+        }
+    }
     return MSG_OK;
 }
 
@@ -357,6 +423,51 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
     return MSG_OK;
 }
 
+USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
+                              USHORT_T         userId,
+                              EINSS7INSTANCE_T tcapInstanceId,
+                              USHORT_T         dialogueId,
+                              UCHAR_T          reportCause,
+                              UCHAR_T          returnIndicator,
+                              USHORT_T         relDialogueId,
+                              UCHAR_T          segmentationIndicator,
+                              UCHAR_T          destAddrLength,
+                              UCHAR_T          *destAddr_p,
+                              UCHAR_T          orgAddrLength,
+                              UCHAR_T          *orgAddr_p)
+{
+    smsc_log_error(tcapLogger, "NOTICE_IND {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  Dialog[0x%X], RelDialog[0x%X]\n"
+                    "  ReportCause: 0x%X, ReturnIndicator: 0x%X\n"
+                    "  SegmentationIndicator: 0x%X\n"
+                    "  Dest. address: %s\n"
+                    "  Org. address: %s\n"
+                    "}",
+                    ssn, userId, tcapInstanceId, dialogueId, relDialogueId,
+                    reportCause, returnIndicator, segmentationIndicator,
+                    DumpHex(destAddrLength, destAddr_p, _HexDump_CVSD).c_str(),
+                    DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str()
+                   );
+    //Notify related dialog if it's present
+    if (returnIndicator & EINSS7_I97TCAP_IND_NOCOMP_DIALOG) {
+        SSNSession* pSession = findSSNsession(ssn);
+        if (pSession) { 
+            Dialog* dlg = pSession->findDialog(relDialogueId);
+            if (dlg) { //check for incoming component
+                if (returnIndicator & EINSS7_I97TCAP_IND_COMP_NODIALOG) {
+                    pSession->noticeInd(dialogueId, relDialogueId, reportCause);
+                    return MSG_OK; //handle in TInvokeInd()
+                }
+                dlg->handleNoticeInd(reportCause);
+            }
+        }
+    }
+    EINSS7_I97TEndReq(ssn, userId, tcapInstanceId, dialogueId,
+                      0, 0, EINSS7_I97TCAP_TERM_PRE_ARR_END, 0, 0, 0, NULL);
+    return MSG_OK;
+}
+
 //-------------------------------------------------------------------------------------
 // TODO: Implement
 //-------------------------------------------------------------------------------------
@@ -427,36 +538,6 @@ USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
                    DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str(),
                    DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
                    DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
-                   );
-    // TODO: Implement
-    return MSG_OK;
-}
-
-USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
-                              USHORT_T         userId,
-                              EINSS7INSTANCE_T tcapInstanceId,
-                              USHORT_T         dialogueId,
-                              UCHAR_T          reportCause,
-                              UCHAR_T          returnIndicator,
-                              USHORT_T         relDialogueId,
-                              UCHAR_T          segmentationIndicator,
-                              UCHAR_T          destAddrLength,
-                              UCHAR_T          *destAddr_p,
-                              UCHAR_T          orgAddrLength,
-                              UCHAR_T          *orgAddr_p)
-{
-    smsc_log_debug(tcapLogger, "NOTICE_IND {"
-                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                    "  Dialog[0x%X], RelDialog[0x%X]\n"
-                    "  ReportCause: 0x%X, ReturnIndicator: 0x%X\n"
-                    "  SegmentationIndicator: 0x%X\n"
-                    "  Dest. address: %s\n"
-                    "  Org. address: %s\n"
-                    "}",
-                    ssn, userId, tcapInstanceId, dialogueId, relDialogueId,
-                    reportCause, returnIndicator, segmentationIndicator,
-                    DumpHex(destAddrLength, destAddr_p, _HexDump_CVSD).c_str(),
-                    DumpHex(orgAddrLength, orgAddr_p, _HexDump_CVSD).c_str()
                    );
     // TODO: Implement
     return MSG_OK;

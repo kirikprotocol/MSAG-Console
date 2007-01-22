@@ -119,6 +119,9 @@ protected:
     void onDialogREnd(bool compPresent);
     void onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                         USHORT_T userInfo_len, UCHAR_T *pUserInfo);
+    void onDialogNotice(UCHAR_T reportCause,
+                        TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
+                        UCHAR_T invId = 0, UCHAR_T opCode = 0);
 
     // InvokeListener interface (no OPs with returnResult defined)
     void onInvokeResult(Invoke* inv, TcapEntity* res) { }

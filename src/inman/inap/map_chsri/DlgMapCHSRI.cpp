@@ -180,6 +180,30 @@ void MapCHSRIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                        smsc::inman::errTCuser);
 }
 
+//Underlying layer unable to deliver message, just abort dialog
+void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
+                        TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
+                        UCHAR_T invId/* = 0*/, UCHAR_T opCode/* = 0*/)
+{
+    MutexGuard  grd(_sync);
+    _sriState.s.ctrAborted = 1;
+    std::string dstr;
+    if (comp_kind != TcapEntity::tceNone) {
+        format(dstr, ", Invoke[%u]", invId);
+        switch (comp_kind) {
+        case TcapEntity::tceError:      dstr += ".Error"; break;
+        case TcapEntity::tceResult:     dstr += ".Result"; break;
+        case TcapEntity::tceResultNL:   dstr += ".ResultNL"; break;
+        default:;
+        }
+        dstr += " not delivered.";
+    }
+    smsc_log_error(logger, "MapSRI[%u]: NOTICE_IND at state 0x%x%s", sriId,
+                   _sriState.value, dstr.c_str());
+    endTCap();
+    sriHdl->onEndMapDlg(reportCause, smsc::inman::errTCAP);
+}
+
 //SCF sent DialogEnd, it's either succsesfull contract completion,
 //or some logic error (f.ex. timeout expiration) on SSF side.
 void MapCHSRIDlg::onDialogREnd(bool compPresent)
