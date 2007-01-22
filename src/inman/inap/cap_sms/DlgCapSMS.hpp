@@ -16,6 +16,7 @@ using smsc::inman::InmanErrorType;
 using smsc::inman::_InmanErrorSource;
 
 using smsc::inman::comp::InitialDPSMSArg;
+using smsc::inman::comp::RequestReportSMSEventArg;
 
 using smsc::inman::inap::TCSessionSR;
 
@@ -86,7 +87,8 @@ typedef union {
 
 
 #define CAPSMS_END_TIMEOUT  2 //seconds
-//NOTE: CapSMS contract allows a prearranged end scenario, so CapSMSDlg sets
+//NOTE: CapSMS contract allows a prearranged end scenario (if SCF set monitorMode
+//      for associated SMS event to notifyAndContinue), so CapSMSDlg sets
 //      a small timeout (CAPSMS_END_TIMEOUT) on last EventReportSMS Invoke
 //      and releases TC Dialog either on receiving T_END_IND or LCancel for
 //      EventReportSMS.
@@ -97,7 +99,7 @@ public:
                 USHORT_T timeout = 0, Logger * uselog = NULL);
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
     enum {
-        smsContractViolation = 0
+        smsContractViolation = 1
     };
 
     unsigned getId(void) const { return capId; }
@@ -139,6 +141,8 @@ private:
     Logger*     logger;
     CAP3State   _capState;  //current state of cap3SMS CONTRACT
     CapSMS_SSFhandlerITF* ssfHdl;
+    std::auto_ptr<RequestReportSMSEventArg> rrse; //keeps detection points
+    messageType_e reportType;
 };
 
 } //inap

@@ -8,7 +8,7 @@ using smsc::util::format;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::comp::CapSMSOpCode;
-
+using smsc::inman::comp::SMSEventDPs;
 //using smsc::inman::comp::ConnectSMSArg;
 using smsc::inman::comp::ReleaseSMSArg;
 using smsc::inman::comp::RequestReportSMSEventArg;
@@ -24,7 +24,8 @@ namespace inap {
  * ************************************************************************** */
 CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
            USHORT_T timeout/* = 0*/, Logger * uselog/* = NULL*/)
-    : ssfHdl(ssfHandler), session(pSession), logger(uselog)
+    : ssfHdl(ssfHandler), session(pSession), reportType(MessageType_notification)
+    , logger(uselog)
 {
     assert(ssfHandler && pSession);
     _capState.value = 0;
@@ -70,16 +71,25 @@ void CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
 {
     EventTypeSMS_e eventType = submitted ? EventTypeSMS_o_smsSubmission : 
                                             EventTypeSMS_o_smsFailure ;
+    {
+        SMSEventDPs::const_iterator cit = rrse->SMSEvents().find(eventType);
+        MonitorMode_e mMode = (cit != rrse->SMSEvents().end())
+                                ? (*cit).second : MonitorMode_notifyAndContinue;
+        reportType = (mMode == MonitorMode_interrupted)
+                     ? MessageType_request : MessageType_notification;
+    }
     smsc_log_debug(logger, "CapSMS[%u]: --> SCF EventReportSMS "
-                   "( eventType: o_sms%s (0x%X), messageType: notification(0x%X) )",
+                   "( eventType: o_sms%s (0x%X), messageType: %s(0x%X) )",
                    capId, (submitted) ? "Submission" : "Failure",
-                   eventType, MessageType_notification);
+                   eventType, (reportType == MessageType_request)
+                   ? "request" : "notification", reportType);
     
-    EventReportSMSArg    arg(eventType, MessageType_notification);
-    Invoke* op = dialog->initInvoke(CapSMSOpCode::EventReportSMS, this, CAPSMS_END_TIMEOUT);
+    EventReportSMSArg    arg(eventType, reportType);
+    Invoke* op = dialog->initInvoke(CapSMSOpCode::EventReportSMS, this,
+                                    (reportType == MessageType_request)
+                                    ? 0 : CAPSMS_END_TIMEOUT);
     op->setParam(&arg);
     dialog->sendInvoke(op);
-
     dialog->continueDialog();
     _capState.s.ctrReported = CAP_OPER_INITED;
 }
@@ -255,24 +265,20 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
             doAbort = true;
         } else {
             _capState.s.ctrRequested = 1;
+            rrse.reset(static_cast<RequestReportSMSEventArg*>(op->getParam()));
+            op->setParam(NULL); //take ownership
             if (logger->isDebugEnabled()) {
-                RequestReportSMSEventArg* arg = static_cast<RequestReportSMSEventArg*>(op->getParam());
-                const RequestReportSMSEventArg::SMSEventVector& dps = arg->getSMSEvents();
-                std::string dump;
-                RequestReportSMSEventArg::SMSEventVector::const_iterator it;
-                for (it = dps.begin(); it != dps.end(); it++) {
-                    RequestReportSMSEventArg::SMSEvent dp = *it;
-                    format(dump, "{eventType 0x%X, monitorMode 0x%X} ", dp.event, dp.monitorType);
+                std::string dump("{");
+                SMSEventDPs::const_iterator it = rrse->SMSEvents().begin();
+                for (short i = 0; it != rrse->SMSEvents().end(); it++, i++) {
+                    format(dump, "%s{eventType 0x%X, monitorMode 0x%X}",
+                           !i ? "" : ", ", (int)((*it).first), (int)((*it).second));
                 }
-                smsc_log_debug(logger, "CapSMS[%u]: <-- SCF RequestReportSMSEvent, %s",
+                dump += "}";
+                smsc_log_debug(logger, "CapSMS[%u]: <-- SCF RequestReportSMSEvent %s",
                                capId, dump.c_str());
             }
         }
-    }   break;
-
-    case CapSMSOpCode::FurnishChargingInformationSMS: {
-        smsc_log_error(logger, "CapSMS[%u]: <-- SCF FurnishChargingInformationSMS",
-                       capId);
     }   break;
 
     case CapSMSOpCode::ResetTimerSMS: {
@@ -280,7 +286,12 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         smsc_log_debug(logger, "CapSMS[%u]: <-- SCF ResetTimerSMS, value: %lu secs",
                        capId, (long)(arg->timerValue));
     }   break;
-
+/*
+    case CapSMSOpCode::FurnishChargingInformationSMS: {
+        smsc_log_error(logger, "CapSMS[%u]: <-- SCF FurnishChargingInformationSMS",
+                       capId);
+    }   break;
+*/
     default:
         smsc_log_error(logger, "CapSMS[%u]: illegal Invoke(opcode = %u)",
             capId, op->getOpcode());
@@ -312,8 +323,8 @@ void CapSMSDlg::endTCap(void)
         dialog->removeListener(this);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
-            try {
-                dialog->endDialog(); // do TC_BasicEnd if still active
+            try {  // do TC_BasicEnd if still active
+                dialog->endDialog((bool)(reportType != MessageType_notification));
                 smsc_log_debug(logger, "CapSMS[%u]: T_END_REQ, state: 0x%x", capId,
                                 _capState.value);
             } catch (std::exception & exc) {
