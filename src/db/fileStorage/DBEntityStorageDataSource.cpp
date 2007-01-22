@@ -1,11 +1,12 @@
 #include "DBEntityStorageDataSource.hpp"
 #include "ApplicationStatements.hpp"
+#include "SequenceNumber.hpp"
 
 extern "C"
 DataSourceFactory*  getDataSourceFactory(void)
 {
   using namespace smsc::db;
-
+  SequenceNumber::getInstance().initialize("seqNum.db");
   static DBEntityStorageDataSourceFactory _dbEntityStorageDataSourceFactory;
   return &_dbEntityStorageDataSourceFactory;
 }
