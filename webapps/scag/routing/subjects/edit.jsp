@@ -14,7 +14,7 @@
 </jsp:attribute>
 
 <jsp:body>
-      <script src="content/scripts/http_routes.js" type="text/javascript"></script>
+      <script src="content/scripts/http_routes.jsp" type="text/javascript"></script>
       <script type="text/javascript">
 
         var global_subj_counter = 0;

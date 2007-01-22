@@ -52,8 +52,13 @@ public class TagLibFunctions {
   {
     try {
       String errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode."+statMode+"."+errcode);
-      if (errMessage.startsWith("???") && errMessage.endsWith("???")) errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode.unknown");
-      if (errMessage.startsWith("???") && errMessage.endsWith("???")) return "! undefined error code "+ ((extended) ? ("("+errcode+") !"):"!");
+      if (errMessage.startsWith("???") && errMessage.endsWith("???")) {
+         errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode.unknown");
+         if (statMode.equals("http") && (errcode>99 && errcode<600)) {
+           byte firstFigure = (byte)((errcode-errcode%100)/100);
+           errMessage = LocaleMessages.getInstance().getMessage(session,"smsc.errcode."+statMode+"."+firstFigure+"xx");
+         }
+      }
       if (extended) errMessage += " ("+errcode+")";
       return errMessage;
     } catch (Exception e) {
