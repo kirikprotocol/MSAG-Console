@@ -2,8 +2,9 @@
 
 #include <memory>
 #include "Exceptions.hpp"
+#include "SequenceNumber.hpp"
 
-InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* storage) : _storage(storage), _currentIdSeqNum(0)
+InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* storage) : _storage(storage)
 {
   InfoSme_T_Entity_Adapter record;
   typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid, nextRid;
@@ -18,7 +19,6 @@ InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<
                                                                    rid) )
       throw smsc::db::SQLException("InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage::: can't load storage data (index update was failed)");
     else {
-      _currentIdSeqNum = std::max(_currentIdSeqNum, record.getAdaptedObjRef().getId());
       opResult =_storage->extractNextRecord(&record, &rid, &nextRid);
     }
   }
@@ -31,7 +31,7 @@ InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<
 uint64_t
 InfoSme_T_DBEntityStorage::getNextIdSequenceNumber()
 {
-  return ++_currentIdSeqNum;
+  return SequenceNumber::getInstance().getNextSequenceNumber();
 }
 
 bool
