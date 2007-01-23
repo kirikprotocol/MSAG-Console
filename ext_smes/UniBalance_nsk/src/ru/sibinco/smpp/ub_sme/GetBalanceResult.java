@@ -11,8 +11,10 @@ public class GetBalanceResult {
     this.balanceDate = balanceDate;
   }
 
-  public GetBalanceResult(String balance) {
+  public GetBalanceResult(String balance, String currency) {
     this.balance = balance;
+    this.currency = currency;
+    balanceDate = System.currentTimeMillis();
   }
 
   public String getBalance() {

@@ -112,22 +112,22 @@ public class Utils {
     return sb.toString().trim();
   }
 
-  public static String aggregateRegexp(String masks) throws IllegalArgumentException {
-    StringTokenizer st = new StringTokenizer(masks, ",");
+  public static String aggregateRegexp(String pattern) throws IllegalArgumentException {
+    StringTokenizer st = new StringTokenizer(pattern, ",");
     StringBuffer sb = new StringBuffer();
     if (st.hasMoreTokens()) {
       String token = st.nextToken();
-      sb.append('(');
-      sb.append(getRegexpFromWildcard(token));
-      sb.append(')');
+      sb.append("(.*?");
+      sb.append(token);
+      sb.append(".*?)");
     }
     while (st.hasMoreTokens()) {
       String token = st.nextToken();
-      sb.append("|(");
-      sb.append(getRegexpFromWildcard(token));
-      sb.append(')');
+      sb.append("|(.*?");
+      sb.append(token);
+      sb.append(".*?)");
     }
-    if (Logger.isDebugEnabled()) Logger.debug("Masks " + masks + " aggregated to regexp " + sb.toString());
+    if (Logger.isDebugEnabled()) Logger.debug("Pattern " + pattern + " aggregated to regexp " + sb.toString());
 
     return sb.toString();
   }

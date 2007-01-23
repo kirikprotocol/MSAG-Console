@@ -38,7 +38,7 @@ public class ProductivityController extends Thread {
     if (logger.isDebugEnabled()) logger.debug("init(..) finished");
   }
 
-  public void addControlObject(ProductivityControllable obj){
+  public void addControlObject(ProductivityControllable obj) {
     obj.setEventsCounterEnabled(true);
     controlObjects.add(obj);
   }
@@ -48,7 +48,7 @@ public class ProductivityController extends Thread {
    */
   public void startService() {
     if (logger.isDebugEnabled()) logger.debug("startService()");
-    if(!logger.isInfoEnabled()){
+    if (!logger.isInfoEnabled()) {
       logger.warn("Logger INFO is disabled. Couldn't start ProductivityController");
       return;
     }
@@ -78,7 +78,9 @@ public class ProductivityController extends Thread {
     while (!stop) {
       for (int i = 0; i < controlObjects.size(); i++) {
         ProductivityControllable object = (ProductivityControllable) controlObjects.get(i);
-        if (logger.isInfoEnabled()) logger.info(object.getName()+": "+(1000L*object.getEventsCount()/(System.currentTimeMillis()-object.getCounterStartTime()))+" / sec.");
+        long tm = (System.currentTimeMillis() - object.getCounterStartTime());
+        if (logger.isInfoEnabled() && tm != 0)
+          logger.info(object.getName() + ": " + (1000L * object.getEventsCount() / tm) + " / sec.");
         object.resetEventsCounter();
       }
       synchronized (monitor) {

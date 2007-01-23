@@ -1,66 +1,71 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Ñ„Ð°Ð¹Ð» ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸ Ð´Ð»Ñ ÑÐµÑ€Ð²ÐµÑ€Ð°, Ð±ÑƒÐ´ÑƒÑ‚ Ð·Ð°Ð³Ñ€ÑƒÐ¶ÐµÐ½Ñ‹ ÑÑ‚Ð¸ Ð½Ð°ÑÑ‚Ñ€Ð¾Ð¹ÐºÐ¸
-ÐµÑÐ»Ð¸ Ð¿Ñ€Ð¸ Ð·Ð°Ð¿ÑƒÑÐºÐµ ÑÐµÑ€Ð²ÐµÑ€Ð° Ð±Ñ‹Ð» Ð¿ÐµÑ€ÐµÐ´Ð°Ð½ Ð°Ñ€Ð³Ñƒ Ð¼ÐµÐ½Ñ‚ Ð² ÐºÐ¾Ð¼Ð°Ð½Ð´Ð½ÑƒÑŽ ÑÑ‚Ñ€Ð¾ÐºÑƒ Ñ€Ð°Ð²Ð½Ñ‹Ð¹ "-c" -->
+<?xml version="1.0" encoding="KOI8-r"?>
+<!-- ÆÁÊÌ ËÏÎÆÉÇÕÒÁÃÉÉ ÄÌÑ ÓÅÒ×ÅÒÁ, ÂÕÄÕÔ ÚÁÇÒÕÖÅÎÙ ÜÔÉ ÎÁÓÔÒÏÊËÉ
+ÅÓÌÉ ÐÒÉ ÚÁÐÕÓËÅ ÓÅÒ×ÅÒÁ ÂÙÌ ÐÅÒÅÄÁÎ ÁÒÇÕ ÍÅÎÔ × ËÏÍÁÎÄÎÕÀ ÓÔÒÏËÕ ÒÁ×ÎÙÊ "-c" -->
 <CONFIG>
 	<NET>
-		<!-- ÑÑ‚Ð¾Ñ‚ Ð¿Ð¾Ñ€Ñ‚ Ð±ÑƒÐ´ÐµÑ‚ Ð¿Ñ€Ð¾ÑÐ»ÑƒÑˆÐ¸Ð²Ð°Ñ‚ÑŒÑÑ ÑÐµÑ€Ð²ÐµÑ€Ð¾Ð¼ -->
+		<!-- ÜÔÏÔ ÐÏÒÔ ÂÕÄÅÔ ÐÒÏÓÌÕÛÉ×ÁÔØÓÑ ÓÅÒ×ÅÒÏÍ -->
 		<TCP port="25000" bind="0.0.0.0" />
 	</NET>
 	<PARAMS>
-		<!-- Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ñ‹ Ð¿Ð¾ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¼ Ð±ÑƒÐ´ÑƒÑ‚ Ð¾Ñ‚ÐºÐ»ÑŽÑ‡Ð°Ñ‚ÑŒÑÑ ÐºÐ»Ð¸ÐµÐ½Ñ‚Ñ‹
+		<!-- ÐÁÒÁÍÅÔÒÙ ÐÏ ËÏÔÏÒÙÍ ÂÕÄÕÔ ÏÔËÌÀÞÁÔØÓÑ ËÌÉÅÎÔÙ
 			timeout -
 			size -
 		-->
 		<ERRINFO timeout="200" size="20" />
-		<!-- Ð¿Ð¾Ñ€Ñ‚ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¹ Ð¿Ñ€Ð¾ÑÐ»ÑƒÑˆÐ¸Ð²Ð°ÐµÑ‚ ÑÐµÑ€Ð²Ð¸Ñ ÑÑ‚Ð°Ñ‚Ð¸ÑÑ‚Ð¸ÐºÐ¸ Ð¿Ð¾ ÑÐµÑ€Ð²ÐµÑ€Ñƒ -->
-		<STATISTIC port="38000" />
+		<!-- STATISTIC CONFIGURATION
+		 statDir - ÄÉÒÅËÔÏÒÉÑ × ËÏÔÏÒÏÊ ÌÅÖÁÔ ÆÁÊÌÙ ÓÔÁÔÉÓÔÉËÉ
+		 unloadPeriod - ÐÅÒÉÏÄ ×ÙÇÒÕÚËÉ ÓÔÁÔÉÓÔÉËÉ ÐÏ ÂÁÎÅÒÁÍ
+		  ONE_SECOND | FIVE_SECOND | TEN_SECOND | ONE_MINUTE | FIVE_MINUTE | TEN_MINUTE | ONE_HOUR
+
+		-->
+		<STATISTIC statDir="./stat/"  unloadPeriod="TEN_SECOND"/>
 		<!--  -->
 		<LINE size="7" />
-		<!-- ÐºÐ¾Ð»Ð¸Ñ‡ÐµÑÑ‚Ð²Ð¾ Ñ€Ð°Ð±Ð¾Ñ‚Ð°ÑŽÑ‰Ð¸Ñ… Ð¿Ð¾Ñ‚Ð¾ÐºÐ¾Ð² -->
+		<!-- ËÏÌÉÞÅÓÔ×Ï ÒÁÂÏÔÁÀÝÉÈ ÐÏÔÏËÏ× -->
 		<WORKTHREADS count="5"></WORKTHREADS>
-		<!-- Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ñ‹ Ð°Ð»Ð³Ð¾Ñ€Ð¸Ñ‚Ð¼Ð°
-			name - Ð¸Ð¼Ñ Ð°Ð»Ð³Ð¾Ñ€Ð¸Ñ‚Ð¼Ð° Ñ ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¼ Ð±ÑƒÐ´ÐµÑ‚ Ñ€Ð°Ð±Ð¾Ñ‚Ð°Ñ‚ÑŒ ÑÐµÑ€Ð²ÐµÑ€
-			Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ:
+		<!-- ÐÁÒÁÍÅÔÒÙ ÁÌÇÏÒÉÔÍÁ
+			name - ÉÍÑ ÁÌÇÏÒÉÔÍÁ Ó ËÏÔÏÒÙÍ ÂÕÄÅÔ ÒÁÂÏÔÁÔØ ÓÅÒ×ÅÒ
+			ÍÏÖÅÔ ÂÙÔØ:
 			AlgorithmSingleEdition
 			AlgorithmSingleEditionMTS
 			AlgorithmSingleEdition2
-			type - Ñ‚Ð¸Ð¿ Ð°Ð»Ð³Ð¾Ñ€Ð¸Ñ‚Ð¼Ð°, Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ:
-			custom - ÐµÑÐ»Ð¸ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐµÑ‚ÑÑ SmartDataAPI
-			default - Ð´Ð»Ñ Ð¿Ñ€Ð¾ÑÑ‚Ñ‹Ñ… DataAPI
+			type - ÔÉÐ ÁÌÇÏÒÉÔÍÁ, ÍÏÖÅÔ ÂÙÔØ:
+			custom - ÅÓÌÉ ÉÓÐÏÌØÚÕÅÔÓÑ SmartDataAPI
+			default - ÄÌÑ ÐÒÏÓÔÙÈ DataAPI
 		-->
 		<ALGORITHM name="AlgorithmSingleEditionMTS" type="default"></ALGORITHM>
-		<!-- Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ñ‹ DataAPI ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¹ Ð±ÑƒÐ´ÐµÑ‚ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡Ð°Ñ‚ÑŒÑÑ
-			name - ÐºÐ»Ð°ÑÑ(Ñ ÑƒÐºÐ°Ð·Ð°Ð½Ð¸ÐµÐ¼ package Ð³Ð´Ðµ Ð¾Ð½ Ð½Ð°Ñ…Ð¾Ð´Ð¸Ñ‚ÑŒÑÑ)
-			ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¹ Ð±ÑƒÐ´ÐµÑ‚ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒÑÑ Ð¿Ñ€Ð¸ Ñ€Ð°Ð±Ð¾Ñ‚Ðµ ÑÐµÑ€Ð²ÐµÑ€Ð°,
-			Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ:
+		<!-- ÐÁÒÁÍÅÔÒÙ DataAPI ËÏÔÏÒÙÊ ÂÕÄÅÔ ÐÏÄËÌÀÞÁÔØÓÑ
+			name - ËÌÁÓÓ(Ó ÕËÁÚÁÎÉÅÍ package ÇÄÅ ÏÎ ÎÁÈÏÄÉÔØÓÑ)
+			ËÏÔÏÒÙÊ ÂÕÄÅÔ ÉÓÐÏÌØÚÏ×ÁÔØÓÑ ÐÒÉ ÒÁÂÏÔÅ ÓÅÒ×ÅÒÁ,
+			ÍÏÖÅÔ ÂÙÔØ:
 			com.lorissoft.advertising.hashfile.HashFileDataAPI
 			com.lorissoft.advertising.db2dataapi.DB2DataAPI
-			confpath - Ð¿ÑƒÑ‚ÑŒ Ðº Ñ„Ð°Ð¹Ð»Ñƒ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸ DataAPI,
+			confpath - ÐÕÔØ Ë ÆÁÊÌÕ ËÏÎÆÉÇÕÒÁÃÉÉ DataAPI,
 			./config/DataAPI.properties
 		-->
 		<DATAAPI name="com.lorissoft.advertising.hashfile.HashFileDataAPI"
-			confpath="./config/DataAPI.properties">
+			confpath="./config/DataAPI.xml">
 		</DATAAPI>
-		<!-- Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ñ‹ WebDataAPI ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¹ Ð±ÑƒÐ´ÐµÑ‚ Ð¿Ð¾Ð´ÐºÐ»ÑŽÑ‡Ð°Ñ‚ÑŒÑÑ
-			name - ÐºÐ»Ð°ÑÑ(Ñ ÑƒÐºÐ°Ð·Ð°Ð½Ð¸ÐµÐ¼ package Ð³Ð´Ðµ Ð¾Ð½ Ð½Ð°Ñ…Ð¾Ð´Ð¸Ñ‚ÑŒÑÑ)
-			ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¹ Ð±ÑƒÐ´ÐµÑ‚ Ð¸ÑÐ¿Ð¾Ð»ÑŒÐ·Ð¾Ð²Ð°Ñ‚ÑŒÑÑ Ð¿Ñ€Ð¸ Ñ€Ð°Ð±Ð¾Ñ‚Ðµ ÑÐµÑ€Ð²ÐµÑ€Ð°,
-			Ð¼Ð¾Ð¶ÐµÑ‚ Ð±Ñ‹Ñ‚ÑŒ:
+		<!-- ÐÁÒÁÍÅÔÒÙ WebDataAPI ËÏÔÏÒÙÊ ÂÕÄÅÔ ÐÏÄËÌÀÞÁÔØÓÑ
+			name - ËÌÁÓÓ(Ó ÕËÁÚÁÎÉÅÍ package ÇÄÅ ÏÎ ÎÁÈÏÄÉÔØÓÑ)
+			ËÏÔÏÒÙÊ ÂÕÄÅÔ ÉÓÐÏÌØÚÏ×ÁÔØÓÑ ÐÒÉ ÒÁÂÏÔÅ ÓÅÒ×ÅÒÁ,
+			ÍÏÖÅÔ ÂÙÔØ:
 			com.lorissoft.advertising.db2dataapi.WebDB2DataAPI
 			com.lorissoft.advertising.hashfile.WebFileDataAPI
-			confpath - Ð¿ÑƒÑ‚ÑŒ Ðº Ñ„Ð°Ð¹Ð»Ñƒ ÐºÐ¾Ð½Ñ„Ð¸Ð³ÑƒÑ€Ð°Ñ†Ð¸Ð¸ WebDataAPI,
+			confpath - ÐÕÔØ Ë ÆÁÊÌÕ ËÏÎÆÉÇÕÒÁÃÉÉ WebDataAPI,
 			./config/DataAPI.properties
 		-->
 		<WEBDATAAPI
 			name="com.lorissoft.advertising.hashfile.WebFileDataAPI"
-			confpath="./config/DataAPI.properties">
+			confpath="./config/DataAPI.xml">
 		</WEBDATAAPI>
 
 		<CACHE
 		    enable ="true"
 			name="com.lorissoft.advertising.cache.RMICache"
-			confpath="./config/DataAPI.properties">
+			confpath="./config/DataAPI.xml">
 		</CACHE>
-		<!-- Ð¿ÑƒÑ‚ÑŒ Ðº Ð±Ð¸Ð±Ð»Ð¸Ð¾Ñ‚ÐµÐºÐµ Ð´Ð»Ñ Ñ€Ð°Ð±Ð¾Ñ‚Ñ‹ Ñ RMI, Ð¾ÑÑƒÑ‰ÐµÑÑ‚Ð²Ð»ÑÑŽÑ‰ÐµÐ³Ð¾ ÐºÐ¾Ð½Ñ‚Ñ€Ð¾Ð»ÑŒ ÑÐµÑ€Ð²ÐµÑ€Ð° -->
+		<!-- ÐÕÔØ Ë ÂÉÂÌÉÏÔÅËÅ ÄÌÑ ÒÁÂÏÔÙ Ó RMI, ÏÓÕÝÅÓÔ×ÌÑÀÝÅÇÏ ËÏÎÔÒÏÌØ ÓÅÒ×ÅÒÁ -->
 		<CODEBASE path="file://../lib/adv-control.jar"></CODEBASE>
 	</PARAMS>
 </CONFIG>

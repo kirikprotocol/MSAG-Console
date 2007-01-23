@@ -3,6 +3,7 @@ package ru.sibinco.smpp.ub_sme;
 import ru.aurorisoft.smpp.Multiplexor;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
+import ru.sibinco.smpp.ub_sme.util.Utils;
 import ru.sibinco.smpp.ub_sme.InitializationException;
 import ru.sibinco.util.threads.ThreadsPool;
 
@@ -60,6 +61,50 @@ public class Sme {
       throw new InitializationException("Could not get DB connection manager.", e);
     }
 
+    boolean outqueueEnabled = Utils.getBooleanProperty(config, "outqueue.enabled", true);
+
+    OutgoingQueue outQueue = null;
+    if (outqueueEnabled) {
+      // init ougoing queue
+      long deliveryTimeout = 0;
+      try {
+        deliveryTimeout = Utils.getLongProperty(config, "delivery.timeout", 30000L);
+      } catch (NullPointerException e) {
+        Logger.warn("\"delivery.timeout\" property not specified.");
+      } catch (NumberFormatException e) {
+        Logger.warn("\"delivery.timeout\" property is invalid: " + config.getProperty("delivery.timeout"));
+      }
+      long retryPeriod = 0;
+      try {
+        retryPeriod = Utils.getLongProperty(config, "retry.period", 60000L);
+      } catch (NullPointerException e) {
+        Logger.warn("\"retry.period\" property not specified.");
+      } catch (NumberFormatException e) {
+        Logger.warn("\"retry.period\" property is invalid: " + config.getProperty("retry.period"));
+      }
+      int maxRetries = 0;
+      try {
+        maxRetries = Utils.getIntProperty(config, "max.retries", 1);
+      } catch (NullPointerException e) {
+        Logger.warn("\"max.retries\" property not specified.");
+      } catch (NumberFormatException e) {
+        Logger.warn("\"max.retries\" property is invalid: " + config.getProperty("max.retries"));
+      }
+
+      outQueue = new OutgoingQueue(deliveryTimeout, maxRetries, retryPeriod);
+
+      // start outgoing queue controller
+      long outqueueControllerPollinginterval = 0;
+      try {
+        outqueueControllerPollinginterval = Long.parseLong(config.getProperty("outqueue.controller.pollinginterval"));
+      } catch (NullPointerException e) {
+        Logger.warn("\"outqueue.controller.pollinginterval\" property not specified.");
+      } catch (NumberFormatException e) {
+        Logger.warn("\"outqueue.controller.pollinginterval\" property is invalid: " + config.getProperty("outqueue.controller.pollinginterval"));
+      }
+      new OutgoingQueueController(outQueue, "OutgoingQueueController", outqueueControllerPollinginterval).startService();
+    }
+
     // init multiplexor
     Multiplexor multiplexor = new Multiplexor();
     try {
@@ -70,14 +115,15 @@ public class Sme {
       throw new InitializationException("Exception occured during initializing of multiplexor.");
     }
 
-    // Init threads pool
-    ThreadsPool threadsPool = new ThreadsPool(config);
+    MessageSender messageSender = null;
+    if (outqueueEnabled) {
+      //init message sender
+      messageSender = new MessageSender(outQueue, multiplexor, "MessageSender", Utils.getLongProperty(config, "message.sender.pollinginterval", 10000L));
+      messageSender.setSyncSendTimeout(Utils.getLongProperty(config, "sync.mode.send.timeout", 10000L));
+      messageSender.setSendDelay(Utils.getLongProperty(config, "send.delay", 0));
 
-    // SME engine
-    SmeEngine engine = new SmeEngine(multiplexor, threadsPool);
-    engine.init(config);
-    multiplexor.setMessageListener(engine);
-    multiplexor.setResponseListener(engine);
+      outQueue.setMessageSender(messageSender);
+    }
 
     // connect multiplexor
     try {
@@ -86,6 +132,22 @@ public class Sme {
       Logger.fatal("Exception occured during establishing connection in multiplexor.", e);
       throw new InitializationException("Exception occured during establishing connection in multiplexor.");
     }
+
+    if (outqueueEnabled) {
+      // run message sender
+      messageSender.startService();
+    }
+
+    // Init threads pool
+    ThreadsPool threadsPool = new ThreadsPool(config);
+
+    // SME engine
+
+    SmeEngine engine = new SmeEngine(multiplexor, outQueue, threadsPool);
+    engine.init(config);
+    multiplexor.setMessageListener(engine);
+    multiplexor.setResponseListener(engine);
+
   }
 
   public static void main(String[] args) {

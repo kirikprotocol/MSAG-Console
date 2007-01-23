@@ -5,16 +5,21 @@ import com.lorissoft.advertising.core.AdvCore;
 import ru.aurorisoft.smpp.*;
 import ru.sibinco.util.threads.ThreadsPool;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
+import ru.sibinco.smpp.ub_sme.util.Utils;
 import ru.sibinco.smpp.ub_sme.inman.*;
 
 import java.util.*;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.CallableStatement;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.io.UnsupportedEncodingException;
+import java.io.IOException;
+import java.io.File;
+import java.io.FileInputStream;
 
 public class SmeEngine implements MessageListener, ResponseListener, InManPDUHandler {
 
@@ -34,6 +39,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String cbossQuery = null;
   private String inManQuery = null;
 
+  private String cbossConnectionErrorPattern = "Connection,NullPointerException";
+  private String inManConnectionErrorPattern = "System or internal error,already closed";
+
   private String inManHost = "localhost";
   private String inManPort = "1234";
   private boolean inManUseCache = true;
@@ -52,6 +60,8 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private DecimalFormatSymbols decimalFormatSymbols;
   private String numberFormatPattern = "#.##";
 
+  private File responsePatternConfigFile;
+
   private String balanceResponsePattern = "{0} {1}";
   private String waitForSmsResponsePattern = "{0}";
   private String bannerAddPattern = "{0}\n{1}";
@@ -66,11 +76,15 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private ThreadsPool threadsPool = null;
   private Multiplexor multiplexor = null;
+  private OutgoingQueue outgoingQueue;
   private InManClient inManClient = null;
   private DBConnectionManager connectionManager = DBConnectionManager.getInstance();
   private List states = new ArrayList();
   private Map mgRequests = new HashMap();
   private Map inManRequests = new HashMap();
+
+  private Map cbossStatements = new HashMap();
+  private Map inManStatements = new HashMap();
 
   private AdvCore bannerEngine;
 
@@ -103,6 +117,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     if (inManQuery.length() == 0) {
       throw new InitializationException("Mandatory config parameter \"inman.query\" is missed");
     }
+    inManConnectionErrorPattern = config.getProperty("inman.connection.error.pattern", inManConnectionErrorPattern);
+    if (inManConnectionErrorPattern.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"inman.connection.error.pattern\" is missed");
+    }
+    inManConnectionErrorPattern = Utils.aggregateRegexp(inManConnectionErrorPattern);
 
     cbossPoolName = config.getProperty("cboss.pool.name", "");
     if (cbossPoolName.length() == 0) {
@@ -112,6 +131,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     if (cbossQuery.length() == 0) {
       throw new InitializationException("Mandatory config parameter \"cboss.query\" is missed");
     }
+    cbossConnectionErrorPattern = config.getProperty("cboss.connection.error.pattern", cbossConnectionErrorPattern);
+    if (cbossConnectionErrorPattern.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"cboss.connection.error.pattern\" is missed");
+    }
+    cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
 
     for (int i = 0; i < billingSystemsOrder.length; i++) {
       String bso = config.getProperty("billing.system." + i + ".order", "");
@@ -132,23 +156,24 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     decimalFormatSymbols = new DecimalFormatSymbols(Locale.US);
     decimalFormatSymbols.setDecimalSeparator(decimalSeparator.charAt(0));
 
-    balanceResponsePattern = config.getProperty("balance.response.pattern", balanceResponsePattern);
-    waitForSmsResponsePattern = config.getProperty("balance.wait.for.sms.response.pattern", waitForSmsResponsePattern);
-    bannerAddPattern = config.getProperty("balance.banner.add.pattern", bannerAddPattern);
-    errorPattern = config.getProperty("balance.error.pattern", errorPattern);
-
-    currency = new HashMap();
-    String defaultCurrency = config.getProperty("balance.currency.default", "usd");
-
-    currency.put("default", defaultCurrency);
-
-    String code;
-    int n = 1;
-    while ((code = config.getProperty("balance.currency." + n + ".code")) != null) {
-      String value = config.getProperty("balance.currency." + n + ".name", "");
-      currency.put(code, value);
-      n++;
+    String responsePatternConfigFileName = config.getProperty("response.pattern.config.file", "response.pattern.properties");
+    responsePatternConfigFile = new File(responsePatternConfigFileName);
+    if (!responsePatternConfigFile.exists()) {
+      responsePatternConfigFile = new File("config/" + responsePatternConfigFileName);
+      if (!responsePatternConfigFile.exists()) {
+        throw new InitializationException("Invalid value for config parameter \"response.pattern.config.file\": file not found");
+      }
     }
+
+    initResponsePatterns();
+
+    long responsePatternConfigFileCheckInterval = 60000L;
+    try {
+      responsePatternConfigFileCheckInterval = Long.parseLong(config.getProperty("response.pattern.config.check.interval", Long.toString(60000L)));
+    } catch (NumberFormatException e) {
+      throw new InitializationException("Invalid value for config parameter \"response.pattern.config.check.interval\": " + config.getProperty("response.pattern.config.check.interval"));
+    }
+    (new ResponcePatternConfigController(responsePatternConfigFileCheckInterval)).startService();
 
     smsResponseMode = Boolean.valueOf(config.getProperty("sms.response.mode", "false")).booleanValue();
 
@@ -214,10 +239,14 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       productivityController.addControlObject(responses);
       productivityController.addControlObject(waitForSmsResponses);
 
+      if (outgoingQueue != null && outgoingQueue.getMessageSender() != null) {
+        productivityController.addControlObject(outgoingQueue.getMessageSender());
+      }
+
       productivityController.startService();
     }
 
-    if(isBillingSystemEnabled(BILLING_SYSTEM_IN_MAN)){
+    if (isBillingSystemEnabled(BILLING_SYSTEM_IN_MAN)) {
       inManClient = new InManClient(inManHost, inManPort, this);
       inManClient.connect();
     }
@@ -227,9 +256,40 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init fineshed");
   }
 
-  protected SmeEngine(Multiplexor multiplexor,
-      ThreadsPool threadsPool) throws InitializationException {
+  private void initResponsePatterns() throws InitializationException {
+    Properties patternConfig;
+    try {
+      patternConfig = new Properties();
+      patternConfig.load(new FileInputStream(responsePatternConfigFile));
+    } catch (IOException e) {
+      logger.error("Exception occured during loading response pattern configuration from " + responsePatternConfigFile.getName(), e);
+      throw new InitializationException("Exception occured during loading response pattern configuration.", e);
+    }
+
+    balanceResponsePattern = patternConfig.getProperty("balance.response.pattern", balanceResponsePattern);
+    waitForSmsResponsePattern = patternConfig.getProperty("balance.wait.for.sms.response.pattern", waitForSmsResponsePattern);
+    errorPattern = patternConfig.getProperty("balance.error.pattern", errorPattern);
+
+    bannerAddPattern = patternConfig.getProperty("balance.banner.add.pattern", bannerAddPattern);
+
+    currency = new HashMap();
+    String defaultCurrency = patternConfig.getProperty("balance.currency.default", "usd");
+
+    currency.put("default", defaultCurrency);
+
+    String code;
+    int n = 1;
+    while ((code = patternConfig.getProperty("balance.currency." + n + ".code")) != null) {
+      String value = patternConfig.getProperty("balance.currency." + n + ".name", "");
+      currency.put(code, value);
+      n++;
+    }
+
+  }
+
+  public SmeEngine(Multiplexor multiplexor, OutgoingQueue messagesQueue, ThreadsPool threadsPool) {
     this.multiplexor = multiplexor;
+    this.outgoingQueue = messagesQueue;
     this.threadsPool = threadsPool;
   }
 
@@ -243,19 +303,19 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (msg.isReceipt()) {
         if (logger.isDebugEnabled())
           logger.debug("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: Receipt");
-        sendDeliverSMResponse(msg, Data.ESME_ROK);
+        sendDeliverSmResponse(msg, Data.ESME_ROK);
         return false;
       }
       if ((msg.getSourceAddress() == null || msg.getSourceAddress().trim().equals(""))) {
         if (logger.isDebugEnabled())
           logger.debug("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: Empty Source Address");
-        sendDeliverSMResponse(msg, Data.ESME_ROK);
+        sendDeliverSmResponse(msg, Data.ESME_ROK);
         return false;
       }
       if (msg.getEncoding() == Message.ENCODING_BINARY) {
         if (logger.isDebugEnabled())
           logger.debug("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: Unsupported encoding: BINARY");
-        sendDeliverSMResponse(msg, Data.ESME_ROK);
+        sendDeliverSmResponse(msg, Data.ESME_ROK);
         return true;
       }
       if (logger.isDebugEnabled())
@@ -265,7 +325,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       return true;
     } catch (Exception e) { // logic exception (message format)
       logger.error("Cannot handle MSG", e);
-      sendDeliverSMResponse(msg, Data.ESME_RSYSERR);
+      sendDeliverSmResponse(msg, Data.ESME_RSYSERR);
       return false;
     }
   }
@@ -281,16 +341,31 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         break;
     }
 
-    if (logger.isDebugEnabled())
-      logger.debug(responseType + " handled. ConnID #" + pdu.getConnectionId() + "; SeqN #" + pdu.getSequenceNumber() + "; Status #" + pdu.getStatus());
-    String abonent = (String) mgRequests.remove(new Long(((long) pdu.getConnectionId()) << 32 | pdu.getSequenceNumber()));
-    if (pdu.getStatus() != PDU.STATUS_CLASS_NO_ERROR) {
-      RequestState state = extractRequestState(abonent);
-      synchronized (state) {
-        state.setError(true);
+    if (pdu.getType() == Data.SUBMIT_SM_RESP || pdu.getType() == Data.DATA_SM_RESP) { // TODO: check for ussd_service_op
+
+      if (logger.isDebugEnabled()) {
+        logger.debug(responseType + " handled. ConnID #" + pdu.getConnectionId() + "; SeqN #" + pdu.getSequenceNumber() + "; Status #" + pdu.getStatus());
       }
-      closeRequestState(state);
+
+      if (pdu.getStatusClass() == PDU.STATUS_CLASS_TEMP_ERROR) {
+        outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
+      } else {
+
+        if (isBillingSystemEnabled(BILLING_SYSTEM_FORIS)) {
+          String abonent = (String) mgRequests.remove(new Long(((long) pdu.getConnectionId()) << 32 | pdu.getSequenceNumber()));
+          if (abonent != null && pdu.getStatus() != PDU.STATUS_CLASS_NO_ERROR) {
+            RequestState state = extractRequestState(abonent);
+            synchronized (state) {
+              state.setError(true);
+            }
+            closeRequestState(state);
+          }
+        }
+
+        outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+      }
     }
+
   }
 
   protected void addRequestState(RequestState state) {
@@ -364,7 +439,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         sendResponse(state);
         state.setClosed(true);
         extractRequestState(abonent);
-        if(logger.isInfoEnabled())
+        if (logger.isInfoEnabled())
           logger.info(state.toString());
       }
     }
@@ -389,13 +464,13 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (state.getAbonentRequestTime() + ussdSessionTimeout > System.currentTimeMillis()) {
         break;
       }
-      boolean sendWaitMessage=false;
+      boolean sendWaitMessage = false;
       synchronized (state) {
         /*
         if (state.getAbonentRequestTime() + requestLifeTime <= System.currentTimeMillis() && !state.isClosed()) {
           if (logger.isDebugEnabled()) logger.debug(state.getAbonentRequest().getSourceAddress() + " request state expired.");
           if (!state.isUssdSessionClosed()) {
-            sendDeliverSMResponse(state.getAbonentRequest(), Data.ESME_RSYSERR);
+            sendDeliverSmResponse(state.getAbonentRequest(), Data.ESME_RSYSERR);
           }
           state.setClosed(true);
           states.remove(0);
@@ -403,18 +478,18 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         }
         */
         if (!state.isUssdSessionClosed()) {
-          sendWaitMessage=true;
+          sendWaitMessage = true;
           state.setUssdSessionClosed(true);
         }
       }
-      if(sendWaitMessage){
+      if (sendWaitMessage) {
         sendWaitForSmsMessage(state);
       }
     }
   }
 
 
-  private void sendDeliverSMResponse(Message msg, int status) {
+  private void sendDeliverSmResponse(Message msg, int status) {
     try {
       msg.setStatus(status);
       multiplexor.sendResponse(msg);
@@ -472,8 +547,12 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private void sendMessage(Message msg, String connectionName) {
     try {
-      multiplexor.assingSequenceNumber(msg, connectionName);
-      multiplexor.sendMessage(msg, false);
+      if (outgoingQueue != null) {
+        outgoingQueue.addOutgoingObject(new OutgoingObject(msg));
+      } else {
+        multiplexor.assingSequenceNumber(msg, connectionName);
+        multiplexor.sendMessage(msg, false);
+      }
       if (logger.isDebugEnabled())
         logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
     } catch (SMPPException e) {
@@ -491,14 +570,14 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (state != null) {
         if (logger.isDebugEnabled())
           logger.debug("Request rejected because another request from this abonent is already processing");
-        sendDeliverSMResponse(message, Data.ESME_RMSGQFUL);
+        sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
         return;
       }
 
       if (states.size() >= maxProcessingRequests) {
         if (logger.isDebugEnabled())
           logger.debug("Request rejected because max processing requests count is reached");
-        sendDeliverSMResponse(message, Data.ESME_RMSGQFUL);
+        sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
         return;
       }
 
@@ -506,7 +585,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         requests.count();
       }
 
-      sendDeliverSMResponse(message, Data.ESME_ROK);
+      sendDeliverSmResponse(message, Data.ESME_ROK);
       state = new RequestState(message, abonentRequestTime);
       addRequestState(state);
       threadsPool.execute(new BalanceProcessor(this, state));
@@ -516,7 +595,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     } else {  // mg response
       if (logger.isDebugEnabled())
         logger.debug("Got FORIS response for " + message.getDestinationAddress());
-      sendDeliverSMResponse(message, Data.ESME_ROK);
+      sendDeliverSmResponse(message, Data.ESME_ROK);
       state = getRequestState(message.getDestinationAddress());
       if (state == null)
         return;
@@ -566,7 +645,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     try {
       int dialogID = inManClient.assignDialogID();
       if (logger.isDebugEnabled())
-        logger.debug("Send InMan request for abonent " + state.getAbonentRequest().getSourceAddress()+ ", sn="+dialogID);
+        logger.debug("Send InMan request for abonent " + state.getAbonentRequest().getSourceAddress() + ", sn=" + dialogID);
       inManClient.sendContractRequest(state.getAbonentRequest().getSourceAddress(), dialogID, inManUseCache);
       Integer key = new Integer(dialogID);
       synchronized (inManRequests) {
@@ -678,8 +757,92 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return cbossQuery;
   }
 
+  protected CallableStatement getCbossStatement() throws SQLException {
+    CallableStatement result;
+    synchronized (cbossStatements) {
+      result = (CallableStatement) cbossStatements.get(Thread.currentThread().getName());
+    }
+    if (result == null) {
+      logger.debug("Creating CBOSS statement for " + Thread.currentThread().getName());
+      result = getCbossConnection().prepareCall(getCbossQuery());
+      synchronized (cbossStatements) {
+      cbossStatements.put(Thread.currentThread().getName(), result);
+      }
+    }
+    /*
+    try {
+      result.getConnection().getAutoCommit();
+    } catch (Exception e) {
+      try {
+        result.close();
+        result.getConnection().close();
+      } catch (SQLException e1) {
+        ;
+      }
+      if(logger.isDebugEnabled())
+        logger.debug("Recreating CBOSS statement for "+Thread.currentThread().getName());
+      result = getCbossConnection().prepareCall(getCbossQuery());
+      cbossStatements.put(Thread.currentThread().getName(), result);
+    }
+    */
+    return result;
+  }
+
+  public boolean isCbossConnectionError(Exception e) {
+    if (e.toString().matches(cbossConnectionErrorPattern)) {
+      synchronized (cbossStatements) {
+        cbossStatements.remove(Thread.currentThread().getName());
+      }
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   protected String getInManQuery() {
     return inManQuery;
+  }
+
+  protected CallableStatement getInManStatement() throws SQLException {
+    CallableStatement result;
+    synchronized (inManStatements) {
+      result = (CallableStatement) inManStatements.get(Thread.currentThread().getName());
+    }
+    if (result == null) {
+      logger.debug("Creating InMan statement for " + Thread.currentThread().getName());
+      result = getInManConnection().prepareCall(getInManQuery());
+      synchronized (inManStatements) {
+        inManStatements.put(Thread.currentThread().getName(), result);
+      }
+    }
+    /*
+    try {
+      result.getConnection().getAutoCommit();
+    } catch (Exception e) {
+      try {
+        result.close();
+        result.getConnection().close();
+      } catch (SQLException e1) {
+        ;
+      }
+      if(logger.isDebugEnabled())
+        logger.debug("Recreating InMan statement for "+Thread.currentThread().getName());
+      result = getInManConnection().prepareCall(getCbossQuery());
+      inManStatements.put(Thread.currentThread().getName(), result);
+    }
+    */
+    return result;
+  }
+
+  public boolean isInManConnectionError(Exception e) {
+    if (e.toString().matches(inManConnectionErrorPattern)) {
+      synchronized (inManStatements) {
+        inManStatements.remove(Thread.currentThread().getName());
+      }
+      return true;
+    } else {
+      return false;
+    }
   }
 
   protected String getMgAddress() {
@@ -687,11 +850,13 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   }
 
   protected Connection getCbossConnection() throws SQLException {
-    return connectionManager.getConnectionFromPool(cbossPoolName);
+    //return connectionManager.getConnectionFromPool(cbossPoolName);
+    return connectionManager.getConnection(cbossPoolName);
   }
 
   protected Connection getInManConnection() throws SQLException {
-    return connectionManager.getConnectionFromPool(inManPoolName);
+    //return connectionManager.getConnectionFromPool(inManPoolName);
+    return connectionManager.getConnection(inManPoolName);
   }
 
   class RequestStatesController extends Thread {
@@ -704,7 +869,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     public RequestStatesController(long pollingInterval) {
       setName("RequestStatesController");
       this.pollingInterval = pollingInterval;
-      if(logger.isInfoEnabled())
+      if (logger.isInfoEnabled())
         logger.info(getName() + " created.");
     }
 
@@ -733,7 +898,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
 
     public void run() {
-      while (true) {
+      while (started) {
         processRequestStates();
         synchronized (monitor) {
           if (!started) break;
@@ -765,4 +930,70 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       closeRequestState(state);
     }
   }
+
+  class ResponcePatternConfigController extends Thread {
+    private boolean started = false;
+    private Object monitor = new Object();
+    private Object shutmonitor = new Object();
+
+    private long pollingInterval = 60000L;
+    private long fileLastModified;
+
+    public ResponcePatternConfigController(long pollingInterval) {
+      this.pollingInterval = pollingInterval;
+      this.fileLastModified = responsePatternConfigFile.lastModified();
+    }
+
+    public void startService() {
+      started = true;
+      if (logger.isInfoEnabled()) logger.info(getName() + " started.");
+      start();
+    }
+
+    public void stopService() {
+      synchronized (shutmonitor) {
+        synchronized (monitor) {
+          started = false;
+          monitor.notifyAll();
+        }
+        try {
+          shutmonitor.wait();
+        } catch (InterruptedException e) {
+          logger.warn(getName() + " shutting down exception:", e);
+        }
+      }
+    }
+
+    public void run() {
+      while (started) {
+        if (logger.isDebugEnabled())
+          logger.debug("Check response pattern config file modification date");
+        if (responsePatternConfigFile.lastModified() != fileLastModified) {
+          if (logger.isInfoEnabled())
+            logger.info("Response pattern config file was modificated. Reloading response pattern config.");
+          try {
+            initResponsePatterns();
+            fileLastModified = responsePatternConfigFile.lastModified();
+          } catch (InitializationException e) {
+            logger.error("Error while reloading response pattern config: " + e, e);
+          }
+        }
+
+        synchronized (monitor) {
+          if (!started) break;
+          try {
+            monitor.wait(pollingInterval);
+          } catch (InterruptedException e) {
+            logger.warn(getName() + " was interrupted.", e);
+          }
+        }
+      }
+      synchronized (shutmonitor) {
+        shutmonitor.notifyAll();
+      }
+
+    }
+
+  }
+
 }

@@ -124,7 +124,7 @@ public class BalanceProcessor extends Thread {
         state.setBalanceReady(true);
       }
     } else {
-      if(logger.isInfoEnabled())
+      if (logger.isInfoEnabled())
         logger.info("Can not get balance for " + abonent);
       synchronized (state) {
         state.setError(true);
@@ -139,46 +139,93 @@ public class BalanceProcessor extends Thread {
     long balanceDate = 0L;
     Connection connection = null;
     CallableStatement stmt = null;
-    ResultSet rs = null;
     try {
-      connection = smeEngine.getCbossConnection();
-      stmt = connection.prepareCall(smeEngine.getCbossQuery());
-      stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
-      stmt.setString(2, cutAbonentAddress(abonent));
-      stmt.registerOutParameter(3, java.sql.Types.DATE);
-      stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
-      stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
-      stmt.execute();
-      if (stmt.getString(4).equalsIgnoreCase("ACCURATE")) {
-        balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
-        currency = smeEngine.getCurrency(stmt.getString(5));
-        balanceDate = stmt.getDate(3).getTime();
-      } else {
-        logger.warn("Abonent " + abonent + " CBOSS balance corrupted: " + stmt.getString(4));
+      //connection = smeEngine.getCbossConnection();
+      //stmt = connection.prepareCall(smeEngine.getCbossQuery());
+      stmt = smeEngine.getCbossStatement();
+      if (stmt == null) {
+        logger.error("Couldn't get CBOSS statement");
         return null;
       }
-    } catch (SQLException e) {
-      logger.error("Could not get balance from CBOSS database.", e);
-      return null;
-    } finally {
-      if (rs != null)
-        try {
-          rs.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close ResultSet.", e);
+      connection = stmt.getConnection();
+      synchronized (stmt) {
+        stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+        stmt.setString(2, cutAbonentAddress(abonent));
+        stmt.registerOutParameter(3, java.sql.Types.DATE);
+        stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
+        stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
+        stmt.execute();
+        if (stmt.getString(4).equalsIgnoreCase("ACCURATE")) {
+          balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
+          currency = smeEngine.getCurrency(stmt.getString(5));
+          balanceDate = stmt.getDate(3).getTime();
+        } else {
+          logger.warn("Abonent " + abonent + " CBOSS balance corrupted: " + stmt.getString(4));
+          return null;
         }
-      if (stmt != null)
-        try {
-          stmt.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close CallableStatement.", e);
+      }
+    } catch (Exception temporalError) {
+      try {
+        if (stmt != null)
+          try {
+            stmt.close();
+            stmt = null;
+          } catch (SQLException e1) {
+            logger.warn("Could not close oracle CallableStatement: "+ e1);
+          }
+        if (connection != null)
+          try {
+            connection.close();
+            connection = null;
+          } catch (SQLException e1) {
+            logger.warn("Could not close oracle Connection: " + e1);
+          }
+        if (!smeEngine.isCbossConnectionError(temporalError)) {
+          if(temporalError instanceof SQLException) {
+            throw (SQLException)temporalError;
+          } else {
+            logger.error("Unexpected exception: "+temporalError, temporalError);
+            throw new SQLException(temporalError.getMessage());
+          }
         }
-      if (connection != null)
-        try {
-          connection.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Connection.", e);
+        stmt = smeEngine.getCbossStatement();
+        if (stmt == null) {
+          logger.error("Couldn't get CBOSS statement");
+          return null;
         }
+        connection = stmt.getConnection();
+        synchronized (stmt) {
+          stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+          stmt.setString(2, cutAbonentAddress(abonent));
+          stmt.registerOutParameter(3, java.sql.Types.DATE);
+          stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
+          stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
+          stmt.execute();
+          if (stmt.getString(4).equalsIgnoreCase("ACCURATE")) {
+            balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
+            currency = smeEngine.getCurrency(stmt.getString(5));
+            balanceDate = stmt.getDate(3).getTime();
+          } else {
+            logger.warn("Abonent " + abonent + " CBOSS balance corrupted: " + stmt.getString(4));
+            return null;
+          }
+        }
+      } catch (SQLException permanentError) {
+        logger.error("Could not get balance from CBOSS database: " + permanentError, permanentError);
+        if (stmt != null)
+          try {
+            stmt.close();
+          } catch (SQLException e1) {
+            logger.warn("Could not close CallableStatement.", e1);
+          }
+        if (connection != null)
+          try {
+            connection.close();
+          } catch (SQLException e1) {
+            logger.warn("Could not close Connection.", e1);
+          }
+        return null;
+      }
     }
     return new GetBalanceResult(balance, currency, balanceDate);
   }
@@ -186,23 +233,95 @@ public class BalanceProcessor extends Thread {
   private GetBalanceResult getInManBalance(String abonent) {
     GetBalanceResult result = null;
     Double balance = null;
+    String currency = null;
     Connection connection = null;
     CallableStatement stmt = null;
     ResultSet rs = null;
     try {
-      connection = smeEngine.getInManConnection();
-      stmt = connection.prepareCall(smeEngine.getInManQuery());
-      stmt.setString(1, cutAbonentAddress(abonent));
-      rs = stmt.executeQuery();
-      if (rs.next()) {
-        BigDecimal r = rs.getBigDecimal(1);
-        if (r != null) {
-          balance = new Double(r.doubleValue());
+      //connection = smeEngine.getInManConnection();
+      //stmt = connection.prepareCall(smeEngine.getInManQuery());
+      stmt = smeEngine.getInManStatement();
+      if (stmt == null) {
+        logger.error("Couldn't get InMan statement");
+        return null;
+      }
+      connection = stmt.getConnection();
+      synchronized (stmt) {
+        stmt.setString(1, cutAbonentAddress(abonent));
+        rs = stmt.executeQuery();
+        if (rs.next()) {
+          BigDecimal r = rs.getBigDecimal(1);
+          currency = smeEngine.getCurrency(rs.getString(2));
+          if (r != null) {
+            balance = new Double(r.doubleValue());
+          }
         }
       }
-    } catch (SQLException e) {
-      logger.error("Could not get balance from database.", e);
+    } catch (SQLException temporalError) {
+      if (rs != null)
+        try {
+          rs.close();
+          rs = null;
+        } catch (SQLException e1) {
+          logger.warn("Could not close ifx ResultSet: " + e1);
+        }
+      if (stmt != null)
+        try {
+          stmt.close();
+          stmt = null;
+        } catch (SQLException e1) {
+          logger.warn("Could not close ifx CallableStatement: " + e1);
+        }
+      if (connection != null)
+        try {
+          connection.close();
+          connection = null;
+        } catch (SQLException e1) {
+          logger.warn("Could not close ifx Connection: "+e1);
+        }
 
+      try {
+        if (!smeEngine.isInManConnectionError(temporalError)) {
+          throw temporalError;
+        }
+        stmt = smeEngine.getInManStatement();
+        if (stmt == null) {
+          logger.error("Couldn't get InMan statement");
+          return null;
+        }
+        connection = stmt.getConnection();
+        synchronized (stmt) {
+          stmt.setString(1, cutAbonentAddress(abonent));
+          rs = stmt.executeQuery();
+          if (rs.next()) {
+            BigDecimal r = rs.getBigDecimal(1);
+            if (r != null) {
+              balance = new Double(r.doubleValue());
+              currency = smeEngine.getCurrency(stmt.getString(2));
+            }
+          }
+        }
+      } catch (SQLException permanentError) {
+        logger.error("Could not get balance from database: " + permanentError, permanentError);
+        if (rs != null)
+          try {
+            rs.close();
+          } catch (SQLException e1) {
+            logger.warn("Could not close ResultSet: ", e1);
+          }
+        if (stmt != null)
+          try {
+            stmt.close();
+          } catch (SQLException e1) {
+            logger.warn("Could not close CallableStatement.", e1);
+          }
+        if (connection != null)
+          try {
+            connection.close();
+          } catch (SQLException e1) {
+            logger.warn("Could not close Connection.", e1);
+          }
+      }
     } finally {
       if (rs != null)
         try {
@@ -210,21 +329,9 @@ public class BalanceProcessor extends Thread {
         } catch (SQLException e) {
           logger.warn("Could not close ResultSet.", e);
         }
-      if (stmt != null)
-        try {
-          stmt.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close CallableStatement.", e);
-        }
-      if (connection != null)
-        try {
-          connection.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Connection.", e);
-        }
     }
     if (balance != null) {
-      result = new GetBalanceResult(smeEngine.getNumberFormat().format(balance));
+      result = new GetBalanceResult(smeEngine.getNumberFormat().format(balance), currency);
     }
     return result;
   }
