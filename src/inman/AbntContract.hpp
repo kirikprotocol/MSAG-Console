@@ -6,31 +6,10 @@
 
 #include "util/TonNpiAddress.hpp"
 using smsc::util::TonNpiAddress;
+using smsc::util::GsmSCFinfo;
 
 namespace smsc {
 namespace inman {
-
-struct GsmSCFinfo { //gsmSCF paramaters
-    uint32_t      serviceKey;   //4 bytes long
-    TonNpiAddress scfAddress;
-
-    GsmSCFinfo() : serviceKey(0) { }
-
-    void Reset(void) { serviceKey = 0; scfAddress.clear(); }
-
-    //gsmSCF address is always ISDN international
-    std::string toString(bool omit_ton_npi = true) const
-    {
-        if (!scfAddress.length)
-            return "<none>";
-        std:: string    str = scfAddress.toString(!omit_ton_npi);
-        char            buf[sizeof("%s:{%u}") + sizeof(serviceKey)*3];
-        int n = snprintf(buf, sizeof(buf) - 1, ":{%u}", serviceKey);
-        buf[(n > 0) ? n : 0] = 0;
-        str += buf;
-        return str;
-    }
-};
 
 struct AbonentContractInfo {
     typedef enum { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 } ContractType;

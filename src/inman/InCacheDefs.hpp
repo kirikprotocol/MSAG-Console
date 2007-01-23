@@ -9,7 +9,6 @@
 #include <time.h>
 
 #include "inman/AbntContract.hpp"
-using smsc::inman::GsmSCFinfo;
 using smsc::inman::AbonentContractInfo;
 
 namespace smsc {

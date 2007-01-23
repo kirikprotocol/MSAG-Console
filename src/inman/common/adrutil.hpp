@@ -14,10 +14,6 @@
 #include "inman/common/types.hpp"
 #include "inman/AbntContract.hpp"
 
-#define MAP_MAX_IMSI_AddressLength      8
-#define MAP_MAX_IMSI_AddressValueLength (MAP_MAX_IMSI_AddressLength*2)
-#define MAP_MAX_ISDN_AddressLength      8
-
 #define CAP_MAX_LocationNumber_Length   8
 #define CAP_MAX_TimeAndTimezoneLength   8
 #define CAP_MAX_IMSILength              8
@@ -26,7 +22,7 @@
 namespace smsc {
 namespace cvtutil {
 
-typedef smsc::inman::GsmSCFinfo MAPSCFinfo;
+typedef smsc::util::GsmSCFinfo MAPSCFinfo;
 
 typedef union TONPI_OCT_u {
     unsigned char tonpi;
