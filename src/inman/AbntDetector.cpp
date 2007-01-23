@@ -210,8 +210,6 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
 void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec)
-
-//                                   AbonentBillType ab_type, const MAPSCFinfo * scf/* = NULL*/)
 {
     MutexGuard grd(_mutex);
     if (_state != adIAPQuering) {

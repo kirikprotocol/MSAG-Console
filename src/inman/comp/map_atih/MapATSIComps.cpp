@@ -84,7 +84,7 @@ void ATSIArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
 /* ************************************************************************** *
  * class ATSIRes implementation:
  * ************************************************************************** */
-static bool parse_O_CSI(CAMEL_SubscriptionInfo_t *cs, MAPSCFinfo *scf_inf) throw(CustomException)
+static bool parse_O_CSI(CAMEL_SubscriptionInfo_t *cs, GsmSCFinfo *scf_inf) throw(CustomException)
 {
     if (cs->o_CSI && cs->o_CSI->csiActive 
         && cs->o_CSI->o_BcsmCamelTDPDataList.list.count) {
@@ -110,7 +110,7 @@ static bool parse_O_CSI(CAMEL_SubscriptionInfo_t *cs, MAPSCFinfo *scf_inf) throw
     return false;
 }
 
-bool ATSIRes::getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, MAPSCFinfo * scf_dat) const
+bool ATSIRes::getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, GsmSCFinfo * scf_dat) const
 {
     if (!(mask & (1 << req_csi)))
         return false;

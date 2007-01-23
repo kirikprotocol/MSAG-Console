@@ -110,7 +110,7 @@ bool ServiceCHSRI::requestCSI(const std::string &subcr_addr)
  * SRI_CSIListener interface
  * ------------------------------------------------------------------------ */
 void ServiceCHSRI::onCSIresult(const std::string & subcr_addr, 
-                               const char * subcr_imsi, const MAPSCFinfo* scfInfo)
+                               const char * subcr_imsi, const GsmSCFinfo* scfInfo)
 {
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);

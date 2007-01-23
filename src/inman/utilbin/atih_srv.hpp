@@ -14,7 +14,6 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 using smsc::inman::comp::atih::ATSIRes;
 using smsc::inman::comp::atih::ATSIArg;
-//using smsc::inman::comp::MAPSCFinfo;
 
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 using smsc::inman::inap::atih::ATSIhandler;
@@ -25,7 +24,7 @@ namespace inman {
 
 class ATCSIListener {
 public:
-    virtual void onCSIresult(const std::string & subcr_addr, const MAPSCFinfo* scfInfo) = 0;
+    virtual void onCSIresult(const std::string & subcr_addr, const GsmSCFinfo* scfInfo) = 0;
     virtual void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
@@ -52,7 +51,7 @@ private:
     volatile bool   _active;
     TCSessionMA *   tcSesssion;
     MapATSIDlg *    mapDlg;
-    MAPSCFinfo      scfInfo;
+    GsmSCFinfo      scfInfo;
     ATCSIListener * csiHdl;
     std::string     subcrAddr;
     Logger *        logger;
@@ -87,7 +86,7 @@ public:
 protected:
     friend class ATIInterrogator;
     //-- ATCSIListener interface
-    void onCSIresult(const std::string &subcr_addr, const MAPSCFinfo* scfInfo);
+    void onCSIresult(const std::string &subcr_addr, const GsmSCFinfo* scfInfo);
     void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer);
 
 private:

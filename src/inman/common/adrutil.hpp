@@ -22,8 +22,6 @@
 namespace smsc {
 namespace cvtutil {
 
-typedef smsc::util::GsmSCFinfo MAPSCFinfo;
-
 typedef union TONPI_OCT_u {
     unsigned char tonpi;
     struct {
@@ -79,6 +77,4 @@ extern unsigned unpackSCCP2SSN_GT(const SCCP_ADDRESS_T* dst, unsigned char & ssn
 using smsc::cvtutil::TONNPI_OCT;
 using smsc::cvtutil::TONNPI_ADDRESS_OCTS;
 using smsc::cvtutil::LOCATION_ADDRESS_OCTS;
-using smsc::cvtutil::MAPSCFinfo;
-
 #endif /* __SMSC_CONVERSION_ADDRESS_UTL_HPP__ */

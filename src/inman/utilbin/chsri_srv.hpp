@@ -13,7 +13,6 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
-//using smsc::inman::comp::MAPSCFinfo;
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::inap::chsri::CHSRIhandler;
@@ -24,7 +23,7 @@ namespace inman {
 
 class SRI_CSIListener {
 public:
-    virtual void onCSIresult(const std::string & subcr_addr, const char * subcr_imsi, const MAPSCFinfo* scfInfo) = 0;
+    virtual void onCSIresult(const std::string & subcr_addr, const char * subcr_imsi, const GsmSCFinfo* scfInfo) = 0;
     virtual void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
@@ -51,7 +50,7 @@ private:
     volatile bool   _active;
     TCSessionMA *    tcSesssion;
     MapCHSRIDlg *   sriDlg;
-    MAPSCFinfo      scfInfo;
+    GsmSCFinfo      scfInfo;
     SRI_CSIListener * csiHdl;
     std::string     subcrAddr;
     char            subcrImsi[MAP_MAX_IMSI_AddressValueLength + 1];
@@ -87,7 +86,7 @@ public:
 protected:
     friend class SRIInterrogator;
     //-- SRI_CSIListener interface
-    void onCSIresult(const std::string &subcr_addr, const char * subcr_imsi, const MAPSCFinfo* scfInfo);
+    void onCSIresult(const std::string &subcr_addr, const char * subcr_imsi, const GsmSCFinfo* scfInfo);
     void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer);
 
 private:

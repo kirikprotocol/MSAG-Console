@@ -8,7 +8,6 @@
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
-//using smsc::inman::comp::MAPSCFinfo;
 
 /* GVR NOTE: while linking the below enums are taken from generated *
  * asn1/c codec, so they should not have namespace prefix.          */
@@ -95,14 +94,14 @@ public:
     { return (mask & (1 << req_csi)) ? true : false; }
 
     //O-CSI only for now
-    bool getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, MAPSCFinfo * scf_dat) const;
+    bool getSCFinfo(enum RequestedCAMEL_SubscriptionInfo req_csi, GsmSCFinfo * scf_dat) const;
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
     unsigned    mask;
     Logger*     compLogger;
-    MAPSCFinfo  o_csi;
+    GsmSCFinfo  o_csi;
 };
 }//namespace atih
 }//namespace comp

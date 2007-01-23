@@ -113,7 +113,7 @@ CHSendRoutingInfoRes::CHSendRoutingInfoRes()
     mask.imsi = mask.o_csi = 0; 
 }
 
-static bool parse_O_CSI(O_CSI_t *csi, MAPSCFinfo *scf_inf) throw(CustomException)
+static bool parse_O_CSI(O_CSI_t *csi, GsmSCFinfo *scf_inf) throw(CustomException)
 {
     if (csi->o_BcsmCamelTDPDataList.list.count) {
         O_BcsmCamelTDPData_t *root_elem = csi->o_BcsmCamelTDPDataList.list.array[0];
@@ -137,7 +137,7 @@ static bool parse_O_CSI(O_CSI_t *csi, MAPSCFinfo *scf_inf) throw(CustomException
     return false;
 }
 
-int CHSendRoutingInfoRes::getSCFinfo(MAPSCFinfo * scf_dat) const
+int CHSendRoutingInfoRes::getSCFinfo(GsmSCFinfo * scf_dat) const
 {
     if (!mask.o_csi)
         return 0;

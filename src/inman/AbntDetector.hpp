@@ -46,7 +46,6 @@ public:
 
     //-- IAPQueryListenerITF interface methods:
     void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec);
-//                      AbonentBillType ab_type, const GsmSCFinfo * scf = NULL);
     //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 

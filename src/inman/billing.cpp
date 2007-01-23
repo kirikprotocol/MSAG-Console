@@ -390,7 +390,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
 }
 
 //here goes: abtPrepaid or abtUnknown or abtPostpaid(SMSX)
-bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf/* = NULL*/)
+bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const GsmSCFinfo * p_scf/* = NULL*/)
 {
     abType = ab_type;
 
@@ -597,7 +597,6 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
 void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec)
-//                           AbonentBillType ab_type, const MAPSCFinfo * scf/* = NULL*/)
 {
     MutexGuard grd(bilMutex);
 

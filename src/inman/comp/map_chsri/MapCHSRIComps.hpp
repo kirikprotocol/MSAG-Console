@@ -9,7 +9,6 @@
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::MAPComponent;
-//using smsc::inman::comp::MAPSCFinfo;
 
 namespace smsc {
 namespace inman {
@@ -70,7 +69,7 @@ public:
     CHSendRoutingInfoRes();
     ~CHSendRoutingInfoRes() {}
 
-    int getSCFinfo(MAPSCFinfo * scf_dat) const;
+    int getSCFinfo(GsmSCFinfo * scf_dat) const;
     int getIMSI(char *imsi) const;
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
@@ -84,7 +83,7 @@ private:
         unsigned int imsi  :1 ; 
         unsigned int o_csi :1 ; 
     } mask;
-    MAPSCFinfo  o_csi;
+    GsmSCFinfo    o_csi;
     char          o_imsi[MAP_MAX_IMSI_AddressValueLength + 1];
     Logger*	  compLogger;
 };

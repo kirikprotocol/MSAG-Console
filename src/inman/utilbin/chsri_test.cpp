@@ -51,7 +51,7 @@ extern "C" static void sighandler(int signal)
 struct AbonentInfo {
     TonNpiAddress  addr;
     char           imsi[MAP_MAX_IMSI_AddressValueLength];
-    MAPSCFinfo     scf;
+    GsmSCFinfo     scf;
 
     AbonentInfo()   { imsi[0] = 0; scf.serviceKey = 0; }
 };
@@ -136,7 +136,7 @@ public:
         return (it != registry.end()) ? &((*it).second) : NULL;
     }
 
-    bool setAbnInfo(unsigned ab_id, const MAPSCFinfo * p_scf = NULL, const char * p_imsi = NULL)
+    bool setAbnInfo(unsigned ab_id, const GsmSCFinfo * p_scf = NULL, const char * p_imsi = NULL)
     {
         MutexGuard  grd(_sync);
         AbonentsMAP::iterator it = registry.find(ab_id);
@@ -221,7 +221,7 @@ public:
     { }
     //-- SRI_CSIListener interface
     void onCSIresult(const std::string &subcr_addr,
-                     const char * subcr_imsi, const MAPSCFinfo* scfInfo)
+                     const char * subcr_imsi, const GsmSCFinfo* scfInfo)
     {
         unsigned ab_id = abnData.searchAbn(subcr_addr);
         if (ab_id) {

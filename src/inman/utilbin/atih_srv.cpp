@@ -110,7 +110,7 @@ bool ServiceATIH::requestCSI(const std::string &subcr_addr, bool imsi/* = true*/
 /* ------------------------------------------------------------------------ *
  * ATCSIListener interface
  * ------------------------------------------------------------------------ */
-void ServiceATIH::onCSIresult(const std::string & subcr_addr, const MAPSCFinfo* scfInfo)
+void ServiceATIH::onCSIresult(const std::string & subcr_addr, const GsmSCFinfo* scfInfo)
 {
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);

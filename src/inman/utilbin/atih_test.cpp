@@ -53,7 +53,7 @@ extern "C" static void sighandler(int signal)
 typedef struct {
     TonNpiAddress  addr;
     TonNpiAddress  imsi;
-    MAPSCFinfo     scf;
+    GsmSCFinfo     scf;
 } AbonentInfo;
 
 typedef struct {
@@ -127,7 +127,7 @@ public:
         return (it != registry.end()) ? &((*it).second) : NULL;
     }
 
-    bool setAbnInfo(unsigned ab_id, const MAPSCFinfo * abn_info)
+    bool setAbnInfo(unsigned ab_id, const GsmSCFinfo * abn_info)
     {
         MutexGuard  grd(_sync);
         AbonentsMAP::iterator it = registry.find(ab_id);
@@ -207,7 +207,7 @@ public:
     ~ATIHClient()
     { }
     //-- ATCSIListener interface
-    void onCSIresult(const std::string &subcr_addr, const MAPSCFinfo* scfInfo)
+    void onCSIresult(const std::string &subcr_addr, const GsmSCFinfo* scfInfo)
     {
         unsigned ab_id = abnData.searchAbn(subcr_addr);
         if (ab_id) {

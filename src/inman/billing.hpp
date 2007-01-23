@@ -91,7 +91,6 @@ public:
 
     //-- IAPQueryListenerITF interface methods:
     void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec);
-//                       AbonentBillType ab_type, const MAPSCFinfo * scf = NULL);
     //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
@@ -110,7 +109,7 @@ protected:
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
-    bool ConfigureSCFandCharge(AbonentBillType ab_type, const MAPSCFinfo * p_scf = NULL);
+    bool ConfigureSCFandCharge(AbonentBillType ab_type, const GsmSCFinfo * p_scf = NULL);
     bool matchBillMode(void) const;
 
     Mutex           bilMutex;
