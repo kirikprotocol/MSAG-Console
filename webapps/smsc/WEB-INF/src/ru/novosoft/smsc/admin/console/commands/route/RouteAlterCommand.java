@@ -59,10 +59,13 @@ public class RouteAlterCommand extends RouteGenCommand
         return;
       }
 
-      if (isSrcSmeId) {
+      if (isSrcSmeId && !srcSmeId.equals(" ")) {
         SME sme = ctx.getSmeManager().get(srcSmeId);
         if (sme == null) throw new Exception("SME '" + srcSmeId + "' not found (srcSmeId)");
       }
+
+      if (srcSmeId.equals(" "))
+        srcSmeId = "";
 
       if (isForwardTo && (!isSrcSmeId || !srcSmeId.equalsIgnoreCase("MAP_PROXY")))
         throw new Exception("Option 'fwd' is valid only for srcSmeId='MAP_PROXY'");
