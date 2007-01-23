@@ -82,7 +82,9 @@ InfoSme_T_DBEntityStorage::findFirstValue(const InfoSme_T_Entity::StateANDSDate_
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
   InfoSme_T_Entity_Adapter record;
-  if ( _nonuniq_index_by_state_and_sdate_key.findFirstIndexedValueByKey(key, &rid) &&
+  InfoSme_T_Entity::StateANDSDate_key foundKey(0,0);
+  if ( _nonuniq_index_by_state_and_sdate_key.findFirstIndexedValueByKey(key, &foundKey, &rid) &&
+       foundKey.getState() == key.getState() &&
        _storage->extractRecord(&record, rid) ==
        DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK ) {
     *resultValue = record.getAdaptedObjRef();
@@ -97,7 +99,9 @@ InfoSme_T_DBEntityStorage::findNextValue(const InfoSme_T_Entity::StateANDSDate_k
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
   InfoSme_T_Entity_Adapter record;
-  if ( _nonuniq_index_by_state_and_sdate_key.findNextIndexedValueByKey(key, &rid) &&
+  InfoSme_T_Entity::StateANDSDate_key foundKey(key);
+  if ( _nonuniq_index_by_state_and_sdate_key.findNextIndexedValueByKey(key, &foundKey, &rid) &&
+       foundKey.getState() == key.getState() &&
        _storage->extractRecord(&record, rid) ==
        DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK ) {
     *resultValue = record.getAdaptedObjRef();
