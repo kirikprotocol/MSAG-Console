@@ -68,7 +68,9 @@ public:
   bool insertIndexedValue(const K& key, const V& value);
 
   bool findFirstIndexedValueByKey(const K& key, V* value);
+  bool findFirstIndexedValueByKey(const K& key, K* foundKey, V* value);
   bool findNextIndexedValueByKey(const K& key, V* value);
+  bool findNextIndexedValueByKey(const K& key, K* foundKey, V* value);
 
   bool eraseIndexedValue(const K& key, const V& value);
   void eraseIndexedIntervalValue(const K& firstKey, const K& lastKey, std::vector<V>* removedValues);
@@ -100,10 +102,19 @@ template <typename K, typename V>
 bool
 NonUniqueStorageIndex<K,V>::findFirstIndexedValueByKey(const K& key, V* value)
 {
+  K foundKey(key);
+  return findFirstIndexedValueByKey(key, &foundKey, value);
+}
+
+template <typename K, typename V>
+bool
+NonUniqueStorageIndex<K,V>::findFirstIndexedValueByKey(const K& key, K* foundKey, V* value)
+{
   _searchIter = _index.lower_bound(key);
 
   if ( _searchIter != _index.end() ) {
     *value = _searchIter->second;
+    *foundKey = _searchIter->first;
     ++_searchIter; _findBeingExecuted = true;
     return true;
   } else
@@ -114,8 +125,17 @@ template <typename K, typename V>
 bool
 NonUniqueStorageIndex<K,V>::findNextIndexedValueByKey(const K& key, V* value)
 {
+  K foundKey(key);
+  return findNextIndexedValueByKey(key, &foundKey, value);
+}
+
+template <typename K, typename V>
+bool
+NonUniqueStorageIndex<K,V>::findNextIndexedValueByKey(const K& key, K* foundKey, V* value)
+{
   if ( _searchIter != _index.upper_bound(key) ) {
     *value = _searchIter->second;
+    *foundKey = _searchIter->first;
     ++_searchIter;
     return true;
   } else {
