@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.jsp.util.helper.statictable;
 
-import org.apache.log4j.Category;
-
 import javax.servlet.http.HttpServletRequest;
 
 /**
@@ -21,8 +19,8 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
   private String mbFilter = null;
   private final boolean filterEnabled;
 
-  public PagedStaticTableHelper(String uid, boolean filterEnabled, Category logger) {
-    super(uid, logger);
+  public PagedStaticTableHelper(String uid, boolean filterEnabled) {
+    super(uid);
     this.filterEnabled = filterEnabled;
   }
 
@@ -37,14 +35,14 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
       if (request.getParameter(getStartPositionPrefix()) != null)
         this.startPosition = Integer.parseInt(request.getParameter(getStartPositionPrefix()));
     } catch (NumberFormatException e) {
-      logger.error("Can't set start position", e);
+      this.startPosition = 0;
     }
 
     this.mbFilter = request.getParameter(getMbFilterPrefix());
   }
 
-  public final void fillTable(HttpServletRequest request) throws TableHelperException {
-    fillTable(request, startPosition, pageSize);
+  public final void fillTable() throws TableHelperException {
+    fillTable(startPosition, pageSize);
     totalSize = calculateTotalSize();
   }
 
@@ -59,7 +57,7 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
 //  Abstract ===========================================================================================================
 
 
-  protected abstract void fillTable(HttpServletRequest request, int start, int size) throws TableHelperException;
+  protected abstract void fillTable(int start, int size) throws TableHelperException;
 
   protected abstract int calculateTotalSize() throws TableHelperException;
 

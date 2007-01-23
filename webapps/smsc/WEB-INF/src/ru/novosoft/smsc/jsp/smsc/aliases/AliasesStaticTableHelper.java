@@ -1,24 +1,23 @@
 package ru.novosoft.smsc.jsp.smsc.aliases;
 
-import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.AliasSet;
-import ru.novosoft.smsc.jsp.util.tables.DataItem;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasDataSource;
-import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
-import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 import ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper;
 import ru.novosoft.smsc.jsp.util.helper.statictable.Row;
 import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.CheckBoxCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.cell.StringCell;
 import ru.novosoft.smsc.jsp.util.helper.statictable.column.TextColumn;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasDataSource;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.Iterator;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * User: artem
@@ -38,9 +37,8 @@ public class AliasesStaticTableHelper extends PagedStaticTableHelper {
 
   private int totalSize = 0;
 
-  public AliasesStaticTableHelper(String uid, AliasSet aliasSet,  Category logger) {
-    super(uid, false, logger);
-    this.aliasSet = aliasSet;
+  public AliasesStaticTableHelper(String uid) {
+    super(uid, false);
 
     addColumn(checkColumn);
     addColumn(aliasColumn);
@@ -48,7 +46,7 @@ public class AliasesStaticTableHelper extends PagedStaticTableHelper {
     addColumn(hideColumn);
   }
 
-  protected void fillTable(HttpServletRequest request, int start, int size) throws TableHelperException {
+  protected void fillTable(int start, int size) throws TableHelperException {
     try {
 
       final QueryResultSet aliasesList = aliasSet.query(new AliasQuery(maxTotalSize, filter, AliasDataSource.ALIAS_FIELD, 0));
@@ -69,7 +67,6 @@ public class AliasesStaticTableHelper extends PagedStaticTableHelper {
       totalSize = aliasesList.size();
 
     } catch (AdminException e) {
-      logger.error("Can't fill basetable", e);
       throw new TableHelperException(e);
     }
   }

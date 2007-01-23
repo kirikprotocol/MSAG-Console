@@ -18,7 +18,6 @@ public abstract class StaticTableHelper {
   private static final String SORTED_COLUMN_ID_PREFIX   = "sortedColumnId";
 
   private final String uid;
-  protected final Category logger;
 
   private final ArrayList columns = new ArrayList();
   private final ArrayList rows = new ArrayList();
@@ -29,9 +28,8 @@ public abstract class StaticTableHelper {
 
   private SortOrderElement[] sortOrder = null;
 
-  public StaticTableHelper(final String uid, final Category logger) {
+  public StaticTableHelper(final String uid) {
     this.uid = uid;
-    this.logger = logger;
   }
 
 
@@ -144,7 +142,7 @@ public abstract class StaticTableHelper {
 //  Abstract ===========================================================================================================
 
 
-  public abstract void fillTable(HttpServletRequest request) throws TableHelperException;
+  public abstract void fillTable() throws TableHelperException;
 
 
 //  Prefixes ===========================================================================================================

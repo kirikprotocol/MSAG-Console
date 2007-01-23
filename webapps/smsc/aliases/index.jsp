@@ -4,12 +4,15 @@
                  ru.novosoft.smsc.jsp.util.helper.statictable.PagedStaticTableHelper,
                  ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp" %>
-<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
+<jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 
 <%
-    TITLE = getLocString("aliases.title");
+    bean.getAliases().processRequest(request);
+    bean.getAddresses().processRequest(request);
+    bean.getTableHelper().processRequest(request);
 
+    TITLE = getLocString("aliases.title");
     switch (bean.process(request)) {
         case PageBean.RESULT_OK :
         case PageBean.RESULT_ERROR :
@@ -33,7 +36,6 @@
     MENU0_SELECTION = "MENU0_ALIASES";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
-
 <div class=content>
     <%{ final DynamicTableHelper tableHelper = bean.getAliases();%>
     <%@ include file="/WEB-INF/inc/dynamic_table.jsp"%>
@@ -68,10 +70,11 @@
     page_menu_end(out);
 
     if (bean.isInitialized()) {
-      final PagedStaticTableHelper tableHelper = bean.getTableHelper();
 %>
 <div class=content>
+  <%{final PagedStaticTableHelper tableHelper = bean.getTableHelper();%>
   <%@ include file="/WEB-INF/inc/paged_static_table.jsp"%>
+  <%}%>
 </div>
 <%    if (bean.isEditAllowed()) {
         page_menu_begin(out);

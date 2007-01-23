@@ -10,10 +10,9 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCJspException;
 import ru.novosoft.smsc.jsp.util.SessionContentManager;
-import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.ListPropertiesHelper;
-import ru.novosoft.smsc.jsp.util.helper.dynamictable.IncorrectValueException;
 import ru.novosoft.smsc.jsp.util.helper.Validation;
+import ru.novosoft.smsc.jsp.util.helper.dynamictable.ListPropertiesHelper;
+import ru.novosoft.smsc.jsp.util.helper.statictable.TableHelperException;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,14 +41,25 @@ public class Index extends PageBean {
 
   private boolean initialized = false;
 
-  private AliasesStaticTableHelper tableHelper;
-  private ListPropertiesHelper aliases;
-  private ListPropertiesHelper addresses;
+  private final AliasesStaticTableHelper tableHelper = new AliasesStaticTableHelper("aliasesTable");
+  private final ListPropertiesHelper aliases = new ListPropertiesHelper("Aliases", "aliases", 30, Validation.NON_EMPTY, true);
+  private final ListPropertiesHelper addresses = new ListPropertiesHelper("Addresses", "addresses", 30, Validation.NON_EMPTY, true);
 
   protected int init(List errors) {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
+
+    aliases.setUseBaseRowValue(true);
+    aliases.setShowColumnsTitle(false);
+
+    aliases.setUseBaseRowValue(true);
+    addresses.setShowColumnsTitle(false);
+
+    tableHelper.setAliasSet(appContext.getSmsc().getAliases());
+    tableHelper.setEditAllowed(isEditAllowed());
+    tableHelper.setPageSize(preferences.getAliasesPageSize());
+    tableHelper.setMaxTotalSize(preferences.getMaxAliasesTotalSize() + 1);
 
     return RESULT_OK;
   }
@@ -57,28 +67,11 @@ public class Index extends PageBean {
   public int process(HttpServletRequest request) {
     int result = super.process(request);
 
-    aliases = new ListPropertiesHelper("Aliases", "aliases", 30, Validation.NON_EMPTY, true);
-    aliases.setUseBaseRowValue(true);
-    aliases.setShowColumnsTitle(false);
-
-    addresses = new ListPropertiesHelper("Addresses", "addresses", 30, Validation.NON_EMPTY, true);
-    aliases.setUseBaseRowValue(true);
-    addresses.setShowColumnsTitle(false);
-
-    tableHelper = new AliasesStaticTableHelper("aliasesTable", appContext.getSmsc().getAliases(), logger);
-    tableHelper.setEditAllowed(isEditAllowed());
-    tableHelper.setPageSize(preferences.getAliasesPageSize());
-    tableHelper.setMaxTotalSize(preferences.getMaxAliasesTotalSize() + 1);
-
     result = readStoredContent(request);
     if (result != RESULT_OK)
       return result;
 
     try {
-      this.tableHelper.processRequest(request);
-      this.aliases.processRequest(request);
-      this.addresses.processRequest(request);
-
       if (this.tableHelper.eventDataCellSelected() != null) {
         result = processEdit(request, this.tableHelper.eventDataCellSelected().getCellId());
 
@@ -101,7 +94,7 @@ public class Index extends PageBean {
 
       if (initialized) {
         this.tableHelper.setFilter(createFilter());
-        this.tableHelper.fillTable(request);
+        this.tableHelper.fillTable();
         if (this.tableHelper.getTotalSize() >= preferences.getMaxAliasesTotalSize())
           return _error(new SMSCJspException("Results size is more than " + preferences.getMaxAliasesTotalSize() + ". Show first " + String.valueOf(preferences.getMaxAliasesTotalSize() + 1) + " results.", SMSCJspException.ERROR_CLASS_WARNING));
       }
@@ -112,9 +105,6 @@ public class Index extends PageBean {
     } catch (AdminException e) {
       logger.error("Can't process request", e);
       return _error(new SMSCJspException("Can't create table", SMSCJspException.ERROR_CLASS_ERROR, e));
-    } catch (IncorrectValueException e) {
-      logger.error("Incorrect filter data", e);
-      return _error(new SMSCJspException("Incorrect filter data", SMSCJspException.ERROR_CLASS_ERROR, e));
     }
 
     return result;
