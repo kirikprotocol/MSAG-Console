@@ -47,13 +47,6 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
   }
 
 
-//  Events =============================================================================================================
-
-
-  public EventShowFilter eventShowFilter() {
-    return (mbFilter != null) ? new EventShowFilter() : null;
-  }
-
 //  Abstract ===========================================================================================================
 
 
@@ -105,14 +98,7 @@ public abstract class PagedStaticTableHelper extends StaticTableHelper {
     this.pageSize = pageSize;
   }
 
-
-//  Event show filter ==================================================================================================
-
-
-  public class EventShowFilter {
-    private EventShowFilter() {
-    }
+  public boolean isShowFilter() {
+    return mbFilter != null;
   }
-
-
 }

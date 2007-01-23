@@ -1,7 +1,5 @@
 package ru.novosoft.smsc.jsp.util.helper.statictable;
 
-import org.apache.log4j.Category;
-
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,8 +37,8 @@ public abstract class StaticTableHelper {
   public void processRequest(HttpServletRequest request) throws TableHelperException {
     fillParameters(request);
 
-    if (eventColumnSelected() != null)
-      setSort(eventColumnSelected().getColumnId(), null);
+    if (isSortColumnSelected())
+      setSort(sortedColumnId, null);
   }
 
 
@@ -76,18 +74,6 @@ public abstract class StaticTableHelper {
         sortOrder[num] = element;
       }
     }
-  }
-
-
-//  Events =============================================================================================================
-
-
-  public EventDataCellSelected eventDataCellSelected() {
-    return (selectedColumnId != null) ? new EventDataCellSelected(selectedColumnId, selectedCellId) : null;
-  }
-
-  public EventColumnSelected eventColumnSelected() {
-    return (sortedColumnId != null) ? new EventColumnSelected(sortedColumnId) : null;
   }
 
 
@@ -169,31 +155,52 @@ public abstract class StaticTableHelper {
 
 
 
-  public Iterator getColumns() {
+  public final Iterator getColumns() {
     return columns.iterator();
   }
 
-  public Iterator getRows() {
+  public final Iterator getRows() {
     return rows.iterator();
   }
 
-  public int getSize() {
+  public final int getSize() {
     return rows.size();
   }
 
-  protected String getUId() {
+  protected final String getUId() {
     return uid;
   }
 
-  public SortOrderElement[] getSortOrder() {
+  public final SortOrderElement[] getSortOrder() {
     return sortOrder;
   }
 
-  public OrderType getOrderType(String columnId) {
+  public final OrderType getOrderType(String columnId) {
     if (sortOrder.length == 0 || columnId == null)
       return null;
     final SortOrderElement element = (SortOrderElement)sortOrder[0];
     return (element != null && element.getColumnId().equals(columnId)) ? element.getOrderType() : null;
+  }
+
+
+  public String getSelectedCellId() {
+    return selectedCellId;
+  }
+
+  public String getSelectedColumnId() {
+    return selectedColumnId;
+  }
+
+  public String getSortedColumnId() {
+    return sortedColumnId;
+  }
+
+  public boolean isDataCellSelected() {
+    return selectedColumnId != null;
+  }
+
+  public boolean isSortColumnSelected() {
+    return sortedColumnId != null;
   }
 
 
@@ -221,44 +228,4 @@ public abstract class StaticTableHelper {
       this.orderType = orderType;
     }
   }
-
-
-//  Event data cell selected ===========================================================================================
-
-
-  public class EventDataCellSelected {
-    private final String columnId;
-    private final String cellId;
-
-    private EventDataCellSelected(String columnId, String cellId) {
-      this.columnId = columnId;
-      this.cellId = cellId;
-    }
-
-    public String getColumnId() {
-      return columnId;
-    }
-
-    public String getCellId() {
-      return cellId;
-    }
-  }
-
-
-//  Event column selected ==============================================================================================
-
-
-  public class EventColumnSelected {
-    private final String columnId;
-
-    private EventColumnSelected(String columnId) {
-      this.columnId = columnId;
-    }
-
-    public String getColumnId() {
-      return columnId;
-    }
-  }
-
-
 }

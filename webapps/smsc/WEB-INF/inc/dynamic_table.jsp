@@ -6,7 +6,7 @@
 <script src="/scripts/dynamic_table.js" type="text/javascript"></script>
 <%    request.setAttribute("properties_table_js_included", new Object());
     }%>
-  <input type=hidden id="<%=tableHelper.getTotalCountPrefix()%>" name="<%=tableHelper.getTotalCountPrefix()%>" value="<%=tableHelper.getTotalCount()%>">
+  <input type=hidden id="<%=tableHelper.getTotalCountPrefix()%>" name="<%=tableHelper.getTotalCountPrefix()%>" value="<%=tableHelper.getRowsCount()%>">
   <div class=page_subtitle><%=getLocString(tableHelper.getName())%></div>
   <table class="properties_list" cellspacing=0 id="<%=tableUid%>" width="30%">
 <!-- --------------------------------------- COLUMNS HEADERS --------------------------------------------------- -->

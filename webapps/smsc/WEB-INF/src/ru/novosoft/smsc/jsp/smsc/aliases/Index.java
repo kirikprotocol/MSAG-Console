@@ -50,10 +50,8 @@ public class Index extends PageBean {
     if (result != RESULT_OK)
       return result;
 
-    aliases.setUseBaseRowValue(true);
     aliases.setShowColumnsTitle(false);
 
-    aliases.setUseBaseRowValue(true);
     addresses.setShowColumnsTitle(false);
 
     tableHelper.setAliasSet(appContext.getSmsc().getAliases());
@@ -72,8 +70,8 @@ public class Index extends PageBean {
       return result;
 
     try {
-      if (this.tableHelper.eventDataCellSelected() != null) {
-        result = processEdit(request, this.tableHelper.eventDataCellSelected().getCellId());
+      if (tableHelper.isDataCellSelected()) {
+        result = processEdit(request, tableHelper.getSelectedCellId());
 
       } else if (mbAdd != null) {
         mbAdd = null;
@@ -92,7 +90,7 @@ public class Index extends PageBean {
         result = processClear();
       }
 
-      if (initialized) {
+      if (initialized && result == RESULT_OK) {
         this.tableHelper.setFilter(createFilter());
         this.tableHelper.fillTable();
         if (this.tableHelper.getTotalSize() >= preferences.getMaxAliasesTotalSize())

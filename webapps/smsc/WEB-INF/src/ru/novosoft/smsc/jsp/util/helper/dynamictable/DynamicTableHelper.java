@@ -19,8 +19,8 @@ public abstract class DynamicTableHelper {
   private final String name;
   private final String uid;
   private boolean showColumnsTitle = true;
-  private boolean useBaseRowValue = true;
   private boolean allowAddValues = true;
+  private Row lastRow = new Row();
 
   public DynamicTableHelper(String name, String uid) {
     this.name = name;
@@ -36,11 +36,10 @@ public abstract class DynamicTableHelper {
       return;
 
     int totalCount = Integer.parseInt(request.getParameter(getTotalCountPrefix()));
-    for (int i = 0; i <= totalCount ; i++)
+    for (int i = 0; i < totalCount ; i++)
       addRow(readRow(request, i));
 
-    if (useBaseRowValue)
-      addRow(readLastRow(request));
+    lastRow = readLastRow(request);
   }
 
   private void addRow(Row row) {
@@ -78,6 +77,7 @@ public abstract class DynamicTableHelper {
 
   public void clear() {
     rows.clear();
+    lastRow = new Row();
   }
 
   public void setShowColumnsTitle(boolean showColumnsTitle) {
@@ -86,14 +86,6 @@ public abstract class DynamicTableHelper {
 
   public boolean isShowColumnsTitle() {
     return showColumnsTitle;
-  }
-
-  public boolean isUseBaseRowValue() {
-    return useBaseRowValue;
-  }
-
-  public void setUseBaseRowValue(boolean useBaseRowValue) {
-    this.useBaseRowValue = useBaseRowValue;
   }
 
   public boolean isAllowAddValues() {
@@ -139,7 +131,7 @@ public abstract class DynamicTableHelper {
     return uid;
   }
 
-  public int getTotalCount() {
+  public int getRowsCount() {
     return rows.size();
   }
 
@@ -153,6 +145,10 @@ public abstract class DynamicTableHelper {
 
   protected Iterator getRows() {
     return rows.iterator();
+  }
+
+  public Row getLastRow() {
+    return lastRow;
   }
 
 }

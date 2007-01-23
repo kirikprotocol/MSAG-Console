@@ -19,17 +19,16 @@ public class DynamicTableRenderer extends HTMLRenderer {
   public static String renderTableBody(DynamicTableHelper tableHelper) {
     int i=0;
     final StringBuffer buffer = new StringBuffer();
-    for (Iterator rows = tableHelper.getRows(); rows.hasNext() || i == 0; i++){
+    for (Iterator rows = tableHelper.getRows(); rows.hasNext(); i++) {
       final Row row = (rows.hasNext()) ? (Row)rows.next() : null;
       buffer.append(renderRow(tableHelper, row, i));
     }
+    
+    buffer.append(renderLastRow(tableHelper, tableHelper.getLastRow(), i));
     return buffer.toString();
   }
 
   private static String renderRow(DynamicTableHelper tableHelper, Row row, int rowNum) {
-    if (rowNum + 1 >= tableHelper.getTotalCount())
-      return renderLastRow(tableHelper, row, rowNum);
-
     final StringBuffer buffer = new StringBuffer();
     buffer.append(trStart("row" + (rowNum&1), "row_" + rowNum));
     {

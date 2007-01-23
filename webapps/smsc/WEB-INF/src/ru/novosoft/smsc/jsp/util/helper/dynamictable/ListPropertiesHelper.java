@@ -29,20 +29,20 @@ public class ListPropertiesHelper extends DynamicTableHelper{
   public ListPropertiesHelper(String name, String uid, int width, Validation validation, boolean allowEditPropsAfterAdd, String[] properties) {
     this(name, uid, width, validation, allowEditPropsAfterAdd);
 
-    for (int i=0; i<properties.length; i++) {
-      final Row row = createNewRow();
-      row.addValue(props, properties[i]);
-    }
+    setProps(properties);
   }
 
   protected void fillTable() {
   }
 
   public void setProps(String[] properties) {
-    for (int i=0; i<properties.length; i++) {
+    for (int i=0; i<properties.length - 1; i++) {
       final Row row = createNewRow();
       row.addValue(props, properties[i]);
     }
+
+    if (properties.length > 0)
+      getLastRow().addValue(props, properties[properties.length - 1]);
   }
 
   public List getPropsAsList() {
@@ -53,10 +53,11 @@ public class ListPropertiesHelper extends DynamicTableHelper{
   }
 
   public String[] getPropsAsArray() {
-    final String[] result = new String[getTotalCount()];
+    final String[] result = new String[getRowsCount()+1];
     int i=0;
     for (Iterator iter = getRows(); iter.hasNext(); i++)
       result[i] =(String)((Row)iter.next()).getValue(props);
+    result[getRowsCount()] = (String)getLastRow().getValue(props);
     return result;
   }
 }
