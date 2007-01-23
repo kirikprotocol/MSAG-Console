@@ -1,6 +1,6 @@
 #ident "$Id$"
 /* ************************************************************************** *
- * TonNpiAddress helper class.
+ * TonNpiAddress and GsmSCFinfo helper classes.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_TONNPIADDR_HPP__
 #define __SMSC_UTIL_TONNPIADDR_HPP__
@@ -9,6 +9,10 @@
 #include <stdio.h>
 
 #include <string>
+
+#define MAP_MAX_IMSI_AddressLength      8
+#define MAP_MAX_IMSI_AddressValueLength (MAP_MAX_IMSI_AddressLength*2)
+#define MAP_MAX_ISDN_AddressLength      8
 
 #define CAP_MAX_SMS_AddressStringLength 10 //CAP-datatypes.maxSMS-AddressStringLength - 1
 #define CAP_MAX_SMS_AddressValueLength  (CAP_MAX_SMS_AddressStringLength*2)
@@ -112,6 +116,28 @@ struct TonNpiAddress {
             return !strcmp(signals, adr2.signals) ? true : false;
         }
         return false;
+    }
+};
+
+struct GsmSCFinfo { //gsmSCF paramaters
+    uint32_t      serviceKey;   //4 bytes long
+    TonNpiAddress scfAddress;
+
+    GsmSCFinfo() : serviceKey(0) { }
+
+    void Reset(void) { serviceKey = 0; scfAddress.clear(); }
+
+    //gsmSCF address is always ISDN international
+    std::string toString(bool omit_ton_npi = true) const
+    {
+        if (!scfAddress.length)
+            return "<none>";
+        std:: string    str = scfAddress.toString(!omit_ton_npi);
+        char            buf[sizeof("%s:{%u}") + sizeof(serviceKey)*3];
+        int n = snprintf(buf, sizeof(buf) - 1, ":{%u}", serviceKey);
+        buf[(n > 0) ? n : 0] = 0;
+        str += buf;
+        return str;
     }
 };
 
