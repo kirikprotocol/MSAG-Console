@@ -194,7 +194,7 @@ int IAPQuerySRI::Execute(void)
 void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
 {
     MutexGuard  grd(_mutex);
-    if (!arg->getIMSI(subcrImsi))
+    if (!arg->getIMSI(abRec.abImsi))
         smsc_log_error(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
     else {
         if (!arg->getSCFinfo(&abRec.gsmSCF)) {

@@ -11,25 +11,37 @@ using smsc::util::GsmSCFinfo;
 namespace smsc {
 namespace inman {
 
+typedef char AbonentImsi[MAP_MAX_IMSI_AddressValueLength + 1];
+
 struct AbonentContractInfo {
     typedef enum { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 } ContractType;
 
     ContractType    ab_type;
     GsmSCFinfo      gsmSCF;
+    AbonentImsi     abImsi;
 
-    AbonentContractInfo(ContractType cntr_type = abtUnknown, const GsmSCFinfo * p_scf = NULL)
+    AbonentContractInfo(ContractType cntr_type = abtUnknown, const GsmSCFinfo * p_scf = NULL,
+                        const char * p_imsi = NULL)
         : ab_type(cntr_type)
     {
         if (p_scf)
             gsmSCF = *p_scf;
         else
             gsmSCF.Reset();
+        setImsi(p_imsi);
     }
 
     AbonentContractInfo(const AbonentContractInfo & ab_info)
-    { AbonentContractInfo(ab_info.ab_type , ab_info.getSCFinfo()); }
+    { AbonentContractInfo(ab_info.ab_type , ab_info.getSCFinfo(), ab_info.getImsi()); }
 
-    void Reset(void) { ab_type = abtUnknown; gsmSCF.Reset(); }
+    void setImsi(const char * p_imsi)
+    { 
+        if (p_imsi && p_imsi[0])
+            strlcpy(abImsi, p_imsi, sizeof(abImsi));
+        else
+            abImsi[0] = 0;
+    }
+    void Reset(void) { ab_type = abtUnknown; gsmSCF.Reset(); abImsi[0] = 0; }
 
     inline bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }
     inline bool isPostpaid(void) const { return (bool)(ab_type == abtPostpaid); }
@@ -44,9 +56,10 @@ struct AbonentContractInfo {
         return "Unknown";
     }
 
-    const char * type2Str(void) const { return type2Str(ab_type); }
-    const GsmSCFinfo * getSCFinfo(void) const
+    inline const char * type2Str(void) const { return type2Str(ab_type); }
+    inline const GsmSCFinfo * getSCFinfo(void) const
     { return gsmSCF.scfAddress.length ? &gsmSCF : NULL; }
+    inline const char * getImsi(void) const { return abImsi[0] ? (const char*)abImsi : NULL; }
 };
 
 } //inman

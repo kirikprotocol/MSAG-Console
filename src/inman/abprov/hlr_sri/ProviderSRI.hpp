@@ -51,7 +51,6 @@ class IAPQuerySRI : public IAPQueryAC, public CHSRIhandler {
 protected:
     IAPQuerySRI_CFG _cfg;
     MapCHSRIDlg *   sriDlg;
-    char            subcrImsi[MAP_MAX_IMSI_AddressValueLength + 1];
     Event           qsig;
 
 public:

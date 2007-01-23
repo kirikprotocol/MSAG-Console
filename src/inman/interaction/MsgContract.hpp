@@ -123,18 +123,34 @@ protected:
     void load(ObjectBuffer& in) throw(SerializerException)
     {
         in >> nmPolicy;
-        uint8_t itmp;
-        in >> itmp;
-        cntrInfo.ab_type = static_cast<AbonentContractInfo::ContractType>(itmp);
-        std::string stmp;
-        in >> stmp;
-        if (!cntrInfo.gsmSCF.scfAddress.fromText(stmp.c_str()))
-            throw SerializerException("invalid gsmSCF address",
-                                      SerializerException::invObjData, stmp.c_str());
+        {
+            uint8_t itmp;
+            in >> itmp;
+            cntrInfo.ab_type = static_cast<AbonentContractInfo::ContractType>(itmp);
+        }
+        {
+            std::string stmp;
+            in >> stmp;
+            if (!cntrInfo.gsmSCF.scfAddress.fromText(stmp.c_str()))
+                throw SerializerException("invalid gsmSCF address",
+                                          SerializerException::invObjData, stmp.c_str());
+        }
         in >> errCode;
         if (cntrInfo.gsmSCF.scfAddress.length) {
             cntrInfo.gsmSCF.serviceKey = errCode;
             errCode = 0;
+        }
+        {
+            std::string stmp;
+            in >> stmp;
+            if (stmp.empty())
+                cntrInfo.abImsi[0] = 0;
+            else {
+                if (stmp.length() > MAP_MAX_IMSI_AddressValueLength)
+                    throw SerializerException("invalid IMSI",
+                                              SerializerException::invObjData, stmp.c_str());
+                cntrInfo.setImsi(stmp.c_str());
+            }
         }
     }
     void save(ObjectBuffer& out) const
@@ -147,6 +163,11 @@ protected:
             out << (uint8_t)0x00;
         }
         out << (errCode ? errCode : cntrInfo.gsmSCF.serviceKey);
+        if (cntrInfo.getImsi()) {
+            std::string si(cntrInfo.getImsi());
+            out << si;
+        } else
+            out << (uint8_t)0x00;
     }
 };
 
