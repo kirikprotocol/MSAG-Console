@@ -60,7 +60,9 @@ InfoSme_Id_Mapping_DBEntityStorage::findFirstValue(const InfoSme_Id_Mapping_Enti
   typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
   InfoSme_Id_Mapping_Entity_Adapter record;
 
-  if ( _nonuniq_index_by_smscid_key.findFirstIndexedValueByKey(key, &rid) &&
+  InfoSme_Id_Mapping_Entity::SmscId_Key foundKey(key);
+  if ( _nonuniq_index_by_smscid_key.findFirstIndexedValueByKey(key, &foundKey, &rid) &&
+       foundKey == key &&
        _storage->extractRecord(&record, rid) ==
        DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ) {
     *resultValue = record.getAdaptedObjRef();
@@ -75,7 +77,10 @@ InfoSme_Id_Mapping_DBEntityStorage::findNextValue(const InfoSme_Id_Mapping_Entit
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
   InfoSme_Id_Mapping_Entity_Adapter record;
+
+  InfoSme_Id_Mapping_Entity::SmscId_Key foundKey(key);
   if ( _nonuniq_index_by_smscid_key.findNextIndexedValueByKey(key, &rid) &&
+       foundKey == key &&
        _storage->extractRecord(&record, rid) ==
        DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ) {
     *resultValue = record.getAdaptedObjRef();
