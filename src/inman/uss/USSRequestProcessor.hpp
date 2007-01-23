@@ -39,6 +39,7 @@ private:
   uint32_t _dialogId;
 
   smsc::inman::interaction::USSDATA_T _resultUssData;
+  unsigned char _dcs;
 };
 
 }
