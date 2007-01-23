@@ -60,6 +60,7 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
 void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg)
 {
   _resultUssData = arg->getUSSData();
+  _dcs = arg->getDCS();
 
   std::string ussAsString;
   if ( arg->getUSSDataAsLatin1Text(ussAsString) )
@@ -79,7 +80,8 @@ void USSRequestProcessor::onEndMapDlg(unsigned short ercode, smsc::inman::InmanE
     // success and send result 
     // process std::vector result
     resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK);
-    resultPacket.Cmd().setUSSData(_resultUssData);
+    // resultPacket.Cmd().setUSSData(_resultUssData);
+    resultPacket.Cmd().setRAWUSSData(_dcs, _resultUssData);
     resultPacket.Cmd().setMSISDNadr(_msISDNAddr);
   } else 
     resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
