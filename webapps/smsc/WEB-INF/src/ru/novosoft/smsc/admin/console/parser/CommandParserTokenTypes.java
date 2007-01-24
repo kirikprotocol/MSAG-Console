@@ -171,9 +171,10 @@ public interface CommandParserTokenTypes {
 	int WS = 146;
 	int STR = 147;
 	int QSTR = 148;
-	int STR_WS = 149;
-	int STR_CHR = 150;
-	int COMMA = 151;
-	int ESC = 152;
-	int DIGIT = 153;
+	int ESTR = 149;
+	int STR_WS = 150;
+	int STR_CHR = 151;
+	int COMMA = 152;
+	int ESC = 153;
+	int DIGIT = 154;
 }

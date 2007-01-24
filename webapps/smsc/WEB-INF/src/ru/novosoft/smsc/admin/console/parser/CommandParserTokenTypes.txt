@@ -145,8 +145,9 @@ VAL_SS7="SS7"=145
 WS=146
 STR("more input")=147
 QSTR("quoted string")=148
-STR_WS=149
-STR_CHR=150
-COMMA("comma character ','")=151
-ESC=152
-DIGIT=153
+ESTR("empty string")=149
+STR_WS=150
+STR_CHR=151
+COMMA("comma character ','")=152
+ESC=153
+DIGIT=154

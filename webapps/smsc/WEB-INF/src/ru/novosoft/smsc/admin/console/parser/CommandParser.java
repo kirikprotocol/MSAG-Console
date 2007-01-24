@@ -3199,6 +3199,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
+		Token  ename = null;
 		
 		out = null; 
 		
@@ -3224,6 +3225,17 @@ public CommandParser(ParserSharedInputState state) {
 				match(STR);
 				
 					    out = name.getText();
+					
+				}
+				break;
+			}
+			case ESTR:
+			{
+				{
+				ename = LT(1);
+				match(ESTR);
+				
+					    out = "";
 					
 				}
 				break;
@@ -3406,17 +3418,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt35=0;
-			_loop35:
+			int _cnt36=0;
+			_loop36:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt35>=1 ) { break _loop35; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt35++;
+				_cnt36++;
 			} while (true);
 			}
 			}
@@ -3438,17 +3450,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt39=0;
-			_loop39:
+			int _cnt40=0;
+			_loop40:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt39>=1 ) { break _loop39; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt40>=1 ) { break _loop40; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt39++;
+				_cnt40++;
 			} while (true);
 			}
 			}
@@ -4300,14 +4312,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop118:
+			_loop119:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop118;
+					break _loop119;
 				}
 				
 			} while (true);
@@ -5785,27 +5797,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop300:
+			_loop301:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop300;
+					break _loop301;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop302:
+			_loop303:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop302;
+					break _loop303;
 				}
 				
 			} while (true);
@@ -6000,6 +6012,7 @@ public CommandParser(ParserSharedInputState state) {
 		"WS",
 		"more input",
 		"quoted string",
+		"empty string",
 		"STR_WS",
 		"STR_CHR",
 		"comma character ','",

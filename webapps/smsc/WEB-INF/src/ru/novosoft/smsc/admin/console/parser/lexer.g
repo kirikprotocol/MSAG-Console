@@ -188,6 +188,13 @@ options {
 	:	'"' (ESC | ~'"')+ '"'
 	;
 
+ESTR
+options {
+  paraphrase = "empty string";
+}
+	:	'"''"'
+	;
+
 protected
 STR_WS	:	' '|'\t'|'\f'
 	;

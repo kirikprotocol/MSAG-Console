@@ -217,6 +217,9 @@ getnameid[String msg] returns [String out] {
 	  |(name:STR {
 	    out = name.getText();
 	  })
+	  |(ename:ESTR {
+	    out = "";
+	  })
 	;
 	exception
 	catch [RecognitionException ex] {
