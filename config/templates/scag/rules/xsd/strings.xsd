@@ -35,6 +35,21 @@
                 </complexType>
             </element>
 
+	    <element name="length">
+                <complexType>
+	    	   <attribute name="var" type="scag:Value" use="required"/>
+	           <attribute name="result" type="scag:Var" use="required" />
+	        </complexType>
+	    </element>
+								      
+	    <element name="replace">
+	        <complexType>
+	            <attribute name="var" type="scag:Value" use="required"/>
+		    <attribute name="regexp" type="string" use="required"/>
+		    <attribute name="value" type="scag:Value" use="required"/>
+		    <attribute name="result" type="scag:Var" use="required" />
+		</complexType>
+	    </element>
 
         </choice>    
     </group>
