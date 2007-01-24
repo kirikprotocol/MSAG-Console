@@ -1,5 +1,6 @@
 .jsdomenuarrow {
-	background-color: #DFD4AE;
+	background-image: url(office_xp_arrow.png);
+	/*background-color: #DFD4AE;*/
 	background-repeat: no-repeat; /* Do not alter this line! */
 	height: 7px;
 	position: absolute; /* Do not alter this line! */
@@ -8,7 +9,8 @@
 }
 
 .jsdomenuarrowover {
-	background-color: #DFD4AE;
+	background-image: url(office_xp_arrow.png);
+	/*background-color: #DFD4AE;*/
 	background-repeat: no-repeat; /* Do not alter this line! */
 	height: 7px;
 	position: absolute; /* Do not alter this line! */
