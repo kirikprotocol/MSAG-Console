@@ -1,12 +1,12 @@
 
 #define VER_MAJOR 0
-#define VER_MINOR 1
-#define VER_BUILD 1
+#define VER_MINOR 51
+#define VER_BUILD 25_01_2007
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Fri Sep  3 12:00:00 2005"
+#define VER_DATE  "Thu Jan 25 17:00:00 NOVT 2007"
 
-#define VER_STR "Sibinco Content Agregation Gateway ver " VER_MAKE_STR(VER_MAJOR) "." VER_MAKE_STR(VER_MINOR) " build " VER_MAKE_STR(VER_BUILD) " date " VER_DATE
+#define VER_STR "Mobile Services Agregation Gateway ver " VER_MAKE_STR(VER_MAJOR) "." VER_MAKE_STR(VER_MINOR) " build " VER_MAKE_STR(VER_BUILD) " date " VER_DATE
 
 extern "C" {
 
