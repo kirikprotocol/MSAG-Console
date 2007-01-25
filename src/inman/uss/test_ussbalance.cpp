@@ -120,6 +120,7 @@ static void init_logger()
 
 int main(int argc, char** argv)
 {
+  try {
   init_logger();
   const char *  cfgFile = "test_ussbalance.cfg";
   if (argc > 1) {
@@ -219,7 +220,7 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  write(1, &responseBuf[0], dataSz);
+  //write(1, &responseBuf[0], dataSz);
   smsc::inman::interaction::SerializerUSS* serializer = smsc::inman::interaction::SerializerUSS::getInstance();
 
   smsc::inman::interaction::ObjectBuffer responseObjectBuffer(1024);
@@ -237,5 +238,9 @@ int main(int argc, char** argv)
     }
   } else 
     fprintf(stderr, "Got error\n");
-  return 1;
+  } catch (std::exception& ex) {
+    fprintf(stderr, "Catch exception=[%s]\n",ex.what());
+    return 1;
+  }
+  return 0;
 }
