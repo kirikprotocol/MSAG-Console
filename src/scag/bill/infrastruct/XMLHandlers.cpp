@@ -188,6 +188,35 @@ XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<u
     bill_currency = "";
 }
 
+//------------------------------------------------------------------------------
+static double str_to_double(char* str)
+{
+    double d = 0, df = 1, f = 0;
+    uint8_t j = '+', ch, fl = 0;
+    if(*str && (*str == '+' || *str == '-'))
+        j = *str++;
+    while(*str)
+    {
+        ch = *str++;
+        if(ch == '.' && !(fl&2))
+            fl |= 2;
+        else if(ch < 0x30 || ch > 0x39)
+            break;
+        else if(fl & 2)
+        {
+            df /= 10;
+            f += df * (ch - 0x30);
+        }
+        else if( (fl & 1) || ch != '0')
+        {
+            fl |= 1;
+            d *= 10;
+            d += ch - 0x30;
+        }
+    }
+    return (j == '-') ? -(d + f) : (d + f);
+}
+
 void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned int length) 
 {
     uint32_t cnt = length;
@@ -209,7 +238,8 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
     else if(bill_tag == 5)
         bill_service_number = atoi(str);
     else if(bill_tag == 6)
-        bill_price = atof(str);
+//        bill_price = atof(str);
+        bill_price = str_to_double(str);        
     else if(bill_tag == 7)
         bill_currency = str;
 }
@@ -331,7 +361,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 id |= (mt & 0x1FF) << 14;
                 id |= bill_operator_id & 0xFFF;
 
-//                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d", bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx);
+                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d", bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx);
 
                 tariff_hash->Insert(id, tr);
 
