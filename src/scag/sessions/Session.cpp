@@ -493,6 +493,7 @@ Property* Session::getProperty(const std::string& name)
         return (*propertyPTR);
     }
 
+    if (propertyPTR) return (*propertyPTR);
 
     property = new AdapterProperty(name,this,"");
     PropertyHash.Insert(name.c_str(),property);
