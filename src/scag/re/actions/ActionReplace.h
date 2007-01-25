@@ -1,30 +1,39 @@
-#ifndef __SCAG_RULE_ENGINE_ACTION_ABORT__
-#define __SCAG_RULE_ENGINE_ACTION_ABORT__
+#ifndef __SCAG_RULE_ENGINE_ACTION_REPLACE__
+#define __SCAG_RULE_ENGINE_ACTION_REPLACE__
 
 #include "ActionContext.h"
 #include "Action.h"
+#include "util/regexp/RegExp.hpp"
 
 
 namespace scag { namespace re { namespace actions {
 
-class ActionAbort : public Action
+using namespace smsc::util::regexp;
+
+class ActionReplace : public Action
 {
-    ActionAbort(const ActionAbort&);
+    ActionReplace(const ActionReplace&);
+    std::auto_ptr<ActionParameter> paramVar, paramRegexp, paramValue, paramResult;
+
+    RegExp *re;
+    std::string m_wstrVar, m_wstrReplace;
+    int m_type;
+
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
-    ActionAbort (){};
+    ActionReplace ();
 
-    virtual ~ActionAbort();
+    virtual ~ActionReplace();
 
 };
-
 
 
 }}}
 
 
 #endif
+

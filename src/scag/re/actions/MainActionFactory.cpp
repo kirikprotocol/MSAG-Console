@@ -24,6 +24,8 @@
 #include "scag/re/actions/ActionCloseUssdDialog.h"
 #include "scag/re/actions/ActionRedirect.h"
 #include "scag/re/actions/ActionTLV.h"
+#include "scag/re/actions/ActionLength.h"
+#include "scag/re/actions/ActionReplace.h"
 
 
 //#include "scag/SAX2Print.hpp"
@@ -62,6 +64,8 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="strings:substr") return new ActionSubstr();
     if (name=="strings:concat") return new ActionConcat();
     if (name=="strings:indexof") return new ActionIndexof();
+    if (name=="strings:length") return new ActionLength();
+    if (name=="strings:replace") return new ActionReplace();
 
     if (name=="profile:set") return new PersAction(PC_SET);
     if (name=="profile:get") return new PersAction(PC_GET);

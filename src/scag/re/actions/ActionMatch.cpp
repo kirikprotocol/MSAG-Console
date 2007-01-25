@@ -124,6 +124,9 @@ bool ActionMatch::run(ActionContext& context)
         }
         std::string temp = pValue->getStr();
         Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), value);
+        char endbuff[2] = {0,0};
+        value.append(endbuff,2);
+
     } else value = wstrValue;
 
     smsc_log_debug(logger,"Action 'match': regexp '%s', value '%s'", strRegexp.c_str(),strValue.c_str());
@@ -137,8 +140,8 @@ bool ActionMatch::run(ActionContext& context)
         return true;
     }
 
-  SMatch m[10];
-  int n=10;
+  SMatch m[100];
+  int n=100;
 
   bool flag = re->Match((unsigned short *)value.data(),m,n);
 
