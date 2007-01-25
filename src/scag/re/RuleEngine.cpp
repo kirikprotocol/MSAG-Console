@@ -434,7 +434,7 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     smsc_log_info(logger,"");
     smsc_log_info(logger,"Rule Engine initialization...");
 
-    setlocale(LC_ALL,"ru_RU.KOI8-R");
+    //setlocale(LC_ALL,"ru_RU.KOI8-R");
     //setlocale(LC_ALL,"UTF-8");
 
     //RegExp::InitLocale();
