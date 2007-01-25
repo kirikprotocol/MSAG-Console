@@ -376,7 +376,7 @@ public:
     bufferPosition=0;
   }
 
-  const std::string& getFileName()
+  const std::string& getFileName() const
   {
     return filename;
   }
