@@ -97,7 +97,7 @@ void Operation::detachBill()
 {
     if (!m_hasBill) 
     {
-        smsc_log_warn(logger,"Operation: No bill to detach");
+        smsc_log_warn(logger,"Operation: (ab=%s) No bill to detach", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
         return;
     }
 
