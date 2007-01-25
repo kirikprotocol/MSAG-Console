@@ -192,24 +192,22 @@ XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<u
 static double str_to_double(char* str)
 {
     double d = 0, df = 1, f = 0;
-    uint8_t j = '+', ch, fl = 0;
+    uint8_t j = '+', ch, adp = 0;
     if(*str && (*str == '+' || *str == '-'))
         j = *str++;
-    while(*str)
+    while(ch = *str++)
     {
-        ch = *str++;
-        if(ch == '.' && !(fl&2))
-            fl |= 2;
+        if(ch == '.' && !adp)
+            adp = true;
         else if(ch < 0x30 || ch > 0x39)
             break;
-        else if(fl & 2)
+        else if(adp)
         {
             df /= 10;
             f += df * (ch - 0x30);
         }
-        else if( (fl & 1) || ch != '0')
+        else
         {
-            fl |= 1;
             d *= 10;
             d += ch - 0x30;
         }
