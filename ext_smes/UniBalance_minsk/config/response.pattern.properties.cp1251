@@ -1,0 +1,3 @@
+balance.response.pattern={0}
+balance.wait.for.sms.response.pattern=Баланс будет выслан вам СМС сообщением через несколько минут
+balance.error.pattern=Ошибка получения баланса
