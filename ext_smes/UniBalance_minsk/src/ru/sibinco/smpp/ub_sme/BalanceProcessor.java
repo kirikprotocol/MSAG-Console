@@ -1,10 +1,8 @@
 package ru.sibinco.smpp.ub_sme;
 
-import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 
 import java.sql.*;
-import java.math.BigDecimal;
 
 import oracle.jdbc.OracleTypes;
 
@@ -86,7 +84,7 @@ public class BalanceProcessor extends Thread {
         stmt.registerOutParameter(1, OracleTypes.INTEGER);
         stmt.setString(2, cutAbonentAddress(abonent));
         stmt.registerOutParameter(3, OracleTypes.VARCHAR);
-        stmt.execute();
+        rs=stmt.executeQuery();
         if (rs.next()) {
           int result = stmt.getInt(1);
           if (result == 1) {
@@ -137,7 +135,7 @@ public class BalanceProcessor extends Thread {
           stmt.registerOutParameter(1, OracleTypes.INTEGER);
           stmt.setString(2, cutAbonentAddress(abonent));
           stmt.registerOutParameter(3, OracleTypes.VARCHAR);
-          stmt.execute();
+          rs=stmt.executeQuery();
           if (rs.next()) {
             int result = stmt.getInt(1);
             if (result == 1) {
