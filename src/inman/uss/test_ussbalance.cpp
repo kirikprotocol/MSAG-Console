@@ -18,6 +18,8 @@
 
 #include <util/BinDump.hpp>
 
+static smsc::logger::Logger* logger;
+
 static ssize_t						/* Read "n" bytes from a descriptor. */
 readn(int fd, void *vptr, size_t n)
 {
@@ -108,9 +110,18 @@ static void printUsage(const char* progName)
   printf("Usage: %s [-h] [-v] [cfg_file]\n", progName);
 }
 
+#include <logger/Logger.h>
+
+static void init_logger()
+{
+  smsc::logger::Logger::Init();
+  logger = smsc::logger::Logger::getInstance("smsc.uss_tst");
+}
+
 int main(int argc, char** argv)
 {
-  const char *  cfgFile = "test_balance_config.xml";
+  init_logger();
+  const char *  cfgFile = "test_ussbalance.cfg";
   if (argc > 1) {
     if ( !strcmp(argv[1], "-v") ) {
       printVersion(); return 0;
