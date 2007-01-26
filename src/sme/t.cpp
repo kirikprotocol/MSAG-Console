@@ -959,13 +959,11 @@ public:
         atrans->sendDataSmResp(resp);
       }
 
-      if(silent)
+
+      if(silent && !autoAnswer)
       {
         return;
       }
-
-      //dump_pdu(pdu);
-
 
       char buf[65535];
       SMS s;
@@ -976,6 +974,32 @@ public:
       {
         fetchSmsFromDataSmPdu((PduDataSm*)pdu,&s);
       }
+
+      if(autoAnswer)
+      {
+        if(!silent)
+        {
+          printf("Autoanswered\n");
+        }
+        Address oa=s.getOriginatingAddress();
+        s.setOriginatingAddress(s.getDestinationAddress());
+        s.setDestinationAddress(oa);
+        if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        {
+          s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
+        }
+        PduSubmitSm sm;
+        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+        fillSmppPduFromSms(&sm,&s);
+        atrans->submit(sm);
+      }
+
+
+      if(silent)
+      {
+        return;
+      }
+
 
       unsigned msgsmlen,msgpllen;
       s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&msgsmlen);
@@ -1118,28 +1142,15 @@ public:
       printf("==========\n");
       fflush(stdout);
 
-      if(autoAnswer)
-      {
-        printf("Autoanswered\n");
-        Address oa=s.getOriginatingAddress();
-        s.setOriginatingAddress(s.getDestinationAddress());
-        s.setDestinationAddress(oa);
-        if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
-        {
-          s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
-        }
-        PduSubmitSm sm;
-        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-        fillSmppPduFromSms(&sm,&s);
-        atrans->submit(sm);
-      }
-
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
-      printf("\nReceived async submit sm resp:status=%#x, msgId=%s\n",
-        pdu->get_commandStatus(),
-        ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
+      if(!silent)
+      {
+        printf("\nReceived async submit sm resp:status=%#x, msgId=%s\n",
+          pdu->get_commandStatus(),
+          ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
+      }
     }else if(pdu->get_commandId()==SmppCommandSet::UNBIND)
     {
       printf("Received unbind\n");
@@ -1152,7 +1163,7 @@ public:
         PduAddress2Address(al->get_source()).toString().c_str(),
         al->get_optional().get_msAvailableStatus());
     }
-    if(!cmdfile && !vcmode)rl_forced_update_display();
+    if(!cmdfile && !vcmode && !silent)rl_forced_update_display();
   }
   void enqueue(SmppHeader* pdu)
   {
@@ -1235,8 +1246,20 @@ int main(int argc,char* argv[])
   }
   Logger::Init();
   SmeConfig cfg;
-  string host="sunfire";
+  string host="localhost";
   int port=9001;
+
+  if(getenv("SMPPHOST"))
+  {
+    host=getenv("SMPPHOST");
+    std::string::size_type pos=host.find(":");
+    if(pos!=std::string::npos)
+    {
+      port=atoi(host.c_str()+pos+1);
+      host.erase(pos);
+    }
+
+  }
 
 
   sourceAddress=argv[1];
@@ -1470,7 +1493,7 @@ int main(int argc,char* argv[])
           vc[idx].cmdfile=fopen(p.fn.c_str(),"rb");
           if(!vc[idx].cmdfile)
           {
-            printf("%02d: failed to open file %s, skipping\n",p.fn.c_str());
+            printf("%02d: failed to open file %s, skipping\n",idx,p.fn.c_str());
             continue;
           }
           vc[idx].sourceAddress=p.src;
