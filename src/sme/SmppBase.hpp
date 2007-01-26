@@ -165,7 +165,7 @@ public:
   }
   static void sigdisp(int sig)
   {
-    if(StaticHolder<0>::olddisp!=SIG_HOLD && StaticHolder<0>::olddisp!=SIG_ERR)
+    if(StaticHolder<0>::olddisp && StaticHolder<0>::olddisp!=SIG_HOLD && StaticHolder<0>::olddisp!=SIG_ERR)
     {
       StaticHolder<0>::olddisp(sig);
     }
