@@ -28,10 +28,10 @@ using smsc::core::synchronization::MutexGuard;
 const char logChars[] = {'*', 'D', 'I', 'W', 'E', 'F'};
 const char* const logNames[] = {"NOTSET", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
-char * vform(const char* format, va_list args)
+char * vform(const char* format, va_list args,char* buf,int bufsize)
 {
-  size_t size = 1024;
-  char* buffer = new char[size];
+  size_t size = bufsize;
+  char* buffer = buf;//new char[size];
 
   while (1) {
     int n = ::vsnprintf(buffer, size, format, args);
@@ -46,7 +46,7 @@ char * vform(const char* format, va_list args)
       n + 1 :   // ISO/IEC 9899:1999
     size * 2; // twice the old size
 
-    delete [] buffer;
+    if(buffer!=buf)delete [] buffer;
     buffer = new char[size];
   }
 }
@@ -432,13 +432,16 @@ void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...
 
 void Logger::logva_(const LogLevel _logLevel, const char * const stringFormat, va_list args) throw()
 {
-  if (isInitialized()) {
-    std::auto_ptr<char> message(vform(stringFormat, args));
-    appender->log(logChars[_logLevel], this->name, message.get());
-  } else {
+  char buf[2048];
+  char* msg=vform(stringFormat, args,buf,sizeof(buf));
+  std::auto_ptr<char> messageBuf(msg==buf?0:msg);
+  if (isInitialized())
+  {
+    appender->log(logChars[_logLevel], this->name, msg);
+  } else
+  {
     __loggerError("logva_: Logger not initialized");
-    std::auto_ptr<char> message(vform(stringFormat, args));
-    fprintf(stderr, "%c %s: %s", logChars[_logLevel], this->name, message.get());
+    fprintf(stderr, "%c %s: %s", logChars[_logLevel], this->name, msg);
   }
 }
 
