@@ -2,6 +2,16 @@
 #include "util/smstext.h"
 #include "system/version.h"
 
+#ifdef LEAKTRACE
+extern uint64_t getCurrentAlloc();
+#else
+uint64_t getCurrentAlloc()
+{
+  return 0;
+}
+#endif
+
+
 namespace smsc{
 namespace system{
 
@@ -27,6 +37,7 @@ static int strprintf(string& s,const char* fmt,...)
   s=buf.get();
   return size;
 }
+
 
 int StatusSme::Execute()
 {
@@ -195,7 +206,13 @@ int StatusSme::Execute()
         addr.c_str());
       answer=buf;
       answer+=p.toString();
-    }else
+    }else if(request=="alloc")
+    {
+      char buf[128];
+      sprintf(buf,"Current alloc:%lld",getCurrentAlloc());
+      answer=buf;
+    }
+    else
     {
       answer="unknown command";
     }
