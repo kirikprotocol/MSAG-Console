@@ -515,7 +515,7 @@ function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
 function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
     var sectionHeader_ = "sectionHeader_" + siteName;
     return ""
-            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" style=\"width:100%;\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
+            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" style=\"width:100%;background-image:none\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
             + " <table id=\"sitesp_table_" + siteName + "\" cellpadding=\"0\" cellspacing=\"0\" class=\"properties_list\">"
             + " <col width=\"1%\">"
             + " <col width=\"99%\">"
