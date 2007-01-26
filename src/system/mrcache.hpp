@@ -2,66 +2,31 @@
 #define __SMSC_SYSTEM_MRCACHE_HPP__
 
 #include "core/synchronization/Mutex.hpp"
-#include "core/buffers/Hash.hpp"
-#include "store/MessageStore.h"
-#include "util/debug.h"
-
-#ifdef _WIN32
-#include <stdint.h>
-#else
-#include <inttypes.h>
-#endif
-
+#include "sms/sms.h"
+#include "util/int.h"
 
 namespace smsc{
 namespace system{
 
-using smsc::core::buffers::Hash;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
-using smsc::store::MessageStore;
-
 class MessageReferenceCache{
 public:
-  MessageReferenceCache():cache(200000),store(0){}
-  void assignStore(MessageStore* st)
+  MessageReferenceCache()
   {
-    store=st;
+    memset(mrArray,0,sizeof(mrArray));
   }
-  void setMR(const char* addr,uint16_t mr)
+  uint16_t getNextMR(const smsc::sms::Address& addr)
   {
-    cache[addr]=mr;
-  }
-  uint16_t getNextMR(const Address& addr)
-  {
-    MutexGuard mg(mtx);
-    char straddr[MAX_FULL_ADDRESS_VALUE_LENGTH+5];
-    addr.toString(straddr,sizeof(straddr));
-    uint16_t* dta=cache.GetPtr(straddr);
-    if(dta)
-    {
-      return ++(*dta);
-    }else
-    {
-      int rv;
-      mtx.Unlock();
-      try{
-        rv=store->getConcatMessageReference(addr);
-      }catch(std::exception& e)
-      {
-        rv=0;
-        __warning2__("getConcatMessageReference failed:%s",e.what());
-      }
-      mtx.Lock();
-      rv=rv==-1?0:rv;
-      cache[straddr]=rv;
-      return rv;
-    }
+    smsc::core::synchronization::MutexGuard mg(mtx);
+    int idx=addr.length-4;
+    if(idx<0)idx=0;
+    idx=atoi(addr.value+idx);
+    if(idx<0)idx=0;
+    if(idx>=10000)idx=10000;
+    return mrArray[idx]++;
   }
 protected:
-  Hash<uint16_t> cache;
-  Mutex mtx;
-  MessageStore* store;
+  uint8_t mrArray[10000];
+  smsc::core::synchronization::Mutex mtx;
 };
 
 }//system

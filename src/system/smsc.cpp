@@ -480,10 +480,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     smsc_log_info(log, "IN manager started" );
   }
 
-  smsc_log_info(log, "Initializing MR cache" );
-  mrCache.assignStore(store);
-  smsc_log_info(log, "MR cache inited" );
-
   {
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildStrParamNames("directives");
