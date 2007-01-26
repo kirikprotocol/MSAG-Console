@@ -99,7 +99,7 @@ struct BlockInfo{
 
 
 
-const int LH_HASHSIZE=16*1024;
+const int LH_HASHSIZE=64*1024;
 const int LH_DEFAULTBUCKETSIZE=16;
 
 class LeakHunter{
@@ -107,13 +107,11 @@ class LeakHunter{
   int memcounts[LH_HASHSIZE];
   int memsizes[LH_HASHSIZE];
 
-  int *cp;
-  int cpcnt;
-  int cpalloc;
+  int64_t cpalloc;
   int makecp;
 
-  int maxmem;
-  int alloc;
+  int64_t maxmem;
+  int64_t alloc;
 
   int idcnt;
 
@@ -139,6 +137,11 @@ public:
   void DumpTrace(void**);
 
   void CheckPoint();
+
+  size_t getAlloc()
+  {
+    return alloc;
+  }
 };
 
 
@@ -164,7 +167,6 @@ void LeakHunter::Init()
   }
   maxmem=0;
   alloc=0;
-  cp=0;
   idcnt=0;
   makecp=0;
   init=1;
@@ -182,7 +184,7 @@ LeakHunter::~LeakHunter()
   if(!f)f=stderr;
   fprintf(f,"Peak mem usage:%d bytes\n",maxmem);
   if(alloc==0)return;
-  fprintf(f,"Unallocated: %d bytes\n",alloc);
+  fprintf(f,"Unallocated: %lld bytes\n",alloc);
   for(int i=0;i<LH_HASHSIZE;i++)
   {
     for(int j=0;j<memcounts[i];j++)
@@ -212,57 +214,21 @@ void LeakHunter::CheckPoint()
     return;
   }
   makecp=0;
-  if(cp)
-  {
-    if(alloc-cpalloc>0)fprintf(f,"Unallocated: %d bytes\n",alloc-cpalloc);
-    for(int i=0;i<LH_HASHSIZE;i++)
-    {
-      for(int j=0;j<memcounts[i];j++)
-      {
-        bool fnd=false;
-        for(int k=0;k<cpcnt;k++)
-        {
-          if(memblocks[i][j].id==cp[k])
-          {
-            fnd=true;
-            break;
-          }
-        }
-        if(!fnd)
-        {
-          BlockInfo *bi=&memblocks[i][j];
-          fprintf(f,"Mem:0x%p size %d, allocated at\n",bi->addr,bi->size);
-          DumpTrace(bi->trace);
-          fprintf(f,"\n");
-        }
-      }
-    }
-  }
-  int cnt=0;
-  for(int i=0;i<LH_HASHSIZE;i++)
-  {
-    cnt+=memcounts[i];
-  }
-  if(cp)
-  {
-    free(cp);
-    cp=0;
-  }
-  if(!cp)
-  {
-    cp=(int*)malloc(cnt*sizeof(int));
-  }
-  int k=0;
-  //fprintf(f,"Checkpoint created, %d block stored\n",cnt);
+  if(alloc-cpalloc>0)fprintf(f,"Unallocated: %lld bytes\n",alloc-cpalloc);
   for(int i=0;i<LH_HASHSIZE;i++)
   {
     for(int j=0;j<memcounts[i];j++)
     {
-      cp[k++]=memblocks[i][j].id;
-      //fprintf(f,"%d\n",memblocks[i][j].id);
+      BlockInfo *bi=&memblocks[i][j];
+      if(bi->id==idcnt)
+      {
+        fprintf(f,"Mem:0x%p size %d, allocated at\n",bi->addr,bi->size);
+        DumpTrace(bi->trace);
+        fprintf(f,"\n");
+      }
     }
   }
-  cpcnt=cnt;
+  idcnt++;
   cpalloc=alloc;
   fclose(f);
   m.Unlock();
@@ -296,7 +262,7 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
 
   bi->addr=ptr;
   bi->size=size;
-  bi->id=idcnt++;
+  bi->id=idcnt;
   memcounts[idx]++;
   alloc+=size;
   if(alloc>maxmem)
@@ -492,4 +458,9 @@ void operator delete[](void* mem)
       xfree(mem);
     }
   }
+}
+
+uint64_t getCurrentAlloc()
+{
+  return smsc::util::leaktracing::lh->getAlloc();
 }
