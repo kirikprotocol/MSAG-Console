@@ -106,6 +106,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         char sigBuf[sizeof(storeSig)];
         uint32_t fileVer;
         LoadUpInfo item;
+        item.sms=0;
         BufOps::SmsBuffer smsBuf(0);
         uint32_t sz,sz2;
         LoadUpInfo* itemPtr;
@@ -161,18 +162,29 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
             {
               if(itemPtr->final || itemPtr->seq>item.seq)
               {
+                continue;
+              }
+              if(item.final)
+              {
                 if(itemPtr->sms)
                 {
                   delete itemPtr->sms;
                   itemPtr->sms=0;
                 }
+                itemPtr->final=true;
                 continue;
               }
             }
 
             smsBuf.SetPos(0);
-            item.sms=new SMS;
-            Deserialize(smsBuf,*item.sms,fileVer);
+            if(!item.final)
+            {
+              item.sms=new SMS;
+              Deserialize(smsBuf,*item.sms,fileVer);
+            }else
+            {
+              item.sms=0;
+            }
 
             if(itemPtr)
             {
