@@ -16,7 +16,7 @@
                             <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
                             <c:set var="defaultSiteObjId" value="${fn:escapeXml((type=='route')?bean.defaultSiteObjId:i.defaultSite)}"/>
 
-                            <div class="collapsing_tree_opened" id="${sectHeader}" style="width:100%;">
+                            <div class="collapsing_tree_opened" style="background-image:none;" id="${sectHeader}" style="width:100%;">
                                  <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
 
                                 <table id="${esite_table}" cellpadding="0" cellspacing="0" class="properties_list">

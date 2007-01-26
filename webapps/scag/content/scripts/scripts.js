@@ -604,3 +604,20 @@ function refreshTdcSCAGStatusObject()
    window.setTimeout(refreshTdcSCAGStatusObject, 5000);
    <%}%>
 }
+
+function changeIcon() {
+  var evt = window.event;
+  var elem=evt.srcElement;
+  if (evt.type=="mouseover") {
+    elem.style.visibility="hidden";
+    elem.filters["revealTrans"].apply();
+    elem.height=parseInt(elem.height)+5;
+    elem.filters["revealTrans"].play();
+    elem.style.visibility="visible";
+    return true;
+  } else if (evt.type=="mouseout") {
+    elem.height=parseInt(elem.height)-5;    
+    return true;
+  }
+  return false;
+}

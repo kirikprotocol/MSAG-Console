@@ -27,10 +27,10 @@ public class Logging extends EditBean {
     public static final String catParamNamePrefix = "category_";
     private LoggerCategoryInfo rootCategory;
     private String[] priorities = {"FATAL", "ERROR", "WARN", "INFO", "DEBUG", "NOTSET"};
-    private LoggerCategoryInfo[] rootCategories;
     private String category;
     private String mbSavePermanent = null;
     private boolean running = true;
+    private Map fullNameToCatInfo = new TreeMap();
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
@@ -133,6 +133,13 @@ public class Logging extends EditBean {
         public Map getChilds() {
             return childs;
         }
+
+        public String toString() {
+            return " # name : "+ name +
+                   " | fullName : " + fullName +
+                   " | priority : " + priority +
+                   " | childs : "+ childs.values() + "#\n";
+        }
     }
 
     protected void init() {
@@ -152,12 +159,7 @@ public class Logging extends EditBean {
             rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
             setRunning(false);
         }
-        rootCategories = getLoggerCategoryInfos(rootCategory);
-
-    }
-
-    public LoggerCategoryInfo[] getRootCategories() {
-        return rootCategories;
+        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);        
     }
 
     public LoggerCategoryInfo getRootCategory() {
@@ -241,19 +243,21 @@ public class Logging extends EditBean {
         this.category = category;
     }
 
-    private LoggerCategoryInfo[] getLoggerCategoryInfos(LoggerCategoryInfo rootCategory) {
-        List result = new ArrayList();
-        result.add(rootCategory);
+    private void getLoggerCategoryInfos(LoggerCategoryInfo rootCategory, Map map) {
+        map.put(rootCategory.getFullName(),rootCategory);
         if (rootCategory.hasChilds()) {
             for (Iterator i = rootCategory.getChilds().values().iterator(); i.hasNext();) {
                 LoggerCategoryInfo child = (Logging.LoggerCategoryInfo) i.next();
-                result.add(child);
+                map.put(child.getFullName(),child);
                 if (child.hasChilds()) {
-                    getLoggerCategoryInfos(child);
+                    getLoggerCategoryInfos(child, map);
                 }
             }
         }
-        return (LoggerCategoryInfo[]) result.toArray(new LoggerCategoryInfo[result.size()]);
+    }
+
+    public Map getFullNameToCatInfo() {
+      return fullNameToCatInfo;
     }
 
     public String getMbSavePermanent() {

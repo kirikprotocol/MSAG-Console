@@ -168,3 +168,8 @@ div.query_result
    overflow: auto;
    height: 300px;
    border: 1px solid #777; }
+
+img.langicon
+{
+  filter: revealTrans(transition=12,duration=1);
+}

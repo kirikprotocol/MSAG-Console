@@ -61,18 +61,19 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort()+request.getContextPath()%>/">
   <link rel="STYLESHEET" type="text/css" href="content/styles/colors.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/common.css">
+  <link rel="STYLESHEET" type="text/css" href="content/styles/styles.jsp">
   <link rel="STYLESHEET" type="text/css" href="content/styles/list.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/properties_list.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/main_menu.css">
-  <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_tree.css">
+<%--  <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_tree.css">--%>
   <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_list.css">
-  <link rel="STYLESHEET" type="text/css" href="content/styles/navbar.css">
+<%--  <link rel="STYLESHEET" type="text/css" href="content/styles/navbar.css">--%>
   <link rel="STYLESHEET" type="text/css" href="content/styles/messages.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/page_menu.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/sme_menu.css">
   <link rel="STYLESHEET" type="text/css" href="content/styles/calendar.css">
 
-  <link rel="STYLESHEET" type="text/css" href="collapsing_tree.css">
+<%--  <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_tree_dl.css">--%>
   <script src="content/scripts/scripts.jsp" type="text/javascript"></script>
 </head>
 <body onload="initjsDOMenu(); assignOpener(); refreshTdcSCAGStatusObject(); ${onLoad} " onKeyPress="return disableCtrlKeyCombination(event,'${param.editId}');" onKeyDown="return disableCtrlKeyCombination(event,'${param.editId}');">
@@ -198,7 +199,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
         java.util.ArrayList localesList = (java.util.ArrayList)application.getAttribute("localesList");
         for (int i=0;i<localesList.size();i++) {
           ru.sibinco.scag.util.LocaleManager.SCAGLocale locale = (ru.sibinco.scag.util.LocaleManager.SCAGLocale)localesList.get(i);
-          out.println("<td background=\"content/images/smsc_14.jpg\"><a href=\"?locale="+locale.locale.getLanguage()+"\"><img src=\"content/images/"+locale.icon+"\" alt="+locale.locale.getDisplayName(ru.sibinco.scag.util.LocaleMessages.getInstance().getLocale(session))+"></a></td>");
+          out.println("<td background=\"content/images/smsc_14.jpg\"><a href=\"?locale="+locale.locale.getLanguage()+"\"><img src=\"content/images/"+locale.icon+"\" alt="+locale.locale.getDisplayName(ru.sibinco.scag.util.LocaleMessages.getInstance().getLocale(session))+" class=langicon onmouseover=\"return changeIcon(event);\" onmouseout=\"return changeIcon(event);\"></a></td>");
         }
       %>
             <%
