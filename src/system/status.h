@@ -76,6 +76,7 @@ static const int DENIEDBYCLOSEDGROUP=1041; // member of closed group tried to se
 static const int DENIEDBYACCESSMASK=1042;  // access mask prohibited submit
 static const int NOCONNECTIONTOINMAN=1043; // failed to connect to inman
 static const int MSMEMCAPACITYFULL=1044;  // mobile station cannot receive sms due to memory limit
+static const int MAPINTERNALFAILURE=1045;  // map internal exception
 
 
 static const int MAP_UR_NO_REASON=1109;
