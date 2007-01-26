@@ -381,7 +381,7 @@ public:
     int attempt=0;
     for(;;attempt++)
     {
-      if(attempt==size)return false;
+      if(attempt==size || attempt>20)return false;
       uint32_t hc=key.HashCode(attempt);
       uint32_t idx=(hc%size)*recsize;
       f.Seek(DiskHashHeader::Size()+idx);
