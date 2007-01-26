@@ -552,7 +552,13 @@ public:
   }
   void delStoreData(StoreData* sd)
   {
-    storeDataPool.push_back(sd);
+    if(storeDataPool.size()<10000)
+    {
+      storeDataPool.push_back(sd);
+    }else
+    {
+      delete sd;
+    }
   }
 
   enum{MessageIdSequenceExtent=1000};
@@ -1178,7 +1184,13 @@ public:
   }
   void deleteMultiChain(MultiChain* mc)
   {
-    mcPool.push_back(mc);
+    if(mcPool.size()<5000)
+    {
+      mcPool.push_back(mc);
+    }else
+    {
+      delete mc;
+    }
   }
 
 
