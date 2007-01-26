@@ -69,6 +69,19 @@ public:
       {
         serrcnt++;
       }
+    }else
+    if(pdu->get_commandId()==SmppCommandSet::DATA_SM)
+    {
+      PduDataSmResp resp;
+      resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+      resp.set_messageId("");
+      resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+      resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
+      trans->sendDataSmResp(resp);
+      {
+        MutexGuard g(cntMutex);
+        reccnt++;
+      }
     }
     disposePdu(pdu);
   }
