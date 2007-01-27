@@ -16,12 +16,12 @@ public:
   }
   uint16_t getNextMR(const smsc::sms::Address& addr)
   {
-    smsc::core::synchronization::MutexGuard mg(mtx);
     int idx=addr.length-4;
     if(idx<0)idx=0;
     idx=atoi(addr.value+idx);
     if(idx<0)idx=0;
-    if(idx>=10000)idx=10000;
+    if(idx>=10000)idx=9999;
+    smsc::core::synchronization::MutexGuard mg(mtx);
     return mrArray[idx]++;
   }
 protected:
