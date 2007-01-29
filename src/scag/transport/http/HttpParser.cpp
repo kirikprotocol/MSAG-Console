@@ -92,6 +92,7 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
         if ((cx.action == READ_REQUEST) && (command->contentLength == -1)) {
           switch (cx.getRequest().getMethod()) {
             case GET:
+            case POST:            
             case TRACE:
             case OPTIONS:
             case HEAD:

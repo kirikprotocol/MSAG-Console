@@ -431,6 +431,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
         return scag::re::STATUS_OK;
     }
 
+    smsc_log_debug(logger, "SERIALIZED RESPONSE: %s", response.serialize().c_str());
+    
     SessionPtr se;
     try{
         CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};

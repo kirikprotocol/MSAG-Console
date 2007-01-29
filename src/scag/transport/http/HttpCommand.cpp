@@ -391,7 +391,7 @@ const std::string& HttpRequest::serialize()
 //    }
 }
 
-void HttpResponse::serialize()
+const std::string& HttpResponse::serialize()
 {
     if (headers.empty()) {
         char *keystr;
@@ -433,6 +433,7 @@ void HttpResponse::serialize()
         
         headers += CRLF;
     }
+    return headers;
 }
 
 void HttpResponse::fillFakeResponse(int s)

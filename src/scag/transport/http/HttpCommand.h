@@ -359,7 +359,7 @@ public:
     void setDelivered(bool d) { delivered = d; }
     
     void fillFakeResponse(int s);
-    void serialize();
+    const std::string& serialize();
     virtual bool isResponse();
     
 protected:
