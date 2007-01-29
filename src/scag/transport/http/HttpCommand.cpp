@@ -381,7 +381,7 @@ const std::string& HttpRequest::serialize()
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
             headers += keystr;
-            headers += ':';
+            headers += ": ";
             headers += *valptr;
             headers += CRLF;
         }
