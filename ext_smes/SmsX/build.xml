@@ -1,4 +1,4 @@
-<project name="MCIProf build" default="help" basedir=".">
+<project name="SMSX build" default="help" basedir=".">
   <property name="esme_name" value="smsx"/>
   <property name="esme_bin_path" value="SMSX"/>
   <property name="esme_bin_name" value="SMSX"/>
@@ -61,13 +61,35 @@
 
   <target name="distr" depends="build, copy_sql, copy_libs" description="installs the webapp">
     <mkdir dir="${DISTR_DIR}/services/${esme_name}/config"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/config/calendar"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/config/secret"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/config/sponsored"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/config/redirector"/>
     <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/calendar"/>
     <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/secret"/>
-    
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/sponsored"/>
+    <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/redirector"/>
+
     <copy todir="${DISTR_DIR}/services/${esme_name}/config">
       <fileset dir="config" includes="*.properties"/>
       <fileset dir="config" includes="*.xml"/>
-    </copy>  
+    </copy>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/config/calendar">
+      <fileset dir="config/calendar" includes="*.properties"/>
+      <fileset dir="config/calendar" includes="*.xml"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/config/secret">
+      <fileset dir="config/secret" includes="*.properties"/>
+      <fileset dir="config/secret" includes="*.xml"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/config/sponsored">
+      <fileset dir="config/sponsored" includes="*.properties"/>
+      <fileset dir="config/sponsored" includes="*.xml"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/config/redirector">
+      <fileset dir="config/redirector" includes="*.properties"/>
+      <fileset dir="config/redirector" includes="*.xml"/>
+    </copy>
   </target>
 
   <target name="update" depends="build, copy_sql, copy_libs" description="update existing installation">

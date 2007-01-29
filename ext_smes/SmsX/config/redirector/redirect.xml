@@ -1,0 +1,26 @@
+<redirects>
+  <!-- NOTE: order is important here -->
+  
+  <redirect regex="ucs2\s*"                   address="0"    description="ucs2"/>
+  <redirect regex="default\s*"                address="0"    description="default"/>
+  <redirect regex="report\s+final\s*"         address="0"    description="report final"/>
+  <redirect regex="report\s+none\s*"          address="0"    description="report none"/>
+  <redirect regex="locale\s+ru_ru\s*"         address="0"    description="locale ru_ru"/>
+  <redirect regex="locale\s+en_en\s*"         address="0"    description="locale en_en"/>
+  <redirect regex="divert\s+to\s*"            address="0"    description="divert to"/>
+  <redirect regex="divert\s+on\s*"            address="0"    description="divert on"/>
+  <redirect regex="divert\s+off\s*"           address="0"    description="divert off"/>
+  <redirect regex="divert\s+absent\s+off\s*"  address="0"    description="divert absent off"/>
+  <redirect regex="divert\s+absent\s+on\s*"   address="0"    description="divert absent on"/>
+  <redirect regex="nick\s+on\s*"              address="0"    description="nick on"/>
+  <redirect regex="nick\s+off\s*"             address="0"    description="nick off"/>
+  <redirect regex="concat\s+on\s*"            address="0"    description="concat on"/>
+  <redirect regex="concat\s+off\s*"           address="0"    description="concat off"/>
+
+  <redirect regex="ADD\s+GroupName\s*"        address="0020" description="ADD GroupName"/>
+  <redirect regex="List\s*"                   address="0020" description="List"/>
+  <redirect regex="ADDM\s+GroupName\s*"       address="0020" description="ADDM GroupName"/>
+  <redirect regex="List\s+GroupName\s*"       address="0020" description="List GroupName"/>
+  <redirect regex="DELM\s+GroupName\s*"       address="0020" description="DELM GroupName"/>
+  <redirect regex="DEL\s+GroupName\s*"        address="0020" description="DEL GropuName"/>
+</redirects>

@@ -27,3 +27,51 @@ CREATE TABLE secret_messages (
   primary key(id)
 ) CHARACTER SET koi8r;
 
+create table smppstats (
+    rdate int not null,
+    tm timestamp not null,
+    direction char(1) not null,
+    abonentaddr varchar(30),
+    sourceaddr varchar(30),
+    message text,
+    conn_name varchar(32),
+    operator varchar(50),
+    ussdop int not null default -1
+);
+
+create index smppstats_rdate on smppstats (rdate,abonentaddr);
+create index smppstats_conn_name on smppstats (conn_name,abonentaddr);
+create index smppstats_operator on smppstats (operator,abonentaddr);
+create index smppstats_ras on smppstats (rdate,abonentaddr,sourceaddr);
+
+
+CREATE TABLE sponsored (
+  abonent VARCHAR (20) NOT NULL PRIMARY KEY,
+  cnt INTEGER NOT NULL,
+  tm TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE advertstats (
+  abonent VARCHAR (20) NOT NULL,
+  msg_id INTEGER,
+  delivery_id INTEGER,
+  tm TIMESTAMP DEFAULT now(),
+  status INTEGER
+);
+
+CREATE TABLE advertmsg (
+  id INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  msg VARCHAR (160) NOT NULL,
+  tm TIMESTAMP DEFAULT now()
+);
+
+CREATE TABLE delivery (
+  id INTEGER UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+  msg_id INTEGER NOT NULL,
+  msg VARCHAR (610) NOT NULL,
+  abonent VARCHAR (20) NOT NULL,
+  status INTEGER
+) CHARACTER SET koi8r;
+
+
+
