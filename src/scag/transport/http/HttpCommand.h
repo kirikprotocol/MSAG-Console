@@ -15,9 +15,9 @@ using scag::transport::SCAGCommand;
 
 typedef Hash<std::string> StringHash;
 
-const char CONTENT_LENGTH_FIELD[] = "content-length";
-const char CONTENT_TYPE_FIELD[] = "content-type";
-const char CONNECTION_FIELD[] = "connection";
+const char CONTENT_LENGTH_FIELD[] = "Content-Length";
+const char CONTENT_TYPE_FIELD[] = "Content-Type";
+const char CONNECTION_FIELD[] = "Connection";
 const char LATIN_1[] = "ISO8859-1"; //"Latin-1";
 
 class HttpCommand;

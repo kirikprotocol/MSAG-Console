@@ -127,7 +127,7 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
   end = strchr(pos, '/');
   if (!end)
   {
-    smsc_log_debug(logger, "if (!end)1");
+    smsc_log_debug(logger, "No slash in path 1");
     return false;
   }
 
@@ -137,7 +137,7 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
         end = strchr(pos, '/');
         if (!end)
         {
-          smsc_log_debug(logger, "if (!end)2");
+          smsc_log_debug(logger, "No slash in path 2");
           return false;
         }
     }
@@ -166,7 +166,7 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
       end = strchr(pos, '/');
       if (!end)
       {
-        smsc_log_debug(logger, "if (!end)3");
+        smsc_log_debug(logger, "No slash in path 1");
         return false;
         }
 

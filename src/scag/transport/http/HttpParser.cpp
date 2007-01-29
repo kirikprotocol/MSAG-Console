@@ -7,12 +7,12 @@
 
 namespace scag { namespace transport { namespace http
 {
-const char HOST_FIELD[] = "host";
+const char HOST_FIELD[] = "Host";
 const char CONTENT_TYPE_URL_ENCODED[] = "application/x-www-form-urlencoded";
 const char CHARSET[] = "charset";
 const char KEEP_ALIVE[] = "keep-alive";
-const char COOKIE_FIELD[] = "cookie";
-const char SET_COOKIE_FIELD[] = "set-cookie";
+const char COOKIE_FIELD[] = "Cookie";
+const char SET_COOKIE_FIELD[] = "Set-Cookie";
 
 struct http_methods {
   const char   *name; 
@@ -285,28 +285,28 @@ StatusCode HttpParser::parseHeaderFieldLine(char *buf, unsigned int len,
 
   value.assign(pos, len - (pos - buf));
 
-  for (unsigned int i = 0; i < key.length(); ++i)
-    key[i] = tolower(key[i]);
+//  for (unsigned int i = 0; i < key.length(); ++i)
+//    key[i] = tolower(key[i]);
 
-  if (!strcmp(key.c_str(), KEEP_ALIVE))
+  if (!strcasecmp(key.c_str(), KEEP_ALIVE))
     return OK;
 
-  if (!strcmp(key.c_str(), HOST_FIELD) && cx.action == READ_REQUEST) {
+  if (!strcasecmp(key.c_str(), HOST_FIELD) && cx.action == READ_REQUEST) {
     return OK;
   }
 
   bool b;
-  if (!(b = strcmp(key.c_str(), COOKIE_FIELD)) || !strcmp(key.c_str(), SET_COOKIE_FIELD))
+  if (!(b = strcasecmp(key.c_str(), COOKIE_FIELD)) || !strcasecmp(key.c_str(), SET_COOKIE_FIELD))
     return parseCookie(value.c_str(), cmd, b);
 
   cmd.setHeaderField(key, value);
 
-  if (!strcmp(key.c_str(), CONTENT_LENGTH_FIELD)) {
+  if (!strcasecmp(key.c_str(), CONTENT_LENGTH_FIELD)) {
     cmd.setContentLength(atoi(value.c_str()));
     return OK;
   }
 
-  if (!strcmp(key.c_str(), CONTENT_TYPE_FIELD)) {
+  if (!strcasecmp(key.c_str(), CONTENT_TYPE_FIELD)) {
     pos = stringStrN(value.c_str(), CHARSET);
 
     if (pos) {

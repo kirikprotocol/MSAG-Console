@@ -355,7 +355,7 @@ const std::string& HttpRequest::serialize()
 
         setHeaderField(connection_field, close);
 
-        if(httpMethod == POST && !strcmp(contentType.c_str(), "application/x-www-form-url-encoded"))
+        if(httpMethod == POST && !strcasecmp(contentType.c_str(), "application/x-www-form-url-encoded"))
         {
             std::string cnt;
             serializeQuery(cnt);
@@ -366,7 +366,7 @@ const std::string& HttpRequest::serialize()
         
         if(cookies.GetCount())
         {
-            headers += "cookie: ";
+            headers += "Cookie: ";
             defCookie.serialize(headers, false);
             Cookie** ck;
             cookies.First();
@@ -376,7 +376,7 @@ const std::string& HttpRequest::serialize()
             headers += CRLF;
         }
 
-        setHeaderField("host", getSite() + ((getSitePort() != 80) ? ':' + std::string(lltostr(getSitePort(), buf + 19)) : ""));
+        setHeaderField("Host", getSite() + ((getSitePort() != 80) ? ':' + std::string(lltostr(getSitePort(), buf + 19)) : ""));
 
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
@@ -413,7 +413,7 @@ void HttpResponse::serialize()
         
         if(cookies.GetCount())
         {
-            headers += "set-cookie: ";
+            headers += "Set-Cookie: ";
             defCookie.serialize(headers, true);
             Cookie** ck;
             cookies.First();
@@ -426,7 +426,7 @@ void HttpResponse::serialize()
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
             headers += keystr;
-            headers += ':';
+            headers += ": ";
             headers += *valptr;
             headers += CRLF;
         }
