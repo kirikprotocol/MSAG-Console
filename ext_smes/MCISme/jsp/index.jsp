@@ -1,18 +1,20 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.util.Functions,
                  ru.novosoft.smsc.mcisme.backend.CountersSet,
-                 ru.novosoft.smsc.mcisme.backend.RuntimeSet"%>
+                 ru.novosoft.smsc.mcisme.backend.RuntimeSet,
+                 ru.novosoft.smsc.mcisme.beans.IndexProperties"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
     ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	TITLE=getLocString("mcisme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
-    int beanResult = bean.process(request);
+  int beanResult = bean.process(request); 
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
+<% if (beanResult == IndexProperties.RESULT_OK) {%>
 <OBJECT id="tdcMCISmeStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_MCISme/statuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
@@ -177,5 +179,6 @@ checkStartStop();
 </thread>
 </table>
 </div>
+<%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
