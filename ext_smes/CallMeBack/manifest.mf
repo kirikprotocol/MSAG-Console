@@ -1,0 +1,3 @@
+Version: 1.02
+Author: Pavel Karavanov
+Customer: MTS Minsk
