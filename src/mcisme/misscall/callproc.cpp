@@ -832,16 +832,25 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
       cgaddr[0] = 0;
       if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
-//        cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
-    size_t len = strlen(countryCode);
-    cgaddr[0] = '+';
-    strncpy(&cgaddr[1], countryCode, len);
+        size_t len = strlen(countryCode);
+        cgaddr[0] = '+';
+        strncpy(&cgaddr[1], countryCode, len);
         unpack_addr(cgaddr+len+1, calling->addrSign_p, calling->noOfAddrSign);
       }
       else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
       {
         cgaddr[0] = '+';
         unpack_addr(cgaddr+1, calling->addrSign_p, calling->noOfAddrSign);
+      }
+      /*
+       * FIX: allow SUBSCRIBER and UNKNOWN type of calling address
+       * For example prefix of PBX number
+       * Change request from MTS MR URAL
+       */
+      else if (calling->natureOfAddr == EINSS7_I97_SUBSCRIBER_NO ||
+               calling->natureOfAddr == EINSS7_I97_NA_UNKNOWN)
+      {
+        unpack_addr(cgaddr, calling->addrSign_p, calling->noOfAddrSign);
       }
       event.from = cgaddr;
     }
@@ -869,10 +878,9 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
       cdaddr[0] = 0;
       if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
-//        cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
-    size_t len = strlen(countryCode);
-    cdaddr[0] = '+';
-    strncpy(&cdaddr[1], countryCode, len);
+        size_t len = strlen(countryCode);
+        cdaddr[0] = '+';
+        strncpy(&cdaddr[1], countryCode, len);
         unpack_addr(cdaddr+len+1, called->addrSign_p, called->noOfAddrSign);
       }
       else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
@@ -977,16 +985,25 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       cgaddr[0] = 0;
       if (calling->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
-//        cgaddr[0] = '+';cgaddr[1] = '7'; // valid only for Russia!!!
-    size_t len = strlen(countryCode);
-    cgaddr[0] = '+';
-    strncpy(&cgaddr[1], countryCode, len);
+        size_t len = strlen(countryCode);
+        cgaddr[0] = '+';
+        strncpy(&cgaddr[1], countryCode, len);
         unpack_addr(cgaddr+len+1, calling->addrSign_p, calling->noOfAddrSign);
       }
       else if (calling->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
       {
         cgaddr[0] = '+';
         unpack_addr(cgaddr+1, calling->addrSign_p, calling->noOfAddrSign);
+      }
+      /*
+       * FIX: allow SUBSCRIBER and UNKNOWN type of calling address
+       * For example prefix of PBX number
+       * Change request from MTS MR URAL
+       */
+      else if (calling->natureOfAddr == EINSS7_I97_SUBSCRIBER_NO ||
+               calling->natureOfAddr == EINSS7_I97_NA_UNKNOWN)
+      {
+        unpack_addr(cgaddr, calling->addrSign_p, calling->noOfAddrSign);
       }
       event.from = cgaddr;
     }
@@ -1014,11 +1031,10 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       cdaddr[0] = 0;
       if (called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
       {
-//        cdaddr[0] = '+';cdaddr[1] = '7'; // valid only for Russia!!!
-    size_t len = strlen(countryCode);
-    cdaddr[0] = '+';
-    strncpy(&cdaddr[1], countryCode, len);
-      unpack_addr(cdaddr+len+1, called->addrSign_p, called->noOfAddrSign);
+        size_t len = strlen(countryCode);
+        cdaddr[0] = '+';
+        strncpy(&cdaddr[1], countryCode, len);
+        unpack_addr(cdaddr+len+1, called->addrSign_p, called->noOfAddrSign);
       }
       else if (called->natureOfAddr == EINSS7_I97_INTERNATIONAL_NO)
       {
