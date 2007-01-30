@@ -112,10 +112,10 @@ public class CallMeBackProcessor implements RequestProcessor {
           Integer.parseInt(messageData.getMessageString());
           try {
             // update constraints
-            int usages = constraintManager.registerUsage(messageData.getSourceAddress());
+            constraintManager.registerUsage(messageData.getSourceAddress());
 
             // prepare confirmatoin & notification
-            Response response = prepareResponse(messageData, MessageFormat.format(confirmation, new Object[] {Integer.toString(usages)}));
+            Response response = prepareResponse(messageData, MessageFormat.format(confirmation, new Object[] {Integer.toString(constraintManager.getAttemptsLimit() - (((int)data)&0xFF))}));
             MessageData n = new MessageData();
             n.setId(getNextId());
             n.setMessageStatusListenerName(listenerName);
@@ -128,7 +128,7 @@ public class CallMeBackProcessor implements RequestProcessor {
 
             // prepare reports
             MessageData sr = prepareResponseMessage(messageData, MessageFormat.format(successReport, new Object[] {n.getDestinationAddress()}));
-            MessageData fr = prepareResponseMessage(messageData, MessageFormat.format(failedReport, new Object[] {n.getDestinationAddress(), Integer.toString(usages + 1)}));
+            MessageData fr = prepareResponseMessage(messageData, MessageFormat.format(failedReport, new Object[] {n.getDestinationAddress(), Integer.toString(constraintManager.getAttemptsLimit() - (((int)data)&0xFF))}));
             rQueue.addReport(new Report(n.getId(), sr, fr));
 
             return response;
