@@ -24,16 +24,17 @@ struct AbonentContractInfo {
                         const char * p_imsi = NULL)
         : ab_type(cntr_type)
     {
+        setSCF(p_scf);
+        setImsi(p_imsi);
+    }
+
+    void setSCF(const GsmSCFinfo * p_scf)
+    {
         if (p_scf)
             gsmSCF = *p_scf;
         else
             gsmSCF.Reset();
-        setImsi(p_imsi);
     }
-
-    AbonentContractInfo(const AbonentContractInfo & ab_info)
-    { AbonentContractInfo(ab_info.ab_type , ab_info.getSCFinfo(), ab_info.getImsi()); }
-
     void setImsi(const char * p_imsi)
     { 
         if (p_imsi && p_imsi[0])
