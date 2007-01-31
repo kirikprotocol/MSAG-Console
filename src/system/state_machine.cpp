@@ -1300,6 +1300,14 @@ StateType StateMachine::submit(Tuple& t)
   bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
   bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
 
+  if(toMap)
+  {
+    if(sms->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND))
+    {
+      debug1(smsLog,"drop SMPP_MORE_MESSAGES_TO_SEND");
+      sms->getMessageBody().dropIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
+    }
+  }
 
   if((fromMap || toMap) && !(fromMap && toMap))
   {
