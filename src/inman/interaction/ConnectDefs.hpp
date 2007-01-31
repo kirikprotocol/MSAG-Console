@@ -17,18 +17,22 @@ public:
     typedef enum {connAlive = 0, connEOF, connException} ConnectState;
 
     ConnectAC(Socket* use_sock) : _socket(use_sock), _state(connAlive) {}
-    virtual ~ConnectAC() { delete _socket; }
+    virtual ~ConnectAC() { Close(); delete _socket; }
 
-    ConnectState State(void) const { return _state; };
-    unsigned     getId(void)  const { return (unsigned)(_socket->getSocket()); }
-    Socket *     getSocket(void) const { return _socket; }
+    inline ConnectState State(void) const { return _state; };
+    inline unsigned     getId(void)  const { return (unsigned)(_socket->getSocket()); }
+    inline Socket *     getSocket(void) const { return _socket; }
 
     virtual void Close(bool abort = false)
     {
         if (abort)
             _socket->Abort();
-        else
+        else {
             _socket->Close();
+            if (_socket->getSocket() != INVALID_SOCKET)
+                _socket->Abort();
+        }
+        _state = connEOF;
     }
 
     virtual ConnectState onReadEvent(void) = 0;
