@@ -21,6 +21,7 @@ IOPageDispatcher::~IOPageDispatcher()
   while (!_registredPages.empty()) {
     IOPage_impl* ioPage = _registredPages.begin()->second;
     delete ioPage;
+    _registredPages.erase(_registredPages.begin());
   }
 }
 
