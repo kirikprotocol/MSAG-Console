@@ -214,9 +214,8 @@ void StatisticsManager::flushCounters(short index)
 
     try
     {
-        Statement* statement = connection->getStatement(INSERT_TASK_STAT_STATE_ID, 
-                                                        INSERT_TASK_STAT_STATE_SQL);
-        if (!statement)
+        std::auto_ptr<Statement> statement(connection->createStatement(INSERT_TASK_STAT_STATE_SQL));
+        if (!statement.get())
             throw Exception("Failed to obtain statement for statistics update");
         
         statement->setUint32(2, period);

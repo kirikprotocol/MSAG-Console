@@ -409,10 +409,12 @@ void TaskProcessor::processWaitingEvents(time_t time)
         {
             MutexGuard guard(receiptsLock);
             ReceiptData* receiptPtr = receipts.GetPtr(timer.smscId.c_str());
-            if (receiptPtr) smsc_log_warn(logger, "%s for smscId=%s wasn't received and timed out!", 
-                                        ((receiptPtr->receipted) ? "Receipt":"Responce"),
-                                        timer.smscId.c_str());
-            
+            if (receiptPtr) { 
+              smsc_log_warn(logger, "%s for smscId=%s wasn't received and timed out!", 
+                            ((receiptPtr->receipted) ? "Receipt":"Responce"),
+                            timer.smscId.c_str());
+              needProcess = true;
+            }
         }
         if (needProcess)
             processReceipt(timer.smscId, false, true, true);
@@ -507,7 +509,6 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
 
     if (!accepted || internal)
     {
-        bool needDelete = true;
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
             time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
@@ -568,9 +569,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 if (!task->enrouteMessage(tmIds.msgId, connection))
                     throw Exception("Message #%lld not found (doEnroute).", tmIds.msgId);
 
-                Statement* createMapping = connection->getStatement(CREATE_ID_MAPPING_STATEMENT_ID,
-                                                                    CREATE_ID_MAPPING_STATEMENT_SQL);
-                if (!createMapping)
+                std::auto_ptr<Statement> createMapping(connection->createStatement(CREATE_ID_MAPPING_STATEMENT_SQL));
+                if (!createMapping.get())
                     throw Exception("processResponce(): Failed to create statement for ids mapping.");
 
                 createMapping->setUint64(1, tmIds.msgId);
@@ -578,6 +578,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 createMapping->setString(3, info.id.c_str());
                 createMapping->executeUpdate();
                 connection->commit();
+                idMappingCreated = true;
             }
 
             {
@@ -595,9 +596,8 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 smsc_log_debug(logger, "Receipt come when responce is in process");
                 if (idMappingCreated)
                 {
-                    Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
-                                                                     DEL_ID_MAPPING_STATEMENT_SQL);
-                    if (!delMapping)
+                    std::auto_ptr<Statement> delMapping(connection->createStatement(DEL_ID_MAPPING_STATEMENT_SQL));
+                    if (!delMapping.get())
                         throw Exception("processResponce(): Failed to create statement for ids mapping.");
 
                     delMapping->setString(1, smsc_id);
@@ -667,9 +667,8 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         if (!connection)
             throw Exception("processReceipt(): Failed to obtain connection to internal data source.");
 
-        Statement* getMapping = connection->getStatement(GET_ID_MAPPING_STATEMENT_ID,
-                                                         GET_ID_MAPPING_STATEMENT_SQL);
-        if (!getMapping)
+        std::auto_ptr<Statement> getMapping(connection->createStatement(GET_ID_MAPPING_STATEMENT_SQL));
+        if (!getMapping.get())
             throw Exception("processReceipt(): Failed to create statement for ids mapping.");
     
         getMapping->setString(1, smsc_id);
@@ -690,9 +689,8 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
             
             if (needProcess)
             {
-                Statement* delMapping = connection->getStatement(DEL_ID_MAPPING_STATEMENT_ID,
-                                                                 DEL_ID_MAPPING_STATEMENT_SQL);
-                if (!delMapping)
+                std::auto_ptr<Statement> delMapping(connection->createStatement(DEL_ID_MAPPING_STATEMENT_SQL));
+                if (!delMapping.get())
                     throw Exception("processReceipt(): Failed to create statement for ids mapping.");
 
                 uint64_t msgId = rs->getUint64(1);
@@ -1063,9 +1061,8 @@ void TaskProcessor::insertRecordIntoTasksStat(const std::string& taskId,
                                               uint32_t retried,
                                               uint32_t failed)
 {
-  Statement* statement = dsIntConnection->getStatement(INSERT_TASK_STAT_STATE_ID, 
-                                                       INSERT_TASK_STAT_STATE_SQL);
-  if (!statement)
+  std::auto_ptr<Statement> statement(dsIntConnection->createStatement(INSERT_TASK_STAT_STATE_SQL));
+  if (!statement.get())
     throw Exception("Failed to obtain statement for statistics update");
 
   statement->setString(1, taskId.c_str());
@@ -1146,9 +1143,8 @@ static bool orderBinaryPredicate(const TaskStatDescription& lhs,
 
 Array<std::string> TaskProcessor::getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit)
 {
-  Statement* selectMessage = dsIntConnection->getStatement(DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_ID,
-                                                           DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_SQL);
-  if (!selectMessage)
+  std::auto_ptr<Statement> selectMessage(dsIntConnection->createStatement(DO_FULL_TABLESCAN_TASKS_STAT_STATEMENT_SQL));
+  if (!selectMessage.get())
     throw Exception("getTasksStatistic(): Failed to create statement for messages access.");
 
   std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
