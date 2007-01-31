@@ -7,6 +7,8 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "inman/common/adrutil.hpp"
+using smsc::inman::AbonentImsi;
+using smsc::inman::AbonentContractInfo;
 
 #include "core/synchronization/Event.hpp"
 using smsc::core::synchronization::Event;
@@ -44,7 +46,7 @@ using smsc::inman::_InmanErrorSource;
  * class AbonentsDB (singleton): abonents registry
  * ************************************************************************** */
 
-typedef enum { abPrepaid = 0, abPostpaid = 1} AbonentType;
+typedef smsc::inman::AbonentContractInfo::ContractType AbonentType;
 typedef struct {
     AbonentType  abType;
     const char *  addr;
@@ -53,22 +55,31 @@ typedef struct {
 
 static const Abonent  _abonents[] = {
     //Nezhinsky phone(prepaid):
-     { abPrepaid, ".1.1.79139343290", "250013900405871" }
+     { AbonentContractInfo::abtPrepaid, ".1.1.79139343290", "250013900405871" }
     //tst phone (prepaid):
-    ,{ abPrepaid, ".1.1.79133821781", "250013903368782" }
+    ,{ AbonentContractInfo::abtPrepaid, ".1.1.79133821781", "250013903368782" }
     //Ryzhkov phone(postpaid):
-    ,{ abPostpaid, ".1.1.79139859489", "250013901464251" }
+    ,{ AbonentContractInfo::abtPostpaid, ".1.1.79139859489", "250013901464251" }
     //Stupnik phone(postpaid):
-    ,{ abPostpaid, ".1.1.79139033669", "250013901464251" }
+    ,{ AbonentContractInfo::abtPostpaid, ".1.1.79139033669", "250013901464251" }
 };
 #define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(Abonent))
 
-struct AbonentInfo {
-    AbonentType    abType;
-    TonNpiAddress  addr;
-    char           imsi[MAP_MAX_IMSI_AddressValueLength];
 
-    AbonentInfo() : abType(abPrepaid)  { imsi[0] = 0; }
+struct AbonentInfo : public AbonentContractInfo {
+    TonNpiAddress  msIsdn;
+
+    AbonentInfo(const TonNpiAddress * p_adr, ContractType cntr_type = abtUnknown,
+                 const char * p_imsi = NULL, const GsmSCFinfo * p_scf = NULL)
+        : AbonentContractInfo(cntr_type, p_scf, p_imsi)
+    { if (p_adr) msIsdn = *p_adr; }
+
+    AbonentInfo(const char * p_adr = NULL, ContractType cntr_type = abtUnknown,
+                 const char * p_imsi = NULL, const GsmSCFinfo * p_scf = NULL)
+        : AbonentContractInfo(cntr_type, p_scf, p_imsi)
+    { msIsdn.fromText(p_adr); }
+
+    inline bool Empty(void) const { return (bool)(!msIsdn.length); }
 };
 
 class AbonentsDB {
@@ -82,17 +93,9 @@ protected:
     void initDB(unsigned n_abn, const Abonent * p_abn)
     {
         for (unsigned i = 0; i < n_abn; i++) {
-            AbonentInfo  abn;
-            if (p_abn[i].addr)
-                abn.addr.fromText(p_abn[i].addr);
-            else
-                abn.addr.clear();
-            if (p_abn[i].imsi[0])
-                strcpy(abn.imsi, p_abn[i].imsi);
-            else
-                abn.imsi[0] = 0;
-            abn.abType = p_abn[i].abType;
-            registry.insert(AbonentsMAP::value_type(++lastAbnId, abn));
+            AbonentInfo  abn(p_abn[i].addr, p_abn[i].abType, p_abn[i].imsi);
+            if (!abn.Empty())
+                registry.insert(AbonentsMAP::value_type(++lastAbnId, abn));
         }
     }
 
@@ -115,10 +118,9 @@ public:
 
     static void printAbnInfo(FILE * stream, const AbonentInfo & abn, unsigned ab_id)
     {
-        fprintf(stream, "abn.%u: %s, isdn <%s>, imsi <%s>\n", ab_id,
-                abn.abType ? "abPostpaid" : "abPrepaid",
-                abn.addr.length ? abn.addr.toString().c_str() : " ",
-                abn.imsi[0] ? abn.imsi : "none");
+        fprintf(stream, "abn.%u: %s, isdn <%s>, imsi <%s>, SCF <%s>\n", ab_id,
+                abn.type2Str(), abn.msIsdn.length ? abn.msIsdn.toString().c_str() : " ",
+                abn.abImsi[0] ? abn.abImsi : "none", abn.gsmSCF.toString().c_str());
     }
 
     inline unsigned getMaxAbId(void) const { return lastAbnId; }
@@ -140,7 +142,7 @@ public:
         }
         for (; it != registry.end(); it ++) {
             const AbonentInfo & abn = (*it).second;
-            if (abn.abType == ab_type)
+            if (abn.ab_type == ab_type)
                 return (*it).first;
         }
         return 0;
@@ -156,11 +158,8 @@ public:
         for (AbonentsMAP::const_iterator it = registry.begin();
                                     it != registry.end(); it ++) {
             const AbonentInfo & abn = (*it).second;
-
-            if (abn.addr.length) {
-                if (abn.addr == subscr)
-                    return (*it).first;
-            }
+            if (abn.msIsdn == subscr)
+                return (*it).first;
         }
         return 0; //unknown
     }
@@ -194,44 +193,22 @@ public:
             it++;
         }
     }
-/*
-    unsigned addAbonent(TonNpiAddress * p_isdn, char * p_imsi)
+
+    unsigned addAbnInfo(const AbonentInfo & abn)
     {
         MutexGuard  grd(_sync);
-        AbonentInfo  abn;
-        if (p_isdn && p_isdn->length)
-            abn.addr = *p_isdn;
-        else
-            abn.addr.clear();
-        if (p_imsi && p_imsi[0])
-            strcpy(abn.imsi, p_imsi);
-        else
-            abn.imsi[0] = 0;
-
         registry.insert(AbonentsMAP::value_type(++lastAbnId, abn));
         return lastAbnId;
     }
-
-    bool setAbnInfo(unsigned ab_id, const MAPSCFinfo * p_scf = NULL, const char * p_imsi = NULL)
+    unsigned setAbnInfo(unsigned ab_id, const AbonentInfo & abn)
     {
         MutexGuard  grd(_sync);
-        AbonentsMAP::iterator it = registry.find(ab_id);
-        if (it != registry.end()) {
-            AbonentInfo & abn = (*it).second;
-            if (p_scf)
-                abn.scf = *p_scf;
-            else {
-                abn.scf.serviceKey = 0;
-                abn.scf.scfAddress.clear();
-            }
-                
-            if (p_imsi && p_imsi[0])
-                strcpy(abn.imsi, p_imsi);
-            return true;
+        if (ab_id <= lastAbnId) {
+            registry.insert(AbonentsMAP::value_type(ab_id, abn));
+            return ab_id;
         }
-        return false;
+        return 0;
     }
-*/
 };
 
 /* ************************************************************************** *
@@ -473,8 +450,7 @@ public:
                 "  bearerType : dp%s\n"
                 "  destAdr[%u]: %s (%s)\n"
                 "  SMSExtra: %u\n",
-                _dlgCfg.abId, (abi->addr.toString()).c_str(),
-                (abi->abType == abPrepaid) ? "prepaid" : "postpaid",
+                _dlgCfg.abId, (abi->msIsdn.toString()).c_str(), abi->type2Str(),
                 _dlgCfg.ussdOp ? "USSD" : "SMS",
                 _dlgCfg.dstId, dAdr->toString().c_str(), 
                 _nm_ToN[dAdr->typeOfNumber], _dlgCfg.xsmsIds);
@@ -533,8 +509,8 @@ public:
         op.setDestinationSubscriberNumber(dAdr->toString());
 
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
-        op.setCallingPartyNumber(abi->addr.toString());
-        op.setCallingIMSI(abi->imsi);
+        op.setCallingPartyNumber(abi->msIsdn.toString());
+        op.setCallingIMSI(abi->abImsi);
         
         op.setLocationInformationMSC((dAdr->typeOfNumber != ToN_ALPHANUM) ?
                                      ".1.1.79139860001" : "");
@@ -1053,12 +1029,12 @@ static void utl_next_abn(const std::vector<std::string> &args, AbonentType ab_ty
 //USAGE: prepaid [?|help | abn_NN]
 void cmd_prepaid(Console&, const std::vector<std::string> &args)
 {
-    utl_next_abn(args, abPrepaid);
+    utl_next_abn(args, AbonentInfo::abtPrepaid);
 }
 //USAGE: postpaid [?|help | abn_NN]
 void cmd_postpaid(Console&, const std::vector<std::string> &args)
 {
-    utl_next_abn(args, abPostpaid);
+    utl_next_abn(args, AbonentInfo::abtPostpaid);
 }
 
 //USAGE: use_abn [?|help | abn_NN]
