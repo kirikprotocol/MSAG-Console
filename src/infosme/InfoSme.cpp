@@ -61,28 +61,28 @@ static int   infoSmeReadyTimeout = 60000;
 static Mutex needStopLock;
 static Mutex needReconnectLock;
 
-static bool  bInfoSmeIsStopped    = false;
+static sig_atomic_t  infoSmeIsStopped    = 0;
 static bool  bInfoSmeIsConnected  = false;
 static bool  bInfoSmeIsConnecting = false;
 
-static void setNeedStop(bool stop=true) {
-    MutexGuard gauard(needStopLock);
-    bInfoSmeIsStopped = stop;
-    if (stop) infoSmeWaitEvent.Signal();
+static int signaling_ReadFd = -1, signaling_WriteFd = -1;
+static sigset_t blocked_signals, original_signal_mask;
+
+static void setNeedStop()
+{
+  infoSmeIsStopped = 1;
 }
+
 static bool isNeedStop() {
-    MutexGuard gauard(needStopLock);
-    return bInfoSmeIsStopped;
+  sigprocmask(SIG_SETMASK, &original_signal_mask, NULL); // unlock all signals and deliver any pending signals
+  sigprocmask(SIG_SETMASK, &blocked_signals, NULL); // lock all signals.
+  return infoSmeIsStopped == 1;
 }
 
 static void setNeedReconnect(bool reconnect=true) {
     MutexGuard gauard(needReconnectLock);
     bInfoSmeIsConnected = !reconnect;
     if (reconnect) infoSmeWaitEvent.Signal();
-}
-static bool isNeedReconnect() {
-    MutexGuard gauard(needReconnectLock);
-    return !bInfoSmeIsConnected;
 }
 
 extern bool isMSISDNAddress(const char* string)
@@ -486,14 +486,12 @@ public:
 
 extern "C" static void appSignalHandler(int sig)
 {
-    smsc_log_debug(logger, "Signal %d handled !", sig);
-    if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
-    {
-        smsc_log_info(logger, "Stopping ...");
-        if (bAdminListenerInited) adminListener->shutdown();
-        setNeedStop(true);
-    }
+  if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT) {
+    if ( signaling_WriteFd > -1 ) close (signaling_WriteFd);
+    setNeedStop();
+  }
 }
+
 extern "C" static void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
@@ -503,6 +501,10 @@ extern "C" static void atExitHandler(void)
 int main(void)
 {
   try {
+    int fds[2];
+    pipe(fds);
+    signaling_ReadFd = fds[0]; signaling_WriteFd = fds[1]; 
+
     int resultCode = 0;
 
     Logger::Init();
@@ -513,9 +515,9 @@ int main(void)
 
     atexit(atExitHandler);
 
-    sigset_t set, old;
+    sigset_t set;
     sigemptyset(&set);
-    sigprocmask(SIG_SETMASK, &set, &old);
+    sigprocmask(SIG_SETMASK, &set, &original_signal_mask);
     sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
     sigset(SIGINT, appSignalHandler);
     sigset(SIGPIPE, SIG_IGN);
@@ -562,8 +564,13 @@ int main(void)
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
         }
 
-        sigfillset(&set);
-        sigprocmask(SIG_SETMASK, &set, &old);
+        sigfillset(&blocked_signals);
+        sigdelset(&blocked_signals, SIGKILL);
+        sigdelset(&blocked_signals, SIGALRM);
+        sigdelset(&blocked_signals, SIGSEGV); sigdelset(&blocked_signals, SIGBUS);
+        sigdelset(&blocked_signals, SIGFPE); sigdelset(&blocked_signals, SIGILL);
+
+        sigprocmask(SIG_SETMASK, &blocked_signals, &original_signal_mask);
 
         ConfigView adminConfig(manager, "InfoSme.Admin");
         adminListener->init(adminConfig.getString("host"), adminConfig.getInt("port"));
@@ -580,8 +587,8 @@ int main(void)
 
         while (!isNeedStop())
         {
-            sigprocmask(SIG_SETMASK, &old, NULL); // unlock all signals and deliver any pending signals
-            sigprocmask(SIG_SETMASK, &set, NULL); // lock all signals. any thread being started from this point has signal mask with all signals locked 
+          // after call to isNeedStop() was completed all signals is locked.
+          // any thread being started from this point has signal mask with all signals locked 
             InfoSmePduListener      listener(processor);
             SmppSession             session(cfg, &listener);
             InfoSmeMessageSender    sender(processor, &session);
@@ -614,18 +621,11 @@ int main(void)
                 continue;
             }
             smsc_log_info(logger, "Connected.");
-            sigprocmask(SIG_SETMASK, &old, NULL); // unlock all signals and deliver any pending signals
+            sigprocmask(SIG_SETMASK, &original_signal_mask, NULL); // unlock all signals and deliver any pending signals
             // in this point any signals was locked in all runnnig thread excepted for this main thread
-            infoSmeWaitEvent.Wait(0);
-            while (!isNeedStop() && !isNeedReconnect())
-            {
-                infoSmeWaitEvent.Wait(100);
-                /*TaskStat stat;
-                if (processor.getStatistics("Task1", stat)) {
-                    printf("Generated:%6d Delivered:%6d Retried:%6d Failed:%6d\r",
-                           stat.generated, stat.delivered, stat.retried, stat.failed);
-                }*/
-            }
+            unsigned char oneByte; 
+            read(signaling_ReadFd, &oneByte, sizeof(oneByte));
+
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();
             processor.Stop();
