@@ -79,12 +79,19 @@ public class ReportSender implements ReiterationTask, MessageStatusListener {
       }
       if (Logger.isDebugEnabled())
         Logger.debug(getName() + " process report #" + report.getId() + " for abonent #" + report.getAbonent() + ", notification " + (status == Data.ESME_ROK ? "delivered" : "failed"));
-      if (status != Data.ESME_ROK)
+      if (status == Data.ESME_ROK) {
+        try {
+          constraintManager.unregisterAttempt(report.getAbonent());
+        } catch (CheckConstraintsException e) {
+          Logger.error(getName() + " could not update cache for abonent #" + report.getAbonent(), e);
+        }
+      } else {
         try {
           constraintManager.unregisterUsage(report.getAbonent());
         } catch (CheckConstraintsException e) {
-          Logger.error(getName() + " could not reduce usages for abonent #" + report.getAbonent(), e);
+          Logger.error(getName() + " could not update cache for abonent #" + report.getAbonent(), e);
         }
+      }
     }
   }
 }

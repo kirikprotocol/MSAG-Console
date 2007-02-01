@@ -157,13 +157,13 @@ public class ConstraintManagerImpl implements ConstraintManager {
     }
   }
 
-  public short check(String abonent)
+  public void check(String abonent)
       throws CheckConstraintsException,
       AttemptsLimitReachedException,
       UsageLimitReachedException,
       BalanceLimitException {
     if (!checkBalance && !checkAttempts && !checkUsages)
-      return 0x0000;
+      return;
     String date = getCurrentRdate();
     short data = getCache(getAbonentNumber(abonent));
     int u = (data>>8)&0xFF;
@@ -174,7 +174,6 @@ public class ConstraintManagerImpl implements ConstraintManager {
       throw new UsageLimitReachedException(abonent, usagesLimit, date);
     if (!(getBalance(abonent) <= 0))
       throw new BalanceLimitException(abonent);
-    return data;
   }
 
   public int registerAttempt(String abonent) throws CheckConstraintsException {

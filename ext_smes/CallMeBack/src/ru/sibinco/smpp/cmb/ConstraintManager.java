@@ -9,7 +9,7 @@ import ru.sibinco.smpp.MessageData;
  * Time: 6:46:48 PM
  */
 public interface ConstraintManager {
-  public short check(String abonent)
+  public void check(String abonent)
       throws CheckConstraintsException,
       AttemptsLimitReachedException,
       UsageLimitReachedException,
