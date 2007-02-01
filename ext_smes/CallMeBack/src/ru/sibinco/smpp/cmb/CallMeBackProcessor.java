@@ -106,13 +106,15 @@ public class CallMeBackProcessor implements RequestProcessor {
       constraintManager.check(messageData.getSourceAddress());
       // update data
       int a =  constraintManager.registerAttempt(messageData.getSourceAddress());
-      int u = constraintManager.registerUsage(messageData.getSourceAddress());
       if (messageData.getMessageString() == null || messageData.getMessageString().trim().length() != 7) {
         Logger.warn("Invalid request " + messageData.getMessageString());
         return prepareResponse(messageData, MessageFormat.format(invalid, new Object[]{(messageData.getDestinationAddress().indexOf(":") > 0 ? messageData.getDestinationAddress().substring(messageData.getDestinationAddress().indexOf(":") + 1) : messageData.getDestinationAddress()), Integer.toString(a)}));
       } else {
         try {
+          // check SMS body
           Integer.parseInt(messageData.getMessageString());
+          // update data
+          int u = constraintManager.registerUsage(messageData.getSourceAddress());
           // prepare confirmatoin & notification
           Response response = prepareResponse(messageData, MessageFormat.format(confirmation, new Object[]{Integer.toString(u)}));
           MessageData n = new MessageData();
