@@ -13,7 +13,6 @@ import ru.sibinco.smpp.InitializationException;
  */
 public class MemoryConstraintManagerImpl extends AbstractConstraintManager {
 
-  private MemoryCache cache = MemoryCache.getInstance();
   private DBConnectionManager dbManager = null;
   private String sql = null;
 
@@ -59,19 +58,8 @@ public class MemoryConstraintManagerImpl extends AbstractConstraintManager {
       BalanceLimitException {
     if (!checkBalance && !checkAttempts && !checkUsages)
       return 0x0000;
-    int _abonent;
-    try {
-      _abonent = Integer.parseInt((abonent.length() > 7 ? abonent.substring(abonent.length()-7) : abonent));
-    } catch (NumberFormatException e) {
-      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
-    }
     String date = getCurrentRdate();
-    short data;
-    try {
-      data = cache.getCache(_abonent);
-    } catch (IndexOutOfBoundsException e) {
-      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
-    }
+    short data = getCache(getAbonentNumber(abonent));
     int u = (data>>8)&0xFF;
     int a = ((int)data)&0xFF;
     if (checkAttempts && a >= attemptsLimit)
@@ -80,66 +68,79 @@ public class MemoryConstraintManagerImpl extends AbstractConstraintManager {
       throw new UsageLimitReachedException(abonent, usagesLimit, date);
     if (!(getBalance(abonent) <= 0))
       throw new BalanceLimitException(abonent);
-    a++;
-    data = (short)(u << 8 | a);
-    try {
-      cache.setCache(_abonent, data);
-    } catch (IndexOutOfBoundsException e) {
-      throw new CheckConstraintsException("Could not update cache for abonent: "+abonent, e);
-    }
     return data;
+  }
+
+  public int registerAttempt(String abonent) throws CheckConstraintsException {
+    if (!checkAttempts)
+      return attemptsLimit;
+    int _abonent = getAbonentNumber(abonent);
+    short data = getCache(_abonent);
+    int a = ((int)data)&0xFF;
+    int u = (data>>8)&0xFF;
+    a++;
+    setCache(_abonent, u, a);
+    return attemptsLimit - u;
+  }
+
+  public int unregisterAttempt(String abonent) throws CheckConstraintsException {
+    if (!checkAttempts)
+      return attemptsLimit;
+    int _abonent = getAbonentNumber(abonent);
+    short data = getCache(_abonent);
+    int a = ((int)data)&0xFF;
+    int u = (data>>8)&0xFF;
+    a--;
+    setCache(_abonent, u, a);
+    return attemptsLimit - u;
   }
 
   public int registerUsage(String abonent) throws CheckConstraintsException {
     if (!checkUsages)
       return usagesLimit;
-    int _abonent;
-    try {
-      _abonent = Integer.parseInt((abonent.length() > 7 ? abonent.substring(abonent.length()-7) : abonent));
-    } catch (NumberFormatException e) {
-      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
-    }
-    short data;
-    try {
-      data = cache.getCache(_abonent);
-    } catch (IndexOutOfBoundsException e) {
-      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
-    }
+    int _abonent = getAbonentNumber(abonent);
+    short data = getCache(_abonent);
     int a = ((int)data)&0xFF;
     int u = (data>>8)&0xFF;
     u++;
-    try {
-      cache.setCache(_abonent, (short)(u << 8 | a));
-    } catch (IndexOutOfBoundsException e) {
-      throw new CheckConstraintsException("Could not update cache for abonent: "+abonent, e);
-    }
+    setCache(_abonent, u, a);
     return usagesLimit - u;
   }
 
   public int unregisterUsage(String abonent) throws CheckConstraintsException {
     if (!checkUsages)
       return usagesLimit;
-    int _abonent;
-    try {
-      _abonent = Integer.parseInt((abonent.length() > 7 ? abonent.substring(abonent.length()-7) : abonent));
-    } catch (NumberFormatException e) {
-      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
-    }
-    short data;
-    try {
-      data = cache.getCache(_abonent);
-    } catch (IndexOutOfBoundsException e) {
-      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
-    }
+    int _abonent = getAbonentNumber(abonent);
+    short data = getCache(_abonent);
     int a = ((int)data)&0xFF;
     int u = (data>>8)&0xFF;
     u--;
+    setCache(_abonent, u, a);
+    return usagesLimit - u;
+  }
+
+  private int getAbonentNumber(String abonent) throws CheckConstraintsException {
     try {
-      cache.setCache(_abonent, (short)(u << 8 | a));
+      return Integer.parseInt((abonent.length() > 7 ? abonent.substring(abonent.length()-7) : abonent));
+    } catch (NumberFormatException e) {
+      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
+    }
+  }
+
+  private short getCache(int abonent) throws CheckConstraintsException {
+    try {
+      return cache.getCache(abonent);
+    } catch (IndexOutOfBoundsException e) {
+      throw new CheckConstraintsException("Could not get cache for abonent: "+abonent, e);
+    }
+  }
+
+  private void setCache(int abonent, int usages, int attempts) throws CheckConstraintsException {
+    try {
+      cache.setCache(abonent, (short)(usages << 8 | attempts));
     } catch (IndexOutOfBoundsException e) {
       throw new CheckConstraintsException("Could not update cache for abonent: "+abonent, e);
     }
-    return usagesLimit - u;
   }
 
   public int getAttemptsLimit() {
