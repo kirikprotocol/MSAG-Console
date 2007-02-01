@@ -29,7 +29,6 @@
    </path>
    <path id="CallMeBack.module.classpath">
       <pathelement location="${module.CallMeBack.basedir}/lib/connpool.jar"/>
-      <pathelement location="${module.CallMeBack.basedir}/lib/classes12.jar"/>
       <pathelement location="${module.CallMeBack.basedir}/lib/jsmppapi.jar"/>
       <pathelement location="${module.CallMeBack.basedir}/lib/log4j.jar"/>
       <pathelement location="${module.CallMeBack.basedir}/lib/sme.jar"/>

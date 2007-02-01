@@ -31,7 +31,7 @@ public class ReportSender implements ReiterationTask, MessageStatusListener {
         throw new InitializationException("Could not initialize ConstraintManager "+config.getProperty("constraint.manager.class")+" for "+getName(), e);
       }
     } else {
-      constraintManager = new MemoryConstraintManagerImpl();
+      constraintManager = new ConstraintManagerImpl();
     }
   }
 

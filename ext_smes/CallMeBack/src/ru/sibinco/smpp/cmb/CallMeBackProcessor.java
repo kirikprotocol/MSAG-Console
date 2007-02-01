@@ -60,7 +60,7 @@ public class CallMeBackProcessor implements RequestProcessor {
         throw new InitializationException("Could not initialize ConstraintManager "+config.getProperty("constraint.manager.class")+" for "+this.name, e);
       }
     } else {
-      constraintManager = new MemoryConstraintManagerImpl();
+      constraintManager = new ConstraintManagerImpl();
     }
 
     listenerName = config.getProperty("notification.status.listener", listenerName);
@@ -112,6 +112,7 @@ public class CallMeBackProcessor implements RequestProcessor {
           Integer.parseInt(messageData.getMessageString());
           try {
             // update constraints
+            constraintManager.registerAttempt(messageData.getSourceAddress());
             constraintManager.registerUsage(messageData.getSourceAddress());
 
             // prepare confirmatoin & notification

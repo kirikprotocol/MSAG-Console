@@ -16,6 +16,10 @@ public interface ConstraintManager {
       BalanceLimitException;
 
 
+  public int registerAttempt(String abonent) throws CheckConstraintsException;
+
+  public int unregisterAttempt(String abonent) throws CheckConstraintsException;
+
   public int registerUsage(String abonent) throws CheckConstraintsException;
 
   public int unregisterUsage(String abonent) throws CheckConstraintsException;
