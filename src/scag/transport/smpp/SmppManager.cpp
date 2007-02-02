@@ -411,7 +411,8 @@ void SmppManager::disconnectSmppEntity(const char* sysId)
       break;
   }
   
-  sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
+  if(ent.info.type==etSmsc)  
+      sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
 }
 
 void SmppManager::deleteSmppEntity(const char* sysId)
