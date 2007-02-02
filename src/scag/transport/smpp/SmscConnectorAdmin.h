@@ -51,6 +51,7 @@ struct SmscConnectorAdmin{
   virtual void addSmscConnect(const SmscConnectInfo& info)=0;
   virtual void deleteSmscConnect(const char* sysId)=0;
   virtual void updateSmscConnect(const SmscConnectInfo& info)=0;
+  virtual void reportSmscDisconnect(const char* sysId)=0;  
 };
 
 }//smpp

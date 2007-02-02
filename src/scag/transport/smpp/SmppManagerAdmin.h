@@ -57,6 +57,7 @@ struct SmppEntityInfo{
 struct SmppManagerAdmin{
   virtual void addSmppEntity(const SmppEntityInfo& info)=0;
   virtual void updateSmppEntity(const SmppEntityInfo& info)=0;
+  virtual void disconnectSmppEntity(const char* sysId)=0;  
   virtual void deleteSmppEntity(const char* sysId)=0;
   virtual void ReloadRoutes()=0;
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType) = 0;

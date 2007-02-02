@@ -144,10 +144,13 @@ using namespace xercesc;
 
 void CommandDeleteSme::init()
 {
-    smsc_log_info(logger, "CommandDeleteSme got parameters:");
+    smsc_log_info(logger, "Command(Delete/Disconnect)Sme got parameters:");
 
+    disconn = 0;
+    
     BEGIN_SCAN_PARAMS
     GETSTRPARAM_(systemId, "systemId")
+    GETINTPARAM(disconn, "disconnect")
     END_SCAN_PARAMS
 
     if (systemId == "") 
@@ -159,24 +162,29 @@ void CommandDeleteSme::init()
 
 Response * CommandDeleteSme::CreateResponse(scag::Scag * ScagApp)
 {
-    smsc_log_info(logger, "CommandDeleteSme is processing...");
+    char *n = disconn ? "Disconnect" : "Delete";
+    
+    smsc_log_info(logger, "Command%sSme is processing...", n);
 
     if (!ScagApp) throw Exception("Scag undefined");
     smsc_log_info(logger, "systemId: %s", systemId.c_str());
 
     try {
-        ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
+        if(disconn)
+            ScagApp->getSmppManagerAdmin()->disconnectSmppEntity(systemId.c_str());
+        else
+            ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());        
     } catch(Exception& e) {                                     
         char msg[1024];                                         
-        sprintf(msg, "Failed to delete SME. Details: %s", e.what());
+        sprintf(msg, "Failed to %s SME. Details: %s", n, e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to delete SME. Unknown exception");        
-        throw AdminException("Failed to delete SME. Unknown exception");
+        smsc_log_warn(logger, "Failed to %s SME. Unknown exception", n);        
+        throw AdminException("Failed to %s SME. Unknown exception", n);
     }
 
-    smsc_log_info(logger, "CommandDeleteSme is processed ok");
+    smsc_log_info(logger, "Command%sSme is processed ok", n);
     return new Response(Response::Ok, "none");
 }
 
@@ -447,7 +455,7 @@ Response * CommandApplyConfig::CreateResponse(scag::Scag * SmscApp)
 Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandApplySmppRoutes is processing...");
-	
+    
     if (!ScagApp) throw Exception("Scag undefined");
 
     scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
@@ -455,8 +463,8 @@ Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * ScagApp)
     if (!smppMan) throw Exception("SmppManager undefined");
 
     try {
-	    ConfigManager & cfg = ConfigManager::Instance();
-	    cfg.reloadConfig(scag::config::ROUTE_CFG);
+        ConfigManager & cfg = ConfigManager::Instance();
+        cfg.reloadConfig(scag::config::ROUTE_CFG);
         smppMan->ReloadRoutes();
     } catch(Exception& e) {                                     
         char msg[1024];                                         
@@ -467,7 +475,7 @@ Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * ScagApp)
         smsc_log_warn(logger, "Failed to reload routes. Unknown exception");        
         throw AdminException("Failed to reload routes. Unknown exception");
     }
-	
+    
     smsc_log_info(logger, "CommandApplySmppRoutes is processed ok");
     return new Response(Response::Ok, "none");
 }

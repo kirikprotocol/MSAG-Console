@@ -45,7 +45,8 @@ public:
   //admin
   virtual void addSmppEntity(const SmppEntityInfo& info);
   virtual void updateSmppEntity(const SmppEntityInfo& info);
-  virtual void deleteSmppEntity(const char* sysId);
+  virtual void disconnectSmppEntity(const char* sysId);  
+  virtual void deleteSmppEntity(const char* sysId);  
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType);
 
   //registragor

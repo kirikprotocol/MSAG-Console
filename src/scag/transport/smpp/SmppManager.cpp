@@ -384,6 +384,36 @@ void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
   }
 }
 
+void SmppManager::disconnectSmppEntity(const char* sysId)
+{
+  smsc_log_debug(log,"disconnectSmppEntity:%s",sysId);
+  sync::MutexGuard mg(regMtx);
+  SmppEntity** ptr=registry.GetPtr(sysId);
+  if(!ptr)
+  {
+    throw smsc::util::Exception("disconnectSmppEntity:Enitity with systemId='%s' not found",sysId);
+  }
+  SmppEntity& ent=**ptr;
+  MutexGuard emg(ent.mtx);
+  switch(ent.bt)
+  {
+    case btTransceiver:
+      ent.channel->disconnect();
+      break;
+    case btTransmitter:
+      ent.transChannel->disconnect();
+      break;
+    case btRecvAndTrans:
+      ent.transChannel->disconnect();
+      //fallthru
+    case  btReceiver:
+      ent.recvChannel->disconnect();
+      break;
+  }
+  
+  sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
+}
+
 void SmppManager::deleteSmppEntity(const char* sysId)
 {
   smsc_log_debug(log,"deleteSmppEntity:%s",sysId);

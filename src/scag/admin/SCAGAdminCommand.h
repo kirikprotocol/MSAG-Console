@@ -54,6 +54,7 @@ public:
   virtual void init();
 protected:
     std::string systemId;
+    int disconn;
 
 };
 
