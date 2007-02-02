@@ -98,9 +98,21 @@ public class Scag extends Proxy {
     }
 
     protected void deleteSvc(final String svcId) throws SibincoException {
-        final Response response = super.runCommand(new DeleteSvc(svcId));
+        final Response response = super.runCommand(new DeleteSvc(svcId,0));
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't delete sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void disconnectService(final String serviceId) throws SibincoException {
+        try {
+          final Response response = super.runCommand(new DeleteSvc(serviceId,1));
+          if (Response.STATUS_OK != response.getStatus())
+              throw new SibincoException("Couldn't disconnect sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+        } catch (SibincoException se) {
+          if (getStatus() == STATUS_DISCONNECTED)
+            throw new StatusDisconnectedException(host,port);
+          else throw se;
+        }
     }
 
     //centers

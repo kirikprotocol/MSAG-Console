@@ -16,9 +16,10 @@ import ru.sibinco.scag.backend.daemon.Command;
  */
 public class DeleteSvc extends Command
 {
-  public DeleteSvc(final String svcId) throws SibincoException
+  public DeleteSvc(final String svcId, final int disconnect) throws SibincoException
   {
     super("deleteSme", "command_gw.dtd");
     createStringParam("systemId", svcId);
+    createIntParam("disconnect",disconnect);
   }
 }

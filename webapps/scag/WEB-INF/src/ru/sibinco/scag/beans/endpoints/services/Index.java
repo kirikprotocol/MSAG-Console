@@ -7,6 +7,8 @@ import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Collection;
 
 /**
@@ -19,6 +21,15 @@ import java.util.Collection;
  */
 public class Index extends TabledBeanImpl implements TabledBean {
 
+    private String mbDisconnect = null;
+
+    public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+      super.process(request, response);
+      if (mbDisconnect!=null && checked.length!=0) {
+        appContext.getSmppManager().disconnectServices(getLoginedPrincipal().getName(), checked, appContext);
+      }
+    }
+
     protected Collection getDataSource() {
         return appContext.getSmppManager().getSvcs().values();
     }
@@ -28,4 +39,7 @@ public class Index extends TabledBeanImpl implements TabledBean {
                 checkedSet, appContext);
     }
 
+    public void setMbDisconnect(String mbDisconnect) {
+        this.mbDisconnect = mbDisconnect;
+    }
 }

@@ -46,6 +46,15 @@
         window.setTimeout(refreshStatus, 10000);
     }
 
+    function disableDisconnect() {
+        if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>' || document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopping</fmt:message>') {
+          var items = opForm.all("mbDisconnect");
+          for (var i = 0; i < items.length; i++) {
+             items[i].disabled = true;
+          }
+        }
+    }
+
 </script>
 <table class=list cellspacing=0>
 <thead>
