@@ -2,15 +2,6 @@
 #include "ApplicationStatements.hpp"
 #include "SequenceNumber.hpp"
 
-extern "C"
-DataSourceFactory*  getDataSourceFactory(void)
-{
-  using namespace smsc::db;
-  SequenceNumber::getInstance().initialize("seqNum.db");
-  static DBEntityStorageDataSourceFactory _dbEntityStorageDataSourceFactory;
-  return &_dbEntityStorageDataSourceFactory;
-}
-
 static std::string
 extractTableName(const char* sql, const char* keyword)
 {
@@ -401,4 +392,30 @@ DBEntityStorageDriver::newConnection()
 {
   static DBEntityStorageConnection _localStorage;
   return &_localStorage;
+}
+
+extern "C"
+DataSourceFactory*  getDataSourceFactory(void)
+{
+  using namespace smsc::db;
+  SequenceNumber::getInstance().initialize("seqNum.db");
+  static DBEntityStorageDataSourceFactory _dbEntityStorageDataSourceFactory;
+
+  try { 
+    // make static storage initialization 
+    InfoSme_Id_Mapping_DBEntityStorage* _init_InfoSme_Id_Mapping_Storage =
+      StorageHelper::getInfoSme_Id_Mapping_Storage();
+
+    InfoSme_Generating_Tasks_DBEntityStorage* _init_InfoSme_GeneratingTasks_Storage =
+      StorageHelper::getInfoSme_GeneratingTasks_Storage();
+
+    InfoSme_Tasks_Stat_DBEntityStorage* _init_InfoSme_Tasks_Stat_Storage = 
+      StorageHelper::getInfoSme_Tasks_Stat_Storage();
+  } catch (std::exception& ex) {
+    smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
+
+    smsc_log_debug(logger, "getDataSourceFactory:: catch exception=[%s]", ex.what());
+    return NULL;
+  }
+  return &_dbEntityStorageDataSourceFactory;
 }
