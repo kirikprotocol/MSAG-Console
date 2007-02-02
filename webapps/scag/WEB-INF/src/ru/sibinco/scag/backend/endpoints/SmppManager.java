@@ -147,6 +147,21 @@ public class SmppManager extends Manager {
                 + checkedSet.toString() + "."));
     }
 
+    public synchronized void disconnectServices(final String user, final String[] serviceIds, final SCAGAppContext appContext) throws SCAGJspException {
+      for (int i=0;i<serviceIds.length;i++) {
+        try {
+            appContext.getScag().disconnectService(serviceIds[i]);
+        } catch (SibincoException e) {
+          if (!(e instanceof StatusDisconnectedException)) {
+            logger.error("Couldn't disconnect services \"" + serviceIds + '"', e);
+            throw new SCAGJspException(Constants.errors.sme.COULDNT_DISCONNECT,serviceIds[i],e);
+          } else
+              throw new SCAGJspException(Constants.errors.sme.COULDNT_DISCONNECT0,e);
+        }
+      }
+      StatusManager.getInstance().addStatMessages(new StatMessage(user, "Service Point", "Disconnected service point(s): " + Arrays.asList(serviceIds) + "."));
+    }
+
     public synchronized void createUpdateCenter(String user, boolean isAdd, boolean isEnabled, Center center,
                                                 SCAGAppContext appContext, Center oldCenter) throws SCAGJspException {
         String messageText = "";
