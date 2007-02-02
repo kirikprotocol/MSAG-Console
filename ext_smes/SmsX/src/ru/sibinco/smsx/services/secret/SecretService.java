@@ -33,10 +33,11 @@ public final class SecretService extends InternalService{
     try {
       final SecretRequestParser.ParseResult res = SecretRequestParser.parseRequest(message.getMessageString());
 
-//      if (!message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS) || res.getType().equals(SecretRequestParser.ParseResultType.MSG)) {
-//        log.info("Unknown message format");
-//        return false;
-//      }
+      if (( message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS) && res.getType().equals(SecretRequestParser.ParseResultType.MSG)) ||
+          (!message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS) && !res.getType().equals(SecretRequestParser.ParseResultType.MSG))) {
+        log.info("Unknown message format");
+        return false;
+      }
 
       messagesQueue.put(new ParsedMessage(message, res));
       log.info("Message added into queue.");

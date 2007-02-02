@@ -10,10 +10,6 @@ import ru.sibinco.smsx.services.ProcessException;
 import ru.sibinco.smsx.utils.BlockingQueue;
 import ru.sibinco.smsx.utils.Utils;
 
-import java.io.UnsupportedEncodingException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 /**
  * User: artem
  * Date: 24.01.2007
@@ -24,8 +20,7 @@ public class SponsoredService extends InternalService{
 
   private BlockingQueue messagesQueue;
 
-  private static final String regex = "sponsored \\d?\\d";
-  private static final Pattern pattern  = Pattern.compile(regex,Pattern.CASE_INSENSITIVE);
+  private static final String regex = "(S|s)(P|p)(O|o)(N|n)(S|s)(O|o)(R|r)(E|e)(D|d) \\d?\\d";
 
 
   public SponsoredService() {
@@ -44,8 +39,7 @@ public class SponsoredService extends InternalService{
         return false;
       }
 
-      final Matcher matcher = pattern.matcher(message.getMessageString());
-      if (!matcher.matches()) {
+      if (!message.getMessageString().matches(regex)) {
         log.info("Unknown message format");
         return false;
       }
@@ -106,7 +100,6 @@ public class SponsoredService extends InternalService{
       public static String NOTIFICATION_USER;
       public static String NOTIFICATION_PASSWORD;
       public static String SUCCESSFULLY_MESSAGE;
-      public static String RULES_MESSAGE;
       public static String SQL_INSERT_ABONENT;
       public static String SQL_UPDATE_ABONENT;
       public static String SQL_GET_ABONENT;
@@ -125,25 +118,7 @@ public class SponsoredService extends InternalService{
 
         NOTIFICATION_PASSWORD=Utils.loadString(config, "subscription.notification.password");
 
-        String coding = Utils.loadString(config, "subscription.service.message.codepage");
-        if(null==coding||coding.length()==0)
-          coding="Koi8r";
-
-        final String succesfullyMessage=Utils.loadString(config, "subscription.service.message.successully");
-
-        try {
-          SUCCESSFULLY_MESSAGE = new String(succesfullyMessage.getBytes("ISO8859_1"),coding);
-        } catch (UnsupportedEncodingException e) {
-          throw new InitializationException(e);
-        }
-
-        final String rulesMessage=Utils.loadString(config, "subscription.service.message.rules");
-
-        try {
-          RULES_MESSAGE = new String(rulesMessage.getBytes("ISO8859_1"),coding);
-        } catch (UnsupportedEncodingException e) {
-          throw new InitializationException(e);
-        }
+        SUCCESSFULLY_MESSAGE=Utils.loadString(config, "subscription.service.message.successully");
 
         SQL_INSERT_ABONENT=Utils.loadString(config, "subscription.sql.insert.abonent");
 

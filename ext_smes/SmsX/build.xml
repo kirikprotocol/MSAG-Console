@@ -24,7 +24,7 @@
 
   <target name="compile" depends="init" description="compile the sources">
     <fileset id="sources" dir="${java_src}" includes="**/*.java"/>
-    <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar classes12.jar"/>
+    <fileset id="common_libs" dir="${libs_path}" includes="log4j.jar"/>
     <fileset id="project_libs" dir="lib" includes="*.jar"/>
     <path id="classpath">
       <pathelement location="${java_src}"/>
@@ -47,7 +47,7 @@
     <mkdir dir="${DISTR_DIR}/services/${esme_name}/bin"/>
     <copy todir="${DISTR_DIR}/services/${esme_name}/bin" flatten="yes" preservelastmodified="yes" >
       <fileset refid="project_libs"/>
-      <fileset dir="${libs_path}" includes="log4j.jar classes12.jar"/>
+      <fileset dir="${libs_path}" includes="log4j.jar"/>
       <fileset dir="${java_lib}" includes="${esme_name}.jar"/>
     </copy>
   </target>
@@ -71,24 +71,19 @@
     <mkdir dir="${DISTR_DIR}/services/${esme_name}/logs/redirector"/>
 
     <copy todir="${DISTR_DIR}/services/${esme_name}/config">
-      <fileset dir="config" includes="*.properties"/>
-      <fileset dir="config" includes="*.xml"/>
+      <fileset dir="config" includes="*.*"/>
     </copy>
     <copy todir="${DISTR_DIR}/services/${esme_name}/config/calendar">
-      <fileset dir="config/calendar" includes="*.properties"/>
-      <fileset dir="config/calendar" includes="*.xml"/>
+      <fileset dir="config/calendar" includes="*.*"/>
     </copy>
     <copy todir="${DISTR_DIR}/services/${esme_name}/config/secret">
-      <fileset dir="config/secret" includes="*.properties"/>
-      <fileset dir="config/secret" includes="*.xml"/>
+      <fileset dir="config/secret" includes="*.*"/>
     </copy>
     <copy todir="${DISTR_DIR}/services/${esme_name}/config/sponsored">
-      <fileset dir="config/sponsored" includes="*.properties"/>
-      <fileset dir="config/sponsored" includes="*.xml"/>
+      <fileset dir="config/sponsored" includes="*.*"/>
     </copy>
     <copy todir="${DISTR_DIR}/services/${esme_name}/config/redirector">
-      <fileset dir="config/redirector" includes="*.properties"/>
-      <fileset dir="config/redirector" includes="*.xml"/>
+      <fileset dir="config/redirector" includes="*.*"/>
     </copy>
   </target>
 

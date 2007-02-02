@@ -31,7 +31,7 @@ public class RedirectorService extends InternalService {
       log.info("=====================================================================================");
       log.info("Processing message: from abonent = " + message.getSourceAddress() + ", to abonent = " + message.getDestinationAddress() + ", message = " + message.getMessageString());
 
-      if (!message.getSourceAddress().equals(Properties.SERVICE_ADDRESS)) {
+      if (!message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS)) {
         log.info("Unknown destination address");
         return false;
       }
