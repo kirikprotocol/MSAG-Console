@@ -336,9 +336,7 @@ private:
 class Delete_from_InfoSme_Id_Mapping_By_SmscId : public DBEntityStorageStatement
 {
 public:
-  Delete_from_InfoSme_Id_Mapping_By_SmscId(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()) {}
-
-  ~Delete_from_InfoSme_Id_Mapping_By_SmscId() { delete _iterator; }
+  Delete_from_InfoSme_Id_Mapping_By_SmscId(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
 
   virtual void setString(int pos, const char* val, bool null=false) throw(SQLException);
 
@@ -348,7 +346,6 @@ private:
   std::string _smscId;
   
   InfoSme_Id_Mapping_DBEntityStorage* _dataSource;
-  DbIterator<InfoSme_Id_Mapping_Entity>* _iterator;
 };
 
 #include "InfoSme_Tasks_Stat_DBEntityStorage.hpp"
