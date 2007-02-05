@@ -469,6 +469,7 @@ int SmppInputThread::Execute()
                   if(!proxy)
                   {
                     proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                    proxy->updateSmeInfo(si);
                     info2(log,"SmppProxy: new(%s) %p!",si.systemId.c_str(),proxy);
                   }
                   switch(pdu->get_commandId())
@@ -555,6 +556,7 @@ int SmppInputThread::Execute()
                         if(rebindproxy)
                         {
                           proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
+                          proxy->updateSmeInfo(si);
                           info2(log,"SmppProxy: new backup proxy(%s) %p!",si.systemId.c_str(),proxy);
                           rebindproxy=false;
                         }

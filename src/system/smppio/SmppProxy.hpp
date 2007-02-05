@@ -15,6 +15,7 @@
 #include <string>
 #include <map>
 #include "util/Exception.hpp"
+#include "util/timeslotcounter.hpp"
 
 namespace smsc{
 namespace system{
@@ -31,7 +32,7 @@ const int proxyTransceiver=smeTRX;
 
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock)
+  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock),shapeCounter(5)
   {
     smppReceiverSocket->assignProxy(this);
     dualChannel=false;
@@ -319,6 +320,16 @@ public:
         {
           throw ProxyQueueLimitException(submitCount,submitLimit);
         }
+        if(!ussdSession && shapeLimit>0 && shapeCounter.Get()/5>shapeLimit)
+        {
+          debug2(log,"Shaping limit exceeded for sme '%s' - %d/%d",id.c_str(),shapeCounter.Get()/5,shapeLimit);
+          throw ProxyQueueLimitException(shapeCounter.Get()/5,shapeLimit);
+        }
+        if(shapeLimit>0)
+        {
+          shapeCounter.Inc(1);
+        }
+
         if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
         {
           MutexGuard mg(mutex);
@@ -332,6 +343,7 @@ public:
               info1(log,"SmppProxy::session found, delayed response sent");
               inqueue.Push(it->second->cmd);
               inQueueCount++;
+              limitHash.Delete(it->second->cmd->get_dialogId());
               limitQueue.erase(it->second);
               ussdSessionMap.erase(it);
             }else
@@ -638,6 +650,13 @@ public:
     return dualChannel;
   }
 
+  void updateSmeInfo(const SmeInfo& info)
+  {
+    processLimit=info.proclimit;
+    processTimeout=info.timeout;
+    shapeLimit=info.schedlimit;
+  }
+
 protected:
   smsc::logger::Logger* log;
   mutable Mutex mutex,mutexin,mutexout;
@@ -754,6 +773,9 @@ protected:
   int totalLimit;
   int submitLimit;
   int submitCount;
+
+  smsc::util::TimeSlotCounter<> shapeCounter;
+  int shapeLimit;
 
   bool disconnecting;
   time_t disconnectionStart;
