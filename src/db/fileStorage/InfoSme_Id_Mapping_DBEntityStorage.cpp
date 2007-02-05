@@ -107,12 +107,6 @@ InfoSme_Id_Mapping_DBEntityStorage::putValue(const InfoSme_Id_Mapping_Entity& va
   } else return false;
 }
 
-DbIterator<InfoSme_Id_Mapping_Entity>*
-InfoSme_Id_Mapping_DBEntityStorage::getIterator()
-{
-  return new InfoSme_Id_Mapping_DbIterator(_storage, _storageLock);
-}
-
 int
 InfoSme_Id_Mapping_DBEntityStorage::eraseValue(const InfoSme_Id_Mapping_Entity::Id_Key& key)
 {
@@ -129,28 +123,4 @@ InfoSme_Id_Mapping_DBEntityStorage::eraseValue(const InfoSme_Id_Mapping_Entity::
     _storage->deleteRecord(rid);
     return 1;
   } else return 0;
-}
-
-InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator::InfoSme_Id_Mapping_DbIterator(DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>* storage, smsc::core::synchronization::Mutex& storageLock)
-  : _storage(storage), _storageLock(storageLock), _ridForSequentialBypass(0), _beginIteration(true) {}
-
-bool
-InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator::nextValue(InfoSme_Id_Mapping_Entity* resultValue)
-{
-  smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::operation_status_t status;
-
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid;
-  InfoSme_Id_Mapping_Entity_Adapter record;
-  if ( _beginIteration ) {
-    status = _storage->extractFirstRecord(&record, &rid, &_ridForSequentialBypass);
-    _beginIteration = false;
-  } else
-    status = _storage->extractNextRecord(&record, &rid, &_ridForSequentialBypass);
-
-  if ( status == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ) {
-    *resultValue = record.getAdaptedObjRef();
-    return true;
-  } else
-    return false;
 }
