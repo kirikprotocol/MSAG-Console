@@ -595,12 +595,17 @@ Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate()
   if ( mutex.Get() ) {
     {
       smsc::core::synchronization::RecursiveMutexGuard mutexGuard(*mutex);
-      while(_iterator->nextValue(&resultValue)) {
-        if (resultValue.getSmscId() == _smscId) {
-          eraseRet = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(resultValue.getId()));
-          rowNum += eraseRet;
-        }
+
+      InfoSme_Id_Mapping_Entity resultValue;
+      bool isFetched = _dataSource->findFirstValue(smscid_key, &resultValue);
+      while (isFetched ) {
+        eraseRet = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(resultValue.getId()));
+        if ( !eraseRet )
+          throw SQLException("Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate::: can't delete value by primary key");
+        ++rowNum;
+        isFetched = _dataSource->findNextValue(smscid_key, &resultValue);
       }
+
     }
     smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
     InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.toUnregisterObject(smscid_key);
