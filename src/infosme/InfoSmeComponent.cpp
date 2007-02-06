@@ -62,6 +62,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     Method add_schedule((unsigned)addScheduleMethod, "addSchedule", id_params, StringType);
     Method remove_schedule((unsigned)removeScheduleMethod, "removeSchedule", id_params, StringType);
     Method change_schedule((unsigned)changeScheduleMethod, "changeSchedule", id_params, StringType);
+    Method end_delivery_messages_generation((unsigned)endDeliveryMessagesGenerationMethod, "endDeliveryMessagesGeneration", id_params, StringType);
 
     Parameters ids_params;
     ids_params[ARGUMENT_NAME_IDS] = Parameter(ARGUMENT_NAME_IDS, StringListType);
@@ -151,6 +152,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     Method select_tasks_statistic ((unsigned)selectTasksStatisticMethod, "selectTasksStatistic",
                                    select_statistic_params, StringListType);
 
+    
     methods[start_task_processor.getName()]         = start_task_processor;
     methods[stop_task_processor.getName()]          = stop_task_processor;
     methods[is_task_processor_running.getName()]    = is_task_processor_running;
@@ -176,6 +178,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[add_statistic_record.getName()]         = add_statistic_record;
     methods[select_task_messages.getName()]         = select_task_messages;
     methods[select_tasks_statistic.getName()]       = select_tasks_statistic;
+    methods[end_delivery_messages_generation.getName()] = end_delivery_messages_generation;
 }
 
 InfoSmeComponent::~InfoSmeComponent()
@@ -259,6 +262,9 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
           return selectTaskMessages(args);
         case selectTasksStatisticMethod:
           return selectTasksStatistic(args);
+        case endDeliveryMessagesGenerationMethod:
+          endDeliveryMessagesGeneration(args);
+          break;
         default:
             smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
             throw AdminException("Unknown method \"%s\"", method.getName());
@@ -830,6 +836,25 @@ Variant InfoSmeComponent::selectTasksStatistic(const Arguments& args)
   for (int i=0; i<tasksStatList.Count(); i++)
     result.appendValueToStringList(tasksStatList[i].c_str());
   return result;
+}
+
+void InfoSmeComponent::endDeliveryMessagesGeneration(const Arguments& args)
+{
+    if (!args.Exists(ARGUMENT_NAME_ID)) 
+        error("endDeliveryMessagesGeneration", ARGUMENT_NAME_ID);
+    Variant arg = args[ARGUMENT_NAME_ID];
+    const char* id = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!id || id[0] == '\0')
+        error("endDeliveryMessagesGeneration", ARGUMENT_NAME_ID);
+    
+    try { admin.endDeliveryMessagesGeneration(id);
+    } catch (Exception& exc) {
+        throw AdminException("Failed to add task '%s'. Cause: %s", id, exc.what());
+    } catch (std::exception& exc) {
+        throw AdminException("Failed to add task '%s'. Cause: %s", id, exc.what());
+    } catch (...) {
+        throw AdminException("Failed to add task '%s'. Cause is unknown", id);
+    }
 }
 
 }}

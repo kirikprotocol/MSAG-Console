@@ -38,7 +38,7 @@ namespace smsc { namespace infosme
             addScheduleMethod, removeScheduleMethod, changeScheduleMethod,
             addDeliveryMessagesMethod, changeDeliveryMessageInfoMethod,
             deleteDeliveryMessagesMethod, addStatisticRecordMethod,
-            selectTaskMessagesMethod, selectTasksStatisticMethod
+            selectTaskMessagesMethod, selectTasksStatisticMethod, endDeliveryMessagesGenerationMethod
         };
         
         void error(const char* method, const char* param);
@@ -74,6 +74,7 @@ namespace smsc { namespace infosme
         void addStatisticRecord(const Arguments& args);
         Variant selectTaskMessages(const Arguments& args);
         Variant selectTasksStatistic(const Arguments& args);
+      void endDeliveryMessagesGeneration(const Arguments& args);
     public:
     
         InfoSmeComponent(InfoSmeAdmin& admin);
