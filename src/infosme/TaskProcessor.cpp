@@ -1204,5 +1204,14 @@ Array<std::string> TaskProcessor::getTasksStatistic(const InfoSme_Tasks_Stat_Sea
   return tasksStat;
 }
 
+void
+TaskProcessor::endDeliveryMessagesGeneration(const std::string& taskId)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::endDeliveryMessagesGeneration::: can't get task by taskId='%s'", taskId.c_str());
+  task->endDeliveryMessagesGeneration();
+}
+
 }}
 
