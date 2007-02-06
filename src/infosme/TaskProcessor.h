@@ -451,6 +451,8 @@ namespace smsc { namespace infosme
                                                    const InfoSme_T_SearchCriterion& searchCrit);
 
         virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
+
+        virtual void endDeliveryMessagesGeneration(const std::string& taskId);
     };
 
 }}
