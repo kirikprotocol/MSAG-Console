@@ -54,7 +54,7 @@ Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix,
            DataSource* _dsOwn, DataSource* _dsInt)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
         usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn), dsInt(_dsInt), 
-            bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
+            bInProcess(false), bInGeneration(false), bGenerationSuccess(false),
                 lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     init(config, taskId, tablePrefix);
@@ -475,13 +475,13 @@ bool Task::beginGeneration(Statistics* statistics)
         ownConnection = dsOwn->getConnection();
         if (!ownConnection)
             throw Exception("Failed to obtain connection to own data source.");
-        
+
         trackIntegrity(false, false, intConnection); // insert flag
 
         std::auto_ptr<Statement> userQuery(ownConnection->createStatement(info.querySql.c_str()));
         if (!userQuery.get())
             throw Exception("Failed to create user query statement on own data source.");
-        
+
         std::string newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
         std::auto_ptr<Statement> newMessage(intConnection->createStatement(newMessageSql.c_str()));
         if (!newMessage.get())
@@ -912,8 +912,8 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
-    /*smsc_log_debug(logger, "getNextMessage method called on task '%s'",
-                   info.id.c_str());*/
+    smsc_log_debug(logger, "getNextMessage method called on task '%s'",
+                   info.id.c_str());
     __require__(connection);
 
     if (!isEnabled())
@@ -963,7 +963,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
         int fetched = 0; int uncommited = 0;
         while (rs->fetchNext() && ++fetched <= info.messagesCacheSize)
         {
-          uint64_t    msgId = rs->getUint64(1);
+            uint64_t    msgId = rs->getUint64(1);
             const char* msgAbonent = rs->isNull(2) ? 0 : rs->getString(2);
             const char* msgMessage = rs->isNull(3) ? 0 : rs->getString(3);
             dsInt->stopTimer(wdTimerId);
@@ -1400,6 +1400,17 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
   }
 
   return taskMessages; 
+}
+
+void
+Task::endDeliveryMessagesGeneration()
+{
+  smsc_log_debug(logger, "Task::endDeliveryMessagesGeneration method called on task '%s'",
+                 info.id.c_str());
+
+  MutexGuard guard(inGenerationLock);
+  bInGeneration = false; bGenerationSuccess = true;
+  generationEndEvent.Signal();
 }
 
 }}
