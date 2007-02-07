@@ -23,7 +23,7 @@
         </c:when>
         <c:otherwise>
             <div class=select>
-                <select name="${name}"
+                <c:if test="${!empty label}"><label><fmt:message>${label}</fmt:message>&nbsp;</label></c:if><select name="${name}"
                         <c:if test="${!empty onChange}">
                             onChange="${onChange}"
                         </c:if> >
@@ -36,7 +36,7 @@
                                     selected
                                 </c:if>>${valueTitles[st.count-1]}</option>
                     </c:forEach>
-                </select><c:if test="${!empty label}"><label>&nbsp;<fmt:message>${label}</fmt:message></label></c:if>
+                </select>
             </div>
         </c:otherwise>
     </c:choose>

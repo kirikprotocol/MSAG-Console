@@ -216,7 +216,7 @@
                   <sm-ep:check title="routes.edit.check.active" name="active"/>
                   <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
                   <sm-ep:check title="routes.edit.check.archived" name="archived"/>
-                  <sm-ep:list title="" label="routes.edit.check.slicing" name="slicing" values="${fn:join(bean.slicingTypes,',')}" valueTitles="${fn:join(bean.slicingTypes,',')}"/>                  
+                  <sm-ep:list title="" label="routes.edit.check.slicing" name="slicing" values="${fn:join(bean.slicingTypes,',')}" valueTitles="${fn:join(bean.slicingTypesTitles,',')}"/>                  
                   <sm-pm:space/>
               </sm-ep:properties>
           </td>

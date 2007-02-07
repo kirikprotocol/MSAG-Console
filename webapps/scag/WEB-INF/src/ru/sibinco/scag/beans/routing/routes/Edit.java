@@ -41,6 +41,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean archived;
     private boolean active;
     private String[] slicingTypes = new String[]{"NONE","SAR","UDH"};
+    private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields","Via UDH encoding"};
     private String slicing;
     private String srcSmeId;
     private String notes;
@@ -408,6 +409,10 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public String[] getSlicingTypes() {
         return slicingTypes;
+    }
+
+    public String[] getSlicingTypesTitles() {
+        return slicingTypesTitles;
     }
 
     public String getSlicing() {
