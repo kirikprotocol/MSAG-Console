@@ -1,5 +1,6 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
 <%@ taglib prefix="smf" uri="/scag/func" %>
 <%@ taglib prefix="sm-ep" tagdir="/WEB-INF/tags/edit/properties" %>
 <%@ tag body-content="empty" %>
@@ -11,6 +12,7 @@
 <%@ attribute name="readonly" required="false" %>
 <%@ attribute name="rowId" required="false" %>
 <%@ attribute name="emptyOption" required="false" %>
+<%@ attribute name="label" required="false" %>
 
 <sm-ep:property title="${title}" rowId="${rowId}">
     <c:set var="values" value="${fn:split(values, ',')}"/>
@@ -34,7 +36,7 @@
                                     selected
                                 </c:if>>${valueTitles[st.count-1]}</option>
                     </c:forEach>
-                </select>
+                </select><c:if test="${!empty label}"><label>&nbsp;<fmt:message>${label}</fmt:message></label></c:if>
             </div>
         </c:otherwise>
     </c:choose>

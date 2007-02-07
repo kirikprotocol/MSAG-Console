@@ -40,6 +40,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean enabled;
     private boolean archived;
     private boolean active;
+    private String[] slicingTypes = new String[]{"NONE","SAR","UDH"};
+    private String slicing;
     private String srcSmeId;
     private String notes;
     private String path = "";
@@ -233,6 +235,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             enabled = route.isEnabled();
             archived = route.isArchived();
             active = route.isActive();
+            slicing = route.getSlicing();
             srcSmeId = route.getSrcSmeId();
             notes = route.getNotes();
 
@@ -257,7 +260,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 if (routes.containsKey(id))
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.put(id,
-                        new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(), srcSmeId,
+                        new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(), getSlicing(), srcSmeId,
                                 serviceObj, notes));
                 messagetxt = "Added new route: " + id + " ";
             } else {
@@ -265,7 +268,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 routes.remove(getEditId());
                 routes.put(id,
-                        new Route(id, sources, destinations, archived, enabled, active, srcSmeId,
+                        new Route(id, sources, destinations, archived, enabled, active, getSlicing(), srcSmeId,
                                 serviceObj, notes));
                 messagetxt = "Changed route: " + id + " ";
             }
@@ -401,6 +404,18 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public void setArchived(boolean archived) {
         this.archived = archived;
+    }
+
+    public String[] getSlicingTypes() {
+        return slicingTypes;
+    }
+
+    public String getSlicing() {
+        return slicing;
+    }
+
+    public void setSlicing(final String slicing) {
+        this.slicing = slicing;
     }
 
     public List getAllSmes() {

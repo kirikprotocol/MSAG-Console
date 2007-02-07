@@ -41,12 +41,13 @@ public class Route {
     private boolean archived;
     private boolean enabled = true;
     private boolean active = true;
+    private String slicing;
     private String srcSmeId;
     private Service service;
     private String notes;
 
     public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String srcSmeId, final Service service,
+                 final boolean enabled, final boolean active, final String slicing, final String srcSmeId, final Service service,
                  final String notes) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
@@ -63,6 +64,7 @@ public class Route {
         this.archived = archived;
         this.enabled = enabled;
         this.active = active;
+        this.slicing = slicing;
         this.srcSmeId = srcSmeId;
         this.service = service;
         this.notes = notes;
@@ -80,6 +82,7 @@ public class Route {
         this.archived = false;
         this.enabled = false;
         this.active = false;
+        this.slicing = "NONE";
         this.srcSmeId = "";
         this.service = null;
         this.notes = "";
@@ -98,6 +101,7 @@ public class Route {
         archived = routeElem.getAttribute("archived").equalsIgnoreCase("true");
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
+        slicing = routeElem.getAttribute("slicing");
         srcSmeId = routeElem.getAttribute("srcSmeId");
         final Long serviceId = Long.decode(routeElem.getAttribute("serviceId"));
         this.service = serviceProvidersManager.getServiceById(serviceId);
@@ -176,6 +180,7 @@ public class Route {
                     + "\" archived=\"" + isArchived()
                     + "\" enabled=\"" + isEnabled()
                     + "\" active=\"" + isActive()
+                    + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
                     + "\" serviceId=\"" + getService().getId()
                     + "\">");
@@ -267,6 +272,14 @@ public class Route {
 
     public void setActive(final boolean active) {
         this.active = active;
+    }
+
+    public String getSlicing() {
+        return slicing;
+    }
+
+    public void setSlicing(final String slicing) {
+        this.slicing = slicing;
     }
 
     public String getSrcSmeId() {
