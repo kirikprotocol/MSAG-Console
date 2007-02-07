@@ -6,6 +6,7 @@
 	archived (true | false) #REQUIRED
 	enabled (true | false) "true"
 	active (true|false) "true"
+	slicing CDATA #IMPLIED
 	srcSmeId CDATA #IMPLIED
   serviceId CDATA "-1"
 >
