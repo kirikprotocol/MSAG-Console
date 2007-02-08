@@ -29,7 +29,7 @@ using smsc::logger::Logger;
         bool setCookieParam(ActionContext& context, std::string& str, const char *param_name, bool exists, Cookie *c);
 
     public:
-        CookieAction() : set(false), logger(NULL) {}
+        CookieAction() : set(false) {}
         CookieAction(bool _set) : set(_set), logger(NULL) {}
         ~CookieAction() {}
         virtual bool run(ActionContext& context);

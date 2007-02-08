@@ -1,12 +1,12 @@
 #ifndef _PERS_ACTION_COMMIT_
 #define _PERS_ACTION_COMMIT_
 
-#include "Types.h"
+#include "scag/pers/Types.h"
 #include <string>
 
 #include "scag/re/actions/Action.h"
 #include "scag/re/actions/LongCallAction.h"
-#include "Property.h"
+#include "scag/pers/Property.h"
 
 namespace scag { namespace pers {
 
