@@ -2,7 +2,7 @@
 #define __SCAG_RULE_ENGINE_ACTION_RETURN__
 
 #include "ActionContext.h"
-#include "Action.h"
+#include "scag/re/actions/Action.h"
 
 namespace scag { namespace re { namespace actions {
 
