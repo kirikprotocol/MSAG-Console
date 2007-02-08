@@ -30,7 +30,7 @@ using smsc::logger::Logger;
 
     public:
         CookieAction() : set(false) {}
-        CookieAction(bool _set) : set(_set), logger(NULL) {}
+        CookieAction(bool _set) : set(_set) {}
         ~CookieAction() {}
         virtual bool run(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);
