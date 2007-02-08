@@ -1,8 +1,8 @@
 #ifndef __SCAG_RULE_ENGINE_ACTION_REPLACE__
 #define __SCAG_RULE_ENGINE_ACTION_REPLACE__
 
-#include "ActionContext.h"
-#include "Action.h"
+#include "scag/re/actions/ActionContext.h"
+#include "scag/re/actions/Action.h"
 #include "util/regexp/RegExp.hpp"
 
 
