@@ -45,7 +45,7 @@ class Action : public IParserHandler
 protected:
     Logger * logger;
 public:
-    Action() : logger(0) {};
+    Action() : logger(0) { logger = Logger::getInstance("re.actions") };
     virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
     virtual bool run(ActionContext& context) = 0;
     static FieldType CheckParameter(const SectionParams& params, PropertyObject& propertyObject, const char * actionName, const char * paramName, bool isRequired, bool readOnly, std::string& strParameter, bool& exist);
