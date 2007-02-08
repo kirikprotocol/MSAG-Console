@@ -12,8 +12,6 @@ using namespace scag::pers::client;
 
 typedef scag::util::properties::Property REProperty;
 
-smsc::logger::Logger* PersAction::logger;
-
 const char* PersAction::getStrCmd()
 {
     switch(cmd)
