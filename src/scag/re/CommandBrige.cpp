@@ -271,9 +271,11 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         }
         else SmppDiscriptor.cmdType = CO_DELIVER;
 
+        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
+            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
 
-        SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
+            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
         break;
     case SUBMIT:
@@ -285,16 +287,23 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         }
         else SmppDiscriptor.cmdType = CO_SUBMIT;
 
-        SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
+            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+
+        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
+            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
 
         break;
     case DELIVERY_RESP:
 
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
 
-        SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
+            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+
+        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
+            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+
         SmppDiscriptor.isResp = true;
 
         if (receiptMessageId) SmppDiscriptor.cmdType = CO_RECEIPT;
@@ -316,8 +325,11 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         }
         else SmppDiscriptor.cmdType = CO_SUBMIT;
 
-        SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
-        SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
+            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+
+        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
+            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
         break;
 
     case DATASM:
@@ -342,6 +354,13 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
             break;
 
         }
+
+        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
+            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+
+        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
+            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+
         break;
 
     case DATASM_RESP:
@@ -369,6 +388,12 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
             break;
 
         }
+        if (sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS)) 
+            SmppDiscriptor.lastIndex = sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS);
+
+        if (sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)) 
+            SmppDiscriptor.currentIndex = sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+
         break;
   /*  case PROCESSEXPIREDRESP:
         SmppDiscriptor.isResp = true;
