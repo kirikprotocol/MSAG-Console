@@ -5,7 +5,6 @@
 #include <string>
 
 #include "scag/re/actions/Action.h"
-#include "scag/re/actions/LongCallAction.h"
 #include "scag/pers/Property.h"
 
 namespace scag { namespace pers {
@@ -14,12 +13,10 @@ using namespace scag::re::actions;
 using namespace scag::re;
 using smsc::logger::Logger;
 
-    class PersAction : public LongCallAction
+    class PersAction : public Action
     {
     protected:
         PersCmd cmd;
-        uint32_t lcm_cmd;
-        
         ProfileType profile;
         std::string var;
         FieldType ftValue, ftModValue;
@@ -41,8 +38,7 @@ using smsc::logger::Logger;
         PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN) {}
         PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN) {}
         ~PersAction() {}
-        virtual bool RunBeforePostpone(ActionContext& context);
-        virtual void ContinueRunning(ActionContext& context);
+        virtual bool run(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);
     };
 
