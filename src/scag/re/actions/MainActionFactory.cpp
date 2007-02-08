@@ -17,6 +17,8 @@
 #include "scag/re/actions/str/ActionSubstr.h"
 #include "scag/re/actions/str/ActionConcat.h"
 #include "scag/re/actions/str/ActionIndexof.h"
+#include "scag/re/actions/str/ActionLength.h"
+#include "scag/re/actions/str/ActionReplace.h"
 
 #include "scag/re/actions/bill/BillActionOpen.h"
 #include "scag/re/actions/bill/BillActionClose.h"
@@ -29,8 +31,6 @@
 #include "scag/re/actions/smpp/ActionRedirect.h"
 #include "scag/re/actions/smpp/ActionTLV.h"
 
-#include "scag/re/actions/ActionLength.h"
-#include "scag/re/actions/ActionReplace.h"
 
 
 

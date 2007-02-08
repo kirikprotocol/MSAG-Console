@@ -36,6 +36,8 @@ bool ActionBillMoveWait::run(ActionContext& context)
     try
     {
         RegisterPending(context, context.getCurrentOperationBillID());
+        Operation * operation = context.GetCurrentOperation();
+        if (operation) operation->detachBill();
     } catch (SCAGException& e)
     {
         smsc_log_error(logger, "Action '%s': Cannot process. Details: %s", m_ActionName.c_str(), e.what());
