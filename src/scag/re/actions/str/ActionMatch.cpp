@@ -18,8 +18,6 @@ bool ActionMatch::FinishXMLSubSection(const std::string& name)
 
 void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     FieldType ft, ftRegexp;
     std::string temp;
     bool bExist;

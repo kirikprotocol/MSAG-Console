@@ -15,8 +15,6 @@ Hash<int> ActionTLV::InitNames()
 
 void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     bool bExist;
 
     tag = 0;

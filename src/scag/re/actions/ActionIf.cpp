@@ -13,7 +13,6 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 
 void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
     propertyObject = _propertyObject;
 
     std::string temp;

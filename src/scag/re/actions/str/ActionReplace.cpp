@@ -18,8 +18,6 @@ bool ActionReplace::FinishXMLSubSection(const std::string& name)
 
 void ActionReplace::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     paramVar = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "var", true, true, logger));
     paramRegexp = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "regexp", true, true, logger));
     paramValue = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "value", true, true, logger));

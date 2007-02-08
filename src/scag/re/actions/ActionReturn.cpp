@@ -12,8 +12,6 @@ ActionReturn::~ActionReturn()
 
 void ActionReturn::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     FieldType ft;
     std::string temp;
     bool bExist;

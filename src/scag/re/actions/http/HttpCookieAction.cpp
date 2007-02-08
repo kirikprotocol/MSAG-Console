@@ -9,8 +9,6 @@ void CookieAction::init(const SectionParams& params, PropertyObject propertyObje
 {
     const char * name = 0;
     bool bExist;
-    if(!logger) 
-        logger = Logger::getInstance("scag.cookie.action");
 
     CheckParameter(params, propertyObject, "cookie", "name", true, true, strName, bExist);
     CheckParameter(params, propertyObject, "cookie", "value", true, set, strValue, bExist);

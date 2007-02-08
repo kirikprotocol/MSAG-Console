@@ -57,7 +57,6 @@ bool ActionTrafficCheck::FinishXMLSubSection(const std::string& name)
 
 void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
     propertyObject = _propertyObject;
 
     FieldType ft;

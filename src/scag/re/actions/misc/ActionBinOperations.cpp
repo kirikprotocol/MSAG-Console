@@ -6,9 +6,6 @@ namespace scag { namespace re { namespace actions {
        
 void ActionBinOperation::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
-
     std::string temp;
     bool bExist;
     FieldType ft;

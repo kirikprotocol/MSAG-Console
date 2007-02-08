@@ -15,7 +15,6 @@ enum{
 class ActionTLV : public Action
 {
     ActionTLV(const ActionTLV &);
-    Logger * logger;
     
     int type, tag, val;
     std::string strVar, strTag;

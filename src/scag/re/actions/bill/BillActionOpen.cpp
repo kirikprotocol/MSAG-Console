@@ -13,8 +13,6 @@ BillActionOpen::BillActionOpen(bool waitOperation)
 
 void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.bill.actions");
-
     FieldType ft;
     std::string temp;
     bool bExist;

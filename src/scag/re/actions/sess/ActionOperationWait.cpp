@@ -18,7 +18,6 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
 {
     m_ActionName = "operation:wait";
 
-    logger = Logger::getInstance("scag.re");
     InitParameters(params,propertyObject);
 }
 

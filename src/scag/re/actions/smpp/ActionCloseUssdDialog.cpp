@@ -18,8 +18,6 @@ void ActionCloseUssdDialog::init(const SectionParams& params,PropertyObject prop
 {
     if (propertyObject.HandlerId != EH_SUBMIT_SM) 
         throw SCAGException("Action 'smpp:close_ussd_dialog' Error. Details: Action can be used only in 'SUBMIT_SM' handler.");
-    
-    logger = Logger::getInstance("scag.re");
 }
 
 bool ActionCloseUssdDialog::run(ActionContext& context)

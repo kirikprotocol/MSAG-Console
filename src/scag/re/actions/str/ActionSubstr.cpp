@@ -5,8 +5,6 @@ namespace scag { namespace re { namespace actions {
 
 void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     FieldType ft;
     bool bExist;
 

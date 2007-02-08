@@ -119,8 +119,6 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
     bool bExist;
     std::string msg;
 
-    logger = Logger::getInstance("scag.re");
-
     propertyObject = _propertyObject;
 
     terminal = false;

@@ -74,7 +74,6 @@ class ActionIf : public Action, ComplexActionLongCallHelper
     bool FillElseSection;
     std::vector<Action *> ThenActions;
     std::vector<Action *> ElseActions;
-    Logger * logger;
 protected:
 
 //////////////IParserHandler Interfase///////////////////////

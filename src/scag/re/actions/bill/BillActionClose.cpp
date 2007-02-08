@@ -5,9 +5,6 @@ namespace scag { namespace re { namespace actions {
 
 void BillActionClose::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.bill.actions");
-
-
     if (params.Exists("action")) 
     {
         std::string str = params["action"];

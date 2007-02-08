@@ -18,8 +18,6 @@ void ActionBillMoveWait::init(const SectionParams& params, PropertyObject proper
 {
     m_ActionName = "operation:bill_move_wait";
 
-    logger = Logger::getInstance("scag.re");
-
     FieldType ft;
     bool bExist;
 

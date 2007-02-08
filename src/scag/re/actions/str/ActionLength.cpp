@@ -5,8 +5,6 @@ namespace scag { namespace re { namespace actions {
 
 void ActionLength::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     paramVar    = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "length", "var", true, true, logger));
     paramResult = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "length", "result", true, false, logger));
     

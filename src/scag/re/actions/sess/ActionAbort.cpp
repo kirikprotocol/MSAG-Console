@@ -17,7 +17,6 @@ bool ActionAbort::FinishXMLSubSection(const std::string& name)
 
 void ActionAbort::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
 
     //if (params.GetCount()) throw SCAGException("Action 'session:abort' must have no parameters");
 }

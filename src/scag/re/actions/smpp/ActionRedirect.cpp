@@ -5,8 +5,6 @@ namespace scag { namespace re { namespace actions {
 
 void ActionRedirect::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    logger = Logger::getInstance("scag.re");
-
     if ((propertyObject.HandlerId != EH_SUBMIT_SM)&&(propertyObject.HandlerId != EH_DELIVER_SM)&&(propertyObject.HandlerId != EH_DATA_SM))
         throw SCAGException("Action 'redirect' Error. Details: Action can be used only in 'SUBMIT_SM', 'DELIVER_SM' or 'DATA_SM' handler.");
 

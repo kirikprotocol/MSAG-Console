@@ -21,8 +21,6 @@ using smsc::logger::Logger;
         std::string strExpires;
         FieldType ftName, ftValue, ftPath, ftDomain, ftExpires;
 
-        Logger * logger;
-
         virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
         virtual bool FinishXMLSubSection(const std::string& name);
 
