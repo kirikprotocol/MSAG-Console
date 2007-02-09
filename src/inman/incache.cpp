@@ -83,15 +83,11 @@ bool AbonentCache::close(void)
 }
 
 //Returns: 0 - update, 1 - addition
-int AbonentCache::ramInsert(const AbonentId & ab_number,
-                            const AbonentRecord & ab_rec)
+int AbonentCache::ramInsert(const AbonentId & ab_number, const AbonentRecord & ab_rec)
 {
     int status = 0; 
     AbonentRecordRAM    ramRec(ab_rec);
     AbonentRecordRAM *  pabRec = cache.GetPtr(ab_number.getSignals());
-
-    if (!ramRec.tm_queried)
-        ramRec.tm_queried = time(NULL);
 
     if (!pabRec) {
         if (accList.size() >= maxRamIt) {
@@ -109,7 +105,7 @@ int AbonentCache::ramInsert(const AbonentId & ab_number,
     return status;
 }
 
-AbonentRecord * AbonentCache::ramLookUp(AbonentId & ab_number)
+AbonentRecord * AbonentCache::ramLookUp(const AbonentId & ab_number)
 {
     AbonentRecordRAM * pabRec = cache.GetPtr(ab_number.getSignals());
     if (pabRec) {
@@ -151,7 +147,7 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number,
                     ab_rec.type2Str(), ab_rec.gsmSCF.toString().c_str());
 }
 
-AbonentBillType AbonentCache::getAbonentInfo(AbonentId & ab_number,
+AbonentBillType AbonentCache::getAbonentInfo(const AbonentId & ab_number,
                                              AbonentRecord * p_ab_rec/* = NULL*/)
 {
     MutexGuard  guard(cacheGuard);

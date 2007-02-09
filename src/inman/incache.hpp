@@ -45,8 +45,8 @@ public:
     ~AbonentCache();
 
     // -- AbonentCacheITF interface methods
-    AbonentBillType getAbonentInfo(AbonentId & ab_number,
-                                           AbonentRecord * ab_rec = NULL);
+    AbonentBillType getAbonentInfo(const AbonentId & ab_number,
+                                   AbonentRecord * ab_rec = NULL);
     void setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec);
 
 protected:
@@ -59,11 +59,14 @@ protected:
         AbonentRecordRAM() : AbonentRecord()
         { }
         AbonentRecordRAM(const AbonentRecord & ab_rec) : AbonentRecord(ab_rec)
-        { }
+        { 
+            if (!tm_queried)
+                tm_queried = time(NULL);
+        }
     };
 
     int  ramInsert(const AbonentId & ab_number, const AbonentRecord & ab_rec);
-    AbonentRecord * ramLookUp(AbonentId & ab_number);
+    AbonentRecord * ramLookUp(const AbonentId & ab_number);
 
     // -- DiskHash interfaces implementation
 
@@ -106,7 +109,10 @@ protected:
         AbonentHashData() : AbonentRecord()
         { }
         AbonentHashData(const AbonentRecord & ab_rec) : AbonentRecord(ab_rec)
-        { }
+        { 
+            if (!tm_queried)
+                tm_queried = time(NULL);
+        }
 
         AbonentRecord * getAbonentRecord(void) { return (AbonentRecord *)this; }
 

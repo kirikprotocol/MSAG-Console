@@ -32,8 +32,9 @@ struct AbonentRecord : public AbonentContractInfo {
 
     void reset(void)    { tm_queried = 0; AbonentContractInfo::Reset(); }
 
+    //NOTE: tm_queried = zero, means record ALWAYS expired!
     inline bool isExpired(long interval) const
-    { return tm_queried ? (bool)(time(NULL) >= (tm_queried + interval)) : false; }
+    { return (bool)(time(NULL) >= (tm_queried + interval)); }
 
     AbonentRecord& operator= (const AbonentContractInfo & ab_info)
     {
@@ -47,7 +48,7 @@ typedef AbonentRecord::ContractType AbonentBillType;
 
 class AbonentCacheITF {
 public:
-    virtual AbonentBillType getAbonentInfo(AbonentId & ab_number,
+    virtual AbonentBillType getAbonentInfo(const AbonentId & ab_number,
                                            AbonentRecord * ab_rec = NULL) = 0;
     virtual void setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec) = 0;
 };
