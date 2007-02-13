@@ -50,8 +50,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private byte[] billingSystemsOrder = {0, 1, 2, 3};
 
-  private boolean bannerEngineEnabled = false;
-
   private String bannerEngineServiceName = "UniBalance";
   private int bannerEngineClientID = 1;
   private int bannerEngineTransportType = 1;
@@ -63,7 +61,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String bannerEngineClientPort = "8555";
   private String bannerEngineClientTimeout = "1000";
   private String bannerEngineClientReconnectTimeout = "1000";
-
 
   private boolean smsResponseMode = false;
 
@@ -95,8 +92,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private Map cbossStatements = new HashMap();
   private Map inManStatements = new HashMap();
-
-  private AdvCore bannerEngine;
 
   private ProductivityControlObject requests;
   private ProductivityControlObject responses;
@@ -212,60 +207,54 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       throw new InitializationException("Invalid value for config parameter \"max.processing.requests.count\": " + config.getProperty("max.processing.requests.count"));
     }
 
-    bannerEngineEnabled = Boolean.valueOf(config.getProperty("banner.engine.enabled", Boolean.toString(bannerEngineEnabled))).booleanValue();
+    bannerEngineClientEnabled = Boolean.valueOf(config.getProperty("banner.engine.client.enabled", Boolean.toString(bannerEngineClientEnabled))).booleanValue();
+    if (bannerEngineClientEnabled) {
 
-    bannerEngineServiceName = config.getProperty("banner.engine.service.name", bannerEngineServiceName);
-    if (bannerEngineServiceName.length() == 0) {
-      throw new InitializationException("Mandatory config parameter \"banner.engine.service.name\" is missed");
-    }
-    try {
-      bannerEngineClientID = Integer.parseInt(config.getProperty("banner.engine.client.id", Integer.toString(bannerEngineClientID)));
-    } catch (NumberFormatException e) {
-      throw new InitializationException("Invalid value for config parameter \"banner.engine.client.id\": " + config.getProperty("banner.engine.client.id"));
-    }
-    try {
-      bannerEngineTransportType = Integer.parseInt(config.getProperty("banner.engine.transport.type", Integer.toString(bannerEngineTransportType)));
-    } catch (NumberFormatException e) {
-      throw new InitializationException("Invalid value for config parameter \"banner.engine.transport.type\": " + config.getProperty("banner.engine.transport.type"));
-    }
-    try {
-      bannerEngineCharSet = Integer.parseInt(config.getProperty("banner.engine.charset", Integer.toString(bannerEngineCharSet)));
-    } catch (NumberFormatException e) {
-      throw new InitializationException("Invalid value for config parameter \"banner.engine.charset\": " + config.getProperty("banner.engine.charset"));
-    }
-
-    if (bannerEngineEnabled) {
-      bannerEngine = AdvCore.getInstance();
-      bannerEngine.init();
-    } else {
-      bannerEngineClientEnabled = Boolean.valueOf(config.getProperty("banner.engine.client.enabled", Boolean.toString(bannerEngineClientEnabled))).booleanValue();
-      if (bannerEngineClientEnabled) {
-
-        bannerEngineClientHost = config.getProperty("banner.engine.client.host", bannerEngineClientHost);
-        if (bannerEngineClientHost.length() == 0) {
-          throw new InitializationException("Mandatory config parameter \"banner.engine.client.host\" is missed");
-        }
-        bannerEngineClientPort = config.getProperty("banner.engine.client.port", bannerEngineClientPort);
-        if (bannerEngineClientPort.length() == 0) {
-          throw new InitializationException("Mandatory config parameter \"banner.engine.client.port\" is missed");
-        }
-        bannerEngineClientTimeout = config.getProperty("banner.engine.client.timeout", bannerEngineClientTimeout);
-        if (bannerEngineClientTimeout.length() == 0) {
-          throw new InitializationException("Mandatory config parameter \"banner.engine.client.timeout\" is missed");
-        }
-        bannerEngineClientReconnectTimeout = config.getProperty("banner.engine.client.reconnect.timeout", bannerEngineClientReconnectTimeout);
-        if (bannerEngineClientReconnectTimeout.length() == 0) {
-          throw new InitializationException("Mandatory config parameter \"banner.engine.client.reconnect.timeout\" is missed");
-        }
-        Properties bannerEngineClientConfig = new Properties();
-        bannerEngineClientConfig.put("ip", bannerEngineClientHost);
-        bannerEngineClientConfig.put("port", bannerEngineClientPort);
-        bannerEngineClientConfig.put("CLIENTTIMEOUT", bannerEngineClientTimeout);
-        bannerEngineClientConfig.put("WATCHDOGSLEEP", bannerEngineClientReconnectTimeout);
-
-        bannerEngineClient = new AdvertisingClientImpl();
-        bannerEngineClient.init(bannerEngineClientConfig);
+      bannerEngineServiceName = config.getProperty("banner.engine.service.name", bannerEngineServiceName);
+      if (bannerEngineServiceName.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"banner.engine.service.name\" is missed");
       }
+      try {
+        bannerEngineClientID = Integer.parseInt(config.getProperty("banner.engine.client.id", Integer.toString(bannerEngineClientID)));
+      } catch (NumberFormatException e) {
+        throw new InitializationException("Invalid value for config parameter \"banner.engine.client.id\": " + config.getProperty("banner.engine.client.id"));
+      }
+      try {
+        bannerEngineTransportType = Integer.parseInt(config.getProperty("banner.engine.transport.type", Integer.toString(bannerEngineTransportType)));
+      } catch (NumberFormatException e) {
+        throw new InitializationException("Invalid value for config parameter \"banner.engine.transport.type\": " + config.getProperty("banner.engine.transport.type"));
+      }
+      try {
+        bannerEngineCharSet = Integer.parseInt(config.getProperty("banner.engine.charset", Integer.toString(bannerEngineCharSet)));
+      } catch (NumberFormatException e) {
+        throw new InitializationException("Invalid value for config parameter \"banner.engine.charset\": " + config.getProperty("banner.engine.charset"));
+      }
+
+      bannerEngineClientHost = config.getProperty("banner.engine.client.host", bannerEngineClientHost);
+      if (bannerEngineClientHost.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"banner.engine.client.host\" is missed");
+      }
+      bannerEngineClientPort = config.getProperty("banner.engine.client.port", bannerEngineClientPort);
+      if (bannerEngineClientPort.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"banner.engine.client.port\" is missed");
+      }
+      bannerEngineClientTimeout = config.getProperty("banner.engine.client.timeout", bannerEngineClientTimeout);
+      if (bannerEngineClientTimeout.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"banner.engine.client.timeout\" is missed");
+      }
+      bannerEngineClientReconnectTimeout = config.getProperty("banner.engine.client.reconnect.timeout", bannerEngineClientReconnectTimeout);
+      if (bannerEngineClientReconnectTimeout.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"banner.engine.client.reconnect.timeout\" is missed");
+      }
+      Properties bannerEngineClientConfig = new Properties();
+      bannerEngineClientConfig.put("ip", bannerEngineClientHost);
+      bannerEngineClientConfig.put("port", bannerEngineClientPort);
+      bannerEngineClientConfig.put("CLIENTTIMEOUT", bannerEngineClientTimeout);
+      bannerEngineClientConfig.put("WATCHDOGSLEEP", bannerEngineClientReconnectTimeout);
+
+      bannerEngineClient = new AdvertisingClientImpl();
+      bannerEngineClient.init(bannerEngineClientConfig);
+
     }
     boolean productivityControllerEnabled = Boolean.valueOf(config.getProperty("productivity.controller.enabled", "true")).booleanValue();
     if (productivityControllerEnabled) {
@@ -454,7 +443,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
     synchronized (state) {
-      if (((state.isBalanceReady() && (state.isBannerReady() || !(bannerEngineEnabled || bannerEngineClientEnabled))) || state.isError()) && !state.isClosed())
+      if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed())
       {
         if (state.isError() || state.getAbonentResponse() == null) {
           Message message = new Message();
@@ -560,7 +549,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private void sendResponse(RequestState state) {
     Message msg = state.getAbonentResponse();
-    if ((bannerEngineEnabled || bannerEngineClientEnabled)&& !state.isError()) {
+    if (bannerEngineClientEnabled && !state.isError()) {
       String banner = state.getBanner();
       if (banner != null && banner.length() > 0) {
         MessageFormat bannerFormat = new MessageFormat(bannerAddPattern);
@@ -630,7 +619,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       state = new RequestState(message, abonentRequestTime);
       addRequestState(state);
       threadsPool.execute(new BalanceProcessor(this, state));
-      if (bannerEngineEnabled || bannerEngineClientEnabled) {
+      if (bannerEngineClientEnabled) {
         threadsPool.execute(new BannerRequestThread(state));
       }
     } else {  // mg response
@@ -734,11 +723,8 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     synchronized (bannerEngineTransactionIdSyncMonitor) {
       transactionId = bannerEngineTransactionId++;
     }
-    byte[] banner=null;
-    if(bannerEngineEnabled){
-      banner = bannerEngine.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
-    }
-    if(bannerEngineClientEnabled){
+    byte[] banner = null;
+    if (bannerEngineClientEnabled) {
       banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
     }
     if (banner == null) {
