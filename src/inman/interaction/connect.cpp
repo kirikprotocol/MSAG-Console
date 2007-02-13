@@ -105,9 +105,12 @@ ConnectAC::ConnectState Connect::onReadEvent(void)
 }
 
 //passes Connect exception to connect listeners
-ConnectAC::ConnectState Connect::onErrorEvent()
+ConnectAC::ConnectState Connect::onErrorEvent(bool abort/* = false*/)
 {
-    _exc.reset(new CustomException("%s: socket error, code %u: %s", _logId, errno,
+    if (abort)
+        _exc.reset(new CustomException("%s: socket is to be aborted", _logId));
+    else
+        _exc.reset(new CustomException("%s: socket error, code %u: %s", _logId, errno,
                                     errno ? strerror(errno) : ""));
     notifyByExc();
     //unconditionally close connection

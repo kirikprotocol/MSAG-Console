@@ -47,6 +47,7 @@ public:
     bool     Start(void);
     void     Stop(unsigned timeOut_msecs = 400);
     SrvState State(void);
+    inline void WaitFor(void) { Thread::WaitFor(); }
 
 protected:
     typedef std::map<unsigned, ConnectAC*> ConnectsMap;

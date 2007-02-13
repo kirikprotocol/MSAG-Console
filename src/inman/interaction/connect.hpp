@@ -94,10 +94,14 @@ public:
     virtual ~Connect() { }
 
     // -- ConnectAC iterface methods:
-    //Accumulates packets from socket and passes them to listeners
+    //Accumulates packets from socket and passes them to listeners,
+    //called if EOF notification or data for reading arrived on socket,
+    //connect may be closed depending on returned status.
     ConnectAC::ConnectState onReadEvent(void);
-    //Notifies connect listeners about error
-    ConnectAC::ConnectState onErrorEvent(void);
+    //Notifies connect listeners about error,
+    //called if error condition is pending on socket or socket is to be
+    //abnormally closed (aborted).
+    ConnectAC::ConnectState onErrorEvent(bool abort = false);
 
     //sends bytes directly to socket, 
     //returns -1 on error, otherwise - number of bytes sent

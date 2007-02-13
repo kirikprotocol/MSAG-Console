@@ -59,6 +59,7 @@ ConnectAC * ConnectSrv::rlseConnection(unsigned conn_id)
     if (it != connects.end()) {
         conn = (*it).second;
         connects.erase(it);
+        smsc_log_debug(logger, "ConnSrv: Connect[%u] released.", conn->getId());
     }
     return conn;
 }
@@ -104,21 +105,30 @@ void ConnectSrv::Stop(unsigned int timeOut_msecs/* = 400*/)
 //Closes and deletes all connections
 void ConnectSrv::closeAllConnects(bool abort/* = false*/)
 {
-    MutexGuard grd(_mutex);
+    _mutex.Lock();
     if (!connects.empty()) {
         smsc_log_debug(logger, "ConnSrv: %s %u connects ..", abort ? "killing" : "closing",
                        connects.size());
-        ConnectsMap::iterator it = connects.begin();
-        while (it != connects.end()) {
-            ConnectsMap::iterator cit = it; it++;
-            ConnectAC* conn = (*cit).second;
+        do {
+            ConnectsMap::iterator it = connects.begin();
+            ConnectAC* conn = (*it).second;
+            connects.erase(it);
+            _mutex.Unlock();
             unsigned sockId = conn->getId();
-            conn->Close(abort);
+            try {
+                conn->onErrorEvent(true); 
+                conn->Close(abort);
+            } catch (const std::exception & exc) {
+                smsc_log_error(logger, "ConnSrv: Connect[%u] exception: %s", sockId,
+                           exc.what());
+            }
             delete conn;
-            smsc_log_debug(logger, "ConnSrv: Connect[%u] closed.", (unsigned)sockId);
-            connects.erase(cit);
-        } 
+            smsc_log_debug(logger, "ConnSrv: Connect[%u] closed.", sockId);
+
+            _mutex.Lock();
+        } while (!connects.empty());
     }
+    _mutex.Unlock();
 }
 
 void ConnectSrv::closeConnect(ConnectAC* conn, bool abort/* = false*/)

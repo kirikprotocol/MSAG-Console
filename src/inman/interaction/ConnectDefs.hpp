@@ -35,8 +35,12 @@ public:
         _state = connEOF;
     }
 
+    //called if EOF notification or data for reading arrived on socket,
+    //connect may be closed depending on returned status.
     virtual ConnectState onReadEvent(void) = 0;
-    virtual ConnectState onErrorEvent(void) = 0;
+    //called if error condition is pending on socket or socket is to be
+    //abnormally closed (aborted).
+    virtual ConnectState onErrorEvent(bool abort = false) = 0;
 
 protected:
     ConnectState  _state;
