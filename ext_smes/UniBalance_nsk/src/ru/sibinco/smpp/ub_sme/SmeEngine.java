@@ -1,7 +1,6 @@
 package ru.sibinco.smpp.ub_sme;
 
 import com.logica.smpp.Data;
-import com.lorissoft.advertising.core.AdvCore;
 import com.lorissoft.advertising.syncclient.IAdvertisingClient;
 import com.lorissoft.advertising.syncclient.AdvertisingClientImpl;
 import ru.aurorisoft.smpp.*;
@@ -254,8 +253,8 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
       bannerEngineClient = new AdvertisingClientImpl();
       bannerEngineClient.init(bannerEngineClientConfig);
-
     }
+
     boolean productivityControllerEnabled = Boolean.valueOf(config.getProperty("productivity.controller.enabled", "true")).booleanValue();
     if (productivityControllerEnabled) {
       ProductivityController productivityController = new ProductivityController();

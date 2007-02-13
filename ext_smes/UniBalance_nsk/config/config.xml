@@ -33,7 +33,7 @@
 			custom - если используется SmartDataAPI
 			default - для простых DataAPI
 		-->
-		<ALGORITHM name="AlgorithmSingleEditionMTS" type="default"></ALGORITHM>
+		<ALGORITHM name="AlgorithmSingleEditionMTS2" type="default"></ALGORITHM>
 		<!-- параметры DataAPI который будет подключаться
 			name - класс(с указанием package где он находиться)
 			который будет использоваться при работе сервера,
@@ -43,7 +43,7 @@
 			confpath - путь к файлу конфигурации DataAPI,
 			./config/DataAPI.properties
 		-->
-		<DATAAPI name="com.lorissoft.advertising.hashfile.HashFileDataAPI"
+		<DATAAPI name="com.lorissoft.advertising.hashfile.dataapi.HashFileDataAPI"
 			confpath="./config/DataAPI.xml">
 		</DATAAPI>
 		<!-- параметры WebDataAPI который будет подключаться
@@ -56,7 +56,7 @@
 			./config/DataAPI.properties
 		-->
 		<WEBDATAAPI
-			name="com.lorissoft.advertising.hashfile.WebFileDataAPI"
+			name="com.lorissoft.advertising.hashfile.dataapi.WebFileDataAPI"
 			confpath="./config/DataAPI.xml">
 		</WEBDATAAPI>
 
@@ -68,6 +68,7 @@
 		<!-- путь к библиотеке для работы с RMI, осуществляющего контроль сервера -->
 		<CODEBASE path="file://../lib/adv-control.jar"></CODEBASE>
 	</PARAMS>
+
 </CONFIG>
 
 

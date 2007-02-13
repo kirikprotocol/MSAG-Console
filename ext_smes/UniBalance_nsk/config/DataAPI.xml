@@ -5,13 +5,13 @@
 	<PROPERTY name="fileBaseDir" value="./adv_data/" />
 
 	<!-- memory mapped mode [true/false] -->
-	<PROPERTY name="memoryMapped" value="true" />
+	<PROPERTY name="memoryMapped" value="false" />
 
 	<!-- init record number for click counters -->
-	<PROPERTY name="clickSize" value="1000000" />
+	<PROPERTY name="clickSize" value="50000" />
 
 	<!-- shema defined used files (MTS/CUSTOM) -->
-	<PROPERTY name="schema" value="CUSTOM" />
+	<PROPERTY name="schema" value="MTS2" />
 
 	<!--FOR HASHFILE BASED DataAPI -->
 	<PROPERTY name="serverInterfaceURL" value="//127.0.0.1/rmidataapi" />

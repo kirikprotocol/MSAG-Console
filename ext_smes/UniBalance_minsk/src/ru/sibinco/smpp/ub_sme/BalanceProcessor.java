@@ -72,8 +72,6 @@ public class BalanceProcessor extends Thread {
     CallableStatement stmt = null;
     ResultSet rs = null;
     try {
-      //connection = smeEngine.getCbossConnection();
-      //stmt = connection.prepareCall(smeEngine.getCbossQuery());
       stmt = smeEngine.getCbossStatement();
       if (stmt == null) {
         logger.error("Couldn't get CBOSS statement");
@@ -192,7 +190,12 @@ public class BalanceProcessor extends Thread {
     try {
       process();
     } catch (Throwable t) {
-      logger.error(getName() + ": Unexpected exception occured during processing request.", t);
+      synchronized (state) {
+        state.setError(true);
+      }
+      if (logger.isInfoEnabled())
+        logger.info("Can not get balance for " + state.getAbonentRequest().getSourceAddress());
+      logger.error("Unexpected exception occured during processing request.", t);
     }
   }
 
