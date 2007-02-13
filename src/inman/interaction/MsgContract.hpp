@@ -131,7 +131,9 @@ protected:
         {
             std::string stmp;
             in >> stmp;
-            if (!cntrInfo.gsmSCF.scfAddress.fromText(stmp.c_str()))
+            if (stmp.empty())
+                cntrInfo.gsmSCF.scfAddress.clear();
+            else if (!cntrInfo.gsmSCF.scfAddress.fromText(stmp.c_str()))
                 throw SerializerException("invalid gsmSCF address",
                                           SerializerException::invObjData, stmp.c_str());
         }
