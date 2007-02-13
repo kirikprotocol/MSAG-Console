@@ -2,6 +2,8 @@ package ru.sibinco.smpp.ub_sme;
 
 import com.logica.smpp.Data;
 import com.lorissoft.advertising.core.AdvCore;
+import com.lorissoft.advertising.syncclient.IAdvertisingClient;
+import com.lorissoft.advertising.syncclient.AdvertisingClientImpl;
 import ru.aurorisoft.smpp.*;
 import ru.sibinco.util.threads.ThreadsPool;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
@@ -55,6 +57,14 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private int bannerEngineTransportType = 1;
   private int bannerEngineCharSet = 1;
 
+  private boolean bannerEngineClientEnabled = false;
+  private IAdvertisingClient bannerEngineClient;
+  private String bannerEngineClientHost = "localhost";
+  private String bannerEngineClientPort = "8555";
+  private String bannerEngineClientTimeout = "1000";
+  private String bannerEngineClientReconnectTimeout = "1000";
+
+
   private boolean smsResponseMode = false;
 
   private DecimalFormatSymbols decimalFormatSymbols;
@@ -91,6 +101,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private ProductivityControlObject requests;
   private ProductivityControlObject responses;
   private ProductivityControlObject waitForSmsResponses;
+
+  private int bannerEngineTransactionId;
+  private final Object bannerEngineTransactionIdSyncMonitor = new Object();
 
   public void init(Properties config) throws InitializationException {
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init started");
@@ -173,7 +186,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     } catch (NumberFormatException e) {
       throw new InitializationException("Invalid value for config parameter \"response.pattern.config.check.interval\": " + config.getProperty("response.pattern.config.check.interval"));
     }
-    (new ResponcePatternConfigController(responsePatternConfigFileCheckInterval)).startService();
+    (new ResponsePatternConfigController(responsePatternConfigFileCheckInterval)).startService();
 
     smsResponseMode = Boolean.valueOf(config.getProperty("sms.response.mode", "false")).booleanValue();
 
@@ -199,33 +212,61 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       throw new InitializationException("Invalid value for config parameter \"max.processing.requests.count\": " + config.getProperty("max.processing.requests.count"));
     }
 
-    bannerEngineEnabled = Boolean.valueOf(config.getProperty("banner.engine.enabled", "true")).booleanValue();
+    bannerEngineEnabled = Boolean.valueOf(config.getProperty("banner.engine.enabled", Boolean.toString(bannerEngineEnabled))).booleanValue();
+
+    bannerEngineServiceName = config.getProperty("banner.engine.service.name", bannerEngineServiceName);
+    if (bannerEngineServiceName.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"banner.engine.service.name\" is missed");
+    }
+    try {
+      bannerEngineClientID = Integer.parseInt(config.getProperty("banner.engine.client.id", Integer.toString(bannerEngineClientID)));
+    } catch (NumberFormatException e) {
+      throw new InitializationException("Invalid value for config parameter \"banner.engine.client.id\": " + config.getProperty("banner.engine.client.id"));
+    }
+    try {
+      bannerEngineTransportType = Integer.parseInt(config.getProperty("banner.engine.transport.type", Integer.toString(bannerEngineTransportType)));
+    } catch (NumberFormatException e) {
+      throw new InitializationException("Invalid value for config parameter \"banner.engine.transport.type\": " + config.getProperty("banner.engine.transport.type"));
+    }
+    try {
+      bannerEngineCharSet = Integer.parseInt(config.getProperty("banner.engine.charset", Integer.toString(bannerEngineCharSet)));
+    } catch (NumberFormatException e) {
+      throw new InitializationException("Invalid value for config parameter \"banner.engine.charset\": " + config.getProperty("banner.engine.charset"));
+    }
+
     if (bannerEngineEnabled) {
       bannerEngine = AdvCore.getInstance();
       bannerEngine.init();
+    } else {
+      bannerEngineClientEnabled = Boolean.valueOf(config.getProperty("banner.engine.client.enabled", Boolean.toString(bannerEngineClientEnabled))).booleanValue();
+      if (bannerEngineClientEnabled) {
 
-      bannerEngineServiceName = config.getProperty("banner.engine.service.name", bannerEngineServiceName);
-      if (bannerEngineServiceName.length() == 0) {
-        throw new InitializationException("Mandatory config parameter \"banner.engine.service.name\" is missed");
-      }
-      try {
-        bannerEngineClientID = Integer.parseInt(config.getProperty("banner.engine.client.id", Integer.toString(bannerEngineClientID)));
-      } catch (NumberFormatException e) {
-        throw new InitializationException("Invalid value for config parameter \"banner.engine.client.id\": " + config.getProperty("banner.engine.client.id"));
-      }
-      try {
-        bannerEngineTransportType = Integer.parseInt(config.getProperty("banner.engine.transport.type", Integer.toString(bannerEngineTransportType)));
-      } catch (NumberFormatException e) {
-        throw new InitializationException("Invalid value for config parameter \"banner.engine.transport.type\": " + config.getProperty("banner.engine.transport.type"));
-      }
-      try {
-        bannerEngineCharSet = Integer.parseInt(config.getProperty("banner.engine.charset", Integer.toString(bannerEngineCharSet)));
-      } catch (NumberFormatException e) {
-        throw new InitializationException("Invalid value for config parameter \"banner.engine.charset\": " + config.getProperty("banner.engine.charset"));
-      }
+        bannerEngineClientHost = config.getProperty("banner.engine.client.host", bannerEngineClientHost);
+        if (bannerEngineClientHost.length() == 0) {
+          throw new InitializationException("Mandatory config parameter \"banner.engine.client.host\" is missed");
+        }
+        bannerEngineClientPort = config.getProperty("banner.engine.client.port", bannerEngineClientPort);
+        if (bannerEngineClientPort.length() == 0) {
+          throw new InitializationException("Mandatory config parameter \"banner.engine.client.port\" is missed");
+        }
+        bannerEngineClientTimeout = config.getProperty("banner.engine.client.timeout", bannerEngineClientTimeout);
+        if (bannerEngineClientTimeout.length() == 0) {
+          throw new InitializationException("Mandatory config parameter \"banner.engine.client.timeout\" is missed");
+        }
+        bannerEngineClientReconnectTimeout = config.getProperty("banner.engine.client.reconnect.timeout", bannerEngineClientReconnectTimeout);
+        if (bannerEngineClientReconnectTimeout.length() == 0) {
+          throw new InitializationException("Mandatory config parameter \"banner.engine.client.reconnect.timeout\" is missed");
+        }
+        Properties bannerEngineClientConfig = new Properties();
+        bannerEngineClientConfig.put("ip", bannerEngineClientHost);
+        bannerEngineClientConfig.put("port", bannerEngineClientPort);
+        bannerEngineClientConfig.put("CLIENTTIMEOUT", bannerEngineClientTimeout);
+        bannerEngineClientConfig.put("WATCHDOGSLEEP", bannerEngineClientReconnectTimeout);
 
+        bannerEngineClient = new AdvertisingClientImpl();
+        bannerEngineClient.init(bannerEngineClientConfig);
+      }
     }
-
     boolean productivityControllerEnabled = Boolean.valueOf(config.getProperty("productivity.controller.enabled", "true")).booleanValue();
     if (productivityControllerEnabled) {
       ProductivityController productivityController = new ProductivityController();
@@ -413,7 +454,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
     synchronized (state) {
-      if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineEnabled)) || state.isError()) && !state.isClosed())
+      if (((state.isBalanceReady() && (state.isBannerReady() || !(bannerEngineEnabled || bannerEngineClientEnabled))) || state.isError()) && !state.isClosed())
       {
         if (state.isError() || state.getAbonentResponse() == null) {
           Message message = new Message();
@@ -519,7 +560,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private void sendResponse(RequestState state) {
     Message msg = state.getAbonentResponse();
-    if (bannerEngineEnabled && !state.isError()) {
+    if ((bannerEngineEnabled || bannerEngineClientEnabled)&& !state.isError()) {
       String banner = state.getBanner();
       if (banner != null && banner.length() > 0) {
         MessageFormat bannerFormat = new MessageFormat(bannerAddPattern);
@@ -589,7 +630,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       state = new RequestState(message, abonentRequestTime);
       addRequestState(state);
       threadsPool.execute(new BalanceProcessor(this, state));
-      if (bannerEngineEnabled) {
+      if (bannerEngineEnabled || bannerEngineClientEnabled) {
         threadsPool.execute(new BannerRequestThread(state));
       }
     } else {  // mg response
@@ -682,10 +723,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     threadsPool.execute(new BalanceProcessor(this, state));
   }
 
-  private int bannerEngineTransactionId;
-  private final Object bannerEngineTransactionIdSyncMonitor = new Object();
-
-
   private String getBanner(String abonent) {
     if (abonent.startsWith("+")) {
       abonent = ".1.1." + abonent.substring(1);
@@ -697,7 +734,13 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     synchronized (bannerEngineTransactionIdSyncMonitor) {
       transactionId = bannerEngineTransactionId++;
     }
-    byte[] banner = bannerEngine.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
+    byte[] banner=null;
+    if(bannerEngineEnabled){
+      banner = bannerEngine.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
+    }
+    if(bannerEngineClientEnabled){
+      banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
+    }
     if (banner == null) {
       return null;
     }
@@ -766,25 +809,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       logger.debug("Creating CBOSS statement for " + Thread.currentThread().getName());
       result = getCbossConnection().prepareCall(getCbossQuery());
       synchronized (cbossStatements) {
-      cbossStatements.put(Thread.currentThread().getName(), result);
+        cbossStatements.put(Thread.currentThread().getName(), result);
       }
     }
-    /*
-    try {
-      result.getConnection().getAutoCommit();
-    } catch (Exception e) {
-      try {
-        result.close();
-        result.getConnection().close();
-      } catch (SQLException e1) {
-        ;
-      }
-      if(logger.isDebugEnabled())
-        logger.debug("Recreating CBOSS statement for "+Thread.currentThread().getName());
-      result = getCbossConnection().prepareCall(getCbossQuery());
-      cbossStatements.put(Thread.currentThread().getName(), result);
-    }
-    */
     return result;
   }
 
@@ -815,22 +842,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         inManStatements.put(Thread.currentThread().getName(), result);
       }
     }
-    /*
-    try {
-      result.getConnection().getAutoCommit();
-    } catch (Exception e) {
-      try {
-        result.close();
-        result.getConnection().close();
-      } catch (SQLException e1) {
-        ;
-      }
-      if(logger.isDebugEnabled())
-        logger.debug("Recreating InMan statement for "+Thread.currentThread().getName());
-      result = getInManConnection().prepareCall(getCbossQuery());
-      inManStatements.put(Thread.currentThread().getName(), result);
-    }
-    */
     return result;
   }
 
@@ -850,12 +861,10 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   }
 
   protected Connection getCbossConnection() throws SQLException {
-    //return connectionManager.getConnectionFromPool(cbossPoolName);
     return connectionManager.getConnection(cbossPoolName);
   }
 
   protected Connection getInManConnection() throws SQLException {
-    //return connectionManager.getConnectionFromPool(inManPoolName);
     return connectionManager.getConnection(inManPoolName);
   }
 
@@ -915,7 +924,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
   }
 
-  class BannerRequestThread extends Thread {
+  class BannerRequestThread implements Runnable {
     private RequestState state;
 
     public BannerRequestThread(RequestState state) {
@@ -931,7 +940,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
   }
 
-  class ResponcePatternConfigController extends Thread {
+  class ResponsePatternConfigController extends Thread {
     private boolean started = false;
     private Object monitor = new Object();
     private Object shutmonitor = new Object();
@@ -939,7 +948,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     private long pollingInterval = 60000L;
     private long fileLastModified;
 
-    public ResponcePatternConfigController(long pollingInterval) {
+    public ResponsePatternConfigController(long pollingInterval) {
       this.pollingInterval = pollingInterval;
       this.fileLastModified = responsePatternConfigFile.lastModified();
     }

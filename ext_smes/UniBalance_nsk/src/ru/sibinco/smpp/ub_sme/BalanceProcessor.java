@@ -8,7 +8,7 @@ import ru.sibinco.smpp.ub_sme.inman.PDUException;
 import java.sql.*;
 import java.math.BigDecimal;
 
-public class BalanceProcessor extends Thread {
+public class BalanceProcessor implements Runnable {
   private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(BalanceProcessor.class);
 
   private SmeEngine smeEngine = null;
@@ -155,7 +155,7 @@ public class BalanceProcessor extends Thread {
         stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
         stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
         stmt.execute();
-        if (stmt.getString(4).equalsIgnoreCase("ACCURATE")) {
+        if (stmt.getString(4).equalsIgnoreCase("ACCURATE") || stmt.getString(4).equalsIgnoreCase("CACHED")) {
           balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
           currency = smeEngine.getCurrency(stmt.getString(5));
           balanceDate = stmt.getDate(3).getTime();
@@ -170,14 +170,14 @@ public class BalanceProcessor extends Thread {
           try {
             stmt.close();
             stmt = null;
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close oracle CallableStatement: "+ e1);
           }
         if (connection != null)
           try {
             connection.close();
             connection = null;
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close oracle Connection: " + e1);
           }
         if (!smeEngine.isCbossConnectionError(temporalError)) {
@@ -201,7 +201,7 @@ public class BalanceProcessor extends Thread {
           stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
           stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
           stmt.execute();
-          if (stmt.getString(4).equalsIgnoreCase("ACCURATE")) {
+          if (stmt.getString(4).equalsIgnoreCase("ACCURATE") || stmt.getString(4).equalsIgnoreCase("CACHED")) {
             balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
             currency = smeEngine.getCurrency(stmt.getString(5));
             balanceDate = stmt.getDate(3).getTime();
@@ -215,13 +215,13 @@ public class BalanceProcessor extends Thread {
         if (stmt != null)
           try {
             stmt.close();
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close CallableStatement.", e1);
           }
         if (connection != null)
           try {
             connection.close();
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close Connection.", e1);
           }
         return null;
@@ -245,8 +245,8 @@ public class BalanceProcessor extends Thread {
         logger.error("Couldn't get InMan statement");
         return null;
       }
-      connection = stmt.getConnection();
       synchronized (stmt) {
+        connection = stmt.getConnection();
         stmt.setString(1, cutAbonentAddress(abonent));
         rs = stmt.executeQuery();
         if (rs.next()) {
@@ -262,21 +262,21 @@ public class BalanceProcessor extends Thread {
         try {
           rs.close();
           rs = null;
-        } catch (SQLException e1) {
+        } catch (Exception e1) {
           logger.warn("Could not close ifx ResultSet: " + e1);
         }
       if (stmt != null)
         try {
           stmt.close();
           stmt = null;
-        } catch (SQLException e1) {
+        } catch (Exception e1) {
           logger.warn("Could not close ifx CallableStatement: " + e1);
         }
       if (connection != null)
         try {
           connection.close();
           connection = null;
-        } catch (SQLException e1) {
+        } catch (Exception e1) {
           logger.warn("Could not close ifx Connection: "+e1);
         }
 
@@ -306,19 +306,19 @@ public class BalanceProcessor extends Thread {
         if (rs != null)
           try {
             rs.close();
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close ResultSet: ", e1);
           }
         if (stmt != null)
           try {
             stmt.close();
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close CallableStatement.", e1);
           }
         if (connection != null)
           try {
             connection.close();
-          } catch (SQLException e1) {
+          } catch (Exception e1) {
             logger.warn("Could not close Connection.", e1);
           }
       }
@@ -326,7 +326,7 @@ public class BalanceProcessor extends Thread {
       if (rs != null)
         try {
           rs.close();
-        } catch (SQLException e) {
+        } catch (Exception e) {
           logger.warn("Could not close ResultSet.", e);
         }
     }
@@ -348,7 +348,12 @@ public class BalanceProcessor extends Thread {
     try {
       process();
     } catch (Throwable t) {
-      logger.error(getName() + ": Unexpected exception occured during processing request.", t);
+      synchronized (state) {
+        state.setError(true);
+      }
+      if (logger.isInfoEnabled())
+        logger.info("Can not get balance for " + state.getAbonentRequest().getSourceAddress());
+      logger.error("Unexpected exception occured during processing request.", t);
     }
   }
 
