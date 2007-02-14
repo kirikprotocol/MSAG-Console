@@ -282,7 +282,7 @@ public class Deliveries extends InfoSmeBean
                     if (messages.size() > 1000) {
                       getInfoSmeContext().getInfoSme().addDeliveryMessages(task.getId(), messages);
                       messages.clear();
-                      currentTime = new java.util.Date();
+                      currentTime = new Date(currentTime.getTime() - 1000);
                     }
 
                     incProgress(false);
