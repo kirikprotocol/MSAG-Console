@@ -140,7 +140,6 @@ public class Deliveries extends InfoSmeBean
             generateThread = null;
         }
 
-        System.out.println("Remove tasks");
         removeTask();
 
         return RESULT_DONE;
@@ -283,6 +282,7 @@ public class Deliveries extends InfoSmeBean
                     if (messages.size() > 1000) {
                       getInfoSmeContext().getInfoSme().addDeliveryMessages(task.getId(), messages);
                       messages.clear();
+                      currentTime = new java.util.Date();
                     }
 
                     incProgress(false);
@@ -295,18 +295,18 @@ public class Deliveries extends InfoSmeBean
 
                 status = STATUS_DONE; statusStr = STATUS_STR_DONE;
 
-                stage++;
+//                stage++;
             } catch (AdminException ae) {
-              rollback();
               logger.error("Error: " + ae.getMessage(), ae);
+              rollback();
               setError("Error: " + ae.getMessage());
             } catch (IOException ex) {
-              rollback();
               logger.error("File input error", ex);
+              rollback();
               setError("File input error. Details: "+ex.getMessage());
             } catch (Throwable th) {
-              rollback();
               logger.error("Unexpected error occured", th);
+              rollback();
               setError("Unexpected error occured. "+th.getMessage());
             } finally {
               try { bis.close(); }
@@ -364,7 +364,6 @@ public class Deliveries extends InfoSmeBean
           getInfoSmeContext().resetConfig();
           getInfoSmeContext().getConfig().save();
         }
-
         getInfoSmeContext().getInfoSme().removeTask(task.getId());
       } catch (Throwable e) {
         logger.error("Failed rollback task");
@@ -385,6 +384,7 @@ public class Deliveries extends InfoSmeBean
 
         }
         catch (Exception exc) {
+          logger.error(exc);
           removeTask();
           try { if (fis != null) fis.close(); }
           catch (Exception e) { logger.error("Can't close input stream", e); }
@@ -403,11 +403,12 @@ public class Deliveries extends InfoSmeBean
 
     private int processTask()
     {
-//        stage++;
+        stage++;
 
         if (status != STATUS_ERR) {
-            statusStr = STATUS_STR_INIT;
-            return RESULT_OK;
+          statusStr = STATUS_STR_INIT;
+
+          return RESULT_OK;
         }
 
         return RESULT_ERROR;
@@ -422,6 +423,7 @@ public class Deliveries extends InfoSmeBean
         task.setUncommitedInGeneration(100);
         task.setUncommitedInProcess(100);
         task.setEnabled(true);
+        task.setTrackIntegrity(true);
         task.setKeepHistory(true);
         task.setReplaceMessage(false);
         task.setRetryOnFail(false);
@@ -466,13 +468,20 @@ public class Deliveries extends InfoSmeBean
 
     private int finishTask()
     {
-        errors.clear();
-        resetTask(); stage = 0;
-        status = STATUS_OK; statusStr = STATUS_STR_INIT;
-        if (incomingFile != null && incomingFile.isFile() && incomingFile.exists()) {
-            incomingFile.delete(); incomingFile = null;
+      if (status == STATUS_DONE) {
+        try {
+          getInfoSmeContext().getInfoSme().endDeliveryMessageGeneration(task.getId());
+        } catch (AdminException e) {
+          logger.error(e);
         }
-        return RESULT_DONE;
+      }
+      errors.clear();
+      resetTask(); stage = 0;
+      status = STATUS_OK; statusStr = STATUS_STR_INIT;
+      if (incomingFile != null && incomingFile.isFile() && incomingFile.exists()) {
+        incomingFile.delete(); incomingFile = null;
+      }
+      return RESULT_DONE;
     }
 
     /* ############################## Task accessors ############################## */

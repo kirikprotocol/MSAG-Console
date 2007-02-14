@@ -47,6 +47,7 @@ class InfoSmeTransport extends Service
   private static final String DELETE_DELIVERY_MESSAGES_METHOD_ID = "deleteDeliveryMessages";
   private static final String SELECT_TASKS_STATISTIC_METHOD_ID = "selectTasksStatistic";
   private static final String ADD_DELIVERY_MESSAGES_METHOD_ID = "addDeliveryMessages";
+  private static final String END_DELIVERY_MESSAGE_GENERATION_ID = "endDeliveryMessagesGeneration";
   private static final String ADD_STATISTIC_RECORD_METHOD_ID = "addStatisticRecord";
 
 
@@ -415,5 +416,11 @@ class InfoSmeTransport extends Service
 
   private Date stringToDate(final String str) throws ParseException {
     return new SimpleDateFormat("ddMMyyyyHHmmss").parse(str);
+  }
+
+  public synchronized void endDeliveryMessageGeneration(String taskId) throws AdminException {
+    Map params = new HashMap();
+    params.put("id", taskId);
+    callMethod(END_DELIVERY_MESSAGE_GENERATION_ID, Type.Types[Type.StringType], params);
   }
 }
