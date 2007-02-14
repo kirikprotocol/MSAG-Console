@@ -289,7 +289,10 @@ public class WHOISDServlet extends HttpServlet {
     if (!resp.containsHeader("status")) {
       logger.debug("Request is served successfully");
       resp.setHeader("status","ok");
-      if (result.size()>1) resp.setContentType("application/xml");
+      if (result.size()>1) {
+        resp.setContentType("application/xml");
+        resp.setCharacterEncoding("UTF-8");
+      }
     } else {
       if (((String)result.get(0)).startsWith(SCAG_ERROR_PREFIX)) logger.error("Request is not served, reason: " + result.get(0));
       else logger.debug("Request is not served, reason: " + result.get(0));
