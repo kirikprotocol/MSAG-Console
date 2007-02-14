@@ -56,6 +56,8 @@ public final class SmeEngine extends Service {
       sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
     } catch (Session.UnexpectedMessageException e) {
       log.error("Unexpected message", e);
+    } catch (Throwable e) {
+      log.error(e);
     }
   }
 
