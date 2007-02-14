@@ -35,6 +35,18 @@ public class MessageListenerImpl implements MessageListener {
         return false;
       }
 
+      if (msg.getSourceAddress() == null || msg.getSourceAddress().trim().equals("")) {
+        Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
+        sendResponse(msg, Data.ESME_ROK);
+        return false;
+      }
+
+      if (msg.getEncoding() == Message.ENCODING_BINARY) {
+        Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: unsupported encoding: BINARY ");
+        sendResponse(msg, Data.ESME_ROK);
+        return true;
+      }
+
       Log.debug("Received MSG, USSD #" + msg.getUssdServiceOp() + "; address #" + msg.getDestinationAddress() + "; abonent #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
       IncomingObject incomingObject = new IncomingObject(msg);
       try {
