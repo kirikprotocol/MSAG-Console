@@ -54,6 +54,8 @@ final class SponsoredRequestProcessor extends ServiceProcessor{
       MessageFormat mf = new MessageFormat(SponsoredService.Properties.Subscription.SUCCESSFULLY_MESSAGE);
       String str = mf.format(new Object[]{new Integer(NN)});
       log.debug("Return text "+str);
+
+      sendResponse(message, Data.ESME_ROK);
       sendMessage(SponsoredService.Properties.SERVICE_ADDRESS, abonent, str);
 
     } catch (Exception e) {
