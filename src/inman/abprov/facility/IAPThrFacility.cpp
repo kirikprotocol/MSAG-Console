@@ -137,9 +137,11 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
         if (!query->delOnCompletion())
             qryPool.push_back(query);
         //else query is being deleted by PooledThread::Execute()
-        smsc_log_debug(logger, "IAPrvd: %s(%s): finished, abonent type %s",
+        smsc_log_info(logger, "IAPrvd: %s(%s): finished, contract %s, SCF %s, IMSI %s",
                        query->taskName(), (query->getAbonentId()).getSignals(),
-                       (query->getAbonentRecord()).type2Str());
+                       (query->getAbonentRecord()).type2Str(),
+                      (query->getAbonentRecord()).gsmSCF.toString().c_str(),
+                      (query->getAbonentRecord()).imsiCStr());
     }
     return;
 }
