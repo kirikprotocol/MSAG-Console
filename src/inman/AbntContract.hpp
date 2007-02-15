@@ -61,6 +61,7 @@ struct AbonentContractInfo {
     inline const GsmSCFinfo * getSCFinfo(void) const
     { return gsmSCF.scfAddress.length ? &gsmSCF : NULL; }
     inline const char * getImsi(void) const { return abImsi[0] ? (const char*)abImsi : NULL; }
+    inline const char * imsiCStr(void) const { return abImsi[0] ? (const char*)abImsi : "<none>"; }
 };
 
 } //inman
