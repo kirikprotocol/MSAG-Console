@@ -154,6 +154,7 @@ public:
     p2pChargePolicy=chargeOnSubmit;
     otherChargePolicy=chargeOnDelivery;
     smartMultipartForward=false;
+    nodeIndex=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg, const char * node);
@@ -532,6 +533,8 @@ public:
   {
     return smartMultipartForward;
   }
+
+  int nodeIndex;
 
 protected:
 

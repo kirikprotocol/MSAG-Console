@@ -280,6 +280,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
               throw Exception("Exception atoi");
           }
 
+          nodeIndex=num1;
+
           --num1;
           if(num1 < 0 || num1 > 1)
               num1 = 0;

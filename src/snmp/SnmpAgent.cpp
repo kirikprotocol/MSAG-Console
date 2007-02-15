@@ -150,7 +150,12 @@ static char const ident[] = "$Id$";
             fileLogRollInterval = 60;
         }
 
-        fileLog = new TrapRecordLog(fileLogLocation, "ucs.lst", "ucs.csv", fileLogRollInterval, log);
+        char buf1[64];
+        sprintf(buf,"n%d.ucs.lst",smsc->nodeIndex);
+        char buf2[64];
+        sprintf(buf,"n%d.ucs.csv",smsc->nodeIndex);
+
+        fileLog = new TrapRecordLog(fileLogLocation, smsc->nodeIndex?buf1:"ucs.lst",smsc->nodeIndex?buf2:"ucs.csv", fileLogRollInterval, log);
         fileLog->RFSOpen(true);
         fileLogRoller = new InFileStorageRoller(fileLog,fileLogRollInterval);
 //        fileLogRoller->attachRFS(fileLog,fileLogRollInterval);
