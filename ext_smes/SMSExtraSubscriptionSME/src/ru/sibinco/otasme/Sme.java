@@ -70,7 +70,7 @@ public final class Sme {
       while (st.hasMoreTokens())
         smscAddresses.add(st.nextToken());
 
-      multiplexor.setMessageListener(new MessageListenerImpl(multiplexor, inQueue, smscAddresses));
+      multiplexor.setMessageListener(new MessageListenerImpl(config, multiplexor, inQueue, smscAddresses));
     } catch (SMPPException e) {
       throw new InitializationException(e);
     }

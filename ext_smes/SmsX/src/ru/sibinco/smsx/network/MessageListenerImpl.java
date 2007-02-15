@@ -3,8 +3,10 @@ package ru.sibinco.smsx.network;
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.*;
 import ru.sibinco.smsx.InitializationException;
+import ru.sibinco.smsx.utils.Utils;
 
 import java.util.Set;
+import java.util.Properties;
 
 public class MessageListenerImpl implements MessageListener {
   private final static org.apache.log4j.Category Log = org.apache.log4j.Category.getInstance(MessageListenerImpl.class);
@@ -12,8 +14,10 @@ public class MessageListenerImpl implements MessageListener {
   private Multiplexor multiplexor;
   private IncomingQueue inQueue;
   private Set smscAddresses = null;
+  private final boolean checkEmptysourceaddr;
+  private final boolean checkBinary;
 
-  public MessageListenerImpl(Multiplexor multiplexor,
+  public MessageListenerImpl(Properties config, Multiplexor multiplexor,
                              IncomingQueue inQueue,
                              Set smscAddresses) throws InitializationException {
     if (multiplexor == null)
@@ -23,6 +27,8 @@ public class MessageListenerImpl implements MessageListener {
       throw new InitializationException("Could not construct MessageListener with NULL IncomingQueue.");
     this.inQueue = inQueue;
     this.smscAddresses = smscAddresses;
+    this.checkEmptysourceaddr = Utils.loadBoolean(config, "messagelistener.check.emptysourceaddr");
+    this.checkBinary = Utils.loadBoolean(config, "messagelistener.check.binary");
     Log.info("MessageListener created.");
   }
 
@@ -35,13 +41,13 @@ public class MessageListenerImpl implements MessageListener {
         return false;
       }
 
-      if (msg.getSourceAddress() == null || msg.getSourceAddress().trim().equals("")) {
+      if (checkEmptysourceaddr && msg.getSourceAddress() == null || msg.getSourceAddress().trim().equals("")) {
         Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
         sendResponse(msg, Data.ESME_ROK);
         return false;
       }
 
-      if (msg.getEncoding() == Message.ENCODING_BINARY) {
+      if (checkBinary && msg.getEncoding() == Message.ENCODING_BINARY) {
         Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: unsupported encoding: BINARY ");
         sendResponse(msg, Data.ESME_ROK);
         return true;

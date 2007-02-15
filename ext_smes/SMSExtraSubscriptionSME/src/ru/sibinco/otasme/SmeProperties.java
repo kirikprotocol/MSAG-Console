@@ -33,6 +33,9 @@ public class SmeProperties {
     public static final String SMSEXTRA_NUMBER;
     public static final String OTA_NUMBER;
     public static final int MAX_OTA_MESSAGE_REPEATS;
+    public static final String FIND_ABONENT_SQL;
+    public static final String ADD_ABONENT_SQL;
+    public static final String DELETE_ABONENT_SQL;
 
     static {
       final Properties config = Utils.loadConfig("sme.properties");
@@ -44,6 +47,9 @@ public class SmeProperties {
       SMSEXTRA_NUMBER = Utils.loadString(config, "session.smsextra.smsc.number");
       OTA_NUMBER = Utils.loadString(config, "sme.engine.ota.number");
       MAX_OTA_MESSAGE_REPEATS = Utils.loadInt(config, "session.max.ota.message.repeats");
+      FIND_ABONENT_SQL = Utils.loadString(config, "session.find.abonent.sql");
+      ADD_ABONENT_SQL = Utils.loadString(config, "session.add.abonent.sql");
+      DELETE_ABONENT_SQL = Utils.loadString(config, "session.delete.abonent.sql");
       config.clear();
     }
   }
