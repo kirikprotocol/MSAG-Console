@@ -80,7 +80,8 @@ public class BalanceProcessor extends Thread {
       connection = stmt.getConnection();
       synchronized (stmt) {
         stmt.registerOutParameter(1, OracleTypes.INTEGER);
-        stmt.setString(2, cutAbonentAddress(abonent));
+        //stmt.setString(2, cutAbonentAddress(abonent));
+        stmt.setString(2, abonent);
         stmt.registerOutParameter(3, OracleTypes.VARCHAR);
         rs=stmt.executeQuery();
         if (rs.next()) {
