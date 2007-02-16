@@ -674,7 +674,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
   }
 
-  class BannerRequestThread extends Thread {
+  class BannerRequestThread implements Runnable {
     private RequestState state;
 
     public BannerRequestThread(RequestState state) {

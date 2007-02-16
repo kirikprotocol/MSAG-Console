@@ -68,16 +68,6 @@ public class BalanceProcessor implements Runnable {
   }
 
   private GetBalanceResult getCbossBalance(String abonent) {
-    // TODO: REMOVE THIS !!!
-    try {
-      Thread.sleep((new Random()).nextInt(50));
-    } catch (InterruptedException e) {
-      logger.error(e);
-    }
-    if(true){
-      return new GetBalanceResult("0.0$");
-    }
-    //////
     String balance = null;
     Connection connection = null;
     CallableStatement stmt = null;
