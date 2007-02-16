@@ -1124,7 +1124,8 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
             if (valueLen == 1)
             {
                 char temp = buff[i + 4];
-                return new AdapterProperty(name, this, (temp > 0));
+                return new AdapterProperty(name, this, temp);
+//                return new AdapterProperty(name, this, (temp > 0));
             }
 
             std::string str;
