@@ -154,7 +154,7 @@ public class OperatorManager extends Manager {
         //File configNew = Functions.createNewFilenameForSave(configFile);
 
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configFile), Functions.getLocaleEncoding()));
-        Functions.storeConfigHeader(out, "operators", "operators.dtd", System.getProperty("file.encoding").equals("Cp1251") ? "ISO-8859-1" : System.getProperty("file.encoding"));
+        Functions.storeConfigHeader(out, "operators", "operators.dtd", Functions.getLocaleEncoding());
         out.print(getParamXmlText());
         for (Iterator i = new SortedList(operators.keySet()).iterator(); i.hasNext();) {
             Long id = (Long) i.next();

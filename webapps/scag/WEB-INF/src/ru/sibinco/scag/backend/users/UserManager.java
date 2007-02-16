@@ -66,7 +66,7 @@ public class UserManager {
         File configNew = Functions.createNewFilenameForSave(configFile);
 
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configNew), Functions.getLocaleEncoding()));
-        Functions.storeConfigHeader(out, "users", "users.dtd", System.getProperty("file.encoding"));
+        Functions.storeConfigHeader(out, "users", "users.dtd", Functions.getLocaleEncoding());
         for (Iterator i = new SortedList(users.keySet()).iterator(); i.hasNext();) {
             String userLogin = (String) i.next();
             User user = (ScagUser) users.get(userLogin);

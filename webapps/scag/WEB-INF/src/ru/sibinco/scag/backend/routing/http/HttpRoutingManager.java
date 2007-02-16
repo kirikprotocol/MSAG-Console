@@ -203,9 +203,7 @@ public class HttpRoutingManager extends Manager{
         if (backup) newFile = Functions.createNewFilenameForSave(file);
 
         String localEncoding = Functions.getLocaleEncoding();
-        if (localEncoding.equalsIgnoreCase("Cp1251")) {
-            localEncoding = "WINDOWS-1251";
-        }
+
         try {
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
             Functions.storeConfigHeader(out, "http_routes", "http_routes.dtd", localEncoding);

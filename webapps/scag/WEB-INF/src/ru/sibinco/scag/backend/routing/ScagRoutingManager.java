@@ -208,8 +208,6 @@ public class ScagRoutingManager extends Manager {
         if (backup) newFile = Functions.createNewFilenameForSave(file);
         try {
             String localEncoding = Functions.getLocaleEncoding();
-            if (localEncoding.equalsIgnoreCase("Cp1251"))
-                localEncoding = "WINDOWS-1251";
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream((backup)?newFile:file), localEncoding));
 
             Functions.storeConfigHeader(out, "routes", "smpp_routes.dtd", localEncoding);

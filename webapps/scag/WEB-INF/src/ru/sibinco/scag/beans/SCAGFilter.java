@@ -28,6 +28,7 @@ public class SCAGFilter implements Filter {
         logger = Logger.getLogger(this.getClass());
 
         defaultEncoding = Functions.getLocaleEncoding();
+        Functions.setLocaleEncoding("UTF-8");
         this.config = config;
         try {
             appContext = SCAGAppContext.getInstance(config.getServletContext().getInitParameter("AppConfigFile"));

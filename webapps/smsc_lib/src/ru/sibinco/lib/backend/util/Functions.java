@@ -20,6 +20,7 @@ public class Functions
 {
   private static Logger logger = Logger.getLogger(Functions.class.getName());
   private static final String backup_dir_name = "backup";
+  private static String localEncoding = null;
 
   public static boolean recursiveDeleteFolder(File folder)
   {
@@ -267,10 +268,14 @@ public class Functions
 
   public static String getLocaleEncoding()
   {
-    System.out.println("Webapp encoding: " + System.getProperty("file.encoding", "WINDOWS-1251"));
-    return System.getProperty("file.encoding", "WINDOWS-1251");
+    return (localEncoding==null)?System.getProperty("file.encoding", "WINDOWS-1251"):localEncoding;        
   }
-  
+
+  public static void setLocaleEncoding(String lE) {
+    localEncoding = lE;
+    System.out.println("Webapp encoding: " + lE);
+  }
+
   public static void readBuffer( InputStream is, byte buffer[], int size ) throws IOException {
     int read = 0;
     while (read < size) {

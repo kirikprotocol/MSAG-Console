@@ -291,7 +291,7 @@ public class WHOISDServlet extends HttpServlet {
       resp.setHeader("status","ok");
       if (result.size()>1) {
         resp.setContentType("application/xml");
-        resp.setCharacterEncoding("UTF-8");
+        resp.setCharacterEncoding(Functions.getLocaleEncoding());
       }
     } else {
       if (((String)result.get(0)).startsWith(SCAG_ERROR_PREFIX)) logger.error("Request is not served, reason: " + result.get(0));
@@ -315,7 +315,7 @@ public class WHOISDServlet extends HttpServlet {
     return WHOISDRequest.getId(requestedFile);
   }
 
-  private LinkedList getRule(HttpServletRequest req) throws WHOISDException{
+  private LinkedList getRule(HttpServletRequest req) throws WHOISDException , Exception {
     Long serviceId = null;
     if (req.getParameter("service") == null) throw new WHOISDException("service parameter is missed!");
     try {
@@ -327,11 +327,9 @@ public class WHOISDServlet extends HttpServlet {
     if (transport == null) throw new WHOISDException("transport parameter is missed!");
     transport = transport.toUpperCase();
     validateTransportParameter(transport);    
-    Rule rule = appContext.getRuleManager().getRule(serviceId.toString(),transport);
-    if (rule == null) throw new WHOISDException("There is no rule for service with id = " + serviceId + " and transport "+ transport);
-    LinkedList result = new LinkedList(rule.getBody());
-    result.removeFirst();
-    return result;
+    File ruleFile = appContext.getRuleManager().composeRuleFile(transport, serviceId.toString());
+    if (!ruleFile.exists()) throw new WHOISDException("There is no rule for service with id = " + serviceId + " and transport "+ transport);
+    return loadFile(ruleFile);
   }
 
   private LinkedList loadXml(String filepath) throws Exception {
@@ -345,7 +343,7 @@ public class WHOISDServlet extends HttpServlet {
     BufferedReader br = null;
     try {
       in = new FileInputStream(file);
-      br = new BufferedReader(new InputStreamReader(in));
+      br = new BufferedReader(new InputStreamReader(in, Functions.getLocaleEncoding()));
       String line;
       while ((line=br.readLine())!=null)
         li.add(line);

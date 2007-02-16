@@ -306,18 +306,29 @@ public class RuleManager
   private LinkedList LoadXml(final String fileName)
    {
      LinkedList li=new  LinkedList();
-     InputStream _in=null; BufferedReader in = null; String inputLine;long length=0;
-     try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in,"UTF-8"));
+     InputStream _in=null;
+     BufferedReader in = null;
+     String inputLine;
+     long length=0;
+     try {
+       _in = new FileInputStream(fileName);
+       in = new BufferedReader(new InputStreamReader(_in,"UTF-8"));
        li.addFirst("ok");
-       while ((inputLine = in.readLine()) != null) {li.add(inputLine);length+=inputLine.length(); }
-     } catch (FileNotFoundException e) { e.printStackTrace();
+       while ((inputLine = in.readLine()) != null) {
+         li.add(inputLine);length+=inputLine.length();
+       }
+     } catch (FileNotFoundException e) {
+       e.printStackTrace();
        li.addFirst(e.getMessage());
-     } catch (IOException e) {  e.printStackTrace();
+     } catch (IOException e) {
+       e.printStackTrace();
      }
-     finally{
+     finally {
        try {
-         if (in!=null) in.close(); if (_in!=null) _in.close();
-       } catch (IOException e) { e.printStackTrace(); }
+         if (in!=null) in.close();
+         if (_in!=null) _in.close();
+       } catch (IOException e) {
+         e.printStackTrace(); }
      }
      logger.debug("RuleManager.LoadXml length= "+length);
      return li;

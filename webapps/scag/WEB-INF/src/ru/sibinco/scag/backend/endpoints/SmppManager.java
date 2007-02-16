@@ -57,7 +57,7 @@ public class SmppManager extends Manager {
     public SmppManager(String configFilename, ProviderManager providerManager) {
         this.configFilename = configFilename;
         this.providerManager = providerManager;
-    }                                                                     
+    }
 
     public synchronized void init() throws IOException, ParserConfigurationException, SAXException {
         svcs.clear();
@@ -257,7 +257,7 @@ public class SmppManager extends Manager {
                 return c1.getId().compareTo(c2.getId());
             }
         });
-        Functions.storeConfigHeader(out, "records", "smpp.dtd", "ISO-8859-1");
+        Functions.storeConfigHeader(out, "records", "smpp.dtd", Functions.getLocaleEncoding());
         storeUid(out, getLastUsedId());
         for (Iterator iterator = svcsValues.iterator(); iterator.hasNext();)
             ((Svc) iterator.next()).store(out);

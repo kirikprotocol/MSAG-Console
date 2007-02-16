@@ -160,7 +160,7 @@ public class ServiceProvidersManager extends Manager {
         //File configNew = Functions.createNewFilenameForSave(configFile);
 
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(configFile), Functions.getLocaleEncoding()));
-        Functions.storeConfigHeader(out, "service_providers", "services.dtd", System.getProperty("file.encoding").equals("Cp1251") ? "ISO-8859-1" : System.getProperty("file.encoding"));
+        Functions.storeConfigHeader(out, "service_providers", "services.dtd", Functions.getLocaleEncoding());
         out.print(getParamXmlText());
         for (Iterator i = new SortedList(serviceProviders.keySet()).iterator(); i.hasNext();) {
             Long id = (Long) i.next();
