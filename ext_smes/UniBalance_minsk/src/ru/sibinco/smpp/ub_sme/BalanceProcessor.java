@@ -3,10 +3,11 @@ package ru.sibinco.smpp.ub_sme;
 import ru.aurorisoft.smpp.Message;
 
 import java.sql.*;
+import java.util.Random;
 
 import oracle.jdbc.OracleTypes;
 
-public class BalanceProcessor extends Thread {
+public class BalanceProcessor implements Runnable {
   private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(BalanceProcessor.class);
 
   private SmeEngine smeEngine = null;
@@ -67,6 +68,16 @@ public class BalanceProcessor extends Thread {
   }
 
   private GetBalanceResult getCbossBalance(String abonent) {
+    // TODO: REMOVE THIS !!!
+    try {
+      Thread.sleep((new Random()).nextInt(50));
+    } catch (InterruptedException e) {
+      logger.error(e);
+    }
+    if(true){
+      return new GetBalanceResult("0.0$");
+    }
+    //////
     String balance = null;
     Connection connection = null;
     CallableStatement stmt = null;

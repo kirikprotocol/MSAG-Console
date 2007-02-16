@@ -139,7 +139,7 @@ public class Sme {
     }
 
     // Init threads pool
-    ThreadsPool threadsPool = new ThreadsPool(config);
+    ThreadsPool threadsPool = new ThreadsPool(config, "threads.pool");
 
     // SME engine
 
