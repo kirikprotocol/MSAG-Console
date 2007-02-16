@@ -226,7 +226,7 @@ public abstract class BufferIORequest extends WorkRequest
     in.reset();
    }
   }
-
+  encoding = "windows-1251";    
   return new InputStreamReader(in,encoding);
  } //}}}
 
@@ -457,7 +457,7 @@ public abstract class BufferIORequest extends WorkRequest
     _out.flush();
     encoding = "UTF-8";
    }
-   encoding = "UTF-8";
+   encoding = "windows-1251";
    out = new BufferedWriter(
     new OutputStreamWriter(_out,encoding),
     IOBUFSIZE);
