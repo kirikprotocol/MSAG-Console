@@ -41,10 +41,21 @@ public class MessageListenerImpl implements MessageListener {
         return false;
       }
 
-      if (checkEmptysourceaddr && msg.getSourceAddress() == null || msg.getSourceAddress().trim().equals("")) {
-        Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
-        sendResponse(msg, Data.ESME_ROK);
-        return false;
+
+
+      if (checkEmptysourceaddr) {
+        final String source = msg.getSourceAddress().trim();
+        boolean skip = source == null || source.trim().equals("");
+
+        if (!skip)
+          skip = (source.lastIndexOf('.') >= 0 && source.lastIndexOf('.') + 1 == source.length()) ||
+              (source.lastIndexOf('+') >= 0 && source.lastIndexOf('+') + 1 == source.length());
+
+        if (skip) {
+          Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
+          sendResponse(msg, Data.ESME_ROK);
+          return false;
+        }
       }
 
       if (checkBinary && msg.getEncoding() == Message.ENCODING_BINARY) {
