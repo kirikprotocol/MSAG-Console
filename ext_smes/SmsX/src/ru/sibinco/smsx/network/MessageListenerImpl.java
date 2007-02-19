@@ -27,7 +27,9 @@ public class MessageListenerImpl implements MessageListener {
       throw new InitializationException("Could not construct MessageListener with NULL IncomingQueue.");
     this.inQueue = inQueue;
     this.smscAddresses = smscAddresses;
+    System.out.println(config.getProperty("messagelistener.check.emptysourceaddr"));
     this.checkEmptysourceaddr = Utils.loadBoolean(config, "messagelistener.check.emptysourceaddr");
+    System.out.println(checkEmptysourceaddr);
     this.checkBinary = Utils.loadBoolean(config, "messagelistener.check.binary");
     Log.info("MessageListener created.");
   }
@@ -44,13 +46,16 @@ public class MessageListenerImpl implements MessageListener {
 
 
       if (checkEmptysourceaddr) {
+
         final String source = msg.getSourceAddress().trim();
+
         boolean skip = source == null || source.trim().equals("");
 
         if (!skip)
           skip = (source.lastIndexOf('.') >= 0 && source.lastIndexOf('.') + 1 == source.length()) ||
               (source.lastIndexOf('+') >= 0 && source.lastIndexOf('+') + 1 == source.length());
 
+        System.out.println(source + " " + skip);
         if (skip) {
           Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
           sendResponse(msg, Data.ESME_ROK);

@@ -5,7 +5,12 @@ import ru.aurorisoft.smpp.Message;
 import ru.sibinco.otasme.Sme;
 import ru.sibinco.otasme.SmeProperties;
 import ru.sibinco.otasme.network.OutgoingObject;
+import ru.sibinco.otasme.utils.ConnectionPool;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Date;
 
 /**
@@ -105,19 +110,19 @@ public final class Session {
 
     private SessionState processOn() {
       logInfo("ON message received.");
-      return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT);
+      return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT, true);
     }
 
     private SessionState processOff() {
       logInfo("OFF message received.");
-      return sendSRCommand(smscenterNumber, SmeProperties.Session.OFF_ERROR_TEXT);
+      return sendSRCommand(smscenterNumber, SmeProperties.Session.OFF_ERROR_TEXT, false);
     }
 
     private String removePlusFromAbonentNumber(String number) {
       return (number.indexOf("+") >= 0) ? number.substring(1) : number;
     }
 
-    private SessionState sendSRCommand(String wtsServiceName, String otaMessage) {
+    private SessionState sendSRCommand(String wtsServiceName, String otaMessage, boolean enableService) {
       final Message otaRequest = new Message();
       otaRequest.setType(Message.TYPE_WTS_REQUEST);
       otaRequest.setWtsOperationCode(Message.WTS_OPERATION_CODE_COMMAND);
@@ -128,7 +133,14 @@ public final class Session {
       otaRequest.setWtsRequestReference(abonentNumber);
       Sme.outQueue.addOutgoingObject(new OutgoingObject(otaRequest));
       logInfo("Send SR_COMMAND with service name = " + wtsServiceName);
-      return new OTAState(otaMessage.replaceAll("%SMSC_NUMBER%", smscenterNumber), wtsServiceName);
+//      final Message message = new Message();
+//      message.setType(Message.TYPE_WTS_REQUEST);
+//      message.setSourceAddress(abonentNumber);
+//      message.setWtsRequestReference(abonentNumber);
+//      message.setWtsOperationCode(Message.WTS_OPERATION_CODE_AACK);
+//      message.setWTSErrorCode(0);
+//      Sme.inQueue.addIncomingObject(new IncomingObject(message));
+      return new OTAState(otaMessage.replaceAll("%SMSC_NUMBER%", smscenterNumber), wtsServiceName, enableService);
     }
 
     private void processOther(Message incomingMessage) {
@@ -141,11 +153,14 @@ public final class Session {
     private final String errorText;
     private final String serviceName;
     private int currentMessageRepeats = 0;
+    private final boolean enableService;
 
-    public OTAState(String errorText, String serviceName) {
+    public OTAState(String errorText, String serviceName, boolean enableService) {
       this.errorText = errorText;
       this.serviceName = serviceName;
+      this.enableService = enableService;
     }
+
     public synchronized SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException {
       if (incomingMessage.getType() != Message.TYPE_WTS_REQUEST || incomingMessage.getWtsOperationCode() != Message.WTS_OPERATION_CODE_AACK) {
         if (incomingMessage.getType() == Message.TYPE_DELIVER)
@@ -181,11 +196,51 @@ public final class Session {
 
         }
 
-      } else // No error occured
+      } else { // No error occured
         logInfo("OTA Platform return success");
-
+        processUser(incomingMessage.getSourceAddress(), enableService);
+      }
 
       return null;
+    }
+  }
+
+  private void processUser(String abonentNumber, boolean enableService) {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+
+    try {
+      conn = ConnectionPool.getConnection();
+      ps = conn.prepareStatement(SmeProperties.Session.FIND_ABONENT_SQL);
+      ps.setString(1, abonentNumber);
+      rs = ps.executeQuery();
+
+      if (rs.next()) { // User already in DB
+        if (!enableService) {
+          ps = conn.prepareStatement(SmeProperties.Session.DELETE_ABONENT_SQL);
+          ps.setString(1, abonentNumber);
+          ps.executeUpdate();
+        }
+      } else if (enableService) {
+        ps = conn.prepareStatement(SmeProperties.Session.ADD_ABONENT_SQL);
+        ps.setString(1, abonentNumber);
+        ps.executeUpdate();
+      }
+
+    } catch (SQLException e) {
+      log.error(e);
+    } finally {
+      try {
+        if (rs != null)
+          rs.close();
+        if (ps != null)
+          ps.close();
+        if (conn != null)
+          conn.close();
+      } catch (SQLException e) {
+        log.error(e);
+      }
     }
   }
 

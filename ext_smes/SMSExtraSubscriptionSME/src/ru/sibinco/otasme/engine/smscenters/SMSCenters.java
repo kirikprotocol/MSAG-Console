@@ -65,7 +65,6 @@ public class SMSCenters {
       } catch (InterruptedException e) {
         log.error("Interrupted", e);
       }
-      System.out.println("reload");
 
       final File tf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.Templates.SMSCENTERS_XML).toString()));
       final File rf = new File(URI.create(ClassLoader.getSystemResource(SmeProperties.Templates.ROUTES_XML).toString()));
@@ -75,7 +74,6 @@ public class SMSCenters {
           final SMSCenters centers = SMSCentersXMLParser.parse(SmeProperties.Templates.SMSCENTERS_XML, SmeProperties.Templates.ROUTES_XML);
 
           if (centers != null) {
-            System.out.println("reloaded");
             log.info("SMSCenters have been reloaded");
             errorOccured = false;
             timezonesLastModifiedTime = tf.lastModified();

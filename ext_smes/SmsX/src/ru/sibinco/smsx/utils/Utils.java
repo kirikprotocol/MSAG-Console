@@ -58,7 +58,7 @@ public final class Utils {
 
     boolean property;
     try {
-      property = Boolean.getBoolean(propertyStr);
+      property = Boolean.valueOf(propertyStr).booleanValue();
     } catch (NumberFormatException e) {
       throw new InitializationException("uncorrect" + propertyName + "property in " + config.getProperty("config.path"));
     }
