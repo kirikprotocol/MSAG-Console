@@ -8,6 +8,10 @@
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (8)
 
+#ifdef SMSEXTRA
+#include "system/ExtraBits.hpp"
+#endif
+
 #define __FUNCTION__ __func__
 
 //#define DLSMSADMIN
@@ -411,6 +415,22 @@ int DistrListProcess::Execute()
                 newsms.setIntProperty(Tag::SMPP_SM_LENGTH,len-argend);
               }
             }
+
+            if(sms.hasStrProperty(Tag::SMSC_IMSI_ADDRESS) || sms.hasStrProperty(Tag::SMSC_MSC_ADDRESS))
+            {
+              newsms.setOriginatingDescriptor
+              (
+                sms.getStrProperty(Tag::SMSC_MSC_ADDRESS).length(),
+                sms.getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str(),
+                sms.getStrProperty(Tag::SMSC_IMSI_ADDRESS).length(),
+                sms.getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str(),
+                0
+              );
+            }
+#ifdef SMSEXTRA
+            newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,smsc::system::EXTRA_GROUPS);
+#endif
+
             for(int i=0;i<m.Count();i++)
             {
               newsms.setDestinationAddress(m[i]);
