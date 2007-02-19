@@ -21,7 +21,7 @@ namespace buffers {
 //               |
 //             Write()/Append()
 // 
-template <typename T, int SZ> class ExtendingBuffer {
+template <typename T, unsigned SZ> class ExtendingBuffer {
 protected:
     T   stackBuf[SZ];
     T*  heapBuf;
@@ -31,7 +31,7 @@ protected:
     unsigned dataSz;     //effective size of data in buffer (stack or heap), starting from pos = 0
 
 public:
-    explicit ExtendingBuffer(unsigned size)
+    explicit ExtendingBuffer(unsigned size = SZ)
     {
         if (size > SZ) {
             dataBuf = heapBuf = new T[size];
@@ -50,11 +50,11 @@ public:
             delete [] heapBuf; 
     }
 
-    T*   get()                  const { return dataBuf; }
-    T*   getCurPtr()            const { return dataBuf + pos; }
-    unsigned  getPos(void)      const { return pos; }
-    unsigned  getDataSize(void) const { return dataSz; }
-    unsigned  getMaxSize(void)  const { return heapBufSz ? heapBufSz : SZ; }
+    inline T*   get()                  const { return dataBuf; }
+    inline T*   getCurPtr()            const { return dataBuf + pos; }
+    inline unsigned  getPos(void)      const { return pos; }
+    inline unsigned  getDataSize(void) const { return dataSz; }
+    inline unsigned  getMaxSize(void)  const { return heapBufSz ? heapBufSz : SZ; }
 
     //reallocates buffer if needed, destroying all previously set data
     T* reset(int size)
@@ -169,7 +169,6 @@ public:
         if (this != &_Right) {
             this->reset(_Right.getDataSize()); //pos = 0
             this->Append(_Right.get(), _Right.getDataSize());
-            this->setPos(_Right.getPos());
         }
         return (*this);
     }
