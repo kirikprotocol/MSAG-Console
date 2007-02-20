@@ -88,7 +88,7 @@ public class Job extends DbsmeBean
         type = getString(jobPrefix + ".type");
         address = getOptionalString(jobPrefix + ".address");
         alias = getOptionalString(jobPrefix + ".alias");
-        timeout = getInt(jobPrefix + ".timeout");
+        timeout = getOptionalInt(jobPrefix + ".timeout");
         sql = getString(jobPrefix + ".sql");
         input = getString(jobPrefix + ".input");
         output = getString(jobPrefix + ".output");
