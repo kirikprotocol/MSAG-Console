@@ -14,6 +14,10 @@
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include <map>
+#include <set>
+#include "system/status.h"
+#include "util/sleep.h"
+#include "core/buffers/File.hpp"
 
 #ifdef linux
 typedef timespec timestruc_t;
@@ -28,18 +32,74 @@ using namespace smsc::core::buffers;
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 
+FILE* cmdFile=stdout;
+FILE* incomFile=stdout;
+
+void CmdOut(const char* fmt,...)
+{
+  if(!cmdFile)return;
+  va_list args;
+  va_start (args, fmt);
+  vfprintf(cmdFile,fmt,args);
+  //fflush(cmdFile);
+  va_end (args);
+}
+
+void IncomOut(const char* fmt,...)
+{
+  if(!incomFile)return;
+  va_list args;
+  va_start (args, fmt);
+  vfprintf(incomFile,fmt,args);
+  //fflush(incomFile);
+  va_end (args);
+}
+
 int stopped=0;
 bool connected=false;
-
-bool hexinput=false;
 
 bool silent=false;
 
 bool vcmode=false;
 
+int vcmodemaxspeed=0;
+
+int temperrProb=0;
+int dontrespProb=0;
+int permErrProb=0;
+int temperrProbDataSm=0;
+int dontrespProbDataSm=0;
+int permErrProbDataSm=0;
+
+int respDelayMin;
+int respDelayMax;
+
+
 bool answerMode=false;
 int answerMr;
 Address answerAddress;
+
+template <class T,int N>
+int GetArraySize(const T (&arr)[N])
+{
+  return N;
+}
+
+int tempErrorsDefault[]=
+{
+  SmppStatusSet::ESME_RMSGQFUL,
+  SmppStatusSet::ESME_RTHROTTLED,
+  SmppStatusSet::ESME_RX_T_APPN
+};
+std::vector<int> tempErrors(tempErrorsDefault,tempErrorsDefault+GetArraySize(tempErrorsDefault));
+int permErrorsDefault[]=
+{
+  SmppStatusSet::ESME_RX_P_APPN,
+  SmppStatusSet::ESME_RUNKNOWNERR
+};
+std::vector<int> permErrors(permErrorsDefault,permErrorsDefault+GetArraySize(permErrorsDefault));
+
+std::string vcprefixtemplate="$2i";
 
 int maxHistorySize=100;
 
@@ -61,14 +121,14 @@ void AddOptionals(PDU& pdu)
   {
     uint16_t tag=htons(it->second.tag);
     dump.insert(dump.end(),(uint8_t*)&tag,(uint8_t*)&tag+2);
-    uint16_t len=htons(it->second.data.size());
+    uint16_t len=htons((uint16_t)it->second.data.size());
     dump.insert(dump.end(),(uint8_t*)&len,(uint8_t*)&len+2);
     dump.insert(dump.end(),it->second.data.begin(),it->second.data.end());
   }
-  printf("Dump:");
-  for(int i=0;i<dump.size();i++)printf("%02x",dump[i]);
-  printf("\n");
-  pdu.get_optional().set_unknownFields((char*)&dump[0],dump.size());
+  CmdOut("Dump:");
+  for(int i=0;i<dump.size();i++)CmdOut("%02x",dump[i]);
+  CmdOut("\n");
+  pdu.get_optional().set_unknownFields((char*)&dump[0],(int)dump.size());
 }
 
 Hash<int> mrcache;
@@ -89,14 +149,16 @@ int getmr(const char* addr)
 struct MrKey{
   string addr;
   int mr;
+  int vcidx;
   MrKey():addr(),mr(0){}
-  MrKey(const char* a,int m):addr(a),mr(m){}
+  MrKey(const char* a,int m,int idx=0):addr(a),mr(m),vcidx(idx){}
   MrKey(const MrKey& k)
   {
     addr=k.addr;
     mr=k.mr;
+    vcidx=k.vcidx;
   }
-  bool operator=(const MrKey& k)const
+  bool operator==(const MrKey& k)const
   {
     return addr==k.addr && mr==k.mr;
   }
@@ -107,7 +169,7 @@ struct MrKey{
   }
 };
 
-typedef map<MrKey,bool*> MrMap;
+typedef map<MrKey,int*> MrMap;
 
 Mutex mrMtx;
 MrMap mrStore;
@@ -115,15 +177,12 @@ MrMap mrStore;
 struct VClientData{
 
 
-  int temperrProb;
-  int dontrespProb;
-  int permErrProb;
-  int respDelayMin;
-  int respDelayMax;
   int mode;
   bool dataSm;
 
   int dataCoding;
+
+  bool hexinput;
 
   int ussd;
   int esmclass;
@@ -146,10 +205,12 @@ struct VClientData{
 
   string eservicetype;
 
-  FILE *cmdfile;
+  File *cmdfile;
 
   bool waitRespMode;
-  bool waitResp;
+  int wrCount;
+  int waitResp;
+  bool waitRespNoUMR;
   int lastMr;
   int waitRespTimeout;
   time_t waitStart;
@@ -169,11 +230,6 @@ struct VClientData{
   }
   void Init()
   {
-    temperrProb=0;
-    dontrespProb=0;
-    permErrProb=0;
-    respDelayMin=0;
-    respDelayMax=0;
     mode=0;
     dataSm=false;
     ussd=-1;
@@ -185,9 +241,11 @@ struct VClientData{
     src_port=0;
     dst_port=0;
     cmdfile=0;
-    waitResp=false;
+    waitResp=0;
+    wrCount=1;
     lastMr=0;
     waitRespMode=false;
+    waitRespNoUMR=false;
     waitRespTimeout=10;
     active=false;
     repeatCnt=0;
@@ -202,19 +260,18 @@ struct VClientData{
     setDpf=false;
     umr=0;
     umrPresent=false;
+    hexinput=false;
   }
 
 }defVC;
 
-int& temperrProb=defVC.temperrProb;
-int& dontrespProb=defVC.dontrespProb;
-int& permErrProb=defVC.permErrProb;
-int& respDelayMin=defVC.respDelayMin;
-int& respDelayMax=defVC.respDelayMax;
+VClientData *vcarray=0;
+
 int& mode=defVC.mode;
 bool& dataSm=defVC.dataSm;
 
 int& dataCoding=defVC.dataCoding;
+bool& hexinput=defVC.hexinput;
 
 int& ussd=defVC.ussd;
 int& esmclass=defVC.esmclass;
@@ -224,7 +281,9 @@ int& sar_seq=defVC.sar_seq;
 int& src_port=defVC.src_port;
 int& dst_port=defVC.dst_port;
 bool& waitRespMode=defVC.waitRespMode;
-bool& waitResp=defVC.waitResp;
+bool& waitRespNoUMR=defVC.waitRespNoUMR;
+int& waitResp=defVC.waitResp;
+int& wrCount=defVC.wrCount;
 int& waitRespTimeout=defVC.waitRespTimeout;
 int& lastMr=defVC.lastMr;
 
@@ -243,7 +302,7 @@ bool& umrPresent=defVC.umrPresent;
 
 bool& setDpf=defVC.setDpf;
 
-FILE*& cmdfile=defVC.cmdfile;
+File*& cmdfile=defVC.cmdfile;
 
 bool ansi1251=false;
 bool cmdecho=false;
@@ -266,6 +325,9 @@ Option options[]={
 {"temperr",'i',&temperrProb},
 {"noresp",'i',&dontrespProb},
 {"permerr",'i',&permErrProb},
+{"temperrdatasm",'i',&temperrProbDataSm},
+{"norespdatasm",'i',&dontrespProbDataSm},
+{"permerrdatasm",'i',&permErrProbDataSm},
 {"respmindelay",'i',&respDelayMin},
 {"respmaxdelay",'i',&respDelayMax},
 {"mode",'m',&mode},
@@ -279,6 +341,8 @@ Option options[]={
 {"source",'s',&sourceAddress},
 {"echo",'b',&cmdecho},
 {"waitresp",'b',&waitRespMode},
+{"wrcount",'i',&wrCount},
+{"waitrespnoumr",'b',&waitRespNoUMR},
 {"wrtimeot",'i',&waitRespTimeout},
 {"autoanswer",'b',&autoAnswer},
 {"hexinput",'b',&hexinput},
@@ -288,7 +352,9 @@ Option options[]={
 {"replaceIfPresent",'b',&replaceIfPresent},
 {"eservicetype",'s',&eservicetype},
 {"setDpf",'b',&setDpf},
-{"asyncsend",'b',&asyncsend}
+{"asyncsend",'b',&asyncsend},
+{"vcprefixtemplate",'s',&vcprefixtemplate},
+{"vcmodemaxspeed",'i',&vcmodemaxspeed}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -321,7 +387,7 @@ void QueryCmd(SmppSession& ss,const string& args)
   PduQuerySm q;
   if(args.length()==0)
   {
-    printf("Usage: query msgId\n");
+    CmdOut("Usage: query msgId\n");
     return;
   }
   q.set_messageId(args.c_str());
@@ -333,7 +399,7 @@ void QueryCmd(SmppSession& ss,const string& args)
   PduQuerySmResp *qresp=tr->query(q);
   if(qresp)
   {
-      printf("Query result:commandStatus=%#x(%d), messageState=%d, errorCode=%d, finalDate=%s\n",
+      CmdOut("Query result:commandStatus=%#x(%d), messageState=%d, errorCode=%d, finalDate=%s\n",
         qresp->get_header().get_commandStatus(),qresp->get_header().get_commandStatus(),
         qresp->get_messageState(),
         qresp->get_errorCode(),
@@ -343,7 +409,7 @@ void QueryCmd(SmppSession& ss,const string& args)
   }
   else
   {
-    printf("Query timed out\n");
+    CmdOut("Query timed out\n");
   }
 }
 
@@ -356,11 +422,11 @@ void EnquireLinkCmd(SmppSession& ss,const string& args)
   SmppHeader *resp=tr->sendPdu((SmppHeader*)&eq);
   if(resp)
   {
-    printf("Enquire link ok\n");
+    CmdOut("Enquire link ok\n");
     disposePdu(resp);
   }else
   {
-    printf("No response\n");
+    CmdOut("No response\n");
   }
 }
 
@@ -371,7 +437,7 @@ void ReplaceCmd(SmppSession& ss,const string& args)
   string msg;
   if(!splitString(id,msg))
   {
-    printf("Usage: replace msgId newmessage\n");
+    CmdOut("Usage: replace msgId newmessage\n");
     return;
   }
   r.set_messageId(id.c_str());
@@ -384,12 +450,12 @@ void ReplaceCmd(SmppSession& ss,const string& args)
   PduReplaceSmResp *replresp=tr->replace(r);
   if(replresp)
   {
-    printf("Replace status:%#x(%d)\n",replresp->get_header().get_commandStatus(),replresp->get_header().get_commandStatus());
+    CmdOut("Replace status:%#x(%d)\n",replresp->get_header().get_commandStatus(),replresp->get_header().get_commandStatus());
     disposePdu((SmppHeader*)replresp);
   }
   else
   {
-    printf("Replace timed out\n");
+    CmdOut("Replace timed out\n");
   }
 }
 
@@ -397,7 +463,7 @@ void CancelCmd(SmppSession& ss,const string& args)
 {
   if(args.length()==0)
   {
-    printf("Usage:\ncancel msgId\nor\ncancel orgaddr dstaddr svctype\n");
+    CmdOut("Usage:\ncancel msgId\nor\ncancel orgaddr dstaddr svctype\n");
     return;
   }
   PduCancelSm q;
@@ -408,7 +474,7 @@ void CancelCmd(SmppSession& ss,const string& args)
     splitString(org,dst);
     if(!splitString(dst,svc))
     {
-      printf("Invalid arguments count\n");
+      CmdOut("Invalid arguments count\n");
       return;
     }
     Address addr(org.c_str());
@@ -441,12 +507,12 @@ void CancelCmd(SmppSession& ss,const string& args)
   PduCancelSmResp *cresp=tr->cancel(q);
   if(cresp)
   {
-    printf("Cancel result:%d\n",cresp->get_header().get_commandStatus());
+    CmdOut("Cancel result:%d\n",cresp->get_header().get_commandStatus());
     disposePdu((SmppHeader*)cresp);
   }
   else
   {
-    printf("Cancel timedout\n");
+    CmdOut("Cancel timedout\n");
   }
 }
 
@@ -454,18 +520,18 @@ void SetUmrCommand(SmppSession& ss,const string& args)
 {
   if(args.length()==0)
   {
-    printf("Usage: setumr {umr|off}\n");
+    CmdOut("Usage: setumr {umr|off}\n");
     return;
   }
   if(args=="no" || args=="off")
   {
     umrPresent=false;
-    printf("Umr turned off\n");
+    CmdOut("Umr turned off\n");
     return;
   }
   umr=atoi(args.c_str());
   umrPresent=true;
-  printf("umr set to %d\n",umr);
+  CmdOut("umr set to %d\n",umr);
 }
 
 const char* modes[]=
@@ -511,18 +577,18 @@ int findDcsByValue(int val)
 
 static void ShowOption(Option& opt,bool singleopt=false)
 {
-  printf("%s=",opt.name);
+  CmdOut("%s=",opt.name);
   switch(opt.type)
   {
-    case 'i':printf("%d\n",opt.asInt());break;
-    case 'b':printf("%s\n",opt.asBool()?"yes":"no");break;
+    case 'i':CmdOut("%d\n",opt.asInt());break;
+    case 'b':CmdOut("%s\n",opt.asBool()?"yes":"no");break;
     case 'm':
     {
-      printf("%s\n",modes[opt.asInt()]);
+      CmdOut("%s\n",modes[opt.asInt()]);
       if(singleopt)
       {
-        printf("Available modes:\n");
-        for(int i=0;i<sizeof(modes)/sizeof(modes[0]);i++)printf("  %s\n",modes[i]);
+        CmdOut("Available modes:\n");
+        for(int i=0;i<sizeof(modes)/sizeof(modes[0]);i++)CmdOut("  %s\n",modes[i]);
       }
     }break;
     case 'd':
@@ -530,18 +596,18 @@ static void ShowOption(Option& opt,bool singleopt=false)
       int idx=findDcsByValue(opt.asInt());
       if(idx!=-1)
       {
-        printf("%s - %s\n",dcs[idx].name.c_str(),dcs[idx].comment);
+        CmdOut("%s - %s\n",dcs[idx].name.c_str(),dcs[idx].comment);
       }
       if(singleopt)
       {
-        printf("Avialable datacoding schemes:\n");
+        CmdOut("Avialable datacoding schemes:\n");
         for(int i=0;i<sizeof(dcs)/sizeof(dcs[0]);i++)
         {
-          printf("  %s - %s\n",dcs[i].name.c_str(),dcs[i].comment);
+          CmdOut("  %s - %s\n",dcs[i].name.c_str(),dcs[i].comment);
         }
       }
     }break;
-    case 's':printf("%s\n",opt.asString().c_str());break;
+    case 's':CmdOut("%s\n",opt.asString().c_str());break;
   }
 }
 
@@ -554,7 +620,7 @@ void SetOption(SmppSession& ss,const string& args)
 {
   if(args.length()==0)
   {
-    printf("Usage: set optionname=optionvalue\nAvailable options are:\n");
+    CmdOut("Usage: set optionname=optionvalue\nAvailable options are:\n");
     for(unsigned int i=0;i<sizeof(options)/sizeof(Option);i++)
     {
       ShowOption(options[i]);
@@ -572,7 +638,7 @@ void SetOption(SmppSession& ss,const string& args)
         return;
       }
     }
-    printf("Unknown option\n");
+    CmdOut("Unknown option\n");
     return;
   }
   string opt,val;
@@ -601,7 +667,7 @@ void SetOption(SmppSession& ss,const string& args)
             dataCoding=dcs[idx].value;
           }else
           {
-            printf("Error: unknown dcs %s\n",val.c_str());
+            CmdOut("Error: unknown dcs %s\n",val.c_str());
           }
         }break;
         case 's':options[i].asString()=val;break;
@@ -609,7 +675,7 @@ void SetOption(SmppSession& ss,const string& args)
       return;
     }
   }
-  printf("Unknown option\n");
+  CmdOut("Unknown option\n");
 }
 
 void SetSar(SmppSession& ss,const string& args)
@@ -621,23 +687,23 @@ void SetSar(SmppSession& ss,const string& args)
     sar_mr=0;
     sar_num=0;
     sar_seq=0;
-    printf("Sar off\n");
+    CmdOut("Sar off\n");
     return;
   }
   if(!splitString(mr,num))
   {
-    printf("Usage: sar mr num seq\nor sar off\n to reset sar info\n");
+    CmdOut("Usage: sar mr num seq\nor sar off\n to reset sar info\n");
     return;
   }
   if(!splitString(num,seq))
   {
-    printf("Usage: sar mr num seq\nor sar off\n to reset sar info\n");
+    CmdOut("Usage: sar mr num seq\nor sar off\n to reset sar info\n");
     return;
   }
   sar_mr=atoi(mr.c_str());
   sar_num=atoi(num.c_str());
   sar_seq=atoi(seq.c_str());
-  printf("sar info set to mr=%d, num=%d, seq=%d\n",sar_mr,sar_num,sar_seq);
+  CmdOut("sar info set to mr=%d, num=%d, seq=%d\n",sar_mr,sar_num,sar_seq);
 }
 
 void ShowHelp(SmppSession& ss,const string& args);
@@ -717,7 +783,7 @@ void Answer(SmppSession& ss,const string& args)
   HistoryMap::iterator it=historyMap.find(idx);
   if(it==historyMap.end())
   {
-    printf("Message %d not found in history\n",idx);
+    CmdOut("Message %d not found in history\n",idx);
     return;
   }
   answerMode=true;
@@ -731,7 +797,7 @@ void AddSmppOptional(SmppSession& ss,const string& args)
   std::string dump;
   if(!splitString(tagstr,dump))
   {
-    printf("Usage: addsmppoptional tag hexdump\n");
+    CmdOut("Usage: addsmppoptional tag hexdump\n");
     return;
   }
   SmppOptionalTag so;
@@ -743,7 +809,7 @@ void AddSmppOptional(SmppSession& ss,const string& args)
     so.data.push_back(v);
   }
   optionalTags.insert(OptionalTagsMap::value_type(lastTagId,so));
-  printf("Id of added tag:%d\n",lastTagId);
+  CmdOut("Id of added tag:%d\n",lastTagId);
   lastTagId++;
 }
 
@@ -751,24 +817,149 @@ void RemoveSmppOptional(SmppSession& ss,const string& args)
 {
   if(args.length()==0)
   {
-    printf("Usage: removesmppoptional tagid\n");
-    printf("tagid printed when you add tag\n");
+    CmdOut("Usage: removesmppoptional tagid\n");
+    CmdOut("tagid printed when you add tag\n");
     return;
   }
   int id=-1;
   if(sscanf(args.c_str(),"%d",&id)!=1 || id<0)
   {
-    printf("Invalid id\n");
+    CmdOut("Invalid id\n");
     return;
   }
   OptionalTagsMap::iterator it=optionalTags.find(id);
   if(it==optionalTags.end())
   {
-    printf("Tag with this id not found\n");
+    CmdOut("Tag with this id not found\n");
     return;
   }
   optionalTags.erase(it);
 }
+
+void SetCmdOut(SmppSession& s,const string& args)
+{
+  if(args.length()==0)
+  {
+    CmdOut("Usage: setcmdout {filename}|none\n");
+    return;
+  }
+  if(args=="none")
+  {
+    if(cmdFile && cmdFile!=stdout)
+    {
+      fclose(cmdFile);
+    }
+    cmdFile=0;
+    return;
+  }
+  if(args=="stdout")
+  {
+    if(cmdFile && cmdFile!=stdout)
+    {
+      fclose(cmdFile);
+    }
+    cmdFile=stdout;
+    return;
+  }
+  FILE *f=fopen(args.c_str(),"wt");
+  if(!f)
+  {
+    fprintf(stderr,"Failed to open file:'%s' for writing",args.c_str());
+    return;
+  }
+  if(cmdFile && cmdFile!=stdout)fclose(cmdFile);
+  cmdFile=f;
+}
+
+void SetIncomOut(SmppSession& s,const string& args)
+{
+  if(args.length()==0)
+  {
+    CmdOut("Usage: setincomout {filename}|none\n");
+    return;
+  }
+  if(args=="none")
+  {
+    if(incomFile && incomFile!=stdout)
+    {
+      fclose(incomFile);
+    }
+    incomFile=0;
+    return;
+  }
+  if(args=="stdout")
+  {
+    if(incomFile && incomFile!=stdout)
+    {
+      fclose(incomFile);
+    }
+    incomFile=stdout;
+    return;
+  }
+  FILE *f=fopen(args.c_str(),"wt");
+  if(!f)
+  {
+    fprintf(stderr,"Failed to open file:'%s' for writing",args.c_str());
+    return;
+  }
+  if(incomFile && incomFile!=stdout)fclose(incomFile);
+  incomFile=f;
+}
+
+void LoadTempErrors(SmppSession& s,const std::string& args)
+{
+  if(args.length()==0)
+  {
+    CmdOut("Usage: loadtemperrors {filename}\n");
+    return;
+  }
+  FILE *f=fopen(args.c_str(),"rt");
+  char buf[128];
+  tempErrors.clear();
+  while(fgets(buf,sizeof(buf),f))
+  {
+    if(!buf[0])continue;
+    int err=atoi(buf);
+    if(smsc::system::Status::isErrorPermanent(err))
+    {
+      CmdOut("WARNING: permanent error %d loaded as temporal\n",err);
+    }
+    tempErrors.push_back(err);
+  }
+  if(tempErrors.size()==0)
+  {
+    CmdOut("WARNING: file with temporal errors is empty or doesn't contains valid error codes, reseting temporal errors to default");
+    tempErrors.insert(tempErrors.begin(),tempErrorsDefault,tempErrorsDefault+GetArraySize(tempErrorsDefault));
+  }
+}
+
+void LoadPermErrors(SmppSession& s,const std::string& args)
+{
+  if(args.length()==0)
+  {
+    CmdOut("Usage: loadpermerrors {filename}\n");
+    return;
+  }
+  FILE *f=fopen(args.c_str(),"rt");
+  char buf[128];
+  tempErrors.clear();
+  while(fgets(buf,sizeof(buf),f))
+  {
+    if(!buf[0])continue;
+    int err=atoi(buf);
+    if(!smsc::system::Status::isErrorPermanent(err))
+    {
+      CmdOut("WARNING: temporal error %d loaded as permanent\n",err);
+    }
+    permErrors.push_back(err);
+  }
+  if(permErrors.size()==0)
+  {
+    CmdOut("WARNING: file with permanent errors is empty or doesn't contains valid error codes, reseting permanent errors to default");
+    permErrors.insert(permErrors.begin(),permErrorsDefault,permErrorsDefault+GetArraySize(permErrorsDefault));
+  }
+}
+
 
 CmdRec commands[]={
 {"query",QueryCmd},
@@ -786,19 +977,23 @@ CmdRec commands[]={
 {"answer",Answer},
 {"addsmppoptional",AddSmppOptional},
 {"removesmppoptional",RemoveSmppOptional},
-{"setumr",SetUmrCommand}
+{"setumr",SetUmrCommand},
+{"setcmdout",SetCmdOut},
+{"setincomout",SetIncomOut},
+{"loadtemperrors",LoadTempErrors},
+{"loadpermerrors",LoadPermErrors}
 };
 
 const int commandsCount=sizeof(commands)/sizeof(CmdRec);
 
 void ShowHelp(SmppSession& ss,const string& args)
 {
-  printf("Available commands:\n");
+  CmdOut("Available commands:\n");
   for( int i=0;i<commandsCount;i++)
   {
-    printf("%s\n",commands[i].cmdname);
+    CmdOut("%s\n",commands[i].cmdname);
   }
-  printf("/ - send last message\n");
+  CmdOut("/ - send last message\n");
 }
 
 extern "C" char** cmd_completion(const char *text,int start,int end)
@@ -873,19 +1068,209 @@ extern "C" char** cmd_completion(const char *text,int start,int end)
   return rv;
 }
 
+std::string vcprefix(int idx,VClientData& vc)
+{
+  std::string out;
+  time_t now=time(NULL);
+  tm* t=localtime(&now);
+  timeval tv;
+  gettimeofday(&tv,0);
+  int msec=tv.tv_usec;
+  msec/=1000;
+  char buf[128];
+  for(int i=0;i<vcprefixtemplate.length();i++)
+  {
+    if(vcprefixtemplate[i]!='$')
+    {
+      out+=vcprefixtemplate[i];
+      continue;
+    }
+    i++;if(i>=vcprefixtemplate.length())break;
+    int width=0;
+    if(isdigit(vcprefixtemplate[i]))
+    {
+      int skip;
+      sscanf(vcprefixtemplate.c_str()+i,"%d%n",&width,&skip);
+      i+=skip;
+    }
+    if(i>=vcprefixtemplate.length())break;
+    switch(vcprefixtemplate[i])
+    {
+      case '$':out+='$';break;
+      case 'i':
+      {
+        snprintf(buf,sizeof(buf),"%0*d",width,idx);
+        out+=buf;
+      }break;
+      case 'y':
+      case 'Y':
+      {
+        int y=t->tm_year+1900;
+        if(vcprefixtemplate[i]=='y')y%=100;
+        snprintf(buf,sizeof(buf),"%0*d",width,y);
+        out+=buf;
+      }break;
+      case 'M':
+      {
+        snprintf(buf,sizeof(buf),"%0*d",width,t->tm_mon+1);
+        out+=buf;
+      }break;
+#define TSFIELD(letter,field) \
+      case letter: { \
+        snprintf(buf,sizeof(buf),"%0*d",width,t->tm_##field); \
+        out+=buf; }break;
+
+      TSFIELD('d',mday)
+      TSFIELD('h',hour)
+      TSFIELD('m',min)
+      TSFIELD('s',sec)
+
+#undef TSFIELD
+
+      case 'u':
+      {
+        snprintf(buf,sizeof(buf),"%0*d",width,msec);
+        out+=buf;
+      }break;
+      case 'a':
+      {
+        snprintf(buf,sizeof(buf),"%0*s",width,vc.sourceAddress.c_str());
+        out+=buf;
+      }break;
+    }
+  }
+  return out;
+}
+
+void ExtractAddresses(SmppHeader* pdu,Address& org,Address& dst)
+{
+  if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
+  {
+    PduDeliverySm* dlvr=(PduDeliverySm*)pdu;
+    org=PduAddress2Address(dlvr->get_message().get_source());
+    dst=PduAddress2Address(dlvr->get_message().get_dest());
+  }else
+  {
+    PduDataSm* dsm=(PduDataSm*)pdu;
+    org=PduAddress2Address(dsm->get_data().get_source());
+    dst=PduAddress2Address(dsm->get_data().get_dest());
+  }
+}
+
+std::string getTimeStamp()
+{
+  time_t now=time(NULL);
+  tm* t=localtime(&now);
+  timeval tv;
+  gettimeofday(&tv,0);
+  int msec=tv.tv_usec;
+  msec/=1000;
+  char buf[128];
+  sprintf(buf,"%02d.%02d.%04d %02d:%02d:%02d.%03d:",t->tm_mday,t->tm_mon+1,t->tm_year+1900,t->tm_hour,t->tm_min,t->tm_sec,msec);
+  return buf;
+}
+
 class ResponseProcessor:public Thread{
   Array<SmppHeader*> queue;
   EventMonitor mon;
   SmppTransmitter* trans;
   SmppTransmitter* atrans;
 
+  int tempErrIdx;
+  int permErrIdx;
+
+  struct DelayedResp
+  {
+    int seq;
+    int err;
+    timeval delayTill;
+    bool isDataSm;
+    bool operator<(const DelayedResp& rhs)const
+    {
+      return delayTill.tv_sec<rhs.delayTill.tv_sec ||
+            (delayTill.tv_sec==rhs.delayTill.tv_sec && delayTill.tv_usec<rhs.delayTill.tv_usec);
+    }
+  };
+
+  std::multiset<DelayedResp> delayedResponses;
+
+  void sendResp(int seq,int err,bool isDataSm,int delay=0)
+  {
+    if(delay)
+    {
+      DelayedResp dr;
+      dr.seq=seq;
+      dr.err=err;
+      dr.isDataSm=isDataSm;
+      timeval tv;
+      gettimeofday(&tv,0);
+      tv.tv_usec+=delay*1000;
+      tv.tv_sec+=tv.tv_usec/1000000;
+      tv.tv_usec%=1000000;
+      dr.delayTill=tv;
+      delayedResponses.insert(dr);
+      return;
+    }
+    if(isDataSm)
+    {
+      PduDataSmResp resp;
+      resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+      resp.set_messageId("");
+      resp.get_header().set_sequenceNumber(seq);
+      resp.get_header().set_commandStatus(err);
+      atrans->sendDataSmResp(resp);
+    }else
+    {
+      PduDeliverySmResp resp;
+      resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+      resp.set_messageId("");
+      resp.get_header().set_sequenceNumber(seq);
+      resp.get_header().set_commandStatus(err);
+      atrans->sendDeliverySmResp(resp);
+    }
+  }
+
+  int TimeValDiff(timeval tv1,timeval tv2)
+  {
+    int diff=(tv1.tv_sec-tv2.tv_sec)*1000;
+    diff+=(tv1.tv_usec-tv2.tv_usec)/1000;
+    return diff;
+  }
+
+
 public:
   int Execute()
   {
+    tempErrIdx=0;
+    permErrIdx=0;
     mon.Lock();
     while(!stopped)
     {
-      if(queue.Count()==0)mon.wait();
+      if(queue.Count()==0)
+      {
+        if(delayedResponses.empty())
+        {
+          mon.wait();
+        }else
+        {
+          timeval tv;
+          gettimeofday(&tv,0);
+          int delay=TimeValDiff(delayedResponses.begin()->delayTill,tv);
+          if(delay>0)mon.wait(delay);
+        }
+      }
+      if(!delayedResponses.empty())
+      {
+        timeval tv;
+        gettimeofday(&tv,0);
+        std::multiset<DelayedResp>::iterator it=delayedResponses.begin();
+        if(TimeValDiff(it->delayTill,tv)<=0)
+        {
+          sendResp(it->seq,it->err,it->isDataSm);
+          delayedResponses.erase(it);
+        }
+      }
+
       if(!queue.Count())continue;
       SmppHeader* pdu;
       queue.Shift(pdu);
@@ -902,65 +1287,64 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM  ||
        pdu->get_commandId()==SmppCommandSet::DATA_SM)
     {
+      bool isDataSm=pdu->get_commandId()==SmppCommandSet::DATA_SM;
       int rnd=rand()%100;
-      if(rnd<temperrProb)
+      if((isDataSm && rnd<temperrProbDataSm) || (!isDataSm && rnd<temperrProb))
       {
-        PduDeliverySmResp resp;
-        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
-        atrans->sendDeliverySmResp(resp);
+        int delay=0;
+        if(respDelayMin || respDelayMax)
+        {
+          double r=1.0*rand()/RAND_MAX;
+          delay=respDelayMin+(respDelayMax-respDelayMin)*r;
+        }
+        sendResp(pdu->get_sequenceNumber(),tempErrors[tempErrIdx++],isDataSm,delay);
+        if(tempErrIdx>=tempErrors.size())tempErrIdx=0;
+        if(!silent)
+        {
+          Address org,dst;
+          ExtractAddresses(pdu,org,dst);
+          IncomOut("\nPDU from %s to %s was replied with temporal error\n",org.toString().c_str(),dst.toString().c_str());
+        }
         return;
       }
-      if(rnd<temperrProb+permErrProb)
+      if((isDataSm && rnd<temperrProbDataSm+permErrProbDataSm) || (!isDataSm && rnd<temperrProb+permErrProb))
       {
-        PduDeliverySmResp resp;
-        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RX_P_APPN);
-        atrans->sendDeliverySmResp(resp);
+        int delay=0;
+        if(respDelayMin || respDelayMax)
+        {
+          double r=1.0*rand()/RAND_MAX;
+          delay=respDelayMin+(respDelayMax-respDelayMin)*r;
+        }
+        sendResp(pdu->get_sequenceNumber(),permErrors[permErrIdx++],pdu->get_commandId()==SmppCommandSet::DATA_SM,delay);
+        if(permErrIdx>=permErrors.size())permErrIdx=0;
+        if(!silent)
+        {
+          Address org,dst;
+          ExtractAddresses(pdu,org,dst);
+          IncomOut("\nPDU from %s to %s was replied with permanent error\n",org.toString().c_str(),dst.toString().c_str());
+        }
         return;
-      }else if(rnd<temperrProb+permErrProb+dontrespProb)
+      }else if((isDataSm && rnd<temperrProbDataSm+permErrProbDataSm+dontrespProbDataSm) || (!isDataSm && rnd<temperrProb+permErrProb+dontrespProb))
       {
+        if(!silent)
+        {
+          Address org,dst;
+          ExtractAddresses(pdu,org,dst);
+          IncomOut("\nPDU from %s to %s was not replied\n",org.toString().c_str(),dst.toString().c_str());
+        }
         return;
       }
 
+      int delay=0;
       if(respDelayMin || respDelayMax)
       {
-        double r=rand()/RAND_MAX;
-        int delay=respDelayMin+(respDelayMax-respDelayMin)*r;
-#ifndef _WIN32
-        int sec=delay/1000;
-        int msec=delay%1000;
-        timestruc_t tv={sec,msec*1000000};
-        nanosleep(&tv,0);
-#else
-        Sleep(delay);
-#endif
+        double r=1.0*rand()/RAND_MAX;
+        delay=respDelayMin+(respDelayMax-respDelayMin)*r;
       }
 
-      if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
-      {
-        PduDeliverySmResp resp;
-        resp.get_header().set_commandStatus(respStatus);
-        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        atrans->sendDeliverySmResp(resp);
-      }else
-      {
-        PduDataSmResp resp;
-        resp.get_header().set_commandStatus(respStatus);
-        resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        atrans->sendDataSmResp(resp);
-      }
+      sendResp(pdu->get_sequenceNumber(),respStatus,pdu->get_commandId()==SmppCommandSet::DATA_SM,delay);
 
-
-      if(silent && !autoAnswer)
+      if(silent && !autoAnswer && !waitRespMode)
       {
         return;
       }
@@ -977,10 +1361,6 @@ public:
 
       if(autoAnswer)
       {
-        if(!silent)
-        {
-          printf("Autoanswered\n");
-        }
         Address oa=s.getOriginatingAddress();
         s.setOriginatingAddress(s.getDestinationAddress());
         s.setDestinationAddress(oa);
@@ -992,6 +1372,37 @@ public:
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm,&s);
         atrans->submit(sm);
+        if(!silent)
+        {
+          IncomOut("Autoanswered: seq=%d\n",sm.get_header().get_sequenceNumber());
+        }
+      }
+
+      int vcidx=-1;
+
+      if(waitRespMode)
+      {
+        MutexGuard g(mrMtx);
+        MrMap::iterator m=mrStore.find
+          (
+            MrKey
+            (
+              s.getDestinationAddress().toString().c_str(),
+              waitRespNoUMR?0:s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
+            )
+          );
+        if(m!=mrStore.end())
+        {
+          (*(m->second))--;
+          if(*m->second==0)
+          {
+            mrStore.erase(m);
+          }
+          if(vcmode)
+          {
+            vcidx=m->first.vcidx;
+          }
+        }
       }
 
 
@@ -1014,31 +1425,26 @@ public:
         int mr=s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)?s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
         historyMap.insert(pair<int,pair<int,Address> > (smsNum,pair<int,Address>(mr,s.getOriginatingAddress())));
       }
-      printf("\n===== %d =====\nFrom:%s\n",smsNum,buf);
+      IncomOut("\n===== %d =====\n",smsNum);
+      if(vcmode && vcidx!=-1)
+      {
+        IncomOut("VCInfo(%s): %s\n",isDataSm?"dataSm":"deliver",vcprefix(vcidx,vcarray[vcidx]).c_str());
+      }else
+      {
+        IncomOut("Timestamp(%s): %s\n",isDataSm?"dataSm":"deliver",getTimeStamp().c_str());
+      }
+      IncomOut("From:%s\n",buf);
       s.getDestinationAddress().toString(buf,sizeof(buf));
-      printf("To:%s\n",buf);
-      printf("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
-      printf("EsmClass:%x\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
+      IncomOut("To:%s\n",buf);
+      IncomOut("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
+      IncomOut("EsmClass:%x\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
       if(s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
       {
-        printf("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-        MutexGuard g(mrMtx);
-        MrMap::iterator m=mrStore.find
-          (
-            MrKey
-            (
-              s.getDestinationAddress().toString().c_str(),
-              s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
-            )
-          );
-        if(m!=mrStore.end())
-        {
-          *(m->second)=false;
-        }
+        IncomOut("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
       }
       if(s.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
       {
-        printf("MsgState:%d\n",s.getIntProperty(Tag::SMPP_MSG_STATE));
+        IncomOut("MsgState:%d\n",s.getIntProperty(Tag::SMPP_MSG_STATE));
       }
 
       if(s.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
@@ -1053,17 +1459,17 @@ public:
           body=(unsigned char*)s.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
         }
         int udhlen=body[0];
-        printf("Udh len: %d\n",udhlen);
-        printf("Udh dump:");
+        IncomOut("Udh len: %d\n",udhlen);
+        IncomOut("Udh dump:");
         for(int i=1;i<=udhlen;i++)
         {
-          printf(" %02X",(unsigned)body[i]);
+          IncomOut(" %02X",(unsigned)body[i]);
         }
-        printf("\n");
+        IncomOut("\n");
       }
       if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
       {
-        printf("Ussd op:%d\n",s.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+        IncomOut("Ussd op:%d\n",s.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
       }
       if(s.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
       {
@@ -1081,7 +1487,7 @@ public:
           std::string dump;
           if(length>len)
           {
-            printf("Warning: Unknown tags contain incorrect data!\n");
+            IncomOut("Warning: Unknown tags contain incorrect data!\n");
             length=len;
           }
           for(int i=0;i<length;i++)
@@ -1092,16 +1498,16 @@ public:
           }
           bin+=length;
           len-=length;
-          printf("Unknown smpp optional: tag=%04x dump: %s\n",tag,dump.c_str());
+          IncomOut("Unknown smpp optional: tag=%04x dump: %s\n",tag,dump.c_str());
         }
       }
       if(s.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM))
       {
-        printf("SAR_MR:%d\nSAR_TOTAL:%d\nSAR_SEQNUM:%d\n",s.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM),s.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),s.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM));
+        IncomOut("SAR_MR:%d\nSAR_TOTAL:%d\nSAR_SEQNUM:%d\n",s.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM),s.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),s.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM));
       }
       if(s.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY)
       {
-        printf("Esm class: %02X\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
+        IncomOut("Esm class: %02X\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
         unsigned char* body;
         unsigned len;
         if(s.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
@@ -1116,12 +1522,12 @@ public:
           len-=body[0]+1;
           body+=body[0]+1;
         }
-        printf("Msg dump(%d):",len);
+        IncomOut("Msg dump(%d):",len);
         for(int i=0;i<len;i++)
         {
-          printf(" %02X",(unsigned)body[i]);
+          IncomOut(" %02X",(unsigned)body[i]);
         }
-        printf("\n");
+        IncomOut("\n");
       }else
       if(getSmsText(&s,buf,sizeof(buf),ansi1251?CONV_ENCODING_CP1251:CONV_ENCODING_KOI8R)==-1)
       {
@@ -1129,17 +1535,17 @@ public:
         char *data=new char[sz];
         if(getSmsText(&s,data,sz)!=-1)
         {
-          printf("Message(payload):%s\n",data);
+          IncomOut("Message(payload):%s\n",data);
         }else
         {
-          printf("Error: faield to retrieve message\n");
+          IncomOut("Error: failed to retrieve message\n");
         }
         delete [] data;
       }else
       {
-        printf("Message:%s\n",buf);
+        IncomOut("Message:%s\n",buf);
       }
-      printf("==========\n");
+      IncomOut("==========\n");
       fflush(stdout);
 
     }else
@@ -1147,24 +1553,27 @@ public:
     {
       if(!silent)
       {
-        printf("\nReceived async submit sm resp:status=%#x, msgId=%s\n",
+        IncomOut("\n%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s\n",
+          vcmode?getTimeStamp().c_str():"",
           pdu->get_commandStatus(),
+          pdu->get_sequenceNumber(),
           ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
       }
     }else if(pdu->get_commandId()==SmppCommandSet::UNBIND)
     {
-      printf("Received unbind\n");
+      IncomOut("Received unbind\n");
       connected=false;
     }else if(pdu->get_commandId()==SmppCommandSet::ALERT_NOTIFICATION)
     {
       PduAlertNotification* al=(PduAlertNotification*)pdu;
-      printf("\nReceived alert notification:%s->%s:%d\n",
+      IncomOut("\nReceived alert notification:%s->%s:%d\n",
         PduAddress2Address(al->get_esme()).toString().c_str(),
         PduAddress2Address(al->get_source()).toString().c_str(),
         al->get_optional().get_msAvailableStatus());
     }
-    if(!cmdfile && !vcmode && !silent)rl_forced_update_display();
+    if(!cmdfile && !vcmode && !silent && incomFile==stdout)rl_forced_update_display();
   }
+
   void enqueue(SmppHeader* pdu)
   {
     mon.Lock();
@@ -1196,8 +1605,8 @@ public:
   }
   void handleError(int errorCode)
   {
-    printf("Network error!\n");
-    fflush(stdout);
+    IncomOut("Network error!\n");
+    fflush(incomFile);
     connected=false;
   }
 
@@ -1213,6 +1622,13 @@ void trimend(char* buf)
   buf[l+1]=0;
 }
 
+void trimend(std::string& line)
+{
+  int l=line.length()-1;
+  while(l>=0 && isspace(line[l]))l--;
+  line.erase(l+1);
+}
+
 struct PendingVC{
   string src;
   string fn;
@@ -1220,15 +1636,17 @@ struct PendingVC{
   time_t timelimit;
 };
 
+
+
 int main(int argc,char* argv[])
 {
   using_history ();
 
   if(argc==1)
   {
-    printf("usage: %s systemid [options] @cmdfile\n",argv[0]);
-    printf("Options are:\n");
-    printf("\t -h host[:port] (default == smsc:9001)\n"
+    CmdOut("usage: %s systemid [options] @cmdfile\n",argv[0]);
+    CmdOut("Options are:\n");
+    CmdOut("\t -h host[:port] (default == smsc:9001)\n"
            "\t -a addr (defauld == sid)\n"
            "\t -p password (default == sid)\n"
            "\t -t bind type (tx,rx,trx)\n"
@@ -1286,7 +1704,7 @@ int main(int argc,char* argv[])
     }
     if(opt[0]!='-' && opt[0]!='/')
     {
-      printf("Unrecognized command line argument: %s\n",opt);
+      CmdOut("Unrecognized command line argument: %s\n",opt);
       return -1;
     }
     switch(opt[1])
@@ -1403,6 +1821,8 @@ int main(int argc,char* argv[])
   cfg.port=port;
   cfg.timeOut=10;
 
+  std::string line;
+
   SmppSession ss(cfg,&lst);
   SmppTransmitter *tr=ss.getSyncTransmitter();
   SmppTransmitter *atr=ss.getAsyncTransmitter();
@@ -1425,7 +1845,7 @@ int main(int argc,char* argv[])
       connected=true;
     }catch(SmppConnectException& e)
     {
-      printf("Connect error:%s\n",e.getTextReason());
+      CmdOut("Connect error:%s\n",e.getTextReason());
     }
 
     char *addr=NULL;
@@ -1444,15 +1864,18 @@ int main(int argc,char* argv[])
     cmdfile=0;
     if(cmdFileName.length()>0)
     {
-      cmdfile=fopen(cmdFileName.c_str(),"rt");
-      if(!cmdfile)
+      cmdfile=new File();
+      try{
+        cmdfile->ROpen(cmdFileName.c_str());
+      }catch(std::exception& e)
       {
-        printf("Faield to open command file:%s\n",cmdFileName.c_str());
+        CmdOut("Faield to open command file:%s\n",cmdFileName.c_str());
+        delete cmdfile;
+        cmdfile=0;
       }
     }
     char fileBuf[65536];
 
-    VClientData *vc=0;
     int vccnt=0;
     int vcused=0;
     int vcidx=0;
@@ -1467,9 +1890,9 @@ int main(int argc,char* argv[])
         int acnt=0;
         for(int x=0;x<vccnt;x++)
         {
-          if(!vc[x].active)continue;
-          if(vc[x].waitResp)continue;
-          if(vc[x].sleepTill)continue;
+          if(!vcarray[x].active)continue;
+          if(vcarray[x].waitResp)continue;
+          if(vcarray[x].sleepTill)continue;
           acnt++;
         }
         if(acnt==0)
@@ -1488,46 +1911,51 @@ int main(int argc,char* argv[])
           PendingVC p=pvc.front();
           pvc.erase(pvc.begin());
           int idx=0;
-          while(vc[idx].active)idx++;
-          printf("%02d: new client %s from %s\n",idx,p.src.c_str(),p.fn.c_str());
-          vc[idx].cmdfile=fopen(p.fn.c_str(),"rb");
-          if(!vc[idx].cmdfile)
+          while(vcarray[idx].active)idx++;
+          CmdOut("%s: new client %s from %s\n",vcprefix(idx,vcarray[idx]).c_str(),p.src.c_str(),p.fn.c_str());
+          vcarray[idx].cmdfile=new File;
+          try{
+            vcarray[idx].cmdfile->ROpen(p.fn.c_str());
+          }catch(std::exception& e)
           {
-            printf("%02d: failed to open file %s, skipping\n",idx,p.fn.c_str());
+            delete vcarray[idx].cmdfile;
+            vcarray[idx].cmdfile=0;
+            CmdOut("%s: failed to open file %s, skipping\n",vcprefix(idx,vcarray[idx]).c_str(),p.fn.c_str());
             continue;
           }
-          vc[idx].sourceAddress=p.src;
-          vc[idx].repeatCnt=p.repeat;
-          vc[idx].execTime=time(NULL)+p.timelimit;
-          vc[idx].active=true;
+          vcarray[idx].sourceAddress=p.src;
+          vcarray[idx].repeatCnt=p.repeat;
+          vcarray[idx].execTime=time(NULL)+p.timelimit;
+          vcarray[idx].active=true;
           vcused++;
         }
         if(vcused==0)break;
-        if(!vc[vcidx].active)continue;
-        defVC=vc[vcidx];
+        if(!vcarray[vcidx].active)continue;
+        defVC=vcarray[vcidx];
         if(waitRespMode)
         {
-          if(waitResp && vc[vcidx].waitStart+waitRespTimeout<time(NULL))
+          if(waitResp && vcarray[vcidx].waitStart+waitRespTimeout>time(NULL))
           {
             continue;
           }
           if(waitResp)
           {
-            printf("Response for %s timed out!\n",sourceAddress.c_str());
-            waitResp=false;
+            if(vcmode)CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+            CmdOut("Response for %s timed out!\n",sourceAddress.c_str());
+            waitResp=0;
             MutexGuard g(mrMtx);
             MrMap::iterator i=mrStore.find(MrKey(sourceAddress.c_str(),lastMr));
             if(i!=mrStore.end())mrStore.erase(i);
           }
         }
-        if(vc[vcidx].sleepTill!=0)
+        if(vcarray[vcidx].sleepTill!=0)
         {
           timeval tv;
           gettimeofday(&tv,0);
-          if(vc[vcidx].sleepTill>tv.tv_sec ||
-             (vc[vcidx].sleepTill==tv.tv_sec && vc[vcidx].sleepTillMsec>tv.tv_usec/1000))continue;
-          vc[vcidx].sleepTill=0;
-          vc[vcidx].sleepTillMsec=0;
+          if(vcarray[vcidx].sleepTill>tv.tv_sec ||
+             (vcarray[vcidx].sleepTill==tv.tv_sec && vcarray[vcidx].sleepTillMsec>tv.tv_usec/1000))continue;
+          vcarray[vcidx].sleepTill=0;
+          vcarray[vcidx].sleepTillMsec=0;
         }
       }else
       {
@@ -1548,8 +1976,8 @@ int main(int argc,char* argv[])
           }
           if(waitResp)
           {
-            printf("Response timed out!\n");
-            waitResp=false;
+            CmdOut("Response timed out!\n");
+            waitResp=0;
             MutexGuard g(mrMtx);
             MrMap::iterator i=mrStore.find(MrKey(sourceAddress.c_str(),lastMr));
             if(i!=mrStore.end())mrStore.erase(i);
@@ -1559,65 +1987,68 @@ int main(int argc,char* argv[])
 
       if(cmdfile)
       {
-        if(!fgets(fileBuf,sizeof(fileBuf),cmdfile))
+        if(!cmdfile->ReadLine(line))
         {
           if(vcmode)
           {
-            if(vc[vcidx].repeatCnt)
+            if(vcarray[vcidx].repeatCnt)
             {
-              vc[vcidx].repeatCnt--;
-              if(vc[vcidx].repeatCnt==0)
+              vcarray[vcidx].repeatCnt--;
+              if(vcarray[vcidx].repeatCnt==0)
               {
-                printf("%02d:finished\n",vcidx);
-                fclose(cmdfile);
-                vc[vcidx].Init();
+                CmdOut("%s:finished\n",vcprefix(vcidx,vcarray[vcidx]).c_str());
+                delete cmdfile;
+                cmdfile=0;
+                vcarray[vcidx].Init();
                 vcused--;
               }else
               {
-                fseek(cmdfile,0,SEEK_SET);
+                cmdfile->Seek(0);
               }
-            }else if(vc[vcidx].execTime)
+            }else if(vcarray[vcidx].execTime)
             {
-              if(vc[vcidx].execTime<=time(NULL))
+              if(vcarray[vcidx].execTime>time(NULL))
               {
-                fseek(cmdfile,0,SEEK_SET);
+                cmdfile->Seek(0);
               }else
               {
-                printf("%02d:finished\n",vcidx);
-                fclose(cmdfile);
-                vc[vcidx].Init();
+                CmdOut("%s:finished\n",vcprefix(vcidx,vcarray[vcidx]).c_str());
+                delete cmdfile;
+                cmdfile=0;
+                vcarray[vcidx].Init();
                 vcused--;
               }
             }else
             {
-              fseek(cmdfile,0,SEEK_SET);
+              cmdfile->Seek(0);
             }
           }else
           {
-            fclose(cmdfile);
+            delete cmdfile;
             addr=0;
             message=0;
             cmdfile=0;
           }
           continue;
         }
-        trimend(fileBuf);
-        addr=fileBuf;
+        //trimend(fileBuf);
+        trimend(line);
+        addr=const_cast<char*>(line.c_str());
         if(cmdecho)
         {
           if(vcmode)
           {
-            printf("%02d:Address or cmd>%s\n",vcidx,fileBuf);
+            CmdOut("%s:>%s\n",vcprefix(vcidx,vcarray[vcidx]).c_str(),line.c_str());
           }else
           {
-            printf("Address or cmd>%s\n",fileBuf);
+            CmdOut("Address or cmd>%s\n",line.c_str());
           }
         }
       }else
       {
         if(vcmode)
         {
-          printf("something goes wrong... interactive mode not allowed during virtualclients\n");
+          CmdOut("something goes wrong... interactive mode not allowed during virtualclients\n");
           break;
         }
         if(addr)free(addr);
@@ -1637,11 +2068,17 @@ int main(int argc,char* argv[])
         break;
       }
 
+      if(cmd[0]=='#' || cmd[0]==';')
+      {
+        //comment
+        continue;
+      }
+
       if(cmd=="virtualclients")
       {
         if(vcmode)
         {
-          printf("Command virtualclients is not suppoerted in virtual clients mode!!!\n");
+          CmdOut("Command virtualclients is not suppoerted in virtual clients mode!!!\n");
           continue;
         }
         int cnt=10;
@@ -1650,20 +2087,24 @@ int main(int argc,char* argv[])
           string n;
           splitString(arg,n);
           cnt=atoi(n.c_str());
-          if(cnt<=0 || cnt >256)
+          if(cnt<=0 || cnt >1024)
           {
-            printf("%s is not valid number of active virtual clients\n",n.c_str());
+            CmdOut("%s is not valid number of active virtual clients\n",n.c_str());
             break;
           }
         }
         FILE *f=fopen(arg.c_str(),"rb");
         if(!f)
         {
-          printf("Failed to open virtualclients script:%s\n",arg.c_str());
+          CmdOut("Failed to open virtualclients script:%s\n",arg.c_str());
           continue;
         }
 
-        if(cmdfile){fclose(cmdfile);cmdfile=0;}
+        if(cmdfile)
+        {
+          delete cmdfile;
+          cmdfile=0;
+        }
         addr=0;
         message=0;
         cmdfile=0;
@@ -1689,7 +2130,8 @@ int main(int argc,char* argv[])
           pvc.push_back(p);
         }
 
-        vc=new VClientData[cnt];
+        vcarray=new VClientData[cnt];
+        for(int i=0;i<cnt;i++)vcarray[i]=defVC;
         vccnt=cnt;
         vcmode=true;
         continue;
@@ -1699,7 +2141,7 @@ int main(int argc,char* argv[])
       {
         if(connected)
         {
-          printf("Sme already connected, type disconnect first\n");
+          CmdOut("Sme already connected, type disconnect first\n");
           continue;
         }
         try{
@@ -1710,11 +2152,11 @@ int main(int argc,char* argv[])
           rp.setTrans(tr,ss.getAsyncTransmitter());
         }catch(SmppConnectException& e)
         {
-          printf("Connect error:%s\n",e.getTextReason());
+          CmdOut("Connect error:%s\n",e.getTextReason());
           continue;
         }
         connected=true;
-        printf("Connect ok\n");
+        CmdOut("Connect ok\n");
         continue;
       }
 
@@ -1722,11 +2164,11 @@ int main(int argc,char* argv[])
       {
         if(!connected)
         {
-          printf("Sme already disconnect, connect it first\n");
+          CmdOut("Sme already disconnect, connect it first\n");
           continue;
         }
         ss.close();
-        printf("Disconnected\n");
+        CmdOut("Disconnected\n");
         connected=false;
         continue;
       }
@@ -1734,12 +2176,20 @@ int main(int argc,char* argv[])
       if(cmd[0]=='@')
       {
         string fn=cmd.substr(1);
-        if(cmdfile)fclose(cmdfile);
-        cmdfile=fopen(fn.c_str(),"rt");
-        if(!cmdfile)
+        if(cmdfile)
         {
-          printf("Failed to open file:%s(%s)\n",fn.c_str(),strerror(errno));
-        }else
+          delete cmdfile;
+        }
+
+        cmdfile=new File();
+        try{
+          cmdfile->ROpen(fn.c_str());
+        }catch(std::exception& e)
+        {
+          delete cmdfile;
+          CmdOut("Failed to open file:%s(%s)\n",fn.c_str(),strerror(errno));
+        }
+        if(!cmdfile)
         {
           if(addr)free(addr);
           if(message)free(message);
@@ -1761,7 +2211,7 @@ int main(int argc,char* argv[])
       }
       if(cmdFound && !answerMode)
       {
-        if(vcmode)vc[vcidx]=defVC;
+        if(vcmode)vcarray[vcidx]=defVC;
         continue;
       }
 
@@ -1777,8 +2227,8 @@ int main(int argc,char* argv[])
         srcaddr=Address(sourceAddress.c_str());
       }catch(...)
       {
-        if(vcmode)printf("%02d:",vcidx);
-        printf("Invalid source address:%s\n",sourceAddress.c_str());
+        if(vcmode)CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+        CmdOut("Invalid source address:%s\n",sourceAddress.c_str());
         continue;
       }
 
@@ -1800,20 +2250,22 @@ int main(int argc,char* argv[])
             s.setDestinationAddress(dst);
           }catch(...)
           {
-            if(vcmode)printf("%02d:",vcidx);
-            printf("Invalid address:%s\n",addr);
+            if(vcmode)CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+            CmdOut("Invalid address:%s\n",addr);
             continue;
           }
         }
         if(cmdfile)
         {
-          fgets(fileBuf,sizeof(fileBuf),cmdfile);
-          trimend(fileBuf);
-          message=fileBuf;
+          //fgets(fileBuf,sizeof(fileBuf),cmdfile);
+          line="";
+          cmdfile->ReadLine(line);
+          trimend(line);
+          message=const_cast<char*>(line.c_str());
           if(cmdecho)
           {
-            if(vcmode)printf("%02d:",vcidx);
-            printf("Enter message:%s\n",fileBuf);
+            if(vcmode)CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+            CmdOut("Enter message:%s\n",line.c_str());
           }
         }else
         {
@@ -1834,7 +2286,7 @@ int main(int argc,char* argv[])
 
       if(!connected)
       {
-        printf("Sme not connected, type connect first\n");
+        CmdOut("Sme not connected, type connect first\n");
         continue;
       }
 
@@ -1988,26 +2440,30 @@ int main(int argc,char* argv[])
 
       if(waitRespMode)
       {
-        int mr;
-        if(!s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
+        int mr=0;
+        if(!waitRespNoUMR)
         {
-          mr=getmr(sourceAddress.c_str());
-          s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr);
-          printf("Set mr to %d\n",mr);
-        }else
-        {
-          mr=s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          if(!s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
+          {
+            mr=getmr(sourceAddress.c_str());
+            s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr);
+            if(vcmode)CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+            CmdOut("Set mr to %d\n",mr);
+          }else
+          {
+            mr=s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+          }
         }
         lastMr=mr;
         MutexGuard g(mrMtx);
         if(vcmode)
         {
-          vc[vcidx].waitResp=true;
-          vc[vcidx].waitStart=time(NULL);
-          mrStore.insert(make_pair(MrKey(Address(sourceAddress.c_str()).toString().c_str(),mr),&vc[vcidx].waitResp));
+          vcarray[vcidx].waitResp=wrCount;
+          vcarray[vcidx].waitStart=time(NULL);
+          mrStore.insert(make_pair(MrKey(Address(sourceAddress.c_str()).toString().c_str(),mr,vcidx),&vcarray[vcidx].waitResp));
         }else
         {
-          waitResp=true;
+          waitResp=wrCount;
           mrStore.insert(make_pair(MrKey(Address(sourceAddress.c_str()).toString().c_str(),mr),&waitResp));
         }
       }
@@ -2018,7 +2474,7 @@ int main(int argc,char* argv[])
         fillSmppPduFromSms(&sm,&s);
         AddOptionals(sm);
         try{
-          if(asyncsend)
+          if(asyncsend || vcmode)
           {
             atr->submit(sm);
           }else
@@ -2027,14 +2483,14 @@ int main(int argc,char* argv[])
           }
         }catch(SmppInvalidBindState& e)
         {
-          printf("Pdu sent in invalid bind state\n");
+          CmdOut("Pdu sent in invalid bind state\n");
         }
       }else
       {
         fillDataSmFromSms(&dsm,&s);
         AddOptionals(dsm);
         try{
-          if(asyncsend)
+          if(asyncsend || vcmode)
           {
             atr->data(dsm);
           }else
@@ -2043,34 +2499,43 @@ int main(int argc,char* argv[])
           }
         }catch(SmppInvalidBindState& e)
         {
-          printf("Pdu sent in invalid bind state\n");
+          CmdOut("Pdu sent in invalid bind state\n");
         }
       }
 
+
+
+      if(vcmode)
+      {
+        CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+      }
       if(resp && resp->get_commandStatus()==0)
       {
-        if(vcmode)
-        {
-          printf("%02d:",vcidx);
-        }
-        printf("Accepted:%d bytes, msgId=%s\n",len,((PduXSmResp*)resp)->get_messageId());fflush(stdout);
+        CmdOut("Accepted:%d bytes, msgId=%s\n",len,((PduXSmResp*)resp)->get_messageId());fflush(stdout);
       }else
       {
         if(resp)
         {
-          printf("Wasn't accepted: %08X\n",resp->get_commandStatus());
+          CmdOut("Wasn't accepted: %08X\n",resp->get_commandStatus());
         }else
         {
-          if(asyncsend)
+          if(asyncsend || vcmode)
           {
-            printf("PDU sent\n");
+            CmdOut("PDU sent. Seq=%d\n",dataSm?dsm.get_header().get_sequenceNumber():sm.get_header().get_sequenceNumber());
           }else
           {
-            printf("Response timed out\n");
+            CmdOut("Response timed out\n");
           }
         }
         fflush(stdout);
       }
+
+      if(vcmode && vcmodemaxspeed>0)
+      {
+        int delay=1000/vcmodemaxspeed-1;
+        millisleep(delay);
+      }
+
       if(resp)disposePdu(resp);
     }
 
@@ -2085,15 +2550,15 @@ int main(int argc,char* argv[])
   }
   catch(std::exception& e)
   {
-    printf("Exception: %s\n",e.what());
+    CmdOut("Exception: %s\n",e.what());
   }
   catch(...)
   {
-    printf("unknown exception\n");
+    CmdOut("unknown exception\n");
   }
   if(connected)
   {
-    printf("\nUnbinding\n");
+    CmdOut("\nUnbinding\n");
     try
     {
       PduUnbind pdu;
@@ -2103,20 +2568,22 @@ int main(int argc,char* argv[])
       ss.getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
       if(resp)
       {
-        printf("Unbind response:status=%#x\n",resp->get_commandStatus());
+        CmdOut("Unbind response:status=%#x\n",resp->get_commandStatus());
         disposePdu(resp);
       }else
       {
-        printf("Unbind response timed out\n");
+        CmdOut("Unbind response timed out\n");
       }
     }catch(...)
     {
-      printf("Exception during unbind\n");
+      CmdOut("Exception during unbind\n");
     }
   }
+  fflush(cmdFile);
+  fflush(incomFile);
   ss.close();
   stopped=1;
   rp.Notify();
-  printf("Exiting\n");//////
+  CmdOut("Exiting\n");//////
   return 0;
 }
