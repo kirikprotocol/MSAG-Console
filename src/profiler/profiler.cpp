@@ -53,7 +53,8 @@ static bool isValidAlias(const std::string& s)
   if(!isalpha(s[0]))return false;
   for(int i=0;i<s.length();i++)
   {
-    if(!(s[i]>32 && s[i]<127 && strchr("|{}[]\\~",s[i])==0))return false;
+    //if(!(s[i]>32 && s[i]<127 && strchr("|{}[]\\~",s[i])==0))return false;
+    if(!(s[i]>32 && s[i]<127 && strchr("_-:.,",s[i])!=0))return false;
     //isalnum(s[i]) &&
   }
   return true;
