@@ -21,7 +21,6 @@ public:
     ActionSend (SendLevel l){ level = l; }
 
     virtual ~ActionSend();
-    Logger * logger;
 
 protected:
     ActionSend(const ActionSend&);

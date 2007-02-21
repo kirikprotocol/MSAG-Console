@@ -3,7 +3,7 @@
 #include "scag/util/properties/Properties.h"
 #include "scag/re/CommandAdapter.h"
 
-namespace scag { namespace transport { namespace http {
+namespace scag { namespace re { namespace actions {
 
 void CookieAction::init(const SectionParams& params, PropertyObject propertyObject)
 {

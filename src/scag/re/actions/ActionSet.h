@@ -1,7 +1,7 @@
 #ifndef __SCAG_RULE_ENGINE_ACTION_SET__
 #define __SCAG_RULE_ENGINE_ACTION_SET__
 
-#include "scag/re/actions/Action.h"
+#include "Action.h"
 
 namespace scag { namespace re { namespace actions {
 

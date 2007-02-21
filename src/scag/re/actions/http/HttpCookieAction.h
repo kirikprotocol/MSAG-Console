@@ -4,11 +4,10 @@
 #include "scag/re/actions/Action.h"
 #include "scag/transport/http/RouterTypes.h"
 
-namespace scag { namespace  transport { namespace http {
+namespace scag { namespace  re { namespace actions {
 
-using namespace scag::re::actions;
+using namespace scag::transport::http;
 using namespace scag::re;
-using smsc::logger::Logger;
 
     class CookieAction : public Action
     {
@@ -40,5 +39,3 @@ using smsc::logger::Logger;
 
 
 #endif
-
-
