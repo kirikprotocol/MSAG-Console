@@ -13,7 +13,7 @@
 #include "scag/re/actions/bill/BillActionOpen.h"
 #include "scag/re/actions/bill/BillActionClose.h"
 
-#include "scag/pers/PersAction.h"
+#include "scag/re/actions/pers/PersAction.h"
 #include "scag/re/actions/http/HttpCookieAction.h"
 
 #include "scag/re/actions/misc/ActionBinOperations.h"
