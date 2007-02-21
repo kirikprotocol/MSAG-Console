@@ -7,7 +7,7 @@
 #include "scag/config/ConfigListener.h"
 #include "scag/pers/PersClient.h"
 #include "scag/pers/Types.h"
-#include "scag/re/actions/BillActionOpen.h"
+#include "scag/re/actions/bill/BillActionOpen.h"
 
 #include "LongCallManager.h"
 
@@ -20,7 +20,7 @@ using namespace smsc::core::threads;
 
 using namespace scag::pers::client;
 using namespace scag::pers;
-//using scag::re::actions::BillOpenCallParams;
+using scag::re::actions::BillOpenCallParams;
 
 bool  LongCallManager::inited = false;
 Mutex LongCallManager::initLock;
@@ -171,7 +171,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 
 void LongCallTask::ExecutePersCall(LongCallContext* ctx)
 {
-/*    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
+    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     PersClient& pc = PersClient::Instance();
     smsc_log_debug(logger, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
     try{
@@ -210,12 +210,12 @@ void LongCallTask::ExecutePersCall(LongCallContext* ctx)
     {
         persParams->error = 0;        
         persParams->exception = "LongCallManager: Unknown exception";
-    }*/
+    }
 }
     
 void LongCallTask::ExecuteBillOpenCall(LongCallContext* ctx)
 {
-/*    BillOpenCallParams* params = (BillOpenCallParams*)ctx->getParams();
+    BillOpenCallParams* params = (BillOpenCallParams*)ctx->getParams();
     params->exception = "";
     try 
     {
@@ -228,7 +228,7 @@ void LongCallTask::ExecuteBillOpenCall(LongCallContext* ctx)
     catch (...)
     {
         params->exception = "LongCallManager: BillOpenCall unknown exception";
-    }*/
+    }
 }
 
 void LongCallTask::ExecuteBillCloseCall(LongCallContext* ctx)
