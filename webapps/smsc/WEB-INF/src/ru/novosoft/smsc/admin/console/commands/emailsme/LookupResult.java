@@ -119,18 +119,18 @@ public class LookupResult {
     final StringBuffer buffer = new StringBuffer();
     final char ch = 0x000D;
     final String nextStr = "" + '\n' + ch;
-    buffer.append("Ton = ").append(ton).append(nextStr);
-    buffer.append("Npi = ").append(npi).append(nextStr);
-    buffer.append("Addr = ").append(addr).append(nextStr);
-    buffer.append("User name = ").append(userName).append(nextStr);
-    buffer.append("Forward email = ").append(forwardEmail).append(nextStr);
-    buffer.append("Real name = ").append(realName).append(nextStr);
-    buffer.append("Limit type = ").append(limitType).append(nextStr);
-    buffer.append("Number mapping = ").append(numberMapping).append(nextStr);
-    buffer.append("Last limit update date = ").append(lastLimitUpdateDate).append(nextStr);
-    buffer.append("Limit value = ").append(limitValue).append(nextStr);
-    buffer.append("Limit count GSM to Email = ").append(limitCountGsm2Eml).append(nextStr);
-    buffer.append("Limit count email to GSM = ").append(limitCountEml2Gsm).append(nextStr);
+    buffer.append(" Ton = ").append(ton).append(nextStr);
+    buffer.append(" Npi = ").append(npi).append(nextStr);
+    buffer.append(" Addr = ").append(addr).append(nextStr);
+    buffer.append(" User name = ").append(userName).append(nextStr);
+    buffer.append(" Forward email = ").append(forwardEmail).append(nextStr);
+    buffer.append(" Real name = ").append(realName).append(nextStr);
+    buffer.append(" Limit type = ").append(limitType).append(nextStr);
+    buffer.append(" Number mapping = ").append(numberMapping).append(nextStr);
+    buffer.append(" Last limit update date = ").append(lastLimitUpdateDate).append(nextStr);
+    buffer.append(" Limit value = ").append(limitValue).append(nextStr);
+    buffer.append(" Limit count GSM to Email = ").append(limitCountGsm2Eml).append(nextStr);
+    buffer.append(" Limit count email to GSM = ").append(limitCountEml2Gsm).append(nextStr);
     return buffer.toString();
   }
 }
