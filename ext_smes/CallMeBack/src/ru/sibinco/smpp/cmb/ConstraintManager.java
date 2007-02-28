@@ -1,6 +1,5 @@
 package ru.sibinco.smpp.cmb;
 
-import ru.sibinco.smpp.MessageData;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,11 +15,15 @@ public interface ConstraintManager {
       BalanceLimitException;
 
 
-  public int registerAttempt(String abonent) throws CheckConstraintsException;
+  public int getLeftAttempts (String abonent) throws CheckConstraintsException;
+
+  public RegisterAttemptAnswer registerAttempt(String abonent) throws CheckConstraintsException;
 
   public int unregisterAttempt(String abonent) throws CheckConstraintsException;
 
-  public int registerUsage(String abonent) throws CheckConstraintsException;
+  public int getLeftUsages (String abonent) throws CheckConstraintsException;
+  
+  public int registerUsage(String abonent, boolean isUsageDecreased) throws CheckConstraintsException;
 
   public int unregisterUsage(String abonent) throws CheckConstraintsException;
 

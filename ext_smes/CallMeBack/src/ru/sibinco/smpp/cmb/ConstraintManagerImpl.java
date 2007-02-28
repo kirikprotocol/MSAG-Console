@@ -176,52 +176,94 @@ public class ConstraintManagerImpl implements ConstraintManager {
       throw new BalanceLimitException(abonent);
   }
 
-  public int registerAttempt(String abonent) throws CheckConstraintsException {
-    if (!checkAttempts)
-      return attemptsLimit;
-    int _abonent = getAbonentNumber(abonent);
-    short data = getCache(_abonent);
-    int a = ((int)data)&0xFF;
-    int u = (data>>8)&0xFF;
-    a++;
-    setCache(_abonent, u, a);
-    return attemptsLimit - u;
+  public RegisterAttemptAnswer registerAttempt(String abonent) throws CheckConstraintsException {
+      if (!checkAttempts)
+        return new RegisterAttemptAnswer(attemptsLimit, false);
+      int _abonent = getAbonentNumber(abonent);
+      short data = getCache(_abonent);
+      int a = ((int)data)&0xFF;
+      int u = (data>>8)&0xFF;
+      a++;
+      
+      boolean isUsagesUpdated = false;
+      int delta = (attemptsLimit - a) - (usagesLimit - u);
+      if (delta < 0) {
+          u -= delta;
+          isUsagesUpdated = true;
+      }
+
+      setCache(_abonent, u, a);
+      return new RegisterAttemptAnswer(attemptsLimit - a, isUsagesUpdated);
+    }
+
+    public int unregisterAttempt(String abonent) throws CheckConstraintsException {
+      if (!checkAttempts)
+        return attemptsLimit;
+      int _abonent = getAbonentNumber(abonent);
+      short data = getCache(_abonent);
+      int a = ((int)data)&0xFF;
+      int u = (data>>8)&0xFF;
+      a--;
+      setCache(_abonent, u, a);
+      return attemptsLimit - a;
+    }
+
+    public int registerUsage(String abonent, boolean isUsageDecreased) throws CheckConstraintsException {
+      if (!checkUsages)
+        return usagesLimit;
+      int _abonent = getAbonentNumber(abonent);
+      short data = getCache(_abonent);
+      int a = ((int)data)&0xFF;
+      int u = (data>>8)&0xFF;
+      
+      if (!isUsageDecreased) {
+          u++;
+      }
+      
+      int delta = (attemptsLimit - a) - (usagesLimit - u);
+      if (delta < 0) {
+          u -= delta;
+      }
+      
+      setCache(_abonent, u, a);
+      return usagesLimit - u;
+    }
+
+    public int unregisterUsage(String abonent) throws CheckConstraintsException {
+      if (!checkUsages)
+        return usagesLimit;
+      int _abonent = getAbonentNumber(abonent);
+      short data = getCache(_abonent);
+      int a = ((int)data)&0xFF;
+      int u = (data>>8)&0xFF;
+
+      int delta = (attemptsLimit - a) - (usagesLimit - u);
+      if (delta > 0) {
+          u--;
+      }
+
+      //u--;
+      
+      setCache(_abonent, u, a);
+      return usagesLimit - u;
+    }
+
+  public int getLeftAttempts (String abonent) throws CheckConstraintsException {
+      if (!checkAttempts)
+          return attemptsLimit;
+        int _abonent = getAbonentNumber(abonent);
+        short data = getCache(_abonent);
+        int a = ((int)data)&0xFF;
+        return attemptsLimit - a;
   }
 
-  public int unregisterAttempt(String abonent) throws CheckConstraintsException {
-    if (!checkAttempts)
-      return attemptsLimit;
-    int _abonent = getAbonentNumber(abonent);
-    short data = getCache(_abonent);
-    int a = ((int)data)&0xFF;
-    int u = (data>>8)&0xFF;
-    a--;
-    setCache(_abonent, u, a);
-    return attemptsLimit - u;
-  }
-
-  public int registerUsage(String abonent) throws CheckConstraintsException {
-    if (!checkUsages)
-      return usagesLimit;
-    int _abonent = getAbonentNumber(abonent);
-    short data = getCache(_abonent);
-    int a = ((int)data)&0xFF;
-    int u = (data>>8)&0xFF;
-    u++;
-    setCache(_abonent, u, a);
-    return usagesLimit - u;
-  }
-
-  public int unregisterUsage(String abonent) throws CheckConstraintsException {
-    if (!checkUsages)
-      return usagesLimit;
-    int _abonent = getAbonentNumber(abonent);
-    short data = getCache(_abonent);
-    int a = ((int)data)&0xFF;
-    int u = (data>>8)&0xFF;
-    u--;
-    setCache(_abonent, u, a);
-    return usagesLimit - u;
+  public int getLeftUsages (String abonent) throws CheckConstraintsException {
+      if (!checkUsages)
+          return usagesLimit;
+        int _abonent = getAbonentNumber(abonent);
+        short data = getCache(_abonent);
+        int u = (data>>8)&0xFF;
+        return usagesLimit - u;
   }
 
   private int getAbonentNumber(String abonent) throws CheckConstraintsException {

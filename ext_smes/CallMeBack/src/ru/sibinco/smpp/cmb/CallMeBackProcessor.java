@@ -28,8 +28,8 @@ public class CallMeBackProcessor implements RequestProcessor {
   private String listenerName = "ReportSender";
 
   private String balanceLimit = "Usluga dostupna tolko abobentam v chastichnoy blokirovke.";
-  private String usageLimit = "Kolichestvo zaprosov na segodnja ischerpano. Maksimalno Ð {0} zaprosov v den'.";
-  private String attemptsLimit = "Kolichestvo popytok na segodnja ischerpano. Maksimalno Ð {0} popytok v den'.";
+  private String usageLimit = "Kolichestvo zaprosov na segodnja ischerpano. Maksimalno {0} zaprosov v den'.";
+  private String attemptsLimit = "Kolichestvo popytok na segodnja ischerpano. Maksimalno {0} popytok v den'.";
   private String notification = "Pozhaluysta, perezvonite mne {0}. Otpravleno {1}";
   private String confirmation = "Vash zapros prinjat. U vas ostalos {0} zaprosov na segodnja.";
   private String failed = "V dannyj moment usluga ne dostupna. Poprobujte povtorit' zapros pozzhe.";
@@ -101,20 +101,40 @@ public class CallMeBackProcessor implements RequestProcessor {
     if (!messageData.hasUssdServiceOp() ||
         messageData.getUssdServiceOp() != MessageData.USSD_OP_PROC_SS_REQ_IND)
       throw new RequestProcessingException("Could not process message with ussd_service_op=" + messageData.getUssdServiceOp());
+    
     try {
       // get data from cache
       constraintManager.check(messageData.getSourceAddress());
+      
+      // TODO remove after testing
+      if (Logger.isDebugEnabled()) {
+          int al = constraintManager.getLeftAttempts(messageData.getSourceAddress());
+          int ul = constraintManager.getLeftUsages(messageData.getSourceAddress());
+          Logger.debug(" ###### Abonent " + messageData.getSourceAddress() + " - before processing a/u=[" + al + "/" + ul + "]");
+      }
+      
       // update data
-      int a =  constraintManager.registerAttempt(messageData.getSourceAddress());
+      RegisterAttemptAnswer _a = constraintManager.registerAttempt(messageData.getSourceAddress()); 
+      int a = _a.getValue();
+
       if (messageData.getMessageString() == null || messageData.getMessageString().trim().length() != 7) {
         Logger.warn("Invalid request " + messageData.getMessageString());
-        return prepareResponse(messageData, MessageFormat.format(invalid, new Object[]{(messageData.getDestinationAddress().indexOf(":") > 0 ? messageData.getDestinationAddress().substring(messageData.getDestinationAddress().indexOf(":") + 1) : messageData.getDestinationAddress()), Integer.toString(a)}));
+
+        // TODO remove after testing
+        if (Logger.isDebugEnabled()) {
+            int al = constraintManager.getLeftAttempts(messageData.getSourceAddress());
+            int ul = constraintManager.getLeftUsages(messageData.getSourceAddress());
+            Logger.debug(" ###### Abonent " + messageData.getSourceAddress() + " - after processing a/u=[" + al + "/" + ul + "]");
+        }
+
+        int u = constraintManager.getLeftUsages(messageData.getSourceAddress());
+        return prepareResponse(messageData, MessageFormat.format(invalid, new Object[]{(messageData.getDestinationAddress().indexOf(":") > 0 ? messageData.getDestinationAddress().substring(messageData.getDestinationAddress().indexOf(":") + 1) : messageData.getDestinationAddress()), Integer.toString(u)}));
       } else {
         try {
           // check SMS body
           Integer.parseInt(messageData.getMessageString());
           // update data
-          int u = constraintManager.registerUsage(messageData.getSourceAddress());
+          int u = constraintManager.registerUsage(messageData.getSourceAddress(), _a.isUsagesDecreased());
           // prepare confirmatoin & notification
           Response response = prepareResponse(messageData, MessageFormat.format(confirmation, new Object[]{Integer.toString(u)}));
           MessageData n = new MessageData();
@@ -128,13 +148,31 @@ public class CallMeBackProcessor implements RequestProcessor {
           response.addMessage(n);
           // prepare reports
           MessageData sr = prepareResponseMessage(messageData, MessageFormat.format(successReport, new Object[]{n.getDestinationAddress()}));
-          MessageData fr = prepareResponseMessage(messageData, MessageFormat.format(failedReport, new Object[]{n.getDestinationAddress(), Integer.toString(a)}));
+          
+          int fru = (u < a) ? (u + 1) : u;
+          MessageData fr = prepareResponseMessage(messageData, MessageFormat.format(failedReport, new Object[]{n.getDestinationAddress(), Integer.toString(fru)}));
+
           rQueue.addReport(new Report(n.getId(), sr, fr));
+          
+          // TODO remove after testing
+          if (Logger.isDebugEnabled()) {
+              int al = constraintManager.getLeftAttempts(messageData.getSourceAddress());
+              int ul = constraintManager.getLeftUsages(messageData.getSourceAddress());
+              Logger.debug(" ###### Abonent " + messageData.getSourceAddress() + " - after processing a/u=[" + al + "/" + ul + "]");
+          }
           // return response
           return response;
         } catch (NumberFormatException e) {
           Logger.warn("Invalid request " + messageData.getMessageString());
-          constraintManager.registerAttempt(messageData.getSourceAddress());
+          //constraintManager.registerAttempt(messageData.getSourceAddress());
+          
+          // TODO remove after testing
+          if (Logger.isDebugEnabled()) {
+              int al = constraintManager.getLeftAttempts(messageData.getSourceAddress());
+              int ul = constraintManager.getLeftUsages(messageData.getSourceAddress());
+              Logger.debug(" ###### Abonent " + messageData.getSourceAddress() + " - after processing a/u=[" + al + "/" + ul + "]");
+          }
+
           return prepareResponse(messageData, MessageFormat.format(invalid, new Object[]{(messageData.getDestinationAddress().indexOf(":") > 0 ? messageData.getDestinationAddress().substring(messageData.getDestinationAddress().indexOf(":") + 1) : messageData.getDestinationAddress()), Integer.toString(a)}));
         }
       }

@@ -80,14 +80,24 @@ public class ReportSender implements ReiterationTask, MessageStatusListener {
       if (Logger.isDebugEnabled())
         Logger.debug(getName() + " process report #" + report.getId() + " for abonent #" + report.getAbonent() + ", notification " + (status == Data.ESME_ROK ? "delivered" : "failed"));
       if (status == Data.ESME_ROK) {
+          /* Never unregister attempt - MTS requirement
         try {
           constraintManager.unregisterAttempt(report.getAbonent());
         } catch (CheckConstraintsException e) {
           Logger.error(getName() + " could not update cache for abonent #" + report.getAbonent(), e);
         }
+        */
       } else {
         try {
           constraintManager.unregisterUsage(report.getAbonent());
+
+          // TODO remove after testing
+          if (Logger.isDebugEnabled()) {
+              int al = constraintManager.getLeftAttempts(report.getAbonent());
+              int ul = constraintManager.getLeftUsages(report.getAbonent());
+              Logger.debug(" ###### Abonent " + report.getAbonent() + " - returned usage a/u=[" + al + "/" + ul + "]");
+          }
+
         } catch (CheckConstraintsException e) {
           Logger.error(getName() + " could not update cache for abonent #" + report.getAbonent(), e);
         }
