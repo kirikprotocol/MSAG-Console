@@ -614,13 +614,27 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         requests.count();
       }
 
-      sendDeliverSmResponse(message, Data.ESME_ROK);
       state = new RequestState(message, abonentRequestTime);
       addRequestState(state);
-      threadsPool.execute(new BalanceProcessor(this, state));
-      if (bannerEngineClientEnabled) {
-        threadsPool.execute(new BannerRequestThread(state));
+      try {
+        threadsPool.execute(new BalanceProcessor(this, state));
+      } catch (RuntimeException e) {
+        logger.error("Exception occured during creating balance processor: "+e, e);
+        synchronized (state) {
+          state.setError(true);
+        }
+        extractRequestState(message.getSourceAddress());
+        sendDeliverSmResponse(message, Data.ESME_RTHROTTLED);
+        return;
       }
+      if (bannerEngineClientEnabled) {
+        try {
+          threadsPool.execute(new BannerRequestThread(state));
+        } catch (RuntimeException e) {
+          logger.error("Exception occured during creating banner processor: "+e, e);
+        }
+      }
+      sendDeliverSmResponse(message, Data.ESME_ROK);
     } else {  // mg response
       if (logger.isDebugEnabled())
         logger.debug("Got FORIS response for " + message.getDestinationAddress());
@@ -917,11 +931,20 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
 
     public void run() {
-      String banner = getBanner(state.getAbonentRequest().getSourceAddress());
-      synchronized (state) {
-        state.setBanner(banner);
+      try {
+        String banner = getBanner(state.getAbonentRequest().getSourceAddress());
+        synchronized (state) {
+          state.setBanner(banner);
+        }
+        closeRequestState(state);
+      } catch (Throwable t) {
+        synchronized (state) {
+          state.setError(true);
+        }
+        if (logger.isInfoEnabled())
+          logger.info("Can not get banner for " + state.getAbonentRequest().getSourceAddress());
+        logger.error("Unexpected exception occured during processing request.", t);
       }
-      closeRequestState(state);
     }
   }
 
