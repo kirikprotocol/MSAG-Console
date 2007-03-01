@@ -3,9 +3,6 @@
  * Created on: 28.02.2007
  * 
  * $Revision$, $Date$
- * 
- * Copyright 2007 MOBILE2BEL. All right reserved.
- * MOBILE2BEL PROPRIETARY/CONFIDENTIAL.
  */
 package ru.sibinco.smpp.cmb;
 

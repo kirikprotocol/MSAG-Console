@@ -169,7 +169,8 @@ public class ConstraintManagerImpl implements ConstraintManager {
     int u = (data>>8)&0xFF;
     int a = ((int)data)&0xFF;
     if (checkAttempts && a >= attemptsLimit)
-      throw  new AttemptsLimitReachedException(abonent, attemptsLimit, date);
+        // MTS Requirement - send usages limit when attempts limit is reached
+      throw  new AttemptsLimitReachedException(abonent, usagesLimit, date);
     if (checkUsages && u >= usagesLimit)
       throw new UsageLimitReachedException(abonent, usagesLimit, date);
     if (!(getBalance(abonent) <= 0))
