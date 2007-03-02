@@ -240,7 +240,7 @@ public:
   MM7GenericVASPReq(string _transaction_id, uint8_t _command_id);
   virtual ~MM7GenericVASPReq();
   virtual void setSenderAddress(SingleAddress address);
-  SingleAddress getSenderAddress() const;	
+  SingleAddress getSenderAddress() const; 	
   virtual void test();
 };
 

@@ -163,7 +163,7 @@ void XMLHandler::characters(const XMLCh* const ch, const unsigned int len) {
   Convertor::UCS2ToUTF8(ch, len, conv_value);
   std::string value = trimCharacters(conv_value);
   //__trace2__("TAG = %s", tag_name.c_str());
-  //__trace2__("TEXT = %s", value.c_str());
+  //__trace2__("TEXT = \'%s\'", value.c_str());
   if (TRANSACTION_ID_TAG_NUMBER == tag_number && tag_name.compare(xml::MM7_TRANSACTION_ID) == 0){
     transaction_id = value;
     return;
@@ -318,7 +318,7 @@ std::string XMLHandler::trimCharacters(const std::string& s) {
   std::string::const_iterator start = s.begin();
   std::string::const_iterator end = s.end() - 1;
   while (start != s.end() && isspace(*start)) ++start;
-  while (end != start && isspace(*end)) ++end;
+  while (end != start && isspace(*end)) --end;
   if (end - start >= 0) {
     std::string res(start, end + 1);
     return res;

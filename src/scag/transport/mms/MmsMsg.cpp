@@ -181,7 +181,7 @@ void MmsMsg::addField(const char* name, string value) {
 
 void MmsMsg::test() {
   __trace2__("Command ID = %d", command_id);
-  __trace2__("Transaction ID = %s", transaction_id.c_str());
+  __trace2__("Transaction ID = \'%s\'", transaction_id.c_str());
   char* name = 0;
   std::string value;
   Hash<string> tmp = mms_fields;
@@ -241,8 +241,12 @@ string MmsMsg::serialize() const {
     doc->release();
     return serialized_msg;
   }
-  
+  doc->normalizeDocument();
   DOMWriter* serializer = ((DOMImplementationLS*)impl)->createDOMWriter();
+  if (serializer->canSetFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true))
+    serializer->setFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true);
+  //if (serializer->canSetFeature(XMLUni::fgDOMWRTSplitCdataSections, true))
+    //serializer->setFeature(XMLUni::fgDOMWRTSplitCdataSections, true);
   std::auto_ptr<DOMErrorHandler> handler(new DOMPrintErrorHandler());
   serializer->setErrorHandler(handler.get());
   //serializer->setEncoding(XStr("UTF-8").unicodeForm());
@@ -328,6 +332,24 @@ bool MM7GenericRSReq::getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_
                                             const char* command_name) const {
   if (!MmsMsg::getXMLDocument(doc, root_element)) {
     return false;
+  }
+  DOMElement* req_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
+                                                 XStr(command_name).unicodeForm());
+  root_element->appendChild(req_element);
+  root_element = req_element;
+  const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);      						 
+  string version = getMmsVersion();
+  if (!ptr && version.empty()) {
+    __trace2__("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
+    return false;
+  }
+  if (version.empty() && ptr) {
+    version = *ptr;
+  }
+  xml::addTextNode(doc, root_element, xml::MM7_VERSION, version);
+  ptr = mms_fields.GetPtr(xml::MMS_RS_ID);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::MMS_RS_ID, *ptr);
   }
   return true;
 }
@@ -530,12 +552,93 @@ bool MM7Deliver::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) con
   }
   root_element->appendChild(recipients);
   if (!previously_sent.empty()) {
+    DOMElement* sent_by = doc->createElement(XStr(xml::PREVIOUSLY_SENT_BY).unicodeForm());
+    DOMElement* sent_date = doc->createElement(XStr(xml::PREVIOUSLY_SENT_DATE).unicodeForm());
     typedef std::map<size_t, PreviouslySent>::const_iterator CI;
+    const uint8_t buf_size = 6;
+    char sn_buf[buf_size];
     for (CI p = previously_sent.begin(); p != previously_sent.end(); ++p) {
-      //__trace2__("%d Date : %s Address :", p->first, p->second.sent_date.c_str());
-      //p->second.sent_by.test();
+      snprintf(sn_buf, buf_size, "%d", p->first);
+      XStr number(sn_buf);
+      XStr sequence(xml::SEQUENCE);
+      if (!p->second.sent_by.address.isNotSet()) {
+        DOMElement* user_agent = doc->createElement(XStr(xml::USER_AGENT).unicodeForm());
+	user_agent->setAttribute(sequence.unicodeForm(), number.unicodeForm());
+	p->second.sent_by.serialize(doc, user_agent);
+	sent_by->appendChild(user_agent);
+      }
+      if (!p->second.sent_date.empty()) {
+        DOMElement* date_time = doc->createElement(XStr(xml::DATE_TIME).unicodeForm());
+	date_time->setAttribute(sequence.unicodeForm(), number.unicodeForm());
+	DOMText* date_value = doc->createTextNode(XStr(p->second.sent_date.c_str()).unicodeForm());
+	date_time->appendChild(date_value);
+	sent_date->appendChild(date_time);
+      }
     }
-  } 
+    root_element->appendChild(sent_by);
+    root_element->appendChild(sent_date);
+  }
+  ptr = mms_fields.GetPtr(xml::SENDER_SPI);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::SENDER_SPI, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::RECIPIENT_SPI);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::RECIPIENT_SPI, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::TIME_STAMP);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::TIME_STAMP, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::REPLAY_CHARGING_ID);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::REPLAY_CHARGING_ID, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::PRIORITY);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::PRIORITY, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::SUBJECT);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::SUBJECT, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::APPLIC_ID);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::APPLIC_ID, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::REPLY_APPLIC_ID);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::REPLY_APPLIC_ID, *ptr);
+  }
+  ptr = mms_fields.GetPtr(xml::AUX_APPLIC_INFO);
+  if (ptr) {
+    xml::addTextNode(doc, root_element, xml::AUX_APPLIC_INFO, *ptr);
+  }
+  const string* ua_prof = mms_fields.GetPtr(xml::UA_PROF);
+  const string* ua_time_stamp = mms_fields.GetPtr(xml::UA_TIME_STAMP);
+  if (ua_prof || ua_time_stamp) {
+    DOMElement* ua = doc->createElement(XStr(xml::UA_CAPABILITIES).unicodeForm());
+    if (ua_prof) {
+      ua->setAttribute(XStr(xml::UA_PROF).unicodeForm(), XStr(ua_prof->c_str()).unicodeForm());
+    }
+    if (ua_time_stamp) {
+      ua->setAttribute(XStr(xml::TIME_STAMP).unicodeForm(), XStr(ua_time_stamp->c_str()).unicodeForm());
+    }
+    root_element->appendChild(ua);
+  }
+  const string* href = mms_fields.GetPtr(xml::HREF);
+  const string* allow = mms_fields.GetPtr(xml::ALLOW_ADAPTATIONS);
+  if (href || allow) {
+    DOMElement* content = doc->createElement(XStr(xml::CONTENT).unicodeForm());
+    if (href) {
+      content->setAttribute(XStr(xml::HREF).unicodeForm(), XStr(href->c_str()).unicodeForm());
+    }
+    if (allow) {
+      content->setAttribute(XStr(xml::ALLOW_ADAPTATIONS).unicodeForm(), XStr(allow->c_str()).unicodeForm());
+    }
+    root_element->appendChild(content);
+  }
+  return true; 
 }
 void MM7Deliver::setRecipientAddress(MultiAddress address, uint8_t recipient_type) {
   switch(recipient_type) {

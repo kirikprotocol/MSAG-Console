@@ -131,6 +131,7 @@ int main(int argc, const char* argv[]) {
 
   std::string xml_msg;
   getline(f, xml_msg, static_cast<char>(EOF));
+  
   std::cout << xml_msg << std::endl;
   
   MemBufInputSource* memBufIS = new MemBufInputSource
@@ -182,7 +183,12 @@ int main(int argc, const char* argv[]) {
   if (mms_msg)
     mms_msg->test();
     std::string serialized_msg = mms_msg->serialize();
-    __trace2__("%s", serialized_msg.c_str());
+    //std::ofstream out("result.xml", std::ios_base::out|std::ios_base::trunc);
+    std::ofstream out("result.xml");
+    if (out) {
+      out << serialized_msg;
+    }
+    //__trace2__("%s", serialized_msg.c_str());
   __trace__("*******************************************");
   delete memBufIS; 
   delete parser;
@@ -191,5 +197,11 @@ int main(int argc, const char* argv[]) {
   http_msg.setFirstLine("POST /mms/mm7 HTTP/1.1");
   http_msg.setFirstLine("POST /mms/mm7 HTTP/1.1 NEW!");
   __trace2__("HTTP FIRST LINE:%s", http_msg.getFirstLine());
+  int sn = 100;
+  char sn_buf[100];
+  int actn = snprintf(sn_buf, 99, "%d", sn);
+  __trace2__("sn=%d buf =\'%s\' actn=%d", sn, sn_buf, actn); 
+  actn = snprintf(sn_buf, 99, "%d", sn);
+  __trace2__("sn=%d buf =\'%s\' actn=%d", sn, sn_buf, actn); 
   return 1;
 }
