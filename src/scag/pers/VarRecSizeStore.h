@@ -24,7 +24,7 @@ public:
     VarRecSizeStore() {};
     ~VarRecSizeStore() {};
 
-    void init(const std::string& storeName)
+    void init(const std::string& storeName, uint32_t initRecCnt)
     {
         log = smsc::logger::Logger::getInstance("VarStore");
 
@@ -35,12 +35,12 @@ public:
         binFile = storeName + ".bin";
 
         if(!File::Exists(idxFile.c_str()))
-            dhash.Create(idxFile.c_str(), 100000, false);
+            dhash.Create(idxFile.c_str(), initRecCnt, false);
         else
             dhash.Open(idxFile.c_str());
 
         if(!File::Exists(binFile.c_str()))
-            pfile.Create(binFile.c_str(), 256, 100000);
+            pfile.Create(binFile.c_str(), 256, initRecCnt);
         else
             pfile.Open(binFile.c_str());
     }

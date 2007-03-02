@@ -23,10 +23,9 @@ using namespace smsc::util::config;
 
 static PersServer *ps = NULL;
 
-static smsc::logger::Logger *logger;
-
 extern "C" static void appSignalHandler(int sig)
 {
+    Logger* logger = Logger::getInstance("pers");
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
@@ -46,10 +45,10 @@ int main(int argc, char* argv[])
     int resultCode = 0;
     std::string host;
     int port = 9988;
-    int maxClientCount = 100;
+    int maxClientCount = 100, recCnt = 1000;
 
     Logger::Init();
-    logger = Logger::getInstance("pers");
+    Logger* logger = Logger::getInstance("pers");
 
     StringProfileStore AbonentStore;
     IntProfileStore ServiceStore, OperatorStore, ProviderStore;
@@ -79,20 +78,22 @@ int main(int argc, char* argv[])
         if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
             storageDir += '/';
 
+        try { recCnt = persConfig.getInt("init_record_count"); } catch (...) { recCnt = 1000; };
+
         ConfigView cacheConfig(manager, "pers.cache_max");
 
         uint32_t cm;
         try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
-        AbonentStore.init(storageDir + "abonent", cm);
+        AbonentStore.init(storageDir + "abonent", cm, recCnt);
 
         try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
-        ServiceStore.init(storageDir + "service", cm);
+        ServiceStore.init(storageDir + "service", cm, recCnt);
 
         try { cm = cacheConfig.getInt("operator"); } catch (...) { cm = 1000; };
-        OperatorStore.init(storageDir + "operator", cm);
+        OperatorStore.init(storageDir + "operator", cm, recCnt);
 
         try { cm = cacheConfig.getInt("provider"); } catch (...) { cm = 1000; };
-        ProviderStore.init(storageDir + "provider", cm);
+        ProviderStore.init(storageDir + "provider", cm, recCnt);
 
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};

@@ -120,7 +120,7 @@ public:
         }
     };
 
-    void init(const std::string& storeName, uint32_t _max_cache_size)
+    void init(const std::string& storeName, uint32_t initRecCnt, uint32_t _max_cache_size)
     {
         log = smsc::logger::Logger::getInstance("store");
 
@@ -130,7 +130,7 @@ public:
         cache = new CacheItem<Key>*[_max_cache_size];
         memset(cache, 0, sizeof(CacheItem<Key>*) * _max_cache_size);
 
-        store.init(storeName);
+        store.init(storeName, initRecCnt);
         name = storeName;
 
         smsc_log_debug(log, "Inited: %s", name.c_str());
