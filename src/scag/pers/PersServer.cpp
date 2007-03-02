@@ -120,7 +120,7 @@ void PersServer::remove_socket(Socket* s)
 {
     char b[256];
     s->GetPeer(b);
-    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, client_count - 1);
+    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount - 1);
     SerialBuffer *sb = (SerialBuffer*)s->getData(0);
     if(sb) delete sb;
     listener.remove(s);
@@ -158,7 +158,7 @@ int PersServer::Execute()
 
                         char b[256];
                         sock1->GetPeer(b);
-                        smsc_log_info(log, "Client connected: %s. Client count: %u", b, client_count + 1);
+                        smsc_log_info(log, "Client connected: %s. Client count: %u", b, clientCount + 1);
 
                         if(clientCount >= maxClientCount)
                         {
