@@ -84,16 +84,16 @@ int main(int argc, char* argv[])
 
         uint32_t cm;
         try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
-        AbonentStore.init(storageDir + "abonent", cm, recCnt);
+        AbonentStore.init(storageDir + "abonent", recCnt, cm);
 
         try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
-        ServiceStore.init(storageDir + "service", cm, recCnt);
+        ServiceStore.init(storageDir + "service", recCnt, cm);
 
         try { cm = cacheConfig.getInt("operator"); } catch (...) { cm = 1000; };
-        OperatorStore.init(storageDir + "operator", cm, recCnt);
+        OperatorStore.init(storageDir + "operator", recCnt, cm);
 
         try { cm = cacheConfig.getInt("provider"); } catch (...) { cm = 1000; };
-        ProviderStore.init(storageDir + "provider", cm, recCnt);
+        ProviderStore.init(storageDir + "provider", recCnt, cm);
 
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
