@@ -26,6 +26,12 @@ namespace smsc  {
 namespace inman {
 namespace interaction  {
 
+class ConnectSupervisorITF {
+public:
+    //Returns true if ConnectAC should be utilized by ConnectSrv
+    virtual bool onConnectClosed(ConnectAC * conn) = 0;
+};
+
 class ConnectSrv : Thread {
 public:
     static const unsigned POLL_TIMEOUT_ms  = 100; //default timeout for select(), millisecs
@@ -38,8 +44,9 @@ public:
 
     ConnectSrv(unsigned tmo_msecs = POLL_TIMEOUT_ms, Logger* uselog = NULL);
     virtual ~ConnectSrv();
-    
-    unsigned    addConnection(ConnectAC * use_conn); //Retuns conn_id
+
+    //Retuns conn_id, if 'mgr' == NULL, connect will be utilized by ConnectSrv
+    unsigned    addConnection(ConnectAC * use_conn, ConnectSupervisorITF * mgr);
     ConnectAC * rlseConnection(unsigned conn_id);
 
     Socket * setConnection(const char * host, unsigned port, unsigned timeout_secs = 5);
@@ -50,11 +57,19 @@ public:
     inline void WaitFor(void) { Thread::WaitFor(); }
 
 protected:
-    typedef std::map<unsigned, ConnectAC*> ConnectsMap;
+    struct ConnectInfo {
+        ConnectAC * conn;
+        ConnectSupervisorITF * mgr;
+
+        ConnectInfo(ConnectAC * use_conn = NULL, ConnectSupervisorITF * use_mgr = NULL)
+            : conn(use_conn), mgr(use_mgr)
+        { }
+    };
+    typedef std::map<unsigned, ConnectInfo> ConnectsMap;
 
     int  Execute(); //listener thread entry point
     ShutdownReason Listen(void);
-    void closeConnect(ConnectAC* connect, bool abort = false);
+    void closeConnect(unsigned conn_id, bool abort = false);
     void closeAllConnects(bool abort = false);
 
     Event           lstEvent;

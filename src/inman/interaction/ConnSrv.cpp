@@ -44,10 +44,11 @@ Socket * ConnectSrv::setConnection(const char * host, unsigned port, unsigned ti
     return socket.release();
 }
 
-unsigned ConnectSrv::addConnection(ConnectAC * use_conn)
+unsigned ConnectSrv::addConnection(ConnectAC * use_conn, ConnectSupervisorITF * mgr)
 {
+    ConnectInfo connInfo(use_conn, mgr);
     MutexGuard grd(_mutex);
-    connects.insert(ConnectsMap::value_type(use_conn->getId(), use_conn));
+    connects.insert(ConnectsMap::value_type(use_conn->getId(), connInfo));
     return use_conn->getId();
 }
 
@@ -57,7 +58,7 @@ ConnectAC * ConnectSrv::rlseConnection(unsigned conn_id)
     MutexGuard grd(_mutex);
     ConnectsMap::iterator it = connects.find(conn_id);
     if (it != connects.end()) {
-        conn = (*it).second;
+        conn = ((*it).second).conn;
         connects.erase(it);
         smsc_log_debug(logger, "ConnSrv: Connect[%u] released.", conn->getId());
     }
@@ -111,36 +112,51 @@ void ConnectSrv::closeAllConnects(bool abort/* = false*/)
                        connects.size());
         do {
             ConnectsMap::iterator it = connects.begin();
-            ConnectAC* conn = (*it).second;
+            ConnectAC * conn = ((*it).second).conn;
+            unsigned conn_id = conn->getId();
+            ConnectSupervisorITF * mgr = ((*it).second).mgr;
             connects.erase(it);
+            conn->Close(abort);
+            smsc_log_debug(logger, "ConnSrv: Connect[%u] %s.", conn_id,
+                           abort ? "aborted" : "closed");
             _mutex.Unlock();
-            unsigned sockId = conn->getId();
-            try {
-                conn->onErrorEvent(true); 
-                conn->Close(abort);
-            } catch (const std::exception & exc) {
-                smsc_log_error(logger, "ConnSrv: Connect[%u] exception: %s", sockId,
-                           exc.what());
+            if (mgr && !mgr->onConnectClosed(conn))
+                conn = NULL;
+            if (conn) {
+                smsc_log_debug(logger, "ConnSrv: Connect[%u] deleted", conn_id);
+                delete conn;
             }
-            delete conn;
-            smsc_log_debug(logger, "ConnSrv: Connect[%u] closed.", sockId);
-
             _mutex.Lock();
         } while (!connects.empty());
     }
     _mutex.Unlock();
 }
 
-void ConnectSrv::closeConnect(ConnectAC* conn, bool abort/* = false*/)
+void ConnectSrv::closeConnect(unsigned conn_id, bool abort/* = false*/)
 {
-    unsigned sockId = conn->getId();
+    ConnectAC * conn = NULL;
+    ConnectSupervisorITF * mgr = NULL;
     {
         MutexGuard grd(_mutex);
-        connects.erase(sockId);
+        ConnectsMap::iterator it = connects.find(conn_id);
+        if (it == connects.end())
+            return;
+        
+        conn = ((*it).second).conn;
+        mgr = ((*it).second).mgr;
+        connects.erase(it);
+        conn->Close(abort);
+        smsc_log_debug(logger, "ConnSrv: Connect[%u] %s.", conn_id,
+                        abort ? "aborted" : "closed");
+        
     }
-    conn->Close(abort);
-    delete conn;
-    smsc_log_debug(logger, "ConnSrv: Connect[%u] closed.", (unsigned)sockId);
+    if (mgr && !mgr->onConnectClosed(conn))
+        conn = NULL;
+    if (conn) {
+        smsc_log_debug(logger, "ConnSrv: Connect[%u] deleted", conn_id);
+        delete conn;
+    }
+    return;
 }
 
 ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
@@ -166,7 +182,7 @@ ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
 
         //in case of lstStopping the clients connection should be served for a while
         for (ConnectsMap::iterator i = connects.begin(); i != connects.end(); i++) {
-            SOCKET  socket = ((*i).second)->getId();
+            SOCKET  socket = ((*i).second).conn->getId();
             FD_SET(socket, &readSet);
             FD_SET(socket, &errorSet);
             if (socket > maxSock)
@@ -194,20 +210,28 @@ ConnectSrv::ShutdownReason ConnectSrv::Listen(void)
         ConnectsMap stump(connects);
         _mutex.Unlock();
         for (ConnectsMap::iterator i = stump.begin(); i != stump.end(); i++) {
-            ConnectAC* conn = (*i).second;
-            SOCKET socket = (SOCKET)conn->getId();
+            ConnectAC* conn = ((*i).second).conn;
+            unsigned socket = conn->getId();
 
-            if (FD_ISSET(socket, &readSet)) {
-                ConnectAC::ConnectState  st = conn->onReadEvent();
+            if (FD_ISSET((SOCKET)socket, &readSet)) {
+                ConnectAC::ConnectState  st = ConnectAC::connAlive;
+                try { st = conn->onReadEvent(); }
+                catch (const std::exception & exc) {
+                    smsc_log_error(logger, "ConnSrv: Connect[%u] exception: %s", socket, exc.what());
+                    st = ConnectAC::connException;
+                }
                 if (st == ConnectAC::connEOF)
                     smsc_log_debug(logger, "ConnSrv: remote point ends Connect[%u]", socket);
                 if (st != ConnectAC::connAlive)
-                    closeConnect(conn);
+                    closeConnect(socket);
             }
-            if (FD_ISSET(socket, &errorSet)) {
+            if (FD_ISSET((SOCKET)socket, &errorSet)) {
                 smsc_log_debug(logger, "ConnSrv: Error Event on socket[%u].", socket);
-                conn->onErrorEvent();
-                closeConnect(conn, true);
+                try { conn->onErrorEvent(); }
+                catch (const std::exception & exc) {
+                    smsc_log_error(logger, "ConnSrv: Connect[%u] exception: %s", socket, exc.what());
+                }
+                closeConnect(socket, true);
             }
         }
         _mutex.Lock();
