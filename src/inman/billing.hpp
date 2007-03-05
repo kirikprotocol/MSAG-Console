@@ -30,7 +30,6 @@ using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::OPAQUE_OBJ;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
-using smsc::inman::cache::AbonentBillType;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
 using smsc::inman::inap::CapSMSDlg;
@@ -109,7 +108,8 @@ protected:
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
-    bool ConfigureSCFandCharge(AbonentBillType ab_type, const GsmSCFinfo * p_scf = NULL);
+    bool ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
+                               const GsmSCFinfo * p_scf = NULL);
     bool matchBillMode(void) const;
 
     Mutex           bilMutex;
@@ -126,7 +126,7 @@ protected:
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
     bool            postpaidBill;
     TimersMAP       timers;     //active timers
-    AbonentBillType abType;     //calling abonent billing type
+    AbonentContractInfo::ContractType abType;     //calling abonent contract type
     TonNpiAddress   abNumber;   //calling abonent ISDN number
     bool            providerQueried;
     // ...

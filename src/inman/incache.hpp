@@ -45,9 +45,10 @@ public:
     ~AbonentCache();
 
     // -- AbonentCacheITF interface methods
-    AbonentBillType getAbonentInfo(const AbonentId & ab_number,
-                                   AbonentRecord * ab_rec = NULL);
-    void setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec);
+    AbonentContractInfo::ContractType
+        getAbonentInfo(const AbonentId & ab_number, AbonentRecord * ab_rec = NULL);
+    void
+        setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec);
 
 protected:
 
@@ -139,7 +140,7 @@ protected:
         void Read(File& fh) /* throw (FileException) */
         {
             uint8_t fb = fh.ReadByte();
-            ab_type = (AbonentBillType)(fb & 0x7F);
+            ab_type = (AbonentContractInfo::ContractType)(fb & 0x7F);
             tm_queried = ReadTimeT(fh);
             gsmSCF.scfAddress.clear();
             if (fb & 0x80) {

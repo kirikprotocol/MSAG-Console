@@ -390,7 +390,8 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
 }
 
 //here goes: abtPrepaid or abtUnknown or abtPostpaid(SMSX)
-bool Billing::ConfigureSCFandCharge(AbonentBillType ab_type, const GsmSCFinfo * p_scf/* = NULL*/)
+bool Billing::ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
+                                    const GsmSCFinfo * p_scf/* = NULL*/)
 {
     abType = ab_type;
 

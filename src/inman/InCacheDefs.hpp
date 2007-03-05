@@ -22,11 +22,12 @@ enum { MAX_ABONENT_ID_LEN =  11 }; //only isdn international numbers supported
 struct AbonentRecord : public AbonentContractInfo {
     time_t  tm_queried;
 
-    AbonentRecord(ContractType abType = abtUnknown, time_t qryTm = 0, const GsmSCFinfo * p_scf = NULL)
-        : AbonentContractInfo(abType, p_scf), tm_queried(qryTm)
+    AbonentRecord(ContractType abType = abtUnknown, time_t qryTm = 0,
+                  const GsmSCFinfo * p_scf = NULL, const char * p_imsi = NULL)
+        : AbonentContractInfo(abType, p_scf, p_imsi), tm_queried(qryTm)
     { }
     AbonentRecord(const AbonentRecord & ab_rec)
-        : AbonentContractInfo(ab_rec.ab_type, ab_rec.getSCFinfo())
+        : AbonentContractInfo(ab_rec.ab_type, ab_rec.getSCFinfo(), ab_rec.getImsi())
         , tm_queried(ab_rec.tm_queried)
     { }
 
@@ -35,22 +36,17 @@ struct AbonentRecord : public AbonentContractInfo {
     //NOTE: tm_queried = zero, means record ALWAYS expired!
     inline bool isExpired(long interval) const
     { return (bool)(time(NULL) >= (tm_queried + interval)); }
-
-    AbonentRecord& operator= (const AbonentContractInfo & ab_info)
-    {
-        *(AbonentContractInfo*)this = ab_info;
-        tm_queried = 0;
-        return *this;
-    }
 };
 
-typedef AbonentRecord::ContractType AbonentBillType;
+//typedef AbonentContractInfo::ContractType AbonentContractType;
+
 
 class AbonentCacheITF {
 public:
-    virtual AbonentBillType getAbonentInfo(const AbonentId & ab_number,
-                                           AbonentRecord * ab_rec = NULL) = 0;
-    virtual void setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec) = 0;
+    virtual AbonentContractInfo::ContractType
+            getAbonentInfo(const AbonentId & ab_number, AbonentRecord * ab_rec = NULL) = 0;
+    virtual void
+            setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec) = 0;
 };
 
 } //cache

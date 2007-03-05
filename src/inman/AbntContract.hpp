@@ -14,7 +14,7 @@ namespace inman {
 typedef char AbonentImsi[MAP_MAX_IMSI_AddressValueLength + 1];
 
 struct AbonentContractInfo {
-    typedef enum { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 } ContractType;
+    enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
     ContractType    ab_type;
     GsmSCFinfo      gsmSCF;

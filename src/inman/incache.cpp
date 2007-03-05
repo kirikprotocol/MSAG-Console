@@ -116,7 +116,7 @@ AbonentRecord * AbonentCache::ramLookUp(const AbonentId & ab_number)
         }
         if (!pabRec->isUnknown()) {
             if (pabRec->isExpired(_cfg.interval)) {
-                pabRec->ab_type = AbonentRecord::abtUnknown;
+                pabRec->ab_type = AbonentContractInfo::abtUnknown;
                 smsc_log_debug(logger, "InCache: abonent %s info is expired",
                                ab_number.getSignals());
             }
@@ -134,7 +134,7 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number,
     MutexGuard grd(cacheGuard);
     int status = ramInsert(ab_number, ab_rec); //sets queried time
 
-    if (ab_rec.ab_type != AbonentRecord::abtUnknown) {
+    if (ab_rec.ab_type != AbonentContractInfo::abtUnknown) {
         try {
             flCache.Insert(AbonentHashKey(ab_number), AbonentHashData(ab_rec), true);
         } catch (std::exception & exc) {
@@ -147,8 +147,9 @@ void AbonentCache::setAbonentInfo(const AbonentId & ab_number,
                     ab_rec.type2Str(), ab_rec.gsmSCF.toString().c_str());
 }
 
-AbonentBillType AbonentCache::getAbonentInfo(const AbonentId & ab_number,
-                                             AbonentRecord * p_ab_rec/* = NULL*/)
+AbonentContractInfo::ContractType 
+    AbonentCache::getAbonentInfo(const AbonentId & ab_number,
+                                AbonentRecord * p_ab_rec/* = NULL*/)
 {
     MutexGuard  guard(cacheGuard);
     AbonentHashData     ab_rec;
