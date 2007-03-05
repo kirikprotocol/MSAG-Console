@@ -11,17 +11,29 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionList;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
 
 import java.util.Iterator;
 
 
 public class DistributionListListCommand extends CommandClass
 {
+    private String owner = null;
+
     public void process(CommandContext ctx)
     {
         try {
+            System.out.println("STARTING");
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
-            Iterator i = admin.list().iterator();
+            Iterator i = null;
+            if (owner != null) {
+              final DlFilter filter = new DlFilter();
+              filter.setOwners(new String[]{owner});
+              i = admin.list(filter).iterator();
+            } else
+              i = admin.list().iterator();
+
+
             if (!i.hasNext()) {
                 ctx.setMessage("No distribution lists defined");
                 ctx.setStatus(CommandContext.CMD_OK);
@@ -41,5 +53,10 @@ public class DistributionListListCommand extends CommandClass
 
     public String getId() {
         return "DL_LIST";
+    }
+
+    public void setOwner(String owner) {
+      System.out.println("SET OWNER");
+      this.owner = owner;
     }
 }
