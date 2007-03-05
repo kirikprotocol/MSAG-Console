@@ -166,22 +166,24 @@ void MapATSIDlg::onDialogNotice(UCHAR_T reportCause,
                         TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
                         UCHAR_T invId/* = 0*/, UCHAR_T opCode/* = 0*/)
 {
-    MutexGuard  grd(_sync);
-    _atsiState.s.ctrAborted = 1;
-    std::string dstr;
-    if (comp_kind != TcapEntity::tceNone) {
-        format(dstr, ", Invoke[%u]", invId);
-        switch (comp_kind) {
-        case TcapEntity::tceError:      dstr += ".Error"; break;
-        case TcapEntity::tceResult:     dstr += ".Result"; break;
-        case TcapEntity::tceResultNL:   dstr += ".ResultNL"; break;
-        default:;
+    {
+        MutexGuard  grd(_sync);
+        _atsiState.s.ctrAborted = 1;
+        std::string dstr;
+        if (comp_kind != TcapEntity::tceNone) {
+            format(dstr, ", Invoke[%u]", invId);
+            switch (comp_kind) {
+            case TcapEntity::tceError:      dstr += ".Error"; break;
+            case TcapEntity::tceResult:     dstr += ".Result"; break;
+            case TcapEntity::tceResultNL:   dstr += ".ResultNL"; break;
+            default:;
+            }
+            dstr += " not delivered.";
         }
-        dstr += " not delivered.";
+        smsc_log_error(logger, "MapATSI[%u]: NOTICE_IND at state 0x%x%s", atsiId,
+                       _atsiState.value, dstr.c_str());
+        endTCap();
     }
-    smsc_log_error(logger, "MapATSI[%u]: NOTICE_IND at state 0x%x%s", atsiId,
-                   _atsiState.value, dstr.c_str());
-    endTCap();
     atsiHdl->onEndATSI(reportCause, smsc::inman::errTCAP);
 }
 
