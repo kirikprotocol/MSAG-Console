@@ -18,7 +18,7 @@ using namespace scag::pers::client;
 using namespace scag::pers;
 using namespace scag::config;
 
-#define ITER_CNT 40000
+#define ITER_CNT 10000
 
 extern "C" static void atExitHandler(void)
 {
