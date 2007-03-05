@@ -42,6 +42,20 @@ sub mycopy
 {
   my ($src,$dst)=@_;
   print "Copy $src => $dst\n";
+  my @path=split(/\//,$dst);
+  pop @path;
+  my $checkpath;
+  unless($path[0])
+  {
+    $checkpath='/';
+    shift @path;
+  }
+  for(@path)
+  {
+    $checkpath.=$_.'/';
+    mkdir $checkpath or die "Failed to create $checkpath\n" unless -d $checkpath;
+  }
+
   copy($src,$dst);
   my @st=stat($src);
   utime($st[8],$st[9],$dst);
