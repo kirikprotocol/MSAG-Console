@@ -211,10 +211,6 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
 void IAPQuerySRI::onEndMapDlg(unsigned short ercode, InmanErrorType errLayer)
 {
     MutexGuard  grd(_mutex);
-    if (sriDlg) {
-        delete sriDlg;
-        sriDlg = NULL;
-    }
     if (errLayer != smsc::inman::errOk)
         smsc_log_error(logger, "%s(%s): query failed: code %u, layer %s\n",
                         taskName(), abonent.getSignals(), ercode,
