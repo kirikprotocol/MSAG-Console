@@ -460,7 +460,7 @@ public CommandParser(ParserSharedInputState state) {
 		case TGT_DL:
 		{
 			match(TGT_DL);
-			cmd = new DistributionListListCommand();
+			cmd=lstdl();
 			break;
 		}
 		case TGT_SME:
@@ -2818,6 +2818,41 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		}
+		return cmd;
+	}
+	
+	public final DistributionListListCommand  lstdl() throws RecognitionException, TokenStreamException {
+		DistributionListListCommand cmd;
+		
+		
+		cmd = new DistributionListListCommand();
+		
+		
+		try {      // for error handling
+			{
+			switch ( LA(1)) {
+			case OPT_OWNER:
+			{
+				match(OPT_OWNER);
+				cmd.setOwner(getnameid("owner"));
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("error");
+			
 		}
 		return cmd;
 	}
@@ -5797,27 +5832,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop301:
+			_loop303:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop301;
+					break _loop303;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop303:
+			_loop305:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop303;
+					break _loop305;
 				}
 				
 			} while (true);

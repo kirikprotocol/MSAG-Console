@@ -23,7 +23,6 @@ public class DistributionListListCommand extends CommandClass
     public void process(CommandContext ctx)
     {
         try {
-            System.out.println("STARTING");
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             Iterator i = null;
             if (owner != null) {
@@ -56,7 +55,6 @@ public class DistributionListListCommand extends CommandClass
     }
 
     public void setOwner(String owner) {
-      System.out.println("SET OWNER");
       this.owner = owner;
     }
 }

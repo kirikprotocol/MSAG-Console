@@ -139,7 +139,7 @@ lst returns [Command cmd] {
 	| TGT_SUBJECT	{ cmd = new SubjectListCommand();   }
 	| TGT_PRINCIPAL	{ cmd = new PrincipalListCommand(); }
 	| TGT_ACL	{ cmd = new AclListCommand();       }
-	| TGT_DL	{ cmd = new DistributionListListCommand(); }
+	| TGT_DL	cmd = lstdl
 	| TGT_SME	{ cmd = new SmeListCommand();       }
 	| TGT_PROVIDER	{ cmd = new ProviderListCommand();  }
 	| TGT_CATEGORY	{ cmd = new CategoryListCommand();  }
@@ -663,6 +663,16 @@ altprofile returns [ProfileAlterCommand cmd] {
 exception[addr]
 catch [RecognitionException ex] {
     throw new RecognitionException("Profile address expected");
+}
+
+lstdl returns [DistributionListListCommand cmd] {
+  cmd = new DistributionListListCommand();
+}
+  : (OPT_OWNER {cmd.setOwner(getnameid("owner"));})?
+  ;
+exception
+catch [RecognitionException ex] {
+    throw new RecognitionException("error");
 }
 
 lstalias returns [AliasListCommand cmd] {
