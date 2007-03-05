@@ -180,11 +180,11 @@ int IAPQueryDB::Execute(void)
             status = -2; 
         }
     }
-    //convert returned integer to AbonentBillType value
+    //convert returned integer to AbonentContractType value
     if (res > 0) 
-        abRec.ab_type = AbonentRecord::abtPrepaid;
+        abRec.ab_type = AbonentContractInfo::abtPrepaid;
     else if (!res)
-        abRec.ab_type = AbonentRecord::abtPostpaid;
+        abRec.ab_type = AbonentContractInfo::abtPostpaid;
     //else btUnknown
 
     //do not unregister routine in order to reuse it in next queries.
