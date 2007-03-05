@@ -91,7 +91,7 @@ public final class Session {
 
   private final class StartState implements SessionState {
     // Regexes for parse abonent request
-    private final static String ON = "ON|oN|On|on";
+    private final static String ON = "ON|oN|On|on|\\s*";
     private final static String OFF = "OFF|OFf|OoF|oFF|Off|oFf|ofF|off";
 
     public SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException {
