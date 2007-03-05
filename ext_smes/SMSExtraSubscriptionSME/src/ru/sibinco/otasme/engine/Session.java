@@ -184,23 +184,19 @@ public final class Session {
             if (currentMessageRepeats < SmeProperties.Session.MAX_OTA_MESSAGE_REPEATS) {
               CommandsRepeater.addCommand(new Command2Send(abonentNumber, serviceName, abonentNumber));
               return this;
-            } else {
+            } else
               sendMessage(errorText, smeAddress);
-              return null;
-            }
+
           } catch (QueueOverflowException e) {
             logInfo("Commands Repeater is full. Send Error sms");
             sendMessage(errorText, smeAddress);
-            return null;
           }
-
         }
 
-      } else { // No error occured
+      } else  // No error occured
         logInfo("OTA Platform return success");
-        processUser(incomingMessage.getSourceAddress(), enableService);
-      }
 
+      processUser(abonentNumber, enableService);
       return null;
     }
   }
