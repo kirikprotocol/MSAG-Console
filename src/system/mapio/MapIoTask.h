@@ -458,7 +458,7 @@ public:
     ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn;
     int addssns = 0;
     if( addUssdSSN.length() > 0 ) {
-      char *str = addUssdSSN.c_str();
+      const char *str = addUssdSSN.c_str();
       for( int i = 0; str[i]; i++ ) if( str[i] == ',' ) addssns++;
       addssns++;
     }
@@ -469,7 +469,8 @@ public:
     numLocalSSNs = addssns+2;
     localSSNs[0] = SSN;
     localSSNs[1] = ussdSSN;
-    char *str = addUssdSSN.c_str();
+    char *beg = strdup(addUssdSSN.c_str());
+    char *str = beg;
     char *tmp = str;
     int idx = 2;
     while( *tmp ) {
@@ -487,6 +488,7 @@ public:
       localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)as;
       __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, as);
     }
+    free( beg );
   }
   static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
   MapProxy* getProxy() { return proxy; }

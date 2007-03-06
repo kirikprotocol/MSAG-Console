@@ -151,9 +151,9 @@ static char const ident[] = "$Id$";
         }
 
         char buf1[64];
-        sprintf(buf,"n%d.ucs.lst",smsc->nodeIndex);
+        sprintf(buf1,"n%d.ucs.lst",smsc->nodeIndex);
         char buf2[64];
-        sprintf(buf,"n%d.ucs.csv",smsc->nodeIndex);
+        sprintf(buf2,"n%d.ucs.csv",smsc->nodeIndex);
 
         fileLog = new TrapRecordLog(fileLogLocation, smsc->nodeIndex?buf1:"ucs.lst",smsc->nodeIndex?buf2:"ucs.csv", fileLogRollInterval, log);
         fileLog->RFSOpen(true);
