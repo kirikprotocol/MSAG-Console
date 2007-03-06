@@ -165,23 +165,23 @@ public final class Session {
     }
 
     private SessionState sendSRCommand(String wtsServiceName, String otaMessage, boolean enableService) {
-//      final Message otaRequest = new Message();
-//      otaRequest.setType(Message.TYPE_WTS_REQUEST);
-//      otaRequest.setWtsOperationCode(Message.WTS_OPERATION_CODE_COMMAND);
-//      otaRequest.setWTSUserId(removePlusFromAbonentNumber(abonentNumber));
-//      otaRequest.setWTSServiceName(wtsServiceName);
-//      otaRequest.setSourceAddress(SmeProperties.Session.OTA_NUMBER);
-//      otaRequest.setDestinationAddress(SmeProperties.Session.OTA_NUMBER);
-//      otaRequest.setWtsRequestReference(abonentNumber);
-//      Sme.outQueue.addOutgoingObject(new OutgoingObject(otaRequest));
+      final Message otaRequest = new Message();
+      otaRequest.setType(Message.TYPE_WTS_REQUEST);
+      otaRequest.setWtsOperationCode(Message.WTS_OPERATION_CODE_COMMAND);
+      otaRequest.setWTSUserId(removePlusFromAbonentNumber(abonentNumber));
+      otaRequest.setWTSServiceName(wtsServiceName);
+      otaRequest.setSourceAddress(SmeProperties.Session.OTA_NUMBER);
+      otaRequest.setDestinationAddress(SmeProperties.Session.OTA_NUMBER);
+      otaRequest.setWtsRequestReference(abonentNumber);
+      Sme.outQueue.addOutgoingObject(new OutgoingObject(otaRequest));
       logInfo("Send SR_COMMAND with service name = " + wtsServiceName);
-      final Message message = new Message();
-      message.setType(Message.TYPE_WTS_REQUEST);
-      message.setSourceAddress(abonentNumber);
-      message.setWtsRequestReference(abonentNumber);
-      message.setWtsOperationCode(Message.WTS_OPERATION_CODE_AACK);
-      message.setWTSErrorCode(0);
-      Sme.inQueue.addIncomingObject(new IncomingObject(message));
+//      final Message message = new Message();
+//      message.setType(Message.TYPE_WTS_REQUEST);
+//      message.setSourceAddress(abonentNumber);
+//      message.setWtsRequestReference(abonentNumber);
+//      message.setWtsOperationCode(Message.WTS_OPERATION_CODE_AACK);
+//      message.setWTSErrorCode(0);
+//      Sme.inQueue.addIncomingObject(new IncomingObject(message));
       return new OTAState(otaMessage.replaceAll("%SMSC_NUMBER%", smscenterNumber), wtsServiceName, enableService);
     }
 
@@ -276,10 +276,6 @@ public final class Session {
       ResultSet rs = null;
 
       try {
-        conn = ConnectionPool.getConnection();
-        ps = conn.prepareStatement("SET wait_timeout=10");
-        ps.executeUpdate();
-
         ps = conn.prepareStatement(SmeProperties.Session.FIND_ABONENT_SQL);
         ps.setString(1, abonentNumber);
         rs = ps.executeQuery();

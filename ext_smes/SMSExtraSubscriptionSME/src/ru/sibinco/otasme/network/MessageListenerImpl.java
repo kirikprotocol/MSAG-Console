@@ -75,7 +75,9 @@ public class MessageListenerImpl implements MessageListener {
         sendResponse(msg, Data.ESME_RMSGQFUL);
         return true;
       }
-       sendResponse(msg, Data.ESME_ROK);
+
+      // sendResponse(msg, Data.ESME_ROK);
+
       inQueue.addIncomingObject(incomingObject);
       return true;
     } catch (Exception e) { // logic exception (message format)

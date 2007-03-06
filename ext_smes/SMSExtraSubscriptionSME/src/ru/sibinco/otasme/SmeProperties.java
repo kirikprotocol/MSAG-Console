@@ -36,6 +36,9 @@ public class SmeProperties {
     public static final String FIND_ABONENT_SQL;
     public static final String ADD_ABONENT_SQL;
     public static final String DELETE_ABONENT_SQL;
+    public static final String INTERNAL_ERROR;
+    public static final String ABONENT_ALREADY_REGISTERED;
+    public static final String ABONENT_NOT_REGISTERED;
 
     static {
       final Properties config = Utils.loadConfig("sme.properties");
@@ -50,6 +53,9 @@ public class SmeProperties {
       FIND_ABONENT_SQL = Utils.loadString(config, "session.find.abonent.sql");
       ADD_ABONENT_SQL = Utils.loadString(config, "session.add.abonent.sql");
       DELETE_ABONENT_SQL = Utils.loadString(config, "session.delete.abonent.sql");
+      INTERNAL_ERROR = Utils.loadString(config, "session.internal.error");
+      ABONENT_ALREADY_REGISTERED = Utils.loadString(config, "session.abonent.already.registered");
+      ABONENT_NOT_REGISTERED = Utils.loadString(config, "session.abonent.not.registered");
       config.clear();
     }
   }

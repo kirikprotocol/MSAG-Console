@@ -77,8 +77,17 @@ public final class ConnectionPool {
     if (pooledDataSource == null)
       throw new SQLException("Conenction pool is not initialized");
 
-    Connection connection = pooledDataSource.getConnection();
-    connection.setAutoCommit(false);
-    return connection;
+    for (int i=0; i<2; i++) {
+      try {
+
+        Connection connection = pooledDataSource.getConnection();
+        connection.setAutoCommit(true);
+        return connection;
+
+      } catch (SQLException e) {
+      }
+    }
+    
+    throw new SQLException("Can't get new connection");
   }
 }
