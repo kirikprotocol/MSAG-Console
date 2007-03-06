@@ -5,8 +5,10 @@
 #include "util/smstext.h"
 #include <string>
 #include <ctype.h>
+#include "resourcemanager/ResourceManager.hpp"
 #define DLP_TIMEOUT 1000
 #define WAIT_SUBMISSION (8)
+
 
 #ifdef SMSEXTRA
 #include "system/ExtraBits.hpp"
@@ -34,7 +36,8 @@ DistrListProcess::DistrListProcess(DistrListAdmin* admin,SmeRegistrar* reg) :
   admin(admin),
   managerMonitor(0),
   seq(1),
-  smereg(reg)
+  smereg(reg),
+  profiler(0)
 {
   autoCreatePrincipal=false;
   defaultMaxLists=10;
@@ -208,7 +211,7 @@ int DistrListProcess::Execute()
         if(cmd!="send" && arg.find('/')!=string::npos)
         {
           tmpl="dl.invalidcmdparam";
-          reason="prefix unexpected";
+          reason="prefix_unexpected";
         }else
         if(cmd=="add")
         {
@@ -231,13 +234,13 @@ int DistrListProcess::Execute()
             tmpl="dl.addok";
           }catch(ListAlreadyExistsException& e)
           {
-            reason="list already exists";
+            reason="list_already_exists";
           }catch(PrincipalNotExistsException& e)
           {
-            reason="principal not exists";
+            reason="principal_not_exists";
           }catch(ListCountExceededException& e)
           {
-            reason="list count exceeded";
+            reason="list_count_exceeded";
           }
         }else
         if(cmd=="del")
@@ -256,7 +259,7 @@ int DistrListProcess::Execute()
             }catch(IllegalSubmitterException& e)
             {
               tmpl="dl.mlistmerr";
-              reason="not allowed to list members";
+              reason="not_allowed_to_list_members";
             }
             if(m.Count()==0)
             {
@@ -289,7 +292,7 @@ int DistrListProcess::Execute()
             }catch(PrincipalNotExistsException& e)
             {
               tmpl="dl.listerr";
-              reason="you are not registered as list owner";
+              reason="not_registered_list_owner";
             }
           }
         }else
@@ -302,11 +305,11 @@ int DistrListProcess::Execute()
             tmpl="dl.maddok";
           }catch(MemberAlreadyExistsException& e)
           {
-            reason="member already exists";
+            reason="member_already_exists";
           }
           catch(MemberCountExceededException& e)
           {
-            reason="members count limit exceeded";
+            reason="members_count_limit_exceeded";
           }
         }else
         if(cmd=="delm")
@@ -318,7 +321,7 @@ int DistrListProcess::Execute()
             tmpl="dl.mdelok";
           }catch(MemberNotExistsException& e)
           {
-            reason="member doesn't exists";
+            reason="member_doesnt_exists";
           }
         }else
         if(cmd=="adds")
@@ -330,13 +333,13 @@ int DistrListProcess::Execute()
             tmpl="dl.saddok";
           }catch(ListNotExistsException& e)
           {
-            reason="list not found";
+            reason="list_not_found";
           }catch(PrincipalNotExistsException& e)
           {
-            reason="principal not found";
+            reason="principal_not_found";
           }catch(SubmitterAlreadyExistsException& e)
           {
-            reason="submitter already exists";
+            reason="submitter_already_exists";
           }
         }else
         if(cmd=="dels")
@@ -348,13 +351,13 @@ int DistrListProcess::Execute()
             tmpl="dl.sdelok";
           }catch(ListNotExistsException& e)
           {
-            reason="list not found";
+            reason="list_not_found";
           }catch(SubmitterNotExistsException& e)
           {
-            reason="submitter not found";
+            reason="submitter_not_found";
           }catch(IllegalSubmitterException& e)
           {
-            reason="illegal submitter";
+            reason="illegal_submitter";
           }
         }else
         if(cmd=="slist")
@@ -379,7 +382,7 @@ int DistrListProcess::Execute()
             }
           }catch(ListNotExistsException& e)
           {
-            reason="list not found";
+            reason="list_not_found";
           }
         }else
         if(cmd=="send")
@@ -442,7 +445,7 @@ int DistrListProcess::Execute()
             arg2=buf;
           }catch(IllegalSubmitterException& e)
           {
-            reason="access denied";
+            reason="access_denied";
           }
         }
 #ifdef DLSMSADMIN
@@ -455,17 +458,31 @@ int DistrListProcess::Execute()
 
       }catch(smsc::core::buffers::FileException& e)
       {
-        reason="database error";
+        reason="database_error";
       }catch(ListNotExistsException& e)
       {
-        reason="list doesn't exists";
+        reason="list_not_found";
       }catch(exception& e)
       {
-        reason=e.what();
+        __warning2__("distrlist exception:'%s'",e.what());
+        reason="system_error";
       }catch(...)
       {
         reason="unknown";
       }
+
+      if(reason.length())
+      {
+        reason="dl.reason."+reason;
+        smsc::profiler::Profile p=profiler->lookup(sms.getOriginatingAddress());
+        try{
+          reason=smsc::resourcemanager::ResourceManager::getInstance()->getString(p.locale,reason);
+        }catch(...)
+        {
+          __warning2__("failed to get resource %s for locale %s",reason.c_str(),p.locale.c_str());
+        }
+      }
+
       SMS ans;
       ans.setOriginatingAddress(sms.getDestinationAddress());
       ans.setDestinationAddress(sms.getOriginatingAddress());

@@ -12,6 +12,7 @@
 #include <map>
 #include <list>
 #include <time.h>
+#include "profiler/profiler-types.hpp"
 
 namespace smsc{
 namespace distrlist{
@@ -55,6 +56,8 @@ protected:
   int seq;
   SmeRegistrar* smereg;
 
+  smsc::profiler::ProfilerInterface* profiler;
+
 public:
   DistrListProcess(DistrListAdmin* admin,SmeRegistrar* sm);
   virtual ~DistrListProcess();
@@ -79,6 +82,11 @@ public:
 // ThreadedTask
   virtual int Execute();
   virtual const char* taskName();
+
+  void assignProfiler(smsc::profiler::ProfilerInterface* argProfiler)
+  {
+    profiler=argProfiler;
+  }
 
   string serviceType;
   int protocolId;
