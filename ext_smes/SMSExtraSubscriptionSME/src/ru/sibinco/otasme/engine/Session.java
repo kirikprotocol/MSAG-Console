@@ -182,6 +182,7 @@ public final class Session {
 //      message.setWtsOperationCode(Message.WTS_OPERATION_CODE_AACK);
 //      message.setWTSErrorCode(0);
 //      Sme.inQueue.addIncomingObject(new IncomingObject(message));
+      
       return new OTAState(otaMessage.replaceAll("%SMSC_NUMBER%", smscenterNumber), wtsServiceName, enableService);
     }
 
@@ -276,6 +277,7 @@ public final class Session {
       ResultSet rs = null;
 
       try {
+        conn = ConnectionPool.getConnection();
         ps = conn.prepareStatement(SmeProperties.Session.FIND_ABONENT_SQL);
         ps.setString(1, abonentNumber);
         rs = ps.executeQuery();
@@ -293,7 +295,7 @@ public final class Session {
         }
 
       } catch (SQLException e) {
-        log.error(e);
+        log.error(e, e);
       } finally {
         try {
           if (rs != null)
@@ -303,7 +305,7 @@ public final class Session {
           if (conn != null)
             conn.close();
         } catch (SQLException e) {
-          log.error(e);
+          log.error(e, e);
         }
       }
     }
