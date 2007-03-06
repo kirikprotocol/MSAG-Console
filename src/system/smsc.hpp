@@ -606,6 +606,7 @@ protected:
   string scAddr;
   string ussdCenterAddr;
   int    ussdSSN;
+  string addUssdSSN;
   int    busyMTDelay;
   int    lockedByMODelay;
   int    MOLockTimeout;

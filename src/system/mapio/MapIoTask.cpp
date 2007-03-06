@@ -16,8 +16,6 @@ Mutex mapMutex;
 //#define SMSC_FORWARD_RESPONSE 0x001
 
 //unsigned __global_bind_counter = 0;
-bool SSN_bound = false;
-bool USSD_SSN_bound = false;
 int bindTimer = 0;
 static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
@@ -38,10 +36,15 @@ extern "C" {
 
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   {
-    __map_warn2__("Et96MapBindConf confirmation received ssn=%d status=%d",lssn,status);
+    __map_warn2__("%s: confirmation received ssn=%d status=%d",__func__,lssn,status);
     if( status == 0  ) {
-      if( lssn == SSN ) SSN_bound = true;
-      else if( lssn == USSD_SSN ) USSD_SSN_bound = true;
+      for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+        if( MapDialogContainer::localSSNs[i] == lssn ) {
+          MapDialogContainer::boundLocalSSNs[i] = 1;
+          __map_warn2__("%s: local ssn=%d bound",__func__,lssn);
+          break;
+        }
+      }
     } else if( status == 1 ) {
       __map_warn2__("Et96MapBindConf SSN %d is already bound trying to reconnect",lssn);
       MAP_disconnectDetected = true;
@@ -59,27 +62,29 @@ extern "C" {
                            ULONG_T affectedSPC,
                            ULONG_T localSPC)
   {
-    __map_warn2__("Et96MapStateInd received ssn=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",lssn,userState,affectedSSN,affectedSPC,localSPC);
+    __map_warn2__("%s: received ssn=%d user state=%d affected SSN=%d affected SPC=%d local SPC=%d",__func__,lssn,userState,affectedSSN,affectedSPC,localSPC);
     if( affectedSPC == localSPC ) {
       if( userState == 1 ) {
-        if (affectedSSN == SSN && SSN_bound ) {
-          __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
-          SSN_bound = false;
-          USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
-          if (result!=ET96MAP_E_OK) {
-            __map_warn2__("SSN Bind error 0x%hx",result);
-          }
-        } else if( affectedSSN == USSD_SSN && USSD_SSN_bound) {
-          __map_warn2__("Et96MapStateInd SSN %d is unavailable trying to rebind",affectedSSN);
-          USSD_SSN_bound = false;
-          USHORT_T result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
-          if (result!=ET96MAP_E_OK) {
-            __map_warn2__("USSD SSN Bind error 0x%hx",result);
+        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+          if( MapDialogContainer::localSSNs[i] == affectedSSN ) {
+            if( MapDialogContainer::boundLocalSSNs[i] ) {
+              MapDialogContainer::boundLocalSSNs[i] = 0;
+              __map_warn2__("%s: SSN %d is unavailable trying to rebind",__func__,affectedSSN);
+              USHORT_T result = Et96MapBindReq(MY_USER_ID, SSN);
+              if (result!=ET96MAP_E_OK) {
+                __map_warn2__("%s: SSN %d Bind error 0x%hx",__func__,affectedSSN,result);
+              }
+            }
+            break;
           }
         }
       } else {
-        if (affectedSSN == SSN ) SSN_bound = true;
-        else if( affectedSSN == USSD_SSN ) USSD_SSN_bound = true;
+        for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+          if( MapDialogContainer::localSSNs[i] == affectedSSN ) {
+            MapDialogContainer::boundLocalSSNs[i] = 1;
+            break;
+          }
+        }
       }
     }
     return ET96MAP_E_OK;
@@ -124,27 +129,24 @@ void MapIoTask::connect(unsigned timeout) {
     sleep(timeout);
   }
 
-  __map_warn__("Binding subsystems");
+  __map_warn2__("Binding %d subsystems", MapDialogContainer::numLocalSSNs);
   bindTimer = 0;
-
-  result = Et96MapBindReq(MY_USER_ID, SSN);
-  if (result!=ET96MAP_E_OK) {
-    __map_warn2__("SSN Bind error 0x%hx",result);
-    throw runtime_error("bind error sms");
-  }
-
-  result = Et96MapBindReq(MY_USER_ID, USSD_SSN);
-  if (result!=ET96MAP_E_OK) {
-    __map_warn2__("USSD Bind error 0x%hx",result);
-    throw runtime_error("bind error ussd");
+  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+    result = Et96MapBindReq(MY_USER_ID, MapDialogContainer::localSSNs[i]);
+    if (result!=ET96MAP_E_OK) {
+      __map_warn2__("SSN %d Bind error 0x%hx",MapDialogContainer::localSSNs[i],result);
+      throw runtime_error("bind error");
+    }
   }
 }
 
 void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
-  SSN_bound = false;
-  USSD_SSN_bound = false;
+  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+    MapDialogContainer::boundLocalSSNs[i] = 0;
+    MapDialogContainer::patternBoundLocalSSNs[i] = 1;
+  }
   __pingPongWaitCounter = 0;
   err = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if ( err != MSG_OK ) {
@@ -162,19 +164,15 @@ void MapIoTask::disconnect()
 {
   USHORT_T result;
   __map_warn__("disconnect from MAP stack");
-  SSN_bound = false;
-  USSD_SSN_bound = false;
 
-  result = Et96MapUnbindReq(SSN);
-  if ( result != ET96MAP_E_OK) {
-    __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
+  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+    result = Et96MapUnbindReq(MapDialogContainer::localSSNs[i]);
+    if ( result != ET96MAP_E_OK) {
+      __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",MapDialogContainer::localSSNs[i],result);
+    }
+    MapDialogContainer::boundLocalSSNs[i] = 0;
   }
-
-  result = Et96MapUnbindReq(USSD_SSN);
-  if ( result != ET96MAP_E_OK) {
-    __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
-  }
-
+  
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK) {
     __map_warn2__("error at MsgRel errcode 0x%hx",result);
@@ -243,7 +241,7 @@ void MapIoTask::dispatcher()
         MAP_disconnectDetected = false;
         continue;
       }
-      if ( SSN_bound && USSD_SSN_bound ) continue;
+      if( memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ) continue;
       __map_warn2__("MAP:: check binders %d", bindTimer);
       if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
       __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
@@ -417,6 +415,10 @@ int MapDialogContainer::MOLockTimeout = 45;
 bool MapDialogContainer::allowCallBarred = false;
 bool MapDialogContainer::ussdV1Enabled = false;
 bool MapDialogContainer::ussdV1UseOrigEntityNumber = false;
+ET96MAP_LOCAL_SSN_T *MapDialogContainer::localSSNs = 0;
+int                  MapDialogContainer::numLocalSSNs = 0;
+int                 *MapDialogContainer::boundLocalSSNs = 0;
+int                 *MapDialogContainer::patternBoundLocalSSNs = 0;
 
 MapProxy* MapDialogContainer::proxy = 0;
 
@@ -706,7 +708,7 @@ void MapProxy::checkLogging() {
 
 bool isMapBound() {
 #ifdef USE_MAP
-  return SSN_bound && USSD_SSN_bound;
+  return memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ;
 #else
   return false;
 #endif

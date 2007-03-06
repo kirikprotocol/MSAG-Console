@@ -357,6 +357,10 @@ class MapDialogContainer{
 
   int    processTimeout;
   int    processLimit;
+  static ET96MAP_LOCAL_SSN_T *localSSNs;
+  static int                *boundLocalSSNs;
+  static int                *patternBoundLocalSSNs; /* contains true values, used for memcmp to check if all SSN bound*/
+  static int                 numLocalSSNs;
 
   void Dump() {
     static smsc::logger::Logger* dlogger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
@@ -422,7 +426,7 @@ public:
     unsigned key;
     MapDialog* dlg;
     hash_.First();
-    __mapdlg_trace2__("%s: dropping all dialogs %s",__func__);
+    __mapdlg_trace2__("%s: dropping all dialogs",__func__);
     while(hash_.Next(key,dlg)) {
       for (;!dlg->chain.empty();dlg->chain.pop_front())
       {
@@ -450,7 +454,40 @@ public:
   static string GetUSSDAdress() { return USSD_ADRESS_VALUE; }
   static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
   static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
-  static void SetUSSDSSN(int ssn) { ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn; }
+  static void SetUSSDSSN(int ssn, const string& addUssdSSN) { 
+    ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn;
+    int addssns = 0;
+    if( addUssdSSN.length() > 0 ) {
+      char *str = addUssdSSN.c_str();
+      for( int i = 0; str[i]; i++ ) if( str[i] == ',' ) addssns++;
+      addssns++;
+    }
+    __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing local SSNs additional %d",__func__, addssns);
+    localSSNs = new ET96MAP_LOCAL_SSN_T[addssns+2];
+    boundLocalSSNs = new int[addssns+2];
+    patternBoundLocalSSNs = new int[addssns+2];
+    numLocalSSNs = addssns+2;
+    localSSNs[0] = SSN;
+    localSSNs[1] = ussdSSN;
+    char *str = addUssdSSN.c_str();
+    char *tmp = str;
+    int idx = 2;
+    while( *tmp ) {
+      if( *tmp == ',' ) {
+        *tmp = 0;
+        int as = atoi(str);
+        str = tmp+1;
+        localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)as;
+        __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, as);
+      }
+      tmp++;
+    }
+    if( tmp > str ) {
+      int as = atoi(str);
+      localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)as;
+      __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, as);
+    }
+  }
   static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
   MapProxy* getProxy() { return proxy; }
   static void setBusyMTDelay(int val){busyMTDelay=val;}
@@ -756,11 +793,11 @@ public:
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent),is_started(false)
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, const string& addUssdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent),is_started(false)
   {
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
-    MapDialogContainer::SetUSSDSSN(ussdSSN);
+    MapDialogContainer::SetUSSDSSN(ussdSSN, addUssdSSN);
     MapDialogContainer::setProxy( &proxy );
     MapDialogContainer::setBusyMTDelay(busyMTDelay);
     MapDialogContainer::setLockedByMoDelay(lockedByMODelay);

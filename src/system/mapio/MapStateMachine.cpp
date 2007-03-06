@@ -223,7 +223,7 @@ static inline void eraseUssdLock(MapDialog *dialog, const char* function) {
   USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
   if(it==ussd_map.end()){
     __map_warn2__("%s: ussd lock not found for ussd dialog for %lld dlg 0x%x", function, dialog->ussdSequence, dialog->dialogid_map );
-  }else if(it->second == dialog->dialogid_map ) {
+  }else if(it->second == (((unsigned)dialog->ssn)<<16)|dialog->dialogid_map ) {
     __map_trace2__("%s: erase ussd lock for %lld dlg 0x%x", function, dialog->ussdSequence, it->second);
     ussd_map.erase(it);
   } else {
@@ -999,7 +999,7 @@ static void SendSubmitCommand(MapDialog* dialog)
     istringstream(dialog->sms->getOriginatingAddress().value)>>dialog->ussdSequence;
     {
   //    MutexGuard ussd_map_guard( ussd_map_lock );
-      ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
+      ussd_map[dialog->ussdSequence] = (((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
     }
   }
   __map_trace2__("%s: dlg 0x%x Submit %s to SMSC: IMSI = %s, MSC = %s, %s",__func__,dialog->dialogid_map,dialog->isUSSD?"USSD":"SMS",dialog->s_imsi.c_str(),dialog->s_msc.c_str(),RouteToString(dialog).c_str());
@@ -1013,13 +1013,12 @@ static void SendSubmitCommand(MapDialog* dialog)
   }
 
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
-  unsigned ssn_var = (dialog->ssn == USSD_SSN) ? 0x10000 : 0;
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
-    *dialog->sms.get(),(unsigned(dialog->dialogid_map)&0xffff)|ssn_var);
+    *dialog->sms.get(),((((unsigned)dialog->ssn)<<16)|dialog->dialogid_map);
   proxy->putIncomingCommand(cmd);
 }
 
-static const unsigned DIALOGID_BEFORE_CREATING = 0x10000;
+//static const unsigned DIALOGID_BEFORE_CREATING = 0x10000;
 
 static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code,unsigned ssn)
 {
@@ -1371,13 +1370,12 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     bool dlg_found = false;
     istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
     {
-//      MutexGuard ussd_map_guard( ussd_map_lock );
       USSD_MAP::iterator it = ussd_map.find(dialog->ussdSequence);
       if ( it != ussd_map.end() ) {
         // USSD dialog already exists on this abonent
         dlg_found = true;
       } else {
-        ussd_map[dialog->ussdSequence] = dialog->dialogid_map;
+        ussd_map[dialog->ussdSequence] = (((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
       }
     }
     if(dlg_found) {
@@ -1485,11 +1483,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           {
             bool dlg_found = false;
             {
-//              MutexGuard ussd_map_guard( ussd_map_lock );
               USSD_MAP::iterator it = ussd_map.find(sequence);
               if ( it != ussd_map.end() ) {
-                dialogid_map = it->second;
-                dialog_ssn = USSD_SSN;
+                dialogid_map = it->second&0xFFFF; // low short value is dlgid
+                dialog_ssn = (it->second>>16)&0xFF; //high short value is ssn
                 dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
                 if( !dialog.isnull() ) {
                   if ( !dialog->isUSSD )
@@ -1706,14 +1703,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         }
       }
     }else{ // !delivery !query abonent status it's submit resp
-      dialogid_map = dialogid_smsc&0x0ffff;
-      if ( ((dialogid_smsc >> 16)&0x3) == 1 ) dialog_ssn = USSD_SSN;
-      else dialog_ssn = SSN;
+      dialogid_map = dialogid_smsc&0xFFFF;
+      dialog_ssn = (dialogid_smsc >> 16)&0xFF;
       if ( dialog2 ) throw runtime_error("MAP::putCommand can't chain MAPINPUT");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
       if ( dialog.isnull() ) {
-/*        SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_FATAL,
-          (dialog_ssn = USSD_SSN?Status::USSDDLGNFOUND:Status::DELIVERYTIMEDOUT)));*/
         __map_warn2__("MAP::putCommand: dialog not found for submit resp x0%x",dialogid_smsc);
         return;
       }
@@ -1721,7 +1715,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
       dialogid_smsc = 0;
       __require__(dialog->ssn == dialog_ssn);
       __map_trace2__("%s: submit resp dialogid 0x%x  (state %d)",__func__,dialog->dialogid_map,dialog->state);
-      //dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
         if ( dialog->isUSSD )
         {
@@ -2241,7 +2234,7 @@ USHORT_T Et96MapCloseInd(
       }else{
         if ( !dialog->routeErr ) {
           if( dialog->sms.get()->hasIntProperty( Tag::SMPP_USSD_SERVICE_OP ) ) {
-            MapDialogContainer::getInstance()->reAssignDialog(dialogueId,dialog->ssn,USSD_SSN);
+            MapDialogContainer::getInstance()->reAssignDialog(dialogueId,dialog->ssn,USSD_SSN); // This is for network initiated sessions
             int serviceOp = dialog->sms.get()->getIntProperty( Tag::SMPP_USSD_SERVICE_OP );
             if( serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ ) {
               DoUSSDRequestOrNotifyReq(dialog.get());

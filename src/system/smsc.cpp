@@ -849,6 +849,15 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   ussdSSN=cfg.cfgman->getInt("core.ussd_ssn");
+  try {
+    if( cfg.cfgman->getString("core.add_ussd_ssn") ) {
+      addUssdSSN = cfg.cfgman->getString("core.add_ussd_ssn");
+    } else {
+      addUssdSSN = "";
+    }
+  } catch (...) {
+    addUssdSSN = "";
+  }
   try{
     busyMTDelay=cfg.cfgman->getInt("map.busyMTDelay");
   } catch (...) {
@@ -1189,7 +1198,7 @@ void Smsc::run()
     __trace__("SMPPIO started");
 #if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber);
     tp.startTask(mapio);
     mapiostarted.Wait();
     __trace__("MAPIO started");
