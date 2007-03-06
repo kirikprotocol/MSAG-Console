@@ -467,28 +467,21 @@ public:
     boundLocalSSNs = new int[addssns+2];
     patternBoundLocalSSNs = new int[addssns+2];
     numLocalSSNs = addssns+2;
+    const char *str = addUssdSSN.c_str();
     localSSNs[0] = SSN;
     localSSNs[1] = ussdSSN;
-    char *beg = strdup(addUssdSSN.c_str());
-    char *str = beg;
-    char *tmp = str;
+    int i = 0;
     int idx = 2;
-    while( *tmp ) {
-      if( *tmp == ',' ) {
-        *tmp = 0;
-        int as = atoi(str);
-        str = tmp+1;
-        localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)as;
-        __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, as);
-      }
-      tmp++;
+    int lssn = 0;
+    while(sscanf(str+i, "%d,%n",&lssn, &i) == 1 ) {
+      localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)lssn;
+      __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, lssn);
     }
-    if( tmp > str ) {
-      int as = atoi(str);
-      localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)as;
-      __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, as);
+    if(sscanf(str+i, "%d",&lssn)==1)
+    {
+      localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)lssn;
+      __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, lssn);
     }
-    free( beg );
   }
   static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
   MapProxy* getProxy() { return proxy; }
