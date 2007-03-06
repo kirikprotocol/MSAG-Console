@@ -714,6 +714,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     delete params;
     profiler->setNotifier(pnot);
   }
+
+  distlstsme->assignProfiler(profiler);
+
   smsc_log_info(log, "Profiler configured" );
   profiler->load(cfg.cfgman->getString("profiler.storeFile"));
   smsc_log_info(log, "Profiler data loaded" );
