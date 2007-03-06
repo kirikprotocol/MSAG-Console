@@ -20,30 +20,31 @@ public final class Sme {
 
   public static final IncomingQueue inQueue;
   public static final OutgoingQueue outQueue;
+  public static final Multiplexor multiplexor;
+  public static final MessageSender messageSender;
 
   static {
     final Properties config = Utils.loadConfig("sme.properties");
     inQueue = new IncomingQueue(config);
     outQueue = new OutgoingQueue(config, inQueue);
+
+    new OutgoingQueueController(config, outQueue);
+
+    multiplexor = initMultiplexor(config, inQueue);
+
+    ResponseListenerImpl responseListener = new ResponseListenerImpl(outQueue, inQueue);
+    multiplexor.setResponseListener(responseListener);
+
+    messageSender = new MessageSender(config, outQueue, multiplexor);
+
+    responseListener.setSendMonitor(messageSender.getSendMonitor());
+
     config.clear();
   }
 
   private Sme() throws InitializationException{
 
     SmeProperties.init();
-
-    final Properties config = Utils.loadConfig("sme.properties");
-
-    new OutgoingQueueController(config, outQueue);
-
-    final Multiplexor multiplexor = initMultiplexor(config, inQueue);
-
-    ResponseListenerImpl responseListener = new ResponseListenerImpl(outQueue, inQueue);
-    multiplexor.setResponseListener(responseListener);
-
-    final MessageSender messageSender = new MessageSender(config, outQueue, multiplexor);
-
-    responseListener.setSendMonitor(messageSender.getSendMonitor());
 
     new SmeEngine().startService();
 
@@ -55,8 +56,6 @@ public final class Sme {
     }
     // run message sender
     messageSender.startService();
-
-    config.clear();
   }
 
   private static Multiplexor initMultiplexor(final Properties config, final IncomingQueue inQueue) {
