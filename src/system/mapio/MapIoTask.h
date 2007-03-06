@@ -357,10 +357,6 @@ class MapDialogContainer{
 
   int    processTimeout;
   int    processLimit;
-  static ET96MAP_LOCAL_SSN_T *localSSNs;
-  static int                *boundLocalSSNs;
-  static int                *patternBoundLocalSSNs; /* contains true values, used for memcmp to check if all SSN bound*/
-  static int                 numLocalSSNs;
 
   void Dump() {
     static smsc::logger::Logger* dlogger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
@@ -386,6 +382,10 @@ class MapDialogContainer{
   }
   
 public:
+  static ET96MAP_LOCAL_SSN_T *localSSNs;
+  static int                *boundLocalSSNs;
+  static int                *patternBoundLocalSSNs; /* contains true values, used for memcmp to check if all SSN bound*/
+  static int                 numLocalSSNs;
   static smsc::logger::Logger* loggerStatDlg;
   static smsc::logger::Logger* loggerMapPdu;
 
