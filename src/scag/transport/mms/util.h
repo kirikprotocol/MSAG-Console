@@ -90,6 +90,9 @@ namespace xml {
   static const char* RECIPIENTS             = "Recipients";
   static const char* SERVICE_CODE           = "ServiceCode";
   static const char* LINKED_ID              = "LinkedID";
+  static const char* MESSAGE_ID             = "MessageID";
+  static const char* CANCEL_ID              = "CancelID";
+  static const char* REPLACE_ID             = "ReplaceID";
   static const char* MESSAGE_CLASS          = "MessageClass";
   static const char* EARLIEST_DELIVERY_TIME = "EarlestDeliveryTime";
   static const char* EXPIRY_DATE            = "ExpiryDate";
@@ -114,6 +117,16 @@ namespace xml {
   static const char* SENDER_SPI             = "SenderSPI";
   static const char* RECIPIENT_SPI          = "RecipientSPI";
   static const char* MMS_RS_ID              = "MMSRelayServerID";
+  static const char* MM_STATUS              = "MMStatus";
+  static const char* MM_STATUS_EXTENSION    = "MMStatusExtension";
+  static const char* STATUS_TEXT            = "StatusText";
+  static const char* DATE                   = "Date";
+  static const char* STATUS                 = "Status";
+  static const char* STATUS_CODE            = "StatusCode";
+  static const char* FAULT                  = "Fault";
+  static const char* FAULT_CODE             = "faultcode";
+  static const char* FAULT_STRING           = "faultstring";
+  static const char* DETAIL                 = "detail";
   
   static const char* MUST_UNDERSTAND        = "env:mustUnderstand";
   static const char* ENCODING_STYLE         = "env:encodingStyle";
@@ -131,6 +144,9 @@ namespace xml {
   static const char* VAS_ID                = "VASID";
   static const char* VASP_ID               = "VASPID";
   static const char* MMS_RELAY_SERVER_ID   = "MMSRelayServerID";
+  
+  static const char* UTF_16                = "UTF-16";
+  static const char* UTF_8                 = "UTF-8";
   
   inline void addTextNode(DOMDocument* doc, DOMElement* parent, const char* name, std::string value) {
     DOMElement* node = doc->createElement(XStr(name).unicodeForm());

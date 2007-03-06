@@ -41,6 +41,20 @@ class A {
   scag::transport::mms::MmsMsg m;
 };
 
+class B {
+public:
+  B() { __trace__("create B"); }  
+  ~B() { __trace__("delete B"); }  
+};
+class C {
+public:
+  B* b;
+  C() { __trace__("create C"); }  
+  ~C() { if (b) delete b; __trace__("delete C"); }  
+  void createB() { b = new B(); };
+  B* getB() { if (b) return b; else return 0; };
+};
+
 class StrX {
 public:
   StrX(const XMLCh* const toTranscode) {
@@ -183,7 +197,6 @@ int main(int argc, const char* argv[]) {
   if (mms_msg)
     mms_msg->test();
     std::string serialized_msg = mms_msg->serialize();
-    //std::ofstream out("result.xml", std::ios_base::out|std::ios_base::trunc);
     std::ofstream out("result.xml");
     if (out) {
       out << serialized_msg;
@@ -193,6 +206,7 @@ int main(int argc, const char* argv[]) {
   delete memBufIS; 
   delete parser;
   delete err_handler;
+  /*
   scag::transport::mms::HttpMsg http_msg;
   http_msg.setFirstLine("POST /mms/mm7 HTTP/1.1");
   http_msg.setFirstLine("POST /mms/mm7 HTTP/1.1 NEW!");
@@ -203,5 +217,6 @@ int main(int argc, const char* argv[]) {
   __trace2__("sn=%d buf =\'%s\' actn=%d", sn, sn_buf, actn); 
   actn = snprintf(sn_buf, 99, "%d", sn);
   __trace2__("sn=%d buf =\'%s\' actn=%d", sn, sn_buf, actn); 
+  */
   return 1;
 }
