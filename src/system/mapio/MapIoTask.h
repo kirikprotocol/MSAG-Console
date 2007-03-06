@@ -473,15 +473,18 @@ public:
     int i = 0;
     int idx = 2;
     int lssn = 0;
-    while(sscanf(str+i, "%d,%n",&lssn, &i) == 1 ) {
+    while(sscanf(str, "%d,%n",&lssn, &i) == 1 ) {
       localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)lssn;
       __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, lssn);
+      str+=i;
     }
+    /*
     if(sscanf(str+i, "%d",&lssn)==1)
     {
       localSSNs[idx++] = (ET96MAP_LOCAL_SSN_T)lssn;
       __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_INFO,"%s: initializing additional SSN %d",__func__, lssn);
     }
+    */
   }
   static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
   MapProxy* getProxy() { return proxy; }
