@@ -124,8 +124,8 @@
     <param name="port" type="int">@smsc.smpp.port@</param>
     <param name="defaultConnectionsLimit" type="int">1000</param>
     <param name="readTimeout" type="int">60</param>
-    <param name="inactivityTime" type="int">600</param>
-    <param name="inactivityTimeOut" type="int">60</param>
+    <param name="inactivityTime" type="int">60</param>
+    <param name="inactivityTimeOut" type="int">600</param>
   </section>
 
   <section name="sms">

@@ -134,6 +134,28 @@
       <param name="1187">Data Missing</param>
       <param name="1188">Unexpected Data value</param>
     </section>
+    <section name="dl">
+      <section name="reason">
+        <param name="prefix_unexpected">prefix unexpected</param>
+        <param name="list_already_exists">list already exists</param>
+        <param name="principal_not_exists">principal doesn't exists</param>
+        <param name="list_count_exceeded">list count exceeded</param>
+        <param name="not_allowed_to_list_members">not allowed to list members</param>
+        <param name="not_registered_list_owner">not registered list owner</param>
+        <param name="member_already_exists">member already exists</param>
+        <param name="members_count_limit_exceeded">members count limit exceeded</param>
+        <param name="member_doesnt_exists">member doesn't exists</param>
+        <param name="list_not_found">list not found</param>
+        <param name="principal_not_found">principal not found</param>
+        <param name="submitter_already_exists">submitter already exists</param>
+        <param name="submitter_not_found">submitter not found</param>
+        <param name="illegal_submitter">illegal submitter</param>
+        <param name="access_denied">access denied</param>
+        <param name="database_error">storage error</param>
+        <param name="system_error">system error</param>
+        <param name="unknown">unknown error</param>
+      </section>
+    </section>
     <section name="templates">
       <section name="dl">
         <param name="invalidcmdparam">Invalid dl command</param>
