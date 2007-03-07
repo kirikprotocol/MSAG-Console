@@ -146,6 +146,8 @@ public:
   string serviceType;
   int protocolId;
 
+  std::string originatingAddress;
+
   const char* getSystemId()const{return systemId.c_str();}
 
   void addToUssdCmdMap(int cmd,const string& txt)

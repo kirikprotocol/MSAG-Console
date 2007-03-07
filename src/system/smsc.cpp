@@ -713,9 +713,23 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     }
     delete params;
     profiler->setNotifier(pnot);
+
+    try{
+      profiler->originatingAddress=cfg.cfgman->getString("profiler.originatingAddress");
+    }catch(...)
+    {
+      ///
+    }
   }
 
   distlstsme->assignProfiler(profiler);
+
+  try{
+    distlstsme->originatingAddress=cfg.cfgman->getString("distrList.originatingAddress");
+  }catch(...)
+  {
+    //optional parameter
+  }
 
   smsc_log_info(log, "Profiler configured" );
   profiler->load(cfg.cfgman->getString("profiler.storeFile"));

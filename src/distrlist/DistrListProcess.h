@@ -56,6 +56,7 @@ protected:
   int seq;
   SmeRegistrar* smereg;
 
+
   smsc::profiler::ProfilerInterface* profiler;
 
 public:
@@ -88,8 +89,11 @@ public:
     profiler=argProfiler;
   }
 
+
   string serviceType;
   int protocolId;
+
+  std::string originatingAddress;
 
   bool autoCreatePrincipal;
   int defaultMaxLists;

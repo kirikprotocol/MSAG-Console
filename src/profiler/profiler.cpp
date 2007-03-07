@@ -1235,7 +1235,7 @@ int Profiler::Execute()
       }
       __trace2__("Profiler: msgstr=%s",msgstr.c_str());
       ans.setOriginatingAddress(sms->getDestinationAddress());
-      ans.setDestinationAddress(sms->getOriginatingAddress());
+      ans.setDestinationAddress(originatingAddress.length()?originatingAddress.c_str():sms->getOriginatingAddress());
       char msc[]="";
       char imsi[]="";
       ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
