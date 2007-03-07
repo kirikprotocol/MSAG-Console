@@ -2825,6 +2825,7 @@ public CommandParser(ParserSharedInputState state) {
 	public final DistributionListListCommand  lstdl() throws RecognitionException, TokenStreamException {
 		DistributionListListCommand cmd;
 		
+		Token  owner = null;
 		
 		cmd = new DistributionListListCommand();
 		
@@ -2835,7 +2836,9 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_OWNER:
 			{
 				match(OPT_OWNER);
-				cmd.setOwner(getnameid("owner"));
+				owner = LT(1);
+				match(STR);
+				cmd.setOwner(owner.getText());
 				break;
 			}
 			case EOF:

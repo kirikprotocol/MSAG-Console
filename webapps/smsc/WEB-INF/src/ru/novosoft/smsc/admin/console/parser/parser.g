@@ -668,7 +668,7 @@ catch [RecognitionException ex] {
 lstdl returns [DistributionListListCommand cmd] {
   cmd = new DistributionListListCommand();
 }
-  : (OPT_OWNER {cmd.setOwner(getnameid("owner"));})?
+  : (OPT_OWNER owner:STR { cmd.setOwner(owner.getText()); })?
   ;
 exception
 catch [RecognitionException ex] {
