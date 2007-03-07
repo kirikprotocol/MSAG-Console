@@ -60,6 +60,7 @@ void USSBalanceService::stop()
     _server->Stop();
   }
 
+  _disp->Stop();
   _running = false;
   smsc_log_debug(_logger, "USSBalanceService: Stopped.");
 }
