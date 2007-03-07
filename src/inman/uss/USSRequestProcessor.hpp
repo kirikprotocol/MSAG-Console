@@ -28,6 +28,8 @@ public:
   //if errLayer != errOk, dialog is aborted by reason = errcode
   virtual void onEndMapDlg(unsigned short ercode, smsc::inman::InmanErrorType errLayer);
 private:
+  void sendNegativeResponse();
+
   smsc::inman::interaction::Connect* _conn;
   smsc::logger::Logger*              _logger;
   smsc::inman::inap::TCSessionSR*    _mapSess;
