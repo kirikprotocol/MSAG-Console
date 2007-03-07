@@ -17,6 +17,18 @@ USSRequestProcessor::setDialogId(uint32_t dialogId)
 }
 
 void
+USSRequestProcessor::sendNegativeResponse()
+{
+  smsc::inman::interaction::SPckUSSResult resultPacket;
+  resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
+
+  smsc_log_debug(_logger, "USSRequestProcessor::sendNegativeResponse::: send negative response=[%s]",
+                 resultPacket.Cmd().toString().c_str());
+  resultPacket.setDialogId(_dialogId);
+  _conn->sendPck(&resultPacket);
+}
+
+void
 USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMessage* requestObject)
 {
   smsc::inman::inap::TCAPDispatcher * disp = smsc::inman::inap::TCAPDispatcher::getInstance();
@@ -26,6 +38,7 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
 
   if (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) {
     smsc_log_error(_logger, "USSRequestProcessor::handleRequest::: SSN session is not available/bound");
+    sendNegativeResponse();
     return;
   }
 
@@ -41,6 +54,7 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
                                                   ACOID::id_ac_cap3_sms_AC, requestObject->get_IN_SSN(),
                                                   &IN_ISDNAddr);
       smsc_log_error(_logger, "USSRequestProcessor::handleRequest::: Unable to init TCSR session: %s", sid.c_str());
+      sendNegativeResponse();
       return;
     }
 
@@ -53,6 +67,7 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
     _msISDNAddr = requestObject->getMSISDNadr();
   } catch (std::exception & ex) {
     smsc_log_error(_logger, "USSRequestProcessor::handleRequest::: catch exception [%s]", ex.what());
+    sendNegativeResponse();
     throw;
   }
 }
