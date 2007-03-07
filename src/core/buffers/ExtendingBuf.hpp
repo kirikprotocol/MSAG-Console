@@ -167,8 +167,9 @@ public:
     ExtendingBuffer<T, SZ>& operator=(const ExtendingBuffer<T, SZ>& _Right)
     {
         if (this != &_Right) {
-            this->reset(_Right.getDataSize()); //pos = 0
+            this->reset(_Right.getMaxSize()); //pos = 0
             this->Append(_Right.get(), _Right.getDataSize());
+            this->setPos(_Right.getPos());
         }
         return (*this);
     }
