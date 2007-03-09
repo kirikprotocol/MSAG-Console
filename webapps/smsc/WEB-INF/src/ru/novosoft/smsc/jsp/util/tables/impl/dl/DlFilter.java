@@ -43,7 +43,7 @@ public class DlFilter implements Filter
       String str = strings[i];
       for (int j = 0; j < str.length(); j++) {
         final char ch = str.charAt(j);
-        if (!Character.isLetterOrDigit(ch) && !Character.isSpaceChar(ch))
+        if (!Character.isLetterOrDigit(ch) && !Character.isSpaceChar(ch) && ch != '+')
           return true;
       }
     }
