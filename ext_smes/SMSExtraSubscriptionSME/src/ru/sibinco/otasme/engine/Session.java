@@ -7,7 +7,6 @@ import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.otasme.Sme;
 import ru.sibinco.otasme.SmeProperties;
 import ru.sibinco.otasme.network.OutgoingObject;
-import ru.sibinco.otasme.network.IncomingObject;
 import ru.sibinco.otasme.utils.ConnectionPool;
 
 import java.sql.Connection;
@@ -189,7 +188,7 @@ public final class Session {
     private void processOther(Message incomingMessage) {
       logInfo("Unknown message received: " + incomingMessage.getMessageString());
       sendResponse(incomingMessage, Data.ESME_ROK);
-      sendMessage(SmeProperties.Session.INFO_TEXT, incomingMessage.getDestinationAddress());
+      sendMessage(SmeProperties.Session.INFO_TEXT, smeAddress);
     }
 
     private boolean checkAbonentSubscription() throws SQLException {

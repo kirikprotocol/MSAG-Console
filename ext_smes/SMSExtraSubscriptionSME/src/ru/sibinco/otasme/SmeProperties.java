@@ -77,11 +77,13 @@ public class SmeProperties {
   public static class SmeEngine {
     public static final String NUMBER_NOT_FOUND_ERROR_TEXT;
     public static final String SESSIONS_REGISTRY_OVERFLOW_TEXT;
+    public static final String SME_ADDRESS;
 
     static {
       final Properties config = Utils.loadConfig("sme.properties");
       NUMBER_NOT_FOUND_ERROR_TEXT = Utils.loadString(config, "sme.engine.number.not.found.error.text");
       SESSIONS_REGISTRY_OVERFLOW_TEXT = Utils.loadString(config, "sme.engine.sessions.registry.full.text");
+      SME_ADDRESS = Utils.loadString(config, "sme.address");
       config.clear();
     }
   }

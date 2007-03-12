@@ -26,7 +26,8 @@ public final class SmeEngine extends Service {
 
      final String abonentAddr = (incomingMessage.getType() == Message.TYPE_WTS_REQUEST) ? incomingMessage.getWtsRequestReference() :
                                                                                              incomingMessage.getSourceAddress();
-    final String smeAddr = incomingMessage.getDestinationAddress();
+//    final String smeAddr = incomingMessage.getDestinationAddress();
+    final String smeAddr = SmeProperties.SmeEngine.SME_ADDRESS;
 
     try {
       Session session = SessionsRegistry.getSession(getSessionId(incomingMessage));
