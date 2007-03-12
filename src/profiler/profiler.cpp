@@ -1234,8 +1234,8 @@ int Profiler::Execute()
         };
       }
       __trace2__("Profiler: msgstr=%s",msgstr.c_str());
-      ans.setOriginatingAddress(sms->getDestinationAddress());
-      ans.setDestinationAddress(originatingAddress.length()?originatingAddress.c_str():sms->getOriginatingAddress());
+      ans.setOriginatingAddress(originatingAddress.length()?originatingAddress.c_str():sms->getDestinationAddress());
+      ans.setDestinationAddress(sms->getOriginatingAddress());
       char msc[]="";
       char imsi[]="";
       ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
