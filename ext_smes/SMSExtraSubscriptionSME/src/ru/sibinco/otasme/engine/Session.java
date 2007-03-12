@@ -237,7 +237,7 @@ public final class Session {
           sendMessage(SmeProperties.Session.UNEXPECTED_MESSAGE_ERROR_TEXT, smeAddress);
         throw new UnexpectedMessageException();
       }
-
+      sendResponse(incomingMessage, Data.ESME_ROK);
       logInfo("OTA message received.");
       if (incomingMessage.getWTSErrorCode() != 0) { // Error occured
         logInfo("OTA Platform return error with code = " + incomingMessage.getWTSErrorCode());
