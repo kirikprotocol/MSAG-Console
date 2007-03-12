@@ -353,6 +353,25 @@ function clickRemoveErrorTimeout(id_to_remove)
 	<td><%button(out, "/images/but_add.gif", "mbAdd", "common.buttons.add", "mcisme.hint.add_ds_driver", "return clickAddErrorTimeout();");%></td>
 </tr>
 </table>
+
+<div class=page_subtitle><%= getLocString("mcisme.subtitle.advertising")%></div>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%">
+<col width="80%">
+<tr class=row<%=rowN++&1%>>
+  <th>Server</th>
+  <td><input class=txt name=advertServer value="<%=StringEncoderDecoder.encode(bean.getAdvertServer())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Port</th>
+  <td><input class=txt name=advertPort value="<%=StringEncoderDecoder.encode(bean.getAdvertPort())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Timeout</th>
+  <td><input class=txt name=advertTimeout value="<%=StringEncoderDecoder.encode(bean.getAdvertTimeout())%>"></td>
+</tr>
+</table>
+
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.mci_prof_options")%></div>
 <table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
 <col width="20%">

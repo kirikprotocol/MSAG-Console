@@ -128,6 +128,10 @@ public class Options extends MCISmeBean
   private String mbDone = null;
   private String mbCancel = null;
 
+  private String    advertServer = "";
+  private int       advertPort = 0;
+  private int       advertTimeout = 0;
+
   protected int init(List errors)
   {
     int result = super.init(errors);
@@ -256,6 +260,10 @@ public class Options extends MCISmeBean
         maxEvents = getConfig().getInt("MCISme.Storage.maxEvents");
         bdFilesIncr = getConfig().getInt("MCISme.Storage.bdFilesIncr");
 
+  	    advertServer = getConfig().getString("MCISme.Advertising.server");
+		advertPort = getConfig().getInt("MCISme.Advertising.port");
+		advertTimeout = getConfig().getInt("MCISme.Advertising.timeout");
+		
         profStorageLocation = getConfig().getString("MCISme.ProfileStorage.location");
         profStoragePort = getConfig().getInt("MCISme.ProfileStorage.port");
 
@@ -390,6 +398,10 @@ public class Options extends MCISmeBean
     getConfig().setString("MCISme.Storage.eventRegistrationPolicy", eventPolicyRegistration);
     getConfig().setInt("MCISme.Storage.maxEvents", maxEvents);
     getConfig().setInt("MCISme.Storage.bdFilesIncr", bdFilesIncr);
+
+	getConfig().setString("MCISme.Advertising.server", advertServer);
+	getConfig().setInt("MCISme.Advertising.port", advertPort);
+	getConfig().setInt("MCISme.Advertising.timeout", advertTimeout);
 
     getConfig().setString("MCISme.ProfileStorage.location", profStorageLocation);
     getConfig().setInt("MCISme.ProfileStorage.port", profStoragePort);
@@ -1193,6 +1205,51 @@ public class Options extends MCISmeBean
         logger.debug("Invalid int MCISme.MSC.port parameter value: \"" + value + '"', e);
       }
     }
+
+	
+	public String getAdvertServer() 
+	{
+		return advertServer;
+	}
+	public void setAdvertServer(String value) 
+	{
+		this.advertServer = value;
+	}
+
+	public String getAdvertPort() 
+	{
+		return String.valueOf(advertPort);
+	}
+	public void setAdvertPortInt(int value) 
+	{
+		this.advertPort = value;
+	}
+	public void setAdvertPort(String value) 
+	{
+		try { this.advertPort = Integer.decode(value).intValue(); } 
+		catch (NumberFormatException e) 
+		{
+			logger.debug("Invalid int MCISme.Advertising.port parameter value: \"" + value + '"', e);
+		}
+	}
+
+	public String getAdvertTimeout() 
+	{
+		return String.valueOf(advertTimeout);
+	}
+	public void setAdvertTimeoutInt(int value) 
+	{
+		this.advertTimeout = value;
+	}
+	public void setAdvertTimeout(String value) 
+	{
+		try { this.advertTimeout = Integer.decode(value).intValue(); } 
+		catch (NumberFormatException e) 
+		{
+			logger.debug("Invalid int MCISme.Advertising.timeout parameter value: \"" + value + '"', e);
+		}
+	}
+
 
   public String getProfStorageLocation() 
   {
