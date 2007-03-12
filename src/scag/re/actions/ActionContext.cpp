@@ -135,10 +135,9 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
         USSD SUBMIT_SM:      SUBMIT
         */
 
-        if (commandProperty.commandId == DELIVERY)
+/*        if (commandProperty.commandId == DELIVERY)
         {
             if ((operationType == CO_SUBMIT)||(operationType == CO_DATA_SC_2_SME)||(operationType == CO_DATA_SME_2_SC)) result = true;
-
             else 
             if ((operationType == CO_USSD_DIALOG)&&
                ((eventHandlerType == EH_RECEIPT)||(eventHandlerType == EH_DELIVER_SM))) result = true;
@@ -146,7 +145,6 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
 
         if (commandProperty.commandId == SUBMIT)
         {
-
             if ((commandProperty.cmdType == CO_USSD_DIALOG)&&(operationType == CO_SUBMIT)) result = true;
             if ((!commandProperty.cmdType != CO_USSD_DIALOG)&&(operationType == CO_HTTP_DELIVERY)) result = true;
 
@@ -157,9 +155,9 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
         if (commandProperty.commandId == DATASM)
         {
             result = true;
-        }
+        }*/
 
-
+        result = true;
         break;
 
     case HTTP:
