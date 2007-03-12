@@ -15,16 +15,18 @@ final class SecretRequestParser {
   private final static String SECRET = "(S|s)(E|e)(C|c)(R|r)(E|e)(T|t)";
   private final static String NONE = "(N|n)(O|o)(N|n)(E|e)";
   private final static String SEC = "(S|s)(E|e)(C|c)";
+  private final static String GET = "(G|g)(E|e)(T|t)";
 
   private final static String ONE_OR_MORE_SPACES = "\\s+";
   private final static String ANY_NONSPACE_STRING_AFTER_SPACE = "\\s+\\S+";
   private final static String ANY_STRING_AFTER_SPACE = "(\\s*|\\s+.+)";
-  private final static String ANY_WORD = "\\s*\\S+\\s*";
+//  private final static String ANY_WORD = "\\s*\\S+\\s*";
 
   private final static String SECRET_ON_REGEX = SECRET  + ANY_NONSPACE_STRING_AFTER_SPACE;
   private final static String SECRET_CHANGE_PASSWORD_REGEX = SECRET + ANY_NONSPACE_STRING_AFTER_SPACE + ANY_NONSPACE_STRING_AFTER_SPACE;
   private final static String SECRET_OFF_REGEX = SECRET + ONE_OR_MORE_SPACES + NONE;
   private final static String SECRET_MESSAGE_REGEX = SEC + ANY_STRING_AFTER_SPACE;
+  private final static String SECRET_GET_REGEX = GET + ANY_STRING_AFTER_SPACE;
 
   static ParseResult parseRequest(final String message) throws ParseException, WrongMessageFormatException {
     try {
@@ -32,13 +34,13 @@ final class SecretRequestParser {
       if (message.matches(SECRET_OFF_REGEX))
         return new ParseResult(ParseResultType.OFF);
       else if (message.matches(SECRET_CHANGE_PASSWORD_REGEX))
-        return new ParseResult(ParseResultType.CHANGE_PWD, getPassword(message)); // There in password will be 2 words: old pwd and new pwd
+        return new ParseResult(ParseResultType.CHANGE_PWD, getPasswordInSecret(message)); // There in password will be 2 words: old pwd and new pwd
       else if (message.matches(SECRET_ON_REGEX))
-        return new ParseResult(ParseResultType.ON, getPassword(message));
+        return new ParseResult(ParseResultType.ON, getPasswordInSecret(message));
       else if (message.matches(SECRET_MESSAGE_REGEX))
         return new ParseResult(ParseResultType.MSG, getMessage(message));
-      else if (message.matches(ANY_WORD))
-        return new ParseResult(ParseResultType.PWD, message);
+      else if (message.matches(SECRET_GET_REGEX))
+        return new ParseResult(ParseResultType.PWD, getPasswordInGet(message));
     } catch (Throwable e) {
       throw new ParseException(e);
     }
@@ -50,8 +52,12 @@ final class SecretRequestParser {
     return message.split(SEC, 2)[1].trim();
   }
 
-  private static String getPassword(final String message) {
+  private static String getPasswordInSecret(final String message) {
     return message.split(SECRET, 2)[1].trim();
+  }
+
+  private static String getPasswordInGet(final String message) {
+    return message.split(GET, 2)[1].trim();
   }
 
   final static class ParseResult {
