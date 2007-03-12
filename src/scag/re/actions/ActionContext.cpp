@@ -120,56 +120,15 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
 
 bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
 {
-    //Проверяем на возможность создавать pending operation для каждого транспорта и хэндлера:
-
-   
-    bool result = false;
-    
     switch (transportType) 
     {
-    case SMPP: 
-        /*
-        DELIVER_SM:          SUBMIT, USSD_DIALOG
-        RECEIPT_DELIVER_SM:  SUBMIT, USSD_DIALOG
-        USSD DELIVER_SM:     SUBMIT
-        USSD SUBMIT_SM:      SUBMIT
-        */
-
-/*        if (commandProperty.commandId == DELIVERY)
-        {
-            if ((operationType == CO_SUBMIT)||(operationType == CO_DATA_SC_2_SME)||(operationType == CO_DATA_SME_2_SC)) result = true;
-            else 
-            if ((operationType == CO_USSD_DIALOG)&&
-               ((eventHandlerType == EH_RECEIPT)||(eventHandlerType == EH_DELIVER_SM))) result = true;
-        } 
-
-        if (commandProperty.commandId == SUBMIT)
-        {
-            if ((commandProperty.cmdType == CO_USSD_DIALOG)&&(operationType == CO_SUBMIT)) result = true;
-            if ((!commandProperty.cmdType != CO_USSD_DIALOG)&&(operationType == CO_HTTP_DELIVERY)) result = true;
-
-            if ((operationType == CO_DATA_SC_2_SME)||(operationType == CO_DATA_SME_2_SC)) result = true;
-            if (operationType == CO_SUBMIT) result = true;
-        }
-
-        if (commandProperty.commandId == DATASM)
-        {
-            result = true;
-        }*/
-
-        result = true;
-        break;
-
-    case HTTP:
-        result = true;
-        break;
-
-    case MMS:
-        break;
+        case SMPP: 
+            return operationType != DELIVERY && operationType != CO_USSD_DIALOG;
+        case MMS:
+        case HTTP:
+            return true;
     }
-    
-    return result;
-   
+    return false;
 }
 
 int ActionContext::getCurrentOperationBillID()
