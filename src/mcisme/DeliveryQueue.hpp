@@ -120,7 +120,7 @@ public:
 
 	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1);
 	time_t Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK); // bool toHead = false
-	void RegisterAlert(const AbntAddr& abnt);
+	time_t RegisterAlert(const AbntAddr& abnt);
 	bool Get(AbntAddr& abnt);
 	bool Get(const AbntAddr& abnt, SchedItem& item);
 //	int Get(vector<SchedItem>& items, int count);

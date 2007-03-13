@@ -165,6 +165,7 @@ public:
         void formatMessage(Message& message, int timeOffset=0);
 //		void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, /*vector<uint32_t>*/uint8_t* ids, uint8_t& events_count,  int timeOffset=0);
         void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset=0);
+		void addBanner(Message& message, const string& banner);
     };
 
     void keyIsNotSupported(const char* type) throw(AdapterException);

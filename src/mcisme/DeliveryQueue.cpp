@@ -179,22 +179,23 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
 	return newSchedTime;
 }
 
-void DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
+time_t DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
 {
 	string strAbnt = abnt.toString();
 	smsc_log_debug(logger, "RegisterAlert for %s", strAbnt.c_str());
 	MutexGuard lock(deliveryQueueMonitor);
+	time_t newSchedTime = time(0);
+
 	if(!AbntsStatus.Exists(strAbnt.c_str()))
 	{
 		smsc_log_debug(logger, "Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
-		return;
+		return -1;
 	}
 
 	SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());		
 
 	if(schedParam->abntStatus == Idle)
 	{
-		time_t newSchedTime = time(0);
 		Resched(abnt, schedParam->schedTime, newSchedTime);
 		schedParam->schedTime = newSchedTime;
 		schedParam->lastError = -1;
@@ -206,6 +207,7 @@ void DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
 		schedParam->abntStatus = AlertHandled;
 		smsc_log_info(logger, "Registering Alert for %s", strAbnt.c_str());
 	}
+	return newSchedTime;
 }
 
 bool DeliveryQueue::Get(AbntAddr& abnt)

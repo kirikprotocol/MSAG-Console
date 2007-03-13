@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <algorithm>
+#include <iconv.h>
 
 #include <mcisme/TaskProcessor.h>
 #include <mcisme/misscall/callproc.hpp>
@@ -21,12 +22,15 @@
 #include "system/common/TimeZoneMan.hpp"
 #include <time.h>
 #include "Templates.h"
+#include "scag/util/encodings/Encodings.h"
 
 extern bool isMSISDNAddress(const char* string);
 extern "C" void clearSignalMask(void);
 
 namespace smsc { namespace mcisme 
 {
+
+using namespace scag::util::encodings;
 
 const uint8_t	STK_PROFILE_ID = 0;
 
@@ -94,13 +98,13 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     smsc_log_info(logger, "Loading ...");
 	
     address = config->getString("Address");
-    if (!address || !isMSISDNAddress(address))
-        throw ConfigException("Address string '%s' is invalid", address ? address:"-");
+	if ((address.length()==0) || !isMSISDNAddress(address.c_str()))
+		throw ConfigException("Address string '%s' is invalid", (address.length()!=0) ? address.c_str():"-");
 
     try { protocolId = config->getInt("ProtocolId"); }
     catch(ConfigException& exc) { protocolId = 0; };
     try { svcType = config->getString("SvcType"); }
-    catch(ConfigException& exc) { svcType = 0; };
+    catch(ConfigException& exc) { svcType = ""; };
     try { daysValid = config->getInt("DaysValid"); }
     catch(ConfigException& exc) { daysValid = 1; };
 
@@ -281,14 +285,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	{
 		test_number="";
 	}
-	
-//   try { stkTemplateId = config->getInt("stkTemplateId"); } catch (...)
-	//{
-	//	throw ConfigException("MCISme need stkTemplateId parameter."
- //                             "Use <MCISme.stkTemplateId> parameter in config.xml. Default value = -1");
-	//	stkTemplateId = 0;
-	//}
-	
+
+//	Init Statistics
 	std::auto_ptr<ConfigView> statCfgGuard(config->getSubConfig("Statistics"));
     ConfigView* statCfg = statCfgGuard.get();
 
@@ -298,9 +296,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	
 	statistics = new StatisticsManager(statDir.c_str());
     if (statistics) statistics->Start();
-    AbonentProfiler::init(0, defaultReasonsMask, bDefaultInform, bDefaultNotify);
+    
+	AbonentProfiler::init(0, defaultReasonsMask, bDefaultInform, bDefaultNotify);
 
-    std::auto_ptr<ConfigView> schedulingCfgGuard(config->getSubConfig("Scheduling"));
+//	Init Delivery Queue
+	std::auto_ptr<ConfigView> schedulingCfgGuard(config->getSubConfig("Scheduling"));
     ConfigView* schedulingCfg = schedulingCfgGuard.get();
 
 	string sResendingPeriod;
@@ -344,12 +344,31 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 		smsc_log_warn(logger, "Schedule Table not specified.");
 
 
+//	Init Advertising Client
+	std::auto_ptr<ConfigView> advertCfgGuard(config->getSubConfig("Advertising"));
+    ConfigView* advertCfg = advertCfgGuard.get();
+
+	string advertServer;
+	try { advertServer = advertCfg->getString("server"); } catch (...){advertServer = "0.0.0.0";
+		smsc_log_warn(logger, "Parameter <MCISme.Advertising.server> missed. Default value is '0.0.0.0'.");}
+	int advertPort;
+	try { advertPort = advertCfg->getInt("port"); } catch (...){advertPort = 25000;
+		smsc_log_warn(logger, "Parameter <MCISme.Advertising.port> missed. Default value is '25000'.");}
+	int advertTimeout;
+	try { advertTimeout = advertCfg->getInt("timeout"); } catch (...){advertTimeout = 15;
+		smsc_log_warn(logger, "Parameter <MCISme.Advertising.server> missed. Default value is '15'.");}
+	
+	Advertising::Init(advertServer, advertPort, advertTimeout*1000);
+    advertising = &(scag::advert::Advertising::Instance());
+
+//	Init Storage
 	std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
     ConfigView* storageCfg = storageCfgGuard.get();
 	pStorage = new FSStorage();
 	int ret = pStorage->Init(storageCfg, pDeliveryQueue);
 	smsc_log_warn(logger, "ret = %d", ret);
 
+//	Init Timeout Monitor
 	string sResponseWaitTime;
 	try { sResponseWaitTime = config->getString("responceWaitTime"); } catch (...){sResponseWaitTime = "00:00:60";
 		smsc_log_warn(logger, "Parameter <MCISme.responceWaitTime> missed. Default value is '00:00:30'.");}
@@ -465,8 +484,9 @@ int TaskProcessor::Execute()
 	uint32_t count=0;
 	
 	//test_sched();
-	//while(1) sleep(1000);
-
+//	test_advert();
+//	while(1) sleep(1000);return 0;
+	
 	while (bInQueueOpen)
 	{
 		try
@@ -565,6 +585,38 @@ void TaskProcessor::test_sched(void)
 	pDeliveryQueue->Reschedule(abnt1, 1179);
 }
 
+void TaskProcessor::test_advert(void)
+{
+	string banner;
+	string text;
+	int rc;
+
+	//iconv_t cd = iconv_open("UTF-8", "UTF-16BE");
+ //   if( cd == (iconv_t)(-1) )
+	//{
+ //       smsc_log_debug(logger, "Convertor: iconv_open. Cannot convert. errno=%d", errno);
+	//	return;
+	//}
+ //   iconv(cd, NULL, NULL, NULL, NULL);
+
+	rc = advertising->getBanner(".1.1.78432909209", "mcisme", 1, 1, banner);
+	if(rc == 0)
+	{
+		smsc_log_debug(logger, "rc = %d;", rc);
+		smsc_log_debug(logger, "Banner: %s", banner.c_str());
+		smsc_log_debug(logger, "len=%d", banner.length());
+//	    if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+//		    throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+
+		try{Convertor::convert("UTF-16BE", "UTF-8", banner.c_str(), banner.length(), text);}catch(SCAGException e){
+			smsc_log_debug(logger, "Exc: %s" );
+		}
+		smsc_log_debug(logger, "!!!!!!!!!!!!!!");
+		smsc_log_debug(logger, "rc = %d; Banner: %s", rc, text.c_str());
+	}
+}
+
+
 void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 {
 	static time_t start = time(0);
@@ -606,6 +658,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
+	formatter.addBanner(msg, getBanner(abnt));
 	{
 		MutexGuard Lock(smsInfoMutex);
 		seqNum = messageSender->getSequenceNumber();
@@ -737,7 +790,10 @@ bool TaskProcessor::invokeProcessAlertNotification(int cmdId, int status, const 
 {
 	smsc_log_debug(logger, "Recieve an ALERT_NOTIFICATION for Abonent %s status = %d", abnt.toString().c_str(), status);
 	if(cmdId == smsc::smpp::SmppCommandSet::ALERT_NOTIFICATION)
-		pDeliveryQueue->RegisterAlert(abnt);
+	{
+		time_t schedTime = pDeliveryQueue->RegisterAlert(abnt);
+		pStorage->setSchedParams(abnt, schedTime, status);
+	}
 	else
 		return false;
 	return true;
@@ -813,6 +869,25 @@ void TaskProcessor::StopProcessEvent4Abnt(const AbntAddr& abnt)
 	if(!GetAbntEvents(abnt, events))
 		pStorage->deleteEvents(abnt, events);
 	pDeliveryQueue->Remove(abnt);
+}
+
+string TaskProcessor::getBanner(const AbntAddr& abnt)
+{
+	string banner, ret;
+	int rc;
+	rc = advertising->getBanner(abnt.toString(), svcType.c_str(), scag::advert::SMPP_SMS, scag::advert::UTF16BE, ret);
+	if(rc == 0)
+	{
+		try{Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), banner);}catch(SCAGException e){
+			smsc_log_debug(logger, "Exc: %s", e.what());
+			return banner="";
+		}
+		smsc_log_debug(logger, "rc = %d; Banner: %s", rc, banner.c_str());
+	}
+	else
+		smsc_log_debug(logger, "getBanner Error. Error code = %d", rc);
+
+	return banner;
 }
 
 void TaskProcessor::openInQueue() {

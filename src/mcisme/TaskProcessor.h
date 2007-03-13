@@ -43,6 +43,7 @@
 #include "AbntAddr.hpp"
 #include "ProfilesStorage.hpp"
 #include "TimeoutMonitor.hpp"
+#include "advert/Advertising.h"
 
 namespace smsc { namespace mcisme
 {
@@ -57,6 +58,7 @@ using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
+using scag::advert::Advertising;
 
 struct MessageSender
 {
@@ -85,7 +87,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   smsc::logger::Logger *logger;
 
     int     protocolId, daysValid;
-    char    *svcType, *address;
+    string	svcType, address;
 
     int     releaseCallsStrategy;
 	int		stkTemplateId;
@@ -99,6 +101,8 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     Mutex               messageSenderLock;
     MessageSender*      messageSender;
     
+	Advertising*		advertising;
+
 	ProfilesStorage*	profileStorage;
     StatisticsManager*  statistics;
 	TimeoutMonitor*		timeoutMonitor;
@@ -126,8 +130,10 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     void closeInQueue();
     bool putToInQueue(const MissedCallEvent& event, bool skip=true);
     bool getFromInQueue(MissedCallEvent& event);
+	string getBanner(const AbntAddr& abnt);
     void test_stk(void);    
-	void test_sched(void);    
+	void test_sched(void);
+	void test_advert(void);
     //void openOutQueue();
     //void closeOutQueue();
     //bool putToOutQueue(const Message& event, bool force=false);
@@ -145,8 +151,8 @@ public:
 
     int getDaysValid()       { return daysValid;  };
     int getProtocolId()      { return protocolId; };
-    const char* getSvcType() { return (svcType) ? svcType:"MCISme"; };
-    const char* getAddress() { return address; };
+	const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; };
+    const char* getAddress() { return address.c_str(); };
 
     void assignMessageSender(MessageSender* sender) {
         MutexGuard guard(messageSenderLock);
