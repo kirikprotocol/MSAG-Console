@@ -1411,6 +1411,7 @@ int ProcessMessage(const char *msg,int msglen)
       int pos2=line.find(':');
       if(pos2==string::npos)continue;
       name=line.substr(0,pos2);
+      toLower(name);
       pos2++;
       while(pos2<line.length() && line[pos2]==' ')pos2++;
       value=line.substr(pos2);
