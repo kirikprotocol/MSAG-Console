@@ -120,7 +120,7 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
 
 bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
 {
-    return (operationType != CO_DELIVERY) && (operationType != CO_USSD_DIALOG);
+    return (operationType != CO_DELIVER) && (operationType != CO_USSD_DIALOG);
     
     /* TODO: Reserved for future constrants 
     switch (transportType) 
