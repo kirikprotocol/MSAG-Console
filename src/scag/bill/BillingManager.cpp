@@ -301,15 +301,19 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
     billTransaction->billId = billId;
     makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, billTransaction->billEvent);
 
-
     #ifdef MSAG_INMAN_BILL
-    //SPckChargeSms pck;
-    fillChargeSms(billTransaction->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
-    billTransaction->ChargeOperation.Hdr().dlgId = billId;
-    //billTransaction->ChargeOperation = pck;
-    billTransaction->status = TRANSACTION_WAIT_ANSWER;
+    if(tariffRec.billType != scag::bill::infrastruct::INMAN)
+        billTransaction->status = TRANSACTION_VALID;
+    else
+    {
+        //SPckChargeSms pck;
+        fillChargeSms(billTransaction->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
+        billTransaction->ChargeOperation.Hdr().dlgId = billId;
+        //billTransaction->ChargeOperation = pck;
+        billTransaction->status = TRANSACTION_WAIT_ANSWER;
+    }
     #else
-    billTransaction->status = TRANSACTION_VALID;
+        billTransaction->status = TRANSACTION_VALID;
     #endif
 
     inUseLock.Lock();
@@ -318,9 +322,12 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
 
 
     #ifdef MSAG_INMAN_BILL
-    sendCommand(billTransaction->ChargeOperation);
+    if(tariffRec.billType == scag::bill::infrastruct::INMAN)
+    {
+        sendCommand(billTransaction->ChargeOperation);
 
-    billTransaction->eventMonitor.wait(1000);
+        billTransaction->eventMonitor.wait(1000);
+    }
     #endif
 
     if (billTransaction->status == TRANSACTION_WAIT_ANSWER)
@@ -343,18 +350,18 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
         throw SCAGException("Transaction billId=%d: charging is impossible", billId);
     }
 
-
-
     ProcessSaccEvent(TRANSACTION_OPEN, billTransaction);
 
     #ifdef MSAG_INMAN_BILL
+    if(tariffRec.billType == scag::bill::infrastruct::INMAN)
+    {
+        SPckDeliverySmsResult opRes;
+        opRes.Hdr().dlgId = billId;
+        opRes.Cmd().setResultValue(1);
 
-    SPckDeliverySmsResult opRes;
-    opRes.Hdr().dlgId = billId;
-    opRes.Cmd().setResultValue(1);
-
-    billTransaction->status = TRANSACTION_WAIT_ANSWER;
-    sendCommand(opRes);
+        billTransaction->status = TRANSACTION_WAIT_ANSWER;
+        sendCommand(opRes);
+    }
     #endif
 
     return billId;
@@ -373,11 +380,16 @@ void BillingManagerImpl::Commit(int billId)
 
 
     #ifdef MSAG_INMAN_BILL
-    //(*pBillTransactionPtr)->ChargeOperation.Hdr().dlgId = billId;
-    //SPckChargeSms pck;
-    sendCommand(pBillTransaction->ChargeOperation);
-    //sendCommand(pck);
-    pBillTransaction->eventMonitor.wait(1000);
+    if(pBillTransaction->tariffRec.billType == scag::bill::infrastruct::INMAN)
+    {
+        //(*pBillTransactionPtr)->ChargeOperation.Hdr().dlgId = billId;
+        //SPckChargeSms pck;
+        sendCommand(pBillTransaction->ChargeOperation);
+        //sendCommand(pck);
+        pBillTransaction->eventMonitor.wait(1000);
+    }
+    else
+        pBillTransaction->status = TRANSACTION_VALID;
     #else
     pBillTransaction->status = TRANSACTION_VALID;
     #endif
@@ -387,7 +399,7 @@ void BillingManagerImpl::Commit(int billId)
 
     smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
-    int status = pBillTransaction->status;
+    int status = pBillTransaction->status, billtype = pBillTransaction->tariffRec.billType;
 
     inUseLock.Lock();
     delete pBillTransaction;
@@ -401,15 +413,14 @@ void BillingManagerImpl::Commit(int billId)
     if (status == TRANSACTION_INVALID)
         throw SCAGException("Transaction billId=%d invalid.", billId);
 
-
-    if (status == TRANSACTION_VALID)
+    #ifdef MSAG_INMAN_BILL
+    if (status == TRANSACTION_VALID && billtype == scag::bill::infrastruct::INMAN)
     {
-        #ifdef MSAG_INMAN_BILL
         SPckDeliverySmsResult op;
         op.Hdr().dlgId = billId;
         sendCommand(op);
-        #endif
     }
+    #endif
 }
 
 
@@ -425,15 +436,15 @@ void BillingManagerImpl::Rollback(int billId)
       pBillTransaction=*pBillTransactionPtrPtr;
     }
 
-    if (pBillTransaction->status == TRANSACTION_VALID)
+    #ifdef MSAG_INMAN_BILL
+    if (pBillTransaction->status == TRANSACTION_VALID && pBillTransaction->tariffRec.billType == scag::bill::infrastruct::INMAN)
     {
-        #ifdef MSAG_INMAN_BILL
         SPckDeliverySmsResult op;
         op.Hdr().dlgId = billId;
         op.Cmd().setResultValue(2);
         sendCommand(op);
-        #endif
     }
+    #endif
 
     ProcessSaccEvent(TRANSACTION_CALL_ROLLBACK, pBillTransaction);
 

@@ -5,7 +5,6 @@
 
 namespace scag { namespace re {namespace actions {
 
-
 class BillActionClose : public Action
 {
     std::string m_sStatus;
@@ -28,7 +27,4 @@ public:
 
 }}}
 
-
 #endif
-
-

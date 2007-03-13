@@ -51,11 +51,6 @@ public:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };
 
-
-
 }}}
 
-
 #endif
-
-

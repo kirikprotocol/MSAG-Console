@@ -18,6 +18,12 @@ using smsc::core::buffers::Hash;
 
 XERCES_CPP_NAMESPACE_USE
 
+enum {
+    STAT,
+    NONE,
+    INMAN
+};
+
 class TariffRec{
 public:
     double Price;
@@ -25,9 +31,10 @@ public:
     std::string Currency;
     uint32_t MediaTypeId;
     uint32_t CategoryId;
+    uint32_t billType;
 
     TariffRec() {};
-    TariffRec(uint32_t sn, double pr, const std::string& c, uint32_t ci, uint32_t mti):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti) {};
+    TariffRec(uint32_t sn, double pr, const std::string& c, uint32_t ci, uint32_t mti, uint32_t bt):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti), billType(bt) {};
     
     TariffRec(const TariffRec& sm) { operator=(sm); };
 
@@ -38,6 +45,7 @@ public:
         Currency = sm.Currency;
         CategoryId = sm.CategoryId;
         MediaTypeId = sm.MediaTypeId;
+        billType = sm.billType;
 
         return *this;
     };
@@ -86,7 +94,7 @@ class XMLTariffMatrixHandler : public HandlerBase
 //    std::string media_type_name, category_name;
     XMLCh chars[1024];
     uint8_t media_type_tag, category_tag, bill_tag;
-    uint32_t bill_service_number, bill_category_id, bill_media_type_id, bill_operator_id;
+    uint32_t bill_service_number, bill_category_id, bill_media_type_id, bill_operator_id, bill_type;
     double bill_price;
     std::string bill_currency;
 

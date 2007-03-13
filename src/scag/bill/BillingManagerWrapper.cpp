@@ -56,6 +56,32 @@ bool BillingManagerWrapper::Reconnect()
     return true;
 }
 
+void BillingManagerWrapper::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& pck)
+{
+    INPPacketAC * cmd = static_cast<INPPacketAC *>(pck.get());
+    if ((cmd->pHdr())->Id() != INPCSBilling::HDR_DIALOG)
+        throw SCAGException("unsupported Inman packet header: %u", (cmd->pHdr())->Id());
+
+    CsBillingHdr_dlg * hdr = static_cast<CsBillingHdr_dlg*>(cmd->pHdr());
+
+     if ((cmd->pCmd())->Id() == INPCSBilling::CHARGE_SMS_RESULT_TAG)
+     {
+         try { 
+             (cmd->pCmd())->loadDataBuf();
+             this->onChargeSmsResult(static_cast<ChargeSmsResult*>(cmd->pCmd()), hdr);
+         } catch (SerializerException& exc)
+         {
+             throw SCAGException("Corrupted cmd %u (dlgId: %u): %s",
+                                 (cmd->pCmd())->Id(), hdr->dlgId, exc.what());
+         }
+     } else throw SCAGException("Unknown command recieved: %u", (cmd->pCmd())->Id());
+}
+
+void BillingManagerWrapper::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
+{
+    throw SCAGException("Connect error: %s", p_exc->what());
+}
+
 void BillingManagerWrapper::receiveCommand()
 {
     #ifdef MSAG_INMAN_BILL
@@ -71,32 +97,7 @@ void BillingManagerWrapper::receiveCommand()
     int n = select(socket->getSocket()+1, &read, 0, 0, &tv);
 
     if( n > 0 )
-    {
-        std::auto_ptr<SerializablePacketAC>  pck(pipe->recvPck());
-        if (pck.get())
-        {
-            INPPacketAC * cmd = static_cast<INPPacketAC *>(pck.get());
-            if ((cmd->pHdr())->Id() != INPCSBilling::HDR_DIALOG)
-                throw SCAGException("unsupported Inman packet header: %u", (cmd->pHdr())->Id());
-
-            CsBillingHdr_dlg * hdr = static_cast<CsBillingHdr_dlg*>(cmd->pHdr());
-
-             if ((cmd->pCmd())->Id() == INPCSBilling::CHARGE_SMS_RESULT_TAG)
-             {
-                 try { 
-                     (cmd->pCmd())->loadDataBuf();
-                     this->onChargeSmsResult(static_cast<ChargeSmsResult*>(cmd->pCmd()), hdr);
-                 } catch (SerializerException& exc)
-                 {
-                     throw SCAGException("Corrupted cmd %u (dlgId: %u): %s",
-                                         (cmd->pCmd())->Id(), hdr->dlgId, exc.what());
-                 }
-             } else throw SCAGException("Unknown command recieved: %u", (cmd->pCmd())->Id());
-
-        } else if (pipe->hasException()) {
-            throw SCAGException("Connect error: %s", (pipe->hasException())->what());
-        }
-     } //else 
+        pipe->onReadEvent();
         //Reconnect();
     #endif
 }

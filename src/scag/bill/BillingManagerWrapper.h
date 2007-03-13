@@ -23,9 +23,9 @@ using namespace smsc::inman::interaction;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
-class BillingManagerWrapper 
+class BillingManagerWrapper
 #ifdef MSAG_INMAN_BILL
-    : public SMSCBillingHandlerITF
+    : public SMSCBillingHandlerITF, public ConnectListenerITF
 #endif
 {
 
@@ -36,6 +36,10 @@ class BillingManagerWrapper
 
     int m_Port;
     std::string m_Host;
+
+    virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
+    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc);
+
 protected:
     Logger * logger;
 
@@ -50,7 +54,8 @@ protected:
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
 
-        pipe = new Connect(socket, Connect::frmLengthPrefixed, INPSerializer::getInstance(), logger);
+        pipe = new Connect(socket, INPSerializer::getInstance(), logger);
+        pipe->addListener(this);
         #endif
     };
     ~BillingManagerWrapper()

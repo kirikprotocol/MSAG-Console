@@ -147,7 +147,6 @@ bool BillActionOpen::run(ActionContext& context)
      
     BillingManager& bm = BillingManager::Instance();
 
-
     TariffRec * tariffRec = 0;
     try {
         tariffRec = context.getTariffRec(category, mediaType);
@@ -159,6 +158,13 @@ bool BillActionOpen::run(ActionContext& context)
         return true;
     }
 
+
+    if(tariffRec->billType == scag::bill::infrastruct::NONE)
+    {
+        smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
+        operation->attachBill((uint32_t)-1);
+        return true;
+    }
 
     if (tariffRec->Price == 0)
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);

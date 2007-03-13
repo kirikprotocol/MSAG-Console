@@ -186,6 +186,7 @@ XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<u
     bill_service_number = 0;
     bill_operator_id = 0;
     bill_currency = "";
+    bill_type = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -284,6 +285,18 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
                 if (s.localForm() == 0) throw Exception("Error parsing Tarif Matrix - attribute 'id' not found in '%s' section",qname);
                 bill_operator_id = atoi(s.localForm());
             }
+            else if(i == 2)
+            {
+                StrX s = attrs.getValue("type");
+                if (s.localForm() != 0)
+                {
+                    if(!strcmp(s.localForm(), "inman"))
+                        bill_type = INMAN;
+                    else if(!strcmp(s.localForm(), "none"))
+                        bill_type = NONE;
+                }
+            }            
+
             return;
         }
 }
@@ -340,9 +353,9 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                     throw Exception("Invalid XML 'billing' record");
 
                 if(bill_price == 0)
-                    smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", bill_service_number, bill_category_id, bill_media_type_id);
+                    smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d, billType=%d", bill_service_number, bill_category_id, bill_media_type_id, bill_type);
 
-                TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id);
+                TariffRec tr(bill_service_number, bill_price, bill_currency, bill_category_id, bill_media_type_id, bill_type);
 
                 if(!media_type_hash->Get(bill_media_type_id, mt))
                 {
@@ -359,7 +372,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 id |= (mt & 0x1FF) << 14;
                 id |= bill_operator_id & 0xFFF;
 
-                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d", bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx);
+                smsc_log_debug(logger,"end_billing: store ci:%d, mt:%d, sn:%d, price:%lf, op_id:%d, curr:%s, mt_idx:%d, cat_idx:%d, bill_type: %d", bill_category_id, bill_media_type_id, bill_service_number, bill_price, bill_operator_id, bill_currency.c_str(), media_type_idx, category_idx, bill_type);
 
                 tariff_hash->Insert(id, tr);
 
@@ -368,6 +381,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 bill_service_number = 0;
                 bill_price = 0;
                 bill_currency = "";
+                bill_type = 0;
             } else if(i == 1)
                 bill_operator_id = 0;
             return;
