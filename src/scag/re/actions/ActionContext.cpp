@@ -120,15 +120,18 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
 
 bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType, TransportType transportType)
 {
+    return (operationType != CO_DELIVERY) && (operationType != CO_USSD_DIALOG);
+    
+    /* TODO: Reserved for future constrants 
     switch (transportType) 
     {
         case SMPP: 
-            return operationType != DELIVERY && operationType != CO_USSD_DIALOG;
         case MMS:
         case HTTP:
             return true;
     }
     return false;
+    */
 }
 
 int ActionContext::getCurrentOperationBillID()
