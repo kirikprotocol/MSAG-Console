@@ -79,7 +79,7 @@ void BillingManagerWrapper::onPacketReceived(Connect* conn, std::auto_ptr<Serial
 
 void BillingManagerWrapper::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
 {
-    throw SCAGException("Connect error: %s", p_exc->what());
+    error_msg = "Connect error: %s", p_exc->what();
 }
 
 void BillingManagerWrapper::receiveCommand()
@@ -94,10 +94,14 @@ void BillingManagerWrapper::receiveCommand()
     tv.tv_sec = 0; 
     tv.tv_usec = 500;
 
+    error_msg = "";
+
     int n = select(socket->getSocket()+1, &read, 0, 0, &tv);
 
-    if( n > 0 )
-        pipe->onReadEvent();
+    if( n > 0 ) pipe->onReadEvent();
+
+    if(error_msg.length() > 0)
+        throw SCAGException(error_msg.c_str());
         //Reconnect();
     #endif
 }

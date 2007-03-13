@@ -42,6 +42,7 @@ class BillingManagerWrapper
 
 protected:
     Logger * logger;
+    std::string error_msg;
 
     BillingManagerWrapper() 
         : 
