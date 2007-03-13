@@ -1416,13 +1416,13 @@ int ProcessMessage(const char *msg,int msglen)
       while(pos2<line.length() && line[pos2]==' ')pos2++;
       value=line.substr(pos2);
 
-      if(name=="From")
+      if(name=="from")
       {
         from=ExtractEmail(value);
         if(from.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
         continue;
       }
-      if(name=="To")
+      if(name=="to")
       {
         to=ExtractEmail(value);
         if(to.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
