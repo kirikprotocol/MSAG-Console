@@ -28,7 +28,7 @@ final class CalendarRequestParser {
   // Dates regexes
   private final static String DATE = ONE_OR_TWO_DIGITS + ZERO_OR_MORE_SPACES + DOT + ZERO_OR_MORE_SPACES +
                                      ONE_OR_TWO_DIGITS + ZERO_OR_MORE_SPACES + DOT + ZERO_OR_MORE_SPACES +
-                                     FOUR_DIGITS;
+                                     ONE_TO_FOUR_DIGITS;
 
   private final static String DATE_TIME_MIN = DATE + ONE_OR_MORE_SPACES + ONE_OR_TWO_DIGITS + ZERO_OR_MORE_SPACES +
                                               COLON + ZERO_OR_MORE_SPACES + ONE_OR_TWO_DIGITS;
@@ -55,6 +55,10 @@ final class CalendarRequestParser {
         return parseAT(msg, DATE_TIME_MIN);
       else if (msg.matches(AT_REGEX_DATE))
         return parseAT(msg, DATE);
+
+      if (msg.matches(AFT + ".*") || msg.matches(AT + ".*"))
+        throw new WrongSendDateException();
+
     } catch (WrongSendDateException e) {
       throw new WrongSendDateException();
     } catch (Throwable e) {
@@ -108,9 +112,14 @@ final class CalendarRequestParser {
     final Calendar calendar = Calendar.getInstance();
     calendar.setTime(new Date());
 
+    if (year == calendar.get(Calendar.YEAR) && months -1 == calendar.get(Calendar.MONTH) && day == calendar.get(Calendar.DAY_OF_MONTH))
+      calendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE) + 10);
+
+
     int hour = calendar.get(Calendar.HOUR);
     int minute = calendar.get(Calendar.MINUTE);
     int second = calendar.get(Calendar.SECOND);
+
     if (strings1.length > 1) {
       final String[] strings2 = strings1[1].trim().split(COLON);
       hour = Integer.parseInt(strings2[0]);
@@ -172,6 +181,7 @@ final class CalendarRequestParser {
     public Date getDate() {
       return date;
     }
+
   }
   /**
    * Exception in parsing message

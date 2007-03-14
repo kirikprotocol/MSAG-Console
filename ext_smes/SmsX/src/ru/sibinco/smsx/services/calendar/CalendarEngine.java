@@ -127,6 +127,7 @@ final class CalendarEngine extends Service {
       final int previousSize = messagesList.size();
 
       try {
+        messagesList.setMaxDate(nextReloadTime);
 
         for (Iterator iter = CalendarMessage.loadList(nextReloadTime, messagesList.getMaxSize() - messagesList.size()).iterator(); iter.hasNext();)
           messagesList.add((CalendarMessage)iter.next());
@@ -139,8 +140,7 @@ final class CalendarEngine extends Service {
       final boolean newMessagesAdded = messagesList.size() - previousSize > 0;
       if (newMessagesAdded)
         messagesList.setMaxDate(messagesList.getLast().getSendDate());
-      else
-        messagesList.setMaxDate(nextReloadTime);
+
 
       return newMessagesAdded;
     }

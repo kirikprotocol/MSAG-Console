@@ -53,7 +53,7 @@ final class CalendarRequestProcessor extends ServiceProcessor {
       // Check send date
       if (sendDate.before(new Date())) {
         sendResponse(message, Data.ESME_RX_P_APPN);
-        sendMessage(message.getDestinationAddress(), message.getSourceAddress(), CalendarService.Properties.CALENDAR_SEND_DATE_IS_IN_THE_PAST);
+        sendMessage(CalendarService.Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.CALENDAR_SEND_DATE_IS_IN_THE_PAST);
         return;
       }
 

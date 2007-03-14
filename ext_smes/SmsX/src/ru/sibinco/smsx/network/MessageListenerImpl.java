@@ -55,7 +55,6 @@ public class MessageListenerImpl implements MessageListener {
           skip = (source.lastIndexOf('.') >= 0 && source.lastIndexOf('.') + 1 == source.length()) ||
               (source.lastIndexOf('+') >= 0 && source.lastIndexOf('+') + 1 == source.length());
 
-        System.out.println(source + " " + skip);
         if (skip) {
           Log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
           sendResponse(msg, Data.ESME_ROK);
