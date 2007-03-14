@@ -143,6 +143,7 @@ void DistrListManager::addDistrList(string dlName, bool system,const Address& dl
       prcPtr=principals.GetPtr(dlOwner.toString().c_str());
       if(!prcPtr)throw PrincipalNotExistsException();
       if(prcPtr->maxLst!=0 && prcPtr->lstCount>=prcPtr->maxLst)throw ListCountExceededException();
+      prcPtr->lstCount++;
     }
 
     auto_ptr<DistrListRecord> lstPtr(system?new DistrListRecord(dlName.c_str(),maxel):

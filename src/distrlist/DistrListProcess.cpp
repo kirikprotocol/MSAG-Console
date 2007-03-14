@@ -215,32 +215,40 @@ int DistrListProcess::Execute()
         }else
         if(cmd=="add")
         {
-          if(autoCreatePrincipal)
+          if(arg.length()==0 || arg.length()>18)
           {
+            tmpl="dl.invalidcmdparam";
+            reason="invalid_list_name";
+          }
+          else
+          {
+            if(autoCreatePrincipal)
+            {
+              try{
+                admin->getPrincipal(sms.getOriginatingAddress());
+              }catch(PrincipalNotExistsException& e)
+              {
+                Principal p;
+                p.address=sms.getOriginatingAddress();
+                p.maxLst=defaultMaxLists;
+                p.maxEl=defaultMaxElements;
+                admin->addPrincipal(p);
+              }
+            }
             try{
-              admin->getPrincipal(sms.getOriginatingAddress());
+              tmpl="dl.adderr";
+              admin->addDistrList(fullarg,false,sms.getOriginatingAddress(),0);
+              tmpl="dl.addok";
+            }catch(ListAlreadyExistsException& e)
+            {
+              reason="list_already_exists";
             }catch(PrincipalNotExistsException& e)
             {
-              Principal p;
-              p.address=sms.getOriginatingAddress();
-              p.maxLst=defaultMaxLists;
-              p.maxEl=defaultMaxElements;
-              admin->addPrincipal(p);
+              reason="principal_not_exists";
+            }catch(ListCountExceededException& e)
+            {
+              reason="list_count_exceeded";
             }
-          }
-          try{
-            tmpl="dl.adderr";
-            admin->addDistrList(fullarg,false,sms.getOriginatingAddress(),0);
-            tmpl="dl.addok";
-          }catch(ListAlreadyExistsException& e)
-          {
-            reason="list_already_exists";
-          }catch(PrincipalNotExistsException& e)
-          {
-            reason="principal_not_exists";
-          }catch(ListCountExceededException& e)
-          {
-            reason="list_count_exceeded";
           }
         }else
         if(cmd=="del")
