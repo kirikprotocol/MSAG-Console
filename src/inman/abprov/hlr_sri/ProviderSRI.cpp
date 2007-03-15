@@ -179,17 +179,14 @@ int IAPQuerySRI::Execute(void)
                        abonent.getSignals(), exc.what());
         status = -1;
     }
-    {
-        MutexGuard  grd(_mutex);
-        if (sriDlg) {
-            delete sriDlg;
-            sriDlg = NULL;
-        }
+    if (sriDlg) {
+        delete sriDlg;  //synchronization point, waits for sriDlg mutex
+        sriDlg = NULL;
     }
     return status;
 }
 // ****************************************
-//-- CHSRIhandler interface:
+// -- CHSRIhandlerITF implementation:
 // ****************************************
 void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
 {

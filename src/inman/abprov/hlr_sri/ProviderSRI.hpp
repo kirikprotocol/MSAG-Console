@@ -32,7 +32,7 @@ using smsc::inman::iaprvd::IAPQueryManagerITF;
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::inap::chsri::MapCHSRIDlg;
-using smsc::inman::inap::chsri::CHSRIhandler;
+using smsc::inman::inap::chsri::CHSRIhandlerITF;
 
 
 namespace smsc {
@@ -47,12 +47,7 @@ struct IAPQuerySRI_CFG {
     IAPQuerySRI_CFG() { mapTimeout = 20; mapSess = NULL; }
 };
 
-class IAPQuerySRI : public IAPQueryAC, public CHSRIhandler {
-protected:
-    IAPQuerySRI_CFG _cfg;
-    MapCHSRIDlg *   sriDlg;
-    Event           qsig;
-
+class IAPQuerySRI : public IAPQueryAC, CHSRIhandlerITF {
 public:
     IAPQuerySRI(unsigned q_id, IAPQueryManagerITF * owner, 
                Logger * use_log, const IAPQuerySRI_CFG & use_cfg);
@@ -62,13 +57,19 @@ public:
     int Execute(void);
     const char * taskType(void) const { return "IAPQuerySRI"; }
 
+protected:
+    friend smsc::inman::inap::chsri::MapCHSRIDlg;
     // ****************************************
-    //-- CHSRIhandler interface:
+    //-- CHSRIhandlerITF implementation:
     // ****************************************
     void onMapResult(CHSendRoutingInfoRes* arg);
     //dialog finalization/error handling:
     //if errLayer != errOk, dialog is aborted by reason = errcode
     void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer);
+
+    IAPQuerySRI_CFG _cfg;
+    MapCHSRIDlg *   sriDlg;
+    Event           qsig;
 };
 
 class IAPQuerySRIFactory : public IAPQueryFactoryITF {
