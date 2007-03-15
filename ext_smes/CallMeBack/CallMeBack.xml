@@ -91,7 +91,7 @@
       <taskdef name="obfuscate" classname="com.yworks.yguard.ObfuscatorTask" classpath="lib/yguard.jar"/>
       <obfuscate mainclass="ru.sibinco.smpp.CallMeBack" logfile="obfuscate.log" replaceclassnamestrings="true">
          <property name="error-checking" value="pedantic"/>
-         <inoutpair in="lib/cmb.jar" out="lib/CallMeBack.jar"/>
+         <inoutpair in="lib/cmb.jar" out="lib/cmb.jar"/>
          <externalclasses>
             <pathelement location="lib/jsmppapi.jar"/>
             <pathelement location="lib/sme.jar"/>

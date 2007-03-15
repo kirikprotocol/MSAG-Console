@@ -6,3 +6,7 @@ CallMeBack.iml
 CallMeBack.ipr
 CallMeBack.iws
 .project
+.classpath
+bin
+obfuscate.log
+classes

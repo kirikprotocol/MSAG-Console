@@ -147,7 +147,7 @@ public class CallMeBackProcessor implements RequestProcessor {
           n.setMessageString(MessageFormat.format(notification, new Object[]{messageData.getSourceAddress(), sdf.format(Calendar.getInstance().getTime())}));
           response.addMessage(n);
           // prepare reports
-          MessageData sr = prepareResponseMessage(messageData, MessageFormat.format(successReport, new Object[]{n.getDestinationAddress()}));
+          MessageData sr = prepareResponseMessage(messageData, MessageFormat.format(successReport, new Object[]{n.getDestinationAddress(), Integer.toString(u)}));
           
           int fru = (u < a) ? (u + 1) : u;
           MessageData fr = prepareResponseMessage(messageData, MessageFormat.format(failedReport, new Object[]{n.getDestinationAddress(), Integer.toString(fru)}));
