@@ -33,6 +33,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         EventMonitor eventMonitor;
         unsigned int billId;
         SACC_BILLING_INFO_EVENT_t billEvent;
+        BillingInfoStruct billingInfoStruct;
         BillTransaction() : status(TRANSACTION_NOT_STARTED) { }
     };
 
@@ -64,7 +65,6 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
     void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev);
     void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SACC_BILLING_INFO_EVENT_t& ev);
 
-
     void ClearTransactions()
     {
         int key;
@@ -77,6 +77,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
         BillTransactionHash.Empty();
     }
+    void logEvent(const char *type, bool success, BillingInfoStruct& b, int billID);
 public:
     void init(BillingManagerConfig& cfg);
 
@@ -89,12 +90,9 @@ public:
 
     virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
     virtual void Commit(int billId);
-    virtual void Rollback(int billId);
-
-
+    virtual void Rollback(int billId, bool timeout);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
-
 
     void configChanged();
 
@@ -286,6 +284,12 @@ void BillingManagerImpl::ProcessSaccEvent(BillingTransactionEvent billingTransac
 
 }
 
+void BillingManagerImpl::logEvent(const char *tp, bool success, BillingInfoStruct& b, int billID)
+{
+    smsc_log_info(logger, "bill %s: %s billId=%d, abonent=%s, opId=%d, sId=%d, providerId=%d",
+        tp, success ? "success" : "failed", billID, b.AbonentNumber.c_str(), b.operatorId, b.serviceId, b.providerId);
+}
+
 unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
     unsigned int billId;
@@ -298,6 +302,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
 
     BillTransaction * billTransaction = new BillTransaction();
     billTransaction->tariffRec = tariffRec;
+    billTransaction->billingInfoStruct = billingInfoStruct;
     billTransaction->billId = billId;
     makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, billTransaction->billEvent);
 
@@ -336,7 +341,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
         delete billTransaction;
         BillTransactionHash.Delete(billId);
         inUseLock.Unlock();
-
+        logEvent("open", false, billingInfoStruct, billId);
         throw SCAGException("Transaction billId=%d timed out", billId);
     }
 
@@ -346,7 +351,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
         delete billTransaction;
         BillTransactionHash.Delete(billId);
         inUseLock.Unlock();
-
+        logEvent("open", false, billingInfoStruct, billId);
         throw SCAGException("Transaction billId=%d: charging is impossible", billId);
     }
 
@@ -364,6 +369,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
     }
     #endif
 
+    logEvent("open", true, billingInfoStruct, billId);
     return billId;
 }
 
@@ -374,10 +380,10 @@ void BillingManagerImpl::Commit(int billId)
     {
       MutexGuard mg(inUseLock);
       BillTransaction ** pBillTransactionPtrPtr = BillTransactionHash.GetPtr(billId);
-      if (!pBillTransactionPtrPtr) throw SCAGException("Cannot find transaction for billId=%d", billId);
+      if (!pBillTransactionPtrPtr)
+        throw SCAGException("Cannot find transaction for billId=%d", billId);
       pBillTransaction=*pBillTransactionPtrPtr;
     }
-
 
     #ifdef MSAG_INMAN_BILL
     if(pBillTransaction->tariffRec.billType == scag::bill::infrastruct::INMAN)
@@ -394,24 +400,18 @@ void BillingManagerImpl::Commit(int billId)
     pBillTransaction->status = TRANSACTION_VALID;
     #endif
 
-
     ProcessSaccEvent(TRANSACTION_COMMITED, pBillTransaction);
 
     smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
     int status = pBillTransaction->status, billtype = pBillTransaction->tariffRec.billType;
 
+    logEvent("commit", !(status == TRANSACTION_WAIT_ANSWER || status == TRANSACTION_INVALID), pBillTransaction->billingInfoStruct, billId);
+
     inUseLock.Lock();
     delete pBillTransaction;
     BillTransactionHash.Delete(billId);
     inUseLock.Unlock();
-
-
-    if (status == TRANSACTION_WAIT_ANSWER)
-        throw SCAGException("Transaction billId=%d timed out.", billId);
-
-    if (status == TRANSACTION_INVALID)
-        throw SCAGException("Transaction billId=%d invalid.", billId);
 
     #ifdef MSAG_INMAN_BILL
     if (status == TRANSACTION_VALID && billtype == scag::bill::infrastruct::INMAN)
@@ -421,11 +421,12 @@ void BillingManagerImpl::Commit(int billId)
         sendCommand(op);
     }
     #endif
+
+    if(status == TRANSACTION_WAIT_ANSWER || status == TRANSACTION_INVALID)
+        throw SCAGException("Transaction billId=%d %s.", billId, status == TRANSACTION_INVALID ? "invalid" : "timed out");
 }
 
-
-
-void BillingManagerImpl::Rollback(int billId)
+void BillingManagerImpl::Rollback(int billId, bool timeout)
 {
 
     BillTransaction * pBillTransaction=0;
@@ -446,17 +447,17 @@ void BillingManagerImpl::Rollback(int billId)
     }
     #endif
 
-    ProcessSaccEvent(TRANSACTION_CALL_ROLLBACK, pBillTransaction);
+    ProcessSaccEvent(timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK, pBillTransaction);
+
+    logEvent(timeout ? "rollback(timeout)" : "rollback", true, pBillTransaction->billingInfoStruct, billId);
 
     inUseLock.Lock();
     delete pBillTransaction;
     BillTransactionHash.Delete(billId);
     inUseLock.Unlock();
 
-    smsc_log_debug(logger, "Transaction rolled back (billId=%d)", billId);
-
+    smsc_log_debug(logger, "Transaction rolled back (billId=%d) %s", billId, timeout ? "by timeout" : "");
 }
-
 
 void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev)
 {
@@ -468,7 +469,6 @@ void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, Bi
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 }
-
 
 void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SACC_BILLING_INFO_EVENT_t& ev)
 {
@@ -498,10 +498,7 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
     char buff[128];
     sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, billingInfo.SessionBornMicrotime.tv_usec / 1000);
     ev.pSessionKey.append(buff);
-
 }
-
-
 
 #ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)

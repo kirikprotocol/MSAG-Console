@@ -173,12 +173,13 @@ namespace scag { namespace sessions
         time_t validityTime;
         bool bStartBillingOperation;
         unsigned int billID;
-        void rollbackAll();
         Logger * logger;
+
+        void rollbackAll(bool timeout = false);
 
         PendingOperation() : bStartBillingOperation(false), billID(0), logger(0) 
         {
-            logger = Logger::getInstance("scag.re");
+            logger = Logger::getInstance("sess.pop");
         };
     };
 
@@ -230,7 +231,7 @@ namespace scag { namespace sessions
             m_Status(OPERATION_INITED)
 
         {
-            logger = Logger::getInstance("scag.re");
+            logger = Logger::getInstance("sess.op");
         };
     };
 

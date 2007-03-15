@@ -86,7 +86,6 @@ namespace scag { namespace sessions
         int  processExpire();
         CSessionSetIterator DeleteSession(CSessionSetIterator it);
 
-
         uint16_t getNewUSR(Address& address);
         uint16_t getLastUSR(Address& address);
 
@@ -110,7 +109,6 @@ namespace scag { namespace sessions
         virtual void Start();
 
         virtual SessionPtr newSession(CSessionKey& sessionKey);
-
     };
 
 
@@ -193,7 +191,7 @@ SessionManagerImpl::~SessionManagerImpl()
 
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
-	delete (*it);
+    delete (*it);
     }
 
     CSessionKey key;
@@ -242,7 +240,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
     this->config = _config;
 
     if (!logger)
-      logger = Logger::getInstance("scag.SessionManager");
+      logger = Logger::getInstance("sess.man");
 
     store.init(config.dir,SessionManagerCallback,this);
 
@@ -374,7 +372,6 @@ SessionManagerImpl::CSessionSetIterator SessionManagerImpl::DeleteSession(CSessi
 int SessionManagerImpl::processExpire()
 {
     //smsc_log_debug(logger,"SessionManager: process expire");
-
     MutexGuard guard(inUseMonitor);
 
     while (1)
@@ -384,16 +381,16 @@ int SessionManagerImpl::processExpire()
         if (SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
 
         CSessionSetIterator it;
-	CSessionAccessData *accessData = 0;
+        CSessionAccessData *accessData = 0;
 
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();)
         {
             accessData = (*it);
-	    if (!accessData) {
+        if (!accessData) {
             ++it;
             continue;
         }
-	    if ((!accessData->bOpened)&&(accessData->hasPending)) break;
+        if ((!accessData->bOpened)&&(accessData->hasPending)) break;
             if ((!accessData->bOpened)&&(!accessData->hasPending)&&(!accessData->hasOperations))
             {
                 it = DeleteSession(it);
@@ -401,7 +398,7 @@ int SessionManagerImpl::processExpire()
             else ++it;
         }
 
-	accessData = 0;
+        accessData = 0;
         time_t now; time(&now);
         int iPeriod;
 
@@ -420,14 +417,14 @@ int SessionManagerImpl::processExpire()
                 return DEFAULT_EXPIRE_INTERVAL;
         }
 
-	accessData = (*it);
+        accessData = (*it);
         iPeriod = accessData->nextWakeTime - now;
 
         smsc_log_debug(logger, "SessionManager: session USR= '%d', Address='%s' has period: %d",
                        accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str(),iPeriod);
         if (iPeriod > 0) return iPeriod;
 
-	SessionPtr sessionPtr(0);
+        SessionPtr sessionPtr(0);
         sessionPtr = store.getSession(accessData->SessionKey);
         Session * session = sessionPtr.Get();
 
@@ -439,7 +436,7 @@ int SessionManagerImpl::processExpire()
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
 
                 SessionHash.Delete(accessData->SessionKey);
-		delete accessData;
+                delete accessData;
                 SessionExpirePool.erase(it);
                 return 0;
             }
@@ -454,9 +451,7 @@ int SessionManagerImpl::processExpire()
             accessData->hasOperations = session->hasOperations();
 
             time_t wakeTime = session->getWakeUpTime();
-            if (wakeTime == 0) accessData->nextWakeTime = now;
-            else accessData->nextWakeTime = wakeTime;
-
+            accessData->nextWakeTime = wakeTime == 0 ? now : wakeTime;
             iPeriod = accessData->nextWakeTime - now;
         }
 
@@ -469,7 +464,6 @@ int SessionManagerImpl::processExpire()
             it = SessionExpirePool.insert(accessData);
             SessionHash.Delete(accessData->SessionKey);
             SessionHash.Insert(accessData->SessionKey, it);
-
 
             store.updateSession(sessionPtr);
 

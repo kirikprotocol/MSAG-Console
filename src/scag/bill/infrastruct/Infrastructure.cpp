@@ -18,9 +18,9 @@
 
 #include "Infrastructure.h"
 
-XERCES_CPP_NAMESPACE_USE
-
 namespace scag { namespace bill { namespace infrastruct {
+
+XERCES_CPP_NAMESPACE_USE
 
 using smsc::core::buffers::IntHash;
 using smsc::core::synchronization::MutexGuard;
@@ -55,7 +55,7 @@ void InfrastructureImpl::init(const std::string& dir)
 {
     XMLPlatformUtils::Initialize("en_EN.UTF-8");
 
-    logger = Logger::getInstance("bill.i");
+    logger = Logger::getInstance("bill.inf");
 
     smsc_log_debug(logger,"Provider/Operator Mapper allocated");
 

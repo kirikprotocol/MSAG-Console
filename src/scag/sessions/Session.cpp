@@ -63,29 +63,19 @@ int Session::getOperationType(std::string& str)
 }
 
 
-
-void PendingOperation::rollbackAll()
+void PendingOperation::rollbackAll(bool timeout)
 {
-    if (billID > 0) 
+    if(billID <= 0) return;
+    smsc_log_warn(logger, "PendingOperation: Rollback all (billId=%d)", billID);
+    try
     {
-        BillingManager& bm = BillingManager::Instance();
-
-        smsc_log_warn(logger, "PendingOperation: Rollback all (billId=%d)", billID);
-
-        try
-        {
-            bm.Rollback(billID);
-        } catch (SCAGException& e)
-        {
-            smsc_log_warn(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
-        }
-
-
-        billID = 0;
+        BillingManager::Instance().Rollback(billID, timeout);
+    } catch (SCAGException& e)
+    {
+        smsc_log_warn(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
     }
+    billID = 0;
 }
-
-
 
 
 ICCOperationStatus Operation::getStatus()
@@ -172,24 +162,16 @@ void Operation::attachBill(unsigned int BillId)
 
 void Operation::rollbackAll()
 {
-   
-    if (m_hasBill) 
+    if(!m_hasBill) return;
+    smsc_log_warn(logger,"Operation: Rollback all (ab=%s)", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
+    try
     {
-        smsc_log_warn(logger,"Operation: Rollback all (ab=%s)", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
-
-        BillingManager& bm = BillingManager::Instance();
-
-        try
-        {
-            bm.Rollback(billId);
-        } catch (SCAGException& e)
-        {
-            smsc_log_warn(logger,"Operation: Cannot rollback. Details: %s", e.what());
-        }
-
-
-        m_hasBill = false;
+        BillingManager::Instance().Rollback(billId);
+    } catch (SCAGException& e)
+    {
+        smsc_log_warn(logger,"Operation: Cannot rollback. Details: %s", e.what());
     }
+    m_hasBill = false;
 }
 
 //////////////////////////////////////////////Session////////////////////////////////////////////
@@ -199,7 +181,7 @@ Session::Session(const CSessionKey& key)
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
         logger(0), lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false)
 {
-    logger = Logger::getInstance("scag.re");
+    logger = Logger::getInstance("sess.man");
     m_SessionKey = key;
 
     timeval tv;
@@ -575,9 +557,8 @@ void Session::expirePendingOperation()
 {
     if (PendingOperationList.size() > 0) 
     {
-
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
-        if (it->billID > 0) it->rollbackAll();
+        if (it->billID > 0) it->rollbackAll(true);
 
         smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d, ab=%s)",it->billID, it->type, m_SessionKey.abonentAddr.toString().c_str());
 
@@ -673,8 +654,6 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
     throw SCAGException("Session: Cannot find pending operation (type=%d, ab=%s)", operationType, m_SessionKey.abonentAddr.toString().c_str());
 }
 
-
-
 Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
 {
 
@@ -692,7 +671,6 @@ Operation * Session::AddNewOperationToHash(SCAGCommand& cmd, int operationType)
 
     return operation;
 }
-
 
 void Session::addPendingOperation(PendingOperation pendingOperation)
 {

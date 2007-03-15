@@ -59,6 +59,17 @@ struct BillingInfoStruct
     timeval SessionBornMicrotime;
 
     //int ServiceNumber;
+    const BillingInfoStruct& operator=(const BillingInfoStruct& cp)
+    {
+        AbonentNumber = cp.AbonentNumber;
+        serviceId = cp.serviceId;
+        protocol = cp.protocol;
+        providerId = cp.providerId;
+        operatorId = cp.operatorId;
+        msgRef = cp.msgRef;
+        SessionBornMicrotime = cp.SessionBornMicrotime;
+        return *this;
+    }
 };
 
 class BillingManager
@@ -72,7 +83,7 @@ protected:
 public:
     virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec) = 0;
     virtual void Commit(int billId) = 0;
-    virtual void Rollback(int billId) = 0;
+    virtual void Rollback(int billId, bool timeout = false) = 0;
 
     //virtual void close(int billId) = 0;
 
@@ -87,3 +98,4 @@ public:
 }}
 
 #endif
+

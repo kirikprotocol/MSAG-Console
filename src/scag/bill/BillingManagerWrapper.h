@@ -49,7 +49,7 @@ protected:
         #ifdef MSAG_INMAN_BILL
         socket(0), pipe(0), 
         #endif
-        logger(Logger::getInstance("scag.BM")) 
+        logger(Logger::getInstance("bill.man")) 
     {
 
         #ifdef MSAG_INMAN_BILL
