@@ -15,7 +15,7 @@ using smsc::inman::comp::chsri::MAP_CH_SRI_OpCode;
 /* ************************************************************************** *
  * class MapCHSRIDlg implementation:
  * ************************************************************************** */
-MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandler * sri_handler,
+MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler,
                         Logger * uselog/* = NULL*/)
     : sriHdl(sri_handler), session(pSession), sriId(0), dialog(NULL)
     , logger(uselog)

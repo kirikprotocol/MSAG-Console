@@ -15,7 +15,7 @@ using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
-using smsc::inman::inap::chsri::CHSRIhandler;
+using smsc::inman::inap::chsri::CHSRIhandlerITF;
 using smsc::inman::inap::chsri::MapCHSRIDlg;
 
 namespace smsc  {
@@ -27,7 +27,7 @@ public:
     virtual void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
-class SRIInterrogator: CHSRIhandler {
+class SRIInterrogator: CHSRIhandlerITF {
 public:
     SRIInterrogator(TCSessionMA* pSession, SRI_CSIListener * csi_listener,
                     Logger * uselog = NULL);
@@ -40,7 +40,7 @@ public:
 
 protected:
     friend class smsc::inman::inap::chsri::MapCHSRIDlg;
-    //CHSRIhandler interface
+    // -- CHSRIhandlerITF implementation:
     void onMapResult(CHSendRoutingInfoRes* arg);
     //dialog finalization/error handling:
     void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer);

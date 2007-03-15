@@ -26,11 +26,12 @@ namespace inman {
 namespace inap {
 namespace chsri {
 
-class CHSRIhandler { // GMSC/SCF <- HLR */
+class CHSRIhandlerITF { // GMSC/SCF <- HLR
 public: 
     virtual void onMapResult(CHSendRoutingInfoRes* arg) = 0;
-    //dialog finalization/error handling:
+    //Dialog finalization/error handling:
     //if errLayer != errOk, dialog is aborted by reason = errcode
+    //NOTE: MAP diaog may be deleted only from this callback !!!
     virtual void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
@@ -51,11 +52,11 @@ typedef union {
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapCHSRIDlg : DialogListener, InvokeListener { // GMSC/SCF -> HLR
 public:
-    MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandler * sri_handler, Logger * uselog = NULL);
+    MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler, Logger * uselog = NULL);
     virtual ~MapCHSRIDlg();
 
     enum {
-        chsriServiceResponse = 0
+        chsriServiceResponse = 1
     };
     void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);
     void reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout = 0) throw(CustomException);
@@ -89,7 +90,7 @@ private:
     Dialog*     dialog;     //TCAP dialog
     TCSessionMA* session;    //TCAP dialogs factory
     Logger*     logger;
-    CHSRIhandler * sriHdl;
+    CHSRIhandlerITF * sriHdl;
     CHSRIState   _sriState;  //current state of dialog
     CHSendRoutingInfoRes reqRes;
 };
