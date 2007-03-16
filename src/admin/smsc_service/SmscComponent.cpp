@@ -225,6 +225,13 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Parameters aliasDelParams;
   aliasDelParams["alias"]=Parameter("alias",StringType);
 
+#ifdef SMSEXTRA
+  Parameters setSponsoredValuesParams;
+  setSponsoredValuesParams["list"]=Parameter("list",StringListType);
+  Method set_sponsored_values ((unsigned)setSponsoredValuesMethod,"set_sponsored_values",setSponsoredValuesParams,StringType);
+#endif
+
+
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
   Method apply_aliases         ((unsigned)applyAliasesMethod,        "apply_aliases",         empty_params, StringType);
@@ -317,6 +324,10 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method alias_del((unsigned)aliasDelMethod,"alias_del",aliasDelParams,StringType);
 
   /***************************** method assigns *****************************/
+#ifdef SMSEXTRA
+  methods[set_sponsored_values .getName()] = set_sponsored_values;
+#endif
+
   methods[apply_routes         .getName()] = apply_routes;
   methods[apply_aliases        .getName()] = apply_aliases;
   methods[apply_reschedule     .getName()] = apply_reschedule;
@@ -439,6 +450,11 @@ throw (AdminException)
         smsc_log_debug(logger, "applying snmp...");
         applySnmp();
         smsc_log_debug(logger, "snmp applied");
+        return Variant("");
+#endif
+#ifdef SMSEXTRA
+      case setSponsoredValuesMethod:
+        setSponsoredValue(args);
         return Variant("");
 #endif
       case profileLookupMethod:
@@ -2065,7 +2081,7 @@ using namespace smsc::distrlist;
 #define BEGINMETHOD\
   try
 
-#define INTARG(name) lastArg=#name;int name=args.Get(#name).getLongValue();
+#define INTARG(name) lastArg=#name;int name=(int)args.Get(#name).getLongValue();
 #define STRARG(name) lastArg=#name;const char* name=args.Get(#name).getStringValue();
 #define LSTARG(name) lastArg=#name;const StringList& name=args.Get(#name).getStringListValue();
 
@@ -2624,6 +2640,44 @@ Variant SmscComponent::delAlias(const Arguments & args)
     return Variant("alias deleted");
   EPILOGUE
 }
+
+#define PROFILERPROLOGUE \
+  info2(logger,"profiler admin call %s",__func__); \
+  ProfilerInterface* profiler=smsc_app_runner->getApp()->getProfiler();\
+  const char* lastArg=0; \
+  try{
+
+
+#ifdef SMSEXTRA
+void SmscComponent::setSponsoredValue(const Arguments& args)
+{
+  PROFILERPROLOGUE
+    LSTARG(list);
+  BEGINMETHOD
+  {
+    StringList::const_iterator it=list.begin();
+    while(it!=list.end())
+    {
+      const char* abonent=*it;
+      it++;
+      if(it==list.end())
+      {
+        smsc_log_warn(logger,"Invalid amount of arguments for setSponsoredValue");
+        break;
+      }
+      const char* value=*it;
+      it++;
+      Profile p=profiler->lookup(abonent);
+      p.sponsored=atoi(value);
+      profiler->update(abonent,p);
+    }
+  }
+  ENDMETHOD
+    return;
+  EPILOGUE
+}
+#endif
+
 
 #ifdef SNMP
 

@@ -140,9 +140,13 @@ protected:
   Variant addAlias(const Arguments & args);
   Variant delAlias(const Arguments & args);
 
-#ifdef SNMP
-  Variant snmpApply(const Arguments & args);
+#ifdef SMSEXTRA
+  void setSponsoredValue(const Arguments& args);
 #endif
+
+//#ifdef SNMP
+//  Variant snmpApply(const Arguments & args);
+//#endif
 
 
   SmscConfigs &configs;
@@ -168,6 +172,9 @@ protected:
     aliasAddMethod,aliasDelMethod
 #ifdef SNMP
     ,applySnmpMethod
+#endif
+#ifdef SMSEXTRA
+    ,setSponsoredValuesMethod
 #endif
   };
 
