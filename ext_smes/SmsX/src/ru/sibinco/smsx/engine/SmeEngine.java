@@ -16,6 +16,7 @@ import ru.sibinco.smsx.services.calendar.CalendarService;
 import ru.sibinco.smsx.services.redirector.RedirectorService;
 import ru.sibinco.smsx.services.secret.SecretService;
 import ru.sibinco.smsx.services.sponsored.SponsoredService;
+import ru.sibinco.smsx.services.sponsored.SponsoredServiceNew;
 import ru.sibinco.smsx.utils.Service;
 
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ public final class SmeEngine extends Service {
     final SecretService secretService = new SecretService();
     secretService.init(new InitializationInfo(multiplexor, outQueue, SmeProperties.SECRET_ADDRESS));
 
-    final SponsoredService sponsoredService = new SponsoredService();
+    final SponsoredServiceNew sponsoredService = new SponsoredServiceNew();
     sponsoredService.init(new InitializationInfo(multiplexor, outQueue, SmeProperties.SPONSORED_ADDRESS));
 
     // Order is important here

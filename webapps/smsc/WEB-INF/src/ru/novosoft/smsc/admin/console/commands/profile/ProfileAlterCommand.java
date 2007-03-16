@@ -90,7 +90,8 @@ public class ProfileAlterCommand extends ProfileGenCommand {
           profile.setOutputAccessMask(profile.getOutputAccessMask() | outputAccessBitOn);
         }
         if (isServices) profile.setServices(services);
-        if (isSponsored) profile.setSponsored((short)(profile.getSponsored() + sponsored > 255 ? 255 : profile.getSponsored() + sponsored));
+//        if (isSponsored) profile.setSponsored((short)(profile.getSponsored() + sponsored > 255 ? 255 : profile.getSponsored() + sponsored));
+        if (isSponsored) profile.setSponsored((short)(sponsored));
 
         updateResult = ctx.getSmsc().profileUpdate(mask, profile);
         switch (updateResult) {

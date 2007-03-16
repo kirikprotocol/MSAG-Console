@@ -116,7 +116,7 @@ final class CalendarRequestParser {
       calendar.set(Calendar.MINUTE, calendar.get(Calendar.MINUTE) + 10);
 
 
-    int hour = calendar.get(Calendar.HOUR);
+    int hour = calendar.get(Calendar.HOUR_OF_DAY);
     int minute = calendar.get(Calendar.MINUTE);
     int second = calendar.get(Calendar.SECOND);
 
@@ -145,9 +145,10 @@ final class CalendarRequestParser {
   public static void main(String[] args) {
 
 //    msg.setMessageString("ATF 1 rewt...");
-    final String msg = "AT 29.2.2008 good1";
+    final String msg = "AT 14.03.2007 good1";
     final ParseResult res;
     try {
+      CalendarService.Properties.CALENDAR_SEND_DATE_MAX_YEAR = 2007;
       res = parseRequest(msg);
       System.out.println(res.getDate().toString() + " ||| " + res.getMessage());
     } catch (ParseException e) {
