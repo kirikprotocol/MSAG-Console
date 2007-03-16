@@ -21,14 +21,14 @@ struct ConvertorImpl : public Convertor
 
     ConvertorImpl() : Convertor() {};
     ~ConvertorImpl();
-    
+
     void convert(const char* inCharset, const char* outCharset,
-                 const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf);
-                        
+                 const char * in, size_t inLen, TmpBuf<char, 2048>& buf);
+
 private:
 
     iconv_t getIconv(const char* inCharset, const char* outCharset);
-    
+
     Hash<iconv_t> iconvHash;
     Mutex mtx;
 };
@@ -41,17 +41,17 @@ typedef SingletonHolder<ConvertorImpl> SingleC;
 void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len, std::string& utf8str)
 {
 //    convert("UCS-2", "UTF-8", (const char*)ucs2buff, ucs2len, utf8str);
-    
+
     int pos = 0;
-    
+
     std::auto_ptr<char> buff(new char[ucs2len*3]);
     char * ptr = buff.get();
 
-    for (int i = 0; i < ucs2len; i++) 
+    for (int i = 0; i < ucs2len; i++)
     {
         unsigned short ucs2ch = ucs2buff[i];
-     
-        if ((ucs2ch >=0x00000000)&&(ucs2ch <= 0x0000007F)) 
+
+        if ((ucs2ch >=0x00000000)&&(ucs2ch <= 0x0000007F))
         {
             ptr[pos] = ucs2ch;
             pos++;
@@ -70,7 +70,7 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
         if ((ucs2ch >=0x00000800)&&(ucs2ch <= 0x0000FFFF))
         {
             char ch;
-            for (int j=0; j<2; j++) 
+            for (int j=0; j<2; j++)
             {
                 ch = ((ucs2ch & 63) + 128);
                 ptr[pos+2-j] = ch;
@@ -82,7 +82,7 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
 
             ptr[pos] = ch;
             pos+=3;
-        }      
+        }
     }
 
     utf8str.assign(ptr,pos);
@@ -133,16 +133,16 @@ void Convertor::UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::st
 
 
 #define MAX_BYTES_IN_CHAR 2
-    
+
 void Convertor::convert(const char* inCharset, const char* outCharset,
-                        const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
+                        const char * in, size_t inLen, TmpBuf<char, 2048>& buf)
 {
     ConvertorImpl& c = SingleC::Instance();
     c.convert(inCharset, outCharset, in, inLen, buf);
 }
 
 void Convertor::convert(const char* inCharset, const char* outCharset,
-                        const char * in, unsigned int inLen, std::string& outstr)
+                        const char * in, size_t inLen, std::string& outstr)
 {
     TmpBuf<char, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
     convert(inCharset, outCharset, in, inLen, buf);
@@ -153,64 +153,72 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
 iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
 {
     std::string s = inCharset; s += '#'; s += outCharset;
-    
+
     iconv_t *pcd = iconvHash.GetPtr(s.c_str());
     if(pcd) return *pcd;
-        
+
     iconv_t cd = iconv_open(outCharset, inCharset);
     if( cd == (iconv_t)(-1) )
-        throw SCAGException("Convertor: iconv_open. Cannot convert from '%s' to '%s'. errno=%d", inCharset, outCharset, errno);        
-        
+        throw SCAGException("Convertor: iconv_open. Cannot convert from '%s' to '%s'. errno=%d", inCharset, outCharset, errno);
+
     iconvHash.Insert(s.c_str(), cd);
-        
-    return cd;        
+
+    return cd;
 }
 
 #define ICONV_BLOCK_SIZE 128
 
 void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
-                            const char * in, unsigned int inLen, TmpBuf<char, 2048>& buf)
+                            const char * in, size_t inLen, TmpBuf<char, 2048>& buf)
 {
 
-    MutexGuard mt(mtx);
-    
-    iconv_t cd = getIconv(inCharset, outCharset);
-    
-    char *outbufptr;
-    size_t outbytesleft, i;
-    
-    iconv(cd, NULL, NULL, NULL, NULL);
+    bool error=false;
+    {
+      MutexGuard mt(mtx);
 
-    i = outbytesleft = MAX_BYTES_IN_CHAR * inLen;
-    buf.setSize(buf.GetPos() + outbytesleft);
-    outbufptr = buf.GetCurPtr();
+      iconv_t cd = getIconv(inCharset, outCharset);
+
+      char *outbufptr;
+      size_t outbytesleft, i;
+
+      iconv(cd, NULL, NULL, NULL, NULL);
+
+      i = outbytesleft = MAX_BYTES_IN_CHAR * inLen;
+      buf.setSize(buf.GetPos() + outbytesleft);
+      outbufptr = buf.GetCurPtr();
+      //unsigned long inLenLong=inLen;
+  //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
+      if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+          error=true;
+
+      buf.SetPos(i - outbytesleft);
+  }
+  if(error)
+  {
+    throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
+  }
+
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
-    if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
-        throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
-        
-    buf.SetPos(i - outbytesleft);
-            
-//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
-        
+
 /*    while (inLen) {
          size_t i = inLen > ICONV_BLOCK_SIZE ? ICONV_BLOCK_SIZE : inLen;
          buf.setSize(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE);
          outbufptr = buf.GetCurPtr();
          outbytesleft = MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE;
-         
+
          printf("<iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);
          if(iconv(cd, &in, &i, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
          {
              printf("iconv_err\n");
              throw SCAGException("Convertor: iconv. Cannot convert from '%s' to '%s'. errno=%d. bytesleft=%d", inCharset, outCharset, errno, inLen);
          }
-         printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);        
+         printf(">iconv_t=%d in=%p inLen=%d outbufptr=%p outbytesleft=%d incharset=%s outCharset=%s\n", cd, in, i, outbufptr, outbytesleft, inCharset, outCharset);
          buf.SetPos(buf.GetPos() + MAX_BYTES_IN_CHAR * ICONV_BLOCK_SIZE - outbytesleft);
-         
+
          if(inLen > ICONV_BLOCK_SIZE)
              inLen -= ICONV_BLOCK_SIZE;
-         else            
-             inLen = 0;            
+         else
+             inLen = 0;
      }*/
 }
 
@@ -221,9 +229,9 @@ ConvertorImpl::~ConvertorImpl()
 {
     char* k;
     iconv_t cd;
-    
+
     MutexGuard mt(mtx);
-    
+
     iconvHash.First();
     while(iconvHash.Next(k, cd))
     {
