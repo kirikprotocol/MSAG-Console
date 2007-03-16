@@ -99,14 +99,14 @@ void AdvertisingImpl::CheckBannerRequest(BannerRequest& banReq, int async)
 
 	__require__(banReq.abonent.length() > 5 && banReq.abonent.length() < 21);
 	
-	if (banReq.dispatcher)
+/*	if (banReq.dispatcher)
     {   
         BannerDispatcher* bd =  banReq.dispatcher;
         void (scag::advert::BannerDispatcher:: *procBanner)(const BannerRequest&) = bd->processBanner;
         void (scag::advert::BannerDispatcher:: *procError)(const BannerRequest& , uint32_t) = bd->processError;
     
     	__require__(procBanner != NULL  && procError != NULL);      
-    }   	 
+    }   */	 
 }
         
 //------------------------------------------------------------------------------

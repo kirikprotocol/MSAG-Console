@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <string>
 
 #include <logger/Logger.h>
 
@@ -59,6 +60,7 @@ using smsc::util::config::Manager;
 using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
 using scag::advert::Advertising;
+using namespace std;
 
 struct MessageSender
 {
@@ -86,8 +88,8 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
 
   smsc::logger::Logger *logger;
 
-    int     protocolId, daysValid;
-    string	svcType, address;
+    int			protocolId, daysValid;
+    std::string	svcType, address;
 
     int     releaseCallsStrategy;
 	int		stkTemplateId;

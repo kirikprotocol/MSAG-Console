@@ -18,8 +18,8 @@
 
 #include <mcisme/misscall/callproc.hpp>
 
-//#define MCI_MODULE_TEST YES
-#undef  MCI_MODULE_TEST
+#define MCI_MODULE_TEST YES
+//#undef  MCI_MODULE_TEST
 
 extern "C" void clearSignalMask(void);
 
@@ -154,26 +154,26 @@ namespace smsc { namespace mcisme
                     if (bAttached && listener) 
 					{
 						listener->missed(event);
-						//listener->missed(event);
-						//listener->missed(event);
-						//caller = (int)(maxAbonents - random()%maxAbonents);
-						//sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-						//listener->missed(event);
-						//caller = (int)(maxAbonents - random()%maxAbonents);
-						//sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-						//listener->missed(event);
-						//listener->missed(event);
-						//listener->missed(event);
-						//caller = (int)(maxAbonents - random()%maxAbonents);
-						//sprintf(abonent, "+79029%06d", caller); event.from = abonent;
-						//listener->missed(event);
-						//listener->missed(event);
-						//listener->missed(event);
-						//listener->missed(event);
-						//listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						caller = (int)(maxAbonents - random()%maxAbonents);
+						sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+						listener->missed(event);
+						caller = (int)(maxAbonents - random()%maxAbonents);
+						sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						caller = (int)(maxAbonents - random()%maxAbonents);
+						sprintf(abonent, "+79029%06d", caller); event.from = abonent;
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
+						listener->missed(event);
 					}
                 }
-                sleepEvent.Wait(2000);
+                sleepEvent.Wait(20);
             }
         }
         #endif

@@ -759,7 +759,7 @@ int main(void)
     logger = Logger::getInstance("smsc.mcisme.MCISme");
 	
     atexit(atExitHandler);
-	clearSignalMask();
+//	clearSignalMask();
 	shutdownThread.Start();
 
     std::auto_ptr<ServiceSocketListener> adml(new ServiceSocketListener());

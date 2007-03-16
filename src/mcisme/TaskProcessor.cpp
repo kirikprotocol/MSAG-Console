@@ -8,6 +8,7 @@
 #include <exception>
 #include <algorithm>
 #include <iconv.h>
+#include <string>
 
 #include <mcisme/TaskProcessor.h>
 #include <mcisme/misscall/callproc.hpp>
@@ -31,6 +32,7 @@ namespace smsc { namespace mcisme
 {
 
 using namespace scag::util::encodings;
+using namespace std;
 
 const uint8_t	STK_PROFILE_ID = 0;
 
@@ -90,7 +92,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("mci.TaskProc")), 
 		profileStorage(ProfilesStorage::GetInstance()),
-        protocolId(0), daysValid(1), svcType(0), address(0), 
+        protocolId(0), daysValid(1), advertising(0),//svcType(0), address(0), 
         templateManager(0), mciModule(0), messageSender(0),
         statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), bStopProcessing(false), pStorage(0), pDeliveryQueue(0)
@@ -657,7 +659,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
-	msg.abonent = abnt.getText();//"777";
+	msg.abonent = "444";//abnt.getText();//"777";
 	formatter.addBanner(msg, getBanner(abnt));
 	{
 		MutexGuard Lock(smsInfoMutex);
@@ -848,9 +850,17 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
 	for(i = 0; i < callers_count; i++)
 	{
 		Message	msg;
-		NotifyGetAdapter	adapter(abnt, callers[i].getText().c_str());
+		string ph = callers[i].getText().c_str();
+		if(ph.length()==0) ph="unknown";
+
+		smsc_log_debug(logger, "Process Notify message 3, %s", abnt.c_str());
+
+		NotifyGetAdapter	adapter(abnt, ph.c_str());					//"11111");//callers[i].getText().c_str());
+		smsc_log_debug(logger, "Process Notify message 4 %s", ph.c_str());
 		messageFormatter->format(msg.message, adapter, ctx);
-		msg.abonent = callers[i].getText();//"444"
+		smsc_log_debug(logger, "Process Notify message 5");
+		msg.abonent = "777";//callers[i].getText();//"444"
+		smsc_log_debug(logger, "Process Notify message 6");
 		try{checkAddress(msg.abonent.c_str());}catch(Exception e)
 		{
 			smsc_log_error(logger, "Skip notification message - bad address %s", e.what());
@@ -875,6 +885,8 @@ string TaskProcessor::getBanner(const AbntAddr& abnt)
 {
 	string banner, ret;
 	int rc;
+	if(!advertising) return banner;
+
 	rc = advertising->getBanner(abnt.toString(), svcType.c_str(), scag::advert::SMPP_SMS, scag::advert::UTF16BE, ret);
 	if(rc == 0)
 	{
