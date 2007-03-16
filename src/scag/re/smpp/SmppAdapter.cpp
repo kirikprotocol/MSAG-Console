@@ -790,7 +790,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
   
             //smsc::logger::Logger * logger = smsc::logger::Logger::getInstance("scag.test");
 
-            if (IsShortSize(2 * str.size())) 
+            if (IsShortSize(resStr.size())) 
             {
 
                 unsigned len = 0;
