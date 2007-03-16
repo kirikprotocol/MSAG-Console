@@ -7,7 +7,6 @@ static char const ident[] = "$Id$";
 using smsc::inman::inap::TCAPDispatcher;
 
 #include "inman/service.hpp"
-using smsc::inman::cache::AbonentCache;
 using smsc::inman::interaction::INPSerializer;
 using smsc::inman::interaction::INPCommandSetAC;
 
@@ -19,7 +18,7 @@ namespace inman {
  * class Service implementation:
  * ************************************************************************** */
 Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(in_cfg), disp(0), server(0), lastSessId(0)
+    : logger(uselog), _cfg(in_cfg), disp(0), server(0), lastSessId(0), abCache(0)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -38,7 +37,7 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
         }
     }                                         
 
-    _cfg->bill.abCache = new AbonentCache(&_cfg->cachePrm, logger);
+    _cfg->bill.abCache = (abCache = new AbonentCacheMTR(&_cfg->cachePrm, logger));
     assert(_cfg->bill.abCache);
     smsc_log_debug(logger, "InmanSrv: AbonentCache inited");
 
@@ -105,9 +104,9 @@ Service::~Service()
         smsc_log_debug(logger, "InmanSrv: Deleting TimeWatcher ..");
         delete _cfg->bill.tmWatcher;
     }
-    if (_cfg->bill.abCache) {
+    if (abCache) {
         smsc_log_debug(logger, "InmanSrv: Closing AbonentsCache ..");
-        delete _cfg->bill.abCache;
+        delete abCache;
     }
     delete _cfg;
     smsc_log_debug(logger, "InmanSrv: Released.");

@@ -21,13 +21,15 @@ using smsc::inman::interaction::Connect;
 using smsc::inman::BillingCFG;
 using smsc::inman::filestore::InFileStorageRoller;
 
-#include "inman/incache.hpp"
+#include "inman/incache/InCacheMT.hpp"
 using smsc::inman::cache::AbonentCacheCFG;
+using smsc::inman::cache::AbonentCacheMTR;
 
 namespace smsc  {
 namespace inman {
 
 struct InService_CFG {
+public:
     ServSocketCFG       sock;
     BillingCFG          bill;
     AbonentCacheCFG     cachePrm;
@@ -85,7 +87,7 @@ private:
     volatile bool   running;
     InService_CFG*  _cfg;
     InFileStorageRoller * roller;
-
+    AbonentCacheMTR * abCache;
     SessionsMap     sessions;
     SocketsMap      sockets;
     unsigned        lastSessId;
