@@ -35,6 +35,8 @@ public interface ResourcesManager
 	 */
 	void add(String localeName, File resourceFile) throws IOException;
 
+  void remove(String localeName) throws IOException;
+
 	/**
 	 * @return список имён локалей (<code>String</code>), для которых есть ресурсы
 	 */

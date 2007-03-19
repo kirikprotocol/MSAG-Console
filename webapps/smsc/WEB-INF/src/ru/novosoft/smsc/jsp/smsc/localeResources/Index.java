@@ -7,6 +7,7 @@ import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
+import java.io.IOException;
 
 /**
  * Created by igork
@@ -86,6 +87,11 @@ public class Index extends IndexBean
     reverseLocales.removeAll(checkedLocalesSet);
     for (Iterator i = checkedLocalesSet.iterator(); i.hasNext();) {
       String localeId = (String) i.next();
+      try {
+        appContext.getResourcesManager().remove(localeId);
+      } catch (IOException e) {
+        return error("error.localeResources.cantRemoveLocaleResourceFile", e);
+      }
       journalAppend(SubjectTypes.TYPE_locale, localeId, Actions.ACTION_DEL);
     }
     checkedLocalesSet.clear();

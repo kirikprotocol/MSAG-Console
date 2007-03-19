@@ -36,7 +36,12 @@ public class ResourcesManagerImpl implements ResourcesManager {
         Functions.renameNewSavedFileToOriginal(resourceFile, createFile(localeName));
     }
 
-    public List list() {
+  public void remove(String localeName) throws IOException {
+    File resourceFile = createFile(localeName);
+    resourceFile.delete();
+  }
+
+  public List list() {
         SortedList result = new SortedList();
         File confFolder = WebAppFolders.getSmscConfFolder();
         String[] files = confFolder.list(new FilenameFilter() {

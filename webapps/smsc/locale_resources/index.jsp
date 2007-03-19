@@ -31,7 +31,7 @@
 <%
     page_menu_begin(out);
     page_menu_button(session, out, "mbAdd", "locale.add", "locale.add");
-//page_menu_button(out, "mbDelete", "locale.delete", "locale.deleteHint");
+    page_menu_button(session, out, "mbDelete", "locale.delete", "locale.deleteHint");
     page_menu_space(out);
     page_menu_end(out);
 %>
@@ -67,10 +67,10 @@
         }
     </script>
     <table class=list cellspacing=0>
-        <%--col width="1%"--%>
+        <col width="1%"/>
         <thead>
             <tr>
-                <%--th>&nbsp;</th--%>
+                <th>&nbsp;</th>
                 <th>
                     <a href="javascript:setSort('locale')" <%=bean.getSort().endsWith("locale") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%>
                        title="<%=getLocString("common.sortmodes.localeHint")%>"><%=getLocString("common.sortmodes.locale")%></a>
@@ -85,7 +85,7 @@
                     String encLocale = StringEncoderDecoder.encode(locale);
             %>
             <tr class=row<%=(row++) & 1%>>
-                <%--td class=check><input class=check type=checkbox name=checkedLocales value="<%=encLocale%>" <%=bean.isLocaleChecked(locale) ? "checked" : ""%>></td--%>
+                <td class=check><input class=check type=checkbox name=checkedLocales value="<%=encLocale%>" <%=bean.isLocaleChecked(locale) ? "checked" : ""%>></td>
                 <td class=name><a href="javascript:view('<%=encLocale%>')"
                                   title="<%=getLocString("locale.viewSubTitle")%>"><%=encLocale%></a></td>
             </tr>
@@ -98,7 +98,7 @@
 <%
     page_menu_begin(out);
     page_menu_button(session, out, "mbAdd", "locale.add", "locale.add");
-//page_menu_button(out, "mbDelete", "locale.delete", "locale.deleteHint");
+    page_menu_button(session, out, "mbDelete", "locale.delete", "locale.deleteHint");
     page_menu_space(out);
     page_menu_end(out);
 %>
