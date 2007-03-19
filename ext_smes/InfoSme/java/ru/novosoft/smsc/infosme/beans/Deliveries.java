@@ -293,7 +293,8 @@ public class Deliveries extends InfoSmeBean
 
                 getInfoSmeContext().getInfoSme().addStatisticRecord(task.getId(), new Date(), (int)getMessages(), 0, 0 ,0);
 
-                status = STATUS_DONE; statusStr = STATUS_STR_DONE;
+                statusStr = STATUS_STR_DONE;
+                status = STATUS_DONE;
 
 //                stage++;
             } catch (AdminException ae) {
@@ -406,7 +407,7 @@ public class Deliveries extends InfoSmeBean
         stage++;
 
         if (status != STATUS_ERR) {
-          statusStr = STATUS_STR_INIT;
+//          statusStr = STATUS_STR_INIT;
 
           return RESULT_OK;
         }
