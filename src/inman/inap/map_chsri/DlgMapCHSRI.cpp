@@ -61,7 +61,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
     dialog->sendInvoke(op);
 
     dialog->beginDialog(); //throws
-    _sriState.s.ctrInited = MAP_OPER_INITED;
+    _sriState.s.ctrInited = MapCHSRIDlg::operInited;
 
     smsc_log_debug(logger, "MapSRI[%u]: quering %s info", sriId, tnpi_adr.getSignals());
 }
@@ -84,7 +84,7 @@ void MapCHSRIDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
         sriId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
         (unsigned)res->getOpcode());
 
-    _sriState.s.ctrResulted = MAP_OPER_INITED;
+    _sriState.s.ctrResulted = MapCHSRIDlg::operInited;
     try { reqRes.mergeSegment(res->getParam());
     } catch (CustomException & exc) {
         smsc_log_error(logger, "MapSRI[%u]: %s", exc.what());
@@ -100,7 +100,7 @@ void MapCHSRIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             sriId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
             (unsigned)res->getOpcode());
 
-        _sriState.s.ctrResulted = MAP_OPER_DONE;
+        _sriState.s.ctrInited = _sriState.s.ctrResulted = MapCHSRIDlg::operDone;
         try { reqRes.mergeSegment(res->getParam());
         } catch (CustomException & exc) {
             smsc_log_error(logger, "MapSRI[%u]: %s", exc.what());
@@ -122,7 +122,7 @@ void MapCHSRIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
             sriId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
             (unsigned)resE->getOpcode());
 
-        _sriState.s.ctrInited = MAP_OPER_FAIL;
+        _sriState.s.ctrInited = MapCHSRIDlg::operDone;
         endTCap();
     }
     sriHdl->onEndMapDlg(resE->getOpcode(), smsc::inman::errMAP);
@@ -135,6 +135,7 @@ void MapCHSRIDlg::onInvokeLCancel(Invoke *op)
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapSRI[%u]: Invoke[%u:%u] got a LCancel",
             sriId, (unsigned)op->getId(), (unsigned)op->getOpcode());
+        _sriState.s.ctrInited = MapCHSRIDlg::operFailed;
         endTCap();
     }
     sriHdl->onEndMapDlg(MapCHSRIDlg::chsriServiceResponse, smsc::inman::errMAPuser);
@@ -239,8 +240,8 @@ void MapCHSRIDlg::endTCap(void)
         dialog->removeListener(this);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
-            try {
-                dialog->endDialog(); // do TC_BasicEnd if still active
+            try {  // do TC_BasicEnd if still active
+                dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ? false : true);
                 smsc_log_debug(logger, "MapSRI[%u]: T_END_REQ, state: 0x%x", sriId,
                                 _sriState.value);
             } catch (std::exception & exc) {

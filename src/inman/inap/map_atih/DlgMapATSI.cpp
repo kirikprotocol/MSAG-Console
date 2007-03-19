@@ -69,7 +69,7 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
     dialog->sendInvoke(op);
 
     dialog->beginDialog();
-    _atsiState.s.ctrInited = MAP_OPER_INITED;
+    _atsiState.s.ctrInited = MapATSIDlg::operInited;
 }
 
 /* ------------------------------------------------------------------------ *
@@ -85,6 +85,7 @@ void MapATSIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             (unsigned)res->getOpcode());
 
         _atsiState.s.ctrResulted = 1;
+        _atsiState.s.ctrInited = MapATSIDlg::operDone;
         ATSIRes * resComp = static_cast<ATSIRes *>(res->getParam());
         atsiHdl->onATSIResult(resComp);
         if ((do_end = _atsiState.s.ctrFinished) != 0)
@@ -103,7 +104,7 @@ void MapATSIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
             atsiId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
             (unsigned)resE->getOpcode());
 
-        _atsiState.s.ctrInited = MAP_OPER_FAIL;
+        _atsiState.s.ctrInited = MapATSIDlg::operDone;
         endTCap();
     }
     atsiHdl->onEndATSI(resE->getOpcode(), smsc::inman::errMAP);
@@ -116,6 +117,7 @@ void MapATSIDlg::onInvokeLCancel(Invoke *op)
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapATSI[%u]: Invoke[%u:%u] got a LCancel",
             atsiId, (unsigned)op->getId(), (unsigned)op->getOpcode());
+        _atsiState.s.ctrInited = MapATSIDlg::operFailed;
         endTCap();
     }
     atsiHdl->onEndATSI(MapATSIDlg::atsiServiceResponse, smsc::inman::errMAPuser);
@@ -221,8 +223,8 @@ void MapATSIDlg::endTCap(void)
         dialog->removeListener(this);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
-            try {
-                dialog->endDialog(); // do TC_BasicEnd if still active
+            try {    // do TC_BasicEnd if still active
+                dialog->endDialog((_atsiState.s.ctrInited < MapATSIDlg::operDone) ? false : true);
                 smsc_log_debug(logger, "MapATSI[%u]: T_END_REQ, state: 0x%x", atsiId,
                                 _atsiState.value);
             } catch (std::exception & exc) {

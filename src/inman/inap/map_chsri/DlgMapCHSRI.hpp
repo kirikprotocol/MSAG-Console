@@ -35,9 +35,6 @@ public:
     virtual void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer) = 0;
 };
 
-#define MAP_OPER_INITED 0x2 //'10'B  on BIG-ENDIAN
-#define MAP_OPER_FAIL   0x3 //'11'B  on BIG-ENDIAN 
-#define MAP_OPER_DONE   0x3 //'11'B  on BIG-ENDIAN 
 typedef union {
     unsigned short value;
     struct {
@@ -55,9 +52,9 @@ public:
     MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler, Logger * uselog = NULL);
     virtual ~MapCHSRIDlg();
 
-    enum {
-        chsriServiceResponse = 1
-    };
+    enum CHSRIDlgError { chsriServiceResponse = 1 };
+    enum MapOperState  { operInited = 1, operFailed = 2, operDone = 3 };
+
     void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);
     void reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout = 0) throw(CustomException);
 
