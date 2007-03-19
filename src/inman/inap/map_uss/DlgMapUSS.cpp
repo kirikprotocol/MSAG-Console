@@ -169,7 +169,7 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
         dialog->beginDialog(&ui4[0], ui4.size()); //throws
     } else
         dialog->beginDialog(); //throws
-    dlgState.s.ctrInited = MAP_OPER_INITED;
+    dlgState.s.ctrInited = MapUSSDlg::operInited;
 }
 
 /* ------------------------------------------------------------------------ *
@@ -182,7 +182,7 @@ void MapUSSDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
         dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
         (unsigned)res->getOpcode());
 
-    dlgState.s.ctrResulted = MAP_OPER_INITED;
+    dlgState.s.ctrResulted = MapUSSDlg::operInited;
     reqRes.reset((MAPUSS2CompAC*)(res->getParam()));
     res->setParam(NULL);
 }
@@ -196,7 +196,7 @@ void MapUSSDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
             (unsigned)res->getOpcode());
 
-        dlgState.s.ctrResulted = MAP_OPER_DONE;
+        dlgState.s.ctrInited = dlgState.s.ctrResulted = MapUSSDlg::operDone;
         reqRes.reset((MAPUSS2CompAC*)(res->getParam()));
         res->setParam(NULL);
         resHdl->onMapResult(reqRes.get());
@@ -216,7 +216,7 @@ void MapUSSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
             dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
             (unsigned)resE->getOpcode());
 
-        dlgState.s.ctrInited = MAP_OPER_FAIL;
+        dlgState.s.ctrInited = MapUSSDlg::operDone;
         endTCap();
     }
     resHdl->onEndMapDlg(resE->getOpcode(), smsc::inman::errMAP);
@@ -229,6 +229,7 @@ void MapUSSDlg::onInvokeLCancel(Invoke *op)
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapUSS[%u]: Invoke[%u:%u] got a LCancel",
             dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode());
+        dlgState.s.ctrInited = MapUSSDlg::operFailed;
         endTCap();
     }
     resHdl->onEndMapDlg(MapUSSDlg::ussServiceResponse, smsc::inman::errMAPuser);
@@ -334,8 +335,8 @@ void MapUSSDlg::endTCap(void)
         dialog->removeListener(this);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
-            try {
-                dialog->endDialog(); // do TC_BasicEnd if still active
+            try {   // do TC_BasicEnd if still active
+                dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ? false : true);
                 smsc_log_debug(logger, "MapUSS[%u]: T_END_REQ, state: 0x%x", dlgId,
                                 dlgState.value);
             } catch (std::exception & exc) {

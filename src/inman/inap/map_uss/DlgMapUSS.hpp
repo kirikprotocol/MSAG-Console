@@ -40,9 +40,6 @@ public:
 };
 
 //USS Dialog state
-#define MAP_OPER_INITED 0x2 //'10'B  on BIG-ENDIAN
-#define MAP_OPER_FAIL   0x3 //'11'B  on BIG-ENDIAN 
-#define MAP_OPER_DONE   0x3 //'11'B  on BIG-ENDIAN 
 typedef union {
     unsigned short value;
     struct {
@@ -53,16 +50,16 @@ typedef union {
     } s;
 } USSDState;
 
-//NOTE: MapCHSRI doesn't maintain own timer for operations, it uses instead the 
+//NOTE: MapUSSDlg doesn't maintain own timer for operations, it uses instead the 
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapUSSDlg : DialogListener, InvokeListener { //  -> gsmSCF
 public:
     MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler, Logger * uselog = NULL);
     virtual ~MapUSSDlg();
 
-    enum {
-        ussServiceResponse = 0xFF
-    };
+    enum MapUSSDlgError { ussServiceResponse = 0xFF };
+    enum MapOperState   { operInited = 1, operFailed = 2, operDone = 3 };
+
     void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const char * subsc_adr = NULL) throw (CustomException);
     void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
