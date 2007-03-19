@@ -659,7 +659,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
-	msg.abonent = "444";//abnt.getText();//"777";
+	msg.abonent = abnt.getText();//"777";
 	formatter.addBanner(msg, getBanner(abnt));
 	{
 		MutexGuard Lock(smsInfoMutex);
@@ -853,14 +853,9 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
 		string ph = callers[i].getText().c_str();
 		if(ph.length()==0) ph="unknown";
 
-		smsc_log_debug(logger, "Process Notify message 3, %s", abnt.c_str());
-
 		NotifyGetAdapter	adapter(abnt, ph.c_str());					//"11111");//callers[i].getText().c_str());
-		smsc_log_debug(logger, "Process Notify message 4 %s", ph.c_str());
 		messageFormatter->format(msg.message, adapter, ctx);
-		smsc_log_debug(logger, "Process Notify message 5");
-		msg.abonent = "777";//callers[i].getText();//"444"
-		smsc_log_debug(logger, "Process Notify message 6");
+		msg.abonent = callers[i].getText();//"444"
 		try{checkAddress(msg.abonent.c_str());}catch(Exception e)
 		{
 			smsc_log_error(logger, "Skip notification message - bad address %s", e.what());
