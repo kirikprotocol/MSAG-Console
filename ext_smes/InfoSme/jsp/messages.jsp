@@ -59,7 +59,7 @@ function setSort(sorting)
         <option value="<%=Message.State.UNDEFINED.getId()%>" <%= (bean.isStatus(Message.State.UNDEFINED.getId())) ? "selected":""%>>ALL</option>
         <option value="<%=Message.State.NEW.getId()%>"       <%= (bean.isStatus(Message.State.NEW.getId())) ? "selected":""%>      >NEW</option>
         <option value="<%=Message.State.WAIT.getId()%>"      <%= (bean.isStatus(Message.State.WAIT.getId())) ? "selected":""%>     >WAIT</option>
-        <option value="<%=Message.State.ENROUTE.getId()%>"   <%= (bean.isStatus(Message.State.ENROUTE.getId())) ? "selected":""%>     >WAIT</option>
+        <option value="<%=Message.State.ENROUTE.getId()%>"   <%= (bean.isStatus(Message.State.ENROUTE.getId())) ? "selected":""%>     >ENROUTE</option>
         <option value="<%=Message.State.DELIVERED.getId()%>" <%= (bean.isStatus(Message.State.DELIVERED.getId())) ? "selected":""%>>DELIVERED</option>
         <option value="<%=Message.State.EXPIRED.getId()%>"   <%= (bean.isStatus(Message.State.EXPIRED.getId())) ? "selected":""%>  >EXPIRED</option>
         <option value="<%=Message.State.FAILED.getId()%>"    <%= (bean.isStatus(Message.State.FAILED.getId())) ? "selected":""%>   >FAILED</option>
