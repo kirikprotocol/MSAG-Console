@@ -56,6 +56,7 @@ bool BillingManagerWrapper::Reconnect()
     return true;
 }
 
+#ifdef MSAG_INMAN_BILL
 void BillingManagerWrapper::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& pck)
 {
     INPPacketAC * cmd = static_cast<INPPacketAC *>(pck.get());
@@ -81,6 +82,7 @@ void BillingManagerWrapper::onConnectError(Connect* conn, std::auto_ptr<CustomEx
 {
     error_msg = "Connect error: %s", p_exc->what();
 }
+#endif
 
 void BillingManagerWrapper::receiveCommand()
 {

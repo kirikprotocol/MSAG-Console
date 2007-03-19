@@ -32,13 +32,12 @@ class BillingManagerWrapper
     #ifdef MSAG_INMAN_BILL
     Socket * socket;
     Connect * pipe;
+    virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
+    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc);
     #endif
 
     int m_Port;
     std::string m_Host;
-
-    virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd);
-    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc);
 
 protected:
     Logger * logger;
