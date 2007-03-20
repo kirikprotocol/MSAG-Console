@@ -12,6 +12,7 @@
 #include "scag/re/actions/str/ActionMatch.h"
 #include "scag/re/actions/bill/BillActionOpen.h"
 #include "scag/re/actions/bill/BillActionClose.h"
+#include "scag/re/actions/bill/BillActionInfo.h"
 
 #include "scag/re/actions/pers/PersAction.h"
 #include "scag/re/actions/http/HttpCookieAction.h"
@@ -27,9 +28,8 @@
 #include "scag/re/actions/str/ActionLength.h"
 #include "scag/re/actions/str/ActionReplace.h"
 
-
 //#include "scag/SAX2Print.hpp"
-                 
+
 namespace scag { namespace re { namespace actions {
 
 using namespace scag::re::actions;
@@ -53,6 +53,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="operation:bill_wait") return new BillActionOpen(true);
 
     if (name=="bill:close") return new BillActionClose();
+    if (name=="bill:info") return new BillActionInfo();
 
     if (name=="inc") return new ActionInc();
     if (name=="dec") return new ActionDec();
@@ -72,6 +73,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="profile:del") return new PersAction(PC_DEL);
     if (name=="profile:inc") return new PersAction(PC_INC);
     if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
+//    if (name=="profile:inc-mod") return new PersAction();
 
     if (name=="log:debug") return new ActionLog(ActionLog::lgDebug);
     if (name=="log:info") return new ActionLog(ActionLog::lgInfo);

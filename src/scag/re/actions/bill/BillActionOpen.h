@@ -23,10 +23,10 @@ class BillActionOpen : public ActionAbstractWait
     std::string m_sStatus;
     std::string m_sMessage;
     std::string m_sResNumber;
+    std::string m_sBillId;
 
     std::string m_category;
     std::string m_mediaType;
-
 
     uint32_t category;
     uint32_t mediaType;
@@ -38,6 +38,7 @@ class BillActionOpen : public ActionAbstractWait
 
     bool m_MsgExist;
     bool m_ResNumExist;
+    bool m_BillIdExist;
 
     bool m_waitOperation;
 

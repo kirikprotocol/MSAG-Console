@@ -13,8 +13,6 @@ BillActionOpen::BillActionOpen(bool waitOperation)
 
 void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    FieldType ft;
-    std::string temp;
     bool bExist;
 
     m_CategoryFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "category", true, true, m_category, bExist);
@@ -28,14 +26,10 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
         throw InvalidPropertyException("Action '%s': content-type should be integer or variable", m_ActionName.c_str());
 
     m_StatusFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "status", true, false, m_sStatus, bExist);
+    m_MsgFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "msg", false, false, m_sMessage, m_MsgExist);
 
-    m_MsgFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "msg", false, false, temp, m_MsgExist);
-
-    if (m_MsgExist)
-        m_sMessage = temp;
-
-    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "result_number", false, false, m_sResNumber, m_ResNumExist);
-
+    CheckParameter(params, propertyObject, m_ActionName.c_str(), "bill_id", false, false, m_sBillId, m_BillIdExist);
+    CheckParameter(params, propertyObject, m_ActionName.c_str(), "result_number", false, false, m_sResNumber, m_ResNumExist);
 
     if (m_waitOperation) InitParameters(params, propertyObject);
 
@@ -62,7 +56,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
         return;
     }
 
-    if (isOK) propertyStatus->setInt(0);
+    propertyStatus->setInt(!isOK);
 
     if (m_ResNumExist) 
     {
@@ -71,29 +65,19 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
         if (!propertyResNum)
             smsc_log_debug(logger,"Action '%s' :: Invalid property %s for result_number", m_ActionName.c_str(), m_sResNumber.c_str());
         else
-        {
-            if ((isOK)&&(tariffRec)) 
-                propertyResNum->setInt(tariffRec->ServiceNumber);
-            else
-                propertyResNum->setInt(0);
-        }
+            propertyResNum->setInt(isOK && tariffRec ? tariffRec->ServiceNumber : 0);
     }
 
-    if (!isOK) 
+    if (m_MsgExist) 
     {
-        propertyStatus->setInt(1);
+        Property * propertyMsg = context.getProperty(m_sMessage);
 
-        if (m_MsgExist) 
+        if (!propertyMsg) 
         {
-            Property * propertyMsg = context.getProperty(m_sMessage);
-
-            if (!propertyMsg) 
-            {
-                smsc_log_debug(logger,"Action '%s' :: Invalid property %s for msg", m_ActionName.c_str(), m_sMessage.c_str());
-                return;
-            }
-            propertyMsg->setStr(errorMsg);
+            smsc_log_debug(logger,"Action '%s' :: Invalid property %s for msg", m_ActionName.c_str(), m_sMessage.c_str());
+            return;
         }
+        propertyMsg->setStr(errorMsg);
     }
 
 }
@@ -199,6 +183,16 @@ bool BillActionOpen::run(ActionContext& context)
 
         bm.Rollback(BillId);
         return true;
+    }
+
+    if(m_BillIdExist) 
+    {
+        Property * p = context.getProperty(m_sBillId);
+
+        if (!p)
+            smsc_log_debug(logger,"Action '%s' :: Invalid property %s for BillID", m_ActionName.c_str(), m_sBillId.c_str());
+        else
+            p->setInt(BillId);
     }
     
     SetBillingStatus(context, "", true, tariffRec);

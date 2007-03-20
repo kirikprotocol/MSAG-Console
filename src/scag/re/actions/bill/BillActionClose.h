@@ -9,9 +9,12 @@ class BillActionClose : public Action
 {
     std::string m_sStatus;
     std::string m_sMessage;
+    std::string m_sBillID;
+    uint32_t BillID;
 
     bool m_StatusExist;
     bool m_MsgExist;
+    bool m_BillIDExist;
 
     bool actionCommit;
 
