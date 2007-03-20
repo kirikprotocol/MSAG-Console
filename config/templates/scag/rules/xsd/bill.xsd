@@ -49,8 +49,6 @@
                     <attribute name="price" type="scag:Var" use="optional" />
                     <attribute name="currency" type="scag:Var" use="optional" />
                     <attribute name="abonent" type="scag:Var" use="optional" />
-                    <attribute name="OA" type="scag:Var" use="optional" />
-                    <attribute name="DA" type="scag:Var" use="optional" />
                 </complexType>
             </element>
         </choice>    
