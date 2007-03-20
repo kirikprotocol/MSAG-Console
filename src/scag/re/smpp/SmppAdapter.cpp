@@ -5,6 +5,7 @@
 #include "scag/util/encodings/Encodings.h"
 #include "logger/Logger.h"
 #include "system/status.h"
+#include "scag/transport/smpp/SmppEntity.h"
 
 
 namespace scag { namespace re { namespace smpp 
@@ -33,7 +34,9 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
 {
     int * pFieldId;
     AccessType * actype = 0;
-    
+
+    if(!strcmp(name.c_str(), "src_sme_id")) return atRead;
+
     switch (handlerType) 
     {
     case EH_DATA_SM:
@@ -1349,6 +1352,8 @@ SmppCommandAdapter::~SmppCommandAdapter()
     {
         delete value;
     }
+    if(src_sme_id)
+        delete src_sme_id;
 }
 
 
@@ -1370,6 +1375,13 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 
     AdapterProperty ** propertyPtr;
     SmsResp * smsResp = 0;
+
+    if(!strcmp(name.c_str(), "src_sme_id"))
+    {
+        if(!src_sme_id)
+            src_sme_id = new AdapterProperty(name, this, command.getEntity()->getSystemId());
+        return src_sme_id;
+    }
 
     switch (cmdid) 
     {

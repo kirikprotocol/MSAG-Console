@@ -136,6 +136,7 @@ namespace scag { namespace re { namespace smpp
 
         SmppCommand&    command;
         IntHash<AdapterProperty *>  PropertyPul;
+        AdapterProperty* src_sme_id;
 
         static IntHash<AccessType> SubmitFieldsAccess;
         static IntHash<AccessType> DeliverFieldsAccess;
@@ -165,7 +166,7 @@ namespace scag { namespace re { namespace smpp
                                                             
     public:
 
-        SmppCommandAdapter(SmppCommand& _command) : command(_command) 
+        SmppCommandAdapter(SmppCommand& _command) : command(_command), src_sme_id(0) 
         {
         }
 
