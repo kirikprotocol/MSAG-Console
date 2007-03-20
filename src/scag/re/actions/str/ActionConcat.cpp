@@ -52,7 +52,6 @@ bool ActionConcat::run(ActionContext& context)
 
     resultProperty->setStr(result);
 
-
     smsc_log_debug(logger,"Action 'concat':: concat result is '%s'", result.c_str());
     return true;
 }
