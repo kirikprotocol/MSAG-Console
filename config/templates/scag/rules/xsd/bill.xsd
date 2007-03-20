@@ -49,6 +49,7 @@
                     <attribute name="price" type="scag:Var" use="optional" />
                     <attribute name="currency" type="scag:Var" use="optional" />
                     <attribute name="abonent" type="scag:Var" use="optional" />
+                    <attribute name="bill_type" type="scag:Var" use="optional" />
                 </complexType>
             </element>
         </choice>    
