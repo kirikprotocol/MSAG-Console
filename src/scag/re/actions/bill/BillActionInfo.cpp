@@ -57,6 +57,7 @@ bool BillActionInfo::run(ActionContext& context)
         return true;
     }
 
+    std::string s = "Action 'bill:info' bill_id=" + m_sBillId;
     for(int i = 0; i < fields_count; i++) 
     {
         if(!m_exist[i]) continue;
@@ -85,7 +86,11 @@ bool BillActionInfo::run(ActionContext& context)
             case 8: p->setStr(tr.Currency); break;
             case 9: p->setInt(tr.billType); break;
         }
+        s += ", ";
+        s += m_name[i];
+        s += "=" + p->getStr();
     }
+    smsc_log_debug(logger, s);
     return true;
 }
 
