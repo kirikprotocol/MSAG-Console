@@ -23,7 +23,7 @@ struct ConvertorImpl : public Convertor
     ~ConvertorImpl();
 
     void convert(const char* inCharset, const char* outCharset,
-                 const char * in, size_t inLen, TmpBuf<char, 2048>& buf);
+                 const char * in, size_t inLen, TmpBuf<short, 1024>& buf);
 
 private:
 
@@ -135,7 +135,7 @@ void Convertor::UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::st
 #define MAX_BYTES_IN_CHAR 2
 
 void Convertor::convert(const char* inCharset, const char* outCharset,
-                        const char * in, size_t inLen, TmpBuf<char, 2048>& buf)
+                        const char * in, size_t inLen, TmpBuf<short, 1024>& buf)
 {
     ConvertorImpl& c = SingleC::Instance();
     c.convert(inCharset, outCharset, in, inLen, buf);
@@ -144,10 +144,10 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
 void Convertor::convert(const char* inCharset, const char* outCharset,
                         const char * in, size_t inLen, std::string& outstr)
 {
-    TmpBuf<char, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
+    TmpBuf<short, 1024> buf(inLen * MAX_BYTES_IN_CHAR);
     convert(inCharset, outCharset, in, inLen, buf);
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "buf=%d getpos=%d", buf.get(), buf.GetPos());
-    outstr.assign(buf.get(), buf.GetPos());
+    outstr.assign((const char*)buf.get(), buf.GetPos());
 }
 
 iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
@@ -169,7 +169,7 @@ iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
 #define ICONV_BLOCK_SIZE 128
 
 void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
-                            const char * in, size_t inLen, TmpBuf<char, 2048>& buf)
+                            const char * in, size_t inLen, TmpBuf<short, 1024>& buf)
 {
 
     bool error=false;
@@ -185,7 +185,7 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
 
       i = outbytesleft = MAX_BYTES_IN_CHAR * inLen;
       buf.setSize(buf.GetPos() + outbytesleft);
-      outbufptr = buf.GetCurPtr();
+      outbufptr = (char*)buf.GetCurPtr();
       //unsigned long inLenLong=inLen;
   //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
       if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
