@@ -288,10 +288,9 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         if (umr < 0)
         {
             if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // New service USSD dialog
-                // TODO: deny service initiated dialog !!!
                 smsc_log_debug(log, "USSD Submit: Begin service dialog...");
                 session=sm.newSession(key);
-                    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+                dst->setMapping(key.abonentAddr, 0, key.USR);
                 smsc_log_debug(log, "USSD Submit: Created session USR=%d", key.USR);
             }
             else {
@@ -327,8 +326,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         }
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST) { // End service USSD dialog
             smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
-            if (dst) dst->delUMRMapping(key.abonentAddr, umr);
-            // TODO: implement it !!!
+//            dst->delUMRMapping(key.abonentAddr, umr);
+//            dst->delUMRMapping(key.abonentAddr, 0);
         }
         else {
             smsc_log_warn(log, "USSD Submit: USSD_OP=%d is invalid", ussd_op);
@@ -628,7 +627,15 @@ void StateMachine::processDelivery(SmppCommand& cmd)
               if (src) src->setMapping(key.abonentAddr, umr, key.USR);
           }
           else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_CONFIRM) { // Continue USSD dialog
-              key.USR = src->getUSR(key.abonentAddr, umr);
+                key.USR = src->getUSR(key.abonentAddr, umr);
+                if(key.USR == -1)
+                {
+                    key.USR = src->getUSR(key.abonentAddr, 0);
+                    if(key.USR == -1) smsc_log_warn(log, "USSD Delivery: USR mapping not found");
+                    src->delUMRMapping(key.abonentAddr, 0);
+                    src->setMapping(key.abonentAddr, umr, key.USR);
+                }
+                
               smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
               session=sm.getSession(key);
               if (!session.Get()) {
@@ -640,12 +647,13 @@ void StateMachine::processDelivery(SmppCommand& cmd)
               sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
           }
           else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM) { // End service USSD dialog
-              smsc_log_debug(log, "USSD Delivery: End service dialog, UMR=%d", umr);
-              if (src) src->delUMRMapping(key.abonentAddr, umr); // TODO: check & implement
+                smsc_log_debug(log, "USSD Delivery: End service dialog, UMR=%d", umr);
+                src->delUMRMapping(key.abonentAddr, umr);
+                src->delUMRMapping(key.abonentAddr, 0); // For service initiated USSD dialog
           }
           else {
               smsc_log_warn(log, "USSD Delivery: USSD_OP=%d is invalid", ussd_op);
-              DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM); // TODO: status
+              DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
               registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
               return;
           }
