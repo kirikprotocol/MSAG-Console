@@ -35,7 +35,7 @@ AccessType SmppCommandAdapter::CheckAccess(int handlerType, const std::string& n
     int * pFieldId;
     AccessType * actype = 0;
 
-    if(!strcmp(name.c_str(), "src_sme_id")) return atRead;
+    if(!strcmp(name.c_str(), "src_sme_id") || !strcmp(name.c_str(), "dst_sme_id")) return atRead;
 
     switch (handlerType) 
     {
@@ -1352,8 +1352,8 @@ SmppCommandAdapter::~SmppCommandAdapter()
     {
         delete value;
     }
-    if(src_sme_id)
-        delete src_sme_id;
+    if(src_sme_id) delete src_sme_id;
+    if(dst_sme_id) delete dst_sme_id;
 }
 
 
@@ -1381,6 +1381,12 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         if(!src_sme_id)
             src_sme_id = new AdapterProperty(name, this, command.getEntity()->getSystemId());
         return src_sme_id;
+    }
+    else if(!strcmp(name.c_str(), "dst_sme_id"))
+    {
+        if(!dst_sme_id)
+            dst_sme_id = new AdapterProperty(name, this, command.getDstEntity()->getSystemId());
+        return dst_sme_id;
     }
 
     switch (cmdid) 
@@ -1446,7 +1452,6 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
     return property;
 }
 
-
 void SmppCommandAdapter::changed(AdapterProperty& property)
 {
 
@@ -1507,6 +1512,5 @@ void SmppCommandAdapter::changed(AdapterProperty& property)
         return;
     }
 }
-
 
 }}}

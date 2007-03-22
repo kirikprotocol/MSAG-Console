@@ -48,8 +48,8 @@ class HttpProcessorImpl : public HttpProcessor
         void registerEvent(int event, HttpCommand& cmd, bool delivery = false);
 };
 
-static bool  inited = false;
-static Mutex initLock;
+bool  HttpProcessor::inited = false;
+Mutex HttpProcessor::initLock;
 
 inline unsigned GetLongevity(HttpProcessor*) { return 5; }
 typedef SingletonHolder<HttpProcessorImpl> SingleHP;

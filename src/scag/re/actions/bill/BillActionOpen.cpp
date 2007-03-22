@@ -6,24 +6,21 @@ namespace scag { namespace re { namespace actions {
 BillActionOpen::BillActionOpen(bool waitOperation)  
 {
     m_waitOperation = waitOperation;
-    if (waitOperation) m_ActionName = "operation:bill_wait";
-    else m_ActionName = "bill:open";
+    m_ActionName = waitOperation ? "operation:bill_wait" : "bill:open";
 }
 
 
 void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObject)
 {
     bool bExist;
-
     m_CategoryFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "category", true, true, m_category, bExist);
 
     if(m_CategoryFieldType == ftUnknown && !(category = atoi(m_category.c_str())))
-        throw InvalidPropertyException("Action '%s': category should be integer or variable", m_ActionName.c_str());
+        throw SCAGException("Action '%s': category should be integer or variable", m_ActionName.c_str());
 
     m_MediaTypeFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "content-type", true, true, m_mediaType, bExist);
-
     if(m_MediaTypeFieldType == ftUnknown && !(mediaType = atoi(m_mediaType.c_str())))
-        throw InvalidPropertyException("Action '%s': content-type should be integer or variable", m_ActionName.c_str());
+        throw SCAGException("Action '%s': content-type should be integer or variable", m_ActionName.c_str());
 
     m_StatusFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "status", true, false, m_sStatus, bExist);
     m_MsgFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "msg", false, false, m_sMessage, m_MsgExist);

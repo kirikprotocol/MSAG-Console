@@ -13,7 +13,7 @@ class BillActionInfo : public Action
     static const int fields_count = 10;
     static const char* m_name[fields_count];
     std::string m_sField[fields_count];
-    bool m_exist[fields_count];
+    bool m_exist[fields_count], bExist;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);

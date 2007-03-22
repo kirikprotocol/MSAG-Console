@@ -84,7 +84,7 @@ struct Convertor
     static void KOI8RToUTF8(const char * latin1Buff, unsigned int latin1BuffLen, std::string& utf8str);
 
     static void convert(const char* inCharset, const char* outCharset,
-                        const char * in, size_t inLen, TmpBuf<short, 1024>& buf);
+                        const char * in, size_t inLen, TmpBuf<uint8_t, 2048>& buf);
 
     static void convert(const char* inCharset, const char* outCharset,
                         const char * in, size_t inLen, std::string& outstr);

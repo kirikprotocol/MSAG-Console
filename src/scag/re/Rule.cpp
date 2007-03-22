@@ -45,7 +45,7 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
 
     smsc_log_debug(logger,"Event Handlers found. (id=%d)", handlerType);
 
-    if (!Handlers.Exist(handlerType)) 
+    if(!Handlers.Exist(handlerType)) 
     {
         rs.status = STATUS_FAILED;
         smsc_log_warn(logger,"Rule: cannot find EventHandler for command");

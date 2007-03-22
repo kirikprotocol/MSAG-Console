@@ -43,7 +43,7 @@ using std::string;
 using scag::util::Reffer;
 using scag::util::RefferGuard;
 
-namespace StatEvents
+/*namespace StatEvents
 {
   const int etSubmitOk     =1;
   const int etSubmitErr    =2;
@@ -54,18 +54,18 @@ namespace StatEvents
 }
 
 class GatewaySme;
-
+*/
 class Scag
 {
 public:
   Scag():stopFlag(false), testRouter_(0)
   {
-    acceptedCounter=0;
+/*    acceptedCounter=0;
     rejectedCounter=0;
     deliveredCounter=0;
     deliverErrCounter=0;
     transOkCounter=0;
-    transFailCounter=0;
+    transFailCounter=0;*/
 
     startTime=0;
     license.maxsms=0;
@@ -178,14 +178,9 @@ public:
 
   void reloadTestRoutes(const RouteConfig& rcfg);
 
-  scag::transport::smpp::SmppManagerAdmin * getSmppManagerAdmin()
+  scag::transport::smpp::SmppManagerAdmin* getSmppManagerAdmin()
   {
-      scag::transport::smpp::SmppManagerAdmin * smppManAdmin = &smppMan;
-
-      if(!smppManAdmin)
-          throw Exception("Failed casting of SmppManger to SmppManagerAdmin from Scag::getSmppManagerAdmin");
-
-      return smppManAdmin;
+      return &scag::transport::smpp::SmppManager::Instance();
   }
 
 protected:
@@ -198,7 +193,7 @@ protected:
   bool stopFlag;
   std::string scagHost;
   int scagPort;
-  scag::transport::smpp::SmppManager smppMan;
+//  scag::transport::smpp::SmppManager smppMan;
   scag::transport::http::HttpManager httpMan;
 
   struct LicenseInfo{
@@ -206,7 +201,7 @@ protected:
     time_t expdate;
   }license;
 
-  Mutex perfMutex;
+/*  Mutex perfMutex;
 
   uint64_t acceptedCounter;
   uint64_t rejectedCounter;
@@ -214,7 +209,7 @@ protected:
   uint64_t deliverErrCounter;
   uint64_t transOkCounter;
   uint64_t transFailCounter;
-
+*/
   string scAddr;
   string ussdCenterAddr;
   int    ussdSSN;

@@ -8,7 +8,6 @@ const char* BillActionInfo::m_name[BillActionInfo::fields_count] = {"operator_id
 void BillActionInfo::init(const SectionParams& params,PropertyObject propertyObject)
 {
     m_BillId = 0;
-    bool bExist;
     FieldType ft = CheckParameter(params, propertyObject, "bill:info", "bill_id", true, true, m_sBillId, bExist);
     if(ft == ftUnknown && !(m_BillId = atoi(m_sBillId.c_str())))
         throw InvalidPropertyException("Action 'bill:info': category should be positive integer value");
@@ -33,16 +32,31 @@ bool BillActionInfo::FinishXMLSubSection(const std::string& name)
 bool BillActionInfo::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'bill:info'...");
-
+    Operation *op = NULL;
     uint32_t bid = m_BillId;
-    if(!bid)
+
+    if(bExist)
     {
-        Property * p = context.getProperty(m_sBillId);
-        if(!p || !(bid = p->getInt()))
+        if(!bid)
         {
-            smsc_log_error(logger,"Action 'bill:info' :: Invalid property %s for BillID", m_sBillId.c_str());
+            Property * p = context.getProperty(m_sBillId);
+            if(!p || !(bid = p->getInt()))
+            {
+                smsc_log_error(logger,"Action 'bill:info' :: Invalid property %s for BillID", m_sBillId.c_str());
+                return true;
+            }
+        }
+    }
+    else
+    {
+        op = context.GetCurrentOperation();
+        if (!op || !op->hasBill())
+        {
+            const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
+            smsc_log_error(logger, p);
             return true;
         }
+        bid = op->getBillId();
     }
 
     BillingInfoStruct bis;
@@ -57,7 +71,10 @@ bool BillActionInfo::run(ActionContext& context)
         return true;
     }
 
-    std::string s = "Action 'bill:info' bill_id=" + m_sBillId;
+    char buf[20];
+    buf[19] = 0;
+    std::string s = "Action 'bill:info' bill_id=";
+    s += lltostr(bid, buf + 19);
     for(int i = 0; i < fields_count; i++) 
     {
         if(!m_exist[i]) continue;

@@ -50,7 +50,7 @@ int SmppWriter::Execute()
     {
       for(int i=0;i<error.Count();i++)
       {
-        smsc_log_warn(log,"error on socket %p",error[i]);
+        smsc_log_warn(log,"writer: error on socket %p",error[i]);
         getSmppSocket(error[i])->disconnect();
       }
       for(int i=0;i<ready.Count();i++)

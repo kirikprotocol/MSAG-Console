@@ -250,10 +250,10 @@ const std::string& HttpCommand::getMessageText()
             textContent.assign(inbufptr, inbytesleft);
         else
         {
-            TmpBuf<char, 2048> buf(2048);
+            TmpBuf<uint8_t, 2048> buf(2048);
             
             Convertor::convert(charset.c_str(), "UTF-8", inbufptr, inbytesleft, buf);
-            textContent.assign(buf.get(), buf.GetPos());
+            textContent.assign((char*)buf.get(), buf.GetPos());
         }
     }
         
@@ -273,7 +273,7 @@ bool HttpCommand::setMessageText(const std::string& text)
         if(!strcasecmp("UTF-8", charset.c_str()))
             content.Append(text.c_str(), text.length());
         else
-            Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), (TmpBuf<char,2048>&)content);
+            Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), (TmpBuf<uint8_t,2048>&)content);
         setContentLength(content.GetPos());
         setLengthField(content.GetPos());
         return true;

@@ -48,8 +48,6 @@ namespace scag
     using scag::config::Mask;
     using scag::config::MaskVector;
     using smsc::sms::Address;
-
-
     extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
 
 static inline void makeAddress_(Address& addr,const string& mask)
@@ -276,7 +274,7 @@ void Scag::init()
     //************** SmppManager initialization **************
     try {
       smsc_log_info(log, "Smpp Manager is starting");
-      smppMan.Init(findConfigFile("../conf/smpp.xml"));
+      scag::transport::smpp::SmppManager::Init(findConfigFile("../conf/smpp.xml"));
       smsc_log_info(log, "Smpp Manager started");
     } catch(Exception& e) {
       throw Exception("Exception during initialization of SmppManager: %s", e.what());
@@ -490,8 +488,6 @@ void Scag::init()
   smsc_log_info(log, "SCAG init complete" );
 
   __trace__("Smsc::init completed");
-
-
 }
 
 /*void Scag::run()
@@ -531,7 +527,7 @@ void Scag::shutdown()
   __trace__("shutting down");
 
   httpMan.shutdown();
-  smppMan.StopProcessing();
+  scag::transport::smpp::SmppManager::shutdown();
   //tp.shutdown();
   //tp2.shutdown();
   LongCallManager::shutdown();  

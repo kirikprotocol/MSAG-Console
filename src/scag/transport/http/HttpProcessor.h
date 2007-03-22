@@ -44,6 +44,8 @@ namespace scag { namespace transport { namespace http {
         static void Init(const std::string& cfg);
 
     protected:
+        static bool  inited;
+        static Mutex initLock;
 
         virtual ~HttpProcessor() {}
     };

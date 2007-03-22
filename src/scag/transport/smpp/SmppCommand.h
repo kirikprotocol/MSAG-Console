@@ -391,6 +391,10 @@ struct SmsCommand{
   DataSmDirection dir;
 };
 
+namespace SmppCommandFlags{
+    const uint8_t NOTIFICATION_RECEIPT = 1;
+};
+
 struct SmppEntity;
 
 struct _SmppCommand
@@ -401,14 +405,15 @@ struct _SmppCommand
   void* dta;
   int status;
   Mutex mutex;
-  SmppEntity *ent;
+  SmppEntity *ent, *dst_ent;
   int serviceId;
   int priority;
   uint64_t opId;
   LongCallContext lcmCtx;
   uint16_t usr;
+  uint32_t flags;
 
-  _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority), usr(0)
+  _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0)
   {
   }
   ~_SmppCommand()
@@ -531,6 +536,9 @@ struct _SmppCommand
   {
     return opId;
   }
+
+  void setFlag(uint32_t f) { flags |= f; }
+  bool flagSet(uint32_t f) { return flags & f; }
 };
 
 class SmppCommand:public SCAGCommand
@@ -575,6 +583,8 @@ public:
 
   SmppEntity* getEntity()const{return cmd->ent;}
   void setEntity(SmppEntity* newent){cmd->ent=newent;}
+  SmppEntity* getDstEntity()const{return cmd->dst_ent;}
+  void setDstEntity(SmppEntity* newent){cmd->dst_ent=newent;}
 
   // specialized constructors (meta constructors)
   static SmppCommand makeSubmitSm(const SMS& sms,uint32_t dialogId)

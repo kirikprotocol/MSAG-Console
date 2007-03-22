@@ -18,48 +18,48 @@
             </restriction>
         </simpleType>
         
-	<simpleType name="Const">
-	    <restriction base="scag:Const">
-	        <enumeration value="@TRUE" />
-		<enumeration value="@FALSE" />
-		<enumeration value="@USSD" />
-		<enumeration value="@SMS" />
-		<enumeration value="@MMS" />
-		<enumeration value="@WAP" />
-		<enumeration value="@HTTP" />
-		
-    		<enumeration value="@ICC_INITED"/>
-    		<enumeration value="@ICC_CONTINUED"/>
-    		<enumeration value="@ICC_COMPLETED"/>
-		
-    		<enumeration value="@UNKNOWN"/>
-    		<enumeration value="@DIRECTION_SC_2_SME"/>
-    		<enumeration value="@DIRECTION_SME_2_SME"/>
-    		<enumeration value="@DIRECTION_SC_2_SC"/>
-    		<enumeration value="@DIRECTION_SME_2_SC"/>
-		
-		
-	    </restriction>
-	</simpleType>
-	
-	
+    <simpleType name="Const">
+        <restriction base="scag:Const">
+            <enumeration value="@TRUE" />
+        <enumeration value="@FALSE" />
+        <enumeration value="@USSD" />
+        <enumeration value="@SMS" />
+        <enumeration value="@MMS" />
+        <enumeration value="@WAP" />
+        <enumeration value="@HTTP" />
+        
+            <enumeration value="@ICC_INITED"/>
+            <enumeration value="@ICC_CONTINUED"/>
+            <enumeration value="@ICC_COMPLETED"/>
+        
+            <enumeration value="@UNKNOWN"/>
+            <enumeration value="@DIRECTION_SC_2_SME"/>
+            <enumeration value="@DIRECTION_SME_2_SME"/>
+            <enumeration value="@DIRECTION_SC_2_SC"/>
+            <enumeration value="@DIRECTION_SME_2_SC"/>
+        
+        
+        </restriction>
+    </simpleType>
+    
+    
         <simpleType name="Command">
             <restriction base="scag:Command">
-	        <enumeration value="#status_ok"/>
-	        <enumeration value="#status_perm_error"/>
-	        <enumeration value="#status_temp_error"/>
+            <enumeration value="#status_ok"/>
+            <enumeration value="#status_perm_error"/>
+            <enumeration value="#status_temp_error"/>
 
-	        <enumeration value="#packet_direction"/>
-	        <enumeration value="#svc_type"/>
-		<enumeration value="#ussd_dialog" />
-		<enumeration value="#whoisd_charging" />
-	        <enumeration value="#whoisd_message_transport_type" />
-	        <enumeration value="#whoisd_expected_message_transport_type"/>
-	    
-	        <enumeration value="#whoisd_message_content_type" />
-		<enumeration value="#whoisd_expected_message_content_type" />
-		    		
-		
+            <enumeration value="#packet_direction"/>
+            <enumeration value="#svc_type"/>
+        <enumeration value="#ussd_dialog" />
+        <enumeration value="#whoisd_charging" />
+            <enumeration value="#whoisd_message_transport_type" />
+            <enumeration value="#whoisd_expected_message_transport_type"/>
+        
+            <enumeration value="#whoisd_message_content_type" />
+        <enumeration value="#whoisd_expected_message_content_type" />
+                    
+        
                 <enumeration value="#OA"/>
                 <enumeration value="#DA"/>
 
@@ -147,9 +147,10 @@
                 <enumeration value="#ussd_ussr_conf"/>
                 <enumeration value="#ussd_ussn_conf"/>
                 <enumeration value="#status"/>
-		
+        
                 <enumeration value="#message_text"/>
-
+                <enumeration value="#src_sme_id"/>
+                <enumeration value="#dst_sme_id"/>
             </restriction>    
         </simpleType>
         
@@ -157,14 +158,14 @@
             <complexContent>
                 <extension base="scag:RuleType">
                     <all>
-                        <element name="submit_sm"       	type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="submit_sm_resp"  	type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="deliver_sm"      	type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="deliver_sm_resp" 	type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="receipt"         	type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="data_sm" 		type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-                        <element name="data_sm_resp" 		type="scag:Handler" minOccurs="0" maxOccurs="1"/>
-			
+                        <element name="submit_sm"           type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="submit_sm_resp"      type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="deliver_sm"          type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="deliver_sm_resp"     type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="receipt"             type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="data_sm"         type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="data_sm_resp"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+            
                     </all>
                 </extension>
             </complexContent>

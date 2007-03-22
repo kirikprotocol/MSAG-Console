@@ -136,19 +136,17 @@ namespace scag { namespace re { namespace smpp
 
         SmppCommand&    command;
         IntHash<AdapterProperty *>  PropertyPul;
-        AdapterProperty* src_sme_id;
+        AdapterProperty *src_sme_id, *dst_sme_id;
 
         static IntHash<AccessType> SubmitFieldsAccess;
         static IntHash<AccessType> DeliverFieldsAccess;
         static IntHash<AccessType> DataSmFieldsAccess;
         static IntHash<AccessType> RespFieldsAccess;
 
-
         static Hash<int> SubmitFieldNames;
         static Hash<int> DeliverFieldNames;
         static Hash<int> DataSmFieldNames;
         static Hash<int> RespFieldNames;
-
 
         static Hash<int> InitSubmitFieldNames();
         static Hash<int> InitDeliverFieldNames();
@@ -161,12 +159,10 @@ namespace scag { namespace re { namespace smpp
         static IntHash<AccessType> InitDeliverAccess();
         static IntHash<AccessType> InitDataSmAccess();
         static IntHash<AccessType> InitRespAccess();
-
-
                                                             
     public:
 
-        SmppCommandAdapter(SmppCommand& _command) : command(_command), src_sme_id(0) 
+        SmppCommandAdapter(SmppCommand& _command) : command(_command), src_sme_id(0), dst_sme_id(0) 
         {
         }
 
@@ -211,4 +207,3 @@ namespace scag { namespace re { namespace smpp
 }}}
 
 #endif // SCAG_RULE_ENGINE_SMPP_ADAPTER
-

@@ -59,6 +59,8 @@ protected:
   static ResponseRegistry reg;
 
   static std::vector<int> allowedUnknownOptionals;
+
+  void sendReceipt(SmppCommand& cmd);
 };
 
 }//smpp

@@ -27,87 +27,27 @@ namespace sync=smsc::core::synchronization;
 using namespace scag::config;
 using namespace scag::lcm;
 
-class SmppManager:
+class SmppManager :
   public SmppManagerAdmin,
   public SmppChannelRegistrator,
   public SmppCommandQueue,
-  public SmppRouter,
-  public ConfigListener,
-  public LongCallInitiator
-  {
+  public SmppRouter
+{
+    static bool  inited;
+    static Mutex initLock;
+
 public:
-  SmppManager();
-  ~SmppManager();
-  void Init(const char* cfgFile);
-  void LoadRoutes(const char* cfgFile);
-  void ReloadRoutes();
+    SmppManager() {};
+    virtual ~SmppManager() {};
 
-  //admin
-  virtual void addSmppEntity(const SmppEntityInfo& info);
-  virtual void updateSmppEntity(const SmppEntityInfo& info);
-  virtual void disconnectSmppEntity(const char* sysId);  
-  virtual void deleteSmppEntity(const char* sysId);  
-  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType);
+    virtual void LoadRoutes(const char* cfgFile) = 0;
+    virtual void ReloadRoutes() = 0;
 
-  //registragor
-  virtual int registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch);
-  virtual int registerSmscChannel(SmppChannel* ch);
-  virtual void unregisterChannel(SmppChannel* ch);
+    virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* src_sme_id, const char* dst_sme_id) = 0;
 
-  //queue
-  virtual void putCommand(SmppChannel* ct,SmppCommand& cmd);
-  virtual bool getCommand(SmppCommand& cmd);
-  virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
-  
-  void configChanged();
-
-  void StopProcessing()
-  {
-    sync::MutexGuard mg(queueMon);
-    running=false;
-    queueMon.notifyAll();
-  }
-
-  //SmppRouter
-  virtual SmppEntity* RouteSms(router::SmeIndex srcidx, const smsc::sms::Address& source, const smsc::sms::Address& dest, router::RouteInfo& info)
-  {
-    {
-      RouterRef ref=routeMan;
-      if(!ref->lookup(srcidx,source,dest,info))return 0;
-    }
-    MutexGuard mg(regMtx);
-    SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
-    if(!ptr)return 0;
-    return *ptr;
-  }
-
-  virtual SmppEntity* getSmppEntity(const char* systemId)const
-  {
-    MutexGuard mg(regMtx);
-    SmppEntity** ptr=registry.GetPtr(systemId);
-    if(!ptr)return 0;
-    return *ptr;
-  }
-
-protected:
-  smsc::logger::Logger* log;
-  buf::Hash<SmppEntity*> registry;
-  mutable sync::Mutex regMtx;
-  SmppSocketManager sm;
-
-  bool running;
-
-  buf::CyclicQueue<SmppCommand> queue;
-  sync::EventMonitor queueMon;
-  time_t lastExpireProcess;
-
-  typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
-  RouterRef routeMan;
-//  std::string routerConfigFile;
-
-  thr::ThreadPool tp;
-
-  int lastUid;
+    static SmppManager& Instance();
+    static void Init(const char* cfgFile);
+    static void shutdown();
 };
 
 }//smpp

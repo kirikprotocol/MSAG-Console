@@ -49,7 +49,7 @@ bool BillActionClose::run(ActionContext& context)
         op = context.GetCurrentOperation();
         if (!op || !op->hasBill())
         {
-            char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
+            const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
             smsc_log_error(logger, p);
             SetBillingStatus(context, p, false);
             return true;

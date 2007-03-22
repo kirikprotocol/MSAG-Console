@@ -84,7 +84,7 @@ public:
     virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec) = 0;
     virtual void Commit(int billId) = 0;
     virtual void Rollback(int billId, bool timeout = false) = 0;
-
+    virtual void Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec) = 0;
     //virtual void close(int billId) = 0;
 
     static BillingManager& Instance();

@@ -9,6 +9,7 @@
 #include "scag/config/ConfigManager.h"
 #include "SmppStateMachine.h"
 #include "scag/exc/SCAGExceptions.h"
+#include <scag/util/singleton/Singleton.h>
 
 namespace scag{
 namespace transport{
@@ -17,6 +18,129 @@ namespace smpp{
 using namespace xercesc;
 using namespace smsc::util::xml;
 using namespace scag::exceptions;
+using namespace scag::util::singleton;
+
+class SmppManagerImpl: public SmppManager,
+  public ConfigListener,
+  public LongCallInitiator
+{
+public:
+  SmppManagerImpl();
+  ~SmppManagerImpl();
+  void Init(const char* cfgFile);
+  void LoadRoutes(const char* cfgFile);
+  void ReloadRoutes();
+
+  //admin
+  virtual void addSmppEntity(const SmppEntityInfo& info);
+  virtual void updateSmppEntity(const SmppEntityInfo& info);
+  virtual void disconnectSmppEntity(const char* sysId);  
+  virtual void deleteSmppEntity(const char* sysId);  
+  virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType);
+
+  //registragor
+  virtual int registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch);
+  virtual int registerSmscChannel(SmppChannel* ch);
+  virtual void unregisterChannel(SmppChannel* ch);
+
+  //queue
+  virtual void putCommand(SmppChannel* ct,SmppCommand& cmd);
+  virtual bool getCommand(SmppCommand& cmd);
+
+  virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
+  void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* src_sme_id, const char* dst_sme_id);
+
+  void configChanged();
+
+  void StopProcessing()
+  {
+    sync::MutexGuard mg(queueMon);
+    running=false;
+    queueMon.notifyAll();
+  }
+
+  //SmppRouter
+  virtual SmppEntity* RouteSms(router::SmeIndex srcidx, const smsc::sms::Address& source, const smsc::sms::Address& dest, router::RouteInfo& info)
+  {
+    {
+      RouterRef ref=routeMan;
+      if(!ref->lookup(srcidx,source,dest,info))return 0;
+    }
+    MutexGuard mg(regMtx);
+    SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
+    if(!ptr)return 0;
+    return *ptr;
+  }
+
+  virtual SmppEntity* getSmppEntity(const char* systemId)const
+  {
+    MutexGuard mg(regMtx);
+    SmppEntity** ptr=registry.GetPtr(systemId);
+    if(!ptr)return 0;
+    return *ptr;
+  }
+
+protected:
+  smsc::logger::Logger* log;
+  buf::Hash<SmppEntity*> registry;
+  mutable sync::Mutex regMtx;
+  SmppSocketManager sm;
+
+  bool running;
+
+  buf::CyclicQueue<SmppCommand> queue;
+  sync::EventMonitor queueMon;
+  time_t lastExpireProcess;
+
+  typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
+  RouterRef routeMan;
+//  std::string routerConfigFile;
+
+  thr::ThreadPool tp;
+
+  int lastUid;
+};
+
+bool SmppManager::inited = false;
+Mutex SmppManager::initLock;
+
+inline unsigned GetLongevity(SmppManager*) { return 5; }
+typedef SingletonHolder<SmppManagerImpl> SingleSM;
+
+SmppManager& SmppManager::Instance()
+{
+    if (!inited) 
+    {
+        MutexGuard guard(initLock);
+        if (!inited) 
+            throw std::runtime_error("SmppManager not inited!");
+    }
+    return SingleSM::Instance();
+}
+
+void SmppManager::Init(const char* cfg)
+{
+    if (!inited)
+    {
+        MutexGuard guard(initLock);
+        if(!inited) {
+            SmppManagerImpl& sm = SingleSM::Instance();
+            sm.Init(cfg);
+            inited = true;
+        }
+    }
+}
+
+void SmppManager::shutdown()
+{
+    if (!inited) 
+    {
+        MutexGuard guard(initLock);
+        if (!inited) 
+            throw std::runtime_error("SmppManager not inited!");
+    }
+    SingleSM::Instance().StopProcessing();
+}
 
 enum ParamTag{
 tag_systemId,
@@ -118,7 +242,7 @@ bool GetBoolValue(DOMNamedNodeMap* attr)
   throw smsc::util::Exception("Invalid value for param 'enabled':%s",bindTypeName);
 }
 
-static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
+static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType et)
 {
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smppMan");
   using namespace smsc::util::xml;
@@ -208,7 +332,7 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
   }
 }
 
-SmppManager::SmppManager():sm(this,this), ConfigListener(SMPPMAN_CFG)
+SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
   running=false;
@@ -216,15 +340,14 @@ SmppManager::SmppManager():sm(this,this), ConfigListener(SMPPMAN_CFG)
   lastExpireProcess=0;
 }
 
-
-SmppManager::~SmppManager()
+SmppManagerImpl::~SmppManagerImpl()
 {
   StopProcessing();
   tp.shutdown();
   sm.shutdown();
 }
 
-void SmppManager::Init(const char* cfgFile)
+void SmppManagerImpl::Init(const char* cfgFile)
 {
   using namespace smsc::util::xml;
   DOMTreeReader reader;
@@ -283,11 +406,11 @@ void SmppManager::Init(const char* cfgFile)
   }
 }
 
-void SmppManager::configChanged()
+void SmppManagerImpl::configChanged()
 {
 }
 
-void SmppManager::LoadRoutes(const char* cfgFile)
+void SmppManagerImpl::LoadRoutes(const char* cfgFile)
 {
   scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
 /*  if(cfg.load(cfgFile)!=scag::config::RouteConfig::success)
@@ -298,7 +421,7 @@ void SmppManager::LoadRoutes(const char* cfgFile)
   router::loadRoutes(routeMan.Get(),cfg,false);
 }
 
-void SmppManager::ReloadRoutes()
+void SmppManagerImpl::ReloadRoutes()
 {
   scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
   RouterRef newRouter(new router::RouteManager());
@@ -306,7 +429,7 @@ void SmppManager::ReloadRoutes()
   routeMan=newRouter;
 }
 
-void SmppManager::addSmppEntity(const SmppEntityInfo& info)
+void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
@@ -339,7 +462,7 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
   }
 }
 
-void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
+void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"updateSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
@@ -384,7 +507,7 @@ void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
   }
 }
 
-void SmppManager::disconnectSmppEntity(const char* sysId)
+void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
 {
   smsc_log_debug(log,"disconnectSmppEntity:%s",sysId);
   sync::MutexGuard mg(regMtx);
@@ -415,7 +538,7 @@ void SmppManager::disconnectSmppEntity(const char* sysId)
       sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
 }
 
-void SmppManager::deleteSmppEntity(const char* sysId)
+void SmppManagerImpl::deleteSmppEntity(const char* sysId)
 {
   smsc_log_debug(log,"deleteSmppEntity:%s",sysId);
   sync::MutexGuard mg(regMtx);
@@ -455,7 +578,7 @@ void SmppManager::deleteSmppEntity(const char* sysId)
   ent.info.type=etUnknown;
 }
 
-SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType entType)
+SmppEntityAdminInfoList * SmppManagerImpl::getEntityAdminInfoList(SmppEntityType entType)
 {
     MutexGuard mg(regMtx);
 
@@ -484,7 +607,7 @@ SmppEntityAdminInfoList * SmppManager::getEntityAdminInfoList(SmppEntityType ent
 
 
 
-int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
+int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
 {
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr=registry.GetPtr(sysId);
@@ -550,7 +673,7 @@ int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindTy
   return rarOk;
 }
 
-int SmppManager::registerSmscChannel(SmppChannel* ch)
+int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
 {
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
@@ -570,7 +693,7 @@ int SmppManager::registerSmscChannel(SmppChannel* ch)
   ent.setUid(++lastUid);
   return rarOk;
 }
-void SmppManager::unregisterChannel(SmppChannel* ch)
+void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
 {
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
@@ -602,7 +725,7 @@ void SmppManager::unregisterChannel(SmppChannel* ch)
 }
 
 
-void SmppManager::putCommand(SmppChannel* ct,SmppCommand& cmd)
+void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
 {
   {
     MutexGuard regmg(regMtx);
@@ -617,7 +740,34 @@ void SmppManager::putCommand(SmppChannel* ct,SmppCommand& cmd)
   queueMon.notify();
 }
 
-bool SmppManager::getCommand(SmppCommand& cmd)
+void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* src_sme_id, const char* dst_sme_id)
+{
+    SMS sms;
+    sms.setOriginatingAddress(from);
+    sms.setDestinationAddress(to);
+    sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
+    sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
+    SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
+    cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
+    {
+        MutexGuard regmg(regMtx);
+        SmppEntity** ptr=registry.GetPtr(src_sme_id);
+        if(!ptr)throw Exception("Unknown src system id:%s", src_sme_id);
+        cmd.setEntity(*ptr);
+        ptr=registry.GetPtr(dst_sme_id);
+        if(!ptr)throw Exception("Unknown dst system id:%s", dst_sme_id);
+        cmd.setDstEntity(*ptr);
+    }
+
+  smsc_log_debug(log, "NoteReceipt sent: from=%s, to=%s, state=%d, msgId=%s, src_sme_id=%s, dst_sme_id=%s", from.toString().c_str(), to.toString().c_str(), state, msgId, src_sme_id, dst_sme_id);
+  MutexGuard mg(queueMon);
+  cmd.getLongCallContext().initiator = this;  
+  queue.Push(cmd);
+  queueMon.notify();
+}
+
+bool SmppManagerImpl::getCommand(SmppCommand& cmd)
 {
   MutexGuard mg(queueMon);
   while(running && queue.Count()==0)
@@ -643,7 +793,7 @@ bool SmppManager::getCommand(SmppCommand& cmd)
   return true;
 }
 
-void SmppManager::continueExecution(LongCallContext* lcmCtx, bool dropped)
+void SmppManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)
 {
     SmppCommand *cx = (SmppCommand*)lcmCtx->stateMachineContext;
     lcmCtx->continueExec = true;
@@ -660,3 +810,4 @@ void SmppManager::continueExecution(LongCallContext* lcmCtx, bool dropped)
 }//smpp
 }//transport
 }//scag
+

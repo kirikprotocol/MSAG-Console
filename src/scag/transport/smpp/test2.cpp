@@ -36,8 +36,8 @@ int main(int argc,char* argv[])
     return -1;
   }
   try{
-    SmppManager sm;
-    sm.Init("smpp.xml");
+    SmppManager::Init("smpp.xml");
+    SmppManager& sm = SmppManager::Instance();
     sm.LoadRoutes("routes.xml");
     printf("press enter...");
 
@@ -66,7 +66,7 @@ int main(int argc,char* argv[])
 
     char buf[32];
     fgets(buf,sizeof(buf),stdin);
-    sm.StopProcessing();
+    SmppManager::shutdown();
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());

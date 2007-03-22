@@ -25,6 +25,7 @@
 #include "scag/re/actions/smpp/ActionCloseUssdDialog.h"
 #include "scag/re/actions/smpp/ActionRedirect.h"
 #include "scag/re/actions/smpp/ActionTLV.h"
+#include "scag/re/actions/smpp/ActionReceipt.h"
 #include "scag/re/actions/str/ActionLength.h"
 #include "scag/re/actions/str/ActionReplace.h"
 
@@ -97,6 +98,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="smpp:get_tlv") return new ActionTLV(TLV_GET);
     if (name=="smpp:del_tlv") return new ActionTLV(TLV_DEL);    
     if (name=="smpp:exist_tlv") return new ActionTLV(TLV_EXIST);
+    if (name=="smpp:receipt") return new ActionReceipt();
 
     Action * action = 0;
 

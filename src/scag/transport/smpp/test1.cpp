@@ -65,8 +65,8 @@ int main(int argc,char* argv[])
 {
   smsc::logger::Logger::Init();
   try{
-    SmppManager smppMan;
-    smppMan.Init("smpp.xml");
+    SmppManager::Init("smpp.xml");
+    SmppManager& smppMan = SmppManager::Instance();
 
     FakeRegistrator fr;
     SmppSocketManager sm(&fr,&fr);

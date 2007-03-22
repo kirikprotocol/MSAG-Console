@@ -91,6 +91,7 @@ public:
     virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
     virtual void Commit(int billId);
     virtual void Rollback(int billId, bool timeout);
+    virtual void Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
 
@@ -457,6 +458,17 @@ void BillingManagerImpl::Rollback(int billId, bool timeout)
     inUseLock.Unlock();
 
     smsc_log_debug(logger, "Transaction rolled back (billId=%d) %s", billId, timeout ? "by timeout" : "");
+}
+
+void BillingManagerImpl::Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec)
+{
+    MutexGuard mg(inUseLock);
+
+    BillTransaction **p = BillTransactionHash.GetPtr(billId);
+    if(!p || !*p)
+        throw SCAGException("Cannot find transaction for billId=%d", billId);
+    bis = (*p)->billingInfoStruct;
+    tariffRec = (*p)->tariffRec;
 }
 
 void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev)

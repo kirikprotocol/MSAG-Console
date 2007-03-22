@@ -233,6 +233,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         return;
       }
       routeId = ri.routeId;
+      cmd.setDstEntity(dst);
 
       sms.setRouteId(ri.routeId);
       sms.setSourceSmeId(src->getSystemId());
@@ -438,6 +439,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   }
 
   SmppEntity* dst=orgCmd.getEntity();
+  cmd.setDstEntity(dst);
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
@@ -505,19 +507,44 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   cmd->get_resp()->set_sms(0);
 }
 
+void StateMachine::sendReceipt(SmppCommand& cmd)
+{
+  SmppEntity *src = cmd.getEntity();
+  SmppEntity *dst = cmd.getDstEntity();
+  try{
+      if(dst->getBindType() == btNone)
+        smsc_log_info(log,"DeliveryReceipt: sme not connected (%s)->(%s)", src->getSystemId(), dst->getSystemId());
+      else
+      {
+        int newSeq=dst->getNextSeq();
+        if(!reg.Register(dst->getUid(), newSeq, cmd))
+          throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+        dst->putCommand(cmd);
+      }
+  } catch(std::exception& e) {
+    smsc_log_info(log, "DeliveryReceipt: Failed to putCommand into %s:%s", dst->getSystemId(), e.what());
+  }
+}
+
 void StateMachine::processDelivery(SmppCommand& cmd)
 {
     uint32_t rcnt = 0;
-  SmppEntity *src = NULL;
-  SmppEntity *dst = NULL;
-  scag::sessions::SessionPtr session;
-  scag::sessions::CSessionKey key;
-  router::RouteInfo ri;
-  buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
+    SmppEntity *src = NULL;
+    SmppEntity *dst = NULL;
+    scag::sessions::SessionPtr session;
+    scag::sessions::CSessionKey key;
+    router::RouteInfo ri;
+    buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     scag::re::RuleStatus st;
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
+
+    if(cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT))
+    {
+        sendReceipt(cmd);
+        return;
+    }
 
     smscmd.dir = dsdSc2Srv;
     smscmd.orgSrc=sms.getOriginatingAddress();
@@ -542,6 +569,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
         return;
       }
       routeId = ri.routeId;
+      cmd.setDstEntity(dst);
 
       sms.setRouteId(ri.routeId);
       sms.setSourceSmeId(src->getSystemId());
@@ -723,7 +751,14 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     return;
   }
 
+    if(orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT))
+    {
+        smsc_log_debug(log, "ReceiptResp got: skipped");
+        return;
+    }
+
   SmppEntity* dst=orgCmd.getEntity();
+  cmd.setDstEntity(dst);
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);
   cmd->set_serviceId(orgCmd->get_serviceId());
@@ -854,6 +889,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         return;
       }
       routeId = ri.routeId;
+      cmd.setDstEntity(dst);
 
       sms.setRouteId(ri.routeId);
       sms.setSourceSmeId(src->getSystemId());
@@ -998,6 +1034,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   }
 
   SmppEntity* dst=orgCmd.getEntity();
+  cmd.setDstEntity(dst);
   SmsCommand& smscmd=orgCmd->get_smsCommand();
   SMS* sms=orgCmd->get_sms();
   cmd->get_resp()->set_sms(sms);

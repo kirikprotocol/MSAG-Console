@@ -23,7 +23,7 @@ struct ConvertorImpl : public Convertor
     ~ConvertorImpl();
 
     void convert(const char* inCharset, const char* outCharset,
-                 const char * in, size_t inLen, TmpBuf<short, 1024>& buf);
+                 const char * in, size_t inLen, TmpBuf<uint8_t, 2048>& buf);
 
 private:
 
@@ -132,10 +132,10 @@ void Convertor::UTF8ToKOI8R(const char * utf8buff, unsigned int utf8len, std::st
 }
 
 
-#define MAX_BYTES_IN_CHAR 2
+#define MAX_BYTES_IN_CHAR 4
 
 void Convertor::convert(const char* inCharset, const char* outCharset,
-                        const char * in, size_t inLen, TmpBuf<short, 1024>& buf)
+                        const char * in, size_t inLen, TmpBuf<uint8_t, 2048>& buf)
 {
     ConvertorImpl& c = SingleC::Instance();
     c.convert(inCharset, outCharset, in, inLen, buf);
@@ -144,7 +144,7 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
 void Convertor::convert(const char* inCharset, const char* outCharset,
                         const char * in, size_t inLen, std::string& outstr)
 {
-    TmpBuf<short, 1024> buf(inLen * MAX_BYTES_IN_CHAR);
+    TmpBuf<uint8_t, 2048> buf(inLen * MAX_BYTES_IN_CHAR);
     convert(inCharset, outCharset, in, inLen, buf);
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "buf=%d getpos=%d", buf.get(), buf.GetPos());
     outstr.assign((const char*)buf.get(), buf.GetPos());
@@ -169,7 +169,7 @@ iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
 #define ICONV_BLOCK_SIZE 128
 
 void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
-                            const char * in, size_t inLen, TmpBuf<short, 1024>& buf)
+                            const char * in, size_t inLen, TmpBuf<uint8_t, 2048>& buf)
 {
 
     bool error=false;

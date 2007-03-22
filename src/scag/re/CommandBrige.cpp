@@ -32,11 +32,11 @@ namespace SMSTags
 }
    */
 /*
-whoisd-charging	Byte	0x4901
-whoisd-message-transport-type	Byte	0x4902
-whoisd-message-content-type	String	0x4903
-whoisd-expected-message-transport-type	Byte	0x4904
-whoisd-expected-message-content-type	String	0x4905
+whoisd-charging Byte    0x4901
+whoisd-message-transport-type   Byte    0x4902
+whoisd-message-content-type String  0x4903
+whoisd-expected-message-transport-type  Byte    0x4904
+whoisd-expected-message-content-type    String  0x4905
 
 */
 
@@ -76,9 +76,7 @@ EventHandlerType CommandBrige::getSMPPHandlerType(const SCAGCommand& command)
     {
     case DELIVERY:
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-
-        if (receiptMessageId) handlerType = EH_RECEIPT;
-        else handlerType = EH_DELIVER_SM;
+        handlerType = receiptMessageId ? EH_RECEIPT : EH_DELIVER_SM;
         break;
 
     case SUBMIT:
@@ -87,9 +85,7 @@ EventHandlerType CommandBrige::getSMPPHandlerType(const SCAGCommand& command)
 
     case DELIVERY_RESP:
         receiptMessageId = atoi(sms.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str());
-
-        if (receiptMessageId) handlerType = EH_RECEIPT;
-        else handlerType = EH_DELIVER_SM_RESP;
+        handlerType = receiptMessageId ? EH_RECEIPT : EH_DELIVER_SM_RESP;
         break;
 
     case SUBMIT_RESP:
