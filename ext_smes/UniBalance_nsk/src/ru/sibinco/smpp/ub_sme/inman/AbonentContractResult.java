@@ -21,6 +21,7 @@ public class AbonentContractResult extends InManPDU {
   VarString gsmSCFAddress = null;
   int serviceKey = -1;
   int error = -1;
+  VarString abImsi = null;
 
   private boolean parsed = false;
 
@@ -30,60 +31,71 @@ public class AbonentContractResult extends InManPDU {
     super(TAG);
   }
 
-  public AbonentContractResult(byte[] data) throws PDUException {
+  public AbonentContractResult(byte[] data) throws InManPDUException {
     super(data);
     if (tag != TAG) {
-      throw new PDUException("Unexpected tag for AbonentContractResult: " + tag);
+      throw new InManPDUException("Unexpected tag for AbonentContractResult: " + tag);
     }
   }
 
-  private void parsePDU() throws PDUException {
+  private void parsePDU() throws InManPDUException {
     try {
       int p = HEADER_LENGTH;
       nmPolicy = new VarString(data, p);
       p = p + nmPolicy.getLength();
       contractType = data[p++];
       gsmSCFAddress = new VarString(data, p);
+      p = p + gsmSCFAddress.getLength();
       int serviceKeyOrError = ((data[p++] & 0xFF) << 24) | ((data[p++] & 0xFF) << 16) | ((data[p++] & 0xFF) << 8) | (data[p++] & 0xFF);
-      if (gsmSCFAddress.getStringValue().length() > 0) {
+      if (gsmSCFAddress.getStringValue() != null && gsmSCFAddress.getStringValue().length() > 0) {
         serviceKey = serviceKeyOrError;
       } else {
         error = serviceKeyOrError;
       }
+      abImsi = new VarString(data, p);
+      p = p + abImsi.getLength();
+      parsed = true;
     } catch (Exception e) {
-      throw new PDUException("PDU Parse error", e);
+      throw new InManPDUException("PDU Parse error", e);
     }
   }
 
-  public String getNmPolicy() throws PDUException {
+  public String getNmPolicy() throws InManPDUException {
     if (!parsed) {
       parsePDU();
     }
     return nmPolicy != null ? nmPolicy.getStringValue() : null;
   }
 
-  public byte getContractType() throws PDUException {
+  public byte getContractType() throws InManPDUException {
     if (!parsed) {
       parsePDU();
     }
     return contractType;
   }
 
-  public String getGsmSCFAddress() throws PDUException {
+  public String getGsmSCFAddress() throws InManPDUException {
     if (!parsed) {
       parsePDU();
     }
     return gsmSCFAddress != null ? gsmSCFAddress.getStringValue() : null;
   }
 
-  public long getServiceKey() throws PDUException {
+  public long getServiceKey() throws InManPDUException {
     if (!parsed) {
       parsePDU();
     }
     return serviceKey;
   }
 
-  public int getError() throws PDUException {
+  public VarString getAbImsi() throws InManPDUException {
+    if (!parsed) {
+      parsePDU();
+    }
+    return abImsi;
+  }
+
+  public int getError() throws InManPDUException {
     if (!parsed) {
       parsePDU();
     }

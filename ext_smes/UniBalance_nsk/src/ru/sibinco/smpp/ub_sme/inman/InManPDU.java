@@ -21,9 +21,9 @@ public class InManPDU implements java.io.Serializable {
     this.tag = tag;
   }
 
-  public InManPDU(byte[] data) throws PDUException {
+  public InManPDU(byte[] data) throws InManPDUException {
     if (data.length < HEADER_LENGTH) {
-      throw new PDUException("Illegal PDU length: " + (data.length));
+      throw new InManPDUException("Illegal PDU length: " + (data.length));
     }
     this.data = data;
     try {
@@ -32,7 +32,7 @@ public class InManPDU implements java.io.Serializable {
       headerFormat = ((data[p++] & 0xFF) << 8) | (data[p++] & 0xFF);
       dialogID = ((data[p++] & 0xFF) << 24) | ((data[p++] & 0xFF) << 16) | ((data[p++] & 0xFF) << 8) | (data[p++] & 0xFF);
     } catch (Exception e) {
-      throw new PDUException("PDU Parse error", e);
+      throw new InManPDUException("PDU Parse error", e);
     }
   }
 

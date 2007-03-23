@@ -15,7 +15,7 @@ public class VarString {
 
   public VarString(String stringValue) {
     value = stringValue;
-    int len = stringValue.length();
+    int len = (value != null ? value.length() : 0);
     int headLen = 1;
     while (((len >> (7 * headLen)) & 0xFF) != 0 && headLen < 6) {
       headLen++;
@@ -40,6 +40,10 @@ public class VarString {
     }
     header=new byte[headerLength];
     System.arraycopy(data, offset, header, 0, headerLength);
+    if(bodyLength==0){
+      value = null;
+      return;
+    }
     try {
       value=new String(data, offset+header.length, bodyLength, "ISO-8859-1");
     } catch (UnsupportedEncodingException e) {
@@ -66,6 +70,9 @@ public class VarString {
   public void toBytesArray(byte[] data, int offset) {
     System.arraycopy(header, 0, data, offset, header.length);
     byte[] body;
+    if(value==null){
+      return;
+    }
     try {
       body=value.getBytes("ISO-8859-1");
     } catch (UnsupportedEncodingException e) {
@@ -75,7 +82,7 @@ public class VarString {
   }
 
   public int getLength() {
-    return header.length + value.length();
+    return header.length + (value != null ? value.length() : 0);
   }
 
   public String toString() {

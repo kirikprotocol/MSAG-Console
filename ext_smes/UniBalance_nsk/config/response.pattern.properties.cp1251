@@ -1,4 +1,5 @@
-balance.response.pattern=Ваш точный баланс составляет {0} {1}
+balance.response.pattern=Баланс {0} {1}
+balance.negative.response.pattern=Задолженность {0} {1}
 balance.wait.for.sms.response.pattern=Баланс будет выслан вам СМС сообщением через несколько минут
 balance.error.pattern=Ошибка получения баланса
 

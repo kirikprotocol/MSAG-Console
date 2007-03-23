@@ -25,6 +25,15 @@ public class ProductivityController extends Thread {
   private Object shutMonitor = new Object();
   private List controlObjects = new LinkedList();
 
+  public ProductivityController() {
+    super("ProductivityController");
+  }
+
+  public ProductivityController(long pollingInterval) {
+    super("ProductivityController");
+    this.pollingInterval = pollingInterval;
+  }
+
   public void init(Properties config) throws InitializationException {
     if (logger.isDebugEnabled()) logger.debug("init(..)");
 

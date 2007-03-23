@@ -2,6 +2,8 @@ package ru.sibinco.smpp.ub_sme;
 
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smpp.ub_sme.inman.AbonentContractResult;
+import ru.sibinco.smpp.ub_sme.inman.InManPDUException;
+import ru.sibinco.smpp.ub_sme.inbalance.InBalanceResult;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -13,6 +15,7 @@ public class RequestState {
   private long abonentRequestTime = 0;
 
   private AbonentContractResult inManContractResult;
+  private InBalanceResult inBalanceResult;
 
   private Message mgResponse = null;
 
@@ -20,7 +23,9 @@ public class RequestState {
   private long abonentResponseTime = 0;
 
   private String banner;
-  private long bannerResponseTime;
+  private long bannerRequestTime = 0;
+  private long bannerResponseTime = 0;
+  private boolean bannerRequested = false;
 
   private boolean error = false;
   private boolean bannerReady = false;
@@ -32,8 +37,9 @@ public class RequestState {
   private long[] billingSystemsRequestTime=new long[SmeEngine.BILLING_SYSTEMS_COUNT];
   private long[] billingSystemsResponseTime=new long[SmeEngine.BILLING_SYSTEMS_COUNT];
 
-  private boolean closed = false;
+  private int currentBillingSystemIndex = 0;
 
+  private boolean closed = false;
 
   public RequestState(Message abonentRequest, long abonentRequestTime) {
     this.abonentRequest = abonentRequest;
@@ -53,13 +59,33 @@ public class RequestState {
     billingSystemsResponseTime[SmeEngine.BILLING_SYSTEM_IN_MAN]=System.currentTimeMillis();
   }
 
+  byte getAbonentContractType(){
+    if(inManContractResult!=null){
+      try {
+        return inManContractResult.getContractType();
+      } catch (InManPDUException e) {
+        ;
+      }
+    }
+    return AbonentContractResult.CONTRACT_UNKNOWN;
+  }
+
+  InBalanceResult getInBalanceResult() {
+    return inBalanceResult;
+  }
+
+  void setInBalanceResult(InBalanceResult inBalanceResult) {
+    this.inBalanceResult = inBalanceResult;
+    billingSystemsResponseTime[SmeEngine.BILLING_SYSTEM_IN_BALANCE]=System.currentTimeMillis();
+  }
+
   Message getMgResponse() {
     return mgResponse;
   }
 
   void setMgResponse(Message mgResponse) {
     this.mgResponse = mgResponse;
-    billingSystemsResponseTime[SmeEngine.BILLING_SYSTEM_FORIS]=System.currentTimeMillis();
+    billingSystemsResponseTime[SmeEngine.BILLING_SYSTEM_FORIS_MG]=System.currentTimeMillis();
   }
 
   Message getAbonentResponse() {
@@ -74,10 +100,15 @@ public class RequestState {
     return banner;
   }
 
+  public void setBannerRequested(){
+    bannerRequestTime = System.currentTimeMillis();
+    bannerRequested = true;
+  }
+
   void setBanner(String banner) {
+    bannerResponseTime = System.currentTimeMillis();
     this.banner = banner;
     bannerReady=true;
-    bannerResponseTime = System.currentTimeMillis();
   }
 
   public long getAbonentRequestTime() {
@@ -137,6 +168,14 @@ public class RequestState {
     billingSystemsResponseTime[systemID] = time;
   }
 
+  public int getCurrentBillingSystemIndex() {
+    return currentBillingSystemIndex;
+  }
+
+  public void setCurrentBillingSystemIndex(int currentBillingSystemIndex) {
+    this.currentBillingSystemIndex = currentBillingSystemIndex;
+  }
+
   private final static DateFormat dateFormat=new SimpleDateFormat("HH:mm:ss.SSS");
 
   public String toString() {
@@ -160,9 +199,9 @@ public class RequestState {
       }
     }
     long bannerEngineDelay = 0;
-    if(bannerReady){
+    if(bannerRequested){
       sb.append("; banner engine response=");
-      bannerEngineDelay = bannerResponseTime-abonentRequestTime;
+      bannerEngineDelay = bannerResponseTime-bannerRequestTime;
       sb.append(bannerEngineDelay);
       sb.append(" ms");
     }

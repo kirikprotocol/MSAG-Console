@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="nsk_unibalance" default="all">
 
+  <property name="jdk.home.1.4" value="c:/jdk1.4.2/"/>
+
 
   <property file="nsk_unibalance.properties"/>
   <!-- Uncomment the following property if no tests compilation is needed -->
@@ -9,6 +11,7 @@
    -->
 
   <!-- Compiler options -->
+
 
   <property name="compiler.debug" value="on"/>
   <property name="compiler.generate.no.warnings" value="off"/>
@@ -100,6 +103,8 @@
     <pathelement location="${module.unibalance.basedir}/lib/jaxen-dom.jar"/>
     <pathelement location="${module.unibalance.basedir}/lib/tpool.jar"/>
     <pathelement location="${module.unibalance.basedir}/lib/yguard.jar"/>
+    <pathelement location="${module.unibalance.basedir}/lib/adv-client.jar"/>
+    <pathelement location="${module.unibalance.basedir}/lib/personalization.jar"/>
   </path>
 
 
@@ -143,6 +148,7 @@
     <jar basedir="${unibalance.output.dir}" destfile="${module.unibalance.basedir}/lib/unibalance.jar"
          manifest="${module.unibalance.basedir}/manifest.mf">
       <exclude name=".dependency-info/**"/>
+      <exclude name="utils/**"/>
     </jar>
     <delete file="${unibalance.output.dir}/history.txt"/>
   </target>
@@ -183,7 +189,7 @@
 
   <target name="clean" depends="clean.module.unibalance" description="cleanup all"/>
 
-  <target name="all" depends="init, clean, compile.module.unibalance" description="build all"/>
+  <target name="all" depends="init, clean, compile.module.unibalance, jar" description="build all"/>
 
   <target name="all+obfuscate" depends="all, obfuscate" description="build all and obfuscate"/>
 

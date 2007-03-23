@@ -3,7 +3,9 @@ package ru.sibinco.smpp.ub_sme;
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smpp.ub_sme.inman.AbonentContractResult;
-import ru.sibinco.smpp.ub_sme.inman.PDUException;
+import ru.sibinco.smpp.ub_sme.inman.InManPDUException;
+import ru.sibinco.smpp.ub_sme.inbalance.InBalanceResult;
+import ru.sibinco.smpp.ub_sme.inbalance.InBalancePDUException;
 
 import java.sql.*;
 import java.math.BigDecimal;
@@ -19,92 +21,147 @@ public class BalanceProcessor implements Runnable {
     this.state = state;
   }
 
-  public BalanceProcessor(SmeEngine smeEngine) {
-    this.smeEngine = smeEngine;
-  }
-
   private void process() {
     if (state == null)
       return;
 
+    String balance = null;
     String abonent = state.getAbonentRequest().getSourceAddress();
 
-    AbonentContractResult inManContractResult = state.getInManContractResult();
-    if (smeEngine.isBillingSystemEnabled(SmeEngine.BILLING_SYSTEM_IN_MAN) && !state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN))
-    {
-      state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN);
-      smeEngine.requestAbonentContractType(state);
-      return;
-    }
-    GetBalanceResult balance = null;
-    byte contractType = AbonentContractResult.CONTRACT_UNKNOWN;
-    if (inManContractResult != null) {
-      try {
-        contractType = inManContractResult.getContractType();
-      } catch (PDUException e) {
-        logger.error("InMan result PDU Exception: " + e, e);
-        return;
+    int currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+
+    int loopDetector = 0;
+    while (state.getCurrentBillingSystemIndex() < smeEngine.getBillingSystemCount()) {
+      if (loopDetector == 10) {
+        logger.error("Breaking on loop_detector=" + loopDetector);
+        break;
       }
-    }
-    if (logger.isDebugEnabled()) {
-      switch (contractType) {
-        case AbonentContractResult.CONTRACT_PREPAID:
-          logger.debug("This is PREPAID abonent contract");
-          break;
-        case AbonentContractResult.CONTRACT_POSTPAID:
-          logger.debug("This is POSTPAID abonent contract");
-          break;
-        case AbonentContractResult.CONTRACT_UNKNOWN:
-          logger.debug("Abonent contract type unknown");
-          break;
-      }
-    }
-    if (contractType != AbonentContractResult.CONTRACT_POSTPAID &&
-        !state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX)) {
-      if (logger.isDebugEnabled())
-        logger.debug("InMan request for abonent " + abonent);
-      state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX);
-      balance = getInManBalance(state.getAbonentRequest().getSourceAddress());
-      state.setBillingSystemResponseTime(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX, System.currentTimeMillis());
-      if (logger.isDebugEnabled()) {
-        if (balance != null) {
-          logger.debug("This is InMan abonent");
-        } else {
-          logger.debug("This is not InMan abonent");
-        }
-      }
-    }
-    if (balance == null) {
-      if (smeEngine.isBillingSystemEnabled(SmeEngine.BILLING_SYSTEM_CBOSS) &&
-          (smeEngine.getBillingSystemOrder(SmeEngine.BILLING_SYSTEM_CBOSS) < smeEngine.getBillingSystemOrder(SmeEngine.BILLING_SYSTEM_FORIS)
-              || state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_FORIS))) {
-        if (logger.isDebugEnabled())
-          logger.debug("CBOSS request for abonent " + abonent);
-        state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_CBOSS);
-        balance = getCbossBalance(state.getAbonentRequest().getSourceAddress());
-        state.setBillingSystemResponseTime(SmeEngine.BILLING_SYSTEM_CBOSS, System.currentTimeMillis());
-        if (logger.isDebugEnabled()) {
-          if (balance != null) {
-            logger.debug("This is CBOSS abonent");
+      loopDetector++;
+
+      switch (currentBillingSystemId) {
+        case SmeEngine.BILLING_SYSTEM_IN_MAN:
+          if (state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN)) {
+            AbonentContractResult inManContractResult = state.getInManContractResult();
+
+            byte contractType = AbonentContractResult.CONTRACT_UNKNOWN;
+            if (inManContractResult != null) {
+              try {
+                contractType = inManContractResult.getContractType();
+              } catch (InManPDUException e) {
+                logger.error("InMan result Exception: " + e, e);
+              }
+            }
+            switch (contractType) {
+              case AbonentContractResult.CONTRACT_PREPAID:
+                logger.debug("This is PREPAID abonent contract");
+                state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+                currentBillingSystemId = SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX;
+                break;
+              case AbonentContractResult.CONTRACT_POSTPAID:
+                logger.debug("This is POSTPAID abonent contract");
+                state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+                currentBillingSystemId = SmeEngine.BILLING_SYSTEM_CBOSS_ORACLE;
+                break;
+              default:
+                logger.debug("Abonent contract type UNKNOWN");
+                state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+                currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+                break;
+            }
           } else {
-            logger.debug("This is not CBOSS abonent");
+            state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN);
+            smeEngine.requestAbonentContractType(state);
+            return;
           }
-        }
-      }
-      if (balance == null && smeEngine.isBillingSystemEnabled(SmeEngine.BILLING_SYSTEM_FORIS)) {
-        if (logger.isDebugEnabled())
-          logger.debug("FORIS request for abonent " + abonent);
-        Message message = new Message();
-        message.setSourceAddress(state.getAbonentRequest().getSourceAddress());
-        message.setDestinationAddress(smeEngine.getMgAddress());
-        message.setMessageString("");
-        message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
-        message.setType(Message.TYPE_SUBMIT);
-        state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_FORIS);
-        smeEngine.sendMgRequest(state, message);
-        return;
+          break;
+        case SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX:
+          if (state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX) || !smeEngine.isBillingSystemEnabled(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX)) {
+            state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+            currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+          } else {
+            if (logger.isDebugEnabled())
+              logger.debug("InMan request for abonent " + abonent);
+            state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX);
+            balance = getInManBalance(state.getAbonentRequest().getSourceAddress());
+            state.setBillingSystemResponseTime(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX, System.currentTimeMillis());
+            if (balance != null) {
+              logger.debug("This is InMan abonent");
+              state.setCurrentBillingSystemIndex(smeEngine.getBillingSystemCount());
+              break;
+            } else {
+              logger.debug("This is not InMan abonent");
+              state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+              currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+            }
+          }
+          break;
+        case SmeEngine.BILLING_SYSTEM_CBOSS_ORACLE:
+          if (state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_CBOSS_ORACLE) || !smeEngine.isBillingSystemEnabled(SmeEngine.BILLING_SYSTEM_CBOSS_ORACLE)) {
+            state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+            currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+          } else {
+            if (logger.isDebugEnabled())
+              logger.debug("CBOSS request for abonent " + abonent);
+            state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_CBOSS_ORACLE);
+            balance = getCbossBalance(state.getAbonentRequest().getSourceAddress());
+            state.setBillingSystemResponseTime(SmeEngine.BILLING_SYSTEM_CBOSS_ORACLE, System.currentTimeMillis());
+            if (balance != null) {
+              logger.debug("This is CBOSS abonent");
+              state.setCurrentBillingSystemIndex(smeEngine.getBillingSystemCount());
+              break;
+            } else {
+              logger.debug("This is not CBOSS abonent");
+              state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+              currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+            }
+          }
+          break;
+        case SmeEngine.BILLING_SYSTEM_FORIS_MG:
+          if (state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_FORIS_MG)) {
+            state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+            currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+          } else {
+            if (logger.isDebugEnabled())
+              logger.debug("FORIS request for abonent " + abonent);
+            Message message = new Message();
+            message.setSourceAddress(state.getAbonentRequest().getSourceAddress());
+            message.setDestinationAddress(smeEngine.getMgAddress());
+            message.setMessageString("");
+            message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
+            message.setType(Message.TYPE_SUBMIT);
+            state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_FORIS_MG);
+            smeEngine.sendMgRequest(state, message);
+            return;
+          }
+          break;
+        case SmeEngine.BILLING_SYSTEM_IN_BALANCE:
+          if (state.isBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_BALANCE)) {
+            InBalanceResult result = state.getInBalanceResult();
+            if(result!=null){
+              try {
+                if(result.getStatus()!=InBalanceResult.STATUS_OK){
+                  balance = result.getUssData();
+                } else {
+                  logger.warn("InBalance status for abonent "+abonent+" is "+result.getStatus());
+                }
+              } catch (InBalancePDUException e) {
+                logger.error(e.getMessage(), e);
+              }
+            }
+            break;
+          } else {
+            //if(state.getAbonentContractType()==AbonentContractResult.CONTRACT_PREPAID){
+              state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_BALANCE);
+              smeEngine.requestInBalance(state);
+              return;
+            //}
+          }
+          //state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+          //currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getCurrentBillingSystemIndex());
+          //break;
       }
     }
+
     if (balance != null) {
       Message message = new Message();
       message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
@@ -113,11 +170,7 @@ public class BalanceProcessor implements Runnable {
         message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
       }
       message.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
-      String currency = balance.getCurrency();
-      if (currency == null) {
-        currency = smeEngine.getCurrency("default");
-      }
-      message.setMessageString(smeEngine.getMessageFormat().format(new String[]{balance.getBalance(), currency}));
+      message.setMessageString(balance);
       message.setType(Message.TYPE_SUBMIT);
       state.setAbonentResponse(message);
       synchronized (state) {
@@ -133,15 +186,13 @@ public class BalanceProcessor implements Runnable {
     smeEngine.closeRequestState(state);
   }
 
-  private GetBalanceResult getCbossBalance(String abonent) {
-    String balance = null;
+  private String getCbossBalance(String abonent) {
+    double balance = Double.NaN;
     String currency = null;
     long balanceDate = 0L;
     Connection connection = null;
     CallableStatement stmt = null;
     try {
-      //connection = smeEngine.getCbossConnection();
-      //stmt = connection.prepareCall(smeEngine.getCbossQuery());
       stmt = smeEngine.getCbossStatement();
       if (stmt == null) {
         logger.error("Couldn't get CBOSS statement");
@@ -156,7 +207,7 @@ public class BalanceProcessor implements Runnable {
         stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
         stmt.execute();
         if (stmt.getString(4).equalsIgnoreCase("ACCURATE") || stmt.getString(4).equalsIgnoreCase("CACHED")) {
-          balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
+          balance = Double.parseDouble(stmt.getString(1));
           currency = smeEngine.getCurrency(stmt.getString(5));
           balanceDate = stmt.getDate(3).getTime();
         } else {
@@ -171,7 +222,7 @@ public class BalanceProcessor implements Runnable {
             stmt.close();
             stmt = null;
           } catch (Exception e1) {
-            logger.warn("Could not close oracle CallableStatement: "+ e1);
+            logger.warn("Could not close oracle CallableStatement: " + e1);
           }
         if (connection != null)
           try {
@@ -181,10 +232,10 @@ public class BalanceProcessor implements Runnable {
             logger.warn("Could not close oracle Connection: " + e1);
           }
         if (!smeEngine.isCbossConnectionError(temporalError)) {
-          if(temporalError instanceof SQLException) {
-            throw (SQLException)temporalError;
+          if (temporalError instanceof SQLException) {
+            throw (SQLException) temporalError;
           } else {
-            logger.error("Unexpected exception: "+temporalError, temporalError);
+            logger.error("Unexpected exception: " + temporalError, temporalError);
             throw new SQLException(temporalError.getMessage());
           }
         }
@@ -202,7 +253,7 @@ public class BalanceProcessor implements Runnable {
           stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
           stmt.execute();
           if (stmt.getString(4).equalsIgnoreCase("ACCURATE") || stmt.getString(4).equalsIgnoreCase("CACHED")) {
-            balance = smeEngine.getNumberFormat().format(Double.parseDouble(stmt.getString(1)));
+            balance = Double.parseDouble(stmt.getString(1));
             currency = smeEngine.getCurrency(stmt.getString(5));
             balanceDate = stmt.getDate(3).getTime();
           } else {
@@ -227,11 +278,14 @@ public class BalanceProcessor implements Runnable {
         return null;
       }
     }
-    return new GetBalanceResult(balance, currency, balanceDate);
+
+    if (currency == null) {
+      currency = smeEngine.getCurrency("default");
+    }
+    return smeEngine.getMessageFormat(balance).format(new String[]{smeEngine.getNumberFormat(balance).format(balance), currency});
   }
 
-  private GetBalanceResult getInManBalance(String abonent) {
-    GetBalanceResult result = null;
+  private String getInManBalance(String abonent) {
     Double balance = null;
     String currency = null;
     Connection connection = null;
@@ -277,7 +331,7 @@ public class BalanceProcessor implements Runnable {
           connection.close();
           connection = null;
         } catch (Exception e1) {
-          logger.warn("Could not close ifx Connection: "+e1);
+          logger.warn("Could not close ifx Connection: " + e1);
         }
 
       try {
@@ -330,10 +384,13 @@ public class BalanceProcessor implements Runnable {
           logger.warn("Could not close ResultSet.", e);
         }
     }
-    if (balance != null) {
-      result = new GetBalanceResult(smeEngine.getNumberFormat().format(balance), currency);
+    if(balance==null){
+      return null;
     }
-    return result;
+    if (currency == null) {
+      currency = smeEngine.getCurrency("default");
+    }
+    return smeEngine.getMessageFormat(balance.doubleValue()).format(new String[]{smeEngine.getNumberFormat(balance.doubleValue()).format(balance), currency});
   }
 
   private static String cutAbonentAddress(String abonent) {

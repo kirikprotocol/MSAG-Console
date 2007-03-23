@@ -8,6 +8,7 @@ import ru.sibinco.util.threads.ThreadsPool;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
 import ru.sibinco.smpp.ub_sme.inman.*;
+import ru.sibinco.smpp.ub_sme.inbalance.*;
 
 import java.util.*;
 import java.sql.Connection;
@@ -22,17 +23,19 @@ import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
 
-public class SmeEngine implements MessageListener, ResponseListener, InManPDUHandler {
+public class SmeEngine implements MessageListener, ResponseListener, InManPDUHandler, InBalancePDUHandler {
 
   private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmeEngine.class);
 
   protected final static byte BILLING_SYSTEM_IN_MAN = 0;
   protected final static byte BILLING_SYSTEM_IN_MAN_INFORMIX = 1;
-  protected final static byte BILLING_SYSTEM_CBOSS = 2;
-  protected final static byte BILLING_SYSTEM_FORIS = 3;
+  protected final static byte BILLING_SYSTEM_CBOSS_ORACLE = 2;
+  protected final static byte BILLING_SYSTEM_FORIS_MG = 3;
+  protected final static byte BILLING_SYSTEM_IN_BALANCE = 4;
 
-  public final static int BILLING_SYSTEMS_COUNT = 4;
-  public final static String[] BILLING_SYSTEMS = {"IN_MAN", "IN_MAN_INFORMIX", "CBOSS", "FORIS"};
+  public final static int BILLING_SYSTEMS_COUNT = 5;
+
+  public final static String[] BILLING_SYSTEMS = {"IN_MAN", "IN_MAN_INFORMIX", "CBOSS_ORACLE", "FORIS_MG", "IN_BALANCE"};
 
   private String mgAddress = null;
   private String cbossPoolName = null;
@@ -47,7 +50,14 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String inManPort = "1234";
   private boolean inManUseCache = true;
 
-  private byte[] billingSystemsOrder = {0, 1, 2, 3};
+  private String inBalanceHost = "localhost";
+  private String inBalancePort = "1235";
+  private String inBalanceUssData = "100";
+  private byte inBalanceIN_SSN = 0;
+  private String inBalanceIN_ISDN = "100";
+
+  private byte[] billingSystemOrder = null;
+  private boolean[] billingSystemEnabled = new boolean[BILLING_SYSTEMS.length];
 
   private String bannerEngineServiceName = "UniBalance";
   private int bannerEngineClientID = 1;
@@ -64,11 +74,13 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private boolean smsResponseMode = false;
 
   private DecimalFormatSymbols decimalFormatSymbols;
-  private String numberFormatPattern = "#.##";
+  private String numberFormatPattern = "#.##;-#.##";
+  private String numberFormatNegativePattern = numberFormatPattern;
 
   private File responsePatternConfigFile;
 
   private String balanceResponsePattern = "{0} {1}";
+  private String balanceNegativeResponsePattern;
   private String waitForSmsResponsePattern = "{0}";
   private String bannerAddPattern = "{0}\n{1}";
   private String errorPattern = "Error occurred";
@@ -80,14 +92,17 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private int maxProcessingRequests = 10000;
 
+  private InManClient inManClient = null;
+  private InBalanceClient inBalanceClient = null;
+
   private ThreadsPool threadsPool = null;
   private Multiplexor multiplexor = null;
   private OutgoingQueue outgoingQueue;
-  private InManClient inManClient = null;
   private DBConnectionManager connectionManager = DBConnectionManager.getInstance();
   private List states = new ArrayList();
   private Map mgRequests = new HashMap();
   private Map inManRequests = new HashMap();
+  private Map inBalanceRequests = new HashMap();
 
   private Map cbossStatements = new HashMap();
   private Map inManStatements = new HashMap();
@@ -107,15 +122,41 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       throw new InitializationException("Mandatory config parameter \"mg.address\" is missed");
     }
 
-    inManHost = config.getProperty("inman.host", "");
+
+    inBalanceHost = config.getProperty("inbalance.host", inBalanceHost);
+    if (inBalanceHost.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"inbalance.host\" is missed");
+    }
+    inBalancePort = config.getProperty("inbalance.port", inBalancePort);
+    if (inBalancePort.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"inbalance.port\" is missed");
+    }
+    inBalanceUssData = config.getProperty("inbalance.uss.data", inBalanceUssData);
+    if (inBalanceUssData.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"inbalance.uss.data\" is missed");
+    }
+    try {
+      inBalanceIN_SSN = Byte.parseByte(config.getProperty("inbalance.in.ssn", Byte.toString(inBalanceIN_SSN)));
+    } catch (NumberFormatException e) {
+      throw new InitializationException("Mandatory config parameter \"inbalance.in.ssn\" is invalid");
+    }
+    inBalanceIN_ISDN = config.getProperty("inbalance.in.isdn", inBalanceIN_ISDN);
+    if (inBalanceIN_ISDN.length() == 0) {
+      throw new InitializationException("Mandatory config parameter \"inbalance.in.isdn\" is missed");
+    }
+
+
+    inManHost = config.getProperty("inman.host", inManHost);
     if (inManHost.length() == 0) {
       throw new InitializationException("Mandatory config parameter \"inman.host\" is missed");
     }
-    inManPort = config.getProperty("inman.port", "");
+    inManPort = config.getProperty("inman.port", inManPort);
     if (inManPort.length() == 0) {
       throw new InitializationException("Mandatory config parameter \"inman.port\" is missed");
     }
     inManUseCache = Boolean.valueOf(config.getProperty("inman.use.cache", "true")).booleanValue();
+
+
     inManPoolName = config.getProperty("inman.pool.name", "");
     if (inManPoolName.length() == 0) {
       throw new InitializationException("Mandatory config parameter \"inman.pool.name\" is missed");
@@ -144,18 +185,28 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
     cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
 
-    for (int i = 0; i < billingSystemsOrder.length; i++) {
-      String bso = config.getProperty("billing.system." + i + ".order", "");
-      if (bso.length() > 0) {
+    List billingSystemsOrderList = new ArrayList(5);
+    int i=1;
+    String s=null;
+    while ((s = config.getProperty("billing.system." + i))!=null) {
+      if (s.length() > 0) {
         try {
-          billingSystemsOrder[i] = Byte.parseByte(bso);
+          billingSystemsOrderList.add(new Byte(s));
         } catch (NumberFormatException e) {
-          throw new InitializationException("Invalid value for config parameter \"billing.system." + i + ".order\": " + bso);
+          throw new InitializationException("Invalid value for config parameter \"billing.system." + i + ": " + s);
         }
       }
+      i++;
+    }
+    billingSystemOrder = new byte[billingSystemsOrderList.size()];
+    for (int j = 0; j < billingSystemsOrderList.size(); j++) {
+      Byte bs = (Byte) billingSystemsOrderList.get(j);
+      billingSystemOrder[j] = bs.byteValue();
+      billingSystemEnabled[billingSystemOrder[j]]=true;
     }
 
     numberFormatPattern = config.getProperty("balance.number.format.pattern", numberFormatPattern);
+    numberFormatNegativePattern = config.getProperty("balance.number.format.negative.pattern", numberFormatNegativePattern);
     String decimalSeparator = config.getProperty("balance.number.format.decimal.separator", ".");
     if (decimalSeparator.length() == 0 || decimalSeparator.length() > 1) {
       throw new InitializationException("Invalid value for config parameter \"balance.number.format.decimal.separator\": " + decimalSeparator);
@@ -280,6 +331,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       inManClient.connect();
     }
 
+    if (isBillingSystemEnabled(BILLING_SYSTEM_IN_BALANCE)) {
+      inBalanceClient = new InBalanceClient(inBalanceHost, inBalancePort, this);
+      inBalanceClient.connect();
+    }
+
     new RequestStatesController(requestStatesControllerPollingInterval).startService();
 
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init fineshed");
@@ -296,6 +352,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
 
     balanceResponsePattern = patternConfig.getProperty("balance.response.pattern", balanceResponsePattern);
+    balanceNegativeResponsePattern = patternConfig.getProperty("balance.negative.response.pattern");
     waitForSmsResponsePattern = patternConfig.getProperty("balance.wait.for.sms.response.pattern", waitForSmsResponsePattern);
     errorPattern = patternConfig.getProperty("balance.error.pattern", errorPattern);
 
@@ -341,12 +398,14 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         sendDeliverSmResponse(msg, Data.ESME_ROK);
         return false;
       }
+      /*
       if (msg.getEncoding() == Message.ENCODING_BINARY) {
         if (logger.isDebugEnabled())
           logger.debug("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: Unsupported encoding: BINARY");
         sendDeliverSmResponse(msg, Data.ESME_ROK);
         return true;
       }
+      */
       if (logger.isDebugEnabled())
         logger.debug("MSG handled. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
 
@@ -380,7 +439,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
       } else {
 
-        if (isBillingSystemEnabled(BILLING_SYSTEM_FORIS)) {
+        if (isBillingSystemEnabled(BILLING_SYSTEM_FORIS_MG)) {
           String abonent = (String) mgRequests.remove(new Long(((long) pdu.getConnectionId()) << 32 | pdu.getSequenceNumber()));
           if (abonent != null && pdu.getStatus() != PDU.STATUS_CLASS_NO_ERROR) {
             RequestState state = extractRequestState(abonent);
@@ -585,7 +644,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (logger.isDebugEnabled())
         logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
     } catch (SMPPException e) {
-      logger.error("Could not send message.", e);
+      logger.error("Could not send message", e);
     }
   }
 
@@ -619,7 +678,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       try {
         threadsPool.execute(new BalanceProcessor(this, state));
       } catch (RuntimeException e) {
-        logger.error("Exception occured during creating balance processor: "+e, e);
+        logger.error("Exception occured during creating balance processor: " + e, e);
         synchronized (state) {
           state.setError(true);
         }
@@ -631,7 +690,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         try {
           threadsPool.execute(new BannerRequestThread(state));
         } catch (RuntimeException e) {
-          logger.error("Exception occured during creating banner processor: "+e, e);
+          logger.error("Exception occured during creating banner processor: " + e, e);
         }
       }
       sendDeliverSmResponse(message, Data.ESME_ROK);
@@ -642,16 +701,17 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       state = getRequestState(message.getDestinationAddress());
       if (state == null)
         return;
-      state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_FORIS);
+      state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_FORIS_MG);
       state.setMgResponse(message);
-      String balance = parseForisBalance(state.getMgResponse().getMessageString());
-      if (balance == null) {
+      String forisBalance = parseForisBalance(state.getMgResponse().getMessageString());
+      if (forisBalance == null) {
         if (logger.isDebugEnabled())
           logger.debug("This is not FORIS abonent");
         threadsPool.execute(new BalanceProcessor(this, state));
       } else {
         if (logger.isDebugEnabled())
           logger.debug("This is FORIS abonent");
+        double balance = Double.parseDouble(forisBalance);
         Message msg = new Message();
         msg.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
         msg.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
@@ -660,7 +720,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         }
         msg.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
         String currency = getCurrency("default");
-        message.setMessageString(getMessageFormat().format(new String[]{balance, currency}));
+        message.setMessageString(getMessageFormat(balance).format(new Object[]{new Double(balance), currency}));
         msg.setType(Message.TYPE_SUBMIT);
         state.setAbonentResponse(msg);
         synchronized (state) {
@@ -680,7 +740,30 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (logger.isDebugEnabled())
         logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
     } catch (SMPPException e) {
-      logger.error("Could not send message.", e);
+      logger.error("Could not send MG request", e);
+      synchronized (state) {
+        state.setError(true);
+      }
+      closeRequestState(state);
+    }
+  }
+
+  protected void requestInBalance(RequestState state) {
+    try {
+      int requestId = inBalanceClient.assignRequestId();
+      if (logger.isDebugEnabled())
+        logger.debug("Send InBalance request for abonent " + state.getAbonentRequest().getSourceAddress() + ", sn=" + requestId);
+      inBalanceClient.sendBalanceRequest(state.getAbonentRequest().getSourceAddress(), inBalanceUssData, inBalanceIN_SSN, inBalanceIN_ISDN, requestId);
+      Integer key = new Integer(requestId);
+      synchronized (inBalanceRequests) {
+        inBalanceRequests.put(key, state);
+      }
+    } catch (InBalanceClientException e) {
+      synchronized (state) {
+        state.setError(true);
+      }
+      closeRequestState(state);
+      logger.error("InBalance Client error: " + e, e);
     }
   }
 
@@ -725,24 +808,80 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     threadsPool.execute(new BalanceProcessor(this, state));
   }
 
-  private String getBanner(String abonent) {
-    if (abonent.startsWith("+")) {
-      abonent = ".1.1." + abonent.substring(1);
-    } else if (!abonent.startsWith(".")) {
-      abonent = ".1.1." + abonent;
+  public void handleInBalancePDU(InBalancePDU pdu) {
+    if (pdu.getCmdId() != InBalanceResult.CMD_ID) {
+      logger.error("Unexpected InBalance PDU: " + pdu);
+      return;
     }
-    String encoding = "UTF-16BE";
-    int transactionId;
-    synchronized (bannerEngineTransactionIdSyncMonitor) {
-      transactionId = bannerEngineTransactionId++;
+    InBalanceResult result = (InBalanceResult) pdu;
+    Integer key = new Integer(result.getRequestId());
+    RequestState state;
+    synchronized (inBalanceRequests) {
+      state = (RequestState) inBalanceRequests.remove(key);
     }
+    if (state == null) {
+      if (logger.isDebugEnabled())
+        logger.debug("Got InBalance response for unknown abonent sn=" + result.getRequestId());
+      return;
+    }
+    if (logger.isDebugEnabled())
+      logger.debug("Got InBalance response for " + state.getAbonentRequest().getSourceAddress());
+    state.setInBalanceResult(result);
+    threadsPool.execute(new BalanceProcessor(this, state));
+  }
+
+
+
+  private String getBanner(RequestState state) {
+    String abonent = state.getAbonentRequest().getSourceAddress();
     byte[] banner = null;
-    if (bannerEngineClientEnabled) {
-      banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
+
+    /*boolean bannerEnabled = false;
+    if (bannerEngineBlackListEnabled) {
+      PersonalizationClient client = null;
+      try {
+        state.setPersonalizationRequested();
+        client = personalizationClientPool.getClient();
+        Property property = client.getProperty(abonent, "balance_no_adv");
+        if (property != null) {
+          bannerEnabled = !property.getBoolValue();
+        } else {
+          bannerEnabled = true;
+        }
+      } catch (PersonalizationClientException e) {
+        logger.error("Personalization Client error: " + e, e);
+      } finally {
+        if (client != null)
+          try {
+            client.close();
+          } catch (PersonalizationClientException e) {
+            logger.error("Error while closing PersonalizationClient connection: " + e, e);
+          }
+      }
+      state.setPersonalizationResponseTime();
+    } else {
+      bannerEnabled = true;
     }
+    */
+    String encoding = "UTF-16BE";
+    //if (bannerEnabled) {
+      if (abonent.startsWith("+")) {
+        abonent = ".1.1." + abonent.substring(1);
+      } else if (!abonent.startsWith(".")) {
+        abonent = ".1.1." + abonent;
+      }
+      int transactionId;
+      synchronized (bannerEngineTransactionIdSyncMonitor) {
+        transactionId = bannerEngineTransactionId++;
+      }
+      state.setBannerRequested();
+      banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
+    //}
+
     if (banner == null) {
       return null;
     }
+
     try {
       return new String(banner, encoding);
     } catch (UnsupportedEncodingException e) {
@@ -771,20 +910,38 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return null;
   }
 
-  protected byte getBillingSystemOrder(byte systemID) {
-    return billingSystemsOrder[systemID] != -1 ? billingSystemsOrder[systemID] : Byte.MAX_VALUE;
+  protected byte getBillingSystemByOrder(int orderID) {
+    if(orderID >=0 &&  orderID < billingSystemOrder.length){
+      return billingSystemOrder[orderID];
+    }
+    return -1;
   }
 
-  protected boolean isBillingSystemEnabled(byte systemID) {
-    return billingSystemsOrder[systemID] != -1;
+  protected boolean isBillingSystemEnabled(byte billingSystemID) {
+    if(billingSystemID >= 0 && billingSystemID < billingSystemEnabled.length){
+       return billingSystemEnabled[billingSystemID];
+    }
+    return false;
   }
 
-  protected NumberFormat getNumberFormat() {
-    return new DecimalFormat(numberFormatPattern, decimalFormatSymbols);
+  protected int getBillingSystemCount(){
+    return billingSystemOrder.length;
   }
 
-  protected MessageFormat getMessageFormat() {
-    return new MessageFormat(balanceResponsePattern);
+  protected NumberFormat getNumberFormat(double balance) {
+    if(balance>=0){
+      return new DecimalFormat(numberFormatPattern, decimalFormatSymbols);
+    } else {
+      return new DecimalFormat(numberFormatNegativePattern, decimalFormatSymbols);
+    }
+  }
+
+  protected MessageFormat getMessageFormat(double balance) {
+    if(balance>=0 || balanceNegativeResponsePattern ==null){
+      return new MessageFormat(balanceResponsePattern);
+    } else {
+      return new MessageFormat(balanceNegativeResponsePattern);
+    }
   }
 
   protected String getCurrency(String code) {
@@ -932,7 +1089,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
     public void run() {
       try {
-        String banner = getBanner(state.getAbonentRequest().getSourceAddress());
+        String banner = getBanner(state);
         synchronized (state) {
           state.setBanner(banner);
         }

@@ -1,4 +1,4 @@
-package ru.sibinco.smpp.ub_sme.inman;
+package ru.sibinco.smpp.ub_sme.inbalance;
 
 import org.apache.log4j.Category;
 import ru.sibinco.smpp.ub_sme.InitializationException;
@@ -15,8 +15,8 @@ import java.net.Socket;
  * EyeLine Communications
  * All rights reserved.
  */
-public class InManClient {
-  private final static Category logger = Category.getInstance(InManClient.class);
+public class InBalanceClient {
+  private final static Category logger = Category.getInstance(InBalanceClient.class);
 
   private Socket socket = null;
   private InputStream is;
@@ -32,11 +32,11 @@ public class InManClient {
   private Object readMonitor = new Object();
   private Object connectMonitor = new Object();
 
-  private InManPDUHandler pduHandler;
+  private InBalancePDUHandler pduHandler;
 
   private int nextSequenceNumber = 0;
 
-  public InManClient(String serverHost, String serverPort, InManPDUHandler pduHandler) throws InitializationException {
+  public InBalanceClient(String serverHost, String serverPort, InBalancePDUHandler pduHandler) throws InitializationException {
     if (serverHost == null) {
       throw new InitializationException("Server host is null");
     }
@@ -64,7 +64,6 @@ public class InManClient {
     try {
       socket = new Socket(serverHost, serverPort);
       socket.setKeepAlive(true);
-      socket.setTcpNoDelay(true);
       is = socket.getInputStream();
       os = socket.getOutputStream();
     } catch (IOException e) {
@@ -122,7 +121,7 @@ public class InManClient {
         readBody(4, pduLength, pdu);
       }
       if (logger.isDebugEnabled())
-        logger.debug("Receive PDU: " + InManPDU.bytesDebugString(pdu));
+        logger.debug("Receive PDU: " + InBalancePDU.bytesDebugString(pdu));
 
     } catch (IOException e) {
       disconnect();
@@ -148,22 +147,21 @@ public class InManClient {
     }
   }
 
-  protected void writePDU(InManPDU pdu) throws IOException {
+  protected void writePDU(InBalancePDU pdu) throws IOException, InBalancePDUException {
     if (!isConnected()) {
       if (!connect()) {
         throw new IOException("Couldn't connect to server");
       }
     }
 
-    /*
+
     if (logger.isDebugEnabled())
-      logger.debug("Send InManPDU: " + pdu);
-    */
+      logger.debug("Send InBalancePDU: " + pdu);
 
     byte[] data = pdu.getData();
 
     if (logger.isDebugEnabled())
-      logger.debug("Send PDU: " + InManPDU.bytesDebugString(data));
+      logger.debug(InBalancePDU.bytesDebugString(data));
 
     try {
       synchronized (writeMonitor) {
@@ -181,37 +179,41 @@ public class InManClient {
     disconnect();
   }
 
-  public synchronized int assignDialogID() {
+  public synchronized int assignRequestId() {
     return nextSequenceNumber++;
   }
 
-  public void sendContractRequest(String abonent, int dialogID, boolean useCache) throws InManClientException {
-    AbonentContractRequest request = new AbonentContractRequest();
-    request.setDialogID(dialogID);
-    request.setSubscriberNumber(abonent);
-    request.setUseCache(useCache);
+  public void sendBalanceRequest(String MsISDN, String UssData, byte IN_SSN, String IN_ISDN, int requestId) throws InBalanceClientException {
+    InBalanceRequest request = new InBalanceRequest();
+    request.setRequestId(requestId);
+    request.setUssData(UssData);
+    request.setMsISDN(MsISDN);
+    request.setIN_SSN(IN_SSN);
+    request.setIN_ISDN(IN_ISDN);
     try {
       writePDU(request);
-    } catch (IOException e) {
-      throw new InManClientException(e);
+    } catch (Exception e) {
+      throw new InBalanceClientException(e);
     }
   }
 
   class IncomingPDUController extends Thread {
-
     public void run() {
       while (!shutdown) {
         if (isConnected()) {
           try {
-            byte[] pduData = readPDU();
+            InBalanceResult pdu;
             try {
-              AbonentContractResult pdu = new AbonentContractResult(pduData);
-              pduHandler.handleInManPDU(pdu);
-            } catch (InManPDUException e) {
-              logger.error("PDU parse error", e);
+              pdu = new InBalanceResult(is);
+            } catch (InBalancePDUException e) {
+              logger.error("PDU read error: " + e, e);
+              disconnect();
+              continue;
             }
+            pduHandler.handleInBalancePDU(pdu);
           } catch (IOException e) {
             logger.error("IO Error", e);
+            disconnect();
           }
         } else {
           synchronized (connectMonitor) {
