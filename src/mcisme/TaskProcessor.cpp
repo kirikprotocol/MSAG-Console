@@ -878,18 +878,22 @@ void TaskProcessor::StopProcessEvent4Abnt(const AbntAddr& abnt)
 
 string TaskProcessor::getBanner(const AbntAddr& abnt)
 {
-	string banner, ret;
+	string banner, ret, ret1;
 	int rc;
 	if(!advertising) return banner;
 
 	rc = advertising->getBanner(abnt.toString(), svcType.c_str(), scag::advert::SMPP_SMS, scag::advert::UTF16BE, ret);
 	if(rc == 0)
 	{
-		try{Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), banner);}catch(SCAGException e){
+		try{Convertor::convert("UTF-16BE", "UTF-8", ret.c_str(), ret.length(), ret1);}catch(SCAGException e){
 			smsc_log_debug(logger, "Exc: %s", e.what());
 			return banner="";
 		}
-		smsc_log_debug(logger, "rc = %d; Banner: %s", rc, banner.c_str());
+		try{Convertor::convert("UTF-8", "CP1251", ret1.c_str(), ret1.length(), banner);}catch(SCAGException e){
+			smsc_log_debug(logger, "Exc: %s", e.what());
+			return banner="";
+		}
+		smsc_log_debug(logger, "rc = %d; Banner: %s (%s)", rc, banner.c_str(), ret.c_str());
 	}
 	else
 		smsc_log_debug(logger, "getBanner Error. Error code = %d", rc);
