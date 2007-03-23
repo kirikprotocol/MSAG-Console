@@ -53,6 +53,11 @@ namespace scag { namespace sessions
         OPERATION_CONTINUED,
         OPERATION_COMPLETED 
     };
+    
+    namespace OperationFlags
+    {
+        const uint32_t SERVICE_INITIATED_USSD_DIALOG = 1;
+    }
 
     class MillisecTime
     {
@@ -207,6 +212,7 @@ namespace scag { namespace sessions
         Session * m_Owner;
     public:
         uint8_t type;
+        uint32_t flags;
         void attachBill(unsigned int BillId);
         void detachBill();
         void rollbackAll();
@@ -218,6 +224,10 @@ namespace scag { namespace sessions
 
         ICCOperationStatus getStatus();
         void setStatus(ICCOperationStatus status) {m_Status = status;}
+
+        void setFlag(uint32_t f) { flags |= f; };
+        void clearFlag(uint32_t f) { flags &= ~f; };
+        bool flagSet(uint32_t f) { return flags & f; };
 
         ~Operation() {}
         Operation(Session * Owner) : 
@@ -454,4 +464,6 @@ namespace scag { namespace sessions
 }}
 
 #endif // SCAG_SESSIONS_SESSION
+
+
 

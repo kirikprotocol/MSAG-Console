@@ -292,6 +292,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                 session=sm.newSession(key);
                 dst->setMapping(key.abonentAddr, 0, key.USR);
                 smsc_log_debug(log, "USSD Submit: Created session USR=%d", key.USR);
+                cmd->setFlag(SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG);
             }
             else {
                 smsc_log_warn(log, "USSD Submit: UMR is not specified");
@@ -300,9 +301,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                 return;
             }
         }
-        else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // Continue USSD dialog
+        else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // Continue USSD dialog (or service initiated USSD by pending)
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
-            smsc_log_debug(log, "USSD Submit: Continue, UMR=%d", umr);
             session=scag::sessions::SessionManager::Instance().getSession(key);
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
@@ -310,7 +310,17 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                 registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
-            sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
+            if(umr <= 0) { // no mapping USR->UMR, service initiated USSD by pending
+                smsc_log_debug(log, "USSD Submit: Begin service dialog(pending)...");
+                dst->setMapping(key.abonentAddr, 0, key.USR);
+                sms.dropProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+                cmd->setFlag(SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG);
+            }
+            else
+            {
+                smsc_log_debug(log, "USSD Submit: Continue, UMR=%d", umr);
+                sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
+            }
         }
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
@@ -864,12 +874,12 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
     uint32_t rcnt = 0;
-  SmppEntity *src = NULL;
-  SmppEntity *dst = NULL;
-  scag::sessions::SessionPtr session;
-  scag::sessions::CSessionKey key;
-  router::RouteInfo ri;
-  buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
+    SmppEntity *src = NULL;
+    SmppEntity *dst = NULL;
+    scag::sessions::SessionPtr session;
+    scag::sessions::CSessionKey key;
+    router::RouteInfo ri;
+    buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
     scag::re::RuleStatus st;
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
@@ -878,6 +888,14 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
+
+    if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    {
+        smsc_log_info(log,"DataSm: USSD dialog not allowed in DataSm %s(%s)->%s", sms.getOriginatingAddress().toString().c_str(),
+                        src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+        DataResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
+    }
 
   do{
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
@@ -914,16 +932,11 @@ void StateMachine::processDataSm(SmppCommand& cmd)
 
       int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
                 sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
-      int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                    sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Datasm:%s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
-        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+      smsc_log_debug(log, "Datasm:%s UMR=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr,
+                sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
-      key.abonentAddr = (src->info.type == etService) ?
-             sms.getDestinationAddress() : sms.getOriginatingAddress();
-      if (ussd_op < 0) // SMPP, No USSD specific flags
-      {
+      key.abonentAddr = (src->info.type == etService) ? sms.getDestinationAddress() : sms.getOriginatingAddress();
         if(!session.Get())
         {
           if (umr < 0) {
@@ -944,7 +957,6 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         }
         else
             session->setRedirectFlag();
-      }
       smsc_log_debug(log, "DataSm: RuleEngine processing...");
       st=scag::re::RuleEngine::Instance().process(cmd,*session);
       smsc_log_debug(log, "DataSm: RuleEngine procesed.");

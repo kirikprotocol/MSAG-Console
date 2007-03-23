@@ -34,9 +34,11 @@ enum CommandOperations
 
     //USSD
     CO_USSD_DIALOG = 7,
+    CO_PULL_USSD_DIALOG = 7,
+    CO_PUSH_USSD_DIALOG = 8,
 
     //HTTP
-    CO_HTTP_DELIVERY = 8
+    CO_HTTP_DELIVERY = 9
 
 };
 

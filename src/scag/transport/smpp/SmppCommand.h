@@ -393,6 +393,7 @@ struct SmsCommand{
 
 namespace SmppCommandFlags{
     const uint8_t NOTIFICATION_RECEIPT = 1;
+    const uint8_t SERVICE_INITIATED_USSD_DIALOG = 2;
 };
 
 struct SmppEntity;

@@ -86,9 +86,11 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
 
         if (smppDiscriptor.wantOpenUSSD)
         {
-             operation = session.AddNewOperationToHash(command, CO_USSD_DIALOG);
-             operation->setStatus(OPERATION_INITED);
-             break;
+            operation = session.AddNewOperationToHash(command, CO_USSD_DIALOG);
+            if(command->flagSet(scag::transport::smpp::SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG))
+                operation->setFlag(scag::sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG);
+            operation->setStatus(OPERATION_INITED);
+            break;
         }
 
         operation = session.setCurrentOperationByType(CO_USSD_DIALOG);

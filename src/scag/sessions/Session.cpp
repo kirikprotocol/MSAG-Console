@@ -256,6 +256,8 @@ void Session::DeserializeOperations(SessionBuffer& buff)
         operation->m_receivedAllParts = temp;
         buff >> operation->m_receivedParts;
 
+        buff >> operation->flags;
+
         buff >> temp;
         operation->m_hasBill = temp;
 
@@ -331,8 +333,11 @@ void Session::SerializeOperations(SessionBuffer& buff)
         buff << operation->m_receivedParts;
         //smsc_log_debug(logger, "SERIALIZE ALLPARTS=%d",temp);
 
+        buff << operation->flags;
+
         temp = operation->m_hasBill;
         buff << temp;
+
         if (operation->m_hasBill) buff << operation->billId;
 
         buff << operation->type;

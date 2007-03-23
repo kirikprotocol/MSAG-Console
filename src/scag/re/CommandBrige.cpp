@@ -69,7 +69,7 @@ EventHandlerType CommandBrige::getSMPPHandlerType(const SCAGCommand& command)
     SMS& sms = getSMS(*smppCommand);
     CommandId cmdid = (*smppCommand)->get_commandId();
 
-    CSmppDiscriptor SmppDiscriptor;
+//    CSmppDiscriptor SmppDiscriptor;
     int receiptMessageId = 0;
 
     switch (cmdid) 
@@ -258,12 +258,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
             SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            //SmppDiscriptor.isUSSDClosed = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST);
-            /*SmppDiscriptor.bWantToOpen = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_INDICATION)
-                                             || (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));*/
-
-            if (smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
-                  SmppDiscriptor.wantOpenUSSD = true;
+            SmppDiscriptor.wantOpenUSSD = smsc::smpp::UssdServiceOpValue::PSSR_INDICATION == sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
         }
         else SmppDiscriptor.cmdType = CO_DELIVER;
 
@@ -279,7 +274,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
             SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            //TODO: снять ремарку SmppDiscriptor.wantOpenUSSD = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == smsc::smpp::UssdServiceOpValue::USSR_REQUEST);
+            SmppDiscriptor.wantOpenUSSD = (*smppCommand)->flagSet(scag::transport::smpp::SmppCommandFlags::SERVICE_INITIATED_USSD_DIALOG);
         }
         else SmppDiscriptor.cmdType = CO_SUBMIT;
 
@@ -306,7 +301,8 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         else if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
             SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            SmppDiscriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
+//            SmppDiscriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
+            SmppDiscriptor.isUSSDClosed = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_CONFIRM);
         }
         else SmppDiscriptor.cmdType = CO_DELIVER;
 
@@ -317,7 +313,7 @@ CSmppDiscriptor CommandBrige::getSmppDiscriptor(const SCAGCommand& command)
         if (sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) 
         {
             SmppDiscriptor.cmdType = CO_USSD_DIALOG;
-            SmppDiscriptor.isUSSDClosed = ((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE)||((sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == USSN_REQUEST)));
+            SmppDiscriptor.isUSSDClosed = (sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) == PSSR_RESPONSE);
         }
         else SmppDiscriptor.cmdType = CO_SUBMIT;
 

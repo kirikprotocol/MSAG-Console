@@ -40,7 +40,12 @@ bool ActionCloseUssdDialog::run(ActionContext& context)
 
     if (serviceOp == USSR_REQUEST) 
     {
-        smppAdapter.setServiceOp(PSSR_RESPONSE);
+        Operation* op = context.GetCurrentOperation();
+        if(op && op->flagSet(scag::sessions::OperationFlags::SERVICE_INITIATED_USSD_DIALOG))
+            smppAdapter.setServiceOp(USSN_REQUEST);
+        else
+            smppAdapter.setServiceOp(PSSR_RESPONSE);
+//        smppAdapter.setServiceOp(USSN_REQUEST);
         smsc_log_debug(logger,"Action 'smpp:close_ussd_dialog' closed ussd dialog.");
     }
     
