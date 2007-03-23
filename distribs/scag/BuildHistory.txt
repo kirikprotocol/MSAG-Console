@@ -46,3 +46,19 @@ TO ALL: Insert log record for all significant changes & fixes here.
 06.01.2007 12:00 makar
 1) MSAG CHANGE: Disconnect functionality for SME (Admin command)
 2) MSAG Admin CHANGE: Disconnect functionality for SME (SMPP Services page)
+
+=================================================================================================================
+23.03.2007 12:00 makar [a lot of changes]
+1) MSAG CRITICAL FIX: Operation close on unexpected packet
+2) MSAG CHANGE: Added optional field whoisd-expected-message-transport-type
+3) MSAG CHANGE: Added actions for access to optional command fields
+4) MSAG FIX: Pending operations constraints fixes
+5) MSAG FIX: Added 'rollback by timeout' for SACC
+6) MSAG CHANGE: Log categories refactored? extra logs added (billing, sessions/operations)
+7) MSAG FIX: Pass HTTP headers as is (was lowcased)
+8) MSAG CHANGE: Added 'billing type' functionality in tariff matrix (InMan)
+9) MSAG CHANGE: Implemented open bill:xxx actions architecture (with billId)
+10) MSAG CHANGE: Billing notification by Receipts logic
+11) MSAG CHANGE: Added service initiated USSD dialogs functionality
+12) MSAG CHANGE: Added access to #src_sme_id & #dst_sme_id in rules 
+13) MSAG CHANGE: Actions refactoring
