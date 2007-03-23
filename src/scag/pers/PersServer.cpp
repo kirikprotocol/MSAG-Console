@@ -47,6 +47,7 @@ void PersServer::process_read_socket(Socket* s)
     if(sb->GetSize() < sizeof(uint32_t))
     {
         j = s->Read(tmp_buf, sizeof(uint32_t) - sb->GetSize());
+        smsc_log_debug(log, "read(len) %u bytes from %p", j, s);
         if(j > 0)
         {
             sb->Append(tmp_buf, j);
@@ -77,6 +78,7 @@ void PersServer::process_read_socket(Socket* s)
         k = (uint32_t)s->getData(1);
         j = k - sb->GetSize();
         j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
+        smsc_log_debug(log, "read %u bytes from %p", j, s);
         if(j > 0)
             sb->Append(tmp_buf, j);
         else  if(errno != EWOULDBLOCK)
@@ -101,6 +103,7 @@ void PersServer::process_write_socket(Socket* s)
 
     len = sb->GetSize();
 
+    smsc_log_debug(log, "write %u bytes to %p", len, s);
     j = s->Write(sb->GetCurPtr(), len - sb->GetPos());
     if(j > 0)
         sb->SetPos(sb->GetPos() + j);
@@ -145,7 +148,7 @@ int PersServer::Execute()
             if(isStopped())
                 break;
 
-            for(int i = 0; i <= read.Count() - 1; i++)
+            for(int i = 0; i < read.Count(); i++)
             {
                 if(read[i] == &sock)
                 {
@@ -181,7 +184,7 @@ int PersServer::Execute()
                     process_read_socket(read[i]);
             }
 
-            for(int i = 0; i <= write.Count() - 1; i++)
+            for(int i = 0; i < write.Count(); i++)
                 process_write_socket(write[i]);
 
             for(int i = 0; i <= err.Count() - 1; i++)
