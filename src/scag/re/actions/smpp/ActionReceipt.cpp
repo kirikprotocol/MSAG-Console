@@ -57,8 +57,6 @@ void ActionReceipt::init(const SectionParams& params,PropertyObject propertyObje
 
     ftMsgId = CheckParameter(params, propertyObject, "receipt", "msg_id", true, true, varMsgId, bExist);
     if(ftMsgId == ftUnknown) msgId = varMsgId;
-    ftSrcSmeId = CheckParameter(params, propertyObject, "receipt", "src_sme_id", true, true, varSrcSmeId, bExist);
-    if(ftSrcSmeId == ftUnknown) srcSmeId = varSrcSmeId;
     ftDstSmeId = CheckParameter(params, propertyObject, "receipt", "dst_sme_id", true, true, varDstSmeId, bExist);
     if(ftDstSmeId == ftUnknown) dstSmeId = varSrcSmeId;
 
@@ -118,13 +116,10 @@ bool ActionReceipt::run(ActionContext& context)
     if(ftMsgId != ftUnknown && !getStrProperty(context, varMsgId, "msg_id", msgId))
         return true;
 
-    if(ftSrcSmeId != ftUnknown && !getStrProperty(context, varSrcSmeId, "src_sme_id", srcSmeId))
-        return true;
-
     if(ftDstSmeId != ftUnknown && !getStrProperty(context, varDstSmeId, "dst_sme_id", dstSmeId))
         return true;
 
-    scag::transport::smpp::SmppManager::Instance().sendReceipt(fromAddr, toAddr, state, msgId.c_str(), srcSmeId.c_str(), dstSmeId.c_str());
+    scag::transport::smpp::SmppManager::Instance().sendReceipt(fromAddr, toAddr, state, msgId.c_str(), dstSmeId.c_str());
     return true;
 }
 

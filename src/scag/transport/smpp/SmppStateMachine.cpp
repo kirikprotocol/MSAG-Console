@@ -518,20 +518,19 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
 void StateMachine::sendReceipt(SmppCommand& cmd)
 {
-  SmppEntity *src = cmd.getEntity();
   SmppEntity *dst = cmd.getDstEntity();
   try{
       if(dst->getBindType() == btNone)
-        smsc_log_info(log,"DeliveryReceipt: sme not connected (%s)->(%s)", src->getSystemId(), dst->getSystemId());
+        smsc_log_info(log,"MSAG Receipt: sme not connected (%s)", dst->getSystemId());
       else
       {
         int newSeq=dst->getNextSeq();
         if(!reg.Register(dst->getUid(), newSeq, cmd))
-          throw Exception("Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+          throw Exception("MSAG Receipt: Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
         dst->putCommand(cmd);
       }
   } catch(std::exception& e) {
-    smsc_log_info(log, "DeliveryReceipt: Failed to putCommand into %s:%s", dst->getSystemId(), e.what());
+    smsc_log_info(log, "MSAG Receipt: Failed to putCommand into %s:%s", dst->getSystemId(), e.what());
   }
 }
 

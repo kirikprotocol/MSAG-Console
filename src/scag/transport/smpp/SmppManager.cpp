@@ -48,7 +48,7 @@ public:
   virtual bool getCommand(SmppCommand& cmd);
 
   virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
-  void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* src_sme_id, const char* dst_sme_id);
+  void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id);
 
   void configChanged();
 
@@ -740,27 +740,24 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
   queueMon.notify();
 }
 
-void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* src_sme_id, const char* dst_sme_id)
+void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id)
 {
     SMS sms;
     sms.setOriginatingAddress(from);
     sms.setDestinationAddress(to);
     sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
     sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
-    sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
+    if(msgId) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
     SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
     cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
     {
         MutexGuard regmg(regMtx);
-        SmppEntity** ptr=registry.GetPtr(src_sme_id);
-        if(!ptr)throw Exception("Unknown src system id:%s", src_sme_id);
-        cmd.setEntity(*ptr);
-        ptr=registry.GetPtr(dst_sme_id);
+        SmppEntity **ptr=registry.GetPtr(dst_sme_id);
         if(!ptr)throw Exception("Unknown dst system id:%s", dst_sme_id);
         cmd.setDstEntity(*ptr);
     }
 
-  smsc_log_debug(log, "NoteReceipt sent: from=%s, to=%s, state=%d, msgId=%s, src_sme_id=%s, dst_sme_id=%s", from.toString().c_str(), to.toString().c_str(), state, msgId, src_sme_id, dst_sme_id);
+  smsc_log_debug(log, "NoteReceipt sent: from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s", from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
   MutexGuard mg(queueMon);
   cmd.getLongCallContext().initiator = this;  
   queue.Push(cmd);

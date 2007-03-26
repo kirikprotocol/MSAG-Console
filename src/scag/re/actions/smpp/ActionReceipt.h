@@ -7,8 +7,8 @@ namespace scag { namespace re { namespace actions {
 
 class ActionReceipt : public Action
 {
-    FieldType ftTo, ftFrom, ftState, ftMsgId, ftSrcSmeId, ftDstSmeId;
-    std::string varTo, varFrom, varState, varMsgId, varSrcSmeId, varDstSmeId, msgId, srcSmeId, dstSmeId;
+    FieldType ftTo, ftFrom, ftState, ftMsgId, ftDstSmeId;
+    std::string varTo, varFrom, varState, varMsgId, varSrcSmeId, varDstSmeId, msgId, dstSmeId;
 
     Address toAddr, fromAddr;
     uint8_t state;

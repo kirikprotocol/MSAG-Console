@@ -43,7 +43,7 @@ public:
     virtual void LoadRoutes(const char* cfgFile) = 0;
     virtual void ReloadRoutes() = 0;
 
-    virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* src_sme_id, const char* dst_sme_id) = 0;
+    virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id) = 0;
 
     static SmppManager& Instance();
     static void Init(const char* cfgFile);
