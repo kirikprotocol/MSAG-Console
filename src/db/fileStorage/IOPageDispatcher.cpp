@@ -48,7 +48,9 @@ IOPageDispatcher::getPreviousIOPage(const IOPage& currentPage)
 IOPage
 IOPageDispatcher::getLastIOPage()
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   smsc::core::synchronization::MutexGuard mutexGuard(_lastPageLock);
+#endif
   return getIOPage(_lastPageOffset);
 }
 
@@ -87,7 +89,9 @@ IOPageDispatcher::markPageAsDitry(IOPage_impl* dirtyPage)
 int
 IOPageDispatcher::commitDirtyPage(IOPage_impl* dirtyPage)
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   smsc::core::synchronization::MutexGuard mutexGuard(_registredPagesLock);
+#endif
   off_t recordFilePosition = ::lseek(_fd, _startByteOffset + dirtyPage->getPageNum() * IOPage_impl::PAGE_SIZE, SEEK_SET);
 
   if ( recordFilePosition == (off_t)-1 )
@@ -97,13 +101,17 @@ IOPageDispatcher::commitDirtyPage(IOPage_impl* dirtyPage)
 }
 
 IOPage_impl::IOPage_impl(size_t pageNum, uint8_t* pageDataPtr, size_t actualDataSize, IOPageDispatcher* dispatcher) : _pageNum(pageNum), _pageDataPtr(pageDataPtr), _actualDataSize(actualDataSize), _dispatcher(dispatcher) {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   if ( pthread_rwlock_init(&_page_IO_RwLock, NULL) )
     throw std::runtime_error("IOPage_impl::IOPage_impl::: can't initialize rwlock");
+#endif
 }
 
 IOPage_impl::~IOPage_impl()
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   pthread_rwlock_destroy(&_page_IO_RwLock);
+#endif
   if ( _pageDataPtr )
     delete [] _pageDataPtr;
 }
@@ -122,7 +130,9 @@ IOPage_impl::setPosition(off_t* inPageOffset, off_t byteOffset, int whence)
   if ( whence == SEEK_SET ) {
     *inPageOffset = byteOffset % PAGE_SIZE;
   } else { // corresponds to SEEK_CUR or SEEK_END
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
     ReadLockGuard rwlockGuard(_page_IO_RwLock);
+#endif
     off_t saveInPageOffset=*inPageOffset;
     if ( whence == SEEK_END ) {
       *inPageOffset = _actualDataSize + byteOffset;
@@ -142,8 +152,9 @@ IOPage_impl::setPosition(off_t* inPageOffset, off_t byteOffset, int whence)
 ssize_t
 IOPage_impl::read(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   ReadLockGuard rwlockGuard(_page_IO_RwLock);
-
+#endif
   size_t readeableSize = std::min(size_t(PAGE_SIZE - *inPageOffset), bufSz);
   if (readeableSize) {
     ::memcpy(buf, _pageDataPtr+*inPageOffset, readeableSize);
@@ -156,7 +167,9 @@ IOPage_impl::read(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
 ssize_t
 IOPage_impl::readOrderReverse(off_t* inPageOffset, uint8_t *buf, size_t bufSz)
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   ReadLockGuard rwlockGuard(_page_IO_RwLock);
+#endif
   int i=bufSz;
   if ( !*inPageOffset )
     return 0;
@@ -173,7 +186,9 @@ IOPage_impl::write(off_t* inPageOffset, const uint8_t *buf, size_t bufSz)
   size_t writeableSize = std::min(size_t(PAGE_SIZE - *inPageOffset), bufSz);
 
   if (writeableSize) {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
     WriteLockGuard rwlockGuard(_page_IO_RwLock);
+#endif
     ::memcpy(_pageDataPtr+*inPageOffset, buf, writeableSize);
 
     _uncommited_memory_chunks.insert(std::make_pair(*inPageOffset, writeableSize));
@@ -190,7 +205,9 @@ IOPage_impl::write(off_t* inPageOffset, const uint8_t *buf, size_t bufSz)
 int
 IOPage_impl::commitMemory()
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   WriteLockGuard rwlockGuard(_page_IO_RwLock);
+#endif
   return _dispatcher->commitDirtyPage(this);
 }
 
@@ -218,7 +235,9 @@ IOPage_impl::flush(int fd, off_t recordFilePosition)
 size_t
 IOPage_impl::getFreeSize() const
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   ReadLockGuard rwlockGuard(_page_IO_RwLock);
+#endif
   return PAGE_SIZE - _actualDataSize;
 }
 

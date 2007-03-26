@@ -37,7 +37,9 @@ private:
   typedef std::map<off_t,size_t> uncommited_memory_chunk_t;
   uncommited_memory_chunk_t _uncommited_memory_chunks;
 
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   mutable pthread_rwlock_t _page_IO_RwLock;
+#endif
 };
 
 class IOPage {
@@ -107,7 +109,9 @@ protected:
   typedef std::map<int, IOPage_impl*> registredPagesMap_t;
   registredPagesMap_t _registredPages;
 
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   smsc::core::synchronization::Mutex _lastPageLock, _registredPagesLock;
+#endif
 
   IOPage_impl* loadPageData(int pageNum, IOPage_impl* pagePtr=0);
 private:
