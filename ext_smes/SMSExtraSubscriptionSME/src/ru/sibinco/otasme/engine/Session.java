@@ -23,6 +23,7 @@ import java.util.Date;
 public final class Session {
 
   private static final Category log = Category.getInstance(Session.class);
+  private static final String MAR = "mar";
 
   private final String abonentNumber;
   private final String smeAddress;
@@ -97,13 +98,50 @@ public final class Session {
   // ---------------------------------------------- States -------------------------------------------------------------
 
 
-  private interface SessionState {
-    public SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException;
+  private abstract class SessionState {
+    public abstract SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException;
+
+    protected void processUser(String abonentNumber, boolean enableService) throws SQLException {
+      Connection conn = null;
+      PreparedStatement ps = null;
+      ResultSet rs = null;
+
+      try {
+        conn = ConnectionPool.getConnection();
+        ps = conn.prepareStatement(SmeProperties.Session.FIND_ABONENT_SQL);
+        ps.setString(1, abonentNumber);
+        rs = ps.executeQuery();
+
+        if (rs.next()) { // User already in DB
+          if (!enableService) {
+            ps = conn.prepareStatement(SmeProperties.Session.DELETE_ABONENT_SQL);
+            ps.setString(1, abonentNumber);
+            ps.executeUpdate();
+          }
+        } else if (enableService) {
+          ps = conn.prepareStatement(SmeProperties.Session.ADD_ABONENT_SQL);
+          ps.setString(1, abonentNumber);
+          ps.executeUpdate();
+        }
+
+      } finally {
+        try {
+          if (rs != null)
+            rs.close();
+          if (ps != null)
+            ps.close();
+          if (conn != null)
+            conn.close();
+        } catch (SQLException e) {
+          log.error(e, e);
+        }
+      }
+    }
   }
 
-  private final class StartState implements SessionState {
+  private final class StartState extends SessionState {
     // Regexes for parse abonent request
-    private final static String ON = "ON|oN|On|on|\\s*";
+    private final static String ON = ".*";
     private final static String OFF = "OFF|OFf|OoF|oFF|Off|oFf|ofF|off";
 
     public SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException {
@@ -111,10 +149,11 @@ public final class Session {
         throw new UnexpectedMessageException();
 
       final String req = incomingMessage.getMessageString();
-      if (req.trim().matches(ON))
-        return processOn(incomingMessage);
-      else if (req.trim().matches(OFF))
+      // NOTE: Order is important here!
+      if (req.trim().matches(OFF))
         return processOff(incomingMessage);
+      else if (req.trim().matches(ON))
+        return processOn(incomingMessage);
 
       processOther(incomingMessage);
       return null;
@@ -123,13 +162,24 @@ public final class Session {
     private SessionState processOn(Message incomingMessage) {
       logInfo("ON message received.");
       try {
-        if (checkAbonentSubscription()) { // Abonent already registered
+
+        if (incomingMessage.getConnectionName().equalsIgnoreCase(MAR)) {
           sendResponse(incomingMessage, Data.ESME_ROK);
-          sendMessage(SmeProperties.Session.ABONENT_ALREADY_REGISTERED, smeAddress);
+          return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT, true);
+        } else {
+          processUser(incomingMessage.getSourceAddress(), true);
+          sendResponse(incomingMessage, Data.ESME_ROK);
+          sendMessage(SmeProperties.Session.SMSC_ON_TEXT, smeAddress);
           return null;
         }
-        sendResponse(incomingMessage, Data.ESME_ROK);
-        return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT, true);
+
+//        if (checkAbonentSubscription()) { // Abonent already registered
+//          sendResponse(incomingMessage, Data.ESME_ROK);
+//          sendMessage(SmeProperties.Session.ABONENT_ALREADY_REGISTERED, smeAddress);
+//          return null;
+//        }
+//
+//        return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT, true);
 
       } catch (SQLException e) {
         log.error(e);
@@ -143,13 +193,27 @@ public final class Session {
       logInfo("OFF message received.");
 
       try {
-        if (!checkAbonentSubscription()) { // Abonent not registered
+        if (incomingMessage.getConnectionName().equalsIgnoreCase(MAR)) {
+          if (!checkAbonentSubscription()) {
+            sendResponse(incomingMessage, Data.ESME_ROK);
+            return sendSRCommand(SmeProperties.Session.SMSEXTRA_NUMBER, SmeProperties.Session.ON_ERROR_TEXT, true);
+          } else {
+            processUser(incomingMessage.getSourceAddress(), false);
+            sendResponse(incomingMessage, Data.ESME_ROK);
+            sendMessage(SmeProperties.Session.MAR_OFF_TEXT, smeAddress);
+            return null;
+          }
+        } else {
           sendResponse(incomingMessage, Data.ESME_ROK);
-          sendMessage(SmeProperties.Session.ABONENT_NOT_REGISTERED, smeAddress);
-          return null;
+          return sendSRCommand(smscenterNumber, SmeProperties.Session.OFF_ERROR_TEXT, false);
         }
-        sendResponse(incomingMessage, Data.ESME_ROK);
-        return sendSRCommand(smscenterNumber, SmeProperties.Session.OFF_ERROR_TEXT, false);
+
+//        if (!checkAbonentSubscription()) { // Abonent not registered
+//          sendResponse(incomingMessage, Data.ESME_ROK);
+//          sendMessage(SmeProperties.Session.ABONENT_NOT_REGISTERED, smeAddress);
+//          return null;
+//        }
+
 
       } catch (SQLException e) {
         log.error(e);
@@ -219,7 +283,7 @@ public final class Session {
     }
   }
 
-  private final class OTAState implements SessionState {
+  private final class OTAState extends SessionState {
     private final String errorText;
     private final String serviceName;
     private int currentMessageRepeats = 0;
@@ -266,48 +330,15 @@ public final class Session {
       } else  // No error occured
         logInfo("OTA Platform return success");
 
-      processUser(abonentNumber, enableService);
+      try {
+        processUser(abonentNumber, enableService);
+      } catch (SQLException e) {
+        log.error(e, e);
+      }
       return null;
     }
 
-    private void processUser(String abonentNumber, boolean enableService) {
-      Connection conn = null;
-      PreparedStatement ps = null;
-      ResultSet rs = null;
 
-      try {
-        conn = ConnectionPool.getConnection();
-        ps = conn.prepareStatement(SmeProperties.Session.FIND_ABONENT_SQL);
-        ps.setString(1, abonentNumber);
-        rs = ps.executeQuery();
-
-        if (rs.next()) { // User already in DB
-          if (!enableService) {
-            ps = conn.prepareStatement(SmeProperties.Session.DELETE_ABONENT_SQL);
-            ps.setString(1, abonentNumber);
-            ps.executeUpdate();
-          }
-        } else if (enableService) {
-          ps = conn.prepareStatement(SmeProperties.Session.ADD_ABONENT_SQL);
-          ps.setString(1, abonentNumber);
-          ps.executeUpdate();
-        }
-
-      } catch (SQLException e) {
-        log.error(e, e);
-      } finally {
-        try {
-          if (rs != null)
-            rs.close();
-          if (ps != null)
-            ps.close();
-          if (conn != null)
-            conn.close();
-        } catch (SQLException e) {
-          log.error(e, e);
-        }
-      }
-    }
   }
 
 

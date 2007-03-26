@@ -26,7 +26,9 @@ public class SmeProperties {
 
   public static class Session {
     public static final String ON_ERROR_TEXT;
+    public static final String SMSC_ON_TEXT;
     public static final String OFF_ERROR_TEXT;
+    public static final String MAR_OFF_TEXT;
     public static final String INFO_TEXT;
     public static final String UNEXPECTED_MESSAGE_ERROR_TEXT;
     public static final String TIMEOUT_ERROR_TEXT;
@@ -37,13 +39,13 @@ public class SmeProperties {
     public static final String ADD_ABONENT_SQL;
     public static final String DELETE_ABONENT_SQL;
     public static final String INTERNAL_ERROR;
-    public static final String ABONENT_ALREADY_REGISTERED;
-    public static final String ABONENT_NOT_REGISTERED;
 
     static {
       final Properties config = Utils.loadConfig("sme.properties");
       ON_ERROR_TEXT = Utils.loadString(config, "session.on.error.text");
+      SMSC_ON_TEXT = Utils.loadString(config, "session.smsc.on.text");
       OFF_ERROR_TEXT = Utils.loadString(config, "session.off.error.text");
+      MAR_OFF_TEXT = Utils.loadString(config, "session.mar.off.text");
       INFO_TEXT = Utils.loadString(config, "session.info.text");
       UNEXPECTED_MESSAGE_ERROR_TEXT = Utils.loadString(config, "session.unexpected.message.error.text");
       TIMEOUT_ERROR_TEXT = Utils.loadString(config, "session.timeout.error.text");
@@ -54,8 +56,6 @@ public class SmeProperties {
       ADD_ABONENT_SQL = Utils.loadString(config, "session.add.abonent.sql");
       DELETE_ABONENT_SQL = Utils.loadString(config, "session.delete.abonent.sql");
       INTERNAL_ERROR = Utils.loadString(config, "session.internal.error");
-      ABONENT_ALREADY_REGISTERED = Utils.loadString(config, "session.abonent.already.registered");
-      ABONENT_NOT_REGISTERED = Utils.loadString(config, "session.abonent.not.registered");
       config.clear();
     }
   }
