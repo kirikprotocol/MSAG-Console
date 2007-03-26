@@ -102,13 +102,14 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
 			Resched(abnt, curSchedTime, curTime);
 			schedParam->schedTime = curTime;
 			deliveryQueueMonitor.notify();
-			smsc_log_info(logger, "Abonent %s already scheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curSchedTime), total, deliveryQueue.size());
+			smsc_log_info(logger, "Abonent %s rescheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curTime), total, deliveryQueue.size());
 		}
 		return schedParam->schedTime;
 	}
 	if(-1 != schedTime)
 	{
-		smsc_log_info(logger, "Abonent %s scheduling on presnet time %s", strAbnt.c_str(), cTime(&schedTime));
+//		smsc_log_info(logger, "Abonent %s scheduling on present time %s", strAbnt.c_str(), cTime(&schedTime));
+		smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime));
 	}
 	else
 	{
