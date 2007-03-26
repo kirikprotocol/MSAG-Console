@@ -2,10 +2,13 @@
 
 #include <memory>
 #include "Exceptions.hpp"
+#include <logger/Logger.h>
 
 InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage (DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>* storage)
   : _storage(storage)
 {
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbgStrg");
+  smsc_log_debug(logger, "InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage::: It is creating an index");
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   InfoSme_Tasks_Stat_Entity_Adapter record;
   typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid, nextRid;
@@ -25,6 +28,7 @@ InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage (DataStor
        opResult != DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::RECORD_DELETED )
     throw smsc::db::SQLException("InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage::: can't load storage data");
 
+  smsc_log_debug(logger, "InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage::: Index was created");
 }
 
 bool
