@@ -49,13 +49,14 @@ const char* NEW_MESSAGE_STATEMENT_SQL         = "INSERT INTO %s (ID, STATE, ABON
 const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
                                                 "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC";
 
+const char* DROP_INFOSME_T_INDEX_STATEMENT_SQL = "DROP INDEX ON %s";
 
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
            DataSource* _dsOwn, DataSource* _dsInt)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
-        usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn), dsInt(_dsInt), 
-            bInProcess(false), bInGeneration(false), bGenerationSuccess(false),
-                lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
+      usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn), dsInt(_dsInt), 
+      bInProcess(false), bInGeneration(false), bGenerationSuccess(false),
+      infoSme_T_storageWasDestroyed(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
 {
     init(config, taskId, tablePrefix);
     formatter = new OutputFormatter(info.msgTemplate.c_str());
@@ -124,6 +125,22 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.trackIntegrity = config->getBool("trackIntegrity");
     info.keepHistory = config->getBool("keepHistory");
     info.endDate = parseDateTime(config->getString("endDate"));
+    if (info.endDate>0 && time(0)>=info.endDate) {
+      // preload InfoSme_T_ storage without index building
+      Connection* connection = 0;
+      connection = dsInt->getConnection();
+
+      std::string createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+      std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.c_str()));
+      Statement* statement = statementGuard.get();
+      if (!statement) 
+        throw Exception("Failed to create table statement.");
+      statement->execute();  
+
+      // and set flag in order to don't try destroy storage needed only for queries execution
+      infoSme_T_storageWasDestroyed = true;
+    }
+
     info.retryTime = parseTime(config->getString("retryTime"));
     if (info.retryOnFail && info.retryTime <= 0)
         throw ConfigException("Task retry time specified incorrectly."); 
@@ -259,7 +276,7 @@ std::string Task::prepareDoubleSqlCall(const char* sql)
 
 void Task::trackIntegrity(bool clear, bool del, Connection* connection)
 {
-    smsc_log_debug(logger, "trackIntegrity method called on task '%s'",
+    smsc_log_debug(logger, "trackIntegrity method being called on task '%s'",
                    info.id.c_str());
     
     if (!info.trackIntegrity) return;
@@ -325,7 +342,7 @@ void Task::trackIntegrity(bool clear, bool del, Connection* connection)
 
 void Task::createTable()
 {
-    smsc_log_debug(logger, "createTable method called on task '%s'", info.id.c_str());
+    smsc_log_debug(logger, "createTable method being called on task '%s'", info.id.c_str());
     
     MutexGuard guard(createTableLock);
     
@@ -397,7 +414,7 @@ void Task::createTable()
 
 void Task::dropTable()
 {
-    smsc_log_debug(logger, "dropTable method called on task '%s'", info.id.c_str());
+    smsc_log_debug(logger, "dropTable method being called on task '%s'", info.id.c_str());
     
     MutexGuard guard(createTableLock);
     
@@ -452,7 +469,7 @@ void Task::dropTable()
 
 bool Task::beginGeneration(Statistics* statistics)
 {
-    smsc_log_debug(logger, "beginGeneration method called on task '%s'",
+    smsc_log_debug(logger, "beginGeneration method being called on task '%s'",
                  info.id.c_str());
 
     uint64_t totalGenerated = 0;
@@ -596,7 +613,7 @@ bool Task::beginGeneration(Statistics* statistics)
 }
 void Task::endGeneration()
 {
-    smsc_log_debug(logger, "endGeneration method called on task '%s'",
+    smsc_log_debug(logger, "endGeneration method being called on task '%s'",
                  info.id.c_str());
     {
         MutexGuard guard(inGenerationLock);
@@ -608,7 +625,7 @@ void Task::endGeneration()
 
 void Task::dropNewMessages(Statistics* statistics)
 {
-    smsc_log_debug(logger, "dropAllMessages method called on task '%s'",
+    smsc_log_debug(logger, "dropAllMessages method being called on task '%s'",
                    info.id.c_str());
 
     endGeneration();
@@ -664,7 +681,7 @@ void Task::dropNewMessages(Statistics* statistics)
 
 void Task::resetWaiting(Connection* connection)
 {
-    smsc_log_debug(logger, "resetWaiting method called on task '%s'",
+    smsc_log_debug(logger, "resetWaiting method being called on task '%s'",
                  info.id.c_str());
     
     bool connectionInternal = false;
@@ -715,7 +732,7 @@ void Task::resetWaiting(Connection* connection)
 
 bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
 {
-    smsc_log_debug(logger, "retryMessage method called on task '%s' for id=%lld",
+    smsc_log_debug(logger, "retryMessage method being called on task '%s' for id=%lld",
                  info.id.c_str(), msgId);
 
     int wdTimerId = -1;
@@ -780,7 +797,7 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* conne
                       state, info.id.c_str(), msgId);
         return false;
     } else {
-        smsc_log_debug(logger, "finalizeMessage(%d) method called on task '%s' for id=%lld",
+        smsc_log_debug(logger, "finalizeMessage(%d) method being called on task '%s' for id=%lld",
                        state, info.id.c_str(), msgId);
     }
 
@@ -853,7 +870,7 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* conne
 
 bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 {
-    smsc_log_debug(logger, "enrouteMessage method called on task '%s' for id=%lld",
+    smsc_log_debug(logger, "enrouteMessage method being called on task '%s' for id=%lld",
                  info.id.c_str(), msgId);
 
     int wdTimerId = -1;
@@ -912,7 +929,7 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
-    smsc_log_debug(logger, "getNextMessage method called on task '%s'",
+    smsc_log_debug(logger, "getNextMessage method being called on task '%s'",
                    info.id.c_str());
     __require__(connection);
 
@@ -1037,9 +1054,18 @@ bool Task::getNextMessage(Connection* connection, Message& message)
 
 bool Task::isReady(time_t time, bool checkActivePeriod)
 {
-    if ( !isEnabled() || isFinalizing() || 
-        (info.endDate>0 && time>=info.endDate) ||
-        (info.validityDate>0 && time>=info.validityDate) ) return false;
+  if ( !isEnabled() || isFinalizing() || 
+       (info.endDate>0 && time>=info.endDate) ||
+       (info.validityDate>0 && time>=info.validityDate) ) { 
+    smsc_log_debug(logger, "Task::isReady::: task id =%s,info.endDate=%ld,info.validityDate=%ld,time()=%ld",info.id.c_str(),info.endDate,info.validityDate,::time(0));
+    if ( !infoSme_T_storageWasDestroyed && !isInProcess() &&
+         ((info.endDate>0 && time>=info.endDate) ||
+          (info.validityDate>0 && time>=info.validityDate)) ) {
+      destroy_InfoSme_T_Storage();
+      infoSme_T_storageWasDestroyed = true;
+    }
+    return false;
+  }
 
     if (checkActivePeriod) 
     {
@@ -1105,7 +1131,7 @@ bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
                                                const std::string& recordId)
 {
   uint64_t msgId = atol(recordId.c_str());
-  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method called on task '%s' for id=%lld",
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method being called on task '%s' for id=%lld",
                  info.id.c_str(), msgId);
 
   try
@@ -1139,14 +1165,14 @@ bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
   return false;
 }
 
-const char* DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID  = "%s_FULL_TABLE_SCAN_ID";
-const char* DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL = "FULL_TABLE_SCAN FROM %s";
+static const char* DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_ID  = "%s_FULL_TABLE_SCAN_ID";
+static const char* DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL = "FULL_TABLE_SCAN FROM %s";
 
 bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
                                                         time_t unixTime,
                                                         const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion method called on task '%s'",
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion method being called on task '%s'",
                  info.id.c_str());
 
   Connection* intConnection = dsInt->getConnection();
@@ -1206,7 +1232,7 @@ bool Task::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCr
 
 bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
 {
-  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId method called on task '%s'",
+  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId method being called on task '%s'",
                  info.id.c_str());
 
   Connection* intConnection = dsInt->getConnection();
@@ -1227,7 +1253,7 @@ bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
 
 bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion method called on task '%s'",
+  smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion method being called on task '%s'",
                  info.id.c_str());
 
   Connection* intConnection = dsInt->getConnection();
@@ -1323,7 +1349,7 @@ static bool reverseOrderBySendDate(MessageDescription& lhs, MessageDescription& 
 Array<std::string>
 Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion method called on task '%s'",
+  smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion method being called on task '%s'",
                  info.id.c_str());
 
   Connection* intConnection = dsInt->getConnection();
@@ -1405,12 +1431,38 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
 void
 Task::endDeliveryMessagesGeneration()
 {
-  smsc_log_debug(logger, "Task::endDeliveryMessagesGeneration method called on task '%s'",
+  smsc_log_debug(logger, "Task::endDeliveryMessagesGeneration method being called on task '%s'",
                  info.id.c_str());
 
   MutexGuard guard(inGenerationLock);
   bInGeneration = false; bGenerationSuccess = true;
+  /*  Manager& configManager = Manager::getInstance();
+
+  configManager.setBool(("InfoSme.Tasks."+info.id+".taskLoaded").c_str(), true);
+  configManager.save();*/
   generationEndEvent.Signal();
+}
+
+void
+Task::destroy_InfoSme_T_Storage()
+{
+  smsc_log_debug(logger, "Task::destroy_InfoSme_T_Storage method being called on task '%s'", info.id.c_str());
+
+  try {
+    Connection* connection = 0;
+    connection = dsInt->getConnection();
+
+    std::string dropInfoSme_T_Idx(prepareSqlCall(DROP_INFOSME_T_INDEX_STATEMENT_SQL));
+    std::auto_ptr<Statement> statementGuard(connection->createStatement(dropInfoSme_T_Idx.c_str()));
+    Statement* statement = statementGuard.get();
+    if (!statement) 
+      throw Exception("can' create statement (null pointer value)");
+
+    statement->execute();  
+  } catch (std::exception& ex) {
+    smsc_log_info(logger, "Task::destroy_InfoSme_T_Storage::: catch exception [%s] for task '%s'",
+                  ex.what(), info.id.c_str());
+  }
 }
 
 }}
