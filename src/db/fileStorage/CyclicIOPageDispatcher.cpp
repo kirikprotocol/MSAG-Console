@@ -19,7 +19,9 @@ CyclicIOPageDispatcher::CyclicIOPageDispatcher(int fd) : IOPageDispatcher(fd),
 bool
 CyclicIOPageDispatcher::haveNextPage(const IOPage& currentPage)
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   smsc::core::synchronization::MutexGuard lastPageMutexGuard(_lastPageLock);
+#endif
   if ( currentPage.getPageNum() == _lastPageOffset/IOPage_impl::PAGE_SIZE ) return false;
   else return true;
 }
@@ -29,7 +31,9 @@ CyclicIOPageDispatcher::getIOPage(off_t byteOffset)
 {
   int pageNum = byteOffset / IOPage_impl::PAGE_SIZE;
 
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   smsc::core::synchronization::MutexGuard mutexGuard(_registredPagesLock);
+#endif
   registredPagesMap_t::iterator regPageIter = _registredPages.find(pageNum);
 
   IOPage_impl* ioPage;
@@ -83,7 +87,9 @@ CyclicIOPageDispatcher::getIOPage(off_t byteOffset)
 IOPage
 CyclicIOPageDispatcher::createNewIOPage()
 {
+#ifdef NEED_IOPAGE_DISPATCHER_LOCK
   smsc::core::synchronization::MutexGuard lastPageMutexGuard(_lastPageLock);
+#endif
 
   _lastPageOffset += IOPage_impl::PAGE_SIZE;
   return getIOPage(_lastPageOffset);
