@@ -7,6 +7,19 @@
 
     <import schemaLocation="rules.xsd" namespace="http://www.sibinco.com/SCAG" />
 
+    <simpleType name="MsgState">
+        <restriction base="string">
+            <enumeration value="ENROUTE"/> <!-- 1 -->
+            <enumeration value="DELIVERED"/>
+            <enumeration value="EXPIRED"/>
+            <enumeration value="DELETED"/>
+            <enumeration value="UNDELIVERABLE"/>
+            <enumeration value="ACCEPTED"/>
+            <enumeration value="UNKNOWN"/>
+            <enumeration value="REJECTED"/>
+        </restriction>
+    </simpleType>
+
     <group name="Actions">
         <choice>
             <element name="redirect">
@@ -49,19 +62,6 @@
                     <attribute name="exist" type="scag:Value" use="required"/>
                 </complexType>
             </element>
-
-            <simpleType name="MsgState">
-                <restriction base="string">
-                    <enumeration value="ENROUTE"/> <!-- 1 -->
-                    <enumeration value="DELIVERED"/>
-                    <enumeration value="EXPIRED"/>
-                    <enumeration value="DELETED"/>
-                    <enumeration value="UNDELIVERABLE"/>
-                    <enumeration value="ACCEPTED"/>
-                    <enumeration value="UNKNOWN"/>
-                    <enumeration value="REJECTED"/>
-                </restriction>
-            </simpleType>
 
             <element name="receipt">
                 <complexType>
