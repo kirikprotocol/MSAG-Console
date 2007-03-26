@@ -207,6 +207,7 @@
     <section name="systemDataSource">
       <param name="connections" type="int">10</param>
       <param name="dbInstance" type="string">smsc</param>
+      <param name="dbSubDir" type="string">db</param>
       <param name="dbUserName" type="string">smsc</param>
       <param name="dbUserPassword" type="string">smsc</param>
       <param name="type" type="string">OCI</param>
