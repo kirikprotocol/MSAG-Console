@@ -846,7 +846,7 @@ AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::strin
         property = new AdapterProperty(name,this,command->get_resp()->get_dir());
         break;
     case MESSAGE_ID:
-        property = new AdapterProperty(name,this,data.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID));
+        property = new AdapterProperty(name,this,data.getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID));
         break;
     case USSD_DIALOG:
         property = new AdapterProperty(name,this,data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP));
