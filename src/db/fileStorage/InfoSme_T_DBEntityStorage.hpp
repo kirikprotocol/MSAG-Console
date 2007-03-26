@@ -20,27 +20,46 @@
 */
 class InfoSme_T_DBEntityStorage
   : public DbEntity_SearchIface<InfoSme_T_Entity::Id_Key, InfoSme_T_Entity>,
-    public DbEntity_NonUniqueSearchIface<InfoSme_T_Entity::StateANDSDate_key, InfoSme_T_Entity>,
+    //    public DbEntity_NonUniqueSearchIface<InfoSme_T_Entity::StateANDSDate_key, InfoSme_T_Entity>,
     public DbEntity_StorageIface<InfoSme_T_Entity>,
     public DbEntity_FullTableScanIface<InfoSme_T_Entity>,
     public DbEntity_EraseIface<InfoSme_T_Entity::Id_Key>,
     public DbEntity_UpdateIface<InfoSme_T_Entity::Id_Key, InfoSme_T_Entity> {
 public:
-  InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* storage);
-
+  InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* storage,
+                            bool buildIndex=true);
+  ~InfoSme_T_DBEntityStorage();
   virtual bool findValue(const InfoSme_T_Entity::Id_Key& key, InfoSme_T_Entity* resultValue);
-  virtual bool findFirstValue(const InfoSme_T_Entity::StateANDSDate_key& key, InfoSme_T_Entity* resultValue);
-  virtual bool findNextValue(const InfoSme_T_Entity::StateANDSDate_key& key, InfoSme_T_Entity* resultValue);
 
   virtual bool putValue(const InfoSme_T_Entity& value);
-
-  virtual DbIterator<InfoSme_T_Entity>* getIterator();
 
   virtual int eraseValue(const InfoSme_T_Entity::Id_Key& key);
   virtual int updateValue(const InfoSme_T_Entity::Id_Key& key, const InfoSme_T_Entity& oldValue , const InfoSme_T_Entity& newValue);
 
   uint64_t getNextIdSequenceNumber();
 
+  class InfoSme_T_DbIterator : public DbIterator<InfoSme_T_Entity> {
+  public:
+    InfoSme_T_DbIterator(InfoSme_T_DBEntityStorage* dbIteratorCreator);
+
+    virtual bool nextValue(InfoSme_T_Entity* resultValue);
+    void setIndexSearchCrit(InfoSme_T_Entity::StateANDSDate_key& fromKey,
+                            InfoSme_T_Entity::StateANDSDate_key& toKey);
+  private:
+    bool sequentialBypass(InfoSme_T_Entity* resultValue);
+    bool indexedBypass(InfoSme_T_Entity* resultValue);
+
+    InfoSme_T_DBEntityStorage* _dbIteratorCreator;
+    //smsc::core::synchronization::Mutex& _storageLock;
+    DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t _ridForSequentialBypass;
+    bool _beginIteration, _searchStateCriterionIsSet;
+    InfoSme_T_Entity::StateANDSDate_key _fromKey, _toKey;
+
+    NonUniqueStorageIndex<InfoSme_T_Entity::StateANDSDate_key,
+                          DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t>::IndexPosition indexPos;
+  };
+
+  virtual InfoSme_T_DbIterator* getIterator();
 private:
   DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* _storage;
   UniqueStorageIndex<InfoSme_T_Entity::Id_Key,
@@ -49,19 +68,7 @@ private:
                         DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t> _nonuniq_index_by_state_and_sdate_key;
   smsc::core::synchronization::Mutex _storageLock;
 
-  class InfoSme_T_DbIterator : public DbIterator<InfoSme_T_Entity> {
-  public:
-    InfoSme_T_DbIterator(DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* storage,
-                         smsc::core::synchronization::Mutex& storageLock);
-
-    virtual bool nextValue(InfoSme_T_Entity* resultValue);
-  private:
-    DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>* _storage;
-    smsc::core::synchronization::Mutex& _storageLock;
-    DataStorage_FileDispatcher<InfoSme_T_Entity>::rid_t _ridForSequentialBypass;
-    bool _beginIteration;
-  };
-
+  
   friend class InfoSme_T_DbIterator;
 };
 
