@@ -27,25 +27,8 @@ extractTableName(const char* sql, const char* keyword)
 # include "InfoSme_Generating_Tasks_DBEntityStorage.hpp"
 # include "InfoSme_Tasks_Stat_DBEntityStorage.hpp"
 # include <core/synchronization/Mutex.hpp>
+# include "StorageHelper.hpp"
 
-class StorageHelper {
-public:
-  static InfoSme_T_DBEntityStorage* getInfoSme_T_Storage(const std::string& tableName);
-  static void createInfoSme_T_Storage(const std::string& tableName);
-  static void deleteInfoSme_T_Storage(const std::string& tableName);
-
-  static InfoSme_Id_Mapping_DBEntityStorage* getInfoSme_Id_Mapping_Storage();
-
-  static InfoSme_Generating_Tasks_DBEntityStorage* getInfoSme_GeneratingTasks_Storage();
-
-  static InfoSme_Tasks_Stat_DBEntityStorage* getInfoSme_Tasks_Stat_Storage();
-private:
-  typedef std::map<std::string, InfoSme_T_DBEntityStorage*> storageMap_t;
-  static storageMap_t _storageMap;
-  static smsc::core::synchronization::Mutex _storageMapLock;
-
-  static smsc::logger::Logger *_logger;
-};
 
 DataSource* DBEntityStorageDataSourceFactory::createDataSource()
 {
@@ -104,7 +87,9 @@ DBEntityStorageConnection::createStatement(const char* sql)
       insert_into_len = strlen("INSERT INTO"),
       update_keyword_len = strlen("UPDATE"),
       infosme_t_fulltablescan_len = strlen("FULL_TABLE_SCAN FROM"),
-      infosme_tasks_stat_fulltablescan_len = strlen("FULL_TABLE_SCAN FROM INFOSME_TASKS_STAT");
+      infosme_tasks_stat_fulltablescan_len = strlen("FULL_TABLE_SCAN FROM INFOSME_TASKS_STAT"),
+      drop_infosme_t_index_len = strlen("DROP INDEX ON"),
+      infosme_t_fulltablescan_wo_idx_len = strlen("FULL_TABLE_SCAN_WO_INDEX FROM");
 
     if (!strncmp(sql,"DELETE FROM INFOSME_GENERATING_TASKS",del_from_infosme_gen_tasks_len)) {
       smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object Delete_from_InfoSme_Generating_Tasks_By_TaskId");
@@ -144,7 +129,7 @@ DBEntityStorageConnection::createStatement(const char* sql)
     } else if ( !strncmp(sql, "CREATE TABLE", create_table_len) ) {
       smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object DDLStatement for CREATE TABLE");
       StorageHelper::createInfoSme_T_Storage(extractTableName(sql, "TABLE"));
-
+      
       return new DDLStatement();
     } else if ( !strncmp(sql, "DROP TABLE", drop_table_len) ) {
       smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: call StorageHelper::deleteInfoSme_T_Storage, sql=[%s]", sql);
@@ -152,9 +137,12 @@ DBEntityStorageConnection::createStatement(const char* sql)
       StorageHelper::deleteInfoSme_T_Storage(extractTableName(sql, "TABLE"));
       smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object DDLStatement for DROP TABLE");
       return new DDLStatement();
+    } else if ( !strncmp(sql, "DROP INDEX ON", drop_infosme_t_index_len) ) {
+      StorageHelper::deleteInfoSme_T_Storage(extractTableName(sql, "ON"), false /*bool needDropDataFile*/);
+      return new DDLStatement();
     } else {
       if ( !strncmp(sql, "DELETE", delete_keyword_len) ) {
-        InfoSme_T_DBEntityStorage*
+        StorageHelper::InfoSme_T_storage_ref_t
           infoSme_T_Storage = StorageHelper::getInfoSme_T_Storage(extractTableName(sql, "FROM"));
         if ( strstr(sql,"WHERE STATE=:NEW AND ABONENT=:ABONENT") ) {
           smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object Delete_from_InfoSme_T_By_StateAndAbonent");
@@ -170,7 +158,7 @@ DBEntityStorageConnection::createStatement(const char* sql)
         smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object Insert_into_InfoSme_T");
         return new Insert_into_InfoSme_T(StorageHelper::getInfoSme_T_Storage(extractTableName(sql, "INTO")));
       } else if ( !strncmp(sql, "UPDATE", update_keyword_len) ) {
-        InfoSme_T_DBEntityStorage*
+        StorageHelper::InfoSme_T_storage_ref_t
           infoSme_T_Storage = StorageHelper::getInfoSme_T_Storage(extractTableName(sql, "UPDATE"));
         if ( strstr(sql, "SET STATE=:NEW WHERE STATE=:WAIT") ) {
           smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object Update_InfoSme_T_Set_NewState_By_OldState");
@@ -188,7 +176,7 @@ DBEntityStorageConnection::createStatement(const char* sql)
       } else if (!strncmp(sql, "SELECT ID, ABONENT, MESSAGE", sel_from_infosme_t_len)) {
         smsc_log_debug(_logger, "DBEntityStorageConnection::createStatement::: return object SelectInfoSme_T_stateAndSendDate_criterion");
         return new SelectInfoSme_T_stateAndSendDate_criterion(StorageHelper::getInfoSme_T_Storage(extractTableName(sql, "FROM")));
-      } else if (traceIf("FULL_TABLE_SCAN FROM") && !strncmp(sql, "FULL_TABLE_SCAN FROM", infosme_t_fulltablescan_len)) {
+      } else if (!strncmp(sql, "FULL_TABLE_SCAN FROM", infosme_t_fulltablescan_len)) {
         return new SelectInfoSme_T_fullTableScan(StorageHelper::getInfoSme_T_Storage(extractTableName(sql, "FROM")));
       }
     }
@@ -207,168 +195,6 @@ DBEntityStorageConnection::createRoutine(const char* call, bool func)
   throw SQLException("DBEntityStorageConnection::createRoutine::: not supported");
 }
 
-StorageHelper::storageMap_t StorageHelper::_storageMap;
-smsc::core::synchronization::Mutex StorageHelper::_storageMapLock;
-
-InfoSme_T_DBEntityStorage* StorageHelper::getInfoSme_T_Storage(const std::string& tableName)
-{
-  smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
-
-  smsc::core::synchronization::MutexGuard lockGuard(_storageMapLock);
-  smsc_log_debug(logger, "StorageHelper::getInfoSme_T_Storage::: find storage for tableName=[%s]", tableName.c_str());
-  storageMap_t::iterator iter = _storageMap.find(tableName);
-  if ( iter == _storageMap.end() ) {
-    SimpleFileDispatcher<InfoSme_T_Entity_Adapter>* infoSme_T_Storage = new SimpleFileDispatcher<InfoSme_T_Entity_Adapter>(tableName + ".db");
-    DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::operation_status_t
-      st =infoSme_T_Storage->open();
-    if ( st != DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK ) {
-      smsc_log_error(logger, "StorageHelper::getInfoSme_T_Storage::: storage for tableName=[%s] not found", tableName.c_str());
-      throw SQLException("StorageHelper::getInfoSme_T_Storage:: storage doesn't exist");
-    }
-    std::pair<storageMap_t::iterator,bool> insResult =
-      _storageMap.insert(std::make_pair(tableName,
-                                        new InfoSme_T_DBEntityStorage(infoSme_T_Storage)
-                                        ));
-    if ( insResult.second == false ) {
-      smsc_log_error(logger, "StorageHelper::getInfoSme_T_Storage::: storage for tableName=[%s] not found", tableName.c_str());
-      throw SQLException("StorageHelper::getInfoSme_T_Storage:: table doesn't exist");
-    } else
-      iter = insResult.first;
-  }
-
-  smsc_log_debug(logger, "StorageHelper::getInfoSme_T_Storage::: found storage for tableName=[%s]", tableName.c_str());
-  return iter->second;
-}
-
-#include "InfoSme_T_Entity_Adapter.hpp"
-
-void StorageHelper::createInfoSme_T_Storage(const std::string& tableName)
-{
-  smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
-  smsc::core::synchronization::MutexGuard lockGuard(_storageMapLock);
-  smsc_log_debug(logger, "StorageHelper::createInfoSme_T_Storage::: create storage for tableName=[%s]", tableName.c_str());
-  storageMap_t::iterator iter = _storageMap.find(tableName);
-  if ( iter == _storageMap.end() ) {
-    SimpleFileDispatcher<InfoSme_T_Entity_Adapter>* infoSme_T_Storage = new SimpleFileDispatcher<InfoSme_T_Entity_Adapter>(tableName + ".db");
-    DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::operation_status_t
-      st =infoSme_T_Storage->open();
-    if ( !(st == DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK ||
-           ( st == DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::NO_SUCH_FILE &&
-             infoSme_T_Storage->create() == DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK )
-           )
-         )
-      throw SQLException("StorageHelper::createInfoSme_T_Storage:: can't create storage");
-    _storageMap.insert(std::make_pair(tableName,
-                                      new InfoSme_T_DBEntityStorage(infoSme_T_Storage)
-                                      ));
-    smsc_log_debug(logger, "StorageHelper::createInfoSme_T_Storage::: storage was created for tableName=[%s]", tableName.c_str());
-  } else {
-    smsc_log_debug(logger, "StorageHelper::createInfoSme_T_Storage::: storage already exists for tableName=[%s]", tableName.c_str());
-    throw SQLException("StorageHelper::createInfoSme_T_Storage:: table already exists");
-  }
-}
-
-void StorageHelper::deleteInfoSme_T_Storage(const std::string& tableName)
-{
-  smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
-  smsc::core::synchronization::MutexGuard lockGuard(_storageMapLock);
-  smsc_log_debug(logger, "StorageHelper::deleteInfoSme_T_Storage::: delete storage for tableName=[%s]", tableName.c_str());
-  storageMap_t::iterator iter = _storageMap.find(tableName);
-  if ( iter != _storageMap.end() ) {
-    SimpleFileDispatcher<InfoSme_T_Entity_Adapter>(tableName + ".db").drop();
-    delete iter->second;
-    _storageMap.erase(iter);
-    smsc_log_debug(logger, "StorageHelper::deleteInfoSme_T_Storage::: storage was deleted for tableName=[%s]", tableName.c_str());
-  }
-}
-
-#include "InfoSme_Id_Mapping_Entity_Adapter.hpp"
-
-static
-SimpleFileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>*
-get_infosme_id_mapping_file_dispatcher()
-{
-  static SimpleFileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>
-    storage("INFOSME_ID_MAPPING.db");
-
-  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::operation_status_t
-    st =storage.open();
-  if ( !(st == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ||
-         ( st == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::NO_SUCH_FILE &&
-           storage.create() == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK )
-         )
-       )
-    throw SQLException("StorageHelper::getInfoSme_Id_Mapping_Storage::: can't create storage");
-
-  return &storage;
-}
-
-InfoSme_Id_Mapping_DBEntityStorage*
-StorageHelper::getInfoSme_Id_Mapping_Storage()
-{
-  static InfoSme_Id_Mapping_DBEntityStorage
-    infoSme_Id_Mapping_Storage(get_infosme_id_mapping_file_dispatcher());
-
-  return &infoSme_Id_Mapping_Storage;
-}
-
-#include "InfoSme_Generating_Tasks_Entity_Adapter.hpp"
-
-static
-SimpleFileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>*
-get_infosme_generating_tasks_file_dispatcher()
-{
-  static SimpleFileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>
-    storage("INFOSME_GENERATING_TASKS.db");
-
-  DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::operation_status_t
-    st =storage.open();
-  if ( !(st == DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::OPERATION_OK ||
-         ( st == DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::NO_SUCH_FILE &&
-           storage.create() == DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::OPERATION_OK )
-         )
-       )
-    throw SQLException("StorageHelper::get_infosme_generating_tasks_file_dispatcher::: can't create storage");
-
-  return &storage;
-}
-
-InfoSme_Generating_Tasks_DBEntityStorage*
-StorageHelper::getInfoSme_GeneratingTasks_Storage()
-{
-  static InfoSme_Generating_Tasks_DBEntityStorage
-    infoSme_GeneratingTasks_storage(get_infosme_generating_tasks_file_dispatcher());
-  return &infoSme_GeneratingTasks_storage;
-}
-
-static
-SimpleFileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>*
-get_infosme_tasks_stat_file_dispatcher()
-{
-  static SimpleFileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>
-    storage("INFOSME_TASKS_STAT.db");
-
-  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::operation_status_t
-    st =storage.open();
-  if ( !(st == DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::OPERATION_OK ||
-         ( st == DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::NO_SUCH_FILE &&
-           storage.create() == DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::OPERATION_OK )
-         )
-       )
-    throw SQLException("StorageHelper::get_infosme_tasks_stat_file_dispatcher::: can't create storage");
-
-  return &storage;
-}
-
-InfoSme_Tasks_Stat_DBEntityStorage*
-StorageHelper::getInfoSme_Tasks_Stat_Storage()
-{
-  static InfoSme_Tasks_Stat_DBEntityStorage
-    infoSme_Tasks_Stat_storage(get_infosme_tasks_stat_file_dispatcher());
-
-  return &infoSme_Tasks_Stat_storage;
-}
-
 Connection* DBEntityStorageDataSource::getConnection()
 {
   return newConnection();
@@ -384,7 +210,32 @@ void DBEntityStorageDataSource::closeRegisteredQueries(const char* id)
 DBEntityStorageDriver::DBEntityStorageDriver(ConfigView* config)
   throw (ConfigException) : DBDriver(config), _logger(Logger::getInstance("dbStrgDrv"))
 {
-  
+  std::string dbSubDir("./");
+  try {
+    dbSubDir += config->getString("dbSubDir");
+  } catch (...) {}
+
+  if ( dbSubDir[dbSubDir.size()-1] != '/' )
+    dbSubDir += '/';
+
+  SequenceNumber::getInstance().initialize(dbSubDir + "seqNum.db");
+
+  try { 
+    // make static storage initialization 
+    StorageHelper::setDbFilePrefix(dbSubDir);
+    InfoSme_Id_Mapping_DBEntityStorage* _init_InfoSme_Id_Mapping_Storage =
+      StorageHelper::getInfoSme_Id_Mapping_Storage();
+
+    InfoSme_Generating_Tasks_DBEntityStorage* _init_InfoSme_GeneratingTasks_Storage =
+      StorageHelper::getInfoSme_GeneratingTasks_Storage();
+
+    InfoSme_Tasks_Stat_DBEntityStorage* _init_InfoSme_Tasks_Stat_Storage = 
+      StorageHelper::getInfoSme_Tasks_Stat_Storage();
+  } catch (std::exception& ex) {
+    smsc_log_debug(_logger, "DBEntityStorageDriver::DBEntityStorageDriver::: catch exception=[%s]", ex.what());
+    throw ConfigException(ex.what());
+  }
+
 }
 
 Connection*
@@ -397,25 +248,8 @@ DBEntityStorageDriver::newConnection()
 extern "C"
 DataSourceFactory*  getDataSourceFactory(void)
 {
-  using namespace smsc::db;
-  SequenceNumber::getInstance().initialize("seqNum.db");
+  //  using namespace smsc::db;
   static DBEntityStorageDataSourceFactory _dbEntityStorageDataSourceFactory;
 
-  try { 
-    // make static storage initialization 
-    InfoSme_Id_Mapping_DBEntityStorage* _init_InfoSme_Id_Mapping_Storage =
-      StorageHelper::getInfoSme_Id_Mapping_Storage();
-
-    InfoSme_Generating_Tasks_DBEntityStorage* _init_InfoSme_GeneratingTasks_Storage =
-      StorageHelper::getInfoSme_GeneratingTasks_Storage();
-
-    InfoSme_Tasks_Stat_DBEntityStorage* _init_InfoSme_Tasks_Stat_Storage = 
-      StorageHelper::getInfoSme_Tasks_Stat_Storage();
-  } catch (std::exception& ex) {
-    smsc::logger::Logger* logger = Logger::getInstance("dbStrgHlp");
-
-    smsc_log_debug(logger, "getDataSourceFactory:: catch exception=[%s]", ex.what());
-    return NULL;
-  }
   return &_dbEntityStorageDataSourceFactory;
 }
