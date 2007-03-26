@@ -62,8 +62,6 @@ SimpleFileDispatcher<V>::writeNbytesToFile(IOPage& ioPage, uchar_t* buf, size_t 
 {
   size_t sz=0;
 
-  size_t availableFreeSize = ioPage.getRemainderSizeToEndPage();
-
   ssize_t st=ioPage.write(buf, bufSz);
   if ( st < 0 )
     return st;
@@ -231,7 +229,9 @@ SimpleFileDispatcher<V>::addRecord(const V& record, typename DataStorage_FileDis
   uchar_t end_marker_buf[STORAGE_END_MARKER_SZ];
   typename DataStorage_FileDispatcher<V>::rid_t addedRid;
 
+#ifdef MAKE_ADDRECORD_LOCK
   smsc::core::synchronization::MutexGuard mutexGuard(_addRecordLock);
+#endif
 
   IOPage ioPage=_ioPageDispatcher->getLastIOPage();
 
@@ -286,7 +286,7 @@ SimpleFileDispatcher<V>::extractFirstRecord(V* record, typename DataStorage_File
   if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
     *record = *(readbleRecord.getReadRecord());
     *rid = firstRecordRid; *nextRid = ioPage.getAbsolutPosition();
-    smsc_log_debug(_logger, "SimpleFileDispatcher<V>::extractFirstRecord::: *rid=[%d]",*rid);
+    //    smsc_log_debug(_logger, "SimpleFileDispatcher<V>::extractFirstRecord::: *rid=[%d]",*rid);
   }
   
   return opRes;
@@ -315,7 +315,7 @@ SimpleFileDispatcher<V>::extractNextRecord(V* record, typename DataStorage_FileD
   if ( opRes == DataStorage_FileDispatcher<V>::OPERATION_OK ) {
     *record = *(readbleRecord.getReadRecord());
     *rid = nextRecordRid; *nextRid = ioPage.getAbsolutPosition();
-    smsc_log_debug(_logger, "SimpleFileDispatcher<V>::extractNextRecord::: *rid=[%d]",*rid);
+    //    smsc_log_debug(_logger, "SimpleFileDispatcher<V>::extractNextRecord::: *rid=[%d]",*rid);
   }
 
   return opRes;
@@ -475,8 +475,13 @@ SimpleFileDispatcher<V>::StorableRecord::unmarshal(IOPage& ioPage, SimpleFileDis
   if ( _flg & RECORD_DELETED_FLAG )
     return DataStorage_FileDispatcher<V>::RECORD_DELETED;
   else {
-    delete _readingAppData;
-    _readingAppData = new V(serialize_recordBuf);
+    //    delete _readingAppData;
+    //    _readingAppData = new V(serialize_recordBuf);
+
+    if ( _readingAppData ) 
+      _readingAppData = new (_readingAppData) V(serialize_recordBuf);
+    else
+      _readingAppData = new V(serialize_recordBuf);
 
     return DataStorage_FileDispatcher<V>::OPERATION_OK;
   }
