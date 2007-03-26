@@ -69,7 +69,6 @@
                     <attribute name="to" type="scag:Value" use="required"/>
                     <attribute name="state" type="smpp:MsgState" use="required"/>
                     <attribute name="msg_id" type="scag:Value" use="required"/>
-                    <attribute name="src_sme_id" type="scag:Value" use="required"/>
                     <attribute name="dst_sme_id" type="scag:Value" use="required"/>
                 </complexType>
             </element>
