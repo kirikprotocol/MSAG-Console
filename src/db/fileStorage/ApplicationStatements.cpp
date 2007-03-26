@@ -38,7 +38,9 @@ SelectInfoSme_T_stateAndSendDate_criterion::executeQuery()
 {
   InfoSme_T_Entity::StateANDSDate_key minKey(_message_state, 0);
   InfoSme_T_Entity::StateANDSDate_key maxKey(_message_state, _message_date_time);
-  DBEntityStorageResultSet* result = new SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet(_dataSource, minKey, maxKey);
+  InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator* iterator = _dataSource->getIterator();
+  iterator->setIndexSearchCrit(minKey, maxKey);
+  DBEntityStorageResultSet* result = new SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet(iterator, maxKey);
 
   return result;
 }
@@ -47,16 +49,11 @@ bool
 SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet::fetchNext()
   throw(SQLException)
 {
-  bool isFetched;
-
   InfoSme_T_Entity resultValue;
-  if ( _beginSearch ) {
-    _beginSearch = false;
-    isFetched = _dataSource->findFirstValue(_minKey, &resultValue);
-    if ( isFetched && _maxKey  < InfoSme_T_Entity::StateANDSDate_key(resultValue) )
-      isFetched = false;
-  } else
-    isFetched = _dataSource->findNextValue(_maxKey, &resultValue);
+
+  bool isFetched = _dbIterator->nextValue(&resultValue);
+  if ( isFetched && _maxKey  < InfoSme_T_Entity::StateANDSDate_key(resultValue) )
+    isFetched = false;
 
   if (isFetched) {
     _fetchedValue = resultValue;
@@ -315,22 +312,25 @@ Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate()
 
   int st;
 
+  _iterator->setIndexSearchCrit(InfoSme_T_Entity::StateANDSDate_key(_searchState, 0),
+                                InfoSme_T_Entity::StateANDSDate_key(_searchState, 0xffffffff));
+
   while(_iterator->nextValue(&oldValue)) {
-    if (oldValue.getState() == _searchState) {
-      InfoSme_T_Entity::Id_Key primaryKey(oldValue);
+    //    if (oldValue.getState() == _searchState) {
+    InfoSme_T_Entity::Id_Key primaryKey(oldValue);
 
-      InfoSme_T_Entity newValue(oldValue.getId(),
-                                _newMsgState,
-                                oldValue.getAbonentAddress(),
-                                oldValue.getSendDate(),
-                                oldValue.getMessage());
+    InfoSme_T_Entity newValue(oldValue.getId(),
+                              _newMsgState,
+                              oldValue.getAbonentAddress(),
+                              oldValue.getSendDate(),
+                              oldValue.getMessage());
 
-      smsc_log_debug(_logger, "Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: set new value=[%s] for row with key=[%s]",newValue.toString().c_str(), primaryKey.toString().c_str());
-      if ( (st = _dataSource->updateValue(primaryKey, oldValue, newValue)) < 0 )
-        throw SQLException("Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: can't update record");
+    smsc_log_debug(_logger, "Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: set new value=[%s] for row with key=[%s],old value=[%s]",newValue.toString().c_str(), primaryKey.toString().c_str(), oldValue.toString().c_str());
+    if ( (st = _dataSource->updateValue(primaryKey, oldValue, newValue)) < 0 )
+      throw SQLException("Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: can't update record");
      
-      rowNum += st;
-    }
+    rowNum += st;
+      //    }
   }
 
   return rowNum;
@@ -495,7 +495,10 @@ SelectInfoSme_Id_Mapping_SmscId_criterion::executeQuery()
     mutex = InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(key);
   }
   if ( mutex.Get() ) {
-    DBEntityStorageResultSet* result = new SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet(_dataSource,key,mutex);
+    InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* dbIterator = _dataSource->getIterator();
+    dbIterator->setIndexSearchCrit(key);
+    DBEntityStorageResultSet* result = new SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet(dbIterator, mutex);
+
     return result;
   } else return NULL;
 }
@@ -504,13 +507,14 @@ bool
 SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet::fetchNext()
   throw(SQLException)
 {
-  bool isFetched;
-  if ( _beginFetch ) {
-    _beginFetch = false;
-    isFetched = _dataSource->findFirstValue(_key, &_fetchedValue);
-  } else {
-    isFetched = _dataSource->findNextValue(_key, &_fetchedValue);
-  }
+  InfoSme_Id_Mapping_Entity resultValue;
+  bool isFetched = _dbIterator->nextValue(&resultValue);
+
+  if (isFetched) {
+    _fetchedValue = resultValue;
+    smsc_log_debug(_logger, "next record of InfoSme_Id_Mapping=[%s]", _fetchedValue.toString().c_str());
+  } else
+    smsc_log_debug(_logger, "no more records of InfoSme_Id_Mapping");
 
   return isFetched;
 }
@@ -596,14 +600,17 @@ Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate()
     {
       smsc::core::synchronization::RecursiveMutexGuard mutexGuard(*mutex);
 
+      InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* dbIterator = _dataSource->getIterator();
+      dbIterator->setIndexSearchCrit(smscid_key);
+
       InfoSme_Id_Mapping_Entity resultValue;
-      bool isFetched = _dataSource->findFirstValue(smscid_key, &resultValue);
+      bool isFetched = dbIterator->nextValue(&resultValue);
       while (isFetched ) {
         eraseRet = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(resultValue.getId()));
         if ( !eraseRet )
           throw SQLException("Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate::: can't delete value by primary key");
         ++rowNum;
-        isFetched = _dataSource->findNextValue(smscid_key, &resultValue);
+        isFetched = dbIterator->nextValue(&resultValue);
       }
 
     }
