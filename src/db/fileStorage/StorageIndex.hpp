@@ -14,8 +14,12 @@ public:
 
   bool eraseIndexedValue(const K& key);
 private:
-  std::map<K,V> _index;
+  //typedef std::map<K,V,std::less<K>,reclaim_mem_alloc<std::pair<const K,V> > >  index_t;
+  typedef std::map<K,V>  index_t;
+  index_t _index;
 };
+
+#include <logger/Logger.h>
 
 template <typename K, typename V>
 bool
@@ -42,7 +46,7 @@ template <typename K, typename V>
 bool
 UniqueStorageIndex<K,V>::findIndexedValueByKey(const K& key, V* value)
 {
-  std::map<K,V>::iterator iter = _index.find(key);
+  typename index_t::iterator iter = _index.find(key);
   if ( iter != _index.end() ) {
     *value = iter->second;
     return true;
@@ -59,10 +63,20 @@ UniqueStorageIndex<K,V>::eraseIndexedValue(const K& key)
 }
 
 #include <vector>
+//#include <iostream>
 
 template <typename K, typename V>
 class NonUniqueStorageIndex {
 public:
+  class IndexPosition {
+  private:
+    void savePosition(const index_t::iterator& iter) { _searchIter=iter; }
+    index_t::iterator restorePosition() { return _searchIter; }
+
+    index_t::iterator _searchIter;
+    friend class NonUniqueStorageIndex<K,V>;
+  };
+
   NonUniqueStorageIndex() : _findBeingExecuted(false) {}
   bool isExist(const K& key) const;
   bool insertIndexedValue(const K& key, const V& value);
@@ -72,12 +86,49 @@ public:
   bool findNextIndexedValueByKey(const K& key, V* value);
   bool findNextIndexedValueByKey(const K& key, K* foundKey, V* value);
 
+  bool findFirstIndexedValueByKey(const K& key, K* foundKey, V* value, IndexPosition& indexPos);
+  bool findNextIndexedValueByKey(const K& key, K* foundKey, V* value, IndexPosition& indexPos);
+
   bool eraseIndexedValue(const K& key, const V& value);
   void eraseIndexedIntervalValue(const K& firstKey, const K& lastKey, std::vector<V>* removedValues);
+
 private:
-  std::multimap<K,V> _index;
-  typename std::multimap<K,V>::iterator _searchIter;
+  typedef typename std::multimap<K, V> index_t;
+   
+  index_t _index;
+  typename index_t::iterator _searchIter;
   bool _findBeingExecuted;
+
+  typedef std::list<IndexPosition*> registredIters_t;
+  registredIters_t _registredIters;
+
+  void registerSearchIterator(IndexPosition* activeIterator)
+  {
+    _registredIters.push_back(activeIterator);
+  }
+
+  void unregisterSearchIterator(IndexPosition* activeIterator)
+  {
+    for(typename registredIters_t::iterator i=_registredIters.begin();
+        i != _registredIters.end(); ++i) {
+      if ( *i == activeIterator ) {
+        _registredIters.erase(i); break;
+      }
+    }
+  }
+
+  void notifySearchIterators(typename index_t::iterator& indexIter)
+  {
+    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbstrg");
+    for(typename registredIters_t::iterator i=_registredIters.begin();
+        i != _registredIters.end(); ++i) {
+      index_t::iterator savedIter = (*i)->restorePosition();
+      if ( savedIter == indexIter ) {
+        ++savedIter;
+        (*i)->savePosition(savedIter);
+      }
+    }
+  }
 };
 
 template <typename K, typename V>
@@ -123,6 +174,22 @@ NonUniqueStorageIndex<K,V>::findFirstIndexedValueByKey(const K& key, K* foundKey
 
 template <typename K, typename V>
 bool
+NonUniqueStorageIndex<K,V>::findFirstIndexedValueByKey(const K& key, K* foundKey, V* value, IndexPosition& indexPos)
+{
+  index_t::iterator searchIter = _index.lower_bound(key);
+
+  if ( searchIter != _index.end() ) {
+    *value = searchIter->second;
+    *foundKey = searchIter->first;
+    ++searchIter; indexPos.savePosition(searchIter);
+    registerSearchIterator(&indexPos);
+    return true;
+  } else
+    return false;
+}
+
+template <typename K, typename V>
+bool
 NonUniqueStorageIndex<K,V>::findNextIndexedValueByKey(const K& key, V* value)
 {
   K foundKey(key);
@@ -146,19 +213,40 @@ NonUniqueStorageIndex<K,V>::findNextIndexedValueByKey(const K& key, K* foundKey,
 
 template <typename K, typename V>
 bool
+NonUniqueStorageIndex<K,V>::findNextIndexedValueByKey(const K& key, K* foundKey, V* value, IndexPosition& indexPos)
+{
+  index_t::iterator searchIter(indexPos.restorePosition());
+
+  if ( searchIter != _index.end() &&
+       searchIter != _index.upper_bound(key) ) {
+    *value = searchIter->second;
+    *foundKey = searchIter->first;
+    ++searchIter; indexPos.savePosition(searchIter);
+    return true;
+  } else {
+    unregisterSearchIterator(&indexPos);
+    return false;
+  }
+}
+
+template <typename K, typename V>
+bool
 NonUniqueStorageIndex<K,V>::eraseIndexedValue(const K& key, const V& value)
 {
-  typename std::multimap<K,V>::iterator
-    indexIter = _index.lower_bound(key);
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbstrg");
+  typename index_t::iterator indexIter = _index.lower_bound(key);
+
   if ( indexIter == _index.end() )
     return false;
-
-  while ( indexIter != _index.upper_bound(key) ) {
+  typename index_t::iterator upperBoundIndexIter = _index.upper_bound(key);
+  while ( indexIter !=  upperBoundIndexIter ) {
     if ( indexIter->second == value ) {
       if ( _findBeingExecuted && indexIter == _searchIter ) ++_searchIter;
+      notifySearchIterators(indexIter);
       _index.erase(indexIter++);
-    } else
+    } else {
       indexIter++;
+    }
   }
   return true;
 }
@@ -169,14 +257,14 @@ template <typename K, typename V>
 void
 NonUniqueStorageIndex<K,V>::eraseIndexedIntervalValue(const K& firstKey, const K& lastKey, std::vector<V>* removedValues)
 {
-  typename std::multimap<K,V>::iterator iter = _index.lower_bound(firstKey);
+  typename index_t::iterator iter = _index.lower_bound(firstKey);
 
-  std::list<std::multimap<K,V>::iterator> iterList;
+  std::list<typename index_t::iterator> iterList;
   while (iter != _index.upper_bound(lastKey)) {
     iterList.push_back(iter);
     ++iter;
   }
-  for(std::list<std::multimap<K,V>::iterator>::iterator i=iterList.begin();
+  for(std::list<typename index_t::iterator>::iterator i=iterList.begin();
       i!=iterList.end();i++) {
     removedValues->push_back((*i)->second);
     _index.erase(*i);
