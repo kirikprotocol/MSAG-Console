@@ -6,6 +6,9 @@
 InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStorage(DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>* storage)
   : _storage(storage)
 {
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbgStrg");
+  smsc_log_debug(logger, "InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStorage::: It is creating an index");
+
   InfoSme_Generating_Tasks_Entity_Adapter record;
   typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid, nextRid;
 
@@ -23,6 +26,8 @@ InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStora
   if ( opResult != DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::NO_RECORD_FOUND &&
        opResult != DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::RECORD_DELETED )
     throw smsc::db::SQLException("InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStorage::: can't load storage data");
+
+  smsc_log_debug(logger, "InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStorage::: Indexe was created");
 }
 
 bool
