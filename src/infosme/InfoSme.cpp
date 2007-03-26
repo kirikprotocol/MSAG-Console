@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/time.h>
+#include <signal.h>
 
 #include <core/threads/ThreadPool.hpp>
 #include <core/buffers/Array.hpp>
@@ -9,8 +11,6 @@
 #include <util/config/Manager.h>
 #include <util/recoder/recode_dll.h>
 #include <util/smstext.h>
-
-#include <signal.h>
 
 #include <db/DataSourceLoader.h>
 #include <core/synchronization/EventMonitor.hpp>
@@ -66,6 +66,8 @@ static bool  bInfoSmeIsConnected  = false;
 static bool  bInfoSmeIsConnecting = false;
 
 static int signaling_ReadFd = -1, signaling_WriteFd = -1;
+static int reconnect_ReadFd = -1, reconnect_WriteFd = -1;
+
 static sigset_t blocked_signals, original_signal_mask;
 
 static void setNeedStop()
@@ -79,10 +81,23 @@ static bool isNeedStop() {
   return infoSmeIsStopped == 1;
 }
 
-static void setNeedReconnect(bool reconnect=true) {
+static void setNeedReconnect() {
     MutexGuard gauard(needReconnectLock);
-    bInfoSmeIsConnected = !reconnect;
-    if (reconnect) infoSmeWaitEvent.Signal();
+    smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+    smsc_log_info(logger, "setNeedReconnect:: Enter it");
+    if ( bInfoSmeIsConnected ) {
+      bInfoSmeIsConnected = false;
+      unsigned char oneByte=0;
+      smsc_log_info(logger, "setNeedReconnect:: write to reconnect_WriteFd");
+      write(reconnect_WriteFd, &oneByte, sizeof(oneByte));
+    }
+}
+
+static void setConnected() {
+  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+  MutexGuard gauard(needReconnectLock);
+  bInfoSmeIsConnected=true;
+  smsc_log_info(logger, "setConnected:: bInfoSmeIsConnected=true");
 }
 
 extern bool isMSISDNAddress(const char* string)
@@ -480,7 +495,7 @@ public:
     void handleError(int errorCode)
     {
         smsc_log_error(logger, "Transport error handled! Code is: %d", errorCode);
-        setNeedReconnect(true);
+        setNeedReconnect();
     }
 };
 
@@ -504,6 +519,8 @@ int main(void)
     int fds[2];
     pipe(fds);
     signaling_ReadFd = fds[0]; signaling_WriteFd = fds[1]; 
+    pipe(fds);
+    reconnect_ReadFd = fds[0]; reconnect_WriteFd = fds[1];
 
     int resultCode = 0;
 
@@ -602,19 +619,18 @@ int main(void)
                 bInfoSmeIsConnecting = true;
                 infoSmeReady.Wait(0);
                 TrafficControl::startControl();
-                setNeedReconnect(false);
                 session.connect();
                 processor.assignMessageSender(&sender);
                 processor.Start();
                 bInfoSmeIsConnecting = false;
                 infoSmeReady.Signal();
+                setConnected();
             }
             catch (SmppConnectException& exc)
             {
                 const char* msg = exc.what();
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 bInfoSmeIsConnecting = false;
-                setNeedReconnect(true);
                 if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
                 sleep(cfg.timeOut);
                 session.close();
@@ -622,15 +638,33 @@ int main(void)
             }
             smsc_log_info(logger, "Connected.");
             sigprocmask(SIG_SETMASK, &original_signal_mask, NULL); // unlock all signals and deliver any pending signals
-            // in this point any signals was locked in all runnnig thread excepted for this main thread
-            unsigned char oneByte; 
-            read(signaling_ReadFd, &oneByte, sizeof(oneByte));
+            int st;
+            fd_set rFdSet;
+            FD_ZERO(&rFdSet);
+            FD_SET(signaling_ReadFd, &rFdSet); FD_SET(reconnect_ReadFd, &rFdSet); 
+            if ( (st=::select(std::max(signaling_ReadFd, reconnect_ReadFd)+1, &rFdSet, NULL, NULL, NULL)) > 0 ) {
+              smsc_log_info(logger, "select return %d", st);
+              if ( FD_ISSET(signaling_ReadFd, &rFdSet) ) break;
+              else {
+                unsigned char oneByte;
+                if ( read(reconnect_ReadFd, &oneByte, sizeof(oneByte)) != sizeof(oneByte) ) break;
+              }
+            } else if ( st == -1 ) {
+              smsc_log_info(logger, "select return -1: errno=%d", errno);
+              if ( errno == EINTR ) continue;
+              else break;
+            }
 
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             TrafficControl::stopControl();
             processor.Stop();
             processor.assignMessageSender(0);
             session.close();
+            // sleep for 2 secs.
+            struct timeval sleepTimeout;
+            sleepTimeout.tv_sec = 2;
+            sleepTimeout.tv_usec = 0;
+            ::select(0, NULL, NULL, NULL, &sleepTimeout);
         }
     }
     catch (SmppConnectException& exc)
