@@ -18,6 +18,8 @@
     id CDATA #REQUIRED>
 
 <!ELEMENT billing (category_id|media_type_id|service_number|price|currency)*>
+<!ATTLIST billing type (inman|stat|none) #IMPLIED>
+
 <!ELEMENT category_id (#PCDATA)>
 <!ELEMENT media_type_id (#PCDATA)>
 <!ELEMENT service_number (#PCDATA)>
