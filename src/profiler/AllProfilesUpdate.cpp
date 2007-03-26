@@ -120,6 +120,10 @@ void PatchProfile(Profile& p,const ArgsVector& args)
     else if(it->first=="accessmaskout")
     {
       sscanf(it->second.c_str(),"%x",&p.accessMaskOut);
+    }
+    else if(it->first=="divertmodifiable")
+    {
+      p.divertModifiable=it->second=="true" || it->second=="yes";
     }else
     {
       throw Exception("Unknown field:%s\n",it->first.c_str());
@@ -194,24 +198,36 @@ int main(int argc,char* argv[])
   smsc::logger::Logger::Init();
   ArgsVector argsVector;
   std::string filterFileName;
+  std::string prefix;
   std::string n,v;
-  for(int i=3;i<argc;i++)
+  try{
+    for(int i=3;i<argc;i++)
+    {
+      char* p=strchr(argv[i],'=');
+      if(!p)
+      {
+        printf("Invalid argument:%s\n",argv[i]);
+      }
+      n.assign(argv[i],p-argv[i]);
+      v=p+1;
+      for(int j=0;j<n.length();j++)n[j]=tolower(n[j]);
+      for(int j=0;j<v.length();j++)v[j]=tolower(v[j]);
+      if(n=="removeabonents")
+      {
+        filterFileName=v;
+        continue;
+      }
+      if(n=="prefix")
+      {
+        Address a(v.c_str());
+        prefix=a.toString();
+        continue;
+      }
+      argsVector.push_back(NameValue(n,v));
+    }
+  }catch(std::exception& e)
   {
-    char* p=strchr(argv[i],'=');
-    if(!p)
-    {
-      printf("Invalid argument:%s\n",argv[i]);
-    }
-    n.assign(argv[i],p-argv[i]);
-    v=p+1;
-    for(int j=0;j<n.length();j++)n[j]=tolower(n[j]);
-    for(int j=0;j<v.length();j++)v[j]=tolower(v[j]);
-    if(n=="removeabonents")
-    {
-      filterFileName=v;
-      continue;
-    }
-    argsVector.push_back(NameValue(n,v));
+    printf("Exception:%s\n",e.what());
   }
   std::set<Address> filter;
 
@@ -265,6 +281,7 @@ int main(int argc,char* argv[])
     int dup=0;
     int skip=0;
     int filtered=0;
+    int patched=0;
 
     while(pos<sz)
     {
@@ -282,14 +299,25 @@ int main(int argc,char* argv[])
         if(isDefault(p))
         {
           skip++;
-        }
+        }else
         if(filter.find(addr)!=filter.end())
         {
           filtered++;
         }
         else
         {
-          PatchProfile(p,argsVector);
+          if(prefix.length())
+          {
+            if(addr.toString().find(prefix)==0)
+            {
+              PatchProfile(p,argsVector);
+              patched++;
+            }
+          }else
+          {
+            PatchProfile(p,argsVector);
+            patched++;
+          }
 
 
           ProfilesMap::iterator it=pmap.find(addr);
@@ -319,7 +347,7 @@ int main(int argc,char* argv[])
       }
     }
     outFile.Flush();
-    printf("%d profiles processed, %d duplicates found, %d matched default and skipped, %d removed by request\n",cnt,dup,skip,filtered);
+    printf("%d profiles processed, %d patched, %d duplicates found, %d matched default and skipped, %d removed by request\n",cnt,patched,dup,skip,filtered);
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
