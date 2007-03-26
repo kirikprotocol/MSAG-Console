@@ -68,3 +68,4 @@ TO ALL: Insert log record for all significant changes & fixes here.
 1) MSAG CHANGE: Changed signature for smpp:receipt action (no src_sme_id)
 2) MSAG CHANGE: Changes in log categories & messages
 3) MSAG FIX: Access to #message_id on xxx_resp processing
+4) MSAG FIX: Removed cleanup of message_id field in data_sm_resp packets
