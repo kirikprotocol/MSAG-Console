@@ -14,16 +14,35 @@
 
 class InfoSme_Id_Mapping_DBEntityStorage
   : public DbEntity_SearchIface<InfoSme_Id_Mapping_Entity::Id_Key, InfoSme_Id_Mapping_Entity>,
-    public DbEntity_NonUniqueSearchIface<InfoSme_Id_Mapping_Entity::SmscId_Key, InfoSme_Id_Mapping_Entity>,
+    public DbEntity_FullTableScanIface<InfoSme_Id_Mapping_Entity>,
     public DbEntity_StorageIface<InfoSme_Id_Mapping_Entity>,
     public DbEntity_EraseIface<InfoSme_Id_Mapping_Entity::Id_Key> {
 public:
   InfoSme_Id_Mapping_DBEntityStorage(DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>* storage);
   virtual bool findValue(const InfoSme_Id_Mapping_Entity::Id_Key& key, InfoSme_Id_Mapping_Entity* result);
-  virtual bool findFirstValue(const InfoSme_Id_Mapping_Entity::SmscId_Key& key, InfoSme_Id_Mapping_Entity* resultValue);
-  virtual bool findNextValue(const InfoSme_Id_Mapping_Entity::SmscId_Key& key, InfoSme_Id_Mapping_Entity* resultValue);
   virtual bool putValue(const InfoSme_Id_Mapping_Entity& value);
   virtual int eraseValue(const InfoSme_Id_Mapping_Entity::Id_Key& key);
+
+  class InfoSme_Id_Mapping_DbIterator : public DbIterator< InfoSme_Id_Mapping_Entity> {
+  public:
+    InfoSme_Id_Mapping_DbIterator(InfoSme_Id_Mapping_DBEntityStorage* dbIteratorCreator);
+
+    virtual bool nextValue(InfoSme_Id_Mapping_Entity* resultValue);
+    void setIndexSearchCrit(InfoSme_Id_Mapping_Entity::SmscId_Key& smscIdKey);
+  private:
+    bool sequentialBypass(InfoSme_Id_Mapping_Entity* resultValue);
+    bool indexedBypass(InfoSme_Id_Mapping_Entity* resultValue);
+
+    InfoSme_Id_Mapping_DBEntityStorage* _dbIteratorCreator;
+    DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t _ridForSequentialBypass;
+    bool _beginIteration, _searchStateCriterionIsSet;
+    InfoSme_Id_Mapping_Entity::SmscId_Key _smscIdKey;
+
+    NonUniqueStorageIndex<InfoSme_Id_Mapping_Entity::SmscId_Key,
+                          DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t>::IndexPosition indexPos;
+  };
+
+  virtual InfoSme_Id_Mapping_DbIterator* getIterator();
 private:
   DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>* _storage;
   UniqueStorageIndex<InfoSme_Id_Mapping_Entity::Id_Key,
