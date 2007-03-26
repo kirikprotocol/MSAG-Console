@@ -87,7 +87,7 @@ static const size_t STORAGE_HEADER_SZ = 4 + 4; // версия (4байта) и reserved(4ба
 template<typename V>
 class SimpleFileDispatcher : public DataStorage_FileDispatcher<V> {
 public:
-  explicit SimpleFileDispatcher(const std::string& fileName) : DataStorage_FileDispatcher<V>(fileName), _ioPageDispatcher(0),_logger(smsc::logger::Logger::getInstance("dbstrg")) {}
+  explicit SimpleFileDispatcher(const std::string& fileName) : DataStorage_FileDispatcher<V>(fileName), _fd(-1), _ioPageDispatcher(0),_logger(smsc::logger::Logger::getInstance("dbstrg")) {}
   virtual ~SimpleFileDispatcher();
 
   virtual typename DataStorage_FileDispatcher<V>::operation_status_t open();
