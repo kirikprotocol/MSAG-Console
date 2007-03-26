@@ -1,6 +1,7 @@
 #include "DBEntityStorageDataSource.hpp"
 #include "ApplicationStatements.hpp"
 #include "SequenceNumber.hpp"
+#include <sys/types.h>
 
 static std::string
 extractTableName(const char* sql, const char* keyword)
@@ -218,6 +219,15 @@ DBEntityStorageDriver::DBEntityStorageDriver(ConfigView* config)
   if ( dbSubDir[dbSubDir.size()-1] != '/' )
     dbSubDir += '/';
 
+  if ( ::mkdir(dbSubDir.c_str(), S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP) < 0 ) {
+    if ( errno != EEXIST ) {
+      std::ostringstream obuf("DBEntityStorageDriver::DBEntityStorageDriver::: can't create directory ");
+      obuf << "[" << dbSubDir.c_str() 
+           << "]. " << strerror(errno);
+      smsc_log_debug(_logger, obuf.str().c_str());
+      throw ConfigException(obuf.str().c_str());
+    }
+  }
   SequenceNumber::getInstance().initialize(dbSubDir + "seqNum.db");
 
   try { 
