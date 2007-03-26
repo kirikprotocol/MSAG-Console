@@ -163,6 +163,7 @@ namespace smsc { namespace infosme
         bool        bFinalizing, bSelectedAll;
 
         bool doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCriterion& searchCrit);
+        void destroy_InfoSme_T_Storage();
     protected:
 
         TaskInfo        info;
@@ -173,6 +174,7 @@ namespace smsc { namespace infosme
         Event       generationEndEvent;
         Mutex       inGenerationLock, inProcessLock;
         bool        bInProcess, bInGeneration, bGenerationSuccess;
+        bool        infoSme_T_storageWasDestroyed;
 
         Mutex           messagesCacheLock;
         Array<Message>  messagesCache;
