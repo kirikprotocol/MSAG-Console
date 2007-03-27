@@ -112,11 +112,10 @@ bool ActionReplace::run(ActionContext& context)
 
     if(result.size() > 0)
     {
-        if(pos < m_wstrVar.size() - 2)
-            result.append(m_wstrVar.data() + 2 * pos, 2 * (m_wstrVar.size() - 2 - pos));
-
+        if(2 * pos < m_wstrVar.size() - 2)
+            result.append(m_wstrVar.data() + 2 * pos, m_wstrVar.size() - 2 - 2 * pos);
         std::string temp;
-        Convertor::UCS2ToUTF8((uint16_t*)result.data(), result.size(), temp);
+        Convertor::UCS2ToUTF8((uint16_t*)result.data(), result.size() / 2, temp);
         paramResult->setStrValue(temp);
     }
     else
