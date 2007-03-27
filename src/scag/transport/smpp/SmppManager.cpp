@@ -748,6 +748,11 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
     sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
     if(msgId) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
+    else {
+	smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s", 
+		      from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
+	abort(); // TODO: Remove it! For testing purposes only.
+    }
     SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
     cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
     {
@@ -757,11 +762,12 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
         cmd.setDstEntity(*ptr);
     }
 
-  smsc_log_debug(log, "NoteReceipt sent: from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s", from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
-  MutexGuard mg(queueMon);
-  cmd.getLongCallContext().initiator = this;  
-  queue.Push(cmd);
-  queueMon.notify();
+    smsc_log_debug(log, "MSAG Receipt: Sent from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s", 
+		   from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
+    MutexGuard mg(queueMon);
+    cmd.getLongCallContext().initiator = this;  
+    queue.Push(cmd);
+    queueMon.notify();
 }
 
 bool SmppManagerImpl::getCommand(SmppCommand& cmd)
