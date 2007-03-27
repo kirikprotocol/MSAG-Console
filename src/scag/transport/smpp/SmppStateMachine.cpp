@@ -548,12 +548,11 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
 
-    if(cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT))
-    {
+    if(cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
         sendReceipt(cmd);
         return;
     }
-
+    
     smscmd.dir = dsdSc2Srv;
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
@@ -749,11 +748,9 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   SmppCommand orgCmd;
   SmppEntity* src=cmd.getEntity();
   int srcUid = 0;
-  if(cmd->get_resp()->expiredResp)
-  {
+  if(cmd->get_resp()->expiredResp) {
     srcUid=cmd->get_resp()->expiredUid;
-  }else
-  {
+  } else  {
     try { srcUid = src->getUid(); }
     catch (std::exception& exc) {
       smsc_log_warn(log, "DeliveryResp: Src entity disconnected. sid='%s', seq='%d'",
@@ -762,14 +759,15 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       return;
     }
   }
-  if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
+  bool bGotFromRegistry = reg.Get(srcUid, cmd->get_dialogId(), orgCmd);
+  if(orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
+    smsc_log_debug(log, "MSAG Receipt: Got responce, skipped");
+    return;
+  }
+  if(!bGotFromRegistry) {
     smsc_log_warn(log,"DeliveryResp: Original delivery for delivery response not found. sid='%s',seq='%d'",
 		  src->getSystemId(),cmd->get_dialogId());
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
-    return;
-  }
-  if(orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
-    smsc_log_debug(log, "MSAG Receipt: Got responce, skipped");
     return;
   }
 
