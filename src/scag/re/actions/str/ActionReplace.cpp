@@ -84,66 +84,43 @@ bool ActionReplace::run(ActionContext& context)
     if (paramVar->isProperty()) 
     {
         std::string temp = paramVar->getStrValue();
-        smsc_log_debug(logger,"Action 'replace': var=%s", paramVar->getStrValue().c_str());
+        smsc_log_debug(logger,"Action 'replace': var=%s", temp.c_str());
         Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), m_wstrVar);
     }
 
     if (paramValue->isProperty()) 
     {
-        std::string temp = paramVar->getStrValue();
+        std::string temp = paramValue->getStrValue();
+        smsc_log_debug(logger,"Action 'replace': value=%s", temp.c_str());
         Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), m_wstrReplace);
     }
 
     char endbuff[2] = {0,0};
     m_wstrVar.append(endbuff,2);
 
-
     SMatch m[100];
-    int n=100;
-
+    int n = 100, pos = 0;
     std::string result;
-    bool flag = re->Search((unsigned short *)m_wstrVar.data(),m,n);
-    int lastIndex = 0;
 
-    while (flag) 
+    while(re->Search((uint16_t*)m_wstrVar.data() + pos, m, n))
     {
-        //smsc_log_debug(logger,"Action 'replace': match passed (n=%d, start=%d, end=%d)", n, m[0].start, m[0].end);
-
-        result.append(m_wstrVar.data(), m[0].start*2);
+        result.append(m_wstrVar.data() + pos * 2, m[0].start * 2);
         result.append(m_wstrReplace.data(), m_wstrReplace.size());
-
-        lastIndex = m[0].end;
-
-        //smsc_log_debug(logger,"Action 'replace': (lastIndex=%d, m_wstrVar.size()=%d)", lastIndex, m_wstrVar.size());
-
-        if (lastIndex * 2 + 2 < m_wstrVar.size()) 
-        {
-            n = 100;
-            m_wstrVar.erase(0, lastIndex * 2);
-            //smsc_log_debug(logger,"Action 'replace': m_wstrVar.size()=%d)", m_wstrVar.size());
-            flag = re->Search((unsigned short *)m_wstrVar.data(),m,n);
-        }
-        else
-            flag = false;
+        pos += m[0].end;
+        n = 100;
     }
 
-    if (result.size() > 0) 
+    if(result.size() > 0)
     {
-        if (lastIndex * 2 + 2 < m_wstrVar.size()) 
-            result.append(m_wstrVar, 0, m_wstrVar.size());
-        else
-        {
-            char endbuff[2] = {0,0};
-            result.append(endbuff,2);
-        }
-
+        if(pos < m_wstrVar.size() - 2)
+            result.append(m_wstrVar.data() + 2 * pos, 2 * (m_wstrVar.size() - 2 - pos));
 
         std::string temp;
-        Convertor::UCS2ToUTF8((unsigned short *)result.data(),result.size(),temp);
+        Convertor::UCS2ToUTF8((uint16_t*)result.data(), result.size(), temp);
         paramResult->setStrValue(temp);
-    } else
-        paramResult->setStrValue(paramVar->getStrValue());
-
+    }
+    else
+        paramResult->setStrValue(paramVar->getStrValue());        
 
     smsc_log_debug(logger,"Action 'replace': result '%s'", paramResult->getStrValue().c_str());
     return true;
@@ -153,13 +130,9 @@ ActionReplace::ActionReplace() : re(0)
 {
 }
 
-
-
 ActionReplace::~ActionReplace() 
 {
     if (re) delete re;
 }
-
-
 
 }}}
