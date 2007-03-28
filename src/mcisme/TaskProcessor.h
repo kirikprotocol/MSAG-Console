@@ -104,6 +104,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
     MessageSender*      messageSender;
     
 	Advertising*		advertising;
+	bool				useAdvert;
 
 	ProfilesStorage*	profileStorage;
     StatisticsManager*  statistics;

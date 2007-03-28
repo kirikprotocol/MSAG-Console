@@ -92,7 +92,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), AdminInterface(), 
         logger(Logger::getInstance("mci.TaskProc")), 
 		profileStorage(ProfilesStorage::GetInstance()),
-        protocolId(0), daysValid(1), advertising(0),//svcType(0), address(0), 
+        protocolId(0), daysValid(1), advertising(0), useAdvert(false),
         templateManager(0), mciModule(0), messageSender(0),
         statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), bStopProcessing(false), pStorage(0), pDeliveryQueue(0)
@@ -350,18 +350,25 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	std::auto_ptr<ConfigView> advertCfgGuard(config->getSubConfig("Advertising"));
     ConfigView* advertCfg = advertCfgGuard.get();
 
-	string advertServer;
-	try { advertServer = advertCfg->getString("server"); } catch (...){advertServer = "0.0.0.0";
-		smsc_log_warn(logger, "Parameter <MCISme.Advertising.server> missed. Default value is '0.0.0.0'.");}
-	int advertPort;
-	try { advertPort = advertCfg->getInt("port"); } catch (...){advertPort = 25000;
-		smsc_log_warn(logger, "Parameter <MCISme.Advertising.port> missed. Default value is '25000'.");}
-	int advertTimeout;
-	try { advertTimeout = advertCfg->getInt("timeout"); } catch (...){advertTimeout = 15;
-		smsc_log_warn(logger, "Parameter <MCISme.Advertising.server> missed. Default value is '15'.");}
-	
-	Advertising::Init(advertServer, advertPort, advertTimeout*1000);
-    advertising = &(scag::advert::Advertising::Instance());
+    try { useAdvert = config->getBool("useAdvert"); } catch (...) { useAdvert = false;
+        smsc_log_warn(logger, "Parameter <MCISme.Advertising.useAdvert> missed. Defaul profile useAdvert is false (off)");
+    }
+
+	if(useAdvert)
+	{
+		string advertServer;
+		try { advertServer = advertCfg->getString("server"); } catch (...){advertServer = "0.0.0.0";
+			smsc_log_warn(logger, "Parameter <MCISme.Advertising.server> missed. Default value is '0.0.0.0'.");}
+		int advertPort;
+		try { advertPort = advertCfg->getInt("port"); } catch (...){advertPort = 25000;
+			smsc_log_warn(logger, "Parameter <MCISme.Advertising.port> missed. Default value is '25000'.");}
+		int advertTimeout;
+		try { advertTimeout = advertCfg->getInt("timeout"); } catch (...){advertTimeout = 15;
+			smsc_log_warn(logger, "Parameter <MCISme.Advertising.server> missed. Default value is '15'.");}
+		
+		Advertising::Init(advertServer, advertPort, advertTimeout*1000);
+		advertising = &(scag::advert::Advertising::Instance());
+	}
 
 //	Init Storage
 	std::auto_ptr<ConfigView> storageCfgGuard(config->getSubConfig("Storage"));
@@ -660,7 +667,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 	formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
 	smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
 	msg.abonent = abnt.getText();//"777";
-	formatter.addBanner(msg, getBanner(abnt));
+	if(useAdvert) formatter.addBanner(msg, getBanner(abnt));
 	{
 		MutexGuard Lock(smsInfoMutex);
 		seqNum = messageSender->getSequenceNumber();
