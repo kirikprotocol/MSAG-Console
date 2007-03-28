@@ -24,27 +24,6 @@ void ActionReplace::init(const SectionParams& params,PropertyObject propertyObje
     ftValue = CheckParameter(params, propertyObject, "replace", "value", true, true, m_sValue, bExist);
     ftResult = CheckParameter(params, propertyObject, "replace", "result", true, false, m_sResult, bExist);
 
-    re = new RegExp();
-
-    if(ftRegexp == ftUnknown) 
-    {
-        std::string temp;
-
-        Convertor::UTF8ToUCS2(m_sRegexp.c_str(), m_sRegexp.size(), temp);
-        if(temp.size() == 0) throw SCAGException("Action 'replace': invalid parameter 'regexp'. Delails: Cannot use blank string.");
-
-        char endbuff[2] = {0,0};
-        temp.append(endbuff,2);
-
-        //OP_SINGLELINE
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((temp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
-        //m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
-
-
-        if (!re->Compile((unsigned short *)temp.data(), m_type))
-            throw SCAGException("Action 'replace' Failed to compile regexp");
-    }
-
     if(ftVar == ftUnknown) 
         Convertor::UTF8ToUCS2(m_sVar.c_str(), m_sVar.size(), m_wstrVar);
 
@@ -72,27 +51,26 @@ bool ActionReplace::run(ActionContext& context)
 
     smsc_log_debug(logger,"Run Action 'replace'...");
 
-    if(ftRegexp != ftUnknown) 
+    RegExp re;
+    std::string regexp, temp;
+
+    if(ftRegexp == ftUnknown) 
+        temp = m_sRegexp;
+    else if(!getStrProperty(context, m_sRegexp, "regexp", temp))
+        return true;
+ 
+    Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), regexp);
+
+    char endbuff[2] = {0,0};
+    regexp.append(endbuff,2);
+
+    if(!re.Compile((unsigned short *)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((regexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
     {
-        std::string regexp, temp;
-        if(!getStrProperty(context, m_sRegexp, "regexp", temp))
-            return true;
-
-        Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), regexp);
-
-        char endbuff[2] = {0,0};
-        regexp.append(endbuff,2);
-
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((regexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
-
-        if (!re->Compile((unsigned short *)regexp.data(), m_type))
-        {
-            smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", temp.c_str());
-            return true;
-        }
-
-        smsc_log_debug(logger, "Action 'replace' Regexp '%s' compiled", temp.c_str());
+        smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", temp.c_str());
+        return true;
     }
+
+    smsc_log_debug(logger, "Action 'replace' Regexp '%s' compiled", temp.c_str());
 
     std::string tvar;
     const char * pvar = m_sVar.c_str();
@@ -119,14 +97,13 @@ bool ActionReplace::run(ActionContext& context)
     else
         rep = m_wstrReplace;
 
-    char endbuff[2] = {0,0};
     var.append(endbuff,2);
 
     SMatch m[100];
     int n = 100, pos = 0;
     std::string result;
 
-    while(re->Search((uint16_t*)(var.data() + pos), m, n))
+    while(re.Search((uint16_t*)(var.data() + pos), m, n))
     {
         result.append(var.data() + pos, m[0].start * 2);
         result.append(rep.data(), rep.size());
@@ -148,15 +125,6 @@ bool ActionReplace::run(ActionContext& context)
 
     smsc_log_debug(logger,"Action 'replace': result '%s'", p->getStr().c_str());
     return true;
-}
-
-ActionReplace::ActionReplace() : re(0)
-{
-}
-
-ActionReplace::~ActionReplace() 
-{
-    if (re) delete re;
 }
 
 }}}

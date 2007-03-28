@@ -14,7 +14,6 @@ class ActionReplace : public Action
 {
     ActionReplace(const ActionReplace&);
 
-    RegExp *re;
     std::string m_sVar, m_sValue, m_sReplace, m_sResult, m_sRegexp, m_wstrVar, m_wstrReplace;
     FieldType ftVar, ftValue, ftReplace, ftResult, ftRegexp;
     int m_type;
@@ -26,9 +25,9 @@ protected:
 public:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
-    ActionReplace ();
+    ActionReplace () {};
 
-    virtual ~ActionReplace();
+    virtual ~ActionReplace() {};
 
 };
 

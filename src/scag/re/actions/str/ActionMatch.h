@@ -20,23 +20,18 @@ class ActionMatch : public Action
     std::string strValue;
     std::string wstrValue;
 
-    FieldType m_ftValue;
+    FieldType m_ftValue, ftRegexp;
 
     std::string strResult;
-    
-    RegExp *re;
-    bool m_Compiled;
-    int m_type;
-
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
-    ActionMatch ();
+    ActionMatch () {};
 
-    virtual ~ActionMatch();
+    virtual ~ActionMatch() {};
 
 };
 

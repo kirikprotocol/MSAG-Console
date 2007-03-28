@@ -18,40 +18,18 @@ bool ActionMatch::FinishXMLSubSection(const std::string& name)
 
 void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    FieldType ft, ftRegexp;
     std::string temp;
     bool bExist;
 
     ftRegexp = CheckParameter(params, propertyObject, "match", "regexp", true, true, strRegexp, bExist);
-    //if (ft!=ftUnknown) throw SCAGException("Action 'match': 'regexp' parameter must be a scalar constant type");
-    Convertor::UTF8ToUCS2(strRegexp.c_str(),strRegexp.size(),wstrRegexp);
+    if(ftRegexp == ftUnknown)
+        Convertor::UTF8ToUCS2(strRegexp.c_str(),strRegexp.size(),wstrRegexp);
 
     m_ftValue = CheckParameter(params, propertyObject, "match", "value", true, true, strValue, bExist);
-    Convertor::UTF8ToUCS2(strValue.c_str(),strValue.size(),wstrValue);
+    if(m_ftValue == ftUnknown)
+        Convertor::UTF8ToUCS2(strValue.c_str(),strValue.size(),wstrValue);
 
-    ft = CheckParameter(params, propertyObject, "match", "result", true, false, strResult, bExist);
-
-    re = new RegExp();
-
-    if (ftRegexp == ftUnknown) 
-    {
-        if (strRegexp.size() == 0) throw SCAGException("Action 'match': invalid parameter 'regexp'. Delails: Cannot use blank string.");
-
-        temp = "";
-        temp.append(wstrRegexp.data(), wstrRegexp.size());
-        char endbuff[2] = {0,0};
-        temp.append(endbuff,2);
-
-        //OP_SINGLELINE
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
-        //m_type = (OP_OPTIMIZE|OP_STRICT|OP_SINGLELINE);
-
-        
-        if (!re->Compile((unsigned short *)temp.data(), m_type))
-            throw SCAGException("Action 'match' Failed to compile regexp");
-
-        m_Compiled = true;
-    } else m_Compiled = false;
+    CheckParameter(params, propertyObject, "match", "result", true, false, strResult, bExist);
 
     smsc_log_debug(logger,"Action 'match':: init");
 }
@@ -60,54 +38,40 @@ bool ActionMatch::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'match'...");
 
-
     Property * pValue = 0;
-    Property * pResult = 0;
+    Property *pResult = context.getProperty(strResult);
+    if (!pResult) 
+    {
+        smsc_log_warn(logger,"Action 'match': invalid property '%s'", strResult.c_str());
+        return true;
+    }
+    pResult->setBool(false);
 
-    if (!m_Compiled) 
+    std::string regexp;
+    if(ftRegexp != ftUnknown)
     {
         Property * pRegexp = context.getProperty(strRegexp);
         if (!pRegexp)
         {
             smsc_log_warn(logger, "Action 'match': invalid property '%s'", strRegexp.c_str());
-
-            pResult = context.getProperty(strResult);
-            if (!pResult) 
-            {
-                smsc_log_warn(logger,"Action 'match': invalid property '%s'", strResult.c_str());
-                return true;
-            }
-
-            pResult->setBool(false);
             return true;
         }
 
         std::string temp = pRegexp->getStr();
-        std::string regexp;
-        Convertor::UTF8ToUCS2(temp.c_str(),temp.size(),regexp);
+        Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), regexp);
+    }
+    else
+        regexp = wstrRegexp;
 
+    char endbuff[2] = {0,0};
+    regexp.append(endbuff,2);
 
-        char endbuff[2] = {0,0};
-        regexp.append(endbuff,2);
+    RegExp re;
 
-        m_type = (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE);
-
-        if (!re->Compile((unsigned short *)regexp.data(), m_type))
-        {
-            smsc_log_warn(logger, "Action 'match' Failed to compile regexp '%s'",temp.c_str());
-
-            pResult = context.getProperty(strResult);
-            if (!pResult) 
-            {
-                smsc_log_warn(logger,"Action 'match': invalid property '%s'", strResult.c_str());
-                return true;
-            }
-
-            pResult->setBool(false);
-
-            return true;
-        }
-        smsc_log_debug(logger, "Action 'match' Regexp '%s' compiled", temp.c_str());
+    if(!re.Compile((uint16_t*)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((strRegexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
+    {
+        smsc_log_warn(logger, "Action 'match' Failed to compile regexp '%s'", strRegexp.c_str());
+        return true;
     }
 
     std::string value,s2;
@@ -121,45 +85,24 @@ bool ActionMatch::run(ActionContext& context)
             return true;
         }
         std::string temp = pValue->getStr();
-        Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), value);
-        char endbuff[2] = {0,0};
-        value.append(endbuff,2);
-
-    } else value = wstrValue;
-
-    smsc_log_debug(logger,"Action 'match': regexp '%s', value '%s'", strRegexp.c_str(),strValue.c_str());
-
-
-    pResult = context.getProperty(strResult);
-
-    if (!pResult) 
-    {
-        smsc_log_warn(logger,"Action 'match': invalid property '%s'", strResult.c_str());
-        return true;
+        Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), value);
     }
+    else
+        value = wstrValue;
 
-  SMatch m[100];
-  int n=100;
+    value.append(endbuff, 2);
 
-  bool flag = re->Match((unsigned short *)value.data(),m,n);
+    smsc_log_debug(logger,"Action 'match': regexp '%s', value '%s'", strRegexp.c_str(), strValue.c_str());
 
-  pResult->setBool(flag);
-  smsc_log_debug(logger,"Action 'match': result '%d'", flag);
+    SMatch m[100];
+    int n=100;
 
-  return true;
+    bool flag = re.Match((uint16_t*)value.data(),m,n);
+
+    pResult->setBool(flag);
+    smsc_log_debug(logger,"Action 'match': result '%d'", flag);
+
+    return true;
 }
-
-ActionMatch::ActionMatch() : re(0)
-{
-}
-
-
-
-ActionMatch::~ActionMatch() 
-{
-    if (re) delete re;
-}
-
-
 
 }}}
