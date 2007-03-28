@@ -822,7 +822,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
                 if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
                     data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, 0, 0);
 
-                data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, str.data(), str.size());
+                data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
                 data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
             }
 
