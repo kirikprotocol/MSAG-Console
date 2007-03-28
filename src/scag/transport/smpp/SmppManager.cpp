@@ -743,16 +743,18 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
 void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id)
 {
     SMS sms;
-    sms.setOriginatingAddress(from);
-    sms.setDestinationAddress(to);
-    sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
-    sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
     if (msgId && msgId[0]) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
     else {
 	smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s", 
 		      from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
-	abort(); // TODO: Remove it! For testing purposes only.
+	//abort(); // TODO: Remove it! For testing purposes only.
+	return; // Do not send receipt at all (msgId missed)
     }
+    sms.setOriginatingAddress(from);
+    sms.setDestinationAddress(to);
+    sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
+
     SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
     cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
     {
