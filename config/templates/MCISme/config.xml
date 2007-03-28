@@ -125,6 +125,7 @@
         </section>
 
 	<section name="Advertising">
+	    <param name="useAdvert" type="bool">false</param>
 	    <param name="server" type="string">@mcisme.Advertising.server@</param>
 	    <param name="port" type="int">@mcisme.Advertising.port@</param>
 	    <param name="timeout" type="int">@mcisme.Advertising.timeout@</param>
