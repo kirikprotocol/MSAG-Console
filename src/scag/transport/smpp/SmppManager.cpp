@@ -747,7 +747,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     sms.setDestinationAddress(to);
     sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
     sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
-    if(msgId) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
+    if (msgId && msgId[0]) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
     else {
 	smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s", 
 		      from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
