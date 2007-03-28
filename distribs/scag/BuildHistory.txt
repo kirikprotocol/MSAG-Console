@@ -68,4 +68,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
 1) MSAG CHANGE: Changed signature for smpp:receipt action (no src_sme_id)
 2) MSAG CHANGE: Changes in log categories & messages
 3) MSAG FIX: Access to #message_id on xxx_resp processing
-4) MSAG FIX: Removed cleanup of message_id field in data_sm_resp packets
+
+=================================================================================================================
+28.03.2007 12:00 makar [!!! CVS: revision marked by tag BUILD_26_03_2007 !!!]
+1) MSAG FIX: Removed cleanup of message_id field in data_sm_resp packets
+2) MSAG FIX: Expired resp processing for MSAG receipts
+3) MSAG CRITICAL FIX: Async write access to actions' members removed (empty msgId)
+4) MSAG FIX: UTF8>UCS2 fix in SmppAdapter for MESSAGE_PAYLOAD
