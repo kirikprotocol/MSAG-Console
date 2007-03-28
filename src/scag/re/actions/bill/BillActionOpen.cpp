@@ -81,6 +81,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
 
 bool BillActionOpen::run(ActionContext& context)
 {
+    int cat = category, mt = mediaType;
     smsc_log_debug(logger,"Run Action '%s'...", m_ActionName.c_str());
 
     /////////////////////////////////////////////
@@ -96,7 +97,7 @@ bool BillActionOpen::run(ActionContext& context)
             smsc_log_error(logger,"Action '%s' :: Invalid property %s for content-type", m_ActionName.c_str(), m_mediaType.c_str());
             return true;
         }
-        mediaType = property->getInt();
+        mt = property->getInt();
     } 
 
     if (m_CategoryFieldType != ftUnknown) 
@@ -108,10 +109,10 @@ bool BillActionOpen::run(ActionContext& context)
             smsc_log_error(logger,"Action '%s' :: Invalid property %s for category", m_ActionName.c_str(), m_category.c_str());
             return true;
         }
-        category = property->getInt();
+        cat = property->getInt();
     } 
 
-    if(!category || !mediaType)
+    if(!cat || !mt)
     {
         smsc_log_warn(logger,"Action '%s' cannot process. Empty category or content-type", m_ActionName.c_str());
         return false;
@@ -130,7 +131,7 @@ bool BillActionOpen::run(ActionContext& context)
 
     TariffRec * tariffRec = 0;
     try {
-        tariffRec = context.getTariffRec(category, mediaType);
+        tariffRec = context.getTariffRec(cat, mt);
         if (!tariffRec) throw SCAGException("TariffRec is not valid");
     } catch (SCAGException& e)
     {
@@ -152,7 +153,7 @@ bool BillActionOpen::run(ActionContext& context)
 
     BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
 
-    unsigned int BillId = 0;
+    uint32_t BillId = 0;
 
     try 
     {

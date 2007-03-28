@@ -38,6 +38,8 @@ bool ActionSubstr::run(ActionContext& context)
     smsc_log_debug(logger,"Run Action 'substr'");
 
     std::string strArgument;
+    int begin = beginIndex;
+    int end = endIndex;
 
     if (m_fVariableFieldType == ftUnknown) 
     {
@@ -64,7 +66,7 @@ bool ActionSubstr::run(ActionContext& context)
             smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strBegin.c_str());
             return true;
         }
-        beginIndex = property->getInt();
+        begin = property->getInt();
     }
 
     if ((m_ftEnd!=ftUnknown)&&(m_bExistEnd))
@@ -76,16 +78,10 @@ bool ActionSubstr::run(ActionContext& context)
             smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strEnd.c_str());
             return true;
         }
-        endIndex = property->getInt();
+        end = property->getInt();
     }
 
-
-
-    int begin;
-    int end;
-
-    if (beginIndex < 0) begin = 0;
-    else begin = beginIndex;
+    if(begin < 0) begin = 0;
 
     if (begin >= strArgument.size()) 
     {
@@ -93,8 +89,7 @@ bool ActionSubstr::run(ActionContext& context)
         return true;
     } 
 
-    if ((endIndex < 0)||((endIndex) >= strArgument.size())) end = strArgument.size() - 1;
-    else end = endIndex;
+    if((endIndex < 0)||((endIndex) >= strArgument.size())) end = strArgument.size() - 1;
 
     if (begin > end) 
     {

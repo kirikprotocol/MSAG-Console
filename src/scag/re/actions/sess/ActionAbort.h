@@ -4,7 +4,6 @@
 #include "scag/re/actions/ActionContext.h"
 #include "scag/re/actions/Action.h"
 
-
 namespace scag { namespace re { namespace actions {
 
 class ActionAbort : public Action
@@ -23,9 +22,6 @@ public:
 
 };
 
-
-
 }}}
-
 
 #endif

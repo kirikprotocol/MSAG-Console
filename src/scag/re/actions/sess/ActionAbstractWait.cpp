@@ -18,7 +18,6 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     m_eventHandlerType = propertyObject.HandlerId;
     m_transportType = propertyObject.transport;
 
-
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 

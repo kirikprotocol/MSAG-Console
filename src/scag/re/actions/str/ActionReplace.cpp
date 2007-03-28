@@ -18,19 +18,20 @@ bool ActionReplace::FinishXMLSubSection(const std::string& name)
 
 void ActionReplace::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    paramVar = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "var", true, true, logger));
-    paramRegexp = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "regexp", true, true, logger));
-    paramValue = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "value", true, true, logger));
-    paramResult = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "replace", "result", true, false, logger));
+    bool bExist;
+    ftVar = CheckParameter(params, propertyObject, "replace", "var", true, true, m_sVar, bExist);
+    ftRegexp = CheckParameter(params, propertyObject, "replace", "regexp", true, true, m_sRegexp, bExist);
+    ftValue = CheckParameter(params, propertyObject, "replace", "value", true, true, m_sValue, bExist);
+    ftResult = CheckParameter(params, propertyObject, "replace", "result", true, false, m_sResult, bExist);
 
     re = new RegExp();
 
-    if (!paramRegexp->isProperty()) 
+    if(ftRegexp == ftUnknown) 
     {
         std::string temp;
 
-        Convertor::UTF8ToUCS2(paramRegexp->getStrValue().c_str(),paramRegexp->getStrValue().size(), temp);
-        if (temp.size() == 0) throw SCAGException("Action 'replace': invalid parameter 'regexp'. Delails: Cannot use blank string.");
+        Convertor::UTF8ToUCS2(m_sRegexp.c_str(), m_sRegexp.size(), temp);
+        if(temp.size() == 0) throw SCAGException("Action 'replace': invalid parameter 'regexp'. Delails: Cannot use blank string.");
 
         char endbuff[2] = {0,0};
         temp.append(endbuff,2);
@@ -44,28 +45,40 @@ void ActionReplace::init(const SectionParams& params,PropertyObject propertyObje
             throw SCAGException("Action 'replace' Failed to compile regexp");
     }
 
-    if (!paramVar->isProperty()) 
-        Convertor::UTF8ToUCS2(paramValue->getStrValue().c_str(),paramValue->getStrValue().size(), m_wstrVar);
+    if(ftVar == ftUnknown) 
+        Convertor::UTF8ToUCS2(m_sVar.c_str(), m_sVar.size(), m_wstrVar);
 
-    if (!paramValue->isProperty()) 
-        Convertor::UTF8ToUCS2(paramValue->getStrValue().c_str(),paramValue->getStrValue().size(), m_wstrReplace);
+    if (ftValue == ftUnknown) 
+        Convertor::UTF8ToUCS2(m_sValue.c_str(), m_sValue.size(), m_wstrReplace);
     
     smsc_log_debug(logger,"Action 'replace':: init");
 }
 
+bool ActionReplace::getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val)
+{
+    Property * p = NULL;
+    if (!(p = context.getProperty(str))) 
+    {
+        smsc_log_error(logger,"Action 'smpp:receipt': invalid '%s' property '%s'", field_name, str.c_str());
+        return false;
+    }
+    val = p->getStr();
+    return true;
+}
+
 bool ActionReplace::run(ActionContext& context)
 {
+    std::string var, rep;
+
     smsc_log_debug(logger,"Run Action 'replace'...");
 
-    if (!paramVar->prepareValue(context)) return true;
-    if (!paramRegexp->prepareValue(context)) return true;
-    if (!paramValue->prepareValue(context)) return true;
-    if (!paramResult->prepareValue(context)) return true;
-
-    if (paramRegexp->isProperty()) 
+    if(ftRegexp != ftUnknown) 
     {
-        std::string regexp;
-        Convertor::UTF8ToUCS2(paramRegexp->getStrValue().c_str(),paramRegexp->getStrValue().size(),regexp);
+        std::string regexp, temp;
+        if(!getStrProperty(context, m_sRegexp, "regexp", temp))
+            return true;
+
+        Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), regexp);
 
         char endbuff[2] = {0,0};
         regexp.append(endbuff,2);
@@ -74,54 +87,66 @@ bool ActionReplace::run(ActionContext& context)
 
         if (!re->Compile((unsigned short *)regexp.data(), m_type))
         {
-            smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", paramRegexp->getStrValue().c_str());
+            smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", temp.c_str());
             return true;
         }
 
-        smsc_log_debug(logger, "Action 'replace' Regexp '%s' compiled", paramRegexp->getStrValue().c_str());
+        smsc_log_debug(logger, "Action 'replace' Regexp '%s' compiled", temp.c_str());
     }
 
-    if (paramVar->isProperty()) 
+    std::string tvar;
+    const char * pvar = m_sVar.c_str();
+    if(ftVar != ftUnknown) 
     {
-        std::string temp = paramVar->getStrValue();
-        smsc_log_debug(logger,"Action 'replace': var=%s", temp.c_str());
-        Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), m_wstrVar);
+        if(!getStrProperty(context, m_sVar, "var", tvar))
+            return true;
+        smsc_log_debug(logger,"Action 'replace': var=%s", tvar.c_str());
+        Convertor::UTF8ToUCS2(tvar.c_str(), tvar.size(), var);
+        pvar = tvar.c_str();
     }
+    else
+        var = m_wstrVar;
 
-    if (paramValue->isProperty()) 
+    if(ftValue != ftUnknown) 
     {
-        std::string temp = paramValue->getStrValue();
+        std::string temp;
+        if(!getStrProperty(context, m_sValue, "value", temp))
+            return true;
         smsc_log_debug(logger,"Action 'replace': value=%s", temp.c_str());
-        Convertor::UTF8ToUCS2(temp.c_str(),temp.size(), m_wstrReplace);
+        Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), rep);
+        
     }
+    else
+        rep = m_wstrReplace;
 
     char endbuff[2] = {0,0};
-    m_wstrVar.append(endbuff,2);
+    var.append(endbuff,2);
 
     SMatch m[100];
     int n = 100, pos = 0;
     std::string result;
 
-    while(re->Search((uint16_t*)m_wstrVar.data() + pos, m, n))
+    while(re->Search((uint16_t*)(var.data() + pos), m, n))
     {
-        result.append(m_wstrVar.data() + pos * 2, m[0].start * 2);
-        result.append(m_wstrReplace.data(), m_wstrReplace.size());
-        pos += m[0].end;
+        result.append(var.data() + pos, m[0].start * 2);
+        result.append(rep.data(), rep.size());
+        pos += 2 * m[0].end;
         n = 100;
     }
 
+    Property *p = context.getProperty(m_sResult);
     if(result.size() > 0)
     {
-        if(2 * pos < m_wstrVar.size() - 2)
-            result.append(m_wstrVar.data() + 2 * pos, m_wstrVar.size() - 2 - 2 * pos);
+        if(pos < var.size() - 2)
+            result.append(var.data() + pos, var.size() - 2 - pos);
         std::string temp;
         Convertor::UCS2ToUTF8((uint16_t*)result.data(), result.size() / 2, temp);
-        paramResult->setStrValue(temp);
+        p->setStr(temp);
     }
     else
-        paramResult->setStrValue(paramVar->getStrValue());        
+        p->setStr(pvar);
 
-    smsc_log_debug(logger,"Action 'replace': result '%s'", paramResult->getStrValue().c_str());
+    smsc_log_debug(logger,"Action 'replace': result '%s'", p->getStr().c_str());
     return true;
 }
 

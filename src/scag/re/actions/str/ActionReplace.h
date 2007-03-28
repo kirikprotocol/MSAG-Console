@@ -13,13 +13,14 @@ using namespace smsc::util::regexp;
 class ActionReplace : public Action
 {
     ActionReplace(const ActionReplace&);
-    std::auto_ptr<ActionParameter> paramVar, paramRegexp, paramValue, paramResult;
 
     RegExp *re;
-    std::string m_wstrVar, m_wstrReplace;
+    std::string m_sVar, m_sValue, m_sReplace, m_sResult, m_sRegexp, m_wstrVar, m_wstrReplace;
+    FieldType ftVar, ftValue, ftReplace, ftResult, ftRegexp;
     int m_type;
 
 protected:
+    bool getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val);
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
