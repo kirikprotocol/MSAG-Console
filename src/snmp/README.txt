@@ -43,6 +43,10 @@ register them in /etc/hosts with traphost name, for example
 
 Copy snmpd.conf to /usr/local/share/snmp/snmpd.conf
 Copy SIBINCO-SMSC-MIB.txt to /usr/local/share/snmp/mibs/SIBINCO-SMSC-MIB.txt
+NOTE: Solaris 10 has built-in net-snmp and directory to put cfg,mib can be /etc/sma/snmp
+
+Check OID tree parsing
+snmptranslate -Tp SIBINCO-SMSC-MIB::sibinco
 
 ------------------------------------------------------------
 5. Register and start net-snmp agent
@@ -76,6 +80,9 @@ exit 0
 chmod 744 S78net-snmp
 ./S78net-snmp start
 
+Get var values
+snmpwalk -v 2c -c ussdc localhost SIBINCO-SMSC-MIB::sibinco
+ 
 ############################################################
                         Appendix
 ############################################################
