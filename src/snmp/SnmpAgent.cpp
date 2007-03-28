@@ -11,6 +11,7 @@ static char const ident[] = "$Id$";
 #include "logger/Logger.h"
 #include "util/config/Manager.h"
 #include "system/smsc.hpp"
+#include "system/version.h"
   extern "C" {
     void init_smsc(void);
     int smscStatusHandler(netsnmp_mib_handler *handler,
@@ -178,7 +179,6 @@ static char const ident[] = "$Id$";
       }
       void SnmpAgent::statusChange(smscStatus newstatus)
       {
-        return; //MTS doesn't need this trap
         status = newstatus;
         int *statusSave;
         memdup((uchar_t **) &statusSave,(uchar_t *) &status,sizeof(status));
@@ -447,7 +447,7 @@ using smsc::snmp::SnmpAgent;
 
     switch (reqinfo->mode) {
       case MODE_GET:
-        snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char *)version, strlen(version));
+        snmp_set_var_typed_value(requests->requestvb, ASN_OCTET_STR, (u_char *)getStrVersion(), strlen(getStrVersion()));
         break;
       case MODE_SET_RESERVE1:
       case MODE_SET_RESERVE2:
