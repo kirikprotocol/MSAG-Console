@@ -11,15 +11,11 @@ void ActionRedirect::init(const SectionParams& params,PropertyObject propertyObj
     m_fOAFieldType = CheckParameter(params, propertyObject, "redirect", "OA", false, true, strOA, m_bExistOA);
     m_fDAFieldType = CheckParameter(params, propertyObject, "redirect", "DA", false, true, strDA, m_bExistDA);
 
-
     if ((!m_bExistOA)&&(!m_bExistDA)) 
         throw SCAGException("Must exist at list one of 'OA' and 'DA' parameters");
 
-
-
     smsc_log_debug(logger,"Action 'redirect':: init");
 }
-
 
 bool ActionRedirect::run(ActionContext& context)
 {
@@ -83,7 +79,6 @@ bool ActionRedirect::run(ActionContext& context)
 
     if (m_bExistOA) smppAdapter.setOA(OA);
     if (m_bExistDA) smppAdapter.setDA(DA);
-
 
     context.setRuleStatus(rs);
 

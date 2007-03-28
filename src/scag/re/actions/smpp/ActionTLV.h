@@ -16,7 +16,7 @@ class ActionTLV : public Action
 {
     ActionTLV(const ActionTLV &);
     
-    int type, tag, val;
+    int type, m_tag;
     std::string strVar, strTag;
     static Hash<int> namesHash;
     bool byTag;

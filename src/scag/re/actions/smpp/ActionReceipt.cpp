@@ -56,16 +56,14 @@ void ActionReceipt::init(const SectionParams& params,PropertyObject propertyObje
         throw SCAGException("Action 'smpp:receipt': Invalid 'message state' field: %s", varState.c_str());
 
     ftMsgId = CheckParameter(params, propertyObject, "receipt", "msg_id", true, true, varMsgId, bExist);
-    if(ftMsgId == ftUnknown) msgId = varMsgId;
     ftDstSmeId = CheckParameter(params, propertyObject, "receipt", "dst_sme_id", true, true, varDstSmeId, bExist);
-    if(ftDstSmeId == ftUnknown) dstSmeId = varSrcSmeId;
 
-    smsc_log_debug(logger,"Action 'smpp:receipt' inited");
+    smsc_log_debug(logger,"Action 'smpp:receipt' inited. to=%s from=%s state=%s msg_id=%s dst_sme_id=%s", varTo.c_str(), varFrom.c_str(), varState.c_str(), varMsgId.c_str(), varDstSmeId.c_str());
 }
 
 bool ActionReceipt::getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val)
 {
-    Property * p = 0;
+    Property * p = NULL;
     if (!(p = context.getProperty(str))) 
     {
         smsc_log_error(logger,"Action 'smpp:receipt': invalid '%s' property '%s'", field_name, str.c_str());
@@ -79,8 +77,10 @@ bool ActionReceipt::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'smpp:receipt'");
 
-    Property * p = NULL;
-    std::string s;
+    Address from(fromAddr), to(toAddr);
+    uint8_t st = state;
+    const char *mid = varMsgId.c_str(), *dst = varDstSmeId.c_str();
+    std::string s, sDstSmeId;
 
     if(ftTo != ftUnknown)
     {
@@ -88,7 +88,7 @@ bool ActionReceipt::run(ActionContext& context)
             return true;
         try{
             Address a(s.c_str());
-            toAddr = a;
+            to = a;
         }
         catch(Exception& e)
         {
@@ -102,7 +102,7 @@ bool ActionReceipt::run(ActionContext& context)
             return true;
         try{
             Address a(s.c_str()); 
-            fromAddr = a;
+            from = a;
         }
         catch(Exception& e)
         {
@@ -110,16 +110,24 @@ bool ActionReceipt::run(ActionContext& context)
         }
 
     }
-    if(ftState != ftUnknown && (!getStrProperty(context, varState, "state", s) || !(state = getMsgState(s.c_str()))))
+
+    if(ftState != ftUnknown && (!getStrProperty(context, varState, "state", s) || !(st = getMsgState(s.c_str()))))
         return true;
 
-    if(ftMsgId != ftUnknown && !getStrProperty(context, varMsgId, "msg_id", msgId))
-        return true;
+    if(ftMsgId != ftUnknown)
+    {
+        if(!getStrProperty(context, varMsgId, "msg_id", s))
+            return true;
+        mid = s.c_str();
+    }
+    if(ftDstSmeId != ftUnknown)
+    {
+        if(!getStrProperty(context, varDstSmeId, "dst_sme_id", sDstSmeId))
+            return true;
+        dst = sDstSmeId.c_str();
+    }
 
-    if(ftDstSmeId != ftUnknown && !getStrProperty(context, varDstSmeId, "dst_sme_id", dstSmeId))
-        return true;
-
-    scag::transport::smpp::SmppManager::Instance().sendReceipt(fromAddr, toAddr, state, msgId.c_str(), dstSmeId.c_str());
+    scag::transport::smpp::SmppManager::Instance().sendReceipt(from, to, st, mid, dst);
     return true;
 }
 

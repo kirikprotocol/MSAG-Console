@@ -17,7 +17,7 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 {
     bool bExist;
 
-    tag = 0;
+    m_tag = 0;
     ftTag = CheckParameter(params, propertyObject, "tlv", "tag", false, true, strTag, byTag);
     if(!byTag)
     {
@@ -27,37 +27,14 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
             int *p = namesHash.GetPtr(strTag.c_str());
             if(!p)
                 throw SCAGException("Action 'tlv': Invalid NAME value");            
-            tag = *p;
+            m_tag = *p;
         }
     }
-    else
-    {
-        if(ftTag == ftUnknown)
-        {
-            tag = atoi(strTag.c_str());
-            if(!tag)
-                throw SCAGException("Action 'tlv': Invalid TAG value");
-        }
-    }
+    else if(ftTag == ftUnknown && !(m_tag = atoi(strTag.c_str())))
+        throw SCAGException("Action 'tlv': Invalid TAG value");
     
-    if(type == TLV_SET || type == TLV_GET)
-    {
-        ftVar = CheckParameter(params, propertyObject, "tlv", "var", true, type == TLV_SET, strVar, bExist);
-        if(type == TLV_GET && (ftVar == ftUnknown || ftVar == ftConst))
-            throw SCAGException("Action 'tlv': Get var can't be a const value");        
-        if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
-        {
-            val = atoi(strVar.c_str());
-            if(!val && (strVar[0] != '0' || strVar.length() != 1))
-                throw SCAGException("Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, strVar.c_str());
-        }
-    }
-    else if(type == TLV_EXIST)
-    {
-        ftVar = CheckParameter(params, propertyObject, "tlv", "exist", true, false, strVar, bExist);
-        if(ftVar == ftUnknown || ftVar == ftConst)
-            throw SCAGException("Action 'tlv': Result can't be a const value");
-    }
+    if(type == TLV_SET || type == TLV_GET || type == TLV_EXIST)
+        ftVar = CheckParameter(params, propertyObject, "tlv", type != TLV_EXIST ? "var" : "exist", true, type == TLV_SET, strVar, bExist);
 
     smsc_log_debug(logger,"Action 'tlv':: init");
 }
@@ -68,21 +45,25 @@ bool ActionTLV::run(ActionContext& context)
 
     SMS& sms = CommandBrige::getSMS((SmppCommand&)context.getSCAGCommand());
 
+    int tag = m_tag;
+
     if(!tag)
     {
-        Property* property = context.getProperty(strTag);
+        Property* p = context.getProperty(strTag);
+        if(!p)
+            throw SCAGException("Action 'tlv': Invalid TAG property: %s", strTag.c_str());
         if(byTag)
         {
-            tag = atoi(strTag.c_str());
+            tag = atoi(p->getStr().c_str());
             if(!tag)
                 throw SCAGException("Action 'tlv': Invalid TAG value");
         }
         else
         {
-            int *p = namesHash.GetPtr(strTag.c_str());
-            if(!p)
+            int *i = namesHash.GetPtr(p->getStr().c_str());
+            if(!i)
                 throw SCAGException("Action 'tlv': Invalid NAME value");
-            tag = *p;
+            tag = *i;
         }
     }
     
@@ -132,6 +113,16 @@ bool ActionTLV::run(ActionContext& context)
     {
         if(tt == SMS_INT_TAG)
         {
+            int val;
+            if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
+            {
+                val = atoi(strVar.c_str());
+                if(!val && (strVar[0] != '0' || strVar.length() != 1))
+                {
+                    smsc_log_error(logger, "Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, strVar.c_str());
+                    return true;
+                }
+            }
             sms.setIntProperty(tag, prop ? (uint32_t)prop->getInt() : val);
             smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? (uint32_t)prop->getInt() : val);
         }
