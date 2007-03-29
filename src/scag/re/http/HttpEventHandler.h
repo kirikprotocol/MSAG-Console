@@ -10,11 +10,11 @@ using namespace scag::transport::http;
 
 class HttpEventHandler : public EventHandler
 {
-    RuleStatus processRequest(HttpRequest& command, Session& session, CommandProperty& commandProperty);
-    RuleStatus processResponse(HttpResponse& command, Session& session, CommandProperty& commandProperty);
-    RuleStatus processDelivery(HttpResponse& command, Session& session, CommandProperty& commandProperty);
+    void processRequest(HttpRequest& command, ActionContext& context);
+    void processResponse(HttpResponse& command, ActionContext& context);
+    void processDelivery(HttpResponse& command, ActionContext& context);
 public:
-    virtual RuleStatus process(SCAGCommand& command, Session& session); 
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs); 
     //Method return HandlerId from hander type string
     virtual int StrToHandlerId(const std::string& str);
 };

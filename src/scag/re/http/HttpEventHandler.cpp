@@ -9,14 +9,12 @@ namespace scag { namespace re { namespace http {
 using namespace scag::transport::http;
 using namespace scag::sessions;
 
-RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& session, CommandProperty& commandProperty)
+void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& context)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Request...");
 
-    Hash<Property> _constants;
-    RuleStatus rs;
-
-    HttpCommandAdapter _command(command);
+    RuleStatus& rs = context.getRuleStatus();
+    Session& session = context.getSession();
 
     try{
         if(command.isInitial())
@@ -24,85 +22,68 @@ RuleStatus HttpEventHandler::processRequest(HttpRequest& command, Session& sessi
         else            
             session.setOperationFromPending(command, CO_HTTP_DELIVERY);
 
-        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
-
-        ActionContext context(_constants, session, _command, commandProperty);
-
-        rs = RunActions(context);
+        RunActions(context);
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
         PendingOperation pendingOperation;
         pendingOperation.type = CO_HTTP_DELIVERY;
         pendingOperation.validityTime = time(NULL) + SessionManager::DEFAULT_EXPIRE_INTERVAL;
         session.addPendingOperation(pendingOperation);
-        return rs;
+        return;
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "HttpEventHandler: cannot process request command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
-    
+   
     session.closeCurrentOperation();
 
     rs.status = STATUS_FAILED;
     rs.result = -1;
-    return rs;
+    return;
 }
 
-RuleStatus HttpEventHandler::processResponse(HttpResponse& command, Session& session, CommandProperty& commandProperty)
+void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& context)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Response...");
 
-    Hash<Property> _constants;
-    RuleStatus rs;
-
-    HttpCommandAdapter _command(command);
+    RuleStatus& rs = context.getRuleStatus();
+    Session& session = context.getSession();
 
     try{
         session.setCurrentOperation(command.getOperationId());
 
-        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
-
-        ActionContext context(_constants, session, _command, commandProperty);
-
-        rs = RunActions(context);
+        RunActions(context);
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
-        return rs;
+        return;
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "HttpEventHandler: cannot process response command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
-
     session.closeCurrentOperation();
 
     rs.status = STATUS_FAILED;
     rs.result = -1;
-    return rs;
+    return;
 }
 
-RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& session, CommandProperty& cp)
+void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& context)
 {
     smsc_log_debug(logger, "Process HttpEventHandler Delivery...");
 
-    Hash<Property> _constants;
-    RuleStatus rs;
-
-    HttpCommandAdapter _command(command);
+    RuleStatus& rs = context.getRuleStatus();
+    Session& session = context.getSession();
 
     try{
         session.setCurrentOperation(command.getOperationId());
 
-        RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
-
-        ActionContext context(_constants, session, _command, cp);
-
-        rs = RunActions(context);
+        RunActions(context);
 
         session.closeCurrentOperation();
 
-        return rs;
+        return;
     } catch (SCAGException& e)
     {
         smsc_log_debug(logger, "HttpEventHandler: cannot process delivery command - %s", e.what());
@@ -113,10 +94,10 @@ RuleStatus HttpEventHandler::processDelivery(HttpResponse& command, Session& ses
 
     rs.status = STATUS_FAILED;
     rs.result = -1;
-    return rs;
+    return;
 }
 
-RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
+void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
     smsc_log_debug(logger, "Process HttpEventHandler...");
 
@@ -149,23 +130,27 @@ RuleStatus HttpEventHandler::process(SCAGCommand& command, Session& session)
 
     CommandProperty cp(command, 0, abonentAddr, hc.getProviderId(), operatorId, -1, CO_HTTP_DELIVERY);
 
+    Hash<Property> _constants;
+    HttpCommandAdapter _command(hc);
+    ActionContext context(_constants, session, _command, cp, rs);
+
+    RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
+
     switch(hc.getCommandId())
     {
         case HTTP_REQUEST:
-            return processRequest((HttpRequest&)hc, session, cp);
+            return processRequest((HttpRequest&)hc, context);
         case HTTP_RESPONSE:
-            return processResponse((HttpResponse&)hc, session, cp);
+            return processResponse((HttpResponse&)hc, context);
         case HTTP_DELIVERY:
-            return processDelivery((HttpResponse&)hc, session, cp);
+            return processDelivery((HttpResponse&)hc, context);
         default:
             smsc_log_debug(logger, "HttpEventHandler: unknown command");
     }
 
-    RuleStatus rs;
-    
     rs.status = STATUS_FAILED;
     rs.result = -1;
-    return rs;
+    return;
 }
 
 int HttpEventHandler::StrToHandlerId(const std::string& str)

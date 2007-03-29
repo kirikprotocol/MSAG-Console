@@ -14,7 +14,7 @@ class SmppEventHandler : public EventHandler
     void ModifyOperationBeforeExecuting(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor);
     void ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor);
 public:
-    virtual RuleStatus process(SCAGCommand& command, Session& session); 
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs); 
     
     virtual int StrToHandlerId(const std::string& str); //Method return HandlerId from string
 };

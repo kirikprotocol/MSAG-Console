@@ -71,9 +71,8 @@ public:
         {
             if (!RunBeforePostpone(context)) return true;
 
-            RuleStatus rs = context.getRuleStatus();
+            RuleStatus& rs = context.getRuleStatus();
             rs.status = STATUS_LONG_CALL;
-            context.setRuleStatus(rs);
 
             context.clearLongCallContext();
             return false;

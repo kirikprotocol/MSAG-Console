@@ -383,7 +383,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
             
         if(se.Get())
         {
-            rs = RuleEngine::Instance().process(request, *se.Get());
+            RuleEngine::Instance().process(request, *se.Get(), rs);
             
             if(rs.status == scag::re::STATUS_LONG_CALL)
             {
@@ -441,7 +441,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
 
         if(se.Get())
         {
-            rs = RuleEngine::Instance().process(response, *se.Get());
+            RuleEngine::Instance().process(response, *se.Get(), rs);
 
             if(rs.status == scag::re::STATUS_OK)
                 registerEvent(scag::stat::events::http::RESPONSE_OK, response);
@@ -492,7 +492,7 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
         {
             response.setCommandId(HTTP_DELIVERY);
             response.setDelivered(delivered);
-            rs = RuleEngine::Instance().process(response, *se.Get());
+            RuleEngine::Instance().process(response, *se.Get(), rs);
             
             if(rs.status == scag::re::STATUS_OK && delivered)
                 registerEvent(scag::stat::events::http::DELIVERED, response, true);

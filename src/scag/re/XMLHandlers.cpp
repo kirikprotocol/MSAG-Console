@@ -39,8 +39,6 @@ Rule * SemanticAnalyser::ReturnRuleObject()
     return result;
 }
 
-
-
 void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionParams& params,int nLine)
 {
     IParserHandler * NewObj = 0;
@@ -125,9 +123,8 @@ Rule * XMLBasicHandler::ReturnFinalObject()
 
 /////////////////////////////////////////////XMLBasicHandler/////////////////////////////
 
-XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj,const char* const encodingName) : 
-    analyser(obj),CanReturnFinalObject(false),logger(0),
-    fFormatter(encodingName, 0, this, XMLFormatter::NoEscapes)
+XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj) : 
+    analyser(obj),CanReturnFinalObject(false),logger(0)
 
 {
     logger = Logger::getInstance("scag.re");
@@ -137,21 +134,9 @@ XMLBasicHandler::~XMLBasicHandler()
 {
 }
 
-
-void XMLBasicHandler::writeChars(const XMLByte* const toWrite)
-{
-}
-
-void XMLBasicHandler::writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter)
-{
-//    XERCES_STD_QUALIFIER cout.write((char *) toWrite, (int) count);
-//    XERCES_STD_QUALIFIER cout.flush();
-}
-
-
 void XMLBasicHandler::characters(const XMLCh* const chars, const unsigned int length)
 {
-    //fFormatter.formatBuf(chars, length, XMLFormatter::CharEscapes);
+    // empty
 }
 
 
@@ -159,46 +144,22 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
 {
     StrX XMLQName(qname);
     SectionParams attr;
-    XMLByte buff[1024];
 
     unsigned int len = attributes.getLength();
     for (unsigned int index = 0; index < len; index++)
     {
-        //StrX * AttrName = new StrX(attributes.getName(index));
-        //StrX * AttrValue = new StrX(attributes.getValue(index));
-
-       /* fFormatter  << XMLFormatter::NoEscapes
-                    << chSpace << attributes.getName(index)
-                    << chEqual << chDoubleQuote
-                    << XMLFormatter::AttrEscapes
-                    << attributes.getValue(index)
-                    << XMLFormatter::NoEscapes
-                    << chDoubleQuote;*/
-
-        const XMLTranscoder * transcoder = fFormatter.getTranscoder();
-
-        unsigned int charsEaten;
-
-        XMLTranscoder * _transcoder = const_cast <XMLTranscoder *>(transcoder);
-
         XMLCh const * XMLValue = attributes.getValue(index);
         XMLCh const * XMLName = attributes.getName(index);
 
-        std::string value;
+        std::string value, name;
 
-        //value.append((wchar_t *)XMLValue, XMLString::stringLen(XMLValue));
-
-        //value.assign((char *)XMLValue,XMLString::stringLen(XMLValue)*2);
         Convertor::UCS2ToUTF8(XMLValue, XMLString::stringLen(XMLValue), value);
+        Convertor::UCS2ToUTF8(XMLName, XMLString::stringLen(XMLName), name);
 
-        _transcoder->transcodeTo(XMLName, XMLString::stringLen(XMLName), buff, 1024, charsEaten,unRepOpts);
-
-
-        attr[(char *)buff] = value;
+        attr[name.c_str()] = value;
     }
 
-    analyser.DeliverBeginTag(XMLQName.localForm(),attr,m_pLocator->getLineNumber());
-
+    analyser.DeliverBeginTag(XMLQName.localForm(), attr, m_pLocator->getLineNumber());
 }
 
 

@@ -92,7 +92,6 @@ bool ActionReplace::run(ActionContext& context)
             return true;
         smsc_log_debug(logger,"Action 'replace': value=%s", temp.c_str());
         Convertor::UTF8ToUCS2(temp.c_str(), temp.size(), rep);
-        
     }
     else
         rep = m_wstrReplace;

@@ -80,7 +80,7 @@ namespace scag { namespace re { namespace actions
     {
     private:
 
-        RuleStatus              status;
+        RuleStatus&              status;
 
         Hash<Property>          variables;
         Hash<Property>&         constants;
@@ -93,8 +93,8 @@ namespace scag { namespace re { namespace actions
     public:
 
         ActionContext(Hash<Property>& _constants,
-                      Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty)
-            : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty) 
+                      Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty, RuleStatus& rs)
+            : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty), status(rs)
         {
         };
 
@@ -114,8 +114,6 @@ namespace scag { namespace re { namespace actions
             while (!command.getSCAGCommand().getLongCallContext().ActionStack.empty()) 
                 command.getSCAGCommand().getLongCallContext().ActionStack.pop();
         }
-
-        void setRuleStatus(RuleStatus rs) {status = rs;};
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);

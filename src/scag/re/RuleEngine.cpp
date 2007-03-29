@@ -180,7 +180,7 @@ public:
     void ProcessInit(const std::string& dir);
     virtual void updateRule(RuleKey& key);
     virtual void removeRule(RuleKey& key);
-    virtual RuleStatus process(SCAGCommand& command, Session& session);
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
 
     virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
     virtual Hash<Property> getConstants();
@@ -281,7 +281,7 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
     int errorCode = 0;
 
     SAXParser parser;
-    XMLBasicHandler handler(factory,"KOI8-R");
+    XMLBasicHandler handler(factory);
 
     try
     {
@@ -400,15 +400,12 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
 }
 
 
-RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
+void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
-
     smsc_log_debug(logger,"");
     smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
 
     RulesReference rulesRef = getRules();
-    RuleStatus rs;
-
     //int ruleId = command.getRuleId();
 
     RuleKey key;
@@ -418,13 +415,9 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
     if (rulePtr)
-    {
-        rs = (*rulePtr)->process(command, session);
-    }
+        (*rulePtr)->process(command, session, rs);
     else
         throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", key.serviceId);
-
-    return rs;
 }
 
 

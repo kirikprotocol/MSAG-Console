@@ -39,7 +39,7 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
 
 bool ActionReturn::run(ActionContext& context)
 {
-    RuleStatus rs = context.getRuleStatus();
+    RuleStatus& rs = context.getRuleStatus();
 
     if (m_bResultExist) 
     {
@@ -58,7 +58,6 @@ bool ActionReturn::run(ActionContext& context)
    rs.status = m_bStatusValue;
 
 
-    context.setRuleStatus(rs);
     smsc_log_debug(logger,"Action 'return': return result=%d, status=%d",rs.result, rs.status);
 
     context.clearLongCallContext();

@@ -61,26 +61,27 @@ void ActionReceipt::init(const SectionParams& params,PropertyObject propertyObje
     smsc_log_debug(logger,"Action 'smpp:receipt' inited. to=%s from=%s state=%s msg_id=%s dst_sme_id=%s", varTo.c_str(), varFrom.c_str(), varState.c_str(), varMsgId.c_str(), varDstSmeId.c_str());
 }
 
-bool ActionReceipt::getStrProperty(ActionContext& context, std::string& str, const char *field_name, std::string& val)
+bool ActionReceipt::getStrProperty(ActionContext& context, const std::string& str, const char *field_name, std::string& val)
 {
-    Property * p = NULL;
-    if (!(p = context.getProperty(str))) 
-    {
+    Property * p = context.getProperty(str);
+    if(p) 
+        val = p->getStr();
+    else
         smsc_log_error(logger,"Action 'smpp:receipt': invalid '%s' property '%s'", field_name, str.c_str());
-        return false;
-    }
-    val = p->getStr();
-    return true;
+    return p != NULL;
 }
 
 bool ActionReceipt::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'smpp:receipt'");
 
-    Address from(fromAddr), to(toAddr);
-    uint8_t st = state;
-    const char *mid = varMsgId.c_str(), *dst = varDstSmeId.c_str();
-    std::string s, sDstSmeId;
+    PostActionReceipt* pa = new PostActionReceipt();
+
+    pa->from = fromAddr;
+    pa->to = toAddr;
+    pa->state = state;
+
+    std::string s;
 
     if(ftTo != ftUnknown)
     {
@@ -88,7 +89,7 @@ bool ActionReceipt::run(ActionContext& context)
             return true;
         try{
             Address a(s.c_str());
-            to = a;
+            pa->to = a;
         }
         catch(Exception& e)
         {
@@ -102,7 +103,7 @@ bool ActionReceipt::run(ActionContext& context)
             return true;
         try{
             Address a(s.c_str()); 
-            from = a;
+            pa->from = a;
         }
         catch(Exception& e)
         {
@@ -111,23 +112,23 @@ bool ActionReceipt::run(ActionContext& context)
 
     }
 
-    if(ftState != ftUnknown && (!getStrProperty(context, varState, "state", s) || !(st = getMsgState(s.c_str()))))
+    if(ftState != ftUnknown && (!getStrProperty(context, varState, "state", s) || !(pa->state = getMsgState(s.c_str()))))
         return true;
 
-    if(ftMsgId != ftUnknown)
-    {
-        if(!getStrProperty(context, varMsgId, "msg_id", s))
-            return true;
-        mid = s.c_str();
-    }
-    if(ftDstSmeId != ftUnknown)
-    {
-        if(!getStrProperty(context, varDstSmeId, "dst_sme_id", sDstSmeId))
-            return true;
-        dst = sDstSmeId.c_str();
-    }
+    if(ftMsgId == ftUnknown)
+        pa->msgId = varMsgId;
+    else if(!getStrProperty(context, varMsgId, "msg_id", pa->msgId))
+        return true;
 
-    scag::transport::smpp::SmppManager::Instance().sendReceipt(from, to, st, mid, dst);
+    if(ftDstSmeId == ftUnknown)
+        pa->dstSmeId = varDstSmeId;
+    else if(!getStrProperty(context, varDstSmeId, "dst_sme_id", pa->dstSmeId))
+            return true;
+
+    smsc_log_debug(logger, "Action 'receipt' from=%s, to=%s, st=%d, mid=%s, dst=%s", pa->from.toString().c_str(), pa->to.toString().c_str(), pa->state, pa->msgId.c_str(), pa->dstSmeId.c_str());
+
+    context.getRuleStatus().addAction(pa);
+
     return true;
 }
 

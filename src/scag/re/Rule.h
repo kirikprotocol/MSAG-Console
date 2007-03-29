@@ -59,7 +59,7 @@ public:
      * @param   command     command to process
      * @return  status      rule's handler execution status
      */
-    virtual RuleStatus process(SCAGCommand& command, Session& session);
+    virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
 
 
     Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};

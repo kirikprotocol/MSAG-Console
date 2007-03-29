@@ -74,13 +74,11 @@ bool ActionRedirect::run(ActionContext& context)
         }
     }
 
-    RuleStatus rs;
+    RuleStatus& rs = context.getRuleStatus();
     rs.status = STATUS_REDIRECT;
 
     if (m_bExistOA) smppAdapter.setOA(OA);
     if (m_bExistDA) smppAdapter.setDA(DA);
-
-    context.setRuleStatus(rs);
 
     context.clearLongCallContext();
     smsc_log_debug(logger,"Action 'redirect' finished");   

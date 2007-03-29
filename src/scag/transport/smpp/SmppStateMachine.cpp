@@ -348,7 +348,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       }
 
       smsc_log_debug(log, "Submit: RuleEngine processing...");
-      st=scag::re::RuleEngine::Instance().process(cmd,*session);
+      scag::re::RuleEngine::Instance().process(cmd,*session, st);
       smsc_log_debug(log, "Submit: RuleEngine procesed.");
 
   }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
@@ -413,6 +413,9 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     session->closeCurrentOperation();
     smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
+
+  st.runPostProcessActions();
+
   sm.releaseSession(session);
 }
 
@@ -475,7 +478,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   else
   {
     smsc_log_debug(log, "SubmitResp: RuleEngine processing...");
-    st=scag::re::RuleEngine::Instance().process(cmd,*session);
+    scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "SubmitResp: RuleEngine  processed");
     if(st.status != scag::re::STATUS_OK)
     {
@@ -506,6 +509,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     smsc_log_warn(log,"SubmitResp: Failed to put command into %s:%s",dst->getSystemId(),e.what());
     rs = -1;
   }
+
+  st.runPostProcessActions();
 
   if(rs != -2 || st.status != scag::re::STATUS_OK)
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)sms->getRouteId(), rs);
@@ -668,7 +673,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       }
 
       smsc_log_debug(log, "Delivery: RuleEngine processing...");
-      st=scag::re::RuleEngine::Instance().process(cmd,*session);
+      scag::re::RuleEngine::Instance().process(cmd,*session, st);
       smsc_log_debug(log, "Delivery: RuleEngine procesed.");
 
   }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
@@ -735,6 +740,9 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     session->closeCurrentOperation();    
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
+
+  st.runPostProcessActions();
+
   sm.releaseSession(session);
 }
 
@@ -766,7 +774,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   }
   if(!bGotFromRegistry) {
     smsc_log_warn(log,"DeliveryResp: Original delivery for delivery response not found. sid='%s',seq='%d'",
-		  src->getSystemId(),cmd->get_dialogId());
+          src->getSystemId(),cmd->get_dialogId());
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
     return;
   }
@@ -799,7 +807,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   else
   {
     smsc_log_debug(log, "DeliveryResp: processing...");
-    st=scag::re::RuleEngine::Instance().process(cmd,*session);
+    scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "DeliveryResp: procesed.");
     if(st.status != scag::re::STATUS_OK)
     {
@@ -823,6 +831,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_warn(log,"DeliveryResp: Failed to put command into %s:%s",dst->getSystemId(),e.what());
     rs = -1;
   }
+
+  st.runPostProcessActions();
 
   if(rs != -2 || st.status != scag::re::STATUS_OK)
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);
@@ -954,7 +964,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         else
             session->setRedirectFlag();
       smsc_log_debug(log, "DataSm: RuleEngine processing...");
-      st=scag::re::RuleEngine::Instance().process(cmd,*session);
+      scag::re::RuleEngine::Instance().process(cmd,*session, st);
       smsc_log_debug(log, "DataSm: RuleEngine procesed.");
   }while(st.status == scag::re::STATUS_REDIRECT && rcnt++ < MAX_REDIRECT_CNT);
 
@@ -1018,6 +1028,9 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     session->closeCurrentOperation();
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
+
+  st.runPostProcessActions();
+
   sm.releaseSession(session);
 }
 void StateMachine::processDataSmResp(SmppCommand& cmd)
@@ -1086,7 +1099,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   else
   {
     smsc_log_debug(log, "DataSmResp: processing...");
-    st=scag::re::RuleEngine::Instance().process(cmd,*session);
+    scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "DataSmResp: procesed.");
     if(st.status != scag::re::STATUS_OK)
     {
@@ -1114,6 +1127,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     smsc_log_warn(log,"DataSmResp: Failed to put command into %s:%s",dst->getSystemId(),e.what());
     rs = -1;
   }
+  
+  st.runPostProcessActions();
 
   if(rs != -2 || st.status != scag::re::STATUS_OK)
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)orgCmd->get_sms()->getRouteId(), rs);

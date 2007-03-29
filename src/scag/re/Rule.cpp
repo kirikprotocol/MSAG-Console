@@ -28,9 +28,8 @@ Rule::~Rule()
 }
 
 
-RuleStatus Rule::process(SCAGCommand& command,Session& session)
+void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
 {
-    RuleStatus rs;
     if (command.getType() != transportType)
     {
         rs.status = STATUS_FAILED;
@@ -49,34 +48,32 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
     {
         rs.status = STATUS_FAILED;
         smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
-        return rs;
+        return;
     }
 
     EventHandler * eh = Handlers.Get(handlerType);
     try
     {
-        rs = eh->process(command, session);
+        eh->process(command, session, rs);
     }
     catch (Exception& e)
     {
         rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
-        return rs;
+        return;
     } 
     catch (std::exception& e)
     {
         rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
     //abort();
-        return rs;
+        return;
     } 
     catch (...)
     {
         rs.status = STATUS_FAILED;
         smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
-        return rs;
     }
-    return rs;
 }
 
 EventHandler * Rule::CreateEventHandler()

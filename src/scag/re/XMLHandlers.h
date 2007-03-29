@@ -52,16 +52,13 @@ public:
 };
 
 
-class XMLBasicHandler : public HandlerBase, private XMLFormatTarget
+class XMLBasicHandler : public HandlerBase
 {
     SemanticAnalyser analyser;
     bool CanReturnFinalObject;
     const Locator * m_pLocator;
     Logger * logger;
-    XMLFormatter  fFormatter;
 
-    void writeChars(const XMLByte* const toWrite);
-    void writeChars(const XMLByte* const toWrite, const unsigned int count, XMLFormatter* const formatter);
     void characters(const XMLCh* const chars, const unsigned int length);
 
 protected:
@@ -71,7 +68,7 @@ public:
     // -----------------------------------------------------------------------
     //  Constructors
     // -----------------------------------------------------------------------
-    XMLBasicHandler(const ActionFactory& obj, const char* const encodingName);
+    XMLBasicHandler(const ActionFactory& obj);
     ~XMLBasicHandler();
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);
@@ -79,66 +76,25 @@ public:
     void SetIParserHandler(IParserHandler * obj);
     virtual void setDocumentLocator(const Locator * const locator);
 
-
-
-    // -----------------------------------------------------------------------
-    //  Implementations of the SAX ErrorHandler interface
-    // -----------------------------------------------------------------------
     void warning(const SAXParseException& exc);
     void error(const SAXParseException& exc);
     void fatalError(const SAXParseException& exc);
     void endDocument();
 };
-/*
-class XMLBasicTranscoder : public XMLTranscoder
-{
-public:
-
-};  */
 
 class StrX
 {
 public :
-    // -----------------------------------------------------------------------
-    //  Constructors and Destructor
-    // -----------------------------------------------------------------------
-    StrX(const XMLCh* const toTranscode)
-    {
-        // Call the private transcoding method
-        fLocalForm = XMLString::transcode(toTranscode);
-    }
+    StrX(const XMLCh* const toTranscode) { fLocalForm = XMLString::transcode(toTranscode);  }
 
-    ~StrX()
-    {
-        XMLString::release(&fLocalForm);
-    }
+    ~StrX() { XMLString::release(&fLocalForm); }
 
-    // -----------------------------------------------------------------------
-    //  Getter methods
-    // -----------------------------------------------------------------------
-    const char* localForm() const
-    {
-        return fLocalForm;
-    }
+    const char* localForm() const { return fLocalForm; }
 
 private :
-    // -----------------------------------------------------------------------
-    //  Private data members
-    //
-    //  fLocalForm
-    //      This is the local code page form of the string.
-    // -----------------------------------------------------------------------
     char*   fLocalForm;
 };
-/*
-inline XERCES_STD_QUALIFIER ostream& operator<<(XERCES_STD_QUALIFIER ostream& target, const StrX& toDump)
-{
-    //target << toDump.localForm();
-    return target;
-}        */
-
 
 }}
 
 #endif
-

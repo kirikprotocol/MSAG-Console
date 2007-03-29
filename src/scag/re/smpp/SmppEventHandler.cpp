@@ -8,7 +8,6 @@ namespace scag { namespace re {
 
 using namespace scag::re::smpp;
 
-
 void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppCommand& command, CSmppDiscriptor& smppDiscriptor)
 {
     Operation * operation = 0;
@@ -166,18 +165,13 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
     }
 }
 
-
-
-RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
+void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
     Hash<Property> _constants = RuleEngine::Instance().getConstants();
-    RuleStatus rs;
-   
 
     smsc::util::config::Config config;
-    
     
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
@@ -228,14 +222,14 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
         smsc_log_error(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
         rs.result = smsc::system::Status::SMDELIFERYFAILURE;
         rs.status = STATUS_FAILED;
-        return rs;
+        return;
     }
 
-    ActionContext context(_constants, session, _command, commandProperty);
+    ActionContext context(_constants, session, _command, commandProperty, rs);
 
     try
     {
-        rs = RunActions(context);
+        RunActions(context);
     } catch (SCAGException& e)
     {
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
@@ -253,7 +247,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     }
 
     ModifyOperationAfterExecuting(session, *smppcommand, rs, smppDiscriptor);
-    return rs;
+    return;
 }
 
 int SmppEventHandler::StrToHandlerId(const std::string& str)

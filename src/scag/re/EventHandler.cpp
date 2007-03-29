@@ -55,13 +55,9 @@ bool EventHandler::FinishXMLSubSection(const std::string& name)
     return true;
 }
 
-RuleStatus EventHandler::RunActions(ActionContext& context)
+void EventHandler::RunActions(ActionContext& context)
 {
-    RuleStatus rs;
-
-    rs.status = STATUS_OK;
-
-    context.setRuleStatus(rs);
+    context.getRuleStatus().status = STATUS_OK;
 
     LongCallContext& longCallContext = context.getSCAGCommand().getLongCallContext();
 
@@ -69,7 +65,6 @@ RuleStatus EventHandler::RunActions(ActionContext& context)
     longCallContext.ActionStack.push(sv);
 
     RunActionVector(context, longCallContext, actions, logger);
-    return context.getRuleStatus();
 }
 
 void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, const CSessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody)
