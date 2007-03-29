@@ -56,22 +56,22 @@ public class CommandCall extends ServiceCommand {
     }
 
     private String encodeStringList(List list) {
-        String result = "";
+        final StringBuffer result = new StringBuffer();
         for (Iterator i = list.iterator(); i.hasNext();) {
             String s = (String) i.next();
-            result += encodeComma(s) + (i.hasNext() ? "," : "");
+            result.append(encodeComma(s)).append((i.hasNext() ? "," : ""));
         }
-        return result;
+        return result.toString();
     }
 
     private String encodeComma(String value) {
-        String result = "";
+        final StringBuffer result = new StringBuffer();
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             if (c == ',' || c == '\\')
-                result += '\\';
-            result += c;
+                result.append("\\");
+            result.append(c);
         }
-        return result;
+        return result.toString();
     }
 }

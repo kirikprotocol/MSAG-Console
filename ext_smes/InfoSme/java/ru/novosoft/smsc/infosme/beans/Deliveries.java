@@ -288,8 +288,10 @@ public class Deliveries extends InfoSmeBean
                     incProgress(false);
                 }
 
+              if (messages.size() > 0) {
                 getInfoSmeContext().getInfoSme().addDeliveryMessages(task.getId(), messages);
                 messages.clear();
+              }
 
                 getInfoSmeContext().getInfoSme().addStatisticRecord(task.getId(), new Date(), (int)getMessages(), 0, 0 ,0);
 
