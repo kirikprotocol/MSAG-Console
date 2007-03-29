@@ -6,16 +6,13 @@ import java.text.MessageFormat;
 import java.util.Properties;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-import ru.aurorisoft.smpp.Message;
 
 /**
  * Created by IntelliJ IDEA.
  * User: makar
  * Date: 13.09.2004
  * Time: 14:16:32
- * To change this template use File | Settings | File Templates.
  */
 public class ProfileManagerExecutor extends ProfileManagerState implements Executor
 {
@@ -53,18 +50,13 @@ public class ProfileManagerExecutor extends ProfileManagerState implements Execu
       state.removeAttribute(Constants.ATTR_ERROR);
     }
 
-    Message resp = new Message();
     if (exc != null) {
       final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
-//      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(Transliterator.translit(msg), true);
-//      return new ExecutorResponse(new Message[]{resp}, true);
+      return new ExecutorResponse(translit(msg), true);
     }
     Object[] args = new Object[] {info.inform ? valueYes:valueNo, info.informFormat.getName(),
                                   info.notify ? valueYes:valueNo, info.notifyFormat.getName()};
     final String msg = pageFormat.format(args);
-//    resp.setMessageString(Transliterator.translit(msg));	
-//    return new ExecutorResponse(new Message[]{resp}, false);
-   return new ExecutorResponse(Transliterator.translit(msg), false);
+   return new ExecutorResponse(translit(msg), false);
   }
 }

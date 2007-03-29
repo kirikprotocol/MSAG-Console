@@ -1,12 +1,11 @@
 package ru.sibinco.mci.divert;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
 import java.util.HashMap;
+import java.util.Map;
 import java.text.MessageFormat;
 
 import org.apache.log4j.Category;
@@ -45,21 +44,16 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     DivertManagerException exc = (DivertManagerException)state.getAttribute(Constants.ATTR_ERROR);
-//    Message resp = new Message();
     if (exc != null) {
       logger.warn("Got stored exception", exc);
       state.removeAttribute(Constants.ATTR_ERROR);
       final String msg = errorFormat.format(new Object [] {getErrorMessage(exc)});
-//      resp.setMessageString(Transliterator.translit(msg));
-//      return new ExecutorResponse(new Message[]{resp}, true);
-    return new ExecutorResponse(Transliterator.translit(msg), true);
+      return new ExecutorResponse(translit(msg), true);
     }
     DivertInfo info = null;
     try { info = getDivertInfo(state); } catch (DivertManagerException e) {
       final String msg = errorFormat.format(new Object [] {getErrorMessage(e)});
-//      resp.setMessageString(Transliterator.translit(msg));
-        return new ExecutorResponse(Transliterator.translit(msg), true);
-//      return new ExecutorResponse(new Message[]{resp}, true);
+        return new ExecutorResponse(translit(msg), true);
     }
 
     String reasonValue = null; // show only inactive reasons
@@ -70,7 +64,7 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
     else if (reason.equals(DivertInfo.UNCOND))   reasonValue = info.getUncond();
     if (reasonValue == null || reasonValue.length() <= 0) reasonValue = Constants.OFF;
 
-    HashMap optsMap = new HashMap();
+    Map optsMap = new HashMap(20);
     state.removeAttribute(Constants.ATTR_OPTIONS);
     String menuOpts = ""; String option = null; int counter = 0;
     if (!reasonValue.equalsIgnoreCase(Constants.OFF)) {
@@ -89,8 +83,6 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
 
     if (menuOpts.endsWith("\r\n")) menuOpts = menuOpts.substring(0, menuOpts.length()-2);
     final String msg = pageFormat.format(new Object [] {menuOpts});
-//    resp.setMessageString(Transliterator.translit(msg));
-//    return new ExecutorResponse(new Message[]{resp}, false);
-    return new ExecutorResponse(Transliterator.translit(msg), false);
+    return new ExecutorResponse(translit(msg), false);
   }
 }

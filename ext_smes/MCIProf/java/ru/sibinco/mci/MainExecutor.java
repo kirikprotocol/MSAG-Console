@@ -2,8 +2,6 @@ package ru.sibinco.mci;
 
 import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
-import ru.sibinco.smpp.appgw.util.Transliterator;
-import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
 import java.text.MessageFormat;
@@ -15,18 +13,17 @@ import org.apache.log4j.Category;
  * User: makar
  * Date: 10.09.2004
  * Time: 14:32:45
- * To change this template use File | Settings | File Templates.
  */
-public class MainExecutor implements Executor
+public class MainExecutor extends AbstractExecutor
 {
   private static Category logger = Category.getInstance(MainExecutor.class);
 
-  protected ScenarioResourceBundle systemBundle = null;
   private MessageFormat pageFormat = null;
   private MessageFormat pageFormatAlt = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
+    super.init(properties);
     try {
       systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
       pageFormat =  new MessageFormat(systemBundle.getString(Constants.PAGE_MAIN));
@@ -39,7 +36,6 @@ public class MainExecutor implements Executor
   
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-//    Message resp = new Message();
     Integer strategyInt = (Integer)state.getAttribute(Constants.ATTR_STRATEGY);
     if (strategyInt == null)
       throw new ExecutingException("Strategy is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
@@ -51,9 +47,7 @@ public class MainExecutor implements Executor
              strategy == Constants.RELEASE_MIXED_STRATEGY) msg = pageFormatAlt.format(new Object[] {});
     else
       throw new ExecutingException("Strategy '"+strategy+"' is invalid", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-//    resp.setMessageString(Transliterator.translit(msg));
     state.setAttribute(Constants.ATTR_MAIN, Constants.ATTR_MAIN);
-//    return new ExecutorResponse(new Message[]{resp}, false);
-    return new ExecutorResponse(Transliterator.translit(msg), false);
+    return new ExecutorResponse(translit(msg), false);
   }
 }

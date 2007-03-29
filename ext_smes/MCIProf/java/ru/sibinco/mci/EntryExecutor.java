@@ -12,9 +12,8 @@ import org.apache.log4j.Category;
  * User: makar
  * Date: 14.12.2004
  * Time: 15:51:35
- * To change this template use File | Settings | File Templates.
  */
-public class EntryExecutor implements Executor
+public class EntryExecutor extends AbstractExecutor
 {
   private static Category logger = Category.getInstance(EntryExecutor.class);
 
@@ -45,6 +44,7 @@ public class EntryExecutor implements Executor
   }
   public void init(Properties initProperties) throws ScenarioInitializationException
   {
+    super.init(initProperties);
     this.loadup();
 
     if (strategy == Constants.RELEASE_MIXED_STRATEGY ||

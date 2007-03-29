@@ -1,15 +1,9 @@
 package ru.sibinco.mci;
 
-import ru.sibinco.smpp.appgw.scenario.impl.AbstractSQLExecutor;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.MessageData;
-import java.util.*;
 
-//import ru.sibinco.smpp.appgw.scenario.*;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
-//import ru.sibinco.smpp.appgw.util.Transliterator;
-//import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
 import java.util.Properties;
@@ -20,24 +14,22 @@ import java.text.MessageFormat;
  * User: makar
  * Date: 15.03.2005
  * Time: 18:23:49
- * To change this template use File | Settings | File Templates.
  */
-public class DetailsExecutor  implements Executor
+public class DetailsExecutor  extends AbstractExecutor
 {
   private static Category logger = Category.getInstance(DetailsExecutor.class);
-
-  private ScenarioResourceBundle detailsBundle = null;
 
   private String detailsInfo = null;
   private MessageFormat detailsPage = null;
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
+    super.init(properties);
     try {
       String infoName = (String) properties.get("info");
       String pageName = (String) properties.get("page");
       String bundleName = (String) properties.get("bundle");
-      detailsBundle = (ScenarioResourceBundle) properties.get(bundleName);
+      ScenarioResourceBundle detailsBundle = (ScenarioResourceBundle) properties.get(bundleName);
       detailsInfo   = detailsBundle.getString(infoName);
       detailsPage   = new MessageFormat(detailsBundle.getString(pageName));
     } catch (Exception e) {
@@ -49,11 +41,8 @@ public class DetailsExecutor  implements Executor
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-//    Message resp = new Message();
     String page = detailsPage.format(new Object[] {detailsInfo});
-//    resp.setMessageString(Transliterator.translit(page));
-//    return new ExecutorResponse(new Message[]{resp}, false);
-    return new ExecutorResponse(page, false);
+    return new ExecutorResponse(translit(page), false);
   }
 
 }

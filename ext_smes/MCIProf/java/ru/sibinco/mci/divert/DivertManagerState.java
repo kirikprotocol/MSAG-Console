@@ -3,6 +3,7 @@ package ru.sibinco.mci.divert;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
+import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
 
 import java.util.Properties;
@@ -13,7 +14,6 @@ import java.text.MessageFormat;
  * User: makar
  * Date: 10.09.2004
  * Time: 15:04:25
- * To change this template use File | Settings | File Templates.
  */
 public class DivertManagerState
 {
@@ -22,6 +22,7 @@ public class DivertManagerState
   protected ScenarioResourceBundle systemBundle = null;
   protected ScenarioResourceBundle divertBundle = null;
   protected DivertManager divertManager = null;
+  protected boolean needTranslit = true;
 
   protected MessageFormat errorFormat = null;
   protected String errorCommunication = null;
@@ -39,10 +40,17 @@ public class DivertManagerState
       errorNotAccepted   = divertBundle.getString(Constants.ERROR_NOT_ACCEPTED);
       errorConnect       = divertBundle.getString(Constants.ERROR_CONNECT);
       errorUnknown       = divertBundle.getString(Constants.ERROR_UNKNOWN);
+      String ss = systemBundle.getString(Constants.TRANSLIT);
+      if( ss != null && ss.equalsIgnoreCase("off") ) needTranslit = false;
     } catch (Exception e) {
       throw new ScenarioInitializationException("Init failed", e);
     }
     divertManager = DivertManager.getInstance();
+  }
+
+  protected String translit(String msg) {
+    if( needTranslit ) return Transliterator.translit(msg);
+    else return msg;
   }
 
   protected String getErrorMessage(DivertManagerException exc)

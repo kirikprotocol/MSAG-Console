@@ -17,7 +17,7 @@ import java.util.Properties;
  * Time: 20:53:53
  * To change this template use File | Settings | File Templates.
  */
-public class HelpExecutor implements Executor
+public class HelpExecutor extends AbstractExecutor
 {
   private static Category logger = Category.getInstance(HelpExecutor.class);
 
@@ -28,6 +28,7 @@ public class HelpExecutor implements Executor
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
+    super.init(properties);
     try {
       helpBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_HELP);
       pageInfo   = helpBundle.getString(Constants.PAGE_INFO);
@@ -43,7 +44,7 @@ public class HelpExecutor implements Executor
   {
 
     Message info = new Message();
-    info.setMessageString(Transliterator.translit(pageInfo));
+    info.setMessageString(translit(pageInfo));
     MessageData resp = new MessageData(info);
     Message man = new Message(); 
     man.setMessageString(pageManual);

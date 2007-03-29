@@ -1,9 +1,7 @@
 package ru.sibinco.mci.divert;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-import ru.aurorisoft.smpp.Message;
 
 import java.util.Properties;
 import java.text.MessageFormat;
@@ -15,7 +13,6 @@ import org.apache.log4j.Category;
  * User: makar
  * Date: 10.09.2004
  * Time: 14:59:18
- * To change this template use File | Settings | File Templates.
  */
 public class DivertManagerExecutor extends DivertManagerState implements Executor
 {
@@ -63,18 +60,13 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
       state.removeAttribute(Constants.ATTR_ERROR);
     }
 
-//    Message resp = new Message();
     if (exc != null) {
       final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
-//      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(Transliterator.translit(msg), false);
-//      return new ExecutorResponse(new Message[]{resp}, true);
+      return new ExecutorResponse(translit(msg), false);
     }
     Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getNoreply()),
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
     final String msg = pageFormat.format(args);
-//    resp.setMessageString(Transliterator.translit(msg));
-//    return new ExecutorResponse(new Message[]{resp}, false);
-    return new ExecutorResponse(Transliterator.translit(msg), false);
+    return new ExecutorResponse(translit(msg), false);
   }
 }

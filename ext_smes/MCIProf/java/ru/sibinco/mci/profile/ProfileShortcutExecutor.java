@@ -1,9 +1,7 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
 import java.util.Properties;
@@ -15,7 +13,6 @@ import java.text.MessageFormat;
  * User: makar
  * Date: 23.12.2004
  * Time: 16:41:19
- * To change this template use File | Settings | File Templates.
  */
 public class ProfileShortcutExecutor extends ProfileManagerState implements Executor
 {
@@ -203,9 +200,7 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
       default:
         throw new ExecutingException("Shortcut "+shortcut+" is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
-//    Message resp = new Message(); resp.setMessageString(Transliterator.translit(message));
-//    return new ExecutorResponse(resp, true);
-    return new ExecutorResponse(Transliterator.translit(message), false);
+    return new ExecutorResponse(translit(message), false);
   }
 
 }

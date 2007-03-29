@@ -13,6 +13,7 @@ public class Constants
   public final static String BUNDLE_SYSTEM  = "system";
   public final static String BUNDLE_DIVERT  = "divert";
   public final static String BUNDLE_PROFILE = "profile";
+  public final static String TRANSLIT  = "translit";
 
   public final static String PAGE_PREFIX    = "page_";
   public final static String VALUE_PREFIX   = "value_";

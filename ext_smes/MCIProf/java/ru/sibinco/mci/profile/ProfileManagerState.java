@@ -3,6 +3,7 @@ package ru.sibinco.mci.profile;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
+import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
 
 import java.util.Properties;
@@ -20,6 +21,7 @@ public class ProfileManagerState
   protected ScenarioResourceBundle systemBundle = null;
   protected ScenarioResourceBundle profileBundle = null;
   protected ProfileManager profileManager = null;
+  protected boolean needTranslit = true;
 
   protected MessageFormat errorFormat = null;
   protected String errorDB      = null;
@@ -35,10 +37,17 @@ public class ProfileManagerState
       errorDB       = profileBundle.getString(Constants.ERROR_DB);
       errorUnknown  = profileBundle.getString(Constants.ERROR_UNKNOWN);
       errorDenied   = profileBundle.getString(Constants.ERROR_DENIED);
+      String ss = systemBundle.getString(Constants.TRANSLIT);
+      if( ss != null && ss.equalsIgnoreCase("off") ) needTranslit = false;
     } catch (Exception e) {
       throw new ScenarioInitializationException("Init failed", e);
     }
     profileManager = ProfileManager.getInstance();
+  }
+
+  protected String translit(String msg) {
+    if( needTranslit ) return Transliterator.translit(msg);
+    else return msg;
   }
 
   protected boolean checkEventMask(int userMask, int cause) {

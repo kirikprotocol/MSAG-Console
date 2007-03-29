@@ -1,9 +1,7 @@
 package ru.sibinco.mci.divert;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
 import java.util.Properties;
@@ -14,7 +12,6 @@ import java.text.MessageFormat;
  * User: makar
  * Date: 23.12.2004
  * Time: 20:13:51
- * To change this template use File | Settings | File Templates.
  */
 public class DivertShortcutExecutor extends DivertManagerState implements Executor
 {
@@ -99,7 +96,7 @@ public class DivertShortcutExecutor extends DivertManagerState implements Execut
         logger.error(err);
         throw new ExecutingException(err, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
       }
-      if (!checkReason(""+reason)) return pageShortcutErr.format(new Object[] {errorReason});
+      if (!checkReason(String.valueOf(reason))) return pageShortcutErr.format(new Object[] {errorReason});
       setDivertInfo(state, info);
     }
     catch(DivertManagerException exc) {
@@ -128,9 +125,7 @@ public class DivertShortcutExecutor extends DivertManagerState implements Execut
       default:
         throw new ExecutingException("Shortcut "+shortcut+" is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     }
-//    Message resp = new Message(); resp.setMessageString(Transliterator.translit(message));
-//    return new ExecutorResponse(resp, true);
-    return new ExecutorResponse(Transliterator.translit(message), false);
+    return new ExecutorResponse(translit(message), false);
   }
 
 }

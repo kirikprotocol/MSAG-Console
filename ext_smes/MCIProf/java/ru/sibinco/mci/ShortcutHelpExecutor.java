@@ -16,7 +16,6 @@ import java.text.MessageFormat;
  * User: makar
  * Date: 23.12.2004
  * Time: 15:57:58
- * To change this template use File | Settings | File Templates.
  */
 public class ShortcutHelpExecutor extends EntryExecutor
 {
@@ -50,14 +49,10 @@ public class ShortcutHelpExecutor extends EntryExecutor
     }
   }
   
-//  public ExecutorResponse execute(ScenarioState state) throws ExecutingException
-//  {
-//    return new ExecutorResponse(new String("AAA"), false);
-//  }
-	    
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
-    Message info = new Message();   info.setMessageString(Transliterator.translit(pageShortcuts));
+    Message info = new Message();
+    info.setMessageString(translit(pageShortcuts));
     MessageData resp = new MessageData(info);    
     Message man = new Message(); man.setMessageString(pageManual);
     MessageData manual = new MessageData(man);

@@ -1,9 +1,7 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-import ru.aurorisoft.smpp.Message;
 
 import java.text.MessageFormat;
 import java.util.Properties;
@@ -15,7 +13,6 @@ import org.apache.log4j.Category;
  * User: makar
  * Date: 14.12.2004
  * Time: 16:59:22
- * To change this template use File | Settings | File Templates.
  */
 public class ProfileManagerAltExecutor extends ProfileManagerState implements Executor
 {
@@ -65,18 +62,14 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
       state.removeAttribute(Constants.ATTR_ERROR);
     }
 
-//    Message resp = new Message();
     if (exc != null) {
       final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
-//      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(Transliterator.translit(msg), false);
-//      return new ExecutorResponse(new Message[]{resp}, true);
+      return new ExecutorResponse(translit(msg), false);
     }
 
     String jumpTo = (String)state.getAttribute(Constants.ATTR_JUMP);
     if (jumpTo != null) {
       state.removeAttribute(Constants.ATTR_JUMP);
-//    return new ExecutorResponse(new String("AAA"), false);
       return new ExecutorResponse(new Jump(jumpTo, state.getMessageString()));
     }
 
@@ -116,9 +109,7 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
     else if (body.endsWith("\r\n")) body = body.substring(0, body.length()-2);
     Object[] args = new Object[] { prefix, body };
     final String msg = pageFormat.format(args);
-//    resp.setMessageString(Transliterator.translit(msg));
-//    return new ExecutorResponse(new Message[]{resp}, false);
-    return new ExecutorResponse(Transliterator.translit(msg), false);
+    return new ExecutorResponse(translit(msg), false);
   }
 
 }

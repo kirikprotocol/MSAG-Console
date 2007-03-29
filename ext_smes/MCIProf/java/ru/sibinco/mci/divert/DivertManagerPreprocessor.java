@@ -1,12 +1,9 @@
 package ru.sibinco.mci.divert;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
-
 import java.util.Properties;
-import java.util.HashMap;
-
+import java.util.Map;
 import org.apache.log4j.Category;
 
 /**
@@ -14,7 +11,6 @@ import org.apache.log4j.Category;
  * User: makar
  * Date: 10.09.2004
  * Time: 14:47:46
- * To change this template use File | Settings | File Templates.
  */
 public class DivertManagerPreprocessor extends DivertManagerState implements ScenarioStateProcessor
 {
@@ -33,12 +29,12 @@ public class DivertManagerPreprocessor extends DivertManagerState implements Sce
       if (msg != null) {
         msg = msg.trim();
         String reason = (String)state.getAttribute(Constants.ATTR_REASON);
-        HashMap optsMap = (HashMap)state.getAttribute(Constants.ATTR_OPTIONS);
+        Map optsMap = (Map)state.getAttribute(Constants.ATTR_OPTIONS);
         if (reason != null && optsMap != null && !msg.equals(Constants.OPTION_EXIT))
         {
           msg = msg.trim();
           String value = (String)optsMap.get(msg);
-          if (value == null) value = Transliterator.translit(msg);
+          if (value == null) value = translit(msg);
 
           try {
             DivertInfo info = getDivertInfo(state);

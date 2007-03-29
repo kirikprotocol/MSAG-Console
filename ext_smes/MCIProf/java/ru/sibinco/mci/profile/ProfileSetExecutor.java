@@ -1,7 +1,6 @@
 package ru.sibinco.mci.profile;
 
 import ru.sibinco.smpp.appgw.scenario.*;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.sibinco.mci.Constants;
 import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
@@ -10,13 +9,13 @@ import java.text.MessageFormat;
 import java.util.Properties;
 import java.util.Iterator;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
  * User: makar
  * Date: 13.09.2004
  * Time: 14:17:07
- * To change this template use File | Settings | File Templates.
  */
 public class ProfileSetExecutor extends ProfileManagerState implements Executor
 {
@@ -44,14 +43,11 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     ProfileManagerException exc = (ProfileManagerException)state.getAttribute(Constants.ATTR_ERROR);
-    Message resp = new Message();
     if (exc != null) {
       logger.warn("Got stored exception", exc);
       state.removeAttribute(Constants.ATTR_ERROR);
       final String msg = errorFormat.format(new Object [] {getErrorMessage(exc)});
-//      resp.setMessageString(Transliterator.translit(msg));
-      return new ExecutorResponse(Transliterator.translit(msg), false);
-//      return new ExecutorResponse(new Message[]{resp}, true);
+      return new ExecutorResponse(translit(msg), false);
     }
 
     final String reason = (String)state.getAttribute(Constants.ATTR_REASON);
@@ -60,7 +56,7 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
     else if (reason.equals(Constants.NOTIFY)) inform = false;
     else throw new ExecutingException("Profile option '"+reason+"' is unknown",
                                       ErrorCode.PAGE_EXECUTOR_EXCEPTION);
-    HashMap formats = new HashMap();
+    Map formats = new HashMap(10);
     String formatAlts = ""; int counter = 1;
     for (Iterator i = profileManager.getFormatAlts(inform); i.hasNext(); counter++) {
       FormatType alt = (FormatType)i.next();
@@ -73,9 +69,7 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
 
     Object args[] = new Object[] {inform ? valueInform:valueNotify, formatAlts};
     final String msg = pageFormat.format(args);
-//    resp.setMessageString(Transliterator.translit(msg));
-//    return new ExecutorResponse(new Message[]{resp}, false);
-    return new ExecutorResponse(Transliterator.translit(msg), false);
+    return new ExecutorResponse(translit(msg), false);
   }
 
 }
