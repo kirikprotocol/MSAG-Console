@@ -224,7 +224,7 @@ void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
 
  if(!PushEvent(pEv))
  {
-  smsc_log_warn(logger,"Error push billing_event to QOEUE for SACC EVENT? queue is Overflow!"); 
+  smsc_log_warn(logger,"Error push billing_event to QOEUE for SACC EVENT queue is Overflow!"); 
   delete pEv;
  }
 }
