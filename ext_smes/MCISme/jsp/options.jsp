@@ -359,6 +359,10 @@ function clickRemoveErrorTimeout(id_to_remove)
 <col width="20%">
 <col width="80%">
 <tr class=row<%=rowN++&1%>>
+  <th>Use advertising</th>
+  <td><input class=check type=checkbox name=useAdvert value=true <%=bean.isUseAdvert() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Server</th>
   <td><input class=txt name=advertServer value="<%=StringEncoderDecoder.encode(bean.getAdvertServer())%>"></td>
 </tr>

@@ -131,6 +131,7 @@ public class Options extends MCISmeBean
   private String    advertServer = "";
   private int       advertPort = 0;
   private int       advertTimeout = 0;
+  private boolean	useAdvert = false;
 
   protected int init(List errors)
   {
@@ -263,7 +264,8 @@ public class Options extends MCISmeBean
   	    advertServer = getConfig().getString("MCISme.Advertising.server");
 		advertPort = getConfig().getInt("MCISme.Advertising.port");
 		advertTimeout = getConfig().getInt("MCISme.Advertising.timeout");
-		
+		useAdvert = getConfig().getBool("MCISme.Advertising.useAdvert");
+
         profStorageLocation = getConfig().getString("MCISme.ProfileStorage.location");
         profStoragePort = getConfig().getInt("MCISme.ProfileStorage.port");
 
@@ -402,6 +404,7 @@ public class Options extends MCISmeBean
 	getConfig().setString("MCISme.Advertising.server", advertServer);
 	getConfig().setInt("MCISme.Advertising.port", advertPort);
 	getConfig().setInt("MCISme.Advertising.timeout", advertTimeout);
+	getConfig().setBool("MCISme.Advertising.useAdvert", useAdvert);
 
     getConfig().setString("MCISme.ProfileStorage.location", profStorageLocation);
     getConfig().setInt("MCISme.ProfileStorage.port", profStoragePort);
@@ -1249,7 +1252,15 @@ public class Options extends MCISmeBean
 			logger.debug("Invalid int MCISme.Advertising.timeout parameter value: \"" + value + '"', e);
 		}
 	}
-
+	
+	public boolean isUseAdvert() 
+	{
+		return useAdvert;
+	}
+	public void setUseAdvert(boolean value) 
+	{
+		this.useAdvert = value;
+	}
 
   public String getProfStorageLocation() 
   {
