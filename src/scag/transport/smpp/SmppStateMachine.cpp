@@ -1116,7 +1116,6 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
   cmd->set_dialogId(orgCmd->get_dialogId());
   if (!(cmd->get_resp()->get_messageId())) {
-    smsc_log_warn(log, "DataSmResp: messageId is null");
     cmd->get_resp()->set_messageId("");
   }
   
