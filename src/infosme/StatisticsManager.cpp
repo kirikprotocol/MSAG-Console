@@ -40,6 +40,8 @@ void StatisticsManager::incGenerated(std::string taskId, unsigned inc)
         TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
         if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(inc, 0, 0, 0));
         else stat->generated += inc;
+        stat = statistics[currentIndex].GetPtr(task_id);
+        smsc_log_debug(logger, "StatisticsManager::incGenerated::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
     }
 }
 void StatisticsManager::incDelivered(std::string taskId, unsigned inc)
@@ -52,6 +54,8 @@ void StatisticsManager::incDelivered(std::string taskId, unsigned inc)
         TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
         if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(0, inc, 0, 0));
         else stat->delivered += inc;
+        stat = statistics[currentIndex].GetPtr(task_id);
+        smsc_log_debug(logger, "StatisticsManager::incDelivered::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
     }
 }
 void StatisticsManager::incRetried(std::string taskId, unsigned inc)
@@ -64,6 +68,8 @@ void StatisticsManager::incRetried(std::string taskId, unsigned inc)
         TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
         if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(0, 0, inc, 0));
         else stat->retried += inc;
+        stat = statistics[currentIndex].GetPtr(task_id);
+        smsc_log_debug(logger, "StatisticsManager::incRetried::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
     }
 }
 void StatisticsManager::incFailed(std::string taskId, unsigned inc)
@@ -76,6 +82,8 @@ void StatisticsManager::incFailed(std::string taskId, unsigned inc)
         TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
         if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(0, 0, 0, inc));
         else stat->failed += inc;
+        stat = statistics[currentIndex].GetPtr(task_id);
+        smsc_log_debug(logger, "StatisticsManager::incFailed::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
     }
 }
 
@@ -83,15 +91,15 @@ int StatisticsManager::Execute()
 {
     while (!bNeedExit)
     {
-        int toSleep = calculateToSleep();
-        smsc_log_debug(logger, "Start wait %d", toSleep);
+        int toSleep = 60*1000; // = calculateToSleep();
+        smsc_log_debug(logger, "StatisticsManager:: Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
-        smsc_log_debug(logger, "End wait");
+        smsc_log_debug(logger, "StatisticsManager:: End wait");
 
         flushCounters(switchCounters());
         bExternalFlush = false;
         doneEvent.Signal();
-        smsc_log_debug(logger, "Statistics flushed");
+        smsc_log_debug(logger, "StatisticsManager:: Statistics flushed");
     }
     exitEvent.Signal();
     return 0;
@@ -148,7 +156,7 @@ void StatisticsManager::delStatistics(std::string taskId)
     
     flushStatistics();
     
-    smsc_log_debug(logger, "Deleting statistics for task '%s'", task_id);
+    smsc_log_debug(logger, "StatisticsManager:: Deleting statistics for task '%s'", task_id);
 
     try
     {
@@ -187,7 +195,7 @@ short StatisticsManager::switchCounters()
 uint32_t StatisticsManager::calculatePeriod()
 {
     time_t currTime = time(0);
-    if (!bExternalFlush) currTime -= 3600;
+    if (!bExternalFlush) currTime -= 600 /*3600*/;
     tm tmCT; localtime_r(&currTime, &tmCT);
     return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+
             (tmCT.tm_mday)*100+tmCT.tm_hour;
@@ -195,7 +203,7 @@ uint32_t StatisticsManager::calculatePeriod()
 int StatisticsManager::calculateToSleep() // returns msecs to next hour
 {
     time_t currTime = time(0);
-    time_t nextTime = currTime + 3600;
+    time_t nextTime = currTime + 3600/;
     tm tmNT; localtime_r(&nextTime, &tmNT);
     tmNT.tm_sec = 0; tmNT.tm_min = 0;
     nextTime = mktime(&tmNT);
@@ -210,7 +218,7 @@ const char* INSERT_TASK_STAT_STATE_SQL = (const char*)
 void StatisticsManager::flushCounters(short index)
 {
     uint32_t period = calculatePeriod();
-    smsc_log_debug(logger, "Flushing statistics for period: %lu / %lu", period, time(NULL));
+    smsc_log_debug(logger, "Flushing statistics for period: period=%lu / time=%lu, index=%d", period, time(NULL),index);
 
     try
     {
@@ -221,10 +229,11 @@ void StatisticsManager::flushCounters(short index)
         statement->setUint32(2, period);
         statistics[index].First();
         char* task_id = 0; TaskStat stat;
+        smsc_log_debug(logger, "StatisticsManager::flushCounters::: try bypass statistics hash");
         while (statistics[index].Next(task_id, stat))
         {
-            if (!task_id || task_id[0] == '\0') continue;
-            
+          if (!task_id || task_id[0] == '\0') continue;
+          smsc_log_debug(logger, "StatisticsManager::flushCounters::: insert statistic: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat.generated,stat.delivered,stat.retried,stat.failed);
             statement->setString(1, task_id);
             statement->setUint32(3, stat.generated);
             statement->setUint32(4, stat.delivered);
