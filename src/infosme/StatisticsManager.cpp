@@ -203,7 +203,7 @@ uint32_t StatisticsManager::calculatePeriod()
 int StatisticsManager::calculateToSleep() // returns msecs to next hour
 {
     time_t currTime = time(0);
-    time_t nextTime = currTime + 3600/;
+    time_t nextTime = currTime + 3600;
     tm tmNT; localtime_r(&nextTime, &tmNT);
     tmNT.tm_sec = 0; tmNT.tm_min = 0;
     nextTime = mktime(&tmNT);
