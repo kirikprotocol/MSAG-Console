@@ -76,6 +76,7 @@ bool ActionReceipt::run(ActionContext& context)
     smsc_log_debug(logger,"Run Action 'smpp:receipt'");
 
     PostActionReceipt* pa = new PostActionReceipt();
+    auto_ptr<PostActionReceipt*> ptr(pa);
 
     pa->from = fromAddr;
     pa->to = toAddr;
@@ -91,9 +92,10 @@ bool ActionReceipt::run(ActionContext& context)
             Address a(s.c_str());
             pa->to = a;
         }
-        catch(Exception& e)
+        catch(...)
         {
-            throw SCAGException("Action 'smpp:receipt': Invalid 'to'(%s) field", varTo.c_str());
+            smsc_log_error("Action 'smpp:receipt': Invalid 'to'(%s) field", varTo.c_str());
+            return true;
         }
 
     }
@@ -105,9 +107,10 @@ bool ActionReceipt::run(ActionContext& context)
             Address a(s.c_str()); 
             pa->from = a;
         }
-        catch(Exception& e)
+        catch(...)
         {
-            throw SCAGException("Action 'smpp:receipt': Invalid 'from'(%s) field", varFrom.c_str());
+            smsc_log_error(logger, "Action 'smpp:receipt': Invalid 'from'(%s) field", varFrom.c_str());
+            return true;
         }
 
     }
@@ -123,10 +126,11 @@ bool ActionReceipt::run(ActionContext& context)
     if(ftDstSmeId == ftUnknown)
         pa->dstSmeId = varDstSmeId;
     else if(!getStrProperty(context, varDstSmeId, "dst_sme_id", pa->dstSmeId))
-            return true;
+        return true;
 
     smsc_log_debug(logger, "Action 'receipt' from=%s, to=%s, st=%d, mid=%s, dst=%s", pa->from.toString().c_str(), pa->to.toString().c_str(), pa->state, pa->msgId.c_str(), pa->dstSmeId.c_str());
 
+    ptr.release();
     context.getRuleStatus().addAction(pa);
 
     return true;
