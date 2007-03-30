@@ -1187,67 +1187,41 @@ int StatisticsManager::indexByCounter(int counter)
 
 int StatisticsManager::indexByHttpCounter(int event)
 {
-
   using namespace Counters;
 
   switch(event)
   {
-  case events::http::REQUEST_OK:
-      return PERF_HTTP_REQUEST;
-  case events::http::REQUEST_FAILED:
-      return PERF_HTTP_REQUEST_REJECTED;
-  case events::http::RESPONSE_OK:
-      return PERF_HTTP_RESPONSE;
-  case events::http::RESPONSE_FAILED:
-      return PERF_HTTP_RESPONSE_REJECTED;
-  case events::http::DELIVERED:
-      return PERF_HTTP_DELIVERED;
-  case events::http::FAILED:
-      return PERF_HTTP_FAILED;
+      case events::http::REQUEST_OK:
+          return PERF_HTTP_REQUEST;
+      case events::http::REQUEST_FAILED:
+          return PERF_HTTP_REQUEST_REJECTED;
+      case events::http::RESPONSE_OK:
+          return PERF_HTTP_RESPONSE;
+      case events::http::RESPONSE_FAILED:
+          return PERF_HTTP_RESPONSE_REJECTED;
+      case events::http::DELIVERED:
+          return PERF_HTTP_DELIVERED;
+      case events::http::FAILED:
+          return PERF_HTTP_FAILED;
   }
-
   return -1;
 }
 
-
-void StatisticsManager::registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev)
+void StatisticsManager::registerSaccEvent(const scag::stat::SaccTrafficInfoEvent& ev)
 {
-      //  MutexGuard  switchGuard(switchLock);
-
-    thrSaccSender.Put(ev);
+    thrSaccSender.PushEvent(new SaccTrafficInfoEvent(ev));
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev)
+void StatisticsManager::registerSaccEvent(const scag::stat::SaccBillingInfoEvent& ev)
 {
-      //  MutexGuard  switchGuard(switchLock);
-
-    thrSaccSender.Put(ev);
+    thrSaccSender.PushEvent(new SaccBillingInfoEvent(ev));
 }
-/*void StatisticsManager::registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev)
+void StatisticsManager::registerSaccEvent(const scag::stat::SaccAlarmMessageEvent& ev)
 {
-      //  MutexGuard  switchGuard(switchLock);
-
-    thrSaccSender.Put(ev);
+    thrSaccSender.PushEvent(new SaccAlarmMessageEvent(ev));
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev)
+void StatisticsManager::registerSaccEvent(const scag::stat::SaccAlarmEvent& ev)
 {
-      //  MutexGuard  switchGuard(switchLock);
-
-    thrSaccSender.Put(ev);
-}*/
-
-void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev)
-{
-      //  MutexGuard  switchGuard(switchLock);
-
-    thrSaccSender.Put(ev);
+    thrSaccSender.PushEvent(new SaccAlarmEvent(ev));
 }
 
-void StatisticsManager::registerSaccEvent(const scag::stat::SACC_ALARM_t& ev)
-{
-      //  MutexGuard  switchGuard(switchLock);
-
-    thrSaccSender.Put(ev);
-}
-
-}//namespace stat
-}//namespace scag
+}}

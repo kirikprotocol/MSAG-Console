@@ -10,11 +10,7 @@
 using namespace scag::stat;
 using namespace smsc::util;
 
-namespace scag{
-namespace stat{
-namespace sacc{
- 
-
+namespace scag{ namespace stat{ namespace sacc{
 
 EventSender::EventSender()
 {
@@ -29,85 +25,38 @@ EventSender::EventSender()
  pdubuffer.resize(0xFFFF);
 }
 
-
-
 EventSender::~EventSender()
 {
-
-    //smsc_log_debug(logger,"EventSender:: ~EventSender %d",*bStarted);
-    //evReconnect.notifyAll();
-    //mtx.notifyAll();  
 }
-
-
 
 void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bool * bf,*/smsc::logger::Logger * lg)
 {
-
- if(!lg)
-  throw Exception("EventSender::init logger is 0");
-
-// if(!bf)
- // throw Exception("EventSender::init start-stop flag is 0");
+ if(!lg) throw Exception("EventSender::init logger is 0");
 
  QueueLength=queuelen;
 
- bStarted  = false;//bf;
+ bStarted  = false;
  logger = lg;
  Host = host;
  Port= port;
  bConnected=false;
  Timeout=timeout*1000;
+ lastOverflowNotify = 0;
  smsc_log_debug(logger,"EventSender::init confuration succsess.");
-
 }
 
-
-
-bool EventSender::processEvent(void *ev)
+bool EventSender::processEvent(SaccEvent *ev)
 {
- uint16_t evType = *(uint16_t*)ev;
- 
- switch(evType) 
- {
-     case sec_transport:
-      {
-           performTransportEvent(*(SACC_TRAFFIC_INFO_EVENT_t*)ev);
-           delete (SACC_TRAFFIC_INFO_EVENT_t*)ev;           
-           smsc_log_debug(logger,"EventSender::Execute Sacc stat TRAFFIC event  processed from queue addr=0x%X",evType,ev);
-      }
-      break;
+    pdubuffer.setPos(sizeof(uint32_t));
+    pdubuffer.WriteNetInt16(ev->getEventType()); 
 
-     case sec_bill:
-      {
-           performBillingEvent(*(SACC_BILLING_INFO_EVENT_t*)ev);
-           delete (SACC_BILLING_INFO_EVENT_t*)ev;           
-           smsc_log_debug(logger,"EventSender::Execute Sacc stat BILLING event  processed from queue addr=0x%X",evType,ev);
-      }
-      break;
+    ev->write(pdubuffer); 
 
-     case sec_alarm_message:
-      {
-           performAlarmMessageEvent(*(SACC_ALARM_MESSAGE_t*)ev);
-           delete (SACC_ALARM_MESSAGE_t*)ev;           
-           smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM_MESSAGE  processed from queue addr=0x%X",evType,ev);
-      }
-      break;
+    bConnected = pdubuffer.writeToSocket(SaccSocket);
 
-     case sec_alarm:
-      {
-           performAlarmEvent(*(SACC_ALARM_t*)ev);
-           delete (SACC_ALARM_t*)ev;           
-           smsc_log_debug(logger,"EventSender::Execute Sacc stat ALARM event  processed from queue addr=0x%X",evType,ev);
-      }
-      break;
-       
-      default:
-          smsc_log_warn(logger,"EventSender Unknown event!!");
-       break;
+    delete ev;
 
-      }
- return true;
+    return true;
 }
 
 int EventSender::Execute()
@@ -139,7 +88,7 @@ int EventSender::Execute()
         {
             while(eventsQueue.Count() > 0)
             {
-                void * ev;                    
+                SaccEvent* ev;                    
                 if(eventsQueue.Pop(ev) && ev)
                    processEvent(ev);
             }
@@ -149,8 +98,6 @@ int EventSender::Execute()
     smsc_log_debug(logger,"EventSender stopped.");
     return 1;
 }
-
-
 
 bool EventSender::connect(std::string host, int port,int timeout)
 {
@@ -169,14 +116,8 @@ bool EventSender::connect(std::string host, int port,int timeout)
 
 
  bConnected=true;
-     smsc_log_debug(logger,"EventSender::connect succsess to %s:%d",host.c_str(),port);
+ smsc_log_debug(logger,"EventSender::connect succsess to %s:%d",host.c_str(),port);
  return true;
-}
-
-
-bool EventSender::isActive()
-{
-   return bConnected;
 }
 
 void EventSender::Start()
@@ -190,334 +131,150 @@ void EventSender::Stop()
     bStarted =false;
     mtx.notifyAll();
 }
-
-void EventSender::Put (const SACC_ALARM_t& ev)
-{
-    SACC_ALARM_t* pEv = new SACC_ALARM_t(ev);
-    smsc_log_debug(logger,"EventSender::put SACC_ALARM_EVENT_t addr=0x%X",pEv);
- 
-    if(!PushEvent(pEv))
-    {
-        smsc_log_warn(logger,"Error push alarm_event to QOEUE for SACC EVENT queue is Overflow!"); 
-        delete pEv;
-    }
-}
-
-
-
-void EventSender::Put(const SACC_TRAFFIC_INFO_EVENT_t& ev)
-{
- SACC_TRAFFIC_INFO_EVENT_t* pEv = new SACC_TRAFFIC_INFO_EVENT_t(ev);
- smsc_log_debug(logger,"EventSender::put SACC_TRAFFIC_INFO_EVENT_t addr=0x%X",pEv);
-
- if(!PushEvent(pEv))
- {
-     smsc_log_warn(logger,"Error push traffic_event to QOEUE for SACC EVENT queue is Overflow!"); 
-  delete pEv;
- }
-}
-
-void EventSender::Put(const SACC_BILLING_INFO_EVENT_t& ev)
-{
- SACC_BILLING_INFO_EVENT_t* pEv = new SACC_BILLING_INFO_EVENT_t(ev);
- smsc_log_debug(logger,"EventSender::put SACC_BILLING_INFO_EVENT_t addr=0x%X",pEv);
-
- if(!PushEvent(pEv))
- {
-  smsc_log_warn(logger,"Error push billing_event to QOEUE for SACC EVENT queue is Overflow!"); 
-  delete pEv;
- }
-}
-
-void EventSender::Put(const SACC_ALARM_MESSAGE_t & ev)
-{
- SACC_ALARM_MESSAGE_t* pEv = new SACC_ALARM_MESSAGE_t(ev);
- smsc_log_debug(logger,"EventSender::put SACC_ALARM_MESSAGE_t addr=0x%X",pEv);
-
- if(!PushEvent(pEv))
- {
-    smsc_log_warn(logger,"Error push Alarm_Message to QOEUE for SACC EVENT queue is Overflow!"); 
-  delete pEv;
- }
-}
  
 void EventSender::sendPing()
 {
     pdubuffer.setPos(sizeof(uint32_t));
     pdubuffer.WriteNetInt16(0); 
-    
-    uint32_t bsize= pdubuffer.getPos();
-    pdubuffer.setPos(0);
-    pdubuffer.WriteNetInt32(bsize);
-    pdubuffer.setPos(0);
-    int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
 
-    if(b<=0)
-        bConnected=false;
+    bConnected = pdubuffer.writeToSocket(SaccSocket);    
         
     smsc_log_debug(logger,"EventSender::ping sent");        
 }
 
-void EventSender::writeHeader(const SACC_EVENT_HEADER_t& e, const std::string& pSessionKey)
+void EventSender::PushEvent(SaccEvent* item)
 {
-    pdubuffer.setPos(sizeof(uint32_t));///header plase 
-    pdubuffer.WriteNetInt16(e.getEventType()); 
-    uint32_t len=e.pAbonentNumber.length();
-    len = (len >MAX_ABONENT_NUMBER_LENGTH) ? MAX_ABONENT_NUMBER_LENGTH:len;
+    MutexGuard g(mtx);
 
-    pdubuffer.WriteNetInt16(len);
-    pdubuffer.Write(e.pAbonentNumber.c_str(), len);
-    pdubuffer.WriteNetInt16(sizeof(uint64_t));
-    pdubuffer.WriteNetInt64(e.lDateTime);
-    pdubuffer.WriteNetInt16(sizeof(uint32_t));
-    pdubuffer.WriteNetInt32(e.iOperatorId);
-    pdubuffer.WriteNetInt16(sizeof(uint32_t));
-    pdubuffer.WriteNetInt32(e.iServiceProviderId);
-    pdubuffer.WriteNetInt16(sizeof(uint32_t));
-    pdubuffer.WriteNetInt32(e.iServiceId);
+    smsc_log_debug(logger,"EventSender::put %s addr=0x%X", item->getName(), item);
 
-    len = pSessionKey.length();
-    len = (len>MAX_SESSION_KEY_LENGTH) ? MAX_SESSION_KEY_LENGTH : len;
-    pdubuffer.WriteNetInt16(len);
-    pdubuffer.Write(pSessionKey.c_str(),len);
-
-    pdubuffer.WriteNetInt16(1);
-    pdubuffer.WriteByte(e.cProtocolId);
-    pdubuffer.WriteNetInt16(1);
-    pdubuffer.WriteByte(e.cCommandId);
-    pdubuffer.WriteNetInt16(2);
-    pdubuffer.WriteNetInt16(e.sCommandStatus);
-}
-
-void EventSender::performTransportEvent(const SACC_TRAFFIC_INFO_EVENT_t& e)
-{
-    writeHeader(e.Header, e.pSessionKey);
-
-    uint32_t len = e.pMessageText.size();
-    len = len > MAX_TEXT_MESSAGE_LENGTH * 2 ? MAX_TEXT_MESSAGE_LENGTH*2 : len;
-    pdubuffer.WriteNetInt16(len);
-    pdubuffer.Write(e.pMessageText.c_str(), len);
-    pdubuffer.WriteNetInt16(1);
-    pdubuffer.WriteByte(e.cDirection);
-    uint32_t bsize= pdubuffer.getPos();
-    pdubuffer.setPos(0);
-    pdubuffer.WriteNetInt32(bsize);
-    pdubuffer.setPos(0);
-    int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
-    if(b<=0) bConnected=false;
-
-}
-
-void EventSender::performBillingEvent(const SACC_BILLING_INFO_EVENT_t& e)
-{
-    writeHeader(e.Header, e.pSessionKey);
-
- pdubuffer.WriteNetInt16(sizeof(uint32_t));
- pdubuffer.WriteNetInt32(e.iMediaResourceType);
- pdubuffer.WriteNetInt16(sizeof(uint32_t));
- pdubuffer.WriteNetInt32(e.iPriceCatId);
- pdubuffer.WriteNetInt16(sizeof(float));
- pdubuffer.Write(&e.fBillingSumm,sizeof(float));
-
- //std::string strbcur;
- //strbcur.assign((char*)e.pBillingCurrency);
- uint32_t len =  (e.pBillingCurrency.length()>MAX_BILLING_CURRENCY_LENGTH)?MAX_BILLING_CURRENCY_LENGTH:e.pBillingCurrency.length();
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pBillingCurrency.c_str(),len);
-
- uint32_t bsize= pdubuffer.getPos();
- pdubuffer.setPos(0);
- pdubuffer.WriteNetInt32(bsize);
- pdubuffer.setPos(0);
- int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
-
- if(b<=0)
-  bConnected=false;
- 
-}
-
-void EventSender::performAlarmMessageEvent(const SACC_ALARM_MESSAGE_t& e)
-{
- uint16_t len =0;
- pdubuffer.setPos(sizeof(uint32_t));///header plase 
- pdubuffer.WriteNetInt16(e.getEventType()); 
- 
- //std::string stran;
- //stran.assign((char*)e.pAbonentsNumbers);
- len = (e.pAbonentsNumbers.length()>MAX_NUMBERS_TEXT_LENGTH)?MAX_NUMBERS_TEXT_LENGTH:e.pAbonentsNumbers.length();
-
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pAbonentsNumbers.c_str(),len);
-
- //std::string stremail;
- //stremail.assign((char*)e.pAddressEmail);
- len = (e.pAddressEmail.length()>MAX_EMAIL_ADDRESS_LENGTH)?MAX_EMAIL_ADDRESS_LENGTH:e.pAddressEmail.length();
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pAddressEmail.c_str(),len);
- 
-// uint32_t sz =0;
-// while(e.pMessageText[sz]!=0 && sz < MAX_TEXT_MESSAGE_LENGTH )
-// {
-//   sz++;
-// }
- len =  (e.pMessageText.size()>MAX_TEXT_MESSAGE_LENGTH*2)?MAX_TEXT_MESSAGE_LENGTH*2:e.pMessageText.size();
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pMessageText.c_str(),len);
-
- //pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
- //pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
-
- len = (e.pDeliveryTime.length() >DELEVIRY_TIME_LENGTH)?DELEVIRY_TIME_LENGTH:e.pDeliveryTime.length() ;
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pDeliveryTime.c_str(),len);
-
- pdubuffer.WriteNetInt16(1);
- pdubuffer.WriteByte(e.cCriticalityLevel);
- 
- if(e.sUsr)
- {
-     pdubuffer.WriteNetInt16(2);
-     pdubuffer.WriteInt16(e.sUsr);
- }
- else
-     pdubuffer.WriteNetInt16(0); 
-
- if(e.cEsmClass)
- {
-     pdubuffer.WriteNetInt16(1);
-     pdubuffer.WriteByte(e.cEsmClass);
- }
- else
-     pdubuffer.WriteNetInt16(0); 
-
- if(e.sSrcPort)
- {
-     pdubuffer.WriteNetInt16(2);
-     pdubuffer.WriteInt16(e.sSrcPort);
- }
- else
-     pdubuffer.WriteNetInt16(0); 
-     
- if(e.sDestPort)
- {
-     pdubuffer.WriteNetInt16(2);
-     pdubuffer.WriteInt16(e.sDestPort);
- }
- else
-     pdubuffer.WriteNetInt16(0); 
-
- len = (e.pPacketType.length() > PACKET_TYPE_LENGTH) ? PACKET_TYPE_LENGTH : e.pPacketType.length();
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pPacketType.c_str(), len);
-          
- uint32_t bsize= pdubuffer.getPos();
- pdubuffer.setPos(0);
- pdubuffer.WriteNetInt32(bsize);
- pdubuffer.setPos(0);
- int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
-
- if(b<=0)
-  bConnected=false;
-}
-
-
-void EventSender::performAlarmEvent(const SACC_ALARM_t& e)
-{
-    writeHeader(e.Header, e.pSessionKey);
-
- uint32_t len =  (e.pMessageText.size()>MAX_TEXT_MESSAGE_LENGTH*2)?MAX_TEXT_MESSAGE_LENGTH*2:e.pMessageText.size();
- pdubuffer.WriteNetInt16(len);
- pdubuffer.Write(e.pMessageText.c_str(),len);
-
- //pdubuffer.WriteNetInt16(sz*sizeof(uint16_t));
- //pdubuffer.Write(e.pMessageText,sz*sizeof(uint16_t));
-
- pdubuffer.WriteNetInt16(1);//!!!!!
- pdubuffer.WriteByte(e.cDirection);
- 
- pdubuffer.WriteNetInt16(sizeof(uint32_t));
- pdubuffer.WriteNetInt32(e.iAlarmEventId);
-
- uint32_t bsize= pdubuffer.getPos();
- pdubuffer.setPos(0);
- pdubuffer.WriteNetInt32(bsize);
- pdubuffer.setPos(0);
- int b =SaccSocket.WriteAll(pdubuffer.getBuffer() ,bsize);
-
- if(b<=0)
-  bConnected=false;
-
-}
-
-bool EventSender::PushEvent(void* item)
-{
-
-  MutexGuard g(mtx);
-
-  if(eventsQueue.Count()<QueueLength)
-  {
+    if(eventsQueue.Count() < QueueLength)
+    {
       eventsQueue.Push(item);
       mtx.notifyAll();
-      return true;
-  }
-  mtx.notifyAll();  
-  return false;
+      return;
+    }
+    mtx.notifyAll();  
+    if(lastOverflowNotify < time(NULL) - 30)
+    {
+        smsc_log_warn(logger,"Error push %s to QOEUE for SACC EVENT queue is Overflow!", item->getName()); 
+        lastOverflowNotify = time(NULL);
+    }
+    delete item;
+}
+
+void SaccSerialBuffer::writeStr(std::string& s, uint16_t maxLen)
+{
+    uint16_t len = (s.length() > maxLen) ? maxLen : s.length() ;
+    WriteNetInt16(len);
+    Write(s.c_str(), len);
+}
+void SaccSerialBuffer::writeInt16(uint16_t i)
+{
+    WriteNetInt16(sizeof(uint16_t));
+    WriteNetInt16(i);
+}
+void SaccSerialBuffer::writeInt32(uint32_t i)
+{
+    WriteNetInt16(sizeof(uint32_t));
+    WriteNetInt32(i);
+}
+void SaccSerialBuffer::writeInt64(uint64_t i)
+{
+    WriteNetInt16(sizeof(uint64_t));
+    WriteNetInt64(i);
+}
+void SaccSerialBuffer::writeByte(uint8_t i)
+{
+    WriteNetInt16(sizeof(uint8_t));
+    WriteByte(i);
+}
+bool SaccSerialBuffer::writeToSocket(Socket& sock)
+{
+    uint32_t bsize = getPos();
+    setPos(0);
+    WriteNetInt32(bsize);
+    setPos(0);
+    return sock.WriteAll(getBuffer() ,bsize) > 0;
 }
 
 
+void SaccEventHeader::write(SaccSerialBuffer& buf)
+{
+    buf.writeStr(pAbonentNumber, MAX_ABONENT_NUMBER_LENGTH);
+    buf.writeInt64(lDateTime);
+    buf.writeInt32(iOperatorId);
+    buf.writeInt32(iServiceProviderId);
+    buf.writeInt32(iServiceId);
 
+    buf.writeStr(pSessionKey, MAX_SESSION_KEY_LENGTH);    
 
-}//sacc
+    buf.writeByte(cProtocolId);
+    buf.writeByte(cCommandId);
+    buf.writeInt16(sCommandStatus);
+}
 
-}//stat
+void SaccTrafficInfoEvent::write(SaccSerialBuffer& buf)
+{
+    Header.write(buf);
 
-}//scag
+    buf.writeStr(pMessageText, MAX_TEXT_MESSAGE_LENGTH * 2);
+    buf.writeByte(cDirection);
+}
 
+void SaccBillingInfoEvent::write(SaccSerialBuffer& buf)
+{
+    Header.write(buf);
 
+    buf.writeInt32(iMediaResourceType);
+    buf.writeInt32(iPriceCatId);
 
+    buf.WriteNetInt16(sizeof(float));
+    buf.Write(&fBillingSumm, sizeof(float));
 
+    buf.writeStr(pBillingCurrency, MAX_BILLING_CURRENCY_LENGTH);
+}
 
+void SaccAlarmMessageEvent::write(SaccSerialBuffer& buf)
+{
+    buf.writeStr(pAbonentsNumbers, MAX_NUMBERS_TEXT_LENGTH);
+    buf.writeStr(pAddressEmail, MAX_EMAIL_ADDRESS_LENGTH);
+    buf.writeStr(pMessageText, MAX_TEXT_MESSAGE_LENGTH * 2);
+    buf.writeStr(pDeliveryTime, DELEVIRY_TIME_LENGTH);
 
+    buf.writeByte(cCriticalityLevel);
+ 
+    if(sUsr)
+        buf.writeInt16(sUsr);
+    else
+        buf.WriteNetInt16(0); 
 
+    if(cEsmClass)
+        buf.writeByte(cEsmClass);
+    else
+        buf.WriteNetInt16(0); 
 
+    if(sSrcPort)
+       buf.writeInt16(sSrcPort);    
+    else
+       buf.WriteNetInt16(0); 
+     
+    if(sDestPort)
+       buf.writeInt16(sDestPort);
+    else
+       buf.WriteNetInt16(0); 
 
+    buf.writeStr(pPacketType, PACKET_TYPE_LENGTH);
+}
 
+void SaccAlarmEvent::write(SaccSerialBuffer& buf)
+{
+    Header.write(buf);
 
+    buf.writeStr(pMessageText, MAX_TEXT_MESSAGE_LENGTH * 2);
 
+    buf.writeByte(cDirection);
+    buf.writeInt32(iAlarmEventId);
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}}}

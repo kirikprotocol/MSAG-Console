@@ -8,6 +8,8 @@
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
 #include "sacc/SACC_Defs.h"
+#include <util/BufferSerialization.hpp>
+#include "core/network/Socket.hpp"
 
 #include <inttypes.h>
 
@@ -16,13 +18,35 @@ namespace scag {
 namespace stat {
 
 using smsc::smeman::SmeRecord;
+using smsc::core::network::Socket;
 
-    struct SACC_EVENT_HEADER_t
+    class SaccSerialBuffer : public SerializationBuffer
     {
-    private:
+    public:
+        void writeStr(std::string& s, uint16_t maxLen);
+        void writeInt16(uint16_t i);
+        void writeInt32(uint32_t i);
+        void writeInt64(uint64_t i);
+        void writeByte(uint8_t i);
+        bool writeToSocket(Socket& sock);
+    };
+
+    class SaccEvent
+    {
         uint16_t sEventType;
     public:
-        //uint8_t  pAbonentNumber[MAX_ABONENT_NUMBER_LENGTH]; 
+        SaccEvent(uint16_t et) : sEventType(et) {};
+        SaccEvent(const SaccEvent& src) : sEventType(src.sEventType) {};
+        virtual ~SaccEvent() {};
+
+        uint16_t getEventType()const {return sEventType; };
+        virtual void write(SaccSerialBuffer& buf) = 0;
+        virtual const char* getName() = 0;
+    };
+
+    struct SaccEventHeader
+    {
+    public:
         std::string pAbonentNumber;
         uint8_t  cCommandId;        
         uint8_t  cProtocolId;       
@@ -31,12 +55,10 @@ using smsc::smeman::SmeRecord;
         uint32_t iServiceProviderId;
         uint32_t iServiceId;
         uint32_t iOperatorId;
-        
-        SACC_EVENT_HEADER_t()
+        std::string pSessionKey;
+
+        SaccEventHeader()
         {
-            //memset(pAbonentNumber,0,MAX_ABONENT_NUMBER_LENGTH);
-            pAbonentNumber="";  
-            sEventType=0;
             cCommandId=0;       
             cProtocolId=0;      
             sCommandStatus=0;
@@ -45,12 +67,10 @@ using smsc::smeman::SmeRecord;
             iServiceId=0;
             iOperatorId=0;
         }
-        SACC_EVENT_HEADER_t(const SACC_EVENT_HEADER_t& src)
+        SaccEventHeader(const SaccEventHeader& src)
         {
-            //memcpy(pAbonentNumber,src.pAbonentNumber,MAX_ABONENT_NUMBER_LENGTH);
-
+            pSessionKey = src.pSessionKey;
             pAbonentNumber = src.pAbonentNumber;
-            sEventType=src.sEventType;
             cCommandId=src.cCommandId;      
             cProtocolId=src.cProtocolId;        
             sCommandStatus=src.sCommandStatus;
@@ -59,163 +79,80 @@ using smsc::smeman::SmeRecord;
             iServiceId=src.iServiceId;
             iOperatorId = src.iOperatorId;
         }
-         uint16_t getEventType()const{return sEventType;} ;
-        
-         void setEventType(uint16_t et){sEventType = et;};
+        void write(SaccSerialBuffer& buf);
     };
 
-    struct SACC_TRAFFIC_INFO_EVENT_t
+    struct SaccTrafficInfoEvent : public SaccEvent
     {
-        SACC_EVENT_HEADER_t Header;
-        
+        SaccEventHeader Header;
         uint8_t  cDirection;
-        //uint16_t pMessageText[MAX_TEXT_MESSAGE_LENGTH];//512*32
-        //uint8_t  pSessionKey[MAX_SESSION_KEY_LENGTH];
         std::string pMessageText;
-        std::string pSessionKey;
 
-        SACC_TRAFFIC_INFO_EVENT_t()
+        SaccTrafficInfoEvent() : SaccEvent(sec_transport), cDirection(0) {};
+
+        SaccTrafficInfoEvent(const SaccTrafficInfoEvent & src) : SaccEvent(src), Header(src.Header)
         {
-            //memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-            //memset(pMessageText,0,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-            //memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-            pMessageText="";
-            pSessionKey="";
-
-            Header.setEventType(sec_transport);
-            cDirection=0;
-        };
-
-        SACC_TRAFFIC_INFO_EVENT_t(const SACC_TRAFFIC_INFO_EVENT_t & src)
-        {
-            Header = src.Header;
-            //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
-            //memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
             pMessageText=src.pMessageText;
-            //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-            pSessionKey=src.pSessionKey;
             cDirection=src.cDirection;
         }
-
-        SACC_TRAFFIC_INFO_EVENT_t(SACC_TRAFFIC_INFO_EVENT_t *src)
-        {
-        
-            Header = src->Header;
-            //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
-            //memcpy(pMessageText,src.pMessageText,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-            pMessageText=src->pMessageText;
-            //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-            pSessionKey=src->pSessionKey;
-            cDirection=src->cDirection;
-            
-        }
-
-
-        uint16_t getEventType()const{return Header.getEventType();} ;
+        void write(SaccSerialBuffer& buf);
+        const char* getName() { return "SaccTrafficInfoEvent"; };
     };
 
-    struct SACC_BILLING_INFO_EVENT_t
+    struct SaccBillingInfoEvent : public SaccEvent
     {
-        SACC_EVENT_HEADER_t Header;
+        SaccEventHeader Header;
 
         uint32_t iMediaResourceType;
         uint32_t iPriceCatId;
         float    fBillingSumm; 
-        std::string  pBillingCurrency;//[MAX_BILLING_CURRENCY_LENGTH];
-        std::string  pSessionKey;//[MAX_SESSION_KEY_LENGTH];
+        std::string  pBillingCurrency;
      
-        SACC_BILLING_INFO_EVENT_t()
+        SaccBillingInfoEvent() : SaccEvent(sec_bill)
         {
-            //memset(&Header,0,sizeof(SACC_EVENT_HEADER_t));
-            //memset(pBillingCurrency,0,MAX_BILLING_CURRENCY_LENGTH);
-            //memset(pSessionKey,0,MAX_SESSION_KEY_LENGTH);
-            pBillingCurrency="";
-            pSessionKey="";
-            Header.setEventType(sec_bill);
             iMediaResourceType=0;
             iPriceCatId=0;
             fBillingSumm=0.00000; 
         }   
-        SACC_BILLING_INFO_EVENT_t(const SACC_BILLING_INFO_EVENT_t & src)
+        SaccBillingInfoEvent(const SaccBillingInfoEvent & src) : SaccEvent(src), Header(src.Header)
         {
-            Header = src.Header;
-            //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
-            //memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
-            //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
             pBillingCurrency=src.pBillingCurrency;
-            pSessionKey=src.pSessionKey;
             iMediaResourceType=src.iMediaResourceType;
             iPriceCatId=src.iPriceCatId;
             fBillingSumm=src.fBillingSumm; 
         }
-        SACC_BILLING_INFO_EVENT_t(SACC_BILLING_INFO_EVENT_t *src)
-        {
-            Header = src->Header;
-            //memcpy(&Header,&src.Header,sizeof(SACC_EVENT_HEADER_t));
-            //memcpy(pBillingCurrency,src.pBillingCurrency,MAX_BILLING_CURRENCY_LENGTH);
-            //memcpy(pSessionKey,src.pSessionKey,MAX_SESSION_KEY_LENGTH);
-            pBillingCurrency=src->pBillingCurrency;
-            pSessionKey=src->pSessionKey;
-            iMediaResourceType=src->iMediaResourceType;
-            iPriceCatId=src->iPriceCatId;
-            fBillingSumm=src->fBillingSumm; 
-        }
-        uint16_t getEventType()const{return Header.getEventType();}; 
+        void write(SaccSerialBuffer& buf);
+        const char* getName() { return "SaccBillingInfoEvent"; };
     };
 
-
-    struct SACC_ALARM_t
+    struct SaccAlarmEvent : public SaccEvent
     {
-
-        SACC_EVENT_HEADER_t Header;
+        SaccEventHeader Header;
         uint8_t  cDirection;
         uint32_t iAlarmEventId;
-        std::string  pSessionKey;//[MAX_SESSION_KEY_LENGTH];
         std::string pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
-        SACC_ALARM_t()
+        SaccAlarmEvent() : SaccEvent(sec_alarm)
         {
-            
-            pSessionKey="";
-            pMessageText="";
-            Header.setEventType(0x0003);
             cDirection=0;
             iAlarmEventId =0;
-
         }
-        SACC_ALARM_t(const SACC_ALARM_t& src)
+        SaccAlarmEvent(const SaccAlarmEvent& src) : SaccEvent(src), Header(src.Header)
         {
-            Header = src.Header;
-            pSessionKey= src.pSessionKey;
             pMessageText=src.pMessageText;
             cDirection=src.cDirection;
             iAlarmEventId = src.iAlarmEventId; 
-
         }
-
-        SACC_ALARM_t(SACC_ALARM_t* src)
-        {
-            
-            Header = src->Header;
-            pSessionKey= src->pSessionKey; 
-            pMessageText=src->pMessageText;
-            cDirection=src->cDirection;
-            iAlarmEventId = src->iAlarmEventId; 
-            
-        }
-
-        uint16_t getEventType()const{return Header.getEventType();} ;
-
+        void write(SaccSerialBuffer& buf);
+        const char* getName() { return "SaccAlarmEvent"; };
     };
 
-    struct SACC_ALARM_MESSAGE_t
+    struct SaccAlarmMessageEvent : public SaccEvent
     {
-    private:
-        uint16_t sEventType;
     public:
-        std::string  pAbonentsNumbers;//[MAX_NUMBERS_TEXT_LENGTH];
-        std::string  pAddressEmail;//[MAX_EMAIL_ADDRESS_LENGTH];
-        std::string  pMessageText;//[MAX_TEXT_MESSAGE_LENGTH];
-        std::string  pDeliveryTime;//[DELEVIRY_TIME_LENGTH];
+        std::string  pAbonentsNumbers;
+        std::string  pAddressEmail;
+        std::string  pMessageText;
+        std::string  pDeliveryTime;
         std::string  pPacketType;        
 
         uint8_t  cCriticalityLevel;
@@ -223,69 +160,33 @@ using smsc::smeman::SmeRecord;
         uint16_t  sDestPort;        
         uint16_t  sSrcPort;                
         uint8_t cEsmClass;
-        SACC_ALARM_MESSAGE_t()
+        SaccAlarmMessageEvent() : SaccEvent(sec_alarm_message)
         {
             cCriticalityLevel=scl_info; 
-            sEventType = sec_alarm_message;
             sUsr = 0;
             sDestPort = 0;
             sSrcPort = 0;            
             cEsmClass = 0;
         }
-        SACC_ALARM_MESSAGE_t(const SACC_ALARM_MESSAGE_t & src)
+        SaccAlarmMessageEvent(const SaccAlarmMessageEvent& src) : SaccEvent(src)
         {
             pAbonentsNumbers=src.pAbonentsNumbers;  
             pAddressEmail=src.pAddressEmail;
             pMessageText=src.pMessageText;
             pDeliveryTime=src.pDeliveryTime;
             pPacketType=src.pPacketType;
-
-         //   memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
-         //   memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
-         //   memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-         //   memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
             cCriticalityLevel = src.cCriticalityLevel;
-            sEventType=src.sEventType;
             sUsr = src.sUsr;
             sDestPort = src.sDestPort;
             sSrcPort = src.sSrcPort;
             cEsmClass = src.cEsmClass;
         }
-        SACC_ALARM_MESSAGE_t(SACC_ALARM_MESSAGE_t * src)
-        {
-            pAbonentsNumbers=src->pAbonentsNumbers; 
-            pAddressEmail=src->pAddressEmail;
-            pMessageText=src->pMessageText;
-            pDeliveryTime=src->pDeliveryTime;
-            pPacketType=src->pPacketType;            
-
-         //   memcpy(pAbonentsNumbers,src.pAbonentsNumbers ,MAX_NUMBERS_TEXT_LENGTH);
-         //   memcpy(pAddressEmail,src.pAddressEmail ,MAX_EMAIL_ADDRESS_LENGTH*sizeof(uint16_t));
-         //   memcpy(pMessageText,src.pMessageText ,MAX_TEXT_MESSAGE_LENGTH*sizeof(uint16_t));
-         //   memcpy(pDeliveryTime,src.pDeliveryTime,DELEVIRY_TIME_LENGTH);
-            cCriticalityLevel = src->cCriticalityLevel;
-            sEventType=src->sEventType;
-            sUsr = src->sUsr;
-            sDestPort = src->sDestPort;
-            sSrcPort = src->sSrcPort;
-            cEsmClass = src->cEsmClass;
-        }
-        uint16_t getEventType()const{return sEventType;};
-
+        void write(SaccSerialBuffer& buf);
+        const char* getName() { return "SaccAlarmMessageEvent"; };
     };
 
     namespace events{
         namespace smpp{
-/*            const int SUBMIT_FAILED = 1;
-            const int SUBMIT_REJECTED = 2;
-            const int SUBMIT_ACCEPTED = 3;
-            const int DELIVER_FAILED = 4;
-            const int DELIVER_REJECTED = 5;
-            const int DELIVER_ACCEPTED = 6;
-            const int SUBMIT_RESP_OK = 7;
-            const int SUBMIT_RESP_FAILED = 8;
-            const int DELIVER_RESP_OK = 9;
-            const int DELIVER_RESP_FAILED = 10;*/
             const int RECEIPT_OK = 18;
             const int RECEIPT_FAILED = 19;
 
@@ -420,12 +321,10 @@ using smsc::smeman::SmeRecord;
         
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
-        virtual void registerSaccEvent(const scag::stat::SACC_TRAFFIC_INFO_EVENT_t& ev) = 0;
-        virtual void registerSaccEvent(const scag::stat::SACC_BILLING_INFO_EVENT_t& ev) = 0;
-//        virtual void registerSaccEvent(const scag::stat::SACC_OPERATOR_NOT_FOUND_ALARM_t& ev) = 0;
-  //      virtual void registerSaccEvent(const scag::stat::SACC_SESSION_EXPIRATION_TIME_ALARM_t& ev) = 0;
-        virtual void registerSaccEvent(const scag::stat::SACC_ALARM_t& ev) = 0;
-        virtual void registerSaccEvent(const scag::stat::SACC_ALARM_MESSAGE_t& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SaccTrafficInfoEvent& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SaccBillingInfoEvent& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SaccAlarmEvent& ev) = 0;
+        virtual void registerSaccEvent(const scag::stat::SaccAlarmMessageEvent& ev) = 0;
 
     protected:
 

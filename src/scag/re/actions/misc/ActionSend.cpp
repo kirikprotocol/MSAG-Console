@@ -159,7 +159,7 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
 bool ActionSend::run(ActionContext& context)
 {
     const char *p;
-    SACC_ALARM_MESSAGE_t ev;
+    SaccAlarmMessageEvent ev;
     std::string s2, s3;
     std::string msg;
 

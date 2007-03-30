@@ -69,7 +69,7 @@ void EventHandler::RunActions(ActionContext& context)
 
 void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, const CSessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody)
 {
-    SACC_TRAFFIC_INFO_EVENT_t ev;
+    SaccTrafficInfoEvent ev;
 
     ev.Header.cCommandId = propertyObject.HandlerId;
 
@@ -94,7 +94,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
         ev.pMessageText.append(messageBody.data(), messageBody.size());
     }
 
-    sessionPrimaryKey.toString(ev.pSessionKey);
+    sessionPrimaryKey.toString(ev.Header.pSessionKey);
 
     if ((commandProperty.direction == dsdSc2Srv) || (propertyObject.HandlerId == EH_HTTP_REQUEST) || (propertyObject.HandlerId == EH_HTTP_DELIVERY))
         ev.cDirection = 'I';
@@ -112,7 +112,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
 
 void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const std::string& sessionPrimaryKey, char dir)
 {
-    SACC_ALARM_t ev;
+    SaccAlarmEvent ev;
 
     ev.Header.cCommandId = 3;
     ev.Header.cProtocolId = protocol;
@@ -127,7 +127,7 @@ void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr,
     gettimeofday(&tv,0);
     ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    ev.pSessionKey = sessionPrimaryKey;
+    ev.Header.pSessionKey = sessionPrimaryKey;
     ev.cDirection = dir;
 
     Statistics::Instance().registerSaccEvent(ev);
