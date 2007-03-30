@@ -527,7 +527,6 @@ void InfoSmeComponent::addDeliveryMessages(const Arguments& args)
     const std::string taskId = (arg.getType() == StringType) ? arg.getStringValue():"";
     if (taskId == "")
       error("addDeliveryMessages", ARGUMENT_NAME_ID);
-    smsc_log_debug(logger, "InfoSmeComponent::addDeliveryMessages::: taskId=[%s]",taskId.c_str());
 
     if ( !args.Exists(ARGUMENT_MESSAGES) )
       error("addDeliveryMessages", ARGUMENT_MESSAGES);
@@ -537,6 +536,7 @@ void InfoSmeComponent::addDeliveryMessages(const Arguments& args)
       error("addDeliveryMessages", ARGUMENT_MESSAGES);
 
     const StringList list(arg.getStringListValue());
+    smsc_log_info(logger, "InfoSmeComponent::addDeliveryMessages::: taskId=[%s], num. of new messages=[%d]",taskId.c_str(), list.size());
     for (StringList::const_iterator it=list.begin(); it != list.end(); it++) {
       long messageState;
       std::string address, messageDate, messageText;
@@ -554,7 +554,7 @@ void InfoSmeComponent::addDeliveryMessages(const Arguments& args)
       deleteEscapeSymbols(&messageText);
       admin.addDeliveryMessages(taskId, (uint8_t)messageState, address, unixTime, messageText);
     }
-
+    smsc_log_info(logger, "InfoSmeComponent::addDeliveryMessages::: messages have been loaded");
   } catch (std::exception& exc) {
     throw AdminException("Failed to add delivery message. Cause: %s", exc.what());
   } catch (...) {
