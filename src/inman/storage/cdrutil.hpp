@@ -51,10 +51,11 @@ struct CDRRecord {
 
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
+    uint32_t        _smsXSrvs;      //SMS Extra serviceCode
     bool            _inBilled;      //message was billed by IN platform                                    
-//private:
+//private: not written to CSV
     bool            _finalized;     //all fields are fullfilled;
-    uint32_t        _smsXSrvs;      //SMS Extra services id
+    uint32_t        _smsXMask;      //SMS Extra services mask
 };
 
 

@@ -593,51 +593,43 @@ public:
         return;
     }
 
-    void readXServiceParms(ConfigView * cfg, std::string srv_id_parm) throw(ConfigException)
+    void readXServiceParms(ConfigView * cfg, const std::string & nm_srv) throw(ConfigException)
     {
-        const char * cstr = srv_id_parm.c_str();
-        if (strstr(cstr, "serviceId") != cstr) {
-            smsc_log_warn(inmanLogger, "ignoring param: %s", cstr);
-            return;
-        }
-        char * ps_id = (char*)(cstr + strlen("serviceId"));
-        uint32_t srvId = atoi((const char*)ps_id);
-        if (!srvId)
-            throw ConfigException("invalid serviceId param: %s", cstr);
+        smsc_log_info(inmanLogger, "SMS Extra service '%s' config ..", nm_srv.c_str());
+        XSmsService xSrv(nm_srv);
+        std::auto_ptr<ConfigView> srvCfg(cfg->getSubConfig(nm_srv.c_str()));
 
-        std::string srv_adr_parm("serviceAdr");
-        char ctmp[20]; //sizeof("4294967295") + 1
-        snprintf(ctmp, sizeof(ctmp)-1, "%u", srvId);
-        srv_adr_parm += ctmp;
+        try { xSrv.mask = (uint32_t)srvCfg->getInt("serviceMask"); }
+        catch (ConfigException& exc) { }
+        if (!xSrv.mask || (xSrv.mask & SMSX_RESERVED_MASK))
+            throw ConfigException("'serviceMask' is missed or invalid or reserved bits is used");
 
-        cstr = NULL;
-        try { cstr = cfg->getString(srv_adr_parm.c_str()); }
+        SmsXServiceMap::iterator xit = bill.smsXMap.find(xSrv.mask);
+        if (xit != bill.smsXMap.end())
+            throw ConfigException("'serviceMask' %u is shared by %s and %s",
+                                  xSrv.mask, ((*xit).second).name.c_str(), nm_srv.c_str());
+
+        try { xSrv.cdrCode = (uint32_t)srvCfg->getInt("serviceCode"); }
+        catch (ConfigException& exc) { }
+        if (!xSrv.cdrCode)
+            throw ConfigException("'serviceCode' is missed or invalid");
+
+        char * cstr = NULL;
+        try { cstr = srvCfg->getString("serviceAdr"); }
         catch (ConfigException& exc) { }
         if (!cstr || !cstr[0])
-            throw ConfigException("missed param %s", srv_adr_parm.c_str());
+            throw ConfigException("'serviceAdr' is missed or invalid");
+        if (!xSrv.adr.fromText(cstr))
+            throw ConfigException("'serviceAdr' is invalid: %s", cstr);
 
-        TonNpiAddress  npi;
-        if (!npi.fromText(cstr))
-            throw ConfigException("invalid param %s value: %s", srv_adr_parm.c_str(), cstr);
-
-        uint32_t srvMask = 0;
-        try { srvMask = cfg->getInt(srv_id_parm.c_str()); }
-        catch (ConfigException& exc) { }
-        if (!srvMask)
-            throw ConfigException("invalid param %s value", srv_id_parm.c_str());
-        if (srvMask & SMSX_RESERVED_MASK)
-            throw ConfigException("reserved bits used in param %s value", srv_id_parm.c_str());
-
-        bill.smsXMap.insert(SmsXServiceMap::value_type(srvMask, npi));
-        smsc_log_info(inmanLogger, "SMS Extra service[%u]: 0x%x = %s", srvId, srvMask,
-                      npi.toString().c_str());
+        bill.smsXMap.insert(SmsXServiceMap::value_type(xSrv.mask, xSrv));
+        smsc_log_info(inmanLogger, "  service[0x%x]: %u, %s", xSrv.mask, xSrv.cdrCode,
+                      xSrv.adr.toString().c_str());
         return;        
     }
 
     void readExtraConfig(Manager& manager) throw(ConfigException)
     {
-        uint32_t tmo = 0;
-        char *   cstr = NULL;
         /* ********************************* *
          * SMS Extra services parameters: *
          * ********************************* */
@@ -645,13 +637,13 @@ public:
             throw ConfigException("'SMSExtra' section is missed");
         ConfigView smsXCfg(manager, "SMSExtra");
 
-        std::auto_ptr<CStrSet> srvIds(smsXCfg.getIntParamNames());
-        if (!srvIds->size())
+        std::auto_ptr<CStrSet> srvPacks(smsXCfg.getShortSectionNames());
+        if (srvPacks->empty())
             throw ConfigException("no SMS Extra services specified");
 
-        for (CStrSet::iterator idIt = srvIds->begin(); idIt != srvIds->end(); idIt++) {
-            readXServiceParms(&smsXCfg, *idIt);
-        }
+        CStrSet::iterator sit = srvPacks->begin();
+        for (; sit != srvPacks->end(); sit++)
+            readXServiceParms(&smsXCfg, *sit);
         smsc_log_info(inmanLogger, "Total SMS Extra services: %u", bill.smsXMap.size());
         return;
     }

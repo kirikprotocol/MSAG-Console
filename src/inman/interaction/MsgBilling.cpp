@@ -128,7 +128,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
 
     cdr._dstAdr = dstSubscriberNumber;
     cdr._dpLength = (uint32_t)msgLen;
-    cdr._smsXSrvs = smsXSrvsId;
+    cdr._smsXMask = smsXSrvsId;
 }
 
 //-----------------------------------------------

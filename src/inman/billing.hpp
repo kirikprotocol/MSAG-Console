@@ -53,7 +53,7 @@ public:
     typedef enum {
         bilIdle, bilAborted,
         bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
-        bilQueried,     // SSF <- AbProvider: query result
+        bilQueried,     // SSF <- IAProvider: query result
         bilInited,      // SSF -> SCF : InitialDPSMS
         bilReleased,    // SSF <- SCF : ReleaseSMS
                         // SSF -> SMSC : CHARGE_SMS_RESULT_TAG
@@ -120,7 +120,7 @@ protected:
 
     TCSessionSR*    capSess;   //TCAP dialogs factory
     bool            capDlgActive;
-    CapSMSDlg*      capDlg;     //CapSMS wrapper for TC dialog
+    CapSMSDlg*      capDlg;     //Cap3SMS dialog controlling class
 
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
@@ -132,8 +132,8 @@ protected:
     // ...
     AbonentPolicy * abPolicy;
     INScfCFG        abScf;
-    TonNpiAddress   smsxNumber;   //short number for SMS Extra service
-    uint32_t        billErr;      //combined billing error code
+    XSmsService   * xsmsSrv;    //optional SMS Extra service config.
+    uint32_t        billErr;    //combined billing error code
 };
 
 } //inman

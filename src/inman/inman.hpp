@@ -11,9 +11,6 @@ using smsc::core::synchronization::MutexGuard;
 #include "inman/common/RPCList.hpp"
 using smsc::inman::common::RPCList;
 
-//#include "inman/InCacheDefs.hpp"
-//using smsc::inman::cache::AbonentCacheITF;
-
 #include "inman/abprov/IAPLoader.hpp"   //includes cache defs
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
@@ -24,7 +21,19 @@ namespace inman {
 //_smsXSrvs bits to mask, i.e. exclude from processing logic
 #define SMSX_RESERVED_MASK  0x80000000
 
-typedef std::map<uint32_t, TonNpiAddress> SmsXServiceMap;
+struct XSmsService {
+    std::string     name;
+    uint32_t        mask;
+    uint32_t        cdrCode;
+    TonNpiAddress   adr;
+
+    XSmsService(uint32_t use_mask = 0) : cdrCode(0), mask(use_mask)
+    { }
+    XSmsService(const std::string & use_name, uint32_t use_mask = 0)
+        : name(use_name), cdrCode(0), mask(use_mask)
+    { }
+};
+typedef std::map<uint32_t, XSmsService> SmsXServiceMap;
 
 class INManConfig;
 

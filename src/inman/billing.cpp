@@ -86,7 +86,7 @@ Billing::Billing(unsigned b_id, BillingManager * owner, Logger * uselog/* = NULL
         : WorkerAC(b_id, owner, uselog), state(bilIdle), capDlg(NULL)
         , postpaidBill(false), abType(AbonentContractInfo::abtUnknown)
         , providerQueried(false), capDlgActive(false), capSess(NULL)
-        , abPolicy(NULL), billErr(0)
+        , abPolicy(NULL), billErr(0), xsmsSrv(0)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
     _cfg = owner->getConfig();
@@ -158,10 +158,10 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
-    if (smsxNumber.length) { //write SMSExtra part first (if necessary)
+    if (xsmsSrv) { //write SMSExtra part first (if necessary)
         if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
             CDRRecord xcdr = cdr;
-            xcdr._dstAdr = smsxNumber.toString();
+            xcdr._dstAdr = xsmsSrv->adr.toString();
             _cfg.bfs->bill(xcdr); cnt++;
             smsc_log_info(logger, "%s: CDR(Extra) written: "
                         "msgId = %llu, IN billed: %s, dstAdr: %s", _logId,
@@ -249,7 +249,7 @@ bool Billing::startCAPDialog(INScfCFG * use_scf)
         capDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //initialize TCAP dialog
         capDlgActive = true;
         smsc_log_debug(logger, "%s: Initiating CapSMS[%u] -> %s", _logId, capDlg->getId(),
-                       smsxNumber.length ? smsxNumber.toString().c_str() : cdr._dstAdr.c_str());
+                       xsmsSrv ? xsmsSrv->adr.toString().c_str() : cdr._dstAdr.c_str());
 
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
 
@@ -261,8 +261,8 @@ bool Billing::startCAPDialog(INScfCFG * use_scf)
         default:
             arg.setLocationInformationMSC(cdr._srcMSC.c_str());
         }
-        if (smsxNumber.length)
-            arg.setDestinationSubscriberNumber(smsxNumber);
+        if (xsmsSrv)
+            arg.setDestinationSubscriberNumber(xsmsSrv->adr);
         else
             arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
         arg.setSMSCAddress(csInfo.smscAddress.c_str());
@@ -327,19 +327,20 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
     smsc_log_info(logger, "%s: %s: Call.Adr <%s>, Dest.Adr <%s>", _logId,
                     cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
 
-    uint32_t smsXSrvs = cdr._smsXSrvs & ~SMSX_RESERVED_MASK;
-    if (smsXSrvs) {
+    uint32_t smsXMask = cdr._smsXMask & ~SMSX_RESERVED_MASK;
+    if (smsXMask) {
         if (cdr._bearer != CDRRecord::dpSMS)
             smsc_log_error(logger, "%s: invalid bearer for SMS Extra service", _logId);
 
-        SmsXServiceMap::iterator it = _cfg.smsXMap.find(smsXSrvs);
+        SmsXServiceMap::iterator it = _cfg.smsXMap.find(smsXMask);
         if (it != _cfg.smsXMap.end()) {
-            smsxNumber = (*it).second;
-            smsc_log_info(logger, "%s: SMSExtra 0x%x configured to %s", _logId,
-                          smsXSrvs, smsxNumber.toString().c_str());
+            xsmsSrv = &(*it).second;
+            cdr._smsXSrvs = xsmsSrv->cdrCode;
+            smsc_log_info(logger, "%s: SMSExtra service[0x%x]: %u, %s", _logId, 
+                    smsXMask, xsmsSrv->cdrCode, xsmsSrv->adr.toString().c_str());
         } else {
-            smsc_log_error(logger, "%s: SMSExtra 0x%x misconfigured, ignoring!",
-                           _logId, smsXSrvs);
+            smsc_log_error(logger, "%s: SMSExtra service[0x%x] misconfigured, ignoring!",
+                           _logId, smsXMask);
             cdr._smsXSrvs &= SMSX_RESERVED_MASK;
         }
     }
@@ -360,7 +361,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
     AbonentRecord   abRec; //ab_type = abtUnknown
     if (postpaidBill
         || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
-             == AbonentContractInfo::abtPostpaid) && !smsXSrvs)) {
+             == AbonentContractInfo::abtPostpaid) && !cdr._smsXMask)) {
         postpaidBill = true; //do not interact IN platform, just create CDR
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
         return true;
