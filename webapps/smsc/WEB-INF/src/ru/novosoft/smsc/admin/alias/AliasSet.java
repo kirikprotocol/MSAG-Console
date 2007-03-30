@@ -315,7 +315,7 @@ public class AliasSet {
       public boolean isItemAllowed(DataItem item) {
         try {
           final Alias alias = createAliasByDataItem(item);
-          return alias.isHide() && alias.getAlias().addressConfirm(aliasToSearch);
+          return  alias.getAlias().addressConfirm(aliasToSearch);
         } catch (AdminException e) {
           return false;
         }
