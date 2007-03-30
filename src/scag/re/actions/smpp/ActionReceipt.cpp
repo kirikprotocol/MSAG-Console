@@ -76,7 +76,7 @@ bool ActionReceipt::run(ActionContext& context)
     smsc_log_debug(logger,"Run Action 'smpp:receipt'");
 
     PostActionReceipt* pa = new PostActionReceipt();
-    auto_ptr<PostActionReceipt*> ptr(pa);
+    auto_ptr<PostActionReceipt> ptr(pa);
 
     pa->from = fromAddr;
     pa->to = toAddr;
@@ -94,7 +94,7 @@ bool ActionReceipt::run(ActionContext& context)
         }
         catch(...)
         {
-            smsc_log_error("Action 'smpp:receipt': Invalid 'to'(%s) field", varTo.c_str());
+            smsc_log_error(logger, "Action 'smpp:receipt': Invalid 'to'(%s) field", varTo.c_str());
             return true;
         }
 
