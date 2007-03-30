@@ -1,32 +1,61 @@
-<!--  "$Id$" -->
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
+<!-- "$Id$" -->
+<!-- SMS Extra services configuration for INMan v0.6.0 or higher -->
+<config> 
+  <section name="SMSExtra">
+    <!-- Each SMS Extra service (pack of services) is described by section of
+      following format:
+      section name="SMS_Extra_services_pack_name"
+          param name="serviceCode" type="int"
+            uint32_t, service id to store in CDR
+          param name="serviceMask" type="int"
+            uint30_t [1..16383], bit masks of used services for USSDC == INMan interaction
+          param name="serviceAdr" type="string"
+            optional service address for IDP, if omitted, the CDR is created
+      end_section
+     -->
+    <section name="SMS-Flash">
+      <param name="serviceCode" type="int">1</param>
+      <param name="serviceMask" type="int">1</param>
+      <param name="serviceAdr" type="string">smsx:201</param>
+    </section>
 
-<config>
-  <section name="SMSExtra"> <!-- SMS Extra services short numbers and indexes -->
-  <!-- SMS Extra service is described by two parameters:
-                serviceId (type of uint32_t) and serviceAdr (type of string)
-        Name of parameters are composed as:
-        serviceIdNN[any_text]
-        serviceAdrNN
-        where NN is a arbitrary decimal number of service, that is used  for association of serviceAdr and  serviceId
-   -->
-    <param name="serviceId1_nick" type="int">1</param>
-    <param name="serviceAdr1" type="string">smsx:201</param> 
+    <section name="SMS-Calendar">
+      <param name="serviceCode" type="int">3</param>
+      <param name="serviceMask" type="int">2</param>
+      <param name="serviceAdr" type="string">smsx:203</param>
+    </section>
 
-    <param name="serviceId2_flash" type="int">2</param>
-    <param name="serviceAdr2" type="string">smsx:202</param> 
+    <section name="SMS-Secret">
+      <param name="serviceCode" type="int">4</param>
+      <param name="serviceMask" type="int">4</param>
+      <param name="serviceAdr" type="string">smsx:204</param>
+    </section>
 
-    <param name="serviceId4_icq" type="int">3</param>
-    <param name="serviceAdr4" type="string">smsx:203</param> 
+    <section name="SMS-Group">
+      <param name="serviceCode" type="int">5</param>
+      <param name="serviceMask" type="int">8</param>
+      <param name="serviceAdr" type="string">smsx:205</param>
+    </section>
 
-    <param name="serviceId8" type="int">8</param>
-    <param name="serviceAdr8" type="string">smsx:208</param> 
+    <section name="SMS-Flash-Calendar">
+      <param name="serviceCode" type="int">12</param>
+      <param name="serviceMask" type="int">3</param> <!-- 1+2 -->
+      <param name="serviceAdr" type="string">smsx:212</param>
+    </section>
 
-    <param name="serviceId5_icq_nick" type="int">5</param>
-    <param name="serviceAdr5" type="string">smsx:205</param> 
+    <section name="SMS-Flash-Secret">
+      <param name="serviceCode" type="int">13</param>
+      <param name="serviceMask" type="int">5</param> <!-- 1+4 -->
+      <param name="serviceAdr" type="string">smsx:213</param>
+    </section>
 
+    <section name="SMS-Flash-Group">
+      <param name="serviceCode" type="int">14</param>
+      <param name="serviceMask" type="int">9</param> <!-- 1+8 -->
+      <param name="serviceAdr" type="string">smsx:214</param>
+    </section>
   </section>
 </config>
-
 
