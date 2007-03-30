@@ -3,7 +3,7 @@
 #include <time.h>
 #include <sstream>
 #include <list>
-
+#include <util/sleep.h>
 extern bool isMSISDNAddress(const char* string);
 
 namespace smsc { namespace infosme 
@@ -1190,7 +1190,7 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
   if (!rs)
     throw Exception("Failed to obtain result set for message access.");
         
-  int fetched = 0;
+  int fetched = 0, numOfRowsProcessed=0;
   while (rs->fetchNext()) {
     smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion::: check next record");
     if ( doesMessageConformToCriterion(rs, searchCrit) ) {
@@ -1201,6 +1201,8 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
                                           unixTime,
                                           recordId);
     }
+    if ( ++numOfRowsProcessed % 100 == 0 )
+      smsc::util::millisleep(10);
   }
   return true;
 }
@@ -1271,7 +1273,7 @@ bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCrite
   if (!rs)
     throw Exception("Failed to obtain result set for message access.");
         
-  int fetched = 0;
+  int fetched = 0, numOfRowsProcessed=0;
   smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion::: search records matching criterion");
   while (rs->fetchNext()) {
     smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion::: check next record");
@@ -1281,6 +1283,8 @@ bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCrite
       smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion: record found[recordId=%s]",recordId);
       deleteDeliveryMessageByRecordId(recordId);
     }
+    if ( ++numOfRowsProcessed % 100 == 0 )
+      smsc::util::millisleep(10);
   }
   return true;
 
@@ -1362,7 +1366,6 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
     throw Exception("selectDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
 
   std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-
   ResultSet* rs = rsGuard.get();
   if (!rs)
     throw Exception("Failed to obtain result set for message access.");
@@ -1375,7 +1378,7 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
   if ( searchCrit.isSetMsgLimit() )
     msgLimit = searchCrit.getMsgLimit();
 
-  size_t fetchedCount=0;
+  size_t fetchedCount=0, numOfRowsProcessed=0;
   while (rs->fetchNext()) {
     if ( doesMessageConformToCriterion(rs, searchCrit) ) {
       smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%lld,%d,%s,%lld,%s] into messagesList", rs->getUint64(1), rs->getUint8(2), rs->getString(3), rs->getDateTime(4), rs->getString(5));
@@ -1387,6 +1390,8 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
       if ( msgLimit && ++fetchedCount == msgLimit )
         break;
     }
+    if ( ++numOfRowsProcessed % 100 == 0 )
+      smsc::util::millisleep(10);
   }
 
   if ( searchCrit.isSetOrderByCriterion() ) {
