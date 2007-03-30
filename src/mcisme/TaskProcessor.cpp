@@ -350,7 +350,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 	std::auto_ptr<ConfigView> advertCfgGuard(config->getSubConfig("Advertising"));
     ConfigView* advertCfg = advertCfgGuard.get();
 
-    try { useAdvert = config->getBool("useAdvert"); } catch (...) { useAdvert = false;
+    try { useAdvert = advertCfg->getBool("useAdvert"); } catch (...) { useAdvert = false;
         smsc_log_warn(logger, "Parameter <MCISme.Advertising.useAdvert> missed. Defaul profile useAdvert is false (off)");
     }
 
@@ -815,6 +815,19 @@ bool TaskProcessor::GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>&  events
 	
 	return pStorage->getEvents(abnt, events);
 }
+
+//
+//
+//уведомление абонента зависит от двух флагов: forceNotify(прописывается в config.xml) и profile.notify(это выбор абонента, который был недоступен о том уведомлять ли звонивших ему).
+//
+//forceNotify  profile.notify
+//true             true        -  отсылка идет
+//false            true        -  отсылка идет
+//true             false       -  отсылка идет
+//false            false       -  отсылки НЕТ
+
+//С количеством сложнее. Каждый раз когда отослана СМС о пропущенных вызовах, на основе данных этой СМС формируется список абонентов, которых надо уведомить и отсылается если выполняются вышеизложенные условия. Соответственно, если Абоненту было отправленно несколько СМС о пропущенных вызовах и у него в профиле не установлен флаг группировки вызовов от одининаковых абонентов, то возможна посылка 
+
 
 void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
 {
