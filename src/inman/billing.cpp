@@ -84,7 +84,7 @@ void BillingManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializableP
  * ************************************************************************** */
 Billing::Billing(unsigned b_id, BillingManager * owner, Logger * uselog/* = NULL*/)
         : WorkerAC(b_id, owner, uselog), state(bilIdle), capDlg(NULL)
-        , postpaidBill(false), abType(AbonentContractInfo::abtUnknown)
+        , bill2CDR(false), abType(AbonentContractInfo::abtUnknown)
         , providerQueried(false), capDlgActive(false), capSess(NULL)
         , abPolicy(NULL), billErr(0), xsmsSrv(0)
 {
@@ -158,6 +158,7 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
+/*
     if (xsmsSrv) { //write SMSExtra part first (if necessary)
         if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
             CDRRecord xcdr = cdr;
@@ -177,7 +178,9 @@ unsigned Billing::writeCDR(void)
                         "msgId = %llu, IN billed: false, dstAdr: %s",
                         _logId, xcdr._msgId, xcdr._dstAdr.c_str());
         }
-    } else if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
+    } else 
+*/
+    if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
                     _logId, cdr._msgId, cdr._inBilled ? "true": "false",
@@ -357,12 +360,11 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         }
     }
 
-    postpaidBill = !matchBillMode();
+    bill2CDR = !matchBillMode();
     AbonentRecord   abRec; //ab_type = abtUnknown
-    if (postpaidBill
-        || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
-             == AbonentContractInfo::abtPostpaid) && !cdr._smsXMask)) {
-        postpaidBill = true; //do not interact IN platform, just create CDR
+    if (bill2CDR || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
+                      == AbonentContractInfo::abtPostpaid))) {
+        bill2CDR = true; //do not interact IN platform, just create CDR
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
         return true;
     }
@@ -414,7 +416,7 @@ bool Billing::ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
             if (!pin) {
                 smsc_log_error(logger, "%s: unable to determine"
                                 " abonent type/SCF, switching to CDR mode", _logId);
-                postpaidBill = true;
+                bill2CDR = true;
             }
         } else if (abType == AbonentContractInfo::abtPrepaid) {
             if (abPolicy->scfMap.size() == 1) { //single IN serving
@@ -422,21 +424,25 @@ bool Billing::ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
             } else {
                 smsc_log_error(logger, "%s: unable to determine"
                                 " abonent SCF, switching to CDR mode", _logId);
-                postpaidBill = true;
+                bill2CDR = true;
             }
         } else //btPostpaid
-            postpaidBill = true;
+            bill2CDR = true;
     } else
-        postpaidBill = true;
+        bill2CDR = true;
 
-    if (!postpaidBill) {
-        smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId, 
-                       abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
-                       abScf.scf.serviceKey);
-        postpaidBill = !startCAPDialog(&abScf);
+    if (!bill2CDR) {
+        if (xsmsSrv && !xsmsSrv->adr.length) {
+            bill2CDR = true;
+        } else {
+            smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId, 
+                           abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
+                           abScf.scf.serviceKey);
+            bill2CDR = !startCAPDialog(&abScf);
+        }
     }
 
-    if (postpaidBill) //do not interact IN platform, just create CDR
+    if (bill2CDR) //do not interact IN platform, just create CDR
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
     return true;
 }
@@ -456,7 +462,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes, CsBillingHdr_dlg *h
             cdr._inBilled = true;
             state = bilReported;
         } catch (std::exception & exc) {
-            postpaidBill = true;
+            bill2CDR = true;
             smsc_log_error(logger, "%s: %s", exc.what());
             capDlgActive = false;
         }
@@ -479,7 +485,7 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
         format(reply, "NOT_POSSIBLE (cause %u)", inmanErr);
         state = Billing::bilReleased;
     } else {
-        format(reply, "POSSIBLE (via %s, cause %u)", postpaidBill ? "CDR" : "SCF", inmanErr);
+        format(reply, "POSSIBLE (via %s, cause %u)", bill2CDR ? "CDR" : "SCF", inmanErr);
         state = Billing::bilContinued;
     }
     smsc_log_info(logger, "%s: <-- %s CHARGING_%s, abonent(%s) type: %s (%u)", _logId,
@@ -633,7 +639,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
         for (RPCList::iterator it = abScf.postpaidRPC.begin(); 
                                 it != abScf.postpaidRPC.end(); it++) {
             if ((*it) == rp_cause) {
-                postpaidBill = true;
+                bill2CDR = true;
                 //Update abonents cache
                 if (abType != AbonentContractInfo::abtPostpaid)
                     _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abType = 
@@ -641,19 +647,19 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
                 break;
             }
         }
-        if (!postpaidBill) { //check for RejectSMS causes indicating that abonent
+        if (!bill2CDR) { //check for RejectSMS causes indicating that abonent
                              //can't be charged (not just the technical failure)
-            postpaidBill = true;
+            bill2CDR = true;
             for (RPCList::iterator it = abScf.rejectRPC.begin();
                                     it != abScf.rejectRPC.end(); it++) {
                 if ((*it) == rp_cause) {
-                    postpaidBill = false;
+                    bill2CDR = false;
                     break;
                 }
             }
         }
         scfErr = InmanErrorCode::combineError(errRPCause, (uint16_t)rp_cause);
-        if (!postpaidBill)
+        if (!bill2CDR)
             chgRes = ChargeSmsResult::CHARGING_NOT_POSSIBLE;
     }
     chargeResult(chgRes, scfErr);
@@ -694,7 +700,7 @@ void Billing::onEndCapDlg(unsigned char ercode/* = 0*/,
             //dialog with MSC finished, release CAP dialog, switch to CDR mode
             cdr._inBilled = false;
         default:
-            postpaidBill = true;
+            bill2CDR = true;
             smsc_log_warn(logger, "%s: switched to billing via CDR"
                             " (reason: CapSMSDlg error).", _logId);
         }

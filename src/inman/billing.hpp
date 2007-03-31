@@ -76,8 +76,6 @@ public:
     void     Abort(const char * reason = NULL); //aborts billing due to fatal error
 
     BillingState getState(void) const { return state; }
-    //
-    bool     isPostpaidBill(void) const { return postpaidBill; }
     //retuns false if CDR was not complete
     bool     CDRComplete(void) const { return cdr._finalized; }
     //returns true if all billing stages are completed
@@ -124,7 +122,7 @@ protected:
 
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
-    bool            postpaidBill;
+    bool            bill2CDR;
     TimersMAP       timers;     //active timers
     AbonentContractInfo::ContractType abType;     //calling abonent contract type
     TonNpiAddress   abNumber;   //calling abonent ISDN number

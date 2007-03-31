@@ -615,11 +615,11 @@ public:
             throw ConfigException("'serviceCode' is missed or invalid");
 
         char * cstr = NULL;
-        try { cstr = srvCfg->getString("serviceAdr"); }
+        try { cstr = srvCfg->getString("serviceAdr"); } //optional param
         catch (ConfigException& exc) { }
         if (!cstr || !cstr[0])
-            throw ConfigException("'serviceAdr' is missed or invalid");
-        if (!xSrv.adr.fromText(cstr))
+            smsc_log_warn(inmanLogger, "  'serviceAdr' is omitted");
+        else if (!xSrv.adr.fromText(cstr))
             throw ConfigException("'serviceAdr' is invalid: %s", cstr);
 
         bill.smsXMap.insert(SmsXServiceMap::value_type(xSrv.mask, xSrv));
