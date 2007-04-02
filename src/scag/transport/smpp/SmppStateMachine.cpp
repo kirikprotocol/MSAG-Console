@@ -768,7 +768,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     }
   }
   bool bGotFromRegistry = reg.Get(srcUid, cmd->get_dialogId(), orgCmd);
-  if(orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
+  if(bGotFromRegistry && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
     smsc_log_debug(log, "MSAG Receipt: Got responce, skipped");
     return;
   }
