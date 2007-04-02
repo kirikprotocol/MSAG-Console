@@ -47,6 +47,7 @@ NOTE: Solaris 10 has built-in net-snmp and directory to put cfg,mib can be /etc/
 
 Check OID tree parsing
 snmptranslate -Tp SIBINCO-SMSC-MIB::sibinco
+snmptranslate -m SIBINCO-SMSC-MIB -Tp -IR sibinco
 
 ------------------------------------------------------------
 5. Register and start net-snmp agent
