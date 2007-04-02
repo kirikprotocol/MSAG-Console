@@ -32,7 +32,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
         #endif
         EventMonitor eventMonitor;
         unsigned int billId;
-        SaccBillingInfoEvent billEvent;
+        SACC_BILLING_INFO_EVENT_t billEvent;
         BillingInfoStruct billingInfoStruct;
         BillTransaction() : status(TRANSACTION_NOT_STARTED) { }
     };
@@ -62,8 +62,8 @@ class BillingManagerImpl : public BillingManager, public Thread, public BillingM
 
     void ProcessSaccEvent(BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
 
-    void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev);
-    void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent& ev);
+    void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev);
+    void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SACC_BILLING_INFO_EVENT_t& ev);
 
     void ClearTransactions()
     {
@@ -294,7 +294,7 @@ void BillingManagerImpl::logEvent(const char *tp, bool success, BillingInfoStruc
 unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
     unsigned int billId;
-    SaccBillingInfoEvent ev;
+    SACC_BILLING_INFO_EVENT_t ev;
 
 
     inUseLock.Lock();
@@ -331,7 +331,6 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
     if(tariffRec.billType == scag::bill::infrastruct::INMAN)
     {
         sendCommand(billTransaction->ChargeOperation);
-
         billTransaction->eventMonitor.wait(1000);
     }
     #endif
@@ -364,6 +363,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
         SPckDeliverySmsResult opRes;
         opRes.Hdr().dlgId = billId;
         opRes.Cmd().setResultValue(1);
+	opRes.Cmd().setFinal(false); // To skip CDR creation
 
         billTransaction->status = TRANSACTION_WAIT_ANSWER;
         sendCommand(opRes);
@@ -471,7 +471,7 @@ void BillingManagerImpl::Info(int billId, BillingInfoStruct& bis, TariffRec& tar
     tariffRec = (*p)->tariffRec;
 }
 
-void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev)
+void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SACC_BILLING_INFO_EVENT_t& ev)
 {
     ev.Header.cCommandId = billCommand;
     ev.Header.sCommandStatus = commandStatus;
@@ -482,7 +482,7 @@ void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, Bi
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
 }
 
-void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent& ev)
+void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SACC_BILLING_INFO_EVENT_t& ev)
 {
     ev.Header.cCommandId = billCommand;
 
@@ -509,7 +509,7 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
 
     char buff[128];
     sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, billingInfo.SessionBornMicrotime.tv_usec / 1000);
-    ev.Header.pSessionKey.append(buff);
+    ev.pSessionKey.append(buff);
 }
 
 #ifdef MSAG_INMAN_BILL
