@@ -31,14 +31,14 @@ class BillActionOpen : public ActionAbstractWait
     uint32_t category;
     uint32_t mediaType;
 
+    bool bCatExist, bMtExist;
+
     FieldType m_StatusFieldType;
     FieldType m_MediaTypeFieldType;
     FieldType m_CategoryFieldType;
     FieldType m_MsgFieldType;
 
-    bool m_MsgExist;
-    bool m_ResNumExist;
-    bool m_BillIdExist;
+    bool m_MsgExist, m_ResNumExist, m_BillIdExist;
 
     bool m_waitOperation;
 

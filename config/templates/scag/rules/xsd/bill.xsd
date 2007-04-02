@@ -19,8 +19,10 @@
         <choice>
             <element name="open">
                 <complexType>
-                    <attribute name="category" type="scag:Value" use="required"/>
-                    <attribute name="content-type" type="scag:Value" use="required"/>
+                    <attribute name="category" type="scag:Value" use="optional"/>
+                    <attribute name="content-type" type="scag:Value" use="optional"/>
+                    <attribute name="category-str" type="scag:Value" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Value" use="optional"/>
                     <attribute name="status" type="scag:Var" use="required" />
                     <attribute name="msg" type="scag:Var" use="optional" />
                     <attribute name="bill_id" type="scag:Var" use="optional" />
@@ -50,6 +52,8 @@
                     <attribute name="currency" type="scag:Var" use="optional" />
                     <attribute name="abonent" type="scag:Var" use="optional" />
                     <attribute name="bill_type" type="scag:Var" use="optional" />
+                    <attribute name="category-str" type="scag:Var" use="optional"/>
+                    <attribute name="content-type-str" type="scag:Var" use="optional"/>
                 </complexType>
             </element>
         </choice>    

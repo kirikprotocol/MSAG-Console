@@ -35,6 +35,8 @@ InfrastructureImpl::InfrastructureImpl()
     mask_hash = NULL;
     category_hash = NULL;
     media_type_hash = NULL;
+    category_str_hash = NULL;
+    media_type_str_hash = NULL;
     tariff_hash = NULL;
 }
 
@@ -147,18 +149,24 @@ void InfrastructureImpl::ReloadTariffMatrix()
 
     IntHash<uint32_t> *cat_hash = new IntHash<uint32_t>();
     IntHash<uint32_t> *mt_hash = new IntHash<uint32_t>();
+    Hash<uint32_t> *cat_str_hash = new Hash<uint32_t>();
+    Hash<uint32_t> *mt_str_hash = new Hash<uint32_t>();
     IntHash<TariffRec> *t_hash = new IntHash<TariffRec>();
 
     try{
-        XMLTariffMatrixHandler handler(cat_hash, mt_hash, t_hash);
+        XMLTariffMatrixHandler handler(cat_hash, mt_hash, cat_str_hash, mt_str_hash, t_hash);
         ParseFile(TariffMatrixFile.c_str(), &handler);
 
         MutexGuard mt1(TariffMatrixMapMutex);
         delete category_hash;
         delete media_type_hash;
+        delete category_str_hash;
+        delete media_type_str_hash;
         delete tariff_hash;
         category_hash = cat_hash;
         media_type_hash = mt_hash;
+        category_str_hash = cat_str_hash;
+        media_type_str_hash = mt_str_hash;
         tariff_hash = t_hash;
     }
     catch(Exception& e)
@@ -166,6 +174,8 @@ void InfrastructureImpl::ReloadTariffMatrix()
         smsc_log_info(logger, "Tariff Matrix reload was not successful");
         delete cat_hash;
         delete mt_hash;
+        delete cat_str_hash;
+        delete mt_str_hash;
         delete t_hash;
         throw e;
     }
@@ -234,6 +244,24 @@ TariffRec* InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category
         delete tr;
         return NULL;
     }
+}
+
+uint32_t InfrastructureImpl::GetMediaTypeID(const std::string& media_type_str)
+{
+    MutexGuard mt(TariffMatrixMapMutex);
+    if(media_type_str_hash == NULL)
+        return 0;
+    uint32_t *p = media_type_str_hash->GetPtr(media_type_str.c_str());
+    return p ? *p : 0;
+}
+
+uint32_t InfrastructureImpl::GetCategoryID(const std::string& category_str)
+{
+    MutexGuard mt(TariffMatrixMapMutex);
+    if(category_str_hash == NULL)
+        return 0;
+    uint32_t *p = category_str_hash->GetPtr(category_str.c_str());
+    return p ? *p : 0;
 }
 
 bool InfrastructureImpl::GetTariff(uint32_t operator_id, uint32_t category, uint32_t mt, TariffRec& tr)

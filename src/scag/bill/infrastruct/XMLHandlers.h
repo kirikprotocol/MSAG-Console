@@ -88,10 +88,12 @@ class XMLTariffMatrixHandler : public HandlerBase
     Logger * logger;
     IntHash<uint32_t>  *category_hash;
     IntHash<uint32_t>  *media_type_hash;
+    Hash<uint32_t>  *category_str_hash;
+    Hash<uint32_t>  *media_type_str_hash;
     IntHash<TariffRec>  *tariff_hash;
-    uint32_t category_idx;
-    uint32_t media_type_idx;
-//    std::string media_type_name, category_name;
+    uint32_t category_idx, media_type_idx;
+    uint32_t category_id, media_type_id;
+    std::string media_type_name, category_name;
     XMLCh chars[1024];
     uint8_t media_type_tag, category_tag, bill_tag;
     uint32_t bill_service_number, bill_category_id, bill_media_type_id, bill_operator_id, bill_type;
@@ -103,7 +105,7 @@ class XMLTariffMatrixHandler : public HandlerBase
 protected:
 
 public:
-    XMLTariffMatrixHandler(IntHash<uint32_t>*, IntHash<uint32_t>*, IntHash<TariffRec>*);
+    XMLTariffMatrixHandler(IntHash<uint32_t>*, IntHash<uint32_t>*, Hash<uint32_t>*, Hash<uint32_t>*, IntHash<TariffRec>*);
     ~XMLTariffMatrixHandler() {};
 
     void startElement(const XMLCh* const qname, AttributeList& attributes);

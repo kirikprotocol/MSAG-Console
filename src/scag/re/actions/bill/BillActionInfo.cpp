@@ -3,7 +3,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-const char* BillActionInfo::m_name[BillActionInfo::fields_count] = {"operator_id", "provider_id", "service_id", "abonent", "category", "content-type", "result_number", "price", "currency", "bill_type"};
+const char* BillActionInfo::m_name[BillActionInfo::fields_count] = {"operator_id", "provider_id", "service_id", "abonent", "category", "content-type", "result_number", "price", "currency", "bill_type", "category-str", "content-type-str"};
 
 void BillActionInfo::init(const SectionParams& params,PropertyObject propertyObject)
 {
@@ -102,6 +102,8 @@ bool BillActionInfo::run(ActionContext& context)
                 }
             case 8: p->setStr(tr.Currency); break;
             case 9: p->setInt(tr.billType); break;
+            case 10: p->setStr(bis.category); break;
+            case 11: p->setStr(bis.mediaType); break;
         }
         s += ", ";
         s += m_name[i];

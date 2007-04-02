@@ -17,7 +17,7 @@ typedef struct{
     uint8_t top_tag;
 } tag_t;
 
-/*static tag_t category_tags[] = {
+static tag_t category_tags[] = {
 {"categories", -1},
 {"category", 0},
 {"name", 1},
@@ -28,7 +28,7 @@ static tag_t media_type_tags[] = {
 {"media_types", -1},
 {"media_type", 0},
 {"name", 1},
-};*/
+};
 
 #define MEDIA_TYPE_TAGS_SZ sizeof(media_type_tags) / sizeof(tag_t)
 
@@ -166,20 +166,25 @@ void XMLBasicHandler::warning(const SAXParseException& e)
 }
 
 //------------------------------------------------------------------------------
-XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<uint32_t> *mt, IntHash<TariffRec> *th)
+XMLTariffMatrixHandler::XMLTariffMatrixHandler(IntHash<uint32_t> *cat, IntHash<uint32_t> *mt, Hash<uint32_t> *cat_str, Hash<uint32_t> *mt_str, IntHash<TariffRec> *th)
 {
     logger = Logger::getInstance("xmlhndlr");
     category_hash = cat;
     media_type_hash = mt;
+    category_str_hash = cat_str;
+    media_type_str_hash = mt_str;
     tariff_hash = th;
     bill_tag = -1;
-//    media_type_tag = -1;
-//    category_tag = -1;
+    media_type_tag = -1;
+    category_tag = -1;
 
     category_idx = 0;
-//    category_name = "";
+    category_name = "";
     media_type_idx = 0;
-//    media_type_name = "";
+    media_type_name = "";
+    category_id = 0;
+    media_type_id = 0;
+
 
     bill_category_id = 0;
     bill_media_type_id = 0;
@@ -226,11 +231,11 @@ void XMLTariffMatrixHandler::characters(const XMLCh *const chrs, const unsigned 
     StrX q(chars);
     char *str = (char*)q.localForm();
 
-/*    if(media_type_tag == 2)
+    if(media_type_tag == 2)
         media_type_name = str;
     else if(category_tag == 2)
         category_name = str;
-    else*/ if(bill_tag == 3)
+    else if(bill_tag == 3)
         bill_category_id = atoi(str);
     else if(bill_tag == 4)
         bill_media_type_id = atoi(str);
@@ -248,7 +253,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-/*    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
+    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == category_tags[i].top_tag)
         {
             category_tag = i;
@@ -273,7 +278,7 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
                 media_type_id = atoi(s.localForm());
             }
             return;
-        }*/
+        }
 
     for(int i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == bill_tags[i].top_tag)
@@ -307,7 +312,7 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
     StrX XMLQName(nm);
     const char *qname = XMLQName.localForm();
 
-/*    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
+    for(int i = 0; i < CATEGORY_TAGS_SZ; i++)
         if(!strcmp(category_tags[i].name, qname) && category_tag == i)
         {
             category_tag = category_tags[i].top_tag;
@@ -316,9 +321,9 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 if(!category_id || category_name.length() == 0)
                     throw Exception("Invalid XML 'category' record");
 
-                category_hash->Insert(category_name.c_str(), category_id);
+                category_str_hash->Insert(category_name.c_str(), category_id);
 
-//                smsc_log_debug(logger,"end_category: store %d, %s", category_id, category_name.c_str());
+                smsc_log_debug(logger,"end_category: store %d, %s", category_id, category_name.c_str());
                 category_id = 0;
                 category_name = "";
             }
@@ -333,14 +338,14 @@ void XMLTariffMatrixHandler::endElement(const XMLCh* const nm)
                 if(!media_type_id || media_type_name.length() == 0)
                     throw Exception("Invalid XML 'media_type' record");
            
-                media_type_hash->Insert(media_type_name.c_str(), media_type_id);
+                media_type_str_hash->Insert(media_type_name.c_str(), media_type_id);
 
-//                smsc_log_debug(logger,"end_media_type: store %d, %s", media_type_id, media_type_name.c_str());
+                smsc_log_debug(logger,"end_media_type: store %d, %s", media_type_id, media_type_name.c_str());
                 media_type_id = 0;
                 media_type_name = "";
             }
             return;
-        }*/
+        }
 
     for(int i = 0; i < BILL_TAGS_SZ; i++)
         if(!strcmp(bill_tags[i].name, qname) && bill_tag == i)

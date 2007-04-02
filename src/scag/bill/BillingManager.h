@@ -49,6 +49,7 @@ enum BillingCommandStatus
 
 struct BillingInfoStruct
 {
+    std::string mediaType, category;
     std::string AbonentNumber;
     int serviceId;
     int protocol;
@@ -61,6 +62,8 @@ struct BillingInfoStruct
     //int ServiceNumber;
     const BillingInfoStruct& operator=(const BillingInfoStruct& cp)
     {
+        mediaType = cp.mediaType;
+        category = cp.category;
         AbonentNumber = cp.AbonentNumber;
         serviceId = cp.serviceId;
         protocol = cp.protocol;

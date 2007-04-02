@@ -9,18 +9,33 @@ BillActionOpen::BillActionOpen(bool waitOperation)
     m_ActionName = waitOperation ? "operation:bill_wait" : "bill:open";
 }
 
-
 void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObject)
 {
     bool bExist;
-    m_CategoryFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "category", true, true, m_category, bExist);
 
-    if(m_CategoryFieldType == ftUnknown && !(category = atoi(m_category.c_str())))
-        throw SCAGException("Action '%s': category should be integer or variable", m_ActionName.c_str());
+    m_CategoryFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "category", false, true, m_category, bCatExist);
+    if(!bCatExist)
+    {
+        m_CategoryFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "category-str", false, true, m_category, bExist);
+        if(!bExist) throw SCAGException("Action '%s': category or category-str should present", m_ActionName.c_str());
+    }
+    if(m_CategoryFieldType == ftUnknown)
+    {
+        category = bCatExist ? atoi(m_category.c_str()) : BillingManager::Instance().getInfrastructure().GetCategoryID(m_category);
+        if(!category) throw SCAGException("Action '%s': category should be integer or variable", m_ActionName.c_str());
+    }
 
-    m_MediaTypeFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "content-type", true, true, m_mediaType, bExist);
-    if(m_MediaTypeFieldType == ftUnknown && !(mediaType = atoi(m_mediaType.c_str())))
-        throw SCAGException("Action '%s': content-type should be integer or variable", m_ActionName.c_str());
+    m_MediaTypeFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "content-type", false, true, m_mediaType, bMtExist);
+    if(!bMtExist)
+    {
+        m_MediaTypeFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "content-type-str", false, true, m_mediaType, bExist);
+        if(!bExist) throw SCAGException("Action '%s': content-type or content-type-str should present", m_ActionName.c_str());
+    }
+    if(m_MediaTypeFieldType == ftUnknown)
+    {
+        mediaType = bMtExist ? atoi(m_mediaType.c_str()) : BillingManager::Instance().getInfrastructure().GetMediaTypeID(m_mediaType);
+        if(!mediaType) throw SCAGException("Action '%s': content-type should be integer or variable", m_ActionName.c_str());
+    }
 
     m_StatusFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "status", true, false, m_sStatus, bExist);
     m_MsgFieldType = CheckParameter(params, propertyObject, m_ActionName.c_str(), "msg", false, false, m_sMessage, m_MsgExist);
@@ -32,7 +47,6 @@ void BillActionOpen::init(const SectionParams& params,PropertyObject propertyObj
 
     smsc_log_debug(logger,"Action '%s' init...", m_ActionName.c_str());
 }
-
 
 IParserHandler * BillActionOpen::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
@@ -81,26 +95,32 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
 
 bool BillActionOpen::run(ActionContext& context)
 {
-    int cat = category, mt = mediaType;
+    int cat = category, mt = mediaType, BillId = 0;
+
     smsc_log_debug(logger,"Run Action '%s'...", m_ActionName.c_str());
 
-    /////////////////////////////////////////////
- 
     Statistics& statistics = Statistics::Instance();
+    BillingManager& bm = BillingManager::Instance();
+    BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
 
-    if (m_MediaTypeFieldType != ftUnknown) 
+    if(m_MediaTypeFieldType != ftUnknown)
     {
         Property * property = context.getProperty(m_mediaType);
-        if (!property) 
+        if(!property)
         {
             SetBillingStatus(context, "Invalid property for content-type", false, 0);
             smsc_log_error(logger,"Action '%s' :: Invalid property %s for content-type", m_ActionName.c_str(), m_mediaType.c_str());
             return true;
         }
-        mt = property->getInt();
-    } 
+        if(!bMtExist)
+            billingInfoStruct.mediaType = property->getStr();
 
-    if (m_CategoryFieldType != ftUnknown) 
+        mt = bMtExist ? property->getInt() : bm.getInfrastructure().GetMediaTypeID(billingInfoStruct.mediaType);
+    }
+    else if(!bMtExist)
+        billingInfoStruct.mediaType = m_mediaType;
+
+    if(m_CategoryFieldType != ftUnknown) 
     {
         Property * property = context.getProperty(m_category);
         if (!property) 
@@ -109,8 +129,13 @@ bool BillActionOpen::run(ActionContext& context)
             smsc_log_error(logger,"Action '%s' :: Invalid property %s for category", m_ActionName.c_str(), m_category.c_str());
             return true;
         }
-        cat = property->getInt();
-    } 
+        if(!bCatExist)
+            billingInfoStruct.category = property->getStr();
+
+        cat = bCatExist ? property->getInt() : bm.getInfrastructure().GetCategoryID(billingInfoStruct.category);
+    }
+    else if(!bCatExist)
+        billingInfoStruct.category = m_category;
 
     if(!cat || !mt)
     {
@@ -127,8 +152,6 @@ bool BillActionOpen::run(ActionContext& context)
         return true;
     }
      
-    BillingManager& bm = BillingManager::Instance();
-
     TariffRec * tariffRec = 0;
     try {
         tariffRec = context.getTariffRec(cat, mt);
@@ -140,7 +163,6 @@ bool BillActionOpen::run(ActionContext& context)
         return true;
     }
 
-
     if(tariffRec->billType == scag::bill::infrastruct::NONE)
     {
         smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
@@ -150,10 +172,6 @@ bool BillActionOpen::run(ActionContext& context)
 
     if (tariffRec->Price == 0)
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
-
-    BillingInfoStruct billingInfoStruct = context.getBillingInfoStruct();
-
-    uint32_t BillId = 0;
 
     try 
     {
