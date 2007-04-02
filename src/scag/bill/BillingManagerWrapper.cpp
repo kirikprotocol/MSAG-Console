@@ -80,7 +80,8 @@ void BillingManagerWrapper::onPacketReceived(Connect* conn, std::auto_ptr<Serial
 
 void BillingManagerWrapper::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc)
 {
-    error_msg = "Connect error: %s", p_exc->what();
+    error_msg = "Connect error: ";
+    error_msg += p_exc->what();
 }
 #endif
 
