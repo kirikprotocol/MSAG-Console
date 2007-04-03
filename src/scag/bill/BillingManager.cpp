@@ -90,6 +90,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev);
     void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent& ev);
 
+    BillTransaction* getBillTransaction(uint32_t billId);
     void deleteBillTransaction(BillTransaction * billTransaction);
     void ClearTransactions()
     {
@@ -276,6 +277,14 @@ void BillingManagerImpl::deleteBillTransaction(BillTransaction * billTransaction
     delete billTransaction;
 }
 
+BillingManagerImpl::BillTransaction* BillingManagerImpl::getBillTransaction(uint32_t billId)
+{
+    MutexGuard mg(inUseLock);
+    BillTransaction** pp = BillTransactionHash.GetPtr(billId);
+    if (!pp || !*pp) throw SCAGException("Cannot find transaction for billId=%d", billId);
+    return *pp;
+}
+
 unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
     unsigned int billId;
@@ -356,14 +365,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
 
 void BillingManagerImpl::Commit(int billId)
 {
-    BillTransaction * pBillTransaction=0;
-    {
-      MutexGuard mg(inUseLock);
-      BillTransaction ** pBillTransactionPtrPtr = BillTransactionHash.GetPtr(billId);
-      if (!pBillTransactionPtrPtr)
-        throw SCAGException("Cannot find transaction for billId=%d", billId);
-      pBillTransaction=*pBillTransactionPtrPtr;
-    }
+    BillTransaction * pBillTransaction = getBillTransaction(billId);
 
     #ifdef MSAG_INMAN_BILL
     if(pBillTransaction->tariffRec.billType == scag::bill::infrastruct::INMAN)
@@ -405,13 +407,7 @@ void BillingManagerImpl::Commit(int billId)
 
 void BillingManagerImpl::Rollback(int billId, bool timeout)
 {
-    BillTransaction * pBillTransaction = 0;
-    {
-      MutexGuard mg(inUseLock);
-      BillTransaction ** pp = BillTransactionHash.GetPtr(billId);
-      if (!pp) throw SCAGException("Cannot find transaction for billId=%d", billId);
-      pBillTransaction = *pp;
-    }
+    BillTransaction * pBillTransaction = getBillTransaction(billId);
 
     #ifdef MSAG_INMAN_BILL
     if (pBillTransaction->status == TRANSACTION_VALID && pBillTransaction->tariffRec.billType == scag::bill::infrastruct::INMAN)
@@ -434,13 +430,9 @@ void BillingManagerImpl::Rollback(int billId, bool timeout)
 
 void BillingManagerImpl::Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec)
 {
-    MutexGuard mg(inUseLock);
-
-    BillTransaction **p = BillTransactionHash.GetPtr(billId);
-    if(!p || !*p)
-        throw SCAGException("Cannot find transaction for billId=%d", billId);
-    bis = (*p)->billingInfoStruct;
-    tariffRec = (*p)->tariffRec;
+    BillTransaction *p = getBillTransaction(billId);
+    bis = p->billingInfoStruct;
+    tariffRec = p->tariffRec;
 }
 
 void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev)
