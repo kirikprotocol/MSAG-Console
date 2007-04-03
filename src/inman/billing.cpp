@@ -133,7 +133,8 @@ bool Billing::matchBillMode(void) const
             || ((_cfg.billMode == smsc::inman::BILL_SMS)
                 && (bearer == CDRRecord::dpSMS))
             || ((cdr._smsXMask & SMSX_INCHARGE_SRV)     //Charge SMS via IN point despite of
-                && (cdr._bearer == CDRRecord::dpSMS))   //billMode setting
+                && (cdr._bearer == CDRRecord::dpSMS)    //billMode setting
+                && _cfg.billMode)
             ) ? true : false;
 }
 
