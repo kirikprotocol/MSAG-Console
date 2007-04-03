@@ -19,7 +19,11 @@ using smsc::inman::iaprvd::IAProviderITF;
 namespace smsc  {
 namespace inman {
 //_smsXSrvs bits to mask, i.e. exclude from processing logic
-#define SMSX_RESERVED_MASK  0x80000000
+#define SMSX_NOCHARGE_SRV  0x80000000   //SMSX Extra service free of charge
+#define SMSX_INCHARGE_SRV  0x40000000   //Charge SMS via IN point despite of
+                                        //billMode setting
+
+#define SMSX_RESERVED_MASK  (SMSX_NOCHARGE_SRV|SMSX_INCHARGE_SRV)
 
 struct XSmsService {
     std::string     name;
@@ -161,7 +165,7 @@ public:
     AbonentPolicy* getPolicy(const TonNpiAddress * an_number = NULL) const
     {
 //        if (!ab_number)
-            return size() ? *begin() : NULL;
+            return !empty() ? *begin() : NULL;
 //        else { /* todo: search policy by matching the address pools */ }
     }
 };

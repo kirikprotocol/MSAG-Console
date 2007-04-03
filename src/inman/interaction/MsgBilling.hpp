@@ -125,9 +125,7 @@ public:
     void setTPValidityPeriod(time_t vpVal)
         { csInfo.tpValidityPeriod = vpVal; }
 
-#ifdef SMSEXTRA
     void setSmsXSrvs(uint32_t srv_ids)     { extCode |= 0x80; smsXSrvsId = srv_ids; }
-#endif /* SMSEXTRA */
 
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
