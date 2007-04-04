@@ -93,6 +93,11 @@ public:
             ConnectParms * prm = NULL);
     virtual ~Connect() { }
 
+    void Reset(void)
+    {
+        pckAcq.Reset(); _exc.reset();
+        _state = smsc::inman::interaction::ConnectAC::connAlive;
+    }
     // -- ConnectAC iterface methods:
     //Accumulates packets from socket and passes them to listeners,
     //called if EOF notification or data for reading arrived on socket,
@@ -118,7 +123,7 @@ protected:
     void notifyByExc(void);
     void notifyByMsg(std::auto_ptr<SerializablePacketAC>& p_msg);
 
-    Mutex           sndSync, rcvSync;
+    Mutex           sndSync;
     ConnectParms    _parms;
     SerializerITF * _objSerializer;
     PckAcquirer     pckAcq;
