@@ -213,6 +213,8 @@ void BillingManagerImpl::init(BillingManagerConfig& cfg)
     #ifdef MSAG_INMAN_BILL
     InitConnection(cfg.BillingHost, cfg.BillingPort);
     smsc_log_info(logger,"BillingManager connecting to host '%s', port %d", cfg.BillingHost.c_str(),cfg.BillingPort);
+    if(socket->Init(m_Host.c_str(), m_Port, 1000))
+        throw SCAGException("BillingManager: cant init socket host=%s, port=%d", m_Host.c_str(), m_Port);
     m_Connected = Reconnect();
     #else
     smsc_log_info(logger,"BillingManager skip connection (fake connection initialized)");
@@ -554,9 +556,11 @@ int BillingManagerImpl::Execute()
                 struct timeval tv;
                 tv.tv_sec = 10; 
                 tv.tv_usec = 500;
-
-                if(select(socket->getSocket()+1, &read, 0, 0, &tv) > 0)
+                int n = select(socket->getSocket() + 1, &read, 0, 0, &tv);
+                if( n > 0)
                     pipe->onReadEvent();
+                else if(n < 0)
+                    m_Connected = false;
             }
             else
             {
