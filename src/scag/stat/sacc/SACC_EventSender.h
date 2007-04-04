@@ -70,7 +70,7 @@ public:
  void init(std::string& host,int port,int timeout,int queuelen/*,bool * bf,*/,smsc::logger::Logger * lg);
 
 private:
- time_t lastOverflowNotify;
+ time_t lastOverflowNotify, lastConnectTry;
  EventMonitor mtx;
  CyclicQueue<SaccEvent*> eventsQueue;
  bool bStarted;

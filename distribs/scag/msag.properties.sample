@@ -25,8 +25,8 @@ gateway.http.port=23840
 bill.config_dir=conf
 bill.server_host=127.0.0.1
 bill.server_port=23989
-bill.time_out=60000
-bill.reconnect_time_out=1000
+bill.time_out=1000
+bill.reconnect_time_out=60
 
 status.show_interval=86400000
 language.default=ru

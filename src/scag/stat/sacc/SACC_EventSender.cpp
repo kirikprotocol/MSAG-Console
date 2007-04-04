@@ -42,6 +42,7 @@ void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bo
  bConnected=false;
  Timeout=timeout*1000;
  lastOverflowNotify = 0;
+ lastConnectTry = 0;
  smsc_log_debug(logger,"EventSender::init confuration succsess.");
 }
 
@@ -63,12 +64,13 @@ int EventSender::Execute()
 {
     while( bStarted)
     {
-        if(!bConnected)
+        if(!bConnected && lastConnectTry < time(NULL) - 30)
         {
             //          SaccSocket.Abort();
             SaccSocket.Close();
             if(connect(Host,Port,Timeout))
-            bConnected=true;
+                bConnected=true;
+            lastConnectTry = time(NULL);
         }
 
         if(!bStarted) break;
