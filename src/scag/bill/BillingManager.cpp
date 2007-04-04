@@ -457,15 +457,19 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
 
 bool BillingManagerImpl::Reconnect()
 {
-    if(!socket->Init(m_Host.c_str(), m_Port, 1000) && !socket->Connect()) 
+    if(!socket->Connect()) 
+    {
+        smsc_log_warn(logger, "Reconnected socket to BillingServer on host '%s', port '%d'", m_Host.c_str(), m_Port);
         return true;
-    smsc_log_warn(logger, "Can't connect socket to BillingServer on host '%s', port '%d': error %s (%d)\n", m_Host.c_str(), m_Port, strerror(errno), errno);
+    }
+    smsc_log_warn(logger, "Can't connect socket to BillingServer on host '%s', port '%d': error %s (%d)", m_Host.c_str(), m_Port, strerror(errno), errno);
     return false;
 }
 
 TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
 {
     SendTransaction st;
+    if(!m_Connected) return TRANSACTION_WAIT_ANSWER;
     {
         MutexGuard mg(inUseLock);
         SendTransactionHash.Insert(op.Hdr().dlgId, &st);
