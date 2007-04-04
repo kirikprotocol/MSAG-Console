@@ -79,3 +79,16 @@ TO ALL: Insert log record for all significant changes & fixes here.
 =================================================================================================================
 29.03.2007 15:00 makar [!!! CVS: revision marked by tag BUILD_26_03_2007 !!!]
 1) MSAG CHANGE: Send MSAG Receipt after processed packet (post-processing added)
+
+=================================================================================================================
+02.04.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_26_03_2007 !!!]
+1) MSAG CHANGE: final=false in bill:open (InMan communication)
+2) MSAG FIX: Memory leak in actions post processing (MSAG Receipts)
+3) MSAG CHANGE: category-str & content-type-str fields added to bill:xxx actions
+4) MSAG FIX: core dump on missed responce from SMPP registry
+
+=================================================================================================================
+04.04.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_04_04_2007 !!!]
+1) MSAG FIX: BillingManager multiple fixes
+2) MSAG FIX: SACC event sender fixes (on disconnect)
+3) MSAG CHANGE: bill_timeout & bill_reconnect_timeout parametes separated.
