@@ -640,24 +640,23 @@ void StateMachine::processDelivery(SmppCommand& cmd)
               if (src) src->setMapping(key.abonentAddr, umr, key.USR);
           }
           else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_CONFIRM) { // Continue USSD dialog
-                key.USR = src->getUSR(key.abonentAddr, umr);
-                if(key.USR == -1)
-                {
-                    key.USR = src->getUSR(key.abonentAddr, 0);
-                    if(key.USR == -1) smsc_log_warn(log, "USSD Delivery: USR mapping not found");
+                int tmpUSR = src->getUSR(key.abonentAddr, umr);
+                if (tmpUSR == -1) {
+                    tmpUSR = src->getUSR(key.abonentAddr, 0);
+                    if(tmpUSR == -1) smsc_log_warn(log, "USSD Delivery: USR mapping not found");
                     src->delUMRMapping(key.abonentAddr, 0);
-                    src->setMapping(key.abonentAddr, umr, key.USR);
+                    src->setMapping(key.abonentAddr, umr, tmpUSR);
                 }
-                
-              smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
-              session=sm.getSession(key);
-              if (!session.Get()) {
-                  smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
-                  DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                  registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
-                  return;
-              }
-              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+		key.USR = tmpUSR;
+                smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
+                session=sm.getSession(key);
+                if (!session.Get()) {
+                    smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
+                    DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
+                    registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
+                    return;
+                }
+                sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
           }
           else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM) { // End service USSD dialog
                 smsc_log_debug(log, "USSD Delivery: End service dialog, UMR=%d", umr);
@@ -768,7 +767,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     }
   }
   bool bGotFromRegistry = reg.Get(srcUid, cmd->get_dialogId(), orgCmd);
-  if(bGotFromRegistry && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
+  if(bGotFromRegistry && orgCmd && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
     smsc_log_debug(log, "MSAG Receipt: Got responce, skipped");
     return;
   }
