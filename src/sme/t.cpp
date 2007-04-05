@@ -41,7 +41,7 @@ void CmdOut(const char* fmt,...)
   va_list args;
   va_start (args, fmt);
   vfprintf(cmdFile,fmt,args);
-  //fflush(cmdFile);
+  fflush(cmdFile);
   va_end (args);
 }
 
@@ -51,7 +51,7 @@ void IncomOut(const char* fmt,...)
   va_list args;
   va_start (args, fmt);
   vfprintf(incomFile,fmt,args);
-  //fflush(incomFile);
+  fflush(incomFile);
   va_end (args);
 }
 
@@ -215,6 +215,8 @@ struct VClientData{
   int waitRespTimeout;
   time_t waitStart;
 
+  bool restartOnError;
+
   bool active;
   int repeatCnt;
   time_t execTime;
@@ -235,6 +237,7 @@ struct VClientData{
     ussd=-1;
     dataCoding=DataCoding::LATIN1;
     esmclass=0;
+    restartOnError=true;
     sar_mr=0;
     sar_num=0;
     sar_seq=0;
@@ -286,6 +289,8 @@ int& waitResp=defVC.waitResp;
 int& wrCount=defVC.wrCount;
 int& waitRespTimeout=defVC.waitRespTimeout;
 int& lastMr=defVC.lastMr;
+
+bool& restartOnError=defVC.restartOnError;
 
 int& validTime=defVC.validTime;
 
@@ -343,7 +348,7 @@ Option options[]={
 {"waitresp",'b',&waitRespMode},
 {"wrcount",'i',&wrCount},
 {"waitrespnoumr",'b',&waitRespNoUMR},
-{"wrtimeot",'i',&waitRespTimeout},
+{"wrtimeout",'i',&waitRespTimeout},
 {"autoanswer",'b',&autoAnswer},
 {"hexinput",'b',&hexinput},
 {"respstatus",'i',&respStatus},
@@ -354,7 +359,8 @@ Option options[]={
 {"setDpf",'b',&setDpf},
 {"asyncsend",'b',&asyncsend},
 {"vcprefixtemplate",'s',&vcprefixtemplate},
-{"vcmodemaxspeed",'i',&vcmodemaxspeed}
+{"vcmodemaxspeed",'i',&vcmodemaxspeed},
+{"restartonerror",'b',&restartOnError}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -1303,7 +1309,13 @@ public:
         {
           Address org,dst;
           ExtractAddresses(pdu,org,dst);
-          IncomOut("\nPDU from %s to %s was replied with temporal error\n",org.toString().c_str(),dst.toString().c_str());
+          if(vcmode)
+          {
+            IncomOut("%sPDU from %s to %s was replied with temporal error\n",getTimeStamp().c_str(),org.toString().c_str(),dst.toString().c_str());
+          }else
+          {
+            IncomOut("\nPDU from %s to %s was replied with temporal error\n",org.toString().c_str(),dst.toString().c_str());
+          }
         }
         return;
       }
@@ -1321,7 +1333,13 @@ public:
         {
           Address org,dst;
           ExtractAddresses(pdu,org,dst);
-          IncomOut("\nPDU from %s to %s was replied with permanent error\n",org.toString().c_str(),dst.toString().c_str());
+          if(vcmode)
+          {
+            IncomOut("%sPDU from %s to %s was replied with permanent error\n",getTimeStamp().c_str(),org.toString().c_str(),dst.toString().c_str());
+          }else
+          {
+            IncomOut("\nPDU from %s to %s was replied with permanent error\n",org.toString().c_str(),dst.toString().c_str());
+          }
         }
         return;
       }else if((isDataSm && rnd<temperrProbDataSm+permErrProbDataSm+dontrespProbDataSm) || (!isDataSm && rnd<temperrProb+permErrProb+dontrespProb))
@@ -1330,7 +1348,13 @@ public:
         {
           Address org,dst;
           ExtractAddresses(pdu,org,dst);
-          IncomOut("\nPDU from %s to %s was not replied\n",org.toString().c_str(),dst.toString().c_str());
+          if(vcmode)
+          {
+            IncomOut("%sPDU from %s to %s was not replied\n",getTimeStamp().c_str(),org.toString().c_str(),dst.toString().c_str());
+          }else
+          {
+            IncomOut("\nPDU from %s to %s was not replied\n",org.toString().c_str(),dst.toString().c_str());
+          }
         }
         return;
       }
@@ -1553,8 +1577,8 @@ public:
     {
       if(!silent)
       {
-        IncomOut("\n%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s\n",
-          vcmode?getTimeStamp().c_str():"",
+        IncomOut("%sReceived async submit sm resp:status=%#x, seq=%d, msgId=%s\n",
+          vcmode?getTimeStamp().c_str():"\n",
           pdu->get_commandStatus(),
           pdu->get_sequenceNumber(),
           ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
@@ -1881,6 +1905,7 @@ int main(int argc,char* argv[])
     int vcidx=0;
 
     vector<PendingVC> pvc;
+    VClientData defVCValues;
 
     if(!receiveOnly)
     while(!stopped)
@@ -1946,6 +1971,21 @@ int main(int argc,char* argv[])
             MutexGuard g(mrMtx);
             MrMap::iterator i=mrStore.find(MrKey(sourceAddress.c_str(),lastMr));
             if(i!=mrStore.end())mrStore.erase(i);
+            if(restartOnError && cmdfile)
+            {
+              CmdOut("Script restarted\n");
+              int repCnt=vcarray[vcidx].repeatCnt;
+              vcarray[vcidx]=defVCValues;
+              vcarray[vcidx].repeatCnt=repCnt;
+              vcarray[vcidx].repeatCnt--;
+              if(vcarray[vcidx].repeatCnt==0)
+              {
+                cmdfile->SeekEnd(0);
+              }else
+              {
+                cmdfile->Seek(0);
+              }
+            }
           }
         }
         if(vcarray[vcidx].sleepTill!=0)
@@ -2016,6 +2056,7 @@ int main(int argc,char* argv[])
                 delete cmdfile;
                 cmdfile=0;
                 vcarray[vcidx].Init();
+                vcarray[vcidx]=defVCValues;
                 vcused--;
               }
             }else
@@ -2068,7 +2109,7 @@ int main(int argc,char* argv[])
         break;
       }
 
-      if(cmd[0]=='#' || cmd[0]==';')
+      if(cmd[0]=='#' || cmd[0]==';' || cmd.length()==0)
       {
         //comment
         continue;
@@ -2131,7 +2172,8 @@ int main(int argc,char* argv[])
         }
 
         vcarray=new VClientData[cnt];
-        for(int i=0;i<cnt;i++)vcarray[i]=defVC;
+        defVCValues=defVC;
+        for(int i=0;i<cnt;i++)vcarray[i]=defVCValues;
         vccnt=cnt;
         vcmode=true;
         continue;
