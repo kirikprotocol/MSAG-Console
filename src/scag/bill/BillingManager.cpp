@@ -435,6 +435,7 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr
     }
 
     (*p)->status = result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ? TRANSACTION_VALID : TRANSACTION_INVALID;
+    smsc_log_info(logger, "%d packet received", hdr->dlgId);
     (*p)->eventMonitor.notify();
 }
 
@@ -474,6 +475,7 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
         MutexGuard mg(inUseLock);
         SendTransactionHash.Insert(op.Hdr().dlgId, &st);
     }
+    smsc_log_info(logger, "%d send packet", op.Hdr().dlgId);
     struct timeval tv, tv1;
     gettimeofday(&tv, NULL);
     pipe->sendPck(&op);
