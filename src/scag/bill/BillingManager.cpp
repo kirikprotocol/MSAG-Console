@@ -53,7 +53,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     struct SendTransaction
     {
         TransactionStatus status;
-        EventMonitor eventMonitor;
+        Event responseEvent;
         uint32_t billId;
         SendTransaction() : status(TRANSACTION_WAIT_ANSWER) {}
     };
@@ -118,7 +118,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
 
         MutexGuard mg(inUseLock);
         for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
-            st->eventMonitor.notify();
+            st->responseEvent.Signal();
 
         for (IntHash <BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
             delete value;
@@ -420,25 +420,6 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
 }
 
 #ifdef MSAG_INMAN_BILL
-void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)
-{
-    if (!result) return;
-
-    MutexGuard guard(inUseLock);
-
-    SendTransaction **p = SendTransactionHash.GetPtr(hdr->dlgId);
-    if(!p)
-    {
-        smsc_log_error(logger, "Cannot find transaction for billId=%d", hdr->dlgId);
-        //TODO: do what we must to do
-        return;
-    }
-
-    (*p)->status = result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ? TRANSACTION_VALID : TRANSACTION_INVALID;
-    smsc_log_info(logger, "%d packet received, monitor=%p", hdr->dlgId, &(*p)->eventMonitor);
-    (*p)->eventMonitor.notify();
-}
-
 void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
     char buff[128];
@@ -454,6 +435,24 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
     smsc_log_debug(logger, "***** SN=%s, CPN=%s, SID=%d", str.c_str(), billingInfoStruct.AbonentNumber.c_str(), billingInfoStruct.serviceId);
 }
 
+void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)
+{
+    if (!result) return;
+
+    MutexGuard guard(inUseLock);
+
+    SendTransaction **p = SendTransactionHash.GetPtr(hdr->dlgId);
+    if(!p)
+    {
+        smsc_log_error(logger, "Cannot find transaction for billId=%d", hdr->dlgId);
+        //TODO: do what we must to do
+        return;
+    }
+
+    (*p)->status = result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ? TRANSACTION_VALID : TRANSACTION_INVALID;
+    smsc_log_info(logger, "%d packet received, monitor=%p", hdr->dlgId, &(*p)->responseEvent);
+    (*p)->responseEvent.Signal();
+}
 
 bool BillingManagerImpl::Reconnect()
 {
@@ -476,18 +475,18 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
         MutexGuard mg(inUseLock);
         SendTransactionHash.Insert(op.Hdr().dlgId, &st);
     }
-    smsc_log_info(logger, "%d send packet", op.Hdr().dlgId);
+    smsc_log_info(logger, "%d send packet, monitor=%p", op.Hdr().dlgId, &st.responseEvent);
     struct timeval tv, tv1;
     gettimeofday(&tv, NULL);
     pipe->sendPck(&op);
-    st.eventMonitor.wait(m_Timeout);
+    st.responseEvent.Wait(m_Timeout);
     gettimeofday(&tv1, NULL);
     int t = (tv1.tv_sec - tv.tv_sec) * 1000 + (tv1.tv_usec - tv.tv_usec) / 1000;
     if(t > max_t) max_t = t;
     if(t < min_t) min_t = t;
     total_t += t;
     billcount++;
-    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.eventMonitor);
+    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
     {
         MutexGuard mg(inUseLock);
         SendTransactionHash.Delete(op.Hdr().dlgId);
