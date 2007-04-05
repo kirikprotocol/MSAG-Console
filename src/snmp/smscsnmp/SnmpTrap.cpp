@@ -28,8 +28,8 @@ public:
       tm t2;
       gmtime_r(&t,&t2);
       char fn[1024];
-      snprintf(fn,sizeof(fn),"%s/%s-%04d%02d%02d-%02d%02d%02d.hs.lst",location.c_str(),prefix.c_str(),
-        t2.tm_year+1900,t2.tm_mon+1,t2.tm_mday,t2.tm_hour,t2.tm_min,t2.tm_sec);
+      snprintf(fn,sizeof(fn),"%s/%04d%02d%02d_%02d%02d%02d.%s.lst",location.c_str(),
+        t2.tm_year+1900,t2.tm_mon+1,t2.tm_mday,t2.tm_hour,t2.tm_min,t2.tm_sec,prefix.c_str());
       f.WOpen(fn);
       const char* header="SUBMIT_TIME,ALARM_ID,ALARMCATEGORY,SEVERITY,TEXT\n";
       f.Write(header,strlen(header));
@@ -42,11 +42,14 @@ public:
   void Close()
   {
     smsc::core::synchronization::MutexGuard mg(mtx);
-    std::string fn=f.getFileName();
-    fn.erase(fn.length()-3);
-    fn+="csv";
-    f.Rename(fn.c_str());
-    f.Close();
+    if(opened)
+    {
+      std::string fn=f.getFileName();
+      fn.erase(fn.length()-3);
+      fn+="csv";
+      f.Rename(fn.c_str());
+      f.Close();
+    }
     opened=false;
   }
 
