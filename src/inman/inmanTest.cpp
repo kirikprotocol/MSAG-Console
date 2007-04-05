@@ -447,7 +447,7 @@ int main(int argc, char** argv)
     const char* host = argv[1];
 
     Logger::Init();
-    Logger * _logger = Logger::getInstance("smsc.inman.InTST");
+    Logger * _logger = Logger::getInstance("smsc.InTST");
 
     AbonentsDB::Init(PRE_ABONENTS_NUM, _abonents);
     TNPIAddressDB::Init(PRE_ADDRESSES_NUM, _dstAdr);
