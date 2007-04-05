@@ -203,7 +203,7 @@ BillingManager& BillingManager::Instance()
 void BillingManagerImpl::init(BillingManagerConfig& cfg)
 {
     MutexGuard guard(inUseLock);
-    smsc_log_info(logger,"BillingManager start initing...");
+    smsc_log_info(logger, "BillingManager start initing...");
 
     if (cfg.MaxThreads < 1) throw SCAGException("BillingManager: cant start service with %d allowed threads", cfg.MaxThreads);
 
@@ -395,26 +395,21 @@ void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, Bi
 void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent& ev)
 {
     ev.Header.cCommandId = billCommand;
-
     ev.Header.cProtocolId = billingInfo.protocol;
     ev.Header.iServiceId = billingInfo.serviceId;
-
     ev.Header.iServiceProviderId = billingInfo.providerId;
 
     timeval tv;
     gettimeofday(&tv,0);
 
     ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
-
     ev.Header.pAbonentNumber = billingInfo.AbonentNumber;
     ev.Header.sCommandStatus = commandStatus;
     ev.Header.iOperatorId = billingInfo.operatorId;
+
     ev.iPriceCatId = tariffRec.CategoryId;
-
-
     ev.fBillingSumm = tariffRec.Price;
     ev.iMediaResourceType = tariffRec.MediaTypeId;
-
     ev.pBillingCurrency = tariffRec.Currency;
 
     char buff[128];
@@ -534,7 +529,9 @@ void BillingManagerImpl::Stop()
     if(m_bStarted)
     {
         m_bStarted = false;
+    #ifdef MSAG_INMAN_BILL
         socket->Close();
+    #endif
         connectEvent.Signal();
         exitEvent.Wait();
     }
@@ -559,7 +556,6 @@ int BillingManagerImpl::Execute()
                 tv.tv_sec = 10; 
                 tv.tv_usec = 500;
                 int n = select(socket->getSocket() + 1, &read, 0, 0, &tv);
-                smsc_log_info(logger,"select result =%d", n);
                 if(n < 0 || (n > 0 && pipe->onReadEvent()))
                     m_Connected = false;
             }
