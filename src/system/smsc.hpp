@@ -161,7 +161,7 @@ public:
   void init(const SmscConfigs& cfg, const char * node);
   void run();
   void stop(){stopFlag=true;}
-  void mainLoop();
+  void mainLoop(int);
   void shutdown();
   TaskContainer tasks;
   bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);

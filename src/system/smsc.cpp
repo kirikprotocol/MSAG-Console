@@ -1133,10 +1133,14 @@ class MainLoopRunner:public Thread
 public:
   MainLoopRunner(){}
   void assignSmsc(Smsc* argSmsc){smsc=argSmsc;}
+  void assignIdx(int argIdx)
+  {
+    idx=argIdx;
+  }
   int Execute()
   {
     try{
-      smsc->mainLoop();
+      smsc->mainLoop(idx);
     }catch(std::exception& e)
     {
       __warning2__("exception in main loop:%s",e.what());
@@ -1145,6 +1149,7 @@ public:
   }
 protected:
   Smsc* smsc;
+  int idx;
 };
 
 void Smsc::run()
@@ -1295,6 +1300,7 @@ void Smsc::run()
     for(int i=0;i<mainLoopsCount;i++)
     {
       mlr[i].assignSmsc(this);
+      mlr[i].assignIdx(i);
       mlr[i].Start();
     }
     for(int i=0;i<mainLoopsCount;i++)

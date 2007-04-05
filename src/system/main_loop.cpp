@@ -72,7 +72,7 @@ void Smsc::RejectSms(const SmscCommand& cmd)
   }
 }
 
-void Smsc::mainLoop()
+void Smsc::mainLoop(int idx)
 {
   typedef std::vector<SmscCommand> CmdVector;
   CmdVector frame;
@@ -125,7 +125,7 @@ void Smsc::mainLoop()
       if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
 
-      if(now-lastTimeStatCheck>60)
+      if(idx==0 && now-lastTimeStatCheck>60)
       {
         tm nowtm;
         localtime_r(&now,&nowtm);
