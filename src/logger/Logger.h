@@ -189,7 +189,7 @@ public:
 
 protected:
   static void Init(const char * const configFileName);
-  
+
 private:
   static bool initialized;
   typedef smsc::core::buffers::Hash<Logger*> LoggersHash;

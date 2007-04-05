@@ -183,11 +183,13 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
 Profiler::~Profiler()
 {
   delete profiles;
+
   try{
     smeman->unregisterSmeProxy(this);
   }catch(...)
   {
   }
+
 }
 
 Profile& Profiler::lookup(const Address& address)
