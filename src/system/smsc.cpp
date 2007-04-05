@@ -826,6 +826,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     delete params;
   }
 
+  try{
+    mainLoopsCount=cfg.cfgman->getInt("core.mainLoopsCount");
+  }catch(...)
+  {
+    __warning2__("mainLoopsCount set to default %d",mainLoopsCount);
+  }
+
   smsc_log_info(log, "MR cache loaded" );
 
   {
@@ -1121,6 +1128,25 @@ void NotifyMonHandler(smsc::cluster::Role r,void* p)
   }
 }
 
+class MainLoopRunner:public Thread
+{
+public:
+  MainLoopRunner(){}
+  void assignSmsc(Smsc* argSmsc){smsc=argSmsc;}
+  int Execute()
+  {
+    try{
+      smsc->mainLoop();
+    }catch(std::exception& e)
+    {
+      __warning2__("exception in main loop:%s",e.what());
+    }
+    return 0;
+  }
+protected:
+  Smsc* smsc;
+};
+
 void Smsc::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
@@ -1263,7 +1289,23 @@ void Smsc::run()
 #endif
 
   // некоторые действия до основного цикла
-  mainLoop();
+
+  MainLoopRunner *mlr=new MainLoopRunner[mainLoopsCount];
+  try{
+    for(int i=0;i<mainLoopsCount;i++)
+    {
+      mlr[i].assignSmsc(this);
+      mlr[i].Start();
+    }
+    for(int i=0;i<mainLoopsCount;i++)
+    {
+      mlr[i].WaitFor();
+    }
+  }catch(std::exception& e)
+  {
+    __warning2__("exception in main loops start:%s",e.what());
+  }
+  delete [] mlr;
 
 #ifdef SNMP
     __trace__("Smsc::changing SNMP state to SHUT");
@@ -1294,7 +1336,6 @@ void Smsc::shutdown()
   smeman.Dump();
 
   delete smscsme;
-  //smeman.unregisterSmeProxy("DSTRLST");
 
   tp.shutdown();
 

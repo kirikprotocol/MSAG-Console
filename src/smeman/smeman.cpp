@@ -27,6 +27,7 @@ using core::synchronization::MutexGuard;
 void SmeManager::addSme(const SmeInfo& info)
 {
 __synchronized__
+  if(records.size()==MAX_SME_PROXIES)throw runtime_error("Maximum number of sme's reached");
   auto_ptr<SmeRecord> record(new SmeRecord);
   record->info = info;
   record->info.internal=false;
@@ -217,7 +218,7 @@ SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 
 SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
-__synchronized__
+//__synchronized__
   SmeRecord* record = (SmeRecord*)(records.at(index));
   if ( record->deleted ) throw runtime_error("proxy deleted");
   if ( !record->proxy ) return 0;
@@ -226,7 +227,7 @@ __synchronized__
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
 {
-__synchronized__
+//__synchronized__
   const SmeRecord* record = records.at(index);
   if ( record->deleted ) throw runtime_error("proxy deleted");
   return record->info;
@@ -283,6 +284,7 @@ __synchronized__
   {
     MutexGuard guard(records[index]->mutex);
     smeProxy->setPriority(records[index]->info.priority);
+    records[index]->acquire();
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
     records[index]->info.internal=true;
@@ -357,6 +359,7 @@ __synchronized__
     }
 
     smeProxy->setPriority(records[index]->info.priority);
+    records[index]->acquire();
     records[index]->proxy = smeProxy;
     records[index]->uniqueId = nextProxyUniqueId();
     __trace2__("registerSme: smeId=%s, uniqueId=%d",systemId.c_str(),records[index]->uniqueId);
@@ -378,7 +381,8 @@ void SmeManager::unregisterSmeProxy(SmeProxy* smeProxy)
     if(records[index]->proxy==smeProxy)
     {
       records[index]->proxy->attachMonitor(0);
-      records[index]->proxy = 0;
+      records[index]->freeProxy=true;
+      records[index]->release();
     }else
     {
       __warning2__("Attempt to unregister incorrect proxy:%s",smeProxy->getSystemId());
@@ -412,33 +416,41 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,boo
   static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smeman");
   {
     frames.clear();
-    __synchronized__
+    //__synchronized__
     int count=0;
-    for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
+    Records::const_iterator end=records.end();
+    for ( Records::const_iterator p = records.begin(); p != end; ++p )
     {
       if ( (*p) )
       {
-        if ( (*p)->deleted || (*p)->proxy==NULL) continue;
+        if ((*p)->proxy==NULL || (*p)->deleted) continue;
+        if(skipScheduler && (*p)->info.systemId=="scheduler")continue;
+
+        int prio=(*p)->info.priority/1000;
+        if(prio<0)prio=0;
+        if(prio>31)prio=31;
+        prio+=1;
+
 
         try {
-          if(skipScheduler && (*p)->info.systemId=="scheduler")continue;
-          /*
-          SmscCommand cmd;
-          if((*p)->proxy->getCommand(cmd))
+          int cnt=0;
           {
-            frames.push_back(cmd);
-            frames.back().setProxy((*p));
+            //MutexGuard mg((*p)->mutex);
+            SmeRecord::RefGuard rg(*p);
+            if((*p)->proxy)
+            {
+              cnt=(*p)->proxy->getCommandEx(frames,prio,*p);
+            }else
+            {
+              prio=0;
+            }
           }
-          */
-          int prio=(*p)->info.priority/1000;
-          if(prio<0)prio=0;
-          if(prio>31)prio=31;
-          prio+=1;
-          int cnt=(*p)->proxy->getCommandEx(frames,prio,*p);
+          /*
           if(prio>0)
           {
             info2(log,"taken from %s:%d, inqueue:%d",(*p)->info.systemId.c_str(),prio,cnt);
           }
+          */
           count+=cnt;
         }catch(exception& e)
         {

@@ -33,6 +33,8 @@ using std::runtime_error;
 using std::string;
 using namespace smsc::admin::service;
 
+#define MAX_SME_PROXIES 2000
+
 class SmeProxyWrap;
 
 namespace SmeRegisterFailReasons{
@@ -72,19 +74,70 @@ public:
   bool deleted;
   SmeIndex idx;
   mutable Mutex mutex;
+
+  Mutex refMtx;
+  int refCnt;
+  bool freeProxy;
+
+  int seq;
+  Mutex seqMtx;
+
+  SmeRecord():seq(0),refCnt(0),deleted(false),freeProxy(false){}
+
+  void acquire()
+  {
+    MutexGuard mg(refMtx);
+    refCnt++;
+  }
+
+  void release()
+  {
+    MutexGuard mg(refMtx);
+    refCnt--;
+    if(freeProxy && refCnt==0)
+    {
+      if(proxy->deleteOnUnregister())delete proxy;
+      proxy=0;
+      freeProxy=false;
+    }
+  }
+
+  struct RefGuard{
+    RefGuard(SmeRecord* argRec):rec(argRec)
+    {
+      rec->acquire();
+    }
+    ~RefGuard()
+    {
+      rec->release();
+    }
+    SmeRecord* rec;
+  };
+
   virtual ~SmeRecord(){}
   virtual void putCommand(const SmscCommand& command)
   {
-    MutexGuard guard(mutex);
+    RefGuard rg(this);
     if ( proxy )
     {
       proxy->putCommand(command);
     }
     else throw runtime_error("proxy unregistred");
   }
+
+  virtual int getCommandEx(std::vector<SmscCommand>& cmds,int& mx,SmeProxy* prx)
+  {
+    RefGuard rg(this);
+    if ( proxy )
+    {
+      return proxy->getCommandEx(cmds,mx,prx);
+    }
+    else throw runtime_error("proxy unregistred");
+  }
+
   virtual bool getCommand(SmscCommand& cmd)
   {
-    MutexGuard guard(mutex);
+    RefGuard rg(this);
     if ( proxy )
     {
       return proxy->getCommand(cmd);
@@ -93,12 +146,16 @@ public:
   }
   virtual uint32_t getNextSequenceNumber()
   {
+    /*
     MutexGuard guard(mutex);
     if ( proxy )
     {
       return proxy->getNextSequenceNumber();
     }
     else throw runtime_error("proxy unregistred");
+    */
+    MutexGuard mg(seqMtx);
+    return seq++;
   }
   virtual uint32_t getUniqueId() const {return uniqueId;}
   virtual bool hasInput() const {__unreachable__("");return 0;}
@@ -121,7 +178,7 @@ public:
   virtual void close() {__unreachable__("");}
   virtual void disconnect()
   {
-    MutexGuard guard(mutex);
+    RefGuard rg(this);
     if ( proxy )
     {
       proxy->disconnect();
@@ -183,11 +240,15 @@ class SmeManager :
 {
 
   mutable Mutex lock;
-  Event mon;
+  ProxyMonitor mon;
   //SmeProxyDispatcher dispatcher;
   Records records;
   SmeIndex internalLookup(const SmeSystemId& systemId) const;
 public:
+  SmeManager()
+  {
+    records.reserve(MAX_SME_PROXIES);
+  }
   virtual ~SmeManager()
   {
     Records::iterator it = records.begin();

@@ -155,6 +155,7 @@ public:
     otherChargePolicy=chargeOnDelivery;
     smartMultipartForward=false;
     nodeIndex=0;
+    mainLoopsCount=1;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg, const char * node);
@@ -473,11 +474,25 @@ public:
   enum{smsWeight=10000};
 
   typedef smsc::util::TimeSlotCounter<> IntTimeSlotCounter;
-  IntTimeSlotCounter& getTotalCounter(){return *totalCounter;}
-  IntTimeSlotCounter& getStatCounter(){return *statCounter;}
+
+  int getTotalCounterRes()
+  {
+    return totalCounter->getSlotRes();
+  }
+  int getTotalCounter()
+  {
+    MutexGuard mg(countersMtx);
+    return totalCounter->Get();
+  }
+  int getStatCounter()
+  {
+    MutexGuard mg(countersMtx);
+    return statCounter->Get();
+  }
 
   void incTotalCounter(int perslot)
   {
+    MutexGuard mg(countersMtx);
     totalCounter->IncDistr(smsWeight,perslot);
     int cntVal=(totalCounter->Get()+smsWeight*shapeTimeFrame/2)/(smsWeight*shapeTimeFrame);
     if(cntVal>maxTotalCounter)maxTotalCounter=cntVal;
@@ -485,6 +500,7 @@ public:
 
   void incStatCounter()
   {
+    MutexGuard mg(countersMtx);
     statCounter->Inc(1);
     int cntVal=statCounter->Get()/statTimeFrame;
     if(cntVal>maxStatCounter)maxStatCounter=cntVal;
@@ -569,6 +585,8 @@ protected:
 
   IntTimeSlotCounter* totalCounter;
   IntTimeSlotCounter* statCounter;
+  Mutex countersMtx;
+
   int shapeTimeFrame;
   int statTimeFrame;
   int maxSmsPerSecond;
@@ -663,6 +681,8 @@ protected:
   smsc::core::buffers::XHash<SMSId,MergeCacheItem,SMSIdHashFunc> reverseMergeCache;
   smsc::core::buffers::CyclicQueue<std::pair<time_t,SMSId> > mergeCacheTimeouts;
   time_t mergeConcatTimeout;
+  Mutex mergeCacheMtx;
+
 
   smsc::cluster::AgentListener agentListener;
   bool ishs;
@@ -674,6 +694,8 @@ protected:
   INManComm* inManCom;
 
   bool smartMultipartForward;
+
+  int mainLoopsCount;
 };
 
 }//system

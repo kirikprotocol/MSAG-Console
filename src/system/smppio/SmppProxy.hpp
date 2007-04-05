@@ -57,8 +57,12 @@ public:
     unbinding=false;
     log=smsc::logger::Logger::getInstance("smppprx");
     info2(log,"SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
+    limitQueueSize=0;
   }
   virtual ~SmppProxy(){}
+
+  bool deleteOnUnregister(){return true;}
+
   virtual void close()
   {
     opened=false;
@@ -345,6 +349,7 @@ public:
               inQueueCount++;
               limitHash.Delete(it->second->cmd->get_dialogId());
               limitQueue.erase(it->second);
+              limitQueueSize--;
               ussdSessionMap.erase(it);
             }else
             {
@@ -481,7 +486,7 @@ public:
 
   uint32_t getNextSequenceNumber()
   {
-    MutexGuard g(mutex);
+    MutexGuard g(seqMutex);
     return seq++;
   }
 
@@ -694,6 +699,7 @@ protected:
 
   typedef std::list<ControlItem> LimitQueue;
   LimitQueue limitQueue;
+  int limitQueueSize;
   typedef std::map<UssdSessionKey,LimitQueue::iterator> UssdSessionMap;
   UssdSessionMap ussdSessionMap;
   smsc::core::buffers::IntHash<LimitQueue::iterator> limitHash;
@@ -713,8 +719,9 @@ protected:
         ussdSessionMap.erase(limitQueue.begin()->key);
       }
       limitQueue.erase(limitQueue.begin());
+      limitQueueSize--;
     }
-    if(limitQueue.size()==processLimit)throw ProxyQueueLimitException(processLimit,limitQueue.size());
+    if(limitQueueSize==processLimit)throw ProxyQueueLimitException(processLimit,limitQueueSize);
     ControlItem ci(now,cmd->get_dialogId());
     bool ussd=false;
     if(cmd->get_commandId()==DELIVERY && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
@@ -725,6 +732,7 @@ protected:
       ussd=true;
     }
     limitQueue.push_back(ci);
+    limitQueueSize++;
     LimitQueue::iterator it=--limitQueue.end();
     limitHash.Insert(ci.seqNum,it);
     if(ussd)ussdSessionMap.insert(UssdSessionMap::value_type(ci.key,it));
@@ -740,6 +748,7 @@ protected:
       if(!(*ptr)->ussd)
       {
         limitQueue.erase(*ptr);
+        limitQueueSize--;
         limitHash.Delete(cmd->get_dialogId());
         return false;
       }else
@@ -752,6 +761,7 @@ protected:
         {
           ussdSessionMap.erase((*ptr)->key);
           limitQueue.erase(*ptr);
+          limitQueueSize--;
           limitHash.Delete(cmd->get_dialogId());
           return false;
         }
@@ -761,6 +771,7 @@ protected:
   }
 
   volatile int seq;
+  Mutex seqMutex;
   int proxyType;
   bool opened;
   SmeProxyState state;

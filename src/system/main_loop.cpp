@@ -111,7 +111,7 @@ void Smsc::mainLoop()
     int maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
     //maxScaled+=maxScaled/4;
 
-    int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounter().getSlotRes());
+    int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounterRes());
 
     //perSlot+=perSlot/4;
 
@@ -120,7 +120,7 @@ void Smsc::mainLoop()
     do
     {
       hrtime_t gfStart=gethrtime();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getTotalCounter().Get()>maxScaled);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getTotalCounter()>maxScaled);
       hrtime_t gfEnd=gethrtime();
       if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
@@ -137,7 +137,7 @@ void Smsc::mainLoop()
           maxStatCounter=0;
         }
         lastTimeStatCheck=now;
-        warn2(log,"sbmcnt=%d",sbmcnt);
+        //warn2(log,"sbmcnt=%d",sbmcnt);
       }
 
 
@@ -154,18 +154,21 @@ void Smsc::mainLoop()
           //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
           generateAlert(id,task.sms,task.inDlgId);
         }
-        while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=now)
         {
-          SMSId id=mergeCacheTimeouts.Front().second;
-          MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
-          if(pmci)
+          MutexGuard mg(mergeCacheMtx);
+          while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=now)
           {
-            debug2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
-            mergeCache.Delete(*pmci);
-            reverseMergeCache.Delete(id);
-            eventqueue.enqueue(id,SmscCommand::makeCancel(id));
+            SMSId id=mergeCacheTimeouts.Front().second;
+            MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
+            if(pmci)
+            {
+              debug2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
+              mergeCache.Delete(*pmci);
+              reverseMergeCache.Delete(id);
+              eventqueue.enqueue(id,SmscCommand::makeCancel(id));
+            }
+            mergeCacheTimeouts.Pop();
           }
-          mergeCacheTimeouts.Pop();
         }
         last_tm = now;
         hrtime_t expEnd=gethrtime();
@@ -295,7 +298,7 @@ void Smsc::mainLoop()
     for(int j=0;j<frame.size();j++)
     {
       SmscCommand* i=&frame[shuffle[j]];
-      cntInstant=getTotalCounter().Get();
+      cntInstant=getTotalCounter();
       eventqueue.getStats(eqsize,equnsize);
       while(equnsize+1>eventQueueLimit)
       {
@@ -323,19 +326,20 @@ void Smsc::mainLoop()
         try{
           if((*i)->get_commandId()==FORWARD || !isUSSDSessionSms((*i)->get_sms()))
           {
-            if(getTotalCounter().Get()>maxScaled)
+            int totalCnt=getTotalCounter();
+            if(totalCnt>maxScaled)
             {
               if((*i)->get_commandId()==SUBMIT)
               {
                 info2(log,"Sms %s->%s sbm rejected by license limit: %d/%d (%d)",
                   (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
                   (*i)->get_sms()->getDestinationAddress().toString().c_str(),
-                  getTotalCounter().Get(),maxScaled,perSlot);
+                  totalCnt,maxScaled,perSlot);
                 RejectSms(*i);
               }else
               {
                 info2(log,"Sms id=%lld fwd rejected by license limit: %d/%d (%d)",(*i)->get_forwardMsgId(),
-                  getTotalCounter().Get(),maxScaled,perSlot);
+                  totalCnt,maxScaled,perSlot);
                 scheduler->RejectForward((*i)->get_forwardMsgId());
               }
               continue;
@@ -399,6 +403,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
           mci.da=sms.getDestinationAddress();
           sms.setConcatMsgRef(mr);
           sms.setConcatSeqNum(0);
+          MutexGuard mg(mergeCacheMtx);
           SMSId *pid=mergeCache.GetPtr(mci);
           if(!pid)
           {
@@ -440,6 +445,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         mci.da=sms.getDestinationAddress();
         sms.setConcatMsgRef(mr);
         sms.setConcatSeqNum(0);
+        MutexGuard mg(mergeCacheMtx);
         SMSId *pid=mergeCache.GetPtr(mci);
         if(!pid)
         {
@@ -621,6 +627,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
       mci.oa=ki.org;
       mci.da=ki.dst;
 
+      MutexGuard mg(mergeCacheMtx);
       SMSId* pid=mergeCache.GetPtr(mci);
       if(pid)
       {

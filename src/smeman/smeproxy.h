@@ -7,6 +7,7 @@
 #include "smsccmd.h"
 #include "core/synchronization/Event.hpp"
 #include <vector>
+#include "util/sleep.h"
 
 #if !defined __Cpp_Header__smeman_smeproxy_h__
 #define __Cpp_Header__smeman_smeproxy_h__
@@ -31,7 +32,28 @@ const int SmeProxyPriorityMin = 1;
 const int SmeProxyPriorityDefault = 16000;
 const int SmeProxyPriorityMax = 32000;
 const int SmeProxyPriorityMaxBr = SmeProxyPriorityMax+1;
-typedef smsc::core::synchronization::Event ProxyMonitor;
+
+struct PolledMonitor
+{
+  bool state;
+  PolledMonitor():state(false){}
+  void Signal()
+  {
+    state=true;
+  }
+  void Wait(int to)
+  {
+    while(!state && to>0)
+    {
+      smsc::util::millisleep(10);
+      to-=10;
+    }
+    state=false;
+  }
+};
+
+//typedef smsc::core::synchronization::Event ProxyMonitor;
+typedef PolledMonitor ProxyMonitor;
 
 struct SmeInfo;
 
@@ -127,6 +149,7 @@ public:
   };
 
   virtual void disconnect(){};
+  virtual bool deleteOnUnregister(){return false;}
 };
 
 } // namespace smeman

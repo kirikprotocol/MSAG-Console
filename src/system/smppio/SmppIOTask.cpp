@@ -52,17 +52,18 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
   static smsc::logger::Logger* snmpLog=smsc::logger::Logger::getInstance("smpp.reg");
   MutexGuard mg(getKillMutex);
   int cnt=proxy?proxy->Unref(ct):0;
+  std::string sysId=proxy?proxy->getSystemId():"unknown";
   if(proxy && cnt==0)
   {
     try{
-      __trace2__("unregistering(%p) smeId=%s",proxy,proxy->getSystemId());
+      __trace2__("unregistering(%p) smeId=%s",proxy,sysId.c_str());
       smeManager->unregisterSmeProxy(proxy);
-      smsc_log_debug(snmpLog,"unregister sme: %s successful",proxy->getSystemId());
+      smsc_log_debug(snmpLog,"unregister sme: %s successful",sysId.c_str());
 #ifdef SNMP
       if(ct==ctTransceiver)
       {
         char buf[1024];
-        sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",proxy->getSystemId(),proxy->getSystemId());
+        sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",sysId.c_str(),sysId.c_str());
         smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
       }
 #endif
@@ -72,26 +73,26 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
       if(ct==ctTransceiver)
       {
         char buf[1024];
-        sprintf(buf,"ACTIVE ESME %s unregistration failed (AlaramID=%s; severity=4)",proxy->getSystemId(),proxy->getSystemId());
+        sprintf(buf,"ACTIVE ESME %s unregistration failed (AlaramID=%s; severity=4)",sysId.c_str(),sysId.c_str());
         smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::MAJOR,buf);
       }
 #endif
       smsc_log_debug(snmpLog,"unregister sme: %s failed",proxy->getSystemId());
       __trace__("failed to unregister");
     }
-    __trace2__("KILLPROXY: %p(%s)",proxy,proxy->getSystemId());
-    delete proxy;
+    //__trace2__("KILLPROXY: %p(%s)",proxy,proxy->getSystemId());
+    //delete proxy;
     proxy=0;
   }
 
 #ifdef SNMP
-  __trace2__("unreg: sid=%s, ct=%d, cnt=%d",proxy?proxy->getSystemId():"NULL",ct,cnt);
+  __trace2__("unreg: sid=%s, ct=%d, cnt=%d",sysId.c_str(),ct,cnt);
   if(proxy && ct!=ctTransceiver && (cnt%2))
   {
     __trace2__("sending unreg trap for %s",proxy->getSystemId());
     char buf[1024];
     char trueSid[32];
-    sprintf(trueSid,"%s_%s",proxy->getSystemId(),ct==ctReceiver?"rx":"tx");
+    sprintf(trueSid,"%s_%s",sysId.c_str(),ct==ctReceiver?"rx":"tx");
     sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=2)",trueSid,trueSid);
     smsc::snmp::SnmpAgent::trap(trueSid,"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
   }
