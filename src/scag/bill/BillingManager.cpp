@@ -81,6 +81,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     void Stop();
     bool isStarted() { return m_bStarted; };
 
+    int max_t, min_t, total_t, billcount;
     InfrastructureImpl infrastruct;
 
     #ifdef MSAG_INMAN_BILL
@@ -148,6 +149,7 @@ public:
         , socket(0), pipe(0)
         #endif
     {
+     max_t = 0, min_t = 1000000000, total_t = 0, billcount = 0;
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
 
@@ -477,7 +479,12 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
     pipe->sendPck(&op);
     st.eventMonitor.wait(m_Timeout);
     gettimeofday(&tv1, NULL);
-    smsc_log_info(logger, " %d time to bill %d", op.Hdr().dlgId, (tv1.tv_sec - tv.tv_sec) * 1000 + (tv1.tv_usec - tv.tv_usec) / 1000);
+    int t = (tv1.tv_sec - tv.tv_sec) * 1000 + (tv1.tv_usec - tv.tv_usec) / 1000;
+    if(t > max_t) max_t = t;
+    if(t < min_t) min_t = t;
+    total_t += t;
+    billcount++;
+    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t);
     {
         MutexGuard mg(inUseLock);
         SendTransactionHash.Delete(op.Hdr().dlgId);
