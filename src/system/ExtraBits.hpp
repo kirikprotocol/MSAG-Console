@@ -12,6 +12,7 @@ static const uint32_t EXTRA_CALEND=0x0004;
 static const uint32_t EXTRA_SECRET=0x0008;
 static const uint32_t EXTRA_GROUPS=0x0010;
 
+static const uint32_t EXTRA_RESERVED =0x40000000;
 static const uint32_t EXTRA_SPONSORED=0x80000000;
 
 }//system
