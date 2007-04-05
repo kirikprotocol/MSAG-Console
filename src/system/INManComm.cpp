@@ -37,6 +37,7 @@ void INManComm::Init(const char* argHost,int argPort)
   {
     warn2(log,"Failed to connect to %s:%d",host.c_str(),port);
     socket=new net::Socket;
+    packetWriter.assignSocket(socket);
     return;
   }
   socketOk=true;
@@ -328,6 +329,7 @@ int INManComm::Execute()
       queue.Push(cmd);
     }
   }
+  socket->Abort();
   return 0;
 }
 
