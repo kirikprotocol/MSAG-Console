@@ -202,7 +202,7 @@ public:
       old+=".old";
       if(!File::Exists(file) && File::Exists(old.c_str()))
       {
-        rename(old.c_str(),file);
+        File::Rename(old.c_str(),file);
       }
       f.RWOpen(file);
     }
