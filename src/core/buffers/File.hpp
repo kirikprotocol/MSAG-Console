@@ -288,7 +288,7 @@ public:
     if(fd!=-1)
     {
       lseek(fd,0,SEEK_SET);
-      int rdsz=read(fd,buffer,(size_t)fileSize);
+      size_t rdsz=read(fd,buffer,(size_t)fileSize);
       if(rdsz!=fileSize)throw FileException(FileException::errReadFailed,filename.c_str());
       if(eventHandler)
       {
@@ -510,7 +510,7 @@ public:
         bufferPosition+=sz;
         return sz;
       }
-      int avail=bufferUsed-bufferPosition;
+      size_t avail=bufferUsed-bufferPosition;
       memcpy(buf,buffer+bufferPosition,avail);
       sz-=avail;
       char* tmp=(char*)buf;
@@ -588,7 +588,7 @@ public:
       }
       if(bufferPosition+sz>bufferSize)
       {
-        int towr=bufferSize-bufferPosition;
+        size_t towr=bufferSize-bufferPosition;
         memcpy(buffer+bufferPosition,buf,towr);
         const char* tmp=(const char*)buf;
         tmp+=towr;
@@ -630,7 +630,7 @@ public:
     Write(&t,sizeof(T));
   }
 
-  void ZeroFill(int sz)
+  void ZeroFill(size_t sz)
   {
     if(isInMemory())
     {
@@ -644,7 +644,7 @@ public:
       return;
     }
     char buf[8192]={0,};
-    int blksz;
+    size_t blksz;
     while(sz>0)
     {
       blksz=sz>sizeof(buf)?sizeof(buf):sz;
@@ -958,8 +958,8 @@ protected:
   char  initBuffer[INIT_BUFFER_SIZE];
   char *buffer;
   int   fd;
-  int   bufferSize,bufferUsed;
-  int   bufferPosition;
+  size_t bufferSize,bufferUsed;
+  size_t bufferPosition;
   int   flags;
   offset_type fileSize;
   std::string filename;
@@ -992,7 +992,7 @@ protected:
     bufferPosition=0;
   }
 
-  void ResizeBuffer(int newsz)
+  void ResizeBuffer(size_t newsz)
   {
     newsz+=newsz/4;
     if(newsz>MAX_BUFFER_SIZE || newsz<=0)

@@ -156,8 +156,8 @@ namespace BufOps{
     SmallCharBuf scbMsc(val.msc,sizeof(val.msc));
     SmallCharBuf scbImsi(val.imsi,sizeof(val.imsi));
     buf>>scbMsc>>scbImsi>>val.sme;
-    val.mscLength=strlen(val.msc);
-    val.imsiLength=strlen(val.imsi);
+    val.mscLength=(uint8_t)strlen(val.msc);
+    val.imsiLength=(uint8_t)strlen(val.imsi);
     return buf;
   }
 

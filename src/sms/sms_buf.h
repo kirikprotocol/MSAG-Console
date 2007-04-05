@@ -52,7 +52,7 @@ public:
     strlength=len;
     buf[strlength]=0;
   }
-  int length()const
+  size_t length()const
   {
     return strlength;
   }

@@ -292,7 +292,7 @@ struct Address
     }else
       return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
   }
-  inline int toString(char* buf,int buflen)const{
+  inline int toString(char* buf,size_t buflen)const{
     char vl[32];
     memcpy(vl,value,length);
     vl[length]=0;
@@ -646,7 +646,7 @@ struct OptionalProperty{
   {
     if(isSetVal==1)
     {
-      if(len)*len=bValue->length();
+      if(len)*len=(unsigned)bValue->length();
       return bValue->c_str();
     }else
     {
@@ -833,7 +833,7 @@ public:
     __require__(tag<=SMS_LAST_TAG);
     return prop.properties[tag].isSet();
   }
-  
+
   bool hasIntProperty(int tag)const
   {
     __require__((tag>>8)==SMS_INT_TAG);
@@ -1743,7 +1743,7 @@ struct SMS
   {
     messageBody.dropProperty(tag);
   }
-  
+
 
   ~SMS() {}
 
