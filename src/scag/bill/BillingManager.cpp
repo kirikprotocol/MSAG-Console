@@ -472,8 +472,12 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
         MutexGuard mg(inUseLock);
         SendTransactionHash.Insert(op.Hdr().dlgId, &st);
     }
+    struct timeval tv, tv1;
+    gettimeofday(&tv, NULL);
     pipe->sendPck(&op);
     st.eventMonitor.wait(m_Timeout);
+    gettimeofday(&tv1, NULL);
+    smsc_log_debug(logger, "time to bill %d", (tv1.tv_sec - tv.tv_sec)*1000 + tv1.tv_usec - tv.tv_usec);
     {
         MutexGuard mg(inUseLock);
         SendTransactionHash.Delete(op.Hdr().dlgId);
