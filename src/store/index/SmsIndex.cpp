@@ -57,7 +57,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
     idxfile+="smsid.idx";
     if(!File::Exists(idxfile.c_str()) && File::Exists((idxfile+".old").c_str()))
     {
-      rename((idxfile+".old").c_str(),idxfile.c_str());
+      File::Rename((idxfile+".old").c_str(),idxfile.c_str());
     }
   }
 
