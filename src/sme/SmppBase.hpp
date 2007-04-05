@@ -163,6 +163,7 @@ public:
     logrd=smsc::logger::Logger::getInstance("smpp.rd");
     running=false;
   }
+#ifndef _WIN32
   static void sigdisp(int sig)
   {
     if(StaticHolder<0>::olddisp && StaticHolder<0>::olddisp!=SIG_HOLD && StaticHolder<0>::olddisp!=SIG_ERR)
@@ -170,6 +171,8 @@ public:
       StaticHolder<0>::olddisp(sig);
     }
   }
+#endif
+
   int Execute()
   {
     smsc_log_info(logrd,"smpp reader started");
@@ -224,11 +227,14 @@ protected:
   smsc::logger::Logger* log;
   smsc::logger::Logger* logrd;
   volatile bool running;
+
+#ifndef _WIN32
   template <int n>
   struct StaticHolder
   {
     static void (*olddisp)(int);
   };
+#endif
 
   time_t lastUpdate;
   time_t lastTOCheck;
@@ -304,8 +310,10 @@ protected:
   }
 };
 
+#ifndef _WIN32
 template <int n>
 void (*SmppReader::StaticHolder<n>::olddisp)(int)=0;
+#endif
 
 class SmppWriter:public SmppThread{
 protected:
