@@ -30,6 +30,7 @@
   </section>
 
   <section name="core">
+    <param name="mainLoopsCount" type="int">1</param>
     <param name="default_locale" type="string">en_en</param>
     <param name="locales" type="string">en_en, ru_ru</param>
     <param name="protocol_id" type="int">34</param>
