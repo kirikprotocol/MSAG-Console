@@ -459,7 +459,7 @@ bool BillingManagerImpl::Reconnect()
 {
     if(!socket->Connect()) 
     {
-        socket->SetNoDelay(1);
+        socket->SetNoDelay(true);
         pipe->Reset();
         smsc_log_warn(logger, "Connected socket to BillingServer on host '%s', port '%d'", m_Host.c_str(), m_Port);
         return true;
