@@ -461,7 +461,8 @@ bool BillingManagerImpl::Reconnect()
 {
     if(!socket->Connect()) 
     {
-        smsc_log_warn(logger, "Reconnected socket to BillingServer on host '%s', port '%d'", m_Host.c_str(), m_Port);
+        pipe->Reset();
+        smsc_log_warn(logger, "Connected socket to BillingServer on host '%s', port '%d'", m_Host.c_str(), m_Port);
         return true;
     }
     smsc_log_warn(logger, "Can't connect socket to BillingServer on host '%s', port '%d': error %s (%d)", m_Host.c_str(), m_Port, strerror(errno), errno);
@@ -511,6 +512,7 @@ void BillingManagerImpl::onConnectError(Connect* conn, std::auto_ptr<CustomExcep
 {
     smsc_log_error(logger, "BillingManager error: Cannot receive command. Details: %s", p_exc->what());
     m_Connected = false;
+    socket->Close();
 }
 #endif
 
@@ -557,9 +559,8 @@ int BillingManagerImpl::Execute()
                 tv.tv_sec = 10; 
                 tv.tv_usec = 500;
                 int n = select(socket->getSocket() + 1, &read, 0, 0, &tv);
-                if( n > 0)
-                    pipe->onReadEvent();
-                else if(n < 0)
+                smsc_log_info(logger,"select result =%d", n);
+                if(n < 0 || (n > 0 && pipe->onReadEvent()))
                     m_Connected = false;
             }
             else
@@ -567,7 +568,7 @@ int BillingManagerImpl::Execute()
                 m_Connected = Reconnect();
                 if(!m_Connected) connectEvent.Wait(m_ReconnectTimeout * 1000);
             }
-        } catch (SCAGException& e)
+        }catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
             m_Connected = false;
