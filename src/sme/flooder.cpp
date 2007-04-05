@@ -195,13 +195,14 @@ void ProcessOption(const char* name,const char* val)
 typedef vector<string> StrList;
 void LoadFile(const string& filename,StrList& sl)
 {
-  FILE *f=fopen(filename.c_str(),"rt");
+  FILE *f=fopen(filename.c_str(),"rb");
   if(!f)throw Exception("Faield to open file %s",filename.c_str());
   fseek(f,0,SEEK_END);
   int sz=ftell(f);
   fseek(f,0,SEEK_SET);
-  char* buf=new char[sz];
+  char* buf=new char[sz+1];
   fread(buf,sz,1,f);
+  buf[sz]=0;
   fclose(f);
   int strStart=0,curPos=0;
   do
