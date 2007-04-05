@@ -2,7 +2,7 @@
 #define __SMSC_CORE_NETWORK_SOCKET_HPP__
 
 #ifdef _WIN32
-#include <winsock.h>
+#include <winsock2.h>
 #include <stdio.h>
 typedef int socklen_t;
 #else
@@ -92,7 +92,7 @@ public:
       char buf[1024];
       int h_err;
       hostent he;
-      lpHostEnt=gethostbyname_r(host, &he, buf, sizeof(buf), &h_err);
+      lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
   #endif
       if(lpHostEnt==NULL)
       {
@@ -101,7 +101,7 @@ public:
       memcpy(&sAddr.sin_addr,lpHostEnt->h_addr,lpHostEnt->h_length);
     }
     sAddr.sin_port=0;
-    if(bind(sock,(sockaddr*)&sAddr,sizeof(sAddr)))return -1;
+    if(bind(sock,(sockaddr*)&sAddr,(int)sizeof(sAddr)))return -1;
     return 0;
   }
   int Connect(bool nb = false);

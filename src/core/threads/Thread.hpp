@@ -3,6 +3,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#undef Yield
 #else
 #include <pthread.h>
 #include <sched.h>

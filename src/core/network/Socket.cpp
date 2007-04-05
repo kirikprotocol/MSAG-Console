@@ -6,6 +6,7 @@
 
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
+#define EINPROGRESS WSAEINPROGRESS
 #else
 #include <sys/ioctl.h>
 #include <errno.h>
@@ -265,7 +266,7 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng,bool force)
   if(force)
   {
     int val=1;
-    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&val,4);
+    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(char*)&val,4);
   }
   if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))
   {
