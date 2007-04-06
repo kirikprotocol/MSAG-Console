@@ -483,15 +483,15 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
     st.responseEvent.Wait(m_Timeout);
     gettimeofday(&tv1, NULL);
     int t = (tv1.tv_sec - tv.tv_sec) * 1000 + (tv1.tv_usec - tv.tv_usec) / 1000;
-    if(t > max_t) max_t = t;
-    if(t < min_t) min_t = t;
-    total_t += t;
-    billcount++;
-    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
     {
         MutexGuard mg(inUseLock);
+        if(t > max_t) max_t = t;
+        if(t < min_t) min_t = t;
+        total_t += t;
+        billcount++;
         SendTransactionHash.Delete(op.Hdr().dlgId);
     }
+    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
     return st.status;
 }
 
