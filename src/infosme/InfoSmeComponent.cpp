@@ -30,6 +30,7 @@ static const char* ARGUMENT_MSG_LIMIT       = "msg_limit";
 
 static const char* ARGUMENT_START_PERIOD    = "start_period";
 static const char* ARGUMENT_END_PERIOD      = "end_period";
+static const char* ARGUMENT_NEW_TEXT_MESSAGE = "new_text_message";
 
 InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     : logger(Logger::getInstance("smsc.infosme.InfoSmeComponent")), admin(admin)
@@ -152,7 +153,18 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     Method select_tasks_statistic ((unsigned)selectTasksStatisticMethod, "selectTasksStatistic",
                                    select_statistic_params, StringListType);
 
-    
+    // interface to change text of delivery message(s)
+    Parameters change_delivery_text_message_params;
+    change_delivery_text_message_params[ARGUMENT_NAME_ID]   = Parameter(ARGUMENT_NAME_ID, StringType);
+    change_delivery_text_message_params[ARGUMENT_NEW_TEXT_MESSAGE] = Parameter(ARGUMENT_NEW_TEXT_MESSAGE, StringType);
+    change_delivery_text_message_params[ARGUMENT_RECORD_ID] = Parameter(ARGUMENT_RECORD_ID, StringType);
+    change_delivery_text_message_params[ARGUMENT_STATE]     = Parameter(ARGUMENT_STATE, StringType);
+    change_delivery_text_message_params[ARGUMENT_FROM_DATE] = Parameter(ARGUMENT_FROM_DATE, StringType);
+    change_delivery_text_message_params[ARGUMENT_TO_DATE]   = Parameter(ARGUMENT_TO_DATE, StringType);
+    change_delivery_text_message_params[ARGUMENT_ADDRESS]   = Parameter(ARGUMENT_ADDRESS, StringType);
+    Method change_delivery_text_message((unsigned)changeDeliveryTextMessageMethod, "changeDeliveryTextMessage",
+                                        change_delivery_text_message_params, StringType);
+
     methods[start_task_processor.getName()]         = start_task_processor;
     methods[stop_task_processor.getName()]          = stop_task_processor;
     methods[is_task_processor_running.getName()]    = is_task_processor_running;
@@ -179,6 +191,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[select_task_messages.getName()]         = select_task_messages;
     methods[select_tasks_statistic.getName()]       = select_tasks_statistic;
     methods[end_delivery_messages_generation.getName()] = end_delivery_messages_generation;
+    methods[change_delivery_text_message.getName()]     = change_delivery_text_message;
 }
 
 InfoSmeComponent::~InfoSmeComponent()
@@ -264,6 +277,9 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
           return selectTasksStatistic(args);
         case endDeliveryMessagesGenerationMethod:
           endDeliveryMessagesGeneration(args);
+          break;
+        case changeDeliveryTextMessageMethod:
+          changeDeliveryTextMessage(args);
           break;
         default:
             smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
@@ -855,6 +871,52 @@ void InfoSmeComponent::endDeliveryMessagesGeneration(const Arguments& args)
     } catch (...) {
         throw AdminException("Failed to add task '%s'. Cause is unknown", id);
     }
+}
+
+void InfoSmeComponent::changeDeliveryTextMessage(const Arguments& args)
+{
+  std::string taskId;
+  if ( !getParameterIfExistsAndNotNull(args, ARGUMENT_NAME_ID, taskId) )
+    error("changeDeliveryTextMessage", ARGUMENT_NAME_ID);
+
+  std::string newTextMsg;
+  if ( !getParameterIfExistsAndNotNull(args, ARGUMENT_NEW_TEXT_MESSAGE, newTextMsg) )
+    error("changeDeliveryTextMessage", ARGUMENT_NEW_TEXT_MESSAGE);
+
+  smsc_log_debug(logger, "InfoSmeComponent::changeDeliveryTextMessage::: taskId=[%s]",taskId.c_str());
+
+  std::string recordId;
+  /*  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_RECORD_ID, recordId) )
+    admin.deleteDeliveryMessageByRecordId(taskId, recordId);
+    else {*/
+  InfoSme_T_SearchCriterion searchCrit;
+
+  std::string stateAsString;
+  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_STATE, stateAsString) ) {
+    searchCrit.setState((uint8_t)atoi(stateAsString.c_str()));
+  }
+  std::string fromDate;
+  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_FROM_DATE, fromDate) ) {
+    time_t fromDateAsUnixTime;
+    if (!convertFullDateFormatToUnixTime(fromDate, &fromDateAsUnixTime))
+      error("changeDeliveryTextMessage", ARGUMENT_FROM_DATE);
+
+    searchCrit.setFromDate(fromDateAsUnixTime);
+  }
+  std::string toDate;
+  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_TO_DATE, toDate ) ) {
+    time_t toDateAsUnixTime;
+    if (!convertFullDateFormatToUnixTime(toDate, &toDateAsUnixTime))
+      error("changeDeliveryTextMessage", ARGUMENT_TO_DATE);
+
+    searchCrit.setToDate(toDateAsUnixTime);
+  }
+  std::string address;
+  if ( getParameterIfExistsAndNotNull(args, ARGUMENT_ADDRESS, address) )
+    searchCrit.setAbonentAddress(address);
+
+  admin.changeDeliveryTextMessageByCompositCriterion(taskId, newTextMsg, searchCrit);
+  //}
 }
 
 }}
