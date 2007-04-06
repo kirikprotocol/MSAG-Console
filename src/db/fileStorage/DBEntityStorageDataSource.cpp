@@ -173,6 +173,9 @@ DBEntityStorageConnection::createStatement(const char* sql)
         } else if ( strstr(sql, "STATE=:ENROUTE WHERE ID=:ID AND STATE=:WAIT") ) {
           smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object Update_InfoSme_T_Set_State_By_IdAndState");
           return new Update_InfoSme_T_Set_State_By_IdAndState(infoSme_T_Storage);
+        } else if ( strstr(sql, "SET MESSAGE = :MSG WHERE ID = :ID") ) {
+          smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object Update_InfoSme_T_Set_NewMessage_By_Id");
+          return new Update_InfoSme_T_Set_NewMessage_By_Id(infoSme_T_Storage);
         }
       } else if (!strncmp(sql, "SELECT ID, ABONENT, MESSAGE", sel_from_infosme_t_len)) {
         smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object SelectInfoSme_T_stateAndSendDate_criterion");
