@@ -1,14 +1,13 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageFilter;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.jsp.SMSCJspException;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
-import ru.novosoft.smsc.jsp.SMSCJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -25,6 +24,9 @@ import java.util.*;
 public class Messages extends InfoSmeBean
 {
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
+  public static final int RESULT_UPDATE_ALL = PRIVATE_RESULT + 1;
+  public static final int RESULT_UPDATE = PRIVATE_RESULT + 2;
+  public static final int RESULT_CANCEL_UPDATE = PRIVATE_RESULT + 3;
 
   private String sort = null;
   private String[] checked = new String[0];
@@ -33,30 +35,28 @@ public class Messages extends InfoSmeBean
   private int pageSize = 0;
 
   private MessageFilter  msgFilter = new MessageFilter();
+  private String message2update;
   private List messages = null;
-  private InfoSme infoSme = null;
 
   private String mbQuery     = null;
   private String mbResend    = null;
   private String mbDelete    = null;
+
+  private String mbUpdate;
+  private String mbCancelUpdate;
+
+  private String mbUpdateAll = null;
   private String mbResendAll = null;
   private String mbDeleteAll = null;
 
   private boolean initialized = false;
 
+  private boolean processed = false;
+
   protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
-
-    try {
-      this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo("InfoSme"),
-                                 appContext.getConfig().getString("InfoSme.Admin.host"),
-                                 appContext.getConfig().getInt("InfoSme.Admin.port"));
-    } catch (Exception e) {
-      logger.error("Can't init InfoSme", e);
-      return RESULT_ERROR;
-    }
 
     checkedSet = new HashSet(Arrays.asList(checked));
 
@@ -75,6 +75,7 @@ public class Messages extends InfoSmeBean
 
   public int process(HttpServletRequest request)
   {
+    processed = true;
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
@@ -82,15 +83,39 @@ public class Messages extends InfoSmeBean
     if (allTasks == null || allTasks.size() <= 0)
       return warning("infosme.warn.no_task_for_msg");
 
-    try {
+    try { // Order is important here!
       if (mbDelete != null || mbDeleteAll != null) return processDelete();
       else if (mbResend != null || mbResendAll != null) return processResend();
+      else if (mbUpdateAll != null) return processUpdateAll();
+      else if (mbUpdate != null) return processUpdate();
+      else if (mbCancelUpdate != null) return processCancelUpdate();
       else if (mbQuery != null || (initialized && messages == null)) return processQuery();
     } catch (AdminException e) {
       logger.error("Process error", e);
       error("Error", e);
     }
     return result;
+  }
+
+  private int processUpdateAll() {
+    mbUpdateAll = null;
+    return RESULT_UPDATE_ALL;
+  }
+
+  private int processUpdate() {
+    mbUpdate = null;
+    try {
+      getInfoSme().changeDeliveryTextMessage(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), message2update);
+    } catch (AdminException e) {
+      logger.debug("Messages update failed", e);
+      return error("infosme.error.ds_msg_update_failed", e);
+    }
+    return RESULT_UPDATE;
+  }
+
+  private int processCancelUpdate() {
+    mbCancelUpdate = null;
+    return RESULT_CANCEL_UPDATE;
   }
 
   public String getStateName(Message.State state) {
@@ -118,7 +143,7 @@ public class Messages extends InfoSmeBean
     if (messages != null)
       messages.clear();
 
-    messages = infoSme.getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+    messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
                                    (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), getInfoSmeContext().getMaxMessagesTotalSize()+1);
 
     if (messages.size() > getInfoSmeContext().getMaxMessagesTotalSize())
@@ -146,7 +171,7 @@ public class Messages extends InfoSmeBean
     try {
       for (int i = 0; i < checked.length; i++) {
         String id = checked[i];
-        infoSme.deleteMessages(msgFilter.getTaskId(), id);
+        getInfoSme().deleteMessages(msgFilter.getTaskId(), id);
         deleted++;
       }
     } catch (Throwable e) {
@@ -159,7 +184,7 @@ public class Messages extends InfoSmeBean
 
   private int deleteAll() {
     try {
-      infoSme.deleteMessages(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate());
+      getInfoSme().deleteMessages(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate());
 
     } catch (AdminException e) {
       logger.debug("Messages delete failed", e);
@@ -185,7 +210,7 @@ public class Messages extends InfoSmeBean
     try {
       for (int i = 0; i < checked.length; i++) {
         String id = checked[i];
-        infoSme.resendMessages(msgFilter.getTaskId(), id, Message.State.NEW, new Date());
+        getInfoSme().resendMessages(msgFilter.getTaskId(), id, Message.State.NEW, new Date());
         resent++;
       }
     } catch (Throwable e) {
@@ -198,7 +223,7 @@ public class Messages extends InfoSmeBean
 
   private int resendAll() {
     try {
-      infoSme.resendMessages(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(),
+      getInfoSme().resendMessages(msgFilter.getTaskId(), msgFilter.getAddress(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(),
                              Message.State.NEW, new Date());
     } catch (AdminException e) {
       logger.debug("Messages resend failed", e);
@@ -393,5 +418,42 @@ public class Messages extends InfoSmeBean
   }
   public boolean isStatus(int status) {
     return (msgFilter.getStatus().getId() == status);
+  }
+
+  public String getMessage2update() {
+    return message2update;
+  }
+
+  public void setMessage2update(String message2update) {
+    this.message2update = message2update;
+  }
+
+  public String getMbUpdate() {
+    return mbUpdate;
+  }
+
+  public void setMbUpdate(String mbUpdate) {
+    this.mbUpdate = mbUpdate;
+  }
+
+  public String getMbCancelUpdate() {
+    return mbCancelUpdate;
+  }
+
+  public void setMbCancelUpdate(String mbCancelUpdate) {
+    this.mbCancelUpdate = mbCancelUpdate;
+  }
+
+  public String getMbUpdateAll() {
+    return mbUpdateAll;
+  }
+
+  public void setMbUpdateAll(String mbUpdateAll) {
+    System.out.println("set MbUpdateAll");
+    this.mbUpdateAll = mbUpdateAll;
+  }
+
+  public boolean isProcessed() {
+    return processed;
   }
 }

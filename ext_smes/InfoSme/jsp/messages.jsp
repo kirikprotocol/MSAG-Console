@@ -3,8 +3,10 @@
                  java.util.*, ru.novosoft.smsc.infosme.backend.Message,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.infosme.beans.Messages"%>
-<jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Messages" />
-<jsp:setProperty name="bean" property="*"/>
+<jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
+<% if (!bean.isProcessed()) {%>
+  <jsp:setProperty name="bean" property="*"/>
+<% } %>
 <%
 	//ServiceIDForShowStatus = ;
 	TITLE=getLocString("infosme.title");
@@ -13,6 +15,11 @@
 
   int rowN = 0;
   int beanResult = bean.process(request);
+  System.out.println("!!! " + beanResult + " "  + Messages.RESULT_UPDATE);
+  if (beanResult == Messages.RESULT_UPDATE_ALL) {
+    request.getRequestDispatcher("updateMessages.jsp").forward(request, response);
+    return;
+  }
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
@@ -49,13 +56,6 @@ function setSort(sorting)
 <%}%></select></td>
   <th style="text-align:left"><%= getLocString("infosme.label.msg_state")%></th>
   <td><select name=status>
-<%--    <option value="<%=Message.MESSAGE_UNDEFINED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_UNDEFINED_STATE)) ? "selected":""%>>ALL</option>--%>
-<%--    <option value="<%=Message.MESSAGE_NEW_STATE%>"       <%= (bean.isStatus(Message.MESSAGE_NEW_STATE)) ? "selected":""%>      >NEW</option>--%>
-<%--    <option value="<%=Message.MESSAGE_WAIT_STATE%>"      <%= (bean.isStatus(Message.MESSAGE_WAIT_STATE)) ? "selected":""%>     >WAIT</option>--%>
-<%--    <option value="<%=Message.MESSAGE_ENROUTE_STATE%>"   <%= (bean.isStatus(Message.MESSAGE_ENROUTE_STATE)) ? "selected":""%>  >ENROUTE</option>--%>
-<%--    <option value="<%=Message.MESSAGE_DELIVERED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_DELIVERED_STATE)) ? "selected":""%>>DELIVERED</option>--%>
-<%--    <option value="<%=Message.MESSAGE_EXPIRED_STATE%>"   <%= (bean.isStatus(Message.MESSAGE_EXPIRED_STATE)) ? "selected":""%>  >EXPIRED</option>--%>
-<%--    <option value="<%=Message.MESSAGE_FAILED_STATE%>"    <%= (bean.isStatus(Message.MESSAGE_FAILED_STATE)) ? "selected":""%>   >FAILED</option>--%>
         <option value="<%=Message.State.UNDEFINED.getId()%>" <%= (bean.isStatus(Message.State.UNDEFINED.getId())) ? "selected":""%>>ALL</option>
         <option value="<%=Message.State.NEW.getId()%>"       <%= (bean.isStatus(Message.State.NEW.getId())) ? "selected":""%>      >NEW</option>
         <option value="<%=Message.State.WAIT.getId()%>"      <%= (bean.isStatus(Message.State.WAIT.getId())) ? "selected":""%>     >WAIT</option>
@@ -141,6 +141,7 @@ page_menu_begin(out);
 page_menu_button(session, out, "mbDelete",    "infosme.button.delete_msg", "infosme.hint.delete_msg");
 page_menu_button(session, out, "mbResend",    "infosme.button.resend_msg", "infosme.hint.resend_msg");
 page_menu_space(out);
+page_menu_button(session, out, "mbUpdateAll", "infosme.button.update_all", "infosme.hint.update_all");
 page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "infosme.hint.delete_all");
 page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
 page_menu_end(out);

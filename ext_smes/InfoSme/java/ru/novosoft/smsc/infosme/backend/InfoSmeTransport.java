@@ -45,6 +45,7 @@ class InfoSmeTransport extends Service
   private static final String SELECT_TASK_MESSAGES_METHOD_ID = "selectTaskMessages";
   private static final String CHANGE_DELIVERY_MESSAGE_INFO_METHOD_ID = "changeDeliveryMessageInfo";
   private static final String DELETE_DELIVERY_MESSAGES_METHOD_ID = "deleteDeliveryMessages";
+  private static final String CHANGE_DELIVERY_TEXT_MESSAGE_METHOD_ID = "changeDeliveryTextMessage";
   private static final String SELECT_TASKS_STATISTIC_METHOD_ID = "selectTasksStatistic";
   private static final String ADD_DELIVERY_MESSAGES_METHOD_ID = "addDeliveryMessages";
   private static final String END_DELIVERY_MESSAGE_GENERATION_ID = "endDeliveryMessagesGeneration";
@@ -310,6 +311,28 @@ class InfoSmeTransport extends Service
     args.put("state", (state == null || state == Message.State.UNDEFINED) ? "" : String.valueOf(state.getId()));
 
     callMethod(DELETE_DELIVERY_MESSAGES_METHOD_ID, Type.Types[Type.StringType], args);
+  }
+
+  public void changeDeliveryTextMessage(String taskId, String abonent, Message.State state, Date fromDate, Date toDate, String newTextMessage) throws AdminException {
+    changeDeliveryTextMessage(taskId, fromDate, toDate, null, abonent, state, newTextMessage);
+  }
+
+  private void changeDeliveryTextMessage(String taskId, Date fromDate, Date toDate, String id, String abonent, Message.State state, String newTextMessage) throws AdminException {
+    if (taskId == null)
+      throw new AdminException("Task id is null");
+    if (newTextMessage == null)
+      throw new AdminException("New text message is null");
+
+    final Map args = new HashMap();
+    args.put("id", taskId);
+    args.put("from_date", (fromDate == null) ? "" : dateToString(fromDate));
+    args.put("record_id", (id == null) ? "" : id);
+    args.put("address", (abonent == null) ? "" : abonent);
+    args.put("to_date", (toDate == null) ? "" : dateToString(toDate));
+    args.put("state", (state == null || state == Message.State.UNDEFINED) ? "" : String.valueOf(state.getId()));
+    args.put("new_text_message", newTextMessage);
+
+    callMethod(CHANGE_DELIVERY_TEXT_MESSAGE_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public List getTaskStatistics(String taskId, Date fromDate, Date toDate) throws AdminException {
