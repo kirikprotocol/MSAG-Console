@@ -13,8 +13,13 @@
 #include <sys/stat.h>
 
 #include "RWLockGuard.hpp"
+#include <assert.h>
 
-IOPageDispatcher::IOPageDispatcher(int fd) : _fd(fd), _firstPageOffset(0), _startByteOffset(::lseek(_fd, 0, SEEK_CUR)), _lastPageOffset(0) {}
+IOPageDispatcher::IOPageDispatcher(int fd) : _fd(fd), _firstPageOffset(0), _startByteOffset(::lseek(_fd, 0, SEEK_CUR)), _lastPageOffset(::lseek(_fd, 0, SEEK_END)) {
+  assert( _startByteOffset >= 0 && _lastPageOffset >= 0 );
+  _lastPageOffset = ((off_t)(_lastPageOffset / IOPage_impl::PAGE_SIZE)) * IOPage_impl::PAGE_SIZE;
+  ::lseek(_fd, _startByteOffset, SEEK_SET);
+}
 
 IOPageDispatcher::~IOPageDispatcher()
 {
@@ -71,7 +76,6 @@ IOPageDispatcher::loadPageData(int pageNum, IOPage_impl* pagePtr)
     delete [] pageDataPtr;
     throw std::runtime_error("IOPageDispatcher::loadPageData::: can't extend file");
   }
-
   ::memset(pageDataPtr+sz, 0xFF, IOPage_impl::PAGE_SIZE-sz);
 
   if ( pagePtr )
@@ -216,7 +220,6 @@ IOPage_impl::flush(int fd, off_t recordFilePosition)
 {
   while ( !_uncommited_memory_chunks.empty() ){
     uncommited_memory_chunk_t::iterator iter = _uncommited_memory_chunks.begin();
-
     if ( lseek(fd, recordFilePosition + iter->first, SEEK_SET) == (off_t)-1 )
       return -1;
 
