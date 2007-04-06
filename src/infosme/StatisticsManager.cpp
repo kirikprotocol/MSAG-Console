@@ -195,7 +195,7 @@ short StatisticsManager::switchCounters()
 uint32_t StatisticsManager::calculatePeriod()
 {
     time_t currTime = time(0);
-    if (!bExternalFlush) currTime -= 600 /*3600*/;
+    //    if (!bExternalFlush) currTime -= 600 /*3600*/;
     tm tmCT; localtime_r(&currTime, &tmCT);
     return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+
             (tmCT.tm_mday)*100+tmCT.tm_hour;
