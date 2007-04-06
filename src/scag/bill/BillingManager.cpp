@@ -470,7 +470,8 @@ bool BillingManagerImpl::Reconnect()
 TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
 {
     SendTransaction st;
-    if(!m_Connected) return TRANSACTION_WAIT_ANSWER;
+    if(!m_Connected)
+        return TRANSACTION_WAIT_ANSWER;
     {
         MutexGuard mg(inUseLock);
         SendTransactionHash.Insert(op.Hdr().dlgId, &st);
@@ -559,20 +560,7 @@ int BillingManagerImpl::Execute()
     {
         try
         {
-            if(m_Connected)
-            {
-                fd_set read;
-                FD_ZERO( &read );
-                FD_SET( socket->getSocket(), &read );
-
-                struct timeval tv;
-                tv.tv_sec = 10; 
-                tv.tv_usec = 500;
-                int n = select(socket->getSocket() + 1, &read, 0, 0, &tv);
-                if(n < 0 || (n > 0 && pipe->onReadEvent()))
-                    m_Connected = false;
-            }
-            else
+            if(!m_Connected || pipe->onReadEvent())
             {
                 m_Connected = Reconnect();
                 if(!m_Connected) connectEvent.Wait(m_ReconnectTimeout * 1000);
