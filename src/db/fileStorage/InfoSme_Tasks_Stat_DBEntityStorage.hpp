@@ -48,6 +48,10 @@ private:
   };
 
   friend class InfoSme_Tasks_Stat_DbIterator;
+
+  // disable copy
+  InfoSme_Tasks_Stat_DBEntityStorage(const InfoSme_Tasks_Stat_DBEntityStorage& rhs);
+  InfoSme_Tasks_Stat_DBEntityStorage& operator=(const InfoSme_Tasks_Stat_DBEntityStorage& rhs);
 };
 
 #endif
