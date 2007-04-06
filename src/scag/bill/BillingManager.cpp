@@ -489,9 +489,9 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
         if(t < min_t) min_t = t;
         total_t += t;
         billcount++;
+        smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
         SendTransactionHash.Delete(op.Hdr().dlgId);
     }
-    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
     return st.status;
 }
 
