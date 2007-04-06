@@ -310,6 +310,22 @@ private:
   smsc::logger::Logger *_logger;
 };
 
+class Update_InfoSme_T_Set_NewMessage_By_Id : public DBEntityStorageStatement
+{
+public:
+  Update_InfoSme_T_Set_NewMessage_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("update4")) {}
+
+  virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
+
+  virtual void setString(int pos, const char* val, bool null=false) throw(SQLException);
+  virtual uint32_t executeUpdate() throw(SQLException);
+private:
+  std::string _newMsg;
+  uint64_t _msgId;
+  StorageHelper::InfoSme_T_storage_ref_t _dataSource;
+  smsc::logger::Logger *_logger;
+};
+
 class Insert_into_InfoSme_Id_Mapping : public DBEntityStorageStatement
 {
 public:
