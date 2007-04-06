@@ -4,9 +4,11 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.Task;
+import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.Transliterator;
 import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
@@ -474,7 +476,13 @@ public class Deliveries extends InfoSmeBean
       if (status == STATUS_DONE) {
         try {
           getInfoSmeContext().getInfoSme().endDeliveryMessageGeneration(task.getId());
+          getConfig().setBool(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(task.getId()) + ".messagesHaveLoaded", true);
+          getConfig().save();
         } catch (AdminException e) {
+          logger.error(e);
+        } catch (Config.WrongParamTypeException e) {
+          logger.error(e);
+        } catch (IOException e) {
           logger.error(e);
         }
       }
