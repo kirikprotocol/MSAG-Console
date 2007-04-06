@@ -471,6 +471,55 @@ Update_InfoSme_T_Set_StateAndSendDate_By_Id::executeUpdate()
     return 0;
 }
 
+void
+Update_InfoSme_T_Set_NewMessage_By_Id::setUint64(int pos, uint64_t val, bool null)
+  throw(SQLException)
+{
+  if ( pos == 2 )
+    _msgId = val;
+  else throw SQLException("Wrong position argument number");
+}
+
+void
+Update_InfoSme_T_Set_NewMessage_By_Id::setString(int pos, const char* val, bool null)
+  throw(SQLException)
+{
+  if ( pos == 1 )
+    _newMsg = val;
+  else throw SQLException("Wrong position argument number");
+}
+
+uint32_t
+Update_InfoSme_T_Set_NewMessage_By_Id::executeUpdate()
+  throw(SQLException)
+{
+  InfoSme_T_Entity::Id_Key primaryKey(_msgId);
+
+  InfoSme_T_Entity oldValue;
+  bool ret = _dataSource->findValue(primaryKey, &oldValue);
+  if ( ret ) {
+    InfoSme_T_Entity newValue(oldValue.getId(),
+                              oldValue.getState(),
+                              oldValue.getAbonentAddress(),
+                              oldValue.getSendDate(),
+                              _newMsg);
+    int updateRes;
+    if ( _newMsg.size() == oldValue.getMessage().size() ) {
+      updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
+    } else {
+      if ( _dataSource->eraseValue(primaryKey) != 1 )
+        throw SQLException("Update_InfoSme_T_Set_NewMessage_By_Id::executeUpdate::: can't replace record");
+      if ( !_dataSource->putValue(newValue) )
+        throw SQLException("Update_InfoSme_T_Set_NewMessage_By_Id::executeUpdate::: can't replace record (new value)");
+    }
+    if ( updateRes < 0 )
+      throw SQLException("Update_InfoSme_T_Set_NewMessage_By_Id::executeUpdate::: can't update record");
+
+    return updateRes;
+  } else
+    return 0;
+}
+
 //-----------------------------------------------------------------------------
 
 void
