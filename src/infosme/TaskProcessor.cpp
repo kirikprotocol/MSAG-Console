@@ -1213,5 +1213,16 @@ TaskProcessor::endDeliveryMessagesGeneration(const std::string& taskId)
   task->endDeliveryMessagesGeneration();
 }
 
+void
+TaskProcessor::changeDeliveryTextMessageByCompositCriterion(const std::string& taskId,
+                                                            const std::string& textMsg,
+                                                            const InfoSme_T_SearchCriterion& searchCrit)
+{
+  TaskGuard taskGuard = getTask(taskId);
+  Task* task = taskGuard.get();
+  if (!task) throw Exception("TaskProcessor::changeDeliveryTextMessageByCompositCriterion::: can't get task by taskId='%s'", taskId.c_str());
+  task->changeDeliveryTextMessageByCompositCriterion(textMsg, searchCrit);
+}
+
 }}
 

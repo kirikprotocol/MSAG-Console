@@ -352,7 +352,11 @@ namespace smsc { namespace infosme
         bool deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit);
 
         Array<std::string> selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit);
+
         void endDeliveryMessagesGeneration();
+
+        bool changeDeliveryTextMessageByCompositCriterion(const std::string& newTextMsg,
+                                                          const InfoSme_T_SearchCriterion& searchCrit);
     };
     
     class TaskGuard

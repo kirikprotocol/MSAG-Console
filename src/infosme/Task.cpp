@@ -1470,4 +1470,47 @@ Task::destroy_InfoSme_T_Storage()
   }
 }
 
+static const char * CHANGE_DELIVERY_MESSAGE_BY_ID_STATEMENT_SQL = "UPDATE %s SET MESSAGE = :MSG WHERE ID = :ID";
+
+bool Task::changeDeliveryTextMessageByCompositCriterion(const std::string& newTextMsg,
+                                                        const InfoSme_T_SearchCriterion& searchCrit)
+{
+  smsc_log_debug(logger, "Task::changeDeliveryTextMessageByCompositCriterion method being called on task '%s'",
+                 info.id.c_str());
+
+  Connection* intConnection = dsInt->getConnection();
+  if (!intConnection)
+    throw Exception("Failed to obtain connection to internal data source.");
+
+  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
+  std::auto_ptr<Statement> selectMessage(intConnection->createStatement(fullTableScanMessageSql.c_str()));
+  if (!selectMessage.get())
+    throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
+
+  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
+
+  ResultSet* rs = rsGuard.get();
+  if (!rs)
+    throw Exception("Failed to obtain result set for message access.");
+        
+  int fetched = 0, numOfRowsProcessed=0;
+  while (rs->fetchNext()) {
+    smsc_log_debug(logger, "Task::changeDeliveryTextMessageByCompositCriterion::: check next record");
+    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+      std::string updateMessageSql(prepareSqlCall(CHANGE_DELIVERY_MESSAGE_BY_ID_STATEMENT_SQL));
+      std::auto_ptr<Statement> updateMessage(intConnection->createStatement(updateMessageSql.c_str()));
+      if (!updateMessage.get())
+        throw Exception("changeDeliveryMessageInfoByRecordId(): Failed to create statement for messages access.");
+
+      updateMessage->setString  (1, newTextMsg.c_str());
+      updateMessage->setUint64  (2, rs->getUint64(1));
+        
+      updateMessage->executeUpdate();
+    }
+    if ( ++numOfRowsProcessed % 100 == 0 )
+      smsc::util::millisleep(10);
+  }
+  return true;
+}
+
 }}

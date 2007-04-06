@@ -85,6 +85,10 @@ namespace smsc { namespace infosme
         virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit) = 0;
 
         virtual void endDeliveryMessagesGeneration(const std::string& taskId) = 0;
+
+        virtual void changeDeliveryTextMessageByCompositCriterion(const std::string& taskId,
+                                                                  const std::string& newTextMsg,
+                                                                  const InfoSme_T_SearchCriterion& searchCrit) = 0;
         InfoSmeAdmin() {};
 
     protected:
