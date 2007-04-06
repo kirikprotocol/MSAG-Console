@@ -96,7 +96,8 @@ public:
     void Reset(void)
     {
         pckAcq.Reset(); _exc.reset();
-        _state = smsc::inman::interaction::ConnectAC::connAlive;
+        snprintf(_logId, sizeof(_logId)-1, "Connect[%u]", (unsigned)_socket->getSocket());
+        _state = ConnectAC::connAlive;
     }
     // -- ConnectAC iterface methods:
     //Accumulates packets from socket and passes them to listeners,
