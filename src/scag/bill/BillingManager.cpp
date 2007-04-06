@@ -66,7 +66,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
 
     Event connectEvent;
     Mutex stopLock;
-    Mutex inUseLock;
+    Mutex inUseLock, sendLock;
     Event exitEvent;
 
     bool m_bStarted;
@@ -100,6 +100,8 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
         m_Host = host;
         m_Port = port;
     }
+    void insertSendTransaction(int dlgId, SendTransaction* st);
+    void deleteSendTransaction(int dlgId);
     #endif /* MSAG_INMAN_BILL */
 
     void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
@@ -439,7 +441,7 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr
 {
     if (!result) return;
 
-    MutexGuard guard(inUseLock);
+    MutexGuard guard(sendLock);
 
     SendTransaction **p = SendTransactionHash.GetPtr(hdr->dlgId);
     if(!p)
@@ -467,31 +469,44 @@ bool BillingManagerImpl::Reconnect()
     return false;
 }
 
+void BillingManagerImpl::insertSendTransaction(int dlgId, SendTransaction* st)
+{
+    MutexGuard mg(sendLock);
+    SendTransactionHash.Insert(dlgId, st);
+}
+
+void BillingManagerImpl::deleteSendTransaction(int dlgId)
+{
+    MutexGuard mg(sendLock);
+    SendTransactionHash.Delete(dlgId);
+}
+
 TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
 {
     SendTransaction st;
+
     if(!m_Connected)
         return TRANSACTION_WAIT_ANSWER;
-    {
-        MutexGuard mg(inUseLock);
-        SendTransactionHash.Insert(op.Hdr().dlgId, &st);
-    }
+
+    insertSendTransaction(op.Hdr().dlgId, &st);
+
     smsc_log_info(logger, "%d send packet, monitor=%p", op.Hdr().dlgId, &st.responseEvent);
     struct timeval tv, tv1;
     gettimeofday(&tv, NULL);
+
     pipe->sendPck(&op);
     st.responseEvent.Wait(m_Timeout);
+
     gettimeofday(&tv1, NULL);
     int t = (tv1.tv_sec - tv.tv_sec) * 1000 + (tv1.tv_usec - tv.tv_usec) / 1000;
-    {
-        MutexGuard mg(inUseLock);
-        if(t > max_t) max_t = t;
-        if(t < min_t) min_t = t;
-        total_t += t;
-        billcount++;
-        smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
-        SendTransactionHash.Delete(op.Hdr().dlgId);
-    }
+    if(t > max_t) max_t = t;
+    if(t < min_t) min_t = t;
+    total_t += t;
+    billcount++;
+    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
+
+    deleteSendTransaction(op.Hdr().dlgId);
+
     return st.status;
 }
 
