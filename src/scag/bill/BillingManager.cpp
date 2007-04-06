@@ -81,7 +81,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     void Stop();
     bool isStarted() { return m_bStarted; };
 
-    int max_t, min_t, total_t, billcount;
+    int max_t, min_t, billcount, start_t;
     InfrastructureImpl infrastruct;
 
     #ifdef MSAG_INMAN_BILL
@@ -151,7 +151,7 @@ public:
         , socket(0), pipe(0)
         #endif
     {
-     max_t = 0, min_t = 1000000000, total_t = 0, billcount = 0;
+     max_t = 0, min_t = 1000000000, billcount = 0, start_t = time(NULL);
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
 
@@ -452,7 +452,6 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr
     }
 
     (*p)->status = result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ? TRANSACTION_VALID : TRANSACTION_INVALID;
-    smsc_log_info(logger, "%d packet received, monitor=%p", hdr->dlgId, &(*p)->responseEvent);
     (*p)->responseEvent.Signal();
 }
 
@@ -490,7 +489,6 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
 
     insertSendTransaction(op.Hdr().dlgId, &st);
 
-    smsc_log_info(logger, "%d send packet, monitor=%p", op.Hdr().dlgId, &st.responseEvent);
     struct timeval tv, tv1;
     gettimeofday(&tv, NULL);
 
@@ -499,11 +497,14 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
 
     gettimeofday(&tv1, NULL);
     int t = (tv1.tv_sec - tv.tv_sec) * 1000 + (tv1.tv_usec - tv.tv_usec) / 1000;
-    if(t > max_t) max_t = t;
-    if(t < min_t) min_t = t;
-    total_t += t;
-    billcount++;
-    smsc_log_info(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d monitor=%p", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t, &st.responseEvent);
+    {
+        MutexGuard mg(inUseLock);
+        if(t > max_t) max_t = t;
+        if(t < min_t) min_t = t;
+        int total_t = time(NULL) - start_t;
+        billcount++;
+        smsc_log_debug(logger, " %d time to bill %d, max=%d, min=%d, avg=%d, persec=%d", op.Hdr().dlgId, t, max_t, min_t, total_t / billcount, billcount * 1000 / total_t);
+    }
 
     deleteSendTransaction(op.Hdr().dlgId);
 
@@ -512,7 +513,6 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
 
 void BillingManagerImpl::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& pck)
 {
-    smsc_log_debug(logger, "onPacketReceivedCalled");
     INPPacketAC* c = static_cast<INPPacketAC *>(pck.get());
     CsBillingHdr_dlg* hdr = static_cast<CsBillingHdr_dlg*>(c->pHdr());
     ChargeSmsResult* cmd = static_cast<ChargeSmsResult*>(c->pCmd());
@@ -576,15 +576,11 @@ int BillingManagerImpl::Execute()
     {
         try
         {
-            if(m_Connected)
-                smsc_log_info(logger,"before read");
             if(!m_Connected || pipe->onReadEvent())
             {
+                connectEvent.Wait(m_ReconnectTimeout * 1000);
                 m_Connected = Reconnect();
-                if(!m_Connected) connectEvent.Wait(m_ReconnectTimeout * 1000);
             }
-            if(m_Connected)
-                smsc_log_info(logger,"data processed");
         }catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
