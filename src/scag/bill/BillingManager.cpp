@@ -512,6 +512,7 @@ TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op
 
 void BillingManagerImpl::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& pck)
 {
+    smsc_log_debug(logger, "onPacketReceivedCalled");
     INPPacketAC* c = static_cast<INPPacketAC *>(pck.get());
     CsBillingHdr_dlg* hdr = static_cast<CsBillingHdr_dlg*>(c->pHdr());
     ChargeSmsResult* cmd = static_cast<ChargeSmsResult*>(c->pCmd());
@@ -575,11 +576,15 @@ int BillingManagerImpl::Execute()
     {
         try
         {
+            if(m_Connected)
+                smsc_log_info(logger,"before read");
             if(!m_Connected || pipe->onReadEvent())
             {
                 m_Connected = Reconnect();
                 if(!m_Connected) connectEvent.Wait(m_ReconnectTimeout * 1000);
             }
+            if(m_Connected)
+                smsc_log_info(logger,"data processed");
         }catch (SCAGException& e)
         {
             smsc_log_error(logger, "BillingManager error: %s", e.what());
