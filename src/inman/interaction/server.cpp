@@ -53,8 +53,7 @@ void Server::setPollTimeout(unsigned long milli_secs)
 bool Server::setConnection(const char * host, unsigned port, unsigned timeout_secs)
 {
     std::auto_ptr<Socket> socket(new Socket());
-    if (socket->Init(host, port, timeout_secs)
-        || socket->Connect()) {
+    if (socket->Init(host, port, timeout_secs) || socket->Connect()) {
         smsc_log_error(logger, "TCPSrv: unable to set connection to %s:%u : %s (%d)",
                        host, port, strerror(errno), errno);
         return false;
@@ -65,9 +64,9 @@ bool Server::setConnection(const char * host, unsigned port, unsigned timeout_se
 
 bool Server::Start(void)
 {
-    if (serverSocket.InitServer(_cfg.host.c_str(), _cfg.port, _cfg.timeout)) {
-        smsc_log_fatal(logger, "TCPSrv: failed to init server socket %s:%d",
-                       _cfg.host.c_str(), _cfg.port);
+    if (serverSocket.InitServer(_cfg.host.c_str(), _cfg.port, _cfg.timeout, 1, true)) {
+        smsc_log_fatal(logger, "TCPSrv: failed to init server socket %s:%d : %d (%s)",
+                       _cfg.host.c_str(), _cfg.port, errno, strerror(errno));
         return false;
     }
     if (serverSocket.StartServer()) {
@@ -133,6 +132,7 @@ void Server::closeAllConnects(bool abort/* = false*/)
 //NOTE: Requires _mutex to be unlocked !!!
 void Server::openConnect(std::auto_ptr<Socket>& use_sock)
 {
+    use_sock->SetNoDelay(true);
     unsigned sock_id = use_sock->getSocket();
     std::auto_ptr<ConnectAC> pConn;
     try {
@@ -188,9 +188,8 @@ Server::ShutdownReason Server::Listen(void)
     _runState = Server::lstRunning;
     while (_runState != Server::lstStopped) {
         //check for last connect while stopping
-        if ((_runState == Server::lstStopping) && !connects.size()) {
+        if ((_runState == Server::lstStopping) && connects.empty()) {
             _runState = Server::lstStopped;
-            _mutex.Unlock();
             smsc_log_debug(logger, "TCPSrv: all connects finished, stopping ..");
             break;
         }
