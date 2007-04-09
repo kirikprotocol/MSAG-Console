@@ -57,12 +57,12 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
         uint32_t billId;
         SendTransaction() : status(TRANSACTION_WAIT_ANSWER) {}
     };
+    IntHash <SendTransaction *> SendTransactionHash;
     #endif
 
     Logger *logger;
 
     IntHash <BillTransaction *> BillTransactionHash;
-    IntHash <SendTransaction *> SendTransactionHash;
 
     Event connectEvent;
     Mutex stopLock;
@@ -116,11 +116,13 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     {
         int key;
         BillTransaction *value;
-        SendTransaction *st;
 
         MutexGuard mg(inUseLock);
+#ifdef MSAG_INMAN_BILL
+        SendTransaction *st;
         for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
             st->responseEvent.Signal();
+#endif
 
         for (IntHash <BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
             delete value;
