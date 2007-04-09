@@ -13,8 +13,10 @@
 using smsc::core::threads::Thread;
 
 #include "core/synchronization/Event.hpp"
-using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::Event;
+#include "core/synchronization/EventMonitor.hpp"
+using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::Mutex;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;
@@ -48,6 +50,7 @@ public:
     //Retuns conn_id, if 'mgr' == NULL, connect will be utilized by ConnectSrv
     unsigned    addConnection(ConnectAC * use_conn, ConnectSupervisorITF * mgr);
     ConnectAC * rlseConnection(unsigned conn_id);
+    unsigned    numOfConnects(void);
 
     Socket * setConnection(const char * host, unsigned port, unsigned timeout_secs = 5);
 
@@ -58,11 +61,12 @@ public:
 
 protected:
     struct ConnectInfo {
+        bool        ignore;
         ConnectAC * conn;
         ConnectSupervisorITF * mgr;
 
         ConnectInfo(ConnectAC * use_conn = NULL, ConnectSupervisorITF * use_mgr = NULL)
-            : conn(use_conn), mgr(use_mgr)
+            : conn(use_conn), mgr(use_mgr), ignore(false)
         { }
     };
     typedef std::map<unsigned, ConnectInfo> ConnectsMap;
@@ -73,7 +77,7 @@ protected:
     void closeAllConnects(bool abort = false);
 
     Event           lstEvent;
-    Mutex           _mutex;
+    EventMonitor    _Sync;
     unsigned int    maxConn;
     unsigned int    tmoMSecs;
     volatile SrvState _runState;
