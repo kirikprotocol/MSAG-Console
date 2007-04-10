@@ -1085,6 +1085,7 @@ int processSms(const char* text,const char* fromaddress)
     }else
     {
       cmd=text;
+      toLower(cmd);
     }
 
     __trace2__("cmd=%s",cmd.c_str());
