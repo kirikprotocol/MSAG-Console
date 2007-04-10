@@ -171,7 +171,7 @@ void Connect::notifyByMsg(std::auto_ptr<SerializablePacketAC>& p_msg)
         try { ptr->onPacketReceived(this, p_msg);
         } catch (std::exception& lexc) {
             _exc.reset(new CustomException("%s: %s", _logId, lexc.what()));
-            smsc_log_error(logger, _exc->what());
+            smsc_log_error(logger, "%s", _exc->what());
         }
     }
 }
