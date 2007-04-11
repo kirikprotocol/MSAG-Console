@@ -58,7 +58,7 @@ bool isValidAlias(const std::string& value)
   for(int i=0;i<value.length();i++)
   {
     if(isalpha(value[i]))haveLetters=true;
-    if(!isalnum(value[i]) && !strchr("-+_",value[i]))return false;
+    if(!isalnum(value[i]) && !strchr("-._",value[i]))return false;
   }
   return haveLetters;
 }
@@ -1154,6 +1154,14 @@ int processSms(const char* text,const char* fromaddress)
           sendAnswer(fromaddress,"realname","realname",p.realName.c_str());
           return ProcessSmsCodes::OK;
         }else
+        if(cmd=="norealname")
+        {
+          std::string oldRn=p.realName;
+          p.realName="";
+          storage.UpdateProfile(p);
+          sendAnswer(fromaddress,"norealname","realname",oldRn.c_str());
+          return ProcessSmsCodes::OK;
+        }else
         if(cmd=="number")
         {
           std::string val=trimSpaces(sp);
@@ -1256,9 +1264,9 @@ int processSms(const char* text,const char* fromaddress)
       {
         sendAnswer(fromaddress,"messagesent","to",to[0].c_str());
       }
-    }catch(...)
+    }catch(std::exception& e)
     {
-      __warning__("SMTP session aborted");
+      __warning2__("SMTP session aborted:%s",e.what());
       sendAnswer(fromaddress,"messagefailedsendmail");
       return ProcessSmsCodes::UNABLETOSEND;
     }
@@ -1767,7 +1775,7 @@ int main(int argc,char* argv[])
 */
   if(!reParseSms.Compile(
 "/^(?:"
-"alias\\s+\\w*|"
+"alias\\s+[\\w.\\-]*|"
 "noalias|"
 "forward\\s+[\\w\\-+\\.]+@[\\w\\-\\]+\\.[\\w\\-\\.]+|"
 "forwardoff|"
@@ -1775,6 +1783,7 @@ int main(int argc,char* argv[])
 "number\\s+on|"
 "number\\s+off|"
 "realname\\s+.*|"
+"norealname|"
 "(?{address}[\\w\\-\\.]+@[\\w\\-\\.]+)(?:\\ssubj=\"(?{subj}.*?)\")?\\s*(?{body}.*)"
 ")\\s*$/isx"
 ))
@@ -1931,7 +1940,8 @@ int main(int argc,char* argv[])
       "messagefailedlimit",
       "messagefailednoprofile",
       "messagefailedsendmail",
-      "messagefailedsystem"
+      "messagefailedsystem",
+      "norealname"
     };
     for(int i=0;i<sizeof(answers)/sizeof(answers[0]);i++)
     {
