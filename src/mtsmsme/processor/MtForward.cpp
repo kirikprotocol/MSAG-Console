@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include "MtForward.hpp"
 #include <stdio.h>
 #include <sys/types.h>

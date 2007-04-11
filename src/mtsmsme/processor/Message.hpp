@@ -1,6 +1,8 @@
+#ident "$Id$"
 #ifndef __SMSC_MTSMSME_PROCESSOR_MESSAGE_HPP_
 #define __SMSC_MTSMSME_PROCESSOR_MESSAGE_HPP_
 
+#include <asn_application.h>
 #include <vector>
 #include <string>
 #include <string.h>
@@ -127,7 +129,8 @@ class ContMsg {
       r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
       r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
       r.aare_user_information = 0;
-      cont.choice.contiinue.dialoguePortion = ( DialoguePortion *)&dp;
+//      cont.choice.contiinue.dialoguePortion = ( DialoguePortion *)&dp;
+      cont.choice.contiinue.dialoguePortion = ( struct EXT *)&dp;
     }
 
     void setComponent(int result, int iid)
@@ -202,7 +205,8 @@ class EndMsg {
       r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
       r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
       r.aare_user_information = 0;
-      end.choice.end.dialoguePortion = ( DialoguePortion *)&dp;
+//      end.choice.end.dialoguePortion = ( DialoguePortion *)&dp;
+      end.choice.end.dialoguePortion = ( struct EXT *)&dp;
     }
     void setComponent(int result, int iid)
     {
@@ -243,6 +247,7 @@ class Message {
     TrId getDTID();
     bool isBegin();
     bool isContinue();
+    bool isEnd();
     bool isComponentPresent();
     int getInvokeId();
     bool isDialoguePortionExist();

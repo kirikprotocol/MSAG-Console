@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include "Message.hpp"
 #include <stdio.h>
 #include <sys/types.h>
@@ -83,6 +84,13 @@ TrId Message::getDTID()
       memcpy(dtid.buf,tid->buf,tid->size);
       //otid.insert(otid.end(),tid->buf, tid->buf + tid->size);
     }
+    if(pmsg->present == MessageType_PR_end)
+    {
+      OCTET_STRING_t *tid = &(pmsg->choice.end.dtid);
+      dtid.size = tid->size;
+      memcpy(dtid.buf,tid->buf,tid->size);
+      //otid.insert(otid.end(),tid->buf, tid->buf + tid->size);
+    }
   }
   return dtid;
 }
@@ -97,6 +105,12 @@ bool Message::isContinue()
 {
   bool res = false;
   if(structure) res = (((MessageType_t*)structure)->present == MessageType_PR_contiinue);
+  return res;
+}
+bool Message::isEnd()
+{
+  bool res = false;
+  if(structure) res = (((MessageType_t*)structure)->present == MessageType_PR_end);
   return res;
 }
 

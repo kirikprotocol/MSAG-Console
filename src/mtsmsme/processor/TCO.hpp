@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __SMSC_MTSMSME_PROCESSOR_TCO_HPP_
 #define __SMSC_MTSMSME_PROCESSOR_TCO_HPP_
 
@@ -26,11 +27,21 @@ struct TrIdHash{
   }
 };
 
+class SccpSender {
+  public:
+    virtual void send(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp) = 0;
+};
+
 class TCO
 {
   public:
-    TCO(int TrLimit);
+    TCO(int TrLimit,uint8_t ssn);
     ~TCO();
+    TSM* TC_BEGIN(const char* imsi,
+                  const char* mcs,
+                  const char* vlr,
+                  const char* mgt
+                 );
     void NUNITDATA(uint8_t cdlen,
                    uint8_t *cd, /* called party address */
                    uint8_t cllen,
@@ -40,6 +51,7 @@ class TCO
                   );
     void TR_CONTINUE(TrId trid);
     void setRequestSender(RequestSender* sender);
+    void setSccpSender(SccpSender* sender);
     void SCCPsend(uint8_t cdlen,
                   uint8_t *cd,
                   uint8_t cllen,
@@ -53,6 +65,7 @@ class TCO
   private:
     XHash<TrId,TSM*,TrIdHash> tsms;
     list<TrId> tridpool;
+    uint8_t ssn;
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

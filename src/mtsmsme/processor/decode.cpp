@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include "decode.hpp"
 #include <stdio.h>
 #include <sys/types.h>

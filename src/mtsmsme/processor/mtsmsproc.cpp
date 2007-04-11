@@ -1,9 +1,18 @@
+static char const ident[] = "$Id$";
 #include "Processor.h"
 #include "clbks.hpp"
 #include "util.hpp"
 #include "logger/Logger.h"
 #include "MTRequest.hpp"
+#include "mtsmsme/processor/HLRImpl.hpp"
 #include "TCO.hpp"
+#include "sms/sms.h"
+
+//delete after
+#include "mtsmsme/comp/UpdateLocation.hpp"
+#include "mtsmsme/processor/util.hpp"
+#include "mtsmsme/processor/ACRepo.hpp"
+//delete above
 
 using namespace std;
 namespace smsc{
@@ -12,10 +21,14 @@ namespace processor{
 
 using namespace smsc::mtsmsme::processor::decode;
 using namespace smsc::mtsmsme::processor::encode;
+using smsc::sms::Address;
+using smsc::sms::AddressValue;
 
 class MtSmsProcessor : public RequestProcessor{
   public:
     virtual void setRequestSender(RequestSender* sender);
+    void configure(int user_id, int ssn,Address& msc, Address& vlr);
+    virtual HLROAM* getHLROAM();
     virtual int Run();
     virtual void Stop();
     TCO*    getCoordinator();
@@ -24,7 +37,7 @@ class MtSmsProcessor : public RequestProcessor{
   private:
     RequestSender* sender;
     TCO* coordinator;
-
+    SubscriberRegistrator* registrator;
 };
 
 using smsc::logger::Logger;
@@ -33,9 +46,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::mtsmsme::processor::util::getReturnCodeDescription;
 
 #define MAXENTRIES 1000
-#define USER USER04_ID
 #define MAXSEGM 272
-#define SSN 191
 #define TCINST 0
 #define MGMT_VER 6
 #define MCIERROR 999
@@ -45,6 +56,18 @@ static MtSmsProcessor* volatile processor = 0;
 Logger* MtSmsProcessorLogger = 0;
 Mutex lock;
 
+static UCHAR_T USER = USER04_ID;
+static UCHAR_T SSN = 191;
+static AddressValue vlrnumber;
+static AddressValue mscnumber;
+
+void MtSmsProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr)
+{
+  USER = user_id; SSN = ssn;
+  msc.getValue(mscnumber);
+  vlr.getValue(vlrnumber);
+  registrator->configure(msc,vlr);
+}
 
 RequestProcessor* RequestProcessor::getInstance()
 {
@@ -61,10 +84,12 @@ RequestProcessor* RequestProcessor::getInstance()
 MtSmsProcessor::MtSmsProcessor()
 {
   MtSmsProcessorLogger = Logger::getInstance("mt.sme.pr");
-  smsc_log_debug(MtSmsProcessorLogger,"\n**********************\n* SIBINCO MT SMS SME *\n**********************");
+  //smsc_log_debug(MtSmsProcessorLogger,"\n**********************\n* SIBINCO MT SMS SME *\n**********************");
   sender = 0;
-  coordinator = new TCO(10);
+  coordinator = new TCO(10,SSN);
+  registrator = new SubscriberRegistrator(coordinator);
 }
+HLROAM* MtSmsProcessor::getHLROAM() { return registrator; }
 MtSmsProcessor::~MtSmsProcessor()
 {
   delete(coordinator);
@@ -83,13 +108,7 @@ void MtSmsProcessor::Stop()
   going = 0;
 }
 /*
- * @-> INIT -> MGMTBINDING --> MGMTBOUND
- *                         |
- *                         --> STACKOK
- * --> MGMTBOUND -> WAITINGSTACK --> STACKOK
- *  |                            |
- *  --------------<---------------
- * --> STACKOK -> SCCPBINDING -> WORKING
+ * @-> INIT -> SCCPBINDING -> WORKING
  */
 enum State{
       INIT,
@@ -176,7 +195,7 @@ int MtSmsProcessor::Run()
     smsc_log_error(MtSmsProcessorLogger,
                    "MsgInit Failed with code %d(%s)",
                    result,getReturnCodeDescription(result));
-    goto msginit;
+    goto msg_init_error;
   }
 
   result = MsgOpen(USER);
@@ -184,7 +203,7 @@ int MtSmsProcessor::Run()
     smsc_log_error(MtSmsProcessorLogger,
                    "MsgOpen failed with code %d(%s)",
                    result,getReturnCodeDescription(result));
-    goto msgexit;
+    goto msg_open_error;
   }
 
   result = MsgConn(USER,SCCP_ID);
@@ -192,14 +211,7 @@ int MtSmsProcessor::Run()
     smsc_log_error(MtSmsProcessorLogger,
                    "MsgConn to SCCP failed with code %d(%s)",
                    result,getReturnCodeDescription(result));
-    goto msgclose;
-  }
-  result = MsgConn(USER,MGMT_ID);
-  if (result != 0) {
-    smsc_log_error(MtSmsProcessorLogger,
-                   "MsgConn to MGMT failed with code %d(%s)",
-                   result,getReturnCodeDescription(result));
-    goto msgrelSCCP;
+    goto msg_conn_sccp_error;
   }
   MSG_T message;
 
@@ -209,67 +221,13 @@ int MtSmsProcessor::Run()
     switch ( state )
     {
       case INIT:
-        /*
-         * Bind to Management module, await confirmation
-         * return if not confirmed in specified period of time
-         */
-        result = EINSS7_MgmtApiSendBindReq(USER,MGMT_ID,MGMT_VER,NO_WAIT);
-        if( EINSS7_MGMTAPI_REQUEST_OK == result)
-        {
-          changeState(MGMTBINDING);
-          setTimer(&conftimer,MAXCONFTIME);
-        }
-        else
-        {
-          smsc_log_error(MtSmsProcessorLogger,
-                         "EINSS7_MgmtApiSendBindReq() failed with code %d(%s)",
-                         result,getReturnCodeDescription(result));
-          goto msgrelmgmt;
-        }
-        break;
-      case MGMTBOUND:
-        /*
-         * Query Stack state, awaiting ss7 stack running
-         */
-        if (checkTimer(&stacktimer))
-        {
-          cancelTimer(&stacktimer);
-          smsc_log_error(MtSmsProcessorLogger,
-                         "ss7 stack is still not running, exiting...");
-          result = MCIERROR;
-          goto unbindmgmt;
-        }
-        if (checkTimer(&waitstacktimer))
-        {
-          cancelTimer(&waitstacktimer);
-          result = EINSS7_MgmtApiSendMgmtReq(USER,
-                                             MGMT_ID,
-                                             9,    /*Stack State Query (SSQ)*/
-                                             0,    /* length */
-                                             NULL, /* data buffer */
-                                             NO_WAIT);
-          if( EINSS7_MGMTAPI_REQUEST_OK == result)
-          {
-            changeState(WAITINGSTACK);
-            setTimer(&conftimer,MAXCONFTIME);
-          }
-          else
-          {
-            smsc_log_error(MtSmsProcessorLogger,
-                           "EINSS7_MgmtApiSendMgmtReq failed with code %d(%s)",
-                           result,getReturnCodeDescription(result));
-            goto unbindmgmt;
-          }
-        }
-        break;
-      case STACKOK:
         result = EINSS7_I96SccpBindReq(SSN,USER,MAXSEGM);
         if( result != EINSS7_I96SCCP_REQUEST_OK )
         {
           smsc_log_error(MtSmsProcessorLogger,
                          "EINSS7_I96SccpBindReq() failed with code %d(%s)",
                          result,getReturnCodeDescription(result));
-          goto unbindmgmt;
+          goto msg_rel_sccp;
         }
         else
         {
@@ -280,40 +238,21 @@ int MtSmsProcessor::Run()
       /*
        * Timer events
        */
-      case MGMTBINDING:
-        if (checkTimer(&conftimer))
-        {
-          smsc_log_error(MtSmsProcessorLogger,
-                         "EINSS7_MgmtApiSendBindReq() confirmation timer is expired");
-          result = MCIERROR;
-          goto unbindmgmt; /* just in case */
-        }
-        break;
-      case WAITINGSTACK:
-        if (checkTimer(&conftimer))
-        {
-          smsc_log_error(MtSmsProcessorLogger,
-                         "EINSS7_MgmtApiSendMgmtReq() confirmation timer is expired");
-          result = MCIERROR;
-          goto unbindmgmt;
-        }
-        break;
       case SCCPBINDING:
         if (checkTimer(&conftimer))
         {
           smsc_log_error(MtSmsProcessorLogger,
                          "EINSS7_I97IsupBindReg() confirmation timer is expired");
           result = MCIERROR;
-          goto unbindSCCP; /* just in case */
+          goto unbind_sccp; /* just in case */
         }
-        break;
-      case MGMTBINDERROR:
-        result = MCIERROR;
-        goto unbindmgmt;
         break;
       case SCCPBINDERROR:
         result = MCIERROR;
-        goto unbindSCCP;
+        goto unbind_sccp;
+        break;
+      case WORKING:
+        registrator->process();
         break;
     } /* end of switch ( state ) */
 
@@ -348,54 +287,32 @@ int MtSmsProcessor::Run()
                            result,getReturnCodeDescription(result));
           }
           break;
-        case MGMT_ID:
-          result = EINSS7_MgmtApiReceivedXMMsg(&message);
-          if( EINSS7_MGMTAPI_RETURN_OK != result )
-          {
-            smsc_log_error(MtSmsProcessorLogger,
-                           "MGMT callback function return code %d(%s)",
-                           result,getReturnCodeDescription(result));
-          }
-          break;
       }
       EINSS7CpReleaseMsgBuffer(&message);
     }
   }
 
-unbindSCCP:
+unbind_sccp:
   extresult = EINSS7_I96SccpUnBindReq(SSN);
   if( extresult != 0 )
     smsc_log_error(MtSmsProcessorLogger,
                    "EINSS7_I96SccpUnBindReq(%d) failed with code %d(%s)",
                     SSN,extresult,getReturnCodeDescription(extresult));
-unbindmgmt:
-  extresult = EINSS7_MgmtApiSendUnbindReq(USER,MGMT_ID);
-  if( extresult != 0 )
-    smsc_log_error(MtSmsProcessorLogger,
-                   "EINSS7_MgmtApiSendUnbindReq(%d,%d) failed with code %d(%s)",
-                    USER,MGMT_ID,extresult,getReturnCodeDescription(extresult));
-msgrelmgmt:
-  extresult = MsgRel(USER,MGMT_ID);
-  if( extresult != 0 )
-    smsc_log_error(MtSmsProcessorLogger,
-                   "MsgRel(%d,%d) failed with code %d(%s)",
-                    USER,MGMT_ID,extresult,getReturnCodeDescription(extresult));
-
-msgrelSCCP:
+msg_rel_sccp:
   extresult = MsgRel(USER,SCCP_ID);
   if( extresult != 0 )
     smsc_log_error(MtSmsProcessorLogger,
                    "MsgRel(%d,%d) failed with code %d(%s)",
                     USER,SCCP_ID,extresult,getReturnCodeDescription(extresult));
-msgclose:
+msg_conn_sccp_error:
   extresult = MsgClose(USER);
   if( extresult != 0 )
     smsc_log_error(MtSmsProcessorLogger,
                    "MsgClose(%d) failed with code %d(%s)",
                     USER,extresult,getReturnCodeDescription(extresult));
-msgexit:
+msg_open_error:
   MsgExit();
-msginit:
+msg_init_error:
   smsc_log_debug(MtSmsProcessorLogger,"RequestProcessor is down");
   return result;
 }
@@ -425,6 +342,7 @@ using smsc::mtsmsme::processor::stacktimer;
 using smsc::mtsmsme::processor::waitstacktimer;
 using namespace smsc::mtsmsme::processor::util;
 using namespace smsc::mtsmsme::processor::decode;
+using smsc::mtsmsme::processor::util::modifyssn;
 
 USHORT_T EINSS7_I96SccpIndError(USHORT_T errorCode,MSG_T *message)
 {
@@ -512,9 +430,17 @@ USHORT_T EINSS7_I96SccpUnitdataInd(UCHAR_T ssn,
     MtSmsProcessor *proc = (MtSmsProcessor*)RequestProcessor::getInstance();
     TCO *coordinator = proc->getCoordinator();
 
-    /* fix ssn from 191 to 8 */
-    cd[1] = 0x08;
+    /* fix ssn for configured numbers */
+    if (modifyssn(cd, cdlen, mscnumber, 8))
+      smsc_log_debug(MtSmsProcessorLogger,
+                    "Cd equals to %s, set SSN = 8, new Cd(%s)",
+                    mscnumber,getAddressDescription(cdlen,cd).c_str());
+    if (modifyssn(cd, cdlen, vlrnumber, 7))
+      smsc_log_debug(MtSmsProcessorLogger,
+                    "Cd GT equals to %s, set SSN = 7, new Cd(%s)",
+                    vlrnumber,getAddressDescription(cdlen,cd).c_str());
 
+    //cd[1] = 0x08;
     if ( coordinator )
     {
       coordinator->NUNITDATA(cdlen,cd,cllen,cl,ulen,udp);
@@ -522,84 +448,4 @@ USHORT_T EINSS7_I96SccpUnitdataInd(UCHAR_T ssn,
 
   }
   return EINSS7_I96SCCP_REQUEST_OK;
-}
-
-/*********************************************************************/
-/* MGMT CALLBACKS                                                    */
-/*-------------------------------------------------------------------*/
-/* BindConf                                                          */
-/* MgmtConf                                                          */
-/*********************************************************************/
-using namespace smsc::mtsmsme::processor::util;
-USHORT_T EINSS7_MgmtApiHandleBindConf(UCHAR_T length,
-                                      UCHAR_T result,
-                                      UCHAR_T mmState,
-                                      UCHAR_T xmRevision)
-{
-  smsc_log_debug(MtSmsProcessorLogger,
-                 "MgmtBindConf STATUS=%s STACK=%s MGMT_VER=%hu",
-                 getResultDescription(result),
-                 getStackStatusDescription(mmState),
-                 xmRevision);
-  if ( state == MGMTBINDING )
-  {
-    cancelTimer(&conftimer);
-    if ( result == 0 ) /* Success Bind */
-    {
-      if ( mmState == 4 ) /* Stack is running */
-      {
-        changeState(STACKOK);
-      }
-      else
-      {
-        changeState(MGMTBOUND);
-        setTimer(&stacktimer,20000); /* wait stack running during 20 sec*/
-        setTimer(&waitstacktimer,0); /* check state immediately after mgmt bind */
-      }
-    }
-    else
-    {
-      changeState(MGMTBINDERROR);
-    }
-  }
-  return EINSS7_MGMTAPI_RETURN_OK;
-}
-USHORT_T EINSS7_MgmtApiHandleMgmtConf(UCHAR_T typeOfService,
-                                      USHORT_T length,
-                                      UCHAR_T *data_p)
-{
-  smsc_log_debug(MtSmsProcessorLogger,
-                 "MgmtConf Service=%s DataLength=%d",
-                  getTypeOfServiceDescription(typeOfService).c_str(),
-                  length);
-  if ( state == WAITINGSTACK &&
-       typeOfService == 9 /* type = "Stack State Query (SSQ)" */)
-  {
-    cancelTimer(&conftimer);
-    if (*data_p == 4)       /* StackState = "Running" */
-    {
-      changeState(STACKOK);
-      cancelTimer(&stacktimer);
-    }
-    else
-    {
-      changeState(MGMTBOUND);
-      setTimer(&waitstacktimer,1500);
-    }
-  }
-  return EINSS7_MGMTAPI_RETURN_OK;
-}
-USHORT_T EINSS7_MgmtApiHandleOrderConf(USHORT_T moduleId,
-                                       UCHAR_T orderId,
-                                       UCHAR_T orderResult,
-                                       UCHAR_T resultInfo,
-                                       UCHAR_T lengthOfInfo,
-                                       UCHAR_T *orderInfo_p)
-{
-  smsc_log_debug(MtSmsProcessorLogger,
-                 "MgmtOrderConf %s ORDER %d %s",
-                 getModuleName(moduleId),
-                 orderId,
-                 getResultDescription(orderResult));
-  return EINSS7_MGMTAPI_RETURN_OK;
 }

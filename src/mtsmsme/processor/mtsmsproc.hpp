@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __SMSC_MTSMS_MTSMSPROC_HPP__
 #define __SMSC_MTSMS_MTSMSPROC_HPP__
 

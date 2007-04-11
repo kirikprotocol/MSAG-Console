@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef SMSC_MTSM_SME_PRECESSOR
 #define SMSC_MTSM_SME_PRECESSOR
 
@@ -5,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string>
+#include <sms/sms.h>
 
 #include <sms/sms.h>
 //#include <util/recoder/recode_dll.h>
@@ -14,7 +16,7 @@ namespace smsc { namespace mtsmsme { namespace processor
 {
 
     using namespace smsc::sms;
-
+    using smsc::sms::Address;
     /**
      * Interface & sms to send
      * Note: Need to be implemnted by lower layer.
@@ -57,6 +59,16 @@ namespace smsc { namespace mtsmsme { namespace processor
     };
 
     /**
+     * Interface for HLR operation and maintenance command
+     */
+   class HLROAM
+   {
+     public:
+       // request to register specified info to HLR on periodical basis specified by period.
+       // if 'period' parameter equals zero then register info only once 
+       virtual void registerSubscriber(Address& imsi, Address& msisdn, Address& mgt, int period) = 0;
+   };
+    /**
      * Interface for request manager
      * Note: Need to be implemnted by lower layer.
      */
@@ -65,8 +77,9 @@ namespace smsc { namespace mtsmsme { namespace processor
     public:
 
         static RequestProcessor* getInstance();
-
+        virtual void configure(int user_id, int ssn, Address& msc, Address& vlr) = 0;
         virtual void setRequestSender(RequestSender* sender) = 0;
+        virtual HLROAM* getHLROAM() = 0;
 
         virtual int Run() = 0;
         virtual void Stop() = 0;
@@ -77,7 +90,6 @@ namespace smsc { namespace mtsmsme { namespace processor
 
         RequestProcessor() {};
     };
-
 }}}
 
 #endif // SMSC_MTSM_SME_PRECESSOR

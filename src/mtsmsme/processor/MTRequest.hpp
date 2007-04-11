@@ -1,15 +1,16 @@
+#ident "$Id$"
 #ifndef __SMSC_MTSMSME_PROCESSOR_MTREQUEST_HPP_
 #define __SMSC_MTSMSME_PROCESSOR_MTREQUEST_HPP_
 
 #include "Processor.h"
 
 namespace smsc{namespace mtsmsme{namespace processor{
-class TSM;
+class MTFTSM;
 struct MTR: public Request {
-  TSM* tsm;
+  MTFTSM* tsm;
   int invokeId;
   bool mms;
-  MTR(TSM* _tsm){tsm = _tsm;}
+  MTR(MTFTSM* _tsm){tsm = _tsm;}
   void setSendResult(int result);
 };
 

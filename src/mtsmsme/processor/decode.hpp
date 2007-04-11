@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __SMSC_MTSMSME_PROCESSOR_DECODE_HPP__
 #define __SMSC_MTSMSME_PROCESSOR_DECODE_HPP__
 

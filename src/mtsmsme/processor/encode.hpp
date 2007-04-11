@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __SMSC_MTSMSME_PROCESSOR_ENCODE_HPP__
 #define __SMSC_MTSMSME_PROCESSOR_ENCODE_HPP__
 
@@ -13,6 +14,8 @@ using std::vector;
 class Encoder {
   public:
     int encode_mt_resp(ContMsg& msg,vector<unsigned char>& buf);
+    int encode_resp(ContMsg& msg,vector<unsigned char>& buf);
+    int encode_resp(EndMsg& msg,vector<unsigned char>& buf);
     int encode_mt_resp(EndMsg& msg,vector<unsigned char>& buf);
     int encodeResourceLimitation(TrId dtid,vector<unsigned char>& buf);
     int encodeBadTrPortion(TrId dtid,vector<unsigned char>& buf);

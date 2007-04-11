@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include <stdio.h>
 #include <sys/types.h>
 
@@ -15,18 +16,7 @@ extern Logger* MtSmsProcessorLogger;
 
 #include "encode.hpp"
 
-namespace smsc{
-namespace mtsmsme{
-namespace processor{
-static uint8_t transid[] = {0,0,0,0};
-static uint8_t magic0780[] = {0x80};
-BIT_STRING_t tcapversion = {magic0780,sizeof(magic0780),0x07,};
-
-static uint8_t magic773[] = {0x00,0x11,0x86,0x05,0x01,0x01,0x01};
-ASN__PRIMITIVE_TYPE_t pduoid = {magic773,sizeof(magic773)};
-static uint8_t smmtappcntx[] = {0x04,0x00,0x00,0x01,0x00,0x19,0x02};
-
-namespace encode{
+namespace smsc{namespace mtsmsme{namespace processor{namespace encode{
 
 extern "C" static int print2vec(const void *buffer, size_t size, void *app_key);
 static void relMtResponse();
@@ -148,6 +138,31 @@ int Encoder::encode_mt_resp(EndMsg& msg,vector<unsigned char>& buf)
   }
   return (er.encoded == -1);
 }
+int Encoder::encode_resp(ContMsg& msg,vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er;
+  er = der_encode(def, &msg.cont,print2vec, &buf);
+
+  if(er.encoded == -1) {
+    smsc_log_error(MtSmsProcessorLogger,
+                   "Cannot encode %s",
+                   er.failed_type->name);
+  }
+  return (er.encoded == -1);
+}
+int Encoder::encode_resp(EndMsg& msg,vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er;
+  er = der_encode(def, &msg.end,print2vec, &buf);
+
+  if(er.encoded == -1) {
+    smsc_log_error(MtSmsProcessorLogger,
+                   "Cannot encode %s",
+                   er.failed_type->name);
+  }
+  return (er.encoded == -1);
+}
+
 int Encoder::encode_mt_resp(ContMsg& msg,vector<unsigned char>& buf)
 {
   asn_enc_rval_t er;
