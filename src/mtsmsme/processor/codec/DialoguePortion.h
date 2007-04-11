@@ -1,18 +1,20 @@
-#ifndef _DialoguePortion_H_
-#define _DialoguePortion_H_
+#ifndef	_DialoguePortion_H_
+#define	_DialoguePortion_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include "EXT.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
+/* DialoguePortion */
+typedef EXT_t	 DialoguePortion_t;
 
-#include <EXT.h>
-
-
-
-typedef EXT_t  DialoguePortion_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_DialoguePortion;
 asn_struct_free_f DialoguePortion_free;
 asn_struct_print_f DialoguePortion_print;
@@ -26,4 +28,4 @@ xer_type_encoder_f DialoguePortion_encode_xer;
 }
 #endif
 
-#endif  /* _DialoguePortion_H_ */
+#endif	/* _DialoguePortion_H_ */

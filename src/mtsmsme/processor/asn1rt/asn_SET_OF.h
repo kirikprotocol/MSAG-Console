@@ -1,16 +1,20 @@
-#ifndef ASN_SET_OF_H
-#define ASN_SET_OF_H
+#ifndef	ASN_SET_OF_H
+#define	ASN_SET_OF_H
 
-#define A_SET_OF(type)          \
-  struct {          \
-    type **array;       \
-    int count;  /* Meaningful size */ \
-    int size; /* Allocated size */  \
-    void (*free)(type *);     \
-  }
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define ASN_SET_ADD(headptr, ptr)   \
-  asn_set_add((headptr), (ptr))
+#define	A_SET_OF(type)					\
+	struct {					\
+		type **array;				\
+		int count;	/* Meaningful size */	\
+		int size;	/* Allocated size */	\
+		void (*free)(type *);			\
+	}
+
+#define	ASN_SET_ADD(headptr, ptr)		\
+	asn_set_add((headptr), (ptr))
 
 /*******************************************
  * Implementation of the SET OF structure.
@@ -39,4 +43,16 @@ void asn_set_del(void *asn_set_of_x, int number, int _do_free);
  */
 void asn_set_empty(void *asn_set_of_x);
 
-#endif  /* ASN_SET_OF_H */
+/*
+ * Cope with different conversions requirements to/from void in C and C++.
+ * This is mostly useful for support library.
+ */
+typedef A_SET_OF(void) asn_anonymous_set_;
+#define _A_SET_FROM_VOID(ptr)		((asn_anonymous_set_ *)(ptr))
+#define _A_CSET_FROM_VOID(ptr)		((const asn_anonymous_set_ *)(ptr))
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif	/* ASN_SET_OF_H */

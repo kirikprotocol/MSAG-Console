@@ -1,23 +1,27 @@
-#ifndef _GeneralProblem_H_
-#define _GeneralProblem_H_
+#ifndef	_GeneralProblem_H_
+#define	_GeneralProblem_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <NativeInteger.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
-
-#include <NativeInteger.h>
-
+/* Dependencies */
 typedef enum GeneralProblem {
-  GeneralProblem_unrecognizedComponent  = 0,
-  GeneralProblem_mistypedComponent  = 1,
-  GeneralProblem_badlyStructuredComponent = 2
-} GeneralProblem_e;
+	GeneralProblem_unrecognizedComponent	= 0,
+	GeneralProblem_mistypedComponent	= 1,
+	GeneralProblem_badlyStructuredComponent	= 2
+} e_GeneralProblem;
 
+/* GeneralProblem */
+typedef long	 GeneralProblem_t;
 
-typedef int  GeneralProblem_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_GeneralProblem;
 asn_struct_free_f GeneralProblem_free;
 asn_struct_print_f GeneralProblem_print;
@@ -31,4 +35,4 @@ xer_type_encoder_f GeneralProblem_encode_xer;
 }
 #endif
 
-#endif  /* _GeneralProblem_H_ */
+#endif	/* _GeneralProblem_H_ */

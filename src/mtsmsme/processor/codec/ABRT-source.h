@@ -1,22 +1,26 @@
-#ifndef _ABRT_source_H_
-#define _ABRT_source_H_
+#ifndef	_ABRT_source_H_
+#define	_ABRT_source_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <NativeInteger.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
-
-#include <NativeInteger.h>
-
+/* Dependencies */
 typedef enum ABRT_source {
-  ABRT_source_dialogue_service_user = 0,
-  ABRT_source_dialogue_service_provider = 1
-} ABRT_source_e;
+	ABRT_source_dialogue_service_user	= 0,
+	ABRT_source_dialogue_service_provider	= 1
+} e_ABRT_source;
 
+/* ABRT-source */
+typedef long	 ABRT_source_t;
 
-typedef int  ABRT_source_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_ABRT_source;
 asn_struct_free_f ABRT_source_free;
 asn_struct_print_f ABRT_source_print;
@@ -30,4 +34,4 @@ xer_type_encoder_f ABRT_source_encode_xer;
 }
 #endif
 
-#endif  /* _ABRT_source_H_ */
+#endif	/* _ABRT_source_H_ */

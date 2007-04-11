@@ -1,23 +1,27 @@
-#ifndef _ReturnResultProblem_H_
-#define _ReturnResultProblem_H_
+#ifndef	_ReturnResultProblem_H_
+#define	_ReturnResultProblem_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <NativeInteger.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
-
-#include <NativeInteger.h>
-
+/* Dependencies */
 typedef enum ReturnResultProblem {
-  ReturnResultProblem_unrecognizedInvokeID  = 0,
-  ReturnResultProblem_returnResultUnexpected  = 1,
-  ReturnResultProblem_mistypedParameter = 2
-} ReturnResultProblem_e;
+	ReturnResultProblem_unrecognizedInvokeID	= 0,
+	ReturnResultProblem_returnResultUnexpected	= 1,
+	ReturnResultProblem_mistypedParameter	= 2
+} e_ReturnResultProblem;
 
+/* ReturnResultProblem */
+typedef long	 ReturnResultProblem_t;
 
-typedef int  ReturnResultProblem_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_ReturnResultProblem;
 asn_struct_free_f ReturnResultProblem_free;
 asn_struct_print_f ReturnResultProblem_print;
@@ -31,4 +35,4 @@ xer_type_encoder_f ReturnResultProblem_encode_xer;
 }
 #endif
 
-#endif  /* _ReturnResultProblem_H_ */
+#endif	/* _ReturnResultProblem_H_ */

@@ -1,25 +1,29 @@
-#ifndef _P_AbortCause_H_
-#define _P_AbortCause_H_
+#ifndef	_P_AbortCause_H_
+#define	_P_AbortCause_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <NativeInteger.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
-
-#include <NativeInteger.h>
-
+/* Dependencies */
 typedef enum P_AbortCause {
-  P_AbortCause_unrecognizedMessageType  = 0,
-  P_AbortCause_unrecognizedTransactionID  = 1,
-  P_AbortCause_badlyFormattedTransactionPortion = 2,
-  P_AbortCause_incorrectTransactionPortion  = 3,
-  P_AbortCause_resourceLimitation = 4
-} P_AbortCause_e;
+	P_AbortCause_unrecognizedMessageType	= 0,
+	P_AbortCause_unrecognizedTransactionID	= 1,
+	P_AbortCause_badlyFormattedTransactionPortion	= 2,
+	P_AbortCause_incorrectTransactionPortion	= 3,
+	P_AbortCause_resourceLimitation	= 4
+} e_P_AbortCause;
 
+/* P-AbortCause */
+typedef long	 P_AbortCause_t;
 
-typedef int  P_AbortCause_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_P_AbortCause;
 asn_struct_free_f P_AbortCause_free;
 asn_struct_print_f P_AbortCause_print;
@@ -33,4 +37,4 @@ xer_type_encoder_f P_AbortCause_encode_xer;
 }
 #endif
 
-#endif  /* _P_AbortCause_H_ */
+#endif	/* _P_AbortCause_H_ */

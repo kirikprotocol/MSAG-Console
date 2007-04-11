@@ -1,7 +1,11 @@
-#ifndef ASN_TYPE_NULL_H
-#define ASN_TYPE_NULL_H
+#ifndef	ASN_TYPE_NULL_H
+#define	ASN_TYPE_NULL_H
 
 #include <asn_application.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * The value of the NULL type is meaningless: see BOOLEAN if you want to
@@ -15,5 +19,11 @@ asn_struct_print_f NULL_print;
 der_type_encoder_f NULL_encode_der;
 xer_type_decoder_f NULL_decode_xer;
 xer_type_encoder_f NULL_encode_xer;
+per_type_decoder_f NULL_decode_uper;
+per_type_encoder_f NULL_encode_uper;
 
-#endif  /* NULL_H */
+#ifdef __cplusplus
+}
+#endif
+
+#endif	/* NULL_H */

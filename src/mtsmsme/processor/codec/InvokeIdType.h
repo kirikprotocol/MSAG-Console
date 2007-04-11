@@ -1,18 +1,20 @@
-#ifndef _InvokeIdType_H_
-#define _InvokeIdType_H_
+#ifndef	_InvokeIdType_H_
+#define	_InvokeIdType_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <NativeInteger.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
+/* InvokeIdType */
+typedef long	 InvokeIdType_t;
 
-#include <NativeInteger.h>
-
-
-
-typedef int  InvokeIdType_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_InvokeIdType;
 asn_struct_free_f InvokeIdType_free;
 asn_struct_print_f InvokeIdType_print;
@@ -26,4 +28,4 @@ xer_type_encoder_f InvokeIdType_encode_xer;
 }
 #endif
 
-#endif  /* _InvokeIdType_H_ */
+#endif	/* _InvokeIdType_H_ */

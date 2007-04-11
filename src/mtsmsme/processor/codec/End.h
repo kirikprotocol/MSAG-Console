@@ -1,36 +1,40 @@
-#ifndef _End_H_
-#define _End_H_
+#ifndef	_End_H_
+#define	_End_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include "DestTransactionID.h"
+#include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
+/* Forward declarations */
+struct EXT;
+struct ComponentPortion;
 
-#include <DestTransactionID.h>
-#include <DialoguePortion.h>
-#include <ComponentPortion.h>
-#include <constr_SEQUENCE.h>
-
-
-struct DialoguePortion; /* Forward declaration */
-
-struct ComponentPortion;  /* Forward declaration */
-extern asn_TYPE_descriptor_t asn_DEF_End;
-
-
+/* End */
 typedef struct End {
-  DestTransactionID_t  dtid;
-  struct DialoguePortion  *dialoguePortion  /* OPTIONAL */;
-  struct ComponentPortion *components /* OPTIONAL */;
-
-  /* Context for parsing across buffer boundaries */
-  asn_struct_ctx_t _asn_ctx;
+	DestTransactionID_t	 dtid;
+	struct EXT	*dialoguePortion	/* OPTIONAL */;
+	struct ComponentPortion	*components	/* OPTIONAL */;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
 } End_t;
 
+/* Implementation */
+extern asn_TYPE_descriptor_t asn_DEF_End;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* _End_H_ */
+/* Referred external types */
+#include "DialoguePortion.h"
+#include "ComponentPortion.h"
+
+#endif	/* _End_H_ */

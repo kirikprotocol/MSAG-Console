@@ -1,38 +1,42 @@
-#ifndef _Continue_H_
-#define _Continue_H_
+#ifndef	_Continue_H_
+#define	_Continue_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include "OrigTransactionID.h"
+#include "DestTransactionID.h"
+#include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
+/* Forward declarations */
+struct EXT;
+struct ComponentPortion;
 
-#include <OrigTransactionID.h>
-#include <DestTransactionID.h>
-#include <DialoguePortion.h>
-#include <ComponentPortion.h>
-#include <constr_SEQUENCE.h>
-
-
-struct DialoguePortion; /* Forward declaration */
-
-struct ComponentPortion;  /* Forward declaration */
-extern asn_TYPE_descriptor_t asn_DEF_Continue;
-
-
+/* Continue */
 typedef struct Continue {
-  OrigTransactionID_t  otid;
-  DestTransactionID_t  dtid;
-  struct DialoguePortion  *dialoguePortion  /* OPTIONAL */;
-  struct ComponentPortion *componenets  /* OPTIONAL */;
-
-  /* Context for parsing across buffer boundaries */
-  asn_struct_ctx_t _asn_ctx;
+	OrigTransactionID_t	 otid;
+	DestTransactionID_t	 dtid;
+	struct EXT	*dialoguePortion	/* OPTIONAL */;
+	struct ComponentPortion	*componenets	/* OPTIONAL */;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
 } Continue_t;
 
+/* Implementation */
+extern asn_TYPE_descriptor_t asn_DEF_Continue;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* _Continue_H_ */
+/* Referred external types */
+#include "DialoguePortion.h"
+#include "ComponentPortion.h"
+
+#endif	/* _Continue_H_ */

@@ -1,39 +1,39 @@
-#ifndef _ReturnResult_H_
-#define _ReturnResult_H_
+#ifndef	_ReturnResult_H_
+#define	_ReturnResult_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include "InvokeIdType.h"
+#include "Code.h"
+#include <ANY.h>
+#include <constr_SEQUENCE.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
-
-#include <InvokeIdType.h>
-#include <NULL.h>
-#include <ANY.h>
-#include <constr_SEQUENCE.h>
-
-
-struct Code;  /* Forward declaration */
-extern asn_TYPE_descriptor_t asn_DEF_ReturnResult;
-
-
+/* ReturnResult */
 typedef struct ReturnResult {
-  InvokeIdType_t   invokeID;
-  struct result {
-    struct Code *operationCode  /* OPTIONAL */;
-    ANY_t  parameter;
-
-    /* Context for parsing across buffer boundaries */
-    asn_struct_ctx_t _asn_ctx;
-  } *result;
-
-  /* Context for parsing across buffer boundaries */
-  asn_struct_ctx_t _asn_ctx;
+	InvokeIdType_t	 invokeID;
+	struct result {
+		Code_t	 operationCode;
+		ANY_t	 parameter;
+		
+		/* Context for parsing across buffer boundaries */
+		asn_struct_ctx_t _asn_ctx;
+	} *result;
+	
+	/* Context for parsing across buffer boundaries */
+	asn_struct_ctx_t _asn_ctx;
 } ReturnResult_t;
 
+/* Implementation */
+extern asn_TYPE_descriptor_t asn_DEF_ReturnResult;
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif  /* _ReturnResult_H_ */
+#endif	/* _ReturnResult_H_ */

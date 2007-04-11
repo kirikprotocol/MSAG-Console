@@ -1,7 +1,11 @@
-#ifndef _BOOLEAN_H_
-#define _BOOLEAN_H_
+#ifndef	_BOOLEAN_H_
+#define	_BOOLEAN_H_
 
 #include <asn_application.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * The underlying integer may contain various values, but everything
@@ -18,5 +22,11 @@ ber_type_decoder_f BOOLEAN_decode_ber;
 der_type_encoder_f BOOLEAN_encode_der;
 xer_type_decoder_f BOOLEAN_decode_xer;
 xer_type_encoder_f BOOLEAN_encode_xer;
+per_type_decoder_f BOOLEAN_decode_uper;
+per_type_encoder_f BOOLEAN_encode_uper;
 
-#endif  /* _BOOLEAN_H_ */
+#ifdef __cplusplus
+}
+#endif
+
+#endif	/* _BOOLEAN_H_ */

@@ -1,18 +1,20 @@
-#ifndef _OrigTransactionID_H_
-#define _OrigTransactionID_H_
+#ifndef	_OrigTransactionID_H_
+#define	_OrigTransactionID_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <OCTET_STRING.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
+/* OrigTransactionID */
+typedef OCTET_STRING_t	 OrigTransactionID_t;
 
-#include <OCTET_STRING.h>
-
-
-
-typedef OCTET_STRING_t   OrigTransactionID_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_OrigTransactionID;
 asn_struct_free_f OrigTransactionID_free;
 asn_struct_print_f OrigTransactionID_print;
@@ -26,4 +28,4 @@ xer_type_encoder_f OrigTransactionID_encode_xer;
 }
 #endif
 
-#endif  /* _OrigTransactionID_H_ */
+#endif	/* _OrigTransactionID_H_ */

@@ -1,18 +1,20 @@
-#ifndef _DestTransactionID_H_
-#define _DestTransactionID_H_
+#ifndef	_DestTransactionID_H_
+#define	_DestTransactionID_H_
+
+
+#include <asn_application.h>
+
+/* Including external dependencies */
+#include <OCTET_STRING.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <asn_application.h>
+/* DestTransactionID */
+typedef OCTET_STRING_t	 DestTransactionID_t;
 
-#include <OCTET_STRING.h>
-
-
-
-typedef OCTET_STRING_t   DestTransactionID_t;
-
+/* Implementation */
 extern asn_TYPE_descriptor_t asn_DEF_DestTransactionID;
 asn_struct_free_f DestTransactionID_free;
 asn_struct_print_f DestTransactionID_print;
@@ -26,4 +28,4 @@ xer_type_encoder_f DestTransactionID_encode_xer;
 }
 #endif
 
-#endif  /* _DestTransactionID_H_ */
+#endif	/* _DestTransactionID_H_ */
