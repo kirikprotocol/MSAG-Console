@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include "util.hpp"
 #include <alloca.h>
 namespace smsc{
@@ -5,6 +6,90 @@ namespace mtsmsme{
 namespace processor{
 namespace util{
 using namespace std;
+
+unsigned packNumString2BCD(unsigned char* bcd, const char* str,
+                                  unsigned slen, bool filler)
+{
+    unsigned bcdLen = (slen + 1)/2;
+
+    for (unsigned i = 0; i < slen; ++i) {
+    if (i & 0x01) // i % 2
+        bcd[i/2] |= ((str[i]-'0') << 4);	// fill high semioctet
+    else
+        bcd[i/2] = (str[i]-'0') & 0x0F;	// fill low semioctet
+    }
+    if ((slen % 2) && filler)
+    bcd[bcdLen - 1] |= 0xF0;		// add filler to high semioctet
+
+    return bcdLen;
+}
+unsigned packNumString2BCD91(unsigned char* dst, const char* str,
+                                  unsigned slen, bool filler)
+{
+    unsigned bcdLen = (slen + 1)/2;
+    dst[0] = 0x91;
+    unsigned char* bcd = dst + 1;
+
+    for (unsigned i = 0; i < slen; ++i) {
+    if (i & 0x01) // i % 2
+        bcd[i/2] |= ((str[i]-'0') << 4);	// fill high semioctet
+    else
+        bcd[i/2] = (str[i]-'0') & 0x0F;	// fill low semioctet
+    }
+    if ((slen % 2) && filler)
+    bcd[bcdLen - 1] |= 0xF0;		// add filler to high semioctet
+
+    return bcdLen + 1;
+}
+
+unsigned packSCCPAddress(unsigned char* dst, unsigned char npi, const char *saddr, unsigned char ssn)
+{
+    unsigned len = strlen(saddr);
+    unsigned addrLen = 5 + (len + 1)/2;    // length in octets
+    dst[0]  = 0x12;                        // GlobTitle(0100) & SSN indicator
+    dst[1]  = ssn;                         // SSN
+    dst[2]  = 0;                           // Translation Type (not used)
+    dst[3]  = npi << 4 ;                   // NumPlan(ISDN) &
+    dst[3] |= (!(len%2) ? 0x02 : 0x01);    // encScheme(BCD odd/even)
+    dst[4]  = 0x04;                        // Nature of address (international)
+
+    //NOTE: SCCP address uses filler '0000'B !!!
+    packNumString2BCD(dst + 5, saddr, len, false);
+    return len ? addrLen : 0;
+}
+
+bool modifyssn(UCHAR_T* src, UCHAR_T len, const char* pattern, UCHAR_T newssn)
+{
+  if( !len || !src) return false;
+  int i=0; //position
+  UCHAR_T ai; //address indicator
+  UCHAR_T* ssn_ptr = 0;
+  ai = src[i++];
+  if (ai & 0x01) // spc included
+  {
+    //skip for now
+    i++;i++;
+  }
+  if (ai & 0x02) { //ssn included
+    ssn_ptr = &src[i++];
+  }
+  {
+    i++;//skip TT, traslation type
+    UCHAR_T npi = src[i++];
+    UCHAR_T odd = npi & 0x01;
+    i++;//skip TON
+
+    char ad[32];
+    unpack_addr(ad,src+i, (len - i)*2 - odd);
+    if (strcmp(ad,pattern) == 0)
+    {
+      *ssn_ptr = newssn;
+      return true;
+    }
+  }
+  return false;
+}
+
 std::string getAddressDescription(UCHAR_T len, UCHAR_T* buf)
 {
   string res="";
