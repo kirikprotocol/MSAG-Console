@@ -1077,10 +1077,9 @@ extern "C" char** cmd_completion(const char *text,int start,int end)
 std::string vcprefix(int idx,VClientData& vc)
 {
   std::string out;
-  time_t now=time(NULL);
-  tm* t=localtime(&now);
   timeval tv;
   gettimeofday(&tv,0);
+  tm* t=localtime(&tv.tv_sec);
   int msec=tv.tv_usec;
   msec/=1000;
   char buf[128];
@@ -1985,6 +1984,15 @@ int main(int argc,char* argv[])
               {
                 cmdfile->Seek(0);
               }
+              if(vcarray[vcidx].execTime<time(NULL))
+              {
+                CmdOut("%s:finished\n",vcprefix(vcidx,vcarray[vcidx]).c_str());
+                delete cmdfile;
+                cmdfile=0;
+                vcarray[vcidx].Init();
+                vcarray[vcidx]=defVCValues;
+                vcused--;
+              }
             }
           }
         }
@@ -2153,6 +2161,7 @@ int main(int argc,char* argv[])
         while(fgets(fileBuf,sizeof(fileBuf),f))
         {
           trimend(fileBuf);
+          if(fileBuf[0]==0)continue;
           string src=fileBuf;
           string file,rep;
           splitString(src,file);
@@ -2510,6 +2519,11 @@ int main(int argc,char* argv[])
         }
       }
 
+      if(vcmode)
+      {
+        CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
+      }
+
       SmppHeader *resp=0;
       if(!dataSm)
       {
@@ -2546,11 +2560,6 @@ int main(int argc,char* argv[])
       }
 
 
-
-      if(vcmode)
-      {
-        CmdOut("%s:",vcprefix(vcidx,vcarray[vcidx]).c_str());
-      }
       if(resp && resp->get_commandStatus()==0)
       {
         CmdOut("Accepted:%d bytes, msgId=%s\n",len,((PduXSmResp*)resp)->get_messageId());fflush(stdout);

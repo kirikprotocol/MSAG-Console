@@ -506,7 +506,7 @@ using smsc::snmp::SnmpAgent;
     int i;
     netsnmp_variable_list *var = requests->requestvb;
     struct counter64 val;
-    uint64_t perf[5];
+    uint64_t perf[6];
     ((smsc::system::Smsc*)smscptr)->getPerfData(perf);
 
     switch (reqinfo->mode)

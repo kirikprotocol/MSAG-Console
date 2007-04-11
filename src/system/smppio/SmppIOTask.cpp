@@ -56,9 +56,6 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
   if(proxy && cnt==0)
   {
     try{
-      __trace2__("unregistering(%p) smeId=%s",proxy,sysId.c_str());
-      smeManager->unregisterSmeProxy(proxy);
-      smsc_log_debug(snmpLog,"unregister sme: %s successful",sysId.c_str());
 #ifdef SNMP
       if(ct==ctTransceiver)
       {
@@ -67,6 +64,9 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
         smsc::snmp::SnmpAgent::trap(proxy->getSystemId(),"ESME",smsc::snmp::SnmpAgent::WARNING,buf);
       }
 #endif
+      __trace2__("unregistering(%p) smeId=%s",proxy,sysId.c_str());
+      smeManager->unregisterSmeProxy(proxy);
+      smsc_log_debug(snmpLog,"unregister sme: %s successful",sysId.c_str());
     }catch(...)
     {
 #ifdef SNMP
