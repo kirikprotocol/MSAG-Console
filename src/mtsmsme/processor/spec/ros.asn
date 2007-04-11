@@ -36,7 +36,10 @@ WITH SYNTAX {
   [CODE &operationCode]
 }
 
-ERROR ::= CLASS {
+Error ::= CHOICE {local   INTEGER,
+                 global  OBJECT IDENTIFIER
+}
+/*ERROR ::= CLASS {
   &ParameterType          OPTIONAL,
   &parameterTypeOptional  BOOLEAN OPTIONAL,
   &errorCode              Code UNIQUE OPTIONAL
@@ -46,7 +49,7 @@ WITH SYNTAX {
    [OPTIONAL &parameterTypeOptional]]
   [PRIORITY &ErrorPriority]
   [CODE &errorCode]
-}
+}*/
 
 Code ::= CHOICE {local   INTEGER,
                  global  OBJECT IDENTIFIER

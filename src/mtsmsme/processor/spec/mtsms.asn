@@ -7,7 +7,7 @@ DEFINITIONS ::=
 BEGIN
 
 IMPORTS
-  OPERATION,ERROR,Code
+  OPERATION,Error,Code
     FROM ROIO {joint-iso-itu-t
       remote-operations(4) informationObjects(5) version1(0)}
   DialoguePDU
@@ -107,7 +107,7 @@ Component ::= CHOICE {
 
 -- The Components are sequences of data elements.
 
-InvokeTable OPERATION ::= {mo-ForwardSM}
+-- InvokeTable OPERATION ::= {mo-ForwardSM}
 Invoke ::= SEQUENCE {
         invokeID        InvokeIdType,
         linkedID        [0] IMPLICIT InvokeIdType OPTIONAL,
@@ -126,7 +126,8 @@ ReturnResult ::= SEQUENCE {
 
 ReturnError ::= SEQUENCE {
         invokeID        InvokeIdType,
-	errorCode	ERROR.&errorCode, 
+--	errorCode	ERROR.&errorCode, 
+	errorCode	Error, 
         parameter       ANY DEFINED BY errorCode OPTIONAL
 }
 
@@ -183,16 +184,18 @@ ReturnErrorProblem ::= INTEGER {
         mistypedParameter (4)
 }
 MO-forward ::= SEQUENCE{
-sm-RP-DA CHOICE {
-imsi [0] IMPLICIT OCTET STRING ( SIZE( 3 .. 8 ) ),
-lmsi [1] IMPLICIT OCTET STRING ( SIZE( 4 ) ),
-serviceCentreAddressDA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
-noSM-RP-DA [5] IMPLICIT NULL},
-sm-RP-OA CHOICE {
-msisdn [2] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ) ( SIZE( 1 .. 9 ) ),
-serviceCentreAddressOA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
-noSM-RP-OA [5] IMPLICIT NULL},
-sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) )
+    sm-RP-DA CHOICE {
+	imsi [0] IMPLICIT OCTET STRING ( SIZE( 3 .. 8 ) ),
+        lmsi [1] IMPLICIT OCTET STRING ( SIZE( 4 ) ),
+        serviceCentreAddressDA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
+        noSM-RP-DA [5] IMPLICIT NULL
+    },
+    sm-RP-OA CHOICE {
+	msisdn [2] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ) ( SIZE( 1 .. 9 ) ),
+        serviceCentreAddressOA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
+        noSM-RP-OA [5] IMPLICIT NULL
+    },
+    sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) )
 }
 MT-forward ::= SEQUENCE {
   sm-RP-DA CHOICE {
@@ -208,110 +211,6 @@ MT-forward ::= SEQUENCE {
   },
   sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) ),
   moreMessagesToSend NULL OPTIONAL
-}
-
-mo-ForwardSM OPERATION ::= {
-ARGUMENT SEQUENCE {
-sm-RP-DA CHOICE {
-imsi [0] IMPLICIT OCTET STRING ( SIZE( 3 .. 8 ) ),
-lmsi [1] IMPLICIT OCTET STRING ( SIZE( 4 ) ),
-serviceCentreAddressDA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
-noSM-RP-DA [5] IMPLICIT NULL},
-sm-RP-OA CHOICE {
-msisdn [2] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ) ( SIZE( 1 .. 9 ) ),
-serviceCentreAddressOA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
-noSM-RP-OA [5] IMPLICIT NULL},
-sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) ),
-extensionContainer SEQUENCE {
-privateExtensionList [0] IMPLICIT SEQUENCE ( SIZE( 1 .. 10 ) ) OF
-SEQUENCE {
-extId MAP-EXTENSION .&extensionId ( {
-,
-...} ) ,
-extType MAP-EXTENSION .&ExtensionType ( {
-,
-...} { @extId } ) OPTIONAL} OPTIONAL,
-pcs-Extensions [1] IMPLICIT SEQUENCE {
-... } OPTIONAL,
-... } OPTIONAL,
-... ,
-imsi OCTET STRING ( SIZE( 3 .. 8 ) ) OPTIONAL}
-RESULT SEQUENCE {
-sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) ) OPTIONAL,
-extensionContainer SEQUENCE {
-privateExtensionList [0] IMPLICIT SEQUENCE ( SIZE( 1 .. 10 ) ) OF
-SEQUENCE {
-extId MAP-EXTENSION .&extensionId ( {
-,
-...} ) ,
-extType MAP-EXTENSION .&ExtensionType ( {
-,
-...} { @extId } ) OPTIONAL} OPTIONAL,
-pcs-Extensions [1] IMPLICIT SEQUENCE {
-... } OPTIONAL,
-... } OPTIONAL,
-... }
-ERRORS {
-systemFailure |
-unexpectedDataValue |
-facilityNotSupported |
-sm-DeliveryFailure }
-CODE local : 46
-}
-
-mt-ForwardSM OPERATION ::= {
-ARGUMENT SEQUENCE {
-sm-RP-DA CHOICE {
-imsi [0] IMPLICIT OCTET STRING ( SIZE( 3 .. 8 ) ),
-lmsi [1] IMPLICIT OCTET STRING ( SIZE( 4 ) ),
-serviceCentreAddressDA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
-noSM-RP-DA [5] IMPLICIT NULL},
-sm-RP-OA CHOICE {
-msisdn [2] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ) ( SIZE( 1 .. 9 ) ),
-serviceCentreAddressOA [4] IMPLICIT OCTET STRING ( SIZE( 1 .. 20 ) ),
-noSM-RP-OA [5] IMPLICIT NULL},
-sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) ),
-moreMessagesToSend NULL OPTIONAL,
-extensionContainer SEQUENCE {
-privateExtensionList [0] IMPLICIT SEQUENCE ( SIZE( 1 .. 10 ) ) OF
-SEQUENCE {
-extId MAP-EXTENSION .&extensionId ( {
-,
-...} ) ,
-extType MAP-EXTENSION .&ExtensionType ( {
-,
-...} { @extId } ) OPTIONAL} OPTIONAL,
-pcs-Extensions [1] IMPLICIT SEQUENCE {
-... } OPTIONAL,
-... } OPTIONAL,
-... }
-RESULT SEQUENCE {
-sm-RP-UI OCTET STRING ( SIZE( 1 .. 200 ) ) OPTIONAL,
-extensionContainer SEQUENCE {
-privateExtensionList [0] IMPLICIT SEQUENCE ( SIZE( 1 .. 10 ) ) OF
-SEQUENCE {
-extId MAP-EXTENSION .&extensionId ( {
-,
-...} ) ,
-extType MAP-EXTENSION .&ExtensionType ( {
-,
-...} { @extId } ) OPTIONAL} OPTIONAL,
-pcs-Extensions [1] IMPLICIT SEQUENCE {
-... } OPTIONAL,
-... } OPTIONAL,
-... }
-ERRORS {
-systemFailure |
-dataMissing |
-unexpectedDataValue |
-facilityNotSupported |
-unidentifiedSubscriber |
-illegalSubscriber |
-illegalEquipment |
-subscriberBusyForMT-SMS |
-sm-DeliveryFailure |
-absentSubscriberSM }
-CODE local : 44
 }
 
 END -- TCAPMessage
