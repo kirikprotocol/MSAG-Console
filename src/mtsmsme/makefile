@@ -1,4 +1,4 @@
-
+# $Id$
 CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms 
 __LIBRARIES := $(__LIBRARIES) -L$(SS7_STACK_HOME)/lib -L$(SMSC_BUILDDIR)/bin
 PACKAGE := mtsmsme

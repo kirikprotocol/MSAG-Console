@@ -380,6 +380,89 @@ public:
         if (strOrigAddr) delete strOrigAddr;
     };
 };
+class RequestProcessorConfig {
+  public:
+    int ssn,user;
+    Address msc;
+    Address vlr;
+  private:
+    char* msc_str;
+    char* vlr_str;
+  public:
+    RequestProcessorConfig() { msc_str = NULL; vlr_str = NULL; }
+    void read(Manager& manager)
+    {
+      if (!manager.findSection("MTSMSme.SCCP"))
+        throw ConfigException("\'SCCP\' section is missed");
+
+      ConfigView sccpConfig(manager, "MTSMSme.SCCP");
+      try { user = sccpConfig.getInt("user_id");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'user_id\' is unknown or missing");
+      }
+
+      try { ssn = sccpConfig.getInt("user_ssn");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'user_ssn\' is unknown or missing");
+      }
+
+      try { msc_str = sccpConfig.getString("msc_gt");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'msc_gt\' is unknown or missing");
+      }
+      msc = Address(msc_str);
+
+      try { vlr_str = sccpConfig.getString("vlr_gt");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'vlr_gt\' is unknown or missing");
+      }
+      vlr = Address(vlr_str);
+
+    }
+};
+
+class SubscriberList
+{
+private:
+    Manager* source;
+public:
+  SubscriberList(Manager* _source) { source = _source; }
+  void registerto(HLROAM* hlr)
+  {
+    ConfigView cfg(*source, "MTSMSme.Aliases");
+    ConfigView* config = &cfg;
+
+    //smsc_log_info(logger, "Registering subscribers IMSI to database...");
+    std::auto_ptr< std::set<std::string> > sections_ptr(config->getShortSectionNames());
+    std::set<std::string>* set = sections_ptr.get();
+    for (std::set<std::string>::iterator i=set->begin(); i!=set->end(); i++)
+    {
+      const char* section = (const char *)i->c_str();
+      if (!section || !section[0]) continue;
+
+      std::auto_ptr<ConfigView> subscriber_ptr(config->getSubConfig(section));
+      ConfigView* subscriber_cfg = subscriber_ptr.get();
+
+      const char* imsi = subscriber_cfg->getString("address");
+      if (!imsi || !imsi[0])
+        throw ConfigException("\'address\' param is empty or wasn't specified for section %s",section);
+      const char* msisdn = subscriber_cfg->getString("msisdn");
+      if (!msisdn || !msisdn[0])
+        throw ConfigException("\'msisdn\' param is empty or wasn't specified for section %s", section);
+      const char* mgt = subscriber_cfg->getString("mgt");
+      if (!mgt || !mgt[0])
+        throw ConfigException("\'mgt\' param is empty or wasn't specified for section %s", section);
+      int period;
+      try {
+        period = subscriber_cfg->getInt("period");
+      } catch (ConfigException& exc) {
+            throw ConfigException("\'period\' param is empty or wasn't specified for section %s", section);
+      }
+      hlr->registerSubscriber(Address(imsi), Address(msisdn), Address(mgt), period);
+    }
+    //smsc_log_info(logger, "Registering subscribers IMSI to database has been completed");
+  }
+};
 
 extern "C" void appSignalHandler(int sig)
 {
@@ -462,6 +545,12 @@ int main(void)
 
         requestProcessor = RequestProcessor::getInstance();
         if (!requestProcessor) throw Exception("RequestProcessor is undefined");
+
+        RequestProcessorConfig rp_cfg;
+        rp_cfg.read(manager);
+        requestProcessor->configure(rp_cfg.user,rp_cfg.ssn,rp_cfg.msc,rp_cfg.vlr);
+        SubscriberList sm(&manager);
+        sm.registerto(requestProcessor->getHLROAM());
 
         while (!isNeedStop())
         {
