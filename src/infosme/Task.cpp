@@ -202,6 +202,10 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.messagesCacheSleep = 1;
     try { info.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
     if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
+    try { 
+      bGenerationSuccess = config->getBool("messagesHaveLoaded");
+      bInGeneration = false;
+    } catch (...) {}
 }
 
 void Task::doFinalization()
