@@ -1909,7 +1909,13 @@ USHORT_T Et96MapOpenConf (
       throw MAPDIALOG_HEREISNO_ID( FormatText("MAP::dialog 0x%x is not present",dialogid_map));
     }
     __require__(dialog->ssn == localSsn);
-    __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
+    if( respondingAddr_sp ) {
+      char tbuf[256];
+      SS7ToText( respondingAddr_sp, tbuf );
+      __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s resp from %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str(), tbuf);
+    } else {
+      __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
+    }
     /* обработка openResult */
     switch( dialog->state ){
     case MAPST_WaitDelRepConf:
