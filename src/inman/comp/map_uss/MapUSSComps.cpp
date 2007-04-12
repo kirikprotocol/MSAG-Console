@@ -41,8 +41,10 @@ bool  MAPUSS2CompAC::getUSSDataAsLatin1Text(std::string & str) const
     return false;
 }
 
-void MAPUSS2CompAC::setUSSData(const unsigned char * data, unsigned size) throw(CustomException)
+void MAPUSS2CompAC::setUSSData(const unsigned char * data, unsigned size/* = 0*/) throw(CustomException)
 {
+    if (!size) 
+        size = strlen((const char*)data);
     unsigned ussdStrSz = estimateTextAs7Bit((const char*)data, size, NULL);
     if (ussdStrSz > MAP_MAX_USSD_StringLength)
         throw CustomException("MAPUSS2CompAC: ussdStrSz is too large: %u", ussdStrSz);

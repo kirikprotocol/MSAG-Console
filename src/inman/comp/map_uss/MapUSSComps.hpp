@@ -57,7 +57,7 @@ public:
     //Setters:
     //assigns USS data, that is plain LATIN1 text,
     //it will be transferred in GSM 7bit packed form. 
-    void setUSSData(const unsigned char * data, unsigned size) throw(CustomException);
+    void setUSSData(const unsigned char * data, unsigned size = 0) throw(CustomException);
     //assigns USS data encoded according to CBS coding scheme (UCS2, GSM 7bit packed, etc)
     void setRAWUSSData(unsigned char dcs, const unsigned char * data, unsigned size);
 
@@ -69,8 +69,8 @@ public:
     bool  getUSSDataAsLatin1Text(std::string & ussStr) const;
 
 protected:
-    unsigned char	    _dCS;	// unparsed data coding scheme (CBS CS)
-    std::vector<unsigned char>   _uSSData;	// encoded USS data string (GSM 7-bit, UCS2, etc)
+    unsigned char	        _dCS;	    // unparsed data coding scheme (CBS CS)
+    std::vector<unsigned char>  _uSSData;   // encoded USS data string (GSM 7-bit, UCS2, etc)
 };
 
 class ProcessUSSRequestArg : public MAPUSS2CompAC {
