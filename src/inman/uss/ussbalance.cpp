@@ -174,14 +174,23 @@ int main(int argc, char** argv)
     smsc_log_error(logger, "Configuration invalid: %s. Exiting", exc.what());
     return 1;
   }
+
   try {
     sigset_t allBlockedSigs, oldMask;
     sigfillset(&allBlockedSigs);
+    sigdelset(&allBlockedSigs, SIGABRT);
+    sigdelset(&allBlockedSigs, SIGBUS);
+    sigdelset(&allBlockedSigs, SIGFPE);
+    sigdelset(&allBlockedSigs, SIGILL);
+    sigdelset(&allBlockedSigs, SIGSEGV);
+    sigdelset(&allBlockedSigs, SIGALRM);
+
     if ( pthread_sigmask(SIG_SETMASK, &allBlockedSigs, &oldMask) ) {
       smsc_log_error(logger, "call to pthread_sigmask was failed");
       return 1;
     }
     service = new smsc::inman::uss::USSBalanceService(cfg);
+
     if ( !service->start() ) {
       smsc_log_error(logger, "Can't 'tcp server' thread");
       return 1;
