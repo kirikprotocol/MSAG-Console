@@ -114,7 +114,8 @@ typedef std::vector<unsigned char> USSDATA_T;
 class USSMessageAC : public SerializableObjectAC {
 public:
   USSMessageAC(unsigned short msgTag) : SerializableObjectAC(msgTag),
-                                        _logger(smsc::logger::Logger::getInstance("smsc.ussbalance"))
+                                        _logger(smsc::logger::Logger::getInstance("smsc.ussbalance")),
+                                        _dCS(0)
   {}
   virtual ~USSMessageAC() {}
 
