@@ -1074,7 +1074,7 @@ int processSms(const char* text,const char* fromaddress)
       p.user=fromaddress;
     }
 
-
+    while(*text==' ')text++;
     const char* sp=strchr(text,' ');
     std::string cmd;
     if(sp)
@@ -1087,6 +1087,7 @@ int processSms(const char* text,const char* fromaddress)
       cmd=text;
       toLower(cmd);
     }
+    while(cmd.length() && cmd[cmd.length()-1]==' ')cmd.erase(cmd.length()-1);
 
     __trace2__("cmd=%s",cmd.c_str());
 
@@ -1774,7 +1775,7 @@ int main(int argc,char* argv[])
 );
 */
   if(!reParseSms.Compile(
-"/^(?:"
+"/^\\s*(?:"
 "alias\\s+[\\w.\\-]*|"
 "noalias|"
 "forward\\s+[\\w\\-+\\.]+@[\\w\\-\\]+\\.[\\w\\-\\.]+|"
