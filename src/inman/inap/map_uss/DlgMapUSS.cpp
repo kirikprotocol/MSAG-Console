@@ -8,7 +8,6 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "inman/inap/map_uss/DlgMapUSS.hpp"
-using smsc::inman::comp::uss::ProcessUSSRequestArg;
 using smsc::inman::comp::uss::MAPUSS_OpCode;
 
 #include "inman/common/adrutil.hpp"
@@ -107,6 +106,10 @@ MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
     dlgState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap");
+    if (!(dialog = session->openDialog()))
+        throw CustomException("MapUSS: Unable to create TC Dialog");
+    dlgId = dialog->getId();
+    dialog->addListener(this);
 }
 
 MapUSSDlg::~MapUSSDlg()
@@ -124,52 +127,28 @@ void MapUSSDlg::endMapDlg(void)
 /* ------------------------------------------------------------------------ *
  * MAP-PROCESS-UNSTRUCTURED-SS-REQUEST interface
  * ------------------------------------------------------------------------ */
-void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
-                    const char * subsc_adr/* = NULL*/) throw (CustomException)
+//composes SS request data from plain text(ASCIIZ BY default).
+void MapUSSDlg::requestSS(const char * txt_data,
+                            const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
 {
-    TonNpiAddress msAdr;
-    if (subsc_adr && !msAdr.fromText(subsc_adr))
-        throw CustomException("MapUSS[%u]: invalid subscrAdr: %s", subsc_adr);
-    requestSS(rq_data, dcs, subsc_adr ? &msAdr : NULL);
+    //create Component for TCAP invoke
+    ProcessUSSRequestArg    arg;
+    arg.setUSSData((const unsigned char*)txt_data);
+    smsc_log_debug(logger, "MapUSS[%u]: USS request: '%s'", dlgId, txt_data);
+    initSSDialog(arg, subsc_adr);
 }
 
+//composes SS request data from preencoded binary data which encoding is identified by dcs.
 void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
 {
-    //create TCAP Dialog
-    MutexGuard  grd(_sync);
-    dialog = session->openDialog();
-    if (!dialog)
-        throw CustomException("MapUSS: Unable to create TC Dialog");
-    dialog->addListener(this);
-    dlgId = dialog->getId();
-
     //create Component for TCAP invoke
     ProcessUSSRequestArg    arg;
+    arg.setRAWUSSData(dcs, &rq_data[0], rq_data.size());
+    smsc_log_debug(logger, "MapUSS[%u]: USS request: 0x%s", dlgId,
+                    DumpHex(rq_data.size(), &rq_data[0]).c_str());
 
-    if (dcs == PLAIN_LATIN1_DCS) { //plain text
-        arg.setUSSData(&rq_data[0], rq_data.size());
-        smsc_log_debug(logger, "MapUSS[%u]: USS request: %.*s" , dlgId,
-                       rq_data.size(), &rq_data[0]);
-    } else {
-        arg.setRAWUSSData(dcs, &rq_data[0], rq_data.size());
-        smsc_log_debug(logger, "MapUSS[%u]: USS request: 0x%s", dlgId,
-                        DumpHex(rq_data.size(), &rq_data[0]).c_str());
-    }
-    Invoke* op = dialog->initInvoke(MAPUSS_OpCode::processUSS_Request, this);
-    op->setParam(&arg);
-    dialog->sendInvoke(op);
-
-    //GVR NOTE: though MAP specifies that msISDN address in USS request may
-    //present in component portion of TCAP invoke, the Ericsson tools transfers
-    //it only in user info section.
-    if (subsc_adr) {    //prepare user info
-        std::vector<unsigned char>   ui4;
-        makeUI(ui4, *subsc_adr,  session->getOwnAdr());
-        dialog->beginDialog(&ui4[0], ui4.size()); //throws
-    } else
-        dialog->beginDialog(); //throws
-    dlgState.s.ctrInited = MapUSSDlg::operInited;
+    initSSDialog(arg, subsc_adr);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -328,6 +307,28 @@ void MapUSSDlg::onDialogREnd(bool compPresent)
 /* ------------------------------------------------------------------------ *
  * Private/protected methods
  * ------------------------------------------------------------------------ */
+void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg, 
+                            const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
+{
+    //create TCAP Dialog
+    MutexGuard  grd(_sync);
+
+    Invoke* op = dialog->initInvoke(MAPUSS_OpCode::processUSS_Request, this);
+    op->setParam(&arg);
+    dialog->sendInvoke(op);
+
+    //GVR NOTE: though MAP specifies that msISDN address in USS request may
+    //present in component portion of TCAP invoke, the Ericsson tools transfers
+    //it only in user info section.
+    if (subsc_adr) {    //prepare user info
+        std::vector<unsigned char>   ui4;
+        makeUI(ui4, *subsc_adr,  session->getOwnAdr());
+        dialog->beginDialog(&ui4[0], ui4.size()); //throws
+    } else
+        dialog->beginDialog(); //throws
+    dlgState.s.ctrInited = MapUSSDlg::operInited;
+}
+
 //ends TC dialog, releases Dialog()
 void MapUSSDlg::endTCap(void)
 {

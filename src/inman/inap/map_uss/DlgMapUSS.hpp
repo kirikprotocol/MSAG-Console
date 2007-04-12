@@ -22,6 +22,7 @@ using smsc::inman::inap::InvokeListener;
 
 #include "inman/comp/map_uss/MapUSSComps.hpp"
 using smsc::inman::comp::uss::MAPUSS2CompAC;
+using smsc::inman::comp::uss::ProcessUSSRequestArg;
 
 #define PLAIN_LATIN1_DCS 0xF4 // 1111 0100
 
@@ -60,8 +61,10 @@ public:
     enum MapUSSDlgError { ussServiceResponse = 0xFF };
     enum MapOperState   { operInited = 1, operFailed = 2, operDone = 3 };
 
-    void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
-                    const char * subsc_adr = NULL) throw (CustomException);
+    //composes SS request data from plain text(ASCIIZ BY default).
+    void requestSS(const char * txt_data,
+                    const TonNpiAddress * subsc_adr = NULL) throw (CustomException);
+    //composes SS request data from preencoded binary data which encoding is identified by dcs.
     void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
                     const TonNpiAddress * subsc_adr = NULL) throw (CustomException);
 
@@ -87,6 +90,9 @@ protected:
     void onInvokeLCancel(Invoke* inv);
 
 private:
+    void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL)
+        throw (CustomException);
+
     void endTCap(void); //ends TC dialog, releases Dialog()
 
     Mutex       _sync;
