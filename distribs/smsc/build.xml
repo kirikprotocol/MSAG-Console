@@ -59,6 +59,7 @@ Targets:
     <ant dir="${SRC_DIR}" target="admin"/>
     <ant dir="${SRC_DIR}" target="inman"/>
     <ant dir="${SRC_DIR}" target="cluster"/>
+    <ant dir="${SRC_DIR}" target="util"/>
   </target>
 
   <target name="makeweb">
@@ -169,8 +170,11 @@ Targets:
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/db/fileStorage/libdb_fileStorage.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/system/smsc" todir="${DISTR_DIR}/services/SMSC/bin"/>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/smsc" perm="755"/>
+    <copy file="${BUILD_BIN}/util/RepairAndMergeStore" todir="${DISTR_DIR}/services/SMSC/bin"/>
+    <chmod file="${DISTR_DIR}/services/SMSC/bin/RepairAndMergeStore" perm="755"/>
     <copy file="${BUILD_BIN}/cluster/agent" todir="${DISTR_DIR}/services/SMSC/bin"/>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/agent" perm="755"/>
     <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
