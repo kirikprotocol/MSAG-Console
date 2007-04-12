@@ -161,29 +161,8 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
-/*
-    if (xsmsSrv) { //write SMSExtra part first (if necessary)
-        if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
-            CDRRecord xcdr = cdr;
-            xcdr._dstAdr = xsmsSrv->adr.toString();
-            _cfg.bfs->bill(xcdr); cnt++;
-            smsc_log_info(logger, "%s: CDR(Extra) written: "
-                        "msgId = %llu, IN billed: %s, dstAdr: %s", _logId,
-                        xcdr._msgId, xcdr._inBilled ? "true": "false", xcdr._dstAdr.c_str());
-        }
-        //write bearer part (not billed by IN)
-        if ((abType == AbonentContractInfo::abtPostpaid)
-            || (_cfg.cdrMode == BillingCFG::CDR_ALL) || !matchBillMode()) {
-            CDRRecord xcdr = cdr;
-            xcdr._inBilled = false;
-            _cfg.bfs->bill(xcdr); cnt++;
-            smsc_log_info(logger, "%s: CDR written: "
-                        "msgId = %llu, IN billed: false, dstAdr: %s",
-                        _logId, xcdr._msgId, xcdr._dstAdr.c_str());
-        }
-    } else 
-*/
-    if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
+    if (!(cdr._inBilled || (cdr._smsXMask & SMSX_NOCHARGE_SRV))
+        || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
                     _logId, cdr._msgId, cdr._inBilled ? "true": "false",
@@ -363,7 +342,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         }
     }
 
-    bill2CDR = !matchBillMode();
+    bill2CDR = !matchBillMode() || (cdr._smsXMask & SMSX_NOCHARGE_SRV);
     AbonentRecord   abRec; //ab_type = abtUnknown
     if (bill2CDR || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
                       == AbonentContractInfo::abtPostpaid))) {
