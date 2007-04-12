@@ -11,6 +11,7 @@ namespace uss {
 USSBalanceService::USSBalanceService(const UssService_CFG& in_cfg)
   : _logger(Logger::getInstance("smsc.uss.BalanceService")), _cfg(in_cfg),
     _server(new smsc::inman::interaction::Server(&_cfg.sock, _logger)),
+    _running(false),
     _disp(smsc::inman::inap::TCAPDispatcher::getInstance())
 {
   assert(_server && _disp);
