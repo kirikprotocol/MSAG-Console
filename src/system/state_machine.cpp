@@ -1466,11 +1466,11 @@ StateType StateMachine::submit(Tuple& t)
     sms->setStrProperty( Tag::SMSC_FORWARD_MO_TO, ri.forwardTo.c_str());
 
     // force forward(transaction) mode
-    //sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
+    sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
     isForwardTo = true;
 
-    //sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
-    //sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
+    sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
   }
 
   bool generateDeliver=true; // do not generate in case of merge-concat
@@ -1967,6 +1967,31 @@ StateType StateMachine::submit(Tuple& t)
   //
   ////
 
+
+  if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
+  {
+    sms->setValidTime(now+maxValidTime);
+    __trace2__("maxValidTime=%d",maxValidTime);
+  }
+
+  __trace2__("Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
+
+
+
+  if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
+  {
+    submitResp(t,sms,Status::INVSCHED);
+    warn2(smsLog, "SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
+      sms->getNextTime(),
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
+
   bool isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
   bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
 
@@ -2033,29 +2058,6 @@ StateType StateMachine::submit(Tuple& t)
       }
     }
 
-
-    if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
-    {
-      sms->setValidTime(now+maxValidTime);
-      __trace2__("maxValidTime=%d",maxValidTime);
-    }
-
-    __trace2__("Valid time for sms %lld=%u",t.msgId,(unsigned int)sms->getValidTime());
-
-
-
-    if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
-    {
-      submitResp(t,sms,Status::INVSCHED);
-      warn2(smsLog, "SBM: invalid schedule time(%d) Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s",
-        sms->getNextTime(),
-        t.msgId,dialogId,
-        sms->getOriginatingAddress().toString().c_str(),
-        sms->getDestinationAddress().toString().c_str(),
-        src_proxy->getSystemId()
-      );
-      return ERROR_STATE;
-    }
 
     __trace2__("SUBMIT_SM: after processDirectives - delrep=%d, sdt=%d",(int)sms->getDeliveryReport(),sms->getNextTime());
 
