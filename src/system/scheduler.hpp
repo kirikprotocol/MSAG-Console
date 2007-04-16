@@ -319,8 +319,8 @@ public:
     }
     ChainSetHead(c,lastRejectReschedule,SchedulerData(id,c->lastValidTime));
     UpdateChainChedule(c);
-    c->headTime=lastRejectReschedule;
-    RescheduleChain(c,c->headTime);
+    //c->headTime=lastRejectReschedule;
+    RescheduleChain(c,lastRejectReschedule);
   }
 
   time_t RescheduleSms(SMSId id,SMS& sms,int smeIndex)
@@ -1135,7 +1135,7 @@ public:
         debug2(Scheduler::log,"mc:push: c=%p",c);
       }else
       {
-        warn2(Scheduler::log,"FUCK: %p",c);
+        warn2(Scheduler::log,"!!! CHAIN ALREADY IN MULTICHAIN(%s): %p <-> %p!",c->addr.toString().c_str(),c,it->second);
       }
     }
     Chain* Pop()
