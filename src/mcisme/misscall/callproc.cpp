@@ -43,7 +43,7 @@ int going;
 char countryCode[COUNTRY_CODE_MAX_LEN + 1];
 
 void detectDisconnect(USHORT_T result, const char *func) {
-  if( result == 1011 && result == 1009 ) {
+  if( (result == 1011) || (result == 1009) ) {
     smsc_log_error(missedCallProcessorLogger,
                    "Stack disconnect detected in %s",
                    func);
