@@ -208,7 +208,7 @@
     <%
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", getLoc());
     %>
-    <div class=page_subtitle><%=getLocString("common.titles.searchResultsPre") + bean.getTotalRowsCount() + getLocString("common.titles.searchResultsPost") +
+    <div class=page_subtitle><%=getLocString("common.titles.searchResultsPre") + bean.getTotalRowsCount() + " " + getLocString("common.titles.searchResultsPost") +
             ((!bean.isExactRowsCount() && bean.isHasMore()) ? getLocString("common.titles.searchResultsPost2") : "")%></div>
     <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp" %>
     <table class=list cellspacing=0>

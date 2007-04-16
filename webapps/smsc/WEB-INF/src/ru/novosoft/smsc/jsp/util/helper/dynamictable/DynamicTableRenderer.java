@@ -169,7 +169,7 @@ public class DynamicTableRenderer extends HTMLRenderer {
     } else if (column instanceof RowControlButtonColumn) {
       final RowControlButtonColumn rowColumn = (RowControlButtonColumn)column;
       if (rowColumn.isAllowRemoveAddedRows())
-        return image("images/but_add.gif", "addRow('" + uid + "','" + tableHelper.getTotalCountPrefix() + "'," + generateColumns(tableHelper)+ ")", getLocalMessage("common.hints.addParam"));
+        return image("/images/but_add.gif", "addRow('" + uid + "','" + tableHelper.getTotalCountPrefix() + "'," + generateColumns(tableHelper)+ ")", getLocalMessage("common.hints.addParam"));
       else return "";
     } else if (column instanceof SelectColumn) {
       final SelectColumn selectColumn = (SelectColumn)column;

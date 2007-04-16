@@ -432,12 +432,12 @@ public class Deliveries extends InfoSmeBean
         task.setKeepHistory(true);
         task.setReplaceMessage(false);
         task.setRetryOnFail(false);
-        task.setRetryTime("01:00:00");
+        task.setRetryTime("03:00:00");
         task.setSvcType("dlvr");
-        task.setActivePeriodStart("09:00:00");
+        task.setActivePeriodStart("10:00:00");
         task.setActivePeriodEnd("21:00:00");
         task.setTransactionMode(false);
-        task.setValidityPeriod("12:00:00");
+        task.setValidityPeriod("01:00:00");
     }
     private boolean checkAndPrepareTask() {
         errors.clear();
