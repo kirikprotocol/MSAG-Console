@@ -138,7 +138,7 @@ class SecretRequestProcessor extends ServiceProcessor {
       // Chech fromAbonent's registration
       if (SecretUser.loadByNumber(fromAbonent) == null) { // fromAbonent has not been registered
         log.error("Abonent " + fromAbonent + " not registered in DB. Redirect message to " + toAbonent);
-        MessageRedirector.redirectMessage(incomingMessage, toAbonent, outQueue, multiplexor);
+        sendResponse(incomingMessage, Data.ESME_RX_P_APPN);
         return;
       }
 

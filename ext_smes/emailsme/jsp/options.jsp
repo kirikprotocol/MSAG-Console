@@ -87,11 +87,11 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>allow GSM to email without profile</th>
-  <td align="LEFT"><input type=checkbox name=admin_allow_gsm_2_email_without_profile <%=bean.getAdmin_allow_gsm_2_email_without_profile()%>></td>
+  <td align="LEFT"><input type=checkbox name=admin_allow_gsm_2_email_without_profile <%=bean.isAdmin_allow_gsm_2_email_without_profile() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>allow email to GSM without profile</th>
-  <td align="LEFT"><input type=checkbox name=admin_allow_email_2_gsm_without_profile <%=bean.getAdmin_allow_email_2_gsm_without_profile()%>></td>
+  <td align="LEFT"><input type=checkbox name=admin_allow_email_2_gsm_without_profile <%=bean.isAdmin_allow_email_2_gsm_without_profile() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>default limit</th>
@@ -156,7 +156,7 @@
 <tr><td colspan=2><div class=page_subtitle>Answers</div></td></tr>
 <tr class=row<%=rowN++&1%>>
   <th>Send success noticies</th>
-  <td align="LEFT"><input type=checkbox name=sendSuccessAnswer <%=bean.getSendSuccessAnswer()%>></td>
+  <td align="LEFT"><input type=checkbox name=sendSuccessAnswer <%=bean.isSendSuccessAnswer() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>alias</th>

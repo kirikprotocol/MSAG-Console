@@ -31,7 +31,7 @@ public class Options extends SmeBean
   private int admin_port = 0;
   private boolean admin_allow_gsm_2_email_without_profile = false;
   private boolean admin_allow_email_2_gsm_without_profile = false;
-  private boolean sendSuccessAnswer = true;
+  private boolean sendSuccessAnswer = false;
   private String admin_default_limit = "";
 
   private String mail_domain = "";
@@ -540,28 +540,28 @@ public class Options extends SmeBean
     }
   }
 
-  public String getAdmin_allow_gsm_2_email_without_profile() {
-    return admin_allow_gsm_2_email_without_profile ? "checked" : "";
+  public boolean isAdmin_allow_gsm_2_email_without_profile() {
+    return admin_allow_gsm_2_email_without_profile;
   }
 
-  public void setAdmin_allow_gsm_2_email_without_profile(String admin_allow_gsm_2_email_without_profile) {
-    this.admin_allow_gsm_2_email_without_profile = admin_allow_gsm_2_email_without_profile.equals("on");
+  public void setAdmin_allow_gsm_2_email_without_profile(boolean admin_allow_gsm_2_email_without_profile) {
+    this.admin_allow_gsm_2_email_without_profile = admin_allow_gsm_2_email_without_profile;
   }
 
-  public String getAdmin_allow_email_2_gsm_without_profile() {
-    return admin_allow_email_2_gsm_without_profile ? "checked" : "";
+  public boolean isAdmin_allow_email_2_gsm_without_profile() {
+    return admin_allow_email_2_gsm_without_profile;
   }
 
-  public void setAdmin_allow_email_2_gsm_without_profile(String admin_allow_email_2_gsm_without_profile) {
-    this.admin_allow_email_2_gsm_without_profile = admin_allow_email_2_gsm_without_profile.equals("on");
+  public void setAdmin_allow_email_2_gsm_without_profile(boolean admin_allow_email_2_gsm_without_profile) {
+    this.admin_allow_email_2_gsm_without_profile = admin_allow_email_2_gsm_without_profile;
   }
 
-  public String getSendSuccessAnswer() {
-    return sendSuccessAnswer ? "checked" : "";
+  public boolean isSendSuccessAnswer() {
+    return sendSuccessAnswer;
   }
 
-  public void setSendSuccessAnswer(String sendSuccessAnswer) {
-    this.sendSuccessAnswer = sendSuccessAnswer.equals("on");
+  public void setSendSuccessAnswer(boolean sendSuccessAnswer) {
+    this.sendSuccessAnswer = sendSuccessAnswer;
   }
 
   public String getAdmin_default_limit() {
