@@ -1165,9 +1165,9 @@ void ExtractAddresses(SmppHeader* pdu,Address& org,Address& dst)
 std::string getTimeStamp()
 {
   time_t now=time(NULL);
-  tm* t=localtime(&now);
   timeval tv;
   gettimeofday(&tv,0);
+  tm* t=localtime(&tv.tv_sec);
   int msec=tv.tv_usec;
   msec/=1000;
   char buf[128];
