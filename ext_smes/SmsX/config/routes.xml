@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="windows-1251"?>
-<!DOCTYPE routes SYSTEM "routes.dtd">
 
 <routes>
   <subject_def id="sponsored" defSme="sponsored">
@@ -402,7 +401,6 @@
   </subject_def>
   <subject_def id="profiler" defSme="profiler">
     <notes></notes>
-       <mask value=".0.1.5500"/>
        <mask value=".5.0.ussd:105"/>
        <mask value=".0.1.0"/>
        <mask value=".0.1.0055"/>
@@ -440,9 +438,9 @@
        <mask value=".1.1.7913502????"/>
        <mask value=".1.1.791316?????"/>
        <mask value=".1.1.791349?????"/>
-       <mask value=".1.1.7913504????"/>
        <mask value=".1.1.7913508????"/>
        <mask value=".1.1.7913500????"/>
+       <mask value=".1.1.7913504????"/>
   </subject_def>
   <subject_def id="Сибирский макрорегион - Красноярск" defSme="MAP_PROXY">
     <notes></notes>
@@ -490,9 +488,9 @@
        <mask value=".1.1.791877?????"/>
        <mask value=".1.1.791881?????"/>
        <mask value=".1.1.791719?????"/>
-       <mask value=".1.1.7988602????"/>
        <mask value=".1.1.791784?????"/>
        <mask value=".1.1.791954?????"/>
+       <mask value=".1.1.7988602????"/>
        <mask value=".1.1.79185??????"/>
        <mask value=".1.1.791772?????"/>
        <mask value=".1.1.7917000????"/>
@@ -748,7 +746,9 @@
   <subject_def id="smsx" defSme="smsx">
     <notes></notes>
        <mask value=".0.1.0012"/>
+       <mask value=".0.1.5500"/>
        <mask value=".0.1.0011"/>
+       <mask value=".0.1.147"/>
   </subject_def>
   <subject_def id="Сибирский макрорегион - Абакан" defSme="MAP_PROXY">
     <notes></notes>
@@ -1011,9 +1011,9 @@
        <mask value=".1.1.791151?????"/>
        <mask value=".1.1.791139?????"/>
        <mask value=".1.1.791137?????"/>
-       <mask value=".1.1.791216?????"/>
        <mask value=".1.1.791135?????"/>
        <mask value=".1.1.791160?????"/>
+       <mask value=".1.1.791216?????"/>
        <mask value=".1.1.791218?????"/>
        <mask value=".1.1.791146?????"/>
        <mask value=".1.1.791161?????"/>
@@ -1234,9 +1234,9 @@
        <mask value=".1.1.79857205???"/>
        <mask value=".1.1.79852316???"/>
        <mask value=".1.1.7916705????"/>
-       <mask value=".1.1.7916150????"/>
        <mask value=".1.1.791660?????"/>
        <mask value=".1.1.791692?????"/>
+       <mask value=".1.1.7916150????"/>
        <mask value=".1.1.7910493????"/>
        <mask value=".1.1.798576608??"/>
        <mask value=".1.1.79851025???"/>
@@ -1522,9 +1522,9 @@
        <mask value=".1.1.7985765????"/>
        <mask value=".1.1.7910002????"/>
        <mask value=".1.1.791653?????"/>
-       <mask value=".1.1.798572848??"/>
        <mask value=".1.1.791616?????"/>
        <mask value=".1.1.791665?????"/>
+       <mask value=".1.1.798572848??"/>
        <mask value=".1.1.7985104????"/>
        <mask value=".1.1.79859708???"/>
        <mask value=".1.1.791545?????"/>
@@ -1748,6 +1748,10 @@
        <mask value=".1.1.79851093???"/>
        <mask value=".1.1.79851047???"/>
        <mask value=".1.1.791609?????"/>
+  </subject_def>
+  <subject_def id="umenu" defSme="umenu">
+    <notes></notes>
+       <mask value=".0.1.0147"/>
   </subject_def>
   <subject_def id="Дальневосточный макрорегион - Благовещенск" defSme="MAP_PROXY">
     <notes></notes>
@@ -1991,6 +1995,45 @@
       <subject id="Северо-Западный макрорегион"/>
     </destination>
   </route>
+  <route id="umenu &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="umenu"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
   <route id="Forwarding &lt; dvostok.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79147991000" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
@@ -2171,7 +2214,7 @@
       <subject id="Северо-Западный макрорегион"/>
     </destination>
   </route>
-  <route id="abonents &gt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="true" replayPath="suppress" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+  <route id="umenu &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
       <subject id="Приволжский С-З макрорегион"/>
@@ -2202,6 +2245,45 @@
     </source>
     <source>
       <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="umenu">
+      <subject id="umenu"/>
+    </destination>
+  </route>
+  <route id="abonents &gt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="true" replayPath="suppress" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
     </source>
     <source>
       <subject id="Северо-Западный макрорегион"/>
@@ -2294,6 +2376,9 @@
       <subject id="Северо-Западный макрорегион"/>
     </source>
     <destination sme="smsx">
+      <subject id="sponsored"/>
+    </destination>
+    <destination sme="smsx">
       <subject id="smsx"/>
     </destination>
   </route>
@@ -2301,6 +2386,9 @@
     <notes></notes>
     <source>
       <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Абонент Б"/>
     </source>
     <source>
       <subject id="Центральный макрорегион Реком"/>
@@ -2354,6 +2442,45 @@
       <subject id="Домашние сервисы"/>
     </destination>
   </route>
+  <route id="sponsored &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="false" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="sponsored">
+      <subject id="sponsored"/>
+    </destination>
+  </route>
   <route id="subscription &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
@@ -2393,45 +2520,6 @@
       <subject id="subscription"/>
     </destination>
   </route>
-  <route id="sponsored &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
-    <notes></notes>
-    <source>
-      <subject id="Приволжский С-З макрорегион"/>
-    </source>
-    <source>
-      <subject id="Тестовый макрорегион"/>
-    </source>
-    <source>
-      <subject id="Центральный макрорегион Реком"/>
-    </source>
-    <source>
-      <subject id="Центральный макрорегион"/>
-    </source>
-    <source>
-      <subject id="Уральский макрорегион"/>
-    </source>
-    <source>
-      <subject id="Южный макрорегион"/>
-    </source>
-    <source>
-      <subject id="Сибирский макрорегион"/>
-    </source>
-    <source>
-      <subject id="Приволжский Ю-В макрорегион"/>
-    </source>
-    <source>
-      <subject id="Москва"/>
-    </source>
-    <source>
-      <subject id="Дальневосточный макрорегион"/>
-    </source>
-    <source>
-      <subject id="Северо-Западный макрорегион"/>
-    </source>
-    <destination sme="sponsored">
-      <subject id="sponsored"/>
-    </destination>
-  </route>
   <route id="Forwarding &lt; severozap.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79112009993" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
@@ -2448,6 +2536,9 @@
     </source>
     <destination sme="MAP_PROXY">
       <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Абонент Б"/>
     </destination>
     <destination sme="MAP_PROXY">
       <subject id="Центральный макрорегион Реком"/>
@@ -2573,8 +2664,11 @@
       <subject id="smsx divert"/>
     </destination>
   </route>
-  <route id="smsx &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+  <route id="smsx &gt; abonents" billing="false" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
+    <source>
+      <subject id="sponsored"/>
+    </source>
     <source>
       <subject id="smsx"/>
     </source>
@@ -2660,10 +2754,10 @@
       <subject id="Северо-Западный макрорегион"/>
     </destination>
   </route>
-  <route id="smscsme &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+  <route id="sponsored &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="false" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
-      <mask value=".1.1.79168960220"/>
+      <subject id="sponsored"/>
     </source>
     <destination sme="MAP_PROXY">
       <subject id="Приволжский С-З макрорегион"/>
@@ -2699,10 +2793,10 @@
       <subject id="Северо-Западный макрорегион"/>
     </destination>
   </route>
-  <route id="sponsored &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+  <route id="smscsme &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="true" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
     <notes></notes>
     <source>
-      <subject id="sponsored"/>
+      <mask value=".1.1.79168960220"/>
     </source>
     <destination sme="MAP_PROXY">
       <subject id="Приволжский С-З макрорегион"/>
@@ -2711,10 +2805,10 @@
       <subject id="Тестовый макрорегион"/>
     </destination>
     <destination sme="MAP_PROXY">
-      <subject id="Центральный макрорегион Реком"/>
+      <subject id="Центральный макрорегион"/>
     </destination>
     <destination sme="MAP_PROXY">
-      <subject id="Центральный макрорегион"/>
+      <subject id="Центральный макрорегион Реком"/>
     </destination>
     <destination sme="MAP_PROXY">
       <subject id="Уральский макрорегион"/>
@@ -2723,16 +2817,16 @@
       <subject id="Южный макрорегион"/>
     </destination>
     <destination sme="MAP_PROXY">
-      <subject id="Сибирский макрорегион"/>
-    </destination>
-    <destination sme="MAP_PROXY">
-      <subject id="Приволжский Ю-В макрорегион"/>
+      <subject id="Дальневосточный макрорегион"/>
     </destination>
     <destination sme="MAP_PROXY">
       <subject id="Москва"/>
     </destination>
     <destination sme="MAP_PROXY">
-      <subject id="Дальневосточный макрорегион"/>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
     </destination>
     <destination sme="MAP_PROXY">
       <subject id="Северо-Западный макрорегион"/>

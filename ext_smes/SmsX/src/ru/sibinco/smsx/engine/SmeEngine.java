@@ -15,7 +15,6 @@ import ru.sibinco.smsx.services.ProcessException;
 import ru.sibinco.smsx.services.calendar.CalendarService;
 import ru.sibinco.smsx.services.redirector.RedirectorService;
 import ru.sibinco.smsx.services.secret.SecretService;
-import ru.sibinco.smsx.services.sponsored.SponsoredService;
 import ru.sibinco.smsx.services.sponsored.SponsoredServiceNew;
 import ru.sibinco.smsx.utils.Service;
 
@@ -63,10 +62,10 @@ public final class SmeEngine extends Service {
     sponsoredService.init(new InitializationInfo(multiplexor, outQueue, SmeProperties.SPONSORED_ADDRESS));
 
     // Order is important here
-    services.add(redirectorService);
     services.add(calendarService);
     services.add(secretService);
     services.add(sponsoredService);
+    services.add(redirectorService);
 
     log.info("Initialization ok");
   }

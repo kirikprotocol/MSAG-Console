@@ -169,6 +169,7 @@ public class SponsoredServiceNew extends InternalService{
 
       public static long REITERATION_INTERVAL;
       public static long SEND_INTERVAL;
+      public static String SME_ADDRESS;
 
       // queries
       public static String PORTION_QUERY;
@@ -209,6 +210,8 @@ public class SponsoredServiceNew extends InternalService{
         SELECT_TOTAL_MESSAGES = Utils.loadString(config, "engine.sql.get.total.messages");
         SELECT_TOTAL_ABONENTS = Utils.loadString(config, "engine.sql.get.total.abonents");
         DECREASE_MESSAGES_COUNT = Utils.loadString(config, "engine.sql.decrease.messages.count");
+
+        SME_ADDRESS = Utils.loadString(config, "engine.sme.address");
 
         config.clear();
 

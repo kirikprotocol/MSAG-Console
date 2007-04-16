@@ -7,7 +7,7 @@ import ru.aurorisoft.smpp.Message;
  * Date: 13.03.2007
  */
 
-public class SponsoredRequestParser {
+final class SponsoredRequestParser {
   private static final String SPONSORED = "(S|s)(P|p)(O|o)(N|n)(S|s)(O|o)(R|r)(E|e)(D|d)";
   private static final String NONE = "(N|n)(O|o)(N|n)(E|e)";
   private static final String ANY_NUMBER = "\\d+";

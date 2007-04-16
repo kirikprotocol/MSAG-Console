@@ -5,7 +5,7 @@ package ru.sibinco.smsx.services.sponsored;
  * Date: 12.03.2007
  */
 
-public class Messages2SendCounter {
+final class Messages2SendCounter {
   private int counter = 0;
 
   public synchronized int getCounter() {

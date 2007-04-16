@@ -20,7 +20,7 @@ import com.logica.smpp.Data;
  * Date: 12.03.2007
  */
 
-public class SponsoredRequestProcessorNew extends ServiceProcessor{
+final class SponsoredRequestProcessorNew extends ServiceProcessor{
 
   private static org.apache.log4j.Category log = Category.getInstance(SponsoredRequestProcessorNew.class);
 
@@ -167,12 +167,12 @@ public class SponsoredRequestProcessorNew extends ServiceProcessor{
 
   private void notification(String abonent,int NN) throws IOException {
 
-    log.debug("Starting notification.Host "+SponsoredService.Properties.Subscription.NOTIFICATION_HOST+" port "+SponsoredService.Properties.Subscription.NOTIFICATION_PORT);
+    log.debug("Starting notification.Host "+SponsoredServiceNew.Properties.Subscription.NOTIFICATION_HOST+" port "+SponsoredServiceNew.Properties.Subscription.NOTIFICATION_PORT);
     SMSXProfileCommandHandler handler = new SMSXProfileCommandHandler();
     boolean res = false;
 
-      handler.connect(SponsoredService.Properties.Subscription.NOTIFICATION_HOST,SponsoredService.Properties.Subscription.NOTIFICATION_PORT,60000);
-      if(!handler.authentication(SponsoredService.Properties.Subscription.NOTIFICATION_USER,SponsoredService.Properties.Subscription.NOTIFICATION_PASSWORD)){
+      handler.connect(SponsoredServiceNew.Properties.Subscription.NOTIFICATION_HOST,SponsoredServiceNew.Properties.Subscription.NOTIFICATION_PORT,60000);
+      if(!handler.authentication(SponsoredServiceNew.Properties.Subscription.NOTIFICATION_USER,SponsoredServiceNew.Properties.Subscription.NOTIFICATION_PASSWORD)){
         log.debug("Authentication failed.");
 
       }else{

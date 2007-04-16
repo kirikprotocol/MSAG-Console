@@ -24,7 +24,7 @@ import com.lorissoft.advertising.util.Encode;
  * Date: 12.03.2007
  */
 
-public class SponsoredEngineNew {
+final class SponsoredEngineNew {
   private static final Category log = Category.getInstance(SponsoredEngineNew.class);
 
   private static final int ABONENTS_PORTION = 1000;
@@ -263,7 +263,7 @@ public class SponsoredEngineNew {
 
     private void sendMessage(final String msg, final String toAbonent) {
       final Message message = new Message();
-      message.setSourceAddress(SponsoredServiceNew.Properties.SERVICE_ADDRESS);
+      message.setSourceAddress(SponsoredServiceNew.Properties.Engine.SME_ADDRESS);
       message.setDestinationAddress(toAbonent);
       message.setMessageString(msg);
       outQueue.addOutgoingObject(new OutgoingObject(message));

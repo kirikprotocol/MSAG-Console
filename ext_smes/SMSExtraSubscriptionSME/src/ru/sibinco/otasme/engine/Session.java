@@ -24,10 +24,13 @@ public final class Session {
 
   private static final Category log = Category.getInstance(Session.class);
   private static final String MAR = "mar";
+  private static final String SMSX = "smsx";
 
   private final String abonentNumber;
   private final String smeAddress;
   private final String smscenterNumber;
+
+  private String incomingMessageConnectorName;
 
   private Date lastRequestDate = new Date();
   private SessionState currentState = new StartState();
@@ -58,7 +61,7 @@ public final class Session {
   }
 
   public void doBeforeUnregisterByTimeout() {
-    sendMessage(SmeProperties.Session.TIMEOUT_ERROR_TEXT, smeAddress);
+    sendMessage(SmeProperties.Session.TIMEOUT_ERROR_TEXT, smeAddress, incomingMessageConnectorName);
   }
 
   private void unregisterMyself() {
@@ -77,11 +80,12 @@ public final class Session {
     log.error("SESSION: ID = " + getId() + ". " + str);
   }
 
-  private void sendMessage(String msg, String sourceAddr) {
+  private void sendMessage(String msg, String sourceAddr, String connectionName) {
     final Message message = new Message();
     message.setSourceAddress(sourceAddr);
     message.setDestinationAddress(abonentNumber);
     message.setMessageString(msg);
+    message.setConnectionName(connectionName);
     Sme.outQueue.addOutgoingObject(new OutgoingObject(message));
   }
 
@@ -148,6 +152,8 @@ public final class Session {
       if (incomingMessage.getType() != Message.TYPE_DELIVER)
         throw new UnexpectedMessageException();
 
+      incomingMessageConnectorName = incomingMessage.getConnectionName();
+
       final String req = incomingMessage.getMessageString();
       // NOTE: Order is important here!
       if (req.trim().matches(OFF))
@@ -169,7 +175,7 @@ public final class Session {
         } else {
           processUser(incomingMessage.getSourceAddress(), true);
           sendResponse(incomingMessage, Data.ESME_ROK);
-          sendMessage(SmeProperties.Session.SMSC_ON_TEXT, smeAddress);
+          sendMessage(SmeProperties.Session.SMSC_ON_TEXT, smeAddress, SMSX);
           return null;
         }
 
@@ -184,7 +190,7 @@ public final class Session {
       } catch (SQLException e) {
         log.error(e);
         sendResponse(incomingMessage, Data.ESME_RSYSERR);
-        sendMessage(SmeProperties.Session.INTERNAL_ERROR, smeAddress);
+        sendMessage(SmeProperties.Session.INTERNAL_ERROR, smeAddress, incomingMessage.getConnectionName());
         return null;
       }
     }
@@ -200,7 +206,7 @@ public final class Session {
           } else {
             processUser(incomingMessage.getSourceAddress(), false);
             sendResponse(incomingMessage, Data.ESME_ROK);
-            sendMessage(SmeProperties.Session.MAR_OFF_TEXT, smeAddress);
+            sendMessage(SmeProperties.Session.MAR_OFF_TEXT, smeAddress, MAR);
             return null;
           }
         } else {
@@ -218,7 +224,7 @@ public final class Session {
       } catch (SQLException e) {
         log.error(e);
         sendResponse(incomingMessage, Data.ESME_RSYSERR);
-        sendMessage(SmeProperties.Session.INTERNAL_ERROR, smeAddress);
+        sendMessage(SmeProperties.Session.INTERNAL_ERROR, smeAddress, incomingMessage.getConnectionName());
         return null;
       }
     }
@@ -252,7 +258,7 @@ public final class Session {
     private void processOther(Message incomingMessage) {
       logInfo("Unknown message received: " + incomingMessage.getMessageString());
       sendResponse(incomingMessage, Data.ESME_ROK);
-      sendMessage(SmeProperties.Session.INFO_TEXT, smeAddress);
+      sendMessage(SmeProperties.Session.INFO_TEXT, smeAddress, incomingMessage.getConnectionName());
     }
 
     private boolean checkAbonentSubscription() throws SQLException {
@@ -298,17 +304,19 @@ public final class Session {
     public synchronized SessionState processMessage(Message incomingMessage) throws UnexpectedMessageException {
       if (incomingMessage.getType() != Message.TYPE_WTS_REQUEST || incomingMessage.getWtsOperationCode() != Message.WTS_OPERATION_CODE_AACK) {
         if (incomingMessage.getType() == Message.TYPE_DELIVER)
-          sendMessage(SmeProperties.Session.UNEXPECTED_MESSAGE_ERROR_TEXT, smeAddress);
+          sendMessage(SmeProperties.Session.UNEXPECTED_MESSAGE_ERROR_TEXT, smeAddress, incomingMessageConnectorName);
         throw new UnexpectedMessageException();
       }
+
       sendResponse(incomingMessage, Data.ESME_ROK);
+
       logInfo("OTA message received.");
       if (incomingMessage.getWTSErrorCode() != 0) { // Error occured
         logInfo("OTA Platform return error with code = " + incomingMessage.getWTSErrorCode());
 
         if (incomingMessage.getWtsErrorStatus() == Message.WTS_ERROR_STATUS_PERM) { // Permanent error occured
           logInfo("It is permanent error. Send SMS");
-          sendMessage(errorText, smeAddress);
+          sendMessage(errorText, smeAddress, incomingMessageConnectorName);
 
         } else { // Temporary error occured
 
@@ -319,11 +327,11 @@ public final class Session {
               CommandsRepeater.addCommand(new Command2Send(abonentNumber, serviceName, abonentNumber));
               return this;
             } else
-              sendMessage(errorText, smeAddress);
+              sendMessage(errorText, smeAddress, incomingMessageConnectorName);
 
           } catch (QueueOverflowException e) {
             logInfo("Commands Repeater is full. Send Error sms");
-            sendMessage(errorText, smeAddress);
+            sendMessage(errorText, smeAddress, incomingMessageConnectorName);
           }
         }
 

@@ -2,11 +2,13 @@ package ru.sibinco.otasme.engine;
 
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
+import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.otasme.Sme;
 import ru.sibinco.otasme.SmeProperties;
 import ru.sibinco.otasme.engine.smscenters.SMSCenters;
 import ru.sibinco.otasme.network.OutgoingObject;
 import ru.sibinco.otasme.utils.Service;
+import com.logica.smpp.Data;
 
 /**
  * User: artem
@@ -34,6 +36,7 @@ public final class SmeEngine extends Service {
 
       if (session == null) {
         if (incomingMessage.getType() != Message.TYPE_DELIVER && incomingMessage.getType() != Message.TYPE_WTS_REQUEST) {
+          sendResponse(incomingMessage, Data.ESME_ROK);
           log.error("Unexpected message with type=" + incomingMessage.getType());
           return;
         }
@@ -41,7 +44,8 @@ public final class SmeEngine extends Service {
         String smscenterNumber = SMSCenters.getSMSCenterNumberByAbonent(abonentAddr);
         if (smscenterNumber == null) {
           log.info("WARNING!!! Can't find macro region for abonent " + abonentAddr);
-          sendMessage(SmeProperties.SmeEngine.NUMBER_NOT_FOUND_ERROR_TEXT, smeAddr, abonentAddr);
+          sendResponse(incomingMessage, Data.ESME_ROK);
+          sendMessage(SmeProperties.SmeEngine.NUMBER_NOT_FOUND_ERROR_TEXT, smeAddr, abonentAddr, incomingMessage.getConnectionName());
           return;
         }
 
@@ -51,13 +55,17 @@ public final class SmeEngine extends Service {
       session.processMessage(incomingMessage);
     } catch (SessionsRegistry.SessionsRegistryException e) {
       log.error("Can't start new session", e);
-      sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
+      sendResponse(incomingMessage, Data.ESME_ROK);
+      sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr, incomingMessage.getConnectionName());
     } catch (SessionsRegistry.SessionsRegistryOverflowException e) {
       log.error("Can't start new session", e);
-      sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr);
+      sendResponse(incomingMessage, Data.ESME_ROK);
+      sendMessage(SmeProperties.SmeEngine.SESSIONS_REGISTRY_OVERFLOW_TEXT, smeAddr, abonentAddr, incomingMessage.getConnectionName());
     } catch (Session.UnexpectedMessageException e) {
+      sendResponse(incomingMessage, Data.ESME_ROK);
       log.error("Unexpected message", e);
     } catch (Throwable e) {
+      sendResponse(incomingMessage, Data.ESME_RSYSERR);
       log.error(e);
     }
   }
@@ -68,11 +76,22 @@ public final class SmeEngine extends Service {
     return incomingMessage.getSourceAddress();
   }
 
-  private static void sendMessage(String msg, String sourceAddr, String destAddr) {
+  private static void sendMessage(String msg, String sourceAddr, String destAddr, String connectionName) {
     final Message message = new Message();
     message.setSourceAddress(sourceAddr);
     message.setDestinationAddress(destAddr);
     message.setMessageString(msg);
+    message.setConnectionName(connectionName);
     Sme.outQueue.addOutgoingObject(new OutgoingObject(message));
+  }
+
+  private static void sendResponse(Message msg, int status) {
+    try {
+      msg.setStatus(status);
+      Sme.multiplexor.sendResponse(msg);
+      log.debug("Delivery response sent, address #" + msg.getDestinationAddress() + "; abonent #" + msg.getSourceAddress() + "; status #" + msg.getStatus());
+    } catch (SMPPException e) {
+      log.warn("Exception occured sending delivery response.", e);
+    }
   }
 }
