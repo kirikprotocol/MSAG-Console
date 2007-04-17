@@ -1331,6 +1331,15 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,smsc->otherChargePolicy);
   }
 
+#ifdef SMSEXTRA
+  if(ri.serviceId==777)
+  {
+    sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
+    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_INCHARGE);
+  }
+#endif
+
+
   if(aclCheck && ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(ri.aclId,aclAddr))
   {
     submitResp(t,sms,Status::NOROUTE);
