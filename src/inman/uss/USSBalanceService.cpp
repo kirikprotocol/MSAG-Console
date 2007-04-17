@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <string.h>
+#include <errno.h>
 
 #include "USSBalanceService.hpp"
 #include <logger/Logger.h>
@@ -44,9 +46,10 @@ USSBalanceService::~USSBalanceService()
 bool USSBalanceService::start()
 {
   if (!_running) {
-    if (!_server->Start())
+    if (!_server->Start()) {
+      smsc_log_error(_logger, "UssBalanceService: can't init server socket, [%s]", strerror(errno));
       return false;
-
+    }
     _running = true;
     smsc_log_debug(_logger, "UssBalanceService: Started.");
   }
