@@ -8,7 +8,6 @@ using smsc::inman::inap::TCAPDispatcher;
 
 #include "inman/service.hpp"
 using smsc::inman::interaction::INPSerializer;
-using smsc::inman::interaction::INPCommandSetAC;
 
 #include "inman/AbntDetManager.hpp"
 
@@ -172,8 +171,8 @@ void Service::closeSession(unsigned sockId)
         if (sit != sessions.end()) {
             SessionInfo & sess = (*sit).second;
             pCm = sess.hdl;
-            smsc_log_error(logger, "InmanSrv: closing session[%u] on Connect[%u]",
-                           sess.sId, sockId);
+            smsc_log_info(logger, "InmanSrv: closing %s session[%u] on Connect[%u]",
+                            sess.pCs->CsName(), sess.sId, sockId);
             sessions.erase(sit);
         }
     }
@@ -220,14 +219,8 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
     INPPacketAC* pck = static_cast<INPPacketAC*>(recv_cmd.get());
     INPCommandSetAC * pCs = pck->pCmd()->commandSet();
     //NOTE: session restoration is not supported for now, so just create new session
-    SessionInfo  newSess;
-    _mutex.Lock();
-    newSess.sId = ++lastSessId;
-    _mutex.Unlock();
     //NOTE: only commands with HDR_DIALOG is supported for now (bindSockId session type)
-    newSess.type = SessionInfo::bindSockId;
-    newSess.conn = conn;
-    newSess.hdl = NULL;
+    SessionInfo  newSess(pCs, conn);
 
     switch (pCs->CsId()) {
     case smsc::inman::interaction::csBilling: {
@@ -246,20 +239,20 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
         newSess.hdl = new AbntDetectorManager(&sCfg, newSess.sId, conn, logger);
     } break;
 
-    default: //close connect
+    default: //force connect closing by TCPSrv
         throw CustomException("InmanSrv: unsupported CommandSet: %s (%u)",
                               pCs->CsName(), pCs->CsId());
     }
-    conn->removeListener(this);
-    conn->addListener(newSess.hdl);
     _mutex.Lock();
+    newSess.sId = ++lastSessId;
     sockets.insert(SocketsMap::value_type(conn->getId(), newSess.sId));
     sessions.insert(SessionsMap::value_type(newSess.sId, newSess));
     _mutex.Unlock();
-    smsc_log_debug(logger, "InmanSrv: New %s session[%u] on Connect[%u] created",
+    smsc_log_info(logger, "InmanSrv: New %s session[%u] on Connect[%u] created",
                   pCs->CsName(), newSess.sId, conn->getId());
 
-    newSess.hdl->onPacketReceived(conn, recv_cmd); //throws
+    conn->folowUp(this, newSess.hdl);
+    conn->removeListener(this);
 }
 
 //NOTE: session restoration is not supported for now, so just delete session

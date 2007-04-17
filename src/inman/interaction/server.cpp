@@ -25,10 +25,7 @@ Server::Server(const ServSocketCFG * in_cfg, Logger * uselog /*= NULL*/)
 
 Server::~Server()
 {
-    _mutex.Lock();
     clearListeners();
-    _mutex.Unlock();
-
     if (_runState != Server::lstStopped)
         Stop();
     WaitFor();
@@ -93,20 +90,20 @@ void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
 
     smsc_log_debug(logger, "TCPSrv: stopping Listener thread, timeout = %u ms ..",
                    timeOutMilliSecs);
-    _mutex.Lock();
+    Sync().Lock();
     if (_runState == Server::lstRunning)
         _runState = Server::lstStopping;
-    _mutex.Unlock();
+    Sync().Unlock();
 
     lstEvent.Wait(timeOutMilliSecs);
 
-    _mutex.Lock();
+    Sync().Lock();
     if (_runState != Server::lstStopped) {
         smsc_log_debug(logger, "TCPSrv: timeout expired, %u connects are still active",
                        connects.size());
         _runState = Server::lstStopped;  //forcedly stop Listener thread
     }
-    _mutex.Unlock();
+    Sync().Unlock();
     WaitFor();
 }
 
@@ -116,12 +113,12 @@ void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
 //Closes all client's connections
 void Server::closeAllConnects(bool abort/* = false*/)
 {
-    if (connects.size()) {
+    if (!connects.empty()) {
         smsc_log_debug(logger, "TCPSrv: %s %u connects ..", abort ? "killing" : "closing",
                        connects.size());
         ConnectsList::iterator it = connects.begin();
         while (it != connects.end()) {
-            ConnectsList::iterator cit = it; it++;
+            ConnectsList::iterator cit = it++;
             closeConnect(*cit, abort);
             connects.erase(cit);
         } 
@@ -129,24 +126,26 @@ void Server::closeAllConnects(bool abort/* = false*/)
 }
 //Notifies listeners for new socket opened. In case of ConnectAC is created
 //by listeners, add it to connects collection.
-//NOTE: Requires _mutex to be unlocked !!!
+//NOTE: Requires Sync() to be unlocked !!!
 void Server::openConnect(std::auto_ptr<Socket>& use_sock)
 {
     use_sock->SetNoDelay(true);
     unsigned sock_id = use_sock->getSocket();
     std::auto_ptr<ConnectAC> pConn;
+    GRDNode *it = begin();
     try {
-        for (ListenerList::iterator it = listeners.begin();
-             it != listeners.end() && !pConn.get(); it++) {
-            ServerListenerITF* ptr = *it;
-            pConn.reset(ptr->onConnectOpening(this, use_sock.get()));
+        for (; it && !pConn.get(); it = next(it)) {
+            pConn.reset(it->val->onConnectOpening(this, use_sock.get()));
         }
     } catch (const std::exception& exc) {
         smsc_log_error(logger, "TCPSrv: connect[%u] opening listener exception: %s",
                        sock_id, exc.what());
     }
+    if (it)
+        it->unmark();
+
     if (pConn.get() && (pConn->State() == ConnectAC::connAlive)) {
-        MutexGuard grd(_mutex);
+        MutexGuard grd(Sync());
         use_sock.release();
         connects.push_back(pConn.release());
     } else {
@@ -155,14 +154,13 @@ void Server::openConnect(std::auto_ptr<Socket>& use_sock)
     }
 }
 
+//NOTE: Requires Sync() to be unlocked !!!
 void Server::closeConnect(ConnectAC* connect, bool abort/* = false*/)
 {
     unsigned sockId = connect->getId();
     try {
-        for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
-            ServerListenerITF* ptr = *it;
-            ptr->onConnectClosing(this, connect);
-        }
+        for (GRDNode *it = begin(); it; it = next(it))
+            it->val->onConnectClosing(this, connect);
     } catch (const std::exception& exc) {
         smsc_log_error(logger, "TCPSrv: connect[%u] closing listener exception: %s",
                        (unsigned)sockId, exc.what());
@@ -172,19 +170,20 @@ void Server::closeConnect(ConnectAC* connect, bool abort/* = false*/)
     smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
 }
 
-void Server::closeConnectGuarded(ConnectAC* conn, bool abort/* = false*/)
+
+void Server::closeConnectGuarded(ConnectsList::iterator & it, bool abort/* = false*/)
 {
     {
-        MutexGuard grd(_mutex);
-        connects.remove(conn);
+        MutexGuard grd(Sync());
+        connects.erase(it);
     }
-    closeConnect(conn, abort);
+    closeConnect(*it, abort);
 }
 
 Server::ShutdownReason Server::Listen(void)
 {
     Server::ShutdownReason result = Server::srvStopped;
-    _mutex.Lock();
+    Sync().Lock();
     _runState = Server::lstRunning;
     while (_runState != Server::lstStopped) {
         //check for last connect while stopping
@@ -194,7 +193,7 @@ Server::ShutdownReason Server::Listen(void)
             break;
         }
 
-        int     n, maxSock = 0;
+        int     maxSock = 0;
         fd_set  readSet;
         fd_set  errorSet;
 
@@ -213,30 +212,27 @@ Server::ShutdownReason Server::Listen(void)
             if (socket > maxSock)
                 maxSock = socket;
         }
-        _mutex.Unlock();
+        Sync().Unlock();
 
-        if (!(n = select(maxSock+1, &readSet, 0, &errorSet, &tmo))) { //timeout expired
-            _mutex.Lock(); continue;
-        }
-            
+        int n = select(maxSock+1, &readSet, 0, &errorSet, &tmo);
+        Sync().Lock();
+        if (!n) //timeout expired
+            continue;
         if (n < 0) {
             smsc_log_fatal(logger, "TCPSrv: select() failed, cause: %d (%s)",
                            errno, strerror(errno));
             result = Server::srvError;
-            _mutex.Lock();
             _runState = Server::lstStopped;
-            _mutex.Unlock();
         }
         if (_runState == Server::lstStopped)
             break;
+        Sync().Unlock();
 
-        //Serve clients connects first (iterate over list copy in order
-        //to safely modify original collection)
-        _mutex.Lock();
-        ConnectsList stump(connects);
-        _mutex.Unlock();
-        for (ConnectsList::iterator i = stump.begin(); i != stump.end(); i++) {
-            ConnectAC* conn = (*i);
+         //Serve clients connects first
+        ConnectsList::iterator nit = connects.begin();
+        while (nit != connects.end()) {
+            ConnectsList::iterator it = nit++;
+            ConnectAC* conn = (*it);
             SOCKET socket = (SOCKET)conn->getId();
 
             if (FD_ISSET(socket, &readSet)) {
@@ -244,12 +240,12 @@ Server::ShutdownReason Server::Listen(void)
                 if (st == ConnectAC::connEOF)
                     smsc_log_debug(logger, "TCPSrv: client ends Connect[%u]", socket);
                 if (st != ConnectAC::connAlive)
-                    closeConnectGuarded(conn);
+                    closeConnectGuarded(it);
             }
             if (FD_ISSET(socket, &errorSet)) {
                 smsc_log_debug(logger, "TCPSrv: Error Event on socket[%u].", socket);
                 conn->onErrorEvent();
-                closeConnectGuarded(conn, true);
+                closeConnectGuarded(it, true);
             }
         }
 
@@ -276,9 +272,9 @@ Server::ShutdownReason Server::Listen(void)
                 smsc_log_debug(logger, "TCPSrv: server socket closed");
             }
         }
-        _mutex.Lock();
+        Sync().Lock();
     } /* eow */
-    _mutex.Unlock();
+    Sync().Unlock();
     lstEvent.Signal();
     return result;
 }
@@ -304,11 +300,8 @@ int Server::Execute()
              && (lstRestartCnt < LISTENER_RESTART_ATTEMPTS));
     
     //notify ServerListeners about server shutdown
-    ListenerList cplist = listeners;
-    for (ListenerList::iterator it = cplist.begin(); it != cplist.end(); it++) {
-        ServerListenerITF* ptr = *it;
-        ptr->onServerShutdown(this, result);
-    }
+    for (GRDNode *it = begin(); it; it = next(it))
+        it->val->onServerShutdown(this, result);
     return result;
 }
 

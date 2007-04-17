@@ -88,9 +88,10 @@ ConnectAC::ConnectState Connect::onReadEvent(void)
             _exc.reset(new CustomException("%s: %s", _logId, exc.what()));
         }
         if (!_exc.get()) {
-            notifyByMsg(msg); 
-            pckAcq.Reset(); //acqAwaits
-        } else
+            notifyByMsg(msg); //may set the _exc
+            pckAcq.Reset();   //acqAwaits
+        }
+        if (_exc.get())
             notifyByExc();
     } break;
 
@@ -164,30 +165,30 @@ int  Connect::sendPck(SerializablePacketAC* pck)
  * -------------------------------------------------------------------------- */
 void Connect::notifyByMsg(std::auto_ptr<SerializablePacketAC>& p_msg)
 {
-    ListenerList cplist = listeners;
-    for (ListenerList::iterator it = cplist.begin();
-                        it != cplist.end() && p_msg.get(); it++) {
-        ConnectListenerITF* ptr = *it;
-        try { ptr->onPacketReceived(this, p_msg);
+    GRDNode *it = begin();
+    for (; it && p_msg.get(); it = next(it)) {
+        try { it->val->onPacketReceived(this, p_msg);
         } catch (std::exception& lexc) {
             _exc.reset(new CustomException("%s: %s", _logId, lexc.what()));
             smsc_log_error(logger, "%s", _exc->what());
         }
     }
+    if (it)
+        it->unmark();
 }
 
 void Connect::notifyByExc(void)
 {
     smsc_log_error(logger, _exc->what());
-    ListenerList cplist = listeners;
-    for (ListenerList::iterator it = cplist.begin();
-                        it != cplist.end() && _exc.get(); it++) {
-        ConnectListenerITF* ptr = *it;
-        try { ptr->onConnectError(this, _exc);
+    GRDNode *it = begin();
+    for (; it && _exc.get(); it = next(it)) {
+        try { it->val->onConnectError(this, _exc);
         } catch (std::exception& lexc) {
             smsc_log_error(logger, "%s: %s", _logId, lexc.what());
         }
     }
+    if (it)
+        it->unmark();
     if (_exc.get()) //Listeners do not reset connect exception!!!
         _state = ConnectAC::connException;
 }

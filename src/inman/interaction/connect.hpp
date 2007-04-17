@@ -14,8 +14,11 @@ using smsc::logger::Logger;
 #include "inman/interaction/serializer.hpp"
 using smsc::inman::interaction::SerializablePacketAC;
 
-#include "inman/common/observable.hpp"
-using smsc::inman::common::ObservableT;
+//#include "inman/common/observable.hpp"
+//using smsc::inman::common::ObservableT;
+
+#include "inman/common/Observatory.hpp"
+using smsc::util::GRDObservatoryOfT;
 
 #include "inman/interaction/ConnectDefs.hpp"
 
@@ -87,7 +90,7 @@ class ConnectListenerITF;
 //Listeners are expected to either reset exception in order to continue Connect
 //processing or may leave exception forcing the Connect destruction by controlling
 //TCP server.
-class Connect : public ConnectAC, public ObservableT<ConnectListenerITF> {
+class Connect : public ConnectAC, public GRDObservatoryOfT<ConnectListenerITF> {
 public:
     Connect(Socket* sock, SerializerITF * serializer, Logger * uselog = NULL,
             ConnectParms * prm = NULL);

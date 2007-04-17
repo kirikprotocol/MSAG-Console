@@ -20,6 +20,7 @@ using smsc::inman::interaction::Connect;
 #include "inman/BillingManager.hpp"
 using smsc::inman::BillingCFG;
 using smsc::inman::filestore::InFileStorageRoller;
+using smsc::inman::interaction::INPCommandSetAC;
 
 #include "inman/incache/InCacheMT.hpp"
 using smsc::inman::cache::AbonentCacheCFG;
@@ -42,14 +43,17 @@ public:
     }
 };
 
-typedef struct {
-    enum _BindType {
-        bindSockId = 0, bindSessId
-    }          type;
-    unsigned    sId;
-    Connect*    conn;
-    ConnectManagerAC * hdl;
-} SessionInfo;
+struct SessionInfo {
+    enum _BindType { bindSockId = 0, bindSessId } type;
+    unsigned            sId;
+    Connect*            conn;
+    ConnectManagerAC *  hdl;
+    INPCommandSetAC *   pCs;
+
+    SessionInfo(INPCommandSetAC * use_Cs = NULL, Connect* use_conn = NULL)
+        : type(bindSockId), sId(0), conn(use_conn), hdl(0), pCs(use_Cs)
+    { }
+};
 
 class Service : public ServerListenerITF, public ConnectListenerITF {
 public:

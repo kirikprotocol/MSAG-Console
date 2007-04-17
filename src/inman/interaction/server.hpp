@@ -15,8 +15,8 @@ using smsc::core::synchronization::Event;
 #include "logger/Logger.h"
 using smsc::logger::Logger;
 
-#include "inman/common/observable.hpp"
-using smsc::inman::common::ObservableT;
+#include "inman/common/Observatory.hpp"
+using smsc::util::GRDObservatoryOfT;
 
 #include "inman/interaction/ConnectDefs.hpp"
 using smsc::inman::interaction::ConnectAC;
@@ -34,7 +34,7 @@ typedef struct {
 } ServSocketCFG;
 
 class ServerListenerITF;
-class Server : Thread, public ObservableT< ServerListenerITF > {
+class Server : Thread, public GRDObservatoryOfT<ServerListenerITF> {
 public:
     typedef enum { lstStopped = 0, lstStopping, lstRunning } ServerState;
     typedef enum {
@@ -62,12 +62,11 @@ protected:
     ShutdownReason Listen(void);
     void openConnect(std::auto_ptr<Socket>& use_sock);
     void closeConnect(ConnectAC* connect, bool abort = false);
-    void closeConnectGuarded(ConnectAC* connect, bool abort = false);
+    void closeConnectGuarded(ConnectsList::iterator & it, bool abort = false);
     //Closes all client's connections
     void closeAllConnects(bool abort = false);
 
     Event           lstEvent;
-    Mutex           _mutex;
     ServSocketCFG   _cfg;
     volatile
         ServerState _runState;
