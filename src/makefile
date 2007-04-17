@@ -17,10 +17,28 @@ else
 SHARED_OPT:=-shared
 endif
 
+USRLOCLIB := /usr/local/lib
+ifeq ($(B64),YES)
+USRLOCLIB := /usr/local/lib/sparcv9
+endif
+
+
+ifeq ($(SFW),YES)
+SSL_LIB_DIR:=/usr/sfw/lib
+NETSNMP_LIB_DIR:=/usr/sfw/lib
+ifeq ($(B64),YES)
+SSL_LIB_DIR:=/usr/sfw/lib/sparcv9
+NETSNMP_LIB_DIR:=/usr/sfw/lib/sparcv9
+endif
+else
 SSL_LIB_DIR:=/usr/local/ssl/lib
+NETSNMP_LIB_DIR:=/usr/local/lib
 ifeq ($(B64),YES)
 SSL_LIB_DIR:=/usr/lib/sparcv9
+NETSNMP_LIB_DIR:=/usr/local/lib/sparcv9
 endif
+endif
+
 
 ifeq ($(CXX),CC)
 ifeq ($(SNMP),YES)
@@ -82,7 +100,13 @@ endif
 
 export SS7_LIBRARY_NAME
 
-CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I/usr/sfw/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__ -I/usr/local/ssl/include
+CAMMON_INCLUDES := -I$(SMSC_SRCDIR) 
+ifeq ($(SFW),YES)
+CAMMON_INCLUDES := $(CAMMON_INCLUDES) -I/usr/sfw/include -I/usr/local/include 
+else
+CAMMON_INCLUDES := $(CAMMON_INCLUDES) -I/usr/local/include 
+endif
+CAMMON_INCLUDES := $(CAMMON_INCLUDES) -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__ -I/usr/local/ssl/include
 
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
@@ -92,9 +116,9 @@ CXXFLAGS := $(CXXFLAGS) $(XTARGET) -library=stlport4
 CFLAGS := $(CFLAGS) $(XTARGET)
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := $(XTARGET) -zrescan -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_LIB_DIR)
+LDFLAGS := $(XTARGET) -zrescan -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR) -L$(NETSNMP_LIB_DIR)
 else
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib -L$(SSL_LIB_DIR)
+LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L$(USRLOCLIB) -L$(SSL_LIB_DIR)
 CXXFLAGS := $(CXXFLAGS) -fPIC
 endif
 
@@ -127,6 +151,9 @@ endif
 ifeq ($(SNMP),YES)
 CXXFLAGS := $(CXXFLAGS) -DSNMP
 SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp -ladm
+ifeq ($(SFW),YES)
+SNMP_LIBS := $(SNMP_LIBS) -lpkcs11
+endif
 export SNMP_LIBS
 endif
 
