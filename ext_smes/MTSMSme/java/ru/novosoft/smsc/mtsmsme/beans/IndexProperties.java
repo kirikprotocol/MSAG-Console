@@ -28,8 +28,16 @@ public abstract class IndexProperties extends MTSMSmeBean
   private int    smscTimeout = 0;
   private String smscPassword = "";
 
+  private int sccpUserId = 0;
+  private int sccpUserSsn = 0;
+  private String sccpMscGt = "";
+  private String sccpVlrGt = "";
+
   private String mapping_new_address = null;
   private String mapping_new_alias = null;
+  private String mapping_new_mgt = null;
+  private String mapping_new_msisdn = null;
+  private int mapping_new_period = -1;
 
   private String mbApply = null;
   private String mbReset = null;
@@ -51,11 +59,17 @@ public abstract class IndexProperties extends MTSMSmeBean
         smscTimeout = getConfig().getInt("MTSMSme.SMSC.timeout");
         smscPassword = getConfig().getString("MTSMSme.SMSC.password");
 
+        sccpUserId = getConfig().getInt("MTSMSme.SCCP.user_id");
+        sccpUserSsn = getConfig().getInt("MTSMSme.SCCP.user_ssn");
+        sccpMscGt = getConfig().getString("MTSMSme.SCCP.msc_gt");
+        sccpVlrGt = getConfig().getString("MTSMSme.SCCP.vlr_gt");
+
       } catch (Exception e) {
         logger.error(e);
         return error("mtsmsme.error.config_load_failed", e);
       }
     }
+
     return result;
   }
 
@@ -88,6 +102,11 @@ public abstract class IndexProperties extends MTSMSmeBean
     getConfig().setString("MTSMSme.SMSC.sid", smscSid);
     getConfig().setInt   ("MTSMSme.SMSC.timeout", smscTimeout);
     getConfig().setString("MTSMSme.SMSC.password", smscPassword);
+
+    getConfig().setInt("MTSMSme.SCCP.user_id", sccpUserId);
+    getConfig().setInt("MTSMSme.SCCP.user_ssn", sccpUserSsn);
+    getConfig().setString("MTSMSme.SCCP.msc_gt", sccpMscGt);
+    getConfig().setString("MTSMSme.SCCP.vlr_gt", sccpVlrGt);
 
     return RESULT_DONE;
   }
@@ -155,6 +174,49 @@ public abstract class IndexProperties extends MTSMSmeBean
     this.smscPassword = smscPassword;
   }
 
+  public String getSccpUserId() {
+    return String.valueOf(sccpUserId);
+  }
+
+  public void setSccpUserId(String sccpUserId) {
+    try {
+      this.sccpUserId = Integer.valueOf(sccpUserId).intValue();
+    } catch (NumberFormatException e) {
+      logger.error("Invalid MTSMSme.SCCP.userId parameter value: \"" + sccpUserId + '"', e);
+      this.sccpUserId = 0;
+    }
+  }
+
+  public String getSccpUserSsn() {
+    return String.valueOf(sccpUserSsn);
+  }
+
+  public void setSccpUserSsn(String sccpUserSsn) {
+    try {
+      this.sccpUserSsn = Integer.valueOf(sccpUserSsn).intValue();
+    } catch (NumberFormatException e) {
+      logger.error("Invalid MTSMSme.SCCP.userSsn parameter value: \"" + sccpUserSsn + '"', e);
+      this.sccpUserSsn = 0;
+    }
+  }
+
+  public String getSccpMscGt() {
+    return sccpMscGt;
+  }
+
+  public void setSccpMscGt(String sccpMscGt) {
+    this.sccpMscGt = sccpMscGt;
+  }
+
+  public String getSccpVlrGt() {
+    return sccpVlrGt;
+  }
+
+  public void setSccpVlrGt(String sccpVlrGt) {
+    this.sccpVlrGt = sccpVlrGt;
+  }
+
+
   public List getMappingSectionNames() {
     return new SortedList(getConfig().getSectionChildSectionNames(MAPPING_SECTION_NAME));
   }
@@ -189,24 +251,44 @@ public abstract class IndexProperties extends MTSMSmeBean
   }
   private int setAliases(Map requestParams)
   {
+
     final String PREFIX = MAPPING_SECTION_NAME + '.';
 
     getConfig().removeSection(MAPPING_SECTION_NAME);
+
     for (Iterator i = requestParams.keySet().iterator(); i.hasNext();)
     {
       String paramName = (String) i.next();
-      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias")))
+      if (paramName.startsWith(PREFIX) && (paramName.endsWith("address") || paramName.endsWith("alias") || paramName.endsWith("mgt") || paramName.endsWith("msisdn")))
       {
         final String paramValue = getParamValue(requestParams.get(paramName));
         if (paramValue != null) getConfig().setString(paramName, paramValue);
+      } else if (paramName.startsWith(PREFIX) && paramName.endsWith("period")) {
+        final String paramValue = getParamValue(requestParams.get(paramName));
+        try {
+          if (paramValue != null) getConfig().setInt(paramName, Integer.parseInt(paramValue));
+        } catch (NumberFormatException e) {
+          logger.error(e, e);
+          getConfig().setInt(paramName, 0);
+        }
       }
+
     }
+
     if (mapping_new_address != null && mapping_new_address.length() > 0 &&
-        mapping_new_alias != null && mapping_new_alias.length() > 0)
+        mapping_new_alias != null && mapping_new_alias.length() > 0 &&
+        mapping_new_mgt != null && mapping_new_mgt.length() > 0 &&
+        mapping_new_msisdn != null && mapping_new_msisdn.length() > 0 &&
+        mapping_new_period >= 0)
     {
-      String section = mapping_new_address.replace('.', '_');
+      int i = mapping_new_address.lastIndexOf('.');
+//      String section = mapping_new_address.replace('.', '_');
+      String section = mapping_new_address.substring(i >=0 ? i : 0);
       getConfig().setString(PREFIX + section + ".address", mapping_new_address);
       getConfig().setString(PREFIX + section + ".alias", mapping_new_alias);
+      getConfig().setString(PREFIX + section + ".mgt", mapping_new_mgt);
+      getConfig().setString(PREFIX + section + ".msisdn", mapping_new_msisdn);
+      getConfig().setInt(PREFIX + section + ".period", mapping_new_period);
     }
 
     return RESULT_DONE;
@@ -223,6 +305,28 @@ public abstract class IndexProperties extends MTSMSmeBean
   }
   public void setMapping_new_alias(String mapping_new_alias) {
     this.mapping_new_alias = mapping_new_alias;
+  }
+  public String getMapping_new_mgt() {
+    return mapping_new_mgt;
+  }
+  public void setMapping_new_mgt(String mapping_new_mgt) {
+    this.mapping_new_mgt = mapping_new_mgt;
+  }
+  public String getMapping_new_msisdn() {
+    return mapping_new_msisdn;
+  }
+  public void setMapping_new_msisdn(String mapping_new_msisdn) {
+    this.mapping_new_msisdn = mapping_new_msisdn;
+  }
+  public String getMapping_new_period() {
+    return String.valueOf(mapping_new_period);
+  }
+  public void setMapping_new_period(String mapping_new_period) {
+    try {
+      this.mapping_new_period = Integer.valueOf(mapping_new_period).intValue();
+    } catch (NumberFormatException e) {
+      this.mapping_new_period = -1;
+    }
   }
 
   protected abstract int apply();

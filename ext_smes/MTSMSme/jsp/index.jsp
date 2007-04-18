@@ -1,7 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.mtsmsme.beans.Index,
                  java.util.*, ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.util.Functions"%>
+                 ru.novosoft.smsc.util.Functions,
+                 ru.novosoft.smsc.jsp.util.helper.dynamictable.DynamicTableHelper"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mtsmsme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -55,30 +56,78 @@ checkStartStop();
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
 </table><br/>
+
+<div class=page_subtitle><%= getLocString("mtsmsme.subtitle.sccp_connection")%></div>
+<table class=properties_list cellspacing=0 width="100%">
+<col width="20%">
+<col width="80%">
+<% rowN = 0;%>
+<tr class=row<%=rowN++&1%>>
+  <th>SCCP user id</th>
+  <td><input class=txt name=sccpUserId value="<%=StringEncoderDecoder.encode(bean.getSccpUserId())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>SCCP user ssn</th>
+  <td><input class=txt name=sccpUserSsn value="<%=StringEncoderDecoder.encode(bean.getSccpUserSsn())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>SCCP MSC GT</th>
+  <td><input class=txt name=sccpMscGt value="<%=StringEncoderDecoder.encode(bean.getSccpMscGt())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>SCCP VLR GT</th>
+  <td><input class=txt name=sccpVlrGt value="<%=StringEncoderDecoder.encode(bean.getSccpVlrGt())%>"></td>
+</tr>
+</table><br/>
+
+
 <div class=page_subtitle><%= getLocString("mtsmsme.subtitle.a_to_a_map")%></div>
 <script type="text/javascript">
 function clickAddMapping()
 {
 	var addressElem = document.getElementById('mapping_new_address');
-    var aliasElem   = document.getElementById('mapping_new_alias');
+  var aliasElem   = document.getElementById('mapping_new_alias');
+  var mgtElem   = document.getElementById('mapping_new_mgt');
+  var msisdnElem   = document.getElementById('mapping_new_msisdn');
+  var periodElem   = document.getElementById('mapping_new_period');
 
-    var newRow = mapping_table_id.insertRow(mapping_table_id.rows.length-1);
+  var newRow = mapping_table_id.insertRow(mapping_table_id.rows.length-1);
 	newRow.className = "row" + (mapping_table_id.rows.length & 1);
 	newRow.id = "mapping_row_" + addressElem.value;
-	var newCell = document.createElement("td");
-    var newSection = addressElem.value.replace(/[.]/g, "_");
 
-	newCell.innerHTML = "<input class=txt name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".address\" value=\"" + addressElem.value + "\">";
+  var newCell = document.createElement("td");
+  //var newSection = addressElem.value.replace(/[.]/g, "_");
+  var i = addressElem.value.lastIndexOf('.');
+  if (i < 0) i = -1;
+  var newSection = addressElem.value.substring(i + 1, addressElem.value.length);
+	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".address\" value=\"" + addressElem.value + "\">";
 	newRow.appendChild(newCell);
-	newCell = document.createElement("td");
+
+  newCell = document.createElement("td");
 	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".alias\" value=\"" + aliasElem.value + "\">";
 	newRow.appendChild(newCell);
-	newCell = document.createElement("td");
+
+  newCell = document.createElement("td");
+	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".mgt\" value=\"" + mgtElem.value + "\">";
+	newRow.appendChild(newCell);
+
+  newCell = document.createElement("td");
+	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".msisdn\" value=\"" + msisdnElem.value + "\">";
+	newRow.appendChild(newCell);
+
+  newCell = document.createElement("td");
+	newCell.innerHTML = "<input class=txtW name=\"<%=Index.MAPPING_SECTION_NAME%>." + newSection + ".period\" value=\"" + periodElem.value + "\">";
+	newRow.appendChild(newCell);
+
+  newCell = document.createElement("td");
 	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"common.buttons.remove\" title=\"mtsmsme.hint.remove_mapping\" jbuttonOnclick=\"return clickRemoveMapping('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	addressElem.value = "";
 	aliasElem.value = "";
+	mgtElem.value = "";
+	msisdnElem.value = "";
+	periodElem.value = "";
 
 	return false;
 }
@@ -90,13 +139,19 @@ function clickRemoveMapping(id_to_remove)
 	return false;
 }
 </script>
-<table class=list cellspacing=0 id=mapping_table_id>
-<col width=1%>
-<col width=98%>
+<table class=list cellspacing=0 id=mapping_table_id width="100%">
+<col width=20%>
+<col width=30%>
+<col width=20%>
+<col width=20%>
+<col width=10%>
 <col width=1%>
 <tr>
 	<th>address</th>
-	<th colspan=2>alias</th>
+	<th>alias</th>
+	<th>mgt</th>
+	<th>msisdn</th>
+	<th>period</th>
 </tr>
 <%rowN = 0;
 	Collection mappingSectionNames = bean.getMappingSectionNames();
@@ -104,16 +159,25 @@ function clickRemoveMapping(id_to_remove)
     final String section = (String) i.next();
 		final String address = bean.getString(section + ".address");
 		final String alias   = bean.getString(section + ".alias");
+		final String mgt   = bean.getString(section + ".mgt");
+		final String msisdn   = bean.getString(section + ".msisdn");
+		final int period   = bean.getInt(section + ".period");
 		%><tr class=row<%=(rowN++)&1%> id=mapping_row_<%=StringEncoderDecoder.encode(address)%>>
-			<td><input class=txt  name="<%=section%>.address" value="<%=address%>"></td>
+			<td><input class=txtW  name="<%=section%>.address" value="<%=address%>"></td>
 			<td><input class=txtW name="<%=section%>.alias"   value="<%=alias%>"></td>
+			<td><input class=txtW name="<%=section%>.mgt"   value="<%=mgt%>"></td>
+			<td><input class=txtW name="<%=section%>.msisdn"   value="<%=msisdn%>"></td>
+			<td><input class=txtW name="<%=section%>.period"   value="<%=period%>"></td>
 			<td><%button(out, "/images/but_del.gif", "mbDel", "common.buttons.remove", "mtsmsme.hint.remove_mapping", "return clickRemoveMapping('mapping_row_" + StringEncoderDecoder.encode(address) + "');");%></td>
 		</tr><%
 	}
 %>
 <tr id=mapping_new class=row<%=(rowN+1)&1%>>
-	<td><input class=txt  id="mapping_new_address" name="mapping_new_address"></td>
+	<td><input class=txtW  id="mapping_new_address" name="mapping_new_address"></td>
 	<td><input class=txtW id="mapping_new_alias"   name="mapping_new_alias"  ></td>
+	<td><input class=txtW id="mapping_new_mgt"   name="mapping_new_mgt"  ></td>
+	<td><input class=txtW id="mapping_new_msisdn"   name="mapping_new_msisdn"  ></td>
+	<td><input class=txtW id="mapping_new_period"   name="mapping_new_period"  ></td>
 	<td><%button(out, "/images/but_add.gif", "mbAdd", "common.buttons.add", "mtsmsme.hint.add_mapping", "return clickAddMapping();");%></td>
 </tr>
 </table>

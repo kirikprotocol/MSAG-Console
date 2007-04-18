@@ -34,6 +34,7 @@ public class Index extends IndexProperties
     }
 
     backup.save();
+
     return message("Changes saved, you should restart MTSM Sme to apply changes");
   }
 
