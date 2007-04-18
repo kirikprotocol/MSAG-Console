@@ -1232,6 +1232,7 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
     dst=xsi.divertAddr;
+    sms->setDestinationAddress(sms->getDealiasedDestinationAddress());
     info2(smsLog,"EXTRA: divert for abonent %s to %s",sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
     noDestChange=true;
   }
