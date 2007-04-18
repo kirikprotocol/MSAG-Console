@@ -138,6 +138,35 @@ public:
 
   void CheckPoint();
 
+  void CheckAll()
+  {
+    for(int i=0;i<LH_HASHSIZE;i++)
+    {
+      for(int j=0;j<memcounts[j];j++)
+      {
+        char* ptr=(char*)memblocks[i][j].addr;
+        for(int k=0;k<PRE_ALLOC;k++)
+        {
+          if(ptr[k-PRE_ALLOC]!=PRE_FILL_PATTERN)
+          {
+            fprintf(stderr,"BadBlock:\n");
+            DumpTrace(memblocks[i][j].trace);
+          }
+        }
+        ptr+=memblocks[i][j].size;
+        for(int k=0;k<POST_ALLOC;k++)
+        {
+          if(ptr[k]!=POST_FILL_PATTERN)
+          {
+            fprintf(stderr,"BadBlock:\n");
+            DumpTrace(memblocks[i][j].trace);
+          }
+        }
+
+      }
+    }
+  }
+
   size_t getAlloc()
   {
     return alloc;
@@ -463,4 +492,9 @@ void operator delete[](void* mem)
 uint64_t getCurrentAlloc()
 {
   return smsc::util::leaktracing::lh->getAlloc();
+}
+
+void lhCheckAll()
+{
+  smsc::util::leaktracing::lh->CheckAll();
 }
