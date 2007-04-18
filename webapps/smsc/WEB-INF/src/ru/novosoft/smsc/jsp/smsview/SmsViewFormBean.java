@@ -315,7 +315,7 @@ public class SmsViewFormBean extends IndexBean {
         if (rows.getRowsCount() == 0) return RESULT_ERROR;
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", appContext.getUserManager().getPrefs(principal).getLocale());
-        String result = "";
+        StringBuffer result = new StringBuffer();
         for (int i = 0; i < rows.getRowsCount(); i++) {
             SmsRow row = rows.getRow(i);
             String id = Long.toString(row.getId());
@@ -335,9 +335,13 @@ public class SmsViewFormBean extends IndexBean {
             String dest = row.getDestinationAddress();
             String route = row.getRouteId();
             String status = row.getStatus();
-            result += id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\r\n";
+          //id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\t";
+            result.append(id).append('\t').append(submit).append('\t').append(valid).append('\t').append(last).append('\t').append(next).append('\t');
+            result.append(source).append('\t').append(dest).append('\t').append(route).append('\t').append(status).append('\t');
+            result.append((row.getText() != null && row.isTextEncoded()) ? row.getText() : StringEncoderDecoder.encode(row.getText()));
+            result.append("\r\n");
         }
-        byte[] buf = result.getBytes();
+        byte[] buf = result.toString().getBytes();
         response.setContentLength(buf.length);
         ServletOutputStream out = response.getOutputStream();
         out.write(buf);
