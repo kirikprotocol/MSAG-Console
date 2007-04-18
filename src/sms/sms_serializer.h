@@ -26,6 +26,7 @@ namespace BufOps{
     buf.Read((char*)&addr.type,1);
     buf.Read((char*)&addr.plan,1);
     buf.Read(addr.value,addr.length);
+    addr.value[addr.length]=0;
     return buf;
   }
 
