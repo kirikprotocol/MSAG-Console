@@ -2,10 +2,11 @@
 #define _BILL_ACTION_CLOSE_
 
 #include "scag/re/actions/Action.h"
+#include "scag/re/actions/LongCallAction.h"
 
 namespace scag { namespace re {namespace actions {
 
-class BillActionClose : public Action
+class BillActionClose : public LongCallAction
 {
     std::string m_sStatus;
     std::string m_sMessage;
@@ -25,7 +26,8 @@ protected:
 public:
     BillActionClose() {}
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
-    virtual bool run(ActionContext& context);
+    virtual bool RunBeforePostpone(ActionContext& context);
+    virtual void ContinueRunning(ActionContext& context);
 };
 
 }}}

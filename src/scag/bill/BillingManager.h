@@ -5,6 +5,7 @@
 #include "sms/sms.h"
 #include <core/synchronization/EventMonitor.hpp>
 #include "scag/config/bill/BillingManagerConfig.h"
+#include "scag/lcm/LongCallManager.h"
 
 #include "infrastruct/Infrastructure.h"
 
@@ -14,6 +15,7 @@ using namespace smsc::sms;
 using namespace smsc::core::synchronization;
 using namespace scag::config;
 using namespace scag::bill::infrastruct;
+using namespace scag::lcm;
 
 enum TransactionStatus
 {
@@ -75,6 +77,20 @@ struct BillingInfoStruct
     }
 };
 
+class BillOpenCallParams : public LongCallParams
+{
+public:
+    BillingInfoStruct billingInfoStruct;
+    TariffRec tariffRec;
+    int BillId;
+};
+
+class BillCloseCallParams : public LongCallParams
+{
+public:
+    int BillId;
+};
+
 class BillingManager
 {
     BillingManager(const BillingManager& bm);
@@ -84,9 +100,9 @@ protected:
     BillingManager() {};
 
 public:
-    virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec) = 0;
-    virtual void Commit(int billId) = 0;
-    virtual void Rollback(int billId, bool timeout = false) = 0;
+    virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec, LongCallContext* lcmCtx = NULL) = 0;
+    virtual void Commit(int billId, LongCallContext* lcmCtx = NULL) = 0;
+    virtual void Rollback(int billId, bool timeout = false, LongCallContext* lcmCtx = NULL) = 0;
     virtual void Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec) = 0;
     //virtual void close(int billId) = 0;
 
@@ -101,4 +117,3 @@ public:
 }}
 
 #endif
-

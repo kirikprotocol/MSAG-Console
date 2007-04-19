@@ -6,16 +6,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-class BillOpenCallParams : public LongCallParams
-{
-public:
-    BillingInfoStruct billingInfoStruct;
-    TariffRec tariffRec;
-    int BillId;
-    std::string exception;
-};
-
-class BillActionOpen : public ActionAbstractWait
+class BillActionOpen : public ActionAbstractWait, public LongCallAction
 {
     std::string m_sName;
     //std::string m_sServiceName;
@@ -43,12 +34,14 @@ class BillActionOpen : public ActionAbstractWait
     bool m_waitOperation;
 
     void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK, const TariffRec * tariffRec);
+    void processResult(ActionContext& context, int billId, TariffRec* tariffRec);
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 public:
     BillActionOpen(bool waitOperation);
-    virtual bool run(ActionContext& context);
+    virtual bool RunBeforePostpone(ActionContext& context);
+    virtual void ContinueRunning(ActionContext& context);
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
 };
 

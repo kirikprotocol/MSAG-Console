@@ -21,7 +21,8 @@ XERCES_CPP_NAMESPACE_USE
 enum {
     STAT,
     NONE,
-    INMAN
+    INMAN,
+    INMANSYNC
 };
 
 class TariffRec{

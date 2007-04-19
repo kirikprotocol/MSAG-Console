@@ -7,7 +7,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-class ActionAbstractWait : public Action
+class ActionAbstractWait
 {
 protected:
     std::string m_sTime;
@@ -18,8 +18,8 @@ protected:
 
     std::string m_ActionName;
 
-    virtual void InitParameters(const SectionParams& params,PropertyObject propertyObject);
-    virtual void RegisterPending(ActionContext& context, unsigned int billID = 0);
+    virtual void InitParameters(const SectionParams& params,PropertyObject propertyObject, smsc::logger::Logger* logger);
+    virtual void RegisterPending(ActionContext& context, smsc::logger::Logger* logger, unsigned int billID = 0);
 public:
     ActionAbstractWait() : m_opType(-1) {};
 

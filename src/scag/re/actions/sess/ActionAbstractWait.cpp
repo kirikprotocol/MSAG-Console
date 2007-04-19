@@ -2,16 +2,16 @@
 
 namespace scag { namespace re { namespace actions {
 
-void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObject propertyObject)
+void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObject propertyObject, smsc::logger::Logger* logger)
 {
     FieldType ft;
     bool bExist;
     std::string sType;
 
-    ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "type", true, true, sType, bExist);
+    ft = Action::CheckParameter(params, propertyObject, m_ActionName.c_str(), "type", true, true, sType, bExist);
     if (ft!=ftUnknown) throw SCAGException("Action '%s': 'type' parameter must be a scalar constant type", m_ActionName.c_str());
 
-    m_ftTime = CheckParameter(params, propertyObject, m_ActionName.c_str(), "time", true, true, m_sTime, bExist);
+    m_ftTime = Action::CheckParameter(params, propertyObject, m_ActionName.c_str(), "time", true, true, m_sTime, bExist);
 
     m_opType = Session::getOperationType(sType);
 
@@ -21,7 +21,7 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
     smsc_log_debug(logger,"Action '%s':: init", m_ActionName.c_str());
 }
 
-void ActionAbstractWait::RegisterPending(ActionContext& context, unsigned int billID)
+void ActionAbstractWait::RegisterPending(ActionContext& context, smsc::logger::Logger* logger, unsigned int billID)
 {
     smsc_log_debug(logger,"Action '%s': registering pending...", m_ActionName.c_str());
 

@@ -5,7 +5,7 @@
 
 namespace scag { namespace re { namespace actions {
 
-class ActionOperationWait : public ActionAbstractWait
+class ActionOperationWait : public ActionAbstractWait, public Action
 {
     ActionOperationWait(const ActionOperationWait&);
 protected:

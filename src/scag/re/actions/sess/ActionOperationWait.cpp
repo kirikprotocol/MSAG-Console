@@ -18,14 +18,14 @@ void ActionOperationWait::init(const SectionParams& params,PropertyObject proper
 {
     m_ActionName = "operation:wait";
 
-    InitParameters(params,propertyObject);
+    InitParameters(params,propertyObject, logger);
 }
 
 bool ActionOperationWait::run(ActionContext& context)
 {
     try 
     {
-        RegisterPending(context);
+        RegisterPending(context, logger);
     } catch (SCAGException& e)
     {
         smsc_log_error(logger,"Run Action '%s': Cannot process. Details: %s", m_ActionName.c_str(), e.what());

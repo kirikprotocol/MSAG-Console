@@ -299,6 +299,8 @@ void XMLTariffMatrixHandler::startElement(const XMLCh* const nm, AttributeList& 
                         bill_type = INMAN;
                     else if(!strcmp(s.localForm(), "none"))
                         bill_type = NONE;
+                    else if(!strcmp(s.localForm(), "inmansync"))
+                        bill_type = INMANSYNC;
                 }
             }            
 

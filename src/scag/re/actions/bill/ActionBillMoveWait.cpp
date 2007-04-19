@@ -24,7 +24,7 @@ void ActionBillMoveWait::init(const SectionParams& params, PropertyObject proper
     ft = CheckParameter(params, propertyObject, m_ActionName.c_str(), "status", true, false, m_sStatus, bExist);
     m_ftMessage = CheckParameter(params, propertyObject, m_ActionName.c_str(), "msg", false, false, m_sMessage, m_MsgExist);
 
-    InitParameters(params,propertyObject);
+    InitParameters(params,propertyObject, logger);
 }
 
 bool ActionBillMoveWait::run(ActionContext& context)
@@ -33,7 +33,7 @@ bool ActionBillMoveWait::run(ActionContext& context)
     bool status = true;
     try
     {
-        RegisterPending(context, context.getCurrentOperationBillID());
+        RegisterPending(context, logger, context.getCurrentOperationBillID());
         Operation * operation = context.GetCurrentOperation();
         if (operation) operation->detachBill();
     } catch (SCAGException& e)

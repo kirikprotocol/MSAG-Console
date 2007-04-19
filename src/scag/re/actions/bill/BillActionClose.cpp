@@ -23,7 +23,7 @@ void BillActionClose::init(const SectionParams& params,PropertyObject propertyOb
     smsc_log_debug(logger,"Action 'bill:close' init...");    
 }
 
-bool BillActionClose::run(ActionContext& context)
+bool BillActionClose::RunBeforePostpone(ActionContext& context)
 {
     Operation * op = NULL;
     uint32_t bid = BillID;
@@ -38,7 +38,7 @@ bool BillActionClose::run(ActionContext& context)
             if (!p)
             {
                 smsc_log_error(logger,"Action 'bill:close' :: Invalid property %s for BillID", m_sBillID.c_str());
-                return true;
+                return false;
             }
             else
                 bid = p->getInt();
@@ -52,33 +52,85 @@ bool BillActionClose::run(ActionContext& context)
             const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
             smsc_log_error(logger, p);
             SetBillingStatus(context, p, false);
-            return true;
+            return false;
         }
         bid = op->getBillId();
     }
     if (!bid)
     {
         smsc_log_error(logger,"Action 'bill:close' :: Invalid BillID=0");
+        SetBillingStatus(context, "Action 'bill:close' :: Invalid BillID=0", false);
         if(op) op->detachBill();
-        return true;
+        return false;
     }
-    try {
-        if(bid != (uint32_t)-1)
-        {
-            BillingManager& bm = BillingManager::Instance();
-            if(actionCommit)
-                bm.Commit(bid);
-            else
-                bm.Rollback(bid);
+
+    if(bid != (uint32_t)-1)
+    {
+        BillingManager& bm = BillingManager::Instance();
+
+        BillingInfoStruct bis;
+        TariffRec tr;
+
+        try{
+            bm.Info(bid, bis, tr);
         }
-        SetBillingStatus(context,"", true);
-    } catch (SCAGException& e)
-    {        
-        smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
-        SetBillingStatus(context, e.what(), false);
-    }   
+        catch(SCAGException& e)
+        {
+            smsc_log_error(logger,"Action 'bill:info' :: No transaction with bill_id=%d. Error: %s", bid, e.what());
+            return false;
+        }
+
+        if(tr.billType == scag::bill::infrastruct::INMAN && actionCommit)
+        {
+            BillCloseCallParams* bp = new BillCloseCallParams();
+            bp->BillId = bid;
+            LongCallContext& lcmCtx = context.getSCAGCommand().getLongCallContext();
+            lcmCtx.callCommandId = actionCommit ? BILL_COMMIT : BILL_ROLLBACK;
+            lcmCtx.setParams(bp);
+            return true;
+        }
+        else
+        {
+            try {
+                if(actionCommit)
+                    bm.Commit(bid);
+                else
+                    bm.Rollback(bid);
+            } catch (SCAGException& e)
+            {        
+                smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", e.what());
+                SetBillingStatus(context, e.what(), false);
+                return false;
+            }
+        }
+    }
+    SetBillingStatus(context,"", true);
     if(op) op->detachBill();
-    return true;
+    return false;
+}
+void BillActionClose::ContinueRunning(ActionContext& context)
+{
+    smsc_log_debug(logger, "ContinueExecution Action 'bill:close'...");
+    
+    BillCloseCallParams *bp = (BillCloseCallParams*)context.getSCAGCommand().getLongCallContext().getParams();
+
+    if(bp->exception.length())
+    {        
+        smsc_log_error(logger,"BillAction 'bill:close' error. Delails: %s", bp->exception.c_str());
+        SetBillingStatus(context, bp->exception.c_str(), false);
+        return;
+    }   
+
+    Operation *op = context.GetCurrentOperation();
+    if(!op || !op->hasBill())
+    {
+        const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
+        smsc_log_error(logger, p);
+        SetBillingStatus(context, p, false);
+        return;
+    }
+    SetBillingStatus(context,"", true);
+    if(op) op->detachBill();
 }
 
 void BillActionClose::SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK)

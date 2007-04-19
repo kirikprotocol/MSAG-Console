@@ -10,9 +10,9 @@ namespace scag { namespace pers {
 using namespace scag::stat;
 using namespace scag::pers::client;
 
-typedef scag::util::properties::Property REProperty;
-
 smsc::logger::Logger* PersAction::logger;
+
+typedef scag::util::properties::Property REProperty;
 
 const char* PersAction::getStrCmd()
 {
@@ -67,9 +67,15 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 {
     const char * name = 0;
 
-    if(!logger) 
-        logger = Logger::getInstance("scag.pers.action");
-
+    switch(cmd)
+    {
+        case PC_DEL: lcm_cmd = PERS_DEL; break;
+        case PC_INC: lcm_cmd = PERS_INC; break;
+        case PC_INC_MOD: lcm_cmd = PERS_INC_MOD; break;
+        case PC_SET: lcm_cmd = PERS_SET; break;
+        case PC_GET: lcm_cmd = PERS_GET; break;
+    }
+        
     if(!params.Exists("type") || (profile = getProfileTypeFromStr(params["type"])) == PT_UNKNOWN) 
         throw SCAGException("PersAction '%s' : missing or unknown 'type' parameter", getStrCmd());
     
@@ -239,113 +245,117 @@ static void setREPropFromPersProp(REProperty& rep, Property& prop)
     }
 }
 
-bool PersAction::run(ActionContext& context)
+static uint32_t cmdToLongCallCmd(uint32_t c)
+{
+    switch(c)
+    {
+        case PC_DEL: return PERS_DEL;
+        case PC_SET: return PERS_SET;
+        case PC_GET: return PERS_GET;
+        case PC_INC: return PERS_INC;
+        case PC_INC_MOD: return PERS_INC_MOD;
+    }
+    return 0;
+}
+
+bool PersAction::RunBeforePostpone(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 
-    try{
-        Property prop;
-        PersClient& pc = PersClient::Instance();
-
-        CommandProperty& cp = context.getCommandProperty();
-
-        switch(cmd)
+    CommandProperty& cp = context.getCommandProperty();
+    PersCallParams *params = new PersCallParams();
+    
+    context.getSCAGCommand().getLongCallContext().callCommandId = cmdToLongCallCmd(cmd);
+    params->pt = profile;
+    params->propName = var;
+    
+    if(params->pt == PT_ABONENT)
+        params->skey = cp.abonentAddr.toString();
+    else
+        params->ikey = getKey(cp, profile);
+    
+    smsc_log_debug(logger, "%d %s %s", params->pt, cp.abonentAddr.toString().c_str(), params->skey.c_str());
+    
+    if(cmd == PC_INC || cmd == PC_INC_MOD || cmd == PC_SET)
+    {
+        if(ftValue != ftUnknown)
         {
-            case PC_DEL:
-                if(profile == PT_ABONENT)
-                    pc.DelProperty(profile, cp.abonentAddr.value, var.c_str());
-                else
-                    pc.DelProperty(profile, getKey(cp, profile), var.c_str());
-                break;
-            case PC_INC:
-            case PC_INC_MOD:
-            case PC_SET:
-                if(ftValue != ftUnknown)
-                {
-                    REProperty *rp = context.getProperty(value_str);
-                    if(rp)
-                    {
-                        setPersPropFromREProp(prop, *rp);
-                        prop.setName(var);
-                        prop.setTimePolicy(policy, final_date, life_time);
-                    } else
-                        return false;
-                }
-                else
-                    prop.assign(var.c_str(), value_str.c_str(), policy, final_date, life_time);
-
-                if(cmd == PC_SET)
-                {
-                    if(profile == PT_ABONENT)
-                        pc.SetProperty(profile, cp.abonentAddr.value, prop);
-                    else
-                        pc.SetProperty(profile, getKey(cp, profile), prop);
-                }
-                else if(cmd == PC_INC)
-                {
-                    if(profile == PT_ABONENT)
-                        pc.IncProperty(profile, cp.abonentAddr.value, prop);
-                    else
-                        pc.IncProperty(profile, getKey(cp, profile), prop);
-                }
-                else if(cmd == PC_INC_MOD)
-                {
-                    if(ftModValue != ftUnknown)
-                    {
-                        REProperty *rp = context.getProperty(mod_str);
-                        if(!rp)
-                            return false;
-                        mod = rp->getInt();
-                    }
-
-                    int res;
-                    if(profile == PT_ABONENT)
-                        res = pc.IncModProperty(profile, cp.abonentAddr.value, prop, mod);
-                    else
-                        res = pc.IncModProperty(profile, getKey(cp, profile), prop, mod);
-
-                    REProperty *rep = context.getProperty(result_str);
-                    rep->setInt(res);
-                }
-
-                break;
-            case PC_GET:
+            REProperty *rp = context.getProperty(value_str);
+            if(rp)
             {
-                try{
-                    if(profile == PT_ABONENT)
-                        pc.GetProperty(profile, cp.abonentAddr.value, var.c_str(), prop);
-                    else
-                        pc.GetProperty(profile, getKey(cp, profile), var.c_str(), prop);
-                    REProperty *rep = context.getProperty(value_str);
-                    setREPropFromPersProp(*rep, prop);
-                }
-                catch(PersClientException& e)
+                setPersPropFromREProp(params->prop, *rp);
+                params->prop.setName(var);
+                params->prop.setTimePolicy(policy, final_date, life_time);
+            }
+            else
+            {
+                delete params;
+                return false;
+            }
+        }
+        else
+            params->prop.assign(var.c_str(), value_str.c_str(), policy, final_date, life_time);
+            
+        if(cmd == PC_INC_MOD)
+        {
+            if(ftModValue != ftUnknown)
+            {
+                REProperty *rp = context.getProperty(mod_str);
+                if(!rp)
                 {
-                    if(e.getType() == PROPERTY_NOT_FOUND)
-                    {
-                        REProperty *rep = context.getProperty(value_str);
-                        rep->setStr("");
-                        smsc_log_warn(logger, "PersClientException: GetProperty not found: %s", var.c_str());
-                    }
-                    else
-                        throw e;
+                    delete params;
+                    return false;
                 }
-                break;
+                params->mod = rp->getInt();
             }
         }
     }
-    catch(PersClientException& e)
+    
+    context.getSCAGCommand().getLongCallContext().setParams(params);
+    return true;
+}
+
+void PersAction::ContinueRunning(ActionContext& context)
+{
+    smsc_log_debug(logger,"ContinueRunning Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
+
+    PersCallParams *params = (PersCallParams*)context.getSCAGCommand().getLongCallContext().getParams();
+    if(params->error)
     {
-        if(cmd == PC_DEL && e.getType() == PROPERTY_NOT_FOUND)
+        if(params->error == PROPERTY_NOT_FOUND)
         {
-            smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
-            return true;
+            if(cmd == PC_DEL)
+                smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
+            else if(cmd == PC_GET)
+            {
+                REProperty *rep = context.getProperty(value_str);
+                rep->setStr("");
+                smsc_log_warn(logger, "PersClientException: GetProperty not found: %s", var.c_str());
+            }
+            return;
         }
-        smsc_log_error(logger, "PersClientException: var=%s, reason: %s", var.c_str(), e.what());
-        return false;
+        smsc_log_error(logger, "PersClientException: var=%s, reason: %s", var.c_str(), params->exception.c_str());
+        return;
+        
+    }
+    else if(params->exception.length())
+    {
+        smsc_log_error(logger, params->exception);
+        throw Exception(params->exception.c_str());
     }
 
-    return true;
+    if(cmd == PC_INC_MOD)
+    {
+        REProperty *rep = context.getProperty(result_str);
+        rep->setInt(params->result);
+    }
+    else if(cmd == PC_GET)
+    {
+        REProperty *rep = context.getProperty(value_str);
+        setREPropFromPersProp(*rep, params->prop);
+    }
+        
+    context.getSCAGCommand().getLongCallContext().freeParams();
 }
 
 IParserHandler * PersAction::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)

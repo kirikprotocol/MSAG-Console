@@ -12,11 +12,9 @@
 #include "inman/inman.hpp"
 #endif
 
-
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/config/ConfigListener.h"
 #include "scag/stat/Statistics.h"
-
 
 namespace scag { namespace bill {
 
@@ -55,7 +53,10 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
         TransactionStatus status;
         Event responseEvent;
         uint32_t billId;
-        SendTransaction() : status(TRANSACTION_WAIT_ANSWER) {}
+        LongCallContext* lcmCtx;
+        time_t startTime;
+        BillTransaction* billTransaction;
+        SendTransaction() : status(TRANSACTION_WAIT_ANSWER), lcmCtx(NULL), startTime(time(NULL)), billTransaction(NULL) {}
     };
     IntHash <SendTransaction *> SendTransactionHash;
     #endif
@@ -102,8 +103,11 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     }
     void insertSendTransaction(int dlgId, SendTransaction* st);
     void deleteSendTransaction(int dlgId);
+
+    void sendCommandAsync(BillTransaction *bt, LongCallContext* lcmCtx);
     #endif /* MSAG_INMAN_BILL */
 
+    void processAsyncResult(BillingManagerImpl::SendTransaction* pst);
     void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
 
     void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev);
@@ -121,7 +125,12 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
 #ifdef MSAG_INMAN_BILL
         SendTransaction *st;
         for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
-            st->responseEvent.Signal();
+        {
+            if(st->lcmCtx)
+                delete st;
+            else
+                st->responseEvent.Signal();
+        }
 #endif
 
         for (IntHash <BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
@@ -137,9 +146,9 @@ public:
     virtual int Execute();
     virtual void Start();
 
-    virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec);
-    virtual void Commit(int billId);
-    virtual void Rollback(int billId, bool timeout);
+    virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec, LongCallContext* lcmCtx = NULL);
+    virtual void Commit(int billId, LongCallContext* lcmCtx = NULL);
+    virtual void Rollback(int billId, bool timeout, LongCallContext* lcmCtx = NULL);
     virtual void Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec);
 
     virtual Infrastructure& getInfrastructure() { return infrastruct; };
@@ -267,6 +276,86 @@ void BillingManagerImpl::ProcessResult(const char *eventName, BillingTransaction
         throw SCAGException("Transaction billId=%d %s", b->billId, p);
 }
 
+void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction* pst)
+{
+    auto_ptr<SendTransaction> st(pst);
+    auto_ptr<BillTransaction> bt(st->billTransaction);
+
+    deleteSendTransaction(st->billId);
+
+    LongCallContext* lcmCtx = st->lcmCtx;
+
+    BillingCommandStatus i;
+    const char *p;
+
+    if(st->status == TRANSACTION_VALID)
+    {
+        SPckDeliverySmsResult opRes;
+        opRes.Hdr().dlgId = st->billId;
+        if(lcmCtx->callCommandId == BILL_OPEN)
+        {
+            BillOpenCallParams* bp = (BillOpenCallParams*)lcmCtx->getParams();
+            bp->BillId = st->billId;
+
+            opRes.Cmd().setResultValue(1);
+            opRes.Cmd().setFinal(false); // To skip CDR creation
+        }
+        else if(lcmCtx->callCommandId == BILL_ROLLBACK)
+            opRes.Cmd().setResultValue(2);
+        sendCommand(opRes);
+
+        i = COMMAND_SUCCESSFULL;
+    }
+    else
+    {
+        switch (st->status)
+        {
+            case TRANSACTION_INVALID:
+                i = INVALID_TRANSACTION;
+                p = "invalid(charging is impossible?)";
+                break;
+            case TRANSACTION_NOT_STARTED:
+                i = REJECTED_BY_SERVER;
+                p = "denied";
+                break;
+            case TRANSACTION_WAIT_ANSWER:
+            default:
+                i = SERVER_NOT_RESPONSE;
+                p = "time out";
+                break;
+        }
+    }
+
+    const char *eventName;
+    BillingTransactionEvent event;
+    switch(lcmCtx->callCommandId)
+    {
+        case BILL_OPEN: event = TRANSACTION_OPEN; eventName = "open"; break;
+        case BILL_COMMIT: event = TRANSACTION_COMMITED; eventName = "commit"; break;
+        case BILL_ROLLBACK: event = TRANSACTION_CALL_ROLLBACK; eventName = "rollback"; break;
+    }
+
+    modifyBillEvent(event, i, bt->billEvent);
+    Statistics::Instance().registerSaccEvent(bt->billEvent);
+    logEvent(eventName, i == COMMAND_SUCCESSFULL, bt->billingInfoStruct, st->billId);
+    if(i != COMMAND_SUCCESSFULL)
+    {
+        char buf[20];
+        buf[19]=0;
+        LongCallParams* lp = lcmCtx->getParams();
+        lp->exception = "Transaction billId=";
+        lp->exception += lltostr(st->billId, buf + 19);
+        lp->exception += p;
+    }
+    else if(lcmCtx->callCommandId == BILL_OPEN)
+    {
+        putBillTransaction(st->billId, bt.get());
+        bt.release();
+    }
+    
+    lcmCtx->initiator->continueExecution(lcmCtx, false);
+}
+
 void BillingManagerImpl::logEvent(const char *tp, bool success, BillingInfoStruct& b, int billID)
 {
     smsc_log_info(logger, "bill %s: %s billId=%d, abonent=%s, opId=%d, sId=%d, providerId=%d",
@@ -294,7 +383,7 @@ uint32_t BillingManagerImpl::genBillId()
     return ++m_lastBillId;
 }
 
-unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
+unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec, LongCallContext* lcmCtx)
 {
     uint32_t billId = genBillId();
 
@@ -308,10 +397,18 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
     makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, p->billEvent);
 
     #ifdef MSAG_INMAN_BILL
-    if(tariffRec.billType == scag::bill::infrastruct::INMAN)
+    if(tariffRec.billType == scag::bill::infrastruct::INMAN || tariffRec.billType == scag::bill::infrastruct::INMANSYNC)
     {
         fillChargeSms(p->ChargeOperation.Cmd(), billingInfoStruct, tariffRec);
         p->ChargeOperation.Hdr().dlgId = billId;
+
+        if(lcmCtx)
+        {
+            sendCommandAsync(p.get(), lcmCtx);
+            p.release();
+            return 0;
+        }
+
         p->status = sendCommandAndWaitAnswer(p->ChargeOperation);
         if(p->status == TRANSACTION_VALID)
         {
@@ -334,15 +431,22 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
     return billId;
 }
 
-void BillingManagerImpl::Commit(int billId)
+void BillingManagerImpl::Commit(int billId, LongCallContext* lcmCtx)
 {
     smsc_log_debug(logger, "Commiting billId=%d...", billId);
 
     auto_ptr<BillTransaction> p(getBillTransaction(billId));
 
     #ifdef MSAG_INMAN_BILL
-    if(p->tariffRec.billType == scag::bill::infrastruct::INMAN)
+    if(p->tariffRec.billType == scag::bill::infrastruct::INMAN || p->tariffRec.billType == scag::bill::infrastruct::INMANSYNC)
     {
+        if(lcmCtx)
+        {
+            sendCommandAsync(p.get(), lcmCtx);
+            p.release();
+            return;
+        }
+
         p->status = sendCommandAndWaitAnswer(p->ChargeOperation);
         if(p->status == TRANSACTION_VALID)
         {
@@ -358,7 +462,7 @@ void BillingManagerImpl::Commit(int billId)
     ProcessResult("commit", TRANSACTION_COMMITED, p.get());
 }
 
-void BillingManagerImpl::Rollback(int billId, bool timeout)
+void BillingManagerImpl::Rollback(int billId, bool timeout, LongCallContext* lcmCtx)
 {
     smsc_log_debug(logger, "Rolling back billId=%d...", billId);
 
@@ -454,7 +558,11 @@ void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr
     }
 
     (*p)->status = result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ? TRANSACTION_VALID : TRANSACTION_INVALID;
-    (*p)->responseEvent.Signal();
+
+    if((*p)->lcmCtx)
+        processAsyncResult(*p);
+    else
+        (*p)->responseEvent.Signal();
 }
 
 bool BillingManagerImpl::Reconnect()
@@ -482,12 +590,24 @@ void BillingManagerImpl::deleteSendTransaction(int dlgId)
     SendTransactionHash.Delete(dlgId);
 }
 
+void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, LongCallContext* lcmCtx)
+{
+    auto_ptr<SendTransaction> st(new SendTransaction());
+
+    st->lcmCtx = lcmCtx;
+    st->billTransaction = bt;
+    insertSendTransaction(bt->ChargeOperation.Hdr().dlgId, st.get());
+    st.release();
+
+    pipe->sendPck(&bt->ChargeOperation);
+}
+
 TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
 {
-    SendTransaction st;
-
     if(!m_Connected)
         return TRANSACTION_WAIT_ANSWER;
+
+    SendTransaction st;
 
     insertSendTransaction(op.Hdr().dlgId, &st);
 
@@ -574,14 +694,40 @@ int BillingManagerImpl::Execute()
 {
     #ifdef MSAG_INMAN_BILL
     smsc_log_info(logger,"BillingManager::start executing");
+    time_t prevCheck = time(NULL);
     while(isStarted())
     {
         try
         {
-            if(!m_Connected || pipe->onReadEvent())
+            if(m_Connected)
+            {
+                fd_set read;
+                FD_ZERO( &read );
+                FD_SET( socket->getSocket(), &read );
+
+                struct timeval tv;
+                tv.tv_sec = 10; 
+                tv.tv_usec = 500;
+                int n = select(socket->getSocket() + 1, &read, 0, 0, &tv);
+                if(n < 0 || (n > 0 && pipe->onReadEvent()))
+                    m_Connected = false;
+            }
+            else
             {
                 connectEvent.Wait(m_ReconnectTimeout * 1000);
                 m_Connected = Reconnect();
+            }
+
+            if(time(NULL) > prevCheck + 10)
+            {
+                prevCheck = time(NULL);
+                SendTransaction *st;
+                smsc_log_debug(logger, "Processing expired inman transactions");
+                MutexGuard mg(sendLock);
+                int key;
+                for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
+                    if(st->lcmCtx && st->startTime + m_Timeout < prevCheck)
+                        processAsyncResult(st);
             }
         }catch (SCAGException& e)
         {

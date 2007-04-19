@@ -5,6 +5,7 @@
 #include <string>
 
 #include "scag/re/actions/Action.h"
+#include "scag/re/actions/LongCallAction.h"
 #include "scag/pers/Property.h"
 
 namespace scag { namespace pers {
@@ -13,10 +14,12 @@ using namespace scag::re::actions;
 using namespace scag::re;
 using smsc::logger::Logger;
 
-    class PersAction : public Action
+    class PersAction : public LongCallAction
     {
     protected:
         PersCmd cmd;
+        uint32_t lcm_cmd;
+        
         ProfileType profile;
         std::string var;
         FieldType ftValue, ftModValue;
@@ -27,7 +30,7 @@ using smsc::logger::Logger;
         time_t life_time;
         uint32_t mod;
 
-        static Logger * logger;
+        static Logger* logger;
 
         virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
         virtual bool FinishXMLSubSection(const std::string& name);
@@ -40,7 +43,8 @@ using smsc::logger::Logger;
         PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN) {}
         PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN) {}
         ~PersAction() {}
-        virtual bool run(ActionContext& context);
+        virtual bool RunBeforePostpone(ActionContext& context);
+        virtual void ContinueRunning(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);
     };
 
