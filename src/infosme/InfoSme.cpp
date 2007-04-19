@@ -120,65 +120,60 @@ static int  unrespondedMessagesSleep = 10;
 static int  unrespondedMessagesMax   = 3;
 static int  maxMessagesPerSecond     = 50;
 
-class TrafficControl
+#include "TrafficControl.hpp"
+
+void TrafficControl::incOutgoing()
 {
-    static EventMonitor   trafficMonitor;
-    static TimeSlotCounter<int> incoming;
-    static TimeSlotCounter<int> outgoing;
-    static bool                 stopped;
+  MutexGuard guard(trafficMonitor);
+  outgoing.Inc();
+  if (TrafficControl::stopped) return;
 
-public:
+  int out = outgoing.Get();
+  int inc = incoming.Get();
+  int difference = out-inc;
+  bool trafficLimitReached = (out >= maxMessagesPerSecond);
 
-    static void incOutgoing()
-    {
-        MutexGuard guard(trafficMonitor);
-        outgoing.Inc();
-        if (TrafficControl::stopped) return;
+  if (difference >= unrespondedMessagesMax || trafficLimitReached) {
+    if (trafficLimitReached) {
+      smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
+                     out, maxMessagesPerSecond);
+    } else {
+      smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
+                     difference, difference*unrespondedMessagesSleep, out, inc);
+    }
+    trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
+                        difference*unrespondedMessagesSleep);
+  } else {
+    smsc_log_debug(logger, "nowait");
+  }
+}
 
-        int out = outgoing.Get();
-        int inc = incoming.Get();
-        int difference = out-inc;
-        bool trafficLimitReached = (out >= maxMessagesPerSecond);
+void TrafficControl::incIncoming()
+{
+  MutexGuard guard(trafficMonitor);
+  incoming.Inc();
+  if (TrafficControl::stopped) return;
+  int out = outgoing.Get(); int inc = incoming.Get();
+  int difference = out-inc;
+  bool trafficLimitOk = (out < maxMessagesPerSecond);
 
-        if (difference >= unrespondedMessagesMax || trafficLimitReached) {
-            if (trafficLimitReached) {
-                smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
-                               out, maxMessagesPerSecond);
-            } else {
-                smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
-                               difference, difference*unrespondedMessagesSleep, out, inc);
-            }
-            trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
-                                 difference*unrespondedMessagesSleep);
-        } else {
-            smsc_log_debug(logger, "nowait");
-        }
-    };
-    static void incIncoming()
-    {
-        MutexGuard guard(trafficMonitor);
-        incoming.Inc();
-        if (TrafficControl::stopped) return;
-        int out = outgoing.Get(); int inc = incoming.Get();
-        int difference = out-inc;
-        bool trafficLimitOk = (out < maxMessagesPerSecond);
+  if ((difference < unrespondedMessagesMax) && trafficLimitOk) {
+    trafficMonitor.notifyAll();
+  }
+}
 
-        if ((difference < unrespondedMessagesMax) && trafficLimitOk) {
-            trafficMonitor.notifyAll();
-        }
-    };
-    static void stopControl()
-    {
-        MutexGuard guard(trafficMonitor);
-        TrafficControl::stopped = true;
-        trafficMonitor.notifyAll();
-    };
-    static void startControl()
-    {
-        MutexGuard guard(trafficMonitor);
-        TrafficControl::stopped = false;
-    };
-};
+void TrafficControl::stopControl()
+{
+  MutexGuard guard(trafficMonitor);
+  TrafficControl::stopped = true;
+  trafficMonitor.notifyAll();
+}
+
+void TrafficControl::startControl()
+{
+  MutexGuard guard(trafficMonitor);
+  TrafficControl::stopped = false;
+}
 
 EventMonitor         TrafficControl::trafficMonitor;
 TimeSlotCounter<int> TrafficControl::incoming(1, 1);
@@ -450,8 +445,6 @@ public:
                           status == Status::SMENOTCONNECTED           ||
                           status == Status::SYSFAILURE);
 
-        if (!trafficst) TrafficControl::incIncoming();
-
         const char* msgid = ((PduXSmResp*)pdu)->get_messageId();
         std::string msgId = "";
         if (!msgid || msgid[0] == '\0') accepted = false;
@@ -461,7 +454,7 @@ public:
             smsc_log_info(logger, "SMS #%s seqNum=%d wasn't accepted, errcode=%d",
                           msgId.c_str(), seqNum, status);
 
-        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgId);
+        processor.invokeProcessResponce(seqNum, accepted, retry, immediate, msgId, trafficst);
     }
 
     void handleEvent(SmppHeader *pdu)
