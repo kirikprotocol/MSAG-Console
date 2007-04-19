@@ -164,6 +164,10 @@ int main(int argc, char **argv)
   {
     smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "AdminException: %s", e.what());
   }
+  catch(std::exception& e)
+  {
+    smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "Exception: %s",e.what());
+  }
   catch (...)
   {
     smsc_log_info(Logger::getInstance("smsc.admin.daemon"), "Exception: <unknown>");

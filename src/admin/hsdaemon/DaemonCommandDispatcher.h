@@ -76,6 +76,7 @@ protected:
   Response * switchover_service             (const CommandSwitchOver                  * const command);
 
 
+  static void loadServiceFromConfig(const char* serviceName);
   static void addServicesFromConfig();
   static void updateServiceFromConfig(Service * service);
   void putServiceToConfig(const ServiceInfo& info);

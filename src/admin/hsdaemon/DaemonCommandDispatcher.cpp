@@ -418,6 +418,82 @@ Response * DaemonCommandDispatcher::kill_service(const CommandKillService * cons
   }
 }
 
+static void getServiceInfo(config::Manager* configManager,const char* fullServiceSection,ServiceInfo& info)
+{
+  Logger* log=Logger::getInstance("hsadm");
+  const char * dotpos = strrchr(fullServiceSection, '.');
+  info.id=decodeDot(dotpos+1);
+  smsc_log_info(log,"Loading service '%s'",info.id.c_str());
+
+
+  std::string prefix(fullServiceSection);
+  prefix += '.';
+
+  std::string tmp = prefix;
+  tmp += "args";
+  info.args = configManager->getString(tmp.c_str());
+
+  info.autoStart = true;
+  try {
+    info.autoStart = configManager->getBool((prefix+"autostart").c_str());
+  } catch (AdminException &e) {
+    smsc_log_warn(log, "Could not get autostart flag for service \"%s\", nested: %s", info.id.c_str(), e.what());
+  } catch (...)
+  {
+    //skip
+  }
+
+  tmp=prefix+"serviceType";
+
+  if(strcmp(configManager->getString(tmp.c_str()),"failover")==0)
+  {
+    info.serviceType=ServiceInfo::failover;
+  }else if(strcmp(configManager->getString(tmp.c_str()),"standalone")==0)
+  {
+    info.serviceType=ServiceInfo::standalone;
+  }else
+  {
+    throw AdminException("Invalid service type:%s",configManager->getString(tmp.c_str()));
+  }
+  try{
+    tmp=prefix+"hostName";
+    const char* val=configManager->getString(tmp.c_str());
+    if(val && *val)info.hostName=val;
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",info.id.c_str());
+  }
+  try{
+    info.autostartDelay=configManager->getInt((prefix+"autostartDelay").c_str());
+  }catch(...)
+  {
+    //ignore exception if optional parameter not present
+  }
+  try{
+    info.preferredNode=configManager->getString((prefix+"preferredNode").c_str());
+  }catch(...)
+  {
+    //ignore exception if optional parameter not present
+  }
+}
+
+void DaemonCommandDispatcher::loadServiceFromConfig(const char* serviceName)
+{
+  MutexGuard configGuard(configManagerMutex);
+  configManager->reinit();
+  char tmp[1024];
+  strncpy(tmp,serviceName,sizeof(tmp)-1);
+  tmp[sizeof(tmp)-1]=0;
+  encodeDot(tmp);
+  std::string serviceSection=CONFIG_SERVICES_SECTION;
+  serviceSection+=tmp;
+  ServiceInfo info;
+  getServiceInfo(configManager,serviceSection.c_str(),info);
+  Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER),info);
+//  MutexGuard mg(servicesListMutex);
+  services.add(svc);
+}
+
 /// global helper methods
 void DaemonCommandDispatcher::addServicesFromConfig()
 {
@@ -429,64 +505,7 @@ void DaemonCommandDispatcher::addServicesFromConfig()
     {
       ServiceInfo info;
       const char * fullServiceSection = i->c_str();
-      const char * dotpos = strrchr(fullServiceSection, '.');
-      info.id=decodeDot(dotpos+1);
-      smsc_log_info(log,"Loading service '%s'",info.id.c_str());
-
-
-      std::string prefix(fullServiceSection);
-      prefix += '.';
-
-      std::string tmp = prefix;
-      tmp += "args";
-      info.args = configManager->getString(tmp.c_str());
-
-      info.autoStart = true;
-      try {
-        info.autoStart = configManager->getBool((prefix+"autostart").c_str());
-      } catch (AdminException &e) {
-        smsc_log_warn(log, "Could not get autostart flag for service \"%s\", nested: %s", info.id.c_str(), e.what());
-      } catch (...)
-      {
-        //skip
-      }
-
-      tmp=prefix+"serviceType";
-
-      if(strcmp(configManager->getString(tmp.c_str()),"failover")==0)
-      {
-        info.serviceType=ServiceInfo::failover;
-      }else if(strcmp(configManager->getString(tmp.c_str()),"standalone")==0)
-      {
-        info.serviceType=ServiceInfo::standalone;
-      }else
-      {
-        throw AdminException("Invalid service type:%s",configManager->getString(tmp.c_str()));
-      }
-      try{
-        tmp=prefix+"hostName";
-        const char* val=configManager->getString(tmp.c_str());
-        if(val && *val)info.hostName=val;
-      }catch(std::exception& e)
-      {
-        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",info.id.c_str());
-      }
-      catch(HashInvalidKeyException& e)
-      {
-        smsc_log_warn(Logger::getInstance("admdmn.Ini"),"hostName not found for service %s, hostname switching disabled",info.id.c_str());
-      }
-      try{
-        info.autostartDelay=configManager->getInt((prefix+"autostartDelay").c_str());
-      }catch(...)
-      {
-        //ignore exception if optional parameter not present
-      }
-      try{
-        info.preferredNode=configManager->getString((prefix+"preferredNode").c_str());
-      }catch(...)
-      {
-        //ignore exception if optional parameter not present
-      }
+      getServiceInfo(configManager,fullServiceSection,info);
 
       Service* svc=new Service(configManager->getString(CONFIG_SERVICES_FOLDER_PARAMETER), info);
       services.add(svc);

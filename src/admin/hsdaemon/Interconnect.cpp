@@ -25,12 +25,14 @@ int Interconnect::Execute()
       smsc_log_warn(log,"accept failed");
       break;
     }
+    sck->SetNoDelay(true);
     try{
       ProcessRequest(sck);
     }catch(std::exception& e)
     {
       smsc_log_warn(log,"exception during request processing:%s",e.what());
     }
+    sck->Abort();
     delete sck;
   }
   smsc_log_info(log,"Interconnect acceptor execution finished");
@@ -164,6 +166,19 @@ void Interconnect::ProcessRequest(net::Socket* sck)
       }catch(std::exception& e)
       {
         writeString(sck,e.what());
+      }
+    }break;
+    case cmdAddServiceFromConfig:
+    {
+      std::string svcName=readString(sck);
+      try{
+        DaemonCommandDispatcher::loadServiceFromConfig(svcName.c_str());
+        writeString(sck,"Service added");
+      }catch(std::exception& e)
+      {
+        std::string answer="Error:";
+        answer+=e.what();
+        writeString(sck,answer.c_str());
       }
     }break;
     default:

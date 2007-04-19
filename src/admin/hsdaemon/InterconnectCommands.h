@@ -64,7 +64,8 @@ enum Commands{
   cmdStartService,
   cmdShutdownService,
   cmdListServices,
-  cmdGetServiceProperty
+  cmdGetServiceProperty,
+  cmdAddServiceFromConfig
 };
 
 enum ServiceProperty{
@@ -120,6 +121,13 @@ std::string remoteGetServiceProperty(net::Socket& clntSck,const char* svc,Servic
   writeUInt16(&clntSck,cmdGetServiceProperty);
   writeString(&clntSck,svc);
   writeUInt16(&clntSck,prop);
+  return readString(&clntSck);
+}
+
+std::string addServiceFromConfig(net::Socket& clntSck,const char* svc)
+{
+  writeUInt16(&clntSck,cmdAddServiceFromConfig);
+  writeString(&clntSck,svc);
   return readString(&clntSck);
 }
 

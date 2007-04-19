@@ -167,6 +167,7 @@ public:
     if(shutdownInProgress)
     {
       __trace2__("shutdown in progress, service '%s' not started",serviceId);
+      return;
     }
     __trace2__("ChildShutdownWaiter : start service \"%s\"", serviceId);
     cleanStoppedWaiters();

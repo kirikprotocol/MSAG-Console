@@ -43,6 +43,10 @@ void connectSocket(net::Socket& sck,int idx=0)
   {
     if(sck.Init(hosts[i].host.c_str(),hosts[i].port,0)==-1)continue;
     if(sck.Connect()==-1)continue;
+    linger l;
+    l.l_onoff=1;
+    l.l_linger=0;
+    setsockopt(sck.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
     return;
   }
   throw std::runtime_error("Failed to connect to either node\n");
@@ -209,6 +213,20 @@ int main(int argc,char* argv[])
       net::Socket sck;
       connectSocket(sck);
       printf("%s\n",interconnect::remoteGetServiceProperty(sck,svcId.c_str(),propVal).c_str());
+    }else if(command=="addservice")
+    {
+      if(argc<4)
+      {
+        printf("Not enough args for addservice command\n");
+        printf("Usage addservice serviceId\n");
+        return -1;
+      }
+      net::Socket sck;
+      for(int i=0;i<hosts.size();i++)
+      {
+        connectSocket(sck,i);
+        printf("%s:%s\n",hosts[i].host.c_str(),interconnect::addServiceFromConfig(sck,argv[3]).c_str());
+      }
     }
   }catch(std::exception& e)
   {
