@@ -26,6 +26,7 @@
 #include "InfoSmeAdmin.h"
 
 #include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
+#include "TrafficControl.hpp"
 
 namespace smsc { namespace infosme
 {
@@ -97,17 +98,17 @@ namespace smsc { namespace infosme
         int             seqNum;
         bool            delivered, retry, immediate;
         std::string     smscId;
-
+        bool            trafficst;
     public:
 
         EventRunner(EventMethod method, TaskProcessorAdapter& processor, int seqNum,
-                    bool accepted, bool retry, bool immediate, std::string smscId="")
+                    bool accepted, bool retry, bool immediate, std::string smscId, bool aTrafficst)
             : method(method), processor(processor), seqNum(seqNum),
-                delivered(accepted), retry(retry), immediate(immediate), smscId(smscId) {};
+              delivered(accepted), retry(retry), immediate(immediate), smscId(smscId), trafficst(aTrafficst) {};
         EventRunner(EventMethod method, TaskProcessorAdapter& processor,
                     std::string smscId, bool delivered, bool retry)
             : method(method), processor(processor), seqNum(0),
-                delivered(delivered), retry(retry), immediate(false), smscId(smscId) {};
+              delivered(delivered), retry(retry), immediate(false), smscId(smscId), trafficst(false) {};
 
         virtual ~EventRunner() {};
 
@@ -117,6 +118,7 @@ namespace smsc { namespace infosme
             {
             case processResponceMethod:
                 processor.processResponce(seqNum, delivered, retry, immediate, smscId);
+                if (!trafficst) TrafficControl::incIncoming();
                 break;
             case processReceiptMethod:
                 processor.processReceipt (smscId, delivered, retry);
@@ -360,10 +362,11 @@ namespace smsc { namespace infosme
         };
 
         virtual bool invokeProcessResponce(int seqNum, bool accepted,
-                                           bool retry, bool immediate, std::string smscId="")
+                                           bool retry, bool immediate, std::string smscId, bool trafficst)
         {
             return eventManager.startThread(new EventRunner(processResponceMethod, *this,
-                                                            seqNum, accepted, retry, immediate, smscId));
+                                                            seqNum, accepted, retry, immediate, smscId,
+                                                            trafficst));
         };
         virtual bool invokeProcessReceipt (std::string smscId, bool delivered, bool retry)
         {
