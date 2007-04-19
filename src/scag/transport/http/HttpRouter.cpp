@@ -79,8 +79,8 @@ HttpRouterImpl::~HttpRouterImpl()
     if (hostsMap) delete hostsMap;
     if (pathsMap) delete pathsMap;
 
-    if (defInPlace) delete defInPlace;
-    if (defOutPlace) delete defOutPlace;
+    if (defInPlace) delete[] defInPlace;
+    if (defOutPlace) delete[] defOutPlace;
 
     XMLPlatformUtils::Terminate();
 }
@@ -526,8 +526,8 @@ void HttpRouterImpl::ReloadRoutes()
         if (pathsMap) delete pathsMap;
         if (hostsMap) delete hostsMap;
         if (AddressURLMap) delete AddressURLMap;
-        if (defInPlace) delete defInPlace;
-        if (defOutPlace) delete defOutPlace;  
+        if (defInPlace) delete[] defInPlace;
+        if (defOutPlace) delete[] defOutPlace;  
         routes = r;
         routeIdMap = h;
         serviceIdMap = s;
