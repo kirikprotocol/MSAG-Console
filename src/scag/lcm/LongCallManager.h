@@ -20,11 +20,13 @@ enum LongCallCommandId{
     PERS_INC,
     PERS_INC_MOD,
     BILL_OPEN,
-    BILL_CLOSE
+    BILL_COMMIT,
+    BILL_ROLLBACK
 };
 
 class LongCallParams{
 public:
+    std::string exception;
     virtual ~LongCallParams() {};
 };
 
