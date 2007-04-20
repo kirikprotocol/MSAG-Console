@@ -1,5 +1,8 @@
 package ru.sibinco.smsx.services.calendar.timezones;
 
+import ru.aurorisoft.smpp.Address;
+import ru.aurorisoft.smpp.SMPPAddressException;
+
 import java.util.*;
 
 /**
@@ -52,6 +55,14 @@ public final class Timezone {
   }
 
   public boolean allowNumber(String number) {
+    try {
+      final Address addr = new Address(number);
+      number = "." + addr.getTon() + "." + addr.getNpi() + "." + addr.getAddress();
+    } catch (SMPPAddressException e) {
+      e.printStackTrace();
+      return false;
+    }
+
     for (Iterator iterator = masks.iterator(); iterator.hasNext();) {
       String mask = (String) iterator.next();
       if (number.matches(mask))

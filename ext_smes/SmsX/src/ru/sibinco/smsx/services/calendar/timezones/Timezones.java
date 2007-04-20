@@ -98,8 +98,12 @@ public class Timezones {
   }
 
   public static void main(String args[]) {
+
+    CalendarService.Properties.Timezones.TIMEZONES_XML = "timezones.xml";
+    CalendarService.Properties.Timezones.ROUTES_XML = "routes.xml";
+    Timezones.init();
     System.out.println(Timezones.getTimezoneByAbonent(".1.1.79133105665"));
-    System.out.println(Timezones.getTimezoneByAbonent(".1.1.79135019090"));
+    System.out.println(Timezones.getTimezoneByAbonent("+79137777000"));
     System.out.println(Timezones.getTimezoneByAbonent(".1.1.9001"));
   }
 }
