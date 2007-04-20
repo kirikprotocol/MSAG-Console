@@ -52,7 +52,6 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     {
         TransactionStatus status;
         Event responseEvent;
-        uint32_t billId;
         LongCallContext* lcmCtx;
         time_t startTime;
         BillTransaction* billTransaction;
@@ -281,9 +280,9 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     auto_ptr<SendTransaction> st(pst);
     auto_ptr<BillTransaction> bt(st->billTransaction);
 
-    smsc_log_debug(logger, "ProcessAsyncResult billId=%d", st->billId);
+    smsc_log_debug(logger, "ProcessAsyncResult billId=%d", bt->billId);
 
-    deleteSendTransaction(st->billId);
+    deleteSendTransaction(bt->billId);
 
     LongCallContext* lcmCtx = st->lcmCtx;
 
@@ -293,11 +292,11 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     if(st->status == TRANSACTION_VALID)
     {
         SPckDeliverySmsResult opRes;
-        opRes.Hdr().dlgId = st->billId;
+        opRes.Hdr().dlgId = bt->billId;
         if(lcmCtx->callCommandId == BILL_OPEN)
         {
             BillOpenCallParams* bp = (BillOpenCallParams*)lcmCtx->getParams();
-            bp->BillId = st->billId;
+            bp->BillId = bt->billId;
 
             opRes.Cmd().setResultValue(1);
             opRes.Cmd().setFinal(false); // To skip CDR creation
@@ -339,19 +338,19 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
 
     modifyBillEvent(event, i, bt->billEvent);
     Statistics::Instance().registerSaccEvent(bt->billEvent);
-    logEvent(eventName, i == COMMAND_SUCCESSFULL, bt->billingInfoStruct, st->billId);
+    logEvent(eventName, i == COMMAND_SUCCESSFULL, bt->billingInfoStruct, bt->billId);
     if(i != COMMAND_SUCCESSFULL)
     {
         char buf[20];
         buf[19]=0;
         LongCallParams* lp = lcmCtx->getParams();
         lp->exception = "Transaction billId=";
-        lp->exception += lltostr(st->billId, buf + 19);
+        lp->exception += lltostr(bt->billId, buf + 19);
         lp->exception += p;
     }
     else if(lcmCtx->callCommandId == BILL_OPEN)
     {
-        putBillTransaction(st->billId, bt.get());
+        putBillTransaction(bt->billId, bt.get());
         bt.release();
     }
     
@@ -598,7 +597,7 @@ void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, LongCallContext* 
 
     st->lcmCtx = lcmCtx;
     st->billTransaction = bt;
-    insertSendTransaction(bt->ChargeOperation.Hdr().dlgId, st.get());
+    insertSendTransaction(bt->billId, st.get());
     st.release();
 
     pipe->sendPck(&bt->ChargeOperation);
