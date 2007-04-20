@@ -282,7 +282,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
 
     smsc_log_debug(logger, "ProcessAsyncResult billId=%d", bt->billId);
 
-    deleteSendTransaction(bt->billId);
+    SendTransactionHash.Delete(bt->billId);
 
     LongCallContext* lcmCtx = st->lcmCtx;
 
