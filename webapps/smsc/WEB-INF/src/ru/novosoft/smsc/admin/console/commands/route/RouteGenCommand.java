@@ -19,6 +19,10 @@ public abstract class RouteGenCommand extends CommandClass
     public final static byte REPLAY_PATH_FORCE = Route.REPLAY_PATH_FORCE;
     public final static byte REPLAY_PATH_SUPPRESS = Route.REPLAY_PATH_SUPPRESS;
 
+    public final static byte BILLING_TRUE = Route.BILLING_TRUE;
+    public final static byte BILLING_FALSE = Route.BILLING_FALSE;
+    public final static byte BILLING_MT = Route.BILLING_MT;
+
     protected String route = null;
 
     protected ArrayList srcs = new ArrayList();

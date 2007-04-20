@@ -18,7 +18,7 @@ import ru.novosoft.smsc.admin.route.*;
 
 public class RouteAddCommand extends RouteGenCommand
 {
-    private boolean bill    = true;
+    private byte bill    = Route.BILLING_TRUE;
     private boolean transit = false;
     private boolean arc     = true;
     private boolean allow   = true;
@@ -119,7 +119,7 @@ public class RouteAddCommand extends RouteGenCommand
       ctx.setStatus(CommandContext.CMD_OK);
     }
 
-    public void setBill(boolean bill) {
+    public void setBill(byte bill) {
       this.bill = bill;
     }
     public void setArc(boolean arc) {

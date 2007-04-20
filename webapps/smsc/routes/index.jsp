@@ -1,10 +1,9 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp" %>
-<%@ page import="ru.novosoft.smsc.admin.route.DestinationList,
-                 ru.novosoft.smsc.admin.route.SourceList,
-                 ru.novosoft.smsc.jsp.smsc.routes.Index,
+<%@ page import="ru.novosoft.smsc.jsp.smsc.routes.Index,
                  ru.novosoft.smsc.jsp.util.tables.DataItem,
                  java.text.DateFormat,
-                 java.util.*" %>
+                 java.util.*,
+                 ru.novosoft.smsc.admin.route.*" %>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
@@ -241,7 +240,7 @@
                title="<%= getLocString("common.sortmodes.allowHint") %>"><%= getLocString("common.sortmodes.allow") %></a>
         </th>
         <th>
-            <a href="javascript:setSort('isBilling')" <%= bean.getSort().endsWith("isBilling") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
+            <a href="javascript:setSort('billing')" <%= bean.getSort().endsWith("billing") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : "" %>
                title="<%= getLocString("common.sortmodes.billingHint") %>"><%= getLocString("common.sortmodes.billing") %></a>
         </th>
         <th>
@@ -270,7 +269,7 @@
             DestinationList destinations = (DestinationList) item.getValue("destinations");
             boolean isActive = ((Boolean) item.getValue("active")).booleanValue();
             boolean isEnabling = ((Boolean) item.getValue("isEnabling")).booleanValue();
-            boolean isBilling = ((Boolean) item.getValue("isBilling")).booleanValue();
+            byte billing = ((Byte) item.getValue("billing")).byteValue();
             boolean isArchiving = ((Boolean) item.getValue("isArchiving")).booleanValue();
             boolean isSuppressDeliveryReports = ((Boolean) item.getValue("suppressDeliveryReports")).booleanValue();
             boolean isTransit = ((Boolean) item.getValue("isTransit")).booleanValue();
@@ -323,16 +322,17 @@
         %>
     </td>
     <td <%= onClick %>>
-        <%
-            if (isBilling) {
-        %>
-        <img src="/images/ic_checked.gif"><%
-    } else {
-    %>
-        &nbsp;
-        <%
-            }
-        %>
+        <%=(billing == Route.BILLING_TRUE ? "true" : (billing == Route.BILLING_FALSE ? "false" : "mt"))%>
+<%--        <%--%>
+<%--            if (isBilling) {--%>
+<%--        %>--%>
+<%--        <img src="/images/ic_checked.gif"><%--%>
+<%--    } else {--%>
+<%--    %>--%>
+<%--        &nbsp;--%>
+<%--        <%--%>
+<%--            }--%>
+<%--        %>--%>
     </td>
     <td <%= onClick %>>
         <%

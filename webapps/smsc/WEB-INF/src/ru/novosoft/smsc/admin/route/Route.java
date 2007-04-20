@@ -25,13 +25,17 @@ public class Route
   public static final byte REPLAY_PATH_FORCE = 1;
   public static final byte REPLAY_PATH_SUPPRESS = 2;
 
+  public static final byte BILLING_FALSE = 0;
+  public static final byte BILLING_TRUE = 1;
+  public static final byte BILLING_MT = 2;
+
   private String name = null;
   private SourceList src = null;
   private DestinationList dst = null;
   private int priority = 0;
   private boolean enabling = true;
   private boolean archiving = true;
-  private boolean billing = false;
+  private byte billing = 0;
   private boolean transit = false;
   private int serviceId = 0;
   private boolean suppressDeliveryReports = false;
@@ -48,7 +52,7 @@ public class Route
   private long providerId;
   private long categoryId;
 
-  public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling,final boolean isTransit, final boolean isArchiving,
+  public Route(final String routeName, final int priority, final boolean isEnabling, final byte billing,final boolean isTransit, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
                final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
                final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked, final long providerId, final long categoryId)
@@ -68,7 +72,7 @@ public class Route
     this.dst = destinations;
     this.enabling = isEnabling;
     this.archiving = isArchiving;
-    this.billing = isBilling;
+    this.billing = billing;
     this.transit = isTransit;
     this.serviceId = serviceId;
     this.suppressDeliveryReports = isSuppressDeliveryReports;
@@ -99,7 +103,7 @@ public class Route
     priority = 0;
     enabling = false;
     archiving = false;
-    billing = false;
+    billing = BILLING_FALSE;
     transit=false;
     serviceId = 0;
     suppressDeliveryReports = false;
@@ -129,7 +133,13 @@ public class Route
     priority = Integer.decode(routeElem.getAttribute("priority")).intValue();
     enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
     archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
-    billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
+    final String billingAttr = routeElem.getAttribute("billing");
+    if (billingAttr.equalsIgnoreCase("true"))
+      billing = BILLING_TRUE;
+    else if (billingAttr.equalsIgnoreCase("false"))
+      billing = BILLING_FALSE;
+    else
+      billing = BILLING_MT;
     transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
     serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
     suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
@@ -279,12 +289,12 @@ public class Route
     this.enabling = enabling;
   }
 
-  public boolean isBilling()
+  public byte getBilling()
   {
     return billing;
   }
 
-  public void setBilling(final boolean billing)
+  public void setBilling(final byte billing)
   {
     this.billing = billing;
   }
@@ -312,7 +322,7 @@ public class Route
   public PrintWriter store(final PrintWriter out)
   {
     out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
-            + "\" billing=\"" + isBilling()
+            + "\" billing=\"" + ((getBilling() == BILLING_FALSE) ? "false" : (getBilling() == BILLING_TRUE ? "true" : "mt"))
             + "\" transit=\"" + isTransit()
             + "\" archiving=\"" + isArchiving()
             + "\" enabling=\"" + isEnabling()

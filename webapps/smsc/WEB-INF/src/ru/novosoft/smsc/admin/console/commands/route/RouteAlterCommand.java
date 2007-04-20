@@ -27,7 +27,7 @@ public class RouteAlterCommand extends RouteGenCommand
   private byte action = ACTION_ADD;
   private byte target = TARGET_SRC;
 
-  private boolean bill    = true;
+  private byte bill    = Route.BILLING_TRUE;
   private boolean transit = true;
   private boolean arc     = true;
   private boolean allow   = true;
@@ -82,7 +82,7 @@ public class RouteAlterCommand extends RouteGenCommand
       }
 
       Route newRoute = new Route(route,
-                                 oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
+                                 oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.getBilling(),
                                  oldRoute.isTransit(), oldRoute.isArchiving(),
                                  oldRoute.isSuppressDeliveryReports(),
                                  oldRoute.isActive(), oldRoute.getServiceId(),
@@ -211,7 +211,7 @@ public class RouteAlterCommand extends RouteGenCommand
   public void setTarget(byte target) {
     this.target = target;
   }
-  public void setBill(boolean bill) {
+  public void setBill(byte bill) {
     this.bill = bill; setBill = true;
   }
   public void setTransit(boolean transit) {

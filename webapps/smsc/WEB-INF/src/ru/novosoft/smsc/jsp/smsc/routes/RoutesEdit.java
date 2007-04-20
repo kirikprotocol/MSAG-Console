@@ -47,7 +47,7 @@ public class RoutesEdit extends RouteBody {
             else {
                 priority = r.getPriority();
                 permissible = r.isEnabling();
-                billing = r.isBilling();
+                billing = r.getBilling();
                 archiving = r.isArchiving();
                 serviceId = r.getServiceId();
                 srcSmeId = r.getSrcSmeId();

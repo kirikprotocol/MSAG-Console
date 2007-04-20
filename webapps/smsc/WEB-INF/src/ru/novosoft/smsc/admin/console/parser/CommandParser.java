@@ -772,6 +772,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_NOHIDE:
 		case OPT_BILL:
 		case OPT_NOBILL:
+		case OPT_MTBILL:
 		case OPT_ACTIVE:
 		case OPT_INACTIVE:
 		case OPT_BLOCKED:
@@ -1831,6 +1832,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_NOHIDE:
 		case OPT_BILL:
 		case OPT_NOBILL:
+		case OPT_MTBILL:
 		case OPT_ARCH:
 		case OPT_NOARCH:
 		case OPT_ALLOW:
@@ -3239,7 +3241,7 @@ public CommandParser(ParserSharedInputState state) {
 		Token  name = null;
 		Token  ename = null;
 		
-		out = null; 
+		out = LT(1).getText();
 		
 		
 		try {      // for error handling
@@ -3256,11 +3258,11 @@ public CommandParser(ParserSharedInputState state) {
 				}
 				break;
 			}
-			case STR:
+			case TSTR:
 			{
 				{
 				name = LT(1);
-				match(STR);
+				match(TSTR);
 				
 					    out = name.getText();
 					
@@ -3283,6 +3285,11 @@ public CommandParser(ParserSharedInputState state) {
 				throw new NoViableAltException(LT(1), getFilename());
 			}
 			}
+		}
+		catch (NoViableAltException ex) {
+			
+				  match(LA(1));
+				
 		}
 		catch (RecognitionException ex) {
 			
@@ -3582,6 +3589,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOHIDE:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_BLOCKED:
 			case OPT_RP:
 			case OPT_FD:
@@ -3611,6 +3619,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_BLOCKED:
 			case OPT_RP:
 			case OPT_FD:
@@ -3659,6 +3668,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_BLOCKED:
 			case OPT_FD:
 			case OPT_TRANSIT:
@@ -3700,6 +3710,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_FD:
 			case OPT_TRANSIT:
 			{
@@ -3721,6 +3732,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_TRANSIT:
 			{
 				break;
@@ -3741,6 +3753,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			{
 				break;
 			}
@@ -3755,13 +3768,19 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_BILL:
 			{
 				match(OPT_BILL);
-				cmd.setBill(true);   	
+				cmd.setBill(RouteGenCommand.BILLING_TRUE);
 				break;
 			}
 			case OPT_NOBILL:
 			{
 				match(OPT_NOBILL);
-				cmd.setBill(false);  	
+				cmd.setBill(RouteGenCommand.BILLING_FALSE);
+				break;
+			}
+			case OPT_MTBILL:
+			{
+				match(OPT_MTBILL);
+				cmd.setBill(RouteGenCommand.BILLING_MT);
 				break;
 			}
 			default:
@@ -3870,6 +3889,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOHIDE:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -3916,6 +3936,7 @@ public CommandParser(ParserSharedInputState state) {
 			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -3981,6 +4002,7 @@ public CommandParser(ParserSharedInputState state) {
 			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -4039,6 +4061,7 @@ public CommandParser(ParserSharedInputState state) {
 			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -4096,6 +4119,7 @@ public CommandParser(ParserSharedInputState state) {
 			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -4152,6 +4176,7 @@ public CommandParser(ParserSharedInputState state) {
 			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
+			case OPT_MTBILL:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -4177,13 +4202,19 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_BILL:
 			{
 				match(OPT_BILL);
-				cmd.setBill(true);
+				cmd.setBill(RouteGenCommand.BILLING_TRUE);
 				break;
 			}
 			case OPT_NOBILL:
 			{
 				match(OPT_NOBILL);
-				cmd.setBill(false);
+				cmd.setBill(RouteGenCommand.BILLING_FALSE);
+				break;
+			}
+			case OPT_MTBILL:
+			{
+				match(OPT_MTBILL);
+				cmd.setBill(RouteGenCommand.BILLING_MT);
 				break;
 			}
 			case EOF:
@@ -5952,6 +5983,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"substitute\"",
 		"\"bill\"",
 		"\"nobill\"",
+		"\"mtbill\"",
 		"\"arc\"",
 		"\"noarc\"",
 		"\"allow\"",
@@ -6055,7 +6087,8 @@ public CommandParser(ParserSharedInputState state) {
 		"STR_CHR",
 		"comma character ','",
 		"ESC",
-		"DIGIT"
+		"DIGIT",
+		"TSTR"
 	};
 	
 	

@@ -20,7 +20,7 @@ public class RouteBody extends SmscBean
   protected String routeId = null;
   protected int priority = 0;
   protected boolean permissible = false;
-  protected boolean billing = false;
+  protected byte billing = Route.BILLING_FALSE;
   protected boolean transit = false;
   protected boolean archiving = false;
   protected boolean suppressDeliveryReports = false;
@@ -156,12 +156,12 @@ public class RouteBody extends SmscBean
     this.permissible = permissible;
   }
 
-  public boolean isBilling()
+  public byte getBilling()
   {
     return billing;
   }
 
-  public void setBilling(final boolean billing)
+  public void setBilling(final byte billing)
   {
     this.billing = billing;
   }

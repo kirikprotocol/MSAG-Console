@@ -209,12 +209,12 @@ export returns [Command cmd] {
 
 /* ----------------------- Common names parser ------------------------- */
 getnameid[String msg] returns [String out] {
-    out = null; 
+    out = LT(1).getText();
 }	: (qname:QSTR {
 	    out = qname.getText().trim();
 	    out = out.substring(1,out.length()-1);
-	  }) 
-	  |(name:STR {
+	  })
+	  |(name:TSTR {
 	    out = name.getText();
 	  })
 	  |(ename:ESTR {
@@ -222,6 +222,9 @@ getnameid[String msg] returns [String out] {
 	  })
 	;
 	exception
+	catch [NoViableAltException ex] {
+	  match(LA(1));
+	}
 	catch [RecognitionException ex] {
 	    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
 	}
@@ -343,8 +346,9 @@ addroute_flags[RouteAddCommand cmd]
 	               |OPT_DENY  { cmd.setAllowBlocked(false);  }))?
 	  (OPT_FD                 { cmd.setForceDelivery(true);  })?
 	  (OPT_TRANSIT            { cmd.setTransit(true);        })?
-	  (OPT_BILL   	          { cmd.setBill(true);   	 }
-	  |OPT_NOBILL 	          { cmd.setBill(false);  	 })
+	  (OPT_BILL   	          { cmd.setBill(RouteGenCommand.BILLING_TRUE);}
+	  |OPT_NOBILL 	          { cmd.setBill(RouteGenCommand.BILLING_FALSE);}
+	  |OPT_MTBILL             { cmd.setBill(RouteGenCommand.BILLING_MT);})
 	  (OPT_ARCH   	          { cmd.setArc(true);    	 }
 	  |OPT_NOARCH 	          { cmd.setArc(false);   	 })
 	  (OPT_ALLOW  	          { cmd.setAllow(true);  	 }
@@ -407,8 +411,9 @@ altroute_flags[RouteAlterCommand cmd]
 	          |OPT_OFF        { cmd.setForceDelivery(false); }))?
 	  (OPT_TRANSIT (OPT_ON    { cmd.setTransit(true);  }
 		       |OPT_OFF   { cmd.setTransit(false); }))?
-	  (OPT_BILL   	          { cmd.setBill(true);     }
-	  |OPT_NOBILL 	          { cmd.setBill(false);    })?
+	  (OPT_BILL   	          { cmd.setBill(RouteGenCommand.BILLING_TRUE);}
+	  |OPT_NOBILL 	          { cmd.setBill(RouteGenCommand.BILLING_FALSE);}
+	  |OPT_MTBILL             { cmd.setBill(RouteGenCommand.BILLING_MT);})?
 	  (OPT_ARCH   	          { cmd.setArc(true);      }
 	  |OPT_NOARCH 	          { cmd.setArc(false);     })?
 	  (OPT_ALLOW  	          { cmd.setAllow(true);    }

@@ -65,6 +65,7 @@ tokens {
   OPT_SUBSTIT   = "substitute";
   OPT_BILL      = "bill";
   OPT_NOBILL    = "nobill";
+  OPT_MTBILL    = "mtbill";
   OPT_ARCH      = "arc";
   OPT_NOARCH    = "noarc";
   OPT_ALLOW     = "allow";

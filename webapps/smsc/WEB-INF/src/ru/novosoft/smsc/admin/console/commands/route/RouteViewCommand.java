@@ -57,7 +57,7 @@ public class RouteViewCommand extends CommandClass
                   "forceDelivery " + (smscRoute.isForceDelivery() ? "on, " : "off, ") +
                   "transit "+(smscRoute.isTransit() ? "on, " : "off, ") +
                   "blocked "+(smscRoute.isAllowBlocked() ? "allowed, ":"denied, ") +
-                  (smscRoute.isBilling() ? "billing, " : "no billing, ") +
+                  (smscRoute.getBilling() == Route.BILLING_TRUE ? "billing, " : ((smscRoute.getBilling() == Route.BILLING_FALSE) ? "no billing, " : "mt billing, ")) +
                   (smscRoute.isArchiving() ? "archiving, " : "no archiving, ") +
                   (smscRoute.isEnabling() ? "allowed, " : "denied, ") +
                   (smscRoute.isSuppressDeliveryReports() ? "no receipt" : "receipt"));
