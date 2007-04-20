@@ -281,6 +281,8 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     auto_ptr<SendTransaction> st(pst);
     auto_ptr<BillTransaction> bt(st->billTransaction);
 
+    smsc_log_debug(logger, "ProcessAsyncResult billId=%d", st->billId);
+
     deleteSendTransaction(st->billId);
 
     LongCallContext* lcmCtx = st->lcmCtx;
