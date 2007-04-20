@@ -639,7 +639,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 
     if (!internal) smsc_log_debug(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
                                 smsc_id, delivered, retry);
-    else smsc_log_debug(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.");
+    else smsc_log_debug(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.",smsc_id);
     
     if (!internal)
     {
