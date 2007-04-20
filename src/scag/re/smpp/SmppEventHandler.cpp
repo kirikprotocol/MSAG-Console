@@ -38,6 +38,13 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
     Operation * operation = 0;
     uint16_t UMR;
 
+    if(command.getLongCallContext().continueExec)
+    {
+        smsc_log_debug(logger,"set current operation(continue execution) id=%d", command.getOperationId());
+        operation = session.setCurrentOperation(command.getOperationId());
+        return;
+    }
+
     switch (smppDiscriptor.cmdType)
     {
     case CO_DELIVER:
