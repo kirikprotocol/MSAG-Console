@@ -92,10 +92,22 @@ function delParam(sectionId) {
        <td><input class=txtW name=balanceResponse value="<%=bean.getBalanceResponse()%>"></td>
     </tr>
     <tr class=row1>
+       <td><%=getLocString("unibalance.balance.negative.response.pattern")%>:</td>
+       <td><input class=txtW name=balanceNegativeResponse value="<%=bean.getBalanceNegativeResponse()%>"></td>
+    </tr>
+    <tr class=row0>
+       <td><%=getLocString("unibalance.balance.with.accumulator.response.pattern")%>:</td>
+       <td><input class=txtW name=balanceWithAccumulatorResponse value="<%=bean.getBalanceWithAccumulatorResponse()%>"></td>
+    </tr>
+    <tr class=row1>
+       <td><%=getLocString("unibalance.balance.with.accumulator.negative.response.pattern")%>:</td>
+       <td><input class=txtW name=balanceWithAccumulatorNegativeResponse value="<%=bean.getBalanceWithAccumulatorNegativeResponse()%>"></td>
+    </tr>
+    <tr class=row0>
        <td><%=getLocString("unibalance.balance.wait.for.sms.response.pattern")%>:</td>
        <td><input class=txtW name=balanceWaitForSmsResponse value="<%=bean.getBalanceWaitForSmsResponse()%>"></td>
     </tr>
-    <tr class=row0>
+    <tr class=row1>
        <td><%=getLocString("unibalance.balance.error.pattern")%>:</td>
        <td><input class=txtW name=balanceError value="<%=bean.getBalanceError()%>"></td>
     </tr>

@@ -24,6 +24,9 @@ public class Index extends SmeBean {
   private String mbCancel = null;
 
   private String balanceResponse = null;
+  private String balanceNegativeResponse = null;
+  private String balanceWithAccumulatorResponse = null;
+  private String balanceWithAccumulatorNegativeResponse = null;
   private String balanceWaitForSmsResponse = null;
   private String balanceError = null;
   private String balanceCurrencyDefault = null;
@@ -109,7 +112,6 @@ public class Index extends SmeBean {
     balanceCurrencyDescriptions.clear();
 
     int count = Integer.parseInt(request.getParameter("tableCounter"));
-    System.out.println(count);
     for (int i=1; i<= count; i++) {
       final String currencyCode = request.getParameter(getCurrencyCodeParamName(i));
       final String currencyName = request.getParameter(getCurrencyNameParamName(i));
@@ -128,6 +130,13 @@ public class Index extends SmeBean {
     balanceError = config.getProperty("balance.error.pattern");
     balanceCurrencyDefault = config.getProperty("balance.currency.default");
     balanceBannerAdd = config.getProperty("balance.banner.add.pattern");
+    balanceNegativeResponse = config.getProperty("balance.negative.response.pattern");
+    if (balanceNegativeResponse == null)
+      balanceNegativeResponse = "";
+    balanceWithAccumulatorResponse = config.getProperty("balance.with.accumulator.response.pattern");
+    balanceWithAccumulatorNegativeResponse = config.getProperty("balance.with.accumulator.negative.response.pattern");
+    if (balanceWithAccumulatorNegativeResponse == null)         
+      balanceWithAccumulatorNegativeResponse = "";
 
     balanceCurrencyDescriptions.clear();
     int i=1;
@@ -141,11 +150,19 @@ public class Index extends SmeBean {
 
   private void propsToConfig() {
     config.clear();
-    config.setProperty("balance.response.pattern", balanceResponse);
-    config.setProperty("balance.wait.for.sms.response.pattern", balanceWaitForSmsResponse);
-    config.setProperty("balance.error.pattern", balanceError);
-    config.setProperty("balance.currency.default", balanceCurrencyDefault);
-    config.setProperty("balance.banner.add.pattern", balanceBannerAdd);
+    config.setProperty("balance.response.pattern", balanceResponse == null ? "" : balanceResponse);
+    config.setProperty("balance.wait.for.sms.response.pattern", balanceWaitForSmsResponse == null ? "" : balanceWaitForSmsResponse);
+    config.setProperty("balance.error.pattern", balanceError == null ? "" : balanceError);
+    config.setProperty("balance.currency.default", balanceCurrencyDefault == null ? "" : balanceCurrencyDefault);
+    config.setProperty("balance.banner.add.pattern", balanceBannerAdd == null ? "" : balanceBannerAdd);
+
+    if (balanceNegativeResponse != null && balanceNegativeResponse.length() > 0)
+      config.setProperty("balance.negative.response.pattern", balanceNegativeResponse);
+
+    config.setProperty("balance.with.accumulator.response.pattern", balanceWithAccumulatorResponse == null ? "" : balanceWithAccumulatorResponse);
+
+    if (balanceWithAccumulatorNegativeResponse != null && balanceWithAccumulatorNegativeResponse.length() > 0)
+      config.setProperty("balance.with.accumulator.negative.response.pattern", balanceWithAccumulatorNegativeResponse);
 
     for (int i=0; i < balanceCurrencyDescriptions.size(); i++) {
       final BalanceCurrencyDescription desc = (BalanceCurrencyDescription)balanceCurrencyDescriptions.get(i);
@@ -209,6 +226,30 @@ public class Index extends SmeBean {
 
   public void setBalanceBannerAdd(String balanceBannerAdd) {
     this.balanceBannerAdd = balanceBannerAdd;
+  }
+
+  public String getBalanceNegativeResponse() {
+    return balanceNegativeResponse;
+  }
+
+  public void setBalanceNegativeResponse(String balanceNegativeResponse) {
+    this.balanceNegativeResponse = balanceNegativeResponse;
+  }
+
+  public String getBalanceWithAccumulatorResponse() {
+    return balanceWithAccumulatorResponse;
+  }
+
+  public void setBalanceWithAccumulatorResponse(String balanceWithAccumulatorResponse) {
+    this.balanceWithAccumulatorResponse = balanceWithAccumulatorResponse;
+  }
+
+  public String getBalanceWithAccumulatorNegativeResponse() {
+    return balanceWithAccumulatorNegativeResponse;
+  }
+
+  public void setBalanceWithAccumulatorNegativeResponse(String balanceWithAccumulatorNegativeResponse) {
+    this.balanceWithAccumulatorNegativeResponse = balanceWithAccumulatorNegativeResponse;
   }
 
   public String getMbStart() {
