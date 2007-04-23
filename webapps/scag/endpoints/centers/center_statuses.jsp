@@ -31,7 +31,9 @@
     for (Iterator i = c.iterator(); i.hasNext();) {
         String sId = (String) i.next();
         CenterStatus centerStatus = (CenterStatus) status.get(sId);
-        result += "<span " + ">" + centerStatus.getConnHostPort() + "</span>";
+	String hostPort = (centerStatus != null && centerStatus.getConnHostPort() != null) ?
+			   centerStatus.getConnHostPort():"&nbsp;";
+        result += "<span " + ">" + hostPort + "</span>";
         if (i.hasNext()) {
             result += ", ";
         }
@@ -42,7 +44,7 @@
         String sId = (String) i.next();
         CenterStatus centerStatus = (CenterStatus) status2.get(sId);
         result += "<span ";
-        if (status != null) {
+        if (centerStatus != null && status != null) {
             if (centerStatus.getConnStatus().equals("yes")) {
                 label = LocaleMessages.getInstance().getMessage(session,"centers.index.table.names.connected");
                 result += "><img src='content/images/ic_internal.gif' width='10' height='10' title='"+label+"'></span>";
