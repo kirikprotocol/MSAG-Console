@@ -31,7 +31,9 @@
     for (Iterator i = c.iterator(); i.hasNext();) {
         String sId = (String) i.next();
         SvcStatus svcStatus = (SvcStatus) status.get(sId);
-        result += "<span " + ">" + svcStatus.getConnHost() + "</span>";
+	String connHost = (svcStatus != null && svcStatus.getConnHost() != null) ? 
+			   svcStatus.getConnHost():"&nbsp;";
+        result += "<span " + ">" + connHost + "</span>";
         if (i.hasNext()) {
             result += ", ";
         }
@@ -42,7 +44,7 @@
         String sId = (String) i.next();
         SvcStatus svcStatus = (SvcStatus) status2.get(sId);
         result += "<span ";
-        if (status != null) {
+        if (svcStatus != null && status != null) {
             if (svcStatus.getConnStatus().equals("yes")) {
                 label = LocaleMessages.getInstance().getMessage(session,"centers.index.table.names.connected");
                 result += "><img src='content/images/ic_internal.gif' width='10' height='10' title='"+label+"'></span>";
