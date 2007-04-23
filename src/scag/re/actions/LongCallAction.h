@@ -37,8 +37,8 @@ protected:
             {
                 if (context.getRuleStatus().status == STATUS_LONG_CALL) 
                 {
-                    smsc_log_debug(logger, "Save to stack %d action number", i);
-                    ActionStackValue sv(i, false);
+                    smsc_log_debug(logger, "Save to stack %d action number %d", i, actions[i]->isTrueCondition);
+                    ActionStackValue sv(i, actions[i]->isTrueCondition);
                     longCallContext.ActionStack.push(sv);
                 }
 
