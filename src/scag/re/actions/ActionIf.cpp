@@ -145,8 +145,6 @@ bool ActionIf::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'if'...");
 
-    bool isValidCondition = true;
-
     LongCallContext &longCallContext = context.getSCAGCommand().getLongCallContext();
 
     if (longCallContext.ActionStack.empty()) 
@@ -162,7 +160,7 @@ bool ActionIf::run(ActionContext& context)
         {
             smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str(), property->getInt());
 
-            isValidCondition = property->getBool();
+            isTrueCondition = property->getBool();
         } 
         else
         {
@@ -205,14 +203,14 @@ bool ActionIf::run(ActionContext& context)
                 else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
             }
 
-            isValidCondition = CompareResultToBool(singleparam.Operation,result);
+            isTrueCondition = CompareResultToBool(singleparam.Operation,result);
         }
     }
     else
-        isValidCondition = longCallContext.ActionStack.top().thenSection;
+        isTrueCondition = longCallContext.ActionStack.top().thenSection;
 
-    smsc_log_debug(logger,"Action 'if': run '%s' section", isValidCondition ? "then" : "else");
-    return RunActionVector(context, longCallContext, isValidCondition ? ThenActions : ElseActions, logger);
+    smsc_log_debug(logger,"Action 'if': run '%s' section", isTrueCondition ? "then" : "else");
+    return RunActionVector(context, longCallContext, isTrueCondition ? ThenActions : ElseActions, logger);
 }
 
 }}}
