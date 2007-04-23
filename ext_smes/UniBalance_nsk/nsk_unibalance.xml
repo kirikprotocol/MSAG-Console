@@ -119,6 +119,7 @@
   <path id="unibalance.module.sourcepath">
     <dirset dir="${module.unibalance.basedir}">
       <include name="src"/>
+      <include name="src.share"/>
     </dirset>
   </path>
 
