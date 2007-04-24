@@ -369,7 +369,6 @@ void Session::Serialize(SessionBuffer& buff)
         bool                    bChanged, bDestroy;
         int                     accessCount;
     */
- 
     SerializeProperty(buff);
     SerializeOperations(buff);
     SerializePendingOperations(buff);
@@ -434,7 +433,6 @@ void Session::Deserialize(SessionBuffer& buff)
     buff >> m_SessionPrimaryKey.abonentAddr;
     buff >> m_SessionPrimaryKey.BornMicrotime.tv_sec;
     buff >> m_SessionPrimaryKey.BornMicrotime.tv_usec;
-                         
 }
 
 
@@ -604,9 +602,10 @@ Operation * Session::setCurrentOperation(uint64_t operationId)
     Operation ** operationPtr = OperationsHash.GetPtr(operationId);
     if (!operationPtr) throw SCAGException("Cannot find operation (id=%lld, ab=%s)", operationId, m_SessionKey.abonentAddr.toString().c_str());
 
-
     currentOperationId = operationId;
     m_pCurrentOperation = (*operationPtr);
+
+    smsc_log_debug(logger,"Session: set current operation (id=%lld), type=%d, billId=%d", operationId, m_pCurrentOperation->type, m_pCurrentOperation->getBillId());
 
     bChanged = true;
     return (*operationPtr);
