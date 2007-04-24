@@ -122,11 +122,14 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
     Operation * currentOperation = session.GetCurrentOperation();
     if (!currentOperation) throw SCAGException("Session: Fatal error - cannot end operation. Couse: current operation not found");
 
-    if (ruleStatus.status == STATUS_FAILED) 
+    if(ruleStatus.status == STATUS_FAILED) 
     {
         session.closeCurrentOperation(); 
         return;
     }
+
+    if(ruleStatus.status == STATUS_LONG_CALL)
+        return;
     
     smsc_log_debug(logger, "current operation status=%d", currentOperation->getStatus());
 
