@@ -133,6 +133,9 @@ TaskProcessor::~TaskProcessor()
         tasks.Empty();
     }
 
+    taskManager.shutdown();
+    eventManager.shutdown();
+
     if (statistics) delete statistics;
     if (dsStatConnection) dsInternal->freeConnection(dsStatConnection);
 
