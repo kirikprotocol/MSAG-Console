@@ -40,7 +40,7 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
 
     if(command.getLongCallContext().continueExec)
     {
-        smsc_log_debug(logger,"set current operation(continue execution) id=%d", command.getOperationId());
+        smsc_log_debug(logger,"set current operation(continue execution) id=%lld", command.getOperationId());
         operation = session.setCurrentOperation(command.getOperationId());
         return;
     }
