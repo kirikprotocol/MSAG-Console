@@ -238,8 +238,8 @@ namespace scag { namespace sessions
             m_receivedParts(0), 
             m_receivedAllParts(false), 
             m_receivedAllResp(false),
-            m_Status(OPERATION_INITED)
-
+            m_Status(OPERATION_INITED),
+            billId(0)
         {
             logger = Logger::getInstance("sess.op");
         };
