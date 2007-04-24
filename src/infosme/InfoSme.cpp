@@ -595,7 +595,8 @@ int main(void)
         ConfigView smscConfig(manager, "InfoSme.SMSC");
         InfoSmeConfig cfg(&smscConfig);
 
-        while (!isNeedStop())
+        bool haveSysError=false;
+        while (!isNeedStop() && !haveSysError)
         {
           // after call to isNeedStop() was completed all signals is locked.
           // any thread being started from this point has signal mask with all signals locked 
@@ -637,15 +638,15 @@ int main(void)
             FD_SET(signaling_ReadFd, &rFdSet); FD_SET(reconnect_ReadFd, &rFdSet); 
             if ( (st=::select(std::max(signaling_ReadFd, reconnect_ReadFd)+1, &rFdSet, NULL, NULL, NULL)) > 0 ) {
               smsc_log_info(logger, "select return %d", st);
-              if ( FD_ISSET(signaling_ReadFd, &rFdSet) ) break;
-              else {
+              if ( FD_ISSET(reconnect_ReadFd, &rFdSet) ) {
                 unsigned char oneByte;
-                if ( read(reconnect_ReadFd, &oneByte, sizeof(oneByte)) != sizeof(oneByte) ) break;
+                if ( read(reconnect_ReadFd, &oneByte, sizeof(oneByte)) != sizeof(oneByte) )
+                  haveSysError = true;
               }
             } else if ( st == -1 ) {
               smsc_log_info(logger, "select return -1: errno=%d", errno);
-              if ( errno == EINTR ) continue;
-              else break;
+              if ( errno != EINTR )
+                haveSysError = true;
             }
 
             smsc_log_info(logger, "Disconnecting from SMSC ...");
