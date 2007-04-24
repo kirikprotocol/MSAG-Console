@@ -489,6 +489,15 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     smsc_log_debug(log, "SubmitResp: RuleEngine processing...");
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "SubmitResp: RuleEngine  processed");
+
+      if(st.status == scag::re::STATUS_LONG_CALL)
+      {
+          smsc_log_debug(log,"SubmitResp: long call initiate");
+          makeLongCall(cmd);
+          scag::sessions::SessionManager::Instance().releaseSession(session);
+          return;
+      }
+
     if(st.status != scag::re::STATUS_OK)
     {
         if(!st.result)
@@ -830,6 +839,15 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_debug(log, "DeliveryResp: processing...");
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "DeliveryResp: procesed.");
+
+      if(st.status == scag::re::STATUS_LONG_CALL)
+      {
+          smsc_log_debug(log,"DeliveryResp: long call initiate");
+          makeLongCall(cmd);
+          scag::sessions::SessionManager::Instance().releaseSession(session);
+          return;
+      }
+
     if(st.status != scag::re::STATUS_OK)
     {
         if(!st.result)
@@ -1122,6 +1140,15 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     smsc_log_debug(log, "DataSmResp: processing...");
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "DataSmResp: procesed.");
+
+      if(st.status == scag::re::STATUS_LONG_CALL)
+      {
+          smsc_log_debug(log,"DataSmResp: long call initiate");
+          makeLongCall(cmd);
+          scag::sessions::SessionManager::Instance().releaseSession(session);
+          return;
+      }
+
     if(st.status != scag::re::STATUS_OK)
     {
         if(!st.result)
