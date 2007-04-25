@@ -39,6 +39,7 @@ public:
 #ifdef _WIN32
     WaitForSingleObject(mutex,INFINITE);
 #else
+    ltid=pthread_self();
     pthread_mutex_lock(&mutex);
 #endif
   }
@@ -47,6 +48,7 @@ public:
 #ifdef _WIN32
     ReleaseMutex(mutex);
 #else
+    ltid=-1;
     pthread_mutex_unlock(&mutex);
 #endif
   }
@@ -63,6 +65,7 @@ protected:
   HANDLE mutex;
 #else
   pthread_mutex_t mutex;
+  pthread_t ltid;
   friend class Event;
 #endif
   Mutex(const Mutex&);
