@@ -1333,7 +1333,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
 #ifdef SMSEXTRA
-  if(ri.serviceId==777)
+  if(ri.billing==2)
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnSubmit);
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_INCHARGE);

@@ -175,6 +175,13 @@ const char * const replyPathToStr(const smsc::router::ReplyPath replyPath)
   }
 }
 
+uint8_t StrToBill(const char* str)
+{
+  if(strcmp(str,"true")==0)return 1;
+  if(strcmp(str,"mt")==0)return 2;
+  return 0;
+}
+
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
@@ -211,7 +218,7 @@ throw (SubjectNotFoundException)
 
   std::auto_ptr<Route> r(new Route(routeid,
                                    priority,
-                                   strcmp("true", billing) == 0,
+                                   StrToBill(billing),
                                    strcmp("true", archiving) == 0,
                                    strcmp("true", enabling) == 0,
                                    strcmp("true", suppressDeliveryReports) == 0,

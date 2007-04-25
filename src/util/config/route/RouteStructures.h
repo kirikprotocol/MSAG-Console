@@ -110,7 +110,7 @@ private:
   int priority;
   SourceHash sources;
   DestinationHash destinations;
-  bool billing;
+  uint8_t billing;
   bool archiving;
   bool enabling;
   bool suppressDeliveryReports;
@@ -135,7 +135,7 @@ private:
 
 public:
   Route()
-    : id(), priority(0), sources(), destinations(), billing(false), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId((AclIdent)-1), forceDelivery(false), allowBlocked(false), providerId(-1),categoryId(-1),transit(false)
+    : id(), priority(0), sources(), destinations(), billing(0), archiving(false), enabling(true),suppressDeliveryReports(false), hide(true), replyPath(smsc::router::ReplyPathPass), serviceId(0), srcSmeSystemId(), deliveryMode(smsc::sms::SMSC_DEFAULT_MSG_MODE), forwardTo(), aclId((AclIdent)-1), forceDelivery(false), allowBlocked(false), providerId(-1),categoryId(-1),transit(false)
   {}
   Route(const Route &r)
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
@@ -157,7 +157,7 @@ public:
 
   const SourceHash &getSources() const {return sources;}
   const DestinationHash &getDestinations() const {return destinations;}
-  const bool isBilling() const {return billing;}
+  const uint8_t isBilling() const {return billing;}
   const bool isArchiving() const {return archiving;}
   const bool isEnabling() const {return enabling;}
   const bool isSuppressDeliveryReports(){return suppressDeliveryReports;}

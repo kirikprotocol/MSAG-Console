@@ -148,7 +148,7 @@ struct TrafficRules{
 struct RouteInfo
 {
   RoutePriority priority;
-  bool billing;
+  uint8_t billing;
   bool archived;
   bool enabling;
   bool suppressDeliveryReports;
