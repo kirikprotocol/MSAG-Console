@@ -14,7 +14,7 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 
     m_ftBegin = CheckParameter(params, propertyObject, "substr", "begin", false, true, m_strBegin, m_bExistBegin);
 
-    if ((m_ftBegin==ftUnknown)&&(m_bExistBegin))
+    if(m_ftBegin==ftUnknown && m_bExistBegin)
     {
         beginIndex = atoi(m_strBegin.c_str());
         if (beginIndex < 0) throw SCAGException("Action 'substr': invalid 'begin' parameter.");
@@ -23,13 +23,13 @@ void ActionSubstr::init(const SectionParams& params,PropertyObject propertyObjec
 
     m_ftEnd = CheckParameter(params, propertyObject, "substr", "end", false, true, m_strEnd, m_bExistEnd);
 
-    if ((m_ftEnd==ftUnknown)&&(m_bExistEnd))
+    if(m_ftEnd == ftUnknown && m_bExistEnd)
     {
         endIndex = atoi(m_strEnd.c_str());
         if (endIndex <= 0) throw SCAGException("Action 'substr': invalid 'end' parameter.");
     }
 
-    smsc_log_debug(logger,"Action 'substr':: init");
+    smsc_log_debug(logger,"Action 'substr':: init begin=%s end=%s", m_strBegin.c_str(), m_strEnd.c_str());
 }
 
 
@@ -42,9 +42,8 @@ bool ActionSubstr::run(ActionContext& context)
     int end = endIndex;
 
     if (m_fVariableFieldType == ftUnknown) 
-    {
         strArgument = m_strVariable;
-    } else
+    else
     {
         Property * property = context.getProperty(m_strVariable);
 
@@ -57,7 +56,7 @@ bool ActionSubstr::run(ActionContext& context)
     }
 
 
-    if ((m_ftBegin!=ftUnknown)&&(m_bExistBegin)) 
+    if(m_ftBegin != ftUnknown && m_bExistBegin) 
     {
         Property * property = context.getProperty(m_strBegin);
 
@@ -69,10 +68,9 @@ bool ActionSubstr::run(ActionContext& context)
         begin = property->getInt();
     }
 
-    if ((m_ftEnd!=ftUnknown)&&(m_bExistEnd))
+    if(m_ftEnd != ftUnknown && m_bExistEnd)
     {
         Property * property = context.getProperty(m_strEnd);
-
         if (!property) 
         {
             smsc_log_warn(logger,"Action 'substr':: invalid property '%s'",m_strEnd.c_str());
@@ -80,7 +78,6 @@ bool ActionSubstr::run(ActionContext& context)
         }
         end = property->getInt();
     }
-
     if(begin < 0) begin = 0;
 
     if (begin >= strArgument.size()) 
@@ -89,7 +86,11 @@ bool ActionSubstr::run(ActionContext& context)
         return true;
     } 
 
-    if((endIndex < 0)||((endIndex) >= strArgument.size())) end = strArgument.size() - 1;
+    if(end < 0 || end >= strArgument.size())
+    {
+        smsc_log_warn(logger,"Action 'substr':: 'end' is out of bound '%d>%d' string", end, strArgument.size());
+        end = strArgument.size() - 1;
+    }
 
     if (begin > end) 
     {
