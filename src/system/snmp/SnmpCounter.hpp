@@ -6,6 +6,8 @@
 #include "core/threads/Thread.hpp"
 #include "logger/Logger.h"
 #include "snmp/SnmpAgent.hpp"
+#include "core/buffers/FixedLengthString.hpp"
+#include "core/buffers/CyclicQueue.hpp"
 
 namespace smsc{
 namespace system{
@@ -61,6 +63,11 @@ public:
       smsc_log_warn(smsc::logger::Logger::getInstance("snmpcnt"),"INVALID VALUE FOR COUNTER ID:%d",id);
       return;
     }
+    CounterEvent evt(id,smeId);
+    sync::MutexGuard mg(queueMon);
+    cntQueue.Push(evt);
+    queueMon.notify();
+    /*
     sync::MutexGuard mg(mon);
     totalCnt.values[id]++;
     Counters* ptr=smeCnt.GetPtr(smeId);
@@ -69,6 +76,7 @@ public:
       ptr=smeCnt.SetItem(smeId,Counters());
     }
     ptr->values[id]++;
+    */
   }
 
   struct SeverityLimits
@@ -123,6 +131,16 @@ protected:
   buf::Hash<SeverityLimits> svrtHash;
   SeverityLimits defSvrtLim;
 
+  struct CounterEvent{
+    CounterId id;
+    smsc::core::buffers::FixedLengthString<32> sysId;
+    CounterEvent(){}
+    CounterEvent(CounterId argId,const char* argSysId):id(argId),sysId(argSysId){}
+  };
+  buf::CyclicQueue<CounterEvent> cntQueue;
+  sync::EventMonitor queueMon;
+
+
   SnmpCounter():isStopping(false)
   {
     log=smsc::logger::Logger::getInstance("snmp.cnt");
@@ -139,12 +157,36 @@ protected:
   int Execute()
   {
     sync::MutexGuard mg(mon);
+    time_t nextCheck=time(NULL);
+    nextCheck+=interval-(nextCheck%interval);
+    smsc::logger::Logger* chkLog=smsc::logger::Logger::getInstance("snmp.chk");
     while(!isStopping)
     {
-      int toSleep=interval-(time(NULL)%interval);
-      toSleep*=1000;
-      mon.wait(toSleep);
+      {
+        MutexGuard qmg(queueMon);
+        if(cntQueue.Count()==0)
+        {
+          queueMon.wait(1000);
+        }else
+        {
+          CounterEvent evt;
+          if(cntQueue.Pop(evt))
+          {
+            totalCnt.values[evt.id]++;
+            Counters* ptr=smeCnt.GetPtr(evt.sysId);
+            if(!ptr)
+            {
+              ptr=smeCnt.SetItem(evt.sysId,Counters());
+            }
+            ptr->values[evt.id]++;
+          }
+        }
+      }
       if(isStopping)break;
+      if(nextCheck>time(NULL))continue;
+      nextCheck=time(NULL)+1;
+      nextCheck+=interval-(nextCheck%interval);
+      smsc_log_info(chkLog,"check started. next check at %d",(int)nextCheck);
       Check("GLOBAL",totalCnt,totalSvrt);
       char* name;
       Counters* cnt;
@@ -158,6 +200,7 @@ protected:
         }
         Check(name,*cnt,*svrt);
       }
+      smsc_log_info(chkLog,"check finished.");
     }
     return 0;
   }

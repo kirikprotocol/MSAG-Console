@@ -91,6 +91,11 @@ void SnmpCounter::LoadCfg(const char* fileName)
   list = elem->getElementsByTagName(XmlStr("default"));
   DOMNode *record = list->item(0);
   ParseRecord(record,defSvrtLim);
+  {
+    DOMNamedNodeMap *attrs = record->getAttributes();
+    XmlStr enabled(attrs->getNamedItem(XmlStr("enabled"))->getNodeValue());
+    defSvrtLim.enabled=enabled=="true";
+  }
   list = elem->getElementsByTagName(XmlStr("object"));
   int listLength=list->getLength();
   svrtHash.Empty();
