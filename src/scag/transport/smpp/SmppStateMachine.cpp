@@ -1143,6 +1143,9 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
       if(st.status == scag::re::STATUS_LONG_CALL)
       {
+          if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
+            throw Exception("Submit: Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+
           smsc_log_debug(log,"DataSmResp: long call initiate");
           makeLongCall(cmd);
           scag::sessions::SessionManager::Instance().releaseSession(session);
