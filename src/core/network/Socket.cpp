@@ -332,6 +332,7 @@ int Socket::ReadAll(char* buf,int size)
 
 int Socket::WriteAll(const void *buf,int bufsize)
 {
+  if(bufsize==0)return 0;
   int wr,count=0;
   const char *_buf=(const char*)buf;
   do{
