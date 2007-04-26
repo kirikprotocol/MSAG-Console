@@ -205,7 +205,7 @@ public:
     bufferPos+=len;
   }
 
-  void assign(void* buf,uint32_t sz)
+  void assign(const void* buf,uint32_t sz)
   {
     resize(sz);
     memcpy(buffer,buf,sz);
