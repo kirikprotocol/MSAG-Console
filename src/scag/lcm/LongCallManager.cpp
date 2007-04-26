@@ -255,7 +255,7 @@ int LongCallTask::Execute()
         
         if(isStopping || !ctx) break;
 
-        if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC)
+        if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC_MOD)
             ExecutePersCall(ctx);
             
         ctx->initiator->continueExecution(ctx, false);

@@ -492,6 +492,9 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
       if(st.status == scag::re::STATUS_LONG_CALL)
       {
+          if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
+            throw Exception("SubmitResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
+
           smsc_log_debug(log,"SubmitResp: long call initiate");
           makeLongCall(cmd);
           scag::sessions::SessionManager::Instance().releaseSession(session);
@@ -620,13 +623,26 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       {
           if(!session.Get())
           {
-              key.USR = 0; // Always create new session
-              session=sm.newSession(key);
-              sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-              if (umr > 0) {
-                  smsc_log_warn(log, "USSD Delivery: UMR=%d is set. "
-                                     "Created new session instead. USR=%d", umr, key.USR);
-                umr = -1;
+              if(!cmd.getLongCallContext().continueExec)
+              {
+                  key.USR = 0; // Always create new session
+                  session=sm.newSession(key);
+                  sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+                  if (umr > 0) {
+                      smsc_log_warn(log, "USSD Delivery: UMR=%d is set. "
+                                         "Created new session instead. USR=%d", umr, key.USR);
+                    umr = -1;
+                  }
+              }
+              else {
+                  key.USR = umr;
+                  smsc_log_debug(log, "DeliverySm: Continue, UMR=%d", umr);
+                  session=scag::sessions::SessionManager::Instance().getSession(key);
+                  if (!session.Get()) {
+                      session=sm.newSession(key);
+                      sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+                      smsc_log_warn(log, "DeliverySm: Session for USR=%d not found, created new USR=%d", umr, key.USR);
+                  }
               }
           }
           else
@@ -842,6 +858,9 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 
       if(st.status == scag::re::STATUS_LONG_CALL)
       {
+          if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
+            throw Exception("DeliveryResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
+
           smsc_log_debug(log,"DeliveryResp: long call initiate");
           makeLongCall(cmd);
           scag::sessions::SessionManager::Instance().releaseSession(session);
@@ -1144,7 +1163,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
       if(st.status == scag::re::STATUS_LONG_CALL)
       {
           if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
-            throw Exception("Submit: Register cmd for uid=%d, seq=%d failed", dst->getUid(), newSeq);
+            throw Exception("DataSmResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
 
           smsc_log_debug(log,"DataSmResp: long call initiate");
           makeLongCall(cmd);
