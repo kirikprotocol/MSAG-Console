@@ -69,8 +69,8 @@ std::string CDRRecord::dpType(void) const
 {
     char buf[sizeof("dpUSSD(X:%Xh)") + sizeof("FFFFFFFF") + 2];
     int n = snprintf(buf, sizeof(buf)-1, "dp%s", (_bearer == dpUSSD) ? "USSD" : "SMS");
-    if (_smsXSrvs)
-        n += snprintf(buf + n, sizeof(buf)-1-n, "(X:%Xh)", _smsXSrvs);
+    if (_smsXMask)
+        n += snprintf(buf + n, sizeof(buf)-1-n, "(X:%Xh)", _smsXMask);
     buf[n] = 0;
     return buf;
 }
