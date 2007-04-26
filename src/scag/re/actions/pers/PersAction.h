@@ -30,7 +30,7 @@ using smsc::logger::Logger;
         time_t life_time;
         uint32_t mod;
 
-        static Logger* logger;
+//        static Logger* logger;
 
         virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
         virtual bool FinishXMLSubSection(const std::string& name);

@@ -10,7 +10,8 @@ namespace scag { namespace pers {
 using namespace scag::stat;
 using namespace scag::pers::client;
 
-smsc::logger::Logger* PersAction::logger;
+char buf[100];
+//smsc::logger::Logger* PersAction::logger = NULL;
 
 typedef scag::util::properties::Property REProperty;
 
@@ -65,6 +66,9 @@ TimePolicy PersAction::getPolicyFromStr(const std::string& str)
 
 void PersAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
+//    if(!logger)
+//        logger = smsc::logger::Logger::getInstance("re.actions");
+
     const char * name = 0;
 
     switch(cmd)
