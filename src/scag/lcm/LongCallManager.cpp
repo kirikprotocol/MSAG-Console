@@ -20,8 +20,8 @@ using smsc::logger::Logger;
 using namespace smsc::core::threads;
 using namespace scag::exceptions;
 
-//using namespace scag::pers::client;
-//using namespace scag::pers;
+using namespace scag::pers::client;
+using namespace scag::pers;
 using scag::bill::BillOpenCallParams;
 using scag::bill::BillCloseCallParams;
 
@@ -203,7 +203,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
 
 void LongCallTask::ExecutePersCall(LongCallContext* ctx)
 {
-/*    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
+    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     PersClient& pc = PersClient::Instance();
     smsc_log_debug(logger, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
     try{
@@ -242,7 +242,7 @@ void LongCallTask::ExecutePersCall(LongCallContext* ctx)
     {
         persParams->error = 0;        
         persParams->exception = "LongCallManager: Unknown exception";
-    }*/
+    }
 }
     
 int LongCallTask::Execute()
