@@ -48,6 +48,7 @@ public:
     inBuffer=0;
     bufPos=0;
     sock=(SOCKET)-1;
+    memset(data,0,sizeof(data));
   }
   Socket(SOCKET s,const sockaddr_in& saddrin )
   {
@@ -57,6 +58,7 @@ public:
     timeOut=60;
     sock=s;
     sockAddr=saddrin;
+    memset(data,0,sizeof(data));
   }
 
   virtual ~Socket()
