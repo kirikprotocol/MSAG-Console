@@ -1,10 +1,12 @@
 /* $Id$ */
 
+#include "logger/Logger.h"
 #include <core/threads/Thread.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 #include <scag/util/singleton/Singleton.h>
 #include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"
+#include "scag/lcm/LongCallManager.h"
 
 #include "PersClient.h"
 
@@ -14,15 +16,16 @@ using namespace scag::util::singleton;
 using smsc::util::Exception;
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
+using namespace scag::lcm;
 using scag::pers;
 
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;
 
-class PersClientImpl: public PersClient, public ConfigListener, public Thread {
+class PersClientImpl: public PersClient, public scag::config::ConfigListener, public Thread {
 //    friend class PersClient;
 public:
-    PersClientImpl(): connected(false), ConfigListener(PERSCLIENT_CFG) {};
+    PersClientImpl(): connected(false), headContext(NULL), ConfigListener(scag::config::PERSCLIENT_CFG) {};
     ~PersClientImpl() { Stop(); if(connected) sock.Close(); };
 
     void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
@@ -40,10 +43,12 @@ public:
     int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod); //throw(PersClientException)
     int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod); //throw(PersClientException)
 
+    bool call(LongCallContext* context);
+
     void init_internal(const char *_host, int _port, int timeout, int _pingTimeout); //throw(PersClientException);
     
     virtual int Execute();
-    void Stop() { isStopping = true; {MutexGuard mt(pingSleeper), mt1(mtx); pingSleeper.notify();} WaitFor();};
+    void Stop() { isStopping = true; {MutexGuard mt(callMutex), mt1(mtx); callMutex.notify();} WaitFor();};
     void Start() {isStopping = false; Thread::Start();};
     
 protected:
@@ -66,7 +71,10 @@ protected:
     uint32_t GetPacketSize();
     PersServerResponseType GetServerResponse();
     void ParseProperty(Property& prop);
-    void Sleep();
+
+    LongCallContext* getContext();
+    void ping();
+    void ExecutePersCall(LongCallContext* ctx);
 
     std::string host;
     int port;
@@ -76,8 +84,9 @@ protected:
     bool connected, isStopping;
     Logger * log;
     Mutex mtx;
+    EventMonitor callMutex;
     SerialBuffer sb;
-    EventMonitor pingSleeper;
+    LongCallContext* headContext, *tailContext;
 };
 
 inline unsigned GetLongevity(PersClient*) { return 5; }
@@ -107,7 +116,7 @@ void PersClient::Init(const char *_host, int _port, int _timeout, int _pingTimeo
     }
 }
 
-void PersClient::Init(const PersClientConfig& cfg)// throw(PersClientException);    
+void PersClient::Init(const scag::config::PersClientConfig& cfg)// throw(PersClientException);    
 {
     if (!PersClient::inited)
     {
@@ -123,7 +132,7 @@ void PersClient::Init(const PersClientConfig& cfg)// throw(PersClientException);
 void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
 {
     log = Logger::getInstance("persclient");
-    smsc_log_info(log, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d", _host, _port, _timeout, _pingTimeout);    
+    smsc_log_info(log, "PersClient init host=%s:%d timeout=%d, pingtimeout=%d", _host, _port, _timeout, _pingTimeout);
     connected = false;
     host = _host;
     port = _port;
@@ -142,7 +151,7 @@ void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, i
 
 void PersClientImpl::configChanged()
 {
-    PersClientConfig& cfg = ConfigManager::Instance().getPersClientConfig();
+    scag::config::PersClientConfig& cfg = scag::config::ConfigManager::Instance().getPersClientConfig();
     
     reinit(cfg.host.c_str(), cfg.port, cfg.timeout, cfg.pingTimeout);
 }
@@ -151,7 +160,7 @@ void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pin
 {
     MutexGuard mt(mtx);
 
-    smsc_log_info(log, "PersClient reinit host=%s:%d timeout=%d, pingtimoeut=%d", _host, _port, _timeout, _pingTimeout);
+    smsc_log_info(log, "PersClient reinit host=%s:%d timeout=%d, pingtimeout=%d", _host, _port, _timeout, _pingTimeout);
     
     if(connected) sock.Close();
     Stop();
@@ -169,68 +178,6 @@ void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pin
         smsc_log_error(log, "Error during reinitialization. %s", e.what());
     }
     Start();
-}
-
-void PersClientImpl::Sleep()
-{
-    int to;
-    MutexGuard ps(pingSleeper);
-    if(isStopping) return;
-/*    do{
-        to = time(NULL) - actTS;
-        if(to >= 0 && to < pingTimeout)*/
-                pingSleeper.wait(pingTimeout * 1000); // -to
-/*        if(isStopping) break;
-    }while(to < pingTimeout);*/
-}
-
-int PersClientImpl::Execute()
-{
-    smsc_log_debug(log, "Ping sender started");
-    while(!isStopping)
-    {
-        if(isStopping) break;
-        
-        Sleep();
-        
-        if(isStopping) break;
-        
-        MutexGuard mt(mtx);        
-        
-        if(isStopping) break;        
-        
-        try{
-            sb.Empty();
-            sb.SetPos(4);
-            sb.WriteInt8(PC_PING);
-            SendPacket();
-            ReadPacket();
-            if(GetServerResponse() != RESPONSE_OK)
-                throw PersClientException(SERVER_ERROR);
-            actTS = time(NULL);
-            smsc_log_debug(log, "Ping sent");
-        }
-        catch(PersClientException& e)
-        {
-            smsc_log_error(log, "Ping failed: %s", e.what());
-            if(connected)
-            {
-                sock.Close();
-                connected = false;
-            }
-            try{
-                init();
-            }
-            catch(...)
-            {};
-        }
-        catch(...)
-        {
-            smsc_log_error(log, "Unknown exception");
-        }
-    }
-    smsc_log_debug(log, "Ping sender stopped");
-    return 0;
 }
 
 void PersClientImpl::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
@@ -586,6 +533,141 @@ void PersClientImpl::ParseProperty(Property& prop)
     {
         throw PersClientException(BAD_RESPONSE);
     }
+}
+
+LongCallContext* PersClientImpl::getContext()
+{
+    LongCallContext *ctx;
+    MutexGuard mt(callMutex);
+    if(isStopping) return NULL;
+    if(!headContext) callMutex.wait(pingTimeout * 1000);
+    ctx = headContext;    
+    if(headContext) headContext = headContext->next;
+    return ctx;        
+}
+
+bool PersClientImpl::call(LongCallContext* context)
+{
+    MutexGuard mt(callMutex);
+    if(isStopping) return false;
+    context->next = NULL;
+
+    if(headContext)
+        tailContext->next = context;
+    else
+        headContext = context;
+    tailContext = context;
+    
+    callMutex.notify();        
+}
+
+void PersClientImpl::ping()
+{
+    MutexGuard mt(mtx);
+    try{
+        sb.Empty();
+        sb.SetPos(4);
+        sb.WriteInt8(PC_PING);
+        SendPacket();
+        ReadPacket();
+        if(GetServerResponse() != RESPONSE_OK)
+            throw PersClientException(SERVER_ERROR);
+        smsc_log_debug(log, "Ping sent");
+    }
+    catch(PersClientException& e)
+    {
+        smsc_log_error(log, "Ping failed: %s", e.what());
+        if(connected)
+        {
+            sock.Close();
+            connected = false;
+        }
+        try{
+            init();
+        }
+        catch(...)
+        {};
+    }
+    catch(...)
+    {
+        smsc_log_error(log, "Unknown exception");
+    }
+}
+
+void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
+{
+    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
+    smsc_log_debug(log, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
+    try{
+        if(persParams->pt == PT_ABONENT)        
+            switch(ctx->callCommandId)
+            {
+                case PERS_GET: GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
+                case PERS_SET: SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
+                case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str()); break;
+                case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
+                case PERS_INC: IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
+            }
+        else
+            switch(ctx->callCommandId)
+            {
+                case PERS_GET: GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
+                case PERS_SET: SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
+                case PERS_DEL: DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str()); break;
+                case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
+                case PERS_INC: IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
+            }
+        persParams->error = 0;
+        persParams->exception.assign("");
+    }
+    catch(PersClientException& exc)
+    {
+        persParams->error = exc.getType();
+        persParams->exception = exc.what();        
+    }
+    catch(Exception& exc)
+    {
+        persParams->error = 0;        
+        persParams->exception = exc.what();
+    }
+    catch(...)
+    {
+        persParams->error = 0;        
+        persParams->exception = "LongCallManager: Unknown exception";
+    }
+}
+
+int PersClientImpl::Execute()
+{
+    smsc_log_debug(log, "Pers thread started");
+    
+    while(!isStopping)
+    {
+        LongCallContext* ctx = getContext();
+        
+        if(isStopping) break;
+
+        if(ctx)
+        {
+            if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC_MOD)
+                ExecutePersCall(ctx);
+                
+            ctx->initiator->continueExecution(ctx, false);
+
+            actTS = time(NULL);
+        }
+        else
+        {
+            if(actTS + pingTimeout < time(NULL))
+            {
+                ping();
+                actTS = time(NULL);
+            }
+        }
+    }
+
+    smsc_log_debug(log, "Pers thread finished");
+    return 0;
 }
 
 }}}

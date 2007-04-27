@@ -3,22 +3,20 @@
 #ifndef SCAG_PERS_CLIENT_H
 #define SCAG_PERS_CLIENT_H
 
-#include "logger/Logger.h"
 #include "SerialBuffer.h"
 #include "Property.h"
 #include "core/network/Socket.hpp"
 #include "Types.h"
+#include "scag/lcm/LongCallManager.h"
 #include "scag/config/pers/PersClientConfig.h"
 #include "scag/lcm/LongCallManager.h"
 
 namespace scag { namespace pers { namespace client {
 
 using smsc::core::network::Socket;
-
-using smsc::logger::Logger;
 using scag::pers;
-using namespace scag::config;
 using scag::lcm::LongCallParams;
+using scag::lcm::LongCallContext;
 
 enum PersClientExceptionType{
     CANT_CONNECT,
@@ -81,7 +79,7 @@ protected:
 public:
     static PersClient& Instance();
     static void Init(const char *_host, int _port, int timeout, int pingTimeout);// throw(PersClientException);
-    static void Init(const PersClientConfig& cfg);// throw(PersClientException);    
+    static void Init(const scag::config::PersClientConfig& cfg);// throw(PersClientException);    
 
     virtual void SetProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);
     virtual void SetProperty(ProfileType pt, uint32_t key, Property& prop) = 0;// throw(PersClientException);
@@ -98,6 +96,7 @@ public:
     virtual int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) = 0; //throw(PersClientException)
     virtual int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) = 0; //throw(PersClientException)
 
+    virtual bool call(LongCallContext* context) = 0;
 protected:
     static bool  inited;
     static Mutex initLock;
@@ -106,4 +105,3 @@ protected:
 }}}
 
 #endif
-
