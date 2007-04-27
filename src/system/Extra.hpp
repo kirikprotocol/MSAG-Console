@@ -45,15 +45,22 @@ public:
       ServiceInfo info;
       info.serviceBit=bit;
       info.prefix=str.substr(lastPos,pos==std::string::npos?pos:pos-lastPos);
-      for(std::string::size_type i=0;i<info.prefix.length();i++)info.prefix[i]=tolower(info.prefix[i]);
-      if(info.prefix.length()!=1)info.prefix+=' ';
-      info.diverted=divertAddr!=0;
-      if(info.diverted)
+      if(info.prefix.length()==0)
       {
-        info.divertAddr=divertAddr;
+        __warning2__("empty prefix found:'%s' for extra bit %d, address %s",prefix,bit,divertAddr);
       }
-      services.push_back(info);
-      if(pos==std::string::npos)break;
+      else
+      {
+        for(std::string::size_type i=0;i<info.prefix.length();i++)info.prefix[i]=tolower(info.prefix[i]);
+        if(info.prefix.length()!=1 && info.prefix[info.prefix.length()-1]!=' ')info.prefix+=' ';
+        info.diverted=divertAddr!=0;
+        if(info.diverted)
+        {
+          info.divertAddr=divertAddr;
+        }
+        services.push_back(info);
+        if(pos==std::string::npos)break;
+      }
       lastPos=pos+1;
       pos=str.find(',',lastPos);
     }while(lastPos!=std::string::npos);
