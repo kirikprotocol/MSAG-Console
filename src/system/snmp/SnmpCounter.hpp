@@ -120,7 +120,7 @@ protected:
   Severities totalSvrt;
   buf::Hash<Counters> smeCnt;
   buf::Hash<Severities> smeSvrt;
-  sync::EventMonitor mon;
+  //sync::EventMonitor mon;
   bool isStopping;
 
   int interval;
@@ -149,14 +149,13 @@ protected:
 
   void Stop()
   {
-    sync::MutexGuard mg(mon);
+    //sync::MutexGuard mg(mon);
     isStopping=true;
-    mon.notify();
+    //mon.notify();
   }
 
   int Execute()
   {
-    sync::MutexGuard mg(mon);
     time_t nextCheck=time(NULL);
     nextCheck+=interval-(nextCheck%interval);
     smsc::logger::Logger* chkLog=smsc::logger::Logger::getInstance("snmp.chk");
@@ -184,6 +183,7 @@ protected:
       }
       if(isStopping)break;
       if(nextCheck>time(NULL))continue;
+      //sync::MutexGuard mg(mon);
       nextCheck=time(NULL)+1;
       nextCheck+=interval-(nextCheck%interval);
       smsc_log_info(chkLog,"check started. next check at %d",(int)nextCheck);
