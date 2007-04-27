@@ -18,7 +18,7 @@
 #include <util/Timer.hpp>
 #include <smeman/smeman.h>
 #include <util/regexp/RegExp.hpp>
-#include <alias/aliasman.h>
+#include <alias/AliasManImpl.hpp>
 #include <util/config/alias/aliasconf.h>
 
 #include <util/findConfigFile.h>
@@ -63,7 +63,7 @@ void reloadAliases(AliasManager* aliaser,const AliasConfig& cfg)
       ai.hide = rec->hide;
       aliaser->addAlias(ai);
     }
-    aliaser->commit();
+    //aliaser->commit();
   }
 }
 
@@ -71,9 +71,9 @@ static time_t parseDateTime(const char* str)
 {
     int year, month, day, hour, minute, second;
     if (!str || str[0] == '\0' ||
-        sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d", 
+        sscanf(str, "%02d.%02d.%4d %02d:%02d:%02d",
                     &day, &month, &year, &hour, &minute, &second) != 6) return -1;
-    
+
     tm  dt; dt.tm_isdst = -1;
     dt.tm_year = year - 1900; dt.tm_mon = month - 1; dt.tm_mday = day;
     dt.tm_hour = hour; dt.tm_min = minute; dt.tm_sec = second;
@@ -81,7 +81,7 @@ static time_t parseDateTime(const char* str)
 }
 static time_t convertTime(tm& dt)
 {
-    dt.tm_isdst = -1; dt.tm_mon--; 
+    dt.tm_isdst = -1; dt.tm_mon--;
     return mktime(&dt);
 }
 
@@ -109,7 +109,7 @@ bool parseParams(int argc, char* argv[])
         if (param[0] == '-' && (i+1 < argc)) {
             if (param[1] == 'f') {
                 fromDateFilter = parseDateTime(argv[++i]);
-                if (fromDateFilter <= 0) { 
+                if (fromDateFilter <= 0) {
                     printf("Invalid from date format '%s'\n", argv[i]);
                     break;
                 }
@@ -123,7 +123,7 @@ bool parseParams(int argc, char* argv[])
                 }
                 //else printf("%s", ctime(&tillDateFilter));
             }
-            else { 
+            else {
                 printf("Invalid option '%s'\n", param);
                 break;
             }
@@ -140,11 +140,11 @@ bool parseParams(int argc, char* argv[])
     return paramsParsed;
 }
 
-namespace smsc { namespace system 
+namespace smsc { namespace system
 {
-    extern void loadRoutes(RouteManager* rm, 
-                           const smsc::util::config::route::RouteConfig& rc, 
-                           bool traceit=false); 
+    extern void loadRoutes(RouteManager* rm,
+                           const smsc::util::config::route::RouteConfig& rc,
+                           bool traceit=false);
 }}
 
 struct SmsStat
@@ -160,9 +160,9 @@ struct RouteStat : public SmsStat
 {
     signed long providerId, categoryId;
 
-    RouteStat(uint32_t a=0, uint32_t d=0, signed long _providerId = -1, signed long _categoryId = -1) 
+    RouteStat(uint32_t a=0, uint32_t d=0, signed long _providerId = -1, signed long _categoryId = -1)
         : SmsStat(), providerId(_providerId), categoryId(_categoryId) {};
-    RouteStat(const RouteStat& stat) 
+    RouteStat(const RouteStat& stat)
         : SmsStat(stat), providerId(stat.providerId), categoryId(stat.categoryId) {};
 };
 
@@ -188,12 +188,12 @@ private:
 
 public:
 
-    StatCounters(const std::string& l) 
+    StatCounters(const std::string& l)
         : logger(Logger::getInstance("stat4log.storage")), location(l), bFileTM(false), bEmpty(true) {};
     ~StatCounters() {
         if (statFile.isOpened()) statFile.Close();
     }
-    
+
     void flush(time_t flushTime);
     void incAccepted(const char* smeId, const char* routeId, signed long pId, signed long cId);
     void incDelivered(const char* smeId, const char* routeId, signed long pId, signed long cId);
@@ -202,7 +202,7 @@ bool StatCounters::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
         if (errno == EEXIST) return false;
-        throw Exception("Failed to create directory '%s'. Details: %s", 
+        throw Exception("Failed to create directory '%s'. Details: %s",
                         dir.c_str(), strerror(errno));
     }
     return true;
@@ -218,16 +218,16 @@ const int MAX_STACK_BUFFER_SIZE = 64*1024;
 
 void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 {
-    smsc_log_info(logger, "Statistics dump for %02d-%02d %02d:%02d GMT", 
+    smsc_log_info(logger, "Statistics dump for %02d-%02d %02d:%02d GMT",
                   flushTM.tm_mon+1, flushTM.tm_mday, flushTM.tm_hour, flushTM.tm_min);
-    
-    try 
+
+    try
     {
-        char dirName[128]; char fileName[128]; 
+        char dirName[128]; char fileName[128];
         sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
         sprintf(fileName, SMSC_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
         std::string fullPath = location; fullPath += '/'; fullPath += (const char*)dirName;
-        std::string statPath = fullPath; statPath += '/'; statPath += (const char*)fileName; 
+        std::string statPath = fullPath; statPath += '/'; statPath += (const char*)fileName;
         const char* statPathStr = statPath.c_str();
 
         if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
@@ -241,9 +241,9 @@ void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         {
             // close old RTS file (if it was opened)
             if (statFile.isOpened()) statFile.Close();
-            
+
             needHeader = true;
-            if (File::Exists(statPathStr)) { 
+            if (File::Exists(statPathStr)) {
                 needHeader = false;
                 statFile.WOpen(statPathStr);
             } else {
@@ -257,7 +257,7 @@ void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 
         TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> writeBuff(MAX_STACK_BUFFER_SIZE);
         if (needHeader) // create header (if new file created)
-        { 
+        {
             writeBuff.Append((uint8_t *)SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
             uint16_t version = htons(SMSC_STAT_VERSION_INFO);
             writeBuff.Append((uint8_t *)&version, sizeof(version));
@@ -292,7 +292,7 @@ void StatCounters::flush(time_t flushTime)
 {
     if (bEmpty) return;
     tm flushTM; gmtime_r(&flushTime, &flushTM); flushTM.tm_min = 0;
-    
+
     TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> buff(MAX_STACK_BUFFER_SIZE);
 
     // General statistics dump
@@ -300,12 +300,12 @@ void StatCounters::flush(time_t flushTime)
     value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
     value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
 
-    int32_t value32 = 0; 
-    value32 = htonl(statGen.accepted);  
+    int32_t value32 = 0;
+    value32 = htonl(statGen.accepted);
     buff.Append((uint8_t *)&value32, sizeof(value32)); // accepted
     value32 = 0;
     buff.Append((uint8_t *)&value32, sizeof(value32)); // rejected
-    value32 = htonl(statGen.delivered); 
+    value32 = htonl(statGen.delivered);
     buff.Append((uint8_t *)&value32, sizeof(value32)); // delivered
     value32 = 0;
     buff.Append((uint8_t *)&value32, sizeof(value32)); // failed
@@ -313,11 +313,11 @@ void StatCounters::flush(time_t flushTime)
     buff.Append((uint8_t *)&value32, sizeof(value32)); // temporal
     buff.Append((uint8_t *)&value32, sizeof(value32)); // peak_i
     buff.Append((uint8_t *)&value32, sizeof(value32)); // peak_o
-    
+
     buff.Append((uint8_t *)&value32, sizeof(value32)); // errors (count = 0)
-    
+
     // Sme statistics dump
-    value32 = statBySme.GetCount(); 
+    value32 = statBySme.GetCount();
     value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
     statBySme.First();
     char* smeId = 0; SmsStat* smeStat = 0;
@@ -331,7 +331,7 @@ void StatCounters::flush(time_t flushTime)
         value32 = htonl(smeStat->accepted);  buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = 0;                         buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = htonl(smeStat->delivered); buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = 0;                         
+        value32 = 0;
         buff.Append((uint8_t *)&value32, sizeof(value32));
         buff.Append((uint8_t *)&value32, sizeof(value32));
         buff.Append((uint8_t *)&value32, sizeof(value32));
@@ -343,7 +343,7 @@ void StatCounters::flush(time_t flushTime)
     }
 
     // Route statistics dump
-    value32 = statByRoute.GetCount(); 
+    value32 = statByRoute.GetCount();
     value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
     statByRoute.First();
     char* routeId = 0; RouteStat* routeStat = 0;
@@ -363,7 +363,7 @@ void StatCounters::flush(time_t flushTime)
         value32 = htonl(routeStat->accepted);  buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = 0;                           buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = htonl(routeStat->delivered); buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = 0;                           
+        value32 = 0;
         buff.Append((uint8_t *)&value32, sizeof(value32));
         buff.Append((uint8_t *)&value32, sizeof(value32));
         buff.Append((uint8_t *)&value32, sizeof(value32));
@@ -377,8 +377,8 @@ void StatCounters::flush(time_t flushTime)
     dump(buff, buff.GetPos(), flushTM);
     statGen.Empty(); statBySme.Empty(); statByRoute.Empty(); bEmpty = true;
 }
-void StatCounters::incAccepted(const char* smeId, const char* routeId, 
-                               signed long pId, signed long cId) 
+void StatCounters::incAccepted(const char* smeId, const char* routeId,
+                               signed long pId, signed long cId)
 {
     statGen.accepted++;
     if (smeId && smeId[0]) {
@@ -394,7 +394,7 @@ void StatCounters::incAccepted(const char* smeId, const char* routeId,
     bEmpty = false;
 }
 void StatCounters::incDelivered(const char* smeId, const char* routeId,
-                                signed long pId, signed long cId) 
+                                signed long pId, signed long cId)
 {
     statGen.delivered++;
     if (smeId && smeId[0]) {
@@ -409,13 +409,13 @@ void StatCounters::incDelivered(const char* smeId, const char* routeId,
     }
     bEmpty = false;
 }
-struct SubmitData 
+struct SubmitData
 {
     std::string dstSmeId;
     std::string routeId;
     int64_t pId, cId;
 
-    SubmitData(const std::string& smeId="", const std::string& rId="", int64_t p=-1, int64_t c=-1) 
+    SubmitData(const std::string& smeId="", const std::string& rId="", int64_t p=-1, int64_t c=-1)
         : dstSmeId(smeId), routeId(rId), pId(p), cId(c) {};
 };
 
@@ -434,22 +434,22 @@ int main(int argc, char* argv[])
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-    
+
     if (!parseParams(argc, argv)) {
         printUsage();
         return -1;
     }
-    
+
     Logger::Init();
     logger = Logger::getInstance("smsc.stat.Stat4Log");
-    
+
     SmeManager   smeManager;
     RouteManager routeManager;
-    AliasManager aliasManager;
+    AliasManImpl aliasManager("store/aliases.bin");
     smsc::util::config::alias::AliasConfig aliasConfig;
     smsc::util::config::smeman::SmeManConfig smemanConfig;
 
-    try 
+    try
     {
         smsc_log_info(logger, "Loading SMSC configuration...");
         aliasConfig.load(findConfigFile("aliases.xml"));
@@ -496,16 +496,16 @@ int main(int argc, char* argv[])
           }
         }
         smsc::util::config::route::RouteConfig rc;
-        rc.load(findConfigFile("routes.xml"));    
+        rc.load(findConfigFile("routes.xml"));
         routeManager.assign(&smeManager);
         smsc::system::loadRoutes(&routeManager, rc);
         smsc_log_info(logger, "SMSC configuration loaded");
-    } 
+    }
     catch (std::exception& exc) {
         smsc_log_error(logger, "Failed to load SMSC configuration. Details: %s", exc.what());
         return -2;
     }
-    
+
     // #################################### Log scanner part #####################################
 
     bool needCount = false;
@@ -516,9 +516,9 @@ int main(int argc, char* argv[])
     int sbmPatLen = strlen(LOG_SBM_ST_PATTERN);
     int fwdPatLen = strlen(LOG_FWD_ST_PATTERN);
     memset(&lastTM, 0, sizeof(lastTM));
-    
+
     uint64_t msgId = 0;
-    char oaBuff[128]; char daBuff[128]; char ddaBuff[128]; 
+    char oaBuff[128]; char daBuff[128]; char ddaBuff[128];
     char srcPrxBuff[512]; char dstPrxBuff[512];
 
     uint64_t totalAccepted = 0;
@@ -529,7 +529,7 @@ int main(int argc, char* argv[])
     XHash<uint64_t, SubmitData> submitByMsgId;
 
     int resultCode = 0;
-    for (int i=0; i<logFiles.Count(); i++) 
+    for (int i=0; i<logFiles.Count(); i++)
     {
         File logFile;
         std::string logFileName = logFiles[i];
@@ -542,25 +542,25 @@ int main(int argc, char* argv[])
         smsc_log_info(logger, "Scanning log file %s", logFileName.c_str());
 
         std::string logLine;
-        while (logFile.ReadLine(logLine)) 
+        while (logFile.ReadLine(logLine))
         {
             const char* str = logLine.c_str();
             int bytesRead = 0;
-            if (sscanf(str, LOG_PREFIX_PATTERN, &LOG_level, &logTM.tm_mday, &logTM.tm_mon, 
+            if (sscanf(str, LOG_PREFIX_PATTERN, &LOG_level, &logTM.tm_mday, &logTM.tm_mon,
                        &logTM.tm_hour, &logTM.tm_min, &logTM.tm_sec, &TM_msec, &TH_pid, &bytesRead) != 8) continue;
-            
+
             logTime = convertTime(logTM); // from local time
             if (tillDateFilter > 0 && logTime >= tillDateFilter) break; // TODO: dump scanned counters
             needCount = (fromDateFilter <= 0 || logTime >= fromDateFilter);
-            
-            if (lastTime <= 0 || 
+
+            if (lastTime <= 0 ||
                 lastTM.tm_hour != logTM.tm_hour || lastTM.tm_mday != logTM.tm_mday ||
-                lastTM.tm_mon != logTM.tm_mon || lastTM.tm_year != logTM.tm_year) 
+                lastTM.tm_mon != logTM.tm_mon || lastTM.tm_year != logTM.tm_year)
             {
                 if (needCount && lastTime > 0) statCounters.flush(lastTime); // dump counters to file & cleanup it
                 lastTime = logTime; lastTM = logTM;
             }
-            
+
             str += bytesRead;
             while (*str && isspace(*str)) str++;
             if (strncmp(str, LOG_CAT_ST_PATTERN, catPatLen) != 0) continue; // 'sms.trace: ' not matched
@@ -569,7 +569,7 @@ int main(int argc, char* argv[])
 
             const char* sub = 0;
             if (strncmp(str, LOG_SBM_ST_PATTERN, sbmPatLen) == 0) // 'SBM: ' matched
-            { 
+            {
 // Только эти строчки !!!!
 // I SBM: submit ok, seqnum=4187769 Id=11794273310;seq=130463;oa=.1.1.79138923688;da=.5.0.ussd:102;dda=.0.1.102;   srcprx=MAP_PROXY; dstprx=dbSme
 // I SBM: dest sme not connected   Id=11794312619;seq=29963;oa=.1.1.79137500058;da=.0.9.0850;srcprx=upcs_gw; dstprx=espp
@@ -591,19 +591,19 @@ int main(int argc, char* argv[])
                 if (!dstSmeMsg) {
                     if (!(sub = strstr(str, ";dda="))) continue;
                     strncpy(daBuff, str, sub-str); daBuff[sub-str] = 0;
-                    if (!(sub = strstr(str, ";srcprx="))) continue; 
+                    if (!(sub = strstr(str, ";srcprx="))) continue;
                 }
                 else {
                     if (!(sub = strstr(str, ";srcprx="))) continue;
-                    strncpy(daBuff, str, sub-str); daBuff[sub-str] = 0; 
+                    strncpy(daBuff, str, sub-str); daBuff[sub-str] = 0;
                 }
                 str = sub + 8;
                 if (!(sub = strstr(str, ";dstprx="))) continue;
                 strncpy(srcPrxBuff, str, sub-str); srcPrxBuff[sub-str] = 0;
                 //strcpy(dstPrxBuff, sub + 8);
-                
+
                 //printf("SUBMIT >>%s msgId=%lld, seq=%ld, oa='%s', da='%s'\n", msgId, seqNum, oaBuff, daBuff);
-                try 
+                try
                 {
                     RouteInfo routeInfo; int tmpIdx = 0; SmeProxy* tmpSmeProxy = 0;
                     int srcPrxIdx = smeManager.lookup(srcPrxBuff);
@@ -611,9 +611,9 @@ int main(int argc, char* argv[])
                     Address daAddress(daBuff); Address ddaAddress;
                     bool oaAliasFound = aliasManager.AliasToAddress(oaAddress, doaAddress);
                     bool daAliasFound = aliasManager.AliasToAddress(daAddress, ddaAddress);
-                    bool routeFound = routeManager.lookup(srcPrxIdx, 
+                    bool routeFound = routeManager.lookup(srcPrxIdx,
                                                           oaAliasFound ? doaAddress:oaAddress,
-                                                          daAliasFound ? ddaAddress:daAddress, 
+                                                          daAliasFound ? ddaAddress:daAddress,
                                                           tmpSmeProxy, &tmpIdx, &routeInfo);
                     if (!routeFound) {
                         smsc_log_warn(logger, "SBM: msgId=%lld No route for oa=%s, da=%s, srcprx=%s (%d)",
@@ -624,7 +624,7 @@ int main(int argc, char* argv[])
                         }
                         return -5;*/
                     }
-                    
+
                     SubmitData sd(routeInfo.smeSystemId, routeInfo.routeId,
                                   routeInfo.providerId, routeInfo.categoryId);
                     SubmitData* psd = submitByMsgId.GetPtr(msgId);
@@ -632,11 +632,11 @@ int main(int argc, char* argv[])
                     else smsc_log_warn(logger, "SBM: msgId=%lld already present", msgId);
 
                     if (needCount) {
-                        statCounters.incAccepted(srcPrxBuff, routeInfo.routeId.c_str(), 
+                        statCounters.incAccepted(srcPrxBuff, routeInfo.routeId.c_str(),
                                                  routeInfo.providerId, routeInfo.categoryId);
                         totalAccepted++;
                     }
-                } 
+                }
                 catch (std::exception& sexc) {
                   smsc_log_warn(logger, "SBM: Failed to lookup route for msgId=%lld, "
                                 "oa=%s, da=%s, srcprx=%s. Details: %s",
@@ -645,7 +645,7 @@ int main(int argc, char* argv[])
                 }
             }
             else if (sscanf(str, LOG_DLVRSP_PATTERN, &msgId, &bytesRead) == 1) // 'DLVRSP: ' matched
-            {           
+            {
 // I DLVRSP: msgId=11793779293;class=TEMP ERROR;st=1179;oa=.0.1.0001302;da=.0.1.79132873419;dda=.1.1.79132873419
 // I DLVRSP: msgId=11794272650;class=OK;st=0;oa=.1.1.79139869990;da=.1.1.79137242867;dda=.1.1.79137242867
 // class ="OK"|"RESCHEDULEDNOW"|"TEMP ERROR"|"PERM ERROR",
@@ -653,7 +653,7 @@ int main(int argc, char* argv[])
                 str += bytesRead;
                 if (*str != 'O') continue; // ! class=OK;
                 //if (!(sub = strstr(str, ";st="))) continue;
-                
+
                 /*str = sub + 4;
                 if (sscanf(str, "%d", &st) != 1) continue;
                 if (!(sub = strstr(str, ";oa="))) continue; str = sub + 4;
@@ -662,7 +662,7 @@ int main(int argc, char* argv[])
                 if (!(sub = strstr(str, ";dda="))) continue;
                 strncpy(daBuff, str, sub-str); daBuff[sub-str] = 0; str = sub + 5;
                 strcpy(ddaBuff, str);*/
-                
+
                 //printf("DLVRSP >> msgId=%lld, st=%d, oa='%s', da='%s', dda='%s'\n",
                 //       msgId, st, oaBuff, daBuff, ddaBuff);
 
@@ -682,7 +682,7 @@ int main(int argc, char* argv[])
             }
         }
     }
-    
+
     if (needCount && lastTime > 0) statCounters.flush(lastTime); // flush the rest of counters
 
     smsc_log_info(logger, "Log files scanned. Total %lld accepted, %lld delivered",

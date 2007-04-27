@@ -13,3 +13,4 @@ sme/txrx txrx -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lp
 -sme/payload payload  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/datasmtest datasmtest -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/sme sme
+sme/uberflooder uberflooder -lcore-threads $(__LIBRARIES) -llogger
