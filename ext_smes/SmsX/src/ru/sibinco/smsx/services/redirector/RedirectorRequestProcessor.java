@@ -4,9 +4,13 @@ import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.Multiplexor;
 import ru.sibinco.smsx.network.OutgoingQueue;
-import ru.sibinco.smsx.services.MessageRedirector;
 import ru.sibinco.smsx.services.ServiceProcessor;
+import ru.sibinco.smsx.services.RedirectorOutgoingObject;
+import ru.sibinco.smsx.services.calendar.CalendarService;
+import ru.sibinco.smsx.services.redirector.redirects.Redirect;
 import ru.sibinco.smsx.utils.BlockingQueue;
+
+import java.util.regex.Matcher;
 
 /**
  * User: artem
@@ -33,12 +37,20 @@ final class RedirectorRequestProcessor extends ServiceProcessor {
 
   public boolean processMessage(final ParsedMessage parsedMessage) {
     final Message message = parsedMessage.getMessage();
+    final Redirect redirect = parsedMessage.getRedirect();
     try {
       log.info("=====================================================================================");
       log.info("Processing message: from abonent = " + message.getSourceAddress() + ", to abonent = " + message.getDestinationAddress() + ", message = " + message.getMessageString());
 
-      log.info("Redirect to address " + parsedMessage.getToAddress());
-      redirectMessage(message, parsedMessage.getToAddress());
+      final Matcher matcher = redirect.getPrefix().matcher(message.getMessageString());
+      matcher.find();
+      message.setMessageString(redirect.getNewPrefix() + message.getMessageString().substring(matcher.end()));
+
+      log.info("Redirect to address " + redirect.getAddress());
+      message.setDestinationAddress(redirect.getAddress());
+      
+      outQueue.addOutgoingObject(new RedirectorOutgoingObject(message, multiplexor));
+
     } catch (Exception e) {
       log.error(e);
       sendResponse(message, Data.ESME_RSYSERR);
@@ -46,7 +58,4 @@ final class RedirectorRequestProcessor extends ServiceProcessor {
     return true;
   }
 
-  private void redirectMessage(final Message message, final String toAddress) {
-    MessageRedirector.redirectMessage(message, toAddress, outQueue, multiplexor);
-  }
 }

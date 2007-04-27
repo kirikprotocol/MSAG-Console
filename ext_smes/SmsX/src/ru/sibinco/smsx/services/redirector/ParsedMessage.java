@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.services.redirector;
 
 import ru.aurorisoft.smpp.Message;
+import ru.sibinco.smsx.services.redirector.redirects.Redirect;
 
 /**
  * User: artem
@@ -8,18 +9,18 @@ import ru.aurorisoft.smpp.Message;
  */
 final class ParsedMessage {
   private final Message message;
-  private final String toAddress;
+  private final Redirect redirect;
 
-  public ParsedMessage(Message message, String toAddress) {
+  public ParsedMessage(Message message, Redirect redirect) {
     this.message = message;
-    this.toAddress = toAddress;
+    this.redirect = redirect;
   }
 
   public Message getMessage() {
     return message;
   }
 
-  public String getToAddress() {
-    return toAddress;
+  public Redirect getRedirect() {
+    return redirect;
   }
 }

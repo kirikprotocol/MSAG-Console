@@ -19,7 +19,7 @@ public class Redirect extends Tag{
 
   public Redirect(Tag parentTag, Parser parser, Attributes atts, List redirects) {
     super(parentTag, parser);
-    redirects.add(new ru.sibinco.smsx.services.redirector.redirects.Redirect(atts.getValue("regex"), atts.getValue("address")));
+    redirects.add(new ru.sibinco.smsx.services.redirector.redirects.Redirect(atts.getValue("format"), atts.getValue("prefix"), atts.getValue("new_prefix"), atts.getValue("address")));
   }
 
   public void endElement(String namespaceURI, String localName, String qName) throws SAXException {

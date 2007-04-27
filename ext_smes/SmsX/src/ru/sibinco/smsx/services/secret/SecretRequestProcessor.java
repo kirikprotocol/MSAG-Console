@@ -4,7 +4,6 @@ import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.Multiplexor;
 import ru.sibinco.smsx.network.OutgoingQueue;
-import ru.sibinco.smsx.services.MessageRedirector;
 import ru.sibinco.smsx.services.ServiceProcessor;
 import ru.sibinco.smsx.utils.BlockingQueue;
 
@@ -137,7 +136,7 @@ class SecretRequestProcessor extends ServiceProcessor {
     try {
       // Chech fromAbonent's registration
       if (SecretUser.loadByNumber(fromAbonent) == null) { // fromAbonent has not been registered
-        log.error("Abonent " + fromAbonent + " not registered in DB. Redirect message to " + toAbonent);
+        log.error("Abonent " + fromAbonent + " not registered in DB.");
         sendResponse(incomingMessage, Data.ESME_RX_P_APPN);
         return;
       }

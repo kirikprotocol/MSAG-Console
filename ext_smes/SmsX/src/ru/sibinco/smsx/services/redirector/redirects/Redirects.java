@@ -10,6 +10,7 @@ import java.io.File;
 import java.net.URI;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * User: artem
@@ -28,11 +29,14 @@ public class Redirects {
     return redirects;
   }
 
-  public static String getRedirectNumberByMessage(String message) {
+  public static Redirect getRedirectByMessage(String message) {
+    Redirect redirect;
+    Matcher matcher;
     for (Iterator iter = redirects.iterator(); iter.hasNext();) {
-      final Redirect redirect = (Redirect)iter.next();
-      if (message.matches(redirect.getRegex()))
-        return redirect.getAddress();
+      redirect = (Redirect)iter.next();
+      matcher = redirect.getFormat().matcher(message.trim());
+      if (matcher.matches())
+        return redirect;
     }
     return null;
   }

@@ -13,7 +13,7 @@ import ru.sibinco.smsx.network.OutgoingObject;
  * Date: 26.01.2007
  */
 
-final class RedirectorOutgoingObject extends OutgoingObject{
+public class RedirectorOutgoingObject extends OutgoingObject{
 
   private static final Category log = Category.getInstance(RedirectorOutgoingObject.class);
 

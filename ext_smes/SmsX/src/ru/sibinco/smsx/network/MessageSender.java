@@ -9,7 +9,7 @@ import ru.sibinco.smsx.utils.Utils;
 import java.util.Properties;
 
 
-// todo проверить интервалы посылки сообщений
+// todo пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 public class MessageSender extends Service {
 
   private final static org.apache.log4j.Category Log = org.apache.log4j.Category.getInstance(MessageSender.class);
@@ -51,7 +51,7 @@ public class MessageSender extends Service {
   public void  iterativeWork() {
 
     final OutgoingObject obj = outQueue.getOutgoingObject();
-
+    
     try {
       final Message msg = obj.getOutgoingMessage();
 

@@ -1,23 +1,37 @@
 package ru.sibinco.smsx.services.redirector.redirects;
 
+import java.util.regex.Pattern;
+
 /**
  * User: artem
  * Date: 24.01.2007
  */
 public class Redirect {
-  private final String regex;
+  private final Pattern format;
+  private final Pattern prefix;
+  private final String newPrefix;
   private final String address;
 
-  public Redirect(String regex, String address) {
-    this.regex = regex;
+  public Redirect(String format, String prefix, String newPrefix, String address) {
+    this.format = Pattern.compile(format, Pattern.CASE_INSENSITIVE);
+    this.prefix = Pattern.compile(prefix, Pattern.CASE_INSENSITIVE);
+    this.newPrefix = newPrefix;
     this.address = address;
-  }
-
-  public String getRegex() {
-    return regex;
   }
 
   public String getAddress() {
     return address;
+  }
+
+  public Pattern getPrefix() {
+    return prefix;
+  }
+
+  public String getNewPrefix() {
+    return newPrefix;
+  }
+
+  public Pattern getFormat() {
+    return format;
   }
 }

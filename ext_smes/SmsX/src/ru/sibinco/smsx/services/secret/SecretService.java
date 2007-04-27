@@ -1,5 +1,6 @@
 package ru.sibinco.smsx.services.secret;
 
+import com.logica.smpp.Data;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smsx.services.InitializationInfo;
@@ -46,6 +47,11 @@ public final class SecretService extends InternalService{
     } catch (SecretRequestParser.WrongMessageFormatException e) {
       log.info("Unknown message format");
       return false;
+    } catch (SecretRequestParser.WrongPasswordException e) {
+      log.error("Wrong password exception", e);
+      sendResponse(message, Data.ESME_ROK);
+      sendMessage(Properties.SERVICE_ADDRESS, message.getSourceAddress(), Properties.WRONG_PASSWORD);
+      return true;
     } catch (Throwable e) {
       log.error("Error", e);
       throw new ProcessException(e);

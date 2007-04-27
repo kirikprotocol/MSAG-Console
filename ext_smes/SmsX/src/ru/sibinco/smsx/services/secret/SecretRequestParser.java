@@ -12,23 +12,25 @@ import java.util.Iterator;
 
 final class SecretRequestParser {
 
-  private final static String SECRET = "(S|s)(E|e)(C|c)(R|r)(E|e)(T|t)";
-  private final static String NONE = "(N|n)(O|o)(N|n)(E|e)";
-  private final static String SEC = "(S|s)(E|e)(C|c)";
-  private final static String GET = "(G|g)(E|e)(T|t)";
+  private final static String SECRET = "(S|s)(E|e|\u0415|\u0435)(C|c|\u0421|\u0441)(R|r)(E|e|\u0415|\u0435)(T|t|\u0422|\u0442)";
+  private static final String P = "(P|p|\u0420|\u0440|\u041F|\u043F)";
+  private static final String SECRET_ON = "(" + SECRET + "|" + P + ")";
+  private final static String NONE = "(N|n)(O|o)(N|n)(E|e|\u0415|\u0435)";
+  private final static String SEC = "(((S|s)(E|e|\u0415|\u0435)(C|c|\u0421|\u0441))|#)";
+  private final static String SMS = "(S|s)(M|m|\u041C)(S|s)";
 
   private final static String ONE_OR_MORE_SPACES = "\\s+";
   private final static String ANY_NONSPACE_STRING_AFTER_SPACE = "\\s+\\S+";
   private final static String ANY_STRING_AFTER_SPACE = "(\\s*|\\s+.+)";
 //  private final static String ANY_WORD = "\\s*\\S+\\s*";
 
-  private final static String SECRET_ON_REGEX = SECRET  + ANY_NONSPACE_STRING_AFTER_SPACE;
-  private final static String SECRET_CHANGE_PASSWORD_REGEX = SECRET + ANY_NONSPACE_STRING_AFTER_SPACE + ANY_NONSPACE_STRING_AFTER_SPACE;
-  private final static String SECRET_OFF_REGEX = SECRET + ONE_OR_MORE_SPACES + NONE;
+  private final static String SECRET_ON_REGEX = SECRET_ON  + ANY_NONSPACE_STRING_AFTER_SPACE;
+  private final static String SECRET_CHANGE_PASSWORD_REGEX = SECRET_ON + ANY_NONSPACE_STRING_AFTER_SPACE + ANY_NONSPACE_STRING_AFTER_SPACE;
+  private final static String SECRET_OFF_REGEX = "(" + SECRET + ONE_OR_MORE_SPACES + NONE + "|-" + P + ")";
   private final static String SECRET_MESSAGE_REGEX = SEC + ANY_STRING_AFTER_SPACE;
-  private final static String SECRET_GET_REGEX = GET + ANY_STRING_AFTER_SPACE;
+  private final static String SECRET_GET_REGEX = SMS + ANY_STRING_AFTER_SPACE;
 
-  static ParseResult parseRequest(final String message) throws ParseException, WrongMessageFormatException {
+  static ParseResult parseRequest(final String message) throws ParseException, WrongMessageFormatException, WrongPasswordException {
     try {
       // Order is important here
       if (message.matches(SECRET_OFF_REGEX))
@@ -41,9 +43,13 @@ final class SecretRequestParser {
         return new ParseResult(ParseResultType.MSG, getMessage(message));
       else if (message.matches(SECRET_GET_REGEX))
         return new ParseResult(ParseResultType.PWD, getPasswordInGet(message));
+
     } catch (Throwable e) {
       throw new ParseException(e);
     }
+
+    if (message.matches(SECRET_ON + ".*") || message.matches(SMS + ".*"))
+        throw new WrongPasswordException();
 
     throw new WrongMessageFormatException();
   }
@@ -53,11 +59,11 @@ final class SecretRequestParser {
   }
 
   private static String getPasswordInSecret(final String message) {
-    return message.split(SECRET, 2)[1].trim();
+    return message.split(SECRET_ON, 2)[1].trim();
   }
 
   private static String getPasswordInGet(final String message) {
-    return message.split(GET, 2)[1].trim();
+    return message.split(SMS, 2)[1].trim();
   }
 
   final static class ParseResult {
@@ -102,6 +108,9 @@ final class SecretRequestParser {
   final static class WrongMessageFormatException extends Exception {
   }
 
+  final static class WrongPasswordException extends Exception {
+  }
+
   public static void main(String[] args)  {
     HashMap hash = new HashMap();
     hash.put("C","C");
@@ -130,6 +139,8 @@ final class SecretRequestParser {
       e.printStackTrace();
     } catch (WrongMessageFormatException e) {
       e.printStackTrace();
+    } catch (WrongPasswordException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
   }
 }

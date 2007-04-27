@@ -35,6 +35,12 @@ public final class CalendarService extends InternalService {
     log.info("Processing message: from abonent = " + message.getSourceAddress() + ", to abonent = " + message.getDestinationAddress() + ", message = " + message.getMessageString());
 
     try {
+
+      if (message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS)) {
+        log.info("Unknown destination address");
+        return false;
+      }
+
       final CalendarRequestParser.ParseResult parseResult = CalendarRequestParser.parseRequest(message.getMessageString());
       messagesQueue.put(new ParsedMessage(message, parseResult));
       log.info("Message added into queue.");

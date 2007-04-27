@@ -8,8 +8,12 @@ import ru.sibinco.smsx.services.InitializationInfo;
 import ru.sibinco.smsx.services.InternalService;
 import ru.sibinco.smsx.services.ProcessException;
 import ru.sibinco.smsx.services.redirector.redirects.Redirects;
+import ru.sibinco.smsx.services.redirector.redirects.Redirect;
 import ru.sibinco.smsx.utils.BlockingQueue;
 import ru.sibinco.smsx.utils.Utils;
+
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * User: artem
@@ -36,14 +40,14 @@ public class RedirectorService extends InternalService {
         return false;
       }
 
-      final String redirectAddress = Redirects.getRedirectNumberByMessage(message.getMessageString());
-      if (redirectAddress == null) {
+      final Redirect redirect = Redirects.getRedirectByMessage(message.getMessageString());
+      if (redirect == null) {
         log.info("Unknown message format");
         return false;
       }
 
-      log.info("Message format ok. Redirect message to address " + redirectAddress);
-      messagesQueue.put(new ParsedMessage(message, redirectAddress));
+      log.info("Message format ok. Redirect message to address " + redirect.getAddress());
+      messagesQueue.put(new ParsedMessage(message, redirect));
 
       return true;
 

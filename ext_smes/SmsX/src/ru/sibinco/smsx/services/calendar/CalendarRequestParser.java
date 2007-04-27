@@ -14,10 +14,10 @@ final class CalendarRequestParser {
   public static final int ATF_REQUEST = 1;
 
   // Regex primitives
-  private final static String AFT = "(A|a)(F|f)(T|t)";
+  private final static String AFT = "(((A|a|\u0410|\u0430)(F|f)(T|t|\u0422|\u0442)\\s+)|\\+)";
   private final static String ONE_OR_MORE_SPACES = "\\s+";
   private final static String ZERO_OR_MORE_SPACES = "\\s*";
-  private final static String AT = "(A|a)(T|t)";
+  private final static String AT = "((A|a|\u0410|\u0430)(T|t|\u0422|\u0442)|(D|d|\u0414|\u0434))";
   private final static String ONE_OR_TWO_DIGITS = "\\d{1,2}";
   private final static String ONE_TO_FOUR_DIGITS = "\\d{1,4}";
   private final static String FOUR_DIGITS = "\\d{4}";
@@ -37,7 +37,7 @@ final class CalendarRequestParser {
                                               ONE_OR_TWO_DIGITS;
 
   // Messages regexes
-  private final static String ATF_REGEX = AFT + ONE_OR_MORE_SPACES + ONE_TO_FOUR_DIGITS + ANY_STRING_AFTER_SPACE;
+  private final static String ATF_REGEX = AFT + ONE_TO_FOUR_DIGITS + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE = AT + ONE_OR_MORE_SPACES + DATE + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE_TIME_MIN = AT + ONE_OR_MORE_SPACES + DATE_TIME_MIN + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE_TIME_SEC = AT + ONE_OR_MORE_SPACES + DATE_TIME_SEC + ANY_STRING_AFTER_SPACE;
@@ -69,7 +69,7 @@ final class CalendarRequestParser {
   }
 
   private static ParseResult parseATF(final String str) {
-    final String dateAndMessage = str.split(AFT + ONE_OR_MORE_SPACES, 2)[1].trim() + " "; // Space is neccessary here
+    final String dateAndMessage = str.split(AFT, 2)[1].trim() + " "; // Space is neccessary here
     final String message = dateAndMessage.split(ONE_TO_FOUR_DIGITS,2)[1].trim();
     final String dateStr = dateAndMessage.substring(0, dateAndMessage.length() - message.length() - 1);
 
