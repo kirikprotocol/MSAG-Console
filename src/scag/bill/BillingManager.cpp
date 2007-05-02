@@ -289,6 +289,8 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     BillingCommandStatus i;
     const char *p;
 
+    bt->status = st->status;
+
     if(st->status == TRANSACTION_VALID)
     {
         SPckDeliverySmsResult opRes;
