@@ -78,7 +78,7 @@ for my $sme(sort(keys(%$smes)))
 print $f "apply routes";
 close $f;
 
-open($f,'>undo.con');
+open($f,'>'.$ARGV[1].'undo') || die "Failed to open undo file $ARGV[1]:$!";
 for(reverse(@undo))
 {
   print $f "$_\n";

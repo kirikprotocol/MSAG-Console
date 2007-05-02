@@ -270,7 +270,7 @@ sub process{
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
     $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-    outrow($out,$outfields);
+    outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
       $outfields->{RECORD_TYPE}=20;
@@ -280,9 +280,9 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      outrow($out,$outfields);
+      outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
       $outfields->{RECORD_TYPE}=30;
-      outrow($out,$outfields);
+      outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
     }else
     {
       $outfields->{RECORD_TYPE}=20;
@@ -300,7 +300,7 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      outrow($out,$outfields);
+      outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
     }
   }
 }
