@@ -21,7 +21,6 @@ using namespace smsc::core::threads;
 using namespace scag::exceptions;
 
 using namespace scag::pers::client;
-using namespace scag::pers;
 using scag::bill::BillOpenCallParams;
 using scag::bill::BillCloseCallParams;
 
@@ -184,6 +183,11 @@ bool LongCallManagerImpl::call(LongCallContext* context)
             context->initiator->continueExecution(context, false);
         }
     }
+    else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_INC_MOD)
+    {
+        if(!PersClient::Instance().call(context))
+            return false;
+    }
     else
     {
         MutexGuard mt(mtx);
@@ -200,50 +204,6 @@ bool LongCallManagerImpl::call(LongCallContext* context)
     }
     return true;
 }
-
-void LongCallTask::ExecutePersCall(LongCallContext* ctx)
-{
-    PersCallParams* persParams = (PersCallParams*)ctx->getParams();
-    PersClient& pc = PersClient::Instance();
-    smsc_log_debug(logger, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
-    try{
-        if(persParams->pt == PT_ABONENT)        
-            switch(ctx->callCommandId)
-            {
-                case PERS_GET: pc.GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
-                case PERS_SET: pc.SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-                case PERS_DEL: pc.DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str()); break;
-                case PERS_INC_MOD: persParams->result = pc.IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
-                case PERS_INC: pc.IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-            }
-        else
-            switch(ctx->callCommandId)
-            {
-                case PERS_GET: pc.GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
-                case PERS_SET: pc.SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-                case PERS_DEL: pc.DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str()); break;
-                case PERS_INC_MOD: persParams->result = pc.IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
-                case PERS_INC: pc.IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-            }
-        persParams->error = 0;
-        persParams->exception.assign("");
-    }
-    catch(PersClientException& exc)
-    {
-        persParams->error = exc.getType();
-        persParams->exception = exc.what();        
-    }
-    catch(Exception& exc)
-    {
-        persParams->error = 0;        
-        persParams->exception = exc.what();
-    }
-    catch(...)
-    {
-        persParams->error = 0;        
-        persParams->exception = "LongCallManager: Unknown exception";
-    }
-}
     
 int LongCallTask::Execute()
 {
@@ -255,8 +215,7 @@ int LongCallTask::Execute()
         
         if(isStopping || !ctx) break;
 
-        if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC_MOD)
-            ExecutePersCall(ctx);
+        // presently do nothing
             
         ctx->initiator->continueExecution(ctx, false);
     }

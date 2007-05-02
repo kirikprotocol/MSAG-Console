@@ -723,12 +723,15 @@ int BillingManagerImpl::Execute()
             {
                 prevCheck = time(NULL);
                 SendTransaction *st;
-                smsc_log_debug(logger, "Processing expired inman transactions");
                 MutexGuard mg(sendLock);
-                int key;
-                for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
-                    if(st->lcmCtx && st->startTime + m_Timeout < prevCheck)
-                        processAsyncResult(st);
+                if(SendTransactionHash.Count())
+                {
+                    smsc_log_debug(logger, "Processing expired inman transactions");
+                    int key;
+                    for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
+                        if(st->lcmCtx && st->startTime + m_Timeout < prevCheck)
+                            processAsyncResult(st);
+                }
             }
         }catch (SCAGException& e)
         {

@@ -7,12 +7,12 @@
 
 namespace scag { namespace pers {
 
+typedef scag::util::properties::Property REProperty;
+
 using namespace scag::stat;
 using namespace scag::pers::client;
 
-char buf[4]; // crash without this :)
-
-typedef scag::util::properties::Property REProperty;
+char buf; // crashs without this :)
 
 const char* PersAction::getStrCmd()
 {
@@ -370,4 +370,3 @@ bool PersAction::FinishXMLSubSection(const std::string& name)
 }
 
 }}
-

@@ -12,7 +12,6 @@ namespace scag { namespace pers {
 
 using namespace scag::re::actions;
 using namespace scag::re;
-using smsc::logger::Logger;
 
     class PersAction : public LongCallAction
     {
@@ -48,7 +47,4 @@ using smsc::logger::Logger;
 
 }}
 
-
 #endif
-
-
