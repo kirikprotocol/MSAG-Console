@@ -28,7 +28,7 @@
 #include "util/Base64.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
-const char* cssc_version="@(#)" FILEVER;
+static const char* cssc_version="@(#)" FILEVER;
 
 
 using namespace smsc::emailsme;
@@ -1299,8 +1299,8 @@ public:
       {
         case ProcessSmsCodes::OUTOFLIMIT:
         case ProcessSmsCodes::NOPROFILE:
-        case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;break;
         case ProcessSmsCodes::UNABLETOSEND:
+        case ProcessSmsCodes::INVALIDSMS:code=SmppStatusSet::ESME_RX_P_APPN;break;
         case ProcessSmsCodes::NETERROR:code=SmppStatusSet::ESME_RX_T_APPN;break;
         case ProcessSmsCodes::OK:code=SmppStatusSet::ESME_ROK;break;
       }
