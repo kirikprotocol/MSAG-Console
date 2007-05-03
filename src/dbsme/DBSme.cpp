@@ -284,10 +284,17 @@ public:
         int outLen = (out) ? strlen(out) : 0;
         __trace2__("Output Data '%s'", (out) ? out:"");
 
-        int outPos = -1;
+        /* Replaced by '\r' skip code (follows)
+	int outPos = -1;
         while (out && out[++outPos])
-            if (out[outPos] == '\r' || out[outPos] == '\n') out[outPos] = ' ';
-
+            if (out[outPos] == '\r' || out[outPos] == '\n') out[outPos] = ' ';*/
+	int readPos = -1; int outPos = -1;
+	while (out && out[++readPos]) {
+    	    if (out[readPos] == '\r') continue;
+	    out[++outPos] = out[readPos];
+	}
+	out[outPos+1] = '\0';
+    
         char* msgBuf = 0;
         if(hasHighBit(out,outLen) || uDBSmeDataCoding == DataCoding::UCS2)
         {
