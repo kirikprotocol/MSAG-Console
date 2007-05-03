@@ -4,7 +4,9 @@
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
+#include "scag/bill/BillingManager.h"
 #include "scag/sessions/Session.h"
+#include "scag/re/CommandBrige.h"
 #include <stack>
 
 namespace scag { namespace re { namespace actions 
@@ -13,6 +15,7 @@ namespace scag { namespace re { namespace actions
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
     using namespace scag::stat;
+    using namespace scag::bill;
     using namespace scag::sessions;
 
     enum FieldType
