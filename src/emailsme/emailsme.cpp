@@ -795,6 +795,7 @@ namespace cfg{
  int defaultDailyLimit;
  int annotationSize;
  string maildomain;
+ vector<string> validDomains;
  string mailstripper;
  OutputFormatter *msgFormat;
  Hash<OutputFormatter*> answerFormats;
@@ -851,9 +852,9 @@ string makeFromAddress(const char* fromaddress)
   return (string)fromaddress+"@"+cfg::maildomain;
 }
 
-string ExtractEmail(const string& value)
+string ExtractEmail(const string& value,int startPos=0)
 {
-  std::string::size_type pos=value.find('@');
+  std::string::size_type pos=value.find('@',startPos);
   if(pos==string::npos)return "";
   int start=pos,end=pos;
   while(start>0 && ismailchar(value[start-1]))start--;
@@ -1403,51 +1404,20 @@ std::string RxSubst(const std::string& src,const std::string& pat,SMatch* m,int 
   return result;
 }
 
-int ProcessMessage(const char *msg,int msglen)
+bool CheckDomain(const std::string eml)
 {
-  string line,name,value,from,to;
-  bool inheader=true;
-  int pos=0;
-  for(;;)
+  for(int i=0;i<cfg::validDomains.size();i++)
   {
-    if(!GetNextLine(msg,msglen,pos,line))break;
-    if(inheader)
+    if(eml.substr(eml.find('@')+1)==cfg::validDomains[i])
     {
-      if(line.length()==0)
-      {
-        inheader=false;
-        continue;
-      }
-      int pos2=line.find(':');
-      if(pos2==string::npos)continue;
-      name=line.substr(0,pos2);
-      toLower(name);
-      pos2++;
-      while(pos2<line.length() && line[pos2]==' ')pos2++;
-      value=line.substr(pos2);
-
-      if(name=="from")
-      {
-        from=ExtractEmail(value);
-        if(from.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
-        continue;
-      }
-      if(name=="to")
-      {
-        to=ExtractEmail(value);
-        if(to.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
-        continue;
-      }
-      continue;
+      return true;
     }
-    break;
   }
+  return false;
+}
 
-  if(from.length()==0 || to.length()==0)
-  {
-    return StatusCodes::STATUS_CODE_INVALIDMSG;
-  }
-
+int sendSms(std::string from,const std::string to,const char* msg,int msglen)
+{
   AbonentProfile p;
   bool noProfile=true;
 
@@ -1591,7 +1561,7 @@ int ProcessMessage(const char *msg,int msglen)
     }
   }
 
-  pos=0;
+  int pos=0;
   string subj;
   GetNextLine(newmsg.get(),len,pos,from);
   GetNextLine(newmsg.get(),len,pos,subj);
@@ -1695,6 +1665,81 @@ int ProcessMessage(const char *msg,int msglen)
   return rc;
 }
 
+int ProcessMessage(const char *msg,int msglen)
+{
+  string line,name,value,from,to;
+  std::vector<std::string> toarr;
+  bool inheader=true;
+  int pos=0;
+  for(;;)
+  {
+    if(!GetNextLine(msg,msglen,pos,line))break;
+    if(inheader)
+    {
+      if(line.length()==0)
+      {
+        inheader=false;
+        continue;
+      }
+      int pos2=line.find(':');
+      if(pos2==string::npos)continue;
+      name=line.substr(0,pos2);
+      toLower(name);
+      pos2++;
+      while(pos2<line.length() && line[pos2]==' ')pos2++;
+      value=line.substr(pos2);
+
+      if(name=="from")
+      {
+        from=ExtractEmail(value);
+        if(from.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
+        continue;
+      }
+      if(name=="to")
+      {
+        int emlpos=0;
+        do{
+          to=ExtractEmail(value,emlpos);
+          if(to.length()>0)
+          {
+            if(CheckDomain(to))
+            {
+              toarr.push_back(to);
+            }else
+            {
+              __warning2__("email '%s' doesn't pass domain check",to.c_str());
+            }
+          }
+          emlpos=value.find(',',emlpos+1);
+        }while(emlpos!=std::string::npos);
+
+        if(toarr.size()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
+        continue;
+      }
+      continue;
+    }
+    break;
+  }
+
+  if(from.length()==0 || toarr.size()==0)
+  {
+    return StatusCodes::STATUS_CODE_INVALIDMSG;
+  }
+
+  int rc=StatusCodes::STATUS_CODE_INVALIDMSG;
+
+  for(int i=0;i<toarr.size();i++)
+  {
+    int localrc=sendSms(from,toarr[i],msg,msglen);
+    __trace2__("rc=%d from eml=%s",localrc,toarr[i].c_str());
+    if(localrc==StatusCodes::STATUS_CODE_OK)
+    {
+      rc=StatusCodes::STATUS_CODE_OK;
+    }
+  }
+  return rc;
+}
+
 struct XBuffer{
   char* buffer;
   int size;
@@ -1727,7 +1772,6 @@ bool reconnectFlag=false;
 
 extern "C"  void disp(int sig)
 {
-  __trace__("disp");
   reconnectFlag=true;
 }
 
@@ -1874,6 +1918,26 @@ int main(int argc,char* argv[])
   cfg::protocolId=cfgman.getInt("smpp.protocolId");
 
   cfg::maildomain=cfgman.getString("mail.domain");
+
+  {
+    std::string validToDomains=cfgman.getString("mail.validToDomains");
+    int pos=0;
+    int comma=0;
+    do{
+      pos=comma;
+      while(pos<validToDomains.length() && isspace(validToDomains[pos]))
+      {
+        pos++;
+      }
+      comma=validToDomains.find(',',comma);
+      cfg::validDomains.push_back(trimSpaces(validToDomains.substr(pos,comma==std::string::npos?std::string::npos:comma-pos).c_str()));
+      if(comma!=std::string::npos)
+      {
+        comma++;
+      }
+    }while(comma!=std::string::npos);
+  }
+
 
   try{
     const char* re=cfgman.getString("mail.userNameTransformRegexp");
