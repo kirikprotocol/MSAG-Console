@@ -33,6 +33,7 @@ namespace scag { namespace sessions
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
     using namespace re;
+    using namespace scag::config;
     using scag::config::SessionManagerConfig;
 
     using smsc::logger::Logger;

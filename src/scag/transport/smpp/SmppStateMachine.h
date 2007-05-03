@@ -5,6 +5,7 @@
 #include "SmppCommandQueue.h"
 #include "SmppRouter.h"
 #include "SmppCommand.h"
+#include "scag/sessions/Session.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
 
@@ -13,6 +14,7 @@ namespace transport{
 namespace smpp{
 
 namespace thr=smsc::core::threads;
+using namespace scag::sessions;
 
 class StateMachine:public thr::ThreadedTask{
 public:
@@ -53,7 +55,7 @@ protected:
 
   void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
   
-  bool makeLongCall(SmppCommand& cx);
+  bool makeLongCall(SmppCommand& cx, SessionPtr session);
   
   struct ResponseRegistry;
   static ResponseRegistry reg;

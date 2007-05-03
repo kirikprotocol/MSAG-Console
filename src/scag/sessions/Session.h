@@ -7,25 +7,23 @@
 #include <list>
 #include <core/synchronization/EventMonitor.hpp>
 #include <logger/Logger.h>
-#include <scag/bill/BillingManager.h>
 #include <core/buffers/XHash.hpp>
 #include <core/buffers/IntHash.hpp>
 
 #include <scag/util/sms/HashUtil.h>
-#include <scag/transport/SCAGCommand.h>
 
 #include <sms/sms_serializer.h>
 #include <scag/re/RuleStatus.h>
-#include <scag/re/CommandBrige.h>
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "core/buffers/RefPtr.hpp"
 
+namespace scag { namespace transport {
+    class SCAGCommand;
+}}
 
-namespace scag { namespace sessions
-{
+namespace scag { namespace sessions {
     using scag::config::SessionManagerConfig;
     using namespace smsc::sms::BufOps;
-    using scag::re::CSmppDiscriptor;
 
     using smsc::logger::Logger;
     using namespace scag::util::properties;
@@ -35,7 +33,6 @@ namespace scag { namespace sessions
     using namespace scag::transport;
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
-    using namespace scag::bill;
     using scag::re::RuleStatus;
 
     enum ProtocolForEvent

@@ -5,6 +5,8 @@
 
 #include "logger/Logger.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
+#include "scag/sessions/Session.h"
+//#include "scag/bill/BillingManager.h"
 #include <stack>
 
 namespace scag { namespace lcm {
@@ -50,6 +52,7 @@ public:
     void *stateMachineContext;
     LongCallInitiator *initiator;
     LongCallContext *next;
+    scag::sessions::SessionPtr session;
     bool continueExec;
 
     std::stack<ActionStackValue> ActionStack;
@@ -100,4 +103,3 @@ protected:
 }}
 
 #endif
-

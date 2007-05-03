@@ -1,4 +1,6 @@
 #include "Session.h"
+#include "scag/bill/BillingManager.h"
+#include "scag/re/CommandBrige.h"
 #include "scag/exc/SCAGExceptions.h"
 #include <time.h>
 
@@ -69,7 +71,7 @@ void PendingOperation::rollbackAll(bool timeout)
     smsc_log_warn(logger, "PendingOperation: Rollback all (billId=%d)", billID);
     try
     {
-        BillingManager::Instance().Rollback(billID, timeout);
+        scag::bill::BillingManager::Instance().Rollback(billID, timeout);
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"PendingOperation: Cannot rollback. Details: %s", e.what());
@@ -166,7 +168,7 @@ void Operation::rollbackAll()
     smsc_log_warn(logger,"Operation: Rollback all (ab=%s)", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
     try
     {
-        BillingManager::Instance().Rollback(billId);
+        scag::bill::BillingManager::Instance().Rollback(billId);
     } catch (SCAGException& e)
     {
         smsc_log_warn(logger,"Operation: Cannot rollback. Details: %s", e.what());
@@ -575,7 +577,7 @@ void Session::closeCurrentOperation()
 {
     if (!m_pCurrentOperation) return;
 
-    smsc_log_debug(logger,"Session: close current operation (id=%lld, type=%d, ab=%s)", currentOperationId, m_pCurrentOperation->type, m_SessionKey.abonentAddr.toString().c_str());
+    smsc_log_debug(logger,"Session: close current operation (id=%lld, type=%d, ab=%s, billId=%d)", currentOperationId, m_pCurrentOperation->type, m_SessionKey.abonentAddr.toString().c_str(), m_pCurrentOperation->billId);
 
     /*delete m_pCurrentOperation;
     m_pCurrentOperation = 0;
@@ -647,7 +649,7 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
             if (it->billID > 0) 
                 operation->attachBill(it->billID);
 
-            smsc_log_debug(logger,"** Session: pending closed (type=%d, ab=%s)", it->type, m_SessionKey.abonentAddr.toString().c_str());
+            smsc_log_debug(logger,"** Session: pending closed (type=%d, ab=%s), billId=%d", it->type, m_SessionKey.abonentAddr.toString().c_str(), it->billID);
 
             PendingOperationList.erase(it);
             bChanged = true;
