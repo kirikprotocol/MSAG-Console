@@ -37,6 +37,7 @@
     <param name="format" type="string">#template=emailsmenotify#{from}="$$string import=from$$" {to}="$$string import=to$$" {subj}="$$string import=subj$$" {body}="$$string import=body$$"</param>
     <param name="userNameTransformRegexp" type="string">^(?:\+7|8|(?=912|919))(.{10})</param>
     <param name="userNameTransformResult" type="string">7$1</param>
+    <param name="validToDomains" type="string">phoenix,phoenix.office.aurorisoft.com</param>
   </section>
 
   <section name="smtp">
