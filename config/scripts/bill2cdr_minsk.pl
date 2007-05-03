@@ -41,7 +41,7 @@ my $eoln="\x0d\x0a";
 {value=>'0',width=>10},                          #21 256
 #{field=>'SERVICE_ID',width=>10},
 #{field=>'MSG_ID',width=>10},
-{value=>'0',width=>1},                           #22 266 
+{value=>'0',width=>1},                           #22 266
 {value=>'0',width=>1},                           #23 267
 {value=>'0',width=>1},                           #24 268
 {value=>'0',width=>1},                           #25 269
@@ -73,6 +73,16 @@ for($indir,$outdir,$tmpdir,$arcdir)
 {
   $_.='/' unless $_=~m!/$!;
 }
+
+{
+my @df=`df -k $arcdir`;
+my @dfline=split(/\s+/,$df[1]);
+if($dfline[3]<100*1024)
+{
+  print STDERR "Too few disk space at $arcdir (@{[$dfline[3]]}). Aborting.\n";
+}
+}
+
 opendir(D,$indir) or die "failed to read $indir";
 my @dir=readdir(D);
 closedir(D);
