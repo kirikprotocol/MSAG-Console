@@ -1736,6 +1736,10 @@ int ProcessMessage(const char *msg,int msglen)
     {
       rc=StatusCodes::STATUS_CODE_OK;
     }
+    if(rc==StatusCodes::STATUS_CODE_INVALIDMSG)
+    {
+      rc=localrc;
+    }
   }
   return rc;
 }
