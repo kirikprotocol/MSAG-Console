@@ -293,7 +293,7 @@ public:
     	    if (out[readPos] == '\r') continue;
 	    out[++outPos] = out[readPos];
 	}
-	out[outPos+1] = '\0';
+	if (out) out[outPos+1] = '\0';
     
         char* msgBuf = 0;
         if(hasHighBit(out,outLen) || uDBSmeDataCoding == DataCoding::UCS2)
