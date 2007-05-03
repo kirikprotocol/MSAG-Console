@@ -15,7 +15,7 @@
 #include "ReceiptManager.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/sms/HashUtil.h"
-//#include "scag/re/CommandBrige.h"
+#include "scag/transport/smpp/SmppCommand.h"
 
 namespace scag { namespace sessions 
 {
