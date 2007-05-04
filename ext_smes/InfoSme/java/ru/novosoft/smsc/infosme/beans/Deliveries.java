@@ -14,10 +14,7 @@ import ru.novosoft.util.jsp.MultipartDataSource;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -231,13 +228,13 @@ public class Deliveries extends InfoSmeBean
             int ch = -1; StringBuffer sb = new StringBuffer(30);
             while (!isStopping)
             {
-                if ((ch = this.bis.read()) == -1) return null;
+                if ((ch = this.bis.read()) == -1) break;
                 synchronized(countersSync) { filePos++; }
                 if (ch == ESC_CR) continue;
                 else if (ch == ESC_LF) break;
                 else sb.append((char)ch);
             }
-            return sb.toString().trim();
+            return (sb.length() == 0) ? null : sb.toString().trim();
         }
 
         private void rollback() {

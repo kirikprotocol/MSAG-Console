@@ -47,13 +47,20 @@ final class CalendarRequestProcessor extends ServiceProcessor {
 
       final CalendarRequestParser.ParseResult parseResult = parsedMessage.getParseResult();
 
-      final Date sendDate = (parseResult.getType() == CalendarRequestParser.ATF_REQUEST) ? parseResult.getDate() :
+      final Date sendDate = (parseResult.getType() == CalendarRequestParser.AFT_REQUEST) ? parseResult.getDate() :
         changeDateAccordingTimezone(message.getSourceAddress(), parseResult.getDate());
 
       // Check send date
-      if (sendDate.before(new Date())) {
-        sendResponse(message, Data.ESME_RX_P_APPN);
-        sendMessage(CalendarService.Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.CALENDAR_SEND_DATE_IS_IN_THE_PAST);
+      String errorText = null;
+      if (sendDate == null)
+        errorText = CalendarService.Properties.CALENDAR_SEND_DATE_IS_WRONG;
+      else if (sendDate.before(new Date()))
+        errorText = CalendarService.Properties.CALENDAR_SEND_DATE_IS_IN_THE_PAST;
+
+      if (errorText != null) {
+        sendResponse(message, Data.ESME_ROK);
+        sendMessage(CalendarService.Properties.SERVICE_ADDRESS, message.getSourceAddress(), errorText);
+        sendMessage(message.getSourceAddress(), message.getDestinationAddress(), parsedMessage.getParseResult().getMessage());
         return;
       }
 
@@ -66,6 +73,9 @@ final class CalendarRequestProcessor extends ServiceProcessor {
   }
 
   private Date changeDateAccordingTimezone(final String abonent, final Date date) {
+    if (date == null)
+      return null;
+    
     log.info("Change time according abonent's time zone:");
     log.info("  Abonent send date = " + date);
     final String timezone = Timezones.getTimezoneByAbonent(abonent);

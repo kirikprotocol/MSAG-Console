@@ -50,11 +50,11 @@ public final class CalendarService extends InternalService {
       log.info("Unknown message format");
       return false;
 
-    } catch (CalendarRequestParser.WrongSendDateException e) {
-      log.info("Send date in message is wrong. Notify abonent");
-      sendResponse(message, Data.ESME_RX_P_APPN);
-      sendMessage(Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.CALENDAR_SEND_DATE_IS_WRONG);
-      return true;
+//    } catch (CalendarRequestParser.WrongSendDateException e) {
+//      log.info("Send date in message is wrong. Notify abonent");
+//      sendResponse(message, Data.ESME_RX_P_APPN);
+//      sendMessage(Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.CALENDAR_SEND_DATE_IS_WRONG);
+//      return true;
 
     } catch (Throwable e) {
       log.error("Error!!!", e);

@@ -4,6 +4,8 @@ import ru.aurorisoft.smpp.Message;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * User: artem
@@ -54,16 +56,25 @@ final class SecretRequestParser {
     throw new WrongMessageFormatException();
   }
 
+  private static String removePrefix(final String message, final String prefixPattern) {
+    final Matcher matcher = Pattern.compile(prefixPattern).matcher(message);
+    matcher.find();
+    return message.substring(matcher.end());
+  }
+
   private static String getMessage(final String message) {
-    return message.split(SEC, 2)[1].trim();
+    return removePrefix(message, SEC);
+//    return message.split(SEC, 2)[1].trim();
   }
 
   private static String getPasswordInSecret(final String message) {
-    return message.split(SECRET_ON, 2)[1].trim();
+    return removePrefix(message, SECRET_ON);
+//    return message.split(SECRET_ON, 2)[1].trim();
   }
 
   private static String getPasswordInGet(final String message) {
-    return message.split(SMS, 2)[1].trim();
+    return removePrefix(message, SMS);
+//    return message.split(SMS, 2)[1].trim();
   }
 
   final static class ParseResult {
@@ -76,7 +87,7 @@ final class SecretRequestParser {
 
     public ParseResult(final ParseResultType type, final String message) {
       this.type = type;
-      this.message = message;
+      this.message = message.trim();
     }
 
     public ParseResultType getType() {
