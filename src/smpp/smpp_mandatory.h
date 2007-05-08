@@ -484,7 +484,7 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
     {
       auto_ptr<PduDataSmResp> pdu(new PduDataSmResp);
       fetchSmppHeader(stream,pdu->header);
-      if(pdu->header.get_commandLength()!=16 && pdu->header.get_commandStatus()==0)
+      if(pdu->header.get_commandLength()!=16)
       {
         fetchCOctetStr(stream,pdu->messageId,65);
         fetchSmppOptional(stream,&pdu->optional);

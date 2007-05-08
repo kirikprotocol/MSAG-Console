@@ -134,7 +134,7 @@ public:
 
   const char* get_messageId()const
   {
-    return messageId;
+    return messageId?messageId:"";
   }
 
   uint32_t get_status()
