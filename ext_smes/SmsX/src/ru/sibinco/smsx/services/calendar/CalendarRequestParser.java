@@ -16,7 +16,7 @@ final class CalendarRequestParser {
   public static final int AFT_REQUEST = 1;
 
   // Regex primitives
-  private final static String AFT = "(((A|a|\u0410|\u0430)(F|f)(T|t|\u0422|\u0442)\\s+)|\\+)";
+  private final static String AFT = "(((A|a|\u0410|\u0430)(F|f)(T|t|\u0422|\u0442)\\s+)|(M|m|\u041C|\u043C)\\s+)";
   private final static String ONE_OR_MORE_SPACES = "\\s+";
   private final static String ZERO_OR_MORE_SPACES = "\\s*";
   private final static String AT = "((A|a|\u0410|\u0430)(T|t|\u0422|\u0442)|(D|d|\u0414|\u0434))";
@@ -133,7 +133,10 @@ final class CalendarRequestParser {
       throw new WrongSendDateException();
 
     final String[] strings1 = strings[2].trim().split(ONE_OR_MORE_SPACES);
-    final int year = Integer.parseInt(strings1[0]);
+    final String Y = "2000";
+    final String yearStr = strings1[0].length()>=Y.length() ? strings1[0] : Y.substring(0, Y.length() - strings1[0].length()) + strings1[0];
+    final int year = Integer.parseInt(yearStr);
+
 
     if (year == 0 || year > CalendarService.Properties.CALENDAR_SEND_DATE_MAX_YEAR )
       throw new WrongSendDateException();
@@ -181,10 +184,10 @@ final class CalendarRequestParser {
   public static void main(String[] args) {
 
 //    msg.setMessageString("ATF 1 rewt...");
-    final String msg = "AFT good1";
+    final String msg = "AT 1.1.18 good1";
     final ParseResult res;
     try {
-      CalendarService.Properties.CALENDAR_SEND_DATE_MAX_YEAR = 2007;
+      CalendarService.Properties.CALENDAR_SEND_DATE_MAX_YEAR = 2030;
       res = parseRequest(msg);
       System.out.println(res.getType());
       System.out.println(res.getDate() + " ||| " + res.getMessage());

@@ -52,8 +52,8 @@
 
   <redirect address="0020" format="(G|Г|г)\s+.*"                            prefix="(G|Г|г) "                           new_prefix="ADD "/>
   <redirect address="0020" format="-(G|Г|г)\s+.*"                           prefix="-(G|Г|г) "                          new_prefix="DELL "/>
-  <redirect address="0020" format="\+.*\s+.*"                               prefix="\+"                                 new_prefix="ADDM "/>
-  <redirect address="0020" format="-.*\s+.*"                                prefix="-"                                  new_prefix="DELLM "/>
+  <redirect address="0020" format="\+.*"                                    prefix="\+"                                 new_prefix="ADDM "/>
+  <redirect address="0020" format="-"                                       prefix="-"                                  new_prefix="DELLM "/>
   <redirect address="0020" format="(S|О|O|о)\s+.*"                          prefix="(S|О|O|о)"                          new_prefix="SEND"/>
   <redirect address="0020" format="(K|К|к)(T|Т|т)(O|О|о)\s+.*"              prefix="(K|К|к)(T|Т|т)(O|О|о)"              new_prefix="LIST"/>
   <redirect address="0020" format="((Y|У|у)(E|Е|е)S|(Д|д)(A|а|А))\s+.*"     prefix="((Y|У|у)(E|Е|е)S|(Д|д)(A|а|А))"     new_prefix="ADDS"/>

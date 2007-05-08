@@ -87,7 +87,7 @@ final class SecretRequestParser {
 
     public ParseResult(final ParseResultType type, final String message) {
       this.type = type;
-      this.message = message.trim();
+      this.message = (message == null) ? null : message.trim();
     }
 
     public ParseResultType getType() {
