@@ -262,11 +262,11 @@ int DistrListProcess::Execute()
           if(arg.length()>0)
           {
             Array<Address> m;
+            tmpl="dl.mlistmerr";
             try{
               m=admin->members(fullarg,sms.getOriginatingAddress());
             }catch(IllegalSubmitterException& e)
             {
-              tmpl="dl.mlistmerr";
               reason="not_allowed_to_list_members";
             }
             if(m.Count()==0)
@@ -306,9 +306,9 @@ int DistrListProcess::Execute()
         }else
         if(cmd=="addm")
         {
+          tmpl="dl.madderr";
           Address member(arg2.c_str());
           try{
-            tmpl="dl.madderr";
             admin->addMember(fullarg,member);
             tmpl="dl.maddok";
           }catch(MemberAlreadyExistsException& e)
@@ -322,9 +322,9 @@ int DistrListProcess::Execute()
         }else
         if(cmd=="delm")
         {
+          tmpl="dl.mdelerr";
           Address member(arg2.c_str());
           try{
-            tmpl="dl.mdelerr";
             admin->deleteMember(fullarg,member);
             tmpl="dl.mdelok";
           }catch(MemberNotExistsException& e)
@@ -334,9 +334,9 @@ int DistrListProcess::Execute()
         }else
         if(cmd=="adds")
         {
+          tmpl="dl.sadderr";
           Address submitter(arg2.c_str());
           try{
-            tmpl="dl.sadderr";
             admin->grantPosting(fullarg,addr,submitter);
             tmpl="dl.saddok";
           }catch(ListNotExistsException& e)
@@ -352,9 +352,9 @@ int DistrListProcess::Execute()
         }else
         if(cmd=="dels")
         {
+          tmpl="dl.sdelerr";
           Address submitter(arg2.c_str());
           try{
-            tmpl="dl.sdelerr";
             admin->revokePosting(fullarg,addr,submitter);
             tmpl="dl.sdelok";
           }catch(ListNotExistsException& e)
