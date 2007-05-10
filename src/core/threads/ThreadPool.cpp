@@ -103,7 +103,7 @@ void ThreadPool::stopNotify()
   __trace__("stopping notify tasks");
   for(int i=0;i<usedThreads.Count();i++)
     usedThreads[i]->stopTask();
-  Unlock();  
+  Unlock();
 }
 
 void ThreadPool::shutdown()
@@ -116,6 +116,18 @@ void ThreadPool::shutdown()
     return;
   }
   __trace__("stopping tasks");
+  for(int i=0;i<pendingTasks.Count();i++)
+  {
+    if (pendingTasks[i]->delOnCompletion())
+    {
+      delete pendingTasks[i];
+    }else
+    {
+      pendingTasks[i]->onRelease();
+    }
+  }
+  pendingTasks.Empty();
+
   for(int i=0;i<usedThreads.Count();i++)
   {
     usedThreads[i]->stopTask();

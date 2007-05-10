@@ -75,6 +75,12 @@ public:
   void stopNotify();
   void shutdown();
 
+  int getPendingTasksCount()
+  {
+    MutexGuard mg(lock);
+    return pendingTasks.Count();
+  }
+
   MemoryHeap* getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum);
 
   void Wait()
