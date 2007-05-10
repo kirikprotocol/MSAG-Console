@@ -94,6 +94,7 @@ protected:
     AbonentContractInfo cntrInfo;
     std::string     nmPolicy;
     uint32_t        errCode;
+    std::string     errMsg;
 
 public:
     AbntContractResult()
@@ -104,17 +105,22 @@ public:
     //Setters:
     void setContractInfo(const AbonentContractInfo & cntr_info) { cntrInfo = cntr_info; }
     void setPolicy(const std::string nm_policy) { nmPolicy = nm_policy; }
-    void setError(uint32_t err_code)
+    void setError(uint32_t err_code, const char * err_msg = NULL)
     { 
         cntrInfo.ab_type = AbonentContractInfo::abtUnknown;
         cntrInfo.gsmSCF.scfAddress.clear();
         errCode = err_code;
+        if (err_msg)
+            errMsg = err_msg;
+        else
+            errMsg.clear();
     }
 
     //Getters:
-    bool  cacheUsed(void) const { return nmPolicy.empty(); }
-    const char * policyUsed(void) const { return nmPolicy.empty() ? NULL: nmPolicy.c_str(); }
-    uint32_t    errorCode(void) const { return errCode; }
+    inline bool  cacheUsed(void) const { return nmPolicy.empty(); }
+    inline const char * policyUsed(void) const { return nmPolicy.empty() ? NULL: nmPolicy.c_str(); }
+    inline uint32_t    errorCode(void) const { return errCode; }
+    inline const char * errorMsg(void) const { return errMsg.c_str(); }
 
     const AbonentContractInfo::ContractType contractType(void) const { return cntrInfo.ab_type; }
     const AbonentContractInfo & contractInfo(void) const { return cntrInfo; }
@@ -154,6 +160,7 @@ protected:
                 cntrInfo.setImsi(stmp.c_str());
             }
         }
+        in >> errMsg;
     }
     void save(ObjectBuffer& out) const
     {
@@ -170,6 +177,7 @@ protected:
             out << si;
         } else
             out << (uint8_t)0x00;
+        out << errMsg;
     }
 };
 

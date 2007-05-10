@@ -8,10 +8,6 @@
 #include "inman/storage/cdrutil.hpp"
 using smsc::inman::cdr::CDRRecord;
 
-#include "inman/inerrcodes.hpp"
-using smsc::inman::InmanErrorCode;
-using smsc::inman::InmanErrorType;
-
 namespace smsc  {
 namespace inman {
 namespace interaction {
@@ -159,19 +155,27 @@ private:
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
-class ChargeSmsResult : public INPBillingCmd, public InmanErrorCode {
+class ChargeSmsResult : public INPBillingCmd {
 public:
     typedef enum { CHARGING_POSSIBLE = 0, CHARGING_NOT_POSSIBLE } ChargeSmsResult_t;
 
     ChargeSmsResult();                //positive result, no error
-    ChargeSmsResult(uint32_t errCode, ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE);
-    ChargeSmsResult(InmanErrorType errType, uint16_t errCode,
-                    ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE);
+    ChargeSmsResult(ChargeSmsResult_t res, uint32_t err_code = 0,
+                    const char * err_msg = NULL);
     
     virtual ~ChargeSmsResult() { }
 
-    ChargeSmsResult_t GetValue() const { return value; }
-    void    SetValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
+    inline ChargeSmsResult_t GetValue(void) const { return value; }
+    inline uint32_t          getError(void) const { return errCode; }
+    inline const char *      getMsg(void)   const { return errMsg.c_str(); }
+
+    inline void   setValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
+    void   setError(uint32_t err_code, const char * err_msg = NULL)
+    {
+        errCode = err_code;
+        if (err_msg)
+            errMsg = err_msg;
+    }
 
 protected:
     virtual void load(ObjectBuffer& in) throw(SerializerException);
@@ -179,6 +183,8 @@ protected:
 
 private:
     ChargeSmsResult_t   value;
+    uint32_t            errCode;
+    std::string         errMsg;
 };
 
 class DeliverySmsResult : public INPBillingCmd {

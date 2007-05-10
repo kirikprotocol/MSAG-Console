@@ -136,36 +136,34 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
 //-----------------------------------------------
 ChargeSmsResult::ChargeSmsResult()
     : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
-    , InmanErrorCode(0), value(CHARGING_POSSIBLE)
+    , value(CHARGING_POSSIBLE), errCode(0)
 {
 }
 
-ChargeSmsResult::ChargeSmsResult(uint32_t errCode,
-                                 ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/)
+ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/,
+                                uint32_t err_code/* = 0*/, const char * err_msg/* = NULL*/)
     : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
-    , InmanErrorCode(errCode), value(res)
+    , value(res), errCode(err_code)
 {
+    if (err_msg)
+        errMsg = err_msg;
 }
 
-ChargeSmsResult::ChargeSmsResult(InmanErrorType errType, uint16_t errCode,
-                                 ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/)
-    : INPBillingCmd(INPCSBilling::CHARGE_SMS_RESULT_TAG)
-    , InmanErrorCode(errType, errCode), value(res)
-{
-}
 
 void ChargeSmsResult::load(ObjectBuffer& in) throw(SerializerException)
 {
     unsigned short v;
     in >> v;
     value = static_cast<ChargeSmsResult_t>(v);
-    in >> _errcode;
+    in >> errCode;
+    in >> errMsg;
 }
 
 void ChargeSmsResult::save(ObjectBuffer& out) const
 {
     out << (unsigned short)value;
-    out << _errcode;
+    out << errCode;
+    out << errMsg;
 }
 
 //-----------------------------------------------
