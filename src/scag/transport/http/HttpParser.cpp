@@ -42,11 +42,11 @@ StatusCode HttpParser::parse(char* buf, unsigned int& len, HttpContext& cx)
   switch (cx.action) {
     case READ_REQUEST:
       if (cx.command == NULL)
-        cx.command = new HttpRequest(cx.getTransactionContext());
+        cx.command = new HttpRequest(&cx, cx.getTransactionContext());
       break;
     case READ_RESPONSE:
       if (cx.command == NULL)
-        cx.command = new HttpResponse(cx.getTransactionContext());
+        cx.command = new HttpResponse(&cx, cx.getTransactionContext());
       break;
     default:
       return ERROR;

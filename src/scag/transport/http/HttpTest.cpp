@@ -293,8 +293,6 @@ int configure()
 
 int main() 
 {
-
-    HttpManager mg;
     MyHttpProcessor p;
     int k;
     sigset_t oset;
@@ -323,11 +321,12 @@ int main()
 //#endif    
 
     try {
-    mg.init( p, HttpManCfg );
+    scag::transport::http::HttpManager::Init(p, HttpManCfg);
     }
     catch(Exception x) {
     smsc_log_error( logger,  "Cannot init the HTTP transport: %s", x.what());    
     }
+    HttpManager& mg = scag::transport::http::HttpManager::Instance();
 
     k = 0;
 #if 1

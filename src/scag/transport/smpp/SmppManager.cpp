@@ -48,7 +48,10 @@ public:
   virtual bool getCommand(SmppCommand& cmd);
 
   virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
+
+  //manager
   void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id);
+  virtual void pushCommand(SmppCommand& cmd);
 
   void configChanged();
 
@@ -745,10 +748,10 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     SMS sms;
     if (msgId && msgId[0]) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
     else {
-	smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s", 
-		      from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
-	//abort(); // TODO: Remove it! For testing purposes only.
-	return; // Do not send receipt at all (msgId missed)
+    smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s", 
+              from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
+    //abort(); // TODO: Remove it! For testing purposes only.
+    return; // Do not send receipt at all (msgId missed)
     }
     sms.setOriginatingAddress(from);
     sms.setDestinationAddress(to);
@@ -765,7 +768,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     }
 
     smsc_log_debug(log, "MSAG Receipt: Sent from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s", 
-		   from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
+           from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
     MutexGuard mg(queueMon);
     cmd.getLongCallContext().initiator = this;  
     queue.Push(cmd);
@@ -810,6 +813,13 @@ void SmppManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)
         queueMon.notify();
     }
     delete cx;
+}
+
+void SmppManagerImpl::pushCommand(SmppCommand& cmd)
+{
+    MutexGuard mg(queueMon);
+    queue.Push(cmd);
+    queueMon.notify();
 }
 
 }//smpp

@@ -51,13 +51,13 @@ void IOTask::killSocket(Socket *s) {
     else {
         if (flags & STAT_RESP) {
             cx->action = PROCESS_STATUS_RESPONSE;
-            manager.scags.process(cx);  
+            manager.process(cx);  
         }    
         if (flags & FAKE_RESP) {
             cx->action = PROCESS_RESPONSE;
             if(cx->command == NULL)
-                cx->command = new HttpResponse(cx->getTransactionContext());                
-            manager.scags.process(cx);  
+                cx->command = new HttpResponse(cx, cx->getTransactionContext());                
+            manager.process(cx);  
         }
     }
 }
@@ -208,7 +208,7 @@ int HttpReaderTask::Execute()
                             cx->action = PROCESS_REQUEST;
                         }
                         cx->result = 0;
-                        manager.scags.process(cx);
+                        manager.process(cx);
                         break;
                     case ERROR:
                         smsc_log_error(logger, "%p: %p, parse error", this, cx);
@@ -398,7 +398,7 @@ int HttpWriterTask::Execute()
                         cx->command = NULL;
                         cx->action = READ_RESPONSE;
                         cx->result = 0;
-                        manager.readers.process(cx);
+                        manager.readerProcess(cx);
                     }
                     else {
                         smsc_log_info(logger, "%p: %p, response sent", this, cx);
@@ -409,7 +409,7 @@ int HttpWriterTask::Execute()
                         cx->user = NULL;
                         cx->action = PROCESS_STATUS_RESPONSE;
                         cx->result = 0;
-                        manager.scags.process(cx);
+                        manager.process(cx);
                     }
                 }
             }
@@ -458,7 +458,7 @@ void HttpWriterTask::registerContext(HttpContext* cx)
     addSocket(s, cx->action != SEND_REQUEST);
 }
 
-IOTask::IOTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
+IOTask::IOTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout) :
     manager(m), iomanager(iom), connectionTimeout(timeout)
 {
 }
@@ -492,13 +492,13 @@ void IOTask::stop() {
     }
 }
 
-HttpWriterTask::HttpWriterTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
+HttpWriterTask::HttpWriterTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout) :
         IOTask(m, iom, timeout)
 {
     logger = Logger::getInstance("scag.http.writer");
 }
 
-HttpReaderTask::HttpReaderTask(HttpManager& m, IOTaskManager& iom, const int timeout) :
+HttpReaderTask::HttpReaderTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout) :
         IOTask(m, iom, timeout)
 {
     logger = Logger::getInstance("scag.http.reader");

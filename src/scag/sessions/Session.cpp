@@ -563,11 +563,15 @@ void Session::expirePendingOperation()
     if (PendingOperationList.size() > 0) 
     {
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
-        if (it->billID > 0) it->rollbackAll(true);
+        time_t now = time(NULL);
+        while(it != PendingOperationList.end() && it->validityTime < now)
+        {
+            if (it->billID > 0) it->rollbackAll(true);
 
-        smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d, ab=%s)",it->billID, it->type, m_SessionKey.abonentAddr.toString().c_str());
-
-        PendingOperationList.pop_front();
+            smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d, ab=%s)",it->billID, it->type, m_SessionKey.abonentAddr.toString().c_str());
+            it++;
+        }
+        PendingOperationList.erase(PendingOperationList.begin(), it);
         bChanged = true;
     }
 }
@@ -706,10 +710,8 @@ Operation * Session::GetCurrentOperation() const
 
 time_t Session::getWakeUpTime()
 {
-    if (PendingOperationList.empty()) return 0;
-
-    time_t time = (PendingOperationList.begin())->validityTime;
-    return time;
+    if (PendingOperationList.empty()) return time(NULL);
+    return (PendingOperationList.begin())->validityTime;
 }
 
 uint64_t Session::getCurrentOperationId()

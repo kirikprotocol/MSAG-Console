@@ -3,23 +3,56 @@
 #include "HttpContext.h"
 #include "IOTasks.h"
 #include "ScagTask.h"
+#include <scag/util/singleton/Singleton.h>
 
 namespace scag { namespace transport { namespace http
 {
 
-HttpManager::HttpManager() : scags(*this),
+using namespace scag::util::singleton;
+
+bool HttpManager::inited = false;
+Mutex HttpManager::initLock;
+
+inline unsigned GetLongevity(HttpManager*) { return 5; }
+typedef SingletonHolder<HttpManagerImpl> SingleHM;
+
+HttpManager& HttpManager::Instance()
+{
+    if (!inited) 
+    {
+        MutexGuard guard(initLock);
+        if (!inited) 
+            throw std::runtime_error("HttpManager not inited!");
+    }
+    return SingleHM::Instance();
+}
+
+void HttpManager::Init(HttpProcessor& p, const HttpManagerConfig& conf)
+{
+    if (!inited)
+    {
+        MutexGuard guard(initLock);
+        if(!inited) {
+            HttpManagerImpl& m = SingleHM::Instance();
+            m.init(p, conf);
+            inited = true;
+        }
+    }
+}
+
+HttpManagerImpl::HttpManagerImpl() : scags(*this),
     readers(*this), writers(*this), acceptor(*this), ConfigListener(HTTPMAN_CFG)
 {
     logger = Logger::getInstance("scag.http.manager");
 }
 
-void HttpManager::configChanged()
+void HttpManagerImpl::configChanged()
 {
     shutdown();
     init(HttpProcessor::Instance(), ConfigManager::Instance().getHttpManConfig());
 }
 
-void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& conf)
+void HttpManagerImpl::init(HttpProcessor& p, const HttpManagerConfig& conf)
 {
     this->cfg = conf;
 
@@ -30,7 +63,7 @@ void HttpManager::init(HttpProcessor& p, const HttpManagerConfig& conf)
     smsc_log_info(logger, "Http manager inited host=%s:%d", cfg.host.c_str(), cfg.port);
 }
 
-void HttpManager::shutdown()
+void HttpManagerImpl::shutdown()
 {
     acceptor.shutdown();
 
@@ -53,7 +86,7 @@ void HttpManager::shutdown()
     smsc_log_info(logger, "HttpManager shutdown");
 }
 
-ScagTaskManager::ScagTaskManager(HttpManager& m) : manager(m)
+ScagTaskManager::ScagTaskManager(HttpManagerImpl& m) : manager(m)
 {
 }
 
@@ -186,15 +219,15 @@ bool ScagTaskManager::canStop()
 
 IOTask* ReaderTaskManager::newTask()
 {
-    return new HttpReaderTask(manager, *this, manager.cfg.connectionTimeout);
+    return new HttpReaderTask(manager, *this, manager.getConfig().connectionTimeout);
 }
 
 IOTask* WriterTaskManager::newTask()
 {
-    return new HttpWriterTask(manager, *this, manager.cfg.connectionTimeout);
+    return new HttpWriterTask(manager, *this, manager.getConfig().connectionTimeout);
 }
 
-IOTaskManager::IOTaskManager(HttpManager& m) : manager(m),
+IOTaskManager::IOTaskManager(HttpManagerImpl& m) : manager(m),
     headTask(0), tailTask(UINT_MAX)
 {
 }

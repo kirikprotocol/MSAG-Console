@@ -6,7 +6,7 @@
 namespace scag { namespace transport { namespace http
 {
 
-ScagTask::ScagTask(HttpManager& m, HttpProcessor& p) : manager(m), processor(p)
+ScagTask::ScagTask(HttpManagerImpl& m, HttpProcessor& p) : manager(m), processor(p)
 {
     logger = Logger::getInstance("scag.http.scag");
 }
@@ -49,7 +49,7 @@ int ScagTask::Execute()
 //                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
                 cx->action = SEND_REQUEST;
                 lcmCtx.continueExec = false;
-                manager.writers.process(cx);                               
+                manager.writerProcess(cx);                               
                 break;
             }
             else if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
@@ -88,7 +88,7 @@ int ScagTask::Execute()
             cx->getResponse().serialize();
             cx->action = SEND_RESPONSE;
             lcmCtx.continueExec = false;
-            manager.writers.process(cx);       
+            manager.writerProcess(cx);       
             break;      
         case PROCESS_STATUS_RESPONSE:
             {

@@ -277,6 +277,17 @@ namespace scag { namespace sessions {
             PROPERTY_ICC_STATUS = 2
         };
 
+        std::list<SCAGCommand*> cmdQueue;
+
+        SCAGCommand* popCommand()
+        { 
+            SCAGCommand* c = cmdQueue.front();
+            cmdQueue.pop_front();
+            return c;
+        };
+        void pushCommand(SCAGCommand* cmd) { cmdQueue.push_back(cmd); };
+        uint32_t commandsEmpty() { return cmdQueue.empty(); };
+
 
         Logger * logger;
         std::list<PendingOperation> PendingOperationList;
@@ -332,7 +343,7 @@ namespace scag { namespace sessions {
         Session(const CSessionKey& key);
         virtual ~Session();
 
-        CSessionKey getSessionKey() const  { return m_SessionKey; }
+        const CSessionKey& getSessionKey() const  { return m_SessionKey; }
         void setSessionKey(CSessionKey& key) { m_SessionKey = key; }
 
 

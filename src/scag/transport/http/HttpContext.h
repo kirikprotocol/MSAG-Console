@@ -92,7 +92,7 @@ public:
         if (!(command && command->isResponse())) {
             if (command)
                 delete command;
-            command = new HttpResponse(trc);
+            command = new HttpResponse(this, trc);
         }
         getResponse().fillFakeResponse(status);
     }

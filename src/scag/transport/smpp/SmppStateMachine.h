@@ -55,7 +55,7 @@ protected:
 
   void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
   
-  bool makeLongCall(SmppCommand& cx, SessionPtr session);
+  bool makeLongCall(SmppCommand& cx, SessionPtr& session);
   
   struct ResponseRegistry;
   static ResponseRegistry reg;

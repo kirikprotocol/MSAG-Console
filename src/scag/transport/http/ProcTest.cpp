@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
         ConfigManager::Init();
         ConfigManager & cfg = ConfigManager::Instance();
 
-        HttpManager httpMan;
         
         PersClient::Init(cfg.getPersClientConfig());
         
@@ -74,7 +73,8 @@ int main(int argc, char* argv[])
         scag::transport::http::HttpProcessor::Init("./conf");
         scag::transport::http::HttpProcessor& hp = scag::transport::http::HttpProcessor::Instance();
 
-        httpMan.init(hp, cfg.getHttpManConfig());
+        HttpManager::Init(hp, cfg.getHttpManConfig());
+        HttpManager& httpMan = HttpManager::Instance();
 
         sleep(5);
         cfg.reloadAllConfigs();

@@ -44,6 +44,7 @@ public:
     virtual void ReloadRoutes() = 0;
 
     virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id) = 0;
+    virtual void pushCommand(SmppCommand& cmd) = 0;
 
     static SmppManager& Instance();
     static void Init(const char* cfgFile);

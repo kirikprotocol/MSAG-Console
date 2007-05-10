@@ -27,9 +27,9 @@ namespace scag { namespace sessions
 
 
         virtual SessionPtr newSession(CSessionKey& key) = 0;
-        virtual SessionPtr getSession(const CSessionKey& key) = 0;
+        virtual bool getSession(const CSessionKey& key, SessionPtr& session, SCAGCommand& cmd) = 0;
         virtual void releaseSession(SessionPtr session)     = 0;
-        virtual void closeSession  (SessionPtr session)     = 0;
+//        virtual void closeSession  (SessionPtr session)     = 0;
         virtual uint32_t getSessionsCount() = 0;
     };
 }}

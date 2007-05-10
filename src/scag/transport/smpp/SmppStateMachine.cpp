@@ -167,7 +167,7 @@ int StateMachine::Execute()
   return 0;
 }
 
-bool StateMachine::makeLongCall(SmppCommand& cx, SessionPtr session)
+bool StateMachine::makeLongCall(SmppCommand& cx, SessionPtr& session)
 {
     LongCallContext& lcmCtx = cx.getLongCallContext();
     lcmCtx.stateMachineContext = new SmppCommand(cx);
@@ -256,7 +256,9 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       {
         if(!session.Get())
         {
-            if(cmd.getLongCallContext().continueExec)
+            if(cmd.hasSession())
+                session = cmd.getSession();
+            else if(cmd.getLongCallContext().continueExec)
                 session = cmd.getLongCallContext().session;
             else if (umr < 0) {
                 key.USR = 0;
@@ -266,7 +268,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             else {
                 key.USR = umr;
                 smsc_log_debug(log, "SMPP Submit: Continue, UMR=%d", umr);
-                session=sm.getSession(key);
+                if(!sm.getSession(key, session, cmd))
+                    return;
                 if (!session.Get()) {
                     session=sm.newSession(key);
                     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
@@ -307,7 +310,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         }
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // Continue USSD dialog (or service initiated USSD by pending)
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
-            session=scag::sessions::SessionManager::Instance().getSession(key);
+            if(!sm.getSession(key, session, cmd))
+                return;
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -329,7 +333,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             smsc_log_debug(log, "USSD Submit: End user dialog, UMR=%d", umr);
-            session=sm.getSession(key);
+            if(!sm.getSession(key, session, cmd))
+                return;
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -341,7 +346,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST) { // End service USSD dialog
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
-            session=sm.getSession(key);
+            if(!sm.getSession(key, session, cmd))
+                return;
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -481,10 +487,16 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
 
   scag::sessions::SessionPtr session;
-  if(cmd.getLongCallContext().continueExec)
+  if(cmd.hasSession())
+    session = cmd.getSession();
+  else if(cmd.getLongCallContext().continueExec)
       session = cmd.getLongCallContext().session;
-  else
-      session = scag::sessions::SessionManager::Instance().getSession(key);
+  else if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
+  {
+      if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
+        throw Exception("SubmitResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
+      return;
+  }
 
   if(!session.Get())
   {
@@ -630,7 +642,9 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       {
           if(!session.Get())
           {
-            if(cmd.getLongCallContext().continueExec)
+            if(cmd.hasSession())
+                session = cmd.getSession();
+            else if(cmd.getLongCallContext().continueExec)
                 session = cmd.getLongCallContext().session;
             else
               {
@@ -682,7 +696,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 }
                 key.USR = tmpUSR;
                 smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
-                session=sm.getSession(key);
+                if(!sm.getSession(key, session, cmd))
+                    return;
                 if (!session.Get()) {
                     smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
                     DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -701,7 +716,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 src->delUMRMapping(key.abonentAddr, 0); // For service initiated USSD dialog
                 key.USR = tmpUSR;
                 smsc_log_debug(log, "USSD Delivery: End service dialog, USR=%d", key.USR);
-                session=sm.getSession(key);
+                if(!sm.getSession(key, session, cmd))
+                    return;
                 if (!session.Get()) {
                     smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
                     DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -842,11 +858,16 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 //      Statistics::Instance().registerEvent(SmppStatEvent(src->info, cntRejected, -1));
 
   scag::sessions::SessionPtr session;
-
-  if(cmd.getLongCallContext().continueExec)
+  if(cmd.hasSession())
+    session = cmd.getSession();
+  else if(cmd.getLongCallContext().continueExec)
       session = cmd.getLongCallContext().session;
-  else
-      session = scag::sessions::SessionManager::Instance().getSession(key);
+  else if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
+  {
+      if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
+        throw Exception("DeliveryResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
+      return;
+  }
 
   if(!session.Get())
   {
@@ -1006,7 +1027,9 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       key.abonentAddr = (src->info.type == etService) ? sms.getDestinationAddress() : sms.getOriginatingAddress();
         if(!session.Get())
         {
-          if(cmd.getLongCallContext().continueExec)
+          if(cmd.hasSession())
+              session = cmd.getSession();
+          else if(cmd.getLongCallContext().continueExec)
               session = cmd.getLongCallContext().session;
           else if (umr < 0) {
               key.USR = 0;
@@ -1016,7 +1039,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
           else {
               key.USR = umr;
               smsc_log_debug(log, "DataSm: Continue, UMR=%d", umr);
-              session=scag::sessions::SessionManager::Instance().getSession(key);
+              if(!sm.getSession(key, session, cmd))
+                  return;
               if (!session.Get()) {
                   session=sm.newSession(key);
                   sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
@@ -1152,10 +1176,16 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 //      Statistics::Instance().registerEvent(SmppStatEvent(src->info, cntRejected, -1));
   scag::sessions::SessionPtr session;
 
-  if(cmd.getLongCallContext().continueExec)
+  if(cmd.hasSession())
+      session = cmd.getSession();
+  else if(cmd.getLongCallContext().continueExec)
       session = cmd.getLongCallContext().session;
-  else
-      session = scag::sessions::SessionManager::Instance().getSession(key);
+  else if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
+  {
+      if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
+        throw Exception("DataSmResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
+      return;
+  }
 
   if(!session.Get())
   {

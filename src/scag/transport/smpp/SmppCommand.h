@@ -411,6 +411,7 @@ struct _SmppCommand
   int priority;
   uint64_t opId;
   LongCallContext lcmCtx;
+  SessionPtr session;
   uint16_t usr;
   uint32_t flags;
 
@@ -562,6 +563,13 @@ class SmppCommand:public SCAGCommand
     }
   }
 
+  void dispose()
+    {
+      if (cmd) unref(cmd);
+    }
+
+public:
+
   static _SmppCommand* ref(_SmppCommand* cmd)
   {
     if ( !cmd )
@@ -573,14 +581,6 @@ class SmppCommand:public SCAGCommand
     ++(cmd->ref_count);
     return cmd;
   }
-
-
-  void dispose()
-    {
-      if (cmd) unref(cmd);
-    }
-
-public:
 
   SmppEntity* getEntity()const{return cmd->ent;}
   void setEntity(SmppEntity* newent){cmd->ent=newent;}
@@ -1348,6 +1348,10 @@ public:
    {
        cmd->usr = usr;
    }
+
+   SessionPtr getSession() { return cmd->session; };
+   void setSession(SessionPtr& s) { cmd->session = s; };
+   bool hasSession() { return cmd->session.Get(); }
 
 };
 

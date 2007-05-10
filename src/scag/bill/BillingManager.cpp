@@ -595,14 +595,15 @@ void BillingManagerImpl::deleteSendTransaction(int dlgId)
 
 void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, LongCallContext* lcmCtx)
 {
-    auto_ptr<SendTransaction> st(new SendTransaction());
+    SendTransaction* s = new SendTransaction();
+    auto_ptr<SendTransaction> st(s);
 
     st->lcmCtx = lcmCtx;
     st->billTransaction = bt;
     insertSendTransaction(bt->billId, st.get());
     st.release();
-
-    pipe->sendPck(&bt->ChargeOperation);
+    if(pipe->sendPck(&bt->ChargeOperation) <= 0)
+        processAsyncResult(s);
 }
 
 TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
@@ -697,7 +698,7 @@ int BillingManagerImpl::Execute()
 {
     #ifdef MSAG_INMAN_BILL
     smsc_log_info(logger,"BillingManager::start executing");
-    time_t prevCheck = time(NULL);
+    time_t prevCheck = time(NULL), lastReconnect = 0;
     while(isStarted())
     {
         try
@@ -717,8 +718,12 @@ int BillingManagerImpl::Execute()
             }
             else
             {
-                connectEvent.Wait(m_ReconnectTimeout * 1000);
-                m_Connected = Reconnect();
+                connectEvent.Wait(10000);
+                if(lastReconnect + m_ReconnectTimeout < time(NULL))
+                {
+                    m_Connected = Reconnect();
+                    lastReconnect = time(NULL);
+                }
             }
 
             if(time(NULL) > prevCheck + 10)
@@ -728,7 +733,7 @@ int BillingManagerImpl::Execute()
                 MutexGuard mg(sendLock);
                 if(SendTransactionHash.Count())
                 {
-                    smsc_log_debug(logger, "Processing expired inman transactions");
+                    smsc_log_debug(logger, "Processing expired inman transactions. Total: %d", SendTransactionHash.Count());
                     int key;
                     for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
                         if(st->lcmCtx && st->startTime + m_Timeout < prevCheck)

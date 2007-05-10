@@ -13,11 +13,11 @@ using smsc::core::network::Socket;
 using smsc::core::synchronization::EventMonitor;
 using smsc::logger::Logger;
 
-class HttpManager;
+class HttpManagerImpl;
 
 class HttpAcceptor : public Thread {
 public:
-    HttpAcceptor(HttpManager& m);
+    HttpAcceptor(HttpManagerImpl& m);
 
     virtual int Execute();
     virtual const char* taskName();
@@ -26,7 +26,7 @@ public:
     void init(const char *host, int port);
 
 protected:
-    HttpManager &manager;    
+    HttpManagerImpl &manager;    
     Socket masterSocket;
     Logger *logger;
 

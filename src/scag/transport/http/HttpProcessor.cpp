@@ -373,12 +373,14 @@ int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
                 request.setUSR(sk.USR);
             }
             else
-                se = SessionManager::Instance().getSession(sk);
+                if(!SessionManager::Instance().getSession(sk, se, request))
+                    return scag::re::STATUS_OK;
         }
         else
         {
             CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};        
-            se = SessionManager::Instance().getSession(sk);
+            if(!SessionManager::Instance().getSession(sk, se, request))
+                return scag::re::STATUS_OK;
         }
             
         if(se.Get())
@@ -436,7 +438,9 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
     SessionPtr se;
     try{
         CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
-        se = SessionManager::Instance().getSession(sk);
+        if(!SessionManager::Instance().getSession(sk, se, response))
+            return scag::re::STATUS_OK; // TODO: proper signal statemachine
+
         RuleStatus rs;
 
         if(se.Get())
@@ -485,7 +489,8 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     SessionPtr se;
     try{
         CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
-        se = SessionManager::Instance().getSession(sk);
+        if(!SessionManager::Instance().getSession(sk, se, response))
+            return scag::re::STATUS_OK; // TODO: proper signal statemachine
 
         RuleStatus rs;
         if(se.Get())

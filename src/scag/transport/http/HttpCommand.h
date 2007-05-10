@@ -13,6 +13,8 @@ using smsc::core::buffers::TmpBuf;
 using smsc::core::buffers::Hash;
 using scag::transport::SCAGCommand;
 
+class HttpContext;
+
 typedef Hash<std::string> StringHash;
 
 const char CONTENT_LENGTH_FIELD[] = "Content-Length";
@@ -117,7 +119,7 @@ class HttpCommand : public SCAGCommand {
 public:
     typedef StringHashIterator FieldIterator;
 
-    HttpCommand(TransactionContext& tcx, uint8_t cmd) : trc(tcx), content(1), command_id(cmd),
+    HttpCommand(HttpContext* cx, TransactionContext& tcx, uint8_t cmd) : context(cx), trc(tcx), content(1), command_id(cmd),
         contentLength(-1), httpVersion("HTTP/1.1"),/* totalHeadersSize(0), */
         headerFieldsIterator(headerFields), charset(LATIN_1) {}
     virtual ~HttpCommand();
@@ -206,6 +208,10 @@ public:
     void setStatus(int s) {
         trc.status = s;
     }
+
+    SessionPtr getSession() { return session; };
+    void setSession(SessionPtr& s) { session = s; };
+    bool hasSession() { return session.Get(); }
     
     // ---------- Command context methods (end) ----------    
 
@@ -216,6 +222,8 @@ public:
                         const std::string& fieldValue);
 
     //void serialize();
+
+    HttpContext* getContext() { return context; };
 
     const std::string& getMessageHeaders() {
         return headers;
@@ -258,8 +266,11 @@ public:
     Cookie  defCookie;
     CookieHash cookies;
     uint8_t command_id;
+
+    SessionPtr session;
         
     TransactionContext &trc;
+    HttpContext* context;
     // unsigned int totalHeadersSize;
     int contentLength;
     
@@ -289,7 +300,7 @@ class HttpRequest : public HttpCommand {
 public:
     typedef StringHashIterator ParameterIterator;
 
-    HttpRequest(TransactionContext& tcx) : HttpCommand(tcx, HTTP_REQUEST),
+    HttpRequest(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_REQUEST),
         queryParametersIterator(queryParameters), isInitialRequest(false) {}
 
     HttpMethod getMethod() {
@@ -323,6 +334,7 @@ public:
 
     const std::string& serialize();
     virtual bool isResponse();
+
 protected:
     void serializeQuery(std::string& s);
 
@@ -346,7 +358,7 @@ class HttpResponse : public HttpCommand {
     friend class HttpParser;
 
 public:
-    HttpResponse(TransactionContext& tcx) : HttpCommand(tcx, HTTP_RESPONSE) {};
+    HttpResponse(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_RESPONSE) {};
 
     const std::string& getStatusLine() {
         return statusLine;

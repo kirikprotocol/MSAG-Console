@@ -29,10 +29,11 @@ class ScagTask;
 class HttpContext;
 class HttpProcessor;
 class HttpManager;
+class HttpManagerImpl;
 
 class ScagTaskManager : public LongCallInitiator {
 public:
-    ScagTaskManager(HttpManager& m);
+    ScagTaskManager(HttpManagerImpl& m);
 
     void shutdown();
     void process(HttpContext* cx);
@@ -58,12 +59,13 @@ public:
     
     void continueExecution(LongCallContext* context, bool dropped);
 
+
 protected:
     ThreadPool pool;
     Mutex procMut;
     EventMonitor queMon;
     EventMonitor taskMon;
-    HttpManager &manager;
+    HttpManagerImpl &manager;
     Logger *logger;    
     
     HttpContext *tailContext[3];
@@ -77,7 +79,7 @@ protected:
 
 class IOTaskManager {
 public:
-    IOTaskManager(HttpManager& m);
+    IOTaskManager(HttpManagerImpl& m);
     virtual ~IOTaskManager();
 
     void process(HttpContext* cx);
@@ -113,7 +115,7 @@ protected:
     IOTaskParent headTask;
     IOTaskParent tailTask;
     IOTask **sortedTasks;
-    HttpManager &manager;
+    HttpManagerImpl &manager;
     Logger *logger;
     unsigned int maxSockets;    
     unsigned int maxThreads;
@@ -121,7 +123,7 @@ protected:
 
 class ReaderTaskManager : public IOTaskManager {
 public:
-    ReaderTaskManager(HttpManager& m) : IOTaskManager(m) {}
+    ReaderTaskManager(HttpManagerImpl& m) : IOTaskManager(m) {}
 
 protected:
     virtual IOTask* newTask();
@@ -129,7 +131,7 @@ protected:
 
 class WriterTaskManager : public IOTaskManager {
 public:
-    WriterTaskManager(HttpManager& m) : IOTaskManager(m) {}
+    WriterTaskManager(HttpManagerImpl& m) : IOTaskManager(m) {}
 protected:
     virtual IOTask* newTask();
 };
@@ -176,13 +178,39 @@ protected:
     }
 };*/
 
-class HttpManager: public ConfigListener {
+class HttpManager{
+
+    static bool  inited;
+    static Mutex initLock;
+
 public:
-    HttpManager();
+    HttpManager() {};
+    virtual ~HttpManager() {};
+
+    static HttpManager& Instance();
+    static void Init(HttpProcessor& p, const HttpManagerConfig& cfg);
+
+    virtual void shutdown() = 0;
+    virtual void process(HttpContext *cx) = 0;
+    virtual void readerProcess(HttpContext *cx) = 0;
+    virtual void writerProcess(HttpContext* cx) = 0;
+    virtual HttpManagerConfig& getConfig() = 0;
+};
+
+class HttpManagerImpl: public HttpManager, public ConfigListener {
+public:
+    HttpManagerImpl();
+    ~HttpManagerImpl() {};
 
     void init(HttpProcessor& p, const HttpManagerConfig& cfg);
     void configChanged();
+
     void shutdown();
+    void process(HttpContext* cx) { scags.process(cx); };
+    void readerProcess(HttpContext* cx) { readers.process(cx); };
+    void writerProcess(HttpContext* cx) { writers.process(cx); };
+    HttpManagerConfig& getConfig() { return cfg; };
+
 
     HttpManagerConfig cfg;
     ScagTaskManager scags;

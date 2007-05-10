@@ -14,12 +14,12 @@ using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
 using smsc::logger::Logger;
 
-class HttpManager;
+class HttpManagerImpl;
 class HttpContext;
 
 class IOTask : public IOTaskParent {
 public:
-    IOTask(HttpManager& m, IOTaskManager& iom, const int timeout);
+    IOTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout);
 
     unsigned int getSocketCount() {
         return socketCount;
@@ -48,7 +48,7 @@ protected:
      
     HttpMultiplexer multiplexer;
     EventMonitor sockMon;
-    HttpManager &manager;
+    HttpManagerImpl &manager;
     IOTaskManager &iomanager;
     Logger *logger;    
     int connectionTimeout;
@@ -58,7 +58,7 @@ protected:
 
 class HttpReaderTask : public IOTask {
 public:
-    HttpReaderTask(HttpManager& m, IOTaskManager& iom, const int timeout);
+    HttpReaderTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout);
 
     virtual int Execute();
     virtual const char* taskName();
@@ -67,7 +67,7 @@ public:
 
 class HttpWriterTask : public IOTask {
 public:
-    HttpWriterTask(HttpManager& m, IOTaskManager& iom, const int timeout);
+    HttpWriterTask(HttpManagerImpl& m, IOTaskManager& iom, const int timeout);
         
     virtual int Execute();
     virtual const char* taskName();

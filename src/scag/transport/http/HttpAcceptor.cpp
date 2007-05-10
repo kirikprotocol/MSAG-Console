@@ -8,7 +8,7 @@ namespace scag { namespace transport { namespace http
 {
 using smsc::util::Exception;
 
-HttpAcceptor::HttpAcceptor(HttpManager& m) : manager(m)
+HttpAcceptor::HttpAcceptor(HttpManagerImpl& m) : manager(m)
 {
 }
 

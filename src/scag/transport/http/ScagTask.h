@@ -13,11 +13,11 @@ namespace scag { namespace transport { namespace http
 using smsc::core::synchronization::EventMonitor;
 using smsc::logger::Logger;
 
-class HttpManager;
+class HttpManagerImpl;
 
 class ScagTask : public ThreadedTask {
 public:
-    ScagTask(HttpManager& m, HttpProcessor& p);
+    ScagTask(HttpManagerImpl& m, HttpProcessor& p);
 
     virtual int Execute();
     virtual const char* taskName();
@@ -25,7 +25,7 @@ public:
     
 protected:
     bool makeLongCall(HttpContext *cx);
-    HttpManager &manager;
+    HttpManagerImpl &manager;
     HttpProcessor &processor;
     Logger *logger;
 };

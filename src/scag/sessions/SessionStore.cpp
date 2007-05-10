@@ -114,9 +114,9 @@ void SessionStore::updateSession(SessionPtr session)
 
 void CachedSessionStore::init(const std::string& dir,SessionLoadCallback cb,void* dataPtr, uint32_t mcs)
 {
-    store.init(dir, cb, dataPtr);
     maxCacheSize = mcs;
     cache = new SessionPtr[mcs];
+    store.init(dir, cb, dataPtr);
 }
 
 SessionPtr CachedSessionStore::getSession(const CSessionKey& sessionKey)
