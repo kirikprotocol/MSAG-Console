@@ -164,7 +164,7 @@ SPckChargeSmsResult * BillingServer::CreateRespOnCharge(SPckChargeSms* pck)
     smsc_log_debug(logger, "Start charging \n\n");
 
     if (!processor.charge(key, addr, pck->Hdr().dlgId))
-        res->Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+        res->Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
 
     smsc_log_debug(logger, "Finish charging \n\n");
     return res;
