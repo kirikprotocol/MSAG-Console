@@ -31,6 +31,8 @@
 #include "InfoSmeComponent.h"
 #include "util/mirrorfile/mirrorfile.h"
 
+#include "version.inc"
+
 using namespace smsc::sme;
 using namespace smsc::smpp;
 using namespace smsc::util;
@@ -506,9 +508,14 @@ extern "C" static void atExitHandler(void)
     smsc::logger::Logger::Shutdown();
 }
 
-int main(void)
+int main(int argc, char** argv)
 {
   try {
+    if ( argc > 1 && !strcmp(argv[1], "-v") ) {
+      printf("%s\n", getStrVersion());
+      return 0;
+    }
+
     int fds[2];
     pipe(fds);
     signaling_ReadFd = fds[0]; signaling_WriteFd = fds[1]; 
