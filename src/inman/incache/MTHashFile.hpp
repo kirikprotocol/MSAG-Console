@@ -501,8 +501,8 @@ public:
                 }
                 if (!hfHdr.equalCFG(hdr)) {
                     fHdl.Close();
-                    throw Exception("Hash file incompatible, header: '%s'",
-                                    hdr.PrintCfg().c_str());
+                    throw Exception("Hash file incompatible, header '%s' vs '%s'",
+                                    hdr.PrintCfg().c_str(), hfHdr.PrintCfg().c_str());
                 }
                 hfHdr = hdr;
             } else {
