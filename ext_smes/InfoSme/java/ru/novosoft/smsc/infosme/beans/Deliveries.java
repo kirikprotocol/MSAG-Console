@@ -475,11 +475,12 @@ public class Deliveries extends InfoSmeBean
           getInfoSmeContext().getInfoSme().endDeliveryMessageGeneration(task.getId());
           getConfig().setBool(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(task.getId()) + ".messagesHaveLoaded", true);
           getConfig().save();
+          backup = (Config)getInfoSmeContext().getConfig().clone();
         } catch (AdminException e) {
           logger.error(e);
         } catch (Config.WrongParamTypeException e) {
           logger.error(e);
-        } catch (IOException e) {
+        } catch (Exception e) {
           logger.error(e);
         }
       }
