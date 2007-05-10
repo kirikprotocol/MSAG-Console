@@ -147,6 +147,7 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/snmp.dtd" link="${DISTR_DIR}/services/SMSC/conf"/>
 
     <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/ArchiveDaemon"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/ArchiveDaemon"/>
@@ -197,11 +198,11 @@ Targets:
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd snmp.dtd"/>
     </copy>
     <mkdir dir="${DISTR_DIR}/webapps/smsc/WEB-INF/classes/dtds"/>
     <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF/classes/dtds" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd webapp/users.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd ClosedGroups.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd webapp/users.dtd snmp.dtd"/>
       <fileset dir="${TEMPL_DIR}/smsc" includes="web-app_2_3.dtd"/>
     </copy>
     <!-- database sql scripts -->
