@@ -321,8 +321,8 @@ bool TaskProcessor::processTask(Task* task)
         }
     }
 
-    smsc_log_debug(logger, "Sending message #%lld for '%s': %s", 
-                 message.id, message.abonent.c_str(), message.message.c_str());
+    smsc_log_debug(logger, "TaskId=[%s]: Sending message #%lld for '%s': %s", 
+                   info.id.c_str(), message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
@@ -351,8 +351,8 @@ bool TaskProcessor::processTask(Task* task)
             if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
             return false;
         }
-        smsc_log_debug(logger, "Sent message #%lld seqNum=%d for '%s'", 
-                       message.id, seqNum, message.abonent.c_str());
+        smsc_log_debug(logger, "TaskId=[%s]: Sent message #%lld seqNum=%d for '%s'", 
+                       info.id.c_str(), message.id, seqNum, message.abonent.c_str());
     }
     else
     {
