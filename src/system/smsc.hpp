@@ -28,6 +28,8 @@
 #include "snmp/SnmpAgent.hpp"
 #ifdef SNMP
 #include "system/snmp/SnmpCounter.hpp"
+#include "stat/SmeStats.hpp"
+#include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #endif
 #include "acls/interfaces.h"
 
@@ -247,6 +249,7 @@ public:
         smePerfMonitor.incAccepted(sms->getSourceSmeId());
 #ifdef SNMP
         SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
+        smeStats.incCounter(smeman.lookup(sms->getSourceSmeId()),smsc::stat::SmeStats::cntAccepted);
 #endif
       }break;
       case etSubmitErr:
@@ -257,6 +260,7 @@ public:
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
 #ifdef SNMP
         SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
+        smeStats.incCounter(smeman.lookup(sms->getSourceSmeId()),smsc::stat::SmeStats::cntRejected);
 #endif
       }break;
       case etDeliveredOk:
@@ -265,6 +269,9 @@ public:
         MutexGuard g(perfMutex);
         deliverOkCounter++;
         smePerfMonitor.incDelivered(sms->getDestinationSmeId());
+#ifdef SNMP
+        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntDelivered);
+#endif
       }break;
       case etDeliverErr:
       {
@@ -272,6 +279,9 @@ public:
         MutexGuard g(perfMutex);
         deliverErrTempCounter++;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
+#ifdef SNMP
+        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntTempError);
+#endif
       }break;
       case etUndeliverable:
       {
@@ -279,6 +289,9 @@ public:
         MutexGuard g(perfMutex);
         deliverErrPermCounter++;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
+#ifdef SNMP
+        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntFailed);
+#endif
       }break;
       case etRescheduled:
       {
@@ -286,6 +299,9 @@ public:
         MutexGuard g(perfMutex);
         rescheduleCounter++;
         smePerfMonitor.incRescheduled(sms->getDestinationSmeId());
+#ifdef SNMP
+        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntRetried);
+#endif
       }break;
     }
   }
@@ -599,6 +615,11 @@ protected:
 
   smsc::stat::StatisticsManager *statMan;
   snmp::SnmpAgent *snmpAgent;
+
+#ifdef SNMP
+  smsc::stat::SmeStats smeStats;
+  smsc::snmp::smestattable::SmeStatTableSubagentThread smeStatTableThread;
+#endif
 
   SmeProxy* mapProxy;
 

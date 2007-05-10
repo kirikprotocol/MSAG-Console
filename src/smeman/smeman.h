@@ -322,6 +322,12 @@ public:
     }
   }
 
+  size_t getSmesCount()
+  {
+    MutexGuard mg(lock);
+    return records.size();
+  }
+
   //=======================================
   virtual void statusSme(Variant& result);
   //=========================================
