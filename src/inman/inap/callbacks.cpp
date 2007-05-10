@@ -12,12 +12,13 @@ using smsc::util::format;
 
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/dialog.hpp"
+#include "inman/inap/TCAPErrors.hpp"
 using smsc::inman::inap::TcapEntity;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSNSession;
 using smsc::inman::inap::TNoticeParms;
 using smsc::inman::inap::TCAPDispatcher;
-using smsc::inman::inap::getTcapBindErrorMessage;
+using smsc::inman::inap::rc2Txt_TC_BindResult;
 
 #define tcapLogger TCAPDispatcher::getInstance()->TCAPLogger()
 
@@ -52,7 +53,7 @@ USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
 
     smsc_log_debug(dsp->TCAPLogger(),
                  "SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s))",
-                   ssn, userId, tcapInstanceId, bindResult, getTcapBindErrorMessage(bindResult));
+                   ssn, userId, tcapInstanceId, bindResult, rc2Txt_TC_BindResult(bindResult));
 
     dsp->confirmSSN(ssn, bindResult);
     return MSG_OK;

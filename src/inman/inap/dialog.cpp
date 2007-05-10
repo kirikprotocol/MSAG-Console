@@ -1,7 +1,9 @@
 #ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
-
+/* ************************************************************************* *
+ * TCAP dialog implementation (initiated by local point).
+ * ************************************************************************* */
 #include <assert.h>
 #include <memory>
 
@@ -10,6 +12,7 @@ using smsc::util::DumpHex;
 
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
+#include "inman/inap/TCAPErrors.hpp"
 
 using smsc::inman::comp::ApplicationContextFactory;
 
@@ -17,9 +20,6 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-/////////////////////////////////////////////////////////////////////////////////////
-// Dialog class implementation
-/////////////////////////////////////////////////////////////////////////////////////
 Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
                ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
                UCHAR_T sender_ssn/* = 0*/, Logger * uselog/* = NULL*/)
@@ -116,7 +116,8 @@ void Dialog::checkSS7res(const char * descr, USHORT_T result) throw(CustomExcept
     if (result) {
         if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
             TCAPDispatcher::getInstance()->onDisconnect();
-        throw CustomException(result, descr, getTcapReasonDescription(result));
+        throw CustomException((int)_RCS_TC_APIError->mkhash(result),
+                            descr, _RCS_TC_APIError->explainCode(result).c_str());
     }
     return;
 }
@@ -218,8 +219,11 @@ void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
 void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
 {
     RawBuffer   op, params;
-    inv->encode(op, params); //throws CustomException
-
+    try { inv->encode(op, params); //throws CustomException    
+    } catch (const std::exception & exc) {
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::invCompEnc),
+                            _RCS_TC_Dialog->explainCode(TC_DlgError::invCompEnc).c_str(), exc.what());
+    }
     const Invoke * linked = inv->getLinkedTo();
     USHORT_T invTimeout = inv->getTimeout();
 
@@ -242,14 +246,17 @@ void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
             EINSS7_I97TCAP_OP_CLASS_1, invTimeout, EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
             op.size(), &op[0], params.size(), &params[0]);
 
-    checkSS7res("InvokeReq failed", result);
+    checkSS7res("InvokeReq failed", result); //throws
 }
 
 void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
 {
     RawBuffer   op, params;
-    res->encode(op, params); //throws CustomException
-
+    try { res->encode(op, params); //throws CustomException    
+    } catch (const std::exception & exc) {
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::resCompEnc),
+                            _RCS_TC_Dialog->explainCode(TC_DlgError::resCompEnc).c_str(), exc.what());
+    }
     smsc_log_debug(logger, "EINSS7_I97TResultLReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
@@ -268,8 +275,11 @@ void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
 void Dialog::sendResultNotLast(TcapEntity* res) throw (CustomException)
 {
     RawBuffer   op, params;
-    res->encode(op, params); //throws CustomException
-
+    try { res->encode(op, params); //throws CustomException    
+    } catch (const std::exception & exc) {
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::resCompEnc),
+                            _RCS_TC_Dialog->explainCode(TC_DlgError::resCompEnc).c_str(), exc.what());
+    }
     smsc_log_debug(logger, "EINSS7_I97TResultNLReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
@@ -282,15 +292,18 @@ void Dialog::sendResultNotLast(TcapEntity* res) throw (CustomException)
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
         op.size(), &op[0], params.size(), &params[0]);
 
-    checkSS7res("ResultNLReq failed", result);
+    checkSS7res("ResultNLReq failed", result); //throws
 }
 
 
 void Dialog::sendResultError(TcapEntity* res) throw (CustomException)
 {
     RawBuffer   op, params;
-    res->encode(op, params);  //throws CustomException
-
+    try { res->encode(op, params); //throws CustomException    
+    } catch (const std::exception & exc) {
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::resCompEnc),
+                            _RCS_TC_Dialog->explainCode(TC_DlgError::resCompEnc).c_str(), exc.what());
+    }
     smsc_log_debug(logger, "EINSS7_I97TUErrorReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",

@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-#CXXFLAGS :=  $(CXXFLAGS)
+CXXFLAGS :=  $(CXXFLAGS) -DURCREGISTRY_GLOBAL_INIT
 PACKAGE := inman.abprov
 
 ifndef SMSC_SRCDIR

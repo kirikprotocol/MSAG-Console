@@ -4,8 +4,8 @@
 
 #include <map>
 
-#include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
+#include "inman/comp/CapOpErrors.hpp"
 #include "logger/Logger.h"
 
 using smsc::logger::Logger;
@@ -64,10 +64,13 @@ struct CapSMSOpCode {
 
 struct CAP3SMSerrCode {
     enum {
-        missingParameter = 7,  taskRefused = 12,
-        unexpectedComponentSequence = 14, 
-        unexpectedDataValue = 15, unexpectedParameter = 16,
-        parameterOutOfRange = 8, systemFailure = 11
+        missingParameter = CAPOpErrorId::missingParameter,
+        parameterOutOfRange = CAPOpErrorId::parameterOutOfRange,
+        systemFailure = CAPOpErrorId::systemFailure,
+        taskRefused = CAPOpErrorId::taskRefused,
+        unexpectedComponentSequence = CAPOpErrorId::unexpectedComponentSequence, 
+        unexpectedDataValue = CAPOpErrorId::unexpectedDataValue,
+        unexpectedParameter = CAPOpErrorId::unexpectedParameter
     };
 };
 enum TP_VP_format {

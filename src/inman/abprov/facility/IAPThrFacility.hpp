@@ -50,7 +50,9 @@ protected:
     AbonentId           abonent;
     AbonentRecord       abRec;
     Logger *            logger;
-    std::string         tName;
+    std::string         tName;  //task name for logging
+    IAPQStatus::Code    _qStatus;   //query completion status, is to return by Execute()
+    std::string         _exc;   //query error/exception message
 
     //Composes taskName, it's recommended to call it in successors constructor
     inline void mkTaskName(void)
@@ -66,18 +68,35 @@ public:
                unsigned timeout_secs, Logger * use_log = NULL);
     virtual ~IAPQueryAC();
 
-    //NOTE: if successor overwrites this one it should call it in its implementation!!!
+    //NOTE: successor may maintain his own init(), but nevertheless it must call this one
     virtual bool init(const AbonentId & ab_number);
 
-//-- Are to implement:
+    //-- Are to implement:
     virtual const char * taskType(void) const = 0;
-//    virtual int Execute(void) = 0;            
+    //virtual int Execute(void) = 0;
 
-    const char *            taskName(void)                { return tName.c_str(); }
-    const AbonentRecord &   getAbonentRecord(void)  const { return abRec; }
-    const AbonentId &       getAbonentId(void)      const { return abonent; }
-    unsigned                getId(void)             const { return _qId; }
-    unsigned long           Usage(void)             const { return usage; }
+    inline const char *             taskName(void)                { return tName.c_str(); }
+    inline const AbonentRecord &    getAbonentRecord(void)  const { return abRec; }
+    inline const AbonentId &        getAbonentId(void)      const { return abonent; }
+    inline unsigned                 getId(void)             const { return _qId; }
+    inline unsigned long            Usage(void)             const { return usage; }
+    inline IAPQStatus::Code         Status(void)            const { return _qStatus; }
+    std::string                     Status2Str(void)        const
+    {
+        std::string st;
+        switch (_qStatus) {
+        case IAPQStatus::iqOk:  st += "finished"; break;
+        case IAPQStatus::iqCancelled: st += "cancelled"; break;
+        case IAPQStatus::iqTimeout: st += "timed out"; break;
+        default:;
+        }
+        st += "failed";
+        if (!_exc.empty()) {
+            st += ", "; st += _exc;
+        }
+        return st;
+    }
+
 
 protected:
     friend class smsc::core::threads::ThreadPool;

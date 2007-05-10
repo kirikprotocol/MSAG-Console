@@ -319,11 +319,9 @@ protected:
         std::string msg = format("<-- ChargeSmsResult[%u]: CHARGING_%sPOSSIBLE", hdr->dlgId,
                 (result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE ) ?
                  "" : "NOT_");
-        if (result->getCombinedError()) {
-            uint16_t        errCode;
-            InmanErrorType  errType = result->splitError(errCode);
-            msg += format(", error %s: %u", _InmanErrorSource[errType], errCode);
-        }
+        if (result->getError())
+            msg += format(", error %u: %s", result->getError(), result->getMsg());
+
         Prompt(Logger::LEVEL_DEBUG, msg);
 
         INDialog * dlg = findDialog(hdr->dlgId);

@@ -1,6 +1,8 @@
 static char const ident[] = "$Id$";
 
 #include "chsri_srv.hpp"
+using smsc::inman::comp::MAPServiceRC;
+using smsc::inman::comp::_RCS_MAPService;
 
 namespace smsc  {
 namespace inman {
@@ -123,8 +125,7 @@ void ServiceCHSRI::onCSIresult(const std::string & subcr_addr,
     }
 }
 
-void ServiceCHSRI::onCSIabort(const std::string &subcr_addr, unsigned short ercode,
-                                                             InmanErrorType errLayer)
+void ServiceCHSRI::onCSIabort(const std::string &subcr_addr, RCHash ercode)
 {
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
@@ -132,7 +133,7 @@ void ServiceCHSRI::onCSIabort(const std::string &subcr_addr, unsigned short erco
         SRIInterrogator * worker = (*it).second;
         workers.erase(it);
         if (_cfg.client)
-            _cfg.client->onCSIabort(subcr_addr, ercode, errLayer);
+            _cfg.client->onCSIabort(subcr_addr, ercode);
         pool.push_back(worker);
     }
 }
@@ -231,22 +232,22 @@ void SRIInterrogator::onMapResult(CHSendRoutingInfoRes* arg)
 }
 
  //dialog finalization/error handling:
-void SRIInterrogator::onEndMapDlg(unsigned short ercode, InmanErrorType errLayer)
+void SRIInterrogator::onEndMapDlg(RCHash ercode/* =0*/)
 {
     MutexGuard  grd(_sync);
     if (sriDlg) {
         delete sriDlg;
         sriDlg = NULL;
     }
-    if (errLayer == smsc::inman::errOk) {
+    if (!ercode) {
         if (subcrImsi[0])
             csiHdl->onCSIresult(subcrAddr, subcrImsi,
                                 scfInfo.scfAddress.length ? &scfInfo : NULL);
         else
-            csiHdl->onCSIabort(subcrAddr, MapCHSRIDlg::chsriServiceResponse,
-                               smsc::inman::errMAPuser);
+            csiHdl->onCSIabort(subcrAddr, 
+                    _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
     } else
-        csiHdl->onCSIabort(subcrAddr, ercode, errLayer);
+        csiHdl->onCSIabort(subcrAddr, ercode);
 }
 
 

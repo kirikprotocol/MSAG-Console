@@ -64,8 +64,8 @@ protected:
     // ****************************************
     void onMapResult(CHSendRoutingInfoRes* arg);
     //dialog finalization/error handling:
-    //if errLayer != errOk, dialog is aborted by reason = errcode
-    void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer);
+    //if ercode != 0, dialog is aborted by reason = errcode
+    void onEndMapDlg(RCHash ercode = 0);
 
     IAPQuerySRI_CFG _cfg;
     MapCHSRIDlg *   sriDlg;

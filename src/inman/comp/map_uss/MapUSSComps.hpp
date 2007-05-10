@@ -5,9 +5,11 @@
 #include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
 #include "inman/comp/compdefs.hpp"
+#include "inman/comp/MapOpErrors.hpp"
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
+using smsc::inman::comp::MAPOpErrorId;
 
 #define MAP_MAX_USSD_StringLength   160 //encoded or GSM 7bit packed
 #define MAX_USSD_TEXT8_LENGTH        90
@@ -42,8 +44,11 @@ struct MAPUSS_OpCode {
 
 struct ERR_ProcessUSS_Request {
     enum {
-        callBarred = 13, systemFailure = 34, dataMissing = 35,
-        unexpectedDataValue = 36, unknownAlphabet = 71
+        callBarred          = MAPOpErrorId::callBarred,
+        systemFailure       = MAPOpErrorId::systemFailure,
+        dataMissing         = MAPOpErrorId::dataMissing,
+        unexpectedDataValue = MAPOpErrorId::unexpectedDataValue,
+        unknownAlphabet     = MAPOpErrorId::unknownAlphabet
     };
 };
 

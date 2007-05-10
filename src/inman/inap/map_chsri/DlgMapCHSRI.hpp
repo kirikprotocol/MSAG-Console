@@ -5,21 +5,18 @@
 #define __SMSC_INMAN_INAP_MAP_CHSRI__
 
 #include "core/synchronization/Mutex.hpp"
-#include "inman/inerrcodes.hpp"
-#include "inman/inap/session.hpp"
-#include "inman/inap/dialog.hpp"
-#include "inman/comp/map_chsri/MapCHSRIComps.hpp"
-
 using smsc::core::synchronization::Mutex;
 
-using smsc::inman::InmanErrorType;
-using smsc::inman::_InmanErrorSource;
-
-using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
+#include "inman/inap/session.hpp"
+#include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::DialogListener;
 using smsc::inman::inap::InvokeListener;
+
+#include "inman/comp/map_chsri/MapCHSRIComps.hpp"
+using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
+using smsc::util::RCHash;
 
 namespace smsc {
 namespace inman {
@@ -30,9 +27,9 @@ class CHSRIhandlerITF { // GMSC/SCF <- HLR
 public: 
     virtual void onMapResult(CHSendRoutingInfoRes* arg) = 0;
     //Dialog finalization/error handling:
-    //if errLayer != errOk, dialog is aborted by reason = errcode
-    //NOTE: MAP diaog may be deleted only from this callback !!!
-    virtual void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer) = 0;
+    //if ercode != 0, no result has been got from MAP service,
+    //NOTE: MAP dialog may be deleted only from this callback !!!
+    virtual void onEndMapDlg(RCHash ercode = 0) = 0;
 };
 
 typedef union {
@@ -52,7 +49,6 @@ public:
     MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler, Logger * uselog = NULL);
     virtual ~MapCHSRIDlg();
 
-    enum CHSRIDlgError { chsriServiceResponse = 1 };
     enum MapOperState  { operInited = 1, operFailed = 2, operDone = 3 };
 
     void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);

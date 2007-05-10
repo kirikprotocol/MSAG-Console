@@ -6,10 +6,6 @@
 #ifndef __SMSC_INMAN_INAP_MAP_USS__
 #define __SMSC_INMAN_INAP_MAP_USS__
 
-#include "inman/inerrcodes.hpp"
-using smsc::inman::InmanErrorType;
-using smsc::inman::_InmanErrorSource;
-
 #include "core/synchronization/Mutex.hpp"
 using smsc::core::synchronization::Mutex;
 
@@ -23,8 +19,7 @@ using smsc::inman::inap::InvokeListener;
 #include "inman/comp/map_uss/MapUSSComps.hpp"
 using smsc::inman::comp::uss::MAPUSS2CompAC;
 using smsc::inman::comp::uss::ProcessUSSRequestArg;
-
-#define PLAIN_LATIN1_DCS 0xF4 // 1111 0100
+using smsc::util::RCHash;
 
 namespace smsc {
 namespace inman {
@@ -36,8 +31,9 @@ class USSDhandlerITF { //  <- gsmSCF */
 public: 
     virtual void onMapResult(MAPUSS2CompAC* arg) = 0;
     //dialog finalization/error handling:
-    //if errLayer != errOk, dialog is aborted by reason = errcode
-    virtual void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer) = 0;
+    //if ercode != 0, no result has been got from MAP service,
+    //NOTE: MAP dialog may be deleted only from this callback !!!
+    virtual void onEndMapDlg(RCHash ercode = 0) = 0;
 };
 
 //USS Dialog state
@@ -58,7 +54,6 @@ public:
     MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler, Logger * uselog = NULL);
     virtual ~MapUSSDlg();
 
-    enum MapUSSDlgError { ussServiceResponse = 0xFF };
     enum MapOperState   { operInited = 1, operFailed = 2, operDone = 3 };
 
     //composes SS request data from plain text(ASCIIZ BY default).

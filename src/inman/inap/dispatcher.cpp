@@ -4,6 +4,8 @@ static char const ident[] = "$Id$";
 using smsc::util::format;
 
 #include "inman/inap/dispatcher.hpp"
+#include "inman/inap/TCAPErrors.hpp"
+using smsc::inman::inap::rc2Txt_TC_BindResult;
 
 namespace smsc  {
 namespace inman {
@@ -33,7 +35,7 @@ TCAPDispatcher::TCAPDispatcher()
     USHORT_T result = EINSS7CpMsgInitNoSig(MSG_INIT_MAX_ENTRIES);
     if (result != 0) {
         smsc_log_fatal(logger, "TCAPDsp: CpMsgInitNoSig() failed: %s (code %u)",
-                             getReturnCodeDescription(result), result);
+                             rc2Txt_SS7_CP(result), result);
     } else {
         state = ss7INITED;
         smsc_log_debug(logger, "TCAPDsp: state INITED");
@@ -131,7 +133,7 @@ int TCAPDispatcher::Listen(void)
             EINSS7CpReleaseMsgBuffer(&msg);
             if (result) {
                 smsc_log_error(logger, "TCAPDsp: MsgRecv() failed with code %d (%s)",
-                               result, getReturnCodeDescription(result));
+                               result, rc2Txt_SS7_CP(result));
                 if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
                     onDisconnect();
             }
@@ -189,7 +191,7 @@ bool TCAPDispatcher::bindSSN(UCHAR_T ssn)
                                           EINSS7_I97TCAP_WHITE_USER);
     if (result) {
         smsc_log_error(logger, "TCAPDsp: BindReq(SSN=%u) failed with code %u (%s)",
-                        ssn, result, getTcapReasonDescription(result));
+                        ssn, result, rc2Txt_TC_APIError(result));
         return false;
     }
     return true;
@@ -217,7 +219,7 @@ void TCAPDispatcher::bindSSNs(void)
                                                    EINSS7_I97TCAP_WHITE_USER);
         if (result) {
             smsc_log_error(logger, "TCAPDsp: BindReq(SSN=%u) failed with code %u (%s)",
-                            ssn, result, getTcapReasonDescription(result));
+                            ssn, result, rc2Txt_TC_APIError(result));
             pSession->setState(smsc::inman::inap::ssnError);
         } else
             pSession->setState(smsc::inman::inap::ssnIdle);
@@ -240,7 +242,7 @@ int TCAPDispatcher::connectCP(SS7State_T upTo/* = ss7CONNECTED*/)
             result = EINSS7CpMsgInitNoSig(MSG_INIT_MAX_ENTRIES);
             if (result != 0) {
                 smsc_log_fatal(logger, "TCAPDsp: CpMsgInitNoSig() failed: %s (code %u)",
-                                     getReturnCodeDescription(result), result);
+                                     rc2Txt_SS7_CP(result), result);
                 rval = -1;
             } else {
                 state = ss7INITED;
@@ -252,7 +254,7 @@ int TCAPDispatcher::connectCP(SS7State_T upTo/* = ss7CONNECTED*/)
             result = EINSS7CpMsgPortOpen(userId, TRUE);
             if (result != 0) {
                 smsc_log_fatal(logger, "TCAPDsp: CpMsgPortOpen(userId = %u) failed: %s (code %u)",
-                                userId, getReturnCodeDescription(result), result);
+                                userId, rc2Txt_SS7_CP(result), result);
                 rval = -1;
             } else {
                 state = ss7OPENED;
@@ -264,7 +266,7 @@ int TCAPDispatcher::connectCP(SS7State_T upTo/* = ss7CONNECTED*/)
             result = MsgConn(userId, TCAP_ID);
             if (result != 0) {
                 smsc_log_fatal(logger, "TCAPDsp: MsgConn() failed: %s (code %u)", 
-                             getReturnCodeDescription(result), result);
+                             rc2Txt_SS7_CP(result), result);
                 rval = -1;
             } else {
                 state = ss7CONNECTED;
@@ -290,7 +292,7 @@ void TCAPDispatcher::disconnectCP(SS7State_T downTo/* = ss7None*/)
             unbindSSNs();
             if ((result = MsgRel(userId, TCAP_ID)) != 0)
                 smsc_log_error(logger, "TCAPDsp: MsgRel(%d,%d) failed: %s (code %d)",
-                               userId, TCAP_ID, getReturnCodeDescription(result),
+                               userId, TCAP_ID, rc2Txt_SS7_CP(result),
                                result);
             smsc_log_debug(logger, "TCAPDsp: state OPENED");
             state = ss7OPENED;
@@ -300,7 +302,7 @@ void TCAPDispatcher::disconnectCP(SS7State_T downTo/* = ss7None*/)
             USHORT_T result;
             if ((result = MsgClose(userId)) != 0)
                 smsc_log_error(logger, "TCAPDsp: MsgClose(%d) failed: %s (code %d)",
-                               userId, getReturnCodeDescription(result), result);
+                               userId, rc2Txt_SS7_CP(result), result);
             smsc_log_debug(logger, "TCAPDsp: state INITED");
             state = ss7INITED;
         } break;
@@ -364,7 +366,7 @@ bool TCAPDispatcher::confirmSSN(UCHAR_T ssn, UCHAR_T bindResult)
         rval = true;
     } else {
         smsc_log_error(logger, "TCAPDsp: SSN[%u] BindReq failed: '%s' (code 0x%X)",
-                           (unsigned)ssn, getTcapBindErrorMessage(bindResult), bindResult);
+                           (unsigned)ssn, rc2Txt_TC_BindResult(bindResult), bindResult);
         pSession->setState(smsc::inman::inap::ssnError);
     }
     pSession->Signal();

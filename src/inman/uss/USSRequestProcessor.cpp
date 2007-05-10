@@ -87,19 +87,22 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
 }
 
 //dialog finalization/error handling:
-//if errLayer != errOk, dialog is aborted by reason = errcode
-void USSRequestProcessor::onEndMapDlg(unsigned short ercode, smsc::inman::InmanErrorType errLayer)
+//if ercode != 0, no result has been got from MAP service
+void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
 {
   smsc::inman::interaction::SPckUSSResult resultPacket;
-  if ( errLayer == errOk ) {
+  if (!ercode) {
     // success and send result 
     // process std::vector result
     resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK);
     // resultPacket.Cmd().setUSSData(_resultUssData);
     resultPacket.Cmd().setRAWUSSData(_dcs, _resultUssData);
     resultPacket.Cmd().setMSISDNadr(_msISDNAddr);
-  } else 
-    resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
+  } else {
+      smsc_log_error(_logger, "USSRequestProcessor::onEndMapDlg: error %u: %s", _logger,
+          ercode, URCRegistry::explainHash(ercode).c_str());
+      resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
+  }
 
   smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: send response object=[%s]",
                  resultPacket.Cmd().toString().c_str());

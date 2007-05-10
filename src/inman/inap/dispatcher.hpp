@@ -9,8 +9,6 @@ using smsc::logger::Logger;
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-
-#include "inman/inap/inss7util.hpp"
 #include "inman/inap/session.hpp"
 
 using smsc::core::threads::Thread;
@@ -22,6 +20,8 @@ using smsc::inman::inap::SSNSession;
 namespace smsc  {
 namespace inman {
 namespace inap  {
+
+static const UCHAR_T TCAP_INSTANCE_ID = 0;
 
 //assign this before calling TCAPDispatcher::getInstance()
 extern Logger * _EINSS7_logger_DFLT; //by default "smsc.inman.inap"

@@ -5,9 +5,11 @@
 #include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
 #include "inman/comp/compdefs.hpp"
+#include "inman/comp/MapOpErrors.hpp"
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
+using smsc::inman::comp::MAPOpErrorId;
 
 /* GVR NOTE: while linking the below enums are taken from generated *
  * asn1/c codec, so they should not have namespace prefix.          */
@@ -40,16 +42,16 @@ struct MAPATIH_OpCode {
 
 struct ERR_ATSI {
     enum {
-        unknownSubscriber = 1,
-        bearerServiceNotProvisioned = 10,
-        teleserviceNotProvisioned = 11,
-        callBarred = 13,
-        illegalSSOperation = 16,
-        ssNotAvailable = 18,
-        dataMissing = 35,
-        unexpectedDataValue = 36,
-        atsi_NotAllowed = 60,
-        informationNotAvailable = 62
+        unknownSubscriber           = MAPOpErrorId::unknownSubscriber,
+        bearerServiceNotProvisioned = MAPOpErrorId::bearerServiceNotProvisioned,
+        teleserviceNotProvisioned   = MAPOpErrorId::teleserviceNotProvisioned,
+        callBarred                  = MAPOpErrorId::callBarred,
+        illegalSSOperation          = MAPOpErrorId::illegalSS_Operation,
+        ssNotAvailable              = MAPOpErrorId::ss_NotAvailable,
+        dataMissing                 = MAPOpErrorId::dataMissing,
+        unexpectedDataValue         = MAPOpErrorId::unexpectedDataValue,
+        atsi_NotAllowed             = MAPOpErrorId::atsi_NotAllowed,
+        informationNotAvailable     = MAPOpErrorId::informationNotAvailable
     };
 };
 

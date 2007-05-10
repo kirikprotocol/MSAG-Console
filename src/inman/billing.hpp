@@ -29,6 +29,7 @@ using smsc::inman::AbonentPolicy;
 using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::OPAQUE_OBJ;
+using smsc::inman::iaprvd::IAPQStatus;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
@@ -84,10 +85,12 @@ public:
     //-- CapSMS_SSFhandlerITF interface methods:
     void onDPSMSResult(unsigned char rp_cause = 0);
     //dialog finalization/error handling:
-    void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk);
+    //if ercode != 0, no result has been got from CAP service,
+    void onEndCapDlg(RCHash errcode = 0);
 
     //-- IAPQueryListenerITF interface methods:
-    void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec);
+    void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+                                                    IAPQStatus::Code qry_status);
     //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
@@ -105,10 +108,10 @@ protected:
     bool startCAPDialog(INScfCFG * use_scf);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
-    void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr = 0);
+    void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
     bool ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
                                const GsmSCFinfo * p_scf = NULL);
-    bool matchBillMode(void) const;
+    RCHash matchBillMode(void) const;
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
@@ -131,7 +134,7 @@ protected:
     AbonentPolicy * abPolicy;
     INScfCFG        abScf;
     XSmsService   * xsmsSrv;    //optional SMS Extra service config.
-    uint32_t        billErr;    //combined billing error code
+    RCHash          billErr;    //global error code made by URCRegistry
 };
 
 } //inman

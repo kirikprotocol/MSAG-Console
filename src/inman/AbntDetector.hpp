@@ -12,6 +12,7 @@ using smsc::inman::AbonentPolicy;
 using smsc::inman::sync::StopWatch;
 using smsc::inman::sync::TimerListenerITF;
 using smsc::inman::sync::OPAQUE_OBJ;
+using smsc::inman::iaprvd::IAPQStatus;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 
 #include "inman/interaction/MsgContract.hpp"
@@ -45,7 +46,8 @@ public:
     void Abort(const char * reason = NULL); //aborts billing due to fatal error
 
     //-- IAPQueryListenerITF interface methods:
-    void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec);
+    void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+                                                    IAPQStatus::Code qry_status);
     //-- TimerListenerITF interface methods:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 

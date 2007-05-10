@@ -24,7 +24,7 @@ namespace inman {
 class SRI_CSIListener {
 public:
     virtual void onCSIresult(const std::string & subcr_addr, const char * subcr_imsi, const GsmSCFinfo* scfInfo) = 0;
-    virtual void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer) = 0;
+    virtual void onCSIabort(const std::string &subcr_addr, RCHash ercode) = 0;
 };
 
 class SRIInterrogator: CHSRIhandlerITF {
@@ -43,7 +43,8 @@ protected:
     // -- CHSRIhandlerITF implementation:
     void onMapResult(CHSendRoutingInfoRes* arg);
     //dialog finalization/error handling:
-    void onEndMapDlg(unsigned short ercode, InmanErrorType errLayer);
+    //if ercode != 0, no result has been got from MAP service,
+    void onEndMapDlg(RCHash ercode = 0);
 
 private:
     Mutex           _sync;
@@ -72,7 +73,7 @@ struct ServiceCHSRI_CFG {
     SRI_CSIListener * client;
 };
 
-class ServiceCHSRI: /*public */SRI_CSIListener {
+class ServiceCHSRI: SRI_CSIListener {
 public:
     ServiceCHSRI(const ServiceCHSRI_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~ServiceCHSRI();
@@ -87,7 +88,7 @@ protected:
     friend class SRIInterrogator;
     //-- SRI_CSIListener interface
     void onCSIresult(const std::string &subcr_addr, const char * subcr_imsi, const GsmSCFinfo* scfInfo);
-    void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer);
+    void onCSIabort(const std::string &subcr_addr, RCHash ercode);
 
 private:
     typedef std::map<std::string, SRIInterrogator *> IntrgtrMAP;

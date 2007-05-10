@@ -1,17 +1,25 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include <assert.h>
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
+using smsc::inman::comp::chsri::MAP_CH_SRI_OpCode;
+using smsc::inman::comp::_RCS_MAPOpErrors;
+using smsc::inman::comp::MAPServiceRC;
+using smsc::inman::comp::_RCS_MAPService;
+
+#include "inman/inap/TCAPErrors.hpp"
+using smsc::inman::inap::TC_AbortCause;
+using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
 namespace inman {
 namespace inap {
 namespace chsri {
-
-using smsc::inman::comp::chsri::MAP_CH_SRI_OpCode;
-
 /* ************************************************************************** *
  * class MapCHSRIDlg implementation:
  * ************************************************************************** */
@@ -46,7 +54,9 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
     MutexGuard  grd(_sync);
     dialog = session->openDialog(tnpi_adr);
     if (!dialog)
-        throw CustomException("MapSRI: Unable to create TC Dialog");
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapSRI", "unable to create TC dialog");
+
     if (timeout)
         dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
@@ -58,7 +68,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
 
     Invoke* op = dialog->initInvoke(MAP_CH_SRI_OpCode::sendRoutingInfo, this);
     op->setParam(&arg);
-    dialog->sendInvoke(op);
+    dialog->sendInvoke(op);  //throws
 
     dialog->beginDialog(); //throws
     _sriState.s.ctrInited = MapCHSRIDlg::operInited;
@@ -70,7 +80,8 @@ void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*
 {
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
-        throw CustomException(-1, "inalid subscriber addr", subcr_adr);
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapSRI: inalid subscriber addr", subcr_adr);
     reqRoutingInfo(tnAdr, timeout);
 }
 
@@ -86,7 +97,7 @@ void MapCHSRIDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
 
     _sriState.s.ctrResulted = MapCHSRIDlg::operInited;
     try { reqRes.mergeSegment(res->getParam());
-    } catch (CustomException & exc) {
+    } catch (const CustomException & exc) {
         smsc_log_error(logger, "MapSRI[%u]: %s", exc.what());
     }
 }
@@ -102,7 +113,7 @@ void MapCHSRIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
 
         _sriState.s.ctrInited = _sriState.s.ctrResulted = MapCHSRIDlg::operDone;
         try { reqRes.mergeSegment(res->getParam());
-        } catch (CustomException & exc) {
+        } catch (const CustomException & exc) {
             smsc_log_error(logger, "MapSRI[%u]: %s", exc.what());
         }
         sriHdl->onMapResult(&reqRes);
@@ -110,7 +121,7 @@ void MapCHSRIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             endTCap();
     }
     if (do_end)
-        sriHdl->onEndMapDlg(0, smsc::inman::errOk);
+        sriHdl->onEndMapDlg();
 }
 
 //Called if Operation got ResultError
@@ -125,7 +136,7 @@ void MapCHSRIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
         _sriState.s.ctrInited = MapCHSRIDlg::operDone;
         endTCap();
     }
-    sriHdl->onEndMapDlg(resE->getOpcode(), smsc::inman::errMAP);
+    sriHdl->onEndMapDlg(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -138,7 +149,7 @@ void MapCHSRIDlg::onInvokeLCancel(Invoke *op)
         _sriState.s.ctrInited = MapCHSRIDlg::operFailed;
         endTCap();
     }
-    sriHdl->onEndMapDlg(MapCHSRIDlg::chsriServiceResponse, smsc::inman::errMAPuser);
+    sriHdl->onEndMapDlg(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
 }
 
 /* ------------------------------------------------------------------------ *
@@ -161,10 +172,11 @@ void MapCHSRIDlg::onDialogPAbort(UCHAR_T abortCause)
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[%u]: P_ABORT at state 0x%x", sriId, _sriState.value);
+        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, P_ABORT: %s ", sriId,
+                        _sriState.value, _RCS_TC_Abort->code2Txt(abortCause));
         endTCap();
     }
-    sriHdl->onEndMapDlg(abortCause, smsc::inman::errTCAP);
+    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -174,11 +186,13 @@ void MapCHSRIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[%u]: U_ABORT at state 0x%x", sriId, _sriState.value);
+        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, U_ABORT: %s", sriId,
+                        _sriState.value, !abortInfo_len ? "userInfo" :
+                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
         endTCap();
     }
-    sriHdl->onEndMapDlg((abortInfo_len == 1) ? *pAbortInfo : Dialog::tcUserGeneralError,
-                       smsc::inman::errTCuser);
+    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+                        TC_AbortCause::userAbort : *pAbortInfo));
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -204,15 +218,14 @@ void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
                        _sriState.value, dstr.c_str());
         endTCap();
     }
-    sriHdl->onEndMapDlg(reportCause, smsc::inman::errTCAP);
+    sriHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
 //or some logic error (f.ex. timeout expiration) on SSF side.
 void MapCHSRIDlg::onDialogREnd(bool compPresent)
 {
-    InmanErrorType layer = smsc::inman::errOk;
-    unsigned char  errcode = 0;
+    RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrFinished = 1;
@@ -220,13 +233,12 @@ void MapCHSRIDlg::onDialogREnd(bool compPresent)
             endTCap();
             if (!_sriState.s.ctrResulted) {
                 smsc_log_error(logger, "MapSRI[%u]: T_END_IND, state 0x%x", sriId, _sriState.value);
-                layer = smsc::inman::errMAPuser;
-                errcode = MapCHSRIDlg::chsriServiceResponse;
+                errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
             }
         }
     }
     if (!compPresent)
-        sriHdl->onEndMapDlg(errcode, layer);
+        sriHdl->onEndMapDlg(errcode);
     //else wait for ongoing Invoke result/error
 }
 
@@ -244,7 +256,7 @@ void MapCHSRIDlg::endTCap(void)
                 dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ? false : true);
                 smsc_log_debug(logger, "MapSRI[%u]: T_END_REQ, state: 0x%x", sriId,
                                 _sriState.value);
-            } catch (std::exception & exc) {
+            } catch (const std::exception & exc) {
                 smsc_log_error(logger, "MapSRI[%u]: T_END_REQ: %s", sriId, exc.what());
                 dialog->releaseAllInvokes();
             }

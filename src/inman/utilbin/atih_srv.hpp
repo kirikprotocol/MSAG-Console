@@ -16,7 +16,7 @@ using smsc::inman::comp::atih::ATSIRes;
 using smsc::inman::comp::atih::ATSIArg;
 
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
-using smsc::inman::inap::atih::ATSIhandler;
+using smsc::inman::inap::atih::ATSIhandlerITF;
 using smsc::inman::inap::atih::MapATSIDlg;
 
 namespace smsc  {
@@ -25,10 +25,10 @@ namespace inman {
 class ATCSIListener {
 public:
     virtual void onCSIresult(const std::string & subcr_addr, const GsmSCFinfo* scfInfo) = 0;
-    virtual void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer) = 0;
+    virtual void onCSIabort(const std::string &subcr_addr, RCHash ercode) = 0;
 };
 
-class ATIInterrogator: ATSIhandler {
+class ATIInterrogator: ATSIhandlerITF {
 public:
     ATIInterrogator(TCSessionMA* pSession, ATCSIListener * csi_listener,
                     Logger * uselog = NULL);
@@ -44,7 +44,8 @@ protected:
     //ATSIhandler interface
     void onATSIResult(ATSIRes* arg);
     //dialog finalization/error handling:
-    void onEndATSI(unsigned short ercode, InmanErrorType errLayer);
+    //if ercode != 0, no result has been got from MAP service,
+    void onEndATSI(RCHash ercode = 0);
 
 private:
     Mutex           _sync;
@@ -72,7 +73,7 @@ struct ServiceATIH_CFG {
     ATCSIListener * client;
 };
 
-class ServiceATIH: /*public */ATCSIListener {
+class ServiceATIH: ATCSIListener {
 public:
     ServiceATIH(const ServiceATIH_CFG * in_cfg, Logger * uselog = NULL);
     virtual ~ServiceATIH();
@@ -87,7 +88,7 @@ protected:
     friend class ATIInterrogator;
     //-- ATCSIListener interface
     void onCSIresult(const std::string &subcr_addr, const GsmSCFinfo* scfInfo);
-    void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer);
+    void onCSIabort(const std::string &subcr_addr, RCHash ercode);
 
 private:
     typedef std::map<std::string, ATIInterrogator *> IntrgtrMAP;

@@ -9,8 +9,8 @@ using smsc::inman::interaction::SPckContractResult;
 using smsc::inman::interaction::AbntContractRequest;
 using smsc::inman::interaction::CSAbntContractHdr_dlg;
 
-#include "inman/inerrcodes.hpp"
-using smsc::inman::InmanErrorCode;
+#include "inman/INManErrors.hpp"
+using smsc::inman::iaprvd::_RCS_IAPQStatus;
 
 namespace smsc  {
 namespace inman {
@@ -41,8 +41,10 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
 
         SPckContractResult spck;
         spck.Hdr().dlgId = srvHdr->dlgId;
-        spck.Cmd().setError(InmanErrorCode::combineError(
-                        errInman, InProtocol_GeneralError));
+        spck.Cmd().setError(
+            _RCS_INManErrors->mkhash(INManErrorId::protocolGeneralError),
+            _RCS_INManErrors->explainCode(INManErrorId::protocolGeneralError).c_str());
+
         _conn->sendPck(&spck);
     } else {
         smsc_log_debug(logger, "%s: Cmd[0x%X] for AbntDet[%u] received", _logId,
@@ -61,8 +63,9 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
                 workers.insert(WorkersMap::value_type(srvHdr->dlgId, dtr));
             } else {
                 SPckContractResult spck;
-                spck.Cmd().setError(InmanErrorCode::combineError(
-                                errInman, InLogic_ResourceLimitation));
+                spck.Cmd().setError(
+                    _RCS_INManErrors->mkhash(INManErrorId::cfgResourceLimitation),
+                    _RCS_INManErrors->explainCode(INManErrorId::cfgResourceLimitation).c_str());
                 spck.Hdr().dlgId = srvHdr->dlgId;
                 _conn->sendPck(&spck);
                 smsc_log_error(logger, "%s: maxRequests limit reached: %u", _logId,
@@ -133,7 +136,7 @@ void AbonentDetector::handleCommand(INPPacketAC* pck)
         wDone = true;
     }
     if (wDone || (wDone = !verifyReq(static_cast<AbntContractRequest*>(pck->pCmd()))))
-        _wErr = InmanErrorCode::combineError(errInman, InProtocol_InvalidData);
+        _wErr = _RCS_INManErrors->mkhash(INManErrorId::protocolInvalidData);
     else
         wDone = onContractReq(static_cast<AbntContractRequest*>(pck->pCmd()), _wId);
 
@@ -209,7 +212,8 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec)
+void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+                                    IAPQStatus::Code qry_status)
 {
     MutexGuard grd(_mutex);
     if (_state != adIAPQuering) {
@@ -220,6 +224,8 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRec
     _state = adIAPQueried;
     providerQueried = false;
     StopTimer();
+    if (qry_status != IAPQStatus::iqOk)
+        _wErr = _RCS_IAPQStatus->mkhash(qry_status);
     if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
         //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
         ConfigureSCF();
@@ -240,7 +246,7 @@ void AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
     iapTimer = NULL;
     _state = adTimedOut;
     abRec.reset(); //abtUnknown
-    _wErr = InmanErrorCode::combineError(errInman, InLogic_TimedOut);
+    _wErr = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
     reportAndExit();
 }
 
@@ -309,17 +315,24 @@ void AbonentDetector::reportAndExit(void)
            abNumber.getSignals(), AbonentContractInfo::type2Str(abRec.ab_type));
 
     if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
-        format(dstr, ", errCode: %u", _wErr);
-    } else if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
-        format(dstr, ", SCF %s:{%u}", abRec.gsmSCF.scfAddress.toString().c_str(),
-               abRec.gsmSCF.serviceKey);
+        format(dstr, ", errCode %u", _wErr);
+        if (_wErr) {
+            dstr += ": "; dstr += URCRegistry::explainHash(_wErr);
+        }
+    } else {
+        if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
+            format(dstr, ", SCF %s:{%u}", abRec.gsmSCF.scfAddress.toString().c_str(),
+                   abRec.gsmSCF.serviceKey);
+        if (abRec.getImsi()) {
+            dstr += ", IMSI: "; dstr += abRec.getImsi();
+        }
+        smsc_log_info(logger, dstr.c_str());
     }
-    smsc_log_info(logger, dstr.c_str());
 
     SPckContractResult spck;
     spck.Hdr().dlgId = _wId;
     if (_wErr)
-        spck.Cmd().setError(_wErr);
+        spck.Cmd().setError(_wErr, URCRegistry::explainHash(_wErr).c_str());
     else {
         spck.Cmd().setContractInfo(abRec);
         if (abPolicy)

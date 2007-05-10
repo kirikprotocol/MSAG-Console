@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-CXXFLAGS := -I../asn1rt $(CXXFLAGS)
+CXXFLAGS := -I../asn1rt $(CXXFLAGS) -DURCREGISTRY_GLOBAL_INIT
 PACKAGE := inman.comp
 
 ifndef SMSC_SRCDIR

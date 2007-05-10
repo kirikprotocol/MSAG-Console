@@ -15,6 +15,15 @@ using smsc::inman::comp::RequestReportSMSEventArg;
 using smsc::inman::comp::ResetTimerSMSArg;
 using smsc::inman::comp::EventReportSMSArg;
 
+using smsc::inman::comp::_RCS_CAPOpErrors;
+using smsc::inman::comp::CAPServiceRC;
+using smsc::inman::comp::_RCS_CAPService;
+
+#include "inman/inap/TCAPErrors.hpp"
+using smsc::inman::inap::TC_AbortCause;
+using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::_RCS_TC_Report;
+
 namespace smsc {
 namespace inman {
 namespace inap {
@@ -33,7 +42,9 @@ CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
         logger = Logger::getInstance("smsc.inman.inap.CapSMSDlg");
     dialog = session->openDialog();
     if (!dialog)
-        throw CustomException("Unable to create TC Dialog");
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "capSMS", "unable to create TC dialog");
+//        throw CustomException("Unable to create TC Dialog");
     
     dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
@@ -60,9 +71,9 @@ void CapSMSDlg::initialDPSMS(InitialDPSMSArg* arg) throw(CustomException)
     smsc_log_debug(logger, "CapSMS[%u]: --> SCF InitialDPSMS", capId);
     Invoke* op = dialog->initInvoke(CapSMSOpCode::InitialDPSMS, this);
     op->setParam(arg);
-    dialog->sendInvoke(op);
+    dialog->sendInvoke(op); //throws
 
-    dialog->beginDialog();
+    dialog->beginDialog();  //throws
     _capState.s.ctrInited = CAP_OPER_INITED;
 }
 
@@ -89,8 +100,8 @@ void CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
                                     (reportType == MessageType_request)
                                     ? 0 : CAPSMS_END_TIMEOUT);
     op->setParam(&arg);
-    dialog->sendInvoke(op);
-    dialog->continueDialog();
+    dialog->sendInvoke(op);  //throws
+    dialog->continueDialog();  //throws
     _capState.s.ctrReported = CAP_OPER_INITED;
 }
 
@@ -117,7 +128,8 @@ void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
     default:;
     }
     endTCap();
-    ssfHdl->onEndCapDlg(resE->getOpcode(), smsc::inman::errCAP3);
+    //ssfHdl->onEndCapDlg(resE->getOpcode(), smsc::inman::errCAP3);
+    ssfHdl->onEndCapDlg(_RCS_CAPOpErrors->mkhash(resE->getOpcode()));
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -132,7 +144,8 @@ void CapSMSDlg::onInvokeLCancel(Invoke *op)
                 "CapSMS[%u]: state 0x%x(TC: 0x%x): has not got any Operation of smsProcessingPackage",
                 capId, _capState.value, dialog->getState().value);
             endTCap();
-            ssfHdl->onEndCapDlg(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
+//            ssfHdl->onEndCapDlg(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
+            ssfHdl->onEndCapDlg(_RCS_CAPService->mkhash(CAPServiceRC::noServiceResponse));
         }
     } else if (CapSMSOpCode::EventReportSMS == op->getOpcode()) {
         endTCap();
@@ -163,7 +176,8 @@ void CapSMSDlg::onDialogPAbort(UCHAR_T abortCause)
     if ((_capState.s.ctrReported == CAP_OPER_INITED) || _capState.s.ctrFinished)
         ssfHdl->onEndCapDlg(); //T_END_IND is timed out
     else
-        ssfHdl->onEndCapDlg(abortCause, smsc::inman::errTCAP);
+//        ssfHdl->onEndCapDlg(abortCause, smsc::inman::errTCAP);
+        ssfHdl->onEndCapDlg(_RCS_TC_Abort->mkhash(abortCause));
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -172,10 +186,17 @@ void CapSMSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
 {
     MutexGuard  grd(_sync);
     _capState.s.ctrAborted = 1;
-    smsc_log_error(logger, "CapSMS[%u]: U_ABORT at state 0x%x", capId, _capState.value);
+//    smsc_log_error(logger, "CapSMS[%u]: U_ABORT at state 0x%x", capId, _capState.value);
+    smsc_log_error(logger, "CapSMS[%u]: state 0x%x, U_ABORT: %s", capId,
+                    _capState.value, !abortInfo_len ? "userInfo" :
+                    _RCS_TC_Abort->code2Txt(*pAbortInfo));
+
     endTCap();
-    ssfHdl->onEndCapDlg(Dialog::tcUserGeneralError, smsc::inman::errTCuser);
+//    ssfHdl->onEndCapDlg(Dialog::tcUserGeneralError, smsc::inman::errTCuser);
+    ssfHdl->onEndCapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+                        TC_AbortCause::userAbort : *pAbortInfo));
 }
+
 //Underlying layer unable to deliver message, just abort dialog
 void CapSMSDlg::onDialogNotice(UCHAR_T reportCause,
                         TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
@@ -197,7 +218,8 @@ void CapSMSDlg::onDialogNotice(UCHAR_T reportCause,
     smsc_log_error(logger, "CapSMS[%u]: NOTICE_IND at state 0x%x%s", capId,
                    _capState.value, dstr.c_str());
     endTCap();
-    ssfHdl->onEndCapDlg(reportCause, smsc::inman::errTCAP);
+//    ssfHdl->onEndCapDlg(reportCause, smsc::inman::errTCAP);
+    ssfHdl->onEndCapDlg(_RCS_TC_Report->mkhash(reportCause));
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
@@ -212,7 +234,8 @@ void CapSMSDlg::onDialogREnd(bool compPresent)
             ssfHdl->onEndCapDlg();
         } else{
             smsc_log_error(logger, "CapSMS[%u]: T_END_IND, state 0x%x", capId, _capState.value);
-            ssfHdl->onEndCapDlg(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
+            //ssfHdl->onEndCapDlg(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
+            ssfHdl->onEndCapDlg(_RCS_CAPService->mkhash(CAPServiceRC::noServiceResponse));
         }
     } //else wait for ongoing Invoke
 }
@@ -309,7 +332,8 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         ssfHdl->onEndCapDlg();
     } else if (doAbort) {
         endTCap();
-        ssfHdl->onEndCapDlg(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
+        //ssfHdl->onEndCapDlg(CapSMSDlg::smsContractViolation, smsc::inman::errCAPuser);
+        ssfHdl->onEndCapDlg(_RCS_CAPService->mkhash(CAPServiceRC::contractViolation));
     }
 }
 

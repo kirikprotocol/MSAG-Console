@@ -140,11 +140,11 @@ int IAPQueryDB::Execute(void)
     {
         MutexGuard tmp(_mutex);
         if (isStopping || !_owner->hasListeners(abonent))
-            return 0; //query was cancelled by either QueryManager or ThreadPool
+            //query was cancelled by either QueryManager or ThreadPool
+            return _qStatus = IAPQStatus::iqCancelled;
     }
     //sleep(24); //for debugging
 
-    int    status = 0;
     Connection * dcon = _cfg.ds->getConnection(); //waits for free connect
     Routine * rtq = NULL;
     int16_t res = -1;
@@ -152,16 +152,20 @@ int IAPQueryDB::Execute(void)
     
     try { //throws SQLException, connects to DB, large delay possible
         rtq = dcon->getRoutine(_cfg.rtId, callStr.c_str(), true); 
-    } catch (std::exception& exc) {
+    } catch (const std::exception& exc) {
         smsc_log_error(logger, "%s(%s): %s", taskName(),
                        abonent.getSignals(), exc.what());
-        status = -1; 
+        _qStatus = IAPQStatus::iqError;
+        _exc = exc.what();
     }
 
     {
         MutexGuard tmp(_mutex);
-        if (isStopping || !_owner->hasListeners(abonent))
-            rtq = NULL; //query was cancelled by either QueryManager or ThreadPool
+        if (isStopping || !_owner->hasListeners(abonent)) {
+            //query was cancelled by either QueryManager or ThreadPool
+            _qStatus = IAPQStatus::iqCancelled;
+            rtq = NULL;
+        }
     }
 
     if (rtq) {
@@ -174,10 +178,11 @@ int IAPQueryDB::Execute(void)
             if (timerId >= 0)
                 _cfg.ds->stopTimer(timerId);
             res = rtq->getInt16("RETURN"); //FUNCTION_RETURN_ATTR_NAME
-        } catch (std::exception& exc) {
+        } catch (const std::exception& exc) {
             smsc_log_error(logger, "%s(%s): %s", taskName(), 
                            abonent.getSignals(), exc.what());
-            status = -2; 
+            _qStatus = IAPQStatus::iqError;
+            _exc = exc.what();
         }
     }
     //convert returned integer to AbonentContractType value
@@ -185,12 +190,12 @@ int IAPQueryDB::Execute(void)
         abRec.ab_type = AbonentContractInfo::abtPrepaid;
     else if (!res)
         abRec.ab_type = AbonentContractInfo::abtPostpaid;
-    //else btUnknown
+    //else abtUnknown
 
     //do not unregister routine in order to reuse it in next queries.
     //routine will be deleted by ~DataSource().
     _cfg.ds->freeConnection(dcon);
-    return status;
+    return _qStatus;
 }
 
 } //db

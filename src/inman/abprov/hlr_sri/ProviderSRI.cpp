@@ -7,6 +7,8 @@ using smsc::inman::inap::TCAPDispatcher;
 #include "inman/comp/map_chsri/MapCHSRIFactory.hpp"
 using smsc::inman::comp::chsri::initMAPCHSRI3Components;
 
+using smsc::util::URCRegistry;
+
 namespace smsc {
 namespace inman {
 namespace iaprvd {
@@ -15,7 +17,7 @@ namespace sri {
 static const unsigned int _CFG_DFLT_QUERIES = 500;
 static const unsigned int _CFG_DFLT_MAP_TIMEOUT = 20;
 
-//This is the HLR(SRI) Provider dynamic library entry point
+//This is the HLR(CH-SRI) Provider dynamic library entry point
 extern "C" IAProviderCreatorITF * 
     loadupAbonentProvider(ConfigView* hlrCfg, Logger * use_log) throw(ConfigException)
 {
@@ -166,24 +168,25 @@ int IAPQuerySRI::Execute(void)
     {
         MutexGuard tmp(_mutex);
         if (isStopping || !_owner->hasListeners(abonent))
-            return 0; //query was cancelled by either QueryManager or ThreadPool
+            //query was cancelled by either QueryManager or ThreadPool
+            return _qStatus = IAPQStatus::iqCancelled;
     }
-    int status = 0;
     try {
         sriDlg = new MapCHSRIDlg(_cfg.mapSess, this);
         sriDlg->reqRoutingInfo(abonent, _cfg.mapTimeout);
         if (qsig.Wait(_cfg.mapTimeout*1000 + 10) != 0)
-            status = -2;
-    } catch (std::exception & exc) {
+            _qStatus = IAPQStatus::iqTimeout;
+    } catch (const std::exception & exc) {
         smsc_log_error(logger, "%s(%s): %s", taskName(),
                        abonent.getSignals(), exc.what());
-        status = -1;
+        _qStatus = IAPQStatus::iqError;
+        _exc = exc.what();
     }
     if (sriDlg) {
         delete sriDlg;  //synchronization point, waits for sriDlg mutex
         sriDlg = NULL;
     }
-    return status;
+    return _qStatus;
 }
 // ****************************************
 // -- CHSRIhandlerITF implementation:
@@ -191,7 +194,7 @@ int IAPQuerySRI::Execute(void)
 void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
 {
     MutexGuard  grd(_mutex);
-    if (!arg->getIMSI(abRec.abImsi))
+    if (!arg->getIMSI(abRec.abImsi)) //abonent is unknown
         smsc_log_error(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
     else {
         if (!arg->getSCFinfo(&abRec.gsmSCF)) {
@@ -205,13 +208,14 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
     }
 }
 
-void IAPQuerySRI::onEndMapDlg(unsigned short ercode, InmanErrorType errLayer)
+void IAPQuerySRI::onEndMapDlg(RCHash ercode/* = 0*/)
 {
     MutexGuard  grd(_mutex);
-    if (errLayer != smsc::inman::errOk)
-        smsc_log_error(logger, "%s(%s): query failed: code %u, layer %s\n",
+    if (ercode) {
+        smsc_log_error(logger, "%s(%s): query failed: code 0x%x, %s\n",
                         taskName(), abonent.getSignals(), ercode,
-                        _InmanErrorSource[errLayer]);
+                        URCRegistry::explainHash(ercode).c_str());
+    }
     qsig.Signal();
 }
 

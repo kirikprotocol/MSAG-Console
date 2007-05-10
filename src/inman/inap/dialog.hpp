@@ -1,6 +1,7 @@
 #ident "$Id$"
-//Locally initiated TCAP dialog implementation.
-
+/* ************************************************************************* *
+ * TCAP dialog implementation (initiated by local point).
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_DIALOG__
 #define __SMSC_INMAN_INAP_DIALOG__
 
@@ -14,14 +15,13 @@ using smsc::ac::ACOID;
 using smsc::inman::comp::OperationFactory;
 
 #include "inman/inap/invoke.hpp"
+#include "inman/inap/TCDlgErrors.hpp"
 
 namespace smsc {
 namespace inman {
 namespace inap {
 
 class SSNSession;
-
-static const USHORT_T   _DEFAULT_INVOKE_TIMER = 30; //seconds
 
 typedef union {
     unsigned short value;
@@ -50,7 +50,6 @@ typedef union {
 #define TCAP_DLG_COMP_LAST  2
 #define TCAP_DLG_COMP_WAIT  1
 
-
 class DialogListener {
 public:
     virtual void onDialogInvoke(Invoke*, bool lastComp) = 0;
@@ -64,12 +63,11 @@ public:
                                 UCHAR_T invId = 0, UCHAR_T opCode = 0) = 0;
 };
 
+static const USHORT_T   _DEFAULT_INVOKE_TIMER = 30; //seconds
+
+//NOTE: All thrown CustomExceptions has errcode set to RCHash
 class Dialog {
 public:
-    enum {
-        tcUserGeneralError = 0
-    };
-    
     void addListener(DialogListener* pListener);
     void removeListener(DialogListener* pListener);
 
@@ -79,7 +77,7 @@ public:
     //returns the default timeout for Invokes
     USHORT_T    getTimeout(void) const { return _timeout; }
     //sets the default timeout for Invoke result waiting
-    void    setInvokeTimeout(USHORT_T timeout);
+    void        setInvokeTimeout(USHORT_T timeout);
 
     //creates and registers Invoke, sets its response waiting timeout,
     //zero as timeout value sets Invoke timer equal to the Dialog default timeout value

@@ -123,8 +123,7 @@ void ServiceATIH::onCSIresult(const std::string & subcr_addr, const GsmSCFinfo* 
     }
 }
 
-void ServiceATIH::onCSIabort(const std::string &subcr_addr, unsigned short ercode,
-                                                             InmanErrorType errLayer)
+void ServiceATIH::onCSIabort(const std::string &subcr_addr, RCHash ercode)
 {
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
@@ -132,7 +131,7 @@ void ServiceATIH::onCSIabort(const std::string &subcr_addr, unsigned short ercod
         ATIInterrogator * worker = (*it).second;
         workers.erase(it);
         if (_cfg.client)
-            _cfg.client->onCSIabort(subcr_addr, ercode, errLayer);
+            _cfg.client->onCSIabort(subcr_addr, ercode);
         pool.push_back(worker);
     }
 }
@@ -223,17 +222,17 @@ void ATIInterrogator::onATSIResult(ATSIRes* arg)
         scfInfo.scfAddress.clear();
 }
  //dialog finalization/error handling:
-void ATIInterrogator::onEndATSI(unsigned short ercode, InmanErrorType errLayer)
+void ATIInterrogator::onEndATSI(RCHash ercode/* =0*/)
 {
     MutexGuard  grd(_sync);
     if (mapDlg) {
         delete mapDlg;
         mapDlg = NULL;
     }
-    if (errLayer == smsc::inman::errOk)
+    if (!ercode)
         csiHdl->onCSIresult(subcrAddr, &scfInfo);
     else
-        csiHdl->onCSIabort(subcrAddr, ercode, errLayer);
+        csiHdl->onCSIabort(subcrAddr, ercode);
 }
 
 

@@ -19,10 +19,6 @@ using smsc::inman::interaction::CSAbntContractHdr_dlg;
 using smsc::inman::interaction::SPckContractRequest;
 using smsc::inman::interaction::SPckContractResult;
 
-#include "inman/inerrcodes.hpp"
-using smsc::inman::InmanErrorCode;
-using smsc::inman::_InmanErrorSource;
-
 namespace smsc  {
 namespace inman {
 namespace test {
@@ -78,11 +74,7 @@ public:
         std::string msg;
         format(msg, "<-- Result[%u](%s): ", dId, abInfo->msIsdn.toString().c_str());
         if (res->errorCode()) {
-            InmanErrorCode  in_err(res->errorCode());
-            uint16_t        errCode;
-            InmanErrorType  errType = in_err.splitError(errCode);
-            format(msg, "failed(%u), error %s: %u", res->errorCode(),
-                   _InmanErrorSource[errType], errCode);
+            format(msg, "failed, error %u: %s", res->errorCode(), res->errorMsg());
         } else {
             format(msg, " %s, SCF %s, IMSI %s, source(%s)", res->contractInfo().type2Str(),
                    res->contractInfo().gsmSCF.toString().c_str(),

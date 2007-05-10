@@ -11,7 +11,7 @@ namespace iaprvd {
  * ************************************************************************** */
 IAPQueryAC::IAPQueryAC(unsigned q_id, IAPQueryManagerITF * owner,
                        unsigned timeout_secs, Logger * use_log/* = NULL*/)
-    : ThreadedTask(), _qId(q_id), _owner(owner)
+    : ThreadedTask(), _qId(q_id), _owner(owner), _qStatus(IAPQStatus::iqOk)
     , timeOut(timeout_secs), usage(0), logger(use_log)
 {
 }
@@ -28,11 +28,13 @@ IAPQueryAC::~IAPQueryAC()
 bool IAPQueryAC::init(const AbonentId & ab_number)
 {
     MutexGuard tmp(_mutex);
+    _qStatus = IAPQStatus::iqOk;
     abonent = ab_number;
     abRec.reset();
     isReleased = isStopping = false;
     usage++;
     mkTaskName();
+    _exc.clear();
     return true;
 }
 
@@ -106,14 +108,16 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 
         if (qry_rec) {
             if (qry_rec->cbList.empty())
-                smsc_log_debug(logger, "IAPrvd: %s(%s): no listeners set",
+                smsc_log_debug(logger, "IAPrvd: %s(%s): has been cancelled",
                                query->taskName(), (query->getAbonentId()).getSignals());
             else {
+                //tell listeners the contract type, even if query was failed (abtUnknown)
                 do {
                     IAPQueryListenerITF * hdl = qry_rec->cbList.front();
                     qry_rec->cbList.pop_front();
                     qrsGuard.Unlock();
-                    try { hdl->onIAPQueried(query->getAbonentId(), query->getAbonentRecord());
+                    try { hdl->onIAPQueried(query->getAbonentId(),
+                                        query->getAbonentRecord(), query->Status());
                     } catch (std::exception &exc) {
                         smsc_log_error(logger, "IAPrvd: %s(%s): listener exception: %s",
                                 query->taskName(), (query->getAbonentId()).getSignals(),
@@ -129,7 +133,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
         qrsGuard.Unlock();
     }
     //update cache: in case of DiskHash it may takes many seconds!!!
-    if (cache)
+    if (cache && (query->Status() == IAPQStatus::iqOk))
         cache->setAbonentInfo(query->getAbonentId(), query->getAbonentRecord());
 
     {   //update queries pool
@@ -137,11 +141,16 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
         if (!query->delOnCompletion())
             qryPool.push_back(query);
         //else query is being deleted by PooledThread::Execute()
-        smsc_log_info(logger, "IAPrvd: %s(%s): finished, contract %s, SCF %s, IMSI %s",
-                       query->taskName(), (query->getAbonentId()).getSignals(),
-                       (query->getAbonentRecord()).type2Str(),
-                      (query->getAbonentRecord()).gsmSCF.toString().c_str(),
-                      (query->getAbonentRecord()).imsiCStr());
+        if (query->Status() == IAPQStatus::iqOk)
+            smsc_log_info(logger, "IAPrvd: %s(%s): finished, contract %s, SCF %s, IMSI %s",
+                           query->taskName(), (query->getAbonentId()).getSignals(),
+                           (query->getAbonentRecord()).type2Str(),
+                          (query->getAbonentRecord()).gsmSCF.toString().c_str(),
+                          (query->getAbonentRecord()).imsiCStr());
+        else
+            smsc_log_info(logger, "IAPrvd: %s(%s): %s",
+                query->taskName(), (query->getAbonentId()).getSignals(),
+                query->Status2Str().c_str());
     }
     return;
 }

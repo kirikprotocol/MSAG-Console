@@ -1,24 +1,21 @@
 #ident "$Id$"
-// cap3SMS CONTRACT implementation (over TCAP dialog)
-
-#ifndef __SMSC_INMAN_INAP_CAPSMS__
-#define __SMSC_INMAN_INAP_CAPSMS__
+/* ************************************************************************* *
+ * cap3SMS CONTRACT implementation (over TCAP dialog)
+ * ************************************************************************* */
+#ifndef __SMSC_INMAN_INAP_CAP3SMS__
+#define __SMSC_INMAN_INAP_CAP3SMS__
 
 #include "core/synchronization/Mutex.hpp"
-#include "inman/inerrcodes.hpp"
-#include "inman/inap/session.hpp"
-#include "inman/inap/dialog.hpp"
-#include "inman/comp/cap_sms/CapSMSComps.hpp"
-
 using smsc::core::synchronization::Mutex;
 
-using smsc::inman::InmanErrorType;
-using smsc::inman::_InmanErrorSource;
+#include "inman/inap/session.hpp"
+#include "inman/inap/dialog.hpp"
+using smsc::inman::inap::TCSessionSR;
 
+#include "inman/comp/cap_sms/CapSMSComps.hpp"
+using smsc::util::RCHash;
 using smsc::inman::comp::InitialDPSMSArg;
 using smsc::inman::comp::RequestReportSMSEventArg;
-
-using smsc::inman::inap::TCSessionSR;
 
 namespace smsc {
 namespace inman {
@@ -47,7 +44,8 @@ class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
 public:
     virtual void onDPSMSResult(unsigned char rp_cause = 0) = 0;
     //dialog finalization/error handling:
-    virtual void onEndCapDlg(unsigned char ercode = 0, InmanErrorType errLayer = smsc::inman::errOk) = 0;
+    //if ercode != 0, no result has been got from CAP service,
+    virtual void onEndCapDlg(RCHash errcode = 0) = 0;
 };
 
 
@@ -98,11 +96,11 @@ public:
     CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
                 USHORT_T timeout = 0, Logger * uselog = NULL);
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
-    enum {
-        smsContractViolation = 1
-    };
+//    enum {
+//        smsContractViolation = 1
+//    };
 
-    unsigned getId(void) const { return capId; }
+    inline unsigned getId(void) const { return capId; }
 
     // SCFcontractor interface
     //  initiates capSMS dialog (over TCAP dialog)
@@ -149,5 +147,5 @@ private:
 } //inman
 } //smsc
 
-#endif /* __SMSC_INMAN_INAP_CAPSMS__ */
+#endif /* __SMSC_INMAN_INAP_CAP3SMS__ */
 

@@ -5,34 +5,32 @@
 #define __SMSC_INMAN_INAP_MAP_ATSI__
 
 #include "core/synchronization/Mutex.hpp"
-#include "inman/inerrcodes.hpp"
-#include "inman/inap/session.hpp"
-#include "inman/inap/dialog.hpp"
-#include "inman/comp/map_atih/MapATSIComps.hpp"
-
 using smsc::core::synchronization::Mutex;
 
-using smsc::inman::InmanErrorType;
-using smsc::inman::_InmanErrorSource;
-
-using smsc::inman::comp::atih::ATSIArg;
-using smsc::inman::comp::atih::ATSIRes;
+#include "inman/inap/session.hpp"
+#include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::DialogListener;
 using smsc::inman::inap::InvokeListener;
+
+#include "inman/comp/map_atih/MapATSIComps.hpp"
+using smsc::inman::comp::atih::ATSIArg;
+using smsc::inman::comp::atih::ATSIRes;
+using smsc::util::RCHash;
 
 namespace smsc {
 namespace inman {
 namespace inap {
 namespace atih {
 
-class ATSIhandler { // SCF <- HLR */
+class ATSIhandlerITF { // SCF <- HLR */
 public: 
     virtual void onATSIResult(ATSIRes* arg) = 0;
     //dialog finalization/error handling:
-    //if errLayer != errOk, dialog is aborted by reason = errcode
-    virtual void onEndATSI(unsigned short ercode, InmanErrorType errLayer) = 0;
+    //if ercode != 0, no result has been got from MAP service,
+    //NOTE: MAP dialog may be deleted only from this callback !!!
+    virtual void onEndATSI(RCHash ercode = 0) = 0;
 };
 
 typedef union {
@@ -49,15 +47,13 @@ typedef union {
 //innate timer of the SS7 stack for Invoke lifetime.
 class MapATSIDlg : DialogListener, InvokeListener { // SCF -> HLR
 public:
-    MapATSIDlg(TCSessionMA* pSession, ATSIhandler * atsi_handler, Logger * uselog = NULL);
+    MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler, Logger * uselog = NULL);
     virtual ~MapATSIDlg();
 
-    enum ATSIDlgError { atsiServiceResponse = 1 };
     enum MapOperState { operInited = 1, operFailed = 2, operDone = 3 };
 
-    void subsciptionInterrogation(const char * subcr_adr,
-                        bool imsi = false, USHORT_T timeout = 0) throw(CustomException);
-
+    void subsciptionInterrogation(const char * subcr_adr, bool imsi = false,
+                                USHORT_T timeout = 0) throw(CustomException);
     void endATSI(void);
 
 protected:
@@ -87,7 +83,7 @@ private:
     Dialog*     dialog;     //TCAP dialog
     TCSessionMA* session;    //TCAP dialogs factory
     Logger*     logger;
-    ATSIhandler * atsiHdl;
+    ATSIhandlerITF * atsiHdl;
     ATSIState   _atsiState;  //current state of mapATSI dialog
 };
 

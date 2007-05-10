@@ -5,7 +5,7 @@
 # include <inman/inap/session.hpp>
 # include <inman/inap/map_uss/DlgMapUSS.hpp>
 # include <inman/comp/map_uss/MapUSSComps.hpp>
-# include <inman/inerrcodes.hpp>
+//# include <inman/inerrcodes.hpp>
 
 # include <logger/Logger.h>
 # include <util/TonNpiAddress.hpp>
@@ -25,8 +25,9 @@ public:
 
   virtual void onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg);
   //dialog finalization/error handling:
-  //if errLayer != errOk, dialog is aborted by reason = errcode
-  virtual void onEndMapDlg(unsigned short ercode, smsc::inman::InmanErrorType errLayer);
+  //if ercode != 0, no result has been got from MAP service,
+  //NOTE: MAP dialog may be deleted only from this callback !!!
+  virtual void onEndMapDlg(RCHash ercode = 0);
 private:
   void sendNegativeResponse();
 

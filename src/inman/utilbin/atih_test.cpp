@@ -218,10 +218,10 @@ public:
                     subcr_addr.c_str());
         return;
     }
-    void onCSIabort(const std::string &subcr_addr, unsigned short ercode, InmanErrorType errLayer)
+    void onCSIabort(const std::string &subcr_addr, RCHash ercode)
     {
-        fprintf(outStream, "ERR: CSI request for subscriber %s failed: code %u, layer %s\n",
-                subcr_addr.c_str(), ercode, _InmanErrorSource[errLayer]);
+        fprintf(outStream, "ERR: CSI request for subscriber %s failed: code %u, %s\n",
+                subcr_addr.c_str(), ercode, URCRegistry::explainHash(ercode).c_str());
     }
 };
 

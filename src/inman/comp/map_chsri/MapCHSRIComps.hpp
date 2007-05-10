@@ -5,10 +5,12 @@
 #include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
 #include "inman/comp/compdefs.hpp"
+#include "inman/comp/MapOpErrors.hpp"
 
 using smsc::logger::Logger;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::MAPComponent;
+using smsc::inman::comp::MAPOpErrorId;
 
 namespace smsc {
 namespace inman {
@@ -23,21 +25,21 @@ struct MAP_CH_SRI_OpCode {
 
 struct ERR_CHSendRountigInfo {
     enum {
-        systemFailure = 34,
-        dataMissing = 35,
-        unexpectedDataValue = 36,
-        facilityNotSupported = 21,
-        or_NotAllowed = 48,
-        unknownSubscriber = 1,
-        numberChanged = 44,
-        bearerServiceNotProvisioned = 10,
-        teleserviceNotProvisioned = 11,
-        absentSubscriber = 27,
-        busySubscriber = 45,
-        noSubscriberReply = 46,
-        callBarred = 13,
-        cug_Reject = 15,
-        forwardingViolation = 14
+        systemFailure       = MAPOpErrorId::systemFailure,
+        dataMissing         = MAPOpErrorId::dataMissing,
+        unexpectedDataValue = MAPOpErrorId::unexpectedDataValue,
+        facilityNotSupported = MAPOpErrorId::facilityNotSupported,
+        or_NotAllowed       = MAPOpErrorId::or_NotAllowed,
+        unknownSubscriber   = MAPOpErrorId::unknownSubscriber,
+        numberChanged       = MAPOpErrorId::numberChanged,
+        bearerServiceNotProvisioned = MAPOpErrorId::bearerServiceNotProvisioned,
+        teleserviceNotProvisioned = MAPOpErrorId::teleserviceNotProvisioned,
+        absentSubscriber    = MAPOpErrorId::absentSubscriber,
+        busySubscriber      = MAPOpErrorId::busySubscriber,
+        noSubscriberReply   = MAPOpErrorId::noSubscriberReply,
+        callBarred          = MAPOpErrorId::callBarred,
+        cug_Reject          = MAPOpErrorId::cug_Reject,
+        forwardingViolation = MAPOpErrorId::forwardingViolation
     };
 };
 

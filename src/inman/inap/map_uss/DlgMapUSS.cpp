@@ -7,14 +7,22 @@ static char const ident[] = "$Id$";
  * ************************************************************************* */
 #include <assert.h>
 
-#include "inman/inap/map_uss/DlgMapUSS.hpp"
-using smsc::inman::comp::uss::MAPUSS_OpCode;
+#include "util/BinDump.hpp"
+using smsc::util::DumpHex;
 
 #include "inman/common/adrutil.hpp"
 using smsc::cvtutil::packMAPAddress2OCTS;
 
-#include "util/BinDump.hpp"
-using smsc::util::DumpHex;
+#include "inman/inap/map_uss/DlgMapUSS.hpp"
+using smsc::inman::comp::uss::MAPUSS_OpCode;
+using smsc::inman::comp::_RCS_MAPOpErrors;
+using smsc::inman::comp::MAPServiceRC;
+using smsc::inman::comp::_RCS_MAPService;
+
+#include "inman/inap/TCAPErrors.hpp"
+using smsc::inman::inap::TC_AbortCause;
+using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
 namespace inman {
@@ -107,7 +115,8 @@ MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap");
     if (!(dialog = session->openDialog()))
-        throw CustomException("MapUSS: Unable to create TC Dialog");
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                            "MapUSS", "unable to create TC dialog");
     dlgId = dialog->getId();
     dialog->addListener(this);
 }
@@ -183,7 +192,7 @@ void MapUSSDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             endTCap();
     }
     if (do_end)
-        resHdl->onEndMapDlg(0, smsc::inman::errOk);
+        resHdl->onEndMapDlg();
 }
 
 //Called if Operation got ResultError
@@ -198,7 +207,7 @@ void MapUSSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
         dlgState.s.ctrInited = MapUSSDlg::operDone;
         endTCap();
     }
-    resHdl->onEndMapDlg(resE->getOpcode(), smsc::inman::errMAP);
+    resHdl->onEndMapDlg(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -211,7 +220,7 @@ void MapUSSDlg::onInvokeLCancel(Invoke *op)
         dlgState.s.ctrInited = MapUSSDlg::operFailed;
         endTCap();
     }
-    resHdl->onEndMapDlg(MapUSSDlg::ussServiceResponse, smsc::inman::errMAPuser);
+    resHdl->onEndMapDlg(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
 }
 
 /* ------------------------------------------------------------------------ *
@@ -235,10 +244,11 @@ void MapUSSDlg::onDialogPAbort(UCHAR_T abortCause)
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapUSS[%u]: P_ABORT at state 0x%x", dlgId, dlgState.value);
+        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, P_ABORT: %s ", dlgId,
+                        dlgState.value, _RCS_TC_Abort->code2Txt(abortCause));
         endTCap();
     }
-    resHdl->onEndMapDlg(abortCause, smsc::inman::errTCAP);
+    resHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
 }
 
 //SCF/HLR sent DialogUAbort (some logic error on remote point).
@@ -248,11 +258,13 @@ void MapUSSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapUSS[%u]: U_ABORT at state 0x%x", dlgId, dlgState.value);
+        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, U_ABORT: %s", dlgId,
+                        dlgState.value, !abortInfo_len ? "userInfo" :
+                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
         endTCap();
     }
-    resHdl->onEndMapDlg((abortInfo_len == 1) ? *pAbortInfo : Dialog::tcUserGeneralError,
-                       smsc::inman::errTCuser);
+    resHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+                        TC_AbortCause::userAbort : *pAbortInfo));
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -278,15 +290,14 @@ void MapUSSDlg::onDialogNotice(UCHAR_T reportCause,
                        dlgState.value, dstr.c_str());
         endTCap();
     }
-    resHdl->onEndMapDlg(reportCause, smsc::inman::errTCAP);
+    resHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
 //or some logic error (f.ex. timeout expiration) on SSF side.
 void MapUSSDlg::onDialogREnd(bool compPresent)
 {
-    InmanErrorType layer = smsc::inman::errOk;
-    unsigned char  errcode = 0;
+    RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrFinished = 1;
@@ -294,13 +305,12 @@ void MapUSSDlg::onDialogREnd(bool compPresent)
             endTCap();
             if (!dlgState.s.ctrResulted) {
                 smsc_log_error(logger, "MapUSS[%u]: T_END_IND, state 0x%x", dlgId, dlgState.value);
-                layer = smsc::inman::errMAPuser;
-                errcode = MapUSSDlg::ussServiceResponse;
+                errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
             }
         }
     }
     if (!compPresent)
-        resHdl->onEndMapDlg(errcode, layer);
+        resHdl->onEndMapDlg(errcode);
     //else wait for ongoing Invoke result/error
 }
 

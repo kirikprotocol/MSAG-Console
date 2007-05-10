@@ -3,18 +3,24 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
+using smsc::inman::comp::atih::MAPATIH_OpCode;
+using smsc::inman::comp::_RCS_MAPOpErrors;
+using smsc::inman::comp::MAPServiceRC;
+using smsc::inman::comp::_RCS_MAPService;
+
+#include "inman/inap/TCAPErrors.hpp"
+using smsc::inman::inap::TC_AbortCause;
+using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
 namespace inman {
 namespace inap {
 namespace atih {
-
-using smsc::inman::comp::atih::MAPATIH_OpCode;
-
 /* ************************************************************************** *
  * class MapATSIDlg implementation:
  * ************************************************************************** */
-MapATSIDlg::MapATSIDlg(TCSessionMA* pSession, ATSIhandler * atsi_handler,
+MapATSIDlg::MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler,
                         Logger * uselog/* = NULL*/)
     : atsiHdl(atsi_handler), session(pSession), atsiId(0), dialog(NULL)
     , logger(uselog)
@@ -46,11 +52,14 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
     MutexGuard  grd(_sync);
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
-        throw CustomException(-1, "inalid subscriberID", subcr_adr);
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapATSI: inalid subscriber addr", subcr_adr);
 
     dialog = session->openDialog(tnAdr);
     if (!dialog)
-        throw CustomException("MapATSI[0]: Unable to create TC Dialog");
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapATSI", "unable to create TC dialog");
+
     if (timeout)
         dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
@@ -66,9 +75,9 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
 
     Invoke* op = dialog->initInvoke(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, this);
     op->setParam(&arg);
-    dialog->sendInvoke(op);
+    dialog->sendInvoke(op); //throws
 
-    dialog->beginDialog();
+    dialog->beginDialog(); //throws
     _atsiState.s.ctrInited = MapATSIDlg::operInited;
 }
 
@@ -92,7 +101,7 @@ void MapATSIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
             endTCap();
     }
     if (do_end)
-        atsiHdl->onEndATSI(0, smsc::inman::errOk);
+        atsiHdl->onEndATSI();
 }
 
 //Called if Operation got ResultError
@@ -107,7 +116,7 @@ void MapATSIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
         _atsiState.s.ctrInited = MapATSIDlg::operDone;
         endTCap();
     }
-    atsiHdl->onEndATSI(resE->getOpcode(), smsc::inman::errMAP);
+    atsiHdl->onEndATSI(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -120,7 +129,7 @@ void MapATSIDlg::onInvokeLCancel(Invoke *op)
         _atsiState.s.ctrInited = MapATSIDlg::operFailed;
         endTCap();
     }
-    atsiHdl->onEndATSI(MapATSIDlg::atsiServiceResponse, smsc::inman::errMAPuser);
+    atsiHdl->onEndATSI(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
 }
 
 /* ------------------------------------------------------------------------ *
@@ -143,10 +152,11 @@ void MapATSIDlg::onDialogPAbort(UCHAR_T abortCause)
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapATSI[%u]: P_ABORT at state 0x%x", atsiId, _atsiState.value);
+        smsc_log_error(logger, "MapATSI[%u]: state 0x%x, P_ABORT: %s ", atsiId,
+                        _atsiState.value, _RCS_TC_Abort->code2Txt(abortCause));
         endTCap();
     }
-    atsiHdl->onEndATSI(abortCause, smsc::inman::errTCAP);
+    atsiHdl->onEndATSI(_RCS_TC_Abort->mkhash(abortCause));
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -156,11 +166,13 @@ void MapATSIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapATSI[%u]: U_ABORT at state 0x%x", atsiId, _atsiState.value);
+        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, U_ABORT: %s", atsiId,
+                        _atsiState.value, !abortInfo_len ? "userInfo" :
+                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
         endTCap();
     }
-    atsiHdl->onEndATSI((abortInfo_len == 1) ? *pAbortInfo : Dialog::tcUserGeneralError,
-                       smsc::inman::errTCuser);
+    atsiHdl->onEndATSI(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+                        TC_AbortCause::userAbort : *pAbortInfo));
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -186,7 +198,7 @@ void MapATSIDlg::onDialogNotice(UCHAR_T reportCause,
                        _atsiState.value, dstr.c_str());
         endTCap();
     }
-    atsiHdl->onEndATSI(reportCause, smsc::inman::errTCAP);
+    atsiHdl->onEndATSI(_RCS_TC_Report->mkhash(reportCause));
 }
 
 
@@ -194,8 +206,7 @@ void MapATSIDlg::onDialogNotice(UCHAR_T reportCause,
 //or some logic error (f.ex. timeout expiration) on SSF side.
 void MapATSIDlg::onDialogREnd(bool compPresent)
 {
-    InmanErrorType layer = smsc::inman::errOk;
-    unsigned char  errcode = 0;
+    RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrFinished = 1;
@@ -203,13 +214,12 @@ void MapATSIDlg::onDialogREnd(bool compPresent)
             endTCap();
             if (!_atsiState.s.ctrResulted) {
                 smsc_log_error(logger, "MapATSI[%u]: T_END_IND, state 0x%x", atsiId, _atsiState.value);
-                layer = smsc::inman::errMAPuser;
-                errcode = MapATSIDlg::atsiServiceResponse;
+                errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
             }
         }
     }
     if (!compPresent)
-        atsiHdl->onEndATSI(errcode, layer);
+        atsiHdl->onEndATSI(errcode);
     //else wait for ongoing Invoke result/error
 }
 

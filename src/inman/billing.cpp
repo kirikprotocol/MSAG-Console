@@ -15,10 +15,16 @@ using smsc::inman::inap::TCSessionAC;
 using smsc::inman::interaction::SerializerException;
 using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::SPckChargeSmsResult;
+using smsc::util::URCRegistry;
+
+#include "inman/comp/cap_sms/MOSM_RPCauses.hpp"
+using smsc::inman::comp::_RCS_MOSM_RPCause;
+
+#include "inman/INManErrors.hpp"
+using smsc::inman::iaprvd::_RCS_IAPQStatus;
 
 namespace smsc  {
 namespace inman {
-
 /* ************************************************************************** *
  * class BillingManager implementation:
  * ************************************************************************** */
@@ -53,8 +59,10 @@ void BillingManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializableP
                 workers.insert(WorkersMap::value_type(srvHdr->dlgId, bill));
             } else {
                 SPckChargeSmsResult spck;
-                spck.Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-                spck.Cmd().setError(errInman, InLogic_ResourceLimitation);
+                spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+                spck.Cmd().setError(
+                    _RCS_INManErrors->mkhash(INManErrorId::cfgResourceLimitation),
+                    _RCS_INManErrors->explainCode(INManErrorId::cfgResourceLimitation).c_str());
                 spck.Hdr().dlgId = srvHdr->dlgId;
                 _conn->sendPck(&spck);
                 smsc_log_warn(logger, "%s: maxBilling limit reached: %u", _logId,
@@ -123,7 +131,7 @@ bool Billing::BillComplete(void) const
  * NOTE: these methods are not the processing graph entries, so never lock bilMutex,
  *       it's a caller responsibility to lock bilMutex !!!
  * ---------------------------------------------------------------------------------- */
-bool Billing::matchBillMode(void) const 
+RCHash Billing::matchBillMode(void) const 
 {
     CDRRecord::CDRBearerType bearer = cdr._smsXSrvs ? CDRRecord::dpUSSD : cdr._bearer;
 
@@ -135,7 +143,7 @@ bool Billing::matchBillMode(void) const
             || ((cdr._smsXMask & SMSX_INCHARGE_SRV)     //Charge SMS via IN point despite of
                 && (cdr._bearer == CDRRecord::dpSMS)    //billMode setting
                 && _cfg.billMode)
-            ) ? true : false;
+            ) ? 0 : _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch);
 }
 
 void Billing::doCleanUp(void)
@@ -342,7 +350,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         }
     }
 
-    bill2CDR = !matchBillMode() || (cdr._smsXMask & SMSX_NOCHARGE_SRV);
+    bill2CDR = ((billErr = matchBillMode()) || (cdr._smsXMask & SMSX_NOCHARGE_SRV));
     AbonentRecord   abRec; //ab_type = abtUnknown
     if (bill2CDR || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
                       == AbonentContractInfo::abtPostpaid))) {
@@ -457,17 +465,17 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes, CsBillingHdr_dlg *h
 }
 
 //NOTE: bilMutex should be locked upon entry
-void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t inmanErr /* = 0*/)
+void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr /* = 0*/)
 {
     if (inmanErr)
         billErr = inmanErr;
     std::string reply;
 
     if (chg_res != ChargeSmsResult::CHARGING_POSSIBLE) {
-        format(reply, "NOT_POSSIBLE (cause %u)", inmanErr);
+        format(reply, "NOT_POSSIBLE (cause %u)", billErr);
         state = Billing::bilReleased;
     } else {
-        format(reply, "POSSIBLE (via %s, cause %u)", bill2CDR ? "CDR" : "SCF", inmanErr);
+        format(reply, "POSSIBLE (via %s, cause %u)", bill2CDR ? "CDR" : "SCF", billErr);
         state = Billing::bilContinued;
     }
     smsc_log_info(logger, "%s: <-- %s CHARGING_%s, abonent(%s) type: %s (%u)", _logId,
@@ -475,12 +483,14 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, uint32_t 
                 AbonentContractInfo::type2Str(abType), (unsigned)abType);
 
     SPckChargeSmsResult res;
-    res.Cmd().SetValue(chg_res);
-    res.Cmd().setError(inmanErr);
+    res.Cmd().setValue(chg_res);
+    if (billErr)
+        res.Cmd().setError(billErr, URCRegistry::explainHash(billErr).c_str());
     res.Hdr().dlgId = _wId;
-    if (_mgr->sendCmd(&res))
-        StartTimer(_cfg.maxTimeout);
-    else     //TCP connect fatal failure
+    if (_mgr->sendCmd(&res)){
+        if (chg_res == ChargeSmsResult::CHARGING_POSSIBLE)
+            StartTimer(_cfg.maxTimeout); //expecting DeliverySmsResult
+    } else     //TCP connect fatal failure
         abortThis(_mgr->connectError()->what());
     return;
 }
@@ -511,8 +521,10 @@ void Billing::handleCommand(INPPacketAC* pck)
             }
             if (!goon || !onChargeSms(static_cast<ChargeSms*>(pck->pCmd()), NULL)) {
                 SPckChargeSmsResult spck;
-                spck.Cmd().SetValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-                spck.Cmd().setError(errInman, InProtocol_InvalidData);
+                spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+                spck.Cmd().setError(
+                    _RCS_INManErrors->mkhash(INManErrorId::protocolInvalidData),
+                    _RCS_INManErrors->explainCode(INManErrorId::protocolInvalidData).c_str());
                 spck.Hdr().dlgId = _wId;
                 _mgr->sendCmd(&spck);
                 doFinalize();
@@ -586,7 +598,8 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec)
+void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+                            IAPQStatus::Code qry_status)
 {
     MutexGuard grd(bilMutex);
 
@@ -597,6 +610,9 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab
     }
     StopTimer(state);
     state = bilQueried;
+    if (qry_status != IAPQStatus::iqOk)
+        billErr = _RCS_IAPQStatus->mkhash(qry_status);
+
     ConfigureSCFandCharge(ab_rec.ab_type, ab_rec.getSCFinfo());
     return;
 }
@@ -640,7 +656,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
                 }
             }
         }
-        scfErr = InmanErrorCode::combineError(errRPCause, (uint16_t)rp_cause);
+        scfErr = _RCS_MOSM_RPCause->mkhash(rp_cause);
         if (!bill2CDR)
             chgRes = ChargeSmsResult::CHARGING_NOT_POSSIBLE;
     }
@@ -648,21 +664,20 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
     return;
 }
 
-void Billing::onEndCapDlg(unsigned char ercode/* = 0*/,
-                          InmanErrorType errLayer/* = smsc::inman::errOk*/)
+void Billing::onEndCapDlg(RCHash errcode/* = 0*/)
 {
     MutexGuard grd(bilMutex);
     capDlgActive = false;
-    if (errLayer == smsc::inman::errOk) {   //EndSMS
+    if (!errcode) {   //EndSMS
         if ((state == bilReleased) || (state == bilReported))
             doFinalize(true);
         else if (state != bilContinued)
             smsc_log_error(logger, "%s: onEndCapDlg() at state: %u",
                            _logId, (unsigned)state);
     } else {                                //AbortSMS
-        billErr = InmanErrorCode::combineError(errLayer, (uint16_t)ercode); 
-        smsc_log_error(logger, "%s: CapSMSDlg Error, code: %u, layer %s",
-                       _logId, (unsigned)ercode, _InmanErrorSource[errLayer]);
+        billErr = errcode;
+        smsc_log_error(logger, "%s: CapSMSDlg Error, code: %u, %s",
+                       _logId, errcode, URCRegistry::explainHash(errcode).c_str());
         bool  contCharge = false;
         switch (state) {
         case Billing::bilComplete:
