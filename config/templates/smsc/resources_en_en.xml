@@ -154,19 +154,20 @@
         <param name="database_error">storage error</param>
         <param name="system_error">system error</param>
         <param name="unknown">unknown error</param>
+        <param name="invalid_list_name">invalid list name</param>
       </section>
     </section>
     <section name="templates">
       <section name="dl">
-        <param name="invalidcmdparam">Invalid dl command</param>
+        <param name="invalidcmdparam">Invalid dl command: $$string import=reason$$</param>
         <param name="adderr">Add list error:reason=$$string import=reason$$, arg=$$string import=arg1$$</param>
         <param name="addok">Add $$string import=arg1$$ ok</param>
         <param name="delerr">Delete $$string import=arg1$$ error: $$string import=reason$$</param>
         <param name="delok">Delete $$string import=arg1$$ ok</param>
-        <param name="mlisterr">List of members error:Delete $$string import=reason$$</param>
+        <param name="mlisterr">List of members error:$$string import=reason$$</param>
         <param name="listempty">There are no lists</param>
         <param name="mlistempty">There are no members in this list</param>
-        <param name="listerr">Failed to get lists:Delete $$string import=reason$$</param>
+        <param name="listerr">Failed to get lists:$$string import=reason$$</param>
         <param name="madderr">Member add to $$string import=arg1$$ error:$$string import=reason$$</param>
         <param name="maddok">Member $$string import=arg2$$ added to list $$string import=arg1$$</param>
         <param name="mdelerr">Failed to delete member $$string import=arg2$$ from list $$string import=arg1$$:$$string import=reason$$</param>
@@ -174,6 +175,7 @@
         <param name="sadderr">Submitter add to $$string import=arg1$$ error:$$string import=reason$$</param>
         <param name="saddok">Submitter $$string import=arg2$$ added to list $$string import=arg1$$</param>
         <param name="sdelerr">Failed to delete submitter $$string import=arg2$$ from list $$string import=arg1$$:$$string import=reason$$</param>
+        <param name="slisterr">Failed to get lists of submitters:$$string import=reason$$</param>
         <param name="sdelok">Submitter $$string import=arg2$$ deleted from list $$string import=arg1$$</param>
         <param name="sendok">Message sent to $$string import=arg2$$ members</param>
         <param name="senderr">Failed to send message to list:$$string import=reason$$</param>
