@@ -109,9 +109,15 @@ DBEntityStorageConnection::createStatement(const char* sql)
 
       return new SelectInfoSme_Id_Mapping_SmscId_criterion(StorageHelper::getInfoSme_Id_Mapping_Storage());
     } else if (!strncmp(sql,"DELETE FROM INFOSME_ID_MAPPING",del_infosme_id_map_len)) {
-      smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object Delete_from_InfoSme_Id_Mapping_By_SmscId");
+      if (strstr(sql, "WHERE SMSC_ID=:SMSC_ID")) {
+        smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object Delete_from_InfoSme_Id_Mapping_By_SmscId");
 
-      return new Delete_from_InfoSme_Id_Mapping_By_SmscId(StorageHelper::getInfoSme_Id_Mapping_Storage());
+        return new Delete_from_InfoSme_Id_Mapping_By_SmscId(StorageHelper::getInfoSme_Id_Mapping_Storage());
+      } else {
+        smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object Delete_from_InfoSme_Id_Mapping_By_Id");
+
+        return new Delete_from_InfoSme_Id_Mapping_By_Id(StorageHelper::getInfoSme_Id_Mapping_Storage());
+      }
     } else if (!strncmp(sql,"DELETE FROM INFOSME_TASKS_STAT",del_from_infosme_tasks_stat_len)) {
       smsc_log_info(_logger, "DBEntityStorageConnection::createStatement::: return object Delete_from_InfoSme_Tasks_Stat_By_TaskId");
 
