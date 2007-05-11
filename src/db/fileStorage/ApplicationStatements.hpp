@@ -26,11 +26,10 @@ public:
   class InfoSme_Id_Mapping_ResultSet : public DBEntityStorageResultSet
   {
   public:
-    InfoSme_Id_Mapping_ResultSet(InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* dbIterator,
-                                 smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex, smsc::core::synchronization::Mutex>& mutex) 
-      : _dbIterator(dbIterator), _mutex(mutex), _logger(Logger::getInstance("resultset1")) { _mutex->Lock(); }
+    InfoSme_Id_Mapping_ResultSet(InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* dbIterator) 
+      : _dbIterator(dbIterator), _logger(Logger::getInstance("dbStrg")) {}
 
-    ~InfoSme_Id_Mapping_ResultSet() { _mutex->Unlock(); }
+    ~InfoSme_Id_Mapping_ResultSet() {}
     virtual bool fetchNext() throw(SQLException);
 
     virtual uint64_t getUint64(int pos) throw(SQLException, InvalidArgumentException);
@@ -40,8 +39,6 @@ public:
   private:
     InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* _dbIterator;
     InfoSme_Id_Mapping_Entity _fetchedValue;
-    smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
-                                smsc::core::synchronization::Mutex> _mutex;
     smsc::logger::Logger *_logger;
   };
 
@@ -58,7 +55,7 @@ class SelectInfoSme_T_stateAndSendDate_criterion : public DBEntityStorageStateme
 {
 public:
   SelectInfoSme_T_stateAndSendDate_criterion(StorageHelper::InfoSme_T_storage_ref_t& dataSource)
-    : _dataSource(dataSource), _logger(Logger::getInstance("select2")) {}
+    : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint8(int pos, uint8_t val, bool null=false) throw(SQLException);
 
@@ -70,7 +67,7 @@ public:
   {
   public:
     InfoSme_T_ResultSet(InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator* dbIterator,
-                        const InfoSme_T_Entity::StateANDSDate_key& maxKey) : _dbIterator(dbIterator), _maxKey(maxKey), _logger(Logger::getInstance("resultset1")) {}
+                        const InfoSme_T_Entity::StateANDSDate_key& maxKey) : _dbIterator(dbIterator), _maxKey(maxKey), _logger(Logger::getInstance("dbStrg")) {}
 
     virtual bool fetchNext() throw(SQLException);
 
@@ -101,14 +98,14 @@ class SelectInfoSme_T_fullTableScan : public DBEntityStorageStatement
 {
 public:
   SelectInfoSme_T_fullTableScan(StorageHelper::InfoSme_T_storage_ref_t dataSource)
-    : _dataSource(dataSource), _logger(Logger::getInstance("select2")) {}
+    : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual ResultSet* executeQuery() throw(SQLException);
 
   class InfoSme_T_ResultSet : public DBEntityStorageResultSet
   {
   public:
-    InfoSme_T_ResultSet(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _iterator(dataSource->getIterator()), _logger(Logger::getInstance("resultset1")) {}
+    InfoSme_T_ResultSet(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _iterator(dataSource->getIterator()), _logger(Logger::getInstance("dbStrg")) {}
 
     ~InfoSme_T_ResultSet() { delete _iterator; }
 
@@ -168,7 +165,7 @@ private:
 class Insert_into_InfoSme_Generating_Tasks : public DBEntityStorageStatement
 {
 public:
-  Insert_into_InfoSme_Generating_Tasks(InfoSme_Generating_Tasks_DBEntityStorage* dataSource) : _dataSource(dataSource),_logger(Logger::getInstance("insert2")) {}
+  Insert_into_InfoSme_Generating_Tasks(InfoSme_Generating_Tasks_DBEntityStorage* dataSource) : _dataSource(dataSource),_logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setString(int pos, const char* str, bool null=false) throw(SQLException);
 
@@ -198,7 +195,7 @@ private:
 class Delete_from_InfoSme_T_By_Id : public DBEntityStorageStatement
 {
 public:
-  Delete_from_InfoSme_T_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("delete1")) {}
+  Delete_from_InfoSme_T_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
 
@@ -212,7 +209,7 @@ private:
 class Delete_from_InfoSme_T_By_State : public DBEntityStorageStatement
 {
 public:
-  Delete_from_InfoSme_T_By_State(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()), _logger(Logger::getInstance("delete2")) {}
+  Delete_from_InfoSme_T_By_State(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()), _logger(Logger::getInstance("dbStrg")) {}
 
   ~Delete_from_InfoSme_T_By_State() { delete _iterator; }
 
@@ -229,7 +226,7 @@ private:
 class Delete_from_InfoSme_T_By_StateAndAbonent : public DBEntityStorageStatement
 {
 public:
-  Delete_from_InfoSme_T_By_StateAndAbonent(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()), _logger(Logger::getInstance("delete3")) {}
+  Delete_from_InfoSme_T_By_StateAndAbonent(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()), _logger(Logger::getInstance("dbStrg")) {}
 
   ~Delete_from_InfoSme_T_By_StateAndAbonent() { delete _iterator; }
 
@@ -248,7 +245,7 @@ private:
 class Update_InfoSme_T_Set_NewState_By_OldState : public DBEntityStorageStatement
 {
 public:
-  Update_InfoSme_T_Set_NewState_By_OldState(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()), _logger(Logger::getInstance("update1")) {}
+  Update_InfoSme_T_Set_NewState_By_OldState(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _iterator(dataSource->getIterator()), _logger(Logger::getInstance("dbStrg")) {}
 
   ~Update_InfoSme_T_Set_NewState_By_OldState() { delete _iterator; }
 
@@ -265,7 +262,7 @@ private:
 class Update_InfoSme_T_Set_State_By_Id : public DBEntityStorageStatement
 {
 public:
-  Update_InfoSme_T_Set_State_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("update2")) {}
+  Update_InfoSme_T_Set_State_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
   virtual void setUint8(int pos, uint8_t val, bool null=false) throw(SQLException);
   virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
 
@@ -280,7 +277,7 @@ private:
 class Update_InfoSme_T_Set_State_By_IdAndState : public DBEntityStorageStatement
 {
 public:
-  Update_InfoSme_T_Set_State_By_IdAndState(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("update3")) {}
+  Update_InfoSme_T_Set_State_By_IdAndState(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
   virtual void setUint8(int pos, uint8_t val, bool null=false) throw(SQLException);
   virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
   virtual uint32_t executeUpdate() throw(SQLException);
@@ -294,7 +291,7 @@ private:
 class Update_InfoSme_T_Set_StateAndSendDate_By_Id : public DBEntityStorageStatement
 {
 public:
-  Update_InfoSme_T_Set_StateAndSendDate_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("update4")) {}
+  Update_InfoSme_T_Set_StateAndSendDate_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
 
@@ -313,7 +310,7 @@ private:
 class Update_InfoSme_T_Set_NewMessage_By_Id : public DBEntityStorageStatement
 {
 public:
-  Update_InfoSme_T_Set_NewMessage_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("update4")) {}
+  Update_InfoSme_T_Set_NewMessage_By_Id(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
 
@@ -329,7 +326,7 @@ private:
 class Insert_into_InfoSme_Id_Mapping : public DBEntityStorageStatement
 {
 public:
-  Insert_into_InfoSme_Id_Mapping(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
+  Insert_into_InfoSme_Id_Mapping(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
 
@@ -342,6 +339,7 @@ private:
   std::string _taskId, _smscId;
   
   InfoSme_Id_Mapping_DBEntityStorage* _dataSource;
+  smsc::logger::Logger *_logger;
 };
 
 class Delete_from_InfoSme_Id_Mapping_By_SmscId : public DBEntityStorageStatement
@@ -357,6 +355,22 @@ private:
   std::string _smscId;
   
   InfoSme_Id_Mapping_DBEntityStorage* _dataSource;
+};
+
+class Delete_from_InfoSme_Id_Mapping_By_Id : public DBEntityStorageStatement
+{
+public:
+  Delete_from_InfoSme_Id_Mapping_By_Id(InfoSme_Id_Mapping_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
+
+  virtual void setUint64(int pos, uint64_t val, bool null=false) throw(SQLException);
+
+  virtual uint32_t executeUpdate() throw(SQLException);
+
+private:
+  uint64_t _msgId;
+  
+  InfoSme_Id_Mapping_DBEntityStorage* _dataSource;
+  smsc::logger::Logger *_logger;
 };
 
 #include "InfoSme_Tasks_Stat_DBEntityStorage.hpp"
@@ -396,14 +410,14 @@ class SelectInfoSme_TasksStat_fullTableScan : public DBEntityStorageStatement
 {
 public:
   SelectInfoSme_TasksStat_fullTableScan(InfoSme_Tasks_Stat_DBEntityStorage* dataSource)
-    : _dataSource(dataSource),  _logger(Logger::getInstance("select2")) {}
+    : _dataSource(dataSource),  _logger(Logger::getInstance("dbStrg")) {}
 
   virtual ResultSet* executeQuery() throw(SQLException);
 
   class InfoSme_Tasks_Stat_ResultSet : public DBEntityStorageResultSet
   {
   public:
-    InfoSme_Tasks_Stat_ResultSet(InfoSme_Tasks_Stat_DBEntityStorage* dataSource) : _iterator(dataSource->getIterator()), _logger(Logger::getInstance("resultset1")) {}
+    InfoSme_Tasks_Stat_ResultSet(InfoSme_Tasks_Stat_DBEntityStorage* dataSource) : _iterator(dataSource->getIterator()), _logger(Logger::getInstance("dbStrg")) {}
 
     ~InfoSme_Tasks_Stat_ResultSet() { delete _iterator; }
 

@@ -253,7 +253,7 @@ Delete_from_InfoSme_T_By_State::executeUpdate() throw(SQLException)
       rowNum += eraseRet;
     }
   }
-
+  smsc_log_debug(_logger, "Delete_from_InfoSme_T_By_State::executeUpdate::: %d records was deleted with state=[%lld]", rowNum, _msgState);
   return rowNum;
 }
 
@@ -290,6 +290,7 @@ Delete_from_InfoSme_T_By_StateAndAbonent::executeUpdate()
       rowNum += ret;
     }
   }
+  smsc_log_debug(_logger, "Delete_from_InfoSme_T_By_StateAndAbonent::executeUpdate::: %d records was deleted with state=[%lld]/abonentAddress=[%s]", rowNum, _msgState, _abonentAddress.c_str());
   return rowNum;
 }
 
@@ -462,6 +463,7 @@ Update_InfoSme_T_Set_StateAndSendDate_By_Id::executeUpdate()
                               oldValue.getAbonentAddress(),
                               _dateTime,
                               oldValue.getMessage());
+    smsc_log_debug(_logger, "Update_InfoSme_T_Set_State_By_Id::executeUpdate::: set new value=[%s] for row with key=[%s]", newValue.toString().c_str(), primaryKey.toString().c_str());
     int updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
     if ( updateRes < 0 )
       throw SQLException("Update_InfoSme_T_Set_StateAndSendDate_By_Id::executeUpdate::: can't update record");
@@ -536,20 +538,10 @@ SelectInfoSme_Id_Mapping_SmscId_criterion::executeQuery()
   throw(SQLException)
 {
   InfoSme_Id_Mapping_Entity::SmscId_Key key(_smscId);
-  smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
-                              smsc::core::synchronization::Mutex> mutex;
-  {
-    smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
-  
-    mutex = InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(key);
-  }
-  if ( mutex.Get() ) {
-    InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* dbIterator = _dataSource->getIterator();
-    dbIterator->setIndexSearchCrit(key);
-    DBEntityStorageResultSet* result = new SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet(dbIterator, mutex);
-
-    return result;
-  } else return NULL;
+  InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator* dbIterator = _dataSource->getIterator();
+  dbIterator->setIndexSearchCrit(key);
+  DBEntityStorageResultSet* result = new SelectInfoSme_Id_Mapping_SmscId_criterion::InfoSme_Id_Mapping_ResultSet(dbIterator);
+  return result;
 }
 
 bool
@@ -604,18 +596,12 @@ Insert_into_InfoSme_Id_Mapping::setString(int pos, const char* val, bool null) t
 uint32_t
 Insert_into_InfoSme_Id_Mapping::executeUpdate() throw(SQLException)
 {
-  if ( _dataSource->putValue(InfoSme_Id_Mapping_Entity(_msgId,
-                                                       _smscId,
-                                                       _taskId)) ) {
-    smsc::core::synchronization::MutexGuard mutexGuard(InfoSme_Id_Mapping_Entity::_mutexRegistryLock_ForSmscIdExAccess);
-    InfoSme_Id_Mapping_Entity::SmscId_Key smscIdKey(_smscId);
-    smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
-                                smsc::core::synchronization::Mutex> mutex=InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.getObject(smscIdKey);
-    if ( !mutex.Get() ) {
-      InfoSme_Id_Mapping_Entity::_mutexRegistry_ForSmscIdExAccess.toRegisterObject
-        (smsc::core::buffers::RefPtr<smsc::core::synchronization::RecursiveMutex,
-         smsc::core::synchronization::Mutex>(new smsc::core::synchronization::RecursiveMutex()), smscIdKey);
-    }
+  InfoSme_Id_Mapping_Entity newRecord(_msgId,
+                                      _smscId,
+                                      _taskId);
+
+  if ( _dataSource->putValue(newRecord) ) {
+    smsc_log_debug(_logger, "Insert_into_InfoSme_Id_Mapping::executeUpdate::: inserted new record=[%s]", newRecord.toString().c_str());
     return 1;
   } else return 0;
 }
@@ -668,6 +654,26 @@ Delete_from_InfoSme_Id_Mapping_By_SmscId::executeUpdate()
     
   }
   return rowNum;
+}
+
+void
+Delete_from_InfoSme_Id_Mapping_By_Id::setUint64(int pos, uint64_t val, bool null)
+  throw(SQLException)
+{
+  if ( pos == 1 )
+    _msgId = val;
+  else  SQLException("Wrong position argument number");
+}
+
+uint32_t
+Delete_from_InfoSme_Id_Mapping_By_Id::executeUpdate()
+  throw(SQLException)
+{
+  int ret = _dataSource->eraseValue(InfoSme_Id_Mapping_Entity::Id_Key(_msgId));
+  if ( ret < 0 )
+    throw SQLException("Delete_from_InfoSme_Id_Mapping_By_Id::executeUpdate::: can't delete record");
+  smsc_log_debug(_logger, "Delete_from_InfoSme_Id_Mapping_By_Id::executeUpdate::: %d records was deleted for msgId=%ld", ret, _msgId);
+  return ret;
 }
 
 //=============================================================================
