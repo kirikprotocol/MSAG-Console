@@ -217,7 +217,7 @@ int DistrListProcess::Execute()
         {
           if(arg.length()==0 || arg.length()>18)
           {
-            tmpl="dl.invalidcmdparam";
+            tmpl="dl.adderr";
             reason="invalid_list_name";
           }
           else
@@ -262,7 +262,7 @@ int DistrListProcess::Execute()
           if(arg.length()>0)
           {
             Array<Address> m;
-            tmpl="dl.mlistmerr";
+            tmpl="dl.mlisterr";
             try{
               m=admin->members(fullarg,sms.getOriginatingAddress());
             }catch(IllegalSubmitterException& e)
@@ -307,8 +307,8 @@ int DistrListProcess::Execute()
         if(cmd=="addm")
         {
           tmpl="dl.madderr";
-          Address member(arg2.c_str());
           try{
+            Address member(arg2.c_str());
             admin->addMember(fullarg,member);
             tmpl="dl.maddok";
           }catch(MemberAlreadyExistsException& e)
@@ -319,24 +319,32 @@ int DistrListProcess::Execute()
           {
             reason="members_count_limit_exceeded";
           }
+          catch(std::exception& e)
+          {
+            reason="invalid_or_empty_address";
+          }
         }else
         if(cmd=="delm")
         {
           tmpl="dl.mdelerr";
-          Address member(arg2.c_str());
           try{
+            Address member(arg2.c_str());
             admin->deleteMember(fullarg,member);
             tmpl="dl.mdelok";
           }catch(MemberNotExistsException& e)
           {
             reason="member_doesnt_exists";
           }
+          catch(std::exception& e)
+          {
+            reason="invalid_or_empty_address";
+          }
         }else
         if(cmd=="adds")
         {
           tmpl="dl.sadderr";
-          Address submitter(arg2.c_str());
           try{
+            Address submitter(arg2.c_str());
             admin->grantPosting(fullarg,addr,submitter);
             tmpl="dl.saddok";
           }catch(ListNotExistsException& e)
@@ -349,12 +357,16 @@ int DistrListProcess::Execute()
           {
             reason="submitter_already_exists";
           }
+          catch(std::exception& e)
+          {
+            reason="invalid_or_empty_address";
+          }
         }else
         if(cmd=="dels")
         {
           tmpl="dl.sdelerr";
-          Address submitter(arg2.c_str());
           try{
+            Address submitter(arg2.c_str());
             admin->revokePosting(fullarg,addr,submitter);
             tmpl="dl.sdelok";
           }catch(ListNotExistsException& e)
@@ -366,6 +378,10 @@ int DistrListProcess::Execute()
           }catch(IllegalSubmitterException& e)
           {
             reason="illegal_submitter";
+          }
+          catch(std::exception& e)
+          {
+            reason="invalid_or_empty_address";
           }
         }else
         if(cmd=="slist")
