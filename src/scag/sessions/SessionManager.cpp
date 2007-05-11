@@ -328,7 +328,6 @@ void SessionManagerImpl::reorderExpireQueue(Session* session)
 
 int SessionManagerImpl::processExpire()
 {
-//    smsc_log_debug(logger,"SessionManager: process expire");
     MutexGuard guard(inUseMonitor);
 
     if(SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
@@ -336,9 +335,10 @@ int SessionManagerImpl::processExpire()
     time_t now = time(NULL);
     CSessionSetIterator it;
 
-    for (it = SessionExpirePool.begin();  it != SessionExpirePool.end() && (*it)->nextWakeTime < now; ++it)
+    it = SessionExpirePool.begin();
+    while(it != SessionExpirePool.end() && (*it)->nextWakeTime < now)
     {
-        CSessionAccessData *accessData = *it;
+        CSessionAccessData *accessData = *it++;
         SessionPtr* s = SessionHash.GetPtr(accessData->SessionKey);
         if(!s)
         {
@@ -358,11 +358,13 @@ int SessionManagerImpl::processExpire()
                     deleteSession(session);
                 else
                     store.updateSession(session.Get());
-//                SessionExpirePool.erase(accessData);
             }
             else
+            {
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
+                deleteSession(session);
+            }
         }
     }
 
@@ -482,7 +484,6 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     SessionHash.Delete(key);
 
     awakeEvent.Signal();
-//    inUseMonitor.notifyAll();
 
     smsc_log_debug(logger,"SessionManager: session released USR='%d', Address='%s' (pending count=%d) InUse: %d",
                    key.USR, key.abonentAddr.toString().c_str(), session->PendingOperationList.size(), SessionHash.Count());
