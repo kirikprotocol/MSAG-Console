@@ -131,23 +131,36 @@ void TrafficControl::incOutgoing()
   if (TrafficControl::stopped) return;
 
   int out = outgoing.Get();
+
+  while (out >= maxMessagesPerSecond) {
+    // traffic limit reached
+    smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
+                   out, maxMessagesPerSecond);
+    trafficMonitor.wait(1000/maxMessagesPerSecond);
+    out = outgoing.Get();
+  }
   int inc = incoming.Get();
   int difference = out-inc;
-  bool trafficLimitReached = (out >= maxMessagesPerSecond);
-
-  if (difference >= unrespondedMessagesMax || trafficLimitReached) {
-    if (trafficLimitReached) {
-      smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
-                     out, maxMessagesPerSecond);
-    } else {
-      smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
-                     difference, difference*unrespondedMessagesSleep, out, inc);
-    }
-    trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
-                        difference*unrespondedMessagesSleep);
-  } else {
-    smsc_log_debug(logger, "nowait");
+  while (difference >= unrespondedMessagesMax) {
+    smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
+                   difference, difference*unrespondedMessagesSleep, out, inc);
+    trafficMonitor.wait(difference*unrespondedMessagesSleep);
+    out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
   }
+
+//   if (difference >= unrespondedMessagesMax || trafficLimitReached) {
+//     if (trafficLimitReached) {
+//       smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
+//                      out, maxMessagesPerSecond);
+//     } else {
+//       smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
+//                      difference, difference*unrespondedMessagesSleep, out, inc);
+//     }
+//     trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
+//                         difference*unrespondedMessagesSleep);
+//   } else {
+//     smsc_log_debug(logger, "nowait");
+//   }
 }
 
 void TrafficControl::incIncoming()
