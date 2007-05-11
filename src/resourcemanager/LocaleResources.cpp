@@ -204,10 +204,16 @@ OutputFormatter* LocaleResources::getFormatter(const std::string& key)throw()
   std::string str=getString(lower_key).c_str();
   __trace2__("LR: creating new formatter for key %s, text=%s",lower_key.c_str(),str.c_str());
 
-  OutputFormatter* res=new OutputFormatter(str.c_str());
-  __trace2__("LR: formatter=%p",res);
-  formatters.insert(std::pair<std::string,OutputFormatter*>(lower_key,res));
-  return res;
+  try{
+    OutputFormatter* res=new OutputFormatter(str.c_str());
+    __trace2__("LR: formatter=%p",res);
+    formatters.insert(std::pair<std::string,OutputFormatter*>(lower_key,res));
+    return res;
+  }catch(std::exception& e)
+  {
+    __warning2__("failed to create formatter:%s",e.what());
+  }
+  return 0;
 }
 
 
