@@ -97,7 +97,7 @@ void SessionStore::deleteSession(const CSessionKey& sessionKey)
 
 }
 
-void SessionStore::updateSession(SessionPtr session)
+void SessionStore::updateSession(Session* session)
 {
   sync::MutexGuard mg(mtx);
   OffsetValue off;
@@ -151,7 +151,7 @@ void CachedSessionStore::deleteSession(const CSessionKey& sessionKey)
   store.deleteSession(sessionKey);  
 }
 
-void CachedSessionStore::updateSession(SessionPtr session)
+void CachedSessionStore::updateSession(Session* session)
 {
   sync::MutexGuard mg(mtx);
   store.updateSession(session);

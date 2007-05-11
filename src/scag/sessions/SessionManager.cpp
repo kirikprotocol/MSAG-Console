@@ -165,7 +165,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
         session->currentOperationId = 0;
 
         reorderExpireQueue(session);
-//        store.updateSession(session);
+        store.updateSession(session);
     }
     else
         store.deleteSession(sessionKey);
@@ -328,7 +328,7 @@ void SessionManagerImpl::reorderExpireQueue(Session* session)
 
 int SessionManagerImpl::processExpire()
 {
-    //smsc_log_debug(logger,"SessionManager: process expire");
+//    smsc_log_debug(logger,"SessionManager: process expire");
     MutexGuard guard(inUseMonitor);
 
     if(SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
@@ -343,28 +343,26 @@ int SessionManagerImpl::processExpire()
         if(!s)
         {
             SessionPtr session = store.getSession(accessData->SessionKey);
-            if(!session.Get())
+            if(session.Get())
             {
+                if(session->hasPending())
+                {
+                    smsc_log_debug(logger,"SessionManager: try to expire session USR='%d', Address='%s', has p: %d op: %d",
+                               accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str(),
+                               session->hasPending(),session->hasOperations());
+
+                    session->expirePendingOperation();
+                    reorderExpireQueue(session.Get());
+                }
+                if(!session->hasOperations())
+                    deleteSession(session);
+                else
+                    store.updateSession(session.Get());
+//                SessionExpirePool.erase(accessData);
+            }
+            else
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
-
-//                SessionExpirePool.erase(accessData);
-                return 0;
-            }
-
-            if(session->hasPending())
-            {
-                smsc_log_debug(logger,"SessionManager: try to expire session USR='%d', Address='%s', has p: %d op: %d",
-                           accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str(),
-                           session->hasPending(),session->hasOperations());
-
-                session->expirePendingOperation();
-                reorderExpireQueue(session.Get());
-            }
-            if(!session->hasOperations())
-                deleteSession(session);
-            else
-                store.updateSession(session);
         }
     }
 
@@ -400,8 +398,8 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
         return true;
     }
 
-    smsc_log_debug(logger, "SessionManager: Session locked USR='%d', Address='%s'",
-                   key.USR, key.abonentAddr.toString().c_str());
+    smsc_log_debug(logger, "SessionManager: Session locked USR='%d', Address='%s', command pushed to session queue, transport %d",
+                   key.USR, key.abonentAddr.toString().c_str(), cmd.getType());
 
     cmd.setSession(*s);
 
@@ -480,11 +478,11 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     reorderExpireQueue(session.Get());
 
-    store.updateSession(session);
+    store.updateSession(session.Get());
     SessionHash.Delete(key);
 
     awakeEvent.Signal();
-    inUseMonitor.notifyAll();
+//    inUseMonitor.notifyAll();
 
     smsc_log_debug(logger,"SessionManager: session released USR='%d', Address='%s' (pending count=%d) InUse: %d",
                    key.USR, key.abonentAddr.toString().c_str(), session->PendingOperationList.size(), SessionHash.Count());
