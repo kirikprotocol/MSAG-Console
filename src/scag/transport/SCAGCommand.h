@@ -16,9 +16,6 @@ using scag::sessions::SessionPtr;
     {
         SMPP = 1, HTTP = 2, MMS = 3
     };
-
-
-        
     
     class SCAGCommand
     {

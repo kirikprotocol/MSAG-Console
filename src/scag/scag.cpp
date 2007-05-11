@@ -467,7 +467,7 @@ void Scag::init()
 
         scag::transport::http::HttpTraceRouter::Init("./conf/http_routes__.xml");
 
-        httpMan.init(hp, cfg.getHttpManConfig());
+        scag::transport::http::HttpManager::Init(hp, cfg.getHttpManConfig());
 
         smsc_log_info(log, "Http Manager started");
     }catch(Exception& e)
@@ -526,7 +526,7 @@ void Scag::shutdown()
 {
   __trace__("shutting down");
 
-  httpMan.shutdown();
+  scag::transport::http::HttpManager::Instance().shutdown();
   scag::transport::smpp::SmppManager::shutdown();
   //tp.shutdown();
   //tp2.shutdown();

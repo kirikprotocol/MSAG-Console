@@ -194,7 +194,7 @@ protected:
   std::string scagHost;
   int scagPort;
 //  scag::transport::smpp::SmppManager smppMan;
-  scag::transport::http::HttpManager httpMan;
+//  scag::transport::http::HttpManager httpMan;
 
   struct LicenseInfo{
     int maxsms;
