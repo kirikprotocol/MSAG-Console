@@ -476,11 +476,11 @@ const char* CREATE_ID_MAPPING_STATEMENT_SQL = (const char*)
 
 const char* GET_ID_MAPPING_STATEMENT_ID = "GET_ID_MAPPING_STATEMENT_ID";
 const char* GET_ID_MAPPING_STATEMENT_SQL = (const char*)
-"SELECT ID, TASK_ID FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID FOR UPDATE";
+"SELECT ID, TASK_ID FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
 
 const char* DEL_ID_MAPPING_STATEMENT_ID = "DEL_ID_MAPPING_STATEMENT_ID";
 const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
-"DELETE FROM INFOSME_ID_MAPPING WHERE SMSC_ID=:SMSC_ID";
+"DELETE FROM INFOSME_ID_MAPPING WHERE ID=:ID";
 
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                     std::string smscId, bool internal)
@@ -599,12 +599,11 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                 smsc_log_debug(logger, "Receipt come when responce is in process");
                 if (idMappingCreated)
                 {
-                    std::auto_ptr<Statement> delMapping(connection->createStatement(DEL_ID_MAPPING_STATEMENT_SQL));
-                    if (!delMapping.get())
-                        throw Exception("processResponce(): Failed to create statement for ids mapping.");
-
-                    delMapping->setString(1, smsc_id);
-                    delMapping->executeUpdate();
+                  std::auto_ptr<Statement> delMapping(connection->createStatement(DEL_ID_MAPPING_STATEMENT_SQL));
+                  if (!delMapping.get())
+                    throw Exception("processResponce(): Failed to create statement for ids mapping.");
+                  delMapping->setUint64(1, tmIds.msgId);
+                  delMapping->executeUpdate();
                 }
                 
                 processMessage(task, connection, tmIds.msgId, receipt.delivered, receipt.retry);
@@ -698,7 +697,8 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 
                 uint64_t msgId = rs->getUint64(1);
                 std::string taskId = rs->getString(2);
-                delMapping->setString(1, smsc_id);
+
+                delMapping->setUint64(1, msgId);
                 delMapping->executeUpdate();
 
                 TaskGuard taskGuard = getTask(taskId); 
