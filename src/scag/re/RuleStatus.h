@@ -8,7 +8,8 @@ enum StatusEnum
     STATUS_OK,
     STATUS_FAILED,
     STATUS_REDIRECT,
-    STATUS_LONG_CALL
+    STATUS_LONG_CALL,
+    STATUS_PROCESS_LATER
 };
 
 class PostProcessAction
