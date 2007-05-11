@@ -54,6 +54,8 @@ int ScagTask::Execute()
             }
             else if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
                 break;
+            else if(st == scag::re::STATUS_PROCESS_LATER)
+                break;
                 
             smsc_log_info(logger, "%p: %p, request denied", this, cx);
             cx->result = 503;          
@@ -71,6 +73,8 @@ int ScagTask::Execute()
                     else
                     {
                         if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
+                            break;
+                        else if(st == scag::re::STATUS_PROCESS_LATER)
                             break;
                         
                         smsc_log_info(logger, "%p: %p, response denied", this, cx);
@@ -103,6 +107,8 @@ int ScagTask::Execute()
                 st = processor.statusResponse(cx->getResponse(), delivered);
 
                 if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
+                    break;
+                else if(st == scag::re::STATUS_PROCESS_LATER)
                     break;
                     
                 delete cx;
