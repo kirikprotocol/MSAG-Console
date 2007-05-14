@@ -723,6 +723,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   distlstsme->assignProfiler(profiler);
+  distlstsme->assignAliaser(aliaser);
 
   try{
     distlstsme->originatingAddress=cfg.cfgman->getString("distrList.originatingAddress");

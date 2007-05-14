@@ -13,6 +13,7 @@
 #include <list>
 #include <time.h>
 #include "profiler/profiler-types.hpp"
+#include "alias/AliasMan.hpp"
 
 namespace smsc{
 namespace distrlist{
@@ -58,6 +59,17 @@ protected:
 
 
   smsc::profiler::ProfilerInterface* profiler;
+  smsc::alias::AliasManager* aliaser;
+
+  Address dealias(const std::string& addr)
+  {
+    Address rv;
+    if(aliaser->AliasToAddress(addr.c_str(),rv))
+    {
+      return rv;
+    }
+    return addr.c_str();
+  }
 
 public:
   DistrListProcess(DistrListAdmin* admin,SmeRegistrar* sm);
@@ -87,6 +99,10 @@ public:
   void assignProfiler(smsc::profiler::ProfilerInterface* argProfiler)
   {
     profiler=argProfiler;
+  }
+  void assignAliaser(smsc::alias::AliasManager* argAliaser)
+  {
+    aliaser=argAliaser;
   }
 
 

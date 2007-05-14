@@ -308,7 +308,7 @@ int DistrListProcess::Execute()
         {
           tmpl="dl.madderr";
           try{
-            Address member(arg2.c_str());
+            Address member(dealias(arg2));
             admin->addMember(fullarg,member);
             tmpl="dl.maddok";
           }catch(MemberAlreadyExistsException& e)
@@ -328,7 +328,7 @@ int DistrListProcess::Execute()
         {
           tmpl="dl.mdelerr";
           try{
-            Address member(arg2.c_str());
+            Address member(dealias(arg2));
             admin->deleteMember(fullarg,member);
             tmpl="dl.mdelok";
           }catch(MemberNotExistsException& e)
@@ -344,7 +344,7 @@ int DistrListProcess::Execute()
         {
           tmpl="dl.sadderr";
           try{
-            Address submitter(arg2.c_str());
+            Address submitter(dealias(arg2));
             admin->grantPosting(fullarg,addr,submitter);
             tmpl="dl.saddok";
           }catch(ListNotExistsException& e)
@@ -366,7 +366,7 @@ int DistrListProcess::Execute()
         {
           tmpl="dl.sdelerr";
           try{
-            Address submitter(arg2.c_str());
+            Address submitter(dealias(arg2));
             admin->revokePosting(fullarg,addr,submitter);
             tmpl="dl.sdelok";
           }catch(ListNotExistsException& e)
