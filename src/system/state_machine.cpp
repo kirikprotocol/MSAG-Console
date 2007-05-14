@@ -1206,35 +1206,38 @@ StateType StateMachine::submit(Tuple& t)
 
 
 #ifdef SMSEXTRA
-  ExtraInfo::ServiceInfo xsi;
-  int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
-  if(extrabit)
-  {
-    info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,sms->getOriginatingAddress().toString().c_str());
-  }
-  if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || xsi.serviceBit==EXTRA_NICK))
-  {
-    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_NICK);
-    sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
-    info2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
-  }
-  if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
-  {
-    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
-    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
-    info2(smsLog,"EXTRA: smsflash for abonent %s",sms->getOriginatingAddress().toString().c_str());
-  }
   bool noDestChange=false;
-  if(extrabit && xsi.diverted)
+  if(strcmp(src_proxy->getSystemId(),"MAP_PROXY")==0 || strcmp(src_proxy->getSystemId(),"DSTRLST")==0)
   {
-    sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit);
-    sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
-    sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
-    sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
-    dst=xsi.divertAddr;
-    sms->setDestinationAddress(sms->getDealiasedDestinationAddress());
-    info2(smsLog,"EXTRA: divert for abonent %s to %s",sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
-    noDestChange=true;
+    ExtraInfo::ServiceInfo xsi;
+    int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
+    if(extrabit)
+    {
+      info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,sms->getOriginatingAddress().toString().c_str());
+    }
+    if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || xsi.serviceBit==EXTRA_NICK))
+    {
+      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_NICK);
+      sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
+      info2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
+    }
+    if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
+    {
+      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+      info2(smsLog,"EXTRA: smsflash for abonent %s",sms->getOriginatingAddress().toString().c_str());
+    }
+    if(extrabit && xsi.diverted)
+    {
+      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit);
+      sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
+      sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
+      dst=xsi.divertAddr;
+      sms->setDestinationAddress(sms->getDealiasedDestinationAddress());
+      info2(smsLog,"EXTRA: divert for abonent %s to %s",sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
+      noDestChange=true;
+    }
   }
 #endif
 
