@@ -287,6 +287,7 @@ namespace scag { namespace sessions {
         };
         void pushCommand(SCAGCommand* cmd) { cmdQueue.push_back(cmd); };
         uint32_t commandsEmpty() { return cmdQueue.empty(); };
+        uint32_t commandsCount() { return cmdQueue.size(); };
 
 
         Logger * logger;

@@ -416,12 +416,12 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
         return true;
     }
 
-    smsc_log_debug(logger, "SessionManager: Session locked USR='%d', Address='%s', command pushed to session queue, transport %d",
-                   key.USR, key.abonentAddr.toString().c_str(), cmd.getType());
-
     cmd.setSession(*s);
 
     (*s)->pushCommand(cmd.getType() == SMPP ? new SmppCommand((SmppCommand&)cmd) : &cmd);
+
+    smsc_log_debug(logger, "SessionManager: Session locked USR='%d', Address='%s', command pushed to session queue, transport %d. Commands count: %d",
+                   key.USR, key.abonentAddr.toString().c_str(), cmd.getType(), session->commandsCount());
     return false;
 }
 
@@ -474,8 +474,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     if(!session->commandsEmpty())
     {
         SCAGCommand* cmd = session->popCommand();
-        smsc_log_debug(logger,"SessionManager: push command to state machine USR='%d', Address='%s' transport=%d",
-                       key.USR, key.abonentAddr.toString().c_str(), cmd->getType());
+        smsc_log_debug(logger,"SessionManager: push command to state machine USR='%d', Address='%s' transport=%d Commands Count: %d",
+                       key.USR, key.abonentAddr.toString().c_str(), cmd->getType(), session->commandsCount());
         if(cmd->getType() == HTTP)
             scag::transport::http::HttpManager::Instance().process(((scag::transport::http::HttpCommand*)cmd)->getContext());
         else if(cmd->getType() == SMPP)
