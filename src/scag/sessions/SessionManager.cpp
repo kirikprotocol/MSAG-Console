@@ -166,6 +166,9 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
         reorderExpireQueue(session);
         store.updateSession(session);
+        smsc_log_debug(logger,"SessionManager: session updated.  USR='%d', Address='%s' Pending: %d InUse: %d",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
+
     }
     else
         store.deleteSession(sessionKey);
@@ -193,9 +196,11 @@ SessionManagerImpl::~SessionManagerImpl()
     for (CSessionHash::Iterator it = SessionHash.getIterator(); it.Next(key, value);)
     {
         SessionPtr session = store.getSession(key);
-        if (session.Get()) session->abort();
-        else smsc_log_debug(logger,"SessionManager: cannot find session in store - USR='%d', Address='%s'",
-          key.USR,key.abonentAddr.toString().c_str());
+        if(session.Get())
+            session->abort();
+        else
+            smsc_log_debug(logger,"SessionManager: cannot find session in store - USR='%d', Address='%s'",
+                  key.USR,key.abonentAddr.toString().c_str());
     }
 
     smsc_log_debug(logger,"SessionManager released");
@@ -321,6 +326,9 @@ void SessionManagerImpl::reorderExpireQueue(Session* session)
     }
     else if(session->hasPending())
     {
+        smsc_log_debug(logger,"SessionManager: session added to expire queue USR='%d', Address='%s' Pending: %d InUse: %d",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
+
         CSessionAccessData* ad = new CSessionAccessData(session->getWakeUpTime(), sessionKey);
         SessionExpireHash.Insert(sessionKey, SessionExpirePool.insert(ad));
     }
@@ -329,6 +337,8 @@ void SessionManagerImpl::reorderExpireQueue(Session* session)
 int SessionManagerImpl::processExpire()
 {
     MutexGuard guard(inUseMonitor);
+
+    smsc_log_debug(logger,"SessionManager: process expire InUse: %d", SessionHash.Count());
 
     if(SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
 
