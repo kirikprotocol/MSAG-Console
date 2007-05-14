@@ -233,8 +233,12 @@ void TaskProcessor::Start()
             return;
         }
         {
-            MutexGuard snGuard(taskIdsBySeqNumLock);
-            taskIdsBySeqNum.Empty();
+          MutexGuard snGuard(taskIdsBySeqNumLock);
+          taskIdsBySeqNum.Empty();
+        }
+        {
+          MutexGuard respGuard(responceWaitQueueLock);
+          responceWaitQueue.Clean();
         }
         resetWaitingTasks();
         bNeedExit = false;
@@ -300,7 +304,7 @@ int TaskProcessor::Execute()
             delete taskGuard;
         }
 
-        processWaitingEvents(currentTime); // ?? or time(NULL)
+        processWaitingEvents(time(NULL)); // ?? or time(NULL)
         if (!bNeedExit && processed <= 0) awake.Wait(switchTimeout);
     }
     exited.Signal();
@@ -321,13 +325,14 @@ bool TaskProcessor::processTask(Task* task)
         }
     }
 
-    smsc_log_debug(logger, "TaskId=[%s]: Sending message #%lld for '%s': %s", 
-                   info.id.c_str(), message.id, message.abonent.c_str(), message.message.c_str());
 
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
     {
         int seqNum = messageSender->getSequenceNumber();
+        smsc_log_debug(logger, "TaskId=[%s]: Sending message #%lld,sq=%d for '%s': %s", 
+                       info.id.c_str(), message.id, seqNum, message.abonent.c_str(), message.message.c_str());
+
         {
             {
                 MutexGuard snGuard(taskIdsBySeqNumLock);
@@ -351,7 +356,7 @@ bool TaskProcessor::processTask(Task* task)
             if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
             return false;
         }
-        smsc_log_debug(logger, "TaskId=[%s]: Sent message #%lld seqNum=%d for '%s'", 
+        smsc_log_debug(logger, "TaskId=[%s]: Sent message #%lld sq=%d for '%s'", 
                        info.id.c_str(), message.id, seqNum, message.abonent.c_str());
     }
     else
