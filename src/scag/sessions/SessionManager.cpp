@@ -421,7 +421,7 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
     (*s)->pushCommand(cmd.getType() == SMPP ? new SmppCommand((SmppCommand&)cmd) : &cmd);
 
     smsc_log_debug(logger, "SessionManager: Session locked USR='%d', Address='%s', command pushed to session queue, transport %d. Commands count: %d",
-                   key.USR, key.abonentAddr.toString().c_str(), cmd.getType(), session->commandsCount());
+                   key.USR, key.abonentAddr.toString().c_str(), cmd.getType(), (*s)->commandsCount());
     return false;
 }
 
