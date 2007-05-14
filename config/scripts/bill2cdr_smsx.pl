@@ -50,10 +50,9 @@ my $eoln="\x0d\x0a";
 {value=>'0',width=>1},                           #25 269 IsFirstCdr
 {value=>'0',width=>10,align=>'R'},               #26 270 Company Zone
 {value=>'0.000000',width=>20,align=>'R'},        #27 280 Charge
-{value=>'',width=>20},                           #28 300 MscId
+{field=>'PAYER_MSC',width=>20},                  #28 300 MscId
 {field=>'MSG_ID',width=>10,maxlength=>10},       #29 320 SeqN
 {value=>'0',width=>10},                          #30 330 OriginNetworkID
-{field=>'PAYER_MSC',width=>21},                  #31 340 Ural requested
 );
 
 if(@ARGV!=4)
