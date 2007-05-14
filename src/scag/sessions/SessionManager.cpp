@@ -346,7 +346,7 @@ int SessionManagerImpl::processExpire()
     CSessionSetIterator it;
 
     it = SessionExpirePool.begin();
-    while(it != SessionExpirePool.end() && (*it)->nextWakeTime < now)
+    while(it != SessionExpirePool.end() && (*it)->nextWakeTime <= now)
     {
         CSessionAccessData *accessData = *it++;
         SessionPtr* s = SessionHash.GetPtr(accessData->SessionKey);
@@ -380,7 +380,10 @@ int SessionManagerImpl::processExpire()
 
     int iPeriod = DEFAULT_EXPIRE_INTERVAL;
     if(!SessionExpirePool.empty())
+    {
         iPeriod = (*SessionExpirePool.begin())->nextWakeTime - now;
+        smsc_log_debug(logger,"SessionManager::expire interval %d %d", (*SessionExpirePool.begin())->nextWakeTime, now);
+    }
     return iPeriod;
 }
 
