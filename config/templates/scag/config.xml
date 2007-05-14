@@ -7,7 +7,7 @@
     <param name="configDir" type="string">@bill.config_dir@</param>
     <param name="BillingServerHost" type="string">@bill.server_host@</param>
     <param name="BillingServerPort" type="int">@bill.server_port@</param>
-    <param name="BillingTimeOut" type="int">@bill.time_out@</param> <!-- millisec. -->
+    <param name="BillingTimeOut" type="int">@bill.time_out@</param> <!-- sec. -->
     <param name="BillingReconnectTimeOut" type="int">@bill.reconnect_time_out@</param> <!-- sec. -->
     </section>
 
