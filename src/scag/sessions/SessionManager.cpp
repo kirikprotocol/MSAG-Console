@@ -345,7 +345,9 @@ int SessionManagerImpl::processExpire()
     time_t now = time(NULL);
     CSessionSetIterator it;
 
+    bool changed = false;
     it = SessionExpirePool.begin();
+    smsc_log_debug(logger,"SessionManager::expire interval %d %d", (*it)->nextWakeTime, now);
     while(it != SessionExpirePool.end() && (*it)->nextWakeTime <= now)
     {
         CSessionAccessData *accessData = *it++;
@@ -375,11 +377,12 @@ int SessionManagerImpl::processExpire()
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
                 deleteSession(session);
             }
+            changed = true;
         }
     }
 
     int iPeriod = DEFAULT_EXPIRE_INTERVAL;
-    if(!SessionExpirePool.empty())
+    if(!SessionExpirePool.empty() && changed)
     {
         iPeriod = (*SessionExpirePool.begin())->nextWakeTime - now;
         smsc_log_debug(logger,"SessionManager::expire interval %d %d", (*SessionExpirePool.begin())->nextWakeTime, now);
