@@ -284,7 +284,7 @@ int SessionManagerImpl::Execute()
     while (isStarted())
     {
         int secs = processExpire();
-//        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
+        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
         awakeEvent.Wait(secs*1000);
     }
     smsc_log_info(logger,"SessionManager::stop executing");
@@ -338,7 +338,7 @@ int SessionManagerImpl::processExpire()
 {
     MutexGuard guard(inUseMonitor);
 
-    smsc_log_debug(logger,"SessionManager: process expire InUse: %d", SessionHash.Count());
+    smsc_log_debug(logger,"SessionManager: process expire InUse: %d, ExpirePoolSize: %d", SessionHash.Count(), SessionExpirePool.size());
 
     if(SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
 
