@@ -25,6 +25,11 @@ using smsc::inman::iaprvd::_RCS_IAPQStatus;
 
 namespace smsc  {
 namespace inman {
+
+const char * const _BILLmodes[] = {"OFF", "CDR", "IN"};
+const char * const _MSGtypes[] = {"unknown", "SMS", "USSD", "XSMS"};
+const char * const _CDRmodes[] = {"none", "billMode", "all"};
+
 /* ************************************************************************** *
  * class BillingManager implementation:
  * ************************************************************************** */
@@ -61,8 +66,8 @@ void BillingManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializableP
                 SPckChargeSmsResult spck;
                 spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
                 spck.Cmd().setError(
-                    _RCS_INManErrors->mkhash(INManErrorId::cfgResourceLimitation),
-                    _RCS_INManErrors->explainCode(INManErrorId::cfgResourceLimitation).c_str());
+                    _RCS_INManErrors->mkhash(INManErrorId::cfgLimitation),
+                    _RCS_INManErrors->explainCode(INManErrorId::cfgLimitation).c_str());
                 spck.Hdr().dlgId = srvHdr->dlgId;
                 _conn->sendPck(&spck);
                 smsc_log_warn(logger, "%s: maxBilling limit reached: %u", _logId,
@@ -94,7 +99,7 @@ Billing::Billing(unsigned b_id, BillingManager * owner, Logger * uselog/* = NULL
         : WorkerAC(b_id, owner, uselog), state(bilIdle), capDlg(NULL)
         , bill2CDR(false), abType(AbonentContractInfo::abtUnknown)
         , providerQueried(false), capDlgActive(false), capSess(NULL)
-        , abPolicy(NULL), billErr(0), xsmsSrv(0)
+        , abPolicy(NULL), billErr(0), xsmsSrv(0), msgType(ChargeObj::msgUnknown)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
     _cfg = owner->getConfig();
@@ -131,21 +136,6 @@ bool Billing::BillComplete(void) const
  * NOTE: these methods are not the processing graph entries, so never lock bilMutex,
  *       it's a caller responsibility to lock bilMutex !!!
  * ---------------------------------------------------------------------------------- */
-RCHash Billing::matchBillMode(void) const 
-{
-    CDRRecord::CDRBearerType bearer = cdr._smsXSrvs ? CDRRecord::dpUSSD : cdr._bearer;
-
-    return ((_cfg.billMode == smsc::inman::BILL_ALL)
-            || ((_cfg.billMode == smsc::inman::BILL_USSD)
-                && (bearer == CDRRecord::dpUSSD))
-            || ((_cfg.billMode == smsc::inman::BILL_SMS)
-                && (bearer == CDRRecord::dpSMS))
-            || ((cdr._smsXMask & SMSX_INCHARGE_SRV)     //Charge SMS via IN point despite of
-                && (cdr._bearer == CDRRecord::dpSMS)    //billMode setting
-                && _cfg.billMode)
-            ) ? 0 : _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch);
-}
-
 void Billing::doCleanUp(void)
 {
     //check for pending query to AbonentProvider
@@ -169,8 +159,7 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
-    if (!(cdr._inBilled || (cdr._smsXMask & SMSX_NOCHARGE_SRV))
-        || (_cfg.cdrMode == BillingCFG::CDR_ALL)) {
+    if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::cdrALL)) {
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
                     _logId, cdr._msgId, cdr._inBilled ? "true": "false",
@@ -322,19 +311,21 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
 
     uint32_t smsXMask = cdr._smsXMask & ~SMSX_RESERVED_MASK;
     if (smsXMask) {
-        if (cdr._bearer != CDRRecord::dpSMS)
+        if (cdr._bearer != CDRRecord::dpSMS) {
             smsc_log_error(logger, "%s: invalid bearer for SMS Extra service", _logId);
-
+            return false;
+        }
         SmsXServiceMap::iterator it = _cfg.smsXMap.find(smsXMask);
         if (it != _cfg.smsXMap.end()) {
             xsmsSrv = &(*it).second;
             cdr._smsXSrvs = xsmsSrv->cdrCode;
-            smsc_log_info(logger, "%s: SMSExtra service[0x%x]: %u, %s", _logId, 
+            smsc_log_info(logger, "%s: %s[0x%x]: %u, %s", _logId,
+                    xsmsSrv->name.empty() ? "SMSExtra service" : xsmsSrv->name.c_str(),
                     smsXMask, xsmsSrv->cdrCode, xsmsSrv->adr.toString().c_str());
         } else {
             smsc_log_error(logger, "%s: SMSExtra service[0x%x] misconfigured, ignoring!",
                            _logId, smsXMask);
-            cdr._smsXSrvs &= SMSX_RESERVED_MASK;
+            cdr._smsXMask &= SMSX_RESERVED_MASK;
         }
     }
 
@@ -350,7 +341,24 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         }
     }
 
-    bill2CDR = ((billErr = matchBillMode()) || (cdr._smsXMask & SMSX_NOCHARGE_SRV));
+    //determine messageType and billmode
+    if (xsmsSrv)
+        msgType = ChargeObj::msgXSMS;
+    else
+        msgType = (cdr._bearer == CDRRecord::dpUSSD) ? ChargeObj::msgUSSD : ChargeObj::msgSMS;
+
+    ChargeObj::BILL_MODE bm = _cfg.billMode.modeFor(msgType);
+    if (bm == ChargeObj::billOFF) {
+        chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE,
+                    _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch));
+        return true;
+    }
+
+    bill2CDR = ((bm == ChargeObj::bill2CDR) || (cdr._smsXMask & SMSX_NOCHARGE_SRV));
+    if ((xsmsSrv && !xsmsSrv->adr.length) || !_cfg.ss7.userId) {
+        bill2CDR = true;
+        billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgSpecific);
+    }
     AbonentRecord   abRec; //ab_type = abtUnknown
     if (bill2CDR || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
                       == AbonentContractInfo::abtPostpaid))) {
@@ -358,7 +366,7 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
         return true;
     }
-
+    
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
         smsc_log_error(logger, "%s: no policy set for %s", _logId, 
                        abNumber.toString().c_str());

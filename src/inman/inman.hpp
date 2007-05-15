@@ -25,6 +25,13 @@ namespace inman {
 
 #define SMSX_RESERVED_MASK  (SMSX_NOCHARGE_SRV|SMSX_INCHARGE_SRV)
 
+class ChargeObj {
+public:
+    enum MSG_TYPE  { msgUnknown = 0, msgSMS = 1, msgUSSD = 2, msgXSMS = 3 };
+    enum BILL_MODE { billOFF = 0, bill2CDR = 1, bill2IN = 2 };
+};
+
+
 struct XSmsService {
     std::string     name;
     uint32_t        mask;
@@ -47,6 +54,9 @@ struct SS7_CFG {    //SS7 stack interaction:
     TonNpiAddress   ssf_addr;       //local ISDN address
     int             own_ssn;        //local SSN
     unsigned short  maxDlgId;       //maximum number of simultaneous TC dialogs, max: 65530
+
+    SS7_CFG()
+    { own_ssn = maxDlgId = capTimeout = userId = 0; }
 };
 
 #define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2

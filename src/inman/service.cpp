@@ -24,7 +24,7 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
 
     smsc_log_debug(logger, "InmanSrv: Creating ..");
 
-    if (_cfg->bill.billMode != smsc::inman::BILL_NONE) {
+    if (_cfg->bill.ss7.userId) {
         disp = TCAPDispatcher::getInstance();
         _cfg->bill.ss7.userId += 39; //adjust USER_ID to PortSS7 units id
         if (!disp->connect(_cfg->bill.ss7.userId))

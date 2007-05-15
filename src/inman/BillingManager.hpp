@@ -23,16 +23,48 @@ using smsc::inman::ConnectManagerT;
 namespace smsc    {
 namespace inman   {
 
-typedef enum { BILL_NONE = 0, BILL_ALL, BILL_USSD, BILL_SMS } BILL_MODE;
+extern const char * const _CDRmodes[];
+extern const char * const _BILLmodes[];
+extern const char * const _MSGtypes[];
+
+class BillModes : public std::map<ChargeObj::MSG_TYPE, ChargeObj::BILL_MODE> {
+public:
+    bool allOFF(void) const
+    {
+        BillModes::const_iterator it = begin();
+        for (; it != end(); ++it) {
+            if (it->second != ChargeObj::billOFF)
+                return false;
+        }
+        return true;
+    }
+
+    bool useIN(void) const
+    {
+        BillModes::const_iterator it = begin();
+        for (; it != end(); ++it) {
+            if (it->second == ChargeObj::bill2IN)
+                return true;
+        }
+        return false;
+    }
+
+    ChargeObj::BILL_MODE modeFor(ChargeObj::MSG_TYPE msg_type)
+    {
+        BillModes::const_iterator it = find(msg_type);
+        return (it == end()) ? ChargeObj::billOFF : it->second;
+    }
+};
 
 struct BillingCFG {
-    typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2} CDR_MODE;
+    typedef enum { cdrNONE = 0, cdrBILLMODE = 1, cdrALL = 2} CDR_MODE;
+
     AbonentCacheITF *   abCache;
     InBillingFileStorage * bfs;
     TimeWatcher *       tmWatcher;
 //billing parameters
     AbonentPolicies * policies;
-    BILL_MODE       billMode;
+    BillModes       billMode;
     CDR_MODE        cdrMode;
     std::string     cdrDir;         //location to store CDR files
     long            cdrInterval;    //rolling interval for CDR files
@@ -46,16 +78,24 @@ struct BillingCFG {
     SS7_CFG         ss7;            //SS7 interaction:
     SmsXServiceMap  smsXMap;        //SMS Extra services iDs and addresses
 
-    BillingCFG()
+    BillingCFG() : abCache(NULL), bfs(NULL), tmWatcher(NULL), cdrMode(cdrBILLMODE)
     {
-        abCache = NULL; bfs = NULL; tmWatcher = NULL;
-        cdrInterval = 0;
-        billMode = smsc::inman::BILL_ALL;
-        cdrMode =  CDR_ALL;
-        maxTimeout = abtTimeout = maxBilling = ss7.maxDlgId = ss7.capTimeout = 0;
-        ss7.own_ssn = ss7.userId = 0;
+        cdrInterval = maxTimeout = abtTimeout = maxBilling = 0;
     }
 
+    static const char * cdrModeStr(CDR_MODE mode_id)
+    {
+        return _CDRmodes[mode_id];
+    }
+
+    static const char * msgTypeStr(ChargeObj::MSG_TYPE msg_id)
+    {
+        return _MSGtypes[msg_id];
+    }
+    static const char * billModeStr(ChargeObj::BILL_MODE mode_id)
+    {
+        return _BILLmodes[mode_id];
+    }
 };
 
 class BillingManager: public ConnectManagerT<BillingCFG> {

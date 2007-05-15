@@ -15,8 +15,9 @@ struct INManErrorId {
     enum Codes {
         protocolGeneralError = 1,
         protocolInvalidData,
+        cfgSpecific,
         cfgMismatch,
-        cfgResourceLimitation,
+        cfgLimitation,
         logicTimedOut,
         brokenPipe
     };
@@ -29,10 +30,11 @@ const char * rc2Txt_INManErrors(uint32_t err_code) { \
     switch (err_code) { \
     case INManErrorId::protocolGeneralError: return "illegal/invalid PDU"; \
     case INManErrorId::protocolInvalidData: return "invalid PDU data"; \
-    case INManErrorId::cfgMismatch:         return "config settings mismatch"; \
-    case INManErrorId::cfgResourceLimitation: return "limitation according to config"; \
-    case INManErrorId::logicTimedOut:       return "external operation is timed out"; \
-    case INManErrorId::brokenPipe:       return "broken connection"; \
+    case INManErrorId::cfgSpecific:         return "specific config settings"; \
+    case INManErrorId::cfgMismatch:     return "config settings mismatch"; \
+    case INManErrorId::cfgLimitation:   return "limitation according to config"; \
+    case INManErrorId::logicTimedOut:   return "external operation is timed out"; \
+    case INManErrorId::brokenPipe:      return "broken connection"; \
     default:; } \
     return "unknown INMan error code"; \
 }

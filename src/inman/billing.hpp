@@ -111,7 +111,6 @@ protected:
     void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
     bool ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
                                const GsmSCFinfo * p_scf = NULL);
-    RCHash matchBillMode(void) const;
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
@@ -125,6 +124,7 @@ protected:
 
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
+    ChargeObj::MSG_TYPE msgType; // 
     bool            bill2CDR;
     TimersMAP       timers;     //active timers
     AbonentContractInfo::ContractType abType;     //calling abonent contract type

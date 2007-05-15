@@ -64,8 +64,8 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
             } else {
                 SPckContractResult spck;
                 spck.Cmd().setError(
-                    _RCS_INManErrors->mkhash(INManErrorId::cfgResourceLimitation),
-                    _RCS_INManErrors->explainCode(INManErrorId::cfgResourceLimitation).c_str());
+                    _RCS_INManErrors->mkhash(INManErrorId::cfgLimitation),
+                    _RCS_INManErrors->explainCode(INManErrorId::cfgLimitation).c_str());
                 spck.Hdr().dlgId = srvHdr->dlgId;
                 _conn->sendPck(&spck);
                 smsc_log_error(logger, "%s: maxRequests limit reached: %u", _logId,
