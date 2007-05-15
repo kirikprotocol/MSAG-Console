@@ -138,7 +138,7 @@ private:
 class Insert_into_InfoSme_T  : public DBEntityStorageStatement
 {
 public:
-  Insert_into_InfoSme_T(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource) {}
+  Insert_into_InfoSme_T(StorageHelper::InfoSme_T_storage_ref_t dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint8(int pos, uint8_t val, bool null=false) throw(SQLException);
 
@@ -158,6 +158,8 @@ private:
 
   static uint64_t getIdSequenceNumber();
   static uint64_t _idSequenceNumber;
+
+  smsc::logger::Logger *_logger;
 };
 
 #include "InfoSme_Generating_Tasks_DBEntityStorage.hpp"
@@ -182,7 +184,7 @@ private:
 class Delete_from_InfoSme_Generating_Tasks_By_TaskId : public DBEntityStorageStatement
 {
 public:
-  Delete_from_InfoSme_Generating_Tasks_By_TaskId(InfoSme_Generating_Tasks_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
+  Delete_from_InfoSme_Generating_Tasks_By_TaskId(InfoSme_Generating_Tasks_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setString(int pos, const char* str, bool null=false) throw(SQLException);
 
@@ -190,6 +192,7 @@ public:
 private:
   std::string _taskId;
   InfoSme_Generating_Tasks_DBEntityStorage* _dataSource;
+  smsc::logger::Logger *_logger;
 };
 
 class Delete_from_InfoSme_T_By_Id : public DBEntityStorageStatement
@@ -378,7 +381,7 @@ private:
 class Delete_from_InfoSme_Tasks_Stat_By_TaskId : public DBEntityStorageStatement
 {
 public:
-  Delete_from_InfoSme_Tasks_Stat_By_TaskId(InfoSme_Tasks_Stat_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
+  Delete_from_InfoSme_Tasks_Stat_By_TaskId(InfoSme_Tasks_Stat_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setString(int pos, const char* val, bool null=false) throw(SQLException);
   virtual uint32_t executeUpdate() throw(SQLException);
@@ -387,12 +390,13 @@ private:
   std::string _taskId;
 
   InfoSme_Tasks_Stat_DBEntityStorage* _dataSource;
+  smsc::logger::Logger *_logger;
 };
 
 class Insert_into_InfoSme_Tasks_Stat : public DBEntityStorageStatement
 {
 public:
-  Insert_into_InfoSme_Tasks_Stat(InfoSme_Tasks_Stat_DBEntityStorage* dataSource) : _dataSource(dataSource) {}
+  Insert_into_InfoSme_Tasks_Stat(InfoSme_Tasks_Stat_DBEntityStorage* dataSource) : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint32(int pos, uint32_t val, bool null=false) throw(SQLException);
   virtual void setString(int pos, const char* val, bool null=false) throw(SQLException);
@@ -404,6 +408,7 @@ private:
   std::string _taskId;
   
   InfoSme_Tasks_Stat_DBEntityStorage* _dataSource;
+  smsc::logger::Logger *_logger;
 };
 
 class SelectInfoSme_TasksStat_fullTableScan : public DBEntityStorageStatement
