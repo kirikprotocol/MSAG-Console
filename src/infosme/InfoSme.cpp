@@ -118,8 +118,8 @@ extern bool convertMSISDNStringToAddress(const char* string, Address& address)
     return true;
 };
 
-static int  unrespondedMessagesSleep = 10;
-static int  unrespondedMessagesMax   = 3;
+//static int  unrespondedMessagesSleep = 10;
+//static int  unrespondedMessagesMax   = 3;
 static int  maxMessagesPerSecond     = 50;
 
 #include "TrafficControl.hpp"
@@ -134,19 +134,19 @@ void TrafficControl::incOutgoing()
 
   while (out >= maxMessagesPerSecond) {
     // traffic limit reached
-    smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
-                   out, maxMessagesPerSecond);
+    smsc_log_info(logger, "wait limit (out=%d, max=%d)",
+                  out, maxMessagesPerSecond);
     trafficMonitor.wait(1000/maxMessagesPerSecond);
     out = outgoing.Get();
   }
   int inc = incoming.Get();
   int difference = out-inc;
-  while (difference >= unrespondedMessagesMax) {
-    smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
-                   difference, difference*unrespondedMessagesSleep, out, inc);
-    trafficMonitor.wait(difference*unrespondedMessagesSleep);
-    out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
-  }
+//   while (difference >= unrespondedMessagesMax) {
+//     smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
+//                    difference, difference*unrespondedMessagesSleep, out, inc);
+//     trafficMonitor.wait(difference*unrespondedMessagesSleep);
+//     out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
+//   }
 
 //   if (difference >= unrespondedMessagesMax || trafficLimitReached) {
 //     if (trafficLimitReached) {
@@ -168,11 +168,11 @@ void TrafficControl::incIncoming()
   MutexGuard guard(trafficMonitor);
   incoming.Inc();
   if (TrafficControl::stopped) return;
-  int out = outgoing.Get(); int inc = incoming.Get();
-  int difference = out-inc;
+  int out = outgoing.Get();// int inc = incoming.Get();
+  //int difference = out-inc;
   bool trafficLimitOk = (out < maxMessagesPerSecond);
 
-  if ((difference < unrespondedMessagesMax) && trafficLimitOk) {
+  if (/*(difference < unrespondedMessagesMax) &&*/ trafficLimitOk) {
     trafficMonitor.notifyAll();
   }
 }
@@ -573,7 +573,7 @@ int main(int argc, char** argv)
             smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
                           "The preffered max value is 100", maxMessagesPerSecond);
         }
-        try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
+        /*try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
         if (unrespondedMessagesMax <= 0) {
             unrespondedMessagesMax = 1;
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
@@ -592,7 +592,7 @@ int main(int argc, char** argv)
         if (unrespondedMessagesSleep > 500) {
             smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
                           "The preffered max value is 500ms", unrespondedMessagesSleep);
-        }
+                          }*/
 
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);
