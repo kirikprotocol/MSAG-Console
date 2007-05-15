@@ -959,8 +959,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     else if (bSelectedAll && !isInGeneration()) 
         return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
     
-    smsc_log_debug(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
-                   info.id.c_str());
+    smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
+                  info.id.c_str());
 
     // Selecting cache from DB
     int wdTimerId = -1;
