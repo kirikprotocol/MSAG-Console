@@ -17,9 +17,13 @@ typedef enum {
     iapCACHE = 0, iapIN, iapHLR, iapDB
 } IAProviderType;
 
+extern const char * const _IAPTypes[]; //according to IAProviderType
+
 typedef enum {
     abContract = 0x01, abSCF = 0x02, abContractSCF = 0x03
 } IAProviderAbility_e;
+
+extern const char * const _IAPAbilities[]; //according to IAProviderAbility_e
 
 struct IAProvider {
     std::string     ident;

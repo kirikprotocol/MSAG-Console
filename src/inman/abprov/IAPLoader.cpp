@@ -6,6 +6,10 @@ static const char ident[] = "$Id$";
 namespace smsc {
 namespace inman {
 namespace iaprvd {
+//according to IAProviderType
+const char * const _IAPTypes[] = {"CACHE", "IN", "HLR", "DB"};
+//according to IAProviderAbility_e
+const char * const _IAPAbilities[] = { "none", "abContract", "abSCF", "abContractSCF" };
 
 static const char * _fnProvLoader = "loadupAbonentProvider";
 
