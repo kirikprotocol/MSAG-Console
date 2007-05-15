@@ -1,23 +1,31 @@
-<!-- ERASE THE NEXT STRING BEFORE DEPLOYING -->
-<!--  "$Id$" -->
-
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
-
-<!-- INMan interacts the IN node -->
-<config> <!-- InMan 0.5.6. and higher -->
-  <param name="version" type="string">0.5.6</param>   <!-- config version -->
+<!--  "$Id$" -->
+<!-- configuration for INMan v0.6.2 or higher -->
+<config>
+  <param name="version" type="string">0.6.2</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
 
   <section name="Billing">
-    <param name="billMode" type="string">all</param>       <!-- options: [none, all, ussd, sms]
-      none: don't request IN platform write CDR instead
-      all:     always reqiest IN platform
-      ussd: request IN platform in case of USSD only, bill SMS to CDR
-      sms:  request IN platform in case of SMS only, bill USSD to CDR
-    -->
+   <section name="BillingModes"> <!--
+      Sets billing mode depending on message type. The following types are
+      recognized:
+        SMS  : ordinary SMS message,
+        USSD : ordinary USSD message,
+        XSMS : SMS Extra message.
+      For each message type the following modes may be assigned:
+        OFF : billing is forbidden (default),
+        CDR : perform billing by generating CDR,
+        IN  : perform billing by interacting the IN point, create CDR in case
+              of interaction failure.
+     -->
+     <param name="SMS" type="string">CDR</param> <!-- [OFF, CDR, IN] -->
+     <param name="USSD" type="string">IN</param> <!-- [OFF, CDR, IN] -->
+     <param name="XSMS" type="string">OFF</param> <!-- [OFF, CDR, IN] -->
+   </section>
+
    <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
      preferred abonent policy (defined in section AbonentPolicies) , if it's missing, 
      the policy is to use will be determined according to sender address and specified
@@ -33,10 +41,11 @@
 
     <param name="cdrDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
     <param name="cdrInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
-    <param name="cdrMode" type="string">all</param>    <!-- options: [none, all, postpaid]
-      none:  don't write CDR at all
-      all:      always write CDR
-      postpaid:  write CDR either for POSTPAID abonents or in case of IN platform interaction error
+    <param name="cdrMode" type="string">billMode</param>    <!-- 
+      options: [none, all, billMode]
+      none:   don't write any CDR at all;
+      all:    always write CDR for each transaction perfomed;
+      billMode: write CDR according to billMode setting (default)
     -->
     <param name="cacheRAM" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
     <param name="cacheInterval" type="int">2</param>   <!-- abonent info refreshing interval, units: minutes -->
