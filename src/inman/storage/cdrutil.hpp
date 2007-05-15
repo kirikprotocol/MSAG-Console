@@ -16,10 +16,13 @@ struct CDRRecord {
     //encodes CDR to CSV format
     static void csvEncode(const CDRRecord & cdr, std::string & rec);
 
+    enum ChargingMode { ON_DELIVERY = 0, ON_SUBMIT, ON_DELIVERY_FOR_CHARGED };
     typedef enum { dpOrdinary = 0, dpDiverted } CDRRecordType;
     typedef enum { dpText = 0, dpBinary } CDRMediaType;
     typedef enum { dpSMS = 0, dpUSSD } CDRBearerType;
     typedef enum { dpDeliveryOk = 0, dpDeliveryFailed = 1 } CDRDeliveryStatus;
+    //this one is the same as smsc::inman::AbonentContractInfo::ContractType
+    enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
     std::string dpType(void) const;
 
@@ -52,6 +55,8 @@ struct CDRRecord {
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
     uint32_t        _smsXSrvs;      //SMS Extra serviceCode
+    ContractType    _contract;      // 
+    ChargingMode    _charge;        //
     bool            _inBilled;      //message was billed by IN platform                                    
 //private: not written to CSV
     bool            _finalized;     //all fields are fullfilled;
