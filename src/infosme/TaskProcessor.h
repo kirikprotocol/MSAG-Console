@@ -284,7 +284,8 @@ namespace smsc { namespace infosme
         Mutex           messageSenderLock;
 
         IntHash<TaskMsgId> taskIdsBySeqNum;
-        Mutex              taskIdsBySeqNumLock;
+      //Mutex              taskIdsBySeqNumLock;
+        EventMonitor       taskIdsBySeqNumMonitor;
 
         Hash<ReceiptData>  receipts;
         Mutex              receiptsLock;
@@ -317,6 +318,8 @@ namespace smsc { namespace infosme
 
         bool doesMessageConformToCriterion(ResultSet* rs,
                                            const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
+
+        int unrespondedMessagesMax, unrespondedMessagesSleep;
     public:
 
         TaskProcessor(ConfigView* config);

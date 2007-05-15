@@ -11,11 +11,12 @@ namespace smsc { namespace infosme
 
 TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), InfoSmeAdmin(), Thread(),
-        logger(Logger::getInstance("smsc.infosme.TaskProcessor")), 
-            bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
-                dsInternal(0), dsIntConnection(0), messageSender(0), 
-                    responceWaitTime(0), receiptWaitTime(0), dsStatConnection(0),
-                        statistics(0), protocolId(0), svcType(0), address(0)
+      logger(Logger::getInstance("smsc.infosme.TaskProcessor")), 
+      bStarted(false), bNeedExit(false), taskTablesPrefix(0), 
+      dsInternal(0), dsIntConnection(0), messageSender(0), 
+      responceWaitTime(0), receiptWaitTime(0), dsStatConnection(0),
+      statistics(0), protocolId(0), svcType(0), address(0),
+      unrespondedMessagesMax(1), unrespondedMessagesSleep(10)
 {
     smsc_log_info(logger, "Loading ...");
 
@@ -38,7 +39,29 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     taskTablesPrefix = config->getString("tasksTablesPrefix");
     if (switchTimeout <= 0) 
         throw ConfigException("Task switch timeout should be positive");
+
+    try { unrespondedMessagesMax = config->getInt("unrespondedMessagesMax"); } catch (...) {};
+    if (unrespondedMessagesMax <= 0) {
+      unrespondedMessagesMax = 1;
+      smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
+                    unrespondedMessagesMax);
+    }
+    if (unrespondedMessagesMax > 500) {
+      smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
+                    "The preffered max value is 500", unrespondedMessagesMax);
+    }
     
+    try { unrespondedMessagesSleep = config->getInt("unrespondedMessagesSleep"); } catch (...) {};
+    if (unrespondedMessagesSleep <= 0) {
+      unrespondedMessagesSleep = 10;
+      smsc_log_warn(logger, "'unrespondedMessagesSleep' value is invalid. Using default %dms",
+                    unrespondedMessagesSleep);
+    }
+    if (unrespondedMessagesSleep > 500) {
+      smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
+                    "The preffered max value is 500ms", unrespondedMessagesSleep);
+    }
+
     std::auto_ptr<ConfigView> tasksThreadPoolCfgGuard(config->getSubConfig("TasksThreadPool"));
     taskManager.init(tasksThreadPoolCfgGuard.get());   // loads up thread pool for tasks
     std::auto_ptr<ConfigView> eventsThreadPoolCfgGuard(config->getSubConfig("EventsThreadPool"));
@@ -233,8 +256,9 @@ void TaskProcessor::Start()
             return;
         }
         {
-          MutexGuard snGuard(taskIdsBySeqNumLock);
+          MutexGuard snGuard(taskIdsBySeqNumMonitor);
           taskIdsBySeqNum.Empty();
+          taskIdsBySeqNumMonitor.notifyAll();
         }
         {
           MutexGuard respGuard(responceWaitQueueLock);
@@ -335,7 +359,12 @@ bool TaskProcessor::processTask(Task* task)
 
         {
             {
-                MutexGuard snGuard(taskIdsBySeqNumLock);
+                MutexGuard snGuard(taskIdsBySeqNumMonitor);
+                int seqNumsCount;
+                while ((seqNumsCount=taskIdsBySeqNum.Count()) >= unrespondedMessagesMax) {
+                  int difference = seqNumsCount - unrespondedMessagesMax;
+                  taskIdsBySeqNumMonitor.wait(difference*unrespondedMessagesSleep);
+                }
                 if (taskIdsBySeqNum.Exist(seqNum))
                 {
                     smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
@@ -352,12 +381,15 @@ bool TaskProcessor::processTask(Task* task)
             smsc_log_error(logger, "Failed to send message #%lld for '%s'", 
                          message.id, message.abonent.c_str());
             
-            MutexGuard snGuard(taskIdsBySeqNumLock);
-            if (taskIdsBySeqNum.Exist(seqNum)) taskIdsBySeqNum.Delete(seqNum);
+            MutexGuard snGuard(taskIdsBySeqNumMonitor);
+            if (taskIdsBySeqNum.Exist(seqNum)) {
+              taskIdsBySeqNum.Delete(seqNum);
+              taskIdsBySeqNumMonitor.notifyAll();
+            }
             return false;
         }
-        smsc_log_debug(logger, "TaskId=[%s]: Sent message #%lld sq=%d for '%s'", 
-                       info.id.c_str(), message.id, seqNum, message.abonent.c_str());
+        smsc_log_info(logger, "TaskId=[%s]: Sent message #%lld sq=%d for '%s'", 
+                      info.id.c_str(), message.id, seqNum, message.abonent.c_str());
     }
     else
     {
@@ -387,7 +419,7 @@ void TaskProcessor::processWaitingEvents(time_t time)
 
         bool needProcess = false;
         {
-            MutexGuard guard(taskIdsBySeqNumLock);
+            MutexGuard guard(taskIdsBySeqNumMonitor);
             needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
         }
         if (needProcess)
@@ -490,20 +522,21 @@ const char* DEL_ID_MAPPING_STATEMENT_SQL = (const char*)
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                     std::string smscId, bool internal)
 {
-    if (!internal) smsc_log_debug(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
-                                seqNum, accepted, retry, immediate);
-    else smsc_log_debug(logger, "Responce for seqNum=%d is timed out.", seqNum);
+    if (!internal) smsc_log_info(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+                                 seqNum, accepted, retry, immediate);
+    else smsc_log_info(logger, "Responce for seqNum=%d is timed out.", seqNum);
 
     TaskMsgId tmIds;
     {   
         TaskMsgId* tmIdsPtr = 0;
-        MutexGuard snGuard(taskIdsBySeqNumLock);
+        MutexGuard snGuard(taskIdsBySeqNumMonitor);
         if (!(tmIdsPtr = taskIdsBySeqNum.GetPtr(seqNum))) {
             if (!internal) smsc_log_warn(logger, "processResponce(): Sequence number=%d is unknown !", seqNum);
             return;
         }
         tmIds = *tmIdsPtr;
         taskIdsBySeqNum.Delete(seqNum);
+        taskIdsBySeqNumMonitor.notifyAll();
     }
     
     TaskGuard taskGuard = getTask(tmIds.taskId); 
@@ -644,9 +677,9 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
 {
     const char* smsc_id = smscId.c_str();
 
-    if (!internal) smsc_log_debug(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
-                                smsc_id, delivered, retry);
-    else smsc_log_debug(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.",smsc_id);
+    if (!internal) smsc_log_info(logger, "Receipt : smscId=%s, delivered=%d, retry=%d",
+                                 smsc_id, delivered, retry);
+    else smsc_log_info(logger, "Responce/Receipt for smscId=%s is timed out. Cleanup.",smsc_id);
     
     if (!internal)
     {
