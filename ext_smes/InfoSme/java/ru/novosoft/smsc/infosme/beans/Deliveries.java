@@ -55,7 +55,7 @@ public class Deliveries extends InfoSmeBean
     private boolean transliterate = false;
     private boolean retryOnFail = true;
 
-    private Config backup = null;
+//    private Config backup = null;
 
     private Task task = new Task();
 
@@ -65,16 +65,16 @@ public class Deliveries extends InfoSmeBean
       if (result != RESULT_OK)
         return result;
 
-      try {
-        if (backup == null) {
-          final Config oldConfig = getInfoSmeContext().getConfig();
-          backup = (Config) oldConfig.clone();
-        }
-
-      } catch (Exception e) {
-        logger.error("Can't init InfoSme", e);
-        return RESULT_ERROR;
-      }
+//      try {
+//        if (backup == null) {
+//          final Config oldConfig = getInfoSmeContext().getConfig();
+//          backup = (Config) oldConfig.clone();
+//        }
+//
+//      } catch (Exception e) {
+//        logger.error("Can't init InfoSme", e);
+//        return RESULT_ERROR;
+//      }
 
       return RESULT_OK;
     }
@@ -360,13 +360,20 @@ public class Deliveries extends InfoSmeBean
     private synchronized void removeTask() {
 
       try {
-        if (backup != null) {
-          logger.warn("Restoring old config.");
-          backup.save();
-          getInfoSmeContext().resetConfig();
+//        if (backup != null) {
+//          logger.warn("Restoring old config.");
+//          backup.save();
+//          backup = null;
+//          getInfoSmeContext().resetConfig();
+//          getInfoSmeContext().getConfig().save();
+//        }
+
+        getInfoSmeContext().resetConfig();
+        if (task != null) {
+          task.removeFromConfig(getInfoSmeContext().getConfig());
           getInfoSmeContext().getConfig().save();
+          getInfoSmeContext().getInfoSme().removeTask(task.getId());
         }
-        getInfoSmeContext().getInfoSme().removeTask(task.getId());
       } catch (Throwable e) {
         logger.error("Failed rollback task");
         error("infosme.error.config_restore");
@@ -475,7 +482,7 @@ public class Deliveries extends InfoSmeBean
           getInfoSmeContext().getInfoSme().endDeliveryMessageGeneration(task.getId());
           getConfig().setBool(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(task.getId()) + ".messagesHaveLoaded", true);
           getConfig().save();
-          backup = (Config)getInfoSmeContext().getConfig().clone();
+//          backup = null;
         } catch (AdminException e) {
           logger.error(e);
         } catch (Config.WrongParamTypeException e) {
