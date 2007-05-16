@@ -1050,8 +1050,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
 
 #ifdef SNMP
-  smeStatTableThread.Init(&smeman,&smeStats);
-  smeStatTableThread.Start();
+//  smeStatTableThread.Init(&smeman,&smeStats);
+//  smeStatTableThread.Start();
 #endif
 
   try {
@@ -1349,7 +1349,7 @@ void Smsc::shutdown()
   smeman.Dump();
 
 #ifdef SNMP
-  smeStatTableThread.Stop();
+//  smeStatTableThread.Stop();
 #endif
 
   delete smscsme;
