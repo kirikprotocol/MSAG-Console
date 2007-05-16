@@ -1205,8 +1205,8 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
                                           unixTime,
                                           recordId);
     }
-    if ( ++numOfRowsProcessed % 100 == 0 )
-      smsc::util::millisleep(10);
+    if ( ++numOfRowsProcessed % 5000 == 0 )
+      smsc::util::millisleep(1);
   }
   return true;
 }
@@ -1287,8 +1287,8 @@ bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCrite
       smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion: record found[recordId=%s]",recordId);
       deleteDeliveryMessageByRecordId(recordId);
     }
-    if ( ++numOfRowsProcessed % 100 == 0 )
-      smsc::util::millisleep(10);
+    if ( ++numOfRowsProcessed % 5000 == 0 )
+      smsc::util::millisleep(1);
   }
   return true;
 
@@ -1394,8 +1394,8 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
       if ( msgLimit && ++fetchedCount == msgLimit )
         break;
     }
-    if ( ++numOfRowsProcessed % 100 == 0 )
-      smsc::util::millisleep(10);
+    if ( ++numOfRowsProcessed % 5000 == 0 )
+      smsc::util::millisleep(1);
   }
 
   if ( searchCrit.isSetOrderByCriterion() ) {
@@ -1511,8 +1511,8 @@ bool Task::changeDeliveryTextMessageByCompositCriterion(const std::string& newTe
         
       updateMessage->executeUpdate();
     }
-    if ( ++numOfRowsProcessed % 100 == 0 )
-      smsc::util::millisleep(10);
+    if ( ++numOfRowsProcessed % 5000 == 0 )
+      smsc::util::millisleep(1);
   }
   return true;
 }
