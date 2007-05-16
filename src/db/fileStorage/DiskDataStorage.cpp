@@ -409,7 +409,7 @@ SimpleFileDispatcher<V>::StorableRecord::marshal(IOPage& ioPage, SimpleFileDispa
   _crc = _writingAppData->calcCrc(_crc);
   serialize_recordBuf.WriteNetInt32(_crc);
 
-  smsc_log_info(_logger, "SimpleFileDispatcher<V>::marshal::: crc=%08X,wrote buf=[%s]",_crc,hexdmp((uchar_t*)(serialize_recordBuf.getBuffer()), serialize_recordBuf.getBufferSize()).c_str());
+  smsc_log_debug(_logger, "SimpleFileDispatcher<V>::marshal::: crc=%08X,wrote buf=[%s]",_crc,hexdmp((uchar_t*)(serialize_recordBuf.getBuffer()), serialize_recordBuf.getBufferSize()).c_str());
   if ( fileDispatcher.writeNbytesToFile(ioPage, reinterpret_cast<uchar_t*>(serialize_recordBuf.getBuffer()), serialize_recordBuf.getBufferSize()) < 0 ) {
     smsc_log_error(_logger, "SimpleFileDispatcher<V>::marshal::: can't write to file");
     return DataStorage_FileDispatcher<V>::FATAL;
