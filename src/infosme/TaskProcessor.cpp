@@ -715,42 +715,42 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool ret
         std::auto_ptr<ResultSet> rsGuard(getMapping->executeQuery());
         ResultSet* rs = rsGuard.get();
         
-        if (rs && rs->fetchNext())
-        {
+        if (rs)
+          while(rs->fetchNext()) {
             bool needProcess = false;
             {
-                MutexGuard guard(receiptsLock);
-                ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
-                if (receiptPtr) { 
-                    receipts.Delete(smsc_id);
-                    needProcess = true;
-                }
+              MutexGuard guard(receiptsLock);
+              ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+              if (receiptPtr) { 
+                receipts.Delete(smsc_id);
+                needProcess = true;
+              }
             }
             
             if (needProcess)
             {
-                std::auto_ptr<Statement> delMapping(connection->createStatement(DEL_ID_MAPPING_STATEMENT_SQL));
-                if (!delMapping.get())
-                    throw Exception("processReceipt(): Failed to create statement for ids mapping.");
+              std::auto_ptr<Statement> delMapping(connection->createStatement(DEL_ID_MAPPING_STATEMENT_SQL));
+              if (!delMapping.get())
+                throw Exception("processReceipt(): Failed to create statement for ids mapping.");
 
-                uint64_t msgId = rs->getUint64(1);
-                std::string taskId = rs->getString(2);
+              uint64_t msgId = rs->getUint64(1);
+              std::string taskId = rs->getString(2);
 
-                delMapping->setUint64(1, msgId);
-                delMapping->executeUpdate();
+              delMapping->setUint64(1, msgId);
+              delMapping->executeUpdate();
 
-                TaskGuard taskGuard = getTask(taskId); 
-                Task* task = taskGuard.get();
-                if (!task)
-                    throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
-                                    taskId.c_str(), smsc_id);
-                TaskInfo info = task->getInfo();
+              TaskGuard taskGuard = getTask(taskId); 
+              Task* task = taskGuard.get();
+              if (!task)
+                throw Exception("processReceipt(): Unable to locate task '%s' for smscId=%s",
+                                taskId.c_str(), smsc_id);
+              TaskInfo info = task->getInfo();
 
-                processMessage(task, connection, msgId, delivered, retry, internal);
+              processMessage(task, connection, msgId, delivered, retry, internal);
             }
             
             connection->commit();
-        }
+          }
     }
     catch (Exception& exc) {
         try { if (connection) connection->rollback(); }
