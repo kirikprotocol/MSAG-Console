@@ -442,10 +442,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   int rs = -2;
   scag::re::RuleStatus st;
 
-  smsc_log_debug(log, "SubmitResp: got");
-
-  SmppEntity* dst;
-  SmppEntity* src;
+  SmppEntity *dst, *src;
   scag::sessions::SessionPtr session;
   scag::sessions::CSessionKey key;
   int ussd_op;
@@ -453,6 +450,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
   if(!cmd.getLongCallContext().continueExec)
   {      
+      smsc_log_debug(log, "SubmitResp: got");
       SmppCommand orgCmd;
       src=cmd.getEntity();
       int srcUid = 0;
@@ -502,6 +500,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   }
   else
   {
+      smsc_log_debug(log, "SubmitResp: continued...");
       dst = cmd.getDstEntity();
       src = cmd.getEntity();
       sms = cmd->get_resp()->get_sms();
@@ -830,8 +829,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 {
   int rs = -2;
   scag::re::RuleStatus st;
-  SmppEntity* dst;
-  SmppEntity* src;
+  SmppEntity *dst, *src;
   SMS* sms;
 
   scag::sessions::SessionPtr session;
@@ -867,7 +865,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
         return;
       }
 
-      SmppEntity* dst=orgCmd.getEntity();
+      dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
       cmd->get_resp()->set_sms(sms);
@@ -891,6 +889,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   }
   else
   {
+    smsc_log_debug(log, "DeliveryResp: continued...");
     dst = cmd.getDstEntity();
     sms = cmd->get_resp()->get_sms();
 
@@ -1166,8 +1165,6 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   int rs = -2;
   scag::re::RuleStatus st;
 
-  smsc_log_debug(log, "DataSmResp: got");
-
   scag::sessions::CSessionKey key;
   scag::sessions::SessionPtr session;
   SmppEntity *dst, *src;
@@ -1175,6 +1172,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
   if(!cmd.getLongCallContext().continueExec)
   {
+      smsc_log_debug(log, "DataSmResp: got");
+
       SmppCommand orgCmd;
       src=cmd.getEntity();
       int srcUid = 0;
@@ -1227,6 +1226,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   }
   else
   {
+      smsc_log_debug(log, "DataSmResp: continued...");
+
       sms=cmd->get_resp()->get_sms();
       dst = cmd.getDstEntity();
       src = cmd.getEntity();
