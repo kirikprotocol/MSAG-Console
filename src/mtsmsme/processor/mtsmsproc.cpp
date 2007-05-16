@@ -221,7 +221,11 @@ int MtSmsProcessor::Run()
     switch ( state )
     {
       case INIT:
-        result = EINSS7_I96SccpBindReq(SSN,USER,MAXSEGM);
+        result = EINSS7_I96SccpBindReq(SSN,
+                                       #ifdef SCCP_R9
+                                       0,
+                                       #endif 
+                                       USER,MAXSEGM);
         if( result != EINSS7_I96SCCP_REQUEST_OK )
         {
           smsc_log_error(MtSmsProcessorLogger,
@@ -293,7 +297,11 @@ int MtSmsProcessor::Run()
   }
 
 unbind_sccp:
-  extresult = EINSS7_I96SccpUnBindReq(SSN);
+  extresult = EINSS7_I96SccpUnBindReq(SSN
+                                       #ifdef SCCP_R9
+                                       , 0
+                                       #endif 
+                                      );
   if( extresult != 0 )
     smsc_log_error(MtSmsProcessorLogger,
                    "EINSS7_I96SccpUnBindReq(%d) failed with code %d(%s)",
@@ -367,6 +375,9 @@ USHORT_T EINSS7_I96SccpIndError(USHORT_T errorCode,MSG_T *message)
 }
 extern "C"
 USHORT_T EINSS7_I96SccpBindConf(UCHAR_T ssn,
+                                #ifdef SCCP_R9                                                                                       
+                                EINSS7INSTANCE_T sccpInstanceId,
+                                #endif 
                                 UCHAR_T result,
                                 USHORT_T maxSegmSize)
 {
