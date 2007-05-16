@@ -402,6 +402,9 @@ USHORT_T EINSS7_I96SccpBindConf(UCHAR_T ssn,
   return EINSS7_I96SCCP_REQUEST_OK;
 }
 USHORT_T EINSS7_I96SccpStateInd(UCHAR_T ssn,
+                                #ifdef SCCP_R9                                                                                       
+                                EINSS7INSTANCE_T sccpInstanceId,
+                                #endif 
                                 UCHAR_T userstatus,
                                 UCHAR_T assn,
                                 ULONG_T aspc,
@@ -418,6 +421,9 @@ USHORT_T EINSS7_I96SccpStateInd(UCHAR_T ssn,
 
 
 USHORT_T EINSS7_I96SccpUnitdataInd(UCHAR_T ssn,
+                                   #ifdef SCCP_R9                                                                                       
+                                   EINSS7INSTANCE_T sccpInstanceId,
+                                   #endif 
                                    UCHAR_T seq,
                                    UCHAR_T ropt,
                                    UCHAR_T messPriImportance,
