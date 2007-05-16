@@ -19,8 +19,6 @@ private:
   index_t _index;
 };
 
-#include <logger/Logger.h>
-
 template <typename K, typename V>
 bool
 UniqueStorageIndex<K,V>::isExist(const K& key) const
@@ -63,7 +61,6 @@ UniqueStorageIndex<K,V>::eraseIndexedValue(const K& key)
 }
 
 #include <vector>
-//#include <iostream>
 
 template <typename K, typename V>
 class NonUniqueStorageIndex {
@@ -109,24 +106,31 @@ private:
 
   void unregisterSearchIterator(IndexPosition* activeIterator)
   {
-    for(typename registredIters_t::iterator i=_registredIters.begin();
-        i != _registredIters.end(); ++i) {
+    typename registredIters_t::iterator i=_registredIters.begin();
+    typename registredIters_t::iterator the_end = _registredIters.end();
+    while( i != the_end ) {
+      //    for(typename registredIters_t::iterator i=_registredIters.begin();
+      //i != _registredIters.end(); ++i) {
       if ( *i == activeIterator ) {
         _registredIters.erase(i); break;
       }
+      ++i;
     }
   }
 
   void notifySearchIterators(typename index_t::iterator& indexIter)
   {
-    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbstrg");
-    for(typename registredIters_t::iterator i=_registredIters.begin();
-        i != _registredIters.end(); ++i) {
+    typename registredIters_t::iterator i=_registredIters.begin();
+    typename registredIters_t::iterator the_end=_registredIters.end();
+    while( i != the_end ) {
+      //    for(typename registredIters_t::iterator i=_registredIters.begin();
+      //        i != _registredIters.end(); ++i) {
       index_t::iterator savedIter = (*i)->restorePosition();
       if ( savedIter == indexIter ) {
         ++savedIter;
         (*i)->savePosition(savedIter);
       }
+      ++i;
     }
   }
 };
@@ -233,7 +237,6 @@ template <typename K, typename V>
 bool
 NonUniqueStorageIndex<K,V>::eraseIndexedValue(const K& key, const V& value)
 {
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbstrg");
   typename index_t::iterator indexIter = _index.lower_bound(key);
 
   if ( indexIter == _index.end() )
@@ -258,16 +261,22 @@ void
 NonUniqueStorageIndex<K,V>::eraseIndexedIntervalValue(const K& firstKey, const K& lastKey, std::vector<V>* removedValues)
 {
   typename index_t::iterator iter = _index.lower_bound(firstKey);
-
+  typename index_t::iterator theEndIter = _index.upper_bound(lastKey);
   std::list<typename index_t::iterator> iterList;
-  while (iter != _index.upper_bound(lastKey)) {
+  while (iter != theEndIter) {
     iterList.push_back(iter);
     ++iter;
   }
-  for(std::list<typename index_t::iterator>::iterator i=iterList.begin();
-      i!=iterList.end();i++) {
-    removedValues->push_back((*i)->second);
-    _index.erase(*i);
+  //  for(std::list<typename index_t::iterator>::iterator i=iterList.begin();
+  //      i!=iterList.end();i++) {
+  {
+    std::list<typename index_t::iterator>::iterator i=iterList.begin();
+    std::list<typename index_t::iterator>::iterator theEndIter=iterList.end();
+    while ( i != theEndIter ) {
+      removedValues->push_back((*i)->second);
+      _index.erase(*i);
+      ++i;
+    }
   }
 }
 #endif
