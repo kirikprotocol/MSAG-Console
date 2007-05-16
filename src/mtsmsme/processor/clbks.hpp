@@ -10,11 +10,19 @@ extern "C" {
 /* TCAP                                                              */
 /*********************************************************************/
 extern "C" {
+#ifdef SCCP_R9
+USHORT_T EINSS7_I96SccpNoticeInd(UCHAR_T, EINSS7INSTANCE_T, UCHAR_T, UCHAR_T, UCHAR_T, UCHAR_T, UCHAR_T *, UCHAR_T, UCHAR_T *,USHORT_T, UCHAR_T *);
+USHORT_T EINSS7_I96SccpConnectInd(UCHAR_T, EINSS7INSTANCE_T, ULONG_T, UCHAR_T,UCHAR_T, UCHAR_T *, UCHAR_T, UCHAR_T *, USHORT_T,UCHAR_T *);
+USHORT_T EINSS7_I96SccpConnectConf(UCHAR_T, EINSS7INSTANCE_T, ULONG_T, UCHAR_T, UCHAR_T, UCHAR_T*, USHORT_T, UCHAR_T*);
+USHORT_T EINSS7_I96SccpDataInd(UCHAR_T, EINSS7INSTANCE_T, ULONG_T, UCHAR_T, USHORT_T, UCHAR_T *);
+USHORT_T EINSS7_I96SccpDiscInd(UCHAR_T, EINSS7INSTANCE_T, ULONG_T, UCHAR_T, UCHAR_T, UCHAR_T, UCHAR_T*, USHORT_T, UCHAR_T*);
+#elseif
 USHORT_T EINSS7_I96SccpNoticeInd(UCHAR_T, UCHAR_T, UCHAR_T,UCHAR_T, UCHAR_T, UCHAR_T *,UCHAR_T, UCHAR_T *, USHORT_T,UCHAR_T *);
 USHORT_T EINSS7_I96SccpConnectInd(UCHAR_T, ULONG_T, UCHAR_T,UCHAR_T, UCHAR_T *, UCHAR_T,UCHAR_T *, USHORT_T,UCHAR_T *);
 USHORT_T EINSS7_I96SccpConnectConf(UCHAR_T,ULONG_T,UCHAR_T,UCHAR_T,UCHAR_T*,USHORT_T,UCHAR_T*);
 USHORT_T EINSS7_I96SccpDataInd(UCHAR_T,ULONG_T,UCHAR_T,USHORT_T,UCHAR_T *);
 USHORT_T EINSS7_I96SccpDiscInd(UCHAR_T,ULONG_T,UCHAR_T,UCHAR_T,UCHAR_T,UCHAR_T*,USHORT_T,UCHAR_T*);
+#endif
 }
 /*********************************************************************/
 /* MGMT                                                              */

@@ -11,6 +11,9 @@ extern Logger* MtSmsProcessorLogger;
 using smsc::mtsmsme::processor::MtSmsProcessorLogger;
 
 USHORT_T EINSS7_I96SccpNoticeInd(UCHAR_T subSystemNumber,
+                                 #ifdef SCCP_R9                                                                                                                     
+                                 EINSS7INSTANCE_T sccpInstanceId,
+                                 #endif
                                  UCHAR_T segmentationInd,
                                  UCHAR_T errorLocation,
                                  UCHAR_T reasonForReturn,
@@ -26,6 +29,9 @@ USHORT_T EINSS7_I96SccpNoticeInd(UCHAR_T subSystemNumber,
 }
 
 USHORT_T EINSS7_I96SccpConnectInd(UCHAR_T subSystemNumber,
+                                  #ifdef SCCP_R9                                                                                                                     
+                                  EINSS7INSTANCE_T sccpInstanceId,
+                                  #endif
                                   ULONG_T connectionId,
                                   UCHAR_T messPriImportance,
                                   UCHAR_T calledAddressLength,
@@ -40,6 +46,9 @@ USHORT_T EINSS7_I96SccpConnectInd(UCHAR_T subSystemNumber,
 }
 
 USHORT_T EINSS7_I96SccpConnectConf(UCHAR_T subSystemNumber,
+                                   #ifdef SCCP_R9                                                                                                                     
+                                   EINSS7INSTANCE_T sccpInstanceId,
+                                   #endif
                                    ULONG_T connectionId,
                                    UCHAR_T messPriImportance,
                                    UCHAR_T respondAddressLength,
@@ -51,6 +60,9 @@ USHORT_T EINSS7_I96SccpConnectConf(UCHAR_T subSystemNumber,
   return EINSS7_I96SCCP_REQUEST_OK;
 }
 USHORT_T EINSS7_I96SccpDataInd(UCHAR_T subSystemNumber,
+                               #ifdef SCCP_R9                                                                                                                     
+                               EINSS7INSTANCE_T sccpInstanceId,
+                               #endif
                                ULONG_T connectionId,
                                UCHAR_T messPriImportance,
                                USHORT_T userDataLength,
@@ -60,6 +72,9 @@ USHORT_T EINSS7_I96SccpDataInd(UCHAR_T subSystemNumber,
   return EINSS7_I96SCCP_REQUEST_OK;
 }
 USHORT_T EINSS7_I96SccpDiscInd(UCHAR_T subSystemNumber,
+                               #ifdef SCCP_R9                                                                                                                     
+                               EINSS7INSTANCE_T sccpInstanceId,
+                               #endif
                                ULONG_T connectionId,
                                UCHAR_T reason,
                                UCHAR_T originator,

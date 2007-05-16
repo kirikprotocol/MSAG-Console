@@ -249,6 +249,9 @@ void TCO::SCCPsend(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t 
     res =
     EINSS7_I96SccpUnitdataReq(
                               ssn,
+                              #ifdef SCCP_R9                                                                                      
+                              0,                          /* EINSS7INSTANCE_T sccpInstanceId /*                                                                    
+                              #endif
                               sls++,
                               EINSS7_I96SCCP_SEQ_CTRL_OFF,
                               EINSS7_I96SCCP_RET_OPT_OFF,
