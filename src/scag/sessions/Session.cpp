@@ -564,7 +564,7 @@ void Session::expirePendingOperation()
     {
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
         time_t now = time(NULL);
-        while(it != PendingOperationList.end() && it->validityTime < now)
+        while(it != PendingOperationList.end() && it->validityTime <= now)
         {
             if (it->billID > 0) it->rollbackAll(true);
 
