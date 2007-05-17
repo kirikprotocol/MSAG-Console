@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.6.2 or higher -->
+<!-- configuration for INMan v0.6.3 or higher -->
 <config>
-  <param name="version" type="string">0.6.2</param>   <!-- config version -->
+  <param name="version" type="string">0.6.3</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
@@ -31,11 +31,18 @@
      the policy is to use will be determined according to sender address and specified
      policies address pool.
     -->
+    <param name="abonentTypeRequest" type="string">onDemand</param> <!-- [onDemand, always]
+    mode of abonent contract type determination (request to AbonentProvider)
+    onDemand : determine only if required for billing, default
+    always   : always determine
+    -->
+    <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535],
+    maximum allowed time for determining abonent contract type,
+    (AbonentProvider request), billing continues on its expiration in CDR mode,
+    default 5 -->
+
     <param name="maxBillings" type="int">20</param>   <!--  [1 .. 100000] , default 500 
      maximium simultaneous billing requests per INMan client  connect -->
-    <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535], default 5 
-    maximum allowed time for determining abonent type, (AbonentProvider interaction),
-    billing continues on its expiration in CDR mode -->
     <param name="maxTimeout" type="int">20</param>  <!-- units: seconds, [5 .. 65535], default 120 
     maximum allowed value for billing suspending time (SMSC interaction), billing aborts on its expiration  -->
 
