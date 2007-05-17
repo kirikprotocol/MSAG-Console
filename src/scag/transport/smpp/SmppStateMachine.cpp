@@ -202,6 +202,7 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
 
 void StateMachine::processSubmit(SmppCommand& cmd)
 {
+    smsc_log_debug(log, "Submit: got");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -434,6 +435,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   st.runPostProcessActions();
 
   sm.releaseSession(session);
+  smsc_log_debug(log, "Submit: processed");
 }
 
 
@@ -580,6 +582,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
   if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
   cmd->get_resp()->set_sms(0);
+  smsc_log_debug(log, "SubmitResp: processed");
 }
 
 void StateMachine::sendReceipt(SmppCommand& cmd)
@@ -602,6 +605,7 @@ void StateMachine::sendReceipt(SmppCommand& cmd)
 
 void StateMachine::processDelivery(SmppCommand& cmd)
 {
+    smsc_log_debug(log, "Delivery: got");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -823,6 +827,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   st.runPostProcessActions();
 
   sm.releaseSession(session);
+  smsc_log_debug(log, "Delivery: processed");
 }
 
 void StateMachine::processDeliveryResp(SmppCommand& cmd)
@@ -966,6 +971,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 
   if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
   cmd->get_resp()->set_sms(0);
+  smsc_log_debug(log, "DeliveryResp: processed");
 }
 
 void StateMachine::SubmitResp(SmppCommand& cmd,int status)
@@ -1004,6 +1010,7 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
 
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
+    smsc_log_debug(log, "DataSm: got");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -1159,6 +1166,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   st.runPostProcessActions();
 
   sm.releaseSession(session);
+
+  smsc_log_debug(log, "DataSm: processed");
 }
 void StateMachine::processDataSmResp(SmppCommand& cmd)
 {
@@ -1301,6 +1310,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
   if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
   cmd->get_resp()->set_sms(0);
+
+  smsc_log_debug(log, "DataSmResp: processed");
 }
 
 void StateMachine::processExpiredResps()
