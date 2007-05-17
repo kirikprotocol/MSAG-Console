@@ -383,10 +383,7 @@ int SessionManagerImpl::processExpire()
 
     int iPeriod = DEFAULT_EXPIRE_INTERVAL;
     if(!SessionExpirePool.empty() && changed)
-    {
         iPeriod = (*SessionExpirePool.begin())->nextWakeTime - now;
-        smsc_log_debug(logger,"SessionManager::expire interval %d %d", (*SessionExpirePool.begin())->nextWakeTime, now);
-    }
     return iPeriod;
 }
 
@@ -474,7 +471,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     if(!session->commandsEmpty())
     {
         SCAGCommand* cmd = session->popCommand();
-        smsc_log_debug(logger,"SessionManager: push command to state machine USR='%d', Address='%s' transport=%d Commands Count: %d",
+        smsc_log_debug(logger,"SessionManager: release: push command to state machine USR='%d', Address='%s' transport=%d Commands Count: %d",
                        key.USR, key.abonentAddr.toString().c_str(), cmd->getType(), session->commandsCount());
         if(cmd->getType() == HTTP)
             scag::transport::http::HttpManager::Instance().process(((scag::transport::http::HttpCommand*)cmd)->getContext());

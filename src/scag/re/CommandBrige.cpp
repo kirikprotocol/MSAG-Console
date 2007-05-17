@@ -148,19 +148,11 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
     SMS& data = getSMS(command);
 
     if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
-    {
         buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
-        if (len == 0) 
-        {
-            if (data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
-                buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-        }
-    } else if (data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
-    {
+    if (!len && data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
         buff = data.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
-    } 
 
-    if (buff == 0) return str;
+    if (!buff || !len) return str;
 
     int code = smsc::smpp::DataCoding::SMSC7BIT;
 
