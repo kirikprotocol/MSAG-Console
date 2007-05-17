@@ -132,16 +132,7 @@
                 suppress</option>
         </td>
     </tr>
-    <tr>
-      <td><%=getLocString("routes.billing")%></td>
-      <td>
-        <select id=billing name=billing>
-          <option value=<%=Route.BILLING_TRUE%> <%=bean.getBilling() == Route.BILLING_TRUE ? "SELECTED" : ""%>>on</option>
-          <option value=<%=Route.BILLING_FALSE%> <%=bean.getBilling() == Route.BILLING_FALSE ? "SELECTED" : ""%>>off</option>
-          <option value=<%=Route.BILLING_MT%> <%=bean.getBilling() == Route.BILLING_MT ? "SELECTED" : ""%>>MT</option>
-         </select>
-      </td>
-    </tr>
+
 </table>
 </td>
 <td>&nbsp;</td>
@@ -189,7 +180,17 @@
             <td><input class=check type=checkbox id=transit name=transit <%=bean.isTransit() ? "checked" : ""%>></td>
             <td><label for=billing style="padding-left:4px;"><%=getLocString("routes.transit")%></label></td>
         </tr>
-        </table>
+        <tr>
+          <td>
+            <select id=billing name=billing>
+              <option value=<%=Route.BILLING_TRUE%> <%=bean.getBilling() == Route.BILLING_TRUE ? "SELECTED" : ""%>>on</option>
+              <option value=<%=Route.BILLING_FALSE%> <%=bean.getBilling() == Route.BILLING_FALSE ? "SELECTED" : ""%>>off</option>
+              <option value=<%=Route.BILLING_MT%> <%=bean.getBilling() == Route.BILLING_MT ? "SELECTED" : ""%>>MT</option>
+            </select>
+          </td>
+          <td><label for=billing style="padding-left:4px;"><%=getLocString("routes.billing")%></label></td>
+        </tr>
+    </table>
 </td>
 </tr>
 </table>
