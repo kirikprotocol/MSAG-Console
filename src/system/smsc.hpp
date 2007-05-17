@@ -559,6 +559,16 @@ public:
     return true;
   }
 
+  void FullReportDelivery(SMSId id,const SMS& sms)
+  {
+    try{
+      inManCom->FullReport(id,sms);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(smsc::logger::Logger::getInstance("inmancom"),"FullReportDelivery failed:%s",e.what());
+    }
+  }
+
   bool isHs(){ return ishs;}
 
   bool getSmartMultipartForward()

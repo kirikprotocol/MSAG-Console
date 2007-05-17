@@ -2,6 +2,7 @@
 #include "INManComm.hpp"
 #include "inman/interaction/MsgBilling.hpp"
 #include "util/Exception.hpp"
+#include "system/smsc.hpp"
 
 namespace smsc{
 namespace system{
@@ -43,7 +44,8 @@ void INManComm::Init(const char* argHost,int argPort)
   socketOk=true;
 }
 
-static void FillChargeOp(SMSId id,smsc::inman::interaction::ChargeSms& op,const SMS& sms)
+template <class OpClass>
+static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
 {
   op.setDestinationSubscriberNumber(sms.getDealiasedDestinationAddress().toString());
   op.setCallingPartyNumber(sms.getOriginatingAddress().toString());
@@ -130,7 +132,11 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   ctx.inDlgId=dlgId;
 
   smsc::inman::interaction::SPckChargeSms pck;
-  pck.Cmd().setForwarded();
+  if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+  {
+    pck.Cmd().setChargeOnSubmit();
+  }
+//  pck.Cmd().setForwarded();
   pck.Hdr().dlgId = dlgId;
   FillChargeOp(id, pck.Cmd(), sms);
   smsc::inman::interaction::ObjectBuffer buf(400);
@@ -154,6 +160,27 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   info2(log,"FwdChargeSms %lld",id);
   */
 }
+
+void INManComm::FullReport(SMSId id,const SMS& sms)
+{
+  if(!socketOk)
+  {
+    throw smsc::util::Exception("Communication with inman failed");
+  }
+  smsc::inman::interaction::SPckDeliveredSmsData pck;
+  FillChargeOp(id,pck.Cmd(),sms);
+  pck.Cmd().setResultValue(sms.lastResult);
+  pck.Cmd().setDestIMSI(sms.getDestinationDescriptor().imsi);
+  pck.Cmd().setDestMSC(sms.getDestinationDescriptor().msc);
+  pck.Cmd().setDestSMEid(sms.getDestinationSmeId());
+  pck.Cmd().setDeliveryTime(time(NULL));
+  if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO))
+    pck.Cmd().setDivertedAdr(sms.getStrProperty(Tag::SMSC_DIVERTED_TO));
+  smsc::inman::interaction::ObjectBuffer buf(200);
+  pck.serialize(buf);
+  packetWriter.enqueue((const char*)buf.get(),buf.getDataSize());
+}
+
 
 void INManComm::Report(int dlgId,const SMS& sms,bool final)
 {

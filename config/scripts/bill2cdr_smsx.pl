@@ -27,7 +27,7 @@ my $eoln="\x0d\x0a";
 {field=>'RECORD_TYPE',width=>5},                 #02   7 Record Type 10-in, 20-out, 30-divert
 {field=>'CALL_DIRECTION',width=>5,align=>'R'},   #03  12 Call Direction I/O
 {field=>'FINAL_DATE',width=>14},                 #04  17 Date & Time
-{field=>'PARTS_NUM',width=>10},                  #05  31 Call Duration or SMS parts num
+{field=>'CALL_DURATION',width=>10},                  #05  31 Call Duration or SMS parts num
 {field=>'DATA_LENGTH',width=>10},                #06  41 Data Volume (size)
 {field=>'PAYER_IMSI',width=>21},                 #07  51 ID
 {field=>'PAYER_ADDR',width=>21},                 #08  72 ID2
@@ -233,6 +233,8 @@ sub process{
     %$outfields=%$infields;
     $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
 
+    $outfields->{CALL_DURATION}=$infields->{PARTS_NUM};
+
     if( $infields->{BEARER_TYPE} == 1 )
     {
       $outfields->{INV_SERVICE_ID}='98';
@@ -262,6 +264,23 @@ sub process{
       $outfields->{ISPRECHARGED}=1;
     }
 
+    my $makeOutRec=1;
+    my $makeInRec=1;
+
+    if($infields->{CONTRACT}==2 && $infields->{SERVICE_ID}!=4 && $infields->{SERVICE_ID}!=7 && $infields->{SERVICE_ID}!=8)
+    {
+      $makeInRec=0;
+    }
+
+    if($infields->{CHARGE}==2)
+    {
+      $makeOutRec=0;
+    }elsif($infields->{CHARGE}==1)
+    {
+      $makeInRec=0;
+    }
+
+
     $outfields->{RECORD_TYPE}=10;
     $outfields->{CALL_DIRECTION}='O';
     $outfields->{PAYER_ADDR}=conv_addr($infields->{SRC_ADDR});
@@ -269,37 +288,44 @@ sub process{
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
     $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-    outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
-    if($infields->{RECORD_TYPE}==1) # diverted sms
+    if($makeOutRec)
     {
-      $outfields->{RECORD_TYPE}=20;
-      $outfields->{CALL_DIRECTION}='I';
-      $outfields->{PAYER_ADDR}=conv_addr($infields->{DIVERTED_FOR});
-      $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
-      $outfields->{PAYER_MSC}=$infields->{DST_MSC};
-      $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
-      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
-      $outfields->{RECORD_TYPE}=30;
-      outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
-    }else
+      outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
+    }
+
+    if($makeInRec)
     {
-      $outfields->{RECORD_TYPE}=20;
-      $outfields->{CALL_DIRECTION}='I';
-      if( $infields->{BEARER_TYPE} == 1 ) # ussd
+      if($infields->{RECORD_TYPE}==1) # diverted sms
       {
-        $outfields->{INV_SERVICE_ID}='97';
-      }
-      if( $infields->{BEARER_TYPE} == 0 ) # sms
+        $outfields->{RECORD_TYPE}=20;
+        $outfields->{CALL_DIRECTION}='I';
+        $outfields->{PAYER_ADDR}=conv_addr($infields->{DIVERTED_FOR});
+        $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
+        $outfields->{PAYER_MSC}=$infields->{DST_MSC};
+        $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
+        $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
+        outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
+        $outfields->{RECORD_TYPE}=30;
+        outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
+      }else
       {
-        $outfields->{INV_SERVICE_ID}='21';
+        $outfields->{RECORD_TYPE}=20;
+        $outfields->{CALL_DIRECTION}='I';
+        if( $infields->{BEARER_TYPE} == 1 ) # ussd
+        {
+          $outfields->{INV_SERVICE_ID}='97';
+        }
+        if( $infields->{BEARER_TYPE} == 0 ) # sms
+        {
+          $outfields->{INV_SERVICE_ID}='21';
+        }
+        $outfields->{PAYER_ADDR}=conv_addr($infields->{DST_ADDR});
+        $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
+        $outfields->{PAYER_MSC}=$infields->{DST_MSC};
+        $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
+        $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
+        outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
       }
-      $outfields->{PAYER_ADDR}=conv_addr($infields->{DST_ADDR});
-      $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
-      $outfields->{PAYER_MSC}=$infields->{DST_MSC};
-      $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
-      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
     }
   }
 }

@@ -3955,6 +3955,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         smsc->getScheduler()->InvalidSms(t.msgId);
 
+#ifdef SMSEXTRA
+        if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+        {
+          smsc->FullReportDelivery(t.msgId,sms);
+        }
+#endif
+
         if(dgortr)
         {
           sms.state=UNDELIVERABLE;
@@ -4488,6 +4495,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
     __trace__("DELIVERYRESP: registerStatisticalEvent");
 
     smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
+
+#ifdef SMSEXTRA
+    if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+    {
+      smsc->FullReportDelivery(t.msgId,sms);
+    }
+#endif
+
+
   //}
 
   try{
