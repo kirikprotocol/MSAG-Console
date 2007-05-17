@@ -41,17 +41,37 @@ AbonentCacheMTR::AbonentCacheMTR(AbonentCacheCFG * cfg, Logger * uselog/* = NULL
     nmFile += _nmCch;
 
     std::auto_ptr<FileCache> flCache(new FileCache());
-    try {
-        bool present = flCache->Open(nmFile.c_str(), _cfg.fileRcrd);
+
+    short   attNum = 2;
+    bool    present = false;
+    do {
+        try {
+            present = flCache->Open(nmFile.c_str(), _cfg.fileRcrd);
+            attNum = 0;
+        } catch (std::exception & exc) {
+            smsc_log_error(logger, "InCache: %s", exc.what());
+            //try to create new cache file
+            if (--attNum && File::Exists(nmFile.c_str())) {
+                std::string nmBad(nmFile);
+                nmBad += ".broken";
+                if (!rename(nmFile.c_str(), nmBad.c_str())) {
+                    smsc_log_error(logger, "InCache: cache file renamed to %s", nmBad.c_str());
+                } else {
+                    flCache.reset();
+                    attNum = 0;
+                }
+            }
+        }
+    } while (attNum);
+
+    if (flCache.get()) {
         smsc_log_info(logger, "InCache: %s cache file %s(%u records of %u)",
                       present ? "red" : "created", nmFile.c_str(),
                       flCache->Used(), flCache->Size());
         fscMgr.reset(new FSCacheMonitor(flCache.release(), &ramCache, logger));
         fscMgr->Start();
-    } catch (std::exception & exc) {
-        smsc_log_error(logger, "InCache: %s", exc.what());
+    } else {
         smsc_log_info(logger, "InCache: proceeding in RAM only mode.");
-        fscMgr.reset();
     }
     return;
 }
