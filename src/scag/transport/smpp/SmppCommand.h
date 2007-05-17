@@ -415,7 +415,7 @@ struct _SmppCommand
   uint16_t usr;
   uint32_t flags;
 
-  _SmppCommand() : ref_count(0), dta(0), ent(0),status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0)
+  _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0)
   {
   }
   ~_SmppCommand()
