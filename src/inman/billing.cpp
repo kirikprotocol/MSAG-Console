@@ -118,17 +118,87 @@ Billing::~Billing()
     smsc_log_debug(logger, "%s: Deleted", _logId);
 }
 
+//returns true if all billing stages are completed
+bool Billing::BillComplete(void) const
+{
+    return ((state >= Billing::bilReported) && cdr._finalized) ? true : false;
+}
+
+/* -------------------------------------------------------------------------- *
+ * WorkerAC interface implementation:
+ * -------------------------------------------------------------------------- */
+static const char * const _nm_cmd[] = {
+    "", "CHARGE_SMS", "CHARGE_SMS_RESULT", "DELIVERY_SMS_RESULT"
+};
+//NOTE: it's the processing graph entry point, so locks bilMutex !!!
+void Billing::handleCommand(INPPacketAC* pck)
+{
+    MutexGuard  grd(bilMutex);
+    unsigned short cmdId = (pck->pCmd())->Id();
+
+    smsc_log_debug(logger, "%s: --> %s at state %u", _logId, _nm_cmd[cmdId], state);
+    switch (state) {
+    case Billing::bilIdle: {
+        switch (cmdId) {
+        case INPCSBilling::CHARGE_SMS_TAG: {
+            state = Billing::bilStarted;
+            bool wDone = false; //true if this worker finished processing
+
+            //complete the command deserialization
+            try { (pck->pCmd())->loadDataBuf(); }
+            catch (SerializerException & exc) {
+                smsc_log_error(logger, "%s: %s", _logId, exc.what());
+                wDone = true;
+            }
+            if (wDone || (wDone = !verifyChargeSms(static_cast<ChargeSms*>(pck->pCmd())))) {
+                SPckChargeSmsResult spck;
+                spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+                spck.Cmd().setError(
+                    _RCS_INManErrors->mkhash(INManErrorId::protocolInvalidData),
+                    _RCS_INManErrors->explainCode(INManErrorId::protocolInvalidData).c_str());
+                spck.Hdr().dlgId = _wId;
+                _mgr->sendCmd(&spck);
+                doFinalize();
+            } else { //process charging request
+                onChargeSms(static_cast<ChargeSms*>(pck->pCmd()), NULL);
+            }
+        } break;
+        //TO DO: case INPCSBilling::DELIVERED_SMS_DATA_TAG: { }
+        default: {
+            smsc_log_error(logger, "%s: protocol error: cmd %u, state %u",
+                           _logId, (unsigned)cmdId, state);
+            doFinalize();
+        }
+        } /* eosw */
+    } break;
+
+    case Billing::bilContinued: {
+        if (cmdId == INPCSBilling::DELIVERY_SMS_RESULT_TAG) {
+            StopTimer(state);
+            state = Billing::bilApproved;
+            //complete the command deserialization
+            try { (pck->pCmd())->loadDataBuf(); }
+            catch (SerializerException & exc) {
+                smsc_log_error(logger, "%s: %s", _logId, exc.what());
+                abortThis(exc.what());
+                return;
+            }
+            onDeliverySmsResult(static_cast<DeliverySmsResult*>(pck->pCmd()), NULL);
+            break;
+        }
+    } //no break, fall into default !!!
+    default: //ignore unknown/illegal command
+        smsc_log_error(logger, "%s: protocol error: cmd %u, state %u",
+                       _logId, (unsigned)cmdId, state);
+    } /* eosw */
+    return; //grd off
+}
+
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
 void Billing::Abort(const char * reason/* = NULL*/)
 {
     MutexGuard grd(bilMutex);
     abortThis(reason,  false);
-}
-
-//returns true if all billing stages are completed
-bool Billing::BillComplete(void) const
-{
-    return ((state >= Billing::bilReported) && cdr._finalized) ? true : false;
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -159,6 +229,7 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
+    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abType);
     if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::cdrALL)) {
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
@@ -206,6 +277,11 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
 
 bool Billing::startCAPDialog(INScfCFG * use_scf)
 {
+    if (!_cfg.ss7.userId) {
+        smsc_log_error(logger, "%s: SS7 stack is not connected!", _logId);
+        return false;
+    }
+
     TCAPDispatcher * disp = TCAPDispatcher::getInstance();
     SSNSession * ssnSess = disp->findSession(_cfg.ss7.own_ssn);
     if (!ssnSess) //attempt to open SSN
@@ -296,8 +372,9 @@ void Billing::StopTimer(Billing::BillingState bilState)
     return;
 }
 
+//returns false if PDU contains invalid data preventing request processing
 //NOTE: bilMutex should be locked upon entry!
-bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
+bool Billing::verifyChargeSms(ChargeSms* sms)
 {
     sms->export2CDR(cdr);
     sms->exportCAPInfo(csInfo);
@@ -340,7 +417,13 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
             smsc_log_error(logger, "%s: cdr   : <%s>", _logId, rec.c_str());
         }
     }
+    return true;
+}
 
+//Returns true if worker finished request processing and may be released
+//NOTE: bilMutex should be locked upon entry!
+bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
+{
     //determine messageType and billmode
     if (xsmsSrv)
         msgType = ChargeObj::msgXSMS;
@@ -349,8 +432,9 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
 
     ChargeObj::BILL_MODE bm = _cfg.billMode.modeFor(msgType);
     if (bm == ChargeObj::billOFF) {
-        chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE,
-                    _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch));
+        if (chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE,
+                    _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch)))
+            doFinalize();
         return true;
     }
 
@@ -359,44 +443,48 @@ bool Billing::onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr)
         bill2CDR = true;
         billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgSpecific);
     }
-    AbonentRecord   abRec; //ab_type = abtUnknown
-    if (bill2CDR || (((abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec))
-                      == AbonentContractInfo::abtPostpaid))) {
+
+    AbonentRecord   abRec;      //ab_type = abtUnknown
+    abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec);
+    if (abType == AbonentContractInfo::abtPostpaid)
         bill2CDR = true; //do not interact IN platform, just create CDR
-        chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
-        return true;
-    }
-    
-    if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
-        smsc_log_error(logger, "%s: no policy set for %s", _logId, 
-                       abNumber.toString().c_str());
-    } else {
-        smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->Ident());
-        if ((abType == AbonentContractInfo::abtUnknown)
-            || ((abType == AbonentContractInfo::abtPrepaid) && !abRec.getSCFinfo())) {
+
+    //check if AbonentProvider should be requested for contract type
+    if ( ((abType == AbonentContractInfo::abtUnknown)
+            && (!bill2CDR || (_cfg.cntrReq == BillingCFG::reqAlways)))
+        || (!bill2CDR && (abType == AbonentContractInfo::abtPrepaid)
+            && !abRec.getSCFinfo()) ) {
+
+        if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
+            smsc_log_error(logger, "%s: no policy set for %s", _logId, 
+                            abNumber.toString().c_str());
+        } else {
+            smsc_log_debug(logger, "%s: using policy %s for %s", _logId, abPolicy->Ident(),
+                            abNumber.toString().c_str());
             // configure SCF by quering provider first
             IAProviderITF *prvd = abPolicy->getIAProvider(logger);
             if (prvd) {
                 if (prvd->startQuery(abNumber, this)) {
                     providerQueried = true;
                     StartTimer(_cfg.abtTimeout);
-                    return true; //execution will continue in onIAPQueried() by another thread.
+                    return false; //execution will continue in onIAPQueried() by another thread.
                 }
                 smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId,
-                               abNumber.getSignals());
+                                   abNumber.getSignals());
             }
         }
     }
-    return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
+    ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
+    return false;
 }
 
-//here goes: abtPrepaid or abtUnknown or abtPostpaid(SMSX)
+//Returns true if ChargeSmsResult::CHARGING_POSSIBLE was sent
 bool Billing::ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
                                     const GsmSCFinfo * p_scf/* = NULL*/)
 {
     abType = ab_type;
 
-    if (p_scf) { //SCF is set for abonent by cache/IAProvider
+    if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
         abScf.scf = *p_scf;
         //lookup policy for extra SCF parms (serviceKey, RPC lists)
         if (abPolicy)
@@ -430,19 +518,17 @@ bool Billing::ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
         bill2CDR = true;
 
     if (!bill2CDR) {
-        if (xsmsSrv && !xsmsSrv->adr.length) {
-            bill2CDR = true;
-        } else {
-            smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId, 
-                           abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
-                           abScf.scf.serviceKey);
-            bill2CDR = !startCAPDialog(&abScf);
-        }
+        smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId, 
+                abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
+                abScf.scf.serviceKey);
+        bill2CDR = !startCAPDialog(&abScf);
     }
 
-    if (bill2CDR) //do not interact IN platform, just create CDR
+    if (bill2CDR) {//do not interact IN platform, just create CDR
         chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
-    return true;
+        return true;
+    }
+    return false;
 }
 
 //NOTE: bilMutex should be locked upon entry
@@ -468,12 +554,13 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes, CsBillingHdr_dlg *h
     if (!capDlgActive) {
         state = bilReported;
         doFinalize();
-    } //else wait onEndSMS();
+    } //else wait onEndCapDlg();
     return;
 }
 
+//Returns false if result sending has been failed, so worker aborted itself.
 //NOTE: bilMutex should be locked upon entry
-void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr /* = 0*/)
+bool Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr /* = 0*/)
 {
     if (inmanErr)
         billErr = inmanErr;
@@ -498,72 +585,11 @@ void Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash in
     if (_mgr->sendCmd(&res)){
         if (chg_res == ChargeSmsResult::CHARGING_POSSIBLE)
             StartTimer(_cfg.maxTimeout); //expecting DeliverySmsResult
-    } else     //TCP connect fatal failure
-        abortThis(_mgr->connectError()->what());
-    return;
-}
-
-/* -------------------------------------------------------------------------- *
- * InmanHandler interface implementation:
- * -------------------------------------------------------------------------- */
-static const char * const _nm_cmd[] = {
-    "", "CHARGE_SMS", "CHARGE_SMS_RESULT", "DELIVERY_SMS_RESULT"
-};
- //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-void Billing::handleCommand(INPPacketAC* pck)
-{
-    MutexGuard  grd(bilMutex);
-    unsigned short cmdId = (pck->pCmd())->Id();
-
-    smsc_log_debug(logger, "%s: --> %s at state %u", _logId, _nm_cmd[cmdId], state);
-    switch (state) {
-    case Billing::bilIdle: {
-        if (cmdId == INPCSBilling::CHARGE_SMS_TAG) {
-            state = Billing::bilStarted;
-            bool goon = true;
-            //complete the command deserialization
-            try { (pck->pCmd())->loadDataBuf(); }
-            catch (SerializerException & exc) {
-                smsc_log_error(logger, "%s: %s", _logId, exc.what());
-                goon = false;
-            }
-            if (!goon || !onChargeSms(static_cast<ChargeSms*>(pck->pCmd()), NULL)) {
-                SPckChargeSmsResult spck;
-                spck.Cmd().setValue(ChargeSmsResult::CHARGING_NOT_POSSIBLE);
-                spck.Cmd().setError(
-                    _RCS_INManErrors->mkhash(INManErrorId::protocolInvalidData),
-                    _RCS_INManErrors->explainCode(INManErrorId::protocolInvalidData).c_str());
-                spck.Hdr().dlgId = _wId;
-                _mgr->sendCmd(&spck);
-                doFinalize();
-            }
-        } else {
-            smsc_log_error(logger, "%s: protocol error: cmd %u, state %u",
-                           _logId, (unsigned)cmdId, state);
-            doFinalize();
-        }
-    } break;
-
-    case Billing::bilContinued: {
-        if (cmdId == INPCSBilling::DELIVERY_SMS_RESULT_TAG) {
-            StopTimer(state);
-            state = Billing::bilApproved;
-            //complete the command deserialization
-            try { (pck->pCmd())->loadDataBuf(); }
-            catch (SerializerException & exc) {
-                smsc_log_error(logger, "%s: %s", _logId, exc.what());
-                abortThis(exc.what());
-                return;
-            }
-            onDeliverySmsResult(static_cast<DeliverySmsResult*>(pck->pCmd()), NULL);
-            break;
-        }
-    } //no break, fall into default !!!
-    default: //ignore unknown/illegal command
-        smsc_log_error(logger, "%s: protocol error: cmd %u, state %u",
-                       _logId, (unsigned)cmdId, state);
-    } /* eosw */
-    return; //grd off
+        return true;
+    }
+    //TCP connect fatal failure
+    abortThis(_mgr->connectError()->what());
+    return false;
 }
 
 /* -------------------------------------------------------------------------- *
@@ -654,7 +680,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
             }
         }
         if (!bill2CDR) { //check for RejectSMS causes indicating that abonent
-                             //can't be charged (not just the technical failure)
+                            //can't be charged (not just the technical failure)
             bill2CDR = true;
             for (RPCList::iterator it = abScf.rejectRPC.begin();
                                     it != abScf.rejectRPC.end(); it++) {
@@ -678,7 +704,7 @@ void Billing::onEndCapDlg(RCHash errcode/* = 0*/)
     capDlgActive = false;
     if (!errcode) {   //EndSMS
         if ((state == bilReleased) || (state == bilReported))
-            doFinalize(true);
+            doFinalize();
         else if (state != bilContinued)
             smsc_log_error(logger, "%s: onEndCapDlg() at state: %u",
                            _logId, (unsigned)state);

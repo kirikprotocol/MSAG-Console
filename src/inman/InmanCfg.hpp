@@ -2,6 +2,9 @@
 /* ************************************************************************** *
  * INMan service config file parsing.
  * ************************************************************************** */
+#ifndef __SMSC_INMAN_CONFIG_PARSING__
+#define __SMSC_INMAN_CONFIG_PARSING__
+
 #include <stdio.h>
 #include <memory>
 #include <string.h>
@@ -139,6 +142,19 @@ public:
 };
 
 class INManConfig : public InService_CFG {
+public:
+    static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
+    static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
+    static const unsigned int _in_CFG_MAX_BILLINGS = 100000;
+    static const unsigned int _in_CFG_DFLT_BILLINGS = 500;
+    static const unsigned short _in_CFG_DFLT_CAP_TIMEOUT = 20;
+    static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;
+    static const unsigned short _in_CFG_DFLT_ABTYPE_TIMEOUT = 5;
+    static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
+    static const unsigned short _in_CFG_DFLT_TCAP_DIALOGS = 2000;
+    static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
+    static const int  _in_CFG_DFLT_CACHE_RECORDS = 10000;
+
 protected:
     typedef std::list<const char *> CPTRList;
     struct AbonentPolicyXCFG {
@@ -208,39 +224,12 @@ protected:
         }
     };
 
+//protected members:
     INScfsRegistry      scfMap;
     std::string         smsXcfg; //SMSExtra services config file
     Logger *            logger;
 
-public:
-    static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
-    static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
-    static const unsigned int _in_CFG_MAX_BILLINGS = 100000;
-    static const unsigned int _in_CFG_DFLT_BILLINGS = 500;
-    static const unsigned short _in_CFG_DFLT_CAP_TIMEOUT = 20;
-    static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;
-    static const unsigned short _in_CFG_DFLT_ABTYPE_TIMEOUT = 5;
-    static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
-    static const unsigned short _in_CFG_DFLT_TCAP_DIALOGS = 2000;
-    static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
-    static const int  _in_CFG_DFLT_CACHE_RECORDS = 10000;
-
-    INManConfig(Logger * use_log) : InService_CFG(), logger(use_log)
-    {
-        //OPTIONAL PARAMETERS:
-        sock.maxConn = _in_CFG_DFLT_CLIENT_CONNS;
-        bill.maxBilling = _in_CFG_DFLT_BILLINGS;
-        sock.timeout = bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
-        bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
-        cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
-        scfMap.Init(logger);
-    }
-
-    ~INManConfig()
-    { }
-
-    const char * hasExtraConfig(void) const { return smsXcfg.length() ? smsXcfg.c_str() : NULL; }
-
+//protected methods:
     AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol) throw(ConfigException)
     {
         AbonentPolicyXCFG   polXCFG(nm_pol);
@@ -393,6 +382,9 @@ public:
     //returns default policy name
     const char * readBillCFG(Manager & manager) throw(ConfigException)
     {
+        //according to BillingCFG::ContractReqMode
+        static const char * _abReq[] = { "onDemand", "always" };
+
         if (!manager.findSection("Billing"))
             throw ConfigException("'Billing' section is missed");
         ConfigView billCfg(manager, "Billing");
@@ -436,6 +428,27 @@ public:
             policyNm = NULL;
             smsc_log_warn(logger, "Default abonent policy is not set!");
         }
+
+        cstr = NULL;
+        try { cstr = billCfg.getString("abonentTypeRequest");
+        } catch (ConfigException& exc) { }
+        if (cstr && cstr[0]) {
+            if (!strcmp(_abReq[BillingCFG::reqAlways], cstr)) {
+                bill.cntrReq = BillingCFG::reqAlways; 
+            } else if (strcmp(_abReq[BillingCFG::reqOnDemand], cstr))
+                throw ConfigException("illegal 'abonentTypeRequest' value");
+        }
+        smsc_log_info(logger, "abonentTypeRequest: %s", _abReq[bill.cntrReq]);
+
+        tmo = 0;    //abtTimeout
+        try { tmo = (uint32_t)billCfg.getInt("abonentTypeTimeout"); }
+        catch (ConfigException& exc) { }
+        if (tmo) {
+            if (tmo >= 65535)
+                throw ConfigException("'abonentTypeTimeout' should fall into the range [1 ..65535] seconds");
+            bill.abtTimeout = (unsigned short)tmo;
+        }
+        smsc_log_info(logger, "abonentTypeTimeout: %s%u secs", !tmo ? "default ":"", bill.abtTimeout);
 
         cstr = NULL;
         try { cstr = billCfg.getString("cdrMode");
@@ -501,8 +514,6 @@ public:
             cachePrm.fileRcrd = (int)tmo;
         smsc_log_info(logger, "cacheRecords: %s%d", !tmo ? "default ":"", cachePrm.fileRcrd);
 
-        /*  optional Billing parameters */
-
         tmo = 0;    //maxBillings
         try { tmo = (uint32_t)billCfg.getInt("maxBillings"); }
         catch (ConfigException& exc) { }
@@ -524,16 +535,6 @@ public:
         }
         smsc_log_info(logger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.maxTimeout);
 
-        tmo = 0;    //abtTimeout
-        try { tmo = (uint32_t)billCfg.getInt("abonentTypeTimeout"); }
-        catch (ConfigException& exc) { }
-        if (tmo) {
-            if (tmo >= 65535)
-                throw ConfigException("'abonentTypeTimeout' should fall into the range [1 ..65535] seconds");
-            bill.abtTimeout = (unsigned short)tmo;
-        }
-        smsc_log_info(logger, "abonentTypeTimeout: %s%u secs", !tmo ? "default ":"", bill.abtTimeout);
-
 #ifdef SMSEXTRA
         /* ********************************* *
          * SMS Extra services configuration: *
@@ -547,63 +548,6 @@ public:
         }
 #endif /* SMSEXTRA */
         return policyNm;
-    }
-
-    void read(Manager& manager) throw(ConfigException)
-    {
-        uint32_t tmo = 0;
-        char *   cstr = NULL;
-
-        /* ********************* *
-         * InService parameters: *
-         * ********************* */
-        try { cstr = manager.getString("version");
-        } catch (ConfigException& exc) { }
-        if (!cstr || !cstr[0])
-            smsc_log_warn(logger, "Config version is not set");
-        else
-            smsc_log_info(logger, "Config version: %s", cstr);
-
-        try {
-            cstr = manager.getString("host");
-            sock.port = manager.getInt("port");
-            smsc_log_info(logger, "INMan: %s:%d", cstr, sock.port);
-        } catch (ConfigException& exc) {
-            throw ConfigException("INMan host or port missing");
-        }
-        sock.host += cstr;
-
-        tmo = 0;
-        try { tmo = (uint32_t)manager.getInt("maxClients"); }
-        catch (ConfigException& exc) { }
-        if (tmo)
-            sock.maxConn = (unsigned short)tmo;
-        smsc_log_info(logger, "maxClients: %s%u", !tmo ? "default ":"", sock.maxConn);
-
-        /* ******************** *
-         * Billing parameters:  *
-         * ******************** */
-        const char * policyNm = readBillCFG(manager);
-
-        /* ********************************* *
-         * SS7 stack interaction parameters: *
-         * ********************************* */
-        if (bill.billMode.useIN())
-            readSS7CFG(manager, bill.ss7);
-        else
-            smsc_log_warn(logger, "SS7 stack not in use!");
-
-        /* ***************************************************************** *
-         * AbonentPolicies: (IN-platforms and AbonentProviders) parameters:  *
-         * ***************************************************************** */
-        if (policyNm) { //default policy
-            abPolicies.setPreferred(readPolicyCFG(manager, policyNm));
-        } else if (bill.billMode.useIN()) {
-            throw ConfigException("Default abonent policy is not set!");
-        }
-        //todo: policies address pool mask is not supported yet!
-        /**/
-        return;
     }
 
     void readXServiceParms(ConfigView * cfg, const std::string & nm_srv) throw(ConfigException)
@@ -641,6 +585,83 @@ public:
         return;        
     }
 
+public:
+
+    INManConfig(Logger * use_log) : InService_CFG(), logger(use_log)
+    {
+        //OPTIONAL PARAMETERS:
+        sock.maxConn = _in_CFG_DFLT_CLIENT_CONNS;
+        bill.maxBilling = _in_CFG_DFLT_BILLINGS;
+        sock.timeout = bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
+        bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
+        cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
+        scfMap.Init(logger);
+    }
+
+    ~INManConfig()
+    { }
+
+    const char * hasExtraConfig(void) const { return smsXcfg.length() ? smsXcfg.c_str() : NULL; }
+
+
+    void read(Manager& manager) throw(ConfigException)
+    {
+        uint32_t tmo = 0;
+        char *   cstr = NULL;
+
+        /* ********************* *
+         * InService parameters: *
+         * ********************* */
+        try { cstr = manager.getString("version");
+        } catch (ConfigException& exc) { }
+        if (!cstr || !cstr[0])
+            smsc_log_warn(logger, "Config version is not set");
+        else
+            smsc_log_info(logger, "Config version: %s", cstr);
+
+        try {
+            cstr = manager.getString("host");
+            sock.port = manager.getInt("port");
+            smsc_log_info(logger, "INMan: %s:%d", cstr, sock.port);
+        } catch (ConfigException& exc) {
+            throw ConfigException("INMan host or port missing");
+        }
+        sock.host += cstr;
+
+        tmo = 0;
+        try { tmo = (uint32_t)manager.getInt("maxClients"); }
+        catch (ConfigException& exc) { }
+        if (tmo)
+            sock.maxConn = (unsigned short)tmo;
+        smsc_log_info(logger, "maxClients: %s%u", !tmo ? "default ":"", sock.maxConn);
+
+        /* ******************** *
+         * Billing parameters:  *
+         * ******************** */
+        const char * policyNm = readBillCFG(manager);
+
+        /* ***************************************************************** *
+         * AbonentPolicies: (IN-platforms and AbonentProviders) parameters:  *
+         * ***************************************************************** */
+        if (policyNm) { //default policy
+            abPolicies.setPreferred(readPolicyCFG(manager, policyNm));
+        } else if (bill.cntrReq == BillingCFG::reqAlways) {
+            throw ConfigException("Default abonent policy is not set!");
+        }
+        //todo: policies address pool mask is not supported yet!
+
+        /* ********************************* *
+         * SS7 stack interaction parameters: *
+         * ********************************* */
+        if (bill.billMode.useIN() || abPolicies.useSS7())
+            readSS7CFG(manager, bill.ss7);
+        else
+            smsc_log_warn(logger, "SS7 stack not in use!");
+
+        /**/
+        return;
+    }
+
     void readExtraConfig(Manager& manager) throw(ConfigException)
     {
         /* ********************************* *
@@ -662,7 +683,7 @@ public:
     }
 };
 
-
 } //inman
 } //smsc
+#endif /* __SMSC_INMAN_CONFIG_PARSING__ */
 

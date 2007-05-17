@@ -72,7 +72,7 @@ public:
     Billing(unsigned b_id, BillingManager * owner, Logger * uselog = NULL);
     virtual ~Billing();
 
-    //-- WorkerAC interface
+    //-- WorkerAC interface methods
     void     handleCommand(INPPacketAC* cmd);
     void     Abort(const char * reason = NULL); //aborts billing due to fatal error
 
@@ -96,10 +96,15 @@ public:
 
 protected:
     //-- INPBillingHandlerITF interface methods:
+    //Returns true if worker finished request processing and may be released
     bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr);
     void onDeliverySmsResult(DeliverySmsResult* dlvr_res, CsBillingHdr_dlg *hdr);
 
+private:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
+
+    //Returns false if PDU contains invalid data preventing request processing
+    bool Billing::verifyChargeSms(ChargeSms* sms);
 
     void doCleanUp(void);
     unsigned writeCDR(void);
@@ -108,7 +113,9 @@ protected:
     bool startCAPDialog(INScfCFG * use_scf);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
-    void chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
+    //Returns false if result sending has been failed.
+    bool chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
+    //Returns true if ChargeSmsResult::CHARGING_POSSIBLE was sent
     bool ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
                                const GsmSCFinfo * p_scf = NULL);
 

@@ -14,6 +14,7 @@ using smsc::inman::common::RPCList;
 #include "inman/abprov/IAPLoader.hpp"   //includes cache defs
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
+using smsc::inman::iaprvd::IAProviderType;
 
 
 namespace smsc  {
@@ -113,9 +114,17 @@ public:
              delete provAllc;
     }
 
-    const char * Ident(void) { return ident.c_str(); }
+    const char * Ident(void) const { return ident.c_str(); }
+    bool useSS7(void) const
+    {
+        IAProviderType provType = !provAllc ? smsc::inman::iaprvd::iapCACHE : 
+                                                provAllc->type();
+        return (!scfMap.empty()
+                || (provType == smsc::inman::iaprvd::iapIN)
+                || (provType == smsc::inman::iaprvd::iapHLR));
+    }
 
-    bool getSCFparms(INScfCFG* scf)
+    bool getSCFparms(INScfCFG* scf) const
     {
         INScfsMAP::const_iterator it = scfMap.find(scf->scf.scfAddress.toString());
         if (it != scfMap.end()) {
@@ -161,6 +170,15 @@ public:
     { 
         for (AbonentPolicies::iterator it = begin(); it != end(); it++)
             delete (*it);
+    }
+
+    bool useSS7(void) const
+    {
+        for (AbonentPolicies::const_iterator it = begin(); it != end(); it++) {
+            if ((*it)->useSS7())
+                return true;
+        }
+        return false;
     }
 
     void setPreferred(AbonentPolicy* def_pol)

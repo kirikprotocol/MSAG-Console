@@ -58,6 +58,7 @@ public:
 
 struct BillingCFG {
     typedef enum { cdrNONE = 0, cdrBILLMODE = 1, cdrALL = 2} CDR_MODE;
+    enum ContractReqMode { reqOnDemand = 0, reqAlways };
 
     AbonentCacheITF *   abCache;
     InBillingFileStorage * bfs;
@@ -65,6 +66,7 @@ struct BillingCFG {
 //billing parameters
     AbonentPolicies * policies;
     BillModes       billMode;
+    ContractReqMode cntrReq;
     CDR_MODE        cdrMode;
     std::string     cdrDir;         //location to store CDR files
     long            cdrInterval;    //rolling interval for CDR files
@@ -78,7 +80,8 @@ struct BillingCFG {
     SS7_CFG         ss7;            //SS7 interaction:
     SmsXServiceMap  smsXMap;        //SMS Extra services iDs and addresses
 
-    BillingCFG() : abCache(NULL), bfs(NULL), tmWatcher(NULL), cdrMode(cdrBILLMODE)
+    BillingCFG() : abCache(NULL), bfs(NULL), tmWatcher(NULL)
+        , cdrMode(cdrBILLMODE), cntrReq(reqOnDemand)
     {
         cdrInterval = maxTimeout = abtTimeout = maxBilling = 0;
     }
