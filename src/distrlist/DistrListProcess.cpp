@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include "resourcemanager/ResourceManager.hpp"
 #define DLP_TIMEOUT 1000
-#define WAIT_SUBMISSION (8)
+#define WAIT_SUBMISSION (60)
 
 
 #ifdef SMSEXTRA
@@ -124,7 +124,7 @@ const char * DistrListProcess::getSystemId() const
 // ThreadedTask
 int DistrListProcess::Execute()
 {
-  SmscCommand cmd,resp,answ;
+  SmscCommand cmd,answ;
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.distrlist.process");
   while(!isStopping)
   {
@@ -166,10 +166,10 @@ int DistrListProcess::Execute()
       string arg;
       string arg2;
       string::size_type argend=string::npos;
-      string cmd;
+      string cmdstr;
       if(sppos!=string::npos)
       {
-        cmd.assign(s,0,sppos);
+        cmdstr.assign(s,0,sppos);
         string::size_type i=sppos+1;
         while(i<s.length() && s.at(i)==' ')i++;
         string::size_type j=i;
@@ -182,10 +182,10 @@ int DistrListProcess::Execute()
         }
       }else
       {
-        cmd=s;
+        cmdstr=s;
       }
 
-      lowercase(cmd);
+      lowercase(cmdstr);
       lowercase(arg);
 
       string answer;
@@ -208,12 +208,12 @@ int DistrListProcess::Execute()
         fullarg=arg.substr(1);
       }
       try{
-        if(cmd!="send" && arg.find('/')!=string::npos)
+        if(cmdstr!="send" && arg.find('/')!=string::npos)
         {
           tmpl="dl.invalidcmdparam";
           reason="prefix_unexpected";
         }else
-        if(cmd=="add")
+        if(cmdstr=="add")
         {
           if(arg.length()==0 || arg.length()>18)
           {
@@ -251,13 +251,13 @@ int DistrListProcess::Execute()
             }
           }
         }else
-        if(cmd=="del")
+        if(cmdstr=="del")
         {
           tmpl="dl.delerr";
           admin->deleteDistrList(fullarg);
           tmpl="dl.delok";
         }else
-        if(cmd=="list")
+        if(cmdstr=="list")
         {
           if(arg.length()>0)
           {
@@ -304,7 +304,7 @@ int DistrListProcess::Execute()
             }
           }
         }else
-        if(cmd=="addm")
+        if(cmdstr=="addm")
         {
           tmpl="dl.madderr";
           try{
@@ -324,7 +324,7 @@ int DistrListProcess::Execute()
             reason="invalid_or_empty_address";
           }
         }else
-        if(cmd=="delm")
+        if(cmdstr=="delm")
         {
           tmpl="dl.mdelerr";
           try{
@@ -340,7 +340,7 @@ int DistrListProcess::Execute()
             reason="invalid_or_empty_address";
           }
         }else
-        if(cmd=="adds")
+        if(cmdstr=="adds")
         {
           tmpl="dl.sadderr";
           try{
@@ -362,7 +362,7 @@ int DistrListProcess::Execute()
             reason="invalid_or_empty_address";
           }
         }else
-        if(cmd=="dels")
+        if(cmdstr=="dels")
         {
           tmpl="dl.sdelerr";
           try{
@@ -384,7 +384,7 @@ int DistrListProcess::Execute()
             reason="invalid_or_empty_address";
           }
         }else
-        if(cmd=="slist")
+        if(cmdstr=="slist")
         {
           try{
             tmpl="dl.slisterr";
@@ -409,13 +409,14 @@ int DistrListProcess::Execute()
             reason="list_not_found";
           }
         }else
-        if(cmd=="send")
+        if(cmdstr=="send")
         {
           Array<Address> m;
           try{
             tmpl="dl.senderr";
             m=admin->members(fullarg,sms.getOriginatingAddress());
-            tmpl="dl.sendok";
+            //tmpl="dl.sendok";
+            tmpl="";
             SMS newsms=sms;
             if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
             {
@@ -423,10 +424,10 @@ int DistrListProcess::Execute()
               const char* msg=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
               if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
               {
-                newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg+argend*2,len-argend*2);
+                newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg+argend*2,(unsigned)(len-argend*2));
               }else
               {
-                newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg+argend,len-argend);
+                newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msg+argend,(unsigned)(len-argend));
               }
             }else
             {
@@ -434,12 +435,12 @@ int DistrListProcess::Execute()
               const char* msg=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
               if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
               {
-                newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend*2,len-argend*2);
-                newsms.setIntProperty(Tag::SMPP_SM_LENGTH,len-argend*2);
+                newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend*2,(unsigned)(len-argend*2));
+                newsms.setIntProperty(Tag::SMPP_SM_LENGTH,(unsigned)(len-argend*2));
               }else
               {
-                newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend,len-argend);
-                newsms.setIntProperty(Tag::SMPP_SM_LENGTH,len-argend);
+                newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend,(unsigned)(len-argend));
+                newsms.setIntProperty(Tag::SMPP_SM_LENGTH,(unsigned)(len-argend));
               }
             }
 
@@ -447,9 +448,9 @@ int DistrListProcess::Execute()
             {
               newsms.setOriginatingDescriptor
               (
-                sms.getStrProperty(Tag::SMSC_MSC_ADDRESS).length(),
+                (uint8_t)sms.getStrProperty(Tag::SMSC_MSC_ADDRESS).length(),
                 sms.getStrProperty(Tag::SMSC_MSC_ADDRESS).c_str(),
-                sms.getStrProperty(Tag::SMSC_IMSI_ADDRESS).length(),
+                (uint8_t)sms.getStrProperty(Tag::SMSC_IMSI_ADDRESS).length(),
                 sms.getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str(),
                 0
               );
@@ -457,23 +458,36 @@ int DistrListProcess::Execute()
 #ifdef SMSEXTRA
             newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,smsc::system::EXTRA_GROUPS);
 #endif
+            std::auto_ptr<ListTask> task(new ListTask);
+            task->cmd=cmd;
+            task->count=0;
+            task->taskType=ttDistrList;
+            task->submited_count=0;
+            task->listName=fullarg;
 
             for(int i=0;i<m.Count();i++)
             {
               newsms.setDestinationAddress(m[i]);
-              SmscCommand snd=SmscCommand::makeSumbmitSm(newsms,GetNextDialogId());
+              int dlgId=GetNextDialogId();
+              SmscCommand snd=SmscCommand::makeSumbmitSm(newsms,dlgId);
               putIncomingCommand(snd);
+              task->list.resize(task->count+1);
+              task->list[task->count].addr = m[i];
+              task->list[task->count].dialogId = dlgId;
+              task->list[task->count].responsed = false;
+              TPAIR p(task.get(),i);
+              task_map.insert( pair<unsigned,TPAIR>(task->list[i].dialogId,p) );
+              task->count++;
             }
-            char buf[32];
-            sprintf(buf,"%d",m.Count());
-            arg2=buf;
+            task->startTime = time(0);
+            task_sheduler.push_back(task.release());
           }catch(IllegalSubmitterException& e)
           {
             reason="access_denied";
           }
         }
 #ifdef DLSMSADMIN
-        else if(cmd=="addprincipal")
+        else if(cmdstr=="addprincipal")
         {
           Principal p(fullarg.c_str(),10,10);
           admin->addPrincipal(p);
@@ -512,7 +526,7 @@ int DistrListProcess::Execute()
       ans.setDestinationAddress(sms.getOriginatingAddress());
       char msc[]="";
       char imsi[]="";
-      ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      ans.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
       ans.setDeliveryReport(0);
       ans.setArchivationRequested(false);
       ans.setEServiceType(serviceType.c_str());
@@ -542,11 +556,17 @@ int DistrListProcess::Execute()
           arg2.at(pos)=' ';
           pos=arg2.find('"',pos);
         }
-        answer="#template="+tmpl+"#{reason}=\""+reason+"\" {arg1}=\""+arg+"\" {arg2}=\""+arg2+"\"";
+        if(tmpl.length())
+        {
+          answer="#template="+tmpl+"#{reason}=\""+reason+"\" {arg1}=\""+arg+"\" {arg2}=\""+arg2+"\"";
+        }
       }
-      smsc::util::fillSms(&ans,answer.c_str(),answer.length(),CONV_ENCODING_CP1251,DataCoding::UCS2|DataCoding::LATIN1);
-      SmscCommand cmdAnswer=SmscCommand::makeSumbmitSm(ans,GetNextDialogId());
-      putIncomingCommand(cmdAnswer);
+      if(answer.length())
+      {
+        smsc::util::fillSms(&ans,answer.c_str(),(int)answer.length(),CONV_ENCODING_CP1251,DataCoding::UCS2|DataCoding::LATIN1);
+        SmscCommand cmdAnswer=SmscCommand::makeSumbmitSm(ans,GetNextDialogId());
+        putIncomingCommand(cmdAnswer);
+      }
     }
     else if ( cmd->get_commandId() == SUBMIT_RESP )
     {
@@ -595,7 +615,8 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
 {
   SubmitMultiSm* multi = cmd->get_Multi();
   multi->msg.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,0);
-  if ( multi->number_of_dests == 0 ) {
+  if ( multi->number_of_dests == 0 )
+  {
     __trace__(":DPL: empty multisubmit");
     //return;
     SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",cmd->get_dialogId(),Status::INVNUMDESTS);
@@ -607,13 +628,16 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   auto_ptr<ListTask> task(new ListTask());
   task->count = 0;
   task->cmd = cmd;
+  task->taskType=ttMulti;
   __trace2__(":DPL: numer of dests %d",multi->number_of_dests);
   for ( unsigned i=0; i < multi->number_of_dests; ++i )
   {
-    if ( task->count >= MAX_COUNT ) {
+    if ( task->count >= MAX_COUNT )
+    {
       throw BIG_MULTI();
     }
-    if ( multi->dests[i].dest_flag ){
+    if ( multi->dests[i].dest_flag )
+    {
       __trace2__(":DPL: distrib list %s",multi->dests[i].value.c_str());
       Array<Address> addresses;
       try{
@@ -623,15 +647,16 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
         continue;
       }
       unsigned count = addresses.Count();
-      if ( count+task->count > MAX_COUNT ) {
-        __trace2__(":DPL: members count(%d)+task->count(%d) great then MAX_COUNT for task",
-                      count,task->count);
+      if ( count+task->count > MAX_COUNT )
+      {
+        __trace2__(":DPL: members count(%d)+task->count(%d) great then MAX_COUNT for task",count,task->count);
         throw BIG_MULTI();
       }
-      for ( unsigned i = 0; i < count; ++i )
+      for ( unsigned j = 0; j < count; ++j )
       {
-        __trace2__(":DPL:MEMBER %d.%d.%s",addresses[i].type,addresses[i].plan,addresses[i].value);
-        task->list[task->count].addr = addresses[i];
+        __trace2__(":DPL:MEMBER %d.%d.%s",addresses[j].type,addresses[j].plan,addresses[j].value);
+        task->list.resize(task->count+1);
+        task->list[task->count].addr = addresses[j];
         task->list[task->count].dialogId = 0;
         task->list[task->count].responsed = false;
         task->list[task->count].errcode = Status::CNTSUBDL;
@@ -641,24 +666,27 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     else
     {
       __trace2__(":DPL: distrib addr %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
-      if( multi->dests[i].value.length() == 0 ) {
+      if( multi->dests[i].value.length() == 0 )
+      {
         throw INV_DSTADDR();
       }
-     task->list[task->count].addr = Address(
-       multi->dests[i].value.length(),
-       multi->dests[i].ton,
-       multi->dests[i].npi,
-       multi->dests[i].value.c_str());
-     __trace2__(":DPL: %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
-     task->list[task->count].dialogId = 0;
-     task->list[task->count].responsed = false;
-     task->list[task->count].errcode = Status::CNTSUBDL;
-      ++task->count;
+      task->list.resize(task->count+1);
+      task->list[task->count].addr = Address(
+        (int)multi->dests[i].value.length(),
+        multi->dests[i].ton,
+        multi->dests[i].npi,
+        multi->dests[i].value.c_str());
+      __trace2__(":DPL: %d.%d.%s",multi->dests[i].ton,multi->dests[i].npi,multi->dests[i].value.c_str());
+      task->list[task->count].dialogId = 0;
+      task->list[task->count].responsed = false;
+      task->list[task->count].errcode = Status::CNTSUBDL;
+       ++task->count;
     }
   }
   __trace2__(":DPL: count of members %d",task->count);
   task->submited_count = 0;
-  if ( task->count != 0 ) {
+  if ( task->count != 0 )
+  {
     for ( unsigned i=0; i<task->count; ++i )
     {
       task->list[i].dialogId = GetNextDialogId();
@@ -691,31 +719,91 @@ void DistrListProcess::SubmitResp(SmscCommand& cmd)
   /*map<pair<unsigned,pair<ListTask*,unsigned> > >*/
   __trace2__(":DPL: %s",__FUNCTION__);
   MAPTYPE::iterator it = task_map.find(cmd->get_dialogId());
-  if ( it != task_map.end() ) {
+  if ( it != task_map.end() )
+  {
     TPAIR taskpair = it->second;
-    if ( taskpair.second >= taskpair.first->count ) {
+    if ( taskpair.second >= taskpair.first->count )
+    {
       __warning__(":DPL: out of adresses range");
       // за пределом массива адресов !!!
-    }else{
+    }else
+    {
       ListTask* task = taskpair.first;
       task->list[taskpair.second].responsed = true;//cmd->get_resp()->get_status() == 0;
       task->list[taskpair.second].errcode = cmd->get_resp()->get_status();
       task_map.erase(task->list[taskpair.second].dialogId);
       task->submited_count++;
-      __trace2__(":DPL: task %d of (0x%x:%d:%d) has been submited",
-        cmd->get_dialogId(),
-        task,
-        task->count,
-        task->submited_count);
-      if ( task->submited_count == task->count ) {
+      __trace2__(":DPL: task %d of (0x%x:%d:%d) has been submited",cmd->get_dialogId(),task,task->count,task->submited_count);
+      if ( task->submited_count == task->count )
+      {
         __trace__(":DPL: send submit responce");
-        SendSubmitResp(task);
+        if(task->taskType==ttMulti)
+        {
+          SendSubmitResp(task);
+        }else
+        {
+          SendDLAnswer(task);
+        }
       }
     }
-  }else{
-    __trace2__(":DPL: has no task with dialogid %d",cmd->get_dialogId());
+  }else
+  {
+    __warning2__(":DPL: has no task with dialogid %d",cmd->get_dialogId());
   }
 }
+
+void DistrListProcess::SendDLAnswer(ListTask* task)
+{
+  SMS& sms=*task->cmd->get_sms();
+
+  SMS ans;
+  ans.setOriginatingAddress(originatingAddress.length()?originatingAddress.c_str():sms.getDestinationAddress());
+  ans.setDestinationAddress(sms.getOriginatingAddress());
+  char msc[]="";
+  char imsi[]="";
+  ans.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
+  ans.setDeliveryReport(0);
+  ans.setArchivationRequested(false);
+  ans.setEServiceType(serviceType.c_str());
+  ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,0);
+  ans.setIntProperty(smsc::sms::Tag::SMPP_PROTOCOL_ID,protocolId);
+  ans.setIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE,
+    sms.getIntProperty(smsc::sms::Tag::SMPP_USER_MESSAGE_REFERENCE));
+  if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==1)
+  {
+    ans.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,17);
+    // clear 0,1 bits and set them to datagram mode
+    ans.setIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS,
+        (ans.getIntProperty(smsc::sms::Tag::SMPP_ESM_CLASS)&~0x03)|0x01);
+  }
+
+  int okCnt=0;
+  for(int i=0;i<task->count;i++)
+  {
+    if(task->list[i].responsed && task->list[i].errcode==0)
+    {
+      okCnt++;
+    }
+  }
+
+  char buf1[32];
+  sprintf(buf1,"%d",okCnt);
+  char buf2[32];
+  sprintf(buf2,"%d",task->count);
+
+  string answer="#template=dl.sendok#{arg1}=\""+task->listName+"\" {arg2}="+buf1+" {arg3}="+buf2;
+  smsc::util::fillSms(&ans,answer.c_str(),(int)answer.length(),CONV_ENCODING_CP1251,DataCoding::UCS2|DataCoding::LATIN1);
+  SmscCommand cmdAnswer=SmscCommand::makeSumbmitSm(ans,GetNextDialogId());
+  putIncomingCommand(cmdAnswer);
+
+  LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
+  if ( it != task_sheduler.end() )
+  {
+    delete *it;
+    task_sheduler.erase(it);
+  }
+}
+
 
 void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мапы
 {
@@ -741,7 +829,11 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
     cmd->get_MultiResp()->set_unsuccessCount(uno);
   //}
   LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
-  if ( it != task_sheduler.end() ) { task_sheduler.erase(it);  }
+  if ( it != task_sheduler.end() )
+  {
+    delete *it;
+    task_sheduler.erase(it);
+  }
   //putIncomingCommand(cmd);
   SmeProxy* srcproxy =  task->cmd.getProxy();
   srcproxy->putCommand(cmd);
@@ -754,7 +846,13 @@ void DistrListProcess::CheckTimeouts()
   {
     //__trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
     //  ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));
-    SendSubmitResp(task_sheduler.front()); // удаляет из списка и мапы
+    if(task_sheduler.front()->taskType==ttMulti)
+    {
+      SendSubmitResp(task_sheduler.front()); // удаляет из списка и мапы
+    }else
+    {
+      SendDLAnswer(task_sheduler.front());
+    }
   }
 }
 

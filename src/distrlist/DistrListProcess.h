@@ -11,6 +11,7 @@
 #include "DistrListAdmin.h"
 #include <map>
 #include <list>
+#include <vector>
 #include <time.h>
 #include "profiler/profiler-types.hpp"
 #include "alias/AliasMan.hpp"
@@ -25,10 +26,12 @@ using namespace smsc::core::synchronization;
 using namespace smsc::core::buffers;
 using namespace std;
 
-class DistrListProcess : public ThreadedTask, public SmeProxy{
+class DistrListProcess : public ThreadedTask, public SmeProxy
+{
 protected:
   enum {MAX_COUNT=256};
-  struct LISTELEMENT{
+  struct LISTELEMENT
+  {
     unsigned dialogId;
     Address addr;           // адрес получателя
     bool responsed;
@@ -36,11 +39,15 @@ protected:
   };
   struct ListTask;
   friend class DistrListProcess::ListTask;
-  struct ListTask{
+  enum TaskType{ttMulti,ttDistrList};
+  struct ListTask
+  {
+    TaskType taskType;//0 - submit multi, 1 - distr list
     time_t startTime;
+    std::string listName;
     unsigned count;           // количество елементов в задаче
     unsigned submited_count;  // количество элементов на которые прешол ответ
-    LISTELEMENT list[MAX_COUNT];
+    std::vector<LISTELEMENT> list;
     SmscCommand cmd;          // исходная команда
   };
   typedef pair<ListTask*,unsigned> TPAIR;
@@ -123,6 +130,7 @@ protected:
   void SubmitMulti(SmscCommand& cmd);
   void SubmitResp(SmscCommand& cmd);
   void SendSubmitResp(ListTask* task);
+  void SendDLAnswer(ListTask* task);
   void CheckTimeouts();
   void Submit();
   //Smsc *smsc;
