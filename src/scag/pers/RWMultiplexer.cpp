@@ -8,14 +8,14 @@ using smsc::core::buffers::Array;
 
 int RWMultiplexer::add(Socket* sock, int type)
 {
-	for(int i = 0; i < sockets.Count(); i++)
-	{
-		if(sockets[i] == sock)
-		{
-			fds[i].events = type;
-			return 0;
-		}
-	}
+    for(int i = 0; i < sockets.Count(); i++)
+    {
+        if(sockets[i] == sock)
+        {
+            fds[i].events = type;
+            return 0;
+        }
+    }
     sockets.Push(sock);
     int i = sockets.Count() - 1;
     fds[i].fd = sock->getSocket();
@@ -30,19 +30,18 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
   error.Empty();
 
   if(poll(&fds[0], fds.Count(), timeout) <= 0)
-	return 0;
-
+    return 0;
   for(int i = 0; i < fds.Count(); i++)
   {
-    if(fds[i].revents & (POLLNVAL | POLLERR | POLLHUP))
-	{
-		error.Push(sockets[i]);
-		continue;
-	}
-    if(fds[i].revents & POLLIN)
-      read.Push(sockets[i]);
-    if(fds[i].revents & POLLOUT)
-      write.Push(sockets[i]);
+    if(fds[i].revents & (POLLIN | POLLOUT))
+    {
+        if(fds[i].revents & POLLIN)
+          read.Push(sockets[i]);
+        if(fds[i].revents & POLLOUT)
+          write.Push(sockets[i]);
+    }
+    else //if(fds[i].revents & (POLLNVAL | POLLERR | POLLHUP))
+        error.Push(sockets[i]);
   }
 
   return read.Count() + write.Count() + error.Count();

@@ -82,7 +82,8 @@ void PersServer::process_read_socket(Socket* s)
         smsc_log_debug(log, "read %u bytes from %p(%d)", j, s, errno);
         if(j > 0)
             sb->Append(tmp_buf, j);
-        else  if(errno != EWOULDBLOCK)
+        else
+//        if(errno != EWOULDBLOCK)
         {
             remove_socket(s);
             return;
@@ -146,7 +147,7 @@ int PersServer::Execute()
     {
         if(listener.canReadWrite(read, write, err))
         {
-//            smsc_log_debug(log, "rwe: %d %d %d %d", read.Count(), write.Count(), err.Count(), clientCount);
+            smsc_log_debug(log, "rwe: %d %d %d %d", read.Count(), write.Count(), err.Count(), clientCount);
             if(isStopped())
                 break;
 

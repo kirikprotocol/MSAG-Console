@@ -124,6 +124,7 @@ void Profile::AddProperty(Property& prop)
     try{
         Property *p = properties.Get(prop.getName().c_str());
         *p = prop;
+        smsc_log_debug(log, "property %s already exists", prop.getName().c_str());
         return;
     }
     catch(HashInvalidKeyException& e)
