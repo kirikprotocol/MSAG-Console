@@ -49,8 +49,8 @@ struct CDRRecord {
     std::string     _dstSMEid;      //DST_SME_ID: recipient SME identifier
     uint32_t        _dlvrRes;       //STATUS: delivery status: 0 or error code
     std::string     _divertedAdr;   //DIVERTED_FOR: if cdrType == dpDiverted, keeps
-                                    //original destination number that differs from
-                                    //address to which delivery was made.
+                                    //destination number to which delivery was made 
+                                    //that differs from original destination address.
 
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
