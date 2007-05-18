@@ -280,7 +280,7 @@ struct Address
     return plan;
   };
 
-  inline int getText(char* buf,int buflen)const
+  inline int getText(char* buf,size_t buflen)const
   {
     char vl[32];
     memcpy(vl,value,length);

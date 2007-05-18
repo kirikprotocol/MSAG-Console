@@ -54,7 +54,7 @@ public:
   {
     IntTimeSlotCounter** pptr=hash.GetPtr(idx);
     if(pptr)return *pptr;
-    IntTimeSlotCounter* ptr=new IntTimeSlotCounter(cfg.protectTimeFrame);
+    IntTimeSlotCounter* ptr=new IntTimeSlotCounter((int)cfg.protectTimeFrame);
     hash.Insert(idx,ptr);
     return ptr;
   }
