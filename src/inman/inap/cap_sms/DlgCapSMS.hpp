@@ -43,8 +43,9 @@ class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
 //NOTE: These callbacks should not delete CapSMSDlg !!!
 public:
     virtual void onDPSMSResult(unsigned char rp_cause = 0) = 0;
-    //dialog finalization/error handling:
-    //if ercode != 0, no result has been got from CAP service,
+    //Dialog finalization/error handling:
+    //if ercode != 0, CAP dialog is abnormally ended
+    //NOTE: CAP dialog may be deleted only from this callback !!!
     virtual void onEndCapDlg(RCHash errcode = 0) = 0;
 };
 
@@ -96,9 +97,6 @@ public:
     CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
                 USHORT_T timeout = 0, Logger * uselog = NULL);
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
-//    enum {
-//        smsContractViolation = 1
-//    };
 
     inline unsigned getId(void) const { return capId; }
 
@@ -134,6 +132,9 @@ private:
 
     Mutex       _sync;
     unsigned    capId;
+                //prefix for logging info
+    char        _logId[sizeof("CapSMS[%u]") + sizeof(unsigned)*3 + 1];
+
     Dialog*     dialog;     //TCAP dialog
     TCSessionSR* session;   //TCAP dialogs factory
     Logger*     logger;
