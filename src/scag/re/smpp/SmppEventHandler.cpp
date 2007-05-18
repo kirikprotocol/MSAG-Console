@@ -181,19 +181,13 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     Hash<Property> _constants = RuleEngine::Instance().getConstants();
 
-    smsc::util::config::Config config;
-    
-    SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
-    if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
-
-    SmppCommandAdapter _command(*smppcommand);
-
-    /////////////////////////////////////////
+    SmppCommand& smppcommand = (SmppCommand&)command;
+    SmppCommandAdapter _command(smppcommand);
 
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    Address& abonentAddr = CommandBrige::getAbonentAddr(*smppcommand);
-    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(*smppcommand);
+    Address& abonentAddr = CommandBrige::getAbonentAddr(smppcommand);
+    CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(smppcommand);
 
     int providerId = istr.GetProviderID(command.getServiceId());
     if (providerId == 0) 
@@ -205,7 +199,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     int operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0) 
     {
-        RegisterAlarmEvent(1, abonentAddr.toString(), CommandBrige::getProtocolForEvent(*smppcommand), command.getServiceId(),
+        RegisterAlarmEvent(1, abonentAddr.toString(), CommandBrige::getProtocolForEvent(smppcommand), command.getServiceId(),
                             providerId, 0, 0, session.getPrimaryKey().abonentAddr.toString(),
                             (propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM) ? 'I' : 'O');
         
@@ -213,20 +207,17 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     }
 
-    SMS& sms = CommandBrige::getSMS(*smppcommand);
+    SMS& sms = CommandBrige::getSMS(smppcommand);
     int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
 
-    CommandProperty commandProperty(command, (*smppcommand)->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
+    CommandProperty commandProperty(command, smppcommand->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
 
-    std::string message = CommandBrige::getMessageBody(*smppcommand);
+    std::string message = CommandBrige::getMessageBody(smppcommand);
 
     RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), message);
     
-    /////////////////////////////////////////
-
-
     try {
-        ModifyOperationBeforeExecuting(session, *smppcommand, smppDiscriptor);
+        ModifyOperationBeforeExecuting(session, smppcommand, smppDiscriptor);
     } catch (SCAGException& e)
     {
         smsc_log_error(logger, "EventHandler cannot start/locate operation. Details: %s", e.what());
@@ -250,13 +241,13 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
         rs.status = STATUS_FAILED;
     }
 
-    if ((*smppcommand)->status > 0)
+    if (smppcommand->status > 0)
     {
-        rs.result = (*smppcommand)->status;
+        rs.result = smppcommand->status;
         rs.status = STATUS_FAILED;
     }
 
-    ModifyOperationAfterExecuting(session, *smppcommand, rs, smppDiscriptor);
+    ModifyOperationAfterExecuting(session, smppcommand, rs, smppDiscriptor);
     return;
 }
 
