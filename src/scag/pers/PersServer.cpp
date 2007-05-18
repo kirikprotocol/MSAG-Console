@@ -36,8 +36,6 @@ void PersServer::InitServer()
 
     if(!listener.addR(&sock))
         throw Exception("Failed to init PersServer");
-
-    sock.setData(0, 0);
 }
 
 void PersServer::process_read_socket(Socket* s)
@@ -49,7 +47,7 @@ void PersServer::process_read_socket(Socket* s)
     if(sb->GetSize() < sizeof(uint32_t))
     {
         j = s->Read(tmp_buf, sizeof(uint32_t) - sb->GetSize());
-        smsc_log_debug(log, "read(len) %u bytes from %p(%d)", j, s, errno);
+        smsc_log_debug(log, "read(len) %u bytes from %p", j, s);
         if(j > 0)
         {
             sb->Append(tmp_buf, j);
@@ -70,7 +68,8 @@ void PersServer::process_read_socket(Socket* s)
         }
         else
         {
-            remove_socket(s);
+           // if(errno != EWOULDBLOCK)
+                remove_socket(s);
             return;
         }
     }
@@ -79,11 +78,10 @@ void PersServer::process_read_socket(Socket* s)
         k = (uint32_t)s->getData(1);
         j = k - sb->GetSize();
         j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
-        smsc_log_debug(log, "read %u bytes from %p(%d)", j, s, errno);
+        smsc_log_debug(log, "read %u bytes from %p", j, s);
         if(j > 0)
             sb->Append(tmp_buf, j);
-        else
-//        if(errno != EWOULDBLOCK)
+        else // if(errno != EWOULDBLOCK)
         {
             remove_socket(s);
             return;
@@ -105,11 +103,11 @@ void PersServer::process_write_socket(Socket* s)
 
     len = sb->GetSize();
 
+    smsc_log_debug(log, "write %u bytes to %p", len, s);
     j = s->Write(sb->GetCurPtr(), len - sb->GetPos());
-    smsc_log_debug(log, "write %u bytes to %p(%d)", len, s, errno);
     if(j > 0)
         sb->SetPos(sb->GetPos() + j);
-    else if(errno != EWOULDBLOCK)
+    else //if(errno != EWOULDBLOCK)
     {
         remove_socket(s);
         return;
@@ -147,7 +145,6 @@ int PersServer::Execute()
     {
         if(listener.canReadWrite(read, write, err))
         {
-            smsc_log_debug(log, "rwe: %d %d %d %d", read.Count(), write.Count(), err.Count(), clientCount);
             if(isStopped())
                 break;
 
@@ -190,8 +187,7 @@ int PersServer::Execute()
             for(int i = 0; i < write.Count(); i++)
                 process_write_socket(write[i]);
 
-            for(int i = 0; i < err.Count(); i++)
-            {
+            for(int i = 0; i <= err.Count() - 1; i++)
                 if(err[i] == &sock)
                 {
                     smsc_log_error(log, "Error on listen socket %d : %s", errno, strerror(errno));
@@ -200,10 +196,7 @@ int PersServer::Execute()
                 }
                 else
                     remove_socket(err[i]);
-            }
         }
-        else
-            smsc_log_warn(log, "rwe: zero. client_count=%d", clientCount);
     }
 
     return 1;
