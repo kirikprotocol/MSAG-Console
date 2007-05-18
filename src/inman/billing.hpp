@@ -48,8 +48,8 @@ namespace smsc    {
 namespace inman   {
 
 class Billing : public WorkerAC, public CapSMS_SSFhandlerITF, 
-                public IAPQueryListenerITF, public TimerListenerITF,
-                INPBillingHandlerITF {
+                public IAPQueryListenerITF, public TimerListenerITF
+                /*,INPBillingHandlerITF*/ {
 public:
     typedef enum {
         bilIdle, bilAborted,
@@ -65,9 +65,12 @@ public:
         bilComplete     // 
     } BillingState;
 
-    typedef enum {
-        doCont = 0, doEnd, doAbort
-    } BillAction;
+    enum PGraphState {  //billing processing graph state
+        pgAbort = -1,   //processing has aborted (worker aborted itself)
+        pgCont = 0,     //processing continues (negotiation with
+                        //client or external module is expected)
+        pgEnd = 1       //processing has been finished (worker may be relaesed)
+    };
 
     Billing(unsigned b_id, BillingManager * owner, Logger * uselog = NULL);
     virtual ~Billing();
@@ -77,8 +80,8 @@ public:
     void     Abort(const char * reason = NULL); //aborts billing due to fatal error
 
     BillingState getState(void) const { return state; }
-    //retuns false if CDR was not complete
-    bool     CDRComplete(void) const { return cdr._finalized; }
+    //returns true if required CDR data fullfilled
+    bool     CDRComplete(void) const;
     //returns true if all billing stages are completed
     bool     BillComplete(void) const;
 
@@ -95,16 +98,15 @@ public:
     void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
-    //-- INPBillingHandlerITF interface methods:
-    //Returns true if worker finished request processing and may be released
-    bool onChargeSms(ChargeSms* sms, CsBillingHdr_dlg *hdr);
-    void onDeliverySmsResult(DeliverySmsResult* dlvr_res, CsBillingHdr_dlg *hdr);
+    //-- INPBillingHandlerITF analogous methods:
+    PGraphState onChargeSms(void);
+    PGraphState onDeliverySmsResult(void);
 
 private:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
 
     //Returns false if PDU contains invalid data preventing request processing
-    bool Billing::verifyChargeSms(ChargeSms* sms);
+    bool verifyChargeSms(void);
 
     void doCleanUp(void);
     unsigned writeCDR(void);
@@ -113,10 +115,8 @@ private:
     bool startCAPDialog(INScfCFG * use_scf);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
-    //Returns false if result sending has been failed.
-    bool chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
-    //Returns true if ChargeSmsResult::CHARGING_POSSIBLE was sent
-    bool ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
+    PGraphState chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
+    PGraphState ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
                                const GsmSCFinfo * p_scf = NULL);
 
     Mutex           bilMutex;

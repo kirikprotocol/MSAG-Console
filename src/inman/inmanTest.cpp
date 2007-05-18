@@ -127,6 +127,24 @@ void cmd_chargeErr(Console&, const std::vector<std::string> &args)
     utl_charge(args, 1016);
 }
 
+static void utl_chargeCD(const std::vector<std::string> &args, uint32_t delivery_status)
+{
+    if (_billFacade->isActive()) {
+        unsigned int did = _billFacade->initDialog(0, true, delivery_status);
+        _billFacade->sendDeliveredSmsData(did);
+    } else
+        throw ConnectionClosedException();
+}
+void cmd_chargeCDOk(Console&, const std::vector<std::string> &args)
+{
+    utl_chargeCD(args, 0);
+}
+void cmd_chargeCDErr(Console&, const std::vector<std::string> &args)
+{
+    utl_chargeCD(args, 1016);
+}
+
+
 static void utl_reportDlg(const std::vector<std::string> &args, uint32_t delivery_status)
 {
     if (_billFacade->isActive()) {
@@ -359,6 +377,30 @@ void cmd_no_xsms(Console&, const std::vector<std::string> &args)
     _billFacade->printDlgConfig();
 }
 
+//USAGE: chg_mode_abn [?|help | submit | delivery | alldata]
+static const char hlp_chg_mode[] = "USAGE: %s [?|help | submit | delivery | alldata]\n";
+
+void cmd_charge_mode(Console&, const std::vector<std::string> &args)
+{
+    if ((args.size() < 2)
+        || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+        fprintf(stdout, hlp_chg_mode, args[0].c_str());
+        return;
+    }
+    const char * mode = args[1].c_str();
+    CDRRecord::ChargingMode chg_mode = CDRRecord::ON_DELIVERY;
+    if (!strcmp(mode, "submit")) {
+        chg_mode = CDRRecord::ON_SUBMIT;
+    } else if (!strcmp(mode, "alldata")) {
+        chg_mode = CDRRecord::ON_DATA_COLLECTED;
+    } else if (strcmp(mode, "delivery")) {
+        fprintf(stdout, "ERR: invalid charging mode: %s!", mode);
+        return;
+    }
+    _billFacade->setChargeMode(chg_mode);
+    _billFacade->printDlgConfig();
+}
+
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
  * ************************************************************************** */
@@ -460,7 +502,7 @@ int main(int argc, char** argv)
 /* ************************************************************************** *
  * Console commands: sending Billing commands to INMan
  * ************************************************************************** */
-        console.addItem("charge", cmd_charge); //chargeSMS only
+        console.addItem("charge", cmd_charge); //chargeSMS -> 
         console.addItem("chargeOk", cmd_chargeOk); //chargeSMS -> reportOk
         console.addItem("chargeErr",  cmd_chargeErr);//chargeSMS -> reportErr
         console.addItem("reportOk",  cmd_reportOk);
@@ -469,6 +511,9 @@ int main(int argc, char** argv)
         console.addItem("dlvrExc",  cmd_dlvrExc); 
         console.addItem("m_chargeOk", cmd_multi_chargeOk); //[chargeSMS -> reportOk]
         console.addItem("m_chargeErr",  cmd_multi_chargeErr);//[chargeSMS -> reportErr]
+        /**/
+        console.addItem("chargeCDOk", cmd_chargeCDOk); //DeliveredSMSData(Ok) -> 
+        console.addItem("chargeCDErr",  cmd_chargeCDErr);//DeliveredSMSData(Ok) -> 
 /* ************************************************************************** *
  * Console commands: setting INMan Billing dialog params
  * ************************************************************************** */
@@ -485,7 +530,9 @@ int main(int argc, char** argv)
         console.addItem("adralpha",  cmd_adrAlpha);
         /**/
         console.addItem("use_xsms",  cmd_use_xsms);
-        console.addItem("no_xsms",  cmd_use_xsms);
+        console.addItem("no_xsms",  cmd_no_xsms);
+        /**/
+        console.addItem("chg_mode",  cmd_charge_mode);
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
  * ************************************************************************** */
