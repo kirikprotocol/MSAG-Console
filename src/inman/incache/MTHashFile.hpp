@@ -536,7 +536,8 @@ public:
         MutexGuard  grd(_fSync);
         HFRecord srcd = searchRcd(key, SEARCH_USED);
         if (srcd.r_num && p_val) //record header is already red
-            p_val->Read(fHdl);
+            srcd.ReadVal(fHdl, p_val);
+//            p_val->Read(fHdl);
         return srcd.r_num;
     }
 
