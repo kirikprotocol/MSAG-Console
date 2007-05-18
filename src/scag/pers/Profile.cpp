@@ -21,7 +21,6 @@ void Profile::Serialize(SerialBuffer& buf)
 
 void Profile::Deserialize(SerialBuffer& buf)
 {
-    const char *key;
     uint16_t cnt;
     Property* prop;
 
@@ -29,14 +28,17 @@ void Profile::Deserialize(SerialBuffer& buf)
     cnt = buf.ReadInt16();
     smsc_log_debug(log, "profile size: %d", (int)cnt);
 
-    while(cnt--) {
+    while(cnt) {
         prop = new Property();
-        prop->Deserialize(buf);
+        do{
+            prop->Deserialize(buf);
+            cnt--;
+        }while(prop->isExpired() && cnt);
 
-        if(!prop->isExpired()) {
-            key = prop->getName().c_str();
-            properties.Insert(key, prop);
-        }
+        if(!prop->isExpired())
+            properties.Insert(prop->getName().c_str(), prop);
+        else
+            delete prop;
     }
 }
 
