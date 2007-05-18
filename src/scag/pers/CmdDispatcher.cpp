@@ -5,7 +5,6 @@
 namespace scag { namespace pers {
 
 using smsc::util::Exception;
-using smsc::logger::Logger;
 
 CommandDispatcher::CommandDispatcher(StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider):
         log(Logger::getInstance("cmd"))
