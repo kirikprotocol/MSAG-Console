@@ -21,7 +21,7 @@ extern const char    _CDRRecordHeader_TEXT[] =
  * class CDRRecord implementation:
  * ************************************************************************** */
 CDRRecord::CDRRecord()
-    : _finalized(false), _msgId(0), _partsNum(1)
+    : _finalized(dpEmpty), _msgId(0), _partsNum(1)
     , _cdrType(CDRRecord::dpOrdinary), _mediaType(CDRRecord::dpText)
     , _bearer(CDRRecord::dpSMS), _dlvrRes(CDRRecord::dpDeliveryFailed)
     , _smsXSrvs(0), _smsXMask(0), _inBilled(false), _contract(abtUnknown)
