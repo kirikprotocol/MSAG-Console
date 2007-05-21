@@ -487,7 +487,6 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
     {
         SessionHash.Delete(key);
         deleteSession(*s);
-        inUseMonitor.notifyAll();
         return;
     }
 
