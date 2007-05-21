@@ -873,7 +873,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
-      smsc_log_debug(log, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
+      smsc_log_debug(log, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms, sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
       cmd->get_resp()->set_sms(sms);
       cmd->set_serviceId(orgCmd->get_serviceId());
       cmd->set_operationId(orgCmd->get_operationId());
