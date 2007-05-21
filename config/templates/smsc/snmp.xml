@@ -2,7 +2,7 @@
 <!DOCTYPE config SYSTEM "snmp.dtd">
 <config>
   <counterInterval value="300"/>
-  <default>
+  <default enabled="false">
     <counter name="accepted">50,40,30,20</counter>
     <counter name="rejected">10,20,30,40</counter>
     <counter name="retried">10,20,30,40</counter>
