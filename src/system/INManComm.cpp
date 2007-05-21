@@ -92,7 +92,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   }
 
   int dlgId=getNewDlgId();
-  info2(log,"ChargeSms %lld/%d",id,dlgId);
+  info2(log,"ChargeSms smsid=%lld,dlgid=%d, cp=%d",id,dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
   ctx.inDlgId=dlgId;
 
   smsc::inman::interaction::SPckChargeSms pck;
@@ -128,7 +128,7 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INFwdSmsChargeRe
   }
 
   int dlgId=getNewDlgId();
-  info2(log,"ChargeSmsFwd %lld/%d",id,dlgId);
+  info2(log,"ChargeSmsFwd smsid=%lld, dlgid=%d, cp=%d",id,dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
   ctx.inDlgId=dlgId;
 
   smsc::inman::interaction::SPckChargeSms pck;
@@ -168,6 +168,8 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
     throw smsc::util::Exception("Communication with inman failed");
   }
   smsc::inman::interaction::SPckDeliveredSmsData pck;
+  pck.Hdr().dlgId=getNewDlgId();
+  info2(log,"FullReport: smsId=%lld, dlgId=%d, cp=%d",id,pck.Hdr().dlgId,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
   FillChargeOp(id,pck.Cmd(),sms);
   pck.Cmd().setResultValue(sms.lastResult);
   pck.Cmd().setDestIMSI(sms.getDestinationDescriptor().imsi);
@@ -184,7 +186,7 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
 
 void INManComm::Report(int dlgId,const SMS& sms,bool final)
 {
-  info2(log,"Report:%d/%d",dlgId,sms.lastResult);
+  info2(log,"Report:dlgid=%d, lr=%d, cp=%d",dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
 
   smsc::inman::interaction::SPckDeliverySmsResult pck;
   pck.Hdr().dlgId = dlgId;
@@ -212,7 +214,7 @@ void INManComm::ProcessExpiration()
   while(!timeMap.empty() && timeMap.begin()->first<now)
   {
     TimeMap::iterator it=timeMap.begin();
-    debug2(log,"Processing expired request for msgId=%lld",it->second->second->id);
+    info2(log,"Processing expired request for msgId=%lld",it->second->second->id);
     smsc::smeman::SmscCommand cmd;
     if(it->second->second->chargeType==ReqData::ctSubmit)
     {
