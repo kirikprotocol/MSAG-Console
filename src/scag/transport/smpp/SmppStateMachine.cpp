@@ -451,11 +451,12 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   SMS *sms;
   SmppCommand orgCmd;
 
+  src=cmd.getEntity();
+
   if(!cmd.getLongCallContext().continueExec)
   {      
       smsc_log_debug(log, "SubmitResp: got");
 
-      src=cmd.getEntity();
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp)
       {
@@ -489,10 +490,23 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
       sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
+      cmd->get_resp()->setOrgCmd(orgCmd);
+  }
+  else
+  {
+      smsc_log_debug(log, "SubmitResp: continued...");
+      dst = cmd.getDstEntity();
+      sms = cmd->get_resp()->get_sms();
+  }
+
+  ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+
+  if(cmd.hasSession())
+    session = cmd.getSession();
+  else
+  {
       key.abonentAddr=sms->getDestinationAddress();
       int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-      ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                    sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
       key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
 
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
@@ -500,30 +514,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
           cmd.getLongCallContext().continueExec = true;
           return;
       }
-  }
-  else
-  {
-      smsc_log_debug(log, "SubmitResp: continued...");
-      dst = cmd.getDstEntity();
-      src = cmd.getEntity();
-      sms = cmd->get_resp()->get_sms();
-      ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                    sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+   }
 
-      if(cmd.hasSession())
-        session = cmd.getSession();
-      else
-      {
-          key.abonentAddr=sms->getDestinationAddress();
-          int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-          key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
-
-          if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
-          {
-              return;
-          }
-       }
-  }
 
   if(!session.Get())
   {
@@ -840,13 +832,14 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 
   scag::sessions::SessionPtr session;
   scag::sessions::CSessionKey key;
-  SmppCommand orgCmd;
+
+  src=cmd.getEntity();
 
   if(!cmd.getLongCallContext().continueExec)
   {
       smsc_log_debug(log, "DeliveryResp: got");
 
-      src=cmd.getEntity();
+      SmppCommand orgCmd;
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp) {
         srcUid=cmd->get_resp()->expiredUid;
@@ -883,41 +876,29 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
       sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
 
-      key.abonentAddr=sms->getOriginatingAddress();
-      key.USR=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-
-    //  if(cmd.status != CMD_OK)
-    //      Statistics::Instance().registerEvent(SmppStatEvent(src->info, cntRejected, -1));
-      if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
-      {
-          cmd.getLongCallContext().continueExec = true;
-          return;
-      }
+      cmd->get_resp()->setOrgCmd(orgCmd);
   }
   else
   {
     smsc_log_debug(log, "DeliveryResp: continued...");
     dst = cmd.getDstEntity();
     sms = cmd->get_resp()->get_sms();
+  }
 
     if(cmd.hasSession())
         session = cmd.getSession();
     else
     {
-//    else if(cmd.getLongCallContext().continueExec)
-//      session = cmd.getLongCallContext().session;
-
-        key.abonentAddr = cmd->get_resp()->get_sms()->getOriginatingAddress();
-        key.USR = cmd->get_resp()->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+        key.abonentAddr = sms->getOriginatingAddress();
+        key.USR = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
 
         if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
         {
-    //      if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
-    //        throw Exception("DeliveryResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
+          cmd.getLongCallContext().continueExec = true;
           return;
         }
     }
-  }
+
 
   if(!session.Get())
   {
@@ -1181,13 +1162,14 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   scag::sessions::SessionPtr session;
   SmppEntity *dst, *src;
   SMS* sms;
-  SmppCommand orgCmd;
+
+  src = cmd.getEntity();
 
   if(!cmd.getLongCallContext().continueExec)
   {
       smsc_log_debug(log, "DataSmResp: got");
 
-      src=cmd.getEntity();
+      SmppCommand orgCmd;
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp)
       {
@@ -1208,8 +1190,6 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
         return;
       }
 
-      dst=orgCmd.getEntity();
-      cmd.setDstEntity(dst);
       SmsCommand& smscmd=orgCmd->get_smsCommand();
       sms=orgCmd->get_sms();
       cmd->get_resp()->set_sms(sms);
@@ -1226,37 +1206,31 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
       sms->setOriginatingAddress(smscmd.orgSrc);
       sms->setDestinationAddress(smscmd.orgDst);
 
-      key.abonentAddr = (smscmd.dir == dsdSrv2Sc || smscmd.dir == dsdSc2Sc) ?
+      dst=orgCmd.getEntity();
+      cmd.setDstEntity(dst);
+
+      cmd->get_resp()->setOrgCmd(orgCmd);
+  }
+  else
+  {
+    smsc_log_debug(log, "DataSmResp: continued...");
+    dst = cmd.getDstEntity();
+    sms = cmd->get_resp()->get_sms();
+  }
+
+  if(cmd.hasSession())
+      session = cmd.getSession();
+  else
+  {
+      key.abonentAddr = (cmd->get_resp()->get_dir() == dsdSrv2Sc || cmd->get_resp()->get_dir() == dsdSc2Sc) ?
              sms->getDestinationAddress() : sms->getOriginatingAddress();
       key.USR=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
 
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
       {
-        cmd.getLongCallContext().continueExec = true;
-        return;
+          cmd.getLongCallContext().continueExec = true;
+          return;
       }
-  }
-  else
-  {
-      smsc_log_debug(log, "DataSmResp: continued...");
-
-      sms=cmd->get_resp()->get_sms();
-      dst = cmd.getDstEntity();
-      src = cmd.getEntity();
-      if(cmd.hasSession())
-          session = cmd.getSession();
-      else
-      {
-          key.abonentAddr = (cmd->get_resp()->get_dir() == dsdSrv2Sc || cmd->get_resp()->get_dir() == dsdSc2Sc) ?
-                 sms->getDestinationAddress() : sms->getOriginatingAddress();
-          key.USR=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-
-          if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
-          {
-              return;
-          }
-      }
-
   }
 
   if(!session.Get())
@@ -1311,7 +1285,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
 
-  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
+  scag::sessions::SessionManager::Instance().releaseSession(session);
+
   cmd->get_resp()->set_sms(0);
 
   smsc_log_debug(log, "DataSmResp: processed");
