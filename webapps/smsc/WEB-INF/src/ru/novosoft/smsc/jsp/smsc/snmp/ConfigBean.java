@@ -5,8 +5,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
@@ -32,6 +32,7 @@ public class ConfigBean extends PageBean {
     private File config = null;
 
     public Map defaultCounters = new HashMap();
+    private boolean defaultEnabled = false;
     public Map objects = new HashMap();
 
     protected int init(List errors) {
@@ -123,7 +124,7 @@ public class ConfigBean extends PageBean {
         PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
         Functions.storeConfigHeader(out, "config", "snmp.dtd", "WINDOWS-1251"/*Functions.getLocaleEncoding()*/);
         out.println("   <counterInterval value=\"" + String.valueOf(counterInterval) + "\"/>");
-        out.println("   <default>");
+        out.println("   <default enabled=\"" + (defaultEnabled) + "\">");
         SnmpObject.writeCounters(out, defaultCounters);
         out.println("   </default>");
         for (Iterator i = objects.keySet().iterator(); i.hasNext();) {
@@ -157,6 +158,8 @@ public class ConfigBean extends PageBean {
 
             NodeList a = doc.getElementsByTagName(DEFAULT_SECTION);
             if (a.getLength() > 0) {
+                Element defaultNode = ((Element) a.item(0));
+                defaultEnabled = defaultNode.getAttribute("enabled") != null && defaultNode.getAttribute("enabled").equalsIgnoreCase("true");
                 NodeList defaultCounterNodes = ((Element) a.item(0)).getElementsByTagName("counter");
                 for (int i = 0; i < defaultCounterNodes.getLength(); i++) {
                     Element cnt = (Element) defaultCounterNodes.item(i);
@@ -200,6 +203,7 @@ public class ConfigBean extends PageBean {
           loadParams();
 
         Enumeration parameterNames = request.getParameterNames();
+        defaultEnabled = request.getParameter("defaultEnabled") != null;
 
         while (parameterNames.hasMoreElements()) {
             String s = (String) parameterNames.nextElement();
@@ -222,6 +226,10 @@ public class ConfigBean extends PageBean {
       this.counterInterval = Integer.parseInt(counterInterval);
     } catch (NumberFormatException e) {
     }
+  }
+
+  public boolean isDefaultEnabled() {
+    return defaultEnabled;
   }
 
   public String getMbSave() {

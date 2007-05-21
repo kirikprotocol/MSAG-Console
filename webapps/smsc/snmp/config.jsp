@@ -230,6 +230,9 @@ function addSectionCounter(parentSectionName)
         finishSection(out);
 
         startSection(out, "Default", "snmp.default", false);
+        startParams(out);
+        param(out, "snmp.default.enabled", "defaultEnabled", bean.isDefaultEnabled());
+        finishParams(out);
         java.util.Map defMap = bean.defaultCounters;
         for (Iterator i = defMap.keySet().iterator(); i.hasNext();) {
             String name = (String) i.next();
