@@ -449,11 +449,12 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   scag::sessions::CSessionKey key;
   int ussd_op;
   SMS *sms;
+  SmppCommand orgCmd;
 
   if(!cmd.getLongCallContext().continueExec)
   {      
       smsc_log_debug(log, "SubmitResp: got");
-      SmppCommand orgCmd;
+
       src=cmd.getEntity();
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp)
@@ -839,12 +840,12 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 
   scag::sessions::SessionPtr session;
   scag::sessions::CSessionKey key;
+  SmppCommand orgCmd;
 
   if(!cmd.getLongCallContext().continueExec)
   {
       smsc_log_debug(log, "DeliveryResp: got");
 
-      SmppCommand orgCmd;
       src=cmd.getEntity();
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp) {
@@ -1180,12 +1181,12 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   scag::sessions::SessionPtr session;
   SmppEntity *dst, *src;
   SMS* sms;
+  SmppCommand orgCmd;
 
   if(!cmd.getLongCallContext().continueExec)
   {
       smsc_log_debug(log, "DataSmResp: got");
 
-      SmppCommand orgCmd;
       src=cmd.getEntity();
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp)
