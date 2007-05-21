@@ -526,34 +526,35 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(AbonentContractInfo::Contrac
         //lookup policy for extra SCF parms (serviceKey, RPC lists)
         if (abPolicy)
             abPolicy->getSCFparms(&abScf);
-    } else if (abPolicy) {  //attempt to determine SCF params from config.xml
-        if (abType == AbonentContractInfo::abtUnknown) {
-            INScfCFG * pin = NULL;
-            if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
-                pin = (*(abPolicy->scfMap.begin())).second;
-                if (pin->postpaidRPC.size())
-                    abScf = *pin;
-                else
-                    pin = NULL;
-            }
-            if (!pin) {
-                smsc_log_error(logger, "%s: unable to determine"
-                                " abonent type/SCF, switching to CDR mode", _logId);
+    } else if (!bill2CDR) { //attempt to determine SCF params from config.xml
+        if (abPolicy) {
+            if (abType == AbonentContractInfo::abtUnknown) {
+                INScfCFG * pin = NULL;
+                if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
+                    pin = (*(abPolicy->scfMap.begin())).second;
+                    if (pin->postpaidRPC.size())
+                        abScf = *pin;
+                    else
+                        pin = NULL;
+                }
+                if (!pin) {
+                    smsc_log_error(logger, "%s: unable to determine"
+                                    " abonent type/SCF, switching to CDR mode", _logId);
+                    bill2CDR = true;
+                }
+            } else if (abType == AbonentContractInfo::abtPrepaid) {
+                if (abPolicy->scfMap.size() == 1) { //single IN serving
+                    abScf = *((*(abPolicy->scfMap.begin())).second);
+                } else {
+                    smsc_log_error(logger, "%s: unable to determine"
+                                    " abonent SCF, switching to CDR mode", _logId);
+                    bill2CDR = true;
+                }
+            } else //btPostpaid
                 bill2CDR = true;
-            }
-        } else if (abType == AbonentContractInfo::abtPrepaid) {
-            if (abPolicy->scfMap.size() == 1) { //single IN serving
-                abScf = *((*(abPolicy->scfMap.begin())).second);
-            } else {
-                smsc_log_error(logger, "%s: unable to determine"
-                                " abonent SCF, switching to CDR mode", _logId);
-                bill2CDR = true;
-            }
-        } else //btPostpaid
+        } else
             bill2CDR = true;
-    } else
-        bill2CDR = true;
-
+    }
     if (!bill2CDR) {
         smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId, 
                 abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
@@ -582,7 +583,10 @@ Billing::PGraphState Billing::onDeliverySmsResult(void)
         }
     }
     if (!capDlgActive) {
-        state = bilReported;
+        if ((cdr._charge == CDRRecord::ON_SUBMIT) && cdr._dlvrRes)
+            state = bilAborted;
+        else
+            state = bilReported;
         return Billing::pgEnd;
     } //else wait onEndCapDlg();
     return Billing::pgCont;
