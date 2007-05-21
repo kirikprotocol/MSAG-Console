@@ -29,7 +29,7 @@
 #ifdef SNMP
 #include "system/snmp/SnmpCounter.hpp"
 #include "stat/SmeStats.hpp"
-//#include "snmp/smestattable/SmeStatTableSubAgent.hpp"
+#include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #endif
 #include "acls/interfaces.h"
 
@@ -628,7 +628,6 @@ protected:
 
 #ifdef SNMP
   smsc::stat::SmeStats smeStats;
-//  smsc::snmp::smestattable::SmeStatTableSubagentThread smeStatTableThread;
 #endif
 
   SmeProxy* mapProxy;

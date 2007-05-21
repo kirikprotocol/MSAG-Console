@@ -12,6 +12,9 @@ static char const ident[] = "$Id$";
 #include "util/config/Manager.h"
 #include "system/smsc.hpp"
 #include "system/version.h"
+
+#include "snmp/smestattable/SmeStatTableSubAgent.hpp"
+
   extern "C" {
     void init_smsc(void);
     int smscStatusHandler(netsnmp_mib_handler *handler,
@@ -128,6 +131,7 @@ static char const ident[] = "$Id$";
         init_agent("smscd");  // initialize the agent library
         init_smsc();          // initialize mib code here
         init_snmp("smsc");    //read .conf files
+        smestattable::SmeStatTableSubagent::Register();
       }
 
       int SnmpAgent::Execute()
@@ -173,6 +177,7 @@ static char const ident[] = "$Id$";
 //            fileLogRoller->WaitFor();
         }
         smsc_log_debug(log, "try to shutdown snmp agent");
+        smestattable::SmeStatTableSubagent::Unregister();
         snmp_shutdown("smscd");// at shutdown time
         smsc_log_debug(log, "snmp agent shutdowned");
         return 0;

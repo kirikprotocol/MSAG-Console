@@ -150,8 +150,7 @@ endif
 
 ifeq ($(SNMP),YES)
 CXXFLAGS := $(CXXFLAGS) -DSNMP
-SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp -ladm
-# -lsnmp-smestattable
+SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp -ladm -lsnmp-smestattable
 ifeq ($(SFW),YES)
 SNMP_LIBS := $(SNMP_LIBS) -lpkcs11
 endif

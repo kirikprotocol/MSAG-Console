@@ -315,6 +315,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 #ifdef SNMP
   {
     snmpAgent = new SnmpAgent(this);
+    smsc::snmp::smestattable::SmeStatTableSubagent::Init(&smeman,&smeStats);
     tp2.startTask(snmpAgent);
     snmpAgent->statusChange(SnmpAgent::INIT);
     SnmpCounter::Init(findConfigFile("snmp.xml"));
@@ -1049,10 +1050,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
 
-#ifdef SNMP
-//  smeStatTableThread.Init(&smeman,&smeStats);
-//  smeStatTableThread.Start();
-#endif
 
   try {
 
@@ -1347,10 +1344,6 @@ void Smsc::shutdown()
 {
   __trace__("shutting down");
   smeman.Dump();
-
-#ifdef SNMP
-//  smeStatTableThread.Stop();
-#endif
 
   delete smscsme;
 

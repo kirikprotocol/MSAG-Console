@@ -35,89 +35,28 @@ smsc::stat::SmeStats* getSmeStats()
   return smeStatsPtr;
 }
 
-
-int ExecuteAgent()
-{
-  int agentx_subagent=1; /* change this if you want to be a SNMP master agent */
-  /* Defs for arg-handling code: handles setting of policy-related variables */
-  int  use_syslog = 0;
-  char *agentx_socket = NULL;
-
-  se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE1"), 128);
-  se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE2"), 129);
-  se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE3"), 130);
-  se_add_pair_to_slist("babystep_mode", strdup("UNKNOWNMODE4"), 160);
-  se_add_pair_to_slist("babystep_mode", strdup("UNKNOWNMODE5"), 161);
-
-  /* we're an agentx subagent? */
-  if (agentx_subagent) {
-    /* make us a agentx client. */
-    netsnmp_enable_subagent();
-    if (NULL != agentx_socket)
-        netsnmp_ds_set_string(NETSNMP_DS_APPLICATION_ID,
-                              NETSNMP_DS_AGENT_X_SOCKET, agentx_socket);
-  }
-
-  snmp_disable_log();
-  if (use_syslog)
-      snmp_enable_calllog();
-  else
-      snmp_enable_stderrlog();
-
-
-  /* initialize tcp/ip if necessary */
-  SOCK_STARTUP;
-
-  /* initialize the agent library */
-  init_agent("smeStatTable");
-
-  /* init smeStatTable mib code */
-  init_smeStatTable();
-
-  /* read smeStatTable.conf files. */
-  init_snmp("smeStatTable");
-
-  /* If we're going to be a snmp master agent, initial the ports */
-  if (!agentx_subagent)
-    init_master_agent();  /* open the port to listen on (defaults to udp:161) */
-
-  /* In case we recevie a request to stop (kill -TERM or kill -INT) */
-  keep_running = 1;
-  //signal(SIGTERM, stop_server);
-  //signal(SIGINT, stop_server);
-
-  /* you're main loop here... */
-  while(keep_running)
-  {
-    /* if you use select(), see snmp_select_info() in snmp_api(3) */
-    /*     --- OR ---  */
-    //agent_check_and_process(1); /* 0 == don't block */
-    sleep(1);
-  }
-
-  /* at shutdown time */
-  snmp_shutdown("smeStatTable");
-  SOCK_CLEANUP;
-  return 0;
-}
-
-void SmeStatTableSubagentThread::Init(smsc::smeman::SmeManager* smeman,smsc::stat::SmeStats* smestats)
+void SmeStatTableSubagent::Init(smsc::smeman::SmeManager* smeman,smsc::stat::SmeStats* smestats)
 {
   smeManPtr=smeman;
   smeStatsPtr=smestats;
 }
 
 
-int SmeStatTableSubagentThread::Execute()
+void SmeStatTableSubagent::Register()
 {
-  return ExecuteAgent();
+  se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE1"), 128);
+  se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE2"), 129);
+  se_add_pair_to_slist("agent_mode", strdup("UNKNOWNMODE3"), 130);
+  se_add_pair_to_slist("babystep_mode", strdup("UNKNOWNMODE4"), 160);
+  se_add_pair_to_slist("babystep_mode", strdup("UNKNOWNMODE5"), 161);
+  init_smeStatTable();
+  init_snmp("smeStatTable");
 }
 
-void SmeStatTableSubagentThread::Stop()
+void SmeStatTableSubagent::Unregister()
 {
-  keep_running=false;
+  snmp_shutdown("smeStatTable");
 }
-
 
 }//smestattable
 }//snmp
