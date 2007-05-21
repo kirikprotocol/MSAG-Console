@@ -101,13 +101,13 @@ public:
 
   SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmsResp");
+    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmsResp %x", this);
     expiredUid=0;
     expiredResp=false;
   };
   ~SmsResp()
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~SmsResp %x", sms);
+    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~SmsResp %x sms=%x", this sms);
     if ( messageId ) delete messageId;
     if (sms)delete sms;
   }
@@ -419,11 +419,11 @@ struct _SmppCommand
 
   _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "_SmppCommand");
+    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "_SmppCommand %x", this);
   }
   ~_SmppCommand()
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~_SmppCommand: %d", cmdid);
+    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~_SmppCommand: %d %x", cmdid, this);
     switch ( cmdid )
     {
     case DELIVERY:
@@ -825,11 +825,11 @@ public:
   }
 
   ~SmppCommand() {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~SmppCommand");
+    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~SmppCommand %x", this);
      dispose();
   }
 
-  SmppCommand() : cmd (0){     smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand(0)");}
+  SmppCommand() : cmd (0){     smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand(0) %x", this);}
   SmppCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0)
   {
     smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand pdu");
