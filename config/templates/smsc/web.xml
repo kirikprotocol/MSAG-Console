@@ -390,7 +390,7 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name></web-resource-name>
-      <url-pattern>/smsc/esme_DBSme/*</url-pattern>
+      <url-pattern>/smsc/esme_dbSme/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
       <role-name>dbsme-admin</role-name>
