@@ -293,9 +293,9 @@ sub process{
 
     my $extraOut;
 
-    if(exists($EXTRA_MAPPING->{$infields->{SERVICE_ID}}))
+    if(exists($EXTRA_MAPPING{int($infields->{SERVICE_ID})}))
     {
-      $extraOut=$EXTRA_MAPPING->{$infields->{SERVICE_ID}};
+      $extraOut=$EXTRA_MAPPING{int($infields->{SERVICE_ID})};
     }
 
 
