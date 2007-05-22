@@ -32,7 +32,8 @@ struct CDRRecord {
     CDRMediaType    _mediaType;     //MEDIA_TYPE: text or binary
     CDRBearerType   _bearer;        //BEARER_TYPE: sms or ussd
     std::string     _routeId;       //ROUTE_ID:
-    int32_t         _serviceId;     //SERVICE_ID: set on route
+    int32_t         _serviceId;     //SERVICE_ID: id of service on route,
+                                    //in case of SMS Extra - id of pack of extra services
     int32_t         _userMsgRef;    //USER_MSG_REF: system identifier for dialog tracing
     uint8_t         _partsNum;      //number of parts if packet was conjoined.
     //sender info
@@ -54,8 +55,8 @@ struct CDRRecord {
 
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
-    uint32_t        _smsXSrvs;      //SMS Extra serviceCode
-    ContractType    _contract;      // 
+    uint32_t        _smsXMask;      //mask of pack of SMS Extra services
+    ContractType    _contract;      //sender contract type
     ChargingMode    _charge;        //
     bool            _inBilled;      //message was billed by IN platform                                    
 //private: not written to CSV
@@ -65,7 +66,6 @@ struct CDRRecord {
         dpDelivered,    //there was an attempt to delivery DP 
         dpCollected     //DP data collected (final delivery attempt)
     }               _finalized;
-    uint32_t        _smsXMask;      //SMS Extra services mask
 };
 
 

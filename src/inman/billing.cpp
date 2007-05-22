@@ -435,14 +435,14 @@ bool Billing::verifyChargeSms(void)
         SmsXServiceMap::iterator it = _cfg.smsXMap.find(smsXMask);
         if (it != _cfg.smsXMap.end()) {
             xsmsSrv = &(*it).second;
-            cdr._smsXSrvs = xsmsSrv->cdrCode;
+            cdr._serviceId = xsmsSrv->cdrCode;
             smsc_log_info(logger, "%s: %s[0x%x]: %u, %s", _logId,
                     xsmsSrv->name.empty() ? "SMSExtra service" : xsmsSrv->name.c_str(),
                     smsXMask, xsmsSrv->cdrCode, xsmsSrv->adr.toString().c_str());
         } else {
             smsc_log_error(logger, "%s: SMSExtra service[0x%x] misconfigured, ignoring!",
                            _logId, smsXMask);
-            cdr._smsXMask &= SMSX_RESERVED_MASK;
+            cdr._smsXMask &= SMSX_INCHARGE_SRV;
         }
     }
 
