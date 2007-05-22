@@ -491,6 +491,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       cmd->set_serviceId(orgCmd->get_serviceId());
       cmd->set_operationId(orgCmd->get_operationId());
       cmd->get_resp()->set_dir(dsdSc2Srv);
+      cmd->set_dialogId(orgCmd->get_dialogId());
 
       sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
       sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
@@ -556,7 +557,6 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST)
       src->delUSRMapping(key.abonentAddr, key.USR); // Empty mapping on USSD dialog end
 
-//  cmd->set_dialogId(orgCmd->get_dialogId());
   if (!(cmd->get_resp()->get_messageId())) {
     smsc_log_warn(log, "SubmitResp: messageId is null");
     cmd->get_resp()->set_messageId("");
@@ -879,6 +879,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       cmd->set_serviceId(orgCmd->get_serviceId());
       cmd->set_operationId(orgCmd->get_operationId());
       cmd->get_resp()->set_dir(dsdSrv2Sc);
+      cmd->set_dialogId(orgCmd->get_dialogId());
 
       sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
       sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
@@ -939,7 +940,6 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     }
   }
 
-//  cmd->set_dialogId(orgCmd->get_dialogId());
   cmd->get_resp()->set_messageId("");
 
   try{
@@ -1215,6 +1215,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
+      cmd->set_dialogId(orgCmd->get_dialogId());
 
       cmd->get_resp()->setOrgCmd(orgCmd);
 
@@ -1269,7 +1270,6 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     }
   }
 
-//  cmd->set_dialogId(orgCmd->get_dialogId());
   if (!(cmd->get_resp()->get_messageId())) {
     cmd->get_resp()->set_messageId("");
   }
