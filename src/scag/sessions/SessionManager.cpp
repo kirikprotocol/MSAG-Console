@@ -401,8 +401,11 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
         session = store.getSession(key);
 
         if(!session.Get())
-            throw SCAGException("SessionManager: Fatal error - cannot find session USR='%d', Address='%s' to get",
+        {
+            smsc_log_warn(logger, "SessionManager: Cannot find session USR='%d', Address='%s' to get",
                           key.USR, key.abonentAddr.toString().c_str());
+            return true;
+        }
 
         SessionHash.Insert(key, session);
 

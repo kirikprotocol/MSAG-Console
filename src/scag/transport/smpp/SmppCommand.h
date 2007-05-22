@@ -342,67 +342,7 @@ struct _SmppCommand
 
   _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "_SmppCommand %x", this);
   }
-/*  ~_SmppCommand()
-  {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~_SmppCommand: %d %x", cmdid, this);
-    switch ( cmdid )
-    {
-    case DELIVERY:
-    case SUBMIT:
-    case DATASM:
-      if(dta)delete ( (SmsCommand*)dta );
-      break;
-
-    case SUBMIT_MULTI_SM:
-      delete ( (SubmitMultiSm*)dta );
-      break;
-    case SUBMIT_MULTI_SM_RESP:
-      delete ( (SubmitMultiResp*)dta );
-      break;
-
-    case DELIVERY_RESP:
-    case SUBMIT_RESP:
-    case DATASM_RESP:
-      delete ( (SmsResp*)dta );
-      break;
-
-    case REPLACE:
-      delete ( (ReplaceSm*)dta);
-      break;
-
-    case QUERY:
-      delete ( (QuerySm*)dta);
-      break;
-    case QUERY_RESP:
-      delete ((QuerySmResp*)dta);
-      break;
-    case CANCEL:
-      delete ( (CancelSm*)dta);
-      break;
-    case BIND_TRANSCEIVER:
-      delete ((BindCommand*)dta);
-      break;
-
-    case UNKNOWN:
-    case GENERIC_NACK:
-    case UNBIND_RESP:
-    case REPLACE_RESP:
-    case CANCEL_RESP:
-    case ENQUIRELINK:
-    case ENQUIRELINK_RESP:
-    case UNBIND:
-    case BIND_RECIEVER_RESP:
-    case BIND_TRANSMITTER_RESP:
-    case BIND_TRANCIEVER_RESP:
-    case PROCESSEXPIREDRESP:
-      // nothing to delete
-      break;
-    default:
-      __warning2__("~SmppCommand:unprocessed cmdid %d",cmdid);
-    }
-  }*/
 
   uint32_t get_dialogId() const { return dialogId; }
   void set_dialogId(uint32_t dlgId) { dialogId=dlgId; }

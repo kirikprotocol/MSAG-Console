@@ -6,7 +6,6 @@ namespace smpp{
 
 _SmppCommand::~_SmppCommand()
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~_SmppCommand: %d %x", cmdid, this);
     switch ( cmdid )
     {
     case DELIVERY:
@@ -66,7 +65,6 @@ _SmppCommand::~_SmppCommand()
 
   SmppCommand::SmppCommand(SmppHeader* pdu,bool forceDC) : cmd (0)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand pdu");
     __require__ ( pdu != NULL );
     auto_ptr<_SmppCommand> _cmd(ref(new _SmppCommand()));
     switch ( pdu->commandId )
@@ -756,13 +754,11 @@ _SmppCommand::~_SmppCommand()
 
   SmsResp::SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmsResp %x", this);
     expiredUid=0;
     expiredResp=false;
   };
   SmsResp::~SmsResp()
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~SmsResp %x sms=%x", this, sms);
     if ( messageId ) delete messageId;
     if (sms)delete sms;
   }
