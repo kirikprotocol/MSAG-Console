@@ -202,7 +202,7 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
 
 void StateMachine::processSubmit(SmppCommand& cmd)
 {
-    smsc_log_debug(log, "Submit: got");
+    smsc_log_debug(log, "Submit: got %s", cmd.getLongCallContext().continueExec ? "continued..." : "");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -259,7 +259,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         if(!session.Get())
         {
             if(cmd.hasSession())
+            {
                 session = cmd.getSession();
+                smsc_log_debug(log, "Submit: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+            }
             else if (umr < 0) {
                 key.USR = 0;
                 session=sm.newSession(key);
@@ -502,7 +505,10 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
   if(cmd.hasSession())
+  {
     session = cmd.getSession();
+    smsc_log_debug(log, "SubmitResp: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+  }
   else
   {
       key.abonentAddr=sms->getDestinationAddress();
@@ -598,7 +604,7 @@ void StateMachine::sendReceipt(SmppCommand& cmd)
 
 void StateMachine::processDelivery(SmppCommand& cmd)
 {
-    smsc_log_debug(log, "Delivery: got");
+    smsc_log_debug(log, "Delivery: got %s", cmd.getLongCallContext().continueExec ? "continued..." : "");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -661,7 +667,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
           if(!session.Get())
           {
             if(cmd.hasSession())
+            {
                 session = cmd.getSession();
+                smsc_log_debug(log, "Delivery: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+            }
             else
               {
                   key.USR = 0; // Always create new session
@@ -886,7 +895,10 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   }
 
     if(cmd.hasSession())
+    {
         session = cmd.getSession();
+        smsc_log_debug(log, "DeliveryResp: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+    }
     else
     {
         key.abonentAddr = sms->getOriginatingAddress();
@@ -994,7 +1006,7 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
 
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
-    smsc_log_debug(log, "DataSm: got");
+    smsc_log_debug(log, "DataSm: got %s", cmd.getLongCallContext().continueExec ? "continued..." : "");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -1062,7 +1074,10 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         if(!session.Get())
         {
           if(cmd.hasSession())
+          {
               session = cmd.getSession();
+              smsc_log_debug(log, "DataSm: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+          }
           else if (umr < 0) {
               key.USR = 0;
               session=sm.newSession(key);
@@ -1153,6 +1168,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
 
   smsc_log_debug(log, "DataSm: processed");
 }
+
 void StateMachine::processDataSmResp(SmppCommand& cmd)
 {
   int rs = -2;
@@ -1219,10 +1235,13 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   }
 
   if(cmd.hasSession())
+  {
       session = cmd.getSession();
+      smsc_log_debug(log, "DataSmResp: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+  }
   else
   {
-      key.abonentAddr = (cmd->get_resp()->get_dir() == dsdSrv2Sc || cmd->get_resp()->get_dir() == dsdSc2Sc) ?
+      key.abonentAddr = (cmd->get_resp()->get_dir() == dsdSc2Srv || cmd->get_resp()->get_dir() == dsdSrv2Srv) ?
              sms->getDestinationAddress() : sms->getOriginatingAddress();
       key.USR=sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
 
