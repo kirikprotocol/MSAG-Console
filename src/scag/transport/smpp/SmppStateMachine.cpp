@@ -520,6 +520,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
           cmd.getLongCallContext().continueExec = true;
           return;
       }
+      smsc_log_warn(log,"SubmitResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
    }
 
 
@@ -909,6 +910,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
           cmd.getLongCallContext().continueExec = true;
           return;
         }
+        smsc_log_warn(log,"DeliveryResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
     }
 
 
@@ -1250,6 +1252,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
           cmd.getLongCallContext().continueExec = true;
           return;
       }
+      smsc_log_warn(log,"DataSmResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
   }
 
   if(!session.Get())
