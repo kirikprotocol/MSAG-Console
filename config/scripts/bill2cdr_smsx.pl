@@ -22,6 +22,17 @@ my $mscrx=qr'.*';
 
 my $eoln="\x0d\x0a";
 
+my %EXTRA_MAPPING=(
+  1=>'00007961',
+  2=>'00007962',
+  3=>'00007963',
+  4=>'00007964',
+  5=>'00007965',
+  6=>'00007965',
+  7=>'00007965',
+  8=>'00007965'
+);
+
 @OUT_FIELDS=(
 {value=>'-1',width=>6},                          #01   1 bIsFirstLeg
 {field=>'RECORD_TYPE',width=>5},                 #02   7 Record Type 10-in, 20-out, 30-divert
@@ -280,6 +291,13 @@ sub process{
       $makeInRec=0;
     }
 
+    my $extraOut;
+
+    if(exists($EXTRA_MAPPING->{$infields->{SERVICE_ID}}))
+    {
+      $extraOut=$EXTRA_MAPPING->{$infields->{SERVICE_ID}};
+    }
+
 
     $outfields->{RECORD_TYPE}=10;
     $outfields->{CALL_DIRECTION}='O';
@@ -291,7 +309,13 @@ sub process{
     if($makeOutRec)
     {
       outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
+      if(defined($extraOut))
+      {
+        $outfields->{OTHER_ADDR}=$extraOut;
+        outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
+      }
     }
+
 
     if($makeInRec)
     {
