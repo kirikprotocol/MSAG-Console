@@ -1289,7 +1289,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
 
-  scag::sessions::SessionManager::Instance().releaseSession(session);
+  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
 
   cmd->get_resp()->set_sms(0);
 
