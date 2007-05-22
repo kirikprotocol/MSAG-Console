@@ -311,6 +311,8 @@ Hash<int> SmppCommandAdapter::InitDataSmFieldNames()
 
     hs["ussd_dialog"]                   = USSD_DIALOG;
 
+//    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
+
     return hs;
 }
 
@@ -425,6 +427,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
     hs["whoisd_message_content_type"]              = OPTIONAL_MESSAGE_CONTENT_TYPE;
     hs["whoisd_expected_message_content_type"]     = OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE;
 
+//    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
 
 /*
 Tag::SMPP_ESM_CLASS //mask +
@@ -604,6 +607,8 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
     hs["ussd_dialog"]                   = USSD_DIALOG;
 
+//    hs["whoisd_phone_model"]     = OPTIONAL_PHONE_MODEL;
+
     return hs;
 }
 
@@ -611,103 +616,41 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 void SmppCommandAdapter::Set_DC_BIT_Property(SMS& data,int FieldId,bool value)
 {
     
-    if (FieldId == DC_BINARY) 
-    {
-        //00000010
-        if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,2);
-        else data.setIntProperty(Tag::SMPP_DATA_CODING,4);
-        return;
-    } else if (FieldId == DC_TEXT) {
-        //00000100
-        if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,4);
-        else data.setIntProperty(Tag::SMPP_DATA_CODING,2);
-        return;
-    } else if ((FieldId >= DC_SMSC_DEFAULT)&&(FieldId <=DC_GSM_MSG_CC)) 
+    if(FieldId == DC_BINARY) 
+        data.setIntProperty(Tag::SMPP_DATA_CODING,value ? 2 : 4); //00000010
+    else if(FieldId == DC_TEXT) {
+        data.setIntProperty(Tag::SMPP_DATA_CODING, value ? 4 : 2); //00000100
+    } else if(FieldId >= DC_SMSC_DEFAULT && FieldId <= DC_GSM_MSG_CC) 
     {
         //TODO: check DC_TEXT field first!
-        int num = data.getIntProperty(Tag::SMPP_DATA_CODING);
-        if (!((num&4)==4)) return;
+        if(!(data.getIntProperty(Tag::SMPP_DATA_CODING) & 4)) return;
         
-        switch (FieldId) 
+        int dc = 0;
+
+        if(value)
         {
-
-        case DC_SMSC_DEFAULT:
-            //00000000
-            data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_ASCII_X34:
-            //00000001
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,1);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_LATIN1:
-            //00000011
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,3);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_JIS:
-            //00000101
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,5);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_CYRILIC:
-            //00000110
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,6);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_LATIN_HEBREW:
-            //00000111
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,7);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_UCS2:
-            //00001000
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,8);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_PICTOGRAM_ENC:
-            //00001001
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,9);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_ISO_MUSIC_CODES:
-            //00001010
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,10);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_E_KANJI_JIS:
-            //00001101
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,11);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_KS_C_5601:
-            //00001110
-            if (value) data.setIntProperty(Tag::SMPP_DATA_CODING,12);
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,0);
-            break;
-        case DC_GSM_MWI:
-            //1100xxxx
-            //1101xxxx
-
-
-            //11000000 = 192
-            //00001111 = 15
-            //11110000 = 240
-            if (value)
-                data.setIntProperty(Tag::SMPP_DATA_CODING,
-                                    ((192|(data.getIntProperty(Tag::SMPP_DATA_CODING)&15))));
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,
-                                    ((240|(data.getIntProperty(Tag::SMPP_DATA_CODING)&15))));
-            break;
-        case DC_GSM_MSG_CC:
-            //1111xxxx
-            if (value)
-                data.setIntProperty(Tag::SMPP_DATA_CODING,
-                                    ((240|(data.getIntProperty(Tag::SMPP_DATA_CODING)&15))));
-            else data.setIntProperty(Tag::SMPP_DATA_CODING,
-                                    ((192|(data.getIntProperty(Tag::SMPP_DATA_CODING)&15))));
-            break;
+            switch (FieldId) 
+            {
+                case DC_ASCII_X34:      dc = 1; break;
+                case DC_LATIN1:         dc = 3; break; //00000011
+                case DC_JIS:            dc = 5; break; //00000101
+                case DC_CYRILIC:        dc = 6; break; //00000110
+                case DC_LATIN_HEBREW:   dc = 7; break; //00000111
+                case DC_UCS2:           dc = 8; break; //00001000
+                case DC_PICTOGRAM_ENC:  dc = 9; break; //00001001
+                case DC_ISO_MUSIC_CODES: dc = 10; break; //00001010
+                case DC_E_KANJI_JIS:    dc = 11; break; //00001101
+                case DC_KS_C_5601:      dc = 12; break; //00001110
+                case DC_GSM_MWI:        dc = 192 | (data.getIntProperty(Tag::SMPP_DATA_CODING) & 15); break;
+                case DC_GSM_MSG_CC:     dc = 240 | (data.getIntProperty(Tag::SMPP_DATA_CODING) & 15); break; //1111xxxx
+            }
         }
+        else if(FieldId == DC_GSM_MWI)
+            dc = 240 | (data.getIntProperty(Tag::SMPP_DATA_CODING) & 15);
+        else if(FieldId == DC_GSM_MSG_CC)
+            dc = 192|(data.getIntProperty(Tag::SMPP_DATA_CODING) & 15);
+
+        data.setIntProperty(Tag::SMPP_DATA_CODING, dc);
     }
 }
 
@@ -727,8 +670,6 @@ void SmppCommandAdapter::WriteSubmitField(SMS& data,int FieldId,AdapterProperty&
 {
     WriteDeliveryField(data,FieldId,property);
 }
-
-
 
 void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterProperty& property)
 {
@@ -881,168 +822,81 @@ AdapterProperty * SmppCommandAdapter::getRespProperty(SMS& data,const std::strin
 
 AdapterProperty * SmppCommandAdapter::GetStrBitFromMask(SMS& data,const std::string& name,int tag,int mask)
 {
-
-    int num = data.getIntProperty(tag);
-
-    AdapterProperty * property = new AdapterProperty(name,this,((num&mask)==mask));
-    return property;
+    return new AdapterProperty(name, this, (data.getIntProperty(tag) & mask) == mask);
 }
 
 void SmppCommandAdapter::SetBitMask(SMS& data, int tag, int mask)
 {
     if (data.hasIntProperty(tag)) 
-    {
-        int prop = data.getIntProperty(tag);
-        data.setIntProperty(tag, prop&mask);
-    }
+        data.setIntProperty(tag, data.getIntProperty(tag) & mask);
 }
 
 AdapterProperty * SmppCommandAdapter::Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId)
 {
-    AdapterProperty * property = 0;
-
+    int esm = 0; // ESM_SMSC_DEFAULT, ESM_MT_DEFAULT, ESM_NSF_NONE
     switch (FieldId) 
     {
-    case ESM_MM_SMSC_DEFAULT:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0);
-        break;
-    case ESM_MM_DATAGRAM:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x1);
-        break;
-    case ESM_MM_FORWARD:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x2);
-        break;
-    case ESM_MM_S_AND_F:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x3);
-        break;
-    case ESM_MT_DEFAULT:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x0);
-        break;
-    case ESM_MT_DELIVERY_ACK:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x8);
-        break;
-    case ESM_MT_MANUAL_ACK:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x16);
-        break;
-    case ESM_NSF_NONE:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,0x0);
-        break;
-    case ESM_NSF_UDHI:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,64);
-        break;
-    case ESM_NSF_SRP:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,128);
-        break;
-    case ESM_NSF_BOTH:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_ESM_CLASS,192);
-        break;
+        case ESM_MM_DATAGRAM: esm = 1; break;
+        case ESM_MM_FORWARD: esm = 2; break;
+        case ESM_MM_S_AND_F: esm = 3; break;
+        case ESM_MT_DELIVERY_ACK: esm = 0x8; break;
+        case ESM_MT_MANUAL_ACK: esm = 0x16; break;
+        case ESM_NSF_UDHI: esm = 64; break;
+        case ESM_NSF_SRP: esm = 128; break;
+        case ESM_NSF_BOTH: esm = 192; break;
     }
-
-    return property;
+    return GetStrBitFromMask(data, name, Tag::SMPP_ESM_CLASS, esm);
 }
 
 AdapterProperty * SmppCommandAdapter::Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId)
 {
-    AdapterProperty * property = 0;
-
+    int rd = 0; // RD_RECEIPT_OFF, RD_ACK_OFF
     switch (FieldId) 
     {
-    case RD_RECEIPT_OFF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,0);
-        break;
-    case RD_RECEIPT_ON:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,1);
-        break;
-    case RD_RECEIPT_FAILURE:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,3);
-        break;
-    case RD_ACK_OFF:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,0);
-        break;
-    case RD_ACK_ON:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,4);
-        break;
-    case RD_ACK_MAN_ON:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,8);
-        break;
-    case RD_RD_ACK_BOTH_ON:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,12);
-        break;
-    case RD_I_NOTIFICATION:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_REGISTRED_DELIVERY,16);
-        break;
+        case RD_RECEIPT_ON: rd = 1; break;
+        case RD_RECEIPT_FAILURE: rd = 3; break;
+        case RD_ACK_ON: rd = 4; break;
+        case RD_ACK_MAN_ON: rd = 8; break;
+        case RD_RD_ACK_BOTH_ON: rd = 12; break;
+        case RD_I_NOTIFICATION: rd = 16; break;
     }
 
-    return property;
+    return GetStrBitFromMask(data, name, Tag::SMPP_REGISTRED_DELIVERY, rd);
 }
 
 
 AdapterProperty * SmppCommandAdapter::Get_DC_BIT_Property(SMS& data, const std::string& name,int FieldId)
 {
-
-    AdapterProperty * property = 0;
-
+    int dc = 0; // DC_SMSC_DEFAULT
     char buff[2] = {0,0};
     int num = 0;
 
     switch (FieldId) 
     {
-    case DC_BINARY:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,2);
-        break;
-    case DC_TEXT:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,4);
-        break;
-    
-    case DC_SMSC_DEFAULT:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,0);
-        break;
-    case DC_ASCII_X34:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,1);
-        break;
-    case DC_LATIN1:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,3);
-        break;
-    case DC_JIS:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,5);
-        break;
-    case DC_CYRILIC:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,6);
-        break;
-    case DC_LATIN_HEBREW:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,7);
-        break;
-    case DC_UCS2:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,8);
-        break;
-    case DC_PICTOGRAM_ENC:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,9);
-        break;
-    case DC_ISO_MUSIC_CODES:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,10);
-        break;
-    case DC_E_KANJI_JIS:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,13);
-        break;
-    case DC_KS_C_5601:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,14);
-        break;
-    case DC_GSM_MWI:
-        num = data.getIntProperty(Tag::SMPP_DATA_CODING);
-        property = new AdapterProperty(name,this,(((num&192)==192)||(num&208)==208));
-        break;
-    case DC_GSM_MSG_CC:
-        property = GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING,240);
-        break;
+        case DC_BINARY:     dc = 2; break;
+        case DC_TEXT:       dc = 4; break;
+        case DC_ASCII_X34:  dc = 1; break;
+        case DC_LATIN1:     dc = 3; break;
+        case DC_JIS:        dc = 5; break;
+        case DC_CYRILIC:    dc = 6; break;
+        case DC_LATIN_HEBREW: dc = 7; break;
+        case DC_UCS2:       dc = 8; break;
+        case DC_PICTOGRAM_ENC: dc = 9; break;
+        case DC_ISO_MUSIC_CODES: dc = 10; break;
+        case DC_E_KANJI_JIS: dc = 13; break;
+        case DC_KS_C_5601:  dc = 14; break;
+        case DC_GSM_MWI:
+            num = data.getIntProperty(Tag::SMPP_DATA_CODING);
+            dc = ((num & 192) == 192) || (num & 208) == 208;
+            break;
+        case DC_GSM_MSG_CC: dc = 240; break;
     }
 
-    return property;
+    return GetStrBitFromMask(data,name,Tag::SMPP_DATA_CODING, dc);
 }
 
 AdapterProperty * SmppCommandAdapter::Get_USSD_BOOL_Property(SMS& data, const std::string& name,int FieldId)
 {
-    AdapterProperty * property = 0;
-
     if (!data.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) return 0;
 
     int sop = data.getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
@@ -1069,36 +923,20 @@ AdapterProperty * SmppCommandAdapter::Get_USSD_BOOL_Property(SMS& data, const st
     
     */
 
+    bool b = false;
     switch (FieldId) 
     {
-    case USSD_PSSD_IND:
-        property = new AdapterProperty(name, this, sop == PSSD_INDICATION);
-        break;
-    case USSD_PSSR_IND:
-        property = new AdapterProperty(name, this, sop ==  PSSR_INDICATION);
-        break;
-    case USSD_USSR_REQ:
-        property = new AdapterProperty(name, this, sop ==  USSR_REQUEST);
-        break;
-    case USSD_USSN_REQ:
-        property = new AdapterProperty(name, this, sop ==  USSN_REQUEST);
-        break;
-    case USSD_PSSD_RESP:
-        property = new AdapterProperty(name, this, sop ==  PSSD_RESPONSE);
-        break;
-    case USSD_PSSR_RESP:
-        property = new AdapterProperty(name, this, sop ==  PSSR_RESPONSE);
-        break;
-    case USSD_USSR_CONF:
-        property = new AdapterProperty(name, this, sop ==  USSR_CONFIRM);
-        break;
-    case USSD_USSN_CONF:
-        property = new AdapterProperty(name, this, sop ==  USSN_CONFIRM);
-        break;
+        case USSD_PSSD_IND:b = sop == PSSD_INDICATION; break;
+        case USSD_PSSR_IND: b = sop ==  PSSR_INDICATION; break;
+        case USSD_USSR_REQ: b = sop ==  USSR_REQUEST; break;
+        case USSD_USSN_REQ:b = sop ==  USSN_REQUEST; break;
+        case USSD_PSSD_RESP: b = sop ==  PSSD_RESPONSE; break;
+        case USSD_PSSR_RESP: b = sop ==  PSSR_RESPONSE; break;
+        case USSD_USSR_CONF: b = sop ==  USSR_CONFIRM; break;
+        case USSD_USSN_CONF: b = sop ==  USSN_CONFIRM; break;
     }
 
-
-    return property;
+    return new AdapterProperty(name, this, b);
 }
 
 
@@ -1366,7 +1204,6 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
 {
 
     SMS * sms = 0;
-    SmsCommand smsCmd;
 
     CommandId cmdid = command->get_commandId();
 
@@ -1417,15 +1254,13 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
         break;
 
     case DATASM:
-        smsCmd = command->get_smsCommand();
-
         pFieldId = DataSmFieldNames.GetPtr(name.c_str());
         if (!pFieldId) return 0;
 
         propertyPtr = PropertyPul.GetPtr(*pFieldId);
         if (propertyPtr) return (*propertyPtr);
 
-        property = getDataSmProperty(smsCmd,name,*pFieldId);
+        property = getDataSmProperty(command->get_smsCommand(),name,*pFieldId);
         break;
 
     case DELIVERY_RESP:
