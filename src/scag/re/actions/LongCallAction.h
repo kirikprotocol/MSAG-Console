@@ -25,7 +25,7 @@ protected:
 
             if(startIndex >= actions.size())
             {
-                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound");
+                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound startIndex=%d, size=%d", startIndex, actions.size());
                 context.clearLongCallContext();
                 return true;
             }

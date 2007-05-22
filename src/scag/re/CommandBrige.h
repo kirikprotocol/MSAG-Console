@@ -1,15 +1,16 @@
 #ifndef __SCAG_RULE_ENGINE_COMMAND_BRIGE__
 #define __SCAG_RULE_ENGINE_COMMAND_BRIGE__
 
-#include <scag/transport/smpp/SmppCommand.h>
+//#include "scag/transport/SCAGCommand.h"
+#include "scag/transport/smpp/SmppCommand.h"
 #include <scag/exc/SCAGExceptions.h>
 #include "scag/stat/Statistics.h"
 
-namespace scag { namespace sessions {
+/*namespace scag { namespace sessions {
 
 struct CSessionPrimaryKey;
 
-}}
+}}*/
 
 
 namespace scag { namespace re {
@@ -20,6 +21,7 @@ using namespace scag::exceptions;
 
 using namespace scag::stat;
 using namespace smsc::smpp::UssdServiceOpValue;
+//using smsc::sms::Address;
 
 enum CommandOperations
 {
