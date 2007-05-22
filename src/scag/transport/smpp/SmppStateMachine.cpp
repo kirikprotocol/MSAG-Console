@@ -250,7 +250,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                     sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Submit: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
+      smsc_log_debug(log, "Submit %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.getLongCallContext().continueExec ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
         sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
       key.abonentAddr=sms.getDestinationAddress();
@@ -272,7 +272,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                 key.USR = umr;
                 smsc_log_debug(log, "SMPP Submit: Continue, UMR=%d", umr);
                 if(!sm.getSession(key, session, cmd))
+                {
+                    cmd.getLongCallContext().continueExec = true;
                     return;
+                }
                 if (!session.Get()) {
                     session=sm.newSession(key);
                     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
@@ -314,7 +317,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // Continue USSD dialog (or service initiated USSD by pending)
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             if(!sm.getSession(key, session, cmd))
+            {
+                cmd.getLongCallContext().continueExec = true;
                 return;
+            }
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -337,7 +343,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             smsc_log_debug(log, "USSD Submit: End user dialog, UMR=%d", umr);
             if(!sm.getSession(key, session, cmd))
+            {
+                cmd.getLongCallContext().continueExec = true;
                 return;
+            }
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -350,7 +359,10 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
             if(!sm.getSession(key, session, cmd))
+            {
+                cmd.getLongCallContext().continueExec = true;
                 return;
+            }
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
                 SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -659,7 +671,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                     sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Delivery: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr, ussd_op,
+      smsc_log_debug(log, "Delivery %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.getLongCallContext().continueExec ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
         sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
       key.abonentAddr=sms.getOriginatingAddress();
@@ -723,7 +735,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 key.USR = tmpUSR;
                 smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
                 if(!sm.getSession(key, session, cmd))
+                {
+                    cmd.getLongCallContext().continueExec = true;
                     return;
+                }
                 if (!session.Get()) {
                     smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
                     DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -743,7 +758,10 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 key.USR = tmpUSR;
                 smsc_log_debug(log, "USSD Delivery: End service dialog, USR=%d", key.USR);
                 if(!sm.getSession(key, session, cmd))
+                {
+                    cmd.getLongCallContext().continueExec = true;
                     return;
+                }
                 if (!session.Get()) {
                     smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
                     DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
@@ -1069,7 +1087,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
                 sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
 
-      smsc_log_debug(log, "DataSm: %s UMR=%d. %s(%s)->%s", rcnt ? "(redirected)" : "", umr,
+      smsc_log_debug(log, "DataSm %s: %s UMR=%d. %s(%s)->%s", cmd.getLongCallContext().continueExec ? "continued..." : "", rcnt ? "(redirected)" : "", umr,
                 sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
       key.abonentAddr = (src->info.type == etService) ? sms.getDestinationAddress() : sms.getOriginatingAddress();
@@ -1089,7 +1107,10 @@ void StateMachine::processDataSm(SmppCommand& cmd)
               key.USR = umr;
               smsc_log_debug(log, "DataSm: Continue, UMR=%d", umr);
               if(!sm.getSession(key, session, cmd))
+              {
+                  cmd.getLongCallContext().continueExec = true;
                   return;
+              }
               if (!session.Get()) {
                   session=sm.newSession(key);
                   sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
