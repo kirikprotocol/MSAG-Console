@@ -134,6 +134,8 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
 
     //smsc_log_debug(logger,"SessionManager: Restoring session from store");
 
+    session->expirePendingOperation();
+
     if(session->hasPending())
     {
         uint16_t lastUSR = getLastUSR(sessionKey.abonentAddr);
@@ -314,22 +316,34 @@ void SessionManagerImpl::reorderExpireQueue(Session* session)
     if(itPtr)
     {
         CSessionAccessData* ad = *(*itPtr);
+        smsc_log_debug(logger,"SessionManager: session predeleted from expire queue USR='%d', Address='%s' Pending: %d InUse: %d AD: %x",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count(), ad);
+
         SessionExpireHash.Delete(sessionKey);
         SessionExpirePool.erase(*itPtr);
+        smsc_log_debug(logger,"SessionManager: session deleted from expire queue USR='%d', Address='%s' Pending: %d InUse: %d AD: %x",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count(), ad);
+
         if(session->hasPending())
         {
             ad->nextWakeTime = session->getWakeUpTime();
+            smsc_log_debug(logger,"SessionManager: session reordered expire queue USR='%d', Address='%s' Pending: %d InUse: %d waketime: %d AD: %x",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count(), ad->nextWakeTime, ad);
+
             SessionExpireHash.Insert(sessionKey, SessionExpirePool.insert(ad));
         }
         else
+        {
+            smsc_log_debug(logger,"SessionManager: access data deleted USR='%d', Address='%s' Pending: %d InUse: %d AD: %x",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count(), ad);
             delete ad;
+        }
     }
     else if(session->hasPending())
     {
-        smsc_log_debug(logger,"SessionManager: session added to expire queue USR='%d', Address='%s' Pending: %d InUse: %d",
-                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
-
         CSessionAccessData* ad = new CSessionAccessData(session->getWakeUpTime(), sessionKey);
+        smsc_log_debug(logger,"SessionManager: session added to expire queue USR='%d', Address='%s' Pending: %d InUse: %d AD: %x",
+                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count(), ad);
         SessionExpireHash.Insert(sessionKey, SessionExpirePool.insert(ad));
     }
 }
