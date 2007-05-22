@@ -455,11 +455,10 @@ public:
   void setDstEntity(SmppEntity* newent){cmd->dst_ent=newent;}
 
   ~SmppCommand() {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "~SmppCommand %x refs=%d", this, cmd ? cmd->ref_count : 0);
      dispose();
   }
 
-  SmppCommand() : cmd (0){     smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand(0) %x", this);}
+  SmppCommand() : cmd (0){}
   SmppCommand(SmppHeader* pdu,bool forceDC=false);
 
   uint32_t makeSmppStatus(uint32_t status)
@@ -491,13 +490,11 @@ public:
 
   SmppCommand(const SmppCommand& _cmd)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand copy");
     cmd = ref(_cmd.cmd);
   }
 
   const SmppCommand& operator = (const SmppCommand& _cmd)
   {
-    smsc_log_debug(smsc::logger::Logger::getInstance("smc"), "SmppCommand assign");
     if (cmd) unref(cmd);
     cmd = ref(_cmd.cmd);
     return _cmd;
