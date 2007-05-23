@@ -1327,7 +1327,7 @@ StateType StateMachine::submit(Tuple& t)
     aclCheck=true;
   }
 
-  if(fromMap && toMap)//peer2peer
+  if((fromMap || !strcmp(src_proxy->getSystemId(),"DSTRLST")) && toMap)//peer2peer
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,smsc->p2pChargePolicy);
   }else
