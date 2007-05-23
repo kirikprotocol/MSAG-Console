@@ -628,6 +628,11 @@ public:
         smsc_log_warn(log,"Packet size too large:%d",pktSize);
         continue;
       }
+      if(pktSize<4)
+      {
+        smsc_log_warn(log,"Packet size too small:%d",pktSize);
+        continue;
+      }
       tmp.setSize(pktSize);
       int bufSz=0;
       while(bufSz<pktSize)
@@ -651,11 +656,12 @@ public:
       }
       smsc_log_debug(log,"Packet dump:%s",dump.c_str());
       buf.setExternalBuffer(tmp.get(),pktSize);
-      uint32_t cmdId=buf.ReadNetInt32();
+      uint32_t cmdId;
       uint32_t rv=1;
       bool writeRV=true;
       try
       {
+        cmdId=buf.ReadNetInt32();
         smsc_log_debug(log,"Received cmdId=%d",cmdId);
         switch(cmdId)
         {
