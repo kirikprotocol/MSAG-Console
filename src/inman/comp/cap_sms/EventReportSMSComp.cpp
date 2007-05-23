@@ -1,17 +1,14 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-
-#include <vector>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/EventReportSMSArg.h"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
 #include "inman/comp/compsutl.hpp"
 
-
 namespace smsc {
 namespace inman {
 namespace comp {
-
-using std::vector;
 
 EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
 		: eventType( et ), messageType( mt )
@@ -19,7 +16,17 @@ EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
     compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.EventReportSMSArg");
 }
 
-void EventReportSMSArg::encode(vector<unsigned char>& buf) throw(CustomException)
+const std::string & EventReportSMSArg::print(std::string & dump)
+{
+    dump += "{";
+    dump += _nmEventTypeSMS(eventType);
+    dump += ", ";
+    dump += _nmMessageType(messageType);
+    dump += "}";
+    return dump;
+}
+
+void EventReportSMSArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
 {
     asn_enc_rval_t	er;
     /* construct EventReportSMSArg */

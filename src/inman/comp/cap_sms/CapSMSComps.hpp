@@ -49,8 +49,13 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-struct CapSMSOpCode {
-    enum {
+
+extern const char * _nmMonitorMode(enum MonitorMode m_mode);
+extern const char * _nmEventTypeSMS(enum EventTypeSMS event);
+extern const char * _nmMessageType(enum messageType msg_type);
+
+struct CapSMSOp {
+    enum Code {
 	InitialDPSMS 			= 60,
 	FurnishChargingInformationSMS	= 61,
 	ConnectSMS			= 62,
@@ -60,6 +65,21 @@ struct CapSMSOpCode {
 	ReleaseSMS			= 66,
 	ResetTimerSMS			= 67
     };
+    static const char * code2Name(unsigned char op_code)
+    {
+        switch (op_code) {
+        case InitialDPSMS: return "InitialDPSMS"; break;
+        case FurnishChargingInformationSMS: return "FurnishChargingInformationSMS"; break;
+        case ConnectSMS: return "ConnectSMS"; break;
+        case RequestReportSMSEvent: return "RequestReportSMSEvent"; break;
+        case EventReportSMS: return "EventReportSMS"; break;
+        case ContinueSMS: return "ContinueSMS"; break;
+        case ReleaseSMS: return "ReleaseSMS"; break;
+        case ResetTimerSMS: return "ResetTimerSMS"; break;
+        default:;
+        }
+        return "IllegalOp";
+    }
 };
 
 struct CAP3SMSerrCode {
@@ -143,6 +163,7 @@ public:
     ~EventReportSMSArg() {}
 
     void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    const std::string & print(std::string & dump);
 
 private:
     EventTypeSMS_e	eventType;
@@ -161,6 +182,7 @@ public:
     ~RequestReportSMSEventArg() { }
 
     const SMSEventDPs& SMSEvents(void) const { return events; }
+    const std::string & printEvents(std::string & dump);
 
     void  decode(const std::vector<unsigned char>& buf) throw(CustomException);
 

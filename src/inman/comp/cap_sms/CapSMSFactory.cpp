@@ -13,16 +13,16 @@ OperationFactory * initCAP3SMSComponents(OperationFactory * fact)
         fact = CAP3SMSFactory::getInstance();   //getInstance() calls FIF in turn
     } else {
         fact->setLogger(Logger::getInstance("smsc.inman.comp.CAP3SMSFactory"));
-        fact->registerArg(CapSMSOpCode::RequestReportSMSEvent,
+        fact->registerArg(CapSMSOp::RequestReportSMSEvent,
                 new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
-        fact->registerArg(CapSMSOpCode::ReleaseSMS,
+        fact->registerArg(CapSMSOp::ReleaseSMS,
                 new CompFactory::ProducerT<smsc::inman::comp::ReleaseSMSArg>() );
-        fact->registerArg(CapSMSOpCode::ConnectSMS,
+        fact->registerArg(CapSMSOp::ConnectSMS,
                 new CompFactory::ProducerT<smsc::inman::comp::ConnectSMSArg>() );
-        fact->registerArg(CapSMSOpCode::ResetTimerSMS,
+        fact->registerArg(CapSMSOp::ResetTimerSMS,
                 new CompFactory::ProducerT<smsc::inman::comp::ResetTimerSMSArg>() );
 
-        fact->bindErrors(CapSMSOpCode::InitialDPSMS, 8,
+        fact->bindErrors(CapSMSOp::InitialDPSMS, 8,
                          CAP3SMSerrCode::missingParameter,
                          CAP3SMSerrCode::taskRefused,
                          CAP3SMSerrCode::unexpectedComponentSequence, 

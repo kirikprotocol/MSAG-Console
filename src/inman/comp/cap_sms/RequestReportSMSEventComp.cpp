@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/RequestReportSMSEventArg.h"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
@@ -13,6 +15,20 @@ RequestReportSMSEventArg::RequestReportSMSEventArg()
     compLogger = Logger::getInstance("smsc.inman.comp.RequestReportSMSEventArg");
 }
 
+const std::string & RequestReportSMSEventArg::printEvents(std::string & dump)
+{
+    SMSEventDPs::const_iterator it = events.begin();
+    for (short i = 0; it != events.end(); it++, i++) {
+        if (i)
+            dump += ", ";
+        dump += "{";
+        dump += _nmEventTypeSMS(it->first);
+        dump += ", ";
+        dump += _nmMonitorMode(it->second);
+        dump += "}";
+    }
+    return dump;
+}
 
 void RequestReportSMSEventArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
