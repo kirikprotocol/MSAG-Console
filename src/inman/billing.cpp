@@ -307,11 +307,7 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
     smsc_log_error(logger, "%s: Aborting at state %u%s%s",
                    _logId, state, reason ? ", reason: " : "", reason ? reason : "");
     if (capDlgActive) {
-        if ((state >= bilContinued) && (state < bilReported)) { //send sms_o_failure to SCF
-            try { capDlg->eventReportSMS(false);
-            } catch (std::exception & exc) { }
-        }
-        capDlg->endDPSMS();
+        capDlg->endDPSMS(); //send sms_o_failure to SCF
         capDlgActive = false;
     }
     state = Billing::bilAborted;
@@ -573,7 +569,7 @@ Billing::PGraphState Billing::onDeliverySmsResult(void)
 
     if (capDlgActive) { //continue CAP dialog if it's still active
         try {
-            capDlg->eventReportSMS(submitted);
+            capDlg->reportSubmission(submitted);
             cdr._inBilled = true;
             state = bilReported;
         } catch (std::exception & exc) {
