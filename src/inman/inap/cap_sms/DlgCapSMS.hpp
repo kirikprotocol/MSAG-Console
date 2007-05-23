@@ -17,6 +17,8 @@ using smsc::util::RCHash;
 using smsc::inman::comp::InitialDPSMSArg;
 using smsc::inman::comp::RequestReportSMSEventArg;
 
+#include "inman/inap/cap_sms/FSMCapSMS.hpp"
+
 namespace smsc {
 namespace inman {
 namespace inap {
@@ -33,7 +35,7 @@ namespace inap {
         SSF <- RequestReportSMSEvent
         eventReportSMS -> SCF       ]
 [ <- smsBillingPackage:
-        SSF <- FurnishChargingInformationSMS ]  -- unused by known IN-points !!!
+        SSF <- FurnishChargingInformationSMS ]  -- unused !!!
 [ <- smsTimerPackage:
         SSF <- ResetTimerSMS ]
 */
@@ -49,40 +51,13 @@ public:
     virtual void onEndCapDlg(RCHash errcode = 0) = 0;
 };
 
-
 class CapSMS_SCFContractorITF { //SSF -> SCF
-public: //operations:
+public:
+    // initiates capSMS dialog
     virtual void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException) = 0;
-    virtual void eventReportSMS(bool submitted) throw(CustomException) = 0;
+    // reports SMS delivery status (continues) and ends capSMS dialog
+    virtual void reportSubmission(bool submitted) throw(CustomException) = 0;
 };
-
-#define CAP_OPER_INITED 0x2 //'10'B  on BIG-ENDIAN
-#define CAP_OPER_FAIL   0x3 //'11'B  on BIG-ENDIAN 
-typedef union {
-    unsigned short value;
-    struct {
-        unsigned int ctrInited : 2;     //InitialDPSMS -> SCF
-        unsigned int ctrReleased : 1;   //ReleaseSMS <- SCF
-        unsigned int ctrContinued : 1;  //ContinueSMS <- SCF
-        // ...
-        unsigned int ctrRequested : 1;  //RequestReportSMSEvent <- SCF
-        unsigned int ctrReported : 2;   //EventReportSMS -> SCF
-        unsigned int ctrFinished : 1;
-        // ...
-        unsigned int ctrAborted : 1;
-        unsigned int reserved : 7;
-    } s;
-#define PRE_CONNECT_SMS_MASK    0x8000
-
-#define PRE_RELEASE_SMS_MASK1   0x8000
-#define PRE_RELEASE_SMS_MASK2   0x8100
-
-#define PRE_CONTINUE_SMS_MASK1  0x8000
-#define PRE_CONTINUE_SMS_MASK2  0x8800
-
-#define PRE_REQUEST_EVENT_MASK1 0x8000
-#define PRE_REQUEST_EVENT_MASK2 0x9000
-} CAP3State;
 
 
 #define CAPSMS_END_TIMEOUT  2 //seconds
@@ -104,7 +79,7 @@ public:
     //  initiates capSMS dialog (over TCAP dialog)
     void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException);
     //  reports delivery status(continues) and ends capSMS dialog
-    void eventReportSMS(bool submitted) throw(CustomException);
+    void reportSubmission(bool submitted) throw(CustomException);
 
     void endDPSMS(void); //ends TC dialog, releases Dialog(), resets SSFhandler
 
@@ -129,19 +104,22 @@ protected:
 
 private:
     void endTCap(void); //ends TC dialog, releases Dialog()
+    // reports delivery status (continues) and ends capSMS dialog
+    void eventReportSMS(bool submitted) throw(CustomException);
 
     Mutex       _sync;
     unsigned    capId;
                 //prefix for logging info
     char        _logId[sizeof("CapSMS[%u]") + sizeof(unsigned)*3 + 1];
 
-    Dialog*     dialog;     //TCAP dialog
-    TCSessionSR* session;   //TCAP dialogs factory
-    Logger*     logger;
-    CAP3State   _capState;  //current state of cap3SMS CONTRACT
+    Dialog*         dialog;     //TCAP dialog
+    TCSessionSR*    session;    //TCAP dialogs factory
+    CAPSmsState     _capState;  //current state of cap3SMS CONTRACT
     CapSMS_SSFhandlerITF* ssfHdl;
     std::auto_ptr<RequestReportSMSEventArg> rrse; //keeps detection points
-    messageType_e reportType;
+    messageType_e   reportType; //notification or request
+    unsigned char   rPCause;    //result or reject cause
+    Logger*         logger;
 };
 
 } //inap

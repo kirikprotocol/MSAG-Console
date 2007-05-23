@@ -1,13 +1,16 @@
-// cap3SMS CONTRACT implementation (over TCAP dialog)
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-
+#endif /* MOD_IDENT_OFF */
+/* ************************************************************************* *
+ * cap3SMS CONTRACT implementation (over TCAP dialog)
+ * ************************************************************************* */
 #include <assert.h>
 
 #include "util/vformat.hpp"
 using smsc::util::format;
 
 #include "inman/inap/cap_sms/DlgCapSMS.hpp"
-using smsc::inman::comp::CapSMSOpCode;
+using smsc::inman::comp::CapSMSOp;
 using smsc::inman::comp::SMSEventDPs;
 //using smsc::inman::comp::ConnectSMSArg;
 using smsc::inman::comp::ReleaseSMSArg;
@@ -34,10 +37,9 @@ namespace inap {
 CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
            USHORT_T timeout/* = 0*/, Logger * uselog/* = NULL*/)
     : ssfHdl(ssfHandler), session(pSession), reportType(MessageType_notification)
-    , logger(uselog)
+    , rPCause(0), logger(uselog)
 {
     assert(ssfHandler && pSession);
-    _capState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.CapSMSDlg");
     dialog = session->openDialog();
@@ -53,14 +55,19 @@ CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
 
 CapSMSDlg::~CapSMSDlg()
 {
-    endDPSMS();
+    MutexGuard  grd(_sync);
+    ssfHdl = NULL;
+    endTCap();
 }
 
 void CapSMSDlg::endDPSMS(void)
 {
     MutexGuard  grd(_sync);
+    if (_capState.preReport())
+        eventReportSMS(false);
+    else
+        endTCap();
     ssfHdl = NULL;
-    endTCap();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -70,46 +77,22 @@ void CapSMSDlg::initialDPSMS(InitialDPSMSArg* arg) throw(CustomException)
 {
     MutexGuard  grd(_sync);
     smsc_log_debug(logger, "%s: --> SCF InitialDPSMS", _logId);
-    Invoke* op = dialog->initInvoke(CapSMSOpCode::InitialDPSMS, this);
+    Invoke* op = dialog->initInvoke(CapSMSOp::InitialDPSMS, this);
     op->setParam(arg);
     dialog->sendInvoke(op); //throws
 
     dialog->beginDialog();  //throws
-    _capState.s.ctrInited = CAP_OPER_INITED;
+    _capState.u.s.ctrInited = CAPSmsStateS::operInited;
 }
 
-
-void CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
+void CapSMSDlg::reportSubmission(bool submitted) throw(CustomException)
 {
     MutexGuard  grd(_sync);
-    if (!_capState.s.ctrRequested)
+    if (!_capState.preReport())
         throw CustomException((int)
             _RCS_CAPService->mkhash(CAPServiceRC::contractViolation),
             _logId, rc2Txt_CapService(CAPServiceRC::contractViolation));
-
-    EventTypeSMS_e eventType = submitted ? EventTypeSMS_o_smsSubmission : 
-                                            EventTypeSMS_o_smsFailure ;
-    {
-        SMSEventDPs::const_iterator cit = rrse->SMSEvents().find(eventType);
-        MonitorMode_e mMode = (cit != rrse->SMSEvents().end())
-                                ? (*cit).second : MonitorMode_notifyAndContinue;
-        reportType = (mMode == MonitorMode_interrupted)
-                     ? MessageType_request : MessageType_notification;
-    }
-    smsc_log_debug(logger, "%s: --> SCF EventReportSMS "
-                   "( eventType: o_sms%s (0x%X), messageType: %s(0x%X) )",
-                   _logId, (submitted) ? "Submission" : "Failure",
-                   eventType, (reportType == MessageType_request)
-                   ? "request" : "notification", reportType);
-    
-    EventReportSMSArg    arg(eventType, reportType);
-    Invoke* op = dialog->initInvoke(CapSMSOpCode::EventReportSMS, this,
-                                    (reportType == MessageType_request)
-                                    ? 0 : CAPSMS_END_TIMEOUT);
-    op->setParam(&arg);
-    dialog->sendInvoke(op);  //throws
-    dialog->continueDialog();  //throws
-    _capState.s.ctrReported = CAP_OPER_INITED;
+    eventReportSMS(submitted); //throws
 }
 
 /* ------------------------------------------------------------------------ *
@@ -126,12 +109,12 @@ void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
     
         //call operation errors handler
         switch (opcode) {
-        case CapSMSOpCode::InitialDPSMS: {
-            _capState.s.ctrInited = CAP_OPER_FAIL;
+        case CapSMSOp::InitialDPSMS: {
+            _capState.u.s.ctrInited = CAPSmsStateS::operFailed;
         }
         break;
-        case CapSMSOpCode::EventReportSMS: {
-            _capState.s.ctrReported = CAP_OPER_FAIL;
+        case CapSMSOp::EventReportSMS: {
+            _capState.u.s.ctrReported = CAPSmsStateS::operFailed;
         } break;
         default:;
         }
@@ -147,18 +130,18 @@ void CapSMSDlg::onInvokeLCancel(Invoke *op)
     bool    doAbort = false;
     {
         MutexGuard  grd(_sync);
-        if (CapSMSOpCode::InitialDPSMS == op->getOpcode()) {
+        if (CapSMSOp::InitialDPSMS == op->getOpcode()) {
             //It's need to check for CapSMSDlg state, to handle possible CAP3 timeout expiration
-            if (!(_capState.s.ctrReleased
-                  || _capState.s.ctrContinued || _capState.s.ctrAborted)) {
-                smsc_log_error(logger, "%s: state 0x%x(TC: 0x%x): has not "
-                                       "got any Operation of smsProcessingPackage",
-                                _logId, _capState.value, dialog->getState().value);
+            if (!(_capState.u.s.ctrReleased
+                  || _capState.u.s.ctrContinued || _capState.Closed())) {
+                smsc_log_error(logger, "%s: timed out expecting smsProcessingPackage "
+                                       "operation, state {%s}(TC: 0x%x)", _logId,
+                                _capState.Print(), dialog->getState().value);
                 endTCap();
                 doAbort = true;
                 errcode = _RCS_CAPService->mkhash(CAPServiceRC::noServiceResponse);
             }
-        } else if (CapSMSOpCode::EventReportSMS == op->getOpcode()) {
+        } else if (CapSMSOp::EventReportSMS == op->getOpcode()) {
             //prearranged end condition
             endTCap();
             doAbort = true;
@@ -188,10 +171,10 @@ void CapSMSDlg::onDialogPAbort(UCHAR_T abortCause)
     RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
-        _capState.s.ctrAborted = 1;
-        smsc_log_error(logger, "%s: P_ABORT at state 0x%x", _logId, _capState.value);
+        _capState.u.s.ctrAborted = 1;
+        smsc_log_error(logger, "%s: P_ABORT at state {%s}", _logId, _capState.Print());
         endTCap();
-        if ((_capState.s.ctrReported != CAP_OPER_INITED) && !_capState.s.ctrFinished)
+        if ((_capState.u.s.ctrReported != CAPSmsStateS::operInited) && !_capState.u.s.ctrFinished)
             errcode = _RCS_TC_Abort->mkhash(abortCause);
         //else T_END_IND is timed out
     }
@@ -204,11 +187,10 @@ void CapSMSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
 {
     {
         MutexGuard  grd(_sync);
-        _capState.s.ctrAborted = 1;
-        smsc_log_error(logger, "%s: state 0x%x, U_ABORT: %s", _logId,
-                        _capState.value, !abortInfo_len ? "userInfo" :
-                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
-    
+        _capState.u.s.ctrAborted = 1;
+        smsc_log_error(logger, "%s: U_ABORT(%s) at state {%s}", _logId,
+                        !abortInfo_len ? "userInfo" : _RCS_TC_Abort->code2Txt(*pAbortInfo),
+                        _capState.Print());
         endTCap();
     }
     ssfHdl->onEndCapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
@@ -222,7 +204,7 @@ void CapSMSDlg::onDialogNotice(UCHAR_T reportCause,
 {
     {
         MutexGuard  grd(_sync);
-        _capState.s.ctrAborted = 1;
+        _capState.u.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
             format(dstr, ", Invoke[%u]", invId);
@@ -234,8 +216,8 @@ void CapSMSDlg::onDialogNotice(UCHAR_T reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "%s: NOTICE_IND at state 0x%x%s", _logId,
-                       _capState.value, dstr.c_str());
+        smsc_log_error(logger, "%s: NOTICE_IND at state {%s}, %s", _logId,
+                       _capState.Print(), dstr.c_str());
         endTCap();
     }
     ssfHdl->onEndCapDlg(_RCS_TC_Report->mkhash(reportCause));
@@ -248,11 +230,11 @@ void CapSMSDlg::onDialogREnd(bool compPresent)
     RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
-        _capState.s.ctrFinished = 1;
+        _capState.u.s.ctrFinished = 1;
         if (!compPresent) {
             endTCap();
-            if ((_capState.s.ctrReported != CAP_OPER_INITED) && !_capState.s.ctrReleased) {
-                smsc_log_error(logger, "%s: T_END_IND, state 0x%x", _logId, _capState.value);
+            if ((_capState.u.s.ctrReported != CAPSmsStateS::operInited) && !_capState.u.s.ctrReleased) {
+                smsc_log_error(logger, "%s: T_END_IND, state {%s}", _logId, _capState.Print());
                 errcode =_RCS_CAPService->mkhash(CAPServiceRC::noServiceResponse);
             }
         }
@@ -268,78 +250,65 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
     bool    doAbort = false;
     bool    doReport = false;
     RCHash  err = 0;
-    unsigned char rPCause = 0;
     {
         MutexGuard  grd(_sync);
     
-        if (!op->getParam() && (op->getOpcode() != CapSMSOpCode::ContinueSMS))
+        if (!op->getParam() && (op->getOpcode() != CapSMSOp::ContinueSMS))
             smsc_log_error(logger, "%s: Invoke(opcode = %u) arg missed!", _logId, op->getOpcode());
     
         switch (op->getOpcode()) {
-        case CapSMSOpCode::ConnectSMS: {
-            if (_capState.value ^ PRE_CONNECT_SMS_MASK)
-                doAbort = true;
-            else
+        case CapSMSOp::ConnectSMS: {
+            if (_capState.preConnect())
                 smsc_log_debug(logger, "%s: <-- SCF ConnectSMS", _logId);
+            else
+                doAbort = true;
         }   break;
     
-        case CapSMSOpCode::ReleaseSMS: {
-            if ((_capState.value ^ PRE_RELEASE_SMS_MASK1)
-                && (_capState.value ^ PRE_RELEASE_SMS_MASK2)) {
-                doAbort = true;
-            } else {
-                _capState.s.ctrReleased = 1;
+        case CapSMSOp::ReleaseSMS: {
+            if (_capState.preRelease() && op->getParam()) {
+                _capState.u.s.ctrReleased = 1;
                 ReleaseSMSArg * arg = static_cast<ReleaseSMSArg*>(op->getParam());
                 smsc_log_debug(logger, "%s: <-- SCF ReleaseSMS, RP cause: %u",
                                 _logId, (unsigned)arg->rPCause);
-                //ssfHdl->onDPSMSResult(arg->rPCause);
                 rPCause = arg->rPCause;
                 doReport = true;
-            }
+            } else
+                doAbort = true;
         }   break;
     
-        case CapSMSOpCode::ContinueSMS: {
-            if ((_capState.value ^ PRE_CONTINUE_SMS_MASK1)
-                && (_capState.value ^ PRE_CONTINUE_SMS_MASK2)) {
-                doAbort = true;
-            } else {
-                _capState.s.ctrContinued = 1;
+        case CapSMSOp::ContinueSMS: {
+            if (_capState.preContinue()) {
+                _capState.u.s.ctrContinued = 1;
                 smsc_log_debug(logger, "%s: <-- SCF ContinueSMS", _logId);
-                //ssfHdl->onDPSMSResult(0);
-                doReport = true;
-            }
+                if (_capState.u.s.ctrRequested)
+                    doReport = true;
+                //else wait RequestReportSMSEvent
+            } else
+                doAbort = true;
         }   break;
     
-        case CapSMSOpCode::RequestReportSMSEvent: {
-            assert(op->getParam());
-            if ((_capState.value ^ PRE_REQUEST_EVENT_MASK1)
-                && (_capState.value ^ PRE_REQUEST_EVENT_MASK2)) {
-                doAbort = true;
-            } else {
-                _capState.s.ctrRequested = 1;
+        case CapSMSOp::RequestReportSMSEvent: {
+            if (_capState.preRequest() && op->getParam()) {
+                _capState.u.s.ctrRequested = 1;
                 rrse.reset(static_cast<RequestReportSMSEventArg*>(op->getParam()));
                 op->setParam(NULL); //take ownership
-                if (logger->isDebugEnabled()) {
-                    std::string dump("{");
-                    SMSEventDPs::const_iterator it = rrse->SMSEvents().begin();
-                    for (short i = 0; it != rrse->SMSEvents().end(); it++, i++) {
-                        format(dump, "%s{eventType 0x%X, monitorMode 0x%X}",
-                               !i ? "" : ", ", (int)((*it).first), (int)((*it).second));
-                    }
-                    dump += "}";
-                    smsc_log_debug(logger, "%s: <-- SCF RequestReportSMSEvent %s",
-                                   _logId, dump.c_str());
-                }
-            }
+                std::string dump;
+                smsc_log_debug(logger, "%s: <-- SCF RequestReportSMSEvent (%s)",
+                               _logId, (rrse->printEvents(dump)).c_str());
+                if (_capState.u.s.ctrContinued)
+                    doReport = true;
+                //else wait ContinueSMS
+            } else
+                doAbort = true;
         }   break;
     
-        case CapSMSOpCode::ResetTimerSMS: {
+        case CapSMSOp::ResetTimerSMS: {
             ResetTimerSMSArg* arg = static_cast<ResetTimerSMSArg*>(op->getParam());
             smsc_log_debug(logger, "%s: <-- SCF ResetTimerSMS, value: %lu secs",
                            _logId, (long)(arg->timerValue));
         }   break;
     
-    /*  case CapSMSOpCode::FurnishChargingInformationSMS: {
+    /*  case CapSMSOp::FurnishChargingInformationSMS: {
             smsc_log_error(logger, "%s: <-- SCF FurnishChargingInformationSMS", _logId);
         } //no break specially !! */
         default:
@@ -349,12 +318,12 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
         if (doAbort) {
             /* NOTE: there is a known problem with Alcatel IN: it sends *
              * END_REQ carrying excessive ContinueSMS component.        */
-            logger->log(_capState.s.ctrFinished ? Logger::LEVEL_WARN : Logger::LEVEL_ERROR,
-                        "%s: inconsistent Invoke(opcode = %u), state(0x%x)",
-                        _logId, op->getOpcode(), _capState.value);
+            logger->log(_capState.u.s.ctrFinished ? Logger::LEVEL_WARN : Logger::LEVEL_ERROR,
+                        "%s: inconsistent %s, state {%s}", _logId,
+                        CapSMSOp::code2Name(op->getOpcode()), _capState.Print());
             err = _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
         }
-        if (_capState.s.ctrFinished)
+        if (_capState.u.s.ctrFinished)
             doAbort = true; //just end dialog with errOk
     }
     if (doReport)
@@ -368,6 +337,31 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
 /* ------------------------------------------------------------------------ *
  * Private/protected methods
  * ------------------------------------------------------------------------ */
+void CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
+{
+    EventTypeSMS_e eventType = submitted ? EventTypeSMS_o_smsSubmission : 
+                                            EventTypeSMS_o_smsFailure ;
+    {
+        SMSEventDPs::const_iterator cit = rrse->SMSEvents().find(eventType);
+        MonitorMode_e mMode = (cit != rrse->SMSEvents().end())
+                                ? (*cit).second : MonitorMode_notifyAndContinue;
+        reportType = (mMode == MonitorMode_interrupted)
+                     ? MessageType_request : MessageType_notification;
+    }
+
+    EventReportSMSArg    arg(eventType, reportType);
+    std::string dump;
+    smsc_log_debug(logger, "%s: --> SCF EventReportSMS %s", _logId, arg.print(dump).c_str());
+
+    Invoke* op = dialog->initInvoke(CapSMSOp::EventReportSMS, this,
+                                    (reportType == MessageType_request)
+                                    ? 0/*dflt*/ : CAPSMS_END_TIMEOUT);
+    op->setParam(&arg);
+    dialog->sendInvoke(op);  //throws
+    dialog->continueDialog();  //throws
+    _capState.u.s.ctrReported = CAPSmsStateS::operInited;
+}
+
 //ends TC dialog, releases Dialog()
 void CapSMSDlg::endTCap(void)
 {
@@ -377,8 +371,8 @@ void CapSMSDlg::endTCap(void)
             //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
             try {  // do TC_BasicEnd if still active
                 dialog->endDialog((bool)(reportType != MessageType_notification));
-                smsc_log_debug(logger, "%s: T_END_REQ, state: 0x%x", _logId,
-                                _capState.value);
+                smsc_log_debug(logger, "%s: T_END_REQ, state {%s}", _logId,
+                                _capState.Print());
             } catch (std::exception & exc) {
                 smsc_log_error(logger, "%s: T_END_REQ: %s", _logId, exc.what());
                 dialog->releaseAllInvokes();
