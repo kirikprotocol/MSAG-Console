@@ -87,13 +87,19 @@ public:
         switch (_qStatus) {
         case IAPQStatus::iqOk:  st += "finished"; break;
         case IAPQStatus::iqCancelled: st += "cancelled"; break;
-        case IAPQStatus::iqTimeout: st += "timed out"; break;
-        default:;
+        case IAPQStatus::iqTimeout: {
+            st += "timed out";
+            if (!_exc.empty()) {
+                st += ", "; st += _exc;
+            }
+        } break;
+        default: {
+            st += "failed";
+            if (!_exc.empty()) {
+                st += ", "; st += _exc;
+            }
         }
-        st += "failed";
-        if (!_exc.empty()) {
-            st += ", "; st += _exc;
-        }
+        } /* eosw */
         return st;
     }
 
