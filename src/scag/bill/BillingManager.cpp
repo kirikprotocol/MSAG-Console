@@ -104,9 +104,9 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     void deleteSendTransaction(int dlgId);
 
     void sendCommandAsync(BillTransaction *bt, LongCallContext* lcmCtx);
+    void processAsyncResult(BillingManagerImpl::SendTransaction* pst);
     #endif /* MSAG_INMAN_BILL */
 
-    void processAsyncResult(BillingManagerImpl::SendTransaction* pst);
     void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
 
     void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev);
@@ -274,7 +274,7 @@ void BillingManagerImpl::ProcessResult(const char *eventName, BillingTransaction
     if(i != COMMAND_SUCCESSFULL)
         throw SCAGException("Transaction billId=%d %s", b->billId, p);
 }
-
+#ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction* pst)
 {
     auto_ptr<SendTransaction> st(pst);
@@ -358,6 +358,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
     
     lcmCtx->initiator->continueExecution(lcmCtx, false);
 }
+#endif
 
 void BillingManagerImpl::logEvent(const char *tp, bool success, BillingInfoStruct& b, int billID)
 {
