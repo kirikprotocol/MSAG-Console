@@ -76,17 +76,17 @@ public:
 
         INScfsMAP::const_iterator sit = scfMap.find(pin->scf.scfAddress.toString());
         if (sit != scfMap.end()) {
-            smsc_log_info(logger, "IN-platform '%s' known ..", pin->ident());
+            smsc_log_info(logger, "IN-platform '%s' already known ..", pin->ident());
             return (*sit).second;
         }
 
         pin->scf.serviceKey = (uint32_t)scfCfg->getInt("serviceKey");
-        smsc_log_info(logger, "SCF: %s:{%u}",
+        smsc_log_info(logger, "  SCF: %s:{%u}",
                         pin->scf.scfAddress.toString().c_str(), pin->scf.serviceKey);
 
         //optional parameters:
         cstr = NULL; 
-        std::string cppStr = "RPCList_reject: ";
+        std::string cppStr = "  RPCList_reject: ";
         try { cstr = scfCfg->getString("RPCList_reject"); }
         catch (ConfigException& exc) { }
         if (cstr && cstr[0]) {
@@ -99,7 +99,7 @@ public:
             cppStr += "unsupported";
         smsc_log_info(logger, cppStr.c_str());
 
-        cstr = NULL; cppStr = "RPCList_postpaid: ";
+        cstr = NULL; cppStr = "  RPCList_postpaid: ";
         try { cstr = scfCfg->getString("RPCList_postpaid"); }
         catch (ConfigException& exc) { }
         if (cstr) {
@@ -125,7 +125,7 @@ public:
                 throw ConfigException("IDPLocationInfo: invalid value");
         } else
             cstr = (char*)_IDPLIAddr[INScfCFG::idpLiMSC];
-        smsc_log_info(logger, "IDPLocationInfo: %s", cstr);
+        smsc_log_info(logger, "  IDPLocationInfo: %s", cstr);
 
         scfMap.insert(INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin.get()));
         return pin.release();
@@ -362,12 +362,8 @@ protected:
         return;
     }
 
-    void readBillMode(ChargeObj::MSG_TYPE msg_type, const char * mode)
-            throw(ConfigException)
+    ChargeObj::BILL_MODE str2BillMode(const char * mode)
     {
-        if (bill.billMode.find(msg_type) != bill.billMode.end())
-            throw ConfigException("Multiple settings for %s", _MSGtypes[msg_type]);
-
         ChargeObj::BILL_MODE bm = ChargeObj::billOFF;
         if (!strcmp(_BILLmodes[ChargeObj::bill2CDR], mode))
             bm = ChargeObj::bill2CDR;
@@ -375,7 +371,17 @@ protected:
             bm = ChargeObj::bill2IN;
         else if (strcmp(_BILLmodes[ChargeObj::billOFF], mode))
             throw ConfigException("Invalid billMode %s", mode);
-        bill.billMode.insert(BillModes::value_type(msg_type, bm));
+        return bm;
+    }
+
+    void readBillMode(ChargeObj::MSG_TYPE msg_type, const char * mode)
+            throw(ConfigException)
+    {
+        if (bill.billMode.isAssigned(msg_type))
+            throw ConfigException("Multiple settings for %s", _MSGtypes[msg_type]);
+
+        ChargeObj::BILL_MODE bm = str2BillMode(mode);
+        bill.billMode.assign(msg_type, bm);
         smsc_log_info(logger, "  %s -> %s", bill.msgTypeStr(msg_type), bill.billModeStr(bm));
     }
 
@@ -413,7 +419,14 @@ protected:
                     readBillMode(ChargeObj::msgUSSD, cstr);
                 else if (!strcmp(_MSGtypes[ChargeObj::msgXSMS], sit->c_str()))
                     readBillMode(ChargeObj::msgXSMS, cstr);
-                else
+                else if (!strcmp("badCfgIN", sit->c_str())) {
+                    ChargeObj::BILL_MODE bm = str2BillMode(cstr);
+                    if (bm != ChargeObj::bill2IN) {
+                        bill.billMode.setBadCfgINMode(bm);
+                        smsc_log_info(logger, "  badCfgIN -> %s", cstr);
+                    } else
+                        throw ConfigException("Invalid billMode %s for 'badCfgIN'", cstr);
+                } else
                     throw ConfigException("Illegal messageType %s", sit->c_str());
             }
         }

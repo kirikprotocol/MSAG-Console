@@ -18,6 +18,7 @@ struct INManErrorId {
         cfgSpecific,
         cfgMismatch,
         cfgLimitation,
+        cfgInconsistency,
         logicTimedOut,
         brokenPipe
     };
@@ -33,6 +34,7 @@ const char * rc2Txt_INManErrors(uint32_t err_code) { \
     case INManErrorId::cfgSpecific:         return "specific config settings"; \
     case INManErrorId::cfgMismatch:     return "config settings mismatch"; \
     case INManErrorId::cfgLimitation:   return "limitation according to config"; \
+    case INManErrorId::cfgInconsistency:   return "config settings inconsistent"; \
     case INManErrorId::logicTimedOut:   return "external operation is timed out"; \
     case INManErrorId::brokenPipe:      return "broken connection"; \
     default:; } \

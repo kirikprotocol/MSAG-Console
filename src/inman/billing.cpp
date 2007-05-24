@@ -289,10 +289,10 @@ void Billing::doFinalize(bool doReport/* = true*/)
         cdrs = writeCDR();
 
     smsc_log_info(logger, "%s: %scomplete(%s), %s --> %s(cause: %u),"
-                          " abonent(%s), type %s, CDR(s) written: %u",
-                    _logId, BillComplete() ? "" : "IN", _chgModes[cdr._charge],
-                    cdr.dpType().c_str(), cdr._inBilled ? "SCF": "CDR", billErr,
-                    abNumber.getSignals(), AbonentContractInfo::type2Str(abType), cdrs);
+                          " abonent(%s), type %s, CDR(s) written: %u", _logId,
+            BillComplete() ? "" : "IN", _chgModes[cdr._charge], cdr.dpType().c_str(),
+            cdr._inBilled ? "SCF" : (bill2CDR ? "CDR" : "OFF"), billErr,
+            abNumber.getSignals(), AbonentContractInfo::type2Str(abType), cdrs);
 
     doCleanUp();
     if (doReport) {
@@ -522,6 +522,18 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(AbonentContractInfo::Contrac
         //lookup policy for extra SCF parms (serviceKey, RPC lists)
         if (abPolicy)
             abPolicy->getSCFparms(&abScf);
+        //check for serviceKey being set
+        if (!abScf.scf.serviceKey) {
+            if (_cfg.billMode.modeForBadCfgIN() == ChargeObj::bill2CDR) {
+                bill2CDR = true;
+                smsc_log_error(logger, "%s: unable to determine IN serviceKey"
+                                ", switching to CDR mode", _logId);
+            } else {
+                smsc_log_error(logger, "%s: unable to determine IN serviceKey", _logId);
+                return chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE,
+                            _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency));
+            }
+        }
     } else if (!bill2CDR) { //attempt to determine SCF params from config.xml
         if (abPolicy) {
             if (abType == AbonentContractInfo::abtUnknown) {
@@ -619,8 +631,8 @@ Billing::PGraphState Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t ch
     res.Hdr().dlgId = _wId;
     if (_mgr->sendCmd(&res)) {
         if (chg_res == ChargeSmsResult::CHARGING_POSSIBLE) {
-                StartTimer(_cfg.maxTimeout); //expecting DeliverySmsResult
-                return Billing::pgCont;
+            StartTimer(_cfg.maxTimeout); //expecting DeliverySmsResult
+            return Billing::pgCont;
         }
         return Billing::pgEnd;
     }
@@ -653,7 +665,9 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             //abonent provider query is expired
             abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
             providerQueried = false;
-            ConfigureSCFandCharge(AbonentContractInfo::abtUnknown, NULL);
+
+            if (ConfigureSCFandCharge(AbonentContractInfo::abtUnknown, NULL) == Billing::pgEnd)
+                doFinalize();
             return;
         }
         if (state == Billing::bilContinued) {
@@ -684,7 +698,8 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab
     if (qry_status != IAPQStatus::iqOk)
         billErr = _RCS_IAPQStatus->mkhash(qry_status);
 
-    ConfigureSCFandCharge(ab_rec.ab_type, ab_rec.getSCFinfo());
+    if (ConfigureSCFandCharge(ab_rec.ab_type, ab_rec.getSCFinfo()) == Billing::pgEnd)
+        doFinalize();
     return;
 }
 

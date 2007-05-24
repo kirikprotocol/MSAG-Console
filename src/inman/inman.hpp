@@ -78,6 +78,19 @@ public:         //SwitchingCenter, SMS Center, INMan
         if (name) _ident += name;
         rejectRPC.push_back(RP_MO_SM_transfer_rejected);
     }
+    INScfCFG(const INScfCFG & use_cfg)
+    {
+        _ident = use_cfg._ident;
+        rejectRPC = use_cfg.rejectRPC;
+        postpaidRPC = use_cfg.postpaidRPC;
+        idpLiAddr = use_cfg.idpLiAddr;
+
+        uint32_t orgKey = scf.serviceKey;
+        scf = use_cfg.scf;
+        if (!scf.serviceKey)
+            scf.serviceKey = orgKey;
+    }
+
     void reset(void)
     {
         scf.serviceKey = 0;
@@ -128,7 +141,7 @@ public:
     {
         INScfsMAP::const_iterator it = scfMap.find(scf->scf.scfAddress.toString());
         if (it != scfMap.end()) {
-            *scf = *((*it).second);
+            *scf = *(it->second);
             return true;
         }
         return false;
