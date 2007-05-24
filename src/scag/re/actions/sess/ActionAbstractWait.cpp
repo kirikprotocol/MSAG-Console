@@ -23,7 +23,7 @@ void ActionAbstractWait::InitParameters(const SectionParams& params,PropertyObje
 
 void ActionAbstractWait::RegisterPending(ActionContext& context, smsc::logger::Logger* logger, unsigned int billID)
 {
-    smsc_log_debug(logger,"Action '%s': registering pending...", m_ActionName.c_str());
+    smsc_log_debug(logger,"Action '%s': registering pending... addr=%s", m_ActionName.c_str(), context.getCommandProperty().abonentAddr.toString().c_str());
 
     if (!context.checkIfCanSetPending(m_opType, m_eventHandlerType, m_transportType))
         throw SCAGException("Cannot set pending operation (id=%d) for this type of command", m_opType);
