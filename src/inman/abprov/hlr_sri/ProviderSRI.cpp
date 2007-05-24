@@ -202,8 +202,9 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
             smsc_log_debug(logger, "%s(%s): gsmSCF not set.", taskName(), abonent.getSignals());
         } else {
             abRec.ab_type = AbonentRecord::abtPrepaid;
-            smsc_log_debug(logger, "%s(%s): gsmSCF %s:%u", taskName(), abonent.getSignals(),
-                           abRec.gsmSCF.scfAddress.getSignals(), abRec.gsmSCF.serviceKey);
+            abRec.gsmSCF.serviceKey = 0; //CH-SRI returns only O-Bcsm tDP serviceKeys
+            smsc_log_debug(logger, "%s(%s): gsmSCF %s", taskName(), abonent.getSignals(),
+                           abRec.gsmSCF.scfAddress.getSignals());
         }
     }
 }
