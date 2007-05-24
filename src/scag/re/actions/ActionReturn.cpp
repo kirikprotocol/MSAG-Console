@@ -58,7 +58,7 @@ bool ActionReturn::run(ActionContext& context)
    rs.status = m_bStatusValue;
 
 
-    smsc_log_debug(logger,"Action 'return': return result=%d, status=%d",rs.result, rs.status);
+    smsc_log_debug(logger,"Action 'return': return result=%d, status=%d, addr=%s",rs.result, rs.status, context.getCommandProperty().abonentAddr.toString().c_str());
 
     context.clearLongCallContext();
     return false;
