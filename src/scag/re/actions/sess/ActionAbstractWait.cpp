@@ -48,8 +48,7 @@ void ActionAbstractWait::RegisterPending(ActionContext& context, smsc::logger::L
     pendingTime = now + wait_time;
 
     context.AddPendingOperation(m_opType, pendingTime, billID);
-    smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d, billId=%d", m_ActionName.c_str(), wait_time, m_opType, billID);
-
+    smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d, billId=%d, addr=%s", m_ActionName.c_str(), wait_time, m_opType, billID, context.getCommandProperty().abonentAddr.toString().c_str());
 }
 
 
