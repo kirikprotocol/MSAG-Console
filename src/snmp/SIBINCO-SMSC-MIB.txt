@@ -40,8 +40,8 @@
             -- 1.3.6.1.4.1.26757.1.1
       smscDescr OBJECT-TYPE
       SYNTAX  DisplayString
-      ACCESS  read-only
-      STATUS  mandatory
+      MAX-ACCESS  read-only
+      STATUS  current
       DESCRIPTION
     "Version string"
       ::= { smsc 1 }
@@ -141,8 +141,8 @@
 
   smeTable OBJECT-TYPE
       SYNTAX  SEQUENCE OF SmeEntry
-      ACCESS  not-accessible
-      STATUS  mandatory
+      MAX-ACCESS  not-accessible
+      STATUS  current
       DESCRIPTION
     "SME table."
       ::= { smsc 6 }
@@ -150,34 +150,139 @@
 
   smeEntry OBJECT-TYPE
       SYNTAX  SmeEntry
-      ACCESS  not-accessible
-      STATUS  mandatory
+      MAX-ACCESS  not-accessible
+      STATUS  current
       DESCRIPTION
     "A route to a particular destination."
-      INDEX   { smeSystemId }
+      INDEX   { smeIndex }
       ::= { smeTable 1 }
 
   SmeEntry ::=
       SEQUENCE {
+    smeIndex INTEGER,
     smeSystemId DisplayString,
     smeStatus INTEGER
       }
 
+  smeIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SMEIDX."
+      ::= { smeEntry 1 }
+
   smeSystemId OBJECT-TYPE
-      SYNTAX  DisplayString
-      ACCESS  read-only
-      STATUS  mandatory
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
       DESCRIPTION
     "SME system Id."
-      ::= { smeEntry 1 }
+      ::= { smeEntry 2 }
 
   smeStatus OBJECT-TYPE
       SYNTAX  INTEGER
-      ACCESS  read-write
-      STATUS  mandatory
+      MAX-ACCESS  read-only
+      STATUS  current
       DESCRIPTION
     "SME status."
-      ::= { smeEntry 2 }
+      ::= { smeEntry 3 }
+
+
+  smeStatTable OBJECT-TYPE
+      SYNTAX  SEQUENCE OF SmeStatEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "SME Stats table."
+      ::= { smsc 10 }
+
+
+  smeStatEntry OBJECT-TYPE
+      SYNTAX  SmeStatEntry
+      MAX-ACCESS  not-accessible
+      STATUS  current
+      DESCRIPTION
+    "A route to a particular destination."
+      INDEX   { smeStatIndex }
+      ::= { smeStatTable 1 }
+
+  SmeStatEntry ::=
+      SEQUENCE {
+    smeStatIndex INTEGER,
+    smeStatSystemId DisplayString,
+    smeStatAccepted  Counter64,
+    smeStatRejected  Counter64,
+    smeStatDelivered Counter64,
+    smeStatFailed    Counter64,
+    smeStatTemporal  Counter64,
+    smeStatRetried   Counter64
+      }
+
+  smeStatIndex OBJECT-TYPE
+      SYNTAX  INTEGER(0..2000)
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Index."
+      ::= { smeStatEntry 1 }
+
+  smeStatSystemId OBJECT-TYPE
+      SYNTAX  DisplayString (SIZE (0..32))
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME system Id."
+      ::= { smeStatEntry 2 }
+
+  smeStatAccepted OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Accepted"
+      ::= { smeStatEntry 3 }
+
+  smeStatRejected OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Rejected"
+      ::= { smeStatEntry 4 }
+
+  smeStatDelivered OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Delivered"
+      ::= { smeStatEntry 5 }
+
+  smeStatFailed OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Failed"
+      ::= { smeStatEntry 6 }
+
+  smeStatTemporal OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Temporal Errors"
+      ::= { smeStatEntry 7 }
+
+  smeStatRetried OBJECT-TYPE
+      SYNTAX  Counter64
+      MAX-ACCESS  read-only
+      STATUS  current
+      DESCRIPTION
+    "SME Counter Temporal Errors"
+      ::= { smeStatEntry 8 }
+
 
   -- 1.3.6.1.4.1.26757.1.7
   alertSeverity OBJECT-TYPE
