@@ -4,7 +4,7 @@
 
   <!-- ############################# General pages ############################# -->
   <bundle name="system">
-
+    <str name="translit"        value="on"/>
     <str name="value_busy"      value="занято"/>
     <str name="value_noreply"   value="не отвечает"/>
     <str name="value_absent"    value="не доступен"/>

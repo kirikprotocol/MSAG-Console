@@ -6,6 +6,7 @@
   <!--MAIN PAGE-->
   <page id="MAIN_PAGE" question="0">
     <pageExecutor name="ENTRY_EXEC">
+	<bundle name="system"/>
 	<initParam name="pagePrefixedStrategy" value="prefixed_entry"/>
 	<initParam name="pageRedirectStrategy" value="redirect_entry"/>
     </pageExecutor>
@@ -96,6 +97,7 @@
     
     <page id="manual_page_absent" question="0">
       <pageExecutor name="DETAILS_EXEC">
+        <bundle name="system"/>
         <initParam name="page" value="page_absent_change"/>
         <initParam name="info" value="page_absent_info"/>
         <initParam name="bundle" value="profile"/>
@@ -139,6 +141,7 @@
 
     <page id="smshelp_mgr" question="0">
       <pageExecutor name="HELP_EXEC">
+        <bundle name="system"/>
         <bundle name="help"/>
       </pageExecutor>
       <command name="(**)" target="MAIN_PAGE"/>
@@ -197,6 +200,7 @@
 
     <page id="shortcut_svc_2" question="0" shortcut="2">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert"/>
       </pageExecutor>
@@ -216,6 +220,7 @@
 
     <page id="shortcut_svc_20" question="0" shortcut="20">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_busy"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_off"/>
       </pageExecutor>
@@ -235,6 +240,7 @@
 
     <page id="shortcut_svc_21" question="0" shortcut="21">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_detach"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_vm"/>
       </pageExecutor>
@@ -254,6 +260,7 @@
 
     <page id="shortcut_svc_22" question="0" shortcut="22">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_noreply"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_busy_mci"/>
       </pageExecutor>
@@ -273,6 +280,7 @@
 
     <page id="shortcut_svc_23" question="0" shortcut="23">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_absent"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_error"/>
       </pageExecutor>
@@ -287,6 +295,7 @@
 
     <page id="shortcut_svc_24" question="0" shortcut="24">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_profile_uncond"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_error"/>
       </pageExecutor>
@@ -300,6 +309,7 @@
 
     <page id="shortcut_svc_30" question="0" shortcut="30">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_noreply_off"/>
       </pageExecutor>
@@ -313,6 +323,7 @@
 
     <page id="shortcut_svc_31" question="0" shortcut="31">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_noreply_vm"/>
       </pageExecutor>
@@ -326,6 +337,7 @@
 
     <page id="shortcut_svc_32" question="0" shortcut="32">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_noreply_mci"/>
       </pageExecutor>
@@ -339,6 +351,7 @@
 
     <page id="shortcut_svc_40" question="0" shortcut="40">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_absent_off"/>
       </pageExecutor>
@@ -352,6 +365,7 @@
 
     <page id="shortcut_svc_41" question="0" shortcut="41">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_absent_vm"/>
       </pageExecutor>
@@ -365,6 +379,7 @@
 
     <page id="shortcut_svc_42" question="0" shortcut="42">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_absent_mci"/>
       </pageExecutor>
@@ -378,6 +393,7 @@
 
     <page id="shortcut_svc_50" question="0" shortcut="50">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_uncond_off"/>
       </pageExecutor>
@@ -391,6 +407,7 @@
 
     <page id="shortcut_svc_51" question="0" shortcut="51">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_uncond_vm"/>
       </pageExecutor>
@@ -404,6 +421,7 @@
 
     <page id="shortcut_svc_52" question="0" shortcut="52">
       <pageExecutor name="ENTRY_EXEC">
+        <bundle name="system"/>
         <initParam name="pagePrefixedStrategy" value="shortcut_svc_error"/>
         <initParam name="pageRedirectStrategy" value="shortcut_svc_divert_uncond_mci"/>
       </pageExecutor>
