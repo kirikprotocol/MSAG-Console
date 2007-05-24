@@ -1229,9 +1229,9 @@ StateType StateMachine::submit(Tuple& t)
     }
     if(extrabit && xsi.diverted)
     {
-      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit);
+      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit|(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FLASH));
       sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
-      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
+      //sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
       dst=xsi.divertAddr;
       sms->setDestinationAddress(sms->getDealiasedDestinationAddress());
