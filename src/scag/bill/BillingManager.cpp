@@ -473,7 +473,7 @@ void BillingManagerImpl::Rollback(int billId, bool timeout, LongCallContext* lcm
 
     auto_ptr<BillTransaction> p(getBillTransaction(billId));
 
-    #ifdef MSAG_INMAN_BILL
+/*    #ifdef MSAG_INMAN_BILL
     if (p->status == TRANSACTION_VALID && p->tariffRec.billType == scag::bill::infrastruct::INMAN)
     {
         SPckDeliverySmsResult op;
@@ -482,7 +482,7 @@ void BillingManagerImpl::Rollback(int billId, bool timeout, LongCallContext* lcm
         sendCommand(op);
     }
     #endif
-
+*/
     ProcessResult(timeout ? "rollback(timeout)" : "rollback", 
             timeout ? TRANSACTION_TIME_OUT : TRANSACTION_CALL_ROLLBACK, p.get());
 }
