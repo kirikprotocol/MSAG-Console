@@ -17,6 +17,11 @@ connect.host=127.0.0.1
 
 daemon.admin.port=23810
 daemon.dir=daemon
+daemon.hsadmin.link.name =msag_admin
+#daemon.bin.name         =hs_smsc_ssdaemon
+#daemon.link.name        =hs_msag_ssdaemon
+daemon.bin.name          =smsc_ssdaemon
+daemon.link.name         =msag_ssdaemon
 
 gateway.admin.port=23811
 gateway.smpp.port=23830
