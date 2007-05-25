@@ -94,7 +94,6 @@ final class SponsoredEngineNew {
       long timeout = dayStart.getTimeInMillis() - System.currentTimeMillis();
       if (timeout > 0) {
         log.debug("Waiting for day start: " + timeout);
-        System.out.println("Waiting for day start: " + timeout);
         try {
           wait(timeout);
         } catch (InterruptedException e) {

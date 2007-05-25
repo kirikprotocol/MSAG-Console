@@ -5,6 +5,7 @@ CREATE TABLE messages2send (
   to_abonent varchar(30) not null,
   time timestamp not null default now(),
   send_time timestamp not null,
+  dest_addr_subunit int not null,
 
   primary key(id),
   index(send_time)
@@ -23,6 +24,7 @@ CREATE TABLE secret_messages (
   from_number varchar(30) not null,
   message text,
   send_date timestamp not null default now(),
+  dest_addr_subunit int not null,
 
   primary key(id)
 ) CHARACTER SET koi8r;

@@ -23,18 +23,20 @@ final class CalendarMessage extends Storable{
   private final String dest;
   private final Timestamp sendDate;
   private final String message;
+  private final int destAddressSubunit;
 
   public CalendarMessage(final int id, final String source, final String dest,
-                         final Timestamp sendDate, final String message) {
+                         final Timestamp sendDate, final int destAddressSubunit, final String message) {
     this.id = id;
     this.source = source;
     this.dest = dest;
     this.sendDate = sendDate;
     this.message = message;
+    this.destAddressSubunit = destAddressSubunit;
   }
 
-  public CalendarMessage(final String source, final String dest, final Date sendDate, final String message) {
-    this(-1, source, dest, new Timestamp(sendDate.getTime()), message);
+  public CalendarMessage(final String source, final String dest, final Date sendDate, final int destAddressSubunit, final String message) {
+    this(-1, source, dest, new Timestamp(sendDate.getTime()), destAddressSubunit, message);
   }
 
   public void save() throws SQLException{
@@ -58,7 +60,8 @@ final class CalendarMessage extends Storable{
       ps.setString(1, source);
       ps.setString(2, dest);
       ps.setTimestamp(3, sendDate);
-      ps.setString(4, message);
+      ps.setInt(4, destAddressSubunit);
+      ps.setString(5, message);
 
       ps.executeUpdate();
     } catch (SQLException e) {
@@ -119,7 +122,7 @@ final class CalendarMessage extends Storable{
       rs = ps.executeQuery();
 
       while (rs != null && rs.next())
-        messagesList.add(new CalendarMessage(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getTimestamp(4), rs.getString(5)));
+        messagesList.add(new CalendarMessage(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getTimestamp(4), rs.getInt(5), rs.getString(6)));
 
       log.info("Loading messages list ok.");
     } catch (SQLException e) {
@@ -150,6 +153,10 @@ final class CalendarMessage extends Storable{
 
   public int getId() {
     return id;
+  }
+
+  public int getDestAddressSubunit() {
+    return destAddressSubunit;
   }
 
   public boolean isExists() {

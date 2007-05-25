@@ -43,4 +43,14 @@ public abstract class ServiceProcessor extends Service{
     msg.setMessageString(message);
     outQueue.addOutgoingObject(new OutgoingObject(msg));
   }
+
+  protected void sendMessage(final String fromAbonent, final String toAbonent, final String message, final int destAddressSubunit) {
+    Log.info("Send message from abonent: " + fromAbonent + "; to abonent: " + toAbonent + "; message: " + message);
+    final Message msg = new Message();
+    msg.setSourceAddress(fromAbonent);
+    msg.setDestinationAddress(toAbonent);
+    msg.setDestAddrSubunit(destAddressSubunit);
+    msg.setMessageString(message);
+    outQueue.addOutgoingObject(new OutgoingObject(msg));
+  }
 }

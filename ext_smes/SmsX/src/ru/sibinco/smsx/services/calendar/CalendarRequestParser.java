@@ -16,7 +16,8 @@ final class CalendarRequestParser {
   public static final int AFT_REQUEST = 1;
 
   // Regex primitives
-  private final static String AFT = "(((A|a|\u0410|\u0430)(F|f)(T|t|\u0422|\u0442)\\s+)|(M|m|\u041C|\u043C)\\s+)";
+  private final static String AFT = "(((A|a|\u0410|\u0430)(F|f)(T|t|\u0422|\u0442)\\s+)|(M|m|\u041C|\u043C))";
+  private static final String AFT_SPACE = AFT + "\\s+";
   private final static String ONE_OR_MORE_SPACES = "\\s+";
   private final static String ZERO_OR_MORE_SPACES = "\\s*";
   private final static String AT = "((A|a|\u0410|\u0430)(T|t|\u0422|\u0442)|(D|d|\u0414|\u0434))";
@@ -40,7 +41,7 @@ final class CalendarRequestParser {
                                               ONE_OR_TWO_DIGITS;
 
   // Messages regexes
-  private final static String AFT_REGEX = AFT + ONE_TO_FOUR_DIGITS + ANY_STRING_AFTER_SPACE;
+  private final static String AFT_REGEX = AFT_SPACE + ONE_TO_FOUR_DIGITS + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE = AT + ONE_OR_MORE_SPACES + DATE + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE_TIME_MIN = AT + ONE_OR_MORE_SPACES + DATE_TIME_MIN + ANY_STRING_AFTER_SPACE;
   private final static String AT_REGEX_DATE_TIME_SEC = AT + ONE_OR_MORE_SPACES + DATE_TIME_SEC + ANY_STRING_AFTER_SPACE;
@@ -80,8 +81,8 @@ final class CalendarRequestParser {
     if (dateRegex != null) {
       matcher = Pattern.compile(ONE_TO_FOUR_DIGITS).matcher(dateAndMessage);
       matcher.find();
-      final String dateStr = dateAndMessage.substring(matcher.start(), matcher.end());
-      final String message = dateAndMessage.substring(matcher.end());
+      final String dateStr = dateAndMessage.substring(matcher.start(), matcher.end()).trim();
+      final String message = dateAndMessage.substring(matcher.end()).trim();
 
 //    final String dateAndMessage = str.split(AFT, 2)[1].trim() + " "; // Space is neccessary here
 //    final String message = dateAndMessage.split(ONE_TO_FOUR_DIGITS,2)[1].trim();
@@ -97,7 +98,7 @@ final class CalendarRequestParser {
   }
 
   private static ParseResult parseAT(final String str, final String dateRegex) {
-    Matcher matcher = Pattern.compile(AT + ONE_OR_MORE_SPACES).matcher(str);
+    Matcher matcher = Pattern.compile(AT).matcher(str);
     matcher.find();
 
     final String dateAndMessage = str.substring(matcher.end());
@@ -106,8 +107,8 @@ final class CalendarRequestParser {
 
     matcher = Pattern.compile(dateRegex).matcher(dateAndMessage);
     matcher.find();
-    final String dateStr = dateAndMessage.substring(matcher.start(), matcher.end());
-    final String message = dateAndMessage.substring(matcher.end());
+    final String dateStr = dateAndMessage.substring(matcher.start(), matcher.end()).trim();
+    final String message = dateAndMessage.substring(matcher.end()).trim();
 
     Date date = null;
     try {

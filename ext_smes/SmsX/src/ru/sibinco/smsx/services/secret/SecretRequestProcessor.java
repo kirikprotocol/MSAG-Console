@@ -151,7 +151,7 @@ class SecretRequestProcessor extends ServiceProcessor {
       }
 
       // Store message
-      final SecretMessage secretMessage = new SecretMessage(toAbonent, message, fromAbonent);
+      final SecretMessage secretMessage = new SecretMessage(toAbonent, message, fromAbonent, incomingMessage.getDestAddrSubunit());
       secretMessage.save();
 
       // Send notification message to toAbonent
@@ -202,7 +202,7 @@ class SecretRequestProcessor extends ServiceProcessor {
 
           final String deliveryReport = prepareDeliveryReport(toAbonent, msg.getSendDate());
           sendResponse(incomingMessage, Data.ESME_ROK);
-          sendMessage(msg.getFromNumber(), toAbonent, msg.getMessage());
+          sendMessage(msg.getFromNumber(), toAbonent, msg.getMessage(), msg.getDestAddressSubunit());
           sendMessage(SecretService.Properties.SERVICE_ADDRESS, msg.getFromNumber(), deliveryReport);
         }
       }

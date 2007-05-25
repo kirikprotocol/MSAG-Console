@@ -27,9 +27,7 @@ public class MessageListenerImpl implements MessageListener {
       throw new InitializationException("Could not construct MessageListener with NULL IncomingQueue.");
     this.inQueue = inQueue;
     this.smscAddresses = smscAddresses;
-    System.out.println(config.getProperty("messagelistener.check.emptysourceaddr"));
     this.checkEmptysourceaddr = Utils.loadBoolean(config, "messagelistener.check.emptysourceaddr");
-    System.out.println(checkEmptysourceaddr);
     this.checkBinary = Utils.loadBoolean(config, "messagelistener.check.binary");
     Log.info("MessageListener created.");
   }

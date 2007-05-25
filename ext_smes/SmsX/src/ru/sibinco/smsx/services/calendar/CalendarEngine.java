@@ -106,6 +106,7 @@ final class CalendarEngine extends Service {
     msg.setSourceAddress(message.getSource());
     msg.setDestinationAddress(message.getDest());
     msg.setMessageString(message.getMessage());
+    msg.setDestAddrSubunit(message.getDestAddressSubunit());
     msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
     outQueue.addOutgoingObject(new OutgoingObject(msg));
 

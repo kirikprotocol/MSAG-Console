@@ -64,7 +64,7 @@ final class CalendarRequestProcessor extends ServiceProcessor {
         return;
       }
 
-      processMessage(message, new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, parseResult.getMessage()));
+      processMessage(message, new CalendarMessage(message.getSourceAddress(), message.getDestinationAddress(), sendDate, message.getDestAddrSubunit(), parseResult.getMessage()));
 
     } catch (Exception e) {
       log.error(e);

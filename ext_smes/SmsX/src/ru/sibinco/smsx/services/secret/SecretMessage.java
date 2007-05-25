@@ -20,18 +20,20 @@ final class SecretMessage extends Storable {
   private final String userNumber;
   private final String message;
   private final String fromNumber;
+  private final int destAddressSubunit;
   private final Timestamp sendDate;
 
-  public SecretMessage(String userNumber, String message, String fromNumber) {
-    this(-1, userNumber, message, fromNumber, new Timestamp(new java.util.Date().getTime()));
+  public SecretMessage(String userNumber, String message, String fromNumber, int destAddressSubunit) {
+    this(-1, userNumber, message, fromNumber, new Timestamp(new java.util.Date().getTime()), destAddressSubunit);
   }
 
-  public SecretMessage(final int id, final String userNumber, final String message, final String fromNumber, final Timestamp sendDate) {
+  public SecretMessage(final int id, final String userNumber, final String message, final String fromNumber, final Timestamp sendDate, final int destAddressSubunit) {
     this.id = id;
     this.userNumber = userNumber;
     this.message = message;
     this.fromNumber = fromNumber;
     this.sendDate = sendDate;
+    this.destAddressSubunit = destAddressSubunit;
   }
 
   public String getMessage() {
@@ -54,6 +56,10 @@ final class SecretMessage extends Storable {
     return sendDate;
   }
 
+  public int getDestAddressSubunit() {
+    return destAddressSubunit;
+  }
+
   public boolean isExists() {
     return id != -1;
   }
@@ -68,6 +74,7 @@ final class SecretMessage extends Storable {
       ps.setString(1, userNumber);
       ps.setString(2, fromNumber);
       ps.setString(3, message);
+      ps.setInt(4, destAddressSubunit);
 
       ps.executeUpdate();
 
@@ -115,7 +122,7 @@ final class SecretMessage extends Storable {
       rs = ps.executeQuery();
 
       while (rs != null && rs.next())
-        messages.add(new SecretMessage(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getTimestamp(5)));
+        messages.add(new SecretMessage(rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getTimestamp(5), rs.getInt(6)));
 
     } catch (SQLException e) {
       throw new SQLException(e.getMessage());
