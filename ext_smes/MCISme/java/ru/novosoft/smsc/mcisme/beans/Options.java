@@ -117,6 +117,7 @@ public class Options extends MCISmeBean
   private int       bdFilesIncr = 0;
 
   private String    profStorageLocation = "";
+  private String    profStorageHost = "";
   private int       profStoragePort = 0;
   private String    statDir = "";
 
@@ -268,6 +269,7 @@ public class Options extends MCISmeBean
 
         profStorageLocation = getConfig().getString("MCISme.ProfileStorage.location");
         profStoragePort = getConfig().getInt("MCISme.ProfileStorage.port");
+        profStorageHost = getConfig().getString("MCISme.ProfileStorage.host");
 
         resendingPeriod = getConfig().getString("MCISme.Scheduling.resendingPeriod");
         schedOnBusy = getConfig().getString("MCISme.Scheduling.schedOnBusy");
@@ -408,6 +410,7 @@ public class Options extends MCISmeBean
 
     getConfig().setString("MCISme.ProfileStorage.location", profStorageLocation);
     getConfig().setInt("MCISme.ProfileStorage.port", profStoragePort);
+    getConfig().setString("MCISme.ProfileStorage.host", profStorageHost);
 
     getConfig().setString("MCISme.Scheduling.resendingPeriod", resendingPeriod);
     getConfig().setString("MCISme.Scheduling.schedOnBusy", schedOnBusy);
@@ -1268,6 +1271,14 @@ public class Options extends MCISmeBean
   }
   public void setProfStorageLocation(String value) {
     this.profStorageLocation = value;
+  }
+
+  public String getProfStorageHost() {
+    return profStorageHost;
+  }
+
+  public void setProfStorageHost(String profStorageHost) {
+    this.profStorageHost = profStorageHost;
   }
 
   public int getProfStoragePortInt() {

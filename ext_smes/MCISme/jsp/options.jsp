@@ -265,6 +265,10 @@ switchConstraint();
   <td><input class=txt name=profStorageLocation value="<%=StringEncoderDecoder.encode(bean.getProfStorageLocation())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
+  <th>Storage host</th>
+  <td><input class=txt name=profStorageHost value="<%=StringEncoderDecoder.encode(bean.getProfStorageHost())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Storage port</th>
   <td><input class=txt name=profStoragePort value="<%=StringEncoderDecoder.encode(bean.getProfStoragePort())%>"></td>
 </tr>
