@@ -14,12 +14,13 @@ namespace inap {
 
 struct TC_DlgError {
     enum Codes {
-        dlgInit     = 0, //
-        dlgParam    = 1, // 
-        invCompEnc  = 2, //invalid invoke component to send
-        invCompDec  = 3, //invoke component decoding failed
-        resCompEnc  = 4, //invalid result/error component to send
-        resCompDec  = 5  //result/error component decoding failed
+        dlgInit     = 0, //TC dialog initialization failure
+        dlgParam    = 1, //invalid TC dialog parameters 
+        dlgFatal    = 2, //unidentified fatal dialog error
+        invCompEnc  = 3, //invalid invoke component to send
+        invCompDec  = 4, //invoke component decoding failed
+        resCompEnc  = 5, //invalid result/error component to send
+        resCompDec  = 6  //result/error component decoding failed
     };
 };
 extern const char * rc2Txt_TC_Dialog(uint32_t rc_code);
@@ -30,6 +31,7 @@ const char * rc2Txt_TC_Dialog(uint32_t rc_code) { \
     switch (rc_code) { \
     case TC_DlgError::dlgInit: return "TC dialog initialization failure"; \
     case TC_DlgError::dlgParam: return "invalid TC dialog parameters"; \
+    case TC_DlgError::dlgFatal: return "unidentified fatal dialog error"; \
     case TC_DlgError::invCompEnc: return "invalid invoke component to send"; \
     case TC_DlgError::invCompDec: return "invoke component decoding failed"; \
     case TC_DlgError::resCompEnc: return "invalid result/error component to send"; \
