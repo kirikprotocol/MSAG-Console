@@ -31,14 +31,14 @@ protected:
             }
         }
 
-        for (int i = startIndex; i < actions.size(); i++)
+        for(int i = startIndex; i < actions.size(); i++)
         {
-            if (!actions[i]->run(context)) 
+            if(!actions[i]->run(context)) 
             {
-                if (context.getRuleStatus().status == STATUS_LONG_CALL) 
+                if(context.getRuleStatus().status == STATUS_LONG_CALL) 
                 {
-                    smsc_log_debug(logger, "Save to stack %d action number. thenSection=%d. addr=%s", i, actions[i]->isTrueCondition, context.getCommandProperty().abonentAddr.toString().c_str());
-                    ActionStackValue sv(i, actions[i]->isTrueCondition);
+                    smsc_log_debug(logger, "Save to stack %d action number. thenSection=%d. addr=%s", i, context.isTrueCondition, context.getCommandProperty().abonentAddr.toString().c_str());
+                    ActionStackValue sv(i, context.isTrueCondition);
                     longCallContext.ActionStack.push(sv);
                 }
 

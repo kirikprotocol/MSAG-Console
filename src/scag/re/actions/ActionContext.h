@@ -95,6 +95,8 @@ namespace scag { namespace re { namespace actions
         auto_ptr<TariffRec>     m_TariffRec;
     public:
 
+        bool isTrueCondition;
+
         ActionContext(Hash<Property>& _constants,
                       Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty, RuleStatus& rs)
             : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty), status(rs)

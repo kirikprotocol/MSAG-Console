@@ -160,7 +160,7 @@ bool ActionIf::run(ActionContext& context)
         {
             smsc_log_debug(logger,"Testing %s = '%lld' for bool, addr=%s", singleparam.strOperand1.c_str(), property->getInt(),context.getCommandProperty().abonentAddr.toString().c_str());
 
-            isTrueCondition = property->getBool();
+            context.isTrueCondition = property->getBool();
         } 
         else
         {
@@ -203,14 +203,14 @@ bool ActionIf::run(ActionContext& context)
                 else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
             }
 
-            isTrueCondition = CompareResultToBool(singleparam.Operation,result);
+            context.isTrueCondition = CompareResultToBool(singleparam.Operation,result);
         }
     }
     else
-        isTrueCondition = longCallContext.ActionStack.top().thenSection;
+        context.isTrueCondition = longCallContext.ActionStack.top().thenSection;
 
-    smsc_log_debug(logger,"Action 'if': run '%s' section, addr=%s", isTrueCondition ? "then" : "else", context.getCommandProperty().abonentAddr.toString().c_str());
-    return RunActionVector(context, longCallContext, isTrueCondition ? ThenActions : ElseActions, logger);
+    smsc_log_debug(logger,"Action 'if': run '%s' section, addr=%s", context.isTrueCondition ? "then" : "else", context.getCommandProperty().abonentAddr.toString().c_str());
+    return RunActionVector(context, longCallContext, context.isTrueCondition ? ThenActions : ElseActions, logger);
 }
 
 }}}

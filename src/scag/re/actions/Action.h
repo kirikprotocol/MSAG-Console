@@ -45,8 +45,7 @@ class Action : public IParserHandler
 protected:
     Logger * logger;
 public:
-    bool isTrueCondition;
-    Action() : logger(0), isTrueCondition(false) { logger = Logger::getInstance("re.actions"); };
+    Action() : logger(0) { logger = Logger::getInstance("re.actions"); };
     virtual ~Action() {};
     virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
     virtual bool run(ActionContext& context) = 0;
