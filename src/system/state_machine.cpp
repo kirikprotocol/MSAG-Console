@@ -1205,9 +1205,45 @@ StateType StateMachine::submit(Tuple& t)
   sms->setIntProperty(Tag::SMSC_ORIGINALPARTSNUM,1);
 
 
+
+  smsc::router::RouteInfo ri;
+
+  ////
+  //
+  //  Routing here
+  //
+
+  bool has_route = false;
+
+  try{
+    has_route=smsc->routeSms(sms->getOriginatingAddress(),
+                            dst,
+                            dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
+  }catch(std::exception& e)
+  {
+    warn2(smsLog,"Routing %s->%s failed:%s",sms->getOriginatingAddress().toString().c_str(),
+      dst.toString().c_str(),e.what());
+  }
+
+  if ( !has_route )
+  {
+    submitResp(t,sms,Status::NOROUTE);
+    warn2(smsLog, "SBM: no route Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
+      t.msgId,dialogId,
+      sms->getOriginatingAddress().toString().c_str(),
+      AddrPair("da",sms->getDestinationAddress(),"dda",dst).c_str(),
+      src_proxy->getSystemId()
+    );
+    return ERROR_STATE;
+  }
+
+  bool fromDistrList=src_proxy && !strcmp(src_proxy->getSystemId(),"DSTRLST");
+  bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
+  bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+
 #ifdef SMSEXTRA
   bool noDestChange=false;
-  if(strcmp(src_proxy->getSystemId(),"MAP_PROXY")==0 || strcmp(src_proxy->getSystemId(),"DSTRLST")==0)
+  if((fromMap || fromDistrList) && toMap)
   {
     ExtraInfo::ServiceInfo xsi;
     int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
@@ -1237,29 +1273,30 @@ StateType StateMachine::submit(Tuple& t)
       sms->setDestinationAddress(sms->getDealiasedDestinationAddress());
       info2(smsLog,"EXTRA: divert for abonent %s to %s",sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
       noDestChange=true;
+      try{
+        has_route=smsc->routeSms(sms->getOriginatingAddress(),
+                                dst,
+                                dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
+      }catch(std::exception& e)
+      {
+        warn2(smsLog,"Routing %s->%s failed:%s",sms->getOriginatingAddress().toString().c_str(),
+          dst.toString().c_str(),e.what());
+      }
+      if(!has_route)
+      {
+        submitResp(t,sms,Status::NOROUTE);
+        warn2(smsLog, "SBM: no route(extra divert) Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
+          t.msgId,dialogId,
+          sms->getOriginatingAddress().toString().c_str(),
+          AddrPair("da",sms->getDestinationAddress(),"dda",dst).c_str(),
+          src_proxy->getSystemId()
+        );
+        return ERROR_STATE;
+      }
     }
   }
 #endif
 
-
-  smsc::router::RouteInfo ri;
-
-  ////
-  //
-  //  Routing here
-  //
-
-  bool has_route = false;
-
-  try{
-    has_route=smsc->routeSms(sms->getOriginatingAddress(),
-                            dst,
-                            dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
-  }catch(std::exception& e)
-  {
-    warn2(smsLog,"Routing %s->%s failed:%s",sms->getOriginatingAddress().toString().c_str(),
-      dst.toString().c_str(),e.what());
-  }
 
   __trace2__("hide=%s, forceRP=%d",ri.hide?"true":"false",ri.replyPath);
 
@@ -1268,19 +1305,6 @@ StateType StateMachine::submit(Tuple& t)
   int prio=sms->getPriority()+ri.priority;
   if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
   sms->setPriority(prio);
-
-  //smsc->routeSms(sms,dest_proxy_index,dest_proxy);
-  if ( !has_route )
-  {
-    submitResp(t,sms,Status::NOROUTE);
-    warn2(smsLog, "SBM: no route Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
-      t.msgId,dialogId,
-      sms->getOriginatingAddress().toString().c_str(),
-      AddrPair("da",sms->getDestinationAddress(),"dda",dst).c_str(),
-      src_proxy->getSystemId()
-    );
-    return ERROR_STATE;
-  }
 
   debug2(smsLog,"SBM: route %s->%s found:%s",
       sms->getOriginatingAddress().toString().c_str(),
@@ -1300,9 +1324,6 @@ StateType StateMachine::submit(Tuple& t)
 
   bool aclCheck=false;
   std::string aclAddr;
-
-  bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
-  bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
 
   if(toMap)
   {
