@@ -413,6 +413,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
             return 0;
         }
 
+        smsc_log_debug(logger, "Send sync inman command billid=%d", billId);
         p->status = sendCommandAndWaitAnswer(p->ChargeOperation);
         if(p->status == TRANSACTION_VALID)
         {
