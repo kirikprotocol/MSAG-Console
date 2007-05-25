@@ -42,11 +42,12 @@ Targets:
                 Creates and moves distribute tree into DISTR_DIR.
     rmdistr     Removes distribute tree from DISTR_DIR.
     rmbuild     Removes build directory from BUILD_DIR.
-    makegw      Builds C++ MSAG, Admin Daemon sources into BUILD_DIR.
+    makegw      Builds C++ MSAG, PVSS, Admin Daemon sources into BUILD_DIR.
     makeweb     Builds WebAdmin sorces into BUILD_DIR.
-    update      Rebuilds C++ MSAG, Admin Daemon, WebAdmin sources into DISTR_DIR.	
-    updategw    Rebuilds C++ MSAG, Admin Daemon sources into DISTR_DIR.
+    update      Rebuilds C++ MSAG, PVSS, WebAdmin sources into DISTR_DIR.	
+    updategw    Rebuilds C++ MSAG, PVSS sources into DISTR_DIR.
     updateweb   Rebuilds WebAdmin sources into DISTR_DIR.
+    updateall   Rebuilds C++ MSAG, PVSS, Admin Daemon, WebAdmin sources into DISTR_DIR.	
     
     TODO: The rest of !!!!
     
@@ -89,8 +90,6 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag/bin"/>
     <mkdir dir="${DISTR_DIR}/services/pers"/>
     <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
-    <mkdir dir="${DISTR_DIR}/daemon"/>
-    <mkdir dir="${DISTR_DIR}/daemon/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
     <mkdir dir="${DISTR_DIR}/tomcat"/>
     <mkdir dir="${DISTR_DIR}/tomcat/common/lib"/>
@@ -103,6 +102,9 @@ Targets:
     <mkdir dir="${DISTR_DIR}/temp"/>
     <mkdir dir="${DISTR_DIR}/logs"/>
     <mkdir dir="${DISTR_DIR}/work"/>
+    <mkdir dir="${DISTR_DIR}/daemon"/>
+    <mkdir dir="${DISTR_DIR}/daemon/bin"/>
+    <mkdir dir="${DISTR_DIR}/daemon/lib"/>
     <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
     <mkdir dir="${DISTR_DIR}/services/scag/conf/rules"/>
     <mkdir dir="${DISTR_DIR}/services/scag/conf/rules/SMPP"/>
@@ -123,7 +125,6 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/pers/conf"/>
 
-    <symlink resource="${DAEMON2HOME_PATH}/lib"  link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
@@ -133,12 +134,10 @@ Targets:
   </target>
 
   <target name="create_update" depends="create_distr_tree_update, makegw, makeweb, copy_to_dist_dir">
-
   </target>
 
-  <target name="copy_to_dist_dir">
+  <target name="copy_services_to_dist_dir">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
-    <!--copy file="${BUILD_BIN}/scag/exc/libscag_exc.so" todir="${DISTR_DIR}/lib"/-->
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
@@ -146,13 +145,6 @@ Targets:
     <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
     <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
 
-    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
-    <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
-    <copy file="${BUILD_BIN}/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
-    <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
-    
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
@@ -165,12 +157,29 @@ Targets:
                includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
     </copy>      
   </target>
+  
+  <target name="copy_to_dist_dir" depends="copy_services_to_dist_dir">
+    <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/daemon/lib"/>
+    <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/daemon/lib"/>
+    <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/daemon/lib"/>
+
+    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
+    
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}/daemon/lib" includes="*"/>
+    </chmod>
+  </target>
 
   <target name="clear_build_bin_dir">
     <delete dir="${BUILD_BIN}"/>
   </target>
 
-  <target name="updategw" depends="clear_build_bin_dir, makegw, copy_to_dist_dir, copy_rules_files">
+  <target name="updategw" depends="clear_build_bin_dir, makegw, copy_services_to_dist_dir, copy_rules_files">
   </target>
   
   <target name="updateweb" depends="distjedit">
@@ -178,7 +187,9 @@ Targets:
   </target>
   
   <target name="update" depends="updategw, updateweb">
-
+  </target>
+  
+  <target name="updateall" depends="clear_build_bin_dir, makegw, copy_to_dist_dir, copy_rules_files, updateweb">
   </target>
 
   <target name="copy_rules_files">     
@@ -402,7 +413,7 @@ Targets:
     <signjar jar="${JEDIT_DIR}/build/jedit.jar" alias="msag" storepass="password" keystore="${JEDIT_DIR}/src/.keystore"/>
   </target>
 																																																																																																		
-  <target  name="applet" depends="distjedit">
+  <target name="applet" depends="distjedit">
 	 <copy todir="${DISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
                <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
         </copy>
@@ -411,7 +422,7 @@ Targets:
         </copy>
   </target>
 		       
-  <target  name="create_distr" depends="create_distr_tree, create_update, distjedit">
+  <target name="create_distr" depends="create_distr_tree, create_update, distjedit">
   </target>
 
   <target name="distr" depends="create_distr, extra_libs, configure">
@@ -431,13 +442,21 @@ Targets:
   <target name="tar" description="tar distr directory">
     <tar destfile="${DISTR_DIR}/scag_update_${DSTAMP}_${TSTAMP}.tar.gz" compression="gzip">
       <tarfileset dir="${DISTR_DIR}" mode="775">
+        <include name="lib/*"/>
         <include name="daemon/bin/smsc_ssdaemon"/>
+        <include name="daemon/bin/hs_smsc_ssdaemon"/>
+        <include name="daemon/bin/hsadmin"/>
+        <include name="daemon/lib/*"/>
         <include name="services/scag/bin/scag"/>
 	<include name="services/pers/bin/pers"/>
         <include name="tomcat/bin/*.sh"/>
       </tarfileset>
       <tarfileset dir="${DISTR_DIR}" mode="664">
+        <exclude name="lib/*"/>
         <exclude name="daemon/bin/smsc_ssdaemon"/>
+        <exclude name="daemon/bin/hs_smsc_ssdaemon"/>
+        <exclude name="daemon/bin/hsadmin"/>
+        <exclude name="daemon/lib/*"/>
         <exclude name="services/scag/bin/scag"/>
 	<exclude name="services/pers/bin/pers"/>
         <exclude name="tomcat/bin/*.sh"/>
