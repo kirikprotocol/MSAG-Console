@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.6.3 or higher -->
+<!-- configuration for INMan v0.6.5 or higher -->
 <config>
-  <param name="version" type="string">0.6.3</param>   <!-- config version -->
+  <param name="version" type="string">0.6.5</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
@@ -18,12 +18,12 @@
       For each message type the following modes may be assigned:
         OFF : billing is forbidden (default),
         CDR : perform billing by generating CDR,
-        IN  : perform billing by interacting the IN point, create CDR in case
-              of interaction failure.
+        IN  : perform billing by interacting the IN point, in case
+              of failure follow the secondary mode.
      -->
-     <param name="SMS" type="string">CDR</param> <!-- [OFF, CDR, IN] -->
-     <param name="USSD" type="string">IN</param> <!-- [OFF, CDR, IN] -->
-     <param name="XSMS" type="string">OFF</param> <!-- [OFF, CDR, IN] -->
+     <param name="SMS" type="string">OFF</param> <!-- [OFF, CDR, IN] -->
+     <param name="USSD" type="string">IN, CDR</param> <!-- [OFF, CDR, IN] -->
+     <param name="XSMS" type="string">IN, OFF</param> <!-- [OFF, CDR, IN] -->
    </section>
 
    <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
@@ -80,6 +80,13 @@
           NOTE 1: * is a special symbol, replacing all defined IN-platforms
           NOTE 2: serviceKey from IN-platform config overrides the one returned by abonent provider
          -->
+    <section name="MTC_NskExtra_SRI"> <!-- get contract/gsmSCF from HLR, 
+      serviceKey from INMan config -->
+      <param name="policy" type="string">HLR_Nsk_SRI, *</param>
+      <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
+      <!-- param name="active" type="bool">true</param -->    <!-- use or ignore this policy, default: true -->
+    </section>
+
       <section name="MTC_Nsk_Default">
           <param name="policy" type="string">, IN_Nsk_Huawei</param> <!-- get contract from gsmSCF, No provider at all !!!  -->
           <!-- param name="addrPool" type="string">7913%7[0-9]</param -->  <!-- address pool mask -->
