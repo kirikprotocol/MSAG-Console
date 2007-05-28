@@ -57,9 +57,9 @@ public:
         bilQueried,     // SSF <- IAProvider: query result
         bilInited,      // SSF -> SCF : InitialDPSMS
         bilReleased,    // SSF <- SCF : ReleaseSMS
-                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG
+                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG(No)
         bilContinued,   // SSF <- SCF : ContinueSMS
-                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG
+                        // SSF -> SMSC : CHARGE_SMS_RESULT_TAG(Ok)
         bilApproved,    // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
         bilReported,    // SSF -> SCF : EventReportSMS
         bilComplete     // 
@@ -112,7 +112,7 @@ private:
     unsigned writeCDR(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
-    bool startCAPDialog(INScfCFG * use_scf);
+    RCHash startCAPDialog(INScfCFG * use_scf);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     PGraphState chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
@@ -132,7 +132,6 @@ private:
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
     ChargeObj::MSG_TYPE msgType; // 
-    bool            bill2CDR;
     TimersMAP       timers;     //active timers
     AbonentContractInfo::ContractType abType;     //calling abonent contract type
     TonNpiAddress   abNumber;   //calling abonent ISDN number
@@ -142,6 +141,7 @@ private:
     INScfCFG        abScf;
     XSmsService   * xsmsSrv;    //optional SMS Extra service config.
     RCHash          billErr;    //global error code made by URCRegistry
+    ChargeObj::BILL_MODE billMode;//current billing mode
 };
 
 } //inman

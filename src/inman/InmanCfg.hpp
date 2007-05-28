@@ -230,6 +230,32 @@ protected:
     Logger *            logger;
 
 //protected methods:
+    //Cuts off leading/ending blanks
+    std::string & cutBlanks(std::string & use_str)
+    {
+        if (use_str.empty())
+            return use_str;
+        std::string::size_type bpos = 0, cnt = 0;
+        //erase leading blanks
+        while ((use_str[bpos] == ' ') || (use_str[bpos] == '\t'))
+            bpos++;
+        if (bpos)
+            use_str.erase(0, bpos);
+        //erase ending blanks
+        bpos = use_str.length();
+        while (bpos) { 
+            bpos--;
+            if ((use_str[bpos] == ' ') || (use_str[bpos] == '\t')) {
+                cnt++;
+            } else {
+                if (cnt) 
+                    use_str.erase(bpos + 1, cnt);
+                break;
+            }
+        }
+        return use_str;
+    }
+
     AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol) throw(ConfigException)
     {
         AbonentPolicyXCFG   polXCFG(nm_pol);
@@ -306,6 +332,7 @@ protected:
         if (!manager.findSection("SS7"))
             throw ConfigException("'SS7' section is missed");
 
+        smsc_log_info(logger, "Reading SS7 configuration ..");
         uint32_t tmo;
         char *   cstr;
         ConfigView ss7Cfg(manager, "SS7");
@@ -322,7 +349,7 @@ protected:
         ss7.ssf_addr.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
 
         ss7.own_ssn = ss7Cfg.getInt("ssn"); //throws
-        smsc_log_info(logger, "SSF: %u:%s", ss7.own_ssn,
+        smsc_log_info(logger, "  SSF: %u:%s", ss7.own_ssn,
                         ss7.ssf_addr.toString().c_str());
 
         /*  optional SS7 interaction parameters */
@@ -338,7 +365,7 @@ protected:
                 throw ConfigException("'ss7UserId' should fall into the range [1..20]");
             ss7.userId = (unsigned char)tmo;
         }
-        smsc_log_info(logger, "ss7UserId: %s%u", !tmo ? "default ":"", ss7.userId);
+        smsc_log_info(logger, "  ss7UserId: %s%u", !tmo ? "default ":"", ss7.userId);
 
         tmo = 0;    //maxTimeout
         try { tmo = (uint32_t)ss7Cfg.getInt("maxTimeout"); }
@@ -348,7 +375,7 @@ protected:
                 throw ConfigException("'maxTimeout' should be less than 65535 seconds");
             ss7.capTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "maxTimeout: %s%u secs", !tmo ? "default ":"", ss7.capTimeout);
+        smsc_log_info(logger, "  maxTimeout: %s%u secs", !tmo ? "default ":"", ss7.capTimeout);
 
         tmo = 0;    //maxDialogs
         try { tmo = (uint32_t)ss7Cfg.getInt("maxDialogs"); }
@@ -358,31 +385,51 @@ protected:
                 throw ConfigException("'maxDialogs' should fall into the range [2..65530]");
             ss7.maxDlgId = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "maxDialogs: %s%u", !tmo ? "default ":"", ss7.maxDlgId);
+        smsc_log_info(logger, "  maxDialogs: %s%u", !tmo ? "default ":"", ss7.maxDlgId);
         return;
     }
 
-    ChargeObj::BILL_MODE str2BillMode(const char * mode)
+    void str2BillMode(const char * m_str, ChargeObj::BILL_MODE (& pbm)[2]) throw(ConfigException)
     {
-        ChargeObj::BILL_MODE bm = ChargeObj::billOFF;
-        if (!strcmp(_BILLmodes[ChargeObj::bill2CDR], mode))
-            bm = ChargeObj::bill2CDR;
-        else if (!strcmp(_BILLmodes[ChargeObj::bill2IN], mode))
-            bm = ChargeObj::bill2IN;
-        else if (strcmp(_BILLmodes[ChargeObj::billOFF], mode))
-            throw ConfigException("Invalid billMode %s", mode);
-        return bm;
+        if (!m_str || !m_str[0])
+            throw ConfigException("Invalid billMode");
+
+        pbm[0] = pbm[1] = ChargeObj::billOFF;
+        unsigned short i = 0;
+        std::string csvlist(m_str);
+        std::string::size_type pos = 0, commaPos;
+        do {
+            commaPos = csvlist.find_first_of(',', pos);
+            std::string mode = csvlist.substr(pos, commaPos);
+            if (!cutBlanks(mode).empty()) {
+                if (!strcmp(_BILLmodes[ChargeObj::bill2IN], mode.c_str()))
+                    pbm[i] = ChargeObj::bill2IN;
+                else if (!strcmp(_BILLmodes[ChargeObj::bill2CDR], mode.c_str())) {
+                    pbm[i] = ChargeObj::bill2CDR; // no need to read next value
+                    pbm[++i] = ChargeObj::bill2CDR; 
+                } else if (!strcmp(_BILLmodes[ChargeObj::billOFF], mode.c_str()))
+                    ++i; // no need to read next value
+                else
+                    throw ConfigException("Invalid billMode '%s'", mode.c_str());
+            }
+            pos = commaPos + 1;
+        } while ((++i < 2) && (commaPos != csvlist.npos));
+        //check bill2IN setting ..
+        if ((pbm[0] == ChargeObj::bill2IN) && (pbm[0] == pbm[1]))
+            throw ConfigException("Invalid billMode '%s'", m_str);
     }
 
     void readBillMode(ChargeObj::MSG_TYPE msg_type, const char * mode)
             throw(ConfigException)
     {
         if (bill.billMode.isAssigned(msg_type))
-            throw ConfigException("Multiple settings for %s", _MSGtypes[msg_type]);
+            throw ConfigException("Multiple settings for '%s'", _MSGtypes[msg_type]);
 
-        ChargeObj::BILL_MODE bm = str2BillMode(mode);
-        bill.billMode.assign(msg_type, bm);
-        smsc_log_info(logger, "  %s -> %s", bill.msgTypeStr(msg_type), bill.billModeStr(bm));
+        ChargeObj::BILL_MODE    pbm[2];
+        str2BillMode(mode, pbm);
+        bill.billMode.assign(msg_type, pbm[0], pbm[1]);
+        smsc_log_info(logger, "  %s -> %s, %s", bill.msgTypeStr(msg_type),
+            bill.billModeStr(pbm[0]), bill.billModeStr(pbm[1]));
     }
 
     //returns default policy name
@@ -419,14 +466,7 @@ protected:
                     readBillMode(ChargeObj::msgUSSD, cstr);
                 else if (!strcmp(_MSGtypes[ChargeObj::msgXSMS], sit->c_str()))
                     readBillMode(ChargeObj::msgXSMS, cstr);
-                else if (!strcmp("badCfgIN", sit->c_str())) {
-                    ChargeObj::BILL_MODE bm = str2BillMode(cstr);
-                    if (bm != ChargeObj::bill2IN) {
-                        bill.billMode.setBadCfgINMode(bm);
-                        smsc_log_info(logger, "  badCfgIN -> %s", cstr);
-                    } else
-                        throw ConfigException("Invalid billMode %s for 'badCfgIN'", cstr);
-                } else
+                else
                     throw ConfigException("Illegal messageType %s", sit->c_str());
             }
         }

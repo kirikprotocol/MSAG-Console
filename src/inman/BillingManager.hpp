@@ -27,32 +27,41 @@ extern const char * const _CDRmodes[];
 extern const char * const _BILLmodes[];
 extern const char * const _MSGtypes[];
 
+//Billing modes priority setting: 
+// primary billing mode and secondary, that is used in case
+// of failure while processing first one
+typedef std::pair<ChargeObj::BILL_MODE, ChargeObj::BILL_MODE> BModesPrio;
+
 class BillModes {
 protected:
-    typedef std::map<ChargeObj::MSG_TYPE, ChargeObj::BILL_MODE> BModesMAP;
+    typedef std::map<ChargeObj::MSG_TYPE, BModesPrio> BModesMAP;
     BModesMAP   bmMap;
-    ChargeObj::BILL_MODE    bmBadCfgIN; //default billing mode in case
-                                               //of misconfigured IN detected
+    BModesMAP::const_iterator  dflt;
 public:
-    BillModes() : bmBadCfgIN(ChargeObj::billOFF)
-    { }
+    BillModes()
+    {
+        std::pair<BModesMAP::iterator, bool> res =
+            bmMap.insert(BModesMAP::value_type(ChargeObj::msgUnknown,
+                 BModesPrio(ChargeObj::billOFF, ChargeObj::billOFF)));
+        dflt = res.first;
+    }
+
     ~BillModes()
     { }
 
-    inline void setBadCfgINMode(ChargeObj::BILL_MODE b_mode) { bmBadCfgIN = b_mode; }
-
-    inline ChargeObj::BILL_MODE  modeForBadCfgIN(void) const { return bmBadCfgIN; }
-
-    inline void assign(ChargeObj::MSG_TYPE msg_type, ChargeObj::BILL_MODE b_mode)
+    inline bool assign(ChargeObj::MSG_TYPE msg_type, ChargeObj::BILL_MODE mode_1st,
+                        ChargeObj::BILL_MODE mode_2nd = ChargeObj::billOFF)
     {
-        bmMap.insert(BModesMAP::value_type(msg_type, b_mode));
+        std::pair<BModesMAP::iterator, bool> res =
+        bmMap.insert(BModesMAP::value_type(msg_type, BModesPrio(mode_1st, mode_2nd)));
+        return res.second;
     }
 
     bool allOFF(void) const
     {
         BModesMAP::const_iterator it = bmMap.begin();
         for (; it != bmMap.end(); ++it) {
-            if (it->second != ChargeObj::billOFF)
+            if ((it->second).first != ChargeObj::billOFF)
                 return false;
         }
         return true;
@@ -62,7 +71,7 @@ public:
     {
         BModesMAP::const_iterator it = bmMap.begin();
         for (; it != bmMap.end(); ++it) {
-            if (it->second == ChargeObj::bill2IN)
+            if ((it->second).first == ChargeObj::bill2IN)
                 return true;
         }
         return false;
@@ -74,10 +83,10 @@ public:
         return (it == bmMap.end()) ? false : true;
     }
 
-    ChargeObj::BILL_MODE modeFor(ChargeObj::MSG_TYPE msg_type)
+    const BModesPrio * modeFor(ChargeObj::MSG_TYPE msg_type) const
     {
         BModesMAP::const_iterator it = bmMap.find(msg_type);
-        return (it == bmMap.end()) ? ChargeObj::billOFF : it->second;
+        return (it == bmMap.end()) ? &(dflt->second) : &(it->second);
     }
 };
 
