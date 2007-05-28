@@ -300,11 +300,8 @@ void SessionManagerImpl::deleteSession(SessionPtr& session)
     CSessionSetIterator* itPtr = SessionExpireHash.GetPtr(sessionKey);
     if(itPtr)
     {
-        smsc_log_debug(logger,"SessionManager: delete session USR='%d', Address='%s' InUse: %d, itPtr=%x, *itPtr=%x",
-                       sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, *itPtr);
-
-        SessionExpireHash.Delete(sessionKey);
         SessionExpirePool.erase(*itPtr);
+        SessionExpireHash.Delete(sessionKey);
     }
     store.deleteSession(sessionKey);
 
@@ -317,52 +314,25 @@ void SessionManagerImpl::reorderExpireQueue(Session* session)
     const CSessionKey& sessionKey = session->getSessionKey();
     CSessionSetIterator* itPtr = SessionExpireHash.GetPtr(sessionKey);
 
-    smsc_log_error(logger,"SessionManager: session start reorder USR='%d', Address='%s' InUse: %d, inpool: %x",
-          sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr);
-
     if(itPtr)
     {
-        smsc_log_error(logger,"SessionManager: session before deletion USR='%d', Address='%s' InUse: %d, inpool: %x, %x, **=%x",
-              sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, *itPtr, *(*itPtr));
-
         CSessionAccessData* ad = *(*itPtr);
 
-        SessionExpireHash.Delete(sessionKey);
         SessionExpirePool.erase(*itPtr);
-
-        smsc_log_error(logger,"SessionManager: session after deletion USR='%d', Address='%s' InUse: %d, inpool: %x, %x, AD: %x",
-              sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, *itPtr, ad);
+        SessionExpireHash.Delete(sessionKey);
 
         if(session->hasPending())
         {
-            smsc_log_error(logger,"SessionManager: session before reinsert USR='%d', Address='%s' InUse: %d, inpool: %x, %x, AD: %x",
-                  sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, *itPtr, ad);
-
             ad->nextWakeTime = session->getWakeUpTime();
             SessionExpireHash.Insert(sessionKey, SessionExpirePool.insert(ad));
-
-            smsc_log_error(logger,"SessionManager: session after reinsert USR='%d', Address='%s' InUse: %d, inpool: %x, %x, AD: %x",
-                  sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, *itPtr, ad);
-
         }
         else
-        {
-            smsc_log_error(logger,"SessionManager: session delete from queue USR='%d', Address='%s' InUse: %d, inpool: %x, %x, AD: %x",
-                  sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, *itPtr, ad);
-
             delete ad;
-        }
     }
     else if(session->hasPending())
     {
         CSessionAccessData* ad = new CSessionAccessData(session->getWakeUpTime(), sessionKey);
-        smsc_log_error(logger,"SessionManager: session before insert into queue USR='%d', Address='%s' InUse: %d, inpool: %x, AD: %x",
-              sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, ad);
-
         SessionExpireHash.Insert(sessionKey, SessionExpirePool.insert(ad));
-
-        smsc_log_error(logger,"SessionManager: session after insert into queue USR='%d', Address='%s' InUse: %d, inpool: %x, AD: %x",
-              sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), itPtr, ad);
     }
 }
 
@@ -395,8 +365,8 @@ int SessionManagerImpl::processExpire()
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str(),
                                session->hasPending(),session->hasOperations());
 
-                    session->expirePendingOperation();
-                    reorderExpireQueue(session.Get());
+                    if(session->expirePendingOperation())
+                        reorderExpireQueue(session.Get());
                 }
                 if(!session->hasOperations())
                     deleteSession(session);

@@ -359,7 +359,7 @@ namespace scag { namespace sessions {
         void closeCurrentOperation();
 
         void addPendingOperation(PendingOperation pendingOperation);
-        void expirePendingOperation();
+        bool expirePendingOperation();
 
         void abort();
         Operation * GetCurrentOperation() const;

@@ -558,8 +558,9 @@ bool Session::hasPending()
     return (PendingOperationList.size() > 0);
 }
 
-void Session::expirePendingOperation()
+bool Session::expirePendingOperation()
 {
+    bool reorder = false;
     if (PendingOperationList.size() > 0) 
     {
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
@@ -571,9 +572,14 @@ void Session::expirePendingOperation()
             smsc_log_debug(logger,"Session: pending operation has expiried (billId = %d, type=%d, ab=%s)",it->billID, it->type, m_SessionKey.abonentAddr.toString().c_str());
             it++;
         }
-        PendingOperationList.erase(PendingOperationList.begin(), it);
+        if(it != PendingOperationList.begin())
+        {
+            PendingOperationList.erase(PendingOperationList.begin(), it);
+            reorder= true;
+        }
         bChanged = true;
     }
+    return reorder;
 }
 
 
