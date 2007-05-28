@@ -478,7 +478,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       }
       if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
         smsc_log_warn(log,"SubmitResp: Original submit for submit response not found. sid='%s',seq='%d'",
-                      src->getSystemId(),cmd->get_dialogId());
+                      src ? src->getSystemId() : "NULL",cmd->get_dialogId());
         registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
         return;
       }
@@ -866,7 +866,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       }
       if(!bGotFromRegistry) {
         smsc_log_warn(log,"DeliveryResp: Original delivery for delivery response not found. sid='%s',seq='%d'",
-              src->getSystemId(),cmd->get_dialogId());
+              src ? src->getSystemId() : "NULL", cmd->get_dialogId());
+
         registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
         return;
       }
@@ -1186,7 +1187,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
         try { srcUid = src->getUid(); }
         catch (std::exception& exc) {
           smsc_log_warn(log, "DataSmResp: Src entity disconnected. sid='%s', seq='%d'",
-                        src->getSystemId(), cmd->get_dialogId());
+                        src ? src->getSystemId() : "NULL", cmd->get_dialogId());
           registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
           return;
         }
