@@ -860,15 +860,16 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
         }
       }
       bool bGotFromRegistry = reg.Get(srcUid, cmd->get_dialogId(), orgCmd);
-      if(bGotFromRegistry && orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
-        smsc_log_debug(log, "MSAG Receipt: Got responce, skipped");
+      if(orgCmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT)) {
+        smsc_log_debug(log, "MSAG Receipt: Got responce, %s (srcuid='%d', seq='%d')",
+            bGotFromRegistry ? "skipped" : "expired", srcUid, cmd->get_dialogId());
         return;
       }
       if(!bGotFromRegistry) {
         smsc_log_warn(log,"DeliveryResp: Original delivery for delivery response not found. sid='%s',seq='%d'",
               src ? src->getSystemId() : "NULL", cmd->get_dialogId());
 
-        registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
+        if(src) registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
         return;
       }
 
