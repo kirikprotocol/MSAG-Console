@@ -450,9 +450,8 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& key)
 void SessionManagerImpl::releaseSession(SessionPtr session)
 {
     if (!session.Get()) return;
-    const CSessionKey& key = session->getSessionKey();
-
     MutexGuard guard(inUseMonitor);
+    const CSessionKey& key = session->getSessionKey();
 
     SessionPtr* s = SessionHash.GetPtr(key);
     if (!s)
@@ -488,8 +487,8 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     if(!session->hasOperations())
     {
+        deleteSession(session);
         SessionHash.Delete(key);
-        deleteSession(*s);
         return;
     }
 
