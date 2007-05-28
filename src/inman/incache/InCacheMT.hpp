@@ -153,7 +153,7 @@ protected:
             ab_type = (AbonentContractInfo::ContractType)(fb & 0x7F);
             tm_queried = ReadTimeT(fh);
             gsmSCF.scfAddress.clear();
-            if (fb & 0x80) {
+            if (fb & 0x80) { //SCF parms present
                 gsmSCF.serviceKey = (uint32_t)fh.ReadNetInt32();
                 uint8_t len = fh.ReadByte();
                 rv += 5;
@@ -172,8 +172,10 @@ protected:
         uint32_t Write(File& fh) _THROWS_HFE const
         {
             uint32_t sz = 1;
-            fh.WriteByte(gsmSCF.serviceKey ? ((unsigned char)ab_type | 0x80) : 
-                         (unsigned char)ab_type);
+            unsigned char fb = (unsigned char)ab_type;
+            if (gsmSCF.scfAddress.length)
+                fb |= 0x80;
+            fh.WriteByte(fb);
             sz += WriteTimeT(fh, tm_queried);
             if (gsmSCF.scfAddress.length) {
                 fh.WriteNetInt32(gsmSCF.serviceKey);
