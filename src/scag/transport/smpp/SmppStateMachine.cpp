@@ -506,7 +506,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
           return;
 
-      smsc_log_warn(log,"SubmitResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+      smsc_log_debug(log,"SubmitResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
   }
   else
   {
@@ -892,7 +892,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
         return;
 
-      smsc_log_warn(log,"DeliveryResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+      smsc_log_debug(log,"DeliveryResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
   }
   else
   {
@@ -1226,7 +1226,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
           return;
 
-      smsc_log_warn(log,"DataSmResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+      smsc_log_debug(log,"DataSmResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
   }
   else
   {
