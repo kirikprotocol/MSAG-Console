@@ -531,6 +531,10 @@ public:
       Dump();
       throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
     }
+    if( dialogueid <= MAX_DIALOGID_POOLED ) {
+      __warn2__(smsc::logger::_mapdlg_cat,"Dialog form SS7 network has too low ID 0x%x.",dialogueid);
+      throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
+    }
     MAPSTATS_Update(MAPSTATS_NEWDIALOG_IN);
     MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
     hash_.Insert(MKDID(dialogueid,lssn),dlg);

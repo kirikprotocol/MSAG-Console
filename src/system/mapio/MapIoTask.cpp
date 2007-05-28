@@ -138,6 +138,10 @@ void MapIoTask::connect(unsigned timeout) {
       throw runtime_error("bind error");
     }
   }
+  {
+    MutexGuard mapMutexGuard(mapMutex);
+    MapDialogContainer::getInstance()->restartStatistics();
+  }
 }
 
 void MapIoTask::init(unsigned timeout)
@@ -153,10 +157,6 @@ void MapIoTask::init(unsigned timeout)
     __map_warn2__("Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
   }
   connect(timeout);
-  {
-    MutexGuard mapMutexGuard(mapMutex);
-    MapDialogContainer::getInstance()->restartStatistics();
-  }
   __map_trace__("MAP proxy init complete");
 }
 
