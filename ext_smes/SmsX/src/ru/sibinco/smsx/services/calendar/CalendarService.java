@@ -36,11 +36,6 @@ public final class CalendarService extends InternalService {
 
     try {
 
-      if (message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS)) {
-        log.info("Unknown destination address");
-        return false;
-      }
-
       final CalendarRequestParser.ParseResult parseResult = CalendarRequestParser.parseRequest(message.getMessageString());
       messagesQueue.put(new ParsedMessage(message, parseResult));
       log.info("Message added into queue.");
@@ -53,7 +48,7 @@ public final class CalendarService extends InternalService {
 //    } catch (CalendarRequestParser.WrongSendDateException e) {
 //      log.info("Send date in message is wrong. Notify abonent");
 //      sendResponse(message, Data.ESME_RX_P_APPN);
-//      sendMessage(Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.CALENDAR_SEND_DATE_IS_WRONG);
+//      sendMessage(Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.SEND_DATE_IS_WRONG);
 //      return true;
 
     } catch (Throwable e) {
@@ -93,14 +88,15 @@ public final class CalendarService extends InternalService {
     // CALENDAR ENGINE
     public static String SERVICE_ADDRESS;
     public static String ERROR_MESSAGE;
-    public static long CALENDAR_ENGINE_WORKING_INTERVAL;
-    public static String CALENDAR_SEND_DATE_IS_IN_THE_PAST;
-    public static String CALENDAR_SEND_DATE_IS_WRONG;
-    public static int CALENDAR_SEND_DATE_MAX_YEAR;
+    public static long ENGINE_WORKING_INTERVAL;
+    public static String SEND_DATE_IS_IN_THE_PAST;
+    public static String SEND_DATE_IS_WRONG;
+    public static String WRONG_DESTINATION_ADDRESS;
+    public static int SEND_DATE_MAX_YEAR;
     // SQL
-    public static String CALENDAR_ENGINE_LOAD_LIST_SQL;
-    public static String CALENDAR_ENGINE_REMOVE_MESSAGE_SQL;
-    public static String CALENDAR_ENGINE_INSERT_MESSAGE_SQL;
+    public static String ENGINE_LOAD_LIST_SQL;
+    public static String ENGINE_REMOVE_MESSAGE_SQL;
+    public static String ENGINE_INSERT_MESSAGE_SQL;
 
     // CALENDAR MESSAGES LIST
     public static int CALENDAR_MESSAGES_LIST_MAX_SIZE;
@@ -110,13 +106,14 @@ public final class CalendarService extends InternalService {
       config.setProperty("config.path", "calendar/service.properties");
       SERVICE_ADDRESS = serviceAddress;
       ERROR_MESSAGE = Utils.loadString(config, "error.message");
-      CALENDAR_ENGINE_WORKING_INTERVAL = Utils.loadInt(config, "working.interval");
-      CALENDAR_SEND_DATE_IS_IN_THE_PAST = Utils.loadString(config, "send.date.is.in.the.past");
-      CALENDAR_SEND_DATE_IS_WRONG = Utils.loadString(config, "send.date.is.wrong");
-      CALENDAR_SEND_DATE_MAX_YEAR = Utils.loadInt(config, "send.date.max.year");
-      CALENDAR_ENGINE_LOAD_LIST_SQL = Utils.loadString(config, "load.list.sql");
-      CALENDAR_ENGINE_REMOVE_MESSAGE_SQL = Utils.loadString(config, "remove.message.sql");
-      CALENDAR_ENGINE_INSERT_MESSAGE_SQL = Utils.loadString(config, "insert.message.sql");
+      ENGINE_WORKING_INTERVAL = Utils.loadInt(config, "working.interval");
+      SEND_DATE_IS_IN_THE_PAST = Utils.loadString(config, "send.date.is.in.the.past");
+      WRONG_DESTINATION_ADDRESS = Utils.loadString(config, "wrong.destination.address");
+      SEND_DATE_IS_WRONG = Utils.loadString(config, "send.date.is.wrong");
+      SEND_DATE_MAX_YEAR = Utils.loadInt(config, "send.date.max.year");
+      ENGINE_LOAD_LIST_SQL = Utils.loadString(config, "load.list.sql");
+      ENGINE_REMOVE_MESSAGE_SQL = Utils.loadString(config, "remove.message.sql");
+      ENGINE_INSERT_MESSAGE_SQL = Utils.loadString(config, "insert.message.sql");
       CALENDAR_MESSAGES_LIST_MAX_SIZE = Utils.loadInt(config, "messages.list.max.size");
       config.clear();
 

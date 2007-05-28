@@ -33,13 +33,6 @@ public final class SecretService extends InternalService{
 
     try {
       final SecretRequestParser.ParseResult res = SecretRequestParser.parseRequest(message.getMessageString());
-
-      if (( message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS) && res.getType().equals(SecretRequestParser.ParseResultType.MSG)) ||
-          (!message.getDestinationAddress().equals(Properties.SERVICE_ADDRESS) && !res.getType().equals(SecretRequestParser.ParseResultType.MSG))) {
-        log.info("Unknown message format");
-        return false;
-      }
-
       messagesQueue.put(new ParsedMessage(message, res));
       log.info("Message added into queue.");
       return true;
@@ -95,6 +88,7 @@ public final class SecretService extends InternalService{
     public static String SYSTEM_ERROR;
     public static String ABONENT_ALREADY_REGISTERED;
     public static String PASSWORD_CHANGED;
+    public static String WRONG_DESTINATION_ADDRESS;
 
     private static void init(String serviceAddress) {
       final java.util.Properties config = Utils.loadConfig("secret/service.properties");
@@ -117,7 +111,7 @@ public final class SecretService extends InternalService{
       ABONENT_ALREADY_REGISTERED= Utils.loadString(config, "abonent.already.registered");
       PASSWORD_CHANGED= Utils.loadString(config, "password.changed");
       ABONENT_INVITATION = Utils.loadString(config, "abonent.invitation");
-
+      WRONG_DESTINATION_ADDRESS = Utils.loadString(config, "wrong.destination.address"); 
       config.clear();
 
       SecretMessage.init();

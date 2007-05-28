@@ -5,6 +5,7 @@ import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.Multiplexor;
 import ru.sibinco.smsx.network.OutgoingQueue;
 import ru.sibinco.smsx.services.ServiceProcessor;
+import ru.sibinco.smsx.services.calendar.CalendarService;
 import ru.sibinco.smsx.utils.BlockingQueue;
 
 import java.sql.SQLException;
@@ -43,6 +44,13 @@ class SecretRequestProcessor extends ServiceProcessor {
       log.info("Processing message: from abonent = " + message.getSourceAddress() + ", to abonent = " + message.getDestinationAddress() + ", message = " + message.getMessageString());
 
       final SecretRequestParser.ParseResult res = parsedMessage.getParseResult();
+
+      if (message.getDestinationAddress().equals(SecretService.Properties.SERVICE_ADDRESS) && res.getType().equals(SecretRequestParser.ParseResultType.MSG)) {
+        log.error("Destination address in secret equals to secret service address: " + SecretService.Properties.SERVICE_ADDRESS + ". Sends notification");
+        sendResponse(message, Data.ESME_RX_P_APPN);
+        sendMessage(CalendarService.Properties.SERVICE_ADDRESS, message.getSourceAddress(), SecretService.Properties.WRONG_DESTINATION_ADDRESS);
+        return;
+      }
 
       if (res.getType().equals(SecretRequestParser.ParseResultType.ON)) {
         log.info("It is request to register abonent");

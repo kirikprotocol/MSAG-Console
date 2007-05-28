@@ -55,7 +55,7 @@ final class CalendarMessage extends Storable{
   public void save(Connection conn) throws SQLException {
     PreparedStatement ps = null;
     try {
-      ps = conn.prepareStatement(CalendarService.Properties.CALENDAR_ENGINE_INSERT_MESSAGE_SQL);
+      ps = conn.prepareStatement(CalendarService.Properties.ENGINE_INSERT_MESSAGE_SQL);
 
       ps.setString(1, source);
       ps.setString(2, dest);
@@ -93,7 +93,7 @@ final class CalendarMessage extends Storable{
 
     PreparedStatement ps = null;
     try {
-      ps = conn.prepareStatement(CalendarService.Properties.CALENDAR_ENGINE_REMOVE_MESSAGE_SQL);
+      ps = conn.prepareStatement(CalendarService.Properties.ENGINE_REMOVE_MESSAGE_SQL);
       ps.setInt(1, id);
 
       ps.executeUpdate();
@@ -115,7 +115,7 @@ final class CalendarMessage extends Storable{
 
     try {
       conn = ConnectionPool.getConnection();
-      ps = conn.prepareStatement(CalendarService.Properties.CALENDAR_ENGINE_LOAD_LIST_SQL);
+      ps = conn.prepareStatement(CalendarService.Properties.ENGINE_LOAD_LIST_SQL);
 
       ps.setTimestamp(1, new Timestamp(toDate.getTime()));
       ps.setInt(2, maxSize);

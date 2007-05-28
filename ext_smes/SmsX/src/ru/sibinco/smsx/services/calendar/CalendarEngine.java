@@ -43,7 +43,7 @@ final class CalendarEngine extends Service {
 
   public synchronized void iterativeWork() {
     log.info("=====================================================================================");
-    nextReloadTime.setTime(System.currentTimeMillis() + CalendarService.Properties.CALENDAR_ENGINE_WORKING_INTERVAL);
+    nextReloadTime.setTime(System.currentTimeMillis() + CalendarService.Properties.ENGINE_WORKING_INTERVAL);
     log.info("Start new time period. End time= " + nextReloadTime.toString());
 
     boolean hasDBMessages = true;

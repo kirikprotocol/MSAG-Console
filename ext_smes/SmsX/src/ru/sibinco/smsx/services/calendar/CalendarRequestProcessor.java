@@ -45,6 +45,13 @@ final class CalendarRequestProcessor extends ServiceProcessor {
       log.info("=====================================================================================");
       log.info("Processing message: from abonent = " + message.getSourceAddress() + ", to abonent = " + message.getDestinationAddress() + ", message = " + message.getMessageString());
 
+      if (message.getDestinationAddress().equals(CalendarService.Properties.SERVICE_ADDRESS)) {
+        log.error("Destination address in calendar equals to Calendar service address: " + CalendarService.Properties.SERVICE_ADDRESS + ". Sends notification.");
+        sendResponse(message, Data.ESME_RX_P_APPN);
+        sendMessage(CalendarService.Properties.SERVICE_ADDRESS, message.getSourceAddress(), CalendarService.Properties.WRONG_DESTINATION_ADDRESS);
+        return;
+      }
+
       final CalendarRequestParser.ParseResult parseResult = parsedMessage.getParseResult();
 
       final Date sendDate = (parseResult.getType() == CalendarRequestParser.AFT_REQUEST) ? parseResult.getDate() :
@@ -53,9 +60,9 @@ final class CalendarRequestProcessor extends ServiceProcessor {
       // Check send date
       String errorText = null;
       if (sendDate == null)
-        errorText = CalendarService.Properties.CALENDAR_SEND_DATE_IS_WRONG;
+        errorText = CalendarService.Properties.SEND_DATE_IS_WRONG;
       else if (sendDate.before(new Date()))
-        errorText = CalendarService.Properties.CALENDAR_SEND_DATE_IS_IN_THE_PAST;
+        errorText = CalendarService.Properties.SEND_DATE_IS_IN_THE_PAST;
 
       if (errorText != null) {
         sendResponse(message, Data.ESME_ROK);
