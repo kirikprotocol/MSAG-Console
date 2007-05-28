@@ -462,9 +462,6 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
         return;
     }
 
-    smsc_log_error(logger,"SessionManager: release session USR='%d', Address='%s'",
-           session->getUSR(), key.abonentAddr.toString().c_str());
-
     std::list<PendingOperation>::iterator itPending;
     if(session->PrePendingOperationList.size() > 0)
     {
