@@ -147,7 +147,6 @@ std::string CommandBrige::getMessageBody(SmppCommand& command)
     */
     SMS& data = getSMS(command);
 
-    smsc_log_debug(smsc::logger::Logger::getInstance("cb"), "sms:%x sm: %d mp: %d rsm: %d rmp: %d", &data, data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE), data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), data.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), data.hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
     if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
         buff = data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
     if (!len && data.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD)) 
