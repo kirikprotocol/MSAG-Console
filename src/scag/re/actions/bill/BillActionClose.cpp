@@ -50,7 +50,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
         if (!op || !op->hasBill())
         {
             const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
-            smsc_log_error(logger, p);
+            smsc_log_error(logger, "%s, addr=%s"p, context.getCommandProperty().abonentAddr.toString().c_str());
             SetBillingStatus(context, p, false);
             return false;
         }
