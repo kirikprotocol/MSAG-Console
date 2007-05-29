@@ -91,7 +91,7 @@ protected:
 
   bool running;
 
-  buf::CyclicQueue<SmppCommand> queue, lcmQueue;
+  buf::CyclicQueue<SmppCommand> queue, lcmQueue, respQueue;
   sync::EventMonitor queueMon;
   time_t lastExpireProcess;
 
@@ -739,7 +739,11 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
 
   MutexGuard mg(queueMon);
   cmd.getLongCallContext().initiator = this;  
-  queue.Push(cmd);
+  int i = cmd->get_commandId();
+  if(i == DELIVERY_RESP || i == SUBMIT_RESP || i == DATASM_RESP)
+    respQueue.Push(cmd);
+  else
+    queue.Push(cmd);
   queueMon.notify();
 }
 
@@ -796,9 +800,12 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
     cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
     return true;
   }
-  if(!running || ( queue.Count()==0 && lcmQueue.Count() == 0))return false;
+  if(!running || (queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count() == 0))
+    return false;
   if(lcmQueue.Count())
       lcmQueue.Pop(cmd);
+  else if(respQueue.Count())
+      respQueue.Pop(cmd);
   else
       queue.Pop(cmd);
   return true;
