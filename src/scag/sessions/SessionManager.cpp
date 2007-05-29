@@ -399,8 +399,6 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
 
     SessionPtr* s = SessionHash.GetPtr(key);
 
-    session->m_CanOpenSubmitOperation = false;
-
     if(!s)
     {
         session = store.getSession(key);
@@ -417,8 +415,11 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
         smsc_log_debug(logger,"SessionManager: got session USR='%d', Address='%s' (pending count=%d) InUse: %d",
             session->getUSR(), key.abonentAddr.toString().c_str(), session->PendingOperationList.size(), SessionHash.Count());
 
+        session->m_CanOpenSubmitOperation = false;
         return true;
     }
+
+    (*s)->m_CanOpenSubmitOperation = false;
 
     cmd.setSession(*s);
 
