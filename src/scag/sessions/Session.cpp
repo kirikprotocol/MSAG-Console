@@ -308,8 +308,7 @@ void Session::SerializeProperty(SessionBuffer& buff)
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
     {
         buff << key;
-        std::string str = value->getStr();
-        buff << str.c_str();
+        buff << value->getStr().c_str();
     }
 }
 
