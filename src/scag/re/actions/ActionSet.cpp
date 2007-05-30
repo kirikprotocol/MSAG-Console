@@ -19,7 +19,7 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 
 bool ActionSet::run(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'set' addr=%s", context.getCommandProperty().abonentAddr.toString().c_str());
+    smsc_log_debug(logger,"Run Action 'set'");
     Property * property = context.getProperty(m_strVariable);
 
     if (!property) 

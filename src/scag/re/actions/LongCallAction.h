@@ -21,11 +21,11 @@ protected:
         if (!longCallContext.ActionStack.empty()) 
         {
             startIndex = longCallContext.ActionStack.top().actionIndex;
-            smsc_log_debug(logger, "Skeep %d actions. addr=%s", startIndex, context.getCommandProperty().abonentAddr.toString().c_str());
+            smsc_log_debug(logger, "Skeep %d actions.", startIndex);
 
             if(startIndex >= actions.size())
             {
-                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound startIndex=%d, size=%d, addr=%s", startIndex, actions.size(), context.getCommandProperty().abonentAddr.toString().c_str());
+                smsc_log_error(logger, "Cannot continue running actions. Details: action index out of bound startIndex=%d, size=%d", startIndex, actions.size());
                 context.clearLongCallContext();
                 return true;
             }
@@ -37,7 +37,7 @@ protected:
             {
                 if(context.getRuleStatus().status == STATUS_LONG_CALL) 
                 {
-                    smsc_log_debug(logger, "Save to stack %d action number. thenSection=%d. addr=%s", i, context.isTrueCondition, context.getCommandProperty().abonentAddr.toString().c_str());
+                    smsc_log_debug(logger, "Save to stack %d action number. thenSection=%d", i, context.isTrueCondition);
                     ActionStackValue sv(i, context.isTrueCondition);
                     longCallContext.ActionStack.push(sv);
                 }

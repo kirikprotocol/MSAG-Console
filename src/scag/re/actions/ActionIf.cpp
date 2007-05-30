@@ -143,7 +143,7 @@ bool ActionIf::CompareResultToBool(IfOperations op,int result)
 
 bool ActionIf::run(ActionContext& context)
 {
-    smsc_log_debug(logger,"Run Action 'if'... addr=%s", context.getCommandProperty().abonentAddr.toString().c_str());
+    smsc_log_debug(logger,"Run Action 'if'...");
 
     LongCallContext &longCallContext = context.getSCAGCommand().getLongCallContext();
 
@@ -158,7 +158,7 @@ bool ActionIf::run(ActionContext& context)
 
         if (!m_hasOP) 
         {
-            smsc_log_debug(logger,"Testing %s = '%lld' for bool, addr=%s", singleparam.strOperand1.c_str(), property->getInt(),context.getCommandProperty().abonentAddr.toString().c_str());
+            smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str());
 
             context.isTrueCondition = property->getBool();
         } 
@@ -167,7 +167,7 @@ bool ActionIf::run(ActionContext& context)
             //std::string str = property->getStr();
             //smsc_log_debug(logger,"Testing %s='%s' vs %s",singleparam.strOperand1.c_str(),FormatWStr(str).c_str(),ConvertWStrToStr(singleparam.wstrOperand2).c_str());
 
-            smsc_log_debug(logger,"Testing %s = '%s' vs '%s', addr=%s", singleparam.strOperand1.c_str(), property->getStr().c_str(),singleparam.strOperand2.c_str(), context.getCommandProperty().abonentAddr.toString().c_str());
+            smsc_log_debug(logger,"Testing %s = '%s' vs '%s'", singleparam.strOperand1.c_str(), property->getStr().c_str(),singleparam.strOperand2.c_str());
 
             int result = 0;
 
@@ -209,7 +209,7 @@ bool ActionIf::run(ActionContext& context)
     else
         context.isTrueCondition = longCallContext.ActionStack.top().thenSection;
 
-    smsc_log_debug(logger,"Action 'if': run '%s' section, addr=%s", context.isTrueCondition ? "then" : "else", context.getCommandProperty().abonentAddr.toString().c_str());
+    smsc_log_debug(logger,"Action 'if': run '%s' section", context.isTrueCondition ? "then" : "else");
     return RunActionVector(context, longCallContext, context.isTrueCondition ? ThenActions : ElseActions, logger);
 }
 
