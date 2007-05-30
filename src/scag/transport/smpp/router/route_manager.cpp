@@ -21,10 +21,8 @@
 #include <memory>
 #include <algorithm>
 #include <string>
-#include <sstream>
 #include <map>
 
-#define __synchronized__
 
 extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
 
@@ -192,19 +190,29 @@ int compare_patterns(const void* a1,const void* a2)
 // RouteAdministrator implementaion
 void RouteManager::addRoute(const RouteInfo& routeInfo)
 {
-__synchronized__
   auto_ptr<RouteRecord> r(new RouteRecord);
   r->info = routeInfo;
   r->src_def = calcDefLengthAndCheck(&r->info.source);
   r->dest_def = calcDefLengthAndCheck(&r->info.dest);
-  r->next = new_first_record;
-  r->proxyIdx = r->srcProxyIdx = 0;
-  r->alternate_pair = 0;
-  if ( strlen(r->info.smeSystemId) != 0 )
+  r->proxyIdx = 0;
+  if ( r->info.smeSystemId.length() != 0 )
+  {
     r->proxyIdx = r->info.smeSystemId;
-  if ( strlen(r->info.srcSmeSystemId)!=0)
-    r->srcProxyIdx = r->info.srcSmeSystemId;
-  new_first_record = r.release();
+  }
+  if(r->info.srcSmeSystemId.length()==0)
+  {
+    r->next = new_first_record;
+    new_first_record = r.release();
+  }else
+  {
+    SmeRoute* ptr=smeRoutes.GetPtr(r->info.srcSmeSystemId);
+    if(!ptr)
+    {
+      ptr=smeRoutes.SetItem(r->info.srcSmeSystemId,SmeRoute());
+    }
+    r->next=ptr->new_first_record;
+    ptr->new_first_record=r.release();
+  }
 }
 
 static
@@ -218,12 +226,14 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
   xcmp = compare_addr_addr_src(r,node->record,strong);
   if (trace_)
   {
-    ostringstream ost;
-    ost << (!xcmp?(strong?"strong":"weak  "):"none  ")
-      << " matching by source address with tuple {"
-      << AddrToString(node->record->info.source) << "} -> "
-      << AddrToString(node->record->info.dest);
-    trace_->push_back(ost.str());
+    std::string res;
+    res.reserve(128);
+    res=!xcmp?(strong?"strong":"weak  "):"none  ";
+    res+=" matching by dest address with tuple {";
+    res+=node->record->info.source.toString();
+    res+="} -> {";
+    res+=node->record->info.dest.toString();
+    res+='}';
   }
   if ( xcmp == 0 )
   {
@@ -271,12 +281,15 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
   xcmp = compare_addr_addr_dest(r,node->record,strong);
   if (trace_)
   {
-    ostringstream ost;
-    ost << (!xcmp?(strong?"strong":"weak  "):"none  ")
-      << " matching by dest address with tuple "
-      << AddrToString(node->record->info.source) << " -> {"
-      << AddrToString(node->record->info.dest) << "}";
-    trace_->push_back(ost.str());
+    std::string res;
+    res.reserve(128);
+    res=!xcmp?(strong?"strong":"weak  "):"none  ";
+    res+=" matching by dest address with tuple {";
+    res+=node->record->info.source.toString();
+    res+="} -> {";
+    res+=node->record->info.dest.toString();
+    res+='}';
+    trace_->push_back(res);
   }
   if ( xcmp == 0 )
   {
@@ -366,21 +379,12 @@ RouteRecord* findInTree(RouteTreeNode* node,
   return rec;
 }
 
-inline void print_step(int step)
-{
-#ifndef DISABLE_TRACING
-  //for(int st=0; st<step;++st) fprintf(stderr,"  ");
-#endif
-}
-
 static
 void dump(RouteSrcTreeNode* node,int step)
 {
-  print_step(step);
   print(node->record,"SRC_NODE rec: ");
   for ( unsigned i=0; i < node->child.size(); ++i )
   {
-    print_step(step);
     dump(node->child[i],step+1);
   }
 }
@@ -388,16 +392,13 @@ void dump(RouteSrcTreeNode* node,int step)
 static
 void dump(RouteTreeNode* node,int step)
 {
-  print_step(step);
   print(node->record,"DEST_NODE rec: ");
   for ( unsigned i=0; i < node->sources.size(); ++i )
   {
-    print_step(step);
     dump(node->sources[i],step+1);
   }
   for ( unsigned i=0; i < node->child.size(); ++i )
   {
-    print_step(step);
     dump(node->child[i],step+1);
   }
 }
@@ -414,43 +415,43 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
   {
     if ( strong )
     {
-      bool conflicted = false;
-      for ( RouteRecord* r0 = node->record; r0 != 0 ; r0 = r0->alternate_pair ) {
-        if ( r0->srcProxyIdx == rec->srcProxyIdx ) {
-          //__warning2__("duplicate route %s, is not added",rec->info.routeId.c_str());
-          dup++;
-          if ( trace_ ) {
-            {
-              ostringstream ost;
-              ost << "duplicated route '"
-                << r0->info.routeId << "':\n"
-                << "    " << AddrToString(r0->info.source) << "(" << r0->info.srcSmeSystemId << ")"
-                << " [" << r0->info.srcSubj << "] "
-                << " ->\n"
-                << "    " << AddrToString(r0->info.dest) << "(" << r0->info.smeSystemId << ")"
-                << " [" << r0->info.dstSubj << "]";
-              trace_->push_back(ost.str());
-            }
-            {
-              ostringstream ost;
-              ost << "  exists as '"
-                << rec->info.routeId << "':\n"
-                << "    " <<AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ")"
-                << " [" << rec->info.srcSubj << "] "
-                << " ->\n"
-                << "    " <<AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")"
-                << "[" << rec->info.dstSubj << "]";
-              trace_->push_back(ost.str());
-            }
-          }
-          conflicted = true;
-        }
-      }
-      if ( !conflicted ) {
-        __trace__("*** add alternate src proxy ***");
-        rec->alternate_pair = node->record;
-        node->record = rec;
-        return 0;
+      dup++;
+      if ( trace_ )
+      {
+        std::string res;
+        res.reserve(128);
+        res="duplicated route '";
+        res+=node->record->info.routeId.c_str();
+        res+="':\n    ";
+        res+=node->record->info.source.toString();
+        res+='(';
+        res+=node->record->info.srcSmeSystemId.c_str();
+        res+=") [";
+        res+=node->record->info.srcSubj.c_str();
+        res+="] ->\n    ";
+        res+=node->record->info.dest.toString();
+        res+='(';
+        res+=node->record->info.smeSystemId.c_str();
+        res+=") [";
+        res+=node->record->info.dstSubj.c_str();
+        res+=']';
+        trace_->push_back(res);
+        res="  exists as '";
+        res+=rec->info.routeId.c_str();
+        res+="':\n    ";
+        res+=rec->info.source.toString();
+        res+='(';
+        res+=rec->info.srcSmeSystemId.c_str();
+        res+=") [";
+        res+=rec->info.srcSubj.c_str();
+        res+="]  ->\n    ";
+        res+=rec->info.dest.toString();
+        res+='(';
+        res+=rec->info.smeSystemId.c_str();
+        res+=") [";
+        res+=rec->info.dstSubj.c_str();
+        res+=']';
+        trace_->push_back(res);
       }
     }
     else //  weak
@@ -575,27 +576,45 @@ int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_
 void RouteManager::commit(bool traceit)
 {
   __trace__("commit!");
-  int count = 0;
-  RouteRecord* r = new_first_record;
-  for ( ; r != 0; r = r->next ) { ++count; }
+  RouteRecord** nfr_ptr=&new_first_record;
+  RouteRecord** fr_ptr=&first_record;
+  RouteTreeNode* root_ptr=&root;
+  std::vector<RouteRecord*> table;
+  bool main=true;
 
-  if ( !count ) return;
-  auto_ptr<RouteRecord*> table(new RouteRecord*[count]);
-  r = new_first_record;
-  for ( int i=0; i < count; ++i )
-  {
-    __require__(r != 0);
-    table.get()[i] = r;
-    r = r->next;
-  }
-  __qsort__(table.get(),count,sizeof(RouteRecord*),compare_patterns);
+  char* key;
+  SmeRoute* smeRoute;
+  smeRoutes.First();
+  do{
+    if(!main)
+    {
+      nfr_ptr=&smeRoute->new_first_record;
+      fr_ptr=&smeRoute->first_record;
+      root_ptr=&smeRoute->root;
+    }else
+    {
+      main=false;
+    }
 
-  {__synchronized__
-    root.clean();
+    int count = 0;
+    RouteRecord* r = *nfr_ptr;
+    for ( ; r != 0; r = r->next ) { ++count; }
+    if ( !count ) continue;
+    table.clear();
+    table.reserve(count);
+    r = *nfr_ptr;
+    for ( int i=0; i < count; ++i )
+    {
+      __require__(r != 0);
+      table.push_back(r);
+      r = r->next;
+    }
+    __qsort__(&table[0],count,sizeof(RouteRecord*),compare_patterns);
+    root_ptr->clean();
 
     for ( int i=0; i < count; ++i )
     {
-      print(table.get()[i],"@@@");
+      print(table[i],"@@@");
     }
 
     typedef std::map<std::string,int> DupsMap;
@@ -603,19 +622,19 @@ void RouteManager::commit(bool traceit)
 
     for ( int i=0; i < count; ++i )
     {
-      if ( table.get()[i] != 0 )
+      if ( table[i] != 0 )
       {
         int dup=0;
-        addRouteIntoTree(&root,table.get()[i],traceit?&trace_:0,dup);
+        addRouteIntoTree(root_ptr,table[i],traceit?&trace_:0,dup);
         if(dup)
         {
-          DupsMap::iterator it=dups.find(table.get()[i]->info.routeId.str);
+          DupsMap::iterator it=dups.find(table[i]->info.routeId.str);
           if(it!=dups.end())
           {
             it->second+=dup;
           }else
           {
-            dups.insert(DupsMap::value_type(table.get()[i]->info.routeId.str,dup));
+            dups.insert(DupsMap::value_type(table[i]->info.routeId.str,dup));
           }
         }
       }
@@ -624,18 +643,13 @@ void RouteManager::commit(bool traceit)
     {
       __warning2__("%d duplicates found in route %s",it->second,it->first.c_str());
     }
-    while ( first_record )
-    {
-      RouteRecord* rec = first_record;
-      first_record = first_record->next;
-      delete rec;
-    }
-    first_record = new_first_record;
-    new_first_record = 0;
-  }
+    clear_list(*fr_ptr);
+    *fr_ptr= *nfr_ptr;
+    *nfr_ptr= 0;
 #ifndef DISABLE_TRACING
-  dump(&root,0);
+    dump(&root,0);
 #endif
+  }while(smeRoutes.Next(key,smeRoute));
   //delete table;
 }
 
@@ -652,70 +666,50 @@ void RouteManager::cancel()
 // RoutingTable implementation
 bool RouteManager::lookup(SmeIndex srcidx, const Address& source, const Address& dest, RouteInfo& info)
 {
-__synchronized__
-
   if ( trace_enabled_ )
+  {
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
       (srcidx?srcidx:string("default"))
       +") -> "+AddrToString(dest));
+  }
 
-  RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
-  if ( !rec ) {
+  RouteRecord* rec=0;
+  if(srcidx)
+  {
+    SmeRoute* ptr=smeRoutes.GetPtr(srcidx);
+    if(ptr)
+    {
+      rec=findInTree(&ptr->root,&source,&dest,trace_enabled_?&trace_:0);
+    }
+  }
+
+  if(!rec)
+  {
+    rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
+  }
+  if ( !rec )
+  {
     if(trace_enabled_)
     {
       trace_.push_back("route not found");
     }
     return false;
   }
-  // изменение от 4 июля 2003, ищем альтернативный маршрут
-  RouteRecord* rec0 = 0;
 
-  if ( trace_enabled_ ) {
-    string s("lookup for alternative route with src proxy: '");
-    if ( srcidx ) {
-      s += srcidx;
-    }else{
-      s += "default";
-    }
-    s += "'";
-    trace_.push_back(s);
-  }
-
-  for ( ; rec != 0 ; rec = rec->alternate_pair ) {
-    if ( trace_enabled_ ) {
-      ostringstream ost;
-      ost << "check alternative route with src proxy: '" <<
-        (rec->srcProxyIdx?rec->info.srcSmeSystemId.str:string("default")) << "'";
-      trace_.push_back(ost.str());
-    }
-    if ( srcidx != 0 && rec->srcProxyIdx!=0 && !strcmp(rec->srcProxyIdx,srcidx) ) {
-      if ( trace_enabled_ ) {
-        ostringstream ost;
-        ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId << "'";
-        trace_.push_back(ost.str());
-      }
-      break;
-    }
-    if ( rec->srcProxyIdx == 0 ) {
-      if ( trace_enabled_ )
-        trace_.push_back("found default src proxy for route");
-      rec0 = rec;
-    }
-  }
-
-  if ( !rec ) rec = rec0;
-  if ( !rec ) {
-    if ( trace_enabled_ )
-      trace_.push_back("src proxy matching not found");
-    return false; // не найден
-  }
-
-  if ( trace_enabled_ ) {
-    ostringstream ost;
-    ost << "route found, "
-      << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ") -> "
-      << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
-    trace_.push_back(ost.str());
+  if ( trace_enabled_ )
+  {
+    std::string res;
+    res.reserve(128);
+    res="route found, ";
+    res+=rec->info.source.toString();
+    res+='(';
+    res+=rec->info.srcSmeSystemId.c_str();
+    res+=") -> ";
+    res+=rec->info.dest.toString();
+    res+='(';
+    res+=rec->info.smeSystemId.c_str();
+    res+=')';
+    trace_.push_back(res);
   }
   info = rec->info;
   return rec->info.enabled;
@@ -736,7 +730,10 @@ void RouteManager::getTrace(vector<string>& tracelist)
 void RouteManager::enableTrace(bool val)
 {
   trace_enabled_ = val;
-  if ( !trace_enabled_ ) vector<string>().swap(trace_);
+  if ( !trace_enabled_ )
+  {
+    vector<string>().swap(trace_);
+  }
 }
 
 

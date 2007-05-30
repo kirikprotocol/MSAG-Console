@@ -7,6 +7,7 @@
 
 #include "route_types.h"
 #include "sms/sms.h"
+#include "core/buffers/Hash.hpp"
 
 #include <vector>
 
@@ -23,8 +24,6 @@ struct RouteRecord
 {
   RouteInfo info; // has address
   SmeIndex proxyIdx;
-  SmeIndex srcProxyIdx;
-  RouteRecord* alternate_pair;
   uint8_t src_def;
   uint8_t dest_def;
   RouteRecord* next;
@@ -65,28 +64,45 @@ struct RouteTreeNode
 
 class RouteManager
 {
+  struct SmeRoute
+  {
+    SmeRoute():first_record(0),new_first_record(0){}
+    RouteRecord* first_record;
+    RouteRecord* new_first_record;
+    RouteTreeNode  root;
+  };
+  smsc::core::buffers::Hash<SmeRoute> smeRoutes;
   RouteRecord* first_record;
   RouteRecord* new_first_record;
   RouteTreeNode  root;
   vector<string> trace_;
   bool trace_enabled_;
+
+  void clear_list(RouteRecord*& lst)
+  {
+    while ( lst )
+    {
+      RouteRecord* r = lst;
+      lst = lst->next;
+      delete r;
+    }
+  }
+
 public :
   RouteManager() : first_record(0),new_first_record(0),trace_enabled_(false)
   {}
 
   virtual ~RouteManager()
   {
-    while ( first_record )
+    clear_list(first_record);
+    clear_list(new_first_record);
+    char* k;
+    SmeRoute* v;
+    smeRoutes.First();
+    while(smeRoutes.Next(k,v))
     {
-      RouteRecord* r = first_record;
-      first_record = first_record->next;
-      delete r;
-    }
-    while ( new_first_record )
-    {
-      RouteRecord* r = new_first_record;
-      new_first_record = new_first_record->next;
-      delete r;
+      clear_list(v->first_record);
+      clear_list(v->new_first_record);
     }
   }
 
