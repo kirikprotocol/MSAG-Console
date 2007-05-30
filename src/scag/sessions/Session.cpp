@@ -217,19 +217,14 @@ Session::~Session()
 
 void Session::DeserializeProperty(SessionBuffer& buff)
 {
-    std::string name, value;
-
     uint32_t Count;
     buff >> Count;
 
     for (int i=0; i < Count; i++) 
     {
-        buff >> name;
-        buff >> value;
-
         AdapterProperty * property = new AdapterProperty(this);
         buff >> *property;
-        PropertyHash.Insert(name.c_str(),property);
+        PropertyHash.Insert(property->GetName().c_str(), property);
     }
 }
 
