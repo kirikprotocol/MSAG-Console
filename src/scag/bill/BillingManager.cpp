@@ -527,7 +527,8 @@ void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, 
 {
     char buff[20];
     buff[19] = 0;
-    op.setDestinationSubscriberNumber(std::string(lltostr(tariffRec.ServiceNumber, buff + 19)));
+    std::string str(lltostr(tariffRec.ServiceNumber, buff + 19));
+    op.setDestinationSubscriberNumber(str);
     op.setCallingPartyNumber(billingInfoStruct.AbonentNumber);
     op.setServiceId(billingInfoStruct.serviceId);
     op.setUserMsgRef(billingInfoStruct.msgRef);
