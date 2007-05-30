@@ -250,10 +250,10 @@ namespace stat {
         virtual void registerEvent(const HttpStatEvent& se);
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
-        virtual void registerSaccEvent(const scag::stat::SaccTrafficInfoEvent& ev);
-        virtual void registerSaccEvent(const scag::stat::SaccBillingInfoEvent& ev);
-        virtual void registerSaccEvent(const scag::stat::SaccAlarmEvent& ev);
-        virtual void registerSaccEvent(const scag::stat::SaccAlarmMessageEvent& ev);
+        virtual void registerSaccEvent(scag::stat::SaccTrafficInfoEvent* ev);
+        virtual void registerSaccEvent(scag::stat::SaccBillingInfoEvent* ev);
+        virtual void registerSaccEvent(scag::stat::SaccAlarmEvent* ev);
+        virtual void registerSaccEvent(scag::stat::SaccAlarmMessageEvent* ev);
 
         virtual void getSmppPerfData(uint64_t *cnt);
         virtual void getHttpPerfData(uint64_t *cnt);

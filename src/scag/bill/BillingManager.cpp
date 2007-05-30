@@ -109,8 +109,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
 
     void ProcessResult(const char* eventName, BillingTransactionEvent billingTransactionEvent, BillTransaction * billTransaction);
 
-    void modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev);
-    void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent& ev);
+    void makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent* ev);
 
     uint32_t genBillId();
     BillTransaction* getBillTransaction(uint32_t billId);
@@ -268,8 +267,9 @@ void BillingManagerImpl::ProcessResult(const char *eventName, BillingTransaction
         default:
             i = COMMAND_SUCCESSFULL;
     }
-    modifyBillEvent(event, i, b->billEvent);
-    Statistics::Instance().registerSaccEvent(b->billEvent);
+    SaccBillingInfoEvent* billEvent = new SaccBillingInfoEvent();
+    makeBillEvent(event, i, b->tariffRec, b->billingInfoStruct, billEvent);
+    Statistics::Instance().registerSaccEvent(billEvent);
     logEvent(eventName, i == COMMAND_SUCCESSFULL, b->billingInfoStruct, b->billId);
     if(i != COMMAND_SUCCESSFULL)
         throw SCAGException("Transaction billId=%d %s", b->billId, p);
@@ -338,8 +338,9 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
         case BILL_ROLLBACK: event = TRANSACTION_CALL_ROLLBACK; eventName = "rollback"; break;
     }
 
-    modifyBillEvent(event, i, bt->billEvent);
-    Statistics::Instance().registerSaccEvent(bt->billEvent);
+    SaccBillingInfoEvent* billEvent = new SaccBillingInfoEvent();
+    makeBillEvent(event, i, bt->tariffRec, bt->billingInfoStruct, billEvent);
+    Statistics::Instance().registerSaccEvent(billEvent);
     logEvent(eventName, i == COMMAND_SUCCESSFULL, bt->billingInfoStruct, bt->billId);
     if(i != COMMAND_SUCCESSFULL)
     {
@@ -398,7 +399,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
     p->tariffRec = tariffRec;
     p->billingInfoStruct = billingInfoStruct;
     p->billId = billId;
-    makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, p->billEvent);
+//    makeBillEvent(TRANSACTION_OPEN, COMMAND_SUCCESSFULL, tariffRec, billingInfoStruct, p->billEvent);
 
     #ifdef MSAG_INMAN_BILL
     if(tariffRec.billType == scag::bill::infrastruct::INMAN || tariffRec.billType == scag::bill::infrastruct::INMANSYNC)
@@ -496,50 +497,37 @@ void BillingManagerImpl::Info(int billId, BillingInfoStruct& bis, TariffRec& tar
     tariffRec = (*p)->tariffRec;
 }
 
-void BillingManagerImpl::modifyBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, SaccBillingInfoEvent& ev)
+void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent* ev)
 {
-    ev.Header.cCommandId = billCommand;
-    ev.Header.sCommandStatus = commandStatus;
+    ev->Header.cCommandId = billCommand;
+    ev->Header.cProtocolId = billingInfo.protocol;
+    ev->Header.iServiceId = billingInfo.serviceId;
+    ev->Header.iServiceProviderId = billingInfo.providerId;
 
     timeval tv;
     gettimeofday(&tv,0);
 
-    ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
-}
+    ev->Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
+    ev->Header.pAbonentNumber = billingInfo.AbonentNumber;
+    ev->Header.sCommandStatus = commandStatus;
+    ev->Header.iOperatorId = billingInfo.operatorId;
 
-void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, BillingCommandStatus commandStatus, TariffRec& tariffRec, BillingInfoStruct& billingInfo, SaccBillingInfoEvent& ev)
-{
-    ev.Header.cCommandId = billCommand;
-    ev.Header.cProtocolId = billingInfo.protocol;
-    ev.Header.iServiceId = billingInfo.serviceId;
-    ev.Header.iServiceProviderId = billingInfo.providerId;
+    ev->iPriceCatId = tariffRec.CategoryId;
+    ev->fBillingSumm = tariffRec.Price;
+    ev->iMediaResourceType = tariffRec.MediaTypeId;
+    ev->pBillingCurrency = tariffRec.Currency;
 
-    timeval tv;
-    gettimeofday(&tv,0);
-
-    ev.Header.lDateTime = (uint64_t)tv.tv_sec*1000 + (tv.tv_usec / 1000);
-    ev.Header.pAbonentNumber = billingInfo.AbonentNumber;
-    ev.Header.sCommandStatus = commandStatus;
-    ev.Header.iOperatorId = billingInfo.operatorId;
-
-    ev.iPriceCatId = tariffRec.CategoryId;
-    ev.fBillingSumm = tariffRec.Price;
-    ev.iMediaResourceType = tariffRec.MediaTypeId;
-    ev.pBillingCurrency = tariffRec.Currency;
-
-    char buff[128];
+    char buff[70];
     sprintf(buff,"%s/%ld%d",billingInfo.AbonentNumber.c_str(), billingInfo.SessionBornMicrotime.tv_sec, billingInfo.SessionBornMicrotime.tv_usec / 1000);
-    ev.Header.pSessionKey.append(buff);
+    ev->Header.pSessionKey.append(buff);
 }
 
 #ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
-    char buff[128];
-    sprintf(buff,"%d", tariffRec.ServiceNumber);
-    std::string str(buff);
-
-    op.setDestinationSubscriberNumber(str);
+    char buff[20];
+    buff[19] = 0;
+    op.setDestinationSubscriberNumber(std::string(lltostr(tariffRec.ServiceNumber, buff + 19)));
     op.setCallingPartyNumber(billingInfoStruct.AbonentNumber);
     op.setServiceId(billingInfoStruct.serviceId);
     op.setUserMsgRef(billingInfoStruct.msgRef);

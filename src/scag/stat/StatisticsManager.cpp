@@ -1207,21 +1207,21 @@ int StatisticsManager::indexByHttpCounter(int event)
   return -1;
 }
 
-void StatisticsManager::registerSaccEvent(const scag::stat::SaccTrafficInfoEvent& ev)
+void StatisticsManager::registerSaccEvent(scag::stat::SaccTrafficInfoEvent* ev)
 {
-    thrSaccSender.PushEvent(new SaccTrafficInfoEvent(ev));
+    thrSaccSender.PushEvent(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::SaccBillingInfoEvent& ev)
+void StatisticsManager::registerSaccEvent(scag::stat::SaccBillingInfoEvent* ev)
 {
-    thrSaccSender.PushEvent(new SaccBillingInfoEvent(ev));
+    thrSaccSender.PushEvent(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::SaccAlarmMessageEvent& ev)
+void StatisticsManager::registerSaccEvent(scag::stat::SaccAlarmMessageEvent* ev)
 {
-    thrSaccSender.PushEvent(new SaccAlarmMessageEvent(ev));
+    thrSaccSender.PushEvent(ev);
 }
-void StatisticsManager::registerSaccEvent(const scag::stat::SaccAlarmEvent& ev)
+void StatisticsManager::registerSaccEvent(scag::stat::SaccAlarmEvent* ev)
 {
-    thrSaccSender.PushEvent(new SaccAlarmEvent(ev));
+    thrSaccSender.PushEvent(ev);
 }
 
 }}

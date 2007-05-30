@@ -320,10 +320,10 @@ using smsc::core::network::Socket;
 
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
-        virtual void registerSaccEvent(const scag::stat::SaccTrafficInfoEvent& ev) = 0;
-        virtual void registerSaccEvent(const scag::stat::SaccBillingInfoEvent& ev) = 0;
-        virtual void registerSaccEvent(const scag::stat::SaccAlarmEvent& ev) = 0;
-        virtual void registerSaccEvent(const scag::stat::SaccAlarmMessageEvent& ev) = 0;
+        virtual void registerSaccEvent(scag::stat::SaccTrafficInfoEvent* ev) = 0;
+        virtual void registerSaccEvent(scag::stat::SaccBillingInfoEvent* ev) = 0;
+        virtual void registerSaccEvent(scag::stat::SaccAlarmEvent* ev) = 0;
+        virtual void registerSaccEvent(scag::stat::SaccAlarmMessageEvent* ev) = 0;
 
     protected:
 

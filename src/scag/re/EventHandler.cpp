@@ -69,66 +69,54 @@ void EventHandler::RunActions(ActionContext& context)
 
 void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, const CSessionPrimaryKey& sessionPrimaryKey, const std::string& messageBody)
 {
-    SaccTrafficInfoEvent ev;
+    SaccTrafficInfoEvent* ev = new SaccTrafficInfoEvent();
 
-    ev.Header.cCommandId = propertyObject.HandlerId;
-
-    ev.Header.cProtocolId = commandProperty.protocol;
-
-    ev.Header.iServiceId = commandProperty.serviceId;
-    ev.Header.iServiceProviderId = commandProperty.providerId; 
+    ev->Header.cCommandId = propertyObject.HandlerId;
+    ev->Header.cProtocolId = commandProperty.protocol;
+    ev->Header.iServiceId = commandProperty.serviceId;
+    ev->Header.iServiceProviderId = commandProperty.providerId; 
     
     timeval tv;
     gettimeofday(&tv,0);
 
-    ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-
-    ev.Header.pAbonentNumber = commandProperty.abonentAddr.toString();
-
-    ev.Header.sCommandStatus = commandProperty.status;
-    ev.Header.iOperatorId = commandProperty.operatorId;
+    ev->Header.pAbonentNumber = commandProperty.abonentAddr.toString();
+    ev->Header.sCommandStatus = commandProperty.status;
+    ev->Header.iOperatorId = commandProperty.operatorId;
     
     if ((propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_DATA_SM))
-    {
-        ev.pMessageText.append(messageBody.data(), messageBody.size());
-    }
+        ev->pMessageText.append(messageBody.data(), messageBody.size());
 
-    sessionPrimaryKey.toString(ev.Header.pSessionKey);
+    sessionPrimaryKey.toString(ev->Header.pSessionKey);
 
     if ((commandProperty.direction == dsdSc2Srv) || (propertyObject.HandlerId == EH_HTTP_REQUEST) || (propertyObject.HandlerId == EH_HTTP_DELIVERY))
-        ev.cDirection = 'I';
+        ev->cDirection = 'I';
     else
-        ev.cDirection = 'O';
+        ev->cDirection = 'O';
 
-    /*
-    if ((propertyObject.HandlerId == EH_DELIVER_SM)||(propertyObject.HandlerId == EH_SUBMIT_SM_RESP) || (propertyObject.HandlerId == EH_HTTP_REQUEST))
-        ev.cDirection = 'I';
-    else
-        ev.cDirection = 'O';
-    */
     Statistics::Instance().registerSaccEvent(ev);
 }
 
 void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const std::string& sessionPrimaryKey, char dir)
 {
-    SaccAlarmEvent ev;
+    SaccAlarmEvent* ev = new SaccAlarmEvent();
 
-    ev.Header.cCommandId = 3;
-    ev.Header.cProtocolId = protocol;
-    ev.Header.iServiceId = serviceId;
-    ev.Header.iServiceProviderId = providerId; 
-    ev.Header.pAbonentNumber = addr;
-    ev.Header.sCommandStatus = commandStatus;
-    ev.Header.iOperatorId = operatorId;
-    ev.iAlarmEventId = eventId;
+    ev->Header.cCommandId = 3;
+    ev->Header.cProtocolId = protocol;
+    ev->Header.iServiceId = serviceId;
+    ev->Header.iServiceProviderId = providerId; 
+    ev->Header.pAbonentNumber = addr;
+    ev->Header.sCommandStatus = commandStatus;
+    ev->Header.iOperatorId = operatorId;
+    ev->iAlarmEventId = eventId;
     
     timeval tv;
     gettimeofday(&tv,0);
-    ev.Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
+    ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    ev.Header.pSessionKey = sessionPrimaryKey;
-    ev.cDirection = dir;
+    ev->Header.pSessionKey = sessionPrimaryKey;
+    ev->cDirection = dir;
 
     Statistics::Instance().registerSaccEvent(ev);
 }

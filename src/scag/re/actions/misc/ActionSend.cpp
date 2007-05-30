@@ -159,13 +159,13 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
 bool ActionSend::run(ActionContext& context)
 {
     const char *p;
-    SaccAlarmMessageEvent ev;
+    auto_ptr<SaccAlarmMessageEvent> ev;
     std::string s2, s3;
     std::string msg;
 
     Statistics& sm = Statistics::Instance();
 
-    if(!getStrProperty(context, strMsg, "message", ev.pMessageText))
+    if(!getStrProperty(context, strMsg, "message", ev->pMessageText))
         return true;
 
     for(int i = 0; i < toSms.Count(); i++)
@@ -181,10 +181,10 @@ bool ActionSend::run(ActionContext& context)
                 Address a1(s3.c_str());
                 s3 = a1.toString();
             }
-            ev.pAbonentsNumbers += a.toString();
+            ev->pAbonentsNumbers += a.toString();
             if(s3.length())
-                ev.pAbonentsNumbers += "," + s3;
-            ev.pAbonentsNumbers += ";";
+                ev->pAbonentsNumbers += "," + s3;
+            ev->pAbonentsNumbers += ";";
         }
         catch(...)
         {
@@ -204,15 +204,15 @@ bool ActionSend::run(ActionContext& context)
                smsc_log_warn(logger, "Action 'send': invalid sender e-mail address %s. Should be name@domain", s3.c_str());        
         else               
         {
-            ev.pAddressEmail += s2;
+            ev->pAddressEmail += s2;
             if(s3.length())
-                ev.pAddressEmail += "," + s3;
-            ev.pAddressEmail += ";";
+                ev->pAddressEmail += "," + s3;
+            ev->pAddressEmail += ";";
         }
     }
 
-    getStrProperty(context, strDate, "date", ev.pDeliveryTime);
-    if(!checkSDTPDateFormat(ev.pDeliveryTime, msg))
+    getStrProperty(context, strDate, "date", ev->pDeliveryTime);
+    if(!checkSDTPDateFormat(ev->pDeliveryTime, msg))
     {
         smsc_log_error(logger, "Action 'send' invalid SDTP date format: %s", msg.c_str());
         return true;
@@ -256,22 +256,24 @@ bool ActionSend::run(ActionContext& context)
             smsc_log_warn(logger,"Action 'send': invalid 'packetType' property '%s'", strPacketType.c_str());
             return false;
         }
-        ev.pPacketType = p2->getStr();
+        ev->pPacketType = p2->getStr();
     }
     else
-        ev.pPacketType = strPacketType;
+        ev->pPacketType = strPacketType;
     
-    ev.sSrcPort = srcPort;
-    ev.sDestPort = destPort;
-    ev.cEsmClass = esmClass;
+    ev->sSrcPort = srcPort;
+    ev->sDestPort = destPort;
+    ev->cEsmClass = esmClass;
 
-    ev.cCriticalityLevel = (uint8_t)level;
+    ev->cCriticalityLevel = (uint8_t)level;
     
-    if(usr) ev.sUsr = context.getSession().getUSR();
+    if(usr) ev->sUsr = context.getSession().getUSR();
 
-    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d, srcPort: %d, packetType: %s", ev.pMessageText.c_str(), ev.pAddressEmail.c_str(), ev.pAbonentsNumbers.c_str(), ev.pDeliveryTime.c_str(), (int)esmClass, destPort, srcPort, ev.pPacketType.c_str());
+    smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d, srcPort: %d, packetType: %s", ev->pMessageText.c_str(), ev->pAddressEmail.c_str(), ev->pAbonentsNumbers.c_str(), ev->pDeliveryTime.c_str(), (int)esmClass, destPort, srcPort, ev->pPacketType.c_str());
 
-    sm.registerSaccEvent(ev);
+    SaccAlarmMessageEvent* pev = ev.get();
+    ev.release();
+    sm.registerSaccEvent(pev);
     return true;
 }
 
