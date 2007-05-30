@@ -158,7 +158,7 @@ bool ActionIf::run(ActionContext& context)
 
         if (!m_hasOP) 
         {
-            smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str());
+            smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str(), property->getInt());
 
             context.isTrueCondition = property->getBool();
         } 
