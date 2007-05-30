@@ -12,6 +12,7 @@ import java.util.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.CallableStatement;
+import java.sql.Statement;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -408,7 +409,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     for (int i = 0; i < states.size(); i++) {
       try {
         state = (RequestState) states.get(i);
-      } catch (ArrayIndexOutOfBoundsException e) {
+      } catch (IndexOutOfBoundsException e) {
         return;
       }
       /*
@@ -540,14 +541,27 @@ public class SmeEngine implements MessageListener, ResponseListener {
       requests.count();
     }
 
-    sendDeliverSmResponse(message, Data.ESME_ROK);
     state = new RequestState(message, abonentRequestTime);
     addRequestState(state);
-    threadsPool.execute(new BalanceProcessor(this, state));
-    if (bannerEngineClientEnabled) {
-      threadsPool.execute(new BannerRequestThread(state));
+    try {
+      threadsPool.execute(new BalanceProcessor(this, state));
+    } catch (RuntimeException e) {
+      logger.error("Exception occured during creating balance processor: "+e, e);
+      synchronized (state) {
+        state.setError(true);
+      }
+      extractRequestState(message.getSourceAddress());
+      sendDeliverSmResponse(message, Data.ESME_RTHROTTLED);
+      return;
     }
-
+    if (bannerEngineClientEnabled) {
+      try {
+        threadsPool.execute(new BannerRequestThread(state));
+      } catch (RuntimeException e) {
+        logger.error("Exception occured during creating banner processor: "+e, e);
+      }
+    }
+    sendDeliverSmResponse(message, Data.ESME_ROK);
   }
 
   private String getBanner(String abonent) {
@@ -603,11 +617,32 @@ public class SmeEngine implements MessageListener, ResponseListener {
     return result;
   }
 
+  protected void closeCbossStatement(Statement stmt) {
+    synchronized (cbossStatements) {
+      cbossStatements.remove(Thread.currentThread().getName());
+    }
+    if (stmt != null){
+      try {
+        stmt.close();
+        stmt = null;
+      } catch (SQLException e1) {
+        logger.warn("Could not close oracle CallableStatement: " + e1);
+      }
+      Connection connection = null;
+      try {
+        connection = stmt.getConnection();
+        if (connection != null){
+          connection.close();
+          connection = null;
+        }
+      } catch (SQLException e1) {
+        logger.warn("Could not close oracle Connection: " + e1);
+      }
+    }
+  }
+
   public boolean isCbossConnectionError(Exception e) {
     if (e.toString().matches(cbossConnectionErrorPattern)) {
-      synchronized (cbossStatements) {
-        cbossStatements.remove(Thread.currentThread().getName());
-      }
       return true;
     } else {
       return false;
@@ -682,11 +717,20 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
 
     public void run() {
-      String banner = getBanner(state.getAbonentRequest().getSourceAddress());
-      synchronized (state) {
-        state.setBanner(banner);
+      try {
+        String banner = getBanner(state.getAbonentRequest().getSourceAddress());
+        synchronized (state) {
+          state.setBanner(banner);
+        }
+        closeRequestState(state);
+      } catch (Throwable t) {
+        synchronized (state) {
+          state.setError(true);
+        }
+        if (logger.isInfoEnabled())
+          logger.info("Can not get banner for " + state.getAbonentRequest().getSourceAddress());
+        logger.error("Unexpected exception occured during processing request.", t);
       }
-      closeRequestState(state);
     }
   }
 

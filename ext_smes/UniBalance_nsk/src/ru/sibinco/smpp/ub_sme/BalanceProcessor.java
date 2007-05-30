@@ -185,7 +185,6 @@ public class BalanceProcessor implements Runnable {
     //long balanceDate = 0;
     String currency = null;
     String accumulator = null;
-    Connection connection = null;
     CallableStatement stmt = null;
     try {
       stmt = smeEngine.getCbossStatement();
@@ -193,7 +192,6 @@ public class BalanceProcessor implements Runnable {
         logger.error("Couldn't get CBOSS statement");
         return null;
       }
-      connection = stmt.getConnection();
       synchronized (stmt) {
         stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
         stmt.setString(2, cutAbonentAddress(abonent));
@@ -214,20 +212,7 @@ public class BalanceProcessor implements Runnable {
       }
     } catch (Exception temporalError) {
       try {
-        if (stmt != null)
-          try {
-            stmt.close();
-            stmt = null;
-          } catch (Exception e1) {
-            logger.warn("Could not close oracle CallableStatement: " + e1);
-          }
-        if (connection != null)
-          try {
-            connection.close();
-            connection = null;
-          } catch (Exception e1) {
-            logger.warn("Could not close oracle Connection: " + e1);
-          }
+        smeEngine.closeCbossStatement(stmt);
         if (!smeEngine.isCbossConnectionError(temporalError)) {
           if (temporalError instanceof SQLException) {
             throw (SQLException) temporalError;
@@ -241,7 +226,6 @@ public class BalanceProcessor implements Runnable {
           logger.error("Couldn't get CBOSS statement");
           return null;
         }
-        connection = stmt.getConnection();
         synchronized (stmt) {
           stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
           stmt.setString(2, cutAbonentAddress(abonent));
@@ -262,18 +246,7 @@ public class BalanceProcessor implements Runnable {
         }
       } catch (SQLException permanentError) {
         logger.error("Could not get balance from CBOSS database: " + permanentError, permanentError);
-        if (stmt != null)
-          try {
-            stmt.close();
-          } catch (Exception e1) {
-            logger.warn("Could not close CallableStatement.", e1);
-          }
-        if (connection != null)
-          try {
-            connection.close();
-          } catch (Exception e1) {
-            logger.warn("Could not close Connection.", e1);
-          }
+        smeEngine.closeCbossStatement(stmt);
         return null;
       }
     }
@@ -293,7 +266,6 @@ public class BalanceProcessor implements Runnable {
   private String getInManBalance(String abonent) {
     Double balance = null;
     String currency = null;
-    Connection connection = null;
     CallableStatement stmt = null;
     ResultSet rs = null;
     try {
@@ -303,7 +275,6 @@ public class BalanceProcessor implements Runnable {
         return null;
       }
       synchronized (stmt) {
-        connection = stmt.getConnection();
         stmt.setString(1, cutAbonentAddress(abonent));
         rs = stmt.executeQuery();
         if (rs.next()) {
@@ -322,21 +293,7 @@ public class BalanceProcessor implements Runnable {
         } catch (Exception e1) {
           logger.warn("Could not close ifx ResultSet: " + e1);
         }
-      if (stmt != null)
-        try {
-          stmt.close();
-          stmt = null;
-        } catch (Exception e1) {
-          logger.warn("Could not close ifx CallableStatement: " + e1);
-        }
-      if (connection != null)
-        try {
-          connection.close();
-          connection = null;
-        } catch (Exception e1) {
-          logger.warn("Could not close ifx Connection: " + e1);
-        }
-
+      smeEngine.closeInManStatement(stmt);
       try {
         if (!smeEngine.isInManConnectionError(temporalError)) {
           throw temporalError;
@@ -346,7 +303,6 @@ public class BalanceProcessor implements Runnable {
           logger.error("Couldn't get InMan statement");
           return null;
         }
-        connection = stmt.getConnection();
         synchronized (stmt) {
           stmt.setString(1, cutAbonentAddress(abonent));
           rs = stmt.executeQuery();
@@ -366,18 +322,7 @@ public class BalanceProcessor implements Runnable {
           } catch (Exception e1) {
             logger.warn("Could not close ResultSet: ", e1);
           }
-        if (stmt != null)
-          try {
-            stmt.close();
-          } catch (Exception e1) {
-            logger.warn("Could not close CallableStatement.", e1);
-          }
-        if (connection != null)
-          try {
-            connection.close();
-          } catch (Exception e1) {
-            logger.warn("Could not close Connection.", e1);
-          }
+        smeEngine.closeInManStatement(stmt);
       }
     } finally {
       if (rs != null)

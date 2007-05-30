@@ -14,6 +14,7 @@ import java.util.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.CallableStatement;
+import java.sql.Statement;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -201,7 +202,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (inManConnectionErrorPattern.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"inman.connection.error.pattern\" is missed");
       }
-      inManConnectionErrorPattern = Utils.aggregateRegexp(inManConnectionErrorPattern);
+      try {
+        inManConnectionErrorPattern = Utils.aggregateRegexp(inManConnectionErrorPattern);
+      } catch (IllegalArgumentException e) {
+        throw new InitializationException(e.getMessage(), e);
+      }
     }
 
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_CBOSS_ORACLE)) {
@@ -217,7 +222,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (cbossConnectionErrorPattern.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"cboss.connection.error.pattern\" is missed");
       }
-      cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
+      try {
+        cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
+      } catch (IllegalArgumentException e) {
+        throw new InitializationException(e.getMessage(), e);
+      }
     }
 
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_FORIS_MG)) {
@@ -587,7 +596,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     for (int i = 0; i < states.size(); i++) {
       try {
         state = (RequestState) states.get(i);
-      } catch (ArrayIndexOutOfBoundsException e) {
+      } catch (IndexOutOfBoundsException e) {
         return;
       }
       /*
@@ -1015,11 +1024,32 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return result;
   }
 
+  protected void closeCbossStatement(Statement stmt) {
+    synchronized (cbossStatements) {
+      cbossStatements.remove(Thread.currentThread().getName());
+    }
+    if (stmt != null){
+      try {
+        stmt.close();
+        stmt = null;
+      } catch (SQLException e1) {
+        logger.warn("Could not close oracle CallableStatement: " + e1);
+      }
+      Connection connection = null;
+      try {
+        connection = stmt.getConnection();
+        if (connection != null){
+          connection.close();
+          connection = null;
+        }
+      } catch (SQLException e1) {
+        logger.warn("Could not close oracle Connection: " + e1);
+      }
+    }
+  }
+
   public boolean isCbossConnectionError(Exception e) {
     if (e.toString().matches(cbossConnectionErrorPattern)) {
-      synchronized (cbossStatements) {
-        cbossStatements.remove(Thread.currentThread().getName());
-      }
       return true;
     } else {
       return false;
@@ -1045,11 +1075,32 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return result;
   }
 
+  protected void closeInManStatement(Statement stmt) {
+    synchronized (inManStatements) {
+      inManStatements.remove(Thread.currentThread().getName());
+    }
+    if (stmt != null){
+      try {
+        stmt.close();
+        stmt = null;
+      } catch (SQLException e1) {
+        logger.warn("Could not close oracle CallableStatement: " + e1);
+      }
+      Connection connection = null;
+      try {
+        connection = stmt.getConnection();
+        if (connection != null){
+          connection.close();
+          connection = null;
+        }
+      } catch (SQLException e1) {
+        logger.warn("Could not close ifx Connection: " + e1);
+      }
+    }
+  }
+
   public boolean isInManConnectionError(Exception e) {
     if (e.toString().matches(inManConnectionErrorPattern)) {
-      synchronized (inManStatements) {
-        inManStatements.remove(Thread.currentThread().getName());
-      }
       return true;
     } else {
       return false;
