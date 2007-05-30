@@ -6,9 +6,9 @@
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
 #include "scag/transport/smpp/router/route_manager.h"
-#include "util/config/smeman/SmeManConfig.h"
+//#include "util/config/smeman/SmeManConfig.h"
 //#include "sme/SmppBase.hpp"
-#include "smeman/smsccmd.h"
+//#include "smeman/smsccmd.h"
 #include "scag/stat/StatisticsManager.h"
 #include "core/buffers/XHash.hpp"
 #include "logger/Logger.h"
@@ -30,7 +30,7 @@ using smsc::sms::SMS;
 using smsc::core::threads::ThreadedTask;
 //using smsc::sme::SmeConfig;
 
-using smsc::smeman::SmscCommand;
+//using smsc::smeman::SmscCommand;
 
 using namespace smsc::logger;
 
@@ -186,7 +186,7 @@ public:
 protected:
 
   // AdminCommand
-  void processCommand(SmscCommand& cmd);
+  //void processCommand(SmscCommand& cmd);
 
   void generateAlert(SMS* sms);
 

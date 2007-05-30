@@ -128,7 +128,7 @@ Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
     try {
         smppMan->addSmppEntity(getSmppEntityInfo());
     }
-    catch(exception& e) {
+    catch(std::exception& e) {
         char msg[1024];
         sprintf(msg, "Failed to add smsc. Details: %s", e.what());
         smsc_log_error(logger, msg);

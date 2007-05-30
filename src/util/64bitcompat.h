@@ -10,7 +10,7 @@ inline int VoidPtr2Int(void* arg)
   }else
   {
     long long* ptr=(long long*)&arg;
-    return *ptr;
+    return (int)*ptr;
   }
 }
 

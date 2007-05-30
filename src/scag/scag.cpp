@@ -10,9 +10,10 @@
 #include <typeinfo>
 #include "util/findConfigFile.h"
 
+#include "scag/transport/smpp/router/load_routes.h"
 #include "scag/config/ConfigManager.h"
-#include "scag/config/route/RouteConfig.h"
-#include "scag/config/route/RouteStructures.h"
+//#include "scag/config/route/RouteConfig.h"
+//#include "scag/config/route/RouteStructures.h"
 #include "scag/bill/BillingManager.h"
 #include "scag/stat/StatisticsManager.h"
 #include "scag/sessions/SessionManager.h"
@@ -31,116 +32,29 @@
 
 #include "scag/lcm/LongCallManager.h"
 
-namespace scag
-{
-    using namespace scag::util::encodings;
+namespace scag{
 
-    using namespace xercesc;
-
-    using namespace scag::exceptions;
-    using namespace scag::transport::smpp::router;
-    using scag::config::RouteConfig;
-    using scag::config::Route;
-    using scag::config::Source;
-    using scag::config::Destination;
-    using scag::config::DestinationHash;
-    using scag::config::SourceHash;
-    using scag::config::Mask;
-    using scag::config::MaskVector;
-    using smsc::sms::Address;
-    extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
-
-static inline void makeAddress_(Address& addr,const string& mask)
-{
-  addr=Address(mask.c_str());
-}
-
-void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool traceit)
-{
-  try
-  {
-    Route *route;
-    for (RouteConfig::RouteIterator ri = rc.getRouteIterator();
-         ri.fetchNext(route) == RouteConfig::success;)
-    {
-      char * dest_key;
-      char* src_key;
-      Source src;
-      Destination dest;
-      RouteInfo rinfo;
-      for (DestinationHash::Iterator dest_it = route->getDestinations().getIterator();
-           dest_it.Next(dest_key, dest);)
-      {
-        for (SourceHash::Iterator src_it = route->getSources().getIterator();
-             src_it.Next(src_key, src);)
-        {
-          // masks
-          if(dest.isSubject())
-          {
-            rinfo.dstSubj=( std::string("subj:")+dest.getIdString() ).c_str();
-          }
-          const MaskVector& dest_masks = dest.getMasks();
-          for (MaskVector::const_iterator dest_mask_it = dest_masks.begin();
-               dest_mask_it != dest_masks.end();
-               ++dest_mask_it)
-          {
-            makeAddress_(rinfo.dest,*dest_mask_it);
-            if(!dest.isSubject())
-            {
-              rinfo.dstSubj=( std::string("mask:")+*dest_mask_it ).c_str();
-            }
-            const MaskVector& src_masks = src.getMasks();
-            if(src.isSubject())
-            {
-              rinfo.srcSubj=( std::string("subj:")+src.getIdString() ).c_str();
-            }
-            for(MaskVector::const_iterator src_mask_it = src_masks.begin();
-                src_mask_it != src_masks.end();
-                ++src_mask_it)
-            {
-              if(!src.isSubject())
-              {
-                rinfo.srcSubj=( std::string("mask:")+*src_mask_it ).c_str();
-              }
-              makeAddress_(rinfo.source,*src_mask_it);
-              rinfo.smeSystemId = dest.getSmeIdString().c_str();//dest.smeId;
-              rinfo.srcSmeSystemId = route->getSrcSmeSystemId().c_str();
-//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
-              rinfo.archived=route->isArchiving();
-              rinfo.enabled = route->isEnabling();
-              rinfo.routeId=route->getId();
-              rinfo.serviceId=route->getServiceId();
-
-              try{
-                rm->addRoute(rinfo);
-              }
-              catch(exception& e)
-              {
-                __warning2__("[route skiped] : %s",e.what());
-              }
-            }
-          }
-        }
-      }
-    }
-    rm->commit(traceit);
-  }
-  catch(...)
-  {
-    rm->cancel();
-    throw;
-  }
-}
-
+using namespace scag::util::encodings;
+using namespace xercesc;
+using namespace scag::exceptions;
+using namespace scag::transport::smpp::router;
+using scag::config::RouteConfig;
+using scag::config::Route;
+using scag::config::Source;
+using scag::config::Destination;
+using scag::config::DestinationHash;
+using scag::config::SourceHash;
+using scag::config::Mask;
+using scag::config::MaskVector;
+using smsc::sms::Address;
 using std::auto_ptr;
 using std::string;
 using std::exception;
 using namespace smsc::sms;
-using namespace smsc::smeman;
-using namespace smsc::router;
+//using namespace smsc::smeman;
+//using namespace smsc::router;
 using namespace smsc::core::synchronization;
 using smsc::util::Exception;
-
 using scag::config::ConfigManager;
 using scag::bill::BillingManager;
 using scag::stat::StatisticsManager;
@@ -171,7 +85,7 @@ void Scag::init()
         throw;
     }*/
     //********************************************************
-    
+
     try {
         LongCallManager::Init(cfg.getLongCallManConfig());
     }catch(...)
@@ -396,8 +310,8 @@ void Scag::init()
   scag::sessions::Session * session = sessionPtr.Get();
 
   if (session) smsc_log_warn(log, "SESSION IS VALID");
-  
-  
+
+
   scag::re::RuleEngine::Instance().process(commandPureDataSm, *session);
   sm.releaseSession(sessionPtr);
 
@@ -406,19 +320,19 @@ void Scag::init()
 
   scag::re::RuleEngine::Instance().process(commandPureDataSmResp, *session);
   sm.releaseSession(sessionPtr);
-  
-  
+
+
   /*
   scag::re::RuleEngine::Instance().process(commandDeliver1, *session);
   sm.releaseSession(sessionPtr);
-  
-  
+
+
   sessionPtr = sm.getSession(key);
   session = sessionPtr.Get();
   scag::re::RuleEngine::Instance().process(commandDeliverResp, *session);
   sm.releaseSession(sessionPtr);
   */
-  
+
   //sessionPtr = sm.getSession(key);
   //session = sessionPtr.Get();
 
@@ -530,7 +444,7 @@ void Scag::shutdown()
   scag::transport::smpp::SmppManager::shutdown();
   //tp.shutdown();
   //tp2.shutdown();
-  LongCallManager::shutdown();  
+  LongCallManager::shutdown();
 }
 
 void Scag::reloadTestRoutes(const RouteConfig& rcfg)

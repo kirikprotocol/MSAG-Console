@@ -1,10 +1,11 @@
-// 
+//
 // File:   SCAGAdminCommand.cpp
 // Author: loomox
 //
-// Created on 24 march 2005 
+// Created on 24 march 2005
 //
 
+#include <vector>
 #include "SCAGAdminCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
@@ -80,9 +81,9 @@ void Abstract_CommandSmeInfo::init()
     GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
     GETSTRPARAM((char*)smppEntityInfo.password,      "password")
     GETINTPARAM(smppEntityInfo.timeOut,              "timeout")
-    //GETINTPARAM(smppEntityInfo.providerId,           "providerId")           
+    //GETINTPARAM(smppEntityInfo.providerId,           "providerId")
 
-    if (::strcmp("mode", name) == 0) 
+    if (::strcmp("mode", name) == 0)
     {
         if (::strcmp("trx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
         else if(::strcmp("tx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
@@ -101,7 +102,7 @@ void Abstract_CommandSmeInfo::init()
     //if (smppEntityInfo.password == "") errorStr = "Failed to tead Sme parameter 'password'";
     if (smppEntityInfo.timeOut == -1) errorStr = "Failed to tead Sme parameter 'timeout'";
 
-    if (errorStr.size() > 0) 
+    if (errorStr.size() > 0)
     {
         smsc_log_warn(logger, errorStr.c_str());
         throw AdminException(errorStr.c_str());
@@ -124,13 +125,13 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
 
     try {
         smppMan->addSmppEntity(getSmppEntityInfo());
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to add new SME. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to add new SME. Unknown exception");        
+        smsc_log_warn(logger, "Failed to add new SME. Unknown exception");
         throw AdminException("Failed to add new SME. Unknown exception");
     }
 
@@ -147,13 +148,13 @@ void CommandDeleteSme::init()
     smsc_log_info(logger, "Command(Delete/Disconnect)Sme got parameters:");
 
     disconn = 0;
-    
+
     BEGIN_SCAN_PARAMS
     GETSTRPARAM_(systemId, "systemId")
     GETINTPARAM(disconn, "disconnect")
     END_SCAN_PARAMS
 
-    if (systemId == "") 
+    if (systemId == "")
     {
         smsc_log_warn(logger, "Failed to read parameter 'systemId' of CommandDeleteSme.");
         throw AdminException("Failed to read parameter 'systemId' of CommandDeleteSme.");
@@ -162,8 +163,8 @@ void CommandDeleteSme::init()
 
 Response * CommandDeleteSme::CreateResponse(scag::Scag * ScagApp)
 {
-    char *n = disconn ? "Disconnect" : "Delete";
-    
+    const char *n = disconn ? "Disconnect" : "Delete";
+
     smsc_log_info(logger, "Command%sSme is processing...", n);
 
     if (!ScagApp) throw Exception("Scag undefined");
@@ -173,14 +174,14 @@ Response * CommandDeleteSme::CreateResponse(scag::Scag * ScagApp)
         if(disconn)
             ScagApp->getSmppManagerAdmin()->disconnectSmppEntity(systemId.c_str());
         else
-            ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());        
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+            ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to %s SME. Details: %s", n, e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to %s SME. Unknown exception", n);        
+        smsc_log_warn(logger, "Failed to %s SME. Unknown exception", n);
         throw AdminException("Failed to %s SME. Unknown exception", n);
     }
 
@@ -214,14 +215,14 @@ Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
     if(!smppMan) throw Exception("SmppManager undefined");
 
     try {
-        smppMan->updateSmppEntity(getSmppEntityInfo());  
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+        smppMan->updateSmppEntity(getSmppEntityInfo());
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to update SME. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to update SME. Unknown exception");        
+        smsc_log_warn(logger, "Failed to update SME. Unknown exception");
         throw AdminException("Failed to update SME. Unknown exception");
     }
 
@@ -249,7 +250,7 @@ Response * CommandLoadSmppTraceRoutes::CreateResponse(scag::Scag * ScagApp)
     RouteConfig cfg;
     if (cfg.load("conf/smpp_routes__.xml") == RouteConfig::fail) throw AdminException("Load routes config file failed.");
 
-    vector<std::string> traceBuff;
+    std::vector<std::string> traceBuff;
 
   try {
 
@@ -333,7 +334,7 @@ void CommandTraceSmppRoute::init()
     if (dstAddr == "") errorStr = "Failed to read parameter 'dstAddress' of CommandTraceRoute";
 //    if (srcSysId == "") errorStr = "Failed to read parameter 'srcSysId' of CommandTraceRoute";
 
-    if (errorStr.size() > 0) 
+    if (errorStr.size() > 0)
     {
         smsc_log_warn(logger, errorStr.c_str());
         throw AdminException(errorStr.c_str());
@@ -369,14 +370,14 @@ Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
 
     if (!ScagApp) throw Exception("Scag undefined");
 
-    if (_srcSysId) 
+    if (_srcSysId)
           found = ScagApp->getTestRouterInstance()->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info);
-    else 
+    else
           found = ScagApp->getTestRouterInstance()->lookup(Address(_srcAddr), Address(_dstAddr), info);
 
     fprintf(stderr,"---- Passed lookup");
 
-    vector<std::string> traceBuff;
+    std::vector<std::string> traceBuff;
     ScagApp->getTestRouterInstance()->getTrace(traceBuff);
 
     if (!found) {
@@ -384,12 +385,12 @@ Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
         {
           result.appendValueToStringList("Route found (disabled)");
           found = true;
-        } 
+        }
         else {
           result.appendValueToStringList("Route not found");
           result.appendValueToStringList("");
         }
-    } 
+    }
     else
     {
         result.appendValueToStringList("Route found");
@@ -455,7 +456,7 @@ Response * CommandApplyConfig::CreateResponse(scag::Scag * SmscApp)
 Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandApplySmppRoutes is processing...");
-    
+
     if (!ScagApp) throw Exception("Scag undefined");
 
     scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
@@ -466,16 +467,16 @@ Response * CommandApplySmppRoutes::CreateResponse(scag::Scag * ScagApp)
         ConfigManager & cfg = ConfigManager::Instance();
         cfg.reloadConfig(scag::config::ROUTE_CFG);
         smppMan->ReloadRoutes();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to reload routes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to reload routes. Unknown exception");        
+        smsc_log_warn(logger, "Failed to reload routes. Unknown exception");
         throw AdminException("Failed to reload routes. Unknown exception");
     }
-    
+
     smsc_log_info(logger, "CommandApplySmppRoutes is processed ok");
     return new Response(Response::Ok, "none");
 }
@@ -489,13 +490,13 @@ Response * CommandApplyHttpRoutes::CreateResponse(scag::Scag * SmscApp)
 
     try {
         scag::transport::http::HttpProcessor::Instance().ReloadRoutes();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to apply HttpRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to apply HttpRoutes. Unknown exception");        
+        smsc_log_warn(logger, "Failed to apply HttpRoutes. Unknown exception");
         throw AdminException("Failed to apply HttpRoutes. Unknown exception");
     }
 
@@ -514,13 +515,13 @@ Response * CommandReloadOperators::CreateResponse(scag::Scag * ScagApp)
     try {
         scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
         bill_mgr.getInfrastructure().ReloadOperatorMap();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to reload operators. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to reload operators. Unknown exception");        
+        smsc_log_warn(logger, "Failed to reload operators. Unknown exception");
         throw AdminException("Failed to reload operators. Unknown exception");
     }
 
@@ -537,13 +538,13 @@ Response * CommandReloadServices::CreateResponse(scag::Scag * ScagApp)
     try {
         scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
         bill_mgr.getInfrastructure().ReloadProviderMap();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to reload services. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to reload services. Unknown exception");        
+        smsc_log_warn(logger, "Failed to reload services. Unknown exception");
         throw AdminException("Failed to reload services. Unknown exception");
     }
 
@@ -560,13 +561,13 @@ Response * CommandReloadTariffMatrix::CreateResponse(scag::Scag * ScagApp)
     try {
         scag::bill::BillingManager& bill_mgr = scag::bill::BillingManager::Instance();
         bill_mgr.getInfrastructure().ReloadTariffMatrix();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to reload TariffMatrix. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to reload TariffMatrix. Unknown exception");        
+        smsc_log_warn(logger, "Failed to reload TariffMatrix. Unknown exception");
         throw AdminException("Failed to reload TariffMatrix. Unknown exception");
     }
 
@@ -578,17 +579,17 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandLoadHttpTraceRoutes is processing...");
     Variant result(smsc::admin::service::StringListType);
-        
+
     try {
         scag::transport::http::HttpTraceRouter::Instance().ReloadRoutes();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to reload HttpTraceRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         result.appendValueToStringList(msg);
         return new Response(Response::Error, result);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");        
+        smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");
         throw AdminException("Failed to reload HttpTraceRoutes. Unknown exception");
     }
 
@@ -605,13 +606,13 @@ Response * CommandLoadHttpTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 
     try {
         scag::transport::http::HttpTraceRouter::Instance().ReloadRoutes();
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Failed to reload HttpTraceRoutes. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
     } catch (...) {
-        smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");        
+        smsc_log_warn(logger, "Failed to reload HttpTraceRoutes. Unknown exception");
         throw AdminException("Failed to reload HttpTraceRoutes. Unknown exception");
     }
 
@@ -635,8 +636,8 @@ void CommandTraceHttpRoute::init()
     GETSTRPARAM_(site,    "site")
     GETSTRPARAM_(path,    "path")
     GETINTPARAM(port,    "port")
-    GETINTPARAM(rid,    "rid")    
-    GETINTPARAM(sid,    "sid")    
+    GETINTPARAM(rid,    "rid")
+    GETINTPARAM(sid,    "sid")
     END_SCAN_PARAMS
 
 }
@@ -650,15 +651,15 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
 
     try {
         if(port == 0) port = 80;
-        
-        vector<std::string> traceBuff;
-        
+
+        std::vector<std::string> traceBuff;
+
         if(rid || sid)
             b = scag::transport::http::HttpTraceRouter::Instance().getTraceRouteById(addr, path, rid, sid, traceBuff);
-        else            
+        else
             b = scag::transport::http::HttpTraceRouter::Instance().getTraceRoute(addr, site, path, port, traceBuff);
-            
-        if(b)            
+
+        if(b)
             result.appendValueToStringList("Http route found");
         else
             result.appendValueToStringList("Http route not found");
@@ -668,8 +669,8 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
             smsc_log_info(logger, "HttpTraceBuff[%d]: %s", i, traceBuff[i].c_str());
         }
 
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         sprintf(msg, "Trace Http route failed. Details: %s", e.what());
         smsc_log_error(logger, msg);
         return new Response(Response::Error, msg);
@@ -687,7 +688,7 @@ Response * CommandGetLogCategories::CreateResponse(scag::Scag * ScagApp)
     smsc_log_info(logger, "CommandGetLogCategories is processing...");
 
     Variant result(smsc::admin::service::StringListType);
-    
+
     try {
         std::auto_ptr<const Logger::LogLevels> cats(Logger::getLogLevels());
         char * k;
@@ -697,11 +698,11 @@ Response * CommandGetLogCategories::CreateResponse(scag::Scag * ScagApp)
             std::string tmp(k);
             tmp += ",";
             tmp += Logger::getLogLevel(level);
-            smsc_log_debug(logger, "GetLogCategories [%s]=[%d, %s]", k, level, Logger::getLogLevel(level));            
+            smsc_log_debug(logger, "GetLogCategories [%s]=[%d, %s]", k, level, Logger::getLogLevel(level));
             result.appendValueToStringList(tmp.c_str());
         }
-    } catch(Exception& e) {                                     
-        char msg[1024];                                         
+    } catch(Exception& e) {
+        char msg[1024];
         snprintf(msg, 1023, "CommandGetLogCategories failed. Details: %s", e.what());
         msg[1023] = 0;
         smsc_log_error(logger, msg);
@@ -722,7 +723,7 @@ void CommandSetLogCategories::init()
     BEGIN_SCAN_PARAMS
     GETSTRPARAM_(cats,    "categories")
     END_SCAN_PARAMS
-    smsc_log_info(logger, "CommandSetLogCategories cats=%s", cats.c_str());    
+    smsc_log_info(logger, "CommandSetLogCategories cats=%s", cats.c_str());
 }
 
 Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
@@ -732,12 +733,12 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     const char *delim_pos, *p = cats.c_str();
     bool s = false;
     std::string cat, val;
-    Logger::LogLevels levels;    
-    
+    Logger::LogLevels levels;
+
     while((delim_pos = strchr(p, ',')))
     {
         if(!s)
-        {            
+        {
             int i = delim_pos - p - ((delim_pos > p && delim_pos[-1] == '\\') ? 1 : 0);
             cat.assign(p, i);
         }
@@ -750,7 +751,7 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
         s = !s;
         p = delim_pos + 1;
     }
-    
+
     if(s)
     {
         if(*p) levels[cat.c_str()] = Logger::getLogLevel(p);
@@ -758,11 +759,11 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     else
     {
         smsc_log_info(logger, "CommandSetLogCategories processed failed. Bad format");
-        return new Response(Response::Error, Variant(false));        
+        return new Response(Response::Error, Variant(false));
     }
-        
+
     Logger::setLogLevels(levels);
-      
+
     smsc_log_info(logger, "CommandSetLogCategories processed ok.");
     return new Response(Response::Ok, Variant(true));
 }
@@ -791,4 +792,3 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
 
 }
 }
-

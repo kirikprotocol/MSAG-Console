@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <exception>
 #include <sys/stat.h>
+#include <string>
 
 #include "scag.h"
 
@@ -47,7 +48,7 @@ void registerSignalHandlers()
   sigdelset(&st, SIGILL);
   sigdelset(&st, SIGSEGV);
   sigprocmask(SIG_SETMASK, &st, NULL);
-  
+
   sigdelset(&st,17);
   sigdelset(&st, SIGALRM);
   sigdelset(&st, SIGABRT);
@@ -82,10 +83,10 @@ int main(int argc,char* argv[])
     scag::config::ConfigManager& cfgs = scag::config::ConfigManager::Instance();
     smsc_log_info(logger,  "SCAG configuration is loaded" );
 
-    Hash<string> lic;
+    Hash<std::string> lic;
     {
-      string lf=findConfigFile("license.ini");
-      string sig=findConfigFile("license.sig");
+      std::string lf=findConfigFile("license.ini");
+      std::string sig=findConfigFile("license.sig");
       if (!smsc::license::check::CheckLicense(lf.c_str(),sig.c_str(),lic))
       {
         smsc_log_error(logger, "Invalid license\n");
@@ -121,42 +122,42 @@ int main(int argc,char* argv[])
         exit(-1);
     }
 
-    app = new scag::Scag;    
-     
+    app = new scag::Scag;
+
     smsc_log_info(logger,  "Start initialization");
     app->init();
 
     scag::admin::SCAGSocketListener *listener = NULL;
-    
+
     if (servicePort != 0 && admin_host != 0) {
       listener = new scag::admin::SCAGSocketListener;
       listener->init(admin_host, servicePort);
-      listener->Start();      
+      listener->Start();
     }
     else
         smsc_log_warn(logger, "WARNING: admin port not specified, admin module disabled - smsc is not administrable");
 
     while(!shutdownFlag) sigsuspend(&st);
-    
+
     if(listener)
     {
         if(shutdownFlag == SHUTDOWN_SIGNAL)
             listener->shutdown();
-        else            
+        else
             listener->abort();
         listener->WaitFor();
         delete listener;
     }
-    
+
     if(shutdownFlag == SHUTDOWN_SIGNAL)
-        app->shutdown();    
-    else if(shutdownFlag == 17)        
+        app->shutdown();
+    else if(shutdownFlag == 17)
         app->abortScag();
     else
         app->dumpScag();
-        
+
     delete app;
-    
+
     smsc_log_info(logger, "All finished");
   }
   catch (AdminException &e)

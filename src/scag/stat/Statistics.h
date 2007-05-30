@@ -1,9 +1,9 @@
 #ifndef SMSC_SCAG_STAT_STATISTICS
 #define SMSC_SCAG_STAT_STATISTICS
 
-#include <smeman/smeproxy.h>
-#include <smeman/smeman.h>
-#include <router/route_types.h>
+//#include <smeman/smeproxy.h>
+//#include <smeman/smeman.h>
+//#include <router/route_types.h>
 #include <sms/sms.h>
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
@@ -17,7 +17,6 @@ using namespace scag::stat::sacc;
 namespace scag {
 namespace stat {
 
-using smsc::smeman::SmeRecord;
 using smsc::core::network::Socket;
 
     class SaccSerialBuffer : public SerializationBuffer
@@ -48,8 +47,8 @@ using smsc::core::network::Socket;
     {
     public:
         std::string pAbonentNumber;
-        uint8_t  cCommandId;        
-        uint8_t  cProtocolId;       
+        uint8_t  cCommandId;
+        uint8_t  cProtocolId;
         uint16_t sCommandStatus;
         uint64_t lDateTime;
         uint32_t iServiceProviderId;
@@ -59,8 +58,8 @@ using smsc::core::network::Socket;
 
         SaccEventHeader()
         {
-            cCommandId=0;       
-            cProtocolId=0;      
+            cCommandId=0;
+            cProtocolId=0;
             sCommandStatus=0;
             lDateTime=0;
             iServiceProviderId=0;
@@ -71,8 +70,8 @@ using smsc::core::network::Socket;
         {
             pSessionKey = src.pSessionKey;
             pAbonentNumber = src.pAbonentNumber;
-            cCommandId=src.cCommandId;      
-            cProtocolId=src.cProtocolId;        
+            cCommandId=src.cCommandId;
+            cProtocolId=src.cProtocolId;
             sCommandStatus=src.sCommandStatus;
             lDateTime=src.lDateTime;
             iServiceProviderId=src.iServiceProviderId;
@@ -105,21 +104,21 @@ using smsc::core::network::Socket;
 
         uint32_t iMediaResourceType;
         uint32_t iPriceCatId;
-        float    fBillingSumm; 
+        float    fBillingSumm;
         std::string  pBillingCurrency;
-     
+
         SaccBillingInfoEvent() : SaccEvent(sec_bill)
         {
             iMediaResourceType=0;
             iPriceCatId=0;
-            fBillingSumm=0.00000; 
-        }   
+            fBillingSumm=0.00000;
+        }
         SaccBillingInfoEvent(const SaccBillingInfoEvent & src) : SaccEvent(src), Header(src.Header)
         {
             pBillingCurrency=src.pBillingCurrency;
             iMediaResourceType=src.iMediaResourceType;
             iPriceCatId=src.iPriceCatId;
-            fBillingSumm=src.fBillingSumm; 
+            fBillingSumm=src.fBillingSumm;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccBillingInfoEvent"; };
@@ -140,7 +139,7 @@ using smsc::core::network::Socket;
         {
             pMessageText=src.pMessageText;
             cDirection=src.cDirection;
-            iAlarmEventId = src.iAlarmEventId; 
+            iAlarmEventId = src.iAlarmEventId;
         }
         void write(SaccSerialBuffer& buf);
         const char* getName() { return "SaccAlarmEvent"; };
@@ -153,24 +152,24 @@ using smsc::core::network::Socket;
         std::string  pAddressEmail;
         std::string  pMessageText;
         std::string  pDeliveryTime;
-        std::string  pPacketType;        
+        std::string  pPacketType;
 
         uint8_t  cCriticalityLevel;
         uint16_t  sUsr;
-        uint16_t  sDestPort;        
-        uint16_t  sSrcPort;                
+        uint16_t  sDestPort;
+        uint16_t  sSrcPort;
         uint8_t cEsmClass;
         SaccAlarmMessageEvent() : SaccEvent(sec_alarm_message)
         {
-            cCriticalityLevel=scl_info; 
+            cCriticalityLevel=scl_info;
             sUsr = 0;
             sDestPort = 0;
-            sSrcPort = 0;            
+            sSrcPort = 0;
             cEsmClass = 0;
         }
         SaccAlarmMessageEvent(const SaccAlarmMessageEvent& src) : SaccEvent(src)
         {
-            pAbonentsNumbers=src.pAbonentsNumbers;  
+            pAbonentsNumbers=src.pAbonentsNumbers;
             pAddressEmail=src.pAddressEmail;
             pMessageText=src.pMessageText;
             pDeliveryTime=src.pDeliveryTime;
@@ -269,7 +268,7 @@ using smsc::core::network::Socket;
         dstType = src.dstType;
       }
     };
-    
+
     struct HttpStatEvent
     {
       std::string routeId;
@@ -279,7 +278,7 @@ using smsc::core::network::Socket;
       uint32_t serviceProviderId;
       int event; // use constants from scag::stat::events::http
       int errCode;
-      
+
       HttpStatEvent(int cnt=-1, const std::string& rId="", const uint32_t sId=0, int spId=0, const std::string _url = "", const std::string _path = "", int err=0)
         : routeId(rId), serviceId(sId), serviceProviderId(spId), event(cnt), errCode(err), url(_url), site(_url)
        {
@@ -318,7 +317,7 @@ using smsc::core::network::Socket;
 
         virtual void registerEvent(const SmppStatEvent& se) = 0;
         virtual void registerEvent(const HttpStatEvent& se) = 0;
-        
+
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
         virtual void registerSaccEvent(const scag::stat::SaccTrafficInfoEvent& ev) = 0;
@@ -337,4 +336,3 @@ using smsc::core::network::Socket;
 }//namespace scag
 
 #endif // SMSC_STAT_STATISTICS
-
