@@ -47,7 +47,7 @@ public:
     virtual ActionFactory& getActionFactory() = 0;
     virtual Hash<TransportType> getTransportTypeHash() = 0;
 //    virtual bool findTransport(const char * name, TransportType& transportType) = 0;
-    virtual Hash<Property> getConstants() = 0;
+    virtual Hash<Property>& getConstants() = 0;
 
 };
 

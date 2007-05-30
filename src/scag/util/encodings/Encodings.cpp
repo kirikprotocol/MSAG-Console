@@ -152,16 +152,21 @@ void Convertor::convert(const char* inCharset, const char* outCharset,
 
 iconv_t ConvertorImpl::getIconv(const char* inCharset, const char* outCharset)
 {
-    std::string s = inCharset; s += '#'; s += outCharset;
+    uint32_t i;
+    char s[128];
 
-    iconv_t *pcd = iconvHash.GetPtr(s.c_str());
+    i = strlcpy(s, inCharset, 128);
+    s[i] = '#';
+    strlcpy(s + i + 1, outCharset, 128 - i - 1);
+
+    iconv_t *pcd = iconvHash.GetPtr(s);
     if(pcd) return *pcd;
 
     iconv_t cd = iconv_open(outCharset, inCharset);
     if( cd == (iconv_t)(-1) )
         throw SCAGException("Convertor: iconv_open. Cannot convert from '%s' to '%s'. errno=%d", inCharset, outCharset, errno);
 
-    iconvHash.Insert(s.c_str(), cd);
+    iconvHash.Insert(s, cd);
 
     return cd;
 }
@@ -187,7 +192,7 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
       buf.setSize(buf.GetPos() + outbytesleft);
       outbufptr = (char*)buf.GetCurPtr();
       //unsigned long inLenLong=inLen;
-  //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
+//    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
       if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
           error=true;
 

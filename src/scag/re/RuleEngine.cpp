@@ -183,7 +183,7 @@ public:
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
 
     virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
-    virtual Hash<Property> getConstants();
+    virtual Hash<Property>& getConstants() { return ConstantsHash; };
 
 //    virtual bool findTransport(const char * name, TransportType& transportType);
 };
@@ -223,12 +223,6 @@ void RuleEngine::Init(const std::string& dir)
         }
     }
 }
-
-Hash<Property> RuleEngineImpl::getConstants()
-{
-    return ConstantsHash;
-}
-
 
 void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
 {

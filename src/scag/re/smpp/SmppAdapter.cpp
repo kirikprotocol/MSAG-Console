@@ -985,8 +985,7 @@ AdapterProperty * SmppCommandAdapter::Get_Unknown_Property(SMS& data, const std:
 
 AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::string name)
 {
-    std::string str = CommandBrige::getMessageBody(command);
-    return new AdapterProperty(name,this,str);
+    return new AdapterProperty(name,this,CommandBrige::getMessageBody(command));
 }
 
 

@@ -179,8 +179,6 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 {
     smsc_log_debug(logger, "Process EventHandler...");
 
-    Hash<Property> _constants = RuleEngine::Instance().getConstants();
-
     SmppCommand& smppcommand = (SmppCommand&)command;
     SmppCommandAdapter _command(smppcommand);
 
@@ -196,12 +194,12 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
         throw SCAGException("SmppEventHandler: Cannot find ProviderID for ServiceID=%d", command.getServiceId());
     }
 
-    int operatorId = istr.GetOperatorID(abonentAddr);
+    int operatorId = istr.GetOperatorID(abonentAddr), hi = propertyObject.HandlerId;
     if (operatorId == 0) 
     {
         RegisterAlarmEvent(1, abonentAddr.toString(), CommandBrige::getProtocolForEvent(smppcommand), command.getServiceId(),
                             providerId, 0, 0, session.getPrimaryKey().abonentAddr.toString(),
-                            (propertyObject.HandlerId == EH_SUBMIT_SM)||(propertyObject.HandlerId == EH_DELIVER_SM) ? 'I' : 'O');
+                            (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
         
         if (smppDiscriptor.isResp) session.closeCurrentOperation();
         throw SCAGException("SmppEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
@@ -212,9 +210,8 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     CommandProperty commandProperty(command, smppcommand->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
 
-    std::string message = CommandBrige::getMessageBody(smppcommand);
-
-    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), message);
+    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), 
+        (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM)||(hi == EH_DATA_SM) ? CommandBrige::getMessageBody(smppcommand) : "");
     
     try {
         ModifyOperationBeforeExecuting(session, smppcommand, smppDiscriptor);
@@ -226,7 +223,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
         return;
     }
 
-    ActionContext context(_constants, session, _command, commandProperty, rs);
+    ActionContext context(RuleEngine::Instance().getConstants(), session, _command, commandProperty, rs);
 
     try
     {
