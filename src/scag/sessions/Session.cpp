@@ -227,7 +227,8 @@ void Session::DeserializeProperty(SessionBuffer& buff)
         buff >> name;
         buff >> value;
 
-        AdapterProperty * property = new AdapterProperty(name,this,value);
+        AdapterProperty * property = new AdapterProperty(this);
+        buff >> *property;
         PropertyHash.Insert(name.c_str(),property);
     }
 }

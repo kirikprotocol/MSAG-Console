@@ -61,6 +61,7 @@ namespace scag { namespace util { namespace properties
         PropertyType getType() {return type;}
 
         virtual void setStr(const std::string& val);
+        virtual std::string& _setStr();
         virtual void setInt(int64_t val);
         virtual void setBool(bool val);
         virtual void setDate(time_t val);
@@ -87,7 +88,11 @@ namespace scag { namespace util { namespace properties
         AdapterProperty(const std::string& _name,Changeable* _patron,const std::string& InitValue) 
             : patron(_patron), name(_name) {s_val = InitValue; type = pt_str;};
 
+        AdapterProperty(Changeable* _patron) 
+            : patron(_patron) { type = pt_int;};
+
         virtual void setStr(const std::string& val);
+        std::string& setName() { return name; };
         virtual void setInt(int64_t val);
         virtual void setBool(bool val);
         virtual void setDate(time_t val);

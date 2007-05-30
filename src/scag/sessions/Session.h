@@ -103,6 +103,12 @@ namespace scag { namespace sessions {
             str = scb;
             return *this;
         };
+        SessionBuffer& operator >> (AdapterProperty& s)
+        {
+            operator>>(s.setName());
+            operator>>(s._setStr());
+            return *this;
+        };
     public:
        SessionBuffer() : smsc::sms::BufOps::SmsBuffer(2048) {}
        SessionBuffer(int size):smsc::sms::BufOps::SmsBuffer(size){}

@@ -208,6 +208,14 @@ void Property::setStr(const std::string& val)
     type = pt_str;
 }
 
+std::string& Property::_setStr()
+{
+    if (constant) throw ConstantSetException();
+    sync = false;
+    type = pt_str;
+    return s_val;
+}
+
 void Property::setBool(bool val)
 {
     if (constant) throw ConstantSetException();
