@@ -15,6 +15,7 @@ using smsc::inman::common::RPCList;
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
 using smsc::inman::iaprvd::IAProviderType;
+using smsc::inman::iaprvd::IAProviderAbility_e;
 
 
 namespace smsc  {
@@ -145,6 +146,11 @@ public:
             return true;
         }
         return false;
+    }
+
+    IAProviderAbility_e getIAPAbilities(void) const
+    {
+        return provAllc ? provAllc->ability() : smsc::inman::iaprvd::abNone;
     }
 
     IAProviderITF * getIAProvider(Logger * use_log)
