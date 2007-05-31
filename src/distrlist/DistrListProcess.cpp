@@ -444,8 +444,6 @@ int DistrListProcess::Execute()
               }
             }
 
-            newsms.setOriginatingDescriptor(sms.getOriginatingDescriptor());
-            /*
             if(sms.hasStrProperty(Tag::SMSC_IMSI_ADDRESS) || sms.hasStrProperty(Tag::SMSC_MSC_ADDRESS))
             {
               newsms.setOriginatingDescriptor
@@ -456,8 +454,11 @@ int DistrListProcess::Execute()
                 sms.getStrProperty(Tag::SMSC_IMSI_ADDRESS).c_str(),
                 0
               );
+            }else
+            {
+              newsms.setOriginatingDescriptor(sms.getOriginatingDescriptor());
             }
-            */
+
 #ifdef SMSEXTRA
             newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,smsc::system::EXTRA_GROUPS);
 #endif
