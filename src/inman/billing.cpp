@@ -483,7 +483,9 @@ Billing::PGraphState Billing::onChargeSms(void)
                     _RCS_INManErrors->mkhash(INManErrorId::cfgMismatch));
     }
     //Here goes either bill2IN or bill2CDR ..
-    if (cdr._smsXMask & SMSX_NOCHARGE_SRV)
+    if (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED)
+        billMode = ChargeObj::bill2CDR;
+    else if (cdr._smsXMask & SMSX_NOCHARGE_SRV)
         billMode = ChargeObj::bill2CDR;
     if ((xsmsSrv && !xsmsSrv->adr.length)) {
         billMode = ChargeObj::bill2CDR;
@@ -506,7 +508,9 @@ Billing::PGraphState Billing::onChargeSms(void)
     //check if AbonentProvider should be requested for contract type
     bool askProvider = ((abType == AbonentContractInfo::abtUnknown)
                         && ((billMode == ChargeObj::bill2IN)
-                            || (_cfg.cntrReq == BillingCFG::reqAlways)));
+                            || (_cfg.cntrReq == BillingCFG::reqAlways)
+                            || (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED))
+                        );
 
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber)))
         smsc_log_error(logger, "%s: no policy set for %s", _logId, 
