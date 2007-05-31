@@ -38,6 +38,7 @@ struct TonNpiAddress {
 
     inline void clear(void) { length = typeOfNumber = numPlanInd = signals[0] = 0; }
     inline const char * getSignals(void) const { return (const char*)&signals[0]; }
+    inline bool empty(void) const { return (bool)!length; }
 
     TonNpiAddress() { clear(); }
 
