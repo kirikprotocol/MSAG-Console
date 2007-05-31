@@ -71,20 +71,28 @@ public:
     CHSendRoutingInfoRes();
     ~CHSendRoutingInfoRes() {}
 
-    int getSCFinfo(GsmSCFinfo * scf_dat) const;
-    int getIMSI(char *imsi) const;
+    unsigned short getSCFinfo(GsmSCFinfo * scf_dat) const;
+    unsigned short getIMSI(char *imsi) const;
+    unsigned short getVLRN(TonNpiAddress & vlr_n) const;
+
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
     void mergeSegment(Component * segm) throw(CustomException);
 
-    bool hasIMSI(void) const { return mask.imsi; }
-    bool hasOCSI(void) const { return mask.o_csi; }
+    inline bool hasIMSI(void) const { return mask.st.imsi; }
+    inline bool hasOCSI(void) const { return mask.st.o_csi; }
+    inline bool hasVLRN(void) const { return mask.st.n_vlr; }
 
 private:
-    struct {
-        unsigned int imsi  :1 ; 
-        unsigned int o_csi :1 ; 
+    union {
+        unsigned short value;
+        struct {
+            unsigned short imsi  :1 ; 
+            unsigned short o_csi :1 ;
+            unsigned short n_vlr :1 ;
+        } st;
     } mask;
+    TonNpiAddress vlrNum;   //VLR number
     GsmSCFinfo    o_csi;
     char          o_imsi[MAP_MAX_IMSI_AddressValueLength + 1];
     Logger*	  compLogger;

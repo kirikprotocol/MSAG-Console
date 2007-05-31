@@ -110,7 +110,7 @@ void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) throw(CustomE
 CHSendRoutingInfoRes::CHSendRoutingInfoRes()
 {
     compLogger = Logger::getInstance("smsc.inman.comp.CHSRIRes");
-    mask.imsi = mask.o_csi = 0; 
+    mask.value = 0; 
 }
 
 static bool parse_O_CSI(O_CSI_t *csi, GsmSCFinfo *scf_inf) throw(CustomException)
@@ -137,22 +137,27 @@ static bool parse_O_CSI(O_CSI_t *csi, GsmSCFinfo *scf_inf) throw(CustomException
     return false;
 }
 
-int CHSendRoutingInfoRes::getSCFinfo(GsmSCFinfo * scf_dat) const
+unsigned short CHSendRoutingInfoRes::getSCFinfo(GsmSCFinfo * scf_dat) const
 {
-    if (!mask.o_csi)
+    if (!mask.st.o_csi)
         return 0;
     *scf_dat = o_csi;
-    return mask.o_csi + mask.imsi;
+    return mask.st.o_csi + mask.st.imsi;
 }
 
-int CHSendRoutingInfoRes::getIMSI(char *imsi) const
+unsigned short CHSendRoutingInfoRes::getIMSI(char *imsi) const
 {
-    if (!mask.imsi)
-        return 0;
-    strcpy(imsi, o_imsi);
-    return mask.imsi;
+    if (mask.st.imsi)
+        strcpy(imsi, o_imsi);
+    return mask.st.imsi;
 }
 
+unsigned short CHSendRoutingInfoRes::getVLRN(TonNpiAddress & vlr_n) const
+{
+    if (mask.st.n_vlr)
+        vlr_n = vlrNum;
+    return mask.st.n_vlr;
+}
 
 void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
@@ -168,17 +173,24 @@ void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(C
             if (dcmd->imsi->size >= sizeof(o_imsi)
                 || !unpackBCD2NumString(dcmd->imsi->buf, o_imsi, dcmd->imsi->size))
                 throw CustomException(-1, "SRIRes: bad IMSI");
-            mask.imsi = 1;
+            mask.st.imsi = 1;
         }
         if (dcmd->extendedRoutingInfo
             && (dcmd->extendedRoutingInfo->present == ExtendedRoutingInfo_PR_camelRoutingInfo)) {
             O_CSI_t * gCSI = 
                 dcmd->extendedRoutingInfo->choice.camelRoutingInfo.gmscCamelSubscriptionInfo.o_CSI;
             if (gCSI)
-                mask.o_csi = parse_O_CSI(gCSI, &o_csi) ? 1 : 0;
+                mask.st.o_csi = parse_O_CSI(gCSI, &o_csi) ? 1 : 0;
+        }
+        ISDN_AddressString_t * vlr_os = NULL;
+        if (dcmd->subscriberInfo && dcmd->subscriberInfo->locationInformation
+            && (vlr_os = dcmd->subscriberInfo->locationInformation->vlr_number)) {
+            if (!OCTET_STRING_2_Address(vlr_os, vlrNum))
+                throw CustomException(-1, "SRIRes: bad vlr_number");
+            mask.st.n_vlr = 1;
         }
         asn_DEF_SendRoutingInfoRes.free_struct(&asn_DEF_SendRoutingInfoRes, dcmd, 0);
-    } catch (CustomException & exc) {
+    } catch (const CustomException & exc) {
         asn_DEF_SendRoutingInfoRes.free_struct(&asn_DEF_SendRoutingInfoRes, dcmd, 0);
         throw;
     }
@@ -191,14 +203,18 @@ void CHSendRoutingInfoRes::mergeSegment(Component * segm) throw(CustomException)
     if (!segm)
         return;
 
-    CHSendRoutingInfoRes *  sri = static_cast<CHSendRoutingInfoRes*>(segm);
-    if (sri->hasIMSI()) {
-        sri->getIMSI(o_imsi);
-        mask.imsi = 1;
+    CHSendRoutingInfoRes *  sriNL = static_cast<CHSendRoutingInfoRes*>(segm);
+    if (sriNL->hasIMSI()) {
+        sriNL->getIMSI(o_imsi);
+        mask.st.imsi = 1;
     }
-    if (sri->hasOCSI()) {
-        mask.o_csi = 1;
-        sri->getSCFinfo(&o_csi);
+    if (sriNL->hasOCSI()) {
+        mask.st.o_csi = 1;
+        sriNL->getSCFinfo(&o_csi);
+    }
+    if (sriNL->hasVLRN()) {
+        mask.st.n_vlr = 1;
+        sriNL->getVLRN(vlrNum);
     }
 }
 
