@@ -24,7 +24,8 @@ CDRRecord::CDRRecord()
     : _finalized(dpEmpty), _msgId(0), _partsNum(1)
     , _cdrType(CDRRecord::dpOrdinary), _mediaType(CDRRecord::dpText)
     , _bearer(CDRRecord::dpSMS), _dlvrRes(CDRRecord::dpDeliveryFailed)
-    , _smsXMask(0), _inBilled(false), _contract(abtUnknown), _charge(ON_DELIVERY)
+    , _smsXMask(0), _inBilled(false), _contract(abtUnknown)
+    , _chargePolicy(ON_DELIVERY), _chargeType(MO_Charge)
 {
     _serviceId = _userMsgRef = _dpLength = 0;
     _submitTime = _finalTime = 0;
@@ -66,7 +67,7 @@ void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
     CSVFileEncoder::addUint8 (rec, cdr._partsNum, false);
     CSVFileEncoder::addUint32(rec, cdr._smsXMask);
     CSVFileEncoder::addUint8 (rec, cdr._contract);
-    CSVFileEncoder::addUint8 (rec, cdr._charge);
+    CSVFileEncoder::addUint8 (rec, cdr._chargePolicy);
     CSVFileEncoder::addUint8 (rec, cdr._inBilled ? 0x01 : 0x00, true);
 }
 

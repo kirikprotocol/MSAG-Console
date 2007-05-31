@@ -388,7 +388,7 @@ void cmd_charge_mode(Console&, const std::vector<std::string> &args)
         return;
     }
     const char * mode = args[1].c_str();
-    CDRRecord::ChargingMode chg_mode = CDRRecord::ON_DELIVERY;
+    CDRRecord::ChargingPolicy chg_mode = CDRRecord::ON_DELIVERY;
     if (!strcmp(mode, "submit")) {
         chg_mode = CDRRecord::ON_SUBMIT;
     } else if (!strcmp(mode, "alldata")) {

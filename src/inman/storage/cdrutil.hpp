@@ -16,7 +16,8 @@ struct CDRRecord {
     //encodes CDR to CSV format
     static void csvEncode(const CDRRecord & cdr, std::string & rec);
 
-    enum ChargingMode { ON_SUBMIT = 0, ON_DELIVERY, ON_DATA_COLLECTED };
+    enum ChargingPolicy { ON_SUBMIT = 0, ON_DELIVERY, ON_DATA_COLLECTED };
+    enum ChargingType { MO_Charge = 0, MT_Charge = 1 };
     typedef enum { dpOrdinary = 0, dpDiverted } CDRRecordType;
     typedef enum { dpText = 0, dpBinary } CDRMediaType;
     typedef enum { dpSMS = 0, dpUSSD } CDRBearerType;
@@ -57,9 +58,10 @@ struct CDRRecord {
                                     //in bytes for dpBinary.
     uint32_t        _smsXMask;      //mask of pack of SMS Extra services
     ContractType    _contract;      //sender contract type
-    ChargingMode    _charge;        //
+    ChargingPolicy  _chargePolicy;  //
     bool            _inBilled;      //message was billed by IN platform                                    
 //private: not written to CSV
+    ChargingType    _chargeType;    //MO or MT charging
     enum {              //indicates which fields are fullfilled;
         dpEmpty = 0,
         dpSubmitted,    //DP was submitted,

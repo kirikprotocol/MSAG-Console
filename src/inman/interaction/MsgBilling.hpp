@@ -83,11 +83,15 @@ struct SMCAPSpecificInfo {
 
 class ChargeSms : public INPBillingCmd {
 public:
-    ChargeSms(); //charging mode is ON_DELIVERY by default
+    ChargeSms(); //by default: charging policy is ON_DELIVERY, charging type is MO
     virtual ~ChargeSms() { }
-    
+
+    inline void setMTcharge(void)
+        { mtBill = true; }
     inline void setChargeOnSubmit(void)
-        { chrgMode = CDRRecord::ON_SUBMIT; }
+        { chrgPolicy = CDRRecord::ON_SUBMIT; }
+    inline void setSmsXSrvs(uint32_t srv_ids)
+        { smsXSrvsId = srv_ids; }
     //data for CDR generation & CAP interaction
     inline void setDestinationSubscriberNumber(const std::string& dst_adr)
         { dstSubscriberNumber = dst_adr; }
@@ -121,11 +125,9 @@ public:
     inline void setTPValidityPeriod(time_t vpVal)
         { csInfo.tpValidityPeriod = vpVal; }
 
-    void setSmsXSrvs(uint32_t srv_ids)     { extCode |= 0x80; smsXSrvsId = srv_ids; }
-
     void export2CDR(CDRRecord & cdr) const;
     void exportCAPInfo(SMCAPSpecificInfo & csi) const { csi = csInfo; }
-    uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
+    inline uint32_t getSmsXSrvs(void) const { return smsXSrvsId; }
 
 protected:
     //SerializableObject interface
@@ -133,7 +135,7 @@ protected:
     void save(ObjectBuffer& out) const;
 
 private:
-    CDRRecord::ChargingMode chrgMode; //
+    CDRRecord::ChargingPolicy chrgPolicy; //
     //data for CDR generation
     std::string   dstSubscriberNumber;
     std::string   callingPartyNumber;
@@ -150,8 +152,8 @@ private:
     uint16_t      msgLen;       //total length of message(including multipart case)
     SMCAPSpecificInfo csInfo;
     //
-    unsigned char extCode;      //extension fields are present
     uint32_t      smsXSrvsId;
+    bool          mtBill;       //charge the dstSubscriber instead of calling one
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
@@ -226,9 +228,11 @@ private:
 //Charging mode ON_DATA_COLLECTED is assumed
 class DeliveredSmsData : public INPBillingCmd {
 public:
-    DeliveredSmsData(uint32_t res = 0);
+    DeliveredSmsData(uint32_t res = 0); //by default: charging type is MO
     virtual ~DeliveredSmsData(void) { }
 
+    inline void setMTcharge(void)
+        { mtBill = true; }
     //data for CDR generation & CAP interaction
     inline void setDestinationSubscriberNumber(const std::string& dst_adr)
         { dstSubscriberNumber = dst_adr; }
@@ -301,6 +305,7 @@ private:
     //
     unsigned char extCode;      //extension fields are present
     uint32_t      smsXSrvsId;
+    bool          mtBill;       //charge the dstSubscriber instead of calling one
 
     //Delivery report data ..
     uint32_t      dlvrRes;    //0, or errorcode

@@ -134,7 +134,7 @@ private:
     ChargeObj::MSG_TYPE msgType; // 
     TimersMAP       timers;     //active timers
     AbonentContractInfo::ContractType abType;     //calling abonent contract type
-    TonNpiAddress   abNumber;   //calling abonent ISDN number
+    TonNpiAddress   abNumber;   //ISDN number of abonent is to charge
     bool            providerQueried;
     // ...
     AbonentPolicy * abPolicy;

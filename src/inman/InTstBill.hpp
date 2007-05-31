@@ -35,7 +35,7 @@ struct INDialogCfg {
     unsigned            dstId;  //destination address id form TonNpiDB
     bool                ussdOp;
     uint32_t            xsmsIds; //SMS Extra services id
-    CDRRecord::ChargingMode chgMode;
+    CDRRecord::ChargingPolicy chgMode;
 
     INDialogCfg() : abId(1), dstId(1), ussdOp(false)
         , xsmsIds(0), chgMode(CDRRecord::ON_DELIVERY)
@@ -52,7 +52,7 @@ public:
         , state(dIdle)
     {}
 
-    inline void    setChargeMode(CDRRecord::ChargingMode chg_mode) { cfg.chgMode = chg_mode; }
+    inline void    setChargeMode(CDRRecord::ChargingPolicy chg_mode) { cfg.chgMode = chg_mode; }
     inline void    setState(DlgState new_state) { state = new_state; }
     inline DlgState getState(void) const { return state; }
     inline uint32_t getDlvrResult(void) const { return dlvrRes; }
@@ -130,7 +130,7 @@ public:
 
     inline void setUssdOp(bool op) { _dlgCfg.ussdOp = op; }
     inline void setSmsXIds(uint32_t srv_ids) { _dlgCfg.xsmsIds = srv_ids; }
-    inline void setChargeMode(CDRRecord::ChargingMode chg_mode) { _dlgCfg.chgMode = chg_mode; }
+    inline void setChargeMode(CDRRecord::ChargingPolicy chg_mode) { _dlgCfg.chgMode = chg_mode; }
 
     bool setAddressId(unsigned adr_id)
     { 
@@ -256,7 +256,7 @@ public:
     }
 
     void sendChargeSms(unsigned int dlgId, uint32_t num_bytes = 0)
-    {   //According to CDRRecord::ChargingMode
+    {   //According to CDRRecord::ChargingPolicy
         static const char *_chgModes[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED" };
 
         std::string msg;
@@ -286,7 +286,7 @@ public:
 
         msg = format("--> %sCharge[%u] %s: %s -> %s .., %s", tbuf, dlgId,
                      cdr.dpType().c_str(), cdr._srcAdr.c_str(), cdr._dstAdr.c_str(),
-                    _chgModes[cdr._charge]);
+                    _chgModes[cdr._chargePolicy]);
         Prompt(Logger::LEVEL_DEBUG, msg);
         if (sendPckPart(&pck, num_bytes) && dlg) { // 0 - forces sending whole packet
             if (dlg->getState() == INDialog::dIdle)

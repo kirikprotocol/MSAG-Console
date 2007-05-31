@@ -50,12 +50,16 @@ CsBillingHdr_sess::CsBillingHdr_sess()
  * ************************************************************************** */
 ChargeSms::ChargeSms()
     : INPBillingCmd(INPCSBilling::CHARGE_SMS_TAG)
-    , partsNum(1), extCode(0), smsXSrvsId(0), chrgMode(CDRRecord::ON_DELIVERY)
+    , partsNum(1), smsXSrvsId(0), chrgPolicy(CDRRecord::ON_DELIVERY)
+    , mtBill(false)
 { }
 
 void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
 {
-    in >> extCode;
+    //service fields
+    in >> mtBill;
+    in >> smsXSrvsId;
+    //data for IN interaction
     in >> dstSubscriberNumber;
     in >> callingPartyNumber;
     in >> callingImsi;
@@ -77,16 +81,15 @@ void ChargeSms::load(ObjectBuffer& in) throw(SerializerException)
     in >> msgLen;
     unsigned char cm;
     in >> cm;
-    chrgMode = static_cast<CDRRecord::ChargingMode>(cm);
-    //extensions
-    if (extCode) {
-        in >> smsXSrvsId;
-    }
+    chrgPolicy = static_cast<CDRRecord::ChargingPolicy>(cm);
 }
 
 void ChargeSms::save(ObjectBuffer& out) const
 {
-    out << extCode;
+    //service fields
+    out << mtBill;
+    out << smsXSrvsId;
+    //data for IN interaction
     out << dstSubscriberNumber;
     out << callingPartyNumber;
     out << callingImsi;
@@ -106,11 +109,7 @@ void ChargeSms::save(ObjectBuffer& out) const
     out << ussdServiceOp;
     out << partsNum;
     out << msgLen;
-    out << ((unsigned char)chrgMode);
-    //extensions
-    if (extCode) {
-        out << smsXSrvsId;
-    }
+    out << ((unsigned char)chrgPolicy);
 }
 
 void ChargeSms::export2CDR(CDRRecord & cdr) const
@@ -134,7 +133,8 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
     cdr._dstAdr = dstSubscriberNumber;
     cdr._dpLength = (uint32_t)msgLen;
     cdr._smsXMask = smsXSrvsId;
-    cdr._charge = chrgMode;
+    cdr._chargePolicy = chrgPolicy;
+    cdr._chargeType = mtBill ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
     cdr._finalized = CDRRecord::dpSubmitted;
 }
 
@@ -178,12 +178,14 @@ void ChargeSmsResult::save(ObjectBuffer& out) const
  * ************************************************************************** */
 DeliveredSmsData::DeliveredSmsData(uint32_t res/* = 0*/)
     : INPBillingCmd(INPCSBilling::DELIVERED_SMS_DATA_TAG)
-    , dlvrRes(res), partsNum(1), smsXSrvsId(0)
+    , dlvrRes(res), partsNum(1), smsXSrvsId(0), mtBill(false)
 { }
 
 void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)
 {
-    in >> extCode;
+    //service fields
+    in >> mtBill;
+    in >> smsXSrvsId;
     //Charging request data ..
     in >> dstSubscriberNumber;
     in >> callingPartyNumber;
@@ -212,16 +214,13 @@ void DeliveredSmsData::load(ObjectBuffer& in) throw(SerializerException)
     in >> destSMEid;
     in >> divertedAdr;
     in >> finalTimeTZ;
-    
-    //extensions
-    if (extCode) {
-        in >> smsXSrvsId;
-    }
 }
 
 void DeliveredSmsData::save(ObjectBuffer& out) const
 {
-    out << extCode;
+    //service fields
+    out << mtBill;
+    out << smsXSrvsId;
     //Charging request data ..
     out << dstSubscriberNumber;
     out << callingPartyNumber;
@@ -250,11 +249,6 @@ void DeliveredSmsData::save(ObjectBuffer& out) const
     out << destSMEid;
     out << divertedAdr;
     out << finalTimeTZ;
-
-    //extensions
-    if (extCode) {
-        out << smsXSrvsId;
-    }
 }
 
 void DeliveredSmsData::export2CDR(CDRRecord & cdr) const
@@ -278,7 +272,8 @@ void DeliveredSmsData::export2CDR(CDRRecord & cdr) const
     cdr._dstAdr = dstSubscriberNumber;
     cdr._dpLength = (uint32_t)msgLen;
     cdr._smsXMask = smsXSrvsId;
-    cdr._charge = CDRRecord::ON_DATA_COLLECTED;
+    cdr._chargePolicy = CDRRecord::ON_DATA_COLLECTED;
+    cdr._chargeType = mtBill ? CDRRecord::MT_Charge : CDRRecord::MO_Charge;
 
     //Delivery report data ..
     cdr._dlvrRes = dlvrRes;

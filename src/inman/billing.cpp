@@ -34,8 +34,8 @@ const char * const _BILLmodes[] = {"OFF", "CDR", "IN"};
 const char * const _MSGtypes[] = {"unknown", "SMS", "USSD", "XSMS"};
 const char * const _CDRmodes[] = {"none", "billMode", "all"};
 
-//According to CDRRecord::ChargingMode
-static const char *_chgModes[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED" };
+//According to CDRRecord::ChargingPolicy
+static const char *_chgPolicy[] = { "ON_SUBMIT", "ON_DELIVERY", "ON_DATA_COLLECTED" };
 
 /* ************************************************************************** *
  * class BillingManager implementation:
@@ -128,9 +128,9 @@ Billing::~Billing()
 //returns true if required (depending on chargeMode) CDR data fullfilled
 bool Billing::CDRComplete(void) const
 {
-    if (cdr._charge == CDRRecord::ON_SUBMIT)
+    if (cdr._chargePolicy == CDRRecord::ON_SUBMIT)
         return (cdr._finalized >= CDRRecord::dpSubmitted) ? true : false;
-    if (cdr._charge == CDRRecord::ON_DELIVERY)
+    if (cdr._chargePolicy == CDRRecord::ON_DELIVERY)
         return (cdr._finalized >= CDRRecord::dpDelivered) ? true : false;
     return (cdr._finalized == CDRRecord::dpCollected)  ? true : false;
 }
@@ -293,7 +293,7 @@ void Billing::doFinalize(bool doReport/* = true*/)
 
     smsc_log_info(logger, "%s: %scomplete(%s), %s --> %s(cause: %u),"
                           " abonent(%s), type %s, CDR(s) written: %u", _logId,
-            BillComplete() ? "" : "IN", _chgModes[cdr._charge], cdr.dpType().c_str(),
+            BillComplete() ? "" : "IN", _chgPolicy[cdr._chargePolicy], cdr.dpType().c_str(),
             cdr._inBilled ? "SCF" : _cfg.billModeStr(billMode), billErr,
             abNumber.getSignals(), AbonentContractInfo::type2Str(abType), cdrs);
 
@@ -365,9 +365,11 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
         if (xsmsSrv)
             arg.setDestinationSubscriberNumber(xsmsSrv->adr);
         else
-            arg.setDestinationSubscriberNumber(cdr._dstAdr.c_str());
+            arg.setDestinationSubscriberNumber(cdr._chargeType ?
+                        cdr._srcAdr.c_str() : cdr._dstAdr.c_str());
         arg.setSMSCAddress(csInfo.smscAddress.c_str());
-        arg.setCallingPartyNumber(cdr._srcAdr.c_str());
+        arg.setCallingPartyNumber(cdr._chargeType ? 
+                        cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
         arg.setIMSI(cdr._srcIMSI.c_str());
         arg.setTimeAndTimezone(cdr._submitTime);
         arg.setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
@@ -428,7 +430,7 @@ bool Billing::verifyChargeSms(void)
         return false;
     }
     smsc_log_info(logger, "%s: %s(%s): '%s' -> '%s'", _logId, cdr.dpType().c_str(),
-                _chgModes[cdr._charge], cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+                 _chgPolicy[cdr._chargePolicy], cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
 
     uint32_t smsXMask = cdr._smsXMask & ~SMSX_RESERVED_MASK;
     if (smsXMask) {
@@ -632,7 +634,7 @@ Billing::PGraphState Billing::onDeliverySmsResult(void)
         }
     }
     if (!capDlgActive) {
-        if ((cdr._charge == CDRRecord::ON_SUBMIT) && cdr._dlvrRes)
+        if ((cdr._chargePolicy == CDRRecord::ON_SUBMIT) && cdr._dlvrRes)
             state = bilAborted;
         else
             state = bilReported;
@@ -661,7 +663,7 @@ Billing::PGraphState Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t ch
                 cdr.dpType().c_str(), reply.c_str(), abNumber.getSignals(),
                 AbonentContractInfo::type2Str(abType), (unsigned)abType);
 
-    if (cdr._charge == CDRRecord::ON_DATA_COLLECTED) {
+    if (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED) {
         if (chg_res == ChargeSmsResult::CHARGING_POSSIBLE)
             return onDeliverySmsResult();
         return Billing::pgEnd;
