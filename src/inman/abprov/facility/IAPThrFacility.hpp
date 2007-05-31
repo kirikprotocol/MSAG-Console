@@ -48,7 +48,7 @@ protected:
     unsigned            timeOut;
     unsigned            _qId;   //query unique id
     AbonentId           abonent;
-    AbonentRecord       abRec;
+    AbonentSubscription abInfo;
     Logger *            logger;
     std::string         tName;  //task name for logging
     IAPQStatus::Code    _qStatus;   //query completion status, is to return by Execute()
@@ -76,7 +76,7 @@ public:
     //virtual int Execute(void) = 0;
 
     inline const char *             taskName(void)                { return tName.c_str(); }
-    inline const AbonentRecord &    getAbonentRecord(void)  const { return abRec; }
+    inline const AbonentSubscription & getAbonentInfo(void) const { return abInfo; }
     inline const AbonentId &        getAbonentId(void)      const { return abonent; }
     inline unsigned                 getId(void)             const { return _qId; }
     inline unsigned long            Usage(void)             const { return usage; }

@@ -212,7 +212,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                     IAPQStatus::Code qry_status)
 {
     MutexGuard grd(_mutex);
@@ -220,7 +220,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentRec
         smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
         return;
     }
-    abRec = ab_rec;
+    abRec = ab_info.abRec;
     _state = adIAPQueried;
     providerQueried = false;
     StopTimer();

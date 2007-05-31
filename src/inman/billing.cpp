@@ -731,7 +731,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * IAPQueryListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                             IAPQStatus::Code qry_status)
 {
     MutexGuard grd(bilMutex);
@@ -746,7 +746,7 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab
     if (qry_status != IAPQStatus::iqOk)
         billErr = _RCS_IAPQStatus->mkhash(qry_status);
 
-    if (ConfigureSCFandCharge(ab_rec.ab_type, ab_rec.getSCFinfo()) == Billing::pgEnd)
+    if (ConfigureSCFandCharge(ab_info.abRec.ab_type, ab_info.abRec.getSCFinfo()) == Billing::pgEnd)
         doFinalize();
     return;
 }

@@ -27,10 +27,23 @@ typedef enum {
     abContract = 0x01, abSCF = 0x02, abContractSCF = 0x03
 } IAProviderAbility_e;
 
+struct AbonentSubscription {
+    AbonentRecord   abRec;
+    TonNpiAddress   vlrNum;
+
+    void reset(void)
+        { abRec.reset(); vlrNum.clear(); }
+
+    inline const TonNpiAddress * getVLRNum(void) const
+        { return vlrNum.length ? &vlrNum : NULL; }
+
+    std::string vlr2Str(void) const 
+        { return vlrNum.length ? vlrNum.toString() : "<none>"; }
+};
 
 class IAPQueryListenerITF {
 public:
-    virtual void onIAPQueried(const AbonentId & ab_number, const AbonentRecord & ab_rec,
+    virtual void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                                         IAPQStatus::Code qry_status) = 0;
 };
 

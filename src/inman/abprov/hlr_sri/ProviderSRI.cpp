@@ -197,17 +197,23 @@ int IAPQuerySRI::Execute(void)
 void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
 {
     MutexGuard  grd(_mutex);
-    if (!arg->getIMSI(abRec.abImsi)) //abonent is unknown
-        smsc_log_error(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
+    if (!arg->getIMSI(abInfo.abRec.abImsi)) //abonent is unknown
+        smsc_log_warn(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
     else {
-        if (!arg->getSCFinfo(&abRec.gsmSCF)) {
-            abRec.ab_type = AbonentRecord::abtPostpaid;
-            smsc_log_debug(logger, "%s(%s): gsmSCF not set.", taskName(), abonent.getSignals());
+        if (!arg->getSCFinfo(&abInfo.abRec.gsmSCF)) {
+            abInfo.abRec.ab_type = AbonentRecord::abtPostpaid;
+            smsc_log_debug(logger, "%s(%s): %s, gsmSCF <none>, IMSI %s",
+                            taskName(), abonent.getSignals(), 
+                            abInfo.abRec.type2Str(), abInfo.abRec.imsiCStr());
         } else {
-            abRec.ab_type = AbonentRecord::abtPrepaid;
-            abRec.gsmSCF.serviceKey = 0; //CH-SRI returns only O-Bcsm tDP serviceKeys
-            smsc_log_debug(logger, "%s(%s): gsmSCF %s", taskName(), abonent.getSignals(),
-                           abRec.gsmSCF.scfAddress.getSignals());
+            abInfo.abRec.ab_type = AbonentRecord::abtPrepaid;
+            abInfo.abRec.gsmSCF.serviceKey = 0; //CH-SRI returns only O-Bcsm tDP serviceKeys
+            arg->getVLRN(abInfo.vlrNum);
+            smsc_log_debug(logger, "%s(%s): %s, gsmSCF %s, IMSI %s, VLR %s",
+                            taskName(), abonent.getSignals(),
+                            abInfo.abRec.type2Str(),
+                            abInfo.abRec.gsmSCF.toString().c_str(),
+                            abInfo.abRec.imsiCStr(), abInfo.vlr2Str().c_str());
         }
     }
 }
