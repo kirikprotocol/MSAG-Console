@@ -12,9 +12,21 @@ using smsc::inman::cache::AbonentRecord;
 
 #include "inman/abprov/IAPErrors.hpp"
 
+#include "logger/Logger.h"
+using smsc::logger::Logger;
+
 namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
+
+typedef enum {
+    iapCACHE = 0, iapIN, iapHLR, iapDB
+} IAProviderType;
+
+typedef enum {
+    abContract = 0x01, abSCF = 0x02, abContractSCF = 0x03
+} IAProviderAbility_e;
+
 
 class IAPQueryListenerITF {
 public:
@@ -33,6 +45,15 @@ public:
     //Unbinds query listener, cancels query if no listeners remain.
     virtual void cancelQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb) = 0;
     virtual void cancelAllQueries(void) = 0;
+};
+
+class IAProviderCreatorITF {
+public:
+    virtual IAProviderType      type(void) const = 0;
+    virtual IAProviderAbility_e ability(void) const = 0;
+    virtual const char *        ident(void) const = 0;
+    virtual IAProviderITF *     create(Logger * use_log) = 0;
+    virtual void                logConfig(Logger * use_log) const = 0;
 };
 
 } //iaprvd

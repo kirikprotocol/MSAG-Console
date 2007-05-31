@@ -1,6 +1,10 @@
+#ifndef MOD_IDENT_OFF
 static const char ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
+#include "inman/abprov/IAPLoader.hpp"
 #include "inman/abprov/db/ProviderDb.hpp"
+
 using smsc::db::Connection;
 using smsc::db::Routine;
 

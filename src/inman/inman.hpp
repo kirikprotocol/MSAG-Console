@@ -11,7 +11,7 @@ using smsc::core::synchronization::MutexGuard;
 #include "inman/common/RPCList.hpp"
 using smsc::inman::common::RPCList;
 
-#include "inman/abprov/IAPLoader.hpp"   //includes cache defs
+#include "inman/abprov/IAProvider.hpp"   //includes cache defs
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
 using smsc::inman::iaprvd::IAProviderType;

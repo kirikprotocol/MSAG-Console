@@ -5,7 +5,6 @@
 #include "util/config/ConfigView.h"
 using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
-using smsc::logger::Logger;
 
 #include "inman/abprov/IAProvider.hpp"
 
@@ -13,35 +12,8 @@ namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
 
-typedef enum {
-    iapCACHE = 0, iapIN, iapHLR, iapDB
-} IAProviderType;
-
 extern const char * const _IAPTypes[]; //according to IAProviderType
-
-typedef enum {
-    abContract = 0x01, abSCF = 0x02, abContractSCF = 0x03
-} IAProviderAbility_e;
-
 extern const char * const _IAPAbilities[]; //according to IAProviderAbility_e
-
-struct IAProvider {
-    std::string     ident;
-    IAProviderType  type;
-    IAProviderITF * prov;   //none for iapIN
-};
-
-//typedef std::list<IAProvider> IAProvidersList;
-
-
-class IAProviderCreatorITF {
-public:
-    virtual IAProviderType      type(void) const = 0;
-    virtual IAProviderAbility_e ability(void) const = 0;
-    virtual const char *        ident(void) const = 0;
-    virtual IAProviderITF *     create(Logger * use_log) = 0;
-    virtual void                logConfig(Logger * use_log) const = 0;
-};
 
 //This is the Abonent Provider dynamic library entry point
 extern "C" IAProviderCreatorITF * 

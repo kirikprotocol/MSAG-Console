@@ -33,7 +33,7 @@
 #ifndef SMSC_INMAN_IAPROVIDER_DB_HPP
 #define SMSC_INMAN_IAPROVIDER_DB_HPP
 
-#include "inman/abprov/IAPLoader.hpp"
+#include "inman/abprov/IAProvider.hpp"
 using smsc::inman::iaprvd::IAProviderType;
 using smsc::inman::iaprvd::IAProviderAbility_e;
 using smsc::inman::iaprvd::IAProviderCreatorITF;
