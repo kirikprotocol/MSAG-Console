@@ -483,6 +483,7 @@ protected:
         }
 
         cstr = NULL;
+        bill.cntrReq = BillingCFG::reqOnDemand;
         try { cstr = billCfg.getString("abonentTypeRequest");
         } catch (ConfigException& exc) { }
         if (cstr && cstr[0]) {
@@ -490,7 +491,8 @@ protected:
                 bill.cntrReq = BillingCFG::reqAlways; 
             } else if (strcmp(_abReq[BillingCFG::reqOnDemand], cstr))
                 throw ConfigException("illegal 'abonentTypeRequest' value");
-        }
+        } else
+            smsc_log_warn(logger, "parameter 'abonentTypeRequest' is missed");
         smsc_log_info(logger, "abonentTypeRequest: %s", _abReq[bill.cntrReq]);
 
         tmo = 0;    //abtTimeout
