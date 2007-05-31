@@ -8,7 +8,6 @@
 #include "inman/InTstDefs.hpp"
 using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::AbonentsDB;
-using smsc::inman::test::TNPIAddressDB;
 
 #include "inman/interaction/MsgBilling.hpp"
 using smsc::inman::interaction::INPCSBilling;
@@ -35,10 +34,12 @@ struct INDialogCfg {
     unsigned            dstId;  //destination address id form TonNpiDB
     bool                ussdOp;
     uint32_t            xsmsIds; //SMS Extra services id
-    CDRRecord::ChargingPolicy chgMode;
+    CDRRecord::ChargingPolicy   chgPolicy;
+    CDRRecord::ChargingType     chgType;
 
-    INDialogCfg() : abId(1), dstId(1), ussdOp(false)
-        , xsmsIds(0), chgMode(CDRRecord::ON_DELIVERY)
+    //NOTE: PRE_ABONENTS_NUM >= 2
+    INDialogCfg() : abId(1), dstId(2), ussdOp(false)
+        , xsmsIds(0), chgPolicy(CDRRecord::ON_DELIVERY), chgType(CDRRecord::MO_Charge)
     { }
 };
 
@@ -52,7 +53,8 @@ public:
         , state(dIdle)
     {}
 
-    inline void    setChargeMode(CDRRecord::ChargingPolicy chg_mode) { cfg.chgMode = chg_mode; }
+    inline void    setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { cfg.chgPolicy = chg_pol; }
+    inline void    setChargeType(CDRRecord::ChargingType chg_type) { cfg.chgType = chg_type; }
     inline void    setState(DlgState new_state) { state = new_state; }
     inline DlgState getState(void) const { return state; }
     inline uint32_t getDlvrResult(void) const { return dlvrRes; }
@@ -81,14 +83,12 @@ protected:
     INDialogsMap        _Dialogs;
     INDialogCfg         _dlgCfg;
     AbonentsDB *        _abDB;
-    TNPIAddressDB *     _adrDB;
 
 public:
     BillFacade(ConnectSrv * conn_srv, Logger * use_log = NULL)
         : TSTFacadeAC(conn_srv, use_log), _maxDlgId(0)
         , _msg_ref(0x0100), _msg_id(0x010203040000)
         , _abDB(AbonentsDB::getInstance())
-        , _adrDB(TNPIAddressDB::getInstance())
     { 
         strcpy(_logId, "TFBill");
     }
@@ -112,38 +112,35 @@ public:
     void  printDlgConfig(void) const
     {
         const AbonentInfo * abi = _abDB->getAbnInfo(_dlgCfg.abId);
-        const TonNpiAddress * dAdr = _adrDB->get(_dlgCfg.dstId);
+        const AbonentInfo * dAdr = _abDB->getAbnInfo(_dlgCfg.dstId);
         fprintf(stdout, "INDialog config:\n"
-                "  Abonent[%u]: %s (%s)\n"
+                "  OrigAdr[%u]: %s (%s)\n"
                 "  bearerType : dp%s\n"
-                "  destAdr[%u]: %s (%s)\n"
-                "  charge     : %s\n"
+                "  DestAdr[%u]: %s (%s)\n"
+                "  chargePol  : %s\n"
+                "  chargeType : %s\n"
                 "  SMSExtra: %u\n",
                 _dlgCfg.abId, (abi->msIsdn.toString()).c_str(), abi->type2Str(),
                 _dlgCfg.ussdOp ? "USSD" : "SMS",
-                _dlgCfg.dstId, dAdr->toString().c_str(), 
-                _adrDB->ton2Str(dAdr->typeOfNumber), 
-                (_dlgCfg.chgMode == CDRRecord::ON_DELIVERY) ? "ON_DELIVERY" :
-                ((_dlgCfg.chgMode == CDRRecord::ON_SUBMIT) ? "ON_SUBMIT" : "ON_DATA_COLLECTED"),
-                _dlgCfg.xsmsIds);
+                _dlgCfg.dstId, (dAdr->msIsdn.toString()).c_str(), dAdr->type2Str(),
+                (_dlgCfg.chgPolicy == CDRRecord::ON_DELIVERY) ? "ON_DELIVERY" :
+                ((_dlgCfg.chgPolicy == CDRRecord::ON_SUBMIT) ? "ON_SUBMIT" : "ON_DATA_COLLECTED"),
+                _dlgCfg.chgType ? "MT" : "MO", _dlgCfg.xsmsIds);
     }
 
     inline void setUssdOp(bool op) { _dlgCfg.ussdOp = op; }
     inline void setSmsXIds(uint32_t srv_ids) { _dlgCfg.xsmsIds = srv_ids; }
-    inline void setChargeMode(CDRRecord::ChargingPolicy chg_mode) { _dlgCfg.chgMode = chg_mode; }
+    inline void setChargePolicy(CDRRecord::ChargingPolicy chg_pol) { _dlgCfg.chgPolicy = chg_pol; }
+    inline void setChargeType(CDRRecord::ChargingType chg_typ) { _dlgCfg.chgType = chg_typ; }
 
-    bool setAddressId(unsigned adr_id)
-    { 
-        if (!_adrDB->get(adr_id))
-            return false;
-        _dlgCfg.dstId = adr_id; 
-        return true;
-    }
-    bool setAbonentId(unsigned ab_id)
-    { 
+    bool setAbonentId(unsigned ab_id, bool orig_abn = true)
+    {
         if (!_abDB->getAbnInfo(ab_id))
             return false;
-        _dlgCfg.abId = ab_id;
+        if (orig_abn)
+            _dlgCfg.abId = ab_id;
+        else
+            _dlgCfg.dstId = ab_id;
         return true;
     }
     
@@ -178,14 +175,13 @@ public:
     // -- INMan commands composition and sending methods -- //
     void composeChargeSms(ChargeSms& op, const INDialogCfg * dlg_cfg)
     {
-        const TonNpiAddress * dAdr = _adrDB->get(dlg_cfg->dstId);
-        op.setDestinationSubscriberNumber(dAdr->toString());
+        const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
+        op.setDestinationSubscriberNumber(dAdr->msIsdn.toString());
 
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->msIsdn.toString());
         op.setCallingIMSI(abi->abImsi);
-        
-        op.setLocationInformationMSC((dAdr->typeOfNumber != ToN_ALPHANUM) ?
+        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
                                      ".1.1.79139860001" : "");
         op.setSMSCAddress(".1.1.79029869990");
 
@@ -204,20 +200,21 @@ public:
         op.setMsgLength(160);
         if (dlg_cfg->xsmsIds)
             op.setSmsXSrvs(dlg_cfg->xsmsIds);
-        if (dlg_cfg->chgMode == CDRRecord::ON_SUBMIT)
+        if (dlg_cfg->chgPolicy == CDRRecord::ON_SUBMIT)
             op.setChargeOnSubmit();
+        if (dlg_cfg->chgType)
+            op.setMTcharge();
     }
 
     void composeDeliveredSmsData(DeliveredSmsData& op, const INDialogCfg * dlg_cfg)
     {
-        const TonNpiAddress * dAdr = _adrDB->get(dlg_cfg->dstId);
-        op.setDestinationSubscriberNumber(dAdr->toString());
+        const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
+        op.setDestinationSubscriberNumber(dAdr->msIsdn.toString());
 
         const AbonentInfo * abi = _abDB->getAbnInfo(dlg_cfg->abId);
         op.setCallingPartyNumber(abi->msIsdn.toString());
         op.setCallingIMSI(abi->abImsi);
-
-        op.setLocationInformationMSC((dAdr->typeOfNumber != ToN_ALPHANUM) ?
+        op.setLocationInformationMSC(abi->msIsdn.interISDN() ?
                                      ".1.1.79139860001" : "");
         op.setSMSCAddress(".1.1.79029869990");
 
@@ -238,20 +235,23 @@ public:
             op.setSmsXSrvs(dlg_cfg->xsmsIds);
 
         //fill delivery fields for CDR creation
-        op.setDestIMSI("250013901464251");
-        op.setDestMSC(".1.1.79139860001");
+        op.setDestIMSI(dAdr->getImsi());
+        op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
         op.setDestSMEid("DST_MAP_PROXY");
-        op.setDivertedAdr(_adrDB->get(dlg_cfg->dstId)->toString());
+        op.setDivertedAdr(dAdr->msIsdn.toString());
         op.setDeliveryTime(time(NULL));
+        if (dlg_cfg->chgType)
+            op.setMTcharge();
     }
 
     void composeDeliverySmsResult(DeliverySmsResult& op, const INDialogCfg * dlg_cfg)
     {
+        const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
         //fill fields for CDR creation
-        op.setDestIMSI("250013901464251");
-        op.setDestMSC(".1.1.79139860001");
+        op.setDestIMSI(dAdr->getImsi());
+        op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
         op.setDestSMEid("DST_MAP_PROXY");
-        op.setDivertedAdr(_adrDB->get(dlg_cfg->dstId)->toString());
+        op.setDivertedAdr(dAdr->msIsdn.toString());
         op.setDeliveryTime(time(NULL));
     }
 
@@ -268,8 +268,8 @@ public:
         } else {
             dlg_cfg = dlg->getConfig();
             //fix charging mode
-            if (dlg->getConfig()->chgMode == CDRRecord::ON_DATA_COLLECTED)
-                dlg->setChargeMode(CDRRecord::ON_DELIVERY);
+            if (dlg->getConfig()->chgPolicy == CDRRecord::ON_DATA_COLLECTED)
+                dlg->setChargePolicy(CDRRecord::ON_DELIVERY);
         }
         //compose ChargeSms
         CDRRecord       cdr;
@@ -309,7 +309,7 @@ public:
         } else {
             dlg_cfg = dlg->getConfig();
             //fix charging mode
-            dlg->setChargeMode(CDRRecord::ON_DATA_COLLECTED);
+            dlg->setChargePolicy(CDRRecord::ON_DATA_COLLECTED);
         }
         //compose ChargeSms
         CDRRecord       cdr;
@@ -428,7 +428,7 @@ protected:
                 dlg->setState(INDialog::dApproved);
                 if (dlg->isBatchMode()) {
                     if ((result->GetValue() == ChargeSmsResult::CHARGING_POSSIBLE)
-                        && (dlg->getConfig()->chgMode != CDRRecord::ON_DATA_COLLECTED))
+                        && (dlg->getConfig()->chgPolicy != CDRRecord::ON_DATA_COLLECTED))
                         sendDeliverySmsResult(hdr->dlgId, dlg->getDlvrResult());
                 }
             } else {

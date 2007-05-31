@@ -15,7 +15,7 @@ static char const ident[] = "$Id$";
 using smsc::inman::common::Console;
 
 #include "inman/InTstDefs.hpp"
-using smsc::inman::test::Abonent;
+using smsc::inman::test::AbonentPreset;
 using smsc::inman::test::AbonentType;
 using smsc::inman::test::AbonentInfo;
 
@@ -29,7 +29,7 @@ using smsc::inman::test::DtcrFacade;
 /* ************************************************************************** *
  * 
  * ************************************************************************** */
-static const Abonent  _abonents[] = {
+static const AbonentPreset  _abonents[] = {
     //Nezhinsky phone(prepaid):
      { AbonentContractInfo::abtPrepaid, ".1.1.79139343290", "250013900405871" }
     //tst phone (prepaid):
@@ -38,16 +38,11 @@ static const Abonent  _abonents[] = {
     ,{ AbonentContractInfo::abtPostpaid, ".1.1.79139859489", "250013901464251" }
     //Stupnik phone(postpaid):
     ,{ AbonentContractInfo::abtPostpaid, ".1.1.79139033669", "250013901464251" }
+    //
+    ,{ AbonentContractInfo::abtUnknown,  ".5.0.smsx:201", 0 }
+    ,{ AbonentContractInfo::abtUnknown,  ".5.0.ussd:448", 0 }
 };
-#define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(Abonent))
-
-static const char * const _dstAdr[] = {
-     ".1.1.79139859489"
-    ,".5.0.ussd:448"
-    ,".5.0.smsx:201"
-};
-#define PRE_ADDRESSES_NUM (sizeof(_dstAdr)/sizeof(char *))
-
+#define PRE_ABONENTS_NUM (sizeof(_abonents)/sizeof(AbonentPreset))
 
 class ConnectionClosedException : public std::exception {
 public:
@@ -227,65 +222,9 @@ void cmd_dpussd(Console&, const std::vector<std::string> &args)
     _billFacade->printDlgConfig();
 }
 
-//USAGE: use_adr [?|help | adr_NN]
-static const char hlp_use_adr[] = "USAGE: %s [?|help | adr_NN]\n";
-void cmd_use_adr(Console&, const std::vector<std::string> &args)
-{
-    unsigned abId = 0;
-
-    if (args.size() > 1) {
-        if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-            fprintf(stdout, hlp_use_adr, args[0].c_str());
-            return;
-        }
-        abId = (uint32_t)atoi(args[1].c_str());
-    }
-    if (!abId) {
-        fprintf(stdout, hlp_use_adr, args[0].c_str());
-        fprintf(stdout, "Known destination addresses:\n");
-        TNPIAddressDB::getInstance()->printAddresses(stdout);
-        return;
-    }
-    if (!_billFacade->setAddressId(abId))
-        fprintf(stdout, "ERR: Unknown address #%u!\n", abId);
-    else
-        _billFacade->printDlgConfig();
-}
-static void utl_next_adr(const std::vector<std::string> &args, unsigned char use_ton)
-{
-    unsigned abId = 0;
-
-    if (args.size() > 1) {
-        if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-            fprintf(stdout, hlp_use_adr, args[0].c_str());
-            return;
-        }
-        abId = (uint32_t)atoi(args[1].c_str());
-    }
-    abId = TNPIAddressDB::getInstance()->searchNextAdr(use_ton, abId);
-    if (!abId)
-        fprintf(stdout, "ERR: no address found!");
-    else {
-        _billFacade->setAddressId(abId);
-        _billFacade->printDlgConfig();
-    }
-    return;
-}
-
-void cmd_adrNum(Console&, const std::vector<std::string> &args)
-{
-    utl_next_adr(args, ToN_INTERNATIONAL);
-}
-
-void cmd_adrAlpha(Console&, const std::vector<std::string> &args)
-{
-    utl_next_adr(args, ToN_ALPHANUM);
-}
-
-
 //USAGE: use_abn [?|help | abn_NN]
 static const char hlp_use_abn[] = "USAGE: %s [?|help | abn_NN]\n";
-void cmd_use_abn(Console&, const std::vector<std::string> &args)
+static void utl_use_abn(const std::vector<std::string> &args, bool orig_abn)
 {
     unsigned abId = 0;
 
@@ -302,10 +241,20 @@ void cmd_use_abn(Console&, const std::vector<std::string> &args)
         AbonentsDB::getInstance()->printAbonents(stdout);
         return;
     }
-    if (!_billFacade->setAbonentId(abId))
+    if (!_billFacade->setAbonentId(abId, orig_abn))
         fprintf(stdout, "ERR: Unknown abonent #%u!\n", abId);
     else
         _billFacade->printDlgConfig();
+}
+
+void cmd_use_oabn(Console&, const std::vector<std::string> &args)
+{
+    utl_use_abn(args, true);
+}
+
+void cmd_use_dabn(Console&, const std::vector<std::string> &args)
+{
+    utl_use_abn(args, false);
 }
 
 static void utl_next_abn(const std::vector<std::string> &args, AbonentType ab_type)
@@ -323,7 +272,7 @@ static void utl_next_abn(const std::vector<std::string> &args, AbonentType ab_ty
     if (!abId)
         fprintf(stdout, "ERR: no known abonent found!");
     else {
-        _billFacade->setAbonentId(abId);
+        _billFacade->setAbonentId(abId, true);
         _billFacade->printDlgConfig();
     }
     return;
@@ -378,28 +327,40 @@ void cmd_no_xsms(Console&, const std::vector<std::string> &args)
 }
 
 //USAGE: chg_mode_abn [?|help | submit | delivery | alldata]
-static const char hlp_chg_mode[] = "USAGE: %s [?|help | submit | delivery | alldata]\n";
-
-void cmd_charge_mode(Console&, const std::vector<std::string> &args)
+static const char hlp_chg_policy[] = "USAGE: %s [?|help | submit | delivery | alldata]\n";
+void cmd_charge_policy(Console&, const std::vector<std::string> &args)
 {
     if ((args.size() < 2)
         || !strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-        fprintf(stdout, hlp_chg_mode, args[0].c_str());
+        fprintf(stdout, hlp_chg_policy, args[0].c_str());
         return;
     }
     const char * mode = args[1].c_str();
-    CDRRecord::ChargingPolicy chg_mode = CDRRecord::ON_DELIVERY;
+    CDRRecord::ChargingPolicy chg_policy = CDRRecord::ON_DELIVERY;
     if (!strcmp(mode, "submit")) {
-        chg_mode = CDRRecord::ON_SUBMIT;
+        chg_policy = CDRRecord::ON_SUBMIT;
     } else if (!strcmp(mode, "alldata")) {
-        chg_mode = CDRRecord::ON_DATA_COLLECTED;
+        chg_policy = CDRRecord::ON_DATA_COLLECTED;
     } else if (strcmp(mode, "delivery")) {
         fprintf(stdout, "ERR: invalid charging mode: %s!", mode);
         return;
     }
-    _billFacade->setChargeMode(chg_mode);
+    _billFacade->setChargePolicy(chg_policy);
     _billFacade->printDlgConfig();
 }
+
+void cmd_charge_type_MO(Console&, const std::vector<std::string> &args)
+{
+    _billFacade->setChargeType(CDRRecord::MO_Charge);
+    _billFacade->printDlgConfig();
+}
+
+void cmd_charge_type_MT(Console&, const std::vector<std::string> &args)
+{
+    _billFacade->setChargeType(CDRRecord::MT_Charge);
+    _billFacade->printDlgConfig();
+}
+
 
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
@@ -492,7 +453,6 @@ int main(int argc, char** argv)
     Logger * _logger = Logger::getInstance("smsc.InTST");
 
     AbonentsDB::Init(PRE_ABONENTS_NUM, _abonents);
-    TNPIAddressDB::Init(PRE_ADDRESSES_NUM, _dstAdr);
 
     std::auto_ptr<ConnectSrv> _connServ(new ConnectSrv(ConnectSrv::POLL_TIMEOUT_ms, _logger));
     try {
@@ -521,18 +481,17 @@ int main(int argc, char** argv)
         console.addItem("dpsms",  cmd_dpsms);
         console.addItem("dpussd",  cmd_dpussd);
         /**/
-        console.addItem("use_abn",  cmd_use_abn);
+        console.addItem("use_oabn",  cmd_use_oabn);
+        console.addItem("use_dabn",  cmd_use_dabn);
         console.addItem("prepaid",  cmd_prepaid);
         console.addItem("postpaid",  cmd_postpaid);
-        /**/
-        console.addItem("use_adr",  cmd_use_adr);
-        console.addItem("adrnum",  cmd_adrNum);
-        console.addItem("adralpha",  cmd_adrAlpha);
         /**/
         console.addItem("use_xsms",  cmd_use_xsms);
         console.addItem("no_xsms",  cmd_no_xsms);
         /**/
-        console.addItem("chg_mode",  cmd_charge_mode);
+        console.addItem("chg_policy",  cmd_charge_policy);
+        console.addItem("mo_charge",  cmd_charge_type_MO);
+        console.addItem("mt_charge",  cmd_charge_type_MT);
 /* ************************************************************************** *
  * Console commands: sending INMan AbonentDetector commands 
  * ************************************************************************** */

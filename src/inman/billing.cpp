@@ -104,9 +104,9 @@ void BillingManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializableP
  * ************************************************************************** */
 Billing::Billing(unsigned b_id, BillingManager * owner, Logger * uselog/* = NULL*/)
         : WorkerAC(b_id, owner, uselog), state(bilIdle), capDlg(NULL)
-        , abType(AbonentContractInfo::abtUnknown), providerQueried(false)
-        , capDlgActive(false), capSess(NULL), abPolicy(NULL), billErr(0)
-        , xsmsSrv(0), msgType(ChargeObj::msgUnknown)
+        , providerQueried(false), capDlgActive(false), capSess(NULL)
+        , abPolicy(NULL), billErr(0), xsmsSrv(0), msgType(ChargeObj::msgUnknown)
+        , billMode(ChargeObj::billOFF)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.Billing");
     _cfg = owner->getConfig();
@@ -275,7 +275,15 @@ void Billing::doCleanUp(void)
 unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
-    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abType);
+    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abRec.ab_type);
+    //set the location MSC to actual one
+    if (cdr._chargeType) {  //MT
+        if (!abCsi.vlrNum.empty())
+            cdr._dstMSC = abCsi.vlr2Str();
+    } else {                //MO
+        if (!abCsi.vlrNum.empty())
+            cdr._srcMSC = abCsi.vlr2Str();
+    }
     if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::cdrALL)) {
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
@@ -291,11 +299,12 @@ void Billing::doFinalize(bool doReport/* = true*/)
     if (_cfg.cdrMode && BillComplete() && _cfg.bfs)
         cdrs = writeCDR();
 
-    smsc_log_info(logger, "%s: %scomplete(%s), %s --> %s(cause: %u),"
+    smsc_log_info(logger, "%s: %scomplete(%s, %s), %s --> %s(cause: %u),"
                           " abonent(%s), type %s, CDR(s) written: %u", _logId,
-            BillComplete() ? "" : "IN", _chgPolicy[cdr._chargePolicy], cdr.dpType().c_str(),
+            BillComplete() ? "" : "IN", cdr._chargeType ? "MT" : "MO",
+            _chgPolicy[cdr._chargePolicy], cdr.dpType().c_str(),
             cdr._inBilled ? "SCF" : _cfg.billModeStr(billMode), billErr,
-            abNumber.getSignals(), AbonentContractInfo::type2Str(abType), cdrs);
+            abNumber.getSignals(), abCsi.abRec.type2Str(), cdrs);
 
     doCleanUp();
     if (doReport) {
@@ -344,13 +353,27 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
     }
     smsc_log_debug(logger, "%s: using TCSR[%u]: %s", _logId,
                    capSess->getUID(), capSess->Signature().c_str());
-
+    
+    //determine destination address for CAP dialog
+    TonNpiAddress dstAdr;
+    if (cdr._chargeType) {  //MT
+        if (!dstAdr.fromText(cdr._srcAdr.c_str())) {
+            smsc_log_error(logger, "%s: invalid Call.Adr '%s'", _logId, cdr._srcAdr.c_str());
+            return _RCS_INManErrors->mkhash(INManErrorId::protocolInvalidData);
+        }
+    } else {                //MO
+        if (xsmsSrv) {
+            dstAdr = xsmsSrv->adr;
+        } else if (!dstAdr.fromText(cdr._dstAdr.c_str())) {
+            smsc_log_error(logger, "%s: invalid Dest.Adr '%s'", _logId, cdr._dstAdr.c_str());
+            return _RCS_INManErrors->mkhash(INManErrorId::protocolInvalidData);
+        }
+    }
     RCHash rval = 0;
     try { //Initiate CAP3 dialog
         capDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //initialize TCAP dialog
-        capDlgActive = true;
-        smsc_log_debug(logger, "%s: Initiating CapSMS[%u] -> %s", _logId, capDlg->getId(),
-                       xsmsSrv ? xsmsSrv->adr.toString().c_str() : cdr._dstAdr.c_str());
+        smsc_log_debug(logger, "%s: Initiating CapSMS[%u] %s -> %s", _logId, capDlg->getId(),
+                        abNumber.toString().c_str(), dstAdr.toString().c_str());
 
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
 
@@ -360,23 +383,29 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
         case INScfCFG::idpLiSMSC:
             arg.setLocationInformationMSC(csInfo.smscAddress.c_str()); break;
         default:
-            arg.setLocationInformationMSC(cdr._srcMSC.c_str());
+            arg.setLocationInformationMSC(abCsi.vlrNum);
+//            arg.setLocationInformationMSC(cdr._srcMSC.c_str());
         }
-        if (xsmsSrv)
-            arg.setDestinationSubscriberNumber(xsmsSrv->adr);
-        else
-            arg.setDestinationSubscriberNumber(cdr._chargeType ?
-                        cdr._srcAdr.c_str() : cdr._dstAdr.c_str());
+//        if (xsmsSrv)
+//            arg.setDestinationSubscriberNumber(xsmsSrv->adr);
+//        else
+//            arg.setDestinationSubscriberNumber(cdr._chargeType ?
+//                        cdr._srcAdr.c_str() : cdr._dstAdr.c_str());
+//        arg.setCallingPartyNumber(cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
+//        arg.setIMSI(cdr._srcIMSI.c_str());
+        arg.setCallingPartyNumber(abNumber);
+        std::string ab_imsi(abCsi.abRec.getImsi());
+        arg.setIMSI(ab_imsi);
+        arg.setDestinationSubscriberNumber(dstAdr);
+
         arg.setSMSCAddress(csInfo.smscAddress.c_str());
-        arg.setCallingPartyNumber(cdr._chargeType ? 
-                        cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
-        arg.setIMSI(cdr._srcIMSI.c_str());
         arg.setTimeAndTimezone(cdr._submitTime);
         arg.setTPShortMessageSpecificInfo(csInfo.tpShortMessageSpecificInfo);
         arg.setTPValidityPeriod(csInfo.tpValidityPeriod, smsc::inman::comp::tp_vp_relative);
         arg.setTPProtocolIdentifier(csInfo.tpProtocolIdentifier);
         arg.setTPDataCodingScheme(csInfo.tpDataCodingScheme);
         capDlg->initialDPSMS(&arg); //begins TCAP dialog
+        capDlgActive = true;
         state = Billing::bilInited;
         return 0;
     } catch (const CustomException & c_exc) {
@@ -386,7 +415,7 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
         smsc_log_error(logger, "%s: %s", _logId, exc.what());
         rval = _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
     }
-    capDlgActive = false;
+//    capDlgActive = false;
     delete capDlg;
     capDlg = NULL;
     return rval;
@@ -425,12 +454,23 @@ void Billing::StopTimer(Billing::BillingState bilState)
 //NOTE: bilMutex should be locked upon entry!
 bool Billing::verifyChargeSms(void)
 {
-    if (!abNumber.fromText(cdr._srcAdr.c_str())) {
-        smsc_log_error(logger, "%s: invalid Call.Adr <%s>", _logId, cdr._srcAdr.c_str());
+    if (cdr._chargeType && (cdr._chargePolicy == CDRRecord::ON_DELIVERY)) {
+        smsc_log_error(logger, "%s: MT billing is incompatible with ON_DELIVERY policy", _logId);
         return false;
     }
-    smsc_log_info(logger, "%s: %s(%s): '%s' -> '%s'", _logId, cdr.dpType().c_str(),
-                 _chgPolicy[cdr._chargePolicy], cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
+    //determine which abonent should be charged
+    if (!abNumber.fromText(cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str())) {
+        smsc_log_error(logger, "%s: invalid %s.Adr '%s'", _logId,
+                        cdr._chargeType ? "Dest" : "Call",
+                        cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
+        return false;
+    }
+    //check if abonent location MSC number is already present
+    abCsi.vlrNum.fromText(cdr._chargeType ? cdr._dstMSC.c_str() : cdr._srcMSC.c_str());
+
+    smsc_log_info(logger, "%s: %s(%s, %s): '%s' -> '%s'", _logId,
+                cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
+                _chgPolicy[cdr._chargePolicy], cdr._srcAdr.c_str(), cdr._dstAdr.c_str());
 
     uint32_t smsXMask = cdr._smsXMask & ~SMSX_RESERVED_MASK;
     if (smsXMask) {
@@ -452,17 +492,6 @@ bool Billing::verifyChargeSms(void)
         }
     }
 
-    //check for source IMSI & MSC
-    if (!strcmp("MAP_PROXY", cdr._srcSMEid.c_str())) {
-        if (!cdr._srcIMSI.length() || !cdr._srcMSC.length()) {
-            std::string rec;
-            CDRRecord::csvEncode(cdr, rec);
-            smsc_log_error(logger, "%s: empty source IMSI or MSC!", _logId);
-            smsc_log_error(logger, "%s: header: <%s>", 
-                           _logId, smsc::inman::cdr::_CDRRecordHeader_TEXT);
-            smsc_log_error(logger, "%s: cdr   : <%s>", _logId, rec.c_str());
-        }
-    }
     if (xsmsSrv)
         msgType = ChargeObj::msgXSMS;
     else
@@ -487,14 +516,14 @@ Billing::PGraphState Billing::onChargeSms(void)
         billMode = ChargeObj::bill2CDR;
     else if (cdr._smsXMask & SMSX_NOCHARGE_SRV)
         billMode = ChargeObj::bill2CDR;
-    if ((xsmsSrv && !xsmsSrv->adr.length)) {
+    //check for SMS extra sevice number being set
+    if ((xsmsSrv && xsmsSrv->adr.empty())) {
         billMode = ChargeObj::bill2CDR;
         billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgSpecific);
     }
 
-    AbonentRecord   abRec;      //ab_type = abtUnknown
-    abType = _cfg.abCache->getAbonentInfo(abNumber, &abRec);
-    if (abType == AbonentContractInfo::abtPostpaid) {
+    _cfg.abCache->getAbonentInfo(abNumber, &abCsi.abRec);
+    if (abCsi.abRec.ab_type == AbonentContractInfo::abtPostpaid) {
         billMode = ChargeObj::bill2CDR;
         //do not interact IN platform, just create CDR
         return chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
@@ -502,19 +531,25 @@ Billing::PGraphState Billing::onChargeSms(void)
 
     //Here goes either abtPrepaid or abtUnknown ..
     //check for cache consistency
-    if ((abType == AbonentContractInfo::abtPrepaid) && !abRec.getSCFinfo())
-        abType = abRec.ab_type = AbonentContractInfo::abtUnknown;
+    if ((abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid) && !abCsi.abRec.getSCFinfo())
+        abCsi.abRec.ab_type = AbonentContractInfo::abtUnknown;
+
+    if (!(abPolicy = _cfg.policies->getPolicy(&abNumber)))
+        smsc_log_error(logger, "%s: no policy set for %s", _logId, 
+                        abNumber.toString().c_str());
 
     //check if AbonentProvider should be requested for contract type
-    bool askProvider = ((abType == AbonentContractInfo::abtUnknown)
+    bool askProvider = ((abCsi.abRec.ab_type == AbonentContractInfo::abtUnknown)
                         && ((billMode == ChargeObj::bill2IN)
                             || (_cfg.cntrReq == BillingCFG::reqAlways)
                             || (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED))
                         );
 
-    if (!(abPolicy = _cfg.policies->getPolicy(&abNumber)))
-        smsc_log_error(logger, "%s: no policy set for %s", _logId, 
-                        abNumber.toString().c_str());
+    //check if AbonentProvider should be requested for current abonent location
+    if (/*cdr._chargeType && */abCsi.vlrNum.empty() && !askProvider
+        && (abPolicy && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF))) {
+        askProvider = true;
+    }
 
     if (askProvider && abPolicy) {
         smsc_log_debug(logger, "%s: using policy %s for %s", _logId, abPolicy->Ident(),
@@ -532,15 +567,13 @@ Billing::PGraphState Billing::onChargeSms(void)
                                abNumber.getSignals());
         }
     }
-    return ConfigureSCFandCharge(abRec.ab_type, abRec.getSCFinfo());
+    return ConfigureSCFandCharge();
 }
 
 //Here goes either bill2IN or bill2CDR ..
-Billing::PGraphState Billing::ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
-                                    const GsmSCFinfo * p_scf/* = NULL*/)
+Billing::PGraphState Billing::ConfigureSCFandCharge(void)
 {
-    abType = ab_type;
-    if (abType == AbonentContractInfo::abtPostpaid) {
+    if (abCsi.abRec.ab_type == AbonentContractInfo::abtPostpaid) {
         billMode = ChargeObj::bill2CDR;
         return chargeResult(ChargeSmsResult::CHARGING_POSSIBLE);
     }
@@ -548,21 +581,22 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(AbonentContractInfo::Contrac
     RCHash err = 0;
     if (billMode == ChargeObj::bill2IN) {
         const char * errmsg = NULL;
+        const GsmSCFinfo * p_scf = abCsi.abRec.getSCFinfo();
         if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
             abScf.scf = *p_scf;
             if (abPolicy) //lookup policy for extra SCF parms (serviceKey, RPC lists)
                 abPolicy->getSCFparms(&abScf);
-        } else { //attempt to determine SCF params from config.xml
+        } else {    //attempt to determine SCF params from config.xml
             if (!abPolicy) {
                 errmsg = "unable to determine IN params, no policy set";
             } else {
-                if (abType == AbonentContractInfo::abtPrepaid) {
+                if (abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid) {
                     //look for single IN serving
                     if (abPolicy->scfMap.size() == 1)
                         abScf = *((*(abPolicy->scfMap.begin())).second);
                     else
                         errmsg = "unable to determine IN params";
-                } else { //abType == AbonentContractInfo::abtUnknown
+                } else { //ab_type == AbonentContractInfo::abtUnknown
                     //look for single IN serving with postpaidRPC defined
                     INScfCFG * pin = NULL;
                     if (abPolicy->scfMap.size() == 1) {
@@ -579,6 +613,8 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(AbonentContractInfo::Contrac
         }
         if (!errmsg && !abScf.scf.serviceKey)  //check for serviceKey being set
             errmsg = "unable to determine IN serviceKey";
+        if (!errmsg && abCsi.vlrNum.empty())   //check for charged abonent location
+            errmsg = "failed to determine abonent location MSC";
         if (errmsg) {
             err = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
             billMode = _cfg.billMode.modeFor(msgType)->second;
@@ -663,9 +699,10 @@ Billing::PGraphState Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t ch
             billMode == ChargeObj::bill2CDR ? "CDR" : "SCF", billErr);
         state = Billing::bilContinued;
     }
-    smsc_log_info(logger, "%s: <-- %s CHARGING_%s, abonent(%s) type: %s (%u)", _logId,
-                cdr.dpType().c_str(), reply.c_str(), abNumber.getSignals(),
-                AbonentContractInfo::type2Str(abType), (unsigned)abType);
+    smsc_log_info(logger, "%s: <-- %s %s CHARGING_%s, abonent(%s) type: %s (%u)",
+                _logId, cdr.dpType().c_str(), cdr._chargeType ? "MT" : "MO",
+                reply.c_str(), abNumber.getSignals(),
+                abCsi.abRec.type2Str(), (unsigned)abCsi.abRec.ab_type);
 
     if (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED) {
         if (chg_res == ChargeSmsResult::CHARGING_POSSIBLE)
@@ -713,8 +750,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             //abonent provider query is expired
             abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
             providerQueried = false;
-
-            if (ConfigureSCFandCharge(AbonentContractInfo::abtUnknown, NULL) == Billing::pgEnd)
+            if (ConfigureSCFandCharge() == Billing::pgEnd)
                 doFinalize();
             return;
         }
@@ -743,10 +779,14 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     }
     StopTimer(state);
     state = bilQueried;
+    abCsi.abRec = ab_info.abRec;
+    if (!ab_info.vlrNum.empty())
+        abCsi.vlrNum = ab_info.vlrNum;
+
     if (qry_status != IAPQStatus::iqOk)
         billErr = _RCS_IAPQStatus->mkhash(qry_status);
 
-    if (ConfigureSCFandCharge(ab_info.abRec.ab_type, ab_info.abRec.getSCFinfo()) == Billing::pgEnd)
+    if (ConfigureSCFandCharge() == Billing::pgEnd)
         doFinalize();
     return;
 }
@@ -762,8 +802,8 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
     ChargeSmsResult::ChargeSmsResult_t  chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
 
     if (!rp_cause) {    //ContinueSMS
-        if (abType != AbonentContractInfo::abtPrepaid)  //Update abonents cache
-            _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abType = 
+        if (abCsi.abRec.ab_type != AbonentContractInfo::abtPrepaid)  //Update abonents cache
+            _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abCsi.abRec.ab_type = 
                                 AbonentContractInfo::abtPrepaid, 0, &abScf.scf));
     } else {            //ReleaseSMS
         capDlgActive = false;
@@ -774,9 +814,9 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
                                 it != abScf.postpaidRPC.end(); it++) {
             if ((*it) == rp_cause) {
                 //Update abonents cache
-                if (abType != AbonentContractInfo::abtPostpaid)
-                    _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abType = 
-                                                 AbonentContractInfo::abtPostpaid));
+                if (abCsi.abRec.ab_type != AbonentContractInfo::abtPostpaid)
+                    _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(
+                            abCsi.abRec.ab_type = AbonentContractInfo::abtPostpaid));
                 billMode = ChargeObj::bill2CDR;
                 chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
                 chargeResult(chgRes, scfErr);

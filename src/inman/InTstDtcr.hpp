@@ -8,7 +8,6 @@
 #include "inman/InTstDefs.hpp"
 using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::AbonentsDB;
-using smsc::inman::test::TNPIAddressDB;
 
 #include "inman/interaction/MsgContract.hpp"
 using smsc::inman::interaction::INPCSAbntContract;

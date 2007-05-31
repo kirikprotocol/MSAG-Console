@@ -160,7 +160,7 @@ typedef struct {
     AbonentType  abType;
     const char *  addr;
     const char *  imsi;
-} Abonent;
+} AbonentPreset;
 
 struct AbonentInfo : public AbonentContractInfo {
     TonNpiAddress  msIsdn;
@@ -193,7 +193,7 @@ protected:
     AbonentsMAP     registry;
     unsigned        lastAbnId;
 
-    void initDB(unsigned n_abn, const Abonent * p_abn)
+    void initDB(unsigned n_abn, const AbonentPreset * p_abn)
     {
         for (unsigned i = 0; i < n_abn; i++) {
             AbonentInfo  abn(p_abn[i].addr, p_abn[i].abType, p_abn[i].imsi);
@@ -212,7 +212,7 @@ public:
         return &abnData;
     }
 
-    static AbonentsDB * Init(unsigned n_abn, const Abonent * p_abn)
+    static AbonentsDB * Init(unsigned n_abn, const AbonentPreset * p_abn)
     {
         AbonentsDB * adb = AbonentsDB::getInstance();
         adb->initDB(n_abn, p_abn);
@@ -320,122 +320,18 @@ public:
         }
         return 0;
     }
-};
 
-/* ************************************************************************** *
- * class TNPIAddressDB: TomNpiAddresses registry
- * ************************************************************************** */
-class TNPIAddressDB {
-protected:
-    typedef std::map<unsigned, TonNpiAddress> TNPIAddressMap;
-
-    Mutex           _sync;
-    TNPIAddressMap  registry;
-    unsigned        lastAdrId;
-
-    unsigned init_db(unsigned n_abn, const char * p_abn[])
-    {
-        for (unsigned i = 0; i < n_abn; i++) {
-            TonNpiAddress  abn;
-            if (abn.fromText(p_abn[i]))
-                registry.insert(TNPIAddressMap::value_type(++lastAdrId, abn));
-        }
-        return registry.size();
-    }
-
-    TNPIAddressDB() : lastAdrId(0) { }
-    ~TNPIAddressDB() { }
-
-public:
-    static TNPIAddressDB * getInstance(void)
-    {
-        static TNPIAddressDB     abnData;
-        return &abnData;
-    }
-
-    static TNPIAddressDB * Init(unsigned n_abn, const char * p_abn[])
-    {
-        TNPIAddressDB * adb = TNPIAddressDB::getInstance();
-        adb->init_db(n_abn, p_abn);
-        return adb;
-    }
-
-    static const char * ton2Str(unsigned char ton)
-    {
-        static const char * _nm_ToN[] = {
-            // 0        1                2    3    4   5
-            "unknown", "international", "2", "3", "4", "alphanumeric"
-        };
-        #define ToN_NAMES_SZ (sizeof(_nm_ToN)/sizeof(char*))
-        return (ton >= ToN_NAMES_SZ) ? "reserved" : _nm_ToN[ton];
-    }
-    static void print_address(FILE * stream, const TonNpiAddress & adr, unsigned ab_id)
-    {
-        fprintf(stream, "adr.%u: %s (%s)\n", ab_id, adr.toString().c_str(),
-                ton2Str(adr.typeOfNumber));
-    }
-
-
-    const TonNpiAddress * get(unsigned adr_id)
+    unsigned addAddress(const TonNpiAddress & addr)
     {
         MutexGuard  grd(_sync);
-        TNPIAddressMap::const_iterator it = registry.find(adr_id);
-        return (it != registry.end()) ? &(*it).second : NULL;
-    }
-
-    unsigned add(TonNpiAddress & abn)
-    {
-        MutexGuard  grd(_sync);
-        registry.insert(TNPIAddressMap::value_type(++lastAdrId, abn));
-        return lastAdrId;
-    }
-
-    unsigned searchNextAdr(unsigned char adr_type, unsigned min_id = 0)
-    {
-        MutexGuard  grd(_sync);
-        TNPIAddressMap::const_iterator it = registry.begin();
-        if (min_id && (min_id <= registry.size())) {
-            it = registry.find(min_id);
-        }
-        for (; it != registry.end(); it ++) {
-            const TonNpiAddress & abn = (*it).second;
-            if (abn.typeOfNumber == adr_type)
-                return (*it).first;
-        }
-        return 0;
-    }
-
-    void printAddress(FILE * stream, unsigned ab_id)
-    {
-        MutexGuard  grd(_sync);
-        TNPIAddressMap::const_iterator it = registry.find(ab_id);
-        if (it != registry.end()) {
-            const TonNpiAddress & abn = (*it).second;
-            TNPIAddressDB::print_address(stream, abn, ab_id);
-        }
-    }
-
-    //0, 0 - print ALL
-    void printAddresses(FILE * stream, unsigned min_id = 0, unsigned max_id = 0)
-    {
-        MutexGuard  grd(_sync);
-        if (!registry.size())
-            return;
-        if (!min_id || (min_id > registry.size()))
-            min_id = 1;
-        if (!max_id || (max_id > registry.size()))
-            max_id = registry.size();
-
-        TNPIAddressMap::const_iterator it = registry.find(min_id);
-        while (min_id <= max_id) {
-            const TonNpiAddress & abn = (*it).second;
-            TNPIAddressDB::print_address(stream, abn, min_id);
-            min_id++;
-            it++;
-        }
+        AbonentInfo abn(&addr);
+        unsigned    ab_id = ++lastAbnId;
+        registry.insert(AbonentsMAP::value_type(ab_id, abn));
+        return ab_id;
     }
 
 };
+
 } // namespace test
 } // namespace inman
 } // namespace smsc

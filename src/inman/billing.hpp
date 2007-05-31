@@ -117,8 +117,7 @@ private:
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     PGraphState chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
-    PGraphState ConfigureSCFandCharge(AbonentContractInfo::ContractType ab_type,
-                               const GsmSCFinfo * p_scf = NULL);
+    PGraphState ConfigureSCFandCharge(void);
 
     Mutex           bilMutex;
     BillingCFG      _cfg;
@@ -134,7 +133,7 @@ private:
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction
     ChargeObj::MSG_TYPE msgType; // 
     TimersMAP       timers;     //active timers
-    AbonentContractInfo::ContractType abType;     //calling abonent contract type
+    AbonentSubscription     abCsi;  //CAMEL subscription info of abonent is to charge
     TonNpiAddress   abNumber;   //ISDN number of abonent is to charge
     bool            providerQueried;
     // ...
