@@ -174,7 +174,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
 
     if (tariffRec->Price == 0)
         smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
-
+#ifdef MSAG_INMAN_BILL
     if(tariffRec->billType == scag::bill::infrastruct::INMAN)
     {
         LongCallContext& lcmCtx = context.getSCAGCommand().getLongCallContext();
@@ -185,6 +185,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
     }
     else
     {
+#endif
         try 
         {
             int bi = scag::bill::BillingManager::Instance().Open(bp->billingInfoStruct, bp->tariffRec);
@@ -195,7 +196,9 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
             smsc_log_warn(logger, "Action '%s' unable to process. Delails: %s", m_ActionName.c_str(), e.what());
             SetBillingStatus(context, e.what(), false, 0);
         }
+#ifdef MSAG_INMAN_BILL
     }
+#endif
     return false;
 }
 

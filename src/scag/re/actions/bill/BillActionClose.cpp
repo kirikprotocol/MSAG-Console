@@ -80,6 +80,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
             return false;
         }
 
+#ifdef MSAG_INMAN_BILL
         if(tr.billType == scag::bill::infrastruct::INMAN && actionCommit)
         {
             BillCloseCallParams* bp = new BillCloseCallParams();
@@ -91,6 +92,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
         }
         else
         {
+#endif
             try {
                 if(actionCommit)
                     bm.Commit(bid);
@@ -103,7 +105,9 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
                 return false;
             }
         }
+#ifdef MSAG_INMAN_BILL
     }
+#endif
     SetBillingStatus(context,"", true);
     if(op) op->detachBill();
     return false;
