@@ -660,28 +660,28 @@ void BillingManagerImpl::onConnectError(Connect* conn, std::auto_ptr<CustomExcep
 
 void BillingManagerImpl::Start()
 {
+    #ifdef MSAG_INMAN_BILL
     MutexGuard guard(stopLock);
     if (!m_bStarted)
     {
         m_bStarted = true;
-    #ifdef MSAG_INMAN_BILL
         Thread::Start();
-    #endif
     }
+    #endif
 }
 
 void BillingManagerImpl::Stop()
 {
+    #ifdef MSAG_INMAN_BILL
     MutexGuard guard(stopLock);
     if(m_bStarted)
     {
         m_bStarted = false;
-    #ifdef MSAG_INMAN_BILL
         socket->Close();
-    #endif
         connectEvent.Signal();
         exitEvent.Wait();
     }
+    #endif
     smsc_log_info(logger,"BillingManager::stop");
 }
 
