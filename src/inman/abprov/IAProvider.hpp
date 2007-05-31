@@ -24,7 +24,7 @@ typedef enum {
 } IAProviderType;
 
 typedef enum {
-    abContract = 0x01, abSCF = 0x02, abContractSCF = 0x03
+    abNone = 0x00, abContract = 0x01, abSCF = 0x02, abContractSCF = 0x03
 } IAProviderAbility_e;
 
 struct AbonentSubscription {
