@@ -15,6 +15,7 @@ static char const ident[] = "$Id$";
 #include <inman/comp/map_uss/MapUSSFactory.hpp>
 
 using smsc::util::config::Manager;
+using smsc::util::config::ConfigView;
 using smsc::util::config::ConfigException;
 
 static smsc::inman::uss::USSBalanceService* service = 0;

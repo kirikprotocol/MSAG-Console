@@ -6,7 +6,6 @@
 # include <inman/interaction/server.hpp>
 # include "USSBalanceConnect.hpp"
 # include <map>
-# include <inman/inman.hpp>
 # include <inman/inap/dispatcher.hpp>
 
 # include "UssServiceCfg.hpp"
