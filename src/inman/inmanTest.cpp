@@ -223,47 +223,83 @@ void cmd_dpussd(Console&, const std::vector<std::string> &args)
 }
 
 //USAGE: use_abn [?|help | abn_NN]
-static const char hlp_use_abn[] = "USAGE: %s [?|help | abn_NN]\n";
-static void utl_use_abn(const std::vector<std::string> &args, bool orig_abn)
+static const char hlp_use_abnts[] = "USAGE: %s [?|help | org.abn_NN] [dst.abn_NN]\n";
+static void cmd_use_abnts(Console&, const std::vector<std::string> &args)
 {
     unsigned abId = 0;
 
-    if (args.size() > 1) {
-        if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-            fprintf(stdout, hlp_use_abn, args[0].c_str());
-            return;
-        }
-        abId = (uint32_t)atoi(args[1].c_str());
-    }
-    if (!abId) {
-        fprintf(stdout, hlp_use_abn, args[0].c_str());
+    if (args.size() ==  1) {
+        fprintf(stdout, hlp_use_abnts, args[0].c_str());
         fprintf(stdout, "Known abonents:\n");
         AbonentsDB::getInstance()->printAbonents(stdout);
         return;
     }
-    if (!_billFacade->setAbonentId(abId, orig_abn))
-        fprintf(stdout, "ERR: Unknown abonent #%u!\n", abId);
-    else
-        _billFacade->printDlgConfig();
+    if (args.size() > 1) {
+        if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+            fprintf(stdout, hlp_use_abnts, args[0].c_str());
+            return;
+        }
+        abId = (unsigned)atoi(args[1].c_str());
+        if (!abId) {
+            fprintf(stdout, "ERR: invalid abonent number: %s\n", args[1].c_str());
+            return;
+        }
+        if (!_billFacade->setAbonentId(abId, true)) {
+            fprintf(stdout, "ERR: Unknown abonent #%u\n", abId);
+            return;
+        }
+    }
+    if (args.size() > 2) {
+        abId = (unsigned)atoi(args[2].c_str());
+        if (!abId) {
+            fprintf(stdout, "ERR: invalid abonent number: %s\n", args[2].c_str());
+            return;
+        }
+        if (!_billFacade->setAbonentId(abId, false)) {
+            fprintf(stdout, "ERR: Unknown abonent #%u\n", abId);
+            return;
+        }
+    }
+    _billFacade->printDlgConfig();
 }
 
-void cmd_use_oabn(Console&, const std::vector<std::string> &args)
-{
-    utl_use_abn(args, true);
-}
-
+static const char hlp_use_dabn[] = "USAGE: %s [?|help | dst.abn_NN]\n";
 void cmd_use_dabn(Console&, const std::vector<std::string> &args)
 {
-    utl_use_abn(args, false);
+    unsigned abId = 0;
+
+    if (args.size() ==  1) {
+        fprintf(stdout, hlp_use_dabn, args[0].c_str());
+        fprintf(stdout, "Known abonents:\n");
+        AbonentsDB::getInstance()->printAbonents(stdout);
+        return;
+    }
+    if (args.size() > 1) {
+        if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
+            fprintf(stdout, hlp_use_dabn, args[0].c_str());
+            return;
+        }
+        abId = (unsigned)atoi(args[1].c_str());
+        if (!abId) {
+            fprintf(stdout, "ERR: invalid abonent number: %s\n", args[1].c_str());
+            return;
+        }
+        if (!_billFacade->setAbonentId(abId, false)) {
+            fprintf(stdout, "ERR: Unknown abonent #%u\n", abId);
+            return;
+        }
+    }
+    _billFacade->printDlgConfig();
 }
 
+static const char hlp_contract[] = "USAGE: %s [?|help | org.abn_NN]\n";
 static void utl_next_abn(const std::vector<std::string> &args, AbonentType ab_type)
 {
     unsigned abId = 0;
 
     if (args.size() > 1) {
         if (!strcmp("?", args[1].c_str()) || !strcmp("help", args[1].c_str())) {
-            fprintf(stdout, hlp_use_abn, args[0].c_str());
+            fprintf(stdout, hlp_contract, args[0].c_str());
             return;
         }
         abId = (uint32_t)atoi(args[1].c_str());
@@ -288,7 +324,7 @@ void cmd_postpaid(Console&, const std::vector<std::string> &args)
     utl_next_abn(args, AbonentInfo::abtPostpaid);
 }
 
-//USAGE: use_abn [?|help | abn_NN]
+
 static const char hlp_use_xsms[] = "USAGE: %s [?|help | Number[baseSym]]\n"
                                    "  baseSym: empty - Decimal, hH - Hex, Bb - Binary\n";
 void cmd_use_xsms(Console&, const std::vector<std::string> &args)
@@ -481,7 +517,7 @@ int main(int argc, char** argv)
         console.addItem("dpsms",  cmd_dpsms);
         console.addItem("dpussd",  cmd_dpussd);
         /**/
-        console.addItem("use_oabn",  cmd_use_oabn);
+        console.addItem("use_abn",  cmd_use_abnts);
         console.addItem("use_dabn",  cmd_use_dabn);
         console.addItem("prepaid",  cmd_prepaid);
         console.addItem("postpaid",  cmd_postpaid);
