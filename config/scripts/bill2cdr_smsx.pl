@@ -278,25 +278,27 @@ sub process{
     my $makeOutRec=1;
     my $makeInRec=1;
 
-    if($infields->{CONTRACT}==2 && $infields->{SERVICE_ID}!=4 && $infields->{SERVICE_ID}!=7 && $infields->{SERVICE_ID}!=8)
-    {
-      $makeInRec=0;
-    }
-
-    if($infields->{CHARGE}==2)
-    {
-      $makeOutRec=0;
-    }elsif($infields->{CHARGE}==1)
-    {
-      $makeInRec=0;
-    }
-
     my $extraOut;
 
     if(exists($EXTRA_MAPPING{int($infields->{SERVICE_ID})}))
     {
       $extraOut=$EXTRA_MAPPING{int($infields->{SERVICE_ID})};
     }
+
+    if($infields->{CONTRACT}==2 && $infields->{SERVICE_ID}!=4 && $infields->{SERVICE_ID}!=7 && $infields->{SERVICE_ID}!=8)
+    {
+      $makeOutRec=0;
+    }
+
+    if($infields->{CHARGE}==2)
+    {
+      $makeOutRec=0;
+      $extraOut=undef;
+    }elsif($infields->{CHARGE}==1)
+    {
+      $makeInRec=0;
+    }
+
 
 
     $outfields->{RECORD_TYPE}=10;
@@ -309,11 +311,11 @@ sub process{
     if($makeOutRec)
     {
       outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
-      if(defined($extraOut))
-      {
-        $outfields->{OTHER_ADDR}=$extraOut;
-        outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
-      }
+    }
+    if(defined($extraOut))
+    {
+      $outfields->{OTHER_ADDR}=$extraOut;
+      outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
     }
 
 
