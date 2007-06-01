@@ -64,6 +64,10 @@ static void FillChargeOp(SMSId id,OpClass& op,const SMS& sms)
   op.setMsgId(id);
   op.setServiceOp(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)?sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP):-1);
   op.setPartsNum(sms.getIntProperty(Tag::SMSC_ORIGINALPARTSNUM));
+  if(sms.getBillingRecord()==2)
+  {
+    op.setMTcharge();
+  }
   if(sms.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
   {
     unsigned len;
@@ -100,6 +104,11 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   FillChargeOp(id, pck.Cmd(), sms);
   smsc::inman::interaction::ObjectBuffer buf(400);
   pck.serialize(buf);
+
+  if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+  {
+    pck.Cmd().setChargeOnSubmit();
+  }
 
   debug2(log,"Buffer size:%d",buf.getDataSize());
   {
