@@ -93,3 +93,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2) MSAG FIX: SACC event sender fixes (on disconnect)
 3) MSAG CHANGE: bill_timeout & bill_reconnect_timeout parametes separated.
 4) MSAG FIX: UMR<>USR mapping access for USSD-push dialog
+
+=================================================================================================================
+01.06.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_01_06_2007 !!!]
+1) MSAG CRITICAL CHANGE: LCM implemented
+2) MSAG CHANGE: Various optimizations in RE done (after profiling)
+3) MSAG CHANGE: New SMPP Router behaviour (search by srcSmeId first, than by OA & DA)
+4) MSAG Distr CHANGE: Safe Daemon update scheme implemented
