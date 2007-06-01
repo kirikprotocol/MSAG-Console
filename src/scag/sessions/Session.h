@@ -117,15 +117,25 @@ namespace scag { namespace sessions {
 
     struct CSessionPrimaryKey
     {
-        smsc::sms::Address abonentAddr;
+        std::string sAddr;
         timeval BornMicrotime;
-        
-        void toString(std::string& s) const
+
+        CSessionPrimaryKey(const smsc::sms::Address& addr)
         {
-            s = abonentAddr.toString();
+            timeval tv;
+            gettimeofday(&tv,0);
+            BornMicrotime = tv;
+
+            sAddr =  addr.toString();
+
             char buff[128];
             sprintf(buff,"/%ld%d", BornMicrotime.tv_sec, BornMicrotime.tv_usec / 1000);
-            s.append(buff);
+            sAddr.append(buff);
+        }
+
+        void toString(std::string& s) const
+        {
+            s = sAddr;
         }
     };
 
@@ -197,7 +207,9 @@ namespace scag { namespace sessions {
         friend class Session;
         friend class Comparator;
 
-        Logger * logger;
+        static Logger * logger;
+        static Mutex loggerMutex;
+
         Operation(const Operation& operation);
         bool m_hasBill;
         unsigned int billId;
@@ -208,9 +220,6 @@ namespace scag { namespace sessions {
         bool m_receivedAllResp;
 
         ICCOperationStatus m_Status;
-
-        std::list<int> DependOperationList;
-        std::list<int> DependPendingOperationList;
 
         Session * m_Owner;
     public:
@@ -235,7 +244,6 @@ namespace scag { namespace sessions {
         ~Operation() {}
         Operation(Session * Owner) : 
             m_Owner(Owner),
-            logger(0), 
             m_hasBill(false), 
             m_receivedResp(false), 
             m_receivedParts(0), 
@@ -244,7 +252,11 @@ namespace scag { namespace sessions {
             m_Status(OPERATION_INITED),
             billId(0)
         {
-            logger = Logger::getInstance("sess.op");
+            if(!logger)
+            {
+                MutexGuard mt(loggerMutex);
+                if(!logger) logger = Logger::getInstance("sess.op");
+            }
         };
     };
 
@@ -296,7 +308,9 @@ namespace scag { namespace sessions {
         uint32_t commandsCount() { return cmdQueue.size(); };
 
 
-        Logger * logger;
+        static Logger * logger;
+        static Mutex loggerMutex;
+
         std::list<PendingOperation> PendingOperationList;
         std::list<PendingOperation> PrePendingOperationList;
 

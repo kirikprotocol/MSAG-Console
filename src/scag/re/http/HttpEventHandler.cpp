@@ -114,7 +114,7 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     if (operatorId == 0)
     {
         RegisterAlarmEvent(1, abonentAddr.toString(), PROTOCOL_HTTP, hc.getServiceId(),
-                            hc.getProviderId(), 0, 0, session.getPrimaryKey().abonentAddr.toString(),
+                            hc.getProviderId(), 0, 0, session.getSessionKey().abonentAddr.toString(),
                             hc.getCommandId() == HTTP_RESPONSE ? 'O' : 'I');
         
         throw SCAGException("HttpEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());

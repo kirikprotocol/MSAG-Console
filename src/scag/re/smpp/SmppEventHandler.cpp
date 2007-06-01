@@ -198,7 +198,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     if (operatorId == 0) 
     {
         RegisterAlarmEvent(1, abonentAddr.toString(), CommandBrige::getProtocolForEvent(smppcommand), command.getServiceId(),
-                            providerId, 0, 0, session.getPrimaryKey().abonentAddr.toString(),
+                            providerId, 0, 0, session.getSessionKey().abonentAddr.toString(),
                             (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
         
         if (smppDiscriptor.isResp) session.closeCurrentOperation();

@@ -10,7 +10,12 @@ using namespace scag::exceptions;
 using namespace scag::re;
 
 ////////////////////////////////////////////////STATIC FUNCTIONS//////////////////////////
-////////////////////////////////////////////////STATIC FUNCTIONS//////////////////////////
+
+smsc::core::synchronization::Mutex Operation::loggerMutex;
+smsc::logger::Logger* Operation::logger = NULL;
+
+smsc::core::synchronization::Mutex Session::loggerMutex;
+smsc::logger::Logger* Session::logger = NULL;
 
 Hash<int> Session::InitOperationTypesHash()
 {
@@ -181,20 +186,16 @@ void Operation::rollbackAll()
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
-        logger(0), lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false)
+        lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false),
+        m_SessionPrimaryKey(key.abonentAddr)
 {
-    logger = Logger::getInstance("sess.man");
+    if(!logger)
+    {
+        MutexGuard mt(loggerMutex);
+        if(!logger) logger = Logger::getInstance("sess.man");
+    }
+
     m_SessionKey = key;
-
-    timeval tv;
-    gettimeofday(&tv,0);
-
-//    MillisecTime msec(tv);
-//    smsc_log_debug(logger," *********** Session: msec %s (abonentAddr = '%s', USR=%d)", msec.toString(), m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
-    
-
-    m_SessionPrimaryKey.abonentAddr = key.abonentAddr;
-    m_SessionPrimaryKey.BornMicrotime = tv;
 }
 
 Session::~Session()
@@ -379,8 +380,7 @@ void Session::Serialize(SessionBuffer& buff)
    
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId;
     //buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
-    buff << m_SessionPrimaryKey.abonentAddr << m_SessionPrimaryKey.BornMicrotime.tv_sec << m_SessionPrimaryKey.BornMicrotime.tv_usec;
-    
+    buff << m_SessionPrimaryKey.sAddr.c_str();
 }
 
 
@@ -427,9 +427,7 @@ void Session::Deserialize(SessionBuffer& buff)
     //buff >> tmp;
     //m_SmppDiscriptor.lastIndex = tmp;
 
-    buff >> m_SessionPrimaryKey.abonentAddr;
-    buff >> m_SessionPrimaryKey.BornMicrotime.tv_sec;
-    buff >> m_SessionPrimaryKey.BornMicrotime.tv_usec;
+    buff >> m_SessionPrimaryKey.sAddr;
 }
 
 
