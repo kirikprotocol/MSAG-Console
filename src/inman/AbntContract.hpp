@@ -43,6 +43,14 @@ struct AbonentContractInfo {
             abImsi[0] = 0;
     }
     void Reset(void) { ab_type = abtUnknown; gsmSCF.Reset(); abImsi[0] = 0; }
+    void Merge(const AbonentContractInfo & use_info)
+    {
+        ab_type = use_info.ab_type;
+        if (use_info.getSCFinfo())
+            gsmSCF = use_info.gsmSCF;
+        if (use_info.getImsi())
+            strlcpy(abImsi, use_info.abImsi, sizeof(abImsi));
+    }
 
     inline bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }
     inline bool isPostpaid(void) const { return (bool)(ab_type == abtPostpaid); }

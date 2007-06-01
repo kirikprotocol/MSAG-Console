@@ -370,8 +370,8 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
         }
     }
     RCHash rval = 0;
-    try { //Initiate CAP3 dialog
-        capDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //initialize TCAP dialog
+    try { //Initiate CAP3 dialog: charge target abonent as if it attempts to send a SMS
+        capDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //throws
         smsc_log_debug(logger, "%s: Initiating CapSMS[%u] %s -> %s", _logId, capDlg->getId(),
                         abNumber.toString().c_str(), dstAdr.toString().c_str());
 
@@ -384,18 +384,9 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
             arg.setLocationInformationMSC(csInfo.smscAddress.c_str()); break;
         default:
             arg.setLocationInformationMSC(abCsi.vlrNum);
-//            arg.setLocationInformationMSC(cdr._srcMSC.c_str());
         }
-//        if (xsmsSrv)
-//            arg.setDestinationSubscriberNumber(xsmsSrv->adr);
-//        else
-//            arg.setDestinationSubscriberNumber(cdr._chargeType ?
-//                        cdr._srcAdr.c_str() : cdr._dstAdr.c_str());
-//        arg.setCallingPartyNumber(cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
-//        arg.setIMSI(cdr._srcIMSI.c_str());
         arg.setCallingPartyNumber(abNumber);
-        std::string ab_imsi(abCsi.abRec.getImsi());
-        arg.setIMSI(ab_imsi);
+        arg.setIMSI(abCsi.abRec.getImsi());
         arg.setDestinationSubscriberNumber(dstAdr);
 
         arg.setSMSCAddress(csInfo.smscAddress.c_str());
@@ -415,7 +406,6 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
         smsc_log_error(logger, "%s: %s", _logId, exc.what());
         rval = _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
     }
-//    capDlgActive = false;
     delete capDlg;
     capDlg = NULL;
     return rval;
@@ -465,6 +455,8 @@ bool Billing::verifyChargeSms(void)
                         cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str());
         return false;
     }
+    //check if abonent IMSI is already present
+    abCsi.abRec.setImsi(cdr._chargeType ? cdr._dstIMSI.c_str() : cdr._srcIMSI.c_str());
     //check if abonent location MSC number is already present
     abCsi.vlrNum.fromText(cdr._chargeType ? cdr._dstMSC.c_str() : cdr._srcMSC.c_str());
 
@@ -522,7 +514,9 @@ Billing::PGraphState Billing::onChargeSms(void)
         billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgSpecific);
     }
 
-    _cfg.abCache->getAbonentInfo(abNumber, &abCsi.abRec);
+    AbonentRecord cacheRec;
+    _cfg.abCache->getAbonentInfo(abNumber, &cacheRec);
+    abCsi.abRec.Merge(cacheRec);     //merge available abonent info
     if (abCsi.abRec.ab_type == AbonentContractInfo::abtPostpaid) {
         billMode = ChargeObj::bill2CDR;
         //do not interact IN platform, just create CDR
@@ -531,7 +525,8 @@ Billing::PGraphState Billing::onChargeSms(void)
 
     //Here goes either abtPrepaid or abtUnknown ..
     //check for cache consistency
-    if ((abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid) && !abCsi.abRec.getSCFinfo())
+    if ((abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid)
+         && (!abCsi.abRec.getSCFinfo() || !abCsi.abRec.getImsi()))
         abCsi.abRec.ab_type = AbonentContractInfo::abtUnknown;
 
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber)))
@@ -779,7 +774,7 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     }
     StopTimer(state);
     state = bilQueried;
-    abCsi.abRec = ab_info.abRec;
+    abCsi.abRec = ab_info.abRec; //renew abonent info
     if (!ab_info.vlrNum.empty())
         abCsi.vlrNum = ab_info.vlrNum;
 
