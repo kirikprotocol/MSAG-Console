@@ -242,7 +242,6 @@ sub process{
     next if $infields->{STATUS}!=0;
     my $outfields={};
     %$outfields=%$infields;
-    $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
 
     $outfields->{CALL_DURATION}=$infields->{PARTS_NUM};
 
@@ -303,6 +302,7 @@ sub process{
 
     $outfields->{RECORD_TYPE}=10;
     $outfields->{CALL_DIRECTION}='O';
+    $outfields->{INV_SERVICE_ID}=22;
     $outfields->{PAYER_ADDR}=conv_addr($infields->{SRC_ADDR});
     $outfields->{PAYER_IMSI}=$infields->{SRC_IMSI};
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
@@ -325,6 +325,7 @@ sub process{
       {
         $outfields->{RECORD_TYPE}=20;
         $outfields->{CALL_DIRECTION}='I';
+        $outfields->{INV_SERVICE_ID}=21;
         $outfields->{PAYER_ADDR}=conv_addr($infields->{DIVERTED_FOR});
         $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
         $outfields->{PAYER_MSC}=$infields->{DST_MSC};
