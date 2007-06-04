@@ -141,6 +141,7 @@ private:
     INScfCFG        abScf;
     XSmsService   * xsmsSrv;    //optional SMS Extra service config.
     RCHash          billErr;    //global error code made by URCRegistry
+    const BModesPrio * billPrio;   //billing modes priority 
     ChargeObj::BILL_MODE billMode;//current billing mode
 };
 

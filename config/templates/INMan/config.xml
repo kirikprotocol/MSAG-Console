@@ -1,29 +1,39 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.6.5 or higher -->
+<!-- configuration for INMan v0.6.7 or higher -->
 <config>
-  <param name="version" type="string">0.6.5</param>   <!-- config version -->
+  <param name="version" type="string">0.6.7</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
 
   <section name="Billing">
    <section name="BillingModes"> <!--
-      Sets billing mode depending on message type. The following types are
-      recognized:
+     Sets billing mode depending on message type. The following types are
+     recognized:
         SMS  : ordinary SMS message,
         USSD : ordinary USSD message,
         XSMS : SMS Extra message.
-      For each message type the following modes may be assigned:
+     For each message type the following modes may be assigned either for
+     MO or MT billing:
         OFF : billing is forbidden (default),
         CDR : perform billing by generating CDR,
         IN  : perform billing by interacting the IN point, in case
               of failure follow the secondary mode.
      -->
-     <param name="SMS" type="string">OFF</param> <!-- [OFF, CDR, IN] -->
-     <param name="USSD" type="string">IN, CDR</param> <!-- [OFF, CDR, IN] -->
-     <param name="XSMS" type="string">IN, OFF</param> <!-- [OFF, CDR, IN] -->
+    <section name="SMS"> <!-- ordinary SMS message -->
+      <param name="MO" type="string">OFF</param>
+      <param name="MT" type="string">IN,CDR</param>
+    </section>
+    <section name="USSD"> <!-- ordinary USSD message -->
+      <param name="MO" type="string">IN,CDR</param>
+      <param name="MT" type="string">IN,CDR</param>
+    </section>
+    <section name="XSMS"> <!-- SMS Extra message -->
+      <param name="MO" type="string">IN,OFF</param>
+      <param name="MT" type="string">IN,OFF</param>
+    </section>
    </section>
 
    <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 

@@ -419,17 +419,65 @@ protected:
             throw ConfigException("Invalid billMode '%s'", m_str);
     }
 
-    void readBillMode(ChargeObj::MSG_TYPE msg_type, const char * mode)
+    void readBillMode(ChargeObj::MSG_TYPE msg_type, const char * mode, bool mt_bill)
             throw(ConfigException)
     {
-        if (bill.billMode.isAssigned(msg_type))
+        BillModes * b_map = mt_bill ? &bill.mt_billMode : &bill.mo_billMode;
+        if (b_map->isAssigned(msg_type))
             throw ConfigException("Multiple settings for '%s'", _MSGtypes[msg_type]);
 
         ChargeObj::BILL_MODE    pbm[2];
         str2BillMode(mode, pbm);
-        bill.billMode.assign(msg_type, pbm[0], pbm[1]);
-        smsc_log_info(logger, "  %s -> %s, %s", bill.msgTypeStr(msg_type),
+        b_map->assign(msg_type, pbm[0], pbm[1]);
+        smsc_log_info(logger, "    %s -> %s, %s", mt_bill ? "MT" : "MO",
             bill.billModeStr(pbm[0]), bill.billModeStr(pbm[1]));
+    }
+
+    void readModesFor(ChargeObj::MSG_TYPE msg_type, ConfigView * m_cfg)
+            throw(ConfigException)
+    {
+        char * mode = NULL;
+        smsc_log_info(logger, "  %s ..", bill.msgTypeStr(msg_type));
+
+        try { mode = m_cfg->getString("MO"); }
+        catch (const ConfigException& exc) { }
+        if (!mode || !mode[0])
+            throw ConfigException("%s parameter 'MO' is invalid or missing!",
+                                    bill.msgTypeStr(msg_type));
+        readBillMode(msg_type, mode, false);
+
+        try { mode = m_cfg->getString("MT"); }
+        catch (const ConfigException& exc) { }
+        if (!mode || !mode[0])
+            throw ConfigException("%s parameter 'MT' is invalid or missing!",
+                                    bill.msgTypeStr(msg_type));
+        readBillMode(msg_type, mode, true);
+    }
+
+    /* Reads BillingModes subsection */
+    void readBillingModes(ConfigView & cfg)  throw(ConfigException)
+    {
+        if (!cfg.findSubSection("BillingModes"))
+            throw ConfigException("'BillingModes' subsection is missed");
+
+        std::auto_ptr<ConfigView>   bmCfg(cfg.getSubConfig("BillingModes"));
+        std::auto_ptr<CStrSet>      msgs(bmCfg->getShortSectionNames());
+        if (msgs->empty())
+            throw ConfigException("no billing modes set");
+
+        uint32_t tmo = 0;
+        char * cstr = NULL;
+        for (CStrSet::iterator sit = msgs->begin(); sit != msgs->end(); ++sit) {
+            std::auto_ptr<ConfigView> curMsg(bmCfg->getSubConfig(sit->c_str()));
+            if (!strcmp(_MSGtypes[ChargeObj::msgSMS], sit->c_str()))
+                readModesFor(ChargeObj::msgSMS, curMsg.get());
+            else if (!strcmp(_MSGtypes[ChargeObj::msgUSSD], sit->c_str()))
+                readModesFor(ChargeObj::msgUSSD, curMsg.get());
+            else if (!strcmp(_MSGtypes[ChargeObj::msgXSMS], sit->c_str()))
+                readModesFor(ChargeObj::msgXSMS, curMsg.get());
+            else
+                throw ConfigException("Illegal section for messageType %s", sit->c_str());
+        }
     }
 
     //returns default policy name
@@ -437,39 +485,16 @@ protected:
     {
         //according to BillingCFG::ContractReqMode
         static const char * _abReq[] = { "onDemand", "always" };
+        uint32_t tmo = 0;
+        char * cstr = NULL;
 
         if (!manager.findSection("Billing"))
             throw ConfigException("'Billing' section is missed");
         ConfigView billCfg(manager, "Billing");
         smsc_log_info(logger, "Reading Billing settings ..");
 
-        /* Read BillingModes subsection */
-        if (!billCfg.findSubSection("BillingModes"))
-            throw ConfigException("'BillingModes' subsection is missed");
-
-        uint32_t tmo = 0;
-        char * cstr = NULL;
-        {
-            std::auto_ptr<ConfigView>   bmCfg(billCfg.getSubConfig("BillingModes"));
-            std::auto_ptr<CStrSet>      msg(bmCfg->getStrParamNames());
-            if (msg->empty())
-                throw ConfigException("no billing modes set");
-
-            for (CStrSet::iterator sit = msg->begin(); sit != msg->end(); ++sit) {
-                cstr = bmCfg->getString(sit->c_str());
-                if (!cstr || !cstr[0])
-                    throw ConfigException("invalid %s value", sit->c_str());
-                
-                if (!strcmp(_MSGtypes[ChargeObj::msgSMS], sit->c_str()))
-                    readBillMode(ChargeObj::msgSMS, cstr);
-                else if (!strcmp(_MSGtypes[ChargeObj::msgUSSD], sit->c_str()))
-                    readBillMode(ChargeObj::msgUSSD, cstr);
-                else if (!strcmp(_MSGtypes[ChargeObj::msgXSMS], sit->c_str()))
-                    readBillMode(ChargeObj::msgXSMS, cstr);
-                else
-                    throw ConfigException("Illegal messageType %s", sit->c_str());
-            }
-        }
+        //read BillingModes subsection
+        readBillingModes(billCfg);
 
         cstr = NULL;
         char * policyNm = NULL;
@@ -708,7 +733,7 @@ public:
         /* ********************************* *
          * SS7 stack interaction parameters: *
          * ********************************* */
-        if (bill.billMode.useIN() || abPolicies.useSS7())
+        if (bill.mo_billMode.useIN() || bill.mt_billMode.useIN() || abPolicies.useSS7())
             readSS7CFG(manager, bill.ss7);
         else
             smsc_log_warn(logger, "SS7 stack not in use!");

@@ -99,7 +99,8 @@ struct BillingCFG {
     TimeWatcher *       tmWatcher;
 //billing parameters
     AbonentPolicies * policies;
-    BillModes       billMode;
+    BillModes       mo_billMode;
+    BillModes       mt_billMode;
     ContractReqMode cntrReq;
     CDR_MODE        cdrMode;
     std::string     cdrDir;         //location to store CDR files

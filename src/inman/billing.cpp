@@ -488,16 +488,19 @@ bool Billing::verifyChargeSms(void)
         msgType = ChargeObj::msgXSMS;
     else
         msgType = (cdr._bearer == CDRRecord::dpUSSD) ? ChargeObj::msgUSSD : ChargeObj::msgSMS;
+
+    //determine billmode
+    billPrio = cdr._chargeType ? _cfg.mt_billMode.modeFor(msgType) : 
+                                    _cfg.mo_billMode.modeFor(msgType);
+    billMode = billPrio->first;
     return true;
 }
 
 //NOTE: bilMutex should be locked upon entry!
 Billing::PGraphState Billing::onChargeSms(void)
 {
-    //determine billmode
-    billMode = _cfg.billMode.modeFor(msgType)->first;
     if ((billMode == ChargeObj::bill2IN) && !_cfg.ss7.userId)
-        billMode = _cfg.billMode.modeFor(msgType)->second;
+        billMode = billPrio->second;
 
     if (billMode == ChargeObj::billOFF) {
         return chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE,
@@ -612,7 +615,7 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
             errmsg = "failed to determine abonent location MSC";
         if (errmsg) {
             err = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
-            billMode = _cfg.billMode.modeFor(msgType)->second;
+            billMode = billPrio->second;
             if (billMode == ChargeObj::billOFF) {
                 smsc_log_error(logger, "%s: %s", _logId, errmsg);
                 return chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE, err);
@@ -631,7 +634,7 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
         
         err = capErr;
         std::string errStr = URCRegistry::explainHash(capErr);
-        billMode = _cfg.billMode.modeFor(msgType)->second;
+        billMode = billPrio->second;
         if (billMode == ChargeObj::billOFF) {
             smsc_log_error(logger, "%s: %s", _logId, errStr.c_str());
             return chargeResult(ChargeSmsResult::CHARGING_NOT_POSSIBLE, err);
@@ -821,7 +824,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
         //NOTE: in case of technical failure, the message still may be
         //charged(depending on billMode settings), so check for RejectSMS
         //causes indicating that charging can't be done because of low balance.
-        if (_cfg.billMode.modeFor(msgType)->second == ChargeObj::bill2CDR) {
+        if (billPrio->second == ChargeObj::bill2CDR) {
             chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
             for (RPCList::iterator it = abScf.rejectRPC.begin();
                                     it != abScf.rejectRPC.end(); it++) {
@@ -865,7 +868,7 @@ void Billing::onEndCapDlg(RCHash errcode/* = 0*/)
         case Billing::bilInited: {
             //IN dialog initialization failed, release CAP dialog,
             //if billMode setting allows, switch to CDR mode 
-            if (_cfg.billMode.modeFor(msgType)->second != ChargeObj::bill2CDR)
+            if (billPrio->second != ChargeObj::bill2CDR)
                 chg_res = ChargeSmsResult::CHARGING_NOT_POSSIBLE;
             contCharge = true;
         } // no break specially !
