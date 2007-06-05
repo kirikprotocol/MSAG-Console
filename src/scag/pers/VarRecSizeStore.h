@@ -45,7 +45,7 @@ public:
             pfile.Open(binFile.c_str());
     }
 
-    void getRecord(const DiskKey& key, Serializable *rec)
+    bool getRecord(const DiskKey& key, Serializable* rec)
     {
         MutexGuard mg(mtx);
 
@@ -53,19 +53,27 @@ public:
         vector<unsigned char> data;
 
         if(!dhash.LookUp(key, off))
-            throw VarRecordNotFound();
+            return false;
 
         pfile.Read(off.value, data);
         SerialBuffer sb(data.size());
         sb.Append((char*)&data[0], data.size());
         sb.SetPos(0);
-        rec->Deserialize(sb);
+        
+        try{
+            rec->Deserialize(sb);
+        }
+        catch(SerialBufferOutOfBounds &f) {
+            smsc_log_error(log, "Seems storage is corrupted. Profile %s.", key.toString().c_str());
+            return false;
+        }
 
         smsc_log_debug(log, "getRecord: %s, offset=%08llx, size=%d", key.toString().c_str(), off.value, data.size());
 //      smsc_log_debug(log, "getRecord:%s", sb.toString().c_str());
+        return true;
     }
 
-    void newRecord(const DiskKey& key, Serializable *rec)
+    void newRecord(const DiskKey& key, Serializable* rec)
     {
         MutexGuard mg(mtx);
 
@@ -96,14 +104,14 @@ public:
         smsc_log_debug(log, "delRecord:%s:%08llx", key.toString().c_str(), off.value);
     }
 
-    void updateRecord(const DiskKey& key, Serializable *rec)
+    bool updateRecord(const DiskKey& key, Serializable* rec)
     {
         MutexGuard mg(mtx);
 
         OffsetValue off;
 
         if(!dhash.LookUp(key, off))
-            throw VarRecordNotFound();
+            return false;
 
         SerialBuffer sb;
         rec->Serialize(sb);
@@ -111,6 +119,7 @@ public:
 
         smsc_log_debug(log, "updateRecord:%s:%08llx", key.toString().c_str(), off.value);
 //      smsc_log_debug(log, "updateRecord:%s", sb.toString().c_str());
+        return true;
     }
 
 protected:

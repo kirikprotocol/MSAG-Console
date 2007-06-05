@@ -56,6 +56,7 @@ void PersServer::process_read_socket(Socket* s)
                 j = sb->GetPos();
                 sb->SetPos(0);
                 k = sb->ReadInt32();
+                smsc_log_debug(log, "%d bytes will be read from %x", k, s);
                 if(k > MAX_PACKET_SIZE)
                 {
                     smsc_log_warn(log, "Too big packet from client");
@@ -68,7 +69,8 @@ void PersServer::process_read_socket(Socket* s)
         }
         else
         {
-           // if(errno != EWOULDBLOCK)
+            smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
+//            if(errno != EWOULDBLOCK)
                 remove_socket(s);
             return;
         }
@@ -81,8 +83,9 @@ void PersServer::process_read_socket(Socket* s)
         smsc_log_debug(log, "read %u bytes from %p", j, s);
         if(j > 0)
             sb->Append(tmp_buf, j);
-        else // if(errno != EWOULDBLOCK)
+        else if(errno != EWOULDBLOCK)
         {
+            smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
             remove_socket(s);
             return;
         }
@@ -109,6 +112,7 @@ void PersServer::process_write_socket(Socket* s)
         sb->SetPos(sb->GetPos() + j);
     else //if(errno != EWOULDBLOCK)
     {
+        smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
         remove_socket(s);
         return;
     }

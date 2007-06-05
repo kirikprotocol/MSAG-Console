@@ -14,8 +14,11 @@
 #include "VarRecSizeStore.h"
 #include "Profile.h"
 #include "Property.h"
+#include "mcisme/AbntAddr.hpp"
+#include "FSDB.h"
 
 namespace scag{ namespace pers{
+using smsc::mcisme::AbntAddr;
 
 class IntProfileKey
 {
@@ -65,6 +68,7 @@ class StringProfileKey
         
     StringProfileKey(const StringProfileKey& k) { copy(k.key); };
     StringProfileKey(const char* k) { copy(k); };
+    StringProfileKey(const std::string& k) { copy(k.c_str()); };
 
     bool operator==(const StringProfileKey& that)const { return !strcmp(key, that.key); }
 
@@ -100,13 +104,115 @@ public:
 };
 
 template <class Key>
-class ProfileStore
+class HashProfileStore
 {
 public:
+    HashProfileStore() {};
+    ~HashProfileStore() {};
 
-    ProfileStore(): cache(NULL) {};
+    void init(const std::string& storeName, uint32_t initRecCnt)
+    {
+        log = smsc::logger::Logger::getInstance("hashstore");
 
-    ~ProfileStore()
+        store.init(storeName, initRecCnt);
+        smsc_log_debug(log, "Inited: %s", storeName.c_str());
+    };
+
+    void storeProfile(Key& key, Profile* pf)
+    {
+        pf->DeleteExpired();
+
+        if(pf->GetCount() > 0)
+        {
+            if(!store.updateRecord(key, pf))
+            {
+                store.newRecord(key, pf);
+                smsc_log_debug(log, "Profile %s created.", key.toString().c_str());
+            }
+        }
+        else
+            store.deleteRecord(key);
+    }
+
+    Profile* getProfile(Key& key, bool create)
+    {
+        Profile *pf = new Profile();
+        if(store.getRecord(key, pf) || create)
+            return pf;
+        delete pf;
+        return NULL;
+    };
+
+/*    bool getProfile(Key& key, Profile& pf, bool create)
+    {
+        if(store.getRecord(key, &pf))
+            return true;
+        if(create)
+        {
+            pf.Empty();
+            return true;
+        }
+            
+        return false;
+    };*/
+
+protected:
+    smsc::logger::Logger* log;
+    VarRecSizeStore<Key> store;
+};
+
+
+template <class Key>
+class TreeProfileStore
+{
+public:
+    TreeProfileStore() {};
+    ~TreeProfileStore() {};
+
+    void init(const std::string& storeName, uint32_t initRecCnt)
+    {
+        log = smsc::logger::Logger::getInstance("treestore");
+        store.Init(storeName);
+        smsc_log_debug(log, "Inited: %s", storeName.c_str());
+    };
+
+    void storeProfile(Key& key, Profile *pf)
+    {
+        pf->DeleteExpired();
+
+        if(pf->GetCount() > 0)
+        {
+            if(!store.updateRecord(key, pf))
+            {
+                store.newRecord(key, pf);
+                smsc_log_debug(log, "Profile %s created.", key.toString().c_str());
+            }
+        }
+        else
+            store.deleteRecord(key);
+    }
+
+    Profile* getProfile(Key& key, bool create)
+    {
+        Profile *pf = new Profile();
+        if(store.getRecord(key, pf) || create)
+            return pf;
+        delete pf;
+        return NULL;
+    };
+
+protected:
+    smsc::logger::Logger* log;
+    FSDBProfiles<Key> store;
+};
+
+template <class StoreType, class Key>
+class CachedProfileStore : public StoreType
+{
+public:
+    CachedProfileStore(): cache(NULL) {};
+
+    ~CachedProfileStore()
     {
         if(cache != NULL)
         {
@@ -120,33 +226,63 @@ public:
         }
     };
 
-    void init(const std::string& storeName, uint32_t initRecCnt, uint32_t _max_cache_size)
+    void init(const std::string& storeName, uint32_t initRecCnt, uint32_t _max_cache_size = 1000)
     {
-        log = smsc::logger::Logger::getInstance("store");
-
-        MutexGuard mt(mtx);
-
         max_cache_size = _max_cache_size;
         cache = new CacheItem<Key>*[_max_cache_size];
         memset(cache, 0, sizeof(CacheItem<Key>*) * _max_cache_size);
 
-        store.init(storeName, initRecCnt);
-        name = storeName;
-
-        smsc_log_debug(log, "Inited: %s", name.c_str());
+        StoreType::init(storeName, initRecCnt);
     };
 
-    void setProperty(Key& key, Property& prop)
+    Profile* getProfile(Key& key, bool create)
+    {
+        uint32_t i = key.HashCode(0) % max_cache_size;
+        if(cache[i] != NULL)
+        {
+            if(cache[i]->key == key)
+                return cache[i]->pf;
+
+            Profile* pf = StoreType::getProfile(key, create);
+            if(pf)
+            {
+                delete cache[i]->pf;
+                cache[i]->key = key;
+                cache[i]->pf = pf;
+                return pf;
+            }
+            return NULL;
+        }
+        else
+        {
+            Profile* pf = StoreType::getProfile(key, create);
+            if(pf)
+                cache[i] = new CacheItem<Key>(key, pf);
+            return pf;
+        }
+            
+    };
+
+protected:
+    uint32_t max_cache_size;
+    CacheItem<Key> **cache;
+};
+
+template <class Key, class RKey, class StorageType>
+class ProfileStore : public StorageType
+{
+    Mutex mtx;
+public:
+    void setProperty(RKey& rkey, Property& prop)
     {
         MutexGuard mt(mtx);
-        Profile *pf;
-        Property *p;
+        Key key(rkey);
 
         if(prop.isExpired())
             return;
 
-        pf = getProfile(key, true);
-        p = pf->GetProperty(prop.getName().c_str());
+        Profile* pf = getProfile(key, true);
+        Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
             p->setValue(prop);
@@ -158,9 +294,10 @@ public:
         smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
     };
 
-    bool delProperty(Key& key, const char* nm)
+    bool delProperty(RKey& rkey, const char* nm)
     {
         MutexGuard mt(mtx);
+        Key key(rkey);
         Profile *pf = getProfile(key, false);
 
         bool res = false;
@@ -173,17 +310,16 @@ public:
         return res;
     };
 
-    bool getProperty(Key& key, const char* nm, Property& prop)
+    bool getProperty(RKey& rkey, const char* nm, Property& prop)
     {
         MutexGuard mt(mtx);
-        Profile *pf;
-        Property *p;
+        Key key(rkey);
 
-        pf = getProfile(key, false);
+        Profile* pf = getProfile(key, false);
 
         if(pf != NULL)
         {
-            p = pf->GetProperty(nm);
+            Property* p = pf->GetProperty(nm);
 
             if(p != NULL)
             {
@@ -197,19 +333,15 @@ public:
                 return true;
             }
         }
-
         return false;
     };
 
-    bool incProperty(Key& key, Property& prop)
+    bool incProperty(RKey& rkey, Property& prop)
     {
         MutexGuard mt(mtx);
-
-        Profile *pf;
-        Property *p;
-
-        pf = getProfile(key, true);
-        p = pf->GetProperty(prop.getName().c_str());
+        Key key(rkey);
+        Profile* pf = getProfile(key, true);
+        Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
             smsc_log_debug(log, "profile %s, incProperty: %s", key.toString().c_str(), p->toString().c_str());
@@ -237,15 +369,12 @@ public:
         return false;
     };
 
-    bool incModProperty(Key& key, Property& prop, uint32_t mod, int& res)
+    bool incModProperty(RKey& rkey, Property& prop, uint32_t mod, int& res)
     {
         MutexGuard mt(mtx);
-
-        Profile *pf;
-        Property *p;
-
-        pf = getProfile(key, true);
-        p = pf->GetProperty(prop.getName().c_str());
+        Key key(rkey);
+        Profile* pf = getProfile(key, true);
+        Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
             smsc_log_debug(log, "profile %s, incProperty: %s", key.toString().c_str(), p->toString().c_str());
@@ -270,92 +399,12 @@ public:
         }
         return false;
     };
-
-    void storeProfile(Key& key, Profile *pf)
-    {
-        pf->DeleteExpired();
-
-        if(pf->GetCount() > 0)
-        {
-            try{
-                store.updateRecord(key, pf);
-            }
-            catch(VarRecordNotFound &f) {
-                store.newRecord(key, pf);
-                smsc_log_debug(log, "Profile %s created.", key.toString().c_str());
-            }
-        }
-        else
-            store.deleteRecord(key);
-    }
-
-    Profile* getProfile(Key& key, bool create)
-    {
-        uint32_t i = key.HashCode(0) % max_cache_size;
-        if(cache[i] != NULL)
-        {
-            if(cache[i]->key == key)
-                return cache[i]->pf;
-
-//          storeProfile(cache[i]->key, cache[i]->pf);
-
-            try{
-                store.getRecord(key, cache[i]->pf);
-                cache[i]->key = key;
-                return cache[i]->pf;
-            }
-            catch(VarRecordNotFound &f) {
-                if(create)
-                {
-                    cache[i]->pf->Empty();
-                    cache[i]->key = key;
-                    return cache[i]->pf;
-                    smsc_log_debug(log, "Profile %s in cache created.", key.toString().c_str());
-                } else
-                    return NULL;
-            }
-            catch(SerialBufferOutOfBounds &f) {
-                smsc_log_error(log, "Seems storage is corrupted. Profile %s.", key.toString().c_str());
-                return NULL;
-            }
-        }
-        else
-        {
-            Profile *pf = new Profile();
-            try{
-                store.getRecord(key, pf);
-            }
-            catch(VarRecordNotFound &f) {
-                if(!create)
-                {
-                    delete pf;
-                    return NULL;
-                }
-                else
-                    smsc_log_debug(log, "Profile %s in cache created.", key.toString().c_str());
-            }
-            catch(SerialBufferOutOfBounds &f) {
-                delete pf;
-                smsc_log_error(log, "Seems storage is corrupted. Profile %s.", key.toString().c_str());
-                return NULL;
-            }
-            cache[i] = new CacheItem<Key>(key, pf);
-            return pf;
-        }
-            
-    };
-
-protected:
-    smsc::logger::Logger* log;
-    Mutex mtx;
-    uint32_t max_cache_size;
-    VarRecSizeStore<Key> store;
-    std::string name;
-    CacheItem<Key> **cache;
 };
 
-typedef ProfileStore<IntProfileKey> IntProfileStore;
-typedef ProfileStore<StringProfileKey> StringProfileStore;
+typedef ProfileStore<IntProfileKey, uint32_t, CachedProfileStore<HashProfileStore<IntProfileKey>, IntProfileKey > > IntProfileStore;
+//typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
+
+typedef ProfileStore<AbntAddr, std::string, TreeProfileStore<AbntAddr> > StringProfileStore;
 
 }}
 
