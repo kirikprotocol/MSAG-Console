@@ -169,7 +169,7 @@ public:
     TreeProfileStore() {};
     ~TreeProfileStore() {};
 
-    void init(const std::string& storeName, uint32_t initRecCnt)
+    void init(const std::string& storeName, uint32_t initRecCnt, uint32_t max_cache_size)
     {
         log = smsc::logger::Logger::getInstance("treestore");
         store.Init(storeName);
@@ -178,7 +178,7 @@ public:
 
     void storeProfile(Key& key, Profile *pf)
     {
-        pf->DeleteExpired();
+/*        pf->DeleteExpired();
 
         if(pf->GetCount() > 0)
         {
@@ -189,15 +189,15 @@ public:
             }
         }
         else
-            store.deleteRecord(key);
+            store.deleteRecord(key);*/
     }
 
     Profile* getProfile(Key& key, bool create)
     {
-        Profile *pf = new Profile();
+/*        Profile *pf = new Profile();
         if(store.getRecord(key, pf) || create)
             return pf;
-        delete pf;
+        delete pf;*/
         return NULL;
     };
 
@@ -273,7 +273,7 @@ class ProfileStore : public StorageType
 {
     Mutex mtx;
 public:
-    void setProperty(RKey& rkey, Property& prop)
+    void setProperty(RKey rkey, Property& prop)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
@@ -294,7 +294,7 @@ public:
         smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
     };
 
-    bool delProperty(RKey& rkey, const char* nm)
+    bool delProperty(RKey rkey, const char* nm)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
@@ -310,7 +310,7 @@ public:
         return res;
     };
 
-    bool getProperty(RKey& rkey, const char* nm, Property& prop)
+    bool getProperty(RKey rkey, const char* nm, Property& prop)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
@@ -336,7 +336,7 @@ public:
         return false;
     };
 
-    bool incProperty(RKey& rkey, Property& prop)
+    bool incProperty(RKey rkey, Property& prop)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
@@ -369,7 +369,7 @@ public:
         return false;
     };
 
-    bool incModProperty(RKey& rkey, Property& prop, uint32_t mod, int& res)
+    bool incModProperty(RKey rkey, Property& prop, uint32_t mod, int& res)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
@@ -404,7 +404,7 @@ public:
 typedef ProfileStore<IntProfileKey, uint32_t, CachedProfileStore<HashProfileStore<IntProfileKey>, IntProfileKey > > IntProfileStore;
 //typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
 
-typedef ProfileStore<AbntAddr, std::string, TreeProfileStore<AbntAddr> > StringProfileStore;
+typedef ProfileStore<AbntAddr, const char*, TreeProfileStore<AbntAddr> > StringProfileStore;
 
 }}
 

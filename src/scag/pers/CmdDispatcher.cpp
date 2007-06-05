@@ -46,7 +46,7 @@ void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, std::str
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "DelCmdHandler AbonetStore: key=%s, name=%s", str_key.c_str(), name.c_str());
-        exists = AbonentStore->delProperty(str_key, name.c_str());
+        exists = AbonentStore->delProperty(str_key.c_str(), name.c_str());
     }
     else if(is = findStore(pt))
     {
@@ -64,7 +64,7 @@ void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::str
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "GetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), name.c_str());
-        exists = AbonentStore->getProperty(str_key, name.c_str(), prop);
+        exists = AbonentStore->getProperty(str_key.c_str(), name.c_str(), prop);
     }
     else if(is = findStore(pt))
     {
@@ -87,7 +87,7 @@ void CommandDispatcher::SetCmdHandler(ProfileType pt, uint32_t int_key, std::str
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
-        AbonentStore->setProperty(str_key, prop);
+        AbonentStore->setProperty(str_key.c_str(), prop);
     }
     else if(is = findStore(pt))    
     {
@@ -104,7 +104,7 @@ void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, std::str
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
-        exists = AbonentStore->incProperty(str_key, prop);
+        exists = AbonentStore->incProperty(str_key.c_str(), prop);
     }
     else if(is = findStore(pt))    
     {
@@ -125,7 +125,7 @@ void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(log, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
-        exists = AbonentStore->incModProperty(str_key, prop, mod, res);
+        exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res);
     }
     else if(is = findStore(pt))    
     {
