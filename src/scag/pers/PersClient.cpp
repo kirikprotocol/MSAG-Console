@@ -435,6 +435,7 @@ void PersClientImpl::SendPacket()
         try{
             init();            
             SetPacketSize();
+            smsc_log_debug(log, "write to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
             WriteAllTO(sb.c_ptr(), sb.length());
             return;
         }
@@ -472,6 +473,7 @@ void PersClientImpl::ReadPacket()
         ReadAllTO(tmp_buf, sz);
         sb.Append(tmp_buf, sz);
     }
+    smsc_log_debug(log, "read from socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
 }
 
 void PersClientImpl::SetPacketSize()

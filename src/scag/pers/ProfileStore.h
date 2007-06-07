@@ -189,11 +189,13 @@ public:
     {
         Profile *pf = new Profile();
         SerialBuffer sb;
-        if(store.Get(key, sb) || create)
+        if(store.Get(key, sb))
         {
-            if(!create) pf->Deserialize(sb);
+            pf->Deserialize(sb);
             return pf;
         }
+        if(create)
+            return pf;
         delete pf;
         return NULL;
     };
