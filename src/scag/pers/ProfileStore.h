@@ -172,32 +172,29 @@ public:
     void init(const std::string& storeName, uint32_t initRecCnt, uint32_t max_cache_size)
     {
         log = smsc::logger::Logger::getInstance("treestore");
-        store.Init(storeName);
+        store.Init(storeName, "./", 20000);
         smsc_log_debug(log, "Inited: %s", storeName.c_str());
     };
 
     void storeProfile(Key& key, Profile *pf)
     {
-/*        pf->DeleteExpired();
+        pf->DeleteExpired();
 
-        if(pf->GetCount() > 0)
-        {
-            if(!store.updateRecord(key, pf))
-            {
-                store.newRecord(key, pf);
-                smsc_log_debug(log, "Profile %s created.", key.toString().c_str());
-            }
-        }
-        else
-            store.deleteRecord(key);*/
+        SerialBuffer sb;
+        pf->Serialize(sb);
+        store.Set(key, sb);
     }
 
     Profile* getProfile(Key& key, bool create)
     {
-/*        Profile *pf = new Profile();
-        if(store.getRecord(key, pf) || create)
+        Profile *pf = new Profile();
+        SerialBuffer sb;
+        if(store.Get(key, sb) || create)
+        {
+            if(!create) pf->Deserialize(sb);
             return pf;
-        delete pf;*/
+        }
+        delete pf;
         return NULL;
     };
 

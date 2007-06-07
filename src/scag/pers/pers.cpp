@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
         uint32_t cm;
         try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
-        AbonentStore.init(storageDir + "abonent", recCnt, cm);
+        AbonentStore.init("abonent", recCnt, cm);
 
         try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
         ServiceStore.init(storageDir + "service", recCnt, cm);

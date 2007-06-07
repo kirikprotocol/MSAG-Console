@@ -66,7 +66,7 @@ protected:
     void AppendString(const char *str);
     void SendPacket();
     void ReadPacket();
-    void WriteAllTO(char* buf, uint32_t sz);
+    void WriteAllTO(const char* buf, uint32_t sz);
     void ReadAllTO(char* buf, uint32_t sz);
     uint32_t GetPacketSize();
     PersServerResponseType GetServerResponse();
@@ -408,7 +408,7 @@ void PersClientImpl::ReadAllTO(char* buf, uint32_t sz)
     }
 }
 
-void PersClientImpl::WriteAllTO(char* buf, uint32_t sz)
+void PersClientImpl::WriteAllTO(const char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t wr = 0;
@@ -435,7 +435,7 @@ void PersClientImpl::SendPacket()
         try{
             init();            
             SetPacketSize();
-            WriteAllTO(sb.get(), sb.GetSize());
+            WriteAllTO(sb.c_ptr(), sb.length());
             return;
         }
         catch(PersClientException &e)

@@ -79,7 +79,7 @@ public:
 
         SerialBuffer sb;
         rec->Serialize(sb);
-        OffsetValue val(pfile.Append(sb.get(), sb.GetPos()));
+        OffsetValue val(pfile.Append((void*)sb.c_ptr(), sb.length()));
 
         dhash.Insert(key, val);
 
@@ -115,7 +115,7 @@ public:
 
         SerialBuffer sb;
         rec->Serialize(sb);
-        pfile.Update(off.value, sb.get(), sb.GetPos());
+        pfile.Update(off.value, (void*)sb.c_ptr(), sb.length());
 
         smsc_log_debug(log, "updateRecord:%s:%08llx", key.toString().c_str(), off.value);
 //      smsc_log_debug(log, "updateRecord:%s", sb.toString().c_str());

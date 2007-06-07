@@ -2,21 +2,21 @@
 
 #include "SerialBuffer.h"
 
-namespace scag{ namespace pers{
+//namespace scag{ namespace pers{
 
-using namespace smsc::core::buffers;
+//using namespace smsc::core::buffers;
 
 std::string SerialBuffer::toString()
 {
     std::string str;
-    int i = 0, j = GetSize(), k = GetPos();
+    int i = 0, j = length(), k = GetPos();
     char buf[10];
 
     uint8_t b;
     SetPos(0);
     while(i++ < j)
     {
-        b = ReadInt8();
+		b = ReadInt8();
         sprintf(buf, "%02x(%c)", (int)b, (b > 32 && b < 128 ? b : '*'));
         str += buf;
     }
@@ -31,7 +31,7 @@ void SerialBuffer::ReadString(std::string &str)
 
     len = ReadInt16();
 
-    if(pos + len > size)
+    if(getPos() + len > length())
         throw SerialBufferOutOfBounds();
 
     str = "";
@@ -57,7 +57,7 @@ void SerialBuffer::ReadString(std::wstring &str)
 
     len = ReadInt16();
 
-    if(pos + len > size)
+    if(getPos() + len > length())
         throw SerialBufferOutOfBounds();
 
     str = L"";
@@ -84,74 +84,75 @@ void SerialBuffer::ReadString(std::wstring &str)
 
 void SerialBuffer::Read(char* dst, int count)
 {
-    if(pos + count > size)
+    if(getPos() + count > length())
         throw SerialBufferOutOfBounds();
 
-    _SerialBuffer::Read(dst, count);
+	blkread((char*)dst, count);
 }
 
 void SerialBuffer::Append(const char* data,int count)
 {
-    if(pos + count > size)
-        size = pos + count;
-
-    _SerialBuffer::Append(data, count);
+    blkwrite(data, count);
 }
 
 void SerialBuffer::Empty()
 {
-    size = 0;
-    SetPos(0);
-}
-
-uint32_t SerialBuffer::GetSize()
-{
-    return size;
+    setLength(0);
+    setPos(0);
 }
 
 uint32_t SerialBuffer::ReadInt32()
 {
-    uint32_t i;
-    Read((char*)&i, sizeof(i));
+    if(getPos() + sizeof(uint32_t) > length())
+        throw SerialBufferOutOfBounds();
+
+	uint32_t i;
+	blkread((char*)&i, sizeof(i));
     return ntohl(i);
 }
 
 uint16_t SerialBuffer::ReadInt16()
 {
-    uint16_t i;
-    Read((char*)&i, sizeof(i));
+    if(getPos() + sizeof(uint16_t) > length())
+        throw SerialBufferOutOfBounds();
+
+	uint16_t i;
+	blkread((char*)&i, sizeof(i));
     return ntohs(i);
 }
 
 uint8_t SerialBuffer::ReadInt8()
 {
+    if(getPos() + sizeof(uint8_t) > length())
+        throw SerialBufferOutOfBounds();
+
     uint8_t i;
-    Read((char*)&i, sizeof(i));
+	blkread((char*)&i, sizeof(i));
     return i;
 }
 
 void SerialBuffer::WriteInt32(uint32_t i)
 {
     i = htonl(i);
-    Append((char*)&i, sizeof(i));
+    blkwrite((char*)&i, sizeof(i));
 }
 
 void SerialBuffer::WriteInt16(uint16_t i)
 {
     i = htons(i);
-    Append((char*)&i, sizeof(i));
+    blkwrite((char*)&i, sizeof(i));
 }
 
 void SerialBuffer::WriteInt8(uint8_t i)
 {
-    Append((char*)&i, sizeof(i));
+    blkwrite((char*)&i, sizeof(i));
 }
 
 void SerialBuffer::WriteString(const char *str)
 {
     uint16_t len = std::strlen(str);
     WriteInt16(len);
-    Append(str, len);
+    blkwrite(str, len);
 }
 
 void SerialBuffer::WriteString(const wchar_t *str)
@@ -162,4 +163,4 @@ void SerialBuffer::WriteString(const wchar_t *str)
         WriteInt16((uint16_t)*(str++));
 }
 
-}}
+//}}
