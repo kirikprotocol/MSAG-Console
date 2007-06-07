@@ -23,6 +23,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "logger/Logger.h"
+
 using std::string;
 
 //const int defaultBlockSize = 8192 // in bytes
@@ -66,7 +68,7 @@ class FSDBProfiles: public FSDB<Key, DataBlock>
     typedef RBTree<Key, long>               IndexStorage;
 
 public:
-    FSDBProfiles(){}
+	FSDBProfiles():logger(smsc::logger::Logger::getInstance("FSDB")){}
     virtual ~FSDBProfiles(){}
 
     virtual int Init(const string& _dbName, const string& _dbPath="./",
@@ -81,15 +83,14 @@ public:
         
         if(dbPath.length()==0)  dbPath = "./";
         else if(dbPath[dbPath.length()-1] != '/') dbPath += '/';
-//      printf("%s\n", dbPath.c_str());
         if(!dbPathExists())
         {
-    //      printf("FSDBProfiles::Init: db not Exists\n");
+		    smsc_log_info(logger, "FSDBProfiles::Init: db not Exists\n");
             if(mode & FSDB_CREATE) 
             {
                 if(!createDBPath())
                 {
-//                  printf("createDBPath - failed\n");
+					smsc_log_info(logger, "createDBPath - failed\n");
                     return ERR_CANNOT_CREATE_DBPATH;
                 }
             }
@@ -102,7 +103,7 @@ public:
         int ret;
         if(0 != (ret=dataStorage.Open(dbName + "-data", dbPath + '/' + dbName)))
         {
-//          printf("Create Data Storage %d\n", ret);
+			smsc_log_info(logger, "Create Data Storage %d\n", ret);
             dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, fileSize, blockSize);
         }
         return 0;
@@ -124,6 +125,7 @@ public:
     }
     virtual bool Set(const Key& key, const DataBlock& data)
     {
+		smsc_log_info(logger, "Set: %s, %d", key.toString().c_str(), data.length());
         long idx;
         if(indexStorage.Get(key, idx))
             return dataStorage.Change(idx, data, key);
@@ -135,12 +137,16 @@ public:
     virtual bool Get(const Key& key, DataBlock& data)
     {
         long idx;
-//      bool ret;
-//      if(!(ret = cache.Get(key, data)))
+		bool ret;
         if(indexStorage.Get(key, idx))
+		{
 //          if(ret = dataStorage.Get(idx, data))
 //              cache.Add(key, data);
-            return dataStorage.Get(idx, data);
+			ret = dataStorage.Get(idx, data);
+			smsc_log_info(logger, "Get: %s, %d", key.toString().c_str(), data.length());
+            return ret;
+		}
+		smsc_log_info(logger, "Get: %s, No data", key.toString().c_str(), data.length());
         return false;
     }
 
@@ -160,6 +166,7 @@ public:
     }
 
 private:
+	smsc::logger::Logger* logger;
     string              dbPath;
     string              dbName;
 
