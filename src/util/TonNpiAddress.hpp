@@ -86,7 +86,10 @@ struct TonNpiAddress {
     }
 
     //Returns true if address numbering is ISDN international
-    inline bool interISDN(void) const { return (bool)(~(numPlanInd ^ typeOfNumber) == 1); }
+    inline bool interISDN(void) const
+    {
+        return (bool)((numPlanInd == typeOfNumber) && (numPlanInd == 0x01));
+    }
                 
     //use at least TonNpiAddress_strSZ chars buffer
     inline int toString(char* buf, int buflen = TonNpiAddress_strSZ) const
