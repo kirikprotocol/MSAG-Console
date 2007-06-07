@@ -182,6 +182,7 @@ public:
 
         SerialBuffer sb;
         pf->Serialize(sb);
+        delete pf;
         store.Set(key, sb);
     }
 
@@ -219,6 +220,7 @@ public:
                 if(cache[i] != NULL)
                 {
                     storeProfile(cache[i]->key, cache[i]->pf);
+                    delete cache[i]->pf;
                     delete cache[i];
                 }
             delete[] cache;
