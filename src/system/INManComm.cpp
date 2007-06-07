@@ -102,13 +102,14 @@ void INManComm::ChargeSms(SMSId id,const SMS& sms,smsc::smeman::INSmsChargeRespo
   smsc::inman::interaction::SPckChargeSms pck;
   pck.Hdr().dlgId = dlgId;
   FillChargeOp(id, pck.Cmd(), sms);
-  smsc::inman::interaction::ObjectBuffer buf(400);
-  pck.serialize(buf);
-
   if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
   {
     pck.Cmd().setChargeOnSubmit();
   }
+
+  smsc::inman::interaction::ObjectBuffer buf(400);
+  pck.serialize(buf);
+
 
   debug2(log,"Buffer size:%d",buf.getDataSize());
   {
