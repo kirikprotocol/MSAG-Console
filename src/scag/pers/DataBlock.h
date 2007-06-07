@@ -167,9 +167,22 @@ public:
 	{
 		return pos;
 	}
-	void setPos(int _pos)
+	int setPos(int _pos)
 	{
-		pos = (_pos < block_len) ? _pos : block_len;
+		if(_pos < block_len)
+			return pos = _pos;
+		if(_pos >= buff_len)
+		{
+			char* temp = block;
+			buff_len = (_pos)*2;
+			block = new char[buff_len];
+			if(temp)
+			{
+				memcpy((void*)block, temp, block_len);
+				delete[] temp;
+			}
+		}
+		return block_len = pos = _pos;
 	}
 	
 
