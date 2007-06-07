@@ -285,6 +285,13 @@ unsigned Billing::writeCDR(void)
             cdr._srcMSC = abCsi.vlr2Str();
     }
     if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::cdrALL)) {
+        //remove TonNpi for MSCs ids
+        TonNpiAddress tna;
+        if (tna.fromText(cdr._srcMSC.c_str()))
+            cdr._srcMSC = tna.getSignals();
+        if (tna.fromText(cdr._dstMSC.c_str()))
+            cdr._dstMSC = tna.getSignals();
+
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
                     _logId, cdr._msgId, cdr._inBilled ? "true": "false",
