@@ -293,9 +293,9 @@ unsigned Billing::writeCDR(void)
             cdr._dstMSC = tna.getSignals();
 
         _cfg.bfs->bill(cdr); cnt++;
-        smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, dstAdr: %s",
+        smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, charged: %s",
                     _logId, cdr._msgId, cdr._inBilled ? "true": "false",
-                    cdr._dstAdr.c_str());
+                    abNumber.toString().c_str());
     }
     return cnt;
 }
@@ -310,7 +310,8 @@ void Billing::doFinalize(bool doReport/* = true*/)
                           " abonent(%s), type %s, CDR(s) written: %u", _logId,
             BillComplete() ? "" : "IN", cdr._chargeType ? "MT" : "MO",
             _chgPolicy[cdr._chargePolicy], cdr.dpType().c_str(),
-            cdr._inBilled ? "SCF" : _cfg.billModeStr(billMode), billErr,
+            cdr._inBilled ? (abScf._ident.empty() ? "SCF" : abScf._ident.c_str()) :
+                            _cfg.billModeStr(billMode), billErr,
             abNumber.getSignals(), abCsi.abRec.type2Str(), cdrs);
 
     doCleanUp();
@@ -518,6 +519,9 @@ Billing::PGraphState Billing::onChargeSms(void)
         billMode = ChargeObj::bill2CDR;
     else if (cdr._smsXMask & SMSX_NOCHARGE_SRV)
         billMode = ChargeObj::bill2CDR;
+    else if (cdr._smsXMask & SMSX_INCHARGE_SRV)
+        billMode = ChargeObj::bill2IN;
+
     //check for SMS extra sevice number being set
     if ((xsmsSrv && xsmsSrv->adr.empty())) {
         billMode = ChargeObj::bill2CDR;
@@ -697,11 +701,17 @@ Billing::PGraphState Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t ch
     std::string reply;
 
     if (chg_res != ChargeSmsResult::CHARGING_POSSIBLE) {
-        format(reply, "NOT_POSSIBLE (cause %u)", billErr);
+        format(reply, "NOT_POSSIBLE (cause %u", billErr);
+        if (billErr) {
+            reply += ": ";
+            reply += URCRegistry::explainHash(billErr);
+        }
+        reply += ")";
         state = Billing::bilReleased;
     } else {
-        format(reply, "POSSIBLE (via %s, cause %u)", 
-            billMode == ChargeObj::bill2CDR ? "CDR" : "SCF", billErr);
+        format(reply, "POSSIBLE (via %s, cause %u)",
+            billMode == ChargeObj::bill2CDR ? "CDR" :
+            (abScf._ident.empty() ? "SCF" : abScf._ident.c_str()), billErr);
         state = Billing::bilContinued;
     }
     smsc_log_info(logger, "%s: <-- %s %s CHARGING_%s, abonent(%s) type: %s (%u)",
