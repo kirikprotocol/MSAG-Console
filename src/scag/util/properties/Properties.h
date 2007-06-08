@@ -8,6 +8,7 @@
 #endif    
 
 #include <string>
+#include <time.h>
 
 namespace scag { namespace re {
     enum AccessType 
