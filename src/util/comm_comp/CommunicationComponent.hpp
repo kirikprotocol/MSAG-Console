@@ -335,12 +335,13 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
         {
           if ( FD_ISSET (iter->second->getSocket(), &tmp_fd_read) ) {
             --st;
+            APPLICATION_REQUEST* appObj=NULL;
             try {
-              APPLICATION_REQUEST* appObj = receive(*iter->second);
+              appObj = receive(*iter->second);
               if ( appObj ) {
                 smsc_log_info(_log, "ObjectReaderWriter::Execute::: got object from network [%s]", appObj->toString().c_str());
                 smsc_log_debug(_log, "ObjectReaderWriter::Execute::: push object to queue");
-              
+
                 const AbstractEvent* requestAsEvent
                   = appObj->createEvent();
 
@@ -364,6 +365,10 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
               smsc_log_error(_log, "Socket error on socket %s - %s", peerNameBuf, ex.what());
               _client_sockets_cache.erase(iter++);
               continue;
+            } catch (QueueCongestionException& ex) {
+              APPLICATION_RESPONSE* appObjResp = appObj->createAppResponse(APPLICATION_RESPONSE::CONGESTION_CONDITION);
+              scheduleObjectForWrite(*appObjResp, iter->first);
+              delete appObj;
             }
           }
           ++iter;
