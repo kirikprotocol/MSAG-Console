@@ -293,7 +293,7 @@ sub process{
     {
       $makeOutRec=0;
       $extraOut=undef;
-    }elsif($infields->{CHARGE}==1)
+    }elsif($infields->{CHARGE}==0)
     {
       $makeInRec=0;
     }
