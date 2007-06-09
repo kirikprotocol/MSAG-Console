@@ -3,15 +3,23 @@
 
 # include <deque>
 # include <pthread.h>
+# include <util/Exception.hpp>
 
 namespace smsc {
 namespace util {
 namespace comm_comp {
 
+class QueueCongestionException : public smsc::util::Exception {
+public:
+  QueueCongestionException() : Exception() {}
+  QueueCongestionException(const char* fmt, ...)
+    : Exception() { SMSC_UTIL_EX_FILL(fmt); }
+};
+
 /*
 ** Abstraction for Objects Queue working in environment with mulitple producers/multiple consumers.
 */
-template <class T>
+template <class T, int QUEUE_LIMIT=10>
 class ObjQueue {
 public:
   ObjQueue() {
@@ -30,9 +38,13 @@ public:
   void push (const T& element) {
     try {
       pthread_mutex_lock(&_lock);
-      bool needSignal = (_innerQue.size() == 0);
+
+      size_t curQueueSize = _innerQue.size();
+      if ( curQueueSize > QUEUE_LIMIT )
+        throw QueueCongestionException("ObjQueue::push::: current queue size=[%d] exceeded max. queue limit size=[%d]", curQueueSize, QUEUE_LIMIT);
+
       _innerQue.push_back(element);
-      if ( needSignal ) pthread_cond_signal(&_signal);
+      if ( curQueueSize == 0 ) pthread_cond_signal(&_signal);
       pthread_mutex_unlock(&_lock);
     } catch (...)  {
       pthread_mutex_unlock(&_lock);
