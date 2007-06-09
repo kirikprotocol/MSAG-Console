@@ -1315,6 +1315,7 @@ void StateMachine::processExpiredResps()
         SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
         resp->get_resp()->expiredResp=true;
         resp->get_resp()->expiredUid=uid;
+        resp.getLongCallContext().initiator = cmd.getLongCallContext().initiator;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDeliveryResp(resp);
       }break;
@@ -1323,6 +1324,7 @@ void StateMachine::processExpiredResps()
         SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false);
         resp->get_resp()->expiredResp=true;
         resp->get_resp()->expiredUid=uid;
+        resp.getLongCallContext().initiator = cmd.getLongCallContext().initiator;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processSubmitResp(resp);
       }break;
@@ -1331,6 +1333,7 @@ void StateMachine::processExpiredResps()
         SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
         resp->get_resp()->expiredResp=true;
         resp->get_resp()->expiredUid=uid;
+        resp.getLongCallContext().initiator = cmd.getLongCallContext().initiator;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDataSmResp(resp);
       }break;
