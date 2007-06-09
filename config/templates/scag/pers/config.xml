@@ -11,11 +11,11 @@
     <param name="init_record_count" type="int">10000</param>
 
     <section name="AbntProfStorage">
-        <param name="fsdbName" type="string">abonent</param>
-        <param name="fsdbPath" type="string">./</param>
+        <param name="storageName" type="string">abonent</param>
+        <param name="storagePath" type="string">@pers.storage_dir@</param>
         <param name="indexGrowth" type="int">200000</param>
         <param name="dataBlockSize" type="int">0</param>
-        <param name="blockInFile" type="int">50000</param>
+        <param name="blocksInFile" type="int">50000</param>
         <param name="cacheSize" type="int">10000</param>
     </section>
 
