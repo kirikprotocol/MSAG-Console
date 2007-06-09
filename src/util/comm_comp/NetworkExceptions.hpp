@@ -9,18 +9,16 @@ namespace comm_comp {
 
 class EOFException : public smsc::util::Exception {
 public:
-  EOFException() : Exception() {};
+  EOFException() : Exception() {}
   EOFException(const char* fmt, ...)
-    : Exception() { SMSC_UTIL_EX_FILL(fmt); };
-  virtual ~EOFException() throw() {};
+    : Exception() { SMSC_UTIL_EX_FILL(fmt); }
 };
 
 class SocketException : public smsc::util::Exception {
 public:
-  SocketException() : Exception() {};
+  SocketException() : Exception() {}
   SocketException(const char* fmt, ...)
-    : Exception() { SMSC_UTIL_EX_FILL(fmt); };
-  virtual ~SocketException() throw() {};
+    : Exception() { SMSC_UTIL_EX_FILL(fmt); }
 };
 }}}
 
