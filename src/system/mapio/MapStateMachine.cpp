@@ -80,7 +80,7 @@ struct MAPDIALOG_ERROR : public runtime_error
   MAPDIALOG_ERROR(unsigned code,const string& s) :
     runtime_error(s),code(code){}
   MAPDIALOG_ERROR(const string& s) :
-    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE)){}
 };
 
 struct MAPDIALOG_XERROR : public runtime_error
@@ -89,13 +89,13 @@ struct MAPDIALOG_XERROR : public runtime_error
   MAPDIALOG_XERROR(unsigned code,const string& s) :
     runtime_error(s),code(code){}
   MAPDIALOG_XERROR(const string& s) :
-    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE)){}
 };
 
 struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
 {
   MAPDIALOG_BAD_STATE(const string& s) :
-  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,0),s){}
+  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,Status::MAPINTERNALFAILURE),s){}
 };
 struct MAPDIALOG_TEMP_ERROR : public MAPDIALOG_ERROR
 {
@@ -448,7 +448,9 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   if ( dialogid == 0 ) return;
   __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
-  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT
+  if ( GET_STATUS_TYPE(code) == CMD_ERR_FATAL && GET_STATUS_CODE(code) == 0 ){
+    code = MAKE_ERRORCODE(CMD_ERR_FATAL,Status::MAPINTERNALFAILURE);
+  } else if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT
     && GET_STATUS_TYPE(code) == CMD_ERR_RESCHEDULENOW ){
     cmd->get_resp()->set_delay(GetBusyDelay());
   } else if( GET_STATUS_CODE(code) == Status::LOCKEDBYMO ) {
