@@ -11,31 +11,33 @@
 
 #include "string.h"
 
+const int start_buff_len = 8192;
+
+//template<int buff_size>
 class DataBlock
 {
 public:
-	DataBlock(const char* _block=0, int _block_len = 0):block(0), block_len(0), buff_len(0), pos(0)
+	DataBlock(const char* _block, int _block_len):block(0), block_len(_block_len), buff_len(start_buff_len), pos(0)
 	{
-		if(_block && _block_len > 0)
+		if(block_len >= buff_len) buff_len = 2 * block_len;
+		block = new char[buff_len];
+		if(_block && block_len > 0)
 		{
-			buff_len = block_len = _block_len;
-			block = new char[buff_len];
 			memcpy((void*)block, (void*)_block, block_len);
 			pos += block_len;
 		}
 	}
-	DataBlock(int _buff_len):block(0), block_len(0), buff_len(_buff_len), pos(0)
+	DataBlock(int _buff_len = start_buff_len):block(0), block_len(0), buff_len(_buff_len), pos(0)
 	{
 		if(buff_len > 0)
 			block = new char[buff_len];
 	}
-	DataBlock(const DataBlock& _block):block(0), block_len(0), buff_len(0), pos(0)
+	DataBlock(const DataBlock& _block):block(0), block_len(_block.block_len), buff_len(start_buff_len), pos(_block.pos)
 	{
-		if(!_block.block)
-			return;
-		pos = block_len = buff_len = _block.block_len;
+		if(block_len >= buff_len) buff_len = 2 * block_len;
 		block = new char[buff_len];
-		memcpy((void*)block, (void*)(_block.block), block_len);
+		if(_block.block)
+			memcpy((void*)block, (void*)(_block.block), block_len);
 	}
 	~DataBlock(void)
 	{

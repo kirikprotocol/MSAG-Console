@@ -73,7 +73,7 @@ public:
 
     virtual int Init(const string& _dbName, const string& _dbPath="./",
         long indexGrowth = 1000000,
-        long fileSize = 100000,
+        long blocksInFile = 100000,
         long blockSize = 8192 - sizeof(templDataBlockHeader<Key>), // 8144
         int mode = FSDB_DEFAULT)
     {
@@ -83,19 +83,26 @@ public:
         
         if(dbPath.length()==0)  dbPath = "./";
         else if(dbPath[dbPath.length()-1] != '/') dbPath += '/';
+		if(indexGrowth <= 0) indexGrowth = 1000000;
+		if(blocksInFile <= 0) blocksInFile = 100000;
+		if(blockSize <= 0) blockSize = 8192 - sizeof(templDataBlockHeader<Key>);
+
         if(!dbPathExists())
         {
-		    smsc_log_info(logger, "FSDBProfiles::Init: db not Exists\n");
+		    smsc_log_info(logger, "FSDBProfiles::Init: db not Exists");
             if(mode & FSDB_CREATE) 
             {
                 if(!createDBPath())
                 {
-					smsc_log_info(logger, "createDBPath - failed\n");
+					smsc_log_info(logger, "createDBPath - failed");
                     return ERR_CANNOT_CREATE_DBPATH;
                 }
             }
             else
+			{
+				smsc_log_info(logger, "FSDB not exist. Create DB first. %d", mode);
                 return ERR_DB_NOTEXISTS;
+			}
         }
         indexAllocator = new RBTreeFileAllocator<Key, long>(dbPath + dbName + '/' + dbName + "-index", indexGrowth);
         indexStorage.SetAllocator(indexAllocator);
@@ -103,9 +110,12 @@ public:
         int ret;
         if(0 != (ret=dataStorage.Open(dbName + "-data", dbPath + '/' + dbName)))
         {
-			smsc_log_info(logger, "Create Data Storage %d\n", ret);
-            dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, fileSize, blockSize);
+			smsc_log_info(logger, "Create Data Storage %d", ret);
+            dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize);
         }
+		smsc_log_info(logger, "Inited: storageName = '%s',  storagePath = '%s'", dbName.c_str(), dbPath.c_str());
+		smsc_log_info(logger, "Inited: indexGrowth = %d,  blocksInFile = %d", indexGrowth, blocksInFile);
+		printf("FSDB created\n");
         return 0;
     }
     
@@ -125,7 +135,7 @@ public:
     }
     virtual bool Set(const Key& key, const DataBlock& data)
     {
-		smsc_log_info(logger, "Set: %s, %d", key.toString().c_str(), data.length());
+		smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
         long idx;
         if(indexStorage.Get(key, idx))
             return dataStorage.Change(idx, data, key);
@@ -143,10 +153,10 @@ public:
 //          if(ret = dataStorage.Get(idx, data))
 //              cache.Add(key, data);
 			ret = dataStorage.Get(idx, data);
-			smsc_log_info(logger, "Get: %s, %d", key.toString().c_str(), data.length());
+			smsc_log_debug(logger, "Get: %s, %d", key.toString().c_str(), data.length());
             return ret;
 		}
-		smsc_log_info(logger, "Get: %s, No data", key.toString().c_str(), data.length());
+		smsc_log_debug(logger, "Get: %s, No data", key.toString().c_str(), data.length());
         return false;
     }
 
@@ -196,7 +206,7 @@ private:
         while(pos != path.length() - 1)
         {
             pos = path.find('/', pos + 1);
-            printf("%s - ", (path.substr(0, pos)).c_str());
+            //printf("%s - ", (path.substr(0, pos)).c_str());
             ret = mkdir((path.substr(0, pos)).c_str(), 0700);
             //if(-1 == (ret = mkdir((path.substr(0, pos)).c_str(), 0700)))
             //{

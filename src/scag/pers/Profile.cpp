@@ -1,6 +1,7 @@
 /* $Id$ */
 
 #include "Profile.h"
+#include <unistd.h>
 
 namespace scag{ namespace pers{
 
@@ -28,14 +29,15 @@ void Profile::Deserialize(SerialBuffer& buf)
     cnt = buf.ReadInt16();
     smsc_log_debug(log, "profile size: %d", (int)cnt);
 
+	time_t cur_time = time(0);
     while(cnt) {
         prop = new Property();
         do{
             prop->Deserialize(buf);
             cnt--;
-        }while(prop->isExpired() && cnt);
+        }while(prop->isExpired(cur_time) && cnt);
 
-        if(!prop->isExpired())
+        if(!prop->isExpired(cur_time))
             properties.Insert(prop->getName().c_str(), prop);
         else
             delete prop;
@@ -97,9 +99,9 @@ void Profile::DeleteExpired()
     Property* prop;
 
     PropertyHash::Iterator it = properties.getIterator();
-
+	time_t cur_time = time(0);
     while(it.Next(key, prop))
-        if(prop->isExpired())
+        if(prop->isExpired(cur_time))
         {
             i++;
             delete prop;
