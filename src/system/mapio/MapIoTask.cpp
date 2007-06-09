@@ -139,7 +139,6 @@ void MapIoTask::connect(unsigned timeout) {
     }
   }
   {
-    MutexGuard mapMutexGuard(mapMutex);
     MapDialogContainer::getInstance()->restartStatistics();
   }
 }
@@ -156,7 +155,10 @@ void MapIoTask::init(unsigned timeout)
   if ( err != MSG_OK ) {
     __map_warn2__("Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
   }
-  connect(timeout);
+  {
+    MutexGuard mapMutexGuard(mapMutex);
+    connect(timeout);
+  }
   __map_trace__("MAP proxy init complete");
 }
 
@@ -497,6 +499,10 @@ smsc::logger::Logger* MAPSTATS_GetLoggerHour() {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.hour");
   return logger;
 }
+smsc::logger::Logger* MAPSTATS_GetLoggerUpdate() {
+  static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.update");
+  return logger;
+}
 
 static time_t MAPSTATS_last_time_sec = 0;
 static time_t MAPSTATS_last_time_min = 0;
@@ -510,6 +516,7 @@ int MAPSTATS_recv[3] = {0,0,0};
 int MAPSTATS_dialogs_in = 0;
 int MAPSTATS_dialogs_out = 0;
 int MAPSTATS_reassign[3] = {0,0,0};
+char *MAPSTATS_types[] = { "GSMRECV", "NEWDIALOG_IN", "DISPOSEDIALOG_IN", "NEWDIALOG_OUT", "DISPOSEDIALOG_OUT" };
 
 enum {
   MAPSTATS__SEC,
@@ -614,6 +621,21 @@ void MAPSTATS_Update_(MAPSTATS stats)
   case MAPSTATS_DISPOSEDIALOG_OUT:  --MAPSTATS_dialogs_out; ++MAPSTATS_close_out[0]; break;
   case MAPSTATS_NEWDIALOG_OUT:      ++MAPSTATS_dialogs_out; ++MAPSTATS_open_out[0]; break;
   default:; // nothing
+  }
+  if( stats != MAPSTATS_GSMRECV )
+  smsc_log_debug(MAPSTATS_GetLoggerUpdate(), 
+                "updated %s dlg %d/%d/%d",
+                MAPSTATS_types[stats],
+                MAPSTATS_dialogs_in,
+                MAPSTATS_dialogs_out,
+                MapDialogContainer::getInstance()->getDialogCount()
+                );
+  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
+    smsc_log_warn(MAPSTATS_GetLoggerUpdate(),"Number of dialogs unbalanced %d/%d/%d", 
+                  MAPSTATS_dialogs_in,
+                  MAPSTATS_dialogs_out,
+                  MapDialogContainer::getInstance()->getDialogCount()
+                  ); 
   }
 }
 
