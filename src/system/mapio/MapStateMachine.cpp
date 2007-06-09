@@ -2651,10 +2651,23 @@ USHORT_T Et96MapV2ForwardSmMTConf (
 }
 
 extern "C"
-USHORT_T Et96MapDelimiterInd(
+USHORT_T Et96MapV3ForwardSmMTConf(
   ET96MAP_LOCAL_SSN_T localSsn,
   ET96MAP_DIALOGUE_ID_T dialogueId,
-  UCHAR_T priorityOrder)
+  ET96MAP_INVOKE_ID_T invokeId,
+  ET96MAP_SM_RP_UI_T *smRpUi_sp,
+  ET96MAP_EXTENSIONDATA_T *extension_sp,
+  ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
+  ET96MAP_PROV_ERR_T *provErrCode_p)
+{
+  return Et96MapVxForwardSmMTConf_Impl(localSsn,dialogueId,invokeId,errorForwardSMmt_sp,provErrCode_p,3);
+}
+
+extern "C"
+USHORT_T Et96MapDelimiterInd(
+                             ET96MAP_LOCAL_SSN_T localSsn,
+                             ET96MAP_DIALOGUE_ID_T dialogueId,
+                             UCHAR_T priorityOrder)
 {
   bool open_confirmed = false;
   ET96MAP_REFUSE_REASON_T reason;
@@ -2662,15 +2675,15 @@ USHORT_T Et96MapDelimiterInd(
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
-        FormatText("MAP::%s dialog 0x%x is not present",__func__,dialogueId));
+                            FormatText("MAP::%s dialog 0x%x is not present",__func__,dialogueId));
     }
     __require__(dialog->ssn==localSsn);
     __map_trace2__("%s: dialogid 0x%x (state %d) %s",__func__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     switch( dialog->state ){
-    case MAPST_WaitSms:
-      dialog->state = MAPST_WaitSmsMOInd;
-      reason = ET96MAP_NO_REASON;
-      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+      case MAPST_WaitSms:
+        dialog->state = MAPST_WaitSmsMOInd;
+        reason = ET96MAP_NO_REASON;
+        checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
       checkMapReq( Et96MapDelimiterReq(dialog->ssn,dialogueId,0,0), __func__);
       open_confirmed = true;
       break;
