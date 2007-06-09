@@ -18,7 +18,7 @@ using namespace scag::pers::client;
 using namespace scag::pers;
 using namespace scag::config;
 
-#define ITER_CNT 10000
+#define ITER_CNT 100000
 
 extern "C" static void atExitHandler(void)
 {
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     try{
         ConfigManager::Init();
         
-        PersClient::Init("phoenix", 1222, 60, 5);
+        PersClient::Init("phoenix", 1232, 60, 5);
         PersClient& pc = PersClient::Instance();
         Property prop;
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
         {
             try{            
             char s[20];
-            sprintf(s, "+7923244%04d", i);
+            sprintf(s, "+792324%05d", i);
             prop.setInt("test_val", 234567, FIXED, -1, 20);
             pc.SetProperty(PT_ABONENT, s, prop);
 
@@ -82,42 +82,42 @@ int main(int argc, char* argv[])
             smsc_log_debug(logger,  ">>ABONENT: del int");
 
 //            sleep(15);
-            prop.setInt("test_val", 234567, FIXED, -1, 20);
-            pc.SetProperty(PT_SERVICE, i + 1, prop);
+            //prop.setInt("test_val", 234567, FIXED, -1, 20);
+            //pc.SetProperty(PT_SERVICE, i + 1, prop);
 
-            prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
-            pc.SetProperty(PT_PROVIDER, i + 1, prop);
+            //prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
+            //pc.SetProperty(PT_PROVIDER, i + 1, prop);
 
-            prop.setString("test_val_string", "test_string", W_ACCESS, -1, 25);
-            pc.SetProperty(PT_OPERATOR, i + 1, prop);
+            //prop.setString("test_val_string", "test_string", W_ACCESS, -1, 25);
+            //pc.SetProperty(PT_OPERATOR, i + 1, prop);
 
-            prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
-            pc.SetProperty(PT_OPERATOR, i + 1, prop);
+            //prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
+            //pc.SetProperty(PT_OPERATOR, i + 1, prop);
 
-            pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
-            smsc_log_debug(logger,  ">>SERVICE: get int %s", prop.toString().c_str());
+            //pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
+            //smsc_log_debug(logger,  ">>SERVICE: get int %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_PROVIDER, i + 1, "test_val_bool", prop);
-            smsc_log_debug(logger,  ">>OPERATOR: get bool %s", prop.toString().c_str());
+            //pc.GetProperty(PT_PROVIDER, i + 1, "test_val_bool", prop);
+            //smsc_log_debug(logger,  ">>OPERATOR: get bool %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_OPERATOR, i + 1, "test_val_string", prop);
-            smsc_log_debug(logger,  ">>OPERATOR: get string %s", prop.toString().c_str());
+            //pc.GetProperty(PT_OPERATOR, i + 1, "test_val_string", prop);
+            //smsc_log_debug(logger,  ">>OPERATOR: get string %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_OPERATOR, i + 1, "test_val_date", prop);
-            smsc_log_debug(logger,  ">>OPERATOR: get date %s", prop.toString().c_str());
+            //pc.GetProperty(PT_OPERATOR, i + 1, "test_val_date", prop);
+            //smsc_log_debug(logger,  ">>OPERATOR: get date %s", prop.toString().c_str());
 
-            prop.setInt("test_val", -123, FIXED, -1, 20);
-            pc.IncProperty(PT_SERVICE, i + 1, prop);
-            pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
-            smsc_log_debug(logger,  ">>SERVICE: get int(after inc) %s", prop.toString().c_str());
+            //prop.setInt("test_val", -123, FIXED, -1, 20);
+            //pc.IncProperty(PT_SERVICE, i + 1, prop);
+            //pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
+            //smsc_log_debug(logger,  ">>SERVICE: get int(after inc) %s", prop.toString().c_str());
 
-            prop.setInt("test_val", -123, FIXED, -1, 20);
-            pc.IncModProperty(PT_SERVICE, i + 1, prop, 10);
-            pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
-            smsc_log_debug(logger,  ">>SERVICE: get int(after inc mod) %s", prop.toString().c_str());
+            //prop.setInt("test_val", -123, FIXED, -1, 20);
+            //pc.IncModProperty(PT_SERVICE, i + 1, prop, 10);
+            //pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
+            //smsc_log_debug(logger,  ">>SERVICE: get int(after inc mod) %s", prop.toString().c_str());
 
-            pc.DelProperty(PT_SERVICE, i + 1, "test_val");
-            smsc_log_debug(logger,  ">>ABONENT: del int(int)");
+            //pc.DelProperty(PT_SERVICE, i + 1, "test_val");
+            //smsc_log_debug(logger,  ">>ABONENT: del int(int)");
             }
             catch(PersClientException &e)
             {
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
         }
         t = time(NULL) - t;
         if(t)
-            smsc_log_error(logger,  "timings: %d sec, %d req/s", t, 24*ITER_CNT/t);
+            smsc_log_error(logger,  "timings: %d sec, %d req/s", t, 11*ITER_CNT/t); //24
     }
     catch (PersClientException& exc) 
     {

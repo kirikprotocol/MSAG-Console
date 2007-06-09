@@ -19,6 +19,7 @@
 
 namespace scag{ namespace pers{
 using smsc::mcisme::AbntAddr;
+using std::string;
 
 class IntProfileKey
 {
@@ -169,18 +170,18 @@ public:
     TreeProfileStore() {};
     ~TreeProfileStore() {};
 
-    void init(const std::string& storeName, uint32_t initRecCnt, uint32_t max_cache_size)
+    void init(	const string& storageName, const string& storagePath,
+				int indexGrowth, int blocksInFile, int dataBlockSize, int cacheSize)
     {
         log = smsc::logger::Logger::getInstance("treestore");
-        store.Init(storeName, "./", 20000);
-        smsc_log_debug(log, "Inited: %s", storeName.c_str());
-    };
+        store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize);
+		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
+	};
 
     void storeProfile(Key& key, Profile *pf)
     {
         pf->DeleteExpired();
-
-        SerialBuffer sb;
+		sb.Empty();
         pf->Serialize(sb);
         delete pf;
         store.Set(key, sb);
@@ -189,7 +190,7 @@ public:
     Profile* getProfile(Key& key, bool create)
     {
         Profile *pf = new Profile();
-        SerialBuffer sb;
+		sb.Empty();
         if(store.Get(key, sb))
         {
             pf->Deserialize(sb);
@@ -204,6 +205,7 @@ public:
 protected:
     smsc::logger::Logger* log;
     FSDBProfiles<Key> store;
+	SerialBuffer sb;
 };
 
 template <class StoreType, class Key>

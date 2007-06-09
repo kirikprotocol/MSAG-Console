@@ -18,6 +18,9 @@
 #include "PersServer.h"
 #include "CmdDispatcher.h"
 
+#include "string"
+
+using std::string;
 using namespace scag::pers;
 using namespace smsc::util::config;
 
@@ -80,12 +83,41 @@ int main(int argc, char* argv[])
 
         try { recCnt = persConfig.getInt("init_record_count"); } catch (...) { recCnt = 1000; };
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	Init Abonent's profiles storage 
+		ConfigView abntProfStorConfig(manager, "pers.AbntProfStorage");
+		
+		string storageName;
+		try { storageName = abntProfStorConfig.getString("storageName"); } catch (...) { storageName = "abonent";
+			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.storageName> missed. Defaul value is 'abonent'");
+		}
+		string storagePath;
+		try { storagePath = abntProfStorConfig.getString("storagePath"); } catch (...) { storagePath = "./";
+			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.storagePath> missed. Defaul value is './'");
+		}
+		int indexGrowth;
+		try { indexGrowth = abntProfStorConfig.getInt("indexGrowth"); } catch (...) { indexGrowth = 0;
+			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.indexGrowth> missed. Defaul value is 0 (automatic size selection)");
+		}
+		int dataBlockSize;
+		try { dataBlockSize = abntProfStorConfig.getInt("dataBlockSize"); } catch (...) { dataBlockSize = 0;
+			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.dataBlockSize> missed. Defaul value is 0 (automatic size selection)");
+		}
+		int blocksInFile;
+		try { blocksInFile = abntProfStorConfig.getInt("blocksInFile"); } catch (...) { blocksInFile = 0;
+			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 0 (automatic size selection)");
+		}
+		int cacheSize;
+		try { cacheSize = abntProfStorConfig.getInt("cacheSize"); } catch (...) { cacheSize = 10000;
+			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 10000");
+		}
+
+        AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//	Init cache Params 
         ConfigView cacheConfig(manager, "pers.cache_max");
-
-        uint32_t cm;
-        try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
-        AbonentStore.init("abonent", recCnt, cm);
-
+		int cm;
         try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
         ServiceStore.init(storageDir + "service", recCnt, cm);
 

@@ -228,7 +228,7 @@ private:
 		header->nil_cell = (long)nil_cell_addr - (long)rbtree_body;
 		header->growth = growth;
 		
-		printf("Create file return \n");
+//		printf("Create file return \n");
 		return SUCCESS;
 	}
 	int OpenRBTreeFile(void)

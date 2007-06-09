@@ -78,6 +78,7 @@ public:
     void setTimePolicy(TimePolicy policy, time_t fd, uint32_t lt);
     TimePolicy getTimePolicy() { return time_policy; };
     bool isExpired();
+	bool isExpired(time_t cur_time);
     std::string toString() const;
 
     void setInt(const char *nm, int32_t i, TimePolicy policy, time_t fd, uint32_t lt);
