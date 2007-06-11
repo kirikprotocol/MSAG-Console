@@ -450,11 +450,14 @@ public:
         bool retry     = (!Status::isErrorPermanent(status));
 
         bool immediate = (status == Status::MSGQFUL   ||
-                          status == Status::THROTTLED /*|| commented for Lugovoj's request
+                          status == Status::THROTTLED ||
+			  status == Status::LICENSELIMITREJECT
+			  /*|| commented for Lugovoj's request
                                                         status == Status::SUBSCRBUSYMT*/);
 
         bool trafficst = (status == Status::MSGQFUL                   ||
                           status == Status::THROTTLED                 ||
+			  status == Status::LICENSELIMITREJECT        ||
                           status == Status::MAP_RESOURCE_LIMITATION   ||
                           status == Status::MAP_NO_RESPONSE_FROM_PEER ||
                           status == Status::SMENOTCONNECTED           ||
