@@ -1363,6 +1363,10 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_INCHARGE);
   }
 #endif
+  if(ri.deliveryMode==SMSC_TRANSACTION_MSG_MODE || (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
+  {
+    sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
+  }
 
 
   if(aclCheck && ri.aclId!=-1 && !smsc->getAclMgr()->isGranted(ri.aclId,aclAddr))
