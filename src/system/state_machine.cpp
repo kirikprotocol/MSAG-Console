@@ -1240,10 +1240,31 @@ StateType StateMachine::submit(Tuple& t)
   bool fromDistrList=src_proxy && !strcmp(src_proxy->getSystemId(),"DSTRLST");
   bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
   bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+  bool firstPart=true;
+  if(sms->getIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    unsigned char *body;
+    unsigned int len;
+    if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      body=(unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }else
+    {
+      body=(unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    }
+    uint16_t mr;
+    uint8_t idx,num;
+    bool havemoreudh;
+    smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
+    if(idx!=1)
+    {
+      firstPart=false;
+    }
+  }
 
 #ifdef SMSEXTRA
   bool noDestChange=false;
-  if((fromMap || fromDistrList) && toMap)
+  if((fromMap || fromDistrList) && toMap && firstPart)
   {
     ExtraInfo::ServiceInfo xsi;
     int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
