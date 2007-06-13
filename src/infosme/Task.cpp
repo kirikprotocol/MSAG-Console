@@ -1207,6 +1207,8 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
     }
     if ( ++numOfRowsProcessed % 5000 == 0 )
       smsc::util::millisleep(1);
+    if ( numOfRowsProcessed % 100 == 0 )
+      --unixTime;
   }
   return true;
 }
