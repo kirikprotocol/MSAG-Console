@@ -2,7 +2,8 @@
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
                  java.util.*, ru.novosoft.smsc.infosme.backend.Message,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
-                 ru.novosoft.smsc.infosme.beans.Messages"%>
+                 ru.novosoft.smsc.infosme.beans.Messages,
+                 java.io.*"%>
 <jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
 <% if (!bean.isProcessed()) {%>
   <jsp:setProperty name="bean" property="*"/>
@@ -15,8 +16,10 @@
 
   int rowN = 0;
   int beanResult = bean.process(request);
-  System.out.println("!!! " + beanResult + " "  + Messages.RESULT_UPDATE);
-  if (beanResult == Messages.RESULT_UPDATE_ALL) {
+  if (beanResult == Messages.RESULT_EXPORT_ALL) {
+    bean.exportAll(response, out);
+    return;
+  } else if (beanResult == Messages.RESULT_UPDATE_ALL) {
     request.getRequestDispatcher("updateMessages.jsp").forward(request, response);
     return;
   }
@@ -144,6 +147,7 @@ page_menu_space(out);
 page_menu_button(session, out, "mbUpdateAll", "infosme.button.update_all", "infosme.hint.update_all");
 page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "infosme.hint.delete_all");
 page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
+page_menu_button(session, out, "mbExportAll", "infosme.button.export_all", "infosme.hint.export_all");
 page_menu_end(out);
 }}%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

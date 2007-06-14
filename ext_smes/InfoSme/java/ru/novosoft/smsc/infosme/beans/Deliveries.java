@@ -15,10 +15,9 @@ import ru.novosoft.util.jsp.MultipartServletRequest;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -31,6 +30,9 @@ public class Deliveries extends InfoSmeBean
 {
     public final static String ABONENTS_FILE_PARAM = "abonentsFile";
 
+    private final static int ESC_CR = 13;
+    private final static int ESC_LF = 10;
+
     public final static int STATUS_OK = 0;
     public final static int STATUS_ERR = -1;
     public final static int STATUS_DONE = 1;
@@ -39,6 +41,9 @@ public class Deliveries extends InfoSmeBean
     private final static String STATUS_STR_INIT       = "Initialization...";
     private final static String STATUS_STR_DONE       = "Finished";
     private final static String STATUS_STR_ERR        = "Error - ";
+
+    private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy");
+    private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("hh:mm:ss");
 
     private int status = STATUS_OK;
     private String statusStr = STATUS_STR_INIT;
@@ -50,6 +55,7 @@ public class Deliveries extends InfoSmeBean
     private String mbCancel = null;
 
     private int stage = 0;
+    private int fileCount = -1;
     private File incomingFile = null;
 
     private boolean transliterate = false;
@@ -79,6 +85,10 @@ public class Deliveries extends InfoSmeBean
       return RESULT_OK;
     }
 
+    public boolean isUserAdmin(HttpServletRequest request) {
+      return request.isUserInRole("infosme-admin");
+    }
+
     public int process(HttpServletRequest request)
     {
       int result = super.process(request);
@@ -86,7 +96,7 @@ public class Deliveries extends InfoSmeBean
         return result;
 
       if (mbNext != null) {
-        mbNext = null;   return next();
+        mbNext = null;   return next(request);
       } else if (mbCancel != null) {
         mbCancel = null; return cleanup();
       } else if (mbStat != null) {
@@ -98,23 +108,25 @@ public class Deliveries extends InfoSmeBean
       return RESULT_OK;
     }
 
-    private int next()
+    private int next(HttpServletRequest request)
     {
         switch (stage)
         {
-            case 0: initCleanup(); stage++; return RESULT_OK;
+            case 0: initCleanup(request); stage++; return RESULT_OK;
             case 1: return RESULT_OK;
-            case 2: return processFile();
+            case 2: return processFile(request);
             case 3: return processTask();
-            case 4: return finishTask();
+            case 4: return finishTask(request);
         }
         stage = 0;
+        fileCount = 0;
         return RESULT_DONE;
     }
 
-    private void initCleanup()
+    private void initCleanup(HttpServletRequest request)
     {
       stage = 0;
+      fileCount = 0;
 
       if (incomingFile != null && incomingFile.isFile() &&
           incomingFile.exists()) incomingFile.delete();
@@ -122,7 +134,7 @@ public class Deliveries extends InfoSmeBean
 
       transliterate = false;
       task = new Task();
-      resetTask();
+      resetTask(request);
     }
 
     private int cleanup()
@@ -156,10 +168,12 @@ public class Deliveries extends InfoSmeBean
         if (dataFile == null)
           return error("infosme.error.file_not_attached");
 
-        incomingFile = Functions.saveFileToTemp(dataFile.getInputStream(),
+//        incomingFile = Functions.saveFileToTemp(dataFile.getInputStream(),
+//                     new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents.list"));
+        incomingFile = saveFileToTemp(dataFile.getInputStream(),
                      new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents.list"));
         incomingFile.deleteOnExit();
-        logger.debug("File '"+incomingFile.toString()+"' received");
+        logger.debug("File '"+incomingFile.toString()+"' received. " + fileCount + " messages");
       }
       catch (Throwable t) {
         return error("infosme.error.file_failed_receive", t);
@@ -176,6 +190,51 @@ public class Deliveries extends InfoSmeBean
         return RESULT_OK;
       } else
         return RESULT_ERROR;
+    }
+
+    private File saveFileToTemp(InputStream in, File file) throws IOException {
+      File tmpFile = Functions.createNewFilenameForSave(file);
+
+      OutputStream out = null;
+      String str;
+      fileCount = 0;
+
+      try {
+        out = new BufferedOutputStream(new FileOutputStream(tmpFile));
+
+        while ((str = readLine(in)) != null) {
+          out.write(str.getBytes());
+          out.write(ESC_LF);
+          fileCount++;
+        }
+
+        out.flush();
+      } catch (IOException e) {
+        throw new IOException(e.getMessage());
+      } finally {
+        try {
+          if (out != null)
+            out.close();
+        } catch (IOException e) {
+        }
+      }
+
+      in.close();
+
+      return tmpFile;
+    }
+
+    private String readLine(InputStream bis) throws IOException {
+      int ch = -1;
+      final StringBuffer sb = new StringBuffer(30);
+      while (true) {
+        if ((ch = bis.read()) == -1) break;
+        if (ch == ESC_CR) continue;
+        else if (ch == ESC_LF) break;
+        else sb.append((char)ch);
+      }
+
+      return (sb.length() == 0) ? null : sb.toString().trim();
     }
 
     private Object countersSync = new Object();
@@ -220,8 +279,7 @@ public class Deliveries extends InfoSmeBean
             }
         }
 
-        private final static int ESC_CR = 13;
-        private final static int ESC_LF = 10;
+
 
         private String readLine() throws IOException
         {
@@ -380,10 +438,94 @@ public class Deliveries extends InfoSmeBean
       }
     }
 
-    private int processFile()
-    {
+    private long calculateTotalTime() throws ParseException {
+      long result = 0;
+      String[] days = new String[] {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+      final long endDate = endDateFormat.parse(task.getEndDate()).getTime();
+
+      final Calendar start = Calendar.getInstance();
+      final Calendar end = Calendar.getInstance();
+
+      start.setTimeInMillis(activePeriodDateFormat.parse(task.getActivePeriodStart()).getTime());
+      end.setTimeInMillis(activePeriodDateFormat.parse(task.getActivePeriodEnd()).getTime());
+
+      final long dayCount = end.getTimeInMillis() - start.getTimeInMillis();
+
+      final Calendar cal = Calendar.getInstance();
+
+      long date = System.currentTimeMillis();
+      cal.setTimeInMillis(date);
+
+      start.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH));
+      start.set(Calendar.MONTH, cal.get(Calendar.MONTH));
+      start.set(Calendar.YEAR, cal.get(Calendar.YEAR));
+
+      end.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH));
+      end.set(Calendar.MONTH, cal.get(Calendar.MONTH));
+      end.set(Calendar.YEAR, cal.get(Calendar.YEAR));
+
+      if (cal.getTime().after(start.getTime())) {
+        if (task.isWeekDayActive(days[cal.get(Calendar.DAY_OF_WEEK) - 1]))
+          result += (end.getTimeInMillis() - cal.getTimeInMillis());
+        date += 1000 * 60 * 60 * 24;
+      }
+
+      for (; date < endDate; date += 1000 * 60 * 60 * 24) {
+        cal.setTimeInMillis(date);
+        if (task.isWeekDayActive(days[cal.get(Calendar.DAY_OF_WEEK) - 1]))
+          result += dayCount;
+      }
+
+      return result;
+    }
+
+    private String getDoubleCharNumber(long num) {
+      String res = String.valueOf(num);
+      if (res.length() == 1)
+        res = "0" + res;
+      return res;
+    }
+
+    private void calculateRetryOnFail() {
+      long retryOnFail = -1;
+      if (task.getEndDate() == null || task.getEndDate().length() == 0)
+        retryOnFail = 24*3600;
+      else {
+        try {
+          final int maxSmsSec = getInfoSmeContext().getConfig().getInt("InfoSme.maxMessagesPerSecond") / 2;
+          final long totalTime = calculateTotalTime() / 1000 ; // total time in seconds
+
+          long trySeconds = fileCount / maxSmsSec ; // total work time in seconds
+          if (trySeconds == 0)
+            trySeconds = 1; // One second will be enough
+
+          long ntries = totalTime / trySeconds; // Count of tries
+
+          if (ntries - 1 > 0)
+            retryOnFail = ntries * trySeconds;
+
+        } catch (ParseException e) {
+          logger.error(e,e);
+        } catch (Config.WrongParamTypeException e) {
+          logger.error(e,e);
+        } catch (Config.ParamNotFoundException e) {
+          logger.error(e,e);
+        }
+      }
+
+      if (retryOnFail > 0) {
+        task.setRetryOnFail(true);
+        long hours = Math.min(retryOnFail/3600, 24);
+        long minutes = hours == 24 ? 0 : (retryOnFail - hours*3600) / 60;
+        long seconds = hours == 24 ? 0 : retryOnFail - hours*3600 - minutes*60;
+        task.setRetryTime(getDoubleCharNumber(hours) + ":" + getDoubleCharNumber(minutes) + ":" + getDoubleCharNumber(seconds));
+      } else
+        task.setRetryOnFail(false);
+    }
+
+    private int processFile(HttpServletRequest request) {
         if (generateThread != null || generateThreadRunning) return RESULT_DONE;
-        if (!checkAndPrepareTask()) return RESULT_ERROR;
+        if (!checkAndPrepareTask(request)) return RESULT_ERROR;
 
         FileInputStream fis = null;
         try
@@ -422,7 +564,7 @@ public class Deliveries extends InfoSmeBean
 
         return RESULT_ERROR;
     }
-    private void resetTask()
+    private void resetTask(HttpServletRequest request)
     {
         task.setDelivery(true);
         task.setProvider(Task.INFOSME_EXT_PROVIDER);
@@ -441,9 +583,10 @@ public class Deliveries extends InfoSmeBean
         task.setActivePeriodStart("10:00:00");
         task.setActivePeriodEnd("21:00:00");
         task.setTransactionMode(false);
-        task.setValidityPeriod("01:00:00");
+        task.setValidityPeriod(isUserAdmin(request) ? "01:00:00" : "00:45:00");
     }
-    private boolean checkAndPrepareTask() {
+
+    private boolean checkAndPrepareTask(HttpServletRequest request) {
         errors.clear();
 
         String taskId = task.getId();
@@ -471,11 +614,14 @@ public class Deliveries extends InfoSmeBean
         if (task.isContainsInConfigByName(getConfig()))
             error("Task with name='"+taskName+"' already exists. Please specify another name");
 
+        if (!isUserAdmin(request))
+          calculateRetryOnFail();
+
         if (errors.size() > 0) return false;
         return (errors.size() <= 0);
     }
 
-    private int finishTask()
+    private int finishTask(HttpServletRequest request)
     {
       if (status == STATUS_DONE) {
         try {
@@ -492,7 +638,7 @@ public class Deliveries extends InfoSmeBean
         }
       }
       errors.clear();
-      resetTask(); stage = 0;
+      resetTask(request); stage = 0; fileCount = 0;
       status = STATUS_OK; statusStr = STATUS_STR_INIT;
       if (incomingFile != null && incomingFile.isFile() && incomingFile.exists()) {
         incomingFile.delete(); incomingFile = null;

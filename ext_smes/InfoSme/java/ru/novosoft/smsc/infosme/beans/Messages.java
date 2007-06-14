@@ -10,9 +10,14 @@ import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.jsp.JspWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.io.UnsupportedEncodingException;
+import java.io.BufferedOutputStream;
+import java.io.IOException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -27,6 +32,7 @@ public class Messages extends InfoSmeBean
   public static final int RESULT_UPDATE_ALL = PRIVATE_RESULT + 1;
   public static final int RESULT_UPDATE = PRIVATE_RESULT + 2;
   public static final int RESULT_CANCEL_UPDATE = PRIVATE_RESULT + 3;
+  public static final int RESULT_EXPORT_ALL = PRIVATE_RESULT + 4;
 
   private String sort = null;
   private String[] checked = new String[0];
@@ -48,6 +54,9 @@ public class Messages extends InfoSmeBean
   private String mbUpdateAll = null;
   private String mbResendAll = null;
   private String mbDeleteAll = null;
+  private String mbExportAll = null;
+
+  private String exportFile;
 
   private boolean initialized = false;
 
@@ -87,6 +96,7 @@ public class Messages extends InfoSmeBean
       if (mbDelete != null || mbDeleteAll != null) return processDelete();
       else if (mbResend != null || mbResendAll != null) return processResend();
       else if (mbUpdateAll != null) return processUpdateAll();
+      else if (mbExportAll != null) return processExportAll();
       else if (mbUpdate != null) return processUpdate();
       else if (mbCancelUpdate != null) return processCancelUpdate();
       else if (mbQuery != null || (initialized && messages == null)) return processQuery();
@@ -100,6 +110,49 @@ public class Messages extends InfoSmeBean
   private int processUpdateAll() {
     mbUpdateAll = null;
     return RESULT_UPDATE_ALL;
+  }
+
+  private int processExportAll() throws AdminException {
+    mbExportAll = null;
+    int result = processQuery();
+    if (result != RESULT_OK)
+      return result;
+    final StringBuffer buffer = new StringBuffer();
+    Message msg;
+    for (Iterator iter = messages.iterator(); iter.hasNext();) {
+      msg = (Message)iter.next();
+      buffer.append(msg.getTaskId()).append(",").append(msg.getAbonent()).append(",").append(getStateName(msg.getState())).append(",")
+          .append(convertDateToString(msg.getSendDate())).append(",").append(msg.getMessage()).append('\n');
+    }
+    try {
+      exportFile = new String(buffer.toString().getBytes("windows-1251"));
+    } catch (UnsupportedEncodingException e) {
+      e.printStackTrace();
+    }
+    return RESULT_EXPORT_ALL;
+  }
+
+  public void exportAll(HttpServletResponse response, JspWriter out) {
+    response.setContentType("file/csv; filename=messages.csv; charset=windows-1251");
+    response.setContentLength(exportFile.length());
+    response.setHeader("Content-Disposition", "attachment; filename=messages.csv");
+//    BufferedOutputStream os = null;
+    try {
+      out.clear();
+      out.print(exportFile);
+      out.flush();
+//      os = new BufferedOutputStream(response.getOutputStream());
+//      os.write(exportFile);
+//      os.flush();
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+//      try {
+//      if (os != null)
+//        os.close();
+//      } catch (IOException e) {
+//      }
+    }
   }
 
   private int processUpdate() {
@@ -449,11 +502,22 @@ public class Messages extends InfoSmeBean
   }
 
   public void setMbUpdateAll(String mbUpdateAll) {
-    System.out.println("set MbUpdateAll");
     this.mbUpdateAll = mbUpdateAll;
+  }
+
+  public String getMbExportAll() {
+    return mbExportAll;
+  }
+
+  public void setMbExportAll(String mbExportAll) {
+    this.mbExportAll = mbExportAll;
   }
 
   public boolean isProcessed() {
     return processed;
   }
+
+//  public byte[] getExportFile() {
+//    return exportFile;
+//  }
 }

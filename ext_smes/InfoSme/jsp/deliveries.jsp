@@ -144,6 +144,7 @@ else {
     </table>
   </td>
 </tr>
+<% if (bean.isUserAdmin(request)) {%>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.vperiod_date")%></th>
   <td>
@@ -152,12 +153,14 @@ else {
     <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button>
   </td>
 </tr>
+<% }%>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.end_date")%></th>
   <td nowrap>
     <input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button>
   </td>
 </tr>
+<% if (bean.isUserAdmin(request)) { %>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail><%= getLocString("infosme.label.retry_on_fail")%></label></th>
   <td nowrap>
@@ -166,6 +169,7 @@ else {
     <script>document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !document.getElementById('retryOnFail').checked;</script>
   </td>
 </tr>
+<% } %>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.message_text")%></th>
   <td><textarea name=text><%=StringEncoderDecoder.encode(bean.getText())%></textarea></td>
