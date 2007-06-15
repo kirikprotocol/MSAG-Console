@@ -67,7 +67,7 @@ class LongCallAction : public Action, ActionLongCallInterface
 public:
     virtual bool run(ActionContext& context)
     {
-        if (context.getSCAGCommand().getLongCallContext().ActionStack.empty()) 
+        if (context.getSession().getLongCallContext().ActionStack.empty()) 
         {
             if (!RunBeforePostpone(context)) return true;
 
@@ -78,7 +78,7 @@ public:
             return false;
         } else
         {
-            context.getSCAGCommand().getLongCallContext().ActionStack.pop();
+            context.getSession().getLongCallContext().ActionStack.pop();
             ContinueRunning(context);
         }
 

@@ -10,21 +10,24 @@ namespace scag { namespace re { namespace actions
     using namespace scag::exceptions;
 
 
-CommandProperty::CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, int MsgRef, CommandOperations CmdType)
-    : abonentAddr(addr)
+CommandProperty::CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int MsgRef, CommandOperations CmdType)
+    : abonentAddr(addr), serviceId(-1), protocol(-1), commandId(-1), direction(dsdUnknown)
 {
     cmdType = CmdType;
-    serviceId = command.getServiceId();
-    protocol = CommandBrige::getProtocolForEvent(command);
 
-    commandId = command.getCommandId();
-    
+    if(command)
+    {
+        serviceId = command->getServiceId();
+        protocol = CommandBrige::getProtocolForEvent(*command);
+        commandId = command->getCommandId();
+        direction = CommandBrige::getPacketDirection(*command);    
+    }
+
     status = commandStatus;
     
     providerId = ProviderId;
     operatorId = OperatorId;
     msgRef = MsgRef;
-    direction = CommandBrige::getPacketDirection(command);
 }
 
 
@@ -84,7 +87,11 @@ Property* ActionContext::getProperty(const std::string& var)
         return constants.GetPtr(name);
         break;
 
-    case ftField: return command.getProperty(name);
+    case ftField:
+    {
+        if(!command) throw SCAGException("ActionContext.getProperty: Command properties is not accessible");
+        return command->getProperty(name);
+    }
     case ftSession: return session.getProperty(name);
 
     default:

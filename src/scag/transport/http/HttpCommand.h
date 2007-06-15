@@ -114,8 +114,6 @@ typedef Hash<Cookie*> CookieHash;
 class HttpCommand : public SCAGCommand {
     friend class HttpParser;
 
-    LongCallContext lcmCtx;
-    
 public:
     typedef StringHashIterator FieldIterator;
 
@@ -124,11 +122,6 @@ public:
         headerFieldsIterator(headerFields), charset(LATIN_1) {}
     virtual ~HttpCommand();
 
-    virtual LongCallContext& getLongCallContext()
-    {
-        return lcmCtx;            
-    }
-    
     virtual TransportType getType() const;
     
     // All values accessible by command context methods

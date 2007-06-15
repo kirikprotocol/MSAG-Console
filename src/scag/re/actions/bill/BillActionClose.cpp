@@ -85,7 +85,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
         {
             BillCloseCallParams* bp = new BillCloseCallParams();
             bp->BillId = bid;
-            LongCallContext& lcmCtx = context.getSCAGCommand().getLongCallContext();
+            LongCallContext& lcmCtx = context.getSession().getLongCallContext();
             lcmCtx.callCommandId = actionCommit ? BILL_COMMIT : BILL_ROLLBACK;
             lcmCtx.setParams(bp);
             return true;
@@ -116,7 +116,7 @@ void BillActionClose::ContinueRunning(ActionContext& context)
 {
     smsc_log_debug(logger, "ContinueExecution Action 'bill:close'...");
     
-    BillCloseCallParams *bp = (BillCloseCallParams*)context.getSCAGCommand().getLongCallContext().getParams();
+    BillCloseCallParams *bp = (BillCloseCallParams*)context.getSession().getLongCallContext().getParams();
 
     if(bp->exception.length())
     {        

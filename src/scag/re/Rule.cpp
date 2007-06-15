@@ -3,6 +3,7 @@
 #include "scag/transport/http/HttpCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
 #include "scag/re/http/HttpEventHandler.h"
+#include "scag/re/session/SessionEventHandler.h"
 #include "RuleEngine.h"
 
 
@@ -20,9 +21,7 @@ Rule::~Rule()
     EventHandler * value;
 
     for (IntHash <EventHandler *>::Iterator it = Handlers.First(); it.Next(key, value);)
-    {
         delete value;
-    }
 
     smsc_log_debug(logger,"Rule released");
 }
@@ -30,50 +29,71 @@ Rule::~Rule()
 
 void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
 {
-    if (command.getType() != transportType)
-    {
-        rs.status = STATUS_FAILED;
-        throw SCAGException("Rule: command transport type and rule transport type are different");
-        //smsc_log_error(logger,"Rule: command transport type and rule transport type are different");
-        //return rs;
-    }
-
     smsc_log_debug(logger,"Process Rule... (%d Event Handlers registered)", Handlers.Count());
+
+    if(session.isNew())
+    {
+        processSession(session, rs);
+        if(rs.status != STATUS_OK)
+           return;
+    }
 
     EventHandlerType handlerType = CommandBrige::getHandlerType(command);
 
     smsc_log_debug(logger,"Event Handlers found. (id=%d)", handlerType);
 
-    if(!Handlers.Exist(handlerType)) 
-    {
-        rs.status = STATUS_FAILED;
-        smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
-        return;
-    }
-
-    EventHandler * eh = Handlers.Get(handlerType);
     try
     {
-        eh->process(command, session, rs);
+        if(Handlers.Exist(handlerType)) 
+        {
+            EventHandler * eh = Handlers.Get(handlerType);
+            eh->process(command, session, rs);
+            return;
+        }
+        smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
     }
     catch (Exception& e)
     {
-        rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
-        return;
     } 
     catch (std::exception& e)
     {
-        rs.status = STATUS_FAILED;
         smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
-    //abort();
-        return;
     } 
     catch (...)
     {
-        rs.status = STATUS_FAILED;
         smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
     }
+    rs.status = STATUS_FAILED;
+}
+
+void Rule::processSession(Session& session, RuleStatus& rs)
+{
+    smsc_log_debug(logger,"Process RuleSessionDestroy... (%d Event Handlers registered)", Handlers.Count());
+
+    try
+    {
+        if(Handlers.Exist(session.isNew() ? EH_SESSION_INIT : EH_SESSION_DESTROY))
+        {
+            SessionEventHandler* eh = (SessionEventHandler*)Handlers.Get(session.isNew() ? EH_SESSION_INIT : EH_SESSION_DESTROY);
+            eh->_process(session, rs);
+            return;
+        }
+        smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
+    }
+    catch (Exception& e)
+    {
+        smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
+    } 
+    catch (std::exception& e)
+    {
+        smsc_log_error(logger, "EH Rule top level exception: %s", e.what());
+    } 
+    catch (...)
+    {
+        smsc_log_error(logger,"EH Rule top level exception: Unknown system error");
+    }
+    rs.status = STATUS_FAILED;
 }
 
 EventHandler * Rule::CreateEventHandler()
@@ -82,17 +102,11 @@ EventHandler * Rule::CreateEventHandler()
     {
     case SMPP:
         return new SmppEventHandler();
-
     case HTTP:
         return new HttpEventHandler();
-
-    default:
-        return 0;
     }
+    throw SCAGException("Rule: unknown RuleTransport to create EventHandler");
 }
-
-
-
 
 
 //////////////IParserHandler Interfase///////////////////////
@@ -101,13 +115,20 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
 {
     EventHandler * eh = 0;
     int nHId = 0;
+    bool i;
 
     try
     {
-        eh = CreateEventHandler();
-        if (!eh) throw SCAGException("Rule: unknown RuleTransport to create EventHandler");
-
-        nHId = eh->StrToHandlerId(name);
+        if( (i = name == "session_init") || name == "session_destroy")
+        {
+            eh = new SessionEventHandler();
+            nHId = i ? EH_SESSION_INIT : EH_SESSION_DESTROY;
+        }
+        else
+        {
+            eh = CreateEventHandler();
+            nHId = eh->StrToHandlerId(name);
+        }
 
         PropertyObject propertyObject;
         propertyObject.transport = transportType;

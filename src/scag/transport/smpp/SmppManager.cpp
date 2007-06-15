@@ -21,8 +21,8 @@ using namespace scag::exceptions;
 using namespace scag::util::singleton;
 
 class SmppManagerImpl: public SmppManager,
-  public ConfigListener,
-  public LongCallInitiator
+  public ConfigListener
+
 {
 public:
   SmppManagerImpl();
@@ -738,7 +738,6 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
   }
 
   MutexGuard mg(queueMon);
-  cmd.getLongCallContext().initiator = this;  
   int i = cmd->get_commandId();
   if(i == DELIVERY_RESP || i == SUBMIT_RESP || i == DATASM_RESP)
     respQueue.Push(cmd);
@@ -774,7 +773,6 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     smsc_log_debug(log, "MSAG Receipt: Sent from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s", 
            from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
     MutexGuard mg(queueMon);
-    cmd.getLongCallContext().initiator = this;  
     queue.Push(cmd);
     queueMon.notify();
 }

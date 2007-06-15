@@ -13,13 +13,17 @@
 #include <scag/util/sms/HashUtil.h>
 
 #include <sms/sms_serializer.h>
+
 #include <scag/re/RuleStatus.h>
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "core/buffers/RefPtr.hpp"
+#include "scag/lcm/LongCallManager.h"
+//#include "scag/transport/SCAGCommand.h"
+#include "scag/re/RuleKey.h"
 
 namespace scag { namespace transport {
     class SCAGCommand;
-}}
+ }}
 
 namespace scag { namespace sessions {
     using scag::config::SessionManagerConfig;
@@ -34,6 +38,8 @@ namespace scag { namespace sessions {
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
     using scag::re::RuleStatus;
+    using scag::re::RuleKey;
+    using scag::lcm::LongCallContext;
 
     enum ProtocolForEvent
     {
@@ -307,6 +313,10 @@ namespace scag { namespace sessions {
         uint32_t commandsEmpty() { return cmdQueue.empty(); };
         uint32_t commandsCount() { return cmdQueue.size(); };
 
+        LongCallContext lcmCtx;
+
+        bool bIsNew;
+        RuleKey ruleKey;
 
         static Logger * logger;
         static Mutex loggerMutex;
@@ -360,6 +370,14 @@ namespace scag { namespace sessions {
 
         int getPendingAmount() {return PendingOperationList.size();}
         bool getCanOpenSubmitOperation() { return m_CanOpenSubmitOperation;}
+
+        bool isNew() { return bIsNew; }
+        void setNew(bool n) { bIsNew = n; }
+
+        RuleKey& getRuleKey() { return ruleKey; }
+        void setRuleKey(RuleKey& rk) { ruleKey = rk; }
+
+        virtual LongCallContext& getLongCallContext() { return lcmCtx; };
 
         Session(const CSessionKey& key);
         virtual ~Session();

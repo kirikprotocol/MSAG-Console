@@ -5,7 +5,7 @@
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
 #include "scag/bill/BillingManager.h"
-#include "scag/sessions/Session.h"
+//#include "scag/sessions/Session.h"
 #include "scag/re/CommandBrige.h"
 #include <stack>
 
@@ -17,6 +17,7 @@ namespace scag { namespace re { namespace actions
     using namespace scag::stat;
     using namespace scag::bill;
     using namespace scag::sessions;
+    using namespace scag::transport;
 
     enum FieldType
     {
@@ -55,7 +56,7 @@ namespace scag { namespace re { namespace actions
    
     struct CommandProperty
     {
-        Address& abonentAddr;
+        const Address& abonentAddr;
         int status;
         int protocol;
         int serviceId;
@@ -67,7 +68,7 @@ namespace scag { namespace re { namespace actions
         CommandOperations cmdType;
         DataSmDirection direction;
 
-        CommandProperty(SCAGCommand& command, int commandStatus, Address& addr, int ProviderId, int OperatorId, int msgRef, CommandOperations CmdType);
+        CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int msgRef, CommandOperations CmdType);
     };
 
 
@@ -89,7 +90,7 @@ namespace scag { namespace re { namespace actions
         Hash<Property>&         constants;
 
         Session&                session;
-        CommandAccessor&        command;
+        CommandAccessor*        command;
 
         CommandProperty&        commandProperty;
         auto_ptr<TariffRec>     m_TariffRec;
@@ -98,7 +99,7 @@ namespace scag { namespace re { namespace actions
         bool isTrueCondition;
 
         ActionContext(Hash<Property>& _constants,
-                      Session& _session, CommandAccessor& _command, CommandProperty& _commandProperty, RuleStatus& rs)
+                      Session& _session, CommandAccessor* _command, CommandProperty& _commandProperty, RuleStatus& rs)
             : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty), status(rs)
         {
         };
@@ -107,7 +108,8 @@ namespace scag { namespace re { namespace actions
 
         SCAGCommand& getSCAGCommand()
         {
-            return command.getSCAGCommand();
+            if(!command) throw SCAGException("ActionContext: command is not set");
+            return command->getSCAGCommand();
         }
 
         inline RuleStatus& getRuleStatus() {
@@ -116,15 +118,20 @@ namespace scag { namespace re { namespace actions
 
         void clearLongCallContext()
         {
-            while (!command.getSCAGCommand().getLongCallContext().ActionStack.empty()) 
-                command.getSCAGCommand().getLongCallContext().ActionStack.pop();
+            if(!command) throw SCAGException("ActionContext: command is not set");
+            while (!command->getSCAGCommand().getSession()->getLongCallContext().ActionStack.empty()) 
+                command->getSCAGCommand().getSession()->getLongCallContext().ActionStack.pop();
         }
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);
         static bool ActionContext::StrToPeriod(CheckTrafficPeriod& period, std::string& str);
 
-        CommandAccessor& getCommand() { return command; };
+        CommandAccessor* getCommand() {
+            if(!command) throw SCAGException("ActionContext: command is not set");
+            return command;
+        };
+
         Session& getSession() { return session; };        
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
@@ -135,10 +142,8 @@ namespace scag { namespace re { namespace actions
 
         CommandProperty& getCommandProperty() {return commandProperty;}
 
-        BillingInfoStruct getBillingInfoStruct()
+        void getBillingInfoStruct(BillingInfoStruct& billingInfoStruct)
         {
-            BillingInfoStruct billingInfoStruct;
-
             billingInfoStruct.AbonentNumber = commandProperty.abonentAddr.toString();
             billingInfoStruct.serviceId = commandProperty.serviceId;
             billingInfoStruct.protocol = commandProperty.protocol;
@@ -147,8 +152,6 @@ namespace scag { namespace re { namespace actions
 
             billingInfoStruct.SessionBornMicrotime = session.getPrimaryKey().BornMicrotime;
             billingInfoStruct.msgRef = commandProperty.msgRef;
-
-            return billingInfoStruct;
         }
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);

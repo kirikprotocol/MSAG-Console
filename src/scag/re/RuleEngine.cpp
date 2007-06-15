@@ -181,6 +181,7 @@ public:
     virtual void updateRule(RuleKey& key);
     virtual void removeRule(RuleKey& key);
     virtual void process(SCAGCommand& command, Session& session, RuleStatus& rs);
+    virtual void processSession(Session& session, RuleStatus& rs);
 
     virtual Hash<TransportType> getTransportTypeHash() {return TransportTypeHash;}
     virtual Hash<Property>& getConstants() { return ConstantsHash; };
@@ -393,10 +394,8 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const Rule
     return result;
 }
 
-
 void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger,"");
     smsc_log_debug(logger,"Process RuleEngine with serviceId: %d", command.getServiceId());
 
     RulesReference rulesRef = getRules();
@@ -406,6 +405,9 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
     key.transport = command.getType();
     key.serviceId = command.getServiceId();
 
+    if(session.isNew())
+        session.setRuleKey(key);
+
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(key);
 
     if (rulePtr)
@@ -414,6 +416,18 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
         throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", key.serviceId);
 }
 
+void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
+{
+    smsc_log_debug(logger,"Process RuleEngineSessionDestroy with serviceId");
+
+    RulesReference rulesRef = getRules();
+    Rule ** rulePtr = rulesRef.rules->rules.GetPtr(session.getRuleKey());
+
+    if (rulePtr)
+        (*rulePtr)->processSession(session, rs);
+    else
+        throw RuleEngineException(0,"Cannot process Rule with ID=%d: Rule not found", session.getRuleKey().serviceId);
+}
 
 
 void RuleEngineImpl::ProcessInit(const std::string& dir)

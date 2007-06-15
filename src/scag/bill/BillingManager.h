@@ -104,11 +104,9 @@ public:
     virtual void Commit(int billId, LongCallContext* lcmCtx = NULL) = 0;
     virtual void Rollback(int billId, bool timeout = false, LongCallContext* lcmCtx = NULL) = 0;
     virtual void Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec) = 0;
-    //virtual void close(int billId) = 0;
 
     static BillingManager& Instance();
     static void Init(BillingManagerConfig& cfg);
-    //static const ActionFactory * getActionFactory() {return &factory;}
 
     virtual Infrastructure& getInfrastructure() = 0;
 };

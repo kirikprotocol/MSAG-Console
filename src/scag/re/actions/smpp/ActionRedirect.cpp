@@ -21,8 +21,7 @@ bool ActionRedirect::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'redirect'");
 
-    CommandAccessor& commandAccessor = context.getCommand();
-    SmppCommandAdapter& smppAdapter = dynamic_cast<SmppCommandAdapter&>(commandAccessor);
+    SmppCommandAdapter& smppAdapter = dynamic_cast<SmppCommandAdapter&>(*context.getCommand());
 
     if (smppAdapter.hasServiceOp()) 
     {

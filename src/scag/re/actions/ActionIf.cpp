@@ -145,7 +145,7 @@ bool ActionIf::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'if'...");
 
-    LongCallContext &longCallContext = context.getSCAGCommand().getLongCallContext();
+    LongCallContext &longCallContext = context.getSession().getLongCallContext();
 
     if (longCallContext.ActionStack.empty()) 
     {

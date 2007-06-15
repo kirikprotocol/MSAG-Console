@@ -21,6 +21,8 @@
 #include "scag/transport/http/Managers.h"
 #include "scag/transport/http/HttpCommand.h"
 #include "scag/transport/smpp/SmppManager.h"
+#include "scag/lcm/LongCallManager.h"
+#include "scag/re/RuleEngine.h"
 
 namespace scag { namespace sessions
 {
@@ -32,6 +34,7 @@ namespace scag { namespace sessions
     using namespace scag::exceptions;
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
+    using namespace scag::lcm;
     using namespace re;
     using namespace scag::config;
     using scag::config::SessionManagerConfig;
@@ -39,7 +42,7 @@ namespace scag { namespace sessions
     using smsc::logger::Logger;
 
 
-    class SessionManagerImpl : public Thread, public ConfigListener, public SessionManager
+    class SessionManagerImpl : public Thread, public ConfigListener, public SessionManager, public LongCallInitiator
     {
         struct CSessionAccessData
         {
@@ -69,6 +72,7 @@ namespace scag { namespace sessions
         CSessionExpireHash SessionExpireHash;
         CUMRHash        UMRHash;
         Logger *        logger;
+        time_t          expireSchedule;
 
         Mutex           stopLock;
         Event           awakeEvent, exitEvent;
@@ -77,10 +81,13 @@ namespace scag { namespace sessions
         CachedSessionStore    store;
         SessionManagerConfig config;
 
+        buf::CyclicQueue<SessionPtr> deleteQueue;
+
         void Stop();
         bool isStarted();
         int  processExpire();
         void deleteSession(SessionPtr& session);
+        bool processDeleteSession(SessionPtr& session);
 
         uint16_t getNewUSR(Address& address);
         uint16_t getLastUSR(Address& address);
@@ -105,6 +112,8 @@ namespace scag { namespace sessions
         virtual void Start();
 
         virtual SessionPtr newSession(CSessionKey& sessionKey);
+
+        virtual void continueExecution(LongCallContext* context, bool dropped);
     };
 
 // ################## Singleton related issues ##################
@@ -235,6 +244,7 @@ SessionManager& SessionManager::Instance()
 void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible throws exceptions
 {
     this->config = _config;
+    expireSchedule = time(NULL) + DEFAULT_EXPIRE_INTERVAL;
 
     if (!logger)
       logger = Logger::getInstance("sess.man");
@@ -279,19 +289,60 @@ void SessionManagerImpl::Stop()
     }
     smsc_log_info(logger,"SessionManager::stop");
 }
+
 int SessionManagerImpl::Execute()
 {
     smsc_log_info(logger,"SessionManager::start executing");
 
-    while (isStarted())
+    while(isStarted())
     {
-        int secs = processExpire();
+        while(deleteQueue.Count() > 0)
+        {
+            SessionPtr s;
+            deleteQueue.Pop(s);
+            if(processDeleteSession(s))
+            {
+                MutexGuard mt(inUseMonitor);
+                deleteSession(s);
+            }
+        }
+        time_t now = time(NULL);
+        if(expireSchedule < now)
+            expireSchedule = now + processExpire();
 //        smsc_log_debug(logger,"SessionManager::----------- ping %d",secs);
-        awakeEvent.Wait(secs*1000);
+        awakeEvent.Wait(expireSchedule - now);
     }
     smsc_log_info(logger,"SessionManager::stop executing");
     exitEvent.Signal();
     return 0;
+}
+
+bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
+{
+    RuleStatus rs;
+    try{
+        scag::re::RuleEngine::Instance().processSession(*session, rs);
+        LongCallContext& lcmCtx = session->getLongCallContext();
+        if(rs.status == STATUS_LONG_CALL)
+        {
+            lcmCtx.stateMachineContext = new SessionPtr(session);
+            lcmCtx.initiator = this;
+            if(!LongCallManager::Instance().call(&lcmCtx))
+                delete lcmCtx.stateMachineContext;
+            else
+                return false;
+        }
+    }
+    catch(SCAGException& exc)
+    {
+        smsc_log_error(logger, "deleteSession: %s", exc.what());
+    }
+    catch(...)
+    {
+        smsc_log_error(logger, "deleteSession: unknown error");
+    }
+
+    return true;
 }
 
 void SessionManagerImpl::deleteSession(SessionPtr& session)
@@ -369,7 +420,7 @@ int SessionManagerImpl::processExpire()
                         reorderExpireQueue(session.Get());
                 }
                 if(!session->hasOperations())
-                    deleteSession(session);
+                    deleteQueue.Push(session);
                 else
                     store.updateSession(session.Get());
             }
@@ -377,7 +428,7 @@ int SessionManagerImpl::processExpire()
             {
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
-                deleteSession(session);
+                deleteQueue.Push(session);
             }
             changed = true;
         }
@@ -528,6 +579,20 @@ uint32_t SessionManagerImpl::getSessionsCount()
 {
     MutexGuard mt(inUseMonitor);
     return store.getSessionsCount();
+}
+
+void SessionManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)
+{
+    SessionPtr* s = (SessionPtr*)lcmCtx->stateMachineContext;
+    lcmCtx->continueExec = true;
+
+    if(!dropped)
+    {
+        MutexGuard mg(inUseMonitor);
+        deleteQueue.Push(*s);
+        awakeEvent.Signal();
+    }
+    delete s;
 }
 
 }}

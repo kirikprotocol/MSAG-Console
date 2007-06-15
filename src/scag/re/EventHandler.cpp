@@ -59,7 +59,7 @@ void EventHandler::RunActions(ActionContext& context)
 {
     context.getRuleStatus().status = STATUS_OK;
 
-    LongCallContext& longCallContext = context.getSCAGCommand().getLongCallContext();
+    LongCallContext& longCallContext = context.getSession().getLongCallContext();
 
     ActionStackValue sv(0, false);
     longCallContext.ActionStack.push(sv);
@@ -98,7 +98,7 @@ void EventHandler::RegisterTrafficEvent(const CommandProperty& commandProperty, 
     Statistics::Instance().registerSaccEvent(ev);
 }
 
-void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const std::string& sessionPrimaryKey, char dir)
+void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol, uint32_t serviceId, uint32_t providerId, uint32_t operatorId, uint16_t commandStatus, const CSessionPrimaryKey& sessionPrimaryKey, char dir)
 {
     SaccAlarmEvent* ev = new SaccAlarmEvent();
 
@@ -115,7 +115,7 @@ void EventHandler::RegisterAlarmEvent(uint32_t eventId, const std::string& addr,
     gettimeofday(&tv,0);
     ev->Header.lDateTime = (uint64_t)tv.tv_sec * 1000 + tv.tv_usec / 1000;
 
-    ev->Header.pSessionKey = sessionPrimaryKey;
+    sessionPrimaryKey.toString(ev->Header.pSessionKey);
     ev->cDirection = dir;
 
     Statistics::Instance().registerSaccEvent(ev);

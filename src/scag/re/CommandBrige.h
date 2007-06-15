@@ -12,7 +12,6 @@ struct CSessionPrimaryKey;
 
 }}*/
 
-
 namespace scag { namespace re {
 
 using namespace scag::transport;
@@ -21,7 +20,7 @@ using namespace scag::exceptions;
 
 using namespace scag::stat;
 using namespace smsc::smpp::UssdServiceOpValue;
-//using smsc::sms::Address;
+using smsc::sms::Address;
 
 enum CommandOperations
 {
@@ -58,7 +57,10 @@ enum EventHandlerType
     EH_HTTP_DELIVERY = 8,
 
     EH_DATA_SM = 9,
-    EH_DATA_SM_RESP = 10
+    EH_DATA_SM_RESP = 10,
+
+    EH_SESSION_INIT = 11,
+    EH_SESSION_DESTROY = 12
 };
 
 struct CSmppDiscriptor

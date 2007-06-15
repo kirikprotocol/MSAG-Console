@@ -11,15 +11,6 @@ ScagTask::ScagTask(HttpManagerImpl& m, HttpProcessor& p) : manager(m), processor
     logger = Logger::getInstance("scag.http.scag");
 }
 
-bool ScagTask::makeLongCall(HttpContext *cx)
-{
-    LongCallContext& lcmCtx = cx->command->getLongCallContext();
-    lcmCtx.stateMachineContext = cx;
-    lcmCtx.initiator = &manager.scags;
-    
-    return LongCallManager::Instance().call(&lcmCtx);
-}
-
 int ScagTask::Execute()
 {
     int st;
@@ -36,26 +27,20 @@ int ScagTask::Execute()
 
         smsc_log_debug(logger, "%p choosen for context %p", this, cx);
 
-        LongCallContext& lcmCtx = cx->command->getLongCallContext();
-        
         switch (cx->action) {
         case PROCESS_REQUEST:
             smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
-            st = processor.processRequest(cx->getRequest(), lcmCtx.continueExec);
+            st = processor.processRequest(cx->getRequest());
             if (st == scag::re::STATUS_OK)
             {
                 smsc_log_info(logger, "%p: %p, request approved", this, cx);
                 cx->getRequest().serialize();
 //                smsc_log_debug(logger, "request %s", cx->getRequest().headers.c_str());
                 cx->action = SEND_REQUEST;
-                lcmCtx.continueExec = false;
                 manager.writerProcess(cx);                               
                 break;
             }
-            else if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
-                break;
-            else if(st == scag::re::STATUS_PROCESS_LATER)
-                break;
+            else if(st == scag::re::STATUS_LONG_CALL || st == scag::re::STATUS_PROCESS_LATER)
                 
             smsc_log_info(logger, "%p: %p, request denied", this, cx);
             cx->result = 503;          
@@ -72,9 +57,7 @@ int ScagTask::Execute()
                         smsc_log_info(logger, "%p: %p, response approved", this, cx);
                     else
                     {
-                        if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
-                            break;
-                        else if(st == scag::re::STATUS_PROCESS_LATER)
+                        if(st == scag::re::STATUS_LONG_CALL || st == scag::re::STATUS_PROCESS_LATER)
                             break;
                         
                         smsc_log_info(logger, "%p: %p, response denied", this, cx);
@@ -91,7 +74,6 @@ int ScagTask::Execute()
 
             cx->getResponse().serialize();
             cx->action = SEND_RESPONSE;
-            lcmCtx.continueExec = false;
             manager.writerProcess(cx);       
             break;      
         case PROCESS_STATUS_RESPONSE:
@@ -106,11 +88,8 @@ int ScagTask::Execute()
                 smsc_log_debug(logger, "%p: %p, call to statusResponse(%s)", this, cx, delivered ? "true" : "false");
                 st = processor.statusResponse(cx->getResponse(), delivered);
 
-                if(st == scag::re::STATUS_LONG_CALL && makeLongCall(cx))
+                if(st == scag::re::STATUS_LONG_CALL || st == scag::re::STATUS_PROCESS_LATER)
                     break;
-                else if(st == scag::re::STATUS_PROCESS_LATER)
-                    break;
-                    
                 delete cx;
             }
         }

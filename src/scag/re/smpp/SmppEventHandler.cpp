@@ -38,7 +38,7 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
     Operation * operation = 0;
     uint16_t UMR;
 
-    if(command.getLongCallContext().continueExec)
+    if(session.getLongCallContext().continueExec)
     {
         smsc_log_debug(logger,"set current operation(continue execution) id=%lld", command.getOperationId());
         operation = session.setCurrentOperation(command.getOperationId());
@@ -184,7 +184,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    Address& abonentAddr = CommandBrige::getAbonentAddr(smppcommand);
+    const Address& abonentAddr = session.getSessionKey().abonentAddr;
     CSmppDiscriptor smppDiscriptor = CommandBrige::getSmppDiscriptor(smppcommand);
 
     int providerId = istr.GetProviderID(command.getServiceId());
@@ -198,7 +198,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     if (operatorId == 0) 
     {
         RegisterAlarmEvent(1, abonentAddr.toString(), CommandBrige::getProtocolForEvent(smppcommand), command.getServiceId(),
-                            providerId, 0, 0, session.getSessionKey().abonentAddr.toString(),
+                            providerId, 0, 0, session.getPrimaryKey(),
                             (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM) ? 'I' : 'O');
         
         if (smppDiscriptor.isResp) session.closeCurrentOperation();
@@ -208,10 +208,11 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     SMS& sms = CommandBrige::getSMS(smppcommand);
     int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
 
-    CommandProperty commandProperty(command, smppcommand->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
+    CommandProperty commandProperty(&command, smppcommand->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
 
-    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), 
-        (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM)||(hi == EH_DATA_SM) ? CommandBrige::getMessageBody(smppcommand) : "");
+    if(!session.getLongCallContext().continueExec)
+        RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), 
+            (hi == EH_SUBMIT_SM)||(hi == EH_DELIVER_SM)||(hi == EH_DATA_SM) ? CommandBrige::getMessageBody(smppcommand) : "");
     
     try {
         ModifyOperationBeforeExecuting(session, smppcommand, smppDiscriptor);
@@ -223,7 +224,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
         return;
     }
 
-    ActionContext context(RuleEngine::Instance().getConstants(), session, _command, commandProperty, rs);
+    ActionContext context(RuleEngine::Instance().getConstants(), session, &_command, commandProperty, rs);
 
     try
     {
@@ -258,7 +259,6 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
 
     if (str == "data_sm")               return EH_DATA_SM;
     if (str == "data_sm_resp")          return EH_DATA_SM_RESP;
-
 
     return UNKNOWN; 
 }

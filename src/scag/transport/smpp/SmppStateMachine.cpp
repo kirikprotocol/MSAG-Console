@@ -5,6 +5,7 @@
 #include "scag/stat/StatisticsManager.h"
 #include "system/status.h"
 #include "SmppUtil.h"
+#include "SmppManager.h"
 
 namespace scag{
 namespace transport{
@@ -170,8 +171,9 @@ int StateMachine::Execute()
 bool StateMachine::makeLongCall(SmppCommand& cx, SessionPtr& session)
 {
     SmppCommand* cmd = new SmppCommand(cx);
-    LongCallContext& lcmCtx = cx.getLongCallContext();
+    LongCallContext& lcmCtx = session->getLongCallContext();
     lcmCtx.stateMachineContext = cmd;
+    lcmCtx.initiator = &SmppManager::Instance();
     cmd->setSession(session);
 
     return LongCallManager::Instance().call(&lcmCtx);
@@ -202,7 +204,7 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
 
 void StateMachine::processSubmit(SmppCommand& cmd)
 {
-    smsc_log_debug(log, "Submit: got %s", cmd.getLongCallContext().continueExec || cmd.hasSession() ? "continued..." : "");
+    smsc_log_debug(log, "Submit: got %s", cmd.hasSession() ? "continued..." : "");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -250,7 +252,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                     sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Submit %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.getLongCallContext().continueExec || cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
+      smsc_log_debug(log, "Submit %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
         sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
       key.abonentAddr=sms.getDestinationAddress();
@@ -601,7 +603,7 @@ void StateMachine::sendReceipt(SmppCommand& cmd)
 
 void StateMachine::processDelivery(SmppCommand& cmd)
 {
-    smsc_log_debug(log, "Delivery: got %s", cmd.getLongCallContext().continueExec || cmd.hasSession() ? "continued..." : "");
+    smsc_log_debug(log, "Delivery: got %s", cmd.hasSession() ? "continued..." : "");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -655,7 +657,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                     sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Delivery %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.getLongCallContext().continueExec || cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
+      smsc_log_debug(log, "Delivery %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
         sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
       key.abonentAddr=sms.getOriginatingAddress();
@@ -998,7 +1000,7 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
 
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
-    smsc_log_debug(log, "DataSm: got %s", cmd.getLongCallContext().continueExec || cmd.hasSession() ? "continued..." : "");
+    smsc_log_debug(log, "DataSm: got %s", cmd.hasSession() ? "continued..." : "");
     uint32_t rcnt = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
@@ -1059,7 +1061,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
                 sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
 
-      smsc_log_debug(log, "DataSm %s: %s UMR=%d. %s(%s)->%s", cmd.getLongCallContext().continueExec || cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr,
+      smsc_log_debug(log, "DataSm %s: %s UMR=%d. %s(%s)->%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr,
                 sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
 
       key.abonentAddr = (src->info.type == etService) ? sms.getDestinationAddress() : sms.getOriginatingAddress();
@@ -1315,7 +1317,6 @@ void StateMachine::processExpiredResps()
         SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
         resp->get_resp()->expiredResp=true;
         resp->get_resp()->expiredUid=uid;
-        resp.getLongCallContext().initiator = cmd.getLongCallContext().initiator;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDeliveryResp(resp);
       }break;
@@ -1324,7 +1325,6 @@ void StateMachine::processExpiredResps()
         SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT,false);
         resp->get_resp()->expiredResp=true;
         resp->get_resp()->expiredUid=uid;
-        resp.getLongCallContext().initiator = cmd.getLongCallContext().initiator;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processSubmitResp(resp);
       }break;
@@ -1333,7 +1333,6 @@ void StateMachine::processExpiredResps()
         SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),smsc::system::Status::DELIVERYTIMEDOUT);
         resp->get_resp()->expiredResp=true;
         resp->get_resp()->expiredUid=uid;
-        resp.getLongCallContext().initiator = cmd.getLongCallContext().initiator;
         resp.setEntity(routeMan->getSmppEntity(cmd->get_sms()->getDestinationSmeId()));
         processDataSmResp(resp);
       }break;

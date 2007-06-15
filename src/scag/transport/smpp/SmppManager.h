@@ -16,6 +16,7 @@
 #include "SmppRouter.h"
 #include "core/threads/ThreadPool.hpp"
 #include "scag/config/ConfigListener.h"
+#include "scag/lcm/LongCallManager.h"
 
 namespace scag{
 namespace transport{
@@ -31,7 +32,8 @@ class SmppManager :
   public SmppManagerAdmin,
   public SmppChannelRegistrator,
   public SmppCommandQueue,
-  public SmppRouter
+  public SmppRouter,
+  public LongCallInitiator
 {
     static bool  inited;
     static Mutex initLock;
@@ -45,6 +47,7 @@ public:
 
     virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id) = 0;
     virtual void pushCommand(SmppCommand& cmd) = 0;
+      virtual void continueExecution(LongCallContext* lcmCtx, bool dropped) = 0;
 
     static SmppManager& Instance();
     static void Init(const char* cfgFile);

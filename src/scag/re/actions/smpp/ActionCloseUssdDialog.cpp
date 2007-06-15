@@ -24,9 +24,7 @@ bool ActionCloseUssdDialog::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'smpp:close_ussd_dialog'");
 
-    
-    CommandAccessor& commandAccessor = context.getCommand();
-    SmppCommandAdapter& smppAdapter = dynamic_cast<SmppCommandAdapter&>(commandAccessor);
+    SmppCommandAdapter& smppAdapter = dynamic_cast<SmppCommandAdapter&>(*context.getCommand());
 
     int serviceOp = 0;
 

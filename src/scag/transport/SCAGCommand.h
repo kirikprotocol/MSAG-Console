@@ -3,12 +3,11 @@
 
 #include "util/int.h"
 #include <core/buffers/Hash.hpp>
-#include "scag/lcm/LongCallManager.h"
+#include "scag/sessions/Session.h"
 
 namespace scag { namespace transport
 {
 
-using scag::lcm::LongCallContext;
 using smsc::core::buffers::Hash;
 using scag::sessions::SessionPtr;
 
@@ -32,8 +31,6 @@ using scag::sessions::SessionPtr;
       virtual void setOperationId(int64_t op) = 0;
       virtual uint8_t getCommandId() const = 0;
       
-      virtual LongCallContext& getLongCallContext() = 0;
-
       virtual SessionPtr getSession() = 0;
       virtual void setSession(SessionPtr&) = 0;
       virtual bool hasSession() = 0;

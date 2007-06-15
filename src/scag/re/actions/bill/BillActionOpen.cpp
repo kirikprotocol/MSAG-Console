@@ -104,7 +104,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
 
     auto_ptr<BillOpenCallParams> bp(new BillOpenCallParams());
 
-    bp->billingInfoStruct = context.getBillingInfoStruct();
+    context.getBillingInfoStruct(bp->billingInfoStruct);
 
     if(m_MediaTypeFieldType != ftUnknown)
     {
@@ -177,7 +177,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
 #ifdef MSAG_INMAN_BILL
     if(tariffRec->billType == scag::bill::infrastruct::INMAN)
     {
-        LongCallContext& lcmCtx = context.getSCAGCommand().getLongCallContext();
+        LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = BILL_OPEN;
         lcmCtx.setParams(bp.get());
         bp.release();
@@ -204,7 +204,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
 
 void BillActionOpen::ContinueRunning(ActionContext& context)
 {
-    BillOpenCallParams *bp = (BillOpenCallParams*)context.getSCAGCommand().getLongCallContext().getParams();
+    BillOpenCallParams *bp = (BillOpenCallParams*)context.getSession().getLongCallContext().getParams();
 
     if(bp->exception.length())
     {

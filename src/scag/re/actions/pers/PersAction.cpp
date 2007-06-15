@@ -265,7 +265,7 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
     CommandProperty& cp = context.getCommandProperty();
     PersCallParams *params = new PersCallParams();
     
-    context.getSCAGCommand().getLongCallContext().callCommandId = cmdToLongCallCmd(cmd);
+    context.getSession().getLongCallContext().callCommandId = cmdToLongCallCmd(cmd);
     params->pt = profile;
     params->propName = var;
     
@@ -310,7 +310,7 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
         }
     }
     
-    context.getSCAGCommand().getLongCallContext().setParams(params);
+    context.getSession().getLongCallContext().setParams(params);
     return true;
 }
 
@@ -318,7 +318,7 @@ void PersAction::ContinueRunning(ActionContext& context)
 {
     smsc_log_debug(logger,"ContinueRunning Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 
-    PersCallParams *params = (PersCallParams*)context.getSCAGCommand().getLongCallContext().getParams();
+    PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
     if(params->error)
     {
         if(params->error == PROPERTY_NOT_FOUND)
@@ -354,7 +354,7 @@ void PersAction::ContinueRunning(ActionContext& context)
         setREPropFromPersProp(*rep, params->prop);
     }
         
-    context.getSCAGCommand().getLongCallContext().freeParams();
+    context.getSession().getLongCallContext().freeParams();
 }
 
 IParserHandler * PersAction::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)

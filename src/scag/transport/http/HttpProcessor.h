@@ -18,7 +18,7 @@ namespace scag { namespace transport { namespace http {
          * @return  true if request was successfuly processed and
          *          accepted to forward to service
          */
-        virtual int processRequest(HttpRequest& request, bool continued = false) = 0;
+        virtual int processRequest(HttpRequest& request) = 0;
         
         /**
          * Should be called on HttpResponse comes from service.

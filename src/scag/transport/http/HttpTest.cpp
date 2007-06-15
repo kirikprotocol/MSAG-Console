@@ -45,7 +45,7 @@ namespace scag { namespace transport { namespace http
     class MyHttpProcessor : public HttpProcessor
     {
     public:
-        virtual int processRequest(HttpRequest& request, bool continued) {        
+        virtual int processRequest(HttpRequest& request) {        
 #ifdef LOG_HEADERS        
             request.serialize();
             const std::string &hdr = request.getMessageHeaders();

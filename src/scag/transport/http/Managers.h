@@ -195,6 +195,7 @@ public:
     virtual void readerProcess(HttpContext *cx) = 0;
     virtual void writerProcess(HttpContext* cx) = 0;
     virtual HttpManagerConfig& getConfig() = 0;
+    virtual ScagTaskManager* getScagTaskManager() = 0;
 };
 
 class HttpManagerImpl: public HttpManager, public ConfigListener {
@@ -210,7 +211,7 @@ public:
     void readerProcess(HttpContext* cx) { readers.process(cx); };
     void writerProcess(HttpContext* cx) { writers.process(cx); };
     HttpManagerConfig& getConfig() { return cfg; };
-
+    ScagTaskManager* getScagTaskManager() { return &scags; };
 
     HttpManagerConfig cfg;
     ScagTaskManager scags;

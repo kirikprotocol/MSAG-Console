@@ -33,7 +33,7 @@ protected:
     
     void RegisterAlarmEvent(uint32_t eventId, const std::string& addr, uint8_t protocol,
                             uint32_t serviceId, uint32_t providerId, uint32_t operatorId,
-                            uint16_t commandStatus, const std::string& sessionPrimaryKey, char dir);
+                            uint16_t commandStatus, const CSessionPrimaryKey& sessionPrimaryKey, char dir);
 public:
     EventHandler() :logger(0)  { logger = Logger::getInstance("scag.re"); };
     virtual ~EventHandler();

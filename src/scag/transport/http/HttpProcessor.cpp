@@ -9,6 +9,7 @@
 #include "HttpCommand.h"
 #include "HttpProcessor.h"
 #include "HttpRouter.h"
+#include "Managers.h"
 
 #include "logger/Logger.h"
 
@@ -21,7 +22,7 @@ using namespace scag::re;
 class HttpProcessorImpl : public HttpProcessor
 {
     public:
-        virtual int processRequest(HttpRequest& request, bool continued);
+        virtual int processRequest(HttpRequest& request);
         virtual int processResponse(HttpResponse& response);
         virtual int statusResponse(HttpResponse& response, bool delivered=true);
         virtual void ReloadRoutes();
@@ -46,6 +47,7 @@ class HttpProcessorImpl : public HttpProcessor
         void setFields(HttpRequest& request, HttpRoute& r);
         bool parsePath(const std::string &path, HttpRequest& cx);
         void registerEvent(int event, HttpCommand& cmd, bool delivery = false);
+        bool makeLongCall(HttpCommand& cmd, SessionPtr& se);
 };
 
 bool  HttpProcessor::inited = false;
@@ -312,7 +314,16 @@ void HttpProcessorImpl::setFields(HttpRequest& request, HttpRoute& r)
 }
 
 
-int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
+bool HttpProcessorImpl::makeLongCall(HttpCommand& cmd, SessionPtr& se)
+{
+    LongCallContext& lcmCtx = se->getLongCallContext();
+    lcmCtx.stateMachineContext = cmd.getContext();
+    lcmCtx.initiator = HttpManager::Instance().getScagTaskManager();
+    
+    return LongCallManager::Instance().call(&lcmCtx);
+}
+
+int HttpProcessorImpl::processRequest(HttpRequest& request)
 {
     HttpRoute r;
 
@@ -320,7 +331,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
     SessionPtr se;
 
     try{
-        if(!continued)
+        if(!request.hasSession())
         {
             smsc_log_debug(logger, "SERIALIZED REQUEST BEFORE PROCESSING: %s", request.serialize().c_str());
                 
@@ -377,11 +388,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
                     return scag::re::STATUS_PROCESS_LATER;
         }
         else
-        {
-            CSessionKey sk = {request.getUSR(), request.getAddress().c_str()};        
-            if(!SessionManager::Instance().getSession(sk, se, request))
-                return scag::re::STATUS_PROCESS_LATER;
-        }
+            se = request.getSession();
             
         if(se.Get())
         {
@@ -389,7 +396,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request, bool continued)
             
             if(rs.status == scag::re::STATUS_LONG_CALL)
             {
-                SessionManager::Instance().releaseSession(se);
+                makeLongCall(request, se);
                 return rs.status;
             }
 
@@ -437,9 +444,14 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
     
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
-        if(!SessionManager::Instance().getSession(sk, se, response))
-            return scag::re::STATUS_PROCESS_LATER; // TODO: proper signal statemachine
+        if(!response.hasSession())
+        {
+            CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
+            if(!SessionManager::Instance().getSession(sk, se, response))
+                return scag::re::STATUS_PROCESS_LATER; // TODO: proper signal statemachine
+        }
+        else
+            se = response.getSession();
 
         RuleStatus rs;
 
@@ -448,11 +460,16 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
             RuleEngine::Instance().process(response, *se.Get(), rs);
 
             if(rs.status == scag::re::STATUS_OK)
-                registerEvent(scag::stat::events::http::RESPONSE_OK, response);
-                        
-            if(rs.status == scag::re::STATUS_OK || rs.status == scag::re::STATUS_LONG_CALL)
             {
+                registerEvent(scag::stat::events::http::RESPONSE_OK, response);
+                response.setSession(SessionPtr(0));
                 SessionManager::Instance().releaseSession(se);
+                return rs.status;
+            }
+
+            if(rs.status == scag::re::STATUS_LONG_CALL)
+            {
+                makeLongCall(response, se);
                 return rs.status;
             }
         } else
@@ -466,6 +483,8 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
     {
         smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
     }
+
+    response.setSession(SessionPtr(0));
 
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
@@ -488,9 +507,14 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
 
     SessionPtr se;
     try{
-        CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
-        if(!SessionManager::Instance().getSession(sk, se, response))
-            return scag::re::STATUS_PROCESS_LATER;
+        if(!response.hasSession())
+        {
+            CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
+            if(!SessionManager::Instance().getSession(sk, se, response))
+                return scag::re::STATUS_PROCESS_LATER;
+        }
+        else
+            se = response.getSession();
 
         RuleStatus rs;
         if(se.Get())
@@ -500,11 +524,15 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
             RuleEngine::Instance().process(response, *se.Get(), rs);
             
             if(rs.status == scag::re::STATUS_OK && delivered)
-                registerEvent(scag::stat::events::http::DELIVERED, response, true);
-
-            if((rs.status == scag::re::STATUS_OK && delivered) || rs.status == scag::re::STATUS_LONG_CALL)
             {
+                registerEvent(scag::stat::events::http::DELIVERED, response, true);
                 SessionManager::Instance().releaseSession(se);
+                return rs.status;
+            }
+
+            if(rs.status == scag::re::STATUS_LONG_CALL)
+            {
+                makeLongCall(response, se);
                 return rs.status;
             }
         }
@@ -554,7 +582,7 @@ void HttpProcessorImpl::registerEvent(int event, HttpCommand& cmd, bool delivery
         s += buf;
     }
     buf[19] = 0;
-    Statistics::Instance().registerEvent(HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath() + cmd.getSiteFileName(), delivery ? cmd.getStatus() : 0 ));
+    scag::stat::Statistics::Instance().registerEvent(scag::stat::HttpStatEvent(event, lltostr(cmd.getRouteId(), buf + 19), cmd.getServiceId(), cmd.getProviderId(), s, cmd.getSitePath() + cmd.getSiteFileName(), delivery ? cmd.getStatus() : 0 ));
 }
 
 }}}

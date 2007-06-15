@@ -24,7 +24,6 @@ public:
     virtual void stop();
     
 protected:
-    bool makeLongCall(HttpContext *cx);
     HttpManagerImpl &manager;
     HttpProcessor &processor;
     Logger *logger;

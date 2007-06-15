@@ -3,6 +3,7 @@
 #include "scag/re/actions/ActionContext.h"
 #include "scag/re/CommandBrige.h"
 #include "scag/sessions/SessionManager.h"
+#include "scag/re/RuleEngine.h"
 
 namespace scag { namespace re { namespace http {
 
@@ -103,18 +104,15 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     HttpCommand& hc = (HttpCommand&)command;
 
-//    CommandProperty commandProperty(command, 0, Address(command.getAbonent()));
-//    RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), "");
-
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
 
-    Address abonentAddr(hc.getAddress().c_str());
+    const Address& abonentAddr = session.getSessionKey().abonentAddr;
 
     uint32_t operatorId = istr.GetOperatorID(abonentAddr);
     if (operatorId == 0)
     {
         RegisterAlarmEvent(1, abonentAddr.toString(), PROTOCOL_HTTP, hc.getServiceId(),
-                            hc.getProviderId(), 0, 0, session.getSessionKey().abonentAddr.toString(),
+                            hc.getProviderId(), 0, 0, session.getPrimaryKey(),
                             hc.getCommandId() == HTTP_RESPONSE ? 'O' : 'I');
         
         throw SCAGException("HttpEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
@@ -128,13 +126,13 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", hc.getProviderId());
 
-    CommandProperty cp(command, 0, abonentAddr, hc.getProviderId(), operatorId, -1, CO_HTTP_DELIVERY);
+    CommandProperty cp(&command, 0, abonentAddr, hc.getProviderId(), operatorId, -1, CO_HTTP_DELIVERY);
 
-    Hash<Property> _constants;
     HttpCommandAdapter _command(hc);
-    ActionContext context(_constants, session, _command, cp, rs);
+    ActionContext context(RuleEngine::Instance().getConstants(), session, &_command, cp, rs);
 
-    RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
+    if(!session.getLongCallContext().continueExec)
+        RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
 
     switch(hc.getCommandId())
     {

@@ -12,9 +12,11 @@
 #include <scag/config/ConfigManager.h>
 #include <scag/transport/http/Managers.h>
 #include <scag/stat/StatisticsManager.h>
+#include <scag/bill/BillingManager.h>
 #include <scag/pers/PersClient.h>
 #include "HttpProcessor.h"
 #include "HttpRouter.h"
+#include "scag/exc/SCAGExceptions.h"
 
 using namespace std;
 using namespace smsc::logger;
@@ -27,6 +29,8 @@ using namespace scag::transport::smpp;
 using namespace scag::transport::http;
 using namespace scag::stat;
 using namespace scag::pers::client;
+using namespace scag::bill;
+using namespace scag::exceptions;
 
 static Logger *logger;
 Mutex mtx;
@@ -116,3 +120,4 @@ int main(int argc, char* argv[])
 
     return resultCode;
 }
+

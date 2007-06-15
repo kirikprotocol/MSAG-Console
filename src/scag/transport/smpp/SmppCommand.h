@@ -333,7 +333,6 @@ struct _SmppCommand
   int serviceId;
   int priority;
   uint64_t opId;
-  LongCallContext lcmCtx;
   SessionPtr session;
   uint16_t usr;
   uint32_t flags;
@@ -534,11 +533,6 @@ public:
    uint8_t getCommandId() const
    {
        return cmd->cmdid;
-   }
-
-   LongCallContext& getLongCallContext()
-   {
-        return cmd->lcmCtx;
    }
 
    uint16_t getUSR()
