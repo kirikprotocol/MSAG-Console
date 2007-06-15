@@ -276,21 +276,26 @@ unsigned Billing::writeCDR(void)
 {
     unsigned cnt = 0;
     cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abRec.ab_type);
-    //set the location MSC to actual one
-    if (cdr._chargeType) {  //MT
+    //set the location MSC of charged abonent to last known one
+    if (cdr._chargeType) {  //MT: from delivery report
+        if (cdr._dstMSC.empty() && !abCsi.vlrNum.empty())
+            cdr._dstMSC = abCsi.vlrNum.toString();
+    } else {                //MO: from chargeReq or abonentProvider
         if (!abCsi.vlrNum.empty())
-            cdr._dstMSC = abCsi.vlr2Str();
-    } else {                //MO
-        if (!abCsi.vlrNum.empty())
-            cdr._srcMSC = abCsi.vlr2Str();
+            cdr._srcMSC = abCsi.vlrNum.toString();
     }
     if (!cdr._inBilled || (_cfg.cdrMode == BillingCFG::cdrALL)) {
         //remove TonNpi for MSCs ids
         TonNpiAddress tna;
         if (tna.fromText(cdr._srcMSC.c_str()))
             cdr._srcMSC = tna.getSignals();
+        else if (cdr._chargeType == CDRRecord::MO_Charge)
+            smsc_log_error(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
+
         if (tna.fromText(cdr._dstMSC.c_str()))
             cdr._dstMSC = tna.getSignals();
+        else if (cdr._chargeType == CDRRecord::MT_Charge)
+            smsc_log_error(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
 
         _cfg.bfs->bill(cdr); cnt++;
         smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, charged: %s",
@@ -452,10 +457,6 @@ void Billing::StopTimer(Billing::BillingState bilState)
 //NOTE: bilMutex should be locked upon entry!
 bool Billing::verifyChargeSms(void)
 {
-    if (cdr._chargeType && (cdr._chargePolicy == CDRRecord::ON_DELIVERY)) {
-        smsc_log_error(logger, "%s: MT billing is incompatible with ON_DELIVERY policy", _logId);
-        return false;
-    }
     //determine which abonent should be charged
     if (!abNumber.fromText(cdr._chargeType ? cdr._dstAdr.c_str() : cdr._srcAdr.c_str())) {
         smsc_log_error(logger, "%s: invalid %s.Adr '%s'", _logId,
@@ -555,8 +556,8 @@ Billing::PGraphState Billing::onChargeSms(void)
                         );
 
     //check if AbonentProvider should be requested for current abonent location
-    if (/*cdr._chargeType && */abCsi.vlrNum.empty() && !askProvider
-        && (abPolicy && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF))) {
+    if (abCsi.vlrNum.empty() && !askProvider && abPolicy
+        && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF)) {
         askProvider = true;
     }
 
@@ -574,6 +575,9 @@ Billing::PGraphState Billing::onChargeSms(void)
             }
             smsc_log_error(logger, "%s: startIAPQuery(%s) failed!", _logId,
                                abNumber.getSignals());
+        } else {
+            billErr = _RCS_INManErrors->mkhash(INManErrorId::cfgInconsistency);
+            smsc_log_warn(logger, "%s: no IAProvider configured", _logId);
         }
     }
     return ConfigureSCFandCharge();
