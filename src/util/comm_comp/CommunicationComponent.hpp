@@ -3,6 +3,7 @@
 
 # include <string.h>
 # include <sys/types.h>
+# include <time.h>
 # include <sys/socket.h>
 # include <sys/time.h>
 
@@ -46,7 +47,7 @@ class ObjectReaderWriter : public smsc::core::threads::Thread,
                            public smsc::util::Singleton<ObjectReaderWriter<TRANSPORT_PACKET, APPLICATION_REQUEST, APPLICATION_RESPONSE> > {
 public:
   ObjectReaderWriter()
-    : _log(NULL), _wasStopped(false), _maxFd(0) {
+    : _log(NULL), _wasStopped(false), _maxFd(0), _srv(new smsc::core::network::Socket()), _actualSelectTimeoutValue(0) {
     FD_ZERO(&_fd_read);
     FD_ZERO(&_fd_write);
     int signal_pipe[2];
@@ -70,6 +71,7 @@ public:
     _cacheOfIncompleteReadingPackets.initialize(log);
     
     _config.read(manager);
+    smsc_log_info(_log, "ObjectReaderWriter::: current configuration is %s", _config.toString().c_str());
   }
 
   void scheduleObjectForWrite(const APPLICATION_RESPONSE& responseObject, const std::string connectId);
@@ -77,27 +79,33 @@ public:
   void shutdown() {
     _wasStopped = true; close (_signalShutdownEventFd);
   }
+
 private:
   /* configuration parameters is defined in 'comm_comp' section.
   ** This section has next parameters:
   ** <section name="comm_comp">
   **  <param name="listenHost" type="string">192.168.1.12</param>
   **  <param name="listenPort" type="int">7777</param>
+  **  <param name="queueLimit" type="int">100</param>
+  **  <param name="idleTimeout" type="int">10</param>
   ** </section>
   */
   struct CommunicationComp_Config
   {
-    CommunicationComp_Config() : listenPort(-1) {}
+    CommunicationComp_Config() : listenPort(-1), queueLimit(0), idleTimeout(IDLE_TIMEOUT_DFLT) {}
     std::string listenHost;
-    int listenPort;
+    int listenPort, queueLimit, idleTimeout;
 
     std::string toString() {
       std::ostringstream obuf;
       obuf << "listenHost=[" << listenHost
            << "],listenPort=[" << listenPort
+           << "],queueLimit=[" << queueLimit
+           << "],idleTimeout=[" << idleTimeout
            << "]";
       return obuf.str();
     };
+    enum {IDLE_TIMEOUT_DFLT=10};
   };
 
   class CommunicationComp_Config_Reader : public CommunicationComp_Config {
@@ -109,14 +117,16 @@ private:
 
       listenHost = dbParamCfg.getString("listenHost");
       listenPort = dbParamCfg.getInt("listenPort");
+      try {
+        queueLimit = dbParamCfg.getInt("queueLimit");
+      } catch (smsc::util::config::ConfigException& ex) {}
+      try {
+        idleTimeout = dbParamCfg.getInt("idleTimeout");
+      } catch (smsc::util::config::ConfigException& ex) {}
     }
   };
 
   CommunicationComp_Config_Reader _config;
-
-  APPLICATION_REQUEST* receive(smsc::core::network::Socket& readySocket);
-  int processOutstandingPackets(fd_set& fd_ready_to_write);
-  void preparePacketsForSending();
 
   template <class KEY, class T>
   class CacheOfIncompletePackets {
@@ -151,10 +161,16 @@ private:
   CacheOfIncompletePackets<std::string, TRANSPORT_PACKET> _cacheOfIncompleteReadingPackets;
   smsc::logger::Logger* _log;
   volatile bool _wasStopped;
-  typedef std::map<std::string, smsc::core::network::Socket*> sockets_cache_t;
+  struct ActiveSocketInfo {
+    ActiveSocketInfo(smsc::core::network::Socket* theSocket) : socket(theSocket), timeStamp(::time(0)) {}
+    smsc::core::network::Socket* socket;
+    time_t timeStamp;
+  };
+  typedef std::map<std::string, ActiveSocketInfo> sockets_cache_t;
   sockets_cache_t _client_sockets_cache;
   int _maxFd;
   fd_set _fd_read, _fd_write;
+  smsc::core::network::Socket* _srv;
 
   smsc::core::synchronization::Mutex _scheduled_packets_for_write_lock;
 
@@ -169,8 +185,17 @@ private:
   scheduled_packets_t _scheduled_packets_for_write, _scheduled_packets_for_write_slice;
   int _waitNewEventFd, _signalNewEventFd;
   int _waitShutdownEventFd, _signalShutdownEventFd;
+  time_t _actualSelectTimeoutValue;
 
+private:
+  APPLICATION_REQUEST* receive(smsc::core::network::Socket& readySocket);
+  int processOutstandingPackets(fd_set& fd_ready_to_write);
+  void preparePacketsForSending();
+  void completeComponentInitialization();
   void cleanupData();
+  void acceptNewConnection();
+  void closeSocketAndCleanupInfoAboutIt(const char *what, typename sockets_cache_t::iterator& iter, const char* ex_err=NULL);
+  void closeIdleConnections();
 
   ObjectReaderWriter(const ObjectReaderWriter& rhs);
   ObjectReaderWriter& operator=(const ObjectReaderWriter& rhs);
@@ -223,7 +248,7 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::p
     sockets_cache_t::iterator sockets_iter = _client_sockets_cache.find(out_pck_iter->connectId);
     if ( sockets_iter != _client_sockets_cache.end() ) {
       smsc_log_info(_log, "ObjectReaderWriter::processOutstandingPackets::: write packet to socket with id=[%s]", out_pck_iter->connectId.c_str());
-      smsc::core::network::Socket* clientSocket = sockets_iter->second;
+      smsc::core::network::Socket* clientSocket = sockets_iter->second.socket;
       if ( FD_ISSET (clientSocket->getSocket(), &fd_ready_to_write) ) {
         ++numOfWrittenPackets;
         TRANSPORT_PACKET* packet = out_pck_iter->packetData;
@@ -259,9 +284,53 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::p
       out_pck_iter != _scheduled_packets_for_write_slice.end(); ++out_pck_iter) {
     sockets_cache_t::iterator sockets_iter = _client_sockets_cache.find(out_pck_iter->connectId);
     if ( sockets_iter != _client_sockets_cache.end() ) {
-      smsc::core::network::Socket* clientSocket = sockets_iter->second;
+      smsc::core::network::Socket* clientSocket = sockets_iter->second.socket;
       FD_SET(clientSocket->getSocket(), &_fd_write);
     }
+  }
+}
+
+template <class TRANSPORT_PACKET, class APPLICATION_REQUEST, class APPLICATION_RESPONSE>
+void
+ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::completeComponentInitialization()
+{
+  if ( _config.listenHost == "" ||
+       _config.listenPort < 0 ) {
+    smsc_log_error(_log, "ObjectReaderWriter::completeComponentInitialization::: class's object isn't initialized properly");
+    throw smsc::util::CustomException("ObjectReaderWriter::completeComponentInitialization::: initialization failed");
+  }
+  if ( _config.queueLimit > 0 )
+    SingleSharedQueue<AcceptedObjInfo<AbstractEvent> >::getInstance().setQueueLimit(_config.queueLimit);
+
+  _actualSelectTimeoutValue = _config.idleTimeout;
+
+  smsc_log_info(_log,"ObjectReaderWriter::completeComponentInitialization::: try start server to accept connection for host=%s:%d", _config.listenHost.c_str(), _config.listenPort);
+
+  if(_srv->InitServer(_config.listenHost.c_str(),_config.listenPort,0)==-1) {
+    smsc_log_error(_log, "ObjectReaderWriter::completeComponentInitialization::: Failed to init server socket. Terminate thread.");
+    throw smsc::util::CustomException("ObjectReaderWriter::completeComponentInitialization::: initialization failed");
+  }
+
+  if(_srv->StartServer()==-1) {
+    smsc_log_error(_log, "ObjectReaderWriter::completeComponentInitialization::: Failed to start server socket");
+    throw smsc::util::CustomException("ObjectReaderWriter::completeComponentInitialization::: initialization failed");
+  }
+  int srvSockFd = _srv->getSocket();
+
+  _maxFd = std::max(_waitNewEventFd, srvSockFd);
+  FD_SET(_waitNewEventFd, &_fd_read );
+
+  _maxFd = std::max(_waitShutdownEventFd, _maxFd);
+  FD_SET(_waitShutdownEventFd, &_fd_read );
+
+  FD_SET(srvSockFd, &_fd_read );
+
+  linger l;
+  l.l_onoff=1;
+  l.l_linger=0;
+  if ( ::setsockopt(_srv->getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l)) < 0 ) {
+    smsc_log_error(_log, "ObjectReaderWriter::completeComponentInitialization::: setsockopt failed [%s]", strerror(errno));
+    throw smsc::util::CustomException("ObjectReaderWriter::completeComponentInitialization::: initialization failed");
   }
 }
 
@@ -270,45 +339,17 @@ int
 ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::Execute()
 {
   try {
-    if ( _config.listenHost == "" ||
-         _config.listenPort < 0 ) {
-      smsc_log_error(_log, "ObjectReaderWriter::Execute::: class's object isn't initialized properly");
-      return -1;
-    }
-
-    smsc_log_info(_log,"ObjectReaderWriter::Execute::: try start server to accept connection for %s", _config.toString().c_str());
-
-    smsc::core::network::Socket* srv = new smsc::core::network::Socket();
-    if(srv->InitServer(_config.listenHost.c_str(),_config.listenPort,0)==-1) {
-      smsc_log_error(_log, "ObjectReaderWriter::Execute::: Failed to init server socket. Terminate thread.");
-      return -1;
-    }
-
-    if(srv->StartServer()==-1) {
-      smsc_log_error(_log, "ObjectReaderWriter::Execute::: Failed to start server socket");
-      return -1;
-    }
-    int srvSockFd = srv->getSocket();
-
-    _maxFd = std::max(_waitNewEventFd, srvSockFd);
-    FD_SET(_waitNewEventFd, &_fd_read );
-
-    _maxFd = std::max(_waitShutdownEventFd, _maxFd);
-    FD_SET(_waitShutdownEventFd, &_fd_read );
-
-    FD_SET(srvSockFd, &_fd_read );
-
-    linger l;
-    l.l_onoff=1;
-    l.l_linger=0;
-    ::setsockopt(srv->getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+    completeComponentInitialization();
 
     while(!_wasStopped)
     {
       fd_set tmp_fd_read = _fd_read, tmp_fd_write = _fd_write;
-      FD_CLR(srv->getSocket(), &tmp_fd_write);
+      FD_CLR(_srv->getSocket(), &tmp_fd_write);
 
-      int st = ::select(_maxFd + 1, &tmp_fd_read, &tmp_fd_write, NULL, NULL /*without timeout for a while*/);
+      struct timeval tm={0};
+      tm.tv_sec = _actualSelectTimeoutValue;
+      smsc_log_debug(_log, "ObjectReaderWriter::Execute::: before call ::select _actualSelectTimeoutValue=%ld", _actualSelectTimeoutValue);
+      int st = ::select(_maxFd + 1, &tmp_fd_read, &tmp_fd_write, NULL, &tm);
 
       if ( st < 0 ) {
         smsc_log_error(_log,"ObjectReaderWriter::Execute::: select returned -1: [%s]", strerror(errno));
@@ -316,12 +357,12 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
       }
 
       if ( _wasStopped ) {
-        smsc_log_debug(_log,"ObjectReaderWriter::Execute::: component being stopping");
+        smsc_log_debug(_log,"ObjectReaderWriter::Execute::: component being stopped");
         break;
       }
 
       bool hasNewConnectionRequest = false;
-      if ( st > 0 && FD_ISSET(srv->getSocket(), &tmp_fd_read) ) {
+      if ( st > 0 && FD_ISSET(_srv->getSocket(), &tmp_fd_read) ) {
         hasNewConnectionRequest = true; --st;
       }
 
@@ -333,14 +374,14 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
         sockets_cache_t::iterator iter = _client_sockets_cache.begin(), end_iter = _client_sockets_cache.end();
         while(iter != end_iter)
         {
-          if ( FD_ISSET (iter->second->getSocket(), &tmp_fd_read) ) {
+          if ( FD_ISSET (iter->second.socket->getSocket(), &tmp_fd_read) ) {
             --st;
             APPLICATION_REQUEST* appObj=NULL;
             try {
-              appObj = receive(*iter->second);
+              appObj = receive(*iter->second.socket);
+              iter->second.timeStamp = ::time(0);
               if ( appObj ) {
-                smsc_log_info(_log, "ObjectReaderWriter::Execute::: got object from network [%s]", appObj->toString().c_str());
-                smsc_log_debug(_log, "ObjectReaderWriter::Execute::: push object to queue");
+                smsc_log_info(_log, "ObjectReaderWriter::Execute::: got object [%s] from network. push it to queue", appObj->toString().c_str());
 
                 const AbstractEvent* requestAsEvent
                   = appObj->createEvent();
@@ -350,22 +391,13 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
                                                   iter->first));
               }
             } catch (EOFException& ex) {
-              char peerNameBuf[32];
-              FD_CLR(iter->second->getSocket(), &_fd_read);
-              cleanupSocketFingerPrint(*iter->second);
-              iter->second->GetPeer(peerNameBuf); delete iter->second;
-              smsc_log_info(_log, "Connection closed by peer %s", peerNameBuf);
-              _client_sockets_cache.erase(iter++);
+              closeSocketAndCleanupInfoAboutIt("ObjectReaderWriter::Execute::: Connection closed by peer", iter);
               continue;
             } catch (SocketException& ex) {
-              char peerNameBuf[32];
-              FD_CLR(iter->second->getSocket(), &_fd_read);
-              cleanupSocketFingerPrint(*iter->second);
-              iter->second->GetPeer(peerNameBuf); delete iter->second;
-              smsc_log_error(_log, "Socket error on socket %s - %s", peerNameBuf, ex.what());
-              _client_sockets_cache.erase(iter++);
+              closeSocketAndCleanupInfoAboutIt("ObjectReaderWriter::Execute::: Error occured on socket", iter, ex.what());
               continue;
             } catch (QueueCongestionException& ex) {
+              smsc_log_warn(_log, "ObjectReaderWriter::Execute::: catch QueueCongestionException: [%s]", ex.what());
               APPLICATION_RESPONSE* appObjResp = appObj->createAppResponse(APPLICATION_RESPONSE::CONGESTION_CONDITION);
               scheduleObjectForWrite(*appObjResp, iter->first);
               delete appObj;
@@ -375,28 +407,14 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
         }
       }
 
-      if ( hasNewConnectionRequest ) {
-        smsc::core::network::Socket *clnt;
-        clnt=srv->Accept();
-        if(!clnt) {
-          smsc_log_error(_log, "accept failed. error [%s] ", strerror(errno));
-          return 1;
-        }
+      closeIdleConnections();
 
-        char peerNameBuf[32];
-        clnt->GetPeer(peerNameBuf);
-        smsc_log_info(_log, "Connection accepted from %s", peerNameBuf);
-        char ptr_value_as_string[sizeof(void*)*2+1+1];
-        sprintf(ptr_value_as_string,",%p",clnt);
-        _client_sockets_cache.insert(std::make_pair(std::string(peerNameBuf)+std::string(ptr_value_as_string), clnt));
+      if ( hasNewConnectionRequest )
+        acceptNewConnection();
 
-        _maxFd = std::max(_maxFd, clnt->getSocket());
-        FD_SET(clnt->getSocket(), &_fd_read);
-      }
-
-      if ( st > 0 ) {
+      if ( st > 0 )
         st -= processOutstandingPackets(tmp_fd_write);
-      }
+
     }
   } catch (const std::exception& ex) {
     smsc_log_error(_log, "ObjectReaderWriter::Execute::: catch unexpected exception");
@@ -407,12 +425,55 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::E
 
 template <class TRANSPORT_PACKET, class APPLICATION_REQUEST, class APPLICATION_RESPONSE>
 void
+ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::closeSocketAndCleanupInfoAboutIt(const char *what, typename sockets_cache_t::iterator& iter, const char* ex_err)
+{
+  char peerNameBuf[32];
+  FD_CLR(iter->second.socket->getSocket(), &_fd_read);
+  cleanupSocketFingerPrint(*iter->second.socket);
+  iter->second.socket->GetPeer(peerNameBuf); delete iter->second.socket;
+
+  if ( ex_err ) {
+    std::string formater(what);
+    formater += " %s - %s";
+    smsc_log_info(_log, formater.c_str(), peerNameBuf, ex_err);
+  } else {
+    std::string formater(what);
+    formater += " %s";
+    smsc_log_info(_log, formater.c_str(), peerNameBuf);
+  }
+  _client_sockets_cache.erase(iter++);
+}
+
+template <class TRANSPORT_PACKET, class APPLICATION_REQUEST, class APPLICATION_RESPONSE>
+void
+ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::acceptNewConnection()
+{
+  smsc::core::network::Socket *clnt;
+  clnt=_srv->Accept();
+  if(!clnt) {
+    smsc_log_error(_log, "accept failed. error [%s] ", strerror(errno));
+    throw smsc::util::CustomException("ObjectReaderWriter::acceptNewConnection::: serverSocket->Accept failed");
+  }
+
+  char peerNameBuf[32];
+  clnt->GetPeer(peerNameBuf);
+  smsc_log_info(_log, "Connection accepted from %s", peerNameBuf);
+  char ptr_value_as_string[sizeof(void*)*2+1+1];
+  sprintf(ptr_value_as_string,",%p",clnt);
+  _client_sockets_cache.insert(std::make_pair(std::string(peerNameBuf)+std::string(ptr_value_as_string), ActiveSocketInfo(clnt)));
+
+  _maxFd = std::max(_maxFd, clnt->getSocket());
+  FD_SET(clnt->getSocket(), &_fd_read);
+}
+
+template <class TRANSPORT_PACKET, class APPLICATION_REQUEST, class APPLICATION_RESPONSE>
+void
 ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::cleanupData()
 {
   sockets_cache_t::iterator iter = _client_sockets_cache.begin();
   sockets_cache_t::iterator end_iter = _client_sockets_cache.end();
   while (iter != end_iter) {
-    delete iter->second; _client_sockets_cache.erase(iter++);
+    delete iter->second.socket; _client_sockets_cache.erase(iter++);
   }
 }
 
@@ -434,6 +495,32 @@ ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::s
       if ( ::write(_signalNewEventFd, &signalByte, sizeof(signalByte)) != sizeof(signalByte) )
         throw smsc::util::CustomException("ObjectReaderWriter::scheduleObjectForWrite::: call write to pipe");
   }
+}
+
+template <class TRANSPORT_PACKET, class APPLICATION_REQUEST, class APPLICATION_RESPONSE>
+void
+ObjectReaderWriter<TRANSPORT_PACKET,APPLICATION_REQUEST,APPLICATION_RESPONSE>::closeIdleConnections()
+{
+  sockets_cache_t::iterator iter = _client_sockets_cache.begin(), end_iter = _client_sockets_cache.end();
+  time_t currentTime = ::time(0);
+
+  while(iter != end_iter)
+  {
+    if ( currentTime - iter->second.timeStamp >= _config.idleTimeout ) {
+      closeSocketAndCleanupInfoAboutIt("Connection is timed out for peer", iter);
+      continue;
+    } else {
+      smsc_log_debug(_log, "ObjectReaderWriter::closeIdleConnections::: _actualSelectTimeoutValue=%ld, currentTime=%ld - iter->second.timeStamp=%ld=%d", _actualSelectTimeoutValue, currentTime, iter->second.timeStamp, currentTime-iter->second.timeStamp);
+      time_t elapsedSleepTime = currentTime-iter->second.timeStamp;
+      if ( elapsedSleepTime > 0 ) {
+        _actualSelectTimeoutValue = std::min(_actualSelectTimeoutValue, _config.idleTimeout - elapsedSleepTime);
+        smsc_log_debug(_log, "ObjectReaderWriter::closeIdleConnections::: now _actualSelectTimeoutValue=%ld", _actualSelectTimeoutValue);
+      }
+      ++iter;
+    }
+  }
+  if ( _client_sockets_cache.size() == 0 )
+    _actualSelectTimeoutValue = _config.idleTimeout;
 }
 
 }}}
