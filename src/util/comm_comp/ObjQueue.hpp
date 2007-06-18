@@ -22,7 +22,7 @@ public:
 template <class T, int QUEUE_LIMIT=10>
 class ObjQueue {
 public:
-  ObjQueue() {
+  ObjQueue() : _qLimit(QUEUE_LIMIT) {
     pthread_mutex_init(&_lock, NULL);
     pthread_cond_init(&_signal, NULL);
   }
@@ -32,6 +32,7 @@ public:
     pthread_cond_destroy(&_signal);
   }
 
+  void setQueueLimit(int qLimit) { _qLimit = qLimit; }
   /*
   ** put copy of object to queue
   */
@@ -40,8 +41,8 @@ public:
       pthread_mutex_lock(&_lock);
 
       size_t curQueueSize = _innerQue.size();
-      if ( curQueueSize > QUEUE_LIMIT )
-        throw QueueCongestionException("ObjQueue::push::: current queue size=[%d] exceeded max. queue limit size=[%d]", curQueueSize, QUEUE_LIMIT);
+      if ( curQueueSize > _qLimit )
+        throw QueueCongestionException("ObjQueue::push::: current queue size=[%d] exceeded max. queue limit size=[%d]", curQueueSize, _qLimit);
 
       _innerQue.push_back(element);
       if ( curQueueSize == 0 ) pthread_cond_signal(&_signal);
@@ -76,6 +77,10 @@ private:
   pthread_cond_t _signal;
 
   std::deque<T> _innerQue;
+  int _qLimit;
+
+  ObjQueue(const ObjQueue& rhs);
+  ObjQueue& operator=(const ObjQueue& rhs);
 };
 
 }}}
