@@ -542,8 +542,9 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     if(!session->hasOperations())
     {
-        deleteSession(session);
         SessionHash.Delete(key);
+        deleteQueue.Push(session);
+        awakeEvent.Signal();
         return;
     }
 
