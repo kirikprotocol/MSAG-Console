@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <signal.h>
 #include <iostream>
 #include <logger/Logger.h>
@@ -14,7 +15,7 @@
 
 mmbox::app_specific_db::MmsDB* mmsDbConnet;
 
-void blockSignals()
+static void blockSignals()
 {
   sigset_t blocked_signals;
   sigfillset(&blocked_signals);
@@ -32,7 +33,7 @@ void sig_handler(int signo)
   return;
 }
 
-void unblockSignals()
+static void unblockSignals()
 {
   sigset_t unblocked_signals;
   sigemptyset(&unblocked_signals);
@@ -40,6 +41,15 @@ void unblockSignals()
   sigprocmask(SIG_SETMASK, &unblocked_signals, NULL);
 }
 
+static void usage(const char* prog_name)
+{
+  fprintf(stderr,"Usage: %s [-c config_name] [-v]\n", prog_name);
+}
+
+static void version(const char* prog_name)
+{
+  fprintf(stderr,"%s: version=$Revision$ (target=$Name$)\n", prog_name);
+}
 
 smsc::util::comm_comp::TEvent<mmbox::app_protocol::AppRequest_InsertMmsRecord>::HandlerList
 smsc::util::comm_comp::TEvent<mmbox::app_protocol::AppRequest_InsertMmsRecord>::registry;
@@ -59,9 +69,27 @@ int main(int argc, char** argv)
     smsc::logger::Logger::Init();
     smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("bdb");
 
-    const char* db_config_file = "bdb_server.cfg";
-    if ( argc > 1 ) 
-      db_config_file = argv[1];
+    const char* db_config_file;
+
+    const char* prog_name = strrchr(argv[0], '/');
+    if (!prog_name) prog_name = argv[0];
+    else ++prog_name;
+
+    if ( argc > 1 ) {
+      if ( !strcmp(argv[1], "-v") ) {
+        version(prog_name); return 0;
+      } else if ( !strcmp(argv[1], "-c") ) {
+        if ( argc > 2 )
+          db_config_file = argv[2];
+        else {
+          usage(prog_name); return 1;
+        }
+      } else {
+        usage(prog_name); return 1;
+      }
+    } else {
+      usage(prog_name); return 1;
+    }
     smsc::util::config::Manager::init(db_config_file);
 
     mmsDbConnet = new mmbox::app_specific_db::MmsDB("mmsDb");
@@ -69,7 +97,7 @@ int main(int argc, char** argv)
 
     sigset(SIGINT, sig_handler);
     sigset(SIGTERM, sig_handler);
-    sigset(SIGHUP, sig_handler);
+    sigset(SIGHUP, SIG_IGN);
     blockSignals();
 
     mmbox::app_pck_handler::bdb_objects_transmitter_t& ioComponent = mmbox::app_pck_handler::bdb_objects_transmitter_t::getInstance() ;
