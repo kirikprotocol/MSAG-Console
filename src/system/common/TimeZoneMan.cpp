@@ -73,7 +73,8 @@ void TimeZoneManager::Reload()
       }
     }catch(smsc::core::buffers::HashInvalidKeyException& e)
     {
-      throw smsc::util::Exception("Unknown subject:%s",subjName.c_str());
+      //throw smsc::util::Exception("Unknown subject:%s",subjName.c_str());
+      smsc_log_warn(log,"Subject not found: '%s' - skipped",subjName.c_str());
     }
   }
   offsetMap.Swap(tempTree);
