@@ -68,7 +68,7 @@ namespace scag { namespace re { namespace actions
         CommandOperations cmdType;
         DataSmDirection direction;
 
-        CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int msgRef, CommandOperations CmdType);
+        CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int ServiceId, int msgRef, CommandOperations CmdType);
     };
 
 
@@ -118,9 +118,8 @@ namespace scag { namespace re { namespace actions
 
         void clearLongCallContext()
         {
-            if(!command) throw SCAGException("ActionContext: command is not set");
-            while (!command->getSCAGCommand().getSession()->getLongCallContext().ActionStack.empty()) 
-                command->getSCAGCommand().getSession()->getLongCallContext().ActionStack.pop();
+            while (!getSession().getLongCallContext().ActionStack.empty()) 
+                getSession().getLongCallContext().ActionStack.pop();
         }
 
         //Comment: 'name' is valid until 'var' is valid

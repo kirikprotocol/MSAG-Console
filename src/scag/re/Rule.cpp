@@ -48,6 +48,8 @@ void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
         {
             EventHandler * eh = Handlers.Get(handlerType);
             eh->process(command, session, rs);
+            if(rs.status == STATUS_OK)
+                session.getLongCallContext().continueExec = false;
             return;
         }
         smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
@@ -69,7 +71,7 @@ void Rule::process(SCAGCommand& command,Session& session, RuleStatus& rs)
 
 void Rule::processSession(Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger,"Process RuleSessionDestroy... (%d Event Handlers registered)", Handlers.Count());
+    smsc_log_debug(logger,"Process session rule... (%d Event Handlers registered)", Handlers.Count());
 
     try
     {
@@ -77,9 +79,16 @@ void Rule::processSession(Session& session, RuleStatus& rs)
         {
             SessionEventHandler* eh = (SessionEventHandler*)Handlers.Get(session.isNew() ? EH_SESSION_INIT : EH_SESSION_DESTROY);
             eh->_process(session, rs);
+            if(rs.status == STATUS_OK)
+            {
+                if(session.isNew()) session.setNew(false);
+                session.getLongCallContext().continueExec = false;
+            }
+
             return;
         }
-        smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
+        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");
+        return;
     }
     catch (Exception& e)
     {

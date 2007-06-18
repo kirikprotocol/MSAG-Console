@@ -560,7 +560,8 @@ bool PersClientImpl::call(LongCallContext* context)
         headContext = context;
     tailContext = context;
     
-    callMutex.notify();        
+    callMutex.notify();
+    return true;
 }
 
 void PersClientImpl::ping()

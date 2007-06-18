@@ -25,7 +25,7 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
         throw SCAGException("SessionEventHandler: Cannot find OperatorID for %s abonent", abonentAddr.toString().c_str());
     }
 
-    CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, 0, (CommandOperations)0);
+    CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, session.getRuleKey().serviceId, 0, (CommandOperations)0);
 
     ActionContext context(RuleEngine::Instance().getConstants(), session, NULL, commandProperty, rs);
 

@@ -130,7 +130,7 @@ void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppComma
 
     if(ruleStatus.status == STATUS_LONG_CALL)
         return;
-    
+
     smsc_log_debug(logger, "current operation status=%d", currentOperation->getStatus());
 
     switch (smppDiscriptor.cmdType)
@@ -208,7 +208,7 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     SMS& sms = CommandBrige::getSMS(smppcommand);
     int msgRef = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ? sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE):-1;
 
-    CommandProperty commandProperty(&command, smppcommand->status, abonentAddr, providerId, operatorId, msgRef, smppDiscriptor.cmdType);
+    CommandProperty commandProperty(&command, smppcommand->status, abonentAddr, providerId, operatorId, smppcommand.getServiceId(), msgRef, smppDiscriptor.cmdType);
 
     if(!session.getLongCallContext().continueExec)
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), 

@@ -10,14 +10,13 @@ namespace scag { namespace re { namespace actions
     using namespace scag::exceptions;
 
 
-CommandProperty::CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int MsgRef, CommandOperations CmdType)
+CommandProperty::CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int ServiceId, int MsgRef, CommandOperations CmdType)
     : abonentAddr(addr), serviceId(-1), protocol(-1), commandId(-1), direction(dsdUnknown)
 {
     cmdType = CmdType;
 
     if(command)
     {
-        serviceId = command->getServiceId();
         protocol = CommandBrige::getProtocolForEvent(*command);
         commandId = command->getCommandId();
         direction = CommandBrige::getPacketDirection(*command);    
@@ -27,6 +26,7 @@ CommandProperty::CommandProperty(SCAGCommand* command, int commandStatus, const 
     
     providerId = ProviderId;
     operatorId = OperatorId;
+    serviceId = ServiceId;
     msgRef = MsgRef;
 }
 
