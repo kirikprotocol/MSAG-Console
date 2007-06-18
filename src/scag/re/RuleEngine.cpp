@@ -418,7 +418,7 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
 
 void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger,"Process RuleEngineSessionDestroy with serviceId");
+    smsc_log_debug(logger,"Process RuleEngineSession with serviceId");
 
     RulesReference rulesRef = getRules();
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(session.getRuleKey());
