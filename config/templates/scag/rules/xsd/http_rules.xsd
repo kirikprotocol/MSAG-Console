@@ -18,7 +18,7 @@
             </restriction>
         </simpleType>
         
-	<!--simpleType name="httpHeader">
+    <!--simpleType name="httpHeader">
             <restriction base="string">
                 <pattern value="#header\-\p{L}+[\w_\-]*"/>
             </restriction>
@@ -45,6 +45,8 @@
                         <element name="request"  type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                         <element name="response" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                         <element name="delivery" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="session_init"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+                        <element name="session_destroy"        type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                     </all>
                 </extension>
             </complexContent>
