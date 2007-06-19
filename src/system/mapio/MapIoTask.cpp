@@ -630,13 +630,13 @@ void MAPSTATS_Update_(MAPSTATS stats)
                 MAPSTATS_dialogs_out,
                 MapDialogContainer::getInstance()->getDialogCount()
                 );
-  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
-    smsc_log_warn(MAPSTATS_GetLoggerUpdate(),"Number of dialogs unbalanced %d/%d/%d", 
-                  MAPSTATS_dialogs_in,
-                  MAPSTATS_dialogs_out,
-                  MapDialogContainer::getInstance()->getDialogCount()
-                  ); 
-  }
+//  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
+//    smsc_log_warn(MAPSTATS_GetLoggerUpdate(),"Number of dialogs unbalanced %d/%d/%d", 
+//                  MAPSTATS_dialogs_in,
+//                  MAPSTATS_dialogs_out,
+//                  MapDialogContainer::getInstance()->getDialogCount()
+//                  ); 
+//  }
 }
 
 void MAPSTATS_Restart()
