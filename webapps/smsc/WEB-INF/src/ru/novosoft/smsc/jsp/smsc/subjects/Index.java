@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
+import ru.novosoft.smsc.jsp.smsc.timezones.TimeZones;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
@@ -171,20 +172,36 @@ public final class Index extends IndexBean {
     }
 
     protected int deleteSubject() {
-        int result = RESULT_DONE;
+      int result = RESULT_DONE;
+      try {
+
         for (int i = 0; i < checkedSubjects.length; i++) {
-            String subject = checkedSubjects[i];
-            if (!routeSubjectManager.getRoutes().isSubjectUsed(subject)) {
-                routeSubjectManager.getSubjects().remove(subject);
-                journalAppend(SubjectTypes.TYPE_subject, subject, Actions.ACTION_DEL);
-                appContext.getStatuses().setSubjectsChanged(true);
-            } else {
-                result = error(SMSCErrors.error.subjects.cantDelete, subject);
-            }
+          String subject = checkedSubjects[i];
+
+
+          // Check subject is in timezones
+          if (TimeZones.getInstance(appContext).isSubjectPresent(subject)) {
+            result = error("Can't remove subject. This subject is in timezones", subject);
+            continue;
+          }
+
+          if (!routeSubjectManager.getRoutes().isSubjectUsed(subject)) {
+            routeSubjectManager.getSubjects().remove(subject);
+            journalAppend(SubjectTypes.TYPE_subject, subject, Actions.ACTION_DEL);
+            appContext.getStatuses().setSubjectsChanged(true);
+          } else {
+            result = error(SMSCErrors.error.subjects.cantDelete, subject);
+          }
         }
         checkedSubjects = new String[0];
         checkedSubjectsSet.clear();
-        return result;
+
+      } catch (Throwable e) {
+        e.printStackTrace();
+        result = error("Can't remove subjects", e);
+      }
+
+      return result;
     }
 
     protected int saveRoutes() // saves temporal configuration

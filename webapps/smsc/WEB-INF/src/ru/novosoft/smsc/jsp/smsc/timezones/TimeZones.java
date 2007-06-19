@@ -69,7 +69,7 @@ public class TimeZones {
     }
 
     public void putMask(String mask, String timezone) throws AdminException {
-        new Mask(mask); //проверка валидности маски
+        new Mask(mask); //пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
         mask = prepareItem(mask);
         putItem(TIMEZONES_MASKS_PREFIX + '.' + mask, mask, timezone);
     }
@@ -121,11 +121,11 @@ public class TimeZones {
         return getItems(TIMEZONES_SUBJECTS_PREFIX);
     }
 
-    protected boolean isMaskPresent(String mask) {
+    public boolean isMaskPresent(String mask) {
         return isPresent(TIMEZONES_MASKS_PREFIX + '.' + prepareItem(mask));
     }
 
-    protected boolean isSubjectPresent(String subj) {
+    public boolean isSubjectPresent(String subj) {
         return isPresent(TIMEZONES_SUBJECTS_PREFIX + '.' + prepareItem(subj));
     }
 
