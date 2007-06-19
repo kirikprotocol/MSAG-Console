@@ -130,8 +130,7 @@ bool ActionReceipt::run(ActionContext& context)
 
     smsc_log_debug(logger, "Action 'receipt' from=%s, to=%s, st=%d, mid=%s, dst=%s", pa->from.toString().c_str(), pa->to.toString().c_str(), pa->state, pa->msgId.c_str(), pa->dstSmeId.c_str());
 
-    ptr.release();
-    context.getRuleStatus().addAction(pa);
+    context.getRuleStatus().addAction(ptr.release());
 
     return true;
 }

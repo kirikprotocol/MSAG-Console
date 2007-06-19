@@ -32,6 +32,8 @@
 #include "scag/transport/http/HttpProcessor.h"
 #include "scag/transport/http/HttpRouter.h"
 
+#include "scag/transport/smpp/SmppManager.h"
+
 #define CATCH_ADMINEXC(msg_)                                    \
       }catch(AdminException& e){                                \
         char msg[1024];                                         \
@@ -58,6 +60,7 @@ using namespace smsc::util::xml;
 using namespace smsc::sms;
 using namespace smsc::util::config;
 using namespace scag::exceptions;
+using namespace scag::transport::smpp;
 
 
 
@@ -254,9 +257,9 @@ Response * CommandLoadSmppTraceRoutes::CreateResponse(scag::Scag * ScagApp)
 
   try {
 
-      ScagApp->reloadTestRoutes(cfg);
-      ScagApp->getTestRouterInstance()->enableTrace(true);
-      ScagApp->getTestRouterInstance()->getTrace(traceBuff);
+      SmppManager::Instance().reloadTestRoutes(cfg);
+      SmppManager::Instance().getTestRouterInstance()->enableTrace(true);
+      SmppManager::Instance().getTestRouterInstance()->getTrace(traceBuff);
 
       // 0:   Message (Routes successfully loaded)
       // 1..: Trace (if any)
@@ -370,15 +373,15 @@ Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
 
     if (!ScagApp) throw Exception("Scag undefined");
 
-    if (_srcSysId)
-          found = ScagApp->getTestRouterInstance()->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info);
-    else
-          found = ScagApp->getTestRouterInstance()->lookup(Address(_srcAddr), Address(_dstAddr), info);
+    if (_srcSysId) 
+          found = SmppManager::Instance().getTestRouterInstance()->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info);
+    else 
+          found = SmppManager::Instance().getTestRouterInstance()->lookup(Address(_srcAddr), Address(_dstAddr), info);
 
     fprintf(stderr,"---- Passed lookup");
 
     std::vector<std::string> traceBuff;
-    ScagApp->getTestRouterInstance()->getTrace(traceBuff);
+    SmppManager::Instance().getTestRouterInstance()->getTrace(traceBuff);
 
     if (!found) {
         if (info.enabled == false)

@@ -55,6 +55,10 @@ public:
 
   void configChanged();
 
+  void reloadTestRoutes(const RouteConfig& rcfg);
+  RefferGuard<RouteManager> getTestRouterInstance();
+  void ResetTestRouteManager(RouteManager* manager);
+
   void StopProcessing()
   {
     sync::MutexGuard mg(queueMon);
@@ -99,6 +103,10 @@ protected:
   typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
   RouterRef routeMan;
 //  std::string routerConfigFile;
+
+  Mutex routerSwitchMutex;
+  Reffer<RouteManager>* testRouter_;
+
 
   thr::ThreadPool tp;
 
@@ -342,7 +350,7 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
   }
 }
 
-SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG)
+SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG), testRouter_(0)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
@@ -869,6 +877,26 @@ void SmppManagerImpl::pushCommand(SmppCommand& cmd)
     MutexGuard mg(queueMon);
     lcmQueue.Push(cmd);
     queueMon.notify();
+}
+
+void SmppManagerImpl::reloadTestRoutes(const RouteConfig& rcfg)
+{
+  auto_ptr<RouteManager> router(new RouteManager());
+  loadRoutes(router.get(),rcfg,true);
+  ResetTestRouteManager(router.release());
+}
+
+RefferGuard<RouteManager> SmppManagerImpl::getTestRouterInstance()
+{
+    MutexGuard g(routerSwitchMutex);
+    return RefferGuard<RouteManager>(testRouter_);
+}
+
+void SmppManagerImpl::ResetTestRouteManager(RouteManager* manager)
+{
+    MutexGuard g(routerSwitchMutex);
+    if ( testRouter_ ) testRouter_->Release();
+    testRouter_ = new Reffer<RouteManager>(manager);
 }
 
 }//smpp

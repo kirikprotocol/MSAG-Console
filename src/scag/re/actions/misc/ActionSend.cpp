@@ -271,8 +271,7 @@ bool ActionSend::run(ActionContext& context)
 
     smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d, srcPort: %d, packetType: %s", ev->pMessageText.c_str(), ev->pAddressEmail.c_str(), ev->pAbonentsNumbers.c_str(), ev->pDeliveryTime.c_str(), (int)esmClass, destPort, srcPort, ev->pPacketType.c_str());
 
-    SaccAlarmMessageEvent* pev = ev.get();
-    ev.release();
+    SaccAlarmMessageEvent* pev = ev.release();
     sm.registerSaccEvent(pev);
     return true;
 }

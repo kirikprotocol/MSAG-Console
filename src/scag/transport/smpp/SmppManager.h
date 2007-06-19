@@ -17,6 +17,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "scag/config/ConfigListener.h"
 #include "scag/lcm/LongCallManager.h"
+#include "scag/util/Reffer.h"
 
 namespace scag{
 namespace transport{
@@ -27,6 +28,8 @@ namespace thr=smsc::core::threads;
 namespace sync=smsc::core::synchronization;
 using namespace scag::config;
 using namespace scag::lcm;
+using namespace scag::util;
+using namespace scag::transport::smpp::router;
 
 class SmppManager :
   public SmppManagerAdmin,
@@ -47,7 +50,11 @@ public:
 
     virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id) = 0;
     virtual void pushCommand(SmppCommand& cmd) = 0;
-      virtual void continueExecution(LongCallContext* lcmCtx, bool dropped) = 0;
+    virtual void continueExecution(LongCallContext* lcmCtx, bool dropped) = 0;
+
+    virtual void reloadTestRoutes(const RouteConfig& rcfg) = 0;
+    virtual RefferGuard<RouteManager> getTestRouterInstance() = 0;
+    virtual void ResetTestRouteManager(RouteManager* manager) = 0;
 
     static SmppManager& Instance();
     static void Init(const char* cfgFile);

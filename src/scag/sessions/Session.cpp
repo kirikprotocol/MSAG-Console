@@ -473,6 +473,18 @@ Property* Session::getProperty(const std::string& name)
         return (*propertyPTR);
     }
 
+    if (name=="abonent") 
+    {
+        if (!propertyPTR) 
+        {
+            property = new AdapterProperty(name, this, m_SessionKey.abonentAddr.toString());
+            PropertyHash.Insert(name.c_str(), property);
+            return property; 
+        }
+
+        return (*propertyPTR);
+    }
+
     if (propertyPTR) return (*propertyPTR);
 
     property = new AdapterProperty(name,this,"");

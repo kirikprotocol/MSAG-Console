@@ -352,10 +352,7 @@ void BillingManagerImpl::processAsyncResult(BillingManagerImpl::SendTransaction*
         lp->exception += p;
     }
     else if(lcmCtx->callCommandId == BILL_OPEN)
-    {
-        putBillTransaction(bt->billId, bt.get());
-        bt.release();
-    }
+        putBillTransaction(bt->billId, bt.release());
     
     lcmCtx->initiator->continueExecution(lcmCtx, false);
 }
@@ -409,8 +406,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
 
         if(lcmCtx)
         {
-            sendCommandAsync(p.get(), lcmCtx);
-            p.release();
+            sendCommandAsync(p.release(), lcmCtx);
             return 0;
         }
 
@@ -431,8 +427,7 @@ unsigned int BillingManagerImpl::Open(BillingInfoStruct& billingInfoStruct, Tari
 
     ProcessResult("open", TRANSACTION_OPEN, p.get());
 
-    putBillTransaction(billId, p.get());
-    p.release();
+    putBillTransaction(billId, p.release());
 
     return billId;
 }
@@ -448,8 +443,7 @@ void BillingManagerImpl::Commit(int billId, LongCallContext* lcmCtx)
     {
         if(lcmCtx)
         {
-            sendCommandAsync(p.get(), lcmCtx);
-            p.release();
+            sendCommandAsync(p.release(), lcmCtx);
             return;
         }
 
@@ -591,8 +585,7 @@ void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, LongCallContext* 
 
     st->lcmCtx = lcmCtx;
     st->billTransaction = bt;
-    insertSendTransaction(bt->billId, st.get());
-    st.release();
+    insertSendTransaction(bt->billId, st.release());
     if(pipe->sendPck(&bt->ChargeOperation) <= 0)
         processAsyncResult(s);
 }

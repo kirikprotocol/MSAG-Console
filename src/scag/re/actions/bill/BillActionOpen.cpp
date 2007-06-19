@@ -179,8 +179,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
     {
         LongCallContext& lcmCtx = context.getSession().getLongCallContext();
         lcmCtx.callCommandId = BILL_OPEN;
-        lcmCtx.setParams(bp.get());
-        bp.release();
+        lcmCtx.setParams(bp.release());
         return true;
     }
     else
