@@ -7,6 +7,7 @@
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/Hash.hpp"
 #include "SmppManagerAdmin.h"
+#include "util/timeslotcounter.hpp"
 
 namespace scag{
 namespace transport{
@@ -31,8 +32,9 @@ struct SmppEntity
   SmppChannel* transChannel;
   int seq;
   bool connected;
+  smsc::util::TimeSlotCounter<> incCnt;
 
-  SmppEntity()
+  SmppEntity():incCnt(5)
   {
     bt=btNone;
     channel=0;
@@ -41,7 +43,7 @@ struct SmppEntity
     seq=0;
     connected = false;
   }
-  SmppEntity(const SmppEntityInfo& argInfo)
+  SmppEntity(const SmppEntityInfo& argInfo):incCnt(5)
   {
     info=argInfo;
     bt=btNone;
@@ -51,11 +53,11 @@ struct SmppEntity
     seq=0;
     connected = false;
   }
-  ~SmppEntity() 
+  ~SmppEntity()
   {
     delMapping();
   }
-  
+
   int getUSR(const Address& abonent, int umr)
   {
     std::string abs = abonent.toString();
@@ -73,7 +75,7 @@ struct SmppEntity
     std::string abs = abonent.toString();
     const char* ab = abs.c_str();
     __require__(ab);
-    
+
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) return -1;
@@ -85,7 +87,7 @@ struct SmppEntity
     std::string abs = abonent.toString();
     const char* ab = abs.c_str();
     __require__(ab);
-    
+
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) {
@@ -104,14 +106,14 @@ struct SmppEntity
     std::string abs = abonent.toString();
     const char* ab = abs.c_str();
     __require__(ab);
-    
+
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) return false;
     int* ptr = umrusr->USRtoUMR.GetPtr(usr);
     if (!ptr) return false;
     umrusr->UMRtoUSR.Delete(*ptr); umrusr->USRtoUMR.Delete(usr);
-    if ((umrusr->UMRtoUSR.Count() <= 0) && (umrusr->USRtoUMR.Count() <= 0)) mapping.Delete(ab); 
+    if ((umrusr->UMRtoUSR.Count() <= 0) && (umrusr->USRtoUMR.Count() <= 0)) mapping.Delete(ab);
     return true;
   }
   bool delUMRMapping(const Address& abonent, int umr)
@@ -119,17 +121,17 @@ struct SmppEntity
     std::string abs = abonent.toString();
     const char* ab = abs.c_str();
     __require__(ab);
-    
+
     sync::MutexGuard guard(mappingLock);
     UMRUSR* umrusr = mapping.GetPtr(ab);
     if (!umrusr) return false;
     int* ptr = umrusr->UMRtoUSR.GetPtr(umr);
     if (!ptr) return false;
     umrusr->USRtoUMR.Delete(*ptr); umrusr->UMRtoUSR.Delete(umr);
-    if ((umrusr->UMRtoUSR.Count() <= 0) && (umrusr->USRtoUMR.Count() <= 0)) mapping.Delete(ab); 
+    if ((umrusr->UMRtoUSR.Count() <= 0) && (umrusr->USRtoUMR.Count() <= 0)) mapping.Delete(ab);
     return true;
   }
-  
+
   SmppBindType getBindType()const
   {
     return bt;

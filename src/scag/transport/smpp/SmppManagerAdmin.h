@@ -43,6 +43,7 @@ struct SmppEntityInfo{
   buf::FixedLengthString<32> altHost;
   int  altPort;
   uint8_t uid;
+  int sendLimit;
 
   SmppEntityInfo()
   {
@@ -51,13 +52,14 @@ struct SmppEntityInfo{
     bindType=btNone;
     port=0;
     altPort=0;
+    sendLimit=0;
   }
 };
 
 struct SmppManagerAdmin{
   virtual void addSmppEntity(const SmppEntityInfo& info)=0;
   virtual void updateSmppEntity(const SmppEntityInfo& info)=0;
-  virtual void disconnectSmppEntity(const char* sysId)=0;  
+  virtual void disconnectSmppEntity(const char* sysId)=0;
   virtual void deleteSmppEntity(const char* sysId)=0;
   virtual void ReloadRoutes()=0;
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType) = 0;

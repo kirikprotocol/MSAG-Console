@@ -34,8 +34,8 @@ public:
   //admin
   virtual void addSmppEntity(const SmppEntityInfo& info);
   virtual void updateSmppEntity(const SmppEntityInfo& info);
-  virtual void disconnectSmppEntity(const char* sysId);  
-  virtual void deleteSmppEntity(const char* sysId);  
+  virtual void disconnectSmppEntity(const char* sysId);
+  virtual void deleteSmppEntity(const char* sysId);
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType);
 
   //registragor
@@ -85,6 +85,7 @@ public:
 
 protected:
   smsc::logger::Logger* log;
+  smsc::logger::Logger* limitsLog;
   buf::Hash<SmppEntity*> registry;
   mutable sync::Mutex regMtx;
   SmppSocketManager sm;
@@ -102,6 +103,7 @@ protected:
   thr::ThreadPool tp;
 
   int lastUid;
+  int queueLimit;
 };
 
 bool SmppManager::inited = false;
@@ -112,10 +114,10 @@ typedef SingletonHolder<SmppManagerImpl> SingleSM;
 
 SmppManager& SmppManager::Instance()
 {
-    if (!inited) 
+    if (!inited)
     {
         MutexGuard guard(initLock);
-        if (!inited) 
+        if (!inited)
             throw std::runtime_error("SmppManager not inited!");
     }
     return SingleSM::Instance();
@@ -136,10 +138,10 @@ void SmppManager::Init(const char* cfg)
 
 void SmppManager::shutdown()
 {
-    if (!inited) 
+    if (!inited)
     {
         MutexGuard guard(initLock);
-        if (!inited) 
+        if (!inited)
             throw std::runtime_error("SmppManager not inited!");
     }
     SingleSM::Instance().StopProcessing();
@@ -152,6 +154,7 @@ tag_timeout,
 tag_mode,
 tag_enabled,
 tag_providerId,
+tag_maxSmsPerSecond,
 tag_host=tag_providerId|1024,
 tag_port,
 tag_althost,
@@ -177,6 +180,7 @@ TAGDEF(password),
 TAGDEF(timeout),
 TAGDEF(mode),
 TAGDEF(providerId),
+TAGDEF(maxSmsPerSecond),
 TAGDEF(host),
 TAGDEF(port),
 TAGDEF(althost),
@@ -323,6 +327,9 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
         case tag_systemType:
           FillStringValue(attrs,entity.systemType);
           break;
+        case tag_maxSmsPerSecond:
+          entity.sendLimit=GetIntValue(attrs);
+          break;
       }
     }
     if(enabled)
@@ -338,6 +345,7 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
 SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
+  limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
   running=false;
   lastUid=0;
   lastExpireProcess=0;
@@ -374,6 +382,14 @@ void SmppManagerImpl::Init(const char* cfgFile)
   {
       running=false;
       throw SCAGException("Invalid parameter 'smpp.core.state_machines_count'");
+  }
+
+  queueLimit=1000;
+  try{
+    queueLimit= scag::config::ConfigManager::Instance().getConfig()->getInt("smpp.core.eventQueueLimit");
+  }catch(HashInvalidKeyException& e)
+  {
+    smsc_log_warn(log,"smpp.queueLimit not found! Using default(%d)",queueLimit);
   }
 
   try{
@@ -492,7 +508,7 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
       ent.recvChannel->disconnect();
       break;
   }
-  
+
   if(ent.info.type==etSmsc)
   {
     SmscConnectInfo ci;
@@ -505,7 +521,7 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
     ci.ports[1]=info.altPort;
     ci.addressRange=info.addressRange.c_str();
     ci.systemType=info.systemType.c_str();
-    
+
     sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
   }
 }
@@ -536,8 +552,8 @@ void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
       ent.recvChannel->disconnect();
       break;
   }
-  
-  if(ent.info.type==etSmsc)  
+
+  if(ent.info.type==etSmsc)
       sm.getSmscConnectorAdmin()->reportSmscDisconnect(sysId);
 }
 
@@ -730,19 +746,43 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
 
 void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
 {
+  SmppEntity* entPtr=0;
   {
     MutexGuard regmg(regMtx);
     SmppEntity** ptr=registry.GetPtr(ct->getSystemId());
     if(!ptr)throw Exception("Unknown system id:%s",ct->getSystemId());
     cmd.setEntity(*ptr);
+    entPtr=*ptr;
   }
 
   MutexGuard mg(queueMon);
+  cmd.getLongCallContext().initiator = this;
   int i = cmd->get_commandId();
   if(i == DELIVERY_RESP || i == SUBMIT_RESP || i == DATASM_RESP)
     respQueue.Push(cmd);
   else
-    queue.Push(cmd);
+  {
+    int cnt=entPtr->incCnt.Get();
+    if(entPtr->info.sendLimit!=0 && cnt/5>=entPtr->info.sendLimit && cmd.getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
+    {
+      smsc_log_info(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt/5,entPtr->info.sendLimit);
+      SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+      ct->putCommand(resp);
+    }else if(queue.Count()>=queueLimit && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
+    {
+      smsc_log_info(limitsLog,"Denied submit from '%s' by queueLimit:%d/%d",entPtr->info.systemId.c_str(),queue.Count(),queueLimit);
+      SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+      ct->putCommand(resp);
+    }else
+    {
+      queue.Push(cmd);
+      if(entPtr->info.sendLimit!=0)
+      {
+        entPtr->incCnt.Inc();
+        //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
+      }
+    }
+  }
   queueMon.notify();
 }
 
@@ -751,7 +791,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     SMS sms;
     if (msgId && msgId[0]) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
     else {
-    smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s", 
+    smsc_log_warn(log, "MSAG Receipt: MsgId is NULL! from=%s, to=%s, state=%d, dst_sme_id=%s",
               from.toString().c_str(), to.toString().c_str(), state, dst_sme_id);
     //abort(); // TODO: Remove it! For testing purposes only.
     return; // Do not send receipt at all (msgId missed)
@@ -770,9 +810,10 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
         cmd.setDstEntity(*ptr);
     }
 
-    smsc_log_debug(log, "MSAG Receipt: Sent from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s", 
+    smsc_log_debug(log, "MSAG Receipt: Sent from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s",
            from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
     MutexGuard mg(queueMon);
+    cmd.getLongCallContext().initiator = this;
     queue.Push(cmd);
     queueMon.notify();
 }
@@ -780,7 +821,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
 bool SmppManagerImpl::getCommand(SmppCommand& cmd)
 {
   MutexGuard mg(queueMon);
-  while(running && queue.Count()==0 && lcmQueue.Count() == 0)
+  while(running && queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count()==0)
   {
     queueMon.wait(5000);
     time_t now=time(NULL);
