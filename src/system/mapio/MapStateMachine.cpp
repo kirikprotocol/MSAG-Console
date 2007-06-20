@@ -446,6 +446,9 @@ static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus
 static void SendErrToSmsc(unsigned dialogid,unsigned code)
 {
   if ( dialogid == 0 ) return;
+  if( (code&0xFFFF) == 0 ) {
+  __map_warn2__("Send error 0x%x with code 0 to SMSC dialogid=%x",code,dialogid);
+  }
   __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
   if ( GET_STATUS_TYPE(code) == CMD_ERR_FATAL && GET_STATUS_CODE(code) == 0 ){
@@ -470,7 +473,7 @@ static void SendOkToSmsc(MapDialog* dialog)
   desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
   cmd->get_resp()->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-  __map_trace2__("Sent OK to SMSC: dlg 0x%x MSC = %s, IMSI = %s",dialog->dialogid_map,dialog->s_msc.c_str(), dialog->s_imsi.c_str());
+  __map_trace2__("Sent OK to SMSC: dlg 0x%x MSC = %s, IMSI = %s, %s",dialog->dialogid_map,dialog->s_msc.c_str(), dialog->s_imsi.c_str(), RouteToString(dialog).c_str());
 }
 
 static void QueryHlrVersion(MapDialog* dialog)
