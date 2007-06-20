@@ -348,7 +348,8 @@ addroute_flags[RouteAddCommand cmd]
 	  (OPT_TRANSIT            { cmd.setTransit(true);        })?
 	  (OPT_BILL   	          { cmd.setBill(RouteGenCommand.BILLING_TRUE);}
 	  |OPT_NOBILL 	          { cmd.setBill(RouteGenCommand.BILLING_FALSE);}
-	  |OPT_MTBILL             { cmd.setBill(RouteGenCommand.BILLING_MT);})
+	  |OPT_MTBILL             { cmd.setBill(RouteGenCommand.BILLING_MT);}
+	  |OPT_FRBILL             { cmd.setBill(RouteGenCommand.BILLING_FR);})
 	  (OPT_ARCH   	          { cmd.setArc(true);    	 }
 	  |OPT_NOARCH 	          { cmd.setArc(false);   	 })
 	  (OPT_ALLOW  	          { cmd.setAllow(true);  	 }
@@ -413,7 +414,8 @@ altroute_flags[RouteAlterCommand cmd]
 		       |OPT_OFF   { cmd.setTransit(false); }))?
 	  (OPT_BILL   	          { cmd.setBill(RouteGenCommand.BILLING_TRUE);}
 	  |OPT_NOBILL 	          { cmd.setBill(RouteGenCommand.BILLING_FALSE);}
-	  |OPT_MTBILL             { cmd.setBill(RouteGenCommand.BILLING_MT);})?
+	  |OPT_MTBILL             { cmd.setBill(RouteGenCommand.BILLING_MT);}
+	  |OPT_FRBILL             { cmd.setBill(RouteGenCommand.BILLING_FR);})?
 	  (OPT_ARCH   	          { cmd.setArc(true);      }
 	  |OPT_NOARCH 	          { cmd.setArc(false);     })?
 	  (OPT_ALLOW  	          { cmd.setAllow(true);    }

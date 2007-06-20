@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4" relativePaths="true" type="J2EE_WEB_MODULE" j2ee-integration="Tomcat Server">
+  <component name="AppServerSpecificValidatorsManager" />
   <component name="ModuleRootManager" />
-  <component name="NewModuleRootManager">
+  <component name="NewModuleRootManager" inherit-compiler-output="false">
     <output url="file://$MODULE_DIR$/../../../build/smsc/exploded/smsc/WEB-INF/classes" />
     <exclude-output />
     <exploded url="file://$MODULE_DIR$/../../../build/smsc/exploded/smsc" />
@@ -123,7 +124,8 @@
     <setting name="JAR_URL" value="file://" />
     <setting name="JAR_ENABLED" value="false" />
     <setting name="SYNC_EXPLODED_DIR" value="true" />
-    <setting name="BUILD_ON_FRAME_DEACTIVATION" value="false" />
+    <setting name="BUILD_MODULE_ON_FRAME_DEACTIVATION" value="false" />
+    <setting name="BUILD_EXTERNAL_DEPENDENCIES" value="false" />
     <setting name="RUN_JASPER_VALIDATION" value="false" />
   </component>
   <component name="WebModuleProperties">
@@ -178,8 +180,6 @@
       <root url="file://$MODULE_DIR$" relative="/" />
     </webroots>
   </component>
-  <component name="WeblogicWebModuleProperties">
-    <option name="IS_RUN_APPC" value="false" />
-  </component>
+  <component name="WeblogicWebModuleProperties" />
 </module>
 

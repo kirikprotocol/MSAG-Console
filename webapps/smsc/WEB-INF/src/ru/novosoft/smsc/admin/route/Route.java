@@ -28,6 +28,7 @@ public class Route
   public static final byte BILLING_FALSE = 0;
   public static final byte BILLING_TRUE = 1;
   public static final byte BILLING_MT = 2;
+  public static final byte BILLING_FR = 3;
 
   private String name = null;
   private SourceList src = null;
@@ -136,10 +137,12 @@ public class Route
     final String billingAttr = routeElem.getAttribute("billing");
     if (billingAttr.equalsIgnoreCase("true"))
       billing = BILLING_TRUE;
-    else if (billingAttr.equalsIgnoreCase("false"))
-      billing = BILLING_FALSE;
-    else
+    else if (billingAttr.equalsIgnoreCase("fr"))
+      billing = BILLING_FR;
+    else if (billingAttr.equalsIgnoreCase("mt"))
       billing = BILLING_MT;
+    else
+      billing = BILLING_FALSE;
     transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
     serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
     suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
@@ -289,6 +292,17 @@ public class Route
     this.enabling = enabling;
   }
 
+  public String getBillingString()
+  {
+    switch( billing ) {
+      case BILLING_FALSE: return "false";
+      case BILLING_TRUE: return "true";
+      case BILLING_MT: return "mt";
+      case BILLING_FR: return "fr";
+      default: return "false";
+    }
+  }
+
   public byte getBilling()
   {
     return billing;
@@ -322,7 +336,7 @@ public class Route
   public PrintWriter store(final PrintWriter out)
   {
     out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
-            + "\" billing=\"" + ((getBilling() == BILLING_FALSE) ? "false" : (getBilling() == BILLING_TRUE ? "true" : "mt"))
+            + "\" billing=\"" + getBillingString()
             + "\" transit=\"" + isTransit()
             + "\" archiving=\"" + isArchiving()
             + "\" enabling=\"" + isEnabling()

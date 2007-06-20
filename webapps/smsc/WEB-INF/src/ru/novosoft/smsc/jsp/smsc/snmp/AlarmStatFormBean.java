@@ -3,9 +3,9 @@ package ru.novosoft.smsc.jsp.smsc.snmp;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.smsc.snmp.tables.*;
-import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.StringCell;
 import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.DateCell;
 import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.IntCell;
+import ru.novosoft.smsc.jsp.smsc.snmp.tables.fields.StringCell;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -24,7 +24,7 @@ public class AlarmStatFormBean extends IndexBean {
   public static final String OPENED_STATS = "opened_stats";
   public static final String CLOSED_STATS = "closed_stats";
 
-//  private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+  //  private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
   private Calendar localCalendar = Calendar.getInstance(TimeZone.getDefault());
   private SimpleDateFormat dateFileFormat = new SimpleDateFormat(DATE_FILE_FORMAT);
   private SimpleDateFormat rowSubmitTimeFormat = new SimpleDateFormat(ROW_SUBMIT_TIME_FORMAT);
@@ -96,9 +96,9 @@ public class AlarmStatFormBean extends IndexBean {
       rowSubmitTimeFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
       String dateFilePrefix = dateFileFormat.format(date);
       localCalendar.setTime(date);
-      localCalendar.add( Calendar.DAY_OF_MONTH, -1);
+      localCalendar.add(Calendar.DAY_OF_MONTH, -1);
       String dateFilePrefix_prev = dateFileFormat.format(localCalendar.getTime());
-      logger.info("Querying snmp files for : "+dateFilePrefix+" and "+dateFilePrefix_prev);
+      logger.info("Querying snmp files for : " + dateFilePrefix + " and " + dateFilePrefix_prev);
       File dirNameFile = new File(fileDirName);
       File[] dirFiles = dirNameFile.listFiles();
       if (dirFiles == null || dirFiles.length == 0) return RESULT_OK;
@@ -106,7 +106,8 @@ public class AlarmStatFormBean extends IndexBean {
       for (int j = 0; j < dirFiles.length; j++) {
         final String fileName = dirFiles[j].getName();
         if (fileName == null || fileName.length() <= 0 ||
-          !(fileName.toLowerCase().startsWith(dateFilePrefix) || fileName.toLowerCase().startsWith(dateFilePrefix_prev))) continue;
+                !(fileName.toLowerCase().startsWith(dateFilePrefix) || fileName.toLowerCase().startsWith(dateFilePrefix_prev)))
+          continue;
         processFile(new File(dirNameFile, dirFiles[j].getName()));
       }
 
@@ -136,8 +137,8 @@ public class AlarmStatFormBean extends IndexBean {
   }
 
   private void processFile(File src) throws ParseException {
-    logger.debug("Processing file "+src);
-    localCalendar.setTime( date );
+    logger.debug("Processing file " + src);
+    localCalendar.setTime(date);
 
     BufferedReader br = null;
     try {
@@ -162,37 +163,37 @@ public class AlarmStatFormBean extends IndexBean {
       while (st.ttype != StreamTokenizer.TT_EOF) {
         // Read string
         try {
-        submitTime = rowSubmitTimeFormat.parse(st.sval);
-        st.nextToken();
-        alarmId = st.sval;
-        st.nextToken();
-        alarmCategory = st.sval;
-        st.nextToken();
-        try {
-          severity = Integer.valueOf(st.sval).intValue();
-        } catch (NumberFormatException e) {
-          severity = 0;
+          submitTime = rowSubmitTimeFormat.parse(st.sval);
+          st.nextToken();
+          alarmId = st.sval;
+          st.nextToken();
+          alarmCategory = st.sval;
+          st.nextToken();
+          try {
+            severity = Integer.valueOf(st.sval).intValue();
+          } catch (NumberFormatException e) {
+            severity = 0;
+          }
+          st.nextToken();
+          text = st.sval;
+
+          // Fill tables
+          addStatToAllStatsTable(submitTime, alarmId, alarmCategory, severity, text); // All stats table
+          addStatToOpenedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Opened stats table
+          addStatToClosedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Closed stats table
+
+          st.nextToken();
+          if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
+        } catch (Exception e) {
+          logger.warn("Invalid snmp log line: " + e.getMessage());
+          while (st.ttype != StreamTokenizer.TT_EOL) st.nextToken();
+          st.nextToken();
         }
-        st.nextToken();
-        text = st.sval;
-
-        // Fill tables
-        addStatToAllStatsTable(submitTime, alarmId, alarmCategory, severity, text); // All stats table
-        addStatToOpenedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Opened stats table
-        addStatToClosedStatsTable(submitTime, alarmId, alarmCategory, severity, text); // Closed stats table
-
-        st.nextToken();
-        if (st.ttype == StreamTokenizer.TT_EOL) st.nextToken();
-	} catch (Exception e) {
-    	  logger.warn("Invalid snmp log line: "+e.getMessage());
-	  while(st.ttype != StreamTokenizer.TT_EOL) st.nextToken();
-	  st.nextToken();
-     	}
       }
     } catch (FileNotFoundException e) {
-      logger.warn("File not found "+e.getMessage());
+      logger.warn("File not found " + e.getMessage());
     } catch (IOException e) {
-      logger.warn("I/O error occured "+e.getMessage());
+      logger.warn("I/O error occured " + e.getMessage());
     } finally {
       try {
         if (br != null)
@@ -219,9 +220,9 @@ public class AlarmStatFormBean extends IndexBean {
       StatsTableRow row = getOpenStatsTableRow(alarmId, alarmCategory);
       if (row == null)
         row = openedStatsTable.createRow();
-      else if (((Date)row.getValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME)).after(submitTime))
+      else if (((Date) row.getValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME)).after(submitTime))
         return;
-      
+
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.SUBMIT_TIME, new DateCell(submitTime));
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_ID, new StringCell(alarmId));
       row.addFieldValue(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY, new StringCell(alarmCategory));
@@ -237,9 +238,9 @@ public class AlarmStatFormBean extends IndexBean {
 
   private StatsTableRow getOpenStatsTableRow(final String alarmId, final String alarmCategory) {
     for (Iterator iter = openedStatsTable.getRows(); iter.hasNext();) {
-      final StatsTableRow row = (StatsTableRow)iter.next();
+      final StatsTableRow row = (StatsTableRow) iter.next();
       if (row.getValueAsString(OpenedStatsTableScheme.SCHEME.ALARM_ID).equals(alarmId) &&
-          row.getValueAsString(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY).equals(alarmCategory))
+              row.getValueAsString(OpenedStatsTableScheme.SCHEME.ALARM_CATEGORY).equals(alarmCategory))
         return row;
     }
     return null;
@@ -273,9 +274,9 @@ public class AlarmStatFormBean extends IndexBean {
 
   private StatsTableRow getCloseStatsTableRow(final String alarmId, final String alarmCategory) {
     for (Iterator iter = closedStatsTable.getRows(); iter.hasNext();) {
-      final StatsTableRow row = (StatsTableRow)iter.next();
+      final StatsTableRow row = (StatsTableRow) iter.next();
       if (row.getValueAsString(ClosedStatsTableScheme.SCHEME.ALARM_ID).equals(alarmId) &&
-          row.getValueAsString(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY).equals(alarmCategory))
+              row.getValueAsString(ClosedStatsTableScheme.SCHEME.ALARM_CATEGORY).equals(alarmCategory))
         return row;
     }
     return null;
@@ -284,14 +285,14 @@ public class AlarmStatFormBean extends IndexBean {
   private void processClosedStatsTable() {
     StatsTableRow row;
     final ArrayList rows2Remove = new ArrayList();
-    for (Iterator iter = closedStatsTable.getRows(); iter.hasNext(); ) {
-      row = (StatsTableRow)iter.next();
+    for (Iterator iter = closedStatsTable.getRows(); iter.hasNext();) {
+      row = (StatsTableRow) iter.next();
       if (row.getValueAsString(ClosedStatsTableScheme.SCHEME.CLOSE_FLAG).equals("0"))
         rows2Remove.add(row);
     }
 
     for (Iterator iter = rows2Remove.iterator(); iter.hasNext();)
-      closedStatsTable.deleteRow((StatsTableRow)iter.next());
+      closedStatsTable.deleteRow((StatsTableRow) iter.next());
   }
 
   private int clearQuery() {

@@ -127,6 +127,7 @@ public class SmsOperativeSource extends SmsSource
             it.remove();
           }
         }
+        logger.info("Operative store "+totalCount+" records. LastResult and Status filters processed "+msgs.size()+" messages matches filter");
       }
     } catch (Exception e) {
       e.printStackTrace();

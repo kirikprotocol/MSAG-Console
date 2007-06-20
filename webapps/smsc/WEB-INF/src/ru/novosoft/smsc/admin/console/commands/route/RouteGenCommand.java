@@ -22,6 +22,7 @@ public abstract class RouteGenCommand extends CommandClass
     public final static byte BILLING_TRUE = Route.BILLING_TRUE;
     public final static byte BILLING_FALSE = Route.BILLING_FALSE;
     public final static byte BILLING_MT = Route.BILLING_MT;
+    public final static byte BILLING_FR = Route.BILLING_FR;
 
     protected String route = null;
 
