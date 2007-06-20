@@ -764,7 +764,6 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
   }
 
   MutexGuard mg(queueMon);
-  cmd.getLongCallContext().initiator = this;
   int i = cmd->get_commandId();
   if(i == DELIVERY_RESP || i == SUBMIT_RESP || i == DATASM_RESP)
     respQueue.Push(cmd);
@@ -821,7 +820,6 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     smsc_log_debug(log, "MSAG Receipt: Sent from=%s, to=%s, state=%d, msgId=%s, dst_sme_id=%s",
            from.toString().c_str(), to.toString().c_str(), state, msgId, dst_sme_id);
     MutexGuard mg(queueMon);
-    cmd.getLongCallContext().initiator = this;
     queue.Push(cmd);
     queueMon.notify();
 }
@@ -829,6 +827,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
 bool SmppManagerImpl::getCommand(SmppCommand& cmd)
 {
   MutexGuard mg(queueMon);
+
   while(running && queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count()==0)
   {
     queueMon.wait(5000);
