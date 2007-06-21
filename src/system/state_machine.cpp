@@ -1369,7 +1369,7 @@ StateType StateMachine::submit(Tuple& t)
     aclCheck=true;
   }
 
-  if((fromMap || !strcmp(src_proxy->getSystemId(),"DSTRLST")) && toMap)//peer2peer
+  if((fromMap || fromDistrList) && toMap)//peer2peer
   {
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,smsc->p2pChargePolicy);
   }else
@@ -1386,6 +1386,7 @@ StateType StateMachine::submit(Tuple& t)
 #endif
   if(ri.deliveryMode==SMSC_TRANSACTION_MSG_MODE || (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
+    // set charge on delivery to avoid charging of sms that could be undelivered
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
   }
 
@@ -2895,7 +2896,6 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
 StateType StateMachine::forward(Tuple& t)
 {
-  debug2(smsLog,"FWD: id=%lld",t.msgId);
   SMS sms;
   try{
     store->retriveSms((SMSId)t.msgId,sms);
@@ -2905,6 +2905,7 @@ StateType StateMachine::forward(Tuple& t)
     smsc->getScheduler()->InvalidSms(t.msgId);
     return UNKNOWN_STATE;
   }
+  info2(smsLog,"FWD: id=%lld,oa=%s,da=%s",t.msgId,sms.originatingAddress.toString().c_str(),sms.destinationAddress.toString().c_str());
 #ifdef SNMP
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntRetried,sms.getDestinationSmeId());
 #endif
@@ -3681,35 +3682,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
     smsc->getScheduler()->InvalidSms(t.msgId);
     return t.state;
   }
-  //smsc::sms::Descriptor d;
 
-  ////
-  //
-  // register deliveryresp in traffic control
-  //
-
-  /*
-  bool ussdSession=false;
-  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
-    if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND &&
-       !(
-         sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_USSR_REQ &&
-         sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
-        )
-      )
-    {
-      ussdSession=true;
-    }
+    Descriptor d=t.command->get_resp()->getDescriptor();
+    smsc_log_debug(smsLog,"resp dest descriptor:%s(%d)/%s(%d), msgId=%lld",d.imsi,d.imsiLength,d.msc,d.mscLength,t.msgId);
   }
-  */
-
-  //smsc->allowCommandProcessing(t.command);
-
-  //
-  // end of traffic control code
-  //
-  ////
 
   SMS sms;
   bool dgortr=t.command->get_resp()->get_sms()!=0; //datagram or transaction
@@ -3730,6 +3707,11 @@ StateType StateMachine::deliveryResp(Tuple& t)
       return UNKNOWN_STATE;
     }
     sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
+  }
+
+  {
+    Descriptor d=sms.destinationDescriptor;
+    smsc_log_debug(smsLog,"sms dest descriptor:%s(%d)/%s(%d), msgId=%lld",d.imsi,d.imsiLength,d.msc,d.mscLength,t.msgId);
   }
 
   {
