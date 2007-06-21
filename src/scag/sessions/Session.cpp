@@ -99,6 +99,7 @@ void Operation::detachBill()
     }
 
     smsc_log_debug(logger,"Operation: Bill (id=%d, ab=%s) dettached", billId, m_Owner->m_SessionKey.abonentAddr.toString().c_str());
+	billId = 0;
     m_hasBill = false;
 }
 

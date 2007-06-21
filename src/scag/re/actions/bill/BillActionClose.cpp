@@ -28,6 +28,15 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
     Operation * op = NULL;
     uint32_t bid = BillID;
     smsc_log_debug(logger, "Run Action 'bill:close'...");
+
+    op = context.GetCurrentOperation();
+    if (!op || !op->hasBill())
+    {
+        const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
+        smsc_log_error(logger, "%s", p);
+        SetBillingStatus(context, p, false);
+        return false;
+    }
     
     if(m_BillIDExist)
     {
@@ -45,17 +54,8 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
         }
     }
     else
-    {
-        op = context.GetCurrentOperation();
-        if (!op || !op->hasBill())
-        {
-            const char *p = !op ? "Bill: Operation from ActionContext is invalid" : "Bill is not attached to operation";
-            smsc_log_error(logger, "%s", p);
-            SetBillingStatus(context, p, false);
-            return false;
-        }
         bid = op->getBillId();
-    }
+		
     if (!bid)
     {
         smsc_log_error(logger,"Action 'bill:close' :: Invalid BillID=0");
@@ -109,7 +109,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
     }
 #endif
     SetBillingStatus(context,"", true);
-    if(op) op->detachBill();
+    if(op && op->getBillId() == bid) op->detachBill();
     return false;
 }
 void BillActionClose::ContinueRunning(ActionContext& context)
@@ -134,7 +134,7 @@ void BillActionClose::ContinueRunning(ActionContext& context)
         return;
     }
     SetBillingStatus(context,"", true);
-    if(op) op->detachBill();
+    if(op && bp->BillId == op->getBillId()) op->detachBill();
 }
 
 void BillActionClose::SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK)
