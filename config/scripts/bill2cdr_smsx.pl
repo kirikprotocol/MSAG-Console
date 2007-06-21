@@ -297,6 +297,11 @@ sub process{
     {
       $makeInRec=0;
     }
+    
+    if($infields->{DST_SME_ID} eq 'smsx')
+    {
+      $makeInRec=0;
+    }
 
 
 
