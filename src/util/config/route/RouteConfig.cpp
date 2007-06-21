@@ -179,6 +179,7 @@ uint8_t StrToBill(const char* str)
 {
   if(strcmp(str,"true")==0)return 1;
   if(strcmp(str,"mt")==0)return 2;
+  if(strcmp(str,"fr")==0)return 3;
   return 0;
 }
 

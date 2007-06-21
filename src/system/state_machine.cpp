@@ -2319,7 +2319,7 @@ StateType StateMachine::submit(Tuple& t)
 #ifdef SMSEXTRA
   ctx.noDestChange=noDestChange;
 #endif
-  if(ri.billing)
+  if(sms->billingRequired())
   {
     try{
       smsc->ChargeSms(t.msgId,*sms,ctx);
@@ -2914,7 +2914,7 @@ StateType StateMachine::forward(Tuple& t)
   INFwdSmsChargeResponse::ForwardContext ctx;
   ctx.allowDivert=t.command->get_forwardAllowDivert();
   ctx.reschedulingForward=t.command->is_reschedulingForward();
-  if(sms.billingRecord && !sms.hasIntProperty(Tag::SMSC_CHARGINGPOLICY))
+  if(sms.billingRequired() && !sms.hasIntProperty(Tag::SMSC_CHARGINGPOLICY))
   {
     if(strcmp(sms.getSourceSmeId(),"MAP_PROXY")==0 && strcmp(sms.getDestinationSmeId(),"MAP_PROXY")==0)
     {
@@ -2931,7 +2931,7 @@ StateType StateMachine::forward(Tuple& t)
     }
   }
 
-  if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery  && sms.billingRecord)
+  if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery  && sms.billingRequired())
   {
     try{
       smsc->ChargeSms(t.msgId,sms,ctx);
@@ -3736,7 +3736,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   bool wasBillReport=false;
 
-  if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
+  if(sms.billingRequired() && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
     bool final=
       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK ||
@@ -3984,7 +3984,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         smsc->getScheduler()->InvalidSms(t.msgId);
 
 #ifdef SMSEXTRA
-        if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+        if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==3)
         {
           smsc->FullReportDelivery(t.msgId,sms);
         }
@@ -4525,7 +4525,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
 
 #ifdef SMSEXTRA
-    if(sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
+    if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==3)
     {
       smsc->FullReportDelivery(t.msgId,sms);
     }

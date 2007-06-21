@@ -1403,6 +1403,11 @@ struct SMS
     billingRecord = billing;
   };
 
+  inline bool billingRequired()
+  {
+    return billingRecord==1 || billingRecord==2;
+  }
+
   /**
   * Возвращает тип биллинга сообщения
   *
