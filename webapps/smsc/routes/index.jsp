@@ -324,8 +324,12 @@
     <td <%= onClick %>>
         <%if (billing == Route.BILLING_TRUE) {%>
           <img src="/images/ic_checked.gif">
+        <%} else if(billing == Route.BILLING_MT) {%>
+          MT
+        <%} else if(billing == Route.BILLING_FR) %>
+          FR
         <%} else {%>
-          <%=(billing == Route.BILLING_FALSE ? "&nbsp;" : "MT")%>
+          &nbsp;
         <%}%>
 <%--        <%--%>
 <%--            if (isBilling) {--%>
