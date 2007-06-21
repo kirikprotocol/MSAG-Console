@@ -130,8 +130,6 @@ bool Billing::CDRComplete(void) const
 {
     if (cdr._chargePolicy == CDRRecord::ON_SUBMIT)
         return (cdr._finalized >= CDRRecord::dpSubmitted) ? true : false;
-    if (cdr._chargePolicy == CDRRecord::ON_DELIVERY)
-        return (cdr._finalized >= CDRRecord::dpDelivered) ? true : false;
     return (cdr._finalized == CDRRecord::dpCollected)  ? true : false;
 }
 
