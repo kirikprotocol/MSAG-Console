@@ -1,5 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-#include <vector>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/ConnectSMSArg.h"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
@@ -8,7 +9,6 @@ static char const ident[] = "$Id$";
 namespace smsc {
 namespace inman {
 namespace comp {
-using std::vector;
 
 ConnectSMSArg::ConnectSMSArg()
 {
@@ -16,7 +16,7 @@ ConnectSMSArg::ConnectSMSArg()
 }
 ConnectSMSArg::~ConnectSMSArg() { }
 
-void ConnectSMSArg::decode(const vector<unsigned char>& buf) throw(CustomException)
+void ConnectSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     ConnectSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */

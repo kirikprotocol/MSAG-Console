@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/cap/ResetTimerSMSArg.h"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"

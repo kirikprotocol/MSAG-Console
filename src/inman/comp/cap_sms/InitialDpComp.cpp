@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/asn1rt/asn_internal.h"
 #include "inman/codec_inc/cap/InitialDPSMSArg.h"
