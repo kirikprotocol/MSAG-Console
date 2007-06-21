@@ -322,7 +322,8 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
             logger->log(_capState.u.s.ctrFinished ? Logger::LEVEL_WARN : Logger::LEVEL_ERROR,
                         "%s: inconsistent %s, state {%s}", _logId,
                         CapSMSOp::code2Name(op->getOpcode()), _capState.Print());
-            err = _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
+            if (!_capState.u.s.ctrFinished)
+                err = _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
         }
         if (_capState.u.s.ctrFinished)
             doAbort = true; //just end dialog with errOk
