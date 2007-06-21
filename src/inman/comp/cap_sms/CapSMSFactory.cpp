@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/comp/cap_sms/CapSMSFactory.hpp"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
@@ -21,6 +23,8 @@ OperationFactory * initCAP3SMSComponents(OperationFactory * fact)
                 new CompFactory::ProducerT<smsc::inman::comp::ConnectSMSArg>() );
         fact->registerArg(CapSMSOp::ResetTimerSMS,
                 new CompFactory::ProducerT<smsc::inman::comp::ResetTimerSMSArg>() );
+        fact->registerArg(CapSMSOp::FurnishChargingInformationSMS,
+                new CompFactory::ProducerT<smsc::inman::comp::FurnishChargingInformationSMSArg>() );
 
         fact->bindErrors(CapSMSOp::InitialDPSMS, 8,
                          CAP3SMSerrCode::missingParameter,

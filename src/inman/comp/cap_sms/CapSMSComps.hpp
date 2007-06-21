@@ -217,8 +217,6 @@ private:
 //  charging record or to include some information in the default SM record.
 //  The registered charging record is intended for off line charging of the
 //  Short Message.
-
-/* GVRoman NOTE: This operation doesn't used by known IN-points
 class FurnishChargingInformationSMSArg: public Component { //SCF -> SSF 
 public:
     FurnishChargingInformationSMSArg();
@@ -229,7 +227,7 @@ public:
 private:
 	Logger* compLogger;
 };
-*/
+
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
 //  This operation is used to prevent an attempt to submit or deliver a short message. 
