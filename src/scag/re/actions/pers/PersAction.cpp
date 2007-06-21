@@ -160,35 +160,28 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(policy == FIXED && params.Exists("finaldate"))
     {
-        std::string dt = params["finaldate"];
-
         struct tm time;
         char *ptr;
 
-        ptr = strptime(dt.c_str(), "%d.%m.%Y %T", &time);
+        ptr = strptime(params["finaldate"].c_str(), "%d.%m.%Y %T", &time);
         if(!ptr || *ptr)
             throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd());
 
         final_date = mktime(&time);
-        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, final_date=%d(%s)", getStrCmd(), profile, var.c_str(), policy, final_date, dt.c_str());
+        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, final_date=%d", getStrCmd(), profile, var.c_str(), policy, final_date);
         return;
     }
 
     if(!params.Exists("lifetime"))
         throw SCAGException("PersAction '%s' : missing 'finaldate' or 'lifetime' parameter", getStrCmd());
 
-    std::string lt = params["lifetime"];
-
-    struct tm time;
-    char *ptr;
-
-    ptr = strptime(lt.c_str(), "%H:%M:%S", &time);
-    if(!ptr || *ptr)
+	uint32_t hour = 0, min = 0, sec = 0;
+    if(sscanf(params["lifetime"].c_str(), "%02u:%02u:%02u", &hour, &min, &sec) < 3)
         throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd());
 
-    life_time = time.tm_hour * 3600 + time.tm_min * 60 + time.tm_sec;
+    life_time = hour * 3600 + min * 60 + sec;
 
-    smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d(%s), mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, lt.c_str(), mod);
+    smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, mod);
 }
 
 uint32_t PersAction::getKey(const CommandProperty& cp, ProfileType pt)
