@@ -3,7 +3,7 @@
 <!ELEMENT route (notes*, source+, destination+)>
 <!ATTLIST route
 	id CDATA #REQUIRED
-	billing (true | false | mt) #REQUIRED
+	billing (true | false | mt | fr) #REQUIRED
 	archiving (true | false) #REQUIRED
 	enabling (true | false) "true"
 	priority CDATA #REQUIRED
