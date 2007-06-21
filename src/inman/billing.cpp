@@ -812,7 +812,7 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
  * CapSMS_SSFhandlerITF interface implementation:
  * NOTE: all callbacks are the processing graph entry points, so lock bilMutex !!!
  * -------------------------------------------------------------------------- */
-void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
+void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause/* = 0*/)
 {
     MutexGuard grd(bilMutex);
     uint32_t            scfErr = 0;
@@ -862,7 +862,7 @@ void Billing::onDPSMSResult(unsigned char rp_cause/* = 0*/)
     return;  //wait for onEndCapDlg()
 }
 
-void Billing::onEndCapDlg(RCHash errcode/* = 0*/)
+void Billing::onEndCapDlg(unsigned dlg_id, RCHash errcode/* = 0*/)
 {
     MutexGuard grd(bilMutex);
     capDlgActive = false;

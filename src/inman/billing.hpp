@@ -87,10 +87,10 @@ public:
     bool     BillComplete(void) const;
 
     //-- CapSMS_SSFhandlerITF interface methods:
-    void onDPSMSResult(unsigned char rp_cause = 0);
+    void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause = 0);
     //dialog finalization/error handling:
     //if ercode != 0, no result has been got from CAP service,
-    void onEndCapDlg(RCHash errcode = 0);
+    void onEndCapDlg(unsigned dlg_id, RCHash errcode = 0);
 
     //-- IAPQueryListenerITF interface methods:
     void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
