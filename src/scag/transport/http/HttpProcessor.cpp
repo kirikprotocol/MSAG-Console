@@ -319,6 +319,7 @@ bool HttpProcessorImpl::makeLongCall(HttpCommand& cmd, SessionPtr& se)
     LongCallContext& lcmCtx = se->getLongCallContext();
     lcmCtx.stateMachineContext = cmd.getContext();
     lcmCtx.initiator = HttpManager::Instance().getScagTaskManager();
+	cmd.setSession(se);
     
     return LongCallManager::Instance().call(&lcmCtx);
 }

@@ -41,6 +41,7 @@ int ScagTask::Execute()
                 break;
             }
             else if(st == scag::re::STATUS_LONG_CALL || st == scag::re::STATUS_PROCESS_LATER)
+				break;
                 
             smsc_log_info(logger, "%p: %p, request denied", this, cx);
             cx->result = 503;          
