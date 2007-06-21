@@ -76,6 +76,12 @@ int StatusSme::Execute()
       sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
       cmd->get_dialogId(),
       Status::OK);
+    Descriptor d;
+    std::string d_imsi="123456";
+    std::string d_msc="123456";
+    d.setImsi(d_imsi.length(),d_imsi.c_str());
+    d.setMsc(d_msc.length(),d_msc.c_str());
+    resp->get_resp()->setDescriptor(d);
     putIncomingCommand(resp);
 
     getSmsText(sms,body,sizeof(body));
