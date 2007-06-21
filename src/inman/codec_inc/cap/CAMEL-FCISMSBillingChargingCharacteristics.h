@@ -19,7 +19,7 @@ extern "C" {
 /* Dependencies */
 typedef enum CAMEL_FCISMSBillingChargingCharacteristics_PR {
 	CAMEL_FCISMSBillingChargingCharacteristics_PR_NOTHING,	/* No components present */
-	CAMEL_FCISMSBillingChargingCharacteristics_PR_fCIBCCCAMELsequence1,
+	CAMEL_FCISMSBillingChargingCharacteristics_PR_fCIBCCCAMELsequence1
 } CAMEL_FCISMSBillingChargingCharacteristics_PR;
 
 /* CAMEL-FCISMSBillingChargingCharacteristics */
