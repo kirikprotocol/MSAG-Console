@@ -50,7 +50,7 @@ CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
     dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
     capId = (unsigned)dialog->getId();
-    snprintf(_logId, sizeof(_logId)-1, "CapSMS[%u]", capId);
+    snprintf(_logId, sizeof(_logId)-1, "CapSMS[0x%X]", capId);
 }
 
 CapSMSDlg::~CapSMSDlg()
@@ -120,7 +120,7 @@ void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
         }
         endTCap();
     }
-    ssfHdl->onEndCapDlg(_RCS_CAPOpErrors->mkhash(resE->getOpcode()));
+    ssfHdl->onEndCapDlg(capId, _RCS_CAPOpErrors->mkhash(resE->getOpcode()));
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -148,7 +148,7 @@ void CapSMSDlg::onInvokeLCancel(Invoke *op)
         }
     }
     if (doAbort)
-        ssfHdl->onEndCapDlg(errcode);
+        ssfHdl->onEndCapDlg(capId, errcode);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -178,7 +178,7 @@ void CapSMSDlg::onDialogPAbort(UCHAR_T abortCause)
             errcode = _RCS_TC_Abort->mkhash(abortCause);
         //else T_END_IND is timed out
     }
-    ssfHdl->onEndCapDlg(errcode);
+    ssfHdl->onEndCapDlg(capId, errcode);
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -193,7 +193,7 @@ void CapSMSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                         _capState.Print());
         endTCap();
     }
-    ssfHdl->onEndCapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+    ssfHdl->onEndCapDlg(capId, _RCS_TC_Abort->mkhash(!abortInfo_len ?
                         TC_AbortCause::userAbort : *pAbortInfo));
 }
 
@@ -220,7 +220,7 @@ void CapSMSDlg::onDialogNotice(UCHAR_T reportCause,
                        _capState.Print(), dstr.c_str());
         endTCap();
     }
-    ssfHdl->onEndCapDlg(_RCS_TC_Report->mkhash(reportCause));
+    ssfHdl->onEndCapDlg(capId, _RCS_TC_Report->mkhash(reportCause));
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
@@ -240,7 +240,7 @@ void CapSMSDlg::onDialogREnd(bool compPresent)
         }
     }
     if (!compPresent)
-        ssfHdl->onEndCapDlg(errcode);
+        ssfHdl->onEndCapDlg(capId, errcode);
     //else wait for ongoing Invoke
 }
 
@@ -308,9 +308,10 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
                            _logId, (long)(arg->timerValue));
         }   break;
     
-    /*  case CapSMSOp::FurnishChargingInformationSMS: {
-            smsc_log_error(logger, "%s: <-- SCF FurnishChargingInformationSMS", _logId);
-        } //no break specially !! */
+        case CapSMSOp::FurnishChargingInformationSMS: {
+            smsc_log_debug(logger, "%s: <-- SCF FurnishChargingInformationSMS", _logId);
+        }   break;
+
         default:
             smsc_log_error(logger, "%s: illegal Invoke(opcode = %u)",
                 _logId, op->getOpcode());
@@ -327,10 +328,10 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
             doAbort = true; //just end dialog with errOk
     }
     if (doReport)
-        ssfHdl->onDPSMSResult(rPCause);
+        ssfHdl->onDPSMSResult(capId, rPCause);
     if (doAbort) {
         endTCap();
-        ssfHdl->onEndCapDlg(err);
+        ssfHdl->onEndCapDlg(capId, err);
     }
 }
 

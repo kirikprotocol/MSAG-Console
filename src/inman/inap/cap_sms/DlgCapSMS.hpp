@@ -44,11 +44,11 @@ namespace inap {
 class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
 //NOTE: These callbacks should not delete CapSMSDlg !!!
 public:
-    virtual void onDPSMSResult(unsigned char rp_cause = 0) = 0;
+    virtual void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause = 0) = 0;
     //Dialog finalization/error handling:
     //if ercode != 0, CAP dialog is abnormally ended
     //NOTE: CAP dialog may be deleted only from this callback !!!
-    virtual void onEndCapDlg(RCHash errcode = 0) = 0;
+    virtual void onEndCapDlg(unsigned dlg_id, RCHash errcode = 0) = 0;
 };
 
 class CapSMS_SCFContractorITF { //SSF -> SCF
@@ -110,7 +110,7 @@ private:
     Mutex       _sync;
     unsigned    capId;
                 //prefix for logging info
-    char        _logId[sizeof("CapSMS[%u]") + sizeof(unsigned)*3 + 1];
+    char        _logId[sizeof("CapSMS[0x%X]") + sizeof(unsigned)*3 + 1];
 
     Dialog*         dialog;     //TCAP dialog
     TCSessionSR*    session;    //TCAP dialogs factory
