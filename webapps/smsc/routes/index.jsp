@@ -326,7 +326,7 @@
           <img src="/images/ic_checked.gif">
         <%} else if(billing == Route.BILLING_MT) {%>
           MT
-        <%} else if(billing == Route.BILLING_FR) %>
+        <%} else if(billing == Route.BILLING_FR) {%>
           FR
         <%} else {%>
           &nbsp;
