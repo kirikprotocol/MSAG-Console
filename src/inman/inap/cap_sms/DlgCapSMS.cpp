@@ -65,9 +65,10 @@ void CapSMSDlg::endDPSMS(void)
     MutexGuard  grd(_sync);
     if (_capState.preReport())
         eventReportSMS(false); //and wait for T_END_IND or L_CANCEL
-    else
+    else {
         endTCap();
-    ssfHdl = NULL;
+        ssfHdl = NULL;
+    }
 }
 
 /* ------------------------------------------------------------------------ *
