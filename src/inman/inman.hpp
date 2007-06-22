@@ -37,13 +37,15 @@ public:
 struct XSmsService {
     std::string     name;
     uint32_t        mask;
-    uint32_t        cdrCode;
+    uint32_t        cdrCode; //actually it's a serviceId
     TonNpiAddress   adr;
+    bool            chargeBearer;
 
-    XSmsService(uint32_t use_mask = 0) : cdrCode(0), mask(use_mask)
+    XSmsService(uint32_t use_mask = 0)
+        : cdrCode(0), mask(use_mask), chargeBearer(false)
     { }
     XSmsService(const std::string & use_name, uint32_t use_mask = 0)
-        : name(use_name), cdrCode(0), mask(use_mask)
+        : name(use_name), cdrCode(0), mask(use_mask), chargeBearer(false)
     { }
 };
 typedef std::map<uint32_t, XSmsService> SmsXServiceMap;

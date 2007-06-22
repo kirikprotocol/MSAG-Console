@@ -13,49 +13,61 @@
             uint30_t [1..16383], bit masks of used services for USSDC == INMan interaction
           param name="serviceAdr" type="string"
             optional service address for IDP, if omitted, the CDR is created
+          param name="chargeBearer" type="bool"
+            optional flag that forces the additional charging of the bearing
+            message for prepaid abonents, by default = false
       end_section
      -->
     <section name="SMS-Flash">
       <param name="serviceCode" type="int">1</param>
-      <param name="serviceMask" type="int">1</param>
-      <param name="serviceAdr" type="string">smsx:201</param>
+      <param name="serviceMask" type="int">2</param>
+      <param name="serviceAdr" type="string">smsx:7961</param>
     </section>
 
     <section name="SMS-Calendar">
-      <param name="serviceCode" type="int">3</param>
-      <param name="serviceMask" type="int">2</param>
-      <param name="serviceAdr" type="string">smsx:203</param>
+      <param name="serviceCode" type="int">2</param>
+      <param name="serviceMask" type="int">4</param>
+      <param name="serviceAdr" type="string">smsx:7962</param>
     </section>
 
     <section name="SMS-Secret">
-      <param name="serviceCode" type="int">4</param>
-      <param name="serviceMask" type="int">4</param>
-      <param name="serviceAdr" type="string">smsx:204</param>
+      <param name="serviceCode" type="int">3</param>
+      <param name="serviceMask" type="int">8</param>
+      <param name="serviceAdr" type="string">smsx:7963</param>
     </section>
 
     <section name="SMS-Group">
-      <param name="serviceCode" type="int">5</param>
-      <param name="serviceMask" type="int">8</param>
-      <param name="serviceAdr" type="string">smsx:205</param>
+      <param name="serviceCode" type="int">4</param>
+      <param name="serviceMask" type="int">16</param>
+      <param name="serviceAdr" type="string">smsx:7964</param>
+      <param name="chargeBearer" type="bool">true</param>
     </section>
 
     <section name="SMS-Flash-Calendar">
-      <param name="serviceCode" type="int">12</param>
-      <param name="serviceMask" type="int">3</param> <!-- 1+2 -->
-      <param name="serviceAdr" type="string">smsx:212</param>
+      <param name="serviceCode" type="int">5</param>
+      <param name="serviceMask" type="int">6</param> <!-- 4+2 -->
+      <param name="serviceAdr" type="string">smsx:7965</param>
     </section>
 
     <section name="SMS-Flash-Secret">
-      <param name="serviceCode" type="int">13</param>
-      <param name="serviceMask" type="int">5</param> <!-- 1+4 -->
-      <param name="serviceAdr" type="string">smsx:213</param>
+      <param name="serviceCode" type="int">6</param>
+      <param name="serviceMask" type="int">10</param> <!-- 8+2 -->
+      <param name="serviceAdr" type="string">smsx:7965</param>
     </section>
 
     <section name="SMS-Flash-Group">
-      <param name="serviceCode" type="int">14</param>
-      <param name="serviceMask" type="int">9</param> <!-- 1+8 -->
-      <param name="serviceAdr" type="string">smsx:214</param>
+      <param name="serviceCode" type="int">7</param>
+      <param name="serviceMask" type="int">18</param> <!-- 16+2 -->
+      <param name="serviceAdr" type="string">smsx:7965</param>
+      <param name="chargeBearer" type="bool">true</param>
     </section>
+
+    <section name="SMS-Calendar-Group">
+      <param name="serviceCode" type="int">8</param>
+      <param name="serviceMask" type="int">20</param> <!-- 4+16 -->
+      <param name="serviceAdr" type="string">smsx:7965</param>
+    </section>
+
   </section>
 </config>
 

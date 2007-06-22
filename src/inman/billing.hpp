@@ -48,12 +48,51 @@ using smsc::inman::interaction::DeliverySmsResult;
 namespace smsc    {
 namespace inman   {
 
+class CAPSmsStatus {
+public:
+    unsigned        dlg_id;
+    CapSMSDlg *     pDlg;
+    TonNpiAddress   dstAdr;
+    bool            active;
+    bool            answered;
+    bool            ended;
+    RCHash          scfErr;
+    ChargeSmsResult::ChargeSmsResult_t  chgRes;
+
+    CAPSmsStatus()
+        : dlg_id(0), pDlg(0), active(false), answered(false), ended(false)
+        , scfErr(0), chgRes(ChargeSmsResult::CHARGING_NOT_POSSIBLE)
+    { }
+    CAPSmsStatus(const TonNpiAddress & dst_adr, CapSMSDlg *cap_dlg = NULL)
+        : dlg_id(cap_dlg ? cap_dlg->getId() : 0), pDlg(cap_dlg), dstAdr(dst_adr)
+        , active(cap_dlg ? true : false), answered(false), ended(false)
+        , scfErr(0), chgRes(ChargeSmsResult::CHARGING_NOT_POSSIBLE)
+    { }
+
+    void abortDlg(void)
+    {
+        if (active) {
+            pDlg->endDPSMS(); //send sms_o_failure to SCF if necessary
+            active = false; ended = true;
+        }
+    }
+
+    ~CAPSmsStatus()
+    {
+        if (pDlg) {
+            abortDlg();
+            delete pDlg;
+            pDlg = NULL;
+        }
+    }
+};
+
 class Billing : public WorkerAC, public CapSMS_SSFhandlerITF, 
                 public IAPQueryListenerITF, public TimerListenerITF
                 /*,INPBillingHandlerITF*/ {
 public:
     typedef enum {
-        bilIdle, bilAborted,
+        bilIdle,
         bilStarted,     // SSF <- SMSC : CHARGE_SMS_TAG
         bilQueried,     // SSF <- IAProvider: query result
         bilInited,      // SSF -> SCF : InitialDPSMS
@@ -61,8 +100,9 @@ public:
                         // SSF -> SMSC : CHARGE_SMS_RESULT_TAG(No)
         bilContinued,   // SSF <- SCF : ContinueSMS
                         // SSF -> SMSC : CHARGE_SMS_RESULT_TAG(Ok)
-        bilApproved,    // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
-        bilReported,    // SSF -> SCF : EventReportSMS
+        bilAborted,     // SSF <- SMSC : Abort
+        bilReported,    // SSF <- SMSC : DELIVERY_SMS_RESULT_TAG
+                        // SSF -> SCF : EventReportSMS
         bilComplete     // 
     } BillingState;
 
@@ -105,6 +145,98 @@ protected:
 
 private:
     typedef std::map<unsigned, StopWatch*> TimersMAP;
+    typedef std::list<CAPSmsStatus> IDPStatus;
+
+    class IDPResult {
+    public:
+        uint8_t     dlgCnt;
+        IDPStatus   dlgRes;
+
+        inline void prepareDlg(const TonNpiAddress & dst_adr, CapSMSDlg *cap_dlg = NULL)
+        {
+            dlgRes.push_back(CAPSmsStatus(dst_adr, cap_dlg));
+            ++dlgCnt;
+        }
+        CAPSmsStatus * getIDPDlg(unsigned dlg_id)
+        {
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it) {
+                if (it->dlg_id == dlg_id)
+                    return it.operator->();
+            }
+            return NULL;
+        }
+
+        bool allEnded(void)
+        {
+            bool res = true;
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it)
+                res &= (it->ended ? true : false);
+            return res;
+        }
+
+        bool allAnswered(void)
+        {
+            if (dlgRes.empty())
+                return false;
+
+            bool res = true;
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it)
+                res &= (it->answered ? true : false);
+            return res;
+        }
+
+        bool allActive(void)
+        {
+            if (dlgRes.empty())
+                return false;
+
+            bool res = true;
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it)
+                res &= (it->active ? true : false);
+            return res;
+        }
+
+        unsigned numActive(void)
+        {
+            unsigned res = 0;
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it)
+                if (it->active) ++res;
+            return res;
+        }
+
+        ChargeSmsResult::ChargeSmsResult_t Result(void)
+        {
+            ChargeSmsResult::ChargeSmsResult_t res = ChargeSmsResult::CHARGING_POSSIBLE;
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it) {
+                if (res < it->chgRes)
+                    res = it->chgRes;
+            }
+            return res;
+        }
+
+        //Returns first SCF error encountered
+        RCHash SCFError(void)
+        {
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it) {
+                if (it->scfErr)
+                    return it->scfErr;
+            }
+            return 0;
+        }
+
+        void cleanUp(void)
+        {
+            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it)
+                delete it.operator->();
+            dlgRes.clear();
+            dlgCnt = 0;
+        }
+
+        IDPResult() : dlgCnt(0)
+        { }
+        ~IDPResult() { cleanUp(); }
+    };
+    
 
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
@@ -116,6 +248,7 @@ private:
     RCHash startCAPDialog(INScfCFG * use_scf);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
+    PGraphState verifyIDPresult(CAPSmsStatus * res, const char * res_reason = NULL);
     PGraphState chargeResult(ChargeSmsResult::ChargeSmsResult_t chg_res, RCHash inmanErr = 0);
     PGraphState ConfigureSCFandCharge(void);
 
@@ -125,9 +258,8 @@ private:
     char            _logId[sizeof("Billing[%u:%u]") + sizeof(unsigned int)*3 + 1];
     BillingState    state;
 
-    TCSessionSR*    capSess;   //TCAP dialogs factory
-    bool            capDlgActive;
-    CapSMSDlg*      capDlg;     //Cap3SMS dialog controlling class
+    TCSessionSR*    capSess;    //TCAP dialogs factory
+    IDPResult       idpRes;     //Cap3SMS dialog(s) controlling class
 
     CDRRecord       cdr;        //data for CDR record creation & CAP3 interaction
     SMCAPSpecificInfo csInfo;   //data for CAP3 interaction

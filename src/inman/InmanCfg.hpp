@@ -659,9 +659,12 @@ protected:
         else if (!xSrv.adr.fromText(cstr))
             throw ConfigException("'serviceAdr' is invalid: %s", cstr);
 
+        try { xSrv.chargeBearer = srvCfg->getBool("chargeBearer"); } //optional param
+        catch (ConfigException& exc) { }
+
         bill.smsXMap.insert(SmsXServiceMap::value_type(xSrv.mask, xSrv));
-        smsc_log_info(logger, "  service[0x%x]: %u, %s", xSrv.mask, xSrv.cdrCode,
-                      xSrv.adr.toString().c_str());
+        smsc_log_info(logger, "  service[0x%x]: %u, %s%s", xSrv.mask, xSrv.cdrCode,
+                      xSrv.adr.toString().c_str(), xSrv.chargeBearer ? ", chargeBearer" : "");
         return;        
     }
 
