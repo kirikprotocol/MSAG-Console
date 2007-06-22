@@ -46,11 +46,11 @@ CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
     if (!dialog)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                     "capSMS", "unable to create TC dialog");
+    capId = (unsigned)dialog->getId();
+    snprintf(_logId, sizeof(_logId)-1, "CapSMS[0x%X]", capId);
     
     dialog->setInvokeTimeout(timeout);
     dialog->addListener(this);
-    capId = (unsigned)dialog->getId();
-    snprintf(_logId, sizeof(_logId)-1, "CapSMS[0x%X]", capId);
 }
 
 CapSMSDlg::~CapSMSDlg()
@@ -64,7 +64,7 @@ void CapSMSDlg::endDPSMS(void)
 {
     MutexGuard  grd(_sync);
     if (_capState.preReport())
-        eventReportSMS(false);
+        eventReportSMS(false); //and wait for T_END_IND or L_CANCEL
     else
         endTCap();
     ssfHdl = NULL;
