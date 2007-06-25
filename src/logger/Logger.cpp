@@ -67,6 +67,7 @@ Mutex                 Logger::static_mutex;
 
 Logger *_trace_cat = NULL;
 Logger *_map_cat = NULL;
+Logger *_mapmsg_cat = NULL;
 Logger *_mapdlg_cat = NULL;
 Logger *_mapproxy_cat = NULL;
 Logger *_sms_err_cat = NULL;
@@ -247,6 +248,7 @@ void Logger::clear() throw(Exception)
 
   _trace_cat = NULL;
   _map_cat = NULL;
+  _mapmsg_cat = NULL;
   _mapdlg_cat = NULL;
   _mapproxy_cat = NULL;
   _sms_err_cat = NULL;
@@ -325,6 +327,7 @@ void Logger::configure(const char * const configFileName) throw (Exception)
   initialized = true;
   _trace_cat=getInstanceInternal("trace");
   _map_cat=getInstanceInternal("map");
+  _mapmsg_cat=getInstanceInternal("map.msg");
   _mapdlg_cat=getInstanceInternal("map.dialog");
   _mapproxy_cat=getInstanceInternal("map.proxy");
   _sms_err_cat=getInstanceInternal("sms.error");
