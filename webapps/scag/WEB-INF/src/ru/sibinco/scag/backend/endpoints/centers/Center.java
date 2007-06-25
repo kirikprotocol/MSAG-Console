@@ -30,6 +30,9 @@ public class Center {
     public static final byte MODE_TRX = 3;
     public static final byte MODE_UNKNOWN = 0;
 
+    public static final String IN_QUEUE_LIMIT  = "inQueueLimit";
+    public static final String MAX_SMS_PER_SEC = "maxSmsPerSec";
+
     private String id = null;
     private byte type = SMPP;
     private int timeout = 0;
@@ -48,6 +51,8 @@ public class Center {
     private String addressRange;
     private String connHostPort = "";
     private String connStatus = "unknow";
+    private int inQueueLimit = -3;
+    private int maxSmsPerSec = -3;
 
     private Category logger = Category.getInstance(this.getClass());
 
@@ -71,6 +76,31 @@ public class Center {
         this.bindPassword = bindPassword;
         this.systemType = systemType;
         this.addressRange = addressRange;
+    }
+
+    public Center(String id, int timeout, byte mode, String host, int port, String altHost,
+                  int altPort, boolean enabled, final Provider provider,
+                  final int uid, final String bindSystemId, final String bindPassword, final String systemType,
+                  final String addressRange, final int inQueueLimit, final int maxSmsPerSec)
+                  throws NullPointerException {
+        if (null == id || bindSystemId == null)
+            throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
+        this.id = id;
+        this.timeout = timeout;
+        this.mode = mode;
+        this.host = host;
+        this.port = port;
+        this.altHost = altHost;
+        this.altPort = altPort;
+        this.enabled = enabled;
+        this.provider = provider;
+        this.uid = uid;
+        this.bindSystemId = bindSystemId;
+        this.bindPassword = bindPassword;
+        this.systemType = systemType;
+        this.addressRange = addressRange;
+        this.inQueueLimit = inQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
     }
 
     public Center(final Element centersElement, final ProviderManager providerManager) throws NullPointerException {
@@ -106,9 +136,12 @@ public class Center {
                     bindPassword = value;
                 } else if ("systemType".equals(name)) {
                     systemType = value;
-                }
-                else if ("addressRange".equals(name)){
+                } else if ("addressRange".equals(name)){
                     addressRange = value;
+                } else if (IN_QUEUE_LIMIT.equals(name)) {
+                    inQueueLimit = Integer.decode(value).intValue();
+                } else if (MAX_SMS_PER_SEC.equals(name)) {
+                    maxSmsPerSec = Integer.decode(value).intValue();
                 }
 
             } catch (NumberFormatException e) {
@@ -132,6 +165,8 @@ public class Center {
         this.provider = center.getProvider();
         this.uid = center.getUid();
         this.addressRange = center.getAddressRange();
+        this.inQueueLimit = center.getInQueueLimit();
+        this.maxSmsPerSec = center.getMaxSmsPerSec();
     }
 
     protected PrintWriter storeHeader(final PrintWriter out) {
@@ -163,6 +198,8 @@ public class Center {
         out.println("    <param name=\"uid\"            value=\"" + uid + "\"/>");
         out.println("    <param name=\"providerId\"     value=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"addressRange\"   value=\"" + addressRange.trim() + "\"/>");
+        out.println("    <param name=\""+ IN_QUEUE_LIMIT +"\"   value=\"" + inQueueLimit + "\"/>");
+        out.println("    <param name=\""+ MAX_SMS_PER_SEC +"\"   value=\"" + maxSmsPerSec + "\"/>");
         return out;
     }
 
@@ -368,5 +405,21 @@ public class Center {
 
     public void setConnHostPort(String connHostPort) {
         this.connHostPort = connHostPort;
+    }
+
+    public void setMaxSmsPerSec(int maxSmsPerSec) {
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public void setInQueueLimit(int inQueueLimit) {
+        this.inQueueLimit = inQueueLimit;
+    }
+
+    public int getInQueueLimit() {
+        return inQueueLimit;
+    }
+
+    public int getMaxSmsPerSec() {
+        return maxSmsPerSec;
     }
 }
