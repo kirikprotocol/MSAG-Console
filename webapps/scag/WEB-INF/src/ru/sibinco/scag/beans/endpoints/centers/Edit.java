@@ -55,7 +55,24 @@ public class Edit extends EditBean {
     private String addressRange = "";
     private long userProviderId = ALL_PROVIDERS;
     private Principal userPrincipal = null;
+    private int inQueueLimit = 0;
+    private int maxSmsPerSec = 0;
 
+    public void setInQueueLimit(int inQueueLimit) {
+        this.inQueueLimit = inQueueLimit;
+    }
+
+    public void setMaxSmsPerSec(int maxSmsPerSec) {
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public int getInQueueLimit() {
+        return inQueueLimit;
+    }
+
+    public int getMaxSmsPerSec() {
+        return maxSmsPerSec;
+    }
     private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
         if (userPrincipal == null)
@@ -121,6 +138,8 @@ public class Edit extends EditBean {
         this.bindPassword = center.getBindPassword();
         this.systemType = center.getSystemType();
         this.addressRange = center.getAddressRange();
+        this.maxSmsPerSec = center.getMaxSmsPerSec();
+        this.inQueueLimit = center.getInQueueLimit();
     }
 
     protected void save() throws SCAGJspException {
@@ -141,8 +160,11 @@ public class Edit extends EditBean {
         if (altHost == null || getAltHost().length() == 0) altHost = "";
         if (bindPassword == null || getBindPassword().length() == 0) bindPassword = "";
         if (systemType == null || getSystemType().length() == 0) systemType = "";
+//        center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
+//                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(), getAddressRange());
         center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
-                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(), getAddressRange());
+                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
+                getAddressRange(), inQueueLimit, maxSmsPerSec);
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),

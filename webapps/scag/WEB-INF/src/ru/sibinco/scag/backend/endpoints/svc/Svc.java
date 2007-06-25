@@ -32,6 +32,9 @@ public class Svc {
     public static final byte MODE_TRX = 3;
     public static final byte MODE_UNKNOWN = 0;
 
+    public static final String IN_QUEUE_LIMIT  = "inQueueLimit";
+    public static final String MAX_SMS_PER_SEC = "maxSmsPerSec";
+
     private String id = null;
     private String password = "";
     private int timeout = 0;
@@ -41,7 +44,9 @@ public class Svc {
     private String transport = "SMPP";
     private String connHost = "";
     private String connStatus = "unknow";
-    
+    private int inQueueLimit = -5;
+    private int maxSmsPerSec = -5;
+
     private byte type = SMPP;
 
     private Category logger = Category.getInstance(this.getClass());
@@ -49,8 +54,21 @@ public class Svc {
     public Svc() {
     }
 
+//    public Svc(final String id, final String password, final int timeout,
+//               final boolean enabled, final byte mode, final Provider provider) throws NullPointerException{
+//        if (null == id)
+//            throw new NullPointerException("SME ID or  password  is null");
+//        this.id = id.trim();
+//        this.password = password;
+//        this.timeout = timeout;
+//        this.enabled = enabled;
+//        this.mode = mode;
+//        this.provider = provider;
+//    }
+
     public Svc(final String id, final String password, final int timeout,
-               final boolean enabled, final byte mode, final Provider provider) throws NullPointerException{
+               final boolean enabled, final byte mode, final Provider provider,
+               final int inQueueLimit, final int maxSmsPerSec) throws NullPointerException{
         if (null == id)
             throw new NullPointerException("SME ID or  password  is null");
         this.id = id.trim();
@@ -59,9 +77,12 @@ public class Svc {
         this.enabled = enabled;
         this.mode = mode;
         this.provider = provider;
+        this.inQueueLimit = inQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
     }
 
-    public Svc(final Element svcElement, final ProviderManager providerManager) throws NullPointerException {
+    public Svc(final Element svcElement, final ProviderManager providerManager)
+            throws NullPointerException {
         final NodeList list = svcElement.getElementsByTagName("param");
         for (int i = 0; i < list.getLength(); i++) {
             final Element paramElem = (Element) list.item(i);
@@ -80,6 +101,10 @@ public class Svc {
                     mode = getMode(value);
                 } else if ("providerId".equals(name)) {
                    provider = (Provider) providerManager.getProviders().get(Long.decode(value));
+                } else if (IN_QUEUE_LIMIT.equals(name)) {
+                    inQueueLimit = Integer.decode(value).intValue();
+                } else if (MAX_SMS_PER_SEC.equals(name)) {
+                    maxSmsPerSec = Integer.decode(value).intValue();
                 }
             } catch (NumberFormatException e) {
                 logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
@@ -96,6 +121,8 @@ public class Svc {
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
         this.mode = svc.getMode();
+        this.inQueueLimit = svc.getInQueueLimit();
+        this.maxSmsPerSec = svc.getMaxSmsPerSec();
     }
 
 
@@ -116,7 +143,8 @@ public class Svc {
         out.println("    <param name=\"mode\"             value=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"          value=\"" + enabled + "\"/>");
         out.println("    <param name=\"providerId\"       value=\"" + -1/*provider.getId()*/ + "\"/>");
-
+        out.println("    <param name=\"" + IN_QUEUE_LIMIT  + "\"     value=\"" + getInQueueLimit() + "\"/>");
+        out.println("    <param name=\"" + MAX_SMS_PER_SEC + "\"     value=\"" + getMaxSmsPerSec() + "\"/>");
         return out;
     }
 
@@ -165,6 +193,8 @@ public class Svc {
         timeout = newSvc.getTimeout();
         enabled = newSvc.isEnabled();
         mode = newSvc.getMode();
+        inQueueLimit = newSvc.getInQueueLimit();
+        maxSmsPerSec = newSvc.getMaxSmsPerSec();
     }
 
 
@@ -253,6 +283,22 @@ public class Svc {
 
     public void setConnStatus(String connStatus) {
         this.connStatus = connStatus;
+    }
+
+    public void setMaxSmsPerSec(int maxSmsPerSec) {
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public void setInQueueLimit(int inQueueLimit) {
+        this.inQueueLimit = inQueueLimit;
+    }
+
+    public int getInQueueLimit() {
+        return inQueueLimit;
+    }
+
+    public int getMaxSmsPerSec() {
+        return maxSmsPerSec;
     }
 }
 

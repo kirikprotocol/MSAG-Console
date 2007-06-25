@@ -45,12 +45,9 @@ public class Edit extends EditBean {
     private String[] providerNames = null;
     private boolean administrator = false;
     private long userProviderId = ALL_PROVIDERS;
+    private int inQueueLimit = 0;
+    private int maxSmsPerSec = 0;
 
-
-    public String getId() {
-        if(id != null)id.trim();
-        return id;
-    }
 
     private void init() throws SCAGJspException {
 
@@ -104,12 +101,13 @@ public class Edit extends EditBean {
         this.providerId = -1;//svc.getProvider().getId();
         this.timeout = svc.getTimeout();
         this.enabled = svc.isEnabled();
+        this.maxSmsPerSec = svc.getMaxSmsPerSec();
+        this.inQueueLimit = svc.getInQueueLimit();
     }
 
     protected void save() throws SCAGJspException {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
-
         if (null == password || getPassword().length() == 0)
             password = "";
         final Provider providerObj = null;
@@ -122,7 +120,8 @@ public class Edit extends EditBean {
         }
         svcs.remove(getEditId());
         final Svc svc;
-        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
+//        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
+        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
         svcs.put(getId(), svc);
         final Scag scag = appContext.getScag();
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
@@ -141,6 +140,10 @@ public class Edit extends EditBean {
         this.id = id;
     }
 
+    public String getId() {
+        if(id != null)id.trim();
+        return id;
+    }
 
     public byte getType() {
         return type;
@@ -205,6 +208,10 @@ public class Edit extends EditBean {
         return providerName;
     }
 
+    public void setProviderName(String providerName) {
+        this.providerName = providerName;
+    }
+
     public String[] getProviderIds() {
         return providerIds;
     }
@@ -223,6 +230,22 @@ public class Edit extends EditBean {
 
     public String[] getTransportTitles() {
         return Transport.transportTitles;
+    }
+
+    public void setInQueueLimit(int inQueueLimit) {
+        this.inQueueLimit = inQueueLimit;
+    }
+
+    public void setMaxSmsPerSec(int maxSmsPerSec) {
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public int getInQueueLimit() {
+        return inQueueLimit;
+    }
+
+    public int getMaxSmsPerSec() {
+        return maxSmsPerSec;
     }
 }
 
