@@ -222,9 +222,10 @@ void IAPQuerySRI::onEndMapDlg(RCHash ercode/* = 0*/)
 {
     MutexGuard  grd(_mutex);
     if (ercode) {
+        _qStatus = IAPQStatus::iqError;
+        _exc = URCRegistry::explainHash(ercode);
         smsc_log_error(logger, "%s(%s): query failed: code 0x%x, %s\n",
-                        taskName(), abonent.getSignals(), ercode,
-                        URCRegistry::explainHash(ercode).c_str());
+                        taskName(), abonent.getSignals(), ercode, _exc.c_str());
     }
     qsig.Signal();
 }
