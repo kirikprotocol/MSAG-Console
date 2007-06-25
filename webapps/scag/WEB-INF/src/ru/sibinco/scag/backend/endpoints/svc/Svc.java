@@ -44,8 +44,8 @@ public class Svc {
     private String transport = "SMPP";
     private String connHost = "";
     private String connStatus = "unknow";
-    private int inQueueLimit = -5;
-    private int maxSmsPerSec = -5;
+    private int inQueueLimit = 0;
+    private int maxSmsPerSec = 0;
 
     private byte type = SMPP;
 
