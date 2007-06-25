@@ -21,6 +21,7 @@ using namespace smsc::smeman;
 namespace smsc{
 namespace logger{
 extern smsc::logger::Logger* _map_cat;
+extern smsc::logger::Logger* _mapmsg_cat;
 extern smsc::logger::Logger* _mapdlg_cat;
 }
 }
