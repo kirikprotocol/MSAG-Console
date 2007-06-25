@@ -4,11 +4,11 @@
 <!ATTLIST route
 	id CDATA #REQUIRED
 	archived (true | false) #REQUIRED
-	enabled (true | false) "true"
-	active (true|false) "true"
-	slicing CDATA #IMPLIED
+	enabled  (true | false) "true"
+	active   (true | false) "true"
+	slicing  (NONE | SAR | UDH) "NONE"
 	srcSmeId CDATA #IMPLIED
-  serviceId CDATA "-1"
+	serviceId CDATA "-1"
 >
 <!ELEMENT notes (#PCDATA)>
 <!ELEMENT source (subject | mask)>
