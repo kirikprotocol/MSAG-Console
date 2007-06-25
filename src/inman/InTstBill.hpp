@@ -235,7 +235,8 @@ public:
             op.setSmsXSrvs(dlg_cfg->xsmsIds);
 
         //fill delivery fields for CDR creation
-        op.setDestIMSI(dAdr->getImsi());
+        if (dAdr->getImsi())
+            op.setDestIMSI(dAdr->getImsi());
         op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
         op.setDestSMEid("DST_MAP_PROXY");
         op.setDivertedAdr(dAdr->msIsdn.toString());
@@ -248,7 +249,8 @@ public:
     {
         const AbonentInfo * dAdr = _abDB->getAbnInfo(dlg_cfg->dstId);
         //fill fields for CDR creation
-        op.setDestIMSI(dAdr->getImsi());
+        if (dAdr->getImsi())
+            op.setDestIMSI(dAdr->getImsi());
         op.setDestMSC(dAdr->msIsdn.interISDN() ? ".1.1.79139860001" : "");
         op.setDestSMEid("DST_MAP_PROXY");
         op.setDivertedAdr(dAdr->msIsdn.toString());
