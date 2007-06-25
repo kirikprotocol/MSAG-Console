@@ -31,6 +31,13 @@ struct AbonentRecord : public AbonentContractInfo {
         , tm_queried(ab_rec.tm_queried)
     { }
 
+    void Merge(const AbonentRecord & use_rcd)
+    {
+        AbonentContractInfo::Merge(use_rcd);
+        if (use_rcd.tm_queried)
+            tm_queried = use_rcd.tm_queried;
+    }
+
     void reset(void)    { tm_queried = 0; AbonentContractInfo::Reset(); }
 
     //NOTE: tm_queried = zero, means record ALWAYS expired!

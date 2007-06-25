@@ -599,7 +599,9 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
     if (billMode == ChargeObj::bill2IN) {
         const char * errmsg = NULL;
         const GsmSCFinfo * p_scf = abCsi.abRec.getSCFinfo();
-        if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
+        if (!abCsi.abRec.getImsi())
+            errmsg = "unable to determine abonent IMSI";
+        else if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
             abScf.scf = *p_scf;
             if (abPolicy) //lookup policy for extra SCF parms (serviceKey, RPC lists)
                 abPolicy->getSCFparms(&abScf);
@@ -624,7 +626,7 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
                             pin = NULL;
                     }
                     if (!pin)
-                        errmsg = "unable to determine IN params (postpaidRPC)";
+                        errmsg = "unable to determine IN params (no postpaidRPC)";
                 }
             }
         }
@@ -817,12 +819,13 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     }
     StopTimer(state);
     state = bilQueried;
-    abCsi.abRec = ab_info.abRec; //renew abonent info
+    if (qry_status != IAPQStatus::iqOk) {
+        billErr = _RCS_IAPQStatus->mkhash(qry_status);
+        abCsi.abRec.Merge(ab_info.abRec); //merge known abonent info
+    } else
+        abCsi.abRec = ab_info.abRec; //renew abonent info
     if (!ab_info.vlrNum.empty())
         abCsi.vlrNum = ab_info.vlrNum;
-
-    if (qry_status != IAPQStatus::iqOk)
-        billErr = _RCS_IAPQStatus->mkhash(qry_status);
 
     if (ConfigureSCFandCharge() == Billing::pgEnd)
         doFinalize();
