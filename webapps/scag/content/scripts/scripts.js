@@ -56,13 +56,13 @@ function validateField_port(elem)
 		: true;
 }
 
-function validateField_mask(elem)
+function validateField_mask(elem, noEmpty)
 {
-	if (elem.value == null || elem.value.length == 0)
+	if( noEmpty==1 && (elem.value == null || elem.value.length == 0) )
 	{
 		return true;
 	}
-	//var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
+    //var pattern_header = "^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?";
 	//var pattern1 = RegExp(pattern_header + "\\d{1,20}\\?{0,19}$");
 	//var pattern2 = RegExp(pattern_header + "(\\d|\\?){1,20}$");
 	var pattern1 = /^((\.[0-6]\.(0|1|3|4|6|8|9|10|14|18)\.)|(\+))?\d{0,20}\?{0,20}$/;
@@ -83,9 +83,9 @@ function validateField_mask(elem)
 		: true;
 }
 
-function validateField_routeMask(elem)
+function validateField_routeMask(elem, noEmpty)
 {
-	return validateField_mask(elem);
+	return validateField_mask(elem, noEmpty);
 }
 
 function validateField_select(elem)
@@ -263,8 +263,9 @@ function validateField(elem)
 	{
 		case "port":return validateField_port(elem);
 		case "mask":return validateField_mask(elem);
-		case "routeMask":return validateField_routeMask(elem);
-		case "select":return validateField_select(elem);
+		case "routeMask":return validateField_routeMask(elem, 0);
+        case "routeMaskNonEmpty":return validateField_routeMask(elem, 1);
+        case "select":return validateField_select(elem);
 		case "priority":return validateField_priority(elem);
 		case "route_serviceId": return validateField_route_serviceId(elem);
 		case "nonEmpty": return validateField_nonEmpty(elem);
