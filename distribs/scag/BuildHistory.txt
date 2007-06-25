@@ -107,3 +107,11 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2) MSAG FIX: LCM in PVSS actions fix (on expiration)
 3) PVSS CRITICAL CHANGE: New storage implemented. Some optimizations. (not by tag TESTING yet)
 4) PVSS CHANGE: Some performance optimizations.
+
+=================================================================================================================
+25.06.2007 16:00 makar
+1) MSAG CHANGE: Implemented traffic limitation by sme, smppQueue limit added
+2) MSAG Admin CHANGE: maxSmsPerSec, smppQueueLimit params added
+3) MSAG Admin FIX: Empty masks in SMPP routes & subjects fixes, dtd fixes
+4) MSAG CRITICAL CHANGE: Added session start/finish sections in RE
+ 
