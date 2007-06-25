@@ -55,6 +55,7 @@ public class SmppManager extends Manager {
 
 
     public SmppManager(String configFilename, ProviderManager providerManager) {
+        logger.debug( "SmppManager(String string, ProviderManager providerManager)ConfigFilename: " + configFilename );
         this.configFilename = configFilename;
         this.providerManager = providerManager;
     }
