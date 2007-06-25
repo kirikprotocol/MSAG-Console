@@ -279,6 +279,15 @@ void MapIoTask::dispatcher()
     }
 
     __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
+    if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 1024) {
+      char text[4097];
+      int k = 0;
+      for ( int i=0; i<message.size; i++) {
+        k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
+      }
+      text[k]=0;
+      __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv msg: %s",text);
+    }
     if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 ) {
       __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[6] = 0;
@@ -325,7 +334,6 @@ void MapIoTask::dispatcher()
       __map_warn__("Unknown exception occured during processing MAP primitive");
     }
     if ( map_result != ET96MAP_E_OK && smsc::logger::_map_cat->isWarnEnabled() ) {
-    {
       char *text = new char[message.size*4+1];
       int k = 0;
       for ( int i=0; i<message.size; i++) {
@@ -334,7 +342,6 @@ void MapIoTask::dispatcher()
       text[k]=0;
       __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text);
       delete text;
-    }
     }
 #if EINSS7_THREADSAFE == 1
     EINSS7CpReleaseMsgBuffer(&message);
