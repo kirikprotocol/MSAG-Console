@@ -1,4 +1,4 @@
-<!ELEMENT records (smerecord|smscrecord)*>
+<!ELEMENT records (smerecord|smscrecord|param_conf)*>
 
 <!ELEMENT smerecord (param+)>
 <!ELEMENT smscrecord (param+)>
@@ -6,5 +6,9 @@
 <!ELEMENT param (#PCDATA)>
 <!ATTLIST param 
 name (systemId|password|timeout|mode|enabled|host|port|althost|altport|uid|
-      bindSystemId|bindPassword|providerId) #REQUIRED
+      bindSystemId|bindPassword|providerId|addressRange|systemType|inQueueLimit|maxSmsPerSec) #REQUIRED
 value CDATA #REQUIRED>
+
+<!ELEMENT param_conf (#PCDATA)>
+<!ATTLIST param_conf name CDATA #REQUIRED type (string|int|bool) #IMPLIED>
+
