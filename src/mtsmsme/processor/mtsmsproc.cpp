@@ -389,8 +389,11 @@ USHORT_T EINSS7_I96SccpBindConf(UCHAR_T ssn,
   if ( state == SCCPBINDING )
   {
     cancelTimer(&conftimer);
-    if (result == EINSS7_I96SCCP_NB_SUCCESS ||
-        result == EINSS7_I96SCCP_SSN_ALREADY_IN_USE)
+    if (result == EINSS7_I96SCCP_NB_SUCCESS)
+        /* 
+         * Useless to allow ALREADY_IN_USE treated as OK because get BROKEN CONNECTION on next MsgRecvEvent
+         * result == EINSS7_I96SCCP_SSN_ALREADY_IN_USE)
+         */
     {
       changeState(WORKING);
     }
