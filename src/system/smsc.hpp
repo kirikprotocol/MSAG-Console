@@ -249,7 +249,8 @@ public:
         smePerfMonitor.incAccepted(sms->getSourceSmeId());
 #ifdef SNMP
         SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
-        smeStats.incCounter(smeman.lookup(sms->getSourceSmeId()),smsc::stat::SmeStats::cntAccepted);
+        int smeIdx=smeman.lookup(sms->getSourceSmeId());
+        smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntAccepted);
 #endif
       }break;
       case etSubmitErr:
@@ -260,7 +261,9 @@ public:
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
 #ifdef SNMP
         SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
-        smeStats.incCounter(smeman.lookup(sms->getSourceSmeId()),smsc::stat::SmeStats::cntRejected);
+        int smeIdx=smeman.lookup(sms->getSourceSmeId());
+        smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntRejected);
+        smeStats.incError(smeIdx,sms->getLastResult());
 #endif
       }break;
       case etDeliveredOk:
@@ -270,7 +273,9 @@ public:
         deliverOkCounter++;
         smePerfMonitor.incDelivered(sms->getDestinationSmeId());
 #ifdef SNMP
-        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntDelivered);
+        int smeIdx=smeman.lookup(sms->getDestinationSmeId());
+        smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntDelivered);
+        smeStats.incError(smeIdx,0);
 #endif
       }break;
       case etDeliverErr:
@@ -280,7 +285,9 @@ public:
         deliverErrTempCounter++;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
-        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntTempError);
+        int smeIdx=smeman.lookup(sms->getDestinationSmeId());
+        smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntTempError);
+        smeStats.incError(smeIdx,sms->getLastResult());
 #endif
       }break;
       case etUndeliverable:
@@ -290,7 +297,9 @@ public:
         deliverErrPermCounter++;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
-        smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntFailed);
+        int smeIdx=smeman.lookup(sms->getDestinationSmeId());
+        smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntFailed);
+        smeStats.incError(smeIdx,sms->getLastResult());
 #endif
       }break;
       case etRescheduled:

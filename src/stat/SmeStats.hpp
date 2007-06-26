@@ -14,6 +14,11 @@ class SmeStats
 {
 public:
   enum CounterId{cntAccepted,cntRejected,cntRetried,cntDelivered,cntFailed,cntTempError};
+  enum {
+    MAX_ERROR_INDEX=1500
+  };
+
+  typedef std::vector<uint64_t> ErrCntVector;
 
   struct Counters{
     uint64_t cnt[cntTempError+1];
@@ -26,6 +31,11 @@ public:
   SmeStats()
   {
     smeStats.resize(MAX_SME_PROXIES);
+    smeErrors.resize(MAX_SME_PROXIES);
+    for(int i=0;i<MAX_SME_PROXIES;i++)
+    {
+      smeErrors[i].resize(MAX_ERROR_INDEX,0);
+    }
   }
 
   void incCounter(int smeIdx,CounterId id)
@@ -39,13 +49,40 @@ public:
     smeStats[smeIdx].cnt[id]++;
   }
 
+  void incError(int smeIdx,int errCode)
+  {
+    if(smeIdx<0 || smeIdx>smeStats.size() || errCode<0 || errCode>MAX_ERROR_INDEX)
+    {
+      //error
+      return;
+    }
+    smsc::core::synchronization::MutexGuard mg(mtx);
+    smeErrors[smeIdx][errCode]++;
+  }
+
+  void getErrors(int smeIdx,ErrCntVector& rv)
+  {
+    if(smeIdx<0 || smeIdx>smeStats.size())
+    {
+      //error
+      return;
+    }
+    rv=smeErrors[smeIdx];
+  }
+
   const Counters& getCnt(int smeIdx)
   {
+    if(smeIdx<0 || smeIdx>smeStats.size())
+    {
+      //error
+      return Counters();
+    }
     return smeStats[smeIdx];
   }
 
 protected:
   std::vector<Counters> smeStats;
+  std::vector<ErrCntVector> smeErrors;
   smsc::core::synchronization::Mutex mtx;
 };
 
