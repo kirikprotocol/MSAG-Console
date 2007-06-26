@@ -30,6 +30,9 @@ while(<IN>)
   s/[\x0d\x0a]//gsm;
   next if /^#/;
   next if /^\s*$/;
+#  print "before:$_\n";
+  s/(\$\((\w+)\))/if(exists($ENV{$2})){$ENV{$2}}else{$1}/ge;
+#  print "after:$_\n";
   my @f=split(/\s+/);
   my $bin=shift @f;
   my $src=shift @f;
