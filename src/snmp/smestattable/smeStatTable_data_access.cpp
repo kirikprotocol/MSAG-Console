@@ -15,6 +15,7 @@
 #include "smeStatTable_data_access.hpp"
 #include "smeman/smeman.h"
 #include "stat/SmeStats.hpp"
+#include "util/config/Manager.h"
 
 /** @defgroup data_access data_access: Routines to access data
  *
@@ -141,7 +142,15 @@ smeStatTable_container_init(netsnmp_container **container_ptr_ptr,
      * by the MFD helper. To completely disable caching, set
      * cache->enabled to 0.
      */
-    cache->timeout = SMESTATTABLE_CACHE_TIMEOUT; /* seconds */
+    int to=60;
+    try{
+      to=smsc::util::config::Manager::getInstance().getInt("snmp.cacheTimeout");
+    }
+    catch(...)
+    {
+      __warning2__("Config parameter snmp.cacheTimeout not found, using default=%d",to);
+    }
+    cache->timeout = to; /* seconds */
 } /* smeStatTable_container_init */
 
 
@@ -207,7 +216,7 @@ smeStatTable_cache_load(netsnmp_container *container)
         return MFD_ERROR;
     }
     rowreq_ctx->data.smeStatSystemId_len = info.systemId.length();
-    memcpy( rowreq_ctx->data.smeStatSystemId, info.systemId.c_str(), rowreq_ctx->data.smeStatSystemId_len );
+    memcpy( rowreq_ctx->data.smeStatSystemId, info.systemId.c_str(), rowreq_ctx->data.smeStatSystemId_len+1);
 
     rowreq_ctx->data.smeStatAccepted.high = smeStatAccepted.high;
     rowreq_ctx->data.smeStatAccepted.low = smeStatAccepted.low;

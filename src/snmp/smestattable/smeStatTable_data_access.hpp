@@ -40,7 +40,7 @@ namespace smestattable{
  * TODO:180:o: Review smeStatTable cache timeout.
  * The number of seconds before the cache times out
  */
-#define SMESTATTABLE_CACHE_TIMEOUT   60
+//#define SMESTATTABLE_CACHE_TIMEOUT   60
 
 void smeStatTable_container_init(netsnmp_container **container_ptr_ptr,
                              netsnmp_cache *cache);

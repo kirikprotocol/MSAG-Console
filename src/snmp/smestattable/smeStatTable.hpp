@@ -14,14 +14,6 @@
  */
 #include <net-snmp/library/asn1.h>
 
-/* other required module components */
-    /* *INDENT-OFF*  */
-config_require(SIBINCO-SMSC-MIB/smeStatTable/smeStatTable_interface);
-config_require(SIBINCO-SMSC-MIB/smeStatTable/smeStatTable_data_access);
-config_require(SIBINCO-SMSC-MIB/smeStatTable/smeStatTable_data_get);
-config_require(SIBINCO-SMSC-MIB/smeStatTable/smeStatTable_data_set);
-    /* *INDENT-ON*  */
-
 namespace smsc{
 namespace smeman{
 class SmeManager;
