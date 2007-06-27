@@ -21,9 +21,6 @@ XERCES_CPP_NAMESPACE_USE
 
 class DOMPrintErrorHandler : public DOMErrorHandler
 {
-  /* Unimplemented constructors and operators */
-  DOMPrintErrorHandler(const DOMErrorHandler&);
-  void operator=(const DOMErrorHandler&);
 public:
   DOMPrintErrorHandler(){};
   ~DOMPrintErrorHandler(){};
@@ -41,6 +38,11 @@ public:
     return true;
   }      
   void resetErrors(){};
+private:
+    /* Unimplemented constructors and operators */
+  DOMPrintErrorHandler(const DOMErrorHandler&);
+  void operator=(const DOMErrorHandler&);
+
 };  
 
 }//mms

@@ -23,8 +23,6 @@ namespace mms {
 XERCES_CPP_NAMESPACE_USE
 
 class XStr {
-private:
-  XMLCh* unicode_form;
 public:
   XStr(const char* const to_transcode) {
     unicode_form = XMLString::transcode(to_transcode);
@@ -35,11 +33,12 @@ public:
   const XMLCh* unicodeForm() const {
     return unicode_form;
   }
+
+private:
+  XMLCh* unicode_form;
 };
 
 class StrX {
-private:
-  char* local_form;
 public:
   StrX(const XMLCh* const to_transcode) {
     local_form = XMLString::transcode(to_transcode);
@@ -50,6 +49,9 @@ public:
   const char* localForm() const {
     return local_form;
   }
+
+private:
+  char* local_form;
 };
 
 namespace xml {
@@ -136,8 +138,9 @@ namespace xml {
   static const char* ENVELOPE               = "Envelope";
   static const char* HEADER                 = "Header";
   static const char* BODY                   = "Body";
-  static const char* ENVELOPE_URI           = "http://schemasxmlsoap.org/soap/envelope";
-  static const char* MM7_URI                = "http://www.w3c.org/ftp/Specs/archive/23_series/23_series/23.140/schema/REL-6-MM7-1-4";
+  static const char* ENVELOPE_URI           = "http://schemas.xmlsoap.org/soap/envelope/";
+  static const char* MM7_URI                = "http://www.3gpp.org/ftp/Specs/archive/23_series/23.140/schema/REL-6-MM7-1-4";
+  static const char* SCHEMA_LOCATION        = "http://www.3gpp.org/ftp/Specs/archive/23_series/23.140/schema/REL-6-MM7-1-4 ./REL-6-MM7-1-4.xsd";
   
   static const char* SENDER_ID             = "SenderIdentification";
   static const char* MM7_VERSION           = "MM7Version";
@@ -304,3 +307,4 @@ static inline time_t mm7Time2CTime(const char* mms_time) {
 }//scag
 
 #endif
+

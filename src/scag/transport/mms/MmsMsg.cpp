@@ -91,9 +91,10 @@ void Address::test() {
 
 Address::~Address() {}
 
-MmsMsg::MmsMsg():command_id(0) {}
+MmsMsg::MmsMsg():command_id(0), mms_version(DEFAULT_MMS_VERSION) {}
 
-MmsMsg::MmsMsg(string _transaction_id, uint8_t _command_id):command_id(_command_id) {
+MmsMsg::MmsMsg(string _transaction_id, uint8_t _command_id)
+       :command_id(_command_id), mms_version(DEFAULT_MMS_VERSION) {
   setTransactionId(_transaction_id);
   //setCommandId(_command_id);
 }
@@ -157,8 +158,8 @@ uint8_t MmsMsg::getCommandId() const {
   return command_id;
 }
 
-void MmsMsg::setTransactionId(string id) {
-  transaction_id = id;
+void MmsMsg::setTransactionId(string _id) {
+  transaction_id = _id;
 }
 
 string MmsMsg::getTransactionId() const{
@@ -176,6 +177,38 @@ string MmsMsg::getMmsVersion() const{
 void MmsMsg::addField(const char* name, string value) {
   if (name && strcmp(name, "") != 0) {
     mms_fields.Insert(name, value);
+  }
+}
+
+string MmsMsg::getInfoElement(const char* element_name) const {
+  const std::string* value = mms_fields.GetPtr(element_name);
+  if (value) {
+    return *value;
+  } else {
+    return "";
+  }
+}
+
+void MmsMsg::setInfoElement(const char* name, string value) {
+  if (name && strcmp(name, "") != 0) {
+    mms_fields.Insert(name, value);
+  }
+  //return mms_fields.Insert(name,value);
+}
+
+bool MmsMsg::isMM7Req() const {
+  if (command_id >= MM7_SUBMIT && command_id <= MM7_READ_REPLY) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool MmsMsg::isMM4Req() const {
+  if (command_id >= MM4_FORWARD && command_id <= MM4_READ_REPLY_REPORT) {
+    return true;
+  } else {
+    return false;
   }
 }
 
@@ -213,8 +246,7 @@ bool MmsMsg::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
   }
   header->appendChild(transact_id);
   if (transaction_id.empty()) {
-    __trace__("Serialization Error : Mandatory field \"Transaction ID\" not set");
-    return false;
+    throw Exception("Serialization Error : Mandatory field \"TransactionID\" not set");
   }
   DOMText* transact_id_val = doc->createTextNode(XStr(transaction_id.c_str()).unicodeForm());
   transact_id->appendChild(transact_id_val);
@@ -237,22 +269,30 @@ string MmsMsg::serialize() const {
     return serialized_msg;
   } 
   DOMDocument* doc = impl->createDocument(XStr(xml::ENVELOPE_URI).unicodeForm(), XStr(xml::ENVELOPE).unicodeForm(), 0);
+  if (!doc) {
+    return serialized_msg;
+  }
   DOMElement* root_element = doc->getDocumentElement();
   root_element->setPrefix(XStr(xml::ENV_PREFIX).unicodeForm());
-  
+ /*
   if (!getXMLDocument(doc, root_element)) {
     doc->release();
     return serialized_msg;
   }
+*/
+  try {
+    getXMLDocument(doc, root_element);
+  } catch (const Exception& e) {
+    doc->release();
+    throw;
+  }
   doc->normalizeDocument();
   DOMWriter* serializer = ((DOMImplementationLS*)impl)->createDOMWriter();
+  serializer->setNewLine(XStr("\n").unicodeForm());
   if (serializer->canSetFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true))
     serializer->setFeature(XMLUni::fgDOMWRTFormatPrettyPrint, true);
-  //if (serializer->canSetFeature(XMLUni::fgDOMWRTSplitCdataSections, true))
-    //serializer->setFeature(XMLUni::fgDOMWRTSplitCdataSections, true);
   std::auto_ptr<DOMErrorHandler> handler(new DOMPrintErrorHandler());
   serializer->setErrorHandler(handler.get());
-  //serializer->setEncoding(XStr("UTF-8").unicodeForm());
   XMLCh *str = serializer->writeToString(*doc);
   if (str != NULL) {
     Convertor::UCS2ToUTF8(str, XMLString::stringLen(str), serialized_msg);
@@ -280,9 +320,7 @@ SingleAddress MM7GenericVASPReq::getSenderAddress() const {
 
 bool MM7GenericVASPReq::getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_element,
                                               const char* command_name) const {
-  if (!MmsMsg::getXMLDocument(doc, root_element)) {
-    return false;
-  }
+  MmsMsg::getXMLDocument(doc, root_element);
   DOMElement* req_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
                                                  XStr(command_name).unicodeForm());
   root_element->appendChild(req_element);
@@ -290,8 +328,7 @@ bool MM7GenericVASPReq::getGenericXMLDocument(DOMDocument* doc, DOMElement*& roo
   const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);      						 
   string version = getMmsVersion();
   if (!ptr && version.empty()) {
-    __trace2__("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
-    return false;
+    throw Exception("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
   }
   if (version.empty() && ptr) {
     version = *ptr;
@@ -334,9 +371,7 @@ SingleAddress MM7GenericRSReq::getSenderAddress() const {
 
 bool MM7GenericRSReq::getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_element,
                                             const char* command_name) const {
-  if (!MmsMsg::getXMLDocument(doc, root_element)) {
-    return false;
-  }
+  MmsMsg::getXMLDocument(doc, root_element);
   DOMElement* req_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
                                                  XStr(command_name).unicodeForm());
   root_element->appendChild(req_element);
@@ -344,8 +379,7 @@ bool MM7GenericRSReq::getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_
   const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);      						 
   string version = getMmsVersion();
   if (!ptr && version.empty()) {
-    __trace2__("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
-    return false;
+    throw Exception("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
   }
   if (version.empty() && ptr) {
     version = *ptr;
@@ -368,6 +402,12 @@ MM7GenericRSReq::~MM7GenericRSReq() {
 }
 
 MM7Submit::MM7Submit(string _transaction_id):MM7GenericVASPReq(_transaction_id, MM7_SUBMIT) {
+}
+
+MmsMsg* MM7Submit::getResponse() const {
+  MmsMsg* _mms_msg = new MM7SubmitResp(transaction_id);
+  _mms_msg->addField(xml::MESSAGE_ID, "testMessageId_12345");
+  return _mms_msg;
 }
 
 void MM7Submit::setRecipientAddress(MultiAddress address, uint8_t recipient_type) {
@@ -395,12 +435,9 @@ void MM7Submit::test() {
 }
 
 bool MM7Submit::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::SUBMIT)) {
-    return false;
-  }
+  MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::SUBMIT);
   if (to_address.empty() && cc_address.empty() && bcc_address.empty()) {
-    __trace__("Serialization Error : Recipient Address Not Set");
-    return false;
+    throw Exception("Serialization Error : Recipient Address Not Set");
   }
   DOMElement* recipients = doc->createElement(XStr(xml::RECIPIENTS).unicodeForm());
   typedef std::vector<MultiAddress>::const_iterator CI;
@@ -522,13 +559,17 @@ MM7Submit::~MM7Submit() {}
 MM7Deliver::MM7Deliver(string _transaction_id):MM7GenericRSReq(_transaction_id, MM7_DELIVER), sequence_number(0) {
 }
 
+MmsMsg* MM7Deliver::getResponse() const {
+  MmsMsg* _mms_msg = new MM7DeliverResp(transaction_id);
+  _mms_msg->addField(xml::SERVICE_CODE, "testServiceCode_12345");
+  return _mms_msg;
+  //return new MM7DeliverResp(transaction_id);
+}
+
 bool MM7Deliver::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericRSReq::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVER)) {
-    return false;
-  }
+  MM7GenericRSReq::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVER);
   if (to_address.empty() && cc_address.empty() && bcc_address.empty()) {
-    __trace__("Serialization Error : Recipient Address Not Set");
-    return false;
+    throw Exception("Serialization Error : Recipient Address Not Set");
   }
   const string* ptr = mms_fields.GetPtr(xml::VASP_ID);
   if (ptr) {
@@ -688,14 +729,15 @@ MM7Deliver::~MM7Deliver() {}
 
 MM7Cancel::MM7Cancel(string _transaction_id):MM7GenericVASPReq(_transaction_id, MM7_CANCEL) {};
 
+MmsMsg* MM7Cancel::getResponse() const {
+  return new MM7CancelResp(transaction_id);
+}
+
 bool MM7Cancel::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::CANCEL)) {
-    return false;
-  }
+  MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::CANCEL);
   const string* ptr = mms_fields.GetPtr(xml::MESSAGE_ID);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_Cancel_REQ : Message ID Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_Cancel_REQ : Message ID Not Set");
   }
   xml::addTextNode(doc, root_element, xml::MESSAGE_ID, *ptr);
   ptr = mms_fields.GetPtr(xml::APPLIC_ID);
@@ -718,14 +760,15 @@ MM7Cancel::~MM7Cancel() {};
 MM7ExtendedCancel::MM7ExtendedCancel(string _transaction_id)
                   :MM7GenericVASPReq(_transaction_id, MM7_EXTENDED_CANCEL) {};
 
+MmsMsg* MM7ExtendedCancel::getResponse() const {
+  return new MM7ExtendedCancelResp(transaction_id);
+}
+
 bool MM7ExtendedCancel::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::EXTENDED_CANCEL)) {
-    return false;
-  }
+  MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::EXTENDED_CANCEL);
   const string* ptr = mms_fields.GetPtr(xml::CANCEL_ID);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_ExtendedCancel_REQ : Cancel ID Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_ExtendedCancel_REQ : Cancel ID Not Set");
   }
   xml::addTextNode(doc, root_element, xml::CANCEL_ID, *ptr);
   return true;
@@ -735,14 +778,15 @@ MM7ExtendedCancel::~MM7ExtendedCancel() {};
 
 MM7Replace::MM7Replace(string _transaction_id):MM7GenericVASPReq(_transaction_id, MM7_REPLACE) {};
 
+MmsMsg* MM7Replace::getResponse() const {
+  return new MM7ReplaceResp(transaction_id);
+}
+
 bool MM7Replace::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::REPLACE)) {
-    return false;
-  }
+  MM7GenericVASPReq::getGenericXMLDocument(doc, root_element, mm7_command_name::REPLACE);
   const string* ptr = mms_fields.GetPtr(xml::MESSAGE_ID);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_Replace_REQ : Message ID Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_Replace_REQ : Message ID Not Set");
   }
   xml::addTextNode(doc, root_element, xml::MESSAGE_ID, *ptr);
 
@@ -805,10 +849,15 @@ MM7Replace::~MM7Replace() {};
 
 MM7ExtendedReplace::MM7ExtendedReplace(string _transaction_id):MmsMsg(_transaction_id, MM7_EXTENDED_REPLACE) {};
 
+MmsMsg* MM7ExtendedReplace::getResponse() const {
+  MmsMsg* _mms_msg = new MM7ExtendedReplaceResp(transaction_id);
+  _mms_msg->addField(xml::MESSAGE_ID, "testMessageId_12345");
+  return _mms_msg;
+  //return new MM7ExtendedReplaceResp(transaction_id);
+}
+
 bool MM7ExtendedReplace::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MmsMsg::getXMLDocument(doc, root_element)) {
-    return false;
-  }
+  MmsMsg::getXMLDocument(doc, root_element);
   DOMElement* req_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
                                                  XStr(mm7_command_name::EXTENDED_REPLACE).unicodeForm());
   root_element->appendChild(req_element);
@@ -816,8 +865,7 @@ bool MM7ExtendedReplace::getXMLDocument(DOMDocument* doc, DOMElement*& root_elem
   const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);      						 
   string version = getMmsVersion();
   if (!ptr && version.empty()) {
-    __trace2__("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
-    return false;
+    throw Exception("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
   }
   if (version.empty() && ptr) {
     version = *ptr;
@@ -879,40 +927,37 @@ MM7ExtendedReplace::~MM7ExtendedReplace() {};
 MM7DeliveryReport::MM7DeliveryReport(string _transaction_id)
                   :MM7GenericRSReq(_transaction_id, MM7_DELIVERY_REPORT) {}
 
+MmsMsg* MM7DeliveryReport::getResponse() const {
+  return new MM7DeliveryReportResp(transaction_id);
+}
+
 void MM7DeliveryReport::setRecipientAddress(MultiAddress address, uint8_t recipient_type) {
   recipient_address = address;
 }
 
 bool MM7DeliveryReport::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericRSReq::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVERY_REPORT)) {
-    return false;
-  }
+  MM7GenericRSReq::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVERY_REPORT);
   const string* ptr = mms_fields.GetPtr(xml::MESSAGE_ID);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_DeliveryReport_REQ : Message ID Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_DeliveryReport_REQ : MessageID Not Set");
   }
   xml::addTextNode(doc, root_element, xml::MESSAGE_ID, *ptr);
   if (recipient_address.address.isNotSet()) {
-    __trace__("Serialization Error of MM7_DeliveryReport_REQ : Recipient Address Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_DeliveryReport_REQ : Recipient Address Not Set");
   }
   recipient_address.serialize(doc, root_element, xml::RECIPIENT);
   if (sender_address.address.isNotSet()) {
-    __trace__("Serialization Error of MM7_DeliveryReport_REQ : Sender Address Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_DeliveryReport_REQ : Sender Address Not Set");
   }
   sender_address.serialize(doc, root_element, xml::SENDER);
   ptr = mms_fields.GetPtr(xml::DATE);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_DeliveryReport_REQ : Date Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_DeliveryReport_REQ : Date Not Set");
   }
   xml::addTextNode(doc, root_element, xml::DATE, *ptr);
   ptr = mms_fields.GetPtr(xml::MM_STATUS);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_DeliveryReport_REQ : MMStatus Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_DeliveryReport_REQ : MMStatus Not Set");
   }
   xml::addTextNode(doc, root_element, xml::MM_STATUS, *ptr);
   ptr = mms_fields.GetPtr(xml::MM_STATUS_EXTENSION);
@@ -960,40 +1005,37 @@ MM7DeliveryReport::~MM7DeliveryReport() {}
 
 MM7ReadReply::MM7ReadReply(string _transaction_id):MM7GenericRSReq(_transaction_id, MM7_READ_REPLY) {}
 
+MmsMsg* MM7ReadReply::getResponse() const {
+  return new MM7ReadReplyResp(transaction_id);
+}
+
 void MM7ReadReply::setRecipientAddress(MultiAddress address, uint8_t recipient_type) {
   recipient_address = address;
 }
 
 bool MM7ReadReply::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-  if (!MM7GenericRSReq::getGenericXMLDocument(doc, root_element, mm7_command_name::READ_REPLY)) {
-    return false;
-  }
+  MM7GenericRSReq::getGenericXMLDocument(doc, root_element, mm7_command_name::READ_REPLY);
   const string* ptr = mms_fields.GetPtr(xml::MESSAGE_ID);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_ReadReply_REQ : Message ID Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_ReadReply_REQ : Message ID Not Set");
   }
   xml::addTextNode(doc, root_element, xml::MESSAGE_ID, *ptr);
   if (recipient_address.address.isNotSet()) {
-    __trace__("Serialization Error of MM7_ReadReply_REQ : Recipient Address Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_ReadReply_REQ : Recipient Address Not Set");
   }
   recipient_address.serialize(doc, root_element, xml::RECIPIENT);
   if (sender_address.address.isNotSet()) {
-    __trace__("Serialization Error of MM7_ReadReply_REQ : Sender Address Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_ReadReply_REQ : Sender Address Not Set");
   }
   sender_address.serialize(doc, root_element, xml::SENDER);
   ptr = mms_fields.GetPtr(xml::TIME_STAMP);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_ReadReply_REQ : TimeStamp Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_ReadReply_REQ : TimeStamp Not Set");
   }
   xml::addTextNode(doc, root_element, xml::TIME_STAMP, *ptr);
   ptr = mms_fields.GetPtr(xml::MM_STATUS);
   if (!ptr) {
-    __trace__("Serialization Error of MM7_ReadReply_REQ : MMStatus Not Set");
-    return false;
+    throw Exception("Serialization Error of MM7_ReadReply_REQ : MMStatus Not Set");
   }
   xml::addTextNode(doc, root_element, xml::MM_STATUS, *ptr);
   ptr = mms_fields.GetPtr(xml::STATUS_TEXT);
@@ -1026,19 +1068,16 @@ MM7ReadReply::~MM7ReadReply() {}
 bool GenericResponse::getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_element, const char* command_name) const {
   uint8_t cmd_id = getCommandId();
   if (cmd_id != MM7_VASP_ERROR_RESP && cmd_id != MM7_RS_ERROR_RESP) {
-    if (!MmsMsg::getXMLDocument(doc, root_element)) {
-      return false;
-    }
+    MmsMsg::getXMLDocument(doc, root_element);
   }
-  DOMElement* req_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
+  DOMElement* resp_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
                                                  XStr(command_name).unicodeForm());
-  root_element->appendChild(req_element);
-  root_element = req_element;
+  root_element->appendChild(resp_element);
+  root_element = resp_element;
   const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);      						 
   string version = getMmsVersion();
   if (!ptr && version.empty()) {
-    __trace2__("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
-    return false;
+    throw Exception("Serialization Error : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
   }
   if (version.empty() && ptr) {
     version = *ptr;
@@ -1048,14 +1087,12 @@ bool GenericResponse::getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_
   root_element->appendChild(status);
   ptr = mms_fields.GetPtr(xml::STATUS_CODE);      						 
   if (!ptr) {
-    __trace2__("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::STATUS_CODE);
-    return false;
+    throw Exception("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::STATUS_CODE);
   }
   xml::addTextNode(doc, status, xml::STATUS_CODE, *ptr);
   ptr = mms_fields.GetPtr(xml::STATUS_TEXT);      						 
   if (!ptr) {
-    __trace2__("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::STATUS_TEXT);
-    return false;
+    throw Exception("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::STATUS_TEXT);
   }
   xml::addTextNode(doc, status, xml::STATUS_TEXT, *ptr);
   root_element->appendChild(status);
@@ -1066,23 +1103,18 @@ bool GenericResponse::getXMLDocument(DOMDocument* doc, DOMElement*& root_element
   if (cmd_id != MM7_VASP_ERROR_RESP && cmd_id != MM7_RS_ERROR_RESP) {
     return true;
   }
-  __trace__("Generic Response");
-  if (!MmsMsg::getXMLDocument(doc, root_element)) {
-    return false;
-  }
+  MmsMsg::getXMLDocument(doc, root_element);
   DOMElement* fault = doc->createElementNS(XStr(xml::ENVELOPE_URI).unicodeForm(), XStr(xml::FAULT).unicodeForm());
   fault->setPrefix(XStr(xml::ENV_PREFIX).unicodeForm());
   root_element->appendChild(fault);
   const string* ptr = mms_fields.GetPtr(xml::FAULT_CODE);
   if (!ptr) {
-    __trace2__("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::FAULT_CODE);
-    return false;
+    throw Exception("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::FAULT_CODE);
   }
   xml::addTextNode(doc, fault, xml::FAULT_CODE, *ptr);
   ptr = mms_fields.GetPtr(xml::FAULT_STRING);
   if (!ptr) {
-    __trace2__("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::FAULT_STRING);
-    return false;
+    throw Exception("Serialization Error of MM7_Response : Mandatory Field \"%s\" Not Set", xml::FAULT_STRING);
   }
   xml::addTextNode(doc, fault, xml::FAULT_STRING, *ptr);
   DOMElement* detail = doc->createElement(XStr(xml::DETAIL).unicodeForm());
@@ -1095,6 +1127,86 @@ bool GenericResponse::getXMLDocument(DOMDocument* doc, DOMElement*& root_element
   }
 
   return false;
+}
+bool MM7SubmitResp::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
+  GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::SUBMIT_RESP);
+  const string* ptr = mms_fields.GetPtr(xml::MESSAGE_ID);
+  if (!ptr) {
+    throw Exception("Serialization Error of MM7_Submit_RESP : Mandatory Field \"%s\" Not Set", xml::MESSAGE_ID);
+  }
+  xml::addTextNode(doc, root_element, xml::MESSAGE_ID, *ptr);
+  return true; 
+}
+bool MM7DeliverResp::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
+  GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVER_RESP);
+  const string* ptr = mms_fields.GetPtr(xml::SERVICE_CODE);
+  if (!ptr) {
+    throw Exception("Serialization Error of MM7_Deliver_RESP : Mandatory Field \"%s\" Not Set", xml::SERVICE_CODE);
+  }
+  xml::addTextNode(doc, root_element, xml::SERVICE_CODE, *ptr);
+  return true; 
+}
+bool MM7ExtendedCancelResp::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
+  MmsMsg::getXMLDocument(doc, root_element);
+  DOMElement* resp_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
+                                               XStr(mm7_command_name::EXTENDED_CANCEL_RESP).unicodeForm());
+  root_element->appendChild(resp_element);
+  root_element = resp_element;
+  const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);
+  string version = getMmsVersion();
+  if (!ptr && version.empty()) {
+    throw Exception("Serialization Error of MM7_ExtendedÑancel_RESP : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
+  }
+  if (version.empty() && ptr) {
+    version = *ptr;
+  }
+  xml::addTextNode(doc, root_element, xml::MM7_VERSION, version);
+  DOMElement* status = doc->createElement(XStr(xml::STATUS).unicodeForm());
+  root_element->appendChild(status);
+  ptr = mms_fields.GetPtr(xml::STATUS_CODE);      						 
+  if (!ptr) {
+    throw Exception("Serialization Error of MM7_ExtendedÑancel_RESP : Mandatory Field \"%s\" Not Set", xml::STATUS_CODE);
+  }
+  xml::addTextNode(doc, status, xml::STATUS_CODE, *ptr);
+  root_element->appendChild(status);
+  return true;
+}
+bool MM7ExtendedReplaceResp::getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
+  MmsMsg::getXMLDocument(doc, root_element);
+  DOMElement* resp_element = doc->createElementNS(XStr(xml::MM7_URI).unicodeForm(),
+                                               XStr(mm7_command_name::EXTENDED_REPLACE_RESP).unicodeForm());
+  root_element->appendChild(resp_element);
+  root_element = resp_element;
+  const string* ptr = mms_fields.GetPtr(xml::MM7_VERSION);
+  string version = getMmsVersion();
+  if (!ptr && version.empty()) {
+    throw Exception("Serialization Error of MM7_ExtendedReplce_RESP : Mandatory Field \"%s\" Not Set", xml::MM7_VERSION);
+  }
+  if (version.empty() && ptr) {
+    version = *ptr;
+  }
+  xml::addTextNode(doc, root_element, xml::MM7_VERSION, version);
+  ptr = mms_fields.GetPtr(xml::MESSAGE_ID);      						 
+  if (!ptr) {
+    throw Exception("Serialization Error of MM7_ExtendedReplce_RESP : Mandatory Field \"%s\" Not Set", xml::MESSAGE_ID);
+  }
+  xml::addTextNode(doc, root_element, xml::MESSAGE_ID, *ptr);
+  DOMElement* status = doc->createElement(XStr(xml::STATUS).unicodeForm());
+  root_element->appendChild(status);
+  ptr = mms_fields.GetPtr(xml::STATUS_CODE);      						 
+  if (!ptr) {
+    throw Exception("Serialization Error of MM7_ExtendedReplce_RESP : Mandatory Field \"%s\" Not Set", xml::STATUS_CODE);
+  }
+  xml::addTextNode(doc, status, xml::STATUS_CODE, *ptr);
+  //ptr = mms_fields.GetPtr(xml::STATUS_TEXT);      						 
+  //if (!ptr) {
+    //throw Exception("Serialization Error of MM7_ExtendedReplce_RESP : Mandatory Field \"%s\" Not Set", xml::STATUS_TEXT);
+    //__trace2__("Serialization Error of MM7_ExtendedReplce_RESP : Mandatory Field \"%s\" Not Set", xml::STATUS_TEXT);
+    //return false;
+  //}
+  //xml::addTextNode(doc, status, xml::STATUS_TEXT, *ptr);
+  root_element->appendChild(status);
+  return true;
 }
 }//mms
 }//transport

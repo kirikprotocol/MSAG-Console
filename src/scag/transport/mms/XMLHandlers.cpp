@@ -4,8 +4,8 @@ namespace scag {
 namespace transport {
 namespace mms {
 
-XMLHandler::XMLHandler(MmsFactory _factory):tag_number(0), command_id(MMS_UNKNOWN), fSawErrors(false) {
-  factory = _factory;
+XMLHandler::XMLHandler():tag_number(0), command_id(MMS_UNKNOWN), fSawErrors(false), mms_msg(0), logger(0) {
+  logger = Logger::getInstance("scag.mms");
 }
 
 void XMLHandler::startElement(const XMLCh* const qname, AttributeList& attributes) {
@@ -281,24 +281,16 @@ void XMLHandler::endElementDeliveryReport(const char* name) {
   }
 }
 
-MmsMsg* XMLHandler::getMmsMsg() {
-  MmsMsg* _mms_msg = NULL;
-  if (command_id && mms_msg) {
-    _mms_msg = mms_msg;
-  }
-  return _mms_msg;
-}
-
 void XMLHandler::warning(const SAXParseException& exc) {
   StrX msg(exc.getMessage());
-  __trace2__("SAX PARSE WARNING : %s", msg.localForm());
+  smsc_log_warn(logger, "SAX Parse Warning : %s", msg.localForm());
 }
 
 void XMLHandler::error(const SAXParseException& exc) {
   fSawErrors = true;
   StrX msg(exc.getMessage());
   StrX system_id(exc.getSystemId());
-  __trace2__("SAX PARSE ERROR in file \"%s\" line:%d column:%d \n MESSAGE : %s",
+  smsc_log_error(logger, "SAX Parse Error in \"%s\" line:%d column:%d \n MESSAGE : %s",
              system_id.localForm(), exc.getLineNumber(), exc.getColumnNumber(),  msg.localForm());
 }
 
@@ -306,8 +298,12 @@ void XMLHandler::fatalError(const SAXParseException& exc) {
   fSawErrors = true;
   StrX msg(exc.getMessage());
   StrX system_id(exc.getSystemId());
-  __trace2__("SAX FATAL ERROR in file \"%s\" line:%d column:%d \n MESSAGE : %s",
+  smsc_log_error(logger, "SAX Parse Fatal Eerror in \"%s\" line:%d column:%d \n MESSAGE : %s",
              system_id.localForm(), exc.getLineNumber(), exc.getColumnNumber(),  msg.localForm());
+}
+
+bool XMLHandler::hadSawErrors() const {
+  return fSawErrors;
 }
 
 void XMLHandler::resetErrors() {
@@ -326,6 +322,19 @@ std::string XMLHandler::trimCharacters(const std::string& s) {
     std::string res;
     return res;
   }
+}
+
+MmsMsg* XMLHandler::getMmsMsg() {
+  MmsMsg* _mms_msg = NULL;
+  if (command_id && mms_msg) {
+    _mms_msg = mms_msg;
+  }
+  mms_msg = 0;
+  return _mms_msg;
+}
+
+std::string XMLHandler::getTransactionId() const {
+  return transaction_id;
 }
 
 XMLHandler::~XMLHandler() {
