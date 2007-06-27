@@ -6,10 +6,12 @@ static char const ident[] = "$Id$";
 #include "MtForward.hpp"
 #include "MTRequest.hpp"
 #include "logger/Logger.h"
+#include <stdexcept>
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
 using namespace smsc::mtsmsme::processor::util;
+using namespace std;
 
 extern void makeSmsToRequest(MtForward* mtf,MTR* req);
 
@@ -105,7 +107,23 @@ void MTFTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrle
     //req =  new MTR(this);
     req.invokeId = msg.getInvokeId();
     req.mms = mtf.isMMS();
-    makeSmsToRequest(&mtf,&req);
+    try {
+      makeSmsToRequest(&mtf,&req);
+    } catch (exception& exc) {
+        smsc_log_debug(logger,
+                       "tsm otid=%s receive BEGIN with MALFORMED(%s) component, mms=%d, END sent, ",
+                       ltrid.toString().c_str(),exc.what(),req.mms);
+
+        EndMsg msg;
+        msg.setTrId(rtrid);
+        msg.setDialog(appcntx);
+        msg.setComponent(1025, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
+        std::vector<unsigned char> rsp;
+        tco->encoder.encode_mt_resp(msg,rsp);
+        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        tco->TSMStopped(ltrid);
+        return;
+    }
     if (tco->sender)
     {
       smsc_log_debug(logger,"tsm otid=%s receive BEGIN with component, mms=%d, INVOKE sending",ltrid.toString().c_str(),req.mms);
@@ -142,9 +160,28 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
     //req =  new MTR(this);
     req.invokeId = msg.getInvokeId();
     req.mms = mtf.isMMS();
-    makeSmsToRequest(&mtf,&req);
-    if (tco->sender) tco->sender->send(&req);
-    smsc_log_debug(logger,"tsm otid=%s receive CONTINUE with component, mms=%d, INVOKE sent",ltrid.toString().c_str(),req.mms);
+    try {
+      makeSmsToRequest(&mtf,&req);
+    } catch (exception& exc) {
+        smsc_log_debug(logger,
+                       "tsm otid=%s receive CONTINUE with MALFORMED(%s) component, mms=%d, END sent, ",
+                       ltrid.toString().c_str(),exc.what(),req.mms);
+
+        EndMsg msg;
+        msg.setTrId(rtrid);
+        msg.setDialog(appcntx);
+        msg.setComponent(1025, req.invokeId);// any not OK result, FYI 1025 = 'no route' :)
+        std::vector<unsigned char> rsp;
+        tco->encoder.encode_mt_resp(msg,rsp);
+        tco->SCCPsend(raddrlen,&raddr[0],laddrlen,laddr,rsp.size(),&rsp[0]);
+        tco->TSMStopped(ltrid);
+        return;
+    }
+    if (tco->sender)
+    {
+      smsc_log_debug(logger,"tsm otid=%s receive CONTINUE with component, mms=%d, INVOKE sent",ltrid.toString().c_str(),req.mms);
+      tco->sender->send(&req);
+    }
   }
 }
 void MTFTSM::BeginTransaction(TsmComletionListener* _listener) { /* there is no action */ }
