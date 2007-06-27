@@ -28,6 +28,8 @@ using namespace scag::re;
         time_t final_date;
         time_t life_time;
         uint32_t mod;
+		FieldType lifeTimeFieldType, finalDateFieldType, varType;
+		std::string sLifeTime, sFinalDate;
 
         virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
         virtual bool FinishXMLSubSection(const std::string& name);
@@ -36,9 +38,11 @@ using namespace scag::re;
         ProfileType getProfileTypeFromStr(const std::string& str);
         TimePolicy getPolicyFromStr(const std::string& str);
         uint32_t getKey(const CommandProperty& cp, ProfileType pt);
+		time_t parseFinalDate(const std::string& s);
+		uint32_t parseLifeTime(const std::string& s);
     public:
-        PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN) {}
-        PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN) {}
+        PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN), lifeTimeFieldType(ftUnknown), finalDateFieldType(ftUnknown) {}
+        PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN), lifeTimeFieldType(ftUnknown), finalDateFieldType(ftUnknown) {}
         ~PersAction() {}
         virtual bool RunBeforePostpone(ActionContext& context);
         virtual void ContinueRunning(ActionContext& context);

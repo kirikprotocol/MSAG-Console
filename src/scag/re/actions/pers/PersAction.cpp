@@ -63,8 +63,30 @@ TimePolicy PersAction::getPolicyFromStr(const std::string& str)
         return UNKNOWN;
 }
 
+time_t PersAction::parseFinalDate(const std::string& s)
+{
+	struct tm time;
+    char *ptr;
+
+    ptr = strptime(s.c_str(), "%d.%m.%Y %T", &time);
+    if(!ptr || *ptr)
+		return 0;
+
+    return mktime(&time);
+}
+
+uint32_t PersAction::parseLifeTime(const std::string& s)
+{
+	uint32_t hour = 0, min = 0, sec = 0;
+    if(sscanf(s.c_str(), "%02u:%02u:%02u", &hour, &min, &sec) < 3)
+		return 0;
+
+    return hour * 3600 + min * 60 + sec;
+}
+
 void PersAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
+	bool bExist;
     const char * name = 0;
 
     switch(cmd)
@@ -79,10 +101,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     if(!params.Exists("type") || (profile = getProfileTypeFromStr(params["type"])) == PT_UNKNOWN) 
         throw SCAGException("PersAction '%s' : missing or unknown 'type' parameter", getStrCmd());
     
-    if(!params.Exists("var"))
-        throw SCAGException("PersAction '%s' : missing 'var' parameter", getStrCmd());
-
-    var = params["var"];
+    varType = CheckParameter(params, propertyObject, "PersAction", "var", true, true, var, bExist);
 
     if(cmd == PC_DEL)
     {
@@ -160,26 +179,26 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(policy == FIXED && params.Exists("finaldate"))
     {
-        struct tm time;
-        char *ptr;
-
-        ptr = strptime(params["finaldate"].c_str(), "%d.%m.%Y %T", &time);
-        if(!ptr || *ptr)
-            throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd());
-
-        final_date = mktime(&time);
+	
+	    finalDateFieldType = CheckParameter(params, propertyObject, "PersAction", "finaldate", true, true, sFinalDate, bExist);
+	    if(finalDateFieldType == ftUnknown)
+	    {
+			final_date = parseFinalDate(sFinalDate);
+	        if(!final_date)
+    	        throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd());
+	    }
+	
         smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, final_date=%d", getStrCmd(), profile, var.c_str(), policy, final_date);
         return;
     }
 
-    if(!params.Exists("lifetime"))
-        throw SCAGException("PersAction '%s' : missing 'finaldate' or 'lifetime' parameter", getStrCmd());
-
-	uint32_t hour = 0, min = 0, sec = 0;
-    if(sscanf(params["lifetime"].c_str(), "%02u:%02u:%02u", &hour, &min, &sec) < 3)
-        throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd());
-
-    life_time = hour * 3600 + min * 60 + sec;
+    lifeTimeFieldType = CheckParameter(params, propertyObject, "PersAction", "lifetime", true, true, sLifeTime, bExist);
+    if(lifeTimeFieldType == ftUnknown)
+    {
+		life_time = parseLifeTime(sLifeTime);
+	    if(!life_time)
+    	    throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd());
+    }
 
     smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, mod);
 }
@@ -253,20 +272,48 @@ static uint32_t cmdToLongCallCmd(uint32_t c)
 
 bool PersAction::RunBeforePostpone(ActionContext& context)
 {
+	time_t fd = final_date, lt = life_time;
     smsc_log_debug(logger,"Run Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 
     CommandProperty& cp = context.getCommandProperty();
-    PersCallParams *params = new PersCallParams();
+    auto_ptr<PersCallParams> params(new PersCallParams());
+
+    REProperty *p;
+	if(varType != ftUnknown && !(p = context.getProperty(var)))
+	{
+		smsc_log_error(logger, "Invalid var property  %s", var.c_str());
+		return false;
+	}
+	const std::string& svar = varType == ftUnknown ? var : p->getStr();
     
     context.getSession().getLongCallContext().callCommandId = cmdToLongCallCmd(cmd);
     params->pt = profile;
-    params->propName = var;
+    params->propName = svar;
     
     if(params->pt == PT_ABONENT)
         params->skey = cp.abonentAddr.toString();
     else
         params->ikey = getKey(cp, profile);
-    
+
+	if(lifeTimeFieldType != ftUnknown)
+	{
+        REProperty *rp = context.getProperty(sLifeTime);
+        if(!rp || !(lt = parseLifeTime(rp->getStr())))
+		{
+			smsc_log_error(logger, "Invalid lifeTime parameter %s(%s)", sLifeTime.c_str(), rp ? rp->getStr().c_str() : "");
+			return false;
+		}
+	}
+	if(finalDateFieldType != ftUnknown)
+	{
+        REProperty *rp = context.getProperty(sFinalDate);
+        if(!rp || !(fd = parseFinalDate(rp->getStr())))
+		{
+			smsc_log_error(logger, "Invalid finaldate parameter %s(%s)", sFinalDate.c_str(), rp ? rp->getStr().c_str() : "");
+			return false;
+		}
+	}
+		
     if(cmd == PC_INC || cmd == PC_INC_MOD || cmd == PC_SET)
     {
         if(ftValue != ftUnknown)
@@ -275,17 +322,14 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
             if(rp)
             {
                 setPersPropFromREProp(params->prop, *rp);
-                params->prop.setName(var);
-                params->prop.setTimePolicy(policy, final_date, life_time);
+                params->prop.setName(svar);
+                params->prop.setTimePolicy(policy, fd, lt);
             }
             else
-            {
-                delete params;
                 return false;
-            }
         }
         else
-            params->prop.assign(var.c_str(), value_str.c_str(), policy, final_date, life_time);
+            params->prop.assign(svar.c_str(), value_str.c_str(), policy, fd, lt);
             
         if(cmd == PC_INC_MOD)
         {
@@ -293,17 +337,14 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
             {
                 REProperty *rp = context.getProperty(mod_str);
                 if(!rp)
-                {
-                    delete params;
                     return false;
-                }
                 params->mod = rp->getInt();
             }
             params->mod = mod;
         }
     }
     
-    context.getSession().getLongCallContext().setParams(params);
+    context.getSession().getLongCallContext().setParams(params.release());
     return true;
 }
 
