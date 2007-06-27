@@ -564,6 +564,9 @@ Billing::PGraphState Billing::onChargeSms(void)
         && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF)) {
         askProvider = true;
     }
+    //verify that abonent number is in ISDN international format
+    if (!abNumber.interISDN())
+        askProvider = false;
 
     if (askProvider && abPolicy) {
         smsc_log_debug(logger, "%s: using policy %s for %s", _logId, abPolicy->Ident(),
