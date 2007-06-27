@@ -208,9 +208,11 @@ sub conv_addr{
 
 sub datetotimestamp{
   my $date=shift;
+  my $offset=shift;
   if($date=~/(\d+).(\d+).(\d+)\s+(\d+):(\d+):(\d+)/)
   {
     my $t1=timegm($6,$5,$4,$1,$2-1,$3-1900);
+    $t1+=$offset;
     my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($t1);
 
     $year+=1900;
@@ -243,7 +245,9 @@ sub process{
     my $outfields={};
     %$outfields=%$infields;
 
-    $outfields->{CALL_DURATION}=$infields->{PARTS_NUM};
+    $outfields->{CALL_DURATION}=1;
+    #$outfields->{CALL_DURATION}=$infields->{PARTS_NUM};
+    #changed by request of MTC at 27.06.2007
 
     if( $infields->{BEARER_TYPE} == 1 )
     {
@@ -312,15 +316,23 @@ sub process{
     $outfields->{PAYER_IMSI}=$infields->{SRC_IMSI};
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
     $outfields->{OTHER_ADDR}=conv_addr($infields->{DST_ADDR});
-    $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
     if($makeOutRec)
     {
-      outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
+      for my $off(1 .. $outfields->{PARTS_NUM})
+      {
+        $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
+        outrow($out,$outfields);
+      }
+
     }
     if(defined($extraOut))
     {
       $outfields->{OTHER_ADDR}=$extraOut;
-      outrow($out,$outfields) for(1 .. $outfields->{PARTS_NUM});
+      for my $off(1 .. $outfields->{PARTS_NUM})
+      {
+        $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
+        outrow($out,$outfields);
+      }
     }
 
 
@@ -335,10 +347,17 @@ sub process{
         $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
         $outfields->{PAYER_MSC}=$infields->{DST_MSC};
         $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
-        $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-        outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
+        for my $off(1 .. $outfields->{PARTS_NUM})
+        {
+          $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
+          outrow($out,$outfields);
+        }
         $outfields->{RECORD_TYPE}=30;
-        outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
+        for my $off(1 .. $outfields->{PARTS_NUM})
+        {
+          $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
+          outrow($out,$outfields);
+        }
       }else
       {
         $outfields->{RECORD_TYPE}=20;
@@ -355,8 +374,11 @@ sub process{
         $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
         $outfields->{PAYER_MSC}=$infields->{DST_MSC};
         $outfields->{OTHER_ADDR}=conv_addr($infields->{SRC_ADDR});
-        $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-        outrow($out,$outfields)for(1 .. $outfields->{PARTS_NUM});;
+        for my $off(1 .. $outfields->{PARTS_NUM})
+        {
+          $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT},$off);
+          outrow($out,$outfields);
+        }
       }
     }
   }
