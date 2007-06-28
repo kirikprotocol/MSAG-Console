@@ -39,6 +39,7 @@ public:
   static void addTransitOptional(int tag)
   {
     allowedUnknownOptionals.push_back(tag);
+    smsc_log_debug(smsc::logger::Logger::getInstance("statmach"), "Transitional tag added: %x", tag);
   }
     
 protected:
