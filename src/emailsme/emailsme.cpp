@@ -1701,7 +1701,7 @@ int ProcessMessage(const char *msg,int msglen)
         if(from.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
         continue;
       }
-      if(name=="to")
+      if(name=="to" || name=="cc")
       {
         int emlpos=0;
         do{
@@ -1718,8 +1718,6 @@ int ProcessMessage(const char *msg,int msglen)
           }
           emlpos=value.find(',',emlpos+1);
         }while(emlpos!=std::string::npos);
-
-        if(toarr.size()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
         continue;
       }
       continue;
