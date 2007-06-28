@@ -80,7 +80,4 @@ bool ActionCloseUssdDialog::run(ActionContext& context)
     return true;
 }
 
-
-
-
 }}}

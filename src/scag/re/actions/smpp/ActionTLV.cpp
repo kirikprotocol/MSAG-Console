@@ -13,6 +13,101 @@ Hash<int> ActionTLV::InitNames()
     return hs;
 }
 
+bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
+{
+    if(!data.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
+    {
+        smsc_log_warn(logger, "Unknown optional field is not set");
+        return false;
+    }
+    buff = data.getBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, &len);
+    if (len < 4)
+    {
+        smsc_log_warn(logger, "Unknown optional field less then 4 bytes");
+        return false;
+    }
+    return true;
+}
+
+uint32_t ActionTLV::findField(const char* buff, uint32_t len, uint16_t fieldId)
+{
+    uint32_t i = 0;
+    while (i <= len - 4 && *(uint16_t *)(buff + i) != fieldId) 
+        i = i + 4 + *(uint16_t *)(buff + i + 2);
+    if(i > len) smsc_log_warn(logger, "Error in TLV field. Index out of bounds.");
+    return i;
+}
+
+void ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp)
+{
+    uint32_t i = findField(buff, len, fieldId);
+    tmp.assign(buff, i < len ? i : len);
+    if(i <= len - 4)
+    {
+        i = i + 4 + *(uint16_t *)(buff + i + 2);
+        if(i < len)
+            tmp.append(buff + i, len - i);
+    }
+}
+
+bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, std::string& str)
+{
+    uint32_t len, i;
+    const char* buff;
+
+    if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
+    {
+        uint16_t valueLen = *(uint16_t *)(buff + i + 2);
+        if(i + 4 + valueLen > len) return false;
+        if(valueLen) str.assign((buff + i + 4), valueLen);
+        return true;
+    }
+
+    return false;
+}
+
+bool ActionTLV::existUnknown(SMS& data, uint16_t fieldId)
+{
+    uint32_t len;
+    const char* buff;
+    return getOptionalProperty(data, buff, len) && findField(buff, len, fieldId) <= len - 4;
+}
+
+bool ActionTLV::delUnknown(SMS& data, uint16_t fieldId)
+{
+    uint32_t i, len;
+    const char* buff;
+    if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
+    {
+        std::string tmp;
+        tmp.assign(buff, i);
+        i = i + 4 + *(uint16_t *)(buff + i + 2);
+        if(i < len)
+            tmp.append(buff + i, len - i);
+        data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
+        return true;
+    }
+
+    return false;
+}
+
+void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, const std::string& str)
+{
+    uint16_t i;
+    uint32_t len;
+    std::string tmp;
+    const char* buff;
+
+    if(getOptionalProperty(data, buff, len))
+        cutField(buff, len, fieldId, tmp);
+
+    tmp.append((char*)&fieldId, 2);
+    i = str.size();
+    tmp.append((char*)&i, 2);
+    tmp.append(str.data(), str.size());
+    data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
+}
+
 void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 {
     bool bExist;
@@ -30,7 +125,7 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
             m_tag = *p;
         }
     }
-    else if(ftTag == ftUnknown && !(m_tag = atoi(strTag.c_str())))
+    else if(ftTag == ftUnknown && !(m_tag = strtol(strTag.c_str(), NULL, 0)))
         throw SCAGException("Action 'tlv': Invalid TAG value");
     
     if(type == TLV_SET || type == TLV_GET || type == TLV_EXIST)
@@ -82,53 +177,73 @@ bool ActionTLV::run(ActionContext& context)
         
     if(type == TLV_EXIST)
     {
-        prop->setBool(sms.hasProperty(tag));
+        prop->setBool(tag < 256 ? sms.hasProperty(tag) : existUnknown(sms, tag));
         smsc_log_debug(logger, "Action 'tlv': Tag: %d is %s", tag, prop->getBool() ? "set" : "not set");
     }
     else if(type == TLV_DEL)
     {
-        sms.dropProperty(tag);
+        if(tag < 256)
+            sms.dropProperty(tag);
+        else
+            delUnknown(sms, tag);
         smsc_log_debug(logger, "Action 'tlv': Tag: %d deleted", tag);
     }
     else if(type == TLV_GET)
     {
-        if(!sms.hasProperty(tag))
+        if(tag < 256)
         {
-            smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
-            return true;
+            if(!sms.hasProperty(tag))
+            {
+                smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
+                return true;
+            }
+            if(tt == SMS_INT_TAG)
+            {
+                prop->setInt(sms.getIntProperty(tag));
+                smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
+            }
+            else if(tt == SMS_STR_TAG)
+            {
+                prop->setStr(sms.getStrProperty(tag | (SMS_STR_TAG << 8)));
+                smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+            }
         }
-        if(tt == SMS_INT_TAG)
+        else
         {
-            prop->setInt(sms.getIntProperty(tag));
-            smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
+            if(getUnknown(sms, tag, prop->_setStr()))
+                smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+            else
+                smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
         }
-        else if(tt == SMS_STR_TAG)
-        {
-            prop->setStr(sms.getStrProperty(tag | (SMS_STR_TAG << 8)));
-            smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
-        }
-    
     }
     else if(type == TLV_SET)
     {
-        if(tt == SMS_INT_TAG)
+        if(tag < 256)
         {
-            int val;
-            if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
+            if(tt == SMS_INT_TAG)
             {
-                val = atoi(strVar.c_str());
-                if(!val && (strVar[0] != '0' || strVar.length() != 1))
+                int val;
+                if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
                 {
-                    smsc_log_error(logger, "Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, strVar.c_str());
-                    return true;
+                    val = strtol(strVar.c_str(), NULL, 0);
+                    if(!val && (strVar[0] != '0' || strVar.length() != 1))
+                    {
+                        smsc_log_error(logger, "Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, strVar.c_str());
+                        return true;
+                    }
                 }
+                sms.setIntProperty(tag, prop ? (uint32_t)prop->getInt() : val);
+                smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? (uint32_t)prop->getInt() : val);
             }
-            sms.setIntProperty(tag, prop ? (uint32_t)prop->getInt() : val);
-            smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? (uint32_t)prop->getInt() : val);
+            else if(tt == SMS_STR_TAG)
+            {
+                sms.setStrProperty(tag, prop ? prop->getStr().c_str() : strVar.c_str());
+                smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%s", tag, prop ? prop->getStr().c_str() : strVar.c_str());
+            }
         }
-        else if(tt == SMS_STR_TAG)
+        else
         {
-            sms.setStrProperty(tag, prop ? prop->getStr().c_str() : strVar.c_str());
+            setUnknown(sms, tag, prop ? prop->getStr() : strVar);
             smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%s", tag, prop ? prop->getStr().c_str() : strVar.c_str());
         }
     }
