@@ -17,7 +17,7 @@ my $header='';
 my $footer='';
 my $crc='0'x32;
 
-my $addrrx=qr'791\d{8}';
+my $addrrx=qr'79\d{9}';
 my $mscrx=qr'.*';
 
 my $eoln="\x0d\x0a";
