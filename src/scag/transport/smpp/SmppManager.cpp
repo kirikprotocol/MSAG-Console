@@ -402,15 +402,21 @@ void SmppManagerImpl::Init(const char* cfgFile)
 
   try{
     const char* tags=scag::config::ConfigManager::Instance().getConfig()->getString("smpp.transitOptionalTags");
-    int n=0;
+    int n=0,i=0;
     int len=strlen(tags);
     int tag;
     while(n<len)
     {
-      if(sscanf(tags+n,"%x%n",&tag,&n)==1)
+      if(sscanf(tags+n,"%x%n",&tag,&i)==1)
       {
         StateMachine::addTransitOptional(tag);
       }
+	  else
+	  {
+	  	smsc_log_warn(log, "Failed to parse tags list :'%s'",tags+n);
+		break;
+	  }
+	  n+=i;
       if(tags[n]==',')
       {
         n++;
