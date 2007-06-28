@@ -3,7 +3,7 @@
 //  Routman Michael, 2007
 //------------------------------------
 //
-//  Файл содержит описание интерфейса FSDB.
+//  пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ FSDB.
 //
 
 #ifndef ___FSDB_H
@@ -12,8 +12,10 @@
 #include "DataBlock.h"
 #include "RBTree.h"
 #include "RBTreeFileAllocator.h"
+#include "RBTreeHSAllocator.h"
 //#include "BlocksMappedFileStorage.h"
 #include "BlocksFileStorage.h"
+#include "BlocksHSStorage.h"
 //#include "FSDBCache.h"
 #include <string>
 
@@ -64,7 +66,7 @@ template<class Key = char*>
 class FSDBProfiles: public FSDB<Key, DataBlock>
 {
 //  typedef FSDBCache<Key, DataBlock>       Cache;
-    typedef RBTreeAllocator<Key, long>      IndexAllocator;
+    typedef RBTreeHSAllocator<Key, long>      IndexAllocator;
     typedef RBTree<Key, long>               IndexStorage;
 
 public:
@@ -77,45 +79,52 @@ public:
         long blockSize = 8192 - sizeof(templDataBlockHeader<Key>), // 8144
         int mode = FSDB_DEFAULT)
     {
+	int ret;
         if(_dbName.length()==0) return ERR_DB_NAME;
-        
+
         dbPath = _dbPath; dbName = _dbName;
-        
+
         if(dbPath.length()==0)  dbPath = "./";
         else if(dbPath[dbPath.length()-1] != '/') dbPath += '/';
-		if(indexGrowth <= 0) indexGrowth = 1000000;
-		if(blocksInFile <= 0) blocksInFile = 100000;
-		if(blockSize <= 0) blockSize = 8192 - sizeof(templDataBlockHeader<Key>);
+	if(indexGrowth <= 0) indexGrowth = 1000000;
+	if(blocksInFile <= 0) blocksInFile = 100000;
+	if(blockSize <= 0) blockSize = 8192 - sizeof(templDataBlockHeader<Key>);
 
         if(!dbPathExists())
         {
-		    smsc_log_info(logger, "FSDBProfiles::Init: db not Exists");
-            if(mode & FSDB_CREATE) 
-            {
-                if(!createDBPath())
-                {
-					smsc_log_info(logger, "createDBPath - failed");
-                    return ERR_CANNOT_CREATE_DBPATH;
-                }
-            }
-            else
+		smsc_log_info(logger, "FSDBProfiles::Init: db not Exists");
+		if(mode & FSDB_CREATE) 
+		{
+			if(!createDBPath())
 			{
-				smsc_log_info(logger, "FSDB not exist. Create DB first. %d", mode);
-                return ERR_DB_NOTEXISTS;
+				smsc_log_info(logger, "createDBPath - failed");
+				return ERR_CANNOT_CREATE_DBPATH;
 			}
+		}
+		else
+		{
+			smsc_log_info(logger, "FSDB not exist. Create DB first. %d", mode);
+			return ERR_DB_NOTEXISTS;
+		}
         }
-        indexAllocator = new RBTreeFileAllocator<Key, long>(dbPath + dbName + '/' + dbName + "-index", indexGrowth);
-        indexStorage.SetAllocator(indexAllocator);
+//        indexAllocator = new RBTreeHSAllocator<Key, long>(dbPath + dbName + '/' + dbName + "-index", indexGrowth);
+	indexAllocator = new IndexAllocator();
+	if(0 != (ret = indexAllocator->Init(dbPath + dbName + '/' + dbName + "-index", indexGrowth)))
+	{
+		smsc_log_info(logger, "Init FSDB failed %d", ret);
+		//printf("Init FSDB failed %d\n", ret);
+		return ret;
+	}
+	indexStorage.SetAllocator(indexAllocator);
+	indexStorage.SetChangesObserver(indexAllocator);
 //      cache.Init(cacheSize);//, (dbPath + dbName).c_str(), dbName + "-cache", mode & FSDB_CLEAR_CACHE);
-        int ret;
         if(0 != (ret=dataStorage.Open(dbName + "-data", dbPath + '/' + dbName)))
         {
-			smsc_log_info(logger, "Create Data Storage %d", ret);
-            dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize);
+		smsc_log_info(logger, "Create Data Storage %d", ret);
+		dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize);
         }
-		smsc_log_info(logger, "Inited: storageName = '%s',  storagePath = '%s'", dbName.c_str(), dbPath.c_str());
-		smsc_log_info(logger, "Inited: indexGrowth = %d,  blocksInFile = %d", indexGrowth, blocksInFile);
-		printf("FSDB created\n");
+	smsc_log_info(logger, "Inited: storageName = '%s',  storagePath = '%s'", dbName.c_str(), dbPath.c_str());
+	smsc_log_info(logger, "Inited: indexGrowth = %d,  blocksInFile = %d", indexGrowth, blocksInFile);
         return 0;
     }
     
@@ -135,14 +144,13 @@ public:
     }
     virtual bool Set(const Key& key, const DataBlock& data)
     {
-		smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
+	smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
         long idx;
         if(indexStorage.Get(key, idx))
-            return dataStorage.Change(idx, data, key);
-
+		return dataStorage.Change(idx, data, key);
         dataStorage.Add(data, idx, key);
         indexStorage.Insert(key, idx);
-        return true;
+	return true;
     }
     virtual bool Get(const Key& key, DataBlock& data)
     {
@@ -177,50 +185,50 @@ public:
 
 private:
 	smsc::logger::Logger* logger;
-    string              dbPath;
-    string              dbName;
-
-    IndexAllocator*     indexAllocator;
-    IndexStorage        indexStorage;
-//  Cache               cache;
-    BlocksFileStorage<Key> dataStorage;
-//  BlocksMappedFileStorage dataStorage;
-
-    bool dbPathExists(void)
-    {
-        char* pwd;
-        pwd = getenv("PWD");
-        if(0 == chdir((dbPath + dbName).c_str()))
-        {
-            chdir(pwd);
-            return true;
-        }
-        return false;
-    }
-
-    bool createDBPath(void)
-    {
-        int pos = 0;
-        int ret;
-        string path = dbPath + dbName + '/';
-        while(pos != path.length() - 1)
-        {
-            pos = path.find('/', pos + 1);
-            //printf("%s - ", (path.substr(0, pos)).c_str());
-            ret = mkdir((path.substr(0, pos)).c_str(), 0700);
-            //if(-1 == (ret = mkdir((path.substr(0, pos)).c_str(), 0700)))
-            //{
-            //  printf(":(((((((\n");
-            //}
-            //else
-            //  printf(":))))))))\n");
-
-        }
-        if(-1 == ret)
-            return false;
-        return true;
-    }
-};
+	string              dbPath;
+	string              dbName;
+	
+	IndexAllocator*     indexAllocator;
+	IndexStorage        indexStorage;
+	//  Cache               cache;
+	BlocksHSStorage<Key> dataStorage;
+	//  BlocksMappedFileStorage dataStorage;
+	
+	bool dbPathExists(void)
+	{
+		char* pwd;
+		pwd = getenv("PWD");
+		if(0 == chdir((dbPath + dbName).c_str()))
+		{
+		chdir(pwd);
+		return true;
+		}
+		return false;
+	}
+	
+	bool createDBPath(void)
+	{
+		int pos = 0;
+		int ret;
+		string path = dbPath + dbName + '/';
+		while(pos != path.length() - 1)
+		{
+		pos = path.find('/', pos + 1);
+		//printf("%s - ", (path.substr(0, pos)).c_str());
+		ret = mkdir((path.substr(0, pos)).c_str(), 0700);
+		//if(-1 == (ret = mkdir((path.substr(0, pos)).c_str(), 0700)))
+		//{
+		//  printf(":(((((((\n");
+		//}
+		//else
+		//  printf(":))))))))\n");
+	
+		}
+		if(-1 == ret)
+		return false;
+		return true;
+	}
+	};
 
 
 #endif
