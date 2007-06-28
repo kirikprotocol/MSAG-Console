@@ -25,6 +25,25 @@ public:
 	virtual RBTreeNode* getNilNode(void) = 0;
 	virtual long getSize(void) = 0;
 	virtual long getOffset(void) = 0;
+
+	//virtual void resetChanges(void) = 0;
+	//virtual void nodeChanged(RBTreeNode* node) = 0;
+	//virtual void completeChanges(void) = 0;
+};
+
+template<class Key=long, class Value=long>
+class RBTreeChangesObserver
+{
+protected:
+	typedef templRBTreeNode<Key, Value> RBTreeNode;
+public:
+	static const int OPER_INSERT = 1;
+	static const int OPER_DELETE = 2;
+	static const int OPER_CHANGE = 3;
+
+	virtual void startChanges(RBTreeNode* node, int operation) = 0;
+	virtual void nodeChanged(RBTreeNode* node) = 0;
+	virtual void completeChanges(void) = 0;
 };
 
 template<class Key=long, class Value=long>
@@ -66,5 +85,15 @@ public:
 	virtual long getSize(void){return count;};
 	virtual long getOffset(void){return 0;}
 };
+
+template<class Key=long, class Value=long>
+class EmptyChangesObserver: public RBTreeChangesObserver<Key, Value>
+{
+public:
+	void startChanges(RBTreeNode* node, int operation){};
+	void nodeChanged(RBTreeNode* node){};
+	void completeChanges(void){};
+};
+
 
 #endif
