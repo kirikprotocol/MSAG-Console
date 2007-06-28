@@ -24,24 +24,39 @@ class Subject {
 private:
   std::string id;
   MaskVector masks;
+  MaskVector subjRefs;
 public:
   Subject()
     : id(), masks()
   {}
+
   Subject(const Mask & mask)
     : id(mask), masks(1, mask)
   {}
-  Subject(const std::string &subjId, const MaskVector & subjMasks)
-    : id(subjId), masks(subjMasks)
+
+  Subject(const std::string &subjId, const MaskVector & subjMasks,const MaskVector& argSubjRefs)
+    : id(subjId), masks(subjMasks),subjRefs(argSubjRefs)
   {}
   Subject(const Subject & subj)
-    : id(subj.id), masks(subj.masks)
+    : id(subj.id), masks(subj.masks),subjRefs(subj.subjRefs)
   {}
 
   const std::string &getIdString() const {return id;}
   const char * const getId()       const {return id.c_str();}
 
-  const MaskVector & getMasks()    const {return masks;}
+  MaskVector& getMasks()
+  {
+    return masks;
+  }
+  const MaskVector& getMasks()const
+  {
+    return masks;
+  }
+
+  MaskVector& getSubjRefs()
+  {
+    return subjRefs;
+  }
 };
 
 //typedef std::vector<Subject> SubjectVector;
@@ -57,9 +72,11 @@ public:
   Source()
     : subj(), isSubj(true)
   {}
+
   Source(const Mask &m)
     : subj(m), isSubj(false)
   {}
+
   Source(const Subject &s)
     : subj(s), isSubj(true)
   {}
@@ -89,9 +106,11 @@ public:
   Destination(const Destination & dst)
     : Source(dst), smeId(dst.smeId)
   {}
+
   Destination(const Mask &m, const SmeId &smeid)
     : Source(m), smeId(smeid)
   {}
+
   Destination(const Subject &s, const SmeId &smeid)
     : Source(s), smeId(smeid)
   {}

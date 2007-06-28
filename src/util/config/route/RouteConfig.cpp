@@ -8,6 +8,7 @@
 #include "util/debug.h"
 #include "sms/sms_const.h"
 #include "util/xml/DOMTreeReader.h"
+#include <list>
 
 namespace smsc {
 namespace util {
@@ -87,8 +88,17 @@ Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
     DOMElement *mask = (DOMElement *) maskElems->item(i);
     masks.push_back(Mask(XmlStr(mask->getAttribute(XmlStr("value")))));
   }
+  MaskVector refs;
+  DOMNodeList *subjElems = elem.getElementsByTagName(XmlStr("subject"));
+  unsigned subjElemsLength = subjElems->getLength();
+  for(unsigned i=0;i<subjElemsLength;i++)
+  {
+    DOMElement *subj = (DOMElement *) subjElems->item(i);
+    XmlStr subjId(subj->getAttribute(XmlStr("id")));
+    refs.push_back(subjId.c_str());
+  }
 
-  return new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks);
+  return new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks,refs);
 }
 
 void RouteConfig::createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r)
@@ -259,6 +269,30 @@ throw (SubjectNotFoundException)
   return r.release();
 }
 
+
+void RouteConfig::expandSubject(Subject& subj)
+{
+  smsc_log_debug(logger,"Expanding subject:%s",subj.getId());
+  while(!subj.getSubjRefs().empty())
+  {
+    std::string id=subj.getSubjRefs().back();
+    subj.getSubjRefs().pop_back();
+    smsc_log_debug(logger,"Found referenced subj:%s",id.c_str());
+    try{
+      Subject& refS=getSubject(id.c_str());
+      if(!refS.getSubjRefs().empty())
+      {
+        smsc_log_debug(logger,"Referenced subj isn't expanded yet. Expanding");
+        expandSubject(refS);
+      }
+      subj.getMasks().insert(subj.getMasks().end(),refS.getMasks().begin(),refS.getMasks().end());
+    }catch(...)
+    {
+      smsc_log_warn(logger,"Referenced subject not found:%s",id.c_str());
+    }
+  }
+}
+
 RouteConfig::status RouteConfig::load(const char * const filename)
 {
   config_filename.reset(cStringCopy(filename));
@@ -270,6 +304,9 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     DOMNodeList *subj_defs = elem->getElementsByTagName(XmlStr("subject_def"));
     // Subjects
     unsigned subj_defsLength = subj_defs->getLength();
+
+    std::list<Subject*> subjs;
+
     for (unsigned i=0; i<subj_defsLength; i++)
     {
       DOMElement *elem2 = (DOMElement *)subj_defs->item(i);
@@ -280,9 +317,32 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       }
       else
       {
-        subjects[s->getId()] = s;
+        subjects.Insert(s->getId(),s);
+        subjs.push_back(s);
       }
     }
+
+    // expand subjrefs
+    for(std::list<Subject*>::iterator it=subjs.begin();it!=subjs.end();it++)
+    {
+      Subject& subj=**it;
+      expandSubject(subj);
+      std::set<Mask> ms;
+      MaskVector& mv=subj.getMasks();
+      for(MaskVector::iterator mit=mv.begin();mit!=mv.end();mit++)
+      {
+        ms.insert(*mit);
+      }
+      int before=mv.size();
+      mv.clear();
+      for(std::set<Mask>::iterator sit=ms.begin();sit!=ms.end();sit++)
+      {
+        mv.push_back(*sit);
+      }
+      smsc_log_debug(logger,"Unique mask pack for '%s': %d->%d",subj.getId(),before,mv.size());
+    }
+
+
 
     // routes
     DOMNodeList *route_list = elem->getElementsByTagName(XmlStr("route"));

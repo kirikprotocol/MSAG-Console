@@ -55,6 +55,8 @@ protected:
   SubjectPHash subjects;
   std::auto_ptr<char> config_filename;
 
+  void expandSubject(Subject& subj);
+
   static Subject * createSubjectDef(const DOMElement &elem);
   static void createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r) throw (SubjectNotFoundException);
   static void createRouteDestination(const DOMElement &dstElem, const SubjectPHash &subjects, Route * r) throw (SubjectNotFoundException);
