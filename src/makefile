@@ -276,6 +276,7 @@ ubuild: .update .build
 
 clean:
 	@echo "clean all"
+	@rm -rf $(SMSC_BUILDDIR)/deps
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
 	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rclean ; done; \
