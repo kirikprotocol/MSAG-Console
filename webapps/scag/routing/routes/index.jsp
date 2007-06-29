@@ -20,13 +20,13 @@
             }
             function enableDisableButtons(){
                 enableDisableButtonsById('mbApply', ${(!bean.routesChanged)});
-                enableDisableButtonsById('mbLoad', ${(!bean.routesRestored)} );
-                enableDisableButtonsById('mbSave', false);
+                enableDisableButtonsById('mbLoad',  ${(bean.routesRestored)} );
+                enableDisableButtonsById('mbSave',  false);
                 enableDisableButtonsById('mbLoadSaved', ${(!bean.routesLoaded)});
 
                 enableDisableButtonsById('mbApplyHttp', ${(!bean.httpRoutesChanged)});
-                enableDisableButtonsById('mbLoadHttp', ${(!bean.httpRoutesRestored)});
-                enableDisableButtonsById('mbSaveHttp', false);
+                enableDisableButtonsById('mbLoadHttp',  ${(!bean.httpRoutesRestored)});
+                enableDisableButtonsById('mbSaveHttp',  false);
                 enableDisableButtonsById('mbLoadSavedHttp', ${(!bean.httpRoutesLoaded)});
             }
 
