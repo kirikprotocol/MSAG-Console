@@ -417,11 +417,9 @@ void PersClientImpl::WriteAllTO(const char* buf, uint32_t sz)
     {
         if(sock.canWrite(0) <= 0)
             throw PersClientException(TIMEOUT);
-
         cnt = sock.Write(buf + wr, sz);
         if(cnt <= 0)
             throw PersClientException(SEND_FAILED);
-
         wr += cnt;
         sz -= cnt;
     }
@@ -441,6 +439,7 @@ void PersClientImpl::SendPacket()
         }
         catch(PersClientException &e)
         {
+            smsc_log_error(log, "send failed");		
             connected = false;
             sock.Close();
             if(++t >= 2) throw e;
