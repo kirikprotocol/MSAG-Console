@@ -69,22 +69,25 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+        logger.debug("Edit.java:process():start");
         path = request.getContextPath();
         appContext = getAppContext();
         session = request.getSession();
+
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
-
         if (getMbCancel() != null) {
             throw new CancelChildException(new StringBuffer().append(path).
                     append("/services/service/edit.jsp?parentId=").append(getParentId()).
                     append("&editId=").append(appContext.getServiceProviderManager().getServiceProviderByServiceId(
                     Long.decode(getParentId())).getId()).append("&editChild=true").toString());
         }
-        if (getEditId() != null)
+        if (getEditId() != null){
             id = getEditId();
+        }
         destinations = new HashMap();
+        logger.debug("Edit.java:process():middle");
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
             final Map.Entry entry = (Map.Entry) i.next();
             final String s = (String) entry.getKey();
@@ -176,10 +179,13 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
             }
         }
+        logger.debug("Edit.java:process(): (getMbSave() != null) before");
         if (getMbSave() != null) {
             super.process(request, response);
+            logger.debug("Edit.java:process(): (getMbSave() != null) in");
             save();
         }
+        logger.debug("Edit.java:process(): (getMbSave() != null) after");
         load(id);
         super.process(request, response);
 
@@ -195,6 +201,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     protected void load(final String loadId) throws SCAGJspException {
+        logger.debug("Edit.java:load():start");
         if (null == new_dst_mask_sme_ && 0 < appContext.getSmppManager().getSvcs().size())
             new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
 
@@ -244,6 +251,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 serviceName = route.getService().getName();
             }
         }
+        logger.debug("Edit.java:load():after");
         if (isAdd()) {
             enabled = true;
             active = true;
@@ -251,32 +259,44 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     protected void save() throws SCAGJspException {
-
+        logger.debug("Edit.java:save():start");
         final Map routes = appContext.getScagRoutingManager().getRoutes();
         String messagetxt = "";
         try {
             final Map sources = createSources();
+            srcMasks = removeEmptyFromArr( srcMasks );
+            dstMasks = removeEmptyFromArr( dstMasks );
+            if( sources.isEmpty() ){
+                logger.debug("Edit.java:save():empty SOURCE MAP|srcMasks.length is: " + srcMasks.length + "|");
+                throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR);
+            }
+            if( null == destinations || destinations.isEmpty() ){
+                logger.debug("Edit.java:save():empty DESTINATION MAP");
+                throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_DEST);
+            }
+
             final Service serviceObj = appContext.getServiceProviderManager().getServiceById(Long.decode(getParentId()));
             if (isAdd()) {
-                if (routes.containsKey(id))
+                if( routes.containsKey(id) ){
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
-                routes.put(id,
-                        new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(), getSlicing(), srcSmeId,
-                                serviceObj, notes));
+                }
+                routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
+                                         getSlicing(), srcSmeId, serviceObj, notes) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
-                if (!getEditId().equals(id) && routes.containsKey(id))
+                if (!getEditId().equals(id) && routes.containsKey(id)){
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
+                }
                 routes.remove(getEditId());
-                routes.put(id,
-                        new Route(id, sources, destinations, archived, enabled, active, getSlicing(), srcSmeId,
-                                serviceObj, notes));
+                routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
+                                         getSlicing(), srcSmeId, serviceObj, notes) );
                 messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
             logger.error("Could not create new route ", e);
             throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE, e);
         }
+        logger.debug("Edit.java:save():middle");
         appContext.getScagRoutingManager().setRoutesChanged(true);
         appContext.getScagRoutingManager().setChangedByUser(getUser(appContext).getName());
         appContext.getScagRoutingManager().setRoutesSaved(true);
@@ -285,14 +305,16 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         appContext.getScagRoutingManager().addStatMessages(message);
         StatusManager.getInstance().addStatMessages(message);
 
-        throw new CancelChildException(new StringBuffer().append(path).append("/services/service/edit.jsp?parentId=").
-                append(getParentId()).append("&editId=").append(
-                appContext.getServiceProviderManager().getServiceProviderByServiceId(
-                Long.decode(getParentId())).getId()).append("&editChild=true").toString());
+        throw new CancelChildException( new StringBuffer().append(path).
+                  append("/services/service/edit.jsp?parentId=").
+                  append(getParentId()).append("&editId=").append(
+                  appContext.getServiceProviderManager().getServiceProviderByServiceId(
+                  Long.decode(getParentId())).getId()).append("&editChild=true").toString() );
     }
 
     private Map createSources() throws SibincoException {
         final Map result = new HashMap();
+        logger.debug("Edit.java:createSources():start");
         for (int i = 0; i < srcSubjs.length; i++) {
             final String srcSubj = srcSubjs[i];
             final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(srcSubj);
@@ -519,4 +541,23 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         return session;
     }
 
+    public String[] removeEmptyFromArr( String[] srcMasks ){
+        int index=0;
+        int count=0;
+
+        for( int i = 0; i < srcMasks.length; i++){
+            if( srcMasks[i].trim().length() != 0 ){
+                count++;
+            }
+        }
+        String[] result = new String[count];
+        logger.debug("Edit.java:removeEmptyFromArr():not empty count='" + count + "'");
+
+        for( int i = 0; i < srcMasks.length; i++){
+            if( srcMasks[i].trim().length() != 0 ){
+                result[index++] = srcMasks[i];
+            }
+        }
+        return result;
+    }
 }
