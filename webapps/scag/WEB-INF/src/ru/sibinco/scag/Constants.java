@@ -69,10 +69,13 @@ public class Constants {
                 public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.routing.routes.could_not_create_mask");
                 public static final Constants COULD_NOT_CREATE_DESTINATION_MASK = new Constants("error.routing.routes.could_not_create_destination_mask");
                 public static final Constants COULDNT_APPLY_ROUTES = new Constants("error.routing.couldnt_apply_routes");
+//                public static final Constants COULD_NOT_SAVE_ROTE = new Constants("error.routing.routes.could_not_save_route");
                 public static final Constants COULDNT_APPLY_HTTP_ROUTES = new Constants("error.routing.couldnt_apply_http_routes");
                 public static final Constants COULDNT_LOAD_ROUTES = new Constants("error.routing.couldnt_load_routes");
                 public static final Constants COULDNT_LOAD_HTTP_ROUTES = new Constants("error.routing.couldnt_load_http_routes");
                 public static final Constants COULDNT_SAVE_ROUTES = new Constants("error.routing.couldnt_save_routes");
+                public static final Constants CAN_NOT_SAVE_ROUTE_SOUR = new Constants("error.routing.can_not_save_route_sour");
+                public static final Constants CAN_NOT_SAVE_ROUTE_DEST = new Constants("error.routing.can_not_save_route_dest");
                 public static final Constants COULDNT_SAVE_HTTP_ROUTES = new Constants("error.routing.couldnt_save_http_routes");
                 public static final Constants COULD_NOT_DELETE_SERVICE_PROVIDER = new Constants("error.routing.couldnt_delete.service.provider.route.or.subject.changed");
                 public static final Constants COULD_NOT_DELETE_SERVICE = new Constants("error.routing.couldnt_delete.service.route.or.subject.changed");
