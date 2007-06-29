@@ -87,7 +87,7 @@ void Rule::processSession(Session& session, RuleStatus& rs)
 
             return;
         }
-        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");
+//        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");
         return;
     }
     catch (Exception& e)
