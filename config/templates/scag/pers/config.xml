@@ -9,6 +9,7 @@
     <param name="connections" type="int">@pers.connections@</param>
     <param name="storage_dir" type="string">@pers.storage_dir@</param>
     <param name="init_record_count" type="int">10000</param>
+	<param name="timeout" type="int">600</param>
 
     <section name="AbntProfStorage">
         <param name="storageName" type="string">abonent</param>
