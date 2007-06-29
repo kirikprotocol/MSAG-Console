@@ -49,7 +49,7 @@ function validationError(elem, txt)
 
 function validateField_port(elem)
 {
-	var intValue = elem.value/1;   
+	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue >= 0xFFFF || intValue < 0
 		//? validationError(elem, "Port must be integer less than " + 0xFFFF)
 		? validationError(elem, '<fmt:message>scripts.portErrorMsg</fmt:message>' + 0xFFFF)
@@ -292,15 +292,16 @@ function validateForm(frm)
 	for (var i=ts.length-1; i>=0; i--)
 	{
 		var elem = frm.elements(i);
-		if (!elem.disabled)
-		{
-      var validationClass = elem.validation;
-      if(validationClass != null)
-      {
-        var r = validateField(elem);
-        validateShowErrors(elem);
-        result = result && r;
-      }
+		if (!elem.disabled){
+            var validationClass = elem.validation;
+            if(validationClass != null){
+                if( validationClass == "routeMask" ){
+                    elem.validation="routeMaskNonEmpty";
+                }
+                var r = validateField(elem);
+                validateShowErrors(elem);
+                result = result && r;
+            }
 		}
 		else elem.value = true;
 	}
@@ -617,7 +618,7 @@ function changeIcon() {
     elem.style.visibility="visible";
     return true;
   } else if (evt.type=="mouseout") {
-    elem.height=parseInt(elem.height)-5;    
+    elem.height=parseInt(elem.height)-5;
     return true;
   }
   return false;
