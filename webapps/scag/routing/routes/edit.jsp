@@ -216,7 +216,7 @@
                   <sm-ep:check title="routes.edit.check.active" name="active"/>
                   <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
                   <sm-ep:check title="routes.edit.check.archived" name="archived"/>
-                  <sm-ep:list title="" label="routes.edit.check.slicing" name="slicing" values="${fn:join(bean.slicingTypes,',')}" valueTitles="${fn:join(bean.slicingTypesTitles,',')}"/>                  
+                  <sm-ep:list title="" label="routes.edit.check.slicing" name="slicing" values="${fn:join(bean.slicingTypes,',')}" valueTitles="${fn:join(bean.slicingTypesTitles,',')}"/>
                   <sm-pm:space/>
               </sm-ep:properties>
           </td>
@@ -245,7 +245,10 @@
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-            <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
+            <td><input id=newSrcMask class=txt name=srcMasks validation=
+                       "routeMask"
+              onkeyup="resetValidation(this)">
+            </td>
             <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
           </tr>
           </table>
@@ -299,7 +302,10 @@
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-            <td><input id=newDstMask class=txt name=new_dstMask validation="routeMask" onkeyup="resetValidation(this)"></td>
+              <td><input id=newDstMask class=txt name=new_dstMask validation=
+                    "routeMask"
+                 onkeyup="resetValidation(this)">
+              </td>
             <td><select name=new_dst_mask_sme_ id=newDstMaskSme>
               <c:forEach items="${bean.allSmes}" var="i">
                 <option value="${fn:escapeXml(i)}" <c:if test="${i == bean.new_dst_mask_sme_}">selected</c:if>>${fn:escapeXml(i)}</option>
