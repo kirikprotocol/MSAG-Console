@@ -30,6 +30,13 @@ public:
   
   int count() {return sockets.Count(); };
   Socket* get(int i) {return sockets[i];};
+  
+  void _remove(int i)
+  {
+	if(i >= count()) return;
+	sockets.Delete(i);
+    fds.Delete(i);
+  }
 };
 
 }}

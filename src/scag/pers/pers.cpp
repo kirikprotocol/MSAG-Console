@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     int resultCode = 0;
     std::string host;
     int port = 9988;
-    int maxClientCount = 100, recCnt = 1000;
+    int maxClientCount = 100, recCnt = 1000, timeout = 600;
 
     Logger::Init();
     Logger* logger = Logger::getInstance("pers");
@@ -130,8 +130,10 @@ int main(int argc, char* argv[])
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
-
-        ps = new PersServer(host.c_str(), port, maxClientCount, 
+		
+	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
+		
+        ps = new PersServer(host.c_str(), port, maxClientCount, timeout,
             new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
 
         auto_ptr<PersServer> pp(ps);

@@ -18,7 +18,7 @@ class PersServer {
     CommandDispatcher* CmdDispatcher;
 
 public:
-    PersServer(const char* persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d);
+    PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, CommandDispatcher *d);
     ~PersServer();
     void InitServer();
     int Execute();
@@ -28,13 +28,12 @@ public:
 protected:
     void process_read_socket(Socket* sock);
     void process_write_socket(Socket* sock);
-    void remove_socket(Socket* s);
+    void remove_socket(Socket* s, int i = -1);
+	void checkTimeouts();
 
     Logger * log;
     std::string persHost;
-    int persPort;
-    int maxClientCount;
-    int clientCount;
+    int persPort, timeout, maxClientCount, clientCount;
     Socket sock;
     bool isStopping;
     RWMultiplexer listener;

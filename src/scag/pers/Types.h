@@ -19,7 +19,8 @@ enum PersCmd{
     PC_GET,
     PC_INC,
     PC_INC_MOD,
-    PC_PING
+    PC_PING,
+	PC_BATCH
 };
 
 enum PersServerResponseType{

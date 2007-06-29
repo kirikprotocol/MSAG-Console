@@ -156,7 +156,7 @@ void CommandDispatcher::Execute(SerialBuffer* sb)
         cmd = (PersCmd)sb->ReadInt8();
         if(cmd == PC_PING)
         {
-            SendResponse(sb, RESPONSE_OK);            
+            SendResponse(sb, RESPONSE_OK);
             smsc_log_debug(log, "Ping received");
             return;
         }
@@ -184,14 +184,19 @@ void CommandDispatcher::Execute(SerialBuffer* sb)
                 IncCmdHandler(pt, int_key, str_key, prop, sb);
                 return;
             case PC_INC_MOD:
+            {
                 int inc = sb->ReadInt32();
                 prop.Deserialize(*sb);
                 IncModCmdHandler(pt, int_key, str_key, prop, inc, sb);
                 return;
+            }
+            default:
+                smsc_log_debug(log, "Bad command %d", cmd);
         }
     }
     catch(SerialBufferOutOfBounds &e)
     {
+        smsc_log_debug(log, "Bad data in buffer received len=%d, data=%s", sb->length(), sb->toString().c_str());
     }
     SendResponse(sb, RESPONSE_BAD_REQUEST);
 }

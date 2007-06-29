@@ -282,7 +282,10 @@ public:
         Key key(rkey);
 
         if(prop.isExpired())
+		{
+	        smsc_log_debug(log, "profile %s, attempt to set expired property: %s", key.toString().c_str(), prop.toString().c_str());		
             return;
+		}
 
         Profile* pf = getProfile(key, true);
         Property* p = pf->GetProperty(prop.getName().c_str());

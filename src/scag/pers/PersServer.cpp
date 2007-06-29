@@ -7,13 +7,14 @@ using smsc::util::Exception;
 
 #define MAX_PACKET_SIZE 100000
 
-PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_, CommandDispatcher *d)
+PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_, int timeout_, CommandDispatcher *d)
     : log(Logger::getInstance("server")), persHost(""), persPort(0), isStopping(false), CmdDispatcher(d)
 {
     persHost = persHost_;
     persPort = persPort_;
     maxClientCount = maxClientCount_;
     clientCount = 0;
+	timeout = timeout_;
 }
 
 PersServer::~PersServer()
@@ -121,25 +122,48 @@ void PersServer::process_write_socket(Socket* s)
     {
         smsc_log_debug(log, "written to socket: len=%d, data=%s", sb->length(), sb->toString().c_str());
         sb->Empty();
+		s->setData(2, (void*)time(NULL));
         listener.addR(s);
     }
 }
 
-void PersServer::remove_socket(Socket* s)
+void PersServer::remove_socket(Socket* s, int i)
 {
     char b[256];
     s->GetPeer(b);
     smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount - 1);
     SerialBuffer *sb = (SerialBuffer*)s->getData(0);
     if(sb) delete sb;
-    listener.remove(s);
+	if(i == -1)
+	    listener.remove(s);
+	else
+	    listener._remove(i);
     if(clientCount) clientCount--;
     s->Close();
     delete s;
 }
 
+void PersServer::checkTimeouts()
+{
+	time_t timeBound = time(NULL) - timeout;
+	int i = 1;
+	smsc_log_debug(log, "Checking timeouts...");
+	while(i < listener.count())
+	{
+		Socket* s = listener.get(i);
+		if((time_t)s->getData(2)  < timeBound)
+		{
+		    smsc_log_info(log, "Disconnecting inactive user by timeout");		
+			remove_socket(s, i);
+		}
+		else
+			i++;
+	}
+}
+
 int PersServer::Execute()
 {
+	int lastTimeoutCheck = time(NULL);
     Multiplexer::SockArray read, write, err;
 
     if(isStopped()) return 1;
@@ -149,7 +173,7 @@ int PersServer::Execute()
 
     while(!isStopped())
     {
-        if(listener.canReadWrite(read, write, err))
+        if(listener.canReadWrite(read, write, err, timeout * 1000))
         {
             if(isStopped())
                 break;
@@ -181,6 +205,7 @@ int PersServer::Execute()
                             clientCount++;
                             sock1->setNonBlocking(1);
                             sock1->setData(0, new SerialBuffer());
+							sock1->setData(2, (void*)time(NULL));
                             listener.addR(sock1);
                         }
                     } else
@@ -202,7 +227,14 @@ int PersServer::Execute()
                 }
                 else
                     remove_socket(err[i]);
+					
         }
+		
+		if(lastTimeoutCheck + timeout < time(NULL))
+		{
+			checkTimeouts();
+			lastTimeoutCheck = time(NULL);
+		}
     }
 
     return 1;
