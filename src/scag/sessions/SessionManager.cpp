@@ -88,6 +88,7 @@ namespace scag { namespace sessions
         int  processExpire();
         void deleteSession(SessionPtr& session);
         bool processDeleteSession(SessionPtr& session);
+		bool deleteQueuePop(SessionPtr& s);
 
         uint16_t getNewUSR(Address& address);
         uint16_t getLastUSR(Address& address);
@@ -290,16 +291,23 @@ void SessionManagerImpl::Stop()
     smsc_log_info(logger,"SessionManager::stop");
 }
 
+bool SessionManagerImpl::deleteQueuePop(SessionPtr& s)
+{
+	MutexGuard m(inUseMonitor);
+	if(!deleteQueue.Count()) return false;
+	deleteQueue.Pop(s);
+	return true;
+}
+
 int SessionManagerImpl::Execute()
 {
     smsc_log_info(logger,"SessionManager::start executing");
 
     while(isStarted())
     {
-        while(deleteQueue.Count() > 0)
+        SessionPtr s;	
+        while(deleteQueuePop(s))
         {
-            SessionPtr s;
-            deleteQueue.Pop(s);
             if(processDeleteSession(s))
             {
                 MutexGuard mt(inUseMonitor);
