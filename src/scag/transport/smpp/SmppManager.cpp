@@ -20,9 +20,7 @@ using namespace smsc::util::xml;
 using namespace scag::exceptions;
 using namespace scag::util::singleton;
 
-class SmppManagerImpl: public SmppManager,
-  public ConfigListener
-
+class SmppManagerImpl: public SmppManager, public ConfigListener
 {
 public:
   SmppManagerImpl();
@@ -171,7 +169,8 @@ tag_uid,
 tag_bindSystemId,
 tag_bindPassword,
 tag_addressRange,
-tag_systemType
+tag_systemType,
+tag_inQueueLimit
 };
 
 struct Param{
@@ -198,7 +197,8 @@ TAGDEF(uid),
 TAGDEF(bindSystemId),
 TAGDEF(bindPassword),
 TAGDEF(addressRange),
-TAGDEF(systemType)
+TAGDEF(systemType),
+TAGDEF(inQueueLimit)
 };
 
 struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
@@ -338,6 +338,9 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
         case tag_maxSmsPerSecond:
           entity.sendLimit=GetIntValue(attrs);
           break;
+	case tag_inQueueLimit:
+	  //TODO: fill it !
+	  break;
       }
     }
     if(enabled)
