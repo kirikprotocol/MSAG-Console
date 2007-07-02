@@ -35,11 +35,11 @@ public class Index extends TabledBeanImpl {
 
     private String[] subj;
     private boolean routesChanged;
-    private String changeByUser;
+    private String  changeByUser;
     private boolean currentUser;
     private boolean routesSaved = false;
     private boolean routesRestored = false;
-    private String restoreDate = null;
+    private String  restoreDate = null;
     private boolean routesLoaded = false;
 
     private boolean httpRoutesSaved = false;
@@ -61,35 +61,64 @@ public class Index extends TabledBeanImpl {
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        logger.debug("DEBUG:process():start");
         sort = "time";
         super.process(request, response);
-
-        if (null != mbRestoreHttp)
+        logger.debug("DEBUG:process():"
+                + "mbRestoreHttp:'" + mbRestoreHttp +"'\n"
+                + "mbRestore:'" + mbRestore+"'\n"
+                + "mbApplyHttp:'" + mbApplyHttp +"'\n"
+                + "mbApply:'" + mbApply +"'\n"
+                + "mbLoadSaved:'" + mbLoadSaved +"'\n"
+                + "mbLoadSavedHttp:'" + mbLoadSavedHttp +"'\n"
+                + "mbLoad:'" + mbLoad +"'\n"
+                + "mbLoadHttp:'" + mbLoadHttp +"'\n"
+                + "mbSave:'" + mbSave +"'\n"
+                + "mbSaveHttp:'" + mbSaveHttp +"'\n"
+        );
+        if (mbRestoreHttp != null){
             restoreHttpRoutes();
-        if (null != mbRestore)
+        }
+        if (mbRestore != null){
             restoreRoutes();
-        else if (null != mbApplyHttp)
+        }
+        else if (mbApplyHttp != null){
             applyHttpRoutes();
-        else if (null != mbApply)
+        }
+        else if (mbApply != null){
             applySmppRoutes();
-        else if (null != mbLoadSaved)
+        }
+        else if (mbLoadSaved != null){
             restoreRoutes();
-        else if (null != mbLoadSavedHttp)
+        }
+        else if (mbLoadSavedHttp != null){
             restoreHttpRoutes();
-        else if (mbLoad != null)
+        }
+        else if (mbLoad != null){
             loadRoutes();
-        else if (mbLoadHttp != null)
+        }
+        else if (mbLoadHttp != null){
             loadHttpRoutes();
-        else if (mbSave != null)
+        }
+        else if (mbSave != null){
             saveRoutes();
-        else if (mbSaveHttp != null)
+        }
+        else if (mbSaveHttp != null){
             saveHttpRoutes();
+        }
         this.init();
         //refresh changes bean values (it's bug from class TabledBeanImpl)
+        logger.debug("DEBUG:process():end");
         super.process(request, response);
+        if( tabledItems.isEmpty() ){
+            logger.debug("DEBUG:init():if( tabledItems.isEmpty() ): set routesRestored = true " +
+                    "routesRestored='" + routesRestored + "'");
+            routesRestored = true;            
+        }
     }
 
     private void init() throws SCAGJspException {
+        logger.debug("DEBUG:init():start");
         SCAGAppContext appContext = getAppContext();
 
         final Locale locale = new Locale(Functions.getLocaleEncoding());
@@ -113,6 +142,8 @@ public class Index extends TabledBeanImpl {
 
         /********************** SMPP ROUTES *********************************/
         routesRestored = appContext.getScagRoutingManager().isRoutesRestored();
+        logger.debug("DEBUG:init():getScagRoutingManager().isRoutesRestored() routesRestored='" + routesRestored + "'");
+//        routesRestored = false;
         routesSaved = appContext.getScagRoutingManager().isRoutesSaved();
         if (appContext.getScagRoutingManager().hasSavedConfiguration()) {
             routesLoaded = appContext.getScagRoutingManager().isRoutesLoaded();
@@ -130,6 +161,7 @@ public class Index extends TabledBeanImpl {
             httpRoutesLoaded = appContext.getHttpRoutingManager().isRoutesLoaded();
         }
         httpRoutesChanged = appContext.getHttpRoutingManager().isRoutesChanged();
+        logger.debug("DEBUG:init():end");
     }
 
     private User getUser(SCAGAppContext appContext) throws SCAGJspException {
@@ -155,14 +187,15 @@ public class Index extends TabledBeanImpl {
      */
     private void restoreRoutes() throws SCAGJspException {
         try {
+            logger.debug("DEBUG:restoreRoutes():start");
             appContext.getScagRoutingManager().restore();
-            appContext.getScagRoutingManager().setRoutesChanged(true);
+            appContext.getScagRoutingManager().setRoutesChanged(true);//???
             appContext.getScagRoutingManager().setRoutesRestored(true);
             appContext.getScagRoutingManager().setRoutesSaved(false);
             appContext.getScagRoutingManager().setRoutesLoaded(false);
-
+            logger.debug("DEBUG:restoreRoutes():end");
         } catch (SibincoException e) {
-            logger.debug("Couldn't restore routes", e);
+            logger.debug("ERROR:Couldn't restore routes", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_RESTORE_ROUTES, e);
         }
     }
@@ -264,7 +297,8 @@ public class Index extends TabledBeanImpl {
             throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_SAVE_ROUTES, exc);
         }
         appContext.getScagRoutingManager().setRoutesSaved(true);
-        appContext.getScagRoutingManager().setRoutesRestored(true);
+//        logic bug
+//        appContext.getScagRoutingManager().setRoutesRestored(true);
     }
 
     /**
@@ -281,7 +315,8 @@ public class Index extends TabledBeanImpl {
             throw new SCAGJspException(Constants.errors.routing.routes.COULDNT_SAVE_HTTP_ROUTES, exc);
         }
         appContext.getHttpRoutingManager().setRoutesSaved(true);
-        appContext.getHttpRoutingManager().setRoutesRestored(true);
+//        logic bug
+//        appContext.getHttpRoutingManager().setRoutesRestored(true);
     }
 
     public boolean isRoutesChanged() {
