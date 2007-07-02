@@ -61,6 +61,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private static final String DST_SME_PREFIX = "dst_sme_";
     private static final String DST_MASK_PREFIX = "dst_mask_sme_";
     private HttpSession session;
+    private boolean emptyDestinations = false;
 
 
     public String getId() {
@@ -73,7 +74,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         path = request.getContextPath();
         appContext = getAppContext();
         session = request.getSession();
-
+        emptyDestinations = false;
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
@@ -266,12 +267,14 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             final Map sources = createSources();
             srcMasks = removeEmptyFromArr( srcMasks );
             dstMasks = removeEmptyFromArr( dstMasks );
-            if( sources.isEmpty() ){
+            if( sources == null || sources.isEmpty() ){
                 logger.debug("Edit.java:save():empty SOURCE MAP|srcMasks.length is: " + srcMasks.length + "|");
                 throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR);
             }
-            if( null == destinations || destinations.isEmpty() ){
+            if( destinations == null || destinations.isEmpty() ){
                 logger.debug("Edit.java:save():empty DESTINATION MAP");
+                final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
+                emptyDestinations = true;
                 throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_DEST);
             }
 
@@ -471,10 +474,12 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
         if (null != route) {
             final Map result = new TreeMap();
-            for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
-                final Destination destination = (Destination) i.next();
-                if (destination.isSubject())
-                    result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+            if( !emptyDestinations ){
+                for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
+                    final Destination destination = (Destination) i.next();
+                    if (destination.isSubject())
+                        result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+                }
             }
             return result;
         }
@@ -483,12 +488,14 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public Map getDstMaskPairs() {
         final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
-        if (null != route) {
+        if( route != null) {
             final Map result = new TreeMap();
-            for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
-                final Destination destination = (Destination) i.next();
-                if (!destination.isSubject())
-                    result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+            if( !emptyDestinations ){
+                for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
+                    final Destination destination = (Destination) i.next();
+                    if (!destination.isSubject() )
+                        result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+                }
             }
             return result;
         }
