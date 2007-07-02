@@ -51,8 +51,8 @@ public class Center {
     private String addressRange;
     private String connHostPort = "";
     private String connStatus = "unknow";
-    private int inQueueLimit = -3;
-    private int maxSmsPerSec = -3;
+    private int inQueueLimit = 0;
+    private int maxSmsPerSec = 0;
 
     private Category logger = Category.getInstance(this.getClass());
 
