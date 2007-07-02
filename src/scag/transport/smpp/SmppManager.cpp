@@ -160,7 +160,7 @@ tag_timeout,
 tag_mode,
 tag_enabled,
 tag_providerId,
-tag_maxSmsPerSecond,
+tag_maxSmsPerSec,
 tag_inQueueLimit,
 tag_host=tag_providerId|1024,
 tag_port,
@@ -187,7 +187,7 @@ TAGDEF(password),
 TAGDEF(timeout),
 TAGDEF(mode),
 TAGDEF(providerId),
-TAGDEF(maxSmsPerSecond),
+TAGDEF(maxSmsPerSec),
 TAGDEF(host),
 TAGDEF(port),
 TAGDEF(althost),
@@ -335,7 +335,7 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
         case tag_systemType:
           FillStringValue(attrs,entity.systemType);
           break;
-        case tag_maxSmsPerSecond:
+        case tag_maxSmsPerSec:
           entity.sendLimit=GetIntValue(attrs);
           break;
 	case tag_inQueueLimit:
