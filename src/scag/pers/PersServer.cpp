@@ -70,7 +70,7 @@ void PersServer::process_read_socket(Socket* s)
         }
         else
         {
-            smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
+            if(j) smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
 //            if(errno != EWOULDBLOCK)
                 remove_socket(s);
             return;
@@ -95,7 +95,8 @@ void PersServer::process_read_socket(Socket* s)
             smsc_log_debug(log, "read from socket: len=%d, data=%s", sb->length(), sb->toString().c_str());
             CmdDispatcher->Execute(sb);
             sb->SetPos(0);
-            listener.addW(s);
+            listener.addRW(s);
+			s->setData(3, (void*)1); // indicate that we want write and read is only for EOF signalling
         }
     }
 }
@@ -124,6 +125,7 @@ void PersServer::process_write_socket(Socket* s)
         sb->Empty();
 		s->setData(2, (void*)time(NULL));
         listener.addR(s);
+		s->setData(3, 0);
     }
 }
 
@@ -207,12 +209,18 @@ int PersServer::Execute()
                             sock1->setData(0, new SerialBuffer());
 							sock1->setData(2, (void*)time(NULL));
                             listener.addR(sock1);
+							sock1->setData(3, 0);
                         }
                     } else
                         smsc_log_error(log, "accept failed: %s", strerror(errno));
                 } 
                 else
-                    process_read_socket(read[i]);
+				{
+					if(read[i]->getData(3))	// in the case if we want to write and unexpected data arrive or EOF
+						remove_socket(read[i]);
+					else
+	                    process_read_socket(read[i]);
+				}
             }
 
             for(int i = 0; i < write.Count(); i++)
