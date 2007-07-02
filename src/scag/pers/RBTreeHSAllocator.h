@@ -367,35 +367,35 @@ private:
 	}
 	int startTransaction(void)
 	{
-	    transFileHeader		hdr;
-	    list<RBTreeNode*>::iterator It;
-	    long			nodeAddr;
-
-	    hdr.status = STAT_WRITE_TRX;
-	    hdr.version = TRX_VER_1;
-	    hdr.operation = currentOperation;
-	    hdr.nodes_count = changedNodes.size();
+		//printf("startTransaction\n");
+		transFileHeader		hdr;
+		list<RBTreeNode*>::iterator It;
+		long			nodeAddr;
+		
+		hdr.status = STAT_WRITE_TRX;
+		hdr.version = TRX_VER_1;
+		hdr.operation = currentOperation;
+		hdr.nodes_count = changedNodes.size();
+		
+		//printf("header->root_cell = %d (%d)\n", header->root_cell, sizeof(header->root_cell));
+		trans_f.Seek(0, SEEK_SET);
+		trans_f.Write((char*)&hdr, sizeof(transFileHeader));
+		trans_f.Write((char*)header, sizeof(rbtFileHeader));
+		
+		for(It = changedNodes.begin(); It != changedNodes.end(); It++)
+		{
+			//printf("0x%p\n", *It);
+			nodeAddr = (long)*It - (long)rbtree_addr;
+			//printf("nodeAddr = 0x%X", nodeAddr);
+			trans_f.Write(&nodeAddr, sizeof(long));
+			trans_f.Write((char*)*It, sizeof(RBTreeNode));
+		}
 	
-	    //printf("header->root_cell = %d (%d)\n", header->root_cell, sizeof(header->root_cell));
-	    trans_f.Seek(0, SEEK_SET);
-	    trans_f.Write((char*)&hdr, sizeof(transFileHeader));
-	    trans_f.Write((char*)header, sizeof(rbtFileHeader));
-	
-	    for(It = changedNodes.begin(); It != changedNodes.end(); It++)
-	    {
-		//printf("0x%p\n", *It);
-		nodeAddr = (long)*It - (long)rbtree_addr;
-		//printf("nodeAddr = 0x%X", nodeAddr);
-		trans_f.Write(&nodeAddr, sizeof(long));
-		trans_f.Write((char*)*It, sizeof(RBTreeNode));
-	    }
-
-	    return 0;
+	return 0;
 	}
 	int writeChanges(void)
 	{
 	    //printf("Write Changes\n");
-	    getchar();
 	    int stat = STAT_WRITE_RBT;
 	    trans_f.Seek(0, SEEK_SET);
 	    trans_f.Write((char*)&stat, sizeof(int));
@@ -406,8 +406,6 @@ private:
 
 	    for(It = changedNodes.begin(); It != changedNodes.end(); It++)
 	    {
-		//printf("0x%p\n", *It);
-		//printf("0x%x\n", (long)*It - (long)rbtree_body);
 		rbtree_f.Seek((long)*It - (long)rbtree_addr , SEEK_SET);
 		rbtree_f.Write((char*)*It, sizeof(RBTreeNode));
 		
@@ -416,10 +414,11 @@ private:
 	}
 	int endTransaction()
 	{
-	    int stat = STAT_OK;
-	    trans_f.Seek(0, SEEK_SET);
-	    trans_f.Write((char*)&stat, sizeof(int));
-	    return 0;
+		//printf("endTransaction\n");
+		int stat = STAT_OK;
+		trans_f.Seek(0, SEEK_SET);
+		trans_f.Write((char*)&stat, sizeof(int));
+		return 0;
 	}
 	int repairRBTreeFile(void)
 	{

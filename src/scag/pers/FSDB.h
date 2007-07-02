@@ -147,9 +147,11 @@ public:
 	smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
         long idx;
         if(indexStorage.Get(key, idx))
+	{
 		return dataStorage.Change(idx, data, key);
+	}
         dataStorage.Add(data, idx, key);
-        indexStorage.Insert(key, idx);
+	indexStorage.Insert(key, idx);
 	return true;
     }
     virtual bool Get(const Key& key, DataBlock& data)

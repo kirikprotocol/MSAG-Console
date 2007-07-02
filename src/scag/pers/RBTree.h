@@ -99,6 +99,9 @@ public:
 
 	int Insert(const Key& k, const Value& v)
 	{
+		//printf("Insert\n");
+// 		sleep(1);
+		
 		RBTreeNode* newNode = allocator->allocateNode();
 		newNode->key = k;
 		newNode->value = v;
@@ -112,6 +115,7 @@ public:
 	}
 	bool Get(const Key& k, Value& val)
 	{
+		//printf("Get\n");
 		RBTreeNode*	node = rootNode;
 		while( (node != nilNode) && (node->key != k) )
 		{
