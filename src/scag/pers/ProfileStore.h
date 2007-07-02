@@ -101,7 +101,10 @@ public:
     Profile *pf;
 
     CacheItem(Key& k, Profile *p) { key = k; pf = p; };
-    ~CacheItem() { delete pf; };
+    ~CacheItem()
+	{ 
+		delete pf; 
+	};
 };
 
 template <class Key>
@@ -109,12 +112,13 @@ class HashProfileStore
 {
 public:
     HashProfileStore() {};
-    ~HashProfileStore() {};
+    ~HashProfileStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str());};
 
-    void init(const std::string& storeName, uint32_t initRecCnt)
+    void init(const std::string& _storeName, uint32_t initRecCnt)
     {
         log = smsc::logger::Logger::getInstance("hashstore");
 
+		storeName = _storeName;
         store.init(storeName, initRecCnt);
         smsc_log_debug(log, "Inited: %s", storeName.c_str());
     };
@@ -159,6 +163,7 @@ public:
 
 protected:
     smsc::logger::Logger* log;
+	std::string storeName;
     VarRecSizeStore<Key> store;
 };
 
@@ -174,6 +179,7 @@ public:
 				int indexGrowth, int blocksInFile, int dataBlockSize, int cacheSize)
     {
         log = smsc::logger::Logger::getInstance("treestore");
+		storeName = storageName;
         store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize);
 		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
 	};
@@ -203,6 +209,7 @@ public:
     };
 
 protected:
+	std::string storeName;
     smsc::logger::Logger* log;
     FSDBProfiles<Key> store;
 	SerialBuffer sb;
@@ -222,20 +229,21 @@ public:
                 if(cache[i] != NULL)
                 {
                     storeProfile(cache[i]->key, cache[i]->pf);
-                    delete cache[i]->pf;
+//                    delete cache[i]->pf;
                     delete cache[i];
                 }
             delete[] cache;
         }
+		smsc_log_debug(log, "Shutdown cached store %s....", storeName.c_str());		
     };
 
-    void init(const std::string& storeName, uint32_t initRecCnt, uint32_t _max_cache_size = 1000)
+    void init(const std::string& _storeName, uint32_t initRecCnt, uint32_t _max_cache_size = 1000)
     {
         max_cache_size = _max_cache_size;
         cache = new CacheItem<Key>*[_max_cache_size];
         memset(cache, 0, sizeof(CacheItem<Key>*) * _max_cache_size);
 
-        StoreType::init(storeName, initRecCnt);
+        StoreType::init(_storeName, initRecCnt);
     };
 
     Profile* getProfile(Key& key, bool create)
