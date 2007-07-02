@@ -393,10 +393,13 @@ void PersClientImpl::ReadAllTO(char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t rd = 0;
-
+	struct pollfd pfd;
+	
     while(sz)
     {
-        if(sock.canRead(0) <= 0)
+		pfd.fd = sock.getSocket();
+		pfd.events = POLLIN;
+        if(poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLIN))
             throw PersClientException(TIMEOUT);
 
         cnt = sock.Read(buf + rd, sz);
@@ -412,11 +415,15 @@ void PersClientImpl::WriteAllTO(const char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t wr = 0;
+	struct pollfd pfd;
 
     while(sz)
     {
-        if(sock.canWrite(0) <= 0)
+		pfd.fd = sock.getSocket();
+		pfd.events = POLLOUT | POLLIN;
+        if(poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLOUT))
             throw PersClientException(TIMEOUT);
+			
         cnt = sock.Write(buf + wr, sz);
         if(cnt <= 0)
             throw PersClientException(SEND_FAILED);
