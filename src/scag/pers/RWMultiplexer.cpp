@@ -41,7 +41,7 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
 	}
     if(fds[i].revents & POLLIN)
       read.Push(sockets[i]);
-    if(fds[i].revents & POLLOUT)
+    else if(fds[i].revents & POLLOUT)
       write.Push(sockets[i]);
   }
 
