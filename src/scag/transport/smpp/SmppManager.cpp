@@ -161,6 +161,7 @@ tag_mode,
 tag_enabled,
 tag_providerId,
 tag_maxSmsPerSecond,
+tag_inQueueLimit,
 tag_host=tag_providerId|1024,
 tag_port,
 tag_althost,
@@ -169,8 +170,7 @@ tag_uid,
 tag_bindSystemId,
 tag_bindPassword,
 tag_addressRange,
-tag_systemType,
-tag_inQueueLimit
+tag_systemType
 };
 
 struct Param{
