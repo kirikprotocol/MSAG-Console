@@ -382,6 +382,8 @@ void Session::Serialize(SessionBuffer& buff)
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId;
     //buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
     buff << m_SessionPrimaryKey.sAddr.c_str();
+	buff << ruleKey.serviceId;
+	buff << ruleKey.transport;
 }
 
 
@@ -429,6 +431,9 @@ void Session::Deserialize(SessionBuffer& buff)
     //m_SmppDiscriptor.lastIndex = tmp;
 
     buff >> m_SessionPrimaryKey.sAddr;
+	
+	buff >> ruleKey.serviceId;
+	buff >> ruleKey.transport;
 }
 
 
