@@ -278,7 +278,8 @@ Connection* ConnectionPool::getConnection()
                       monitor.wait(&queue.condition, getConnectionTimeout);
         pthread_cond_destroy(&queue.condition);
         if ((getConnectionTimeout > 0) && (status == ETIMEDOUT)) {
-            __trace2__("Failed to obtain connection after %d msec: time out", getConnectionTimeout);
+            smsc_log_warn(log, "Failed to obtain connection after %d msec: time out", 
+				getConnectionTimeout);
             return 0; // throw exc?
         }
         if (queue.connection) queue.connection->setInUse(true);
@@ -409,9 +410,9 @@ int WatchDog::Execute()
         if (timers.empty())
         {
             timersLock.Unlock();
-            __trace__("DS WatchDog> Idle");
+    	    smsc_log_debug(log, "DS WatchDog> Idle");
             awake.Wait(3600*1000); // idle timeout;
-            __trace__("DS WatchDog> Idle quit");
+	    smsc_log_debug(log, "DS WatchDog> Idle quit");
         }
         else
         {
@@ -421,34 +422,34 @@ int WatchDog::Execute()
             int32_t left = cd.deadline - time(NULL);
             if (left <=0)
             {
-                __trace2__("DS WatchDog> Timer #%u expired for connection %x. "
-                           "Time: left=%d, sleep=%u, current=%u",
-                           timer, cd.connection, left, cd.deadline, time(NULL));
+                smsc_log_warn(log, "DS WatchDog> Timer #%u expired for connection %x. "
+                        	   "Time: left=%d, sleep=%u, current=%u",
+                                   timer, cd.connection, left, cd.deadline, time(NULL));
                 timers.erase(timer);
                 timersLock.Unlock();
 
                 try 
                 {
                     if (cd.connection) cd.connection->abort();
-                    __trace2__("DS WatchDog> DS operation terminated "
-                               "on connection %x. ", cd.connection);
+        	    smsc_log_warn(log, "DS WatchDog> DS operation terminated "
+		                       "on connection %x. ", cd.connection);
                 }
                 catch (Exception& exc) {
-                    __trace2__("DS WatchDog> Termination of DS operation "
-                               "on connection %x failed! Cause:",
-                               cd.connection, exc.what());
+                    smsc_log_error(log, "DS WatchDog> Termination of DS operation "
+                            		"on connection %x failed! Cause:",
+                            		cd.connection, exc.what());
                 }
                 catch (...) {
-                    __trace2__("DS WatchDog> Termination of DS operation "
-                               "on connection %x failed! Unknown reason.",
-                               cd.connection);
+                    smsc_log_error(log, "DS WatchDog> Termination of DS operation "
+                            		"on connection %x failed! Unknown reason.",
+                            		cd.connection);
                 }
             }
             else
             {
-                __trace2__("DS WatchDog> Waiting timer #%u for connection %x. "
-                           "Time: left=%d, sleep=%u, current=%u",
-                           timer, cd.connection, left, cd.deadline, time(NULL));
+                smsc_log_debug(log, "DS WatchDog> Waiting timer #%u for connection %x. "
+                    		    "Time: left=%d, sleep=%u, current=%u",
+                        	    timer, cd.connection, left, cd.deadline, time(NULL));
                 timersLock.Unlock();
                 awake.Wait(left*1000);
             }
@@ -475,8 +476,8 @@ int WatchDog::startTimer(Connection* connection, uint32_t timeout)
     }
     timers.insert(TimersPair(timer, 
                     ConnectionDeadline(connection, time(NULL)+timeout)));
-    __trace2__("DS WatchDog> Timer #%u start for connection %x timeout=%d",
-                timer, connection, timeout);
+    smsc_log_debug(log, "DS WatchDog> Timer #%u start for connection %x timeout=%d",
+            		timer, connection, timeout);
     awake.Signal();
     return timer;
 }
@@ -487,7 +488,7 @@ void WatchDog::stopTimer(int timer)
         if (!bStarted || timer < 0) return;
     }
     
-    __trace2__("DS WatchDog> Timer #%u stop", timer);
+    smsc_log_debug(log, "DS WatchDog> Timer #%u stop", timer);
     MutexGuard  guard(timersLock);
     timers.erase(timer);
 }

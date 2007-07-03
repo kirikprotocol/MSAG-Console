@@ -265,7 +265,7 @@ namespace smsc { namespace db
         
     protected:
         
-		smsc::logger::Logger *log;
+	smsc::logger::Logger *log;
 
         bool                isConnected, isDead;
         
@@ -359,11 +359,14 @@ namespace smsc { namespace db
         bool    bStarted, bNeedExit;
         Mutex   startLock, timersLock;
 
-        TimersMap   timers;
+        TimersMap   		timers;
+	smsc::logger::Logger   *log;
 
     public:
 
-        WatchDog() : Thread(), bStarted(false), bNeedExit(false) {};
+        WatchDog() 
+	    : Thread(), bStarted(false), bNeedExit(false),
+	      log(Logger::getInstance("smsc.db.WatchDog")) {};
         virtual ~WatchDog() { Stop(); };
 
         virtual int Execute();
