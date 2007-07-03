@@ -137,15 +137,19 @@ public class Svc {
     }
 
     protected PrintWriter storeBody(final PrintWriter out) {
-        out.println("    <param name=\"systemId\"         value=\"" + StringEncoderDecoder.encode(id) + "\"/>");
-        out.println("    <param name=\"password\"         value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
-        out.println("    <param name=\"timeout\"          value=\"" + timeout + "\"/>");
-        out.println("    <param name=\"mode\"             value=\"" + getModeStr() + "\"/>");
-        out.println("    <param name=\"enabled\"          value=\"" + enabled + "\"/>");
-        out.println("    <param name=\"providerId\"       value=\"" + -1/*provider.getId()*/ + "\"/>");
-        out.println("    <param name=\"" + IN_QUEUE_LIMIT  + "\"     value=\"" + getInQueueLimit() + "\"/>");
-        out.println("    <param name=\"" + MAX_SMS_PER_SEC + "\"     value=\"" + getMaxSmsPerSec() + "\"/>");
+        out.println("    <param name=\"systemId\"\tvalue=\"" + StringEncoderDecoder.encode(id) + "\"/>");
+        out.println("    <param name=\"password\"\tvalue=\"" + StringEncoderDecoder.encode(password) + "\"/>");
+        out.println("    <param name=\"timeout\"\tvalue=\"" + timeout + "\"/>");
+        out.println("    <param name=\"mode\"\t\tvalue=\"" + getModeStr() + "\"/>");
+        out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
+        out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
+        out.println("    <param name=\"" + IN_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
+        out.println("    <param name=\"" + MAX_SMS_PER_SEC + "\"\tvalue=\"" + intToString(getMaxSmsPerSec()) + "\"/>");
         return out;
+    }
+
+    public String intToString(int number){
+        return number==0?"":new Integer(number).toString();
     }
 
     public PrintWriter store(final PrintWriter out) {
