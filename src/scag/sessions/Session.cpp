@@ -384,6 +384,7 @@ void Session::Serialize(SessionBuffer& buff)
     buff << m_SessionPrimaryKey.sAddr.c_str();
 	buff << ruleKey.serviceId;
 	buff << ruleKey.transport;
+	buff << (uint32_t)bIsNew;
 }
 
 
@@ -434,6 +435,8 @@ void Session::Deserialize(SessionBuffer& buff)
 	
 	buff >> ruleKey.serviceId;
 	buff >> ruleKey.transport;
+	buff >> tmp;	
+	bIsNew = tmp;
 }
 
 
