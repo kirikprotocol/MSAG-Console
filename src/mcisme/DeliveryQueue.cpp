@@ -31,7 +31,7 @@ using namespace core::synchronization;
 using namespace core::buffers;
 
 
-char* cTime(const time_t* clock)		// функция возвращает на статический буфер. Не потокобезопасная.
+char* cTime(const time_t* clock)		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ. пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 {
 	static char buff[32];
 
@@ -104,6 +104,13 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
 			deliveryQueueMonitor.notify();
 			smsc_log_info(logger, "Abonent %s rescheduled on %s. total = %d (%d)", strAbnt.c_str(), cTime(&curTime), total, deliveryQueue.size());
 		}
+		if( (schedParam->abntStatus == InProcess) && (schedParam->lastAttempt != 0) &&
+			(curTime > (schedParam->lastAttempt + responseWaitTime)) )
+		{
+			smsc_log_warn(logger, "Abonent %s is in delivery too long. Reset abntStatus in Idle", strAbnt.c_str());
+			schedParam->abntStatus = Idle;
+			schedParam->lastAttempt = 0;
+		}
 		return schedParam->schedTime;
 	}
 	if(-1 != schedTime)
@@ -123,7 +130,7 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
 
 	deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
 	
-	SchedParam schedParam = {Idle, schedTime, lastError};
+	SchedParam schedParam = {Idle, schedTime, lastError, 0};
 	AbntsStatus.Insert(strAbnt.c_str(), schedParam);
 	deliveryQueueMonitor.notify();
 	total++;
@@ -136,7 +143,7 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
 {
 	bool toHead = false;
 	string strAbnt = abnt.toString();
-//		smsc_log_debug(logger, "Reschedule %s", strAbnt.c_str());
+//	smsc_log_debug(logger, "Reschedule %s", strAbnt.c_str());
 	MutexGuard lock(deliveryQueueMonitor);
 	if(!AbntsStatus.Exists(strAbnt.c_str()))
 	{
@@ -216,13 +223,13 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
 	MutexGuard lock(deliveryQueueMonitor);
 	int pause = GetDeliveryTime()-time(0);
 
-//		smsc_log_debug(logger, "pause = %d", pause);
+//	smsc_log_debug(logger, "pause = %d", pause);
 	if(pause > 0)
 	{
 		deliveryQueueMonitor.wait(pause*1000);
 
 		//if(0 == deliveryQueueMonitor.wait(pause*1000))
-//             smsc_log_debug(logger, "recieved a notify.");
+//		smsc_log_debug(logger, "recieved a notify.");
 		//else
 		//	smsc_log_debug(logger, "timeout has passed.");
 	}
@@ -240,8 +247,9 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
 
 		It = deliveryQueue.begin();
 		t = It->first;
-
-		if(t > time(0))
+		
+		time_t curTime = time(0);
+		if(t > curTime)
 		{
 			smsc_log_debug(logger, "Delivery time is not reached yet.");
 			return false;
@@ -252,10 +260,11 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
 		if(AbntsStatus.Exists(strAbnt.c_str()))
 		{
 			SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
+			schedParam->abntStatus = InProcess;
 			schedParam->schedTime = 0;
+			schedParam->lastAttempt = curTime;
 			if(schedParam->abntStatus == Idle)
 			{	
-				schedParam->abntStatus = InProcess;
 				smsc_log_info(logger, "Abonent %s ready to delivery.", strAbnt.c_str());
 				return true;
 			}

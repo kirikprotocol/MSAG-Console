@@ -64,7 +64,7 @@ public:
 		memcpy((void*)&(value.full_addr), (void*)&(addr.value.full_addr), sizeof(value.full_addr));
 	};
 
-	virtual ~AbntAddr(){};
+	~AbntAddr(){};
 
 	AbntAddr(const char* text)
 	{

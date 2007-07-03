@@ -85,63 +85,63 @@ class TimeoutMonitor;
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
 {
 	std::string test_number;
-
-  smsc::logger::Logger *logger;
-
-    int			protocolId, daysValid;
-    std::string	svcType, address;
-
-    int     releaseCallsStrategy;
-	int		stkTemplateId;
-
-	Storage*			pStorage;
-	DeliveryQueue*		pDeliveryQueue;
-
-	TemplateManager*    templateManager;
-    MCIModule*          mciModule;
-
-    Mutex               messageSenderLock;
-    MessageSender*      messageSender;
-    
-	Advertising*		advertising;
-	bool				useAdvert;
-
-	ProfilesStorage*	profileStorage;
-    StatisticsManager*  statistics;
-	TimeoutMonitor*		timeoutMonitor;
-	time_t				responseWaitTime;
-    
-//    EventMonitor    smscIdMonitor;
-    Hash<bool>      lockedSmscIds;
-
-	IntHash<sms_info*>	smsInfo;
-	Mutex				smsInfoMutex;
 	
+	smsc::logger::Logger *logger;
+	
+	int		protocolId, daysValid;
+	std::string	svcType, address;
+	
+	int     	releaseCallsStrategy;
+	int		stkTemplateId;
+	
+	Storage*	pStorage;
+	DeliveryQueue*	pDeliveryQueue;
+	
+	TemplateManager*	templateManager;
+	MCIModule*		mciModule;
+	
+	Mutex		messageSenderLock;
+	MessageSender*	messageSender;
+	
+	Advertising*	advertising;
+	bool		useAdvert;
+	
+	ProfilesStorage*	profileStorage;
+	StatisticsManager*	statistics;
+	TimeoutMonitor*		timeoutMonitor;
+	time_t			responseWaitTime;
+	
+	//EventMonitor    smscIdMonitor;
+	Hash<bool>      lockedSmscIds;
+	
+	IntHash<sms_info*>	smsInfo;
+	Mutex			smsInfoMutex;
+		
 	bool	forceInform, forceNotify;
-
-//	EventMonitor		tasksMonitor;
-
-    Mutex   startLock;
-    Event   exitedEvent;
-    bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
-    int                             maxInQueueSize, maxOutQueueSize;
-    EventMonitor                    inQueueMonitor, outQueueMonitor;
-    CyclicQueue<MissedCallEvent>    inQueue;
-    CyclicQueue<Message>            outQueue;
-    
-    void openInQueue();
-    void closeInQueue();
-    bool putToInQueue(const MissedCallEvent& event, bool skip=true);
-    bool getFromInQueue(MissedCallEvent& event);
+	
+	//EventMonitor		tasksMonitor;
+	
+	Mutex   startLock;
+	Event   exitedEvent;
+	bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
+	int                             maxInQueueSize, maxOutQueueSize;
+	EventMonitor                    inQueueMonitor, outQueueMonitor;
+	CyclicQueue<MissedCallEvent>    inQueue;
+	CyclicQueue<Message>            outQueue;
+	
+	void openInQueue();
+	void closeInQueue();
+	bool putToInQueue(const MissedCallEvent& event, bool skip=true);
+	bool getFromInQueue(MissedCallEvent& event);
 	string getBanner(const AbntAddr& abnt);
-    void test_stk(void);    
+	void test_stk(void);    
 	void test_sched(void);
 	void test_advert(void);
-    //void openOutQueue();
-    //void closeOutQueue();
-    //bool putToOutQueue(const Message& event, bool force=false);
-    //bool getFromOutQueue(Message& event);
-    
+	//void openOutQueue();
+	//void closeOutQueue();
+	//bool putToOutQueue(const Message& event, bool force=false);
+	//bool getFromOutQueue(Message& event);
+	
 	void ProcessAbntEvents(const AbntAddr& abnt);
 	bool GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>& events);
 	void SendAbntOnlineNotifications(const sms_info* pInfo);

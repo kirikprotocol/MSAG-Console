@@ -281,7 +281,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 		throw ConfigException(e.what());
 	}
 	
-	time_t t = time(NULL); localtime(&t);	// после вызова localtime() должна проинициализироваться timezone;
+	time_t t = time(NULL); localtime(&t);	// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ localtime() пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ timezone;
 
     try { test_number = config->getString("testNumber"); } catch (...)
 	{
@@ -303,7 +303,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
 //	Init Delivery Queue
 	std::auto_ptr<ConfigView> schedulingCfgGuard(config->getSubConfig("Scheduling"));
-    ConfigView* schedulingCfg = schedulingCfgGuard.get();
+	ConfigView* schedulingCfg = schedulingCfgGuard.get();
 
 	string sResendingPeriod;
 	try { sResendingPeriod = schedulingCfg->getString("resendingPeriod"); } catch (...){sResendingPeriod = "00:30:00";
@@ -348,11 +348,11 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
 //	Init Advertising Client
 	std::auto_ptr<ConfigView> advertCfgGuard(config->getSubConfig("Advertising"));
-    ConfigView* advertCfg = advertCfgGuard.get();
+	ConfigView* advertCfg = advertCfgGuard.get();
 
-    try { useAdvert = advertCfg->getBool("useAdvert"); } catch (...) { useAdvert = false;
-        smsc_log_warn(logger, "Parameter <MCISme.Advertising.useAdvert> missed. Defaul profile useAdvert is false (off)");
-    }
+	try { useAdvert = advertCfg->getBool("useAdvert"); } catch (...) { useAdvert = false;
+	smsc_log_warn(logger, "Parameter <MCISme.Advertising.useAdvert> missed. Defaul profile useAdvert is false (off)");
+	}
 
 	if(useAdvert)
 	{
@@ -385,7 +385,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 
 //	timeoutMonitor = new TimeoutMonitor(this, responseWaitTime);
 	timeoutMonitor = new TimeoutMonitor(this);
-
+	pDeliveryQueue->SetResponseWaitTime(responseWaitTime);
+	
 	smsc_log_info(logger, "Load success.");
 }
 TaskProcessor::~TaskProcessor()
@@ -468,7 +469,7 @@ void TaskProcessor::Run()
 		{
 			AbntAddr	abnt;
 			if(pDeliveryQueue->Get(abnt))
-					ProcessAbntEvents(abnt);
+				ProcessAbntEvents(abnt);
 		}
 		catch (std::exception& exc){
             smsc_log_error(logger, ERROR_MESSAGE, exc.what());}
@@ -481,7 +482,7 @@ void TaskProcessor::Run()
 
 int TaskProcessor::Execute()
 {
-    clearSignalMask();
+	clearSignalMask();
     
 	MissedCallEvent event;
 	MCEvent			outEvent;
@@ -652,10 +653,10 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 		pStorage->deleteEvents(abnt, events);
 		return;
 	}
-	Message				msg;
+	Message			msg;
 	MessageFormatter	formatter(templateManager->getInformFormatter(profile.informTemplateId));
-	sms_info*			pInfo = new sms_info;
-	int					seqNum=0;
+	sms_info*		pInfo = new sms_info;
+	int			seqNum=0;
 
 	pInfo->abnt = abnt;
 	int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
@@ -750,9 +751,10 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
 //	It = smsInfo.First();
 	sms_info* pInfo=0;
 	int seqNum=0;
+	int count = 0;
+	time_t curTime = time(0);
 	while(It.Next(seqNum, pInfo))
 	{
-		time_t curTime = time(0);
 //		smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) was sent %d sec ago", pInfo->abnt.toString().c_str(), seqNum, curTime - pInfo->sending_time);
 		if(curTime > (pInfo->sending_time + responseWaitTime))
 		{
@@ -764,9 +766,10 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
 			smsInfo.Delete(seqNum);
 			delete pInfo;
 		}
+		count++;
 	}
 	int count_new = smsInfo.Count();
-	smsc_log_debug(logger, "Complete serching unresponded DATA_SM. Total SMS in Hash is %d, removed %d", count_new, count_old - count_new);
+	smsc_log_debug(logger, "Complete serching unresponded DATA_SM. Total SMS in Hash is %d, removed %d (%d)", count_new, count_old - count_new, count);
 }
 
 //void TaskProcessor::invokeProcessDataSmTimeout(int seqNum)
@@ -818,15 +821,15 @@ bool TaskProcessor::GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>&  events
 
 //
 //
-//уведомление абонента зависит от двух флагов: forceNotify(прописывается в config.xml) и profile.notify(это выбор абонента, который был недоступен о том уведомлять ли звонивших ему).
+//пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ: forceNotify(пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ config.xml) пїЅ profile.notify(пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ).
 //
 //forceNotify  profile.notify
-//true             true        -  отсылка идет
-//false            true        -  отсылка идет
-//true             false       -  отсылка идет
-//false            false       -  отсылки НЕТ
+//true             true        -  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+//false            true        -  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+//true             false       -  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+//false            false       -  пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 
-//С количеством сложнее. Каждый раз когда отослана СМС о пропущенных вызовах, на основе данных этой СМС формируется список абонентов, которых надо уведомить и отсылается если выполняются вышеизложенные условия. Соответственно, если Абоненту было отправленно несколько СМС о пропущенных вызовах и у него в профиле не установлен флаг группировки вызовов от одининаковых абонентов, то возможна посылка 
+//пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 
 
 
 void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)

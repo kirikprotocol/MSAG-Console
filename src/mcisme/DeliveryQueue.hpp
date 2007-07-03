@@ -78,9 +78,10 @@ struct SchedParam
 //	int8_t		count;
 	time_t		schedTime;
 	uint16_t	lastError;
+	time_t		lastAttempt;
 };
 
-char* cTime(const time_t* clock);		// функция возвращает на статический буфер. Не потокобезопасная.
+char* cTime(const time_t* clock);		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ. пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 
 class DeliveryQueue
 {
@@ -88,29 +89,31 @@ class DeliveryQueue
 	typedef map<int, time_t>			SchedTable;
 	typedef DelQueue::iterator	DelQueueIter;
 
-	DelQueue			deliveryQueue;
-	SchedTable			scheduleTable;
-	time_t				schedTimeOnBusy;
+	DelQueue		deliveryQueue;
+	SchedTable		scheduleTable;
+	time_t			schedTimeOnBusy;
 	EventMonitor		deliveryQueueMonitor;
 	Hash<SchedParam>	AbntsStatus;
 //	Hash<abnt_stat_t>	AbntsStatus;
 		
-	time_t				dt;
-	uint32_t			total;
-	bool				isQueueOpen;
-
+	time_t			dt;
+	uint32_t		total;
+	bool			isQueueOpen;
+	time_t			responseWaitTime;
+			
 	smsc::logger::Logger *logger;
 
 public:
 
 	DeliveryQueue(time_t _dt = 5, time_t onBusy = 300):
-		dt(_dt), schedTimeOnBusy(onBusy), total(0), isQueueOpen(false),
+		dt(_dt), schedTimeOnBusy(onBusy), total(0), isQueueOpen(false), responseWaitTime(60),
 		logger(smsc::logger::Logger::getInstance("mci.DlvQueue")){}
 	DeliveryQueue(const DeliveryQueue& addr){}
 	virtual ~DeliveryQueue(){Erase();}
 
 	void AddScheduleRow(int error, time_t wait);
 	void SetSchedTimeOnBusy(time_t wait);
+	void SetResponseWaitTime(time_t _responseWaitTime){responseWaitTime = _responseWaitTime;}
 	
 	void OpenQueue(void);
 	void CloseQueue(void);
