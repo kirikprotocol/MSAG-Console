@@ -59,7 +59,7 @@ public:
     
     void continueExecution(LongCallContext* context, bool dropped);
 
-
+    uint32_t queueLen();
 protected:
     ThreadPool pool;
     Mutex procMut;
@@ -196,6 +196,7 @@ public:
     virtual void writerProcess(HttpContext* cx) = 0;
     virtual HttpManagerConfig& getConfig() = 0;
     virtual ScagTaskManager* getScagTaskManager() = 0;
+    virtual uint32_t getQueueLen() = 0;
 };
 
 class HttpManagerImpl: public HttpManager, public ConfigListener {
@@ -213,6 +214,8 @@ public:
     HttpManagerConfig& getConfig() { return cfg; };
     ScagTaskManager* getScagTaskManager() { return &scags; };
 
+    uint32_t getQueueLen() {return scags.queueLen();};
+    
     HttpManagerConfig cfg;
     ScagTaskManager scags;
     ReaderTaskManager readers;    

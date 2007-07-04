@@ -996,6 +996,9 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     uint32_t size = 192;
     buf.WriteNetInt32(size);
     buf.WriteNetInt32(data->sessionCount);
+    buf.WriteNetInt32(data->smppQueueLen);    
+    buf.WriteNetInt32(data->httpQueueLen);    
+    buf.WriteNetInt32(data->mmsQueueLen);    
     buf.WriteNetInt32(data->uptime);
     buf.WriteNetInt32(data->now);
 

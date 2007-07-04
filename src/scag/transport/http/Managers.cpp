@@ -203,6 +203,12 @@ void ScagTaskManager::looseQueueLimit()
     queMon.notify();
 }
 
+uint32_t ScagTaskManager::queueLen()
+{
+    MutexGuard g(queMon);
+    return queueLength;
+}
+
 void ScagTaskManager::wakeTask()
 {
     MutexGuard g(taskMon);

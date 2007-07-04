@@ -57,6 +57,8 @@ public:
   RefferGuard<RouteManager> getTestRouterInstance();
   void ResetTestRouteManager(RouteManager* manager);
 
+  uint32_t getQueueLen();
+  
   void StopProcessing()
   {
     sync::MutexGuard mg(queueMon);
@@ -905,6 +907,12 @@ void SmppManagerImpl::ResetTestRouteManager(RouteManager* manager)
     MutexGuard g(routerSwitchMutex);
     if ( testRouter_ ) testRouter_->Release();
     testRouter_ = new Reffer<RouteManager>(manager);
+}
+
+uint32_t SmppManagerImpl::getQueueLen()
+{
+    MutexGuard mg(queueMon);
+    return queue.Count();
 }
 
 }//smpp

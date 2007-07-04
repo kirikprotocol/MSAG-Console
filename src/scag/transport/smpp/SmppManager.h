@@ -55,7 +55,7 @@ public:
     virtual void reloadTestRoutes(const RouteConfig& rcfg) = 0;
     virtual RefferGuard<RouteManager> getTestRouterInstance() = 0;
     virtual void ResetTestRouteManager(RouteManager* manager) = 0;
-
+    virtual uint32_t getQueueLen() = 0;
     static SmppManager& Instance();
     static void Init(const char* cfgFile);
     static void shutdown();

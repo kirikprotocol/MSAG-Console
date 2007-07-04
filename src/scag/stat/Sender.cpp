@@ -1,6 +1,8 @@
 #include "Sender.h"
 #include "StatisticsManager.h"
 #include "scag/sessions/SessionManager.h"
+#include "scag/transport/smpp/SmppManager.h"
+#include "scag/transport/http/Managers.h"
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -10,6 +12,8 @@ namespace stat {
 using smsc::core::threads::Thread;
 using smsc::logger::Logger;
 using namespace scag::sessions;
+using namespace scag::transport::smpp;
+using namespace scag::transport::http;
 
 class Registrator : public Thread {
 public:
@@ -241,6 +245,9 @@ int Sender::Execute()
 
       try {
           d.sessionCount = SessionManager::Instance().getSessionsCount();
+          d.smppQueueLen = SmppManager::Instance().getQueueLen();
+          d.httpQueueLen = HttpManager::Instance().getQueueLen();
+	  d.mmsQueueLen = 0;
       } catch (std::exception& e)
       {
           d.sessionCount = 0;
