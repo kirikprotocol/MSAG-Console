@@ -993,7 +993,7 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     MutexGuard g(genSocketsMutex);
     SerializationBuffer buf(256);
 
-    uint32_t size = 192;
+    uint32_t size = 28 + (PERF_CNT_COUNT + PERF_HTTP_COUNT) * 16;
     buf.WriteNetInt32(size);
     buf.WriteNetInt32(data->sessionCount);
     buf.WriteNetInt32(data->smppQueueLen);    
