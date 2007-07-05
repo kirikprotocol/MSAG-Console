@@ -911,7 +911,6 @@ void SmppManagerImpl::ResetTestRouteManager(RouteManager* manager)
 
 uint32_t SmppManagerImpl::getQueueLen()
 {
-    MutexGuard mg(queueMon);
     return queue.Count();
 }
 
