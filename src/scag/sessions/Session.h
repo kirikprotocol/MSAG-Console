@@ -315,7 +315,7 @@ namespace scag { namespace sessions {
 
         LongCallContext lcmCtx;
 
-        bool bIsNew;
+        bool bIsNew, bIsExpired;
         RuleKey ruleKey;
 
         static Logger * logger;
@@ -373,6 +373,8 @@ namespace scag { namespace sessions {
 
         bool isNew() { return bIsNew; }
         void setNew(bool n) { bIsNew = n; }
+        bool isExpired() { return bIsExpired; }
+        void setExpired(bool n) { bIsExpired = n; }
 
         RuleKey& getRuleKey() { return ruleKey; }
         void setRuleKey(RuleKey& rk) { ruleKey = rk; }

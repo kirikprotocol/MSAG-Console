@@ -59,7 +59,8 @@ public:
     
     void continueExecution(LongCallContext* context, bool dropped);
 
-    uint32_t queueLen();
+    void queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen);
+    
 protected:
     ThreadPool pool;
     Mutex procMut;
@@ -71,7 +72,7 @@ protected:
     HttpContext *tailContext[3];
     HttpContext *headContext[3];    
     
-    unsigned int queueLength;
+    unsigned int queueLength[3];
     unsigned int scagQueueLimit;
     bool waitQueueShrinkage;
     void deleteQueue(HttpContext* pcx);
@@ -196,7 +197,7 @@ public:
     virtual void writerProcess(HttpContext* cx) = 0;
     virtual HttpManagerConfig& getConfig() = 0;
     virtual ScagTaskManager* getScagTaskManager() = 0;
-    virtual uint32_t getQueueLen() = 0;
+    virtual void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) = 0;
 };
 
 class HttpManagerImpl: public HttpManager, public ConfigListener {
@@ -214,7 +215,7 @@ public:
     HttpManagerConfig& getConfig() { return cfg; };
     ScagTaskManager* getScagTaskManager() { return &scags; };
 
-    uint32_t getQueueLen() {return scags.queueLen();};
+    void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) { scags.queueLen(reqLen, respLen, lcmLen); };
     
     HttpManagerConfig cfg;
     ScagTaskManager scags;

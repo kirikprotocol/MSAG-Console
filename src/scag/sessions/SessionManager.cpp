@@ -88,7 +88,7 @@ namespace scag { namespace sessions
         int  processExpire();
         void deleteSession(SessionPtr& session);
         bool processDeleteSession(SessionPtr& session);
-		bool deleteQueuePop(SessionPtr& s);
+	bool deleteQueuePop(SessionPtr& s);
 
         uint16_t getNewUSR(Address& address);
         uint16_t getLastUSR(Address& address);
@@ -107,7 +107,7 @@ namespace scag { namespace sessions
         // SessionManager interface
         virtual bool getSession(const CSessionKey& key, SessionPtr& session, SCAGCommand& cmd);
         virtual void releaseSession(SessionPtr session);
-        virtual uint32_t getSessionsCount();
+        virtual void getSessionsCount(uint32_t& sessionsCount, uint32_t& sessionsLockedCount);
 
         virtual int Execute();
         virtual void Start();
@@ -428,7 +428,10 @@ int SessionManagerImpl::processExpire()
                         reorderExpireQueue(session.Get());
                 }
                 if(!session->hasOperations())
-                    deleteQueue.Push(session);
+				{
+				    session->setExpired(true);
+	                deleteQueue.Push(session);
+				}
                 else
                     store.updateSession(session.Get());
             }
@@ -584,10 +587,11 @@ uint16_t SessionManagerImpl::getNewUSR(Address& address)
     return result;
 }
 
-uint32_t SessionManagerImpl::getSessionsCount()
+void SessionManagerImpl::getSessionsCount(uint32_t& sessionsCount, uint32_t& sessionsLockedCount)
 {
-    MutexGuard mt(inUseMonitor);
-    return store.getSessionsCount();
+//    MutexGuard mt(inUseMonitor);
+    sessionsCount = store.getSessionsCount();
+    sessionsLockedCount = SessionHash.Count();
 }
 
 void SessionManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)

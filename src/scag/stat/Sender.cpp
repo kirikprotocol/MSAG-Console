@@ -243,15 +243,9 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
-      try {
-          d.sessionCount = SessionManager::Instance().getSessionsCount();
-          d.smppQueueLen = SmppManager::Instance().getQueueLen();
-          d.httpQueueLen = HttpManager::Instance().getQueueLen();
-	  d.mmsQueueLen = 0;
-      } catch (std::exception& e)
-      {
-          d.sessionCount = 0;
-      }
+      SessionManager::Instance().getSessionsCount(d.sessionCount, d.sessionLockedCount);
+      SmppManager::Instance().getQueueLen(d.smppReqQueueLen, d.smppRespQueueLen, d.smppLCMQueueLen);
+      HttpManager::Instance().getQueueLen(d.httpReqQueueLen, d.httpRespQueueLen, d.httpLCMQueueLen);
 
       perfListener->reportGenPerformance(&d);
 

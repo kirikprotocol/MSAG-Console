@@ -125,7 +125,8 @@ void ScagTaskManager::process(HttpContext* cx)
         headContext[cx->action] = cx;
     tailContext[cx->action] = cx;        
     
-    if (++queueLength > scagQueueLimit)
+    ++queueLength[cx->action];
+    if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
         waitQueueShrinkage = true;
 
     {
@@ -150,7 +151,10 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 {
     int i;
  
-    queueLength = 0;
+    queueLength[PROCESS_REQUEST] = 0;
+    queueLength[PROCESS_RESPONSE] = 0;
+    queueLength[PROCESS_STATUS_RESPONSE] = 0;
+    
     scagQueueLimit = scagQueueLim;
     waitQueueShrinkage = false;
     
@@ -183,9 +187,9 @@ HttpContext *ScagTaskManager::getFirst()
     
     cx = headContext[i];
     headContext[i] = headContext[i]->next;
-    queueLength--;
+    queueLength[i]--;
 
-    if (waitQueueShrinkage && queueLength <= scagQueueLimit) {
+    if (waitQueueShrinkage && queueLength[PROCESS_REQUEST] <= scagQueueLimit) {
         MutexGuard q(queMon);
         
         waitQueueShrinkage = false;
@@ -203,10 +207,12 @@ void ScagTaskManager::looseQueueLimit()
     queMon.notify();
 }
 
-uint32_t ScagTaskManager::queueLen()
+void ScagTaskManager::queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen)
 {
-    MutexGuard g(queMon);
-    return queueLength;
+//    MutexGuard g(queMon);
+    reqLen = queueLength[PROCESS_REQUEST];
+    respLen = queueLength[PROCESS_RESPONSE];
+    lcmLen = 0;
 }
 
 void ScagTaskManager::wakeTask()

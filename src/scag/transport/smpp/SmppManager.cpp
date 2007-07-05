@@ -57,7 +57,7 @@ public:
   RefferGuard<RouteManager> getTestRouterInstance();
   void ResetTestRouteManager(RouteManager* manager);
 
-  uint32_t getQueueLen();
+  void getQueueLen(uint32_t& reqQueueLen, uint32_t& respQueueLen, uint32_t& lcmQueueLen);
   
   void StopProcessing()
   {
@@ -909,9 +909,11 @@ void SmppManagerImpl::ResetTestRouteManager(RouteManager* manager)
     testRouter_ = new Reffer<RouteManager>(manager);
 }
 
-uint32_t SmppManagerImpl::getQueueLen()
+void SmppManagerImpl::getQueueLen(uint32_t& reqQueueLen, uint32_t& respQueueLen, uint32_t& lcmQueueLen)
 {
-    return queue.Count();
+    reqQueueLen = queue.Count();
+    respQueueLen = respQueue.Count();
+    lcmQueueLen = lcmQueue.Count();
 }
 
 }//smpp
