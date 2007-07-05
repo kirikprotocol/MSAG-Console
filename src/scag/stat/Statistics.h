@@ -324,7 +324,7 @@ using smsc::core::network::Socket;
         virtual void registerSaccEvent(scag::stat::SaccBillingInfoEvent* ev) = 0;
         virtual void registerSaccEvent(scag::stat::SaccAlarmEvent* ev) = 0;
         virtual void registerSaccEvent(scag::stat::SaccAlarmMessageEvent* ev) = 0;
-
+        virtual void Start() = 0;
     protected:
 
         Statistics() {};

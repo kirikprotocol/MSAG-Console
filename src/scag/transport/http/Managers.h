@@ -36,7 +36,7 @@ public:
     ScagTaskManager(HttpManagerImpl& m);
 
     void shutdown();
-    void process(HttpContext* cx);
+    void process(HttpContext* cx, bool continued);
     void init(int maxThreads, int scagQueueLimit, HttpProcessor& p);
     bool canStop();
     void wakeTask();
@@ -209,7 +209,7 @@ public:
     void configChanged();
 
     void shutdown();
-    void process(HttpContext* cx) { scags.process(cx); };
+    void process(HttpContext* cx) { scags.process(cx, false); };
     void readerProcess(HttpContext* cx) { readers.process(cx); };
     void writerProcess(HttpContext* cx) { writers.process(cx); };
     HttpManagerConfig& getConfig() { return cfg; };

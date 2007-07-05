@@ -92,7 +92,7 @@ void StatisticsManager::init(const StatManConfig& statManConfig)
         if (!StatisticsManager::inited) {
             StatisticsManager& sm = SingleSM::Instance();
             sm.configure(statManConfig);
-            sm.Start();
+//            sm.Start();
             StatisticsManager::inited = true;
         }
     }
@@ -147,23 +147,19 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     int queuelen = statManConfig.getMaxQueueLength();
     thrSaccSender.init(saccHost,saccPort,reconnect_timeout,queuelen,logger);
     
-
-    
-    printf("StatisticsManager, perfSvcPort: %d\n", perfSvcPort);
+    smsc_log_debug(logger, "StatisticsManager, perfSvcPort: %d\n", perfSvcPort);
 
     sender.init((PerformanceListener*)this, (PerformanceServer*)this);
     sender.InitServer(perfHost, perfGenPort, perfSvcPort, perfScPort);
 
     initTraffic(smppTrafficByRouteId, traffloc + std::string("/SMPP/") + "traffic.dat");
     initTraffic(httpTrafficByRouteId, traffloc + std::string("/HTTP/") + "traffic.dat");
-
-    logger = Logger::getInstance("statman");
 }
 
 
 StatisticsManager::StatisticsManager()
     : Statistics(), Thread(), genStatHttp(PERF_HTTP_COUNT), genStatSmpp(PERF_CNT_COUNT),
-      logger(Logger::getInstance("scag.stat.StatisticsManager")),
+      logger(Logger::getInstance("statman")),
       currentIndex(0), bExternalFlush(false), isStarted(false), ConfigListener(STATMAN_CFG)
 {
     memset(&smppFileTM, 0, sizeof(smppFileTM));

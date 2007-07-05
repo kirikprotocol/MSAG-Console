@@ -111,21 +111,23 @@ void ScagTaskManager::shutdown()
         deleteQueue(headContext[PROCESS_REQUEST]);
         deleteQueue(headContext[PROCESS_RESPONSE]);
         deleteQueue(headContext[PROCESS_STATUS_RESPONSE]);
+        deleteQueue(headContext[PROCESS_LCM]);        
     }
 }
 
-void ScagTaskManager::process(HttpContext* cx)
+void ScagTaskManager::process(HttpContext* cx, bool continued)
 {
     MutexGuard g(procMut);
 
     cx->next = NULL;
-    if(headContext[cx->action])
-        tailContext[cx->action]->next = cx;
+    uint32_t i = continued ? PROCESS_LCM : cx->action;
+    if(headContext[i])
+        tailContext[i]->next = cx;
     else        
-        headContext[cx->action] = cx;
-    tailContext[cx->action] = cx;        
+        headContext[i] = cx;
+    tailContext[i] = cx;        
     
-    ++queueLength[cx->action];
+    ++queueLength[i];
     if (queueLength[PROCESS_REQUEST] > scagQueueLimit)
         waitQueueShrinkage = true;
 
@@ -142,7 +144,7 @@ void ScagTaskManager::continueExecution(LongCallContext* context, bool dropped)
     context->continueExec = true;
 
     if(!dropped)
-        process(cx);
+        process(cx, true);
     else
         delete cx;
 }
@@ -151,6 +153,7 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
 {
     int i;
  
+    queueLength[PROCESS_LCM] = 0; 
     queueLength[PROCESS_REQUEST] = 0;
     queueLength[PROCESS_RESPONSE] = 0;
     queueLength[PROCESS_STATUS_RESPONSE] = 0;
@@ -161,6 +164,7 @@ void ScagTaskManager::init(int maxThreads, int scagQueueLim, HttpProcessor& p)
     headContext[PROCESS_REQUEST] = NULL;
     headContext[PROCESS_RESPONSE] = NULL;
     headContext[PROCESS_STATUS_RESPONSE] = NULL;
+    headContext[PROCESS_LCM] = NULL;    
 
     logger = Logger::getInstance("scag.http.scag");
 
@@ -176,7 +180,9 @@ HttpContext *ScagTaskManager::getFirst()
     HttpContext *cx;
     MutexGuard g(procMut);
 
-    if(headContext[PROCESS_STATUS_RESPONSE])
+    if(headContext[PROCESS_LCM])
+        i = PROCESS_LCM;
+    else if(headContext[PROCESS_STATUS_RESPONSE])
         i = PROCESS_STATUS_RESPONSE;        
     else if(headContext[PROCESS_RESPONSE])
         i = PROCESS_RESPONSE;
@@ -212,7 +218,7 @@ void ScagTaskManager::queueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lc
 //    MutexGuard g(queMon);
     reqLen = queueLength[PROCESS_REQUEST];
     respLen = queueLength[PROCESS_RESPONSE];
-    lcmLen = 0;
+    lcmLen = queueLength[PROCESS_LCM];
 }
 
 void ScagTaskManager::wakeTask()
