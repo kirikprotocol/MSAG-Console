@@ -338,7 +338,7 @@ public class SmsViewFormBean extends IndexBean {
           //id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\t";
             result.append(id).append('\t').append(submit).append('\t').append(valid).append('\t').append(last).append('\t').append(next).append('\t');
             result.append(source).append('\t').append(dest).append('\t').append(route).append('\t').append(status).append('\t');
-            result.append((row.getText() != null && row.isTextEncoded()) ? row.getText() : StringEncoderDecoder.encode(row.getText()));
+	    if( row.getText() != null ) result.append( row.getText() );
             result.append("\r\n");
         }
         byte[] buf = result.toString().getBytes();
