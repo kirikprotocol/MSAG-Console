@@ -5,6 +5,8 @@
 #ifndef __SMSC_UTIL_TONNPIADDR_HPP__
 #define __SMSC_UTIL_TONNPIADDR_HPP__
 
+#include <inttypes.h>
+
 #include <string.h>
 #include <stdio.h>
 
@@ -24,14 +26,14 @@
 
 namespace smsc {
 namespace util {
-                                 // '.' + 3 + '.' + 3 + '.' + 20
-#define TonNpiAddress_strSZ (12 + CAP_MAX_SMS_AddressValueLength + 2)
-
+                                 
 //This is slightly more intelligent analog of sms::sms::Address,
 //it also accepts alpha-numeric addresses.
 //In opposite to sms::Address, all methods return error code instead
 //of throwing exception.
-struct TonNpiAddress {
+struct TonNpiAddress {              // '.' + 3 + '.' + 3 + '.' + 20
+    static const unsigned  _strSZ = (12 + CAP_MAX_SMS_AddressValueLength + 2);
+
     unsigned char   length, typeOfNumber, numPlanInd;
                      //signals is always zero-terminated
     char            signals[CAP_MAX_SMS_AddressValueLength + 1];
@@ -85,30 +87,43 @@ struct TonNpiAddress {
         return true;
     }
 
+    //checks if address is ISDN International or Unknown and sets it to International
+    //returns false if address is not an ISDN International
+    bool fixISDN(void)
+    {
+        if ((numPlanInd != NUMBERING_ISDN) || (typeOfNumber > ToN_INTERNATIONAL))
+            return false;
+        typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+        return true;
+    }
+
     //Returns true if address numbering is ISDN international
     inline bool interISDN(void) const
     {
         return (bool)((numPlanInd == typeOfNumber) && (numPlanInd == 0x01));
     }
                 
-    //use at least TonNpiAddress_strSZ chars buffer
-    inline int toString(char* buf, int buflen = TonNpiAddress_strSZ) const
+    //use at least TonNpiAddress::_strSZ chars buffer
+    int toString(char* buf, bool ton_npi = true, int buflen = TonNpiAddress::_strSZ) const
     {
-        return snprintf(buf, buflen - 1, ".%u.%u.%s",
-                        (unsigned)typeOfNumber, (unsigned)numPlanInd, signals);
+        int n = 0;
+        if (length) {
+            if (ton_npi)
+                n = snprintf(buf, buflen - 1, ".%u.%u.", (unsigned)typeOfNumber,
+                                                            (unsigned)numPlanInd);
+            else if (interISDN())
+                buf[n++] = '+';
+            strcpy(buf + n, getSignals()); //inserts ending zero
+            n += length;
+        } else
+            buf[0] = 0;
+        return n;
     }
 
     inline std::string toString(bool ton_npi = true) const
     {
-        char buf[TonNpiAddress_strSZ];
-        int n = (buf[0] = 0);
-        if (ton_npi)
-            n = snprintf(buf, sizeof(buf) - 1, ".%u.%u.",
-                            (unsigned)typeOfNumber, (unsigned)numPlanInd);
-        else if (interISDN()) {
-            n = 1; buf[0] = '+';
-        }
-        strcpy(buf + n, getSignals());
+        char buf[TonNpiAddress::_strSZ];
+        toString(buf, ton_npi);
         return buf;
     }
 
@@ -124,24 +139,36 @@ struct TonNpiAddress {
 };
 
 struct GsmSCFinfo { //gsmSCF paramaters
-    uint32_t      serviceKey;   //4 bytes long
-    TonNpiAddress scfAddress;
+    static const unsigned  _strSZ = sizeof("%s:{%u}") + TonNpiAddress::_strSZ + sizeof(uint32_t)*3;
 
-    GsmSCFinfo() : serviceKey(0) { }
+    uint32_t      serviceKey;   //4 bytes long
+    TonNpiAddress scfAddress;   //gsmSCF address always has ISDN international format
+
+    GsmSCFinfo() : serviceKey(0)
+    { }
+    GsmSCFinfo(const TonNpiAddress & use_scf, uint32_t use_key)
+        : scfAddress(use_scf), serviceKey(use_key)
+    { }
 
     void Reset(void) { serviceKey = 0; scfAddress.clear(); }
 
-    //gsmSCF address is always ISDN international
+    int toString(char* buf, bool omit_ton_npi = true, int buflen = GsmSCFinfo::_strSZ) const
+    {
+        int     n = scfAddress.toString(buf, !omit_ton_npi);
+        if (n)
+            n += snprintf(buf + n, buflen-1-n, ":{%u}", serviceKey);
+        buf[n] = 0;
+        return n;
+    }
+
     std::string toString(bool omit_ton_npi = true) const
     {
         if (!scfAddress.length)
             return "<none>";
-        std:: string    str = scfAddress.toString(!omit_ton_npi);
-        char            buf[sizeof("%s:{%u}") + sizeof(serviceKey)*3];
-        int n = snprintf(buf, sizeof(buf) - 1, ":{%u}", serviceKey);
-        buf[(n > 0) ? n : 0] = 0;
-        str += buf;
-        return str;
+
+        char    buf[GsmSCFinfo::_strSZ];
+        toString(buf, !omit_ton_npi);
+        return buf;
     }
 };
 
