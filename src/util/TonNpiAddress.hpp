@@ -167,7 +167,7 @@ struct GsmSCFinfo { //gsmSCF paramaters
             return "<none>";
 
         char    buf[GsmSCFinfo::_strSZ];
-        toString(buf, !omit_ton_npi);
+        toString(buf, omit_ton_npi);
         return buf;
     }
 };
