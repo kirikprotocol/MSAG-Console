@@ -11,13 +11,20 @@ public class PerfSnap {
     public int uptime;
     public int sctime;
     public int sessionCount;
+    public int httpQueueLen;
+    public int smppQueueLen;
+    public int mmsQueueLen;
 
     public SMPPSnap smppSnap;
     public HTTPSnap httpSnap;
 
     public String strUptime;
     public String strSctime;
-    public String strSessionCount;
+    public String strSessionCount ="";
+    public String strHttpQueueLen ="";
+    public String strSmppQueueLen ="";
+    public String strMmsQueueLen ="";
+
 
     public class SMPPSnap{
       public long last[] = {0, 0, 0, 0, 0};
@@ -47,6 +54,7 @@ public class PerfSnap {
     public PerfSnap() {
       smppSnap = new SMPPSnap();
       httpSnap = new HTTPSnap();
+
     }
 
     public PerfSnap(PerfSnap snap) {
@@ -57,12 +65,20 @@ public class PerfSnap {
         System.arraycopy(snap.httpSnap.last, 0, httpSnap.last, 0, snap.httpSnap.last.length);
         System.arraycopy(snap.httpSnap.avg, 0, httpSnap.avg, 0, snap.httpSnap.avg.length);
         System.arraycopy(snap.httpSnap.total, 0, httpSnap.total, 0, snap.httpSnap.total.length);
+
         uptime = snap.uptime;
         sctime = snap.sctime;
         sessionCount = snap.sessionCount;
+        smppQueueLen = snap.smppQueueLen;
+        httpQueueLen = snap.httpQueueLen;
+        mmsQueueLen = snap.mmsQueueLen;
+
         strSctime = new String(snap.strSctime);
         strUptime = new String(snap.strUptime);
         strSessionCount = new String(snap.strSessionCount);
+        strSmppQueueLen = new String(snap.strSmppQueueLen);
+        strHttpQueueLen = new String(snap.strHttpQueueLen);
+        strMmsQueueLen  = new String(snap.strMmsQueueLen);
     }
 
     protected String verbDigit(String key, int number) {
@@ -116,14 +132,19 @@ public class PerfSnap {
         {
             strSctime = PerfMon.dateFormat.format(new Date(((long) sctime) * 1000));
             strSessionCount = new Integer(sessionCount).toString();
+            strSmppQueueLen = new Integer(smppQueueLen).toString();
+            strHttpQueueLen = new Integer(httpQueueLen).toString();
+            strMmsQueueLen =  new Integer(mmsQueueLen).toString();
         }
     }
 
-    public void write(java.io.DataOutputStream out)
-            throws IOException {
+    public void write(java.io.DataOutputStream out) throws IOException {
+        out.writeInt(sessionCount);
+        out.writeInt(smppQueueLen);
+        out.writeInt(httpQueueLen);
+        out.writeInt(mmsQueueLen);
         out.writeInt(uptime);
         out.writeInt(sctime);
-        out.writeInt(sessionCount);
         writeArray(out, smppSnap.last);
         writeArray(out, smppSnap.avg);
         writeArray(out, smppSnap.total);
@@ -138,11 +159,13 @@ public class PerfSnap {
         }
     }
 
-    public void read(java.io.DataInputStream in)
-            throws IOException {
+    public void read(java.io.DataInputStream in) throws IOException {
+        sessionCount = in.readInt();
+        smppQueueLen = in.readInt();
+        httpQueueLen = in.readInt();
+        mmsQueueLen  = in.readInt();
         uptime = in.readInt();
         sctime = in.readInt();
-        sessionCount = in.readInt();
         readArray(in, smppSnap.last);
         readArray(in, smppSnap.avg);
         readArray(in, smppSnap.total);
@@ -160,6 +183,9 @@ public class PerfSnap {
 
     public void init(SnapBufferReader in) throws IOException {
         sessionCount = in.readNetworkInt();
+        smppQueueLen = in.readNetworkInt();
+        httpQueueLen = in.readNetworkInt();
+        mmsQueueLen = in.readNetworkInt();
         uptime = in.readNetworkInt();
         sctime = in.readNetworkInt();
 
