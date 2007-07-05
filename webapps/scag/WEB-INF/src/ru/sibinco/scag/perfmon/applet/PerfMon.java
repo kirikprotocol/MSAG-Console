@@ -25,10 +25,17 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     public static final String httpStatMode = "http";
     public static final String mmsStatMode = "mms";
     public static String statMode = smppStatMode;
+
     AdvancedLabel uptimeLabel;
     AdvancedLabel sctimeLabel;
+
     AdvancedLabel sessionCountLabel;
-    AdvancedLabel queueLimitLabel;
+    AdvancedLabel sessionLockedCountLabel;
+
+    AdvancedLabel queueReqLabel;
+    AdvancedLabel queueResLabel;
+    AdvancedLabel queueLCMLabel;
+    
     PerformanceBar perfbar;
     PerfInfoTable perfTable;
     PerformanceGraph perfGraph;
@@ -259,10 +266,15 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
         uptimeLabel = new AdvancedLabel(snap.strUptime);
         sctimeLabel = new AdvancedLabel(snap.strSctime);
-        sessionCountLabel = new AdvancedLabel(snap.strSessionCount);
-        queueLimitLabel = new AdvancedLabel(snap.strHttpQueueLen);
 
-        Panel p = new Panel(new GridLayout(1, 2));
+        sessionCountLabel = new AdvancedLabel(snap.strSessionCount);
+	sessionLockedCountLabel = new AdvancedLabel(snap.strSessionLockedCount);
+	
+        queueReqLabel = new AdvancedLabel("");
+	queueResLabel = new AdvancedLabel("");
+	queueLCMLabel = new AdvancedLabel("");
+
+        Panel p = new Panel(new GridLayout(1, 4));
         // uptime
         LabelGroup lg = new LabelGroup(localeText.getString("lab.uptime"), LabelGroup.NORTHWEST);
         lg.setLayout(new BorderLayout());
@@ -275,15 +287,21 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         p.add(lg);
         // sesscount
         lg = new LabelGroup(localeText.getString("lab.sesscount"), LabelGroup.NORTHWEST);
-        lg.setLayout(new BorderLayout());
-        lg.add(sessionCountLabel, BorderLayout.CENTER);
-        p.add(lg);
-        // queuelimit
+	lg.setLayout(new BorderLayout());
+	Panel pp = new Panel(new GridLayout(1, 2));
+        pp.add(sessionCountLabel);
+	pp.add(sessionLockedCountLabel);
+        lg.add(pp, BorderLayout.CENTER);
+	p.add(lg);
+        // queues sizes
         lg = new LabelGroup(localeText.getString("lab.queuelimit"), LabelGroup.NORTHWEST);
-        lg.setLayout(new BorderLayout());
-        lg.add(queueLimitLabel, BorderLayout.CENTER);
-        p.add(lg);
-
+	lg.setLayout(new BorderLayout());
+	Panel ppp = new Panel(new GridLayout(1, 3));
+        ppp.add(queueReqLabel);
+	ppp.add(queueResLabel);
+	ppp.add(queueLCMLabel);
+	lg.add(ppp, BorderLayout.CENTER);
+	p.add(lg);
 
         gbc.gridx = 1;
         gbc.gridy = 1;
@@ -421,12 +439,19 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                         uptimeLabel.setText(snap.strUptime);
                         sctimeLabel.setText(snap.strSctime);
                         sessionCountLabel.setText(snap.strSessionCount);
+			sessionLockedCountLabel.setText(snap.strSessionLockedCount);
                         if( statMode.equals(httpStatMode) ){
-                            queueLimitLabel.setText(snap.strHttpQueueLen);
+                            queueReqLabel.setText(snap.strHttpReqQueueLen);
+			    queueResLabel.setText(snap.strHttpResQueueLen);
+			    queueLCMLabel.setText(snap.strHttpLCMQueueLen);
                         } else if( statMode.equals(smppStatMode) ) {
-                            queueLimitLabel.setText(snap.strSmppQueueLen);
+                            queueReqLabel.setText(snap.strSmppReqQueueLen);
+			    queueResLabel.setText(snap.strSmppResQueueLen);
+			    queueLCMLabel.setText(snap.strSmppLCMQueueLen);
                         } else {
-                            queueLimitLabel.setText(snap.strMmsQueueLen);
+                            queueReqLabel.setText("");
+			    queueResLabel.setText("");
+			    queueLCMLabel.setText("");
                         }
                         perfbar.setSnap(snap);
                         perfTable.setSnap(snap);
