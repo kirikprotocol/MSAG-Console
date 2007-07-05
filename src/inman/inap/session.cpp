@@ -25,6 +25,7 @@ TCSessionAC::TCSessionAC(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
                 const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
     : tcUID(uid), _owner(owner), ac_idx(dlg_ac_idx), ownAdr(own_addr)
 {
+    ownAdr.fixISDN();
     senderSsn = _owner->getSSN();
     packSCCPAddress(&locAddr, ownAdr.getSignals(), fake_ssn ? fake_ssn : senderSsn);
 }
@@ -39,6 +40,7 @@ TCSessionAC::~TCSessionAC(void)
         pool.clear();
     }
 }
+//NOTE: it's important that mkSignature doesn't rely on addresses .Ton.Npi
 void TCSessionAC::mkSignature(std::string & sid, UCHAR_T own_ssn, const TonNpiAddress & onpi,
                              ACOID::DefinedOIDidx dlg_ac_idx,
                              UCHAR_T rmt_ssn, const TonNpiAddress * rnpi)
@@ -47,11 +49,10 @@ void TCSessionAC::mkSignature(std::string & sid, UCHAR_T own_ssn, const TonNpiAd
     if (rmt_ssn)
         snprintf(rssn, sizeof(rssn), "%u", rmt_ssn);
     else {
-        rssn[0] = '*';
-        rssn[1] = 0;   
+        rssn[0] = '*'; rssn[1] = 0;
     }
-    format(sid, "%u:%s[%u]->%s:%s", own_ssn, onpi.toString().c_str(), dlg_ac_idx, rssn,
-           rnpi ? rnpi->toString().c_str() : "*");
+    format(sid, "%u:%s[%u]->%s:%s", own_ssn, onpi.getSignals(), dlg_ac_idx, rssn,
+           rnpi ? rnpi->getSignals() : "*");
 }
 
 
@@ -115,9 +116,8 @@ Dialog* TCSessionMR::openDialog(UCHAR_T rmt_ssn, const char* rmt_addr)
     TonNpiAddress   rnpi;
     SCCP_ADDRESS_T  rmtAddr;
 
-    if (!rnpi.fromText(rmt_addr) || (rnpi.numPlanInd != NUMBERING_ISDN)
-        || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
-        return NULL; //todo: throw
+    if (!rnpi.fromText(rmt_addr) || !rnpi.fixISDN())
+        return NULL;
 
     packSCCPAddress(&rmtAddr, rnpi.getSignals(), rmt_ssn);
     return initDialog(rmtAddr);
@@ -138,8 +138,8 @@ TCSessionMA::TCSessionMA(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
 Dialog* TCSessionMA::openDialog(const char* rmt_addr)
 {
     TonNpiAddress   rnpi;
-    if (!rnpi.fromText(rmt_addr))
-        return NULL; //todo: throw
+    if (!rnpi.fromText(rmt_addr) || !rnpi.fixISDN())
+        return NULL;
 
     return openDialog(rnpi);
 }
@@ -170,9 +170,8 @@ TCSessionSR::TCSessionSR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
 
 Dialog* TCSessionSR::openDialog(void)
 {
-    if ((rmtNpi.numPlanInd != NUMBERING_ISDN)
-        || (rmtNpi.typeOfNumber > ToN_INTERNATIONAL))
-        return NULL; //todo: throw
+    if (!rmtNpi.fixISDN())
+        return NULL;
     return initDialog(rmtAddr);
 }
 
@@ -247,14 +246,14 @@ TCSessionMR * SSNSession::newMRsession(const char* own_addr, ACOID::DefinedOIDid
     return newMRsession(onpi, dlg_ac_idx, fake_ssn);
 }
 
-TCSessionMR * SSNSession::newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+TCSessionMR * SSNSession::newMRsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
                                        UCHAR_T fake_ssn/* = 0*/)
 {
     TCSessionMR *   pSess = NULL;
 
     if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
-    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+//    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
     {
         MutexGuard tmp(mutex);
         std::string sid;
@@ -276,19 +275,19 @@ TCSessionMA * SSNSession::newMAsession(const char* own_addr, ACOID::DefinedOIDid
                             UCHAR_T rmt_ssn, UCHAR_T fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi;
-    if (!onpi.fromText(own_addr))
+    if (!onpi.fromText(own_addr) || !onpi.fixISDN())
         return NULL;
     return newMAsession(onpi, dlg_ac_idx, rmt_ssn, fake_ssn);
 }
 
-TCSessionMA * SSNSession::newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+TCSessionMA * SSNSession::newMAsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
                             UCHAR_T rmt_ssn, UCHAR_T fake_ssn/* = 0*/)
 {
     TCSessionMA *   pSess = NULL;
 
     if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
-    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+//    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
     {
         MutexGuard tmp(mutex);
         std::string sid;
@@ -310,23 +309,22 @@ TCSessionSR * SSNSession::newSRsession(const char* own_addr, ACOID::DefinedOIDid
                                 UCHAR_T rmt_ssn, const char* rmt_addr, UCHAR_T fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi, rnpi;
-    if (!onpi.fromText(own_addr) || !rnpi.fromText(rmt_addr))
+    if (!onpi.fromText(own_addr) || !onpi.fixISDN())
+        return NULL;
+    if (!rnpi.fromText(own_addr) || !rnpi.fixISDN())
         return NULL;
     return newSRsession(onpi, dlg_ac_idx, rmt_ssn, rnpi, fake_ssn);
 }
 
-TCSessionSR * SSNSession::newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi, UCHAR_T fake_ssn/* = 0*/)
+TCSessionSR * SSNSession::newSRsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn, const TonNpiAddress & rnpi, UCHAR_T fake_ssn/* = 0*/)
 {
     TCSessionSR *   pSess = NULL;
 
     if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
-    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
-
     if ((rnpi.numPlanInd != NUMBERING_ISDN) || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
-    rnpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
 
     {
         MutexGuard tmp(mutex);

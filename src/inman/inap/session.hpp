@@ -56,18 +56,18 @@ public:
     //but sending still perfomed by behalf on SSN from owning SSNSession
     TCSessionMR * newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                                UCHAR_T fake_ssn = 0);
-    TCSessionMR * newMRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+    TCSessionMR * newMRsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
                                UCHAR_T fake_ssn = 0);
 
     TCSessionMA * newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                                 UCHAR_T rmt_ssn, UCHAR_T fake_ssn = 0);
-    TCSessionMA * newMAsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+    TCSessionMA * newMAsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
                                 UCHAR_T rmt_ssn, UCHAR_T fake_ssn = 0);
 
     TCSessionSR * newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
                                 UCHAR_T rmt_ssn, const char* rmt_addr, UCHAR_T fake_ssn = 0);
-    TCSessionSR * newSRsession(TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, TonNpiAddress & rnpi, UCHAR_T fake_ssn = 0);
+    TCSessionSR * newSRsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
+                                UCHAR_T rmt_ssn, const TonNpiAddress & rnpi, UCHAR_T fake_ssn = 0);
     
     // -- TCAP Dialogs factory methods -- //
     Dialog* findDialog(USHORT_T did);

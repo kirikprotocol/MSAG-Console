@@ -86,11 +86,8 @@ private:
     catch (ConfigException& exc) { }
     if (!cstr || !cstr[0])
       throw ConfigException("SSF address is missing");
-    if (!ss7ConfigValue.ssf_addr.fromText(cstr)
-        || (ss7ConfigValue.ssf_addr.numPlanInd != NUMBERING_ISDN)
-        || (ss7ConfigValue.ssf_addr.typeOfNumber > ToN_INTERNATIONAL))
+    if (!ss7ConfigValue.ssf_addr.fromText(cstr) || !ss7ConfigValue.ssf_addr.fixISDN())
       throw ConfigException("SSF address is invalid: %s", cstr);
-    ss7ConfigValue.ssf_addr.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
     ss7ConfigValue.own_ssn = ss7Cfg.getInt("ssn"); //throws
 
     smsc_log_info(logger, "SSF: %u:%s", ss7ConfigValue.own_ssn,

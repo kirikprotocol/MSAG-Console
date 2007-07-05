@@ -198,11 +198,9 @@ void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw
 {
     TonNpiAddress addr = sadr;
     /* NOTE: _vlrNumber may be only the ISDN INTERNATIONAL address */
-    if ((addr.numPlanInd != NUMBERING_ISDN) || (addr.typeOfNumber > ToN_INTERNATIONAL))
+    if (!addr.fixISDN())
         throw CustomException(-1, "InitialDPSMSArg: invalid VLR address",
                               addr.toString().c_str());
-    //correct ToN_UNKNOWN
-    addr.typeOfNumber = ToN_INTERNATIONAL;
 
     memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
     Address2OCTET_STRING(comp->_vlrNumber, addr);
