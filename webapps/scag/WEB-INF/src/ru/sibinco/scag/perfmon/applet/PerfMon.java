@@ -23,10 +23,12 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     public static final int VIEWMODE_SEPARATE = 1;
     public static final String smppStatMode = "smpp";
     public static final String httpStatMode = "http";
+    public static final String mmsStatMode = "mms";
     public static String statMode = smppStatMode;
     AdvancedLabel uptimeLabel;
     AdvancedLabel sctimeLabel;
     AdvancedLabel sessionCountLabel;
+    AdvancedLabel queueLimitLabel;
     PerformanceBar perfbar;
     PerfInfoTable perfTable;
     PerformanceGraph perfGraph;
@@ -258,6 +260,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         uptimeLabel = new AdvancedLabel(snap.strUptime);
         sctimeLabel = new AdvancedLabel(snap.strSctime);
         sessionCountLabel = new AdvancedLabel(snap.strSessionCount);
+        queueLimitLabel = new AdvancedLabel(snap.strHttpQueueLen);
 
         Panel p = new Panel(new GridLayout(1, 2));
         // uptime
@@ -275,6 +278,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         lg.setLayout(new BorderLayout());
         lg.add(sessionCountLabel, BorderLayout.CENTER);
         p.add(lg);
+        // queuelimit
+        lg = new LabelGroup(localeText.getString("lab.queuelimit"), LabelGroup.NORTHWEST);
+        lg.setLayout(new BorderLayout());
+        lg.add(queueLimitLabel, BorderLayout.CENTER);
+        p.add(lg);
 
 
         gbc.gridx = 1;
@@ -287,6 +295,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         final JTabbedPane jTabbedPane = new JTabbedPane();
         jTabbedPane.addTab("SMPP", new SmppPanel());
         jTabbedPane.addTab("HTTP", new HttpPanel());
+//        jTabbedPane.addTab("MMS", new HttpPanel());
         jTabbedPane.addChangeListener(new ChangeListener() {
            public void stateChanged(ChangeEvent e) {
              CommonPanel selectedTab = (CommonPanel)jTabbedPane.getSelectedComponent();
@@ -412,6 +421,13 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
                         uptimeLabel.setText(snap.strUptime);
                         sctimeLabel.setText(snap.strSctime);
                         sessionCountLabel.setText(snap.strSessionCount);
+                        if( statMode.equals(httpStatMode) ){
+                            queueLimitLabel.setText(snap.strHttpQueueLen);
+                        } else if( statMode.equals(smppStatMode) ) {
+                            queueLimitLabel.setText(snap.strSmppQueueLen);
+                        } else {
+                            queueLimitLabel.setText(snap.strMmsQueueLen);
+                        }
                         perfbar.setSnap(snap);
                         perfTable.setSnap(snap);
                         perfGraph.addSnap(snap);
