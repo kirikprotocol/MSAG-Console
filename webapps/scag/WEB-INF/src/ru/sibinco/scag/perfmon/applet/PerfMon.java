@@ -358,7 +358,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         jTabbedPane.addChangeListener(new ChangeListener() {
            public void stateChanged(ChangeEvent e) {
              CommonPanel selectedTab = (CommonPanel)jTabbedPane.getSelectedComponent();
-             for(int i = 0; i<1;i++)
+             for(int i = 0; i<jTabbedPane.getTabCount();i++)
               ((CommonPanel)jTabbedPane.getComponentAt(i)).removeAll();
              selectedTab.init();
              selectedTab.changeStatMode();
