@@ -273,7 +273,6 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
     case events::smpp::RESP_OK:
         STAT_LOG_EVENT("RESP_OK");
         if(srcSt) { srcSt->delivered++; incSmppCounter(se.srcId, se.srcType, cntDelivered);}
-//        if(dstSt) { dstSt->delivered++; incSmppCounter(se.dstId, se.dstType, cntDelivered);}        
         if(routeSt) { routeSt->delivered++; }
 
         if (se.routeId && se.routeId[0])
