@@ -26,20 +26,18 @@ IntProfileStore* CommandDispatcher::findStore(ProfileType pt)
     return i < INT_STORE_CNT ? int_store[i].store : NULL;            
 }
 
-void CommandDispatcher::SendResponse(SerialBuffer *sb, PersServerResponseType r)
+void CommandDispatcher::SendResponse(SerialBuffer& sb, PersServerResponseType r)
 {
-    sb->Empty();
-    sb->WriteInt32(5);
-    sb->WriteInt8((uint8_t)r);
+    sb.WriteInt8((uint8_t)r);
 }
 
-void CommandDispatcher::SetPacketSize(SerialBuffer *sb)
+void CommandDispatcher::SetPacketSize(SerialBuffer& sb)
 {
-    sb->SetPos(0);
-    sb->WriteInt32(sb->GetSize());
+    sb.SetPos(0);
+    sb.WriteInt32(sb.GetSize());
 }
 
-void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb)
+void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
 {
     IntProfileStore *is;
     bool exists = false;
@@ -53,10 +51,10 @@ void CommandDispatcher::DelCmdHandler(ProfileType pt, uint32_t int_key, std::str
         smsc_log_debug(log, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
         exists = is->delProperty(int_key, name.c_str());
     }
-    SendResponse(sb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
+    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb)
+void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
 {
     IntProfileStore *is;
     Property prop;
@@ -74,14 +72,13 @@ void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, std::str
     if(exists)
     {   
         smsc_log_debug(log, "GetCmdHandler prop=%s", prop.toString().c_str());
-        SendResponse(sb, RESPONSE_OK);
-        prop.Serialize(*sb);
-        SetPacketSize(sb);
+        SendResponse(osb, RESPONSE_OK);
+        prop.Serialize(osb);
     } else
-        SendResponse(sb, RESPONSE_PROPERTY_NOT_FOUND);
+        SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-void CommandDispatcher::SetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb)
+void CommandDispatcher::SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
 {
     IntProfileStore *is;
     if(pt == PT_ABONENT)
@@ -94,10 +91,10 @@ void CommandDispatcher::SetCmdHandler(ProfileType pt, uint32_t int_key, std::str
         smsc_log_debug(log, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
         is->setProperty(int_key, prop);
     }
-    SendResponse(sb, RESPONSE_OK);
+    SendResponse(osb, RESPONSE_OK);
 }
 
-void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb)
+void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
 {
     IntProfileStore *is;
     bool exists = false;
@@ -111,13 +108,10 @@ void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, std::str
         smsc_log_debug(log, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
         exists = is->incProperty(int_key, prop);
     }
-    if(exists)
-        SendResponse(sb, RESPONSE_OK);
-    else
-        SendResponse(sb, RESPONSE_PROPERTY_NOT_FOUND);
+    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, int mod, SerialBuffer *sb)
+void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb)
 {
     IntProfileStore *is;
     bool exists = false;
@@ -134,15 +128,30 @@ void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, std::
     }
     if(exists)
     {
-        SendResponse(sb, RESPONSE_OK);
-        sb->WriteInt32(res);
-        SetPacketSize(sb);
+        SendResponse(osb, RESPONSE_OK);
+        osb.WriteInt32(res);
     }
     else
-        SendResponse(sb, RESPONSE_PROPERTY_NOT_FOUND);
+        SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-void CommandDispatcher::Execute(SerialBuffer* sb)
+void CommandDispatcher::Execute(SerialBuffer& isb, SerialBuffer& osb)
+{
+    osb.SetPos(4);
+    try{
+		execCommand(isb, osb);
+		SetPacketSize(osb);
+		return;
+    }
+    catch(SerialBufferOutOfBounds &e)
+    {
+        smsc_log_debug(log, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+    }
+    SendResponse(osb, RESPONSE_BAD_REQUEST);
+	SetPacketSize(osb);	
+}
+
+void CommandDispatcher::execCommand(SerialBuffer& isb, SerialBuffer& osb)
 {
     PersCmd cmd;
     ProfileType pt;
@@ -150,55 +159,56 @@ void CommandDispatcher::Execute(SerialBuffer* sb)
     string str_key;
     string name;
     Property prop;
-
-    try{
-        sb->SetPos(4);
-        cmd = (PersCmd)sb->ReadInt8();
-        if(cmd == PC_PING)
-        {
-            SendResponse(sb, RESPONSE_OK);
-            smsc_log_debug(log, "Ping received");
-            return;
-        }
-        pt = (ProfileType)sb->ReadInt8();
-        if(pt != PT_ABONENT)
-            int_key = sb->ReadInt32();
-        else
-            sb->ReadString(str_key);
-        switch(cmd)
-        {
-            case PC_DEL:
-                sb->ReadString(name);
-                DelCmdHandler(pt, int_key, str_key, name, sb);
-                return;
-            case PC_SET:
-                prop.Deserialize(*sb);
-                SetCmdHandler(pt, int_key, str_key, prop, sb);
-                return;
-            case PC_GET:
-                sb->ReadString(name);
-                GetCmdHandler(pt, int_key, str_key, name, sb);
-                return;
-            case PC_INC:
-                prop.Deserialize(*sb);
-                IncCmdHandler(pt, int_key, str_key, prop, sb);
-                return;
-            case PC_INC_MOD:
-            {
-                int inc = sb->ReadInt32();
-                prop.Deserialize(*sb);
-                IncModCmdHandler(pt, int_key, str_key, prop, inc, sb);
-                return;
-            }
-            default:
-                smsc_log_debug(log, "Bad command %d", cmd);
-        }
-    }
-    catch(SerialBufferOutOfBounds &e)
+    cmd = (PersCmd)isb.ReadInt8();
+    if(cmd == PC_PING)
     {
-        smsc_log_debug(log, "Bad data in buffer received len=%d, data=%s", sb->length(), sb->toString().c_str());
+		osb.WriteInt8(RESPONSE_OK);
+        smsc_log_debug(log, "Ping received");
+        return;
     }
-    SendResponse(sb, RESPONSE_BAD_REQUEST);
+    if(cmd != PC_BATCH)
+    {
+        pt = (ProfileType)isb.ReadInt8();
+        if(pt != PT_ABONENT)
+            int_key = isb.ReadInt32();
+        else
+            isb.ReadString(str_key);
+    }
+    switch(cmd)
+    {
+        case PC_DEL:
+            isb.ReadString(name);
+            DelCmdHandler(pt, int_key, str_key, name, osb);
+            return;
+        case PC_SET:
+            prop.Deserialize(isb);
+            SetCmdHandler(pt, int_key, str_key, prop, osb);
+            return;
+        case PC_GET:
+            isb.ReadString(name);
+            GetCmdHandler(pt, int_key, str_key, name, osb);
+            return;
+        case PC_INC:
+            prop.Deserialize(isb);
+            IncCmdHandler(pt, int_key, str_key, prop, osb);
+            return;
+        case PC_INC_MOD:
+        {
+            int inc = isb.ReadInt32();
+            prop.Deserialize(isb);
+            IncModCmdHandler(pt, int_key, str_key, prop, inc, osb);
+			return;
+        }
+        case PC_BATCH:
+        {
+            uint16_t cnt = isb.ReadInt16();
+            while(cnt--)
+                    execCommand(isb, osb);
+			return;
+        }
+        default:
+            smsc_log_debug(log, "Bad command %d", cmd);
+    }
 }
 
 }}

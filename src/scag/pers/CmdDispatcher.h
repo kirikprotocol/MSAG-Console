@@ -17,21 +17,22 @@ class CommandDispatcher {
 public:
     CommandDispatcher(StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
     ~CommandDispatcher() {};
-    void Execute(SerialBuffer* sb);
+    void Execute(SerialBuffer& isb, SerialBuffer& osb);
 protected:
     typedef struct {
         ProfileType pt;
         IntProfileStore* store;
     } IntStore;
 
+	void execCommand(SerialBuffer& isb, SerialBuffer& osb);
     IntProfileStore* findStore(ProfileType pt);
-    void SendResponse(SerialBuffer *sb, PersServerResponseType r);
-    void SetPacketSize(SerialBuffer *sb);
-    void DelCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb);
-    void GetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, std::string& name, SerialBuffer *sb);
-    void SetCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb);
-    void IncCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, SerialBuffer *sb);
-    void IncModCmdHandler(ProfileType pt, uint32_t int_key, std::string& str_key, Property& prop, int mod, SerialBuffer *sb);
+    void SendResponse(SerialBuffer& sb, PersServerResponseType r);
+    void SetPacketSize(SerialBuffer& sb);
+    void DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
+    void GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
+    void SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
+    void IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
+    void IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb);
     Logger * log;
 #define INT_STORE_CNT 3
     IntStore int_store[INT_STORE_CNT];

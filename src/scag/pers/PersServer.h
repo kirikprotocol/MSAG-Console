@@ -14,7 +14,6 @@ using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
 class PersServer {
-//    Multiplexer::SockArray socks;
     CommandDispatcher* CmdDispatcher;
 
 public:
@@ -26,9 +25,9 @@ public:
     bool isStopped() { MutexGuard mt(mtx); return isStopping; };
 
 protected:
-    void process_read_socket(Socket* sock);
-    void process_write_socket(Socket* sock);
-    void remove_socket(Socket* s, int i = -1);
+    void processReadSocket(Socket* sock);
+    void processWriteSocket(Socket* sock);
+    void removeSocket(Socket* s, int i = -1);
 	void checkTimeouts();
 
     Logger * log;
@@ -41,8 +40,6 @@ protected:
     char tmp_buf[1024];
 };
 
-}
-}
+}}
 
 #endif
-
