@@ -56,7 +56,7 @@ public class TopMenu  extends ArrayList {
             add(new MenuItem("menu.routing", "", routingItems,new String[]{"routing"}));
 
             Collection statisticItems = new ArrayList();
-            statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp', '', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');",new String[]{"stat"}));
+            statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp', '', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=500,width=580');",new String[]{"stat"}));
             statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp",new String[]{"stat"}));
             add(new MenuItem("menu.stat", "", statisticItems,new String[]{"stat"}));
 
