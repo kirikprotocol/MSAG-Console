@@ -224,10 +224,15 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
 
     switch (pCs->CsId()) {
     case smsc::inman::interaction::csBilling: {
+        MutexGuard tmp(_mutex);
+        newSess.sId = ++lastSessId;
         newSess.hdl = new BillingManager(&_cfg->bill, newSess.sId, conn, logger);
     } break;
 
     case smsc::inman::interaction::csAbntContract: {
+        MutexGuard tmp(_mutex);
+        newSess.sId = ++lastSessId;
+
         AbonentDetectorCFG sCfg;
         sCfg.tmWatcher = _cfg->bill.tmWatcher;
         sCfg.abCache = _cfg->bill.abCache;
@@ -244,7 +249,6 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
                               pCs->CsName(), pCs->CsId());
     }
     _mutex.Lock();
-    newSess.sId = ++lastSessId;
     sockets.insert(SocketsMap::value_type(conn->getId(), newSess.sId));
     sessions.insert(SessionsMap::value_type(newSess.sId, newSess));
     _mutex.Unlock();
