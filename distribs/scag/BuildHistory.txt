@@ -132,3 +132,7 @@ TO ALL: Insert log record for all significant changes & fixes here.
 3) MSAG CHANGE: Runtime statistics improvements
 4) MSAG CHANGE: Added access to #status parameter in session_destroy block
 
+=================================================================================================================
+06.07.2007 17:00 makar [!!! CVS: revision marked by tag BUILD_07_07_2007 !!!]
+1) MSAG FIX: MSAG statistics collecting for SME & SC
+2) MSAG Admin CHANGE: Runtime statistics monitoring improvements
