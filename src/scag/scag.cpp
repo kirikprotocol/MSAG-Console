@@ -205,7 +205,7 @@ void Scag::init()
 void Scag::shutdown()
 {
   __trace__("shutting down");
-
+  scag::stat::StatisticsManager::Instance().Stop();
   scag::transport::http::HttpManager::Instance().shutdown();
   scag::transport::smpp::SmppManager::shutdown();
   LongCallManager::shutdown();

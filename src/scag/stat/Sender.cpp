@@ -138,7 +138,7 @@ int Sender::Execute()
     while(!isStopping)
     {
       while(now.tv_sec==time(NULL))ev.Wait(10);
-
+      if(isStopping) break;
       //===========================
       // replace queue
       //cnt=queue.getCounter();

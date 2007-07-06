@@ -211,7 +211,6 @@ namespace stat {
 
         static bool createDir(const std::string& dir);
         bool createStorageDir(const std::string loc);
-        void Stop();
 
         inline TimeSlotCounter<int>* newSlotCounter() {
             return new TimeSlotCounter<int>(3600, 1000);
@@ -240,7 +239,9 @@ namespace stat {
         CommonStat* getStat(const char* id, bool sc);
     public:
         static void init(const StatManConfig& statManCfg);    
+        void Stop();                        
         void Start();
+        
         void configChanged();
         
         virtual int Execute();

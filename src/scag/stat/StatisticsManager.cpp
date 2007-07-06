@@ -70,7 +70,7 @@ const char*    SCAG_SMPP_STAT_DIR_NAME_FORMAT  = "SMPP/%04d-%02d";
 const char*    SCAG_HTTP_STAT_DIR_NAME_FORMAT = "HTTP/%04d-%02d";
 const char*    SCAG_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-inline unsigned GetLongevity(StatisticsManager*) { return 5; }
+inline unsigned GetLongevity(StatisticsManager*) { return 7; }
 //typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
 typedef SingletonHolder<StatisticsManager> SingleSM;
 
@@ -190,7 +190,7 @@ void StatisticsManager::incError(IntHash<int>& hash, int errcode)
 CommonStat* StatisticsManager::getStat(const char* id, bool sc)
 {
     CommonStat* st = NULL;
-    Hash<CommonStat>* h = sc ? &srvStatBySmeId[currentIndex] : &srvStatBySmeId[currentIndex];
+    Hash<CommonStat>* h = sc ? &srvStatBySmeId[currentIndex] : &statBySmeId[currentIndex];
 
     if(id && id[0])
     {

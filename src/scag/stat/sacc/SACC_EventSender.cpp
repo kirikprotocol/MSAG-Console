@@ -130,7 +130,7 @@ void EventSender::Start()
 
 void EventSender::Stop()
 {
-    bStarted =false;
+    bStarted = false;
     mtx.notifyAll();
 }
  
