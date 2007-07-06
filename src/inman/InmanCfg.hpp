@@ -10,7 +10,7 @@
 #include <string.h>
 #include <string>
 
-#include "inman.hpp"
+#include "inman/inman.hpp"
 using smsc::inman::ChargeObj;
 
 #include "util/config/ConfigView.h"
@@ -26,20 +26,129 @@ using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::_IAPTypes;
 using smsc::inman::iaprvd::_IAPAbilities;
 
-#include "service.hpp"
+#include "inman/service.hpp"
 using smsc::inman::BillModes;
+
+#include "inman/common/CSVList.hpp"
+using smsc::util::CSVList;
 
 namespace smsc {
 namespace inman {
 
+
 class INScfsRegistry {
 protected:
+    typedef std::map<TDPCategory::Id, const char *> TDPNames;
+
+    TDPNames    tdpNames;
     INScfsMAP   scfMap;
     Logger *    logger;
 
+    TDPCategory::Id str2tdp(const char * str)
+    {
+        for (TDPNames::const_iterator it = tdpNames.begin(); it != tdpNames.end(); ++it) {
+            if (!strcmp(str, it->second))
+                return it->first;
+        }
+        return TDPCategory::dpUnknown;
+    }
+
+    bool str2UInt(uint32_t * p_val, const std::string & str)
+    {
+        if (str.empty())
+            return false;
+        *p_val = atoi(str.c_str());
+        if (!*p_val) { //check for all zeroes
+            if (strspn(str.c_str(), "0") != str.size())
+                return false;
+        }
+        return true;
+    }
+
+    SKAlgorithmAC * readSkeyVal(TDPCategory::Id tdp_type, std::string & str)
+    {
+        uint32_t skey = 0;
+        if (str2UInt(&skey, str))
+            return new SKAlgorithm_SKVal(tdp_type, skey);
+        return NULL;
+    }
+
+    bool readSKeyMap(SKAlgorithm_SKMap * alg, ConfigView * xlt_cfg)
+    {
+        std::auto_ptr<CStrSet> subs(xlt_cfg->getIntParamNames());
+        for (CStrSet::const_iterator sit = subs->begin(); sit != subs->end(); ++sit) {
+            uint32_t argKey = 0, resKey = 0;
+            //check paramName
+            if (str2UInt(&argKey, *sit)) {
+                try {
+                    resKey = (uint32_t)xlt_cfg->getInt(sit->c_str());
+                    alg->insert(argKey, resKey);
+                } catch (const ConfigException & exc) {
+                    return false;
+                }
+            } else
+                return false;
+        }
+        return true;
+    }
+
+    //"[algId :] algArg [: algParams] "
+    SKAlgorithmAC * readSkeyAlg(ConfigView * scf_cfg, TDPCategory::Id tdp_type, const char * str)
+    {
+        CSVList algStr(':');
+        CSVList::size_type n = algStr.init(str);
+        if (!n)
+            return NULL;
+        if (n == 1) //just a value
+            return readSkeyVal(tdp_type, algStr[0]);
+        // n >= 2
+        if (!strcmp("val", algStr[0].c_str())) //just a value
+            return readSkeyVal(tdp_type, algStr[1]);
+
+        if (!strcmp("map", algStr[0].c_str())) {
+            if (n < 3)
+                return NULL;
+
+            TDPCategory::Id argTdp = str2tdp(algStr[1].c_str());
+            if (argTdp == TDPCategory::dpUnknown)
+                return NULL;
+            if (!scf_cfg->findSubSection(algStr[2].c_str()))
+                return NULL;
+            std::auto_ptr<SKAlgorithm_SKMap> alg(new SKAlgorithm_SKMap(tdp_type, argTdp));
+            std::auto_ptr<ConfigView> xltCfg(scf_cfg->getSubConfig(algStr[2].c_str()));
+            bool res = readSKeyMap(alg.get(), xltCfg.get());
+            return (res && alg->size()) ? alg.release() : NULL;
+        }
+    }
+
+    unsigned readSrvKeys(ConfigView * scf_cfg, SKAlgorithmMAP & sk_alg) throw(ConfigException)
+    {
+        std::auto_ptr<ConfigView> skeyCfg(scf_cfg->getSubConfig("ServiceKeys"));
+        std::auto_ptr<CStrSet> subs(skeyCfg->getStrParamNames());
+        for (CStrSet::iterator sit = subs->begin(); sit != subs->end(); ++sit) {
+            TDPCategory::Id tdpType = str2tdp(sit->c_str());
+            if (tdpType != TDPCategory::dpUnknown) {
+                char *          cstr = skeyCfg->getString(sit->c_str());
+                SKAlgorithmAC * alg = readSkeyAlg(scf_cfg, tdpType, cstr);
+                if (alg) {
+                    sk_alg[tdpType] = alg;
+                    smsc_log_info(logger, "  skey %s %s", sit->c_str(),
+                                                    alg->toString().c_str());
+                } else
+                    throw ConfigException("  %s service key value/algorithm is invalid",
+                                            TDPCategory::Name(tdpType));
+            } else
+                smsc_log_warn(logger, " %s service key is unknown/unsupported", sit->c_str());
+        }
+        return scfMap.size();
+    }
+
 public:
     INScfsRegistry()
-    { }
+    { 
+        tdpNames[TDPCategory::dpMO_BC] = TDPCategory::Name(TDPCategory::dpMO_BC);
+        tdpNames[TDPCategory::dpMO_SM] = TDPCategory::Name(TDPCategory::dpMO_SM);
+    }
     ~INScfsRegistry()
     {
         for (INScfsMAP::iterator sit = scfMap.begin(); sit != scfMap.end(); sit++)
@@ -54,80 +163,96 @@ public:
     }
 
     //NOTE: the 'nm_scf' subsection presence must be previously checked !!!
-    INScfCFG * readSCF(ConfigView * scf_sec, const char * nm_scf) throw(ConfigException)
-    {
-        // according to INScfCFG::IDPLocationAddr
+    const INScfCFG * readSCF(ConfigView * scf_sec, const char * nm_scf, bool warn = false) throw(ConfigException)
+    {   // according to INScfCFG::IDPLocationAddr
         static const char * const _IDPLIAddr[] = { "MSC", "SMSC", "SSF" };
 
         std::auto_ptr<ConfigView> scfCfg(scf_sec->getSubConfig(nm_scf));
-        std::auto_ptr<INScfCFG> pin(new INScfCFG(nm_scf));
-        smsc_log_info(logger, "IN-platform '%s' config ..", pin->ident());
 
         char * cstr = NULL;
         cstr = scfCfg->getString("scfAddress");
         if (!cstr[0])
-            throw ConfigException("SCF address missing");
+            throw ConfigException("%s.scfAddress missing", nm_scf);
 
-        if (!pin->scf.scfAddress.fromText(cstr)
-            || (pin->scf.scfAddress.numPlanInd != NUMBERING_ISDN)
-            || (pin->scf.scfAddress.typeOfNumber > ToN_INTERNATIONAL))
-            throw ConfigException("SCF address is invalid: %s", cstr);
-        pin->scf.scfAddress.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
+        TonNpiAddress scfAdr;
+        if (!scfAdr.fromText(cstr) || !scfAdr.fixISDN())
+            throw ConfigException("%s.scfAddress is invalid: %s", nm_scf, cstr);
 
-        INScfsMAP::const_iterator sit = scfMap.find(pin->scf.scfAddress.toString());
+        //check uniqueness
+        INScfsMAP::const_iterator sit = scfMap.find(scfAdr.toString());
         if (sit != scfMap.end()) {
-            smsc_log_info(logger, "IN-platform '%s' already known ..", pin->ident());
+            if (warn)
+                smsc_log_info(logger, "IN-platform '%s' already known ..", nm_scf);
             return (*sit).second;
         }
 
-        pin->scf.serviceKey = (uint32_t)scfCfg->getInt("serviceKey");
-        smsc_log_info(logger, "  SCF: %s:{%u}",
-                        pin->scf.scfAddress.toString().c_str(), pin->scf.serviceKey);
+        //read configuration
+        std::auto_ptr<INScfCFG> pin;
 
-        //optional parameters:
-        cstr = NULL; 
-        std::string cppStr = "  RPCList_reject: ";
-        try { cstr = scfCfg->getString("RPCList_reject"); }
-        catch (ConfigException& exc) { }
-        if (cstr && cstr[0]) {
-            try { pin->rejectRPC.init(cstr); }
-            catch (std::exception& exc) {
-                throw ConfigException("RPCList_reject: %s", exc.what());
-            }
-        }
-        if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.print(cppStr))
-            cppStr += "unsupported";
-        smsc_log_info(logger, cppStr.c_str());
-
-        cstr = NULL; cppStr = "  RPCList_postpaid: ";
-        try { cstr = scfCfg->getString("RPCList_postpaid"); }
-        catch (ConfigException& exc) { }
-        if (cstr) {
-            try { pin->postpaidRPC.init(cstr); }
-            catch (std::exception& exc) {
-                throw ConfigException("RPCList_postpaid: %s", exc.what());
-            }
-        }
-        if (!pin->postpaidRPC.print(cppStr))
-            cppStr += "unsupported";
-        smsc_log_info(logger, cppStr.c_str());
-
-        cstr = NULL; cppStr = "IDPLocationInfo: ";
-        try { cstr = scfCfg->getString("IDPLocationInfo");}
-        catch (ConfigException& exc) { }
+        cstr = NULL;
+        try { cstr = scfCfg->getString("aliasFor", 0, false); }
+        catch (const ConfigException & exc) { }
 
         if (cstr && cstr[0]) {
-            if (!strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiSSF]))
-                pin->idpLiAddr = INScfCFG::idpLiSSF;
-            else if (!strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiSMSC]))
-                pin->idpLiAddr = INScfCFG::idpLiSMSC;
-            else if (strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiMSC]))
-                throw ConfigException("IDPLocationInfo: invalid value");
-        } else
-            cstr = (char*)_IDPLIAddr[INScfCFG::idpLiMSC];
-        smsc_log_info(logger, "  IDPLocationInfo: %s", cstr);
+            pin.reset((INScfCFG*)readSCF(scf_sec, cstr)); //throws
+            smsc_log_info(logger, "IN-platform '%s' config ..", nm_scf);
+            smsc_log_info(logger, "  ISDN: %s", scfAdr.toString().c_str());
+            smsc_log_info(logger, "  aliasFor: %s", cstr);
+        } else {
+            pin.reset(new INScfCFG(nm_scf));
+            pin->scfAdr = scfAdr;
+            smsc_log_info(logger, "IN-platform '%s' config ..", nm_scf);
+            smsc_log_info(logger, "  ISDN: %s", scfAdr.toString().c_str());
 
-        scfMap.insert(INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin.get()));
+            //Read service keys
+            if (!scfCfg->findSubSection("ServiceKeys"))
+                throw ConfigException("'ServiceKeys' section is missed");
+            readSrvKeys(scfCfg.get(), pin->skAlg);
+
+            //optional parameters:
+            cstr = NULL; 
+            std::string cppStr = "  RPCList_reject: ";
+            try { cstr = scfCfg->getString("RPCList_reject"); }
+            catch (ConfigException& exc) { }
+            if (cstr && cstr[0]) {
+                try { pin->rejectRPC.init(cstr); }
+                catch (std::exception& exc) {
+                    throw ConfigException("RPCList_reject: %s", exc.what());
+                }
+            }
+            if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.print(cppStr))
+                cppStr += "unsupported";
+            smsc_log_info(logger, cppStr.c_str());
+    
+            cstr = NULL; cppStr = "  RPCList_postpaid: ";
+            try { cstr = scfCfg->getString("RPCList_postpaid"); }
+            catch (ConfigException& exc) { }
+            if (cstr) {
+                try { pin->postpaidRPC.init(cstr); }
+                catch (std::exception& exc) {
+                    throw ConfigException("RPCList_postpaid: %s", exc.what());
+                }
+            }
+            if (!pin->postpaidRPC.print(cppStr))
+                cppStr += "unsupported";
+            smsc_log_info(logger, cppStr.c_str());
+    
+            cstr = NULL; cppStr = "IDPLocationInfo: ";
+            try { cstr = scfCfg->getString("IDPLocationInfo");}
+            catch (ConfigException& exc) { }
+    
+            if (cstr && cstr[0]) {
+                if (!strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiSSF]))
+                    pin->idpLiAddr = INScfCFG::idpLiSSF;
+                else if (!strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiSMSC]))
+                    pin->idpLiAddr = INScfCFG::idpLiSMSC;
+                else if (strcmp(cstr, _IDPLIAddr[INScfCFG::idpLiMSC]))
+                    throw ConfigException("IDPLocationInfo: invalid value");
+            } else
+                cstr = (char*)_IDPLIAddr[INScfCFG::idpLiMSC];
+            smsc_log_info(logger, "  IDPLocationInfo: %s", cstr);
+        }
+        scfMap.insert(INScfsMAP::value_type(scfAdr.toString(), pin.get()));
         return pin.release();
     }
 
@@ -136,7 +261,7 @@ public:
         std::auto_ptr<CStrSet> subs(scf_sec->getShortSectionNames());
         CStrSet::iterator sit = subs->begin();
         for (; sit != subs->end(); sit++)
-            readSCF(scf_sec, sit->c_str());
+            readSCF(scf_sec, sit->c_str(), true);
         return scfMap.size();
     }
 };
@@ -300,9 +425,9 @@ protected:
                                         sit != polXCFG.scfNms.end(); sit++) {
                     if (!scfSec.findSubSection(*sit))
                         throw ConfigException("IN-platform '%s'is not defined", *sit);
-                    INScfCFG * pin = scfMap.readSCF(&scfSec, *sit);
+                    const INScfCFG * pin = scfMap.readSCF(&scfSec, *sit);
                     policyCFG->scfMap.insert(
-                        INScfsMAP::value_type(pin->scf.scfAddress.toString(), pin));
+                        INScfsMAP::value_type(pin->scfAdr.toString(), pin));
                 }
             }
         }
@@ -342,11 +467,8 @@ protected:
         catch (ConfigException& exc) { }
         if (!cstr || !cstr[0])
             throw ConfigException("SSF address is missing");
-        if (!ss7.ssf_addr.fromText(cstr)
-            || (ss7.ssf_addr.numPlanInd != NUMBERING_ISDN)
-            || (ss7.ssf_addr.typeOfNumber > ToN_INTERNATIONAL))
+        if (!ss7.ssf_addr.fromText(cstr) || !ss7.ssf_addr.fixISDN())
             throw ConfigException("SSF address is invalid: %s", cstr);
-        ss7.ssf_addr.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
 
         ss7.own_ssn = ss7Cfg.getInt("ssn"); //throws
         smsc_log_info(logger, "  SSF: %u:%s", ss7.own_ssn,

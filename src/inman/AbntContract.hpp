@@ -2,11 +2,7 @@
 #ifndef SMSC_INMAN_SUBSCR_CONTRACT_HPP
 #define SMSC_INMAN_SUBSCR_CONTRACT_HPP
 
-#include <inttypes.h>
-
-#include "util/TonNpiAddress.hpp"
-using smsc::util::TonNpiAddress;
-using smsc::util::GsmSCFinfo;
+#include "inman/InScf.hpp"  //using TDPScfMap
 
 namespace smsc {
 namespace inman {
@@ -17,24 +13,15 @@ struct AbonentContractInfo {
     enum ContractType { abtUnknown = 0, abtPostpaid = 1, abtPrepaid = 2 };
 
     ContractType    ab_type;
-    GsmSCFinfo      gsmSCF;
     AbonentImsi     abImsi;
+    TDPScfMap       tdpSCF;
 
-    AbonentContractInfo(ContractType cntr_type = abtUnknown, const GsmSCFinfo * p_scf = NULL,
-                        const char * p_imsi = NULL)
+    AbonentContractInfo(ContractType cntr_type = abtUnknown, const char * p_imsi = NULL)
         : ab_type(cntr_type)
     {
-        setSCF(p_scf);
         setImsi(p_imsi);
     }
 
-    void setSCF(const GsmSCFinfo * p_scf)
-    {
-        if (p_scf)
-            gsmSCF = *p_scf;
-        else
-            gsmSCF.Reset();
-    }
     void setImsi(const char * p_imsi)
     { 
         if (p_imsi && p_imsi[0])
@@ -42,14 +29,23 @@ struct AbonentContractInfo {
         else
             abImsi[0] = 0;
     }
-    void Reset(void) { ab_type = abtUnknown; gsmSCF.Reset(); abImsi[0] = 0; }
+
+    void setSCF(TDPCategory::Id tdp_type, const GsmSCFinfo * p_scf)
+    {
+        if (p_scf)
+            tdpSCF[tdp_type] = *p_scf;
+        else
+            tdpSCF[tdp_type].Reset();
+    }
+
+    void Reset(void) { ab_type = abtUnknown; abImsi[0] = 0; tdpSCF.clear();  }
     void Merge(const AbonentContractInfo & use_info)
     {
         ab_type = use_info.ab_type;
-        if (use_info.getSCFinfo())
-            gsmSCF = use_info.gsmSCF;
         if (use_info.getImsi())
             strlcpy(abImsi, use_info.abImsi, sizeof(abImsi));
+
+        tdpSCF.Merge(use_info.tdpSCF);
     }
 
     inline bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }
@@ -66,10 +62,14 @@ struct AbonentContractInfo {
     }
 
     inline const char * type2Str(void) const { return type2Str(ab_type); }
-    inline const GsmSCFinfo * getSCFinfo(void) const
-    { return gsmSCF.scfAddress.length ? &gsmSCF : NULL; }
     inline const char * getImsi(void) const { return abImsi[0] ? (const char*)abImsi : NULL; }
     inline const char * imsiCStr(void) const { return abImsi[0] ? (const char*)abImsi : "<none>"; }
+
+    inline const GsmSCFinfo * getSCFinfo(TDPCategory::Id tdp_type) const
+    {
+        TDPScfMap::const_iterator it = tdpSCF.find(tdp_type);
+        return ((it == tdpSCF.end()) || it->second.scfAddress.empty()) ? NULL : &(it->second);
+    }
 };
 
 } //inman

@@ -93,7 +93,7 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
  * class AbonentDetector implementation:
  * ************************************************************************** */
 AbonentDetector::AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog/* = NULL*/)
-        : WorkerAC(w_id, owner, uselog), providerQueried(false)
+        : WorkerAC(w_id, owner, uselog), providerQueried(false), abScf(0)
         , abPolicy(NULL), iapTimer(NULL), _wErr(0), _state(adIdle)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman");
@@ -187,7 +187,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
                        abNumber.toString().c_str());
     } else {
         smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->Ident());
-        if ((abRec.ab_type == AbonentContractInfo::abtUnknown) || !abRec.getSCFinfo()) {
+        if ((abRec.ab_type == AbonentContractInfo::abtUnknown) || !abRec.getSCFinfo(TDPCategory::dpMO_SM)) {
             // configure SCF by quering provider first
             IAProviderITF *prvd = abPolicy->getIAProvider(logger);
             if (prvd) {
@@ -220,12 +220,15 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
         smsc_log_warn(logger, "%s: IAPQueried() at state: %s", State2Str());
         return;
     }
-    abRec = ab_info.abRec;
     _state = adIAPQueried;
     providerQueried = false;
     StopTimer();
-    if (qry_status != IAPQStatus::iqOk)
+    if (qry_status != IAPQStatus::iqOk) {
         _wErr = _RCS_IAPQStatus->mkhash(qry_status);
+        abRec.Merge(ab_info.abRec); //merge known abonent info
+    } else
+        abRec = ab_info.abRec;      //renew abonent info, overwrite TDPScfMAP
+
     if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
         //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
         ConfigureSCF();
@@ -257,43 +260,36 @@ void AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * ---------------------------------------------------------------------------------- */
 void AbonentDetector::ConfigureSCF(void)
 {
-    bool scfKnown = true;
-    INScfCFG        abScf;
+    const GsmSCFinfo * p_scf = abRec.getSCFinfo(TDPCategory::dpMO_SM);
+    if (!p_scf) //check if SCF for MO-BC may be used
+        p_scf = abRec.getSCFinfo(TDPCategory::dpMO_BC);
 
-    if (abRec.getSCFinfo()) { //SCF is set for abonent by cache/IAProvider
-        abScf.scf = abRec.gsmSCF;
-        //lookup policy for extra SCF parms (serviceKey, RPC lists)
-        if (abPolicy)
-            abPolicy->getSCFparms(&abScf);
+    if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
+        if (abPolicy)    //lookup policy for extra SCF parms (serviceKey, RPC lists)
+            abScf = abPolicy->getSCFparms(&(p_scf->scfAddress));
     } else if (abPolicy) {  //attempt to determine SCF and its params from config.xml
-        if (abRec.ab_type == AbonentContractInfo::abtUnknown) {
-            INScfCFG * pin = NULL;
-            if (abPolicy->scfMap.size() == 1) { //single IN serving, look for postpaidRPC
-                pin = (*(abPolicy->scfMap.begin())).second;
-                if (pin->postpaidRPC.size())
-                    abScf = *pin;
-                else
-                    pin = NULL;
+        if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
+            //look for single IN serving
+            if (abPolicy->scfMap.size() == 1)
+                abScf = abPolicy->scfMap.begin()->second;
+        } else { //ab_type == AbonentContractInfo::abtUnknown
+            //look for single IN serving with postpaidRPC defined
+            if (abPolicy->scfMap.size() == 1) {
+                abScf = abPolicy->scfMap.begin()->second;
+                if (abScf->postpaidRPC.empty())
+                    abScf = NULL;
             }
-            if (!pin) {
-                scfKnown = false;
-                smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
-            }
-        } else if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
-            if (abPolicy->scfMap.size() == 1) { //single IN serving
-                abScf = *((*(abPolicy->scfMap.begin())).second);
-            } else {
-                scfKnown = false;
-                smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
-            }
-        } else //btPostpaid
-            scfKnown = false;
-    } else
-        scfKnown = false;
-
-    if (!scfKnown && (abRec.ab_type == AbonentContractInfo::abtPrepaid))
+        }
+        if (!abScf)
+            smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
+    }
+    if (!abScf && (abRec.ab_type == AbonentContractInfo::abtPrepaid))
         abRec.ab_type = AbonentContractInfo::abtUnknown;
-    abRec.gsmSCF = abScf.scf;
+    else {
+        uint32_t skeyMOSM = abScf->getSKey(&abRec.tdpSCF);
+        //renew MO-SM SCF params
+        abRec.tdpSCF[TDPCategory::dpMO_SM] = GsmSCFinfo(abScf->scfAdr, skeyMOSM);
+    }
 }
 
 void AbonentDetector::doCleanUp(void)
@@ -320,9 +316,18 @@ void AbonentDetector::reportAndExit(void)
             dstr += ": "; dstr += URCRegistry::explainHash(_wErr);
         }
     } else {
-        if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
-            format(dstr, ", SCF %s:{%u}", abRec.gsmSCF.scfAddress.toString().c_str(),
-                   abRec.gsmSCF.serviceKey);
+        if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
+            GsmSCFinfo          smScf;
+            const GsmSCFinfo *  p_scf = abRec.getSCFinfo(TDPCategory::dpMO_SM);
+
+            if (!p_scf) { //check if SCF for MO-BC may be used
+                p_scf = abRec.getSCFinfo(TDPCategory::dpMO_BC);
+                smScf.scfAddress = p_scf->scfAddress;
+            } else 
+                smScf = *p_scf;
+            format(dstr, ", SCF %s", smScf.toString().c_str());
+        }
+
         if (abRec.getImsi()) {
             dstr += ", IMSI: "; dstr += abRec.getImsi();
         }

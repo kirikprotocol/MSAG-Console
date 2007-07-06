@@ -29,10 +29,8 @@ extern "C" IAProviderCreatorITF *
 
     if (!(cstr = hlrCfg->getString("ownAddress")))
         throw ConfigException("'ownAddress' isn't set!");
-    if (!cfg.owdAddr.fromText(cstr) || (cfg.owdAddr.numPlanInd != NUMBERING_ISDN)
-        || (cfg.owdAddr.typeOfNumber > ToN_INTERNATIONAL))
+    if (!cfg.owdAddr.fromText(cstr) || !cfg.owdAddr.fixISDN())
         throw ConfigException("'ownAddress' is invalid: %s !", cstr);
-    cfg.owdAddr.typeOfNumber = ToN_INTERNATIONAL;  //correct isdn unknown
 
     if (!(cfg.ownSsn = (UCHAR_T)hlrCfg->getInt("ownSsn")))
         throw ConfigException("'ownSsn' is not set!", cstr);
@@ -200,20 +198,22 @@ void IAPQuerySRI::onMapResult(CHSendRoutingInfoRes* arg)
     if (!arg->getIMSI(abInfo.abRec.abImsi)) //abonent is unknown
         smsc_log_warn(logger, "%s(%s): IMSI not determined.", taskName(), abonent.getSignals());
     else {
-        if (!arg->getSCFinfo(&abInfo.abRec.gsmSCF)) {
+        //NOTE: CH-SRI returns only O-Bcsm tDP serviceKeys
+        if (!arg->hasOCSI()) {
             abInfo.abRec.ab_type = AbonentRecord::abtPostpaid;
-            smsc_log_debug(logger, "%s(%s): %s, gsmSCF <none>, IMSI %s",
+            smsc_log_debug(logger, "%s(%s): %s, IMSI %s, MSC <unknown>, SCFs: <none>",
                             taskName(), abonent.getSignals(), 
                             abInfo.abRec.type2Str(), abInfo.abRec.imsiCStr());
         } else {
             abInfo.abRec.ab_type = AbonentRecord::abtPrepaid;
-            abInfo.abRec.gsmSCF.serviceKey = 0; //CH-SRI returns only O-Bcsm tDP serviceKeys
+            arg->getSCFinfo(&abInfo.abRec.tdpSCF[TDPCategory::dpMO_BC]);
             arg->getVLRN(abInfo.vlrNum);
-            smsc_log_debug(logger, "%s(%s): %s, gsmSCF %s, IMSI %s, VLR %s",
+            smsc_log_debug(logger, "%s(%s): %s, IMSI %s, MSC %s, %s",
                             taskName(), abonent.getSignals(),
                             abInfo.abRec.type2Str(),
-                            abInfo.abRec.gsmSCF.toString().c_str(),
-                            abInfo.abRec.imsiCStr(), abInfo.vlr2Str().c_str());
+                            abInfo.abRec.imsiCStr(), abInfo.vlr2Str().c_str(),
+                            abInfo.abRec.tdpSCF.toString().c_str()
+                );
         }
     }
 }

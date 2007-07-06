@@ -71,6 +71,7 @@ protected:
 
     AbonentRecord   abRec;      //ab_type = abtUnknown
     TonNpiAddress   abNumber;   //calling abonent ISDN number
+    const INScfCFG* abScf;      ////corresponding IN-point configuration 
     bool            providerQueried;
     uint32_t        _wErr;
     StopWatch *     iapTimer;   //timer for InAbonentProvider quering

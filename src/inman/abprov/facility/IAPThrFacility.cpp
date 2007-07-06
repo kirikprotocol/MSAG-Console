@@ -102,6 +102,10 @@ bool IAProviderThreaded::hasListeners(const AbonentId & ab_number)
 //Notifies query listeners and releases query.
 void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 {
+    //Update cache: NOTE: cache implementation should not block !!!
+    if (cache && (query->Status() == IAPQStatus::iqOk))
+        cache->setAbonentInfo(query->getAbonentId(), query->getAbonentInfo().abRec);
+
     //Notify listeners if any, and remove query from active queries cache
     {
         qrsGuard.Lock();
@@ -133,10 +137,6 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
                            query->taskName(), (query->getAbonentId()).getSignals());
         qrsGuard.Unlock();
     }
-    //update cache: in case of DiskHash it may takes many seconds!!!
-    if (cache && (query->Status() == IAPQStatus::iqOk))
-        cache->setAbonentInfo(query->getAbonentId(), query->getAbonentInfo().abRec);
-
     {   //update queries pool
         MutexGuard  guard(qrsGuard); 
         if (!query->delOnCompletion())
@@ -144,12 +144,13 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
         //else query is being deleted by PooledThread::Execute()
         if (query->Status() == IAPQStatus::iqOk)
             smsc_log_info(logger,
-                    "IAPrvd: %s(%s): finished, contract %s, SCF %s, IMSI %s, VLR %s",
+                    "IAPrvd: %s(%s): finished, contract %s, IMSI %s, MSC %s, %s",
                     query->taskName(), (query->getAbonentId()).getSignals(),
                     query->getAbonentInfo().abRec.type2Str(),
-                    query->getAbonentInfo().abRec.gsmSCF.toString().c_str(),
                     query->getAbonentInfo().abRec.imsiCStr(),
-                    query->getAbonentInfo().vlr2Str().c_str() );
+                    query->getAbonentInfo().vlr2Str().c_str(),
+                    query->getAbonentInfo().abRec.tdpSCF.toString().c_str()
+                );
         else
             smsc_log_info(logger, "IAPrvd: %s(%s): %s",
                 query->taskName(), (query->getAbonentId()).getSignals(),

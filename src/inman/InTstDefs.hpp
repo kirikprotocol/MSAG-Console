@@ -166,22 +166,20 @@ struct AbonentInfo : public AbonentContractInfo {
     TonNpiAddress  msIsdn;
 
     AbonentInfo(const TonNpiAddress * p_adr, ContractType cntr_type = abtUnknown,
-                 const char * p_imsi = NULL, const GsmSCFinfo * p_scf = NULL)
-        : AbonentContractInfo(cntr_type, p_scf, p_imsi)
+                 const char * p_imsi = NULL)
+        : AbonentContractInfo(cntr_type, p_imsi)
     { if (p_adr) msIsdn = *p_adr; }
 
     AbonentInfo(const char * p_adr = NULL, ContractType cntr_type = abtUnknown,
-                 const char * p_imsi = NULL, const GsmSCFinfo * p_scf = NULL)
-        : AbonentContractInfo(cntr_type, p_scf, p_imsi)
+                 const char * p_imsi = NULL)
+        : AbonentContractInfo(cntr_type, p_imsi)
     { msIsdn.fromText(p_adr); }
 
     inline bool Empty(void) const { return (bool)(!msIsdn.length); }
 
-    void setContractInfo(const AbonentContractInfo& ctr_inf)
+    inline void setContractInfo(const AbonentContractInfo& ctr_inf)
     {
-        ab_type = ctr_inf.ab_type;
-        setSCF(ctr_inf.getSCFinfo());
-        setImsi(ctr_inf.abImsi);
+        *(AbonentContractInfo*)this = ctr_inf;
     }
 };
 
@@ -221,9 +219,9 @@ public:
 
     static void printAbnInfo(FILE * stream, const AbonentInfo & abn, unsigned ab_id)
     {
-        fprintf(stream, "abn.%u: %s, isdn <%s>, imsi <%s>, SCF <%s>\n", ab_id,
+        fprintf(stream, "abn.%u: %s, isdn <%s>, imsi <%s>, %s\n", ab_id,
                 abn.type2Str(), abn.msIsdn.length ? abn.msIsdn.toString().c_str() : " ",
-                abn.abImsi[0] ? abn.abImsi : "none", abn.gsmSCF.toString().c_str());
+                abn.abImsi[0] ? abn.abImsi : "none", abn.tdpSCF.toString().c_str());
     }
 
     inline unsigned getMaxAbId(void) const { return lastAbnId; }

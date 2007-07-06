@@ -223,9 +223,9 @@ int AbonentCacheMTR::FSCacheMonitor::Execute(void)
                         uint32_t r_num = fsCache->Insert(AbonentHashKey(ab_number), &abRec, true);
                         if (r_num) {
                             updList.pop_front();
-                            smsc_log_debug(logger, "FSCache: rcd[%u.%u]: %s, %s, SCF %s",
+                            smsc_log_debug(logger, "FSCache: rcd[%u.%u]: %s, %s, %s",
                                            fsCache->Size(), r_num, ab_number.getSignals(),
-                                           abRec.type2Str(), abRec.gsmSCF.toString().c_str());
+                                           abRec.type2Str(), abRec.tdpSCF.toString().c_str());
                             MutexGuard  grd(ramCache->Sync());
                             if ((prRec = ramCache->LookUp(ab_number)))
                                 prRec->toUpdate = false;

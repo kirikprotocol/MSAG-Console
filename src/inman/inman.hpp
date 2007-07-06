@@ -63,50 +63,8 @@ struct SS7_CFG {    //SS7 stack interaction:
     { own_ssn = maxDlgId = capTimeout = userId = 0; }
 };
 
-#define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
-class INScfCFG {
-public:         //SwitchingCenter, SMS Center, INMan
-    typedef enum { idpLiMSC = 0, idpLiSMSC = 1, idpLiSSF = 2 } IDPLocationAddr;
 
-    std::string     _ident;   //INPlatform ident
-    GsmSCFinfo      scf;
-    RPCList         rejectRPC;      //list of RP causes forcing charging denial because of low balance
-    RPCList         postpaidRPC;    //list of RP causes returned for postpaid abonents
-    IDPLocationAddr idpLiAddr;      //nature of address to substitute into
-                                    //LocationInformationMSC of InitialDP operation
-                                    //while interacting this IN platfrom
-
-    INScfCFG(const char * name = NULL) : idpLiAddr(idpLiMSC)
-    { 
-        if (name) _ident += name;
-        rejectRPC.push_back(RP_MO_SM_transfer_rejected);
-    }
-    INScfCFG(const INScfCFG & use_cfg)
-    {
-        _ident = use_cfg._ident;
-        rejectRPC = use_cfg.rejectRPC;
-        postpaidRPC = use_cfg.postpaidRPC;
-        idpLiAddr = use_cfg.idpLiAddr;
-
-        uint32_t orgKey = scf.serviceKey;
-        scf = use_cfg.scf;
-        if (!scf.serviceKey)
-            scf.serviceKey = orgKey;
-    }
-
-    void reset(void)
-    {
-        scf.serviceKey = 0;
-        scf.scfAddress.clear();
-        rejectRPC.clear();
-        rejectRPC.push_back(RP_MO_SM_transfer_rejected);
-        postpaidRPC.clear();
-        idpLiAddr = idpLiMSC;
-    }
-    const char * ident(void) { return _ident.c_str(); }
-};
-
-typedef std::map<std::string, INScfCFG*> INScfsMAP;
+typedef std::map<std::string, const INScfCFG *> INScfsMAP;
 
 class AbonentPolicy {
 protected:
@@ -140,14 +98,10 @@ public:
                 || (provType == smsc::inman::iaprvd::iapHLR));
     }
 
-    bool getSCFparms(INScfCFG* scf) const
+    const INScfCFG * getSCFparms(const TonNpiAddress* scf) const
     {
-        INScfsMAP::const_iterator it = scfMap.find(scf->scf.scfAddress.toString());
-        if (it != scfMap.end()) {
-            *scf = *(it->second);
-            return true;
-        }
-        return false;
+        INScfsMAP::const_iterator it = scfMap.find(scf->toString());
+        return (it != scfMap.end()) ? it->second : NULL;
     }
 
     IAProviderAbility_e getIAPAbilities(void) const

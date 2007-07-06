@@ -103,7 +103,7 @@ void BillingManager::onPacketReceived(Connect* conn, std::auto_ptr<SerializableP
  * class Billing implementation:
  * ************************************************************************** */
 Billing::Billing(unsigned b_id, BillingManager * owner, Logger * uselog/* = NULL*/)
-        : WorkerAC(b_id, owner, uselog), state(bilIdle)
+        : WorkerAC(b_id, owner, uselog), state(bilIdle), abScf(0)
         , providerQueried(false), capSess(NULL), abPolicy(NULL), billErr(0)
         , xsmsSrv(0), msgType(ChargeObj::msgUnknown), billMode(ChargeObj::billOFF)
 {
@@ -292,8 +292,8 @@ unsigned Billing::writeCDR(void)
             smsc_log_error(logger, "%s: empty MSC for %s", _logId, abNumber.toString().c_str());
 
         _cfg.bfs->bill(cdr); cnt++;
-        smsc_log_info(logger, "%s: CDR written: msgId = %llu, IN billed: %s, charged: %s",
-                    _logId, cdr._msgId, cdr._inBilled ? "true": "false",
+        smsc_log_info(logger, "%s: CDR written: msgId: %llu, status: %u, IN billed: %s, charged: %s",
+                    _logId, cdr._msgId, cdr._dlvrRes, cdr._inBilled ? "true": "false",
                     abNumber.toString().c_str());
     }
     return cnt;
@@ -309,8 +309,7 @@ void Billing::doFinalize(bool doReport/* = true*/)
                           " abonent(%s), type %s, CDR(s) written: %u", _logId,
             BillComplete() ? "" : "IN", cdr._chargeType ? "MT" : "MO",
             _chgPolicy[cdr._chargePolicy], cdr.dpType().c_str(),
-            cdr._inBilled ? (abScf._ident.empty() ? "SCF" : abScf._ident.c_str()) :
-                            _cfg.billModeStr(billMode), billErr,
+            cdr._inBilled ? abScf->Ident() : _cfg.billModeStr(billMode), billErr,
             abNumber.getSignals(), abCsi.abRec.type2Str(), cdrs);
 
     doCleanUp();
@@ -331,8 +330,12 @@ void Billing::abortThis(const char * reason/* = NULL*/, bool doReport/* = true*/
 }
 
 
-RCHash Billing::startCAPDialog(INScfCFG * use_scf)
+RCHash Billing::startCAPDialog(void)
 {
+    //renew MO-SM SCF params in abonent record tdpSCF map and in cache
+    uint32_t skeyMOSM = abCsi.abRec.tdpSCF[TDPCategory::dpMO_SM].serviceKey;
+    smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId, abScf->Ident(), skeyMOSM);
+
     if (!_cfg.ss7.userId) {
         smsc_log_error(logger, "%s: SS7 stack is not connected!", _logId);
         return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
@@ -349,10 +352,10 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
     }
 
     if (!(capSess = ssnSess->newSRsession(_cfg.ss7.ssf_addr,
-            ACOID::id_ac_cap3_sms_AC, 146, use_scf->scf.scfAddress))) {
+            ACOID::id_ac_cap3_sms_AC, 146, abScf->scfAdr))) {
         std::string sid;
         TCSessionAC::mkSignature(sid, _cfg.ss7.own_ssn, _cfg.ss7.ssf_addr,
-                                 ACOID::id_ac_cap3_sms_AC, 146, &(use_scf->scf.scfAddress));
+                                 ACOID::id_ac_cap3_sms_AC, 146, &(abScf->scfAdr));
         smsc_log_error(logger, "%s: Unable to init TCSR session: %s", _logId, sid.c_str());
         return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
     }
@@ -382,9 +385,9 @@ RCHash Billing::startCAPDialog(INScfCFG * use_scf)
     RCHash rval = 0;
     try {
         //compose InitialDPSMS argument
-        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, use_scf->scf.serviceKey);
+        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating, skeyMOSM);
 
-        switch (use_scf->idpLiAddr) {
+        switch (abScf->idpLiAddr) {
         case INScfCFG::idpLiSSF:
             arg.setLocationInformationMSC(_cfg.ss7.ssf_addr); break;
         case INScfCFG::idpLiSMSC:
@@ -536,6 +539,10 @@ Billing::PGraphState Billing::onChargeSms(void)
     AbonentRecord cacheRec;
     _cfg.abCache->getAbonentInfo(abNumber, &cacheRec);
     abCsi.abRec.Merge(cacheRec);     //merge available abonent info
+    //check for IMSI being defined
+    if (!abCsi.abRec.getImsi())
+        abCsi.abRec.ab_type = AbonentContractInfo::abtUnknown;
+
     if (abCsi.abRec.ab_type == AbonentContractInfo::abtPostpaid) {
         billMode = ChargeObj::bill2CDR;
         //do not interact IN platform, just create CDR
@@ -543,11 +550,6 @@ Billing::PGraphState Billing::onChargeSms(void)
     }
 
     //Here goes either abtPrepaid or abtUnknown ..
-    //check for cache consistency
-    if ((abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid)
-         && (!abCsi.abRec.getSCFinfo() || !abCsi.abRec.getImsi()))
-        abCsi.abRec.ab_type = AbonentContractInfo::abtUnknown;
-
     if (!(abPolicy = _cfg.policies->getPolicy(&abNumber)))
         smsc_log_error(logger, "%s: no policy set for %s", _logId, 
                         abNumber.toString().c_str());
@@ -559,11 +561,15 @@ Billing::PGraphState Billing::onChargeSms(void)
                             || (cdr._chargePolicy == CDRRecord::ON_DATA_COLLECTED))
                         );
 
-    //check if AbonentProvider should be requested for current abonent location
-    if (abCsi.vlrNum.empty() && !askProvider && abPolicy
-        && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF)) {
+    //check for MO_SM SCF params defined
+    if ((abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid)
+         && !abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM))
         askProvider = true;
-    }
+    //check if AbonentProvider should be requested for current abonent location
+    if (abCsi.vlrNum.empty() && abPolicy
+        && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF))
+        askProvider = true;
+
     //verify that abonent number is in ISDN international format
     if (!abNumber.interISDN())
         askProvider = false;
@@ -601,40 +607,56 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
     RCHash err = 0;
     if (billMode == ChargeObj::bill2IN) {
         const char * errmsg = NULL;
-        const GsmSCFinfo * p_scf = abCsi.abRec.getSCFinfo();
+        const GsmSCFinfo * p_scf = abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM);
+        if (!p_scf) //check if SCF for MO-BC may be used
+            p_scf = abCsi.abRec.getSCFinfo(TDPCategory::dpMO_BC);
+        
         if (!abCsi.abRec.getImsi())
             errmsg = "unable to determine abonent IMSI";
         else if (p_scf) { //SCF is set only for prepaid abonent by cache/IAProvider
-            abScf.scf = *p_scf;
             if (abPolicy) //lookup policy for extra SCF parms (serviceKey, RPC lists)
-                abPolicy->getSCFparms(&abScf);
+                abScf = abPolicy->getSCFparms(&(p_scf->scfAddress));
         } else {    //attempt to determine SCF params from config.xml
             if (!abPolicy) {
-                errmsg = "unable to determine IN params, no policy set";
+                errmsg = "unable to determine IN params (no policy set)";
             } else {
                 if (abCsi.abRec.ab_type == AbonentContractInfo::abtPrepaid) {
                     //look for single IN serving
                     if (abPolicy->scfMap.size() == 1)
-                        abScf = *((*(abPolicy->scfMap.begin())).second);
+                        abScf = abPolicy->scfMap.begin()->second;
                     else
-                        errmsg = "unable to determine IN params";
+                        errmsg = "unable to determine IN params (too many INs)";
                 } else { //ab_type == AbonentContractInfo::abtUnknown
                     //look for single IN serving with postpaidRPC defined
-                    INScfCFG * pin = NULL;
                     if (abPolicy->scfMap.size() == 1) {
-                        pin = (*(abPolicy->scfMap.begin())).second;
-                        if (pin->postpaidRPC.size())
-                            abScf = *pin;
-                        else
-                            pin = NULL;
+                        abScf = abPolicy->scfMap.begin()->second;
+                        if (abScf->postpaidRPC.empty())
+                            abScf = NULL;
                     }
-                    if (!pin)
-                        errmsg = "unable to determine IN params (no postpaidRPC)";
+                    if (!abScf)
+                        errmsg = "unable to determine IN params (no postpaidRPC set)";
                 }
             }
         }
-        if (!errmsg && !abScf.scf.serviceKey)  //check for serviceKey being set
-            errmsg = "unable to determine IN serviceKey";
+        //check for MO_SM serviceKey being defined
+        if (!errmsg) {
+            if (!abScf)
+                errmsg = "unable to determine IN params";
+            else {
+            // renew MO-SM SCF params in abonent record tdpSCF map and in abonent cache
+                p_scf = abCsi.abRec.getSCFinfo(TDPCategory::dpMO_SM);
+                uint32_t recMOSM = p_scf ? p_scf->serviceKey : 0;
+                uint32_t cfgMOSM = abScf->getSKey(&abCsi.abRec.tdpSCF, TDPCategory::dpMO_SM);
+                //serviceKey from config.xml has a higher priority
+                if ((cfgMOSM != recMOSM) && cfgMOSM) {
+                    recMOSM = cfgMOSM;
+                    abCsi.abRec.tdpSCF[TDPCategory::dpMO_SM] = GsmSCFinfo(abScf->scfAdr, recMOSM);
+                    _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
+                }
+                if (!recMOSM)
+                    errmsg = "unable to determine IN MO-SM serviceKey";
+            }
+        }
         if (!errmsg && abCsi.vlrNum.empty())   //check for charged abonent location
             errmsg = "failed to determine abonent location MSC";
         if (errmsg) {
@@ -649,10 +671,7 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
     }
 
     if (billMode == ChargeObj::bill2IN) {
-        smsc_log_debug(logger, "%s: using SCF %s:{%u}", _logId,
-                abScf._ident.size() ? abScf.ident() : abScf.scf.scfAddress.getSignals(),
-                abScf.scf.serviceKey);
-        RCHash capErr = startCAPDialog(&abScf);
+        RCHash capErr = startCAPDialog();
         if (!capErr)
             return pgCont; //awaiting response from IN point
         
@@ -738,8 +757,7 @@ Billing::PGraphState Billing::chargeResult(ChargeSmsResult::ChargeSmsResult_t ch
         state = Billing::bilReleased;
     } else {
         format(reply, "POSSIBLE (via %s, cause %u)",
-            billMode == ChargeObj::bill2CDR ? "CDR" :
-            (abScf._ident.empty() ? "SCF" : abScf._ident.c_str()), billErr);
+            billMode == ChargeObj::bill2CDR ? "CDR" : abScf->Ident(), billErr);
         state = Billing::bilContinued;
     }
     smsc_log_info(logger, "%s: <-- %s %s CHARGING_%s, abonent(%s) type: %s (%u)",
@@ -826,7 +844,7 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
         billErr = _RCS_IAPQStatus->mkhash(qry_status);
         abCsi.abRec.Merge(ab_info.abRec); //merge known abonent info
     } else
-        abCsi.abRec = ab_info.abRec; //renew abonent info
+        abCsi.abRec = ab_info.abRec; //renew abonent info, overwrite TDPScfMAP
     if (!ab_info.vlrNum.empty())
         abCsi.vlrNum = ab_info.vlrNum;
 
@@ -847,9 +865,10 @@ void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause/* = 0*/)
     res->answered = true;
 
     if (!rp_cause) {    //ContinueSMS
-        if (abCsi.abRec.ab_type != AbonentContractInfo::abtPrepaid)  //Update abonents cache
-            _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(abCsi.abRec.ab_type = 
-                                AbonentContractInfo::abtPrepaid, 0, &abScf.scf));
+        if (abCsi.abRec.ab_type != AbonentContractInfo::abtPrepaid) { //Update abonents cache
+            abCsi.abRec.ab_type = AbonentContractInfo::abtPrepaid;
+            _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
+        }
         res->chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
     } else {            //ReleaseSMS
         res->active = false;
@@ -857,13 +876,14 @@ void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause/* = 0*/)
         res->chgRes = ChargeSmsResult::CHARGING_NOT_POSSIBLE;
 
         //check for RejectSMS causes for postpaid abonents:
-        for (RPCList::iterator it = abScf.postpaidRPC.begin(); 
-                                it != abScf.postpaidRPC.end(); it++) {
+        for (RPCList::const_iterator it = abScf->postpaidRPC.begin(); 
+                                it != abScf->postpaidRPC.end(); it++) {
             if ((*it) == rp_cause) {
                 //Update abonents cache
-                if (abCsi.abRec.ab_type != AbonentContractInfo::abtPostpaid)
-                    _cfg.abCache->setAbonentInfo(abNumber, AbonentRecord(
-                            abCsi.abRec.ab_type = AbonentContractInfo::abtPostpaid));
+                if (abCsi.abRec.ab_type != AbonentContractInfo::abtPostpaid) {
+                    abCsi.abRec.ab_type = AbonentContractInfo::abtPostpaid;
+                    _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
+                }
                 res->chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
                 verifyIDPresult(res, "postpaid abonent detected");
                 return;  //wait for onEndCapDlg()
@@ -875,8 +895,8 @@ void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause/* = 0*/)
         if (billPrio->second == ChargeObj::bill2CDR) {
             res->chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
             res_reason = "technical failure";
-            for (RPCList::iterator it = abScf.rejectRPC.begin();
-                                    it != abScf.rejectRPC.end(); it++) {
+            for (RPCList::const_iterator it = abScf->rejectRPC.begin();
+                                    it != abScf->rejectRPC.end(); it++) {
                 if ((*it) == rp_cause) {
                     res->chgRes = ChargeSmsResult::CHARGING_NOT_POSSIBLE;
                     res_reason = NULL;

@@ -75,9 +75,9 @@ public:
         if (res->errorCode()) {
             format(msg, "failed, error %u: %s", res->errorCode(), res->errorMsg());
         } else {
-            format(msg, " %s, SCF %s, IMSI %s, source(%s)", res->contractInfo().type2Str(),
-                   res->contractInfo().gsmSCF.toString().c_str(),
+            format(msg, " %s, IMSI %s, %s, source(%s)", res->contractInfo().type2Str(),
                    res->contractInfo().imsiCStr(),
+                   res->contractInfo().tdpSCF.toString().c_str(),
                    res->cacheUsed() ? "cache" : res->policyUsed());
             abInfo->setContractInfo(res->contractInfo());
         }

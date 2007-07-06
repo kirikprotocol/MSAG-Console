@@ -245,7 +245,7 @@ private:
     unsigned writeCDR(void);
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
-    RCHash startCAPDialog(INScfCFG * use_scf);
+    RCHash startCAPDialog(void);
     void StartTimer(unsigned short timeout);
     void StopTimer(BillingState bilState);
     PGraphState verifyIDPresult(CAPSmsStatus * res, const char * res_reason = NULL);
@@ -270,7 +270,7 @@ private:
     bool            providerQueried;
     // ...
     AbonentPolicy * abPolicy;
-    INScfCFG        abScf;
+    const INScfCFG* abScf;      //corresponding IN-point configuration
     XSmsService   * xsmsSrv;    //optional SMS Extra service config.
     RCHash          billErr;    //global error code made by URCRegistry
     const BModesPrio * billPrio;   //billing modes priority 

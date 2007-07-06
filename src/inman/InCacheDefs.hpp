@@ -22,15 +22,16 @@ enum { MAX_ABONENT_ID_LEN =  11 }; //only isdn international numbers supported
 struct AbonentRecord : public AbonentContractInfo {
     time_t  tm_queried;
 
-    AbonentRecord(ContractType abType = abtUnknown, time_t qryTm = 0,
-                  const GsmSCFinfo * p_scf = NULL, const char * p_imsi = NULL)
-        : AbonentContractInfo(abType, p_scf, p_imsi), tm_queried(qryTm)
+    AbonentRecord(ContractType abType = abtUnknown,
+                                const char * p_imsi = NULL, time_t qryTm = 0)
+        : AbonentContractInfo(abType, p_imsi), tm_queried(qryTm)
     { }
+/*
     AbonentRecord(const AbonentRecord & ab_rec)
         : AbonentContractInfo(ab_rec.ab_type, ab_rec.getSCFinfo(), ab_rec.getImsi())
         , tm_queried(ab_rec.tm_queried)
     { }
-
+*/
     void Merge(const AbonentRecord & use_rcd)
     {
         AbonentContractInfo::Merge(use_rcd);

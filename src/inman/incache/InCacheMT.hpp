@@ -116,8 +116,9 @@ protected:
     //MTHashFileT<> HFValueTA argument implementation
     class AbonentHashData : public AbonentRecord, public HashFileEntityITF {
     public:
-        static const uint32_t _maxSize = sizeof(time_t) + 1 + sizeof(uint32_t)
-                                         + 1 + MAP_MAX_ISDN_AddressLength;
+        static const uint32_t _maxSize = sizeof(time_t) + 1 + 1 
+            + (TDPCategory::dpRESERVED_MAX - 1)
+                * (1 + sizeof(uint32_t) + 1 + MAP_MAX_ISDN_AddressLength);
 
         AbonentHashData() : AbonentRecord()
         { }
@@ -152,43 +153,63 @@ protected:
             uint8_t fb = fh.ReadByte();
             ab_type = (AbonentContractInfo::ContractType)(fb & 0x7F);
             tm_queried = ReadTimeT(fh);
-            gsmSCF.scfAddress.clear();
+
+            tdpSCF.clear();
             if (fb & 0x80) { //SCF parms present
-                gsmSCF.serviceKey = (uint32_t)fh.ReadNetInt32();
-                uint8_t len = fh.ReadByte();
-                rv += 5;
-                if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
-                    TONNPI_ADDRESS_OCTS oct;
-                    oct.b0.tonpi = fh.ReadByte();
-                    fh.Read(oct.val, len - 1);
-                    unpackOCTS2MAPAddress(gsmSCF.scfAddress, &oct, len - 1);
-                    rv += len;
+                uint8_t cnt = fh.ReadByte(); ++rv;   //number of SCFs
+                for (; cnt; --cnt) {
+                    fb = fh.ReadByte(); ++rv;
+                    TDPCategory::Id  tdpType = static_cast<TDPCategory::Id>(fb);
+                    if (tdpType != TDPCategory::dpUnknown) {   //read SCF parms
+                        GsmSCFinfo      gsmSCF;
+                        gsmSCF.serviceKey = (uint32_t)fh.ReadNetInt32();
+                        uint8_t len = fh.ReadByte();
+                        rv += 5;
+                        if (len && (len <= MAP_MAX_ISDN_AddressLength)) {
+                            TONNPI_ADDRESS_OCTS oct;
+                            oct.b0.tonpi = fh.ReadByte();
+                            fh.Read(oct.val, len - 1);
+                            rv += len;
+                            unpackOCTS2MAPAddress(gsmSCF.scfAddress, &oct, len - 1);
+                        }
+                        tdpSCF[tdpType] = gsmSCF;
+                    }
                 }
-            } else
-                gsmSCF.serviceKey = 0;
+            }
             return rv;
         }
 
         uint32_t Write(File& fh) _THROWS_HFE const
         {
             uint32_t sz = 1;
-            unsigned char fb = (unsigned char)ab_type;
-            if (gsmSCF.scfAddress.length)
+            uint8_t fb = (uint8_t)ab_type;
+            if (!tdpSCF.empty())
                 fb |= 0x80;
             fh.WriteByte(fb);
             sz += WriteTimeT(fh, tm_queried);
-            if (gsmSCF.scfAddress.length) {
-                fh.WriteNetInt32(gsmSCF.serviceKey);
-                sz += 4 + 1;
-                TONNPI_ADDRESS_OCTS oct;
-                unsigned len = packMAPAddress2OCTS(gsmSCF.scfAddress, &oct);
-                if ((len > 1) && (len <= MAP_MAX_ISDN_AddressLength)) {
-                    fh.WriteByte((uint8_t)len);
-                    fh.WriteByte(oct.b0.tonpi);
-                    fh.Write(oct.val, len - 1);
-                    sz += len;
-                } else
-                    fh.WriteByte(0);
+
+            if ((fb = (uint8_t)tdpSCF.size()) != 0) {
+                fh.WriteByte(fb); ++sz;     //number of SCFs
+                for (TDPScfMap::const_iterator it = tdpSCF.begin();
+                                            it != tdpSCF.end(); ++it) {
+                    if (it->second.scfAddress.empty()) {
+                        fh.WriteByte(TDPCategory::dpUnknown); ++sz;
+                    } else {
+                        fh.WriteByte((uint8_t)it->first); ++sz;
+                        //write SCF parms
+                        fh.WriteNetInt32(it->second.serviceKey);
+                        sz += 4 + 1;    //serviceKey + address length
+                        TONNPI_ADDRESS_OCTS oct;
+                        unsigned len = packMAPAddress2OCTS(it->second.scfAddress, &oct);
+                        if ((len > 1) && (len <= MAP_MAX_ISDN_AddressLength)) {
+                            fh.WriteByte((uint8_t)len);
+                            fh.WriteByte(oct.b0.tonpi);
+                            fh.Write(oct.val, len - 1);
+                            sz += len;
+                        } else
+                            fh.WriteByte(0);
+                    }
+                }
             }
             return sz;
         }
@@ -201,7 +222,8 @@ protected:
     typedef std::list<AbonentId> AbonentsList;
     struct AbonentRecordRAM : public AbonentRecord {
     public:
-        bool toUpdate;
+        bool toUpdate;  //indicates that record awaits for transfer to external
+                        //storage, so cann't be evicted
         AbonentsList::iterator accIt;
 
         AbonentRecordRAM() : AbonentRecord(), toUpdate(false)

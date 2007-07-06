@@ -108,7 +108,7 @@ public:
     void setError(uint32_t err_code, const char * err_msg = NULL)
     { 
         cntrInfo.ab_type = AbonentContractInfo::abtUnknown;
-        cntrInfo.gsmSCF.scfAddress.clear();
+        cntrInfo.tdpSCF.clear();
         errCode = err_code;
         if (err_msg)
             errMsg = err_msg;
@@ -138,14 +138,18 @@ protected:
             std::string stmp;
             in >> stmp;
             if (stmp.empty())
-                cntrInfo.gsmSCF.scfAddress.clear();
-            else if (!cntrInfo.gsmSCF.scfAddress.fromText(stmp.c_str()))
-                throw SerializerException("invalid gsmSCF address",
-                                          SerializerException::invObjData, stmp.c_str());
+                cntrInfo.tdpSCF.clear();
+            else {
+                TonNpiAddress adr;
+                if (!adr.fromText(stmp.c_str()))
+                    throw SerializerException("invalid gsmSCF address",
+                                              SerializerException::invObjData, stmp.c_str());
+                cntrInfo.tdpSCF[TDPCategory::dpMO_SM].scfAddress = adr;
+            }
         }
         in >> errCode;
-        if (cntrInfo.gsmSCF.scfAddress.length) {
-            cntrInfo.gsmSCF.serviceKey = errCode;
+        if (cntrInfo.getSCFinfo(TDPCategory::dpMO_SM)) {
+            cntrInfo.tdpSCF[TDPCategory::dpMO_SM].serviceKey = errCode;
             errCode = 0;
         }
         {
@@ -166,12 +170,21 @@ protected:
     {
         out << nmPolicy;
         out << (uint8_t)cntrInfo.ab_type;
-        if (cntrInfo.gsmSCF.scfAddress.length)
-            out << cntrInfo.gsmSCF.scfAddress.toString();
-        else {
+
+        GsmSCFinfo          smScf;
+        const GsmSCFinfo *  p_scf = cntrInfo.getSCFinfo(TDPCategory::dpMO_SM);
+        if (!p_scf) { //check if SCF for MO-BC may be used
+            if ((p_scf = cntrInfo.getSCFinfo(TDPCategory::dpMO_BC)) != 0)
+                smScf.scfAddress = p_scf->scfAddress;
+        } else 
+            smScf = *p_scf;
+
+        if (smScf.scfAddress.empty())
             out << (uint8_t)0x00;
-        }
-        out << (errCode ? errCode : cntrInfo.gsmSCF.serviceKey);
+        else
+            out << smScf.scfAddress.toString();
+
+        out << (errCode ? errCode : smScf.serviceKey);
         if (cntrInfo.getImsi()) {
             std::string si(cntrInfo.getImsi());
             out << si;
