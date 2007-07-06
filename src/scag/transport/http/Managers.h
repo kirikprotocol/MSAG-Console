@@ -69,10 +69,10 @@ protected:
     HttpManagerImpl &manager;
     Logger *logger;    
     
-    HttpContext *tailContext[3];
-    HttpContext *headContext[3];    
+    HttpContext *tailContext[4];
+    HttpContext *headContext[4];    
     
-    unsigned int queueLength[3];
+    unsigned int queueLength[4];
     unsigned int scagQueueLimit;
     bool waitQueueShrinkage;
     void deleteQueue(HttpContext* pcx);
