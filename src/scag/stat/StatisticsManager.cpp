@@ -237,7 +237,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
   if(routeSt && se.routeProviderId!=-1)routeSt->providerId=se.routeProviderId;
 
 #ifdef MSAG_FAKE_STAT
-#define STAT_LOG_EVENT(ev) smsc_log_debug(logger, "StatisticsManager:events::smpp::"ev" %d %d %d", srcSt, dstSt, routeSt)
+#define STAT_LOG_EVENT(ev) smsc_log_debug(logger, "StatisticsManager:events::smpp::"ev" %s(%d) %s(%d) %d", se.srcId, se.srcType, se.dstId, se.dstType, routeSt)
 #else
 #define STAT_LOG_EVENT(ev)
 #endif
@@ -272,7 +272,8 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         break;
     case events::smpp::RESP_OK:
         STAT_LOG_EVENT("RESP_OK");
-        if(dstSt) { dstSt->delivered++; incSmppCounter(se.dstId, se.dstType, cntDelivered);}
+        if(srcSt) { srcSt->delivered++; incSmppCounter(se.srcId, se.srcType, cntDelivered);}
+//        if(dstSt) { dstSt->delivered++; incSmppCounter(se.dstId, se.dstType, cntDelivered);}        
         if(routeSt) { routeSt->delivered++; }
 
         if (se.routeId && se.routeId[0])
