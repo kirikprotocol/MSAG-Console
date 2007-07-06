@@ -24,7 +24,8 @@ public:
             std::string::size_type pos = 0, commaPos;
             do {
                 commaPos = rplist.find_first_of(',', pos);
-                std::string rp_s = rplist.substr(pos, commaPos);
+                std::string rp_s(rplist.substr(pos,
+                        ((commaPos != rplist.npos) ? commaPos : rplist.size()) - pos));
                 int rp_i = atoi(rp_s.c_str());
                 if (!rp_i || (rp_i > 0xFF))
                     throw CustomException("bad element \'%s\'", rp_s.c_str());
