@@ -1023,6 +1023,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
                         src->getSystemId(), sms.getDestinationAddress().toString().c_str());
         DataResp(cmd,smsc::system::Status::USSDDLGREFMISM);
         registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::USSDDLGREFMISM);
+        return;
     }
 
     do{
