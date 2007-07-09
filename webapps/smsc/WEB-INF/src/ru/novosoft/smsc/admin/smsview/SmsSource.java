@@ -164,6 +164,7 @@ public abstract class SmsSource {
 
       row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
       row.setText(textBuffer.toString());
+      row.setOriginalText(originalTextBuffer.toString());
     } catch (IOException exc) {
       logger.warn("SMS Body parsing failed", exc);
     }
