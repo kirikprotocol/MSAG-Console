@@ -337,9 +337,8 @@ public class SmsViewFormBean extends IndexBean {
       //id + "\t" + submit + "\t" + valid + "\t" + last + "\t" + next + "\t" + source + "\t" + dest + "\t" + route + "\t" + status + "\t";
       result.append(id).append('\t').append(submit).append('\t').append(valid).append('\t').append(last).append('\t').append(next).append('\t');
       result.append(source).append('\t').append(dest).append('\t').append(route).append('\t').append(status).append('\t');
-      if (row.getText() != null) {
-        row.getBodyParameters().get();
-        result.append(row.getText());
+      if (row.getOriginalText() != null) {
+        result.append(row.getOriginalText());
       }
       result.append("\r\n");
     }
