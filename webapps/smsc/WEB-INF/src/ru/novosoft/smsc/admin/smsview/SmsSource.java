@@ -163,7 +163,9 @@ public abstract class SmsSource {
         convertMessage(textBuffer, originalTextBuffer, text, 0, text.length, ((esmClass & 0x40) == 0x40), textEncoding);
 
       row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
+      logger.info("Set text: "+textBuffer);
       row.setText(textBuffer.toString());
+      logger.info("Set org text: "+originalTextBuffer);
       row.setOriginalText(originalTextBuffer.toString());
     } catch (IOException exc) {
       logger.warn("SMS Body parsing failed", exc);
@@ -192,6 +194,7 @@ public abstract class SmsSource {
       byte msgText[] = new byte[len];
       System.arraycopy(text, start, msgText, 0, len);
       sb.append(decodeMessage(msgText, len, encoding));
+      orgsb.append(decodeOriginalMessage(msgText, len, encoding));
     }
   }
 
