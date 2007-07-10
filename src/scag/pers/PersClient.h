@@ -57,14 +57,23 @@ public:
     const char* what() const { return strs[et]; };
 };
 
+union PersKey{
+	const char* skey;
+	uint32_t ikey;
+	PersKey() {};
+	PersKey(const char* s) {skey = s;};
+	PersKey(uint32_t i) {ikey = i;};
+};
+
 class PersCallParams : public LongCallParams{
 public:
     PersCallParams() : error(0), result(0) {};
     ProfileType pt;
-    uint32_t ikey;
+	SerialBuffer sb;
+	uint32_t ikey;
     std::string skey;
-    Property prop;
     std::string propName;
+	Property prop;
     uint32_t mod;
     
     uint32_t error;
@@ -81,21 +90,28 @@ public:
     static void Init(const char *_host, int _port, int timeout, int pingTimeout);// throw(PersClientException);
     static void Init(const scag::config::PersClientConfig& cfg);// throw(PersClientException);    
 
-    virtual void SetProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);
-    virtual void SetProperty(ProfileType pt, uint32_t key, Property& prop) = 0;// throw(PersClientException);
+    virtual void SetProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
+    virtual void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop) = 0;
+    virtual bool DelProperty(ProfileType pt, const PersKey& key, const char *property_name) = 0;
+    virtual void IncProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
+    virtual int IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod) = 0;
 
-    virtual void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) = 0;// throw(PersClientException);
-    virtual void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) = 0;// throw(PersClientException);
+    virtual void SetPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb) = 0;
+    virtual void GetPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb) = 0;
+    virtual void DelPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb) = 0;
+    virtual void IncPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb) = 0;
+    virtual void IncModPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod, SerialBuffer& bsb) = 0;
+    
+    virtual void SetPropertyResult(SerialBuffer& bsb) = 0;
+    virtual void GetPropertyResult(Property& prop, SerialBuffer& bsb) = 0;
+    virtual bool DelPropertyResult(SerialBuffer& bsb) = 0;
+    virtual void IncPropertyResult(SerialBuffer& bsb) = 0;
+    virtual int IncModPropertyResult(SerialBuffer& bsb) = 0;
 
-    virtual void DelProperty(ProfileType pt, const char* key, const char *property_name) = 0;// throw(PersClientException);
-    virtual void DelProperty(ProfileType pt, uint32_t key, const char *property_name) = 0;// throw(PersClientException);
-
-    virtual void IncProperty(ProfileType pt, const char* key, Property& prop) = 0;// throw(PersClientException);
-    virtual void IncProperty(ProfileType pt, uint32_t key, Property& prop) = 0;// throw(PersClientException);
-
-    virtual int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) = 0; //throw(PersClientException)
-    virtual int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) = 0; //throw(PersClientException)
-
+	virtual void PrepareBatch(SerialBuffer& bsb) = 0;
+	virtual void RunBatch(SerialBuffer& sb) = 0;
+	virtual void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb) = 0;
+	
     virtual bool call(LongCallContext* context) = 0;
 protected:
     static bool  inited;

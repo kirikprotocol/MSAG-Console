@@ -104,6 +104,7 @@ void PersServer::processReadSocket(Socket* s)
 			ctx->outbuf.Empty();
             ctx->inbuf.SetPos(4);
             CmdDispatcher->Execute(ctx->inbuf, ctx->outbuf);
+			ctx->lastActivity = time(NULL);			
             ctx->outbuf.SetPos(0);
             listener.addRW(s);
 			ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling

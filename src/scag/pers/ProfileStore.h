@@ -391,7 +391,7 @@ public:
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
-            smsc_log_debug(log, "profile %s, incProperty: %s", key.toString().c_str(), p->toString().c_str());
+            smsc_log_debug(log, "profile %s, incModProperty: %s", key.toString().c_str(), p->toString().c_str());
             if(p->getType() == INT && prop.getType() == INT)
             {
                 res = p->getIntValue() + prop.getIntValue();
@@ -416,9 +416,9 @@ public:
 };
 
 typedef ProfileStore<IntProfileKey, uint32_t, CachedProfileStore<HashProfileStore<IntProfileKey>, IntProfileKey > > IntProfileStore;
-//typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
+typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
 
-typedef ProfileStore<AbntAddr, const char*, TreeProfileStore<AbntAddr> > StringProfileStore;
+//typedef ProfileStore<AbntAddr, const char*, TreeProfileStore<AbntAddr> > StringProfileStore;
 
 }}
 

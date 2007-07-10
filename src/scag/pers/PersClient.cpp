@@ -28,49 +28,54 @@ public:
     PersClientImpl(): connected(false), headContext(NULL), ConfigListener(scag::config::PERSCLIENT_CFG) {};
     ~PersClientImpl() { Stop(); if(connected) sock.Close(); };
 
-    void SetProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
-    void SetProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
-
-    void GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop);// throw(PersClientException);
-    void GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop);// throw(PersClientException);
-
-    void DelProperty(ProfileType pt, const char* key, const char *property_name);// throw(PersClientException);
-    void DelProperty(ProfileType pt, uint32_t key, const char *property_name);// throw(PersClientException);
-
-    void IncProperty(ProfileType pt, const char* key, Property& prop);// throw(PersClientException);
-    void IncProperty(ProfileType pt, uint32_t key, Property& prop);// throw(PersClientException);
-
-    int IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod); //throw(PersClientException)
-    int IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod); //throw(PersClientException)
+    void SetProperty(ProfileType pt, const PersKey& key, Property& prop);
+    void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop);
+    bool DelProperty(ProfileType pt, const PersKey& key, const char *property_name);
+    void IncProperty(ProfileType pt, const PersKey& key, Property& prop);
+    int IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod);
+    
+    void SetPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb);
+    void GetPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb);
+    void DelPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb);
+    void IncPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb);
+    void IncModPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod, SerialBuffer& bsb);
+    
+    void SetPropertyResult(SerialBuffer& bsb);
+    void GetPropertyResult(Property& prop, SerialBuffer& bsb);
+    bool DelPropertyResult(SerialBuffer& bsb);
+    void IncPropertyResult(SerialBuffer& bsb);
+    int IncModPropertyResult(SerialBuffer& bsb);
+	
+	void PrepareBatch(SerialBuffer& bsb);
+	void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb);
+	void RunBatch(SerialBuffer& bsb);
 
     bool call(LongCallContext* context);
 
-    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout); //throw(PersClientException);
+    void init_internal(const char *_host, int _port, int timeout, int _pingTimeout);
     
     virtual int Execute();
     void Stop() { isStopping = true; {MutexGuard mt(callMutex), mt1(mtx); callMutex.notify();} WaitFor();};
     void Start() {isStopping = false; Thread::Start();};
-    
+	
 protected:
-
+    void setBatchCount(uint32_t cnt, SerialBuffer& bsb);    
     void configChanged();
     void init();
-    void reinit(const char *_host, int _port, int _timeout, int _pingTimeout); //throw(PersClientException)    
-    void SetPacketSize();
-    void _SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop); //throw(PersClientException)
-    void _DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name); //throw(PersClientException)
-    void _IncProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop); //throw(PersClientException)
-    int _IncModProperty(ProfileType pt, const char* key, uint32_t ikey, Property& prop, uint32_t mod); //throw(PersClientException)
-    void FillHead(PersCmd pc, ProfileType pt, const char *key);
-    void FillHead(PersCmd pc, ProfileType pt, uint32_t key);
+    void reinit(const char *_host, int _port, int _timeout, int _pingTimeout);
+    void setPacketSize(SerialBuffer& bsb);
+	
+	void emptyPacket(SerialBuffer& bsb) { bsb.Empty(); bsb.SetPos(4); }
+	
+    void FillHead(PersCmd pc, ProfileType pt, const PersKey& key, SerialBuffer& bsb);
     void AppendString(const char *str);
-    void SendPacket();
-    void ReadPacket();
+    void SendPacket(SerialBuffer& bsb);
+    void ReadPacket(SerialBuffer& bsb);
     void WriteAllTO(const char* buf, uint32_t sz);
     void ReadAllTO(char* buf, uint32_t sz);
-    uint32_t GetPacketSize();
-    PersServerResponseType GetServerResponse();
-    void ParseProperty(Property& prop);
+    uint32_t getPacketSize(SerialBuffer& bsb);
+    PersServerResponseType GetServerResponse(SerialBuffer& bsb);
+    void ParseProperty(Property& prop, SerialBuffer& bsb);
 
     LongCallContext* getContext();
     void ping();
@@ -180,184 +185,179 @@ void PersClientImpl::reinit(const char *_host, int _port, int _timeout, int _pin
     Start();
 }
 
-void PersClientImpl::_SetProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
+void PersClientImpl::SetPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb)
+{
+    FillHead(PC_SET, pt, key, bsb);
+    prop.Serialize(bsb);	
+}
+
+void PersClientImpl::SetPropertyResult(SerialBuffer& bsb)
+{
+    if(GetServerResponse(bsb) != RESPONSE_OK)
+        throw PersClientException(SERVER_ERROR);
+}
+
+void PersClientImpl::SetProperty(ProfileType pt, const PersKey& key, Property& prop)
 {
     MutexGuard mt(mtx);
 
-    if(pt == PT_ABONENT)
-        FillHead(PC_SET, pt, skey);
-    else
-        FillHead(PC_SET, pt, ikey);
-    prop.Serialize(sb);
-    SendPacket();
-    ReadPacket();
-    if(GetServerResponse() != RESPONSE_OK)
-        throw PersClientException(SERVER_ERROR);
-        
+	emptyPacket(sb);
+	SetPropertyPrepare(pt, key, prop, sb);
+    SendPacket(sb);
+   	ReadPacket(sb);
+	SetPropertyResult(sb);
+}
+
+void PersClientImpl::GetPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb)
+{
+    FillHead(PC_GET, pt, key, bsb);
+    bsb.WriteString(property_name);
+}
+
+void PersClientImpl::GetPropertyResult(Property& prop, SerialBuffer& bsb)
+{
+    ParseProperty(prop, bsb);
+}
+
+void PersClientImpl::GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop)
+{
+    MutexGuard mt(mtx);
+
+    emptyPacket(sb);
+	GetPropertyPrepare(pt, key, property_name, sb);
+    SendPacket(sb);
+    ReadPacket(sb);
+	GetPropertyResult(prop, sb);
     actTS = time(NULL);
 }
 
-void PersClientImpl::SetProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
+void PersClientImpl::DelPropertyPrepare(ProfileType pt, const PersKey& key, const char *property_name, SerialBuffer& bsb)
 {
-    if(pt != PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
-    _SetProperty(pt, key, 0, prop);
-}
-void PersClientImpl::SetProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
-{
-    if(pt == PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
-    _SetProperty(pt, NULL, key, prop);
+    FillHead(PC_DEL, pt, key, bsb);
+    bsb.WriteString(property_name);
 }
 
-void PersClientImpl::GetProperty(ProfileType pt, const char* key, const char *property_name, Property& prop) //throw(PersClientException)
+bool PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
 {
-    if(pt != PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
+	int resp;
+	
+	try{
+	    resp = bsb.ReadInt8();
+	}
+	catch(SerialBufferOutOfBounds& e)
+	{
+		throw PersClientException(BAD_RESPONSE);
+	}
 
-
-    MutexGuard mt(mtx);
-
-    FillHead(PC_GET, pt, key);
-    sb.WriteString(property_name);
-    SendPacket();
-    ReadPacket();
-    ParseProperty(prop);
-    actTS = time(NULL);    
-}
-void PersClientImpl::GetProperty(ProfileType pt, uint32_t key, const char *property_name, Property& prop) //throw(PersClientException)
-{
-    if(pt == PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
-    MutexGuard mt(mtx);
-
-    FillHead(PC_GET, pt, key);
-    sb.WriteString(property_name);
-    SendPacket();
-    ReadPacket();
-    ParseProperty(prop);
-    actTS = time(NULL);    
-}
-
-void PersClientImpl::_DelProperty(ProfileType pt, const char* skey, uint32_t ikey, const char *property_name) //throw(PersClientException)
-{
-    MutexGuard mt(mtx);
-
-    if(pt == PT_ABONENT)
-        FillHead(PC_DEL, pt, skey);
-    else
-        FillHead(PC_DEL, pt, ikey);
-
-    sb.WriteString(property_name);
-    SendPacket();
-    ReadPacket();
-
-    int resp = GetServerResponse();
-
-    if(resp == RESPONSE_PROPERTY_NOT_FOUND)
-        throw PersClientException(PROPERTY_NOT_FOUND);
-    else if(resp != RESPONSE_OK)
+    if(resp != RESPONSE_OK && resp != RESPONSE_PROPERTY_NOT_FOUND)
         throw PersClientException(SERVER_ERROR);
-    actTS = time(NULL);        
+		
+	return resp != RESPONSE_PROPERTY_NOT_FOUND;
 }
 
-void PersClientImpl::DelProperty(ProfileType pt, const char* key, const char *property_name) //throw(PersClientException)
+bool PersClientImpl::DelProperty(ProfileType pt, const PersKey& key, const char *property_name)
 {
-    if(pt != PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
+    MutexGuard mt(mtx);
 
-    _DelProperty(pt, key, 0, property_name);
+	emptyPacket(sb);
+	DelPropertyPrepare(pt, key, property_name, sb);
+    SendPacket(sb);
+    ReadPacket(sb);
+    bool b = DelPropertyResult(sb);
+    actTS = time(NULL);
+	return b;
 }
 
-void PersClientImpl::DelProperty(ProfileType pt, uint32_t key, const char *property_name) //throw(PersClientException)
-{
-    if(pt == PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
-    _DelProperty(pt, NULL, key, property_name);
-}
-
-void PersClientImpl::_IncProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop) //throw(PersClientException)
+void PersClientImpl::IncPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb)
 {
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
 
+    FillHead(PC_INC, pt, key, bsb);
+    prop.Serialize(bsb);
+}
+
+void PersClientImpl::IncPropertyResult(SerialBuffer& bsb)
+{
+    if(GetServerResponse(bsb) != RESPONSE_OK)
+        throw PersClientException(SERVER_ERROR);
+}
+
+void PersClientImpl::IncProperty(ProfileType pt, const PersKey& key, Property& prop)
+{
     MutexGuard mt(mtx);
 
-    if(pt == PT_ABONENT)
-        FillHead(PC_INC, pt, skey);
-    else
-        FillHead(PC_INC, pt, ikey);
-
-    prop.Serialize(sb);
-    SendPacket();
-    ReadPacket();
-    if(GetServerResponse() != RESPONSE_OK)
-        throw PersClientException(SERVER_ERROR);
-    actTS = time(NULL);        
-}
-void PersClientImpl::IncProperty(ProfileType pt, const char* key, Property& prop) //throw(PersClientException)
-{
-    if(pt != PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
-    _IncProperty(pt, key, 0, prop);
-}
-void PersClientImpl::IncProperty(ProfileType pt, uint32_t key, Property& prop) //throw(PersClientException)
-{
-    if(pt == PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
-
-    _IncProperty(pt, NULL, key, prop);
+    emptyPacket(sb);
+    IncPropertyPrepare(pt, key, prop, sb);
+    SendPacket(sb);
+    ReadPacket(sb);
+    IncPropertyResult(sb);
+		
+    actTS = time(NULL);
 }
 
-int PersClientImpl::_IncModProperty(ProfileType pt, const char* skey, uint32_t ikey, Property& prop, uint32_t mod) //throw(PersClientException)
+void PersClientImpl::IncModPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod, SerialBuffer& bsb)
 {
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
 
-    MutexGuard mt(mtx);
+    FillHead(PC_INC_MOD, pt, key, bsb);
+    bsb.WriteInt32(mod);
+    prop.Serialize(bsb);
+}
 
-    if(pt == PT_ABONENT)
-        FillHead(PC_INC_MOD, pt, skey);
-    else
-        FillHead(PC_INC_MOD, pt, ikey);
-
-    sb.WriteInt32(mod);
-    prop.Serialize(sb);
-    SendPacket();
-    ReadPacket();
-
-    if(GetServerResponse() != RESPONSE_OK)
+int PersClientImpl::IncModPropertyResult(SerialBuffer& bsb)
+{
+    if(GetServerResponse(bsb) != RESPONSE_OK)
         throw PersClientException(SERVER_ERROR);
 
     try{
-        sb.SetPos(sizeof(uint32_t) + 1);
-        actTS = time(NULL);        
-        return sb.ReadInt32();
+        return bsb.ReadInt32();
     }
     catch(SerialBufferOutOfBounds &e)
     {
         throw PersClientException(BAD_RESPONSE);
     }
-
 }
-int PersClientImpl::IncModProperty(ProfileType pt, const char* key, Property& prop, uint32_t mod) //throw(PersClientException)
+int PersClientImpl::IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod)
 {
-    if(pt != PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
+    MutexGuard mt(mtx);
 
-    return _IncModProperty(pt, key, 0, prop, mod);
+	emptyPacket(sb);
+    IncModPropertyPrepare(pt, key, prop, mod, sb);
+    SendPacket(sb);
+    ReadPacket(sb);
+    int i =  IncModPropertyResult(sb);
+    actTS = time(NULL);
+    return i;
 }
-int PersClientImpl::IncModProperty(ProfileType pt, uint32_t key, Property& prop, uint32_t mod) //throw(PersClientException)
-{
-    if(pt == PT_ABONENT)
-        throw PersClientException(INVALID_KEY);
 
-    return _IncModProperty(pt, NULL, key, prop, mod);
+void PersClientImpl::setBatchCount(uint32_t cnt, SerialBuffer& bsb)
+{
+	uint32_t i = bsb.GetPos();
+	bsb.SetPos(5);
+	bsb.WriteInt16(cnt);
+	bsb.SetPos(i);
+}
+
+void PersClientImpl::PrepareBatch(SerialBuffer& bsb)
+{
+	bsb.setPos(4);
+	bsb.WriteInt8(PC_BATCH);
+	bsb.WriteInt16(0);
+}
+
+void PersClientImpl::FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb)
+{
+	setBatchCount(cnt, bsb);
+}
+
+void PersClientImpl::RunBatch(SerialBuffer& bsb)
+{
+    MutexGuard mt(mtx);
+    SendPacket(bsb);
+    ReadPacket(bsb);
+    actTS = time(NULL);
 }
 
 void PersClientImpl::init()
@@ -393,8 +393,8 @@ void PersClientImpl::ReadAllTO(char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t rd = 0;
-	struct pollfd pfd;
-	
+    struct pollfd pfd;
+
     while(sz)
     {
 		pfd.fd = sock.getSocket();
@@ -415,38 +415,41 @@ void PersClientImpl::WriteAllTO(const char* buf, uint32_t sz)
 {
     int cnt;
     uint32_t wr = 0;
-	struct pollfd pfd;
+    struct pollfd pfd;    
 
     while(sz)
     {
 		pfd.fd = sock.getSocket();
 		pfd.events = POLLOUT | POLLIN;
-        if(poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLOUT))
+        if(poll(&pfd, 1, timeout * 1000) <= 0)
             throw PersClientException(TIMEOUT);
-			
+		else if(!(pfd.revents & POLLOUT) || (pfd.revents & POLLIN))
+            throw PersClientException(SEND_FAILED);		
+
         cnt = sock.Write(buf + wr, sz);
         if(cnt <= 0)
             throw PersClientException(SEND_FAILED);
+
         wr += cnt;
         sz -= cnt;
     }
 }
 
-void PersClientImpl::SendPacket()
+void PersClientImpl::SendPacket(SerialBuffer& bsb)
 {
     uint32_t  t = 0;
     for(;;)
     {
         try{
             init();            
-            SetPacketSize();
-            smsc_log_debug(log, "write to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
-            WriteAllTO(sb.c_ptr(), sb.length());
+            setPacketSize(bsb);
+            WriteAllTO(bsb.c_ptr(), bsb.length());
+            smsc_log_debug(log, "connected=%d write to socket: len=%d, data=%s", connected, bsb.length(), bsb.toString().c_str());			
             return;
         }
         catch(PersClientException &e)
         {
-            smsc_log_error(log, "send failed");		
+            smsc_log_debug(log, "PersClientException: %s", e.what());		
             connected = false;
             sock.Close();
             if(++t >= 2) throw e;
@@ -454,7 +457,7 @@ void PersClientImpl::SendPacket()
     }
 }
 
-void PersClientImpl::ReadPacket()
+void PersClientImpl::ReadPacket(SerialBuffer& bsb)
 {
     char tmp_buf[1024];
     uint32_t sz;
@@ -462,43 +465,43 @@ void PersClientImpl::ReadPacket()
     if(!connected)
         throw PersClientException(NOT_CONNECTED);
 
-    sb.Empty();
+    bsb.Empty();
     ReadAllTO(tmp_buf, sizeof(uint32_t));
-    sb.Append(tmp_buf, sizeof(uint32_t));
-    sb.SetPos(0);
-    sz = sb.ReadInt32() - sizeof(uint32_t);
+    bsb.Append(tmp_buf, sizeof(uint32_t));
+    bsb.SetPos(0);
+    sz = bsb.ReadInt32() - sizeof(uint32_t);
 
     while(sz > 1024)
     {
         ReadAllTO(tmp_buf, 1024);
-        sb.Append(tmp_buf, 1024);
+        bsb.Append(tmp_buf, 1024);
         sz -= 1024;
     }
     if(sz)
     {
         ReadAllTO(tmp_buf, sz);
-        sb.Append(tmp_buf, sz);
+        bsb.Append(tmp_buf, sz);
     }
-    smsc_log_debug(log, "read from socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
+    smsc_log_debug(log, "read from socket: connected=%d len=%d, data=%s", connected, bsb.length(), bsb.toString().c_str());
+	bsb.SetPos(4);
 }
 
-void PersClientImpl::SetPacketSize()
+void PersClientImpl::setPacketSize(SerialBuffer& bsb)
 {
-    sb.SetPos(0);
-    sb.WriteInt32(sb.GetSize());
+    bsb.SetPos(0);
+    bsb.WriteInt32(bsb.GetSize());
 }
 
-uint32_t PersClientImpl::GetPacketSize()
+uint32_t PersClientImpl::getPacketSize(SerialBuffer& bsb)
 {
-    sb.SetPos(0);
-    return sb.ReadInt32();
+    bsb.SetPos(0);
+    return bsb.ReadInt32();
 }
 
-PersServerResponseType PersClientImpl::GetServerResponse()
+PersServerResponseType PersClientImpl::GetServerResponse(SerialBuffer& bsb)
 {
     try{
-        sb.SetPos(sizeof(uint32_t));
-        return (PersServerResponseType)sb.ReadInt8();
+        return (PersServerResponseType)bsb.ReadInt8();
     }
     catch(SerialBufferOutOfBounds &e)
     {
@@ -506,37 +509,28 @@ PersServerResponseType PersClientImpl::GetServerResponse()
     }
 }
 
-void PersClientImpl::FillHead(PersCmd pc, ProfileType pt, uint32_t key)
+void PersClientImpl::FillHead(PersCmd pc, ProfileType pt, const PersKey& key, SerialBuffer& bsb)
 {
-    sb.Empty();
-    sb.SetPos(4);
-    sb.WriteInt8((uint8_t)pc);
-    sb.WriteInt8((uint8_t)pt);
-    sb.WriteInt32(key);
+    bsb.WriteInt8((uint8_t)pc);
+    bsb.WriteInt8((uint8_t)pt);
+	if(pt == PT_ABONENT)
+	    bsb.WriteString(key.skey);
+	else
+	    bsb.WriteInt32(key.ikey);	
 }
 
-void PersClientImpl::FillHead(PersCmd pc, ProfileType pt, const char *key)
+void PersClientImpl::ParseProperty(Property& prop, SerialBuffer& bsb)
 {
-    sb.Empty();
-    sb.SetPos(4);
-    sb.WriteInt8((uint8_t)pc);
-    sb.WriteInt8((uint8_t)pt);
-    sb.WriteString(key);
-}
-
-void PersClientImpl::ParseProperty(Property& prop)
-{
-    PersServerResponseType ss = GetServerResponse();
-    if(ss == RESPONSE_PROPERTY_NOT_FOUND)
-        throw PersClientException(PROPERTY_NOT_FOUND);
-
-    if(ss != RESPONSE_OK)
-        throw PersClientException(SERVER_ERROR);
-
-
-    sb.SetPos(sizeof(uint32_t) + 1);
     try{
-        prop.Deserialize(sb);
+	    PersServerResponseType ss = (PersServerResponseType)bsb.ReadInt8();
+		
+	    if(ss == RESPONSE_PROPERTY_NOT_FOUND)
+    	    throw PersClientException(PROPERTY_NOT_FOUND);
+
+	    if(ss != RESPONSE_OK)
+    	    throw PersClientException(SERVER_ERROR);
+	
+        prop.Deserialize(bsb);
     } catch(SerialBufferOutOfBounds &e)
     {
         throw PersClientException(BAD_RESPONSE);
@@ -577,9 +571,9 @@ void PersClientImpl::ping()
         sb.Empty();
         sb.SetPos(4);
         sb.WriteInt8(PC_PING);
-        SendPacket();
-        ReadPacket();
-        if(GetServerResponse() != RESPONSE_OK)
+        SendPacket(sb);
+        ReadPacket(sb);
+        if(GetServerResponse(sb) != RESPONSE_OK)
             throw PersClientException(SERVER_ERROR);
         smsc_log_debug(log, "Ping sent");
     }
@@ -608,12 +602,16 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
     PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     smsc_log_debug(log, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
     try{
-        if(persParams->pt == PT_ABONENT)        
+        persParams->error = 0;
+        persParams->exception.assign("");
+		if(ctx->callCommandId == PERS_BATCH)
+			RunBatch(persParams->sb);
+		else if(persParams->pt == PT_ABONENT)        
             switch(ctx->callCommandId)
             {
                 case PERS_GET: GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
                 case PERS_SET: SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-                case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str()); break;
+                case PERS_DEL: if(!DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
                 case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
                 case PERS_INC: IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
             }
@@ -622,12 +620,10 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
             {
                 case PERS_GET: GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
                 case PERS_SET: SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-                case PERS_DEL: DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str()); break;
+                case PERS_DEL: if(!DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
                 case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
                 case PERS_INC: IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
             }
-        persParams->error = 0;
-        persParams->exception.assign("");
     }
     catch(PersClientException& exc)
     {
@@ -658,8 +654,7 @@ int PersClientImpl::Execute()
 
         if(ctx)
         {
-            if(ctx->callCommandId >= PERS_GET && ctx->callCommandId <= PERS_INC_MOD)
-                ExecutePersCall(ctx);
+            ExecutePersCall(ctx);
                 
             ctx->initiator->continueExecution(ctx, false);
 
