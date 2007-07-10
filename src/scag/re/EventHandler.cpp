@@ -30,8 +30,7 @@ EventHandler::~EventHandler()
 IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
 
-    Action * action = 0;
-    action = factory.CreateAction(name);
+    Action * action = factory.CreateAction(name);
     if (!action) 
         throw SCAGException("EventHandler: unrecognized child object '%s' to create",name.c_str());
 

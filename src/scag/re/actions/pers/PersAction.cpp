@@ -270,6 +270,137 @@ static uint32_t cmdToLongCallCmd(uint32_t c)
     return 0;
 }
 
+bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
+{
+	std::string skey;
+	Property prop;
+	uint32_t md;
+	time_t fd = final_date, lt = life_time;
+    smsc_log_debug(logger,"Run BatchPrepare 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
+
+    CommandProperty& cp = context.getCommandProperty();
+    auto_ptr<PersCallParams> params(new PersCallParams());
+
+    REProperty *p;
+	if(varType != ftUnknown && !(p = context.getProperty(var)))
+	{
+		smsc_log_error(logger, "Invalid var property  %s", var.c_str());
+		return false;
+	}
+	const std::string& svar = varType == ftUnknown ? var : p->getStr();
+    
+    PersKey pk;
+	if(profile == PT_ABONENT)
+	{
+		skey = cp.abonentAddr.toString();
+		pk.skey = skey.c_str();
+	}
+    else
+        pk.ikey = getKey(cp, profile);
+		
+	if(lifeTimeFieldType != ftUnknown)
+	{
+        REProperty *rp = context.getProperty(sLifeTime);
+        if(!rp || !(lt = parseLifeTime(rp->getStr())))
+		{
+			smsc_log_error(logger, "Invalid lifeTime parameter %s(%s)", sLifeTime.c_str(), rp ? rp->getStr().c_str() : "");
+			return false;
+		}
+	}
+	if(finalDateFieldType != ftUnknown)
+	{
+        REProperty *rp = context.getProperty(sFinalDate);
+        if(!rp || !(fd = parseFinalDate(rp->getStr())))
+		{
+			smsc_log_error(logger, "Invalid finaldate parameter %s(%s)", sFinalDate.c_str(), rp ? rp->getStr().c_str() : "");
+			return false;
+		}
+	}
+		
+    if(cmd == PC_INC || cmd == PC_INC_MOD || cmd == PC_SET)
+    {
+        if(ftValue != ftUnknown)
+        {
+            REProperty *rp = context.getProperty(value_str);
+            if(rp)
+            {
+                setPersPropFromREProp(prop, *rp);
+                prop.setName(svar);
+                prop.setTimePolicy(policy, fd, lt);
+            }
+            else
+                return false;
+        }
+        else
+            prop.assign(svar.c_str(), value_str.c_str(), policy, fd, lt);
+            
+        if(cmd == PC_INC_MOD)
+        {
+            if(ftModValue != ftUnknown)
+            {
+                REProperty *rp = context.getProperty(mod_str);
+                if(!rp)
+                    return false;
+                md = rp->getInt();
+            }
+            md = mod;
+        }
+    }
+
+	PersClient& pc = PersClient::Instance();
+	try
+	{
+		switch(cmd)
+		{
+			case PC_GET: pc.GetPropertyPrepare(profile, pk, svar.c_str(), sb); break;
+			case PC_SET: pc.SetPropertyPrepare(profile, pk, prop, sb); break;
+			case PC_DEL: pc.DelPropertyPrepare(profile, pk, svar.c_str(), sb); break;		
+			case PC_INC: pc.IncPropertyPrepare(profile, pk, prop, sb); break;		
+			case PC_INC_MOD: pc.IncModPropertyPrepare(profile, pk, prop, md, sb); break;		
+		}
+	}
+	catch(PersClientException& e)		
+	{
+		smsc_log_error(logger, "PersAction error %s", e.what());
+		return false;
+	}
+    return true;
+}
+
+void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
+{
+    smsc_log_debug(logger,"ContinueRunning BatchAction 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
+	PersClient& pc = PersClient::Instance();
+	try{
+		switch(cmd)
+		{
+			case PC_GET:
+			{
+				Property prop;
+				pc.GetPropertyResult(prop, sb);
+		        REProperty *rep = context.getProperty(value_str);
+		        setREPropFromPersProp(*rep, prop);
+				break;
+			}
+			case PC_SET: pc.SetPropertyResult(sb); break;
+			case PC_DEL: 
+				if(!pc.DelPropertyResult(sb))
+	        	    smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
+				break;		
+			case PC_INC: pc.IncPropertyResult(sb); break;		
+			case PC_INC_MOD:
+				uint32_t i = pc.IncModPropertyResult(sb);
+		        REProperty *rep = context.getProperty(result_str);
+		        if(rep) rep->setInt(i);
+				break;		
+		}
+	}
+	catch(PersClientException& e)		
+	{
+		smsc_log_error(logger, "PersClientException: var=%s, reason: %s", var.c_str(), e.what());
+	}
+}
+
 bool PersAction::RunBeforePostpone(ActionContext& context)
 {
 	time_t fd = final_date, lt = life_time;

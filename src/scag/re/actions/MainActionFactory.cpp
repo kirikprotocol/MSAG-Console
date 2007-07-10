@@ -15,6 +15,8 @@
 #include "scag/re/actions/bill/BillActionInfo.h"
 
 #include "scag/re/actions/pers/PersAction.h"
+#include "scag/re/actions/pers/BatchAction.h"
+
 #include "scag/re/actions/http/HttpCookieAction.h"
 
 #include "scag/re/actions/misc/ActionBinOperations.h"
@@ -74,7 +76,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="profile:del") return new PersAction(PC_DEL);
     if (name=="profile:inc") return new PersAction(PC_INC);
     if (name=="profile:inc-mod") return new PersAction(PC_INC_MOD);
-//    if (name=="profile:inc-mod") return new PersAction();
+    if (name=="profile:batch") return new BatchAction();
 
     if (name=="log:debug") return new ActionLog(ActionLog::lgDebug);
     if (name=="log:info") return new ActionLog(ActionLog::lgInfo);
@@ -118,7 +120,4 @@ void MainActionFactory::registerChild(const ActionFactory * af)
     smsc_log_info(logger,"Action factory registered");
 }
 
-
-
 }}}
-

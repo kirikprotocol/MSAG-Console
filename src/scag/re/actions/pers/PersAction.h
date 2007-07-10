@@ -13,7 +13,14 @@ namespace scag { namespace pers {
 using namespace scag::re::actions;
 using namespace scag::re;
 
-    class PersAction : public LongCallAction
+	class PersBatchAction : public LongCallAction
+	{
+	public:
+		virtual bool batchPrepare(ActionContext& context, SerialBuffer& sb) = 0;
+		virtual void batchResult(ActionContext& context, SerialBuffer& sb) = 0;
+	};
+	
+    class PersAction : public PersBatchAction
     {
     protected:
         PersCmd cmd;
@@ -44,6 +51,8 @@ using namespace scag::re;
         PersAction() : cmd(PC_GET), final_date(-1), life_time(-1), policy(UNKNOWN), lifeTimeFieldType(ftUnknown), finalDateFieldType(ftUnknown) {}
         PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN), lifeTimeFieldType(ftUnknown), finalDateFieldType(ftUnknown) {}
         ~PersAction() {}
+		virtual bool batchPrepare(ActionContext& context, SerialBuffer& sb);
+		virtual void batchResult(ActionContext& context, SerialBuffer& sb);
         virtual bool RunBeforePostpone(ActionContext& context);
         virtual void ContinueRunning(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);

@@ -537,8 +537,6 @@ void RuleEngineImpl::updateRule(RuleKey& key)
     Rule* newRule = ParseFile(filename);
     if (!newRule) throw SCAGException("Cannod load rule %d from file %s", key.serviceId, filename.c_str());
 
-
-
     Rules *newRules = copyReference();
     Rule** rulePtr = newRules->rules.GetPtr(key);
 
