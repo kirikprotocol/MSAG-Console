@@ -20,7 +20,7 @@ PerfSocketServer::~PerfSocketServer()
 int PerfSocketServer::Execute()
 {
     smsc::core::network::Multiplexer::SockArray ready, err;
-    smsc_log_debug(logger, "Execute is starting...\n");
+    smsc_log_debug(logger, "Execute is starting...");
 
     if(isStopping) return 1;
 
@@ -31,7 +31,7 @@ int PerfSocketServer::Execute()
     if( scSocket.StartServer())
         smsc_log_warn(logger, "Service center statistics socket can't start");;
 
-    smsc_log_debug(logger, "Wait for a socket to write...\n");
+    smsc_log_debug(logger, "Wait for a socket to write...");
 
     while(!isStopping)
     {
