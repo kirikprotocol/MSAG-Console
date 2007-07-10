@@ -7,6 +7,7 @@
 #include <string>
 
 #include "SerialBuffer.h"
+#include "Glossary.h"
 
 namespace scag{ namespace pers{
 
@@ -40,6 +41,7 @@ protected:
     TimePolicy time_policy;
     time_t final_date;
     uint32_t life_time;
+
 
     void copy(const Property& cp);
     static void StringFromBuf(SerialBuffer& buf, std::string &str);

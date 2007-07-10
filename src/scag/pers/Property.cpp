@@ -186,7 +186,12 @@ void Property::Serialize(SerialBuffer& buf)
     buf.WriteInt8((uint8_t)time_policy);
     buf.WriteInt32((uint32_t)final_date);
     buf.WriteInt32(life_time);
-    buf.WriteString(name.c_str());
+    int i_name;
+    if(Glossary::NO_VALUE == (i_name = Glossary::GetValueByKey(name)))
+	    i_name = Glossary::Add(name);
+    buf.WriteInt32(i_name);
+
+    //buf.WriteString(name.c_str());
 
     switch(type) {
         case INT:   buf.WriteInt32(i_val);          break;
@@ -202,7 +207,15 @@ void Property::Deserialize(SerialBuffer& buf)
     time_policy = (TimePolicy)buf.ReadInt8();
     final_date = (time_t)buf.ReadInt32();
     life_time = buf.ReadInt32();
-    buf.ReadString(name);
+    int i_name = buf.ReadInt32();
+    if(Glossary::SUCCESS != Glossary::GetKeyByValue(i_name, name))
+    {
+	    char buff[16];
+	    snprintf(buff, 16, "%d", i_name);
+	    name = buff;
+    }
+
+//    buf.ReadString(name);
 
     switch(type) {
         case INT:   i_val = buf.ReadInt32();        break;

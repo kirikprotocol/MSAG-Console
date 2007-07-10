@@ -19,6 +19,7 @@
 #include "CmdDispatcher.h"
 
 #include "string"
+#include "Glossary.h"
 
 using std::string;
 using namespace scag::pers;
@@ -52,6 +53,20 @@ int main(int argc, char* argv[])
 
     Logger::Init();
     Logger* logger = Logger::getInstance("pers");
+// //	Mike's tests
+// 	Glossary::Open("abonent/glossary");
+// 	
+// 	printf("%d\n", Glossary::GetValueByKey("AAA1"));
+// 	printf("%d\n", Glossary::GetValueByKey("BBBB1"));
+// 	printf("%d\n", Glossary::GetValueByKey("CCCCC1"));
+// 	printf("%d\n", Glossary::GetValueByKey("DDDDDD1"));
+// 	printf("%d\n", Glossary::GetValueByKey("AAA2"));
+// 	Glossary::Add("AAA1");
+// 	Glossary::Add("BBBB1");
+// 	Glossary::Add("CCCCC1");
+// 	Glossary::Add("DDDDDD1");
+// 	return 0;	
+// //	Mike's tests end
 
     StringProfileStore AbonentStore;
     IntProfileStore ServiceStore, OperatorStore, ProviderStore;
@@ -80,7 +95,7 @@ int main(int argc, char* argv[])
         int len = storageDir.length();
         if( len > 0 && storageDir[len - 1] != '\\' && storageDir[len - 1] != '/')
             storageDir += '/';
-
+	
         try { recCnt = persConfig.getInt("init_record_count"); } catch (...) { recCnt = 1000; };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +128,7 @@ int main(int argc, char* argv[])
 		}
 
         AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize);
-
+	Glossary::Open(storagePath + "/glossary");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Init cache Params 
         ConfigView cacheConfig(manager, "pers.cache_max");
@@ -133,7 +148,7 @@ int main(int argc, char* argv[])
 		
 	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
 		
-        ps = new PersServer(host.c_str(), port, maxClientCount, timeout,
+	ps = new PersServer(host.c_str(), port, maxClientCount, timeout,
             new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
 
         auto_ptr<PersServer> pp(ps);
@@ -161,6 +176,6 @@ int main(int argc, char* argv[])
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
-
+    Glossary::Close();
     return resultCode;
 }
