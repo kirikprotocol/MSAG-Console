@@ -416,9 +416,9 @@ public:
 };
 
 typedef ProfileStore<IntProfileKey, uint32_t, CachedProfileStore<HashProfileStore<IntProfileKey>, IntProfileKey > > IntProfileStore;
-typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
+//typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
 
-//typedef ProfileStore<AbntAddr, const char*, TreeProfileStore<AbntAddr> > StringProfileStore;
+typedef ProfileStore<AbntAddr, const char*, TreeProfileStore<AbntAddr> > StringProfileStore;
 
 }}
 

@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 10000");
 		}
 
-//        AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize);
+        AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Init cache Params 
@@ -126,9 +126,6 @@ int main(int argc, char* argv[])
 
         try { cm = cacheConfig.getInt("provider"); } catch (...) { cm = 1000; };
         ProviderStore.init(storageDir + "provider", recCnt, cm);
-
-        try { cm = cacheConfig.getInt("abonent"); } catch (...) { cm = 1000; };
-        AbonentStore.init(storageDir + "abonent", recCnt, cm);
 
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
