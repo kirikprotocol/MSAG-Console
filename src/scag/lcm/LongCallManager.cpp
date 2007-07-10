@@ -128,7 +128,7 @@ void LongCallManagerImpl::configChanged()
 
 void LongCallManagerImpl::shutdown()
 {
-    smsc_log_debug(logger, "shutdown");
+    smsc_log_debug(logger, "shutting down");
     mtx.Lock();
     stopped = true;
     LongCallContext *ctx;
@@ -142,6 +142,7 @@ void LongCallManagerImpl::shutdown()
     mtx.notifyAll();
     mtx.Unlock();
     pool.shutdown();
+    smsc_log_debug(logger, "shutdown");    
 }
 
 LongCallContext* LongCallManagerImpl::getContext()
@@ -183,7 +184,7 @@ bool LongCallManagerImpl::call(LongCallContext* context)
             context->initiator->continueExecution(context, false);
         }
     }
-    else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_INC_MOD)
+    else if(context->callCommandId >= PERS_GET && context->callCommandId <= PERS_BATCH)
     {
         if(!PersClient::Instance().call(context))
             return false;
@@ -212,13 +213,12 @@ int LongCallTask::Execute()
     while(!isStopping)
     {
         ctx = manager->getContext();
-        
         if(isStopping || !ctx) break;
-
         // presently do nothing
             
         ctx->initiator->continueExecution(ctx, false);
     }
+//    smsc_log_debug(logger, "Stopped lcm task");
     return 0;
 }
 
