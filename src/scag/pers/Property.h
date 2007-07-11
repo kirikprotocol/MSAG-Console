@@ -42,7 +42,6 @@ protected:
     time_t final_date;
     uint32_t life_time;
 
-
     void copy(const Property& cp);
     static void StringFromBuf(SerialBuffer& buf, std::string &str);
 
@@ -90,8 +89,8 @@ public:
 
     void assign(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
 
-    void Serialize(SerialBuffer& buf);
-    void Deserialize(SerialBuffer& buf);
+    void Serialize(SerialBuffer& buf, bool fromFSDB = false);
+    void Deserialize(SerialBuffer& buf, bool toFSDB = false);
 };
 
 }}

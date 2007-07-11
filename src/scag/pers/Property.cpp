@@ -180,18 +180,21 @@ void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, u
     setTimePolicy(policy, fd, lt);
 }
 
-void Property::Serialize(SerialBuffer& buf)
+void Property::Serialize(SerialBuffer& buf, bool toFSDB)
 {
     buf.WriteInt8((uint8_t)type);
     buf.WriteInt8((uint8_t)time_policy);
     buf.WriteInt32((uint32_t)final_date);
     buf.WriteInt32(life_time);
     int i_name;
-    if(Glossary::NO_VALUE == (i_name = Glossary::GetValueByKey(name)))
-	    i_name = Glossary::Add(name);
-    buf.WriteInt32(i_name);
-
-    //buf.WriteString(name.c_str());
+    if(toFSDB)
+    {
+	if(Glossary::NO_VALUE == (i_name = Glossary::GetValueByKey(name)))
+	i_name = Glossary::Add(name);
+    	buf.WriteInt32(i_name);
+    }
+    else
+	buf.WriteString(name.c_str());
 
     switch(type) {
         case INT:   buf.WriteInt32(i_val);          break;
@@ -201,21 +204,24 @@ void Property::Serialize(SerialBuffer& buf)
     }
 }
 
-void Property::Deserialize(SerialBuffer& buf)
+void Property::Deserialize(SerialBuffer& buf, bool fromFSDB)
 {
     type = (PropertyType)buf.ReadInt8();
     time_policy = (TimePolicy)buf.ReadInt8();
     final_date = (time_t)buf.ReadInt32();
     life_time = buf.ReadInt32();
-    int i_name = buf.ReadInt32();
-    if(Glossary::SUCCESS != Glossary::GetKeyByValue(i_name, name))
+    if(fromFSDB)
     {
-	    char buff[16];
-	    snprintf(buff, 16, "%d", i_name);
-	    name = buff;
+	int i_name = buf.ReadInt32();
+	if(Glossary::SUCCESS != Glossary::GetKeyByValue(i_name, name))
+	{
+		char buff[16];
+		snprintf(buff, 16, "%d", i_name);
+		name = buff;
+	}
     }
-
-//    buf.ReadString(name);
+    else
+	buf.ReadString(name);
 
     switch(type) {
         case INT:   i_val = buf.ReadInt32();        break;

@@ -46,8 +46,8 @@ protected:
 class Serializable
 {
 public:
-    virtual void Serialize(SerialBuffer &sb) = 0;
-    virtual void Deserialize(SerialBuffer &sb) = 0;
+    virtual void Serialize(SerialBuffer &sb, bool toFSDB = false) = 0;
+    virtual void Deserialize(SerialBuffer &sb, bool fromFSDB = false) = 0;
 };
 
 //}}

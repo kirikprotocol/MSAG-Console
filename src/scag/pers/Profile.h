@@ -36,8 +36,8 @@ public:
     void Empty();
     uint32_t GetCount() { return properties.GetCount(); };
 
-    void Serialize(SerialBuffer& buf);
-    void Deserialize(SerialBuffer& buf);
+    void Serialize(SerialBuffer& buf, bool toFSDB = false);
+    void Deserialize(SerialBuffer& buf, bool fromFSDB = false);
 };
 
 }}

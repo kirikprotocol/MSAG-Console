@@ -5,7 +5,7 @@
 
 namespace scag{ namespace pers{
 
-void Profile::Serialize(SerialBuffer& buf)
+void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 {
     char *key = 0;
     uint16_t cnt;
@@ -17,10 +17,10 @@ void Profile::Serialize(SerialBuffer& buf)
     buf.WriteInt16(cnt);
 
     while(it.Next(key, prop))
-        prop->Serialize(buf);
+        prop->Serialize(buf, toFSDB);
 }
 
-void Profile::Deserialize(SerialBuffer& buf)
+void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
 {
     uint16_t cnt;
     Property* prop;
@@ -33,7 +33,7 @@ void Profile::Deserialize(SerialBuffer& buf)
     while(cnt) {
         prop = new Property();
         do{
-            prop->Deserialize(buf);
+            prop->Deserialize(buf, fromFSDB);
             cnt--;
         }while(prop->isExpired(cur_time) && cnt);
 

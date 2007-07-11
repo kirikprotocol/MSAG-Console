@@ -70,8 +70,7 @@ public:
 				glossFile.Write("UDEFINED\n", 9);
 			}
 
-			glos
-				sFile.SetUnbuffered();
+			glossFile.SetUnbuffered();
 		}
 		catch(FileException ex)
 		{

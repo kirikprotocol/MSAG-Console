@@ -188,7 +188,7 @@ public:
     {
         pf->DeleteExpired();
 		sb.Empty();
-        pf->Serialize(sb);
+        pf->Serialize(sb, true);
         delete pf;
         store.Set(key, sb);
     }
@@ -199,7 +199,7 @@ public:
 		sb.Empty();
         if(store.Get(key, sb))
         {
-            pf->Deserialize(sb);
+            pf->Deserialize(sb, true);
             return pf;
         }
         if(create)
