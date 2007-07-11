@@ -61,7 +61,7 @@ public:
         sb.SetPos(0);
         
         try{
-            rec->Deserialize(sb);
+            rec->Deserialize(sb, true);
         }
         catch(SerialBufferOutOfBounds &f) {
             smsc_log_error(log, "Seems storage is corrupted. Profile %s.", key.toString().c_str());
@@ -78,7 +78,7 @@ public:
         MutexGuard mg(mtx);
 
         SerialBuffer sb;
-        rec->Serialize(sb);
+        rec->Serialize(sb, true);
         OffsetValue val(pfile.Append((void*)sb.c_ptr(), sb.length()));
 
         dhash.Insert(key, val);
@@ -114,7 +114,7 @@ public:
             return false;
 
         SerialBuffer sb;
-        rec->Serialize(sb);
+        rec->Serialize(sb, true);
         pfile.Update(off.value, (void*)sb.c_ptr(), sb.length());
 
         smsc_log_debug(log, "updateRecord:%s:%08llx", key.toString().c_str(), off.value);
