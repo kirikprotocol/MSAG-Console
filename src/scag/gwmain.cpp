@@ -138,7 +138,10 @@ int main(int argc,char* argv[])
     else
         smsc_log_warn(logger, "WARNING: admin port not specified, admin module disabled - smsc is not administrable");
 
-    while(!shutdownFlag) { sigsuspend(&st); smsc_log_debug(logger, "sigsuspend exited. flag=%d", shutdownFlag); };
+    while(!shutdownFlag) { 
+	sigsuspend(&st); 
+	smsc_log_debug(logger, "MAIN: sigsuspend exited. flag=%d", shutdownFlag); 
+    }
 
     if(listener)
     {
