@@ -74,8 +74,12 @@ void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, const st
         smsc_log_debug(log, "GetCmdHandler prop=%s", prop.toString().c_str());
         SendResponse(osb, RESPONSE_OK);
         prop.Serialize(osb);
-    } else
+    }
+    else
+    {
+        smsc_log_warn(log, "GetCmdHandler property not found: store=%d, %s", pt, name.c_str());    
         SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
+    }        
 }
 
 void CommandDispatcher::SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
