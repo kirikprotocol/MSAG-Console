@@ -451,13 +451,13 @@ void PersClientImpl::SendPacket(SerialBuffer& bsb)
 {
     uint32_t  t = 0;
     
-    if(!connected)
-        throw PersClientException(NOT_CONNECTED);
+//    if(!connected)
+//        throw PersClientException(NOT_CONNECTED);
     
     for(;;)
     {
         try{
-//            init();
+            init();
             setPacketSize(bsb);
             WriteAllTO(bsb.c_ptr(), bsb.length());
             smsc_log_debug(log, "write to socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());			
