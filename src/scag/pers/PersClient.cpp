@@ -444,7 +444,7 @@ void PersClientImpl::SendPacket(SerialBuffer& bsb)
             init();            
             setPacketSize(bsb);
             WriteAllTO(bsb.c_ptr(), bsb.length());
-            smsc_log_debug(log, "connected=%d write to socket: len=%d, data=%s", connected, bsb.length(), bsb.toString().c_str());			
+            smsc_log_debug(log, "write to socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());			
             return;
         }
         catch(PersClientException &e)
@@ -482,7 +482,7 @@ void PersClientImpl::ReadPacket(SerialBuffer& bsb)
         ReadAllTO(tmp_buf, sz);
         bsb.Append(tmp_buf, sz);
     }
-    smsc_log_debug(log, "read from socket: connected=%d len=%d, data=%s", connected, bsb.length(), bsb.toString().c_str());
+    smsc_log_debug(log, "read from socket: len=%d, data=%s", bsb.length(), bsb.toString().c_str());
 	bsb.SetPos(4);
 }
 
