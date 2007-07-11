@@ -117,20 +117,23 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     void ClearTransactions()
     {
         int key;
-        BillTransaction *value;
 
-        MutexGuard mg(inUseLock);
 #ifdef MSAG_INMAN_BILL
-        SendTransaction *st;
-        for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
         {
-            if(st->lcmCtx)
-                delete st;
-            else
-                st->responseEvent.Signal();
+            MutextGuard mg1(sendLock);
+            SendTransaction *st;
+            for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
+            {
+                if(st->lcmCtx)
+                    delete st;
+                else
+                    st->responseEvent.Signal();
+            }
         }
 #endif
 
+        BillTransaction *value;
+        MutexGuard mg(inUseLock);
         for (IntHash <BillTransaction *>::Iterator it = BillTransactionHash.First(); it.Next(key, value);)
             delete value;
 
@@ -587,7 +590,10 @@ void BillingManagerImpl::sendCommandAsync(BillTransaction *bt, LongCallContext* 
     st->billTransaction = bt;
     insertSendTransaction(bt->billId, st.release());
     if(pipe->sendPck(&bt->ChargeOperation) <= 0)
+    {
+        MutexGuard mg(sendLock);
         processAsyncResult(s);
+    }
 }
 
 TransactionStatus BillingManagerImpl::sendCommandAndWaitAnswer(SPckChargeSms& op)
