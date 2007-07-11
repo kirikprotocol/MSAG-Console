@@ -675,7 +675,7 @@ int PersClientImpl::Execute()
     {
         LongCallContext* ctx = headContext;
         headContext = headContext->next;
-        ctx->initiator->continueExecution(headContext, true);
+        ctx->initiator->continueExecution(ctx, true);
     }
     
     smsc_log_debug(log, "Pers thread finished");
