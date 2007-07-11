@@ -393,7 +393,12 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   if(st.status == scag::re::STATUS_LONG_CALL)
   {
     smsc_log_info(log,"Submit: long call initiate");
-    makeLongCall(cmd, session);
+    if(!makeLongCall(cmd, session))
+    {
+        SubmitResp(cmd, smsc::system::Status::SYSERR);
+        sm.releaseSession(session);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+    }
     return;
   }
   
@@ -535,14 +540,15 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "SubmitResp: RuleEngine  processed");
 
-      if(st.status == scag::re::STATUS_LONG_CALL)
-      {
-          smsc_log_debug(log,"SubmitResp: long call initiate");
-          makeLongCall(cmd, session);
+    if(st.status == scag::re::STATUS_LONG_CALL)
+    {
+        smsc_log_debug(log,"SubmitResp: long call initiate");
+        if(makeLongCall(cmd, session))
           return;
-      }
-
-    if(st.status != scag::re::STATUS_OK)
+        rs = smsc::system::Status::SYSERR;
+        cmd->get_resp()->set_status(rs);
+    }
+    else if(st.status != scag::re::STATUS_OK)
     {
         if(!st.result)
         {
@@ -779,7 +785,12 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   if(st.status == scag::re::STATUS_LONG_CALL)
   {
       smsc_log_debug(log,"Delivery: long call initiate");
-      makeLongCall(cmd, session);
+      if(!makeLongCall(cmd, session))
+      {
+        DeliveryResp(cmd, smsc::system::Status::SYSERR);
+        sm.releaseSession(session);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+      }
       return;
   }
   
@@ -920,17 +931,18 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "DeliveryResp: procesed.");
 
-      if(st.status == scag::re::STATUS_LONG_CALL)
-      {
+    if(st.status == scag::re::STATUS_LONG_CALL)
+    {
 //          if (!reg.Register(srcUid, cmd->get_dialogId(), orgCmd))
 //            throw Exception("DeliveryResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
 
-          smsc_log_debug(log,"DeliveryResp: long call initiate");
-          makeLongCall(cmd, session);
+        smsc_log_debug(log,"DeliveryResp: long call initiate");
+        if(makeLongCall(cmd, session))
           return;
-      }
-
-    if(st.status != scag::re::STATUS_OK)
+        rs = smsc::system::Status::SYSERR;
+        cmd->get_resp()->set_status(rs);
+    }
+    else if(st.status != scag::re::STATUS_OK)
     {
         if(!st.result)
         {
@@ -1111,7 +1123,12 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   if(st.status == scag::re::STATUS_LONG_CALL)
   {
       smsc_log_debug(log,"DataSm: long call initiate");
-      makeLongCall(cmd, session);
+      if(!makeLongCall(cmd, session))
+      {
+        DataResp(cmd, smsc::system::Status::SYSERR);
+        sm.releaseSession(session);
+        registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
+      }
       return;
   }
   
@@ -1254,14 +1271,15 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
     smsc_log_debug(log, "DataSmResp: procesed.");
 
-      if(st.status == scag::re::STATUS_LONG_CALL)
-      {
-          smsc_log_debug(log,"DataSmResp: long call initiate");
-          makeLongCall(cmd, session);
+    if(st.status == scag::re::STATUS_LONG_CALL)
+    {
+        smsc_log_debug(log,"DataSmResp: long call initiate");
+        if(makeLongCall(cmd, session))
           return;
-      }
-
-    if(st.status != scag::re::STATUS_OK)
+        rs = smsc::system::Status::SYSERR;
+        cmd->get_resp()->set_status(rs);
+    }
+    else if(st.status != scag::re::STATUS_OK)
     {
         if(!st.result)
         {
@@ -1277,7 +1295,6 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   if (!(cmd->get_resp()->get_messageId())) {
     cmd->get_resp()->set_messageId("");
   }
-  
 
   try{
     dst->putCommand(cmd);
