@@ -120,7 +120,7 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
 
 #ifdef MSAG_INMAN_BILL
         {
-            MutextGuard mg1(sendLock);
+            MutexGuard mg1(sendLock);
             SendTransaction *st;
             for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
             {
