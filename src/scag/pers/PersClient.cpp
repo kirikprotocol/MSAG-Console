@@ -362,14 +362,14 @@ void PersClientImpl::RunBatch(SerialBuffer& bsb)
 
 void PersClientImpl::Stop()
 {
-    smsc_log_debug(log, "PersClient stopping...");
+    smsc_log_info(log, "PersClient stopping...");
     isStopping = true;
     {
         MutexGuard mt(callMonitor), mt1(mtx);
         callMonitor.notify();
     }
     WaitFor();
-    smsc_log_debug(log, "PersClient stopped");
+    smsc_log_info(log, "PersClient stopped");
 }
 
 void PersClientImpl::init()

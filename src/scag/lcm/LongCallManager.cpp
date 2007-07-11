@@ -128,7 +128,7 @@ void LongCallManagerImpl::configChanged()
 
 void LongCallManagerImpl::shutdown()
 {
-    smsc_log_debug(logger, "shutting down");
+    smsc_log_info(logger, "shutting down");
     mtx.Lock();
     stopped = true;
     LongCallContext *ctx;
@@ -142,7 +142,7 @@ void LongCallManagerImpl::shutdown()
     mtx.notifyAll();
     mtx.Unlock();
     pool.shutdown();
-    smsc_log_debug(logger, "shutdown");    
+    smsc_log_info(logger, "shutdown");    
 }
 
 LongCallContext* LongCallManagerImpl::getContext()
