@@ -361,7 +361,7 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
 	}
 	catch(PersClientException& e)		
 	{
-		smsc_log_error(logger, "PersClientException: batchPrepare: cmd=%s profile=%d var=%s, reason: %s", getStrCmd(), profile, var.c_str(), e.what());    
+		smsc_log_error(logger, "PersClientException: batchPrepare: cmd=%s profile=%d var=%s, reason: %s", getStrCmd(), profile, var.c_str(), e.what());
 		return false;
 	}
     return true;
@@ -397,7 +397,7 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
 	}
 	catch(PersClientException& e)		
 	{
-		throw SCAGException("PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), profile, var.c_str(), e.what());
+		throw SCAGException("PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), e.what());
 	}
 }
 
