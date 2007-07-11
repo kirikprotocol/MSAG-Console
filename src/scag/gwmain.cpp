@@ -47,6 +47,7 @@ void registerSignalHandlers()
   sigdelset(&st, SIGFPE);
   sigdelset(&st, SIGILL);
   sigdelset(&st, SIGSEGV);
+  sigdelset(&st, SIGINT);
   sigprocmask(SIG_SETMASK, &st, NULL);
 
   sigdelset(&st,17);
@@ -78,10 +79,10 @@ int main(int argc,char* argv[])
   try {
     smsc::logger::Logger *logger = Logger::getInstance("scagmain");
 
-    smsc_log_info(logger,  "SCAG configuration loading..." );
+//    smsc_log_info(logger,  "SCAG configuration loading..." );
     scag::config::ConfigManager::Init();
     scag::config::ConfigManager& cfgs = scag::config::ConfigManager::Instance();
-    smsc_log_info(logger,  "SCAG configuration is loaded" );
+//    smsc_log_info(logger,  "SCAG configuration is loaded" );
 
     Hash<std::string> lic;
     {
@@ -137,7 +138,7 @@ int main(int argc,char* argv[])
     else
         smsc_log_warn(logger, "WARNING: admin port not specified, admin module disabled - smsc is not administrable");
 
-    while(!shutdownFlag) sigsuspend(&st);
+    while(!shutdownFlag) { sigsuspend(&st); smsc_log_debug(logger, "sigsuspend exited. flag=%d", shutdownFlag); };
 
     if(listener)
     {
