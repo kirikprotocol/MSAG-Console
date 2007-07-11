@@ -78,7 +78,6 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
     int m_Port;
     std::string m_Host;
 
-    void Stop();
     bool isStarted() { return m_bStarted; };
 
     int max_t, min_t, billcount, start_t;
@@ -125,7 +124,10 @@ class BillingManagerImpl : public BillingManager, public Thread, public ConfigLi
             for(IntHash <SendTransaction *>::Iterator it = SendTransactionHash.First(); it.Next(key, st);)
             {
                 if(st->lcmCtx)
+                {
+                    st->lcmCtx->initiator->continueExecution(st->lcmCtx, true);
                     delete st;
+                }
                 else
                     st->responseEvent.Signal();
             }
@@ -146,6 +148,7 @@ public:
 
     virtual int Execute();
     virtual void Start();
+    virtual void Stop();        
 
     virtual unsigned int Open(BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec, LongCallContext* lcmCtx = NULL);
     virtual void Commit(int billId, LongCallContext* lcmCtx = NULL);
@@ -174,8 +177,6 @@ public:
 
     ~BillingManagerImpl()
     {
-        Stop();
-        ClearTransactions();
         #ifdef MSAG_INMAN_BILL
         if(pipe) delete pipe;
         #endif
@@ -737,6 +738,7 @@ int BillingManagerImpl::Execute()
         }
     }
 
+    ClearTransactions();
     smsc_log_info(logger,"BillingManager::stop executing");
     exitEvent.Signal();
     #endif

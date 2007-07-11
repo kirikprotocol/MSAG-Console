@@ -205,10 +205,12 @@ void Scag::init()
 void Scag::shutdown()
 {
   __trace__("shutting down");
+  LongCallManager::shutdown();
   scag::stat::StatisticsManager::Instance().Stop();
+  scag::pers::client::PersClient::Instance().Stop();
+  scag::bill::BillingManager::Instance().Stop();
   scag::transport::http::HttpManager::Instance().shutdown();
   scag::transport::smpp::SmppManager::shutdown();
-  LongCallManager::shutdown();
 }
 
 } //scag

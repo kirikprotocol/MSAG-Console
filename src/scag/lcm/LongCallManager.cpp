@@ -158,6 +158,8 @@ LongCallContext* LongCallManagerImpl::getContext()
 
 bool LongCallManagerImpl::call(LongCallContext* context)
 {
+    if(stopped) return false;
+    
     if(context->callCommandId == BILL_OPEN || context->callCommandId == BILL_COMMIT || context->callCommandId == BILL_ROLLBACK)
     {
         try{

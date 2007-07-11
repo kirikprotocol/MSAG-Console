@@ -55,7 +55,7 @@ public:
     void init_internal(const char *_host, int _port, int timeout, int _pingTimeout);
     
     virtual int Execute();
-    void Stop() { isStopping = true; {MutexGuard mt(callMutex), mt1(mtx); callMutex.notify();} WaitFor();};
+    void Stop() { isStopping = true; {MutexGuard mt(callMonitor), mt1(mtx); callMonitor.notify();} WaitFor();};
     void Start() {isStopping = false; Thread::Start();};
 	
 protected:
@@ -89,7 +89,7 @@ protected:
     bool connected, isStopping;
     Logger * log;
     Mutex mtx;
-    EventMonitor callMutex;
+    EventMonitor callMonitor;
     SerialBuffer sb;
     LongCallContext* headContext, *tailContext;
 };
@@ -540,9 +540,9 @@ void PersClientImpl::ParseProperty(Property& prop, SerialBuffer& bsb)
 LongCallContext* PersClientImpl::getContext()
 {
     LongCallContext *ctx;
-    MutexGuard mt(callMutex);
+    MutexGuard mt(callMonitor);
     if(isStopping) return NULL;
-    if(!headContext) callMutex.wait(pingTimeout * 1000);
+    if(!headContext) callMonitor.wait(pingTimeout * 1000);
     ctx = headContext;    
     if(headContext) headContext = headContext->next;
     return ctx;        
@@ -550,7 +550,7 @@ LongCallContext* PersClientImpl::getContext()
 
 bool PersClientImpl::call(LongCallContext* context)
 {
-    MutexGuard mt(callMutex);
+    MutexGuard mt(callMonitor);
     if(isStopping) return false;
     context->next = NULL;
 
@@ -560,7 +560,7 @@ bool PersClientImpl::call(LongCallContext* context)
         headContext = context;
     tailContext = context;
     
-    callMutex.notify();
+    callMonitor.notify();
     return true;
 }
 
@@ -670,6 +670,14 @@ int PersClientImpl::Execute()
         }
     }
 
+    MutexGuard mg(callMonitor);
+    while(headContext)
+    {
+        LongCallContext* ctx = headContext;
+        headContext = headContext->next;
+        ctx->initiator->continueExecution(headContext, true);
+    }
+    
     smsc_log_debug(log, "Pers thread finished");
     return 0;
 }

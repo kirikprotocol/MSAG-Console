@@ -104,6 +104,7 @@ public:
     virtual void Commit(int billId, LongCallContext* lcmCtx = NULL) = 0;
     virtual void Rollback(int billId, bool timeout = false, LongCallContext* lcmCtx = NULL) = 0;
     virtual void Info(int billId, BillingInfoStruct& bis, TariffRec& tariffRec) = 0;
+    virtual void Stop() = 0;
 
     static BillingManager& Instance();
     static void Init(BillingManagerConfig& cfg);
