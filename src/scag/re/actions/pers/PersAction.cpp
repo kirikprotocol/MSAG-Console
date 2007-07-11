@@ -361,7 +361,7 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
 	}
 	catch(PersClientException& e)		
 	{
-		smsc_log_error(logger, "PersAction error %s", e.what());
+		smsc_log_error(logger, "PersClientException: batchPrepare: cmd=%s profile=%d var=%s, reason: %s", getStrCmd(), profile, var.c_str(), e.what());    
 		return false;
 	}
     return true;
@@ -397,7 +397,7 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
 	}
 	catch(PersClientException& e)		
 	{
-		smsc_log_error(logger, "PersClientException: var=%s, reason: %s", var.c_str(), e.what());
+		smsc_log_error(logger, "PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), profile, var.c_str(), e.what());
 	}
 }
 
@@ -498,7 +498,8 @@ void PersAction::ContinueRunning(ActionContext& context)
             }
             return;
         }
-        smsc_log_error(logger, "PersClientException: var=%s, reason: %s", var.c_str(), params->exception.c_str());
+		smsc_log_error(logger, "PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), profile, var.c_str(), params->exception.c_str());
+//        smsc_log_error(logger, "PersClientException: continueRunning: var=%s, reason: %s", var.c_str(), params->exception.c_str());
         return;
         
     }
