@@ -55,7 +55,7 @@ public:
     void init_internal(const char *_host, int _port, int timeout, int _pingTimeout);
     
     virtual int Execute();
-    void Stop() { isStopping = true; {MutexGuard mt(callMonitor), mt1(mtx); callMonitor.notify();} WaitFor();};
+    void Stop();
     void Start() {isStopping = false; Thread::Start();};
 	
 protected:
@@ -358,6 +358,18 @@ void PersClientImpl::RunBatch(SerialBuffer& bsb)
     SendPacket(bsb);
     ReadPacket(bsb);
     actTS = time(NULL);
+}
+
+void PersClientImpl::Stop()
+{
+    smsc_log_debug(log, "PersClient stopping...");
+    isStopping = true;
+    {
+        MutexGuard mt(callMonitor), mt1(mtx);
+        callMonitor.notify();
+    }
+    WaitFor();
+    smsc_log_debug(log, "PersClient stopped");
 }
 
 void PersClientImpl::init()
