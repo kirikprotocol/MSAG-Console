@@ -299,7 +299,12 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             return;
         }
 
-        if (umr < 0)
+        if(cmd.hasSession())
+        {
+            session = cmd.getSession();
+            smsc_log_debug(log, "Submit(USSD): session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+        }
+		else if (umr < 0)
         {
             if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST) { // New service USSD dialog
                 smsc_log_debug(log, "USSD Submit: Begin service dialog...");
@@ -703,7 +708,12 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 return;
             }
 
-          if (umr < 0) {
+          if(cmd.hasSession())
+          {
+              session = cmd.getSession();
+              smsc_log_debug(log, "Delivery(USSD): session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
+          }
+		  else if (umr < 0) {
               smsc_log_warn(log, "USSD Delivery: UMR is not specified");
               DeliveryResp(cmd,smsc::system::Status::USSDDLGREFMISM);
               registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
