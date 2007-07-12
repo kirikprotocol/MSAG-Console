@@ -159,7 +159,7 @@ void ActionSend::init(const SectionParams& params,PropertyObject _propertyObject
 bool ActionSend::run(ActionContext& context)
 {
     const char *p;
-    auto_ptr<SaccAlarmMessageEvent> ev;
+    auto_ptr<SaccAlarmMessageEvent> ev(new SaccAlarmMessageEvent());
     std::string s2, s3;
     std::string msg;
 
@@ -271,8 +271,7 @@ bool ActionSend::run(ActionContext& context)
 
     smsc_log_debug(logger, "msg: \"%s\", toEmail: \"%s\", toSms: \"%s\", date: \"%s\", esmClass: %d, destPort: %d, srcPort: %d, packetType: %s", ev->pMessageText.c_str(), ev->pAddressEmail.c_str(), ev->pAbonentsNumbers.c_str(), ev->pDeliveryTime.c_str(), (int)esmClass, destPort, srcPort, ev->pPacketType.c_str());
 
-    SaccAlarmMessageEvent* pev = ev.release();
-    sm.registerSaccEvent(pev);
+    sm.registerSaccEvent(ev.release());
     return true;
 }
 
