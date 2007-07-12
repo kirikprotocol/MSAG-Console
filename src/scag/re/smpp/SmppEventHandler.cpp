@@ -100,6 +100,7 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
         }
 
         operation = session.setCurrentOperationByType(CO_USSD_DIALOG);
+        command.setOperationId(session.getCurrentOperationId());
         operation->setStatus(OPERATION_CONTINUED);
 
         break;
