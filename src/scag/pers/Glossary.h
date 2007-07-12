@@ -176,15 +176,19 @@ private:
 	static int LoadGlossary(void)
 	{
 		string	key;
+		smsc_log_debug(logger, "Load Glossary");
 		
 		try
 		{
 			while(glossFile.ReadLine(key))
 			{
+				smsc_log_debug(logger, "%s %d", key.c_str(), currentIndex);
 				glossMap.insert(GlossaryMap::value_type(key, currentIndex));
 				glossVector.push_back(key);
 				currentIndex++;
 			}
+			smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossMap.size(), glossVector.size(), currentIndex);
+			
 			glossFile.SeekEnd(0);
 		}
 		catch(FileException ex)
