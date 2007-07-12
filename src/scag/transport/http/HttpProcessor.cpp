@@ -441,7 +441,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
         return scag::re::STATUS_OK;
     }
 
-    smsc_log_debug(logger, "SERIALIZED RESPONSE: %s", response.serialize().c_str());
+    smsc_log_debug(logger, "SERIALIZED RESPONSE BEFORE: %s", response.serialize().c_str());
     
     SessionPtr se;
     try{
@@ -465,6 +465,7 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
                 registerEvent(scag::stat::events::http::RESPONSE_OK, response);
                 response.setSession(SessionPtr(0));
                 SessionManager::Instance().releaseSession(se);
+                smsc_log_debug(logger, "SERIALIZED RESPONSE AFTER: %s", response.serialize().c_str());
                 return rs.status;
             }
 
