@@ -69,9 +69,6 @@ int main(int argc, char* argv[])
 // 	return 0;	
 // //	Mike's tests end
 
-    StringProfileStore AbonentStore;
-    IntProfileStore ServiceStore, OperatorStore, ProviderStore;
-
     atexit(atExitHandler);
 
     sigset_t set;
@@ -85,6 +82,9 @@ int main(int argc, char* argv[])
     sigset(SIGINT, appSignalHandler);
 
     try{
+	    StringProfileStore AbonentStore;
+	    IntProfileStore ServiceStore, OperatorStore, ProviderStore;
+	
         smsc_log_info(logger,  "Starting up %s", getStrVersion());
 
         Manager::init("config.xml");
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 		}
 
         AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize);
-	Glossary::Open(storagePath + "/glossary");
+		Glossary::Open(storagePath + "/glossary");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Init cache Params 
         ConfigView cacheConfig(manager, "pers.cache_max");
@@ -149,13 +149,14 @@ int main(int argc, char* argv[])
 		
 	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
 		
-	ps = new PersServer(host.c_str(), port, maxClientCount, timeout,
+		ps = new PersServer(host.c_str(), port, maxClientCount, timeout,
             new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
 
         auto_ptr<PersServer> pp(ps);
 
         ps->InitServer();
         ps->Execute();
+        smsc_log_error(logger, "PersServer stopped");
     }
     catch (ConfigException& exc) 
     {
@@ -177,6 +178,7 @@ int main(int argc, char* argv[])
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
+	
     Glossary::Close();
     return resultCode;
 }

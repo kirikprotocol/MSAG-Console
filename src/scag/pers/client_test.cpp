@@ -18,7 +18,7 @@ using namespace scag::pers::client;
 using namespace scag::pers;
 using namespace scag::config;
 
-#define ITER_CNT 1000
+#define ITER_CNT 1
 
 extern "C" static void atExitHandler(void)
 {
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     try{
         ConfigManager::Init();
         
-        PersClient::Init("phoenix", 1235, 60, 5);
+        PersClient::Init("phoenix", 1222, 60, 5);
         PersClient& pc = PersClient::Instance();
         Property prop;
 
@@ -45,78 +45,83 @@ int main(int argc, char* argv[])
 
         for(int i = 0; i< ITER_CNT; i++)
         {
+            char s[20], tv[20], tvs[30], tvb[30], tvd[30];		
             try{ 
-            char s[20];
+
             sprintf(s, "+792324%05d", i);
-            prop.setInt("test_val", 234567, FIXED, -1, 20);
+            sprintf(tv, "test_val%05d", i);			
+            sprintf(tvs, "test_val_string%05d", i);						
+            sprintf(tvb, "test_val_bool%05d", i);						
+            sprintf(tvd, "test_val_date%05d", i);						
+            prop.setInt(tv, 234567, FIXED, -1, 20);
             pc.SetProperty(PT_ABONENT, s, prop);
 
-            prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
+            prop.setBool(tvb, false, R_ACCESS, -1, 25);
             pc.SetProperty(PT_ABONENT, s, prop);
 
-            prop.setString("test_val_string", "test_string", W_ACCESS, -1, 25);
+            prop.setString(tvs, "test_string", W_ACCESS, -1, 25);
             pc.SetProperty(PT_ABONENT, s, prop);
 
-            prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
+            prop.setDate(tvd, 111111, INFINIT, -1, 25);
             pc.SetProperty(PT_ABONENT, s, prop);
 
-            pc.GetProperty(PT_ABONENT, s, "test_val", prop);
+            pc.GetProperty(PT_ABONENT, s, tv, prop);
             smsc_log_debug(logger,  ">>ABONENT %s: get int %s", s, prop.toString().c_str());
 
 //            sleep(15);
-            pc.GetProperty(PT_ABONENT, s, "test_val_bool", prop);
+            pc.GetProperty(PT_ABONENT, s, tvb, prop);
             smsc_log_debug(logger,  ">>ABONENT %s: get bool %s", s, prop.toString().c_str());
 
-            pc.GetProperty(PT_ABONENT, s, "test_val_string", prop);
+            pc.GetProperty(PT_ABONENT, s, tvs, prop);
             smsc_log_debug(logger,  ">>ABONENT: get string %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_ABONENT, s, "test_val_date", prop);
+            pc.GetProperty(PT_ABONENT, s, tvd, prop);
             smsc_log_debug(logger,  ">>ABONENT: get string1 %s", prop.toString().c_str());
 
-            prop.setInt("test_val", -123, FIXED, -1, 20);
+            prop.setInt(tv, -123, FIXED, -1, 20);
             pc.IncProperty(PT_ABONENT, s, prop);
-            pc.GetProperty(PT_ABONENT, s, "test_val", prop);
+            pc.GetProperty(PT_ABONENT, s, tv, prop);
             smsc_log_debug(logger,  ">>ABONENT: get int(after inc) %s", prop.toString().c_str());
 			
-            pc.DelProperty(PT_ABONENT, s, "test_val");
+            pc.DelProperty(PT_ABONENT, s, tv);
             smsc_log_debug(logger,  ">>ABONENT: del int");
 
 //            sleep(15);
-            prop.setInt("test_val", 234567, FIXED, -1, 20);
+            prop.setInt(tv, 234567, FIXED, -1, 20);
             pc.SetProperty(PT_SERVICE, i + 1, prop);
 
-            prop.setBool("test_val_bool", false, R_ACCESS, -1, 25);
+            prop.setBool(tvb, false, R_ACCESS, -1, 25);
             pc.SetProperty(PT_PROVIDER, i + 1, prop);
 
-            prop.setString("test_val_string", "test_string", W_ACCESS, -1, 25);
+            prop.setString(tvs, "test_string", W_ACCESS, -1, 25);
             pc.SetProperty(PT_OPERATOR, i + 1, prop);
 
-            prop.setDate("test_val_date", 111111, INFINIT, -1, 25);
+            prop.setDate(tvd, 111111, INFINIT, -1, 25);
             pc.SetProperty(PT_OPERATOR, i + 1, prop);
 
-            pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
+            pc.GetProperty(PT_SERVICE, i + 1, tv, prop);
             smsc_log_debug(logger,  ">>SERVICE: get int %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_PROVIDER, i + 1, "test_val_bool", prop);
+            pc.GetProperty(PT_PROVIDER, i + 1, tvb, prop);
             smsc_log_debug(logger,  ">>OPERATOR: get bool %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_OPERATOR, i + 1, "test_val_string", prop);
+            pc.GetProperty(PT_OPERATOR, i + 1, tvs, prop);
             smsc_log_debug(logger,  ">>OPERATOR: get string %s", prop.toString().c_str());
 
-            pc.GetProperty(PT_OPERATOR, i + 1, "test_val_date", prop);
+            pc.GetProperty(PT_OPERATOR, i + 1, tvd, prop);
             smsc_log_debug(logger,  ">>OPERATOR: get date %s", prop.toString().c_str());
 
-            prop.setInt("test_val", -123, FIXED, -1, 20);
+            prop.setInt(tv, -123, FIXED, -1, 20);
             pc.IncProperty(PT_SERVICE, i + 1, prop);
-            pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
+            pc.GetProperty(PT_SERVICE, i + 1, tv, prop);
             smsc_log_debug(logger,  ">>SERVICE: get int(after inc) %s", prop.toString().c_str());
 
-            prop.setInt("test_val", -123, FIXED, -1, 20);
+            prop.setInt(tv, -123, FIXED, -1, 20);
             pc.IncModProperty(PT_SERVICE, i + 1, prop, 10);
-            pc.GetProperty(PT_SERVICE, i + 1, "test_val", prop);
+            pc.GetProperty(PT_SERVICE, i + 1, tv, prop);
             smsc_log_debug(logger,  ">>SERVICE: get int(after inc mod) %s", prop.toString().c_str());
 
-            pc.DelProperty(PT_SERVICE, i + 1, "test_val");
+            pc.DelProperty(PT_SERVICE, i + 1, tv);
             smsc_log_debug(logger,  ">>ABONENT: del int(int)");
             }
             catch(PersClientException &e)
@@ -124,7 +129,7 @@ int main(int argc, char* argv[])
                 smsc_log_error(logger, "persclientexception: %s", e.what());
             }
 
-            if(pc.DelProperty(PT_SERVICE, i + 1, "test_val"))
+            if(pc.DelProperty(PT_SERVICE, i + 1, tv))
 	            smsc_log_debug(logger,  ">>ABONENT: del int(int)");
 			else
                 smsc_log_debug(logger, "property already deleted...");
