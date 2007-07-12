@@ -186,11 +186,11 @@ void Property::Serialize(SerialBuffer& buf, bool toFSDB)
     buf.WriteInt8((uint8_t)time_policy);
     buf.WriteInt32((uint32_t)final_date);
     buf.WriteInt32(life_time);
-    int i_name;
     if(toFSDB)
     {
+	int i_name;
 	if(Glossary::NO_VALUE == (i_name = Glossary::GetValueByKey(name)))
-	i_name = Glossary::Add(name);
+		i_name = Glossary::Add(name);
     	buf.WriteInt32(i_name);
     }
     else
@@ -215,8 +215,8 @@ void Property::Deserialize(SerialBuffer& buf, bool fromFSDB)
 	int i_name = buf.ReadInt32();
 	if(Glossary::SUCCESS != Glossary::GetKeyByValue(i_name, name))
 	{
-		char buff[16];
-		snprintf(buff, 16, "%d", i_name);
+		char buff[32];
+		snprintf(buff, 32, "%d", i_name);
 		name = buff;
 	}
     }

@@ -18,7 +18,7 @@ using namespace scag::pers::client;
 using namespace scag::pers;
 using namespace scag::config;
 
-#define ITER_CNT 10
+#define ITER_CNT 1000
 
 extern "C" static void atExitHandler(void)
 {
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
         for(int i = 0; i< ITER_CNT; i++)
         {
-            try{            
+            try{ 
             char s[20];
             sprintf(s, "+792324%05d", i);
             prop.setInt("test_val", 234567, FIXED, -1, 20);
