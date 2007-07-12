@@ -143,6 +143,7 @@ bool ActionIf::CompareResultToBool(IfOperations op,int result)
 
 bool ActionIf::run(ActionContext& context)
 {
+    bool isTrueCondition;
     smsc_log_debug(logger,"Run Action 'if'...");
 
     LongCallContext &longCallContext = context.getSession().getLongCallContext();
@@ -159,8 +160,7 @@ bool ActionIf::run(ActionContext& context)
         if (!m_hasOP) 
         {
             smsc_log_debug(logger,"Testing %s = '%lld' for bool", singleparam.strOperand1.c_str(), property->getInt());
-
-            context.isTrueCondition = property->getBool();
+            isTrueCondition = property->getBool();
         } 
         else
         {
@@ -195,7 +195,7 @@ bool ActionIf::run(ActionContext& context)
                     result = property->Compare(singleparam.strOperand2);
                 else
                     result = property->Compare(atoi(singleparam.strOperand2.c_str())); 
-            } 
+            }
             else
             {
                 Property * valproperty = context.getProperty(singleparam.strOperand2);
@@ -203,14 +203,16 @@ bool ActionIf::run(ActionContext& context)
                 else smsc_log_warn(logger,"Action 'if': Invalid property '%s'", singleparam.strOperand2.c_str());
             }
 
-            context.isTrueCondition = CompareResultToBool(singleparam.Operation,result);
+            isTrueCondition = CompareResultToBool(singleparam.Operation,result);
         }
     }
     else
-        context.isTrueCondition = longCallContext.ActionStack.top().thenSection;
+        isTrueCondition = longCallContext.ActionStack.top().thenSection;
 
-    smsc_log_debug(logger,"Action 'if': run '%s' section", context.isTrueCondition ? "then" : "else");
-    return RunActionVector(context, longCallContext, context.isTrueCondition ? ThenActions : ElseActions, logger);
+    smsc_log_debug(logger,"Action 'if': run '%s' section", isTrueCondition ? "then" : "else");
+    bool b =  RunActionVector(context, longCallContext, isTrueCondition ? ThenActions : ElseActions, logger);
+    context.isTrueCondition = isTrueCondition;
+    return b;
 }
 
 }}}
