@@ -29,13 +29,13 @@ public:
     virtual ~TcapEntity() { if (ownComp) delete param; }
 
     inline TCEntityKind kind() const           { return ekind; }
-    inline USHORT_T    getId() const           { return id; }
+    inline UCHAR_T     getId() const           { return id; }
     inline UCHAR_T     getOpcode() const       { return opcode; }
     inline Component*  getParam() const        { return param; }
     //sets 'param' without passing ownership, it's caller responsibility to free Component
-    void        setParam(Component* p)     { param = p; ownComp = false; }
+    inline void        setParam(Component* p)  { param = p; ownComp = false; }
     //grands the ownership of 'param', Component will be freed by ~TcapEntity()
-    void        ownParam(Component* p)     { param = p; ownComp = true; }
+    inline void        ownParam(Component* p)  { param = p; ownComp = true; }
 
     //throws CustomException
     void encode(RawBuffer& operation, RawBuffer& params) throw(CustomException)
