@@ -73,7 +73,8 @@ struct CAPServiceRC {
     enum Error {
         //-- generic errors
         noServiceResponse = 1,  // CAP service doesn't respond
-        contractViolation = 2   // operation interchange violates CAP contract
+        contractViolation = 2,  // operation interchange violates CAP contract
+        monitoringTimeOut = 3   // FSM monitoring state lasts too long
     };
 };
 extern const char * rc2Txt_CapService(uint32_t ret_code);
@@ -84,6 +85,7 @@ const char * rc2Txt_CapService(uint32_t ret_code) { \
     switch (ret_code) { \
     case CAPServiceRC::noServiceResponse: return "CAP service not responding"; \
     case CAPServiceRC::contractViolation: return "CAP CONTRACT violation"; \
+    case CAPServiceRC::monitoringTimeOut: return "FSM monitoring state lasts too long"; \
     default:; } \
     return "unknown CAP service error"; \
 }
