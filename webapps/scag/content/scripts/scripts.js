@@ -169,6 +169,17 @@ function validateField_unsigned(elem)
 		: true;
 }
 
+function validateFieldUnsignedOrEmpty( elem ){
+    alert("VALIDATE:"+elem.value);
+    if( elem.value != null && elem.value != "" ){
+    var r = /^(\s*)(\d+)(\s*)$/;
+    return elem.value == null || elem.value.match(r) == null
+		? validationError(elem, '<fmt:message>scripts.valueSignErrorMsg</fmt:message>')
+		: true;
+    }
+    return true;
+}
+
 function validateField_address(elem)
 {
 	if (elem.value == null || elem.value.length == 0)
@@ -276,11 +287,12 @@ function validateField(elem)
 		case "address_prefix": return validateField_address_prefix(elem);
 		case "id" : return validateField_id(elem);
 		case "unsigned": return validateField_unsigned(elem);
-		case "reschedule": return validateField_reschedule(elem);
+        case "unsignedOrEmpty": return validateFieldUnsignedOrEmpty(elem);
+        case "reschedule": return validateField_reschedule(elem);
 		case "release_cause": return validateField_release_cause(elem);
 		case "language": return validateField_language(elem);
 		case "transitOptionalTags": return validateField_transitOptionalTags(elem);
-	}
+    }
 	alert('<fmt:message>scripts.unknownValidationTypeErrorMsg</fmt:message>' + ": "+elem.validation);
 	return false;
 }
