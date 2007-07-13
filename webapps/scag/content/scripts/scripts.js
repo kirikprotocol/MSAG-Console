@@ -170,7 +170,6 @@ function validateField_unsigned(elem)
 }
 
 function validateFieldUnsignedOrEmpty( elem ){
-    alert("VALIDATE:"+elem.value);
     if( elem.value != null && elem.value != "" ){
     var r = /^(\s*)(\d+)(\s*)$/;
     return elem.value == null || elem.value.match(r) == null
