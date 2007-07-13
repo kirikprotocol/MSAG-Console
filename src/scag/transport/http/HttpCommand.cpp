@@ -198,6 +198,7 @@ const std::string& HttpCommand::getHeaderField(const std::string& fieldName)
 void HttpCommand::setHeaderField(const std::string& fieldName,
                                 const std::string& fieldValue)
 {
+    smsc_log_debug(smsc::logger::Logger::getInstance("hhh"), "Header: %s, Value: %s", fieldName.c_str(), fieldValue.c_str());
     headerFields[fieldName.c_str()] = fieldValue;
 }
 
@@ -431,6 +432,7 @@ const std::string& HttpResponse::serialize()
 
         headerFields.First();
         while (headerFields.Next(keystr, valptr)) {
+            smsc_log_debug(smsc::logger::Logger::getInstance("hhh"), "SerializeResponse Header: %s, Value: %s", keystr, valptr);
             headers += keystr;
             headers += ": ";
             headers += *valptr;
