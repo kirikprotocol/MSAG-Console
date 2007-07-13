@@ -400,7 +400,7 @@ const std::string& HttpRequest::serialize()
 
 const std::string& HttpResponse::serialize()
 {
-    if (headers.empty()) {
+//    if (headers.empty()) {
         char *keystr;
         std::string *valptr;
         char buf[20];
@@ -440,7 +440,7 @@ const std::string& HttpResponse::serialize()
         }
         
         headers += CRLF;
-    }
+//    }
     return headers;
 }
 
