@@ -149,7 +149,7 @@ public class Svc {
     }
 
     public String intToString(int number){
-        return number==0?"":new Integer(number).toString();
+        return number==0?"-1":new Integer(number).toString();
     }
 
     public PrintWriter store(final PrintWriter out) {
