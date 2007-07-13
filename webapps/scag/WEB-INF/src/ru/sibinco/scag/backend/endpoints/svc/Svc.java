@@ -102,12 +102,12 @@ public class Svc {
                 } else if ("providerId".equals(name)) {
                    provider = (Provider) providerManager.getProviders().get(Long.decode(value));
                 } else if (IN_QUEUE_LIMIT.equals(name)) {
-                    inQueueLimit = Integer.decode(value).intValue();
+                   inQueueLimit = Integer.decode(value).intValue();
                 } else if (MAX_SMS_PER_SEC.equals(name)) {
                     maxSmsPerSec = Integer.decode(value).intValue();
                 }
             } catch (NumberFormatException e) {
-                logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
+                logger.warn("Int parameter \"" + name + "\" misformatted: '" + value + "', skipped");
             }
         }
 

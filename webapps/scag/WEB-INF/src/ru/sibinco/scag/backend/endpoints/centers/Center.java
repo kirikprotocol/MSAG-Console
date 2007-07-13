@@ -139,13 +139,14 @@ public class Center {
                 } else if ("addressRange".equals(name)){
                     addressRange = value;
                 } else if (IN_QUEUE_LIMIT.equals(name)) {
-                    inQueueLimit = Integer.decode(value).intValue();
+                        inQueueLimit = Integer.decode(value).intValue();
                 } else if (MAX_SMS_PER_SEC.equals(name)) {
-                    maxSmsPerSec = Integer.decode(value).intValue();
+                        maxSmsPerSec = Integer.decode(value).intValue();
                 }
 
             } catch (NumberFormatException e) {
-                logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
+//                logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
+                logger.warn("Int parameter \"" + name + "\" misformatted: '" + value + "', skipped");
             }
         }
 
