@@ -273,7 +273,13 @@ bool HttpCommand::setMessageText(const std::string& text)
         if(!strcasecmp("UTF-8", charset.c_str()))
             content.Append(text.c_str(), text.length());
         else
-            Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), content);
+        {
+            TmpBuf<uint8_t, 2048> buf(2048);
+            Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), buf);
+            content.Append((char*)buf.get(), buf.GetPos());
+            textContent = text;
+        }
+        textContent = text;        
         setContentLength(content.GetPos());
         setLengthField(content.GetPos());
         return true;
