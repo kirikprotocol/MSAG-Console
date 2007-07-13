@@ -105,7 +105,18 @@ typedef enum DeliveryMode {
     DeliveryMode_Terminating = 11 //EventTypeSMS_sms_DeliveryRequested
 } DeliveryMode_e;
 
-typedef std::map<EventTypeSMS_e, MonitorMode_e> SMSEventDPs;
+
+class SMSEventDPs : public std::map<EventTypeSMS_e, MonitorMode_e> {
+public:
+    bool hasMMode(MonitorMode_e ref_mode)
+    {
+        for (SMSEventDPs::const_iterator cit = begin(); cit != end(); ++cit) {
+            if (cit->second == ref_mode)
+                return true;
+        }
+        return false;
+    }
+};
 
 // Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Tidpsms
 // This operation is used after a TDP to indicate request for service.
@@ -196,17 +207,21 @@ private:
 //  actions to route or forward a short message to a specified destination.
 class ConnectSMSArg: public Component { //SCF -> SSF
 public:
+    enum Params { connNone = 0, connDSN = 0x01, connCPN = 0x02, connSMSC = 0x04 };
+
     ConnectSMSArg();
     ~ConnectSMSArg();
 
-    const TonNpiAddress&	destinationSubscriberNumber() { return dstSN; }
-    const TonNpiAddress&	callingPartyNumber() { return clngPN; }
-    const TonNpiAddress&	SMSCAddress() { return sMSCAdr; }
+    inline unsigned char paramsMask(void) const { return mask; }
+    inline const TonNpiAddress&	destinationSubscriberNumber(void) const { return dstSN; }
+    inline const TonNpiAddress&	callingPartyNumber(void) const { return clngPN; }
+    inline const TonNpiAddress&	SMSCAddress(void) const { return sMSCAdr; }
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 protected:
     TonNpiAddress	dstSN, clngPN, sMSCAdr;
+    unsigned char       mask;
 
 private:
     Logger* compLogger;
@@ -225,7 +240,7 @@ public:
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
-	Logger* compLogger;
+    Logger* compLogger;
 };
 
 
