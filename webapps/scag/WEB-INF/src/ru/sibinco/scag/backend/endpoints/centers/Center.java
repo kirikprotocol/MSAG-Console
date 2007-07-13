@@ -198,9 +198,13 @@ public class Center {
         out.println("    <param name=\"uid\"            value=\"" + uid + "\"/>");
         out.println("    <param name=\"providerId\"     value=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"addressRange\"   value=\"" + addressRange.trim() + "\"/>");
-        out.println("    <param name=\""+ IN_QUEUE_LIMIT +"\"   value=\"" + inQueueLimit + "\"/>");
-        out.println("    <param name=\""+ MAX_SMS_PER_SEC +"\"   value=\"" + maxSmsPerSec + "\"/>");
+        out.println("    <param name=\""+ IN_QUEUE_LIMIT +"\"   value=\"" + intToString(inQueueLimit) + "\"/>");
+        out.println("    <param name=\""+ MAX_SMS_PER_SEC +"\"   value=\"" + intToString(maxSmsPerSec) + "\"/>");
         return out;
+    }
+
+    public String intToString(int number){
+        return number==0?"-1":new Integer(number).toString();
     }
 
     public String getModeStr() {
