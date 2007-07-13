@@ -64,6 +64,14 @@ bool ActionReplace::run(ActionContext& context)
     char endbuff[2] = {0,0};
     regexp.append(endbuff,2);
 
+    std::string ss; char b[50];
+    for(int i = 0; i < regexp.size(); i++)
+    {
+        sprintf(b, "%02X", regexp[i]);
+        ss += b;
+    }        
+    smsc_log_debug(logger, "Regexp: %s", ss.c_str());
+    
     if(!re.Compile((unsigned short *)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((regexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
     {
         smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", temp.c_str());
@@ -102,8 +110,25 @@ bool ActionReplace::run(ActionContext& context)
     int n = 100, pos = 0;
     std::string result;
 
+    ss.clear();
+    for(int i = 0; i < var.size(); i++)
+    {
+        sprintf(b, "%02X", var[i]);
+        ss += b;
+    }
+    smsc_log_debug(logger, "Var: %s", ss.c_str());
+    
+    ss.clear();
+    for(int i = 0; i < rep.size(); i++)
+    {
+        sprintf(b, "%02X", rep[i]);    
+        ss += b;
+    }        
+    smsc_log_debug(logger, "Rep: %s", ss.c_str());
+
     while(re.Search((uint16_t*)(var.data() + pos), m, n))
     {
+        smsc_log_debug(logger,"Action 'replace': match: pos=%d", m[0].start);    
         result.append(var.data() + pos, m[0].start * 2);
         result.append(rep.data(), rep.size());
         pos += 2 * m[0].end;
