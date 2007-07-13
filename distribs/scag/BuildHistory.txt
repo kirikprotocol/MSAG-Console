@@ -148,3 +148,14 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2) MSAG FIX: BillingManager & PersClient shutdown fixes in LCM processing.
 	     Shutdown scheme refactored
 3) MSAG FIX: SmppQueue close on shutdown (do not accept new commands).
+4) PVSS CRITICAL FIX: Shutdow core & storage integrity fixes
+5) MSAG CRITICAL FIX: Action If logic for LCM processing fix
+6) MSAG FIX: Not allocated event in SendAction fix
+7) MSAG CRITICAL FIX: LCM logic for USSD branch fixes (operationId & new session on LCM continue)
+
+=================================================================================================================
+13.07.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_07_07_2007 !!!]
+1) MSAG CRITICAL FIX: Http message content set fix (TmpBuff & converting)
+2) MSAG CRITICAL FIX: Http response serialization fix (on set headers & message body)
+3) MSAG FIX: ActionReplace fix (first time failed)
+4) MSAG Admin FIX: smpp.xml store/load (new params: maxSmsPerSec & inQueueLimit)
