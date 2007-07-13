@@ -63,7 +63,11 @@ bool ActionReplace::run(ActionContext& context)
 
     char endbuff[2] = {0,0};
     regexp.append(endbuff,2);
-
+    
+/*    const uint8_t* pr = (const uint8_t*)regexp.data();
+    int i = 0;
+    while(i < 8 && (*pr == 0xFF || *pr == 0xFE)) pr++;
+*/
     std::string ss; char b[50];
     for(int i = 0; i < regexp.size(); i++)
     {
@@ -72,7 +76,7 @@ bool ActionReplace::run(ActionContext& context)
     }        
     smsc_log_debug(logger, "Regexp: %s", ss.c_str());
     
-    if(!re.Compile((unsigned short *)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((regexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
+    if(!re.Compile((uint16_t*)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((regexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
     {
         smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", temp.c_str());
         return true;

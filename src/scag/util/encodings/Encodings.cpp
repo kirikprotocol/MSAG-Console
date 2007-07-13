@@ -96,7 +96,7 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
 
 void Convertor::UTF8ToUCS2(const char * utf8buff, unsigned int utf8len, std::string& ucs2str)
 {
-    convert("UTF-8", "UCS-2", utf8buff, utf8len, ucs2str);
+    convert("UTF-8", "UCS-2BE", utf8buff, utf8len, ucs2str);
 }
 
 
