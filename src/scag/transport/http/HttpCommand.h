@@ -250,7 +250,7 @@ public:
 public:
     StringHash headerFields;
     FieldIterator headerFieldsIterator;
-    TmpBuf<char, 1> content;
+    TmpBuf<uint8_t, 2048> content;
     std::string headers;
     std::string charset;
     std::string contentType;
