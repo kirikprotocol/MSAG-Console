@@ -345,9 +345,9 @@ void MapUSSDlg::endTCap(void)
     if (dialog) {
         dialog->removeListener(this);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
-            //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
-            try {   // do TC_BasicEnd if still active
-                dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ? false : true);
+            try {   // do TC_PREARRANGED if still active
+                dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ?
+                                    Dialog::endPrearranged : Dialog::endBasic);
                 smsc_log_debug(logger, "MapUSS[%u]: T_END_REQ, state: 0x%x", dlgId,
                                 dlgState.value);
             } catch (std::exception & exc) {

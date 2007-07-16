@@ -72,7 +72,7 @@ public:
     void abortDlg(void)
     {
         if (active) {
-            pDlg->endDPSMS(); //send sms_o_failure to SCF if necessary
+            pDlg->abortSMS(); //send sms_o_failure to SCF if necessary
             active = false; ended = true;
         }
     }
@@ -127,7 +127,8 @@ public:
     bool     BillComplete(void) const;
 
     //-- CapSMS_SSFhandlerITF interface methods:
-    void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause = 0);
+    void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
+                        std::auto_ptr<ConnectSMSArg> & sms_params);
     //dialog finalization/error handling:
     //if ercode != 0, no result has been got from CAP service,
     void onEndCapDlg(unsigned dlg_id, RCHash errcode = 0);

@@ -48,16 +48,18 @@ Dialog::~Dialog()
 void Dialog::releaseAllInvokes(void)
 {
     MutexGuard  tmp(invGrd);
-    clearInvokes();
+    clearInvokes(!(_state.value & TC_DLG_CLOSED_MASK));
 }
 
-void Dialog::clearInvokes(void)
+void Dialog::clearInvokes(bool reqTC/* = false*/)
 {
     InvokeMap::const_iterator it;
     for (it = originating.begin(); it != originating.end(); it++) {
         Invoke * inv = (*it).second;
         smsc_log_debug(logger, "Dialog[0x%X]: releasing %s", (unsigned)_dId,
                        inv->strStatus().c_str());
+        if (reqTC)
+            EINSS7_I97TUCancelReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId());
         delete inv;
     }
     originating.clear();
@@ -65,6 +67,8 @@ void Dialog::clearInvokes(void)
         Invoke * inv = (*it).second;
         smsc_log_debug(logger, "Dialog[0x%X]: releasing %s", (unsigned)_dId,
                        inv->strStatus().c_str());
+        if (reqTC)
+            EINSS7_I97TUCancelReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId());
         delete inv;
     }
     terminating.clear();
@@ -108,6 +112,7 @@ void Dialog::removeListener(DialogListener* pListener)
 
 void Dialog::setInvokeTimeout(USHORT_T timeout)
 {
+    MutexGuard  tmp(invGrd);
     _timeout = timeout ? timeout : _DEFAULT_INVOKE_TIMER;
 }
 
@@ -183,32 +188,52 @@ void Dialog::continueDialog(void) throw (CustomException)
     _state.s.dlgLContinued = 1;
 }
 
-
-void Dialog::endDialog(bool basicEnd/* = true*/) throw (CustomException)
+//bool basicEnd/* = true*/
+void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomException)
 {
     MutexGuard  tmp(dlgGrd);
     if (!(_state.value & TC_DLG_CLOSED_MASK)) {
-        USHORT_T termination = basicEnd ? EINSS7_I97TCAP_TERM_BASIC_END :
-            EINSS7_I97TCAP_TERM_PRE_ARR_END;
+        if (type == Dialog::endUAbort) {
+            UCHAR_T abInfo = 0; //ABRT-source : dialogue-service-user(0)
+            smsc_log_debug(logger, "U_ABRT_REQ -> {"
+                            "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                            "  Dialog[0x%X]\n"
+                            "  PriOrder: 0x%X, QoS: 0x%X\n"
+                            "  App. context[%u]: %s\n"
+                            "}",
+                           dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
+                           ac.acLen, DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str());
 
-        smsc_log_debug(logger, "END_REQ -> {"
-                        "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
-                        "  Dialog[0x%X]\n"
-                        "  PriOrder: 0x%X, QoS: 0x%X\n"
-                        "  Termination: %s\n"
-                        "  App. context[%u]: %s\n"
-                        "}",
-                       dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
-                       basicEnd ? "BASIC" : "PREARRANGED", ac.acLen, 
-                       DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str());
+            USHORT_T result =
+                EINSS7_I97TUAbortReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+                                priority, qSrvc, 1, &abInfo,
+                                ac.acLen, ac.ac, 0, NULL);
 
-        USHORT_T result =
-            EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
-                              priority, qSrvc, termination,
-                              ac.acLen, ac.ac, 0, NULL);
-
-        checkSS7res("TEndReq failed", result); //throws
-        _state.s.dlgLEnded = 1;
+            checkSS7res("TUAbortReq failed", result); //throws
+            _state.s.dlgLUAborted = 1;
+        } else {
+            USHORT_T termination = (type == Dialog::endBasic) ?
+                EINSS7_I97TCAP_TERM_BASIC_END : EINSS7_I97TCAP_TERM_PRE_ARR_END;
+    
+            smsc_log_debug(logger, "END_REQ -> {"
+                            "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                            "  Dialog[0x%X]\n"
+                            "  PriOrder: 0x%X, QoS: 0x%X\n"
+                            "  Termination: %s\n"
+                            "  App. context[%u]: %s\n"
+                            "}",
+                           dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
+                           (type == Dialog::endBasic) ? "BASIC" : "PREARRANGED", ac.acLen, 
+                           DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str());
+    
+            USHORT_T result =
+                EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+                                  priority, qSrvc, termination,
+                                  ac.acLen, ac.ac, 0, NULL);
+    
+            checkSS7res("TEndReq failed", result); //throws
+            _state.s.dlgLEnded = 1;
+        }
     }
     releaseAllInvokes();
     smsc_log_debug(logger, "Dialog[0x%X]: %s (state = 0x%x)", _dId,
@@ -319,17 +344,27 @@ void Dialog::sendResultError(TcapEntity* res) throw (CustomException)
     checkSS7res("UErrorReq failed", result);
 }
 
-
-void Dialog::resetInvokeTimer(UCHAR_T invokeId) throw (CustomException)
+//Returns TC_APIError
+USHORT_T Dialog::resetInvokeTimer(UCHAR_T inv_id)
 {
-    smsc_log_debug(logger,"EINSS7_I97TTimerResetReq("
-                   "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, invokeId=%d",
-                   dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, invokeId);
-
-    USHORT_T result = 
-        EINSS7_I97TTimerResetReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, invokeId);
-
-    checkSS7res("TTimerResetReq failed", result);
+    MutexGuard  tmp(invGrd);
+    Invoke* pInv = NULL;
+    //search both maps for Invoke and copy it onto stack
+    InvokeMap::iterator it = originating.find(inv_id);
+    if (it == originating.end()) {
+        it = terminating.find(inv_id);
+        if (it != terminating.end())
+            pInv = (*it).second;
+    } else {
+        pInv = (*it).second;
+    }
+    if (pInv) {
+        smsc_log_debug(logger,"EINSS7_I97TTimerResetReq("
+                       "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, invokeId=%d",
+                       dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv_id);
+        return EINSS7_I97TTimerResetReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv_id);
+    }
+    return EINSS7_I97TCAP_INV_INVOKE_ID_USED;
 }
 
 Invoke* Dialog::initInvoke(UCHAR_T opcode, InvokeListener * pLst/* = NULL*/,
@@ -376,6 +411,7 @@ void Dialog::releaseInvoke(UCHAR_T invId)
     if (inv) {
         smsc_log_debug(logger, "Dialog[0x%X]: releasing %s", (unsigned)_dId,
                        inv->strStatus().c_str());
+        EINSS7_I97TUCancelReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId());
         delete inv;
     } else {
         smsc_log_error(logger, "Dialog[0x%X]: releasing unregistered Invoke[%u]",
@@ -531,7 +567,8 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     }
     //if Dialog is remotedly ended, no LCancel will arise for invokes
     {
-        MutexGuard tmp(dlgGrd);
+        MutexGuard dtmp(dlgGrd);
+        MutexGuard itmp(invGrd);
         if (_state.s.dlgREnded == TCAP_DLG_COMP_LAST)
             clearInvokes();
     }

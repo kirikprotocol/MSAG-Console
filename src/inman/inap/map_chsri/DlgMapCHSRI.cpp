@@ -251,9 +251,9 @@ void MapCHSRIDlg::endTCap(void)
     if (dialog) {
         dialog->removeListener(this);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
-            //see 3GPP 29.078 14.1.2.1.3 smsSSF-to-gsmSCF SMS related messages
-            try {  // do TC_BasicEnd if still active
-                dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ? false : true);
+            try {  // do TC_PREARRANGED if still active
+                dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ?
+                                    Dialog::endPrearranged : Dialog::endBasic);
                 smsc_log_debug(logger, "MapSRI[%u]: T_END_REQ, state: 0x%x", sriId,
                                 _sriState.value);
             } catch (const std::exception & exc) {

@@ -68,24 +68,30 @@ static const USHORT_T   _DEFAULT_INVOKE_TIMER = 30; //seconds
 //NOTE: All thrown CustomExceptions has errcode set to RCHash
 class Dialog {
 public:
+    enum Ending { endBasic = 0, endPrearranged, endUAbort };
+
     void addListener(DialogListener* pListener);
     void removeListener(DialogListener* pListener);
 
-    TC_DlgState getState(void);
-    const std::string & getSUId(void)  const { return _tcSUId;  }
-    USHORT_T    getId(void)     const { return _dId;     }
-    //returns the default timeout for Invokes
-    USHORT_T    getTimeout(void) const { return _timeout; }
-    //sets the default timeout for Invoke result waiting
-    void        setInvokeTimeout(USHORT_T timeout);
+    inline const std::string & getSUId(void)  const { return _tcSUId;  }
 
-    //creates and registers Invoke, sets its response waiting timeout,
-    //zero as timeout value sets Invoke timer equal to the Dialog default timeout value
+    TC_DlgState         getState(void);
+    inline USHORT_T     getId(void)     const  { return _dId; }
+    //Returns the default timeout for Invokes
+    inline USHORT_T     getTimeout(void) const { return _timeout; }
+    //Sets the default timeout for Invoke result waiting
+    void                setInvokeTimeout(USHORT_T timeout);
+
+    //Creates and registers Invoke, timeout value equal to zero forces the
+    //Invoke timer being set to the Dialog default timeout value
     Invoke* initInvoke(UCHAR_T opcode, InvokeListener * pLst = NULL,
                        USHORT_T timeout = 0);
     void    releaseInvoke(UCHAR_T invId);
     void    releaseAllInvokes(void);
-    //returns true is dialog has some Invokes pending (awaiting Result or LCancel)
+    //Resets the Invoke timer, extending its lifetime (response waiting),
+    //Returns TC_APIError
+    USHORT_T  resetInvokeTimer(UCHAR_T inv_id);
+    //Returns true is dialog has some Invokes pending (awaiting Result or LCancel)
     unsigned  pendingInvokes(void);
 
     // Component layer requests
@@ -93,8 +99,6 @@ public:
     void    sendResultLast(TcapEntity* res) throw(CustomException);
     void    sendResultNotLast(TcapEntity* res) throw(CustomException);
     void    sendResultError(TcapEntity* res) throw(CustomException);
-        //resets the Invoke timer, extending its lifetime (response waiting)
-    void    resetInvokeTimer(UCHAR_T invokeId) throw (CustomException);
 
     // Transaction layer requests
     void beginDialog(UCHAR_T* ui = NULL, USHORT_T uilen = 0) throw(CustomException);
@@ -102,7 +106,7 @@ public:
     void beginDialog(const SCCP_ADDRESS_T& remote_addr,
                      UCHAR_T* ui = NULL, USHORT_T uilen = 0) throw(CustomException);
     void continueDialog(void) throw(CustomException);
-    void endDialog(bool basicEnd = true) throw(CustomException);
+    void endDialog(Dialog::Ending type = endBasic) throw(CustomException);
 
     // Transaction layer callbacks (indications)
     // USHORT_T handleBeginDialog(); //NOTE: Unimplemented yet!
@@ -139,7 +143,7 @@ protected:
     virtual ~Dialog();
 
 private:
-    void clearInvokes(void);
+    void clearInvokes(bool reqTC = false);
     void checkSS7res(const char * descr, USHORT_T result) throw(CustomException);
     UCHAR_T  getNextInvokeId(void)  { return _lastInvId++; }
 

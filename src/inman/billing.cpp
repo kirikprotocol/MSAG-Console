@@ -408,7 +408,7 @@ RCHash Billing::startCAPDialog(void)
         //Initiate CAP3 dialog(s): 
         for (IDPStatus::iterator it = idpRes.dlgRes.begin(); it != idpRes.dlgRes.end(); ++it) {
             arg.setDestinationSubscriberNumber(it->dstAdr);
-            it->pDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, logger); //throws
+            it->pDlg = new CapSMSDlg(capSess, this, _cfg.ss7.capTimeout, abScf->Ident(), logger); //throws
             it->dlg_id = it->pDlg->getId();
             //set Billing state here in order to correctly handle onEndCapDlg()
             state = Billing::bilInited;
@@ -857,7 +857,8 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
  * CapSMS_SSFhandlerITF interface implementation:
  * NOTE: all callbacks are the processing graph entry points, so lock bilMutex !!!
  * -------------------------------------------------------------------------- */
-void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause/* = 0*/)
+void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
+                            std::auto_ptr<ConnectSMSArg> & sms_params)
 {
     MutexGuard grd(bilMutex);
     const char * res_reason = NULL;

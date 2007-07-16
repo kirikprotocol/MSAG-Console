@@ -12,12 +12,12 @@ using smsc::core::synchronization::Mutex;
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionSR;
 
-#include "inman/comp/cap_sms/CapSMSComps.hpp"
-using smsc::util::RCHash;
-using smsc::inman::comp::InitialDPSMSArg;
-using smsc::inman::comp::RequestReportSMSEventArg;
-
 #include "inman/inap/cap_sms/FSMCapSMS.hpp"
+using smsc::util::RCHash;
+using smsc::inman::comp::CapSMSOp;
+using smsc::inman::comp::InitialDPSMSArg;
+using smsc::inman::comp::ConnectSMSArg;
+
 
 namespace smsc {
 namespace inman {
@@ -40,23 +40,28 @@ namespace inap {
         SSF <- ResetTimerSMS ]
 */
 
-
+//3GPP TS 23.078 version 6.x.x Release 6, clause 7.5.2.1)
 class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
-//NOTE: These callbacks should not delete CapSMSDlg !!!
 public:
-    virtual void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause = 0) = 0;
-    //Dialog finalization/error handling:
+    //Stands for following signals to MSC/SGSN:
+    //  Int_ReleaseSMS, Int_ConnectSMS, Int_ContinueSMS
+    virtual void onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
+                                    std::auto_ptr<ConnectSMSArg> & sms_params) = 0;
+
     //if ercode != 0, CAP dialog is abnormally ended
     //NOTE: CAP dialog may be deleted only from this callback !!!
+    //Stands for following signals to MSC/SGSN:  Int_Continue, Int_Error
     virtual void onEndCapDlg(unsigned dlg_id, RCHash errcode = 0) = 0;
 };
 
-class CapSMS_SCFContractorITF { //SSF -> SCF
+class CapSMS_SCFContractorITF { //SSF -> CapSMSDlg --> SCF
 public:
     // initiates capSMS dialog
     virtual void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException) = 0;
     // reports SMS delivery status (continues) and ends capSMS dialog
     virtual void reportSubmission(bool submitted) throw(CustomException) = 0;
+    // aborts capSMS dialog (
+    virtual void abortSMS(void) throw(CustomException) = 0;
 };
 
 
@@ -66,11 +71,12 @@ public:
 //      a small timeout (CAPSMS_END_TIMEOUT) on last EventReportSMS Invoke
 //      and releases TC Dialog either on receiving T_END_IND or LCancel for
 //      EventReportSMS.
-class CapSMSDlg : public CapSMS_SCFContractorITF, DialogListener, InvokeListener {
+class CapSMSDlg : SMS_SSF_Fsm, DialogListener, InvokeListener {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
     CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
-                USHORT_T timeout = 0, Logger * uselog = NULL);
+                USHORT_T timeout = 0, const char * scf_ident = NULL,
+                Logger * uselog = NULL);
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
 
     inline unsigned getId(void) const { return capId; }
@@ -81,7 +87,7 @@ public:
     //  reports delivery status(continues) and ends capSMS dialog
     void reportSubmission(bool submitted) throw(CustomException);
 
-    void endDPSMS(void); //ends TC dialog, releases Dialog(), resets SSFhandler
+    void abortSMS(void); //ends TC dialog, releases Dialog(), resets SSFhandler
 
 protected:
     friend class Dialog;
@@ -103,23 +109,42 @@ protected:
     void onInvokeLCancel(Invoke* inv);
 
 private:
-    void endTCap(void); //ends TC dialog, releases Dialog()
-    // reports delivery status (continues) and ends capSMS dialog
-    void eventReportSMS(bool submitted) throw(CustomException);
+    void endTCap(bool u_abort = false); //ends TC dialog, releases Dialog()
+    // reports delivery status (continues capSMS dialog)
+    bool eventReportSMS(bool submitted) throw(CustomException);
+    inline void setTimer(Invoke * new_op)
+    {
+        if (_timer)
+            dialog->releaseInvoke(_timer->getId());
+        _timer = new_op;
+    }
+    inline void stopTimer(void) { setTimer(NULL); }
+    inline void resetTimer(void)
+    {
+        if (_timer)
+            dialog->resetInvokeTimer(_timer->getId());
+    }
+    inline void logBadInvoke(UCHAR_T op_code)
+    {
+        smsc_log_error(logger, "%s: inconsistent %s, state %s(%s), {%s}", _logId,
+                        CapSMSOp::code2Name(op_code), nmFSMState(), nmRelations(),
+                        _capState.s.Print().c_str());
+    }
 
     Mutex       _sync;
     unsigned    capId;
-                //prefix for logging info
+    //prefix for logging info
     char        _logId[sizeof("CapSMS[0x%X]") + sizeof(unsigned)*3 + 1];
 
     Dialog*         dialog;     //TCAP dialog
     TCSessionSR*    session;    //TCAP dialogs factory
-    CAPSmsState     _capState;  //current state of cap3SMS CONTRACT
     CapSMS_SSFhandlerITF* ssfHdl;
-    std::auto_ptr<RequestReportSMSEventArg> rrse; //keeps detection points
-    messageType_e   reportType; //notification or request
     unsigned char   rPCause;    //result or reject cause
+    Invoke *        _timer;     //last initiated operation
+    const char *    nmScf;
     Logger*         logger;
+    messageType_e   reportType; //notification or request
+    std::auto_ptr<ConnectSMSArg> smsParams;
 };
 
 } //inap
