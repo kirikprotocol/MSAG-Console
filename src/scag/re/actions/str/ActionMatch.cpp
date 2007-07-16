@@ -74,7 +74,7 @@ bool ActionMatch::run(ActionContext& context)
         return true;
     }
 
-    std::string value,s2;
+    std::string value;
 
     if (m_ftValue != ftUnknown) 
     {
