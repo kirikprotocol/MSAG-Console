@@ -871,6 +871,20 @@ void Billing::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
             _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
         }
         res->chgRes = ChargeSmsResult::CHARGING_POSSIBLE;
+        if (sms_params.get()) {
+            if (sms_params->paramsMask() & ConnectSMSArg::connDSN) {
+                smsc_log_info(logger, "%s: %s set DA: %s", _logId, abScf->Ident(),
+                    sms_params->destinationSubscriberNumber().toString().c_str());
+            }
+            if (sms_params->paramsMask() & ConnectSMSArg::connCPN) {
+                smsc_log_info(logger, "%s: %s set OA: %s", _logId, abScf->Ident(),
+                    sms_params->callingPartyNumber().toString().c_str());
+            }
+            if (sms_params->paramsMask() & ConnectSMSArg::connSMSC) {
+                smsc_log_info(logger, "%s: %s set SMSC: %s", _logId, abScf->Ident(),
+                    sms_params->SMSCAddress().toString().c_str());
+            }
+        }
     } else {            //ReleaseSMS
         res->active = false;
         res->scfErr = _RCS_MOSM_RPCause->mkhash(rp_cause);
