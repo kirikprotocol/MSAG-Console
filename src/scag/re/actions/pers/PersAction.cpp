@@ -105,7 +105,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(cmd == PC_DEL)
     {
-        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
         return;
     }
 
@@ -131,7 +131,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(cmd == PC_GET)
     {
-        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
         return;
     }
 
@@ -173,7 +173,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
     if(policy == INFINIT)
     {
-        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, mod);
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s, policy=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, mod);
         return;
     }
 
@@ -188,7 +188,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     	        throw SCAGException("PersAction '%s' : invalid 'finaldate' parameter", getStrCmd());
 	    }
 	
-        smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, final_date=%d", getStrCmd(), profile, var.c_str(), policy, final_date);
+        smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s, policy=%d, final_date=%d", getStrCmd(), profile, var.c_str(), policy, final_date);
         return;
     }
 
@@ -200,7 +200,7 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     	    throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd());
     }
 
-    smsc_log_debug(logger, "act params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, mod);
+    smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, mod);
 }
 
 uint32_t PersAction::getKey(const CommandProperty& cp, ProfileType pt)
@@ -279,7 +279,6 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
     smsc_log_debug(logger,"Run BatchPrepare 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 
     CommandProperty& cp = context.getCommandProperty();
-    auto_ptr<PersCallParams> params(new PersCallParams());
 
     REProperty *p;
 	if(varType != ftUnknown && !(p = context.getProperty(var)))
@@ -489,18 +488,16 @@ void PersAction::ContinueRunning(ActionContext& context)
         if(params->error == PROPERTY_NOT_FOUND)
         {
             if(cmd == PC_DEL)
-                smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
+                smsc_log_warn(logger, "PersClientException: Property not found on deletion: profileType=%d, key=%s(%d), name=%s", profile, params->skey.c_str(), params->ikey, var.c_str());
             else if(cmd == PC_GET)
             {
                 REProperty *rep = context.getProperty(value_str);
                 rep->setStr("");
-                smsc_log_warn(logger, "PersClientException: GetProperty not found: %s", var.c_str());
+                smsc_log_warn(logger, "PersClientException: GetProperty not found: profileType=%d, key=%s(%d), name=%s", profile, params->skey.c_str(), params->ikey, var.c_str());
             }
             return;
         }
   		throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), profile, var.c_str(), params->exception.c_str());
-//        smsc_log_error(logger, "PersClientException: continueRunning: var=%s, reason: %s", var.c_str(), params->exception.c_str());
-//        return;
     }
     else if(params->exception.length())
     {
