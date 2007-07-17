@@ -8,6 +8,7 @@
       <param name="msgAliasOk">Nickname assigned</param>
       <param name="msgAliasDuplicate">Nick already in use</param>
       <param name="msgAliasFailed">Nick is invalid (too long, empty or contain invalid symbols)</param>
+      <param name="msgAliasInvalid">This nick is prohibited</param>
       <param name="msgAliasOn">Nick activated</param>
       <param name="msgAliasOff">Nick deactivated</param>
       <param name="msgAliasDeleted">Nick deleted</param>
