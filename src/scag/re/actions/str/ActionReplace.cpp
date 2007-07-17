@@ -64,18 +64,6 @@ bool ActionReplace::run(ActionContext& context)
     char endbuff[2] = {0,0};
     regexp.append(endbuff,2);
     
-/*    const uint8_t* pr = (const uint8_t*)regexp.data();
-    int i = 0;
-    while(i < 8 && (*pr == 0xFF || *pr == 0xFE)) pr++;
-*/
-    std::string ss; char b[50];
-    for(int i = 0; i < regexp.size(); i++)
-    {
-        sprintf(b, "%02X", regexp[i]);
-        ss += b;
-    }        
-    smsc_log_debug(logger, "Regexp: %s", ss.c_str());
-    
     if(!re.Compile((uint16_t*)regexp.data(), (OP_OPTIMIZE|OP_STRICT)|((regexp[0] == '/') ? OP_PERLSTYLE:OP_SINGLELINE)))
     {
         smsc_log_warn(logger, "Action 'replace' Failed to compile regexp '%s'", temp.c_str());
@@ -113,22 +101,6 @@ bool ActionReplace::run(ActionContext& context)
     SMatch m[100];
     int n = 100, pos = 0;
     std::string result;
-
-    ss.clear();
-    for(int i = 0; i < var.size(); i++)
-    {
-        sprintf(b, "%02X", var[i]);
-        ss += b;
-    }
-    smsc_log_debug(logger, "Var: %s", ss.c_str());
-    
-    ss.clear();
-    for(int i = 0; i < rep.size(); i++)
-    {
-        sprintf(b, "%02X", rep[i]);    
-        ss += b;
-    }        
-    smsc_log_debug(logger, "Rep: %s", ss.c_str());
 
     while(re.Search((uint16_t*)(var.data() + pos), m, n))
     {
