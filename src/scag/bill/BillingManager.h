@@ -61,7 +61,6 @@ struct BillingInfoStruct
 
     timeval SessionBornMicrotime;
 
-    //int ServiceNumber;
     const BillingInfoStruct& operator=(const BillingInfoStruct& cp)
     {
         mediaType = cp.mediaType;

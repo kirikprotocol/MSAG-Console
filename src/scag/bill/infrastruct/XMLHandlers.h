@@ -28,14 +28,14 @@ enum {
 class TariffRec{
 public:
     double Price;
-    uint32_t ServiceNumber;
+    std::string ServiceNumber;
     std::string Currency;
     uint32_t MediaTypeId;
     uint32_t CategoryId;
     uint32_t billType;
 
     TariffRec() {};
-    TariffRec(uint32_t sn, double pr, const std::string& c, uint32_t ci, uint32_t mti, uint32_t bt):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti), billType(bt) {};
+    TariffRec(const std::string& sn, double pr, const std::string& c, uint32_t ci, uint32_t mti, uint32_t bt):Price(pr), ServiceNumber(sn), Currency(c), CategoryId(ci), MediaTypeId(mti), billType(bt) {};
     
     TariffRec(const TariffRec& sm) { operator=(sm); };
 
@@ -51,7 +51,6 @@ public:
         return *this;
     };
 };
-
 
 class XMLBasicHandler : public HandlerBase
 {
@@ -97,9 +96,9 @@ class XMLTariffMatrixHandler : public HandlerBase
     std::string media_type_name, category_name;
     XMLCh chars[1024];
     uint8_t media_type_tag, category_tag, bill_tag;
-    uint32_t bill_service_number, bill_category_id, bill_media_type_id, bill_operator_id, bill_type;
+    uint32_t bill_category_id, bill_media_type_id, bill_operator_id, bill_type;
     double bill_price;
-    std::string bill_currency;
+    std::string bill_currency, bill_service_number;
 
     void characters(const XMLCh *const chrs, const unsigned int length);
 

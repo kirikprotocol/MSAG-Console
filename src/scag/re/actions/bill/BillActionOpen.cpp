@@ -76,7 +76,7 @@ void BillActionOpen::SetBillingStatus(ActionContext& context, const char * error
         if (!propertyResNum)
             smsc_log_debug(logger,"Action '%s' :: Invalid property %s for result_number", m_ActionName.c_str(), m_sResNumber.c_str());
         else
-            propertyResNum->setInt(isOK && tariffRec ? tariffRec->ServiceNumber : 0);
+            propertyResNum->setStr(isOK && tariffRec ? tariffRec->ServiceNumber : "");
     }
 
     if (m_MsgExist) 
@@ -160,7 +160,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
 
     if(tariffRec->billType == scag::bill::infrastruct::NONE)
     {
-        smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
+        smsc_log_warn(logger, "Billing desabled for this tariff entry. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId, tariffRec->MediaTypeId);
         Operation * operation = context.GetCurrentOperation();
         if(!operation) 
         {
@@ -173,7 +173,7 @@ bool BillActionOpen::RunBeforePostpone(ActionContext& context)
     }
 
     if (tariffRec->Price == 0)
-        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%d, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber, tariffRec->CategoryId, tariffRec->MediaTypeId);
+        smsc_log_warn(logger, "Zero price in tariff matrix. ServiceNumber=%s, CategoryId=%d, MediaTypeId=%d", tariffRec->ServiceNumber.c_str(), tariffRec->CategoryId, tariffRec->MediaTypeId);
 #ifdef MSAG_INMAN_BILL
     if(tariffRec->billType == scag::bill::infrastruct::INMAN)
     {

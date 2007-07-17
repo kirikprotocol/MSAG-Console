@@ -523,16 +523,13 @@ void BillingManagerImpl::makeBillEvent(BillingTransactionEvent billCommand, Bill
 #ifdef MSAG_INMAN_BILL
 void BillingManagerImpl::fillChargeSms(smsc::inman::interaction::ChargeSms& op, BillingInfoStruct& billingInfoStruct, TariffRec& tariffRec)
 {
-    char buff[20];
-    buff[19] = 0;
-    std::string str(lltostr(tariffRec.ServiceNumber, buff + 19));
-    op.setDestinationSubscriberNumber(str);
+    op.setDestinationSubscriberNumber(tariffRec.ServiceNumber);
     op.setCallingPartyNumber(billingInfoStruct.AbonentNumber);
     op.setServiceId(billingInfoStruct.serviceId);
     op.setUserMsgRef(billingInfoStruct.msgRef);
     op.setSmsXSrvs(SMSX_INCHARGE_SRV);
 
-    smsc_log_debug(logger, "***** SN=%s, CPN=%s, SID=%d", str.c_str(), billingInfoStruct.AbonentNumber.c_str(), billingInfoStruct.serviceId);
+    smsc_log_debug(logger, "***** SN=%s, CPN=%s, SID=%d", tariffRec.ServiceNumber.c_str(), billingInfoStruct.AbonentNumber.c_str(), billingInfoStruct.serviceId);
 }
 
 void BillingManagerImpl::onChargeSmsResult(ChargeSmsResult* result, CsBillingHdr_dlg * hdr)

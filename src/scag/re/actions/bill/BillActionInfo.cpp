@@ -92,7 +92,7 @@ bool BillActionInfo::run(ActionContext& context)
             case 3: p->setStr(bis.AbonentNumber); break;
             case 4: p->setInt(tr.CategoryId); break;
             case 5: p->setInt(tr.MediaTypeId); break;
-            case 6: p->setInt(tr.ServiceNumber); break;
+            case 6: p->setStr(tr.ServiceNumber); break;
             case 7:
                 {
                     char buf[20];

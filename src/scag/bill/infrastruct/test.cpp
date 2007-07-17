@@ -76,13 +76,13 @@ int main(int argc, char* argv[])
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=1. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=1. sn:%s, price:%lf, curr:%s", tr->ServiceNumber.c_str(), tr->Price, tr->Currency.c_str());
         }
         tr = sm.GetTariff(1, 1, 2);
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%s, price:%lf, curr:%s", tr->ServiceNumber.c_str(), tr->Price, tr->Currency.c_str());
         }
 
         int o, m, c;
@@ -109,20 +109,20 @@ int main(int argc, char* argv[])
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=1. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=1. sn:%s, price:%lf, curr:%s", tr->ServiceNumber.c_str(), tr->Price, tr->Currency.c_str());
         }
         tr = sm.GetTariff(1, 1, 2);
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%d, price:%lf, curr:%s", tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = 1, category_id=1, media_type=2. sn:%s, price:%lf, curr:%s", tr->ServiceNumber.c_str(), tr->Price, tr->Currency.c_str());
         }
         tr = sm.GetTariff(o, m, c);
         if(tr != NULL)
         {
             auto_ptr<TariffRec> pp(tr);
-            smsc_log_info(logger, "operator_id = %d, category_id=%d, media_type=%d. sn:%d, price:%lf, curr:%s", o, c, m, tr->ServiceNumber, tr->Price, tr->Currency.c_str());
-            printf("operator_id = %d, category_id=%d, media_type=%d. sn:%d, price:%lf, curr:%s", o, c, m, tr->ServiceNumber, tr->Price, tr->Currency.c_str());
+            smsc_log_info(logger, "operator_id = %d, category_id=%d, media_type=%d. sn:%s, price:%lf, curr:%s", o, c, m, tr->ServiceNumber.c_str(), tr->Price, tr->Currency.c_str());
+            printf("operator_id = %d, category_id=%d, media_type=%d. sn:%s, price:%lf, curr:%s", o, c, m, tr->ServiceNumber.c_str(), tr->Price, tr->Currency.c_str());
         }
         else
             printf("No such record. operator_id = %d, category_id=%d, media_type=%d", o, c, m);
