@@ -12,10 +12,10 @@
         var headerElem = opForm.all("sectionHeader_" + sectionId);
         var valueElem = opForm.all("sectionValue_" + sectionId);
         if (valueElem.style.display != "none") {
-            headerElem.className = "collapsing_tree_closed";
+            headerElem.className = "collapsing_tree_closed_logging";
             valueElem.style.display = "none";
         } else {
-            headerElem.className = "collapsing_tree_opened";
+            headerElem.className = "collapsing_tree_opened_logging";
             valueElem.style.display = "";
         }
 
@@ -33,20 +33,22 @@
                 </c:if>
                 <c:if test="${tree.hasChilds}">
                     <c:set var="ch" value="${tree.childs}"/>
-                        <c:forEach items="${ch}" var="catItem">                        
+                        <c:forEach items="${ch}" var="catItem">
                         <c:if test="${!catItem.value.hasChilds}">
                             <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
                         </c:if>
                         </c:forEach>
                         <c:forEach items="${ch}" var="catItem">
                         <c:if test="${catItem.value.hasChilds}">
-                            <div class=collapsing_tree_closed id="sectionHeader_${catItem.value.fullName}"
-                                 onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
-                                <table cellspacing=0>
+                                <table cellspacing=0 border="0">
                                     <tr>
-                                        <td width=100%>${catItem.value.name}</td>
+                                        <td width="10%">
+                                            <div class=collapsing_tree_closed_logging id="sectionHeader_${catItem.value.fullName}"
+                                                 onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
+                                                 ${catItem.value.name}</td>
+                                            </div>
                                         <td>
-
+                                            <sm-l:select name="_empty_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
                                         </td>
                                     </tr>
                                 </table>
