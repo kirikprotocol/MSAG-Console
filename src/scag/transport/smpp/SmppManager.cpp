@@ -58,7 +58,7 @@ public:
   void ResetTestRouteManager(RouteManager* manager);
 
   void getQueueLen(uint32_t& reqQueueLen, uint32_t& respQueueLen, uint32_t& lcmQueueLen);
-  
+
   void StopProcessing()
   {
     sync::MutexGuard mg(queueMon);
@@ -340,9 +340,9 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
         case tag_maxSmsPerSec:
           entity.sendLimit=GetIntValue(attrs);
           break;
-	case tag_inQueueLimit:
-	  //TODO: fill it !
-	  break;
+  case tag_inQueueLimit:
+    //TODO: fill it !
+    break;
       }
     }
     if(enabled)
@@ -416,12 +416,12 @@ void SmppManagerImpl::Init(const char* cfgFile)
       {
         StateMachine::addTransitOptional(tag);
       }
-	  else
-	  {
-	  	smsc_log_warn(log, "Failed to parse tags list :'%s'",tags+n);
-		break;
-	  }
-	  n+=i;
+    else
+    {
+      smsc_log_warn(log, "Failed to parse tags list :'%s'",tags+n);
+    break;
+    }
+    n+=i;
       if(tags[n]==',')
       {
         n++;
@@ -781,7 +781,7 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
   else
   {
     int cnt=entPtr->incCnt.Get();
-    if(entPtr->info.sendLimit!=0 && cnt/5>=entPtr->info.sendLimit && cmd.getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
+    if(entPtr->info.sendLimit>0 && cnt/5>=entPtr->info.sendLimit && cmd.getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
       smsc_log_info(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt/5,entPtr->info.sendLimit);
       SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
@@ -794,7 +794,7 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
     }else
     {
       queue.Push(cmd);
-      if(entPtr->info.sendLimit!=0)
+      if(entPtr->info.sendLimit>0)
       {
         entPtr->incCnt.Inc();
         //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
