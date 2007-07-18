@@ -3,10 +3,12 @@
 <%@ attribute name="name" required="true"%>
 <%@ attribute name="fullName" required="true"%>
 <%@ attribute name="priority" required="true"%>
-<table class="properties_list" cellspacing="0">
+<table class="properties_list" cellspacing="0" border="0">
     <col width="150px">
     <tr class=row${rowNum%2}>
-        <th nowrap>${name}</th>
+        <c:if test="${name!='_empty_'}">
+            <th nowrap>${name}</th>
+        </c:if>
         <td>
             <select name="category_${fullName}" id="category_${fullName}" class="txt" style="font-size:80%;">
             <c:forEach items="${bean.priorities}" var="i">
