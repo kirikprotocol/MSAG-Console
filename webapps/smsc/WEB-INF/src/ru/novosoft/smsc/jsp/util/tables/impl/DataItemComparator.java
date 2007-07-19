@@ -27,9 +27,11 @@ class DataItemComparator implements Comparator
     DataItem i2 = (DataItem) o2;
     Object val1 = i1.getValue(fieldName);
     Object val2 = i2.getValue(fieldName);
-    if (val1 instanceof String)
+
+    if (val1 instanceof String) {
       return ((String) val1).compareToIgnoreCase((String) val2);
-    else if (val1 instanceof Vector) {
+
+    } else if (val1 instanceof Vector) {
       Vector v1 = (Vector) val1;
       Vector v2 = (Vector) val2;
       int count = Math.min(v1.size(), v2.size());
@@ -39,20 +41,17 @@ class DataItemComparator implements Comparator
           return result;
       }
       return v1.size() - v2.size();
-    }
-    else if (val1 instanceof Boolean) {
-      if (((Boolean) val1).booleanValue()) {
-        return ((Boolean) val2).booleanValue()
-                ? 0
-                : 1;
-      }
-      else {
-        return ((Boolean) val2).booleanValue()
-                ? -1
-                : 0;
-      }
-    }
-    else
+
+    } else if (val1 instanceof Boolean) {
+      if (((Boolean) val1).booleanValue())
+        return ((Boolean) val2).booleanValue() ? 0 : 1;
+      else
+        return ((Boolean) val2).booleanValue() ? -1 : 0;
+
+    } else if (val1 instanceof Comparable) {
+      return ((Comparable)val1).compareTo(val2);
+
+    } else
       return 0;
   }
 }

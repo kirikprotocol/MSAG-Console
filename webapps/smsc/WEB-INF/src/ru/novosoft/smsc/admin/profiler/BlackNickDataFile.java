@@ -2,16 +2,18 @@ package ru.novosoft.smsc.admin.profiler;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.blacknick.BlackNickDataItem;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.impl.blacknick.BlackNickDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.blacknick.BlackNickQuery;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 
 /**
  * User: artem
@@ -63,24 +65,16 @@ public class BlackNickDataFile {
 
 
   public QueryResultSet query(BlackNickQuery query) throws AdminException {
-    final QueryResultSetImpl rs = new QueryResultSetImpl(columnNames, query.getSortOrder());
+    final BlackNickDataSource ds = new BlackNickDataSource();
+
     InputStream is = null;
 
     String line;
     try {
       is = new FileInputStream(listStorePath);
 
-      int totalSize = 0;
-      while ((line = readLine(is))!= null) {
-        if (query.getFilter() != null && query.getFilter().length() > 0 && !line.startsWith(query.getFilter()))
-          continue;
-
-        rs.add(new BlackNickDataItem(line));
-        totalSize++;
-      }
-
-      rs.setTotalSize(totalSize);;
-      rs.sortByColumnName(query.getSortOrder());
+      while ((line = readLine(is))!= null)
+        ds.add(line);
 
     } catch (IOException e) {
       log.error("Can't read black nicks file", e);
@@ -93,7 +87,7 @@ public class BlackNickDataFile {
       }
     }
 
-    return rs;
+    return ds.query(query);
   }
 
   private boolean isNickExists(final BlackNick nick) {

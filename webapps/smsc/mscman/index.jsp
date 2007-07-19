@@ -79,8 +79,8 @@
             </th>
             <th><%=getLocString("common.sortmodes.actions")%></th>
         </tr><%
-        for (Iterator i = mscList.iterator(); i.hasNext();) {
-            MscDataItem item = (MscDataItem) i.next();
+          for (int i = 0; i < mscList.size(); i++) {
+            MscDataItem item = (MscDataItem) mscList.get(i);
             final String commutator = item.getCommutator();
     %>
         <tr class=row<%=(posIdx++) % 2%>>

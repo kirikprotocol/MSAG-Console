@@ -89,33 +89,51 @@ public abstract class AbstractDataSourceImpl implements DataSource
 
     QueryResultSetImpl results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
 
-    Iterator i = srcVector.iterator();
-    final int start_position = query_to_run.getStartPosition();
-    int totalCount = 0;
-    for (int count_to_skip = 0; i.hasNext() && count_to_skip < start_position;) {
-      i.next();
-      count_to_skip++;
+    // new
+    int totalCount = query_to_run.getStartPosition();
+    int count = 0;
+    results.setLast(true);
+    for (int i=query_to_run.getStartPosition(); i < srcVector.size(); i++) {
+      DataItem item = (DataItem) srcVector.get(i);
+      if (count < query_to_run.getExpectedResultsQuantity()) {
+        count++;
+        results.add(item);
+      } else
+        results.setLast(false);
       totalCount++;
     }
 
-    final int quantity = query_to_run.getExpectedResultsQuantity();
-    for (int count = 0; i.hasNext() && count < quantity;) {
-      DataItem item = (DataItem) i.next();
-      if (filter.isItemAllowed(item)) {
-        count++;
-        totalCount++;
-        results.add(item);
-      }
-    }
-
-    results.setLast(true);
-    for (; i.hasNext();) {
-      if (filter.isItemAllowed((DataItem) i.next())) {
-        results.setLast(false);
-        totalCount++;
-      }
-    }
     results.setTotalSize(totalCount);
+
+
+
+//    Iterator i = srcVector.iterator();
+//    final int start_position = query_to_run.getStartPosition();
+//    int totalCount = 0;
+//    for (int count_to_skip = 0; i.hasNext() && count_to_skip < start_position;) {
+//      i.next();
+//      count_to_skip++;
+//      totalCount++;
+//    }
+//
+//    final int quantity = query_to_run.getExpectedResultsQuantity();
+//    for (int count = 0; i.hasNext() && count < quantity;) {
+//      DataItem item = (DataItem) i.next();
+//      if (filter.isItemAllowed(item)) {
+//        count++;
+//        totalCount++;
+//        results.add(item);
+//      }
+//    }
+
+//    results.setLast(true);
+//    for (; i.hasNext();) {
+//      if (filter.isItemAllowed((DataItem) i.next())) {
+//        results.setLast(false);
+//        totalCount++;
+//      }
+//    }
+//    results.setTotalSize(totalCount);
 
     return results;
   }

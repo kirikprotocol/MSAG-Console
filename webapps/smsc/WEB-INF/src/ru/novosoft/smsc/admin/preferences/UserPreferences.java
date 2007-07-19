@@ -30,7 +30,7 @@ public class UserPreferences {
     private String profilesSortOrder = null;
     private String profilesFilter = null;
 
-    private int blackNickPageSize = 5;
+    private int blackNickPageSize = 10;
     private int blackNickMaxSize = 1000;
 
     private int aliasesPageSize = 20;
