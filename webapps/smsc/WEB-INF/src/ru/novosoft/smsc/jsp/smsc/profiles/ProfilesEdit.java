@@ -58,6 +58,7 @@ public class ProfilesEdit extends ProfilesBean {
                 if (SupportExtProfile.enabled) {
                   services = p.getServices();
                   sponsored = p.getSponsored();
+                  nick = p.getNick();
                 }
             } catch (AdminException e) {
                 logger.error("Couldn't lookup profile \"" + mask + '"', e);
@@ -93,7 +94,7 @@ public class ProfilesEdit extends ProfilesBean {
 
         try {
             final Mask address = new Mask(mask);
-            final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);
+            final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored, nick);
             switch (smsc.profileUpdate(address, profile)) {
                 case 1: //pusUpdated
                     journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);

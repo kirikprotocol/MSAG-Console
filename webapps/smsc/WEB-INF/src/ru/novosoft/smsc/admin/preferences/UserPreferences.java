@@ -6,7 +6,7 @@ package ru.novosoft.smsc.admin.preferences;
  * Time: 19:06:21
  */
 
-//todo Надо бы сделать контейнер для topmonPrefs, perfmonPrefs и других будущих хэшмапных префов, чтобы код не воротить каждый раз
+//todo пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ topmonPrefs, perfmonPrefs пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -29,6 +29,9 @@ public class UserPreferences {
     private int profilesPageSize = 20;
     private String profilesSortOrder = null;
     private String profilesFilter = null;
+
+    private int blackNickPageSize = 5;
+    private int blackNickMaxSize = 1000;
 
     private int aliasesPageSize = 20;
     private int maxAliasesTotalSize = 1000;
@@ -170,6 +173,14 @@ public class UserPreferences {
 
     public void setProfilesFilter(String profilesFilter) {
         this.profilesFilter = profilesFilter;
+    }
+
+    public int getBlackNickPageSize() {
+      return blackNickPageSize;
+    }
+
+    public int getBlackNickMaxSize() {
+      return blackNickMaxSize;
     }
 
     public int getAliasesPageSize() {

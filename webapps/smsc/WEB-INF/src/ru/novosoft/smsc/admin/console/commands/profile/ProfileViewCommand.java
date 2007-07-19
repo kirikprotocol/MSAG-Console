@@ -80,7 +80,9 @@ public class ProfileViewCommand extends CommandClass {
         if (SupportExtProfile.enabled)
             result += " services: 0x" + Long.toHexString(profile.getServices())  + "(" + Long.toBinaryString(profile.getServices()) + ")"; 
         if (SupportExtProfile.enabled)
-            result += " sponsored: " + profile.getSponsored(); 
+            result += " sponsored: " + profile.getSponsored();
+        if (SupportExtProfile.enabled)
+            result += " nick: " + profile.getNick();
         return result;
     }
 

@@ -37,6 +37,7 @@ public class ProfileDataFile {
 
         try {
             profilerStorePath = config.getString(PARAM_NAME_FILE_NAME);
+//            profilerStorePath = "/home/artem/Work/mnt/shulga/build/smsc/distr/services/SMSC/store/profiles.bin";
             if (profilerStorePath == null || profilerStorePath.length() <= 0)
                 throw new AdminException("store path is empty");
         } catch (Exception e) {
@@ -84,6 +85,7 @@ public class ProfileDataFile {
             int version = (int) Message.readUInt32(fis);
             int msgSize1 = 129 + 4 + 1; // 1+8+1+1+21+4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4+4+1
             if (version == 0x00010000) msgSize1 = 117;
+            if (version >= 0x00010100) msgSize1 = 129 + 4+ 1 + 10;
 
             int currentPos = 0;
 
@@ -121,6 +123,7 @@ public class ProfileDataFile {
                 int outputAccessMask = 1;
                 int services = 0;
                 short sponsored = 0;
+                String nick = null;
                 if (version > 0x00010000) {
                     groupId = (int) Message.readUInt32(bis);
                     inputAccessMask = (int) Message.readUInt32(bis);
@@ -129,6 +132,11 @@ public class ProfileDataFile {
                         services = (int) Message.readUInt32(bis);
                         sponsored = (short) Message.readUInt8(bis);
                     }
+                }
+                if (version >= 0x00010100) {
+                  if (SupportExtProfile.enabled) {
+                    nick = getCleanString(Message.readString(bis, 10));
+                  }
                 }
 
                 if (used == 1 && isAddProfile(mask, queryFilter, show)) {
@@ -146,7 +154,7 @@ public class ProfileDataFile {
 
                     Profile profile = setProfile(mask, codepage, reportoptions,
                             locale, hide, hideModifiable, divert, divertResult,
-                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored);
+                            divertModifiable, udhconcat, translit, groupId, inputAccessMask, outputAccessMask, services, sponsored, nick);
 
                     if (currentPos >= query_to_run.getStartPosition()) {
                       results.add(new ProfileDataItem(profile));
@@ -158,6 +166,7 @@ public class ProfileDataFile {
                 currentPos++;
             }
         } catch (EOFException e) {
+          System.out.println("eof!");
         } catch (Exception e) {
             logger.error("Unexpected exception occured reading operative store file", e);
         } finally {
@@ -260,7 +269,7 @@ public class ProfileDataFile {
                                final short udhconcat, final short translit,
                                final int groupId,
                                final int inputAccessMask, final int outputAccessMask,
-                               final int services, final short sponsored) throws AdminException {
+                               final int services, final short sponsored, final String nick) throws AdminException {
         return new Profile(mask,
                 Profile.getCodepageString((byte) ((byte) codepage & 0x7F)),
                 String.valueOf((codepage & 0x80) != 0),
@@ -276,7 +285,7 @@ public class ProfileDataFile {
                 groupId,
                 inputAccessMask,
                 outputAccessMask,
-                services, sponsored);
+                services, sponsored, nick);
     }
 
 

@@ -48,6 +48,7 @@ public abstract class ProfileGenCommand extends CommandClass {
     protected int outputAccessBitOn = 0;
     protected int services = 0;
     protected int sponsored = 0;
+    protected String nick;
 
     protected boolean isAliasOptions = false;
     protected boolean isDivertOptions = false;
@@ -240,5 +241,9 @@ public abstract class ProfileGenCommand extends CommandClass {
     public void setSponsored(int sponsored) {
       this.sponsored = sponsored;
       this.isSponsored = true;
+    }
+
+    public void setNick(String nick) {
+      this.nick = nick;
     }
 }

@@ -131,7 +131,7 @@
     </select></div></td>
 </tr>
 
-<%//todo сделать штуку для ввода масок и валидейшн%>
+<%//todo пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ%>
 <tr class=row1>
     <th><%=getLocString("profiles.inputAccessMask")%></th>
     <td><input class=txt name="inputAccessMask" value="<%=bean.getInputAccessMask()%>" validation="hex"
@@ -162,6 +162,10 @@
 <tr class=row1>
     <th><%=getLocString("profiles.sponsored")%></th>
     <td><input class=txt name="sponsored" value="<%=bean.getSponsored()%>" validation="hex" onkeyup="resetValidation(this)"></td>
+</tr>
+<tr class=row0>
+    <th><%=getLocString("profiles.nick")%></th>
+    <td><input class=txt name="nick" value="<%=bean.getNick() == null ? "" : bean.getNick()%>"></td>
 </tr>
           <% } %>
 </table>

@@ -17,7 +17,7 @@ public class ProfileEx extends Profile {
     public ProfileEx(Mask mask, List profileProperties) throws AdminException {
         super(mask, profileProperties);
         int i = 14;
-        if (SupportExtProfile.enabled) i+=2;
+        if (SupportExtProfile.enabled) i+=3;
         setMatchType((String) profileProperties.get(i++));
         if (matchType != MATCH_DEFAULT)
             setMatchAddress(new Mask((String) profileProperties.get(i)));

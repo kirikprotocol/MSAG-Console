@@ -94,9 +94,9 @@ public class SMSCenters {
   }
 
   public static void main(String args[]) {
-    System.out.println("1");
+    System.out.println();
     System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79100001111"));
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79103879673"));
-    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79039037894"));
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79106382117"));
+    System.out.println(SMSCenters.getSMSCenterNumberByAbonent("+79106382119"));
   }
 }

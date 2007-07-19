@@ -1095,6 +1095,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SERVICESMASK:
 		case OPT_SERVICESBIT:
 		case OPT_SPONSORED:
+		case OPT_NICK:
 		{
 			break;
 		}
@@ -1124,6 +1125,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SERVICESMASK:
 		case OPT_SERVICESBIT:
 		case OPT_SPONSORED:
+		case OPT_NICK:
 		{
 			break;
 		}
@@ -1139,6 +1141,35 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_SPONSORED);
 			cmd.setSponsored(getint("sponsored"));
+			break;
+		}
+		case EOF:
+		case TGT_GROUP:
+		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
+		case OPT_INPUTACCESSMASK:
+		case OPT_INPUTACCESSBIT:
+		case OPT_OUTPUTACCESSMASK:
+		case OPT_OUTPUTACCESSBIT:
+		case OPT_SERVICESMASK:
+		case OPT_SERVICESBIT:
+		case OPT_NICK:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NICK:
+		{
+			match(OPT_NICK);
+			cmd.setNick(getnameid("nick"));
 			break;
 		}
 		case EOF:
@@ -2321,6 +2352,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
 		case OPT_SPONSORED:
+		case OPT_NICK:
 		{
 			break;
 		}
@@ -2350,6 +2382,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
 		case OPT_SPONSORED:
+		case OPT_NICK:
 		{
 			break;
 		}
@@ -2378,6 +2411,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
 		case OPT_SPONSORED:
+		case OPT_NICK:
 		{
 			break;
 		}
@@ -2405,6 +2439,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_OUTPUTACCESSMASK:
 		case OPT_OUTPUTACCESSBIT:
 		case OPT_SPONSORED:
+		case OPT_NICK:
 		{
 			break;
 		}
@@ -2420,6 +2455,33 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(OPT_SPONSORED);
 			cmd.setSponsored(getint("sponsored"));
+			break;
+		}
+		case EOF:
+		case TGT_GROUP:
+		case OPT_DIVERT:
+		case OPT_UDHCONCAT:
+		case OPT_TRANSLIT:
+		case OPT_INPUTACCESSMASK:
+		case OPT_INPUTACCESSBIT:
+		case OPT_OUTPUTACCESSMASK:
+		case OPT_OUTPUTACCESSBIT:
+		case OPT_NICK:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NICK:
+		{
+			match(OPT_NICK);
+			cmd.setNick(getnameid("nick"));
 			break;
 		}
 		case EOF:
@@ -4790,6 +4852,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SERVICESMASK:
 			case OPT_SERVICESBIT:
 			case OPT_SPONSORED:
+			case OPT_NICK:
 			{
 				break;
 			}
@@ -4825,6 +4888,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SERVICESMASK:
 			case OPT_SERVICESBIT:
 			case OPT_SPONSORED:
+			case OPT_NICK:
 			{
 				break;
 			}
@@ -4904,6 +4968,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SERVICESMASK:
 			case OPT_SERVICESBIT:
 			case OPT_SPONSORED:
+			case OPT_NICK:
 			{
 				break;
 			}
@@ -5892,27 +5957,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop303:
+			_loop305:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop303;
+					break _loop305;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop305:
+			_loop307:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop305;
+					break _loop307;
 				}
 				
 			} while (true);
@@ -6088,6 +6153,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"servicesmask\"",
 		"\"servicesbit\"",
 		"\"sponsored\"",
+		"\"nick\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

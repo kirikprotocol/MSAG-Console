@@ -144,6 +144,7 @@ tokens {
   OPT_SERVICESMASK = "servicesmask";
   OPT_SERVICESBIT  = "servicesbit";
   OPT_SPONSORED = "sponsored";
+  OPT_NICK = "nick";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

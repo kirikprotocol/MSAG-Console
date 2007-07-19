@@ -626,6 +626,7 @@ addprofile returns [ProfileAddCommand cmd] {
   (OPT_ENCODE profile_encode_opt[cmd] )?
   (TGT_ALIAS  profile_alias_opt[cmd]  )?
   (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })?
+  (OPT_NICK {cmd.setNick(getnameid("nick"));})?
   (OPT_DIVERT  { cmd.setDivertOptions(true); }
 	      ({ cmd.setDivert(getnameid("Divert value")); })
 	         profile_divert_opt[cmd] 
@@ -656,6 +657,7 @@ altprofile returns [ProfileAlterCommand cmd] {
 	  (OPT_ENCODE profile_encode_opt[cmd] )?
 	  (TGT_ALIAS  profile_alias_opt[cmd]  )?
 	  (OPT_SPONSORED {cmd.setSponsored(getint("sponsored")); })?
+	  (OPT_NICK {cmd.setNick(getnameid("nick"));})?
 	  (OPT_DIVERT { cmd.setDivertOptions(true); }
 	    ((OPT_SET   { cmd.setDivert(getnameid("Divert value")); })|
 	     (OPT_CLEAR { cmd.setDivert(""); }))?

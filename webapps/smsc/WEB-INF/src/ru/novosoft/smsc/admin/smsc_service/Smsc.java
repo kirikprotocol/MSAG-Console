@@ -8,10 +8,7 @@ import ru.novosoft.smsc.admin.acl.AclInfo;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionListManager;
-import ru.novosoft.smsc.admin.profiler.Profile;
-import ru.novosoft.smsc.admin.profiler.ProfileDataFile;
-import ru.novosoft.smsc.admin.profiler.ProfileEx;
-import ru.novosoft.smsc.admin.profiler.SupportExtProfile;
+import ru.novosoft.smsc.admin.profiler.*;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.SME;
@@ -22,6 +19,7 @@ import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.blacknick.BlackNickQuery;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.WebAppFolders;
@@ -105,6 +103,7 @@ public class Smsc extends Service {
     private AliasSet aliases = null;
 
     private ProfileDataFile profileDataFile = null;
+    private BlackNickDataFile blackNickDataFile = null;
 
     private long serviceRefreshTimeStamp = 0;
     private static final char LOGGER_DELIMITER = ',';
@@ -121,6 +120,12 @@ public class Smsc extends Service {
             aliases.init(getSmscConfig(),this);
             profileDataFile = new ProfileDataFile();
             profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
+
+            if (SupportExtProfile.enabled) {
+              blackNickDataFile = new BlackNickDataFile();
+              blackNickDataFile.init(getSmscConfig());
+            }
+
             initDefaultProfileProps();
         } catch (FactoryConfigurationError error) {
             logger.error("Couldn't configure xml parser factory", error);
@@ -276,6 +281,7 @@ public class Smsc extends Service {
         profileArg.add(Long.toString(newProfile.getOutputAccessMask()));
         if (SupportExtProfile.enabled) profileArg.add(Long.toString(newProfile.getServices()));
         if (SupportExtProfile.enabled) profileArg.add(Short.toString(newProfile.getSponsored()));
+        if (SupportExtProfile.enabled) profileArg.add(newProfile.getNick());
 
         args.put("profile", profileArg);
         return ((Long) call(SMSC_COMPONENT_ID, PROFILE_UPDATE_METHOD_ID, Type.Types[Type.IntType], args)).intValue();
@@ -293,6 +299,22 @@ public class Smsc extends Service {
 
     public synchronized void applyProfiles() {
         // nothing to do
+    }
+
+    public synchronized QueryResultSet blackNicksQueryFromFile(final BlackNickQuery query) throws AdminException {
+      return blackNickDataFile.query(query);
+    }
+
+    public synchronized void addBlackNick(final BlackNick blackNick) throws AdminException {
+      blackNickDataFile.addBlackNick(blackNick);
+    }
+
+    public synchronized void removeBlackNicks(Collection blackNicks) throws AdminException {
+      blackNickDataFile.removeBlackNicks(blackNicks);
+    }
+
+    public synchronized void removeBlackNick(final BlackNick blackNick) throws AdminException {
+      blackNickDataFile.removeBlackNick(blackNick);
     }
 
     public synchronized void processCancelMessages(final Collection messageIds) throws AdminException {

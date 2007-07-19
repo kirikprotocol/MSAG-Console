@@ -126,30 +126,31 @@ OPT_LIMITVALUE="limitvalue"=126
 OPT_SERVICESMASK="servicesmask"=127
 OPT_SERVICESBIT="servicesbit"=128
 OPT_SPONSORED="sponsored"=129
-VAL_FORCE="force"=130
-VAL_SUPPRESS="suppress"=131
-VAL_PASS="pass"=132
-VAL_FULL="full"=133
-VAL_FINAL="final"=134
-VAL_NONE="none"=135
-VAL_DEF="default"=136
-VAL_UCS2="ucs2"=137
-VAL_LATIN1="latin1"=138
-VAL_UCS2LATIN1="ucs2-latin1"=139
-VAL_STORE="store"=140
-VAL_FORWARD="forward"=141
-VAL_DATAGRAM="datagram"=142
-VAL_TX="TX"=143
-VAL_RX="RX"=144
-VAL_TRX="TRX"=145
-VAL_SMPP="SMPP"=146
-VAL_SS7="SS7"=147
-WS=148
-STR("more input")=149
-QSTR("quoted string")=150
-ESTR("empty string")=151
-STR_WS=152
-STR_CHR=153
-COMMA("comma character ','")=154
-ESC=155
-DIGIT=156
+OPT_NICK="nick"=130
+VAL_FORCE="force"=131
+VAL_SUPPRESS="suppress"=132
+VAL_PASS="pass"=133
+VAL_FULL="full"=134
+VAL_FINAL="final"=135
+VAL_NONE="none"=136
+VAL_DEF="default"=137
+VAL_UCS2="ucs2"=138
+VAL_LATIN1="latin1"=139
+VAL_UCS2LATIN1="ucs2-latin1"=140
+VAL_STORE="store"=141
+VAL_FORWARD="forward"=142
+VAL_DATAGRAM="datagram"=143
+VAL_TX="TX"=144
+VAL_RX="RX"=145
+VAL_TRX="TRX"=146
+VAL_SMPP="SMPP"=147
+VAL_SS7="SS7"=148
+WS=149
+STR("more input")=150
+QSTR("quoted string")=151
+ESTR("empty string")=152
+STR_WS=153
+STR_CHR=154
+COMMA("comma character ','")=155
+ESC=156
+DIGIT=157

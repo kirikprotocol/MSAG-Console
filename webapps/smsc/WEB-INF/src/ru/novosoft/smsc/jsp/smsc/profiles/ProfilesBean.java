@@ -43,6 +43,7 @@ public class ProfilesBean extends SmscBean {
     protected long outputAccessMask = 1;
     protected long services = 0;
     protected short sponsored = 0;
+    protected String nick;
 
     protected String[] checkedServicesNames = null;
 
@@ -93,7 +94,7 @@ public class ProfilesBean extends SmscBean {
                 Set set = webconfig.getSectionChildParamsNames("profiler.extra");
                 for (Iterator i = set.iterator(); i.hasNext();) { String name = (String) i.next();
                     Object param = webconfig.getParameter(name);
-                    smsExtraServices.put(name.substring("profiler.extra.".length()), param);  // вырезали profiler.extra.
+                    smsExtraServices.put(name.substring("profiler.extra.".length()), param);  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ profiler.extra.
                 }
             }
         } catch (Throwable e) {
@@ -343,4 +344,12 @@ public class ProfilesBean extends SmscBean {
         this.sponsored = -1;
       }
     }
+
+  public String getNick() {
+    return nick;
+  }
+
+  public void setNick(String nick) {
+    this.nick = nick;
+  }
 }

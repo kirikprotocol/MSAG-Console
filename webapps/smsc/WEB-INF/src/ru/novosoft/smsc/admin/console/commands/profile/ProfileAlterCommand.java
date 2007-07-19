@@ -92,6 +92,8 @@ public class ProfileAlterCommand extends ProfileGenCommand {
         if (isServices) profile.setServices(services);
 //        if (isSponsored) profile.setSponsored((short)(profile.getSponsored() + sponsored > 255 ? 255 : profile.getSponsored() + sponsored));
         if (isSponsored) profile.setSponsored((short)(sponsored));
+        if (nick != null)
+          profile.setNick(nick);
 
         updateResult = ctx.getSmsc().profileUpdate(mask, profile);
         switch (updateResult) {
