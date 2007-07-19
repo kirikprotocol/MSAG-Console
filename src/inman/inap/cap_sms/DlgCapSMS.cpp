@@ -355,7 +355,11 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
             if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) 
                 && (_relation == SMS_SSF_Fsm::relControl)) {
                 _capState.s.smsReqEvent = 1;
+                std::string dump;
                 RequestReportSMSEventArg * rrse = static_cast<RequestReportSMSEventArg*>(op->getParam());
+                smsc_log_debug(logger, "%s: <-- %s: %s {%s}", _logId, nmScf, 
+                                CapSMSOp::code2Name(op->getOpcode()),
+                                rrse->SMSEvents().print(dump).c_str());
                 //arm/disarm EDPs
                 for (SMSEventDPs::const_iterator cit = rrse->SMSEvents().begin();
                                                 cit != rrse->SMSEvents().end(); ++cit) {
