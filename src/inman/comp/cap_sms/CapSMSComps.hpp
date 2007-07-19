@@ -116,6 +116,17 @@ public:
         }
         return false;
     }
+
+    std::string & print(std::string & dump) const
+    {
+        unsigned i = 0;
+        for (SMSEventDPs::const_iterator cit = begin(); cit != end(); ++cit, ++i) {
+            dump += !i ? "{" : ", {"; 
+            dump += _nmEventTypeSMS(cit->first); dump += ", ";
+            dump += _nmMonitorMode(cit->second); dump += '}';
+        }
+        return dump;
+    }
 };
 
 // Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Tidpsms
@@ -174,7 +185,7 @@ public:
     ~EventReportSMSArg() {}
 
     void encode(std::vector<unsigned char>& buf) throw(CustomException);
-    const std::string & print(std::string & dump);
+    std::string & print(std::string & dump) const;
 
 private:
     EventTypeSMS_e	eventType;

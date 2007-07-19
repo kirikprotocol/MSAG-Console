@@ -16,7 +16,7 @@ EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
     compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.EventReportSMSArg");
 }
 
-const std::string & EventReportSMSArg::print(std::string & dump)
+std::string & EventReportSMSArg::print(std::string & dump) const
 {
     dump += "{";
     dump += _nmEventTypeSMS(eventType);
