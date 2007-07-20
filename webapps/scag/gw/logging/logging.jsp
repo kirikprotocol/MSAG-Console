@@ -24,43 +24,43 @@
 </script>
 
 <c:set var="tree" value="${bean.rootCategory}"/>
-    <table cellspacing=0 cellpadding=0 id="sectionValue_">
-        <col width='56px'/>
-        <tr>
-            <td>
-                <c:if test="${tree.root}">
-                    <sm-l:select name="${tree.name}" fullName="${tree.name}" priority="${tree.priority}" />
+<table cellspacing=0 cellpadding=0 id="sectionValue_">
+    <col width='56px'/>
+    <tr>
+        <td>
+            <c:if test="${tree.root}">
+                <sm-l:select name="${tree.name}" fullName="${tree.name}" priority="${tree.priority}" />
+            </c:if>
+            <c:if test="${tree.hasChilds}">
+                <c:set var="ch" value="${tree.childs}"/>
+                <c:forEach items="${ch}" var="catItem">
+                <c:if test="${!catItem.value.hasChilds}">
+                    <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
                 </c:if>
-                <c:if test="${tree.hasChilds}">
-                    <c:set var="ch" value="${tree.childs}"/>
-                        <c:forEach items="${ch}" var="catItem">
-                        <c:if test="${!catItem.value.hasChilds}">
-                            <sm-l:select name="${catItem.value.name}" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
-                        </c:if>
-                        </c:forEach>
-                        <c:forEach items="${ch}" var="catItem">
-                        <c:if test="${catItem.value.hasChilds}">
-                                <table cellspacing=0 border="0">
-                                    <tr>
-                                        <td width="10%">
-                                            <div class=collapsing_tree_closed_logging id="sectionHeader_${catItem.value.fullName}"
-                                                 onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
-                                                 ${catItem.value.name}</td>
-                                            </div>
-                                        <td>
-                                            <sm-l:select name="_empty_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
-                                        </td>
-                                    </tr>
-                                </table>
-                            </div>
-                            <sm-l:section fullName="${catItem.value.fullName}"/>
-                        </c:if>
-                    </c:forEach>
-                </c:if>
-            </td>
-        </tr>
-    </table>
-     <br>
+                </c:forEach>
+                <c:forEach items="${ch}" var="catItem">
+                    <c:if test="${catItem.value.hasChilds}">
+                        <table cellspacing=0 border="0">
+                            <tr>
+                                <td width="10%">
+                                    <div class=collapsing_tree_closed_logging id="sectionHeader_${catItem.value.fullName}"
+                                         onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
+                                         ${catItem.value.name}
+                                    </div>
+                                </td>
+                                <td>
+                                    <sm-l:select name="_empty_name_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
+                                </td>
+                            </tr>
+                        </table>
+                    <sm-l:section fullName="${catItem.value.fullName}"/>
+                    </c:if>
+                </c:forEach>
+            </c:if>
+        </td>
+    </tr>
+</table>
+<br>
 <c:choose>
     <c:when test="${bean.running}">
         <sm-pm:menu>

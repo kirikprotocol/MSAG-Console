@@ -6,7 +6,7 @@
 <table class="properties_list" cellspacing="0" border="0">
     <col width="150px">
     <tr class=row${rowNum%2}>
-        <c:if test="${name!='_empty_'}">
+        <c:if test="${name!='_empty_name_'}">
             <th nowrap>${name}</th>
         </c:if>
         <td>
