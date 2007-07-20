@@ -11,16 +11,19 @@
             <c:forEach items="${catItem.childs}" var="catItem">
             <c:choose>
                 <c:when test="${catItem.value.hasChilds}">
-                    <div class=collapsing_tree_closed id="sectionHeader_${catItem.value.fullName}" onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
-                        <table cellspacing=0>
-                            <tr>
-                                <td width=100%>${catItem.value.name}</td>
-                                <td>
-
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
+                    <table cellspacing=0 border="0">
+                        <tr>
+                            <td width="10%">
+                                <div class=collapsing_tree_closed_logging id="sectionHeader_${catItem.value.fullName}"
+                                     onclick="collasping_tree_showhide_section('${catItem.value.fullName}')">
+                                                 ${catItem.value.name}
+                                </div>
+                            </td>
+                            <td>
+                                <sm-l:select name="_empty_name_" fullName="${catItem.value.fullName}" priority="${catItem.value.priority}"/>
+                            </td>
+                        </tr>
+                    </table>
                     <sm-l:section fullName="${catItem.value.fullName}"/>
                 </c:when>
                 <c:otherwise>
