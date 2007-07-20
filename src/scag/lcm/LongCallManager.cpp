@@ -224,5 +224,21 @@ int LongCallTask::Execute()
     return 0;
 }
 
+void LongCallContext::setActionContext(ActionContext* context) 
+{
+    if (actionContext) delete actionContext;
+    actionContext = context;
+}
+ActionContext* LongCallContext::getActionContext() 
+{
+    return actionContext;
+}
+LongCallContext::~LongCallContext()
+{
+    if(params) delete params;
+    if(actionContext) delete actionContext;
+}
+
+
 }}
 

@@ -5,13 +5,20 @@
 
 #include "logger/Logger.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
+//#include "scag/re/actions/ActionContext.h"
+
 #include <stack>
+
+namespace scag { namespace re { namespace actions { 
+    class ActionContext;
+}}}
 
 namespace scag { namespace lcm {
 
 using smsc::logger::Logger;
 using namespace scag::config;
 using smsc::core::synchronization;
+using scag::re::actions::ActionContext;
 
 enum LongCallCommandId{
     PERS_GET = 1,
@@ -44,8 +51,11 @@ struct ActionStackValue
 class LongCallContext
 {
     LongCallParams *params;
+    ActionContext  *actionContext;
+    
 public:
-    LongCallContext(): initiator(NULL), stateMachineContext(NULL), next(NULL), params(NULL), continueExec(false) {};
+    LongCallContext(): initiator(NULL), stateMachineContext(NULL), 
+	next(NULL), params(NULL), actionContext(NULL), continueExec(false) {};
     
     uint32_t systemType, callCommandId;
     void *stateMachineContext;
@@ -61,17 +71,16 @@ public:
         if(params) delete params;
        params = p;
     }
-    
     void freeParams()
     {
         if(params) delete params;
         params = NULL;
     }
+
+    void setActionContext(ActionContext* context);
+    ActionContext* getActionContext();
     
-    ~LongCallContext()
-    {
-        if(params) delete params;
-    }
+    ~LongCallContext();
 };
 
 class LongCallInitiator

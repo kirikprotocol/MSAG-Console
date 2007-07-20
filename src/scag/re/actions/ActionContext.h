@@ -4,8 +4,8 @@
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
-#include "scag/bill/BillingManager.h"
 //#include "scag/sessions/Session.h"
+#include "scag/bill/BillingManager.h"
 #include "scag/re/CommandBrige.h"
 #include <stack>
 
@@ -84,27 +84,30 @@ namespace scag { namespace re { namespace actions
     {
     private:
 
-        RuleStatus&              status;
+        RuleStatus*             status;
 
         Hash<Property>          variables;
-        Hash<Property>&         constants;
+        Hash<Property>*         constants;
 
-        Session&                session;
+        Session*                session;
         CommandAccessor*        command;
 
-        CommandProperty&        commandProperty;
+        CommandProperty*        commandProperty;
         auto_ptr<TariffRec>     m_TariffRec;
     public:
 
         bool isTrueCondition;
 
-        ActionContext(Hash<Property>& _constants,
-                      Session& _session, CommandAccessor* _command, CommandProperty& _commandProperty, RuleStatus& rs)
+        ActionContext(Hash<Property>* _constants, Session* _session, 
+		      CommandAccessor* _command, CommandProperty* _commandProperty, RuleStatus* rs)
             : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty), status(rs)
         {
         };
-
         ~ActionContext() {};
+
+        void resetContext(Hash<Property>* _constants, Session* _session, 
+			  CommandAccessor* _command, CommandProperty* _commandProperty,
+			  RuleStatus* rs);
 
         SCAGCommand& getSCAGCommand()
         {
@@ -113,7 +116,7 @@ namespace scag { namespace re { namespace actions
         }
 
         inline RuleStatus& getRuleStatus() {
-            return status;
+            return *status;
         }
 
         void clearLongCallContext()
@@ -131,26 +134,26 @@ namespace scag { namespace re { namespace actions
             return command;
         };
 
-        Session& getSession() { return session; };        
+        Session& getSession() { return *session; };        
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
         void abortSession();
         void AddPendingOperation(uint8_t type, time_t pendingTime, unsigned int billID);
-        Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
+        Operation * GetCurrentOperation() {return session->GetCurrentOperation();}
 
-        CommandProperty& getCommandProperty() {return commandProperty;}
+        CommandProperty& getCommandProperty() { return *commandProperty; }
 
         void getBillingInfoStruct(BillingInfoStruct& billingInfoStruct)
         {
-            billingInfoStruct.AbonentNumber = commandProperty.abonentAddr.toString();
-            billingInfoStruct.serviceId = commandProperty.serviceId;
-            billingInfoStruct.protocol = commandProperty.protocol;
-            billingInfoStruct.providerId = commandProperty.providerId;
-            billingInfoStruct.operatorId = commandProperty.operatorId;
+            billingInfoStruct.AbonentNumber = commandProperty->abonentAddr.toString();
+            billingInfoStruct.serviceId = commandProperty->serviceId;
+            billingInfoStruct.protocol = commandProperty->protocol;
+            billingInfoStruct.providerId = commandProperty->providerId;
+            billingInfoStruct.operatorId = commandProperty->operatorId;
 
-            billingInfoStruct.SessionBornMicrotime = session.getPrimaryKey().BornMicrotime;
-            billingInfoStruct.msgRef = commandProperty.msgRef;
+            billingInfoStruct.SessionBornMicrotime = session->getPrimaryKey().BornMicrotime;
+            billingInfoStruct.msgRef = commandProperty->msgRef;
         }
 
         TariffRec * getTariffRec(uint32_t category, uint32_t mediaType);

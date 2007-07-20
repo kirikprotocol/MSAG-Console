@@ -42,7 +42,7 @@ void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime, unsign
     if (billID > 0) 
         pendingOperation.billID = billID;
     
-    session.addPendingOperation(pendingOperation);
+    session->addPendingOperation(pendingOperation);
 }
 
 
@@ -84,7 +84,7 @@ Property* ActionContext::getProperty(const std::string& var)
         break;
 
     case ftConst:
-        return constants.GetPtr(name);
+        return constants->GetPtr(name);
         break;
 
     case ftField:
@@ -92,7 +92,7 @@ Property* ActionContext::getProperty(const std::string& var)
         if(!command) throw SCAGException("ActionContext.getProperty: Command properties is not accessible");
         return command->getProperty(name);
     }
-    case ftSession: return session.getProperty(name);
+    case ftSession: return session->getProperty(name);
 
     default:
         return 0;
@@ -102,7 +102,7 @@ Property* ActionContext::getProperty(const std::string& var)
 
 void ActionContext::abortSession()
 {
-    session.abort();
+    session->abort();
 }
 
 
@@ -111,10 +111,10 @@ TariffRec * ActionContext::getTariffRec(uint32_t category, uint32_t medyaType)
     if (!m_TariffRec.get()) 
     {
         Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-        TariffRec * trec = istr.GetTariff(commandProperty.operatorId, category, medyaType);
+        TariffRec * trec = istr.GetTariff(commandProperty->operatorId, category, medyaType);
 
         if (!trec) 
-            throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%d, mtype=%d ", commandProperty.operatorId, category, medyaType);
+            throw SCAGException("BillEvent: Cannot find tariffRec for OID=%d, cat=%d, mtype=%d ", commandProperty->operatorId, category, medyaType);
 
         m_TariffRec.reset(trec);
     }
@@ -143,13 +143,21 @@ bool ActionContext::checkIfCanSetPending(int operationType, int eventHandlerType
 
 int ActionContext::getCurrentOperationBillID()
 {
-    Operation * operation = session.GetCurrentOperation();
+    Operation * operation = session->GetCurrentOperation();
     if (!operation) throw SCAGException("Operation: cannot find billing current operation");
 
     if (!operation->hasBill()) throw SCAGException("Operation: cannot find billing transaction");
 
     return operation->getBillId();
 }
+
+void ActionContext::resetContext(Hash<Property>* _constants, Session* _session, 
+     CommandAccessor* _command, CommandProperty* _commandProperty, RuleStatus* rs)
+{
+    constants = _constants; session = _session; 
+    command = _command; commandProperty = _commandProperty; 
+    status = rs; isTrueCondition = false; // TODO: ???
+};
 
 
 }}}

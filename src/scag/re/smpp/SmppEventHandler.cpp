@@ -225,23 +225,35 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
         return;
     }
 
-    ActionContext context(RuleEngine::Instance().getConstants(), session, &_command, commandProperty, rs);
-
-    try
-    {
-        RunActions(context);
-    } catch (SCAGException& e)
-    {
+    ActionContext* actionContext = 0;
+    if(session.getLongCallContext().continueExec) {
+	actionContext = session.getLongCallContext().getActionContext();
+	if (actionContext) {
+	    actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
+					&session, &_command, &commandProperty, &rs);
+	} else {
+	    smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
+    	    rs.result = smsc::system::Status::SMDELIFERYFAILURE;
+    	    rs.status = STATUS_FAILED;
+    	    return;
+	}
+    } else {
+	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
+					  &session, &_command, &commandProperty, &rs);
+	session.getLongCallContext().setActionContext(actionContext);
+    }
+    
+    try {
+        RunActions(*actionContext);
+    } catch (SCAGException& e) {
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
-    } catch (std::exception& e)
-    {
+    } catch (std::exception& e) {
         smsc_log_error(logger, "EventHandler: error in actions processing. Details: %s", e.what());
         rs.status = STATUS_FAILED;
     }
 
-    if (smppcommand->status > 0)
-    {
+    if (smppcommand->status > 0) {
         rs.result = smppcommand->status;
         rs.status = STATUS_FAILED;
     }

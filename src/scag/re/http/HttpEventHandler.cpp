@@ -103,14 +103,11 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     smsc_log_debug(logger, "Process HttpEventHandler...");
 
     HttpCommand& hc = (HttpCommand&)command;
-
     Infrastructure& istr = BillingManager::Instance().getInfrastructure();
-
     const Address& abonentAddr = session.getSessionKey().abonentAddr;
 
     uint32_t operatorId = istr.GetOperatorID(abonentAddr);
-    if (operatorId == 0)
-    {
+    if (operatorId == 0) {
         RegisterAlarmEvent(1, abonentAddr.toString(), PROTOCOL_HTTP, hc.getServiceId(),
                             hc.getProviderId(), 0, 0, session.getPrimaryKey(),
                             hc.getCommandId() == HTTP_RESPONSE ? 'O' : 'I');
@@ -127,21 +124,35 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
     smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", hc.getProviderId());
 
     CommandProperty cp(&command, 0, abonentAddr, hc.getProviderId(), operatorId, hc.getServiceId(), -1, CO_HTTP_DELIVERY);
-
     HttpCommandAdapter _command(hc);
-    ActionContext context(RuleEngine::Instance().getConstants(), session, &_command, cp, rs);
 
-    if(!session.getLongCallContext().continueExec)
-        RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
+    ActionContext* actionContext = 0;
+    if(session.getLongCallContext().continueExec) {
+	actionContext = session.getLongCallContext().getActionContext();
+	if (actionContext) {
+	    actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
+					&session, &_command, &cp, &rs);
+	} else {
+	    smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
+    	    rs.result = -1;
+    	    rs.status = STATUS_FAILED;
+    	    return;
+	}
+    } else {
+	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
+					  &session, &_command, &cp, &rs);
+	session.getLongCallContext().setActionContext(actionContext);
+	RegisterTrafficEvent(cp, session.getPrimaryKey(), "");
+    }
 
     switch(hc.getCommandId())
     {
         case HTTP_REQUEST:
-            return processRequest((HttpRequest&)hc, context);
+            return processRequest((HttpRequest&)hc, *actionContext);
         case HTTP_RESPONSE:
-            return processResponse((HttpResponse&)hc, context);
+            return processResponse((HttpResponse&)hc, *actionContext);
         case HTTP_DELIVERY:
-            return processDelivery((HttpResponse&)hc, context);
+            return processDelivery((HttpResponse&)hc, *actionContext);
         default:
             smsc_log_debug(logger, "HttpEventHandler: unknown command");
     }
