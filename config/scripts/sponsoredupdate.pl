@@ -8,12 +8,15 @@ use constant DATABASEHOST  =>'dbhost';
 use constant DATABASEUSER  =>'user';
 use constant DATABASEPASS  =>'password';
 
+use constant SELECTQUERY   =>'SELECT abonent,cnt FROM sponsored';
+use constant UPDATEQUERY   =>'UPDATE sponsored SET cur_cnt=cnt, today_cnt=cnt';
+
 
 my $dbh=DBI->connect("DBI:mysql:database=smsx;host=".DATABASEHOST.';',DATABASEUSER,DATABASEPASS,undef);
 
 die "Connect failed" unless $dbh;
 
-my $sth=$dbh->prepare('select abonent,cnt from sponsored');
+my $sth=$dbh->prepare(SELECTQUERY);
 
 die "Prepare failed:".$dbh->errstr unless $sth;
 
@@ -66,7 +69,7 @@ $sth->finish;
 printf "Sponsored updated $totalOk/$total\n";
 };
 
-$dbh->do('UPDATE sponsored SET cur_cnt=cnt, today_cnt=cnt');
+$dbh->do(UPDATEQUERY);
 
 $dbh->disconnect;
 
