@@ -128,6 +128,9 @@ IntHash<AccessType> SmppCommandAdapter::InitDataSmAccess()
 
     hs.Insert(SMS_SVC_TYPE, atReadWrite);
 
+    hs.Insert(Tag::SMPP_SOURCE_PORT, atReadWrite);
+    hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
+
     return hs;
 }
 
@@ -137,7 +140,6 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
 
     hs.Insert(OA,atReadWrite);
     hs.Insert(DA,atReadWrite);
-
 
     hs.Insert(DC_BINARY,atReadWrite);
     hs.Insert(DC_TEXT, atReadWrite);
@@ -165,6 +167,9 @@ IntHash<AccessType> SmppCommandAdapter::InitSubmitAccess()
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
 
     hs.Insert(SMS_SVC_TYPE, atReadWrite);
+
+    hs.Insert(Tag::SMPP_SOURCE_PORT, atReadWrite);
+    hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
 
     return hs;
 }
@@ -202,6 +207,9 @@ IntHash<AccessType> SmppCommandAdapter::InitDeliverAccess()
     hs.Insert(Tag::SMPP_LANGUAGE_INDICATOR, atReadWrite);
 
     hs.Insert(SMS_SVC_TYPE, atReadWrite);
+
+    hs.Insert(Tag::SMPP_SOURCE_PORT, atReadWrite);
+    hs.Insert(Tag::SMPP_DESTINATION_PORT, atReadWrite);
     
     return hs;
 }
@@ -681,15 +689,15 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
     else if (FieldId == DA) 
         AssignAddress(data.destinationAddress, property.getStr().c_str());
     else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
-    {
         Set_DC_BIT_Property(data,FieldId,property.getBool());
-    } 
     else 
         switch (FieldId)
         {
         case Tag::SMPP_SM_LENGTH:
         case Tag::SMPP_USER_RESPONSE_CODE:
         case Tag::SMPP_LANGUAGE_INDICATOR:
+        case Tag::SMPP_SOURCE_PORT:
+        case Tag::SMPP_DESTINATION_PORT:
             data.setIntProperty(FieldId,property.getInt());
             break;
         case SMS_SVC_TYPE:

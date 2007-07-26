@@ -227,20 +227,20 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
-	actionContext = session.getLongCallContext().getActionContext();
-	if (actionContext) {
-	    actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
-					&session, &_command, &commandProperty, &rs);
-	} else {
-	    smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
+    	actionContext = session.getLongCallContext().getActionContext();
+    	if (actionContext) {
+	        actionContext->resetContext(&(RuleEngine::Instance().getConstants()), 
+	                    				&session, &_command, &commandProperty, &rs);
+    	} else {
+	        smsc_log_error(logger, "EventHandler cannot get actionContext to continue");
     	    rs.result = smsc::system::Status::SMDELIFERYFAILURE;
     	    rs.status = STATUS_FAILED;
     	    return;
-	}
+    	}
     } else {
-	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
-					  &session, &_command, &commandProperty, &rs);
-	session.getLongCallContext().setActionContext(actionContext);
+    	actionContext = new ActionContext(&(RuleEngine::Instance().getConstants()), 
+                    					  &session, &_command, &commandProperty, &rs);
+    	session.getLongCallContext().setActionContext(actionContext);
     }
     
     try {
