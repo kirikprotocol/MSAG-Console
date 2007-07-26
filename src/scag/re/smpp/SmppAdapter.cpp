@@ -698,7 +698,7 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
         case Tag::SMPP_LANGUAGE_INDICATOR:
         case Tag::SMPP_SOURCE_PORT:
         case Tag::SMPP_DESTINATION_PORT:
-            data.setIntProperty(FieldId,property.getInt());
+            data.setIntProperty(FieldId, property.getInt());
             break;
         case SMS_SVC_TYPE:
             str = property.getStr();
@@ -1000,29 +1000,21 @@ AdapterProperty * SmppCommandAdapter::getMessageBodyProperty(SMS& data, std::str
 AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
-    char buff[20];
-    int num = 0;
 
     if ((FieldId >= ESM_MM_SMSC_DEFAULT)&&(FieldId <= ESM_NSF_BOTH)) 
-    {
         property = Get_ESM_BIT_Property(data,name,FieldId);
-    } else if ((FieldId >= RD_RECEIPT_OFF)&&(FieldId <= RD_I_NOTIFICATION)) 
-    {
+    else if ((FieldId >= RD_RECEIPT_OFF)&&(FieldId <= RD_I_NOTIFICATION)) 
         property = Get_RD_BIT_Property(data,name,FieldId);
-    } else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
-    {
+    else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
         property = Get_DC_BIT_Property(data,name,FieldId);
-    } else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
-    {
+    else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
         property = Get_USSD_BOOL_Property(data,name,FieldId);
-    } else if (FieldId == Tag::SMPP_MESSAGE_PAYLOAD) 
-    {
+    else if (FieldId == Tag::SMPP_MESSAGE_PAYLOAD) 
         property = new AdapterProperty(name,this,data.getState());
         //property->setPureInt(data.getState());
-    } else if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
-    {
+    else if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
         property = Get_Unknown_Property(data, name, FieldId);
-    } else
+    else
     switch (FieldId) 
     {
     case PACKET_DIRECTION:
@@ -1052,16 +1044,10 @@ AdapterProperty * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::str
     
     if (!property) 
     {
-        if (tagType == SMS_STR_TAG) 
-        {
-            if (!data.hasStrProperty(FieldId)) return 0;
-            property = new AdapterProperty(name,this,data.getStrProperty(FieldId).c_str());
-        } else if (tagType == SMS_INT_TAG) 
-        {
-            if (!data.hasIntProperty(FieldId)) return 0;
-            num = data.getIntProperty(FieldId);
-            property = new AdapterProperty(name,this,num);
-        }
+        if (tagType == SMS_STR_TAG)
+            property = new AdapterProperty(name, this, data.hasStrProperty(FieldId) ? data.getStrProperty(FieldId).c_str() : "");
+        else if (tagType == SMS_INT_TAG)
+            property = new AdapterProperty(name, this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
     }
           
     return property;
@@ -1079,17 +1065,11 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
 */
 
     if (FieldId == PACKET_DIRECTION) 
-    {
         property = new AdapterProperty(name,this,(int)data.dir);
-    }
     else if (data.dir == dsdSc2Srv) 
-    {
         property = getDeliverProperty(data.sms, name, FieldId);
-    }
     else if (data.dir == dsdSrv2Sc) 
-    {
         property = getSubmitProperty(data.sms, name, FieldId);
-    }
 
    /* 
     if ((FieldId >= OPTIONAL_CHARGING)&&(FieldId <= OPTIONAL_EXPECTED_MESSAGE_CONTENT_TYPE))
@@ -1119,9 +1099,6 @@ AdapterProperty * SmppCommandAdapter::getDataSmProperty(SmsCommand& data,const s
 AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& name,int FieldId)
 {
     AdapterProperty * property = 0;
-    char buff[100];
-    int num = 0;
-    std::string tempStr;
 
     if ((FieldId >= ESM_MM_SMSC_DEFAULT)&&(FieldId <= ESM_NSF_BOTH)) 
     {
@@ -1172,16 +1149,9 @@ AdapterProperty * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::st
     if (!property) 
     {
         if (tagType == SMS_STR_TAG) 
-        {
-            if (!data.hasStrProperty(FieldId)) return 0;
-            property = new AdapterProperty(name,this,data.getStrProperty(FieldId).c_str());
-        } else if (tagType == SMS_INT_TAG) 
-        {
-            if (!data.hasIntProperty(FieldId)) return 0;
-
-            num = data.getIntProperty(FieldId);
-            property = new AdapterProperty(name,this,num);
-        }
+            property = new AdapterProperty(name,this, data.hasStrProperty(FieldId) ? data.getStrProperty(FieldId).c_str() : "");
+        else if (tagType == SMS_INT_TAG) 
+            property = new AdapterProperty(name, this, data.hasIntProperty(FieldId) ? data.getIntProperty(FieldId) : 0);
     } 
           
     return property;
