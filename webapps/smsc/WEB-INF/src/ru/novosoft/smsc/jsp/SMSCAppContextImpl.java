@@ -25,6 +25,7 @@ import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContextImpl;
+import ru.novosoft.util.menu.TopMenu;
 
 import java.io.File;
 import java.security.Principal;
@@ -67,6 +68,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
                 webXmlConfig = new WebXml(new File(WebAppFolders.getWebinfFolder(), "web.xml"));
             }
             catch (Throwable e) {
+                e.printStackTrace();
                 System.err.println("Could not load web.xml - administration services access rights can not be changed");
                 throw new AdminException("Could not load web.xml - administration services access rights can not be changed");
             }
@@ -111,8 +113,9 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             }
             aclManager = new AclManager(this);
             Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));
-            LocaleMessages.init(localeConfig); // должно вызываться раньше, чем ЮзерМанагер
+            LocaleMessages.init(localeConfig); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             File usersConfig = new File(webappConfig.getString("system.users file"));
+            System.out.println("Init UserManager");
             userManager = new UserManager(usersConfig);
             providerManager = new ProviderManager(webappConfig);
             categoryManager = new CategoryManager(webappConfig);
@@ -125,6 +128,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             topServer.setSmscHost(smscList.getSmsc().getHost());
             topServer.start();
             startConsole();
+            if (webappConfig.containsParameter("installation.uid"))
+              TopMenu.setInstallationId(webappConfig.getString("installation.uid"));
             System.out.println("SMSC Administration Web Application Started  **************************************************");
         }
         catch (Exception e) {

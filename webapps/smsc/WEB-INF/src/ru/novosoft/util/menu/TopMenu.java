@@ -13,6 +13,12 @@ public class TopMenu extends ArrayList {
 
     private static org.apache.log4j.Category category = org.apache.log4j.Category.getInstance(TopMenu.class);
 
+    public static String installationId = "";
+
+    public static void setInstallationId(String installationId) {
+        TopMenu.installationId = installationId;
+    }
+
     public TopMenu() {
 
         try {
@@ -33,8 +39,8 @@ public class TopMenu extends ArrayList {
             add(new MenuItem("menu.smsc", "", smsItems));
 
             Collection statisticItems = new ArrayList();
-            statisticItems.add(new MenuItem("menu.stat.perfmon", "", "/smsc/perfmon/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
-            statisticItems.add(new MenuItem("menu.stat.topmon", "", "/smsc/topmon/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
+            statisticItems.add(new MenuItem("menu.stat.perfmon", "", "/smsc/perfmon/index.jsp','perfmon" + installationId + "', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
+            statisticItems.add(new MenuItem("menu.stat.topmon", "", "/smsc/topmon/index.jsp', 'topmon" + installationId + "', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
             statisticItems.add(new MenuItem("menu.stat.smsstat", "/smsc/smsstat/index.jsp", MenuItem.VISIBLE_IN_ALL));
             statisticItems.add(new MenuItem("menu.stat.statexport", "/smsc/smsstat/export.jsp", MenuItem.VISIBLE_IN_ALL));
             statisticItems.add(new MenuItem("menu.stat.statcsv", "/smsc/smsstat/index.jsp?csv=true", MenuItem.VISIBLE_IN_ALL));
