@@ -18,18 +18,23 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
     Session& session = context.getSession();
 
     try{
-        if(command.isInitial())
-            session.AddNewOperationToHash(command, CO_HTTP_DELIVERY);        
-        else            
+        if(session.getLongCallContext().continueExec)
+            session.setCurrentOperation(command.getOperationId());
+        else if(command.isInitial())
+            session.AddNewOperationToHash(command, CO_HTTP_DELIVERY);
+        else
             session.setOperationFromPending(command, CO_HTTP_DELIVERY);
 
         RunActions(context);
         if(rs.status == STATUS_FAILED) session.closeCurrentOperation();
 
-        PendingOperation pendingOperation;
-        pendingOperation.type = CO_HTTP_DELIVERY;
-        pendingOperation.validityTime = time(NULL) + SessionManager::DEFAULT_EXPIRE_INTERVAL;
-        session.addPendingOperation(pendingOperation);
+        if(rs.status != STATUS_LONG_CALL)
+        {
+            PendingOperation pendingOperation;
+            pendingOperation.type = CO_HTTP_DELIVERY;
+            pendingOperation.validityTime = time(NULL) + SessionManager::DEFAULT_EXPIRE_INTERVAL;
+            session.addPendingOperation(pendingOperation);
+        }
         return;
     } catch (SCAGException& e)
     {
