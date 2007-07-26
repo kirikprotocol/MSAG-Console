@@ -377,6 +377,7 @@ int HttpWriterTask::Execute()
                         else
                             cx->setDestiny(500, STAT_RESP | DEL_USER_SOCK); //500
                         error.Push(s);
+                        continue;
                     }
                 }
                 
