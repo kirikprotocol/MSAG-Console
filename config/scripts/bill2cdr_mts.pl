@@ -576,22 +576,42 @@ sub process{
     }
 
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-    $billed|=outrow($out,$outfields);
+    
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
+      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
+      # A -> B
+      $billed|=outrow($out,$outfields);
+      
+      $outfields->{RECORD_TYPE}=10;
+#      $outfields->{RECORD_TYPE}=30;
+      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
+      $outfields->{PAYER_IMSI}='';#$infields->{DST_IMSI};
+      $outfields->{PAYER_MSC}='';#$infields->{DST_MSC};
+      $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DST_ADDR});
+      # B -> C
+      $billed|=outrow($out,$outfields);
+
+      
       $outfields->{RECORD_TYPE}=20;
       $outfields->{CALL_DIRECTION}='I';
-      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
-      $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
-      $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{INV_SERVICE_ID}=21;
+      # B <- A
       $billed|=outrow($out,$outfields);
-      $outfields->{RECORD_TYPE}=30;
+      
+      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
+      $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
+      $outfields->{PAYER_MSC}=$infields->{DST_MSC};
+      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
+      # C <- B
       $billed|=outrow($out,$outfields);
     }else
     {
+      
+      $billed|=outrow($out,$outfields);
+      
       $outfields->{RECORD_TYPE}=20;
       $outfields->{CALL_DIRECTION}='I';
       $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
