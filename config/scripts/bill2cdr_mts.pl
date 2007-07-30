@@ -260,16 +260,7 @@ for(@dir)
 
   $nbfile=$nbarcout.'/'.$nbfile;
 
-  eval{
-    process($infile,$tmpfile,$nbfile);
-  };
-  if($@)
-  {
-    print STDERR "Processing error on file '$infile':'$@'\n";
-    rename($infile,$infile.'.err');
-  }
-
-
+  process($infile,$tmpfile,$nbfile);
   for my $ref(@$tmpfile)
   {
     my $tmp=$ref->{name};
