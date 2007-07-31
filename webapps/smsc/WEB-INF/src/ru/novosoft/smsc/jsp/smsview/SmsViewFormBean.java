@@ -329,7 +329,7 @@ public class SmsViewFormBean extends IndexBean {
         last = StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime()));
       String next = " ";
       if (row.getNextTryTime() != null)
-        submit = StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime()));
+        next = StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime()));
       String source = row.getOriginatingAddress();
       String dest = row.getDestinationAddress();
       String route = row.getRouteId();
