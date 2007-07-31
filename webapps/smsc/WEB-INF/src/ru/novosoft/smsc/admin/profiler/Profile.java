@@ -536,6 +536,6 @@ public class Profile {
     }
 
     public void setNick(String nick) {
-      this.nick = nick;
+      this.nick = (nick == null) ? "" : nick;
     }
 }
