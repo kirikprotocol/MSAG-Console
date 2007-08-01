@@ -17,8 +17,6 @@ public class RequestState {
   private AbonentContractResult inManContractResult;
   private InBalanceResult inBalanceResult;
 
-  private Message mgResponse = null;
-
   private Message abonentResponse = null;
   private long abonentResponseTime = 0;
 
@@ -36,6 +34,8 @@ public class RequestState {
   private boolean[] billingSystemQueried=new boolean[SmeEngine.BILLING_SYSTEMS_COUNT];
   private long[] billingSystemsRequestTime=new long[SmeEngine.BILLING_SYSTEMS_COUNT];
   private long[] billingSystemsResponseTime=new long[SmeEngine.BILLING_SYSTEMS_COUNT];
+
+  private String regionStorageName;
 
   private int currentBillingSystemIndex = 0;
 
@@ -79,15 +79,6 @@ public class RequestState {
     billingSystemsResponseTime[SmeEngine.BILLING_SYSTEM_IN_BALANCE]=System.currentTimeMillis();
   }
 
-  Message getMgResponse() {
-    return mgResponse;
-  }
-
-  void setMgResponse(Message mgResponse) {
-    this.mgResponse = mgResponse;
-    billingSystemsResponseTime[SmeEngine.BILLING_SYSTEM_FORIS_MG]=System.currentTimeMillis();
-  }
-
   Message getAbonentResponse() {
     return abonentResponse;
   }
@@ -117,6 +108,14 @@ public class RequestState {
 
   public void setAbonentResponseTime(long abonentResponseTime) {
     this.abonentResponseTime = abonentResponseTime;
+  }
+
+  public String getRegionStorageName() {
+    return regionStorageName;
+  }
+
+  public void setRegionStorageName(String regionStorageName) {
+    this.regionStorageName = regionStorageName;
   }
 
   public boolean isError() {
@@ -161,7 +160,13 @@ public class RequestState {
 
   public void setBillingSystemQueried(byte systemID) {
     billingSystemQueried[systemID]=true;
-    billingSystemsRequestTime[systemID]=System.currentTimeMillis();
+    if(billingSystemsRequestTime[systemID]==0){
+      billingSystemsRequestTime[systemID]=System.currentTimeMillis();
+    }
+  }
+
+  public void setBillingSystemRequestTime(byte systemID, long time) {
+    billingSystemsRequestTime[systemID] = time;
   }
 
   public void setBillingSystemResponseTime(byte systemID, long time) {
