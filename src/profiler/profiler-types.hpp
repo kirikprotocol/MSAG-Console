@@ -83,6 +83,7 @@ struct Profile{
 #ifdef SMSEXTRA
   uint32_t subscription;
   uint8_t sponsored;
+  smsc::core::buffers::FixedLengthString<11> nick;
 #endif
 
   File::offset_type offset;
@@ -148,6 +149,7 @@ struct Profile{
 #ifdef SMSEXTRA
       subscription=src.subscription;
       sponsored=src.sponsored;
+      nick=src.nick;
 #endif
     }
     return *this;
@@ -175,6 +177,7 @@ struct Profile{
 #ifdef SMSEXTRA
            && subscription==src.subscription
            && sponsored==src.sponsored
+           && nick==src.nick
 #endif
            ;
   }
@@ -218,6 +221,9 @@ struct Profile{
 #ifdef SMSEXTRA
     f.WriteNetInt32(subscription);
     f.WriteByte(sponsored);
+    memset(buf,0,sizeof(buf));
+    memcpy(buf,nick.c_str(),std::min(sizeof(buf),nick.length()));
+    f.Write(buf,10);
 #endif
   }
   void Read(File& f)
@@ -233,6 +239,7 @@ struct Profile{
 
     hideModifiable=f.ReadByte();
 
+    memset(buf,0,sizeof(buf));
     f.Read(buf,sizeof(buf));
     divert=buf;
 
@@ -251,6 +258,9 @@ struct Profile{
 #ifdef SMSEXTRA
     subscription=f.ReadNetInt32();
     sponsored=f.ReadByte();
+    memset(buf,0,sizeof(buf));
+    f.Read(buf,10);
+    nick=(const char*)buf;
 #endif
 
   }
@@ -258,7 +268,7 @@ struct Profile{
   {
     return 4+4+4+32+1+32+1+1+1+1+1+1+1+1+4+4+4
 #ifdef SMSEXTRA
-    +4+1
+    +4+1+10
 #endif
     ;
   }

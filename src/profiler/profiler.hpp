@@ -24,6 +24,9 @@ using smsc::core::buffers::IntHash;
 
 
 class ProfilesTable;
+#ifdef SMSEXTRA
+class BlackList;
+#endif
 
 class Profiler:public ProfilerInterface,public SmeProxy, public ThreadedTask{
 public:
@@ -46,6 +49,7 @@ public:
 
 #ifdef SMSEXTRA
   void decrementSponsoredCount(const Address& address);
+  void InitBlackList(const char* file,time_t checkTo);
 #endif
 
   /* from SmppProxy */
@@ -195,6 +199,10 @@ protected:
   void internal_update(int flag,const Address& addr,int value,const char* svalue=NULL);
 
   void CreateOrOpenFileIfNeeded();
+
+#ifdef SMSEXTRA
+  BlackList* blklst;
+#endif
 
 };
 

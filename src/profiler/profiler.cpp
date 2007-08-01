@@ -28,6 +28,7 @@
 
 #ifdef SMSEXTRA
 #include "system/ExtraBits.hpp"
+#include "BlackList.hpp"
 #endif
 
 namespace smsc{
@@ -54,7 +55,8 @@ static bool isValidAlias(const std::string& s)
   for(int i=0;i<s.length();i++)
   {
     //if(!(s[i]>32 && s[i]<127 && strchr("|{}[]\\~",s[i])==0))return false;
-    if(!(s[i]>32 && s[i]<127 && strchr("_-:.,",s[i])==0))return false;
+    //if(!(s[i]>32 && s[i]<127 && strchr("_-:.,",s[i])==0))return false;
+    if(!(isalnum(s[i]) || strchr("_-:.,",s[i])!=0))return false;
     //isalnum(s[i]) &&
   }
   return true;
@@ -178,12 +180,18 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
   prio=SmeProxyPriorityDefault;
   notifier=0;
   log=smsc::logger::Logger::getInstance("smsc.prof");
+#ifdef SMSEXTRA
+  blklst=0;
+#endif
 }
 
 Profiler::~Profiler()
 {
   delete profiles;
 
+#ifdef SMSEXTRA
+  delete blklst;
+#endif
   try{
     smeman->unregisterSmeProxy(this);
   }catch(...)
@@ -488,6 +496,7 @@ static const int _update_udhconcat=9;
 static const int _update_translit=10;
 static const int _update_subscription_add=11;
 static const int _update_subscription_clear=12;
+static const int _update_extra_nick=13;
 
 static const int _update_extra=0x10000;
 
@@ -516,6 +525,10 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   if(flag==_update_subscription_clear)
   {
     profile.subscription&=~value;
+  }
+  if(flag==_update_extra_nick)
+  {
+    profile.nick=svalue;
   }
 #endif
 
@@ -620,6 +633,7 @@ enum{
   msgAliasOk,
   msgAliasDuplicate,
   msgAliasFailed,
+  msgAliasInvalid,
   msgAliasOn,
   msgAliasOff,
   msgAliasDeleted,
@@ -931,35 +945,28 @@ int Profiler::Execute()
         {
           if(arg1=="NONE")
           {
-            Address alias;
-            if(aliasman->AddressToAlias(sms->getOriginatingAddress(),alias))
-            {
-              aliasman->deleteAlias(alias);
-              msg=msgAliasDeleted;
-              internal_update(_update_extra|_update_hide,addr,0);
-              internal_update(_update_subscription_clear,addr,EXTRA_NICK);
-            }else
-            {
-              msg=msgAliasNotFound;
-            }
+            msg=msgAliasDeleted;
+            //internal_update(_update_extra|_update_hide,addr,0);
+            internal_update(_update_subscription_clear,addr,EXTRA_NICK);
+            internal_update(_update_extra_nick,addr,0,"");
           }else if(arg1=="ON")
           {
-            Address alias;
-            if(aliasman->AddressToAlias(sms->getOriginatingAddress(),alias))
+            Profile p=lookup(sms->getOriginatingAddress());
+            if(p.nick.length()>0)
             {
               msg=msgAliasOn;
-              internal_update(_update_extra|_update_hide,addr,1);
+              internal_update(_update_subscription_add,addr,EXTRA_NICK);
             }else
             {
               msg=msgAliasNotFound;
             }
           }else if(arg1=="OFF")
           {
-            Address alias;
-            if(aliasman->AddressToAlias(sms->getOriginatingAddress(),alias))
+            Profile p=lookup(sms->getOriginatingAddress());
+            if(p.nick.length()>0)
             {
               msg=msgAliasOff;
-              internal_update(_update_extra|_update_hide,addr,0);
+              internal_update(_update_subscription_clear,addr,EXTRA_NICK);
             }else
             {
               msg=msgAliasNotFound;
@@ -970,31 +977,24 @@ int Profiler::Execute()
             try{
               if(isValidAlias(orgArg))
               {
-                Address oldAlias;
-                if(aliasman->AddressToAlias(sms->getOriginatingAddress(),oldAlias))
+                std::string lcarg=orgArg;
+                for(int i=0;i<lcarg.length();i++)lcarg[i]=tolower(lcarg[i]);
+                if(blklst && blklst->check(lcarg))
                 {
-                  try{
-                    aliasman->deleteAlias(oldAlias);
-                  }catch(std::exception& e)
-                  {
-                    smsc_log_warn(log,"DeleteAlias failed for '%s':'%s'",oldAlias.toString().c_str(),e.what());
-                  }
+                  msg=msgAliasInvalid;
+                }else
+                {
+                  msg=msgAliasOk;
+                  internal_update(_update_subscription_add,addr,EXTRA_NICK);
+                  internal_update(_update_extra_nick,addr,0,orgArg.c_str());
                 }
-                smsc::alias::AliasInfo ai;
-                ai.addr=sms->getOriginatingAddress();
-                ai.alias=Address(orgArg.length(),5,0,orgArg.c_str());
-                ai.hide=true;
-                aliasman->addAlias(ai);
-                msg=msgAliasOk;
-                internal_update(_update_extra|_update_hide,addr,1);
-                internal_update(_update_subscription_add,addr,EXTRA_NICK);
               }else
               {
                 msg=msgAliasFailed;
               }
             }catch(...)
             {
-              msg=msgAliasDuplicate;
+              msg=msgAliasFailed;
             }
           }
         }else if(profCmd=="FLASH")
@@ -1068,6 +1068,7 @@ int Profiler::Execute()
 #ifdef SMSEXTRA
         SIMPLERESP(msgAliasOk);
         SIMPLERESP(msgAliasDuplicate);
+        SIMPLERESP(msgAliasInvalid);
         SIMPLERESP(msgAliasFailed);
         SIMPLERESP(msgAliasOn);
         SIMPLERESP(msgAliasOff);
@@ -1339,7 +1340,11 @@ static int RsAsHide(smsc::db::ResultSet* rs,int idx)
 void Profiler::load(const char* filename)
 {
   const char sig[]="SMSCPROF";
+#ifdef SMSEXTRA
+  const uint32_t ver=0x00010100;
+#else
   const uint32_t ver=0x00010001;
+#endif
   storeFileName=filename;
   hrtime_t st=gethrtime();
 
@@ -1491,7 +1496,12 @@ void Profiler::load(const char* filename)
 void Profiler::CreateOrOpenFileIfNeeded()
 {
   const char sig[]="SMSCPROF";
+#ifdef SMSEXTRA
+  const uint32_t ver=0x00010100;
+#else
   const uint32_t ver=0x00010001;
+#endif
+
 
   if(storeFile.isOpened())return;
   using namespace smsc::cluster;
@@ -1520,6 +1530,13 @@ void Profiler::decrementSponsoredCount(const Address& address)
     update(address,p);
   }
 }
+
+void Profiler::InitBlackList(const char* file,time_t checkTo)
+{
+  blklst=new BlackList(checkTo);
+  blklst->Load(file);
+}
+
 #endif
 
 
