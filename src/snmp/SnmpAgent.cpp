@@ -12,6 +12,8 @@ static char const ident[] = "$Id$";
 #include "util/config/Manager.h"
 #include "system/smsc.hpp"
 #include "system/version.h"
+#include "core/buffers/CyclicQueue.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
 #include "snmp/smestattable/SmeStatTableSubAgent.hpp"
 #include "snmp/smeerrtable/smeErrTable_subagent.hpp"
@@ -24,7 +26,7 @@ static char const ident[] = "$Id$";
          netsnmp_request_info *requests);
     void sendStatusNotification(unsigned int clientreg, void *clientarg);
     void sendAlarmNotification(unsigned int clientreg, void *clientarg);
-    void sendSmscAlertFFMR(unsigned int clientreg, void *clientarg);
+    //void sendSmscAlertFFMR(unsigned int clientreg, void *clientarg);
     int smscDescrHandler(netsnmp_mib_handler *handler,
                  netsnmp_handler_registration *reginfo,
                  netsnmp_agent_request_info *reqinfo,
@@ -72,19 +74,102 @@ static char const ident[] = "$Id$";
       using smsc::util::config::Manager;
       using smsc::util::config::ConfigException;
       smsc::logger::Logger* SnmpAgent::log = 0;
+      using smsc::core::buffers;
 
-    struct FFMRargs {
-      char* alarmId;
-      char* alarmObjCategory;
-      char* text;
-      uint8_t severity;
-      SnmpAgent::alertStatus status;
-    };
 
-      TrapRecordLog*       fileLog = 0;
-      InFileStorageRoller* fileLogRoller = 0;
-      const char *         fileLogLocation = ".";
-      unsigned long        fileLogRollInterval = 60;
+    CyclicQueue<TrapRecord> trapsQueue;
+    smsc::core::synchronization::EventMonitor trapsQueueMon;
+    TrapRecordLog*       fileLog = 0;
+    InFileStorageRoller* fileLogRoller = 0;
+    const char *         fileLogLocation = ".";
+    unsigned long        fileLogRollInterval = 60;
+
+    extern "C" void dummyAlert(unsigned,void*)
+    {
+    }
+
+    void
+    ProcessTrap( TrapRecord* vars)
+    {
+      if(vars->recordType==TrapRecord::rtTrap)
+      {
+        if(fileLog) fileLog->log(*vars);
+        smsc_log_debug( smsc::snmp::SnmpAgent::log,
+                       "trap(alarmId=%s,object=%s,severity=%d,text=%s)",
+                       vars->alarmId,
+                       vars->alarmObjCategory,
+                       vars->severity,
+                       vars->text.c_str());
+
+        if (vars)
+        {
+          netsnmp_variable_list *notification_vars = NULL;
+          u_char* buf; int buflen;
+          if (vars->text.length())
+          {
+            buf = (u_char*)vars->text.c_str();buflen = vars->text.length();
+            snmp_varlist_add_variable(&notification_vars,
+                                      alertMessageOid, OID_LENGTH(alertMessageOid), ASN_OCTET_STR,
+                                      buf,buflen);
+          }
+
+          {
+            buf = (u_char*)&(vars->severity); buflen = sizeof(vars->severity);
+            snmp_varlist_add_variable(&notification_vars,
+                                      alertSeverityOid, OID_LENGTH(alertSeverityOid), ASN_INTEGER,
+                                      buf,buflen);
+          }
+
+          if (vars->alarmObjCategory.length())
+          {
+            buf = (u_char*)vars->alarmObjCategory.c_str();buflen = vars->alarmObjCategory.length();
+            snmp_varlist_add_variable(&notification_vars,
+                                      alertObjCategoryOid, OID_LENGTH(alertObjCategoryOid), ASN_OCTET_STR,
+                                      buf,buflen);
+          }
+
+          if (vars->alarmId.length())
+          {
+            buf = (u_char*)vars->alarmId.c_str();buflen = vars->alarmId.length();
+            snmp_varlist_add_variable(&notification_vars,
+                                      alertIdOid, OID_LENGTH(alertIdOid), ASN_OCTET_STR,
+                                      buf,buflen);
+          }
+          oid* poid = 0;
+          int  oidlen = 0;
+          switch (vars->status)
+          {
+            case SnmpAgent::INFO : poid = smscAlertFFMROid; oidlen = OID_LENGTH(smscAlertFFMROid); break;
+            case SnmpAgent::NEW  : poid = smscNewAlertFFMROid; oidlen = OID_LENGTH(smscNewAlertFFMROid); break;
+            case SnmpAgent::CLEAR: poid = smscClearAlertFFMROid; oidlen = OID_LENGTH(smscClearAlertFFMROid); break;
+          }
+          send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
+          snmp_free_varbind(notification_vars);
+        }
+      }else if(vars->recordType==TrapRecord::rtNotification)
+      {
+        if(fileLog) fileLog->log(*vars);
+        netsnmp_variable_list *notification_vars = NULL;
+        snmp_varlist_add_variable(&notification_vars,
+                                  status_oid, OID_LENGTH(status_oid), ASN_INTEGER,
+                                  (u_char *) vars->status, sizeof(vars->status));
+        send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
+                                  statusNotificationOid,
+                                  OID_LENGTH(statusNotificationOid), notification_vars);
+        snmp_free_varbind(notification_vars);
+      }else if(vars->recordType==TrapRecord::rtStatusChange)
+      {
+        netsnmp_variable_list *notification_vars = NULL;
+        snmp_varlist_add_variable(&notification_vars,
+                                  alertMessageOid, OID_LENGTH(alertMessageOid), ASN_OCTET_STR,
+                                  (u_char *) vars->text.c_str(), vars->text.length());
+        send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
+                                  alertOid,
+                                  OID_LENGTH(alertOid), notification_vars);
+        snmp_free_varbind(notification_vars);
+      }
+    }
+
 
       const char* SnmpAgent::taskName()
       {
@@ -170,9 +255,26 @@ static char const ident[] = "$Id$";
         if (fileLogRoller) {
             fileLogRoller->Start();
         }
+        struct timeval t;t.tv_sec=0,t.tv_usec=500000;
+        snmp_alarm_register_hr(t, SA_REPEAT, dummyAlert, 0);
+
         while(!isStopping)
         {
           agent_check_and_process(1);
+          smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
+          TrapRecord tr;
+          while(trapsQueue.Count()!=0)
+          {
+            trapsQueue.Pop(tr);
+            trapsQueueMon.Unlock();
+            try{
+              ProcessTrap(&tr);
+            }catch(...)
+            {
+              //
+            }
+            trapsQueueMon.Lock();
+          }
         }
         if (fileLogRoller) {
             fileLogRoller->Stop();
@@ -187,25 +289,36 @@ static char const ident[] = "$Id$";
       }
       void SnmpAgent::statusChange(smscStatus newstatus)
       {
-        status = newstatus;
-        int *statusSave;
+        TrapRecord rec;
+        rec.submitTime=time(NULL);
+        rec.recordType=TrapRecord::rtStatusChange;
+        rec.status=newstatus;
+        smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
+        trapsQueue.Push(rec);
+        //status = newstatus;
+        /*int *statusSave;
         memdup((uchar_t **) &statusSave,(uchar_t *) &status,sizeof(status));
         struct timeval t;t.tv_sec=0,t.tv_usec=10;
         snmp_alarm_register_hr(t, 0, sendStatusNotification, (void*)statusSave);
-        smsc_log_debug(log, "smsc status changed to %d, trap sent, saved = %d(%d)",newstatus,*statusSave,sizeof(status));
+        */
+        smsc_log_debug(log, "smsc status changed to %d",newstatus);
+
       }
 
       void SnmpAgent::trap(const char * const message)
       {
         TrapRecord rec;
-        rec.submitTime = time(0);
-        rec.alarmId = "empty";
-        rec.alarmObjCategory = "empty";
-        rec.severity = NORMAL;
+        rec.submitTime=time(NULL);
+        rec.recordType=TrapRecord::rtNotification;
+        rec.alarmId="empty";
+        rec.alarmObjCategory="empty";
+        rec.severity=NORMAL;
         rec.text = message;
-        if(fileLog) fileLog->log(rec);
-        struct timeval t;t.tv_sec=0,t.tv_usec=10;
-        snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message));
+        //if(fileLog) fileLog->log(rec);
+        //struct timeval t;t.tv_sec=0,t.tv_usec=10;
+        //snmp_alarm_register_hr(t, 0, sendAlarmNotification, strdup(message));
+        smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
+        trapsQueue.Push(rec);
       }
       void SnmpAgent::trap(const char * const alarmId,
                            const char * const alarmObjCategory,
@@ -226,11 +339,15 @@ static char const ident[] = "$Id$";
           return;
         }
         TrapRecord rec;
-        rec.submitTime = time(0);
+        rec.submitTime=time(NULL);
+        rec.recordType=TrapRecord::rtTrap;
         rec.alarmId = alarmId;
         rec.alarmObjCategory = alarmObjCategory;
         rec.severity = severity;
         rec.text = text;
+        smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
+        trapsQueue.Push(rec);
+        /*
         if(fileLog) fileLog->log(rec);
         struct timeval t;t.tv_sec=0,t.tv_usec=10;
         FFMRargs* clientarg = new(FFMRargs);
@@ -242,7 +359,7 @@ static char const ident[] = "$Id$";
           clientarg->text = strdup(text);
           clientarg->status = status;
           unsigned int reg_id;
-          reg_id = snmp_alarm_register_hr(t, 0 /* once */, sendSmscAlertFFMR,clientarg);
+          reg_id = snmp_alarm_register_hr(t, 0 , sendSmscAlertFFMR,clientarg);
           smsc_log_debug(log,
                          "trap(alarmId=%s,object=%s,severity=%d,text=%s) has been registered to send, registration_id=%X",
                          clientarg->alarmId,
@@ -251,6 +368,7 @@ static char const ident[] = "$Id$";
                          clientarg->text,
                          reg_id);
         }
+        */
       }
 
     }//snmp name space
@@ -347,104 +465,9 @@ static char const ident[] = "$Id$";
     return SNMP_ERR_NOERROR;
   }
 
-  extern "C"
-  void
-  sendStatusNotification(unsigned int clientreg, void *clientarg)
-  {
-    netsnmp_variable_list *notification_vars = NULL;
-    snmp_varlist_add_variable(&notification_vars,
-                              status_oid, OID_LENGTH(status_oid), ASN_INTEGER,
-                              (u_char *) clientarg, sizeof(status));
-    send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
-                              statusNotificationOid,
-                              OID_LENGTH(statusNotificationOid), notification_vars);
-    snmp_free_varbind(notification_vars);
-    free(clientarg);
-  }
-
-  extern "C"
-  void
-  sendAlarmNotification(unsigned int clientreg, void *clientarg)
-  {
-    netsnmp_variable_list *notification_vars = NULL;
-    snmp_varlist_add_variable(&notification_vars,
-                              alertMessageOid, OID_LENGTH(alertMessageOid), ASN_OCTET_STR,
-                              (u_char *) clientarg, strlen((const char *)clientarg));
-    send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
-                              alertOid,
-                              OID_LENGTH(alertOid), notification_vars);
-    snmp_free_varbind(notification_vars);
-    free(clientarg);
-  }
-using smsc::snmp::FFMRargs;
 using smsc::snmp::SnmpAgent;
 //using smsc::snmp::CLEAR;
 //using smsc::snmp::INFO;
-  /* order of vars in clientarg array: alarmId, alarmObCategory, severity, text */
-  extern "C"
-  void
-  sendSmscAlertFFMR(unsigned int clientreg, void *clientarg)
-  {
-    FFMRargs* vars = (FFMRargs *)clientarg;
-    smsc_log_debug( smsc::snmp::SnmpAgent::log,
-                   "trap(alarmId=%s,object=%s,severity=%d,text=%s) is called to send, registration_id=%X",
-                   vars->alarmId,
-                   vars->alarmObjCategory,
-                   vars->severity,
-                   vars->text,
-                   clientreg);
-
-    if (vars)
-    {
-      netsnmp_variable_list *notification_vars = NULL;
-      u_char* buf; int buflen;
-      if (vars->text)
-      {
-        buf = (u_char*)vars->text;buflen = strlen(vars->text);
-        snmp_varlist_add_variable(&notification_vars,
-                                  alertMessageOid, OID_LENGTH(alertMessageOid), ASN_OCTET_STR,
-                                  buf,buflen);
-        free(vars->text);
-      }
-
-      {
-        buf = &(vars->severity); buflen = sizeof(vars->severity);
-        snmp_varlist_add_variable(&notification_vars,
-                                  alertSeverityOid, OID_LENGTH(alertSeverityOid), ASN_INTEGER,
-                                  buf,buflen);
-      }
-
-      if (vars->alarmObjCategory)
-      {
-        buf = (u_char*)vars->alarmObjCategory;buflen = strlen(vars->alarmObjCategory);
-        snmp_varlist_add_variable(&notification_vars,
-                                  alertObjCategoryOid, OID_LENGTH(alertObjCategoryOid), ASN_OCTET_STR,
-                                  buf,buflen);
-        free(vars->alarmObjCategory);
-      }
-
-      if (vars->alarmId)
-      {
-        buf = (u_char*)vars->alarmId;buflen = strlen(vars->alarmId);
-        snmp_varlist_add_variable(&notification_vars,
-                                  alertIdOid, OID_LENGTH(alertIdOid), ASN_OCTET_STR,
-                                  buf,buflen);
-        free(vars->alarmId);
-      }
-      oid* poid = 0;
-      int  oidlen = 0;
-      switch (vars->status)
-      {
-        case SnmpAgent::INFO : poid = smscAlertFFMROid; oidlen = OID_LENGTH(smscAlertFFMROid); break;
-        case SnmpAgent::NEW  : poid = smscNewAlertFFMROid; oidlen = OID_LENGTH(smscNewAlertFFMROid); break;
-        case SnmpAgent::CLEAR: poid = smscClearAlertFFMROid; oidlen = OID_LENGTH(smscClearAlertFFMROid); break;
-      }
-      send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
-      snmp_free_varbind(notification_vars);
-      delete(clientarg);
-      smsc_log_debug(smsc::snmp::SnmpAgent::log,"trap with registration_id=%X has been sent", clientreg);
-    }
-  }
 
   static char version[] ="SMSC UNKNOWN VERSION";
   extern "C" int smscDescrHandler(netsnmp_mib_handler *handler,

@@ -3,6 +3,7 @@
 #define __SMSC_SNMP_TRAPRECORD_HPP__
 
 #include "SnmpAgent.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 namespace smsc  {
 namespace snmp {
 using smsc::snmp::SnmpAgent;
@@ -14,11 +15,16 @@ struct TrapRecord {
     static void  csvEncode(const TrapRecord & cdr, std::string & rec);
     static const char* headerText();
 
-    time_t          submitTime;       //SUBMIT: sms submit time
-    std::string     alarmId;          //SRC_ADDR: sender number
-    std::string     alarmObjCategory; //SRC_IMSI: sender IMSI
-    SnmpAgent::alertSeverity   severity;         //SRC_MSC: sender MSC
-    std::string     text;             //SRC_SME_ID: sender SME identifier
+    enum RecordType{
+      rtTrap,rtNotification,rtStatusChange
+    };
+    RecordType recordType;
+    time_t submitTime;
+    int status;
+    smsc::core::buffers::FixedLengthString<32> alarmId;
+    smsc::core::buffers::FixedLengthString<32> alarmObjCategory;
+    SnmpAgent::alertSeverity                   severity;
+    std::string                                text;
 };
 
 
