@@ -579,16 +579,19 @@ sub process{
     
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
-      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
+      #SRC_ADDR     = A
+      #DST_ADDR     = B - original delivery addr
+      #DIVERTED_FOR = C - real destination
+      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       # A -> B
       $billed|=outrow($out,$outfields);
       
       $outfields->{RECORD_TYPE}=10;
 #      $outfields->{RECORD_TYPE}=30;
-      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
+      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       $outfields->{PAYER_IMSI}='';#$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}='';#$infields->{DST_MSC};
-      $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DST_ADDR});
+      $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DIVERTED_FOR});
       # B -> C
       $billed|=outrow($out,$outfields);
 
@@ -601,10 +604,10 @@ sub process{
       # B <- A
       $billed|=outrow($out,$outfields);
       
-      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
+      $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
-      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
+      $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       # C <- B
       $billed|=outrow($out,$outfields);
     }else
