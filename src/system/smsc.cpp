@@ -501,6 +501,15 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   smsc::closedgroups::ClosedGroupsManager::getInstance()->Load(findConfigFile("ClosedGroups.xml"));
 
   {
+#ifdef SMSEXTRA
+    bool createCopyOnNickUsage=false;
+    try{
+      createCopyOnNickUsage=cfg.cfgman->getBool("smsx.createCopyOnNickUsage");
+    }catch(...)
+    {
+      __warning__("Config parameter smsx.createCopyOnNickUsage not found. Feature disabled by default");
+    }
+#endif
     smsc_log_info(log, "Starting statemachines" );
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
     time_t maxValidTime=cfg.cfgman->getInt("sms.max_valid_time");
@@ -508,6 +517,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     {
       StateMachine *m=new StateMachine(eventqueue,store,this);
       m->maxValidTime=maxValidTime;
+#ifdef SMSEXTRA
+      m->createCopyOnNickUsage=createCopyOnNickUsage;
+#endif
       Address addr(cfg.cfgman->getString("core.service_center_address"));
       m->scAddress=addr;
       m->setReceiptInfo(
@@ -697,6 +709,17 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     profiler=new smsc::profiler::Profiler(defProfile,
                &smeman,
                cfg.cfgman->getString("profiler.systemId"));
+
+#ifdef SMSEXTRA
+    try{
+      const char* blklstFile=cfg.cfgman->getString("profiler.blackListFile");
+      time_t checkPeriod=cfg.cfgman->getInt("profiler.blackListCheckPeriod");
+      profiler->InitBlackList(blklstFile,checkPeriod);
+    }catch(std::exception& e)
+    {
+      smsc_log_warn(log,"Failed to init black list:'%s'",e.what());
+    }
+#endif
 
     profiler->serviceType=cfg.cfgman->getString("profiler.service_type");
     profiler->protocolId=cfg.cfgman->getInt("profiler.protocol_id");

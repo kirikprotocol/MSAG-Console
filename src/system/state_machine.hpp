@@ -70,6 +70,9 @@ public:
 
   time_t maxValidTime;
   Address scAddress;
+#ifdef SMSEXTRA
+  bool createCopyOnNickUsage;
+#endif
 
   void processDirectives(SMS& sms,Profile& p,Profile& srcprof);
 

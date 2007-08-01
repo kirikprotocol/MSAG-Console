@@ -262,6 +262,9 @@ StateMachine::StateMachine(EventQueue& q,
   __throw_if_fail__(dreTemplateParam.LastError()==regexp::errNone,RegExpCompilationException);
   dreUnknown.Compile("/#.*?#/");
   __throw_if_fail__(dreUnknown.LastError()==regexp::errNone,RegExpCompilationException);
+#ifdef SMSEXTRA
+  createCopyOnNickUsage=false;
+#endif
 }
 
 
@@ -1240,6 +1243,8 @@ StateType StateMachine::submit(Tuple& t)
   bool fromDistrList=src_proxy && !strcmp(src_proxy->getSystemId(),"DSTRLST");
   bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
   bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+#ifdef SMSEXTRA
+
   bool firstPart=true;
   if(sms->getIntProperty(Tag::SMSC_MERGE_CONCAT))
   {
@@ -1262,7 +1267,6 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-#ifdef SMSEXTRA
   bool noDestChange=false;
   if((fromMap || fromDistrList) && toMap && firstPart)
   {
@@ -1272,10 +1276,10 @@ StateType StateMachine::submit(Tuple& t)
     {
       info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,sms->getOriginatingAddress().toString().c_str());
     }
-    if((srcprof.subscription&EXTRA_NICK) && (srcprof.hide==HideOption::hoEnabled || xsi.serviceBit==EXTRA_NICK))
+    if(((srcprof.subscription&EXTRA_NICK) || xsi.serviceBit==EXTRA_NICK) && srcprof.nick.length()>0)
     {
       sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_NICK);
-      sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
+      //sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
       info2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
     }
     if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
@@ -1287,7 +1291,7 @@ StateType StateMachine::submit(Tuple& t)
     if(extrabit && xsi.diverted)
     {
       sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit|(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FLASH));
-      sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
+      //sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
       //sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
       dst=xsi.divertAddr;
@@ -1439,6 +1443,7 @@ StateType StateMachine::submit(Tuple& t)
   SmeInfo dstSmeInfo=smsc->getSmeInfo(dest_proxy_index);
 
 #ifdef SMSEXTRA
+  /*
   if((sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK) &&
      (
        !dstSmeInfo.wantAlias ||
@@ -1449,6 +1454,7 @@ StateType StateMachine::submit(Tuple& t)
     info2(smsLog,"EXTRA: smsnick not allowed for route %s",ri.routeId.c_str());
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&~EXTRA_NICK);
   }
+  */
 
   if(fromMap && toMap && srcprof.sponsored>0)
   {
@@ -1496,6 +1502,12 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("SUBMIT: archivation request for %lld/%d is %s",t.msgId,dialogId,ri.archived?"true":"false");
   sms->setArchivationRequested(ri.archived);
   sms->setBillingRecord(ri.billing);
+#ifdef SMSEXTRA
+  if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FAKE)
+  {
+    sms->setBillingRecord(0);
+  }
+#endif
 
 
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
@@ -2713,6 +2725,14 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       // send delivery
       Address src;
       __trace2__("SUBMIT: wantAlias=%s, hide=%s",dstSmeInfo.wantAlias?"true":"false",HideOptionToText(sms->getIntProperty(Tag::SMSC_HIDE)));
+#ifdef SMSEXTRA
+      if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK)
+      {
+        Profile srcprof=smsc->getProfiler()->lookup(sms->getOriginatingAddress());
+        Address nick(srcprof.nick.length(),5,0,srcprof.nick.c_str());
+        sms->setOriginatingAddress(nick);
+      }else
+#endif
       if(
           dstSmeInfo.wantAlias &&
           sms->getIntProperty(Tag::SMSC_HIDE)==HideOption::hoEnabled &&
@@ -4025,6 +4045,28 @@ StateType StateMachine::deliveryResp(Tuple& t)
   */
 
   sms.setLastResult(Status::OK);
+
+#ifdef SMSEXTRA
+  if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO) ||
+     (sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()==0))
+  {
+    if(createCopyOnNickUsage && sms.getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK)
+    {
+      SMS newsms=sms;
+      newsms.setIntProperty(Tag::SMSC_EXTRAFLAGS,EXTRA_FAKE);
+      try{
+        SMSId msgId=store->getNextId();
+        newsms.setSourceSmeId(smscSmeId.c_str());
+        store->createSms(newsms,msgId,smsc::store::CREATE_NEW);
+        smsc->getScheduler()->AddFirstTimeForward(msgId,newsms);
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(smsLog,"Failed to create fake sms for msgId=%lld, oa=%s, da=%s:'%s'",t.msgId,sms.getOriginatingAddress().toString().c_str(),
+                      sms.getDealiasedDestinationAddress().toString().c_str(),e.what());
+      }
+    }
+  }
+#endif
 
   // concatenated message with conditional divert.
   // first part delivered ok.
