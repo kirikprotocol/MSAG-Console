@@ -637,6 +637,13 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
   buf.WriteNetInt32(profile.accessMaskIn);
   buf.WriteNetInt32(profile.accessMaskOut);
 
+#ifdef SMSEXTRA
+  buf.WriteNetInt32(profile.subscription);
+  buf.WriteByte(profile.sponsored);
+  buf.WriteNetInt32(profile.nick.length());
+  buf.Write(profile.nick.c_str(),profile.nick.length());
+#endif
+
   len = buf.getPos();
 
   return buf.releaseBuffer();
@@ -686,6 +693,14 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
   profile.closedGroupId=buf.ReadNetInt32();
   profile.accessMaskIn=buf.ReadNetInt32();
   profile.accessMaskOut=buf.ReadNetInt32();
+#ifdef SMSEXTRA
+  profile.subscription=buf.ReadNetInt32();
+  profile.sponsored=buf.ReadByte();
+  tmplen=buf.ReadNetInt32();
+  tmp.setSize(tmplen);
+  buf.Read(tmp.get(),tmplen);
+  profile.nick.assign(tmp.get(),tmplen);
+#endif
 
   return true;
 }
