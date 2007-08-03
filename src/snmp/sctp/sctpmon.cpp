@@ -110,7 +110,7 @@ class Coordinator: public AssociationChangeListener{
           if (stateCategory(event.state) == -1) {
             status = SnmpAgent::NEW;
             status_text = "Active";
-            severity = SnmpAgent::MAJOR;
+            severity = SnmpAgent::CRITICAL;
             param = "failed";
           }
           text += status_text; text += " "; text += object; text += " "; text += alarm_id; text += " "; text += param;
