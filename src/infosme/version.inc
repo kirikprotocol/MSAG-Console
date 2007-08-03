@@ -1,6 +1,6 @@
 
 #define VER_MAJOR 1
-#define VER_MINOR 1
+#define VER_MINOR 2
 #define VER_BUILD 1
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
