@@ -305,7 +305,7 @@ int TaskProcessor::Execute()
         }
 
         int processed = 0;
-        while (taskGuards.Count()>0)
+        while (taskGuards.Count()>0 && !bNeedExit)
         {
             TaskGuard* taskGuard = 0;
             taskGuards.Shift(taskGuard);
@@ -327,6 +327,8 @@ int TaskProcessor::Execute()
             }
             delete taskGuard;
         }
+
+        if (bNeedExit) break;
 
         processWaitingEvents(time(NULL)); // ?? or time(NULL)
         if (!bNeedExit && processed <= 0) awake.Wait(switchTimeout);
@@ -361,10 +363,12 @@ bool TaskProcessor::processTask(Task* task)
             {
                 MutexGuard snGuard(taskIdsBySeqNumMonitor);
                 int seqNumsCount;
-                while ((seqNumsCount=taskIdsBySeqNum.Count()) >= unrespondedMessagesMax) {
+                while ((seqNumsCount=taskIdsBySeqNum.Count()) > unrespondedMessagesMax && !bNeedExit) {
                   int difference = seqNumsCount - unrespondedMessagesMax;
                   taskIdsBySeqNumMonitor.wait(difference*unrespondedMessagesSleep);
                 }
+                if (bNeedExit) return false;
+
                 if (taskIdsBySeqNum.Exist(seqNum))
                 {
                     smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
