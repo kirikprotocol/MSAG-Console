@@ -1079,7 +1079,8 @@ std::string vcprefix(int idx,VClientData& vc)
   std::string out;
   timeval tv;
   gettimeofday(&tv,0);
-  tm* t=localtime(&tv.tv_sec);
+  tm tres;
+  tm* t=localtime_r(&tv.tv_sec,&tres);
   int msec=tv.tv_usec;
   msec/=1000;
   char buf[128];
@@ -1167,7 +1168,8 @@ std::string getTimeStamp()
   time_t now=time(NULL);
   timeval tv;
   gettimeofday(&tv,0);
-  tm* t=localtime(&tv.tv_sec);
+  tm tres;
+  tm* t=localtime_r(&tv.tv_sec,&tres);
   int msec=tv.tv_usec;
   msec/=1000;
   char buf[128];
