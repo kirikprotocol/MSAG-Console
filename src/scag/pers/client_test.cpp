@@ -37,8 +37,9 @@ int main(int argc, char* argv[])
     try{
         ConfigManager::Init();
         
+        smsc_log_debug(logger, "Host: %s:%d. Requests: %d", argc > 1 ? argv[1] : "localhost", argc > 2 ? atoi(argv[2]) : 22890, 45 * ITER_CNT);        
         PersClient::Init(argc > 1 ? argv[1] : "localhost", argc > 2 ? atoi(argv[2]) : 22890, 60, 5);
-        smsc_log_debug(logger, "Host: %s:%d. Requests: %d", argc > 1 ? argv[1] : "localhost", argc > 2 ? atoi(argv[2]) : 22890, 45 * ITER_CNT);
+
         PersClient& pc = PersClient::Instance();
         Property prop;
         SerialBuffer sb;

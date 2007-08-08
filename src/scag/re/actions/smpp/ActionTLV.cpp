@@ -149,7 +149,7 @@ bool ActionTLV::run(ActionContext& context)
             throw SCAGException("Action 'tlv': Invalid TAG property: %s", strTag.c_str());
         if(byTag)
         {
-            tag = atoi(p->getStr().c_str());
+            tag = strtol(p->getStr().c_str(), NULL, 0);
             if(!tag)
                 throw SCAGException("Action 'tlv': Invalid TAG value");
         }
