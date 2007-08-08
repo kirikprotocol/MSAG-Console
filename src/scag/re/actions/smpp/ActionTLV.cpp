@@ -16,14 +16,11 @@ Hash<int> ActionTLV::InitNames()
 bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
 {
     if(!data.hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
-    {
-        smsc_log_warn(logger, "Unknown optional field is not set");
         return false;
-    }
     buff = data.getBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, &len);
     if (len < 4)
     {
-        smsc_log_warn(logger, "Unknown optional field less then 4 bytes");
+        smsc_log_warn(logger, "Unknown optional field is less then 4 bytes");
         return false;
     }
     return true;
