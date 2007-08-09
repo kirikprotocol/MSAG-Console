@@ -277,6 +277,13 @@ public:
 	{
 		memset((void*)&value, 0x00, sizeof(value));
 	}
+	
+    uint32_t HashCode(uint32_t attempt)const
+    {
+        uint32_t res = crc32(0, value.full_addr, sizeof(value.full_addr));
+        for(; attempt > 0; attempt--) res = crc32(res, value.full_addr, sizeof(value.full_addr));
+        return res;
+    }
 };
 
 struct MCEvent
