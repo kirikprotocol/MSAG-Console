@@ -117,7 +117,7 @@ int CommandDispatcher::Execute()
             try
             {
               listener->handle(*command);
-            }catch(Exception & e)
+            }catch(std::exception & e)
             {
               smsc_log_warn(logger, "Handler exception, key: %X, %s", key, e.what());
             }catch(...)
