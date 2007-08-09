@@ -54,10 +54,10 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
   {
     dupe.SetEventHandler(0);
   }
-  void SetBroken()
+  void SetBroken(const char* e = NULL)
   {
     broken=true;
-    fprintf(stderr,"Broken mirror file:%s",dupe.getFileName().c_str());
+    fprintf(stderr,"Broken mirror file:%s : Error: %s",dupe.getFileName().c_str(), e);
   }
   virtual void onOpen(int mode,const char* fileName)
   {
@@ -103,7 +103,12 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
           }
         }break;
       }
-    }catch(...)
+    }
+	catch(std::exception& e)
+    {
+      SetBroken(e.what());
+    }
+	catch(...)
     {
       SetBroken();
     }
@@ -117,7 +122,12 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
     try{
       dupe.Write(data,sz);
       dupe.Flush();
-    }catch(...)
+    }
+	catch(std::exception& e)
+    {
+      SetBroken(e.what());
+    }
+	catch(...)
     {
       SetBroken();
     }
@@ -127,7 +137,12 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
     if(broken)return;
     try{
       dupe.Seek(offset,whence);
-    }catch(...)
+    }
+	catch(std::exception& e)
+    {
+      SetBroken(e.what());
+    }
+	catch(...)
     {
       SetBroken();
     }
@@ -137,7 +152,12 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
     MakePath(makeMirrorFilename(newname).c_str());
     try{
       dupe.Rename(makeMirrorFilename(newname).c_str());
-    }catch(...)
+    }
+	catch(std::exception& e)
+    {
+      SetBroken(e.what());
+    }
+	catch(...)
     {
       SetBroken();
     }
