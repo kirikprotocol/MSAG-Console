@@ -104,17 +104,27 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
         }break;
       }
     }
-	catch(std::exception& e)
+  catch(std::exception& e)
     {
       SetBroken(e.what());
     }
-	catch(...)
+  catch(...)
     {
       SetBroken();
     }
   }
   virtual void onRead(const void* data,size_t sz)
   {
+    if(broken)return;
+    try{
+      dupe.SeekCur(sz);
+    }catch(std::exception& e)
+    {
+      SetBroken(e.what());
+    }catch(...)
+    {
+      SetBroken();
+    }
   }
   virtual void onWrite(const void* data,size_t sz)
   {
@@ -123,11 +133,11 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
       dupe.Write(data,sz);
       dupe.Flush();
     }
-	catch(std::exception& e)
+    catch(std::exception& e)
     {
       SetBroken(e.what());
     }
-	catch(...)
+    catch(...)
     {
       SetBroken();
     }
@@ -138,11 +148,11 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
     try{
       dupe.Seek(offset,whence);
     }
-	catch(std::exception& e)
+    catch(std::exception& e)
     {
       SetBroken(e.what());
     }
-	catch(...)
+    catch(...)
     {
       SetBroken();
     }
@@ -153,11 +163,11 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
     try{
       dupe.Rename(makeMirrorFilename(newname).c_str());
     }
-	catch(std::exception& e)
+    catch(std::exception& e)
     {
       SetBroken(e.what());
     }
-	catch(...)
+    catch(...)
     {
       SetBroken();
     }
@@ -221,3 +231,4 @@ void InitMirrorFile()
 {
   smsc::util::mirrorfile::globalFEH.DummyMethod();
 }
+
