@@ -1701,6 +1701,14 @@ int ProcessMessage(const char *msg,int msglen)
         if(from.length()==0)return StatusCodes::STATUS_CODE_INVALIDMSG;
         continue;
       }
+      if(name=="x-to")
+      {
+        to=value;
+        to+='@';
+        to+=cfg::maildomain;
+        toarr.push_back(to);
+        continue;
+      }
       if(name=="to" || name=="cc")
       {
         int emlpos=0;

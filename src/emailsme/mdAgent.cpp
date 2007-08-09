@@ -136,6 +136,14 @@ int main(int argc,char* argv[])
     LOG(("Read error\n"));
     return(EX_IOERR);
   }
+  if(argc==3)
+  {
+    String xto;
+    xto="X-To: ";
+    xto+=argv[2];
+    xto+="\n";
+    msg.Insert(0,xto);
+  }
   LOG(("Connecting to %s:%d\n",host.Str(),port));
   Socket s;
   if(s.Init(host,port,0)==-1 || s.Connect()==-1)
