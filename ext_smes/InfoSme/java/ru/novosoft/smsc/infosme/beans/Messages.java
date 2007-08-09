@@ -121,8 +121,11 @@ public class Messages extends InfoSmeBean
     Message msg;
     for (Iterator iter = messages.iterator(); iter.hasNext();) {
       msg = (Message)iter.next();
-      buffer.append(msg.getTaskId()).append(",").append(msg.getAbonent()).append(",").append(getStateName(msg.getState())).append(",")
-          .append(convertDateToString(msg.getSendDate())).append(",").append(msg.getMessage()).append('\n');
+      buffer.append(StringEncoderDecoder.encode(msg.getTaskId())).append(",")
+            .append(StringEncoderDecoder.encode(msg.getAbonent())).append(",")
+            .append(StringEncoderDecoder.encode(getStateName(msg.getState()))).append(",")
+            .append(StringEncoderDecoder.encode(convertDateToString(msg.getSendDate()))).append(",")
+            .append(StringEncoderDecoder.encode(msg.getMessage())).append('\n');
     }
     try {
       exportFile = new String(buffer.toString().getBytes("windows-1251"));
