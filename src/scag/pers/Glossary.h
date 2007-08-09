@@ -62,21 +62,23 @@ public:
 		smsc_log_debug(logger, "open");
 		currentIndex = 0;
 		glossVector.reserve(1024);
-		
+        
+		if(!glossFile) glossFile = new File();
+        
 		try
 		{
 			if(File::Exists(glossFileName.c_str()))
 			{
-				glossFile.RWOpen(glossFileName.c_str());
+				glossFile->RWOpen(glossFileName.c_str());
 				LoadGlossary();
 			}
 			else
 			{
-				glossFile.RWCreate(glossFileName.c_str());
+				glossFile->RWCreate(glossFileName.c_str());
 //				glossFile.Write("UNDEFINED\n", 10);
 			}
 
-			glossFile.SetUnbuffered();
+			glossFile->SetUnbuffered();
 		}
 		catch(FileException ex)
 		{
@@ -98,7 +100,9 @@ public:
 		}
 		glossMap.erase(glossMap.begin(), glossMap.end());
 		glossVector.erase(glossVector.begin(), glossVector.end());
-		glossFile.Close();
+		glossFile->Close();
+        delete glossFile;
+        glossFile = NULL;
 		opened=false;
 	}
 	
@@ -119,8 +123,8 @@ public:
 		if(It == glossMap.end())
 		{
 			char ch = 0x0a;
-			glossFile.Write(key.c_str(), key.length());
-			glossFile.Write(&ch, sizeof(char)); 
+			glossFile->Write(key.c_str(), key.length());
+			glossFile->Write(&ch, sizeof(char)); 
 			glossMap.insert(GlossaryMap::value_type(key, currentIndex));
 			glossVector.push_back(key);
 			currentIndex++;
@@ -180,7 +184,7 @@ private:
 		
 		try
 		{
-			while(glossFile.ReadLine(key))
+			while(glossFile->ReadLine(key))
 			{
 				smsc_log_debug(logger, "%s %d", key.c_str(), currentIndex);
 				glossMap.insert(GlossaryMap::value_type(key, currentIndex));
@@ -189,7 +193,7 @@ private:
 			}
 			smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossMap.size(), glossVector.size(), currentIndex);
 			
-			glossFile.SeekEnd(0);
+			glossFile->SeekEnd(0);
 		}
 		catch(FileException ex)
 		{
@@ -201,7 +205,7 @@ private:
 protected:
 	static smsc::logger::Logger *logger;
 	
-	static File		glossFile;
+	static File*		glossFile;
 	static GlossaryMap	glossMap;
 	static GlossaryVector	glossVector;
 	static int		currentIndex;

@@ -111,11 +111,12 @@ public:
 		hdr.total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 1;
 		hdr.data_size = data.length();//effectiveBlockSize;
 
-		//printf("data.length() = %d\n", data.length());
-		//printf("sizeof(DataBlockHeader) = %d\n", sizeof(DataBlockHeader));
-		//printf("hdr.block_used = 0x%X\n", hdr.block_used);
-		//printf("hdr.key = %s\n", hdr.key.getText().c_str());
-		//printf("hdr.total_blocks = %d\n", hdr.total_blocks);
+//		printf("data.length() = %d\n", data.length());
+//		printf("sizeof(DataBlockHeader) = %d\n", sizeof(DataBlockHeader));
+//		printf("hdr.block_used = 0x%X\n", hdr.block_used);
+//		printf("hdr.key = %s\n", hdr.key.getText().c_str());
+//		printf("hdr.total_blocks = %d\n", hdr.total_blocks);
+//		printf("FilePos = %d\n", hdr.total_blocks);
 		
 		for(int i = 0; i < hdr.total_blocks; i++)
 		{
@@ -134,7 +135,7 @@ public:
 			}
 			size_t curBlockSize = (i == hdr.total_blocks - 1) ? data.length() - effectiveBlockSize*i:effectiveBlockSize;
 			hdr.next_block = (i < hdr.total_blocks - 1) ? descrFile.first_free_block : -1;
-			f->Seek(-sizeof(descrFile.first_free_block), SEEK_CUR);
+			f->Seek(offset, SEEK_SET);
 			f->Write((void*)&hdr, sizeof(DataBlockHeader));
 			f->Write((void*)(data.c_ptr()+i*(effectiveBlockSize)), curBlockSize);
 			if(i == 0) blockIndex = curBlockIndex;
@@ -220,9 +221,8 @@ public:
 			File* f = dataFile_f[file_number];
 			f->Seek(offset, SEEK_SET);
 //			pritnf("3\n");
-
 			f->Read((void*)&hdr, sizeof(DataBlockHeader));
-			f->Seek(-sizeof(DataBlockHeader), SEEK_CUR);
+			f->Seek(offset, SEEK_SET);
 //			pritnf("4\n");
 			if( hdr.block_used != BLOCK_USED)
 				return false;
@@ -294,7 +294,7 @@ public:
 			File* f = dataFile_f[file_number];
 			f->Seek(offset, SEEK_SET);
 			f->Read((void*)&hdr, sizeof(DataBlockHeader));
-			f->Seek(-sizeof(DataBlockHeader), SEEK_CUR);
+			f->Seek(offset, SEEK_SET);
 			if( (hdr.block_used != BLOCK_USED))
 				return;
 			f->Write((void*)&(descrFile.first_free_block), sizeof(descrFile.first_free_block));

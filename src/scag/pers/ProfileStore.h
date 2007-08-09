@@ -108,14 +108,16 @@ public:
 };
 
 template <class Key>
-class HashProfileStore
+class HashProfileStore : public CachedProfileStore<Key>
 {
 public:
-    HashProfileStore() {};
+    HashProfileStore() { };
     ~HashProfileStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str());};
 
-    void init(const std::string& _storeName, uint32_t initRecCnt)
+    void init(const std::string& _storeName, uint32_t initRecCnt, uint32_t cacheSize)
     {
+		CachedProfileStore::init(cacheSize);
+		
         log = smsc::logger::Logger::getInstance("hashstore");
 
 		storeName = _storeName;
@@ -139,7 +141,7 @@ public:
             store.deleteRecord(key);
     }
 
-    Profile* getProfile(Key& key, bool create)
+    Profile* _getProfile(Key& key, bool create)
     {
         Profile *pf = new Profile();
         if(store.getRecord(key, pf) || create)
@@ -169,15 +171,17 @@ protected:
 
 
 template <class Key>
-class TreeProfileStore
+class TreeProfileStore : public CachedProfileStore<Key>
 {
 public:
-    TreeProfileStore() {};
-    ~TreeProfileStore() {};
+    TreeProfileStore() { };
+    ~TreeProfileStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str()); };
 
     void init(	const string& storageName, const string& storagePath,
 				int indexGrowth, int blocksInFile, int dataBlockSize, int cacheSize)
     {
+		CachedProfileStore::init(cacheSize);
+		
         log = smsc::logger::Logger::getInstance("treestore");
 		storeName = storageName;
         store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize);
@@ -189,11 +193,11 @@ public:
         pf->DeleteExpired();
 		sb.Empty();
         pf->Serialize(sb, true);
-        delete pf;
+//        delete pf;
         store.Set(key, sb);
     }
 
-    Profile* getProfile(Key& key, bool create)
+    Profile* _getProfile(Key& key, bool create)
     {
         Profile *pf = new Profile();
 		sb.Empty();
@@ -215,35 +219,33 @@ protected:
 	SerialBuffer sb;
 };
 
-template <class StoreType, class Key>
-class CachedProfileStore : public StoreType
+template <class Key>
+class CachedProfileStore
 {
 public:
     CachedProfileStore(): cache(NULL) {};
 
-    ~CachedProfileStore()
+    virtual ~CachedProfileStore()
     {
         if(cache != NULL)
         {
             for(int i = 0; i < max_cache_size; i++)
                 if(cache[i] != NULL)
                 {
-                    storeProfile(cache[i]->key, cache[i]->pf);
+//                    _storeProfile(cache[i]->key, cache[i]->pf);
 //                    delete cache[i]->pf;
                     delete cache[i];
                 }
             delete[] cache;
         }
-		smsc_log_debug(log, "Shutdown cached store %s....", storeName.c_str());		
+//		smsc_log_debug(log, "Shutdown cached store %s....", storeName.c_str());		
     };
-
-    void init(const std::string& _storeName, uint32_t initRecCnt, uint32_t _max_cache_size = 1000)
+	
+    void init(uint32_t _max_cache_size = 1000)
     {
         max_cache_size = _max_cache_size;
         cache = new CacheItem<Key>*[_max_cache_size];
         memset(cache, 0, sizeof(CacheItem<Key>*) * _max_cache_size);
-
-        StoreType::init(_storeName, initRecCnt);
     };
 
     Profile* getProfile(Key& key, bool create)
@@ -254,7 +256,7 @@ public:
             if(cache[i]->key == key)
                 return cache[i]->pf;
 
-            Profile* pf = StoreType::getProfile(key, create);
+            Profile* pf = _getProfile(key, create);
             if(pf)
             {
                 delete cache[i]->pf;
@@ -266,7 +268,7 @@ public:
         }
         else
         {
-            Profile* pf = StoreType::getProfile(key, create);
+            Profile* pf = _getProfile(key, create);
             if(pf)
                 cache[i] = new CacheItem<Key>(key, pf);
             return pf;
@@ -274,6 +276,8 @@ public:
             
     };
 
+	virtual Profile* _getProfile(Key& key, bool create) = 0;
+	
 protected:
     uint32_t max_cache_size;
     CacheItem<Key> **cache;
@@ -415,7 +419,7 @@ public:
     };
 };
 
-typedef ProfileStore<IntProfileKey, uint32_t, CachedProfileStore<HashProfileStore<IntProfileKey>, IntProfileKey > > IntProfileStore;
+typedef ProfileStore<IntProfileKey, uint32_t, HashProfileStore<IntProfileKey> > IntProfileStore;
 //typedef ProfileStore<StringProfileKey, std::string, CachedProfileStore<HashProfileStore<StringProfileKey>, StringProfileKey> > StringProfileStore;
 
 typedef ProfileStore<AbntAddr, const char*, TreeProfileStore<AbntAddr> > StringProfileStore;

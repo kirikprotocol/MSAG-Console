@@ -13,7 +13,7 @@ namespace scag{ namespace pers{
 	
 smsc::logger::Logger* Glossary::logger = 0;
 
-File				Glossary::glossFile;
+File*				Glossary::glossFile = NULL;
 Glossary::GlossaryMap		Glossary::glossMap;
 Glossary::GlossaryVector	Glossary::glossVector;
 int				Glossary::currentIndex = 0;
