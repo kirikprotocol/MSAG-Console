@@ -57,7 +57,7 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
   void SetBroken(const char* e = NULL)
   {
     broken=true;
-    fprintf(stderr,"Broken mirror file:%s : Error: %s",dupe.getFileName().c_str(), e);
+    fprintf(stderr,"Broken mirror file:%s : Error: %s",dupe.getFileName().c_str(), e ? e : "unknown");
   }
   virtual void onOpen(int mode,const char* fileName)
   {
