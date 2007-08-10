@@ -196,7 +196,7 @@ time_t DeliveryQueue::RegisterAlert(const AbntAddr& abnt)
 
 	if(!AbntsStatus.Exists(strAbnt.c_str()))
 	{
-		smsc_log_debug(logger, "Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
+		smsc_log_warn(logger, "Registration alert for %s canceled (abonent is not in hash).", strAbnt.c_str());
 		return -1;
 	}
 
@@ -260,11 +260,11 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
 		if(AbntsStatus.Exists(strAbnt.c_str()))
 		{
 			SchedParam *schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-			schedParam->abntStatus = InProcess;
-			schedParam->schedTime = 0;
-			schedParam->lastAttempt = curTime;
 			if(schedParam->abntStatus == Idle)
 			{	
+				schedParam->abntStatus = InProcess;
+				schedParam->schedTime = 0;
+				schedParam->lastAttempt = curTime;
 				smsc_log_info(logger, "Abonent %s ready to delivery.", strAbnt.c_str());
 				return true;
 			}
@@ -277,7 +277,7 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
 		}
 		else
 		{
-			smsc_log_debug(logger, "Abonent %s is not exists in the hash.", strAbnt.c_str());
+			smsc_log_warn(logger, "Abonent %s is not exists in the hash.", strAbnt.c_str());
 			return false;
 		}
 	}
