@@ -586,11 +586,12 @@ sub process{
       # A -> B
       $billed|=outrow($out,$outfields);
       
-      $outfields->{RECORD_TYPE}=10;
-#      $outfields->{RECORD_TYPE}=30;
+#      $outfields->{RECORD_TYPE}=10;
+      $outfields->{RECORD_TYPE}=30;
       $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       $outfields->{PAYER_IMSI}='';#$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}='';#$infields->{DST_MSC};
+      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DIVERTED_FOR});
       # B -> C
       $billed|=outrow($out,$outfields);
@@ -599,7 +600,7 @@ sub process{
       $outfields->{RECORD_TYPE}=20;
       $outfields->{CALL_DIRECTION}='I';
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
-      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
+      $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
       $outfields->{INV_SERVICE_ID}=21;
       # B <- A
       $billed|=outrow($out,$outfields);
@@ -607,6 +608,7 @@ sub process{
       $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DIVERTED_FOR});
       $outfields->{PAYER_IMSI}=$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
+      $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       # C <- B
       $billed|=outrow($out,$outfields);
