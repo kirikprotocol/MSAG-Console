@@ -23,6 +23,7 @@
 #include <signal.h>
 #include <pthread.h>
 #include <list>
+#include <algorithm>
 #include "sms/sms_util.h"
 #include "emailsme/AbonentProfile.hpp"
 #include "util/Base64.hpp"
@@ -1704,9 +1705,15 @@ int ProcessMessage(const char *msg,int msglen)
       if(name=="x-to")
       {
         to=value;
-        to+='@';
-        to+=cfg::maildomain;
-        toarr.push_back(to);
+        if(to.find('@')==std::string::npos)
+        {
+          to+='@';
+          to+=cfg::maildomain;
+        }
+        if(std::find(toarr.begin(),toarr.end(),to)==toarr.end())
+        {
+          toarr.push_back(to);
+        }
         continue;
       }
       if(name=="to" || name=="cc")
