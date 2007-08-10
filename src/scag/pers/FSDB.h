@@ -70,8 +70,11 @@ class FSDBProfiles: public FSDB<Key, DataBlock>
     typedef RBTree<Key, long>               IndexStorage;
 
 public:
-	FSDBProfiles():logger(smsc::logger::Logger::getInstance("FSDB")){}
-    virtual ~FSDBProfiles(){}
+	FSDBProfiles():logger(smsc::logger::Logger::getInstance("FSDB")), indexAllocator(0) {}
+    virtual ~FSDBProfiles(){
+		if(indexAllocator)
+			delete indexAllocator;
+	}
 
     virtual int Init(const string& _dbName, const string& _dbPath="./",
         long indexGrowth = 1000000,

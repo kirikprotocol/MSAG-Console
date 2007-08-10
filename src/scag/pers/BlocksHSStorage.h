@@ -48,9 +48,8 @@ public:
 	static const int defaultFileSize = 3; // in blocks 
 	static const long BLOCK_USED	= (long)1 << 63;
 
-	BlocksHSStorage():running(false), descrFile_fd(-1), descrFile_addr(0)
+	BlocksHSStorage():running(false)
 	{
-		dataFile_f.reserve(1024);
 	}
 	virtual ~BlocksHSStorage()
 	{
@@ -88,14 +87,19 @@ public:
 		running = true;
 		return 0;
 	}
+	
 	void Close(void)
 	{
 		if(running)
 		{
-			if(descrFile_addr) munmap(descrFile_addr, sizeof(DescriptionFile));
-			if(-1 != descrFile_fd) close(descrFile_fd);
-			for(int i = 0; i < dataFile_fd.size(); i++)
-				close(dataFile_fd[i]);
+			for(int i = 0; i < dataFile_f.size(); i++)
+			{
+//				printf("Free: %p, %d\n", dataFile_f[i], i);			
+				dataFile_f[i]->Close();
+				delete dataFile_f[i];
+			}
+			dataFile_f.clear();
+			descrFile_f.Close();			
 			running = false;
 		}
 	
@@ -310,10 +314,7 @@ private:
 	string				dbName;
 	string				dbPath;
 	DescriptionFile			descrFile;		
-	int				descrFile_fd;
 	File				descrFile_f;
-	caddr_t				descrFile_addr;
-	vector<int>			dataFile_fd;
 	vector<File*>			dataFile_f;
 	
 	//bool isFileExists(void)
@@ -354,7 +355,8 @@ private:
 		snprintf(buff, 16, "-%.7d", descrFile.files_count);
 		string name = dbPath + '/' + dbName + buff;
 	
-		dataFile_f[descrFile.files_count] = new File();
+		dataFile_f.push_back(new File());
+//		printf("Alloc: %p, %d\n", dataFile_f[descrFile.files_count], descrFile.files_count);
 		try
 		{
 			dataFile_f[descrFile.files_count]->RWCreate(name.c_str());
@@ -416,7 +418,7 @@ private:
 		{
 			snprintf(buff, 10, "-%.7d", i);
 			string name = path + buff;
-			dataFile_f[i] = new File();
+			dataFile_f.push_back(new File());
 			try
 			{
 				dataFile_f[i]->RWOpen(name.c_str());
