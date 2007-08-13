@@ -345,6 +345,7 @@ static char const ident[] = "$Id$";
         rec.alarmObjCategory = alarmObjCategory;
         rec.severity = severity;
         rec.text = text;
+        rec.status = status;
         smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
         trapsQueue.Push(rec);
         /*
