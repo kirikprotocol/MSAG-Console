@@ -96,8 +96,8 @@ static char const ident[] = "$Id$";
         if(fileLog) fileLog->log(*vars);
         smsc_log_debug( smsc::snmp::SnmpAgent::log,
                        "trap(alarmId=%s,object=%s,severity=%d,text=%s)",
-                       vars->alarmId,
-                       vars->alarmObjCategory,
+                       vars->alarmId.c_str(),
+                       vars->alarmObjCategory.c_str(),
                        vars->severity,
                        vars->text.c_str());
 
