@@ -341,15 +341,13 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         text=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
       }
       //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
-      if ( text_len > 140 ){
+      if ( text_len > 140 ) {
 	char *dbgtxt = new char[text_len*4];
 	int k = 0;
-        for ( int i=0; i<text_len; ++i){
+        for ( int i=0; i<text_len; ++i) {
 	  k+=sprintf(dbgtxt+k,"%02x ",(unsigned)text[i]);
         }
-      
-        __map_warn2__("mkDeliverPDU:  UCS2 text length %d > 140: %s",
-                  text_len, dbgtxt);
+        __map_warn2__("mkDeliverPDU:  UCS2 text length %d > 140: %s", text_len, dbgtxt);
 	delete[] dbgtxt;
         throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
       }
@@ -371,5 +369,5 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   return pdu;
 #else
   return 0;
-dk#endif
+#endif
 }
