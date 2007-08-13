@@ -3840,8 +3840,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
+    sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
     time_t now=time(NULL);
-    if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
+    if((sms.getValidTime()<=now) || //expired or
        RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
     {
       sms.setLastResult(Status::EXPIRED);
@@ -3868,7 +3869,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       return EXPIRED_STATE;
     }
 
-    sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
        sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
     {
