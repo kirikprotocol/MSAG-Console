@@ -1710,10 +1710,7 @@ int ProcessMessage(const char *msg,int msglen)
           to+='@';
           to+=cfg::maildomain;
         }
-        if(std::find(toarr.begin(),toarr.end(),to)==toarr.end())
-        {
-          toarr.push_back(to);
-        }
+        toarr.push_back(to);
         continue;
       }
       if(name=="to" || name=="cc")
@@ -1743,6 +1740,19 @@ int ProcessMessage(const char *msg,int msglen)
   if(from.length()==0 || toarr.size()==0)
   {
     return StatusCodes::STATUS_CODE_INVALIDMSG;
+  }
+
+  {
+    std::set<std::string> toset;
+    for(int i=0;i<toarr.size();i++)
+    {
+      toset.insert(toarr[i]);
+    }
+    toarr.clear();
+    for(std::set<std::string>::iterator it=toset.begin();it!=toset.end();it++)
+    {
+      toarr.push_back(*it);
+    }
   }
 
   int rc=StatusCodes::STATUS_CODE_INVALIDMSG;
