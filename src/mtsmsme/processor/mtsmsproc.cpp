@@ -246,7 +246,7 @@ int MtSmsProcessor::Run()
         if (checkTimer(&conftimer))
         {
           smsc_log_error(MtSmsProcessorLogger,
-                         "EINSS7_I97IsupBindReg() confirmation timer is expired");
+                         "EINSS7_I96SccpBindReq() confirmation timer is expired");
           result = MCIERROR;
           goto unbind_sccp; /* just in case */
         }
