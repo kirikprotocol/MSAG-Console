@@ -342,8 +342,15 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       }
       //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
       if ( text_len > 140 ){
-        __map_warn2__("mkDeliverPDU:  UCS2 text length %d > 140",
-                  text_len);
+	char *dbgtxt = new char[text_len*4];
+	int k = 0;
+        for ( int i=0; i<text_len; ++i){
+	  k+=sprintf(dbgtxt+k,"%02x ",(unsigned)text[i]);
+        }
+      
+        __map_warn2__("mkDeliverPDU:  UCS2 text length %d > 140: %s",
+                  text_len, dbgtxt);
+	delete[] dbgtxt;
         throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
       }
       memcpy(pdu_ptr+1,text,text_len);
@@ -364,5 +371,5 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   return pdu;
 #else
   return 0;
-#endif
+dk#endif
 }

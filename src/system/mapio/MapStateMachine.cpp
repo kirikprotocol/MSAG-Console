@@ -95,7 +95,7 @@ struct MAPDIALOG_XERROR : public runtime_error
 struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
 {
   MAPDIALOG_BAD_STATE(const string& s) :
-  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,Status::MAPINTERNALFAILURE),s){}
+  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE),s){}
 };
 struct MAPDIALOG_TEMP_ERROR : public MAPDIALOG_ERROR
 {
@@ -1471,10 +1471,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
     if ( cmd->get_commandId() != SUBMIT_RESP ) {
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
         throw MAPDIALOG_BAD_STATE("putCommand: must be DELIVERY or QUERYABONENTSTATUS");
+      // this is deliver command
       try
       {
         if ( cmd->get_commandId() == DELIVERY  && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
-        {
+        { // DELIVERY ussd operation
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
           __map_trace2__("putCommand dialogid_smsc /0x%x USSD OP %d",dialogid_smsc, serviceOp);
           string s_seq(cmd->get_sms()->getDestinationAddress().value);
@@ -1634,7 +1635,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             ussd_map.erase(sequence);
             throw;
           }
-        }else if ( !dialog2  ) {
+        }else if ( !dialog2  ) { // end of DELIVERY ussd operation
+          // DELIVERY SMS no chained dialog 
           try {
             dialog_ssn = SSN;
             if ( cmd->get_commandId() == DELIVERY ) {
@@ -1670,6 +1672,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             return;
           }
         }else{
+          // DELIVERY SMS chained dialog 
           dialog_ssn = SSN;
           dialog.assign(dialog2->AddRef());
           dialogid_map = dialog->dialogid_map;
@@ -1679,7 +1682,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog->dialogid_smsc = dialogid_smsc;
           dialog->dropChain = false;
         }
-      }catch(MAPDIALOG_ERROR& e){
+      }catch(MAPDIALOG_ERROR& e){ // try for delivery command
         throw;
       }catch(exception& e){
         __map_warn2__("putCommand: exception when create dialog. <exception>:%s",e.what());
