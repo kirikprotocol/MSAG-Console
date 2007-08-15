@@ -17,14 +17,17 @@ class HttpContext;
 
 typedef Hash<std::string> StringHash;
 
-const char CONTENT_LENGTH_FIELD[] = "Content-Length";
-const char CONTENT_TYPE_FIELD[] = "Content-Type";
-const char CONNECTION_FIELD[] = "Connection";
-const char LATIN_1[] = "ISO8859-1"; //"Latin-1";
-
 class HttpCommand;
 class HttpRequest;
 class HttpParser;
+
+const char CONTENT_LENGTH_FIELD[] = "Content-Length";
+const char CONTENT_TYPE_FIELD[] = "Content-Type";
+const char CONNECTION_FIELD[] = "Connection";
+const char TRANSFER_ENCODING_FIELD[] = "Transfer-Encoding";
+const char CONTENT_ENCODING_FIELD[] = "Content-Encoding";
+const char ACCEPT_ENCODING_FIELD[] = "Accept-Encoding";
+const char LATIN_1[] = "ISO8859-1"; //"Latin-1";
 
 struct TransactionContext {
     int64_t operationId;
@@ -213,7 +216,8 @@ public:
     const std::string& getHeaderField(const std::string& fieldName);
     void setHeaderField(const std::string& fieldName, 
                         const std::string& fieldValue);
-
+                        
+    void removeHeaderField(const std::string& fieldName);
     //void serialize();
 
     HttpContext* getContext() { return context; };

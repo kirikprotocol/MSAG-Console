@@ -33,6 +33,9 @@ const char *HttpRequest::httpMethodNames[9] = {
 static const std::string content_length_field(CONTENT_LENGTH_FIELD);
 static const std::string content_type_field(CONTENT_TYPE_FIELD);
 static const std::string connection_field(CONNECTION_FIELD);
+static const std::string transfer_encoding(TRANSFER_ENCODING_FIELD);
+static const std::string content_encoding(CONTENT_ENCODING_FIELD);
+static const std::string accept_encoding(ACCEPT_ENCODING_FIELD);
 static const std::string close("close");
 static const std::string empty;        
 
@@ -202,6 +205,11 @@ void HttpCommand::setHeaderField(const std::string& fieldName,
     headerFields[fieldName.c_str()] = fieldValue;
 }
 
+void HttpCommand::removeHeaderField(const std::string& fieldName)
+{
+    headerFields.Delete(fieldName.c_str());
+}
+
 HttpRequest::ParameterIterator& HttpRequest::getQueryParameterNames()
 {
     queryParameters.First();
@@ -268,25 +276,28 @@ bool HttpCommand::setMessageText(const std::string& text)
     const std::string &content_type = getHeaderField(content_type_field);
 
 //    printf("charset=%s content-type=%s\n", charset.c_str(), content_type.c_str());
-    if(charset.length() && (content_type.empty() || !strncasecmp(content_type.c_str(), "text/", 5)))
-    {  
-        content.SetPos(0);        
-        if(!strcasecmp("UTF-8", charset.c_str()))
-            content.Append(text.c_str(), text.length());
-        else
-        {
-            TmpBuf<uint8_t, 2048> buf(2048);
-            Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), buf);
-            content.Append((char*)buf.get(), buf.GetPos());
-            textContent = text;
-        }
-        textContent = text;        
-        setContentLength(content.GetPos());
-        setLengthField(content.GetPos());
-        return true;
-    }
+    if(strncasecmp(content_type.c_str(), "text/", 5))
+    {
+        charset = "UTF-8";
+        setHeaderField(content_type_field, "text/html; charset=" + charset);
+    }        
     
-    return false;
+    content.SetPos(0);        
+    if(!strcasecmp("UTF-8", charset.c_str()))
+        content.Append(text.c_str(), text.length());
+    else
+    {
+        TmpBuf<uint8_t, 2048> buf(2048);
+        Convertor::convert("UTF-8", charset.c_str(), text.c_str(), text.length(), buf);
+        content.Append((char*)buf.get(), buf.GetPos());
+        textContent = text;
+    }
+    textContent = text;        
+    setContentLength(content.GetPos());
+    setLengthField(content.GetPos());
+    removeHeaderField(transfer_encoding);
+    removeHeaderField(content_encoding);
+    return true;
 }
 
 const uint8_t* HttpCommand::getMessageBinary(int& length)
@@ -310,7 +321,9 @@ void HttpCommand::setMessageBinary(uint8_t* body, int length, const std::string&
     
     setLengthField(length);
     setHeaderField(content_type_field, cp);
-
+    removeHeaderField(transfer_encoding);
+    removeHeaderField(content_encoding);
+    
     textContent.clear();
 }
 
@@ -361,6 +374,8 @@ const std::string& HttpRequest::serialize()
         headers += CRLF;
 
         setHeaderField(connection_field, close);
+        removeHeaderField(accept_encoding);
+        removeHeaderField("TE");
 
         if(httpMethod == POST && !strcasecmp(contentType.c_str(), "application/x-www-form-url-encoded"))
         {
@@ -480,6 +495,7 @@ void HttpResponse::fillFakeResponse(int s)
     content.Append(sl, len);
     content.Append("</h1></body></html>", 19);
     setLengthField(content.GetPos());
+    setHeaderField(content_type_field, "text/html");
 }
 
 bool HttpResponse::isResponse()

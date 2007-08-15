@@ -302,13 +302,16 @@ void HttpProcessorImpl::setFields(HttpRequest& request, HttpRoute& r)
     
     setPlaces(lltostr(request.getUSR(), buf + 19), getOutPlaces(r, PlacementKind::USR), request, URLField);
     setPlaces(request.getAbonent(), getOutPlaces(r, PlacementKind::ADDR), request, URLField);
-    setPlaces(lltostr(r.service_id, buf + 19), getOutPlaces(r, PlacementKind::SERVICE_ID), request, URLField);
-    setPlaces(lltostr(r.id, buf + 19), getOutPlaces(r, PlacementKind::ROUTE_ID), request, URLField);
+    setPlaces(lltostr(request.getServiceId(), buf + 19), getOutPlaces(r, PlacementKind::SERVICE_ID), request, URLField);
+    setPlaces(lltostr(request.getRouteId(), buf + 19), getOutPlaces(r, PlacementKind::ROUTE_ID), request, URLField);
    
     if(!URLField.length()) return;
     
     if(request.getSiteFileName().length())
         URLField = '/' + URLField;
+        
+    URLField += '/';
+    
 //    request.setSiteFileName(request.getSiteFileName() + URLField);
     request.setURLField(URLField);
 }
@@ -389,7 +392,15 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
                     return scag::re::STATUS_PROCESS_LATER;
         }
         else
+        {
             se = request.getSession();
+            if(request.getRouteId() > 0)
+                r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
+            else if(request.getServiceId() > 0)
+                r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
+            else
+                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
+        }
             
         if(se.Get())
         {
