@@ -227,8 +227,6 @@ private:
 
         void cleanUp(void)
         {
-            for (IDPStatus::iterator it = dlgRes.begin(); it != dlgRes.end(); ++it)
-                delete it.operator->();
             dlgRes.clear();
             dlgCnt = 0;
         }
