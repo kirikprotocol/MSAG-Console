@@ -77,7 +77,7 @@ void CommandDispatcher::GetCmdHandler(ProfileType pt, uint32_t int_key, const st
     }
     else
     {
-        smsc_log_warn(log, "GetCmdHandler property not found: store=%d, %s", pt, name.c_str());    
+        smsc_log_warn(log, "GetCmdHandler property not found: store=%d, key=%s(%d), name=%s", pt, str_key.c_str(), int_key, name.c_str());    
         SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
     }        
 }
