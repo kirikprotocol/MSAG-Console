@@ -15,8 +15,8 @@ void BillingManagerConfig::init(ConfigView& cv) throw(ConfigException)
         int port_(cv.getInt("BillingServerPort"));
         
 
-        BillingTimeOut = cv.getInt("BillingTimeOut");
-        BillingReconnectTimeOut = cv.getInt("BillingReconnectTimeOut");
+        try{ BillingTimeOut = cv.getInt("BillingTimeOut"); } catch(ConfigException&) { BillingTimeOut = 2; }
+        try{ BillingReconnectTimeOut = cv.getInt("BillingReconnectTimeOut"); } catch(ConfigException&) { BillingReconnectTimeOut = 300; }
         //MaxThreads = cv.getInt("MaxThreads");
         MaxThreads = 10;
 
