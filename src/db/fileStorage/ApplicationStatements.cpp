@@ -81,6 +81,8 @@ SelectInfoSme_T_stateAndSendDate_criterion::InfoSme_T_ResultSet::getString(int p
     return _fetchedValue.getAbonentAddress().c_str();
   else if ( pos == 3 )
     return _fetchedValue.getMessage().c_str();
+  else if ( pos == 4 )
+    return _fetchedValue.getRegionId().c_str();
   else throw InvalidArgumentException();
 }
 
@@ -178,6 +180,8 @@ Insert_into_InfoSme_T::setString(int pos, const char* str, bool null)
     _abonentAddress = str;
   else if ( pos == 4 )
     _message = str;
+  else if ( pos == 5 )
+    _regionId = str;
   else throw SQLException("Wrong position argument number");
 }
 
@@ -204,7 +208,8 @@ Insert_into_InfoSme_T::executeUpdate()
                             _state,
                             _abonentAddress,
                             _sendDate,
-                            _message);
+                            _message,
+                            _regionId);
 
   if ( _dataSource->putValue(newValue) ) {
     smsc_log_info(_logger, "Insert_into_InfoSme_T::executeUpdate::: the new record=[%s] was inserted into Infosme_T_", newValue.toString().c_str());
@@ -325,7 +330,8 @@ Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate()
                               _newMsgState,
                               oldValue.getAbonentAddress(),
                               oldValue.getSendDate(),
-                              oldValue.getMessage());
+                              oldValue.getMessage(),
+                              oldValue.getRegionId());
 
     if ( (st = _dataSource->updateValue(primaryKey, oldValue, newValue)) < 0 )
       throw SQLException("Update_InfoSme_T_Set_NewState_By_OldState::executeUpdate::: can't update record");
@@ -368,7 +374,8 @@ Update_InfoSme_T_Set_State_By_Id::executeUpdate()
                               _newMsgState,
                               oldValue.getAbonentAddress(),
                               oldValue.getSendDate(),
-                              oldValue.getMessage());
+                              oldValue.getMessage(),
+                              oldValue.getRegionId());
 
     int updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
     if ( updateRes < 0 )
@@ -415,7 +422,8 @@ Update_InfoSme_T_Set_State_By_IdAndState::executeUpdate()
                               _newMsgState,
                               oldValue.getAbonentAddress(),
                               oldValue.getSendDate(),
-                              oldValue.getMessage());
+                              oldValue.getMessage(),
+                              oldValue.getRegionId());
     int updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
     if ( updateRes < 0 )
       throw SQLException("Update_InfoSme_T_Set_State_By_IdAndState::executeUpdate::: can't update record");
@@ -464,7 +472,8 @@ Update_InfoSme_T_Set_StateAndSendDate_By_Id::executeUpdate()
                               _newMsgState,
                               oldValue.getAbonentAddress(),
                               _dateTime,
-                              oldValue.getMessage());
+                              oldValue.getMessage(),
+                              oldValue.getRegionId());
     int updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
     if ( updateRes < 0 )
       throw SQLException("Update_InfoSme_T_Set_StateAndSendDate_By_Id::executeUpdate::: can't update record");
@@ -506,7 +515,8 @@ Update_InfoSme_T_Set_NewMessage_By_Id::executeUpdate()
                               oldValue.getState(),
                               oldValue.getAbonentAddress(),
                               oldValue.getSendDate(),
-                              _newMsg);
+                              _newMsg,
+                              oldValue.getRegionId());
     int updateRes;
     if ( _newMsg.size() == oldValue.getMessage().size() ) {
       updateRes = _dataSource->updateValue(primaryKey, oldValue, newValue);
