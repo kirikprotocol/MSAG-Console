@@ -11,18 +11,23 @@
 class InfoSme_T_Entity {
 public:
   InfoSme_T_Entity() :
-    _id(0), _state(0), _abonentAddress(""), _sendDate(0), _message("") {}
+    _id(0), _state(0), _abonentAddress(""), _sendDate(0), _message(""), _regionId("") {}
   InfoSme_T_Entity(uint64_t id,
                    uint8_t state,
                    const std::string& abonentAddress,
                    time_t   sendDate,
-                   const std::string& message="") :
-    _id(id), _state(state), _abonentAddress(abonentAddress), _sendDate(sendDate), _message(message) {}
+                   const std::string& message="",
+                   const std::string& regionId="") :
+    _id(id), _state(state), _abonentAddress(abonentAddress),
+    _sendDate(sendDate), _message(message), _regionId(regionId) {}
+
   uint64_t getId() const { return _id; }
   uint8_t getState() const { return _state; }
   const std::string& getAbonentAddress() const { return _abonentAddress; }
   time_t getSendDate() const { return _sendDate; }
   const std::string& getMessage() const { return _message; }
+  const std::string& getRegionId() const { return _regionId; }
+
   std::string toString() const {
     std::ostringstream obuf;
     obuf << "id=[" << _id
@@ -30,6 +35,7 @@ public:
          << "],abonentAddress=[" << _abonentAddress
          << "],sendDate=[" << _sendDate
          << "],message=[" << _message
+         << "],regionId=[" << _regionId
          << "]";
     return obuf.str();
   }
@@ -103,11 +109,12 @@ public:
   };
 
 private:
-  uint64_t _id;
-  uint8_t _state;
+  uint64_t    _id;
+  uint8_t     _state;
   std::string _abonentAddress;
-  time_t   _sendDate;
+  time_t      _sendDate;
   std::string _message;
+  std::string _regionId;
 };
 
 
