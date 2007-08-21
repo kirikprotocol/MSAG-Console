@@ -31,6 +31,14 @@
 #include "InfoSmeComponent.h"
 #include "util/mirrorfile/mirrorfile.h"
 
+#include <sms/sms.h>
+#include <util/config/route/RouteStructures.h>
+#include <util/config/route/RouteConfig.h>
+
+#include <util/config/region/RegionsConfig.hpp>
+#include <util/config/region/Region.hpp>
+#include <util/config/region/RegionFinder.hpp>
+
 #include "version.inc"
 
 using namespace smsc::sme;
@@ -139,28 +147,6 @@ void TrafficControl::incOutgoing()
     trafficMonitor.wait(1000/maxMessagesPerSecond);
     out = outgoing.Get();
   }
-  int inc = incoming.Get();
-  int difference = out-inc;
-//   while (difference >= unrespondedMessagesMax) {
-//     smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
-//                    difference, difference*unrespondedMessagesSleep, out, inc);
-//     trafficMonitor.wait(difference*unrespondedMessagesSleep);
-//     out = outgoing.Get(); inc = incoming.Get(); difference = out-inc;
-//   }
-
-//   if (difference >= unrespondedMessagesMax || trafficLimitReached) {
-//     if (trafficLimitReached) {
-//       smsc_log_debug(logger, "wait limit (out=%d, max=%d)",
-//                      out, maxMessagesPerSecond);
-//     } else {
-//       smsc_log_debug(logger, "wait %d/%d (o=%d, i=%d)",
-//                      difference, difference*unrespondedMessagesSleep, out, inc);
-//     }
-//     trafficMonitor.wait((trafficLimitReached) ? 1000/maxMessagesPerSecond:
-//                         difference*unrespondedMessagesSleep);
-//   } else {
-//     smsc_log_debug(logger, "nowait");
-//   }
 }
 
 void TrafficControl::incIncoming()
@@ -172,7 +158,7 @@ void TrafficControl::incIncoming()
   //int difference = out-inc;
   bool trafficLimitOk = (out < maxMessagesPerSecond);
 
-  if (/*(difference < unrespondedMessagesMax) &&*/ trafficLimitOk) {
+  if (trafficLimitOk) {
     trafficMonitor.notifyAll();
   }
 }
@@ -518,10 +504,47 @@ extern "C" static void appSignalHandler(int sig)
   }
 }
 
+static smsc::util::config::region::RegionsConfig *regionsConfig;
+
 extern "C" static void atExitHandler(void)
 {
-    smsc::util::xml::TerminateXerces();
-    smsc::logger::Logger::Shutdown();
+  delete regionsConfig;
+  smsc::util::xml::TerminateXerces();
+  smsc::logger::Logger::Shutdown();
+}
+
+static void
+doRegionsInitilization(const char* regions_xml_file, const char* route_xml_file)
+{
+  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+
+  regionsConfig = new smsc::util::config::region::RegionsConfig(regions_xml_file);
+
+  smsc::util::config::region::RegionsConfig::status st = regionsConfig->load();
+  if ( st == smsc::util::config::region::RegionsConfig::success )
+    smsc_log_info(logger, "config file %s has been loaded successful", regions_xml_file);
+  else
+    throw smsc::util::config::ConfigException("can't load config file %s", regions_xml_file);
+
+  smsc::util::config::route::RouteConfig routeConfig;
+  if ( routeConfig.load(route_xml_file) == smsc::util::config::route::RouteConfig::success )
+    smsc_log_info(logger, "config file %s has been loaded successful", route_xml_file);
+  else
+    throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file);
+
+  smsc::util::config::region::Region* region;
+  smsc::util::config::region::RegionsConfig::RegionsIterator regsIter = regionsConfig->getIterator();
+
+  while (regsIter.fetchNext(region) == smsc::util::config::region::RegionsConfig::success) {
+    region->expandSubjectRefs(routeConfig);
+    smsc::util::config::region::Region::MasksIterator maskIter = region->getMasksIterator();
+    std::string addressMask;
+    while(maskIter.fetchNext(addressMask)) {
+      smsc::util::config::region::RegionFinder::getInstance().registerAddressMask(addressMask, region);
+    }
+  }
+
+  smsc::util::config::region::RegionFinder::getInstance().registerDefaultRegion(&(regionsConfig->getDefaultRegion()));
 }
 
 int main(int argc, char** argv)
@@ -576,26 +599,11 @@ int main(int argc, char** argv)
             smsc_log_warn(logger, "Parameter 'maxMessagesPerSecond' value '%d' is too big. "
                           "The preffered max value is 100", maxMessagesPerSecond);
         }
-        /*try { unrespondedMessagesMax = tpConfig.getInt("unrespondedMessagesMax"); } catch (...) {};
-        if (unrespondedMessagesMax <= 0) {
-            unrespondedMessagesMax = 1;
-            smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value is invalid. Using default %d",
-                          unrespondedMessagesMax);
-        }
-        if (unrespondedMessagesMax > 500) {
-            smsc_log_warn(logger, "Parameter 'unrespondedMessagesMax' value '%d' is too big. "
-                          "The preffered max value is 500", unrespondedMessagesMax);
-        }
-        try { unrespondedMessagesSleep = tpConfig.getInt("unrespondedMessagesSleep"); } catch (...) {};
-        if (unrespondedMessagesSleep <= 0) {
-            unrespondedMessagesSleep = 100;
-            smsc_log_warn(logger, "'unrespondedMessagesSleep' value is invalid. Using default %dms",
-                          unrespondedMessagesSleep);
-        }
-        if (unrespondedMessagesSleep > 500) {
-            smsc_log_warn(logger, "Parameter 'unrespondedMessagesSleep' value '%d' is too big. "
-                          "The preffered max value is 500ms", unrespondedMessagesSleep);
-                          }*/
+
+        const char* route_xml_file = tpConfig.getString("route_config_filename");
+        const char* regions_xml_file = tpConfig.getString("regions_config_filename");
+
+        doRegionsInitilization(regions_xml_file, route_xml_file);
 
         sigfillset(&blocked_signals);
         sigdelset(&blocked_signals, SIGKILL);

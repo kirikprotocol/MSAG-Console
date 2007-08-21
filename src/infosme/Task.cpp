@@ -4,6 +4,10 @@
 #include <sstream>
 #include <list>
 #include <util/sleep.h>
+#include <sms/sms.h>
+#include <util/config/region/Region.hpp>
+#include <util/config/region/RegionFinder.hpp>
+
 extern bool isMSISDNAddress(const char* string);
 
 namespace smsc { namespace infosme 
@@ -931,6 +935,41 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
     return result;
 }
 
+void
+Task::putToSuspendedMessagesQueue(const Message& suspendedMessage)
+{
+  smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%s': exceeded region bandwidth (regionId=%s), put message with id=%d to suspendedMessagesCache",
+                info.id.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
+  MutexGuard guard(messagesCacheLock);
+  suspendedMessagesCache_t::iterator iter = suspendedMessagesCache.find(suspendedMessage.regionId);
+  if ( iter == suspendedMessagesCache.end() ) {
+    std::pair<suspendedMessagesCache_t::iterator, bool> ins_res = suspendedMessagesCache.insert(std::make_pair(suspendedMessage.regionId, new suspended_msg_inf()));
+    iter = ins_res.first;
+  }
+  iter->second->messages.push_back(suspendedMessage);
+  iter->second->lastUseOfTime = ::time(0);
+}
+
+bool
+Task::fetchMessageFromCache(Message& message)
+{
+  MutexGuard guard(messagesCacheLock);
+  while (messagesCache.Count() > 0) {
+    messagesCache.Shift(message);
+    suspendedMessagesCache_t::iterator iter = suspendedMessagesCache.find(message.regionId);
+    if ( iter == suspendedMessagesCache.end() ) {
+      // return message for region for which bandwidth congestion condition isn't occured yet
+      setInProcess(isEnabled());
+      return true;
+    } else {
+      iter->second->messages.push_back(message);
+      iter->second->lastUseOfTime = ::time(0);
+    }
+  }
+
+  return false;
+}
+
 bool Task::getNextMessage(Connection* connection, Message& message)
 {
     smsc_log_debug(logger, "getNextMessage method being called on task '%s'",
@@ -940,25 +979,46 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     if (!isEnabled())
         return setInProcess(false);
 
-    {
-        // selecting from cache
-        MutexGuard guard(messagesCacheLock); 
-        if (messagesCache.Count() > 0) {
-            messagesCache.Shift(message);
-            setInProcess(isEnabled());
-            return true;
-        }
-    }   // Cache is empty here
+    // selecting from cache
+    if ( fetchMessageFromCache(message) )
+      return true;
+
+    // Cache is empty here
 
     if (info.trackIntegrity && !isGenerationSucceeded())
-        return setInProcess(false); // for track integrity check that generation finished ok
+      return setInProcess(false); // for track integrity check that generation finished ok
 
+    {
+      MutexGuard guard(messagesCacheLock);
+      if ( suspendedMessagesCache.size() > 0 ) {
+        smsc_log_info(logger, "Task::getNextMessage::: check timed out messages in suspendedMessagesCache");
+        // move all timed out messages from suspendedMessagesCache to messagesCache
+        for(suspendedMessagesCache_t::iterator iter = suspendedMessagesCache.begin(), end_iter = suspendedMessagesCache.end(); iter != end_iter; ++iter) {
+          if ( ::time(0) - iter->second->lastUseOfTime >= 1 ) {
+            for (std::vector<Message>::iterator msg_iter = iter->second->messages.begin(), msg_end_iter = iter->second->messages.end(); msg_iter != msg_end_iter; ++msg_iter) {
+              messagesCache.Push(*msg_iter);
+              smsc_log_debug(logger, "Task::getNextMessage::: move message with id=%ld from suspendedMessagesCache to messagesCache", msg_iter->id);
+            }
+            delete iter->second;
+            suspendedMessagesCache.erase(iter);
+          }
+        }
+        if ( messagesCache.Count() > 0 ) {
+          smsc_log_debug(logger, "Task::getNextMessage::: There is message in messagesCache after checking timed out messages in suspendedMessagesCache");
+          messagesCache.Shift(message);
+          return true;
+        } else
+          return false;
+      }
+    }
     time_t currentTime = time(NULL);
     if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
-        lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
+      lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
     else if (bSelectedAll && !isInGeneration()) 
-        return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
-    
+      return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
+    else {
+     
+    }
     smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
                   info.id.c_str());
 
@@ -987,6 +1047,8 @@ bool Task::getNextMessage(Connection* connection, Message& message)
             uint64_t    msgId = rs->getUint64(1);
             const char* msgAbonent = rs->isNull(2) ? 0 : rs->getString(2);
             const char* msgMessage = rs->isNull(3) ? 0 : rs->getString(3);
+            const char* regionId = rs->getString(4);
+
             dsInt->stopTimer(wdTimerId);
             
             if (!msgAbonent || !msgMessage) {
@@ -994,7 +1056,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
                 wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
                 --fetched; continue;
             }
-            Message fetchedMessage(msgId, msgAbonent, msgMessage);
+            Message fetchedMessage(msgId, msgAbonent, msgMessage, regionId);
 
             std::string waitMessageSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
             std::auto_ptr<Statement> waitMessage(connection->createStatement(waitMessageSql.c_str()));
@@ -1042,18 +1104,15 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     dsInt->stopTimer(wdTimerId);
     smsc_log_debug(logger, "Selected %d messages from DB for task '%s'",
                    messagesCache.Count(), info.id.c_str());
-    
-    MutexGuard guard(messagesCacheLock);
-    if (messagesCache.Count() > 0) {
-        messagesCache.Shift(message);
-        setInProcess(isEnabled());
-        return true;
-    } 
+
+    // selecting from cache
+    if ( fetchMessageFromCache(message) )
+      return true;
     else {
-        lastMessagesCacheEmpty = time(NULL);
-        bSelectedAll = true;
+      lastMessagesCacheEmpty = time(NULL);
+      bSelectedAll = true;
+      return setInProcess(false);
     }
-    return setInProcess(false);
 }
 
 bool Task::isReady(time_t time, bool checkActivePeriod)
@@ -1114,17 +1173,23 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
   if (!newMessage.get())
     throw Exception("Failed to create statement for message generation.");
 
-  //  std::string message = "";
-  //  formatter->format(message, getAdapter, context);
+  smsc::sms::Address parsedAddr(address.c_str());
+  smsc_log_debug(logger, "Task::insertDeliveryMessage::: try map telephone number [%s] to Region", address.c_str());
+  const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(parsedAddr.toString());
+  if ( foundRegion )
+    smsc_log_debug(logger, "Task::insertDeliveryMessage::: telephone number = %s matches to mask for region with id %s", address.c_str(), foundRegion->getId().c_str());
+  else
+    throw Exception("Task::insertDeliveryMessage::: Wrong configuraiton - can't find region definition");
+
   if (msg.length() > 0)
   {
     newMessage->setUint8(1, MESSAGE_NEW_STATE);
     newMessage->setString(2, address.c_str());
     newMessage->setDateTime(3, messageDate);
     newMessage->setString(4, msg.c_str());
-    newMessage->executeUpdate();
+    newMessage->setString(5, foundRegion->getId().c_str());
 
-    //if (statistics) statistics->incGenerated(info.id, 1);
+    newMessage->executeUpdate();
   }
   intConnection->commit();
 

@@ -18,7 +18,7 @@
 #include <core/threads/ThreadPool.hpp>
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
-
+#include <util/config/region/Region.hpp>
 #include <db/DataSource.h>
 
 #include "TaskScheduler.h"
@@ -304,6 +304,9 @@ namespace smsc { namespace infosme
         char*   svcType;
         char*   address;
 
+        typedef std::map<std::string, TimeSlotCounter<int>* > timeSlotsHashByRegion_t;
+        timeSlotsHashByRegion_t _timeSlotsHashByRegion;
+
         void processWaitingEvents(time_t time);
         bool processTask(Task* task);
         void resetWaitingTasks();
@@ -320,6 +323,9 @@ namespace smsc { namespace infosme
                                            const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
 
         int unrespondedMessagesMax, unrespondedMessagesSleep;
+
+        typedef enum { TRAFFIC_CONTINUED = 1, TRAFFIC_SUSPENDED = -1 } traffic_control_res_t;
+        traffic_control_res_t controlTrafficSpeedByRegion(Task* task, Message& message);
     public:
 
         TaskProcessor(ConfigView* config);

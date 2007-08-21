@@ -2,6 +2,9 @@
 #include <exception>
 #include <list>
 #include <sstream>
+#include <util/timeslotcounter.hpp>
+#include <util/config/region/RegionFinder.hpp>
+
 extern bool isMSISDNAddress(const char* string);
 
 namespace smsc { namespace infosme 
@@ -337,10 +340,39 @@ int TaskProcessor::Execute()
     return 0;
 }
 
+TaskProcessor::traffic_control_res_t
+TaskProcessor::controlTrafficSpeedByRegion(Task* task, Message& message)
+{
+  const char* taskId = task->getInfo().id.c_str();
+
+  smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%s]: check region(regionId=%s) bandwidth limit exceeding", taskId, message.regionId.c_str());
+  const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+
+  timeSlotsHashByRegion_t::iterator iter = _timeSlotsHashByRegion.find(message.regionId);
+  if ( iter == _timeSlotsHashByRegion.end() ) {
+    smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%s]: insert timeSlot to hash for regionId=%s", taskId, message.regionId.c_str());
+    std::pair<timeSlotsHashByRegion_t::iterator, bool> insRes = _timeSlotsHashByRegion.insert(std::make_pair(message.regionId, new TimeSlotCounter<int>(1,1)));
+    iter = insRes.first;
+  }
+  TimeSlotCounter<int>* outgoing = iter->second;
+  int out = outgoing->Get();
+
+  bool regionTrafficLimitReached = (out >= region->getBandwidth());
+  smsc_log_debug(logger, "TaskProcessor::controlTrafficSpeedByRegion::: TaskId=[%s]: regionTrafficLimitReached=%d, region bandwidth=%d, current sent messages during one second=%d", taskId, regionTrafficLimitReached, region->getBandwidth(), out);
+  // check max messages per sec. limit. if limit was reached then put message to queue of suspended messages.
+  if ( regionTrafficLimitReached ) {
+    task->putToSuspendedMessagesQueue(message);
+    return TRAFFIC_SUSPENDED;
+  } else {
+    outgoing->Inc();
+    return TRAFFIC_CONTINUED;
+  }
+}
+
 bool TaskProcessor::processTask(Task* task)
 {
     __require__(task && dsIntConnection);
-     
+
     TaskInfo info = task->getInfo();
     Message message;
     {
@@ -351,49 +383,54 @@ bool TaskProcessor::processTask(Task* task)
         }
     }
 
-
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
     {
-        int seqNum = messageSender->getSequenceNumber();
-        smsc_log_debug(logger, "TaskId=[%s]: Sending message #%lld,sq=%d for '%s': %s", 
-                       info.id.c_str(), message.id, seqNum, message.abonent.c_str(), message.message.c_str());
+        if ( controlTrafficSpeedByRegion(task, message) != TRAFFIC_SUSPENDED ) {
+          int seqNum = messageSender->getSequenceNumber();
+          smsc_log_debug(logger, "TaskId=[%s]: Sending message #%lld,sq=%d for '%s': %s", 
+                         info.id.c_str(), message.id, seqNum, message.abonent.c_str(), message.message.c_str());
 
-        {
+          {
             {
-                MutexGuard snGuard(taskIdsBySeqNumMonitor);
-                int seqNumsCount;
-                while ((seqNumsCount=taskIdsBySeqNum.Count()) > unrespondedMessagesMax && !bNeedExit) {
-                  int difference = seqNumsCount - unrespondedMessagesMax;
-                  taskIdsBySeqNumMonitor.wait(difference*unrespondedMessagesSleep);
-                }
-                if (bNeedExit) return false;
+              MutexGuard snGuard(taskIdsBySeqNumMonitor);
+              int seqNumsCount;
+              while ((seqNumsCount=taskIdsBySeqNum.Count()) > unrespondedMessagesMax && !bNeedExit) {
+                int difference = seqNumsCount - unrespondedMessagesMax;
+                taskIdsBySeqNumMonitor.wait(difference*unrespondedMessagesSleep);
+              }
+              if (bNeedExit) return false;
 
-                if (taskIdsBySeqNum.Exist(seqNum))
-                {
-                    smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
-                    taskIdsBySeqNum.Delete(seqNum);
-                }
-                taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.id, message.id));
+              if (taskIdsBySeqNum.Exist(seqNum))
+              {
+                smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
+                taskIdsBySeqNum.Delete(seqNum);
+              }
+              taskIdsBySeqNum.Insert(seqNum, TaskMsgId(info.id, message.id));
             }
             MutexGuard respGuard(responceWaitQueueLock);
             responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
-        }
+          }
         
-        if (!messageSender->send(message.abonent, message.message, info, seqNum))
-        {
+          if (!messageSender->send(message.abonent, message.message, info, seqNum))
+          {
             smsc_log_error(logger, "Failed to send message #%lld for '%s'", 
-                         message.id, message.abonent.c_str());
-            
+                           message.id, message.abonent.c_str());
+
             MutexGuard snGuard(taskIdsBySeqNumMonitor);
             if (taskIdsBySeqNum.Exist(seqNum)) {
               taskIdsBySeqNum.Delete(seqNum);
               taskIdsBySeqNumMonitor.notifyAll();
             }
             return false;
+          }
+          smsc_log_info(logger, "TaskId=[%s]: Sent message #%lld sq=%d for '%s'", 
+                        info.id.c_str(), message.id, seqNum, message.abonent.c_str());
+        } else {
+          const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
+          smsc_log_info(logger, "TaskId=[%s]: Traffic for region %s with id %s was suspeded",
+                        info.id.c_str(), region->getName().c_str(), region->getId().c_str());
         }
-        smsc_log_info(logger, "TaskId=[%s]: Sent message #%lld sq=%d for '%s'", 
-                      info.id.c_str(), message.id, seqNum, message.abonent.c_str());
     }
     else
     {

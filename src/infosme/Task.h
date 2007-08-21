@@ -64,10 +64,11 @@ namespace smsc { namespace infosme
         uint64_t    id;
         std::string abonent;
         std::string message;
+        std::string regionId;
 
-        Message(uint64_t id=0, std::string abonent="", std::string message="")
-            : id(id), abonent(abonent), message(message) {};
-        virtual ~Message() {};
+        Message(uint64_t anId=0, std::string anAbonent="", std::string aMessage="", std::string aRegionId="")
+          : id(anId), abonent(anAbonent), message(aMessage), regionId(aRegionId) {}
+        virtual ~Message() {}
     };
 
     struct TaskInfo
@@ -78,7 +79,7 @@ namespace smsc { namespace infosme
         int         priority;
 
         bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory;
-        
+
         time_t  endDate;            // full date/time
         time_t  retryTime;          // only HH:mm:ss in seconds
         time_t  validityPeriod;     // only HH:mm:ss in seconds
@@ -178,6 +179,15 @@ namespace smsc { namespace infosme
 
         Mutex           messagesCacheLock;
         Array<Message>  messagesCache;
+
+        struct suspended_msg_inf {
+          suspended_msg_inf() : lastUseOfTime(::time(0)) {}
+          std::vector<Message> messages;
+          time_t lastUseOfTime;
+        };
+
+        typedef std::map<std::string /*region id value*/, suspended_msg_inf*>  suspendedMessagesCache_t;
+        suspendedMessagesCache_t                           suspendedMessagesCache;
         time_t          lastMessagesCacheEmpty;
         
         void  doFinalization();
@@ -357,6 +367,10 @@ namespace smsc { namespace infosme
 
         bool changeDeliveryTextMessageByCompositCriterion(const std::string& newTextMsg,
                                                           const InfoSme_T_SearchCriterion& searchCrit);
+
+        void putToSuspendedMessagesQueue(const Message& suspendedMessage);
+
+        bool fetchMessageFromCache(Message& message);
     };
     
     class TaskGuard
