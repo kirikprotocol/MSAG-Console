@@ -77,6 +77,7 @@ namespace scag { namespace sessions
         Mutex           stopLock;
         Event           awakeEvent, exitEvent;
         bool            bStarted;
+        uint32_t        sessionCount;
 
         CachedSessionStore    store;
         SessionManagerConfig config;
@@ -88,7 +89,7 @@ namespace scag { namespace sessions
         int  processExpire();
         void deleteSession(SessionPtr& session);
         bool processDeleteSession(SessionPtr& session);
-	bool deleteQueuePop(SessionPtr& s);
+    	bool deleteQueuePop(SessionPtr& s);
 
         uint16_t getNewUSR(Address& address);
         uint16_t getLastUSR(Address& address);
@@ -101,7 +102,7 @@ namespace scag { namespace sessions
 
         void init(const SessionManagerConfig& config);
 
-        SessionManagerImpl() : bStarted(false) , logger(0), ConfigListener(SESSIONMAN_CFG) {};
+        SessionManagerImpl() : bStarted(false) , logger(0), sessionCount(0), ConfigListener(SESSIONMAN_CFG) {};
         virtual ~SessionManagerImpl();
 
         // SessionManager interface
@@ -180,7 +181,7 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
         store.updateSession(session);
         smsc_log_debug(logger,"SessionManager: session updated.  USR='%d', Address='%s' Pending: %d InUse: %d",
                        sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
-
+        sessionCount++;
     }
     else
         store.deleteSession(sessionKey);
@@ -363,7 +364,7 @@ void SessionManagerImpl::deleteSession(SessionPtr& session)
         SessionExpireHash.Delete(sessionKey);
     }
     store.deleteSession(sessionKey);
-
+    sessionCount--;
     smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s' InUse: %d",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count());
 }
@@ -504,7 +505,8 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& key)
     session = store.newSession(key);
     session->setSessionKey(key);
     session->m_CanOpenSubmitOperation = true;
-
+    sessionCount++;
+    
     SessionHash.Insert(key, session);
 
     smsc_log_debug(logger,"SessionManager: created new session USR='%d', Address='%s' InUse: %d",
@@ -590,7 +592,7 @@ uint16_t SessionManagerImpl::getNewUSR(Address& address)
 void SessionManagerImpl::getSessionsCount(uint32_t& sessionsCount, uint32_t& sessionsLockedCount)
 {
 //    MutexGuard mt(inUseMonitor);
-    sessionsCount = store.getSessionsCount();
+    sessionsCount = sessionCount;
     sessionsLockedCount = SessionHash.Count();
 }
 
