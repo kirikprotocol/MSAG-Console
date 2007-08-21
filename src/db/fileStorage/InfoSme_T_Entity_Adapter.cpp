@@ -21,6 +21,7 @@ InfoSme_T_Entity_Adapter::InfoSme_T_Entity_Adapter(const InfoSme_T_Entity& rhs)
   buffer.WriteNetInt32(rhs.getSendDate());
 #endif
   buffer.WriteString<uint16_t>(rhs.getMessage());
+  buffer.WriteString<uint8_t>(rhs.getRegionId());
 
   _serialize_buf_size = buffer.getBufferSize();
   _serialize_buf = reinterpret_cast<uint8_t*>(buffer.releaseBuffer());
@@ -33,7 +34,8 @@ InfoSme_T_Entity_Adapter::InfoSme_T_Entity_Adapter(smsc::util::SerializationBuff
                 _strict_field_order._state,
                 _strict_field_order._abonent,
                 _strict_field_order._sendDate,
-                _strict_field_order._msg) {}
+                _strict_field_order._msg,
+                _strict_field_order._regionId) {}
 
 void
 InfoSme_T_Entity_Adapter::marshal(smsc::util::SerializationBuffer* buf) const

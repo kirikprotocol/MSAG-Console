@@ -41,12 +41,14 @@ private:
       _sendDate = inputBuf.ReadNetInt32();
 #endif
       inputBuf.ReadString<uint16_t>(_msg);
+      inputBuf.ReadString<uint8_t>(_regionId);
     }
     uint64_t _id;
     uint8_t _state;
     std::string _abonent;
     time_t _sendDate;
     std::string _msg;
+    std::string _regionId;
   };
   strict_field_order _strict_field_order;
 
