@@ -153,6 +153,7 @@ private:
   std::string _abonentAddress;
   time_t _sendDate;
   std::string _message;
+  std::string _regionId;
 
   StorageHelper::InfoSme_T_storage_ref_t _dataSource;
 
