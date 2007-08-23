@@ -70,7 +70,11 @@ public:
   virtual SmppEntity* RouteSms(router::SmeIndex srcidx, const smsc::sms::Address& source, const smsc::sms::Address& dest, router::RouteInfo& info)
   {
     {
-      RouterRef ref=routeMan;
+      RouterRef ref;
+      {
+        sync::MutexGuard rsmg(routerSwitchMtx);
+        ref=routeMan;
+      }
       if(!ref->lookup(srcidx,source,dest,info))return 0;
     }
     MutexGuard mg(regMtx);
@@ -102,6 +106,7 @@ protected:
 
   typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
   RouterRef routeMan;
+  sync::Mutex routerSwitchMtx;
 //  std::string routerConfigFile;
 
   Mutex routerSwitchMutex;
@@ -455,8 +460,12 @@ void SmppManagerImpl::LoadRoutes(const char* cfgFile)
   {
     throw Exception("Failed to load routes config");
   };*/
-  routeMan=new router::RouteManager();
-  router::loadRoutes(routeMan.Get(),cfg,false);
+  router::RouteManager* newman=new router::RouteManager();
+  router::loadRoutes(newman,cfg,false);
+  {
+    sync::MutexGuard mg(routerSwitchMtx);
+    routeMan=newman;
+  }
 }
 
 void SmppManagerImpl::ReloadRoutes()
