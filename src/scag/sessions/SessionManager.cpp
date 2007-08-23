@@ -341,6 +341,8 @@ bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
             else
                 return false;
         }
+        else
+            rs.runPostProcessActions();
     }
     catch(SCAGException& exc)
     {
