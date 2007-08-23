@@ -10,8 +10,8 @@
 #include <map>
 
 
-namespace smsc { namespace mcisme
-{
+namespace smsc {
+namespace mcisme {
 
 using namespace smsc::misscall;
 
@@ -25,55 +25,52 @@ const int IDLE_PERIOD = 600; //sec
 const int pause = 10; //sec
 
 TimeoutMonitor::TimeoutMonitor(TaskProcessor* _processor):
-	processor(_processor),
-	logger(Logger::getInstance("mci.TimeoutM")) 
-	{}
+  processor(_processor),
+  logger(Logger::getInstance("mci.TimeoutM")) 
+{}
 
 int TimeoutMonitor::Execute()
 {
-	clearSignalMask();
-    
-	while (!bNeedExit)
-	{
-		smsc_log_debug(logger, "TimeoutMonitor: Start wait %d sec", pause);
-		awakeEvent.Wait(pause*1000);
-		smsc_log_debug(logger, "TimeoutMonitor: End wait");
-		processor->invokeProcessDataSmTimeout();
-	}
-	smsc_log_info(logger, "TimeoutMonitor Exiting ...");
-	return 0;	
+  clearSignalMask();
+
+  while (!bNeedExit)
+  {
+    smsc_log_debug(logger, "TimeoutMonitor: Start wait %d sec", pause);
+    awakeEvent.Wait(pause*1000);
+    smsc_log_debug(logger, "TimeoutMonitor: End wait");
+    processor->invokeProcessDataSmTimeout();
+  }
+  smsc_log_info(logger, "TimeoutMonitor Exiting ...");
+  return 0;	
 }
 void TimeoutMonitor::Start()
 {
-	MutexGuard guard(startLock);
-	
-	if (!bStarted)
-	{
-		smsc_log_info(logger, "TimeoutMonitor Starting ...");
-		bNeedExit = false;
-		Thread::Start();
-		bStarted = true;
-		smsc_log_info(logger, "TimeoutMonitor Started");
-	}	
+  MutexGuard guard(startLock);
+
+  if (!bStarted)
+  {
+    smsc_log_info(logger, "TimeoutMonitor Starting ...");
+    bNeedExit = false;
+    Thread::Start();
+    bStarted = true;
+    smsc_log_info(logger, "TimeoutMonitor Started");
+  }	
 }
 
 void TimeoutMonitor::Stop()
 {
-	MutexGuard  guard(startLock);
-	
-	if (bStarted)
-	{
-		smsc_log_info(logger, "TimeoutMonitor Stopping ...");
-		bNeedExit = true;
-		awakeEvent.Signal();
-		WaitFor();
-		bStarted = false;
-		smsc_log_info(logger, "TimeoutMonitor Stopped.");
-	}
+  MutexGuard  guard(startLock);
+
+  if (bStarted)
+  {
+    smsc_log_info(logger, "TimeoutMonitor Stopping ...");
+    bNeedExit = true;
+    awakeEvent.Signal();
+    WaitFor();
+    bStarted = false;
+    smsc_log_info(logger, "TimeoutMonitor Stopped.");
+  }
 }
-
-
-
 
 //TimeoutMonitor::TimeoutMonitor(TaskProcessor* _processor, uint32_t to):
 //	processor(_processor), timeout(to),
@@ -175,5 +172,5 @@ void TimeoutMonitor::Stop()
 //	smsc_log_debug(logger, "Removing SMS (seqNum = %d) from monitoring list - failed. No such seqNum. (total = %d)", seqNum, count);
 //}
 
-};
-};
+}
+}

@@ -12,48 +12,49 @@
 
 #include "MCISmeAdmin.h"
 
-namespace smsc { namespace mcisme
+namespace smsc {
+namespace mcisme {
+
+using namespace smsc::admin::service;
+
+using smsc::logger::Logger;
+using smsc::util::Exception;
+
+class MCISmeComponent : public Component
 {
-    using namespace smsc::admin::service;
-    
-    using smsc::logger::Logger;
-    using smsc::util::Exception;
-    
-    class MCISmeComponent : public Component
-    {
-    private:
-    
-        smsc::logger::Logger *logger;
+private:
 
-        MCISmeAdmin       &admin;
-        Methods            methods;
-        
-        enum { flushStatisticsMethod, getStatisticsMethod, getRuntimeMethod, getSchedItemMethod, getSchedItemsMethod };
-        
-    protected:
-        
-        void error(const char* method, const char* param);
+  smsc::logger::Logger *logger;
 
-        Variant getStatistics();
-        Variant getRuntime();
-		Variant getSchedItem(const std::string Abonent);
-		Variant getSchedItems(void);
-    
-    public:
-        
-        MCISmeComponent(MCISmeAdmin& admin);
-        virtual ~MCISmeComponent() {};
-        
-        virtual const char* const getName() const {
-            return "MCISme";
-        }
-        virtual const Methods& getMethods() const {
-            return methods;
-        }
-        
-        virtual Variant call(const Method& method, const Arguments& args)
-            throw (AdminException);
-    };
+  MCISmeAdmin       &admin;
+  Methods            methods;
+
+  enum { flushStatisticsMethod, getStatisticsMethod, getRuntimeMethod, getSchedItemMethod, getSchedItemsMethod };
+
+protected:
+
+  void error(const char* method, const char* param);
+
+  Variant getStatistics();
+  Variant getRuntime();
+  Variant getSchedItem(const std::string Abonent);
+  Variant getSchedItems(void);
+
+public:
+
+  MCISmeComponent(MCISmeAdmin& admin);
+  virtual ~MCISmeComponent() {};
+
+  virtual const char* const getName() const {
+    return "MCISme";
+  }
+  virtual const Methods& getMethods() const {
+    return methods;
+  }
+
+  virtual Variant call(const Method& method, const Arguments& args)
+    throw (AdminException);
+};
 
 }}
 

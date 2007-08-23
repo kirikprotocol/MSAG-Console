@@ -10,58 +10,59 @@
 
 #include "Statistics.h"
 
-namespace smsc { namespace mcisme
+namespace smsc {
+namespace mcisme {
+
+struct RuntimeStat
 {
-    struct RuntimeStat
-    {
-        int activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed;
+  int activeTasks, inQueueSize, outQueueSize, inSpeed, outSpeed;
         
-        RuntimeStat(int at=0, int inQS=0, int outQS=0, int inS=0, int outS=0)
-            : activeTasks(at), inQueueSize(inQS), outQueueSize(outQS), inSpeed(inS), outSpeed(outS) {};
-        RuntimeStat(const RuntimeStat& stat)
-            : activeTasks(stat.activeTasks), inQueueSize(stat.inQueueSize), outQueueSize(stat.outQueueSize),
-              inSpeed(stat.inSpeed), outSpeed(stat.outSpeed) {};
-        RuntimeStat& operator=(const RuntimeStat& stat) {
-            activeTasks = stat.activeTasks;
-            inQueueSize = stat.inQueueSize; outQueueSize = stat.outQueueSize;
-            inSpeed     = stat.inSpeed;     outSpeed     = stat.outSpeed;
-            return (*this);
-        };
-    };
+  RuntimeStat(int at=0, int inQS=0, int outQS=0, int inS=0, int outS=0)
+    : activeTasks(at), inQueueSize(inQS), outQueueSize(outQS), inSpeed(inS), outSpeed(outS) {};
+  RuntimeStat(const RuntimeStat& stat)
+    : activeTasks(stat.activeTasks), inQueueSize(stat.inQueueSize), outQueueSize(stat.outQueueSize),
+      inSpeed(stat.inSpeed), outSpeed(stat.outSpeed) {};
+  RuntimeStat& operator=(const RuntimeStat& stat) {
+    activeTasks = stat.activeTasks;
+    inQueueSize = stat.inQueueSize; outQueueSize = stat.outQueueSize;
+    inSpeed     = stat.inSpeed;     outSpeed     = stat.outSpeed;
+    return (*this);
+  };
+};
 
-    struct AdminInterface
-    {
-        virtual void flushStatistics() = 0;
-        virtual EventsStat getStatistics() = 0;
+struct AdminInterface
+{
+  virtual void flushStatistics() = 0;
+  virtual EventsStat getStatistics() = 0;
 
-        virtual int getActiveTasksCount() = 0;
-        virtual int getInQueueSize()  = 0;
-        virtual int getOutQueueSize() = 0;
-		virtual std::string getSchedItem(const std::string& Abonent) = 0;
-		virtual std::string getSchedItems(void) = 0;
+  virtual int getActiveTasksCount() = 0;
+  virtual int getInQueueSize()  = 0;
+  virtual int getOutQueueSize() = 0;
+  virtual std::string getSchedItem(const std::string& Abonent) = 0;
+  virtual std::string getSchedItems(void) = 0;
 
-        AdminInterface() {};
+  AdminInterface() {};
 
-    protected:
+protected:
 
-        virtual ~AdminInterface() {};
-    };
+  virtual ~AdminInterface() {};
+};
 
-    struct MCISmeAdmin
-    {
-        virtual void flushStatistics() = 0;
+struct MCISmeAdmin
+{
+  virtual void flushStatistics() = 0;
         
-        virtual EventsStat  getStatistics() = 0;
-        virtual RuntimeStat getRuntimeStatistics() = 0;
-		virtual std::string getSchedItem(const std::string& Abonent) = 0;
-		virtual std::string getSchedItems(void) = 0;
+  virtual EventsStat  getStatistics() = 0;
+  virtual RuntimeStat getRuntimeStatistics() = 0;
+  virtual std::string getSchedItem(const std::string& Abonent) = 0;
+  virtual std::string getSchedItems(void) = 0;
 
-        MCISmeAdmin() {};
+  MCISmeAdmin() {};
 
-    protected:
+protected:
 
-        virtual ~MCISmeAdmin() {};
-    };
+  virtual ~MCISmeAdmin() {};
+};
         
 }}
 

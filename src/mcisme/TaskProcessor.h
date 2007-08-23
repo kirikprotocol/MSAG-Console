@@ -46,8 +46,9 @@
 #include "TimeoutMonitor.hpp"
 #include "advert/Advertising.h"
 
-namespace smsc { namespace mcisme
-{
+namespace smsc {
+namespace mcisme {
+
 using namespace smsc::misscall;
 
 using namespace smsc::core::synchronization;
@@ -64,150 +65,150 @@ using namespace std;
 
 struct MessageSender
 {
-    virtual int  getSequenceNumber() = 0;
-    virtual bool send(int seqNumber, const Message& message) = 0;
-    virtual ~MessageSender() {};
+  virtual int  getSequenceNumber() = 0;
+  virtual bool send(int seqNumber, const Message& message) = 0;
+  virtual ~MessageSender() {};
 
 protected:
 
-    MessageSender() {};
+  MessageSender() {};
 };
 
 struct sms_info
 {
-	time_t				sending_time;
-	AbntAddr			abnt;
-	vector<MCEvent>		events;
+  time_t				sending_time;
+  AbntAddr			abnt;
+  vector<MCEvent>		events;
 };
 
 class TimeoutMonitor;
 
 class TaskProcessor : public Thread, public MissedCallListener, public AdminInterface
 {
-	std::string test_number;
-	
-	smsc::logger::Logger *logger;
-	
-	int		protocolId, daysValid;
-	std::string	svcType, address;
-	
-	int     	releaseCallsStrategy;
-	int		stkTemplateId;
-	
-	Storage*	pStorage;
-	DeliveryQueue*	pDeliveryQueue;
-	
-	TemplateManager*	templateManager;
-	MCIModule*		mciModule;
-	
-	Mutex		messageSenderLock;
-	MessageSender*	messageSender;
-	
-	Advertising*	advertising;
-	bool		useAdvert;
-	
-	ProfilesStorage*	profileStorage;
-	StatisticsManager*	statistics;
-	TimeoutMonitor*		timeoutMonitor;
-	time_t			responseWaitTime;
-	
-	//EventMonitor    smscIdMonitor;
-	Hash<bool>      lockedSmscIds;
-	
-	IntHash<sms_info*>	smsInfo;
-	Mutex			smsInfoMutex;
-		
-	bool	forceInform, forceNotify;
-	
-	//EventMonitor		tasksMonitor;
-	
-	Mutex   startLock;
-	Event   exitedEvent;
-	bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
-	int                             maxInQueueSize, maxOutQueueSize;
-	EventMonitor                    inQueueMonitor, outQueueMonitor;
-	CyclicQueue<MissedCallEvent>    inQueue;
-	CyclicQueue<Message>            outQueue;
-	
-	void openInQueue();
-	void closeInQueue();
-	bool putToInQueue(const MissedCallEvent& event, bool skip=true);
-	bool getFromInQueue(MissedCallEvent& event);
-	string getBanner(const AbntAddr& abnt);
-	void test_stk(void);    
-	void test_sched(void);
-	void test_advert(void);
-	//void openOutQueue();
-	//void closeOutQueue();
-	//bool putToOutQueue(const Message& event, bool force=false);
-	//bool getFromOutQueue(Message& event);
-	
-	void ProcessAbntEvents(const AbntAddr& abnt);
-	bool GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>& events);
-	void SendAbntOnlineNotifications(const sms_info* pInfo);
-	void StopProcessEvent4Abnt(const AbntAddr& abnt);
+  std::string test_number;
+
+  smsc::logger::Logger *logger;
+
+  int		protocolId, daysValid;
+  std::string	svcType, address;
+
+  int     	releaseCallsStrategy;
+  int		stkTemplateId;
+
+  Storage*	pStorage;
+  DeliveryQueue*	pDeliveryQueue;
+
+  TemplateManager*	templateManager;
+  MCIModule*		mciModule;
+
+  Mutex		messageSenderLock;
+  MessageSender*	messageSender;
+
+  Advertising*	advertising;
+  bool		useAdvert;
+
+  ProfilesStorage*	profileStorage;
+  StatisticsManager*	statistics;
+  TimeoutMonitor*		timeoutMonitor;
+  time_t			responseWaitTime;
+
+  //EventMonitor    smscIdMonitor;
+  Hash<bool>      lockedSmscIds;
+
+  IntHash<sms_info*>	smsInfo;
+  Mutex			smsInfoMutex;
+
+  bool	forceInform, forceNotify;
+
+  //EventMonitor		tasksMonitor;
+
+  Mutex   startLock;
+  Event   exitedEvent;
+  bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
+  int                             maxInQueueSize, maxOutQueueSize;
+  EventMonitor                    inQueueMonitor, outQueueMonitor;
+  CyclicQueue<MissedCallEvent>    inQueue;
+  CyclicQueue<Message>            outQueue;
+
+  void openInQueue();
+  void closeInQueue();
+  bool putToInQueue(const MissedCallEvent& event, bool skip=true);
+  bool getFromInQueue(MissedCallEvent& event);
+  string getBanner(const AbntAddr& abnt);
+  void test_stk(void);    
+  void test_sched(void);
+  void test_advert(void);
+  //void openOutQueue();
+  //void closeOutQueue();
+  //bool putToOutQueue(const Message& event, bool force=false);
+  //bool getFromOutQueue(Message& event);
+
+  void ProcessAbntEvents(const AbntAddr& abnt);
+  bool GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>& events);
+  void SendAbntOnlineNotifications(const sms_info* pInfo);
+  void StopProcessEvent4Abnt(const AbntAddr& abnt);
 
 public:
 
-    TaskProcessor(ConfigView* config);
-    virtual ~TaskProcessor();
+  TaskProcessor(ConfigView* config);
+  virtual ~TaskProcessor();
 
-    int getDaysValid()       { return daysValid;  };
-    int getProtocolId()      { return protocolId; };
-	const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; };
-    const char* getAddress() { return address.c_str(); };
+  int getDaysValid()       { return daysValid;  };
+  int getProtocolId()      { return protocolId; };
+  const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; };
+  const char* getAddress() { return address.c_str(); };
 
-    void assignMessageSender(MessageSender* sender) {
-        MutexGuard guard(messageSenderLock);
-        messageSender = sender;
-    };
-    bool isMessageSenderAssigned() {
-        MutexGuard guard(messageSenderLock);
-        return (messageSender != 0);
-    };
-    
-//    void lockSmscId(const char* smsc_id);
-//    void freeSmscId(const char* smsc_id);
+  void assignMessageSender(MessageSender* sender) {
+    MutexGuard guard(messageSenderLock);
+    messageSender = sender;
+  };
+  bool isMessageSenderAssigned() {
+    MutexGuard guard(messageSenderLock);
+    return (messageSender != 0);
+  };
 
-    void Run();             // outQueue processing
-    virtual int Execute();  // inQueue processing
-    void Start(); void Stop();
-	void Pause(void);
-    
-    virtual void missed(MissedCallEvent event) {
-        putToInQueue(event);
-    };
-    
-    virtual bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
-//	virtual void invokeProcessDataSmTimeout(int seqNum);
-	virtual void invokeProcessDataSmTimeout(void);
-	virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
+  //    void lockSmscId(const char* smsc_id);
+  //    void freeSmscId(const char* smsc_id);
 
-    /* ------------------------ Admin interface ------------------------ */
+  void Run();             // outQueue processing
+  virtual int Execute();  // inQueue processing
+  void Start(); void Stop();
+  void Pause(void);
 
-    virtual void flushStatistics() {
-		if (statistics) statistics->flushStatistics();
-    }
-    virtual EventsStat getStatistics() {
-        return (statistics) ? statistics->getStatistics():EventsStat(0,0,0,0);
-    }
+  virtual void missed(MissedCallEvent event) {
+    putToInQueue(event);
+  };
 
-    virtual int getActiveTasksCount() {
-        if(pDeliveryQueue)
-			return pDeliveryQueue->GetAbntCount();
-		return 0;
-    }
-    virtual int getInQueueSize() {
-        MutexGuard guard(inQueueMonitor);
-        return inQueue.Count();
-    }
-    virtual int getOutQueueSize() {
-        if(pDeliveryQueue)
-			return pDeliveryQueue->GetQueueSize();
-		return 0;
-    }
-	virtual string getSchedItem(const string& Abonent);
-	virtual string getSchedItems(void);
+  virtual bool invokeProcessDataSmResp(int cmdId, int status, int seqNum);
+  //	virtual void invokeProcessDataSmTimeout(int seqNum);
+  virtual void invokeProcessDataSmTimeout(void);
+  virtual bool invokeProcessAlertNotification(int cmdId, int status, const AbntAddr& abnt);
+
+  /* ------------------------ Admin interface ------------------------ */
+
+  virtual void flushStatistics() {
+    if (statistics) statistics->flushStatistics();
+  }
+  virtual EventsStat getStatistics() {
+    return (statistics) ? statistics->getStatistics():EventsStat(0,0,0,0);
+  }
+
+  virtual int getActiveTasksCount() {
+    if(pDeliveryQueue)
+      return pDeliveryQueue->GetAbntCount();
+    return 0;
+  }
+  virtual int getInQueueSize() {
+    MutexGuard guard(inQueueMonitor);
+    return inQueue.Count();
+  }
+  virtual int getOutQueueSize() {
+    if(pDeliveryQueue)
+      return pDeliveryQueue->GetQueueSize();
+    return 0;
+  }
+  virtual string getSchedItem(const string& Abonent);
+  virtual string getSchedItems(void);
 };
 
 //class TimeoutMonitor : public Thread

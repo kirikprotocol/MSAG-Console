@@ -17,33 +17,33 @@
 
 #include "Templates.h"
 
-namespace smsc { namespace mcisme
-{
+namespace smsc {
+namespace mcisme {
 
-    using namespace smsc::core::synchronization;
-    using namespace smsc::core::buffers;
+using namespace smsc::core::synchronization;
+using namespace smsc::core::buffers;
 
-    using smsc::logger::Logger;
-    using smsc::util::config::ConfigView;
-    using smsc::util::config::ConfigException;
+using smsc::logger::Logger;
+using smsc::util::config::ConfigView;
+using smsc::util::config::ConfigException;
     
-    class TemplateManager
-    {
-    private:
+class TemplateManager
+{
+private:
 
-        int32_t defaultInformTemplateId, defaultNotifyTemplateId;
-        IntHash<InformTemplateFormatter *> informTemplates;
-        IntHash<NotifyTemplateFormatter *> notifyTemplates;
+  int32_t defaultInformTemplateId, defaultNotifyTemplateId;
+  IntHash<InformTemplateFormatter *> informTemplates;
+  IntHash<NotifyTemplateFormatter *> notifyTemplates;
 
-    public:
+public:
         
-        TemplateManager(ConfigView* config);
-        ~TemplateManager();
+  TemplateManager(ConfigView* config);
+  ~TemplateManager();
 
-        // if id<0 || formatter not exists => returns default formatter
-        InformTemplateFormatter* getInformFormatter(int32_t id);
-        NotifyTemplateFormatter* getNotifyFormatter(int32_t id);
-    };
+  // if id<0 || formatter not exists => returns default formatter
+  InformTemplateFormatter* getInformFormatter(int32_t id);
+  NotifyTemplateFormatter* getNotifyFormatter(int32_t id);
+};
 
 }}
 

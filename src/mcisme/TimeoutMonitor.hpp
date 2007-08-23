@@ -30,8 +30,9 @@
 //#include "Tasks.h"
 #include "MCIModule.h"
 
-namespace smsc { namespace mcisme
-{
+namespace smsc {
+namespace mcisme {
+
 using namespace smsc::misscall;
 
 using namespace smsc::core::synchronization;
@@ -43,19 +44,19 @@ class TaskProcessor;
 
 class TimeoutMonitor : public Thread
 {
-	smsc::logger::Logger*   logger;
-	TaskProcessor*			processor;
+  smsc::logger::Logger*   logger;
+  TaskProcessor*			processor;
 
-	Event		awakeEvent;
-	Mutex		startLock;
-	bool		bStarted, bNeedExit;
+  Event		awakeEvent;
+  Mutex		startLock;
+  bool		bStarted, bNeedExit;
 
 public:
-	
-	TimeoutMonitor(TaskProcessor* _processor);
-    virtual int Execute();
-	void Start();
-	void Stop();
+
+  TimeoutMonitor(TaskProcessor* _processor);
+  virtual int Execute();
+  void Start();
+  void Stop();
 };
 
 

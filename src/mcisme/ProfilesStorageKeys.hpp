@@ -35,38 +35,38 @@ struct AbntProfKey{
 		key.fields.inform = inform;
 		key.fields.notify = notify;
 	}
-	AbntProfKey(const AbntProfKey& src)
-	{
-		key.prof=src.key.prof;
-	}
-	AbntProfKey& operator=(const AbntProfKey& src)
-	{
-		if(this != &src)
-			key.prof=src.key.prof;
-		return *this;
-	}
-	uint32_t Get()const{return key.prof;}
+  AbntProfKey(const AbntProfKey& src)
+  {
+    key.prof=src.key.prof;
+  }
+  AbntProfKey& operator=(const AbntProfKey& src)
+  {
+    if(this != &src)
+      key.prof=src.key.prof;
+    return *this;
+  }
+  uint32_t Get()const{return key.prof;}
 
-	static uint32_t Size(){return sizeof(AbntProf);}
-	void Read(File& f)
-	{
-		key.prof=f.ReadNetInt32();
-	}
-	void Write(File& f)const
-	{
-		f.WriteNetInt32(key.prof);
-	}
-	uint32_t HashCode(uint32_t attempt)const
-	{
-		uint32_t res=0;
-		res=crc32(res,&key.prof,sizeof(key.prof));
-		for(;attempt>0;attempt--)res=crc32(res,&key.prof,sizeof(key.prof));
-		return res;
-	}
-	bool operator==(const AbntProfKey& cmp)
-	{
-		return key.prof==cmp.key.prof;
-	}
+  static uint32_t Size(){return sizeof(AbntProf);}
+  void Read(File& f)
+  {
+    key.prof=f.ReadNetInt32();
+  }
+  void Write(File& f)const
+  {
+    f.WriteNetInt32(key.prof);
+  }
+  uint32_t HashCode(uint32_t attempt)const
+  {
+    uint32_t res=0;
+    res=crc32(res,&key.prof,sizeof(key.prof));
+    for(;attempt>0;attempt--)res=crc32(res,&key.prof,sizeof(key.prof));
+    return res;
+  }
+  bool operator==(const AbntProfKey& cmp)
+  {
+    return key.prof==cmp.key.prof;
+  }
 };
 
 

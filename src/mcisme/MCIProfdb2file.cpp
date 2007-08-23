@@ -61,42 +61,42 @@ void initDataSource(ConfigView* config)
 
 int main(int argc, char** argv)
 {
-	printf("Any other programs working with this file MUST BE CLOSED\n");
+  printf("Any other programs working with this file MUST BE CLOSED\n");
   
   Logger::Init();
   logger = Logger::getInstance("DBProf2file");
   
-	try
-	{
+  try
+  {
     //        smsc_log_info(logger, getStrVersion());
     
     Manager::init("./conf/config.xml");
     Manager& manager = Manager::getInstance();
     
-		ConfigView tpConfig(manager, "MCISme");
+    ConfigView tpConfig(manager, "MCISme");
     
-		// Init ProfileStorage
+    // Init ProfileStorage
     std::auto_ptr<ConfigView> profStorCfgGuard(tpConfig.getSubConfig("ProfileStorage"));
     ConfigView* profStorCfg = profStorCfgGuard.get();
     string locationProfStor;
     try {locationProfStor = profStorCfg->getString("location"); } catch (...){locationProfStor="./";
       printf("Parameter <MCISme.ProfileStorage.location> missed. Default value is './'\n");}
-		printf("Profile Storage location is '%s'\n", locationProfStor.c_str());
-		ProfilesStorage::Open(locationProfStor);
-		printf("Profile Storage is opened\n");
+    printf("Profile Storage location is '%s'\n", locationProfStor.c_str());
+    ProfilesStorage::Open(locationProfStor);
+    printf("Profile Storage is opened\n");
     
     ConfigView dsConfig(manager, "StartupLoader");
     DataSourceLoader::loadup(&dsConfig);
     
     std::auto_ptr<ConfigView> dsIntCfgGuard(tpConfig.getSubConfig("DataSource"));
-		initDataSource(dsIntCfgGuard.get());
-		dsStatConnection = ds->getConnection();
+    initDataSource(dsIntCfgGuard.get());
+    dsStatConnection = ds->getConnection();
     if (!dsStatConnection)
-			printf("throw Exception 0");
+      printf("throw Exception 0");
     
-		Statement* getProStmt = dsStatConnection->getStatement(GET_ALL_ID, GET_ALL_SQL);
+    Statement* getProStmt = dsStatConnection->getStatement(GET_ALL_ID, GET_ALL_SQL);
     if (!getProStmt)
-			printf("throw Exception 1");
+      printf("throw Exception 1");
     
     //        getProStmt->setString(1, abonent);
     std::auto_ptr<ResultSet> rsGuard(getProStmt->executeQuery());
@@ -112,15 +112,15 @@ int main(int argc, char** argv)
       const char* abntStr = rs->isNull(1) ? 0:rs->getString(1);
       const char* infStr = rs->isNull(2) ? 0:rs->getString(2);
       const char* notStr = rs->isNull(3) ? 0:rs->getString(3);
-			int	infId = rs->isNull(4) ? 0:rs->getUint32(4);
-			int	notId = rs->isNull(5) ? 0:rs->getUint32(5);
+      int	infId = rs->isNull(4) ? 0:rs->getUint32(4);
+      int	notId = rs->isNull(5) ? 0:rs->getUint32(5);
       uint8_t	eventMask = rs->isNull(6) ? 0:rs->getUint8(6);
-			//profile.inform   = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
+      //profile.inform   = (infStr && (infStr[0]=='Y' || infStr[0]=='y'));
       //profile.notify   = (notStr && (notStr[0]=='Y' || notStr[0]=='y'));
       //profile.informTemplateId = rs->isNull(3) ?   -1:rs->getUint32(3);
       //profile.notifyTemplateId = rs->isNull(4) ?   -1:rs->getUint32(4);
       //profile.eventMask = rs->isNull(5) ? AbonentProfiler::defaultEventMask : rs->getUint8(5);
-			printf("Process Abonent %s inform:%s notify:%s informTemplate:%d notifyTemplate:%d eventMask:%d\n", abntStr, infStr, notStr, infId, notId, eventMask);
+      printf("Process Abonent %s inform:%s notify:%s informTemplate:%d notifyTemplate:%d eventMask:%d\n", abntStr, infStr, notStr, infId, notId, eventMask);
       profile.eventMask = eventMask;
       profile.inform = (*infStr=='Y')?true:false;
       profile.notify = (*notStr=='Y')?true:false;
@@ -129,18 +129,18 @@ int main(int argc, char** argv)
       if( notId == 3 ) profile.notifyTemplateId = 2;
       else profile.notifyTemplateId = 1;
       abnt = AbntAddr(abntStr);
-			printf("Set Abonent %s inform:%d notify:%d informTemplate:%d notifyTemplate:%d eventMask:%d\n", abnt.getText().c_str(), profile.inform, profile.notify, profile.informTemplateId, profile.notifyTemplateId, profile.eventMask);
+      printf("Set Abonent %s inform:%d notify:%d informTemplate:%d notifyTemplate:%d eventMask:%d\n", abnt.getText().c_str(), profile.inform, profile.notify, profile.informTemplateId, profile.notifyTemplateId, profile.eventMask);
       profStorage->Set(abnt,profile);
     } 
     printf("Done\n");
-	}
-	catch(...)
-	{
-		printf("Exception\n");
-	}
+  }
+  catch(...)
+  {
+    printf("Exception\n");
+  }
   
   //    dsStatConnection = ds->getConnection();
-	ProfilesStorage::Close();
+  ProfilesStorage::Close();
   
   return 0;
 }

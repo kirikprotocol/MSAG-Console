@@ -23,8 +23,8 @@
 #include <mcisme/AbntAddr.hpp>
 #include <system/status.h>
 
-namespace smsc { namespace mcisme
-{
+namespace smsc {
+namespace mcisme {
 
 using std::multimap;
 using std::map;
@@ -43,99 +43,99 @@ const time_t	default_wait = 60;
 
 struct SchedItem
 {
-	time_t		schedTime;
+  time_t		schedTime;
 	
-	AbntAddr	abnt;
-	uint8_t		eventsCount;
-	uint32_t	lastError;
+  AbntAddr	abnt;
+  uint8_t		eventsCount;
+  uint32_t	lastError;
 
-	uint32_t	abonentsCount;
+  uint32_t	abonentsCount;
 	
-	SchedItem(){}
-	SchedItem(time_t t, const AbntAddr& _abnt, uint8_t ec, uint32_t le, uint32_t ac):
-		schedTime(t), abnt(_abnt), eventsCount(ec), lastError(le), abonentsCount(ac){}
-	SchedItem(const SchedItem& item):
-		schedTime(item.schedTime), abnt(item.abnt), eventsCount(item.eventsCount), lastError(item.lastError), abonentsCount(item.abonentsCount){}
-	SchedItem& operator=(const SchedItem& item)
-	{
-		if(this != &item)
-		{
-			schedTime = item.schedTime;
-			abnt = item.abnt;
-			eventsCount = item.eventsCount;
-			lastError = item.lastError;
-			abonentsCount = item.abonentsCount;
-		}
-		return *this;
-	}
-	bool operator<(const SchedItem& item) const
-	{return schedTime < item.schedTime;}
+  SchedItem(){}
+  SchedItem(time_t t, const AbntAddr& _abnt, uint8_t ec, uint32_t le, uint32_t ac):
+    schedTime(t), abnt(_abnt), eventsCount(ec), lastError(le), abonentsCount(ac){}
+  SchedItem(const SchedItem& item):
+    schedTime(item.schedTime), abnt(item.abnt), eventsCount(item.eventsCount), lastError(item.lastError), abonentsCount(item.abonentsCount){}
+  SchedItem& operator=(const SchedItem& item)
+  {
+    if(this != &item)
+    {
+      schedTime = item.schedTime;
+      abnt = item.abnt;
+      eventsCount = item.eventsCount;
+      lastError = item.lastError;
+      abonentsCount = item.abonentsCount;
+    }
+    return *this;
+  }
+  bool operator<(const SchedItem& item) const
+  {return schedTime < item.schedTime;}
 };
 
 struct SchedParam
 {
-	abnt_stat_t abntStatus;
-//	int8_t		count;
-	time_t		schedTime;
-	uint16_t	lastError;
-	time_t		lastAttempt;
+  abnt_stat_t abntStatus;
+  //	int8_t		count;
+  time_t		schedTime;
+  uint16_t	lastError;
+  time_t		lastAttempt;
 };
 
 char* cTime(const time_t* clock);		// ������� ���������� �� ����������� �����. �� ����������������.
 
 class DeliveryQueue
 {
-	typedef multimap<time_t, AbntAddr>	DelQueue;
-	typedef map<int, time_t>			SchedTable;
-	typedef DelQueue::iterator	DelQueueIter;
+  typedef multimap<time_t, AbntAddr>	DelQueue;
+  typedef map<int, time_t>			SchedTable;
+  typedef DelQueue::iterator	DelQueueIter;
 
-	DelQueue		deliveryQueue;
-	SchedTable		scheduleTable;
-	time_t			schedTimeOnBusy;
-	EventMonitor		deliveryQueueMonitor;
-	Hash<SchedParam>	AbntsStatus;
-//	Hash<abnt_stat_t>	AbntsStatus;
+  DelQueue		deliveryQueue;
+  SchedTable		scheduleTable;
+  time_t			schedTimeOnBusy;
+  EventMonitor		deliveryQueueMonitor;
+  Hash<SchedParam>	AbntsStatus;
+  //	Hash<abnt_stat_t>	AbntsStatus;
 		
-	time_t			dt;
-	uint32_t		total;
-	bool			isQueueOpen;
-	time_t			responseWaitTime;
+  time_t			dt;
+  uint32_t		total;
+  bool			isQueueOpen;
+  time_t			responseWaitTime;
 			
-	smsc::logger::Logger *logger;
+  smsc::logger::Logger *logger;
 
 public:
 
-	DeliveryQueue(time_t _dt = 5, time_t onBusy = 300):
-		dt(_dt), schedTimeOnBusy(onBusy), total(0), isQueueOpen(false), responseWaitTime(60),
-		logger(smsc::logger::Logger::getInstance("mci.DlvQueue")){}
-	DeliveryQueue(const DeliveryQueue& addr){}
-	virtual ~DeliveryQueue(){Erase();}
+  DeliveryQueue(time_t _dt = 5, time_t onBusy = 300):
+    dt(_dt), schedTimeOnBusy(onBusy), total(0), isQueueOpen(false), responseWaitTime(60),
+    logger(smsc::logger::Logger::getInstance("mci.DlvQueue")){}
+  DeliveryQueue(const DeliveryQueue& addr){}
+  virtual ~DeliveryQueue(){Erase();}
 
-	void AddScheduleRow(int error, time_t wait);
-	void SetSchedTimeOnBusy(time_t wait);
-	void SetResponseWaitTime(time_t _responseWaitTime){responseWaitTime = _responseWaitTime;}
+  void AddScheduleRow(int error, time_t wait);
+  void SetSchedTimeOnBusy(time_t wait);
+  void SetResponseWaitTime(time_t _responseWaitTime){responseWaitTime = _responseWaitTime;}
 	
-	void OpenQueue(void);
-	void CloseQueue(void);
-	bool isQueueOpened(void);
-	int GetAbntCount(void);
-	int GetQueueSize(void);
+  void OpenQueue(void);
+  void CloseQueue(void);
+  bool isQueueOpened(void);
+  int GetAbntCount(void);
+  int GetQueueSize(void);
 
-	time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1);
-	time_t Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK); // bool toHead = false
-	time_t RegisterAlert(const AbntAddr& abnt);
-	bool Get(AbntAddr& abnt);
-	bool Get(const AbntAddr& abnt, SchedItem& item);
-//	int Get(vector<SchedItem>& items, int count);
-	int Get(vector<SchedItem>& items, int count);
-	void Remove(const AbntAddr& abnt);
-	void Erase(void);
+  time_t Schedule(const AbntAddr& abnt, bool onBusy=false, time_t schedTime=-1, uint16_t lastError=-1);
+  time_t Reschedule(const AbntAddr& abnt, int resp_status = smsc::system::Status::OK); // bool toHead = false
+  time_t RegisterAlert(const AbntAddr& abnt);
+  bool Get(AbntAddr& abnt);
+  bool Get(const AbntAddr& abnt, SchedItem& item);
+  //	int Get(vector<SchedItem>& items, int count);
+  int Get(vector<SchedItem>& items, int count);
+  void Remove(const AbntAddr& abnt);
+  void Erase(void);
 
 private:
 	
-	void Resched(const AbntAddr& abnt, time_t oldSchedTime, time_t newSchedTime);
-	time_t CalcTimeDelivery(int err = -1);
-	time_t GetDeliveryTime(void);
+  void Resched(const AbntAddr& abnt, time_t oldSchedTime, time_t newSchedTime);
+  time_t CalcTimeDelivery(int err = -1);
+  time_t GetDeliveryTime(void);
 
 };
 
