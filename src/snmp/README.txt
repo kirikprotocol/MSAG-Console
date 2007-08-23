@@ -19,11 +19,19 @@ tar -xvf net-snmp_5.2.2-SunOS_5.9_sun4u.tar
 ------------------------------------------------------------
 2. Stop Sun's snmp agent
 
+Solaris 9
+
 cd /etc/rc3.d
 ./S76snmpdx stop
 ./S77dmi stop
 mv S76snmpdx s76snmpdx
 mv S77dmi s77dmi
+
+Solaris 10
+
+svcadm disable sma
+svcadm disable dmi
+svcadm disable snmpdx
 
 ------------------------------------------------------------
 3. Set up OpenSSL library path (optional)
