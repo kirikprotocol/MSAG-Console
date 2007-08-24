@@ -1,22 +1,21 @@
 package ru.sibinco.WHOISDIntegrator;
 
+import org.apache.log4j.Logger;
+import ru.sibinco.lib.backend.util.Functions;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.transport.Transport;
-import ru.sibinco.scag.beans.rules.applet.MiscUtilities;
 import ru.sibinco.scag.beans.rules.RuleState;
-import ru.sibinco.scag.Constants;
-import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.StatusDisconnectedException;
-import ru.sibinco.lib.backend.util.Functions;
 
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.ServletOutputStream;
 import java.io.*;
-import java.util.*;
 import java.text.MessageFormat;
-
-import org.apache.log4j.Logger;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -25,36 +24,87 @@ import org.apache.log4j.Logger;
  * Time: 11:15:17
  * To change this template use File | Settings | File Templates.
  */
-public class WHOISDServlet extends HttpServlet {
+public class WHOISDServlet extends HttpServlet
+{
   protected final Logger logger = Logger.getLogger(this.getClass());
 
-  private SCAGAppContext appContext;
+//  private SCAGAppContext appContext;
   private HashMap schemaCash = new HashMap();
   private static final String SCAG_ERROR_PREFIX = "Internal MSAG error: ";
   private static final String WHOISD_ERROR_PREFIX = "WHOISD request error: ";
+  public static final String GW_LOCATION_OPERATORS_FILE = "gw location.operators_file";
+  public static final String GW_LOCATION_SERVICES_FILE =  "gw location.services_file";
+  public static final String GW_LOCATION_TARIFFS_FILE =   "gw location.tariffs_file";
+  public static final String GW_LOCATION_CONFIG_FOLDER =  "gw location.gw_config_folder";
+  public static final String GW_LOCATION_RULES_FOLDER =   "gw location.rules_folder";
+  public static final String CONTENT_TYPE_XML = "application/xhtml+xml";
+  public static final String CONTENT_TYPE_TXT = "text/plain";
+
+  public static final Object ruleLock =    new Object();
+  public static final Object tariffsLock = new Object();
 
   private static final int CR = (int)'\r';
   private static final int LF = (int)'\n';
 
-  public synchronized void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+  private class WHOISDResult
+  {
+    public byte result[] = null;
+    public String error = null;
+  }
+
+  private WHOISDResult addError(String error)
+  {
+    WHOISDResult result = new WHOISDResult();
+    result.error = error;
+    return result;
+  }
+
+  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException
+  {
     logRequest(req);
-    appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
+    SCAGAppContext appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
     int id = getRequestId(req);
-    LinkedList result = new LinkedList();
+    WHOISDResult result = null;
+    String contentType = CONTENT_TYPE_TXT;
     try {
     switch (id) {
-      case WHOISDRequest.OPERATORS: result = loadXml(composePath("gw location.operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.OPERATORS_SCHEMA: result = getSchema(WHOISDRequest.OPERATORS_SCHEMA, composePath("gw location.operators_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES:  result = loadXml(composePath("gw location.services_file")); SendResult(result, resp); break;
-      case WHOISDRequest.SERVICES_SCHEMA: result = getSchema(WHOISDRequest.SERVICES_SCHEMA, composePath("gw location.services_file")); SendResult(result, resp); break;
-      case WHOISDRequest.RULE: result = getRule(req);  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX: result = loadXml(composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
-      case WHOISDRequest.TARIFF_MATRIX_SCHEMA: result = getSchema(WHOISDRequest.TARIFF_MATRIX_SCHEMA,composePath("gw location.tariffs_file"));  SendResult(result, resp); break;
+      case WHOISDRequest.OPERATORS:
+        result = loadXml(composePath(GW_LOCATION_OPERATORS_FILE, appContext));
+          contentType = CONTENT_TYPE_XML;
+        break;
+      case WHOISDRequest.OPERATORS_SCHEMA:
+        result = getSchema(id, composePath(GW_LOCATION_OPERATORS_FILE, appContext));
+        contentType = CONTENT_TYPE_TXT;
+        break;
+      case WHOISDRequest.SERVICES:
+        result = loadXml(composePath(GW_LOCATION_SERVICES_FILE, appContext));
+        contentType = CONTENT_TYPE_XML;
+        break;
+      case WHOISDRequest.SERVICES_SCHEMA:
+        result = getSchema(id, composePath(GW_LOCATION_SERVICES_FILE, appContext));
+        contentType = CONTENT_TYPE_TXT;
+        break;
+      case WHOISDRequest.RULE:
+        synchronized(ruleLock) {
+            result = getRule(req, appContext);
+        }
+        contentType = CONTENT_TYPE_TXT;
+        break;
+      case WHOISDRequest.TARIFF_MATRIX:
+        synchronized(tariffsLock) {
+            result = loadXml(composePath(GW_LOCATION_TARIFFS_FILE, appContext));
+        }
+        contentType = CONTENT_TYPE_XML;
+        break;
+      case WHOISDRequest.TARIFF_MATRIX_SCHEMA:
+        result = getSchema(id, composePath(GW_LOCATION_TARIFFS_FILE, appContext));
+        contentType = CONTENT_TYPE_TXT;
+        break;
       default:
         resp.setHeader("status","false");
-        result.add(WHOISD_ERROR_PREFIX + "Wrong request for get method, available: " + Arrays.asList(WHOISDRequest.WHOISDRequests));
-        SendResult(result, resp);
-        return;
+        result = addError(WHOISD_ERROR_PREFIX + "Wrong request for get method, available: "
+                          + Arrays.asList(WHOISDRequest.WHOISDRequests));
+        contentType = CONTENT_TYPE_TXT;
       }
     }
     catch (Exception e) {
@@ -66,28 +116,38 @@ public class WHOISDServlet extends HttpServlet {
         errorMessage=SCAG_ERROR_PREFIX + e.getMessage();
         e.printStackTrace();
       }
-      result.add(errorMessage);
-      SendResult(result, resp);
+      result = addError(errorMessage);
     }
+
+    SendResult(result, resp, contentType);
   }
 
-  public synchronized void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException{
-       logRequest(req);
-       appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
-       int id = getRequestId(req);
-       LinkedList result = new LinkedList();
-       try {
+  public synchronized void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException
+  {
+      logRequest(req);
+      SCAGAppContext appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
+      int id = getRequestId(req);
+      WHOISDResult result = null;
+
+      try {
         switch (id) {
-          case WHOISDRequest.RULE: applyTerm(req,isMultipartFormat(req));SendResult(result, resp); break;
-          case WHOISDRequest.TARIFF_MATRIX: appContext.getTMatrixManager().applyTariffMatrix(composePath("gw location.tariffs_file"),req,isMultipartFormat(req), appContext); SendResult(result, resp); break;
+          case WHOISDRequest.RULE:
+              synchronized(ruleLock){
+                applyTerm(req,isMultipartFormat(req), appContext);
+              }
+              break;
+          case WHOISDRequest.TARIFF_MATRIX:
+              synchronized(tariffsLock){
+                appContext.getTMatrixManager().applyTariffMatrix(
+                            composePath(GW_LOCATION_TARIFFS_FILE, appContext),req,isMultipartFormat(req), appContext);
+              }
+            break;
           default:
             resp.setHeader("status","false");
-            result.add(WHOISD_ERROR_PREFIX+"Wrong request for post method");
-            SendResult(result, resp);
-            return;
+            result = addError(WHOISD_ERROR_PREFIX + "Wrong request for post method");
          }
-       }
-       catch (Exception e) {
+      }
+      catch (Exception e) {
          resp.setHeader("status","false");
          String errorMessage;
          if (e instanceof WHOISDException)
@@ -96,23 +156,26 @@ public class WHOISDServlet extends HttpServlet {
            e.printStackTrace();
            errorMessage=SCAG_ERROR_PREFIX + e.getMessage();
          }
-         result.add(errorMessage);
-         SendResult(result, resp);
-       }
+         result = addError(errorMessage);
+      }
+      SendResult(result, resp, "");
   }
 
-   private void logRequest(HttpServletRequest req) {
+   private void logRequest(HttpServletRequest req)
+   {
      logger.debug("Start serving request from WHOISD platform");
      logger.debug("from host - " + req.getRemoteAddr());
      logger.debug("requested url: " + req.getRequestURL());
      logger.debug("method = " + req.getMethod());
    }
 
-   private String composePath(String paramName) throws Exception {
-     return appContext.getConfig().getString("gw location.gw_config_folder") + File.separatorChar + appContext.getConfig().getString(paramName);
+   private String composePath(String paramName, SCAGAppContext appContext) throws Exception {
+     return appContext.getConfig().getString(GW_LOCATION_CONFIG_FOLDER) +
+            File.separatorChar + appContext.getConfig().getString(paramName);
    }
 
-   private void applyTerm(HttpServletRequest req, boolean isMultipartFormat) throws Exception {
+   private void applyTerm(HttpServletRequest req, boolean isMultipartFormat, SCAGAppContext appContext) throws Exception
+   {
      ByteArrayOutputStream bos = new ByteArrayOutputStream();
      int b;
      InputStream in = req.getInputStream();
@@ -128,7 +191,7 @@ public class WHOISDServlet extends HttpServlet {
        throw new WHOISDException("service parameter must be an integer or long value");
      }
      if (appContext.getServiceProviderManager().getServiceById(new Long(service))==null)
-       throw new WHOISDException("MSAG doesn't contain service with id = " + service);     
+       throw new WHOISDException("MSAG doesn't contain service with id = " + service);
      RuleManagerWrapper rulemanager = appContext.getRuleManager().getWrapper();
      Map rulesWHOISD = null;
      Rule ruleWHOISD = null;
@@ -136,7 +199,7 @@ public class WHOISDServlet extends HttpServlet {
      if (isMultipartFormat) {
        int[] dataSlice = extractData(req,new ByteArrayInputStream(bos.toByteArray()));
        String content = new String();
-       for (int i =0 ;i<dataSlice.length;i++)
+       for (int i=0 ;i<dataSlice.length;i++)
          content = content +(char)dataSlice[i];
          rulesWHOISD = WHOISDTermsTransformer.buildRules(termAsList,service, new BufferedReader(new StringReader(content)), rulemanager.getXslFolder());
      } else {
@@ -154,7 +217,7 @@ public class WHOISDServlet extends HttpServlet {
          }
          continue;
        }
-       String ruleSystemId = composePath("gw location.rules_folder")+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
+       String ruleSystemId = composePath(GW_LOCATION_RULES_FOLDER, appContext)+"/"+ transports[i] + "/"+ruleWHOISD.getId().toString();
        try {
         SAXParserImpl.parseRule(rulemanager.getRuleContentAsString(ruleWHOISD), ruleSystemId, transports[i]);
        } catch(WHOISDException e) {
@@ -183,7 +246,7 @@ public class WHOISDServlet extends HttpServlet {
      int ruleHeaderLength = Rule.mainHeaderLength;
      LinkedList ruleBodyWithoutHeader = ruleWHOISD.getBody();
      for (int ii=0;ii<(ruleHeaderLength+ruleWHOISD.getWhoisdPartOffset());ii++)
-       ruleBodyWithoutHeader.removeFirst();   
+       ruleBodyWithoutHeader.removeFirst();
      int offset = 0;
      int startindex = ruleBodyWithoutHeader.size()-1;
      for (;startindex>0;startindex--){
@@ -214,8 +277,7 @@ public class WHOISDServlet extends HttpServlet {
      if (offset!=-1)
       linenumberinterm = new Integer(offset + linenumber - ruleWHOISD.getWhoisdPartOffset() - ruleHeaderLength - 1);
      else linenumberinterm = new String("unknown");
-     String message = MessageFormat.format(errormessage, new Object[]{linenumberinterm});
-     return message;
+     return MessageFormat.format(errormessage, new Object[]{linenumberinterm});
    }
 
    public static void saveFile(String pathToWrite, HttpServletRequest req, boolean isMultipartFormat) throws Exception {
@@ -285,37 +347,53 @@ public class WHOISDServlet extends HttpServlet {
     return cType.substring(cType.indexOf("boundary=")+9);
   }
 
-  private void SendResult(LinkedList result, HttpServletResponse resp) throws IOException {
-    if (!resp.containsHeader("status")) {
+  private void SendResult(WHOISDResult result, HttpServletResponse resp, String contentType) throws IOException
+  {
+    if (!resp.containsHeader("status"))
+    {
       logger.debug("Request is served successfully");
       resp.setHeader("status","ok");
-      if (result.size()>1) {
-        resp.setContentType("application/xml");
+      if (result != null && result.result != null && result.result.length > 0) {
+        resp.setContentType(contentType);
         resp.setCharacterEncoding(Functions.getLocaleEncoding());
       }
+    }
+    else {
+      String error = (result != null && result.error != null) ? result.error : null;
+      logger.error("Request is not served, reason: " + error);
+    }
+    if( result.error==null ){
+        resp.setContentLength(result.result.length);
+        OutputStream out = null;
+        try {
+            out = resp.getOutputStream();
+            out.write(result.result);
+            out.flush();
+        }
+        finally {
+            if (out!=null) out.close();
+        }
     } else {
-      if (((String)result.get(0)).startsWith(SCAG_ERROR_PREFIX)) logger.error("Request is not served, reason: " + result.get(0));
-      else logger.debug("Request is not served, reason: " + result.get(0));
+        ServletOutputStream serOut = null;
+        try{
+            serOut = resp.getOutputStream();
+            serOut.println( result.error );
+            serOut.flush();
+        }finally{
+            if(serOut!=null) serOut.close();
+        }
     }
-    PrintWriter out = null;
-    try {
-    out = resp.getWriter();
-    for (Iterator i = result.iterator(); i.hasNext();)
-      out.println(i.next());
-    out.flush();
-    }
-    finally {
-     if (out!=null) out.close();
-    }
+
   }
 
-  private int getRequestId(HttpServletRequest req) {
+  private int getRequestId(HttpServletRequest req)
+  {
     String[] parsedURI = req.getRequestURI().split("/");
     String requestedFile = parsedURI[parsedURI.length-1];
     return WHOISDRequest.getId(requestedFile);
   }
 
-  private LinkedList getRule(HttpServletRequest req) throws WHOISDException , Exception {
+  private WHOISDResult getRule(HttpServletRequest req, SCAGAppContext appContext) throws WHOISDException , Exception {
     Long serviceId = null;
     if (req.getParameter("service") == null) throw new WHOISDException("service parameter is missed!");
     try {
@@ -326,18 +404,36 @@ public class WHOISDServlet extends HttpServlet {
     String transport = req.getParameter("transport");
     if (transport == null) throw new WHOISDException("transport parameter is missed!");
     transport = transport.toUpperCase();
-    validateTransportParameter(transport);    
+    validateTransportParameter(transport);
     File ruleFile = appContext.getRuleManager().composeRuleFile(transport, serviceId.toString());
     if (!ruleFile.exists()) throw new WHOISDException("There is no rule for service with id = " + serviceId + " and transport "+ transport);
     return loadFile(ruleFile);
   }
 
-  private LinkedList loadXml(String filepath) throws Exception {
+  private WHOISDResult loadXml(String filepath) throws Exception {
     File filetoread = new File(filepath);
     return loadFile(filetoread);
   }
 
-  private LinkedList loadFile(File file) throws Exception {
+  private WHOISDResult loadFile(File file) throws IOException {
+    InputStream input = null;
+    WHOISDResult result = new WHOISDResult();
+    try {
+      input = new BufferedInputStream(new FileInputStream(file));
+      int size = input.available();
+      result.result = new byte[size];
+      Functions.readBuffer(input, result.result, size);
+    }
+    catch (IOException e) {
+      result = addError("WHOISDServlet can not load file:" + e.getMessage());
+    }
+    finally {
+      if (input != null) input.close();
+    }
+    return result;
+  }
+
+  private LinkedList loadFileToList(File file) throws Exception {
     LinkedList li = new LinkedList();
     InputStream in = null;
     BufferedReader br = null;
@@ -355,15 +451,28 @@ public class WHOISDServlet extends HttpServlet {
     return li;
   }
 
-  private LinkedList getSchema(int id, String xmlPath) throws Exception{
+  private WHOISDResult getSchema(int id, String xmlPath) throws Exception
+  {
     RuleManager.Schema schema = (RuleManager.Schema)schemaCash.get(xmlPath);
     File filetoread = new File(xmlPath);
     File schemaFile = new File(filetoread.getParent(), WHOISDRequest.getSchemaName(id));
     if (schema==null || schemaFile.lastModified() > schema.lastmodified) {
-       schema = new RuleManager.Schema(schemaFile.lastModified(),loadFile(schemaFile));
+       schema = new RuleManager.Schema(schemaFile.lastModified(),loadFileToList(schemaFile));
        schemaCash.put(xmlPath,schema);
     }
-    return schema.schemaContent;
+
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    PrintWriter pw = new PrintWriter(bos);
+    for (Iterator i = schema.schemaContent.iterator(); i.hasNext();) {
+      String s = (String)i.next();
+      pw.println(s);
+    }
+    pw.flush(); pw.close();
+    bos.flush(); bos.close();
+
+    WHOISDResult result = new WHOISDResult();
+    result.result = bos.toByteArray();
+    return result;
   }
 
   private void validateTransportParameter(String transport) throws WHOISDException{
