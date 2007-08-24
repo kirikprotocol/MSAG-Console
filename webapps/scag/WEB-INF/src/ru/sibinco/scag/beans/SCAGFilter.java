@@ -51,18 +51,18 @@ public class SCAGFilter implements Filter {
         if (logger == null) logger = Logger.getLogger(this.getClass());
 
         if (logger.isDebugEnabled())
-            logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + ':'/* + req.getRemotePort()*/);
+            logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + "| "+ req.toString() );
 
         if (config == null) {
             logger.fatal("Not initialized");
             return;
         }
-
         req.setCharacterEncoding(defaultEncoding);
         req.setAttribute(Constants.APP_CONTEXT, appContext);
         if (req instanceof HttpServletRequest) {
             final HttpServletRequest request = (HttpServletRequest) req;
             req.setAttribute("requestURI", request.getRequestURI());
+            logger.debug("Requested URL:" + request.getRequestURL() );
         }
         chain.doFilter(req, resp);
     }
