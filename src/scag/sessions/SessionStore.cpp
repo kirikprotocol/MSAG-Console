@@ -97,18 +97,21 @@ void SessionStore::deleteSession(const CSessionKey& sessionKey)
 
 }
 
-void SessionStore::updateSession(Session* session)
+bool SessionStore::updateSession(Session* session)
 {
   sync::MutexGuard mg(mtx);
   OffsetValue off;
   if(!dhash.LookUp(session->getSessionKey(),off))
   {
-    throw smsc::util::Exception("SessionStore::updateSession - Session with key %s not found",DiskSessionKey(session->getSessionKey()).toString().c_str());
-  }
+    smsc_log_error(log, "SessionStore::updateSession - Session with key %s not found",DiskSessionKey(session->getSessionKey()).toString().c_str());
+    return false;
+  }    
+
   smsc_log_debug(log,"updateSession:%s:%08llx",DiskSessionKey(session->getSessionKey()).toString().c_str(),off.value);
   SessionBuffer sb;
   session->Serialize(sb);
   pfile.Update(off.value,sb.get(),sb.GetPos());
+  return true;
 }
 
 
@@ -151,10 +154,10 @@ void CachedSessionStore::deleteSession(const CSessionKey& sessionKey)
   store.deleteSession(sessionKey);  
 }
 
-void CachedSessionStore::updateSession(Session* session)
+bool CachedSessionStore::updateSession(Session* session)
 {
   sync::MutexGuard mg(mtx);
-  store.updateSession(session);
+  return store.updateSession(session);
 }
 
 }

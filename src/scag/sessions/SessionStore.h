@@ -34,7 +34,7 @@ public:
 
   SessionPtr newSession(const CSessionKey& sessionKey);
   void deleteSession(const CSessionKey& sessionKey);
-  void updateSession(Session* session);
+  bool updateSession(Session* session);
   uint32_t getSessionsCount() {return dhash.Count();}
 
 protected:
@@ -129,7 +129,7 @@ public:
 
   SessionPtr newSession(const CSessionKey& sessionKey);
   void deleteSession(const CSessionKey& sessionKey);
-  void updateSession(Session* session);
+  bool updateSession(Session* session);
   uint32_t getSessionsCount() {return store.getSessionsCount();}
 protected:
     inline uint32_t getIdx(const CSessionKey& key) { return CSessionKey::CalcHash(key) % maxCacheSize; };

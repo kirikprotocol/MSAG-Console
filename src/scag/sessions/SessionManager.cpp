@@ -178,10 +178,12 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
         session->currentOperationId = 0;
 
         reorderExpireQueue(session);
-        store.updateSession(session);
-        smsc_log_debug(logger,"SessionManager: session updated.  USR='%d', Address='%s' Pending: %d InUse: %d",
+        if(store.updateSession(session))
+        {
+            smsc_log_debug(logger,"SessionManager: session updated.  USR='%d', Address='%s' Pending: %d InUse: %d",
                        sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
-        sessionCount++;
+            sessionCount++;
+        }            
     }
     else
         store.deleteSession(sessionKey);
@@ -341,8 +343,8 @@ bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
             else
                 return false;
         }
-        else
-            rs.runPostProcessActions();
+        else if(rs.status == STATUS_OK)
+            lcmCtx.runPostProcessActions();
     }
     catch(SCAGException& exc)
     {
@@ -481,10 +483,12 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
             session->getUSR(), key.abonentAddr.toString().c_str(), session->PendingOperationList.size(), SessionHash.Count());
 
         session->m_CanOpenSubmitOperation = false;
+        session->getLongCallContext().clear();        
         return true;
     }
 
     (*s)->m_CanOpenSubmitOperation = false;
+
 
     cmd.setSession(*s);
 
