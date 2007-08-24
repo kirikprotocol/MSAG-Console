@@ -5,16 +5,16 @@
  taglib prefix="sm" tagdir="/WEB-INF/tags"%><%@
  taglib prefix="sm-mm" tagdir="/WEB-INF/tags/main_menu"%><%@
 
- tag body-content="scriptless"              %><%@
+ tag body-content="scriptless"                  %><%@
  attribute name="beanClass"    required="false" %><%@
- attribute name="title"        required="true" %><%@
+ attribute name="title"        required="true"  %><%@
  attribute name="menu"         required="false" %><%@
  attribute name="menu2"        required="false" %><%@
  attribute name="form_method"  required="false" %><%@
  attribute name="form_uri"     required="false" %><%@
- attribute name="form_enctype" required="false"%><%@
- attribute name="onLoad"       required="false"%><%@
- attribute name="rawBody"      required="false"%>
+ attribute name="form_enctype" required="false" %><%@
+ attribute name="onLoad"       required="false" %><%@
+ attribute name="rawBody"      required="false" %>
 <%! private java.util.List errorMessages = new java.util.ArrayList();%>
 <%
 errorMessages.clear();
@@ -162,7 +162,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
   <%if (request.getUserPrincipal() != null) {%>
   <OBJECT id="tdcSCAGStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-    <PARAM NAME="DataURL" VALUE="gw/status/status.jsp">
+    <PARAM NAME="DataURL" VALUE="<%=request.getContextPath()%>/gw/status/status.jsp">
     <PARAM NAME="UseHeader" VALUE="True">
     <PARAM NAME="TextQualifier" VALUE='"'>
   </OBJECT>
