@@ -450,10 +450,11 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   __map_warn2__("Send error 0x%x with code 0 to SMSC dialogid=%x",code,dialogid);
   }
   __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
-  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
   if ( GET_STATUS_TYPE(code) == CMD_ERR_FATAL && GET_STATUS_CODE(code) == 0 ){
     code = MAKE_ERRORCODE(CMD_ERR_FATAL,Status::MAPINTERNALFAILURE);
-  } else if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT
+  }
+  SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
+  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT
     && GET_STATUS_TYPE(code) == CMD_ERR_RESCHEDULENOW ){
     cmd->get_resp()->set_delay(GetBusyDelay());
   } else if( GET_STATUS_CODE(code) == Status::LOCKEDBYMO ) {
@@ -2515,12 +2516,15 @@ USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn,
     }
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
-    __map_trace2__("%s: dialogid 0x%x  (state %d) forward %s",__func__,dialog->dialogid_map,dialog->state, RouteToString(dialog.get()).c_str());
+    __map_trace2__("%s: dialogid 0x%x  (state %d) forward %s code: %d, provider: %d",__func__,dialog->dialogid_map,dialog->state,
+                   RouteToString(dialog.get()).c_str(), (int)(errorForwardSMmo_sp?*errorForwardSMmo_sp:0), 
+                   (int)(provErrCode_p?*provErrCode_p:0));
 
     try {
       DoMAPErrorProcessor( errorForwardSMmo_sp?errorForwardSMmo_sp->errorCode:0, provErrCode_p );
     }catch(MAPDIALOG_ERROR& e){
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
+      if( GET_STATUS_CODE(code) == Status::MAP_NO_RESPONSE_FROM_PEER ) dialog->dropChain = true;
       dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
       dialog->wasDelivered = false;
     }
