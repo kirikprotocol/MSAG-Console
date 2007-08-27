@@ -15,15 +15,13 @@ import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Arrays;
 
-public class SubjectsAdd extends SmscBean {
+public class SubjectsAdd extends SubjectBody {
     protected String mbSave = null;
     protected String mbCancel = null;
 
-    protected String name = null;
-    protected String defSme = null;
-    protected String[] masks = null;
-    protected String notes = "";
 
     protected int init(List errors) {
         int result = super.init(errors);
@@ -32,13 +30,22 @@ public class SubjectsAdd extends SmscBean {
 
         if (name == null) {
             name = defSme = "";
-            masks = new String[0];
+//            masks = new String[0];
         }
 
-        if (masks == null)
-            masks = new String[0];
+        if (checkedSources == null)
+          checkedSources = new String[0];
+        if (srcMasks == null)
+          srcMasks = new String[0];
 
-        masks = Functions.trimStrings(masks);
+//        if (masks == null)
+//            masks = new String[0];
+
+//        masks = Functions.trimStrings(masks);
+        srcMasks = Functions.trimStrings(srcMasks);
+
+          checkedSources = Functions.trimStrings(checkedSources);
+        checkedSourcesSet = new HashSet(Arrays.asList(checkedSources));
 
         return result;
     }
@@ -60,11 +67,14 @@ public class SubjectsAdd extends SmscBean {
         if (routeSubjectManager.getSubjects().contains(name))
             return error(SMSCErrors.error.subjects.alreadyExists, name);
         else {
-            if (masks == null || masks.length <= 0) {
+//            if (masks == null || masks.length <= 0) {
+//                return error(SMSCErrors.error.subjects.masksNotDefined);
+//            }
+            if ((srcMasks == null || srcMasks.length <= 0) && (checkedSources == null || checkedSources.length <=0)) {
                 return error(SMSCErrors.error.subjects.masksNotDefined);
             }
             try {
-                routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.get(defSme), notes));
+                routeSubjectManager.getSubjects().add(new Subject(name, srcMasks, smeManager.get(defSme), notes, checkedSources));
                 request.getSession().setAttribute("SUBJECT_NAME", name);
                 journalAppend(SubjectTypes.TYPE_subject, name, Actions.ACTION_ADD);
                 appContext.getStatuses().setSubjectsChanged(true);
@@ -75,9 +85,9 @@ public class SubjectsAdd extends SmscBean {
         }
     }
 
-    public List getPossibleSmes() {
-        return smeManager.getSmeNames();
-    }
+//    public List getPossibleSmes() {
+//        return smeManager.getSmeNames();
+//    }
 
     /**
      * ************************ properties ********************************
@@ -98,35 +108,35 @@ public class SubjectsAdd extends SmscBean {
         this.mbCancel = mbCancel;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDefSme() {
-        return defSme;
-    }
-
-    public void setDefSme(String defSme) {
-        this.defSme = defSme;
-    }
-
-    public String[] getMasks() {
-        return masks;
-    }
-
-    public void setMasks(String[] masks) {
-        this.masks = masks;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
+//    public String getName() {
+//        return name;
+//    }
+//
+//    public void setName(String name) {
+//        this.name = name;
+//    }
+//
+//    public String getDefSme() {
+//        return defSme;
+//    }
+//
+//    public void setDefSme(String defSme) {
+//        this.defSme = defSme;
+//    }
+//
+//    public String[] getMasks() {
+//        return masks;
+//    }
+//
+//    public void setMasks(String[] masks) {
+//        this.masks = masks;
+//    }
+//
+//    public String getNotes() {
+//        return notes;
+//    }
+//
+//    public void setNotes(String notes) {
+//        this.notes = notes;
+//    }
 }

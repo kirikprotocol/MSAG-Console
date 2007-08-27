@@ -35,6 +35,7 @@ public class TopMenu extends ArrayList {
             smsItems.add(new MenuItem("menu.smsc.timezones", "/smsc/timezones/index.jsp", MenuItem.VISIBLE_IN_ALL));
             if (SupportExtProfile.enabled)
               smsItems.add(new MenuItem("menu.smsc.smscenters", "/smsc/smscenters/index.jsp", MenuItem.VISIBLE_IN_ALL));
+            smsItems.add(new MenuItem("menu.smsc.regions", "/smsc/regions/regions.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.switch", "/smsc/smsc_service/switch.jsp", MenuItem.VISIBLE_IN_HA));
             add(new MenuItem("menu.smsc", "", smsItems));
 

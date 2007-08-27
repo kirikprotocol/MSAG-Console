@@ -389,7 +389,7 @@ class InfoSmeTransport extends Service
     return converted;
   }
 
-  public void addDeliveryMessages(String taskId, List messages) throws AdminException {
+  public void addDeliveryMessages(String taskId, Collection messages) throws AdminException {
     if (taskId == null)
       throw new AdminException("Task id is null");
     if (messages == null)

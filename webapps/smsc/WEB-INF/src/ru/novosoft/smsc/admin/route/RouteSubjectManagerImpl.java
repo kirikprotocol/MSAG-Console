@@ -125,6 +125,7 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager {
             final File newFile = Functions.createNewFilenameForSave(file);
             PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
             Functions.storeConfigHeader(out, "routes", "routes.dtd", Functions.getLocaleEncoding());
+            subjects.check();
             subjects.store(out);
             routes.store(out);
             Functions.storeConfigFooter(out, "routes");

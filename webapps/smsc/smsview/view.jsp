@@ -117,6 +117,30 @@
             </td>
         </tr>
         <tr class=row<%=rowN++&1%>0>
+            <th width="1%" nowrap valign=top><%=getLocString("smsview.destinationDescriptor")%></th>
+            <%String imsi = row.getDestinationDescriptor().getImsi();
+              if (imsi == null || imsi.length() == 0)
+                imsi = "-";
+              String msc = row.getDestinationDescriptor().getMsc();
+              if (msc == null || msc.length() == 0)
+                msc = "-";
+              String desc = imsi + " / " + msc;%>
+            <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? desc : StringEncoderDecoder.encode(desc)%>
+                &nbsp;</td>
+        </tr>
+        <tr class=row<%=rowN++&1%>0>
+            <th width="1%" nowrap valign=top><%=getLocString("smsview.originatingDescriptor")%></th>
+            <%String oimsi = row.getOriginatingDescriptor().getImsi();
+              if (oimsi == null || oimsi.length() == 0)
+                oimsi = "-";
+              String omsc = row.getOriginatingDescriptor().getMsc();
+              if (omsc == null || omsc.length() == 0)
+                omsc = "-";
+              String odesc = oimsi + " / " + omsc;%>
+            <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? odesc : StringEncoderDecoder.encode(odesc)%>
+                &nbsp;</td>
+        </tr>
+        <tr class=row<%=rowN++&1%>0>
             <th width="1%" nowrap valign=top><%=getLocString("smsview.decodedMessage")%></th>
             <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? row.getText() : StringEncoderDecoder.encode(row.getText())%>
                 &nbsp;</td>

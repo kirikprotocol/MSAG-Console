@@ -18,10 +18,7 @@ import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.xml.Utils;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 
 public class SubjectList
@@ -38,12 +35,21 @@ public class SubjectList
       for (int i = 0; i < subjList.getLength(); i++) {
         Element subjElem = (Element) subjList.item(i);
         String name = subjElem.getAttribute("id");
+
         NodeList masksList = subjElem.getElementsByTagName("mask");
         String[] masks = new String[masksList.getLength()];
         for (int j = 0; j < masksList.getLength(); j++) {
           Element maskElem = (Element) masksList.item(j);
           masks[j] = maskElem.getAttribute("value").trim();
         }
+
+        NodeList childList = subjElem.getElementsByTagName("subject");
+        String[] childs = new String[childList.getLength()];
+        for (int j = 0; j < childList.getLength(); j++) {
+          Element childElem = (Element) childList.item(j);
+          childs[j] = childElem.getAttribute("id").trim();
+        }
+
         SME defSme = smeManager.get(subjElem.getAttribute("defSme"));
         if (defSme == null)
           throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
@@ -54,12 +60,13 @@ public class SubjectList
           notes += Utils.getNodeText(notesList.item(j));
 
         try {
-          add(new Subject(name, masks, defSme, notes));
+          add(new Subject(name, masks, defSme, notes, childs));
         } catch (AdminException e) {
           logger.warn("source skipped", e);
         }
       }
     } catch (Throwable ex) {
+      ex.printStackTrace();
       logger.error("Couldn't parse subjects", ex);
       throw new AdminException("Couldn't parse subjects");
     }
@@ -108,6 +115,91 @@ public class SubjectList
   public synchronized List getNames()
   {
     return new SortedList(subjects.keySet());
+  }
+
+  public synchronized void check() throws AdminException {
+    // Try to find circles in subjects graph
+    // Construct graph matrix
+    final int[][] matrix = new int[subjects.size()][subjects.size()];
+    for (int i=0; i < matrix.length; i++) {
+      for (int j = 0; j < matrix.length; j++)
+        matrix[i][j] = 0;
+    }
+    final ArrayList subjectNames = new ArrayList();
+    for (Iterator i = iterator(); i.hasNext();)
+      subjectNames.add(((Subject) i.next()).getName());
+
+    // Fill graph matrix
+
+    for (Iterator iter=iterator(); iter.hasNext();) {
+      Subject subj = (Subject)iter.next();
+      int i = subjectNames.indexOf(subj.getName());
+      String[] childs = subj.getChildSubjects().getNames();
+      for (int j = 0; j < childs.length; j++) {
+        int k = subjectNames.indexOf(childs[j]);
+        matrix[i][k] = 1;
+      }
+    }
+
+    // Find circles
+
+    // Find non circled elements
+    boolean removed = true;
+    final Set removedVertexes = new HashSet();
+    while (removed) {
+      removed = false;
+      for (int i=0; i < matrix.length; i++) {
+        if (removedVertexes.contains(new Integer(i))) // vertex was removed
+          continue;
+
+        // Check outgoing links
+        boolean found = false;
+        for (int j = 0; j < matrix.length && !found; j++)
+          found = matrix[i][j] > 0;
+
+        if (found) {
+          // Check incoming links
+          found = false;
+          for (int j = 0; j < matrix.length && !found; j++)
+            found = matrix[j][i] > 0;
+
+          if (found) // Outgoing and incoming links was found
+            continue;
+        }
+
+        // Vertex has just outgoing or just incoming links. Remove it.
+        for (int j = 0; j < matrix.length; j++) {
+          matrix[i][j] = -1;
+          matrix[j][i] = -1;
+        }
+        removedVertexes.add(new Integer(i));
+        removed = true;
+      }
+    }
+
+    for (int i=0; i < matrix.length; i++) {
+      for (int j = 0; j < matrix.length; j++)
+        if (matrix[i][j] > 0) {
+          final StringBuffer buffer = new StringBuffer();
+          printCircle(matrix, subjectNames, i, j, buffer, new HashSet());
+          throw new AdminException("Circle was found in subjects: " + buffer);
+        }
+    }
+  }
+
+  private void printCircle(int[][] matrix, ArrayList subjectNames, int i, int j, StringBuffer buffer, Set steps) {
+    if (steps.contains(new Integer(i)))
+      return;
+
+    steps.add(new Integer(i));
+    buffer.append(buffer.length() > 0 ? " -> " : "").append(subjectNames.get(i));
+
+    for (int k =0; k < matrix.length; k++) {
+      if (matrix[j][k] > 0) {
+        printCircle(matrix, subjectNames, j, k, buffer, steps);
+        return;
+      }
+    }
   }
 
   public synchronized PrintWriter store(PrintWriter out)

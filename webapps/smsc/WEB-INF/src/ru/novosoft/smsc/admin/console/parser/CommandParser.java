@@ -15,6 +15,7 @@ import ru.novosoft.smsc.admin.console.commands.acl.*;
 import ru.novosoft.smsc.admin.console.commands.alias.*;
 import ru.novosoft.smsc.admin.console.commands.dl.*;
 import ru.novosoft.smsc.admin.console.commands.profile.*;
+import ru.novosoft.smsc.admin.console.commands.infosme.*;
 import ru.novosoft.smsc.admin.console.commands.route.*;
 import ru.novosoft.smsc.admin.console.commands.sme.*;
 import ru.novosoft.smsc.admin.console.commands.misc.*;
@@ -139,6 +140,12 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(ACT_APPLY);
 			cmd=apply();
+			break;
+		}
+		case ACT_INFOSME:
+		{
+			match(ACT_INFOSME);
+			cmd=infosme();
 			break;
 		}
 		default:
@@ -747,6 +754,18 @@ public CommandParser(ParserSharedInputState state) {
 			throw new NoViableAltException(LT(1), getFilename());
 		}
 		}
+		return cmd;
+	}
+	
+	public final Command  infosme() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
+		
+		
+		match(TGT_IMPORT);
+		cmd=infosmeimport();
 		return cmd;
 	}
 	
@@ -3296,6 +3315,20 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final InfosmeImportCommand  infosmeimport() throws RecognitionException, TokenStreamException {
+		InfosmeImportCommand cmd;
+		
+		
+		cmd = new InfosmeImportCommand();
+		
+		
+		{
+		match(OPT_TASK);
+		cmd.setFile(getnameid("task file"));
+		}
+		return cmd;
+	}
+	
 	public final String  getnameid(
 		String msg
 	) throws RecognitionException, TokenStreamException {
@@ -3527,17 +3560,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt36=0;
-			_loop36:
+			int _cnt37=0;
+			_loop37:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt37>=1 ) { break _loop37; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt36++;
+				_cnt37++;
 			} while (true);
 			}
 			}
@@ -3559,17 +3592,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt40=0;
-			_loop40:
+			int _cnt41=0;
+			_loop41:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt40>=1 ) { break _loop40; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt41>=1 ) { break _loop41; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt40++;
+				_cnt41++;
 			} while (true);
 			}
 			}
@@ -4469,14 +4502,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop119:
+			_loop120:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop119;
+					break _loop120;
 				}
 				
 			} while (true);
@@ -5957,27 +5990,27 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			}
 			{
-			_loop305:
+			_loop306:
 			do {
 				if ((LA(1)==ACT_ADD)) {
 					match(ACT_ADD);
 					cmd.addMask(getnameid("closed group mask to add"));
 				}
 				else {
-					break _loop305;
+					break _loop306;
 				}
 				
 			} while (true);
 			}
 			{
-			_loop307:
+			_loop308:
 			do {
 				if ((LA(1)==ACT_DELETE)) {
 					match(ACT_DELETE);
 					cmd.delMask(getnameid("closed group mask to delete"));
 				}
 				else {
-					break _loop307;
+					break _loop308;
 				}
 				
 			} while (true);
@@ -6038,6 +6071,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"revoke\"",
 		"\"check\"",
 		"\"export\"",
+		"\"infosme\"",
 		"\"connect\"",
 		"\"disconnect\"",
 		"\"access\"",
@@ -6067,6 +6101,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"archive\"",
 		"\"group\"",
 		"\"emailsme\"",
+		"\"import\"",
 		"\"id\"",
 		"\"name\"",
 		"\"hide\"",
@@ -6154,6 +6189,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"servicesbit\"",
 		"\"sponsored\"",
 		"\"nick\"",
+		"\"task\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

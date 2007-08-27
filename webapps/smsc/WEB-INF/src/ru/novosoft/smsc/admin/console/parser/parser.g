@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.console.commands.acl.*;
 import ru.novosoft.smsc.admin.console.commands.alias.*;
 import ru.novosoft.smsc.admin.console.commands.dl.*;
 import ru.novosoft.smsc.admin.console.commands.profile.*;
+import ru.novosoft.smsc.admin.console.commands.infosme.*;
 import ru.novosoft.smsc.admin.console.commands.route.*;
 import ru.novosoft.smsc.admin.console.commands.sme.*;
 import ru.novosoft.smsc.admin.console.commands.misc.*;
@@ -64,6 +65,7 @@ parse returns [Command cmd] {
 	| ACT_CHECK	cmd = check
 	| ACT_EXPORT	cmd = export
 	| ACT_APPLY	cmd = apply
+	| ACT_INFOSME	cmd = infosme
 	;
 
 /* --------------------- Apply action parser ---------------------- */
@@ -206,6 +208,11 @@ export returns [Command cmd] {
 	| TGT_ARCHIVE cmd = exportarchive
 	;
 
+/* ----------------------- Info Sme action parser ---------------------- */
+infosme returns [Command cmd] {
+    cmd = null;
+}
+  : TGT_IMPORT cmd = infosmeimport;
 
 /* ----------------------- Common names parser ------------------------- */
 getnameid[String msg] returns [String out] {
@@ -1075,6 +1082,11 @@ delemailsme returns [EmailSmeDelCommand cmd] {
     cmd = new EmailSmeDelCommand();
 }   : emailsme_gen_opt[cmd]
     ;
+/* ------------------ Info Sme ----------------------------- */
+infosmeimport returns [InfosmeImportCommand cmd] {
+    cmd = new InfosmeImportCommand();
+} : ( OPT_TASK { cmd.setFile(getnameid("task file")); });
+
 /* ------------------ Misc commands parsers ---------------- */
 
 addprovider returns [ProviderAddCommand cmd] {

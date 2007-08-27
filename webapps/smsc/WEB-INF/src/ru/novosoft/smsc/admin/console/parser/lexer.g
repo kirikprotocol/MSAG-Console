@@ -25,6 +25,7 @@ tokens {
   ACT_REVOKE    = "revoke";
   ACT_CHECK     = "check";
   ACT_EXPORT    = "export";
+  ACT_INFOSME   = "infosme";
   
   ACT_CONNECT	= "connect";
   ACT_DISCONNECT= "disconnect";
@@ -57,6 +58,7 @@ tokens {
   TGT_ARCHIVE   = "archive";
   TGT_GROUP     = "group";
   TGT_EMAILSME  = "emailsme";
+  TGT_IMPORT    = "import";
 
   OPT_ID        = "id";
   OPT_NAME      = "name";
@@ -145,6 +147,7 @@ tokens {
   OPT_SERVICESBIT  = "servicesbit";
   OPT_SPONSORED = "sponsored";
   OPT_NICK = "nick";
+  OPT_TASK = "task";
 
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

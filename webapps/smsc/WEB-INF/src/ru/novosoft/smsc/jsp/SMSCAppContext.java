@@ -19,6 +19,7 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.closedgroups.ClosedGroupManager;
+import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
 import ru.novosoft.util.jsp.AppContext;
@@ -60,6 +61,8 @@ public interface SMSCAppContext extends AppContext {
     CategoryManager getCategoryManager();
 
     RouteSubjectManager getRouteSubjectManager();
+
+    RegionsManager getRegionsManager();
 
     ResourcesManager getResourcesManager();
 
