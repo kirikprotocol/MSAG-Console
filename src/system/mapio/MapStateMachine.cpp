@@ -2517,14 +2517,14 @@ USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn,
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x  (state %d) forward %s code: %d, provider: %d",__func__,dialog->dialogid_map,dialog->state,
-                   RouteToString(dialog.get()).c_str(), (int)(errorForwardSMmo_sp?*errorForwardSMmo_sp:0), 
-                   (int)(provErrCode_p?*provErrCode_p:0));
+                   RouteToString(dialog.get()).c_str(), errorForwardSMmo_sp?(int)(*errorForwardSMmo_sp):0, 
+                   provErrCode_p?(int)(*provErrCode_p):0);
 
     try {
       DoMAPErrorProcessor( errorForwardSMmo_sp?errorForwardSMmo_sp->errorCode:0, provErrCode_p );
     }catch(MAPDIALOG_ERROR& e){
       SendErrToSmsc(dialog->dialogid_smsc,e.code);
-      if( GET_STATUS_CODE(code) == Status::MAP_NO_RESPONSE_FROM_PEER ) dialog->dropChain = true;
+      if( GET_STATUS_CODE(e.code) == Status::MAP_NO_RESPONSE_FROM_PEER ) dialog->dropChain = true;
       dialog->dialogid_smsc = 0; // далее смсцентр ничего не знает о диалоге
       dialog->wasDelivered = false;
     }
