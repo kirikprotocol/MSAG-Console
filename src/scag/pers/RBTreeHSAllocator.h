@@ -133,7 +133,7 @@ public:
 	{
 		if(!running) return 0;
 		RBTreeNode* newNode;
-        smsc_log_debug(logger, "allocatingNode rbtree_body = %p, header->first_free_cell = %d", rbtree_body, header->first_free_cell);
+//        smsc_log_debug(logger, "allocatingNode rbtree_body = %p, header->first_free_cell = %d", rbtree_body, header->first_free_cell);
         if(!header->cells_free && ReallocRBTreeFile() != SUCCESS)
             abort();
 		newNode = (RBTreeNode*)((long)rbtree_body + header->first_free_cell);
@@ -186,19 +186,19 @@ public:
 	}
 	virtual void startChanges(RBTreeNode* node, int operation)
 	{
-	    smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);        
+//	    smsc_log_debug(logger, "startChanges. node = (%d)%p, operation = %d", (long)node - (long)rbtree_body, node, operation);        
 	    currentOperation = operation;
 	    changedNodes.erase(changedNodes.begin(), changedNodes.end());
 	    changedNodes.push_back(node);
 	}
 	virtual void nodeChanged(RBTreeNode* node)
 	{
-	    smsc_log_debug(logger, "Node changed=%d(%p)", (long)node - (long)rbtree_body, node);
+//	    smsc_log_debug(logger, "Node changed=%d(%p)", (long)node - (long)rbtree_body, node);
 	    changedNodes.push_back(node);
 	}
 	virtual void completeChanges(void)
 	{
-	    smsc_log_debug(logger, "completeChanges=%d", changedNodes.size());
+//	    smsc_log_debug(logger, "completeChanges=%d", changedNodes.size());
 	    changedNodes.sort();
 	    changedNodes.unique();
             //printf("%d\n", changedNodes.size());
