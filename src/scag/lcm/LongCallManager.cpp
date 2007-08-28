@@ -11,6 +11,7 @@
 #include "scag/exc/SCAGExceptions.h"
 
 #include "LongCallManager.h"
+#include "scag/re/actions/ActionContext.h"
 
 namespace scag { namespace lcm {
 
@@ -233,12 +234,24 @@ ActionContext* LongCallContext::getActionContext()
 {
     return actionContext;
 }
+
+void LongCallContext::clear()
+{
+    continueExec =false;
+    while(actions)
+    {
+        PostProcessAction* c = actions;
+        actions = actions->next;
+        delete c;
+    }
+    actions = NULL;
+}
+
 LongCallContext::~LongCallContext()
 {
     if(params) delete params;
     if(actionContext) delete actionContext;
+    clear();
 }
 
-
 }}
-

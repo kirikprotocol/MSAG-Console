@@ -48,14 +48,23 @@ struct ActionStackValue
     ActionStackValue(int index, bool flag) : actionIndex(index), thenSection(flag) {}
 };
 
+class PostProcessAction
+{
+public:
+    PostProcessAction* next;
+    PostProcessAction() : next(NULL) {};
+    virtual void run() = 0;   
+    virtual ~PostProcessAction() {};
+};
+
 class LongCallContext
 {
     LongCallParams *params;
     ActionContext  *actionContext;
-    
+    PostProcessAction *actions, *actionsTail;    
 public:
     LongCallContext(): initiator(NULL), stateMachineContext(NULL), 
-	next(NULL), params(NULL), actionContext(NULL), continueExec(false) {};
+	next(NULL), params(NULL), actionContext(NULL), continueExec(false), actions(NULL) {};
     
     uint32_t systemType, callCommandId;
     void *stateMachineContext;
@@ -79,6 +88,26 @@ public:
 
     void setActionContext(ActionContext* context);
     ActionContext* getActionContext();
+
+    void addAction(PostProcessAction* p)
+    {
+        if(actions)
+            actionsTail->next = p;
+        else
+            actions = p;
+        actionsTail = p;
+    }
+    void runPostProcessActions()
+    {
+        PostProcessAction* p = actions;
+        while(p)
+        {
+            p->run();
+            p = p->next;
+        }
+    }
+
+    void clear();
     
     ~LongCallContext();
 };
