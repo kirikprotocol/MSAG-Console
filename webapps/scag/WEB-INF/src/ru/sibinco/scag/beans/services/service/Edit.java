@@ -54,6 +54,64 @@ public class Edit extends TabledEditBeanImpl {
     private String childEitId;
     private String mbDeleteHttpRoute;
     private String mbDefaultHttpRoute;
+    private String unlockRuleSMPP = null;
+    private String unlockRuleHTTP = null;
+    private String unlockRuleMMS  = null;
+    private String editRuleSMPP = null;
+    private String editRuleHTTP = null;
+    private String editRuleMMS  = null;
+
+    public String getEditRuleSMPP() {
+        return editRuleSMPP;
+    }
+
+    public String getEditRuleHTTP() {
+        return editRuleHTTP;
+    }
+
+    public String getEditRuleMMS() {
+        return editRuleMMS;
+    }
+
+    public void setEditRuleSMPP(String editRuleSMPP) {
+        this.editRuleSMPP = editRuleSMPP;
+    }
+
+    public void setEditRuleHTTP(String editRuleHTTP) {
+        this.editRuleHTTP = editRuleHTTP;
+    }
+
+    public void setEditRuleMMS(String editRuleMMS) {
+        this.editRuleMMS = editRuleMMS;
+    }
+
+    public String getUnlockRuleSMPP() {
+        return unlockRuleSMPP;
+    }
+
+    public String getUnlockRuleHTTP() {
+        return unlockRuleHTTP;
+    }
+
+    public String getUnlockRuleMMS() {
+        return unlockRuleMMS;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public void setUnlockRuleSMPP(String unblockRuleSMPP) {
+        this.unlockRuleSMPP = unblockRuleSMPP;
+    }
+
+    public void setUnlockRuleHTTP(String unblockRuleHTTP) {
+        this.unlockRuleHTTP = unblockRuleHTTP;
+    }
+
+    public void setUnlockRuleMMS(String unlockRuleMMS) {
+        this.unlockRuleMMS = unlockRuleMMS;
+    }
 
     private List httpRuteItems = new ArrayList();
 
@@ -124,14 +182,59 @@ public class Edit extends TabledEditBeanImpl {
 
         load();
 
-        if (deleteRuleSMPP != null) deleteRule(Transport.SMPP_TRANSPORT_NAME);
-        if (deleteRuleHTTP != null) deleteRule(Transport.HTTP_TRANSPORT_NAME);
-        if (deleteRuleMMS != null) deleteRule(Transport.MMS_TRANSPORT_NAME);
+        if (deleteRuleSMPP != null) {
+            deleteRule(Transport.SMPP_TRANSPORT_NAME);
+            System.out.println("!!!!!!deleteRuleSMPP!!!!!!!!!!!!");
+        }
+        if (deleteRuleHTTP != null) {
+            deleteRule(Transport.HTTP_TRANSPORT_NAME);
+        }
+        if (deleteRuleMMS != null) {
+            deleteRule(Transport.MMS_TRANSPORT_NAME);
+        }
         if (mbDefaultHttpRoute!=null) setDefaultHttpRoute(new Long(id));
+//unlock rule forcibly if click "unlock" button
+        if( unlockRuleSMPP != null ) {
+            unlockRule( Transport.SMPP_TRANSPORT_NAME );
+        } else if( unlockRuleHTTP != null ) {
+            unlockRule( Transport.HTTP_TRANSPORT_NAME );
+        } else if( editRuleMMS != null )  {
+            unlockRule( Transport.MMS_TRANSPORT_NAME );
+        }
+//set permission true if click "edit" button
+        if( editRuleSMPP != null ) {
+            System.out.println("Edit:editRuleSMPP!=null");
+            setPermissionRule( Transport.SMPP_TRANSPORT_NAME, true );
+        }
+        if( editRuleHTTP != null ) {
+            System.out.println("Edit:editRuleHTTP!=null");
+            setPermissionRule( Transport.HTTP_TRANSPORT_NAME, true );
+        }
+        if( unlockRuleMMS != null )  {
+            System.out.println("Edit:editRuleMMS!=null");
+            setPermissionRule( Transport.MMS_TRANSPORT_NAME, true );
+        }
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }
 
+    }
+
+    void unlockRule( String transport ){
+        RuleState ruleState = appContext.getRuleManager().getRuleState(Long.toString(id), transport);
+        setPermissionRule( transport, false );
+        ruleState.setLocked( false );
+    }
+
+    void setPermissionRule( String transport, boolean permission){
+        RuleManager ruleManager = appContext.getRuleManager();
+        if( transport.equals(Transport.SMPP_TRANSPORT_NAME) ){
+            ruleManager.setSavePermissionSMPP( permission );
+        }else if( transport.equals(Transport.HTTP_TRANSPORT_NAME) ){
+            ruleManager.setSavePermissionHTTP( permission );
+        }else if( transport.equals(Transport.MMS_TRANSPORT_NAME) ){
+            ruleManager.setSavePermissionMMS( permission );
+        }
     }
 
     private void setDefaultHttpRoute(Long serviceId) {
@@ -141,6 +244,7 @@ public class Edit extends TabledEditBeanImpl {
     private void deleteHttpRoute() {
        appContext.getHttpRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), checkedSet);
     }
+
 
     protected void delete() throws SCAGJspException {
         appContext.getScagRoutingManager().deleteRoutes(getLoginedPrincipal().getName(), checkedSet);
@@ -375,4 +479,5 @@ public class Edit extends TabledEditBeanImpl {
     public void setMbDefaultHttpRoute(String mbDefaultHttpRoute) {
         this.mbDefaultHttpRoute = mbDefaultHttpRoute;
     }
+
 }
