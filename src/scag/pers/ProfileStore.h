@@ -194,6 +194,8 @@ public:
 		sb.Empty();
         pf->Serialize(sb, true);
 //        delete pf;
+        key.setNumberingPlan(1);
+        key.setTypeOfNumber(1);
         store.Set(key, sb);
     }
 
@@ -201,6 +203,8 @@ public:
     {
         Profile *pf = new Profile();
 		sb.Empty();
+        key.setNumberingPlan(1);
+        key.setTypeOfNumber(1);
         if(store.Get(key, sb))
         {
             pf->Deserialize(sb, true);

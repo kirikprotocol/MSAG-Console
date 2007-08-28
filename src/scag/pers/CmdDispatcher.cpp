@@ -151,6 +151,10 @@ void CommandDispatcher::Execute(SerialBuffer& isb, SerialBuffer& osb)
     {
         smsc_log_debug(log, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
     }
+    catch(...)
+    {
+        smsc_log_debug(log, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+    }
     SendResponse(osb, RESPONSE_BAD_REQUEST);
 	SetPacketSize(osb);	
 }
