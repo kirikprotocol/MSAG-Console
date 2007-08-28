@@ -184,3 +184,15 @@ TO ALL: Insert log record for all significant changes & fixes here.
 10.08.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_07_07_2007 !!!]
 1) MSAG FIX: TLV actions fix (0x prefix for tags from vars)
 2) PVSS CRITICAL FIX: seek on read in mirrorfile
+
+=================================================================================================================
+28.08.2007 18:00 makar [!!! CVS: revision marked by tag BUILD_07_07_2007 !!!]
+1) MSAG FIX: Enabled receipt sending from session rule blocks
+2) MSAG CHANGE: HTTP chuncked transfer coding support (improvements)
+3) MSAG CHANGE: bill_id parameter in operation:bill_wait
+4) MSAG CRITICAL FIX: Apply SMPP routes coredump
+5) MSAG CRITICAL FIX: tariffs.xml lock
+6) PVSS CRITICAL FIX/CHANGE: A lot of PVSS improvements (coredump fixes)
+7) PVSS CRITICAL FIX/CHANGE: Skip adaress prefix (treat all prefixes as '+' == .1.1)
+8) MSAG Admin CHANGE: Added 'Unlock' button for rule edit
+9) MSAG FIX: Valid session counter after coredump
