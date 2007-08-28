@@ -39,16 +39,20 @@
                function openJedit(id,action)
                {
                  if (window.jEdit) {
-                   //alert('window.jEdit.openjEditView(action,id)');
+                   alert('Such window already exist!');
+//                   alert('Window already exist! window.jEdit.openjEditView(action,id)' + action + "|" + id);
                    window.jEdit.openjEditView(action,id);
                  } else if (opener && opener.jEdit && !opener.closed) {
-                   //alert('opener.jEdit.openjEditView(action,id)');
+                     alert('Such Window already exist!2');
+//                   alert('opener.jEdit.openjEditView(action,id)2' + action + "|" + id);
                    opener.jEdit.openjEditView(action,id);
                  } else {
-                   //alert('window.open');
+//                   alert('window.open');
                    window.open("${pageContext.request.contextPath}/rules/rules/jedit.jsp?id="+id+"&action="+action,"","width=10,height=10,left="+screen.availWidth+",top="+screen.availHeight);
                  }
-                 return false;
+//                 submitOpForm();
+//                 return false;
+                 return true;
                }
 
                function assignjEditOpener(jEditwindow, marker) {
@@ -100,14 +104,17 @@
                   for (var i=0;i<rules.length;i++) {
                     //alert(rules[i].exists + " " + spans[i*2].id+ " " + spans[i*2+1].id);
                     if (rules[i].exists) {
-                      spans[i*2].style.display="inline";
-                      spans[i*2+1].style.display="none";
+                      spans[i*3].style.display="inline";
+                      spans[i*3+1].style.display="none";
+                      spans[i*3+2].style.display="inline";
                      } else {
-                      spans[i*2].style.display="none";
-                      spans[i*2+1].style.display="inline";
+                      spans[i*3].style.display="none";
+                      spans[i*3+1].style.display="inline";
+                      spans[i*3+2].style.display="inline";
                      }
-                     lockRuleButtons(rules[i].locked, spans[i*2].getElementsByTagName("input"));
-                     lockRuleButtons(rules[i].locked, spans[i*2+1].getElementsByTagName("input"));
+                     lockRuleButtons(rules[i].locked, spans[i*3].getElementsByTagName("input"));
+                     lockRuleButtons(rules[i].locked, spans[i*3+1].getElementsByTagName("input"));
+                     lockRuleButtons(!rules[i].locked, spans[i*3+2].getElementsByTagName("input"));
                   }
                   return false;
                }
@@ -119,6 +126,9 @@
                    else
                      buttons[j].disabled = false;
                }
+                function submitOpForm(){
+                    opForm.submit();
+                }
             </script>
 
             <iframe id="rulesFrame" onload="fireRulesState()" src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}"  width='0px' height="0px"></iframe>
@@ -126,7 +136,7 @@
             <sm-ep:properties title="service.edit.properties.service_rules" noEdit="true" id="rulesT">
               <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp"/>
               <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http"/>
-              <sm:rule tname="MMS" ttitle="service.edit.rule.transport.mms"/>
+              <sm:rule tname="MMS"  ttitle="service.edit.rule.transport.mms"/>
             </sm-ep:properties>
 
             <div class=page_subtitle>&nbsp;</div>
