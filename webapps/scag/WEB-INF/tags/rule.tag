@@ -21,6 +21,6 @@
       <input type=submit onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','add')" value="<fmt:message>service.edit.rule.add</fmt:message>">
     </span>
     <span style="display:inline">
-        <input type=submit  name="unlockRule${tname}" value="<fmt:message>service.edit.rule.unblock</fmt:message>">
+        <input type=submit  name="unlockRule${tname}" value="<fmt:message>service.edit.rule.unlock</fmt:message>">
     </span>
   </sm-ep:property>
