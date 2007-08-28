@@ -92,6 +92,19 @@
   <security-constraint>
     <web-resource-collection>
       <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/regions/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>regions</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
       <url-pattern>/smsc/snmp/*</url-pattern>
     </web-resource-collection>
     <auth-constraint>
@@ -439,6 +452,38 @@
     </form-login-config>
   </login-config>
 
+<<<<<<< web.xml
+  <!-- Emailsme -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_emailsme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>emailsme</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+  
+  <!-- unibalanceSME -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_unibalance/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>unibalance</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+
+=======
+>>>>>>> 1.15
   <!-- security roles -->
 
   <security-role>
