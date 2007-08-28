@@ -55,7 +55,6 @@ struct HashFunc{
 
 class RuleEngineImpl : RuleEngine
 {
-
     typedef XHash <RuleKey, Rule*, HashFunc> CRulesHash;
 
     MainActionFactory factory;

@@ -80,13 +80,9 @@ void Rule::processSession(Session& session, RuleStatus& rs)
             SessionEventHandler* eh = (SessionEventHandler*)Handlers.Get(session.isNew() ? EH_SESSION_INIT : EH_SESSION_DESTROY);
             eh->_process(session, rs);
             if(rs.status == STATUS_OK)
-            {
-                if(session.isNew()) session.setNew(false);
                 session.getLongCallContext().continueExec = false;
-            }
-
-            return;
         }
+        if(session.isNew()) session.setNew(false);        
 //        smsc_log_warn(logger,"session rule: cannot find EventHandler for command");
         return;
     }

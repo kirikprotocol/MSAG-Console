@@ -80,7 +80,7 @@ bool ActionRedirect::run(ActionContext& context)
     if (m_bExistDA) smppAdapter.setDA(DA);
 
     context.clearLongCallContext();
-    smsc_log_debug(logger,"Action 'redirect' finished");   
+    smsc_log_debug(logger,"Action 'redirect' finished");
     return false;
 }
 
