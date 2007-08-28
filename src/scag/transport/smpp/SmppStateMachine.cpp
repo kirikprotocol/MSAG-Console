@@ -224,6 +224,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
 
     do{
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      smsc_log_debug(log, "orig_route_id=%s, new_route_id=%s", routeId.c_str(), ri.routeId.c_str());
       if(!dst || routeId == ri.routeId)
       {
         smsc_log_info(log,"Submit: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",
@@ -252,8 +253,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                     sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Submit %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
-        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+      smsc_log_info(log, "Submit %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s, routeId=%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
+        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str(), routeId.c_str());
 
       key.abonentAddr=sms.getDestinationAddress();
       if (ussd_op < 0) // SMPP, No USSD specific flags
@@ -277,7 +278,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                 if (!session.Get()) {
                     session=sm.newSession(key);
                     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-                    smsc_log_warn(log, "SMPP Submit: Session for USR=%d not found, created new USR=%d", umr, key.USR);
+                    smsc_log_warn(log, "SMPP Submit: Session for USR=%d not found, created new USR=%d, Address=%s", umr, key.USR, key.abonentAddr.toString().c_str());
                 }
             }
         }
@@ -443,7 +444,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
 
-  st.runPostProcessActions();
+  session->getLongCallContext().runPostProcessActions();
 
   sm.releaseSession(session);
   smsc_log_debug(log, "Submit: processed");
@@ -576,14 +577,16 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  st.runPostProcessActions();
-
   if(rs != -2 || st.status != scag::re::STATUS_OK)
     registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)sms->getRouteId(), rs);
   else
     registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
 
-  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
+  if(session.Get())
+  {
+    session->getLongCallContext().runPostProcessActions();  
+    scag::sessions::SessionManager::Instance().releaseSession(session);
+  }    
   cmd->get_resp()->set_sms(0);
   smsc_log_debug(log, "SubmitResp: processed");
 }
@@ -633,6 +636,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
 
     do{
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      smsc_log_debug(log, "orig_route_id=%s, new_route_id=%s", routeId.c_str(), ri.routeId.c_str());
       if(!dst || routeId == ri.routeId)
       {
         smsc_log_info(log,"Delivery: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",
@@ -662,8 +666,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       int ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
                     sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
-      smsc_log_debug(log, "Delivery %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
-        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+      smsc_log_info(log, "Delivery %s: %s UMR=%d, USSD_OP=%d. %s(%s)->%s, routeId=%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr, ussd_op,
+        sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str(), routeId.c_str());
 
       key.abonentAddr=sms.getOriginatingAddress();
       if (ussd_op < 0) // SMPP, No USSD specific flags
@@ -838,7 +842,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
 
-  st.runPostProcessActions();
+  session->getLongCallContext().runPostProcessActions();
 
   sm.releaseSession(session);
   smsc_log_debug(log, "Delivery: processed");
@@ -965,14 +969,16 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     rs = -1;
   }
 
-  st.runPostProcessActions();
-
   if(rs != -2 || st.status != scag::re::STATUS_OK)
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)sms->getRouteId(), rs);
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
 
-  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
+  if(session.Get())
+  {
+    session->getLongCallContext().runPostProcessActions();  
+    scag::sessions::SessionManager::Instance().releaseSession(session);
+  }    
   cmd->get_resp()->set_sms(0);
   smsc_log_debug(log, "DeliveryResp: processed");
 }
@@ -1041,6 +1047,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
 
     do{
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
+      smsc_log_debug(log, "orig_route_id=%s, new_route_id=%s", routeId.c_str(), ri.routeId.c_str());
       if(!dst || routeId == ri.routeId)
       {
         smsc_log_info(log,"DataSm: %s %s(%s)->%s", !dst ? "no route" : "redirection to the same route",
@@ -1075,8 +1082,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       int umr = sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ?
                 sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) : -1;
 
-      smsc_log_debug(log, "DataSm %s: %s UMR=%d. %s(%s)->%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr,
-                sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str());
+      smsc_log_info(log, "DataSm %s: %s UMR=%d. %s(%s)->%s, routeid=%s", cmd.hasSession() ? "continued..." : "", rcnt ? "(redirected)" : "", umr,
+                sms.getOriginatingAddress().toString().c_str(), src->getSystemId(), sms.getDestinationAddress().toString().c_str(), routeId.c_str());
 
       key.abonentAddr = (src->info.type == etService) ? sms.getDestinationAddress() : sms.getOriginatingAddress();
         if(!session.Get())
@@ -1098,7 +1105,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
               if (!session.Get()) {
                   session=sm.newSession(key);
                   sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
-                  smsc_log_warn(log, "DataSm: Session for USR=%d not found, created new USR=%d", umr, key.USR);
+                  smsc_log_warn(log, "DataSm: Session for USR=%d not found, created new USR=%d, Address=%s", umr, key.USR, key.abonentAddr.toString().c_str());
               }
           }
         }
@@ -1174,7 +1181,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
 
-  st.runPostProcessActions();
+  session->getLongCallContext().runPostProcessActions();
 
   sm.releaseSession(session);
 
@@ -1303,14 +1310,16 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     rs = -1;
   }
   
-  st.runPostProcessActions();
-
   if(rs != -2 || st.status != scag::re::STATUS_OK)
       registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, (char*)sms->getRouteId(), rs);
   else
       registerEvent(scag::stat::events::smpp::RESP_OK, src, dst, (char*)sms->getRouteId(), -1);
 
-  if(session.Get())scag::sessions::SessionManager::Instance().releaseSession(session);
+  if(session.Get())
+  {
+    session->getLongCallContext().runPostProcessActions();
+    scag::sessions::SessionManager::Instance().releaseSession(session);
+  }    
 
   cmd->get_resp()->set_sms(0);
 
