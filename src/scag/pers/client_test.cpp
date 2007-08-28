@@ -71,7 +71,6 @@ int main(int argc, char* argv[])
             pc.GetProperty(PT_ABONENT, s, tv, prop);
             smsc_log_debug(logger,  ">>ABONENT %s: get int %s", s, prop.toString().c_str());
 
-//            sleep(15);
             pc.GetProperty(PT_ABONENT, s, tvb, prop);
             smsc_log_debug(logger,  ">>ABONENT %s: get bool %s", s, prop.toString().c_str());
 
@@ -89,7 +88,6 @@ int main(int argc, char* argv[])
             pc.DelProperty(PT_ABONENT, s, tv);
             smsc_log_debug(logger,  ">>ABONENT: del int");
 
-//            sleep(15);
             prop.setInt(tv, 234567, FIXED, -1, 20);
             pc.SetProperty(PT_SERVICE, i + 1, prop);
 
@@ -233,11 +231,11 @@ int main(int argc, char* argv[])
                 smsc_log_error(logger, "persclientexception: %s", e.what());
             }
 
-/*            if(pc.DelProperty(PT_SERVICE, i + 1, tv))
+            if(pc.DelProperty(PT_SERVICE, i + 1, tv))
 	            smsc_log_debug(logger,  ">>ABONENT: del int(int)");
 			else
                 smsc_log_debug(logger, "property already deleted...");
-*/
+
             smsc_log_debug(logger,  "end");
         }
         t = time(NULL) - t;

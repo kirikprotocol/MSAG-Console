@@ -13,8 +13,8 @@
 #define ___RBTREE_H
 
 
-const char RED = 0;
-const char BLACK = 1;
+const char RED = 1;
+const char BLACK = 0;
 			
 template<class Key, class Value>
 struct templRBTreeNode
@@ -39,6 +39,7 @@ class RBTree
 public:
 	RBTree(RBTreeAllocator<Key, Value>* _allocator=0, RBTreeChangesObserver<Key, Value>* _changesObserver=0):defaultAllocator(false), defaultChangesObserver(false)
 	{
+        logger = smsc::logger::Logger::getInstance("RBTree");
 		if(!_allocator)
 		{
 			allocator = new DefaultAllocator;
@@ -48,7 +49,6 @@ public:
 		    allocator = _allocator;
 		rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
-		offset = allocator->getOffset();
 		size = allocator->getSize();
 		
 		if(!_changesObserver)
@@ -103,8 +103,13 @@ public:
 // 		sleep(1);
 		
 		RBTreeNode* newNode = allocator->allocateNode();
+		rootNode = allocator->getRootNode();
+		nilNode = allocator->getNilNode();
+		offset = allocator->getOffset();
+       
 		newNode->key = k;
 		newNode->value = v;
+        smsc_log_debug(logger, "Insert: %s val=%d", k.toString().c_str(), v);
 		changesObserver->startChanges(newNode, RBTreeChangesObserver<Key, Value>::OPER_INSERT);
 		bstInsert(newNode);
 		newNode->color = RED;
@@ -127,10 +132,12 @@ public:
 		
 		if(node == nilNode) return false;
 		val = node->value;
+        smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), val);
 		return true;
 	}
 
 protected:
+    smsc::logger::Logger* logger;
 	RBTreeAllocator<Key, Value>*	allocator;
 	RBTreeChangesObserver<Key, Value>*	changesObserver;
 	RBTreeNode*		rootNode;
@@ -142,12 +149,12 @@ protected:
 inline
 	RBTreeNode* realAddr(RBTreeNode* node)
 	{
-		return (RBTreeNode*)((long)node + offset);
+		return (RBTreeNode*)((long)node + allocator->getOffset());
 	}
 inline
 	RBTreeNode* relativeAddr(RBTreeNode* node)
 	{
-		return (RBTreeNode*)((long)node - offset);
+		return (RBTreeNode*)((long)node - allocator->getOffset());
 	}
 inline
 	RBTreeNode* set(RBTreeNode** to, RBTreeNode* from)

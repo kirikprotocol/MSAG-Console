@@ -11,12 +11,8 @@
 
 #include "DataBlock.h"
 #include "RBTree.h"
-#include "RBTreeFileAllocator.h"
 #include "RBTreeHSAllocator.h"
-//#include "BlocksMappedFileStorage.h"
-#include "BlocksFileStorage.h"
 #include "BlocksHSStorage.h"
-//#include "FSDBCache.h"
 #include <string>
 
 #include <sys/types.h>

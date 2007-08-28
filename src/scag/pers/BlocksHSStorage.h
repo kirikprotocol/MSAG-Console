@@ -17,7 +17,6 @@
 #include "sys/mman.h"
 
 #include "core/buffers/File.hpp"
-#include "BlocksFileStorage.h"
 
 #include "DataBlock.h"
 
@@ -27,6 +26,57 @@ extern int errno;
 #define ___BLOCKS_HS_STORAGE_H
 
 using namespace std;
+
+const string dfPreambule= "RBTREE_FILE_STORAGE!";
+const int dfVersion_32_1 = 0x01;
+const int dfVersion_64_1 = 0x80000001;
+
+const int dfMode = 0600;
+
+//const int SUCCESS                 = 0;
+//const int RBTREE_FILE_NOT_SPECIFIED   = -1;
+const int CANNOT_CREATE_DESCR_FILE  = -2;
+const int CANNOT_CREATE_DATA_FILE   = -3;
+const int CANNOT_OPEN_DESCR_FILE    = -4;
+const int CANNOT_OPEN_DATA_FILE     = -5;
+const int DESCR_FILE_MAP_FAILED     = -6;
+//const int RBTREE_FILE_ERROR           = -10;
+
+//const int defaultBlockSize = 8192; // in bytes
+//const int defaultFileSize = 10000; // in blocks
+
+const int defaultBlockSize = 56; // in bytes
+const int defaultFileSize = 3; // in blocks 
+const long long BLOCK_USED   = (long long)1 << 63;
+
+struct DescriptionFile
+{
+    char preamble[20];
+    int version;
+
+    int files_count;
+    int block_size;         // in bytes;
+    int file_size;          // in blocks
+    int blocks_used;
+    int blocks_free;
+    long first_free_block;
+    char Reserved[12];
+};
+
+template<class Key>
+struct templDataBlockHeader
+{
+    union
+    {
+        long next_free_block;
+        long block_used;
+    };
+    Key     key;
+    long    total_blocks;
+    long    data_size;
+    long    next_block;
+};
+
 
 template<class Key>
 class BlocksHSStorage
@@ -50,6 +100,7 @@ public:
 
 	BlocksHSStorage():running(false)
 	{
+        logger = smsc::logger::Logger::getInstance("BlkStore");
 	}
 	virtual ~BlocksHSStorage()
 	{
@@ -115,6 +166,7 @@ public:
 		hdr.total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 1;
 		hdr.data_size = data.length();//effectiveBlockSize;
 
+//        smsc_log_debug(logger, "data_len=%d, block_used=%d, key=%s, total_blocks=%d", data.length(), hdr.block_used, hdr.key.getText().c_str(), hdr.total_blocks);
 //		printf("data.length() = %d\n", data.length());
 //		printf("sizeof(DataBlockHeader) = %d\n", sizeof(DataBlockHeader));
 //		printf("hdr.block_used = 0x%X\n", hdr.block_used);
@@ -128,9 +180,11 @@ public:
 			int file_number = curBlockIndex / descrFile.file_size;
 			off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
 //			int fd = dataFile_fd[file_number];
+//            smsc_log_debug(logger, "ffb=%d, file_size=%d, fn=%d", descrFile.first_free_block, descrFile.file_size, file_number);
 			File* f = dataFile_f[file_number];
 			f->Seek(offset, SEEK_SET);
 			f->Read((void*)&(descrFile.first_free_block), sizeof(descrFile.first_free_block));
+//            smsc_log_debug(logger, "ffb=%d offset=%d", descrFile.first_free_block, offset);
 			if(descrFile.first_free_block == -1)
 			{
 				int ret;
@@ -143,6 +197,7 @@ public:
 			f->Write((void*)&hdr, sizeof(DataBlockHeader));
 			f->Write((void*)(data.c_ptr()+i*(effectiveBlockSize)), curBlockSize);
 			if(i == 0) blockIndex = curBlockIndex;
+//            smsc_log_debug(logger, "i=%d block_idx=%d", i, blockIndex);
 //			printf("hdr.next_block = %d\n", hdr.next_block);
 		}
 		descrFile_f.Seek(0, SEEK_SET);
@@ -310,6 +365,7 @@ public:
 	}
 
 private:
+    smsc::logger::Logger* logger;
 	bool				running;
 	string				dbName;
 	string				dbPath;
@@ -356,7 +412,7 @@ private:
 		string name = dbPath + '/' + dbName + buff;
 	
 		dataFile_f.push_back(new File());
-//		printf("Alloc: %p, %d\n", dataFile_f[descrFile.files_count], descrFile.files_count);
+//		smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
 		try
 		{
 			dataFile_f[descrFile.files_count]->RWCreate(name.c_str());
@@ -364,7 +420,7 @@ private:
 		}
 		catch(FileException ex)
 		{
-//		    smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
+		    smsc_log_debug(logger, "FSStorage: error data_file - %s\n", ex.what());
 			return CANNOT_CREATE_DATA_FILE;
 		}
 		
@@ -404,7 +460,7 @@ private:
 		}
 		catch(FileException ex)
 		{
-//		    smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
+		    smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
 			return DESCR_FILE_OPEN_FAILED;
 		}
 		descrFile_f.Read((char*)&descrFile, sizeof(DescriptionFile));
