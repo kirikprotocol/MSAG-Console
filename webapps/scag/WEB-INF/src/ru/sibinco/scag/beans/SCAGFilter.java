@@ -48,10 +48,8 @@ public class SCAGFilter implements Filter {
     }
 
     public void doFilter(final ServletRequest req, final ServletResponse resp, final FilterChain chain) throws ServletException, IOException {
+        String log = null;
         if (logger == null) logger = Logger.getLogger(this.getClass());
-
-        if (logger.isDebugEnabled())
-            logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + "| "+ req.toString() );
 
         if (config == null) {
             logger.fatal("Not initialized");
@@ -62,7 +60,11 @@ public class SCAGFilter implements Filter {
         if (req instanceof HttpServletRequest) {
             final HttpServletRequest request = (HttpServletRequest) req;
             req.setAttribute("requestURI", request.getRequestURI());
-            logger.debug("Requested URL:" + request.getRequestURL() );
+            if (logger.isDebugEnabled()){
+                logger.debug("Requested URL:" + request.getRequestURL() + log );
+            }
+        }else if (logger.isDebugEnabled()){
+            logger.debug("Request: " + req.getScheme() + " from " + req.getRemoteHost() + "| "+ req.toString() );
         }
         chain.doFilter(req, resp);
     }
