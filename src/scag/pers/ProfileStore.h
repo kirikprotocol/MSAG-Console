@@ -16,6 +16,7 @@
 #include "Property.h"
 #include "mcisme/AbntAddr.hpp"
 #include "FSDB.h"
+#include "scag/exc/SCAGExceptions.h"
 
 namespace scag{ namespace pers{
 using smsc::mcisme::AbntAddr;
@@ -184,7 +185,8 @@ public:
 		
         log = smsc::logger::Logger::getInstance("treestore");
 		storeName = storageName;
-        store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize);
+        if(store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize))
+            throw Exception("Error init abonentstore");
 		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
 	};
 

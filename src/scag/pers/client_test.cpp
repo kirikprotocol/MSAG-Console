@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
             char s[20], tv[20], tvs[30], tvb[30], tvd[30];		
             try{ 
 
-            sprintf(s, "+792324%05d", i);
+            sprintf(s, "892324%05d", i);
             sprintf(tv, "test_val%05d", i);			
             sprintf(tvs, "test_val_string%05d", i);						
             sprintf(tvb, "test_val_bool%05d", i);						
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
             prop.setInt(tv, 234567, FIXED, -1, 20);
             pc.SetProperty(PT_ABONENT, s, prop);
 
-            prop.setBool(tvb, false, R_ACCESS, -1, 25);
+/*            prop.setBool(tvb, false, R_ACCESS, -1, 25);
             pc.SetProperty(PT_ABONENT, s, prop);
 
             prop.setString(tvs, "test_string", W_ACCESS, -1, 25);
@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
 
             pc.GetProperty(PT_ABONENT, s, tvs, prop);
             smsc_log_debug(logger,  ">>ABONENT: get string %s", prop.toString().c_str());
-
+*/
             pc.GetProperty(PT_ABONENT, s, tvd, prop);
             smsc_log_debug(logger,  ">>ABONENT: get string1 %s", prop.toString().c_str());
 

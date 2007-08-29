@@ -84,7 +84,7 @@ public:
 	static const int ATTEMPT_INIT_RUNNING_PROC	= -20;
 
 	RBTreeHSAllocator():
-		rbtree_addr(0), rbtFileLen(0), rbtree_fd(-1), growth(100000000), running(false)
+		rbtree_addr(0), rbtFileLen(0), growth(100000000), running(false)
 	{
         logger = smsc::logger::Logger::getInstance("RBTAlloc");
 	}
@@ -124,8 +124,7 @@ public:
 		if(running)
 		{
 //			if(rbtree_addr) munmap(rbtree_addr, rbtFileLen);
-			if(rbtree_addr) free((void*)rbtree_addr);
-			if(-1 != rbtree_fd) close(rbtree_fd);
+			if(rbtree_addr) delete rbtree_addr;
 			running = false;
 		}
 	}
@@ -210,7 +209,6 @@ public:
 private:
 	string			rbtree_file;
 	string			trans_file;
-	int			rbtree_fd;
 	File			rbtree_f;
 	File			trans_f;
 	caddr_t			rbtree_addr;
@@ -241,7 +239,7 @@ private:
         }
         
 		uint32_t newRbtFileLen = rbtFileLen + growth * sizeof(RBTreeNode);
-        caddr_t newMem = (caddr_t)realloc(rbtree_addr, newRbtFileLen);
+        caddr_t newMem = new char[newRbtFileLen];
 		if(!newMem)
 		{
             smsc_log_error(logger, "Error reallocating memory for RBTree, reason: %s", strerror(errno));
@@ -249,7 +247,13 @@ private:
 		}
         else
             smsc_log_info(logger, "RBTree index realloc from %d to %d bytes", rbtFileLen, newRbtFileLen);
-        
+
+        if(rbtree_addr)
+        {
+            memcpy(newMem, rbtree_addr, rbtFileLen);
+            delete rbtree_addr;
+        }
+            
 		header = (rbtFileHeader*)newMem;
         rbtree_body = newMem + sizeof(rbtFileHeader);        
         
@@ -379,11 +383,8 @@ private:
 		off_t len = rbtree_f.Pos();
 		rbtree_f.Seek(0, SEEK_SET);
 			
-		if(!(rbtree_addr = (caddr_t)malloc(len)))
-		{
-			//printf("malloc failed\n");
+		if(!(rbtree_addr = new char[len]))
 			return BTREE_FILE_MAP_FAILED;
-		}
 
 		rbtree_f.Read(rbtree_addr, len);
 		header = (rbtFileHeader*)rbtree_addr;
@@ -404,7 +405,7 @@ private:
 		hdr.version = TRX_VER_1;
 		hdr.operation = currentOperation;
 		hdr.nodes_count = changedNodes.size();
-	    smsc_log_debug(logger, "Start transaction: nodes changed=%d", changedNodes.size());
+//	    smsc_log_debug(logger, "Start transaction: nodes changed=%d", changedNodes.size());
 		//printf("header->root_cell = %d (%d)\n", header->root_cell, sizeof(header->root_cell));
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&hdr, sizeof(transFileHeader));
@@ -423,7 +424,7 @@ private:
 	}
 	int writeChanges(void)
 	{
-	    smsc_log_debug(logger, "Write Changes: nodes changed=%d", changedNodes.size());
+//	    smsc_log_debug(logger, "Write Changes: nodes changed=%d", changedNodes.size());
 	    int stat = STAT_WRITE_RBT;
 	    trans_f.Seek(0, SEEK_SET);
 	    trans_f.Write((char*)&stat, sizeof(int));
@@ -437,12 +438,12 @@ private:
     		rbtree_f.Seek((long)*It - (long)rbtree_addr , SEEK_SET);
 	    	rbtree_f.Write((char*)*It, sizeof(RBTreeNode));
 	    }
-	    smsc_log_debug(logger, "Write Changes: finish");        
+//	    smsc_log_debug(logger, "Write Changes: finish");        
 	    return 0;
 	}
 	int endTransaction()
 	{
-		smsc_log_debug(logger, "endTransaction");
+//		smsc_log_debug(logger, "endTransaction");
 		int stat = STAT_OK;
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&stat, sizeof(int));
