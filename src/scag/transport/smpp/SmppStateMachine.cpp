@@ -313,8 +313,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             }
             else {
                 smsc_log_warn(log, "USSD Submit: UMR is not specified");
-                SubmitResp(cmd,smsc::system::Status::USSDDLGREFMISM);
-                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, -1);
+                SubmitResp(cmd, smsc::system::Status::USSDDLGREFMISM);
+                registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::USSDDLGREFMISM);
                 return;
             }
         }
@@ -488,13 +488,15 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
         smsc_log_warn(log,"SubmitResp: Original submit for submit response not found. sid='%s',seq='%d'",
                       src ? src->getSystemId() : "NULL",cmd->get_dialogId());
-        registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
         return;
       }
 
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
+      
+      if(cmd->get_resp()->expiredResp)
+        registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, sms->getRouteId(), smsc::system::Status::TRANSACTIONTIMEDOUT);
 
       cmd->get_resp()->set_sms(sms);
       cmd->set_serviceId(orgCmd->get_serviceId());
@@ -515,7 +517,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
           return;
 
-      smsc_log_debug(log,"SubmitResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+      smsc_log_debug(log,"SubmitResp: got session. key='%s:%d' %s",key.abonentAddr.toString().c_str(),key.USR, cmd->get_resp()->expiredResp ? "(expired)" : "");
   }
   else
   {
@@ -889,14 +891,15 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       if(!bGotFromRegistry) {
         smsc_log_warn(log,"%s: Original delivery for delivery response not found. sid='%s',seq='%d'",
               src ? "DeliveryResp" : "MSAG Receipt" , src ? src->getSystemId() : "NULL", cmd->get_dialogId());
-
-        if(src) registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
         return;
       }
 
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
+      
+      if(cmd->get_resp()->expiredResp)
+        registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, sms->getRouteId(), smsc::system::Status::TRANSACTIONTIMEDOUT);
 
       cmd->get_resp()->set_sms(sms);
       cmd->set_serviceId(orgCmd->get_serviceId());
@@ -915,7 +918,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
         return;
 
-      smsc_log_debug(log,"DeliveryResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+      smsc_log_debug(log,"DeliveryResp: got session. key='%s:%d' %s",key.abonentAddr.toString().c_str(),key.USR, cmd->get_resp()->expiredResp ? "(expired)" : "");
   }
   else
   {
@@ -1227,13 +1230,15 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
       }
       if(!reg.Get(srcUid, cmd->get_dialogId(), orgCmd)) {
         smsc_log_warn(log,"DataSmResp: Original datasm for datasm response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
-        registerEvent(scag::stat::events::smpp::RESP_FAILED, src, NULL, NULL, -1);
         return;
       }
 
       SmsCommand& smscmd=orgCmd->get_smsCommand();
       sms=orgCmd->get_sms();
       cmd->get_resp()->set_sms(sms);
+
+      if(cmd->get_resp()->expiredResp)
+        registerEvent(scag::stat::events::smpp::RESP_FAILED, src, dst, sms->getRouteId(), smsc::system::Status::TRANSACTIONTIMEDOUT);
 
       if (smscmd.dir == dsdSrv2Sc) 
           cmd->get_resp()->set_dir(dsdSc2Srv);
@@ -1260,7 +1265,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
           return;
 
-      smsc_log_debug(log,"DataSmResp: got session. key='%s:%d'",key.abonentAddr.toString().c_str(),key.USR);
+      smsc_log_debug(log,"DataSmResp: got session. key='%s:%d' %s",key.abonentAddr.toString().c_str(),key.USR, cmd->get_resp()->expiredResp ? "(expired)" : "");
   }
   else
   {
