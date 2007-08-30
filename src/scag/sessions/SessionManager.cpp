@@ -499,7 +499,7 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
 
     if((*s)->deleteScheduled)
     {
-        smsc_log_warn(logger, "SessionManager: Session scheduled for deletion (cannot get) USR='%d', Address='%s'",
+        smsc_log_debug(logger, "SessionManager: Session scheduled for deletion (cannot get) USR='%d', Address='%s'",
                    key.USR, key.abonentAddr.toString().c_str());
         session = NULL;
         return true;
