@@ -130,13 +130,13 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   }
 
   deliveryQueue.insert(multimap<time_t, AbntAddr>::value_type(schedTime, abnt));
-	
+
   SchedParam schedParam = {Idle, schedTime, lastError, 0};
   AbntsStatus.Insert(strAbnt.c_str(), schedParam);
   deliveryQueueMonitor.notify();
   total++;
   //	smsc_log_info(logger, "Add %s. total = %d (%d) (on time %s)", strAbnt.c_str(), total, deliveryQueue.size(), cTime(&schedTime));
-	
+
   return schedTime;
 }
 
@@ -151,7 +151,7 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
     smsc_log_debug(logger, "Rescheduling %s canceled (abonent is not in hash).", strAbnt.c_str());
     return 0;
   }
-	
+
   if(resp_status == smsc::system::Status::OK)
   {
     smsc_log_debug(logger, "Previous SMS for Abonent %s was delivered normally or no DATA_SM_RESP.", strAbnt.c_str());
@@ -164,7 +164,7 @@ time_t DeliveryQueue::Reschedule(const AbntAddr& abnt, int resp_status) // bool 
     smsc_log_debug(logger, "ALERT_NOTIFICATION for %s has accepted previously.", strAbnt.c_str());
     toHead = true;
   }
-	
+
   schedParam->abntStatus = Idle;
   time_t oldSchedTime = schedParam->schedTime;
   time_t newSchedTime;
@@ -240,7 +240,7 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
     smsc_log_info(logger, "Queue was closed.");
     return false;
   }
-	
+
   if(!deliveryQueue.empty())
   {
     multimap<time_t, AbntAddr>::iterator It;
@@ -248,7 +248,7 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
 
     It = deliveryQueue.begin();
     t = It->first;
-		
+
     time_t curTime = time(0);
     if(t > curTime)
     {
@@ -282,7 +282,7 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
       return false;
     }
   }
-	
+
   smsc_log_debug(logger, "deliveryQueue is empty.");
   return false;
 }
@@ -333,28 +333,27 @@ bool DeliveryQueue::Get(const AbntAddr& abnt, SchedItem& item)
 
 int DeliveryQueue::Get(vector<SchedItem>& items, int count)
 {
-  MutexGuard		lock(deliveryQueueMonitor);
-  AbntAddr		abnt;
-  DelQueueIter	It;
-  int				i;
-	
+  MutexGuard    lock(deliveryQueueMonitor);
+  AbntAddr      abnt;
+  DelQueueIter  It;
+  int           i;
+
   It = deliveryQueue.begin();
   for(i = 0; i < count; i++)
   {	
     if(It == deliveryQueue.end()) break;
-    uint32_t	abonentsCount = 0;
-    time_t		schedTime = It->first;
+    uint32_t  abonentsCount = 0;
+    time_t    schedTime = It->first;
 
     while(schedTime == It->first)
     {
       ++abonentsCount; ++It;
       if(It == deliveryQueue.end()) break;
     }
-    SchedItem	item;
+    SchedItem item;
     item.schedTime = schedTime;
     item.abonentsCount = abonentsCount;
     items.push_back(item);
-    //			if(It != deliveryQueue.end()) ++It;
   }
   return i;
 }
