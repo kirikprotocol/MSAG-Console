@@ -94,10 +94,12 @@ public abstract class dlBody extends IndexBean {
 
     sort(fullMembersList, sort);
 
-    if (isChanged) processAddresses(fullMembersList, members);
+//    if (isChanged)
+    if (members != null)
+        processAddresses(fullMembersList, members);
 
     totalSize = fullMembersList.size();
-    List newMembersList = fullMembersList.subList(Math.max(startPosition, 0), Math.min(startPosition + pageSize, fullMembersList.size()));
+    List newMembersList = fullMembersList;//.subList(Math.max(startPosition, 0), Math.min(startPosition + pageSize, fullMembersList.size()));
     members = (String[]) newMembersList.toArray(new String[0]);
     return RESULT_OK;
   }

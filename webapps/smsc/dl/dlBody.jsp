@@ -195,7 +195,7 @@
         }
 
         var t = document.getElementById('MembersTable');
-        var r = t.insertRow(t.rows.length - 1);
+        var r = t.insertRow(t.rows.length);
 
         r.id = "row_Members_" + rowCounter++;
 
@@ -245,7 +245,7 @@
         }
     %>
 </table>
-<%@ include file="/WEB-INF/inc/navbar_nofilter.jsp" %>
+<%--<%@ include file="/WEB-INF/inc/navbar_nofilter.jsp" %>--%>
 <table class=list cellspacing=0 cellpadding=1 width="100%">
     <thead>
         <col width="15%" align=right>
