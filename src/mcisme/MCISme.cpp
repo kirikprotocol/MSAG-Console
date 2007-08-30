@@ -276,15 +276,15 @@ public:
       return false;
     }
         
-    if (message.notification) smsc_log_debug(logger, "Sender: sending notification message seqNum=%d for %s",
-                                             seqNumber, message.abonent.c_str());
-    else smsc_log_debug(logger, "Sender: %s%s message #%lld seqNum=%d for %s", 
+    if (message.notification) smsc_log_debug(logger, "Sender: sending notification message with seqNum=%d for %s from %s",
+                                             seqNumber, message.abonent.c_str(), message.caller_abonent.c_str());
+    else smsc_log_debug(logger, "Sender: %s%s message with seqNum=%d for %s from %s", 
                         (message.cancel) ? "canceling ":"sending", (message.cancel) ? message.smsc_id.c_str():"",
-                        message.id, seqNumber, message.abonent.c_str());
+                        seqNumber, message.abonent.c_str(), message.caller_abonent.c_str());
 
 
     Address oa, da;
-    const char* oaStr = processor.getAddress(); // TODO: caller address for notifications
+    const char* oaStr = message.caller_abonent.c_str();
     if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
       smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
       return false;
@@ -364,7 +364,7 @@ public:
       if (msgBuf) delete msgBuf;
       //sm.dump(stdout, 1);
 			
-      smsc_log_debug(logger, "Sending DATA_SM to %s seq_num = %d", daStr, sm.get_header().get_sequenceNumber());
+      smsc_log_debug(logger, "Sending DATA_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
       TrafficControl::incOutgoing();
 
@@ -407,7 +407,7 @@ public:
       if (msgBuf) delete msgBuf;
       //sm.dump(stdout, 1);
 			
-      smsc_log_debug(logger, "Sending DATA_SM to %s seq_num = %d", daStr, sm.get_header().get_sequenceNumber());
+      smsc_log_debug(logger, "Sending DATA_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
       TrafficControl::incOutgoing();
 
@@ -451,7 +451,7 @@ public:
       char timeBuffer[64];
       cTime2SmppTime(smsValidityDate, timeBuffer);
       sm.get_message().set_validityPeriod(timeBuffer);
-      cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer);
+      cTime2SmppTime(time(NULL), timeBuffer);
       sm.get_message().set_scheduleDeliveryTime(timeBuffer);
       sm.get_message().set_registredDelivery((message.notification) ? 0:1);
       sm.get_message().set_replaceIfPresentFlag(0);
@@ -462,8 +462,8 @@ public:
       if (outLen > MAX_ALLOWED_MESSAGE_LENGTH)
       {
         if (outLen > MAX_ALLOWED_PAYLOAD_LENGTH) {
-          smsc_log_error(logger, "Message #%lld is too large to send (%d bytes)", 
-                         message.id, outLen);
+          smsc_log_error(logger, "Message with seqNum=%d is too large to send (%d bytes)", 
+                         seqNumber, outLen);
           return false;
         }
         sm.get_optional().set_payloadType(0);
@@ -478,7 +478,7 @@ public:
 
       if (msgBuf) delete msgBuf;
 
-      smsc_log_debug(logger, "Sending SUBMIT_SM to %s seq_num = %d", daStr, sm.get_header().get_sequenceNumber());
+      smsc_log_debug(logger, "Sending SUBMIT_SM to %s with seqNum = %d", daStr, sm.get_header().get_sequenceNumber());
       asyncTransmitter->sendPdu(&(sm.get_header()));
       TrafficControl::incOutgoing();
     }
