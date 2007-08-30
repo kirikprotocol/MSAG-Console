@@ -61,24 +61,29 @@ using namespace UDPattern;
 
 struct Message
 {
-  uint64_t    id;
-  uint32_t    attempts;
-  std::string abonent, message, smsc_id;
+  std::string abonent, caller_abonent, message, smsc_id;
   bool        cancel, notification, skip, data_sm, secured_data;
-  int         rowsCount, eventsCount;
   static int  maxRowsPerMessage;
 
 private:
   mutable char* user_data;
 
+  inline void reset(const std::string& _abonent="") {
+    abonent = _abonent; caller_abonent = "";
+    message = ""; smsc_id = ""; skip = false;
+    cancel = false; notification = false; data_sm = false;
+    data_sm = false; secured_data = false;
+    //rowsCount = 0; eventsCount = 0; 
+    if(user_data) delete[] user_data;
+  }
+
 public:        
   Message(): user_data(0), data_sm(false), secured_data(false)  { reset(); };
   ~Message(){if(user_data) delete[] user_data;};
   Message(const Message& msg) 
-    : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
+    : abonent(msg.abonent), caller_abonent(msg.caller_abonent), message(msg.message),
       smsc_id(msg.smsc_id), cancel(msg.cancel), notification(msg.notification),  
       skip(msg.skip), data_sm(msg.data_sm), secured_data(msg.secured_data),
-      rowsCount(msg.rowsCount), eventsCount(msg.eventsCount),
       user_data(0)
   {
     user_data = new char[sizeof(msg.user_data)];
@@ -86,32 +91,24 @@ public:
   }
     
   Message& operator=(const Message& msg) {
-    id = msg.id; attempts = msg.attempts;
-    abonent = msg.abonent; message = msg.message; smsc_id = msg.smsc_id; 
-    cancel = msg.cancel; notification = msg.notification; skip = msg.skip;
-    data_sm = msg.data_sm; secured_data = msg.secured_data;
-    rowsCount = msg.rowsCount; eventsCount  = msg.eventsCount; 
-    if(user_data) delete[] user_data;
-    if(msg.user_data)
-    {
-      user_data = new char[sizeof(msg.user_data)];
-      memcpy(user_data, msg.user_data, sizeof(msg.user_data));
+    if (this != &msg) {
+      abonent = msg.abonent; caller_abonent = msg.caller_abonent;
+      message = msg.message; smsc_id = msg.smsc_id; 
+      cancel = msg.cancel; notification = msg.notification; skip = msg.skip;
+      data_sm = msg.data_sm; secured_data = msg.secured_data;
+      if(user_data) delete[] user_data;
+      if(msg.user_data)
+      {
+        user_data = new char[sizeof(msg.user_data)];
+        memcpy(user_data, msg.user_data, sizeof(msg.user_data));
+      }
     }
     return (*this);
   }
 
-  inline void reset(const std::string& _abonent="") {
-    id = 0; attempts = 0; this->abonent = _abonent;
-    message = ""; smsc_id = ""; skip = false;
-    cancel = false; notification = false; data_sm = false;
-    data_sm = false; secured_data = false;
-    rowsCount = 0; eventsCount = 0; 
-    if(user_data) delete[] user_data;
-  }
-
-  inline bool isFull() {
-    return (rowsCount >= Message::maxRowsPerMessage);
-  }
+  // inline bool isFull() {
+  //   return (rowsCount >= Message::maxRowsPerMessage);
+  // }
 
   const char* GetMsg(void) const
   {
@@ -165,9 +162,7 @@ public:
   bool canAdd(const MissedCallEvent& event);
   void addEvent(const MissedCallEvent& event);
   void addEvent(const AbntAddr& abnt, const MCEvent& event);
-  void formatMessage(Message& message, int timeOffset=0);
-  //		void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, /*vector<uint32_t>*/uint8_t* ids, uint8_t& events_count,  int timeOffset=0);
-  void formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset=0);
+  void formatMessage(const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEventOut>& for_send, int timeOffset=0);
   void addBanner(Message& message, const string& banner);
 };
 
