@@ -175,7 +175,7 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
             // обрезать смску.
             report_msg_for_client.resize(MAX_MSG_LENS[hibit]);
             MCEventOut outEvent(fromStr, report_msg_for_client);
-            outEvent.srcEvents.assgin(1, mc_events[i]);
+            outEvent.srcEvents.assign(1, mc_events[i]);
             for_send.push_back(outEvent);
           }
           break;
@@ -214,7 +214,7 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
           // обрезать смску.
           report_msg_for_client.resize(MAX_MSG_LENS[hibit]);
           MCEventOut outEvent(fromStr, report_msg_for_client);
-          outEvent.srcEvents.assgin(1, mc_events[i]);
+          outEvent.srcEvents.assign(1, mc_events[i]);
           for_send.push_back(outEvent);
         }
         break;
