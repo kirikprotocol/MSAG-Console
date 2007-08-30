@@ -13,6 +13,7 @@
 #include <sms/sms.h>
 #include <sms/sms_const.h>
 #include <util/crc32.h>
+#include <vector>
 
 namespace smsc {
 namespace mcisme {
@@ -26,8 +27,8 @@ union	AbntAddrValue
   uint8_t full_addr[10];
   struct	_addr_content
   {
-    uint8_t	length:5;
-    uint8_t	plan:3;
+    uint8_t     length:5;
+    uint8_t     plan:3;
     uint8_t type;
     uint8_t signals[8];
   } addr_content;
@@ -298,7 +299,7 @@ struct MCEvent
   {
     memset((void*)&(caller.full_addr), 0xFF, sizeof(caller.full_addr));
   }
-	
+
   MCEvent(const MCEvent& e): id(e.id), dt(e.dt)
   {
     memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
@@ -313,12 +314,21 @@ struct MCEvent
   {
     if(&e == this)
       return *this;
-		
+
     id = e.id; dt = e.dt;
     memcpy((void*)&(caller.full_addr), (void*)&(e.caller.full_addr), sizeof(caller.full_addr));
     return *this;
   }
 
+};
+
+struct MCEventOut {
+  MCEventOut(const std::string& aCaller, const std::string& aMsg) : caller(aCaller), msg(aMsg) {}
+
+  //addSourceEvent(const MCEvent& srcEvent) { srcEvents.push_back(srcEvent); }
+  std::string caller;
+  std::string msg;
+  std::vector<MCEvent> srcEvents;
 };
 
 };	//  namespace mcisme
