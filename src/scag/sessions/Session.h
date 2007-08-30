@@ -354,7 +354,6 @@ namespace scag { namespace sessions {
         int getNewOperationId();
         void DoAddPendingOperation(PendingOperation& pendingOperation);
 
-
         void SerializeProperty(SessionBuffer& buff);
         void SerializeOperations(SessionBuffer& buff);
         void SerializePendingOperations(SessionBuffer& buff);
@@ -364,9 +363,9 @@ namespace scag { namespace sessions {
         void DeserializePendingOperations(SessionBuffer& buff);
         bool m_CanOpenSubmitOperation;
     public:
+        bool deleteScheduled;
         void setRedirectFlag() {m_bRedirectFlag = true;}
         bool hasRedirectFlag() {return m_bRedirectFlag;}
-
 
         int getPendingAmount() {return PendingOperationList.size();}
         bool getCanOpenSubmitOperation() { return m_CanOpenSubmitOperation;}

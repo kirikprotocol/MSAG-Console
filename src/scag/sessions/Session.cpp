@@ -188,7 +188,7 @@ Session::Session(const CSessionKey& key)
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
         lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false),
-        m_SessionPrimaryKey(key.abonentAddr), bIsNew(true), bIsExpired(false)
+        m_SessionPrimaryKey(key.abonentAddr), bIsNew(true), bIsExpired(false), deleteScheduled(false)
 {
     if(!logger)
     {

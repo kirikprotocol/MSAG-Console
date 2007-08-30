@@ -90,6 +90,7 @@ namespace scag { namespace sessions
         void deleteSession(SessionPtr& session);
         bool processDeleteSession(SessionPtr& session);
     	bool deleteQueuePop(SessionPtr& s);
+        void deleteQueuePush(SessionPtr& s, bool expired);
 
         uint16_t getNewUSR(Address& address);
         uint16_t getLastUSR(Address& address);
@@ -302,6 +303,13 @@ bool SessionManagerImpl::deleteQueuePop(SessionPtr& s)
 	return true;
 }
 
+void SessionManagerImpl::deleteQueuePush(SessionPtr& s, bool expired)
+{
+    s->setExpired(expired);
+    s->deleteScheduled = true;
+	deleteQueue.Push(s);
+}
+
 int SessionManagerImpl::Execute()
 {
     smsc_log_info(logger,"SessionManager::start executing");
@@ -367,6 +375,7 @@ void SessionManagerImpl::deleteSession(SessionPtr& session)
         SessionExpirePool.erase(*itPtr);
         SessionExpireHash.Delete(sessionKey);
     }
+    SessionHash.Delete(sessionKey);
     store.deleteSession(sessionKey);
     sessionCount--;
     smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s' InUse: %d",
@@ -433,10 +442,10 @@ int SessionManagerImpl::processExpire()
                         reorderExpireQueue(session.Get());
                 }
                 if(!session->hasOperations())
-				{
-				    session->setExpired(true);
-	                deleteQueue.Push(session);
-				}
+                {
+                    SessionHash.Insert(session->getSessionKey(), session);                
+                    deleteQueuePush(session, true);
+                }
                 else
                     store.updateSession(session.Get());
             }
@@ -444,7 +453,8 @@ int SessionManagerImpl::processExpire()
             {
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
-                deleteQueue.Push(session);
+                SessionHash.Insert(session->getSessionKey(), session);
+                deleteQueuePush(session, true);
             }
             changed = true;
         }
@@ -487,8 +497,15 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
         return true;
     }
 
+    if((*s)->deleteScheduled)
+    {
+        smsc_log_warn(logger, "SessionManager: Session scheduled for deletion (cannot get) USR='%d', Address='%s'",
+                   key.USR, key.abonentAddr.toString().c_str());
+        session = NULL;
+        return true;
+    }
+    
     (*s)->m_CanOpenSubmitOperation = false;
-
 
     cmd.setSession(*s);
 
@@ -561,8 +578,7 @@ void SessionManagerImpl::releaseSession(SessionPtr session)
 
     if(!session->hasOperations())
     {
-        SessionHash.Delete(key);
-        deleteQueue.Push(session);
+        deleteQueuePush(session, false);
         awakeEvent.Signal();
         return;
     }

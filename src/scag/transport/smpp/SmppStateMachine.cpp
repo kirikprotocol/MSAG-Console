@@ -396,6 +396,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     if(!makeLongCall(cmd, session))
     {
         SubmitResp(cmd, smsc::system::Status::SYSERR);
+        session->closeCurrentOperation();        
         sm.releaseSession(session);
         registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
     }
@@ -411,6 +412,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         st.result = smsc::system::Status::SYSERR;
     }
     SubmitResp(cmd, st.result);
+    session->closeCurrentOperation();    
     sm.releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
@@ -793,6 +795,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       if(!makeLongCall(cmd, session))
       {
         DeliveryResp(cmd, smsc::system::Status::SYSERR);
+        session->closeCurrentOperation();        
         sm.releaseSession(session);
         registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
       }
@@ -808,6 +811,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
         st.result = smsc::system::Status::SYSERR;
     }
     DeliveryResp(cmd, st.result);
+    session->closeCurrentOperation();    
     sm.releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
@@ -1133,6 +1137,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       if(!makeLongCall(cmd, session))
       {
         DataResp(cmd, smsc::system::Status::SYSERR);
+        session->closeCurrentOperation();            
         sm.releaseSession(session);
         registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSERR);
       }
@@ -1148,6 +1153,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         st.result = smsc::system::Status::SYSERR;
     }
     DataResp(cmd, st.result);
+    session->closeCurrentOperation();    
     sm.releaseSession(session);
     registerEvent(scag::stat::events::smpp::REJECTED, src, dst, (char*)ri.routeId, st.result);
     return;
