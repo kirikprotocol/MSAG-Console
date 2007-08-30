@@ -653,46 +653,50 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
     pStorage->deleteEvents(abnt, events);
     return;
   }
-  Message			msg;
+
   MessageFormatter	formatter(templateManager->getInformFormatter(profile.informTemplateId));
-  sms_info*		pInfo = new sms_info;
+
   int			seqNum=0;
 
-  pInfo->abnt = abnt;
   int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
-  if(profile.informTemplateId == STK_PROFILE_ID)
-    msg.secured_data = true;
-  else
-    msg.data_sm = true;
+  std::vector <MCEventOut> mcEventsOut;
+  formatter.formatMessage(abnt, events, 0, mcEventsOut, timeOffset);
 
-  formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
-  smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
-  msg.abonent = abnt.getText();//"777";
-  if(useAdvert) formatter.addBanner(msg, getBanner(abnt));
-  {
-    MutexGuard Lock(smsInfoMutex);
-    seqNum = messageSender->getSequenceNumber();
-    pInfo->sending_time = time(0);
-    int res = smsInfo.Insert(seqNum, pInfo);
-    if(!messageSender->send(seqNum, msg))
+  for (std::vector <MCEventOut>::iterator iter = mcEventsOut.begin(), end_iter = mcEventsOut.end(); iter !=end_iter; ++iter) {
+    Message  msg;
+
+    if(profile.informTemplateId == STK_PROFILE_ID)
+      msg.secured_data = true;
+    else
+      msg.data_sm = true;
+
+    msg.abonent = abnt.getText();
+    msg.message = iter->msg;
+    msg.caller_abonent = iter->caller;
+
+    smsc_log_debug(logger, "ProcessAbntEvents: prepare message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
+
+    if(useAdvert) formatter.addBanner(msg, getBanner(abnt));
     {
-      smsc_log_debug(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
-      pDeliveryQueue->Reschedule(pInfo->abnt);
-      smsInfo.Delete(seqNum);
-      delete pInfo;
-      return;
-    }
-    //		timeoutMonitor->addSeqNum(seqNum);
-  }
+      MutexGuard Lock(smsInfoMutex);
+      seqNum = messageSender->getSequenceNumber();
+      sms_info*		pInfo = new sms_info;
 
-  //	count+=pInfo->events.size();
-  //	end = time(0);
-  //	if( (end-start) > 0)
-  //	{
-  //		smsc_log_debug(logger, "speed: Current Delivery speed is %d messages per second ", count);
-  //		start = time(0);
-  //		count=0;
-  //	}
+      pInfo->sending_time = time(0);
+      pInfo->abnt = abnt;
+      pInfo->events = iter->srcEvents;
+
+      int res = smsInfo.Insert(seqNum, pInfo);
+      if(!messageSender->send(seqNum, msg))
+      {
+        smsc_log_debug(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
+        pDeliveryQueue->Reschedule(pInfo->abnt);
+        smsInfo.Delete(seqNum);
+        delete pInfo;
+        return;
+      }
+    }
+  }
 }
 
 bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
@@ -722,8 +726,8 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
       SendAbntOnlineNotifications(pInfo);
       statistics->incDelivered(pInfo->events.size());
       pStorage->deleteEvents(pInfo->abnt, pInfo->events);
-      time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
-      pStorage->setSchedParams(pInfo->abnt, schedTime, status);
+      //time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
+      //pStorage->setSchedParams(pInfo->abnt, schedTime, status);
     }
     else if(smsc::system::Status::isErrorPermanent(status))
     {
