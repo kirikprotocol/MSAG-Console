@@ -194,7 +194,9 @@ using smsc::core::network::Socket;
             const int ACCEPTED = 22;
 
             const int RESP_OK = 23;
-            const int RESP_FAILED = 24;
+            const int RESP_EXPIRED = 24;
+            const int RESP_REJECTED = 25;
+            const int RESP_GW_REJECTED = 26;
         }
         namespace http{
             const int REQUEST_OK = 1;
