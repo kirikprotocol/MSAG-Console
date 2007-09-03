@@ -788,6 +788,13 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
     respQueue.Push(cmd);
   else
   {
+    if(!running)
+    {
+        smsc_log_info(limitsLog,"Denied %s from '%s' due to shutting down", i == DELIVERY ? "DELIVERY" : (i == SUBMIT ? "SUBMIT" : "DATASM"), entPtr->info.systemId.c_str());
+        SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::SYSERR);
+        ct->putCommand(resp);
+        return;
+    }        
     int cnt=entPtr->incCnt.Get();
     if(entPtr->info.sendLimit>0 && cnt/5>=entPtr->info.sendLimit && cmd.getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
@@ -865,7 +872,7 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
     cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
     return true;
   }
-  if(!running || (queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count() == 0))
+  if(queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count() == 0)
     return false;
   if(lcmQueue.Count())
       lcmQueue.Pop(cmd);
