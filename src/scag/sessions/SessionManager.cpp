@@ -298,10 +298,12 @@ void SessionManagerImpl::Stop()
 bool SessionManagerImpl::deleteQueuePop(SessionPtr& s)
 {
 	MutexGuard m(inUseMonitor);
+    if(!deleteQueue.Count()) return false;
+    deleteQueue.Pop(s);
     const CSessionKey& sessionKey = s->getSessionKey();    
     smsc_log_debug(logger,"SessionManager: deleteQueuePop USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
-	return deleteQueue.Pop(s);
+	return true;
 }
 
 void SessionManagerImpl::deleteQueuePush(SessionPtr& s, bool expired)
