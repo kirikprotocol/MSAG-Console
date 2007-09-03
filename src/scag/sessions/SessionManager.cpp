@@ -298,15 +298,19 @@ void SessionManagerImpl::Stop()
 bool SessionManagerImpl::deleteQueuePop(SessionPtr& s)
 {
 	MutexGuard m(inUseMonitor);
-	if(!deleteQueue.Count()) return false;
-	deleteQueue.Pop(s);
-	return true;
+    const CSessionKey& sessionKey = s->getSessionKey();    
+    smsc_log_debug(logger,"SessionManager: deleteQueuePop USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
+                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
+	return deleteQueue.Pop(s);
 }
 
 void SessionManagerImpl::deleteQueuePush(SessionPtr& s, bool expired)
 {
     s->setExpired(expired);
     s->deleteScheduled = true;
+    const CSessionKey& sessionKey = s->getSessionKey();        
+    smsc_log_debug(logger,"SessionManager: deleteQueuePush USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
+                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
 	deleteQueue.Push(s);
 }
 
@@ -339,6 +343,9 @@ int SessionManagerImpl::Execute()
 bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
 {
     RuleStatus rs;
+    const CSessionKey& sessionKey = session->getSessionKey();            
+    smsc_log_debug(logger,"SessionManager: processingSessionDestroy USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
+                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
     try{
         scag::re::RuleEngine::Instance().processSession(*session, rs);
         LongCallContext& lcmCtx = session->getLongCallContext();
@@ -362,7 +369,8 @@ bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
     {
         smsc_log_error(logger, "deleteSession: unknown error");
     }
-
+    smsc_log_debug(logger,"SessionManager: processedSessionDestroy USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
+                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
     return true;
 }
 
@@ -378,8 +386,8 @@ void SessionManagerImpl::deleteSession(SessionPtr& session)
     SessionHash.Delete(sessionKey);
     store.deleteSession(sessionKey);
     sessionCount--;
-    smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s' InUse: %d",
-                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count());
+    smsc_log_debug(logger,"SessionManager: session closed USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
+                   sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
 }
 
 void SessionManagerImpl::reorderExpireQueue(Session* session)
@@ -423,6 +431,7 @@ int SessionManagerImpl::processExpire()
     bool changed = false;
     it = SessionExpirePool.begin();
 
+    smsc_log_debug(logger,"SessionManager: process expire, headtime: %d", (*it)->nextWakeTime);
     while(it != SessionExpirePool.end() && (*it)->nextWakeTime <= now)
     {
         CSessionAccessData *accessData = *it++;
@@ -453,8 +462,8 @@ int SessionManagerImpl::processExpire()
             {
                 smsc_log_debug(logger,"SessionManager: Session USR='%d', Address='%s' cannot be found in store",
                                accessData->SessionKey.USR, accessData->SessionKey.abonentAddr.toString().c_str());
-                SessionHash.Insert(session->getSessionKey(), session);
-                deleteQueuePush(session, true);
+                SessionExpirePool.erase(accessData);
+                SessionExpireHash.Delete(accessData->SessionKey);
             }
             changed = true;
         }
