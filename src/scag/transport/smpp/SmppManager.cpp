@@ -456,10 +456,6 @@ void SmppManagerImpl::configChanged()
 void SmppManagerImpl::LoadRoutes(const char* cfgFile)
 {
   scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
-/*  if(cfg.load(cfgFile)!=scag::config::RouteConfig::success)
-  {
-    throw Exception("Failed to load routes config");
-  };*/
   router::RouteManager* newman=new router::RouteManager();
   router::loadRoutes(newman,cfg,false);
   {
@@ -471,9 +467,12 @@ void SmppManagerImpl::LoadRoutes(const char* cfgFile)
 void SmppManagerImpl::ReloadRoutes()
 {
   scag::config::RouteConfig& cfg = scag::config::ConfigManager::Instance().getRouteConfig();
-  RouterRef newRouter(new router::RouteManager());
-  router::loadRoutes(newRouter.Get(),cfg);
-  routeMan=newRouter;
+  router::RouteManager* newman=new router::RouteManager();
+  router::loadRoutes(newman,cfg,false);
+  {
+    sync::MutexGuard mg(routerSwitchMtx);
+    routeMan=newman;
+  }
 }
 
 void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
