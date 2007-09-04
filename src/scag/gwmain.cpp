@@ -48,6 +48,7 @@ void registerSignalHandlers()
   sigdelset(&st, SIGILL);
   sigdelset(&st, SIGSEGV);
   sigdelset(&st, SIGINT);
+  sigdelset(&st, SIGHUP);  
   sigprocmask(SIG_SETMASK, &st, NULL);
 
   sigdelset(&st,17);
@@ -139,8 +140,8 @@ int main(int argc,char* argv[])
         smsc_log_warn(logger, "WARNING: admin port not specified, admin module disabled - smsc is not administrable");
 
     while(!shutdownFlag) { 
-	sigsuspend(&st); 
-	smsc_log_debug(logger, "MAIN: sigsuspend exited. flag=%d", shutdownFlag); 
+    	sigsuspend(&st); 
+    	smsc_log_debug(logger, "MAIN: sigsuspend exited. flag=%d", shutdownFlag); 
     }
 
     if(listener)

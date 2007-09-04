@@ -296,6 +296,9 @@ namespace scag { namespace sessions {
         friend class Comparator;
 
 
+        static uint32_t sessionCounter; // for debugging
+        static Mutex    cntMutex;
+        
         enum ReadOnlyProperties
         {
             PROPERTY_USR = 1,
