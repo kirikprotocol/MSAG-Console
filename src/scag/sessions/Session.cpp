@@ -199,11 +199,12 @@ Session::Session(const CSessionKey& key)
         if(!logger) logger = Logger::getInstance("sess.man");
     }
 
+    uint32_t sc = 0;
     {
         MutexGuard mtxx(cntMutex);
-        sessionCounter++;
-        smsc_log_debug(logger, "Session create: count=%d", sessionCounter);        
+        sc = ++sessionCounter;
     }
+    smsc_log_debug(logger, "Session create: count=%d, addr=%s, usr=%d", sc, key.abonentAddr.toString().c_str(), key.USR);
 
     m_SessionKey = key;
 }
@@ -212,8 +213,12 @@ Session::~Session()
 {
     // rollback all pending billing transactions & destroy session
     {
-        MutexGuard mtxx(cntMutex);
-        sessionCounter--;
+        uint32_t sc = 0;
+        {
+            MutexGuard mtxx(cntMutex);
+            sc = --sessionCounter;
+        }
+        smsc_log_debug(logger, "Session destroy: count=%d, addr=%s, usr=%d", sc, key.abonentAddr.toString().c_str(), key.USR);
     }
 
     char * key;
