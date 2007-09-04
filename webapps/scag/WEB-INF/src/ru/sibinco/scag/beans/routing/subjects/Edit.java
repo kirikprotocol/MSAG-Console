@@ -121,7 +121,10 @@ public class Edit extends EditBean {
             if (defSvc == null && defCenter == null)
                 throw new SCAGJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
         }
-
+        if( masks.length == 0 || masks == null ){
+            logger.error( "Could not save subject with empty mask!" );
+            throw new SCAGJspException( Constants.errors.routing.subjects.COULD_NOT_SAVE_WITH_EMPTY_MASK );
+        }
         if (isAdd()) {
             if (transportId == Transport.SMPP_TRANSPORT_ID) {
                 if (subjects.containsKey(getName()))
