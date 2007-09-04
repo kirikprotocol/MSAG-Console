@@ -41,6 +41,7 @@ struct RouteSrcTreeNode
     record = 0;
     for ( unsigned i=0; i< child.size(); ++i )
       { if ( child[i] ) delete child[i]; }
+    child.clear();
   }
 };
 
@@ -56,8 +57,10 @@ struct RouteTreeNode
     record = 0;
     for ( unsigned i=0; i< child.size(); ++i )
       { if ( child[i] ) delete child[i]; }
+    child.clear();
     for ( unsigned i=0; i< sources.size(); ++i )
       { if ( sources[i] ) delete sources[i]; }
+    sources.clear();
   }
 };
 
