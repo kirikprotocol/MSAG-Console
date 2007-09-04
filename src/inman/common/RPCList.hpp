@@ -1,4 +1,7 @@
 #ident "$Id$"
+/* ************************************************************************** *
+ * Helper classes for operations with RPCauses (Reject Processing Cause)
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_RPCLIST__
 #define __SMSC_INMAN_RPCLIST__
 
@@ -9,12 +12,17 @@
 using smsc::util::format;
 using smsc::util::CustomException;
 
+#include "inman/common/CSVList.hpp"
+using smsc::util::CSVList;
+
 namespace smsc   {
 namespace inman  {
 namespace common {
 
+//Ordinary list of RPCauses
 class RPCList : public std::list<unsigned char> {
 public:
+    //format: "C1, C2, ..., Cn"
     int init(const char * str) throw(CustomException)
     {
         if (!str || !str[0])
@@ -44,6 +52,54 @@ public:
         return i;
     }
 };
+
+//RPCause with attribute
+typedef std::pair<unsigned char, unsigned> RPCauseATT;
+
+class RPCListATT : public std::list<RPCauseATT> {
+public:
+    //format: "C1:A1, C2:A2, ..., Cn:An"
+    int init(const char * str) throw(CustomException)
+    {
+        if (!str || !str[0])
+            RPCListATT::clear();
+        else {
+            std::string rplist(str);
+            std::string::size_type pos = 0, commaPos;
+            do {
+                commaPos = rplist.find_first_of(',', pos);
+                std::string rp_s(rplist.substr(pos,
+                        ((commaPos != rplist.npos) ? commaPos : rplist.size()) - pos));
+                //separate RPCause ant attribute
+                CSVList  rpAtt(':');
+                if (!rpAtt.init(rp_s.c_str()))
+                    throw CustomException("bad element \'%s\'", rp_s.c_str());
+                //convert RPCause
+                int rp_i = atoi(rpAtt[0].c_str());
+                if ((rp_i <= 0) || (rp_i > 0xFF))
+                    throw CustomException("bad element \'%s\'", rp_s.c_str());
+                //convert attribute
+                int att = 0;
+                if (rpAtt.size() > 1) {
+                    if ((att = atoi(rpAtt[1].c_str())) <= 0)
+                        throw CustomException("bad element \'%s\'", rp_s.c_str());
+                }
+                RPCListATT::push_back(RPCauseATT(rp_i, att));
+                pos = commaPos + 1;
+            } while (commaPos != rplist.npos);
+        }
+        return RPCListATT::size();
+    }
+    int print(std::string & ostr)
+    {
+        int i = 0;
+        RPCListATT::iterator it = RPCListATT::begin();
+        for (; it != RPCListATT::end(); it++, i++)
+            format(ostr, "%s%u:%u", i ? ", ":"", it->first, it->second);
+        return i;
+    }
+};
+
 
 } //common
 } //inman
