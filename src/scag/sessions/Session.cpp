@@ -17,6 +17,9 @@ smsc::logger::Logger* Operation::logger = NULL;
 smsc::core::synchronization::Mutex Session::loggerMutex;
 smsc::logger::Logger* Session::logger = NULL;
 
+smsc::core::synchronization::Mutex Session::cntMutex;
+uint32_t Session::sessionCounter;
+
 Hash<int> Session::InitOperationTypesHash()
 {
     Hash<int> hs;
@@ -190,6 +193,12 @@ Session::Session(const CSessionKey& key)
         lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false),
         m_SessionPrimaryKey(key.abonentAddr), bIsNew(true), bIsExpired(false), deleteScheduled(false),offset(0)
 {
+    {
+        MutexGuard mtxx(cntMutex);
+        sessionCounter++;
+        smsc_log_debug(logger, "Session create: count=%d", sessionCounter);        
+    }
+    
     if(!logger)
     {
         MutexGuard mt(loggerMutex);
@@ -202,7 +211,10 @@ Session::Session(const CSessionKey& key)
 Session::~Session()
 {
     // rollback all pending billing transactions & destroy session
-
+    {
+        MutexGuard mtxx(cntMutex);
+        sessionCounter--;
+    }
 
     char * key;
     AdapterProperty * value = 0;

@@ -27,6 +27,12 @@ EventSender::EventSender()
 
 EventSender::~EventSender()
 {
+    while(eventsQueue.Count() > 0)
+    {
+        SaccEvent* ev;                    
+        if(eventsQueue.Pop(ev) && ev)
+            processEvent(ev);
+    }
 }
 
 void EventSender::init(std::string& host,int port,int timeout,int queuelen,/*,bool * bf,*/smsc::logger::Logger * lg)
@@ -97,6 +103,20 @@ int EventSender::Execute()
         }
     }
 
+    while(eventsQueue.Count() > 0)
+    {
+        SaccEvent* ev;                    
+        if(eventsQueue.Pop(ev) && ev)
+        {
+            if(bConnected)
+                processEvent(ev);
+            else
+                delete ev;
+        }
+    }
+
+    SaccSocket.Close();
+    
     smsc_log_debug(logger,"EventSender stopped.");
     return 1;
 }

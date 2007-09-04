@@ -317,7 +317,7 @@ void SessionManagerImpl::deleteQueuePush(SessionPtr& s, bool expired)
     const CSessionKey& sessionKey = s->getSessionKey();
     smsc_log_debug(logger,"SessionManager: deleteQueuePush USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
-  deleteQueue.Push(s);
+    deleteQueue.Push(s);
 }
 
 int SessionManagerImpl::Execute()
@@ -437,7 +437,7 @@ int SessionManagerImpl::processExpire()
     bool changed = false;
     it = SessionExpirePool.begin();
 
-    smsc_log_debug(logger,"SessionManager: process expire, headtime: %d", (*it)->nextWakeTime);
+    smsc_log_debug(logger,"SessionManager: process expire, headtime: %d, curtime=%s", (*it)->nextWakeTime, time(NULL));
     while(it != SessionExpirePool.end() && (*it)->nextWakeTime <= now)
     {
         CSessionAccessData *accessData = *it++;
