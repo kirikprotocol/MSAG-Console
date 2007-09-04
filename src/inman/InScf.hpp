@@ -13,6 +13,7 @@ using smsc::util::GsmSCFinfo;
 
 #include "inman/common/RPCList.hpp"
 using smsc::inman::common::RPCList;
+using smsc::inman::common::RPCListATT;
 
 namespace smsc  {
 namespace inman {
@@ -189,7 +190,10 @@ public:         //SwitchingCenter, SMS Center, INMan
     SKAlgorithmMAP  skAlg;          //translation algoritms for various TDPs and service keys 
     //optional params:
     RPCList         rejectRPC;      //list of RP causes forcing charging denial because of low balance
-    RPCList         postpaidRPC;    //list of RP causes returned for postpaid abonents
+    RPCList         postpaidRPC;    //list of RP causes indicating that abonent should be
+                                    //treated as if it's a postpaid abonent
+    RPCListATT      retryRPC;       //list of RP causes indicating that IN point should be
+                                    //interacted again later a bit
     IDPLocationAddr idpLiAddr;      //nature of initiator address to substitute into
                                     //LocationInformationMSC of InitialDP operation
                                     //while interacting this IN platfrom

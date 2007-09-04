@@ -236,7 +236,50 @@ public:
             if (!pin->postpaidRPC.print(cppStr))
                 cppStr += "unsupported";
             smsc_log_info(logger, cppStr.c_str());
-    
+
+            cstr = NULL; cppStr = "  RPCList_retry: ";
+            try { cstr = scfCfg->getString("RPCList_retry"); }
+            catch (ConfigException& exc) { }
+            if (cstr) {
+                try { pin->retryRPC.init(cstr); }
+                catch (std::exception& exc) {
+                    throw ConfigException("RPCList_retry: %s", exc.what());
+                }
+            }
+            //adjust attempt setings for given RPcauses
+            for (RPCListATT::iterator it = pin->retryRPC.begin();
+                                    it != pin->retryRPC.end(); ++it) {
+                it->second++;
+            }
+            if (!pin->retryRPC.print(cppStr))
+                cppStr += "unsupported";
+            smsc_log_info(logger, cppStr.c_str());
+            //verify the RPC uniqueness
+            for (RPCListATT::iterator ait = pin->retryRPC.begin();
+                                    ait != pin->retryRPC.end(); ++ait) {
+                unsigned char rpc = ait->first;
+                for (RPCList::iterator pit = pin->postpaidRPC.begin();
+                                    pit != pin->postpaidRPC.end(); ++pit) {
+                    if (*pit == rpc)
+                        throw ConfigException("multiply settings for RPCause: %u", (unsigned)rpc);
+                }
+                for (RPCList::iterator rit = pin->rejectRPC.begin();
+                                    rit != pin->rejectRPC.end(); ++rit) {
+                    if (*rit == rpc)
+                        throw ConfigException("multiply settings for RPCause: %u", (unsigned)rpc);
+                }
+
+            }
+            for (RPCList::iterator pit = pin->postpaidRPC.begin();
+                                pit != pin->postpaidRPC.end(); ++pit) {
+                unsigned char rpc = *pit;
+                for (RPCList::iterator rit = pin->rejectRPC.begin();
+                                    rit != pin->rejectRPC.end(); ++rit) {
+                    if (*rit == rpc)
+                        throw ConfigException("multiply settings for RPCause: %u", (unsigned)rpc);
+                }
+            }
+
             cstr = NULL; cppStr = "IDPLocationInfo: ";
             try { cstr = scfCfg->getString("IDPLocationInfo");}
             catch (ConfigException& exc) { }
