@@ -218,7 +218,7 @@ Session::~Session()
             MutexGuard mtxx(cntMutex);
             sc = --sessionCounter;
         }
-        smsc_log_debug(logger, "Session destroy: count=%d, addr=%s, usr=%d", sc, key.abonentAddr.toString().c_str(), key.USR);
+        smsc_log_debug(logger, "Session destroy: count=%d, addr=%s, usr=%d", sc, m_SessionKey.abonentAddr.toString().c_str(), m_SessionKey.USR);
     }
 
     char * key;

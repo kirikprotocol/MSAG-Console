@@ -427,7 +427,7 @@ int SessionManagerImpl::processExpire()
 {
     MutexGuard guard(inUseMonitor);
 
-    smsc_log_debug(logger,"SessionManager: process expire InUse: %d, ExpirePoolSize: %d", SessionHash.Count(), SessionExpirePool.size());
+    smsc_log_debug(logger,"SessionManager: process expire InUse: %d, ExpirePoolSize: %d, ExpireHashSize: %d", SessionHash.Count(), SessionExpirePool.size(), SessionExpireHash.Count());
 
     if(SessionExpirePool.empty()) return DEFAULT_EXPIRE_INTERVAL;
 
