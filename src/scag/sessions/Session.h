@@ -17,6 +17,7 @@
 #include <scag/re/RuleStatus.h>
 #include "scag/config/sessn/SessionManagerConfig.h"
 #include "core/buffers/RefPtr.hpp"
+#include "core/buffers/File.hpp"
 #include "scag/lcm/LongCallManager.h"
 //#include "scag/transport/SCAGCommand.h"
 #include "scag/re/RuleKey.h"
@@ -50,13 +51,13 @@ namespace scag { namespace sessions {
     };
 
 
-    enum ICCOperationStatus 
+    enum ICCOperationStatus
     {
         OPERATION_INITED,
         OPERATION_CONTINUED,
-        OPERATION_COMPLETED 
+        OPERATION_COMPLETED
     };
-    
+
     namespace OperationFlags
     {
         const uint32_t SERVICE_INITIATED_USSD_DIALOG = 1;
@@ -201,7 +202,7 @@ namespace scag { namespace sessions {
 
         void rollbackAll(bool timeout = false);
 
-        PendingOperation() : bStartBillingOperation(false), billID(0), logger(0) 
+        PendingOperation() : bStartBillingOperation(false), billID(0), logger(0)
         {
             logger = Logger::getInstance("sess.pop");
         };
@@ -248,12 +249,12 @@ namespace scag { namespace sessions {
         bool flagSet(uint32_t f) { return flags & f; };
 
         ~Operation() {}
-        Operation(Session * Owner) : 
+        Operation(Session * Owner) :
             m_Owner(Owner),
-            m_hasBill(false), 
-            m_receivedResp(false), 
-            m_receivedParts(0), 
-            m_receivedAllParts(false), 
+            m_hasBill(false),
+            m_receivedResp(false),
+            m_receivedParts(0),
+            m_receivedAllParts(false),
             m_receivedAllResp(false),
             m_Status(OPERATION_INITED),
             billId(0)
@@ -266,7 +267,7 @@ namespace scag { namespace sessions {
         };
     };
 
-    
+
     typedef IntHash<Operation*> COperationsHash;
     /*
     class COperationsHashPtr : public smsc::core::buffers::RefPtr<COperationsHash,smsc::core::synchronization::Mutex>
@@ -304,7 +305,7 @@ namespace scag { namespace sessions {
         std::list<SCAGCommand*> cmdQueue;
 
         SCAGCommand* popCommand()
-        { 
+        {
             SCAGCommand* c = cmdQueue.front();
             cmdQueue.pop_front();
             return c;
@@ -341,6 +342,8 @@ namespace scag { namespace sessions {
         Hash<AdapterProperty *> PropertyHash;
         static Hash<int> OperationTypesHash;
         static Hash<int> ReadOnlyPropertiesHash;
+
+        smsc::core::buffers::File::offset_type offset;
         /*
         COperationsHashPtr getOperationsHash()
         {
@@ -407,7 +410,7 @@ namespace scag { namespace sessions {
         Operation * setCurrentOperationByType(int operationType);
         Operation * setOperationFromPending(SCAGCommand& cmd, int operationType);
         uint64_t getCurrentOperationId();
-        
+
         time_t Session::getWakeUpTime();
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
@@ -418,6 +421,11 @@ namespace scag { namespace sessions {
         static Hash<int> Session::InitOperationTypesHash();
         static Hash<int> Session::InitReadOnlyPropertiesHash();
         static bool isReadOnlyProperty(const char * name);
+
+        smsc::core::buffers::File::offset_type& getOffsetRef()
+        {
+          return offset;
+        }
     };
 
     typedef smsc::core::buffers::RefPtr<Session,smsc::core::synchronization::Mutex> SessionPtr;
@@ -508,10 +516,7 @@ namespace scag { namespace sessions {
 
         }
     };
-  
+
 }}
 
 #endif // SCAG_SESSIONS_SESSION
-
-
-

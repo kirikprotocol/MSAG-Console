@@ -30,11 +30,12 @@ public:
 
   void init(const std::string& dir,SessionLoadCallback cb,void* data);
 
-  SessionPtr getSession(const CSessionKey& sessionKey);
-
   SessionPtr newSession(const CSessionKey& sessionKey);
+  SessionPtr getSession(const CSessionKey& sessionKey);
   void deleteSession(const CSessionKey& sessionKey);
   bool updateSession(Session* session);
+  void storeSessionIndex(Session* session);
+  void deleteSessionByIndex(Session* session);
   uint32_t getSessionsCount() {return dhash.Count();}
 
 protected:
@@ -131,6 +132,14 @@ public:
   void deleteSession(const CSessionKey& sessionKey);
   bool updateSession(Session* session);
   uint32_t getSessionsCount() {return store.getSessionsCount();}
+  void storeSessionIndex(Session* session)
+  {
+    store.storeSessionIndex(session);
+  }
+  void deleteSessionByIndex(Session* session)
+  {
+    store.deleteSessionByIndex(session);
+  }
 protected:
     inline uint32_t getIdx(const CSessionKey& key) { return CSessionKey::CalcHash(key) % maxCacheSize; };
 

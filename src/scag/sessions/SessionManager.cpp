@@ -89,7 +89,7 @@ namespace scag { namespace sessions
         int  processExpire();
         void deleteSession(SessionPtr& session);
         bool processDeleteSession(SessionPtr& session);
-    	bool deleteQueuePop(SessionPtr& s);
+      bool deleteQueuePop(SessionPtr& s);
         void deleteQueuePush(SessionPtr& s, bool expired);
 
         uint16_t getNewUSR(Address& address);
@@ -179,15 +179,19 @@ void SessionManagerImpl::AddRestoredSession(Session * session)
         session->currentOperationId = 0;
 
         reorderExpireQueue(session);
+        store.storeSessionIndex(session);
         if(store.updateSession(session))
         {
             smsc_log_debug(logger,"SessionManager: session updated.  USR='%d', Address='%s' Pending: %d InUse: %d",
                        sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), session->getPendingAmount(), SessionHash.Count());
             sessionCount++;
-        }            
+        }
     }
     else
-        store.deleteSession(sessionKey);
+    {
+         store.deleteSessionByIndex(session);
+        //store.deleteSession(sessionKey);
+    }
     /*smsc_log_debug(logger,"SessionManager: Session restored from store with USR='%d', Address='%s', pending: %d-%d",
        accessData->SessionKey.USR,accessData->SessionKey.abonentAddr.toString().c_str(),
        session->PendingOperationList.size(),session->PrePendingOperationList.size());
@@ -297,23 +301,23 @@ void SessionManagerImpl::Stop()
 
 bool SessionManagerImpl::deleteQueuePop(SessionPtr& s)
 {
-	MutexGuard m(inUseMonitor);
+  MutexGuard m(inUseMonitor);
     if(!deleteQueue.Count()) return false;
     deleteQueue.Pop(s);
-    const CSessionKey& sessionKey = s->getSessionKey();    
+    const CSessionKey& sessionKey = s->getSessionKey();
     smsc_log_debug(logger,"SessionManager: deleteQueuePop USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
-	return true;
+  return true;
 }
 
 void SessionManagerImpl::deleteQueuePush(SessionPtr& s, bool expired)
 {
     s->setExpired(expired);
     s->deleteScheduled = true;
-    const CSessionKey& sessionKey = s->getSessionKey();        
+    const CSessionKey& sessionKey = s->getSessionKey();
     smsc_log_debug(logger,"SessionManager: deleteQueuePush USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
-	deleteQueue.Push(s);
+  deleteQueue.Push(s);
 }
 
 int SessionManagerImpl::Execute()
@@ -322,7 +326,7 @@ int SessionManagerImpl::Execute()
 
     while(isStarted())
     {
-        SessionPtr s;	
+        SessionPtr s;
         while(deleteQueuePop(s))
         {
             if(processDeleteSession(s))
@@ -345,7 +349,7 @@ int SessionManagerImpl::Execute()
 bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
 {
     RuleStatus rs;
-    const CSessionKey& sessionKey = session->getSessionKey();            
+    const CSessionKey& sessionKey = session->getSessionKey();
     smsc_log_debug(logger,"SessionManager: processingSessionDestroy USR='%d', Address='%s' InUse: %d, DeleteQueueLen: %d",
                    sessionKey.USR, sessionKey.abonentAddr.toString().c_str(), SessionHash.Count(), deleteQueue.Count());
     try{
@@ -454,7 +458,7 @@ int SessionManagerImpl::processExpire()
                 }
                 if(!session->hasOperations())
                 {
-                    SessionHash.Insert(session->getSessionKey(), session);                
+                    SessionHash.Insert(session->getSessionKey(), session);
                     deleteQueuePush(session, true);
                 }
                 else
@@ -504,7 +508,7 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
             session->getUSR(), key.abonentAddr.toString().c_str(), session->PendingOperationList.size(), SessionHash.Count());
 
         session->m_CanOpenSubmitOperation = false;
-        session->getLongCallContext().clear();        
+        session->getLongCallContext().clear();
         return true;
     }
 
@@ -515,7 +519,7 @@ bool SessionManagerImpl::getSession(const CSessionKey& key, SessionPtr& session,
         session = NULL;
         return true;
     }
-    
+
     (*s)->m_CanOpenSubmitOperation = false;
 
     cmd.setSession(*s);
@@ -540,7 +544,7 @@ SessionPtr SessionManagerImpl::newSession(CSessionKey& key)
     session->setSessionKey(key);
     session->m_CanOpenSubmitOperation = true;
     sessionCount++;
-    
+
     SessionHash.Insert(key, session);
 
     smsc_log_debug(logger,"SessionManager: created new session USR='%d', Address='%s' InUse: %d",

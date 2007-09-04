@@ -20,13 +20,12 @@ void SessionStore::init(const std::string& dir,SessionLoadCallback cb,void* data
     binFile=dir+'/'+binFile;
   }
 
-  if(!buf::File::Exists(idxFile.c_str()))
+  if(buf::File::Exists(idxFile.c_str()))
   {
-    dhash.Create(idxFile.c_str(),100000,false);
-  }else
-  {
-    dhash.Open(idxFile.c_str());
+    buf::File::Unlink(idxFile.c_str());
   }
+  dhash.Create(idxFile.c_str(),100000,false);
+
   if(!buf::File::Exists(binFile.c_str()))
   {
     pfile.Create(binFile.c_str(),256,25000);
@@ -43,9 +42,30 @@ void SessionStore::init(const std::string& dir,SessionLoadCallback cb,void* data
     SessionBuffer sb(data.size());
     sb.Append((char*)&data[0],data.size());
     s.Deserialize(sb);
+    s.getOffsetRef()=ridx;
     cb(dataPtr,&s);
   }
 }
+
+void SessionStore::storeSessionIndex(Session* session)
+{
+  sync::MutexGuard mg(mtx);
+  OffsetValue off(session->getOffsetRef());
+  const CSessionKey& key=session->getSessionKey();
+  dhash.Insert(key,off);
+}
+
+
+void SessionStore::deleteSessionByIndex(Session* session)
+{
+  sync::MutexGuard mg(mtx);
+  OffsetValue off=session->getOffsetRef();
+  if(off.value)
+  {
+    pfile.Delete(off.value);
+  }
+}
+
 
 SessionPtr SessionStore::getSession(const CSessionKey& sessionKey)
 {
@@ -105,7 +125,7 @@ bool SessionStore::updateSession(Session* session)
   {
     smsc_log_error(log, "SessionStore::updateSession - Session with key %s not found",DiskSessionKey(session->getSessionKey()).toString().c_str());
     return false;
-  }    
+  }
 
   smsc_log_debug(log,"updateSession:%s:%08llx",DiskSessionKey(session->getSessionKey()).toString().c_str(),off.value);
   SessionBuffer sb;
@@ -125,15 +145,15 @@ void CachedSessionStore::init(const std::string& dir,SessionLoadCallback cb,void
 SessionPtr CachedSessionStore::getSession(const CSessionKey& sessionKey)
 {
   sync::MutexGuard mg(mtx);
-  
+
   uint32_t i = getIdx(sessionKey);
   if(cache[i].Get() && cache[i]->getSessionKey() == sessionKey)
     return cache[i];
-  
+
   SessionPtr p = store.getSession(sessionKey);
   if(p.Get())
     cache[i] = p;
-  
+
   return p;
 }
 
@@ -151,7 +171,7 @@ void CachedSessionStore::deleteSession(const CSessionKey& sessionKey)
   uint32_t i = getIdx(sessionKey);
   if(cache[i].Get() && cache[i]->getSessionKey() == sessionKey)
     cache[i] = NULL;
-  store.deleteSession(sessionKey);  
+  store.deleteSession(sessionKey);
 }
 
 bool CachedSessionStore::updateSession(Session* session)

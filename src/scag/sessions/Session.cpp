@@ -92,14 +92,14 @@ ICCOperationStatus Operation::getStatus()
 
 void Operation::detachBill()
 {
-    if (!m_hasBill) 
+    if (!m_hasBill)
     {
         smsc_log_warn(logger,"Operation: (ab=%s) No bill to detach", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
         return;
     }
 
     smsc_log_debug(logger,"Operation: Bill (id=%d, ab=%s) dettached", billId, m_Owner->m_SessionKey.abonentAddr.toString().c_str());
-	billId = 0;
+  billId = 0;
     m_hasBill = false;
 }
 
@@ -107,12 +107,12 @@ void Operation::receiveNewPart(int currentIndex,int lastIndex)
 {
     //smsc_log_debug(logger,"Operation: Change status part (CI=%d, LI=%d, allParts=%d)",currentIndex, lastIndex, m_receivedAllParts);
 
-    if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex)) 
+    if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex))
         throw SCAGException("Error: Invalid SMS index (currIndex %d, lastIndex %d)",currentIndex, lastIndex);
 
-    if (currentIndex == 0) 
+    if (currentIndex == 0)
         m_Status = OPERATION_INITED;
-    else 
+    else
         m_Status = OPERATION_CONTINUED;
 
 
@@ -136,7 +136,7 @@ void Operation::receiveNewResp(int currentIndex,int lastIndex)
     //smsc_log_debug(logger,"Operation: Change status resp (CI=%d, LI=%d, allParts=%d)",currentIndex, lastIndex, m_receivedAllParts);
 
 
-    if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex)) 
+    if ((currentIndex < 0)||(lastIndex < 0)||(currentIndex > lastIndex))
         throw SCAGException("Error: Invalid SMS index (currIndex %d, lastIndex %d)",currentIndex, lastIndex);
 
     m_Status = OPERATION_CONTINUED;
@@ -158,7 +158,7 @@ void Operation::receiveNewResp(int currentIndex,int lastIndex)
 
 
 void Operation::attachBill(unsigned int BillId)
-{ 
+{
     if (m_hasBill) throw SCAGException("Operation: (ab=%s) Cannot attach bill - bill already attached!", m_Owner->m_SessionKey.abonentAddr.toString().c_str());
 
     m_hasBill = true;
@@ -184,11 +184,11 @@ void Operation::rollbackAll()
 
 //////////////////////////////////////////////Session////////////////////////////////////////////
 
-Session::Session(const CSessionKey& key) 
-    : PropertyManager(), lastAccessTime(-1), 
+Session::Session(const CSessionKey& key)
+    : PropertyManager(), lastAccessTime(-1),
         bChanged(false), bDestroy(false), accessCount(0), m_pCurrentOperation(0),
         lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false),
-        m_SessionPrimaryKey(key.abonentAddr), bIsNew(true), bIsExpired(false), deleteScheduled(false)
+        m_SessionPrimaryKey(key.abonentAddr), bIsNew(true), bIsExpired(false), deleteScheduled(false),offset(0)
 {
     if(!logger)
     {
@@ -206,12 +206,12 @@ Session::~Session()
 
     char * key;
     AdapterProperty * value = 0;
- 
+
     PropertyHash.First();
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
         if (value) delete value;
 
-    ClearOperations();   
+    ClearOperations();
     //smsc_log_debug(logger,"Session deleted (%s,%d)", m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
 
 }
@@ -222,7 +222,7 @@ void Session::DeserializeProperty(SessionBuffer& buff)
     uint32_t Count;
     buff >> Count;
 
-    for (int i=0; i < Count; i++) 
+    for (int i=0; i < Count; i++)
     {
         AdapterProperty * property = new AdapterProperty(this);
         buff >> *property;
@@ -242,7 +242,7 @@ void Session::DeserializeOperations(SessionBuffer& buff)
 
     buff >> Count;
 
-    for (int i=0; i < Count; i++) 
+    for (int i=0; i < Count; i++)
     {
         operation = new Operation(this);
 
@@ -280,7 +280,7 @@ void Session::DeserializePendingOperations(SessionBuffer& buff)
 
     buff >> Count;
 
-    for (int i=0; i<Count; i++) 
+    for (int i=0; i<Count; i++)
     {
         int temp;
 
@@ -319,7 +319,7 @@ void Session::SerializeOperations(SessionBuffer& buff)
     buff << OperationsHash.Count();
 
     for (;it.Next(key, operation);)
-    {              
+    {
         uint8_t temp;
         temp = operation->m_receivedAllResp;
         //smsc_log_debug(logger, "SERIALIZE ALLRESP=%d",temp);
@@ -376,15 +376,15 @@ void Session::Serialize(SessionBuffer& buff)
     buff << hasCurrentOperation;
 
 
-    if (m_pCurrentOperation != 0) 
+    if (m_pCurrentOperation != 0)
         buff << currentOperationId;
-   
+
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime << lastOperationId;
     //buff << m_SmppDiscriptor.cmdType << m_SmppDiscriptor.currentIndex << m_SmppDiscriptor.lastIndex;
     buff << m_SessionPrimaryKey.sAddr.c_str();
-	buff << ruleKey.serviceId;
-	buff << ruleKey.transport;
-	buff << (uint32_t)bIsNew;
+  buff << ruleKey.serviceId;
+  buff << ruleKey.transport;
+  buff << (uint32_t)bIsNew;
 }
 
 
@@ -404,8 +404,8 @@ void Session::Deserialize(SessionBuffer& buff)
 
 
     m_pCurrentOperation = 0;
-    
-    if (hasCurrentOperation) 
+
+    if (hasCurrentOperation)
     {
         buff >> currentOperationId;
         if (OperationsHash.Exist(currentOperationId)) m_pCurrentOperation = OperationsHash.Get(currentOperationId);
@@ -420,7 +420,7 @@ void Session::Deserialize(SessionBuffer& buff)
     uint8_t c;
     buff >> lastAccessTime >> lastOperationId;
     // >> c;
-    //m_isTransact = c;     
+    //m_isTransact = c;
 
     //buff >> tmp;
     //m_SmppDiscriptor.cmdType = (CommandOperations)tmp;
@@ -432,11 +432,11 @@ void Session::Deserialize(SessionBuffer& buff)
     //m_SmppDiscriptor.lastIndex = tmp;
 
     buff >> m_SessionPrimaryKey.sAddr;
-	
-	buff >> ruleKey.serviceId;
-	buff >> ruleKey.transport;
-	buff >> tmp;	
-	bIsNew = tmp;
+
+  buff >> ruleKey.serviceId;
+  buff >> ruleKey.transport;
+  buff >> tmp;
+  bIsNew = tmp;
 }
 
 
@@ -454,15 +454,15 @@ Property* Session::getProperty(const std::string& name)
     AdapterProperty ** propertyPTR = PropertyHash.GetPtr(name.c_str());
     AdapterProperty * property = 0;
 
-    if (name=="ICC_STATUS") 
+    if (name=="ICC_STATUS")
     {
         if (!m_pCurrentOperation) return 0;
 
-        if (!propertyPTR) 
+        if (!propertyPTR)
         {
             property = new AdapterProperty(name,this, m_pCurrentOperation->getStatus());
             PropertyHash.Insert(name.c_str(),property);
-            return property; 
+            return property;
         }
 
         (*propertyPTR)->setInt(m_pCurrentOperation->getStatus());
@@ -470,25 +470,25 @@ Property* Session::getProperty(const std::string& name)
         return (*propertyPTR);
     }
 
-    if (name=="USR") 
+    if (name=="USR")
     {
-        if (!propertyPTR) 
+        if (!propertyPTR)
         {
             property = new AdapterProperty(name,this, m_SessionKey.USR);
             PropertyHash.Insert(name.c_str(),property);
-            return property; 
+            return property;
         }
 
         return (*propertyPTR);
     }
 
-    if (name=="abonent") 
+    if (name=="abonent")
     {
-        if (!propertyPTR) 
+        if (!propertyPTR)
         {
             property = new AdapterProperty(name, this, m_SessionKey.abonentAddr.toString());
             PropertyHash.Insert(name.c_str(), property);
-            return property; 
+            return property;
         }
 
         return (*propertyPTR);
@@ -511,7 +511,7 @@ void Session::ClearOperations()
     COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, value);)
-    {              
+    {
         delete value;
     }
 
@@ -534,13 +534,13 @@ void Session::abort()
     smsc_log_debug(logger,"Session: abort (usr=%d, %s)", m_SessionKey.USR, m_SessionKey.abonentAddr.toString().c_str());
 
     for (;it.Next(key, value);)
-    {              
+    {
         value->rollbackAll();
         delete value;
     }
 
     for (std::list<PendingOperation>::iterator it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
-    {              
+    {
         it->rollbackAll();
     }
 
@@ -552,11 +552,11 @@ void Session::abort()
     m_pCurrentOperation = 0;
     lastOperationId = 0;
     bChanged = true;
-    
+
     smsc_log_debug(logger,"Session: session aborted (usr=%d, %s)", m_SessionKey.USR, m_SessionKey.abonentAddr.toString().c_str());
 }
 
-bool Session::hasOperations() 
+bool Session::hasOperations()
 {
     return !(PendingOperationList.empty() && (OperationsHash.Count() == 0));
 }
@@ -575,7 +575,7 @@ bool Session::hasPending()
 bool Session::expirePendingOperation()
 {
     bool reorder = false;
-    if (PendingOperationList.size() > 0) 
+    if (PendingOperationList.size() > 0)
     {
         std::list<PendingOperation>::iterator it = PendingOperationList.begin();
         time_t now = time(NULL);
@@ -608,7 +608,7 @@ void Session::closeCurrentOperation()
     getOperationsHash()->Delete(currentOperationId);*/
 
     Operation ** opPtr = OperationsHash.GetPtr(currentOperationId);
-    if (opPtr) 
+    if (opPtr)
     {
        (*opPtr)->rollbackAll();
         delete (*opPtr);
@@ -617,7 +617,7 @@ void Session::closeCurrentOperation()
         m_pCurrentOperation = 0;
         smsc_log_debug(logger,"Session: current operation (id=%lld) released (count = %d)", currentOperationId, OperationsHash.Count());
     }
-    
+
 
     bChanged = true;
 }
@@ -645,8 +645,8 @@ Operation * Session::setCurrentOperationByType(int operationType)
     COperationsHash::Iterator it = OperationsHash.First();
 
     for (;it.Next(key, operation);)
-    {              
-        if (operation->type == operationType) 
+    {
+        if (operation->type == operationType)
         {
             bChanged = true;
             currentOperationId = key;
@@ -666,11 +666,11 @@ Operation * Session::setOperationFromPending(SCAGCommand& cmd, int operationType
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
-        if (it->type == operationType) 
+        if (it->type == operationType)
         {
             Operation * operation = AddNewOperationToHash(cmd, operationType);
 
-            if (it->billID > 0) 
+            if (it->billID > 0)
                 operation->attachBill(it->billID);
 
             smsc_log_debug(logger,"** Session: pending closed (type=%d, ab=%s), billId=%d", it->type, m_SessionKey.abonentAddr.toString().c_str(), it->billID);
@@ -713,7 +713,7 @@ void Session::DoAddPendingOperation(PendingOperation& pendingOperation)
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
-        if (it->validityTime > pendingOperation.validityTime) 
+        if (it->validityTime > pendingOperation.validityTime)
         {
             PendingOperationList.insert(it,pendingOperation);
             bChanged = true;
