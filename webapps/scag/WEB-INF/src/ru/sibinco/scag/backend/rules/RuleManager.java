@@ -489,7 +489,7 @@ public class RuleManager
         if( transport.equals(SMPP_TRANSPORT_NAME)){
             return savePermissionSMPP;
         }else if( transport.equals(HTTP_TRANSPORT_NAME) ){
-            return savePermissionSMPP;
+            return savePermissionHTTP;
         }else if( transport.equals(MMS_TRANSPORT_NAME) ){
             return savePermissionMMS;
         }else{
@@ -513,7 +513,7 @@ public class RuleManager
               out.close();
             } catch (Exception e) {e.printStackTrace();}
         } else {
-            logger.debug("RuleManger:saveCurrentRule( , , )");
+            logger.debug("RuleManger:saveCurrentRule( , , ):permission=false");
         }
         return newFile;
     }
@@ -555,7 +555,7 @@ public class RuleManager
             out.flush();
             out.close();
           } else{
-              logger.debug("RuleManger:saveRule( SB, , ):permission=flase");
+              logger.debug("RuleManger:saveRule( SB, , ):permission=false");
           }
       } catch (FileNotFoundException e) {
         throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
