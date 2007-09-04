@@ -18,7 +18,7 @@ smsc::core::synchronization::Mutex Session::loggerMutex;
 smsc::logger::Logger* Session::logger = NULL;
 
 smsc::core::synchronization::Mutex Session::cntMutex;
-uint32_t Session::sessionCounter;
+uint32_t Session::sessionCounter = 0;
 
 Hash<int> Session::InitOperationTypesHash()
 {
@@ -193,16 +193,16 @@ Session::Session(const CSessionKey& key)
         lastOperationId(0), m_CanOpenSubmitOperation(false), m_bRedirectFlag(false),
         m_SessionPrimaryKey(key.abonentAddr), bIsNew(true), bIsExpired(false), deleteScheduled(false),offset(0)
 {
-    {
-        MutexGuard mtxx(cntMutex);
-        sessionCounter++;
-        smsc_log_debug(logger, "Session create: count=%d", sessionCounter);        
-    }
-    
     if(!logger)
     {
         MutexGuard mt(loggerMutex);
         if(!logger) logger = Logger::getInstance("sess.man");
+    }
+
+    {
+        MutexGuard mtxx(cntMutex);
+        sessionCounter++;
+        smsc_log_debug(logger, "Session create: count=%d", sessionCounter);        
     }
 
     m_SessionKey = key;
