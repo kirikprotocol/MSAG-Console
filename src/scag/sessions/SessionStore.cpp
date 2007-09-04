@@ -147,7 +147,7 @@ SessionPtr CachedSessionStore::getSession(const CSessionKey& sessionKey)
   sync::MutexGuard mg(mtx);
 
   uint32_t i = getIdx(sessionKey);
-  smsc_log_debug(logger, "getSession: %p %s:%d %s:%d, hit: %d", cache[i].Get(), cache[i].Get() ? cache[i]->getSessionKey().abonentAddr.toString().c_str() : "", cache[i].Get() ? cache[i]->getSessionKey().USR : 0, sessionKey.abonentAddr.toString().c_str(), sessionKey.USR, cache[i].Get() && cache[i]->getSessionKey() == sessionKey);
+//  smsc_log_debug(logger, "getSession: %p %s:%d %s:%d, hit: %d", cache[i].Get(), cache[i].Get() ? cache[i]->getSessionKey().abonentAddr.toString().c_str() : "", cache[i].Get() ? cache[i]->getSessionKey().USR : 0, sessionKey.abonentAddr.toString().c_str(), sessionKey.USR, cache[i].Get() && cache[i]->getSessionKey() == sessionKey);
   if(cache[i].Get() && cache[i]->getSessionKey() == sessionKey)
     return cache[i];
 
