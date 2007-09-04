@@ -35,6 +35,17 @@ struct RouteSrcTreeNode
   RouteRecord* record;
   vector<RouteSrcTreeNode*> child;
   RouteSrcTreeNode() : record(0) {}
+  RouteSrcTreeNode(const RouteSrcTreeNode& rhs)
+  {
+    for ( unsigned i=0; i< rhs.child.size(); ++i )
+    {
+      if ( rhs.child[i] )
+      {
+        child.push_back(new RouteSrcTreeNode(*rhs.child[i]));
+      }
+    }
+    record=rhs.record;
+  }
   ~RouteSrcTreeNode() {clean();}
   void clean()
   {
@@ -51,6 +62,24 @@ struct RouteTreeNode
   vector<RouteTreeNode*> child;
   vector<RouteSrcTreeNode*> sources;
   RouteTreeNode() : record(0) {}
+  RouteTreeNode(const RouteTreeNode& rhs)
+  {
+    for ( unsigned i=0; i< rhs.child.size(); ++i )
+    {
+      if ( rhs.child[i] )
+      {
+        child.push_back(new RouteTreeNode(*rhs.child[i]));
+      }
+    }
+    for ( unsigned i=0; i< rhs.sources.size(); ++i )
+    {
+      if(rhs.sources[i])
+      {
+        sources.push_back(new RouteSrcTreeNode(*rhs.sources[i]));
+      }
+    }
+    record=rhs.record;
+  }
   ~RouteTreeNode() {clean();}
   void clean()
   {
