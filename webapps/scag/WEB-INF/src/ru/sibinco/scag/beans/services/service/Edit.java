@@ -193,27 +193,29 @@ public class Edit extends TabledEditBeanImpl {
             deleteRule(Transport.MMS_TRANSPORT_NAME);
         }
         if (mbDefaultHttpRoute!=null) setDefaultHttpRoute(new Long(id));
-//unlock rule forcibly if click "unlock" button
+//unlock rule forcibly if clicked "unlock" button
         if( unlockRuleSMPP != null ) {
+            logger.warn( "Edit:unlockRuleSMPP" );
             unlockRule( Transport.SMPP_TRANSPORT_NAME );
         } else if( unlockRuleHTTP != null ) {
+            logger.warn( "Edit:unlockRuleHTTP" );
             unlockRule( Transport.HTTP_TRANSPORT_NAME );
-        } else if( editRuleMMS != null )  {
+        } else if( unlockRuleMMS != null )  {
+            logger.warn( "Edit:unlockRuleMMS" );
             unlockRule( Transport.MMS_TRANSPORT_NAME );
         }
-//set permission true if click "edit" button
+//set permission true if clicked "edit" button
         if( editRuleSMPP != null ) {
-            System.out.println("Edit:editRuleSMPP!=null");
+            logger.debug( "Edit:editRuleSMPP" );
             setPermissionRule( Transport.SMPP_TRANSPORT_NAME, true );
-        }
-        if( editRuleHTTP != null ) {
-            System.out.println("Edit:editRuleHTTP!=null");
+        } else if( editRuleHTTP != null ) {
+            logger.debug( "Edit:editRuleHTTP" );
             setPermissionRule( Transport.HTTP_TRANSPORT_NAME, true );
-        }
-        if( unlockRuleMMS != null )  {
-            System.out.println("Edit:editRuleMMS!=null");
+        } else if( editRuleMMS != null ) {
+            logger.debug( "Edit:editRuleMMS" );
             setPermissionRule( Transport.MMS_TRANSPORT_NAME, true );
         }
+
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }

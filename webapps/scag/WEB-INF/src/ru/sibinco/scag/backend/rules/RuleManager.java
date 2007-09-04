@@ -485,7 +485,7 @@ public class RuleManager
         }
   }
     boolean checkPermission( String transport){
-        logger.debug( "RuleManager:checkPermission()" );
+//        logger.debug( "RuleManager:checkPermission()" );
         if( transport.equals(SMPP_TRANSPORT_NAME)){
             return savePermissionSMPP;
         }else if( transport.equals(HTTP_TRANSPORT_NAME) ){
@@ -498,10 +498,10 @@ public class RuleManager
     }
 
     private File saveCurrentRule(LinkedList li,String ruleId, String transport) {
-        logger.debug("RuleManger:saveCurrentRule( , , )");
         File ruleFile;
         File newFile = null;
         if( checkPermission(transport) ){
+            logger.debug("RuleManger:saveCurrentRule( , , )");
             ruleFile = composeRuleFile(transport,ruleId);
             newFile = Functions.createNewFilenameForSave(ruleFile);
             try {
@@ -513,15 +513,16 @@ public class RuleManager
               out.close();
             } catch (Exception e) {e.printStackTrace();}
         } else {
-            logger.debug("RuleManger:saveCurrentRule( , , ):permission=false");
+            logger.error( "Attempt to save unlocked rule. RuleManger:saveCurrentRule( , , ):" +
+                          "permission=false for " + transport );
         }
         return newFile;
     }
 
   public void saveRule(LinkedList li,String ruleId, String transport) throws SibincoException
   {
-    logger.debug("RESAVING current rule body to disc!!!!");
     if( checkPermission(transport) ){
+        logger.debug("RESAVING current rule body to disc!!!!");
         try {
             File newFile= composeRuleFile(transport,ruleId);
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
@@ -536,13 +537,13 @@ public class RuleManager
             throw new SibincoException("Couldn't save new rule template", e);
         }
     }else{
-        logger.debug("RuleManger:saveRule( , , ):permission=false");
+        logger.error( "Attempt to save unlocked rule.RuleManger:saveRule( LL, S, S):" +
+                      "permission=false for " + transport );
     }
   }
 
   private void saveRule(BufferedReader r,String ruleId, String transport) throws SibincoException
   {
-      logger.debug("RuleManger:saveRule( BR, S, S )");
       try {
           if( checkPermission(transport)){
             File newFile= composeRuleFile(transport,ruleId);
@@ -555,7 +556,8 @@ public class RuleManager
             out.flush();
             out.close();
           } else{
-              logger.debug("RuleManger:saveRule( SB, , ):permission=false");
+              logger.error( "Attempt to save unlocked rule. RuleManger:saveRule( BR, S, S):" +
+                            "permission=false for " + transport );
           }
       } catch (FileNotFoundException e) {
         throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
