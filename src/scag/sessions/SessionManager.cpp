@@ -437,7 +437,7 @@ int SessionManagerImpl::processExpire()
     bool changed = false;
     it = SessionExpirePool.begin();
 
-    smsc_log_debug(logger,"SessionManager: process expire, headtime: %d, curtime=%s", (*it)->nextWakeTime, time(NULL));
+    smsc_log_debug(logger,"SessionManager: process expire, headtime: %d, curtime=%d", (*it)->nextWakeTime, time(NULL));
     while(it != SessionExpirePool.end() && (*it)->nextWakeTime <= now)
     {
         CSessionAccessData *accessData = *it++;
