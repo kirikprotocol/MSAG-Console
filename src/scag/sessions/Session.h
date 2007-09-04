@@ -298,6 +298,7 @@ namespace scag { namespace sessions {
 
         static uint32_t sessionCounter; // for debugging
         static Mutex    cntMutex;
+        static uint32_t stuid;
         
         enum ReadOnlyProperties
         {

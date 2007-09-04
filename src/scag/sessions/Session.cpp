@@ -19,6 +19,7 @@ smsc::logger::Logger* Session::logger = NULL;
 
 smsc::core::synchronization::Mutex Session::cntMutex;
 uint32_t Session::sessionCounter = 0;
+uint32_t Session::stuid = 0;
 
 Hash<int> Session::InitOperationTypesHash()
 {
@@ -203,8 +204,9 @@ Session::Session(const CSessionKey& key)
     {
         MutexGuard mtxx(cntMutex);
         sc = ++sessionCounter;
+        uid = ++stuid;
     }
-    smsc_log_debug(logger, "Session create: count=%d, addr=%s, usr=%d", sc, key.abonentAddr.toString().c_str(), key.USR);
+    smsc_log_debug(logger, "Session create: count=%d, addr=%s, usr=%d, uid=%d", sc, key.abonentAddr.toString().c_str(), key.USR, uid);
 
     m_SessionKey = key;
 }
@@ -218,7 +220,7 @@ Session::~Session()
             MutexGuard mtxx(cntMutex);
             sc = --sessionCounter;
         }
-        smsc_log_debug(logger, "Session destroy: count=%d, addr=%s, usr=%d", sc, m_SessionKey.abonentAddr.toString().c_str(), m_SessionKey.USR);
+        smsc_log_debug(logger, "Session destroy: count=%d, addr=%s, usr=%d, uid=%d", sc, m_SessionKey.abonentAddr.toString().c_str(), m_SessionKey.USR, uid);
     }
 
     char * key;
