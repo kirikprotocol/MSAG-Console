@@ -559,6 +559,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     }
   }
 
+  if(cmd.hasSession()) cmd.setSession(SessionPtr(NULL));
+  
   if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE ||
       ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST)
       src->delUSRMapping(key.abonentAddr, key.USR); // Empty mapping on USSD dialog end
@@ -966,6 +968,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     }
   }
 
+  if(cmd.hasSession()) cmd.setSession(SessionPtr(NULL));
+  
   cmd->get_resp()->set_messageId("");
 
   if(rs != -2)
@@ -1314,6 +1318,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     }
   }
 
+  if(cmd.hasSession()) cmd.setSession(SessionPtr(NULL));
+  
   if (!(cmd->get_resp()->get_messageId())) {
     cmd->get_resp()->set_messageId("");
   }
@@ -1331,6 +1337,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     rs = scag::stat::events::smpp::RESP_OK;            
 
   registerEvent(rs, src, dst, (char*)sms->getRouteId(), rs != scag::stat::events::smpp::RESP_OK ? cmd->get_resp()->get_status() : -1);  
+
 
   try{
     dst->putCommand(cmd);
