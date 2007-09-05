@@ -418,6 +418,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     return;
   }
 
+  if(cmd.getSession()) cmd.setSession(NULL);
+  
   try{
       if(dst->getBindType() == btNone)
       {
@@ -819,6 +821,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     return;
   }
 
+  if(cmd.getSession()) cmd.setSession(NULL);
+  
   try{
       if(dst->getBindType() == btNone)
       {
@@ -1165,6 +1169,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     return;
   }
 
+  if(cmd.getSession()) cmd.setSession(NULL);
+  
   try{
       if(dst->getBindType() == btNone)
       {

@@ -11,7 +11,7 @@
 
 #include "string.h"
 
-const int start_buff_len = 8192;
+const int start_buff_len = 1024;
 
 //template<int buff_size>
 class DataBlock
