@@ -4,6 +4,9 @@ namespace scag{
 namespace transport{
 namespace smpp{
 
+smsc::core::synchronization::Mutex _SmppCommand::loggerMutex;
+smsc::logger::Logger* _SmppCommand::logger = NULL;
+
 smsc::core::synchronization::Mutex _SmppCommand::cntMutex;
 uint32_t _SmppCommand::commandCounter = 0;
 uint32_t _SmppCommand::stuid = 0;

@@ -336,10 +336,13 @@ struct _SmppCommand
   SessionPtr session;
   uint16_t usr;
   uint32_t flags;
-  smsc::logger::Logger* logger;
-
+  
+  static smsc::logger::Logger* logger;
+  static Mutex    smsc::core::synchronization::Mutex loggerMutex;
+  
         static uint32_t commandCounter; // for debugging
-        static Mutex    cntMutex;
+
+        static Mutex    cntMutex;        
         static uint32_t stuid;
         uint32_t uid;
 
