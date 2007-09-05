@@ -15,6 +15,8 @@
 #include "system/status.h"
 #include "scag/transport/SCAGCommand.h"
 #include "util/64bitcompat.h"
+#include "logger/Logger.h"
+#include "core/synchronization/Mutex.hpp"
 
 namespace scag{
 namespace transport{
@@ -27,6 +29,7 @@ using smsc::sms::SMSId;
 using smsc::sms::Address;
 using smsc::sms::Descriptor;
 using smsc::core::synchronization::Mutex;
+using smsc::logger::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::Exception;
 using std::string;
@@ -337,8 +340,8 @@ struct _SmppCommand
   uint16_t usr;
   uint32_t flags;
   
-  static smsc::logger::Logger* logger;
-  static smsc::core::synchronization::Mutex loggerMutex;
+  static Logger* logger;
+  static Mutex loggerMutex;
   
         static uint32_t commandCounter; // for debugging
 
@@ -350,7 +353,6 @@ struct _SmppCommand
 
   _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0), opId(-1)
   {
-    logger = NULL;
     if(!logger)
     {
         MutexGuard mt(loggerMutex);
