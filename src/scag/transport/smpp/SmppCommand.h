@@ -338,7 +338,7 @@ struct _SmppCommand
   uint32_t flags;
   
   static smsc::logger::Logger* logger;
-  static Mutex    smsc::core::synchronization::Mutex loggerMutex;
+  static smsc::core::synchronization::Mutex loggerMutex;
   
         static uint32_t commandCounter; // for debugging
 
