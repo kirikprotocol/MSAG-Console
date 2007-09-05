@@ -336,11 +336,31 @@ struct _SmppCommand
   SessionPtr session;
   uint16_t usr;
   uint32_t flags;
+  smsc::logger::Logger* logger;
+
+        static uint32_t commandCounter; // for debugging
+        static Mutex    cntMutex;
+        static uint32_t stuid;
+        uint32_t uid;
 
   ~_SmppCommand();
 
   _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0), opId(-1)
   {
+    logger = NULL;
+    if(!logger)
+    {
+        MutexGuard mt(loggerMutex);
+        if(!logger) logger = Logger::getInstance("smppMan");
+    }
+
+    uint32_t sc = 0;
+    {
+        MutexGuard mtxx(cntMutex);
+        sc = ++commandCounter;
+        uid = ++stuid;
+    }
+    smsc_log_debug(logger, "Command create: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
   }
 
   uint32_t get_dialogId() const { return dialogId; }

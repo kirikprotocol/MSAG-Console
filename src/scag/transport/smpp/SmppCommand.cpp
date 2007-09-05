@@ -4,8 +4,21 @@ namespace scag{
 namespace transport{
 namespace smpp{
 
+smsc::core::synchronization::Mutex _SmppCommand::cntMutex;
+uint32_t _SmppCommand::commandCounter = 0;
+uint32_t _SmppCommand::stuid = 0;
+
 _SmppCommand::~_SmppCommand()
   {
+    {
+        uint32_t sc = 0;
+        {
+            MutexGuard mtxx(cntMutex);
+            sc = --commandCounter;
+        }
+        smsc_log_debug(logger, "Command destroy: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
+    }
+  
     switch ( cmdid )
     {
     case DELIVERY:
