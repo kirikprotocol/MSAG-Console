@@ -244,8 +244,8 @@ void SmppSocket::sendData()
       out+=buf; out+=" ";
     }
     sock->GetPeer(buf);
-    dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s): %s",
-	      buf, systemId.c_str(), out.c_str());
+    dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
+	      buf, systemId.c_str(), outQueue.Count(), out.c_str());
   }
   wrBufSent=0;
   wrBufUsed=sz;
