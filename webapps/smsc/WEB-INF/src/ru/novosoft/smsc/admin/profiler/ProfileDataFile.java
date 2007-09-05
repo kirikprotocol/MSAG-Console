@@ -37,7 +37,6 @@ public class ProfileDataFile {
 
         try {
             profilerStorePath = config.getString(PARAM_NAME_FILE_NAME);
-//            profilerStorePath = "/home/artem/Work/mnt/shulga/build/smsc/distr/services/SMSC/store/profiles.bin";
             if (profilerStorePath == null || profilerStorePath.length() <= 0)
                 throw new AdminException("store path is empty");
         } catch (Exception e) {
@@ -72,6 +71,7 @@ public class ProfileDataFile {
         int totalCount = 0;
         boolean isLast = true;
         queryFilter = getFilterQuery(show, query_to_run);
+        String nickFilter = query_to_run.getNickFilter();
         results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
         FileInputStream fis = null;
         System.out.println("start reading File in: " + new Date());
@@ -139,7 +139,7 @@ public class ProfileDataFile {
                   }
                 }
 
-                if (used == 1 && isAddProfile(mask, queryFilter, show)) {
+                if (used == 1 && isMaskValid(mask, queryFilter, show) && isNickValid(version, nick, nickFilter)) {
                     String divertActiveStr = String.valueOf(divertActive != 0);
                     String divertActiveAbsentStr = String.valueOf(divertActiveAbsent != 0);
                     String divertActiveBlockedStr = String.valueOf(divertActiveBlocked != 0);
@@ -205,7 +205,7 @@ public class ProfileDataFile {
         return queryFilter;
     }
 
-    private boolean isAddProfile(Mask mask, String queryFilter, byte show) {
+    private boolean isMaskValid(Mask mask, String queryFilter, byte show) {
         boolean filter;
         if (show == ProfileQuery.SHOW_ADDRESSES) {
             filter = mask.getNormalizedMask().startsWith(queryFilter);
@@ -216,6 +216,13 @@ public class ProfileDataFile {
             filter = true;
         }
         return filter;
+    }
+
+    private boolean isNickValid(int version, String nick, String nickFilter) {
+      if (version >= 0x00010100 && SupportExtProfile.enabled)
+        return (nickFilter == null || (nick != null && nick.equals(nickFilter)));
+
+      return true;
     }
 
 

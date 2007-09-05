@@ -7,6 +7,7 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.blacknick.BlackNickQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -66,11 +67,26 @@ public class BlackNickIndex extends IndexBean {
   }
 
   private int add() {
+    if (newNick == null)
+      return RESULT_OK;
+
     try {
       smsc.addBlackNick(new BlackNick(newNick.toLowerCase()));
     } catch (AdminException e) {
-      _error(new SMSCJspException("Can't add black nick", SMSCJspException.ERROR_CLASS_WARNING, e));
+      _error(new SMSCJspException("Can't add black nick", SMSCJspException.ERROR_CLASS_ERROR, e));
     }
+
+    try {
+      final ProfileQuery profileQuery = new ProfileQuery(1, null, null, 0, ProfileQuery.SHOW_ALL);
+      profileQuery.setNickFilter(newNick.toLowerCase());
+
+      final QueryResultSet rs = smsc.profilesQueryFromFile(profileQuery);
+      if (rs.size() > 0)
+        _error(new SMSCJspException("Profile " + rs.get(0).getValue("mask") + " has nick " + newNick, SMSCJspException.ERROR_CLASS_WARNING));
+    } catch (AdminException e) {
+      _error(new SMSCJspException("Can't check profiles", SMSCJspException.ERROR_CLASS_WARNING, e));
+    }
+
     return RESULT_OK;
   }
 

@@ -16,6 +16,7 @@ public class ProfileQuery
   private int expectedResultsQuantity;
   private String filter;
   private String sortOrder;
+  private String nickFilter;
   private int startPosition;
   private byte show;
 
@@ -52,6 +53,14 @@ public class ProfileQuery
   public byte getShow()
   {
     return show;
+  }
+
+  public String getNickFilter() {
+    return nickFilter;
+  }
+
+  public void setNickFilter(String nickFilter) {
+    this.nickFilter = nickFilter;
   }
 
 }

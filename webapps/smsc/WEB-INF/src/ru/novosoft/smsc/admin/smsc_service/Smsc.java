@@ -262,6 +262,14 @@ public class Smsc extends Service {
     }
 
     public synchronized int profileUpdate(final Mask mask, final Profile newProfile) throws AdminException {
+        // Check profile
+        if (SupportExtProfile.enabled) {
+          BlackNickQuery query = new BlackNickQuery(1, newProfile.getNick(), BlackNickQuery.MATCH_TYPE_EXACTLY);
+          QueryResultSet rs = blackNicksQueryFromFile(query);
+          if (rs.size() > 0)
+            throw new AdminException("Nick " + newProfile.getNick() + " in black list");
+        }
+
         final Map args = new HashMap();
         args.put("address", mask.getMask());
         final List profileArg = new LinkedList();

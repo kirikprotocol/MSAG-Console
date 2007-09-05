@@ -120,7 +120,7 @@ function addSourceSubj() {
 <%
   page_menu_begin(out);
   page_menu_button(session, out, "mbApply", "common.buttons.apply", "common.buttons.apply");
-  page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel");
+  page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %>
