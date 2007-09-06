@@ -106,7 +106,7 @@ void ThreadPool::stopNotify()
   Unlock();
 }
 
-void ThreadPool::shutdown()
+void ThreadPool::shutdown(uint32_t timeout)
 {
   sigset(16,disp);
   Lock();
@@ -157,7 +157,7 @@ void ThreadPool::shutdown()
     }
     Unlock();
 #ifndef LEAKTRACE
-    if(time(NULL)-sdstart>180)abort();
+    if(timeout && time(NULL)-sdstart>timeout)abort();
 #endif
     Wait();
   }

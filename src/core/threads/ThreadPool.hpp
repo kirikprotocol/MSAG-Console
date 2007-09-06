@@ -73,7 +73,7 @@ public:
   void releaseThread(PooledThread* thread);
 
   void stopNotify();
-  void shutdown();
+  void shutdown(uint32_t timeout = 180);
 
   int getPendingTasksCount()
   {
