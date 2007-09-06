@@ -51,6 +51,7 @@ public:
     virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id) = 0;
     virtual void pushCommand(SmppCommand& cmd) = 0;
     virtual void continueExecution(LongCallContext* lcmCtx, bool dropped) = 0;
+    virtual bool makeLongCall(SmppCommand& cx, SessionPtr& session) = 0;
 
     virtual void reloadTestRoutes(const RouteConfig& rcfg) = 0;
     virtual RefferGuard<RouteManager> getTestRouterInstance() = 0;

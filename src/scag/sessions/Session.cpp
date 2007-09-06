@@ -221,9 +221,9 @@ Session::~Session()
             sc = --sessionCounter;
         }
         smsc_log_debug(logger, "Session destroy: count=%d, addr=%s, usr=%d, uid=%d", sc, m_SessionKey.abonentAddr.toString().c_str(), m_SessionKey.USR, uid);
-        if(cmdQueue.Count())
+        if(cmdQueue.size())
         {
-            smsc_log_debug(logger, "!!!Session command queue not empty: %d", cmdQueue.Count());        
+            smsc_log_debug(logger, "!!!Session command queue not empty: %d", cmdQueue.size());
             abort();
         }
     }

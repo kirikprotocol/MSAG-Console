@@ -477,11 +477,13 @@ private:
 			dataFile_f.push_back(new File());
 			try
 			{
+                smsc_log_debug(logger, "Open data file: %s", name.c_str());
 				dataFile_f[i]->RWOpen(name.c_str());
 				dataFile_f[i]->SetUnbuffered();
 			}
 			catch(FileException ex)
 			{
+                smsc_log_error(logger, "Cannot open data file: %s", ex.what());
 				return CANNOT_OPEN_DATA_FILE;
 			}
 		}

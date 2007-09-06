@@ -141,7 +141,7 @@ int StateMachine::Execute()
   while(!isStopping)
   {
     try{
-      if(queue->getCommand(cmd))
+      while(queue->getCommand(cmd))
       {
         if (cmd->get_commandId() != 25) {
           smsc_log_debug(log,"Exec: processing command %d(%x) from %s",cmd->get_commandId(),cmd->get_commandId(),cmd.getEntity()?cmd.getEntity()->getSystemId():"");
@@ -166,17 +166,6 @@ int StateMachine::Execute()
     }
   }
   return 0;
-}
-
-bool StateMachine::makeLongCall(SmppCommand& cx, SessionPtr& session)
-{
-    SmppCommand* cmd = new SmppCommand(cx);
-    LongCallContext& lcmCtx = session->getLongCallContext();
-    lcmCtx.stateMachineContext = cmd;
-    lcmCtx.initiator = &SmppManager::Instance();
-    cmd->setSession(session);
-
-    return LongCallManager::Instance().call(&lcmCtx);
 }
 
 void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode)
@@ -393,7 +382,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   if(st.status == scag::re::STATUS_LONG_CALL)
   {
     smsc_log_info(log,"Submit: long call initiate");
-    if(!makeLongCall(cmd, session))
+    if(!SmppManager::Instance().makeLongCall(cmd, session))
     {
         SubmitResp(cmd, smsc::system::Status::SYSERR);
         session->closeCurrentOperation();        
@@ -544,7 +533,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     if(st.status == scag::re::STATUS_LONG_CALL)
     {
         smsc_log_debug(log,"SubmitResp: long call initiate");
-        if(makeLongCall(cmd, session))
+        if(SmppManager::Instance().makeLongCall(cmd, session))
           return;
         rs = smsc::system::Status::SYSERR;
     }
@@ -798,7 +787,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   if(st.status == scag::re::STATUS_LONG_CALL)
   {
       smsc_log_debug(log,"Delivery: long call initiate");
-      if(!makeLongCall(cmd, session))
+      if(!SmppManager::Instance().makeLongCall(cmd, session))
       {
         DeliveryResp(cmd, smsc::system::Status::SYSERR);
         session->closeCurrentOperation();        
@@ -952,7 +941,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
 //            throw Exception("DeliveryResp: Register cmd for uid=%d, seq=%d failed", dst->getUid(), cmd->get_dialogId());
 
         smsc_log_debug(log,"DeliveryResp: long call initiate");
-        if(makeLongCall(cmd, session))
+        if(SmppManager::Instance().makeLongCall(cmd, session))
           return;
         rs = smsc::system::Status::SYSERR;
     }
@@ -1148,7 +1137,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   if(st.status == scag::re::STATUS_LONG_CALL)
   {
       smsc_log_debug(log,"DataSm: long call initiate");
-      if(!makeLongCall(cmd, session))
+      if(!SmppManager::Instance().makeLongCall(cmd, session))
       {
         DataResp(cmd, smsc::system::Status::SYSERR);
         session->closeCurrentOperation();            
@@ -1302,7 +1291,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
     if(st.status == scag::re::STATUS_LONG_CALL)
     {
         smsc_log_debug(log,"DataSmResp: long call initiate");
-        if(makeLongCall(cmd, session))
+        if(SmppManager::Instance().makeLongCall(cmd, session))
           return;
         rs = smsc::system::Status::SYSERR;
     }

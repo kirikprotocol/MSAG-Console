@@ -46,7 +46,8 @@ public:
   virtual bool getCommand(SmppCommand& cmd);
 
   virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
-
+  virtual bool makeLongCall(SmppCommand& cx, SessionPtr& session);
+  
   //manager
   void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id);
   virtual void pushCommand(SmppCommand& cmd);
@@ -61,9 +62,16 @@ public:
 
   void StopProcessing()
   {
-    sync::MutexGuard mg(queueMon);
-    running=false;
-    queueMon.notifyAll();
+    {
+        sync::MutexGuard mg(queueMon);
+        if(!running) return;          
+        running=false;
+        queueMon.notifyAll();
+    }
+    smsc_log_debug(log, "SmppManager shutting down");                
+    tp.shutdown(0);
+    sm.shutdown();
+    smsc_log_debug(log, "SmppManager shutdown");
   }
 
   //SmppRouter
@@ -79,16 +87,14 @@ public:
     }
     MutexGuard mg(regMtx);
     SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
-    if(!ptr)return 0;
-    return *ptr;
+    return ptr ? *ptr : 0;
   }
 
   virtual SmppEntity* getSmppEntity(const char* systemId)const
   {
     MutexGuard mg(regMtx);
     SmppEntity** ptr=registry.GetPtr(systemId);
-    if(!ptr)return 0;
-    return *ptr;
+    return ptr ? *ptr : 0;
   }
 
 protected:
@@ -117,6 +123,8 @@ protected:
 
   int lastUid;
   int queueLimit;
+  
+  uint32_t lcmProcessingCount;
 };
 
 bool SmppManager::inited = false;
@@ -367,13 +375,12 @@ SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG), t
   running=false;
   lastUid=0;
   lastExpireProcess=0;
+  lcmProcessingCount = 0;
 }
 
 SmppManagerImpl::~SmppManagerImpl()
 {
-  StopProcessing();
-  tp.shutdown();
-  sm.shutdown();
+    StopProcessing();
 }
 
 void SmppManagerImpl::Init(const char* cfgFile)
@@ -854,32 +861,37 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
 {
   MutexGuard mg(queueMon);
 
-  while(running && queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count()==0)
+  while((running || lcmProcessingCount) && !queue.Count() && !lcmQueue.Count() && !respQueue.Count())
   {
     queueMon.wait(5000);
+    
     time_t now=time(NULL);
-    if(now-lastExpireProcess>5)
+    if(now - lastExpireProcess > 5)
     {
       lastExpireProcess=now;
       cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
       return true;
     }
   }
+  
   time_t now=time(NULL);
-  if(now-lastExpireProcess>5)
+  if(now - lastExpireProcess > 5)
   {
     lastExpireProcess=now;
     cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
     return true;
   }
-  if(queue.Count()==0 && lcmQueue.Count() == 0 && respQueue.Count() == 0)
+  
+  if(!queue.Count() && !lcmQueue.Count() && !respQueue.Count())
     return false;
+    
   if(lcmQueue.Count())
       lcmQueue.Pop(cmd);
   else if(respQueue.Count())
       respQueue.Pop(cmd);
   else
       queue.Pop(cmd);
+      
   return true;
 }
 
@@ -887,14 +899,30 @@ void SmppManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)
 {
     SmppCommand *cx = (SmppCommand*)lcmCtx->stateMachineContext;
     lcmCtx->continueExec = true;
-
+    
+    MutexGuard mg(queueMon);
+    lcmProcessingCount--;
     if(!dropped)
     {
-        MutexGuard mg(queueMon);
         lcmQueue.Push(*cx);
         queueMon.notify();
     }
     delete cx;
+}
+
+bool SmppManagerImpl::makeLongCall(SmppCommand& cx, SessionPtr& session)
+{
+    SmppCommand* cmd = new SmppCommand(cx);
+    LongCallContext& lcmCtx = session->getLongCallContext();
+    lcmCtx.stateMachineContext = cmd;
+    lcmCtx.initiator = this;
+    cmd->setSession(session);
+    
+    bool b = LongCallManager::Instance().call(&lcmCtx);
+    MutexGuard mg(queueMon);
+    if(b) lcmProcessingCount++;
+
+    return b;
 }
 
 void SmppManagerImpl::pushCommand(SmppCommand& cmd)
