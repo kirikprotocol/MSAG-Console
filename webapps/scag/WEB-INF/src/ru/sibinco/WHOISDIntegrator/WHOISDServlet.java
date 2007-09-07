@@ -127,7 +127,7 @@ public class WHOISDServlet extends HttpServlet
       logRequest(req);
       SCAGAppContext appContext = (SCAGAppContext)req.getAttribute(Constants.APP_CONTEXT);
       int id = getRequestId(req);
-      WHOISDResult result = null;
+      WHOISDResult result = new WHOISDResult();
 
       try {
         switch (id) {
@@ -139,7 +139,10 @@ public class WHOISDServlet extends HttpServlet
           case WHOISDRequest.TARIFF_MATRIX:
               synchronized(tariffsLock){
                 appContext.getTMatrixManager().applyTariffMatrix(
-                            composePath(GW_LOCATION_TARIFFS_FILE, appContext),req,isMultipartFormat(req), appContext);
+                            composePath(GW_LOCATION_TARIFFS_FILE,
+                            appContext), req, isMultipartFormat(req),
+                            appContext );
+//                  result.result = new ;
               }
             break;
           default:
@@ -349,11 +352,14 @@ public class WHOISDServlet extends HttpServlet
 
   private void SendResult(WHOISDResult result, HttpServletResponse resp, String contentType) throws IOException
   {
+    int length = 0;
     if (!resp.containsHeader("status"))
     {
       logger.debug("Request is served successfully");
       resp.setHeader("status","ok");
       if (result != null && result.result != null && result.result.length > 0) {
+          length = result.result.length;
+        if( contentType.equals("") ) contentType = CONTENT_TYPE_TXT;
         resp.setContentType(contentType);
         resp.setCharacterEncoding(Functions.getLocaleEncoding());
       }
@@ -363,7 +369,7 @@ public class WHOISDServlet extends HttpServlet
       logger.error("Request is not served, reason: " + error);
     }
     if( result.error==null ){
-        resp.setContentLength(result.result.length);
+        resp.setContentLength( length );
         OutputStream out = null;
         try {
             out = resp.getOutputStream();
