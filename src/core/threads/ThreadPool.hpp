@@ -46,6 +46,17 @@ public:
   {
     if(task)return task->taskName();else return "";
   }
+
+  void releaseTask()
+  {  
+    if(!task) return;
+    if (task->delOnCompletion())
+        delete task;
+    else
+        task->onRelease();
+    task=NULL;
+  }    
+  
 protected:
   Event taskEvent;
   ThreadPool *owner;

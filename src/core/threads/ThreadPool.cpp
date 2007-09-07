@@ -70,11 +70,6 @@ int PooledThread::Execute()
     }
     smsc_log_info(log,"Execution of task %s finished",task->taskName());
     //task->releaseHeap();
-    if (task->delOnCompletion())
-        delete task;
-    else
-        task->onRelease();
-    task=NULL;
     owner->releaseThread(this);
   }
 }
@@ -231,6 +226,7 @@ void ThreadPool::releaseThread(PooledThread* thread)
 {
   trace2("Releasing thread %8p",thread);
   Lock();
+  thread->releaseTask();
   int i;
   for(i=0;i<usedThreads.Count();i++)
   {
