@@ -257,29 +257,40 @@ public class Edit extends TabledEditBeanImpl {
         Service oldService = null;
         Long serviceProviderId = null;
         if (description == null) description = "";
-        if (getEditId() == null) {
-            Service service = new Service(getName(), getDescription());
-            serviceProviderId = Long.decode(getParentId());
-            id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
-        } else {
-            if (editChild) {
-                serviceProviderId = Long.decode(getEditId());
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
-                Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
-                oldService = service.copy();
-                service.setName(getName());
-                service.setDescription(getDescription());
-                serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
+        if( serviceProvidersManager.isUniqueServiceName( name, parentId )){
+            if (getEditId() == null) {
+    //            if( serviceProvidersManager.isUniqueServiceName(name, id)){
+                    Service service = new Service(getName(), getDescription());
+                    serviceProviderId = Long.decode(getParentId());
+                    id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
+    //            }else{
+    //                logger.error( "services.Edit:save():service - name not unique" );
+    //                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+    //            }
             } else {
-                serviceProviderId = Long.decode(getParentId());
-                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
-                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
-                oldService = service.copy();
-                service.setName(getName());
-                service.setDescription(getDescription());
-                serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+                if (editChild) {
+                    serviceProviderId = Long.decode(getEditId());
+                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
+                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                    oldService = service.copy();
+                    service.setName(getName());
+                    service.setDescription(getDescription());
+                    serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
+                } else {
+                    serviceProviderId = Long.decode(getParentId());
+                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
+                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                    oldService = service.copy();
+                    service.setName(getName());
+                    service.setDescription(getDescription());
+                    serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+                }
             }
+        }else{
+            logger.error( "services.Edit:save():service - name not unique" );
+            throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
         }
+
         appContext.getServiceProviderManager().reloadServices(appContext,(getEditId() == null)?true:false,id, serviceProviderId, oldService);
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
