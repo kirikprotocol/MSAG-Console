@@ -5,35 +5,28 @@
 package ru.sibinco.scag.backend.operators;
 
 import org.apache.log4j.Logger;
-import org.xml.sax.SAXException;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
-import javax.xml.parsers.ParserConfigurationException;
-import java.util.*;
-import java.io.IOException;
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.OutputStreamWriter;
-import java.io.FileOutputStream;
-
-import ru.sibinco.lib.backend.util.xml.Utils;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
-import ru.sibinco.lib.backend.route.Mask;
-import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.StatusDisconnectedException;
-import ru.sibinco.scag.backend.status.StatMessage;
-import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.Scag;
+import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.Manager;
 import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.daemon.Proxy;
+import ru.sibinco.scag.backend.status.StatMessage;
+import ru.sibinco.scag.backend.status.StatusManager;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.Constants;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.util.*;
 
 /**
  * The <code>OperatorManager</code> class represents
@@ -259,4 +252,17 @@ public class OperatorManager extends Manager {
     public synchronized Map getOperators() {
         return operators;
     }
+
+    public boolean isUniqueName( String name ){
+        Map opMap = getOperators();
+        Iterator iterator = opMap.keySet().iterator();
+        while( iterator. hasNext() ){
+            Operator operator = (Operator)opMap.get( iterator.next() );
+            if( operator.getName().equals(name) ){
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
