@@ -13,6 +13,7 @@ uint32_t _SmppCommand::stuid = 0;
 
 _SmppCommand::~_SmppCommand()
   {
+    if(logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG))
     {
         uint32_t sc = 0;
         {

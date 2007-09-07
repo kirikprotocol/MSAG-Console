@@ -359,13 +359,16 @@ struct _SmppCommand
         if(!logger) logger = Logger::getInstance("smppMan");
     }
 
-    uint32_t sc = 0;
+    if(logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG))
     {
-        MutexGuard mtxx(cntMutex);
-        sc = ++commandCounter;
-        uid = ++stuid;
-    }
-    smsc_log_debug(logger, "Command create: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
+        uint32_t sc = 0;
+        {
+            MutexGuard mtxx(cntMutex);
+            sc = ++commandCounter;
+            uid = ++stuid;
+        }
+        smsc_log_debug(logger, "Command create: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
+    }        
   }
 
   uint32_t get_dialogId() const { return dialogId; }

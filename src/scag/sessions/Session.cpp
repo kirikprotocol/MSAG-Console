@@ -200,13 +200,16 @@ Session::Session(const CSessionKey& key)
         if(!logger) logger = Logger::getInstance("sess.man");
     }
 
-    uint32_t sc = 0;
+    if(logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG))
     {
-        MutexGuard mtxx(cntMutex);
-        sc = ++sessionCounter;
-        uid = ++stuid;
-    }
-    smsc_log_debug(logger, "Session create: count=%d, addr=%s, usr=%d, uid=%d", sc, key.abonentAddr.toString().c_str(), key.USR, uid);
+        uint32_t sc = 0;
+        {
+            MutexGuard mtxx(cntMutex);
+            sc = ++sessionCounter;
+            uid = ++stuid;
+        }
+        smsc_log_debug(logger, "Session create: count=%d, addr=%s, usr=%d, uid=%d", sc, key.abonentAddr.toString().c_str(), key.USR, uid);
+    }        
 
     m_SessionKey = key;
 }
@@ -214,6 +217,7 @@ Session::Session(const CSessionKey& key)
 Session::~Session()
 {
     // rollback all pending billing transactions & destroy session
+    if(logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG))
     {
         uint32_t sc = 0;
         {
@@ -237,7 +241,6 @@ Session::~Session()
 
     ClearOperations();
     //smsc_log_debug(logger,"Session deleted (%s,%d)", m_SessionKey.abonentAddr.toString().c_str(),m_SessionKey.USR);
-
 }
 
 
