@@ -226,7 +226,9 @@ void ThreadPool::releaseThread(PooledThread* thread)
 {
   trace2("Releasing thread %8p",thread);
   Lock();
+  
   thread->releaseTask();
+  
   int i;
   for(i=0;i<usedThreads.Count();i++)
   {

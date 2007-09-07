@@ -50,10 +50,12 @@ public:
   void releaseTask()
   {  
     if(!task) return;
+    
     if (task->delOnCompletion())
         delete task;
     else
         task->onRelease();
+        
     task=NULL;
   }    
   
