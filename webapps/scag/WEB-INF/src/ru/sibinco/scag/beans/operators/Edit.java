@@ -63,26 +63,28 @@ public class Edit extends EditBean {
     protected void save() throws SCAGJspException {
         final OperatorManager operatorManager = appContext.getOperatorManager();
         Operator oldOperator = null;
-        if (isAdd()) {
-            if( operatorManager.isUniqueName(name) ){
+        if( operatorManager.isUniqueOperatorName(name, id ) ){
+            if( isAdd() ) {
+
+                    try {
+                        id = operatorManager.createOperator(getLoginedPrincipal().getName(), getName(), getDescription(), srcMasks);
+                    } catch (SibincoException e) {
+                        logger.debug("Couldn't create new operator", e);
+                        throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
+                    }
+            } else {
                 try {
-                    id = operatorManager.createOperator(getLoginedPrincipal().getName(), getName(), getDescription(), srcMasks);
+                    oldOperator = operatorManager.updateOperator(getLoginedPrincipal().getName(), id, getName(), getDescription(), srcMasks);
                 } catch (SibincoException e) {
-                    logger.debug("Couldn't create new operator", e);
-                    throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
+                    logger.debug("Couldn't update operator", e);
+                    throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);
                 }
-            }else{
-                logger.error( "operators.Edit:save():operator - name not unique" );
-                throw new SCAGJspException( Constants.errors.operators.CAN_NOT_SAVE_OPERATOR_NOT_UNIQUE_NAME, name );
             }
-        } else {
-            try {
-                oldOperator = operatorManager.updateOperator(getLoginedPrincipal().getName(), id, getName(), getDescription(), srcMasks);
-            } catch (SibincoException e) {
-                logger.debug("Couldn't update operator", e);
-                throw new SCAGJspException(Constants.errors.operators.COULD_NOT_UPDATE_OPERATOR, e);
-            }
+        }else{
+            logger.error( "operators.Edit:save():operator - name not unique" );
+            throw new SCAGJspException( Constants.errors.operators.CAN_NOT_SAVE_OPERATOR_NOT_UNIQUE_NAME, name );
         }
+
         operatorManager.reloadOperators(appContext,isAdd(), id, oldOperator);
         throw new DoneException();
     }
