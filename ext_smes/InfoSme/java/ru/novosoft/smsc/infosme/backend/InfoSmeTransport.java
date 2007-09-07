@@ -218,7 +218,7 @@ class InfoSmeTransport extends Service
   }
 
   private List translateGetMessagesResult(List messages) throws AdminException {
-    final List result = new ArrayList();
+    final List result = new LinkedList();
 
     try {
 

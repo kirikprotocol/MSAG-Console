@@ -115,50 +115,36 @@ public class Messages extends InfoSmeBean
   private int processExportAll() throws AdminException {
     mbExportAll = null;
 
-    if (messages != null)
-      messages.clear();
-
-    messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
-
-    final StringBuffer buffer = new StringBuffer();
-    Message msg;
-    for (Iterator iter = messages.iterator(); iter.hasNext();) {
-      msg = (Message)iter.next();
-      buffer.append(StringEncoderDecoder.encode(msg.getTaskId())).append(",")
-            .append(StringEncoderDecoder.encode(msg.getAbonent())).append(",")
-            .append(StringEncoderDecoder.encode(getStateName(msg.getState()))).append(",")
-            .append(StringEncoderDecoder.encode(convertDateToString(msg.getSendDate()))).append(",")
-            .append(StringEncoderDecoder.encode(msg.getMessage())).append('\n');
-    }
-    try {
-      exportFile = new String(buffer.toString().getBytes("windows-1251"));
-    } catch (UnsupportedEncodingException e) {
-      e.printStackTrace();
-    }
     return RESULT_EXPORT_ALL;
   }
 
   public void exportAll(HttpServletResponse response, JspWriter out) {
     response.setContentType("file/csv; filename=messages.csv; charset=windows-1251");
-    response.setContentLength(exportFile.length());
+//    response.setContentLength(exportFile.length());
     response.setHeader("Content-Disposition", "attachment; filename=messages.csv");
-//    BufferedOutputStream os = null;
+
     try {
-      out.clear();
-      out.print(exportFile);
+      final List messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+          (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
+
+      Message msg;
+      for (Iterator iter = messages.iterator(); iter.hasNext();) {
+        final StringBuffer buffer = new StringBuffer();
+        msg = (Message)iter.next();
+        buffer.append(StringEncoderDecoder.encode(msg.getTaskId())).append(",")
+            .append(StringEncoderDecoder.encode(msg.getAbonent())).append(",")
+            .append(StringEncoderDecoder.encode(getStateName(msg.getState()))).append(",")
+            .append(StringEncoderDecoder.encode(convertDateToString(msg.getSendDate()))).append(",")
+            .append(StringEncoderDecoder.encode(msg.getMessage())).append('\n');
+        out.print(buffer);
+//        buffer.setLength(0);
+      }
+
       out.flush();
-//      os = new BufferedOutputStream(response.getOutputStream());
-//      os.write(exportFile);
-//      os.flush();
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-//      try {
-//      if (os != null)
-//        os.close();
-//      } catch (IOException e) {
-//      }
+    } catch (AdminException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     }
   }
 
