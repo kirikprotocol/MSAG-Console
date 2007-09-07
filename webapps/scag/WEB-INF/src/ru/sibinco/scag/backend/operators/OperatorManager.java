@@ -253,12 +253,12 @@ public class OperatorManager extends Manager {
         return operators;
     }
 
-    public boolean isUniqueName( String name ){
+    public boolean isUniqueOperatorName( String name, long id ){
         Map opMap = getOperators();
         Iterator iterator = opMap.keySet().iterator();
         while( iterator. hasNext() ){
             Operator operator = (Operator)opMap.get( iterator.next() );
-            if( operator.getName().equals(name) ){
+            if( operator.getName().equals(name) && operator.getId().longValue() != id){
                 return false;
             }
         }
