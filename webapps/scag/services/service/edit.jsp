@@ -14,9 +14,6 @@
     <jsp:body>
         <sm-ep:properties title="service.edit.properties.service_info">
             <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
-            <c:if test="${!param.add}">
-               <sm-ep:txt title="service.edit.txt.id" name="id" readonly ="true" validation="nonEmpty"/>
-            </c:if>
             <sm-ep:txt title="service.edit.txt.name" name="name" validation="nonEmpty"/>
             <sm-ep:txtBox title="service.edit.txtbox.description" cols="0" rows="0" name="description"/>
             <input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.parentId)}">
