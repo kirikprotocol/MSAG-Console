@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.jsp.smsc.profiles.BlackNickIndex"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-    TITLE = getLocString("mscman.title");
+    TITLE = getLocString("profiles.black.nick.list");
     MENU0_SELECTION = "MENU0_MSCMAN";
 
     int beanResult = bean.process(request);

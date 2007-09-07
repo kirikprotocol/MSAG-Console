@@ -114,9 +114,13 @@ public class Messages extends InfoSmeBean
 
   private int processExportAll() throws AdminException {
     mbExportAll = null;
-    int result = processQuery();
-    if (result != RESULT_OK)
-      return result;
+
+    if (messages != null)
+      messages.clear();
+
+    messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
+
     final StringBuffer buffer = new StringBuffer();
     Message msg;
     for (Iterator iter = messages.iterator(); iter.hasNext();) {
