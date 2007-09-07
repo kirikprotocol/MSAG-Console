@@ -56,7 +56,7 @@ public class Messages extends InfoSmeBean
   private String mbDeleteAll = null;
   private String mbExportAll = null;
 
-  private String exportFile;
+  private StringBuffer exportFile;
 
   private boolean initialized = false;
 
@@ -124,12 +124,14 @@ public class Messages extends InfoSmeBean
     response.setHeader("Content-Disposition", "attachment; filename=messages.csv");
 
     try {
+      out.clear();
       final List messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-          (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
+                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
 
+      StringBuffer buffer = new StringBuffer();
       Message msg;
       for (Iterator iter = messages.iterator(); iter.hasNext();) {
-        final StringBuffer buffer = new StringBuffer();
+
         msg = (Message)iter.next();
         buffer.append(StringEncoderDecoder.encode(msg.getTaskId())).append(",")
             .append(StringEncoderDecoder.encode(msg.getAbonent())).append(",")
@@ -137,14 +139,14 @@ public class Messages extends InfoSmeBean
             .append(StringEncoderDecoder.encode(convertDateToString(msg.getSendDate()))).append(",")
             .append(StringEncoderDecoder.encode(msg.getMessage())).append('\n');
         out.print(buffer);
-//        buffer.setLength(0);
+        buffer.setLength(0);
       }
 
       out.flush();
     } catch (IOException e) {
       e.printStackTrace();
     } catch (AdminException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      e.printStackTrace();
     }
   }
 
