@@ -12,10 +12,7 @@ import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * The <code>Edit</code> class represents
@@ -111,7 +108,13 @@ public class Edit extends TabledEditBeanImpl {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         ServiceProvider oldProvider = null;
         if (isAdd()) {
-            id = serviceProvidersManager.createServiceProvider(userLogin, getName(), description);
+            if( serviceProvidersManager.isUniqueName(name) ){
+                id = serviceProvidersManager.createServiceProvider(userLogin, getName(), description);
+            }else {
+                logger.error( "services.Edit:save():privider - name not unique" );
+                throw new SCAGJspException( Constants.errors.providers.CAN_NOT_SAVE_PROVIDER_NOT_UNIQUE_NAME, name );
+            }
+
         } else {
             oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, getName(), description);
         }

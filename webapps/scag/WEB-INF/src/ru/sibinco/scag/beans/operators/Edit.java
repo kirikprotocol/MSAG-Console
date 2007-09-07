@@ -64,11 +64,16 @@ public class Edit extends EditBean {
         final OperatorManager operatorManager = appContext.getOperatorManager();
         Operator oldOperator = null;
         if (isAdd()) {
-            try {
-                id = operatorManager.createOperator(getLoginedPrincipal().getName(), getName(), getDescription(), srcMasks);
-            } catch (SibincoException e) {
-                logger.debug("Couldn't create new operator", e);
-                throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
+            if( operatorManager.isUniqueName(name) ){
+                try {
+                    id = operatorManager.createOperator(getLoginedPrincipal().getName(), getName(), getDescription(), srcMasks);
+                } catch (SibincoException e) {
+                    logger.debug("Couldn't create new operator", e);
+                    throw new SCAGJspException(Constants.errors.operators.COULD_NOT_CREATE_OPERATOR, e);
+                }
+            }else{
+                logger.error( "operators.Edit:save():operator - name not unique" );
+                throw new SCAGJspException( Constants.errors.operators.CAN_NOT_SAVE_OPERATOR_NOT_UNIQUE_NAME, name );
             }
         } else {
             try {
