@@ -142,7 +142,6 @@ public class WHOISDServlet extends HttpServlet
                             composePath(GW_LOCATION_TARIFFS_FILE,
                             appContext), req, isMultipartFormat(req),
                             appContext );
-//                  result.result = new ;
               }
             break;
           default:
