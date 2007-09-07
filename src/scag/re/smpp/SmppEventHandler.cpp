@@ -12,6 +12,13 @@ void SmppEventHandler::ProcessModifyRespCommandOperation(Session& session, SmppC
 {
     Operation * operation = 0;
 
+    if(session.getLongCallContext().continueExec)
+    {
+        smsc_log_debug(logger,"resp: continue execution. operation id=%lld", command.getOperationId());
+//        operation = session.setCurrentOperation(command.getOperationId());
+        return;
+    }
+
     switch (smppDiscriptor.cmdType)
     {
     case CO_DELIVER:
@@ -40,8 +47,8 @@ void SmppEventHandler::ProcessModifyCommandOperation(Session& session, SmppComma
 
     if(session.getLongCallContext().continueExec)
     {
-        smsc_log_debug(logger,"set current operation(continue execution) id=%lld", command.getOperationId());
-        operation = session.setCurrentOperation(command.getOperationId());
+        smsc_log_debug(logger,"continue execution. operation_id=%lld", command.getOperationId());
+//        operation = session.setCurrentOperation(command.getOperationId());
         return;
     }
 
@@ -114,8 +121,7 @@ void SmppEventHandler::ModifyOperationBeforeExecuting(Session& session, SmppComm
    if (smppDiscriptor.isResp)
        ProcessModifyRespCommandOperation(session, command, smppDiscriptor);
    else
-       if (!session.hasRedirectFlag()) 
-           ProcessModifyCommandOperation(session, command, smppDiscriptor);
+       ProcessModifyCommandOperation(session, command, smppDiscriptor);
 }
 
 void SmppEventHandler::ModifyOperationAfterExecuting(Session& session, SmppCommand& command, RuleStatus& ruleStatus, CSmppDiscriptor& smppDiscriptor)

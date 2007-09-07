@@ -272,7 +272,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
             }
         }
         else
-            session->setRedirectFlag();
+            session->getLongCallContext().continueExec = true;        
       }
       else // USSD Dialog
       {
@@ -331,7 +331,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) { // End user USSD dialog
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             smsc_log_debug(log, "USSD Submit: End user dialog, UMR=%d", umr);
-	    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
+    	    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
             if(!sm.getSession(key, session, cmd)) return;
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
@@ -343,7 +343,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         else if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST) { // End service USSD dialog
             key.USR = umr; umr = dst->getUMR(key.abonentAddr, key.USR);
             smsc_log_debug(log, "USSD Submit: End service dialog, UMR=%d", umr);
-	    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
+    	    sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, umr);
             if(!sm.getSession(key, session, cmd)) return;
             if (!session.Get()) {
                 smsc_log_warn(log, "USSD Submit: USR=%d is invalid, no session", key.USR);
@@ -689,7 +689,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
               }
           }
           else
-            session->setRedirectFlag();
+            session->getLongCallContext().continueExec = true;
       }
       else // USSD Dialog
       {
@@ -1117,7 +1117,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
           }
         }
         else
-            session->setRedirectFlag();
+            session->getLongCallContext().continueExec = true;        
       smsc_log_debug(log, "DataSm: RuleEngine processing...");
       scag::re::RuleEngine::Instance().process(cmd,*session, st);
       smsc_log_debug(log, "DataSm: RuleEngine procesed.");
