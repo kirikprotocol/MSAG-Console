@@ -4,36 +4,29 @@
 
 package ru.sibinco.scag.backend.service;
 
-import ru.sibinco.lib.backend.util.xml.Utils;
-import ru.sibinco.lib.backend.util.Functions;
-import ru.sibinco.lib.backend.util.SortedList;
+import org.apache.log4j.Logger;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.StatusDisconnectedException;
+import ru.sibinco.lib.backend.util.Functions;
+import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Manager;
+import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.routing.http.HttpRoute;
 import ru.sibinco.scag.backend.status.StatMessage;
 import ru.sibinco.scag.backend.status.StatusManager;
-import ru.sibinco.scag.backend.Scag;
-import ru.sibinco.scag.backend.Manager;
-import ru.sibinco.scag.backend.SCAGAppContext;
-import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.beans.SCAGJspException;
-import ru.sibinco.scag.Constants;
 
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
 import java.util.*;
-import java.io.IOException;
-import java.io.File;
-import java.io.PrintWriter;
-import java.io.OutputStreamWriter;
-import java.io.FileOutputStream;
-
-import org.xml.sax.SAXException;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.apache.log4j.Logger;
 
 /**
  * The <code>ServiceProvidersManager</code> class represents
@@ -362,5 +355,38 @@ public class ServiceProvidersManager extends Manager {
             }
         }
         return result;
+    }
+
+    public boolean isUniqueProviderName( String name, long id ){
+        Map spMap = getServiceProviders();
+        Iterator iterator = spMap.keySet().iterator();
+        while( iterator. hasNext() ){
+            ServiceProvider serviceProvider = (ServiceProvider)spMap.get( iterator.next() );
+            if( serviceProvider.getName().equals(name) && serviceProvider.getId().longValue() != id){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean isUniqueServiceName( String name, String id ){
+        Map serviceProviderMap = getServiceProviders();
+        Iterator serviceProviderIterator = serviceProviderMap.keySet().iterator();
+        while( serviceProviderIterator. hasNext() ){
+            ServiceProvider serviceProvider = (ServiceProvider)serviceProviderMap.get( serviceProviderIterator.next() );
+            Map serviceMap = serviceProvider.getServices();
+            Iterator serviceIterator = serviceMap.keySet().iterator();
+            while( serviceIterator.hasNext() ){
+                Object object = serviceIterator.next();
+                Long currentId = (Long)object;
+                logger.error( "OBJECT:class='" + object.getClass() + "' | string='" + object.toString() + "'");
+                Service service = getServiceById( currentId );
+//                    Service service = (Service)serviceIterator.next();
+                if( service.getName().equals(name) && service.getId().longValue() != Long.parseLong(id) ){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
