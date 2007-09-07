@@ -196,3 +196,14 @@ TO ALL: Insert log record for all significant changes & fixes here.
 7) PVSS CRITICAL FIX/CHANGE: Skip adaress prefix (treat all prefixes as '+' == .1.1)
 8) MSAG Admin CHANGE: Added 'Unlock' button for rule edit
 9) MSAG FIX: Valid session counter after coredump
+
+=================================================================================================================
+07.09.2007 17:00 makar [!!! CVS: revision marked by tag BUILD_07_07_2007 !!!]
+1) MSAG CRITICAL FIX: Apply SMPP routes coredump (on load routes)
+2) MSAG CRITICAL FIX: Memory "leak" when endpoint fails (SessionPtr was in Command)
+3) MSAG CRITICAL FIX: Session store index build on loadup (coredump recovery)
+4) MSAG CRITICAL FIX: Valid shutdown sequence (MSAG failed to stop or core while stopping)
+5) MSAG CRITICAL FIX: Current operation lose after redirect action
+6) MSAG Admin FIX: Valid response on tariff matrix upload (was 500)
+7) MSAG Admin FIX: 'Unlock' button for rule edit fix
+8) MSAG Admin CHANGE: Unique service, service provider and operator name constrain added
