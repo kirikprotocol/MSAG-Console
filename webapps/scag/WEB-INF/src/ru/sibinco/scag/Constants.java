@@ -129,11 +129,14 @@ public class Constants {
             public static final Constants notAuthorizedForDeletingService = new Constants("error.services.notAuthorizedForDeletingService");
             public static final Constants couldntGetServiceInfo = new Constants("error.services.couldntGetServiceInfo");
             public static final Constants COULDNT_DELETE_SERVICE_RULE_IS_EDITING = new Constants("error.services.couldntDelete");
+            public static final Constants CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME = new Constants("error.services.can_not_save_service_not_unique_name");
         }
 
         public interface providers {
             public static final Constants PROVIDER_NOT_FOUND = new Constants("error.providers.provider_not_found");
             public static final Constants COULDNT_DELETE_PROVIDER = new Constants("error.providers.couldnt_delete_provider");
+            public static final Constants CAN_NOT_SAVE_PROVIDER_NOT_UNIQUE_NAME =
+                    new Constants("errors.providers.can_not_save_provider_not_unique_name");
         }
 
         public interface operators {
@@ -143,6 +146,8 @@ public class Constants {
             public static final Constants COULD_NOT_CREATE_OPERATOR = new Constants("error.operators.couldnt_create_operator");
             public static final Constants COULD_NOT_UPDATE_OPERATOR = new Constants("error.operators.couldnt_update_operator");
             public static final Constants COULD_NOT_RELOAD_OPERATORS = new Constants("error.operators.couldnt_reload_operators");
+            public static final Constants CAN_NOT_SAVE_OPERATOR_NOT_UNIQUE_NAME =
+                    new Constants("error.operators.can_not_save_operator_not_unique_name");
         }
 
         public interface serviceProviders {

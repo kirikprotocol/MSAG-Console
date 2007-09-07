@@ -107,16 +107,15 @@ public class Edit extends TabledEditBeanImpl {
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         ServiceProvider oldProvider = null;
-        if (isAdd()) {
-            if( serviceProvidersManager.isUniqueName(name) ){
-                id = serviceProvidersManager.createServiceProvider(userLogin, getName(), description);
-            }else {
-                logger.error( "services.Edit:save():privider - name not unique" );
-                throw new SCAGJspException( Constants.errors.providers.CAN_NOT_SAVE_PROVIDER_NOT_UNIQUE_NAME, name );
+        if( serviceProvidersManager.isUniqueProviderName(name, id) ){
+            if( isAdd() ) {
+                    id = serviceProvidersManager.createServiceProvider(userLogin, getName(), description);
+            } else {
+                oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, getName(), description);
             }
-
-        } else {
-            oldProvider = serviceProvidersManager.updateServiceProvider(userLogin, id, getName(), description);
+        }else {
+            logger.error( "services.Edit:save():provider - name not unique" );
+            throw new SCAGJspException( Constants.errors.providers.CAN_NOT_SAVE_PROVIDER_NOT_UNIQUE_NAME, name );
         }
         appContext.getServiceProviderManager().reloadServices(appContext, isAdd(), id, oldProvider);
         if (isAdd()) {
