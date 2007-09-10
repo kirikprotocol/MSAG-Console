@@ -377,11 +377,8 @@ public class ServiceProvidersManager extends Manager {
             Map serviceMap = serviceProvider.getServices();
             Iterator serviceIterator = serviceMap.keySet().iterator();
             while( serviceIterator.hasNext() ){
-                Object object = serviceIterator.next();
-                Long currentId = (Long)object;
-                logger.error( "OBJECT:class='" + object.getClass() + "' | string='" + object.toString() + "'");
+                Long currentId = (Long)serviceIterator.next();
                 Service service = getServiceById( currentId );
-//                    Service service = (Service)serviceIterator.next();
                 if( service.getName().equals(name) && service.getId().longValue() != Long.parseLong(id) ){
                     return false;
                 }
