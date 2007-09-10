@@ -98,6 +98,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setId(long id) {
+        logger.error("setId:'" + id +"'");
         this.id = id;
     }
 
@@ -145,7 +146,7 @@ public class Edit extends TabledEditBeanImpl {
             deleteHttpRoute();
         }
         Long servIdForRout;
-        if (getEditId() != null) {
+        if( getEditId() != null ) {
             servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
         } else {
             servIdForRout = Long.decode(getParentId());
@@ -257,39 +258,46 @@ public class Edit extends TabledEditBeanImpl {
         Service oldService = null;
         Long serviceProviderId = null;
         if (description == null) description = "";
-        if( serviceProvidersManager.isUniqueServiceName( name, parentId )){
+
             if (getEditId() == null) {
-    //            if( serviceProvidersManager.isUniqueServiceName(name, id)){
+                if( serviceProvidersManager.isUniqueServiceName( name, parentId )){
                     Service service = new Service(getName(), getDescription());
                     serviceProviderId = Long.decode(getParentId());
                     id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
-    //            }else{
-    //                logger.error( "services.Edit:save():service - name not unique" );
-    //                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-    //            }
+                }else{
+                    logger.error( "services.Edit:save():service - name '" + name + "' is not unique" );
+                    throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+                }
             } else {
                 if (editChild) {
-                    serviceProviderId = Long.decode(getEditId());
-                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
-                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
-                    oldService = service.copy();
-                    service.setName(getName());
-                    service.setDescription(getDescription());
-                    serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
+                    if( serviceProvidersManager.isUniqueServiceName(name, parentId) ){
+                        serviceProviderId = Long.decode(getEditId());
+                        ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
+                        Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                        oldService = service.copy();
+                        service.setName(getName());
+                        service.setDescription(getDescription());
+                        serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
+                    }else{
+                        logger.error( "services.Edit:save():service - name '" + name + "' is not unique1" );
+                        throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+                    }
                 } else {
-                    serviceProviderId = Long.decode(getParentId());
-                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
-                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
-                    oldService = service.copy();
-                    service.setName(getName());
-                    service.setDescription(getDescription());
-                    serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+                    if( serviceProvidersManager.isUniqueServiceName( name, parentId )){
+                        serviceProviderId = Long.decode(getParentId());
+                        ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
+                        Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                        oldService = service.copy();
+                        service.setName(getName());
+                        service.setDescription(getDescription());
+                        serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+                    }else{
+                        logger.error( "services.Edit:save():service - name '" + name + "' is not unique2" );
+                        throw new EditChildException(Long.toString(id), getParentId());
+//                        throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+                    }
                 }
             }
-        }else{
-            logger.error( "services.Edit:save():service - name not unique" );
-            throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-        }
 
         appContext.getServiceProviderManager().reloadServices(appContext,(getEditId() == null)?true:false,id, serviceProviderId, oldService);
         if (id != -1) {
@@ -357,6 +365,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setName(String name) {
+        logger.error( "setName:'" + name + "'" );
         this.name = name;
     }
 
@@ -426,6 +435,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setParentId(String parentId) {
+        logger.error( "setParentId:'" + parentId + "'" );
         this.parentId = parentId;
     }
 
