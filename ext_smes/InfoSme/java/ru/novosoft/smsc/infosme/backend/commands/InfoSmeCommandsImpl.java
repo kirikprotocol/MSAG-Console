@@ -3,6 +3,7 @@ package ru.novosoft.smsc.infosme.backend.commands;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.commands.infosme.InfoSmeCommands;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.route.SmeStatus;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
@@ -26,7 +27,7 @@ public class InfoSmeCommandsImpl implements InfoSmeCommands {
       }
       
       final SMSCAppContext appContext = ctx.getOwner().getContext();
-      if (appContext.getHostsManager().getServiceStatus("InfoSme") != ServiceInfo.STATUS_ONLINE) {
+      if (!appContext.getSmeManager().smeStatus("InfoSme").isConnected()) {
         ctx.setMessage("InfoSme is not started");
         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         return;
