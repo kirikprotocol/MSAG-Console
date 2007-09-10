@@ -4732,7 +4732,7 @@ StateType StateMachine::alert(Tuple& t)
   }
 
   time_t now=time(NULL);
-  if((sms.getValidTime()<=now && sms.getLastResult()!=0) || //expired or
+  if((sms.getValidTime()<=now) || //expired or
      RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
   {
     sms.setLastResult(Status::EXPIRED);
