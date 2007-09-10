@@ -1485,7 +1485,7 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(dstSmeInfo.interfaceVersion==0x99)
+  if((dstSmeInfo.interfaceVersion&0x0f)==0x09)
   {
     sms->setStrProperty(Tag::SMSC_SUPPORTED_LOCALE,orgprofile.locale.c_str());
     sms->setIntProperty(Tag::SMSC_SUPPORTED_CODESET,orgprofile.codepage);
@@ -3375,7 +3375,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
 
   SmeInfo dstSmeInfo=smsc->getSmeInfo(dest_proxy_index);
 
-  if(dstSmeInfo.interfaceVersion==0x50 && sms.hasStrProperty(Tag::SMSC_RECIPIENTADDRESS))
+  if((dstSmeInfo.interfaceVersion&0xf0)==0x50 && sms.hasStrProperty(Tag::SMSC_RECIPIENTADDRESS))
   {
     sms.setOriginatingAddress(sms.getStrProperty(Tag::SMSC_RECIPIENTADDRESS).c_str());
   }
@@ -4634,7 +4634,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
       rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,sms.getSubmitTime());
       SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-      if(si.interfaceVersion==0x50)
+      if((si.interfaceVersion&0xf0)==0x50)
       {
         rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
       }
@@ -5250,7 +5250,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
 
   SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-  if(si.interfaceVersion==0x50)
+  if((si.interfaceVersion&0xf0)==0x50)
   {
     rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
   }
@@ -5338,7 +5338,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
 
     SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
-    if(si.interfaceVersion==0x50)
+    if((si.interfaceVersion&0xf0)==0x50)
     {
       rpt.setStrProperty(Tag::SMSC_DIVERTED_TO,sms.getSourceSmeId());
     }
