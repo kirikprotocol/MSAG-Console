@@ -151,6 +151,10 @@ struct Address
     plan = (uint8_t)iplan;
     type = (uint8_t)itype;
     length = (uint8_t)strlen(addr_value);
+    if(length==0)
+    {
+      throw runtime_error(string("bad address ")+text);
+    }
     memcpy(value,addr_value,sizeof(addr_value));
   }
 
