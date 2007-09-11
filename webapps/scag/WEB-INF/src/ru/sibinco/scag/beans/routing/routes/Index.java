@@ -111,14 +111,13 @@ public class Index extends TabledBeanImpl {
         logger.debug("DEBUG:process():end");
         super.process(request, response);
         if( tabledItems.isEmpty() ){
-            logger.debug("DEBUG:init():if( tabledItems.isEmpty() ): set routesRestored = true " +
-                    "routesRestored='" + routesRestored + "'");
-            routesRestored = true;            
+            logger.debug("DEBUG:process():tabledItems.isEmpty(): set routesRestored to 'true' " +
+                    "routesRestored was '" + routesRestored + "'");
+            routesRestored = true;
         }
     }
 
     private void init() throws SCAGJspException {
-        logger.debug("DEBUG:init():start");
         SCAGAppContext appContext = getAppContext();
 
         final Locale locale = new Locale(Functions.getLocaleEncoding());
@@ -142,8 +141,6 @@ public class Index extends TabledBeanImpl {
 
         /********************** SMPP ROUTES *********************************/
         routesRestored = appContext.getScagRoutingManager().isRoutesRestored();
-        logger.debug("DEBUG:init():getScagRoutingManager().isRoutesRestored() routesRestored='" + routesRestored + "'");
-//        routesRestored = false;
         routesSaved = appContext.getScagRoutingManager().isRoutesSaved();
         if (appContext.getScagRoutingManager().hasSavedConfiguration()) {
             routesLoaded = appContext.getScagRoutingManager().isRoutesLoaded();
@@ -161,7 +158,6 @@ public class Index extends TabledBeanImpl {
             httpRoutesLoaded = appContext.getHttpRoutingManager().isRoutesLoaded();
         }
         httpRoutesChanged = appContext.getHttpRoutingManager().isRoutesChanged();
-        logger.debug("DEBUG:init():end");
     }
 
     private User getUser(SCAGAppContext appContext) throws SCAGJspException {
@@ -187,13 +183,11 @@ public class Index extends TabledBeanImpl {
      */
     private void restoreRoutes() throws SCAGJspException {
         try {
-            logger.debug("DEBUG:restoreRoutes():start");
             appContext.getScagRoutingManager().restore();
             appContext.getScagRoutingManager().setRoutesChanged(true);//???
             appContext.getScagRoutingManager().setRoutesRestored(true);
             appContext.getScagRoutingManager().setRoutesSaved(false);
             appContext.getScagRoutingManager().setRoutesLoaded(false);
-            logger.debug("DEBUG:restoreRoutes():end");
         } catch (SibincoException e) {
             logger.debug("ERROR:Couldn't restore routes", e);
             throw new SCAGJspException(Constants.errors.status.COULDNT_RESTORE_ROUTES, e);
