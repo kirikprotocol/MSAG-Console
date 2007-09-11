@@ -29,7 +29,7 @@ public class TasksStatistics extends InfoSmeBean
     private Statistics statistics = null;
     private StatQuery  query = new StatQuery();
 
-    private InfoSme infoSme = null;
+//    private InfoSme infoSme = null;
 
     private String exportFilePath = null;
 
@@ -44,9 +44,9 @@ public class TasksStatistics extends InfoSmeBean
             return result;
 
         try {
-          this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo("InfoSme"),
-                                     appContext.getConfig().getString("InfoSme.Admin.host"),
-                                     appContext.getConfig().getInt("InfoSme.Admin.port"));
+//          this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo("InfoSme"),
+//                                     appContext.getConfig().getString("InfoSme.Admin.host"),
+//                                     appContext.getConfig().getInt("InfoSme.Admin.port"));
         } catch (Exception e) {
           logger.error("Can't init InfoSme", e);
           return RESULT_ERROR;
@@ -89,7 +89,7 @@ public class TasksStatistics extends InfoSmeBean
       statistics = null;
       statistics = new Statistics();
 
-      final List stats =  infoSme.getTaskStatistics(query.getTaskId(),
+      final List stats =  getInfoSme().getTaskStatistics(query.getTaskId(),
                                                     (query.isFromDateEnabled()) ? query.getFromDate() : null,
                                                     (query.isTillDateEnabled()) ? query.getTillDate() : null);
 
@@ -124,7 +124,7 @@ public class TasksStatistics extends InfoSmeBean
       }
 
       if (needFlush)
-          infoSme.flushStatistics();
+          getInfoSme().flushStatistics();
     }
 
     private boolean needChangeDate(Calendar oldPeriod, Calendar newPeriod) {

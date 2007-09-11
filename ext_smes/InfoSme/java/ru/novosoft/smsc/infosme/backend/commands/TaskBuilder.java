@@ -29,7 +29,6 @@ public class TaskBuilder extends Thread {
   private String file;
   private Config oldConfig;
   private String processedFile;
-  private long currentTime = System.currentTimeMillis();
   private final InfoSmeContext smeContext;
 
   public TaskBuilder(String file, InfoSmeContext smeContext) {
@@ -84,7 +83,6 @@ public class TaskBuilder extends Thread {
 
       is = new InputStreamReader(new FileInputStream(processedFile), Functions.getLocaleEncoding());
 
-
       int count = 0;
 
       System.out.println("Store task to config...");
@@ -93,11 +91,13 @@ public class TaskBuilder extends Thread {
       System.out.println("Task generation....");
       smeContext.getInfoSme().addTask(task.getId());
 
-      Collection messages = getMessages(task, is, 1000);
+      long currentTime = System.currentTimeMillis();
+      Collection messages = getMessages(task, is, 1000, new Date(currentTime));
       while (messages != null && messages.size() > 0) {
         smeContext.getInfoSme().addDeliveryMessages(task.getId(), messages);
         count += messages.size();
-        messages = getMessages(task, is, 1000);
+        currentTime -= 1000;
+        messages = getMessages(task, is, 1000,  new Date(currentTime));
       }
 
       smeContext.getInfoSme().addStatisticRecord(task.getId(), new Date(), count, 0, 0, 0);
@@ -167,7 +167,7 @@ public class TaskBuilder extends Thread {
     return (sb.length() == 0) ? null : sb.toString().trim();
   }
 
-  public List getMessages(Task task, InputStreamReader is, int limit) throws IOException {
+  public List getMessages(Task task, InputStreamReader is, int limit, Date sendDate) throws IOException {
     final List list = new ArrayList();
     try {
       String line;
@@ -179,7 +179,7 @@ public class TaskBuilder extends Thread {
           msg.setAbonent(st.nextToken());
           msg.setMessage(st.hasMoreTokens() ? st.nextToken() : task.getText());
           msg.setState(Message.State.NEW);
-          msg.setSendDate(new Date(currentTime - 1000));
+          msg.setSendDate(sendDate);
           list.add(msg);
         }
       }
