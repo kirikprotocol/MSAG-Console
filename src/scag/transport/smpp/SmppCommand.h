@@ -588,6 +588,7 @@ private:
   SMS* sms;
   DataSmDirection dir;
   SmppCommand orgCmd;
+  bool bHasOrgCmd;
 
 public:
 
@@ -645,6 +646,8 @@ public:
   }
 
   void setOrgCmd(SmppCommand& o);
+  void getOrgCmd(SmppCommand& o);  
+  bool hasOrgCmd() { return bHasOrgCmd; };
 
   int expiredUid;
   bool expiredResp;

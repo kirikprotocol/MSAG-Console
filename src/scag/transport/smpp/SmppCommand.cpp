@@ -773,6 +773,7 @@ _SmppCommand::~_SmppCommand()
   {
     expiredUid=0;
     expiredResp=false;
+	bHasOrgCmd = true;
   };
   SmsResp::~SmsResp()
   {
@@ -783,6 +784,12 @@ _SmppCommand::~_SmppCommand()
   void SmsResp::setOrgCmd(SmppCommand& o)
   {
     orgCmd = o;
+	bHasOrgCmd = true;
+  }
+  
+  void SmsResp::getOrgCmd(SmppCommand& o)
+  {
+    o = orgCmd;
   }
 
 } //smpp

@@ -194,7 +194,7 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
 void StateMachine::processSubmit(SmppCommand& cmd)
 {
     smsc_log_debug(log, "Submit: got %s", cmd.hasSession() ? "continued..." : "");
-    uint32_t rcnt = 0;
+    uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
     scag::sessions::SessionPtr session;
@@ -414,9 +414,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       {
         smsc_log_info(log,"Submit: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
-        SubmitResp(cmd,smsc::system::Status::SMENOTCONNECTED);
-        session->closeCurrentOperation();        
-        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
+        failed = smsc::system::Status::SMENOTCONNECTED;
       }
       else
       {
@@ -431,16 +429,22 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
       }
   } catch(std::exception& e) {
-    SubmitResp(cmd,smsc::system::Status::SYSFAILURE);
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
-    session->closeCurrentOperation();
+	failed = smsc::system::Status::SYSFAILURE;  
     smsc_log_info(log,"Submit: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
 
   session->getLongCallContext().runPostProcessActions();
-
   sm.releaseSession(session);
   smsc_log_debug(log, "Submit: processed");
+  
+  if(failed)
+  {
+    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, failed);  
+    SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed);
+    resp.setEntity(dst);
+	resp->get_resp()->setOrgCmd(cmd);	
+    processSubmitResp(resp);
+  }
 }
 
 
@@ -462,6 +466,8 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   {      
       smsc_log_debug(log, "SubmitResp: got");
 
+	if(!cmd->get_resp()->hasOrgCmd()) // hasOrgCmd is true in the case of inplace call from processSubmit due to failed putCommand
+	{
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp)
       {
@@ -481,7 +487,10 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
                       src ? src->getSystemId() : "NULL",cmd->get_dialogId());
         return;
       }
-
+	}
+	else
+		cmd->get_resp()->getOrgCmd(orgCmd);
+		
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
@@ -528,7 +537,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   {
     smsc_log_debug(log, "SubmitResp: RuleEngine processing...");
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
-    smsc_log_debug(log, "SubmitResp: RuleEngine  processed");
+    smsc_log_debug(log, "SubmitResp: RuleEngine processed");
 
     if(st.status == scag::re::STATUS_LONG_CALL)
     {
@@ -609,7 +618,7 @@ void StateMachine::sendReceipt(SmppCommand& cmd)
 void StateMachine::processDelivery(SmppCommand& cmd)
 {
     smsc_log_debug(log, "Delivery: got %s", cmd.hasSession() ? "continued..." : "");
-    uint32_t rcnt = 0;
+    uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
     scag::sessions::SessionPtr session;
@@ -731,7 +740,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                 }
                 key.USR = tmpUSR;
                 smsc_log_debug(log, "USSD Delivery: Continue USR=%d", key.USR);
-		sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+				sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
                 if(!sm.getSession(key, session, cmd)) return;
                 if (!session.Get()) {
                     smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
@@ -819,9 +828,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       {
         smsc_log_info(log,"Delivery: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
-        DeliveryResp(cmd,smsc::system::Status::SMENOTCONNECTED);
-        session->closeCurrentOperation();        
-        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
+        failed = smsc::system::Status::SMENOTCONNECTED;
       }
       else
       {
@@ -837,16 +844,23 @@ void StateMachine::processDelivery(SmppCommand& cmd)
       }
 
   } catch(std::exception& e) {
+    failed = smsc::system::Status::SYSFAILURE;
     smsc_log_info(log,"Delivery: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
-    DeliveryResp(cmd,smsc::system::Status::SYSFAILURE);
-    session->closeCurrentOperation();    
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
 
   session->getLongCallContext().runPostProcessActions();
 
   sm.releaseSession(session);
   smsc_log_debug(log, "Delivery: processed");
+  
+  if(failed)
+  {
+    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, failed);
+    SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),failed);
+    resp.setEntity(dst);
+	resp->get_resp()->setOrgCmd(cmd);	
+    processDeliveryResp(resp);
+  }
 }
 
 void StateMachine::processDeliveryResp(SmppCommand& cmd)
@@ -866,6 +880,9 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       smsc_log_debug(log, "DeliveryResp: got");
 
       SmppCommand orgCmd;
+	  
+	if(!cmd->get_resp()->hasOrgCmd())
+	{
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp) {
         srcUid=cmd->get_resp()->expiredUid;
@@ -888,7 +905,10 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
               src ? "DeliveryResp" : "MSAG Receipt" , src ? src->getSystemId() : "NULL", cmd->get_dialogId());
         return;
       }
-
+	}
+	else
+		cmd->get_resp()->getOrgCmd(orgCmd);
+		
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
@@ -931,9 +951,9 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   else
   {
     smsc_log_debug(log, "sms:%x sm: %d mp: %d rsm: %d rmp: %d", sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE), sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD), sms->hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE), sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD));
-    smsc_log_debug(log, "DeliveryResp: processing...");
+    smsc_log_debug(log, "DeliveryResp: RuleEngine processing...");
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
-    smsc_log_debug(log, "DeliveryResp: procesed.");
+    smsc_log_debug(log, "DeliveryResp: RuleEngine processed.");
 
     if(st.status == scag::re::STATUS_LONG_CALL)
     {
@@ -1027,7 +1047,7 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
 void StateMachine::processDataSm(SmppCommand& cmd)
 {
     smsc_log_debug(log, "DataSm: got %s", cmd.hasSession() ? "continued..." : "");
-    uint32_t rcnt = 0;
+    uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL;
     SmppEntity *dst = NULL;
     scag::sessions::SessionPtr session;
@@ -1169,9 +1189,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
       {
         smsc_log_info(log,"DataSm: sme not connected %s(%s)->%s(%s)", sms.getOriginatingAddress().toString().c_str(), src->getSystemId(),
             sms.getDestinationAddress().toString().c_str(), dst->getSystemId());
-        DataResp(cmd,smsc::system::Status::SMENOTCONNECTED);
-        session->closeCurrentOperation();        
-        registerEvent(scag::stat::events::smpp::REJECTED, src, NULL, NULL, smsc::system::Status::SMENOTCONNECTED);
+        failed = smsc::system::Status::SMENOTCONNECTED;
       }
       else
       {
@@ -1186,10 +1204,8 @@ void StateMachine::processDataSm(SmppCommand& cmd)
         registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
       }
   } catch(std::exception& e) {
+    failed = smsc::system::Status::SYSFAILURE;
     smsc_log_info(log,"DataSm: Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
-    DataResp(cmd,smsc::system::Status::SYSFAILURE);
-    session->closeCurrentOperation();
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, smsc::system::Status::SYSFAILURE);
   }
 
   session->getLongCallContext().runPostProcessActions();
@@ -1197,6 +1213,15 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   sm.releaseSession(session);
 
   smsc_log_debug(log, "DataSm: processed");
+  
+  if(failed)
+  {
+    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, failed);    
+    SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed);
+    resp.setEntity(dst);
+	resp->get_resp()->setOrgCmd(cmd);
+    processDataSmResp(resp);
+  }
 }
 
 void StateMachine::processDataSmResp(SmppCommand& cmd)
@@ -1216,6 +1241,8 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
       smsc_log_debug(log, "DataSmResp: got");
 
       SmppCommand orgCmd;
+	if(!cmd->get_resp()->hasOrgCmd())	  
+	{
       int srcUid = 0;
       if(cmd->get_resp()->expiredResp)
       {
@@ -1234,7 +1261,10 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
         smsc_log_warn(log,"DataSmResp: Original datasm for datasm response not found. sid='%s',seq='%d'",src->getSystemId(),cmd->get_dialogId());
         return;
       }
-
+	}
+	else
+		cmd->get_resp()->getOrgCmd(orgCmd);
+	
       SmsCommand& smscmd=orgCmd->get_smsCommand();
       sms=orgCmd->get_sms();
       cmd->get_resp()->set_sms(sms);
@@ -1284,9 +1314,9 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   }
   else
   {
-    smsc_log_debug(log, "DataSmResp: processing...");
+    smsc_log_debug(log, "DataSmResp: RuleEngine processing...");
     scag::re::RuleEngine::Instance().process(cmd,*session, st);
-    smsc_log_debug(log, "DataSmResp: procesed.");
+    smsc_log_debug(log, "DataSmResp: RuleEngine processed.");
 
     if(st.status == scag::re::STATUS_LONG_CALL)
     {
