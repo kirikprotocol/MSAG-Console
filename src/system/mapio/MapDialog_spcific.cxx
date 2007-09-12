@@ -138,39 +138,13 @@ inline unsigned ConvertSMSC7bit27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,
   unsigned offset,unsigned bufsize)
 {
-  /*
-  if ( chars > 160 ){
-    __map_trace2__("ConvertSMSC7bit27bit: text length(%d) > 160",chars);
-    throw runtime_error("text length > 160");
-  }
-  */
   unsigned char* base = bit7buf;
   unsigned char* bit7buf_end = base+bufsize;
   unsigned shift = offset;
   for ( unsigned i=0; i< chars; ++i ){
     PutChar(bit7buf,shift,text[i],bit7buf_end);
   }
-  if( smsc::logger::_map_cat->isDebugEnabled() ){
-    {
-      /*
-      char b[chars+1];
-      memcpy(b,text,chars);
-      b[chars] = 0;
-      __map_trace2__("SMSC7bit->7bit: %s",b);
-      */
-    }
-    {
-      char b[255*4];
-      unsigned k;
-      unsigned i;
-      for ( i=0,k=0; i<chars;++i){
-        k += sprintf(b+k,"%x ",text[i]);
-      }
-//      __map_trace2__("7bit(hex): %s",b);
-    }
-  }
   unsigned _7bit_len = bit7buf-base+(shift?1:0);
-//  __map_trace2__("7bit buffer length: %d",_7bit_len);
   return _7bit_len;
 }
 

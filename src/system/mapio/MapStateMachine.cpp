@@ -1213,6 +1213,8 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   unsigned bytes = 0;
   if( encoding == MAP_UCS2_ENCODING ) {
+    if( text_len > ET96MAP_MAX_USSD_STR_LEN )
+      throw runtime_error(FormatText("MAP::%s very long msg UCS2 text %d",__func__,text_len));
     bytes = text_len;
     memcpy( ussdString->ussdStr, text, text_len );
     ussdEncoding = 0x48;
@@ -1229,6 +1231,8 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
     }
     ussdEncoding = 0x01;
   } else { //8 bit
+    if( text_len > ET96MAP_MAX_USSD_STR_LEN )
+      throw runtime_error(FormatText("MAP::%s very long msg binary text %d",__func__,text_len));
     bytes = text_len;
     memcpy( ussdString->ussdStr, text, text_len );
     ussdEncoding = 0x44;
