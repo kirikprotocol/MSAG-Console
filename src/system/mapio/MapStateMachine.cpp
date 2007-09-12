@@ -1349,9 +1349,9 @@ static void DoUSSRUserResponce( MapDialog* dialog)
         throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
       */
 
-      ET96MAP_USSD_STRING_T ussdString = {0,};
       ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
       try {
+        ET96MAP_USSD_STRING_T ussdString = {0,};
         ussdEncoding = fillUSSDString( encoding, text, text_len, &ussdString );
         checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
                                                                dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
@@ -1360,10 +1360,11 @@ static void DoUSSRUserResponce( MapDialog* dialog)
                                                                0), __func__);
         SendOkToSmsc(dialog);
       } catch (VeryLongText &t) {
-        __map_warn2__("%s: dlg 0x%x very long ussd string %d",__func__,dialog->dialogid_map, text_len);
         char errtext[1024] = {0,};
+        ET96MAP_USSD_STRING_T ussdString = {0,};
         makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
         int err_text_len = strlen(errtext);
+        __map_warn2__("%s: dlg 0x%x very long ussd string %d %s",__func__,dialog->dialogid_map, text_len, errtext);
         ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdString );
         checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
                                                                dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
