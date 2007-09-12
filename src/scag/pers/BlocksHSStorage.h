@@ -464,6 +464,8 @@ private:
 			return DESCR_FILE_OPEN_FAILED;
 		}
 		descrFile_f.Read((char*)&descrFile, sizeof(DescriptionFile));
+        smsc_log_debug(logger, "OpenDescrFile: files_count=%d, block_size=%d, file_size=%d, blocks_used=%d, blocks_free=%d, first_free_block=%d",
+            descrFile.files_count, descrFile.block_size, descrFile.file_size, descrFile.blocks_used, descrFile.blocks_free, descrFile.first_free_block);
 		return 0;
 	}
 	int OpenDataFiles(void)
