@@ -1364,7 +1364,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
         char errtext[1024] = {0,};
         makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
         int err_text_len = strlen(errtext);
-        ussdEncoding = fillUSSDString( encoding, (unsigned char *)errtext, err_text_len, &ussdString );
+        ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdString );
         checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
                                                                dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
                                                                &ussdEncoding,
@@ -1453,13 +1453,12 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       char errtext[1024] = {0,};
       makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
       int err_text_len = strlen(errtext);
-      ussdEncoding = fillUSSDString( encoding, (unsigned char *)errtext, err_text_len, &ussdString );
+      ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdString );
       ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
       checkMapReq( Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      eraseUssdLock(dialog, __func__);
-      dialog->state = MAPST_END;
-      DropMapDialog(dialog);
+      dialog->state = MAPST_WaitUSSDErrorClose;
+      checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
+      return;
     }
   }
 
@@ -3192,6 +3191,10 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
+    if( dialog->state == MAPST_WaitUSSDErrorClose ) {
+      dialog->state = MAPST_WaitUSSDNotifyCloseErr;
+      return ET96MAP_E_OK;
+    }
     try {
       DoMAPErrorProcessor(errorUssdNotify_sp?errorUssdNotify_sp->errorCode:0,provErrCode_p);
     } catch (MAPDIALOG_ERROR& er) {
