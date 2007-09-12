@@ -1454,6 +1454,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
       int err_text_len = strlen(errtext);
       ussdEncoding = fillUSSDString( encoding, (unsigned char *)errtext, err_text_len, &ussdString );
+      ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
       checkMapReq( Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       eraseUssdLock(dialog, __func__);
