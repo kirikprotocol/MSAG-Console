@@ -142,7 +142,7 @@ static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
 static const int MSGWLISTFULL=1185; //
 static const int SYSFAILURE=1186; // 34 - System Failure
 static const int DATAMISSING=1187; // 35 - Data Missing !
-static const int UNEXPDATA=1188; // 36 - Unexpected Data value !
+static const int UNEXPDATA=1188; // 36 - Unexpected Data value
 static const int UNKALPHABET=1223; // 71 - Unknown alphabet !
 static const int USSDBUSY=1224; // 72 - USSD busy
 static const int INVPRBRESLIM=1258; // 106 - Invoke problem. Resource limitation
@@ -1337,7 +1337,7 @@ static const bool errorStatus[1280] = {
 0, // MSGWLISTFULL=1185
 0, // SYSFAILURE=1186 34 - System Failure
 1, // DATAMISSING=1187 35 - Data Missing !
-1, // UNEXPDATA=1188 36 - Unexpected Data value !
+0, // UNEXPDATA=1188 36 - Unexpected Data value
 1, // reserved
 1, // reserved
 1, // reserved
