@@ -74,8 +74,9 @@ public:
   {
     if(smeIdx<0 || smeIdx>smeStats.size())
     {
+      static Counters defaultCounters();
       //error
-      return Counters();
+      return defaultCounters;
     }
     return smeStats[smeIdx];
   }
