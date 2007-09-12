@@ -56,7 +56,7 @@ public:
 };
 
 inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit,unsigned char* ptr_end){
-  if ( ptr >= ptr_end ) throw VeryLongText();
+  if ( ptr >= ptr_end || (shift > 1 && (ptr+1) >= ptr_end)) throw VeryLongText();
   unsigned char val = val8bit;
   *ptr = *ptr | (val << shift);
   if ( shift > 1 )
