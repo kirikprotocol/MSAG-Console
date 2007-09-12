@@ -1270,7 +1270,7 @@ static void makeUssdErrorText( char *text, int code, int routeErr = 0) {
       if( out.length() < 160 ) strcpy(text,out.c_str());
       else strcpy(text,out.substr(0, 160).c_str());
     }catch(exception& e)  {
-      __map_warn2__("%s: dialogid 0x%x formatter error: %s",__func__,dialog->dialogid_map,e.what());
+      __map_warn2__("%s: formatter error: %s",__func__,e.what());
       sprintf( text, "Formatting error: %s", e.what() );
     }
   }
@@ -1363,7 +1363,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
         char errtext[1024] = {0,};
         makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
         int err_text_len = strlen(errtext);
-        ussdEncoding = fillUSSDString( encoding, errtext, err_text_len, &ussdString );
+        ussdEncoding = fillUSSDString( encoding, (unsigned char *)errtext, err_text_len, &ussdString );
         checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
                                                                dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
                                                                &ussdEncoding,
