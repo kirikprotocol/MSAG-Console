@@ -148,6 +148,7 @@ enum MapState{
   MAPST_WaitUssdImsiReq = 49,
   MAPST_MapNoticed = 50,
   MAPST_WaitUssdV1Delimiter = 51
+  MAPST_WaitUSSDErrorClose = 52,
 };
 
 class hash_func_ET96MAP_DID{
