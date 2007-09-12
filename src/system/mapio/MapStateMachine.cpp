@@ -1241,30 +1241,24 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
   return ussdEncoding;
 }
 
-static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
-{
-  __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
-  char text[1024];
+static void makeUssdErrorText( char *text, int code, int routeErr = 0) {
   DummyGetAdapter ga;
   ContextEnvironment ce;
-
-  if( cmd.IsOk() ) {
-    if( cmd->get_commandId() == SUBMIT_RESP ) {
+  
+  if( code > 0 ) {
       char buf[32];
-      sprintf(buf,"%d",cmd->get_resp()->get_status()&0x0000FFFF);
+      sprintf(buf,"%d",code);
       std::string reason=ResourceManager::getInstance()->getString("en_en",((string)"reason.")+buf);
       ce.exportStr("msg",reason.c_str());
-      ce.exportInt("code",cmd->get_resp()->get_status()&0x0000FFFF);
-    } else {
+      ce.exportInt("code",code);
+  } else if( code == -1 ) {
       ce.exportStr("msg","Invalid command");
       ce.exportInt("code",0);
-      __map_warn2__("%s: dialogid 0x%x invalid command_id: %d",__func__,dialog->dialogid_map,cmd->get_commandId());
-    }
   } else {
     ce.exportStr("msg","Bad command status");
-    ce.exportInt("code",dialog->routeErr);
+    ce.exportInt("code",routeErr);
   }
-
+  
   OutputFormatter* ofDelivered=ResourceManager::getInstance()->getFormatter("en_en","ussd_error");
   if(!ofDelivered)
   {
@@ -1275,13 +1269,27 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
       ofDelivered->format(out,ga,ce);
       if( out.length() < 160 ) strcpy(text,out.c_str());
       else strcpy(text,out.substr(0, 160).c_str());
-    }catch(exception& e)
-    {
+    }catch(exception& e)  {
       __map_warn2__("%s: dialogid 0x%x formatter error: %s",__func__,dialog->dialogid_map,e.what());
       sprintf( text, "Formatting error: %s", e.what() );
     }
   }
+}
 
+static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
+{
+  __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
+  char text[1024] = {0,};
+  if( cmd.IsOk() ) {
+    if( cmd->get_commandId() == SUBMIT_RESP ) {
+      makeUssdErrorText(text, cmd->get_resp()->get_status()&0x0000FFFF);
+    } else {
+      makeUssdErrorText(text, -1);
+    }
+  } else {
+    makeUssdErrorText(text, -2, dialog->routeErr);
+  }
+  
   unsigned text_len = strlen(text);
 
   if ( dialog->version == 2 ) {
@@ -1334,46 +1342,62 @@ static void DoUSSRUserResponce( MapDialog* dialog)
     text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
   }
 
-  if ( dialog->version == 2 )
-  {
-    /*
-    if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
-      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
-    */
-
-    ET96MAP_USSD_STRING_T ussdString = {0,};
-    ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = fillUSSDString( encoding, text, text_len, &ussdString );
-    checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
-                                                           dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
-                                                           &ussdEncoding,
-                                                           &ussdString,
-                                                           0), __func__);
-  } else if( dialog->version == 1 ) {
-    if ( text_len > ET96MAP_MAX_SS_USER_DATA_LEN )
-      throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
-
-    char data[ET96MAP_MAX_SS_USER_DATA_LEN*3];
-    int data_len = 0;
-    if( encoding == MAP_UCS2_ENCODING ) {
-      char buf[ET96MAP_MAX_SS_USER_DATA_LEN];
-      int len = ConvertUCS2ToMultibyte((const short*)text,text_len,buf,ET96MAP_MAX_SS_USER_DATA_LEN,CONV_ENCODING_CP1251);
-      data_len=Transliterate(buf,len,CONV_ENCODING_CP1251,data,ET96MAP_MAX_SS_USER_DATA_LEN*3);
-      if ( data_len > ET96MAP_MAX_SS_USER_DATA_LEN || data_len == -1)
+    if ( dialog->version == 2 )
+    {
+      /*
+      if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
         throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
-      text = (const unsigned char*)data;
-      text_len = data_len;
-    }
+      */
 
-    ET96MAP_SS_USER_DATA_T ussdData;
-    memcpy(ussdData.ssUserDataStr,text,text_len);
-    ussdData.ssUserDataStrLen = text_len;
-    checkMapReq( Et96MapV1ProcessUnstructuredSSDataResp( dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,&ussdData, 0 ), __func__);
-  } else throw runtime_error( FormatText("%s: incorrect dialog version %d",__func__,dialog->version));
+      ET96MAP_USSD_STRING_T ussdString = {0,};
+      ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
+      try {
+        ussdEncoding = fillUSSDString( encoding, text, text_len, &ussdString );
+        checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
+                                                               dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
+                                                               &ussdEncoding,
+                                                               &ussdString,
+                                                               0), __func__);
+        SendOkToSmsc(dialog);
+      } catch (VeryLongText &t) {
+        char errtext[1024] = {0,};
+        makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
+        int err_text_len = strlen(errtext);
+        ussdEncoding = fillUSSDString( encoding, errtext, err_text_len, &ussdString );
+        checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
+                                                               dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
+                                                               &ussdEncoding,
+                                                               &ussdString,
+                                                               0), __func__);
+        SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDMSGTOOLONG));
+      }
+    } else if( dialog->version == 1 ) {
+      if ( text_len > ET96MAP_MAX_SS_USER_DATA_LEN )
+        throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+
+      char data[ET96MAP_MAX_SS_USER_DATA_LEN*3];
+      int data_len = 0;
+      if( encoding == MAP_UCS2_ENCODING ) {
+        char buf[ET96MAP_MAX_SS_USER_DATA_LEN];
+        int len = ConvertUCS2ToMultibyte((const short*)text,text_len,buf,ET96MAP_MAX_SS_USER_DATA_LEN,CONV_ENCODING_CP1251);
+        data_len=Transliterate(buf,len,CONV_ENCODING_CP1251,data,ET96MAP_MAX_SS_USER_DATA_LEN*3);
+        if ( data_len > ET96MAP_MAX_SS_USER_DATA_LEN || data_len == -1)
+          throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+        text = (const unsigned char*)data;
+        text_len = data_len;
+      }
+
+      ET96MAP_SS_USER_DATA_T ussdData;
+      memcpy(ussdData.ssUserDataStr,text,text_len);
+      ussdData.ssUserDataStrLen = text_len;
+      checkMapReq( Et96MapV1ProcessUnstructuredSSDataResp( dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,&ussdData, 0 ), __func__);
+      SendOkToSmsc(dialog);
+    } else throw runtime_error( FormatText("%s: incorrect dialog version %d",__func__,dialog->version));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   eraseUssdLock(dialog, __func__);
   dialog->state = MAPST_END;
-  SendOkToSmsc(dialog);
   DropMapDialog(dialog);
+  
 }
 
 static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)

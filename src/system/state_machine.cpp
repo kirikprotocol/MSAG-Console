@@ -2208,7 +2208,7 @@ StateType StateMachine::submit(Tuple& t)
 
     if(pres==psErrorUssd)
     {
-      submitResp(t,sms,Status::USSDMSGTOOLONG);
+/*      submitResp(t,sms,Status::USSDMSGTOOLONG);
       warn2(smsLog, "SBM: ussd message too long!!! Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
         t.msgId,dialogId,
         sms->getOriginatingAddress().toString().c_str(),
@@ -2216,7 +2216,8 @@ StateType StateMachine::submit(Tuple& t)
         src_proxy->getSystemId(),
         ri.smeSystemId.c_str()
       );
-      return ERROR_STATE;
+      return ERROR_STATE;*/
+      pres = psSingle;
     }
 
 
