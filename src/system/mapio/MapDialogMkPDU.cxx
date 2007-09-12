@@ -75,7 +75,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   {
     if (addr.getLength()>11) throw runtime_error(":MAP: invalid address length");
     unsigned tmpX = 0;
-    unsigned _7bit_text_len = ConvertText27bit((const unsigned char*)addr.value,addr.length,oa->val,&tmpX,0);
+    unsigned _7bit_text_len = ConvertText27bit((const unsigned char*)addr.value,addr.length,oa->val,&tmpX,0,10);
     oa->len = _7bit_text_len*2;
     oa_length = _7bit_text_len;
     if( _7bit_text_len*8-addr.length*7 == 7 ) {
@@ -300,22 +300,26 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
 //          __map_trace2__("mkDeliverPDU: udh_len %d text symbols %d bit offset %d",udh_len,symbols,x-(udh_len+1)*8);
           unsigned _7bit_text_len;
           if (encoding == MAP_SMSC7BIT_ENCODING ) {
+            int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+udh_len+1+1-(pdu->signalInfo+1));
            _7bit_text_len = ConvertSMSC7bit27bit(
               text+1+udh_len,
               symbols,
               pdu_ptr+udh_len+1+1, // ud_len+1(ud)+1(udh_len)+udhlen now points to symbols
-              x-(udh_len+1)*8);
+              x-(udh_len+1)*8,
+              maxlen);
             *pdu_ptr++ = x/7+symbols; // x is udh len in bits filled to 7
             pdu_ptr+= udh_len+_7bit_text_len+1;
 //            __map_trace2__("MAP::mkDeliverPDU: data length septets %d symbols %d octets %d",x/7+symbols,udh_len+_7bit_text_len);
           } else {
             unsigned escaped_len = 0; // escaped len in 7bit symbols
+            int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+udh_len+1+1-(pdu->signalInfo+1));
             _7bit_text_len = ConvertText27bit(
               text+1+udh_len,
               symbols,
               pdu_ptr+udh_len+1+1,
               &escaped_len,
-              x-(udh_len+1)*8);
+              x-(udh_len+1)*8,
+              maxlen);
             *pdu_ptr++ = x/7+escaped_len;
             pdu_ptr+= udh_len+_7bit_text_len+1;
 //            __map_trace2__("MAP::mkDeliverPDU: data length septets %d symbols %d tmpX %d octets %d",x/7+escaped_len,escaped_len,udh_len+_7bit_text_len);
@@ -323,12 +327,14 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }else{
           if (encoding == MAP_SMSC7BIT_ENCODING ) {
            *pdu_ptr++ = text_len;
-            pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+           int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr-(pdu_ptr->signalInfo+1));
+            pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr,0,maxlen);
           }
           else
           {
             unsigned escaped_len = 0; // escaped length
-            int _newbuflen = ConvertText27bit(text,text_len,pdu_ptr+1,&escaped_len,0);
+            int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1));
+            int _newbuflen = ConvertText27bit(text,text_len,pdu_ptr+1,&escaped_len,0,maxlen);
             *pdu_ptr++ = escaped_len;
             pdu_ptr += _newbuflen;
           }
@@ -341,14 +347,16 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         text=(const unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
       }
       //unsigned size_x = /*pdu_ptr-(unsigned char*)pdu->signalInfo*;
-      if ( text_len > 140 ) {
-	char *dbgtxt = new char[text_len*4];
-	int k = 0;
-        for ( int i=0; i<text_len; ++i) {
-	  k+=sprintf(dbgtxt+k,"%02x ",(unsigned)text[i]);
+      if ( text_len > 140 )
+      {
+        char *dbgtxt = new char[text_len*4];
+        int k = 0;
+        for ( int i=0; i<text_len; ++i)
+        {
+          k+=sprintf(dbgtxt+k,"%02x ",(unsigned)text[i]);
         }
         __map_warn2__("mkDeliverPDU:  UCS2 text length %d > 140: %s", text_len, dbgtxt);
-	delete[] dbgtxt;
+        delete[] dbgtxt;
         throw runtime_error("MAP::mkDeliverPDU:  UCS2 text length > pdu_ptr-pdu->signalInfoLen");
       }
       memcpy(pdu_ptr+1,text,text_len);

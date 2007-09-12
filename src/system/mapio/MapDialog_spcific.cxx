@@ -98,14 +98,16 @@ inline void Convert7BitToText(
 
 inline unsigned ConvertText27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,unsigned* elen,
-  unsigned offset=0)
+  unsigned offset,unsigned buflen)
 {
+  /*
   if ( chars > 160 ){
     __map_warn2__("ConvertText27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
   }
+  */
   unsigned char* base = bit7buf;
-  unsigned char* bit7buf_end = base+140;
+  unsigned char* bit7buf_end = base+buflen;
   unsigned shift = offset;
   (*elen) = 0;
   for ( unsigned i=0; i< chars; ++i ){
@@ -134,14 +136,16 @@ inline unsigned ConvertText27bit(
 
 inline unsigned ConvertSMSC7bit27bit(
   const unsigned char* text, unsigned chars, unsigned char* bit7buf,
-  unsigned offset=0)
+  unsigned offset,unsigned bufsize)
 {
+  /*
   if ( chars > 160 ){
     __map_trace2__("ConvertSMSC7bit27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
   }
+  */
   unsigned char* base = bit7buf;
-  unsigned char* bit7buf_end = base+140;
+  unsigned char* bit7buf_end = base+bufsize;
   unsigned shift = offset;
   for ( unsigned i=0; i< chars; ++i ){
     PutChar(bit7buf,shift,text[i],bit7buf_end);

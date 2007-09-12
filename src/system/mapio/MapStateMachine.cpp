@@ -1218,12 +1218,12 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
     ussdEncoding = 0x48;
   } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
     if (encoding == MAP_SMSC7BIT_ENCODING ) {
-      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString->ussdStr,0);
+      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString->ussdStr,0,ET96MAP_MAX_USSD_STR_LEN);
       // if buffer have trailing 7 unfilled bits place <cr> there
       if( bytes*8-text_len*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     } else {
       unsigned elen = 0;
-      bytes = ConvertText27bit(text,text_len,ussdString->ussdStr,&elen);
+      bytes = ConvertText27bit(text,text_len,ussdString->ussdStr,&elen,0,ET96MAP_MAX_USSD_STR_LEN);
       // if buffer have trailing 7 unfilled bits place <cr> there
       if( bytes*8-elen*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     }
@@ -1281,8 +1281,10 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   unsigned text_len = strlen(text);
 
   if ( dialog->version == 2 ) {
+    /*
     if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
       throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+    */
 
     ET96MAP_USSD_STRING_T ussdString = {0,};
     ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
@@ -1330,8 +1332,10 @@ static void DoUSSRUserResponce( MapDialog* dialog)
 
   if ( dialog->version == 2 )
   {
+    /*
     if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
       throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
+    */
 
     ET96MAP_USSD_STRING_T ussdString = {0,};
     ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = fillUSSDString( encoding, text, text_len, &ussdString );
@@ -1404,8 +1408,10 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   {
     text=(const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&text_len);
   }
+  /*
   if ( text_len > ET96MAP_MAX_USSD_STR_LEN )
     throw runtime_error(FormatText("%s: dlg=0x%x very long msg text %d",__func__,dialog->dialogid_map,text_len));
+  */
 
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString(encoding,text,text_len, &ussdString);
@@ -1637,7 +1643,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             throw;
           }
         }else if ( !dialog2  ) { // end of DELIVERY ussd operation
-          // DELIVERY SMS no chained dialog 
+          // DELIVERY SMS no chained dialog
           try {
             dialog_ssn = SSN;
             if ( cmd->get_commandId() == DELIVERY ) {
@@ -1673,7 +1679,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             return;
           }
         }else{
-          // DELIVERY SMS chained dialog 
+          // DELIVERY SMS chained dialog
           dialog_ssn = SSN;
           dialog.assign(dialog2->AddRef());
           dialogid_map = dialog->dialogid_map;
@@ -2517,7 +2523,7 @@ USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn,
     __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x  (state %d) forward %s code: %d, provider: %d",__func__,dialog->dialogid_map,dialog->state,
-                   RouteToString(dialog.get()).c_str(), (int)(errorForwardSMmo_sp?errorForwardSMmo_sp->errorCode:0), 
+                   RouteToString(dialog.get()).c_str(), (int)(errorForwardSMmo_sp?errorForwardSMmo_sp->errorCode:0),
                    (int)(provErrCode_p?*provErrCode_p:0));
 
     try {
