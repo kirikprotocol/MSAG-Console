@@ -47,7 +47,7 @@ public:
 		}
 		else
 		    allocator = _allocator;
-		rootNode = allocator->getRootNode();
+        rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
 		size = allocator->getSize();
 		
@@ -135,6 +135,34 @@ public:
         smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), val);
 		return true;
 	}
+    void Reset()
+    {
+        iterNode = nilNode;
+    }
+	bool Next(Key& k, Value& val)
+	{
+		//printf("Get\n");
+        if(rootNode == nilNode || iterNode == rootNode) return false;
+        if(iterNode == nilNode) iterNode = rootNode;
+        
+        k = iterNode->key;
+        val = iterNode->value;
+
+        RBTreeNode *left = realAddr(iterNode->left);
+        RBTreeNode *right = realAddr(iterNode->right);
+        if(left != nilNode)
+            iterNode = realAddr(iterNode->left);
+        else if(right != nilNode)
+            iterNode = realAddr(iterNode->right);
+        else
+        {
+            while(iterNode != rootNode && realAddr(realAddr(iterNode->parent)->right) == iterNode)
+                iterNode = realAddr(iterNode->parent);
+            if(iterNode != rootNode)
+                iterNode = realAddr(realAddr(iterNode->parent)->right);
+        }
+        return true;
+	}
 
 protected:
     smsc::logger::Logger* logger;
@@ -142,6 +170,7 @@ protected:
 	RBTreeChangesObserver<Key, Value>*	changesObserver;
 	RBTreeNode*		rootNode;
 	RBTreeNode*		nilNode;
+    RBTreeNode*     iterNode;
 	long			offset;
 	long			size;
 	bool			defaultAllocator;

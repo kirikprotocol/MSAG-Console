@@ -198,10 +198,10 @@ public:
 //          if(ret = dataStorage.Get(idx, data))
 //              cache.Add(key, data);
 			ret = dataStorage.Get(idx, data);
-			smsc_log_debug(logger, "Get: %s, %d", key.toString().c_str(), data.length());
+			smsc_log_debug(logger, "Next: %s, %d", key.toString().c_str(), data.length());
             return ret;
 		}
-		smsc_log_debug(logger, "Get: %s, No data", key.toString().c_str());
+		smsc_log_debug(logger, "Next: %s, No data", key.toString().c_str());
         return false;
     }
 
