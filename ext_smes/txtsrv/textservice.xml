@@ -45,7 +45,7 @@
   
   <!-- JDK definitions -->
   <path id="jdk.classpath.1.4">
-    <fileset dir="${jdk.home.1.4}">
+    <fileset dir="${java.home}">
       <include name="../Classes/dt.jar"/>
       <include name="lib/jaws.jar"/>
       <include name="../Classes/jce.jar"/>
@@ -63,7 +63,7 @@
     </fileset>
   </path>
   
-  <property name="project.jdk.home" value="${jdk.home.1.4}"/>
+  <property name="project.jdk.home" value="${java.home}"/>
   <property name="project.jdk.classpath" value="jdk.classpath.1.4"/>
   
   <!-- Modules -->

@@ -33,6 +33,7 @@ public class TextServiceProcessor implements RequestProcessor {
   private ConfigLoader configLoader = null;
   private Session session = null;
   private SimpleDateFormat sdf = new SimpleDateFormat("dd.MM.yyyy HH:mm");
+  private boolean reuseConnection = true;
 
   public void init(String name, String configFileName) throws InitializationException {
     this.configFileName = configFileName;
@@ -60,6 +61,10 @@ public class TextServiceProcessor implements RequestProcessor {
         throw new InitializationException("Could not start config reloader.", e);
       }
     }
+    if( config.getProperty("reuse.connection") != null && config.getProperty("reuse.connection").equalsIgnoreCase("false") ) {
+      reuseConnection = false;
+    }
+    Logger.info("Reuse connection feature set to "+reuseConnection);
     if (session == null) {
       session = Session.getInstance(config, null);
     }
@@ -118,7 +123,7 @@ public class TextServiceProcessor implements RequestProcessor {
     respMessageData.setDestinationAddress(request.getSourceAddress());
     respMessageData.setSourceAddress(request.getDestinationAddress());
     respMessageData.setMessageString(data);
-    respMessageData.setConnectionName(request.getConnectionName());
+    if( reuseConnection ) respMessageData.setConnectionName(request.getConnectionName());
     respMessageData.setTransactionId(request.getTransactionId());
     respMessageData.setAddressPrefix(request.getAddressPrefix());
     if (request.hasUssdServiceOp()) {
