@@ -327,7 +327,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }else{
           if (encoding == MAP_SMSC7BIT_ENCODING ) {
            *pdu_ptr++ = text_len;
-           int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr-(pdu_ptr->signalInfo+1));
+           int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr-(pdu->signalInfo+1));
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr,0,maxlen);
           }
           else
