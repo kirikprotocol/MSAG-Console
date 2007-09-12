@@ -176,8 +176,14 @@ public class Functions {
         }
 
         final String newFilename = newCreatedFile.getAbsolutePath();
-        if (Constants.isMirrorNeeded())
+        if (Constants.isMirrorNeeded()) {
+          try {
             copyFileTo(newCreatedFile, Constants.getMirrorFile(oldFileRenameTo));
+          } catch (IOException e) {
+            e.printStackTrace();
+            Constants.setMirrorSaveErrorAppeared(true);
+          }
+        }
         //rename temp new file to desired file
         if (!new File(newFilename).renameTo(oldFileRenameTo))
             throw new IOException("Couldn't rename new file \"" + newFilename + "\" to old file \"" + oldFilename + '"');

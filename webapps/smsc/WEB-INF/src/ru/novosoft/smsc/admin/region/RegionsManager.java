@@ -119,13 +119,11 @@ public class RegionsManager {
     }
   }
 
-  public synchronized void save() throws AdminException {
-    check();
-
+  private synchronized void save(File file) throws AdminException {
     PrintWriter out = null;
 
     try {
-      out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(regionsFile), Functions.getLocaleEncoding()));
+      out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file), Functions.getLocaleEncoding()));
       Functions.storeConfigHeader(out, "regions", "regions.dtd", Functions.getLocaleEncoding());
       for (Iterator iter = regions.entrySet().iterator(); iter.hasNext();) {
         Map.Entry entry = (Map.Entry)iter.next();
@@ -145,6 +143,19 @@ public class RegionsManager {
     } finally {
       if (out != null)
         out.close();
+    }
+  }
+
+  public synchronized void save() throws AdminException {
+    check();
+
+    try {
+      final File newFile = Functions.createNewFilenameForSave(regionsFile);
+      save(newFile);
+      Functions.renameNewSavedFileToOriginal(newFile, regionsFile);
+    } catch (IOException e) {
+      log.error(e,e);
+      throw new AdminException("Can't save regions. Reason: " + e.getMessage());
     }
   }
 

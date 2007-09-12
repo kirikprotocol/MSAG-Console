@@ -31,11 +31,14 @@ public class Constants {
     public static int instType = ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE;
     public static String HSMODE_MIRRORFILES_PATH = null;
 
+    private static boolean mirrorSaveErrorAppeared = false;
+
     public static boolean isMirrorNeeded() {
-        if (instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS)
-            return true;
-        else
-            return false;
+      return (instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS) && !mirrorSaveErrorAppeared;
+//        if (instType == ResourceGroupConstants.RESOURCEGROUP_TYPE_HS)
+//            return true;
+//        else
+//            return false;
     }
 
     public static File getMirrorFile(File file) throws IOException {
@@ -45,5 +48,9 @@ public class Constants {
             result.createNewFile();
         }
         return result;
+    }
+
+    public static void setMirrorSaveErrorAppeared(boolean value) {
+      mirrorSaveErrorAppeared = value;
     }
 }

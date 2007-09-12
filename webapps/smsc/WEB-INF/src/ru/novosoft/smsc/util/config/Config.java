@@ -113,7 +113,7 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Ищет имена секций (только секций)
+     * пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
      *
      * @return section names that is immediate descedants of given section. Full names.
      */
@@ -130,7 +130,7 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Ищет имена секций (только секций)
+     * пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
      *
      * @return section names that is immediate descedants of given section. Full names.
      */
@@ -147,7 +147,7 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Ищет имена секций (только секций)
+     * пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
      *
      * @return section names that is immediate descedants of given section.
      */
@@ -215,14 +215,14 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через
-     * Config(Reader configReader) - то есть файл конфига неизвестен - будет брошен NullPointerException <br>
-     * В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
+     * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+     * Config(Reader configReader) - пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ NullPointerException <br>
+     * пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
      *
      * @throws IOException
      * @throws WrongParamTypeException
-     * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью
-     *                                 Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
+     * @throws NullPointerException    пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+     *                                 Config(Reader configReader), пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ save(File configFileToSave, String encoding)
      * @see #save(File configFileToSave)
      */
     public synchronized void save() throws IOException, WrongParamTypeException, NullPointerException {
@@ -230,8 +230,8 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Записывает конфиг в указанный файл.<br>
-     * В файл конфига будет записана та кодировка, под которой запущен сервлет контейнер.
+     * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.<br>
+     * пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
      *
      * @throws IOException
      * @throws WrongParamTypeException
@@ -243,14 +243,14 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через
-     * Config(Reader configReader) - то есть файл конфига неизвестен - будет брошен NullPointerException
+     * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+     * Config(Reader configReader) - пїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ NullPointerException
      *
-     * @param encoding - кодировка, которая будет указана в файле конфига.
+     * @param encoding - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
      * @throws IOException
      * @throws WrongParamTypeException
-     * @throws NullPointerException    если неизвестен файл конфига. Если вы создаёте конфиг с помощью
-     *                                 Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
+     * @throws NullPointerException    пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ. пїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+     *                                 Config(Reader configReader), пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ save(File configFileToSave, String encoding)
      * @see #save(File configFileToSave, String encoding)
      */
     private synchronized void save(final String encoding) throws IOException, WrongParamTypeException, NullPointerException {
@@ -260,9 +260,9 @@ public class Config implements Cloneable {
     }
 
     /**
-     * Записывает конфиг в указанный файл.
+     * пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ.
      *
-     * @param encoding         - кодировка, которая будет указана в файле конфига.
+     * @param encoding         - пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
      * @param configFileToSave
      * @param encoding
      * @throws IOException
@@ -291,8 +291,14 @@ public class Config implements Cloneable {
         if (configFile == null)
             throw new NullPointerException("config file not specified");
         saveInternal(configFile, Functions.getLocaleEncoding());
-        if (Constants.isMirrorNeeded())
+        if (Constants.isMirrorNeeded()) {
+          try {
             Functions.copyFileTo(configFile, Constants.getMirrorFile(configFile));
+          } catch (IOException e) {
+            e.printStackTrace();
+            Constants.setMirrorSaveErrorAppeared(true);
+          }
+        }
     }
 
     public synchronized Collection getSectionChildShortParamsNames(String sectionName) {

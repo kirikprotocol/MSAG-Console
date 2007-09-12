@@ -37,7 +37,14 @@ public class FileOutputStreamMirror extends FileOutputStream {
 
     public void write(byte b[]) throws IOException {
         super.write(b);
-        if (mirror != null) mirror.write(b);
+        if (mirror != null) {
+          try {
+            mirror.write(b);
+          } catch (IOException e) {
+            Constants.setMirrorSaveErrorAppeared(true);
+            mirror = null;
+          }
+        }
     }
 
     public void write(byte b[], int off, int len) throws IOException {
