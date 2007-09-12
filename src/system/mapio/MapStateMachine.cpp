@@ -1452,11 +1452,12 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDMSGTOOLONG));
     if(dialog->id_opened) {
       char errtext[1024] = {0,};
+      ET96MAP_USSD_STRING_T ussdErrString = {0,};
       makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
       int err_text_len = strlen(errtext);
-      ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdString );
+      ussdEncoding = fillUSSDString( MAP_LATIN1_ENCODING, (unsigned char *)errtext, err_text_len, &ussdErrString );
       ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
-      checkMapReq( Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
+      checkMapReq( Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdErrString, &alertPattern), __func__);
       dialog->state = MAPST_WaitUSSDErrorClose;
       checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
       return;
@@ -2808,6 +2809,11 @@ USHORT_T Et96MapDelimiterInd(
       eraseUssdLock(dialog.get(), __func__);
       DropMapDialog(dialog.get());
       break;
+    case MAPST_WaitUSSDNotifyCloseErr:
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      eraseUssdLock(dialog.get(), __func__);
+      DropMapDialog(dialog.get());
+      break;
     case MAPST_MapNoticed:
       reason = ET96MAP_NO_REASON;
       checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
@@ -3192,6 +3198,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
+    __map_trace2__("%s: dialogid 0x%x notify confirmation.",__func__,dialogueId);
     if( dialog->state == MAPST_WaitUSSDErrorClose ) {
       dialog->state = MAPST_WaitUSSDNotifyCloseErr;
       return ET96MAP_E_OK;
@@ -3213,7 +3220,6 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     sms.setOriginatingAddress(src_addr);
-    __map_trace2__("%s: dialogid 0x%x notify confirmation subsystem %s",__func__,dialogueId, originator.toString().c_str());
     unsigned esm_class = 2; // Transaction mode
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
