@@ -1360,6 +1360,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
                                                                0), __func__);
         SendOkToSmsc(dialog);
       } catch (VeryLongText &t) {
+        __map_warn2__("%s: dlg 0x%x very long ussd string %d",__func__,dialog->dialogid_map, text_len);
         char errtext[1024] = {0,};
         makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
         int err_text_len = strlen(errtext);
@@ -1441,8 +1442,25 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     throw runtime_error(FormatText("%s: dlg=0x%x very long msg text %d",__func__,dialog->dialogid_map,text_len));
   */
 
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
-    fillUSSDString(encoding,text,text_len, &ussdString);
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
+
+  try {
+    ussdEncoding = fillUSSDString(encoding,text,text_len, &ussdString);
+  } catch (VeryLongText &t) {
+    __map_warn2__("%s: dlg 0x%x very long ussd string %d",__func__,dialog->dialogid_map, text_len);
+    SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_PERM,Status::USSDMSGTOOLONG));
+    if(dialog->id_opened) {
+      char errtext[1024] = {0,};
+      makeUssdErrorText(errtext, Status::USSDMSGTOOLONG );
+      int err_text_len = strlen(errtext);
+      ussdEncoding = fillUSSDString( encoding, (unsigned char *)errtext, err_text_len, &ussdString );
+      checkMapReq( Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      eraseUssdLock(dialog, __func__);
+      dialog->state = MAPST_END;
+      DropMapDialog(dialog);
+    }
+  }
 
   int serviceOp = dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
   if( serviceOp == USSD_USSR_REQ ) {
