@@ -20,6 +20,9 @@ using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::WorkerAC;
 using smsc::inman::ConnectManagerT;
 
+#include "inman/common/TaskSchedulerDefs.hpp"
+using smsc::util::TaskSchedulerFactoryITF;
+
 namespace smsc    {
 namespace inman   {
 
@@ -94,6 +97,7 @@ struct BillingCFG {
     typedef enum { cdrNONE = 0, cdrBILLMODE = 1, cdrALL = 2} CDR_MODE;
     enum ContractReqMode { reqOnDemand = 0, reqAlways };
 
+    TaskSchedulerFactoryITF * schedMgr;
     AbonentCacheITF *   abCache;
     InBillingFileStorage * bfs;
     TimeWatcher *       tmWatcher;
@@ -116,7 +120,7 @@ struct BillingCFG {
     SmsXServiceMap  smsXMap;        //SMS Extra services iDs and addresses
 
     BillingCFG() : abCache(NULL), bfs(NULL), tmWatcher(NULL)
-        , cdrMode(cdrBILLMODE), cntrReq(reqOnDemand)
+        , cdrMode(cdrBILLMODE), cntrReq(reqOnDemand), schedMgr(0)
     {
         cdrInterval = maxTimeout = abtTimeout = maxBilling = 0;
     }

@@ -268,18 +268,9 @@ void AbonentDetector::ConfigureSCF(void)
         if (abPolicy)    //lookup policy for extra SCF parms (serviceKey, RPC lists)
             abScf = abPolicy->getSCFparms(&(p_scf->scfAddress));
     } else if (abPolicy) {  //attempt to determine SCF and its params from config.xml
-        if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
-            //look for single IN serving
-            if (abPolicy->scfMap.size() == 1)
-                abScf = abPolicy->scfMap.begin()->second;
-        } else { //ab_type == AbonentContractInfo::abtUnknown
-            //look for single IN serving with postpaidRPC defined
-            if (abPolicy->scfMap.size() == 1) {
-                abScf = abPolicy->scfMap.begin()->second;
-                if (abScf->postpaidRPC.empty())
-                    abScf = NULL;
-            }
-        }
+        //look for single IN serving
+        if (abPolicy->scfMap.size() == 1)
+            abScf = abPolicy->scfMap.begin()->second;
         if (!abScf)
             smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
     }

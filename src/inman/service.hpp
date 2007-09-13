@@ -22,6 +22,10 @@ using smsc::inman::BillingCFG;
 using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::interaction::INPCommandSetAC;
 
+#include "inman/common/TaskScheduler.hpp"
+using smsc::util::TaskSchedulerITF;
+using smsc::util::TaskSchedulerAC;
+
 #include "inman/incache/InCacheMT.hpp"
 using smsc::inman::cache::AbonentCacheCFG;
 using smsc::inman::cache::AbonentCacheMTR;
@@ -55,7 +59,8 @@ struct SessionInfo {
     { }
 };
 
-class Service : public ServerListenerITF, public ConnectListenerITF {
+class Service : public ServerListenerITF,
+                public ConnectListenerITF, public TaskSchedulerFactoryITF {
 public:
     //Service takes ownership of in_cfg
     Service(InService_CFG * in_cfg, Logger * uselog = NULL);
@@ -63,6 +68,9 @@ public:
 
     bool start();
     void stop();
+
+    //-- TaskSchedulerFactoryITF interface methods: --//
+    TaskSchedulerITF * getScheduler(TaskSchedulerITF::SchedulerType sched_type);
 
 protected:
     friend class smsc::inman::interaction::Server;
@@ -81,10 +89,13 @@ protected:
 private:
     typedef std::map<unsigned, SessionInfo> SessionsMap;
     typedef std::map<unsigned /*sock_id*/, unsigned /*sess_id*/> SocketsMap;
+    typedef std::pair<TaskSchedulerITF::SchedulerType, TaskSchedulerAC*> TSchedRCD;
+    typedef std::list<TSchedRCD> TSchedList;
 
     void closeSession(unsigned sockId);
 
     Mutex           _mutex;
+    const char *    _logId; //logging prefix
     Logger*         logger;
     TCAPDispatcher* disp;
     Server*         server;
@@ -95,6 +106,7 @@ private:
     SessionsMap     sessions;
     SocketsMap      sockets;
     unsigned        lastSessId;
+    TSchedList      tschedList;
 };
 
 } //inman

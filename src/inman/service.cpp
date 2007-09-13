@@ -18,27 +18,28 @@ namespace inman {
  * ************************************************************************** */
 Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     : logger(uselog), _cfg(in_cfg), disp(0), server(0), lastSessId(0), abCache(0)
+    , _logId("InmanSrv")
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
 
-    smsc_log_debug(logger, "InmanSrv: Creating ..");
+    smsc_log_debug(logger, "%s: Creating ..", _logId);
 
     if (_cfg->bill.ss7.userId) {
         disp = TCAPDispatcher::getInstance();
         _cfg->bill.ss7.userId += 39; //adjust USER_ID to PortSS7 units id
         if (!disp->connect(_cfg->bill.ss7.userId))
-            smsc_log_error(logger, "InmanSrv: EINSS7 stack unavailable!!!");
+            smsc_log_error(logger, "%s: EINSS7 stack unavailable!!!", _logId);
         else {
-            smsc_log_debug(logger, "InmanSrv: TCAP dispatcher has connected to SS7 stack");
+            smsc_log_debug(logger, "%s: TCAP dispatcher has connected to SS7 stack", _logId);
             if (!disp->openSSN(_cfg->bill.ss7.own_ssn, _cfg->bill.ss7.maxDlgId))
-                smsc_log_error(logger, "InmanSrv: SSN[%u] unavailable!!!", _cfg->bill.ss7.own_ssn);
+                smsc_log_error(logger, "%s: SSN[%u] unavailable!!!", _logId, _cfg->bill.ss7.own_ssn);
         }
     }                                         
 
     _cfg->bill.abCache = (abCache = new AbonentCacheMTR(&_cfg->cachePrm, logger));
     assert(_cfg->bill.abCache);
-    smsc_log_debug(logger, "InmanSrv: AbonentCache inited");
+    smsc_log_debug(logger, "%s: AbonentCache inited", _logId);
 
     //initialize IAProviders for defined policies
     for (AbonentPolicies::iterator pit = _cfg->abPolicies.begin(); 
@@ -52,108 +53,121 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     server = new Server(&_cfg->sock, logger);
     assert(server);
     server->addListener(this);
-    smsc_log_debug(logger, "InmanSrv: TCP server inited");
+    smsc_log_debug(logger, "%s: TCP server inited", _logId);
 
     if (_cfg->bill.cdrMode) {
         _cfg->bill.bfs = new InBillingFileStorage(_cfg->bill.cdrDir, 0, logger);
         assert(_cfg->bill.bfs);
         int oldfs = _cfg->bill.bfs->RFSOpen(true);
         assert(oldfs >= 0);
-        smsc_log_debug(logger, "InmanSrv: Billing storage opened%s",
+        smsc_log_debug(logger, "%s: Billing storage opened%s", _logId,
                        oldfs > 0 ? ", old files rolled": "");
 
         if (_cfg->bill.cdrInterval) { //use external storage roller
             roller = new InFileStorageRoller(_cfg->bill.bfs,
                                              (unsigned long)_cfg->bill.cdrInterval);
             assert(roller);
-            smsc_log_debug(logger, "InmanSrv: BillingStorage roller inited");
+            smsc_log_debug(logger, "%s: BillingStorage roller inited", _logId);
         }
     } else
         _cfg->bill.bfs = NULL;
 
     _cfg->bill.tmWatcher = new TimeWatcher(logger);
     assert(_cfg->bill.tmWatcher);
-    smsc_log_debug(logger, "InmanSrv: TimeWatcher inited");
+    _cfg->bill.schedMgr = this;
+    smsc_log_debug(logger, "%s: TimeWatcher inited", _logId);
 }
 
 Service::~Service()
 {
-    smsc_log_debug(logger, "InmanSrv: Releasing ..");
+    smsc_log_debug(logger, "%s: Releasing ..", _logId);
     if (running)
       stop();
 
     if (disp) {
-        smsc_log_debug(logger, "InmanSrv: Disconnecting SS7 stack ..");
+        smsc_log_debug(logger, "%s: Disconnecting SS7 stack ..", _logId);
         disp->disconnect();
     }
 
     if (server) {
         server->removeListener(this);
-        smsc_log_debug( logger, "InmanSrv: Deleting TCP server ..");
+        smsc_log_debug( logger, "%s: Deleting TCP server ..", _logId);
         delete server;
     }
     if (_cfg->bill.bfs) {
-        smsc_log_debug(logger, "InmanSrv: Closing Billing storage ..");
+        smsc_log_debug(logger, "%s: Closing Billing storage ..", _logId);
         _cfg->bill.bfs->RFSClose();
         if (roller)
             delete roller;
         delete _cfg->bill.bfs;
     }
     if (_cfg->bill.tmWatcher) {
-        smsc_log_debug(logger, "InmanSrv: Deleting TimeWatcher ..");
+        smsc_log_debug(logger, "%s: Deleting TimeWatcher ..", _logId);
         delete _cfg->bill.tmWatcher;
     }
     if (abCache) {
-        smsc_log_debug(logger, "InmanSrv: Closing AbonentsCache ..");
+        smsc_log_debug(logger, "%s: Closing AbonentsCache ..", _logId);
         delete abCache;
     }
+    //delete task schedulers if any
+    for (TSchedList::iterator it = tschedList.begin(); it != tschedList.end(); ++it) {
+        smsc_log_debug(logger, "%s: deleting %s ..", _logId, it->second->Name());
+        delete it->second;
+    }
+
     delete _cfg;
-    smsc_log_debug(logger, "InmanSrv: Released.");
+    smsc_log_debug(logger, "%s: Released.", _logId);
 }
 
 bool Service::start()
 {
-    smsc_log_debug(logger, "InmanSrv: Starting TimeWatcher ..");
+    smsc_log_debug(logger, "%s: Starting TimeWatcher ..", _logId);
     _cfg->bill.tmWatcher->Start();
     if (!_cfg->bill.tmWatcher->isRunning())
         return false;
 
-    smsc_log_debug(logger, "InmanSrv: Starting TCP server ..");
+    smsc_log_debug(logger, "%s: Starting TCP server ..", _logId);
     if (!server->Start())
         return false;
     
     if (roller) {
-        smsc_log_debug(logger, "InmanSrv: Starting BillingStorage roller ..");
+        smsc_log_debug(logger, "%s: Starting BillingStorage roller ..", _logId);
         roller->Start();
     }
     running = true;
-    smsc_log_debug(logger, "InmanSrv: Started.");
+    smsc_log_debug(logger, "%s: Started.", _logId);
     return running;
 }
 
 void Service::stop()
 {
     if (server) {
-        smsc_log_debug( logger, "InmanSrv: Stopping TCP server ..");
+        smsc_log_debug(logger, "%s: Stopping TCP server ..", _logId);
         server->Stop();
     }
 
-    smsc_log_debug(logger, "InmanSrv: Stopping TimeWatcher ..");
+    smsc_log_debug(logger, "%s: Stopping TimeWatcher ..", _logId);
     _cfg->bill.tmWatcher->Stop();
     _cfg->bill.tmWatcher->WaitFor();
 
     if (disp) {
-        smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher ..");
+        smsc_log_debug(logger, "%s: Stopping TCAP dispatcher ..", _logId);
         disp->Stop();
     }
 
     if (roller) {
-        smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller ..");
+        smsc_log_debug(logger, "%s: Stopping BillingStorage roller ..", _logId);
         roller->Stop(true);
     }
 
+    //stop task schedulers if any
+    for (TSchedList::iterator it = tschedList.begin(); it != tschedList.end(); ++it) {
+        smsc_log_debug(logger, "%s: stoping %s ..", _logId, it->second->Name());
+        it->second->Stop();
+    }
+
     running = false;
-    smsc_log_debug(logger, "InmanSrv: Stopped.");
+    smsc_log_debug(logger, "%s: Stopped.", _logId);
 }
 
 void Service::closeSession(unsigned sockId)
@@ -171,7 +185,7 @@ void Service::closeSession(unsigned sockId)
         if (sit != sessions.end()) {
             SessionInfo & sess = (*sit).second;
             pCm = sess.hdl;
-            smsc_log_info(logger, "InmanSrv: closing %s session[%u] on Connect[%u]",
+            smsc_log_info(logger, "%s: closing %s session[%u] on Connect[%u]", _logId,
                             sess.pCs->CsName(), sess.sId, sockId);
             sessions.erase(sit);
         }
@@ -188,7 +202,7 @@ ConnectAC * Service::onConnectOpening(Server* srv, Socket* sock)
 {
     Connect * conn = new Connect(sock, INPSerializer::getInstance());
     conn->addListener(this);
-//    smsc_log_debug(logger, "InmanSrv: New Connect[%u] inited", conn->getId());
+//    smsc_log_debug(logger, "%s: New Connect[%u] inited", _logId, conn->getId());
     return conn;
 }
 
@@ -201,11 +215,11 @@ void Service::onConnectClosing(Server* srv, ConnectAC* conn)
 //throws CustomException
 void Service::onServerShutdown(Server* srv, Server::ShutdownReason reason)
 {
-    smsc_log_debug(logger, "InmanSrv: TCP server shutdowning, reason %d", reason);
+    smsc_log_debug(logger, "%s: TCP server shutdowning, reason %d", _logId, reason);
     srv->removeListener(this);
 
     if (reason != Server::srvStopped) { //abnormal shutdown
-        throw CustomException("InmanSrv: TCP server fatal failure, exiting.");
+        throw CustomException("%s: TCP server fatal failure, exiting.");
     }
 }
 
@@ -245,14 +259,14 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
     } break;
 
     default: //force connect closing by TCPSrv
-        throw CustomException("InmanSrv: unsupported CommandSet: %s (%u)",
+        throw CustomException("%s: unsupported CommandSet: %s (%u)",
                               pCs->CsName(), pCs->CsId());
     }
     _mutex.Lock();
     sockets.insert(SocketsMap::value_type(conn->getId(), newSess.sId));
     sessions.insert(SessionsMap::value_type(newSess.sId, newSess));
     _mutex.Unlock();
-    smsc_log_info(logger, "InmanSrv: New %s session[%u] on Connect[%u] created",
+    smsc_log_info(logger, "%s: New %s session[%u] on Connect[%u] created", _logId,
                   pCs->CsName(), newSess.sId, conn->getId());
 
     conn->folowUp(this, newSess.hdl);
@@ -264,6 +278,32 @@ void Service::onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_ex
 { 
     conn->removeListener(this);
     closeSession(conn->getId());
+}
+
+
+TaskSchedulerITF * Service::getScheduler(TaskSchedulerITF::SchedulerType sched_type)
+{
+    {
+        MutexGuard grd(_mutex);
+        for (TSchedList::iterator it = tschedList.begin(); it != tschedList.end(); ++it) {
+            if (it->first == sched_type)
+                return it->second;
+        }
+    }
+    //create new scheduler
+    std::auto_ptr<TaskSchedulerAC> pShed;
+    if (sched_type == TaskSchedulerITF::schedMT)
+        pShed.reset(new TaskSchedulerMT(logger));
+    else
+        pShed.reset(new TaskSchedulerSEQ(logger));
+
+    if (pShed->Start()) {
+        MutexGuard grd(_mutex);
+        tschedList.push_back(TSchedRCD(sched_type, pShed.get()));
+        return pShed.release();
+    }
+    smsc_log_error(logger, "%s: failed to start %s ..", _logId, pShed->Name());
+    return NULL;
 }
 
 } // namespace inmgr
