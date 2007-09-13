@@ -20,7 +20,9 @@ struct INManErrorId {
         cfgLimitation,
         cfgInconsistency,
         logicTimedOut,
-        brokenPipe
+        brokenPipe,
+        /* */
+        internalError = 20 //this a max cap
     };
 };
 extern const char * rc2Txt_INManErrors(uint32_t err_code);
@@ -37,13 +39,14 @@ const char * rc2Txt_INManErrors(uint32_t err_code) { \
     case INManErrorId::cfgInconsistency:   return "config settings inconsistent or insufficient"; \
     case INManErrorId::logicTimedOut:   return "external operation is timed out"; \
     case INManErrorId::brokenPipe:      return "broken connection"; \
+    case INManErrorId::internalError:   return "internal error"; \
     default:; } \
     return "unknown INMan error code"; \
 }
 
 #define ODECL_RCS_INManErrors() FDECL_rc2Txt_INManErrors() \
 URCSpacePTR  _RCS_INManErrors("errINMan", INManErrorId::protocolGeneralError, \
-                                INManErrorId::logicTimedOut, rc2Txt_INManErrors)
+                                INManErrorId::internalError, rc2Txt_INManErrors)
 
 /* ------------------------------------------------------------------------- *
  * Macro for all return code spaces global initialization
