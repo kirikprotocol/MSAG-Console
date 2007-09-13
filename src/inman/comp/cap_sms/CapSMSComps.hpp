@@ -142,6 +142,8 @@ public:
         missingCustomerRecord = 6
     } IDPErrCodes;
 
+    inline uint32_t ServiceKey(void) { return servKey; }
+
     void setDestinationSubscriberNumber(const TonNpiAddress& addr); // missing for MT
     void setDestinationSubscriberNumber(const char * text);
 
@@ -171,7 +173,8 @@ public:
     void encode(std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
-    Logger*  compLogger;
+    uint32_t    servKey;
+    Logger *    compLogger;
     PrivateInitialDPSMSArg* comp;
 };
       
