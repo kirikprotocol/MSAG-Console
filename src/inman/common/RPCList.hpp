@@ -46,14 +46,22 @@ public:
     int print(std::string & ostr)
     {
         int i = 0;
-        RPCList::iterator it = RPCList::begin();
-        for (; it != RPCList::end(); it++, i++)
+        for (RPCList::iterator it = RPCList::begin(); it != RPCList::end(); ++it, ++i)
             format(ostr, "%s%u", i ? ", ":"", (*it));
         return i;
     }
+
+    bool exist(unsigned char rpc) const
+    {
+        for (RPCList::const_iterator it = RPCList::begin(); it != RPCList::end(); ++it) {
+            if (*it == rpc)
+                return true;
+        }
+        return false;
+    }
 };
 
-//RPCause with attribute
+//RPCause with unsigned int attribute
 typedef std::pair<unsigned char, unsigned> RPCauseATT;
 
 class RPCListATT : public std::list<RPCauseATT> {
@@ -93,10 +101,18 @@ public:
     int print(std::string & ostr)
     {
         int i = 0;
-        RPCListATT::iterator it = RPCListATT::begin();
-        for (; it != RPCListATT::end(); it++, i++)
+        for (RPCListATT::iterator it = RPCListATT::begin(); it != RPCListATT::end(); ++it, ++i)
             format(ostr, "%s%u:%u", i ? ", ":"", it->first, it->second);
         return i;
+    }
+
+    const RPCauseATT * exist(unsigned char rpc) const
+    {
+        for (RPCListATT::const_iterator it = RPCListATT::begin(); it != RPCListATT::end(); ++it) {
+            if (it->first == rpc)
+                return it.operator->();
+        }
+        return NULL;
     }
 };
 
