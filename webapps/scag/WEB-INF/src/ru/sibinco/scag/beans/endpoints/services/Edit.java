@@ -46,6 +46,7 @@ public class Edit extends EditBean {
     private boolean administrator = false;
     private long userProviderId = ALL_PROVIDERS;
     private int inQueueLimit = 0;
+    private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
 
 
@@ -103,6 +104,7 @@ public class Edit extends EditBean {
         this.enabled = svc.isEnabled();
         this.maxSmsPerSec = svc.getMaxSmsPerSec();
         this.inQueueLimit = svc.getInQueueLimit();
+        this.outQueueLimit = svc.getOutQueueLimit();
     }
 
     protected void save() throws SCAGJspException {
@@ -121,7 +123,9 @@ public class Edit extends EditBean {
         svcs.remove(getEditId());
         final Svc svc;
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
-        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
+//        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
+        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
+                      inQueueLimit, outQueueLimit, maxSmsPerSec);
         svcs.put(getId(), svc);
         final Scag scag = appContext.getScag();
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
@@ -236,12 +240,20 @@ public class Edit extends EditBean {
         this.inQueueLimit = inQueueLimit;
     }
 
+    public void setOutQueueLimit(int outQueueLimit) {
+        this.outQueueLimit = outQueueLimit;
+    }
+
     public void setMaxSmsPerSec(int maxSmsPerSec) {
         this.maxSmsPerSec = maxSmsPerSec;
     }
 
     public int getInQueueLimit() {
         return inQueueLimit;
+    }
+
+    public int getOutQueueLimit() {
+        return outQueueLimit;
     }
 
     public int getMaxSmsPerSec() {

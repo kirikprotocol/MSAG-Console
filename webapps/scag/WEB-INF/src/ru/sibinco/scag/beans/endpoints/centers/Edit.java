@@ -30,8 +30,8 @@ import java.util.Map;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Edit extends EditBean {
-
+public class Edit extends EditBean
+{
     public static final long ALL_PROVIDERS = -1;
     private String id = null;
     private String password = null;
@@ -56,23 +56,9 @@ public class Edit extends EditBean {
     private long userProviderId = ALL_PROVIDERS;
     private Principal userPrincipal = null;
     private int inQueueLimit = 0;
+    private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
 
-    public void setInQueueLimit(int inQueueLimit) {
-        this.inQueueLimit = inQueueLimit;
-    }
-
-    public void setMaxSmsPerSec(int maxSmsPerSec) {
-        this.maxSmsPerSec = maxSmsPerSec;
-    }
-
-    public int getInQueueLimit() {
-        return inQueueLimit;
-    }
-
-    public int getMaxSmsPerSec() {
-        return maxSmsPerSec;
-    }
     private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
         if (userPrincipal == null)
@@ -138,8 +124,9 @@ public class Edit extends EditBean {
         this.bindPassword = center.getBindPassword();
         this.systemType = center.getSystemType();
         this.addressRange = center.getAddressRange();
-        this.maxSmsPerSec = center.getMaxSmsPerSec();
         this.inQueueLimit = center.getInQueueLimit();
+        this.outQueueLimit = center.getOutQueueLimit();
+        this.maxSmsPerSec = center.getMaxSmsPerSec();
     }
 
     protected void save() throws SCAGJspException {
@@ -162,9 +149,12 @@ public class Edit extends EditBean {
         if (systemType == null || getSystemType().length() == 0) systemType = "";
 //        center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
 //                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(), getAddressRange());
+//        center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
+//                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
+//                getAddressRange(), inQueueLimit, maxSmsPerSec);
         center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                 enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                getAddressRange(), inQueueLimit, maxSmsPerSec);
+                getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec);
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
@@ -342,5 +332,27 @@ public class Edit extends EditBean {
     public void setAddressRange(String addressRange) {
         this.addressRange = addressRange;
     }
+    public void setInQueueLimit(int inQueueLimit) {
+        this.inQueueLimit = inQueueLimit;
+    }
 
+    public void setOutQueueLimit(int outQueueLimit) {
+        this.outQueueLimit = outQueueLimit;
+    }
+
+    public void setMaxSmsPerSec(int maxSmsPerSec) {
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public int getInQueueLimit() {
+        return inQueueLimit;
+    }
+
+    public int getOutQueueLimit() {
+        return outQueueLimit;
+    }
+
+    public int getMaxSmsPerSec() {
+        return maxSmsPerSec;
+    }
 }

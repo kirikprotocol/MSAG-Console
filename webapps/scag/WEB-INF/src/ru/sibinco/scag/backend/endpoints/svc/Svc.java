@@ -33,6 +33,7 @@ public class Svc {
     public static final byte MODE_UNKNOWN = 0;
 
     public static final String IN_QUEUE_LIMIT  = "inQueueLimit";
+    public static final String OUT_QUEUE_LIMIT  = "outQueueLimit";
     public static final String MAX_SMS_PER_SEC = "maxSmsPerSec";
 
     private String id = null;
@@ -45,6 +46,7 @@ public class Svc {
     private String connHost = "";
     private String connStatus = "unknow";
     private int inQueueLimit = 0;
+    private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
 
     private byte type = SMPP;
@@ -68,7 +70,9 @@ public class Svc {
 
     public Svc(final String id, final String password, final int timeout,
                final boolean enabled, final byte mode, final Provider provider,
-               final int inQueueLimit, final int maxSmsPerSec) throws NullPointerException{
+               final int inQueueLimit, final int maxSmsPerSec)
+               throws NullPointerException
+    {
         if (null == id)
             throw new NullPointerException("SME ID or  password  is null");
         this.id = id.trim();
@@ -78,6 +82,24 @@ public class Svc {
         this.mode = mode;
         this.provider = provider;
         this.inQueueLimit = inQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public Svc(final String id, final String password, final int timeout,
+               final boolean enabled, final byte mode, final Provider provider,
+               final int inQueueLimit, final int outQueueLimit, final int maxSmsPerSec)
+               throws NullPointerException
+    {
+        if (null == id)
+            throw new NullPointerException("SME ID or  password  is null");
+        this.id = id.trim();
+        this.password = password;
+        this.timeout = timeout;
+        this.enabled = enabled;
+        this.mode = mode;
+        this.provider = provider;
+        this.inQueueLimit = inQueueLimit;
+        this.outQueueLimit = outQueueLimit;
         this.maxSmsPerSec = maxSmsPerSec;
     }
 
@@ -103,6 +125,8 @@ public class Svc {
                    provider = (Provider) providerManager.getProviders().get(Long.decode(value));
                 } else if (IN_QUEUE_LIMIT.equals(name)) {
                    inQueueLimit = Integer.decode(value).intValue();
+                } else if (OUT_QUEUE_LIMIT.equals(name)) {
+                   outQueueLimit = Integer.decode(value).intValue();
                 } else if (MAX_SMS_PER_SEC.equals(name)) {
                     maxSmsPerSec = Integer.decode(value).intValue();
                 }
@@ -122,6 +146,7 @@ public class Svc {
         this.enabled = svc.isEnabled();
         this.mode = svc.getMode();
         this.inQueueLimit = svc.getInQueueLimit();
+        this.outQueueLimit = svc.getOutQueueLimit();
         this.maxSmsPerSec = svc.getMaxSmsPerSec();
     }
 
@@ -144,6 +169,7 @@ public class Svc {
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
         out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
         out.println("    <param name=\"" + IN_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
+        out.println("    <param name=\"" + OUT_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getOutQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + MAX_SMS_PER_SEC + "\"\tvalue=\"" + intToString(getMaxSmsPerSec()) + "\"/>");
         return out;
     }
@@ -197,7 +223,8 @@ public class Svc {
         timeout = newSvc.getTimeout();
         enabled = newSvc.isEnabled();
         mode = newSvc.getMode();
-        inQueueLimit = newSvc.getInQueueLimit();
+        inQueueLimit =  newSvc.getInQueueLimit();
+        outQueueLimit = newSvc.getOutQueueLimit();
         maxSmsPerSec = newSvc.getMaxSmsPerSec();
     }
 
@@ -289,16 +316,24 @@ public class Svc {
         this.connStatus = connStatus;
     }
 
-    public void setMaxSmsPerSec(int maxSmsPerSec) {
-        this.maxSmsPerSec = maxSmsPerSec;
-    }
-
     public void setInQueueLimit(int inQueueLimit) {
         this.inQueueLimit = inQueueLimit;
     }
 
+    public void setOutQueueLimit(int outQueueLimit) {
+        this.outQueueLimit = outQueueLimit;
+    }
+
+    public void setMaxSmsPerSec(int maxSmsPerSec) {
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
     public int getInQueueLimit() {
         return inQueueLimit;
+    }
+
+    public int getOutQueueLimit() {
+        return outQueueLimit;
     }
 
     public int getMaxSmsPerSec() {
