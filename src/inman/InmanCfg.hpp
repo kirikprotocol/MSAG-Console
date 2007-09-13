@@ -166,6 +166,7 @@ public:
     const INScfCFG * readSCF(ConfigView * scf_sec, const char * nm_scf, bool warn = false) throw(ConfigException)
     {   // according to INScfCFG::IDPLocationAddr
         static const char * const _IDPLIAddr[] = { "MSC", "SMSC", "SSF" };
+        static const char * const _IDPReqMode[] = { "MT", "SEQ" };
 
         std::auto_ptr<ConfigView> scfCfg(scf_sec->getSubConfig(nm_scf));
 
@@ -209,9 +210,10 @@ public:
                 throw ConfigException("'ServiceKeys' section is missed");
             readSrvKeys(scfCfg.get(), pin->skAlg);
 
-            //optional parameters:
-            cstr = NULL; 
-            std::string cppStr = "  RPCList_reject: ";
+            // -- OPTIONAL parameters --//
+
+            //list of RP causes forcing charging denial because of low balance
+            cstr = NULL; std::string cppStr = "  RPCList_reject: ";
             try { cstr = scfCfg->getString("RPCList_reject"); }
             catch (ConfigException& exc) { }
             if (cstr && cstr[0]) {
@@ -223,20 +225,9 @@ public:
             if ((pin->rejectRPC.size() <= 1) || !pin->rejectRPC.print(cppStr))
                 cppStr += "unsupported";
             smsc_log_info(logger, cppStr.c_str());
-    
-            cstr = NULL; cppStr = "  RPCList_postpaid: ";
-            try { cstr = scfCfg->getString("RPCList_postpaid"); }
-            catch (ConfigException& exc) { }
-            if (cstr) {
-                try { pin->postpaidRPC.init(cstr); }
-                catch (std::exception& exc) {
-                    throw ConfigException("RPCList_postpaid: %s", exc.what());
-                }
-            }
-            if (!pin->postpaidRPC.print(cppStr))
-                cppStr += "unsupported";
-            smsc_log_info(logger, cppStr.c_str());
 
+            //list of RP causes indicating that IN point should be
+            //interacted again a bit later
             cstr = NULL; cppStr = "  RPCList_retry: ";
             try { cstr = scfCfg->getString("RPCList_retry"); }
             catch (ConfigException& exc) { }
@@ -246,39 +237,15 @@ public:
                     throw ConfigException("RPCList_retry: %s", exc.what());
                 }
             }
-            //adjust attempt setings for given RPcauses
+            //adjust default attempt setings for given RPCauses
             for (RPCListATT::iterator it = pin->retryRPC.begin();
                                     it != pin->retryRPC.end(); ++it) {
-                it->second++;
+                if (!it->second)
+                    it->second++;
             }
             if (!pin->retryRPC.print(cppStr))
                 cppStr += "unsupported";
             smsc_log_info(logger, cppStr.c_str());
-            //verify the RPC uniqueness
-            for (RPCListATT::iterator ait = pin->retryRPC.begin();
-                                    ait != pin->retryRPC.end(); ++ait) {
-                unsigned char rpc = ait->first;
-                for (RPCList::iterator pit = pin->postpaidRPC.begin();
-                                    pit != pin->postpaidRPC.end(); ++pit) {
-                    if (*pit == rpc)
-                        throw ConfigException("multiply settings for RPCause: %u", (unsigned)rpc);
-                }
-                for (RPCList::iterator rit = pin->rejectRPC.begin();
-                                    rit != pin->rejectRPC.end(); ++rit) {
-                    if (*rit == rpc)
-                        throw ConfigException("multiply settings for RPCause: %u", (unsigned)rpc);
-                }
-
-            }
-            for (RPCList::iterator pit = pin->postpaidRPC.begin();
-                                pit != pin->postpaidRPC.end(); ++pit) {
-                unsigned char rpc = *pit;
-                for (RPCList::iterator rit = pin->rejectRPC.begin();
-                                    rit != pin->rejectRPC.end(); ++rit) {
-                    if (*rit == rpc)
-                        throw ConfigException("multiply settings for RPCause: %u", (unsigned)rpc);
-                }
-            }
 
             cstr = NULL; cppStr = "IDPLocationInfo: ";
             try { cstr = scfCfg->getString("IDPLocationInfo");}
@@ -294,6 +261,19 @@ public:
             } else
                 cstr = (char*)_IDPLIAddr[INScfCFG::idpLiMSC];
             smsc_log_info(logger, "  IDPLocationInfo: %s", cstr);
+
+            cstr = NULL; cppStr = "IDPReqMode: ";
+            try { cstr = scfCfg->getString("IDPReqMode");}
+            catch (ConfigException& exc) { }
+
+            if (cstr && cstr[0]) {
+                if (!strcmp(cstr, _IDPReqMode[INScfCFG::idpReqSEQ]))
+                    pin->idpReqMode = INScfCFG::idpReqSEQ;
+                else if (strcmp(cstr, _IDPReqMode[INScfCFG::idpReqMT]))
+                    throw ConfigException("IDPReqMode: invalid value");
+            } else
+                cstr = (char*)_IDPReqMode[INScfCFG::idpReqMT];
+            smsc_log_info(logger, "  IDPReqMode: %s", cstr);
         }
         scfMap.insert(INScfsMAP::value_type(scfAdr.toString(), pin.get()));
         return pin.release();

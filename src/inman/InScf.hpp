@@ -183,22 +183,23 @@ typedef std::map<TDPCategory::Id, SKAlgorithmAC*> SKAlgorithmMAP;
 #define RP_MO_SM_transfer_rejected 21       //3GPP TS 24.011 Annex E-2
 class INScfCFG {
 public:         //SwitchingCenter, SMS Center, INMan
-    typedef enum { idpLiMSC = 0, idpLiSMSC = 1, idpLiSSF = 2 } IDPLocationAddr;
+    enum IDPLocationAddr { idpLiMSC = 0, idpLiSMSC = 1, idpLiSSF = 2 } ;
+    enum IDPReqMode      { idpReqMT = 0, idpReqSEQ };
 
     std::string     _ident;         //INPlatform ident
     TonNpiAddress   scfAdr;         //gsmSCF address always has ISDN international format
     SKAlgorithmMAP  skAlg;          //translation algoritms for various TDPs and service keys 
     //optional params:
     RPCList         rejectRPC;      //list of RP causes forcing charging denial because of low balance
-    RPCList         postpaidRPC;    //list of RP causes indicating that abonent should be
-                                    //treated as if it's a postpaid abonent
     RPCListATT      retryRPC;       //list of RP causes indicating that IN point should be
-                                    //interacted again later a bit
+                                    //interacted again a bit later
     IDPLocationAddr idpLiAddr;      //nature of initiator address to substitute into
                                     //LocationInformationMSC of InitialDP operation
                                     //while interacting this IN platfrom
+    IDPReqMode      idpReqMode;     //mode of IDP requests (simultaneous or sequential)
+                                    //this IN-point supports
 
-    INScfCFG(const char * name = NULL) : idpLiAddr(idpLiMSC)
+    INScfCFG(const char * name = NULL) : idpLiAddr(idpLiMSC), idpReqMode(idpReqMT)
     { 
         if (name) _ident += name;
         rejectRPC.push_back(RP_MO_SM_transfer_rejected);
