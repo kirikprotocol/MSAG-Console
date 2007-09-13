@@ -45,8 +45,9 @@
                     <sm-ep:list title="centers.edit.list.mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
                     <sm-ep:txt title="centers.edit.txt.timeout" name="timeout" maxlength="6" validation="unsigned"/>
                     <sm-ep:check title="centers.edit.check.enabled.title" head="centers.edit.check.enabled.head" name="enabled"/>
-                    <sm-ep:txt title="sp.edit.txt.inQueueLimit" name="inQueueLimit" maxlength="6" validation="unsignedOrEmpty"/>
-                    <sm-ep:txt title="sp.edit.txt.maxSmsPerSec" name="maxSmsPerSec" maxlength="6" validation="unsignedOrEmpty"/>
+                    <sm-ep:txtEmpty title="sp.edit.txt.inQueueLimit" name="inQueueLimit" maxlength="6" validation="unsignedOrEmpty"/>
+                    <sm-ep:txtEmpty title="sp.edit.txt.outQueueLimit" name="outQueueLimit" maxlength="6" validation="unsignedOrEmpty"/>
+                    <sm-ep:txtEmpty title="sp.edit.txt.maxSmsPerSec" name="maxSmsPerSec" maxlength="6" validation="unsignedOrEmpty"/>
                     <c:choose>
                         <c:when test="${!param.add}">
                             <sm-ep:txt title="centers.edit.txt.uid" name="uid" readonly="true"/>
