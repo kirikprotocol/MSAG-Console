@@ -35,34 +35,26 @@ namespace inap {
  * class CapSMSDlg implementation:
  * ************************************************************************** */
 CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
-           USHORT_T timeout/* = 0*/, const char * scf_ident/* = NULL*/,
-            Logger * uselog/* = NULL*/)
-    : SMS_SSF_Fsm(EventTypeSMS_sms_CollectedInfo)
+           USHORT_T inv_timeout/* = 0*/, const char * scf_ident/* = NULL*/,
+            Logger * uselog/* = NULL*/) _THROWS_NONE
+    : SMS_SSF_Fsm(EventTypeSMS_sms_CollectedInfo), _logPfx("CapSMS")
     , session(pSession), ssfHdl(ssfHandler), nmScf(scf_ident), logger(uselog)
-    , rPCause(0), _timer(0), reportType(MessageType_request)
+    , rPCause(0), _timer(0), reportType(MessageType_request), dialog(0)
+    , capId(0), invTimeout(inv_timeout)
 {
     assert(ssfHandler && pSession);
     if (!logger)
-        logger = Logger::getInstance("smsc.inman.inap.CapSMSDlg");
+        logger = Logger::getInstance("smsc.inman.inap.CapSMS");
     if (!nmScf)
         nmScf = "SCF";
-
-    dialog = session->openDialog();
-    if (!dialog)
-        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
-                    "capSMS", "unable to create TC dialog");
-    capId = (unsigned)dialog->getId();
-    snprintf(_logId, sizeof(_logId)-1, "CapSMS[0x%X]", capId);
-    
-    dialog->setInvokeTimeout(timeout);
-    dialog->addListener(this);
-    _fsmState = SMS_SSF_Fsm::fsmWaitReq;
+    strcpy(_logId, _logPfx);
 }
 
 CapSMSDlg::~CapSMSDlg()
 {
     MutexGuard  grd(_sync);
     ssfHdl = NULL;
+    endCapSMS();
     reportType = MessageType_notification; //do PREARRANED_END if TC dialog is still active
     endTCap(); 
 }
@@ -71,46 +63,73 @@ void CapSMSDlg::abortSMS(void)
 {
     MutexGuard  grd(_sync);
     ssfHdl = NULL;
-    //in monitoting state send submission report and wait for T_END_IND or L_CANCEL
-    if ((_fsmState != SMS_SSF_Fsm::fsmMonitoring) || !eventReportSMS(false))
-        endTCap(true); //send U_ABORT to SCF
+    endCapSMS();
+}
+
+RCHash CapSMSDlg::Init(void) _THROWS_NONE
+{
+    //check preconfitions
+    if (_fsmState != SMS_SSF_Fsm::fsmIdle)
+        return _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
+
+    //Initialize TCAP dialog
+    dialog = session->openDialog();
+    if (!dialog)
+        return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
+    capId = (unsigned)dialog->getId();
+    snprintf(_logId, sizeof(_logId)-1, "%s[0x%X]", _logPfx, capId);
+
+    dialog->setInvokeTimeout(invTimeout);
+    dialog->addListener(this);
+    _fsmState = SMS_SSF_Fsm::fsmWaitReq;
+    return 0;
 }
 
 /* ------------------------------------------------------------------------ *
  * SCFcontractor interface
  * ------------------------------------------------------------------------ */
-void CapSMSDlg::initialDPSMS(InitialDPSMSArg* arg) throw(CustomException)
+RCHash CapSMSDlg::initialDPSMS(InitialDPSMSArg* arg) _THROWS_NONE
 {
     MutexGuard  grd(_sync);
     //check preconfitions
+    if (_fsmState == SMS_SSF_Fsm::fsmIdle) {
+        RCHash rval = Init();
+        if (rval)
+            return rval;
+    }
     if (_fsmState != SMS_SSF_Fsm::fsmWaitReq)
-        throw CustomException((int)
-            _RCS_CAPService->mkhash(CAPServiceRC::contractViolation),
-            _logId, rc2Txt_CapService(CAPServiceRC::contractViolation));
+        return _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
 
-    smsc_log_debug(logger, "%s: --> %s: InitialDPSMS", _logId, nmScf);
+    //begin TCAP dialog with given component
+    smsc_log_debug(logger, "%s: --> %s{%u}: InitialDPSMS", _logId, nmScf, arg->ServiceKey());
     Invoke* op = dialog->initInvoke(CapSMSOp::InitialDPSMS, this);
     op->setParam(arg);
-    dialog->sendInvoke(op); //throws
-    dialog->beginDialog();  //throws
-
+    try {
+        dialog->sendInvoke(op); //throws
+        dialog->beginDialog();  //throws
+    } catch (const CustomException & c_exc) {
+        smsc_log_error(logger, "%s: %s", _logId, c_exc.what());
+        return (RCHash)(c_exc.errorCode());
+    } catch (...) {
+        smsc_log_error(logger, "%s: <unknown> exception", _logId);
+        return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgParam);
+    }
     //set postconditions 
     _timer = op;            //start Tssf
     _capState.s.smsIDP = CAPSmsStateS::operInited;
     _fsmState = SMS_SSF_Fsm::fsmWaitInstr;
     _relation = SMS_SSF_Fsm::relControl;
+    return 0;
 }
 
-void CapSMSDlg::reportSubmission(bool submitted) throw(CustomException)
+RCHash CapSMSDlg::reportSubmission(bool submitted) _THROWS_NONE
 {
     MutexGuard  grd(_sync);
     //check preconfitions
     if (_fsmState != SMS_SSF_Fsm::fsmMonitoring)
-        throw CustomException((int)
-            _RCS_CAPService->mkhash(CAPServiceRC::contractViolation),
-            _logId, rc2Txt_CapService(CAPServiceRC::contractViolation));
+        return _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
 
-    eventReportSMS(submitted); //throws
+    return eventReportSMS(submitted);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -418,7 +437,8 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
  * Private/protected methods
  * ------------------------------------------------------------------------ */
 //Returns true if Invoke is sent
-bool CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
+//Reports delivery status (continues capSMS dialog)
+RCHash CapSMSDlg::eventReportSMS(bool submitted) _THROWS_NONE
 {
     EventTypeSMS_e eventType;
     if (submitted) {
@@ -435,7 +455,7 @@ bool CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
                         smsc::inman::comp::_nmEventTypeSMS(eventType));
         _relation = SMS_SSF_Fsm::relNone;
         _fsmState = SMS_SSF_Fsm::fsmDone;
-        return false;
+        return 0;
     }
 
      //disarm this EDP
@@ -451,9 +471,16 @@ bool CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
     Invoke* op = dialog->initInvoke(CapSMSOp::EventReportSMS, this,
             (reportType == MessageType_request) ? 0/*dflt*/ : CAPSMS_END_TIMEOUT);
     op->setParam(&arg);
-    dialog->sendInvoke(op);  //throws
-    dialog->continueDialog();  //throws
-
+    try {
+        dialog->sendInvoke(op);     //throws
+        dialog->continueDialog();   //throws
+    } catch (const CustomException & c_exc) {
+        smsc_log_error(logger, "%s: %s", _logId, c_exc.what());
+        return (RCHash)(c_exc.errorCode());
+    } catch (...) {
+        smsc_log_error(logger, "%s: <unknown> exception", _logId);
+        return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgParam);
+    }
     //set postconfitions
     setTimer(op);
     _capState.s.smsReport = CAPSmsStateS::operInited;
@@ -463,10 +490,22 @@ bool CapSMSDlg::eventReportSMS(bool submitted) throw(CustomException)
         _fsmState = SMS_SSF_Fsm::fsmDone;
         _relation = SMS_SSF_Fsm::relNone;
     }
-    return true;
+    return 0;
 }
 
-//Ends TC dialog, releases Dialog()
+//Forcedly ends CapSMS dialog: sends to SCF either submission failure report or U_ABORT 
+void CapSMSDlg::endCapSMS(void)
+{
+    //in monitoring state send submission failure report
+    //and wait for T_END_IND or L_CANCEL
+    if (_fsmState == SMS_SSF_Fsm::fsmMonitoring) {
+        if (eventReportSMS(false))
+            endTCap(true); //send 
+    } else if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) && !_capState.s.smsReport)
+        endTCap(true); //send U_ABORT to SCF
+}
+
+//Ends TC dialog depending on CapSMS state, releases Dialog()
 void CapSMSDlg::endTCap(bool u_abort/* = false*/)
 {
     _fsmState = SMS_SSF_Fsm::fsmDone;

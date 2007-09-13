@@ -18,6 +18,10 @@ using smsc::inman::comp::CapSMSOp;
 using smsc::inman::comp::InitialDPSMSArg;
 using smsc::inman::comp::ConnectSMSArg;
 
+#ifdef _THROWS_NONE
+#undef _THROWS_NONE
+#endif
+#define _THROWS_NONE /* throw() */
 
 namespace smsc {
 namespace inman {
@@ -75,19 +79,25 @@ class CapSMSDlg : SMS_SSF_Fsm, DialogListener, InvokeListener {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
     CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
-                USHORT_T timeout = 0, const char * scf_ident = NULL,
-                Logger * uselog = NULL);
+                USHORT_T inv_timeout = 0, const char * scf_ident = NULL,
+                Logger * uselog = NULL) _THROWS_NONE;
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
 
+    //Allocates and initializes TCAP dialog
+    RCHash Init(void) _THROWS_NONE;
+
     inline unsigned getId(void) const { return capId; }
+    inline const char * Ident(void) const { return _logId; }
+    CAPSmsStateT CAPState(void) { MutexGuard tmp(_sync); return _capState; }
+
 
     // SCFcontractor interface
     //  initiates capSMS dialog (over TCAP dialog)
-    void initialDPSMS(InitialDPSMSArg* arg) throw(CustomException);
+    RCHash initialDPSMS(InitialDPSMSArg* arg) _THROWS_NONE;
     //  reports delivery status(continues) and ends capSMS dialog
-    void reportSubmission(bool submitted) throw(CustomException);
-
-    void abortSMS(void); //ends TC dialog, releases Dialog(), resets SSFhandler
+    RCHash reportSubmission(bool submitted) _THROWS_NONE;
+    //Forcedly ends CapSMS dialog
+    void abortSMS(void);
 
 protected:
     friend class Dialog;
@@ -109,9 +119,13 @@ protected:
     void onInvokeLCancel(Invoke* inv);
 
 private:
-    void endTCap(bool u_abort = false); //ends TC dialog, releases Dialog()
+    //Forcedly ends CapSMS dialog: sends to SCF 
+    //either submission failure report or U_ABORT 
+    void endCapSMS(void);
+    //Ends TC dialog depending on CapSMS state, releases Dialog()
+    void endTCap(bool u_abort = false);
     // reports delivery status (continues capSMS dialog)
-    bool eventReportSMS(bool submitted) throw(CustomException);
+    RCHash eventReportSMS(bool submitted) _THROWS_NONE;
     inline void setTimer(Invoke * new_op)
     {
         if (_timer)
@@ -134,6 +148,7 @@ private:
     Mutex       _sync;
     unsigned    capId;
     //prefix for logging info
+    const char *_logPfx; //"CapSMS"
     char        _logId[sizeof("CapSMS[0x%X]") + sizeof(unsigned)*3 + 1];
 
     Dialog*         dialog;     //TCAP dialog
@@ -145,6 +160,7 @@ private:
     Logger*         logger;
     messageType_e   reportType; //notification or request
     std::auto_ptr<ConnectSMSArg> smsParams;
+    USHORT_T        invTimeout;
 };
 
 } //inap
