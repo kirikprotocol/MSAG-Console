@@ -14,7 +14,7 @@
             name="${fn:escapeXml(name)}"
             value=
             <c:choose>
-                <c:when test="${fn:escapeXml(bean[name])==0}">""</c:when>
+                <c:when test="${fn:escapeXml(bean[name])==0 || fn:escapeXml(bean[name])==-1}">""</c:when>
                 <c:otherwise>"${fn:escapeXml(bean[name])}"</c:otherwise>
             </c:choose>
             <c:if test="${readonly}"> readonly</c:if>
