@@ -194,20 +194,22 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
     MutexGuard  tmp(dlgGrd);
     if (!(_state.value & TC_DLG_CLOSED_MASK)) {
         if (type == Dialog::endUAbort) {
-            UCHAR_T abInfo = 0; //ABRT-source : dialogue-service-user(0)
-            smsc_log_debug(logger, "U_ABRT_REQ -> {"
+            //NOTE: do not set abortInfo, so the EINSS7 selects appropriate
+            //variant of TCAP PDU: either ABRT-apdu or AARE-apdu with 
+            //Associate-source-diagnostic set to  dialogue-service-user : null(0)
+            smsc_log_debug(logger, "U_ABORT_REQ {"
                             "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                             "  Dialog[0x%X]\n"
                             "  PriOrder: 0x%X, QoS: 0x%X\n"
-                            "  App. context[%u]: %s\n"
+                            "  Abort info: \n"
+                            "  App. context: \n"
+                            "  User info: \n"
                             "}",
-                           dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
-                           ac.acLen, DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str());
-
+                           dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
+                           priority, qSrvc);
             USHORT_T result =
                 EINSS7_I97TUAbortReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
-                                priority, qSrvc, 1, &abInfo,
-                                ac.acLen, ac.ac, 0, NULL);
+                                priority, qSrvc, 0, NULL, 0, NULL, 0, NULL);
 
             checkSS7res("TUAbortReq failed", result); //throws
             _state.s.dlgLUAborted = 1;
