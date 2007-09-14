@@ -505,8 +505,25 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
                    DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
                    DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
-  // TODO: Implement
-  return MSG_OK;
+
+    //NOTE: dialog initiation by remote peer is not supported yet,
+    //so just send AARE-apdu with Associate-source-diagnostic set to
+    //dialogue-service-user : application-context-name-not-supported(2)
+    UCHAR_T abInfo = 0x02;
+    smsc_log_debug(tcapLogger, "U_ABORT_REQ {"
+                    "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
+                    "  Dialog[0x%X]\n"
+                    "  PriOrder: 0x%X, QoS: 0x%X\n"
+                    "  Abort info: 0x02\n"
+                    "  App. context: \n"
+                    "  User info: \n"
+                    "}",
+                   ssn, userId, tcapInstanceId, dialogueId,
+                   priOrder, qualityOfService);
+
+    EINSS7_I97TUAbortReq(ssn, userId, tcapInstanceId, dialogueId,
+                        priOrder, qualityOfService, 1, &abInfo, 0, NULL, 0, NULL);
+    return MSG_OK;
 }
 
 USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
