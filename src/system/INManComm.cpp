@@ -280,22 +280,33 @@ int INManComm::Execute()
       ProcessExpiration();
     }
 
-    int packetSize;
+    uint32_t packetSize;
     if(socket->ReadAll((char*)&packetSize,4)<=0)
     {
-      info2(log,"Socket read failed:%d",errno);
+      info2(log,"Socket len read failed:%d",errno);
       socketOk=false;
       socket->Close();
+      sleep(2);
       socket=new net::Socket();
       continue;
     }
     packetSize=ntohl(packetSize);
+    if(packetSize>65536)
+    {
+      warn2(log,"Packet size too big:%d",packetSize);
+      socketOk=false;
+      socket->Close();
+      sleep(2);
+      socket=new net::Socket();
+      continue;
+    }
     buf.reset(packetSize);
     if(socket->ReadAll((char*)buf.get(),packetSize)<=0)
     {
-      info2(log,"Socket read failed:%d",errno);
+      info2(log,"Socket packet read failed:%d",errno);
       socketOk=false;
       socket->Close();
+      sleep(2);
       socket=new net::Socket();
       continue;
     }
@@ -312,6 +323,7 @@ int INManComm::Execute()
       warn2(log,"Failed to deserialize buffer:%s",e.what());
       socket->Close();
       socketOk=false;
+      sleep(2);
       socket=new net::Socket();
       continue;
     }
