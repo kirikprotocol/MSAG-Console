@@ -1067,7 +1067,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 #define GETDLOPTIONALCFGPARAM(n,t) \
   try{ distlstsme->n=cfg.cfgman->t("distrList."#n);}\
   catch(...) \
-  { smsc_log_warn(log,"Config Parameter distrList."#n"not found in config. Using default value");}
+  { smsc_log_warn(log,"Config Parameter distrList."#n" not found in config. Using default value");}
 
   GETDLOPTIONALCFGPARAM(autoCreatePrincipal,getBool);
   GETDLOPTIONALCFGPARAM(defaultMaxLists,getInt);
