@@ -941,6 +941,35 @@ int Profiler::Execute()
           }
         }
 #ifdef SMSEXTRA
+        else if(profCmd=="SETNICK")
+        {
+          try{
+            if(isValidAlias(orgArg))
+            {
+              std::string lcarg=orgArg;
+              for(int i=0;i<lcarg.length();i++)lcarg[i]=tolower(lcarg[i]);
+              if(blklst && blklst->check(lcarg))
+              {
+                msg=msgAliasInvalid;
+              }else
+              {
+                msg=msgAliasOk;
+                internal_update(_update_extra_nick,addr,0,orgArg.c_str());
+              }
+            }else
+            {
+              msg=msgAliasFailed;
+            }
+          }catch(...)
+          {
+            msg=msgAliasFailed;
+          }
+        }else if(profCmd=="CLEARNICK")
+        {
+          msg=msgAliasDeleted;
+          internal_update(_update_extra_nick,addr,0,"");
+        }
+/*
         else if(profCmd=="NICK")
         {
           if(arg1=="NONE")
@@ -997,7 +1026,8 @@ int Profiler::Execute()
               msg=msgAliasFailed;
             }
           }
-        }else if(profCmd=="FLASH")
+*/
+        else if(profCmd=="FLASH")
         {
           if(arg1=="NONE")
           {
