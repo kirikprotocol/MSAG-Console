@@ -1064,6 +1064,17 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 #endif
 
+#define GETDLOPTIONALCFGPARAM(n,t) \
+  try{ distlstsme->n=cfg.cfgman->t("distrList."#n);}\
+  catch(...) \
+  { smsc_log_warn(log,"Config Parameter distrList."#n"not found in config. Using default value");}
+
+  GETDLOPTIONALCFGPARAM(autoCreatePrincipal,getBool);
+  GETDLOPTIONALCFGPARAM(defaultMaxLists,getInt);
+  GETDLOPTIONALCFGPARAM(defaultMaxElements,getInt);
+  GETDLOPTIONALCFGPARAM(sendSpeed,getInt);
+
+  /*
   try{
     distlstsme->autoCreatePrincipal=cfg.cfgman->getBool("distrList.autocreatePrincipal");
     distlstsme->defaultMaxLists=cfg.cfgman->getInt("distrList.defaultMaxLists");
@@ -1071,6 +1082,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }catch(...)
   {
   }
+  */
 
 
 
