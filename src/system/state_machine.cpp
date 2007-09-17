@@ -1240,10 +1240,11 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  bool fromDistrList=src_proxy && !strcmp(src_proxy->getSystemId(),"DSTRLST");
   bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
   bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+  bool fromDistrList=src_proxy && !strcmp(src_proxy->getSystemId(),"DSTRLST");
 #ifdef SMSEXTRA
+  bool toSmsx=dest_proxy && !strcmp(dest_proxy->getSystemId(),"smsx");
 
   bool firstPart=true;
   if(sms->getIntProperty(Tag::SMSC_MERGE_CONCAT))
@@ -1268,7 +1269,7 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   bool noDestChange=false;
-  if((fromMap || fromDistrList) && toMap && firstPart)
+  if((((fromMap || fromDistrList) && toMap) || (fromMap && toSmsx))&& firstPart)
   {
     ExtraInfo::ServiceInfo xsi;
     int extrabit=ExtraInfo::getInstance().checkExtraService(*sms,xsi);
@@ -1276,13 +1277,55 @@ StateType StateMachine::submit(Tuple& t)
     {
       info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,sms->getOriginatingAddress().toString().c_str());
     }
-    if(((srcprof.subscription&EXTRA_NICK) || xsi.serviceBit==EXTRA_NICK) && srcprof.nick.length()>0)
+    if((/*(srcprof.subscription&EXTRA_NICK) ||*/ extrabit==EXTRA_NICK))
     {
+      if(!srcprof.nick.length())
+      {
+        submitResp(t,sms,Status::INVOPTPARAMVAL);
+        warn2(smsLog,"EXTRA: abonent '%s' sent nick command without nick set",sms->getOriginatingAddress().toString().c_str());
+        return ERROR_STATE;
+      }
       sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_NICK);
       //sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoEnabled);
       info2(smsLog,"EXTRA: smsnick for abonent %s",sms->getOriginatingAddress().toString().c_str());
+      unsigned txtlen;
+      if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+      {
+        sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&txtlen);
+      }else
+      {
+        txtlen=sms->getIntProperty(Tag::SMPP_SM_LENGTH);
+      }
+      TmpBuf<char,2048> txt(txtlen*3);
+      txtlen=getSmsText(sms,txt.get(),txtlen*3);
+      int i=0;
+      while(i<txtlen && !isspace(txt[i]))i++;
+      while(i<txtlen && isspace(txt[i]))i++;
+      int j=i;
+      while(i<txtlen && !isspace(txt[i]))i++;
+      std::string addrstr;
+      addrstr.assign(txt.get()+j,i-j);
+      Address daaddr;
+      try{
+        daaddr=addrstr.c_str();
+      }catch(...)
+      {
+        submitResp(t,sms,Status::INVDSTADR);
+        warn2(smsLog,"EXTRA: abonent '%s' sent nick command with invalid address '%s'",sms->getOriginatingAddress().toString().c_str(),addrstr.c_str());
+        return ERROR_STATE;
+      }
+      Address ddadst;
+      if(smsc->AliasToAddress(daaddr,ddadst))
+      {
+        daaddr=ddadst;
+      }
+      sms->setDealiasedDestinationAddress(daaddr);
+      dst=daaddr;
+      sms->setBillingRecord(1);
     }
-    if((srcprof.subscription&EXTRA_FLASH) || xsi.serviceBit==EXTRA_FLASH)
+
+
+    if((srcprof.subscription&EXTRA_FLASH) || extrabit==EXTRA_FLASH)
     {
       sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
       sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
@@ -1290,7 +1333,7 @@ StateType StateMachine::submit(Tuple& t)
     }
     if(extrabit && xsi.diverted)
     {
-      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit|(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FLASH));
+      sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,xsi.serviceBit|(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&(EXTRA_FLASH|EXTRA_NICK)));
       //sms->setIntProperty(Tag::SMSC_HIDE,HideOption::hoDisabled);
       //sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,0);
       sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&~3)|2);
@@ -1501,12 +1544,18 @@ StateType StateMachine::submit(Tuple& t)
 
   __trace2__("SUBMIT: archivation request for %lld/%d is %s",t.msgId,dialogId,ri.archived?"true":"false");
   sms->setArchivationRequested(ri.archived);
-  sms->setBillingRecord(ri.billing);
+
 #ifdef SMSEXTRA
   if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FAKE)
   {
     sms->setBillingRecord(0);
   }
+  if(!(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK))
+  {
+    sms->setBillingRecord(ri.billing);
+  }
+#else
+  sms->setBillingRecord(ri.billing);
 #endif
 
 
@@ -2727,11 +2776,19 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       Address src;
       __trace2__("SUBMIT: wantAlias=%s, hide=%s",dstSmeInfo.wantAlias?"true":"false",HideOptionToText(sms->getIntProperty(Tag::SMSC_HIDE)));
 #ifdef SMSEXTRA
-      if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK)
+      if(sms->getIntProperty(Tag::SMPP_PRIVACYINDICATOR)==2)
       {
         Profile srcprof=smsc->getProfiler()->lookup(sms->getOriginatingAddress());
-        Address nick(srcprof.nick.length(),5,0,srcprof.nick.c_str());
-        sms->setOriginatingAddress(nick);
+        if(srcprof.nick.length())
+        {
+          try{
+            Address nick(srcprof.nick.length(),5,0,srcprof.nick.c_str());
+            sms->setOriginatingAddress(nick);
+          }catch(...)
+          {
+            warn2(smsLog,"Failed to construct nick from '%s' for abonent '%s'",srcprof.nick.c_str(),sms->getOriginatingAddress().toString().c_str());
+          }
+        }
       }else
 #endif
       if(
