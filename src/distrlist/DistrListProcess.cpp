@@ -42,6 +42,7 @@ DistrListProcess::DistrListProcess(DistrListAdmin* admin,SmeRegistrar* reg) :
   autoCreatePrincipal=false;
   defaultMaxLists=10;
   defaultMaxElements=10;
+  sendSpeed=5;
 }
 
 DistrListProcess::~DistrListProcess()
@@ -62,8 +63,11 @@ void DistrListProcess::putCommand(const SmscCommand& cmd)
 bool DistrListProcess::getCommand(SmscCommand& cmd)
 {
   MutexGuard g(mon);
-  if(inQueue.Count()==0)return false;
-  inQueue.Shift(cmd);
+  if(inQueue.empty())return false;
+  InQueue::iterator b=inQueue.begin();
+  if(b->first>time(NULL))return false;
+  cmd=b->second;
+  inQueue.erase(b);
   return true;
 }
 
@@ -85,7 +89,7 @@ void DistrListProcess::init()
 bool DistrListProcess::hasInput() const
 {
   MutexGuard g(mon);
-  return inQueue.Count()!=0;
+  return !inQueue.empty() && inQueue.begin()->first<time(NULL);
 }
 
 // for detach monitor call with NULL
@@ -158,7 +162,7 @@ int DistrListProcess::Execute()
       SMS &sms=*cmd->get_sms();
       {
         SmscCommand resp=SmscCommand::makeDeliverySmResp("",cmd->get_dialogId(),Status::OK);
-        putIncomingCommand(resp);
+        putIncomingCommand(resp,0);
       }
       string s;
       smsc::util::getSmsText(&sms,s);
@@ -469,12 +473,13 @@ int DistrListProcess::Execute()
             task->submited_count=0;
             task->listName=fullarg;
 
+            time_t now=time(NULL);
             for(int i=0;i<m.Count();i++)
             {
               newsms.setDestinationAddress(m[i]);
               int dlgId=GetNextDialogId();
               SmscCommand snd=SmscCommand::makeSumbmitSm(newsms,dlgId);
-              putIncomingCommand(snd);
+              putIncomingCommand(snd,now+i/sendSpeed);
               task->list.resize(task->count+1);
               task->list[task->count].addr = m[i];
               task->list[task->count].dialogId = dlgId;
@@ -483,7 +488,7 @@ int DistrListProcess::Execute()
               task_map.insert( pair<unsigned,TPAIR>(task->list[i].dialogId,p) );
               task->count++;
             }
-            task->startTime = time(0);
+            task->expirationTime = now+m.Count()/sendSpeed+WAIT_SUBMISSION;
             task_sheduler.push_back(task.release());
           }catch(IllegalSubmitterException& e)
           {
@@ -569,7 +574,7 @@ int DistrListProcess::Execute()
       {
         smsc::util::fillSms(&ans,answer.c_str(),(int)answer.length(),CONV_ENCODING_CP1251,DataCoding::UCS2|DataCoding::LATIN1);
         SmscCommand cmdAnswer=SmscCommand::makeSumbmitSm(ans,GetNextDialogId());
-        putIncomingCommand(cmdAnswer);
+        putIncomingCommand(cmdAnswer,0);
       }
     }
     else if ( cmd->get_commandId() == SUBMIT_RESP )
@@ -586,10 +591,10 @@ int DistrListProcess::Execute()
 
 const char* DistrListProcess::taskName() { return "DitrListProcess";}
 
-void DistrListProcess::putIncomingCommand(const SmscCommand& cmd)
+void DistrListProcess::putIncomingCommand(const SmscCommand& cmd,time_t t)
 {
   mon.Lock();
-  inQueue.Push(cmd);
+  inQueue.insert(InQueue::value_type(t,cmd));
   mon.Unlock();
   managerMonitor->Signal();
 }
@@ -691,6 +696,7 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   task->submited_count = 0;
   if ( task->count != 0 )
   {
+    time_t now=time(NULL);
     for ( unsigned i=0; i<task->count; ++i )
     {
       task->list[i].dialogId = GetNextDialogId();
@@ -699,13 +705,13 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
       TPAIR p(task.get(),i);
       task_map.insert( pair<unsigned,TPAIR>(task->list[i].dialogId,p) );
       __trace2__(":DPL:DEST %d.%d.%s",task->list[i].addr.type,task->list[i].addr.plan,task->list[i].addr.value);
-      putIncomingCommand(SmscCommand::makeSumbmitSm(msg,task->list[i].dialogId));
+      putIncomingCommand(SmscCommand::makeSumbmitSm(msg,task->list[i].dialogId),now+i/sendSpeed);
       __trace2__(":DPL: task %d of (0x%x:%d) has been scheduled for submit",
         task->list[i].dialogId,
         task.get(),
         task->count);
     }
-    task->startTime = time(0);
+    task->expirationTime = now+task->count/sendSpeed+WAIT_SUBMISSION;
     task_sheduler.push_back(task.get());
     __trace2__(":DPL: task list 0x%x has been scheduled",task.get());
     task.release();
@@ -798,7 +804,7 @@ void DistrListProcess::SendDLAnswer(ListTask* task)
   string answer="#template=dl.sendok#{arg1}=\""+task->listName+"\" {arg2}="+buf1+" {arg3}="+buf2;
   smsc::util::fillSms(&ans,answer.c_str(),(int)answer.length(),CONV_ENCODING_CP1251,DataCoding::UCS2|DataCoding::LATIN1);
   SmscCommand cmdAnswer=SmscCommand::makeSumbmitSm(ans,GetNextDialogId());
-  putIncomingCommand(cmdAnswer);
+  putIncomingCommand(cmdAnswer,0);
 
   LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
   if ( it != task_sheduler.end() )
@@ -846,7 +852,7 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
 void DistrListProcess::CheckTimeouts()
 {
   time_t curTime = time(0);
-  while ( !task_sheduler.empty() && (task_sheduler.front()->startTime+WAIT_SUBMISSION < curTime) )
+  while ( !task_sheduler.empty() && (task_sheduler.front()->expirationTime < curTime) )
   {
     //__trace2__(":DPL: T:%s task 0x%x(T:%s) was time out",
     //  ctime(&curTime),task_sheduler.front(),ctime(&task_sheduler.front()->startTime));

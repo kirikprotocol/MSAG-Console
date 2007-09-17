@@ -43,7 +43,7 @@ protected:
   struct ListTask
   {
     TaskType taskType;//0 - submit multi, 1 - distr list
-    time_t startTime;
+    time_t expirationTime;
     std::string listName;
     unsigned count;           // количество елементов в задаче
     unsigned submited_count;  // количество элементов на которые прешол ответ
@@ -58,7 +58,8 @@ protected:
   DistrListAdmin* admin;
   mutable EventMonitor mon;
   Array<SmscCommand> outQueue;
-  Array<SmscCommand> inQueue;
+  typedef std::multimap<time_t,SmscCommand> InQueue;
+  InQueue inQueue;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   int seq;
@@ -121,9 +122,10 @@ public:
   bool autoCreatePrincipal;
   int defaultMaxLists;
   int defaultMaxElements;
+  int sendSpeed;
 
 protected:
-  void putIncomingCommand(const SmscCommand& cmd);
+  void putIncomingCommand(const SmscCommand& cmd,time_t t);
   SmscCommand getOutgoingCommand();
   bool hasOutput();
   void waitFor(unsigned timeout);
