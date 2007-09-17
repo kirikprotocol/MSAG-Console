@@ -173,19 +173,25 @@ int StatusSme::Execute()
       answer=buf;
     }else if(request=="getsched")
     {
-      if(arg.length()==0)
-      {
-        answer="usage: getsched address";
-      }else
-      {
-        time_t sc=smsc->scheduler->getScheduleByAddr(arg.c_str());
-        if(sc==0)
+      try{
+
+        if(arg.length()==0)
         {
-          answer="chain for "+arg+" not found in scheduled";
+          answer="usage: getsched address";
         }else
         {
-          strprintf(answer,"chain scheduled to %u",sc);
+          time_t sc=smsc->scheduler->getScheduleByAddr(arg.c_str());
+          if(sc==0)
+          {
+            answer="chain for "+arg+" not found in scheduled";
+          }else
+          {
+            answer="chain scheduled to %u"+sc;
+          }
         }
+      }catch(...)
+      {
+        strprintf(answer,"invalid address %s",arg.c_str());
       }
     }else if(request=="hlralert")
     {
@@ -217,6 +223,22 @@ int StatusSme::Execute()
       char buf[128];
       sprintf(buf,"Current alloc:%lld",getCurrentAlloc());
       answer=buf;
+    }else if(request=="chaininfo")
+    {
+      Scheduler::Chain c(0,"0",0);
+      if(smsc->getScheduler()->getChainInfo(arg.c_str(),c))
+      {
+        char buf1[64];
+        char buf2[64];
+        ctime_r(&c.headTime,buf1);
+        ctime_r(&c.lastValidTime,buf2);
+        strprintf(answer,"headTime:%s, validTime=%s, inTL=%s, inPM=%s, dpf=%s, queueSize=%d",
+                  buf1,buf2,c.inTimeLine?"true":"false",c.inProcMap?"true":"false",
+                  c.dpfPresent?"true":"false",c.queueSize);
+      }else
+      {
+        answer="Chain not found or in processing";
+      }
     }
     else
     {
