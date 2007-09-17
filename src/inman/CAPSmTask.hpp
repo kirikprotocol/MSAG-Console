@@ -130,6 +130,7 @@ public:
             if (!it->dlgRes || !it->dlgRes->completed)
                 return false;
         }
+        return true;
     }
 };
 
