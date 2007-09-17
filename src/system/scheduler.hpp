@@ -485,6 +485,7 @@ public:
     return c->headTime;
   }
 
+
   struct ReplaceIfPresentKey{
     const SMS* sms;
     ReplaceIfPresentKey(const SMS* argSms):sms(argSms)
@@ -1350,6 +1351,14 @@ public:
   time_t lastRejectReschedule;
 
   bool delayInit;
+  public:
+    bool getChainInfo(const Address& addr,Chain& out)
+    {
+      MutexGuard g(mon);
+      Chain *c=GetChain(addr);
+      if(!c)return 0;
+      out=*c;
+    }
 };
 
 }//system
