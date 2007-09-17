@@ -90,6 +90,11 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
   if(sms->hasIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE))
     optional.set_sourceBearerType(sms->getIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE));
 
+  if(sms->hasIntProperty(Tag::SMPP_PRIVACYINDICATOR))
+  {
+    optional.set_privacyIndicator(sms->getIntProperty(Tag::SMPP_PRIVACYINDICATOR));
+  }
+
 
   if ( sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD) ){
     unsigned len;
@@ -293,6 +298,10 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
     sms->setIntProperty(Tag::SMPP_SOURCE_NETWORK_TYPE,optional.get_sourceNetworkType());
   if(optional.has_sourceBearerType())
     sms->setIntProperty(Tag::SMPP_SOURCE_BEARER_TYPE,optional.get_sourceBearerType());
+  if(optional.has_privacyIndicator())
+  {
+    sms->setIntProperty(Tag::SMPP_PRIVACYINDICATOR,optional.get_privacyIndicator());
+  }
 
   if(!forceDC)
   {
