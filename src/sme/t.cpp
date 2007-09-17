@@ -79,6 +79,10 @@ bool answerMode=false;
 int answerMr;
 Address answerAddress;
 
+std::set<Address> tempBlock;
+std::set<Address> permBlock;
+
+
 template <class T,int N>
 int GetArraySize(const T (&arr)[N])
 {
@@ -540,6 +544,78 @@ void SetUmrCommand(SmppSession& ss,const string& args)
   CmdOut("umr set to %d\n",umr);
 }
 
+void addTempBlock(SmppSession& ss,const string& args)
+{
+  if(args.length())
+  {
+    try{
+      Address addr(args.c_str());
+      tempBlock.insert(addr);
+    }catch(...)
+    {
+      CmdOut("Invalid address:'%s'",args.c_str());
+    }
+  }
+}
+
+void addPermBlock(SmppSession& ss,const string& args)
+{
+  if(args.length())
+  {
+    try{
+      Address addr(args.c_str());
+      permBlock.insert(addr);
+    }catch(...)
+    {
+      CmdOut("Invalid address:'%s'",args.c_str());
+    }
+  }
+}
+
+void delTempBlock(SmppSession& ss,const string& args)
+{
+  if(args.length())
+  {
+    try{
+      Address addr(args.c_str());
+      std::set<Address>::iterator it=tempBlock.find(addr);
+      if(it!=tempBlock.end())
+      {
+        tempBlock.erase(it);
+      }else
+      {
+        CmdOut("Address '%s' wasn't temporary blocked",args.c_str());
+      }
+    }catch(...)
+    {
+      CmdOut("Invalid address:'%s'",args.c_str());
+    }
+  }
+}
+
+void delPermBlock(SmppSession& ss,const string& args)
+{
+  if(args.length())
+  {
+    try{
+      Address addr(args.c_str());
+      std::set<Address>::iterator it=permBlock.find(addr);
+      if(it!=permBlock.end())
+      {
+        permBlock.erase(it);
+      }else
+      {
+        CmdOut("Address '%s' wasn't temporary blocked",args.c_str());
+      }
+    }catch(...)
+    {
+      CmdOut("Invalid address:'%s'",args.c_str());
+    }
+  }
+}
+
+
+
 const char* modes[]=
 {
   "default(def)",
@@ -948,7 +1024,7 @@ void LoadPermErrors(SmppSession& s,const std::string& args)
   }
   FILE *f=fopen(args.c_str(),"rt");
   char buf[128];
-  tempErrors.clear();
+  permErrors.clear();
   while(fgets(buf,sizeof(buf),f))
   {
     if(!buf[0])continue;
@@ -987,7 +1063,11 @@ CmdRec commands[]={
 {"setcmdout",SetCmdOut},
 {"setincomout",SetIncomOut},
 {"loadtemperrors",LoadTempErrors},
-{"loadpermerrors",LoadPermErrors}
+{"loadpermerrors",LoadPermErrors},
+{"addtempblock",addTempBlock},
+{"deltempblock",delTempBlock},
+{"addpermblock",addPermBlock},
+{"delpermblock",delPermBlock}
 };
 
 const int commandsCount=sizeof(commands)/sizeof(CmdRec);
@@ -1295,6 +1375,29 @@ public:
        pdu->get_commandId()==SmppCommandSet::DATA_SM)
     {
       bool isDataSm=pdu->get_commandId()==SmppCommandSet::DATA_SM;
+      {
+        Address org,dst;
+        ExtractAddresses(pdu,org,dst);
+        if(tempBlock.find(org)!=tempBlock.end() || tempBlock.find(dst)!=tempBlock.end())
+        {
+          sendResp(pdu->get_sequenceNumber(),SmppStatusSet::ESME_RX_T_APPN,isDataSm,0);
+          if(!silent)
+          {
+            IncomOut("\nPDU from %s to %s blocked with temporal error\n",org.toString().c_str(),dst.toString().c_str());
+          }
+          return;
+        }
+        if(permBlock.find(org)!=permBlock.end() || permBlock.find(dst)!=permBlock.end())
+        {
+          sendResp(pdu->get_sequenceNumber(),SmppStatusSet::ESME_RX_P_APPN,isDataSm,0);
+          if(!silent)
+          {
+            IncomOut("\nPDU from %s to %s blocked with permanent error\n",org.toString().c_str(),dst.toString().c_str());
+          }
+          return;
+        }
+      }
+
       int rnd=rand()%100;
       if((isDataSm && rnd<temperrProbDataSm) || (!isDataSm && rnd<temperrProb))
       {
