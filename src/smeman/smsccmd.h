@@ -467,7 +467,7 @@ struct INSmsChargeResponse{
   struct SubmitContext{
     SmeProxy* srcProxy;
     SmeProxy* dstProxy;
-    bool allowCreateSms;
+    int createSms;
     bool needToSendResp;
     int dialogId;
     int dest_proxy_index;

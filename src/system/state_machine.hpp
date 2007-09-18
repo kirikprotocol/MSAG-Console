@@ -88,6 +88,12 @@ public:
     directiveAliases[dir].push_back(alias);
   }
 
+  enum SmsCreationState{
+    scsCreate,
+    scsDoNotCreate,
+    scsReplace
+  };
+
 protected:
 
   EventQueue& eq;
@@ -140,6 +146,52 @@ protected:
 
   StateType DivertProcessing(Tuple& t,SMS& sms);
 
+  struct SbmContext
+  {
+    SbmContext(Tuple& argT):t(argT)
+    {
+      sms=0;
+      dest_proxy=0;
+      dest_proxy_index=-1;
+      fromMap=false;
+      toMap=false;
+      fromDistrList=false;
+      noDestChange=false;
+      has_route=false;
+      isForwardTo=false;
+      generateDeliver=false;
+      needToSendResp=false;
+      dialogId=-1;
+      createSms=scsCreate;
+    }
+    SMS* sms;
+    SmeProxy* dest_proxy;
+    int dest_proxy_index;
+    SmeProxy* src_proxy;
+    Tuple& t;
+    bool fromMap;
+    bool toMap;
+    bool fromDistrList;
+    Profile srcprof;
+    Profile profile;
+    bool noDestChange;
+    Address dst;
+    bool has_route;
+    RouteInfo ri;
+    StateType rvstate;
+    bool isForwardTo;
+    bool generateDeliver;
+    bool needToSendResp;
+    bool noPartitionSms;
+    SmsCreationState createSms;
+    int dialogId;
+  };
+
+  bool processMerge(SbmContext& c);
+
+#ifdef SMSEXTRA
+  bool ExtraProcessing(SbmContext& c);
+#endif
 };
 
 }//system
