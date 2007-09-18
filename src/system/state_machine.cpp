@@ -2023,6 +2023,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
   t.command.setProxy(src_proxy);
   t.command->set_dialogId(dialogId);
+  sms->dialogId=dialogId;
 
   if(!resp->result)
   {
