@@ -54,7 +54,7 @@ void CHSendRoutingInfoArg::setSubscrMSISDN(const char *addr) throw(CustomExcepti
 
 //3GPP TS 23.018 version 6.5.0 Release 6
 //      7.2.2.1 Process SRI_HLR
-void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
+void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t          erc;
     SendRoutingInfoArg_t    cmd;

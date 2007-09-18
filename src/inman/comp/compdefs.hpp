@@ -34,7 +34,7 @@ public:
 //OPERATIONs, which are transferred through TCAP.
 class Component {
 public:
-    virtual void encode(std::vector<unsigned char>& buf) throw(CustomException)
+    virtual void encode(std::vector<unsigned char>& buf) const throw(CustomException)
     { throw CustomException(-1, "ASN.1 encoding is not implemented"); }
 
     virtual void decode(const std::vector<unsigned char>& buf) throw(CustomException)

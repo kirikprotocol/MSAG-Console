@@ -38,7 +38,7 @@ public:
     inline void        ownParam(Component* p)  { param = p; ownComp = true; }
 
     //throws CustomException
-    void encode(RawBuffer& operation, RawBuffer& params) throw(CustomException)
+    void encode(RawBuffer& operation, RawBuffer& params) const throw(CustomException)
     {
         operation.clear(); params.clear();
         operation.push_back(opcode);

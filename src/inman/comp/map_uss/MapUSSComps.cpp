@@ -73,12 +73,12 @@ ProcessUSSRequestArg::ProcessUSSRequestArg()
     _alrt = alertingNotSet;
 }
 
-bool ProcessUSSRequestArg::msISDNadr_present(void)
+bool ProcessUSSRequestArg::msISDNadr_present(void) const
 {
     return (_msAdr.signals[0] && (_msAdr.signals[1] || _msAdr.signals[0] != '0')) ? true : false;
 }
 
-bool ProcessUSSRequestArg::msAlerting_present(void)
+bool ProcessUSSRequestArg::msAlerting_present(void) const
 {
     return (_alrt == alertingNotSet) ? false : true;
 }
@@ -123,7 +123,7 @@ void ProcessUSSRequestArg::decode(const std::vector<unsigned char>& buf) throw(C
                       _uSSData.size());
 }
 
-void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t  er;
     /* construct USSD_Arg */

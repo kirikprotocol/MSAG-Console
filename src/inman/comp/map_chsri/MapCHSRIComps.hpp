@@ -57,7 +57,7 @@ public:
     void setSubscrMSISDN(const char * msisdn) throw(CustomException);
     void setSubscrMSISDN(const TonNpiAddress& addr) { subscrAdr = addr; }
 
-    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
     TonNpiAddress      	scfAdr;     //requesting GMSC or SCF address

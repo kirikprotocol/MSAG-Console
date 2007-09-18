@@ -250,7 +250,7 @@ InitialDPSMSArg::~InitialDPSMSArg() { delete(comp); }
 
 
 
-void InitialDPSMSArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
+void InitialDPSMSArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t er;
 

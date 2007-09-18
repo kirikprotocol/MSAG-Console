@@ -91,14 +91,14 @@ public:
 
     //Getters:
     //Optional parameters
-    bool  msISDNadr_present(void);
-    bool  msAlerting_present(void);
+    bool  msISDNadr_present(void) const;
+    bool  msAlerting_present(void) const;
     //returns empty TonNpiAddress if msISDN adr absent
     const TonNpiAddress& getMSISDNadr(void) const   { return _msAdr; }
     //returns alertingNotSet if alerting absent
     enum AlertingPattern getAlertingPattern(void) const { return _alrt; }
 
-    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:
@@ -113,7 +113,7 @@ public:
     ProcessUSSRequestRes();
     ~ProcessUSSRequestRes();
 
-    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 private:

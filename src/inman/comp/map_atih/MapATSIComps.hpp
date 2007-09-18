@@ -76,7 +76,7 @@ public:
 
     void setRequestedCSI(enum RequestedCAMEL_SubscriptionInfo csi2ask) { askCSI = csi2ask; }
 
-    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
     bool            subscrImsi;

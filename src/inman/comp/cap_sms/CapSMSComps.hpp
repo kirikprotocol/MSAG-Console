@@ -142,7 +142,7 @@ public:
         missingCustomerRecord = 6
     } IDPErrCodes;
 
-    inline uint32_t ServiceKey(void) { return servKey; }
+    inline uint32_t ServiceKey(void) const { return servKey; }
 
     void setDestinationSubscriberNumber(const TonNpiAddress& addr); // missing for MT
     void setDestinationSubscriberNumber(const char * text);
@@ -170,7 +170,7 @@ public:
     void setLocationInformationMSC(const TonNpiAddress& addr) throw(CustomException);
     void setLocationInformationMSC(const char* text) throw(CustomException);
 
-    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
 private:
     uint32_t    servKey;
@@ -187,7 +187,7 @@ public:
     EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
     ~EventReportSMSArg() {}
 
-    void encode(std::vector<unsigned char>& buf) throw(CustomException);
+    void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     std::string & print(std::string & dump) const;
 
 private:

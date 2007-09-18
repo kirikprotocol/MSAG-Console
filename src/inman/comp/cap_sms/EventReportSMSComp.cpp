@@ -26,7 +26,7 @@ std::string & EventReportSMSArg::print(std::string & dump) const
     return dump;
 }
 
-void EventReportSMSArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
+void EventReportSMSArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t	er;
     /* construct EventReportSMSArg */

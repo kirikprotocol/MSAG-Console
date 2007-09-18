@@ -46,7 +46,7 @@ void ATSIArg::setSubscriberId(const char *addr, bool imsi/* = true*/) throw(Cust
     }
 }
 
-void ATSIArg::encode(std::vector<unsigned char>& buf) throw(CustomException)
+void ATSIArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t                          erc;
     AnyTimeSubscriptionInterrogationArg_t   cmd;

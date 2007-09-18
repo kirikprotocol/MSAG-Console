@@ -45,7 +45,7 @@ void ProcessUSSRequestRes::decode(const std::vector<unsigned char>& buf) throw(C
                       _uSSData.size());
 }
 
-void ProcessUSSRequestRes::encode(std::vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestRes::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
     asn_enc_rval_t      er;
     /* construct USSD_Arg */
