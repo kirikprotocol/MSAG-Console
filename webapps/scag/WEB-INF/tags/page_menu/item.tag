@@ -39,6 +39,7 @@
                 <input type=submit id="${name}" name="${name}" value="<fmt:message>${value}</fmt:message>" title="<fmt:message>${title}</fmt:message>"
                     <c:if test="${!empty enabled && !enabled}">disabled</c:if>
                     <c:if test="${!empty onclick}">jbuttonOnclick="${onclick}"</c:if>
+                    <c:if test="${!empty onclick}">onclick="${onclick}"</c:if>
                     <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>>
                 </input>
             </td>
