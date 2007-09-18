@@ -5252,7 +5252,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
     {
       info2(smsLog,"EXTRA: service with bit=%x detected for abonent %s",xsi.serviceBit,c.sms->getOriginatingAddress().toString().c_str());
     }
-    if((/*(srcprof.subscription&EXTRA_NICK) ||*/ extrabit==EXTRA_NICK))
+    if((/*(srcprof.subscription&EXTRA_NICK) ||*/ extrabit && xsi.serviceBit==EXTRA_NICK))
     {
       if(!c.srcprof.nick.length())
       {
@@ -5300,7 +5300,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
     }
 
 
-    if((c.srcprof.subscription&EXTRA_FLASH) || extrabit==EXTRA_FLASH)
+    if((c.srcprof.subscription&EXTRA_FLASH) || (extrabit && xsi.serviceBit==EXTRA_FLASH))
     {
       c.sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,c.sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_FLASH);
       c.sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
