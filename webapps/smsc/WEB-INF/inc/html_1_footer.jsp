@@ -14,6 +14,14 @@
 </table>
 </body>
 <script>
+<% if (isServiceStatusNeeded || (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)) { %>
+if (serviceStatusWaiters.length > 0)
+  window.setTimeout(refreshServiceStatuses, 10000);
+if (smeStatusWaiters.length > 0)
+  window.setTimeout(refreshSmeStatuses, 10000);
+if (smscStatusWaiters.length > 0)
+  window.setTimeout(refreshSmscStatuses, 10000);
+<%}%>
 selectFirstTextInput();
 </script>
 </html>
