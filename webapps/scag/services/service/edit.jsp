@@ -14,6 +14,9 @@
     <jsp:body>
         <sm-ep:properties title="service.edit.properties.service_info">
             <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
+            <c:if test="${!param.add}">
+                <sm-ep:txt  title="service.edit.txt.id" name="parentId" readonly ="true" validation="nonEmpty"/>
+            </c:if>
             <sm-ep:txt title="service.edit.txt.name" name="name" validation="nonEmpty"/>
             <sm-ep:txtBox title="service.edit.txtbox.description" cols="0" rows="0" name="description"/>
             <input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.parentId)}">
@@ -98,8 +101,10 @@
                   var rules = window.rulesFrame.rulesState;
                   var rulesTable = document.getElementById("rulesT");
                   var spans = rulesTable.getElementsByTagName("span");
+//                  alert("CHECK1");
                   for (var i=0;i<rules.length;i++) {
                     //alert(rules[i].exists + " " + spans[i*2].id+ " " + spans[i*2+1].id);
+//                    alert("CHECK2");
                     if (rules[i].exists) {
                       spans[i*3].style.display="inline";
                       spans[i*3+1].style.display="none";
@@ -113,6 +118,7 @@
                      lockRuleButtons(rules[i].locked, spans[i*3+1].getElementsByTagName("input"));
                      lockRuleButtons(!rules[i].locked, spans[i*3+2].getElementsByTagName("input"));
                   }
+//                  alert("CHECK3");
                   return false;
                }
 
@@ -128,7 +134,7 @@
                 }
             </script>
 
-            <iframe id="rulesFrame" onload="fireRulesState()" src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}"  width='0px' height="0px"></iframe>
+            <iframe id="rulesFrame" onload="fireRulesState()" src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.parentId}"  width='0px' height="0px"></iframe>
 
             <sm-ep:properties title="service.edit.properties.service_rules" noEdit="true" id="rulesT">
               <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp"/>

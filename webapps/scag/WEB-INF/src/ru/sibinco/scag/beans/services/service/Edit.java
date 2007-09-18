@@ -61,59 +61,6 @@ public class Edit extends TabledEditBeanImpl {
     private String editRuleHTTP = null;
     private String editRuleMMS  = null;
 
-    public String getEditRuleSMPP() {
-        return editRuleSMPP;
-    }
-
-    public String getEditRuleHTTP() {
-        return editRuleHTTP;
-    }
-
-    public String getEditRuleMMS() {
-        return editRuleMMS;
-    }
-
-    public void setEditRuleSMPP(String editRuleSMPP) {
-        this.editRuleSMPP = editRuleSMPP;
-    }
-
-    public void setEditRuleHTTP(String editRuleHTTP) {
-        this.editRuleHTTP = editRuleHTTP;
-    }
-
-    public void setEditRuleMMS(String editRuleMMS) {
-        this.editRuleMMS = editRuleMMS;
-    }
-
-    public String getUnlockRuleSMPP() {
-        return unlockRuleSMPP;
-    }
-
-    public String getUnlockRuleHTTP() {
-        return unlockRuleHTTP;
-    }
-
-    public String getUnlockRuleMMS() {
-        return unlockRuleMMS;
-    }
-
-    public void setId(long id) {
-        logger.error("setId:'" + id +"'");
-        this.id = id;
-    }
-
-    public void setUnlockRuleSMPP(String unblockRuleSMPP) {
-        this.unlockRuleSMPP = unblockRuleSMPP;
-    }
-
-    public void setUnlockRuleHTTP(String unblockRuleHTTP) {
-        this.unlockRuleHTTP = unblockRuleHTTP;
-    }
-
-    public void setUnlockRuleMMS(String unlockRuleMMS) {
-        this.unlockRuleMMS = unlockRuleMMS;
-    }
-
     private List httpRuteItems = new ArrayList();
 
     private int totalHttpSize = 0;
@@ -254,51 +201,47 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void save() throws SCAGJspException {
+        logger.error( "services.Edit:save():service - name is - " + name );
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         Service oldService = null;
         Long serviceProviderId = null;
         if (description == null) description = "";
-
-            if (getEditId() == null) {
-                if( serviceProvidersManager.isUniqueServiceName( name, parentId )){
+        if( name == null || name.equals("") ){
+            logger.error( "services.Edit:save():name is empty" );
+            throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_EMPTY_NAME, name );
+        }
+        if (getEditId() == null ) {
+            if( serviceProvidersManager.isUniqueServiceName(name, "-1") ){
                     Service service = new Service(getName(), getDescription());
                     serviceProviderId = Long.decode(getParentId());
                     id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
-                }else{
-                    logger.error( "services.Edit:save():service - name '" + name + "' is not unique" );
-                    throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-                }
             } else {
-                if (editChild) {
-                    if( serviceProvidersManager.isUniqueServiceName(name, parentId) ){
-                        serviceProviderId = Long.decode(getEditId());
-                        ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
-                        Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
-                        oldService = service.copy();
-                        service.setName(getName());
-                        service.setDescription(getDescription());
-                        serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
-                    }else{
-                        logger.error( "services.Edit:save():service - name '" + name + "' is not unique1" );
-                        throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-                    }
-                } else {
-                    if( serviceProvidersManager.isUniqueServiceName( name, parentId )){
-                        serviceProviderId = Long.decode(getParentId());
-                        ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
-                        Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
-                        oldService = service.copy();
-                        service.setName(getName());
-                        service.setDescription(getDescription());
-                        serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
-                    }else{
-                        logger.error( "services.Edit:save():service - name '" + name + "' is not unique2" );
-                        throw new EditChildException(Long.toString(id), getParentId());
-//                        throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-                    }
-                }
+                logger.error( "services.Edit:save():new service:name '" + name + "' is not unique" );
+                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
             }
-
+        } else {
+            if( !serviceProvidersManager.isUniqueServiceName(name, getEditId()) ){
+                logger.error( "services.Edit:save():edit service:name '" + name + "' is not unique" );
+                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+            }
+            if( editChild ) {
+                    serviceProviderId = Long.decode(getEditId());
+                    ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
+                    Service service = (Service) serviceProvider.getServices().get(Long.decode(getParentId()));
+                    oldService = service.copy();
+                    service.setName(getName());
+                    service.setDescription(getDescription());
+                    serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getEditId()).longValue(), service);
+            } else {
+                serviceProviderId = Long.decode(getParentId());
+                ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
+                Service service = (Service) serviceProvider.getServices().get(Long.decode(getEditId()));
+                oldService = service.copy();
+                service.setName(getName());
+                service.setDescription(getDescription());
+                serviceProvidersManager.updateService(getLoginedPrincipal().getName(), Long.decode(getParentId()).longValue(), service);
+            }
+        }
         appContext.getServiceProviderManager().reloadServices(appContext,(getEditId() == null)?true:false,id, serviceProviderId, oldService);
         if (id != -1) {
             throw new EditChildException(Long.toString(id), getParentId());
@@ -312,6 +255,7 @@ public class Edit extends TabledEditBeanImpl {
         if (!isAdd() && getTabledItems() != null) {
 
             if (editChild) {
+                logger.debug( "service:Edit:if (editChild)" );
                 if (!serviceProviders.containsKey(Long.decode(getEditId())))
                     throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId());
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getEditId()));
@@ -325,6 +269,7 @@ public class Edit extends TabledEditBeanImpl {
                     }
                 }
             } else {
+                logger.debug( "service:Edit:if (editChild)" );
                 if (!serviceProviders.containsKey(Long.decode(getParentId())))
                     throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId());
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getParentId()));
@@ -501,6 +446,59 @@ public class Edit extends TabledEditBeanImpl {
 
     public void setMbDefaultHttpRoute(String mbDefaultHttpRoute) {
         this.mbDefaultHttpRoute = mbDefaultHttpRoute;
+    }
+
+    public String getEditRuleSMPP() {
+        return editRuleSMPP;
+    }
+
+    public String getEditRuleHTTP() {
+        return editRuleHTTP;
+    }
+
+    public String getEditRuleMMS() {
+        return editRuleMMS;
+    }
+
+    public void setEditRuleSMPP(String editRuleSMPP) {
+        this.editRuleSMPP = editRuleSMPP;
+    }
+
+    public void setEditRuleHTTP(String editRuleHTTP) {
+        this.editRuleHTTP = editRuleHTTP;
+    }
+
+    public void setEditRuleMMS(String editRuleMMS) {
+        this.editRuleMMS = editRuleMMS;
+    }
+
+    public String getUnlockRuleSMPP() {
+        return unlockRuleSMPP;
+    }
+
+    public String getUnlockRuleHTTP() {
+        return unlockRuleHTTP;
+    }
+
+    public String getUnlockRuleMMS() {
+        return unlockRuleMMS;
+    }
+
+    public void setId(long id) {
+        logger.error("setId:'" + id +"'");
+        this.id = id;
+    }
+
+    public void setUnlockRuleSMPP(String unblockRuleSMPP) {
+        this.unlockRuleSMPP = unblockRuleSMPP;
+    }
+
+    public void setUnlockRuleHTTP(String unblockRuleHTTP) {
+        this.unlockRuleHTTP = unblockRuleHTTP;
+    }
+
+    public void setUnlockRuleMMS(String unlockRuleMMS) {
+        this.unlockRuleMMS = unlockRuleMMS;
     }
 
 }
