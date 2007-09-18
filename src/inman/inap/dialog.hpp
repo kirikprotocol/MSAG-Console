@@ -82,10 +82,6 @@ public:
     //Sets the default timeout for Invoke result waiting
     void                setInvokeTimeout(USHORT_T timeout);
 
-    //Creates and registers Invoke, timeout value equal to zero forces the
-    //Invoke timer being set to the Dialog default timeout value
-    Invoke* initInvoke(UCHAR_T opcode, InvokeListener * pLst = NULL,
-                       USHORT_T timeout = 0);
     void    releaseInvoke(UCHAR_T invId);
     void    releaseAllInvokes(void);
     //Resets the Invoke timer, extending its lifetime (response waiting),
@@ -94,8 +90,12 @@ public:
     //Returns true is dialog has some Invokes pending (awaiting Result or LCancel)
     unsigned  pendingInvokes(void);
 
-    // Component layer requests
-    void    sendInvoke(Invoke * inv) throw(CustomException);
+    // -- Component layer requests -- //
+    //Creates and sends Invoke, timeout value equal to zero forces the
+    //Invoke timer being set to the Dialog default timeout value,
+    //doesn't take ownership of Component
+    UCHAR_T /*inv_id*/ sendInvoke(UCHAR_T opcode, const Component *p_arg, InvokeListener * pLst = NULL,
+                        USHORT_T timeout = 0) throw(CustomException);
     void    sendResultLast(TcapEntity* res) throw(CustomException);
     void    sendResultNotLast(TcapEntity* res) throw(CustomException);
     void    sendResultError(TcapEntity* res) throw(CustomException);
@@ -145,7 +145,7 @@ protected:
 private:
     void clearInvokes(bool reqTC = false);
     void checkSS7res(const char * descr, USHORT_T result) throw(CustomException);
-    UCHAR_T  getNextInvokeId(void)  { return _lastInvId++; }
+    UCHAR_T  getNextInvokeId(void)  { MutexGuard  tmp(invGrd);  return ++_lastInvId; }
 
     typedef std::list<DialogListener*> ListenerList;
     typedef std::map<UCHAR_T, Invoke*> InvokeMap;

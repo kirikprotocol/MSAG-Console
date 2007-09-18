@@ -66,10 +66,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
     arg.setGMSCorSCFaddress(session->getOwnAdr());
     arg.setSubscrMSISDN(tnpi_adr);
 
-    Invoke* op = dialog->initInvoke(MAP_CH_SRI_OpCode::sendRoutingInfo, this);
-    op->setParam(&arg);
-    dialog->sendInvoke(op);  //throws
-
+    dialog->sendInvoke(MAP_CH_SRI_OpCode::sendRoutingInfo, &arg, this);  //throws
     dialog->beginDialog(); //throws
     _sriState.s.ctrInited = MapCHSRIDlg::operInited;
 

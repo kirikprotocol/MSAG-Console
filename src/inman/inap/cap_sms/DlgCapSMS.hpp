@@ -93,7 +93,7 @@ public:
 
     // SCFcontractor interface
     //  initiates capSMS dialog (over TCAP dialog)
-    RCHash initialDPSMS(InitialDPSMSArg* arg) _THROWS_NONE;
+    RCHash initialDPSMS(const InitialDPSMSArg* arg) _THROWS_NONE;
     //  reports delivery status(continues) and ends capSMS dialog
     RCHash reportSubmission(bool submitted) _THROWS_NONE;
     //Forcedly ends CapSMS dialog
@@ -126,17 +126,17 @@ private:
     void endTCap(bool u_abort = false);
     // reports delivery status (continues capSMS dialog)
     RCHash eventReportSMS(bool submitted) _THROWS_NONE;
-    inline void setTimer(Invoke * new_op)
+    inline void setTimer(UCHAR_T new_op)
     {
         if (_timer)
-            dialog->releaseInvoke(_timer->getId());
+            dialog->releaseInvoke(_timer);
         _timer = new_op;
     }
-    inline void stopTimer(void) { setTimer(NULL); }
+    inline void stopTimer(void) { setTimer(0); }
     inline void resetTimer(void)
     {
         if (_timer)
-            dialog->resetInvokeTimer(_timer->getId());
+            dialog->resetInvokeTimer(_timer);
     }
     inline void logBadInvoke(UCHAR_T op_code)
     {
@@ -155,7 +155,7 @@ private:
     TCSessionSR*    session;    //TCAP dialogs factory
     CapSMS_SSFhandlerITF* ssfHdl;
     unsigned char   rPCause;    //result or reject cause
-    Invoke *        _timer;     //last initiated operation
+    UCHAR_T         _timer;     //last initiated operation (invoke) id
     const char *    nmScf;
     Logger*         logger;
     messageType_e   reportType; //notification or request

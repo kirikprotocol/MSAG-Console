@@ -79,10 +79,12 @@ void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
     MutexGuard dtmp(dlgGrd);
     unsigned cnt = originating.size() + terminating.size();
     if (cnt) {
-        smsc_log_warn(logger, "Dialog[0x%X]: resetting, %u invokes pending!",
-                      (unsigned)_dId, cnt);
+        smsc_log_warn(logger, "Dialog[0x%X]: resetting to 0x%X, %u invokes pending!",
+                      (unsigned)_dId, (unsigned)new_id, cnt);
         releaseAllInvokes();
-    }
+    } else if (_dId != new_id)
+        smsc_log_debug(logger, "Dialog[0x%X]: resetting to 0x%X",
+                      (unsigned)_dId, (unsigned)new_id);
     _lastInvId = 0;
     _dId = new_id;
     _state.value = 0;
@@ -243,20 +245,30 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
 }
 
 
-void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
+UCHAR_T /*inv_id*/ Dialog::sendInvoke(UCHAR_T opcode, const Component *p_arg,
+    InvokeListener * pLst/* = NULL*/, USHORT_T timeout/* = 0*/) throw(CustomException)
 {
     RawBuffer   op, params;
-    try { inv->encode(op, params); //throws CustomException    
+    op.push_back(opcode);
+    try {
+        if (p_arg)
+            p_arg->encode(params); //throws CustomException
     } catch (const std::exception & exc) {
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::invCompEnc),
-                            _RCS_TC_Dialog->explainCode(TC_DlgError::invCompEnc).c_str(), exc.what());
+                _RCS_TC_Dialog->explainCode(TC_DlgError::invCompEnc).c_str(), exc.what());
     }
+
+    Invoke::InvokeResponse  resp = Invoke::respNone;
+    if (ac_fact->hasErrors(opcode))
+        resp = Invoke::respError;
+    if (ac_fact->hasResult(opcode))
+        resp = Invoke::respResultOrError;
+
+    UCHAR_T invId = getNextInvokeId();
+    std::auto_ptr<Invoke> inv(new Invoke(invId, opcode, resp, pLst));
+    inv->setTimeout(timeout ? timeout : _timeout);
+   
     const Invoke * linked = inv->getLinkedTo();
-    USHORT_T invTimeout = inv->getTimeout();
-
-    if (!invTimeout)
-        invTimeout = _timeout;
-
     smsc_log_debug(logger, "EINSS7_I97TInvokeReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
                 "invokeId=%d, lunkedused=\"%s\", linkedid=%d, "
@@ -270,10 +282,23 @@ void Dialog::sendInvoke(Invoke * inv) throw (CustomException)
         EINSS7_I97TInvokeReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId(), 
             linked ? EINSS7_I97TCAP_LINKED_ID_USED : EINSS7_I97TCAP_LINKED_ID_NOT_USED,
             linked ? linked->getId() : 0,
-            EINSS7_I97TCAP_OP_CLASS_1, invTimeout, EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
-            op.size(), &op[0], params.size(), &params[0]);
+            EINSS7_I97TCAP_OP_CLASS_1, inv->getTimeout(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
+            op.size(), &op[0], params.size(), params.empty() ? NULL : &params[0]);
 
+    if (!result) {
+        MutexGuard  tmp(invGrd);
+        //register invoke if OPERATION has RESULT/ERRORS defined,
+        //in order to provide possibility to call result/error listeners
+        if (resp != Invoke::respNone)
+            originating.insert(InvokeMap::value_type(inv->getId(), inv.get()));
+        else
+            terminating.insert(InvokeMap::value_type(inv->getId(), inv.get()));
+        smsc_log_debug(logger, "Dialog[0x%X]: initiated %s", (unsigned)_dId,
+                       inv->strStatus().c_str());
+        inv.release();
+    }
     checkSS7res("InvokeReq failed", result); //throws
+    return invId;
 }
 
 void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
@@ -367,31 +392,6 @@ USHORT_T Dialog::resetInvokeTimer(UCHAR_T inv_id)
         return EINSS7_I97TTimerResetReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv_id);
     }
     return EINSS7_I97TCAP_INV_INVOKE_ID_USED;
-}
-
-Invoke* Dialog::initInvoke(UCHAR_T opcode, InvokeListener * pLst/* = NULL*/,
-                           USHORT_T timeout/* = 0*/)
-{
-    MutexGuard  tmp(invGrd);
-    Invoke::InvokeResponse  resp = Invoke::respNone;
-
-    if (ac_fact->hasErrors(opcode))
-        resp = Invoke::respError;
-    if (ac_fact->hasResult(opcode))
-        resp = Invoke::respResultOrError;
-
-    Invoke* inv = new Invoke(getNextInvokeId(), opcode, resp, pLst);
-    inv->setTimeout(timeout ? timeout : _timeout);
-
-    //register invoke if OPERATION has RESULT/ERRORS defined,
-    //in order to provide possibility to call result/error listeners
-    if (resp != Invoke::respNone)
-        originating.insert(InvokeMap::value_type(inv->getId(), inv));
-    else
-        terminating.insert(InvokeMap::value_type(inv->getId(), inv));
-    smsc_log_debug(logger, "Dialog[0x%X]: initiated %s", (unsigned)_dId,
-                   inv->strStatus().c_str());
-    return inv;
 }
 
 void Dialog::releaseInvoke(UCHAR_T invId)

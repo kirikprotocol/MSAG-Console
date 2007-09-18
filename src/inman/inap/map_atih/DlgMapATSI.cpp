@@ -73,10 +73,7 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
         arg.setSubscriberId(subcr_adr, imsi);
     arg.setRequestedCSI(RequestedCAMEL_SubscriptionInfo_o_CSI);
 
-    Invoke* op = dialog->initInvoke(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, this);
-    op->setParam(&arg);
-    dialog->sendInvoke(op); //throws
-
+    dialog->sendInvoke(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, &arg, this); //throws
     dialog->beginDialog(); //throws
     _atsiState.s.ctrInited = MapATSIDlg::operInited;
 }

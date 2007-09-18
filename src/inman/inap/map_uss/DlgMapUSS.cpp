@@ -323,10 +323,7 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
     //create TCAP Dialog
     MutexGuard  grd(_sync);
 
-    Invoke* op = dialog->initInvoke(MAPUSS_OpCode::processUSS_Request, this);
-    op->setParam(&arg);
-    dialog->sendInvoke(op);
-
+    dialog->sendInvoke(MAPUSS_OpCode::processUSS_Request, &arg, this);
     //GVR NOTE: though MAP specifies that msISDN address in USS request may
     //present in component portion of TCAP invoke, the Ericsson tools transfers
     //it only in user info section.
