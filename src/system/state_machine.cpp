@@ -1248,6 +1248,9 @@ StateType StateMachine::submit(Tuple& t)
   c.fromMap=c.src_proxy && !strcmp(c.src_proxy->getSystemId(),"MAP_PROXY");
   c.toMap=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"MAP_PROXY");
   c.fromDistrList=c.src_proxy && !strcmp(c.src_proxy->getSystemId(),"DSTRLST");
+
+  sms->setArchivationRequested(c.ri.archived);
+
 #ifdef SMSEXTRA
   /*
   if(sms->getIntProperty(Tag::SMSC_MERGE_CONCAT))
@@ -1534,7 +1537,6 @@ StateType StateMachine::submit(Tuple& t)
 
 
   __trace2__("SUBMIT: archivation request for %lld/%d is %s",t.msgId,c.dialogId,c.ri.archived?"true":"false");
-  sms->setArchivationRequested(c.ri.archived);
 
 #ifdef SMSEXTRA
   if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FAKE)
