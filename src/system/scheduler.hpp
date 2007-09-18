@@ -1356,8 +1356,9 @@ public:
     {
       MutexGuard g(mon);
       Chain *c=GetChain(addr);
-      if(!c)return 0;
+      if(!c)return false;
       out=*c;
+      return true;
     }
 };
 
