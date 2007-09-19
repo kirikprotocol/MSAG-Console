@@ -298,27 +298,28 @@ function validateField(elem)
 
 function validateForm(frm)
 {
-	var result = true;
-	var ts = frm.elements;
-	for (var i=ts.length-1; i>=0; i--)
-	{
-		var elem = frm.elements(i);
-		if (!elem.disabled){
-            var validationClass = elem.validation;
-            if(validationClass != null){
-                if( validationClass == "routeMask" ){
-                    elem.validation="routeMaskNonEmpty";
+    var result = true;
+    if( document.all.jbutton.name != "mbCancel" ){
+        var ts = frm.elements;
+        for (var i=ts.length-1; i>=0; i--)
+        {
+            var elem = frm.elements(i);
+            if (!elem.disabled){
+                var validationClass = elem.validation;
+                if(validationClass != null){
+                    if( validationClass == "routeMask" ){
+                        elem.validation="routeMaskNonEmpty";
+                    }
+                    var r = validateField(elem);
+                    validateShowErrors(elem);
+                    result = result && r;
                 }
-                var r = validateField(elem);
-                validateShowErrors(elem);
-                result = result && r;
             }
-		}
-		else elem.value = true;
-	}
-	return result;
+            else elem.value = true;
+        }
+    }
+    return result;
 }
-
 
 function clickCancel()
 {
