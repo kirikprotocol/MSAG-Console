@@ -44,6 +44,8 @@ struct SmppEntityInfo{
   int  altPort;
   uint8_t uid;
   int sendLimit;
+  int inQueueLimit;
+  int outQueueLimit;
 
   SmppEntityInfo()
   {
@@ -53,6 +55,8 @@ struct SmppEntityInfo{
     port=0;
     altPort=0;
     sendLimit=0;
+    inQueueLimit=0;
+    outQueueLimit=0;
   }
 };
 

@@ -47,7 +47,7 @@ public:
 
   virtual void continueExecution(LongCallContext* lcmCtx, bool dropped);
   virtual bool makeLongCall(SmppCommand& cx, SessionPtr& session);
-  
+
   //manager
   void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id);
   virtual void pushCommand(SmppCommand& cmd);
@@ -64,11 +64,11 @@ public:
   {
     {
         sync::MutexGuard mg(queueMon);
-        if(!running) return;          
+        if(!running) return;
         running=false;
         queueMon.notifyAll();
     }
-    smsc_log_debug(log, "SmppManager shutting down");                
+    smsc_log_debug(log, "SmppManager shutting down");
     tp.shutdown(0);
     sm.shutdown();
     smsc_log_debug(log, "SmppManager shutdown");
@@ -123,7 +123,7 @@ protected:
 
   int lastUid;
   int queueLimit;
-  
+
   uint32_t lcmProcessingCount;
 };
 
@@ -168,6 +168,8 @@ void SmppManager::shutdown()
     SingleSM::Instance().StopProcessing();
 }
 
+const int tag_smscParams=1024;
+
 enum ParamTag{
 tag_systemId,
 tag_password,
@@ -177,7 +179,8 @@ tag_enabled,
 tag_providerId,
 tag_maxSmsPerSec,
 tag_inQueueLimit,
-tag_host=tag_providerId|1024,
+tag_outQueueLimit,
+tag_host=tag_outQueueLimit|tag_smscParams,
 tag_port,
 tag_althost,
 tag_altport,
@@ -213,7 +216,8 @@ TAGDEF(bindSystemId),
 TAGDEF(bindPassword),
 TAGDEF(addressRange),
 TAGDEF(systemType),
-TAGDEF(inQueueLimit)
+TAGDEF(inQueueLimit),
+TAGDEF(outQueueLimit)
 };
 
 struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
@@ -302,7 +306,7 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
       {
         throw smsc::util::Exception("Unknown parameter '%s' in smpp.xml",paramName.c_str());
       }
-      if(et==etService && *tagPtr>1024)
+      if(et==etService && *tagPtr>tag_smscParams)
       {
         throw smsc::util::Exception("Parameter '%s' allowed for smscrecord only",paramName.c_str());
       }
@@ -353,9 +357,12 @@ static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType e
         case tag_maxSmsPerSec:
           entity.sendLimit=GetIntValue(attrs);
           break;
-  case tag_inQueueLimit:
-    //TODO: fill it !
-    break;
+        case tag_inQueueLimit:
+          entity.inQueueLimit=GetIntValue(attrs);
+          break;
+        case tag_outQueueLimit:
+          entity.outQueueLimit=GetIntValue(attrs);
+          break;
       }
     }
     if(enabled)
@@ -801,7 +808,7 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
         SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::SYSERR);
         ct->putCommand(resp);
         return;
-    }        
+    }
     int cnt=entPtr->incCnt.Get();
     if(entPtr->info.sendLimit>0 && cnt/5>=entPtr->info.sendLimit && cmd.getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
@@ -864,7 +871,7 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
   while((running || lcmProcessingCount) && !queue.Count() && !lcmQueue.Count() && !respQueue.Count())
   {
     queueMon.wait(5000);
-    
+
     time_t now=time(NULL);
     if(now - lastExpireProcess > 5)
     {
@@ -873,7 +880,7 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
       return true;
     }
   }
-  
+
   time_t now=time(NULL);
   if(now - lastExpireProcess > 5)
   {
@@ -881,17 +888,17 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
     cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
     return true;
   }
-  
+
   if(!queue.Count() && !lcmQueue.Count() && !respQueue.Count())
     return false;
-    
+
   if(lcmQueue.Count())
       lcmQueue.Pop(cmd);
   else if(respQueue.Count())
       respQueue.Pop(cmd);
   else
       queue.Pop(cmd);
-      
+
   return true;
 }
 
@@ -899,7 +906,7 @@ void SmppManagerImpl::continueExecution(LongCallContext* lcmCtx, bool dropped)
 {
     SmppCommand *cx = (SmppCommand*)lcmCtx->stateMachineContext;
     lcmCtx->continueExec = true;
-    
+
     MutexGuard mg(queueMon);
     lcmProcessingCount--;
     if(!dropped)
@@ -917,7 +924,7 @@ bool SmppManagerImpl::makeLongCall(SmppCommand& cx, SessionPtr& session)
     lcmCtx.stateMachineContext = cmd;
     lcmCtx.initiator = this;
     cmd->setSession(session);
-    
+
     bool b = LongCallManager::Instance().call(&lcmCtx);
     MutexGuard mg(queueMon);
     if(b) lcmProcessingCount++;
