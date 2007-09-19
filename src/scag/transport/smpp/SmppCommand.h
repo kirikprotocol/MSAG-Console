@@ -394,6 +394,7 @@ struct _SmppCommand
     __require__(cmdid==DELIVERY_RESP || cmdid==SUBMIT_RESP || cmdid==DATASM_RESP);
     return (SmsResp*)dta;
   }
+  uint32_t getCommandStatus() const;
   SubmitMultiResp* get_MultiResp() { return (SubmitMultiResp*)dta;}
   SubmitMultiSm* get_Multi() { return (SubmitMultiSm*)dta;}
   int get_priority(){return priority;};

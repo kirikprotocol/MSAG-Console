@@ -11,6 +11,12 @@ smsc::core::synchronization::Mutex _SmppCommand::cntMutex;
 uint32_t _SmppCommand::commandCounter = 0;
 uint32_t _SmppCommand::stuid = 0;
 
+uint32_t _SmppCommand::getCommandStatus() const 
+{
+    return (cmdid == DELIVERY_RESP || cmdid == SUBMIT_RESP || cmdid == DATASM_RESP) 
+	    ? ((SmsResp*)dta)->get_status() : status;
+}
+
 _SmppCommand::~_SmppCommand()
   {
     if(logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG))
@@ -771,20 +777,19 @@ _SmppCommand::~_SmppCommand()
 
   SmsResp::SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown)
   {
-    expiredUid=0;
-    expiredResp=false;
-	bHasOrgCmd = true;
+    expiredUid = 0;
+    expiredResp = false;
+    bHasOrgCmd = false;
   };
   SmsResp::~SmsResp()
   {
     if ( messageId ) delete messageId;
-    if (sms)delete sms;
+    if (sms) delete sms;
   }
 
   void SmsResp::setOrgCmd(SmppCommand& o)
   {
-    orgCmd = o;
-	bHasOrgCmd = true;
+    orgCmd = o; bHasOrgCmd = true;
   }
   
   void SmsResp::getOrgCmd(SmppCommand& o)
