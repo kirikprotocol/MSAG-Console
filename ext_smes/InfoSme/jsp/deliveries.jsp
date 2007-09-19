@@ -64,12 +64,15 @@ else {
 <%}%>
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 <%@ include file="/WEB-INF/inc/time.jsp"%>
-<%if (bean.getStage() == 3 && isBrowserMSIE(request) ) {%>
-<OBJECT id="tdcProgress" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskProgress.jsp">
-	<PARAM NAME="UseHeader" VALUE="True">
-	<PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT>
+<%if (bean.getStage() == 3 /*&& isBrowserMSIE(request) */) {%>
+<%--<OBJECT id="tdcProgress" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
+<%--	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskProgress.jsp">--%>
+<%--	<PARAM NAME="UseHeader" VALUE="True">--%>
+<%--	<PARAM NAME="TextQualifier" VALUE='"'>--%>
+<%--</OBJECT>--%>
+<script>
+  var statusDataSource = new StringTableDataSource({url: '/smsc/smsc/esme_InfoSme/taskProgress.jsp', async: false});
+</script>
 <%}%>
 <div class=content>
 <%switch (bean.getStage())
@@ -186,14 +189,18 @@ else {
     case 3:
         {%>
 <div class=page_subtitle><%= getLocString("infosme.subtitle.stage3")%></div><br/>
-<div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id=tdcStatus datasrc=#tdcProgress DATAFORMATAS=html datafld="status" style='color:blue;'><%= bean.getStatusStr()%></span></div>
-<div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="messages"><%= bean.getMessages()%></span></div>
-<div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span id=tdcProcents datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
+<div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id="tdcStatus" datasrc=#tdcProgress DATAFORMATAS=html datafld="status" style='color:blue;'><%= bean.getStatusStr()%></span></div>
+<div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span id="tdcMessages" datasrc=#tdcProgress DATAFORMATAS=html datafld="messages"><%= bean.getMessages()%></span></div>
+<div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span id="tdcProcents" datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
 <script type="text/javascript">
+statusDataSource.addObserver(new ElementObserver({elementId: 'tdcStatus', field: 'status'}));
+statusDataSource.addObserver(new ElementObserver({elementId: 'tdcMessages', field: 'messages'}));
+statusDataSource.addObserver(new ElementObserver({elementId: 'tdcProcents', field: 'progress'}));
 function refreshProgressStatus()
 {
-	document.getElementById('tdcProgress').DataURL = document.getElementById('tdcProgress').DataURL;
-	document.getElementById('tdcProgress').reset();
+<%--	document.getElementById('tdcProgress').DataURL = document.getElementById('tdcProgress').DataURL;--%>
+<%--	document.getElementById('tdcProgress').reset();--%>
+    statusDataSource.update();
     if (document.getElementById('tdcStatus').innerText != null &&
         document.getElementById('tdcStatus').innerText == 'Finished')
     {

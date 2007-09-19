@@ -19,25 +19,28 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
-<%
-  if( isBrowserMSIE(request) ) {
-%>
-<OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">
-	<PARAM NAME="UseHeader" VALUE="True">
-	<PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT><script type="text/javascript">
+<%--<%--%>
+<%--  if( isBrowserMSIE(request) ) {--%>
+<%--%>--%>
+<%--<OBJECT id="tdcTasksStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
+<%--	<PARAM NAME="DataURL" VALUE="/smsc/smsc/esme_InfoSme/taskStatuses.jsp">--%>
+<%--	<PARAM NAME="UseHeader" VALUE="True">--%>
+<%--	<PARAM NAME="TextQualifier" VALUE='"'>--%>
+<%--</OBJECT>--%>
+<script type="text/javascript">
+var taskStatusesDS = new StringTableDataSource({url: '/smsc/smsc/esme_InfoSme/taskStatuses.jsp'});
 function refreshTaskStatuses()
 {
-	document.getElementById('tdcTasksStatuses').DataURL = document.getElementById('tdcTasksStatuses').DataURL;
-	document.getElementById('tdcTasksStatuses').reset();
+<%--	document.getElementById('tdcTasksStatuses').DataURL = document.getElementById('tdcTasksStatuses').DataURL;--%>
+<%--	document.getElementById('tdcTasksStatuses').reset();--%>
+  taskStatusesDS.update();
 	window.setTimeout(refreshTaskStatuses, 5000);
 }
 refreshTaskStatuses();
 </script>
-<%
-  }
-%>
+<%--<%--%>
+<%--  }--%>
+<%--%>--%>
 <div class=content>
 <script type="text/javascript">
 function checkApplyResetButtons()
@@ -214,11 +217,16 @@ function setSort(sorting)
         <td><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkTasks();"></td>
         <td><%if (enabled){%><img src="/images/ic_checked.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></td>
         <td><label for=checked<%=idHex%>><%=nameEnc%></label></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td><span id="gen<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td><span id="prc<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
         <td><%=priority%></td>
         <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-      </tr><%
+      </tr>
+      <script>
+        taskStatusesDS.addObserver(new ElementObserver({elementId: 'gen<%=idHex%>', field: 'gen<%=idHex%>'}));
+        taskStatusesDS.addObserver(new ElementObserver({elementId: 'prc<%=idHex%>', field: 'prc<%=idHex%>'}));
+      </script>
+      <%
     }
     %></table><%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%><%
   }%>

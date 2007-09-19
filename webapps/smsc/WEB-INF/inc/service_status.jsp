@@ -6,32 +6,18 @@
                  ru.novosoft.smsc.util.StringEncoderDecoder" %>
 <%@ include file="/WEB-INF/inc/show_sme_status.jsp" %>
 <script>
-  var serviceStatusWaiters = new Array();
-  var smeStatusWaiters = new Array();
-  var smscStatusWaiters = new Array();
-
-  var StatusWaiter = new Class({
-    options: {
-      elementId : 'id',
-      serviceId : 'id',
-      html : false
-    },
-
-    initialize : function(options) {
-      this.setOptions(options);
-    }
-  });
-
-  StatusWaiter.implement(new Options);
+  var serviceStatusDataSource = new StringTableDataSource({url: '<%= CPATH %>/services/statuses.jsp'});
+  var smscStatusDataSource = new StringTableDataSource({url: '<%= CPATH %>/services/smsc_statuses.jsp'});
+  var smeStatusDataSource = new StringTableDataSource({url: '<%= CPATH %>/services/connected_statuses.jsp'});
 
   function registerServiceStatusWaiter(statusWaiter) {
-    serviceStatusWaiters[serviceStatusWaiters.length] = statusWaiter;
+    serviceStatusDataSource.addObserver(statusWaiter);
   }
   function registerSmeStatusWaiter(statusWaiter) {
-    smeStatusWaiters[smeStatusWaiters.length] = statusWaiter;
+    smeStatusDataSource.addObserver(statusWaiter);
   }
   function registerSmscStatusWaiter(statusWaiter) {
-    smscStatusWaiters[smscStatusWaiters.length] = statusWaiter;
+    smscStatusDataSource.addObserver(statusWaiter);
   }
 </script>
 <%!
@@ -176,7 +162,7 @@
     }
 
     String getStatusWaiter(String elementId, String serviceId, boolean html) {
-      return "new StatusWaiter({elementId: '" +elementId + "', serviceId: '" + serviceId + "', html: " + html + "})";
+      return "new ElementObserver({elementId: '" +elementId + "', field: '" + serviceId + "'})";
     }
 
     String addServiceStatusWaiterScript(String elementId, String serviceId) {
@@ -204,97 +190,21 @@
     }
 
 %>
-<%--<%--%>
-<%--    if (browserType == BROWSER_TYPE_MSIE) {--%>
-<%--%>--%>
-<%--<OBJECT id="tdcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
-<%--    <PARAM NAME="DataURL" VALUE="<%= CPATH %>/services/statuses.jsp">--%>
-<%--    <PARAM NAME="UseHeader" VALUE="True">--%>
-<%--    <PARAM NAME="TextQualifier" VALUE='"'>--%>
-<%--</OBJECT>--%>
-<%--<OBJECT id="tdcConnStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
-<%--    <PARAM NAME="DataURL" VALUE="<%= CPATH %>/services/connected_statuses.jsp">--%>
-<%--    <PARAM NAME="UseHeader" VALUE="True">--%>
-<%--    <PARAM NAME="TextQualifier" VALUE='"'>--%>
-<%--</OBJECT>--%>
-<%--<OBJECT id="tdcSmscStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
-<%--    <PARAM NAME="DataURL" VALUE="<%= CPATH %>/services/smsc_statuses.jsp">--%>
-<%--    <PARAM NAME="UseHeader" VALUE="True">--%>
-<%--    <PARAM NAME="TextQualifier" VALUE='"'>--%>
-<%--</OBJECT>--%>
-<%--<script>--%>
-<%--    function refreshStatus() {--%>
-<%--        document.getElementById('tdcStatuses').DataURL = document.getElementById('tdcStatuses').DataURL;--%>
-<%--        document.getElementById('tdcStatuses').reset();--%>
-<%--        document.getElementById('tdcSmscStatuses').DataURL = document.getElementById('tdcSmscStatuses').DataURL;--%>
-<%--        document.getElementById('tdcSmscStatuses').reset();--%>
-<%--        document.getElementById('tdcConnStatuses').DataURL = document.getElementById('tdcConnStatuses').DataURL;--%>
-<%--        document.getElementById('tdcConnStatuses').reset();--%>
-<%--        window.setTimeout(refreshStatus, 10000);--%>
-<%--    }--%>
-<%--    refreshStatus();--%>
-<%--</script>--%>
-<%--<%--%>
-<%--    }--%>
-<%--%>--%>
+
 <script>
-  function sendAsynchronousRequest(url, responseHandler) {
-    var xhr = new XHR({method: 'post'});
-    xhr.addEvent('onSuccess', responseHandler);
-    xhr.send(url, '');
-  }
-  function processResponse(text, xml, statusWaiters) {
-    var txt = new String(text);
-    var i = txt.indexOf("\r\n");
-
-    if (i > 0) {
-      var services = new Array();
-      services = txt.substring(0, i).split(', ');
-      var statuses = new Array();
-      statuses = txt.substring(i, txt.length).split(', ');
-
-      var statusWaiter;
-      var element;
-      for (var j = 0; j < statusWaiters.length; j++) {
-        statusWaiter = statusWaiters[j];
-        for (var k = 0; k < services.length; k++) {
-          if (services[k] == statusWaiter.options.serviceId) {
-            element = document.getElementById(statusWaiter.options.elementId);
-            if (statusWaiter.options.html)
-              element.innerHTML = statuses[k];
-            else
-              element.innerText = statuses[k];
-            break;
-          }
-        }
-      }
-    }
-  }
-
   // SMSC status
   function refreshSmscStatuses() {
-    sendAsynchronousRequest('<%= CPATH %>/services/smsc_statuses.jsp', processResponseForSmscStatuses);
+    smscStatusDataSource.update();
     window.setTimeout(refreshSmscStatuses, 10000);
   }
-  function processResponseForSmscStatuses(text, xml) {
-    processResponse(text, xml, smscStatusWaiters);
-  }
-
   // SME status
   function refreshSmeStatuses() {
-    sendAsynchronousRequest('<%= CPATH %>/services/connected_statuses.jsp', processResponseForSmeStatuses);
+    smeStatusDataSource.update();
     window.setTimeout(refreshSmeStatuses, 10000);
   }
-  function processResponseForSmeStatuses(text, xml) {
-    processResponse(text, xml, smeStatusWaiters);
-  }
-
   // Service status
   function refreshServiceStatuses() {
-    sendAsynchronousRequest('<%= CPATH %>/services/statuses.jsp', processResponseForServiceStatuses)
+    serviceStatusDataSource.update();
     window.setTimeout(refreshServiceStatuses, 10000);
-  }
-  function processResponseForServiceStatuses(text, xml) {
-    processResponse(text, xml, serviceStatusWaiters);
   }
 </script>

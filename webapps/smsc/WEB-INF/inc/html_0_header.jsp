@@ -31,6 +31,7 @@
     <script src="<%=getScriptsLocMsgFileName()%>" type="text/javascript"></script>
     <script src="<%=getLocJSConfFileName()%>" type="text/javascript"></script>
     <script src="/scripts/mootools.js" type="text/javascript"></script>
+    <script src="/scripts/datasource.js" type="text/javascript"></script>
     <script src="/scripts/scripts.js" type="text/javascript"></script>
     <%@ include file="/WEB-INF/inc/top_menu.jsp" %>
 </head>
