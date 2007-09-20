@@ -24,18 +24,21 @@
         <c:otherwise>
             <div class=select>
                 <c:if test="${!empty label}"><label><fmt:message>${label}</fmt:message>&nbsp;</label></c:if><select name="${name}"
-                        <c:if test="${!empty onChange}">
-                            onChange="${onChange}"
-                        </c:if> >
-                    <c:if test="${emptyOption}">
-                            <option value="-1">                </option>
-                        </c:if>
+                    <c:if test="${!empty onChange}">
+                        onChange="${onChange}"
+                    </c:if> >
+                    <c:if test="${name == 'srcSmeId'}">
+                            <option value=""></option>
+                    </c:if>
                     <c:forEach var="i" items="${values}" varStatus="st">
                         <option value="${i}"
                                 <c:if test="${i == bean[name]}">
                                     selected
                                 </c:if>>${valueTitles[st.count-1]}</option>
                     </c:forEach>
+                    <!--<option value="-1">-->
+                        <%--<c:out value="${name}"/>--%>
+                    <!--</option>-->
                 </select>
             </div>
         </c:otherwise>
