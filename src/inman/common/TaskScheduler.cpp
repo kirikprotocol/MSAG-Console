@@ -19,7 +19,7 @@ void TaskSchedulerMT::processSignal(bool doAbort/* = false*/)
     TaskMap::iterator qIt = qPool.find(tSig.first);
     if (qIt == qPool.end()) {
         smsc_log_warn(logger, "%s: task[%lu] is not in pool or was aborted, signal %s",
-            _logId, tSig.first, TaskSchedulerITF::PGSignal(tSig.second));
+            _logId, tSig.first, TaskSchedulerITF::nmPGSignal(tSig.second));
         return;
     }
     pTask = qIt->second;
@@ -68,7 +68,7 @@ void TaskSchedulerSEQ::processSignal(bool doAbort/* = false*/)
     TaskMap::iterator qIt = qPool.find(tSig.first);
     if (qIt == qPool.end()) {
         smsc_log_warn(logger, "%s: task[%lu] is not in pool or was aborted, signal %s",
-            _logId, tSig.first, TaskSchedulerITF::PGSignal(tSig.second));
+            _logId, tSig.first, TaskSchedulerITF::nmPGSignal(tSig.second));
         return;
     }
     pTask = static_cast<TaskDataSEQ *>(qIt->second);
@@ -125,7 +125,7 @@ void TaskSchedulerSEQ::processSignal(bool doAbort/* = false*/)
     } else if (tSig.second == sigSuspend) {
         if (!Unqueue(qIt))
             smsc_log_warn(logger, "%s: %s is not in queue, signal %s",
-                _logId, nmTask.c_str(), TaskSchedulerITF::PGSignal(tSig.second));
+                _logId, nmTask.c_str(), TaskSchedulerITF::nmPGSignal(tSig.second));
         smsc_log_debug(logger, "%s: %s is suspended", _logId, nmTask.c_str());
     }
     return;
