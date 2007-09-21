@@ -1114,7 +1114,7 @@ StateType StateMachine::submit(Tuple& t)
   };
 
 
-  Profile srcprof=profile;
+  c.srcprof=profile;
 
   int profileMatchType;
   std::string profileMatchAddress;
@@ -1466,17 +1466,17 @@ StateType StateMachine::submit(Tuple& t)
   }
   */
 
-  if(fromMap && toMap && srcprof.sponsored>0)
+  if(fromMap && toMap && c.srcprof.sponsored>0)
   {
-    info2(smsLog,"EXTRA: sponsored sms for abonent %s(cnt=%d)",sms->getOriginatingAddress().toString().c_str(),srcprof.sponsored);
+    info2(smsLog,"EXTRA: sponsored sms for abonent %s(cnt=%d)",sms->getOriginatingAddress().toString().c_str(),c.srcprof.sponsored);
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_SPONSORED);
     smsc->getProfiler()->decrementSponsoredCount(sms->getOriginatingAddress());
   }
 #endif
 
-  if((dstSmeInfo.accessMask&srcprof.accessMaskOut)==0)
+  if((dstSmeInfo.accessMask&c.srcprof.accessMaskOut)==0)
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by access out mask (%s=%x,%s=%x",t.msgId,dstSmeInfo.systemId.c_str(),dstSmeInfo.accessMask,sms->getOriginatingAddress().toString().c_str(),srcprof.accessMaskOut);
+    info2(smsLog,"SBM: msgId=%lld, denied by access out mask (%s=%x,%s=%x",t.msgId,dstSmeInfo.systemId.c_str(),dstSmeInfo.accessMask,sms->getOriginatingAddress().toString().c_str(),c.srcprof.accessMaskOut);
     submitResp(t,sms,Status::DENIEDBYACCESSMASK);
     if(c.createSms==scsReplace)
     {
@@ -1506,9 +1506,9 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if((srcprof.accessMaskOut&profile.accessMaskIn)==0)
+  if((c.srcprof.accessMaskOut&profile.accessMaskIn)==0)
   {
-    info2(smsLog,"SBM: msgId=%lld, denied by access masks(%s=%x,%s=%x",t.msgId,sms->getOriginatingAddress().toString().c_str(),srcprof.accessMaskOut,sms->getDestinationAddress().toString().c_str(),profile.accessMaskIn);
+    info2(smsLog,"SBM: msgId=%lld, denied by access masks(%s=%x,%s=%x",t.msgId,sms->getOriginatingAddress().toString().c_str(),c.srcprof.accessMaskOut,sms->getDestinationAddress().toString().c_str(),profile.accessMaskIn);
     submitResp(t,sms,Status::DENIEDBYACCESSMASK);
     if(c.createSms==scsReplace)
     {
@@ -1712,7 +1712,7 @@ StateType StateMachine::submit(Tuple& t)
     try{
       if(!sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
-        processDirectives(*sms,profile,srcprof);
+        processDirectives(*sms,profile,c.srcprof);
       }
     }catch(std::exception& e)
     {
@@ -5320,6 +5320,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
       info2(smsLog,"EXTRA: divert for abonent %s to %s",c.sms->getOriginatingAddress().toString().c_str(),xsi.divertAddr.toString().c_str());
       c.noDestChange=true;
       c.createSms=scsDoNotCreate;
+      c.noPartitionSms=true;
       try{
         c.has_route=smsc->routeSms(c.sms->getOriginatingAddress(),
                                 c.dst,
