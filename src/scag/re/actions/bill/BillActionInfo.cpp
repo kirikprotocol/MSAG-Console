@@ -8,7 +8,7 @@ const char* BillActionInfo::m_name[BillActionInfo::fields_count] = {"operator_id
 void BillActionInfo::init(const SectionParams& params,PropertyObject propertyObject)
 {
     m_BillId = 0;
-    FieldType ft = CheckParameter(params, propertyObject, "bill:info", "bill_id", true, true, m_sBillId, bExist);
+    FieldType ft = CheckParameter(params, propertyObject, "bill:info", "bill_id", false, true, m_sBillId, bExist);
     if(ft == ftUnknown && !(m_BillId = atoi(m_sBillId.c_str())))
         throw InvalidPropertyException("Action 'bill:info': category should be positive integer value");
 
