@@ -173,34 +173,37 @@ void IAProviderThreaded::bindCache(AbonentCacheITF * use_cache)
 bool IAProviderThreaded::startQuery(const AbonentId & ab_number, 
                                    IAPQueryListenerITF * pf_cb/* = NULL*/)
 {
-    MutexGuard  guard(qrsGuard);
-    CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
-    if (qry_rec) { //allocated query exists, just add callback to list
-        qry_rec->cbList.push_back(pf_cb);
-        smsc_log_debug(logger, "IAPrvd: %s(%s): listener is added",
-                       qry_rec->query->taskName(), ab_number.getSignals());
-        return true;
-    }
-
     CachedQuery  qryRec;
-    if (qryPool.size()) {
-        qryRec.query = *(qryPool.begin());
-        qryPool.pop_front();
-    } else {
-        _lastQId++;
-        qryRec.query = _cfg.qryPlant->newQuery(_lastQId, this, logger);
-        if (!qryRec.query)
+    {
+        MutexGuard  guard(qrsGuard);
+        CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
+        if (qry_rec) { //allocated query exists, just add callback to list
+            qry_rec->cbList.push_back(pf_cb);
+            smsc_log_debug(logger, "IAPrvd: %s(%s): listener is added",
+                           qry_rec->query->taskName(), ab_number.getSignals());
+            return true;
+        }
+    
+        if (qryPool.size()) {
+            qryRec.query = *(qryPool.begin());
+            qryPool.pop_front();
+        } else {
+            _lastQId++;
+            qryRec.query = _cfg.qryPlant->newQuery(_lastQId, this, logger);
+            if (!qryRec.query)
+                return false;
+        }
+        qryRec.cbList.push_back(pf_cb);
+        if (!qryRec.query->init(ab_number)) {
+            smsc_log_error(logger, "IAPrvd: %s(%s): failed to init",
+                            qryRec.query->taskName(), ab_number.getSignals());
             return false;
-    }
-    qryRec.cbList.push_back(pf_cb);
-    if (qryRec.query->init(ab_number)) {
+        }
         qryCache.Insert(ab_number.getSignals(), qryRec);
-        pool.startTask(qryRec.query, !_cfg.qryMultiRun); //do not delete task on completion !!!
         smsc_log_debug(logger, "IAPrvd: %s(%s): added to queue",
                         qryRec.query->taskName(), ab_number.getSignals());
-    } else
-        smsc_log_error(logger, "IAPrvd: %s(%s): failed to init",
-                       qryRec.query->taskName(), ab_number.getSignals());
+    }
+    pool.startTask(qryRec.query, !_cfg.qryMultiRun); //do not delete task on completion !!!
     return true;
 }
 
