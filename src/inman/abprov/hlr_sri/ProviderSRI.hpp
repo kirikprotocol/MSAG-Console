@@ -55,6 +55,7 @@ public:
     //-- IAPQueryAC implementation:
     // ****************************************
     int Execute(void);
+    void stop(void);
     const char * taskType(void) const { return "IAPQuerySRI"; }
 
 protected:

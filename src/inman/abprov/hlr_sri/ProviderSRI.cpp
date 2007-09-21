@@ -189,6 +189,14 @@ int IAPQuerySRI::Execute(void)
     }
     return _qStatus;
 }
+
+void IAPQuerySRI::stop(void)
+{
+    MutexGuard  grd(_mutex);
+    isStopping = true;
+    _qStatus = IAPQStatus::iqCancelled;
+    qsig.Signal();
+}
 // ****************************************
 // -- CHSRIhandlerITF implementation:
 // ****************************************
