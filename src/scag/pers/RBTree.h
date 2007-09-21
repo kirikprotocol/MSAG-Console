@@ -317,11 +317,12 @@ inline
 					realAddr(node->parent)->color = BLACK;
 					tempNode->color = BLACK; 
 					realAddr(realAddr(node->parent)->parent)->color = RED;
-					node = realAddr(realAddr(node->parent)->parent);
 
 					changesObserver->nodeChanged(realAddr(node->parent));
 					changesObserver->nodeChanged(tempNode);
 					changesObserver->nodeChanged(realAddr(realAddr(node->parent)->parent));
+                    
+					node = realAddr(realAddr(node->parent)->parent);                    
 				}
 				else
 				{
@@ -346,11 +347,12 @@ inline
 					realAddr(node->parent)->color = BLACK;
 					tempNode->color = BLACK;
 					realAddr(realAddr(node->parent)->parent)->color = RED;
-					node = realAddr(realAddr(node->parent)->parent);
 					
 					changesObserver->nodeChanged(realAddr(node->parent));
 					changesObserver->nodeChanged(tempNode);
 					changesObserver->nodeChanged(realAddr(realAddr(node->parent)->parent));
+                    
+					node = realAddr(realAddr(node->parent)->parent);                    
 				}
 				else
 				{
