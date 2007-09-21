@@ -82,7 +82,7 @@ public:
   int seq;
   Mutex seqMtx;
 
-  SmeRecord():seq(0),refCnt(0),deleted(false),freeProxy(false){}
+  SmeRecord():seq(1),refCnt(0),deleted(false),freeProxy(false){}
 
   void acquire()
   {
@@ -155,6 +155,7 @@ public:
     else throw runtime_error("proxy unregistred");
     */
     MutexGuard mg(seqMtx);
+    if(seq==0)seq++;
     return seq++;
   }
   virtual uint32_t getUniqueId() const {return uniqueId;}
