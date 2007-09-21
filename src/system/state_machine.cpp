@@ -5671,6 +5671,7 @@ bool StateMachine::processMerge(SbmContext& c)
           c.rvstate=ERROR_STATE;
           return false;
         }
+        /*
         if(c.ri.smeSystemId=="MAP_PROXY")
         {
           if(!newsms.hasIntProperty(Tag::SMSC_DSTCODEPAGE))
@@ -5693,6 +5694,7 @@ bool StateMachine::processMerge(SbmContext& c)
           }
           c.noPartitionSms=true;
         }
+        */
       }else
       {
         newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
