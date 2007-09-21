@@ -128,7 +128,7 @@ bool Property::convertToBool()
     switch (type) 
     {
     case pt_str:
-        i_val = atoi(s_val.c_str());
+        i_val = s_val.length();
         break;
 /*    case PTYPE_DATE:
         throw ConvertException("date","bool");
