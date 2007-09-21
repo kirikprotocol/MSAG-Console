@@ -9,8 +9,6 @@ namespace smsc{
 namespace core{
 namespace threads{
 
-using namespace std;
-
 /*
 void ThreadedTask::getMemoryInfo(int& rawheapsize,int& blocksheapquantum)
 {
@@ -59,8 +57,10 @@ int PooledThread::Execute()
     */
     try{
       task->Execute();
+      if (!task->delOnCompletion())
+          task->onRelease();
     }
-    catch(exception& e)
+    catch(std::exception& e)
     {
       smsc_log_warn(log,"Exception in task %s:%s",task->taskName(),e.what());
     }
@@ -96,8 +96,10 @@ void ThreadPool::stopNotify()
 {
   Lock();
   __trace__("stopping notify tasks");
-  for(int i=0;i<usedThreads.Count();i++)
-    usedThreads[i]->stopTask();
+  for (int i=0; i<usedThreads.Count(); i++) {
+      if (!usedThreads[i].destructing)
+          usedThreads[i].ptr->stopTask();
+  }
   Unlock();
 }
 
@@ -123,9 +125,10 @@ void ThreadPool::shutdown(uint32_t timeout)
   }
   pendingTasks.Empty();
 
-  for(int i=0;i<usedThreads.Count();i++)
+  for (int i=0; i < usedThreads.Count(); i++)
   {
-    usedThreads[i]->stopTask();
+      if (!usedThreads[i].destructing)
+          usedThreads[i].ptr->stopTask();
   }
   __trace__("all tasks are notified");
   Unlock();
@@ -146,9 +149,11 @@ void ThreadPool::shutdown(uint32_t timeout)
     }
     for(int i=0;i<usedThreads.Count();i++)
     {
-      __warning2__("Unfinished task:%s",usedThreads[i]->taskName());
-      usedThreads[i]->stopTask();
-      usedThreads[i]->Kill(16);
+        if (!usedThreads[i].destructing) {
+          __warning2__("Unfinished task:%s",usedThreads[i].ptr->taskName());
+          usedThreads[i].ptr->stopTask();
+          usedThreads[i].ptr->Kill(16);
+        }
     }
     Unlock();
 #ifndef LEAKTRACE
@@ -185,8 +190,8 @@ void ThreadPool::preCreateThreads(int count)
   for(i=0;i<n;i++)
   {
     trace2("Creating thread:%d",i);
-    usedThreads.Push(new PooledThread(this));
-    usedThreads[-1]->Start(defaultStackSize);
+    usedThreads.Push(ThreadInfo(new PooledThread(this)));
+    usedThreads[-1].ptr->Start(defaultStackSize);
   }
   Unlock();
 }
@@ -202,7 +207,7 @@ void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
     freeThreads.Pop(t);
     t->assignTask(task);
     t->processTask();
-    usedThreads.Push(t);
+    usedThreads.Push(ThreadInfo(t));
   }else
   {
     if(usedThreads.Count()==maxThreads)
@@ -216,7 +221,7 @@ void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
       t->assignTask(task);
       t->Start(defaultStackSize);
       t->processTask();
-      usedThreads.Push(t);
+      usedThreads.Push(ThreadInfo(t));
     }
   }
   Unlock();
@@ -225,32 +230,34 @@ void ThreadPool::startTask(ThreadedTask* task, bool delOnCompletion/* = true*/)
 void ThreadPool::releaseThread(PooledThread* thread)
 {
   trace2("Releasing thread %8p",thread);
-  Lock();
-  
-  thread->releaseTask();
-  
-  int i;
-  for(i=0;i<usedThreads.Count();i++)
-  {
-    if(usedThreads[i]==thread)
-    {
-      trace2("Pending tasks:%d",pendingTasks.Count());
-      if(pendingTasks.Count()>0)
-      {
-        ThreadedTask *t;
-        pendingTasks.Shift(t);
-        thread->assignTask(t);
-        thread->processTask();
-        break;
-      }else
-      {
-        usedThreads.Delete(i,1);
-        freeThreads.Push(thread);
-      }
-      break;
-    }
-  }
+  int   i = 0;
 
+  Lock();
+  //NOTE: no check for return value, because of in case of
+  //findUsed() failure only core dump analyzis will help :)
+  findUsed(thread, i);
+
+  //destroy task if necessary
+  ThreadedTask* pTask = thread->releaseTask();
+  if (pTask && pTask->delOnCompletion()) {
+      usedThreads[i].destructing = true;
+      Unlock();
+      delete pTask; //may lasts rather long time
+      Lock();
+      findUsed(thread, i);
+      usedThreads[i].destructing = false;
+  }
+  //assign next task from queue of pending ones
+  trace2("Pending tasks:%d",pendingTasks.Count());
+  if (pendingTasks.Count() > 0) {
+      ThreadedTask * t;
+      pendingTasks.Shift(t);
+      thread->assignTask(t);
+      thread->processTask();
+  } else {
+      usedThreads.Delete(i,1);
+      freeThreads.Push(thread);
+  }
   Unlock();
 }
 

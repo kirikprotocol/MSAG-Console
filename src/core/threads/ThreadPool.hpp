@@ -47,16 +47,11 @@ public:
     if(task)return task->taskName();else return "";
   }
 
-  void releaseTask()
-  {  
-    if(!task) return;
-    
-    if (task->delOnCompletion())
-        delete task;
-    else
-        task->onRelease();
-        
-    task=NULL;
+  ThreadedTask* releaseTask(void)
+  {
+      ThreadedTask * tmp = task;
+      task = NULL;
+      return tmp;
   }    
   
 protected:
@@ -108,11 +103,19 @@ public:
 private:
   Mutex lock;
 //  MemoryManager mm;
-  typedef Array<PooledThread*> ThreadsArray;
-  typedef Array<ThreadedTask*> TasksArray;
-  ThreadsArray freeThreads;
-  ThreadsArray usedThreads;
-  TasksArray pendingTasks;
+  struct ThreadInfo {
+      PooledThread * ptr;
+      bool          destructing; //threaded task is releasing its resources
+      ThreadInfo(PooledThread * use_ptr = NULL)
+        : ptr(use_ptr), destructing(false)
+      { }
+  };
+  typedef Array<PooledThread *> ThreadsArray;
+  typedef Array<ThreadInfo>     ThreadInfoArray;
+  typedef Array<ThreadedTask*>  TasksArray;
+  ThreadsArray      freeThreads;
+  ThreadInfoArray   usedThreads;
+  TasksArray        pendingTasks;
   int defaultStackSize;
   int maxThreads;
 
@@ -123,6 +126,15 @@ private:
   void Unlock()
   {
     lock.Unlock();
+  }
+  bool findUsed(PooledThread* thread, int & idx)
+  {
+    for (int i = 0; i < usedThreads.Count(); i++) {
+        if (usedThreads[i].ptr == thread) {
+            idx = i; return true;
+        }
+    }
+    return false;
   }
 
 };//ThreadPool
