@@ -359,8 +359,8 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
     if ( !dialog.isnull() )
     {
       __map_trace2__("%s: dropping dlg 0x%x, chain size %d , dropChain %d, associate:%p",__func__,dialog->dialogid_map,dialog->chain.size(),dialog->dropChain, dialog->associate);
-      unsigned __dialogid_map = dialog->dialogid_map;
-      unsigned __dialogid_smsc = 0;
+//      unsigned __dialogid_map = dialog->dialogid_map;
+//      unsigned __dialogid_smsc = 0;
       if ( dialog->chain.size() == 0 ) {
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {

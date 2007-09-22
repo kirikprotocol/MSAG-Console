@@ -294,9 +294,12 @@ void MapIoTask::dispatcher()
     } else if ( message.primitive == 0x8d && message.msg_p[4] >= 0x04 ) {
       __map_trace__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
-    } else if ( message.primitive == 0xa3 && message.msg_p[5] == 0x22 && message.size == 8 ) {
+    } else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 ) {
       __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
       message.msg_p[5] = 24;
+    } else if ( message.primitive == 0x9f && message.size == 11 && message.msg_p[8] == 0x22 ) {
+      __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
+      message.msg_p[8] = 24;
     }
     try {
       MutexGuard mapMutexGuard(mapMutex);
