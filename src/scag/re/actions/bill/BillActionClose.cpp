@@ -77,6 +77,7 @@ bool BillActionClose::RunBeforePostpone(ActionContext& context)
         catch(SCAGException& e)
         {
             smsc_log_error(logger,"Action 'bill:info' :: No transaction with bill_id=%d. Error: %s", bid, e.what());
+            SetBillingStatus(context, e.what(), false);
             return false;
         }
 

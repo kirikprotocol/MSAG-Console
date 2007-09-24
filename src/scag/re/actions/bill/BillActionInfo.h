@@ -15,6 +15,12 @@ class BillActionInfo : public Action
     std::string m_sField[fields_count];
     bool m_exist[fields_count], bExist;
 
+    std::string m_sStatus;
+    std::string m_sMessage;
+    bool m_StatusExist;
+    bool m_MsgExist;
+
+    void SetBillingStatus(ActionContext& context, const char * errorMsg, bool isOK);
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params, const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
