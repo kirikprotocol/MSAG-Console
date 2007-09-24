@@ -439,7 +439,6 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   
   if(failed)
   {
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, failed);  
     SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
 	resp->get_resp()->setOrgCmd(cmd);	
@@ -855,7 +854,6 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   
   if(failed)
   {
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, failed);
     SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
 	resp->get_resp()->setOrgCmd(cmd);	
@@ -1216,7 +1214,6 @@ void StateMachine::processDataSm(SmppCommand& cmd)
   
   if(failed)
   {
-    registerEvent(scag::stat::events::smpp::FAILED, src, dst, (char*)ri.routeId, failed);    
     SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
 	resp->get_resp()->setOrgCmd(cmd);
