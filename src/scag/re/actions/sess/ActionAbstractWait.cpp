@@ -51,11 +51,4 @@ void ActionAbstractWait::RegisterPending(ActionContext& context, smsc::logger::L
     smsc_log_debug(logger,"Action '%s': pending registered time=%d, type=%d, billId=%d", m_ActionName.c_str(), wait_time, m_opType, billID);
 }
 
-
-
-
-
-
 }}}
-
-
