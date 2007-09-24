@@ -95,6 +95,11 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
     optional.set_privacyIndicator(sms->getIntProperty(Tag::SMPP_PRIVACYINDICATOR));
   }
 
+  if(sms->hasIntProperty(Tag::SMPP_NETWORK_ERROR_CODE))
+  {
+    uint32_t nec = htonl(sms->getIntProperty(Tag::SMPP_NETWORK_ERROR_CODE));
+    optional.set_networkErrorCode((uint8_t*)&nec + 1);
+  }    
 
   if ( sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD) ){
     unsigned len;
@@ -302,6 +307,13 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
   {
     sms->setIntProperty(Tag::SMPP_PRIVACYINDICATOR,optional.get_privacyIndicator());
   }
+  
+  if(optional.has_networkErrorCode())
+  {
+    uint32_t nec = 0;
+    memcpy((uint8_t*)&nec + 1, optional.get_networkErrorCode(), 3);
+    sms->setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE,ntohl(nec));
+  }    
 
   if(!forceDC)
   {

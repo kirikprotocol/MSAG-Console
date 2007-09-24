@@ -12,18 +12,21 @@ public:
     Address to, from;
     std::string msgId, dstSmeId;
     uint8_t state;
+    uint32_t netErrCode;
 
-    PostActionReceipt() {}
+    PostActionReceipt() : netErrCode(0) {}
     void run()
     {
-        scag::transport::smpp::SmppManager::Instance().sendReceipt(from, to, state, msgId.c_str(), dstSmeId.c_str());
+        scag::transport::smpp::SmppManager::Instance().sendReceipt(from, to, state, msgId.c_str(), dstSmeId.c_str(), netErrCode);
     }
 };
 
 class ActionReceipt : public Action
 {
-    FieldType ftTo, ftFrom, ftState, ftMsgId, ftDstSmeId;
-    std::string varTo, varFrom, varState, varMsgId, varDstSmeId;
+    FieldType ftTo, ftFrom, ftState, ftMsgId, ftDstSmeId, ftNetErrCode;
+    std::string varTo, varFrom, varState, varMsgId, varDstSmeId, varNetErrCode;
+    bool bNetErrCodeExist;
+    uint32_t netErrCode;
 
     Address toAddr, fromAddr;
     uint8_t state;

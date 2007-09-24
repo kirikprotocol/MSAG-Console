@@ -70,6 +70,7 @@
                     <attribute name="state" type="smpp:MsgState" use="required"/>
                     <attribute name="msg_id" type="scag:Value" use="required"/>
                     <attribute name="dst_sme_id" type="scag:Value" use="required"/>
+                    <attribute name="network_error_code" type="scag:Value" use="optional"/>
                 </complexType>
             </element>
         </choice>    

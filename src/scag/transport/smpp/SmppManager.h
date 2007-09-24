@@ -48,7 +48,7 @@ public:
     virtual void LoadRoutes(const char* cfgFile) = 0;
     virtual void ReloadRoutes() = 0;
 
-    virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id) = 0;
+    virtual void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode) = 0;
     virtual void pushCommand(SmppCommand& cmd) = 0;
     virtual void continueExecution(LongCallContext* lcmCtx, bool dropped) = 0;
     virtual bool makeLongCall(SmppCommand& cx, SessionPtr& session) = 0;

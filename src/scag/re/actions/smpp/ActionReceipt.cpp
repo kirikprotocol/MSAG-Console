@@ -57,8 +57,11 @@ void ActionReceipt::init(const SectionParams& params,PropertyObject propertyObje
 
     ftMsgId = CheckParameter(params, propertyObject, "receipt", "msg_id", true, true, varMsgId, bExist);
     ftDstSmeId = CheckParameter(params, propertyObject, "receipt", "dst_sme_id", true, true, varDstSmeId, bExist);
+    ftNetErrCode = CheckParameter(params, propertyObject, "receipt", "network_error_code", false, true, varNetErrCode, bNetErrCodeExist);
+    if(bNetErrCodeExist && ftNetErrCode == ftUnknown && !(netErrCode = strtol(varNetErrCode.c_str(), NULL, 0)))
+        throw SCAGException("Action 'smpp:receipt': Invalid 'network_error_code' field: %s", varNetErrCode.c_str());
 
-    smsc_log_debug(logger,"Action 'smpp:receipt' inited. to=%s from=%s state=%s msg_id=%s dst_sme_id=%s", varTo.c_str(), varFrom.c_str(), varState.c_str(), varMsgId.c_str(), varDstSmeId.c_str());
+    smsc_log_debug(logger,"Action 'smpp:receipt' inited. to=%s from=%s state=%s msg_id=%s dst_sme_id=%s, netErrCode=%d", varTo.c_str(), varFrom.c_str(), varState.c_str(), varMsgId.c_str(), varDstSmeId.c_str(), varNetErrCode.c_str());
 }
 
 bool ActionReceipt::getStrProperty(ActionContext& context, const std::string& str, const char *field_name, std::string& val)
@@ -127,8 +130,25 @@ bool ActionReceipt::run(ActionContext& context)
         pa->dstSmeId = varDstSmeId;
     else if(!getStrProperty(context, varDstSmeId, "dst_sme_id", pa->dstSmeId))
         return true;
+        
+    if(bNetErrCodeExist)
+    {
+        if(ftNetErrCode == ftUnknown)
+            pa->netErrCode = netErrCode;
+        else
+        {
+            Property * p = context.getProperty(varNetErrCode);
+            if(!p)
+            {
+                smsc_log_error(logger,"Action 'smpp:receipt': invalid 'network_error_code' property '%s'", varNetErrCode.c_str());
+                return true;
+            }
+            pa->netErrCode = p->getInt();
+        }
+        pa->netErrCode = (pa->netErrCode & 0xFFFF) | 0x030000; // 3 - GSM
+    }
 
-    smsc_log_debug(logger, "Action 'receipt' from=%s, to=%s, st=%d, mid=%s, dst=%s", pa->from.toString().c_str(), pa->to.toString().c_str(), pa->state, pa->msgId.c_str(), pa->dstSmeId.c_str());
+    smsc_log_debug(logger, "Action 'receipt' from=%s, to=%s, st=%d, mid=%s, dst=%s, netErrCode=%d", pa->from.toString().c_str(), pa->to.toString().c_str(), pa->state, pa->msgId.c_str(), pa->dstSmeId.c_str(), pa->netErrCode);
 
     context.getSession().getLongCallContext().addAction(ptr.release());
 

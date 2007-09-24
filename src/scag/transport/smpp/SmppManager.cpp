@@ -49,7 +49,7 @@ public:
   virtual bool makeLongCall(SmppCommand& cx, SessionPtr& session);
 
   //manager
-  void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id);
+  void  sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode);
   virtual void pushCommand(SmppCommand& cmd);
 
   void configChanged();
@@ -833,7 +833,7 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
   queueMon.notify();
 }
 
-void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id)
+void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const char* msgId, const char* dst_sme_id, uint32_t netErrCode)
 {
     SMS sms;
     if (msgId && msgId[0]) sms.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID, msgId);
@@ -847,6 +847,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     sms.setDestinationAddress(to);
     sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
     sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
+    sms.setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE, netErrCode);    
 
     SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
     cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
