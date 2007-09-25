@@ -5,13 +5,16 @@ namespace transport {
 namespace mms {
 
 bool HttpPacket::parse(const char* buf, size_t buf_size) {
-  if (!buf || buf_size == 0) {
-    return size;
+  //clear();
+  if (!buf || !buf_size) {
+    //__trace__("BUF = NULL");
+    return false;
   }
-  while (!complite && size < buf_size) {
+  while (*buf && !complite && state != ERROR) {
     size_t _size = HttpParser::parse(buf, buf_size, this);
     size += _size;
     buf += _size;
+   // __trace2__("BUF SIZE=%d BUF=\'%s\'", size, buf);
   }
   if (complite && valid) {
     return true;
@@ -24,6 +27,7 @@ void HttpPacket::setStartLine(const char* buf, size_t line_size) {
   if (!buf || line_size < HTTP_SIZE) {
     return;
   }
+  modified = true;
   if (std::strncmp(buf, HTTP, HTTP_SIZE) == 0) {
     string http_status(buf + HTTP_SIZE + HTTP_VERSION_SIZE, HTTP_STATUS_SIZE);
     int status_code = atoi(http_status.c_str()); 
@@ -37,6 +41,7 @@ void HttpPacket::setStartLine(const char* buf, size_t line_size) {
 }
 
 string HttpPacket::serialize() const {
+  //packet.erase();
   if (start_line.empty()) {
     return "";
   }
@@ -100,6 +105,7 @@ int HttpParser::findNextPacket(const char* buf, size_t buf_size, HttpPacket* pac
 }
 
 int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* packet) {
+  __trace__("parseStartLine");
   size_t size = 0;
   while (*buf && isspace(*buf)) {
     ++buf;
@@ -114,7 +120,7 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
     packet->valid = false;
     packet->state = ERROR;
     return size;
-  }
+  }  
   size_t line_size = 0;
   while (*buf) {
     if (std::strncmp(buf, CRLF, CRLF_SIZE) == 0) {
@@ -134,6 +140,56 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
     packet->complite = true;
   }
   return line_size;
+}
+
+void HttpPacket::createFakeResp(int status) {
+  modified = true;
+  switch (status) {
+  case BAD_REQUEST           : start_line = "HTTP/1.1 400 Bad Request\r\n"; break;
+  case INTERNAL_SERVER_ERROR : start_line = "HTTP/1.1 500 Internal Server Error\r\n"; break;
+  case SERVICE_UNAVAILABLE   : start_line = "HTTP/1.1 503 Service Unavailable\r\n"; break;
+  }
+  error_resp = true;
+}
+void HttpPacket::setContentLength(size_t length) {
+  if (header.isMultipart() || 0 == length) {
+    header.addField(CONTENT_LENGTH, SAMPLE_CONTENT_LENGTH);
+    return;
+  }
+  const size_t buf_size = 14;
+  char buf[buf_size];
+  int n = snprintf(buf, buf_size, "%d", length);
+  if (n > 0) {
+    string value(buf, n);
+    header.addField(CONTENT_LENGTH, value);
+  }
+}
+void HttpPacket::fillResponse() {
+  header.setContentType(TEXT_XML);
+  header.setCharset(xml::UTF_8);
+  header.addField(SOAP_ACTION, "\"\"");
+  //setContentLength(soap_envelope.size());
+  start_line = OK_RESPONSE;
+  modified = true;
+}
+
+void HttpPacket::clear() {
+  header.clear();
+  envelope_header.clear();
+  soap_envelope.erase();
+  soap_attachment.erase();
+  start_line.erase();
+  packet.erase();
+  packet_size = 0;
+  size = 0;
+  content_size = 0;
+  state = START_LINE;
+  next_state = HTTP_HEADER;
+  complite = false;;
+  valid = true;
+  request = true;
+  error_resp = false;
+  modified = true;
 }
 
 int HttpHeader::parseHeaderLine(const char* buf, size_t buf_size) {
@@ -184,6 +240,7 @@ int HttpHeader::parseHeaderLine(const char* buf, size_t buf_size) {
 }
 
 int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* packet) {
+  __trace__("parseHttpHeader");
   size_t header_size = 0;
   while (*buf && isspace(*buf)) {
     ++header_size;
@@ -210,7 +267,7 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
       packet->complite = true;
       if (content_length) {
         if (content_length > envelope_size) {
-          packet->valid = false;
+          //packet->valid = false;
           packet->complite = false;
         } else {
           envelope_size = content_length;
@@ -227,6 +284,7 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
 }
 
 int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket* packet) {
+  __trace__("parseEnvelopeHeader");
   size_t header_size = 0;
   while (*buf && isspace(*buf)) {
     ++header_size;
@@ -252,12 +310,27 @@ int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket
 }
 
 int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* packet) {
+  __trace__("parseSoapEnvelope");
+  if (!packet->header.isMultipart()) {
+    __trace__("NOT Multipart");
+    packet->setSoapEnvelope(buf, buf_size);
+    int content_length = packet->header.getContentLength();
+    if (content_length > 0) {
+      if (packet->soap_envelope.size() > content_length) {
+        packet->valid = false;
+      }
+      if (packet->soap_envelope.size() == content_length) {
+        packet->complite = true;
+      }
+    }
+    return buf_size;
+  }
+  __trace__("Multipart");
   size_t envelope_size = 0;
   const char* boundary = packet->header.getBoundary().c_str();
   size_t boundary_size = std::strlen(boundary);
   while (*buf) {
     if (std::strncmp(buf, boundary, boundary_size) == 0)  {
-      //__trace2__("BUF=\'%s\'", buf);
       if (std::strncmp(buf + boundary_size, BOUNDARY_START, BOUNDARY_START_SIZE) == 0) {
         packet->complite = true;
         packet->valid = false;
@@ -280,6 +353,7 @@ int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* 
 }
 
 int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket* packet) {
+  __trace__("parseSoapAttachment");
   int content_length = packet->header.getContentLength();
   if ((content_length > 0) && ((content_length -= packet->getContentSize()) <= 0)) {
     //size_t attachment_size = buf_size - packet->getSize();
@@ -339,6 +413,7 @@ void HttpHeader::setContentType(const char* type) {
   if (std::strncmp(type, MULTIPART, MULTIPART_SIZE) == 0) {
     multipart = true;
   }
+  multipart = false;
   content_type = type;
 }
 
@@ -451,6 +526,16 @@ void HttpHeader::test() {
   __trace2__("content_length=%d", content_length);
   string ser_header = serialize();
   __trace2__("SerializedHeader:\n\'%s\'", ser_header.c_str());
+}
+
+void HttpHeader::clear() {
+  charset.erase();
+  content_type.erase();
+  boundary.erase();
+  content_length = 0;
+  fields.Empty();
+  content_type_params.Empty();
+  multipart = false;
 }
 
 }//mms

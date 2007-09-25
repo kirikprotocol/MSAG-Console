@@ -10,7 +10,7 @@
 #include "sms/sms.h"
 #include "core/buffers/Hash.hpp"
 
-//#include "MmsParser.h"
+#include "util.h"
 
 namespace scag{
 namespace transport{
@@ -25,7 +25,11 @@ using smsc::core::buffers::Hash;
 //static const char* POST = "POST";
 //static const char* HTTP = "HTTP";
 
+static const int BAD_REQUEST = 400;
+static const int INTERNAL_SERVER_ERROR = 500;
+static const int SERVICE_UNAVAILABLE = 503;
 
+static const char* OK_RESPONSE = "HTTP/1.1 200 Ok\r\n";
 static const char* POST = "POST";
 static const char* HTTP = "HTTP";
 static const size_t POST_SIZE = std::strlen(POST);
@@ -39,7 +43,7 @@ static const char* LF = "\n";
 static const char* CR = "\r";
 //static const char* SPACE = " \r\n\t";
 static const char* COLON = ": ";
-
+  
 static const char* HOST = "Host";
 static const size_t HOST_SIZE = std::strlen(HOST);
 static const char* CONTENT_TYPE = "Content-Type";
@@ -71,7 +75,7 @@ static const size_t BOUNDARY_START_SIZE = std::strlen(BOUNDARY_START);
 
 static const char* CONTENT_LENGTH = "Content-Length";
 static const char* SAMPLE_CONTENT_LENGTH = "nnnn";
-static const size_t CONTENT_LENGTH_SIZE = std::strlen(CONTENT_LENGTH);
+static const size_t CONTENT_LENGTH_SIZE = 14;
 
 static const char* SOAP_ACTION = "SOAPAction";
 
@@ -86,7 +90,7 @@ public:
   void addField(const char* name_buf, size_t name_size, const char* value_buf, size_t value_size) {
     string name(name_buf, name_size);
     string value(value_buf, value_size);
-    fields.Insert(name.c_str(), value);
+    fields.Insert(name.c_str(), value);   
   }
   void addField(const char* name, string value) {
     fields.Insert(name, value);
@@ -134,6 +138,7 @@ public:
   int parseHeaderLine(const char* buf, size_t buf_size);
   virtual string serialize() const;
   void test();
+  void clear();
 private:
   string charset;
   string content_type;
@@ -161,8 +166,8 @@ class HttpParser;
 
 class HttpPacket {
 public:
-  HttpPacket():size(0), complite(false), valid(true), request(true), error_resp(false),
-               state(START_LINE), next_state(HTTP_HEADER), content_size(0) {
+  HttpPacket():size(0), complite(false), valid(true), request(true), error_resp(false), packet_size(0),
+               state(START_LINE), next_state(HTTP_HEADER), content_size(0), modified(true) {
   }
   ~HttpPacket() {
   }
@@ -171,6 +176,7 @@ public:
   size_t getSize() const {
     return size;
   }
+  void setContentLength(size_t length);
   size_t getContentSize() const {
     return content_size;  
   }
@@ -191,9 +197,13 @@ public:
   }
   void setSoapEnvelope(const char* buf, size_t envelope_size) {
     soap_envelope.append(buf, envelope_size);
+    setContentLength(envelope_size);
+    modified = true;
   }
   void setSoapEnvelope(string envelope) {
     soap_envelope = envelope;
+    setContentLength(soap_envelope.size());
+    modified = true;
   }
   //const char* getSoapEnvelope() const {
     //return soap_envelope.c_str();
@@ -203,27 +213,47 @@ public:
   }
   void setSoapAttachment(const char* buf, size_t attachment_size) {
     soap_attachment.append(buf, attachment_size);
+    setContentLength(0);
+    modified = true;
   }
   void setHttpHeader(HttpHeader _header) {
     header = _header;
+    modified = true;
   }
   void setEnvelopeHeader(HttpHeader _header) {
     envelope_header = _header;
+    modified = true;
   }
   void setHost(string host) {
     header.addField(HOST, host);
+    modified = true;
   }
   string getHost() const {
     return header.getHost();
   }
+  const char* getPacket() {
+    if (modified) {
+      modified = false;
+      packet = serialize();
+    }
+    return packet.c_str();
+  }
+  size_t getPacketSize() const {
+    return packet.size();
+  }
   string serialize() const;
   void test();
+  void createFakeResp(int status);
+  void fillResponse();
+  void clear();
 private:
   HttpHeader header;
   HttpHeader envelope_header;
   string soap_envelope;
   string soap_attachment;
   string start_line;
+  string packet;
+  size_t packet_size;
   size_t size;
   size_t content_size;
   uint8_t state;
@@ -232,6 +262,7 @@ private:
   bool valid;
   bool request;
   bool error_resp;
+  bool modified;
 private:
   friend class HttpParser;
 

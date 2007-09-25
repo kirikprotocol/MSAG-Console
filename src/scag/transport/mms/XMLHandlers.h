@@ -20,12 +20,13 @@
 
 #include <scag/util/encodings/Encodings.h>
 #include <core/buffers/Hash.hpp>
+#include <util/Exception.hpp>
 
 #include "MmsMsg.h"
 #include "MmsFactory.h"
 #include "logger/Logger.h"
 
-//#include "DOMPrintErrorHandler.h"
+#include "MmsRouterTypes.h"
 
 namespace scag{
 namespace transport{
@@ -62,8 +63,6 @@ public:
   void warning(const SAXParseException& exc);
   void error(const SAXParseException& exc);
   void fatalError(const SAXParseException& exc);
-  void resetErrors();
-  bool hadSawErrors() const;
   MmsMsg* getMmsMsg();
   std::string getTransactionId() const;
 
@@ -93,7 +92,25 @@ private:
   Hash<std::string> soap_attributes;
   int tag_number;
   uint8_t command_id;
-  bool fSawErrors;
+  //bool fSawErrors;
+};
+
+
+class RouterXMLHandler : public HandlerBase {
+public:
+  RouterXMLHandler(RouteHash* r);
+  ~RouterXMLHandler() {};
+  void startElement(const XMLCh* const qname, AttributeList& attributes);
+  void endElement(const XMLCh* const qname);
+  void characters(const XMLCh* const ch, const unsigned int len) {};
+  void warning(const SAXParseException& exc);
+  void error(const SAXParseException& exc);
+  void fatalError(const SAXParseException& exc);
+private:
+  Logger* logger;
+  RouteHash* routes_hash;
+  MmsRouteInfo route;
+  bool source;
 };
 
 }//mms

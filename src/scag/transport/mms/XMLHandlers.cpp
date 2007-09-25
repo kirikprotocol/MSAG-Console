@@ -4,8 +4,10 @@ namespace scag {
 namespace transport {
 namespace mms {
 
-XMLHandler::XMLHandler():tag_number(0), command_id(MMS_UNKNOWN), fSawErrors(false), mms_msg(0), logger(0) {
-  logger = Logger::getInstance("scag.mms");
+using smsc::util::Exception;
+
+XMLHandler::XMLHandler():tag_number(0), command_id(MMS_UNKNOWN), mms_msg(0), logger(0) {
+  logger = Logger::getInstance("mms.xml");
 }
 
 void XMLHandler::startElement(const XMLCh* const qname, AttributeList& attributes) {
@@ -287,27 +289,17 @@ void XMLHandler::warning(const SAXParseException& exc) {
 }
 
 void XMLHandler::error(const SAXParseException& exc) {
-  fSawErrors = true;
   StrX msg(exc.getMessage());
   StrX system_id(exc.getSystemId());
-  smsc_log_error(logger, "SAX Parse Error in \"%s\" line:%d column:%d \n MESSAGE : %s",
+  throw Exception("SAX Parse Error in \"%s\" line:%d column:%d \n MESSAGE : %s",
              system_id.localForm(), exc.getLineNumber(), exc.getColumnNumber(),  msg.localForm());
 }
 
 void XMLHandler::fatalError(const SAXParseException& exc) {
-  fSawErrors = true;
   StrX msg(exc.getMessage());
   StrX system_id(exc.getSystemId());
-  smsc_log_error(logger, "SAX Parse Fatal Eerror in \"%s\" line:%d column:%d \n MESSAGE : %s",
+  throw Exception("SAX Parse Fatal Eerror in \"%s\" line:%d column:%d \n MESSAGE : %s",
              system_id.localForm(), exc.getLineNumber(), exc.getColumnNumber(),  msg.localForm());
-}
-
-bool XMLHandler::hadSawErrors() const {
-  return fSawErrors;
-}
-
-void XMLHandler::resetErrors() {
-  fSawErrors = false;
 }
 
 std::string XMLHandler::trimCharacters(const std::string& s) {
@@ -341,6 +333,78 @@ XMLHandler::~XMLHandler() {
   if (mms_msg) {
     delete mms_msg;
   }
+}
+
+RouterXMLHandler::RouterXMLHandler(RouteHash* r) {
+  logger = Logger::getInstance("mms.xml");
+  routes_hash = r;
+}
+
+void RouterXMLHandler::startElement(const XMLCh *const name, AttributeList &attrs) {
+  StrX XMLQName(name);
+  const char *qname = XMLQName.localForm();
+  if (strcmp(qname, "route") == 0) {
+    StrX s = attrs.getValue("name");
+    route.name = s.localForm();
+    route.srcId = StrX(attrs.getValue("srcEndpointId")).localForm();
+    StrX s1 = attrs.getValue("id");
+    route.id = atoi(s1.localForm());
+    if(!route.id)
+        throw Exception("Invalid XML route id: name = %s, id = %s", s.localForm(), s1.localForm());
+    StrX s2 = attrs.getValue("serviceId");
+    route.service_id = atoi(s2.localForm());
+    if(!route.service_id)
+        throw Exception("Invalid XML service id: name = %s, id = %s, service_id=%s", s.localForm(), s1.localForm(), s2.localForm());
+    route.enabled = stringToBool(StrX(attrs.getValue("enabled")).localForm(), true);
+    return;
+  }
+  if (strcmp(qname, "source") == 0) {
+    source = true;
+    //route.sourceId = StrX(attrs.getValue("value")).localForm();
+    return;
+  }
+  if (strcmp(qname, "destination") == 0) {
+    source = false;
+    route.destId = StrX(attrs.getValue("endpointId")).localForm();
+    return;
+  }
+  if (strcmp(qname, "mask") == 0) {
+    string mask = StrX(attrs.getValue("value")).localForm();
+    if (source) {
+      route.srcMask = mask;
+    } else {
+      route.destMask = mask;
+    }
+  }
+}
+
+void RouterXMLHandler::endElement(const XMLCh *const name) {
+  StrX XMLQName(name);
+  const char *qname = XMLQName.localForm();
+  if (strcmp(qname, "route") == 0) {
+    routes_hash->Insert(route.srcId.c_str(), route);
+  }
+}
+
+void RouterXMLHandler::error(const SAXParseException& e)
+{
+    StrX fname(e.getSystemId());
+    StrX msg(e.getMessage());
+    throw Exception("Error at file %s, line %d, char %d Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+}
+
+void RouterXMLHandler::fatalError(const SAXParseException& e)
+{
+    StrX fname(e.getSystemId());
+    StrX msg(e.getMessage());
+    throw Exception("Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+}
+
+void RouterXMLHandler::warning(const SAXParseException& e)
+{
+    StrX fname(e.getSystemId());
+    StrX msg(e.getMessage());
+    smsc_log_error(logger, "Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 }//mms

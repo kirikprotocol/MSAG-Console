@@ -96,11 +96,11 @@ public:
   void setDisplayOnly(bool _display_only);
   bool getDisplayOnly() const;
   bool isNotSet() const;
-  void setValue(string _value);
-  string getValue() const;
+  void setValue(const string& _value);
+  const string& getValue() const;
   void serialize(DOMDocument* doc, DOMElement* parent, const char* address_type) const;
   void reset();
-  void test() ;
+  void test() const;
 private:
   string value;
   bool display_only;
@@ -118,83 +118,20 @@ struct MultiAddress {
   Address number;
   Address short_code;
   Address rfc2822;
-  bool isNotSet() const {
-    if (number.isNotSet() && short_code.isNotSet() && rfc2822.isNotSet()) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-  void serialize(DOMDocument* doc, DOMElement* parent, const char* parent_tag_name) const {
-    if (!parent_tag_name || isNotSet()) {
-      return;
-    }
-    DOMElement* address_element = doc->createElement(XStr(parent_tag_name).unicodeForm());
-    number.serialize(doc, address_element, xml::NUMBER);
-    short_code.serialize(doc, address_element, xml::SHORT_CODE);
-    rfc2822.serialize(doc, address_element, xml::RFC2822);
-    parent->appendChild(address_element);
-  }
-  void reset() {
-    number.reset();
-    short_code.reset();
-    rfc2822.reset();
-  };
-  void test() {
-    number.test();
-    short_code.test();
-    rfc2822.test();
-  }
+  bool isNotSet() const;
+  void serialize(DOMDocument* doc, DOMElement* parent, const char* parent_tag_name) const;
+  void reset();
+  void test() const;
 };
 
 struct SingleAddress {
   uint8_t type;
   Address address;
-  SingleAddress():type(NUMBER) {};
-  SingleAddress(const MultiAddress& multi_address) {
-    if (!multi_address.number.isNotSet()) {
-      address = multi_address.number;
-      type = NUMBER;
-    }
-    if (!multi_address.short_code.isNotSet()) {
-      address = multi_address.short_code;
-      type = SHORT_CODE;
-    }
-    if (!multi_address.rfc2822.isNotSet()) {
-      address = multi_address.rfc2822;
-      type = RFC2822;
-    }
-  }
-  void serialize(DOMDocument* doc, DOMElement* parent, const char* parent_tag_name) const {
-    if (address.isNotSet() || !parent_tag_name) {
-      return;
-    }
-    const char* address_type = 0;
-    switch (type) {
-      case NUMBER     : address_type = xml::NUMBER; break;
-      case SHORT_CODE : address_type = xml::SHORT_CODE; break;
-      case RFC2822    : address_type = xml::RFC2822; break;
-      default         : return;
-    }
-    DOMElement* address_element = doc->createElement(XStr(parent_tag_name).unicodeForm());
-    address.serialize(doc, address_element, address_type);
-    parent->appendChild(address_element);
-  }
-  void serialize(DOMDocument* doc, DOMElement* parent) const {
-    if (address.isNotSet()) {
-      return;
-    }
-    const char* address_type = 0;
-    switch (type) {
-      case NUMBER     : address_type = xml::NUMBER; break;
-      case SHORT_CODE : address_type = xml::SHORT_CODE; break;
-      case RFC2822    : address_type = xml::RFC2822; break;
-      default         : return;
-    }
-    address.serialize(doc, parent, address_type);
-  }
-  void test() { address.test(); }
-  ~SingleAddress() {}; 
+  SingleAddress();
+  SingleAddress(const MultiAddress& multi_address);
+  void serialize(DOMDocument* doc, DOMElement* parent, const char* parent_tag_name) const;
+  void serialize(DOMDocument* doc, DOMElement* parent) const;
+  void test() const;
 };
 
 enum RecipientType {
@@ -206,26 +143,29 @@ enum RecipientType {
 struct MmsMsg {
 public:
   MmsMsg();
-  MmsMsg(string _transaction_id, uint8_t _command_id);
+  MmsMsg(const string& _transaction_id, uint8_t _command_id);
   virtual ~MmsMsg();
-  string serialize() const;
+  bool serialize(string& serilized_msg) const;
   virtual void deserialize(const char*) {};
-  virtual void addField(const char* name, std::string value);
-  virtual void setSenderAddress(SingleAddress address) {};
-  virtual void setRecipientAddress(MultiAddress address, uint8_t recipient_type = TO) {};
+  virtual void addField(const char* name, const string& value);
+  virtual void setSenderAddress(const SingleAddress& address) {};
+  virtual void setRecipientAddress(const MultiAddress& address,
+                                   uint8_t recipient_type = TO) {};
+  virtual MmsMsg* getResponse() const { return NULL; }
+  virtual string getEndpointId() const { return ""; };
+  virtual void setEndpointId(const string& endpointId) {};
   virtual void test();
-  void setTransactionId(string _transaction_id);
-  string getTransactionId() const;
-  void setMmsVersion(string version);
-  string getMmsVersion() const;
+
+  void setTransactionId(const string& _transaction_id);
+  const string& getTransactionId() const;
+  void setMmsVersion(const string& version);
+  const string& getMmsVersion() const;
   uint8_t getCommandId() const;
   void setCommandId(uint8_t _command_id);
-  void setCommandId(const char* command_name);
   string getInfoElement(const char* element_name) const;
-  void setInfoElement(const char* name, string value);
+  void setInfoElement(const char* name, const string& value);
   bool isMM7Req() const;
   bool isMM4Req() const;
-  virtual MmsMsg* getResponse() const { return NULL; }
   //void setMsgType(string _msgType);
   //string getMsgType() const;
 protected:
@@ -240,23 +180,28 @@ private:
 
 struct MM7GenericVASPReq : public MmsMsg {
 public:
-  MM7GenericVASPReq(string _transaction_id, uint8_t _command_id);
+  MM7GenericVASPReq(const string& _transaction_id, uint8_t _command_id);
   virtual ~MM7GenericVASPReq();
-  virtual void setSenderAddress(SingleAddress address);
-  SingleAddress getSenderAddress() const; 	
-  virtual void test();
+  virtual void setSenderAddress(const SingleAddress& address);
+  const SingleAddress& getSenderAddress() const; 	
+  string getEndpointId() const;
+  void setEndpointId(const string& vasp_id);
+  virtual void test() ;
 protected:
-  bool getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_element, const char* command_name) const;
+  bool getGenericXMLDocument(DOMDocument* doc, DOMElement*& root_element,
+                             const char* command_name) const;
 private:
   SingleAddress sender_address;
 };
 
 struct MM7GenericRSReq : public MmsMsg {
 public:
-  MM7GenericRSReq(string _transaction_id, uint8_t _command_id);
+  MM7GenericRSReq(const string& _transaction_id, uint8_t _command_id);
   virtual ~MM7GenericRSReq();
-  virtual void setSenderAddress(SingleAddress address);
-  SingleAddress getSenderAddress() const;	
+  virtual void setSenderAddress(const SingleAddress& address);
+  const SingleAddress& getSenderAddress() const;	
+  string getEndpointId() const;
+  void setEndpointId(const string& rs_id);
   virtual void test();
 protected:
   SingleAddress sender_address;
@@ -307,9 +252,9 @@ enum DeliveryCondition {
 
 struct MM7Submit: public MM7GenericVASPReq {
 public:
-  MM7Submit(string _transaction_id);
+  MM7Submit(const string& _transaction_id);
   ~MM7Submit();
-  void setRecipientAddress(MultiAddress address, uint8_t recipient_type = TO);
+  void setRecipientAddress(const MultiAddress& address, uint8_t recipient_type = TO);
   void test();
   MmsMsg* getResponse() const;
 protected:
@@ -347,8 +292,10 @@ private:
 
 struct GenericResponse : public MmsMsg {
 public:
-  GenericResponse(string _transaction_id, uint8_t _command_id):MmsMsg(_transaction_id, _command_id) {};
-  GenericResponse(string _transaction_id):MmsMsg(_transaction_id, MMS_GENERIC_RESP) {}; 
+  GenericResponse(const string& _transaction_id, uint8_t _command_id)
+                  :MmsMsg(_transaction_id, _command_id) {};
+  GenericResponse(const string& _transaction_id)
+                  :MmsMsg(_transaction_id, MMS_GENERIC_RESP) {}; 
   ~GenericResponse() {};
 protected:
   virtual bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
@@ -357,13 +304,12 @@ protected:
 
 struct MM7SubmitResp: public GenericResponse {
 public:
-  MM7SubmitResp(string _transaction_id):GenericResponse(_transaction_id, MM7_SUBMIT_RESP) {};
+  MM7SubmitResp(const string& _transaction_id)
+                :GenericResponse(_transaction_id, MM7_SUBMIT_RESP) {};
   ~MM7SubmitResp() {};
 protected:
-  bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;// {
-    //return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::SUBMIT_RESP);
-  //}
-private:
+  bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
+//private:
   //string message_id;  //conditional : if status indicates success then this contains MMS R/S generated identification
                       //              of submutted message. This ID may be used in subsequent request and reports relating
 		      //              to this message
@@ -378,12 +324,13 @@ struct PreviouslySent {
 
 struct MM7Deliver: public MM7GenericRSReq {
 public:
-  MM7Deliver(string _transaction_id);
+  MM7Deliver(const string& _transaction_id);
   ~MM7Deliver();
-  virtual void setRecipientAddress(MultiAddress address, uint8_t recipient_type = TO);  
+  virtual void setRecipientAddress(const MultiAddress& address, 
+                                   uint8_t recipient_type = TO);  
   void setSequenceNumber(size_t number);
-  void setPreviouslySentBy(SingleAddress address);
-  void setPreviouslySentDate(string date);
+  void setPreviouslySentBy(const SingleAddress& address);
+  void setPreviouslySentDate(const string& date);
   MmsMsg* getResponse() const;
   void test();
 protected:
@@ -398,38 +345,38 @@ private:
 
 struct MM7DeliverResp : public GenericResponse {
 public:
-  MM7DeliverResp(string _transaction_id):GenericResponse(_transaction_id, MM7_DELIVER_RESP) {};
+  MM7DeliverResp(const string& _transaction_id)
+                 :GenericResponse(_transaction_id, MM7_DELIVER_RESP) {};
   ~MM7DeliverResp() {};
 protected:
-  bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const; //{
-    //return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVER_RESP);
-  //}
+  bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
 private:
 };
 
 struct MM7Cancel : public MM7GenericVASPReq {
 public:
-  MM7Cancel(string _transaction_id);
+  MM7Cancel(const string& _transaction_id);
   ~MM7Cancel();
   MmsMsg* getResponse() const;
-  //void test();
 protected:
   bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
 };
 
 struct MM7CancelResp : public GenericResponse {
 public:
-  MM7CancelResp(string _transaction_id):GenericResponse(_transaction_id, MM7_CANCEL_RESP) {};
+  MM7CancelResp(const string& _transaction_id)
+                :GenericResponse(_transaction_id, MM7_CANCEL_RESP) {};
   ~MM7CancelResp() {};
 protected:
   bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-    return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::CANCEL_RESP);
+    return GenericResponse::getGenericXMLDocument(doc, root_element,
+                                                  mm7_command_name::CANCEL_RESP);
   }
 };
 
 struct MM7ExtendedCancel : public MM7GenericVASPReq {
 public:
-  MM7ExtendedCancel(string _transaction_id);
+  MM7ExtendedCancel(const string& _transaction_id);
   ~MM7ExtendedCancel();
   MmsMsg* getResponse() const;
 protected:
@@ -438,7 +385,8 @@ protected:
 
 struct MM7ExtendedCancelResp : public GenericResponse {
 public:
-  MM7ExtendedCancelResp(string _transaction_id):GenericResponse(_transaction_id, MM7_EXTENDED_CANCEL_RESP) {};
+  MM7ExtendedCancelResp(const string& _transaction_id)
+                       :GenericResponse(_transaction_id, MM7_EXTENDED_CANCEL_RESP) {};
   ~MM7ExtendedCancelResp() {};
 protected:
   bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
@@ -446,7 +394,7 @@ protected:
 
 struct MM7Replace : public MM7GenericVASPReq {
 public:
-  MM7Replace(string _transaction_id);
+  MM7Replace(const string& _transaction_id);
   ~MM7Replace();
   MmsMsg* getResponse() const;
 protected:
@@ -455,17 +403,19 @@ protected:
 
 struct MM7ReplaceResp : public GenericResponse {
 public:
-  MM7ReplaceResp(string _transaction_id):GenericResponse(_transaction_id, MM7_REPLACE_RESP) {};
+  MM7ReplaceResp(const string& _transaction_id)
+                 :GenericResponse(_transaction_id, MM7_REPLACE_RESP) {};
   ~MM7ReplaceResp() {};
 protected:
   bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-    return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::REPLACE_RESP);
+    return GenericResponse::getGenericXMLDocument(doc, root_element,
+                                                  mm7_command_name::REPLACE_RESP);
   }
 };
 
 struct MM7ExtendedReplace : public MmsMsg {
 public:
-  MM7ExtendedReplace(string _transaction_id);
+  MM7ExtendedReplace(const string& _transaction_id);
   ~MM7ExtendedReplace();
   MmsMsg* getResponse() const;
 protected:
@@ -474,19 +424,18 @@ protected:
 
 struct MM7ExtendedReplaceResp : public GenericResponse {
 public:
-  MM7ExtendedReplaceResp(string _transaction_id):GenericResponse(_transaction_id, MM7_EXTENDED_REPLACE_RESP) {};
+  MM7ExtendedReplaceResp(const string& _transaction_id)
+                         :GenericResponse(_transaction_id, MM7_EXTENDED_REPLACE_RESP) {};
   ~MM7ExtendedReplaceResp() {};
 protected:
-  bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;// {
-    //return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::EXTENDED_REPLACE_RESP);
-  //}
+  bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
 };
 
 struct MM7DeliveryReport : public MM7GenericRSReq {
 public:
-  MM7DeliveryReport(string _transaction_id);
+  MM7DeliveryReport(const string& _transaction_id);
   ~MM7DeliveryReport();
-  void setRecipientAddress(MultiAddress address, uint8_t recipient_type = TO);
+  void setRecipientAddress(const MultiAddress& address, uint8_t recipient_type = TO);
   MmsMsg* getResponse() const;
   void test();
 protected:
@@ -497,19 +446,21 @@ private:
 
 struct MM7DeliveryReportResp : public GenericResponse {
 public:
-  MM7DeliveryReportResp(string _transaction_id):GenericResponse(_transaction_id, MM7_DELIVERY_REPORT_RESP) {};
+  MM7DeliveryReportResp(const string& _transaction_id)
+                        :GenericResponse(_transaction_id, MM7_DELIVERY_REPORT_RESP) {};
   ~MM7DeliveryReportResp() {};
 protected:
   bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-    return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::DELIVERY_REPORT_RESP);
+    return GenericResponse::getGenericXMLDocument(doc, root_element,
+                                                 mm7_command_name::DELIVERY_REPORT_RESP);
   }
 };
 
 struct MM7ReadReply : public MM7GenericRSReq {
 public:
-  MM7ReadReply(string _transaction_id);
+  MM7ReadReply(const string& _transaction_id);
   ~MM7ReadReply();
-  void setRecipientAddress(MultiAddress address, uint8_t recipient_type = TO);
+  void setRecipientAddress(const MultiAddress& address, uint8_t recipient_type = TO);
   MmsMsg* getResponse() const;
   void test();
 protected:
@@ -520,23 +471,27 @@ private:
 
 struct MM7ReadReplyResp : public GenericResponse {
 public:
-  MM7ReadReplyResp(string _transaction_id):GenericResponse(_transaction_id, MM7_READ_REPLY_RESP) {};
+  MM7ReadReplyResp(const string& _transaction_id)
+                   :GenericResponse(_transaction_id, MM7_READ_REPLY_RESP) {};
   ~MM7ReadReplyResp() {};
 protected:
   bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const {
-    return GenericResponse::getGenericXMLDocument(doc, root_element, mm7_command_name::READ_REPLY_RESP);
+    return GenericResponse::getGenericXMLDocument(doc, root_element,
+                                                   mm7_command_name::READ_REPLY_RESP);
   }
 };
 
 struct MM7RSErrorResp : public GenericResponse {
 public:
-  MM7RSErrorResp(string _transaction_id):GenericResponse(_transaction_id, MM7_RS_ERROR_RESP) {};
+  MM7RSErrorResp(const string& _transaction_id)
+                 :GenericResponse(_transaction_id, MM7_RS_ERROR_RESP) {};
   ~MM7RSErrorResp() {};
 };
 
 struct MM7VASPErrorResp : public GenericResponse {
 public:
-  MM7VASPErrorResp(string _transaction_id):GenericResponse(_transaction_id, MM7_VASP_ERROR_RESP) {};
+  MM7VASPErrorResp(const string& _transaction_id)
+                   :GenericResponse(_transaction_id, MM7_VASP_ERROR_RESP) {};
   ~MM7VASPErrorResp() {};
 };
 
