@@ -11,11 +11,13 @@ namespace test {
 class ProxyMms : public ServerMms {
 public:
 
-  ProxyMms(string proxy_host, int proxy_port, string _service_host, int _service_port, bool _is_vasp)
-  :ServerMms(proxy_host, proxy_port, _is_vasp), service_host(_service_host), service_port(_service_port) {
+  ProxyMms(const string& proxy_host, int proxy_port, string _service_host,int _service_port,
+           bool _is_vasp, const string& ep_id)
+  :ServerMms(proxy_host, proxy_port, ep_id, _is_vasp),
+    service_host(_service_host), service_port(_service_port) {
     prefix = "MSAG_";
     logger = Logger::getInstance("mms.proxy");
-    __trace2__("Create MMS Proxy %s:%d", host.c_str(), port);
+    smsc_log_info(logger, "Create MMS Proxy %s:%d", host.c_str(), port);
   }
 
 protected:
@@ -27,7 +29,8 @@ protected:
     smsc_log_debug(logger, "Accept Client %d", con_number);
     smsc_log_debug(logger, "Start Receive Request Packet");
 
-    std::string packet = recvPacket(sock, SERVER_TIME_OUT);
+    string packet;
+    recvPacket(sock, SERVER_TIME_OUT, packet);
 
     smsc_log_debug(logger, "Request Packet size = %d bytes", packet.size());
     smsc_log_debug(logger, "Request Packet:\n\n\'%s\'\n", packet.c_str());
@@ -51,15 +54,15 @@ protected:
       }
       return;
     }
-    string soap_envelope = http_packet.getSoapEnvelope();
+    //string soap_envelope = http_packet.getSoapEnvelope();
     MmsCommand in_cmd;
-    if (!in_cmd.createMM7Command(soap_envelope.c_str(), soap_envelope.size())) {
+    if (!in_cmd.createMM7Command(http_packet.getSoapEnvelope(),
+                                 http_packet.getSoapEnvelopeSize())) {
       smsc_log_error(logger, "Error While Creating Request MM7 Command");
       processErrorCommand(sock, in_cmd);
       return;
     }
     smsc_log_debug(logger, "Request Command Id = %d", in_cmd.getCommandId());
-    //__trace2__("Http Packet:\n\n\'%s\'\n", http_packet.serialize().c_str());
     if (is_vasp) {
       workAsVASP(sock, in_cmd, http_packet);
     } else {
@@ -83,11 +86,17 @@ private:
 
     incTransactionId();
 
-    string soap_envelope = in_cmd.serialize();
+    string soap_envelope;
+    if (!in_cmd.serialize(soap_envelope)) {
+      smsc_log_error(logger, "Serilization Error");
+      in_cmd.setTransactionId(client_tid);
+      sendResp(sock, in_cmd, "3000", "Server Error");
+      return;
+    }
     in_packet.setSoapEnvelope(soap_envelope);
 
-    string packet = in_packet.serialize();
-    if (packet.empty()) {
+    string packet;
+    if (!in_packet.serialize(packet)) {
       in_cmd.setTransactionId(client_tid);
       sendResp(sock, in_cmd, "3000", "Server Error");
       return;
@@ -97,7 +106,8 @@ private:
     smsc_log_debug(logger, "Proxy Sent %d bytes", wn);
 
     smsc_log_debug(logger, "Proxy Start Recieve Response");
-    string resp_buf = recvPacket(&client_socket, SERVER_TIME_OUT * 10);
+    string resp_buf;
+    recvPacket(&client_socket, SERVER_TIME_OUT * 10, resp_buf);
     smsc_log_debug(logger, "Response Packet:\n\n\'%s\'\n", resp_buf.c_str());
     /********************/
     client_socket.Close();
@@ -117,10 +127,11 @@ private:
       return;
     }
     MmsCommand resp_cmd;
-    string soap_env = resp_packet.getSoapEnvelope();
+    //string soap_env = resp_packet.getSoapEnvelope();
     smsc_log_debug(logger, "Create Response MM7 Command");
 
-    if (resp_cmd.createMM7Command(soap_env.c_str(), soap_env.size())) {
+    if (resp_cmd.createMM7Command(resp_packet.getSoapEnvelope(),
+                                  resp_packet.getSoapEnvelopeSize())) {
       //smsc_log_debug(logger, "Serialized Response Command:\n\n\'%s\'\n", in_cmd.serialize().c_str());
 
       resp_cmd.setTransactionId(client_tid);
@@ -132,12 +143,12 @@ private:
 
       in_cmd.setTransactionId(client_tid);
 
-      sendResp(sock, in_cmd, "4010", "Bad Request");
+      sendResp(sock, in_cmd, "4012", "Bad Request");
     }
   }
 
   void workAsRS(Socket* sock, MmsCommand& in_cmd, HttpPacket& in_packet) {
-    __trace__("Proxy Start Work as RS");
+    smsc_log_info(logger, "Proxy Start Work as RS");
     uint8_t cmd_id = in_cmd.getCommandId();
     if (cmd_id != MM7_SUBMIT && cmd_id != MM7_CANCEL && cmd_id != MM7_REPLACE &&
         cmd_id != MM7_EXTENDED_CANCEL && cmd_id != MM7_EXTENDED_REPLACE) {
@@ -148,7 +159,7 @@ private:
   }
 
   void workAsVASP(Socket* sock, MmsCommand& in_cmd, HttpPacket& in_packet) {
-    __trace__("Proxy Start Work as VASP");
+    smsc_log_info(logger, "Proxy Start Work as VASP");
     uint8_t cmd_id = in_cmd.getCommandId();
     if (cmd_id != MM7_DELIVER && cmd_id != MM7_DELIVERY_REPORT && cmd_id != MM7_READ_REPLY) {
       sendVASPErrorResp(sock, in_cmd.getTransactionId(), "4003", "Unsupported Operation");
@@ -156,19 +167,22 @@ private:
     }
     processCommand(sock, in_cmd, in_packet);
   }
-  void sendRSErrorResp(Socket* sock, string tid, string status_code, string status_text) {
+  void sendRSErrorResp(Socket* sock, const string& tid, const char* status_code, 
+                       const char* status_text) {
     MmsCommand resp_cmd;
     resp_cmd.createRSError(tid, status_code, status_text);
     ServerMms::sendResp(sock, resp_cmd);
   }
 
-  void sendVASPErrorResp(Socket* sock, string tid, string status_code, string status_text) {
+  void sendVASPErrorResp(Socket* sock, const string& tid, const char* status_code,
+                         const char* status_text) {
     MmsCommand resp_cmd;
     resp_cmd.createVASPError(tid, status_code, status_text);
     ServerMms::sendResp(sock, resp_cmd);
   }
 
-  void sendResp(Socket* sock, const MmsCommand& in_cmd, string status_code, string status_text) {
+  void sendResp(Socket* sock, const MmsCommand& in_cmd, const char* status_code,
+                const char* status_text) {
     MmsCommand resp_cmd;
     resp_cmd.createResponse(in_cmd.getMmsMsg(), status_code, status_text);
     ServerMms::sendResp(sock, resp_cmd);

@@ -4,9 +4,9 @@ namespace scag {
 namespace transport {
 namespace mms {
 
-MmsFactory::MmsFactory() {};
+MmsFactory_::MmsFactory_() {};
 
-MmsMsg* MmsFactory::createMM7Msg(const char* command_name, std::string transaction_id) {
+MmsMsg* MmsFactory_::createMM7Msg(const char* command_name, const string& transaction_id) {
   if (std::strcmp(command_name, mm7_command_name::SUBMIT) == 0) {
     return new MM7Submit(transaction_id);
   }
@@ -61,7 +61,24 @@ MmsMsg* MmsFactory::createMM7Msg(const char* command_name, std::string transacti
   return NULL;
 }
 
-MmsFactory::~MmsFactory() {};
+MmsFactory_::~MmsFactory_() {};
+
+Hash<MmsFactory*> MmsFactory::factories;
+
+void MmsFactory::initFactories() {
+}
+   
+void MmsFactory::deleteFactories() {
+  //if (factories) {
+    //factories->Empty();
+  //}
+}
+
+MmsMsg* MmsFactory::getMmsMsg(const char* key, const string& transaction_id) {
+  MmsFactory* f = factories.Exists(key) ? factories.Get(key) : 0;
+  return f ? f->createMmsMsg(transaction_id) : 0; 
+}
+
 
 }//mms
 }//transport

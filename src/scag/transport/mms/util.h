@@ -156,7 +156,8 @@ namespace xml {
 
   using std::string;
 
-  inline void addTextNode(DOMDocument* doc, DOMElement* parent, const char* name, std::string value) {
+  inline void addTextNode(DOMDocument* doc, DOMElement* parent,
+                           const char* name, const string& value) {
     DOMElement* node = doc->createElement(XStr(name).unicodeForm());
     parent->appendChild(node);
     DOMText* node_value = doc->createTextNode(XStr(value.c_str()).unicodeForm());
@@ -249,7 +250,7 @@ static inline time_t mm7Time2CTime(const char* mms_time) {
   if (!mms_time) {
     return result_time;
   }
-  size_t time_size = std::strlen(mms_time);
+  size_t time_size = strlen(mms_time);
   int sign = 1;
   if (*mms_time == '-') {
     sign = -1;

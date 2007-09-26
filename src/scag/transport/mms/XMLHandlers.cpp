@@ -19,26 +19,26 @@ void XMLHandler::startElement(const XMLCh* const qname, AttributeList& attribute
     if (mms_msg) {
       command_id = mms_msg->getCommandId();
       char* name = 0;
-      std::string value;
+      string value;
       soap_attributes.First();
       while (soap_attributes.Next(name, value)) {
-        mms_msg->addField(name, value);
+        mms_msg->setInfoElement(name, value);
       }
     }
     return;
   }
-  Hash<std::string> attr;
+  Hash<string> attr;
   size_t len = attributes.getLength();
   for (int i = 0; i < len; ++i) {
     XMLCh const * xml_name = attributes.getName(i);
     XMLCh const * xml_value = attributes.getValue(i);
-    std::string name, value;
+    string name, value;
     //scag::util::encodings::Convertor::UCS2ToUTF8(xml_name, XMLString::stringLen(xml_name), name);
     Convertor::UCS2ToUTF8(xml_name, XMLString::stringLen(xml_name), name);
     Convertor::UCS2ToUTF8(xml_value, XMLString::stringLen(xml_value), value);
     attr.Insert(name.c_str(), value);
   }
-  if (std::strcmp(tag.localForm(), xml::MM7_TRANSACTION_ID) == 0) {
+  if (strcmp(tag.localForm(), xml::MM7_TRANSACTION_ID) == 0) {
     soap_attributes = attr;
   }
   switch (command_id) {
@@ -60,10 +60,10 @@ void XMLHandler::startElementSubmit(const char* name, Hash<std::string>& attribu
   startElementCancel(name, attributes);
   if (strcmp(name, xml::REPLY_CHARGING) == 0 || strcmp(name, xml::CONTENT) == 0) {
     char* name = 0;
-    std::string value;
+    string value;
     attributes.First();
     while (attributes.Next(name, value)) {
-      mms_msg->addField(name, value);
+      mms_msg->setInfoElement(name, value);
     }
   }
 }
@@ -71,19 +71,19 @@ void XMLHandler::startElementSubmit(const char* name, Hash<std::string>& attribu
 void XMLHandler::startElementDeliver(const char* name, Hash<std::string>& attributes) {
   startElementSubmit(name, attributes);
   if (strcmp(name, xml::DATE_TIME) == 0 || strcmp(name, xml::USER_AGENT) == 0) {
-    const std::string* ptr = attributes.GetPtr(xml::SEQUENCE);
+    const string* ptr = attributes.GetPtr(xml::SEQUENCE);
     if (ptr) {
       dynamic_cast<MM7Deliver *>(mms_msg)->setSequenceNumber(atoi(ptr->c_str()));
     }
   }
   if (strcmp(name, xml::UA_CAPABILITIES) == 0) {
-    const std::string* ptr = attributes.GetPtr(xml::UA_PROF);
+    const string* ptr = attributes.GetPtr(xml::UA_PROF);
     if (ptr) {
-      mms_msg->addField(xml::UA_PROF, *ptr);
+      mms_msg->setInfoElement(xml::UA_PROF, *ptr);
     }
     ptr = attributes.GetPtr(xml::TIME_STAMP);
     if (ptr) {
-      mms_msg->addField(xml::UA_TIME_STAMP, *ptr);
+      mms_msg->setInfoElement(xml::UA_TIME_STAMP, *ptr);
     }
   }
 
@@ -91,7 +91,7 @@ void XMLHandler::startElementDeliver(const char* name, Hash<std::string>& attrib
 
 void XMLHandler::startElementCancel(const char* name, Hash<std::string>& attributes) {
   if (strcmp(name, xml::NUMBER) == 0) {
-    const std::string* ptr = attributes.GetPtr(xml::DISPLAY_ONLY);
+    const string* ptr = attributes.GetPtr(xml::DISPLAY_ONLY);
     if (ptr) {
       address.number.setDisplayOnly(ptr->c_str());
     }
@@ -102,7 +102,7 @@ void XMLHandler::startElementCancel(const char* name, Hash<std::string>& attribu
     return;
   }
   if (strcmp(name, xml::SHORT_CODE) == 0) {
-    const std::string* ptr = attributes.GetPtr(xml::DISPLAY_ONLY);
+    const string* ptr = attributes.GetPtr(xml::DISPLAY_ONLY);
     if (ptr) {
       address.short_code.setDisplayOnly(ptr->c_str());
     }
@@ -113,7 +113,7 @@ void XMLHandler::startElementCancel(const char* name, Hash<std::string>& attribu
     return;
   }
   if (strcmp(name, xml::RFC2822) == 0) {
-    const std::string* ptr = attributes.GetPtr(xml::DISPLAY_ONLY);
+    const string* ptr = attributes.GetPtr(xml::DISPLAY_ONLY);
     if (ptr) {
       address.rfc2822.setDisplayOnly(ptr->c_str());
     }
@@ -129,10 +129,10 @@ void XMLHandler::startElementExtendedReplace(const char* name, Hash<std::string>
   startElementCancel(name, attributes);
   if (strcmp(name, xml::CONTENT) == 0) {
     char* name = 0;
-    std::string value;
+    string value;
     attributes.First();
     while (attributes.Next(name, value)) {
-      mms_msg->addField(name, value);
+      mms_msg->setInfoElement(name, value);
     }
   }
 }
@@ -140,32 +140,31 @@ void XMLHandler::startElementExtendedReplace(const char* name, Hash<std::string>
 void XMLHandler::startElementDeliveryReport(const char* name, Hash<std::string>& attributes) {
   startElementCancel(name, attributes);
   if (strcmp(name, xml::UA_CAPABILITIES) == 0) {
-    const std::string* ptr = attributes.GetPtr(xml::UA_PROF);
+    const string* ptr = attributes.GetPtr(xml::UA_PROF);
     if (ptr) {
-      mms_msg->addField(xml::UA_PROF, *ptr);
+      mms_msg->setInfoElement(xml::UA_PROF, *ptr);
     }
     ptr = attributes.GetPtr(xml::TIME_STAMP);
     if (ptr) {
-      mms_msg->addField(xml::UA_TIME_STAMP, *ptr);
+      mms_msg->setInfoElement(xml::UA_TIME_STAMP, *ptr);
     }
   }
 }
 
 void XMLHandler::startElementGenericResp(const char* name, Hash<std::string>& attributes) {
-  if (std::strcmp(name, mm7_command_name::RS_ERROR_RESP) == 0) {
+  if (strcmp(name, mm7_command_name::RS_ERROR_RESP) == 0) {
     mms_msg->setCommandId(MM7_RS_ERROR_RESP);
   }
-  if (std::strcmp(name, mm7_command_name::VASP_ERROR_RESP) == 0) {
+  if (strcmp(name, mm7_command_name::VASP_ERROR_RESP) == 0) {
     mms_msg->setCommandId(MM7_VASP_ERROR_RESP);
   }
 }
 
 void XMLHandler::characters(const XMLCh* const ch, const unsigned int len) {
-  std::string conv_value;
-  Convertor::UCS2ToUTF8(ch, len, conv_value);
-  std::string value = trimCharacters(conv_value);
-  //__trace2__("TAG = %s", tag_name.c_str());
-  //__trace2__("TEXT = \'%s\'", value.c_str());
+  string value;
+  //XMLString::trim(ch);
+  Convertor::UCS2ToUTF8(ch, len, value);
+  trimCharacters(value);
   if (TRANSACTION_ID_TAG_NUMBER == tag_number && tag_name.compare(xml::MM7_TRANSACTION_ID) == 0){
     transaction_id = value;
     return;
@@ -182,13 +181,13 @@ void XMLHandler::characters(const XMLCh* const ch, const unsigned int len) {
     case MM7_SUBMIT           : charactersSubmit(value); break;
     //case MM7_RS_ERROR_RESP    : 
     //case MM7_VASP_ERROR_RESP  : break;
-    case MM7_EXTENDED_REPLACE : mms_msg->addField(tag_name.c_str(), value); break;
-    default                   : mms_msg->addField(tag_name.c_str(), value); break;
+    case MM7_EXTENDED_REPLACE : mms_msg->setInfoElement(tag_name.c_str(), value); break;
+    default                   : mms_msg->setInfoElement(tag_name.c_str(), value); break;
   }
   tag_name = "";
 }
 
-void XMLHandler::charactersSubmit(std::string value) {
+void XMLHandler::charactersSubmit(const string& value) {
   if (tag_name.compare(xml::NUMBER) == 0) {
     address.number.setValue(value);
     return;
@@ -206,7 +205,7 @@ void XMLHandler::charactersSubmit(std::string value) {
     deliver_msg->setPreviouslySentDate(value);
     return;
   }
-  mms_msg->addField(tag_name.c_str(), value);
+  mms_msg->setInfoElement(tag_name.c_str(), value);
 }
 
 void XMLHandler::endElement(const XMLCh* const qname) {
@@ -233,17 +232,17 @@ void XMLHandler::endElementSubmit(const char* name) {
     address.reset();
     return;
   }
-  if (std::strcmp(name, xml::CC) == 0) {
+  if (strcmp(name, xml::CC) == 0) {
     mms_msg->setRecipientAddress(address, CC);
     address.reset();
     return;
   }
-  if (std::strcmp(name, xml::BCC) == 0) {
+  if (strcmp(name, xml::BCC) == 0) {
     mms_msg->setRecipientAddress(address, BCC);
     address.reset();
     return;
   }
-  if (std::strcmp(name, xml::SENDER_ADDRESS) == 0) {
+  if (strcmp(name, xml::SENDER_ADDRESS) == 0) {
     mms_msg->setSenderAddress(address);
     address.reset();
     return;
@@ -272,11 +271,11 @@ void XMLHandler::endElementCancel(const char* name) {
 }
 
 void XMLHandler::endElementDeliveryReport(const char* name) {
-  if (std::strcmp(name, xml::SENDER) == 0) {
+  if (strcmp(name, xml::SENDER) == 0) {
     mms_msg->setSenderAddress(address);
     address.reset();
   }
-  if (std::strcmp(name, xml::RECIPIENT) == 0) {
+  if (strcmp(name, xml::RECIPIENT) == 0) {
     mms_msg->setRecipientAddress(address);
     address.reset();
     return;
@@ -302,17 +301,16 @@ void XMLHandler::fatalError(const SAXParseException& exc) {
              system_id.localForm(), exc.getLineNumber(), exc.getColumnNumber(),  msg.localForm());
 }
 
-std::string XMLHandler::trimCharacters(const std::string& s) {
-  std::string::const_iterator start = s.begin();
-  std::string::const_iterator end = s.end() - 1;
+void XMLHandler::trimCharacters(string& s) {
+  string::iterator start = s.begin();
+  string::iterator end = s.end() - 1;
   while (start != s.end() && isspace(*start)) ++start;
   while (end != start && isspace(*end)) --end;
   if (end - start >= 0) {
-    std::string res(start, end + 1);
-    return res;
+    s.erase(s.begin(), start);
+    s.erase(end + 1, s.end());
   } else {
-    std::string res;
-    return res;
+    s.erase();
   }
 }
 
@@ -325,7 +323,7 @@ MmsMsg* XMLHandler::getMmsMsg() {
   return _mms_msg;
 }
 
-std::string XMLHandler::getTransactionId() const {
+const string& XMLHandler::getTransactionId() const {
   return transaction_id;
 }
 

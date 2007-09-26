@@ -24,7 +24,7 @@ public:
   MmsRouter() {};
   virtual const MmsRouteInfo* findRouteBySourceEndpointId(const char* endpointId);
   virtual void loadRoutes();
-  void Init(string cfg_file);
+  void Init(const string& cfg_file);
   void printRoutes();
   ~MmsRouter() {};
 private:

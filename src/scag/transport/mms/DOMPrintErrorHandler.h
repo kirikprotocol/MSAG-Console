@@ -18,23 +18,26 @@ namespace transport {
 namespace mms {
 
 XERCES_CPP_NAMESPACE_USE
+using smsc::logger::Logger;
 
 class DOMPrintErrorHandler : public DOMErrorHandler
 {
 public:
-  DOMPrintErrorHandler(){};
+  DOMPrintErrorHandler(){
+    logger = Logger::getInstance("mms.dom");
+  };
   ~DOMPrintErrorHandler(){};
   bool handleError(const DOMError& dom_error) {
     StrX msg(dom_error.getMessage());
     if (dom_error.getSeverity() == DOMError::DOM_SEVERITY_WARNING) {
-      __trace2__("DOM Print Warning Message : %s", msg.localForm());
+      smsc_log_warn(logger, "Warning : %s", msg.localForm());
       return true;
     }
     if (dom_error.getSeverity() == DOMError::DOM_SEVERITY_ERROR) {
-      __trace2__("DOM Print Error Message : %s", msg.localForm());
+      smsc_log_error(logger, "Error : %s", msg.localForm());
       return true;
     }    
-    __trace2__("DOM Print Fatal Message : %s", msg.localForm());
+    smsc_log_error(logger, "Fatal Error : %s", msg.localForm());
     return true;
   }      
   void resetErrors(){};
@@ -43,6 +46,7 @@ private:
   DOMPrintErrorHandler(const DOMErrorHandler&);
   void operator=(const DOMErrorHandler&);
 
+  Logger* logger;
 };  
 
 }//mms

@@ -14,7 +14,7 @@ public:
   virtual int processResponse(MmsResponse &response) = 0;
   virtual int statusResponse(MmsResponse &response, bool delivered = true) = 0;
   static MmsProcessor& Instance();
-  static void Init(std::string cfg);
+  static void Init(const string& cfg);
 protected:
   virtual ~MmsProcessor() {};
 };

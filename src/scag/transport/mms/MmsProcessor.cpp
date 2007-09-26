@@ -26,7 +26,7 @@ public:
   virtual int processRequest(MmsRequest &request);
   virtual int processResponse(MmsResponse &response);
   virtual int statusResponse(MmsResponse &response, bool delivered);
-  void init(std::string cfg);
+  void init(const string& cfg);
   virtual ~MmsProcessorImpl() {};
 
 public:
@@ -63,7 +63,7 @@ MmsProcessor& MmsProcessor::Instance() {
   return SingleMP::Instance();
 }
 
-void MmsProcessor::Init(std::string cfg) {
+void MmsProcessor::Init(const string& cfg) {
   MutexGuard g(init_lock);
   if (!inited) {
     MmsProcessorImpl &mp = SingleMP::Instance();
@@ -198,7 +198,7 @@ static void ParseTag(MmsProcessorImpl* mmsMan, DOMNodeList* list, MmsEntityType 
   }
 }
 
-void MmsProcessorImpl::init(std::string cfg) {
+void MmsProcessorImpl::init(const string& cfg) {
   logger = Logger::getInstance("mms.proc");
 
   DOMTreeReader reader;

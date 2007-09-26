@@ -34,7 +34,7 @@ void MmsRouter::Init(const std::string &cfg) {
 }
 */
 
-void MmsRouter::Init(string cfg_file) {
+void MmsRouter::Init(const string& cfg_file) {
   cfg_file_name = cfg_file;
   logger = Logger::getInstance("mms.router");
   loadRoutes();

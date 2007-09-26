@@ -38,9 +38,9 @@ void MmsContext::replaceTid() {
 }
 
 bool MmsContext::createResponse(Socket* s) {
-  std::string soap_envelope = http_packet.getSoapEnvelope();
   MmsCommand *cmd = new MmsResponse();
-  if (cmd->createMM7Command(soap_envelope.c_str(), soap_envelope.size())) {
+  if (cmd->createMM7Command(http_packet.getSoapEnvelope(),
+                             http_packet.getSoapEnvelopeSize())) {
     result = 0;
   } else {
     result = status::SERVICE_UNAVAILABLE; //status???
@@ -60,13 +60,14 @@ bool MmsContext::createResponse(Socket* s) {
 }
 
 bool MmsContext::createRequest() {
-  std::string soap_envelope = http_packet.getSoapEnvelope();
-  __trace2__("SOAP_ENVELOPE=\'%s\'", soap_envelope.c_str());
+  //std::string soap_envelope = http_packet.getSoapEnvelope();
+  __trace2__("SOAP_ENVELOPE=\'%s\'", http_packet.getSoapEnvelope());
   if (command) {
     delete command;
   }
   command = new MmsRequest();
-  if (command->createMM7Command(soap_envelope.c_str(), soap_envelope.size())) {
+  if (command->createMM7Command(http_packet.getSoapEnvelope(),
+                                 http_packet.getSoapEnvelopeSize())) {
     action = PROCESS_REQUEST;
   } else {
     result = status::VALIDATION_ERROR;
@@ -113,7 +114,7 @@ void MmsContext::createFakeResponse() {
   command->serialize(soap_envelope);
   http_packet.setSoapEnvelope(soap_envelope);
   http_packet.fillResponse();
-  __trace2__("MmsContext::createFakeResponse():serialized http packet=\'%s\'", http_packet.serialize().c_str());
+  //__trace2__("MmsContext::createFakeResponse():serialized http packet=\'%s\'", http_packet.serialize().c_str());
 }
 
 void MmsContext::serializeRequest() {

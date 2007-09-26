@@ -19,7 +19,11 @@ uint8_t MmsCommand::getCommandId() const {
 }
 
 string MmsCommand::getInfoElement(const char* element_name) const {
-  return mms_msg ? mms_msg->getInfoElement(element_name) : "";
+  if (!mms_msg) {
+    return string("");
+  }
+  const string* value = mms_msg->getInfoElement(element_name);
+  return value ? string(*value) : string("");
 }
 
 void MmsCommand::setInfoElement(const char* name, const string& value) {
@@ -221,7 +225,7 @@ void MmsCommand::setStatus(int st) {
   case status::VALIDATION_ERROR :
      mms_msg->setInfoElement(xml::STATUS_CODE, "4004");
      mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::VALIDATION_ERROR);
-              return;
+     return;
   case status::SERVICE_ERROR :
      mms_msg->setInfoElement(xml::STATUS_CODE, "4005");
      mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::SERVICE_ERROR);
@@ -280,9 +284,10 @@ MmsRequest::MmsRequest():MmsCommand(), dest_port(0) {
 
 string MmsRequest::getEndpointId() const {
   if (!mms_msg) {
-    return "";
+    return string("");
   }
-  return mms_msg->getEndpointId();
+  const string* ep_id = mms_msg->getEndpointId();
+  return ep_id ? string(*ep_id) : string("");
 }
 
 void MmsRequest::setEndpointId(const string& endpoint_id) {

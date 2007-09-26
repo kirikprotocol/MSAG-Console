@@ -147,12 +147,11 @@ public:
   virtual ~MmsMsg();
   bool serialize(string& serilized_msg) const;
   virtual void deserialize(const char*) {};
-  virtual void addField(const char* name, const string& value);
   virtual void setSenderAddress(const SingleAddress& address) {};
   virtual void setRecipientAddress(const MultiAddress& address,
                                    uint8_t recipient_type = TO) {};
   virtual MmsMsg* getResponse() const { return NULL; }
-  virtual string getEndpointId() const { return ""; };
+  virtual const string* getEndpointId() const { return NULL; };
   virtual void setEndpointId(const string& endpointId) {};
   virtual void test();
 
@@ -162,7 +161,7 @@ public:
   const string& getMmsVersion() const;
   uint8_t getCommandId() const;
   void setCommandId(uint8_t _command_id);
-  string getInfoElement(const char* element_name) const;
+  const string* getInfoElement(const char* element_name) const;
   void setInfoElement(const char* name, const string& value);
   bool isMM7Req() const;
   bool isMM4Req() const;
@@ -184,7 +183,7 @@ public:
   virtual ~MM7GenericVASPReq();
   virtual void setSenderAddress(const SingleAddress& address);
   const SingleAddress& getSenderAddress() const; 	
-  string getEndpointId() const;
+  const string* getEndpointId() const;
   void setEndpointId(const string& vasp_id);
   virtual void test() ;
 protected:
@@ -200,7 +199,7 @@ public:
   virtual ~MM7GenericRSReq();
   virtual void setSenderAddress(const SingleAddress& address);
   const SingleAddress& getSenderAddress() const;	
-  string getEndpointId() const;
+  const string* getEndpointId() const;
   void setEndpointId(const string& rs_id);
   virtual void test();
 protected:

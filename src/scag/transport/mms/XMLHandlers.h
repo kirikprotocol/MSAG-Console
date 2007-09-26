@@ -64,32 +64,32 @@ public:
   void error(const SAXParseException& exc);
   void fatalError(const SAXParseException& exc);
   MmsMsg* getMmsMsg();
-  std::string getTransactionId() const;
+  const string& getTransactionId() const;
 
 private:
-  std::string trimCharacters(const std::string& s);
-  void startElementSubmit(const char* name, Hash<std::string>& attributes);
-  void charactersSubmit(std::string value);
+  void trimCharacters(string& s);
+  void startElementSubmit(const char* name, Hash<string>& attributes);
+  void charactersSubmit(const string& value);
   void endElementSubmit(const char* name);
-  void startElementDeliver(const char* name, Hash<std::string>& attributes);
-  void charactersDeliver(std::string value);
+  void startElementDeliver(const char* name, Hash<string>& attributes);
+  void charactersDeliver(const string& value);
   void endElementDeliver(const char* name);  
-  void startElementCancel(const char* name, Hash<std::string>& attributes);
+  void startElementCancel(const char* name, Hash<string>& attributes);
   void endElementCancel(const char* name);  
-  void startElementExtendedReplace(const char* name, Hash<std::string>& attributes);
-  void startElementDeliveryReport(const char* name, Hash<std::string>& attributes);
+  void startElementExtendedReplace(const char* name, Hash<string>& attributes);
+  void startElementDeliveryReport(const char* name, Hash<string>& attributes);
   void endElementDeliveryReport(const char* name);
-  void startElementGenericResp(const char* name, Hash<std::string>& attributes);
+  void startElementGenericResp(const char* name, Hash<string>& attributes);
 
 private:
   Logger* logger;
   const Locator* locator;
   MmsMsg* mms_msg;
-  MmsFactory factory;
+  MmsFactory_ factory;
   MultiAddress address;
-  std::string tag_name;
-  std::string transaction_id;
-  Hash<std::string> soap_attributes;
+  string tag_name;
+  string transaction_id;
+  Hash<string> soap_attributes;
   int tag_number;
   uint8_t command_id;
   //bool fSawErrors;

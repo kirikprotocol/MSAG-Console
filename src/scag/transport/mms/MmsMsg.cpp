@@ -208,15 +208,8 @@ const string& MmsMsg::getMmsVersion() const{
   return mms_version;
 }
 
-void MmsMsg::addField(const char* name, const string& value) {
-  if (name && strcmp(name, "") != 0) {
-    mms_fields.Insert(name, value);
-  }
-}
-
-string MmsMsg::getInfoElement(const char* element_name) const {
-  const std::string* value = mms_fields.GetPtr(element_name);
-  return value ? *value : "";
+const string* MmsMsg::getInfoElement(const char* element_name) const {
+  return mms_fields.GetPtr(element_name);
 }
 
 void MmsMsg::setInfoElement(const char* name, const string& value) {
@@ -354,9 +347,8 @@ const SingleAddress& MM7GenericVASPReq::getSenderAddress() const {
   return sender_address;
 }
 
-string MM7GenericVASPReq::getEndpointId() const {
-  const string *vasp_id = mms_fields.GetPtr(xml::VASP_ID);
-  return vasp_id ? *vasp_id : "";
+const string* MM7GenericVASPReq::getEndpointId() const {
+  return mms_fields.GetPtr(xml::VASP_ID);
 }
 
 void MM7GenericVASPReq::setEndpointId(const string& vasp_id) {
@@ -415,9 +407,8 @@ const SingleAddress& MM7GenericRSReq::getSenderAddress() const {
   return sender_address;
 }
 
-string MM7GenericRSReq::getEndpointId() const {
-  const string *rs_id = mms_fields.GetPtr(xml::MMS_RS_ID);
-  return rs_id ? *rs_id : "";
+const string* MM7GenericRSReq::getEndpointId() const {
+  return mms_fields.GetPtr(xml::MMS_RS_ID);
 }
 
 void MM7GenericRSReq::setEndpointId(const string& rs_id) {

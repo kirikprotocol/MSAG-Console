@@ -67,8 +67,8 @@ int main(int argc, const char* argv[])
   int vasp_port = 47001; //VASP_DEFAULT_PORT mmst.cpp
   string rs_host = "phoenix";
   int rs_port = 47002; //RS_DEFAULT_PORT mmst.cpp
-  ProxyMms vasp_proxy(proxy_host, proxy_vasp_port, vasp_host, vasp_port, true);
-  ProxyMms rs_proxy(proxy_host, proxy_rs_port, rs_host, rs_port, false);
+  ProxyMms vasp_proxy(proxy_host, proxy_vasp_port, vasp_host, vasp_port, true, "MSAG_VASP");
+  ProxyMms rs_proxy(proxy_host, proxy_rs_port, rs_host, rs_port, false, "MSAG_RS");
   MmsThread vasp_thread(&vasp_proxy, "VASP Proxy");
   vasp_thread.Start();
   MmsThread rs_thread(&rs_proxy, "RS Proxy");

@@ -84,61 +84,30 @@ struct HttpHeader {
 public:
   HttpHeader():multipart(false), content_length(0) {}
   virtual ~HttpHeader() {}
-  bool isMultipart() const {
-    return multipart;
-  }
-  void addField(const char* name_buf, size_t name_size, const char* value_buf, size_t value_size) {
-    string name(name_buf, name_size);
-    string value(value_buf, value_size);
-    fields.Insert(name.c_str(), value);   
-  }
-  void addField(const char* name, string value) {
-    fields.Insert(name, value);
-  }
-  size_t getContentLength() {
-    if (content_length) {
-      return content_length;
-    }
-    const string * ptr = fields.GetPtr(CONTENT_LENGTH);
-    if (ptr) {
-      content_length = atoi((*ptr).c_str());
-    }
-    return content_length;
-  }
+  void serialize(string& serialized_header) const;
+
+  bool isMultipart() const;
+  void addField(const char* name_buf, size_t name_size, 
+                const char* value_buf, size_t value_size);
+  void addField(const char* name, string value);
+  size_t getContentLength();
   bool parseContentType();
-  void setBoundary(string _boundary) {
-    boundary.erase();
-    boundary += CRLF;
-    boundary += BOUNDARY_START + _boundary + CRLF;
-  }
-  string getBoundary() const {
-    return boundary;
-  }
-  string getEndBoundary() const {
-    if (boundary.empty()) {
-      return "";
-    }
-    string end_boundary(boundary, 0, boundary.size() - CRLF_SIZE);
-    return end_boundary + BOUNDARY_START;
-  }
-  void setCharset(const char* _charset) {
-    charset = _charset;
-  }
-  void addContentTypeParam(const char* param_name, string param_value) {
-    content_type_params.Insert(param_name, param_value);
-  }
-  string getHost() const {
-    const string *host = fields.GetPtr(HOST);
-    if (host) {
-      return *host;
-    }
-    return "";
-  }
+  void setBoundary(const string& _boundary);
+  const string& getBoundary() const;
+  void setCharset(const char* _charset);
+  void addContentTypeParam(const char* param_name, string param_value);
+  string getHost() const;
+  void getEndBoundary(string& end_boundary) const;
   void setContentType(const char* type);
   int parseHeaderLine(const char* buf, size_t buf_size);
-  virtual string serialize() const;
   void test();
   void clear();
+private:
+  void serializeContentType(string& serialized) const;
+  void serializeContentTypeParam(const char* param_name, const string& param_value,
+                                 string& serialized) const;
+  void serializeHeaderField(const char* field_name, const string& field_value,
+                            string& serialized) const; 
 private:
   string charset;
   string content_type;
@@ -147,9 +116,6 @@ private:
   Hash<string> fields;
   Hash<string> content_type_params;
   bool multipart;
-  string serializeContentType() const;
-  string serializeContentTypeParam(const char* param_name, string param_value) const;
-  string serializeHeaderField(const char* field_name, string field_value) const; 
 };
 
 enum HttpPacketState {
@@ -173,78 +139,30 @@ public:
   }
   bool parse(const char* buf, size_t buf_size);
   void setStartLine(const char* buf, size_t line_size);
-  size_t getSize() const {
-    return size;
-  }
+  size_t getSize() const;
   void setContentLength(size_t length);
-  size_t getContentSize() const {
-    return content_size;  
-  }
-  uint8_t getState() const {
-    return state;
-  }
-  bool isValid() const {
-    return valid;
-  }
-  bool isComplite() const {
-    return complite;
-  }
-  bool isRequest() const {
-    return request;
-  }
-  bool isErrorResp() const {
-    return error_resp;
-  }
-  void setSoapEnvelope(const char* buf, size_t envelope_size) {
-    soap_envelope.append(buf, envelope_size);
-    setContentLength(envelope_size);
-    modified = true;
-  }
-  void setSoapEnvelope(string envelope) {
-    soap_envelope = envelope;
-    setContentLength(soap_envelope.size());
-    modified = true;
-  }
-  //const char* getSoapEnvelope() const {
-    //return soap_envelope.c_str();
-  //}
-  string getSoapEnvelope() const {
-    return soap_envelope;
-  }
-  void setSoapAttachment(const char* buf, size_t attachment_size) {
-    soap_attachment.append(buf, attachment_size);
-    setContentLength(0);
-    modified = true;
-  }
-  void setHttpHeader(HttpHeader _header) {
-    header = _header;
-    modified = true;
-  }
-  void setEnvelopeHeader(HttpHeader _header) {
-    envelope_header = _header;
-    modified = true;
-  }
-  void setHost(string host) {
-    header.addField(HOST, host);
-    modified = true;
-  }
-  string getHost() const {
-    return header.getHost();
-  }
-  const char* getPacket() {
-    if (modified) {
-      modified = false;
-      packet = serialize();
-    }
-    return packet.c_str();
-  }
-  size_t getPacketSize() const {
-    return packet.size();
-  }
-  string serialize() const;
-  void test();
+  size_t getContentSize() const;
+  uint8_t getState() const;
+  bool isValid() const;
+  bool isComplite() const;
+  bool isRequest() const;
+  bool isErrorResp() const;
+  void setSoapEnvelope(const char* buf, size_t envelope_size);
+  void setSoapEnvelope(const string& envelope);
+  const char* getSoapEnvelope() const;
+  size_t getSoapEnvelopeSize() const;
+  void setSoapAttachment(const char* buf, size_t attachment_size);
+  void setHttpHeader(const HttpHeader& _header);
+  void setEnvelopeHeader(const HttpHeader& _header);
+  void setHost(const string& host);
+  string getHost() const;
+  const char* getPacket();
+  size_t getPacketSize() const;
+  bool serialize(string& serialized_packet) const;
   void createFakeResp(int status);
   void fillResponse();
+
+  void test();
   void clear();
 private:
   HttpHeader header;
@@ -309,7 +227,7 @@ private:
 static string trimString(const string& s, const char* what_trim) {
   size_t start = s.find_first_not_of(what_trim);
   if (string::npos == start) {
-    return "";
+    return string("");
   }
   size_t end = s.find_last_not_of(what_trim);
   return string(s, start, end - start + 1);

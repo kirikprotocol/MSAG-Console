@@ -90,7 +90,7 @@ namespace cmd_id {
   };
 };
 
-std::string fileToString(const char* file_name) {
+string fileToString(const char* file_name) {
   char* buf = 0;
   try {
     File f;
@@ -99,7 +99,7 @@ std::string fileToString(const char* file_name) {
     buf = new char[size];
     f.Read(buf, size);
     buf[size - 1] = 0;
-    std::string packet(buf);
+    string packet(buf);
     delete[] buf;
     return packet;
   } catch (const FileException& fex) {
@@ -111,7 +111,7 @@ std::string fileToString(const char* file_name) {
   }
 }
 
-uint8_t getCmdId(string cmd, string& templ) {
+uint8_t getCmdId(const string& cmd, string& templ) {
   if (cmd.compare(cmd_name::SUBMIT) == 0) {
     templ = fileToString(SUBMIT_TEMPLATE.c_str());
     return cmd_id::SUBMIT;
@@ -191,16 +191,15 @@ std::string getTestPacket(const char* file_name) {
   getline(f, test_packet, static_cast<char>(EOF));
   return test_packet;
 }
-
-void startAsServer(std::string host, int port) {
-  ServerMms server(host, port);
+/*
+void startAsServer(const string& host, int port, string endpoint_id) {
+  ServerMms server(host, port, endpoint_id);
   server.start();
-  //server.createMultipartHttpPacket().test();
 }
 
-void startAsClient(string host, int port, std::string cmd_templ, 
+void startAsClient(const string& host, int port, string endpoint_id, std::string cmd_templ, 
                    std::string test_packet, std::string attach_templ) {
-  ClientMms client(host, port);
+  ClientMms client(host, port, endpoint_id);
   if (!client.start()) {
     return;
   }
@@ -210,7 +209,7 @@ void startAsClient(string host, int port, std::string cmd_templ,
   }
   client.sendRequestPacket(test_packet.c_str());
 }
-
+*/
 bool getCommandTemplate(const char* _argv, string& cmd_templ, string& attach_templ) {
   if (!_argv) {
     return false;
@@ -293,9 +292,6 @@ struct MmsCmd {
 
 void cmdHelp(bool is_vasp) {
    printf("\nfile file_name      - send file\n");
-  //printf("mms_command [command_template] - send MMS Command\n");
-  //printf("   command_template - file with Command Template, if not specified will be send default template\n");
-  //printf("   mms_command\n");
   if (is_vasp) {
     printf("submit   [template] - send MM7 Submit Request\n");
     printf("cancel   [template] - send MM7 Cancel Request\n");
@@ -403,11 +399,16 @@ uint8_t enterCmd(ClientMms* client, MmsCmd& mms_cmd) {
       printf("\nCan't connect to Server\n\n");
       return CMD;
     }
+    client->sendRequestWithPrintf(packet.c_str());
+/*
     if (client->sendRequestPacket(packet.c_str())) {
-      printf("\nSuccess Send\n\n");
+      time_t ticks = time(NULL);
+      printf("\nSuccess Send      %s\n\n", ctime(&ticks));
     } else {
-      printf("\nError Send\n\n");
+      time_t ticks = time(NULL);
+      printf("\nError Send        %s\n\n", ctime(&ticks));
     }
+    */
     return CMD;
   }
   string envelope_templ = fileToString(value.c_str());
@@ -467,9 +468,9 @@ uint8_t addAttach(ClientMms* client, MmsCmd& mms_cmd) {
       return ATTACH;
     }
     if (client->sendCommand(mms_cmd.soap_envelope, mms_cmd.soap_attachment)) {
-      printf("\nSuccess Send\n\n");
+      printf("\nSuccess Send\n");
     } else {
-      printf("\nError Send\n\n");
+      printf("\nError Send\n");
     }
     return CMD;
   }
@@ -537,9 +538,9 @@ uint8_t addFiled(ClientMms* client, MmsCmd& mms_cmd) {
       printf("\nCan't connect to Server\n\n");
     }
     if (client->sendCommand(mms_cmd.soap_envelope, mms_cmd.soap_attachment, mms_cmd.fields)) {
-      printf("\nSuccess Send\n\n");
+      printf("\nSuccess Send\n");
     } else {
-      printf("\nError Send\n\n");
+      printf("\nError Send\n");
     }
     return CMD;
   }
@@ -566,17 +567,19 @@ int main(int argc, char* argv[]) {
   std::string vasp_host = VASP_DEFAULT_HOST;
   int rs_port = RS_DEFAULT_PORT;
   std::string rs_host = RS_DEFAULT_HOST;
+  string endpoint_id("TestEndpoint");
   if (argc > 3) {
-    if (std::strcmp(argv[2],"-rh") == 0) {
-      getHostPort(argv[3],rs_host, rs_port);
-      if (argc > 5 && std::strcmp(argv[4],"-vh") == 0) {
-        getHostPort(argv[5], vasp_host, vasp_port);
+    endpoint_id = argv[2];
+    if (std::strcmp(argv[3],"-rh") == 0) {
+      getHostPort(argv[4],rs_host, rs_port);
+      if (argc > 5 && std::strcmp(argv[5],"-vh") == 0) {
+        getHostPort(argv[6], vasp_host, vasp_port);
       }
     }
-    if (std::strcmp(argv[2],"-vh") == 0) {
-      getHostPort(argv[3],vasp_host, vasp_port);
-      if (argc > 5 && std::strcmp(argv[4],"-rs") == 0) {
-        getHostPort(argv[5], rs_host, rs_port);
+    if (std::strcmp(argv[3],"-vh") == 0) {
+      getHostPort(argv[4],vasp_host, vasp_port);
+      if (argc > 5 && std::strcmp(argv[5],"-rh") == 0) {
+        getHostPort(argv[6], rs_host, rs_port);
       }
     }
   }
@@ -592,10 +595,10 @@ int main(int argc, char* argv[]) {
     client_port = rs_port;
     name = "VASP Server";
   }
-  ServerMms server(server_host, server_port,is_vasp);
+  ServerMms server(server_host, server_port, endpoint_id, is_vasp);
   MmsThread server_thread(&server, name.c_str());
   server_thread.Start();
-  ClientMms client(client_host, client_port, is_vasp);
+  ClientMms client(client_host, client_port, endpoint_id, is_vasp);
   uint8_t state = CMD;
   MmsCmd mms_cmd;
   while (state != QUIT) {
@@ -609,7 +612,7 @@ int main(int argc, char* argv[]) {
   //server.closeSocket();
   return 1;
 }
-
+/*
 int old_main(int argc, char* argv[]) {
   if (argc == 1) {
     help(argv[0]);
@@ -656,4 +659,4 @@ int old_main(int argc, char* argv[]) {
   }
   return 1;
 }
-
+*/
