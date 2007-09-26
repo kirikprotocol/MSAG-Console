@@ -17,7 +17,6 @@
 
 #include "ProfileStore.h"
 #include "PersServer.h"
-#include "CmdDispatcher.h"
 
 #include "string"
 #include "Glossary.h"

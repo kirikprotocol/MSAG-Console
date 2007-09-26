@@ -73,7 +73,7 @@ public:
 	}
 
     virtual int Init(const string& _dbName, const string& _dbPath="./",
-        long indexGrowth = 1000000,
+        long _indexGrowth = 1000000,
         long blocksInFile = 100000,
         long blockSize = 8192 - sizeof(templDataBlockHeader<Key>), // 8144
         int mode = FSDB_DEFAULT)
@@ -82,6 +82,7 @@ public:
         if(_dbName.length()==0) return ERR_DB_NAME;
 
         dbPath = _dbPath; dbName = _dbName;
+        indexGrowth = _indexGrowth;
 
         if(dbPath.length()==0)  dbPath = "./";
         else if(dbPath[dbPath.length()-1] != '/') dbPath += '/';
@@ -204,11 +205,58 @@ public:
 		smsc_log_debug(logger, "Next: %s, No data", key.toString().c_str());
         return false;
     }
+    
+    bool RebuildIndex(std::string& _dbName, std::string& _dbPath, long _indexGrowth)
+    {
+    	BlocksHSStorage<Key> tempDataStorage;
+        IndexStorage tempIdxStorage;
+    	auto_ptr<IndexAllocator> tempIndexAllocator(new IndexAllocator());
+
+        if(0 != tempDataStorage.Open(_dbName + "-data", _dbPath + "/" + _dbName))
+        {
+    		smsc_log_info(logger, "Cannot open data file: path=%s, name=%s", _dbPath.c_str(), _dbName.c_str());
+            return false;
+        }
+        
+        if(_dbPath.length()==0)  _dbPath = "./";
+        else if(_dbPath[_dbPath.length()-1] != '/') _dbPath += '/';
+        
+
+        std::string n = _dbPath + _dbName + '/' + _dbName + "-index", t = n + "-temp", o = n + "-old";
+        
+    	if(0 != tempIndexAllocator->Init(t, _indexGrowth))
+    	{
+    		smsc_log_info(logger, "Init temp index failed: %s", t.c_str());
+    		return false;
+    	}
+    	tempIdxStorage.SetAllocator(tempIndexAllocator.get());
+    	tempIdxStorage.SetChangesObserver(tempIndexAllocator.get());
+  		smsc_log_info(logger, "Rebuild: temp index inited: %s", t.c_str());        
+        DataBlock data;
+        long blockIndex, i = 0;
+        Key key;
+        while(tempDataStorage.Next(blockIndex, data, key))
+        {
+            smsc_log_debug(logger, "Rebuild: key=%s, idx=%d", key.toString().c_str(), blockIndex);
+            tempIdxStorage.Insert(key, blockIndex);
+            i++;
+        }
+        
+        smsc_log_debug(logger, "Rebuild: %d records reindexed", i);
+
+        rename(n.c_str(), o.c_str());
+        rename(t.c_str(), n.c_str());
+        t += ".trx";
+        n += ".trx";
+        rename(t.c_str(), n.c_str());
+        return true;
+    }
 
 private:
 	smsc::logger::Logger* logger;
 	string              dbPath;
 	string              dbName;
+    long                indexGrowth;
 	
 	IndexAllocator*     indexAllocator;
 	IndexStorage        indexStorage;

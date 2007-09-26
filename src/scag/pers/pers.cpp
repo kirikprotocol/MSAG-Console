@@ -17,7 +17,6 @@
 
 #include "ProfileStore.h"
 #include "PersServer.h"
-#include "CmdDispatcher.h"
 
 #include "string"
 #include "Glossary.h"
@@ -54,20 +53,6 @@ int main(int argc, char* argv[])
 
     Logger::Init();
     Logger* logger = Logger::getInstance("pers");
-// //	Mike's tests
-// 	Glossary::Open("abonent/glossary");
-// 	
-// 	printf("%d\n", Glossary::GetValueByKey("AAA1"));
-// 	printf("%d\n", Glossary::GetValueByKey("BBBB1"));
-// 	printf("%d\n", Glossary::GetValueByKey("CCCCC1"));
-// 	printf("%d\n", Glossary::GetValueByKey("DDDDDD1"));
-// 	printf("%d\n", Glossary::GetValueByKey("AAA2"));
-// 	Glossary::Add("AAA1");
-// 	Glossary::Add("BBBB1");
-// 	Glossary::Add("CCCCC1");
-// 	Glossary::Add("DDDDDD1");
-// 	return 0;	
-// //	Mike's tests end
 
     atexit(atExitHandler);
 
@@ -82,9 +67,6 @@ int main(int argc, char* argv[])
     sigset(SIGINT, appSignalHandler);
 
     try{
-	    StringProfileStore AbonentStore;
-	    IntProfileStore ServiceStore, OperatorStore, ProviderStore;
-	
         smsc_log_info(logger,  "Starting up %s", getStrVersion());
 
         Manager::init("config.xml");
@@ -128,6 +110,18 @@ int main(int argc, char* argv[])
 			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 10000");
 		}
 
+        if(argc > 1 && !strcmp(argv[1], "--rebuild-index"))
+        {
+      		smsc_log_info(logger, "Index rebuilding started");                        
+            FSDBProfiles<AbntAddr> store;
+            store.RebuildIndex(storageName, storagePath, indexGrowth);
+            smsc_log_info(logger, "Index rebuilding finished.");
+            return 0;
+        }
+
+	    StringProfileStore AbonentStore;
+	    IntProfileStore ServiceStore, OperatorStore, ProviderStore;
+        
         AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize);
 		Glossary::Open(storagePath + "/glossary");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -149,8 +143,7 @@ int main(int argc, char* argv[])
 		
 	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
 		
-		ps = new PersServer(host.c_str(), port, maxClientCount, timeout,
-            new CommandDispatcher(&AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore));
+		ps = new PersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore);
 
         auto_ptr<PersServer> pp(ps);
 

@@ -75,6 +75,7 @@ struct templDataBlockHeader
     long    total_blocks;
     long    data_size;
     long    next_block;
+    bool    head;
 };
 
 
@@ -98,7 +99,7 @@ public:
 	static const int defaultFileSize = 3; // in blocks 
 	static const long BLOCK_USED	= (long)1 << 63;
 
-	BlocksHSStorage():running(false)
+	BlocksHSStorage():running(false), iterBlockIndex(0)
 	{
         logger = smsc::logger::Logger::getInstance("BlkStore");
 	}
@@ -163,6 +164,7 @@ public:
 		
 		hdr.block_used = BLOCK_USED;
 		hdr.key = key;
+        hdr.head = true;
 		hdr.total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 1;
 		hdr.data_size = data.length();//effectiveBlockSize;
 
@@ -364,6 +366,37 @@ public:
 		descrFile_f.Write((char*)&descrFile, sizeof(DescriptionFile));
 	}
 
+    void Reset()
+    {
+        iterBlockIndex = 0;
+    }
+    
+    bool Next(long& blockIndex, DataBlock& data, Key& key)
+    {
+        uint64_t cnt = descrFile.files_count * descrFile.file_size;
+		DataBlockHeader hdr;
+        
+        while(iterBlockIndex < cnt)
+        {
+			int file_number = iterBlockIndex / descrFile.file_size;
+			off_t offset = (iterBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+			File* f = dataFile_f[file_number];
+			f->Seek(offset, SEEK_SET);
+			f->Read((void*)&hdr, sizeof(DataBlockHeader));
+            blockIndex = iterBlockIndex++;            
+            if(hdr.block_used == BLOCK_USED && hdr.head)
+            {
+                key = hdr.key;
+                if(!Get(blockIndex, data))
+                    smsc_log_error(logger, "Error reading block: %d", blockIndex);
+                else
+                    return true;
+            }
+        }
+        
+        return false;
+    }
+
 private:
     smsc::logger::Logger* logger;
 	bool				running;
@@ -372,6 +405,7 @@ private:
 	DescriptionFile			descrFile;		
 	File				descrFile_f;
 	vector<File*>			dataFile_f;
+    long                iterBlockIndex;
 	
 	//bool isFileExists(void)
 	//{

@@ -1,45 +1,45 @@
-#ifndef SCAG_PERS_SOCKETSERVER
-#define SCAG_PERS_SOCKETSERVER
+/* $Id$ */
 
-#include <string>
-#include "RWMultiplexer.hpp"
-#include "core/network/Socket.hpp"
+#ifndef SCAG_PERS_COMMAND_DISPATCHER
+#define SCAG_PERS_COMMAND_DISPATCHER
+
 #include "logger/Logger.h"
 #include "SerialBuffer.h"
-#include "CmdDispatcher.h"
+#include "ProfileStore.h"
+#include "Types.h"
+#include "PersSocketServer.h"
 
 namespace scag { namespace pers {
 
-using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
-class PersServer {
-    CommandDispatcher* CmdDispatcher;
-
+class PersServer : public PersSocketServer {
+    StringProfileStore* AbonentStore;
 public:
-    PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, CommandDispatcher *d);
-    ~PersServer();
-    void InitServer();
-    int Execute();
-    void Stop() { MutexGuard mt(mtx); isStopping = true; };
-    bool isStopped() { MutexGuard mt(mtx); return isStopping; };
-
+    PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
+    ~PersServer() {};
+    virtual void processPacket(SerialBuffer& isb, SerialBuffer& osb);
 protected:
-    void processReadSocket(Socket* sock);
-    void processWriteSocket(Socket* sock);
-    void removeSocket(Socket* s, int i = -1);
-	void checkTimeouts();
+    typedef struct {
+        ProfileType pt;
+        IntProfileStore* store;
+    } IntStore;
 
-    Logger * log;
-    std::string persHost;
-    int persPort, timeout, maxClientCount, clientCount;
-    Socket sock;
-    bool isStopping;
-    RWMultiplexer listener;
-    Mutex mtx;
-    char tmp_buf[1024];
+	void execCommand(SerialBuffer& isb, SerialBuffer& osb);
+    IntProfileStore* findStore(ProfileType pt);
+    void SendResponse(SerialBuffer& sb, PersServerResponseType r);
+    void SetPacketSize(SerialBuffer& sb);
+    void DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
+    void GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
+    void SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
+    void IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
+    void IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb);
+    Logger * plog;
+#define INT_STORE_CNT 3
+    IntStore int_store[INT_STORE_CNT];
 };
 
 }}
 
 #endif
+

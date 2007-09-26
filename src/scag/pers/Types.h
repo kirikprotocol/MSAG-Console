@@ -23,6 +23,15 @@ enum PersCmd{
 	PC_BATCH
 };
 
+enum CentralPersCmd{
+    LOGIN = 1,
+    GET,
+    PROFILE,
+    ACK,
+    DONE,
+    CHECK_OWN
+};
+
 enum PersServerResponseType{
     RESPONSE_OK = 1,
     RESPONSE_ERROR,

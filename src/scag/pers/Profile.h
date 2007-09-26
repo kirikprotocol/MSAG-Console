@@ -19,14 +19,20 @@ using namespace smsc::core::buffers;
 
 typedef Hash<Property*> PropertyHash;
 
+enum ProfileState{
+    OK = 1,
+    LOCKED,
+    DELETED
+};
+
 class Profile : public Serializable
 {
     PropertyHash properties;
     smsc::logger::Logger* log;
-
+    ProfileState state;
 public:
     ~Profile();
-    Profile() {log = smsc::logger::Logger::getInstance("profile");};
+    Profile() : state(OK) {log = smsc::logger::Logger::getInstance("profile");};
 
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);

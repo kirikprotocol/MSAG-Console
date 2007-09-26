@@ -1,261 +1,222 @@
+/* $Id$ */
+
 #include "PersServer.h"
-#include "util/Exception.hpp"
 
 namespace scag { namespace pers {
 
 using smsc::util::Exception;
+using smsc::logger::Logger;
 
-class ConnectionContext{
-public:
-	ConnectionContext() : wantRead(true), lastActivity(time(NULL)) {};
-	SerialBuffer inbuf, outbuf;
-	bool wantRead;
-	time_t lastActivity;
-	uint32_t packetLen;
-};
- 
-#define MAX_PACKET_SIZE 100000
-
-PersServer::PersServer(const char *persHost_, int persPort_, int maxClientCount_, int timeout_, CommandDispatcher *d)
-    : log(Logger::getInstance("server")), persHost(""), persPort(0), isStopping(false), CmdDispatcher(d)
+PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider):
+        PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), plog(Logger::getInstance("persserver"))
 {
-    persHost = persHost_;
-    persPort = persPort_;
-    maxClientCount = maxClientCount_;
-    clientCount = 0;
-	timeout = timeout_;
+    int_store[0].pt = PT_SERVICE;
+    int_store[1].pt = PT_OPERATOR;
+    int_store[2].pt = PT_PROVIDER;
+    int_store[0].store = service;
+    int_store[1].store = oper;
+    int_store[2].store = provider;
+    AbonentStore = abonent;
 }
 
-PersServer::~PersServer()
+IntProfileStore* PersServer::findStore(ProfileType pt)
 {
-    listener.remove(&sock);
-    sock.Close();
-    
-    while(listener.count())
-        removeSocket(listener.get(0));
-            
-    delete CmdDispatcher;
+    int i = 0;
+    while(i < INT_STORE_CNT && pt != int_store[i].pt) i++;
+    return i < INT_STORE_CNT ? int_store[i].store : NULL;            
 }
 
-void PersServer::InitServer()
+void PersServer::SendResponse(SerialBuffer& sb, PersServerResponseType r)
 {
-    if(sock.InitServer(persHost.c_str(), persPort, 10, 1, true))
-        throw Exception("Failed to init socket server by host: %s, port: %d", persHost.c_str(), persPort);
-
-    smsc_log_info(log, "Socket server is inited by host: %s, port: %d", persHost.c_str(), persPort);
-
-    if(!listener.addR(&sock))
-        throw Exception("Failed to init PersServer");
+    sb.WriteInt8((uint8_t)r);
 }
 
-void PersServer::processReadSocket(Socket* s)
+void PersServer::SetPacketSize(SerialBuffer& sb)
 {
-    int j;
-    long k;
-	ConnectionContext* ctx = (ConnectionContext*)s->getData(0);
-    SerialBuffer& sb = ctx->inbuf;
+    sb.SetPos(0);
+    sb.WriteInt32(sb.GetSize());
+}
 
-    if(sb.GetSize() < sizeof(uint32_t))
+void PersServer::DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
+{
+    IntProfileStore *is;
+    bool exists = false;
+    if(pt == PT_ABONENT)
     {
-        j = s->Read(tmp_buf, sizeof(uint32_t) - sb.GetSize());
-        smsc_log_debug(log, "read(len) %u bytes from %p", j, s);
-        if(j > 0)
-        {
-            sb.Append(tmp_buf, j);
-            if(sb.GetSize() >= sizeof(uint32_t))
-            {
-                j = sb.GetPos();
-                sb.SetPos(0);
-                ctx->packetLen = sb.ReadInt32();
-                smsc_log_debug(log, "%d bytes will be read from %x", ctx->packetLen, s);
-                if(ctx->packetLen > MAX_PACKET_SIZE)
-                {
-                    smsc_log_warn(log, "Too big packet from client");
-                    removeSocket(s);
-                    return;
-                }
-                sb.SetPos(j);
-            }
-        }
-        else
-        {
-            if(j) smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
-//            if(errno != EWOULDBLOCK)
-                removeSocket(s);
-            return;
-        }
+        smsc_log_debug(plog, "DelCmdHandler AbonetStore: key=%s, name=%s", str_key.c_str(), name.c_str());
+        exists = AbonentStore->delProperty(str_key.c_str(), name.c_str());
     }
-    if(sb.GetSize() >= sizeof(uint32_t))
+    else if(is = findStore(pt))
     {
-        j = ctx->packetLen - sb.GetSize();
-        j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
-        smsc_log_debug(log, "read %u bytes from %p", j, s);
-        if(j > 0)
-            sb.Append(tmp_buf, j);
-        else if(errno != EWOULDBLOCK)
-        {
-            if(j) smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
-            removeSocket(s);
-            return;
-        }
-        if(sb.GetSize() >= ctx->packetLen)
-        {
-            smsc_log_debug(log, "read from socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
-			ctx->outbuf.Empty();
-            ctx->inbuf.SetPos(4);
-            CmdDispatcher->Execute(ctx->inbuf, ctx->outbuf);
-			ctx->lastActivity = time(NULL);			
-            ctx->outbuf.SetPos(0);
-            listener.addRW(s);
-			ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
-        }
+        smsc_log_debug(plog, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
+        exists = is->delProperty(int_key, name.c_str());
     }
+    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-void PersServer::processWriteSocket(Socket* s)
+void PersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
 {
-    int j;
-    uint32_t i, len;
-	ConnectionContext* ctx = (ConnectionContext*)s->getData(0);
-    SerialBuffer& sb = ctx->outbuf;
-
-    len = sb.GetSize();
-
-    smsc_log_debug(log, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d", len, s, sb.GetCurPtr(), sb.GetPos());
-    j = s->Write(sb.GetCurPtr(), len - sb.GetPos());
-    if(j > 0)
-        sb.SetPos(sb.GetPos() + j);
-    else //if(errno != EWOULDBLOCK)
+    IntProfileStore *is;
+    Property prop;
+    bool exists = false;
+    if(pt == PT_ABONENT)
     {
-        smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
-        removeSocket(s);
+        smsc_log_debug(plog, "GetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), name.c_str());
+        exists = AbonentStore->getProperty(str_key.c_str(), name.c_str(), prop);
+    }
+    else if(is = findStore(pt))
+    {
+        smsc_log_debug(plog, "GetCmdHandler store=%d, key=%d, name=%s", pt, int_key, name.c_str());
+        exists = is->getProperty(int_key, name.c_str(), prop);
+    }
+    if(exists)
+    {   
+        smsc_log_debug(plog, "GetCmdHandler prop=%s", prop.toString().c_str());
+        SendResponse(osb, RESPONSE_OK);
+        prop.Serialize(osb);
+    }
+    else
+    {
+        smsc_log_debug(plog, "GetCmdHandler property not found: store=%d, key=%s(%d), name=%s", pt, str_key.c_str(), int_key, name.c_str());    
+        SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
+    }        
+}
+
+void PersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
+{
+    IntProfileStore *is;
+    if(pt == PT_ABONENT)
+    {
+        smsc_log_debug(plog, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
+        AbonentStore->setProperty(str_key.c_str(), prop);
+    }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
+        is->setProperty(int_key, prop);
+    }
+    SendResponse(osb, RESPONSE_OK);
+}
+
+void PersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
+{
+    IntProfileStore *is;
+    bool exists = false;
+    if(pt == PT_ABONENT)
+    {
+        smsc_log_debug(plog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+        exists = AbonentStore->incProperty(str_key.c_str(), prop);
+    }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+        exists = is->incProperty(int_key, prop);
+    }
+    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
+}
+
+void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb)
+{
+    IntProfileStore *is;
+    bool exists = false;
+    int res = 0;
+    if(pt == PT_ABONENT)
+    {
+        smsc_log_debug(plog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
+        exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res);
+    }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
+        exists = is->incModProperty(int_key, prop, mod, res);
+    }
+    if(exists)
+    {
+        SendResponse(osb, RESPONSE_OK);
+        osb.WriteInt32(res);
+    }
+    else
+        SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
+}
+
+void PersServer::processPacket(SerialBuffer& isb, SerialBuffer& osb)
+{
+    osb.SetPos(4);
+    try{
+		execCommand(isb, osb);
+		SetPacketSize(osb);
+		return;
+    }
+    catch(SerialBufferOutOfBounds &e)
+    {
+        smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+    }
+    catch(...)
+    {
+        smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+    }
+    SendResponse(osb, RESPONSE_BAD_REQUEST);
+	SetPacketSize(osb);	
+}
+
+void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
+{
+    PersCmd cmd;
+    ProfileType pt;
+    uint32_t int_key;
+    string str_key;
+    string name;
+    Property prop;
+    cmd = (PersCmd)isb.ReadInt8();
+    if(cmd == PC_PING)
+    {
+		osb.WriteInt8(RESPONSE_OK);
+        smsc_log_debug(plog, "Ping received");
         return;
     }
-    if(sb.GetPos() >= len)
+    if(cmd != PC_BATCH)
     {
-        smsc_log_debug(log, "written to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
-        ctx->inbuf.Empty();
-		ctx->lastActivity = time(NULL);
-        listener.addR(s);
-		ctx->wantRead = true;
+        pt = (ProfileType)isb.ReadInt8();
+        if(pt != PT_ABONENT)
+            int_key = isb.ReadInt32();
+        else
+            isb.ReadString(str_key);
     }
-}
-
-void PersServer::removeSocket(Socket* s, int i)
-{
-    char b[256];
-    s->GetPeer(b);
-    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount - 1);
-    ConnectionContext *ctx = (ConnectionContext*)s->getData(0);
-    if(ctx) delete ctx;
-	if(i == -1)
-	    listener.remove(s);
-	else
-	    listener._remove(i);
-    if(clientCount) clientCount--;
-    s->Close();
-    delete s;
-}
-
-void PersServer::checkTimeouts()
-{
-	time_t timeBound = time(NULL) - timeout;
-	int i = 1;
-	smsc_log_debug(log, "Checking timeouts...");
-	while(i < listener.count())
-	{
-		Socket* s = listener.get(i);
-		ConnectionContext* ctx = (ConnectionContext*)s->getData(0);
-		if(ctx->lastActivity  < timeBound)
-		{
-		    smsc_log_info(log, "Disconnecting inactive user by timeout");		
-			removeSocket(s, i);
-		}
-		else
-			i++;
-	}
-}
-
-int PersServer::Execute()
-{
-	int lastTimeoutCheck = time(NULL);
-    Multiplexer::SockArray read, write, err;
-
-    if(isStopped()) return 1;
-
-    if( sock.StartServer())
-        smsc_log_warn(log, "Server socket can't start");
-
-    while(!isStopped())
+    switch(cmd)
     {
-        if(listener.canReadWrite(read, write, err, timeout * 1000))
+        case PC_DEL:
+            isb.ReadString(name);
+            DelCmdHandler(pt, int_key, str_key, name, osb);
+            return;
+        case PC_SET:
+            prop.Deserialize(isb);
+            SetCmdHandler(pt, int_key, str_key, prop, osb);
+            return;
+        case PC_GET:
+            isb.ReadString(name);
+            GetCmdHandler(pt, int_key, str_key, name, osb);
+            return;
+        case PC_INC:
+            prop.Deserialize(isb);
+            IncCmdHandler(pt, int_key, str_key, prop, osb);
+            return;
+        case PC_INC_MOD:
         {
-            if(isStopped())
-                break;
-
-            for(int i = 0; i < read.Count(); i++)
-            {
-                if(read[i] == &sock)
-                {
-                    sockaddr_in addrin;
-                    int sz = sizeof(addrin);
-                    SOCKET s = accept(sock.getSocket(), (sockaddr*)&addrin, &sz);
-                    if(s != -1)
-                    {
-                        Socket *sock1 = new Socket(s, addrin);
-
-                        char b[256];
-                        sock1->GetPeer(b);
-                        smsc_log_info(log, "Client connected: %s. Client count: %u", b, clientCount + 1);
-
-                        if(clientCount >= maxClientCount)
-                        {
-                            sock1->Write("SB", 2);
-                            delete sock1;
-                            smsc_log_info(log, "Server busy sent. Disconnected.");
-                        }
-                        else
-                        {
-                            sock1->Write("OK", 2);
-                            clientCount++;
-                            sock1->setNonBlocking(1);
-                            sock1->setData(0, new ConnectionContext());
-                            listener.addR(sock1);
-                        }
-                    } else
-                        smsc_log_error(log, "accept failed: %s", strerror(errno));
-                } 
-                else
-				{
-					if(!((ConnectionContext*)read[i]->getData(0))->wantRead)	// in the case if we want to write and unexpected data arrive or EOF
-						removeSocket(read[i]);
-					else
-	                    processReadSocket(read[i]);
-				}
-            }
-
-            for(int i = 0; i < write.Count(); i++)
-                processWriteSocket(write[i]);
-
-            for(int i = 0; i <= err.Count() - 1; i++)
-                if(err[i] == &sock)
-                {
-                    smsc_log_error(log, "Error on listen socket %d : %s", errno, strerror(errno));
-                    listener.remove(&sock);
-                    sock.Close();
-                }
-                else
-                    removeSocket(err[i]);
+            int inc = isb.ReadInt32();
+            prop.Deserialize(isb);
+            IncModCmdHandler(pt, int_key, str_key, prop, inc, osb);
+			return;
         }
-		
-		if(lastTimeoutCheck + timeout < time(NULL))
-		{
-			checkTimeouts();
-			lastTimeoutCheck = time(NULL);
-		}
+        case PC_BATCH:
+        {
+            uint16_t cnt = isb.ReadInt16();
+            while(cnt--)
+                    execCommand(isb, osb);
+			return;
+        }
+        default:
+            smsc_log_debug(plog, "Bad command %d", cmd);
     }
-
-    return 1;
 }
 
 }}
