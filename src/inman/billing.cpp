@@ -661,10 +661,14 @@ Billing::PGraphState Billing::onDeliverySmsResult(void)
         RCHash rval = capTask->reportSMSubmission(submitted);
         if (rval) {
             billErr = rval;
-            smsc_log_error(logger, "%s: submission report to %s failed: %s ", _logId,
+            //if message has been already delivered, then just create CDR
+            smsc_log_error(logger, "%s: %ssubmission report to %s failed: %s ", _logId,
+                submitted ? "switching to CDR mode, " : "",
                 abScf->Ident(), URCRegistry::explainHash(rval).c_str());
-            billMode = billPrio->second;
-        }
+            if (submitted)
+                billMode = ChargeObj::bill2CDR;
+        } else
+            cdr._inBilled = true;
         capTask->UnrefBy(this);
         capTask = NULL;
     }
