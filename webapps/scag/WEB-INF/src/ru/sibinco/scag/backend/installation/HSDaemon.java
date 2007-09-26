@@ -118,8 +118,9 @@ public class HSDaemon {
     }
     catch (IOException ioe)
     {
-      logger.error("Couldn't copy file from path "+source.getAbsolutePath()+" to path "+dest.getAbsolutePath(),ioe);
-      throw new SibincoException("Couldn't copy file from path "+source.getAbsolutePath()+" to path "+dest.getAbsolutePath());
+      logger.error( "HS:ERROR:\nCouldn't copy file from path " + source.getAbsolutePath() + " to path " + dest.getAbsolutePath(),ioe );
+      logger.error( "HS:ERROR." );
+//      throw new SibincoException("Couldn't copy file from path "+source.getAbsolutePath()+" to path "+dest.getAbsolutePath());
     }
     finally
     {
