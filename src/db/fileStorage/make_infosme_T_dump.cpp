@@ -1,11 +1,11 @@
 #include <sys/types.h>
 #include <time.h>
 
-#include <db/dbEntityStorage/ApplicationStatements.hpp>
-#include <db/dbEntityStorage/InfoSme_T_DBEntityStorage.hpp>
-#include <db/dbEntityStorage/DiskDataStorage.hpp>
-#include <db/dbEntityStorage/InfoSme_T_Entity_Adapter.hpp>
-#include <db/dbEntityStorage/InfoSme_T_Entity.hpp>
+#include <db/fileStorage/ApplicationStatements.hpp>
+#include <db/fileStorage/InfoSme_T_DBEntityStorage.hpp>
+#include <db/fileStorage/DiskDataStorage.hpp>
+#include <db/fileStorage/InfoSme_T_Entity_Adapter.hpp>
+#include <db/fileStorage/InfoSme_T_Entity.hpp>
 
 #include <logger/Logger.h>
 
