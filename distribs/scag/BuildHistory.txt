@@ -207,3 +207,21 @@ TO ALL: Insert log record for all significant changes & fixes here.
 6) MSAG Admin FIX: Valid response on tariff matrix upload (was 500)
 7) MSAG Admin FIX: 'Unlock' button for rule edit fix
 8) MSAG Admin CHANGE: Unique service, service provider and operator name constrain added
+
+=================================================================================================================
+26.09.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_26_09_2007 !!!]
+1) MSAG Admin FIX: Unique service, service provider and operator name constraint fixes
+2) MSAG Admin FIX: Rule file recovery when external update fails
+3) MSAG CRITICAL FIX: Coredump on DeliverResp processing (after patch for all Resp processing in RE)
+4) MSAG FIX: MSAG statistics fix (statistics SMSCs for rejected/failed counters)
+5) MSAG CRITICAL FIX: Report status==0 for all XXXResp in SACC events (even if were errors)
+6) MSAG CHANGE/FIX: RE fix. <if test="%aaa"> for %aaa='.1.1.7123' was false
+7) MSAG CHANGE: bill_id, status, msg parameters were added into bill:info action
+8) MSAG CHANGE: network_error_code parameter & functionality added for smpp:receipt action
+9) MSAG CHANGE: inQueueLimit, outQueueLimit parameters & functionality added for SMPP endpoints
+10) MSAG Admin CHANGE: outQueueLimit parameter added into SMPP endpoint
+11) MSAG Admin CHANGE/FIX: Store config files in HS mode fix (if one node fails)
+12) PVSS CRITICAL FIX: Index create & update fixes for abonents profiles 
+13) PVSS CHANGE: Option & functionality --rebuild-index added to PersServer
+14) PVSS CHANGE: Logging of Add, Update, Delete events into separate category (for external DB updates)
+
