@@ -248,6 +248,8 @@ public:
         rename(t.c_str(), n.c_str());
         t += ".trx";
         n += ".trx";
+        o += ".trx";
+        rename(n.c_str(), o.c_str());        
         rename(t.c_str(), n.c_str());
         return true;
     }
