@@ -99,6 +99,14 @@ public class RuleManager
       return newFile;
   }
 
+  public File composeRuleBackFile(String transport, String serviceId, String backSuffix ) {
+      if( backSuffix == null ) backSuffix = "";
+      String filename="rule_"+ serviceId.toString() + ".xml" + backSuffix;
+      final File folder = new File(rulesFolder, transport);
+      File newFile= new File(folder,filename);
+      return newFile;
+  }
+
   public boolean checkRuleFileExists(String ruleId, String transport) {
     return composeRuleFile(transport, ruleId).exists();
   }
@@ -542,29 +550,131 @@ public class RuleManager
     }
   }
 
+    public static int CHAR_WRITER = 0;
+    public static int STRING_WRITER = 1;
+
   private void saveRule(BufferedReader r,String ruleId, String transport) throws SibincoException
   {
-      try {
-          if( checkPermission(transport)){
-            File newFile= composeRuleFile(transport,ruleId);
+      PrintWriter out = null;
+      File newFile = null;
+      File backupFile = null;
+      try
+      {
+        if( checkPermission(transport) ){
             logger.debug("Saving rule to disc!!!! file : " + newFile);
-            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
-            String s;
-            while((s=r.readLine())!=null) {
-              out.println(s);
-            }
-            out.flush();
-            out.close();
-          } else{
-              logger.error( "Attempt to save unlocked rule. RuleManger:saveRule( BR, S, S):" +
-                            "permission=false for " + transport );
-          }
-      } catch (FileNotFoundException e) {
+            newFile= composeRuleFile(transport,ruleId);
+            backupFile= composeRuleBackFile( transport, ruleId, "_prev" );
+            saveBackup( newFile, backupFile  );
+//            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
+            out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(newFile), "UTF-8" ) );
+//            out = new PrintWriter( new FileWriter(newFile) );
+            ruleWriter( r, out, CHAR_WRITER );
+            stringWriter( r, out );
+
+        } else{
+            logger.error( "Attempt to save unlocked rule. RuleManger:saveRule( BR, S, S):" +
+                        "permission=false for " + transport );
+        }
+        out.flush();
+        out.close();
+      }
+      catch (FileNotFoundException e) {
         throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
-      } catch (IOException e) {
+      }
+      catch (IOException e){
+        out.flush();
+        out.close();
+        restoreFile( backupFile, newFile );
+//          Functions.
         logger.error("Couldn't save new rule settings", e);
         throw new SibincoException("Couldn't save new rule template", e);
       }
+    }
+
+    void ruleWriter( BufferedReader r, PrintWriter out, int type ) throws IOException {
+        switch( type ){
+            case 0:
+               System.out.println("CHAR WRITER");
+               int ch;
+               Reader reader = r;
+               while( (ch = reader.read()) != -1 ){
+                   out.print( (char)ch );
+               }
+                break;
+            case 1:
+//                int lineCount = 0;
+                System.out.println("STRING WRITER");
+                String s;
+                while( (s=r.readLine() ) != null ) {
+//                    lineCount++;
+//                    throwIOException( 3, lineCount, 1 );
+                    out.println(s);
+                }
+                break;
+            default:
+                break;
+        }
+        logger.error( "START TIME:" + System.currentTimeMillis() );
+    }
+
+
+    void charWriter( BufferedReader r, PrintWriter out ) throws IOException {
+        int ch;
+        logger.error( "START TIME:" + System.currentTimeMillis() );
+        while( (ch = r.read()) != -1 ){
+          out.print( (char)ch );
+        }
+        logger.error( "START TIME:" + System.currentTimeMillis() );
+    }
+
+
+    void stringWriter( BufferedReader r, PrintWriter out ) throws IOException {
+        String s;
+//        logger.error( "START TIME:" + System.currentTimeMillis() );
+//        int lineCount = 0;
+        while( (s=r.readLine() )!=null) {
+//            lineCount++;
+//            throwIOException( 3, lineCount, 1 );
+            out.println(s);
+        }
+//        logger.error( "STOP TIME:" + System.currentTimeMillis() );
+
+    }
+
+    void throwIOException( int number, int count ) throws IOException
+    {
+        if ( count == number ){ throw new IOException(); }
+    }
+
+    public void saveBackup( File source, File target ){
+        RandomAccessFile input = null;
+        RandomAccessFile output = null;
+        try {
+            input = new RandomAccessFile( source, "r");
+            output = new RandomAccessFile( target, "rw");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+        try{
+            byte[] buf = new byte[32768];
+            long length = input.length();
+            output.setLength( length );
+            int bytesRead;
+            while( (bytesRead =input.read(buf, 0, buf.length)) != -1 ){
+                output.write( buf, 0, bytesRead );
+            }
+        }catch( IOException e ){
+            try{ input.close();  } catch( Exception e1 ){};
+            try{ output.close(); } catch( Exception e1 ){};
+            return;
+        }
+        try{ input.close(); }catch( IOException e1 )  { logger.error( "IOException while closing file '" + source.getName() + "'" ); }
+        try{ output.close(); }catch( IOException e1 ) { logger.error( "IOException while closing file '" + target.getName() + "'" ); }
+    }
+
+    public void restoreFile( File backupFile, File targetFile ){
+        logger.error( "Restored rule in file '" + targetFile.getName() + "' from file '" + backupFile + "'" );
+        saveBackup( backupFile, targetFile );
     }
 
     public void saveMessage(final String stringMessage, final String user, final String ruleId, final String transport) {
