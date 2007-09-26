@@ -62,7 +62,7 @@ std::string Property::toString() const
     char buf[32];
     std::string str;
 
-    str = name;
+    str = '"' + name + '"';
     switch(type)
     {
         case INT:
@@ -70,7 +70,7 @@ std::string Property::toString() const
             str += buf;
             break;
         case STRING:
-            str += " STRING: " + s_val;
+            str += " STRING: \"" + s_val + '"';
             break;
         case BOOL:
             str += " BOOL: ";

@@ -37,7 +37,7 @@ class IntProfileKey
     std::string toString() const
     {
       char buf[16];
-      sprintf(buf,":%hu", key);
+      sprintf(buf,"%hu", key);
       std::string str = buf;
       return str;
     }
@@ -115,11 +115,12 @@ public:
     HashProfileStore() { };
     ~HashProfileStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str());};
 
-    void init(const std::string& _storeName, uint32_t initRecCnt, uint32_t cacheSize)
+    void init(const std::string& _storeName, uint32_t initRecCnt, uint32_t cacheSize, smsc::logger::Logger *_log)
     {
 		CachedProfileStore::init(cacheSize);
 		
         log = smsc::logger::Logger::getInstance("hashstore");
+        dblog = _log;
 
 		storeName = _storeName;
         store.init(storeName, initRecCnt);
@@ -166,6 +167,7 @@ public:
 
 protected:
     smsc::logger::Logger* log;
+    smsc::logger::Logger *dblog;    
 	std::string storeName;
     VarRecSizeStore<Key> store;
 };
@@ -179,15 +181,17 @@ public:
     ~TreeProfileStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str()); };
 
     void init(	const string& storageName, const string& storagePath,
-				int indexGrowth, int blocksInFile, int dataBlockSize, int cacheSize)
+				int indexGrowth, int blocksInFile, int dataBlockSize, int cacheSize,  smsc::logger::Logger *_log)
     {
 		CachedProfileStore::init(cacheSize);
 		
-        log = smsc::logger::Logger::getInstance("treestore");
+        log = smsc::logger::Logger::getInstance("treestore");;
+        dblog = _log;
+        
 		storeName = storageName;
         if(store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize))
             throw Exception("Error init abonentstore");
-		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
+//		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
 	};
 
     void storeProfile(Key& key, Profile *pf)
@@ -221,6 +225,7 @@ public:
 protected:
 	std::string storeName;
     smsc::logger::Logger* log;
+    smsc::logger::Logger *dblog;    
     FSDBProfiles<Key> store;
 	SerialBuffer sb;
 };
@@ -300,10 +305,7 @@ public:
         Key key(rkey);
 
         if(prop.isExpired())
-		{
-	        smsc_log_debug(log, "profile %s, attempt to set expired property: %s", key.toString().c_str(), prop.toString().c_str());		
             return;
-		}
 
         Profile* pf = getProfile(key, true);
         Property* p = pf->GetProperty(prop.getName().c_str());
@@ -315,7 +317,8 @@ public:
         else
             pf->AddProperty(prop);
         storeProfile(key, pf);
-        smsc_log_debug(log, "profile %s, setProperty: %s", key.toString().c_str(), prop.toString().c_str());
+        smsc_log_debug(dblog, "S key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
+        smsc_log_debug(log, "profile %s, setProperty=%s", key.toString().c_str(), prop.toString().c_str());        
     };
 
     bool delProperty(RKey rkey, const char* nm)
@@ -326,6 +329,7 @@ public:
 
         bool res = false;
 
+        smsc_log_debug(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
         if(pf != NULL)
         {
             res = pf->DeleteProperty(nm);
@@ -341,6 +345,7 @@ public:
 
         Profile* pf = getProfile(key, false);
 
+        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
         if(pf != NULL)
         {
             Property* p = pf->GetProperty(nm);
@@ -353,7 +358,7 @@ public:
                     storeProfile(key, pf);
                 }
                 prop = *p;
-                smsc_log_debug(log, "profile %s, getProperty: %s", key.toString().c_str(), prop.toString().c_str());
+                smsc_log_debug(log, "profile %s, getProperty=%s", key.toString().c_str(), prop.toString().c_str());
                 return true;
             }
         }
@@ -368,11 +373,12 @@ public:
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
-            smsc_log_debug(log, "profile %s, incProperty: %s", key.toString().c_str(), p->toString().c_str());
             if(p->getType() == INT && prop.getType() == INT)
             {
                 p->setIntValue(p->getIntValue() + prop.getIntValue());
                 p->WriteAccess();
+                smsc_log_debug(log, "profile %s, incProperty: %s, inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getIntValue());
+                smsc_log_debug(dblog, "M key=\"%s\" property=%s inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getIntValue());
                 storeProfile(key, pf);
                 return true;
             }
@@ -380,6 +386,8 @@ public:
             {
                 p->setDateValue(p->getDateValue() + prop.getDateValue());
                 p->WriteAccess();
+                smsc_log_debug(log, "profile %s, incProperty: %s, inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getDateValue());
+                smsc_log_debug(dblog, "M key=\"%s\" property=%s inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getDateValue());
                 storeProfile(key, pf);
                 return true;
             }
@@ -387,6 +395,8 @@ public:
         else
         {
             pf->AddProperty(prop);
+            smsc_log_debug(log, "profile %s, incProperty: %s, inc=%u", key.toString().c_str(), prop.toString().c_str(), prop.getType() == INT ? prop.getIntValue() : prop.getDateValue());
+            smsc_log_debug(dblog, "M key=\"%s\" property=%s inc=%u", key.toString().c_str(), prop.toString().c_str(), prop.getType() == INT ? prop.getIntValue() : prop.getDateValue());
             storeProfile(key, pf);
             return true;
         }
@@ -401,13 +411,14 @@ public:
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
-            smsc_log_debug(log, "profile %s, incModProperty: %s", key.toString().c_str(), p->toString().c_str());
             if(p->getType() == INT && prop.getType() == INT)
             {
                 res = p->getIntValue() + prop.getIntValue();
                 if(mod) res %= mod;
                 p->setIntValue(res);
                 p->WriteAccess();
+                smsc_log_debug(log, "profile %s, incModProperty: %s, inc=%d, mod=%d", key.toString().c_str(), p->toString().c_str(), prop.getIntValue(), mod);
+                smsc_log_debug(dblog, "I key=\"%s\" property=%s inc=%d mod=%d", key.toString().c_str(), p->toString().c_str(), prop.getIntValue(), mod);                
                 storeProfile(key, pf);
                 return true;
             }
@@ -418,6 +429,8 @@ public:
             if(mod) res %= mod;
             prop.setIntValue(res);
             pf->AddProperty(prop);
+            smsc_log_debug(log, "profile %s, incModProperty: %s, inc=%d, mod=%d", key.toString().c_str(), prop.toString().c_str(), prop.getIntValue(), mod);
+            smsc_log_debug(dblog, "I key=\"%s\" property=%s inc=%d mod=%d", key.toString().c_str(), prop.toString().c_str(), prop.getIntValue(), mod);
             storeProfile(key, pf);
             return true;
         }
