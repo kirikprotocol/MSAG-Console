@@ -29,7 +29,7 @@ class Profile : public Serializable
 {
     PropertyHash properties;
     smsc::logger::Logger* log;
-//    ProfileState state;
+    ProfileState state;
 public:
     ~Profile();
     Profile() : state(OK) {log = smsc::logger::Logger::getInstance("profile");};
