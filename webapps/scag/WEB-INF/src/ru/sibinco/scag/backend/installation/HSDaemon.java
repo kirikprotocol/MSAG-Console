@@ -99,43 +99,44 @@ public class HSDaemon {
   }
   
   private class CommonSaver implements SavingStrategy {
-  private File source;
-  public CommonSaver(File configFile) {
-    this.source = configFile;
-  }
+      private File source;
 
-  public void storeToMirror(final File dest) throws SibincoException {
-    OutputStream fos = null;
-    InputStream fis = null;
-    try
-    {
-      fos = new FileOutputStream(dest);
-      fis = new FileInputStream(source);
-      byte[] buf = new byte[32768];
-      int read;
-      while ((read = fis.read(buf, 0, buf.length)) != -1)
-        fos.write(buf, 0, read);
-    }
-    catch (IOException ioe)
-    {
-      logger.error( "HS:ERROR:\nCouldn't copy file from path " + source.getAbsolutePath() + " to path " + dest.getAbsolutePath(),ioe );
-      logger.error( "HS:ERROR." );
-//      throw new SibincoException("Couldn't copy file from path "+source.getAbsolutePath()+" to path "+dest.getAbsolutePath());
-    }
-    finally
-    {
-      try
-      {
-        if(fos != null)
-          fos.close();
-        if(fis != null)
-          fis.close();
+      public CommonSaver(File configFile) {
+        this.source = configFile;
       }
-      catch(Exception e)
-      {
-        e.printStackTrace();
-      }
-    }
+
+      public void storeToMirror(final File dest) throws SibincoException {
+        OutputStream fos = null;
+        InputStream fis = null;
+        try
+        {
+          fos = new FileOutputStream(dest);
+          fis = new FileInputStream(source);
+          byte[] buf = new byte[32768];
+          int read;
+          while ((read = fis.read(buf, 0, buf.length)) != -1)
+            fos.write(buf, 0, read);
+        }
+        catch (IOException ioe)
+        {
+          logger.error( "HS:ERROR:\nCouldn't copy file from path " + source.getAbsolutePath() + " to path " + dest.getAbsolutePath(),ioe );
+          logger.error( "HS:ERROR." );
+    //      throw new SibincoException("Couldn't copy file from path "+source.getAbsolutePath()+" to path "+dest.getAbsolutePath());
+        }
+        finally
+        {
+          try
+          {
+            if(fos != null)
+              fos.close();
+            if(fis != null)
+              fis.close();
+          }
+          catch(Exception e)
+          {
+            e.printStackTrace();
+          }
+        }
   }
 
   }
