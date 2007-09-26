@@ -299,6 +299,7 @@ class ProfileStore : public StorageType
 {
     Mutex mtx;
 public:
+
     void setProperty(RKey rkey, Property& prop)
     {
         MutexGuard mt(mtx);
@@ -313,12 +314,15 @@ public:
         {
             p->setValue(prop);
             p->WriteAccess();
+            smsc_log_debug(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());            
         }
         else
+        {
             pf->AddProperty(prop);
+            smsc_log_debug(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
+        }
         storeProfile(key, pf);
-        smsc_log_debug(dblog, "S key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
-        smsc_log_debug(log, "profile %s, setProperty=%s", key.toString().c_str(), prop.toString().c_str());        
+
     };
 
     bool delProperty(RKey rkey, const char* nm)
@@ -345,7 +349,7 @@ public:
 
         Profile* pf = getProfile(key, false);
 
-        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
+//        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
         if(pf != NULL)
         {
             Property* p = pf->GetProperty(nm);
@@ -377,8 +381,7 @@ public:
             {
                 p->setIntValue(p->getIntValue() + prop.getIntValue());
                 p->WriteAccess();
-                smsc_log_debug(log, "profile %s, incProperty: %s, inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getIntValue());
-                smsc_log_debug(dblog, "M key=\"%s\" property=%s inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getIntValue());
+                smsc_log_debug(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
                 storeProfile(key, pf);
                 return true;
             }
@@ -386,8 +389,7 @@ public:
             {
                 p->setDateValue(p->getDateValue() + prop.getDateValue());
                 p->WriteAccess();
-                smsc_log_debug(log, "profile %s, incProperty: %s, inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getDateValue());
-                smsc_log_debug(dblog, "M key=\"%s\" property=%s inc=%u", key.toString().c_str(), p->toString().c_str(), prop.getDateValue());
+                smsc_log_debug(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
                 storeProfile(key, pf);
                 return true;
             }
@@ -395,8 +397,7 @@ public:
         else
         {
             pf->AddProperty(prop);
-            smsc_log_debug(log, "profile %s, incProperty: %s, inc=%u", key.toString().c_str(), prop.toString().c_str(), prop.getType() == INT ? prop.getIntValue() : prop.getDateValue());
-            smsc_log_debug(dblog, "M key=\"%s\" property=%s inc=%u", key.toString().c_str(), prop.toString().c_str(), prop.getType() == INT ? prop.getIntValue() : prop.getDateValue());
+            smsc_log_debug(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
             storeProfile(key, pf);
             return true;
         }
@@ -417,8 +418,7 @@ public:
                 if(mod) res %= mod;
                 p->setIntValue(res);
                 p->WriteAccess();
-                smsc_log_debug(log, "profile %s, incModProperty: %s, inc=%d, mod=%d", key.toString().c_str(), p->toString().c_str(), prop.getIntValue(), mod);
-                smsc_log_debug(dblog, "I key=\"%s\" property=%s inc=%d mod=%d", key.toString().c_str(), p->toString().c_str(), prop.getIntValue(), mod);                
+                smsc_log_debug(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
                 storeProfile(key, pf);
                 return true;
             }
@@ -429,8 +429,7 @@ public:
             if(mod) res %= mod;
             prop.setIntValue(res);
             pf->AddProperty(prop);
-            smsc_log_debug(log, "profile %s, incModProperty: %s, inc=%d, mod=%d", key.toString().c_str(), prop.toString().c_str(), prop.getIntValue(), mod);
-            smsc_log_debug(dblog, "I key=\"%s\" property=%s inc=%d mod=%d", key.toString().c_str(), prop.toString().c_str(), prop.getIntValue(), mod);
+            smsc_log_debug(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
             storeProfile(key, pf);
             return true;
         }
