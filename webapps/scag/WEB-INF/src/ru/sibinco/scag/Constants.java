@@ -130,6 +130,7 @@ public class Constants {
             public static final Constants couldntGetServiceInfo = new Constants("error.services.couldntGetServiceInfo");
             public static final Constants COULDNT_DELETE_SERVICE_RULE_IS_EDITING = new Constants("error.services.couldntDelete");
             public static final Constants CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME = new Constants("error.services.can_not_save_service_not_unique_name");
+            public static final Constants CAN_NOT_SAVE_SERVICE_EMPTY_NAME = new Constants("error.services.can_not_save_service_empty_name");
         }
 
         public interface providers {
