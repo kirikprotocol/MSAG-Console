@@ -123,20 +123,20 @@ int main(int argc, char* argv[])
 	    IntProfileStore ServiceStore, OperatorStore, ProviderStore;
         
         AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize,
-            Logger::getInstance("pvss.abonent"));
+            Logger::getInstance("pvss.abnt"));
 		Glossary::Open(storagePath + "/glossary");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Init cache Params 
         ConfigView cacheConfig(manager, "pers.cache_max");
 		int cm;
         try { cm = cacheConfig.getInt("service"); } catch (...) { cm = 1000; };
-        ServiceStore.init(storageDir + "service", recCnt, cm, Logger::getInstance("pvss.service"));
+        ServiceStore.init(storageDir + "service", recCnt, cm, Logger::getInstance("pvss.serv"));
 
         try { cm = cacheConfig.getInt("operator"); } catch (...) { cm = 1000; };
-        OperatorStore.init(storageDir + "operator", recCnt, cm, Logger::getInstance("pvss.operator"));
+        OperatorStore.init(storageDir + "operator", recCnt, cm, Logger::getInstance("pvss.oper"));
 
         try { cm = cacheConfig.getInt("provider"); } catch (...) { cm = 1000; };
-        ProviderStore.init(storageDir + "provider", recCnt, cm, Logger::getInstance("pvss.provider"));
+        ProviderStore.init(storageDir + "provider", recCnt, cm, Logger::getInstance("pvss.prov"));
 
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
