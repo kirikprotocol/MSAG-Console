@@ -34,7 +34,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
             prop->Deserialize(buf, fromFSDB);
             cnt--;
             if(log && prop->isExpired(cur_time))
-                smsc_log_debug(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName().c_str());
+                smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName().c_str());
         }while(prop->isExpired(cur_time) && cnt);
 
         if(!prop->isExpired(cur_time))
@@ -66,7 +66,7 @@ Property* Profile::GetProperty(const char* name)
         Property *p = properties.Get(name);
         if(p->isExpired())
         {
-            if(log) smsc_log_debug(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
+            if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
             properties.Delete(name);
             delete p;
             return NULL;
@@ -105,7 +105,7 @@ void Profile::DeleteExpired()
         if(prop->isExpired(cur_time))
         {
             i++;
-            if(log) smsc_log_debug(log, "E key=\"%s\" name=%s", pkey.c_str(), key);
+            if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), key);
             delete prop;
             properties.Delete(key);
         }
