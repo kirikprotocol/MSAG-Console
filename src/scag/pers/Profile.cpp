@@ -13,7 +13,6 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 
     PropertyHash::Iterator it = properties.getIterator();
     cnt = properties.GetCount();
-    smsc_log_debug(log, "before store profile size: %d", (int)cnt);
     buf.WriteInt16(cnt);
 
     while(it.Next(key, prop))
@@ -27,7 +26,6 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
 
     Empty();
     cnt = buf.ReadInt16();
-    smsc_log_debug(log, "profile size: %d", (int)cnt);
 
 	time_t cur_time = time(0);
     while(cnt) {
@@ -35,6 +33,8 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
         do{
             prop->Deserialize(buf, fromFSDB);
             cnt--;
+            if(log && prop->isExpired(cur_time))
+                smsc_log_debug(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName().c_str());
         }while(prop->isExpired(cur_time) && cnt);
 
         if(!prop->isExpired(cur_time))
@@ -55,18 +55,19 @@ Profile::~Profile()
         if(prop) delete prop;
 }
 
-bool Profile::PropertyExists(const char* str)
+bool Profile::PropertyExists(const char* name)
 {
-    return properties.Exists(str);
+    return properties.Exists(name);
 }
 
-Property* Profile::GetProperty(const char* str)
+Property* Profile::GetProperty(const char* name)
 {
     try{
-        Property *p = properties.Get(str);
+        Property *p = properties.Get(name);
         if(p->isExpired())
         {
-            properties.Delete(str);
+            if(log) smsc_log_debug(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
+            properties.Delete(name);
             delete p;
             return NULL;
         }
@@ -104,10 +105,11 @@ void Profile::DeleteExpired()
         if(prop->isExpired(cur_time))
         {
             i++;
+            if(log) smsc_log_debug(log, "E key=\"%s\" name=%s", pkey.c_str(), key);
             delete prop;
             properties.Delete(key);
         }
-    smsc_log_debug(log, "Delete %d expired properties.", i);
+
 }
 
 void Profile::Empty()

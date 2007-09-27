@@ -30,9 +30,10 @@ class Profile : public Serializable
     PropertyHash properties;
     smsc::logger::Logger* log;
     ProfileState state;
+    std::string pkey;
 public:
     ~Profile();
-    Profile() : state(OK) {log = smsc::logger::Logger::getInstance("profile");};
+    Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(_pkey), log(_log) {};
 
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);
