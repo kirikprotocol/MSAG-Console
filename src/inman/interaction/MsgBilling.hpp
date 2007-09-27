@@ -168,10 +168,12 @@ public:
     virtual ~ChargeSmsResult() { }
 
     inline ChargeSmsResult_t GetValue(void) const { return value; }
+    inline CDRRecord::ContractType getContract(void) const { return contract; }
     inline uint32_t          getError(void) const { return errCode; }
     inline const char *      getMsg(void)   const { return errMsg.c_str(); }
 
     inline void   setValue(ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE) { value = res; }
+    inline void   setContract(CDRRecord::ContractType abn_contract) { contract = abn_contract; }
     void   setError(uint32_t err_code, const char * err_msg = NULL)
     {
         errCode = err_code;
@@ -187,6 +189,7 @@ private:
     ChargeSmsResult_t   value;
     uint32_t            errCode;
     std::string         errMsg;
+    CDRRecord::ContractType contract;
 };
 
 class DeliverySmsResult : public INPBillingCmd {

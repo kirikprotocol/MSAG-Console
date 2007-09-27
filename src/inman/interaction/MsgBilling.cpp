@@ -164,6 +164,10 @@ void ChargeSmsResult::load(ObjectBuffer& in) throw(SerializerException)
     value = static_cast<ChargeSmsResult_t>(v);
     in >> errCode;
     in >> errMsg;
+
+    unsigned char tmp;
+    in >> tmp;
+    contract = static_cast<CDRRecord::ContractType>(tmp);
 }
 
 void ChargeSmsResult::save(ObjectBuffer& out) const
@@ -171,6 +175,7 @@ void ChargeSmsResult::save(ObjectBuffer& out) const
     out << (unsigned short)value;
     out << errCode;
     out << errMsg;
+    out << (unsigned char)contract;
 }
 
 /* ************************************************************************** *

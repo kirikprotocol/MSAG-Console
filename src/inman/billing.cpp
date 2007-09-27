@@ -710,6 +710,8 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
     SPckChargeSmsResult res;
     res.Cmd().setValue(do_charge ? ChargeSmsResult::CHARGING_POSSIBLE : 
                                 ChargeSmsResult::CHARGING_NOT_POSSIBLE);
+    cdr._contract = static_cast<CDRRecord::ContractType>((unsigned)abCsi.abRec.ab_type);
+    res.Cmd().setContract(cdr._contract);
     if (billErr)
         res.Cmd().setError(billErr, URCRegistry::explainHash(billErr).c_str());
     res.Hdr().dlgId = _wId;
