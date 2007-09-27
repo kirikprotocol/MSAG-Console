@@ -60,6 +60,7 @@ int main(int argc, const char* argv[])
 {
   Logger::Init();
   smsc::util::xml::initXerces();
+  scag::transport::mms::MmsFactory::initFactories();
   string proxy_host = "phoenix";
   int proxy_vasp_port = 47003;
   int proxy_rs_port = 47004;

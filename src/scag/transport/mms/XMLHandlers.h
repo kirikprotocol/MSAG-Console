@@ -85,14 +85,12 @@ private:
   Logger* logger;
   const Locator* locator;
   MmsMsg* mms_msg;
-  MmsFactory_ factory;
   MultiAddress address;
   string tag_name;
   string transaction_id;
   Hash<string> soap_attributes;
   int tag_number;
   uint8_t command_id;
-  //bool fSawErrors;
 };
 
 

@@ -559,6 +559,7 @@ int main(int argc, char* argv[]) {
   }
   Logger::Init();
   smsc::util::xml::initXerces();
+  scag::transport::mms::MmsFactory::initFactories();
   bool is_vasp = true;
   if (std::strcmp(argv[1],"-r") == 0) {
     is_vasp = false;

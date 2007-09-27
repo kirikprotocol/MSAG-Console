@@ -7,6 +7,9 @@ namespace scag { namespace transport { namespace mms { namespace test {
 
 //public
 
+static const char* MULTIPART = "multipart";
+static const size_t MULTIPART_SIZE = strlen(MULTIPART);
+
 bool ClientMms::start() {
   smsc_log_debug(logger, "Start MMS Client");
   smsc_log_debug(logger, "MMS Relay Server \'%s:%d\'", host.c_str(), port);
@@ -230,7 +233,7 @@ void ClientMms::createMultipartRequestPacket(HttpPacket& packet, size_t content_
 }
 
 void ClientMms::setPrefix() {
-  prefix = is_vasp ? "    VASP_" : "     RS_";
+  prefix = is_vasp ? "VASP_" : "RS_";
 }
 
 //private

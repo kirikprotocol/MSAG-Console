@@ -15,7 +15,7 @@ void XMLHandler::startElement(const XMLCh* const qname, AttributeList& attribute
   StrX tag(qname);
   tag_name = tag.localForm();
   if (COMMAND_NAME_TAG_NUMBER == tag_number) {
-    mms_msg = factory.createMM7Msg(tag.localForm(), transaction_id);
+    mms_msg = MmsFactory::getMmsMsg(tag.localForm(), transaction_id);
     if (mms_msg) {
       command_id = mms_msg->getCommandId();
       char* name = 0;

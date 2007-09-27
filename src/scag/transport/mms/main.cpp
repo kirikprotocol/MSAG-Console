@@ -66,6 +66,8 @@ void init() {
     scag::transport::mms::MmsManager::Init(mp, cfg.getMmsManConfig(),
                                             smsc::util::findConfigFile("./conf/mms.xml"));
 
+    scag::transport::mms::MmsFactory::initFactories();
+
     smsc_log_info(log, "Mms Manager started");
   } catch(const Exception& e){
 
