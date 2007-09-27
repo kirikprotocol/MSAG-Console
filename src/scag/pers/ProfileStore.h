@@ -207,10 +207,10 @@ public:
 
     Profile* _getProfile(Key& key, bool create)
     {
-        Profile *pf = new Profile(key.toString(), dblog);
-		sb.Empty();
         key.setNumberingPlan(1);
         key.setTypeOfNumber(1);
+        Profile *pf = new Profile(key.toString(), dblog);
+		sb.Empty();
         if(store.Get(key, sb))
         {
             pf->Deserialize(sb, true);
