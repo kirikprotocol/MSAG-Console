@@ -422,7 +422,7 @@ private:
 		}
 		catch(FileException ex)
 		{
-//		    smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
+		    smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
 			return DESCR_FILE_CREATE_FAILED;
 		}
 
@@ -435,7 +435,8 @@ private:
 		descrFile.blocks_free = 0;
 		descrFile.blocks_used = 0;
 		descrFile.first_free_block = 0;
-		
+        
+		descrFile_f.Seek(0, SEEK_SET);
 		descrFile_f.Write((char*)&descrFile, sizeof(DescriptionFile));
 		return 0;
 	}
@@ -481,6 +482,7 @@ private:
 		descrFile.files_count++;
 		descrFile.blocks_free = descrFile.file_size;
 		descrFile.first_free_block = startBlock;
+		descrFile_f.Seek(0, SEEK_SET);        
 		descrFile_f.Write((char*)&descrFile, sizeof(DescriptionFile));
 		return 0;
 	}
