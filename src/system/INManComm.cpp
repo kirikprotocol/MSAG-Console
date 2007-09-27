@@ -359,6 +359,8 @@ int INManComm::Execute()
             *it->second->sbmCtx,
             result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
           );
+        cmd->get_chargeSmsResp()->inmanError=result->getMsg();
+        cmd->get_chargeSmsResp()->contractType=result->getContract();
         delete it->second->sbmCtx;
       }else
       {
@@ -369,6 +371,7 @@ int INManComm::Execute()
             *it->second->fwdCtx,
             result->GetValue()==smsc::inman::interaction::ChargeSmsResult::CHARGING_POSSIBLE
           );
+        cmd->get_fwdChargeSmsResp()->inmanError=result->getMsg();
         delete it->second->fwdCtx;
       }
       timeMap.erase(it->second->tmIt);

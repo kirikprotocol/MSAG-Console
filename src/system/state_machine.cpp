@@ -16,10 +16,12 @@
 #include "core/buffers/FixedLengthString.hpp"
 #include "closedgroups/ClosedGroupsInterface.hpp"
 #include "system/common/TimeZoneMan.hpp"
+#include "inman/storage/cdrutil.hpp"
 #ifdef SMSEXTRA
 #include "Extra.hpp"
 #include "ExtraBits.hpp"
 #endif
+
 
 // строчка по русски, что б сработал autodetect :)
 
@@ -2028,14 +2030,23 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   if(!resp->result)
   {
     submitResp(t,sms,Status::DENIEDBYINMAN);
-    warn2(smsLog, "SBM: denied by inman Id=%lld;seq=%d;oa=%s;%s;srcprx=%s",
+    warn2(smsLog, "SBM: denied by inman Id=%lld;seq=%d;oa=%s;%s;srcprx=%s: '%s'",
       t.msgId,dialogId,
       sms->getOriginatingAddress().toString().c_str(),
       AddrPair("da",sms->getDestinationAddress(),"dda",dst).c_str(),
-      src_proxy->getSystemId()
+      src_proxy->getSystemId(),
+      resp->inmanError.c_str()
     );
     return ERROR_STATE;
   }
+
+#ifdef SMSEXTRA
+  if(sms->billingRecord==2 && resp->contractType!=smsc::inman::cdr::CDRRecord::abtPrepaid)
+  {
+    //
+    sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x3))|0x2);
+  }
+#endif
 
 
   ////
@@ -3416,22 +3427,22 @@ StateType StateMachine::deliveryResp(Tuple& t)
     bool final=
       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK ||
       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_PERM;
-    bool lastPart=false;
+    bool firstPart=false;
     bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
-    if(final && GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_ERR_PERM)
+    if(GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK)
     {
       if(multiPart)
       {
         unsigned len;
         ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-        if(sms.getConcatSeqNum()==ci->num-1)
+        if(sms.getConcatSeqNum()==0)
         {
-          lastPart=true;
+          firstPart=true;
         }
       }
     }
-    smsc_log_debug(smsLog,"multiPart=%s, lastPart=%s, final=%s",multiPart?"true":"false",lastPart?"true":"false",final?"true":"false");
-    if(!multiPart || lastPart || !final)
+    smsc_log_debug(smsLog,"multiPart=%s, firstPart=%s, final=%s",multiPart?"true":"false",firstPart?"true":"false",final?"true":"false");
+    if(!multiPart || firstPart || !final)
     {
       int savedLastResult=sms.getLastResult();
       try{
@@ -3452,6 +3463,17 @@ StateType StateMachine::deliveryResp(Tuple& t)
         smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
       }
       sms.setLastResult(savedLastResult);
+      if(multiPart && (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x02) && firstPart)
+      {
+        smsc_log_info(smsLog,"Remove billing flag for multipart sms msgId=%lld",t.msgId);
+        sms.setBillingRecord(0);
+        try{
+          store->replaceSms(t.msgId,sms);
+        }catch(std::exception& e)
+        {
+          smsc_log_warn(smsLog,"Failed to replace sms msgId=%lld:'%s'",t.msgId,e.what());
+        }
+      }
     }
   }
 

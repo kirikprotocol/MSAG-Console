@@ -464,6 +464,8 @@ struct INSmsChargeResponse{
   SMSId id;
   SMS sms;
   int result;
+  int contractType;
+  std::string inmanError;
   struct SubmitContext{
     SmeProxy* srcProxy;
     SmeProxy* dstProxy;
@@ -492,6 +494,7 @@ struct INFwdSmsChargeResponse{
   SMSId id;
   SMS sms;
   int result;
+  std::string inmanError;
   struct ForwardContext{
     bool allowDivert;
     bool reschedulingForward;
