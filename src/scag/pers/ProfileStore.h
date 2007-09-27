@@ -129,7 +129,7 @@ public:
 
     void storeProfile(Key& key, Profile* pf)
     {
-        pf->DeleteExpired();
+//        pf->DeleteExpired();
 
         if(pf->GetCount() > 0)
         {
@@ -196,7 +196,7 @@ public:
 
     void storeProfile(Key& key, Profile *pf)
     {
-        pf->DeleteExpired();
+//        pf->DeleteExpired();
 		sb.Empty();
         pf->Serialize(sb, true);
 //        delete pf;
@@ -314,14 +314,11 @@ public:
         {
             p->setValue(prop);
             p->WriteAccess();
-            smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
         }
         else
-        {
             pf->AddProperty(prop);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
-        }
         storeProfile(key, pf);
+        smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
     };
 
     bool delProperty(RKey rkey, const char* nm)
@@ -380,24 +377,24 @@ public:
             {
                 p->setIntValue(p->getIntValue() + prop.getIntValue());
                 p->WriteAccess();
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
                 storeProfile(key, pf);
+                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
             }
             else if(p->getType() == DATE && prop.getType() == DATE)
             {
                 p->setDateValue(p->getDateValue() + prop.getDateValue());
                 p->WriteAccess();
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
                 storeProfile(key, pf);
+                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
             }
         }
         else
         {
             pf->AddProperty(prop);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());                        
             storeProfile(key, pf);
+            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());                                    
             return true;
         }
         return false;
@@ -417,8 +414,8 @@ public:
                 if(mod) res %= mod;
                 p->setIntValue(res);
                 p->WriteAccess();
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());
                 storeProfile(key, pf);
+                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
             }
         }
@@ -428,8 +425,8 @@ public:
             if(mod) res %= mod;
             prop.setIntValue(res);
             pf->AddProperty(prop);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
             storeProfile(key, pf);
+            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());            
             return true;
         }
         return false;
