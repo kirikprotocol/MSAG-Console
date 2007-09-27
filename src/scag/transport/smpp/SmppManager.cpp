@@ -822,11 +822,20 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
       ct->putCommand(resp);
     }else
     {
-      queue.Push(cmd);
-      if(entPtr->info.sendLimit>0)
+      if(entPtr->info.inQueueLimit>0 && entPtr->getQueueCount()>=entPtr->info.inQueueLimit)
       {
-        entPtr->incCnt.Inc();
-        //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
+        smsc_log_info(limitsLog,"Denied submit from '%s' by inQueueLimit:%d/%d",entPtr->info.systemId.c_str(),entPtr->getQueueCount(),entPtr->info.inQueueLimit);
+        SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+        ct->putCommand(resp);
+      }else
+      {
+        queue.Push(cmd);
+        if(entPtr->info.sendLimit>0)
+        {
+          entPtr->incCnt.Inc();
+          //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
+        }
+        entPtr->incQueueCount();
       }
     }
   }
@@ -890,16 +899,26 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
     return true;
   }
 
-  if(!queue.Count() && !lcmQueue.Count() && !respQueue.Count())
-    return false;
+//  if(!queue.Count() && !lcmQueue.Count() && !respQueue.Count())
+//    return false;
 
   if(lcmQueue.Count())
-      lcmQueue.Pop(cmd);
+  {
+    lcmQueue.Pop(cmd);
+  }
   else if(respQueue.Count())
-      respQueue.Pop(cmd);
+  {
+    respQueue.Pop(cmd);
+  }
+  else if(queue.Count())
+  {
+    queue.Pop(cmd);
+    if(cmd.getEntity())cmd.getEntity()->decQueueCount();
+  }
   else
-      queue.Pop(cmd);
-
+  {
+    return false;
+  }
   return true;
 }
 

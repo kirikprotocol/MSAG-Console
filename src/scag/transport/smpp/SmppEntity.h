@@ -30,9 +30,12 @@ struct SmppEntity
   SmppChannel* channel;
   SmppChannel* recvChannel;
   SmppChannel* transChannel;
+  sync::Mutex seqMtx;
   int seq;
   bool connected;
   smsc::util::TimeSlotCounter<> incCnt;
+  sync::Mutex cntMtx;
+  int queueCount;
 
   SmppEntity():incCnt(5)
   {
@@ -42,6 +45,7 @@ struct SmppEntity
     transChannel=0;
     seq=0;
     connected = false;
+    queueCount=0;
   }
   SmppEntity(const SmppEntityInfo& argInfo):incCnt(5)
   {
@@ -51,6 +55,7 @@ struct SmppEntity
     recvChannel=0;
     transChannel=0;
     seq=0;
+    queueCount=0;
     connected = false;
   }
   ~SmppEntity()
@@ -205,8 +210,26 @@ struct SmppEntity
 
   int getNextSeq()
   {
-    sync::MutexGuard mg(mtx);
+    sync::MutexGuard mg(seqMtx);
     return ++seq;
+  }
+
+  int getQueueCount()
+  {
+    sync::MutexGuard mg(cntMtx);
+    return queueCount;
+  }
+
+  void incQueueCount()
+  {
+    sync::MutexGuard mg(cntMtx);
+    queueCount++;
+  }
+
+  void decQueueCount()
+  {
+    sync::MutexGuard mg(cntMtx);
+    queueCount--;
   }
 
 protected:
