@@ -58,10 +58,15 @@ void ActionReceipt::init(const SectionParams& params,PropertyObject propertyObje
     ftMsgId = CheckParameter(params, propertyObject, "receipt", "msg_id", true, true, varMsgId, bExist);
     ftDstSmeId = CheckParameter(params, propertyObject, "receipt", "dst_sme_id", true, true, varDstSmeId, bExist);
     ftNetErrCode = CheckParameter(params, propertyObject, "receipt", "network_error_code", false, true, varNetErrCode, bNetErrCodeExist);
-    if(bNetErrCodeExist && ftNetErrCode == ftUnknown && !(netErrCode = strtol(varNetErrCode.c_str(), NULL, 0)))
-        throw SCAGException("Action 'smpp:receipt': Invalid 'network_error_code' field: %s", varNetErrCode.c_str());
+    if(bNetErrCodeExist && ftNetErrCode == ftUnknown)
+    {
+        char *endptr;
+        netErrCode = strtol(varNetErrCode.c_str(), &endptr, 0);
+        if(!varNetErrCode.length() || (endptr && *endptr))
+            throw SCAGException("Action 'smpp:receipt': Invalid 'network_error_code' field: %s", varNetErrCode.c_str());
+    }        
 
-    smsc_log_debug(logger,"Action 'smpp:receipt' inited. to=%s from=%s state=%s msg_id=%s dst_sme_id=%s, netErrCode=%d", varTo.c_str(), varFrom.c_str(), varState.c_str(), varMsgId.c_str(), varDstSmeId.c_str(), varNetErrCode.c_str());
+    smsc_log_debug(logger,"Action 'smpp:receipt' inited. to=%s from=%s state=%s msg_id=%s dst_sme_id=%s, netErrCode=%s", varTo.c_str(), varFrom.c_str(), varState.c_str(), varMsgId.c_str(), varDstSmeId.c_str(), varNetErrCode.c_str());
 }
 
 bool ActionReceipt::getStrProperty(ActionContext& context, const std::string& str, const char *field_name, std::string& val)
