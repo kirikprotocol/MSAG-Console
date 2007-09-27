@@ -116,7 +116,10 @@ struct StateMachine::ResponseRegistry
     cmd->set_dialogId(ptr->dlgId);
     toList.erase(ptr->it);
     reg.Delete(key);
-    outCnt.Get(cmd.getDstEntity()->info.systemId.c_str())--;
+    if(cmd.getDstEntity().info.outQueueLimit)
+    {
+      outCnt.Get(cmd.getDstEntity()->info.systemId.c_str())--;
+    }
     return true;
   }
 
