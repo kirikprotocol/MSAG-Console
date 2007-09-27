@@ -47,8 +47,6 @@ static const char* COLON = ": ";
 static const char* HOST = "Host";
 static const size_t HOST_SIZE = std::strlen(HOST);
 static const char* CONTENT_TYPE = "Content-Type";
-static const char* MULTIPART = "multipart";
-static const size_t MULTIPART_SIZE = std::strlen(MULTIPART);
 static const char* TEXT_XML = "text/xml";
 static const char* START = "start";
 static const char* TYPE = "type";
@@ -82,7 +80,9 @@ static const char* SOAP_ACTION = "SOAPAction";
 
 struct HttpHeader {
 public:
-  HttpHeader():multipart(false), content_length(0) {}
+  HttpHeader():multipart(false), content_length(0) {
+    logger = Logger::getInstance("mms.parser");
+  }
   virtual ~HttpHeader() {}
   void serialize(string& serialized_header) const;
 
@@ -116,6 +116,7 @@ private:
   Hash<string> fields;
   Hash<string> content_type_params;
   bool multipart;
+  Logger* logger;
 };
 
 enum HttpPacketState {
@@ -134,6 +135,7 @@ class HttpPacket {
 public:
   HttpPacket():size(0), complite(false), valid(true), request(true), error_resp(false), packet_size(0),
                state(START_LINE), next_state(HTTP_HEADER), content_size(0), modified(true) {
+    logger = Logger::getInstance("mms.parser");
   }
   ~HttpPacket() {
   }
@@ -181,6 +183,7 @@ private:
   bool request;
   bool error_resp;
   bool modified;
+  Logger* logger;
 private:
   friend class HttpParser;
 
@@ -206,7 +209,7 @@ private:
       return;
     }
     if (size < 0) {
-      size = std::strlen(src);
+      size = strlen(src);
     }
     if (field) {
       delete[] field;

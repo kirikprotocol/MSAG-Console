@@ -4,23 +4,20 @@ namespace scag {
 namespace transport {
 namespace mms {
 
+static const char* MULTIPART = "multipart";
+static const size_t MULTIPART_SIZE = strlen(MULTIPART);
+
+
 bool HttpPacket::parse(const char* buf, size_t buf_size) {
-  //clear();
   if (!buf || !buf_size) {
-    //__trace__("BUF = NULL");
     return false;
   }
   while (*buf && !complite && state != ERROR) {
     size_t _size = HttpParser::parse(buf, buf_size, this);
     size += _size;
     buf += _size;
-   // __trace2__("BUF SIZE=%d BUF=\'%s\'", size, buf);
   }
-  if (complite && valid) {
-    return true;
-  } else {
-    return false;
-  }
+  return (complite && valid) ? true : false;
 };
 
 void HttpPacket::setStartLine(const char* buf, size_t line_size) {
@@ -42,6 +39,7 @@ void HttpPacket::setStartLine(const char* buf, size_t line_size) {
 
 bool HttpPacket::serialize(string& serialized_packet) const {
   if (start_line.empty()) {
+    smsc_log_error(logger, "HttpPacket::serialize : start line is empty");
     return false;
   }
   serialized_packet.erase();
@@ -51,11 +49,13 @@ bool HttpPacket::serialize(string& serialized_packet) const {
   }
   header.serialize(serialized_packet);
   if (soap_envelope.empty()) {
+    smsc_log_error(logger, "HttpPacket::serialize : soap envelope is empty");
     return false;
   }
   if (header.isMultipart()) {
     string boundary = header.getBoundary();
     if (boundary.empty()) {
+      smsc_log_error(logger, "HttpPacket::serialize : soap boundary is empty");
       return false;
     }
     serialized_packet.append(boundary);
@@ -161,20 +161,20 @@ size_t HttpPacket::getPacketSize() const {
 }
 
 void HttpPacket::test() {
-  __trace__("TRACE HttpPacket");
-  __trace2__("StartLine=\'%s\'", start_line.c_str());
+  smsc_log_debug(logger, "TRACE HttpPacket");
+  smsc_log_debug(logger, "StartLine=\'%s\'", start_line.c_str());
   header.test();
   envelope_header.test();
-  __trace2__("SoapEnvelope=\'%s\'", soap_envelope.c_str());
-  __trace2__("SoapAttachment=\'%s\'", soap_attachment.c_str());
-  __trace2__("Size=%d", size);
-  __trace2__("ContentSize=%d", content_size);
-  __trace2__("State=%d", state);
-  __trace2__("NextState=%d", next_state);
-  __trace2__("Complite=%d", complite);
-  __trace2__("Valid=%d", valid);
-  __trace2__("Request=%d", request);
-  __trace2__("ErrorResp=%d", error_resp);
+  smsc_log_debug(logger, "SoapEnvelope=\'%s\'", soap_envelope.c_str());
+  smsc_log_debug(logger, "SoapAttachment=\'%s\'", soap_attachment.c_str());
+  smsc_log_debug(logger, "Size=%d", size);
+  smsc_log_debug(logger, "ContentSize=%d", content_size);
+  smsc_log_debug(logger, "State=%d", state);
+  smsc_log_debug(logger, "NextState=%d", next_state);
+  smsc_log_debug(logger, "Complite=%d", complite);
+  smsc_log_debug(logger, "Valid=%d", valid);
+  smsc_log_debug(logger, "Request=%d", request);
+  smsc_log_debug(logger, "ErrorResp=%d", error_resp);
 }
 
 int HttpParser::findNextPacket(const char* buf, size_t buf_size, HttpPacket* packet) {
@@ -191,7 +191,8 @@ int HttpParser::findNextPacket(const char* buf, size_t buf_size, HttpPacket* pac
 }
 
 int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* packet) {
-  __trace__("parseStartLine");
+  Logger* logger = Logger::getInstance("mms.parser");
+  smsc_log_debug(logger, "HttpParser::parseStartLine");
   size_t size = 0;
   while (*buf && isspace(*buf)) {
     ++buf;
@@ -200,9 +201,11 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
   if (size == buf_size) {
     packet->valid = false;
     packet->complite = true;
+    smsc_log_error(logger, "HttpParser::parseStartLine : packet complite & invalid");
     return size;
   }
   if ((strncmp(buf, POST, POST_SIZE) != 0) && (strncmp(buf, HTTP, HTTP_SIZE) != 0)) {
+    smsc_log_error(logger, "HttpParser::parseStartLine : packet invalid");
     packet->valid = false;
     packet->state = ERROR;
     return size;
@@ -223,6 +226,7 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
   packet->setStartLine(buf-line_size, line_size);
   line_size += size;
   if (packet->isErrorResp()) {
+    smsc_log_debug(logger, "HttpParser::parseStartLine : packet complite");
     packet->complite = true;
   }
   return line_size;
@@ -254,7 +258,6 @@ void HttpPacket::fillResponse() {
   header.setContentType(TEXT_XML);
   header.setCharset(xml::UTF_8);
   header.addField(SOAP_ACTION, "\"\"");
-  //setContentLength(soap_envelope.size());
   start_line = OK_RESPONSE;
   modified = true;
 }
@@ -279,7 +282,8 @@ void HttpPacket::clear() {
 }
 
 int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* packet) {
-  __trace__("parseHttpHeader");
+  Logger* logger = Logger::getInstance("mms.parser");
+  smsc_log_debug(logger, "HttpParser::parseHttpHeader");
   size_t header_size = 0;
   while (*buf && isspace(*buf)) {
     ++header_size;
@@ -289,10 +293,12 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
     size_t line_size = packet->header.parseHeaderLine(buf, buf_size - header_size);
     if (line_size == 0) {
       if (!packet->header.parseContentType()) {
+        smsc_log_error(logger, "HttpParser::parseHttpHeader : error in parseContentType, packet invalid");
         packet->state = ERROR;
         packet->valid = false;
         return header_size + CRLF_SIZE;
       }
+      packet->header.test();
       if (packet->header.isMultipart()) {
         packet->state = FIND_NEXT_PART;
         packet->next_state = ENVELOPE_HEADER;
@@ -304,9 +310,11 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
       size_t envelope_size = buf_size - packet->getSize() - header_size;
       packet->valid = true;
       packet->complite = true;
+      smsc_log_debug(logger, "HttpParser::parseHttpHeader : packet complite & valid");
       if (content_length) {
         if (content_length > envelope_size) {
           //packet->valid = false;
+          smsc_log_warn(logger, "HttpParser::parseHttpHeader : packet incomplite");
           packet->complite = false;
         } else {
           envelope_size = content_length;
@@ -323,7 +331,8 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
 }
 
 int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket* packet) {
-  __trace__("parseEnvelopeHeader");
+  Logger* logger = Logger::getInstance("mms.parser");
+  smsc_log_debug(logger, "HttpParser::parseEnvelopeHeader");
   size_t header_size = 0;
   while (*buf && isspace(*buf)) {
     ++header_size;
@@ -337,6 +346,7 @@ int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket
       } else {
         packet->state = ERROR;
         packet->valid = false;
+        smsc_log_error(logger, "HttpParser::parseEnvelopeHeader : packet invalid");
       }
       packet->content_size += header_size + CRLF_SIZE;
       return header_size + CRLF_SIZE;
@@ -349,28 +359,30 @@ int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket
 }
 
 int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* packet) {
-  __trace__("parseSoapEnvelope");
+  Logger* logger = Logger::getInstance("mms.parser");
+  smsc_log_debug(logger, "HttpParser::parseSoapEnvelope");
   if (!packet->header.isMultipart()) {
-    __trace__("NOT Multipart");
     packet->setSoapEnvelope(buf, buf_size);
     int content_length = packet->header.getContentLength();
     if (content_length > 0) {
       if (packet->soap_envelope.size() > content_length) {
         packet->valid = false;
+        smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet invalid 1");
       }
       if (packet->soap_envelope.size() == content_length) {
         packet->complite = true;
+        smsc_log_debug(logger, "HttpParser::parseSoapEnvelope : packet complite");
       }
     }
     return buf_size;
   }
-  __trace__("Multipart");
   size_t envelope_size = 0;
   const char* boundary = packet->header.getBoundary().c_str();
   size_t boundary_size = strlen(boundary);
   while (*buf) {
     if (strncmp(buf, boundary, boundary_size) == 0)  {
       if (strncmp(buf + boundary_size, BOUNDARY_START, BOUNDARY_START_SIZE) == 0) {
+        smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet complite & invalid");
         packet->complite = true;
         packet->valid = false;
       }
@@ -386,17 +398,20 @@ int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* 
   packet->setSoapEnvelope(buf - envelope_size, envelope_size);
   int content_length = packet->header.getContentLength();
   if (content_length > 0 && content_length <= packet->content_size) {
+    smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet invalid 2");
     packet->valid = false;
   }
   return envelope_size;
 }
 
 int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket* packet) {
-  __trace__("parseSoapAttachment");
+  Logger* logger = Logger::getInstance("mms.parser");
+  smsc_log_debug(logger, "HttpParser::parseSoapAttachment");
   int content_length = packet->header.getContentLength();
   if ((content_length > 0) && ((content_length -= packet->getContentSize()) <= 0)) {
     //size_t attachment_size = buf_size - packet->getSize();
     packet->valid = false;
+    smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet invalid 1");
     return buf_size - packet->getSize();
   }
     //if (content_length <= attachment_size) {
@@ -416,10 +431,12 @@ int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket
     if (strncmp(buf, end_boundary.c_str(), end_boundary_size) == 0) {
       packet->complite = true;
       //packet->valid = true;
+      smsc_log_debug(logger, "HttpParser::parseSoapAttachment : packet complite");
       packet->setSoapAttachment(buf - attachment_size, attachment_size);
       packet->content_size += attachment_size;
       if (content_length > 0 && attachment_size > content_length) {
         packet->valid = false;
+        smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet invalid 2");
       }
       return attachment_size;
     }
@@ -428,6 +445,7 @@ int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket
   }
   if (content_length > 0 && attachment_size > content_length) {
     packet->valid = false;
+    smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet invalid 3");
   }
   packet->setSoapAttachment(buf - attachment_size, attachment_size);
   packet->content_size += attachment_size;
@@ -461,6 +479,7 @@ int HttpHeader::parseHeaderLine(const char* buf, size_t buf_size) {
   while(*buf && *buf != ':') {
     if (*buf < 33 || *buf > 126) {
       //__trace__("MmsParser::readLine ERROR : Http header field name MUST be composed of charcters between 33 and 126 (RFC 2822 2.2)");
+      smsc_log_warn(logger, "HttpHeader::parseHeaderLine : wrong header field name character \'%c\'", *buf);
       while (*buf) {
         if (strncmp(buf, CRLF, CRLF_SIZE) == 0) {
           return name_size + line_size + CRLF_SIZE;
@@ -485,7 +504,6 @@ int HttpHeader::parseHeaderLine(const char* buf, size_t buf_size) {
   size_t value_size = 0;
   while (*buf){ 
     if (strncmp(buf, CRLF, CRLF_SIZE) == 0) {
-      //header_field.setValue(msg - value_size, value_size);
       addField(name_end - name_size, name_size, buf - value_size, value_size);
       return line_size + value_size + CRLF_SIZE;
     }
@@ -497,19 +515,15 @@ int HttpHeader::parseHeaderLine(const char* buf, size_t buf_size) {
 }
 
 void HttpHeader::setContentType(const char* type) {
-  if (strncmp(type, MULTIPART, MULTIPART_SIZE) == 0) {
-    multipart = true;
-  }
-  multipart = false;
+  multipart = (strncmp(type, MULTIPART, MULTIPART_SIZE) == 0) ? true : false;
   content_type = type;
 }
 
 bool HttpHeader::parseContentType() {
-  const string* ptr = fields.GetPtr(CONTENT_TYPE);
-  if (!ptr) {
+  if (!fields.Exists(CONTENT_TYPE)) {
     return false;
   }
-  string content_type_string(*ptr);
+  string content_type_string = fields.Get(CONTENT_TYPE);
   fields.Delete(CONTENT_TYPE);
   size_t pos = 0;
   size_t next_pos = 0;
@@ -533,6 +547,7 @@ bool HttpHeader::parseContentType() {
     content_type_params.Insert(name.c_str(), value);
     pos = next_pos + 1;
   }
+  const string* ptr;
   if (multipart) {
     ptr = content_type_params.GetPtr(BOUNDARY);
     if (!ptr || (*ptr).empty()) {
@@ -655,25 +670,21 @@ string HttpHeader::getHost() const {
 }
 
 void HttpHeader::test() {
-  __trace__("TRACE HttpHeader");
-  __trace2__("charset=\'%s\'", charset.c_str());
-  __trace2__("boundary=\'%s\'", boundary.c_str());
-  __trace2__("content_type=\'%s\'", content_type.c_str());
+  smsc_log_debug(logger, "TRACE HttpHeader");
+  smsc_log_debug(logger, "charset=\'%s\'", charset.c_str());
+  smsc_log_debug(logger, "boundary=\'%s\'", boundary.c_str());
+  smsc_log_debug(logger, "content_type=\'%s\'", content_type.c_str());
   fields.First();
   char* name = 0;
   string value;
   while(fields.Next(name, value)) {
-    __trace2__("Field Name = \'%s\' Field Value = \'%s\'", name, value.c_str());
+    smsc_log_debug(logger, "Field Name = \'%s\' Field Value = \'%s\'", name, value.c_str());
   }
-  if (multipart) {
-    __trace__("Multipart=true");
-  } else {
-    __trace__("Multipart=false");
-  }
-  __trace2__("content_length=%d", content_length);
+  smsc_log_debug(logger, "Multipart=%d", multipart);
+  smsc_log_debug(logger, "content_length=%d", content_length);
   string ser_header;
   serialize(ser_header);
-  __trace2__("SerializedHeader:\n\'%s\'", ser_header.c_str());
+  smsc_log_debug(logger, "SerializedHeader:\n\'%s\'", ser_header.c_str());
 }
 
 void HttpHeader::clear() {

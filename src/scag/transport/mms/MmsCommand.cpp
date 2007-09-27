@@ -196,6 +196,7 @@ bool MmsCommand::createVASPError(const string& _transaction_id, int status_code)
 
 bool MmsCommand::serialize(string& serialized_cmd) const {
   if (!mms_msg) {
+    smsc_log_error(logger, "serialize: mms_msg=NULL");
     return false;
   }
   try {
@@ -247,18 +248,6 @@ void MmsCommand::setStatus(int st) {
      mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::ROUTE_NOT_FOUND);
      return;
   }
-  //char buf[5];
-  //snprintf(buf, 4, "%04d", status);
-  //buf[4] = 0;
-  //mms_msg->setInfoElement(xml::STATUS_CODE, buf);
-  //string status_code;
-  //string status_text;
-  //switch (status) {
-  //case 1000 : status_text = STATUS_1000; status_code = "1000"; break;
-  //case 4004 : status_text = STATUS_4004; status_code = "4004"; break;
-  //case 4005 : status_text = STATUS_4005; status_code = "4005"; break;
-  //case 4006 : status_text = STATUS_4006; status_code = "4006"; break;
-  //}
 }
 
 SessionPtr MmsCommand::getSession() {
