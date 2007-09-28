@@ -21,6 +21,8 @@ import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 /**
  * The <code>Edit</code> class represents
@@ -132,6 +134,12 @@ public class Edit extends EditBean
     protected void save() throws SCAGJspException {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
+        if( !validateString(id) ){
+            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID, "id");
+        }
+        if( !validateString(bindSystemId) ){
+            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID, "bind System Id");
+        }
         if (null == password) password = "";
 
         final Provider providerObj = null;//(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
@@ -160,6 +168,13 @@ public class Edit extends EditBean
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
                 isAdd(), isEnabled(), center, appContext, oldCenter);
         throw new DoneException();
+    }
+
+    public boolean validateString( String string )
+    {
+        Pattern pattern = Pattern.compile("[a-zA-Z0-9]{1,15}");
+        Matcher matcher = pattern.matcher(string);
+        return matcher.matches();
     }
 
     public String[] getSmes() {
