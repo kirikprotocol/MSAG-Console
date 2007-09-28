@@ -523,6 +523,7 @@ int TaskProcessor::Execute()
       try{checkAddress(event.from.c_str());}catch(Exception e)
       {
         smsc_log_error(logger, "Bad calling number. %s", e.what());
+        continue;
       }
       AbntAddr to(event.to.c_str()), from(event.from.c_str());
       outEvent = from;
