@@ -35,8 +35,8 @@ struct RouteInfo
   bool enabled;
   bool archived;
 
-  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH> smeSystemId;
-  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH> srcSmeSystemId;
+  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeSystemId;
+  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> srcSmeSystemId;
 
   buf::FixedLengthString<MAX_SUBJECTID_LENGTH> srcSubj;
   buf::FixedLengthString<MAX_SUBJECTID_LENGTH> dstSubj;
