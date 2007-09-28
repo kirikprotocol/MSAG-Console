@@ -21,6 +21,7 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.*;
+import java.text.DateFormat;
 
 /**
  * Created by IntelliJ IDEA.
@@ -553,30 +554,40 @@ public class RuleManager
     public static int CHAR_WRITER = 0;
     public static int STRING_WRITER = 1;
 
-  private void saveRule(BufferedReader r,String ruleId, String transport) throws SibincoException
+  private void saveRule(BufferedReader reader,String ruleId, String transport) throws SibincoException
   {
       PrintWriter out = null;
-      File newFile = null;
-      File backupFile = null;
+      File ruleFile = null;
+      File tempFile = null;
+      File tempFile1 = null;
+      File backFile = null;
       try
       {
         if( checkPermission(transport) ){
-            logger.debug("Saving rule to disc!!!! file : " + newFile);
-            newFile= composeRuleFile(transport,ruleId);
-            backupFile= composeRuleBackFile( transport, ruleId, "_prev" );
-            saveBackup( newFile, backupFile  );
-//            final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
-            out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(newFile), "UTF-8" ) );
-//            out = new PrintWriter( new FileWriter(newFile) );
-            ruleWriter( r, out, CHAR_WRITER );
-            stringWriter( r, out );
+            logger.debug("Saving rule to disc!!!! file : " + ruleFile);
+            ruleFile = composeRuleFile(transport,ruleId);
 
-        } else{
+            tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
+            out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
+            ruleWriter( reader, out, CHAR_WRITER );
+
+//            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
+//                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
+//            Functions.checkCreateBackupDir( ruleFile );
+//            tempFile1 = composeRuleBackFile( transport, ruleId, ".tmp1" );
+
+            out.flush();
+            out.close();
+
+            logger.debug(" Move rule to backup: " + ruleFile);
+//            Functions.MoveFileToBackupDir( ruleFile, "");
+            logger.debug(" Move temp rule to rule: " + tempFile);
+            tempFile.renameTo( ruleFile );
+
+        } else {
             logger.error( "Attempt to save unlocked rule. RuleManger:saveRule( BR, S, S):" +
                         "permission=false for " + transport );
         }
-        out.flush();
-        out.close();
       }
       catch (FileNotFoundException e) {
         throw new SibincoException("Couldn't save new rule : Couldn't write to destination config filename: " + e.getMessage());
@@ -584,8 +595,7 @@ public class RuleManager
       catch (IOException e){
         out.flush();
         out.close();
-        restoreFile( backupFile, newFile );
-//          Functions.
+//        tempFile.delete();    //          Functions.
         logger.error("Couldn't save new rule settings", e);
         throw new SibincoException("Couldn't save new rule template", e);
       }
@@ -595,6 +605,7 @@ public class RuleManager
         switch( type ){
             case 0:
                System.out.println("CHAR WRITER");
+               logger.info( "CHAR WRITER" );
                int ch;
                Reader reader = r;
                while( (ch = reader.read()) != -1 ){
@@ -602,49 +613,17 @@ public class RuleManager
                }
                 break;
             case 1:
-//                int lineCount = 0;
                 System.out.println("STRING WRITER");
                 String s;
                 while( (s=r.readLine() ) != null ) {
-//                    lineCount++;
-//                    throwIOException( 3, lineCount, 1 );
                     out.println(s);
                 }
                 break;
             default:
                 break;
         }
-        logger.error( "START TIME:" + System.currentTimeMillis() );
     }
 
-
-    void charWriter( BufferedReader r, PrintWriter out ) throws IOException {
-        int ch;
-        logger.error( "START TIME:" + System.currentTimeMillis() );
-        while( (ch = r.read()) != -1 ){
-          out.print( (char)ch );
-        }
-        logger.error( "START TIME:" + System.currentTimeMillis() );
-    }
-
-
-    void stringWriter( BufferedReader r, PrintWriter out ) throws IOException {
-        String s;
-//        logger.error( "START TIME:" + System.currentTimeMillis() );
-//        int lineCount = 0;
-        while( (s=r.readLine() )!=null) {
-//            lineCount++;
-//            throwIOException( 3, lineCount, 1 );
-            out.println(s);
-        }
-//        logger.error( "STOP TIME:" + System.currentTimeMillis() );
-
-    }
-
-    void throwIOException( int number, int count ) throws IOException
-    {
-        if ( count == number ){ throw new IOException(); }
-    }
 
     public void saveBackup( File source, File target ){
         RandomAccessFile input = null;
