@@ -15,7 +15,7 @@ extern const char    _CDRRecordHeader_TEXT[] =
     "MSG_ID,RECORD_TYPE,MEDIA_TYPE,BEARER_TYPE,SUBMIT,FINALIZED,STATUS,"
     "SRC_ADDR,SRC_IMSI,SRC_MSC,SRC_SME_ID,DST_ADDR,DST_IMSI,DST_MSC,DST_SME_ID,"
     "DIVERTED_FOR,ROUTE_ID,SERVICE_ID,USER_MSG_REF,DATA_LENGTH,PARTS_NUM,SMSX_SRV,"
-    "CONTRACT,CHARGE,IN_BILL\n";
+    "MT,CONTRACT,CHARGE,IN_BILL\n";
 
 /* ************************************************************************** *
  * class CDRRecord implementation:
@@ -66,6 +66,7 @@ void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
     CSVFileEncoder::addUint32(rec, cdr._dpLength);
     CSVFileEncoder::addUint8 (rec, cdr._partsNum, false);
     CSVFileEncoder::addUint32(rec, cdr._smsXMask);
+    CSVFileEncoder::addUint8 (rec, cdr._chargeType);
     CSVFileEncoder::addUint8 (rec, cdr._contract);
     CSVFileEncoder::addUint8 (rec, cdr._chargePolicy);
     CSVFileEncoder::addUint8 (rec, cdr._inBilled ? 0x01 : 0x00, true);
