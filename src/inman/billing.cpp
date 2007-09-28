@@ -819,27 +819,35 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
 void Billing::onTaskReport(TaskSchedulerITF * sched, ScheduledTaskAC * task)
 {
     MutexGuard grd(bilMutex);
-    if (state > bilInited) {
-        smsc_log_warn(logger, "%s: %s reported at state: %u", _logId,
-                    task->TaskName(), state);
-        return;
-    }
-    StopTimer(state);
-
     CAPSmTaskAC * sm_res = static_cast<CAPSmTaskAC *>(task);
-    if (!sm_res->doCharge) {
+    if (state == bilInited) {
+        StopTimer(state);
+        if (!sm_res->doCharge) {
+            task->UnrefBy(this);
+            capTask = NULL;
+        }
+        bool doCharge = sm_res->doCharge;
+        if (!sm_res->doCharge && !sm_res->rejectRPC 
+            && (billPrio->second == ChargeObj::bill2CDR)) {
+            smsc_log_error(logger, "%s: %s interaction failure, switching to CDR mode",
+                        _logId, abScf->Ident());
+            billMode = ChargeObj::bill2CDR;
+            doCharge = true;
+        }
+        if (chargeResult(doCharge, sm_res->scfErr) == Billing::pgEnd)
+            doFinalize();
+    } else if (state == bilContinued) {
+        //abnormal CapSMTask termination, charging was allowed so create CDR
+        //despite of secondary billmode setting
         task->UnrefBy(this);
         capTask = NULL;
-    }
-    bool doCharge = sm_res->doCharge;
-    if (!sm_res->doCharge && !sm_res->rejectRPC && (billPrio->second == ChargeObj::bill2CDR)) {
-        smsc_log_info(logger, "%s: %s interaction failure, switching to CDR mode",
+        smsc_log_error(logger, "%s: %s interaction failure, switching to CDR mode",
                     _logId, abScf->Ident());
-        billMode = billPrio->second;
-        doCharge = true;
-    }        
-    if (chargeResult(doCharge, sm_res->scfErr) == Billing::pgEnd)
-        doFinalize();
+        billMode = ChargeObj::bill2CDR;
+    } else
+        smsc_log_warn(logger, "%s: %s reported at state: %u", _logId,
+                        task->TaskName(), state);
+    return;
 }
 
 } //inman

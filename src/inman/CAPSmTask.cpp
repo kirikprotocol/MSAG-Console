@@ -68,13 +68,13 @@ RCHash CAPSmTaskAC::startDialog(CAPSmDPList::iterator & use_da)
 void CAPSmTaskAC::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
                         std::auto_ptr<ConnectSMSArg> & sms_params)
 {
-    bool doReport = false;
     {
         MutexGuard tmp(_sync);
-//        smsc_log_debug(logger, "%s: RES_IND { Dialog[0x%x] }", _logId, dlg_id);
         CAPSmDPList::iterator res = lookUp(dlg_id);
-        if (res == dpRes.end())
+        if (res == dpRes.end()) {
+            smsc_log_warn(logger, "%s: RES_IND for unhandled Dialog[0x%x]", _logId, dlg_id);
             return;
+        }
     
         res->dlgRes->answered = true;
         if (!(res->dlgRes->rpCause = rp_cause)) {    //ContinueSMS
@@ -114,43 +114,49 @@ void CAPSmTaskAC::onDPSMSResult(unsigned dlg_id, unsigned char rp_cause,
             res->scfErr = _RCS_MOSM_RPCause->mkhash(rp_cause);
             abortDialogs(&res); //abort all other dialogs and mark them as completed
         }
-        doReport = reported = Adjust();
-    }
-    if (doReport) {
-        smsc_log_debug(logger, "%s: reporting ..", _logId);
-        _Owner->ReportTask(_Id);
+        if (Adjust()) {
+            _pMode = doCharge ? pmMonitoring : pmIdle;
+            smsc_log_debug(logger, "%s: reporting ..", _logId);
+            _Owner->ReportTask(_Id);
+        }
     }
     return;
 }
 
 void CAPSmTaskAC::onEndCapDlg(unsigned dlg_id, RCHash errcode)
 {
-    bool done = false;
-    bool doReport = false;
-    {
-        MutexGuard tmp(_sync);
-//        smsc_log_debug(logger, "%s: END_IND { Dialog[0x%x] }", _logId, dlg_id);
-        CAPSmDPList::iterator res = lookUp(dlg_id);
-        if (res == dpRes.end())
-            return;
-    
-        res->dlgRes->completed = true;
-        if (errcode)
-            res->scfErr = errcode;
-        corpses.push_back(res->dlgRes->releaseDlg());
+    MutexGuard tmp(_sync);
+    //smsc_log_debug(logger, "%s: END_IND { Dialog[0x%x] }", _logId, dlg_id);
+    CAPSmDPList::iterator res = lookUp(dlg_id);
+    if (res == dpRes.end())
+        return; //END_IND for one of corpses
 
-        if ((done = Completed())) {
-            Adjust();
-            _fsmState = ScheduledTaskAC::pgDone;
-            if (!reported) 
-                doReport = reported = true;
-        }
-    }
+    res->dlgRes->completed = true;
+    corpses.push_back(res->dlgRes->releaseDlg());
+    if (errcode && !res->scfErr)
+        res->scfErr = errcode;
+
+    //select further actions depending on processing mode
+    bool doReport = false;
+    if (_pMode == pmWaitingInstr) {
+        //abnormal termination: task still hasn't reported result to referee
+        abortDialogs(&res); //abort all other dialogs and mark them as completed
+        res->doCharge = false;
+        Adjust();
+        doReport = true;
+    } else if (_pMode == pmMonitoring) {
+        //abnormal termination: task already has reported successfful result to referee
+        abortDialogs(&res); //abort all other dialogs and mark them as completed
+        doReport = true;
+    } //else if (_pMode == pmIdle) //normal end
+
     if (doReport) {
         smsc_log_debug(logger, "%s: reporting ..", _logId);
         _Owner->ReportTask(_Id);
     }
-    if (done) {
+    if (Completed()) {
+        _pMode = pmIdle;
+        _fsmState = ScheduledTaskAC::pgDone;
         smsc_log_debug(logger, "%s: signalling %s", _logId,
                         TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigRelease));
         Signal(TaskSchedulerITF::sigRelease);
@@ -164,7 +170,6 @@ void CAPSmTaskAC::onEndCapDlg(unsigned dlg_id, RCHash errcode)
  * ************************************************************************* */
 ScheduledTaskAC::PGState CAPSmTaskMT::processTask(void)
 {
-    bool doReport = false;
     {
         MutexGuard tmp(_sync);
         corpses.cleanUp();
@@ -182,22 +187,22 @@ ScheduledTaskAC::PGState CAPSmTaskMT::processTask(void)
                     break;
                 daList.pop_front();
             } while (!daList.empty());
-            if (daList.empty()) //all dialogs are succesfully started
+            if (daList.empty()) { //all dialogs are succesfully started
+                _pMode = pmWaitingInstr;
                 return _fsmState = ScheduledTaskAC::pgCont;
+            }
             
             abortDialogs();
+            _pMode = pmIdle;
             _fsmState = ScheduledTaskAC::pgDone;
-            doReport = true;
+            smsc_log_debug(logger, "%s: reporting ..", _logId);
+            _Owner->ReportTask(_Id);
         } break;
     
         default: 
             smsc_log_warn(logger, "%s: activated at state %s", _logId,
                             ScheduledTaskAC::nmPGState(_fsmState));
         }
-    }
-    if (doReport) {
-        smsc_log_debug(logger, "%s: reporting ..", _logId);
-        _Owner->ReportTask(_Id);
     }
     return _fsmState;
 }
@@ -207,7 +212,6 @@ ScheduledTaskAC::PGState CAPSmTaskMT::processTask(void)
  * ************************************************************************* */
 ScheduledTaskAC::PGState CAPSmTaskSQ::processTask(void)
 {
-    bool doReport = false;
     {
         MutexGuard tmp(_sync);
         corpses.cleanUp();
@@ -222,21 +226,21 @@ ScheduledTaskAC::PGState CAPSmTaskSQ::processTask(void)
             //start first enqueued dialog
             if (!startDialog(daList.front())) {
                 daList.pop_front();
+                _pMode = pmWaitingInstr;
                 return _fsmState = ScheduledTaskAC::pgCont;
             }
             abortDialogs();
+            _pMode = pmIdle;
             _fsmState = ScheduledTaskAC::pgDone;
-            doReport = true;
+            smsc_log_debug(logger, "%s: reporting ..", _logId);
+            _Owner->ReportTask(_Id);
+
         } break;
     
         default: 
             smsc_log_warn(logger, "%s: activated at state %s", _logId,
                             ScheduledTaskAC::nmPGState(_fsmState));
         }
-    }
-    if (doReport) {
-        smsc_log_debug(logger, "%s: reporting ..", _logId);
-        _Owner->ReportTask(_Id);
     }
     return _fsmState;
 }

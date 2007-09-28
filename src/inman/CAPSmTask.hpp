@@ -45,7 +45,6 @@ public:
         pDlg = NULL;
         return tmp;
     }
-
 };
 
 class CAPSmDPResult {
@@ -123,7 +122,7 @@ public:
         return (allReplied = (cnt == dpRes.size()) ? true : false);
     }
 
-    //Returns true if all dialogs completed
+    //Returns true if all enqueued dialogs completed
     bool Completed(void)
     {
         for (CAPSmDPList::iterator it = dpRes.begin(); it != dpRes.end(); ++it) {
@@ -137,6 +136,11 @@ public:
 
 class CAPSmTaskAC : public CAPSmResult, public ScheduledTaskAC, CapSMS_SSFhandlerITF {
 protected:
+    enum ProcMode { pmIdle = 0,
+        pmWaitingInstr, //waiting instructions from IN-platform
+        pmMonitoring    //monitoring for submission report from SMSC
+    };
+
     typedef std::list<CAPSmDPList::iterator> DAList;
 
     class DLGList : public std::list<CapSMSDlg*> {
@@ -155,9 +159,10 @@ protected:
     const TonNpiAddress abNumber;
 
     Mutex           _sync;
+    ProcMode        _pMode;
     std::auto_ptr<InitialDPSMSArg> _arg;
     DAList          daList;
-    bool            reported; //task has been reported to Referee
+    bool            reporting; //task is or awaits reporting to referee
     DLGList         corpses;
     TCSessionSR *   capSess;
     Logger *        logger;
@@ -176,7 +181,7 @@ public:
                 uint32_t serv_key, CAPSmMode idp_mode = idpMO,
                 const char * log_pfx = "CAPSm", Logger * use_log = NULL)
         : ScheduledTaskAC(true), CAPSmResult(use_scf), cfgSS7(cfg_ss7)
-        , abNumber(use_abn), reported(false), capSess(0)
+        , abNumber(use_abn), capSess(0), _pMode(pmIdle)
         , logPfx(log_pfx), logger(use_log)
     {
         _arg.reset(new InitialDPSMSArg(
@@ -190,7 +195,7 @@ public:
     virtual ~CAPSmTaskAC()
     { corpses.cleanUp(); }
 
-    InitialDPSMSArg & Arg(void) { return *(_arg.get()); }
+    inline InitialDPSMSArg & Arg(void) const { return *(_arg.get()); }
 
     inline void enqueueDA(const TonNpiAddress & use_da)
     { 
@@ -204,11 +209,14 @@ public:
         for (CAPSmDPList::iterator it = dpRes.begin();
               (it != dpRes.end()) && it->dlgRes && it->dlgRes->pDlg; ++it) {
             RCHash err = it->dlgRes->pDlg->reportSubmission(submitted);
-            if (!it->scfErr)
-                it->scfErr = err;
-            if (!repErr)
-                repErr = err;
+            if (err) {
+                if (!it->scfErr)
+                    it->scfErr = err;
+                if (!repErr)
+                    repErr = err;
+            }
         }
+        _pMode = pmIdle;
         _fsmState = ScheduledTaskAC::pgSuspend;
         smsc_log_debug(logger, "%s: signalling %s", _logId,
                         TaskSchedulerITF::nmPGSignal(TaskSchedulerITF::sigSuspend));
