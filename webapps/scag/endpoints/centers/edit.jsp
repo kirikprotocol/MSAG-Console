@@ -33,7 +33,7 @@
                 <c:set var="smes" value="${fn:join(bean.smes, ',')}"/>
                 <sm-ep:properties title="centers.edit.properties.smpp_info">
                     <br>
-                    <sm-ep:txt title="centers.edit.txt.id" name="id" maxlength="15" validation="id"/>
+                    <sm-ep:txt title="sp.edit.txt.id" name="id" maxlength="15" validation="id"/>
                     <sm-ep:txt title="centers.edit.txt.bindsystemid" name="bindSystemId" maxlength="15" validation="id"/>
                     <sm-ep:txt title="centers.edit.txt.bindpassword" name="bindPassword"/>
                     <sm-ep:txt title="centers.edit.txt.systemtype" name="systemType"/>
