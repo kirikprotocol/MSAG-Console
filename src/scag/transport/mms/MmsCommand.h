@@ -15,32 +15,29 @@
 #include "logger/Logger.h"
 #include "XMLHandlers.h"
 #include "MmsMsg.h"
-//#include "MmsParser.h"
-
-//#include "MmsParserNew.hpp"
 
 namespace scag {
 namespace transport {
 namespace mms {
 
 namespace status {
-  static const uint32_t SUCSESS                = 1000;
-  static const uint32_t VALIDATION_ERROR       = 4004;
-  static const uint32_t SERVICE_ERROR          = 4005;
-  static const uint32_t SERVICE_UNAVAILABLE    = 4006;
-  static const uint32_t SERVICE_DENIED         = 4007;
-  static const uint32_t ENDPOINT_NOT_REGISTRED = 4010;
-  static const uint32_t ROUTE_NOT_FOUND        = 4011;
+  extern const uint32_t SUCSESS;
+  extern const uint32_t VALIDATION_ERROR;
+  extern const uint32_t SERVICE_ERROR;
+  extern const uint32_t SERVICE_UNAVAILABLE;
+  extern const uint32_t SERVICE_DENIED;
+  extern const uint32_t ENDPOINT_NOT_REGISTRED;
+  extern const uint32_t ROUTE_NOT_FOUND;
 }
 
 namespace status_text {
-  static const char* SUCSESS                = "Success";
-  static const char* VALIDATION_ERROR       = "Validation Error";
-  static const char* SERVICE_ERROR          = "Service Error";
-  static const char* SERVICE_UNAVAILABLE    = "Service Unavailable";
-  static const char* SERVICE_DENIED         = "Service Denied";
-  static const char* ENDPOINT_NOT_REGISTRED = "Endpoint Not Regisetred";
-  static const char* ROUTE_NOT_FOUND        = "Route Not Found";
+  extern const char* SUCSESS;
+  extern const char* VALIDATION_ERROR;
+  extern const char* SERVICE_ERROR;
+  extern const char* SERVICE_UNAVAILABLE;
+  extern const char* SERVICE_DENIED;
+  extern const char* ENDPOINT_NOT_REGISTRED;
+  extern const char* ROUTE_NOT_FOUND;
 }
 
 using smsc::logger::Logger;

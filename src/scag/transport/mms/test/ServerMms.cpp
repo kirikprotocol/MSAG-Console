@@ -2,6 +2,12 @@
 
 namespace scag { namespace transport { namespace mms { namespace test {
 
+const char* SERVER_ERROR = "HTTP/1.1 500 Internal Server Error\r\n";
+const int SERVER_ERROR_SIZE = strlen(SERVER_ERROR);
+
+const char* BAD_REQUEST = "HTTP/1.1 400 Bad Request\r\n";
+const int BAD_REQUEST_SIZE = strlen(BAD_REQUEST);
+
 bool ServerMms::start() {
   if (socket.InitServer(host.c_str(), port, SERVER_TIME_OUT, true) < 0) {
     smsc_log_error(logger, "Can't Init Server on Host = \'%s\' Port = %d", host.c_str(), port);

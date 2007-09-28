@@ -60,8 +60,6 @@ bool MmsContext::createResponse(Socket* s) {
 }
 
 bool MmsContext::createRequest() {
-  //std::string soap_envelope = http_packet.getSoapEnvelope();
-  __trace2__("SOAP_ENVELOPE=\'%s\'", http_packet.getSoapEnvelope());
   if (command) {
     delete command;
   }
@@ -114,7 +112,6 @@ void MmsContext::createFakeResponse() {
   command->serialize(soap_envelope);
   http_packet.setSoapEnvelope(soap_envelope);
   http_packet.fillResponse();
-  //__trace2__("MmsContext::createFakeResponse():serialized http packet=\'%s\'", http_packet.serialize().c_str());
 }
 
 void MmsContext::serializeRequest() {
@@ -138,6 +135,19 @@ void MmsContext::serializeResponse() {
     return;
   }
   http_packet.setSoapEnvelope(soap_envelope);
+}
+
+MmsContext::~MmsContext()
+{
+  if (client) {
+    delete client;
+  }
+  if (service) {
+    delete service;
+  }
+  if (command) {
+    delete command;
+  }
 }
 
 /*
@@ -250,19 +260,6 @@ bool MmsContext::createCommand(Socket* s) {
 //unsigned int MmsContext::getPort() {
   //return trc.port;
 //}
-
-MmsContext::~MmsContext()
-{
-  if (client) {
-    delete client;
-  }
-  if (service) {
-    delete service;
-  }
-  if (command) {
-    delete command;
-  }
-}
 
 }//mms
 }//transport

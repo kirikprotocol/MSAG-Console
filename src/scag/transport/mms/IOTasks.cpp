@@ -202,6 +202,7 @@ int MmsReaderTask::Execute() {
       }
 
       if (cx->http_packet.parse(packet.c_str(), packet_len)) {
+        smsc_log_debug(logger,"SoapEnvelope=\'%s\'", cx->http_packet.getSoapEnvelope());
         if (createCommand(cx, s)) {
           removeSocket(s);
           manager.process(cx);
@@ -220,7 +221,7 @@ int MmsReaderTask::Execute() {
         } else {
           MmsContext::updateTimestamp(s, now);
           incomplite.Push(s);
-          smsc_log_error(logger, "%p: %p packet incomplite", this, cx);
+          smsc_log_warn(logger, "%p: %p packet incomplite", this, cx);
         }
       }
     }

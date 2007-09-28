@@ -4,6 +4,27 @@ namespace scag{
 namespace transport{
 namespace mms {
 
+namespace status {
+  const uint32_t SUCSESS                = 1000;
+  const uint32_t VALIDATION_ERROR       = 4004;
+  const uint32_t SERVICE_ERROR          = 4005;
+  const uint32_t SERVICE_UNAVAILABLE    = 4006;
+  const uint32_t SERVICE_DENIED         = 4007;
+  const uint32_t ENDPOINT_NOT_REGISTRED = 4010;
+  const uint32_t ROUTE_NOT_FOUND        = 4011;
+}
+
+namespace status_text {
+  const char* SUCSESS                = "Success";
+  const char* VALIDATION_ERROR       = "Validation Error";
+  const char* SERVICE_ERROR          = "Service Error";
+  const char* SERVICE_UNAVAILABLE    = "Service Unavailable";
+  const char* SERVICE_DENIED         = "Service Denied";
+  const char* ENDPOINT_NOT_REGISTRED = "Endpoint Not Regisetred";
+  const char* ROUTE_NOT_FOUND        = "Route Not Found";
+}
+
+
 MmsCommand::MmsCommand():mms_msg(0), logger(0) {
   logger = Logger::getInstance("mms.cmd");
 }

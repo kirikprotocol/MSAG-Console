@@ -4,6 +4,31 @@ namespace scag{
 namespace transport{
 namespace mms {
 
+static const char* DEFAULT_MMS_VERSION = "5.6.0";
+
+namespace mm7_command_name {
+  const char* SUBMIT                = "SubmitReq";
+  const char* SUBMIT_RESP           = "SubmitRsp";
+  const char* DELIVER               = "DeliverReq";
+  const char* DELIVER_RESP          = "DeliverRsp";
+  const char* CANCEL                = "CancelReq";
+  const char* CANCEL_RESP           = "CancelRsp";
+  const char* REPLACE               = "ReplaceReq";
+  const char* REPLACE_RESP          = "ReplaceRsp";
+  const char* DELIVERY_REPORT       = "DeliveryReportReq";
+  const char* DELIVERY_REPORT_RESP  = "DeliveryReportRsp";
+  const char* READ_REPLY            = "ReadReplyReq";
+  const char* READ_REPLY_RESP       = "ReadReplyRsp";
+  const char* EXTENDED_CANCEL       = "extendedCancelReq";
+  const char* EXTENDED_CANCEL_RESP  = "extendedCancelRsp";    
+  const char* EXTENDED_REPLACE      = "extendedReplaceReq";
+  const char* EXTENDED_REPLACE_RESP = "extendedReplaceRsp";
+  const char* RS_ERROR_RESP         = "RSErrorRsp";
+  const char* VASP_ERROR_RESP       = "VASPErrorRsp";
+  const char* FAULT                 = "env:Fault";
+};
+
+
 Address::Address():display_only(false), coding_type(0) {}
 
 void Address::setCodingType(const char* type) {

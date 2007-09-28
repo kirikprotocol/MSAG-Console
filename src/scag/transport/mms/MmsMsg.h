@@ -28,28 +28,27 @@ using smsc::util::Exception;
 
 XERCES_CPP_NAMESPACE_USE
 
-static const char* DEFAULT_MMS_VERSION = "5.6.0";
 
 namespace mm7_command_name {
-  static const char* SUBMIT                = "SubmitReq";
-  static const char* SUBMIT_RESP           = "SubmitRsp";
-  static const char* DELIVER               = "DeliverReq";
-  static const char* DELIVER_RESP          = "DeliverRsp";
-  static const char* CANCEL                = "CancelReq";
-  static const char* CANCEL_RESP           = "CancelRsp";
-  static const char* REPLACE               = "ReplaceReq";
-  static const char* REPLACE_RESP          = "ReplaceRsp";
-  static const char* DELIVERY_REPORT       = "DeliveryReportReq";
-  static const char* DELIVERY_REPORT_RESP  = "DeliveryReportRsp";
-  static const char* READ_REPLY            = "ReadReplyReq";
-  static const char* READ_REPLY_RESP       = "ReadReplyRsp";
-  static const char* EXTENDED_CANCEL       = "extendedCancelReq";
-  static const char* EXTENDED_CANCEL_RESP  = "extendedCancelRsp";    
-  static const char* EXTENDED_REPLACE      = "extendedReplaceReq";
-  static const char* EXTENDED_REPLACE_RESP = "extendedReplaceRsp";
-  static const char* RS_ERROR_RESP         = "RSErrorRsp";
-  static const char* VASP_ERROR_RESP       = "VASPErrorRsp";
-  static const char* FAULT                 = "env:Fault";
+  extern const char* SUBMIT;
+  extern const char* SUBMIT_RESP;;
+  extern const char* DELIVER;
+  extern const char* DELIVER_RESP;
+  extern const char* CANCEL;
+  extern const char* CANCEL_RESP;
+  extern const char* REPLACE;
+  extern const char* REPLACE_RESP;
+  extern const char* DELIVERY_REPORT;
+  extern const char* DELIVERY_REPORT_RESP;
+  extern const char* READ_REPLY;
+  extern const char* READ_REPLY_RESP;
+  extern const char* EXTENDED_CANCEL;
+  extern const char* EXTENDED_CANCEL_RESP;  
+  extern const char* EXTENDED_REPLACE;
+  extern const char* EXTENDED_REPLACE_RESP;
+  extern const char* RS_ERROR_RESP;
+  extern const char* VASP_ERROR_RESP;
+  extern const char* FAULT;
 };
 
 enum CommandId {

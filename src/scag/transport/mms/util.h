@@ -1,5 +1,5 @@
-#ifndef __SCAG_MMS_UTIL_H__
-#define __SCAG_MMS_UTIL_H__
+#ifndef __SCAG_TRANSPORT_MMS_UTIL_H__
+#define __SCAG_TRANSPORT_MMS_UTIL_H__
 
 #include <string.h>
 #include <string>
@@ -12,6 +12,7 @@
 #include <xercesc/dom/DOM.hpp>
 
 #include "logger/Logger.h"
+#include "util/debug.h"
 
 //#include "scag/transport/mms/XMLHandlers.h"
 //#include "XMLHandlers.h"
@@ -55,104 +56,104 @@ private:
 };
 
 namespace xml {
-  static const char* TRUE                   = "true";
-  static const char* FALSE                  = "false";
-  static const char* MM7_TRANSACTION_ID     = "mm7:TransactionID";
-  static const char* TRANSACTION_ID         = "TransactionID";
-  static const char* NUMBER                 = "Number";
-  static const char* SHORT_CODE             = "ShortCode";
-  static const char* RFC2822                = "RFC2822Address";
-  static const char* CONTENT                = "Content";
-  static const char* REPLY_CHARGING         = "ReplyCharging";
-  static const char* REPLY_CHARGING_SIZE    = "replyChargingSize";
-  static const char* REPLY_DEADLINE         = "replyDeadline";
-  static const char* DISPLAY_ONLY           = "displayOnly";
-  static const char* ADDRESS_CODING         = "addressCoding";
-  static const char* ENCRYPTED              = "encrypted";
-  static const char* OBFUSCATED             = "obfuscated";
-  static const char* TO                     = "To";
-  static const char* CC                     = "Cc";
-  static const char* BCC                    = "Bcc";
-  static const char* SENDER_ADDRESS         = "SenderAddress";
-  static const char* SENDER                 = "Sender";
-  static const char* DATE_TIME              = "DateTime";
-  static const char* USER_AGENT             = "UserAgent";
-  static const char* SEQUENCE               = "sequence";
-  static const char* UA_TIME_STAMP          = "UATimeStamp";
-  static const char* TIME_STAMP             = "TimeStamp";
-  static const char* UA_PROF                = "UAProf";
-  static const char* UA_CAPABILITIES        = "UACapabilities";
-  static const char* CANCEL                 = "CancelReq";
-  static const char* EXTENDED_CANCEL        = "extendedCancelReq";
-  static const char* REPLACE                = "ReplaceReq";
-  static const char* EXTENDED_REPLACE       = "extendedReplaceReq";
-  static const char* READ_REPLY             = "ReadReplyReq";
-  static const char* DELIVERY_REPORT        = "DeliveryReportReq";
-  static const char* RECIPIENT              = "Recipient";
-  static const char* RECIPIENTS             = "Recipients";
-  static const char* SERVICE_CODE           = "ServiceCode";
-  static const char* LINKED_ID              = "LinkedID";
-  static const char* MESSAGE_ID             = "MessageID";
-  static const char* CANCEL_ID              = "CancelID";
-  static const char* REPLACE_ID             = "ReplaceID";
-  static const char* MESSAGE_CLASS          = "MessageClass";
-  static const char* EARLIEST_DELIVERY_TIME = "EarlestDeliveryTime";
-  static const char* EXPIRY_DATE            = "ExpiryDate";
-  static const char* DELIVERY_REPORT_TAG    = "DeliveryReport";
-  static const char* READ_REPLY_TAG         = "ReadReply";
-  static const char* PRIORITY               = "Priority";
-  static const char* SUBJECT                = "Subject";
-  static const char* CHARGED_PARTY          = "ChargedParty";
-  static const char* CHARGED_PARTY_ID       = "ChargedPartyID";
-  static const char* REPLAY_CHARGING_ID     = "ReplayChargingID";
-  static const char* DISTRIBUTION_INDICATOR = "DistributionIndicator";
-  static const char* DELIVERY_CONDITION     = "DeliveryCondition";
-  static const char* APPLIC_ID              = "ApplicID";
-  static const char* REPLY_APPLIC_ID        = "ReplyApplicID";
-  static const char* AUX_APPLIC_INFO        = "AuxApplicInfo";
-  static const char* CONTENT_CLASS          = "ContentClass";
-  static const char* DRM_CONTENT            = "DRMContent";
-  static const char* HREF                   = "href";
-  static const char* ALLOW_ADAPTATIONS      = "allowAdaptations";
-  static const char* PREVIOUSLY_SENT_BY     = "Previouslysentby";
-  static const char* PREVIOUSLY_SENT_DATE   = "Previouslysentdateandtime";
-  static const char* SENDER_SPI             = "SenderSPI";
-  static const char* RECIPIENT_SPI          = "RecipientSPI";
-  static const char* MMS_RS_ID              = "MMSRelayServerID";
-  static const char* MM_STATUS              = "MMStatus";
-  static const char* MM_STATUS_EXTENSION    = "MMStatusExtension";
-  static const char* STATUS_TEXT            = "StatusText";
-  static const char* DATE                   = "Date";
-  static const char* STATUS                 = "Status";
-  static const char* STATUS_CODE            = "StatusCode";
-  static const char* FAULT                  = "Fault";
-  static const char* FAULT_CODE             = "faultcode";
-  static const char* FAULT_STRING           = "faultstring";
-  static const char* DETAIL                 = "detail";
+  extern const char* TRUE;
+  extern const char* FALSE;
+  extern const char* MM7_TRANSACTION_ID;
+  extern const char* TRANSACTION_ID;
+  extern const char* NUMBER;
+  extern const char* SHORT_CODE;
+  extern const char* RFC2822;
+  extern const char* CONTENT;
+  extern const char* REPLY_CHARGING;
+  extern const char* REPLY_CHARGING_SIZE;
+  extern const char* REPLY_DEADLINE;
+  extern const char* DISPLAY_ONLY;
+  extern const char* ADDRESS_CODING;
+  extern const char* ENCRYPTED;
+  extern const char* OBFUSCATED;
+  extern const char* TO;
+  extern const char* CC;
+  extern const char* BCC;
+  extern const char* SENDER_ADDRESS;
+  extern const char* SENDER;
+  extern const char* DATE_TIME;
+  extern const char* USER_AGENT;
+  extern const char* SEQUENCE;
+  extern const char* UA_TIME_STAMP;
+  extern const char* TIME_STAMP;
+  extern const char* UA_PROF;
+  extern const char* UA_CAPABILITIES;
+  extern const char* CANCEL;
+  extern const char* EXTENDED_CANCEL;
+  extern const char* REPLACE;
+  extern const char* EXTENDED_REPLACE;
+  extern const char* READ_REPLY;
+  extern const char* DELIVERY_REPORT;
+  extern const char* RECIPIENT;
+  extern const char* RECIPIENTS;
+  extern const char* SERVICE_CODE;
+  extern const char* LINKED_ID;
+  extern const char* MESSAGE_ID;
+  extern const char* CANCEL_ID;
+  extern const char* REPLACE_ID;
+  extern const char* MESSAGE_CLASS;
+  extern const char* EARLIEST_DELIVERY_TIME;
+  extern const char* EXPIRY_DATE;
+  extern const char* DELIVERY_REPORT_TAG;
+  extern const char* READ_REPLY_TAG;
+  extern const char* PRIORITY;
+  extern const char* SUBJECT;
+  extern const char* CHARGED_PARTY;
+  extern const char* CHARGED_PARTY_ID;
+  extern const char* REPLAY_CHARGING_ID;
+  extern const char* DISTRIBUTION_INDICATOR;
+  extern const char* DELIVERY_CONDITION;
+  extern const char* APPLIC_ID;
+  extern const char* REPLY_APPLIC_ID;
+  extern const char* AUX_APPLIC_INFO;
+  extern const char* CONTENT_CLASS;
+  extern const char* DRM_CONTENT;
+  extern const char* HREF;
+  extern const char* ALLOW_ADAPTATIONS;
+  extern const char* PREVIOUSLY_SENT_BY;
+  extern const char* PREVIOUSLY_SENT_DATE;
+  extern const char* SENDER_SPI;
+  extern const char* RECIPIENT_SPI;
+  extern const char* MMS_RS_ID;
+  extern const char* MM_STATUS;
+  extern const char* MM_STATUS_EXTENSION;
+  extern const char* STATUS_TEXT;
+  extern const char* DATE;
+  extern const char* STATUS;
+  extern const char* STATUS_CODE;
+  extern const char* FAULT;
+  extern const char* FAULT_CODE;
+  extern const char* FAULT_STRING;
+  extern const char* DETAIL;
   
-  static const char* MUST_UNDERSTAND        = "env:mustUnderstand";
-  static const char* ENCODING_STYLE         = "env:encodingStyle";
-  static const char* ACTOR                  = "env:actor";
-  static const char* ENV_PREFIX             = "env";
-  static const char* MM7_PREFIX             = "mm7";
-  static const char* XMLNS                  = "xmlns";
-  static const char* XMLNS_MM7              = "xmlns:mm7";
+  extern const char* MUST_UNDERSTAND;
+  extern const char* ENCODING_STYLE;
+  extern const char* ACTOR;
+  extern const char* ENV_PREFIX;
+  extern const char* MM7_PREFIX;
+  extern const char* XMLNS;
+  extern const char* XMLNS_MM7;
 
-  static const char* ENVELOPE               = "Envelope";
-  static const char* HEADER                 = "Header";
-  static const char* BODY                   = "Body";
-  static const char* ENVELOPE_URI           = "http://schemas.xmlsoap.org/soap/envelope/";
-  static const char* MM7_URI                = "http://www.3gpp.org/ftp/Specs/archive/23_series/23.140/schema/REL-6-MM7-1-4";
-  static const char* SCHEMA_LOCATION        = "http://www.3gpp.org/ftp/Specs/archive/23_series/23.140/schema/REL-6-MM7-1-4 ./REL-6-MM7-1-4.xsd";
+  extern const char* ENVELOPE;
+  extern const char* HEADER;
+  extern const char* BODY;
+  extern const char* ENVELOPE_URI;
+  extern const char* MM7_URI;
+  extern const char* SCHEMA_LOCATION;
   
-  static const char* SENDER_ID             = "SenderIdentification";
-  static const char* MM7_VERSION           = "MM7Version";
-  static const char* VAS_ID                = "VASID";
-  static const char* VASP_ID               = "VASPID";
-  static const char* MMS_RELAY_SERVER_ID   = "MMSRelayServerID";
+  extern const char* SENDER_ID;
+  extern const char* MM7_VERSION;
+  extern const char* VAS_ID;
+  extern const char* VASP_ID;
+  extern const char* MMS_RELAY_SERVER_ID;
   
-  static const char* UTF_16                = "UTF-16";
-  static const char* UTF_8                 = "UTF-8";
+  extern const char* UTF_16;
+  extern const char* UTF_8;
 
   using std::string;
 

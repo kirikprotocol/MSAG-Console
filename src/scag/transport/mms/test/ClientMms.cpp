@@ -2,14 +2,27 @@
 
 namespace scag { namespace transport { namespace mms { namespace test {
 
-//LOCAL_HOST = "192.168.1.12";
-//BAD_REQUEST = "HTTP/1.1 400 Bad Request\r\n";
+const char* START = "start";
+const char* TYPE = "type";
+const size_t CONTENT_LENGTH_SIZE = 14;
+const char* SAMPLE_POST = "POST /mms-rs/mm7 HTTP/1.1\r\n";
+const size_t SAMPLE_POST_SIZE = strlen(SAMPLE_POST);
+const size_t OK_RESPONSE_SIZE = strlen(OK_RESPONSE);
+const char* SAMPLE_HOST = "msag";
+const char* CONTENT_ID = "Content-ID";
+const char* TID_TEMPLATE = "@tid@";
+const char* EPID_TEMPLATE = "@endpoint_id@";
+const size_t TID_TEMPLATE_SIZE = strlen(TID_TEMPLATE);
+const size_t EPID_TEMPLATE_SIZE = strlen(EPID_TEMPLATE);
+const char* MULTIPART = "multipart";
+const size_t MULTIPART_SIZE = strlen(MULTIPART);
+
+const int SERVER_TIME_OUT = 10;
+const size_t CLIENT_TIME_OUT = 100;
+const char* SAMPLE_BOUNDARY = "NextPart_000_0128_01C19839.12345";
+const char* SAMPLE_START = "</tnn-123456/mm7-request>";
 
 //public
-
-static const char* MULTIPART = "multipart";
-static const size_t MULTIPART_SIZE = strlen(MULTIPART);
-
 bool ClientMms::start() {
   smsc_log_debug(logger, "Start MMS Client");
   smsc_log_debug(logger, "MMS Relay Server \'%s:%d\'", host.c_str(), port);
@@ -171,7 +184,7 @@ void ClientMms::createRequestPacket(HttpPacket& packet, size_t content_length) {
   HttpHeader header;
   header.setContentType(TEXT_XML);
   header.setCharset(xml::UTF_8);
-  header.addField(HOST, SAMPLE_HOST);
+  //header.addField(HOST, SAMPLE_HOST);
   header.addField(SOAP_ACTION, "\"\"");
   header.addField(CONTENT_LENGTH, SAMPLE_CONTENT_LENGTH);
   if (content_length > 0) {
@@ -183,6 +196,7 @@ void ClientMms::createRequestPacket(HttpPacket& packet, size_t content_length) {
     }
   }
   packet.setHttpHeader(header);
+  packet.setHost(SAMPLE_HOST);
   packet.setStartLine(SAMPLE_POST, SAMPLE_POST_SIZE);
 }
 
@@ -211,7 +225,7 @@ void ClientMms::createMultipartRequestPacket(HttpPacket& packet, size_t content_
   header.setContentType(MULTIPART);
   header.addContentTypeParam(START, start);
   header.addContentTypeParam(TYPE, TEXT_XML);
-  header.addField(HOST, SAMPLE_HOST);
+  //header.addField(HOST, SAMPLE_HOST);
   header.addField(SOAP_ACTION, "\"\"");
   header.addField(CONTENT_LENGTH, SAMPLE_CONTENT_LENGTH);
   if (content_length > 0) {
@@ -228,6 +242,7 @@ void ClientMms::createMultipartRequestPacket(HttpPacket& packet, size_t content_
   envelope_header.addField(CONTENT_ID, start);
 
   packet.setEnvelopeHeader(envelope_header);
+  packet.setHost(SAMPLE_HOST);
   packet.setHttpHeader(header);
   packet.setStartLine(SAMPLE_POST, SAMPLE_POST_SIZE);
 }

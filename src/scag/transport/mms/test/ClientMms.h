@@ -19,29 +19,25 @@ using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::logger::Logger;
 
-static const char* LOCAL_HOST = "192.168.1.12";//"127.0.0.1";
-static const char* BAD_REQUEST = "HTTP/1.1 400 Bad Request\r\n";
-static const char* SAMPLE_POST = "POST /mms-rs/mm7 HTTP/1.1\r\n";
-static const size_t SAMPLE_POST_SIZE = strlen(SAMPLE_POST);
-static const size_t OK_RESPONSE_SIZE = strlen(OK_RESPONSE);
-static const int BAD_REQUEST_SIZE = strlen(BAD_REQUEST);
-static const char* SERVER_ERROR = "HTTP/1.1 500 Internal Server Error\r\n";
-static const int SERVER_ERROR_SIZE = strlen(SERVER_ERROR);
-static const int SERVER_TIME_OUT = 10;
-static const size_t CLIENT_TIME_OUT = 100;
+extern const int SERVER_TIME_OUT;
+extern const size_t CLIENT_TIME_OUT;
+extern const char* SAMPLE_BOUNDARY;
+extern const char* SAMPLE_START;
 
-static const char* SAMPLE_BOUNDARY = "NextPart_000_0128_01C19839.12345";
-static const char* SAMPLE_START = "</tnn-123456/mm7-request>";
-static const char* MULTIPART_RELATED = "multipart/related";
-static const char* SAMPLE_HOST = "msag";
-//static const char* SAMPLE_POST = "/mms-rs/mm7"
-static const char* CONTENT_ID = "Content-ID";
-
-static const char* ADR_TEMPLATE = "@address@";
-static const char* TID_TEMPLATE = "@tid@";
-static const char* EPID_TEMPLATE = "@endpoint_id@";
-static size_t TID_TEMPLATE_SIZE = strlen(TID_TEMPLATE);
-static size_t EPID_TEMPLATE_SIZE = strlen(EPID_TEMPLATE);
+extern const char* START;
+extern const char* TYPE;
+extern const size_t CONTENT_LENGTH_SIZE;
+extern const char* SAMPLE_POST;
+extern const size_t SAMPLE_POST_SIZE;
+extern const size_t OK_RESPONSE_SIZE;
+extern const char* SAMPLE_HOST;
+extern const char* CONTENT_ID;
+extern const char* TID_TEMPLATE;
+extern const char* EPID_TEMPLATE;
+extern const size_t TID_TEMPLATE_SIZE;
+extern const size_t EPID_TEMPLATE_SIZE;
+extern const char* MULTIPART;
+extern const size_t MULTIPART_SIZE;
 
 static Mutex tid_mutex;
 
@@ -68,7 +64,7 @@ public:
   bool sendCommand(const string& cmd_template, const string& soap_attchment);
   void sendRequestWithPrintf(const char* packet);
   bool flood(string& cmd_template, const string& soap_attachment, const Hash<string>& fields, 
-             const vector<string>& values, const char* template_string = ADR_TEMPLATE);
+             const vector<string>& values, const char* template_string = "@address@");
 
   bool sendCommand(const string& cmd_template, const string& soap_attchment,
                    const Hash<string>& fields);

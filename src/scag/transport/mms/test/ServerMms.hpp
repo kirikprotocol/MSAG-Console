@@ -21,6 +21,11 @@ namespace test {
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
+extern const char* BAD_REQUEST;
+extern const int BAD_REQUEST_SIZE;
+extern const char* SERVER_ERROR;
+extern const int SERVER_ERROR_SIZE;
+
 class ServerMms: public ClientMms {
 
 public:

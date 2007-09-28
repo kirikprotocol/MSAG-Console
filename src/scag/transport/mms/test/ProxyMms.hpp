@@ -10,7 +10,6 @@ namespace test {
 
 class ProxyMms : public ServerMms {
 public:
-
   ProxyMms(const string& proxy_host, int proxy_port, string _service_host,int _service_port,
            bool _is_vasp, const string& ep_id)
   :ServerMms(proxy_host, proxy_port, ep_id, _is_vasp),
@@ -21,7 +20,6 @@ public:
   }
 
 protected:
-
   void work(Socket* sock, size_t con_number) {
     if (sock == NULL) {
       return;
@@ -71,7 +69,6 @@ protected:
   }
 
 private:
-
   void processCommand(Socket* sock, MmsCommand& in_cmd, HttpPacket& in_packet) {
     Socket client_socket;
     if (client_socket.Init(service_host.c_str(), service_port, CLIENT_TIME_OUT) < 0 ||
@@ -189,7 +186,6 @@ private:
   }
 
 private:
-
   string service_host;
   int service_port;
 };

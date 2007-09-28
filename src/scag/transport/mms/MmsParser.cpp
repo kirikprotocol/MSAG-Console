@@ -4,9 +4,39 @@ namespace scag {
 namespace transport {
 namespace mms {
 
-static const char* MULTIPART = "multipart";
-static const size_t MULTIPART_SIZE = strlen(MULTIPART);
+const int BAD_REQUEST = 400;
+const int INTERNAL_SERVER_ERROR = 500;
+const int SERVICE_UNAVAILABLE = 503;
 
+const char* MULTIPART = "multipart";
+const size_t MULTIPART_SIZE = strlen(MULTIPART);
+const char* POST = "POST";
+const size_t POST_SIZE = strlen(POST);
+const char* HTTP = "HTTP";
+const size_t HTTP_SIZE = strlen(HTTP);
+const char* CRLF = "\r\n";
+const size_t CRLF_SIZE = strlen(CRLF);
+const char* HOST = "Host";
+const size_t HOST_SIZE = strlen(HOST);
+const char* CONTENT_TYPE = "Content-Type";
+const char* CHARSET = "charset";
+const size_t CHARSET_SIZE = strlen(CHARSET);
+const char* BOUNDARY = "boundary";
+const size_t BOUNDARY_SIZE = strlen(BOUNDARY);
+const char* HTTP_VERSION = "/1.1 ";
+size_t HTTP_VERSION_SIZE = strlen(HTTP_VERSION);
+size_t HTTP_STATUS_SIZE = 3;
+const char* SPACES_QOUTES = " \n\t\'\"";
+const char* SPACES = " \n\t";
+const char* BOUNDARY_START = "--";
+const size_t BOUNDARY_START_SIZE = strlen(BOUNDARY_START);
+
+const char* OK_RESPONSE = "HTTP/1.1 200 Ok\r\n";
+const char* TEXT_XML = "text/xml";
+const size_t TEXT_XML_SIZE = strlen(TEXT_XML);
+const char* CONTENT_LENGTH = "Content-Length";
+const char* SAMPLE_CONTENT_LENGTH = "nnnn";
+const char* SOAP_ACTION = "SOAPAction";
 
 bool HttpPacket::parse(const char* buf, size_t buf_size) {
   if (!buf || !buf_size) {

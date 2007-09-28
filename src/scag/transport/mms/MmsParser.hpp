@@ -22,61 +22,39 @@ using std::vector;
 using smsc::logger::Logger;
 using smsc::core::buffers::Hash;
 
-//static const char* POST = "POST";
-//static const char* HTTP = "HTTP";
+extern const char* OK_RESPONSE;
+extern const char* TEXT_XML;
+extern const size_t TEXT_XML_SIZE;
+extern const char* CONTENT_LENGTH;
+extern const char* SAMPLE_CONTENT_LENGTH;
+extern const char* SOAP_ACTION;
 
-static const int BAD_REQUEST = 400;
-static const int INTERNAL_SERVER_ERROR = 500;
-static const int SERVICE_UNAVAILABLE = 503;
+extern const int BAD_REQUEST;
+extern const int INTERNAL_SERVER_ERROR;
+extern const int SERVICE_UNAVAILABLE;
 
-static const char* OK_RESPONSE = "HTTP/1.1 200 Ok\r\n";
-static const char* POST = "POST";
-static const char* HTTP = "HTTP";
-static const size_t POST_SIZE = std::strlen(POST);
-static const size_t HTTP_SIZE = std::strlen(HTTP);
-
-static const char* PART_DELIMITER = "\r\n\r\n";
-static const size_t PART_DELIMITER_SIZE = std::strlen(PART_DELIMITER);
-static const char* CRLF = "\r\n";
-static const size_t CRLF_SIZE = std::strlen(CRLF);
-static const char* LF = "\n";
-static const char* CR = "\r";
-//static const char* SPACE = " \r\n\t";
-static const char* COLON = ": ";
-  
-static const char* HOST = "Host";
-static const size_t HOST_SIZE = std::strlen(HOST);
-static const char* CONTENT_TYPE = "Content-Type";
-static const char* TEXT_XML = "text/xml";
-static const char* START = "start";
-static const char* TYPE = "type";
-static const size_t TEXT_XML_SIZE = std::strlen(TEXT_XML);
-static const char* CHARSET = "charset";
-static const size_t CHARSET_SIZE = std::strlen(CHARSET);
-static const char* BOUNDARY = "boundary";
-static const size_t BOUNDARY_SIZE = std::strlen(BOUNDARY);
-
-static const char* HTTP_VERSION = "/1.1 ";
-static size_t HTTP_VERSION_SIZE = std::strlen(HTTP_VERSION);
-static size_t HTTP_STATUS_SIZE = 3;
-
-static const char* LFCRLF = "\n\r\n";
-static size_t LFCRLF_SIZE = std::strlen(HTTP_VERSION);
-
-static const char* ENVELOPE_END = "</env:Envelope>";
-static size_t ENVELOPE_END_SIZE = std::strlen(ENVELOPE_END);
-
-static const char* SPACES_QOUTES = " \n\t\'\"";
-static const char* SPACES = " \n\t";
-static const char* BOUNDARY_START = "--";
-static const size_t BOUNDARY_START_SIZE = std::strlen(BOUNDARY_START);
-
-static const char* CONTENT_LENGTH = "Content-Length";
-static const char* SAMPLE_CONTENT_LENGTH = "nnnn";
-static const size_t CONTENT_LENGTH_SIZE = 14;
-
-static const char* SOAP_ACTION = "SOAPAction";
-
+extern const char* MULTIPART;
+extern const size_t MULTIPART_SIZE;
+extern const char* POST;
+extern const size_t POST_SIZE;
+extern const char* HTTP;
+extern const size_t HTTP_SIZE;
+extern const char* CRLF;
+extern const size_t CRLF_SIZE;
+extern const char* HOST;
+extern const size_t HOST_SIZE;
+extern const char* CONTENT_TYPE;
+extern const char* CHARSET;
+extern const size_t CHARSET_SIZE;
+extern const char* BOUNDARY;
+extern const size_t BOUNDARY_SIZE;
+extern const char* HTTP_VERSION;
+extern size_t HTTP_VERSION_SIZE;
+extern size_t HTTP_STATUS_SIZE;
+extern const char* SPACES_QOUTES;
+extern const char* SPACES;
+extern const char* BOUNDARY_START;
+extern const size_t BOUNDARY_START_SIZE;
 
 struct HttpHeader {
 public:

@@ -32,13 +32,6 @@ namespace scag{
 namespace transport{
 namespace mms{
 
-/*
-namespace xml {
-  static const char* TRUE = "true";
-  static const char* FALSE = "false";
-};
-*/
-
 XERCES_CPP_NAMESPACE_USE
 
 XERCES_CPP_NAMESPACE_BEGIN
