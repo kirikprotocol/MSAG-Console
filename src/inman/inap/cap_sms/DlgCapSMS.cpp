@@ -282,7 +282,7 @@ void CapSMSDlg::onDialogREnd(bool compPresent) //_THROW_NONE
     RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
-        _capState.s.smsEnd |= CAPSmsStateS::idSSF;
+        _capState.s.smsEnd |= CAPSmsStateS::idSCF;
         if (!compPresent) {
             if (_tDPs.front() == EventTypeSMS_sms_CollectedInfo) {
                 smsc_log_error(logger, "%s: T_END_IND, state %s", _logId, State2Str().c_str());
