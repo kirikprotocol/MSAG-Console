@@ -19,7 +19,7 @@ import java.util.zip.ZipInputStream;
 public class Functions
 {
   private static Logger logger = Logger.getLogger(Functions.class.getName());
-  private static final String backup_dir_name = "backup";
+  public static final String backup_dir_name = "backup";
   private static String localEncoding = null;
 
   public static boolean recursiveDeleteFolder(File folder)
@@ -134,7 +134,7 @@ public class Functions
     return file;
   }
 
-  private static final DateFormat suffixDateFormat = new SimpleDateFormat(".yyyy.MM.dd.HH.mm.ss.SSS.'bak'");
+  public static final DateFormat suffixDateFormat = new SimpleDateFormat(".yyyy.MM.dd.HH.mm.ss.SSS.'bak'");
 
   public static synchronized File createNewFilenameForSave(final File filenameToSave)
   {
@@ -215,6 +215,34 @@ public class Functions
       }
     }
   }
+
+    public static final void CheckCreateBackupDir( File file ) throws IOException {
+        MoveFileToBackupDir( file, "checkbackupdir" );
+    }
+
+    public static final void MoveFileToBackupDir(File newCreatedFile, String suffixToDelete) throws IOException
+    {
+      final String suffix = suffixDateFormat.format(new Date());
+
+      // rename old config file to bakup file
+      String newCreated = newCreatedFile.getAbsolutePath();
+      if (newCreatedFile.exists()) {
+        File backupDir = new File(newCreatedFile.getParentFile(), backup_dir_name);
+        if (!backupDir.exists()) {
+          if (!backupDir.mkdirs()) {
+            logger.warn("Could not create backup directory \"" + backupDir.getAbsolutePath() + "\", using \"" + newCreatedFile.getParentFile().getAbsolutePath() + "\"");
+            backupDir = newCreatedFile.getParentFile();
+          }
+        }
+        if( !suffixToDelete.equals("checkbackupdir") ){
+          final File backFile = Functions.createTempFilename(newCreatedFile.getName().substring(0,newCreatedFile.getName().length()-suffixToDelete.length()), suffix, backupDir);
+          if (!new File(newCreated).renameTo(backFile)) {
+              logger.error("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+              throw new IOException("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
+            }
+        }
+      }
+    }
 
   public static final void RenameFile(File original, File destination) throws IOException {
     String configPath = original.getAbsolutePath();
