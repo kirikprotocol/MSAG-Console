@@ -258,7 +258,7 @@ void RuleEngineImpl::ReadRulesFromDir(TransportType transport, const char * dir)
             }
             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0))
             {
-                smsc_log_error(logger,"Skipped '%s' file: Invalid file name",pDirEnt->d_name);
+                smsc_log_info(logger,"Skipped '%s' file: Invalid rule name",pDirEnt->d_name);
             }
         }
         else
@@ -417,8 +417,6 @@ void RuleEngineImpl::process(SCAGCommand& command, Session& session, RuleStatus&
 
 void RuleEngineImpl::processSession(Session& session, RuleStatus& rs)
 {
-    smsc_log_debug(logger,"Process RuleEngineSession with serviceId");
-
     RulesReference rulesRef = getRules();
     Rule ** rulePtr = rulesRef.rules->rules.GetPtr(session.getRuleKey());
 
@@ -534,7 +532,8 @@ void RuleEngineImpl::updateRule(RuleKey& key)
 
     std::string filename = CreateRuleFileName(RulesDir,key);
     Rule* newRule = ParseFile(filename);
-    if (!newRule) throw SCAGException("Cannod load rule %d from file %s", key.serviceId, filename.c_str());
+    if (!newRule) 
+        throw SCAGException("Cannod load rule %d from file %s", key.serviceId, filename.c_str());
 
     Rules *newRules = copyReference();
     Rule** rulePtr = newRules->rules.GetPtr(key);
@@ -556,11 +555,7 @@ void RuleEngineImpl::removeRule(RuleKey& key)
 
     Rule** rulePtr = rules->rules.GetPtr(key);  // Can we do such direct access? TODO: Ensure
     if (!rulePtr)
-    {
         throw SCAGException("Invalid rule id %d to remove", key.serviceId);
-        //smsc_log_warn(logger,"Invalid rule id %d to remove",ruleId);
-        //return;
-    }
 
     Rules *newRules = copyReference();
     rulePtr = newRules->rules.GetPtr(key);
