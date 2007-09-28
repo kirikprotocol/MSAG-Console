@@ -2043,8 +2043,8 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 #ifdef SMSEXTRA
   if(sms->billingRecord==2 && resp->contractType!=smsc::inman::cdr::CDRRecord::abtPrepaid)
   {
-    //
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x3))|0x2);
+    sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
   }
 #endif
 
