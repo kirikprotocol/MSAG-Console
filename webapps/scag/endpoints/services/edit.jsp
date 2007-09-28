@@ -35,7 +35,7 @@
         <c:when test="${bean.transportId == 1}">
             <sm-ep:properties title="sp.edit.properties.smpp_info">
             <br>
-            <sm-ep:txt title="sp.edit.txt.id" name="id" maxlength="60" validation="id"/>
+            <sm-ep:txt title="sp.edit.txt.id" name="id" maxlength="15" validation="id"/>
             <sm-ep:txt title="sp.edit.txt.timeout" name="timeout" maxlength="6" validation="unsigned"/>
             <sm-ep:txt title="sp.edit.txt.password" name="password"/>
             <sm-ep:check title="sp.edit.check.enabled.title" head="sp.edit.check.enabled.head" name="enabled"/>
