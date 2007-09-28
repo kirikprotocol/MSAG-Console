@@ -119,6 +119,7 @@ public class Constants {
             public static final Constants COULDNT_DISCONNECT = new Constants("error.sme.couldnt_disconnect");
             public static final Constants COULDNT_DISCONNECT0 = new Constants("error.sme.couldnt_disconnect0");
             public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.sme.couldnt_save_config");
+            public static final Constants COULDNT_SAVE_NOT_VALID_ID = new Constants("error.sme.couldnt_save_not_valid_id");
         }
 
         public interface services {
