@@ -82,6 +82,7 @@ public abstract class IndexBean extends SmscBean
     try {
       this.pageSize = Integer.decode(pageSize).intValue();
     } catch (NumberFormatException e) {
+      logger.error("Invalid page size: " + pageSize, e);
       this.pageSize = 0;
     }
   }

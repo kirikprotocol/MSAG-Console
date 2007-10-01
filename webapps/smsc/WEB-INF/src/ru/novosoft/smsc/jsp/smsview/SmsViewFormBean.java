@@ -75,6 +75,9 @@ public class SmsViewFormBean extends IndexBean {
     else
       sort = preferences.getSmsviewSortOrder();
 
+    if (pageSize == 0)
+      pageSize = preferences.getSmsviewPageSize();
+
     try {
       view.init(appContext);
     } catch (Throwable t) {
