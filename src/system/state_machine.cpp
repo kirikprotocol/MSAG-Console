@@ -3467,12 +3467,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         smsc_log_info(smsLog,"Remove billing flag for multipart sms msgId=%lld",t.msgId);
         sms.setBillingRecord(0);
-        try{
-          store->replaceSms(t.msgId,sms);
-        }catch(std::exception& e)
-        {
-          smsc_log_warn(smsLog,"Failed to replace sms msgId=%lld:'%s'",t.msgId,e.what());
-        }
       }
     }
   }
