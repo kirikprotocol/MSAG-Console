@@ -134,11 +134,11 @@ public class Edit extends EditBean
     protected void save() throws SCAGJspException {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
-        if( !validateString(id) ){
-            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID, "id");
+        if( !validateString(id, VALIDATION_TYPE_ID) ){
+            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID, "ID");
         }
-        if( !validateString(bindSystemId) ){
-            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID, "bind System Id");
+        if( !validateString(bindSystemId, VALIDATION_TYPE_ID) ){
+            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID, "bind system Id");
         }
         if (null == password) password = "";
 
@@ -170,11 +170,16 @@ public class Edit extends EditBean
         throw new DoneException();
     }
 
-    public boolean validateString( String string )
+    private final static int VALIDATION_TYPE_ID = 0;
+
+    public boolean validateString( String string, int type )
     {
-        Pattern pattern = Pattern.compile("[a-zA-Z0-9]{1,15}");
-        Matcher matcher = pattern.matcher(string);
-        return matcher.matches();
+        switch (type){
+            case VALIDATION_TYPE_ID:
+                return Pattern.matches( "[a-zA-Z_0-9]{1,15}", string );
+            default:
+                return true;
+        }
     }
 
     public String[] getSmes() {

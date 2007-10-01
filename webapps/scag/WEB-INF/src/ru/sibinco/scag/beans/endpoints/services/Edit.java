@@ -4,6 +4,7 @@
 package ru.sibinco.scag.beans.endpoints.services;
 
 import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.Scag;
@@ -112,7 +113,10 @@ public class Edit extends EditBean {
     protected void save() throws SCAGJspException {
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
-        if( !validateString(id) ){
+//        if( Functions.valdateString( id, Functions.VALIDATION_TYPE_ID )){
+//            throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID);
+//        }
+        if( !validateString(id, VALIDATION_TYPE_ID) ){
             throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID);
         }
         if (null == password || getPassword().length() == 0)
@@ -138,11 +142,16 @@ public class Edit extends EditBean {
         throw new DoneException();
     }
 
-    public boolean validateString( String string )
+    private final static int VALIDATION_TYPE_ID = 0;
+
+    public boolean validateString( String string, int type )
     {
-        Pattern pattern = Pattern.compile("[a-zA-Z_0-9]{1,15}");
-        Matcher matcher = pattern.matcher(string);
-        return matcher.matches();
+        switch (type){
+            case VALIDATION_TYPE_ID:
+                return Pattern.matches( "[a-zA-Z_0-9]{1,15}", string );
+            default:
+                return true;
+        }
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
