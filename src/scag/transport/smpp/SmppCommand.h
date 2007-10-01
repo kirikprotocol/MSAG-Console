@@ -319,6 +319,7 @@ struct SmsCommand{
 namespace SmppCommandFlags{
     const uint8_t NOTIFICATION_RECEIPT = 1;
     const uint8_t SERVICE_INITIATED_USSD_DIALOG = 2;
+    const uint8_t EXPIRED_COMMAND = 4;
 };
 
 struct SmppEntity;
@@ -329,6 +330,7 @@ struct _SmppCommand
   mutable int ref_count;
   CommandId cmdid;
   uint32_t dialogId;
+  uint32_t orgDialogId;
   void* dta;
   int status;
   Mutex mutex;
@@ -339,15 +341,15 @@ struct _SmppCommand
   SessionPtr session;
   uint16_t usr;
   uint32_t flags;
-  
+
   static Logger* logger;
   static Mutex loggerMutex;
-  
-        static uint32_t commandCounter; // for debugging
 
-        static Mutex    cntMutex;        
-        static uint32_t stuid;
-        uint32_t uid;
+  static uint32_t commandCounter; // for debugging
+
+  static Mutex    cntMutex;
+  static uint32_t stuid;
+  uint32_t uid;
 
   ~_SmppCommand();
 
@@ -368,11 +370,15 @@ struct _SmppCommand
             uid = ++stuid;
         }
         smsc_log_debug(logger, "Command create: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
-    }        
+    }
   }
 
   uint32_t get_dialogId() const { return dialogId; }
   void set_dialogId(uint32_t dlgId) { dialogId=dlgId; }
+
+  uint32_t get_orgDialogId() const { return orgDialogId; }
+  void set_orgDialogId(uint32_t dlgId) { orgDialogId=dlgId; }
+
 
   CommandId get_commandId() const { return cmdid; }
 
@@ -647,7 +653,7 @@ public:
   }
 
   void setOrgCmd(SmppCommand& o);
-  void getOrgCmd(SmppCommand& o);  
+  void getOrgCmd(SmppCommand& o);
   bool hasOrgCmd() { return bHasOrgCmd; };
 
   int expiredUid;

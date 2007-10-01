@@ -46,7 +46,6 @@ struct StateMachine::ResponseRegistry
 
   struct RegValue {
     SmppCommand cmd;
-    int dlgId;
     TimeOutList::iterator it;
   };
   struct HashFunc{
@@ -95,7 +94,6 @@ struct StateMachine::ResponseRegistry
     toList.push_back(lv);
     val.cmd = cmd;
     val.it = toList.end(); val.it--;
-    val.dlgId = cmd->get_dialogId();
     cmd->set_dialogId(seq);
     reg.Insert(key,val);
     return true;
@@ -113,7 +111,7 @@ struct StateMachine::ResponseRegistry
       return false;
     }
     cmd = ptr->cmd;
-    cmd->set_dialogId(ptr->dlgId);
+    //cmd->set_dialogId(ptr->dlgId);
     toList.erase(ptr->it);
     reg.Delete(key);
     if(cmd.getDstEntity()->info.outQueueLimit)
@@ -150,7 +148,8 @@ struct StateMachine::ResponseRegistry
     }
     toList.front().expired=true;
     cmd = ptr->cmd;
-    cmd->set_dialogId(key.seq);
+    cmd->setFlag(SmppCommandFlags::EXPIRED_COMMAND);
+    //cmd->set_dialogId(key.seq);
     uid=key.uid;
     return true;
   }
@@ -238,6 +237,9 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
+
+    cmd->set_orgDialogId(cmd->get_dialogId());
+
 
     do{
       dst=routeMan->RouteSms(src->getSystemId(),sms.getOriginatingAddress(),sms.getDestinationAddress(),ri);
@@ -555,7 +557,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       cmd->set_serviceId(orgCmd->get_serviceId());
       cmd->set_operationId(orgCmd->get_operationId());
       cmd->get_resp()->set_dir(dsdSc2Srv);
-      cmd->set_dialogId(orgCmd->get_dialogId());
+      cmd->set_dialogId(orgCmd->get_orgDialogId());
 
       sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
       sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
@@ -705,6 +707,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     SMS& sms=*(cmd->get_sms());
     SmsCommand& smscmd=cmd->get_smsCommand();
     scag::sessions::SessionManager& sm = scag::sessions::SessionManager::Instance();
+    cmd->set_orgDialogId(cmd->get_dialogId());
+
 
     if(cmd->flagSet(SmppCommandFlags::NOTIFICATION_RECEIPT))
     {
@@ -1021,7 +1025,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       cmd->set_serviceId(orgCmd->get_serviceId());
       cmd->set_operationId(orgCmd->get_operationId());
       cmd->get_resp()->set_dir(dsdSrv2Sc);
-      cmd->set_dialogId(orgCmd->get_dialogId());
+      cmd->set_dialogId(orgCmd->get_orgDialogId());
 
       sms->setOriginatingAddress(orgCmd->get_smsCommand().orgSrc);
       sms->setDestinationAddress(orgCmd->get_smsCommand().orgDst);
@@ -1133,7 +1137,7 @@ void StateMachine::SubmitResp(SmppCommand& cmd,int status)
   cmd.getEntity()->putCommand(
     SmppCommand::makeSubmitSmResp(
       "0",
-      cmd->get_dialogId(),
+      cmd->get_orgDialogId(),
       status,
       cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM)
     )
@@ -1145,7 +1149,7 @@ void StateMachine::DeliveryResp(SmppCommand& cmd,int status)
   cmd.getEntity()->putCommand(
     SmppCommand::makeDeliverySmResp(
       "0",
-      cmd->get_dialogId(),
+      cmd->get_orgDialogId(),
       status
     )
   );
@@ -1156,7 +1160,7 @@ void StateMachine::DataResp(SmppCommand& cmd,int status)
   cmd.getEntity()->putCommand(
     SmppCommand::makeDataSmResp(
       "0",
-      cmd->get_dialogId(),
+      cmd->get_orgDialogId(),
       status
     )
   );
@@ -1180,6 +1184,9 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     smscmd.orgSrc=sms.getOriginatingAddress();
     smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
+
+    cmd->set_orgDialogId(cmd->get_dialogId());
+
 
     if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
     {
@@ -1423,7 +1430,7 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
 
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
-      cmd->set_dialogId(orgCmd->get_dialogId());
+      cmd->set_dialogId(orgCmd->get_orgDialogId());
 
       cmd->get_resp()->setOrgCmd(orgCmd);
 

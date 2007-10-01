@@ -76,7 +76,7 @@ void SmppSocket::processInput()
     }
     sock->GetPeer(buf);
     dump->log(smsc::logger::Logger::LEVEL_DEBUG, "in from %s(%s): %s",
-	      buf, systemId.c_str(), out.c_str());
+        buf, systemId.c_str(), out.c_str());
   }
   SmppStream s;
   assignStreamWith(&s,rdBuffer,rdBufUsed,true);
@@ -216,6 +216,7 @@ void SmppSocket::sendData()
     MutexGuard mg(outMtx);
     if(outQueue.Count()==0)return;
     outQueue.Pop(cmd);
+    if(cmd->flagSet(SmppCommandFlags::EXPIRED_COMMAND))return;
   }
   pdu=cmd.makePdu();
   int sz=calcSmppPacketLength(pdu);
@@ -226,7 +227,7 @@ void SmppSocket::sendData()
     wrBufSize=sz;
   }
   smsc_log_debug(log,"Preparing to send %x/%d",
-		 pdu->get_commandId(), pdu->get_sequenceNumber());
+     pdu->get_commandId(), pdu->get_sequenceNumber());
   SmppStream st;
   assignStreamWith(&st,wrBuffer,wrBufSize,false);
   if(!fillSmppPdu(&st,pdu))
@@ -245,7 +246,7 @@ void SmppSocket::sendData()
     }
     sock->GetPeer(buf);
     dump->log(smsc::logger::Logger::LEVEL_DEBUG, "out to %s(%s),%d: %s",
-	      buf, systemId.c_str(), outQueue.Count(), out.c_str());
+        buf, systemId.c_str(), outQueue.Count(), out.c_str());
   }
   wrBufSent=0;
   wrBufUsed=sz;
