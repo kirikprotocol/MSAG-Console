@@ -310,7 +310,6 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setName(String name) {
-        logger.error( "setName:'" + name + "'" );
         this.name = name;
     }
 
@@ -380,7 +379,6 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setParentId(String parentId) {
-        logger.error( "setParentId:'" + parentId + "'" );
         this.parentId = parentId;
     }
 
@@ -485,7 +483,6 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void setId(long id) {
-        logger.error("setId:'" + id +"'");
         this.id = id;
     }
 
