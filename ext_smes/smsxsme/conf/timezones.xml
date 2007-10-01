@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<config>
+  <param name="default_timezone" type="string">180,Europe/Moscow</param>
+
+  <section name="subjects">
+    <param name="Дальневосточный макрорегион - Биробиджан" type="string">600,Asia/Vladivostok</param>
+    <param name="Дальневосточный макрорегион - Благовещенск" type="string">600,Asia/Vladivostok</param>
+    <param name="Дальневосточный макрорегион - Владивосток" type="string">600,Asia/Vladivostok</param>
+    <param name="Дальневосточный макрорегион - Иркутск" type="string">480,Asia/Irkutsk</param>
+    <param name="Дальневосточный макрорегион - Комсомольск-на-Амуре" type="string">600,Asia/Vladivostok</param>
+    <param name="Дальневосточный макрорегион - Магадан" type="string">660,Asia/Magadan</param>
+    <param name="Дальневосточный макрорегион - Мирный" type="string">540,Asia/Yakutsk</param>
+    <param name="Дальневосточный макрорегион - Нерюнгри" type="string">540,Asia/Yakutsk</param>
+    <param name="Дальневосточный макрорегион - Петропавловск-Камчатский" type="string">720,Asia/Kamchatka</param>
+    <param name="Дальневосточный макрорегион - Улан-Удэ" type="string">480,Asia/Irkutsk</param>
+    <param name="Дальневосточный макрорегион - Хабаровск" type="string">600,Asia/Vladivostok</param>
+    <param name="Дальневосточный макрорегион - Чита" type="string">480,Asia/Irkutsk</param>
+    <param name="Дальневосточный макрорегион - Южно-Сахалинск" type="string">600,Asia/Vladivostok</param>
+    <param name="Дальневосточный макрорегион - Якутск" type="string">540,Asia/Yakutsk</param>
+    <param name="Москва" type="string">180,Europe/Moscow</param>
+    <param name="Приволжский С-З макрорегион" type="string">180,Europe/Moscow</param>
+    <param name="Приволжский Ю-В макрорегион" type="string">180,Europe/Moscow</param>
+    <param name="Северо-Западный макрорегион" type="string">180,Europe/Moscow</param>
+    <param name="Сибирский макрорегион - Абакан" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Барнаул" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Горно-Алтайск" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Кемерово" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Красноярск" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Кызыл" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Новокузнецк" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Новосибирск" type="string">360,Asia/Novosibirsk</param>
+    <param name="Сибирский макрорегион - Норильск" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Сибирский макрорегион - Омск" type="string">360,Asia/Omsk</param>
+    <param name="Сибирский макрорегион - Томск" type="string">420,Asia/Krasnoyarsk</param>
+    <param name="Уральский макрорегион" type="string">300,Asia/Yekaterinburg</param>
+    <param name="Центральный макрорегион" type="string">180,Europe/Moscow</param>
+    <param name="Центральный макрорегион Реком" type="string">180,Europe/Moscow</param>
+  </section>
+</config>

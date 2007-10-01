@@ -1,0 +1,17 @@
+package ru.sibinco.smsx.engine.service.sender.datasource;
+
+import com.eyeline.sme.utils.ds.DataSourceException;
+
+/**
+ * User: artem
+ * Date: 06.07.2007
+ */
+
+public interface SenderDataSource {
+
+  public SenderMessage loadSenderMessageById(int id) throws DataSourceException;
+  public void saveSenderMessage(final SenderMessage msg) throws DataSourceException;
+  public void removeSenderMessage(final SenderMessage msg) throws DataSourceException;
+
+  public void release();
+}

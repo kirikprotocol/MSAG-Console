@@ -1,0 +1,2874 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<routes>
+  <subject_def id="sponsored" defSme="sponsored">
+    <notes></notes>
+       <mask value=".0.1.0015"/>
+  </subject_def>
+  <subject_def id="Центральный макрорегион Реком" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7910747????"/>
+       <mask value=".1.1.791030?????"/>
+       <mask value=".1.1.791928?????"/>
+       <mask value=".1.1.791073701??"/>
+       <mask value=".1.1.791921?????"/>
+       <mask value=".1.1.791021?????"/>
+       <mask value=".1.1.7910738????"/>
+       <mask value=".1.1.7910745????"/>
+       <mask value=".1.1.791925?????"/>
+       <mask value=".1.1.79107487???"/>
+       <mask value=".1.1.791917?????"/>
+       <mask value=".1.1.7910744????"/>
+       <mask value=".1.1.79107463???"/>
+       <mask value=".1.1.791580?????"/>
+       <mask value=".1.1.7910734????"/>
+       <mask value=".1.1.7910742????"/>
+       <mask value=".1.1.79107462???"/>
+       <mask value=".1.1.791035?????"/>
+       <mask value=".1.1.79107466???"/>
+       <mask value=".1.1.791073700??"/>
+       <mask value=".1.1.791918?????"/>
+       <mask value=".1.1.7910735????"/>
+       <mask value=".1.1.791036?????"/>
+       <mask value=".1.1.7910741????"/>
+       <mask value=".1.1.791557?????"/>
+       <mask value=".1.1.791020?????"/>
+       <mask value=".1.1.7910737????"/>
+       <mask value=".1.1.791031?????"/>
+       <mask value=".1.1.7910732????"/>
+       <mask value=".1.1.791553?????"/>
+       <mask value=".1.1.791550?????"/>
+       <mask value=".1.1.7910739????"/>
+       <mask value=".1.1.79107465???"/>
+       <mask value=".1.1.79107484???"/>
+       <mask value=".1.1.791027?????"/>
+       <mask value=".1.1.791923?????"/>
+       <mask value=".1.1.79107467???"/>
+       <mask value=".1.1.791919?????"/>
+       <mask value=".1.1.791926?????"/>
+       <mask value=".1.1.791929?????"/>
+       <mask value=".1.1.7910025????"/>
+       <mask value=".1.1.79107460???"/>
+       <mask value=".1.1.7910730????"/>
+       <mask value=".1.1.791555?????"/>
+       <mask value=".1.1.7910740????"/>
+       <mask value=".1.1.79107482???"/>
+       <mask value=".1.1.791023?????"/>
+       <mask value=".1.1.791033?????"/>
+       <mask value=".1.1.791920?????"/>
+       <mask value=".1.1.791073702??"/>
+       <mask value=".1.1.7910731????"/>
+       <mask value=".1.1.79107464???"/>
+       <mask value=".1.1.79107483???"/>
+       <mask value=".1.1.7910736????"/>
+       <mask value=".1.1.79107468???"/>
+       <mask value=".1.1.79107461???"/>
+       <mask value=".1.1.7910749????"/>
+       <mask value=".1.1.791916?????"/>
+       <mask value=".1.1.79107480???"/>
+       <mask value=".1.1.791034?????"/>
+       <mask value=".1.1.79107485???"/>
+       <mask value=".1.1.791556?????"/>
+       <mask value=".1.1.79107481???"/>
+       <mask value=".1.1.7910733????"/>
+       <mask value=".1.1.791585?????"/>
+       <mask value=".1.1.791927?????"/>
+       <mask value=".1.1.791558?????"/>
+       <mask value=".1.1.791026?????"/>
+       <mask value=".1.1.791032?????"/>
+       <mask value=".1.1.791551?????"/>
+       <mask value=".1.1.791022?????"/>
+       <mask value=".1.1.79107469???"/>
+       <mask value=".1.1.791552?????"/>
+       <mask value=".1.1.791029?????"/>
+       <mask value=".1.1.7910743????"/>
+       <mask value=".1.1.791025?????"/>
+       <mask value=".1.1.791924?????"/>
+       <mask value=".1.1.791554?????"/>
+       <mask value=".1.1.791922?????"/>
+       <mask value=".1.1.79107486???"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Нерюнгри" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7411472????"/>
+       <mask value=".1.1.7914242????"/>
+       <mask value=".1.1.791424?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Мирный" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7902159????"/>
+       <mask value=".1.1.7914259????"/>
+       <mask value=".1.1.791425?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791498?????"/>
+       <mask value=".1.1.791428?????"/>
+       <mask value=".1.1.791421?????"/>
+       <mask value=".1.1.7411472????"/>
+       <mask value=".1.1.7902575????"/>
+       <mask value=".1.1.791429?????"/>
+       <mask value=".1.1.791427?????"/>
+       <mask value=".1.1.7902531????"/>
+       <mask value=".1.1.791456?????"/>
+       <mask value=".1.1.791438?????"/>
+       <mask value=".1.1.791467?????"/>
+       <mask value=".1.1.791488?????"/>
+       <mask value=".1.1.791490?????"/>
+       <mask value=".1.1.791465?????"/>
+       <mask value=".1.1.7411278????"/>
+       <mask value=".1.1.791489?????"/>
+       <mask value=".1.1.7914185????"/>
+       <mask value=".1.1.7914187????"/>
+       <mask value=".1.1.791477?????"/>
+       <mask value=".1.1.7914189????"/>
+       <mask value=".1.1.7902571????"/>
+       <mask value=".1.1.791495?????"/>
+       <mask value=".1.1.791448?????"/>
+       <mask value=".1.1.791475?????"/>
+       <mask value=".1.1.7908713????"/>
+       <mask value=".1.1.791455?????"/>
+       <mask value=".1.1.7902186????"/>
+       <mask value=".1.1.791476?????"/>
+       <mask value=".1.1.791472?????"/>
+       <mask value=".1.1.791420?????"/>
+       <mask value=".1.1.7902187????"/>
+       <mask value=".1.1.791468?????"/>
+       <mask value=".1.1.791461?????"/>
+       <mask value=".1.1.791425?????"/>
+       <mask value=".1.1.7902157????"/>
+       <mask value=".1.1.791479?????"/>
+       <mask value=".1.1.7411276????"/>
+       <mask value=".1.1.7914259????"/>
+       <mask value=".1.1.791471?????"/>
+       <mask value=".1.1.7411279????"/>
+       <mask value=".1.1.791460?????"/>
+       <mask value=".1.1.791457?????"/>
+       <mask value=".1.1.791469?????"/>
+       <mask value=".1.1.791487?????"/>
+       <mask value=".1.1.791494?????"/>
+       <mask value=".1.1.791470?????"/>
+       <mask value=".1.1.7902185????"/>
+       <mask value=".1.1.7914188????"/>
+       <mask value=".1.1.791415?????"/>
+       <mask value=".1.1.791486?????"/>
+       <mask value=".1.1.791424?????"/>
+       <mask value=".1.1.791447?????"/>
+       <mask value=".1.1.791439?????"/>
+       <mask value=".1.1.7902574????"/>
+       <mask value=".1.1.791473?????"/>
+       <mask value=".1.1.7902550????"/>
+       <mask value=".1.1.791454?????"/>
+       <mask value=".1.1.7902572????"/>
+       <mask value=".1.1.791451?????"/>
+       <mask value=".1.1.791417?????"/>
+       <mask value=".1.1.791419?????"/>
+       <mask value=".1.1.791446?????"/>
+       <mask value=".1.1.791478?????"/>
+       <mask value=".1.1.791483?????"/>
+       <mask value=".1.1.7902570????"/>
+       <mask value=".1.1.791464?????"/>
+       <mask value=".1.1.791474?????"/>
+       <mask value=".1.1.791463?????"/>
+       <mask value=".1.1.791445?????"/>
+       <mask value=".1.1.791452?????"/>
+       <mask value=".1.1.7914538????"/>
+       <mask value=".1.1.7902552????"/>
+       <mask value=".1.1.7908710????"/>
+       <mask value=".1.1.791458?????"/>
+       <mask value=".1.1.791422?????"/>
+       <mask value=".1.1.791450?????"/>
+       <mask value=".1.1.791484?????"/>
+       <mask value=".1.1.7908711????"/>
+       <mask value=".1.1.7902159????"/>
+       <mask value=".1.1.791423?????"/>
+       <mask value=".1.1.791493?????"/>
+       <mask value=".1.1.7914186????"/>
+       <mask value=".1.1.791481?????"/>
+       <mask value=".1.1.7908714????"/>
+       <mask value=".1.1.791459?????"/>
+       <mask value=".1.1.790459?????"/>
+       <mask value=".1.1.791449?????"/>
+       <mask value=".1.1.791497?????"/>
+       <mask value=".1.1.7914242????"/>
+       <mask value=".1.1.791416?????"/>
+       <mask value=".1.1.791485?????"/>
+       <mask value=".1.1.7908712????"/>
+       <mask value=".1.1.7902158????"/>
+       <mask value=".1.1.7411277????"/>
+       <mask value=".1.1.791466?????"/>
+       <mask value=".1.1.7914184????"/>
+       <mask value=".1.1.791418?????"/>
+       <mask value=".1.1.791491?????"/>
+       <mask value=".1.1.791496?????"/>
+       <mask value=".1.1.791462?????"/>
+       <mask value=".1.1.7902551????"/>
+       <mask value=".1.1.7902573????"/>
+       <mask value=".1.1.791492?????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Кызыл" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791335?????"/>
+       <mask value=".1.1.791334?????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Новосибирск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791393?????"/>
+       <mask value=".1.1.791370?????"/>
+       <mask value=".1.1.791301?????"/>
+       <mask value=".1.1.7913986????"/>
+       <mask value=".1.1.791391?????"/>
+       <mask value=".1.1.791300?????"/>
+       <mask value=".1.1.791373?????"/>
+       <mask value=".1.1.791394?????"/>
+       <mask value=".1.1.7913999????"/>
+       <mask value=".1.1.791375?????"/>
+       <mask value=".1.1.791395?????"/>
+       <mask value=".1.1.791339?????"/>
+       <mask value=".1.1.7913998????"/>
+       <mask value=".1.1.7913989????"/>
+       <mask value=".1.1.7913984????"/>
+       <mask value=".1.1.791378?????"/>
+       <mask value=".1.1.791371?????"/>
+       <mask value=".1.1.7913982????"/>
+       <mask value=".1.1.791320?????"/>
+       <mask value=".1.1.791389?????"/>
+       <mask value=".1.1.7913981????"/>
+       <mask value=".1.1.791377?????"/>
+       <mask value=".1.1.791390?????"/>
+       <mask value=".1.1.7913987????"/>
+       <mask value=".1.1.791337?????"/>
+       <mask value=".1.1.791379?????"/>
+       <mask value=".1.1.7913983????"/>
+       <mask value=".1.1.791374?????"/>
+       <mask value=".1.1.7913985????"/>
+       <mask value=".1.1.791372?????"/>
+       <mask value=".1.1.791376?????"/>
+       <mask value=".1.1.7913980????"/>
+       <mask value=".1.1.791392?????"/>
+       <mask value=".1.1.791338?????"/>
+  </subject_def>
+  <subject_def id="smsx divert" defSme="smsx">
+    <notes></notes>
+       <mask value=".0.1.00012"/>
+       <mask value=".0.1.00011"/>
+  </subject_def>
+  <subject_def id="Центральный макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791016?????"/>
+       <mask value=".1.1.7910531????"/>
+       <mask value=".1.1.791060?????"/>
+       <mask value=".1.1.7910649????"/>
+       <mask value=".1.1.79105390???"/>
+       <mask value=".1.1.791075?????"/>
+       <mask value=".1.1.791037?????"/>
+       <mask value=".1.1.7910702????"/>
+       <mask value=".1.1.7910644????"/>
+       <mask value=".1.1.7910664????"/>
+       <mask value=".1.1.791017?????"/>
+       <mask value=".1.1.791584?????"/>
+       <mask value=".1.1.7910665????"/>
+       <mask value=".1.1.791067?????"/>
+       <mask value=".1.1.7910669????"/>
+       <mask value=".1.1.7910646????"/>
+       <mask value=".1.1.791059?????"/>
+       <mask value=".1.1.791086?????"/>
+       <mask value=".1.1.791099?????"/>
+       <mask value=".1.1.791592?????"/>
+       <mask value=".1.1.791588?????"/>
+       <mask value=".1.1.791063?????"/>
+       <mask value=".1.1.7910706????"/>
+       <mask value=".1.1.7910707????"/>
+       <mask value=".1.1.791590?????"/>
+       <mask value=".1.1.791572?????"/>
+       <mask value=".1.1.7910537????"/>
+       <mask value=".1.1.7910538????"/>
+       <mask value=".1.1.791009?????"/>
+       <mask value=".1.1.7910663????"/>
+       <mask value=".1.1.7910532????"/>
+       <mask value=".1.1.791011?????"/>
+       <mask value=".1.1.791587?????"/>
+       <mask value=".1.1.791071?????"/>
+       <mask value=".1.1.7910701????"/>
+       <mask value=".1.1.791080?????"/>
+       <mask value=".1.1.791077?????"/>
+       <mask value=".1.1.791573?????"/>
+       <mask value=".1.1.791058?????"/>
+       <mask value=".1.1.7910666????"/>
+       <mask value=".1.1.791091?????"/>
+       <mask value=".1.1.791583?????"/>
+       <mask value=".1.1.79105391???"/>
+       <mask value=".1.1.7910667????"/>
+       <mask value=".1.1.791591?????"/>
+       <mask value=".1.1.791054?????"/>
+       <mask value=".1.1.79105393???"/>
+       <mask value=".1.1.791090?????"/>
+       <mask value=".1.1.7910647????"/>
+       <mask value=".1.1.791061?????"/>
+       <mask value=".1.1.791582?????"/>
+       <mask value=".1.1.7910708????"/>
+       <mask value=".1.1.791094?????"/>
+       <mask value=".1.1.7910648????"/>
+       <mask value=".1.1.7910534????"/>
+       <mask value=".1.1.791597?????"/>
+       <mask value=".1.1.791095?????"/>
+       <mask value=".1.1.7910709????"/>
+       <mask value=".1.1.791596?????"/>
+       <mask value=".1.1.7910704????"/>
+       <mask value=".1.1.791586?????"/>
+       <mask value=".1.1.791559?????"/>
+       <mask value=".1.1.7910668????"/>
+       <mask value=".1.1.791051?????"/>
+       <mask value=".1.1.79105392???"/>
+       <mask value=".1.1.791571?????"/>
+       <mask value=".1.1.791092?????"/>
+       <mask value=".1.1.79105394???"/>
+       <mask value=".1.1.791083?????"/>
+       <mask value=".1.1.791563?????"/>
+       <mask value=".1.1.79105396???"/>
+       <mask value=".1.1.7910705????"/>
+       <mask value=".1.1.7910536????"/>
+       <mask value=".1.1.791055?????"/>
+       <mask value=".1.1.7910530????"/>
+       <mask value=".1.1.7910642????"/>
+       <mask value=".1.1.791598?????"/>
+       <mask value=".1.1.7910640????"/>
+       <mask value=".1.1.7910700????"/>
+       <mask value=".1.1.791575?????"/>
+       <mask value=".1.1.791566?????"/>
+       <mask value=".1.1.791056?????"/>
+       <mask value=".1.1.7910641????"/>
+       <mask value=".1.1.791576?????"/>
+       <mask value=".1.1.791093?????"/>
+       <mask value=".1.1.791589?????"/>
+       <mask value=".1.1.7910703????"/>
+       <mask value=".1.1.791579?????"/>
+       <mask value=".1.1.7910645????"/>
+       <mask value=".1.1.791069?????"/>
+       <mask value=".1.1.791019?????"/>
+       <mask value=".1.1.791050?????"/>
+       <mask value=".1.1.7910662????"/>
+       <mask value=".1.1.791015?????"/>
+       <mask value=".1.1.791052?????"/>
+       <mask value=".1.1.7910533????"/>
+       <mask value=".1.1.791084?????"/>
+       <mask value=".1.1.791081?????"/>
+       <mask value=".1.1.791057?????"/>
+       <mask value=".1.1.791577?????"/>
+       <mask value=".1.1.791599?????"/>
+       <mask value=".1.1.791578?????"/>
+       <mask value=".1.1.791076?????"/>
+       <mask value=".1.1.791562?????"/>
+       <mask value=".1.1.7910661????"/>
+       <mask value=".1.1.791098?????"/>
+       <mask value=".1.1.791570?????"/>
+       <mask value=".1.1.7910535????"/>
+       <mask value=".1.1.791065?????"/>
+       <mask value=".1.1.791560?????"/>
+       <mask value=".1.1.791018?????"/>
+       <mask value=".1.1.791565?????"/>
+       <mask value=".1.1.791068?????"/>
+       <mask value=".1.1.791062?????"/>
+       <mask value=".1.1.791082?????"/>
+       <mask value=".1.1.791569?????"/>
+       <mask value=".1.1.79105395???"/>
+       <mask value=".1.1.791564?????"/>
+       <mask value=".1.1.791085?????"/>
+       <mask value=".1.1.791568?????"/>
+       <mask value=".1.1.791096?????"/>
+       <mask value=".1.1.791072?????"/>
+       <mask value=".1.1.791574?????"/>
+       <mask value=".1.1.791078?????"/>
+       <mask value=".1.1.791561?????"/>
+       <mask value=".1.1.791581?????"/>
+       <mask value=".1.1.7910643????"/>
+       <mask value=".1.1.791097?????"/>
+       <mask value=".1.1.791567?????"/>
+       <mask value=".1.1.7910660????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Кемерово" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791330?????"/>
+       <mask value=".1.1.791328?????"/>
+       <mask value=".1.1.791340?????"/>
+       <mask value=".1.1.791329?????"/>
+       <mask value=".1.1.791343?????"/>
+       <mask value=".1.1.791312?????"/>
+  </subject_def>
+  <subject_def id="megafon abonents" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7926???????"/>
+  </subject_def>
+  <subject_def id="profiler" defSme="profiler">
+    <notes></notes>
+       <mask value=".5.0.ussd:105"/>
+       <mask value=".0.1.0"/>
+       <mask value=".0.1.0055"/>
+  </subject_def>
+  <subject_def id="1971" defSme="1971">
+    <notes></notes>
+       <mask value=".0.1.1971"/>
+       <mask value=".1.1.79150748822"/>
+  </subject_def>
+  <subject_def id="test" defSme="test">
+    <notes></notes>
+       <mask value=".0.1.0123"/>
+  </subject_def>
+  <subject_def id="Абонент Б" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.?????????????"/>
+       <mask value=".1.1.????????"/>
+       <mask value=".1.1.???????????"/>
+       <mask value=".1.1.??????????"/>
+       <mask value=".1.1.??????????????"/>
+       <mask value=".1.1.????????????"/>
+       <mask value=".1.1.?????????"/>
+       <mask value=".1.1.???????????????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Норильск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7913501????"/>
+       <mask value=".1.1.7913525????"/>
+       <mask value=".1.1.7913506????"/>
+       <mask value=".1.1.7913505????"/>
+       <mask value=".1.1.7913530????"/>
+       <mask value=".1.1.7913503????"/>
+       <mask value=".1.1.7913526????"/>
+       <mask value=".1.1.7913531????"/>
+       <mask value=".1.1.7913502????"/>
+       <mask value=".1.1.791316?????"/>
+       <mask value=".1.1.791349?????"/>
+       <mask value=".1.1.7913508????"/>
+       <mask value=".1.1.7913500????"/>
+       <mask value=".1.1.7913504????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Красноярск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7913538????"/>
+       <mask value=".1.1.7913537????"/>
+       <mask value=".1.1.791383?????"/>
+       <mask value=".1.1.791317?????"/>
+       <mask value=".1.1.7913507????"/>
+       <mask value=".1.1.7913529????"/>
+       <mask value=".1.1.791318?????"/>
+       <mask value=".1.1.7913521????"/>
+       <mask value=".1.1.7913536????"/>
+       <mask value=".1.1.791319?????"/>
+       <mask value=".1.1.7913532????"/>
+       <mask value=".1.1.7913535????"/>
+       <mask value=".1.1.7913539????"/>
+       <mask value=".1.1.7913509????"/>
+       <mask value=".1.1.791351?????"/>
+       <mask value=".1.1.7913520????"/>
+       <mask value=".1.1.7913528????"/>
+       <mask value=".1.1.7913534????"/>
+       <mask value=".1.1.7913533????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Комсомольск-на-Амуре" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7914189????"/>
+       <mask value=".1.1.7914184????"/>
+       <mask value=".1.1.7914188????"/>
+       <mask value=".1.1.791416?????"/>
+       <mask value=".1.1.7914185????"/>
+       <mask value=".1.1.791417?????"/>
+       <mask value=".1.1.7914187????"/>
+       <mask value=".1.1.7914186????"/>
+  </subject_def>
+  <subject_def id="Южный макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7988769????"/>
+       <mask value=".1.1.7988523????"/>
+       <mask value=".1.1.7988509????"/>
+       <mask value=".1.1.7988382????"/>
+       <mask value=".1.1.791998?????"/>
+       <mask value=".1.1.7988966????"/>
+       <mask value=".1.1.7988652????"/>
+       <mask value=".1.1.791878?????"/>
+       <mask value=".1.1.791877?????"/>
+       <mask value=".1.1.791881?????"/>
+       <mask value=".1.1.791719?????"/>
+       <mask value=".1.1.791784?????"/>
+       <mask value=".1.1.791954?????"/>
+       <mask value=".1.1.7988602????"/>
+       <mask value=".1.1.79185??????"/>
+       <mask value=".1.1.791772?????"/>
+       <mask value=".1.1.7917000????"/>
+       <mask value=".1.1.79182??????"/>
+       <mask value=".1.1.7988312????"/>
+       <mask value=".1.1.791733?????"/>
+       <mask value=".1.1.791768?????"/>
+       <mask value=".1.1.7862988????"/>
+       <mask value=".1.1.791876?????"/>
+       <mask value=".1.1.798823?????"/>
+       <mask value=".1.1.791880?????"/>
+       <mask value=".1.1.7861???????"/>
+       <mask value=".1.1.7988953????"/>
+       <mask value=".1.1.791764?????"/>
+       <mask value=".1.1.7988379????"/>
+       <mask value=".1.1.791874?????"/>
+       <mask value=".1.1.791872?????"/>
+       <mask value=".1.1.7988594????"/>
+       <mask value=".1.1.79183??????"/>
+       <mask value=".1.1.7862???????"/>
+       <mask value=".1.1.7988674????"/>
+       <mask value=".1.1.79180??????"/>
+       <mask value=".1.1.791875?????"/>
+       <mask value=".1.1.7988473????"/>
+       <mask value=".1.1.791885?????"/>
+       <mask value=".1.1.790245?????"/>
+       <mask value=".1.1.791975?????"/>
+       <mask value=".1.1.791989?????"/>
+       <mask value=".1.1.7988325????"/>
+       <mask value=".1.1.7988464????"/>
+       <mask value=".1.1.791979?????"/>
+       <mask value=".1.1.79181??????"/>
+       <mask value=".1.1.791974?????"/>
+       <mask value=".1.1.7988770????"/>
+       <mask value=".1.1.791886?????"/>
+       <mask value=".1.1.791987?????"/>
+       <mask value=".1.1.79186??????"/>
+       <mask value=".1.1.791871?????"/>
+       <mask value=".1.1.7988557????"/>
+       <mask value=".1.1.791888?????"/>
+       <mask value=".1.1.79184??????"/>
+       <mask value=".1.1.791942?????"/>
+       <mask value=".1.1.7988666????"/>
+       <mask value=".1.1.798824?????"/>
+       <mask value=".1.1.791883?????"/>
+       <mask value=".1.1.7988486????"/>
+       <mask value=".1.1.791973?????"/>
+       <mask value=".1.1.7988765????"/>
+       <mask value=".1.1.791708?????"/>
+       <mask value=".1.1.7988336????"/>
+       <mask value=".1.1.791879?????"/>
+       <mask value=".1.1.7917002????"/>
+       <mask value=".1.1.791709?????"/>
+       <mask value=".1.1.791718?????"/>
+       <mask value=".1.1.791717?????"/>
+       <mask value=".1.1.7877???????"/>
+       <mask value=".1.1.791988?????"/>
+       <mask value=".1.1.7917001????"/>
+       <mask value=".1.1.7988762????"/>
+       <mask value=".1.1.791882?????"/>
+       <mask value=".1.1.791887?????"/>
+       <mask value=".1.1.7988425????"/>
+       <mask value=".1.1.7988353????"/>
+       <mask value=".1.1.7988622????"/>
+       <mask value=".1.1.79189??????"/>
+       <mask value=".1.1.791889?????"/>
+       <mask value=".1.1.791783?????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Омск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7913988????"/>
+       <mask value=".1.1.791363?????"/>
+       <mask value=".1.1.791364?????"/>
+       <mask value=".1.1.791397?????"/>
+       <mask value=".1.1.791365?????"/>
+       <mask value=".1.1.791368?????"/>
+       <mask value=".1.1.791314?????"/>
+       <mask value=".1.1.791361?????"/>
+       <mask value=".1.1.791315?????"/>
+       <mask value=".1.1.791366?????"/>
+       <mask value=".1.1.791360?????"/>
+       <mask value=".1.1.791396?????"/>
+       <mask value=".1.1.791367?????"/>
+       <mask value=".1.1.791362?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Хабаровск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791420?????"/>
+       <mask value=".1.1.791418?????"/>
+       <mask value=".1.1.791421?????"/>
+       <mask value=".1.1.791454?????"/>
+       <mask value=".1.1.791415?????"/>
+       <mask value=".1.1.791417?????"/>
+       <mask value=".1.1.791477?????"/>
+       <mask value=".1.1.791419?????"/>
+  </subject_def>
+  <subject_def id="Домашние сервисы" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".0.1.??????"/>
+       <mask value=".0.1.???????"/>
+       <mask value=".0.1.?????"/>
+       <mask value=".0.1.????"/>
+       <mask value=".0.1.?"/>
+       <mask value=".0.1.???"/>
+       <mask value=".0.1.??"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Магадан" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791485?????"/>
+       <mask value=".1.1.791486?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Биробиджан" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791481?????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791331?????"/>
+       <mask value=".1.1.791301?????"/>
+       <mask value=".1.1.791314?????"/>
+       <mask value=".1.1.791329?????"/>
+       <mask value=".1.1.791318?????"/>
+       <mask value=".1.1.791324?????"/>
+       <mask value=".1.1.791315?????"/>
+       <mask value=".1.1.791366?????"/>
+       <mask value=".1.1.791394?????"/>
+       <mask value=".1.1.791321?????"/>
+       <mask value=".1.1.791310?????"/>
+       <mask value=".1.1.7913505????"/>
+       <mask value=".1.1.7913530????"/>
+       <mask value=".1.1.791323?????"/>
+       <mask value=".1.1.7902989????"/>
+       <mask value=".1.1.7913522????"/>
+       <mask value=".1.1.791335?????"/>
+       <mask value=".1.1.7913538????"/>
+       <mask value=".1.1.791364?????"/>
+       <mask value=".1.1.791308?????"/>
+       <mask value=".1.1.791381?????"/>
+       <mask value=".1.1.7913529????"/>
+       <mask value=".1.1.791387?????"/>
+       <mask value=".1.1.791380?????"/>
+       <mask value=".1.1.791313?????"/>
+       <mask value=".1.1.7991358????"/>
+       <mask value=".1.1.7913523????"/>
+       <mask value=".1.1.791374?????"/>
+       <mask value=".1.1.791327?????"/>
+       <mask value=".1.1.7913980????"/>
+       <mask value=".1.1.791376?????"/>
+       <mask value=".1.1.791347?????"/>
+       <mask value=".1.1.791309?????"/>
+       <mask value=".1.1.791338?????"/>
+       <mask value=".1.1.7913533????"/>
+       <mask value=".1.1.791363?????"/>
+       <mask value=".1.1.791382?????"/>
+       <mask value=".1.1.791391?????"/>
+       <mask value=".1.1.791328?????"/>
+       <mask value=".1.1.791300?????"/>
+       <mask value=".1.1.791311?????"/>
+       <mask value=".1.1.7902907????"/>
+       <mask value=".1.1.791384?????"/>
+       <mask value=".1.1.791354?????"/>
+       <mask value=".1.1.7913509????"/>
+       <mask value=".1.1.7913502????"/>
+       <mask value=".1.1.7913984????"/>
+       <mask value=".1.1.7913504????"/>
+       <mask value=".1.1.791367?????"/>
+       <mask value=".1.1.791371?????"/>
+       <mask value=".1.1.7913501????"/>
+       <mask value=".1.1.7913981????"/>
+       <mask value=".1.1.7913524????"/>
+       <mask value=".1.1.7913525????"/>
+       <mask value=".1.1.7913536????"/>
+       <mask value=".1.1.791344?????"/>
+       <mask value=".1.1.791390?????"/>
+       <mask value=".1.1.7913551????"/>
+       <mask value=".1.1.791379?????"/>
+       <mask value=".1.1.791372?????"/>
+       <mask value=".1.1.791346?????"/>
+       <mask value=".1.1.7913526????"/>
+       <mask value=".1.1.791322?????"/>
+       <mask value=".1.1.791349?????"/>
+       <mask value=".1.1.7913528????"/>
+       <mask value=".1.1.791392?????"/>
+       <mask value=".1.1.791334?????"/>
+       <mask value=".1.1.7913988????"/>
+       <mask value=".1.1.7913537????"/>
+       <mask value=".1.1.791317?????"/>
+       <mask value=".1.1.791368?????"/>
+       <mask value=".1.1.7913986????"/>
+       <mask value=".1.1.791340?????"/>
+       <mask value=".1.1.7913535????"/>
+       <mask value=".1.1.791373?????"/>
+       <mask value=".1.1.7913999????"/>
+       <mask value=".1.1.791395?????"/>
+       <mask value=".1.1.7913539????"/>
+       <mask value=".1.1.791330?????"/>
+       <mask value=".1.1.7913989????"/>
+       <mask value=".1.1.7913531????"/>
+       <mask value=".1.1.791348?????"/>
+       <mask value=".1.1.7913583????"/>
+       <mask value=".1.1.7913527????"/>
+       <mask value=".1.1.791397?????"/>
+       <mask value=".1.1.7991359????"/>
+       <mask value=".1.1.791325?????"/>
+       <mask value=".1.1.791333?????"/>
+       <mask value=".1.1.791361?????"/>
+       <mask value=".1.1.791312?????"/>
+       <mask value=".1.1.7913532????"/>
+       <mask value=".1.1.791377?????"/>
+       <mask value=".1.1.7991357????"/>
+       <mask value=".1.1.7913987????"/>
+       <mask value=".1.1.791345?????"/>
+       <mask value=".1.1.791360?????"/>
+       <mask value=".1.1.791341?????"/>
+       <mask value=".1.1.7904856????"/>
+       <mask value=".1.1.791369?????"/>
+       <mask value=".1.1.791393?????"/>
+       <mask value=".1.1.791370?????"/>
+       <mask value=".1.1.791365?????"/>
+       <mask value=".1.1.791386?????"/>
+       <mask value=".1.1.791388?????"/>
+       <mask value=".1.1.791319?????"/>
+       <mask value=".1.1.7913506????"/>
+       <mask value=".1.1.7913516????"/>
+       <mask value=".1.1.791375?????"/>
+       <mask value=".1.1.7991356????"/>
+       <mask value=".1.1.791339?????"/>
+       <mask value=".1.1.7913998????"/>
+       <mask value=".1.1.7913503????"/>
+       <mask value=".1.1.791336?????"/>
+       <mask value=".1.1.791332?????"/>
+       <mask value=".1.1.791343?????"/>
+       <mask value=".1.1.7913534????"/>
+       <mask value=".1.1.791378?????"/>
+       <mask value=".1.1.7913982????"/>
+       <mask value=".1.1.7913507????"/>
+       <mask value=".1.1.791389?????"/>
+       <mask value=".1.1.791320?????"/>
+       <mask value=".1.1.7913521????"/>
+       <mask value=".1.1.791337?????"/>
+       <mask value=".1.1.7913983????"/>
+       <mask value=".1.1.791385?????"/>
+       <mask value=".1.1.7913985????"/>
+       <mask value=".1.1.791342?????"/>
+       <mask value=".1.1.791396?????"/>
+       <mask value=".1.1.7913520????"/>
+       <mask value=".1.1.791326?????"/>
+       <mask value=".1.1.7991355????"/>
+       <mask value=".1.1.7913500????"/>
+       <mask value=".1.1.7913508????"/>
+       <mask value=".1.1.791362?????"/>
+  </subject_def>
+  <subject_def id="smsx" defSme="smsx">
+    <notes></notes>
+       <mask value=".0.1.0012"/>
+       <mask value=".0.1.5500"/>
+       <mask value=".0.1.0011"/>
+       <mask value=".0.1.147"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Абакан" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791335?????"/>
+       <mask value=".1.1.791354?????"/>
+       <mask value=".1.1.791344?????"/>
+       <mask value=".1.1.791334?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Чита" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791447?????"/>
+       <mask value=".1.1.791449?????"/>
+       <mask value=".1.1.791448?????"/>
+       <mask value=".1.1.791451?????"/>
+       <mask value=".1.1.791452?????"/>
+       <mask value=".1.1.791450?????"/>
+       <mask value=".1.1.791445?????"/>
+       <mask value=".1.1.791446?????"/>
+  </subject_def>
+  <subject_def id="ota" defSme="ota">
+    <notes></notes>
+       <mask value=".0.1.251"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Томск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791310?????"/>
+       <mask value=".1.1.791382?????"/>
+       <mask value=".1.1.791385?????"/>
+       <mask value=".1.1.791386?????"/>
+       <mask value=".1.1.791381?????"/>
+       <mask value=".1.1.791388?????"/>
+       <mask value=".1.1.791311?????"/>
+       <mask value=".1.1.791380?????"/>
+       <mask value=".1.1.791384?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Петропавловск-Камчатский" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791478?????"/>
+       <mask value=".1.1.791462?????"/>
+  </subject_def>
+  <subject_def id="Приволжский С-З макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791965?????"/>
+       <mask value=".1.1.791787?????"/>
+       <mask value=".1.1.791799?????"/>
+       <mask value=".1.1.79107901???"/>
+       <mask value=".1.1.79107907???"/>
+       <mask value=".1.1.791012?????"/>
+       <mask value=".1.1.7910793????"/>
+       <mask value=".1.1.791245?????"/>
+       <mask value=".1.1.791769?????"/>
+       <mask value=".1.1.791766?????"/>
+       <mask value=".1.1.791013?????"/>
+       <mask value=".1.1.791962?????"/>
+       <mask value=".1.1.79107908???"/>
+       <mask value=".1.1.791282?????"/>
+       <mask value=".1.1.7843297????"/>
+       <mask value=".1.1.791244?????"/>
+       <mask value=".1.1.791739?????"/>
+       <mask value=".1.1.79103815???"/>
+       <mask value=".1.1.791039?????"/>
+       <mask value=".1.1.79107916???"/>
+       <mask value=".1.1.79103811???"/>
+       <mask value=".1.1.79103819???"/>
+       <mask value=".1.1.791792?????"/>
+       <mask value=".1.1.79107917???"/>
+       <mask value=".1.1.7910798????"/>
+       <mask value=".1.1.79107993???"/>
+       <mask value=".1.1.791969?????"/>
+       <mask value=".1.1.7843296????"/>
+       <mask value=".1.1.798729?????"/>
+       <mask value=".1.1.791770?????"/>
+       <mask value=".1.1.791990?????"/>
+       <mask value=".1.1.791951?????"/>
+       <mask value=".1.1.791729?????"/>
+       <mask value=".1.1.7843290????"/>
+       <mask value=".1.1.791967?????"/>
+       <mask value=".1.1.791722?????"/>
+       <mask value=".1.1.791793?????"/>
+       <mask value=".1.1.79103810???"/>
+       <mask value=".1.1.791272?????"/>
+       <mask value=".1.1.79107915???"/>
+       <mask value=".1.1.791089?????"/>
+       <mask value=".1.1.791276?????"/>
+       <mask value=".1.1.791964?????"/>
+       <mask value=".1.1.791788?????"/>
+       <mask value=".1.1.791790?????"/>
+       <mask value=".1.1.79107918???"/>
+       <mask value=".1.1.79107912???"/>
+       <mask value=".1.1.79107995???"/>
+       <mask value=".1.1.791785?????"/>
+       <mask value=".1.1.79107996???"/>
+       <mask value=".1.1.791725?????"/>
+       <mask value=".1.1.791767?????"/>
+       <mask value=".1.1.791270?????"/>
+       <mask value=".1.1.791014?????"/>
+       <mask value=".1.1.791087?????"/>
+       <mask value=".1.1.791274?????"/>
+       <mask value=".1.1.7910794????"/>
+       <mask value=".1.1.791966?????"/>
+       <mask value=".1.1.7910796????"/>
+       <mask value=".1.1.79107913???"/>
+       <mask value=".1.1.791724?????"/>
+       <mask value=".1.1.79103812???"/>
+       <mask value=".1.1.791952?????"/>
+       <mask value=".1.1.791950?????"/>
+       <mask value=".1.1.791728?????"/>
+       <mask value=".1.1.791727?????"/>
+       <mask value=".1.1.791237?????"/>
+       <mask value=".1.1.791723?????"/>
+       <mask value=".1.1.7910792????"/>
+       <mask value=".1.1.791287?????"/>
+       <mask value=".1.1.79103814???"/>
+       <mask value=".1.1.791246?????"/>
+       <mask value=".1.1.791765?????"/>
+       <mask value=".1.1.791088?????"/>
+       <mask value=".1.1.791273?????"/>
+       <mask value=".1.1.791786?????"/>
+       <mask value=".1.1.79107991???"/>
+       <mask value=".1.1.79107997???"/>
+       <mask value=".1.1.79107914???"/>
+       <mask value=".1.1.791233?????"/>
+       <mask value=".1.1.79103817???"/>
+       <mask value=".1.1.79107904???"/>
+       <mask value=".1.1.79107919???"/>
+       <mask value=".1.1.791595?????"/>
+       <mask value=".1.1.791275?????"/>
+       <mask value=".1.1.79103816???"/>
+       <mask value=".1.1.79107905???"/>
+       <mask value=".1.1.791791?????"/>
+       <mask value=".1.1.79103818???"/>
+       <mask value=".1.1.791771?????"/>
+       <mask value=".1.1.791991?????"/>
+       <mask value=".1.1.79103813???"/>
+       <mask value=".1.1.79107994???"/>
+       <mask value=".1.1.791271?????"/>
+       <mask value=".1.1.7910797????"/>
+       <mask value=".1.1.791726?????"/>
+       <mask value=".1.1.79107909???"/>
+       <mask value=".1.1.79107903???"/>
+       <mask value=".1.1.791236?????"/>
+       <mask value=".1.1.791968?????"/>
+       <mask value=".1.1.79107902???"/>
+       <mask value=".1.1.79107992???"/>
+       <mask value=".1.1.79107906???"/>
+       <mask value=".1.1.791594?????"/>
+       <mask value=".1.1.791789?????"/>
+       <mask value=".1.1.7910386????"/>
+       <mask value=".1.1.791963?????"/>
+       <mask value=".1.1.79107911???"/>
+       <mask value=".1.1.791593?????"/>
+       <mask value=".1.1.791285?????"/>
+       <mask value=".1.1.791010?????"/>
+       <mask value=".1.1.7910795????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Барнаул" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791325?????"/>
+       <mask value=".1.1.791308?????"/>
+       <mask value=".1.1.791327?????"/>
+       <mask value=".1.1.791336?????"/>
+       <mask value=".1.1.791323?????"/>
+       <mask value=".1.1.791322?????"/>
+       <mask value=".1.1.791324?????"/>
+       <mask value=".1.1.791309?????"/>
+       <mask value=".1.1.791326?????"/>
+       <mask value=".1.1.791321?????"/>
+  </subject_def>
+  <subject_def id="Forward services" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".0.1.1234"/>
+       <mask value=".0.1.4949"/>
+       <mask value=".0.1.2403"/>
+       <mask value=".0.1.4402"/>
+       <mask value=".0.1.8889"/>
+       <mask value=".0.1.4405"/>
+       <mask value=".0.1.1111"/>
+       <mask value=".0.1.2030"/>
+  </subject_def>
+  <subject_def id="Приволжский Ю-В макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791711?????"/>
+       <mask value=".1.1.791235?????"/>
+       <mask value=".1.1.791714?????"/>
+       <mask value=".1.1.7917102????"/>
+       <mask value=".1.1.791775?????"/>
+       <mask value=".1.1.791986?????"/>
+       <mask value=".1.1.791985?????"/>
+       <mask value=".1.1.791777?????"/>
+       <mask value=".1.1.791778?????"/>
+       <mask value=".1.1.791981?????"/>
+       <mask value=".1.1.791984?????"/>
+       <mask value=".1.1.791760?????"/>
+       <mask value=".1.1.7917106????"/>
+       <mask value=".1.1.791715?????"/>
+       <mask value=".1.1.791774?????"/>
+       <mask value=".1.1.791720?????"/>
+       <mask value=".1.1.7917101????"/>
+       <mask value=".1.1.791716?????"/>
+       <mask value=".1.1.791797?????"/>
+       <mask value=".1.1.7912847????"/>
+       <mask value=".1.1.791732?????"/>
+       <mask value=".1.1.7912842????"/>
+       <mask value=".1.1.791721?????"/>
+       <mask value=".1.1.791763?????"/>
+       <mask value=".1.1.79174??????"/>
+       <mask value=".1.1.791914?????"/>
+       <mask value=".1.1.7917104????"/>
+       <mask value=".1.1.7912846????"/>
+       <mask value=".1.1.7917103????"/>
+       <mask value=".1.1.791762?????"/>
+       <mask value=".1.1.791737?????"/>
+       <mask value=".1.1.7912841????"/>
+       <mask value=".1.1.7912849????"/>
+       <mask value=".1.1.791712?????"/>
+       <mask value=".1.1.791735?????"/>
+       <mask value=".1.1.791798?????"/>
+       <mask value=".1.1.791794?????"/>
+       <mask value=".1.1.791779?????"/>
+       <mask value=".1.1.791234?????"/>
+       <mask value=".1.1.791731?????"/>
+       <mask value=".1.1.791915?????"/>
+       <mask value=".1.1.7917107????"/>
+       <mask value=".1.1.7912845????"/>
+       <mask value=".1.1.791773?????"/>
+       <mask value=".1.1.791980?????"/>
+       <mask value=".1.1.7912843????"/>
+       <mask value=".1.1.7917105????"/>
+       <mask value=".1.1.791730?????"/>
+       <mask value=".1.1.791780?????"/>
+       <mask value=".1.1.791983?????"/>
+       <mask value=".1.1.791736?????"/>
+       <mask value=".1.1.7912844????"/>
+       <mask value=".1.1.791796?????"/>
+       <mask value=".1.1.791795?????"/>
+       <mask value=".1.1.791713?????"/>
+       <mask value=".1.1.7917109????"/>
+       <mask value=".1.1.791960?????"/>
+       <mask value=".1.1.791738?????"/>
+       <mask value=".1.1.791761?????"/>
+       <mask value=".1.1.7912848????"/>
+       <mask value=".1.1.791734?????"/>
+       <mask value=".1.1.791781?????"/>
+       <mask value=".1.1.791982?????"/>
+       <mask value=".1.1.791961?????"/>
+       <mask value=".1.1.791776?????"/>
+       <mask value=".1.1.7917108????"/>
+       <mask value=".1.1.791782?????"/>
+  </subject_def>
+  <subject_def id="Северо-Западный макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791155?????"/>
+       <mask value=".1.1.791169?????"/>
+       <mask value=".1.1.791214?????"/>
+       <mask value=".1.1.7912944????"/>
+       <mask value=".1.1.791183?????"/>
+       <mask value=".1.1.791138?????"/>
+       <mask value=".1.1.77911650???"/>
+       <mask value=".1.1.791141?????"/>
+       <mask value=".1.1.791151?????"/>
+       <mask value=".1.1.791139?????"/>
+       <mask value=".1.1.791137?????"/>
+       <mask value=".1.1.791135?????"/>
+       <mask value=".1.1.791160?????"/>
+       <mask value=".1.1.791216?????"/>
+       <mask value=".1.1.791218?????"/>
+       <mask value=".1.1.791146?????"/>
+       <mask value=".1.1.791161?????"/>
+       <mask value=".1.1.791173?????"/>
+       <mask value=".1.1.791167?????"/>
+       <mask value=".1.1.791174?????"/>
+       <mask value=".1.1.791296?????"/>
+       <mask value=".1.1.7912943????"/>
+       <mask value=".1.1.791255?????"/>
+       <mask value=".1.1.791132?????"/>
+       <mask value=".1.1.791185?????"/>
+       <mask value=".1.1.791131?????"/>
+       <mask value=".1.1.791156?????"/>
+       <mask value=".1.1.77911651???"/>
+       <mask value=".1.1.791144?????"/>
+       <mask value=".1.1.791175?????"/>
+       <mask value=".1.1.791219?????"/>
+       <mask value=".1.1.7912942????"/>
+       <mask value=".1.1.791152?????"/>
+       <mask value=".1.1.791162?????"/>
+       <mask value=".1.1.791295?????"/>
+       <mask value=".1.1.791158?????"/>
+       <mask value=".1.1.7912949????"/>
+       <mask value=".1.1.791164?????"/>
+       <mask value=".1.1.791212?????"/>
+       <mask value=".1.1.791188?????"/>
+       <mask value=".1.1.7912945????"/>
+       <mask value=".1.1.79110??????"/>
+       <mask value=".1.1.791172?????"/>
+       <mask value=".1.1.791178?????"/>
+       <mask value=".1.1.791286?????"/>
+       <mask value=".1.1.79111??????"/>
+       <mask value=".1.1.791211?????"/>
+       <mask value=".1.1.791256?????"/>
+       <mask value=".1.1.7912948????"/>
+       <mask value=".1.1.791145?????"/>
+       <mask value=".1.1.791149?????"/>
+       <mask value=".1.1.77911654???"/>
+       <mask value=".1.1.7912947????"/>
+       <mask value=".1.1.79112??????"/>
+       <mask value=".1.1.791147?????"/>
+       <mask value=".1.1.791184?????"/>
+       <mask value=".1.1.791133?????"/>
+       <mask value=".1.1.791215?????"/>
+       <mask value=".1.1.791130?????"/>
+       <mask value=".1.1.791189?????"/>
+       <mask value=".1.1.791186?????"/>
+       <mask value=".1.1.791148?????"/>
+       <mask value=".1.1.791177?????"/>
+       <mask value=".1.1.791217?????"/>
+       <mask value=".1.1.791250?????"/>
+       <mask value=".1.1.791150?????"/>
+       <mask value=".1.1.7912946????"/>
+       <mask value=".1.1.791163?????"/>
+       <mask value=".1.1.791166?????"/>
+       <mask value=".1.1.77911653???"/>
+       <mask value=".1.1.791176?????"/>
+       <mask value=".1.1.791213?????"/>
+       <mask value=".1.1.791154?????"/>
+       <mask value=".1.1.791254?????"/>
+       <mask value=".1.1.791136?????"/>
+       <mask value=".1.1.791182?????"/>
+       <mask value=".1.1.791171?????"/>
+       <mask value=".1.1.791140?????"/>
+       <mask value=".1.1.79119??????"/>
+       <mask value=".1.1.791134?????"/>
+       <mask value=".1.1.791143?????"/>
+       <mask value=".1.1.791168?????"/>
+       <mask value=".1.1.791179?????"/>
+       <mask value=".1.1.7912941????"/>
+       <mask value=".1.1.791181?????"/>
+       <mask value=".1.1.791180?????"/>
+       <mask value=".1.1.791165?????"/>
+       <mask value=".1.1.791142?????"/>
+       <mask value=".1.1.791153?????"/>
+       <mask value=".1.1.791157?????"/>
+       <mask value=".1.1.791210?????"/>
+       <mask value=".1.1.77911652???"/>
+       <mask value=".1.1.791159?????"/>
+       <mask value=".1.1.791170?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Якутск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791428?????"/>
+       <mask value=".1.1.7902158????"/>
+       <mask value=".1.1.7411277????"/>
+       <mask value=".1.1.7902159????"/>
+       <mask value=".1.1.7902574????"/>
+       <mask value=".1.1.791423?????"/>
+       <mask value=".1.1.7902572????"/>
+       <mask value=".1.1.7902157????"/>
+       <mask value=".1.1.7411278????"/>
+       <mask value=".1.1.7902575????"/>
+       <mask value=".1.1.791429?????"/>
+       <mask value=".1.1.791427?????"/>
+       <mask value=".1.1.7902571????"/>
+       <mask value=".1.1.7411276????"/>
+       <mask value=".1.1.791422?????"/>
+       <mask value=".1.1.7902570????"/>
+       <mask value=".1.1.7411279????"/>
+       <mask value=".1.1.7902573????"/>
+  </subject_def>
+  <subject_def id="beeline abonents" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7903???????"/>
+       <mask value=".1.1.7905???????"/>
+  </subject_def>
+  <subject_def id="subscription" defSme="subscription">
+    <notes></notes>
+       <mask value=".0.1.684"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Иркутск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791494?????"/>
+       <mask value=".1.1.791491?????"/>
+       <mask value=".1.1.791487?????"/>
+       <mask value=".1.1.791495?????"/>
+       <mask value=".1.1.791490?????"/>
+       <mask value=".1.1.791493?????"/>
+       <mask value=".1.1.791489?????"/>
+       <mask value=".1.1.791492?????"/>
+       <mask value=".1.1.791488?????"/>
+  </subject_def>
+  <subject_def id="Москва" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7916041????"/>
+       <mask value=".1.1.79857285???"/>
+       <mask value=".1.1.79859699???"/>
+       <mask value=".1.1.791751?????"/>
+       <mask value=".1.1.7916055????"/>
+       <mask value=".1.1.7985764????"/>
+       <mask value=".1.1.79851034???"/>
+       <mask value=".1.1.7915018????"/>
+       <mask value=".1.1.791683?????"/>
+       <mask value=".1.1.791525?????"/>
+       <mask value=".1.1.798572387??"/>
+       <mask value=".1.1.7916700????"/>
+       <mask value=".1.1.791672?????"/>
+       <mask value=".1.1.798576987??"/>
+       <mask value=".1.1.79852580???"/>
+       <mask value=".1.1.79851038???"/>
+       <mask value=".1.1.7916032????"/>
+       <mask value=".1.1.7916044????"/>
+       <mask value=".1.1.791671?????"/>
+       <mask value=".1.1.791046?????"/>
+       <mask value=".1.1.79851055???"/>
+       <mask value=".1.1.7910492????"/>
+       <mask value=".1.1.79851088???"/>
+       <mask value=".1.1.7916039????"/>
+       <mask value=".1.1.79857696???"/>
+       <mask value=".1.1.79851033???"/>
+       <mask value=".1.1.7910496????"/>
+       <mask value=".1.1.791510?????"/>
+       <mask value=".1.1.7916190????"/>
+       <mask value=".1.1.798576995??"/>
+       <mask value=".1.1.7919777????"/>
+       <mask value=".1.1.791523?????"/>
+       <mask value=".1.1.791045?????"/>
+       <mask value=".1.1.7919965????"/>
+       <mask value=".1.1.79852310???"/>
+       <mask value=".1.1.791641?????"/>
+       <mask value=".1.1.791517?????"/>
+       <mask value=".1.1.79851068???"/>
+       <mask value=".1.1.7916158????"/>
+       <mask value=".1.1.79857844???"/>
+       <mask value=".1.1.7916703????"/>
+       <mask value=".1.1.79851089???"/>
+       <mask value=".1.1.791688?????"/>
+       <mask value=".1.1.791652?????"/>
+       <mask value=".1.1.7919775????"/>
+       <mask value=".1.1.7915022????"/>
+       <mask value=".1.1.791659?????"/>
+       <mask value=".1.1.7910494????"/>
+       <mask value=".1.1.791691?????"/>
+       <mask value=".1.1.7910003????"/>
+       <mask value=".1.1.7915441????"/>
+       <mask value=".1.1.791508?????"/>
+       <mask value=".1.1.7916746????"/>
+       <mask value=".1.1.7916152????"/>
+       <mask value=".1.1.79851027???"/>
+       <mask value=".1.1.79857664???"/>
+       <mask value=".1.1.7915017????"/>
+       <mask value=".1.1.7919109????"/>
+       <mask value=".1.1.791606?????"/>
+       <mask value=".1.1.7919779????"/>
+       <mask value=".1.1.79857265???"/>
+       <mask value=".1.1.791759?????"/>
+       <mask value=".1.1.7985227????"/>
+       <mask value=".1.1.798572385??"/>
+       <mask value=".1.1.7919999????"/>
+       <mask value=".1.1.791685?????"/>
+       <mask value=".1.1.791755?????"/>
+       <mask value=".1.1.7916361????"/>
+       <mask value=".1.1.791047?????"/>
+       <mask value=".1.1.7919997????"/>
+       <mask value=".1.1.7985991????"/>
+       <mask value=".1.1.79851059???"/>
+       <mask value=".1.1.7916207????"/>
+       <mask value=".1.1.7919960????"/>
+       <mask value=".1.1.7915019????"/>
+       <mask value=".1.1.7919970????"/>
+       <mask value=".1.1.7985108????"/>
+       <mask value=".1.1.79851039???"/>
+       <mask value=".1.1.79851040???"/>
+       <mask value=".1.1.79851085???"/>
+       <mask value=".1.1.7915016????"/>
+       <mask value=".1.1.798572847??"/>
+       <mask value=".1.1.7916309????"/>
+       <mask value=".1.1.7985774????"/>
+       <mask value=".1.1.79851041???"/>
+       <mask value=".1.1.791522?????"/>
+       <mask value=".1.1.7919102????"/>
+       <mask value=".1.1.7916036????"/>
+       <mask value=".1.1.79857662???"/>
+       <mask value=".1.1.7919992????"/>
+       <mask value=".1.1.798572388??"/>
+       <mask value=".1.1.7915023????"/>
+       <mask value=".1.1.79857205???"/>
+       <mask value=".1.1.79852316???"/>
+       <mask value=".1.1.7916705????"/>
+       <mask value=".1.1.791660?????"/>
+       <mask value=".1.1.791692?????"/>
+       <mask value=".1.1.7916150????"/>
+       <mask value=".1.1.7910493????"/>
+       <mask value=".1.1.798576608??"/>
+       <mask value=".1.1.79851025???"/>
+       <mask value=".1.1.7919724????"/>
+       <mask value=".1.1.7919723????"/>
+       <mask value=".1.1.7919722????"/>
+       <mask value=".1.1.791541?????"/>
+       <mask value=".1.1.798572389??"/>
+       <mask value=".1.1.7985220????"/>
+       <mask value=".1.1.791655?????"/>
+       <mask value=".1.1.7916198????"/>
+       <mask value=".1.1.79859675???"/>
+       <mask value=".1.1.79851079???"/>
+       <mask value=".1.1.79851066???"/>
+       <mask value=".1.1.791756?????"/>
+       <mask value=".1.1.798572846??"/>
+       <mask value=".1.1.791682?????"/>
+       <mask value=".1.1.7916792????"/>
+       <mask value=".1.1.798510518??"/>
+       <mask value=".1.1.791651?????"/>
+       <mask value=".1.1.798572386??"/>
+       <mask value=".1.1.7916051????"/>
+       <mask value=".1.1.7919967????"/>
+       <mask value=".1.1.79857690???"/>
+       <mask value=".1.1.7916156????"/>
+       <mask value=".1.1.79851051???"/>
+       <mask value=".1.1.79851062???"/>
+       <mask value=".1.1.79851052???"/>
+       <mask value=".1.1.7985410????"/>
+       <mask value=".1.1.79857694???"/>
+       <mask value=".1.1.7919786????"/>
+       <mask value=".1.1.7916367????"/>
+       <mask value=".1.1.791625?????"/>
+       <mask value=".1.1.791750?????"/>
+       <mask value=".1.1.791623?????"/>
+       <mask value=".1.1.791638?????"/>
+       <mask value=".1.1.79857253???"/>
+       <mask value=".1.1.7916159????"/>
+       <mask value=".1.1.79169702???"/>
+       <mask value=".1.1.79851022???"/>
+       <mask value=".1.1.791526?????"/>
+       <mask value=".1.1.7916364????"/>
+       <mask value=".1.1.79857239???"/>
+       <mask value=".1.1.7985767????"/>
+       <mask value=".1.1.798510506??"/>
+       <mask value=".1.1.798596967??"/>
+       <mask value=".1.1.7916197????"/>
+       <mask value=".1.1.7916022????"/>
+       <mask value=".1.1.79169708???"/>
+       <mask value=".1.1.79851072???"/>
+       <mask value=".1.1.791607?????"/>
+       <mask value=".1.1.7916745????"/>
+       <mask value=".1.1.79851087???"/>
+       <mask value=".1.1.7919101????"/>
+       <mask value=".1.1.791530?????"/>
+       <mask value=".1.1.791684?????"/>
+       <mask value=".1.1.7916363????"/>
+       <mask value=".1.1.79857845???"/>
+       <mask value=".1.1.7916308????"/>
+       <mask value=".1.1.7985784????"/>
+       <mask value=".1.1.7916157????"/>
+       <mask value=".1.1.7916031????"/>
+       <mask value=".1.1.7919108????"/>
+       <mask value=".1.1.798576997??"/>
+       <mask value=".1.1.79851036???"/>
+       <mask value=".1.1.79857843???"/>
+       <mask value=".1.1.79857842???"/>
+       <mask value=".1.1.79859696???"/>
+       <mask value=".1.1.791503?????"/>
+       <mask value=".1.1.791048?????"/>
+       <mask value=".1.1.7916741????"/>
+       <mask value=".1.1.7919771????"/>
+       <mask value=".1.1.7919729????"/>
+       <mask value=".1.1.7916397????"/>
+       <mask value=".1.1.791649?????"/>
+       <mask value=".1.1.79169704???"/>
+       <mask value=".1.1.7919966????"/>
+       <mask value=".1.1.791505?????"/>
+       <mask value=".1.1.791677?????"/>
+       <mask value=".1.1.791690?????"/>
+       <mask value=".1.1.7916391????"/>
+       <mask value=".1.1.791657?????"/>
+       <mask value=".1.1.7915010????"/>
+       <mask value=".1.1.7910444????"/>
+       <mask value=".1.1.791509?????"/>
+       <mask value=".1.1.7919104????"/>
+       <mask value=".1.1.791626?????"/>
+       <mask value=".1.1.798596969??"/>
+       <mask value=".1.1.7916204????"/>
+       <mask value=".1.1.791543?????"/>
+       <mask value=".1.1.7919772????"/>
+       <mask value=".1.1.7916056????"/>
+       <mask value=".1.1.7916194????"/>
+       <mask value=".1.1.79857848???"/>
+       <mask value=".1.1.791698?????"/>
+       <mask value=".1.1.79857665???"/>
+       <mask value=".1.1.798572857??"/>
+       <mask value=".1.1.791611?????"/>
+       <mask value=".1.1.791533?????"/>
+       <mask value=".1.1.79857276???"/>
+       <mask value=".1.1.7916203????"/>
+       <mask value=".1.1.7919774????"/>
+       <mask value=".1.1.791666?????"/>
+       <mask value=".1.1.7916052????"/>
+       <mask value=".1.1.7919998????"/>
+       <mask value=".1.1.79854113???"/>
+       <mask value=".1.1.7916154????"/>
+       <mask value=".1.1.79851035???"/>
+       <mask value=".1.1.7916151????"/>
+       <mask value=".1.1.7919776????"/>
+       <mask value=".1.1.7916976????"/>
+       <mask value=".1.1.79851058???"/>
+       <mask value=".1.1.791546?????"/>
+       <mask value=".1.1.79859704???"/>
+       <mask value=".1.1.7915012????"/>
+       <mask value=".1.1.7916706????"/>
+       <mask value=".1.1.79851020???"/>
+       <mask value=".1.1.7985763????"/>
+       <mask value=".1.1.798572384??"/>
+       <mask value=".1.1.79851026???"/>
+       <mask value=".1.1.79859604???"/>
+       <mask value=".1.1.791632?????"/>
+       <mask value=".1.1.79851081???"/>
+       <mask value=".1.1.79169705???"/>
+       <mask value=".1.1.798576996??"/>
+       <mask value=".1.1.791664?????"/>
+       <mask value=".1.1.798525802??"/>
+       <mask value=".1.1.7916793????"/>
+       <mask value=".1.1.79859706???"/>
+       <mask value=".1.1.79851090???"/>
+       <mask value=".1.1.7915442????"/>
+       <mask value=".1.1.7915443????"/>
+       <mask value=".1.1.7915446????"/>
+       <mask value=".1.1.791618?????"/>
+       <mask value=".1.1.7919969????"/>
+       <mask value=".1.1.791613?????"/>
+       <mask value=".1.1.798576989??"/>
+       <mask value=".1.1.7916395????"/>
+       <mask value=".1.1.79851045???"/>
+       <mask value=".1.1.798525803??"/>
+       <mask value=".1.1.7915015????"/>
+       <mask value=".1.1.791678?????"/>
+       <mask value=".1.1.7916360????"/>
+       <mask value=".1.1.79851069???"/>
+       <mask value=".1.1.7985776????"/>
+       <mask value=".1.1.7916193????"/>
+       <mask value=".1.1.7919996????"/>
+       <mask value=".1.1.79851037???"/>
+       <mask value=".1.1.791695?????"/>
+       <mask value=".1.1.79859702???"/>
+       <mask value=".1.1.7916196????"/>
+       <mask value=".1.1.7985364????"/>
+       <mask value=".1.1.798576992??"/>
+       <mask value=".1.1.79854112???"/>
+       <mask value=".1.1.7916035????"/>
+       <mask value=".1.1.7916394????"/>
+       <mask value=".1.1.7916704????"/>
+       <mask value=".1.1.7919964????"/>
+       <mask value=".1.1.7915074????"/>
+       <mask value=".1.1.7916798????"/>
+       <mask value=".1.1.79851042???"/>
+       <mask value=".1.1.791531?????"/>
+       <mask value=".1.1.79857860???"/>
+       <mask value=".1.1.791686?????"/>
+       <mask value=".1.1.79169707???"/>
+       <mask value=".1.1.79851071???"/>
+       <mask value=".1.1.7916201????"/>
+       <mask value=".1.1.7916743????"/>
+       <mask value=".1.1.79851049???"/>
+       <mask value=".1.1.7915014????"/>
+       <mask value=".1.1.791661?????"/>
+       <mask value=".1.1.798596968??"/>
+       <mask value=".1.1.79857277???"/>
+       <mask value=".1.1.79857861???"/>
+       <mask value=".1.1.7919103????"/>
+       <mask value=".1.1.7916302????"/>
+       <mask value=".1.1.791753?????"/>
+       <mask value=".1.1.7985226????"/>
+       <mask value=".1.1.7919778????"/>
+       <mask value=".1.1.7916393????"/>
+       <mask value=".1.1.791663?????"/>
+       <mask value=".1.1.7916366????"/>
+       <mask value=".1.1.7916301????"/>
+       <mask value=".1.1.791519?????"/>
+       <mask value=".1.1.791650?????"/>
+       <mask value=".1.1.79851032???"/>
+       <mask value=".1.1.791506?????"/>
+       <mask value=".1.1.798576602??"/>
+       <mask value=".1.1.791534?????"/>
+       <mask value=".1.1.7910440????"/>
+       <mask value=".1.1.791538?????"/>
+       <mask value=".1.1.798510519??"/>
+       <mask value=".1.1.791758?????"/>
+       <mask value=".1.1.798510516??"/>
+       <mask value=".1.1.791549?????"/>
+       <mask value=".1.1.798572650??"/>
+       <mask value=".1.1.7916030????"/>
+       <mask value=".1.1.798596965??"/>
+       <mask value=".1.1.798572858??"/>
+       <mask value=".1.1.79857841???"/>
+       <mask value=".1.1.7916057????"/>
+       <mask value=".1.1.79169706???"/>
+       <mask value=".1.1.7916973????"/>
+       <mask value=".1.1.79854111???"/>
+       <mask value=".1.1.7919721????"/>
+       <mask value=".1.1.79851046???"/>
+       <mask value=".1.1.7916202????"/>
+       <mask value=".1.1.791668?????"/>
+       <mask value=".1.1.791648?????"/>
+       <mask value=".1.1.798576?????"/>
+       <mask value=".1.1.7916038????"/>
+       <mask value=".1.1.791537?????"/>
+       <mask value=".1.1.7916707????"/>
+       <mask value=".1.1.7915448????"/>
+       <mask value=".1.1.79851028???"/>
+       <mask value=".1.1.7916033????"/>
+       <mask value=".1.1.79851053???"/>
+       <mask value=".1.1.7919994????"/>
+       <mask value=".1.1.7915025????"/>
+       <mask value=".1.1.79851016???"/>
+       <mask value=".1.1.791658?????"/>
+       <mask value=".1.1.7915444????"/>
+       <mask value=".1.1.791528?????"/>
+       <mask value=".1.1.7916748????"/>
+       <mask value=".1.1.7916020????"/>
+       <mask value=".1.1.7985997????"/>
+       <mask value=".1.1.791500?????"/>
+       <mask value=".1.1.79857849???"/>
+       <mask value=".1.1.7916979????"/>
+       <mask value=".1.1.798576604??"/>
+       <mask value=".1.1.791536?????"/>
+       <mask value=".1.1.7919100????"/>
+       <mask value=".1.1.7985768????"/>
+       <mask value=".1.1.791601?????"/>
+       <mask value=".1.1.791041?????"/>
+       <mask value=".1.1.7916799????"/>
+       <mask value=".1.1.7916053????"/>
+       <mask value=".1.1.7919990????"/>
+       <mask value=".1.1.79851074???"/>
+       <mask value=".1.1.7985998????"/>
+       <mask value=".1.1.791633?????"/>
+       <mask value=".1.1.791754?????"/>
+       <mask value=".1.1.791654?????"/>
+       <mask value=".1.1.791694?????"/>
+       <mask value=".1.1.798576985??"/>
+       <mask value=".1.1.79857238???"/>
+       <mask value=".1.1.7916305????"/>
+       <mask value=".1.1.791629?????"/>
+       <mask value=".1.1.7910442????"/>
+       <mask value=".1.1.79859698???"/>
+       <mask value=".1.1.7916392????"/>
+       <mask value=".1.1.791667?????"/>
+       <mask value=".1.1.7916155????"/>
+       <mask value=".1.1.79859703???"/>
+       <mask value=".1.1.79169703???"/>
+       <mask value=".1.1.7916740????"/>
+       <mask value=".1.1.7919963????"/>
+       <mask value=".1.1.791627?????"/>
+       <mask value=".1.1.791527?????"/>
+       <mask value=".1.1.7919995????"/>
+       <mask value=".1.1.7916153????"/>
+       <mask value=".1.1.79857666???"/>
+       <mask value=".1.1.798510536??"/>
+       <mask value=".1.1.7985102????"/>
+       <mask value=".1.1.7919784????"/>
+       <mask value=".1.1.7916307????"/>
+       <mask value=".1.1.7916396????"/>
+       <mask value=".1.1.7919105????"/>
+       <mask value=".1.1.791548?????"/>
+       <mask value=".1.1.79851063???"/>
+       <mask value=".1.1.7916192????"/>
+       <mask value=".1.1.79851024???"/>
+       <mask value=".1.1.7910445????"/>
+       <mask value=".1.1.791673?????"/>
+       <mask value=".1.1.79859709???"/>
+       <mask value=".1.1.79851080???"/>
+       <mask value=".1.1.79859705???"/>
+       <mask value=".1.1.791540?????"/>
+       <mask value=".1.1.79169709???"/>
+       <mask value=".1.1.798572052??"/>
+       <mask value=".1.1.7916199????"/>
+       <mask value=".1.1.79859697???"/>
+       <mask value=".1.1.7985765????"/>
+       <mask value=".1.1.7910002????"/>
+       <mask value=".1.1.791653?????"/>
+       <mask value=".1.1.791616?????"/>
+       <mask value=".1.1.791665?????"/>
+       <mask value=".1.1.798572848??"/>
+       <mask value=".1.1.7985104????"/>
+       <mask value=".1.1.79859708???"/>
+       <mask value=".1.1.791545?????"/>
+       <mask value=".1.1.798572397??"/>
+       <mask value=".1.1.798576605??"/>
+       <mask value=".1.1.7985231????"/>
+       <mask value=".1.1.7916205????"/>
+       <mask value=".1.1.7985999????"/>
+       <mask value=".1.1.7916059????"/>
+       <mask value=".1.1.7919968????"/>
+       <mask value=".1.1.798596966??"/>
+       <mask value=".1.1.79857692???"/>
+       <mask value=".1.1.798572845??"/>
+       <mask value=".1.1.79854114???"/>
+       <mask value=".1.1.7985411????"/>
+       <mask value=".1.1.79851076???"/>
+       <mask value=".1.1.791513?????"/>
+       <mask value=".1.1.798576993??"/>
+       <mask value=".1.1.79851084???"/>
+       <mask value=".1.1.79851043???"/>
+       <mask value=".1.1.79859600???"/>
+       <mask value=".1.1.7916708????"/>
+       <mask value=".1.1.79851075???"/>
+       <mask value=".1.1.79851050???"/>
+       <mask value=".1.1.79857250???"/>
+       <mask value=".1.1.7910490????"/>
+       <mask value=".1.1.79857691???"/>
+       <mask value=".1.1.79851082???"/>
+       <mask value=".1.1.7916797????"/>
+       <mask value=".1.1.791622?????"/>
+       <mask value=".1.1.7916300????"/>
+       <mask value=".1.1.791043?????"/>
+       <mask value=".1.1.7915440????"/>
+       <mask value=".1.1.791547?????"/>
+       <mask value=".1.1.7916058????"/>
+       <mask value=".1.1.798572535??"/>
+       <mask value=".1.1.79851077???"/>
+       <mask value=".1.1.798576994??"/>
+       <mask value=".1.1.7916200????"/>
+       <mask value=".1.1.79851065???"/>
+       <mask value=".1.1.7916795????"/>
+       <mask value=".1.1.791752?????"/>
+       <mask value=".1.1.7919991????"/>
+       <mask value=".1.1.798576603??"/>
+       <mask value=".1.1.791647?????"/>
+       <mask value=".1.1.79857284???"/>
+       <mask value=".1.1.79851078???"/>
+       <mask value=".1.1.791612?????"/>
+       <mask value=".1.1.7916040????"/>
+       <mask value=".1.1.791635?????"/>
+       <mask value=".1.1.7985762????"/>
+       <mask value=".1.1.798572398??"/>
+       <mask value=".1.1.7916365????"/>
+       <mask value=".1.1.7919728????"/>
+       <mask value=".1.1.7916362????"/>
+       <mask value=".1.1.79851073???"/>
+       <mask value=".1.1.791675?????"/>
+       <mask value=".1.1.7915449????"/>
+       <mask value=".1.1.7916742????"/>
+       <mask value=".1.1.79852318???"/>
+       <mask value=".1.1.791624?????"/>
+       <mask value=".1.1.791521?????"/>
+       <mask value=".1.1.791757?????"/>
+       <mask value=".1.1.7985773????"/>
+       <mask value=".1.1.7985760????"/>
+       <mask value=".1.1.79852319???"/>
+       <mask value=".1.1.79851021???"/>
+       <mask value=".1.1.7915011????"/>
+       <mask value=".1.1.791634?????"/>
+       <mask value=".1.1.7985139????"/>
+       <mask value=".1.1.79851017???"/>
+       <mask value=".1.1.791631?????"/>
+       <mask value=".1.1.791516?????"/>
+       <mask value=".1.1.7915024????"/>
+       <mask value=".1.1.79851067???"/>
+       <mask value=".1.1.79851023???"/>
+       <mask value=".1.1.791042?????"/>
+       <mask value=".1.1.7985103????"/>
+       <mask value=".1.1.798576982??"/>
+       <mask value=".1.1.791656?????"/>
+       <mask value=".1.1.79851061???"/>
+       <mask value=".1.1.7915021????"/>
+       <mask value=".1.1.791529?????"/>
+       <mask value=".1.1.79857669???"/>
+       <mask value=".1.1.791640?????"/>
+       <mask value=".1.1.7919770????"/>
+       <mask value=".1.1.7916702????"/>
+       <mask value=".1.1.79851086???"/>
+       <mask value=".1.1.791542?????"/>
+       <mask value=".1.1.791040?????"/>
+       <mask value=".1.1.7916369????"/>
+       <mask value=".1.1.7916796????"/>
+       <mask value=".1.1.7916972????"/>
+       <mask value=".1.1.79851091???"/>
+       <mask value=".1.1.791532?????"/>
+       <mask value=".1.1.7916206????"/>
+       <mask value=".1.1.798576984??"/>
+       <mask value=".1.1.79851092???"/>
+       <mask value=".1.1.7915071????"/>
+       <mask value=".1.1.7916971????"/>
+       <mask value=".1.1.791662?????"/>
+       <mask value=".1.1.791614?????"/>
+       <mask value=".1.1.7919106????"/>
+       <mask value=".1.1.7916390????"/>
+       <mask value=".1.1.798576607??"/>
+       <mask value=".1.1.798572396??"/>
+       <mask value=".1.1.798576983??"/>
+       <mask value=".1.1.79857695???"/>
+       <mask value=".1.1.79851029???"/>
+       <mask value=".1.1.7916043????"/>
+       <mask value=".1.1.79857697???"/>
+       <mask value=".1.1.79859707???"/>
+       <mask value=".1.1.791642?????"/>
+       <mask value=".1.1.791535?????"/>
+       <mask value=".1.1.7919962????"/>
+       <mask value=".1.1.7910495????"/>
+       <mask value=".1.1.791515?????"/>
+       <mask value=".1.1.798576609??"/>
+       <mask value=".1.1.7916042????"/>
+       <mask value=".1.1.7910491????"/>
+       <mask value=".1.1.7916303????"/>
+       <mask value=".1.1.791511?????"/>
+       <mask value=".1.1.7910441????"/>
+       <mask value=".1.1.7916195????"/>
+       <mask value=".1.1.7916974????"/>
+       <mask value=".1.1.79851018???"/>
+       <mask value=".1.1.79857667???"/>
+       <mask value=".1.1.7910446????"/>
+       <mask value=".1.1.791518?????"/>
+       <mask value=".1.1.791617?????"/>
+       <mask value=".1.1.7916977????"/>
+       <mask value=".1.1.79851057???"/>
+       <mask value=".1.1.7985920????"/>
+       <mask value=".1.1.791645?????"/>
+       <mask value=".1.1.7919725????"/>
+       <mask value=".1.1.7916304????"/>
+       <mask value=".1.1.79857840???"/>
+       <mask value=".1.1.7915013????"/>
+       <mask value=".1.1.7985761????"/>
+       <mask value=".1.1.7916747????"/>
+       <mask value=".1.1.798572399??"/>
+       <mask value=".1.1.798576986??"/>
+       <mask value=".1.1.79851094???"/>
+       <mask value=".1.1.79851031???"/>
+       <mask value=".1.1.791621?????"/>
+       <mask value=".1.1.791693?????"/>
+       <mask value=".1.1.798576606??"/>
+       <mask value=".1.1.7985106????"/>
+       <mask value=".1.1.791669?????"/>
+       <mask value=".1.1.7916794????"/>
+       <mask value=".1.1.79859674???"/>
+       <mask value=".1.1.791696?????"/>
+       <mask value=".1.1.7916701????"/>
+       <mask value=".1.1.798510513??"/>
+       <mask value=".1.1.7916191????"/>
+       <mask value=".1.1.7916037????"/>
+       <mask value=".1.1.7919961????"/>
+       <mask value=".1.1.791512?????"/>
+       <mask value=".1.1.7919993????"/>
+       <mask value=".1.1.798510514??"/>
+       <mask value=".1.1.7916023????"/>
+       <mask value=".1.1.7915027????"/>
+       <mask value=".1.1.79851019???"/>
+       <mask value=".1.1.7985922????"/>
+       <mask value=".1.1.79857278???"/>
+       <mask value=".1.1.7916054????"/>
+       <mask value=".1.1.7916001????"/>
+       <mask value=".1.1.791539?????"/>
+       <mask value=".1.1.79851015???"/>
+       <mask value=".1.1.7919726????"/>
+       <mask value=".1.1.79851048???"/>
+       <mask value=".1.1.791646?????"/>
+       <mask value=".1.1.791643?????"/>
+       <mask value=".1.1.791524?????"/>
+       <mask value=".1.1.798572500??"/>
+       <mask value=".1.1.798510517??"/>
+       <mask value=".1.1.791608?????"/>
+       <mask value=".1.1.7916306????"/>
+       <mask value=".1.1.79851083???"/>
+       <mask value=".1.1.791514?????"/>
+       <mask value=".1.1.79857663???"/>
+       <mask value=".1.1.791687?????"/>
+       <mask value=".1.1.7916034????"/>
+       <mask value=".1.1.798576988??"/>
+       <mask value=".1.1.7910443????"/>
+       <mask value=".1.1.7916024????"/>
+       <mask value=".1.1.79851064???"/>
+       <mask value=".1.1.79851054???"/>
+       <mask value=".1.1.7916744????"/>
+       <mask value=".1.1.7915445????"/>
+       <mask value=".1.1.7919773????"/>
+       <mask value=".1.1.7985233????"/>
+       <mask value=".1.1.791520?????"/>
+       <mask value=".1.1.79857275???"/>
+       <mask value=".1.1.79851044???"/>
+       <mask value=".1.1.7916975????"/>
+       <mask value=".1.1.791699?????"/>
+       <mask value=".1.1.79859672???"/>
+       <mask value=".1.1.7916368????"/>
+       <mask value=".1.1.791628?????"/>
+       <mask value=".1.1.791610?????"/>
+       <mask value=".1.1.791504?????"/>
+       <mask value=".1.1.7916978????"/>
+       <mask value=".1.1.798510537??"/>
+       <mask value=".1.1.79851070???"/>
+       <mask value=".1.1.7916801????"/>
+       <mask value=".1.1.7919727????"/>
+       <mask value=".1.1.791644?????"/>
+       <mask value=".1.1.798510512??"/>
+       <mask value=".1.1.7916021????"/>
+       <mask value=".1.1.7915447????"/>
+       <mask value=".1.1.79851056???"/>
+       <mask value=".1.1.79851030???"/>
+       <mask value=".1.1.791637?????"/>
+       <mask value=".1.1.7919107????"/>
+       <mask value=".1.1.7919720????"/>
+       <mask value=".1.1.7910000????"/>
+       <mask value=".1.1.79851060???"/>
+       <mask value=".1.1.79857668???"/>
+       <mask value=".1.1.79857693???"/>
+       <mask value=".1.1.79851093???"/>
+       <mask value=".1.1.79851047???"/>
+       <mask value=".1.1.791609?????"/>
+  </subject_def>
+  <subject_def id="umenu" defSme="umenu">
+    <notes></notes>
+       <mask value=".0.1.0147"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Благовещенск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791460????"/>
+       <mask value=".1.1.791461????"/>
+       <mask value=".1.1.791456?????"/>
+       <mask value=".1.1.791458????"/>
+       <mask value=".1.1.791439????"/>
+       <mask value=".1.1.791457????"/>
+       <mask value=".1.1.791438????"/>
+       <mask value=".1.1.791455?????"/>
+       <mask value=".1.1.7914538????"/>
+       <mask value=".1.1.791459????"/>
+  </subject_def>
+  <subject_def id="distrlist" defSme="DSTRLST">
+    <notes></notes>
+       <mask value=".0.1.0020"/>
+  </subject_def>
+  <subject_def id="Тестовый макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.796078919??"/>
+  </subject_def>
+  <subject_def id="smscsme" defSme="smscsme">
+    <notes></notes>
+       <mask value=".1.1.79168960220"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Владивосток" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791472?????"/>
+       <mask value=".1.1.791468?????"/>
+       <mask value=".1.1.791469?????"/>
+       <mask value=".1.1.791473?????"/>
+       <mask value=".1.1.791466?????"/>
+       <mask value=".1.1.791465?????"/>
+       <mask value=".1.1.791479?????"/>
+       <mask value=".1.1.7902531????"/>
+       <mask value=".1.1.791470?????"/>
+       <mask value=".1.1.791496?????"/>
+       <mask value=".1.1.791497?????"/>
+       <mask value=".1.1.791467?????"/>
+       <mask value=".1.1.791471?????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Горно-Алтайск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.7913999????"/>
+       <mask value=".1.1.7913998????"/>
+       <mask value=".1.1.791369?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Южно-Сахалинск" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791474?????"/>
+       <mask value=".1.1.791475?????"/>
+       <mask value=".1.1.791464?????"/>
+       <mask value=".1.1.791476?????"/>
+  </subject_def>
+  <subject_def id="Уральский макрорегион" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.79128804???"/>
+       <mask value=".1.1.7912886????"/>
+       <mask value=".1.1.7912888????"/>
+       <mask value=".1.1.79128809???"/>
+       <mask value=".1.1.791283?????"/>
+       <mask value=".1.1.791953?????"/>
+       <mask value=".1.1.791293?????"/>
+       <mask value=".1.1.791297?????"/>
+       <mask value=".1.1.791912?????"/>
+       <mask value=".1.1.791992?????"/>
+       <mask value=".1.1.79128805???"/>
+       <mask value=".1.1.791932?????"/>
+       <mask value=".1.1.791232?????"/>
+       <mask value=".1.1.7912883????"/>
+       <mask value=".1.1.791944?????"/>
+       <mask value=".1.1.791281?????"/>
+       <mask value=".1.1.791289?????"/>
+       <mask value=".1.1.791936?????"/>
+       <mask value=".1.1.791946?????"/>
+       <mask value=".1.1.791277?????"/>
+       <mask value=".1.1.791259?????"/>
+       <mask value=".1.1.791292?????"/>
+       <mask value=".1.1.791995?????"/>
+       <mask value=".1.1.791971?????"/>
+       <mask value=".1.1.791249?????"/>
+       <mask value=".1.1.791298?????"/>
+       <mask value=".1.1.791935?????"/>
+       <mask value=".1.1.791239?????"/>
+       <mask value=".1.1.791242?????"/>
+       <mask value=".1.1.791939?????"/>
+       <mask value=".1.1.791911?????"/>
+       <mask value=".1.1.791948?????"/>
+       <mask value=".1.1.791933?????"/>
+       <mask value=".1.1.791240?????"/>
+       <mask value=".1.1.791238?????"/>
+       <mask value=".1.1.791938?????"/>
+       <mask value=".1.1.791278?????"/>
+       <mask value=".1.1.7912889????"/>
+       <mask value=".1.1.791947?????"/>
+       <mask value=".1.1.791290?????"/>
+       <mask value=".1.1.79128808???"/>
+       <mask value=".1.1.791956?????"/>
+       <mask value=".1.1.79128806???"/>
+       <mask value=".1.1.79128807???"/>
+       <mask value=".1.1.79122??????"/>
+       <mask value=".1.1.7912882????"/>
+       <mask value=".1.1.791940?????"/>
+       <mask value=".1.1.791931?????"/>
+       <mask value=".1.1.791241?????"/>
+       <mask value=".1.1.791231?????"/>
+       <mask value=".1.1.791937?????"/>
+       <mask value=".1.1.791258?????"/>
+       <mask value=".1.1.791949?????"/>
+       <mask value=".1.1.7912884????"/>
+       <mask value=".1.1.7912887????"/>
+       <mask value=".1.1.791930?????"/>
+       <mask value=".1.1.791970?????"/>
+       <mask value=".1.1.791957?????"/>
+       <mask value=".1.1.791934?????"/>
+       <mask value=".1.1.791230?????"/>
+       <mask value=".1.1.791247?????"/>
+       <mask value=".1.1.791279?????"/>
+       <mask value=".1.1.791251?????"/>
+       <mask value=".1.1.791945?????"/>
+       <mask value=".1.1.791280?????"/>
+       <mask value=".1.1.791958?????"/>
+       <mask value=".1.1.791299?????"/>
+       <mask value=".1.1.79126??????"/>
+       <mask value=".1.1.791959?????"/>
+       <mask value=".1.1.791257?????"/>
+       <mask value=".1.1.791253?????"/>
+       <mask value=".1.1.7912881????"/>
+       <mask value=".1.1.7912885????"/>
+       <mask value=".1.1.791993?????"/>
+       <mask value=".1.1.791252?????"/>
+       <mask value=".1.1.791248?????"/>
+       <mask value=".1.1.791994?????"/>
+  </subject_def>
+  <subject_def id="Дальневосточный макрорегион - Улан-Удэ" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791483?????"/>
+       <mask value=".1.1.791463?????"/>
+       <mask value=".1.1.791488?????"/>
+       <mask value=".1.1.791484?????"/>
+  </subject_def>
+  <subject_def id="Сибирский макрорегион - Новокузнецк" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.791331?????"/>
+       <mask value=".1.1.791342?????"/>
+       <mask value=".1.1.791333?????"/>
+       <mask value=".1.1.791332?????"/>
+       <mask value=".1.1.791341?????"/>
+       <mask value=".1.1.791313?????"/>
+  </subject_def>
+  <subject_def id="Абоненты МТС" defSme="MAP_PROXY">
+    <notes></notes>
+       <mask value=".1.1.798????????"/>
+       <mask value=".1.1.791????????"/>
+  </subject_def>
+  <route id="profiler &lt; abonents" billing="false" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="profiler">
+      <subject id="profiler"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; pvskuv.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79171002003" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="subscription &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="subscription"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="umenu &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="umenu"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; dvostok.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79147991000" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="1971.direct &lt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="1971">
+      <subject id="1971"/>
+    </destination>
+  </route>
+  <route id="distrlist &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="DSTRLST">
+      <subject id="distrlist"/>
+    </destination>
+  </route>
+  <route id="ota &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="smscsme"/>
+    </source>
+    <destination sme="ota">
+      <subject id="ota"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; ug.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79184330000" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Forward services"/>
+    </destination>
+  </route>
+  <route id="profiler &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="profiler"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="ota &gt; abonents" billing="false" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="ota"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="umenu &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="umenu">
+      <subject id="umenu"/>
+    </destination>
+  </route>
+  <route id="abonents &gt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="true" replayPath="suppress" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Абоненты МТС"/>
+    </destination>
+  </route>
+  <route id="abonents &gt; others" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="true" replayPath="suppress" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Абонент Б"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; ural.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79126313431" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="smsx &lt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="smsx">
+      <subject id="sponsored"/>
+    </destination>
+    <destination sme="smsx">
+      <subject id="smsx"/>
+    </destination>
+  </route>
+  <route id="1971 &lt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="MTSMSme" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Абонент Б"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="1971">
+      <subject id="1971"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; msk.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79168999100" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="Forwarded &lt; nsk.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79139869990" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="sponsored &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="false" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="sponsored">
+      <subject id="sponsored"/>
+    </destination>
+  </route>
+  <route id="subscription &lt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="subscription">
+      <subject id="subscription"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; severozap.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79112009993" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="1971 &gt; abonents" billing="true" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="1971"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Абонент Б"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; pvsksz.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79104999109" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="smsx divert &gt; abonents" billing="false" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="smsx" deliveryMode="default" hide="true" replayPath="suppress" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Абоненты МТС"/>
+    </destination>
+  </route>
+  <route id="smsx &lt; smscsme" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="smscsme"/>
+    </source>
+    <destination sme="smsx">
+      <subject id="smsx"/>
+    </destination>
+  </route>
+  <route id="smsx divert &lt; abonents" billing="true" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Приволжский С-З макрорегион"/>
+    </source>
+    <source>
+      <subject id="Тестовый макрорегион"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <source>
+      <subject id="Центральный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Уральский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Южный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Сибирский макрорегион"/>
+    </source>
+    <source>
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </source>
+    <source>
+      <subject id="Москва"/>
+    </source>
+    <source>
+      <subject id="Дальневосточный макрорегион"/>
+    </source>
+    <source>
+      <subject id="Северо-Западный макрорегион"/>
+    </source>
+    <destination sme="smsx">
+      <subject id="smsx divert"/>
+    </destination>
+  </route>
+  <route id="smsx &gt; abonents" billing="false" transit="false" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="sponsored"/>
+    </source>
+    <source>
+      <subject id="smsx"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="Forwarding &lt; rekom.abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="MAP_PROXY" deliveryMode="forward" hide="false" replayPath="pass" forceDelivery="false" forwardTo="+79107459999" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="Центральный макрорегион Реком"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Домашние сервисы"/>
+    </destination>
+  </route>
+  <route id="distrlist &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="distrlist"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="sponsored &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="false" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="sponsored"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="smscsme &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="true" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <mask value=".1.1.79168960220"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+  <route id="test &gt; abonents" billing="false" transit="false" archiving="false" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="false" active="true" srcSmeId="" deliveryMode="default" hide="false" replayPath="pass" forceDelivery="false" aclId="-1" allowBlocked="false" providerId="-1" categoryId="-1">
+    <notes></notes>
+    <source>
+      <subject id="test"/>
+    </source>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский С-З макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Тестовый макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион Реком"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Центральный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Уральский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Южный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Сибирский макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Приволжский Ю-В макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Москва"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Дальневосточный макрорегион"/>
+    </destination>
+    <destination sme="MAP_PROXY">
+      <subject id="Северо-Западный макрорегион"/>
+    </destination>
+  </route>
+</routes>
