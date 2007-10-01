@@ -1,4 +1,9 @@
+#include <xercesc/util/OutOfMemoryException.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/parsers/SAXParser.hpp>
+
 #include "MmsCommand.h"
+#include "XMLHandlers.h"
 
 namespace scag{
 namespace transport{

@@ -2,23 +2,13 @@
 #define __SCAG_TRANSPORT_MMS_SERVERMMS_HPP__
 
 #include "ClientMms.h"
-
 #include "core/threads/Thread.hpp"
-
-#include <string>
-#include <cstring>
-#include <string.h>
-#include <memory>
-#include <sys/param.h>
-#include <sys/stat.h>
-#include <sys/utsname.h>
   
 namespace scag { 
 namespace transport { 
 namespace mms {
 namespace test {
 
-using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
 extern const char* BAD_REQUEST;

@@ -1,18 +1,12 @@
-#include <string>
-
-//#include <scag/re/RuleEngine.h>
-#include <scag/sessions/SessionManager.h>
 #include <scag/util/singleton/Singleton.h>
-#include <scag/stat/Statistics.h>
 
+#include "logger/Logger.h"
 #include "util/xml/DOMTreeReader.h"
 #include "util/xml/utilFunctions.h"
-#include "MmsCommand.h"
 #include "MmsProcessor.h"
 #include "MmsRouter.h"
 #include "MmsEntity.h"
 
-#include "logger/Logger.h"
 
 namespace scag { namespace transport { namespace mms {
 

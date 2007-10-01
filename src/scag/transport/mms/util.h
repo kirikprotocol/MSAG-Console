@@ -14,9 +14,6 @@
 #include "logger/Logger.h"
 #include "util/debug.h"
 
-//#include "scag/transport/mms/XMLHandlers.h"
-//#include "XMLHandlers.h"
-
 namespace scag {
 namespace transport {
 namespace mms {

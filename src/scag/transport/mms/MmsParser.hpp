@@ -1,16 +1,13 @@
-#ifndef __SCAG_MMS_PARSER_HPP__
-#define __SCAG_MMS_PARSER_HPP__
+#ifndef __SCAG_TRANSPORT_MMS_PARSER_HPP__
+#define __SCAG_TRANSPORT_MMS_PARSER_HPP__
 
-#include <cstring>
+#include <string>
 #include <vector>
 #include <string.h>
 #include <stdlib.h>
 
 #include "logger/Logger.h"
-#include "sms/sms.h"
 #include "core/buffers/Hash.hpp"
-
-#include "util.h"
 
 namespace scag{
 namespace transport{

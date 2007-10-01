@@ -1,34 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <fstream>
 #include <string>
-#include <vector>
 
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include "sms/sms.h"
 #include "util/xml/init.h"
-#include "core/buffers/File.hpp"
 #include "scag/lcm/LongCallManager.h"
 #include "util/Exception.hpp"
 #include "util/config/ConfigView.h"
 #include "logger/Logger.h"
-
-
 #include "util/findConfigFile.h"
 
 #include "Managers.h"
-#include "XMLHandlers.h"
 #include "MmsProcessor.h"
-#include "util.h"
+#include "MmsFactory.h"
 
-using namespace scag::exceptions;
 using std::string;
 using std::exception;
 using namespace smsc::sms;
 using scag::lcm::LongCallManager;
+using scag::transport::mms::MmsFactory;
 using smsc::util::Exception;
 using scag::config::ConfigManager;
 using smsc::logger::Logger;

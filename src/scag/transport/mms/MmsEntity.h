@@ -1,18 +1,15 @@
 #ifndef __SCAG_TRANSPORT_MMS_ENTITY_H__
 #define __SCAG_TRANSPORT_MMS_ENTITY_H__
 
-#include "core/synchronization/Mutex.hpp"
-#include "core/buffers/IntHash.hpp"
-#include "core/buffers/Hash.hpp"
 #include <string>
+
+#include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
 
 namespace scag { namespace transport { namespace mms {
 
 using std::string;
 using smsc::logger::Logger;
-namespace buff=smsc::core::buffers;
-namespace sync=smsc::core::synchronization;
 
 enum MmsEntityType {
   etUnknown, etVASP, etRS

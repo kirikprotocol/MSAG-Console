@@ -1,5 +1,9 @@
-#include "MmsRouter.h"
+#include <xercesc/util/OutOfMemoryException.hpp>
+#include <xercesc/framework/MemBufInputSource.hpp>
+#include <xercesc/parsers/SAXParser.hpp>
 
+#include "MmsRouter.h"
+#include "XMLHandlers.h"
 //#include <scag/util/singleton/Singleton.h>
 
 namespace scag { namespace transport { namespace mms {

@@ -4,7 +4,6 @@
 #include <string>
 
 #include "MmsCommand.h"
-#include "MmsContext.h"
 
 namespace scag { namespace transport { namespace mms {
 

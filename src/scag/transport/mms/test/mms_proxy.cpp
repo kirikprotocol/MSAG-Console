@@ -11,7 +11,7 @@
 #include "core/buffers/File.hpp"
 
 #include "ProxyMms.hpp"
-
+#include "scag/transport/mms/MmsFactory.h"
 
 using scag::transport::mms::test::ProxyMms;
 using scag::transport::mms::test::ServerMms;

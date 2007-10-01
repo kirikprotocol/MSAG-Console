@@ -1,4 +1,7 @@
+#include "scag/util/encodings/Encodings.h"
+#include "util/Exception.hpp"
 #include "XMLHandlers.h"
+#include "MmsFactory.h"
 
 namespace scag {
 namespace transport {

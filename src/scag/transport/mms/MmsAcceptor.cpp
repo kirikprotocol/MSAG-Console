@@ -1,4 +1,3 @@
-#include <errno.h>
 #include "util/Exception.hpp"
 #include "MmsAcceptor.h"
 #include "MmsContext.h"

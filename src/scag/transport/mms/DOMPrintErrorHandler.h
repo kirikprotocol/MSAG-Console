@@ -2,15 +2,8 @@
 #define __SCAG_DOM_PRINT_ERROR_HANDLER_H__
 
 #include <xercesc/dom/DOMErrorHandler.hpp>
-#include <xercesc/dom/DOM.hpp>
-#include <xercesc/dom/DOMWriter.hpp>
-#include <xercesc/dom/DOMImplementation.hpp>
-#include <xercesc/dom/DOMImplementationLS.hpp>
-
 
 #include "logger/Logger.h"
-#include "sms/sms.h"
-
 #include "util.h"
 
 namespace scag {

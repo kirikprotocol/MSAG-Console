@@ -1,5 +1,7 @@
 #include "ScagTask.h"
 #include "Managers.h"
+#include "MmsCommand.h"
+#include "MmsContext.h"
 
 namespace scag { namespace transport { namespace mms {
 

@@ -1,31 +1,16 @@
-#ifndef __SCAG_XML_HANDLER_H__
-#define __SCAG_XML_HANDLER_H__
+#ifndef __SCAG_TRANSPORT_MMS_XML_HANDLER_H__
+#define __SCAG_TRANSPORT_MMS_XML_HANDLER_H__
 
-#include <cstdio>
-#include <ctype.h>
-#include <cctype>
-#include <cstring>
-#include <string.h>
+#include <string>
 
 #include <xercesc/sax/HandlerBase.hpp>
 #include <xercesc/sax/AttributeList.hpp>
 #include <xercesc/dom/DOMErrorHandler.hpp>
-#include <xercesc/util/XMLString.hpp>
-
-#include <xercesc/util/OutOfMemoryException.hpp>
-#include <xercesc/framework/MemBufInputSource.hpp>
-#include <xercesc/parsers/SAXParser.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 
-
-#include <scag/util/encodings/Encodings.h>
-#include <core/buffers/Hash.hpp>
-#include <util/Exception.hpp>
-
-#include "MmsMsg.h"
-#include "MmsFactory.h"
+#include "core/buffers/Hash.hpp"
 #include "logger/Logger.h"
-
+#include "MmsMsg.h"
 #include "MmsRouterTypes.h"
 
 namespace scag{

@@ -1,16 +1,13 @@
-#ifndef SCAG_TRANSPORT_MMS_SCAG_TASK
-#define SCAG_TRANSPORT_MMS_SCAG_TASK
+#ifndef __SCAG_TRANSPORT_MMS_SCAG_TASK_H__
+#define __SCAG_TRANSPORT_MMS_SCAG_TASK_H__
 
-#include "core/synchronization/EventMonitor.hpp"
 #include "logger/Logger.h"
-#include "MmsCommand.h"
-#include "MmsContext.h"
+#include "core/threads/ThreadedTask.hpp"
 #include "MmsProcessor.h"
-#include "TaskList.h"
 
 namespace scag { namespace transport { namespace mms {
 
-using smsc::core::synchronization::EventMonitor;
+using smsc::core::threads::ThreadedTask;
 using smsc::logger::Logger;
 
 class MmsManagerImpl;

@@ -9,12 +9,10 @@
 #include <readline/history.h>
 
 #include "logger/Logger.h"
-#include "sms/sms.h"
 #include "util/xml/init.h"
 #include "core/buffers/File.hpp"
 
-
-//#include "ClientMms.hpp"
+#include "scag/transport/mms/MmsFactory.h"
 #include "ServerMms.hpp"
 
 using smsc::logger::Logger;

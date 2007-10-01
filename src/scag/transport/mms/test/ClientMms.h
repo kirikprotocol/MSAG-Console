@@ -1,13 +1,9 @@
 #ifndef __SCAG_TRANSPORT_MMS_CLIENTMMS_H__
 #define __SCAG_TRANSPORT_MMS_CLIENTMMS_H__
 
-#include <time.h>
-#include <unistd.h>
-
 #include "core/network/Socket.hpp"
 #include "core/threads/Thread.hpp"
 #include "logger/Logger.h"
-#include "sms/sms.h"
 #include "scag/transport/mms/MmsCommand.h"
 #include "scag/transport/mms/MmsParser.hpp"
 

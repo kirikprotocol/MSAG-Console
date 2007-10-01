@@ -1,27 +1,21 @@
 #ifndef SCAG_TRANSPORT_MMS_MANAGERS
 #define SCAG_TRANSPORT_MMS_MANAGERS
 
-#include <string>
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"
-#include "core/network/Socket.hpp"
-#include "logger/Logger.h"
-#include "MmsAcceptor.h"
-#include "TaskList.h"
-#include "IOTasks.h"
-#include "MmsRouter.h"
-#include "util.h"
 #include "scag/config/mms/MmsManagerConfig.h"
-#include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"
 #include "scag/lcm/LongCallManager.h"
+#include "logger/Logger.h"
+#include "MmsAcceptor.h"
+#include "IOTasks.h"
 
 
 namespace scag { namespace transport { namespace mms {
 
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::MutexGuard;
-using smsc::core::network::Socket;
+//using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::logger::Logger;
 using smsc::core::buffers::Hash;

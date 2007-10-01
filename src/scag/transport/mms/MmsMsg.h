@@ -5,15 +5,10 @@
 #include <vector>
 #include <map>
 
-#include "util/Exception.hpp"
-//#include "scag/transport/SCAGCommand.h"
-//#include "core/synchronization/Mutex.hpp"
 #include "core/buffers/Hash.hpp"
 #include "logger/Logger.h"
-#include "sms/sms.h"
 #include "scag/util/encodings/Encodings.h"
 
-#include "scag/transport/mms/util.h"
 #include "DOMPrintErrorHandler.h"
 
 namespace scag {

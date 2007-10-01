@@ -1,6 +1,5 @@
 #include "MmsContext.h"
 
-
 namespace scag { namespace transport { namespace mms {
 
 ActionID MmsContext::actionNext[8] = {

@@ -1,5 +1,5 @@
-#ifndef __SCAG_MMS_FACTORY_H__
-#define __SCAG_MMS_FACTORY_H__
+#ifndef __SCAG_TRANSPORT_MMS_FACTORY_H__
+#define __SCAG_TRANSPORT_MMS_FACTORY_H__
 
 #include <string>
 

@@ -4,12 +4,11 @@
 #include <string>
 
 #include <xercesc/sax/HandlerBase.hpp>
-#include <logger/Logger.h>
-#include <util/xml/DOMTreeReader.h>
-#include <util/xml/utilFunctions.h>
+#include "logger/Logger.h"
+#include "util/xml/DOMTreeReader.h"
+#include "util/xml/utilFunctions.h"
 
 #include "MmsRouterTypes.h"
-#include "XMLHandlers.h"
 
 namespace scag {
 namespace transport {

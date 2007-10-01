@@ -1,4 +1,5 @@
 #include "MmsParser.hpp"
+#include "util.h"
 
 namespace scag {
 namespace transport {

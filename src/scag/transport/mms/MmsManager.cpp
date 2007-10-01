@@ -1,5 +1,4 @@
 #include "Managers.h"
-#include "MmsFactory.h"
 #include <scag/util/singleton/Singleton.h>
 
 namespace scag { namespace transport { namespace mms {
