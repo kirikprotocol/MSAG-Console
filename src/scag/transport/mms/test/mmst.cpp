@@ -12,7 +12,6 @@
 #include "util/xml/init.h"
 #include "core/buffers/File.hpp"
 
-#include "scag/transport/mms/MmsFactory.h"
 #include "ServerMms.hpp"
 
 using smsc::logger::Logger;
@@ -557,7 +556,6 @@ int main(int argc, char* argv[]) {
   }
   Logger::Init();
   smsc::util::xml::initXerces();
-  scag::transport::mms::MmsFactory::initFactories();
   bool is_vasp = true;
   if (std::strcmp(argv[1],"-r") == 0) {
     is_vasp = false;

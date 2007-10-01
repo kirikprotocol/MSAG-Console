@@ -1,10 +1,31 @@
 #include "MmsFactory.h"
+#include "logger/Logger.h"
 
 namespace scag {
 namespace transport {
 namespace mms {
 
+using smsc::logger::Logger;
+
 Hash<MmsFactory*> MmsFactory::factories;
+
+static const MM7SubmitFactory _MM7SubmitFactory;
+static const MM7SubmitRespFactory _MM7SubmitRespFactory;
+static const MM7DeliverFactory _MM7DeliverFactory;
+static const MM7DeliverRespFactory _MM7DeliverRespFactory;
+static const MM7CancelFactory _MM7CancelFactory;
+static const MM7CancelRespFactory _MM7CancelRespFactory;
+static const MM7ExtendedCancelFactory _MM7ExtendedCancelFactory;
+static const MM7ExtendedCancelRespFactory _MM7ExtendedCancelRespFactory;
+static const MM7ReplaceFactory _MM7ReplaceFactory;
+static const MM7ReplaceRespFactory _MM7ReplaceRespFactory;
+static const MM7ExtendedReplaceFactory _MM7ExtendedReplaceFactory;
+static const MM7ExtendedReplaceRespFactory _MM7ExtendedReplaceRespFactory;
+static const MM7ReadReplyFactory _MM7ReadReplyFactory;
+static const MM7ReadReplyRespFactory _MM7ReadReplyRespFactory;
+static const MM7DeliveryReportFactory _MM7DeliveryReportFactory;
+static const MM7DeliveryReportRespFactory _MM7DeliveryReportRespFactory;
+static const GenericResponseFactory _GenericResponseFactory;
 
 void MmsFactory::registerFactory(const char* key, MmsFactory* factory) {
   if (!factories.Exists(key)) {
@@ -12,35 +33,19 @@ void MmsFactory::registerFactory(const char* key, MmsFactory* factory) {
   }
 }
 
-void MmsFactory::initFactories() {
-  registerFactory(mm7_command_name::SUBMIT, new MM7SubmitFactory());
-  registerFactory(mm7_command_name::SUBMIT_RESP, new MM7SubmitRespFactory());
-  registerFactory(mm7_command_name::DELIVER, new MM7DeliverFactory());
-  registerFactory(mm7_command_name::DELIVER_RESP, new MM7DeliverRespFactory());
-  registerFactory(mm7_command_name::CANCEL, new MM7CancelFactory());
-  registerFactory(mm7_command_name::CANCEL_RESP, new MM7CancelRespFactory());
-  registerFactory(mm7_command_name::EXTENDED_CANCEL, new MM7ExtendedCancelFactory());
-  registerFactory(mm7_command_name::EXTENDED_CANCEL_RESP,
-                   new MM7ExtendedCancelRespFactory());
-  registerFactory(mm7_command_name::REPLACE, new MM7ReplaceFactory());
-  registerFactory(mm7_command_name::REPLACE_RESP, new MM7ReplaceRespFactory());
-  registerFactory(mm7_command_name::EXTENDED_REPLACE, new MM7ExtendedReplaceFactory());
-  registerFactory(mm7_command_name::EXTENDED_REPLACE_RESP,
-                   new MM7ExtendedReplaceRespFactory());
-  registerFactory(mm7_command_name::READ_REPLY, new MM7ReadReplyFactory());
-  registerFactory(mm7_command_name::READ_REPLY_RESP, new MM7ReadReplyRespFactory());
-  registerFactory(mm7_command_name::DELIVERY_REPORT, new MM7DeliveryReportFactory());
-  registerFactory(mm7_command_name::DELIVERY_REPORT_RESP,
-                   new MM7DeliveryReportRespFactory());
-  registerFactory(mm7_command_name::FAULT, new GenericResponseFactory());
-}
-   
 MmsMsg* MmsFactory::getMmsMsg(const char* key, const string& transaction_id) {
-  MmsFactory* f = factories.Exists(key) ? factories.Get(key) : 0;
-  return f ? f->createMmsMsg(transaction_id) : 0; 
+  MmsFactory* f = 0;
+  if (factories.Exists(key)) {
+    f = factories.Get(key);
+    return f->createMmsMsg(transaction_id); 
+  } else {
+    smsc_log_warn(Logger::getInstance("mms.fact"),"Factory \'%s\' doesn't exist", key);
+    return 0;
+  }
 }
 
 
 }//mms
 }//transport
 }//scag
+

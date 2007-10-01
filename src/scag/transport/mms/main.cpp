@@ -15,13 +15,11 @@
 
 #include "Managers.h"
 #include "MmsProcessor.h"
-#include "MmsFactory.h"
 
 using std::string;
 using std::exception;
 using namespace smsc::sms;
 using scag::lcm::LongCallManager;
-using scag::transport::mms::MmsFactory;
 using smsc::util::Exception;
 using scag::config::ConfigManager;
 using smsc::logger::Logger;
@@ -58,8 +56,6 @@ void init() {
     scag::transport::mms::MmsProcessor& mp = scag::transport::mms::MmsProcessor::Instance();
     scag::transport::mms::MmsManager::Init(mp, cfg.getMmsManConfig(),
                                             smsc::util::findConfigFile("./conf/mms.xml"));
-
-    scag::transport::mms::MmsFactory::initFactories();
 
     smsc_log_info(log, "Mms Manager started");
   } catch(const Exception& e){
