@@ -2,6 +2,7 @@
 #include <xercesc/framework/MemBufInputSource.hpp>
 #include <xercesc/parsers/SAXParser.hpp>
 
+#include "core/buffers/IntHash.hpp"
 #include "MmsCommand.h"
 #include "XMLHandlers.h"
 
@@ -10,24 +11,37 @@ namespace transport{
 namespace mms {
 
 namespace status {
-  const uint32_t SUCSESS                = 1000;
-  const uint32_t VALIDATION_ERROR       = 4004;
-  const uint32_t SERVICE_ERROR          = 4005;
-  const uint32_t SERVICE_UNAVAILABLE    = 4006;
-  const uint32_t SERVICE_DENIED         = 4007;
-  const uint32_t ENDPOINT_NOT_REGISTRED = 4010;
-  const uint32_t ROUTE_NOT_FOUND        = 4011;
+  const int SUCSESS                = 1000;
+  const int VALIDATION_ERROR       = 4004;
+  const int SERVICE_ERROR          = 4005;
+  const int SERVICE_UNAVAILABLE    = 4006;
+  const int SERVICE_DENIED         = 4007;
+  const int ENDPOINT_NOT_REGISTRED = 4010;
+  const int ROUTE_NOT_FOUND        = 4011;
+  const int MAX_STATUS_CODE        = 4999;
 }
 
 namespace status_text {
-  const char* SUCSESS                = "Success";
-  const char* VALIDATION_ERROR       = "Validation Error";
-  const char* SERVICE_ERROR          = "Service Error";
-  const char* SERVICE_UNAVAILABLE    = "Service Unavailable";
-  const char* SERVICE_DENIED         = "Service Denied";
-  const char* ENDPOINT_NOT_REGISTRED = "Endpoint Not Regisetred";
-  const char* ROUTE_NOT_FOUND        = "Route Not Found";
-}
+  const string SUCSESS                = "Success";
+  const string VALIDATION_ERROR       = "Validation Error";
+  const string SERVICE_ERROR          = "Service Error";
+  const string SERVICE_UNAVAILABLE    = "Service Unavailable";
+  const string SERVICE_DENIED         = "Service Denied";
+  const string ENDPOINT_NOT_REGISTRED = "Endpoint Not Registered";
+  const string ROUTE_NOT_FOUND        = "Route Not Found";
+
+  StatusHash::StatusHash() {
+    Insert(status::SUCSESS, SUCSESS);
+    Insert(status::VALIDATION_ERROR, VALIDATION_ERROR);
+    Insert(status::SERVICE_ERROR, SERVICE_ERROR);
+    Insert(status::SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE);
+    Insert(status::SERVICE_DENIED, SERVICE_DENIED);
+    Insert(status::ENDPOINT_NOT_REGISTRED, ENDPOINT_NOT_REGISTRED);
+    Insert(status::ROUTE_NOT_FOUND, ROUTE_NOT_FOUND);
+  };
+
+  const StatusHash statusHash;
+};
 
 
 MmsCommand::MmsCommand():mms_msg(0), logger(0) {
@@ -244,35 +258,19 @@ const string& MmsCommand::getTransactionId() const {
 }
 
 void MmsCommand::setStatus(int st) {
-  switch (st) {
-  case status::SUCSESS : 
-    mms_msg->setInfoElement(xml::STATUS_CODE, "1000");
-    mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::SUCSESS);
+  if (st < status::SUCSESS || st > status::MAX_STATUS_CODE) {
+    smsc_log_warn(logger, "error status code %d", st);
     return;
-  case status::VALIDATION_ERROR :
-     mms_msg->setInfoElement(xml::STATUS_CODE, "4004");
-     mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::VALIDATION_ERROR);
-     return;
-  case status::SERVICE_ERROR :
-     mms_msg->setInfoElement(xml::STATUS_CODE, "4005");
-     mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::SERVICE_ERROR);
-     return;
-  case status::SERVICE_UNAVAILABLE :
-     mms_msg->setInfoElement(xml::STATUS_CODE, "4006");
-     mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::SERVICE_UNAVAILABLE);
-     return;
-  case status::SERVICE_DENIED :
-     mms_msg->setInfoElement(xml::STATUS_CODE, "4007");
-     mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::SERVICE_DENIED);
-     return;
-  case status::ENDPOINT_NOT_REGISTRED :
-     mms_msg->setInfoElement(xml::STATUS_CODE, "4010");
-     mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::ENDPOINT_NOT_REGISTRED);
-     return;
-  case status::ROUTE_NOT_FOUND :
-     mms_msg->setInfoElement(xml::STATUS_CODE, "4011");
-     mms_msg->setInfoElement(xml::STATUS_TEXT, status_text::ROUTE_NOT_FOUND);
-     return;
+  }
+  char buf[5];
+  snprintf(buf, 5, "%04d", st);
+  buf[4] = 0;
+  mms_msg->setInfoElement(xml::STATUS_CODE, buf);
+  string *ptr = status_text::statusHash.GetPtr(st);
+  if (ptr) {
+    mms_msg->setInfoElement(xml::STATUS_TEXT, *ptr);
+  } else {
+    smsc_log_warn(logger, "unknown status code %d", st);
   }
 }
 

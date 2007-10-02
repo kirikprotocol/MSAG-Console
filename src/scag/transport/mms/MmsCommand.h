@@ -12,23 +12,28 @@ namespace transport {
 namespace mms {
 
 namespace status {
-  extern const uint32_t SUCSESS;
-  extern const uint32_t VALIDATION_ERROR;
-  extern const uint32_t SERVICE_ERROR;
-  extern const uint32_t SERVICE_UNAVAILABLE;
-  extern const uint32_t SERVICE_DENIED;
-  extern const uint32_t ENDPOINT_NOT_REGISTRED;
-  extern const uint32_t ROUTE_NOT_FOUND;
+  extern const int SUCSESS;
+  extern const int VALIDATION_ERROR;
+  extern const int SERVICE_ERROR;
+  extern const int SERVICE_UNAVAILABLE;
+  extern const int SERVICE_DENIED;
+  extern const int ENDPOINT_NOT_REGISTRED;
+  extern const int ROUTE_NOT_FOUND;
+  extern const int MAX_STATUS_CODE;
 }
 
 namespace status_text {
-  extern const char* SUCSESS;
-  extern const char* VALIDATION_ERROR;
-  extern const char* SERVICE_ERROR;
-  extern const char* SERVICE_UNAVAILABLE;
-  extern const char* SERVICE_DENIED;
-  extern const char* ENDPOINT_NOT_REGISTRED;
-  extern const char* ROUTE_NOT_FOUND;
+  extern const string SUCSESS;
+  extern const string VALIDATION_ERROR;
+  extern const string SERVICE_ERROR;
+  extern const string SERVICE_UNAVAILABLE;
+  extern const string SERVICE_DENIED;
+  extern const string ENDPOINT_NOT_REGISTRED;
+  extern const string ROUTE_NOT_FOUND;
+
+  struct StatusHash : public smsc::core::buffers::IntHash<string> {
+    StatusHash();
+  };
 }
 
 using smsc::logger::Logger;
