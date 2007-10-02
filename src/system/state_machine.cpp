@@ -1303,6 +1303,41 @@ StateType StateMachine::submit(Tuple& t)
     sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
   }
 
+
+  if(!c.ri.transit)
+  {
+    if(!extactConcatInfoToSar(*sms))
+    {
+      warn2(smsLog,"extactConcatInfoToSar failed. msgId=%lld, from %s to %s",
+                            t.msgId,
+                            sms->getOriginatingAddress().toString().c_str(),
+                            sms->getDestinationAddress().toString().c_str());
+      submitResp(t,sms,Status::INVOPTPARAMVAL);
+      return ERROR_STATE;
+    }
+
+
+    if(!extractPortsFromUdh(*sms))
+    {
+      warn2(smsLog,"extractPortsFromUdh failed. msgId=%lld, from %s to %s",
+                            t.msgId,
+                            sms->getOriginatingAddress().toString().c_str(),
+                            sms->getDestinationAddress().toString().c_str());
+      submitResp(t,sms,Status::INVOPTPARAMVAL);
+      return ERROR_STATE;
+    }
+
+
+    if(!convertSarToUdh(*sms))
+    {
+      warn2(smsLog,"convertSarToUdh failed. msgId=%lld, from %s to %s",
+                            t.msgId,
+                            sms->getOriginatingAddress().toString().c_str(),
+                            sms->getDestinationAddress().toString().c_str());
+      submitResp(t,sms,Status::INVOPTPARAMVAL);
+      return ERROR_STATE;
+    };
+  }
   ////
   //
   //  Merging
@@ -1575,69 +1610,6 @@ StateType StateMachine::submit(Tuple& t)
 
 
   int pres=psSingle;
-
-  if(!c.ri.transit)
-  {
-    if(!extactConcatInfoToSar(*sms))
-    {
-      warn2(smsLog,"extactConcatInfoToSar failed. msgId=%lld, from %s to %s",
-                            t.msgId,
-                            sms->getOriginatingAddress().toString().c_str(),
-                            sms->getDestinationAddress().toString().c_str());
-      submitResp(t,sms,Status::INVOPTPARAMVAL);
-      if(c.createSms==scsReplace)
-      {
-        try{
-          store->changeSmsStateToDeleted(t.msgId);
-        }catch(std::exception& e)
-        {
-          warn2(smsLog,"Failed to change incomplete sms state to deleted msgId=%lld",t.msgId);
-        }
-      }
-      return ERROR_STATE;
-    }
-
-
-    if(!extractPortsFromUdh(*sms))
-    {
-      warn2(smsLog,"extractPortsFromUdh failed. msgId=%lld, from %s to %s",
-                            t.msgId,
-                            sms->getOriginatingAddress().toString().c_str(),
-                            sms->getDestinationAddress().toString().c_str());
-      submitResp(t,sms,Status::INVOPTPARAMVAL);
-      if(c.createSms==scsReplace)
-      {
-        try{
-          store->changeSmsStateToDeleted(t.msgId);
-        }catch(std::exception& e)
-        {
-          warn2(smsLog,"Failed to change incomplete sms state to deleted msgId=%lld",t.msgId);
-        }
-      }
-      return ERROR_STATE;
-    }
-
-
-    if(!convertSarToUdh(*sms))
-    {
-      warn2(smsLog,"convertSarToUdh failed. msgId=%lld, from %s to %s",
-                            t.msgId,
-                            sms->getOriginatingAddress().toString().c_str(),
-                            sms->getDestinationAddress().toString().c_str());
-      submitResp(t,sms,Status::INVOPTPARAMVAL);
-      if(c.createSms==scsReplace)
-      {
-        try{
-          store->changeSmsStateToDeleted(t.msgId);
-        }catch(std::exception& e)
-        {
-          warn2(smsLog,"Failed to change incomplete sms state to deleted msgId=%lld",t.msgId);
-        }
-      }
-      return ERROR_STATE;
-    };
-  }
-
 
 
   if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
