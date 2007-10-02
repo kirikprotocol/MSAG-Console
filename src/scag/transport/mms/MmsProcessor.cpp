@@ -21,7 +21,7 @@ public:
   virtual int processResponse(MmsResponse &response);
   virtual int statusResponse(MmsResponse &response, bool delivered);
   void init(const string& cfg);
-  virtual ~MmsProcessorImpl() {};
+  virtual ~MmsProcessorImpl();
 
 public:
   void addMmsEntity(const MmsEntityInfo& info);
@@ -204,7 +204,12 @@ void MmsProcessorImpl::init(const string& cfg) {
 
   list = elem->getElementsByTagName(XmlStr("rsrecord"));
   ParseTag(this,list,etRS);
-
+  MmsEntityInfo entity_info;
+  entity_info.host = "sunfire";
+  entity_info.endpointId = "vasp3";
+  entity_info.port = 11111;
+  entity_info.enabled = false;
+  updateMmsEntity(entity_info);
   printMmsEntity();
 
   router.Init(cfg + "/mms_routes.xml");
@@ -252,6 +257,14 @@ void MmsProcessorImpl::printMmsEntity(){
 
 }
 
+MmsProcessorImpl::~MmsProcessorImpl(){
+  char* name = 0;
+  MmsEntity* value = 0;
+  registry.First();
+  while(registry.Next(name, value)) {
+    delete value;
+  }
+}
 }//mms
 }//transport
 }//scag
