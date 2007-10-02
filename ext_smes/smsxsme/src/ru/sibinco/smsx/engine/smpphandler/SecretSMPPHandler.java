@@ -247,6 +247,10 @@ class SecretSMPPHandler extends SMPPHandler {
             sendMessage(serviceAddress, sourceAddress, msgDestinationAbonentNotRegistered.replaceAll("\\{dest_abonent}", destinationAddress));
             break;
 
+          case SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
+            sendResponse(msg, Data.ESME_RINVDSTADR);
+            break;
+
           case SecretSendMessageCmd.STATUS_SYSTEM_ERROR:
             sendResponse(msg, Data.ESME_RSYSERR);
             break;

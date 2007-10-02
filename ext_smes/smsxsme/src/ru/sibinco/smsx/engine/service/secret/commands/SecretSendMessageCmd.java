@@ -10,6 +10,7 @@ import ru.sibinco.smsx.engine.service.Command;
 public class SecretSendMessageCmd extends Command {
   public static final int STATUS_SOURCE_ABONENT_NOT_REGISTERED = STATUS_INT + 1;
   public static final int STATUS_DESTINATION_ABONENT_NOT_REGISTERED = STATUS_INT + 2;
+  public static final int STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED = STATUS_INT + 3;
 
   private String sourceAddress;
   private String destinationAddress;

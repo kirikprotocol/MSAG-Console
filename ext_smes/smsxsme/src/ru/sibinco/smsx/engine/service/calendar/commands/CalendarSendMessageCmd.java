@@ -12,6 +12,7 @@ import java.util.Date;
 public class CalendarSendMessageCmd extends Command {
 
   public static final int STATUS_WRONG_SEND_DATE = STATUS_INT + 1;
+  public static final int STATUS_WRONG_DESTINATION_ADDRESS = STATUS_INT + 2;
 
   // fields
   private String sourceAddress;

@@ -12,6 +12,7 @@ import ru.sibinco.smsx.engine.service.secret.datasource.SecretUserWithMessages;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * User: artem
@@ -23,6 +24,8 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
                                  SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver {
 
   private static final Category log = Category.getInstance("SECRET");
+
+  private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}");
 
   private final SecretDataSource ds;
   private final MessageSender messageSender;
@@ -131,6 +134,13 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
   public void execute(SecretSendMessageCmd cmd) {
     try {
       log.info("Secret msg send req: srcaddr=" + cmd.getSourceAddress() + "; dstAddr=" + cmd.getDestinationAddress());
+
+      // Check destination address
+      if (!ALLOWED_DEST_ADDR.matcher(cmd.getDestinationAddress()).matches()) {
+        log.info("Destination address is not allowed");
+        cmd.update(SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED);
+        return;
+      }
 
       final Map users = ds.loadSecretUsersByAddresses(new String[]{cmd.getSourceAddress(), cmd.getDestinationAddress()});
 

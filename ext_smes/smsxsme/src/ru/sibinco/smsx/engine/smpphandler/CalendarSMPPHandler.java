@@ -141,6 +141,9 @@ class CalendarSMPPHandler extends SMPPHandler {
                 sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
                 sendMessage(sourceAddress, destinationAddress, cmd.getMessage());
                 break;
+              case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
+                sendResponse(inObj.getIncomingMessage(), Data.ESME_RINVDSTADR);
+                break;
               default:
                 sendResponse(inObj.getIncomingMessage(), Data.ESME_RSYSERR);
                 log.error("WARNING: Unknown result type in Calendar Handler");

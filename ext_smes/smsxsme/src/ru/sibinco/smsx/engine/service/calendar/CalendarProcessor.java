@@ -9,6 +9,7 @@ import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.regex.Pattern;
 
 /**
  * User: artem
@@ -17,6 +18,8 @@ import java.util.Calendar;
 
 class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarCheckMessageStatusCmd.Receiver {
   private static final Category log = Category.getInstance("CALENDAR");
+
+  private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}");
 
   // Properties
   private final long maxDate;
@@ -42,6 +45,11 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
       if (cmd.getSendDate() == null || cmd.getSendDate().getTime() > maxDate || cmd.getSendDate().getTime() < System.currentTimeMillis()) {
         log.info("Send date is empty, in the past or after max year");
         cmd.update(CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE);
+        return;
+
+      } else if (!ALLOWED_DEST_ADDR.matcher(cmd.getDestinationAddress()).matches()) {
+        log.info("Destination address is not allowed");
+        cmd.update(CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS);
         return;
 
       } else {

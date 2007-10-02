@@ -32,9 +32,11 @@ class SmsXSenderHandler implements SmsXSender {
 
   // Secret service errors
   private static final int STATUS_SECRET_DESTINATION_ABONENT_NOT_REGISTERED = -200;
+  private static final int STATUS_SECRET_WRONG_DESTINATION_ADDRESS = -201;
 
   // Calendar service errors
   private static final int STATUS_CALENDAR_WRONG_SEND_DATE = -100;
+  private static final int STATUS_CALENDAR_WRONG_DESTINATION_ADDRESS = -101;
 
   // General error
   private static final int STATUS_DESTINATION_ABONENT_IN_BLACK_LIST = -6;
@@ -131,6 +133,9 @@ class SmsXSenderHandler implements SmsXSender {
           case CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE:
             status = STATUS_CALENDAR_WRONG_SEND_DATE;
             break;
+          case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
+            status = STATUS_CALENDAR_WRONG_DESTINATION_ADDRESS;
+            break;
           default:
             status = STATUS_SYSTEM_ERROR;
 
@@ -155,6 +160,9 @@ class SmsXSenderHandler implements SmsXSender {
             break;
           case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
             status = STATUS_SECRET_DESTINATION_ABONENT_NOT_REGISTERED;
+            break;
+          case SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
+            status = STATUS_SECRET_WRONG_DESTINATION_ADDRESS;
             break;
           default:
             status = STATUS_SYSTEM_ERROR;
