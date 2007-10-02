@@ -128,6 +128,7 @@ const char* MmsReaderTask::taskName() {
 }
 
 bool MmsReaderTask::createCommand(MmsContext *cx, Socket *s) {
+  cx->http_packet.replaceSoapEnvelopeXmlnsValue();
   if (cx->action == READ_REQUEST) {
     smsc_log_debug(logger, "%p: %p request parsed", this, cx);
     return cx->createRequest();

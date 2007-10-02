@@ -35,13 +35,23 @@ struct MmsEntityInfo {
 struct MmsEntity {
   MmsEntityInfo info;
   Mutex mutex;
+  Logger* logger;
   MmsEntity() {
+    logger = Logger::getInstance("mms.entity");
+    smsc_log_debug(logger, "create \'%s\' entity", info.endpointId.c_str());
   }
   MmsEntity(const MmsEntityInfo& _info) {
     info = _info;
+    logger = Logger::getInstance("mms.entity");
+    smsc_log_debug(logger, "create \'%s\' entity", info.endpointId.c_str());
   }
   MmsEntity(const MmsEntity& entity) {
     info = entity.info;
+    logger = Logger::getInstance("mms.entity");
+    smsc_log_debug(logger, "create \'%s\' entity", info.endpointId.c_str());
+  }
+  ~MmsEntity() {
+    smsc_log_debug(logger, "delete \'%s\' entity", info.endpointId.c_str());
   }
 };
 

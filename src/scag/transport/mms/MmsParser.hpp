@@ -138,6 +138,7 @@ public:
   bool serialize(string& serialized_packet) const;
   void createFakeResp(int status);
   void fillResponse();
+  bool replaceSoapEnvelopeXmlnsValue();
 
   void test();
   void clear();

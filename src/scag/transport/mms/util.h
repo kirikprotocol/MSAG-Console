@@ -161,36 +161,6 @@ namespace xml {
     DOMText* node_value = doc->createTextNode(XStr(value.c_str()).unicodeForm());
     node->appendChild(node_value);
   };
-
-  inline bool replaceXmlnsValue(string& soap_envelope) {
-    size_t mm7_pos = soap_envelope.find(xml::XMLNS_MM7);
-    if (mm7_pos == string::npos) {
-      return false;
-    }
-    size_t ns_start = soap_envelope.find_first_of("\"\'", mm7_pos);
-    if (ns_start == string::npos) {
-      return false;
-    }
-    size_t ns_end = soap_envelope.find_first_of("\"\'", ++ns_start);
-    if (ns_end == string::npos) {
-      return false;
-    }
-    soap_envelope.replace(ns_start, ns_end - ns_start, MM7_URI);
-    size_t ns_pos = soap_envelope.find(xml::XMLNS, ns_end);
-    if (ns_pos == string::npos) {
-      return false;
-    }
-    ns_start = soap_envelope.find_first_of("\"\'", ns_pos);
-    if (ns_start == string::npos) {
-      return false;
-    }
-    ns_end = soap_envelope.find_first_of("\"\'", ++ns_start);
-    if (ns_end == string::npos) {
-      return false;
-    }
-    soap_envelope.replace(ns_start, ns_end - ns_start, MM7_URI);
-    return true;
-  }
 }
 
 static const size_t MM7_TIME_BUFFER_SIZE = 26;
