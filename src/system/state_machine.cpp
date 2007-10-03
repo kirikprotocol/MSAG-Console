@@ -499,11 +499,16 @@ bool checkSourceAddress(const std::string& pattern,const Address& src)
 
 void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
 {
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("sms.dir");
   const char *body="";
   TmpBuf<char,256> tmpBuf(0);
   unsigned int len=0;
   int dc=sms.getIntProperty(Tag::SMPP_DATA_CODING);
-  if(dc==DataCoding::BINARY)return;
+  if(dc==DataCoding::BINARY)
+  {
+    smsc_log_info(log,"DIRECT: disabled for binary datacoding");
+    return;
+  }
   bool udhi=(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40;
   int udhLen=0;
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
@@ -540,6 +545,20 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     len-=udhLen;
     body+=udhLen;
   }
+  {
+
+    unsigned char tmp[4]={
+      0,
+    };
+    tmp[0]=len>0?body[0]:0;
+    tmp[1]=len>1?body[1]:0;
+    tmp[2]=len>2?body[2]:0;
+    tmp[3]=len>3?body[3]:0;
+    smsc_log_info(log,"DIRECT: oa=%s, da=%s, Body: %02x %02x %02x %02x, len=%d, dc=%d",
+                  sms.getOriginatingAddress().toString().c_str(),
+                  sms.getDestinationAddress().toString().c_str(),
+                  tmp[0],tmp[1],tmp[2],tmp[3],len,sms.getIntProperty(Tag::SMPP_DATA_CODING));
+  }
   if(len==0)return;
   bool hasDirectives=false;
   switch(sms.getIntProperty(Tag::SMPP_DATA_CODING))
@@ -550,13 +569,17 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       break;
     case DataCoding::UCS2:
     {
-      unsigned short tmp;
+      uint16_t tmp;
       memcpy(&tmp,body,2);
       hasDirectives=(tmp=='#');
       break;
     }
   }
-  if(!hasDirectives)return;
+  if(!hasDirectives)
+  {
+    smsc_log_info(log,"Directive not found\n");
+    return;
+  }
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))throw Exception("Directive found in multipart message");
   static const char *escchars="[]{}^~\\|";
   TmpBuf<char,256> bufPtr(len*2+1);
@@ -591,33 +614,33 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     int n=10;
     if(dreAck.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
-      __trace__("DIRECT: ack found");
+      smsc_log_info(log,"DIRECT: ack found");
       sms.setDeliveryReport(REPORT_ACK);
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreNoAck.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
-      __trace__("DIRECT: noack found");
+      smsc_log_info(log,"DIRECT: noack found");
       sms.setDeliveryReport(REPORT_NOACK);
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreHide.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
-      __trace__("DIRECT: hide");
+      smsc_log_info(log,"DIRECT: hide");
       if(srcprof.hideModifiable)
         sms.setIntProperty(Tag::SMSC_HIDE,1);
       else
       {
-        __trace__("DIRECT: error, hide is not modifiable");
+        smsc_log_info(log,"DIRECT: error, hide is not modifiable");
       }
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreUnhide.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
-      __trace__("DIRECT: unhide");
+      smsc_log_info(log,"DIRECT: unhide");
       if(srcprof.hideModifiable)
         sms.setIntProperty(Tag::SMSC_HIDE,0);
       else
@@ -629,13 +652,14 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     }else
     if(dreNoTrans.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
-      __trace__("DIRECT: notrans");
+      smsc_log_info(log,"DIRECT: notrans");
       sms.setIntProperty(Tag::SMSC_TRANSLIT,0);
       lastDirectiveSymbol=m[0].end;
       i=m[0].end;
     }else
     if(dreFlash.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
+      smsc_log_info(log,"DIRECT: flash");
       if(!sms.hasIntProperty(Tag::SMSC_FORCE_DC))
       {
         sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
@@ -659,7 +683,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(dreTemplate.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       tmplname.assign(buf+m[1].start,m[1].end-m[1].start);
-      __trace2__("DIRECT: template=%s",tmplname.c_str());
+      smsc_log_info(log,"DIRECT: template=%s",tmplname.c_str());
       tmplname="templates."+tmplname;
       OutputFormatter *f=ResourceManager::getInstance()->getFormatter(p.locale,tmplname);
       int j=m[0].end;
@@ -679,7 +703,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         {
           value="";
         }
-        __trace2__("DIRECT: found template param %s=%s",name.c_str(),value.c_str());
+        smsc_log_info(log,"DIRECT: found template param %s=%s",name.c_str(),value.c_str());
         if(f)
         {
           int et=f->getEntityType(name.c_str());
@@ -730,7 +754,11 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
       break;
     }
   }
-  if(lastDirectiveSymbol==0)return;
+  if(lastDirectiveSymbol==0)
+  {
+    smsc_log_info(log,"DIRECT: lastDirectiveSymbol==0");
+    return;
+  }
   if(tmplname.length())
   {
     lastDirectiveSymbol=len;
@@ -843,7 +871,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     }
   }
   __require__(newlen>=0 && newlen<=65535);
-  __trace2__("DIRECT: newlen=%d",newlen);
+  smsc_log_info(log,"DIRECT: newlen=%d",newlen);
   //#def N# #ack# #noack# #template=name# {name}="value"
   if(newlen>255)
   {
