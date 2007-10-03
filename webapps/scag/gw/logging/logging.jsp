@@ -67,7 +67,7 @@
             <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="true" title="item.mbapply.title"/>
             <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="true"
                         title="logging.item.save.permanent.title"
-                        onclick="clickCancel()"/>
+                        onclick=""/>
             <sm-pm:space/>
         </sm-pm:menu>
     </c:when>
@@ -76,7 +76,7 @@
             <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="false" title="item.mbapply.title"/>
             <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="false"
                         title="logging.item.save.permanent.title"
-                        onclick="clickCancel()"/>
+                        onclick=""/>
             <sm-pm:space/>
         </sm-pm:menu>
     </c:otherwise>
