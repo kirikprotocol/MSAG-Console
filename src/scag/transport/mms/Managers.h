@@ -15,7 +15,6 @@ namespace scag { namespace transport { namespace mms {
 
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::MutexGuard;
-//using smsc::core::network::Socket;
 using smsc::core::threads::ThreadPool;
 using smsc::logger::Logger;
 using smsc::core::buffers::Hash;

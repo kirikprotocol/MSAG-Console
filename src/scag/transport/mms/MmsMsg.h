@@ -159,16 +159,13 @@ public:
   void setInfoElement(const char* name, const string& value);
   bool isMM7Req() const;
   bool isMM4Req() const;
-  //void setMsgType(string _msgType);
-  //string getMsgType() const;
+
 protected:
   uint8_t command_id; 
   string transaction_id;
   string mms_version;
   Hash<string> mms_fields;  
   virtual bool getXMLDocument(DOMDocument* doc, DOMElement*& root_element) const;
-private:
-  //string msg_type;
 };
 
 struct MM7GenericVASPReq : public MmsMsg {

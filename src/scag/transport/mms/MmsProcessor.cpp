@@ -204,12 +204,6 @@ void MmsProcessorImpl::init(const string& cfg) {
 
   list = elem->getElementsByTagName(XmlStr("rsrecord"));
   ParseTag(this,list,etRS);
-  MmsEntityInfo entity_info;
-  entity_info.host = "sunfire";
-  entity_info.endpointId = "vasp3";
-  entity_info.port = 11111;
-  entity_info.enabled = false;
-  updateMmsEntity(entity_info);
   printMmsEntity();
 
   router.Init(cfg + "/mms_routes.xml");

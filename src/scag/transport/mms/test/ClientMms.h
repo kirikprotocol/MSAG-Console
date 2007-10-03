@@ -111,7 +111,7 @@ protected:
   string prefix;
 
 private:
-  bool sendVASPRequest(const MmsCommand& cmd, const string& soap_attchment);
+  bool sendVASPRequest(MmsCommand& cmd, const string& soap_attchment);
 
 };
 

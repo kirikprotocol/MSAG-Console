@@ -77,15 +77,15 @@ bool MmsContext::createRequest() {
 }
 
 void MmsContext::createFakeResponse() {
-  if (result && result < 1000) {
+  if (result && result < status::SUCSESS) {
     http_packet.createFakeResp(result);
     return;
   }
-  if (!result || result < 2000) {
+  if (!result || result < status::CLIENT_ERROR) {
     return;
   }
   if (!command) {
-    result = 500;
+    result = http_status::INTERNAL_SERVER_ERROR;
     http_packet.createFakeResp(result);
     return;
   }
@@ -95,14 +95,13 @@ void MmsContext::createFakeResponse() {
   if (!cmd->createResponse(command->getMmsMsg(), result)) {
     if (command->isRequest()) {
       if (command->getTransactionId().empty()) {
-        result = 500;
+        result = http_status::INTERNAL_SERVER_ERROR;
         http_packet.createFakeResp(result);
         return;
       }
       transaction_id = command->getTransactionId();
     }
-    (is_vasp) ? cmd->createVASPError(transaction_id, result) : 
-                cmd->createRSError(transaction_id, result);
+    cmd->createGenericError(transaction_id, result, is_vasp);
   }
   delete command;
   command = cmd;
@@ -116,7 +115,7 @@ void MmsContext::createFakeResponse() {
 void MmsContext::serializeRequest() {
   string soap_envelope;
   if (!command || !command->serialize(soap_envelope)) {
-    result = 500;
+    result = http_status::INTERNAL_SERVER_ERROR;
     createFakeResponse();
     return;
   }
@@ -129,7 +128,7 @@ void MmsContext::serializeResponse() {
   }
   string soap_envelope;
   if (!command || !command->serialize(soap_envelope)) {
-    result = 4005;
+    result = status::SERVICE_ERROR;
     createFakeResponse();
     return;
   }

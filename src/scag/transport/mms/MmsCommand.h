@@ -13,7 +13,10 @@ namespace mms {
 
 namespace status {
   extern const int SUCSESS;
+  extern const int CLIENT_ERROR;
+  extern const int SERVER_ERROR;
   extern const int VALIDATION_ERROR;
+  extern const int UNSUPPORTED_OPERATION;
   extern const int SERVICE_ERROR;
   extern const int SERVICE_UNAVAILABLE;
   extern const int SERVICE_DENIED;
@@ -24,7 +27,10 @@ namespace status {
 
 namespace status_text {
   extern const string SUCSESS;
+  extern const string CLIENT_ERROR;
+  extern const string SERVER_ERROR;
   extern const string VALIDATION_ERROR;
+  extern const string UNSUPPORTED_OPERATION;
   extern const string SERVICE_ERROR;
   extern const string SERVICE_UNAVAILABLE;
   extern const string SERVICE_DENIED;
@@ -83,17 +89,9 @@ public:
 /*********************************************/  
   const MmsMsg* getMmsMsg() const;
   bool createMM7Command(const char* http_buf, size_t buf_size); 
-  bool createResponse(const MmsMsg* _mms_msg,
-                      const string& status_code, const string& status_text);
-  bool createResponse(const string& status_code, const string& status_text);
   bool createResponse(const MmsMsg* _mms_msg, int status_code);
   bool createResponse(int status_code);
-  bool createRSError(const string& transaction_id,
-                     const string& status_code, const string& status_text);
-  bool createVASPError(const string& transaction_id,
-                       const string& status_code, const string& status_text);
-  bool createRSError(const string& transaction_id, int status_code);
-  bool createVASPError(const string& transaction_id, int status_code);
+  bool createGenericError(const string& _transaction_id, int status_code, bool is_vasp);
 
   bool serialize(string& serilized_cmd) const;
   string getInfoElement(const char* element_name) const;

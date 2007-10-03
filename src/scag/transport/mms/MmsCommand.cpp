@@ -12,6 +12,9 @@ namespace mms {
 
 namespace status {
   const int SUCSESS                = 1000;
+  const int CLIENT_ERROR           = 2000;  
+  const int SERVER_ERROR           = 3000;  
+  const int UNSUPPORTED_OPERATION  = 4003;
   const int VALIDATION_ERROR       = 4004;
   const int SERVICE_ERROR          = 4005;
   const int SERVICE_UNAVAILABLE    = 4006;
@@ -23,6 +26,9 @@ namespace status {
 
 namespace status_text {
   const string SUCSESS                = "Success";
+  const string CLIENT_ERROR           = "Client Error"; 
+  const string SERVER_ERROR           = "Server Error"; 
+  const string UNSUPPORTED_OPERATION  = "Unsupported Operation";
   const string VALIDATION_ERROR       = "Validation Error";
   const string SERVICE_ERROR          = "Service Error";
   const string SERVICE_UNAVAILABLE    = "Service Unavailable";
@@ -32,6 +38,9 @@ namespace status_text {
 
   StatusHash::StatusHash() {
     Insert(status::SUCSESS, SUCSESS);
+    Insert(status::CLIENT_ERROR, CLIENT_ERROR);
+    Insert(status::SERVER_ERROR, SERVER_ERROR);
+    Insert(status::UNSUPPORTED_OPERATION, UNSUPPORTED_OPERATION);
     Insert(status::VALIDATION_ERROR, VALIDATION_ERROR);
     Insert(status::SERVICE_ERROR, SERVICE_ERROR);
     Insert(status::SERVICE_UNAVAILABLE, SERVICE_UNAVAILABLE);
@@ -129,62 +138,6 @@ bool MmsCommand::createMM7Command(const char* soap_envelope, size_t envelope_siz
   return mms_msg ? true : false;
 }
 
-bool MmsCommand::createResponse(const MmsMsg* _mms_msg,
-                                const string& status_code, const string& status_text) {
-  if (!_mms_msg || (!_mms_msg->isMM7Req() && !_mms_msg->isMM4Req())) {
-    return false;
-  }
-  if (mms_msg) {
-    delete mms_msg;
-    mms_msg = NULL;
-  }
-  transaction_id = _mms_msg->getTransactionId();
-  mms_msg = _mms_msg->getResponse();
-  mms_msg->setInfoElement(xml::STATUS_CODE, status_code);
-  mms_msg->setInfoElement(xml::STATUS_TEXT, status_text);
-  return true;
-}
-
-bool MmsCommand::createResponse(const string& status_code, const string& status_text) {
-  if (!mms_msg || (!mms_msg->isMM7Req() && !mms_msg->isMM4Req())) {
-    return false;
-  }
-  MmsMsg *resp_msg = mms_msg->getResponse();
-  delete mms_msg;
-  mms_msg = resp_msg;
-  mms_msg->setInfoElement(xml::STATUS_CODE, status_code);
-  mms_msg->setInfoElement(xml::STATUS_TEXT, status_text);
-  return true;
-}
-
-bool MmsCommand::createRSError(const string& _transaction_id,
-                               const string& status_code, const string& status_text) {
-  if (mms_msg) {
-    delete mms_msg;
-    mms_msg = NULL;
-  }
-  mms_msg = new MM7RSErrorResp(_transaction_id);
-  mms_msg->setInfoElement(xml::STATUS_CODE, status_code);
-  mms_msg->setInfoElement(xml::STATUS_TEXT, status_text);
-  mms_msg->setInfoElement(xml::FAULT_CODE, "env:Client");
-  mms_msg->setInfoElement(xml::FAULT_STRING, "Client Error");
-  return true;
-}
-
-bool MmsCommand::createVASPError(const string& _transaction_id,
-                                 const string& status_code, const string& status_text) {
-  if (mms_msg) {
-    delete mms_msg;
-    mms_msg = NULL;
-  }
-  mms_msg = new MM7VASPErrorResp(_transaction_id);
-  mms_msg->setInfoElement(xml::STATUS_CODE, status_code);
-  mms_msg->setInfoElement(xml::STATUS_TEXT, status_text);
-  mms_msg->setInfoElement(xml::FAULT_CODE, "env:Client");
-  mms_msg->setInfoElement(xml::FAULT_STRING, "Client Error");
-  return true;
-}
-
 bool MmsCommand::createResponse(const MmsMsg* _mms_msg, int status_code) {
   if (!_mms_msg || (!_mms_msg->isMM7Req() && !_mms_msg->isMM4Req())) {
     return false;
@@ -210,24 +163,17 @@ bool MmsCommand::createResponse(int status_code) {
   return true;
 }
 
-bool MmsCommand::createRSError(const string& _transaction_id, int status_code) {
+bool MmsCommand::createGenericError(const string& _transaction_id,
+                                    int status_code, bool is_vasp) {
   if (mms_msg) {
     delete mms_msg;
     mms_msg = NULL;
   }
-  mms_msg = new MM7RSErrorResp(_transaction_id);
-  setStatus(status_code);
-  mms_msg->setInfoElement(xml::FAULT_CODE, "env:Client");
-  mms_msg->setInfoElement(xml::FAULT_STRING, "Client Error");
-  return true;
-}
-
-bool MmsCommand::createVASPError(const string& _transaction_id, int status_code) {
-  if (mms_msg) {
-    delete mms_msg;
-    mms_msg = NULL;
+  if (is_vasp) {
+    mms_msg = new MM7VASPErrorResp(_transaction_id);
+  } else {
+    mms_msg = new MM7RSErrorResp(_transaction_id);
   }
-  mms_msg = new MM7VASPErrorResp(_transaction_id);
   setStatus(status_code);
   mms_msg->setInfoElement(xml::FAULT_CODE, "env:Client");
   mms_msg->setInfoElement(xml::FAULT_STRING, "Client Error");

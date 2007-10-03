@@ -26,9 +26,12 @@ extern const char* CONTENT_LENGTH;
 extern const char* SAMPLE_CONTENT_LENGTH;
 extern const char* SOAP_ACTION;
 
-extern const int BAD_REQUEST;
-extern const int INTERNAL_SERVER_ERROR;
-extern const int SERVICE_UNAVAILABLE;
+namespace http_status {
+  extern const int BAD_REQUEST;
+  extern const int INTERNAL_SERVER_ERROR;
+  extern const int SERVICE_UNAVAILABLE;
+  extern const int REQUEST_TIMEOUT;
+}
 
 extern const char* MULTIPART;
 extern const size_t MULTIPART_SIZE;

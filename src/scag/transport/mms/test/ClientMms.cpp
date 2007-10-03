@@ -38,12 +38,6 @@ bool ClientMms::sendCommand(const string& cmd_template, const string& soap_attch
   if (!cmd.createMM7Command(cmd_template.c_str(), cmd_template.size())) {
     return false;
   }
-  cmd.setTransactionId(getTransactionId(prefix));
-  if (is_vasp) {
-    cmd.setInfoElement(xml::VASP_ID, endpoint_id);
-  } else {
-    cmd.setInfoElement(xml::MMS_RS_ID, endpoint_id);
-  }
   return sendVASPRequest(cmd, soap_attchment);
 }
 
@@ -130,7 +124,7 @@ bool ClientMms::sendRequestPacket(const char* packet) {
   smsc_log_debug(logger, "Request Packet:\n\n\'%s\'\n", packet);
   smsc_log_debug(logger, "Start Receive Response Packet");
   std::string in_packet;
-  recvPacket(&socket, SERVER_TIME_OUT * 10, in_packet);
+  recvPacket(&socket, 100, in_packet);
   smsc_log_debug(logger, "Response Packet size=%d:\n\n\'%s\'\n"
                  ,in_packet.size(), in_packet.c_str());
   /********************/
@@ -253,7 +247,13 @@ void ClientMms::setPrefix() {
 
 //private
 
-bool ClientMms::sendVASPRequest(const MmsCommand& cmd, const string& soap_attchment) {
+bool ClientMms::sendVASPRequest(MmsCommand& cmd, const string& soap_attchment) {
+  cmd.setTransactionId(getTransactionId(prefix));
+  if (is_vasp) {
+    cmd.setInfoElement(xml::VASP_ID, endpoint_id);
+  } else {
+    cmd.setInfoElement(xml::MMS_RS_ID, endpoint_id);
+  }
   string soap_envelope;
   if (!cmd.serialize(soap_envelope)) {
     return false;

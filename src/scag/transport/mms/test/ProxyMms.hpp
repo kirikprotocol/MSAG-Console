@@ -73,7 +73,7 @@ private:
     Socket client_socket;
     if (client_socket.Init(service_host.c_str(), service_port, CLIENT_TIME_OUT) < 0 ||
         client_socket.Connect() < 0) {
-      sendResp(sock, in_cmd, "4006", "Service Unavailable");
+      sendResp(sock, in_cmd, status::SERVICE_UNAVAILABLE);
       return;
     }
     string client_tid = in_cmd.getTransactionId();
@@ -87,7 +87,7 @@ private:
     if (!in_cmd.serialize(soap_envelope)) {
       smsc_log_error(logger, "Serilization Error");
       in_cmd.setTransactionId(client_tid);
-      sendResp(sock, in_cmd, "3000", "Server Error");
+      sendResp(sock, in_cmd, status::SERVER_ERROR);
       return;
     }
     in_packet.setSoapEnvelope(soap_envelope);
@@ -95,7 +95,7 @@ private:
     string packet;
     if (!in_packet.serialize(packet)) {
       in_cmd.setTransactionId(client_tid);
-      sendResp(sock, in_cmd, "3000", "Server Error");
+      sendResp(sock, in_cmd, status::SERVER_ERROR);
       return;
     }
     smsc_log_debug(logger, "Proxy Send Packet size = %d\n\n\'%s\'\n", packet.size(), packet.c_str());
@@ -114,13 +114,13 @@ private:
     if (!resp_packet.parse(resp_buf.c_str(), resp_buf.size())) {
       smsc_log_error(logger, "Error While Parsing Response Packet");
       in_cmd.setTransactionId(client_tid);
-      sendResp(sock, in_cmd, "4005", "Service Error");
+      sendResp(sock, in_cmd, status::SERVICE_ERROR);
       return;
     }
     if (resp_packet.isErrorResp()) {
       smsc_log_error(logger, "Proxy Recieve Error Response");
       in_cmd.setTransactionId(client_tid);
-      sendResp(sock, in_cmd, "4010", "Bad Request");
+      sendResp(sock, in_cmd, status::SERVER_ERROR);
       return;
     }
     MmsCommand resp_cmd;
@@ -140,7 +140,7 @@ private:
 
       in_cmd.setTransactionId(client_tid);
 
-      sendResp(sock, in_cmd, "4012", "Bad Request");
+      sendResp(sock, in_cmd, status::SERVICE_ERROR);
     }
   }
 
@@ -149,7 +149,7 @@ private:
     uint8_t cmd_id = in_cmd.getCommandId();
     if (cmd_id != MM7_SUBMIT && cmd_id != MM7_CANCEL && cmd_id != MM7_REPLACE &&
         cmd_id != MM7_EXTENDED_CANCEL && cmd_id != MM7_EXTENDED_REPLACE) {
-      sendRSErrorResp(sock, in_cmd.getTransactionId(), "4003", "Unsupported Operation");
+      sendErrorResp(sock, in_cmd.getTransactionId(), status::UNSUPPORTED_OPERATION);
       return;
     }
     processCommand(sock, in_cmd, in_packet);
@@ -159,29 +159,21 @@ private:
     smsc_log_info(logger, "Proxy Start Work as VASP");
     uint8_t cmd_id = in_cmd.getCommandId();
     if (cmd_id != MM7_DELIVER && cmd_id != MM7_DELIVERY_REPORT && cmd_id != MM7_READ_REPLY) {
-      sendVASPErrorResp(sock, in_cmd.getTransactionId(), "4003", "Unsupported Operation");
+      sendErrorResp(sock, in_cmd.getTransactionId(), status::UNSUPPORTED_OPERATION);
       return;
     }
     processCommand(sock, in_cmd, in_packet);
   }
-  void sendRSErrorResp(Socket* sock, const string& tid, const char* status_code, 
-                       const char* status_text) {
+
+  void sendErrorResp(Socket* sock, const string& tid, int status_code) {
     MmsCommand resp_cmd;
-    resp_cmd.createRSError(tid, status_code, status_text);
+    resp_cmd.createGenericError(tid, status_code, is_vasp);
     ServerMms::sendResp(sock, resp_cmd);
   }
 
-  void sendVASPErrorResp(Socket* sock, const string& tid, const char* status_code,
-                         const char* status_text) {
+  void sendResp(Socket* sock, const MmsCommand& in_cmd, int status_code) {
     MmsCommand resp_cmd;
-    resp_cmd.createVASPError(tid, status_code, status_text);
-    ServerMms::sendResp(sock, resp_cmd);
-  }
-
-  void sendResp(Socket* sock, const MmsCommand& in_cmd, const char* status_code,
-                const char* status_text) {
-    MmsCommand resp_cmd;
-    resp_cmd.createResponse(in_cmd.getMmsMsg(), status_code, status_text);
+    resp_cmd.createResponse(in_cmd.getMmsMsg(), status_code);
     ServerMms::sendResp(sock, resp_cmd);
   }
 

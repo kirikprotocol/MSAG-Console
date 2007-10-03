@@ -5,9 +5,12 @@ namespace scag {
 namespace transport {
 namespace mms {
 
-const int BAD_REQUEST = 400;
-const int INTERNAL_SERVER_ERROR = 500;
-const int SERVICE_UNAVAILABLE = 503;
+namespace http_status {
+  const int BAD_REQUEST = 400;
+  const int REQUEST_TIMEOUT = 408;
+  const int INTERNAL_SERVER_ERROR = 500;
+  const int SERVICE_UNAVAILABLE = 503;
+}
 
 const char* MULTIPART = "multipart";
 const size_t MULTIPART_SIZE = strlen(MULTIPART);
@@ -296,9 +299,10 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
 void HttpPacket::createFakeResp(int status) {
   modified = true;
   switch (status) {
-  case BAD_REQUEST           : start_line = "HTTP/1.1 400 Bad Request\r\n"; break;
-  case INTERNAL_SERVER_ERROR : start_line = "HTTP/1.1 500 Internal Server Error\r\n"; break;
-  case SERVICE_UNAVAILABLE   : start_line = "HTTP/1.1 503 Service Unavailable\r\n"; break;
+  case http_status::BAD_REQUEST           : start_line = "HTTP/1.1 400 Bad Request\r\n"; break;
+  case http_status::REQUEST_TIMEOUT       : start_line = "HTTP/1.1 408 Request Time-out\r\n"; break;
+  case http_status::INTERNAL_SERVER_ERROR : start_line = "HTTP/1.1 500 Internal Server Error\r\n"; break;
+  case http_status::SERVICE_UNAVAILABLE   : start_line = "HTTP/1.1 503 Service Unavailable\r\n"; break;
   }
   error_resp = true;
 }

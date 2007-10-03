@@ -70,7 +70,7 @@ void ServerMms::work(Socket* sock, size_t con_number) {
     return;
   }
   MmsCommand out_cmd; 
-  if (out_cmd.createResponse(in_cmd.getMmsMsg(), "1000", "Success")) {
+  if (out_cmd.createResponse(in_cmd.getMmsMsg(), status::SUCSESS)) {
     sendResp(sock, out_cmd);
   } else {
     sock->Write(BAD_REQUEST, BAD_REQUEST_SIZE);
@@ -102,7 +102,7 @@ void ServerMms::processErrorCommand(Socket* sock, const MmsCommand& command) {
   const MmsMsg* msg = command.getMmsMsg();
   if (msg) {
     MmsCommand resp_cmd;
-    if (resp_cmd.createResponse(msg, "4004", "Validation Error")) {
+    if (resp_cmd.createResponse(msg, status::VALIDATION_ERROR)) {
       sendResp(sock, resp_cmd);
     } else {
       sock->Write(BAD_REQUEST, BAD_REQUEST_SIZE);
@@ -114,11 +114,13 @@ void ServerMms::processErrorCommand(Socket* sock, const MmsCommand& command) {
     return;
   }
   MmsCommand resp_cmd;
-  if (is_vasp) {
-    resp_cmd.createVASPError(command.getTransactionId(), "4004", "Validation Error");
-  } else {
-    resp_cmd.createRSError(command.getTransactionId(), "4004", "Validation Error");
-  }
+  //if (is_vasp) {
+    //resp_cmd.createVASPError(command.getTransactionId(), "4004", "Validation Error");
+  //} else {
+    //resp_cmd.createRSError(command.getTransactionId(), "4004", "Validation Error");
+  //}
+  resp_cmd.createGenericError(command.getTransactionId(),
+                              status::VALIDATION_ERROR, is_vasp);
   sendResp(sock, resp_cmd);
 }
 

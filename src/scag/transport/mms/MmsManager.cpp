@@ -51,6 +51,7 @@ void MmsManagerImpl::init(MmsProcessor& p, const MmsManagerConfig& conf, const c
   scags.init(cfg.scag_pool_size, cfg.scag_queue_limit, p);
   rs_acceptor.init(cfg.host.c_str(), cfg.rs_port);
   vasp_acceptor.init(cfg.host.c_str(), cfg.vasp_port);
+  smsc_log_debug(logger, "connection_timeout=%d", cfg.connection_timeout);
 }
 
 void MmsManagerImpl::shutdown() {
