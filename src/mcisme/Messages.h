@@ -162,7 +162,7 @@ public:
   bool canAdd(const MissedCallEvent& event);
   void addEvent(const MissedCallEvent& event);
   void addEvent(const AbntAddr& abnt, const MCEvent& event);
-  void formatMessage(const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEventOut>& for_send, int timeOffset=0);
+  void formatMessage(const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEventOut>& for_send, const std::string& smscAddress, int timeOffset=0);
   void addBanner(Message& message, const string& banner);
 };
 

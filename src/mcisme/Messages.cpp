@@ -104,7 +104,7 @@ bool MessageFormatter::isLastFromCaller(int index)
   return true;
 }
 
-void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEventOut>& for_send, int timeOffset/*=0*/)
+void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEventOut>& for_send, const std::string& smscAddress, int timeOffset/*=0*/)
 {
   if (mc_events.size() <= 0) return;
 
@@ -165,8 +165,13 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
         messageFormatter->format(report_msg_for_client, msg_adapter, ctx);
         hibit = hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length()); 
 
+        std::string messageOriginatingAddress;
+        if ( !strcmp(fromStr, unknownCaller.c_str()) )
+          messageOriginatingAddress = smscAddress;
+        else
+          messageOriginatingAddress = fromStr;
         if(report_msg_for_client.length() < MAX_MSG_LENS[hibit]) {
-          MCEventOut outEvent(fromStr, report_msg_for_client);
+          MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
           outEvent.srcEvents = srcEventLst;
           for_send.push_back(outEvent);
         } else {
@@ -174,7 +179,7 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
           {
             // обрезать смску.
             report_msg_for_client.resize(MAX_MSG_LENS[hibit]);
-            MCEventOut outEvent(fromStr, report_msg_for_client);
+            MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
             outEvent.srcEvents.assign(1, mc_events[i]);
             for_send.push_back(outEvent);
           }
@@ -203,7 +208,12 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
       std::string report_msg_for_client;
       messageFormatter->format(report_msg_for_client, msg_adapter, ctx);
       hibit = hasHighBit(report_msg_for_client.c_str(), report_msg_for_client.length()); 
-      MCEventOut outEvent(fromStr, report_msg_for_client);
+      std::string messageOriginatingAddress;
+      if ( !strcmp(fromStr, unknownCaller.c_str()) )
+        messageOriginatingAddress = smscAddress;
+      else
+        messageOriginatingAddress = fromStr;
+      MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
       outEvent.srcEvents.push_back(mc_events[i]);
       if(report_msg_for_client.length() < MAX_MSG_LENS[hibit])
         for_send.push_back(outEvent);
@@ -213,7 +223,7 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
         {
           // обрезать смску.
           report_msg_for_client.resize(MAX_MSG_LENS[hibit]);
-          MCEventOut outEvent(fromStr, report_msg_for_client);
+          MCEventOut outEvent(messageOriginatingAddress, report_msg_for_client);
           outEvent.srcEvents.assign(1, mc_events[i]);
           for_send.push_back(outEvent);
         }
