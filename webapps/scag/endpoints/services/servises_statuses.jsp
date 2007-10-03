@@ -26,7 +26,7 @@
             result += ", ";
         }
     }
-    result += "\r\n";
+    result += "\n";
     Map status = bean.getSvcStatuses();
     for (Iterator i = c.iterator(); i.hasNext();) {
         String sId = (String) i.next();
