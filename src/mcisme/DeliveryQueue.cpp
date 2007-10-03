@@ -31,7 +31,7 @@ using namespace core::synchronization;
 using namespace core::buffers;
 
 
-char* cTime(const time_t* clock)		// О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫ О©╫О©╫О©╫О©╫О©╫. О©╫О©╫ О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫О©╫.
+char* cTime(const time_t* clock)      // функция возвращает на статический буфер. Не потокобезопасная.
 {
   static char buff[32];
 
@@ -64,14 +64,11 @@ void DeliveryQueue::OpenQueue(void)
 
 void DeliveryQueue::CloseQueue(void)
 {
-  //		MutexGuard lock(deliveryQueueMonitor);
   isQueueOpen = false;
-  //		deliveryQueueMonitor.notify();
 }
 
 bool DeliveryQueue::isQueueOpened(void)
 {
-  //		MutexGuard lock(deliveryQueueMonitor);
   return isQueueOpen;
 }
 
@@ -90,7 +87,6 @@ int DeliveryQueue::GetQueueSize(void)
 time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTime, uint16_t lastError)
 {
   string strAbnt = abnt.toString();
-  //		smsc_log_debug(logger, "Schedule %s", strAbnt.c_str());
   MutexGuard lock(deliveryQueueMonitor);
   if(AbntsStatus.Exists(strAbnt.c_str()))
   {
@@ -116,7 +112,6 @@ time_t DeliveryQueue::Schedule(const AbntAddr& abnt, bool onBusy, time_t schedTi
   }
   if(-1 != schedTime)
   {
-    //		smsc_log_info(logger, "Abonent %s scheduling on present time %s", strAbnt.c_str(), cTime(&schedTime));
     smsc_log_info(logger, "Abonent %s scheduling on time %s", strAbnt.c_str(), cTime(&schedTime));
   }
   else
@@ -236,7 +231,7 @@ bool DeliveryQueue::Get(AbntAddr& abnt)
   }
 
   if(!isQueueOpen)
-  {	
+  {
     smsc_log_info(logger, "Queue was closed.");
     return false;
   }
@@ -302,35 +297,6 @@ bool DeliveryQueue::Get(const AbntAddr& abnt, SchedItem& item)
   return false;
 }
 
-//int DeliveryQueue::Get(vector<SchedItem>& items, int count)
-//{
-//	MutexGuard		lock(deliveryQueueMonitor);
-//	AbntAddr		abnt;
-//	DelQueueIter	It;
-//	int				i;
-//	
-//	It = deliveryQueue.begin();
-//	for(i = 0; i< count; i++)
-//	{	
-//		if(It == deliveryQueue.end()) break;
-//		abnt = It->second;
-//		string strAbnt = abnt.toString();
-//		if(AbntsStatus.Exists(strAbnt.c_str()))
-//		{
-//			SchedParam	*schedParam = AbntsStatus.GetPtr(strAbnt.c_str());
-//			SchedItem	item;
-//			item.abnt = abnt;
-//			item.schedTime = schedParam->schedTime;
-//			item.lastError = schedParam->lastError;
-//			items.push_back(item);
-//		}
-//		else
-//			i--;
-//		++It;
-//	}
-//	return i;
-//}
-
 int DeliveryQueue::Get(vector<SchedItem>& items, int count)
 {
   MutexGuard    lock(deliveryQueueMonitor);
@@ -382,7 +348,6 @@ void DeliveryQueue::Erase(void)
   total = 0;
   smsc_log_info(logger, "Erased. (%d %d %d)", deliveryQueue.size(), AbntsStatus.GetCount(), total);
 }
-
 
 void DeliveryQueue::Resched(const AbntAddr& abnt, time_t oldSchedTime, time_t newSchedTime)
 {
