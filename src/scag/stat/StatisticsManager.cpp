@@ -262,7 +262,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
 		
         if(routeSt) { routeSt->rejected++; routeSt->gw_rejected++; routeSt->failed++; }
 
-        genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected);
+        genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntGw_Rejected); genStatSmpp.inc(cntFailed);
         break;
     case events::smpp::FAILED:
         STAT_LOG_EVENT("FAILED");
@@ -289,7 +289,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         if(dstSt) { dstSt->rejected++; incSmppCounter(se.dstId, se.dstType, cntRejected);}
         if(routeSt) { routeSt->failed++; }
 
-        genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntFailed);
+        genStatSmpp.inc(cntFailed);
         break;
     case events::smpp::RESP_REJECTED:
         STAT_LOG_EVENT("RESP_REJECTED");
@@ -297,7 +297,7 @@ void StatisticsManager::registerEvent(const SmppStatEvent& se)
         if(dstSt) { dstSt->rejected++; incSmppCounter(se.dstId, se.dstType, cntRejected);}
         if(routeSt) { routeSt->rejected++; }
 
-        genStatSmpp.inc(cntRejected); genStatSmpp.inc(cntFailed);
+        genStatSmpp.inc(cntRejected);
         break;
     case events::smpp::RESP_GW_REJECTED:
         STAT_LOG_EVENT("RESP_GW_REJECTED");
