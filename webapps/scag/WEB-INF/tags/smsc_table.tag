@@ -20,14 +20,16 @@
 <input type="hidden" id="editId" name="editId" value="">
 <input type="hidden" id="childEditId" name="childEditId" value="">
 
-<OBJECT id="tdcSmscStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-    <PARAM NAME="DataURL" VALUE="endpoints/centers/center_statuses.jsp">
-    <PARAM NAME="UseHeader" VALUE="True">
-    <PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT>
-
+<%--<OBJECT id="tdcSmscStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
+<%--    <PARAM NAME="DataURL" VALUE="endpoints/centers/center_statuses.jsp">--%>
+<%--    <PARAM NAME="UseHeader" VALUE="True">--%>
+<%--    <PARAM NAME="TextQualifier" VALUE='"'>--%>
+<%--</OBJECT>--%>
+<script >
+    var centerStatus =
+    new StringTableDataSource({url: '<%=request.getContextPath()%>/endpoints/centers/center_statuses.jsp'});
+</script>
 <script>
-
     function edit(idToEdit, child, parentId) {
         opForm.mbEdit.value = idToEdit;
         opForm.editId.value = idToEdit;
@@ -41,12 +43,13 @@
     }
 
     function refreshStatus() {
-        document.getElementById('tdcSmscStatuses').DataURL = document.getElementById('tdcSmscStatuses').DataURL;
-        document.getElementById('tdcSmscStatuses').reset();
+//        document.getElementById('tdcSmscStatuses').DataURL = document.getElementById('tdcSmscStatuses').DataURL;
+//        document.getElementById('tdcSmscStatuses').reset();
+        centerStatus.update();
         window.setTimeout(refreshStatus, 10000);
     }
-
 </script>
+
 <table class=list cellspacing=0>
 <thead>
   <tr>
@@ -100,10 +103,16 @@
                         </c:choose>
                     </c:when>
                     <c:when test="${column == 'connHostPort'}">
-                        <span id="CONNECTION_STATUSERVICE_${Id}" datasrc=#tdcSmscStatuses DATAFORMATAS=html datafld="${Id}"  class=C080>&nbsp;</span>
+                        <span id="CONNECTION_STATUSCENTER_${Id}" class=C080>&nbsp;</span>
+      <script>
+      centerStatus.addObserver(new ElementObserver({elementId: 'CONNECTION_STATUSCENTER_${Id}', field: '"${Id}"' }));
+      </script>
                     </c:when>
                     <c:when test="${column == 'connStatus'}">
-                        <span id="CONNECTION_STATUSERVICE_${Id}_S" datasrc=#tdcSmscStatuses DATAFORMATAS=html datafld="${Id}_s"  class=C080>&nbsp;</span>
+                        <span id="CONNECTION_STATUSCENTER_${Id}_S" class=C080>&nbsp;</span>
+      <script>
+      centerStatus.addObserver(new ElementObserver({elementId: 'CONNECTION_STATUSCENTER_${Id}_S', field: '"${Id}_s"' }));
+      </script>
                     </c:when>
                     <c:otherwise>
                         ${itemValue}

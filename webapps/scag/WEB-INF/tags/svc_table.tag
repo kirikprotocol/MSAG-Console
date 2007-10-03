@@ -20,12 +20,15 @@
 <input type="hidden" id="editId" name="editId" value="">
 <input type="hidden" id="childEditId" name="childEditId" value="">
 
-<OBJECT id="tdcSvcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-    <PARAM NAME="DataURL" VALUE="endpoints/services/servises_statuses.jsp">
-    <PARAM NAME="UseHeader" VALUE="True">
-    <PARAM NAME="TextQualifier" VALUE='"'>
-</OBJECT>
-
+<%--<OBJECT id="tdcSvcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">--%>
+<%--    <PARAM NAME="DataURL" VALUE="endpoints/services/servises_statuses.jsp">--%>
+<%--    <PARAM NAME="UseHeader" VALUE="True">--%>
+<%--    <PARAM NAME="TextQualifier" VALUE='"'>--%>
+<%--</OBJECT>--%>
+<script >
+    var serviceStatus =
+    new StringTableDataSource({url: '<%=request.getContextPath()%>/endpoints/services/servises_statuses.jsp'});
+</script>
 <script>
 
     function edit(idToEdit, child, parentId) {
@@ -41,8 +44,9 @@
     }
 
     function refreshStatus() {
-        document.getElementById('tdcSvcStatuses').DataURL = document.getElementById('tdcSvcStatuses').DataURL;
-        document.getElementById('tdcSvcStatuses').reset();
+//        document.getElementById('tdcSvcStatuses').DataURL = document.getElementById('tdcSvcStatuses').DataURL;
+//        document.getElementById('tdcSvcStatuses').reset();
+        serviceStatus.update();
         window.setTimeout(refreshStatus, 10000);
     }
 
@@ -74,7 +78,6 @@
     </c:forEach>
   </tr>
 </thead>
-
 <tbody>
   <c:forEach var="user" items="${bean.tabledItems}" varStatus="status">
     <tr class='row${(status.count+1)%2}'>
@@ -85,9 +88,9 @@
             <td class=ico><input class=check <c:if test="${!empty targetElemId}">id="${targetElemId}Check"</c:if> type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecks(<c:if test="${!empty targetElemId}">'${targetElemId}'</c:if>);" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
           </c:when>
           <c:when test="${column == 'status'}">
-            <td class=ico>  <c:set var="Id" value="${ user['id']}"/>
-           <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' :  smf:smeStatus(user[column],Id)}"/>
-           ${itemValue}
+            <td class=ico>
+                <c:set var="Id" value="${ user['id']}"/>
+                <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' :  smf:smeStatus(user[column],Id)}"/>
            </td>
           </c:when>
           <c:when test="${fn:substringBefore('name',column) == fn:substringBefore('name',column)}">
@@ -109,10 +112,16 @@
                         </c:choose>
                     </c:when>
                     <c:when test="${column == 'connHost'}">
-                        <span id="CONNECTION_STATUSERVICE_${Id}" datasrc=#tdcSvcStatuses DATAFORMATAS=html datafld="${Id}"  class=C080>&nbsp;</span>
+                        <span id="CONNECTION_STATUSERVICE_${Id}" class=C080>&nbsp;</span>
+      <script>
+      serviceStatus.addObserver(new ElementObserver({elementId: 'CONNECTION_STATUSERVICE_${Id}', field: '"${Id}"' }));
+      </script>
                     </c:when>
                     <c:when test="${column == 'connStatus'}">
-                        <span id="CONNECTION_STATUSERVICE_${Id}_S" datasrc=#tdcSvcStatuses DATAFORMATAS=html datafld="${Id}_s"  class=C080>&nbsp;</span>
+                        <span id="CONNECTION_STATUSERVICE_${Id}_S" class=C080>&nbsp;</span>
+      <script>
+      serviceStatus.addObserver(new ElementObserver({elementId: 'CONNECTION_STATUSERVICE_${Id}_S', field: '"${Id}_s"' }));
+      </script>
                     </c:when>
                     <c:otherwise>
                         ${itemValue}
