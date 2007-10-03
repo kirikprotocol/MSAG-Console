@@ -523,7 +523,7 @@ int TaskProcessor::Execute()
       try{checkAddress(event.from.c_str());}catch(Exception e)
       {
         smsc_log_error(logger, "Bad calling number. %s", e.what());
-        continue;
+        //        continue;
       }
       AbntAddr to(event.to.c_str()), from(event.from.c_str());
       outEvent = from;
@@ -661,7 +661,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
 
   int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
   std::vector <MCEventOut> mcEventsOut;
-  formatter.formatMessage(abnt, events, 0, mcEventsOut, timeOffset);
+  formatter.formatMessage(abnt, events, 0, mcEventsOut, address, timeOffset);
 
   for (std::vector <MCEventOut>::iterator iter = mcEventsOut.begin(), end_iter = mcEventsOut.end(); iter !=end_iter; ++iter) {
     Message  msg;
@@ -727,8 +727,8 @@ bool TaskProcessor::invokeProcessDataSmResp(int cmdId, int status, int seqNum)
       SendAbntOnlineNotifications(pInfo);
       statistics->incDelivered(pInfo->events.size());
       pStorage->deleteEvents(pInfo->abnt, pInfo->events);
-      //time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
-      //pStorage->setSchedParams(pInfo->abnt, schedTime, status);
+      time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt, smsc::system::Status::OK);
+      pStorage->setSchedParams(pInfo->abnt, schedTime, status);
     }
     else if(smsc::system::Status::isErrorPermanent(status))
     {
