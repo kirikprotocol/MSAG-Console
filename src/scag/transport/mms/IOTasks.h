@@ -37,7 +37,9 @@ protected:
       return sockets[i];
     }
   };
-  void checkConnectionTimeout(Multiplexer::SockArray& error);
+  //void checkConnectionTimeout(Multiplexer::SockArray& error);
+  void checkConnectionTimeout(Multiplexer::SockArray& error,
+                              Multiplexer::SockArray& incomplite);
   inline bool isTimedOut(Socket* s, time_t now);
   void killSocket(Socket *s);
   void removeSocket(Multiplexer::SockArray &error);

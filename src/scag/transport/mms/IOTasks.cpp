@@ -91,8 +91,10 @@ void IOTask::killSocket(Socket *s) {
   }
 }
 
-void IOTask::checkConnectionTimeout(Multiplexer::SockArray &error) {
+void IOTask::checkConnectionTimeout(Multiplexer::SockArray &error,
+                                    Multiplexer::SockArray &incomplite) {
   error.Empty();
+  incomplite.Empty();
   time_t now = time(NULL);
   for (int i = 0; i < multiplexer.Count(); ++i) {
     Socket *s = multiplexer.getSocket(i);
@@ -102,9 +104,13 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray &error) {
       if (cx->action == SEND_REQUEST) {
         cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP | DEL_SERVICE_SOCK);
       } else if (cx->action == SEND_RESPONSE) {
-        cx->setDestiny(500, STAT_RESP | DEL_CLIENT_SOCK);
+        cx->setDestiny(http_status::INTERNAL_SERVER_ERROR, STAT_RESP | DEL_CLIENT_SOCK);
       } else if (cx->action == READ_REQUEST) {
-        cx->setDestiny(503, DEL_CONTEXT);
+        if (cx->http_packet.isValid() && !cx->http_packet.isComplite()) {
+          //smsc_log_warn(logger, "socket %p timeout", s);
+          incomplite.Push(s);
+        }
+        //cx->setDestiny(http_status::REQUEST_TIMEOUT, FAKE_RESP);
       } else if (cx->action == READ_RESPONSE) {
         cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP);
       }
@@ -164,14 +170,30 @@ int MmsReaderTask::Execute() {
       }
     }
 
-    checkConnectionTimeout(error);
+    checkConnectionTimeout(error, incomplite);
+/***************/
+    for (int i = 0; i < incomplite.Count(); ++i) {
+      Socket *s = incomplite[i];
+      MmsContext *cx = MmsContext::getContext(s);
+      smsc_log_error(logger, "%p: %p process incomplite packet, socket %p", this, cx, s);
+      smsc_log_debug(logger,"SoapEnvelope=\'%s\'", cx->http_packet.getSoapEnvelope());
+      if (createCommand(cx, s)) {
+        removeSocket(s);
+        manager.process(cx);
+      } else {
+        smsc_log_error(logger, "%p: %p create command error", this, cx);
+        error.Push(s);
+      }
+    }
+/***************/
     removeSocket(error);
+
 
     if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) <= 0) {
       continue;
     }
 
-    for (unsigned int i = 0; i < (unsigned int)error.Count(); ++i) {
+    for (int i = 0; i < error.Count(); ++i) {
       Socket *s = error[i];
       MmsContext *cx = MmsContext::getContext(s);
       smsc_log_error(logger, "%p: %p failed", this, cx);
@@ -179,7 +201,7 @@ int MmsReaderTask::Execute() {
                       FAKE_RESP | DEL_SERVICE_SOCK : DEL_CONTEXT);
     }
     now = time(NULL);
-    for (unsigned int i = 0; i < (unsigned int)ready.Count(); ++i) {
+    for (int i = 0; i < ready.Count(); ++i) {
       Socket *s = ready[i];
       MmsContext *cx = MmsContext::getContext(s);
       smsc_log_debug(logger, "ready: context %p, socket %p", cx, s);
@@ -217,11 +239,11 @@ int MmsReaderTask::Execute() {
           smsc_log_error(logger, "%p: %p parse error", this, cx);
           (cx->action == READ_RESPONSE) ?
             cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP | DEL_SERVICE_SOCK) :
-            cx->setDestiny(400, FAKE_RESP);
+            cx->setDestiny(http_status::BAD_REQUEST, FAKE_RESP);
           error.Push(s);
         } else {
           MmsContext::updateTimestamp(s, now);
-          incomplite.Push(s);
+          //incomplite.Push(s);
           smsc_log_warn(logger, "%p: %p packet incomplite", this, cx);
         }
       }
@@ -267,6 +289,7 @@ const char* MmsWriterTask::taskName() {
 int MmsWriterTask::Execute() {
   Multiplexer::SockArray error;
   Multiplexer::SockArray ready;
+  Multiplexer::SockArray incomplite;
   char buf[4];
   time_t now;
   smsc_log_debug(logger, "%p started", this);
@@ -289,7 +312,7 @@ int MmsWriterTask::Execute() {
       }
     }
 
-    checkConnectionTimeout(error);
+    checkConnectionTimeout(error, incomplite);
 
     while (waiting_connect.Count()) {
       Socket *s;
@@ -318,7 +341,7 @@ int MmsWriterTask::Execute() {
         smsc_log_error(logger, "%p: %p faild", this, cx);
         (cx->action == SEND_REQUEST) ?
           cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP | DEL_SERVICE_SOCK) :
-          cx->setDestiny(500, STAT_RESP | DEL_CLIENT_SOCK); 
+          cx->setDestiny(http_status::INTERNAL_SERVER_ERROR, STAT_RESP | DEL_CLIENT_SOCK); 
       }
     }
     now = time(NULL);
@@ -344,7 +367,8 @@ int MmsWriterTask::Execute() {
           smsc_log_error(logger, "%p: %p, write error", this, cx);
           (cx->action == SEND_REQUEST) ?
             cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP | DEL_SERVICE_SOCK) :
-            cx->setDestiny(500, STAT_RESP | DEL_CLIENT_SOCK);
+            cx->setDestiny(http_status::INTERNAL_SERVER_ERROR, 
+                           STAT_RESP | DEL_CLIENT_SOCK);
           error.Push(s);
         }
       }
