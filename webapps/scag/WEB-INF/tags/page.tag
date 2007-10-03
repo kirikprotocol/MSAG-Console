@@ -1,7 +1,7 @@
 <%@
  taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt"%>
-<%@ 
+<%@
  taglib prefix="sm" tagdir="/WEB-INF/tags"%><%@
  taglib prefix="sm-mm" tagdir="/WEB-INF/tags/main_menu"%><%@
 
@@ -36,7 +36,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
     for (int i = 0; i < buffer.length(); i++)
       if (buffer.charAt(i) == '/')
-        buffer.setCharAt(i, '.');                                   
+        buffer.setCharAt(i, '.');
 
     final int cnp = buffer.lastIndexOf(".")+1;
     buffer.setCharAt(cnp, Character.toUpperCase(buffer.charAt(cnp)));
@@ -75,8 +75,10 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 
 <%--  <link rel="STYLESHEET" type="text/css" href="content/styles/collapsing_tree_dl.css">--%>
   <script src="content/scripts/scripts.jsp" type="text/javascript"></script>
+  <script src="content/scripts/mootools.js" type="text/javascript"></script>
+  <script src="content/scripts/datasource.js" type="text/javascript"></script>
 </head>
-<body onload="initjsDOMenu(); assignOpener(); refreshTdcSCAGStatusObject(); ${onLoad} " onKeyPress="return disableCtrlKeyCombination(event,'${param.editId}');" onKeyDown="return disableCtrlKeyCombination(event,'${param.editId}');">
+<body onload="initjsDOMenu(); assignOpener(); refreshSCAGStatusObject(); ${onLoad} " onKeyPress="return disableCtrlKeyCombination(event,'${param.editId}');" onKeyDown="return disableCtrlKeyCombination(event,'${param.editId}');">
   <!--calendar-->
   <iframe id=calendarIFrame class=calendarHiddenLayer2 src="content/images/blank.html"></iframe>
   <div id=calendarPanel class=calendarHiddenLayer
@@ -160,13 +162,13 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   </div>
   <!--end of calendar-->
 
-  <%if (request.getUserPrincipal() != null) {%>
-  <OBJECT id="tdcSCAGStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
-    <PARAM NAME="DataURL" VALUE="<%=request.getContextPath()%>/gw/status/status.jsp">
-    <PARAM NAME="UseHeader" VALUE="True">
-    <PARAM NAME="TextQualifier" VALUE='"'>
-  </OBJECT>
-  <%}%>
+<%if (request.getUserPrincipal() != null) {%>
+  <script >
+  var serviceStatusDataSource = new StringTableDataSource({url: '<%=request.getContextPath()%>/gw/status/status.jsp'});
+  var observer = new ElementObserver({elementId: 'SCAGStatusSpan', field: 'status' });
+  serviceStatusDataSource.addObserver(observer);
+  </script>
+<%}%>
   <table height="100%" cellspacing=0 cellpadding=0 class=main_table>
   <tr>
     <td width=50 background="content/images/smsc_02.jpg" rowspan=3></td>
@@ -216,7 +218,11 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
         <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
            <tr>
              <th background="content/images/smsc_17.jpg" nowrap><c:if test="${!empty title}"><fmt:message>${title}<c:if test="${!empty param.editId}"><fmt:param value="${param.editId}"/></c:if></fmt:message></c:if></th>
-             <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SCAGStatusSpan" datasrc="#tdcSCAGStatusObject" DATAFORMATAS="html" datafld="status"/><%}%></td>
+             <td align="right">&nbsp;
+                <%if (request.getUserPrincipal() != null) {%>
+                    <span id="SCAGStatusSpan"></span>
+                <%}%>
+             </td>
              <td width=12px background="content/images/smsc_19.jpg" style="padding-right:0px;"></td>
            </tr>
         </table>
@@ -227,7 +233,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
                 <c:if test="${!empty form_method}">method="${form_method}"</c:if>
                 <c:if test="${!empty form_enctype}">enctype="${form_enctype}"</c:if>
                 onSubmit="return validateForm(this)">
-        <input type=hidden ID=jbutton value=jbutton>
+                <input type=hidden ID=jbutton value=jbutton>
 
         <c:choose>
           <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.scag.beans.${beanClass}"/></c:when>
