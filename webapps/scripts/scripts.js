@@ -1,7 +1,11 @@
 function resetValidation(elem)
 {
     elem.errorMessage = null;
+
     try {
+        if (typeof(elem.style.baseColor) == "undefined") {
+          elem.style.baseColor = elem.style.color;
+        }
         elem.style.color = elem.style.baseColor;
     }
     catch(ex) {
@@ -11,6 +15,9 @@ function resetValidation(elem)
         elem = elem.parentElement;
     }
     try {
+        if (typeof(elem.style.baseBorderColor) == "undefined") {
+          elem.style.baseBorderColor = elem.style.borderColor;
+        }
         elem.style.borderColor = elem.style.baseBorderColor;
     }
     catch(ex) {
