@@ -296,7 +296,7 @@ function validateField_ruleName(elem)
 
 function validateField(elem)
 {
-    switch (elem.validation)
+    switch (elem.getAttribute("validation"))
             {
     case "port":return validateField_port(elem);
     case "mask":return validateField_mask(elem);
@@ -318,7 +318,7 @@ function validateField(elem)
     case "ruleName": return validateField_ruleName(elem);
     case "hex": return validateField_hex(elem);
     }
-    alert(unknownValidationTypeErrorMsg + ": " + elem.validation);
+    alert(unknownValidationTypeErrorMsg + ": " + elem.getAttribute("validation"));
     return false;
 }
 
@@ -328,10 +328,10 @@ function validateForm(frm)
     var ts = frm.elements;
     for (var i = ts.length - 1; i >= 0; i--)
     {
-        var elem = frm.elements(i);
+        var elem = frm.elements[i];
         if (!elem.disabled)
         {
-            var validationClass = elem.validation;
+            var validationClass = elem.getAttribute("validation");
             if (validationClass != null)
             {
                 var r = validateField(elem);
@@ -513,7 +513,7 @@ function encodeHEX(str) {
 }
 function removeRow(tbl, rowId)
 {
-    var rowElem = tbl.rows(rowId);
+    var rowElem = tbl.rows[rowId];
     tbl.deleteRow(rowElem.rowIndex);
 }
 

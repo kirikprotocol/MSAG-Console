@@ -34,6 +34,10 @@
     page_menu_button(session, out, name, value, title, null, enabled);
   }
 
+  String makeOnClick(String onclick) {
+    return "onClick=\"" + onclick + "\"";
+  }
+
   void page_menu_button(HttpSession session, JspWriter out, String name, String value, String title, String onclick, boolean
           enabled) throws IOException {
     if (page_menu_delimiter_needed) {
@@ -43,8 +47,8 @@
     out.print("<td width=\"1px\">");
     out.print("<a id=\"" + name + "\"" +
       (enabled ? "" : " disabled") +
-      ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +
-      ((onclick != null && onclick.length() > 0) ? makeHref(onclick) : makeHref("clickSubmit('" + name + "','" + getLocString(value) + "')")) +
+      ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "") +  
+      ((onclick != null && onclick.length() > 0) ? makeOnClick(onclick) : makeOnClick("clickSubmit('" + name + "','" + getLocString(value) + "')")) +
       ">" + getLocString(value) + "</a>");
     out.print("</td>");
 
