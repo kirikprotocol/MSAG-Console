@@ -75,7 +75,7 @@ public:
     virtual int Init(const string& _dbName, const string& _dbPath="./",
         long _indexGrowth = 1000000,
         long blocksInFile = 100000,
-        long blockSize = 8192 - sizeof(templDataBlockHeader<Key>), // 8144
+        long blockSize = 2048 - sizeof(templDataBlockHeader<Key>), // 8144
         int mode = FSDB_DEFAULT)
     {
     	int ret;
@@ -88,7 +88,7 @@ public:
         else if(dbPath[dbPath.length()-1] != '/') dbPath += '/';
     	if(indexGrowth <= 0) indexGrowth = 1000000;
     	if(blocksInFile <= 0) blocksInFile = 100000;
-    	if(blockSize <= 0) blockSize = 8192 - sizeof(templDataBlockHeader<Key>);
+    	if(blockSize <= 0) blockSize = 2048 - sizeof(templDataBlockHeader<Key>);
 
         if(!dbPathExists())
         {
