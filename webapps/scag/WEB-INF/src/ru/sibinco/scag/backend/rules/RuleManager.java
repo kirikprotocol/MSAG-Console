@@ -439,6 +439,7 @@ public class RuleManager
    }    catch (SibincoException e)    {
      if (e instanceof StatusDisconnectedException) {
        if (mode != TERM_MODE) {
+           logger.error("RuleManager:StatusDisconnectedException:if:1");
          Functions.SavedFileToBackup(currentRuleFile,".new");
          finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
          saveMessage("Updated rule: ", user, ruleId, transport);
@@ -456,6 +457,7 @@ public class RuleManager
    }
     if (errorInfo == null || errorInfo.size()==0) {
         if (mode!=TERM_MODE) {
+            logger.error("RuleManager:StatusDisconnectedException:if2:");
           Functions.SavedFileToBackup(currentRuleFile, ".new");
           finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
           saveMessage("Updated rule: ", user, ruleId, transport);
@@ -559,8 +561,8 @@ public class RuleManager
       PrintWriter out = null;
       File ruleFile = null;
       File tempFile = null;
-      File tempFile1 = null;
-      File backFile = null;
+//      File tempFile1 = null;
+//      File backFile = null;
       try
       {
         if( checkPermission(transport) ){
@@ -569,7 +571,7 @@ public class RuleManager
 
             tempFile = composeRuleBackFile( transport, ruleId, ".tmp" );
             out = new PrintWriter( new OutputStreamWriter( new FileOutputStream(tempFile), "UTF-8" ) ); //alter out = new PrintWriter( new FileWriter(newFile) );
-            ruleWriter( reader, out, CHAR_WRITER );
+            ruleWriter( reader, out, STRING_WRITER );
 
 //            backFile = new File( tempFile.getAbsolutePath().substring(0, tempFile.getAbsolutePath().lastIndexOf("/")),
 //                                 tempFile.getName()+Functions.suffixDateFormat.format(new Date()) );
@@ -608,7 +610,9 @@ public class RuleManager
                logger.info( "CHAR WRITER" );
                int ch;
                Reader reader = r;
+                System.getProperties();
                while( (ch = reader.read()) != -1 ){
+                   if(ch=='\n')
                    out.print( (char)ch );
                }
                 break;
