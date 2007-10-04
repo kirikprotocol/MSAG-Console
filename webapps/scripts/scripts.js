@@ -2,7 +2,7 @@ function resetValidation(elem)
 {
     elem.errorMessage = null;
     try {
-        elem.style.color = elem.style.color;
+        elem.style.color = elem.style.baseColor;
     }
     catch(ex) {
     }
@@ -11,7 +11,7 @@ function resetValidation(elem)
         elem = elem.parentElement;
     }
     try {
-        elem.style.borderColor = elem.style.borderColor;
+        elem.style.borderColor = elem.style.baseBorderColor;
     }
     catch(ex) {
     }
@@ -46,6 +46,7 @@ function validationError(elem, txt)
         elem.focus();
 
     try {
+        elem.style.baseColor = elem.style.color;
         elem.style.color = "#FF0000";
     }
     catch(ex) {
@@ -55,6 +56,7 @@ function validationError(elem, txt)
         elem = elem.parentElement;
     }
     try {
+        elem.style.baseBorderColor = elem.style.borderColor;
         elem.style.borderColor = "#FF0000";
     }
     catch(ex) {
