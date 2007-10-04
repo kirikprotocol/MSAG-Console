@@ -220,7 +220,12 @@ smeErrTable_cache_load(netsnmp_container *container)
 
     for(smeErrIndex=0;smeErrIndex<cnt;smeErrIndex++)
     {
-      info=smeman->getSmeInfo(smeErrIndex);
+      try{
+        info=smeman->getSmeInfo(smeErrIndex);
+      }catch(...)
+      {
+        continue;
+      }
       if(info.disabled)continue;
       smsc::stat::SmeStats::ErrCntVector errors;
       smestat->getErrors(smeErrIndex,errors);
