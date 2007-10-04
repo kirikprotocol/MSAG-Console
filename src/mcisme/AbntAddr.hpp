@@ -286,6 +286,10 @@ public:
     for(; attempt > 0; attempt--) res = crc32(res, value.full_addr, sizeof(value.full_addr));
     return res;
   }
+  static uint32_t CalcHash(AbntAddr key)
+  {
+      return  crc32(0, key.value.full_addr, sizeof(key.value.full_addr));
+  }
 };
 
 struct MCEvent
