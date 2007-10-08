@@ -1,12 +1,27 @@
 function resetValidation(elem)
 {
 	elem.errorMessage = null;
-	elem.runtimeStyle.color = elem.style.color;
-	if(elem.tagName == "SELECT")
-	{
-		elem = elem.parentElement;
-	}
-	elem.runtimeStyle.borderColor = elem.style.borderColor;
+//	alert("Color:'" + elem.style.color + "'" + rgb(255,0,0));
+
+    try{
+        if (typeof(elem.style.baseColor) == "undefined") {
+    //	    alert( "undef baseColor!");
+            elem.style.baseColor = elem.style.color;
+        }
+        elem.style.color = elem.style.baseColor;
+    }catch(ex){ alert( "Exception resetVal Color!" ); }
+
+        if(elem.tagName == "SELECT")
+        {
+            elem = elem.parentElement;
+        }
+    try{
+        if (typeof(elem.style.baseBorderColor) == "undefined") {
+            elem.style.baseBorderColor = elem.style.borderColor;
+        }
+        elem.style.borderColor = elem.style.baseBorderColor;
+    }catch(ex){ alert( "Exception resetVal BorderColor!" ); }
+
 /*	var errPointer = elem.nextSibling;
 	if(errPointer != null)
 	{
@@ -36,14 +51,21 @@ function validationError(elem, txt)
 
 	if (!elem.disabled)
 	  elem.focus();
+    try{
+	    elem.style.baseColor = elem.style.color;
+	    elem.style.color = "#FF0000";
+    }catch(ex){ alert( "Exception validationErr baseColor!" ); }
 
-	elem.runtimeStyle.color = "#FF0000";
 	if(elem.tagName == "SELECT")
 	{
 		elem = elem.parentElement;
 	}
-	elem.runtimeStyle.borderColor = "#FF0000";
+	try{
+	    elem.style.baseBorderColor = elem.style.borderColor;
+	    elem.style.borderColor = "#FF0000";
+    }catch(ex){ alert( "Exception validationErr baseBorderColor!" ); }
 
+//    alert( "validation color:" + elem.style.color);
 	return false;
 }
 
@@ -219,8 +241,7 @@ function validateField_id(elem)
 	//}
 	//var r1 = RegExp("^((\\.[0-6]\\.(0|1|3|4|6|8|9|10|14|18)\\.)|(\\+))?\\d{1,20}$");
 	//var r2 = RegExp("^\\.5\\.0\\.[ _\\-0-9A-Za-z]{1,20}$");
-	var r = /^[a-zA-Z_0-9]+$/
-
+	var r = /^[a-zA-Z_0-9]+$/;
 	return elem.value == null || elem.value.length == 0 || elem.value.match(r) == null
 		? validationError(elem, '<fmt:message>scripts.idErrorMsg</fmt:message>')
 		: true;
@@ -269,7 +290,7 @@ function validateField_transitOptionalTags(elem)
 
 function validateField(elem)
 {
-	switch(elem.validation)
+	switch(elem.getAttribute("validation"))
 	{
 		case "port":return validateField_port(elem);
 		case "mask":return validateField_mask(elem);
@@ -292,7 +313,7 @@ function validateField(elem)
 		case "language": return validateField_language(elem);
 		case "transitOptionalTags": return validateField_transitOptionalTags(elem);
     }
-	alert('<fmt:message>scripts.unknownValidationTypeErrorMsg</fmt:message>' + ": "+elem.validation);
+	alert('<fmt:message>scripts.unknownValidationTypeErrorMsg</fmt:message>' + ": "+elem.getAttribute("validation"));
 	return false;
 }
 
@@ -303,9 +324,9 @@ function validateForm(frm)
         var ts = frm.elements;
         for (var i=ts.length-1; i>=0; i--)
         {
-            var elem = frm.elements(i);
+            var elem = frm.elements[i];
             if (!elem.disabled){
-                var validationClass = elem.validation;
+                var validationClass = elem.getAttribute("validation");
                 if(validationClass != null){
                     if( validationClass == "routeMask" ){
                         elem.validation="routeMaskNonEmpty";
@@ -326,6 +347,13 @@ function clickCancel()
 	document.all.jbutton.name = "mbCancel";
 	opForm.submit();
 	return false;
+}
+
+function clickSubmit() {
+    if (opForm.onsubmit() == false)
+        return false;
+    opForm.submit();
+    return false;
 }
 
 function clickClear()
@@ -490,7 +518,7 @@ function encodeHEX( str ) {
 }
 function removeRow(tbl, rowId)
 {
-	var rowElem = tbl.rows(rowId);
+	var rowElem = tbl.rows[rowId];
 	tbl.deleteRow(rowElem.rowIndex);
 }
 
@@ -610,12 +638,28 @@ function assignOpener() {
   setTimeout("assignOpener()",1000);
 }
 
+function refreshSCAGStatusObject()
+{
+   <%if (request.getUserPrincipal() != null) {%>
+        serviceStatusDataSource.update();
+        window.setTimeout(refreshSCAGStatusObject, 10000);
+   <%}%>
+}
+
+function refreshSCAGStatusObject()
+{
+   <%if (request.getUserPrincipal() != null) {%>
+        serviceStatusDataSource.update();
+        window.setTimeout(refreshSCAGStatusObject, 10000);
+   <%}%>
+}
+
 function refreshTdcSCAGStatusObject()
 {
    <%if (request.getUserPrincipal() != null) {%>
-   document.all.tdcSCAGStatusObject.DataURL = document.all.tdcSCAGStatusObject.DataURL;
-   document.all.tdcSCAGStatusObject.reset();
-   window.setTimeout(refreshTdcSCAGStatusObject, 5000);
+//   document.all.tdcSCAGStatusObject.DataURL = document.all.tdcSCAGStatusObject.DataURL;
+//   document.all.tdcSCAGStatusObject.reset();
+//   window.setTimeout(refreshTdcSCAGStatusObject, 5000);
    <%}%>
 }
 
