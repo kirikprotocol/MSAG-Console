@@ -68,7 +68,7 @@ struct StateMachine::ResponseRegistry
         smsc_log_warn(log, "register %d/%d failed", uid, seq);
         return false;
     }
-    if(cmd.getDstEntity()->info.outQueueLimit)
+    if(cmd.getDstEntity()->info.outQueueLimit > 0)
     {
       int* p=outCnt.GetPtr(cmd.getDstEntity()->info.systemId.c_str());
       if(p && *p>cmd.getDstEntity()->info.outQueueLimit)
@@ -114,7 +114,7 @@ struct StateMachine::ResponseRegistry
     //cmd->set_dialogId(ptr->dlgId);
     toList.erase(ptr->it);
     reg.Delete(key);
-    if(cmd.getDstEntity()->info.outQueueLimit)
+    if(cmd.getDstEntity()->info.outQueueLimit > 0)
     {
       outCnt.Get(cmd.getDstEntity()->info.systemId.c_str())--;
     }
@@ -130,7 +130,7 @@ struct StateMachine::ResponseRegistry
     if(toList.front().expired)
     {
       RegValue* ptr=reg.GetPtr(toList.begin()->key);
-      if(ptr && ptr->cmd.getDstEntity()->info.outQueueLimit)
+      if(ptr && ptr->cmd.getDstEntity()->info.outQueueLimit > 0)
       {
         outCnt.Get(ptr->cmd.getDstEntity()->info.systemId.c_str())--;
       }
