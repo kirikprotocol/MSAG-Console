@@ -35,7 +35,7 @@ var StringTableDataSource = XHR.extend({
 
   onComplete : function() {
     var txt = new String(this.response.text);
-    var i = txt.indexOf("\r\n");
+    var i = txt.indexOf("\n");
 
     if (i > 0) {
 
