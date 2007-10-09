@@ -118,19 +118,20 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
 
   if(formatter->isGroupping())
   {
-    Hash<bool>	callers;
+//    Hash<bool>	callers;
     int total = 0;
-    for (int i = start_from; i < mc_events_count; i++)
+//    for (int i = start_from; i < mc_events_count; i++)
     {
       int	count = 0;
+      int i = start_from;
       time_t convertedTime = 0;
       AbntAddr from(&(mc_events[i].caller));
       const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
       if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
         fromStr = unknownCaller.c_str();
-      if(!callers.Exists(fromStr))
+//      if(!callers.Exists(fromStr))
       {
-        callers.Insert(fromStr, true);
+//        callers.Insert(fromStr, true);
         convertedTime = mc_events[i].dt + timeOffset; //timeOffset*3600;
         count++;
 
@@ -183,11 +184,11 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
             outEvent.srcEvents.assign(1, mc_events[i]);
             for_send.push_back(outEvent);
           }
-          break;
+//          break;
         }
       }
     }
-    callers.Empty();
+//    callers.Empty();
   }
   else
   {
