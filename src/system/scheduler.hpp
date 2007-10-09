@@ -238,7 +238,7 @@ public:
     Chain* c=GetProcessingChain(id);
     if(!c)
     {
-      info2(log,"DeliverOk - chain not found for %lld",id);
+      debug2(log,"DeliverOk - chain not found for %lld",id);
 
       IdToTimeMap::iterator it=firstQueueProcessing.find(id);
       if(it!=firstQueueProcessing.end())
@@ -791,8 +791,8 @@ public:
       {
         if(!DeleteChain(c))
         {
-          warn2(log,"SHIT HAPPENED WITH CHAIN %p, addr=%s, intl=%s,inproc=%s",
-            c,c->addr.toString().c_str(),c->inTimeLine?"true":"false",c->inProcMap?"true":"false");
+          warn2(log,"SHIT HAPPENED WITH CHAIN %p, addr=%s, intl=%s,inproc=%d",
+            c,c->addr.toString().c_str(),c->inTimeLine?"true":"false",c->inProcMap);
         }
       }else
       {
@@ -824,7 +824,7 @@ public:
     time_t headTime;
     time_t lastValidTime;
     bool inTimeLine;
-    bool inProcMap;
+    time_t inProcMap;
 
     bool dpfPresent;
     SMSId dpfId;
@@ -848,7 +848,7 @@ public:
       smeIndex=argSmeIndex;
       headTime=sctime;
       inTimeLine=false;
-      inProcMap=false;
+      inProcMap=0;
       queueSize=0;
       dpfPresent=false;
     }
@@ -1109,7 +1109,7 @@ public:
 
   void AddProcessingChain(SMSId id,Chain* c)
   {
-    c->inProcMap=true;
+    c->inProcMap=time(NULL);
     procMap.insert(ProcessingMap::value_type(id,c));
   }
 
@@ -1119,7 +1119,7 @@ public:
     if(it==procMap.end())return 0;
     Chain* rv=it->second;
     procMap.erase(it);
-    rv->inProcMap=false;
+    rv->inProcMap=0;
     return rv;
   }
 
@@ -1277,7 +1277,18 @@ public:
 
   void RescheduleChain(Chain* c,time_t sctime)
   {
-    if(c->inProcMap)return;
+    if(c->inProcMap)
+    {
+      time_t now=time(NULL);
+      if(now-c->inProcMap>60*60)
+      {
+        smsc_log_error(log,"CHAIN INPROCMAP STALL: %s",c->addr.toString().c_str());
+        c->inProcMap=0;
+      }else
+      {
+        return;
+      }
+    }
     if(c->inTimeLine)
     {
       timeLine.RemoveChain(c);
