@@ -466,7 +466,18 @@ int Scheduler::Execute()
         try{
           Chain* c=GetChain(cmd->get_address());
           if(!c)continue;
-          if(c->inProcMap)continue;
+          if(c->inProcMap)
+          {
+            time_t now=time(NULL);
+            if(now-c->inProcMap>60*60)
+            {
+              smsc_log_error(log,"CHAIN INPROCMAP STALL: %s",c->addr.toString().c_str());
+              c->inProcMap=0;
+            }else
+            {
+              continue;
+            }
+          }
           if(c->dpfPresent)
           {
             if(c->CancelMsgId(c->dpfId))DecSme(c);
