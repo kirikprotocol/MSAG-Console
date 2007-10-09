@@ -577,7 +577,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   }
   if(!hasDirectives)
   {
-    smsc_log_info(log,"Directive not found\n");
+    smsc_log_info(log,"Directive not found");
     return;
   }
   if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))throw Exception("Directive found in multipart message");
@@ -3027,13 +3027,15 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     if(pres!=psSingle && pres!=psMultiple)
     {
       debug2(smsLog,"FWD: divert failed - cannot concat, msgId=%lld",t.msgId);
-    try{
-      sms.setLastResult(Status::SYSERR);
-      smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
-    }catch(std::exception& e)
-    {
-      smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
-    }
+      try{
+        sms.setLastResult(Status::SYSERR);
+        smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+      }
+      Descriptor d;
+      changeSmsStateToEnroute(sms,t.msgId,d,Status::SYSERR,rescheduleSms(sms));
       return UNKNOWN_STATE;
     }
     debug2(smsLog,"%lld after repartition: %s",t.msgId,pres==psSingle?"single":"multiple");
