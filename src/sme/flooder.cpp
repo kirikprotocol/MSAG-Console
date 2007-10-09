@@ -251,6 +251,7 @@ int main(int argc,char* argv[])
     printf("usage: %s inifile [param=arg ...]\n",argv[0]);
     return -1;
   }
+  putenv("SMSC_LOGGER_PROPERTIES=flooder.properties");
   Logger::Init();
   try{
     LoadConfig(argv[1]);
