@@ -218,6 +218,13 @@ void transLiterateSms(SMS* sms,int datacoding)
     memcpy(buf8.get(),udhiData,udhiDataLen);
     newlen+=udhiDataLen;
   }
+  if(!pl && newlen>254)
+  {
+    sms->dropProperty(Tag::SMPP_SHORT_MESSAGE);
+    sms->getMessageBody().dropIntProperty(Tag::SMPP_SM_LENGTH);
+    pl=true;
+  }
+
   if(pl)
   {
     sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buf8.get(),newlen);
