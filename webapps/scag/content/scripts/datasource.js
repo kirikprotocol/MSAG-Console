@@ -38,7 +38,6 @@ var StringTableDataSource = XHR.extend({
     var i = txt.indexOf("\n");
 
     if (i > 0) {
-
       var services = new Array();
       services = txt.substring(0, i).split(', ');
       var statuses = new Array();
@@ -56,6 +55,8 @@ var StringTableDataSource = XHR.extend({
           }
         }
       }
+    } else {
+      alert("Cann't parse response to get status!");
     }
   },
 
