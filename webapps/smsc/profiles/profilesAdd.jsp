@@ -32,6 +32,7 @@
     page_menu_space(out);
     page_menu_end(out);
 %>
+<input type=hidden id="defaultValues" name="defaultValues" value="false">
 <%@ include file="profileBody.jsp" %>
 <%
     page_menu_begin(out);

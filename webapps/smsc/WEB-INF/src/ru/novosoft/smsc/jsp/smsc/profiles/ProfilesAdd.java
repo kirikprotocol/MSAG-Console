@@ -14,20 +14,48 @@ import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public class ProfilesAdd extends ProfilesBean {
     protected String mbSave = null;
     protected String mbCancel = null;
+
+    private String defaultValues = null;
 
     public ProfilesAdd() {
         report = Profile.REPORT_OPTION_None;
         codepage = Profile.CODEPAGE_Default;
     }
 
+    protected int init(final List errors) {
+      int result = super.init(errors);
+      if (result != RESULT_OK)
+        return result;
+
+      try {
+        if (defaultValues == null) { // Set default values just first time we enter page 
+          codepage = Profile.convertCodepageStringToByte(smsc.getDefaultProfilePropString("DataCoding"));
+          ussd7bit = smsc.getDefaultProfilePropBoolean("UssdIn7Bit");
+          report = Profile.convertReportOptionsStringToByte(smsc.getDefaultProfilePropString("Report"));
+          aliasHide = (smsc.getDefaultProfilePropBoolean("Hide") ? Profile.ALIAS_HIDE_true : Profile.ALIAS_HIDE_false);
+          aliasModifiable = smsc.getDefaultProfilePropBoolean("HideModifiable");
+          divertModifiable = smsc.getDefaultProfilePropBoolean("DivertModifiable");
+          udhConcat = smsc.getDefaultProfilePropBoolean("UdhConcat");
+          locale = smsc.getDefaultProfilePropString("Locale");
+          inputAccessMask = smsc.getDefaultProfilePropInt("AccessMaskIn");
+          outputAccessMask = smsc.getDefaultProfilePropInt("AccessMaskOut");
+        }
+      } catch (Throwable e) {
+        logger.error("Couldn't set default values to profile", e);
+        return error(SMSCErrors.error.profiles.couldntGetRegisteredLocales, e);
+      }
+
+      return result;
+    }
+
     public int process(HttpServletRequest request) {
         if (mbCancel != null)
             return RESULT_DONE;
-
         int result = super.process(request);
         if (result != RESULT_OK)
             return result;
@@ -94,6 +122,14 @@ public class ProfilesAdd extends ProfilesBean {
 
     public void setMbCancel(String mbCancel) {
         this.mbCancel = mbCancel;
+    }
+
+    public String getDefaultValues() {
+      return defaultValues;
+    }
+
+    public void setDefaultValues(String defaultValues) {
+      this.defaultValues = defaultValues;
     }
 
 }
