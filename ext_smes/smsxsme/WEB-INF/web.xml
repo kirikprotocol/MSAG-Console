@@ -55,10 +55,16 @@ Application 2.3//EN" "http://java.sun.com/dtd/web-app_2_3.dtd">
     <mime-type>text/xml</mime-type>
   </mime-mapping>
 
-  <welcome-file-list id="WelcomeFileList">
-    <welcome-file>index.jsp</welcome-file>
-    <welcome-file>index.html</welcome-file>
-    <welcome-file>index.jws</welcome-file>
-  </welcome-file-list>
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Protected Context</web-resource-name>
+      <url-pattern>/smsx/services/SmsXSender</url-pattern>
+      <http-method>POST</http-method>
+    </web-resource-collection>
+    <user-data-constraint>
+      <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
 
 </web-app>
