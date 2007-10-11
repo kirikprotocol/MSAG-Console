@@ -107,7 +107,7 @@ AbonentRecord::ContractType
     {
         MutexGuard  guard(ramCache.Sync());
         AbonentRecordRAM *  rabRec = ramCache.LookUp(ab_number);
-        if (rabRec) {
+        if (rabRec && !rabRec->isExpired(_cfg.interval)) {
             if (p_ab_rec)
                 *p_ab_rec = *(rabRec->getAbonentRecord());
             return rabRec->ab_type;
@@ -117,8 +117,9 @@ AbonentRecord::ContractType
     if (fscMgr.get()) { //look in file cache
         try {
             if (fscMgr->LookUp(AbonentHashKey(ab_number), ab_rec)) {
-                if (!ab_rec.isExpired(_cfg.interval)
-                    && (ab_rec.ab_type != AbonentHashData::abtUnknown)) {
+                if (ab_rec.isExpired(_cfg.interval)) {
+                    ab_rec.reset();
+                } else if (ab_rec.ab_type != AbonentHashData::abtUnknown) {
                     MutexGuard  guard(ramCache.Sync());
                     ramCache.Update(ab_number, *ab_rec.getAbonentRecord());
                 }
