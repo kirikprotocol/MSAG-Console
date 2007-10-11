@@ -761,6 +761,8 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     std::string cat, val;
     Logger::LogLevels levels;
 
+    try{
+    
     while((delim_pos = strchr(p, ',')))
     {
         if(!s)
@@ -789,6 +791,17 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     }
 
     Logger::setLogLevels(levels);
+
+    } catch(Exception& e) {
+        char msg[1024];
+        snprintf(msg, 1023, "CommandSetLogCategories failed. Details: %s", e.what());
+        msg[1023] = 0;
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "CommandSetLogCategories Failed. Unknown exception");
+        throw AdminException("CommandSetLogCategories Failed. Unknown exception");
+    }
 
     smsc_log_info(logger, "CommandSetLogCategories processed ok.");
     return new Response(Response::Ok, Variant(true));
