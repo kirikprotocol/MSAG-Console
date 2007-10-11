@@ -1,5 +1,5 @@
-#ifndef __SCAG_MMS_MSG_H__
-#define __SCAG_MMS_MSG_H__
+#ifndef __SCAG_TRANSPORT_MMS_MSG_H__
+#define __SCAG_TRANSPORT_MMS_MSG_H__
 
 #include <string>
 #include <vector>

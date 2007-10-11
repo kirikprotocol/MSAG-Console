@@ -66,6 +66,8 @@ void MmsProcessor::Init(const string& cfg) {
   }
 }
 
+//continue develope form here
+
 int MmsProcessorImpl::processRequest(MmsRequest &request) {
   string endpointId = request.getEndpointId();
   MmsEntity** entity = getMmsEntity(endpointId.c_str());
@@ -89,10 +91,12 @@ int MmsProcessorImpl::processRequest(MmsRequest &request) {
 }
 
 int MmsProcessorImpl::processResponse(MmsResponse &response) {
+  //process response
   return scag::re::STATUS_OK;
 }
 
 int MmsProcessorImpl::statusResponse(MmsResponse &response, bool delivered) {
+  //process statusResponse
   return scag::re::STATUS_OK;
 }
 

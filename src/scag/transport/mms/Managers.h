@@ -1,5 +1,5 @@
-#ifndef SCAG_TRANSPORT_MMS_MANAGERS
-#define SCAG_TRANSPORT_MMS_MANAGERS
+#ifndef __SCAG_TRANSPORT_MMS_MANAGERS_H__
+#define __SCAG_TRANSPORT_MMS_MANAGERS_H__
 
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/threads/ThreadPool.hpp"

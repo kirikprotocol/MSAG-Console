@@ -26,7 +26,7 @@ using smsc::logger::Logger;
 
 XERCES_CPP_NAMESPACE_USE
 
-void init() {
+void init_mms_transport() {
 
   Logger::Init();
   smsc::util::xml::initXerces();
@@ -85,7 +85,7 @@ void shutdown() {
 
 int main() {
   try {
-    init();
+    init_mms_transport();
     string exit_cmd("exit");
     for (;;) {
       char* buf = NULL;

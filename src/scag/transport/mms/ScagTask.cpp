@@ -35,9 +35,10 @@ int ScagTask::Execute() {
     case PROCESS_REQUEST:
       smsc_log_debug(logger, "%p: %p, call to processRequest()", this, cx);
       cx->replaceTid();
+      //continue develope from MmsProcessor::processRequest
       st = processor.processRequest(cx->getRequest());
       if (scag::re::STATUS_OK == st) {
-        smsc_log_info(logger, "%p: %p, request aproved", this, cx);
+        smsc_log_info(logger, "%p: %p, request approved", this, cx);
         cx->action = SEND_REQUEST;
         cx->serializeRequest();
         manager.writers.process(cx);
@@ -53,9 +54,10 @@ int ScagTask::Execute() {
       if (cx->result == 0) {
         smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
         cx->replaceTid();
+        //continue develope from MmsProcessor::processResponse
         st = processor.processResponse(cx->getResponse());
         if (scag::re::STATUS_OK == st) {
-          smsc_log_info(logger, "%p: %p, response aproved", this, cx);
+          smsc_log_info(logger, "%p: %p, response approved", this, cx);
         } else {
           if (scag::re::STATUS_LONG_CALL == st || scag::re::STATUS_PROCESS_LATER == st) {
             break;

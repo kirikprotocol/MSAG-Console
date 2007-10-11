@@ -1,5 +1,5 @@
-#ifndef __SCAG_TRANSPORT_MMS_CLIENTMMS_H__
-#define __SCAG_TRANSPORT_MMS_CLIENTMMS_H__
+#ifndef __SCAG_TRANSPORT_MMS_TEST_CLIENTMMS_H__
+#define __SCAG_TRANSPORT_MMS_TEST_CLIENTMMS_H__
 
 #include "core/network/Socket.hpp"
 #include "core/threads/Thread.hpp"

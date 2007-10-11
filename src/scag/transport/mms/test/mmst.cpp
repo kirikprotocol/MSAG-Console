@@ -556,6 +556,7 @@ int main(int argc, char* argv[]) {
   }
   Logger::Init();
   smsc::util::xml::initXerces();
+  int *p = new int[100];
   bool is_vasp = true;
   if (std::strcmp(argv[1],"-r") == 0) {
     is_vasp = false;

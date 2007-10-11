@@ -91,7 +91,11 @@ void IOTask::killSocket(Socket *s) {
   }
 }
 
-void IOTask::checkConnectionTimeout(Multiplexer::SockArray &error,
+MmsReaderTask::MmsReaderTask(MmsManagerImpl &m, IOTaskManager &iom, int timeout):IOTask(m, iom, timeout) {
+  logger = Logger::getInstance("mms.reader");
+}
+
+void MmsReaderTask::checkConnectionTimeout(Multiplexer::SockArray &error,
                                     Multiplexer::SockArray &incomplite) {
   error.Empty();
   incomplite.Empty();
@@ -101,26 +105,17 @@ void IOTask::checkConnectionTimeout(Multiplexer::SockArray &error,
     if (isTimedOut(s,now)) {
       smsc_log_warn(logger, "socket %p timeout", s);
       MmsContext *cx = MmsContext::getContext(s);
-      if (cx->action == SEND_REQUEST) {
-        cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP | DEL_SERVICE_SOCK);
-      } else if (cx->action == SEND_RESPONSE) {
-        cx->setDestiny(http_status::INTERNAL_SERVER_ERROR, STAT_RESP | DEL_CLIENT_SOCK);
-      } else if (cx->action == READ_REQUEST) {
+      if (cx->action == READ_REQUEST) {
         if (cx->http_packet.isValid() && !cx->http_packet.isComplite()) {
-          //smsc_log_warn(logger, "socket %p timeout", s);
           incomplite.Push(s);
         }
         //cx->setDestiny(http_status::REQUEST_TIMEOUT, FAKE_RESP);
-      } else if (cx->action == READ_RESPONSE) {
+      } else {
         cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP);
       }
       error.Push(s);
     }
   }
-}
-
-MmsReaderTask::MmsReaderTask(MmsManagerImpl &m, IOTaskManager &iom, int timeout):IOTask(m, iom, timeout) {
-  logger = Logger::getInstance("mms.reader");
 }
 
 void MmsReaderTask::registerContext(MmsContext *cx) {
@@ -141,6 +136,22 @@ bool MmsReaderTask::createCommand(MmsContext *cx, Socket *s) {
   } else {
     smsc_log_debug(logger, "%p: %p response parsed", this, cx);
     return cx->createResponse(s);
+  }
+}
+
+void MmsReaderTask::processIncomplitePackets(Multiplexer::SockArray &incomplite,
+                                    Multiplexer::SockArray &error) {
+  for (int i = 0; i < incomplite.Count(); ++i) {
+    Socket *s = incomplite[i];
+    MmsContext *cx = MmsContext::getContext(s);
+    smsc_log_error(logger, "%p: %p process incomplite packet, socket %p", this, cx, s);
+    if (createCommand(cx, s)) {
+      removeSocket(s);
+      manager.process(cx);
+    } else {
+      smsc_log_error(logger, "%p: %p create command error", this, cx);
+      error.Push(s);
+    }
   }
 }
 
@@ -171,23 +182,14 @@ int MmsReaderTask::Execute() {
     }
 
     checkConnectionTimeout(error, incomplite);
-/***************/
-    for (int i = 0; i < incomplite.Count(); ++i) {
-      Socket *s = incomplite[i];
-      MmsContext *cx = MmsContext::getContext(s);
-      smsc_log_error(logger, "%p: %p process incomplite packet, socket %p", this, cx, s);
-      smsc_log_debug(logger,"SoapEnvelope=\'%s\'", cx->http_packet.getSoapEnvelope());
-      if (createCommand(cx, s)) {
-        removeSocket(s);
-        manager.process(cx);
-      } else {
-        smsc_log_error(logger, "%p: %p create command error", this, cx);
-        error.Push(s);
-      }
-    }
-/***************/
-    removeSocket(error);
 
+/***********************************************/
+
+    processIncomplitePackets(incomplite, error);
+
+/***********************************************/
+
+    removeSocket(error);
 
     if (multiplexer.canRead(ready, error, SOCKOP_TIMEOUT) <= 0) {
       continue;
@@ -214,7 +216,7 @@ int MmsReaderTask::Execute() {
         packet.append(buf, len);
         packet_len += len;
       } while (len == -1 && errno == EINTR);
-      smsc_log_debug(logger, "read packet size = %d packet:\n\'%s\'", packet_len, packet.c_str());
+      //smsc_log_debug(logger, "read packet size = %d packet:\n\'%s\'", packet_len, packet.c_str());
 
       if (len <= 0) {
         smsc_log_error(logger, "%p: %p, read error", this, cx);
@@ -225,7 +227,7 @@ int MmsReaderTask::Execute() {
       }
 
       if (cx->http_packet.parse(packet.c_str(), packet_len)) {
-        smsc_log_debug(logger,"SoapEnvelope=\'%s\'", cx->http_packet.getSoapEnvelope());
+        //smsc_log_debug(logger,"SoapEnvelope=\'%s\'", cx->http_packet.getSoapEnvelope());
         if (createCommand(cx, s)) {
           removeSocket(s);
           manager.process(cx);
@@ -243,7 +245,6 @@ int MmsReaderTask::Execute() {
           error.Push(s);
         } else {
           MmsContext::updateTimestamp(s, now);
-          //incomplite.Push(s);
           smsc_log_warn(logger, "%p: %p packet incomplite", this, cx);
         }
       }
@@ -282,6 +283,24 @@ void MmsWriterTask::registerContext(MmsContext *cx) {
   addSocket(s, cx->action != SEND_REQUEST);
 }
 
+void MmsWriterTask::checkConnectionTimeout(Multiplexer::SockArray &error) {
+  error.Empty();
+  time_t now = time(NULL);
+  for (int i = 0; i < multiplexer.Count(); ++i) {
+    Socket *s = multiplexer.getSocket(i);
+    if (isTimedOut(s,now)) {
+      smsc_log_warn(logger, "socket %p timeout", s);
+      MmsContext *cx = MmsContext::getContext(s);
+      if (cx->action == SEND_REQUEST) {
+        cx->setDestiny(status::SERVICE_UNAVAILABLE, FAKE_RESP | DEL_SERVICE_SOCK);
+      } else {
+        cx->setDestiny(http_status::INTERNAL_SERVER_ERROR, STAT_RESP | DEL_CLIENT_SOCK);
+      }
+      error.Push(s);
+    }
+  }
+}
+
 const char* MmsWriterTask::taskName() {
   return "mms.writer";
 }
@@ -289,7 +308,6 @@ const char* MmsWriterTask::taskName() {
 int MmsWriterTask::Execute() {
   Multiplexer::SockArray error;
   Multiplexer::SockArray ready;
-  Multiplexer::SockArray incomplite;
   char buf[4];
   time_t now;
   smsc_log_debug(logger, "%p started", this);
@@ -312,7 +330,7 @@ int MmsWriterTask::Execute() {
       }
     }
 
-    checkConnectionTimeout(error, incomplite);
+    checkConnectionTimeout(error);
 
     while (waiting_connect.Count()) {
       Socket *s;
@@ -349,7 +367,7 @@ int MmsWriterTask::Execute() {
       Socket *s = ready[i];
       MmsContext *cx = MmsContext::getContext(s);
       const char* data = cx->http_packet.getPacket() + cx->position;
-      smsc_log_debug(logger,"write data:\'%s\'", data);
+      //smsc_log_debug(logger,"write data:\'%s\'", data);
       unsigned int size = cx->http_packet.getPacketSize() - cx->position;
       if (size) {
         int writen_size = 0;

@@ -1,5 +1,5 @@
-#ifndef SCAG_TRANSPORT_MMS_TASK_LIST
-#define SCAG_TRANSPORT_MMS_TASK_LIST
+#ifndef __SCAG_TRANSPORT_MMS_TASK_LIST_H__
+#define __SCAG_TRANSPORT_MMS_TASK_LIST_H__
 
 #include "core/threads/ThreadedTask.hpp"
 

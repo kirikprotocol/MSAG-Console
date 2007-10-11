@@ -1,5 +1,5 @@
-#ifndef SCAG_TRANSPORT_MMS_ACCEPTOR
-#define SCAG_TRANSPORT_MMS_ACCEPTOR
+#ifndef __SCAG_TRANSPORT_MMS_ACCEPTOR_H__
+#define __SCAG_TRANSPORT_MMS_ACCEPTOR_H__
 
 
 #include "core/threads/Thread.hpp"

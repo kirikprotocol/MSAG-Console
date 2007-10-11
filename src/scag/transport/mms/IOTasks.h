@@ -1,5 +1,5 @@
-#ifndef SCAG_TRANSPORT_MMS_IO_TASKS
-#define SCAG_TRANSPORT_MMS_IO_TASKS
+#ifndef __SCAG_TRANSPORT_MMS_IO_TASKS_H__
+#define __SCAG_TRANSPORT_MMS_IO_TASKS_H__
 
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/network/Socket.hpp"
@@ -37,9 +37,6 @@ protected:
       return sockets[i];
     }
   };
-  //void checkConnectionTimeout(Multiplexer::SockArray& error);
-  void checkConnectionTimeout(Multiplexer::SockArray& error,
-                              Multiplexer::SockArray& incomplite);
   inline bool isTimedOut(Socket* s, time_t now);
   void killSocket(Socket *s);
   void removeSocket(Multiplexer::SockArray &error);
@@ -64,7 +61,11 @@ public:
   virtual const char* taskName();
   virtual void registerContext(MmsContext* cx);
 private:
+  void checkConnectionTimeout(Multiplexer::SockArray& error,
+                              Multiplexer::SockArray& incomplite);
   bool createCommand(MmsContext *cx, Socket *s);
+  void processIncomplitePackets(Multiplexer::SockArray& incomplite,
+                              Multiplexer::SockArray& error);
 
 };
 
@@ -78,6 +79,10 @@ public:
 
 protected:
   Array<Socket*> waiting_connect;
+
+private:
+  void checkConnectionTimeout(Multiplexer::SockArray& error);
+
 };
 
 }//mms

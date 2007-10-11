@@ -1,5 +1,5 @@
-#ifndef SCAG_TRANSPORT_MMS_CONTEXT
-#define SCAG_TRANSPORT_MMS_CONTEXT
+#ifndef __SCAG_TRANSPORT_MMS_CONTEXT_H__
+#define __SCAG_TRANSPORT_MMS_CONTEXT_H__
 
 #include "core/synchronization/Mutex.hpp"
 #include "core/network/Socket.hpp"

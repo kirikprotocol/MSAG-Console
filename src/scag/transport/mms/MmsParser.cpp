@@ -225,7 +225,7 @@ bool HttpPacket::replaceSoapEnvelopeXmlnsValue() {
 }
 
 void HttpPacket::test() {
-  smsc_log_debug(logger, "TRACE HttpPacket");
+  smsc_log_debug(logger, "TRACE HttpPacket %p", this);
   smsc_log_debug(logger, "StartLine=\'%s\'", start_line.c_str());
   header.test();
   envelope_header.test();
@@ -256,7 +256,7 @@ int HttpParser::findNextPacket(const char* buf, size_t buf_size, HttpPacket* pac
 
 int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* packet) {
   Logger* logger = Logger::getInstance("mms.parser");
-  smsc_log_debug(logger, "HttpParser::parseStartLine");
+  smsc_log_debug(logger, "HttpParser::parseStartLine %p", packet);
   size_t size = 0;
   while (*buf && isspace(*buf)) {
     ++buf;
@@ -265,11 +265,11 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
   if (size == buf_size) {
     packet->valid = false;
     packet->complite = true;
-    smsc_log_error(logger, "HttpParser::parseStartLine : packet complite & invalid");
+    smsc_log_error(logger, "HttpParser::parseStartLine : packet %p complite & invalid", packet);
     return size;
   }
   if ((strncmp(buf, POST, POST_SIZE) != 0) && (strncmp(buf, HTTP, HTTP_SIZE) != 0)) {
-    smsc_log_error(logger, "HttpParser::parseStartLine : packet invalid");
+    smsc_log_error(logger, "HttpParser::parseStartLine : packet %p invalid", packet);
     packet->valid = false;
     packet->state = ERROR;
     return size;
@@ -290,7 +290,7 @@ int HttpParser::parseStartLine(const char* buf, size_t buf_size, HttpPacket* pac
   packet->setStartLine(buf-line_size, line_size);
   line_size += size;
   if (packet->isErrorResp()) {
-    smsc_log_debug(logger, "HttpParser::parseStartLine : packet complite");
+    smsc_log_debug(logger, "HttpParser::parseStartLine : packet %p complite", packet);
     packet->complite = true;
   }
   return line_size;
@@ -348,7 +348,7 @@ void HttpPacket::clear() {
 
 int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* packet) {
   Logger* logger = Logger::getInstance("mms.parser");
-  smsc_log_debug(logger, "HttpParser::parseHttpHeader");
+  smsc_log_debug(logger, "HttpParser::parseHttpHeader %p", packet);
   size_t header_size = 0;
   while (*buf && isspace(*buf)) {
     ++header_size;
@@ -358,12 +358,12 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
     size_t line_size = packet->header.parseHeaderLine(buf, buf_size - header_size);
     if (line_size == 0) {
       if (!packet->header.parseContentType()) {
-        smsc_log_error(logger, "HttpParser::parseHttpHeader : error in parseContentType, packet invalid");
+        smsc_log_error(logger, "HttpParser::parseHttpHeader : error in parseContentType, packet %p invalid", packet);
         packet->state = ERROR;
         packet->valid = false;
         return header_size + CRLF_SIZE;
       }
-      packet->header.test();
+      //packet->header.test();
       if (packet->header.isMultipart()) {
         packet->state = FIND_NEXT_PART;
         packet->next_state = ENVELOPE_HEADER;
@@ -375,11 +375,11 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
       size_t envelope_size = buf_size - packet->getSize() - header_size;
       packet->valid = true;
       packet->complite = true;
-      smsc_log_debug(logger, "HttpParser::parseHttpHeader : packet complite & valid");
+      smsc_log_debug(logger, "HttpParser::parseHttpHeader : packet %p complite & valid", packet);
       if (content_length) {
         if (content_length > envelope_size) {
           //packet->valid = false;
-          smsc_log_warn(logger, "HttpParser::parseHttpHeader : packet incomplite");
+          smsc_log_warn(logger, "HttpParser::parseHttpHeader : packet %p incomplite", packet);
           packet->complite = false;
         } else {
           envelope_size = content_length;
@@ -397,7 +397,7 @@ int HttpParser::parseHttpHeader(const char* buf, size_t buf_size, HttpPacket* pa
 
 int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket* packet) {
   Logger* logger = Logger::getInstance("mms.parser");
-  smsc_log_debug(logger, "HttpParser::parseEnvelopeHeader");
+  smsc_log_debug(logger, "HttpParser::parseEnvelopeHeader %p", packet);
   size_t header_size = 0;
   while (*buf && isspace(*buf)) {
     ++header_size;
@@ -411,7 +411,7 @@ int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket
       } else {
         packet->state = ERROR;
         packet->valid = false;
-        smsc_log_error(logger, "HttpParser::parseEnvelopeHeader : packet invalid");
+        smsc_log_error(logger, "HttpParser::parseEnvelopeHeader : packet %p invalid", packet);
       }
       packet->content_size += header_size + CRLF_SIZE;
       return header_size + CRLF_SIZE;
@@ -425,18 +425,18 @@ int HttpParser::parseEnvelopeHeader(const char* buf, size_t buf_size, HttpPacket
 
 int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* packet) {
   Logger* logger = Logger::getInstance("mms.parser");
-  smsc_log_debug(logger, "HttpParser::parseSoapEnvelope");
+  smsc_log_debug(logger, "HttpParser::parseSoapEnvelope %p", packet);
   if (!packet->header.isMultipart()) {
     packet->setSoapEnvelope(buf, buf_size);
     int content_length = packet->header.getContentLength();
     if (content_length > 0) {
       if (packet->soap_envelope.size() > content_length) {
         packet->valid = false;
-        smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet invalid 1");
+        smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet %p invalid 1", packet);
       }
       if (packet->soap_envelope.size() == content_length) {
         packet->complite = true;
-        smsc_log_debug(logger, "HttpParser::parseSoapEnvelope : packet complite");
+        smsc_log_debug(logger, "HttpParser::parseSoapEnvelope : packet %p complite", packet);
       }
     }
     return buf_size;
@@ -447,7 +447,7 @@ int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* 
   while (*buf) {
     if (strncmp(buf, boundary, boundary_size) == 0)  {
       if (strncmp(buf + boundary_size, BOUNDARY_START, BOUNDARY_START_SIZE) == 0) {
-        smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet complite & invalid");
+        smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet %p complite & invalid", packet);
         packet->complite = true;
         packet->valid = false;
       }
@@ -463,7 +463,7 @@ int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* 
   packet->setSoapEnvelope(buf - envelope_size, envelope_size);
   int content_length = packet->header.getContentLength();
   if (content_length > 0 && content_length <= packet->content_size) {
-    smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet invalid 2");
+    smsc_log_error(logger, "HttpParser::parseSoapEnvelope : packet %p invalid 2", packet);
     packet->valid = false;
   }
   return envelope_size;
@@ -471,12 +471,12 @@ int HttpParser::parseSoapEnvelope(const char* buf, size_t buf_size, HttpPacket* 
 
 int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket* packet) {
   Logger* logger = Logger::getInstance("mms.parser");
-  smsc_log_debug(logger, "HttpParser::parseSoapAttachment");
+  smsc_log_debug(logger, "HttpParser::parseSoapAttachment %p", packet);
   int content_length = packet->header.getContentLength();
   if ((content_length > 0) && ((content_length -= packet->getContentSize()) <= 0)) {
     //size_t attachment_size = buf_size - packet->getSize();
     packet->valid = false;
-    smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet invalid 1");
+    smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet %p invalid 1", packet);
     return buf_size - packet->getSize();
   }
     //if (content_length <= attachment_size) {
@@ -496,12 +496,12 @@ int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket
     if (strncmp(buf, end_boundary.c_str(), end_boundary_size) == 0) {
       packet->complite = true;
       //packet->valid = true;
-      smsc_log_debug(logger, "HttpParser::parseSoapAttachment : packet complite");
+      smsc_log_debug(logger, "HttpParser::parseSoapAttachment : packet %p complite", packet);
       packet->setSoapAttachment(buf - attachment_size, attachment_size);
       packet->content_size += attachment_size;
       if (content_length > 0 && attachment_size > content_length) {
         packet->valid = false;
-        smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet invalid 2");
+        smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet %p invalid 2", packet);
       }
       return attachment_size;
     }
@@ -510,7 +510,7 @@ int HttpParser::parseSoapAttachment(const char* buf, size_t buf_size, HttpPacket
   }
   if (content_length > 0 && attachment_size > content_length) {
     packet->valid = false;
-    smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet invalid 3");
+    smsc_log_error(logger, "HttpParser::parseSoapAttachment : packet %p invalid 3", packet);
   }
   packet->setSoapAttachment(buf - attachment_size, attachment_size);
   packet->content_size += attachment_size;

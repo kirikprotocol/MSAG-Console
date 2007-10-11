@@ -1,5 +1,5 @@
-#ifndef __SCAG_MMS_COMMAND_HPP__
-#define __SCAG_MMS_COMMAND_HPP__
+#ifndef __SCAG_TRANSPORT_MMS_COMMAND_HPP__
+#define __SCAG_TRANSPORT_MMS_COMMAND_HPP__
 
 #include <string>
 
@@ -48,6 +48,7 @@ using smsc::core::synchronization::MutexGuard;
 
 using scag::sessions::SessionPtr;
 
+//transaction context is not using now
 struct TransactionContext {
   int64_t operationId;
   uint32_t serviceId;
@@ -101,6 +102,7 @@ public:
   virtual bool isRequest() { return false; };
 
   SessionPtr session;
+
 protected:
   void setStatus(int status);
   MmsMsg* mms_msg;
@@ -121,6 +123,7 @@ public:
   void setDestPort(uint32_t _port);
   string getDestHost() const;
   void setDestHost(const string& _host);
+
 private:
   string dest_host;
   uint32_t dest_port;

@@ -1,5 +1,5 @@
-#ifndef SCAG_TRANSPORT_MMS_ROUTER
-#define SCAG_TRANSPORT_MMS_ROUTER
+#ifndef __SCAG_TRANSPORT_MMS_ROUTER_H__
+#define __SCAG_TRANSPORT_MMS_ROUTER_H__
 
 #include <string>
 

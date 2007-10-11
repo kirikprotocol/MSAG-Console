@@ -1,5 +1,5 @@
-#ifndef __SCAG_TRANSPORT_MMS_SERVERMMS_HPP__
-#define __SCAG_TRANSPORT_MMS_SERVERMMS_HPP__
+#ifndef __SCAG_TRANSPORT_MMS_TEST_SERVERMMS_HPP__
+#define __SCAG_TRANSPORT_MMS_TEST_SERVERMMS_HPP__
 
 #include "ClientMms.h"
 #include "core/threads/Thread.hpp"
