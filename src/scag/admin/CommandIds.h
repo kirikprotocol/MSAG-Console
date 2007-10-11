@@ -38,6 +38,7 @@ namespace CommandIds {
     traceHttpRoute,
     getLogCategories,
     setLogCategories,
+    storeLogConfig,
 
     listSme,
     listSmsc

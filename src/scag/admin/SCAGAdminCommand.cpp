@@ -686,6 +686,29 @@ Response * CommandTraceHttpRoute::CreateResponse(scag::Scag * ScagApp)
     return new Response(Response::Ok, result);
 }
 
+Response * CommandStoreLogConfig::CreateResponse(scag::Scag * ScagApp)
+{
+    smsc_log_info(logger, "CommandStoreLogConfig is processing...");
+
+    Variant result(smsc::admin::service::StringListType);
+
+    try {
+        Logger::Store();
+    } catch(Exception& e) {
+        char msg[1024];
+        snprintf(msg, 1023, "CommandStoreLogConfig failed. Details: %s", e.what());
+        msg[1023] = 0;
+        smsc_log_error(logger, msg);
+        return new Response(Response::Error, msg);
+    } catch (...) {
+        smsc_log_warn(logger, "CommandStoreLogConfig Failed. Unknown exception");
+        throw AdminException("CommandStoreLogConfig Failed. Unknown exception");
+    }
+
+    smsc_log_info(logger, "CommandStoreLogConfig processed ok.");
+    return new Response(Response::Ok, Variant(true));
+}
+
 Response * CommandGetLogCategories::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandGetLogCategories is processing...");

@@ -229,6 +229,16 @@ public:
     virtual void init();    
 };
 
+class CommandStoreLogConfig : public AdminCommand
+{
+public:
+    CommandStoreLogConfig(const xercesc::DOMDocument * const doc) :
+        AdminCommand((Command::Id)CommandIds::storeLogConfig, doc)
+    {
+    }
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
+};
+
 
 class CommandListSmppEntity : public AdminCommand 
 {
