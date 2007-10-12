@@ -1476,7 +1476,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     if(!storage.checkEml2GsmLimit(dstUser.c_str()))
     {
       __trace2__("limit exceeded for user:%s",dstUser.c_str());
-      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+      return StatusCodes::STATUS_CODE_LIMIEXCEEDED;
     }
   }
 
