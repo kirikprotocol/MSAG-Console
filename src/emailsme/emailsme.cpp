@@ -1488,7 +1488,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     if(util::ForkPipedCmd(cfg::mailstripper.c_str(),emlIn,emlOut)<=0)
     {
       __trace2__("failed to fork mailstripper child:%s",strerror(errno));
-      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+      return StatusCodes::STATUS_CODE_TEMPORARYERROR;
     }
   };
   __trace2__("write msg size:%d",msglen);
@@ -1501,7 +1501,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     if(wr<=0)
     {
       __trace__("failed to write data for mailstripper");
-      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+      return StatusCodes::STATUS_CODE_TEMPORARYERROR;
     }
     sz+=wr;
   }
@@ -1510,7 +1510,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   if(!fgets(buf,sizeof(buf),emlIn))
   {
     __trace__("failed to read data from mailstripper");
-    return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+    return StatusCodes::STATUS_CODE_TEMPORARYERROR;
   }
   int len=atoi(buf);
   __trace2__("resp len=%d",len);
@@ -1523,7 +1523,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     if(rv==0 || rv==-1)
     {
       __trace__("failed to read data from mailstripper");
-      return StatusCodes::STATUS_CODE_UNKNOWNERROR;
+      return StatusCodes::STATUS_CODE_TEMPORARYERROR;
     }
     sz+=rv;
   }
