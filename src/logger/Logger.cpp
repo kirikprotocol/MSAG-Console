@@ -10,7 +10,9 @@
 #include "logger/additional/StderrAppender.h"
 #include "logger/additional/RollingFileAppender.h"
 #include "logger/additional/RollingDayAppender.h"
+#include "logger/additional/RollingIntervalAppender.h"
 #include "util/cstrings.h"
+#include "util/findConfigFile.h"
 #include "core/synchronization/Mutex.hpp"
 
 #ifdef SMSC_DEBUG
@@ -64,6 +66,9 @@ Logger::AppendersHash Logger::appenders;
 Logger::LogLevels     Logger::logLevels;
 Properties            Logger::cats2appenders;
 Mutex                 Logger::static_mutex;
+uint32_t              Logger::reloadConfigInterval = 0;
+time_t                Logger::lastReloadConfigCheck = time(NULL);
+ConfigReader          Logger::configReader;
 
 Logger *_trace_cat = NULL;
 Logger *_map_cat = NULL;
@@ -94,6 +99,30 @@ void Logger::Init()
     smsc::logger::Logger::Init(logFileName);
   else
     smsc::logger::Logger::Init("logger.properties");
+}
+
+void Logger::Reload()
+{
+  MutexGuard guard(static_mutex);
+  if(!initialized)
+  {
+      __loggerError("setCategoryLogLevel: Logger not initialized");  
+      return;
+  }      
+  char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
+  smsc::logger::Logger::reconfigure(logFileName ? logFileName : "logger.properties");
+}
+
+void Logger::Store()
+{
+  MutexGuard guard(static_mutex);
+  if(!initialized)
+  {
+      __loggerError("setCategoryLogLevel: Logger not initialized");  
+      return;
+  }      
+  char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
+  smsc::logger::Logger::storeConfig(logFileName ? logFileName : "logger.properties");
 }
 
 void Logger::Shutdown()
@@ -160,14 +189,21 @@ void Logger::setLogLevels(const Logger::LogLevels & _logLevels)
 {
   MutexGuard guard(static_mutex);
   if (initialized) {
-    logLevels.Empty();
     {
       char* k;
       LogLevel l;
+      logLevels.Empty();
       for (LogLevels::Iterator i = _logLevels.getIterator(); i.Next(k, l); )
       {
-        if (_logLevels[k] != LEVEL_NOTSET)
-          logLevels[k] = l;
+          if (_logLevels[k] != LEVEL_NOTSET)
+              logLevels[k] = l;
+          if(!*k)
+              configReader.rootLevel.reset(cStringCopy(getLogLevel(l)));
+          else
+          {
+              ConfigReader::CatInfo** ci = configReader.cats.GetPtr(k);
+              if(ci) (*ci)->level.reset(cStringCopy(getLogLevel(l)));
+          }              
       }
     }
     {
@@ -258,6 +294,7 @@ void Logger::configureAppenders(const ConfigReader & configs) throw (Exception)
 {
   char * key;
   ConfigReader::AppenderInfo * info;
+
   for (ConfigReader::AppenderInfos::Iterator i = configs.appenders.getIterator(); i.Next(key, info); )
   {
     if (strcasecmp(info->type.get(), "stderr") == 0) {
@@ -266,10 +303,12 @@ void Logger::configureAppenders(const ConfigReader & configs) throw (Exception)
     else if (strcasecmp(info->type.get(), "file") == 0) {
       appenders.Insert(key, new RollingFileAppender(key, *info->params));
     }
-    else if (strcasecmp(info->type.get(), "dayfile") == 0) {
-      appenders.Insert(key, new RollingDayAppender(key, *info->params));
-    }
-    else {
+    else if (strcasecmp(info->type.get(), "dayfile") == 0)
+      appenders.Insert(key, new RollingIntervalAppender(key, *info->params, ".%04d-%02d-%02d"));
+    else if (strcasecmp(info->type.get(), "intervalfile") == 0)
+      appenders.Insert(key, new RollingIntervalAppender(key, *info->params));
+    else 
+    {
       std::string msg("Unknown appender type: \"");
       msg += info->type.get();
       msg += "\"";
@@ -319,10 +358,14 @@ void Logger::configureRoot(const ConfigReader & cr) throw (Exception)
 void Logger::configure(const char * const configFileName) throw (Exception)
 {
   Properties props(configFileName);
-  ConfigReader cr(props);
-  configureAppenders(cr);
-  configureCatAppenders(cr);
-  configureRoot(cr);
+  
+  if(props.Exists("configReloadInterval"))
+    reloadConfigInterval = atoi(props["configReloadInterval"]);
+  
+  configReader.init(props);
+  configureAppenders(configReader);
+  configureCatAppenders(configReader);
+  configureRoot(configReader);
 
   initialized = true;
   _trace_cat=getInstanceInternal("trace");
@@ -333,10 +376,61 @@ void Logger::configure(const char * const configFileName) throw (Exception)
   _sms_err_cat=getInstanceInternal("sms.error");
 }
 
+void Logger::reconfigure(const char * const configFileName) throw (Exception)
+{
+  Properties props(configFileName);
+
+  if(props.Exists("configReloadInterval"))
+    reloadConfigInterval = atoi(props["configReloadInterval"]);
+
+  configReader.init(props);
+
+  char * key;
+  ConfigReader::CatInfo* catInfo;
+  for (ConfigReader::CatInfos::Iterator i = configReader.cats.getIterator(); i.Next(key, catInfo); )
+  {
+    if (catInfo->level.get() != NULL && strlen(catInfo->level.get()) > 0)
+    {
+      Logger::LogLevel level = Logger::getLogLevel(catInfo->level.get());
+      if(logLevels.Exists(catInfo->name.get()))
+          logLevels[catInfo->name.get()] = level;
+      else
+          logLevels.Insert(catInfo->name.get(), level);
+    }
+  }
+  {
+    char* k;
+    Logger* l;
+    for (LoggersHash::Iterator i = loggers.getIterator(); i.Next(k, l); )
+      l->setLogLevel(Logger::findDebugLevel(l->getName()));
+  }
+}
+
+void Logger::storeConfig(const char * const configFileName) throw (Exception)
+{
+    std::string str;
+    configReader.serialize(str);
+    char* k;
+    LogLevel l;
+    for (LogLevels::Iterator i = logLevels.getIterator(); i.Next(k, l); )
+    {
+        ConfigReader::CatInfo** ci = configReader.cats.GetPtr(k);
+        if(!ci && *k)
+        {
+            str += "cat."; str += k; str += '='; str += getLogLevel(l); str += '\n';
+        }
+    }
+
+    const char* fn = findConfigFile(configFileName);
+    File f;
+    f.RWCreate(fn);
+    f.Write(str.c_str(), str.length());
+}
+
 Logger::LogLevel Logger::findDebugLevel(const char * const name)
 {
   std::auto_ptr<char> n(cStringCopy(name));
-  while (strlen(n.get()) > 0 && !logLevels.Exists(n.get()))
+  while (strlen(n.get()) > 0 && (!logLevels.Exists(n.get())))
     truncateLastNamePart(n.get());
 
   if (logLevels.Exists(n.get()))
@@ -413,6 +507,10 @@ Logger & Logger::operator = (const Logger & other)
 ////////////////////// public methods
 void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 {
+#ifdef LOGGER_TIMED_CONFIG_RELOAD
+    timedConfigReload();
+#endif    
+
   if (isInitialized()) {
     try {
       appender->log(logChars[_logLevel], this->name, message.c_str());
@@ -426,6 +524,10 @@ void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 
 void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...) throw()
 {
+#ifdef LOGGER_TIMED_CONFIG_RELOAD
+    timedConfigReload();
+#endif    
+
   va_list args;
   va_start(args, stringFormat);
   logva_(_logLevel, stringFormat, args);

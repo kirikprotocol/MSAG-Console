@@ -2,6 +2,9 @@
 #define SMSC_LOGGER_H_INCLUDED_C3A87A6B
 
 #include <stdarg.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <core/buffers/Hash.hpp>
 #include <core/synchronization/Mutex.hpp>
 #include <util/Exception.hpp>
@@ -55,6 +58,10 @@ public:
 
   static void Init();
 
+  static void Reload();
+
+  static void Store();
+  
   /**
   * retrieves smsc::logger::Logger instance for given category name
   * \param logCategoryName Category name to retrieve
@@ -199,16 +206,41 @@ private:
   static LogLevels logLevels;
   static Properties cats2appenders;
   static Mutex static_mutex;
+  static ConfigReader configReader;
 
   static Logger * getInstanceInternal(const char * const logCategoryName);
   static void clear() throw(Exception);
+  
   static void configure(const char * const configFileName) throw (Exception);
+  static void reconfigure(const char * const configFileName) throw (Exception);  
+  static void storeConfig(const char * const configFileName) throw (Exception);    
+  
   static void configureAppenders(const ConfigReader & properties) throw (Exception);
   static void configureCatAppenders(const ConfigReader & properties) throw (Exception);
   static void configureRoot(const ConfigReader & config) throw (Exception);
+
   static LogLevel findDebugLevel(const char * const name);
   static Appender* findAppenderByCat(const char * const name);
 
+  static uint32_t reloadConfigInterval;
+  static time_t lastReloadConfigCheck;
+  
+  static void timedConfigReload()
+  {
+    if(reloadConfigInterval && lastReloadConfigCheck + reloadConfigInterval < time(NULL))
+    {
+        MutexGuard guard(static_mutex);
+        if(lastReloadConfigCheck + reloadConfigInterval >= time(NULL)) return;
+        struct ::stat st;
+        const char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
+        if(!logFileName) logFileName = "logger.properties";
+        if(::stat(logFileName, &st)) return;
+        if(st.st_mtime > lastReloadConfigCheck)
+            smsc::logger::Logger::reconfigure(logFileName);
+        lastReloadConfigCheck = time(NULL);
+    }
+  }
+  
   Logger(const char * const logCategoryName, const LogLevel logLevel, Appender * const appender);
   LogLevel logLevel;
   const char* const name;
@@ -228,7 +260,6 @@ private:
 
 }
 }
-
 
 #ifdef _WIN32
 template <class T>
@@ -272,6 +303,5 @@ inline void smsc_log_debug(T* l,const char* stringFormat,...)
   va_end(args);
 }
 #endif
-
 
 #endif // ifndef SMSC_LOGGER_H_INCLUDED_C3A87A6B

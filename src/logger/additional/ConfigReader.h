@@ -27,8 +27,12 @@ public:
 		CatInfo(const char * const name, const char * const initStr);
 	};
 
-	ConfigReader(Properties const & properties);
+	ConfigReader(): configReloadInterval(0) {};
+	ConfigReader(Properties const & properties);    
 	~ConfigReader();
+    void init(Properties const & properties);
+    void clear();
+    void serialize(std::string& str);
 
 	typedef smsc::core::buffers::Hash<AppenderInfo*> AppenderInfos;
 	typedef smsc::core::buffers::Hash<CatInfo*> CatInfos;
@@ -37,7 +41,8 @@ public:
 
 	std::auto_ptr<char> rootLevel;
 	std::auto_ptr<char> rootAppender;
-	
+
+    uint32_t configReloadInterval;	
 private:
 	AppenderInfo* createAppender(const char * const name, const Properties & ap);
 };

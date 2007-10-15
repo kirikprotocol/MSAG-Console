@@ -29,8 +29,10 @@ ConfigReader::CatInfo::CatInfo(const char * const name, const char * const initS
 	}
 }
 
-ConfigReader::ConfigReader(Properties const & properties)
+void ConfigReader::init(Properties const & properties)
 {
+    clear();
+    
 	std::auto_ptr<Properties> appendersSection(properties.getSection("appender"));
 	char * key;
 	PropertiesValue value;
@@ -77,9 +79,77 @@ ConfigReader::ConfigReader(Properties const & properties)
 		rootLevel.reset(cStringCopy("NOTSET"));
 		rootAppender.reset(cStringCopy(""));
 	}
+	if (properties.Exists("configReloadInterval"))
+        configReloadInterval = atoi(properties["configReloadInterval"]);
 }
 
-ConfigReader::~ConfigReader()
+void ConfigReader::serialize(std::string& str)
+{
+    str = "root=";
+    str += rootLevel.get();
+    if(*rootAppender.get())
+    {
+        str += ", ";
+        str += rootAppender.get();
+    }
+    str += '\n';
+    
+    if(configReloadInterval)
+    {
+        char buf[20];
+        buf[19] = 0;
+        str += "configReloadInterval=";
+        str += lltostr(configReloadInterval, buf + 19);
+        str += '\n';
+    }
+    
+	{
+		char * key, *prop;
+        PropertiesValue value;
+		AppenderInfo * val;
+		for (AppenderInfos::Iterator i = appenders.getIterator(); i.Next(key, val);) 
+        {
+        	for (Properties::Iterator i1 = val->params->getIterator(); i1.Next(prop, value); )
+            {
+                str += "appender.";
+                str += val->name.get();
+                str += '.';
+                str += val->type.get();
+                str += '.';
+                str += prop;
+                str += '=';
+                str += value;
+                str += '\n';
+            }                
+        }
+	}
+	{
+		char * key;
+		CatInfo * val;
+		for (CatInfos::Iterator i = cats.getIterator(); i.Next(key, val); ) 
+        {
+            if(!strcmp(val->level.get(), "NOTSET") && !*val->appender.get()) continue;
+            str += "cat.";
+            str += val->name.get();
+            str += '=';
+            str += val->level.get();
+            if(*val->appender.get())
+            {
+                str += ", ";
+                str += val->appender.get();
+
+            }
+            str += '\n';            
+        }
+	}
+}
+
+ConfigReader::ConfigReader(Properties const & properties): configReloadInterval(0)
+{
+    init(properties);
+}
+
+void ConfigReader::clear()
 {
 	{
 		char * key;
@@ -95,6 +165,11 @@ ConfigReader::~ConfigReader()
 			delete val;
 		appenders.Empty();
 	}
+}
+
+ConfigReader::~ConfigReader()
+{
+    clear();
 }
 
 ConfigReader::AppenderInfo* ConfigReader::createAppender(const char * const name, const Properties & ap)
