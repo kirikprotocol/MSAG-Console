@@ -7,8 +7,7 @@ package ru.sibinco.scag.backend.gw.logging;
 import org.apache.log4j.Logger;
 
 import java.io.*;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import ru.sibinco.scag.backend.installation.HSDaemon;
 import ru.sibinco.scag.backend.installation.SavingStrategy;
@@ -30,6 +29,7 @@ public class LoggingManager {
     private File loggerFile;
 
     public LoggingManager(final String lfile, HSDaemon hsDaemon){
+        logger.error( "LoggingManager:LoggingManager( String, HSDaemon):" + lfile + "|" + hsDaemon.toString() );
         loggerFile = new File(lfile);
         if(!loggerFile.exists()){
             logger.error("Cannot find file: " + loggerFile.getAbsolutePath());
@@ -78,6 +78,41 @@ public class LoggingManager {
            write(cats, mirrorFile);
           }
       });
+    }
+
+    public synchronized Map readFromLogFile() throws SibincoException{
+        logger.debug( "LoggingManager:readFromLogFile()");
+      return read( loggerFile );
+    }
+
+    public static int PROP_SEPARATOR = '=';
+
+    private Map read( File loggerFile ){
+        Map map = new TreeMap();
+        BufferedReader br = null;
+        try {
+            br = new BufferedReader(new FileReader(loggerFile));
+        } catch (FileNotFoundException e) {
+            logger.error( "" );
+        }
+        StringBuffer buf = new StringBuffer();
+            String str;
+        try {
+            br.readLine();
+            String key;
+            String value;
+            while ((str = br.readLine())!=null) {
+                if (str.startsWith(CAT_PREFIX)) {
+                    key = str.substring( CAT_PREFIX.length(), str.indexOf(PROP_SEPARATOR) );
+                    value = str.substring( str.indexOf(PROP_SEPARATOR)+1);
+                    map.put( key, value );
+                }
+          }
+        } catch (IOException io) {
+            logger.error("Cannot read from "+loggerFile.getAbsolutePath(),io);
+        } finally {
+            return map;
+        }
     }
 
     private String extractAppender(final File destination) throws FileNotFoundException {
