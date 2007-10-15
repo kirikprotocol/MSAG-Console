@@ -214,7 +214,7 @@ public class Logging extends EditBean {
         try {
 //            appContext.getScag().setLogCategories(cats);
             logger.error( "Logging:savePermanent():storeLogConfig()" );
-            appContext.getScag().storeLogConfig(cats);
+            appContext.getScag().storeLogCategories(cats);
 //            appContext.getLoggingManager().writeToLog(cats);
         } catch (SibincoException e) {
             logger.error( "Logging:savePermanent():can not store Scag logging");
