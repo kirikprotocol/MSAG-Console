@@ -57,7 +57,7 @@ public class Logging extends EditBean {
         }
 
         public void addChild(String childFullName, String childPriority) {
-            logger.debug(new StringBuffer().append("Adding child: name=\"").append(fullName).
+            logger.debug(new StringBuffer().append("Adding child isRoot:'" + isRoot() + "' : name=\"").append(fullName).
                     append("\" priority=").append(priority).append(", childName=\"").append(childFullName).
                     append("\" childPriority=").append(childPriority).toString());
             if (isRoot()) {
@@ -156,10 +156,12 @@ public class Logging extends EditBean {
             }
 
         } catch (SibincoException e) {
+            logger.error( "init:Exception while init()" );
+
             rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
             setRunning(false);
         }
-        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);        
+        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
     }
 
     public LoggerCategoryInfo getRootCategory() {
@@ -210,10 +212,19 @@ public class Logging extends EditBean {
 
         }
         try {
-            appContext.getScag().setLogCategories(cats);
-            appContext.getLoggingManager().writeToLog(cats);
+//            appContext.getScag().setLogCategories(cats);
+            logger.error( "Logging:savePermanent():storeLogConfig()" );
+            appContext.getScag().storeLogConfig(cats);
+//            appContext.getLoggingManager().writeToLog(cats);
         } catch (SibincoException e) {
-            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
+            logger.error( "Logging:savePermanent():can not store Scag logging");
+            try {
+                appContext.getLoggingManager().writeToLog(cats);
+            } catch (SibincoException e1) {
+                logger.error( "Logging:savePermanent():can not store Scag logging to file");
+                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
+            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS_FILE_WRITE, e);
         }
     }
 
@@ -245,11 +256,16 @@ public class Logging extends EditBean {
 
     private void getLoggerCategoryInfos(LoggerCategoryInfo rootCategory, Map map) {
         map.put(rootCategory.getFullName(),rootCategory);
+        logger.error( "Logging:getLoggerCategoryInfos:MAP=" + map.keySet().toString() );
         if (rootCategory.hasChilds()) {
+            logger.error( "Logging:getLoggerCategoryInfos:rootCategory=" + rootCategory.getFullName() + "|" + rootCategory.getName() );
+            logger.error( "Logging:getLoggerCategoryInfos:rootCategory.childs=" + rootCategory.getChilds().values().toString() );
             for (Iterator i = rootCategory.getChilds().values().iterator(); i.hasNext();) {
                 LoggerCategoryInfo child = (Logging.LoggerCategoryInfo) i.next();
+                logger.error( "Logging:getLoggerCategoryInfos:child=" + child.getFullName() + "|" +child.getName() );
                 map.put(child.getFullName(),child);
                 if (child.hasChilds()) {
+                    logger.error( "Logging:getLoggerCategoryInfos:hasChilds" );
                     getLoggerCategoryInfos(child, map);
                 }
             }
