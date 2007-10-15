@@ -96,7 +96,7 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
 }
 
 RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const Properties & properties, const char* suffix)
-  :Appender(_name), interval(86400), path(".")
+  :Appender(_name), interval(86400), path("."), maxBackupIndex(0)
 {
   if (properties.Exists("maxindex"))
     maxBackupIndex = atoi(properties["maxindex"]);
