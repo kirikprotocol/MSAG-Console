@@ -11,13 +11,16 @@
         </c:if>
         <td>
             <select name="category_${fullName}" id="category_${fullName}" class="txt" style="font-size:80%;">
+            <c:set var="selected" value="0"></c:set>
             <c:forEach items="${bean.priorities}" var="i">
                 <c:choose>
                     <c:when test="${priority==i}">
                         <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
+                        <c:set var="selected" value="1"></c:set>
                     </c:when>
                     <c:otherwise>
-                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                        <option value="${fn:escapeXml(i)}" <c:if test="${selected!=1}">selected="true"</c:if> >${fn:escapeXml(i)}
+                        </option>
                     </c:otherwise>
                 </c:choose>
             </c:forEach>
