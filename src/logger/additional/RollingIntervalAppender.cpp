@@ -103,10 +103,9 @@ RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const
     
   if (properties.Exists("interval"))
   {
-    struct tm t;
-    char* p = strptime(properties["interval"], "%T", &t);
-    if(p && !*p)
-        interval = t.tm_hour * 3600 + t.tm_min * 60 + t.tm_sec;
+    uint32_t hour, min, sec;
+    if(sscanf(properties["interval"], "%u:%u:%u", &hour, &min, &sec) == 3)
+        interval = hour * 3600 + min * 60 + sec;
   }
   
   suffixFormat = properties.Exists("suffixFormat") ? properties["suffixFormat"] : suffix ? suffix : ".%04d%02d%02d%02d%02d%02d";
