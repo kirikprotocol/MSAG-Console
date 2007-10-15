@@ -9,7 +9,6 @@
 
 #include "logger/additional/StderrAppender.h"
 #include "logger/additional/RollingFileAppender.h"
-#include "logger/additional/RollingDayAppender.h"
 #include "logger/additional/RollingIntervalAppender.h"
 #include "util/cstrings.h"
 #include "util/findConfigFile.h"
