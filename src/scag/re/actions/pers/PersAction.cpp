@@ -78,7 +78,7 @@ time_t PersAction::parseFinalDate(const std::string& s)
 uint32_t PersAction::parseLifeTime(const std::string& s)
 {
 	uint32_t hour = 0, min = 0, sec = 0;
-    if(sscanf(s.c_str(), "%02u:%02u:%02u", &hour, &min, &sec) < 3)
+    if(sscanf(s.c_str(), "%u:%u:%u", &hour, &min, &sec) < 3)
 		return 0;
 
     return hour * 3600 + min * 60 + sec;
