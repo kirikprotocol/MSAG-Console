@@ -230,15 +230,12 @@ public class Scag extends Proxy {
 
     public Object call(final String commandId, final String err, final Type returnType, final Map arguments) throws SibincoException {
         try {
-            logger.error( "Scag:call(): commandId=" + commandId + "|returnType=" + returnType + "|arguments.keySet=" + arguments.keySet().toString());
             final Response r = runCommand(new CommandCall(commandId, returnType, arguments));
             if (Response.STATUS_OK != r.getStatus()){
-                logger.error( "call():!STATUS_OK" );
                 throw new SibincoException("Error occured: " + err + r.getDataAsString());
             }
             final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
             final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
-            logger.error( "call():resultType.getId() =" + resultType.getId());
             switch (resultType.getId()) {
                 case Type.STRING_TYPE:
                     return Utils.getNodeText(resultElem);
@@ -254,11 +251,9 @@ public class Scag extends Proxy {
              }
         } catch (SibincoException se) {
            if (getStatus() == STATUS_DISCONNECTED) {
-             logger.error( "Scag:call():catch{}:if");
              throw new StatusDisconnectedException(host,port);
            }
            else {
-               logger.error( "Scag:call():catch{}:else");
                throw se;
            }
          }
@@ -355,15 +350,7 @@ public class Scag extends Proxy {
     public synchronized void storeLogConfig(final Map cats) throws SibincoException {
         final Map params = new HashMap();
         String err = "Couldn't set LogCategories , nested: ";
-//        final List catsList = new LinkedList();
-//        params.put("categories", catsList);
-//        for (Iterator iterator = cats.entrySet().iterator(); iterator.hasNext();) {
-//            final Map.Entry entry = (Map.Entry) iterator.next();
-//            final String catName = (String) entry.getKey();
-//            final String catPriority = (String) entry.getValue();
-//            catsList.add(catName + LOGGER_DELIMITER + catPriority);
-//        }
-        logger.error( "Scag:storeLogConfig():call()" );
+        logger.error( "Scag:storeLogConfig()" );
         call("storeLogConfig", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
 
