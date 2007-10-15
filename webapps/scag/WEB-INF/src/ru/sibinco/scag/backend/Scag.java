@@ -347,11 +347,11 @@ public class Scag extends Proxy {
         call("setLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
 
-    public synchronized void storeLogConfig(final Map cats) throws SibincoException {
+    public synchronized void storeLogCategories(final Map cats) throws SibincoException {
         final Map params = new HashMap();
         String err = "Couldn't set LogCategories , nested: ";
-        logger.error( "Scag:storeLogConfig()" );
-        call("storeLogConfig", err, Type.Types[Type.BOOLEAN_TYPE], params);
+        logger.error( "Scag:storeLogCategories()" );
+        call("storeLogCategories", err, Type.Types[Type.BOOLEAN_TYPE], params);
     }
 
     //common logic of command executing
