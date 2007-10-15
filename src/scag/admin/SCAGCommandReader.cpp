@@ -46,7 +46,7 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["traceHttpRoute"] = CommandIds::traceHttpRoute;
   commandlist["getLogCategories"] = CommandIds::getLogCategories;
   commandlist["setLogCategories"] = CommandIds::setLogCategories;  
-  commandlist["storeLogConfig"] = CommandIds::storeLogConfig;    
+  commandlist["storeLogCategories"] = CommandIds::storeLogConfig;
 
   commandlist["listSme"] = CommandIds::listSme;
   commandlist["listSmsc"] = CommandIds::listSmsc;
