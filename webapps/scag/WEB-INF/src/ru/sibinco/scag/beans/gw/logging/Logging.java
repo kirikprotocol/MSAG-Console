@@ -167,7 +167,6 @@ public class Logging extends EditBean {
             if (rootPriority == null) rootPriority = "NOTSET";
             rootCategory = new LoggerCategoryInfo("", "", rootPriority);
             Collection keys = new SortedList(logCategories.keySet());
-            logger.error( "init:Exception while init():Connected" );
             for (Iterator iterator = keys.iterator(); iterator.hasNext();) {
                 String key = (String) iterator.next();
                 String value = (String) logCategories.get(key);
