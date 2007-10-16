@@ -494,6 +494,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
     resp->get_resp()->setOrgCmd(cmd);
+    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);    
     processSubmitResp(resp);
   }
 }
@@ -644,6 +645,10 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
   else if(cmd->get_resp()->get_status() && !cmd->get_resp()->expiredResp)
   {
     rs = scag::stat::events::smpp::RESP_REJECTED;
+  }
+  else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
+  {
+    rs = scag::stat::events::smpp::RESP_FAILED;
   }
   else if(cmd->get_resp()->expiredResp)
   {
@@ -958,6 +963,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     SmppCommand resp=SmppCommand::makeDeliverySmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
     resp->get_resp()->setOrgCmd(cmd);
+    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);
     processDeliveryResp(resp);
   }
 }
@@ -1104,6 +1110,10 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   else if(cmd->get_resp()->get_status() && !cmd->get_resp()->expiredResp)
   {
     rs = scag::stat::events::smpp::RESP_REJECTED;
+  }
+  else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
+  {
+    rs = scag::stat::events::smpp::RESP_FAILED;
   }
   else if(cmd->get_resp()->expiredResp)
   {
@@ -1355,6 +1365,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
     resp->get_resp()->setOrgCmd(cmd);
+    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);    
     processDataSmResp(resp);
   }
 }
@@ -1506,6 +1517,10 @@ void StateMachine::processDataSmResp(SmppCommand& cmd)
   else if(cmd->get_resp()->get_status() && !cmd->get_resp()->expiredResp)
   {
     rs = scag::stat::events::smpp::RESP_REJECTED;
+  }
+  else if(cmd->flagSet(SmppCommandFlags::FAILED_COMMAND_RESP))
+  {
+    rs = scag::stat::events::smpp::RESP_FAILED;
   }
   else if(cmd->get_resp()->expiredResp)
   {
