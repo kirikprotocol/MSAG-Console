@@ -150,13 +150,14 @@ public class Logging extends EditBean {
             parseMap( logCategories );
         } catch (SibincoException e) {
             logger.warn( "Loigging:init():Exception while init():Disconnected" );
+            setRunning(false);
             try{
                 logCategories = appContext.getLoggingManager().readFromLogFile();
                 parseMap( logCategories );
             }catch (SibincoException e1) {
                 logger.error( "Loigging:init():Exception while init():can not read loggers from file!!!" );
                 rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
-                setRunning(false);
+
             }
         }
         getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
@@ -204,7 +205,15 @@ public class Logging extends EditBean {
         try {
             appContext.getScag().setLogCategories(cats);
         } catch (SibincoException e) {
-            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
+              logger.error( "Logging:save():Disconnected" );            
+//            try {
+//                appContext.getLoggingManager().writeToLog(cats);
+//            } catch (SibincoException e1) {
+//                logger.error( "Logging:save():Disconnected:can not write loggers file!!!" );
+//                throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
+//                e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+//            }
+//            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS, e);
         }
     }
 
@@ -234,7 +243,7 @@ public class Logging extends EditBean {
                 logger.error( "Logging:savePermanent():can not store Scag logging to file");
                 e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
-            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS_FILE_WRITE, e);
+//            throw new SCAGJspException(Constants.errors.logging.COULDNT_SET_LOGCATS_FILE_WRITE, e);
         }
     }
 
