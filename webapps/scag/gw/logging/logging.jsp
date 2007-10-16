@@ -74,7 +74,7 @@
     <c:otherwise>
         <sm-pm:menu>
             <sm-pm:item name="mbSave" value="item.mbapply.value" enabled="false" title="item.mbapply.title"/>
-            <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="false"
+            <sm-pm:item name="mbSavePermanent" value="logging.item.save.permanent.value" enabled="true"
                         title="logging.item.save.permanent.title"
                         onclick=""/>
             <sm-pm:space/>
