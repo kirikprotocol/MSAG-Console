@@ -29,6 +29,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
   private static final Category log = Category.getInstance("SPONSORED SMPP");
 
   private static final Pattern SPONSORED = Pattern.compile("(S|s)(P|p)(O|o)(N|n)(S|s)(O|o)(R|r)(E|e)(D|d)");
+  private static final Pattern SPONSOR = Pattern.compile("(S|s)(P|p)(O|o)(N|n)(S|s)(O|o)(R|r)\\s*");
   private static final Pattern NONE = Pattern.compile("(N|n)(O|o)(N|n)(E|e)");
   private static final Pattern ANY_NUMBER = Pattern.compile("\\d+");
   private static final Pattern SPACE = Pattern.compile(" ");
@@ -45,6 +46,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
   private final String msgUnsubscriptionOk;
   private final String msgSourceAbonentNotRegistered;
   private final String msgSubscriptionLocked;
+  private final String msgInvitation;
 
   SponsoredSMPPHandler(String configDir, SMPPMultiplexor multiplexor) {
     super(multiplexor);
@@ -58,6 +60,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
       msgWrongSubscriptionCount = config.getString("wrong.subscription.count");
       msgSourceAbonentNotRegistered = config.getString("source.abonent.not.registered");
       msgSubscriptionLocked = config.getString("subscription.locked");
+      msgInvitation = config.getString("invitation");
     } catch (ConfigException e) {
       throw new SMPPHandlerInitializationException(e);
     }
@@ -82,7 +85,11 @@ class SponsoredSMPPHandler extends SMPPHandler {
             return true;
           }
 
-          if (SPONSORED_SUBSCRIBE.matcher(msg).matches()) {
+          if (SPONSOR.matcher(msg).matches()) {
+            sendMessage(serviceAddress, sourceAddress, msgInvitation);
+            return true;
+
+          } else if (SPONSORED_SUBSCRIBE.matcher(msg).matches()) {
             try {
               final int count = Integer.parseInt(SPACE.split(msg)[1]);
               final SponsoredRegisterAbonentCmd cmd = new SponsoredRegisterAbonentCmd();
