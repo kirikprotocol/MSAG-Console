@@ -56,7 +56,7 @@ var StringTableDataSource = XHR.extend({
         }
       }
     } else {
-      alert( "Cann't parse response string to get status!\n" + txt );
+//      alert( "Cann't parse response string to get status!\n" + txt );
     }
   },
 
