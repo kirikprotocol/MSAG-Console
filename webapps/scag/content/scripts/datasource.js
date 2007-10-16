@@ -13,7 +13,9 @@ var ElementObserver = new Class({
   }
 });
 
+
 ElementObserver.implement(new Options);
+
 
 var StringTableDataSource = XHR.extend({
   options: {
