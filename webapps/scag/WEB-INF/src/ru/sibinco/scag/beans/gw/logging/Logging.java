@@ -147,7 +147,23 @@ public class Logging extends EditBean {
         String rootPriority = null;
         try {
             logCategories = appContext.getScag().getLogCategories();
-            rootPriority = (String) logCategories.remove("");
+            parseMap( logCategories );
+        } catch (SibincoException e) {
+            logger.warn( "Loigging:init():Exception while init():Disconnected" );
+            try{
+                logCategories = appContext.getLoggingManager().readFromLogFile();
+                parseMap( logCategories );
+            }catch (SibincoException e1) {
+                logger.error( "Loigging:init():Exception while init():can not read loggers from file!!!" );
+                rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
+                setRunning(false);
+            }
+        }
+        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
+    }
+
+    public void parseMap( Map logCategories ){
+            String rootPriority = (String) logCategories.remove("");
             if (rootPriority == null) rootPriority = "NOTSET";
             rootCategory = new LoggerCategoryInfo("", "", rootPriority);
             Collection keys = new SortedList(logCategories.keySet());
@@ -157,27 +173,6 @@ public class Logging extends EditBean {
                 String value = (String) logCategories.get(key);
                 rootCategory.addChild(key, value);
             }
-        } catch (SibincoException e) {
-            logger.error( "init:Exception while init():Disconnected" );
-            try{
-                logCategories = appContext.getLoggingManager().readFromLogFile();
-                rootPriority = (String) logCategories.remove("");
-                if (rootPriority == null) rootPriority = "NOTSET";
-                rootCategory = new LoggerCategoryInfo("", "", rootPriority);
-                Collection keys = new SortedList(logCategories.keySet());
-                for (Iterator iterator = keys.iterator(); iterator.hasNext();) {
-                    String key = (String) iterator.next();
-                    String value = (String) logCategories.get(key);
-                    rootCategory.addChild(key, value);
-                }
-
-            }catch (SibincoException e1) {
-                logger.error( "init:Exception while init():can not read loggers from file!!!" );
-                rootCategory = new LoggerCategoryInfo("", "", "NOTSET");
-                setRunning(false);
-            }
-        }
-        getLoggerCategoryInfos(rootCategory, fullNameToCatInfo);
     }
 
     public LoggerCategoryInfo getRootCategory() {
