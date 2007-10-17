@@ -45,7 +45,7 @@ public class SponsoredExport {
 
   private static ConnectionPool pool;
 
-  private static void unload(Date startDate, Date endDate, String fileDir) {
+  private static void unload(Date startDate, Date endDate, String fileDir, double cost) {
     Timestamp start = new Timestamp(getDayStartTime(startDate.getTime()).getTime());
     Timestamp end = new Timestamp(getDayStartTime(endDate.getTime()).getTime());
 
@@ -82,7 +82,7 @@ public class SponsoredExport {
 
         String abonent;
         int cnt;
-        long totalCost;
+        double totalCost;
         count = 0;
         while(rs.next()) {
           count ++;
@@ -94,11 +94,11 @@ public class SponsoredExport {
             abonent = abonent.substring(1);
 
           cnt = rs.getInt(2);
-//          totalCost = cnt*days*cost;
+          totalCost = cnt*cost;
 
           if (cnt > 0) {
-            log.write(abonent + "|" + cnt + "\n");
-            writer.write(abonent + "|" + cnt + "\n");
+            log.write(abonent + "|" + totalCost + "\n");
+            writer.write(abonent + "|" + totalCost + "\n");
 //            log.write("|" + totalCost + "|||" + "bonus SMS Extra " + abonent + "\n");
 //            writer.write("|" + totalCost + "|||" + "bonus SMS Extra " + abonent + "\n");
           }
@@ -167,10 +167,14 @@ public class SponsoredExport {
     try {
       conn = pool.getConnection();
 
+      final Timestamp date = new Timestamp(System.currentTimeMillis());
+      String address;
       for (int i=0; i < 1000000; i++) {
-        ps = conn.prepareStatement("INSERT INTO sponsored_subscription_history(abonent, start_date, cnt) VALUES ('+7913" + i + "', ?, 10)");
+        address ="+7913" + i;
+        ps = conn.prepareStatement("INSERT INTO sponsored_delivery_stats(address, date, cnt) VALUES (?, ?, 10)");
 
-        ps.setTimestamp(1, new Timestamp(System.currentTimeMillis()));
+        ps.setString(1, address);
+        ps.setTimestamp(2, date);
 
         ps.executeUpdate();
 
@@ -203,12 +207,14 @@ public class SponsoredExport {
     String configDir;
     String outputDir;
     Date endDate, startDate;
+    double cost;
 
     try {
       configDir = args[0];
       outputDir = args[1];
       startDate = df.parse(args[2]);
       endDate = df.parse(args[3]);
+      cost = Double.parseDouble(args[4]);
     } catch (Throwable e) {
       System.out.println("invalid arguments");
       e.printStackTrace();
@@ -217,9 +223,10 @@ public class SponsoredExport {
 
     ConnectionPoolFactory.init(configDir);
     pool = ConnectionPoolFactory.createConnectionPool("", 1, 10000);
+
     pool.init(1);
 //    insertAbonents();
-    unload(startDate, endDate, outputDir);
+    unload(startDate, endDate, outputDir, cost);
 
   }
 }
