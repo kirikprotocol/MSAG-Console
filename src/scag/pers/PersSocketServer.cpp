@@ -5,15 +5,6 @@ namespace scag { namespace pers {
 
 using smsc::util::Exception;
 
-class ConnectionContext{
-public:
-	ConnectionContext() : wantRead(true), lastActivity(time(NULL)) {};
-	SerialBuffer inbuf, outbuf;
-	bool wantRead;
-	time_t lastActivity;
-	uint32_t packetLen;
-};
- 
 #define MAX_PACKET_SIZE 100000
 
 PersSocketServer::PersSocketServer(const char *persHost_, int persPort_, int maxClientCount_, int timeout_)
@@ -101,11 +92,15 @@ void PersSocketServer::processReadSocket(Socket* s)
             smsc_log_debug(log, "read from socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
 			ctx->outbuf.Empty();
             ctx->inbuf.SetPos(4);
-            processPacket(ctx->inbuf, ctx->outbuf);
-			ctx->lastActivity = time(NULL);			
-            ctx->outbuf.SetPos(0);
-            listener.addRW(s);
-			ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
+            if(processPacket(*ctx))
+            {
+    			ctx->lastActivity = time(NULL);			
+                ctx->outbuf.SetPos(0);
+                listener.addRW(s);
+    			ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
+            }
+            else
+                removeSocket(s);                
         }
     }
 }
@@ -143,9 +138,13 @@ void PersSocketServer::removeSocket(Socket* s, int i)
 {
     char b[256];
     s->GetPeer(b);
-    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount - 1);
     ConnectionContext *ctx = (ConnectionContext*)s->getData(0);
-    if(ctx) delete ctx;
+    if(ctx)
+    {
+        onDisconnect(*ctx);
+        delete ctx;
+    }
+    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount - 1);    
 	if(i == -1)
 	    listener.remove(s);
 	else

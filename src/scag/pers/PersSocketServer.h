@@ -12,18 +12,30 @@ namespace scag { namespace pers {
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
+class ConnectionContext{
+public:
+	ConnectionContext() : wantRead(true), lastActivity(time(NULL)), authed(false) {};
+	SerialBuffer inbuf, outbuf;
+	bool wantRead, authed;
+	time_t lastActivity;
+	uint32_t packetLen;
+};
+
 class PersSocketServer {
 public:
     PersSocketServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_);
     virtual ~PersSocketServer();
     void InitServer();
     int Execute();
-    virtual void processPacket(SerialBuffer& isb, SerialBuffer& osb) {};
-    virtual void processUplinkPacket(SerialBuffer& isb, SerialBuffer& osb) {};
     void Stop() { MutexGuard mt(mtx); isStopping = true; };
     bool isStopped() { MutexGuard mt(mtx); return isStopping; };
 
 protected:
+
+    virtual bool processPacket(ConnectionContext& ctx) { return true; };
+    virtual void processUplinkPacket(ConnectionContext& ctx) {};
+    virtual void onDisconnect(ConnectionContext& ctx) {};    
+
     void processReadSocket(Socket* sock);
     void processWriteSocket(Socket* sock);
     void removeSocket(Socket* s, int i = -1);

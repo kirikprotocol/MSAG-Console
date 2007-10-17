@@ -23,13 +23,16 @@ enum PersCmd{
 	PC_BATCH
 };
 
-enum CentralPersCmd{
-    LOGIN = 1,
-    GET,
-    PROFILE,
-    ACK,
-    DONE,
-    CHECK_OWN
+namespace CentralPersCmd{
+    enum{
+        UNKNOWN,
+        GET,
+        ACK,
+        PROFILE,
+        DONE,
+        CHECK_OWN,
+        LOGIN
+    };
 };
 
 enum PersServerResponseType{

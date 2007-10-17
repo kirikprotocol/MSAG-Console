@@ -18,7 +18,7 @@ class PersServer : public PersSocketServer {
 public:
     PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
     ~PersServer() {};
-    virtual void processPacket(SerialBuffer& isb, SerialBuffer& osb);
+    virtual bool processPacket(ConnectionContext& ctx);
 protected:
     typedef struct {
         ProfileType pt;

@@ -300,7 +300,7 @@ private:
 		}
 		catch(FileException ex)
 		{
-		    smsc_log_error(logger, "FSStorage: error idx_file - %s\n", ex.what());
+		    smsc_log_error(logger, "FSStorage: error idx_file: %s, reason: %s\n", rbtree_file.c_str(), ex.what());
 		    return CANNOT_CREATE_RBTREE_FILE;
 		}
 

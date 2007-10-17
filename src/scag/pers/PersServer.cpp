@@ -139,13 +139,14 @@ void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::s
         SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-void PersServer::processPacket(SerialBuffer& isb, SerialBuffer& osb)
+bool PersServer::processPacket(ConnectionContext& ctx)
 {
+    SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
     osb.SetPos(4);
     try{
 		execCommand(isb, osb);
 		SetPacketSize(osb);
-		return;
+		return true;
     }
     catch(SerialBufferOutOfBounds &e)
     {
@@ -156,7 +157,8 @@ void PersServer::processPacket(SerialBuffer& isb, SerialBuffer& osb)
         smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
     }
     SendResponse(osb, RESPONSE_BAD_REQUEST);
-	SetPacketSize(osb);	
+	SetPacketSize(osb);
+    return true;
 }
 
 void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
