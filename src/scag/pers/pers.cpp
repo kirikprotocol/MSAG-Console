@@ -36,6 +36,11 @@ extern "C" static void appSignalHandler(int sig)
         if(ps) ps->Stop();
         smsc_log_info(logger, "Stopping ...");
     }
+    else if(sig == SIGHUP)
+    {
+        smsc_log_info(logger, "Reloading logger config");
+        smsc::logger::Logger::Reload();
+    }
 }
 
 extern "C" static void atExitHandler(void)
@@ -62,9 +67,12 @@ int main(int argc, char* argv[])
     sigdelset(&set, SIGINT);
     sigdelset(&set, SIGSEGV);
     sigdelset(&set, SIGBUS);
+    sigdelset(&set, SIGHUP);
+    
     sigprocmask(SIG_SETMASK, &set, NULL);
     sigset(SIGTERM, appSignalHandler);
     sigset(SIGINT, appSignalHandler);
+    sigset(SIGHUP, appSignalHandler);    
 
     try{
         smsc_log_info(logger,  "Starting up %s", getStrVersion());
