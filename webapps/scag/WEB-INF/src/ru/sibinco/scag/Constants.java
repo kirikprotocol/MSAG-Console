@@ -78,6 +78,7 @@ public class Constants {
                 public static final Constants COULDNT_SAVE_ROUTES = new Constants("error.routing.couldnt_save_routes");
                 public static final Constants CAN_NOT_SAVE_ROUTE_SOUR = new Constants("error.routing.can_not_save_route_sour");
                 public static final Constants CAN_NOT_SAVE_ROUTE_DEST = new Constants("error.routing.can_not_save_route_dest");
+                public static final Constants CAN_NOT_SAVE_ROUTE_SOUR_DEST = new Constants("error.routing.can_not_save_route_sour_dest");
                 public static final Constants COULDNT_SAVE_HTTP_ROUTES = new Constants("error.routing.couldnt_save_http_routes");
                 public static final Constants COULD_NOT_DELETE_SERVICE_PROVIDER = new Constants("error.routing.couldnt_delete.service.provider.route.or.subject.changed");
                 public static final Constants COULD_NOT_DELETE_SERVICE = new Constants("error.routing.couldnt_delete.service.route.or.subject.changed");
