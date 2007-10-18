@@ -42,13 +42,14 @@ public class Route {
     private boolean enabled = true;
     private boolean active = true;
     private String slicing;
+    private String slicedRespPolicy;
     private String srcSmeId;
     private Service service;
     private String notes;
 
     public Route(final String routeName, final Map sources, final Map destinations, final boolean archived,
-                 final boolean enabled, final boolean active, final String slicing, final String srcSmeId, final Service service,
-                 final String notes) {
+                 final boolean enabled, final boolean active, final String slicing, final String slicedRespPolicy,
+                 final String srcSmeId, final Service service, final String notes) {
         if (routeName == null)
             throw new NullPointerException("Route name is null");
         if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -65,6 +66,7 @@ public class Route {
         this.enabled = enabled;
         this.active = active;
         this.slicing = slicing;
+        this.slicedRespPolicy = slicedRespPolicy;
         this.srcSmeId = srcSmeId;
         this.service = service;
         this.notes = notes;
@@ -83,6 +85,7 @@ public class Route {
         this.enabled = false;
         this.active = false;
         this.slicing = "NONE";
+        this.slicedRespPolicy = "ALL";
         this.srcSmeId = "";
         this.service = null;
         this.notes = "";
@@ -102,6 +105,7 @@ public class Route {
         enabled = routeElem.getAttribute("enabled").equalsIgnoreCase("true");
         active = routeElem.getAttribute("active").equalsIgnoreCase("true");
         slicing = routeElem.getAttribute("slicing");
+        slicedRespPolicy = routeElem.getAttribute("slicedRespPolicy");
         srcSmeId = routeElem.getAttribute("srcSmeId");
         final Long serviceId = Long.decode(routeElem.getAttribute("serviceId"));
         this.service = serviceProvidersManager.getServiceById(serviceId);
@@ -181,6 +185,7 @@ public class Route {
                     + "\" enabled=\"" + isEnabled()
                     + "\" active=\"" + isActive()
                     + "\" slicing=\"" + StringEncoderDecoder.encode(getSlicing())
+                    + "\" slicedRespPolicy=\"" + StringEncoderDecoder.encode(getSlicedRespPolicy())
                     + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
                     + "\" serviceId=\"" + getService().getId()
                     + "\">");
@@ -281,6 +286,15 @@ public class Route {
     public void setSlicing(final String slicing) {
         this.slicing = slicing;
     }
+
+    public String getSlicedRespPolicy() {
+        return slicedRespPolicy;
+    }
+
+    public void setSlicedRespPolicy(final String slicedRespPolicy) {
+        this.slicedRespPolicy = slicedRespPolicy;
+    }
+
 
     public String getSrcSmeId() {
         return srcSmeId;
