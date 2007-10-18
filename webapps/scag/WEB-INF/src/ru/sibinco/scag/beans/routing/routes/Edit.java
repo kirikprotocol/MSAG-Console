@@ -43,6 +43,9 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private String[] slicingTypes = new String[]{"NONE","SAR","UDH"};
     private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields","Via UDH encoding"};
     private String slicing;
+    private String slicedRespPolicy;
+    private String[] slicedRespPolicyTypes = new String[]{"ALL","ANY"};
+    private String[] slicedRespPolicyTypesTitles = new String[]{"All","Any"};
     private String srcSmeId;
     private String notes;
     private String path = "";
@@ -245,6 +248,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             archived = route.isArchived();
             active = route.isActive();
             slicing = route.getSlicing();
+            slicedRespPolicy= route.getSlicedRespPolicy();
             srcSmeId = route.getSrcSmeId();
             notes = route.getNotes();
 
@@ -268,7 +272,12 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             srcMasks = removeEmptyFromArr( srcMasks );
             dstMasks = removeEmptyFromArr( dstMasks );
             if( sources == null || sources.isEmpty() ){
-                logger.debug("Edit.java:save():empty SOURCE MAP|srcMasks.length is: " + srcMasks.length + "|");
+                logger.debug( "Edit.java:save():empty SOURCE MAP|srcMasks.length is:'" + srcMasks.length + "'" );
+                if( destinations == null || destinations.isEmpty() ){
+                    logger.debug( "Edit.java:save():empty DESTINATONS MAP|destinations" );
+                    emptyDestinations = true;
+                    throw new SCAGJspException( Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR_DEST );
+                }
                 throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR);
             }
             if( destinations == null || destinations.isEmpty() ){
@@ -284,7 +293,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, id);
                 }
                 routes.put( id, new Route(id, sources, destinations, isArchived(), isEnabled(), isActive(),
-                                         getSlicing(), srcSmeId, serviceObj, notes) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 messagetxt = "Added new route: " + id + " ";
             } else {
                 if (!getEditId().equals(id) && routes.containsKey(id)){
@@ -292,7 +301,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 }
                 routes.remove(getEditId());
                 routes.put( id, new Route(id, sources, destinations, archived, enabled, active,
-                                         getSlicing(), srcSmeId, serviceObj, notes) );
+                                         getSlicing(), getSlicedRespPolicy(), srcSmeId, serviceObj, notes) );
                 messagetxt = "Changed route: " + id + " ";
             }
         } catch (SibincoException e) {
@@ -436,8 +445,16 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         return slicingTypes;
     }
 
+    public String[] getSlicedRespPolicyTypes() {
+        return slicedRespPolicyTypes;
+    }
+
     public String[] getSlicingTypesTitles() {
         return slicingTypesTitles;
+    }
+
+    public String[] getSlicedRespPolicyTypesTitles() {
+        return slicedRespPolicyTypesTitles;
     }
 
     public String getSlicing() {
@@ -446,6 +463,14 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public void setSlicing(final String slicing) {
         this.slicing = slicing;
+    }
+
+    public String getSlicedRespPolicy() {
+        return slicedRespPolicy;
+    }
+
+    public void setSlicedRespPolicy(final String slicedRespPolicy) {
+        this.slicedRespPolicy = slicedRespPolicy;
     }
 
     public List getAllSmes() {
