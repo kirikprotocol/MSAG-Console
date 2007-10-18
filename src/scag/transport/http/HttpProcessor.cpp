@@ -125,7 +125,17 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
   const char    *pos = path.c_str(), *mid, *end;
   std::string   str, rs;
   unsigned int len, i;
-   
+
+  if(!strncmp(pos, "http://", 7))
+  {
+    pos += 7;
+    pos = strchr(pos, '/');
+    if(!pos)
+    {
+        smsc_log_debug(logger, "No slash after host in absoulte path");
+        return false;
+    }
+  }
   end = strchr(pos, '/');
   if (!end)
   {
