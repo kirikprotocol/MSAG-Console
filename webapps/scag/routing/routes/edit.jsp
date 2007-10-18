@@ -198,7 +198,7 @@
   }
   </script>
     <c:set var="smes" value="${fn:join(bean.smeIds, ',')}"/>
-    <table cellpadding="5">
+    <table cellpadding="5" border=0>
       <col width="50%">
       <col width="50%">
       <tr>
@@ -208,7 +208,6 @@
                   <sm-ep:txt title="routes.edit.txt.notes" name="notes"/>
                   <sm-ep:list title="routes.edit.list.srcsmeid" name="srcSmeId"
                               values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
-                  <sm-pm:space/>
               </sm-ep:properties>
           </td>
           <td valign="top">
@@ -216,10 +215,21 @@
                   <sm-ep:check title="routes.edit.check.active" name="active"/>
                   <sm-ep:check title="routes.edit.check.enabled" name="enabled"/>
                   <sm-ep:check title="routes.edit.check.archived" name="archived"/>
-                  <sm-ep:list title="" label="routes.edit.check.slicing" name="slicing" values="${fn:join(bean.slicingTypes,',')}" valueTitles="${fn:join(bean.slicingTypesTitles,',')}"/>
-                  <sm-pm:space/>
               </sm-ep:properties>
           </td>
+      </tr>
+      <tr>
+        <td valign="top" colspan="2">
+            <sm-ep:properties title="routes.edit.properties.route_slicing" noColoredLines="false">
+                  <sm-ep:list title="routes.edit.list.slicing"  name="slicing"
+                              values="${fn:join(bean.slicingTypes,',')}"
+                              valueTitles="${fn:join(bean.slicingTypesTitles,',')}"/>
+                  <sm-ep:list title="routes.edit.list.slicedRespPolicy" name="slicedRespPolicy"
+                              values="${fn:join(bean.slicedRespPolicyTypes,',')}"
+                              valueTitles="${fn:join(bean.slicedRespPolicyTypesTitles,',')}"/>
+                  <sm-pm:space/>
+              </sm-ep:properties>
+        </td>
       </tr>
       <tr><td colspan="2"><hr></td></tr>
     </table>
@@ -245,9 +255,7 @@
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-            <td><input id=newSrcMask class=txt name=srcMasks validation=
-                       "routeMask"
-              onkeyup="resetValidation(this)">
+            <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)">
             </td>
             <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
           </tr>
@@ -302,9 +310,7 @@
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-              <td><input id=newDstMask class=txt name=new_dstMask validation=
-                    "routeMask"
-                 onkeyup="resetValidation(this)">
+              <td><input id=newDstMask class=txt name=new_dstMask validation="routeMask" onkeyup="resetValidation(this)">
               </td>
             <td><select name=new_dst_mask_sme_ id=newDstMaskSme>
               <c:forEach items="${bean.allSmes}" var="i">
