@@ -17,6 +17,7 @@
 #include "util/64bitcompat.h"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
+#include "router/route_types.h"
 
 namespace scag{
 namespace transport{
@@ -342,6 +343,10 @@ struct _SmppCommand
   SessionPtr session;
   uint16_t usr;
   uint32_t flags;
+  uint32_t sliceCount;
+  uint8_t slicingRespPolicy;
+  bool slicedRespSent;
+  Mutex    slicedMutex;
 
   static Logger* logger;
   static Mutex loggerMutex;
@@ -354,7 +359,7 @@ struct _SmppCommand
 
   ~_SmppCommand();
 
-  _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0), opId(-1)
+  _SmppCommand() : ref_count(0), dta(0), ent(0), dst_ent(0), status(0),priority(ScagCommandDefaultPriority), usr(0), flags(0), opId(-1), sliceCount(1), slicedRespSent(false)
   {
     if(!logger)
     {
@@ -380,7 +385,25 @@ struct _SmppCommand
   uint32_t get_orgDialogId() const { return orgDialogId; }
   void set_orgDialogId(uint32_t dlgId) { orgDialogId=dlgId; }
 
+  void setSlicingRespPolicy(uint8_t srp) { slicingRespPolicy = srp; };
+  void setSliceCount(uint32_t cnt) { sliceCount=cnt; };
 
+  bool essentialSlicedResponse(bool failed)
+  {
+    MutexGuard mg(slicedMutex);
+    
+    sliceCount--;
+    
+    if(!slicedRespSent && (failed || slicingRespPolicy == router::SlicingRespPolicy::ANY || !sliceCount))
+    {
+        smsc_log_debug(logger, "essential sliced resp got: should be processed: failed=%d, policy=%d count=%d", failed, slicingRespPolicy, sliceCount);
+        slicedRespSent = true;
+        return true;
+    }
+    
+    return false;   
+  }
+  
   CommandId get_commandId() const { return cmdid; }
 
   SMS* get_sms()
@@ -504,8 +527,10 @@ public:
   SmppHeader* makePdu(bool forceDC=false);
 
   // specialized constructors (meta constructors)
+  static SmppCommand makeCommandSm(CommandId command, const SMS& sms,uint32_t dialogId);
   static SmppCommand makeSubmitSm(const SMS& sms,uint32_t dialogId);
   static SmppCommand makeDeliverySm(const SMS& sms,uint32_t dialogId);
+  static SmppCommand makeDataSm(const SMS& sms,uint32_t dialogId);
   static SmppCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status,bool dataSm=false);
   static SmppCommand makeDataSmResp(const char* messageId, uint32_t dialogId, uint32_t status);
   static SmppCommand makeSubmitMultiResp(const char* messageId, uint32_t dialogId, uint32_t status);

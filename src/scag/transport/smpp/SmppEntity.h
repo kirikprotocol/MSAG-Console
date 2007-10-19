@@ -32,6 +32,7 @@ struct SmppEntity
   SmppChannel* transChannel;
   sync::Mutex seqMtx;
   int seq;
+  uint16_t slicingSeq;
   bool connected;
   smsc::util::TimeSlotCounter<> incCnt;
   sync::Mutex cntMtx;
@@ -46,6 +47,7 @@ struct SmppEntity
     seq=0;
     connected = false;
     queueCount=0;
+    slicingSeq = 0;
   }
   SmppEntity(const SmppEntityInfo& argInfo):incCnt(5)
   {
@@ -57,6 +59,7 @@ struct SmppEntity
     seq=0;
     queueCount=0;
     connected = false;
+    slicingSeq = 0;
   }
   ~SmppEntity()
   {
@@ -212,6 +215,12 @@ struct SmppEntity
   {
     sync::MutexGuard mg(seqMtx);
     return ++seq;
+  }
+  
+  int getNextSlicingSeq()
+  {
+    sync::MutexGuard mg(seqMtx);
+    return ++slicingSeq;
   }
 
   int getQueueCount()

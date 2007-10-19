@@ -13,6 +13,8 @@ namespace config {
 using smsc::util::cStringCopy;
 using smsc::core::buffers::Hash;
 using scag::transport::smpp::router::RouteInfo;
+namespace SlicingType=scag::transport::smpp::router::SlicingType;
+namespace SlicingRespPolicy=scag::transport::smpp::router::SlicingRespPolicy;
 
 typedef std::string Mask;
 typedef std::vector<Mask> MaskVector;
@@ -112,6 +114,7 @@ private:
   bool enabling;
   bool active;
   std::string srcSmeSystemId;
+  uint8_t slicing, slicingRespPolicy;
 
   int serviceId;
 
@@ -119,17 +122,23 @@ private:
 
 public:
   Route()
-    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), serviceId(-1)
-  {}
+    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), serviceId(-1), 
+        slicing(SlicingType::NONE)
+  {
+  }
   Route(const Route &r)
     : id(r.id), sources(r.sources), destinations(r.destinations),
     archiving(r.archiving), enabling(r.enabling), active(r.active),
-    srcSmeSystemId(r.srcSmeSystemId), serviceId(r.serviceId)
+    srcSmeSystemId(r.srcSmeSystemId), serviceId(r.serviceId), slicing(r.slicing), slicingRespPolicy(r.slicingRespPolicy)
   {}
-  Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t serviceId_)
+  Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t serviceId_,
+    std::string slicing_, std::string slicingRespPolicy_)
     : id(routeId), sources(), destinations(),
     archiving(archiving_), enabling(enabling_), active(active_), srcSmeSystemId(srcSmeSystemId_), serviceId(serviceId_)
-  {}
+  {
+      slicing = !strcmp(slicing_.c_str(), "SAR") ? SlicingType::SAR : (!strcmp(slicing_.c_str(), "UDH") ? SlicingType::UDH : SlicingType::NONE);
+      slicingRespPolicy = !strcmp(slicingRespPolicy_.c_str(), "ALL") ? SlicingRespPolicy::ALL : SlicingRespPolicy::ANY;
+  }
 
   ~Route()
   {
@@ -142,6 +151,8 @@ public:
   const bool isArchiving() const {return archiving;}
   const bool isEnabling() const {return enabling;}
   const bool isActive() const {return active;}
+  uint8_t getSlicingType() const {return slicing;}
+  uint8_t getSlicingRespPolicy() const {return slicingRespPolicy;}
   const char * const getId() const {return id.c_str();}
   //int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}

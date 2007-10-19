@@ -208,7 +208,9 @@ throw (SubjectNotFoundException)
                                     getAttribBool(elem, "enabled"),
                                     getAttribBool(elem, "active"),
                                     getAttribStr(elem, "srcSmeId"),
-                                    getAttribInt(elem, "serviceId") )
+                                    getAttribInt(elem, "serviceId"),
+                                    getAttribStr(elem, "slicing"),
+                                    getAttribStr(elem, "slicedRespPolicy") )
                          );
 
 

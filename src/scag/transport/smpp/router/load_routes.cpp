@@ -68,6 +68,8 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
               rinfo.routeId=route->getId();
               rinfo.serviceId=route->getServiceId();
               rinfo.enabled=route->isEnabling();
+              rinfo.slicing=route->getSlicingType();
+              rinfo.slicingRespPolicy=route->getSlicingRespPolicy();
               try{
                 rm->addRoute(rinfo);
               }

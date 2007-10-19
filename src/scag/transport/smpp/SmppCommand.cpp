@@ -266,6 +266,19 @@ _SmppCommand::~_SmppCommand()
   }
 
   // specialized constructors (meta constructors)
+   SmppCommand SmppCommand::makeCommandSm(CommandId command, const SMS& sms,uint32_t dialogId)
+  {
+    SmppCommand cmd;
+    cmd.cmd = new _SmppCommand;
+    _SmppCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = command;
+    _cmd.dta = new SmsCommand(sms);
+    //*_cmd.get_sms() = sms;
+    _cmd.dialogId = dialogId;
+    return cmd;
+  }
+  
    SmppCommand SmppCommand::makeSubmitSm(const SMS& sms,uint32_t dialogId)
   {
     SmppCommand cmd;
@@ -286,6 +299,19 @@ _SmppCommand::~_SmppCommand()
     _SmppCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = DELIVERY;
+    _cmd.dta = new SmsCommand(sms);
+    //*_cmd.get_sms() = sms;
+    _cmd.dialogId = dialogId;
+    return cmd;
+  }
+
+   SmppCommand SmppCommand::makeDataSm(const SMS& sms,uint32_t dialogId)
+  {
+    SmppCommand cmd;
+    cmd.cmd = new _SmppCommand;
+    _SmppCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = DATASM;
     _cmd.dta = new SmsCommand(sms);
     //*_cmd.get_sms() = sms;
     _cmd.dialogId = dialogId;

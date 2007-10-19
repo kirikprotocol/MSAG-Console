@@ -21,6 +21,14 @@ namespace buf=smsc::core::buffers;
 
 typedef const char* SmeIndex;
 
+namespace SlicingType{
+    const uint8_t NONE = 0, SAR = 1, UDH = 2;
+}
+
+namespace SlicingRespPolicy{
+    const uint8_t ALL = 0, ANY = 1;
+}
+
 struct RouteInfo
 {
   RouteInfo()
@@ -28,12 +36,14 @@ struct RouteInfo
     routeId[0]=0;
     smeSystemId[0]=0;
     srcSmeSystemId[0]=0;
+    slicing = SlicingType::NONE;
   }
 
   buf::FixedLengthString<smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH> routeId;
 
   bool enabled;
   bool archived;
+  uint8_t slicing, slicingRespPolicy;
 
   buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> smeSystemId;
   buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> srcSmeSystemId;

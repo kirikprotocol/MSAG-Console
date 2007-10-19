@@ -55,6 +55,7 @@ protected:
   void DataResp(SmppCommand& cmd,int status);
 
   void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
+  uint32_t putCommand(CommandId cmdType, SmppEntity* src, SmppEntity* dst, router::RouteInfo& ri, SmppCommand& cmd);
   
   bool makeLongCall(SmppCommand& cx, SessionPtr& session);
   
