@@ -7,6 +7,9 @@ use File::Copy;
 use Time::Local qw(timegm timelocal);
 use Fcntl ':flock';
 
+
+use constant EXTRAMSC => '79169860220';
+
 my $f;
 open($f,'>>/data/conf/scripts/lock') || die "Failed to open lock file:$!";
 flock($f,LOCK_EX) || die "Lock failed:$!";
@@ -244,6 +247,16 @@ sub process{
     next if $infields->{STATUS}!=0;
     my $outfields={};
     %$outfields=%$infields;
+    
+    #changed by request 19.10.2007
+    if($infields->{SRC_SME_ID} ne 'MAP_PROXY' && $infields->{SRC_MSC} eq '')
+    {
+      $infields->{SRC_MSC}=EXTRAMSC;
+    }
+    if($infields->{DST_SME_ID} ne 'MAP_PROXY' && $infields->{DST_MSC} eq '')
+    {
+      $infields->{DST_MSC}=EXTRAMSC;
+    }
 
     $outfields->{CALL_DURATION}=1;
     #$outfields->{CALL_DURATION}=$infields->{PARTS_NUM};
