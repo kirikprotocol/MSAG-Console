@@ -93,7 +93,9 @@ public class Route {
 
 
     public Route(Element routeElem, Map subjects, SmppManager smppManager,
-                 ServiceProvidersManager serviceProvidersManager) throws SibincoException {
+                 ServiceProvidersManager serviceProvidersManager)
+                 throws SibincoException
+    {
 
         name = routeElem.getAttribute("id");
         if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
@@ -130,11 +132,18 @@ public class Route {
     }
 
     private Map loadDestinations(Element routeElem, Map subjects, SmppManager smppManager)
-            throws SibincoException {
+//            throws SibincoException
+    {
         Map result = new HashMap();
         NodeList list = routeElem.getElementsByTagName("destination");
         for (int i = 0; i < list.getLength(); i++) {
-            final Destination destination = new Destination((Element) list.item(i), subjects, smppManager);
+            Destination destination = null;
+            try {
+                destination = new Destination((Element) list.item(i), subjects, smppManager);
+            } catch (SibincoException e) {
+                logger.warn( "Cann't create destination with id" + list.item(i) );
+                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            }
             result.put(destination.getName(), destination);
         }
         return result;
