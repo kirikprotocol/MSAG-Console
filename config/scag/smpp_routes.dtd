@@ -6,7 +6,7 @@
 	archived (true | false) #REQUIRED
 	enabled  (true | false) "true"
 	active   (true | false) "true"
-	slicing  (NONE | SAR | UDH) "NONE"
+	slicing  (NONE | SAR | UDH8 | UDH16) "NONE"
     slicedRespPolicy (ALL | ANY) "ALL"
 	srcSmeId CDATA #IMPLIED
 	serviceId CDATA "-1"
