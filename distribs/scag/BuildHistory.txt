@@ -241,3 +241,9 @@ TO ALL: Insert log record for all significant changes & fixes here.
 15.10.2007 16:00 makar [!!! CVS: revision marked by tag BUILD_26_09_2007 !!!]
 1) GLOBAL CHANGE: Logger settings reload in runtime. New appender added. (changes in liblogger.so)
 2) MSAG Admin & MSAG CHANGE: StoreLogCategories command added. New logger configuration scheme implemented.
+
+=================================================================================================================
+22.10.2007 12:00 makar
+1) MSAG Admin FIX: HTTP requests with full URL support added (proxy style)
+2) MSAG CRITICAL CHANGE: Output slicing functionality added (via SAR & UDH)
+3) MSAG Admin CHANGE: SMPP route parameter added (slicedRespPolicy(ALL | ANY) "ALL")
