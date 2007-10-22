@@ -113,6 +113,9 @@ public class SmppManager extends Manager {
             try {
                 if (center.isEnabled()) {
                     appContext.getScag().invokeCommand("deleteCenter",center,appContext,this,configFilename);
+                } else {
+                    logger.error( "Deleted from file only center with id:" +centerId );
+                    store();
                 }
             } catch (SibincoException e) {
                 if (!(e instanceof StatusDisconnectedException)) {
@@ -135,6 +138,9 @@ public class SmppManager extends Manager {
             try {
                 if (svc.isEnabled()) {
                     appContext.getScag().invokeCommand("deleteSvc",svcId,appContext,this,configFilename);
+                } else {
+                    logger.error("Delete SP in FILE ONLY, id=" + svcId );
+                    store();
                 }
             } catch (SibincoException e) {
                 if (!(e instanceof StatusDisconnectedException)) {
@@ -174,6 +180,9 @@ public class SmppManager extends Manager {
                 setLastUsedId(center.getUid());
                 if (center.isEnabled()) {
                     appContext.getScag().invokeCommand("addCenter",center,appContext,this,configFilename);
+                } else {
+                    logger.error("SAVE CENTER TO FILE ONLY, id=" + center.getId() );
+                    store();
                 }
 
             } else {
@@ -213,12 +222,16 @@ public class SmppManager extends Manager {
                 messageText = "Added new service point: ";
                 if (svc.isEnabled()) {
                     appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
+                }else{
+                    logger.error("SAVE SP TO FILE ONLY, id=" + svc.getId() );
+                    store();
                 }
             } else {
                 messageText = "Changed service point: ";
                 if ((oldSvc.isEnabled() == svc.isEnabled())) {
-                    if (isEnabled)
+                    if (isEnabled){
                         appContext.getScag().invokeCommand("updateSvcInfo", svc, appContext, this, configFilename);
+                    }
                 } else {
                     if (svc.isEnabled()) {
                         appContext.getScag().invokeCommand("addSvc", svc, appContext, this, configFilename);
