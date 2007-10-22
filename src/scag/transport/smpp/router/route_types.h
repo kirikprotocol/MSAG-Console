@@ -22,7 +22,7 @@ namespace buf=smsc::core::buffers;
 typedef const char* SmeIndex;
 
 namespace SlicingType{
-    const uint8_t NONE = 0, SAR = 1, UDH = 2;
+    const uint8_t NONE = 0, SAR = 1, UDH8 = 2, UDH16 = 3;
 }
 
 namespace SlicingRespPolicy{

@@ -18,7 +18,7 @@ uint32_t getPartsCount(SMS& orgSms)
   return datalen / MAX_SMS_PART_LEN + (datalen % MAX_SMS_PART_LEN ? 1 : 0);
 }
 
-uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq, bool udh)
+uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq, uint8_t udh)
 {
   uint32_t maxlen = MAX_SMS_PART_LEN, datalen, sent = seq * maxlen;
   const char *data = orgSms.getBinProperty(orgSms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) ? 
@@ -35,19 +35,32 @@ uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq
 
   if(udh)
   {
-      std::auto_ptr<char> buf(new char[piece + 7]);
+      std::auto_ptr<char> buf(new char[piece + 5 + udh]);
       char* d = buf.get();
-      d[0]=6;
-      d[1]=8;
-      d[2]=4;
-      d[3]=refNum >> 8;
-      d[4]=refNum & 0xff;
-      d[5]=count;
-      d[6]=++seq;
-      memcpy(d + 7, data, piece);      
+      if(udh == 1) // 8 bit
+      {
+          d[0] = 5;
+          d[1] = 0;
+          d[2] = 4;
+          d[3] = refNum & 0xff;;
+          d[4] = count;
+          d[5] = ++seq;
+      }
+      else
+      {
+          d[0] = 6;
+          d[1] = 8;
+          d[2] = 4;
+          d[3] = refNum >> 8;
+          d[4] = refNum & 0xff;
+          d[5] = count;
+          d[6] = ++seq;
+      }
+      udh += 5;
+      memcpy(d + udh, data, piece);      
       partSms.setIntProperty(Tag::SMPP_ESM_CLASS, partSms.getIntProperty(Tag::SMPP_ESM_CLASS) | 0x40);
-      partSms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, d, piece + 7);
-      partSms.setIntProperty(Tag::SMPP_SM_LENGTH, piece + 7);
+      partSms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, d, piece + udh);
+      partSms.setIntProperty(Tag::SMPP_SM_LENGTH, piece + udh);
   }
   else
   {

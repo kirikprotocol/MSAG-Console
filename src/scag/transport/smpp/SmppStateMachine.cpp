@@ -213,10 +213,7 @@ void StateMachine::registerEvent(int event, SmppEntity* src, SmppEntity* dst, co
         dstType = dst->info.type == etSmsc;
     }
 
-    if(rid)
-        Statistics::Instance().registerEvent(SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode));
-    else
-        Statistics::Instance().registerEvent(SmppStatEvent(src_id, srcType, dst_id, dstType, event, errCode));
+    Statistics::Instance().registerEvent(SmppStatEvent(src_id, srcType, dst_id, dstType, rid, event, errCode));
 }
 
 uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity* dst, router::RouteInfo& ri, SmppCommand& cmd)
@@ -247,7 +244,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             uint32_t seq = 0, refNum = dst->getNextSlicingSeq();
 
             SMS partSms;
-            while(seq = getNextSmsPart(sms, partSms, refNum, seq, ri.slicing == SlicingType::UDH))
+            while(seq = getNextSmsPart(sms, partSms, refNum, seq, ri.slicing > SlicingType::SAR ? ri.slicing - SlicingType::SAR : 0))
             {
                 int newSeq=dst->getNextSeq();
                 SmppCommand partCmd = SmppCommand::makeCommandSm(cmdType, partSms, newSeq);
