@@ -40,8 +40,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private boolean enabled;
     private boolean archived;
     private boolean active;
-    private String[] slicingTypes = new String[]{"NONE","SAR","UDH"};
-    private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields","Via UDH encoding"};
+    private String[] slicingTypes = new String[]{"NONE","SAR","UDH8", "UDH16"};
+    private String[] slicingTypesTitles = new String[]{"NO/OFF","Via SAR Fields", "Via UDH8 encoding", "Via UDH16 encoding"};
     private String slicing;
     private String slicedRespPolicy;
     private String[] slicedRespPolicyTypes = new String[]{"ALL","ANY"};
