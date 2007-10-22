@@ -243,8 +243,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
         if(ri.slicing != SlicingType::NONE && !isSliced(sms) && (cnt = getPartsCount(sms)) > 1)
         {
             smsc_log_debug(log, "%s: slicing message, type=%d, parts=%d, resppolicy=%d", cmdName, ri.slicing, cnt, ri.slicingRespPolicy);
-            cmd->setSlicingRespPolicy(ri.slicingRespPolicy);
-            cmd->setSliceCount(cnt);            
+            cmd->setSlicingParams(ri.slicingRespPolicy, cnt);
             uint32_t seq = 0, refNum = dst->getNextSlicingSeq();
 
             SMS partSms;

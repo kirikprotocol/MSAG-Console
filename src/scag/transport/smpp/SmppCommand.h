@@ -385,8 +385,7 @@ struct _SmppCommand
   uint32_t get_orgDialogId() const { return orgDialogId; }
   void set_orgDialogId(uint32_t dlgId) { orgDialogId=dlgId; }
 
-  void setSlicingRespPolicy(uint8_t srp) { slicingRespPolicy = srp; };
-  void setSliceCount(uint32_t cnt) { sliceCount=cnt; };
+  void setSlicingParams(uint8_t srp, uint32_t cnt) { slicingRespPolicy = srp; sliceCount=cnt; };
 
   bool essentialSlicedResponse(bool failed)
   {
@@ -395,11 +394,7 @@ struct _SmppCommand
     sliceCount--;
     
     if(!slicedRespSent && (failed || slicingRespPolicy == router::SlicingRespPolicy::ANY || !sliceCount))
-    {
-        smsc_log_debug(logger, "essential sliced resp got: should be processed: failed=%d, policy=%d count=%d", failed, slicingRespPolicy, sliceCount);
-        slicedRespSent = true;
-        return true;
-    }
+        return slicedRespSent = true;
     
     return false;   
   }
