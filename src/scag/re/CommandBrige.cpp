@@ -129,7 +129,11 @@ EventHandlerType CommandBrige::getHandlerType(const SCAGCommand& command)
     return handlerType;
 }
 
-
+bool CommandBrige::hasMSB(const char* data, int len)
+{
+    while(len-- && !(data[len] & 0x80));
+    return len >= 0;
+}
 
 std::string CommandBrige::getMessageBody(SmppCommand& command)
 {

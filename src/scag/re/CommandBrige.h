@@ -99,6 +99,7 @@ private:
 public:
     static DataSmDirection getPacketDirection(const SCAGCommand& command);
 
+    static bool hasMSB(const char* data, int len);
     static std::string getMessageBody(SmppCommand& command);
     //static void makeTrafficEvent(SmppCommand& command, int handlerType, scag::sessions::CSessionPrimaryKey& sessionPrimaryKey, SACC_TRAFFIC_INFO_EVENT_t& ev);
     static EventHandlerType getHandlerType(const SCAGCommand& command);
