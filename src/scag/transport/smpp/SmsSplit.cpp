@@ -18,7 +18,7 @@ uint32_t getPartsCount(SMS& orgSms)
   return datalen / MAX_SMS_PART_LEN + (datalen % MAX_SMS_PART_LEN ? 1 : 0);
 }
 
-uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq, uint8_t udh)
+uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq, uint8_t udh, bool usePayload)
 {
   uint32_t maxlen = MAX_SMS_PART_LEN, datalen, sent = seq * maxlen;
   const char *data = orgSms.getBinProperty(orgSms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) ? 
@@ -31,8 +31,9 @@ uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq
 
   partSms = orgSms;
   partSms.dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
-  partSms.dropProperty(Tag::SMSC_RAW_PAYLOAD);  
+  partSms.dropProperty(Tag::SMSC_RAW_PAYLOAD);
 
+  uint16_t field = usePayload ? Tag::SMPP_MESSAGE_PAYLOAD : Tag::SMPP_SHORT_MESSAGE;
   if(udh)
   {
       std::auto_ptr<char> buf(new char[piece + 5 + udh]);
@@ -57,19 +58,18 @@ uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq
           d[6] = ++seq;
       }
       udh += 5;
-      memcpy(d + udh, data, piece);      
+      memcpy(d + udh, data, piece);
       partSms.setIntProperty(Tag::SMPP_ESM_CLASS, partSms.getIntProperty(Tag::SMPP_ESM_CLASS) | 0x40);
-      partSms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, d, piece + udh);
-      partSms.setIntProperty(Tag::SMPP_SM_LENGTH, piece + udh);
+      partSms.setBinProperty(field, d, piece + udh);
   }
   else
   {
       partSms.setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM, ++seq);
       partSms.setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS, count);
       partSms.setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM, refNum);
-      partSms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, data, piece);
-      partSms.setIntProperty(Tag::SMPP_SM_LENGTH, piece);  
+      partSms.setBinProperty(field, data, piece);
   }
+  if(!usePayload) partSms.setIntProperty(Tag::SMPP_SM_LENGTH, piece + udh);
 
   return seq;
 }

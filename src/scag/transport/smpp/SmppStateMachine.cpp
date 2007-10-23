@@ -244,7 +244,8 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             uint32_t seq = 0, refNum = dst->getNextSlicingSeq();
 
             SMS partSms;
-            while(seq = getNextSmsPart(sms, partSms, refNum, seq, ri.slicing > SlicingType::SAR ? ri.slicing - SlicingType::SAR : 0))
+            uint8_t udhType = ri.slicing > SlicingType::SAR ? ri.slicing - SlicingType::SAR : 0;
+            while(seq = getNextSmsPart(sms, partSms, refNum, seq, udhType, cmdType == DATASM))
             {
                 int newSeq=dst->getNextSeq();
                 SmppCommand partCmd = SmppCommand::makeCommandSm(cmdType, partSms, newSeq);

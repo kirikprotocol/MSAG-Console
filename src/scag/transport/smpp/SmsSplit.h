@@ -12,7 +12,7 @@ bool isSliced(SMS& sms);
 
 uint32_t getPartsCount(SMS& orgSms);
 
-uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq, uint8_t udh = 0);
+uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq, uint8_t udh = 0, bool usePayload = false);
 
 }}}
 
