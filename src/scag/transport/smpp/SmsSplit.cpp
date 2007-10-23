@@ -44,7 +44,7 @@ uint32_t getNextSmsPart(SMS& orgSms, SMS& partSms, uint32_t refNum, uint32_t seq
       {
           d[0] = 5;
           d[1] = 0;
-          d[2] = 4;
+          d[2] = 3;
           d[3] = refNum & 0xff;;
           d[4] = count;
           d[5] = ++seq;
