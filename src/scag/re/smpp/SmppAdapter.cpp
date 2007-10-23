@@ -719,20 +719,13 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 
             int code = smsc::smpp::DataCoding::UCS2;
 
-            if (data.hasIntProperty(Tag::SMPP_DATA_CODING)) 
-                code = data.getIntProperty(Tag::SMPP_DATA_CODING);
-            else
-            {
-                if(!CommandBrige::hasMSB(str.data(), str.size()))
-                    code = smsc::smpp::DataCoding::SMSC7BIT;
-                data.setIntProperty(Tag::SMPP_DATA_CODING, code);
-            }
+            if(!CommandBrige::hasMSB(str.data(), str.size()))
+                code = smsc::smpp::DataCoding::SMSC7BIT;
+                
+            data.setIntProperty(Tag::SMPP_DATA_CODING, code);
             
             switch (code) 
             {
-                case smsc::smpp::DataCoding::LATIN1:
-                    Convertor::UTF8ToKOI8R(str.data(), str.size(), resStr);
-                    break;
                 case smsc::smpp::DataCoding::UCS2:
                     Convertor::UTF8ToUCS2(str.data(), str.size(), resStr);
                     break;
