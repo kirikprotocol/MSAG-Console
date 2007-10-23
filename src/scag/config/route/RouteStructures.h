@@ -137,8 +137,7 @@ public:
     archiving(archiving_), enabling(enabling_), active(active_), srcSmeSystemId(srcSmeSystemId_), serviceId(serviceId_)
   {
     slicing = SlicingType::NONE;
-    if (!strcmp(slicing_.c_str(), "NONE")) slicing = SlicingType::NONE;
-    else if (!strcmp(slicing_.c_str(), "SAR")) slicing = SlicingType::SAR;
+    if (!strcmp(slicing_.c_str(), "SAR")) slicing = SlicingType::SAR;
     else if (!strcmp(slicing_.c_str(), "UDH8")) slicing = SlicingType::UDH8;
     else if (!strcmp(slicing_.c_str(), "UDH16")) slicing = SlicingType::UDH16;
     slicingRespPolicy = !strcmp(slicingRespPolicy_.c_str(), "ANY") ? SlicingRespPolicy::ANY : SlicingRespPolicy::ALL;
