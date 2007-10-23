@@ -673,7 +673,6 @@ void SmppCommandAdapter::WriteDataSmField(SMS& data,int FieldId,AdapterProperty&
     WriteDeliveryField(data,FieldId,property);
 }
 
-
 void SmppCommandAdapter::WriteSubmitField(SMS& data,int FieldId,AdapterProperty& property)
 {
     WriteDeliveryField(data,FieldId,property);
@@ -718,64 +717,47 @@ void SmppCommandAdapter::WriteDeliveryField(SMS& data,int FieldId,AdapterPropert
 
             std::string resStr;
 
-            int code = smsc::smpp::DataCoding::SMSC7BIT;
+            int code = smsc::smpp::DataCoding::UCS2;
 
             if (data.hasIntProperty(Tag::SMPP_DATA_CODING)) 
                 code = data.getIntProperty(Tag::SMPP_DATA_CODING);
-
-            int resultLen = 0;
-
-            switch (code) 
-            {
-            case smsc::smpp::DataCoding::SMSC7BIT:
-                Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
-                break;
-            case smsc::smpp::DataCoding::LATIN1:
-                Convertor::UTF8ToKOI8R(str.data(), str.size(), resStr);
-                break;
-            case smsc::smpp::DataCoding::UCS2:
-                Convertor::UTF8ToUCS2(str.data(), str.size(), resStr);
-                break;
-            default:
-                Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
-            }
-  
-            //smsc::logger::Logger * logger = smsc::logger::Logger::getInstance("scag.test");
-
-            if (IsShortSize(resStr.size())) 
-            {
-
-                unsigned len = 0;
-                if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
-                {
-                    data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
-                    if (len == 0) 
-                    {
-                        //smsc_log_debug(logger, "1 String size is: %d", resStr.size());
-                        data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
-                        data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
-                    } else
-                    {
-                        data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
-                        data.setIntProperty(Tag::SMPP_SM_LENGTH, resStr.size());
-                    }
-                }
-                else
-                {
-                    data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
-                    data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
-                }
-            }
             else
             {
-                if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
-                    data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, 0, 0);
-
-                data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
-                data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
+                if(!CommandBrige::hasMSB(str.data(), str.size()))
+                    code = smsc::smpp::DataCoding::SMSC7BIT;
+                data.setIntProperty(Tag::SMPP_DATA_CODING, code);
+            }
+            
+            switch (code) 
+            {
+                case smsc::smpp::DataCoding::LATIN1:
+                    Convertor::UTF8ToKOI8R(str.data(), str.size(), resStr);
+                    break;
+                case smsc::smpp::DataCoding::UCS2:
+                    Convertor::UTF8ToUCS2(str.data(), str.size(), resStr);
+                    break;
+                default:
+                    Convertor::UTF8ToGSM7Bit(str.data(), str.size(), resStr);
+            }
+  
+            if (IsShortSize(resStr.size()) && data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE)) 
+            {
+                unsigned len;
+                data.getBinProperty(Tag::SMPP_SHORT_MESSAGE, &len);
+                if (len) 
+                {
+                   data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, resStr.data(), resStr.size());
+                   data.setIntProperty(Tag::SMPP_SM_LENGTH, resStr.size());
+                   return;
+                }
             }
 
-            //smsc_log_debug(logger, "MESSAGE BODY: %s", CommandBrige::getMessageBody(command).c_str());
+            if (data.hasBinProperty(Tag::SMPP_SHORT_MESSAGE))
+                data.setBinProperty(Tag::SMPP_SHORT_MESSAGE, 0, 0);
+
+            data.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, resStr.data(), resStr.size());
+            data.setIntProperty(Tag::SMPP_SM_LENGTH, 0);
+
             break;
         }
 }
