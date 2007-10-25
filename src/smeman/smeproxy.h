@@ -35,7 +35,7 @@ const int SmeProxyPriorityMaxBr = SmeProxyPriorityMax+1;
 
 struct PolledMonitor
 {
-  bool state;
+  volatile bool state;
   PolledMonitor():state(false){}
   void Signal()
   {
