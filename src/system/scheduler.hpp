@@ -1283,6 +1283,14 @@ public:
       if(now-c->inProcMap>60*60)
       {
         smsc_log_error(log,"CHAIN INPROCMAP STALL: %s",c->addr.toString().c_str());
+        for(ProcessingMap::iterator it=procMap.begin();it!=procMap.end();it++)
+        {
+          if(it->second==c)
+          {
+            procMap.erase(it);
+            break;
+          }
+        }
         c->inProcMap=0;
       }else
       {
