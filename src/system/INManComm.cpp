@@ -258,6 +258,7 @@ void INManComm::ProcessExpiration()
 int INManComm::Execute()
 {
   smsc::inman::interaction::ObjectBuffer buf(0);
+  time_t lastExpire=time(NULL);
   while(!isStopping)
   {
     while(!socketOk && !isStopping)
@@ -275,10 +276,16 @@ int INManComm::Execute()
         packetWriter.assignSocket(socket);
       }
     }
-    while(!socket->canRead(1) && !isStopping)
-    {
-      ProcessExpiration();
+
+    do{
+      time_t now=time(NULL);
+      if(now!=lastExpire)
+      {
+        ProcessExpiration();
+        lastExpire=now;
+      }
     }
+    while(!socket->canRead(1) && !isStopping);
 
     uint32_t packetSize;
     if(socket->ReadAll((char*)&packetSize,4)<=0)
