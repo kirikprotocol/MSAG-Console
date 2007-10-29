@@ -25,9 +25,9 @@ public class NewSme {
       // Start SMS centers reloader
       new SMSCentersReloader(smsCenters).start();
 
-      ConnectionPoolFactory.init("config");
+      ConnectionPoolFactory.init("conf");
 
-      final SMPPMultiplexor multiplexor = new SMPPMultiplexor(new PropertiesConfig("config/network.properties"));
+      final SMPPMultiplexor multiplexor = new SMPPMultiplexor(new PropertiesConfig("conf/network.properties"));
       multiplexor.connect();
 
       final SubscriptionStateMachine stateMachine = new SubscriptionStateMachine(multiplexor.getOutQueue(), smsCenters);

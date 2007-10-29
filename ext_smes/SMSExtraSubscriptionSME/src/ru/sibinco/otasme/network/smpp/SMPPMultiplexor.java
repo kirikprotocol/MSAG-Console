@@ -141,8 +141,10 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
           log.debug("SUBMIT_SM_RESP handled. Status #" + pdu.getStatus());
       }
 
-      if (pdu.getType() != Data.SUBMIT_SM_RESP && pdu.getType() != Data.DATA_SM_RESP)
+      if (pdu.getType() != Data.SUBMIT_SM_RESP && pdu.getType() != Data.DATA_SM_RESP && pdu.getType() != Data.WTS_RESPONSE) {
+        log.warn("Skip response...");
         return;
+      }
 
       if (sendMonitor.isSyncMode()) {
         if (sendMonitor.isLocked()) {
