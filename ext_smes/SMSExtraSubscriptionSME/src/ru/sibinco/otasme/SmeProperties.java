@@ -62,13 +62,13 @@ public class SmeProperties {
 
   public static class CommandsRepeater {
     public final static String OTA_NUMBER;
-    public final static long RETRY_PERIOD;
+    public final static int RETRY_PERIOD;
     public final static int SIZE;
 
     static {
       final Properties config = Utils.loadConfig("sme.properties");
       OTA_NUMBER = Utils.loadString(config, "sme.engine.ota.number");
-      RETRY_PERIOD = Utils.loadLong(config, "commands.repeater.retry.period");
+      RETRY_PERIOD = Utils.loadInt(config, "commands.repeater.retry.period");
       SIZE = Utils.loadInt(config, "commands.repeater.size");
       config.clear();
     }

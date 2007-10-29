@@ -5,6 +5,9 @@ import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.otasme.engine.SmeEngine;
 import ru.sibinco.otasme.network.*;
 import ru.sibinco.otasme.utils.Utils;
+import ru.sibinco.otasme.utils.Service;
+import ru.sibinco.smsc.utils.smscenters.SmsCentersList;
+import ru.sibinco.smsc.utils.smscenters.SmsCentersListException;
 
 import java.util.HashSet;
 import java.util.Properties;
@@ -43,19 +46,28 @@ public final class Sme {
   }
 
   private Sme() throws InitializationException{
-
-    SmeProperties.init();
-
-    new SmeEngine().startService();
-
-    // connect multiplexor
     try {
+      SmeProperties.init();
+
+      final SmsCentersList smsCenters = new SmsCentersList(SmeProperties.Templates.SMSCENTERS_XML, SmeProperties.Templates.ROUTES_XML);
+
+      // Start SMS centers reloader
+      new SMSCentersReloader(smsCenters).startService();
+
+      // Start Sme engine
+      new SmeEngine(smsCenters).startService();
+
+      // Connect multiplexor
       multiplexor.connect();
+
+      // Run message sender
+      messageSender.startService();
+
     } catch (SMPPException e) {
       throw new InitializationException("Exception occured during establishing connection in multiplexor.");
+    } catch (SmsCentersListException e) {
+      throw new InitializationException(e);
     }
-    // run message sender
-    messageSender.startService();
   }
 
   private static Multiplexor initMultiplexor(final Properties config, final IncomingQueue inQueue) {
@@ -79,5 +91,31 @@ public final class Sme {
 
   public static void main(String args[]) {
     new Sme();
+  }
+
+  private static class SMSCentersReloader extends Service {
+    private boolean errorOccured = false;
+    private final SmsCentersList smsCenters;
+
+    SMSCentersReloader(SmsCentersList smsCenters) {
+      super(null);
+      this.smsCenters = smsCenters;
+    }
+
+    public synchronized void iterativeWork() {
+      try {
+        wait((!errorOccured) ? SmeProperties.Templates.RELOAD_INTERVAL : 15000);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+//        log.error("Interrupted", e);
+      }
+
+      try {
+        smsCenters.reload();
+      } catch (SmsCentersListException e) {
+        e.printStackTrace();
+//        log.error("Can't reload SMS centers", e);
+      }
+    }
   }
 }

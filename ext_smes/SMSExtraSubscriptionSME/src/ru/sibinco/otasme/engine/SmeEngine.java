@@ -1,14 +1,15 @@
 package ru.sibinco.otasme.engine;
 
+import com.logica.smpp.Data;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.otasme.Sme;
 import ru.sibinco.otasme.SmeProperties;
-import ru.sibinco.otasme.engine.smscenters.SMSCenters;
 import ru.sibinco.otasme.network.OutgoingObject;
 import ru.sibinco.otasme.utils.Service;
-import com.logica.smpp.Data;
+import ru.sibinco.smsc.utils.smscenters.SmsCenter;
+import ru.sibinco.smsc.utils.smscenters.SmsCentersList;
 
 /**
  * User: artem
@@ -18,9 +19,11 @@ import com.logica.smpp.Data;
 public final class SmeEngine extends Service {
 
   private static final Category log = Category.getInstance(SmeEngine.class);
+  private final SmsCentersList smsCenters;
 
-  public SmeEngine() {
+  public SmeEngine(SmsCentersList list) {
     super(log);
+    this.smsCenters = list;
   }
 
   public void iterativeWork() {
@@ -41,15 +44,16 @@ public final class SmeEngine extends Service {
           return;
         }
 
-        String smscenterNumber = SMSCenters.getSMSCenterNumberByAbonent(abonentAddr);
-        if (smscenterNumber == null) {
+//        String smscenterNumber = SMSCenters.getSMSCenterNumberByAbonent(abonentAddr);
+        SmsCenter smsc = smsCenters.getSmsCenterByAddress(abonentAddr);
+        if (smsc == null || smsc.getAddress() == null) {
           log.info("WARNING!!! Can't find macro region for abonent " + abonentAddr);
           sendResponse(incomingMessage, Data.ESME_ROK);
           sendMessage(SmeProperties.SmeEngine.NUMBER_NOT_FOUND_ERROR_TEXT, smeAddr, abonentAddr, incomingMessage.getConnectionName());
           return;
         }
 
-        session = new Session(abonentAddr, smeAddr, smscenterNumber);
+        session = new Session(abonentAddr, smeAddr, smsc.getAddress());
       }
 
       session.processMessage(incomingMessage);
