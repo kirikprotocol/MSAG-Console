@@ -9,8 +9,8 @@ void BillActionInfo::init(const SectionParams& params,PropertyObject propertyObj
 {
     m_BillId = 0;
     FieldType ft = CheckParameter(params, propertyObject, "bill:info", "bill_id", false, true, m_sBillId, bExist);
-    if(ft == ftUnknown && !(m_BillId = atoi(m_sBillId.c_str())))
-        throw InvalidPropertyException("Action 'bill:info': category should be positive integer value");
+    if(bExist && ft == ftUnknown && !(m_BillId = atoi(m_sBillId.c_str())))
+        throw InvalidPropertyException("Action 'bill:info': bill_id should be positive integer value");
 
     for(int i = 0; i < fields_count; i++)
         CheckParameter(params, propertyObject, "bill:info", m_name[i], false, false, m_sField[i], m_exist[i]);
