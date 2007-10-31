@@ -16,7 +16,7 @@ using smsc::inman::interaction::SerializableObjectAC;
 using smsc::inman::interaction::SerializerITF;
 
 #include <sstream>
-
+#include <iomanip>
 #include <util/BinDump.hpp>
 
 //NOTE: USSman considers the USS request encoding with DCS == 0xF4 as plain LATIN1 text
@@ -114,8 +114,8 @@ typedef std::vector<unsigned char> USSDATA_T;
 class USSMessageAC : public SerializableObjectAC {
 public:
   USSMessageAC(unsigned short msgTag) : SerializableObjectAC(msgTag),
-                                        _logger(smsc::logger::Logger::getInstance("smsc.ussbalance")),
-                                        _dCS(0)
+                                        _dCS(0),_flg(UNKNOWN_CODING),_dCS_wasRead(false),
+                                        _logger(smsc::logger::Logger::getInstance("smsc.ussbalance"))
   {}
   virtual ~USSMessageAC() {}
 
@@ -124,29 +124,40 @@ public:
   virtual void save(ObjectBuffer &out) const;
 
   //assigns USS data, that is plain LATIN1 text,
-  void setUSSData(const unsigned char * data, unsigned size);
-  void setUSSData(const USSDATA_T& data);
+  void setUSSData(const char * data, unsigned size);
 
   //assigns USS data encoded according to CBS coding scheme (UCS2, GSM 7bit, etc)
   void setRAWUSSData(unsigned char dcs, const USSDATA_T& ussdata);
 
+  // assings UCS2 data
+  void setUCS2USSData(const std::vector<uint8_t>& ucs2);
+
   void setMSISDNadr(const TonNpiAddress& msadr) { _msAdr = msadr; }
   void setMSISDNadr(const char * adrStr) throw (CustomException);
 
+  unsigned char getFlg() const { return _flg; }
   const USSDATA_T& getUSSData(void) const { return _ussData; }
+  const char* getLatin1Text() const { return _latin1Text.c_str(); }
+
   const TonNpiAddress& getMSISDNadr(void) const { return _msAdr; }
   unsigned char    getDCS(void) const     { return _dCS; }
 
   virtual std::string toString() const {
     std::ostringstream obuf;
-    obuf << "msAddr=[" <<_msAdr.toString()
-         << "],dCS=[" << static_cast<uint32_t>(_dCS)
-         << "],ussData=[" << smsc::util::DumpHex(_ussData.size(), &_ussData[0])
+    obuf << "msAddr=[" << _msAdr.toString()
+         << "],flg=["  << (uint32_t)_flg;
+    if ( _dCS_wasRead )
+      obuf << "],dCS=[" << static_cast<uint32_t>(_dCS);
+    obuf << "],ussData=[" << smsc::util::DumpHex(_ussData.size(), &_ussData[0])
          << "]";
     return obuf.str();
   }
+
+  typedef enum { PREPARED_USS_REQ=0, LATIN1_USS_TEXT, UCS2_USS_TEXT, UNKNOWN_CODING=0XFF } flg_values_t;
 protected:
-  unsigned char   _dCS;
+  unsigned char   _dCS, _flg;
+  bool            _dCS_wasRead;
+  std::string     _latin1Text;
   USSDATA_T       _ussData;
   TonNpiAddress   _msAdr;
   smsc::logger::Logger* _logger; // for debug
@@ -170,8 +181,9 @@ public:
   unsigned char    get_IN_SSN(void) const     { return _inSSN; }
 
   virtual std::string toString() const {
-    std::ostringstream obuf(USSMessageAC::toString());
-    obuf << ",IN_SSN=[" << static_cast<uint32_t>(_inSSN)
+    std::ostringstream obuf;
+    obuf << USSMessageAC::toString()
+         << ",IN_SSN=[" << static_cast<uint32_t>(_inSSN)
          << "],INAddr=[" << _inAddr.toString()
          << "]";
     return obuf.str();
