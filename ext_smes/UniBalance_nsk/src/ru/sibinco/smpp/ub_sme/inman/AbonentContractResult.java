@@ -18,6 +18,7 @@ public class AbonentContractResult extends InManPDU {
   int serviceKey = -1;
   int error = -1;
   VarString abImsi = null;
+  VarString errorMsg = null;
 
   private boolean parsed = false;
 
@@ -50,6 +51,8 @@ public class AbonentContractResult extends InManPDU {
       }
       abImsi = new VarString(data, p);
       p = p + abImsi.getLength();
+      errorMsg = new VarString(data, p);
+      p = p + errorMsg.getLength();
       parsed = true;
     } catch (Exception e) {
       throw new InManPDUException("PDU Parse error", e);
@@ -98,6 +101,14 @@ public class AbonentContractResult extends InManPDU {
     return error;
   }
 
+  public VarString getErrorMsg() {
+    return errorMsg;
+  }
+
+  public void setErrorMsg(VarString errorMsg) {
+    this.errorMsg = errorMsg;
+  }
+
   public String toString() {
     StringBuffer sb = new StringBuffer("AbonentContractResult: sn=");
     sb.append(dialogID);
@@ -111,6 +122,10 @@ public class AbonentContractResult extends InManPDU {
     sb.append(serviceKey);
     sb.append(", error=");
     sb.append(error);
+    sb.append(", abIMSI=");
+    sb.append(abImsi);
+    sb.append(", errorMsg=");
+    sb.append(errorMsg);
     return sb.toString();
   }
 
