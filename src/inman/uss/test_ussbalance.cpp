@@ -17,6 +17,8 @@
 #include <inman/interaction/serializer.hpp>
 
 #include <util/BinDump.hpp>
+#include <inman/common/cvtutil.hpp>
+#include <inman/comp/map_uss/MapUSSComps.hpp>
 
 static smsc::logger::Logger* logger;
 
@@ -107,7 +109,7 @@ static void printVersion()
 
 static void printUsage(const char* progName)
 {
-  printf("Usage: %s [-h] [-v] [cfg_file]\n", progName);
+  printf("Usage: %s [-h] [-v] [cfg_file] [needDcs]\n", progName);
 }
 
 #include <logger/Logger.h>
@@ -123,13 +125,17 @@ int main(int argc, char** argv)
   try {
     init_logger();
     const char *  cfgFile = "test_ussbalance.cfg";
+    int needDcs=0;
     if (argc > 1) {
       if ( !strcmp(argv[1], "-v") ) {
         printVersion(); return 0;
       } else if ( !strcmp(argv[1], "-h") ) {
         printUsage(argv[0]); return 0;
-      } else
+      } else {
+        if ( argc  == 3 )
+          needDcs = atoi (argv[2]);
         cfgFile = argv[1];
+      }
     }
 
     UssTestServiceConfig cfg;
@@ -167,7 +173,7 @@ int main(int argc, char** argv)
     uint8_t buf[1000];
     uint16_t cmdId = htons(1);
     uint32_t reqId = htonl(10);
-    uint8_t dcs = 0xF4;
+    uint8_t dcs = 0x0F;
 
     uint8_t ussData[] = "*100#";
     uint8_t ussDataLen = strlen((char*)ussData);
@@ -183,9 +189,22 @@ int main(int argc, char** argv)
     size_t offset=0;
     size_t dataSz = appendDataToBuf(buf, (uint8_t*)&cmdId, sizeof(cmdId), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)&reqId, sizeof(reqId), &offset);
-    dataSz += appendDataToBuf(buf, (uint8_t*)&dcs, sizeof(dcs), &offset);
-    dataSz += appendDataToBuf(buf, (uint8_t*)&ussDataLen, sizeof(ussDataLen), &offset);
-    dataSz += appendDataToBuf(buf, (uint8_t*)ussData, ussDataLen, &offset);
+
+    uint8_t flg;
+    if (needDcs) flg = 0;
+    else flg = 1;
+    dataSz += appendDataToBuf(buf, (uint8_t*)&flg, sizeof(flg), &offset);
+
+    if (needDcs) {
+      dataSz += appendDataToBuf(buf, (uint8_t*)&dcs, sizeof(dcs), &offset);
+      uint8_t ussdStr[MAP_MAX_USSD_StringLength];
+      uint8_t ussdStrSz = (uint8_t)smsc::cvtutil::packTextAs7BitPadded((const char*)ussData, ussDataLen, ussdStr);
+      dataSz += appendDataToBuf(buf, (uint8_t*)&ussdStrSz, sizeof(ussdStrSz), &offset);
+      dataSz += appendDataToBuf(buf, (uint8_t*)ussdStr, ussdStrSz, &offset);
+    } else {
+      dataSz += appendDataToBuf(buf, (uint8_t*)&ussDataLen, sizeof(ussDataLen), &offset);
+      dataSz += appendDataToBuf(buf, (uint8_t*)ussData, ussDataLen, &offset);
+    }
     dataSz += appendDataToBuf(buf, (uint8_t*)&msAddrLen, sizeof(msAddrLen), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)cfg.msAddr.c_str(), msAddrLen, &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)&inSSN, sizeof(inSSN), &offset);
@@ -230,11 +249,15 @@ int main(int argc, char** argv)
     smsc::inman::interaction::USSResultMessage *message = static_cast<smsc::inman::interaction::USSResultMessage*>(ussPacket->pCmd());
     if ( message->getStatus() == smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK ) {
       std::string ussAsString;
-      if ( message->getUSSDataAsLatin1Text(ussAsString) )
-        printf("Got response: %s\n", ussAsString.c_str());
+      if ( message->getFlg() == 1 ) 
+        printf("Got response as Latin1 text: %s\n", message->getLatin1Text());
       else {
-        smsc::inman::interaction::USSDATA_T resultUssData = message->getUSSData();
-        printf("Got response: %s\n", smsc::util::DumpHex(resultUssData.size(), &resultUssData[0]).c_str());
+        if ( message->getUSSDataAsLatin1Text(ussAsString) )
+          printf("Got response as ussd data: %s\n", ussAsString.c_str());
+        else {
+          smsc::inman::interaction::USSDATA_T resultUssData = message->getUSSData();
+          printf("Got response ussd data: %s\n", smsc::util::DumpHex(resultUssData.size(), &resultUssData[0]).c_str());
+        }
       }
     } else 
       fprintf(stderr, "Got error\n");
