@@ -52,7 +52,8 @@ function calendarMakeDateStr(year, month, day, hour, minute, second, PM) {
     return calendarUS?(((month + 1) < 10?"0":"") + (month + 1) + "/" + (day < 10?"0":"") + day + "/" + year + (calendarTime?("  " + hour + ":" + (minute < 10?"0":"") + minute + ":" + (second < 10?"0":"") + second + " " + (PM?"PM":"AM")):"")):(day + "." + ((month + 1) < 10?"0":"") + (month + 1) + "." + year + (calendarTime?("  " + hour + ":" + (minute < 10?"0":"") + minute + ":" + (second < 10?"0":"") + second):""));
 }
 function calendarClose() {
-    calendarPanel.releaseCapture();
+    if (isMSIE())
+      calendarPanel.releaseCapture();
     calendarPanel.style.display = "none";
     document.getElementById('calendarIFrame').style.display = "none";
     calendarMouseDown = false;
@@ -68,16 +69,16 @@ function createCalendarPanel(year, month, day, hour, minute, second, PM) {
     calendarCurMonth = month;
     var startDay = calendarUS?-1:0;
     var date;
-    for (i = calendarDaysTable.rows.length - 1; i >= 0; i--)calendarDaysTable.deleteRow(calendarDaysTable.rows(i));
+    for (i = calendarDaysTable.rows.length - 1; i >= 0; i--) calendarDaysTable.deleteRow(i);
     while ((new Date(year, month, startDay)).getDay() != (calendarUS?0:1)) startDay--;
     var dayPos = startDay;
     var curDate = new Date();
     curDate = new Date(curDate.getYear(), curDate.getMonth(), curDate.getDate());
     for (j = 0; j < 6; j++) {
-        row = calendarDaysTable.insertRow();
+        row = calendarDaysTable.insertRow(j);
         row.align = "center";
         for (i = 0; i < 7; i++) {
-            cell = row.insertCell();
+            cell = row.insertCell(i);
             date = new Date(year, month, dayPos);
             if (date.getMonth() == month)
                 if (date.getDate() == day) {
@@ -146,7 +147,7 @@ function showCalendar(calendarInputText, us, showTime) {
                 if (pos3 != -1) dtYear = dtText.substring(pos2 + 1, pos3);
                 else dtYear = dtText.substring(pos2 + 1);
             }
-            if (dtYear = makeYear(dtYear, (new Date()).getYear())) {
+            if (dtYear = makeYear(dtYear, (new Date()).getFullYear())) {
                 var dt = new Date(dtYear, dtMonth, dtDate);
                 if ((dt.getDate() == dtDate) &&
                     (dt.getMonth() == dtMonth) &&
@@ -226,9 +227,9 @@ function showCalendar(calendarInputText, us, showTime) {
         E = E.offsetParent;
     }
     var row = calendarWeekDays;
-    if (row.cells(0) == null)
+    if (row.cells[0] == null)
         for (i = 0; i < 7; i++) {
-            var cell = row.insertCell();
+            var cell = row.insertCell(i);
             cell.innerHTML = calendarWD[(calendarUS?0:1) + i];
             cell.style.width = "22px";
         }
@@ -241,43 +242,52 @@ function showCalendar(calendarInputText, us, showTime) {
     document.getElementById('calendarIFrame').style.width = calendarPanel.offsetWidth;
     document.getElementById('calendarIFrame').style.height = calendarPanel.offsetHeight;
     document.getElementById('calendarIFrame').style.display = "block";
-    calendarPanel.setCapture();
+    if (isMSIE())
+      calendarPanel.setCapture();
     return false;
+}
+
+function isMSIE() {
+  return navigator.appName == "Microsoft Internet Explorer";
 }
 
 function isCalendarOwner(o) {
     //return true;
     while (o != null) {
-          //      alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
+        //alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
         if (o == calendarPanel) return true;
-        o = o.parentElement;
+        o = (isMSIE()) ? o.parentElement : o.parentNode;
     }
     return false;
 }
 
-function calendarMD() {
-    calendarPanel.setCapture();
-    var a = window.event.srcElement;
-    //    alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
+function calendarMD(e) {
+    if (isMSIE())
+      calendarPanel.setCapture();
+    var a = e.target || window.event.srcElement;
+    //alert("object: " + a + " owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
     if (!isCalendarOwner(a) && !calendarPressedTime) return calendarClose();
-    var b = window.event.button;
+    var b = (isMSIE()) ? e.button : e.which;
+    if (!a.name)
+      a.name = a.getAttribute("name");
+    //alert(a.name + " " + b);
     if (a != null && a.name != null && b == 1) {
         if (a.name.indexOf("calendarCell") != -1) {
             var dayPos = a.name.substring(12, 14);
             var pos = a.name.substring(14);
             if ((new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos)).getMonth() == calendarCurMonth)
-                calendarDaysTable.rows((calendarLastPos - calendarLastPos % 7) / 7).cells(calendarLastPos % 7).className = "calendarUp";
+                calendarDaysTable.rows[(calendarLastPos - calendarLastPos % 7) / 7].cells[calendarLastPos % 7].className = "calendarUp";
             else
-                calendarDaysTable.rows((calendarLastPos - calendarLastPos % 7) / 7).cells(calendarLastPos % 7).className = "calendarGreyUp";
+                calendarDaysTable.rows[(calendarLastPos - calendarLastPos % 7) / 7].cells[calendarLastPos % 7].className = "calendarGreyUp";
             var date = new Date(calendarCurYear, calendarCurMonth, dayPos);
             var year = date.getFullYear();
             var day = date.getDate();
             var month = date.getMonth();
             calendarActivePanel.value = calendarMakeDateStr(year, month, day, calendarCurHour, calendarCurMinute, calendarCurSecond, calendarCurPM);
             if (date.getMonth() == calendarCurMonth)
-                calendarDaysTable.rows((pos - pos % 7) / 7).cells(pos % 7).className = "calendarDown";
+                calendarDaysTable.rows[(pos - pos % 7) / 7].cells[pos % 7].className = "calendarDown";
             else
-                calendarDaysTable.rows((pos - pos % 7) / 7).cells(pos % 7).className = "calendarGreyDown";
+                calendarDaysTable.rows[(pos - pos % 7) / 7].cells[pos % 7].className = "calendarGreyDown";
             calendarLastPos = pos;
             calendarLastDayPos = dayPos;
             calendarMouseDown = true;
@@ -307,7 +317,7 @@ function calendarMD() {
                         calendarActivePanel.value = calendarMakeDateStr(date.getFullYear(), date.getMonth(), date.getDate(), calendarCurHour, calendarCurMinute, calendarCurSecond, calendarCurPM);
                         calendarPressedTime = true;
                         calendarPressedHour = true;
-                        calendarPressedYPos = event.y;
+                        calendarPressedYPos = e.y;
                         calendarCurHour1 = calendarCurHour;
                     }
                     else
@@ -331,7 +341,7 @@ function calendarMD() {
                                 calendarActivePanel.value = calendarMakeDateStr(date.getFullYear(), date.getMonth(), date.getDate(), calendarCurHour, calendarCurMinute, calendarCurSecond, calendarCurPM);
                                 calendarPressedTime = true;
                                 calendarPressedSecond = true;
-                                calendarPressedYPos = event.y;
+                                calendarPressedYPos = e.y;
                                 calendarCurSecond1 = calendarCurSecond;
                             }
             }
@@ -339,8 +349,8 @@ function calendarMD() {
     }
 }
 
-function calendarMU() {
-    var a = window.event.srcElement;
+function calendarMU(e) {
+    var a = e.target || window.event.srcElement;
     if (calendarTime && calendarPressedTime) {
         var date = new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos);
         calendarActivePanel.value = calendarMakeDateStr(date.getFullYear(), date.getMonth(), date.getDate(), calendarCurHour, calendarCurMinute, calendarCurSecond, calendarCurPM);
@@ -369,11 +379,11 @@ function calendarMU() {
     calendarMouseDown = false;
 }
 
-function calendarMM() {
-    var a = window.event.srcElement;
-    var b = window.event.button;
+function calendarMM(e) {
+    var a = e.target || window.event.srcElement;
+    var b = e.button;
     if (calendarTime && calendarPressedTime) {
-        var inc = calendarPressedYPos - event.y;
+        var inc = calendarPressedYPos - e.y;
         inc = (inc - inc % 5) / 5;
         if (calendarPressedHour) {
             calendarCurHour = (calendarCurHour1 + 1536 + inc) % (calendarUS?12:24);
@@ -396,18 +406,18 @@ function calendarMM() {
             var pos = a.name.substring(14);
             if (pos != calendarLastPos) {
                 if ((new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos)).getMonth() == calendarCurMonth)
-                    calendarDaysTable.rows((calendarLastPos - calendarLastPos % 7) / 7).cells(calendarLastPos % 7).className = "calendarUp";
+                    calendarDaysTable.rows[(calendarLastPos - calendarLastPos % 7) / 7].cells[calendarLastPos % 7].className = "calendarUp";
                 else
-                    calendarDaysTable.rows((calendarLastPos - calendarLastPos % 7) / 7).cells(calendarLastPos % 7).className = "calendarGreyUp";
+                    calendarDaysTable.rows[(calendarLastPos - calendarLastPos % 7) / 7].cells[calendarLastPos % 7].className = "calendarGreyUp";
                 var date = new Date(calendarCurYear, calendarCurMonth, dayPos);
                 var year = date.getFullYear();
                 var day = date.getDate();
                 var month = date.getMonth();
                 calendarActivePanel.value = calendarMakeDateStr(year, month, day, calendarCurHour, calendarCurMinute, calendarCurSecond, calendarCurPM);
                 if (date.getMonth() == calendarCurMonth)
-                    calendarDaysTable.rows((pos - pos % 7) / 7).cells(pos % 7).className = "calendarDown";
+                    calendarDaysTable.rows[(pos - pos % 7) / 7].cells[pos % 7].className = "calendarDown";
                 else
-                    calendarDaysTable.rows((pos - pos % 7) / 7).cells(pos % 7).className = "calendarGreyDown";
+                    calendarDaysTable.rows[(pos - pos % 7) / 7].cells[pos % 7].className = "calendarGreyDown";
                 calendarLastPos = pos;
                 calendarLastDayPos = dayPos;
             }
