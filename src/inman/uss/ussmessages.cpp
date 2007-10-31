@@ -42,23 +42,28 @@ SerializerUSS* SerializerUSS::getInstance()
 
 Request (PROCESS_USS_REQUEST_TAG):
 --------l
-  2b        4b        1b       1b        up to 160b   1b     up to 32                  1b     1b    up to 32
-------   ---------   -----  ----------   ----------   ---  -----------------------   ------   ---   --------
- cmdId : requestId  : DCS : ussDataLen  :  ussData  : len : ms ISDN address string : IN SSN : len : IN ISDN
-                    |                                                                                       |
-                    -------- processed by load() method ----------------------------------------------------
-
+  2b        4b        1b  1b       1b        up to 160b   1b     up to 32                  1b     1b    up to 32
+------   ---------    -- ----  ----------   ----------   ---  -----------------------   ------   ---   --------
+ cmdId : requestId  : flg DCS : ussDataLen  :  ussData  : len : ms ISDN address string : IN SSN : len : IN ISDN
+                    |                                                                                          |
+                     ------- processed by load() method -------------------------------------------------------
 
 Result (PROCESS_USS_RESULT_TAG):
 --------
 
-  2b        4b          2b      1b       1b        up to 160b   1b     up to 32
-------   ---------   -------   ---   ----------   ----------   ---  -----------------------
- cmdId : requestId  : status : DCS : ussDataLen  :  ussData  : len : ms ISDN address string
+  2b        4b          2b     1b   1b       1b        up to 160b   1b     up to 32
+------   ---------   -------   --  ---   ----------   ----------   ---  -----------------------
+ cmdId : requestId  : status : flg DCS : ussDataLen  :  ussData  : len : ms ISDN address string
                              |                                                             |
                               -------- present if status == 0 -----------------------------
                     |                                                                      |
-                    -------- processed by save() method ------------------------------------
+                     ------- processed by save() method -----------------------------------
+
+if flg == 0 then DCS presents and ussData contains binary data, otherwise flg indicates text string encoding and 
+DCS is missed.
+There are next flg values for text string encoding:
+0x01 - ASCII LATIN
+0x02 - UCS2
 */
 //NOTE: SerializerUSS doesn't provide partial deserialization of packets
 SerializablePacketAC * SerializerUSS::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
@@ -100,7 +105,9 @@ SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in)
  * ************************************************************************** */
 void USSMessageAC::save(ObjectBuffer& out) const
 {
-  out << _dCS;
+  out << _flg;
+  if ( _flg == PREPARED_USS_REQ )
+    out << _dCS;
   out << _ussData;
   out << _msAdr.toString();
 }
@@ -108,9 +115,20 @@ void USSMessageAC::save(ObjectBuffer& out) const
 void USSMessageAC::load(ObjectBuffer& in) throw(SerializerException)
 {
   smsc_log_debug(_logger, "USSMessageAC::load::: enter it");
-  in >> _dCS;
-  smsc_log_debug(_logger, "USSMessageAC::load::: read dcs=%d", _dCS);
+  in >> _flg;
+  if ( _flg != PREPARED_USS_REQ &&
+       _flg != LATIN1_USS_TEXT) 
+    throw SerializerException("invalid flg value" , SerializerException::invObjData, NULL);
+
+  if ( _flg == PREPARED_USS_REQ ) {
+    in >> _dCS;
+    _dCS_wasRead = true;
+    smsc_log_debug(_logger, "USSMessageAC::load::: read dcs=%d", _dCS);
+  }
   in >> _ussData;
+  if ( _flg == LATIN1_USS_TEXT )
+    _latin1Text.assign((char*)&_ussData[0], _ussData.size());
+
   smsc_log_debug(_logger, "USSMessageAC::load::: read ussdata");
   std::string sadr;
   in >> sadr;
@@ -129,18 +147,21 @@ void USSMessageAC::setRAWUSSData(unsigned char dcs, const USSDATA_T& ussdata)
   _ussData.clear();
   _ussData = ussdata;
   _dCS = dcs;
+  _flg = PREPARED_USS_REQ;
 }
 
-void USSMessageAC::setUSSData(const unsigned char * data, unsigned size)
+void USSMessageAC::setUSSData(const char * data, unsigned size)
 {
   _ussData.clear();
-  _ussData.insert(_ussData.begin(), data, data + size);
-  _dCS = USSMAN_LATIN1_DCS;
+  _ussData.insert(_ussData.begin(), (unsigned char*)data, (unsigned char*)data + size);
+  _flg = LATIN1_USS_TEXT;
 }
 
-void USSMessageAC::setUSSData(const USSDATA_T& data)
+void USSMessageAC::setUCS2USSData(const std::vector<uint8_t>& ucs2)
 {
-  setUSSData(&data[0], data.size());
+  _ussData.clear();
+  _ussData = ucs2;
+  _flg = UCS2_USS_TEXT;
 }
 
 void USSMessageAC::setMSISDNadr(const char * adrStr) throw (CustomException)
