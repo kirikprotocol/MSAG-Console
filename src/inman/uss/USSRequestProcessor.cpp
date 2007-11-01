@@ -121,7 +121,7 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
     resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK);
     resultPacket.Cmd().setMSISDNadr(_msISDNAddr);
   } else {
-      smsc_log_error(_logger, "USSRequestProcessor::onEndMapDlg: error %u: %s", _logger,
+      smsc_log_error(_logger, "USSRequestProcessor::onEndMapDlg: error %u: %s",
           ercode, URCRegistry::explainHash(ercode).c_str());
       resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
   }
