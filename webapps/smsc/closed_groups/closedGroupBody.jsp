@@ -4,7 +4,7 @@
     <script>
         function removeFilterMask(rowId) {
             var t = document.getElementById('filterMasksTable');
-            var r = t.rows(rowId);
+            var r = t.rows[rowId];
 
             if (r != null) {
                 t.deleteRow(r.rowIndex);
@@ -26,12 +26,12 @@
 
             r.id = "row_FilterMask_" + rowCounter++;
 
-            var c1 = r.insertCell();
+            var c1 = r.insertCell(0);
 
             c1.innerHTML = "<input class=txt name=masks value=\"" + fm +
                            "\" validation=\"mask\" onkeyup=\"resetValidation(this)\">";
 
-            var c2 = r.insertCell();
+            var c2 = r.insertCell(1);
 
             c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeFilterMask('" + r.id +
                            "')\" style=\"cursor:hand;\">";

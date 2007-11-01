@@ -73,11 +73,11 @@
 <script language="JavaScript">
 function createImgButton(imgUrl, onclickT, tooltipText)
 {
-    return "<img src=\"" + imgUrl + "\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\">";
+    return "<img class=\"button\" src=\"" + imgUrl + "\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\">";
 }
 function createImgButton2(imgUrl, onclickT, tooltipText, styleText)
 {
-    return "<img src=\"" + imgUrl + "\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\" style=\"" + styleText + "\">";
+    return "<img class=\"button\" src=\"" + imgUrl + "\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\" style=\"" + styleText + "\">";
 }
 function addParam(sectionName)
 {
@@ -88,46 +88,62 @@ function addParam(sectionName)
     newRow = tableElem.insertRow(tableElem.rows.length - 1);
     newRow.className = "row" + (tableElem.rows.length & 1);
     newRow.id = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
-    labelElement = document.createElement("label");
-    labelElement.innerText = paramNameElem.value;
-    newCell = newRow.insertCell();
-    newCell.appendChild(labelElement);
+<%--    labelElement = document.createElement("input");--%>
+<%--    labelElement.innerText = labelElement.text = labelElement.value = paramNameElem.value;--%>
+    newCell = newRow.insertCell(0);
+    newCell.innerHTML = paramNameElem.value;
+    //newCell.appendChild(labelElement);
 
     inputElement = document.createElement("input");
     inputElement.name = sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
     inputElement.value = paramValueElem.value;
     inputElement.className = "txtW";
-    newCell = newRow.insertCell();
+    newCell = newRow.insertCell(1);
     newCell.appendChild(inputElement);
 
     imgElement = document.createElement("img");
     imgElement.src = "/images/but_del.gif";
     imgElement.setAttribute('sectionName', sectionName);
     imgElement.setAttribute('paramName', paramNameElem.value);
-    imgElement.attachEvent("onclick", removeParam_Event);
-    newCell = newRow.insertCell();
+    imgElement.onclick = removeParam_Event;
+<%--    if (imgElement.addEventListener) { // For Firefox--%>
+<%--      imgElement.addEventListener("onclick", removeParam_Event, true);--%>
+<%--    } else { // For IE and Opera--%>
+<%--      imgElement.attachEvent("onclick", removeParam_Event);--%>
+<%--    }--%>
+    newCell = newRow.insertCell(2);
     newCell.appendChild(imgElement);
 
     paramNameElem.value = "";
     paramValueElem.value = "";
 }
-function removeParam_Event()
+function removeParam_Event(e)
 {
-    removeParam(event.srcElement.attributes.sectionName.nodeValue, event.srcElement.attributes.paramName.nodeValue);
+    if (!e)
+      e = event;
+    var a = e.target || e.srcElement;
+    removeParam(a.attributes.sectionName.nodeValue, a.attributes.paramName.nodeValue);
 }
 function removeParam(sectionName, paramName)
 {
     tableElem = document.getElementById("paramTable_" + sectionName);
     rowId = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramName;
-    rowElem = tableElem.rows(rowId);
+    rowElem = tableElem.rows[rowId];
     tableElem.deleteRow(rowElem.rowIndex);
 }
 function removeSection(sectionName)
 {
     sectionElem = document.getElementById("sectionHeader_" + sectionName);
-    sectionElem.removeNode(true);
+    if (sectionElem.removeNode)
+      sectionElem.removeNode(true);
+    else
+      sectionElem.parentNode.removeChild(sectionElem);
+
     sectionElem = document.getElementById("sectionValue_" + sectionName);
-    sectionElem.removeNode(true);
+    if (sectionElem.removeNode)
+      sectionElem.removeNode(true);
+    else
+      sectionElem.parentNode.removeChild(sectionElem);
 }
 function sectionHeader(sectionName, fullName)
 {
@@ -197,8 +213,8 @@ function addSection(parentSectionName)
     parentSectionTable = document.getElementById("sectionValue_" + parentSectionName);
 
     parentNewRow = parentSectionTable.insertRow(parentSectionTable.rows.length);
-    parentNewRow.insertCell();
-    nestCell = parentNewRow.insertCell();
+    parentNewRow.insertCell(0);
+    nestCell = parentNewRow.insertCell(1);
     nestCell.innerHTML = ""
             + sectionHeader(newSectionName, fullName)
             + sectionValue(newSectionName, fullName);
