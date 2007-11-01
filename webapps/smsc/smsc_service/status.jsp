@@ -52,7 +52,7 @@
 
                     out.println((firstRow
                             ? ""
-                            : "<tr>") + "<td align=right>" + StringEncoderDecoder.encode(additionalKey) + ":</td><td>" +
+                            : "<tr>") + "<td align=right>" + StringEncoderDecoder.encode(additionalKey) + ":</td>\n<td>" +
                             StringEncoderDecoder.encode(additionalValue) + "</td>");
 
                     firstRow = false;
@@ -75,9 +75,7 @@
 
         final boolean isJournalHasEntries = journalEntries.size() > 0;
 
-        out.println("  <td rowspan=" + (isJournalHasEntries
-                ? 2
-                : 1) + " valign=top>" + "<input class=check type=checkbox name=checks value=" + checkboxValue + ((!optionsChanged && !
+        out.println("  <td rowspan=1" + " valign=top>" + "<input class=check type=checkbox name=checks value=" + checkboxValue + ((!optionsChanged && !
                 isJournalHasEntries)
                 ? " disabled"
                 : "") + ">" + "</td>");
@@ -95,13 +93,13 @@
         out.println("</tr>");
 
         if (isJournalHasEntries) {
-            out.println("<tr id=" + journalRowId + "><td colspan=3>");
+            out.println("<tr id=" + journalRowId + "><td>&nbsp;</td><td colspan=3>");
             printJournalEntries(out, request, journalEntries);
             out.println("</td></tr>");
             out.println("<script>");
             out.println("function click" + journalRowId + "() {");
             out.println("  if (" + journalRowId + ".style.display == 'none') {");
-            out.println("    " + journalRowId + ".style.display = 'block';");
+            out.println("    " + journalRowId + ".style.display = '';");
             out.println("    " + journalRowId + "_div.className = 'collapsing_list_opened';");
             out.println("  } else {");
             out.println("    " + journalRowId + ".style.display = 'none';");
@@ -210,7 +208,7 @@
                             "users.roles.snmp");
                 }
 
-                //todo security-constraint для reschedule  if (request.isUserInRole("reschedule"))
+                //todo security-constraint пїЅпїЅпїЅ reschedule  if (request.isUserInRole("reschedule"))
                 printOptionsString(out, request, bean.getJournalReschedule(), rowN++, "reschedule", bean.isRescheduleChanged(),
                         "users.roles.reschedule");
             %>
