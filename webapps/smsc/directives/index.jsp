@@ -22,17 +22,17 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp" %>
 <div class=content>
 <table class=list id=aliases>
-<col width="15%">
-<col width="15%">
+<col width="20%">
+<col width="20%">
 <col width="1%">
-<col width="69%">
+<col width="59%">
 <tr><th><%=getLocString("common.sortmodes.alias")%></th><th><%=getLocString("common.sortmodes.directive")%></th><th>
     &nbsp;</th><th></th></tr>
 <script>
     function removeDirectiveAlias(rowId)
     {
         var tbl = document.getElementById('aliases');
-        var r = tbl.rows(rowId);
+        var r = tbl.rows[rowId];
         tbl.deleteRow(r.rowIndex);
     }
     function createInput(id, value)
@@ -45,15 +45,21 @@
     }
     function addSelectOption(select, text, value)
     {
-        var o = document.createElement("OPTION");
-        select.add(o);
-        o.value = o.innerText = text;
+        var o = document.createElement("option");
+        try {
+          select.add(o, null); // For Firefox, does not work in MSIE
+        } catch (ex) {
+          select.add(o); // For MSIE
+        }
+        o.value = o.innerText = o.text = text;
         if (text == value)
             o.selected = true;
     }
     function createSelect(id, value)
     {
         var s = document.createElement("select");
+        s.className = "selectW";
+        s.setAttribute("class", "selectW");
         s.id = s.name = id;
         addSelectOption(s, "def", value);
         addSelectOption(s, "template", value);
@@ -77,7 +83,7 @@
             alert("<%=getLocString("directives.alerts.nameNotSpecified")%>");
             return false;
         }
-        if (tbl.rows('row_' + aHex) != null) {
+        if (tbl.rows['row_' + aHex] != null) {
             alert("<%=getLocString("directives.alerts.aliasAlreadyExists")%>: " + a);
             return false;
         }
@@ -92,7 +98,7 @@
         dCell.appendChild(createSelect("directive_" + aHex, d));
         r.appendChild(dCell);
         var bCell = document.createElement("td");
-        bCell.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeDirectiveAlias('row_" + aHex + "')\" style=\"cursor:hand;\">";
+        bCell.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeDirectiveAlias('row_" + aHex + "')\" style=\"cursor:pointer;\">";
         r.appendChild(bCell);
         aElem.value = "";
 
@@ -108,7 +114,7 @@
         final String aliasHex = StringEncoderDecoder.encodeHEX(alias);
 %><tr id="row_<%=aliasHex%>">
     <td><input class=txt name="alias" value="<%=alias%>" validation="id" onkeyup="resetValidation(this)"></td>
-    <td><select name="directive_<%=aliasHex%>">
+    <td><select class=selectW name="directive_<%=aliasHex%>">
         <option value="def"      <%="def"     .equals(directive) ? "selected" : ""%>>def</option>
         <option value="template" <%="template".equals(directive) ? "selected" : ""%>>template</option>
         <option value="ack"      <%="ack"     .equals(directive) ? "selected" : ""%>>ack</option>
@@ -117,13 +123,13 @@
         <option value="unhide"   <%="unhide"  .equals(directive) ? "selected" : ""%>>unhide</option>
         <option value="flash"    <%="flash"   .equals(directive) ? "selected" : ""%>>flash</option>
     </select></td>
-    <td><img src="/images/but_del.gif" onclick="removeDirectiveAlias('row_<%=aliasHex%>')" style="cursor:hand;"></td>
+    <td><img src="/images/but_del.gif" onclick="removeDirectiveAlias('row_<%=aliasHex%>')" style="cursor:pointer;"></td>
 </tr><%
     }
 %>
 <tr>
     <td><input class=txt id=newAlias name=newAlias validation="id" onkeyup="resetValidation(this)"></td>
-    <td><select id=newDirective name=newDirective>
+    <td><select class=selectW id=newDirective name=newDirective>
         <option value="def">def</option>
         <option value="template">template</option>
         <option value="ack">ack</option>
@@ -134,7 +140,7 @@
     </select></td>
     <td><img src="/images/but_add.gif"
              onclick="return validateField(document.getElementById('newAlias')) && addDirectiveAlias();"
-             style="cursor:hand;"></td>
+             style="cursor:pointer;"></td>
 </tr>
 </table>
 </div>
