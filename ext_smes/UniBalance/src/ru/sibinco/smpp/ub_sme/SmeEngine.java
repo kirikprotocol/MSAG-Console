@@ -14,6 +14,7 @@ import java.util.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.CallableStatement;
+import java.sql.Statement;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -1019,13 +1020,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     if (stmt != null){
       try {
         stmt.close();
-        stmt = null;
       } catch (SQLException e1) {
         logger.warn("Could not close oracle CallableStatement: " + e1);
       }
-      Connection connection = null;
       try {
-        connection = stmt.getConnection();
+        Connection connection = stmt.getConnection();
         if (connection != null){
           connection.close();
           connection = null;
@@ -1070,13 +1069,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     if (stmt != null){
       try {
         stmt.close();
-        stmt = null;
       } catch (SQLException e1) {
         logger.warn("Could not close oracle CallableStatement: " + e1);
       }
-      Connection connection = null;
       try {
-        connection = stmt.getConnection();
+        Connection connection = stmt.getConnection();
         if (connection != null){
           connection.close();
           connection = null;
