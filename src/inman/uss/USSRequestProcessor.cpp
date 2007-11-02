@@ -66,10 +66,11 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
 
     if ( requestObject->getFlg() == smsc::inman::interaction::USSMessageAC::PREPARED_USS_REQ )
       _mapDialog->requestSS(requestObject->getUSSData(),  requestObject->getDCS(),
-                            &(requestObject->getMSISDNadr()));
+                            &(requestObject->getMSISDNadr()), requestObject->getIMSI().c_str());
     else if ( requestObject->getFlg() == smsc::inman::interaction::USSMessageAC::LATIN1_USS_TEXT )
       _mapDialog->requestSS(requestObject->getLatin1Text(),
-                            &(requestObject->getMSISDNadr()));
+                            &(requestObject->getMSISDNadr()), requestObject->getIMSI().c_str());
+
 
     _msISDNAddr = requestObject->getMSISDNadr();
   } catch (std::exception & ex) {
