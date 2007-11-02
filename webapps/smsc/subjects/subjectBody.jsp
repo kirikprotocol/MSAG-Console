@@ -18,7 +18,7 @@
                 newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'sources_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'sources_table\'), \'' + newRow.id + '\')" style="cursor: pointer;">';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();
@@ -30,13 +30,16 @@
         {
             var selectElem = document.getElementById('subjSelect');
             var tbl = document.getElementById('sources_table');
-            var rowElem = tbl.rows(rowId);
+            var rowElem = tbl.rows[rowId];
             var subjObj = findChildById(rowElem, 'subjSrc');
             var subjValue = subjObj.value;
             var oOption = document.createElement("OPTION");
-            selectElem.add(oOption);
-            oOption.innerText = subjValue;
-            oOption.value = subjValue;
+            try {
+              selectElem.add(oOption); // For MSIE
+            } catch (ex) {
+              selectElem.add(oOption, null); // For Firefox
+            }
+            oOption.innerText = oOption.text = oOption.value = subjValue;
             selectElem.disabled = false;
             tbl.deleteRow(rowElem.rowIndex);
         }
@@ -55,7 +58,7 @@
                 newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
                 newRow.appendChild(newCell);
                 selectElem.options[selectElem.selectedIndex] = null;
                 selectElem.focus();
@@ -122,7 +125,7 @@
            <col width="0%"-->
             <tr valign="middle">
                 <td><%=getLocString("common.util.Subject")%></td>
-                <td><select id=subjSelect name="fake_name" class="txt"><%
+                <td align=RIGHT><select id=subjSelect name="fake_name" class="txt"><%
                     for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();) {
                         String name = (String) i.next();
                         if (!bean.isSrcChecked(name) && !bean.getName().equals(name)) {
@@ -130,13 +133,13 @@
                 %><option value="<%=encName%>"><%=encName%></option><%
                         }
                     }%></select></td>
-                <td><img src="/images/but_add.gif" onclick="addSubj()" style="cursor:hand;"></td>
+                <td><img src="/images/but_add.gif" onclick="addSubj()" style="cursor:pointer;"></td>
             </tr><tr>
             <td><%=getLocString("common.util.Mask")%></td>
             <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)">
             </td>
             <td><img src="/images/but_add.gif" onclick="addMask(document.getElementById('newSrcMask'))"
-                     style="cursor:hand;"></td>
+                     style="cursor:pointer;"></td>
         </tr>
         </table>
     </td>
@@ -156,7 +159,7 @@
         <tr class=row<%=(rowN++) & 1%> id="<%=rowId%>">
             <td><img src="/images/subject.gif"></td>
             <td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
-            <td><img src="/images/but_del.gif" onClick="removeSubj('<%=rowId%>');" style="cursor: hand;"></td>
+            <td><img src="/images/but_del.gif" onClick="removeSubj('<%=rowId%>');" style="cursor: pointer;"></td>
         </tr><%
             }
         }
@@ -167,7 +170,7 @@
             <td><img src="/images/mask.gif"></td>
             <td><%=bean.getSrcMasks()[i]%><input type=hidden name=srcMasks value="<%=bean.getSrcMasks()[i]%>"></td>
             <td><img src="/images/but_del.gif"
-                     onClick="removeRow(document.getElementById('sources_table'), '<%=rowId%>')" style="cursor: hand;">
+                     onClick="removeRow(document.getElementById('sources_table'), '<%=rowId%>')" style="cursor: pointer;">
             </td>
         </tr><%
         }%>
