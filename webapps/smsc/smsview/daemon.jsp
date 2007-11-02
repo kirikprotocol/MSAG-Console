@@ -28,7 +28,7 @@
         out.print("<tr class=row" + ((row++) & 1) + ">");
         out.print("<th><input class=txt id=\"newParamName_" + section + "\" name=\"newParamName_" + section + "\"></th>");
         out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + section + "\" name=\"newParamValue_" + section + "\"></td>");
-        out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('" + section + "')\" title='" + getLocString("common.hints.addParam") + "'></td>");
+        out.print("<td><img class=button src=\"/images/but_add.gif\" onclick=\"addParam('" + section + "')\" title='" + getLocString("common.hints.addParam") + "'></td>");
         out.print("</tr>");
     }
 
@@ -37,7 +37,7 @@
         out.print("<tr class=row" + ((row++) & 1) + " id=\"paramRow_" + fullParam + "\">");
         out.print("<th nowrap>" + param + "</th>");
         out.print("<td width=100% ><input class=txtW id=\"" + fullParam + "\" name=\"" + fullParam + "\" value=\"" + StringEncoderDecoder.encode(value) + "\"></td>");
-        out.print("<td><img src=\"/images/but_del.gif\" onclick=\"delParam('" + section + "', '" + param + "')\" title='" + getLocString("common.hints.delParam") + "'></td>");
+        out.print("<td><img class=button src=\"/images/but_del.gif\" onclick=\"delParam('" + section + "', '" + param + "')\" title='" + getLocString("common.hints.delParam") + "'></td>");
         out.print("</tr>");
     }
 %>
@@ -72,7 +72,7 @@
         newRow.id = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
         newCell = document.createElement("th");
         newCell.className = "label";
-        newCell.innerText = paramNameElem.value;
+        newCell.innerText = newCell.innerHTML = paramNameElem.value;
         newRow.appendChild(newCell);
 
         inputElement = document.createElement("input");
@@ -86,22 +86,27 @@
         imgElement.src = "/images/but_del.gif";
         imgElement.setAttribute('sectionName', sectionName);
         imgElement.setAttribute('paramName', paramNameElem.value);
-        imgElement.attachEvent("onclick", removeParam_Event);
+        imgElement.onclick = removeParam_Event;
+        imgElement.className = "button";
+        //imgElement.attachEvent("onclick", removeParam_Event);
         newCell = newRow.insertCell(2);
         newCell.appendChild(imgElement);
 
         paramNameElem.value = "";
         paramValueElem.value = "";
     }
-    function removeParam_Event()
+    function removeParam_Event(e)
     {
-        delParam(event.srcElement.attributes.sectionName.nodeValue, event.srcElement.attributes.paramName.nodeValue);
+        if (!e)
+          e = event;
+        var a = e.target || e.srcElement;
+        delParam(a.attributes.sectionName.nodeValue, a.attributes.paramName.nodeValue);
     }
     function delParam(sectionName, paramName)
     {
         tableElem = document.getElementById("paramTable_" + sectionName);
         rowId = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramName;
-        rowElem = tableElem.rows(rowId);
+        rowElem = tableElem.rows[rowId];
         tableElem.deleteRow(rowElem.rowIndex);
     }
 </script>
