@@ -75,7 +75,7 @@
 <script>
     function removeSubmitters(rowId) {
         var t = document.getElementById('SubmittersTable');
-        var r = t.rows(rowId);
+        var r = t.rows[rowId];
 
         if (r != null) {
             t.deleteRow(r.rowIndex);
@@ -98,14 +98,14 @@
 
         r.id = "row_Submitters_" + rowCounter++;
 
-        var c1 = r.insertCell();
+        var c1 = r.insertCell(0);
 
         c1.innerHTML = "<input class=txt name=submitters value=\"" + fm +
                        "\" validation=\"address\" onkeyup=\"resetValidation(this)\">";
 
-        var c2 = r.insertCell();
+        var c2 = r.insertCell(1);
 
-        c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeSubmitters('" + r.id + "')\" style=\"cursor:hand;\">";
+        c2.innerHTML = "<img class=button src=\"/images/but_del.gif\" onclick=\"removeSubmitters('" + r.id + "')\" >";
         fme.value = "";
 
         fme.focus();
@@ -132,7 +132,7 @@
         <%-- <td><img src="/images/but_del.gif" onclick="removeSubmitters('SubmittersRow_<%=SubmittersHex%>')" style="cursor:hand;"></td>  --%>
         <td>
             <%
-                out.print("<img id=\"mbDel\" src=\"/images/but_del.gif\" title=\"delete submitter\"" +
+                out.print("<img class=button id=\"mbDel\" src=\"/images/but_del.gif\" title=\"delete submitter\"" +
                         "onClick = \"removeSubmitters('SubmittersRow_" + SubmittersHex + "');return false;\">");
             %>
         </td>
@@ -146,7 +146,7 @@
         </td>
         <td>
             <%
-                out.print("<img id=\"mbAdd\" src=\"/images/but_add.gif\" title=\"add submitter\" " +
+                out.print("<img class=button id=\"mbAdd\" src=\"/images/but_add.gif\" title=\"add submitter\" " +
                         "onClick = \"addSubmitters();return false;\">");
             %>
         </td>
@@ -176,7 +176,7 @@
 <script>
     function removeMembers(rowId) {
         var t = document.getElementById('MembersTable');
-        var r = t.rows(rowId);
+        var r = t.rows[rowId];
 
         if (r != null) {
             t.deleteRow(r.rowIndex);
@@ -199,14 +199,14 @@
 
         r.id = "row_Members_" + rowCounter++;
 
-        var c1 = r.insertCell();
+        var c1 = r.insertCell(0);
 
         c1.innerHTML = "<input class=txt name=members value=\"" + fm +
                        "\" validation=\"address\" onkeyup=\"resetValidation(this)\">";
 
-        var c2 = r.insertCell();
+        var c2 = r.insertCell(1);
 
-        c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeMembers('" + r.id + "')\" style=\"cursor:hand;\">";
+        c2.innerHTML = "<img class=button src=\"/images/but_del.gif\" onclick=\"removeMembers('" + r.id + "')\">";
         fme.value = "";
 
         fme.focus();
@@ -236,7 +236,7 @@
         </td>
         <td>
             <%
-                out.print("<img id=\"mbDel\" src=\"/images/but_del.gif\" title=\"delete member\" " +
+                out.print("<img class=button id=\"mbDel\" src=\"/images/but_del.gif\" title=\"delete member\" " +
                         "onClick = \"removeMembers('MembersRow_" + MembersHex + "');return false;\">");
             %>
         </td>
@@ -257,7 +257,7 @@
         </td>
         <td>
             <%
-                out.print("<img id=\"mbAdd\" src=\"/images/but_add.gif\" title=\"add member\" " +
+                out.print("<img class=button id=\"mbAdd\" src=\"/images/but_add.gif\" title=\"add member\" " +
                         "onClick = \"addMembers();return false;\">");
             %>
         </td>
