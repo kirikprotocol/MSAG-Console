@@ -25,13 +25,16 @@ var global_counter = 0;
 function removeSrcSubj(rowId) {
   var selectElem = document.getElementById('srcSubjSelect');
   var tbl = document.getElementById('sources_table');
-  var rowElem = tbl.rows(rowId);
+  var rowElem = tbl.rows[rowId];
   var subjObj = findChildById(rowElem, 'subjSrc');
   var subjValue = subjObj.value;
   var oOption = document.createElement("OPTION");
-  selectElem.add(oOption);
-  oOption.innerText = subjValue;
-  oOption.value = subjValue;
+  try {
+    selectElem.add(oOption, null); // For Firefox, does not work in MSIE
+  } catch (ex) {
+    selectElem.add(oOption); // For MSIE
+  }
+  oOption.innerText = oOption.value = oOption.text = subjValue;
   selectElem.disabled = false;
   tbl.deleteRow(rowElem.rowIndex);
 }
@@ -51,7 +54,7 @@ function addSourceSubj() {
     newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
     newRow.appendChild(newCell);
     newCell = document.createElement("td");
-    newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+    newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');">';
     newRow.appendChild(newCell);
     selectElem.options[selectElem.selectedIndex] = null;
     selectElem.focus();
@@ -85,7 +88,7 @@ function addSourceSubj() {
           <col width="0%" align=left>
           <tr valign="middle">
             <td><%=getLocString("common.util.Subject")%></td>
-            <td><select id=srcSubjSelect name="fake_name" class="txt"><%
+            <td align=RIGHT><select id=srcSubjSelect name="fake_name" class="txt"><%
               for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();) {
                 String name = (String) i.next();
                 if (!bean.isSrcChecked(name)) {
@@ -93,7 +96,7 @@ function addSourceSubj() {
                 %><option value="<%=encName%>"><%=encName%></option><%
                 }
               }%></select></td>
-            <td><img src="/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
+            <td><img class=button src="/images/but_add.gif" onclick="addSourceSubj()"></td>
           </tr>
         </table>
         <table id=sources_table class=properties_list cellspacing=0 cellpadding=0>
@@ -107,7 +110,7 @@ function addSourceSubj() {
                 <tr class=row<%=(rowN++) & 1%> id="<%=rowId%>">
                   <td><img src="/images/subject.gif"></td>
                   <td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
-                  <td><img src="/images/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');" style="cursor: hand;"></td>
+                  <td><img class=button src="/images/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');"></td>
                 </tr><%
               }
             }%>
