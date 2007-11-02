@@ -79,7 +79,7 @@
     {
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
-        c.style.display = o ? "none" : "block";
+        c.style.display = o ? "none" : "";
     }
 </script>
 <table class=list cellspacing=0>
@@ -114,7 +114,7 @@
         DateCountersSet date = (DateCountersSet) obj;
         String dateStr = formatter.format(date.getDate());
 %> <tr class=row0>
-    <td width="23%" align=right style="cursor:hand"
+    <td width="23%" align=right style="cursor:pointer"
         onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div
             id="p<%=disNo%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>><%= dateStr%><div></td>
     <td width="11%" align=right><%= date.accepted%></td>
@@ -125,7 +125,7 @@
     <td width="11%" align=right><%= date.temporal%></td>
     <td width="11%" align=right><%= date.peak_i%>&nbsp;/&nbsp;<%= date.peak_o%></td>
 </tr>
-<tr id="c<%=disNo++%>" style="display:<%=i.hasNext() ? "none" : "block"%>">
+<tr id="c<%=disNo++%>" style="display:<%=i.hasNext() ? "none" : ""%>">
     <td colspan=8>
         <table class=list cellspacing=0 cellpadding=0 border=0>
             <%
@@ -173,7 +173,7 @@
         Collection errs = sme.getErrors();
 %>
 <tr class=row0>
-    <td width="23%" align=right style="cursor:hand"
+    <td width="23%" align=right style="cursor:pointer"
         onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div
             id="p<%=disNo%>" class=collapsing_list_closed><%= smeStr%><div></td>
     <td width="11%" align=right><%= sme.accepted%></td>
@@ -239,7 +239,7 @@
         Collection errs = route.getErrors();
 %>
 <tr class=row0>
-    <td width="23%" align=right style="cursor:hand"
+    <td width="23%" align=right style="cursor:pointer"
         onClick="toggleVisible(document.getElementById('p<%=disNo%>'), document.getElementById('c<%=disNo%>'));"><div
             id="p<%=disNo%>" class=collapsing_list_closed><%= routeStr%><div></td>
     <td width="11%" align=right><%= route.accepted%></td>
