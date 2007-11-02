@@ -42,10 +42,10 @@ SerializerUSS* SerializerUSS::getInstance()
 
 Request (PROCESS_USS_REQUEST_TAG):
 --------l
-  2b        4b        1b  1b       1b        up to 160b   1b     up to 32                  1b     1b    up to 32
-------   ---------    -- ----  ----------   ----------   ---  -----------------------   ------   ---   --------
- cmdId : requestId  : flg DCS : ussDataLen  :  ussData  : len : ms ISDN address string : IN SSN : len : IN ISDN
-                    |                                                                                          |
+  2b        4b       1b  1b       1b        up to 160b   1b     up to 32    1b     1b    up to 32 1b     up to 32
+------   ---------   -- ----  ----------   ----------   ---  -----------  ------   ---   -------- ----   -------
+ cmdId : requestId : flg DCS : ussDataLen  :  ussData  : len : ms ISDN  : IN SSN : len : IN ISDN IMSI len  IMSI
+                    |                                                                                           |
                      ------- processed by load() method -------------------------------------------------------
 
 Result (PROCESS_USS_RESULT_TAG):
@@ -198,6 +198,9 @@ void USSRequestMessage::load(ObjectBuffer& in) throw(SerializerException)
   smsc_log_debug(_logger, "USSRequestMessage::load::: read inSaddr=%s", inSaddr.c_str());
   if (!_inAddr.fromText(inSaddr.c_str()))
     throw SerializerException("invalid IN isdn" , SerializerException::invObjData, NULL);
+  in >> _imsi;
+  if ( _imsi.length() > 32 )
+    throw SerializerException(format("invalid IMSI len=%d", _imsi.length()).c_str(), SerializerException::invObjData, NULL);
 }
 
 void USSRequestMessage::save(ObjectBuffer& out) const

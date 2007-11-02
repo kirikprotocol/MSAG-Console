@@ -180,6 +180,8 @@ public:
   const TonNpiAddress& get_IN_ISDNaddr(void) const { return _inAddr; }
   unsigned char    get_IN_SSN(void) const     { return _inSSN; }
 
+  const std::string& getIMSI() const { return _imsi; }
+
   virtual std::string toString() const {
     std::ostringstream obuf;
     obuf << USSMessageAC::toString()
@@ -191,6 +193,7 @@ public:
 private:
   unsigned char _inSSN;
   TonNpiAddress _inAddr;
+  std::string _imsi;
 };
 
 
