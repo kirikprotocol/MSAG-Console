@@ -144,7 +144,7 @@ public class HTMLRenderer {
   }
 
   protected static String tdEnd() {
-    return "</tr>\n";
+    return "</td>\n";
   }
 
 
