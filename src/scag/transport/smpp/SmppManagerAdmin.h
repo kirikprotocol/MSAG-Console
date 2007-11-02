@@ -36,6 +36,7 @@ struct SmppEntityInfo{
   buf::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> bindPassword;
   buf::FixedLengthString<42> addressRange;
   buf::FixedLengthString<13> systemType;
+  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> metaGroupId;
   int timeOut;
   SmppBindType bindType;
   buf::FixedLengthString<32> host;
@@ -60,6 +61,25 @@ struct SmppEntityInfo{
   }
 };
 
+enum BalancingPolicy{
+  bpRoundRobin,bpRandom
+};
+enum MetaEntityType{
+  mtMetaService,mtMetaSmsc
+};
+struct MetaEntityInfo{
+  MetaEntityInfo()
+  {
+    type=mtMetaService;
+    policy=bpRoundRobin;
+    persistanceEnabled=true;
+  }
+  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> systemId;
+  MetaEntityType type;
+  BalancingPolicy policy;
+  bool persistanceEnabled;
+};
+
 struct SmppManagerAdmin{
   virtual void addSmppEntity(const SmppEntityInfo& info)=0;
   virtual void updateSmppEntity(const SmppEntityInfo& info)=0;
@@ -67,6 +87,13 @@ struct SmppManagerAdmin{
   virtual void deleteSmppEntity(const char* sysId)=0;
   virtual void ReloadRoutes()=0;
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType) = 0;
+
+  virtual void addMetaEntity(const char* id,MetaEntityInfo info)=0;
+  virtual void updateMetaEntity(const char* id,MetaEntityInfo info)=0;
+  virtual void deleteMetaEntity(const char* id)=0;
+
+  virtual void addMetaEndPoint(const char* metaId,const char* sysId)=0;
+  virtual void removeMetaEndPoint(const char* metaId,const char* sysId)=0;
 };
 
 }//smpp
