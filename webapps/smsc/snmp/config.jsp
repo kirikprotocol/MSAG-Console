@@ -77,9 +77,15 @@ function createImgButton2(imgUrl, onclickT, tooltipText, styleText)
 function removeSection(sectionName)
 {
     sectionElem = document.getElementById("sectionHeader_" + sectionName);
-    sectionElem.removeNode(true);
+    if (sectionElem.removeNode)
+      sectionElem.removeNode(true);
+    else
+      sectionElem.parentNode.removeChild(sectionElem);
     sectionElem = document.getElementById("sectionValue_" + sectionName);
-    sectionElem.removeNode(true);
+    if (sectionElem.removeNode)
+      sectionElem.removeNode(true);
+    else
+      sectionElem.parentNode.removeChild(sectionElem);
 }
 function sectionHeader(sectionName, fullName)
 {
@@ -187,8 +193,8 @@ function addSection(parentSectionName)
     parentSectionTable = document.getElementById("sectionValue_" + parentSectionName);
 
     parentNewRow = parentSectionTable.insertRow(parentSectionTable.rows.length);
-    parentNewRow.insertCell();
-    nestCell = parentNewRow.insertCell();
+    parentNewRow.insertCell(0);
+    nestCell = parentNewRow.insertCell(0);
     nestCell.innerHTML = ""
             + sectionHeader(newSectionName, fullName)
             + sectionValue(newSectionName, fullName);
@@ -207,8 +213,8 @@ function addSectionCounter(parentSectionName)
     parentSectionTable = document.getElementById("sectionValue_" + parentSectionName);
 
     parentNewRow = parentSectionTable.insertRow(0);
-    parentNewRow.insertCell();
-    nestCell = parentNewRow.insertCell();
+    parentNewRow.insertCell(0);
+    nestCell = parentNewRow.insertCell(0);
     nestCell.innerHTML = ""
             + sectionHeader(newSectionName, fullName)
             + sectionValueCounter(newSectionName, fullName);
