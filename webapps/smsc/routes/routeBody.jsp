@@ -212,7 +212,7 @@
            <col width="0%"-->
             <tr valign="middle">
                 <td><%=getLocString("common.util.Subject")%></td>
-                <td><select id=srcSubjSelect name="fake_name" class="txt"><%
+                <td align=RIGHT><select id=srcSubjSelect name="fake_name" class="txt"><%
                     for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();) {
                         String name = (String) i.next();
                         if (!bean.isSrcChecked(name)) {
@@ -221,13 +221,12 @@
                 %><option value="<%=encName%>"><%=encName%></option><%
                         }
                     }%></select></td>
-                <td><img src="/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
+                <td><img class=button src="/images/but_add.gif" onclick="addSourceSubj()"></td>
             </tr><tr>
             <td><%=getLocString("common.util.Mask")%></td>
             <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)">
             </td>
-            <td><img src="/images/but_add.gif" onclick="addSourceMask(document.getElementById('newSrcMask'))"
-                     style="cursor:hand;"></td>
+            <td><img class=button src="/images/but_add.gif" onclick="addSourceMask(document.getElementById('newSrcMask'))"></td>
         </tr>
         </table>
     </td>
@@ -241,7 +240,7 @@
             <col width="0%">
             <tr>
                 <td><%=getLocString("common.util.Subject")%></td>
-                <td><select id=dstSubjSelect onchange="return selectDefaultSme();"><%
+                <td align=RIGHT><select id=dstSubjSelect onchange="return selectDefaultSme();"><%
                     for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();) {
                         String name = (String) i.next();
                         if (!bean.isDstChecked(name)) {
@@ -257,7 +256,7 @@
                 %><option id="<%=encSmeId%>" value="<%=encSmeId%>"><%=encSmeId%></option><%
                     }
                 %></select></td>
-                <td><img src="/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
+                <td><img class=button src="/images/but_add.gif" onclick="addDestSubj()"></td>
             </tr>
             <tr>
                 <td><%=getLocString("common.util.Mask")%></td>
@@ -273,7 +272,7 @@
                 %>
                 </select>
                 </td>
-                <td><img src="/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
+                <td><img class=button src="/images/but_add.gif" onclick="addDestMask()"></td>
             </tr>
         </table>
     </td>
@@ -295,7 +294,7 @@
                 newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'sources_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'sources_table\'), \'' + newRow.id + '\')" >';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();
@@ -307,13 +306,16 @@
         {
             var selectElem = document.getElementById('srcSubjSelect');
             var tbl = document.getElementById('sources_table');
-            var rowElem = tbl.rows(rowId);
+            var rowElem = tbl.rows[rowId];
             var subjObj = findChildById(rowElem, 'subjSrc');
             var subjValue = subjObj.value;
             var oOption = document.createElement("OPTION");
-            selectElem.add(oOption);
-            oOption.innerText = subjValue;
-            oOption.value = subjValue;
+            try {
+              selectElem.add(oOption); // For MSIE
+            } catch (ex) {
+              selectElem.add(oOption, null);
+            }
+            oOption.innerText = oOption.text = oOption.value = subjValue;
             selectElem.disabled = false;
             tbl.deleteRow(rowElem.rowIndex);
         }
@@ -332,7 +334,7 @@
                 newCell.innerHTML = subjValue + '<input id=subjSrc type=hidden name=checkedSources value="' + subjValue + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+                newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeSrcSubj(\'' + newRow.id + '\');">';
                 newRow.appendChild(newCell);
                 selectElem.options[selectElem.selectedIndex] = null;
                 selectElem.focus();
@@ -354,7 +356,7 @@
         <tr class=row<%=(rowN++) & 1%> id="<%=rowId%>">
             <td><img src="/images/subject.gif"></td>
             <td><%=encName%><input id=subjSrc type=hidden name=checkedSources value="<%=encName%>"></td>
-            <td><img src="/images/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');" style="cursor: hand;"></td>
+            <td><img class=button src="/images/but_del.gif" onClick="removeSrcSubj('<%=rowId%>');"></td>
         </tr><%
             }
         }
@@ -364,8 +366,8 @@
         <tr class=row<%=(rowN++) & 1%> id=<%=rowId%>>
             <td><img src="/images/mask.gif"></td>
             <td><%=bean.getSrcMasks()[i]%><input type=hidden name=srcMasks value="<%=bean.getSrcMasks()[i]%>"></td>
-            <td><img src="/images/but_del.gif"
-                     onClick="removeRow(document.getElementById('sources_table'), '<%=rowId%>')" style="cursor: hand;">
+            <td><img class=button src="/images/but_del.gif"
+                     onClick="removeRow(document.getElementById('sources_table'), '<%=rowId%>')">
             </td>
         </tr><%
         }%>
@@ -413,7 +415,7 @@ function addDestMask() {
         newRow.appendChild(newCell);
 
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'destinations_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
+        newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'destinations_table\'), \'' + newRow.id + '\')">';
         newRow.appendChild(newCell);
         document.getElementById('newDstMask').value = "";
         document.getElementById('newDstMask').focus();
@@ -439,15 +441,18 @@ function removeDestSubj(rowId)
 {
     var selectElem = document.getElementById('dstSubjSelect');
     var tbl = document.getElementById('destinations_table');
-    var rowElem = tbl.rows(rowId);
+    var rowElem = tbl.rows[rowId];
     var subjObj = findChildById(rowElem, 'subjDst');
     var subjValue = subjObj.value;
     var subjDSObj = findChildById(rowElem, 'subjDst');
     var subjDefaultSme = subjDSObj.defaultSme;
     var oOption = document.createElement("OPTION");
-    selectElem.add(oOption);
-    oOption.innerText = subjValue;
-    oOption.value = subjValue;
+    try {
+      selectElem.add(oOption); // For MSIE
+    } catch (ex) {
+      selectElem.add(oOption, null); // For Firefox
+    }
+    oOption.innerText = oOption.text = oOption.value = subjValue;
     oOption.defaultSme = subjDefaultSme;
     selectElem.disabled = false;
     tbl.deleteRow(rowElem.rowIndex);
@@ -484,7 +489,7 @@ function addDestSubj() {
         newRow.appendChild(newCell);
 
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');" style="cursor: hand;">';
+        newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeDestSubj(\'' + newRow.id + '\');">';
         newRow.appendChild(newCell);
         selectElem.options[selectElem.selectedIndex] = null;
         selectElem.focus();
@@ -512,7 +517,7 @@ function addDestSubj() {
     <td><img src="/images/subject.gif"></td>
     <td><%=encName%><input id=subjDst type=hidden name=checkedDestinations value="<%=encName%>"
                            defaultSme="<%=StringEncoderDecoder.encode(bean.getDefaultSubjectSme(name))%>"></td>
-    <td><select name=dst_sme_<%=hexName%>>
+    <td align=RIGHT><select name=dst_sme_<%=hexName%>>
         <%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext();) {
             String smeId = (String) j.next();
             String encSmeId = StringEncoderDecoder.encode(smeId);
@@ -521,7 +526,7 @@ function addDestSubj() {
     %>
     </select>
     </td>
-    <td><img src="/images/but_del.gif" onClick="removeDestSubj('<%=rowId%>');" style="cursor: hand;"></td>
+    <td><img class=button src="/images/but_del.gif" onClick="removeDestSubj('<%=rowId%>');"></td>
 </tr><%
         }
     }
@@ -534,7 +539,7 @@ function addDestSubj() {
     <tr class=row<%=(rowN++) & 1%> id="<%=rowId%>">
         <td><img src="/images/mask.gif"></td>
         <td><%=encMask%><input type=hidden name=dstMasks value="<%=encMask%>"></td>
-        <td><select name=dst_mask_sme_<%=hexMask%> onkeyup="resetValidation(this)">
+        <td align=RIGHT><select name=dst_mask_sme_<%=hexMask%> onkeyup="resetValidation(this)">
             <%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext();) {
                 String smeId = (String) j.next();
                 String encSmeId = StringEncoderDecoder.encode(smeId);
@@ -544,8 +549,8 @@ function addDestSubj() {
         %>
         </select>
         </td>
-        <td><img src="/images/but_del.gif"
-                 onClick="removeRow(document.getElementById('destinations_table'), '<%=rowId%>')" style="cursor: hand;">
+        <td><img class=button src="/images/but_del.gif"
+                 onClick="removeRow(document.getElementById('destinations_table'), '<%=rowId%>')">
         </td>
     </tr>
     <%}%>
