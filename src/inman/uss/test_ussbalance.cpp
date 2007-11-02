@@ -109,7 +109,7 @@ static void printVersion()
 
 static void printUsage(const char* progName)
 {
-  printf("Usage: %s [-h] [-v] [cfg_file] [needDcs]\n", progName);
+  printf("Usage: %s [-h] [-v] [-I IMSIvalue] [cfg_file [needDcs]]\n", progName);
 }
 
 #include <logger/Logger.h>
@@ -122,6 +122,8 @@ static void init_logger()
 
 int main(int argc, char** argv)
 {
+  const char* imsi = NULL;
+  int processedArgs=0;
   try {
     init_logger();
     const char *  cfgFile = "test_ussbalance.cfg";
@@ -132,9 +134,14 @@ int main(int argc, char** argv)
       } else if ( !strcmp(argv[1], "-h") ) {
         printUsage(argv[0]); return 0;
       } else {
-        if ( argc  == 3 )
-          needDcs = atoi (argv[2]);
-        cfgFile = argv[1];
+        if ( !strcmp(argv[1], "-I") ) {
+          imsi = argv[2];
+          processedArgs = 2;
+        }
+        if ( argc  == processedArgs + 3 ) {
+          needDcs = atoi (argv[processedArgs++ + 1]);
+        }
+        cfgFile = argv[processedArgs + 1];
       }
     }
 
@@ -184,8 +191,6 @@ int main(int argc, char** argv)
     //  uint8_t inAddr[] = "+79139860005";
     uint8_t inAddrLen = cfg.inAddr.size();
 
-    uint8_t inSSN = 6;
-
     size_t offset=0;
     size_t dataSz = appendDataToBuf(buf, (uint8_t*)&cmdId, sizeof(cmdId), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)&reqId, sizeof(reqId), &offset);
@@ -207,9 +212,12 @@ int main(int argc, char** argv)
     }
     dataSz += appendDataToBuf(buf, (uint8_t*)&msAddrLen, sizeof(msAddrLen), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)cfg.msAddr.c_str(), msAddrLen, &offset);
-    dataSz += appendDataToBuf(buf, (uint8_t*)&inSSN, sizeof(inSSN), &offset);
+    dataSz += appendDataToBuf(buf, (uint8_t*)&cfg.inSSN, sizeof(cfg.inSSN), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)&inAddrLen, sizeof(inAddrLen), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)cfg.inAddr.c_str(), inAddrLen, &offset);
+    dataSz += appendDataToBuf(buf, (uint8_t*)cfg.inAddr.c_str(), inAddrLen, &offset);
+    if ( imsi )
+      dataSz += appendDataToBuf(buf, (uint8_t*)imsi, strlen(imsi), &offset);
 
     printf("Make balance request for ISDN#=%s\n",cfg.msAddr.c_str());
     uint32_t netDataSz = htonl(dataSz);
