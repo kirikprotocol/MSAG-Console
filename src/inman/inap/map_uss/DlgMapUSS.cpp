@@ -56,8 +56,9 @@ MAP-OpenInfo ::= SEQUENCE {
 	-- extensionContainer must not be used in version 2
 	}
 
- * NOTE: The Ericcson MAP implementation requires the destinationReference to
- * be passed as ISDN Address as vendor specific extension:
+ * GVR NOTE: The Ericcson MAP implementation requires the ISDN address of 
+ * destinationReference to be passed as vendor specific extension:
+ *
  *   destinationISDN	[2] AddressString
  *  
  * References:
@@ -70,32 +71,43 @@ MAP-OpenInfo ::= SEQUENCE {
  * 3) 3GPP TS 29.02 (ETSI TS 129 002): Mobile Application Part (MAP) 
  *    clauses 7.3.1, 17.*
  */
-static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & msadr,
-                   const TonNpiAddress & own_adr)
+static void makeUI(std::vector<unsigned char> & ui, const TonNpiAddress & own_adr,
+                   const TonNpiAddress * msadr, const TonNpiAddress * ms_imsi)
 {
     //BER encoded map-DialogueAS OID + single-ASN1-type tag [0]
     static const UCHAR_T ui_oid[] = {06,0x07,0x04,0x00,0x00,0x01,0x01,0x01,0x01,0xA0};
 
+    unsigned addrLen = 0;
     unsigned char addrOcts[sizeof(TONNPI_ADDRESS_OCTS) + 1];
     ui.clear();
 
-    unsigned addrLen = packMAPAddress2OCTS(msadr, (TONNPI_ADDRESS_OCTS*)addrOcts);
-    ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
-    ui.insert(ui.begin(), (unsigned char)addrLen);
-    ui.insert(ui.begin(), 0x82); //destinationISDN [2]
+    if (msadr) {
+        addrLen = packMAPAddress2OCTS(*msadr, (TONNPI_ADDRESS_OCTS*)addrOcts);
+        ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
+        ui.insert(ui.begin(), (unsigned char)addrLen);
+        ui.insert(ui.begin(), 0x82); //destinationISDN [2]
+    }
 
     addrLen = packMAPAddress2OCTS(own_adr, (TONNPI_ADDRESS_OCTS*)addrOcts);
     ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
     ui.insert(ui.begin(), (unsigned char)addrLen);
     ui.insert(ui.begin(), 0x81); //originationReference	[1]
 
+    if (ms_imsi) {
+        addrLen = packMAPAddress2OCTS(*ms_imsi, (TONNPI_ADDRESS_OCTS*)addrOcts);
+        ui.insert(ui.begin(), addrOcts, addrOcts + addrLen);
+        ui.insert(ui.begin(), (unsigned char)addrLen);
+        ui.insert(ui.begin(), 0x80); //destinationReference [0]
+    }
+
+    //NOTE: total encoding size is less then 127, so encode it as small number
     addrLen = ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
     ui.insert(ui.begin(), 0xA0); //[0] MAP-OpenInfo
 
     addrLen = ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
-    ui.insert(ui.begin(), ui_oid, ui_oid + sizeof(ui_oid));
+    ui.insert(ui.begin(), ui_oid, ui_oid + sizeof(ui_oid)); //map-DialogueAS OID
 
     addrLen = ui.size();
     ui.insert(ui.begin(), (unsigned char)addrLen);
@@ -138,18 +150,19 @@ void MapUSSDlg::endMapDlg(void)
  * ------------------------------------------------------------------------ */
 //composes SS request data from plain text(ASCIIZ BY default).
 void MapUSSDlg::requestSS(const char * txt_data,
-                            const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
+                            const TonNpiAddress * subsc_adr/* = NULL*/,
+                            const char * subscr_imsi/* = NULL*/) throw (CustomException)
 {
     //create Component for TCAP invoke
     ProcessUSSRequestArg    arg;
     arg.setUSSData((const unsigned char*)txt_data);
     smsc_log_debug(logger, "MapUSS[%u]: USS request: '%s'", dlgId, txt_data);
-    initSSDialog(arg, subsc_adr);
+    initSSDialog(arg, subsc_adr, subscr_imsi);
 }
 
 //composes SS request data from preencoded binary data which encoding is identified by dcs.
 void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
-                    const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
+                    const TonNpiAddress * subsc_adr/* = NULL*/, const char * subscr_imsi/* = NULL*/) throw (CustomException)
 {
     //create Component for TCAP invoke
     ProcessUSSRequestArg    arg;
@@ -157,7 +170,7 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
     smsc_log_debug(logger, "MapUSS[%u]: USS request: 0x%s", dlgId,
                     DumpHex(rq_data.size(), &rq_data[0]).c_str());
 
-    initSSDialog(arg, subsc_adr);
+    initSSDialog(arg, subsc_adr, subscr_imsi);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -318,7 +331,8 @@ void MapUSSDlg::onDialogREnd(bool compPresent)
  * Private/protected methods
  * ------------------------------------------------------------------------ */
 void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg, 
-                            const TonNpiAddress * subsc_adr/* = NULL*/) throw (CustomException)
+                             const TonNpiAddress * subsc_adr/* = NULL*/,
+                             const char * subscr_imsi/* = NULL*/) throw (CustomException)
 {
     //create TCAP Dialog
     MutexGuard  grd(_sync);
@@ -326,10 +340,18 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
     dialog->sendInvoke(MAPUSS_OpCode::processUSS_Request, &arg, this);
     //GVR NOTE: though MAP specifies that msISDN address in USS request may
     //present in component portion of TCAP invoke, the Ericsson tools transfers
-    //it only in user info section.
-    if (subsc_adr) {    //prepare user info
+    //and expects it only in user info section (see makeUI() comments).
+    if (subsc_adr || (subscr_imsi && *subscr_imsi)) {    //prepare user info
+        TonNpiAddress msImsi;
+        if (subscr_imsi && *subscr_imsi) { //verify IMSI
+            if (!msImsi.fromText(subscr_imsi))
+                throw CustomException("MapUSSDlg: invalid IMSI: '%s'", subscr_imsi);
+            //set TonNPI to International 'Land Mobile' (E.212) for transmission in UserInfo
+            msImsi.numPlanInd = 0x06;
+            msImsi.typeOfNumber = 0x01;
+        }
         std::vector<unsigned char>   ui4;
-        makeUI(ui4, *subsc_adr,  session->getOwnAdr());
+        makeUI(ui4, session->getOwnAdr(), subsc_adr, msImsi.empty() ? NULL : &msImsi);
         dialog->beginDialog(&ui4[0], ui4.size()); //throws
     } else
         dialog->beginDialog(); //throws

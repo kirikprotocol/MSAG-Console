@@ -58,10 +58,10 @@ public:
 
     //composes SS request data from plain text(ASCIIZ BY default).
     void requestSS(const char * txt_data,
-                    const TonNpiAddress * subsc_adr = NULL) throw (CustomException);
+                    const TonNpiAddress * subsc_adr = NULL, const char * subscr_imsi = NULL) throw (CustomException);
     //composes SS request data from preencoded binary data which encoding is identified by dcs.
     void requestSS(const std::vector<unsigned char> & rq_data, unsigned char dcs,
-                    const TonNpiAddress * subsc_adr = NULL) throw (CustomException);
+                    const TonNpiAddress * subsc_adr = NULL, const char * subscr_imsi = NULL) throw (CustomException);
 
     void endMapDlg(void);
 
@@ -85,8 +85,8 @@ protected:
     void onInvokeLCancel(Invoke* inv);
 
 private:
-    void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL)
-        throw (CustomException);
+    void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL,
+                      const char * subscr_imsi = NULL) throw (CustomException);
 
     void endTCap(void); //ends TC dialog, releases Dialog()
 
