@@ -65,7 +65,7 @@
       <% int id = item.getId();%>
       <tr class=row<%=(posIdx++) % 2%>>
         <td>
-          <input class=check type=checkbox name=checked value="<%=id%>" <%=bean.isRegionChecked(String.valueOf(id)) ? "checked" : ""%> onclick="checkCheckboxes();">
+          <input class=check type=checkbox name=checked value="<%=id%>" <%=bean.isRegionChecked(String.valueOf(id)) ? "checked" : ""%>>
         </td>
         <td><a href="javascript:editSomething('<%=StringEncoderDecoder.encode(String.valueOf(id))%>')" title="Edit region"><%=StringEncoderDecoder.encode(name)%></a></td>
         <td><%=item.getBandWidth()%></td>
@@ -83,6 +83,5 @@
   page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset");
   page_menu_end(out);
 %>
-
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp" %>
 <%@ include file="/WEB-INF/inc/code_footer.jsp" %>
