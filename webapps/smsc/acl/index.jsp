@@ -92,12 +92,12 @@
         function delAclAddress(rowN)
         {
             var tbl = document.getElementById('addresses_table');
-            var row = tbl.rows("address_row_" + rowN);
-            if (confirm('<%=getLocString("acl.delAddressConfirm")%> "' + row.address + '"?')) {
+            var row = tbl.rows["address_row_" + rowN];
+            if (confirm('<%=getLocString("acl.delAddressConfirm")%> "' + row.getAttribute("address") + '"?')) {
                 var addressElem = document.createElement("input");
                 addressElem.type = "hidden";
                 addressElem.name = "deleted_address";
-                addressElem.value = row.address;
+                addressElem.value = row.getAttribute("address");
                 opForm.appendChild(addressElem);
                 tbl.deleteRow(row.rowIndex);
             }
@@ -118,7 +118,7 @@
                 newCell.innerHTML = addr + "<input type=hidden name=new_address id=new_address_" + global_counter + " value=\"" + addr + "\">";
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'addresses_table\'), \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'addresses_table\'), \'' + newRow.id + '\')">';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();

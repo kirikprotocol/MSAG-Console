@@ -42,10 +42,10 @@
             newRow.className = "row" + ((tbl.rows.length + 1) & 1);
             newRow.id = "addrRow_" + (global_counter++);
             newCell = document.createElement("td");
-            newCell.innerHTML = '<input name=addresses value="' + addr + '">';
+            newCell.innerHTML = '<input class=txt name=addresses value="' + addr + '">';
             newRow.appendChild(newCell);
             newCell = document.createElement("td");
-            newCell.innerHTML = '<img src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'aclAddresses\'), \'' + newRow.id + '\')" style="cursor: hand;">';
+            newCell.innerHTML = '<img class=button src="/images/but_del.gif" onClick="removeRow(document.getElementById(\'aclAddresses\'), \'' + newRow.id + '\')">';
             newRow.appendChild(newCell);
             valueElem.value = "";
             valueElem.focus();
