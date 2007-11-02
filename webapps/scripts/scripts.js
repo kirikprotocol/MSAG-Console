@@ -305,6 +305,9 @@ function validateField_ruleName(elem)
 
 function validateField(elem)
 {
+    if (elem.getAttribute("validation") == null)
+      return true;
+
     switch (elem.getAttribute("validation"))
             {
     case "port":return validateField_port(elem);
