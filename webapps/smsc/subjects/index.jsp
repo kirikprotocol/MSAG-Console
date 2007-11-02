@@ -37,11 +37,10 @@
     <script>
         function removeFilterMask(rowId) {
             var t = document.getElementById('filterMasksTable');
-            var r = t.rows(rowId);
+            var r = t.rows[rowId];
 
-            if (r != null) {
+            if (r != null)
                 t.deleteRow(r.rowIndex);
-            }
         }
 
         var rowCounter = 0;
@@ -59,15 +58,15 @@
 
             r.id = "row_FilterMask_" + rowCounter++;
 
-            var c1 = r.insertCell();
+            var c1 = r.insertCell(0);
 
             c1.innerHTML = "<input class=txt name=filter_masks value=\"" + fm +
                            "\" validation=\"mask\" onkeyup=\"resetValidation(this)\">";
 
-            var c2 = r.insertCell();
+            var c2 = r.insertCell(1);
 
             c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeFilterMask('" + r.id +
-                           "')\" style=\"cursor:hand;\">";
+                           "')\" style=\"cursor:pointer;\">";
             fme.value = "";
 
             fme.focus();
@@ -77,9 +76,9 @@
             var _head = document.getElementById(headId);
             var _body = document.getElementById(bodyId);
 
-            if (_body.style.display == 'none' || _body.style.display == '') {
+            if (_body.style.display == 'none') {
                 _head.className = 'collapsing_list_opened';
-                _body.style.display = 'block';
+                _body.style.display = '';
             } else {
                 _head.className = 'collapsing_list_closed';
                 _body.style.display = 'none';
@@ -105,7 +104,7 @@
                        validation="mask" onkeyup="resetValidation(this)">
             </td>
             <td><img src="/images/but_del.gif" onclick="removeFilterMask('filterMaskRow_<%= filterMaskHex %>')"
-                     style="cursor:hand;"></td>
+                     style="cursor:pointer;"></td>
             <td>
                 &nbsp;
             </td>
@@ -118,7 +117,7 @@
                 <input class=txt name=filter_masks value="" id=newFilterMask validation="mask"
                        onkeyup="resetValidation(this)">
             </td>
-            <td><img src="/images/but_add.gif" onclick="addFilterMask()" style="cursor:hand;"></td>
+            <td><img src="/images/but_add.gif" onclick="addFilterMask()" style="cursor:pointer;"></td>
             <td>
                 &nbsp;
             </td>
