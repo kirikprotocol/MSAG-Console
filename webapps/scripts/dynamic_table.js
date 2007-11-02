@@ -130,18 +130,23 @@ function createRowControlButtonColumnElement(tableId, newRow, newCount) {
   var image = createImage("/images/but_del.gif");
   image.setAttribute('rownum', newCount);
   image.setAttribute('tableid', tableId);
-  image.attachEvent("onclick", removeRow);
+  image.className = "button";
+  image.onclick = removeRow;
+  //image.attachEvent("onclick", removeRow);
   newRow.insertCell(newRow.cells.length).appendChild(image);
 }
 
-function removeRow() {
-  delRow(event.srcElement.attributes.tableid.nodeValue, event.srcElement.attributes.rownum.nodeValue);
+function removeRow(e) {
+  if (!e)
+    e = event;
+  var a = e.target || e.srcElement;
+  delRow(a.attributes.tableid.nodeValue, a.attributes.rownum.nodeValue);
 }
 
 function delRow(tableId, rownum) {
   var tableElem = document.getElementById(tableId);
   var rowId = "row_" + rownum ;
-  var rowElem = tableElem.rows(rowId);
+  var rowElem = tableElem.rows[rowId];
   tableElem.deleteRow(rowElem.rowIndex);
 }
 
