@@ -40,7 +40,7 @@
             out.print("<option value=\""+encName + "\">" + encName + "</option>");
         }
         out.print("</select></th>");
-        out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + section + "\" name=\"newParamValue_" + section + "\" value="+selectedValue+"></td>");
+        out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + section + "\" name=\"newParamValue_" + section + "\" value="+selectedValue+" validation=\"nonEmpty\"></td>");
         out.print("<td><img class=button src=\"/images/but_add.gif\" onclick=\"addParam('" + section + "')\" title='" + getLocString("common.hints.addParam") + "'></td>");
         out.print("</tr>");
     }
@@ -48,7 +48,7 @@
     void printAddParam(JspWriter out, String section, String selectedValue) throws IOException {
         out.print("<tr class=row" + ((row++) & 1) + ">");
         out.print("<th><input class=txt id=\"newParamName_" + section + "\" name=\"newParamName_" + section + "\" validation=\"mask\"></th>");
-        out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + section + "\" name=\"newParamValue_" + section + "\" value="+selectedValue+"></td>");
+        out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + section + "\" name=\"newParamValue_" + section + "\" value="+selectedValue+" validation=\"nonEmpty\"></td>");
         out.print("<td><img class=button src=\"/images/but_add.gif\" onclick=\"addParam('" + section + "')\" title='" + getLocString("common.hints.addParam") + "'></td>");
         out.print("</tr>");
     }
@@ -57,7 +57,7 @@
         String fullParam = section + Section.NAME_DELIMETER + param;
         out.print("<tr class=row" + ((row++) & 1) + " id=\"paramRow_" + fullParam + "\">");
         out.print("<th nowrap>" + param + "</th>");
-        out.print("<td width=100% ><input class=txtW id=\"" + fullParam + "\" name=\"" + fullParam + "\" value=\"" + StringEncoderDecoder.encode(value) + "\"></td>");
+        out.print("<td width=100% ><input class=txtW id=\"" + fullParam + "\" name=\"" + fullParam + "\" value=\"" + StringEncoderDecoder.encode(value) + "\" validation=\"nonEmpty\"></td>");
         out.print("<td><img class=button src=\"/images/but_del.gif\" onclick=\"delParam('" + section + "', '" + param + "')\" title='" + getLocString("common.hints.delParam") + "'></td>");
         out.print("</tr>");
     }
@@ -66,11 +66,16 @@
     function addParam(sectionName)
     {
         tableElem = document.getElementById("paramTable_" + sectionName);
+
         paramNameElem = document.getElementById("newParamName_" + sectionName);
+        resetValidation(paramNameElem);
         if (!validateField(paramNameElem) || paramNameElem.value == "")
           return;
 
         paramValueElem = document.getElementById("newParamValue_" + sectionName);
+        resetValidation(paramValueElem);
+        if (!validateField(paramValueElem) || paramValueElem.value == "")
+          return;
 
         test = document.getElementById("paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value);
         if (test == null)
@@ -103,7 +108,6 @@
             paramNameElem.value = "";
             paramValueElem.value = document.getElementById("defaultTZ").value;
         }
-        resetValidation(paramNameElem);
     }
     function removeParam_Event(e)
     {
