@@ -52,6 +52,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private String cbossConnectionErrorPattern = "Connection,NullPointerException";
   private String inManConnectionErrorPattern = "System or internal error,already closed";
+  private String inManInIsdnPattern = null;
 
   private String inManHost = "localhost";
   private String inManPort = "5678";
@@ -177,7 +178,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
     }
 
-    if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_IN_MAN_CONTRACT_TYPE)) {
+    if (contractTypeDetectionEnabled) {
       inManHost = config.getProperty("inman.host", inManHost);
       if (inManHost.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"inman.host\" is missed");
@@ -207,6 +208,12 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       } catch (IllegalArgumentException e) {
         throw new InitializationException(e.getMessage(), e);
       }
+
+      inManInIsdnPattern = config.getProperty("inman.in.isdn", inManInIsdnPattern);
+      if(inManInIsdnPattern!=null){
+        inManInIsdnPattern = Utils.aggregateRegexp(inManInIsdnPattern);
+      }
+
     }
 
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_CBOSS_ORACLE)) {
@@ -250,7 +257,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         throw new InitializationException("Mandatory config parameter \"inbalance.uss.data\" is missed");
       }
       try {
-        inBalanceIN_SSN = Byte.parseByte(config.getProperty("inbalance.in.ssn", Byte.toString(inBalanceIN_SSN)));
+        inBalanceIN_SSN = (byte)Integer.parseInt(config.getProperty("inbalance.in.ssn", Byte.toString(inBalanceIN_SSN)));
       } catch (NumberFormatException e) {
         throw new InitializationException("Mandatory config parameter \"inbalance.in.ssn\" is invalid");
       }
@@ -1048,7 +1055,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
   }
 
-  public boolean isCbossConnectionError(Exception e) {
+  protected boolean isCbossConnectionError(Exception e) {
     if (e.toString().matches(cbossConnectionErrorPattern)) {
       return true;
     } else {
@@ -1099,7 +1106,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
   }
 
-  public boolean isInManConnectionError(Exception e) {
+  protected boolean isInManConnectionError(Exception e) {
     if (e.toString().matches(inManConnectionErrorPattern)) {
       return true;
     } else {
@@ -1117,6 +1124,10 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   protected Connection getInManConnection() throws SQLException {
     return connectionManager.getConnection(inManPoolName);
+  }
+
+  protected String getInManInIsdnPattern(){
+    return inManInIsdnPattern;
   }
 
   class RequestStatesController extends Thread {

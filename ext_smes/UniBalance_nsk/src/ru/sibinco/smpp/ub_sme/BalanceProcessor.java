@@ -75,17 +75,34 @@ public class BalanceProcessor implements Runnable {
             state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
             currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getAbonentContractType(), state.getCurrentBillingSystemIndex());
           } else {
+            if(smeEngine.getInManInIsdnPattern()!=null){
+              String InIsdn = null;
+              if(state.getInManContractResult()!=null){
+                try {
+                  InIsdn = state.getInManContractResult().getGsmSCFAddress();
+                } catch (InManPDUException e) {
+                  logger.error("InMan result Exception: " + e, e);
+                }
+              }
+              if (InIsdn==null || InIsdn.length()==0 || !InIsdn.matches(smeEngine.getInManInIsdnPattern())){
+                if (logger.isDebugEnabled())
+                  logger.debug("InMan Informix request canceled by IN MSISDN ("+InIsdn+") for abonent " + abonent);
+                state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
+                currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getAbonentContractType(), state.getCurrentBillingSystemIndex());
+                break;
+              }
+            }
             if (logger.isDebugEnabled())
-              logger.debug("InMan request for abonent " + abonent);
+              logger.debug("InMan Informix request for abonent " + abonent);
             state.setBillingSystemQueried(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX);
             balance = getInManBalance(state.getAbonentRequest().getSourceAddress());
             state.setBillingSystemResponseTime(SmeEngine.BILLING_SYSTEM_IN_MAN_INFORMIX, System.currentTimeMillis());
             if (balance != null) {
-              logger.debug("This is InMan abonent");
+              logger.debug("This is InMan Informix abonent");
               state.setCurrentBillingSystemIndex(smeEngine.getBillingSystemCount(state.getAbonentContractType()));
               break;
             } else {
-              logger.debug("This is not InMan abonent");
+              logger.debug("This is not InMan Informix abonent");
               state.setCurrentBillingSystemIndex(state.getCurrentBillingSystemIndex() + 1);
               currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getAbonentContractType(), state.getCurrentBillingSystemIndex());
             }
