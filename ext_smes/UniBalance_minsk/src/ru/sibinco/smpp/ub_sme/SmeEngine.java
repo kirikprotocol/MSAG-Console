@@ -624,13 +624,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
     if (stmt != null){
       try {
         stmt.close();
-        stmt = null;
       } catch (SQLException e1) {
         logger.warn("Could not close oracle CallableStatement: " + e1);
       }
-      Connection connection = null;
       try {
-        connection = stmt.getConnection();
+        Connection connection = stmt.getConnection();
         if (connection != null){
           connection.close();
           connection = null;
