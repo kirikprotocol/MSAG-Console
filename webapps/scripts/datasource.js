@@ -9,7 +9,8 @@ var ElementObserver = new Class({
   },
 
   update: function(data) {
-    document.getElementById(this.options.elementId).innerHTML = data;
+    var el = document.getElementById(this.options.elementId);
+    el.innerHTML = el.innerText = el.value = data;
   }
 });
 

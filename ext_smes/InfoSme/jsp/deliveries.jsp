@@ -212,7 +212,7 @@ function refreshProgressStatus()
     {
         document.getElementById('mbCancel').innerText = 'Abort';
     }
-	else window.setTimeout(refreshProgressStatus, 5000);
+	  window.setTimeout(refreshProgressStatus, 5000);
 }
 refreshProgressStatus();
 </script>

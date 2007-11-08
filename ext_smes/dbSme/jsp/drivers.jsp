@@ -59,7 +59,7 @@ function clickAddDriver()
 }
 function clickRemoveDriver(id_to_remove)
 {
-	var rowElem = drivers_table_id.rows(id_to_remove);
+	var rowElem = drivers_table_id.rows[id_to_remove];
 	drivers_table_id.deleteRow(rowElem.rowIndex);
 
 	return false;

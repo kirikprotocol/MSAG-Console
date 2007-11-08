@@ -322,7 +322,7 @@ function clickAddErrorTimeout()
 }
 function clickRemoveErrorTimeout(id_to_remove)
 {
-	var rowElem = sched_table_id.rows(id_to_remove);
+	var rowElem = sched_table_id.rows[id_to_remove];
 	sched_table_id.deleteRow(rowElem.rowIndex);
 
 	return false;

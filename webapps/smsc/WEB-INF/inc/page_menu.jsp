@@ -5,6 +5,15 @@
     page_menu_delimiter_needed = false;
 
     out.print("<div class=\"page_menu\">");
+
+    out.print("<table class=\"page_menu_background\" cellspacing=\"0px\" cellpadding=\"0px\">");
+    out.print("<tr>");
+//    out.print("<td width=\"80px\" background=\"/images/smsc_20.jpg\">&nbsp;</td>");
+    out.print("<td background=\"/images/smsc_21.jpg\">&nbsp;</td>");
+//    out.print("<td width=\"80px\" background=\"/images/smsc_23.jpg\">&nbsp;</td>");
+    out.print("</tr>");
+    out.print("</table>");
+
     out.print("<table class=\"page_menu\" cellpadding=\"0px\" cellspacing=\"0px\">");
     out.print("<tr>");
     out.print("<td width=\"37px\">&nbsp;</td>");
@@ -95,17 +104,22 @@
   }
 
   void page_menu_end(JspWriter out) throws IOException {
+
     out.print("<td width=\"37px\">&nbsp;</td>");
     out.print("</tr>");
     out.print("</table>");
-    out.print("<table class=\"page_menu_background\" cellspacing=\"0px\" cellpadding=\"0px\">");
-    out.print("<tr>");
-    out.print("<td width=\"80px\" background=\"/images/smsc_20.jpg\">&nbsp;</td>");
-    out.print("<td background=\"/images/smsc_21.jpg\">&nbsp;</td>");
-    out.print("<td width=\"80px\" background=\"/images/smsc_23.jpg\">&nbsp;</td>");
-    out.print("</tr>");
-    out.print("</table>");
     out.print("</div>");
+//    out.print("<td width=\"37px\">&nbsp;</td>");
+//    out.print("</tr>");
+//    out.print("</table>");
+//    out.print("<table class=\"page_menu_background\" cellspacing=\"0px\" cellpadding=\"0px\">");
+//    out.print("<tr>");
+//    out.print("<td width=\"80px\" background=\"/images/smsc_20.jpg\">&nbsp;</td>");
+//    out.print("<td background=\"/images/smsc_21.jpg\">&nbsp;</td>");
+//    out.print("<td width=\"80px\" background=\"/images/smsc_23.jpg\">&nbsp;</td>");
+//    out.print("</tr>");
+//    out.print("</table>");
+//    out.print("</div>");
 
     page_menu_delimiter_needed = false;
   }

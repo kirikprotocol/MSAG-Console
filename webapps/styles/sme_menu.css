@@ -17,10 +17,10 @@ table.sme_menu a:hover,
 table.sme_menu a:visited
 {
 	border: 0px;
-	cursor: hand;
+	cursor: pointer;
 	color: #006986;
 	text-decoration : none;
-	behavior : url(/scripts/click_submit.htc);
+	/*behavior : url(/scripts/click_submit.htc);*/
 	white-space : nowrap;
 }
 
@@ -29,10 +29,10 @@ table.sme_menu a.disabled:hover,
 table.sme_menu a.disabled:visited
 {
 	border: 0px;
-	cursor: hand;
+	cursor: pointer;
 	color: #768C8E;
 	text-decoration : none;
-	behavior : url(/scripts/click_submit.htc);
+	/*behavior : url(/scripts/click_submit.htc);*/
 	white-space : nowrap;
 }
 

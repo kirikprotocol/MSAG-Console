@@ -62,20 +62,33 @@ public class dlFilter extends PageBean
     return RESULT_OK;
   }
 
-  private boolean isStringsAllowed(String cat, String[] strings)
+  private boolean isStringArrayContainsNonAlphanumeric(String[] strings)
   {
-    boolean result = true;
     for (int i = 0; i < strings.length; i++) {
-      String string = strings[i];
-      try {
-        Pattern pattern = Pattern.compile(string);
-      } catch (PatternSyntaxException e) {
-        logger.error(cat + " pattern \"" + string + "\" is invalid", e);
-        error(SMSCErrors.error.dl.patternIsInvalid, string, e, cat);
-        result = false;
+      String str = strings[i];
+      for (int j = 0; j < str.length(); j++) {
+        final char ch = str.charAt(j);
+        if (!Character.isLetterOrDigit(ch) && !Character.isSpaceChar(ch) && ch != '+' && ch != '/')
+          return true;
       }
     }
-    return result;
+    return false;
+  }
+
+  private boolean isStringsAllowed(String cat, String[] strings)
+  {
+    for (int i = 0; i < strings.length; i++) {
+      String str = strings[i];
+      for (int j = 0; j < str.length(); j++) {
+        final char ch = str.charAt(j);
+        if (!Character.isLetterOrDigit(ch) && !Character.isSpaceChar(ch) && ch != '+' && ch != '/') {
+          logger.error(cat + " pattern \"" + str + "\" is invalid");
+          error(SMSCErrors.error.dl.patternIsInvalid, str);
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   private int apply()

@@ -21,7 +21,7 @@ public class DistributionList extends AbstractDataItem
 
   public DistributionList(String name, String owner, int maxElements) throws AdminException
   {
-    values.put("name", name.toLowerCase());
+    values.put("name", name);
     values.put("maxElements", new Integer(maxElements));
     setOwner(owner);
   }
@@ -33,7 +33,7 @@ public class DistributionList extends AbstractDataItem
 
   public void setName(String name)
   {
-    values.put("name", name == null ? "" : name.toLowerCase());
+    values.put("name", name == null ? "" : name);
   }
 
   public String getOwner()

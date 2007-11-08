@@ -133,7 +133,7 @@ function clickAddMapping()
 }
 function clickRemoveMapping(id_to_remove)
 {
-	var rowElem = mapping_table_id.rows(id_to_remove);
+	var rowElem = mapping_table_id.rows[id_to_remove];
 	mapping_table_id.deleteRow(rowElem.rowIndex);
 
 	return false;

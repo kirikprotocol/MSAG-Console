@@ -22,7 +22,8 @@ function timeMakeTimeStr(hour, minute, second, PM) {
     return "" + hour + ":" + (minute < 10?"0":"") + minute + ":" + (second < 10?"0":"") + second + (timeUS ? (" " + (PM?"PM":"AM")) : "");
 }
 function timeClose() {
-    timePanel.releaseCapture();
+    if (isMSIE())
+      timePanel.releaseCapture();
     timePanel.style.display = "none";
     document.getElementById('timeIFrame').style.display = "none";
     timeMouseDown = false;
@@ -115,21 +116,35 @@ function showTime(timeInputText, us) {
     document.getElementById('timeIFrame').style.width = timePanel.offsetWidth;
     document.getElementById('timeIFrame').style.height = timePanel.offsetHeight;
     document.getElementById('timeIFrame').style.display = "block";
-    timePanel.setCapture();
+    if (isMSIE())
+      timePanel.setCapture();
     return false;
 }
+
+function isMSIE() {
+  return navigator.appName == "Microsoft Internet Explorer";
+}
+
 function isTimeOwner(o) {
     while (o != null) {
         if (o == timePanel) return true;
-        o = o.parentElement;
+        o = (isMSIE()) ? o.parentElement : o.parentNode;
     }
     return false;
 }
-function timeMD() {
-    timePanel.setCapture();
-    var a = window.event.srcElement;
+function timeMD(e) {
+    if (!e)
+      e = window.event;
+    if (isMSIE())
+      timePanel.setCapture();
+    var a = e.target || e.srcElement;
+
     if (!isTimeOwner(a) && !timePressedTime) return timeClose();
-    var b = window.event.button;
+    var b = (isMSIE()) ? e.button : e.which;
+
+    if (!a.name)
+      a.name = a.getAttribute("name");
+
     if (a != null && a.name != null && b == 1) {
         if (timeUS && a.name.indexOf("timeAMPMsv") != -1) {
             if (a.innerHTML == "AM") {
@@ -181,8 +196,10 @@ function timeMD() {
         }
     }
 }
-function timeMU() {
-    var a = window.event.srcElement;
+function timeMU(e) {
+    if (!e)
+      e = window.event;
+    var a = e.target || e.srcElement;
     if (timePressedTime) {
         timeActivePanel.value = timeMakeTimeStr(timeCurHour, timeCurMinute, timeCurSecond, timeCurPM);
         timePressedTime = false;
@@ -194,9 +211,12 @@ function timeMU() {
     if (!isTimeOwner(a)) return timeClose();
     timeMouseDown = false;
 }
-function timeMM() {
-    var a = window.event.srcElement;
-    var b = window.event.button;
+function timeMM(e) {
+    if (!e)
+      e = window.event;
+
+    var a = e.target || e.srcElement;
+    var b = (isMSIE()) ? e.button : e.which;
     if (timePressedTime) {
         var inc = timePressedYPos - event.y;
         inc = (inc - inc % 5) / 5;

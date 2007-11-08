@@ -19,8 +19,9 @@
 %>
 <%@ include file="/WEB-INF/inc/html_1_header.jsp" %>
 <%@ include file="/WEB-INF/inc/messages.jsp" %>
+
 <%-- SMSC Status --%>
-<table cellpadding=0 cellspacing=0 height=30px class=smsc_status><tr>
+<table cellpadding=0 cellspacing=0 height=30px class=smsc_status ><tr>
     <th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
     <td>&nbsp;<%
         if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
@@ -39,6 +40,16 @@
         }%></td>
     <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td></tr>
 </table>
-<form name="opForm" id=opForm action="<%=FORM_URI%>" method="<%=FORM_METHOD%>" enctype="<%=FORM_ENCTYPE%>"
-      onSubmit="return validateForm(this)">
-    <input type=hidden ID=jbutton value=jbutton>
+
+<table cellspacing="0" cellpadding="0" >
+<tr>
+<td width="12px" background="/images/smsc_24.jpg" ></td>
+
+
+<%--<table cellspacing="0" cellpadding="0" height="100%" style="position: relative; top:0; left:0; z-index:1;">--%>
+<%--   <tr><td width="12px" background="/images/smsc_24.jpg" ></td><td>&nbsp;</td><td width="12px" background="/images/smsc_26.jpg"></td>--%>
+<%--   </tr>--%>
+<%--</table>--%>
+<td>
+<form name="opForm" id=opForm action="<%=FORM_URI%>" method="<%=FORM_METHOD%>" enctype="<%=FORM_ENCTYPE%>" onSubmit="return validateForm(this)">
+  <input type=hidden ID=jbutton value=jbutton>

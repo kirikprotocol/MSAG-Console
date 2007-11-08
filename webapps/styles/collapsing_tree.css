@@ -4,7 +4,7 @@ div.collapsing_tree_closed
 	background-repeat: no-repeat;
 	padding-left: 18px;
 	height: 17px;
-	cursor: hand;
+	cursor: pointer;
 	width: 280px;
 }
 div.collapsing_tree_opened

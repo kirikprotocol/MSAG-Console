@@ -10,7 +10,7 @@ body
 	color: #161E49;
 	display: block;
 }
-body*
+body *
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: x-small;
@@ -27,8 +27,9 @@ img
 }
 img.button
 {
-	behavior : url(/scripts/click_submit.htc);
-	cursor: hand;
+	/*behavior : url(/scripts/click_submit.htc);*/
+	cursor: pointer;
+	/*cursor: hand;*/
 /*	position: relative;
 	top: 3px;*/
 }
@@ -39,7 +40,8 @@ input, textarea, select
 	font-size: 100%;
 }
 input {
-	behavior : url(/scripts/input.htc);
+	/*behavior : url(/scripts/input.htc);*/
+	z-index:10;
 }
 textarea
 {
@@ -86,7 +88,8 @@ input.radio
 
 .clickable
 {
-  cursor: hand;
+  cursor: pointer;
+  /*cursor: hand;*/
 }
 
 select.selectW

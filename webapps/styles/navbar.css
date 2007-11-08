@@ -34,7 +34,7 @@ table.navbar td.pageSize a
 table.navbar td.page,
 table.navbar td.current
 {
-	cursor: hand;
+	cursor: pointer;
 }
 table.navbar td.current
 {

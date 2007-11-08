@@ -71,7 +71,7 @@
 	padding-right: 10px;
 	padding-top: 0px;
 	position: relative; /* Do not alter this line! */
-	cursor: hand;
+	cursor: pointer;
 }
 
 .jsdomenubaritemover {
@@ -86,7 +86,7 @@
 	padding-right: 9px;
 	padding-top: 2px;
 	position: relative; /* Do not alter this line! */
-	cursor: hand;
+	cursor: pointer;
 }
 
 /*Drop-down box style:*/
@@ -112,7 +112,7 @@
 	font-size: 12px;
 
 	padding-bottom: 1px;
-	padding-left: 10px;//
+	padding-left: 10px;
 	padding-right: 10px;
 	padding-top: 1px;
 	position: relative; /* Do not alter this line! */
@@ -131,11 +131,11 @@
 	padding-bottom: 1px;
 	margin-left: 0px;
 	margin-right: 0px;
-	padding-left: 10px;//
+	padding-left: 10px;
 	padding-right: 10px;
 	padding-top: 1px;
 	position: relative; /* Do not alter this line! */
-	cursor: hand;
+	cursor: pointer;
 
        white-space:nowrap;
 }
@@ -179,7 +179,7 @@ table.main_menu a:hover
 {
 	text-decoration: none;
 	color: #F2E275;
-	cursor: hand;
+	cursor: pointer;
 }
 
 table.main_menu table.submenu,
@@ -189,9 +189,9 @@ table.main_menu iframe.hiddenLayer
 	top: 25px;
 	left:0px;
 }
-table.main_menu table.submenu,
+table.main_menu table.submenu
 {
-	border: 1px solid #4E6E82;
+	border: 1px #4E6E82 solid;
 	background-color: #3A5867;
 	visibility: hidden;
 	z-index: 4;

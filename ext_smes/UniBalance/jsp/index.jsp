@@ -62,7 +62,8 @@ function addParam() {
   imgElement = document.createElement("img");
   imgElement.src = "/images/but_del.gif";
   imgElement.setAttribute('sectionName', sectionName);
-  imgElement.attachEvent("onclick", removeParam_Event);
+  imgElement.onclick = removeParam_Event;
+<%--  imgElement.attachEvent("onclick", removeParam_Event);--%>
   newCell = newRow.insertCell(2);
   newCell.appendChild(imgElement);
 
@@ -70,14 +71,17 @@ function addParam() {
   curName.value="";
 }
 
-function removeParam_Event() {
-  delParam(event.srcElement.attributes.sectionName.nodeValue);
+function removeParam_Event(e) {
+  if (!e)
+    e = window.event;
+  var a = e.target || e.srcElement;
+  delParam(e.attributes.sectionName.nodeValue);
 }
 
 function delParam(sectionId) {
   tableElem = document.getElementById("paramTable");
   rowId = "paramRow_" + sectionId;
-  rowElem = tableElem.rows(rowId);
+  rowElem = tableElem.rows[rowId];
   tableElem.deleteRow(rowElem.rowIndex);
 }
 </script>
