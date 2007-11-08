@@ -173,11 +173,12 @@ void Server::closeConnect(ConnectAC* connect, bool abort/* = false*/)
 
 void Server::closeConnectGuarded(ConnectsList::iterator & it, bool abort/* = false*/)
 {
+    ConnectAC* connect = *it;
     {
         MutexGuard grd(Sync());
         connects.erase(it);
     }
-    closeConnect(*it, abort);
+    closeConnect(connect, abort);
 }
 
 Server::ShutdownReason Server::Listen(void)
