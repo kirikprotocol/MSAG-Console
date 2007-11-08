@@ -30,7 +30,7 @@ protected:
   scag::transport::smpp::SmppEntityInfo smppEntityInfo;
 };
 
-class CommandAddSme : public Abstract_CommandSmeInfo 
+class CommandAddSme : public Abstract_CommandSmeInfo
 {
 public:
   CommandAddSme(const xercesc::DOMDocument * const doc)
@@ -44,7 +44,7 @@ public:
 class CommandDeleteSme : public AdminCommand
 {
 public:
-  CommandDeleteSme(const xercesc::DOMDocument * const doc) 
+  CommandDeleteSme(const xercesc::DOMDocument * const doc)
     : AdminCommand((Command::Id)CommandIds::deleteSme, doc)
   {
 
@@ -58,7 +58,7 @@ protected:
 
 };
 
-class CommandStatusSme : public Abstract_CommandSmeInfo 
+class CommandStatusSme : public Abstract_CommandSmeInfo
 {
 public:
     CommandStatusSme(const xercesc::DOMDocument * const doc)
@@ -81,13 +81,13 @@ public:
 
 //========================================================================
 //==================== TraceSmppRoute command ================================
-class CommandTraceSmppRoute : public AdminCommand 
+class CommandTraceSmppRoute : public AdminCommand
 {
 public:
   CommandTraceSmppRoute(const xercesc::DOMDocument * doc) : AdminCommand((Command::Id)CommandIds::traceSmppRoute, doc)
   {
   }
-  
+
   virtual Response * CreateResponse(scag::Scag * SmscApp);
   virtual void init();
 
@@ -98,10 +98,10 @@ protected:
   std::string srcSysId;
 };
 
-class CommandLoadSmppTraceRoutes : public AdminCommand 
+class CommandLoadSmppTraceRoutes : public AdminCommand
 {
 public:
-  
+
   CommandLoadSmppTraceRoutes(const xercesc::DOMDocument * doc) : AdminCommand((Command::Id)CommandIds::loadSmppTraceRoutes, doc)
   {
   }
@@ -112,11 +112,11 @@ public:
 
 //========================================================================
 //==================== CommandApplyConfig command =====================================
-class CommandApplyConfig : public AdminCommand 
+class CommandApplyConfig : public AdminCommand
 {
 public:
-  
-  CommandApplyConfig(const xercesc::DOMDocument * doc) 
+
+  CommandApplyConfig(const xercesc::DOMDocument * doc)
     : AdminCommand((Command::Id)CommandIds::applyConfig, doc)
   {
   }
@@ -127,11 +127,11 @@ public:
 
 //========================================================================
 //==================== CommandApplySmppRoutes command =====================================
-class CommandApplySmppRoutes : public AdminCommand 
+class CommandApplySmppRoutes : public AdminCommand
 {
 public:
-  
-  CommandApplySmppRoutes(const xercesc::DOMDocument * doc) 
+
+  CommandApplySmppRoutes(const xercesc::DOMDocument * doc)
     : AdminCommand((Command::Id)CommandIds::applySmppRoutes, doc)
   {
   }
@@ -140,11 +140,11 @@ public:
 };
 
 //==================== CommandApplySmppRoutes command =====================================
-class CommandApplyHttpRoutes : public AdminCommand 
+class CommandApplyHttpRoutes : public AdminCommand
 {
 public:
-  
-  CommandApplyHttpRoutes(const xercesc::DOMDocument * doc) 
+
+  CommandApplyHttpRoutes(const xercesc::DOMDocument * doc)
     : AdminCommand((Command::Id)CommandIds::applyHttpRoutes, doc)
   {
   }
@@ -226,7 +226,7 @@ public:
     {
     }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
-    virtual void init();    
+    virtual void init();
 };
 
 class CommandStoreLogConfig : public AdminCommand
@@ -240,7 +240,7 @@ public:
 };
 
 
-class CommandListSmppEntity : public AdminCommand 
+class CommandListSmppEntity : public AdminCommand
 {
 protected:
    virtual scag::transport::smpp::SmppEntityType getEntityType() = 0;
@@ -259,10 +259,10 @@ protected:
        return str;
    }
 public:
-  CommandListSmppEntity(Command::Id commandId, const xercesc::DOMDocument * doc) : AdminCommand(commandId, doc) 
-  {   
+  CommandListSmppEntity(Command::Id commandId, const xercesc::DOMDocument * doc) : AdminCommand(commandId, doc)
+  {
   }
- 
+
   virtual Response * CreateResponse(scag::Scag * SmscApp);
 
 };
@@ -283,9 +283,9 @@ protected:
     virtual void fillResultSet(Variant& result, scag::transport::smpp::SmppEntityAdminInfoList& lst)
     {
         char buff[2048];
-        for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
+        for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it)
         {
-            //if (it->host.size() == 0) 
+            //if (it->host.size() == 0)
             //    sprintf(buff, "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", (it->connected) ? "yes" : "no");
             //else
             sprintf(buff, "SystemId, %s, Host, %s %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), (it->connected) ? "yes" : "no");
@@ -296,7 +296,7 @@ protected:
     }
 
 public:
-    CommandListSme(const xercesc::DOMDocument * doc) : name("CommandListSme"), 
+    CommandListSme(const xercesc::DOMDocument * doc) : name("CommandListSme"),
         CommandListSmppEntity((Command::Id)CommandIds::listSme, doc) {   }
 
 };
@@ -317,9 +317,9 @@ protected:
     virtual void fillResultSet(Variant& result, scag::transport::smpp::SmppEntityAdminInfoList& lst)
     {
         char buff[2048];
-        for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it) 
+        for (scag::transport::smpp::SmppEntityAdminInfoList::iterator it = lst.begin(); it!=lst.end(); ++it)
         {
-            //if (it->host.size() == 0) 
+            //if (it->host.size() == 0)
             //    sprintf(buff, "SystemId, %s, Host, %s %s, Port, %s, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), "Unknown", "Unknown", (it->connected) ? "yes" : "no");
             //else
             sprintf(buff, "SystemId, %s, Host, %s %s, Port, %d, Status, %s", it->systemId.c_str(), getStrBindType(it->bindType).c_str(), it->host.c_str(), it->port, (it->connected) ? "yes" : "no");
@@ -334,6 +334,83 @@ public:
         CommandListSmppEntity((Command::Id)CommandIds::listSmsc, doc) {   }
 };
 
+class CommandMetaEntity:public AdminCommand
+{
+public:
+  CommandMetaEntity(Command::Id id,const xercesc::DOMDocument * doc):
+    AdminCommand(id,doc)
+  {
+
+  }
+  virtual void init();
+protected:
+  std::string systemId;
+  int policy;
+  int type;
+  bool persistance;
+};
+
+class CommandAddMetaEntity:public CommandMetaEntity{
+public:
+  CommandAddMetaEntity(const xercesc::DOMDocument * doc)
+    : CommandMetaEntity((Command::Id)CommandIds::addMetaEntity, doc)
+  {
+  }
+  virtual Response * CreateResponse(scag::Scag *ScagApp);
+};
+
+class CommandUpdateMetaEntity:public CommandMetaEntity{
+public:
+  CommandUpdateMetaEntity(const xercesc::DOMDocument * doc)
+    : CommandMetaEntity((Command::Id)CommandIds::addMetaEntity, doc)
+  {
+  }
+  virtual Response * CreateResponse(scag::Scag *ScagApp);
+};
+
+class CommandDeleteMetaEntity:public AdminCommand{
+public:
+  CommandDeleteMetaEntity(const xercesc::DOMDocument * doc)
+    : AdminCommand((Command::Id)CommandIds::deleteMetaEntity, doc)
+  {
+  }
+  virtual Response * CreateResponse(scag::Scag *ScagApp);
+  virtual void init();
+protected:
+  std::string systemId;
+};
+
+class CommandMetaEndpoint:public AdminCommand{
+public:
+  CommandMetaEndpoint(Command::Id id,const xercesc::DOMDocument * doc)
+    : AdminCommand(id, doc)
+  {
+  }
+  virtual void init();
+protected:
+  std::string metaId;
+  std::string sysId;
+};
+
+class CommandAddMetaEndpoint:public CommandMetaEndpoint{
+public:
+  CommandAddMetaEndpoint(const xercesc::DOMDocument * doc)
+    : CommandMetaEndpoint((Command::Id)CommandIds::addMetaEndpoint, doc)
+  {
+  }
+
+  virtual Response * CreateResponse(scag::Scag *ScagApp);
+};
+
+class CommandRemoveMetaEndpoint:public CommandMetaEndpoint{
+public:
+  CommandRemoveMetaEndpoint(const xercesc::DOMDocument * doc)
+    : CommandMetaEndpoint((Command::Id)CommandIds::removeMetaEndpoint, doc)
+  {
+  }
+
+  virtual Response * CreateResponse(scag::Scag *ScagApp);
+};
 
 
 }

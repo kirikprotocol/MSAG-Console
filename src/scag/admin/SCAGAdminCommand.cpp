@@ -373,9 +373,9 @@ Response * CommandTraceSmppRoute::CreateResponse(scag::Scag * ScagApp)
 
     if (!ScagApp) throw Exception("Scag undefined");
 
-    if (_srcSysId) 
+    if (_srcSysId)
           found = SmppManager::Instance().getTestRouterInstance()->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info);
-    else 
+    else
           found = SmppManager::Instance().getTestRouterInstance()->lookup(Address(_srcAddr), Address(_dstAddr), info);
 
     fprintf(stderr,"---- Passed lookup");
@@ -762,7 +762,7 @@ Response * CommandSetLogCategories::CreateResponse(scag::Scag * ScagApp)
     Logger::LogLevels levels;
 
     try{
-    
+
     while((delim_pos = strchr(p, ',')))
     {
         if(!s)
@@ -826,6 +826,113 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
 
     smsc_log_info(logger, "%s is processed ok", getCommandName());
     return new Response(Response::Ok, result);
+}
+
+void CommandMetaEntity::init()
+{
+  smsc_log_info(logger, "CommandMetaEntity got parameters:");
+  std::string tmpPolicy,tmpType,tmpPersistance;
+  BEGIN_SCAN_PARAMS
+  GETSTRPARAM_(systemId,    "systemId")
+  GETSTRPARAM_(tmpPolicy,    "policy")
+  GETSTRPARAM_(tmpType,    "type")
+  GETSTRPARAM_(tmpPersistance,    "persistance")
+  END_SCAN_PARAMS
+  policy=tmpPolicy=="RoundRobin"?bpRoundRobin:tmpPolicy=="Random"?bpRandom:-1;
+  if(policy==-1)
+  {
+    throw Exception("Invalid value for balancing policy:%s",tmpPolicy.c_str());
+  }
+  type=tmpType=="MetaSmsc"?mtMetaSmsc:tmpType=="MetaService"?mtMetaService:-1;
+  if(type==-1)
+  {
+    throw Exception("Invalid value for meta entity type:%s",tmpType.c_str());
+  }
+  persistance=tmpPersistance=="true";
+}
+
+Response * CommandAddMetaEntity::CreateResponse(scag::Scag *ScagApp)
+{
+  scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+  if(!smppMan)
+  {
+    throw Exception("SmppManager not defined");
+  }
+  MetaEntityInfo mei;
+  mei.systemId=systemId;
+  mei.policy=(BalancingPolicy)policy;
+  mei.type=(MetaEntityType)type;
+  mei.persistanceEnabled=persistance;
+  smppMan->addMetaEntity(mei.systemId.c_str(),mei);
+  return new Response(Response::Ok,"Meta entity added");
+}
+
+Response * CommandUpdateMetaEntity::CreateResponse(scag::Scag *ScagApp)
+{
+  scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+  if(!smppMan)
+  {
+    throw Exception("SmppManager not defined");
+  }
+  MetaEntityInfo mei;
+  mei.systemId=systemId;
+  mei.policy=(BalancingPolicy)policy;
+  mei.type=(MetaEntityType)type;
+  mei.persistanceEnabled=persistance;
+  smppMan->updateMetaEntity(mei.systemId.c_str(),mei);
+  return new Response(Response::Ok,"Meta entity updated");
+}
+
+
+void CommandDeleteMetaEntity::init()
+{
+  smsc_log_info(logger, "CommandDeleteMetaEntity got parameters:");
+  BEGIN_SCAN_PARAMS
+  GETSTRPARAM_(systemId,    "systemId")
+  END_SCAN_PARAMS
+}
+
+Response * CommandDeleteMetaEntity::CreateResponse(scag::Scag *ScagApp)
+{
+  scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+  if(!smppMan)
+  {
+    throw Exception("SmppManager not defined");
+  }
+  smppMan->deleteMetaEntity(systemId.c_str());
+  return new Response(Response::Ok,"Meta entity deleted");
+}
+
+
+void CommandMetaEndpoint::init()
+{
+  smsc_log_info(logger, "CommandMetaEndpoint got parameters:");
+  BEGIN_SCAN_PARAMS
+  GETSTRPARAM_(metaId,    "metaId")
+  GETSTRPARAM_(sysId,     "sysId")
+  END_SCAN_PARAMS
+}
+
+Response * CommandAddMetaEndpoint::CreateResponse(scag::Scag *ScagApp)
+{
+  scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+  if(!smppMan)
+  {
+    throw Exception("SmppManager not defined");
+  }
+  smppMan->addMetaEndPoint(metaId.c_str(),sysId.c_str());
+  return new Response(Response::Ok,"MetaEndpoint added");
+}
+
+Response * CommandRemoveMetaEndpoint::CreateResponse(scag::Scag *ScagApp)
+{
+  scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+  if(!smppMan)
+  {
+    throw Exception("SmppManager not defined");
+  }
+  smppMan->removeMetaEndPoint(metaId.c_str(),sysId.c_str());
+  return new Response(Response::Ok,"MetaEndpoint removed");
 }
 
 

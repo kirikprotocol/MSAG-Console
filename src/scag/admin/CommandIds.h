@@ -1,4 +1,4 @@
-// 
+//
 // File:   CommandIds.h
 // Author: igork
 //
@@ -12,7 +12,7 @@
 
 namespace scag {
 namespace admin {
-  
+
 namespace CommandIds {
   enum IDS {
     unknown = smsc::admin::protocol::Command::undefined,
@@ -41,7 +41,12 @@ namespace CommandIds {
     storeLogConfig,
 
     listSme,
-    listSmsc
+    listSmsc,
+    addMetaEntity,
+    updateMetaEntity,
+    deleteMetaEntity,
+    addMetaEndpoint,
+    removeMetaEndpoint
   };
 }
 

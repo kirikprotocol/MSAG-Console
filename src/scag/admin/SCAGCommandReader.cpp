@@ -1,4 +1,4 @@
-// 
+//
 // File:   SCAGCommandReader.cc
 // Author: igork
 //
@@ -45,11 +45,17 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["loadHttpTraceRoutes"] = CommandIds::loadHttpTraceRoutes;
   commandlist["traceHttpRoute"] = CommandIds::traceHttpRoute;
   commandlist["getLogCategories"] = CommandIds::getLogCategories;
-  commandlist["setLogCategories"] = CommandIds::setLogCategories;  
+  commandlist["setLogCategories"] = CommandIds::setLogCategories;
   commandlist["storeLogCategories"] = CommandIds::storeLogConfig;
 
   commandlist["listSme"] = CommandIds::listSme;
   commandlist["listSmsc"] = CommandIds::listSmsc;
+  commandlist["addMetaEntity"] = CommandIds::addMetaEntity;
+  commandlist["updateMetaEntity"] = CommandIds::updateMetaEntity;
+  commandlist["deleteMetaEntity"] = CommandIds::deleteMetaEntity;
+  commandlist["addMetaEndpoint"] = CommandIds::addMetaEndpoint;
+  commandlist["removeMetaEndpoint"] = CommandIds::removeMetaEndpoint;
+
 }
 
 
@@ -70,7 +76,7 @@ int SCAGCommandReader::getCommandIdByName(const char * const command_name)
 Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
 {
   fprintf(stderr,"---- Create command \n");
-  if (!data) 
+  if (!data)
   {
       smsc_log_warn(logger, "Command document is invalid");
       throw AdminException("Command document is invalid");
@@ -103,14 +109,16 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::loadHttpTraceRoutes: return new CommandLoadHttpTraceRoutes(data);
     case CommandIds::traceHttpRoute: return new CommandTraceHttpRoute(data);
     case CommandIds::getLogCategories: return new CommandGetLogCategories(data);
-    case CommandIds::setLogCategories: return new CommandSetLogCategories(data);    
-    case CommandIds::storeLogConfig: return new CommandStoreLogConfig(data);        
+    case CommandIds::setLogCategories: return new CommandSetLogCategories(data);
+    case CommandIds::storeLogConfig: return new CommandStoreLogConfig(data);
 
     case CommandIds::listSme: return new CommandListSme(data);
     case CommandIds::listSmsc: return new CommandListSmsc(data);
 
+    case CommandIds::addMetaEntity: return new CommandAddMetaEntity(data);
+    case CommandIds::updateMetaEntity: return new CommandUpdateMetaEntity(data);
 
-    default: 
+    default:
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);
       throw AdminException("Unknown command");
   }
