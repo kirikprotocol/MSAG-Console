@@ -105,6 +105,25 @@ public class Svc {
         this.maxSmsPerSec = maxSmsPerSec;
     }
 
+        public Svc(final String id, final String password, final int timeout,
+               final boolean enabled, final byte mode, final Provider provider,
+               final int inQueueLimit, final int outQueueLimit, final int maxSmsPerSec, final String metaGroup)
+               throws NullPointerException
+    {
+        if (null == id)
+            throw new NullPointerException("SME ID or  password  is null");
+        this.id = id.trim();
+        this.password = password;
+        this.timeout = timeout;
+        this.enabled = enabled;
+        this.mode = mode;
+        this.provider = provider;
+        this.inQueueLimit = inQueueLimit;
+        this.outQueueLimit = outQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
+        this.metaGroup = metaGroup;
+    }
+
     public Svc(final Element svcElement, final ProviderManager providerManager)
             throws NullPointerException {
         final NodeList list = svcElement.getElementsByTagName("param");
