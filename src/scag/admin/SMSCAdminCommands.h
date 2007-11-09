@@ -11,31 +11,30 @@ namespace scag { namespace admin {
 class Abstract_CommandSmsc : public AdminCommand
 {
 public:
-	Abstract_CommandSmsc(const Command::Id id, const xercesc::DOMDocument * const doc) 
+  Abstract_CommandSmsc(const Command::Id id, const xercesc::DOMDocument * const doc)
         : AdminCommand(id, doc)
     {
     }
 
-    const scag::transport::smpp::SmppEntityInfo & getSmppEntityInfo() const {return smppEntityInfo;};
     virtual void init();
 protected:
-  scag::transport::smpp::SmppEntityInfo smppEntityInfo;
+  std::string systemId;
 };
 
-class CommandUpdateSmsc : public Abstract_CommandSmsc 
+class CommandUpdateSmsc : public Abstract_CommandSmsc
 {
 public:
-	CommandUpdateSmsc(const xercesc::DOMDocument * const doc)
+  CommandUpdateSmsc(const xercesc::DOMDocument * const doc)
     : Abstract_CommandSmsc((Command::Id)CommandIds::updateSmsc, doc)
   {
   }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
-class CommandAddSmsc : public Abstract_CommandSmsc 
+class CommandAddSmsc : public Abstract_CommandSmsc
 {
 public:
-	CommandAddSmsc(const xercesc::DOMDocument * const doc)
+  CommandAddSmsc(const xercesc::DOMDocument * const doc)
     : Abstract_CommandSmsc((Command::Id)CommandIds::addSmsc, doc)
   {
   }
@@ -43,7 +42,7 @@ public:
 };
 
 class CommandDeleteSmsc : public AdminCommand
-{    
+{
 protected:
     std::string systemId;
 public:

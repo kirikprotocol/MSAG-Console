@@ -90,7 +90,13 @@ public:
     SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
     if(ptr)
     {
-      return *ptr;
+      if((*ptr)->info.enabled)
+      {
+        return *ptr;
+      }else
+      {
+        return 0;
+      }
     }
     MetaEntity** pme=metaRegistry.GetPtr(info.smeSystemId);
     if(!pme)return 0;
@@ -109,6 +115,10 @@ public:
     {
       rv=me.getEntity();
     }
+    if(rv)
+    {
+      info.smeSystemId=rv->getSystemId();
+    }
     return rv;
   }
 
@@ -116,28 +126,28 @@ public:
   {
     MutexGuard mg(regMtx);
     SmppEntity** ptr=registry.GetPtr(systemId);
-    return ptr ? *ptr : 0;
+    return ptr ? (*ptr)->info.enabled?*ptr:0 : 0;
   }
 
-  void addMetaEntity(const char* id,MetaEntityInfo info)
+  void addMetaEntity(MetaEntityInfo info)
   {
     MutexGuard mg(regMtx);
-    if(metaRegistry.Exists(id))
+    if(metaRegistry.Exists(info.systemId.c_str()))
     {
-      throw Exception("Duplicate meta entity:%s",id);
+      throw Exception("Duplicate meta entity:%s",info.systemId.c_str());
     }
     MetaEntity* ptr=new MetaEntity;
     ptr->info=info;
-    metaRegistry.Insert(id,ptr);
+    metaRegistry.Insert(info.systemId.c_str(),ptr);
   }
 
-  void updateMetaEntity(const char* id,MetaEntityInfo info)
+  void updateMetaEntity(MetaEntityInfo info)
   {
     MutexGuard mg(regMtx);
-    MetaEntity** ptr=metaRegistry.GetPtr(id);
+    MetaEntity** ptr=metaRegistry.GetPtr(info.systemId.c_str());
     if(!ptr)
     {
-      throw Exception("updateMetaEntity::Meta entity not found:%s",id);
+      throw Exception("updateMetaEntity::Meta entity not found:%s",info.systemId.c_str());
     }
     (*ptr)->info=info;
   }
@@ -205,6 +215,10 @@ public:
     }
     throw Exception("removeMetaEndPoint::unexpected error - smpp entity not found in meta entity :(");
   }
+
+  bool LoadEntityFromConfig(SmppEntityInfo& info,const char* sysId,SmppEntityType et);
+  bool LoadMetaEntityFromConfig(MetaEntityInfo& info,const char* sysId);
+
 
 protected:
 
@@ -308,7 +322,7 @@ protected:
           lastEntity=0;
         }
         sync::MutexGuard mg2(ents[lastEntity].ptr->mtx);
-        if(ents[lastEntity].ptr->bt==btNone)continue;
+        if(ents[lastEntity].ptr->bt==btNone || !ents[lastEntity].ptr->info.enabled)continue;
         return ents[lastEntity].ptr;
       }
       return 0;
@@ -343,6 +357,7 @@ protected:
   int queueLimit;
 
   uint32_t lcmProcessingCount;
+  std::string cfgFileName;
 };
 
 time_t SmppManagerImpl::MetaEntity::expirationTimeout=300;
@@ -501,110 +516,109 @@ bool GetBoolValue(DOMNamedNodeMap* attr)
   throw smsc::util::Exception("Invalid value for param 'enabled':%s",bindTypeName);
 }
 
-static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType et)
+static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
 {
   smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smppMan");
+  for(DOMNode *node = record->getFirstChild(); node != 0; node = node->getNextSibling())
+  {
+    //DOMNode *node = children->item(i);
+    if (node->getNodeType() != DOMNode::ELEMENT_NODE)continue;
+
+    DOMNamedNodeMap *attrs = node->getAttributes();
+    if(!attrs)
+    {
+      throw smsc::util::Exception("Invalid smpp.xml configuration file");
+    }
+    XmlStr paramName(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
+    const ParamTag* tagPtr=paramsHash.GetPtr(paramName.c_str());
+    if(!tagPtr)
+    {
+      throw smsc::util::Exception("Unknown parameter '%s' in smpp.xml",paramName.c_str());
+    }
+    if(entity.type==etService && *tagPtr>tag_smscParams)
+    {
+      throw smsc::util::Exception("Parameter '%s' allowed for smscrecord only",paramName.c_str());
+    }
+    switch(*tagPtr)
+    {
+      case tag_systemId:
+        FillStringValue(attrs,entity.systemId);
+        break;
+      case tag_password:
+        FillStringValue(attrs,entity.password);
+        break;
+      case tag_bindSystemId:
+        FillStringValue(attrs,entity.bindSystemId);
+        break;
+      case tag_bindPassword:
+        FillStringValue(attrs,entity.bindPassword);
+        break;
+      case tag_timeout:
+        entity.timeOut=GetIntValue(attrs);
+        break;
+      case tag_mode:
+        entity.bindType=GetBindType(attrs);
+        break;
+      case tag_host:
+        FillStringValue(attrs,entity.host);
+        break;
+      case tag_port:
+        entity.port=GetIntValue(attrs);
+        break;
+      case tag_althost:
+        FillStringValue(attrs,entity.altHost);
+        break;
+      case tag_altport:
+        entity.altPort=GetIntValue(attrs);
+        break;
+      case tag_enabled:
+        entity.enabled=GetBoolValue(attrs);
+        break;
+      case tag_uid:
+        entity.uid=GetIntValue(attrs);
+        break;
+      case tag_addressRange:
+        FillStringValue(attrs,entity.addressRange);
+        break;
+      case tag_systemType:
+        FillStringValue(attrs,entity.systemType);
+        break;
+      case tag_maxSmsPerSec:
+        entity.sendLimit=GetIntValue(attrs);
+        break;
+      case tag_inQueueLimit:
+        entity.inQueueLimit=GetIntValue(attrs);
+        break;
+      case tag_outQueueLimit:
+        entity.outQueueLimit=GetIntValue(attrs);
+        break;
+      case tag_metaGroup:
+        FillStringValue(attrs,entity.metaGroupId);
+        break;
+      default:
+        smsc_log_warn(log,"Parameter '%s' meaningless for record type %s. Skipped",paramName.c_str(),entity.type==etService?"service":"smsc");
+    }
+  }
+}
+
+static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType et)
+{
   using namespace smsc::util::xml;
   unsigned listLength = list->getLength();
   for (unsigned i=0; i<listLength; i++)
   {
     SmppEntityInfo entity;
     entity.type=et;
-    bool enabled=false;
+    //bool enabled=false;
     DOMNode *record = list->item(i);
     //DOMNodeList *children = record->getChildNodes();
     //unsigned childrenCount= children->getLength();
     //for (unsigned j=0; j<childrenCount; j++)
-    for(DOMNode *node = record->getFirstChild(); node != 0; node = node->getNextSibling())
+    FillEntity(entity,record);
+    smppMan->addSmppEntity(entity);
+    if(entity.metaGroupId.length())
     {
-      //DOMNode *node = children->item(i);
-      if (node->getNodeType() != DOMNode::ELEMENT_NODE)continue;
-
-      DOMNamedNodeMap *attrs = node->getAttributes();
-      if(!attrs)
-      {
-        throw smsc::util::Exception("Invalid smpp.xml configuration file");
-      }
-      XmlStr paramName(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
-      const ParamTag* tagPtr=paramsHash.GetPtr(paramName.c_str());
-      if(!tagPtr)
-      {
-        throw smsc::util::Exception("Unknown parameter '%s' in smpp.xml",paramName.c_str());
-      }
-      if(et==etService && *tagPtr>tag_smscParams)
-      {
-        throw smsc::util::Exception("Parameter '%s' allowed for smscrecord only",paramName.c_str());
-      }
-      switch(*tagPtr)
-      {
-        case tag_systemId:
-          FillStringValue(attrs,entity.systemId);
-          break;
-        case tag_password:
-          FillStringValue(attrs,entity.password);
-          break;
-        case tag_bindSystemId:
-          FillStringValue(attrs,entity.bindSystemId);
-          break;
-        case tag_bindPassword:
-          FillStringValue(attrs,entity.bindPassword);
-          break;
-        case tag_timeout:
-          entity.timeOut=GetIntValue(attrs);
-          break;
-        case tag_mode:
-          entity.bindType=GetBindType(attrs);
-          break;
-        case tag_host:
-          FillStringValue(attrs,entity.host);
-          break;
-        case tag_port:
-          entity.port=GetIntValue(attrs);
-          break;
-        case tag_althost:
-          FillStringValue(attrs,entity.altHost);
-          break;
-        case tag_altport:
-          entity.altPort=GetIntValue(attrs);
-          break;
-        case tag_enabled:
-          enabled=GetBoolValue(attrs);
-          break;
-        case tag_uid:
-          entity.uid=GetIntValue(attrs);
-          break;
-        case tag_addressRange:
-          FillStringValue(attrs,entity.addressRange);
-          break;
-        case tag_systemType:
-          FillStringValue(attrs,entity.systemType);
-          break;
-        case tag_maxSmsPerSec:
-          entity.sendLimit=GetIntValue(attrs);
-          break;
-        case tag_inQueueLimit:
-          entity.inQueueLimit=GetIntValue(attrs);
-          break;
-        case tag_outQueueLimit:
-          entity.outQueueLimit=GetIntValue(attrs);
-          break;
-        case tag_metaGroup:
-          FillStringValue(attrs,entity.metaGroupId);
-          break;
-        default:
-          smsc_log_warn(log,"Parameter '%s' meaningless for record type %s. Skipped",paramName.c_str(),et==etService?"service":"smsc");
-      }
-    }
-    if(enabled)
-    {
-      smppMan->addSmppEntity(entity);
-      if(entity.metaGroupId.length())
-      {
-        smppMan->addMetaEndPoint(entity.metaGroupId.c_str(),entity.systemId.c_str());
-      }
-    }else
-    {
-      smsc_log_info(log,"Record with systemId='%s' disabled and skipped",entity.systemId.c_str());
+      smppMan->addMetaEndPoint(entity.metaGroupId.c_str(),entity.systemId.c_str());
     }
   }
 }
@@ -618,45 +632,48 @@ BalancingPolicy GetPolicyValue(DOMNamedNodeMap* attrs)
   throw Exception("Invalid balancing policy value:%s",policy);
 }
 
+static void FillMetaEntity(MetaEntityInfo& entity,DOMNode* record)
+{
+  for(DOMNode *node = record->getFirstChild(); node != 0; node = node->getNextSibling())
+  {
+    if (node->getNodeType() != DOMNode::ELEMENT_NODE)continue;
+
+    DOMNamedNodeMap *attrs = node->getAttributes();
+    if(!attrs)
+    {
+      throw smsc::util::Exception("Invalid smpp.xml configuration file");
+    }
+    XmlStr paramName(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
+    if(paramName=="policy")
+    {
+      entity.policy=GetPolicyValue(attrs);
+      continue;
+    }
+    if(paramName=="systemId")
+    {
+      FillStringValue(attrs,entity.systemId);
+      continue;
+    }
+    if(paramName=="persistance")
+    {
+      entity.persistanceEnabled=GetBoolValue(attrs);
+      continue;
+    }
+    throw Exception("Unknown meta entity parameter name:'%s'",paramName.c_str());
+  }
+}
+
 static void ParseMetaTag(SmppManagerImpl* smppMan,DOMNodeList* list,MetaEntityType et)
 {
-  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("smppMan");
   using namespace smsc::util::xml;
   unsigned listLength = list->getLength();
   for (unsigned i=0; i<listLength; i++)
   {
     MetaEntityInfo entity;
     entity.type=et;
-    bool enabled=false;
     DOMNode *record = list->item(i);
-    for(DOMNode *node = record->getFirstChild(); node != 0; node = node->getNextSibling())
-    {
-      if (node->getNodeType() != DOMNode::ELEMENT_NODE)continue;
-
-      DOMNamedNodeMap *attrs = node->getAttributes();
-      if(!attrs)
-      {
-        throw smsc::util::Exception("Invalid smpp.xml configuration file");
-      }
-      XmlStr paramName(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
-      if(paramName=="policy")
-      {
-        entity.policy=GetPolicyValue(attrs);
-        continue;
-      }
-      if(paramName=="systemId")
-      {
-        FillStringValue(attrs,entity.systemId);
-        continue;
-      }
-      if(paramName=="persistance")
-      {
-        entity.persistanceEnabled=GetBoolValue(attrs);
-        continue;
-      }
-      throw Exception("Unknown meta entity parameter name:'%s'",paramName.c_str());
-    }
-    smppMan->addMetaEntity(entity.systemId,entity);
+    FillMetaEntity(entity,record);
+    smppMan->addMetaEntity(entity);
   }
 }
 
@@ -678,6 +695,7 @@ SmppManagerImpl::~SmppManagerImpl()
 
 void SmppManagerImpl::Init(const char* cfgFile)
 {
+  cfgFileName=cfgFile;
   using namespace smsc::util::xml;
   DOMTreeReader reader;
   DOMDocument* doc=reader.read(cfgFile);
@@ -755,6 +773,76 @@ void SmppManagerImpl::Init(const char* cfgFile)
     tp.startTask(new StateMachine(this,this));
   }
 }
+
+bool SmppManagerImpl::LoadEntityFromConfig(SmppEntityInfo& info,const char* sysId,SmppEntityType et)
+{
+  using namespace smsc::util::xml;
+  DOMTreeReader reader;
+  DOMDocument* doc=reader.read(cfgFileName.c_str());
+  DOMElement *elem = doc->getDocumentElement();
+
+  DOMNodeList *list;
+  if(et==etService)
+  {
+    list = elem->getElementsByTagName(XmlStr("smerecord"));
+  }else
+  {
+    list = elem->getElementsByTagName(XmlStr("smscrecord"));
+  }
+  unsigned listLength = list->getLength();
+  for (unsigned i=0; i<listLength; i++)
+  {
+    SmppEntityInfo entity;
+    entity.type=et;
+    DOMNode *record = list->item(i);
+    FillEntity(entity,record);
+    if(entity.systemId==sysId)
+    {
+      info=entity;
+      return true;
+    }
+  }
+  return false;
+}
+
+bool SmppManagerImpl::LoadMetaEntityFromConfig(MetaEntityInfo& info,const char* sysId)
+{
+  using namespace smsc::util::xml;
+  DOMTreeReader reader;
+  DOMDocument* doc=reader.read(cfgFileName.c_str());
+  DOMElement *elem = doc->getDocumentElement();
+
+  DOMNodeList *list= elem->getElementsByTagName(XmlStr("metasmerecord"));
+  unsigned listLength = list->getLength();
+  for (unsigned i=0; i<listLength; i++)
+  {
+    MetaEntityInfo entity;
+    entity.type=mtMetaService;
+    DOMNode *record = list->item(i);
+    FillMetaEntity(entity,record);
+    if(entity.systemId==sysId)
+    {
+      info=entity;
+      return true;
+    }
+  }
+  list = elem->getElementsByTagName(XmlStr("metasmscrecord"));
+  listLength = list->getLength();
+  for (unsigned i=0; i<listLength; i++)
+  {
+    MetaEntityInfo entity;
+    entity.type=mtMetaSmsc;
+    DOMNode *record = list->item(i);
+    FillMetaEntity(entity,record);
+    if(entity.systemId==sysId)
+    {
+      info=entity;
+      return true;
+    }
+  }
+  return false;
+}
+
 
 void SmppManagerImpl::configChanged()
 {
@@ -969,6 +1057,11 @@ int SmppManagerImpl::registerSmeChannel(const char* sysId,const char* pwd,SmppBi
     smsc_log_info(log,"Failed to register sme with sysId='%s' - Not found",sysId);
     return rarFailed;
   }
+  if(!(*ptr)->info.enabled)
+  {
+    smsc_log_info(log,"Failed to register sme with sysId='%s' - disabled",sysId);
+    return rarFailed;
+  }
   SmppEntity& ent=**ptr;
   if(!(ent.info.password == pwd))
   {
@@ -1031,6 +1124,11 @@ int SmppManagerImpl::registerSmscChannel(SmppChannel* ch)
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr=registry.GetPtr(ch->getSystemId());
   if(!ptr || (**ptr).info.bindType==btNone)
+  {
+    smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
+    return rarFailed;
+  }
+  if(!(**ptr).info.enabled)
   {
     smsc_log_info(log,"Failed to register smsc with sysId='%s' - Not found",ch->getSystemId());
     return rarFailed;

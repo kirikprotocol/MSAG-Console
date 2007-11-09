@@ -47,6 +47,7 @@ struct SmppEntityInfo{
   int sendLimit;
   int inQueueLimit;
   int outQueueLimit;
+  bool enabled;
 
   SmppEntityInfo()
   {
@@ -58,6 +59,7 @@ struct SmppEntityInfo{
     sendLimit=0;
     inQueueLimit=0;
     outQueueLimit=0;
+    enabled=false;
   }
 };
 
@@ -88,8 +90,11 @@ struct SmppManagerAdmin{
   virtual void ReloadRoutes()=0;
   virtual SmppEntityAdminInfoList * getEntityAdminInfoList(SmppEntityType entType) = 0;
 
-  virtual void addMetaEntity(const char* id,MetaEntityInfo info)=0;
-  virtual void updateMetaEntity(const char* id,MetaEntityInfo info)=0;
+  virtual bool LoadEntityFromConfig(SmppEntityInfo& info,const char* sysId,SmppEntityType et)=0;
+  virtual bool LoadMetaEntityFromConfig(MetaEntityInfo& info,const char* sysId)=0;
+
+  virtual void addMetaEntity(MetaEntityInfo info)=0;
+  virtual void updateMetaEntity(MetaEntityInfo info)=0;
   virtual void deleteMetaEntity(const char* id)=0;
 
   virtual void addMetaEndPoint(const char* metaId,const char* sysId)=0;

@@ -25,9 +25,8 @@ public:
     }
 
     virtual void init();
-    const scag::transport::smpp::SmppEntityInfo & getSmppEntityInfo() const {return smppEntityInfo;};
 protected:
-  scag::transport::smpp::SmppEntityInfo smppEntityInfo;
+  std::string systemId;
 };
 
 class CommandAddSme : public Abstract_CommandSmeInfo
@@ -73,7 +72,7 @@ class CommandUpdateSmeInfo : public Abstract_CommandSmeInfo
 {
 public:
     CommandUpdateSmeInfo(const xercesc::DOMDocument * const doc) :
-        Abstract_CommandSmeInfo((Command::Id)CommandIds::updateSmeInfo, doc)
+        Abstract_CommandSmeInfo((Command::Id)CommandIds::updateSme, doc)
     {
     }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
@@ -345,9 +344,6 @@ public:
   virtual void init();
 protected:
   std::string systemId;
-  int policy;
-  int type;
-  bool persistance;
 };
 
 class CommandAddMetaEntity:public CommandMetaEntity{

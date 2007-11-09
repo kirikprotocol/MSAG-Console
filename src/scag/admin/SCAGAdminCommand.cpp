@@ -74,42 +74,9 @@ void Abstract_CommandSmeInfo::init()
 {
 
     smsc_log_info(logger, "Abstract_CommandSmeInfo got parameters:");
-
-    smppEntityInfo.systemId = "";
-    smppEntityInfo.password = "";
-    smppEntityInfo.timeOut = -1;
-    //smppEntityInfo.providerId = -1;
-
     BEGIN_SCAN_PARAMS
-    GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
-    GETSTRPARAM((char*)smppEntityInfo.password,      "password")
-    GETINTPARAM(smppEntityInfo.timeOut,              "timeout")
-    //GETINTPARAM(smppEntityInfo.providerId,           "providerId")
-
-    if (::strcmp("mode", name) == 0)
-    {
-        if (::strcmp("trx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
-        else if(::strcmp("tx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
-        else if(::strcmp("rx", value.get()) == 0) smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
-        else smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
-
-        smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.timeOut);
-    }
+    GETSTRPARAM_(systemId,      "systemId")
     END_SCAN_PARAMS
-
-    smppEntityInfo.type = scag::transport::smpp::etService;
-
-    std::string errorStr;
-
-    if (smppEntityInfo.systemId == "") errorStr = "Failed to tead Sme parameter 'systemId'";
-    //if (smppEntityInfo.password == "") errorStr = "Failed to tead Sme parameter 'password'";
-    if (smppEntityInfo.timeOut == -1) errorStr = "Failed to tead Sme parameter 'timeout'";
-
-    if (errorStr.size() > 0)
-    {
-        smsc_log_warn(logger, errorStr.c_str());
-        throw AdminException(errorStr.c_str());
-    }
 }
 
 
@@ -124,10 +91,16 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
     scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
     if (!smppMan) throw Exception("SmppManager undefined");
-    smsc_log_info(logger, "systemId: %s", getSmppEntityInfo().systemId.c_str());
+    smsc_log_info(logger, "systemId: %s", systemId.c_str());
+
+    SmppEntityInfo info;
+    if(!smppMan->LoadEntityFromConfig(info,systemId.c_str(),etService))
+    {
+      throw Exception("Failed to load sme entity with systemId='%s'",systemId.c_str());
+    }
 
     try {
-        smppMan->addSmppEntity(getSmppEntityInfo());
+        smppMan->addSmppEntity(info);
     } catch(Exception& e) {
         char msg[1024];
         sprintf(msg, "Failed to add new SME. Details: %s", e.what());
@@ -217,8 +190,14 @@ Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
 
     if(!smppMan) throw Exception("SmppManager undefined");
 
+    SmppEntityInfo info;
+    if(!smppMan->LoadEntityFromConfig(info,systemId.c_str(),etService))
+    {
+      throw Exception("Failed to load sme entity with systemId='%s'",systemId.c_str());
+    }
+
     try {
-        smppMan->updateSmppEntity(getSmppEntityInfo());
+        smppMan->updateSmppEntity(info);
     } catch(Exception& e) {
         char msg[1024];
         sprintf(msg, "Failed to update SME. Details: %s", e.what());
@@ -831,24 +810,10 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
 void CommandMetaEntity::init()
 {
   smsc_log_info(logger, "CommandMetaEntity got parameters:");
-  std::string tmpPolicy,tmpType,tmpPersistance;
+  std::string systemId;
   BEGIN_SCAN_PARAMS
   GETSTRPARAM_(systemId,    "systemId")
-  GETSTRPARAM_(tmpPolicy,    "policy")
-  GETSTRPARAM_(tmpType,    "type")
-  GETSTRPARAM_(tmpPersistance,    "persistance")
   END_SCAN_PARAMS
-  policy=tmpPolicy=="RoundRobin"?bpRoundRobin:tmpPolicy=="Random"?bpRandom:-1;
-  if(policy==-1)
-  {
-    throw Exception("Invalid value for balancing policy:%s",tmpPolicy.c_str());
-  }
-  type=tmpType=="MetaSmsc"?mtMetaSmsc:tmpType=="MetaService"?mtMetaService:-1;
-  if(type==-1)
-  {
-    throw Exception("Invalid value for meta entity type:%s",tmpType.c_str());
-  }
-  persistance=tmpPersistance=="true";
 }
 
 Response * CommandAddMetaEntity::CreateResponse(scag::Scag *ScagApp)
@@ -859,11 +824,12 @@ Response * CommandAddMetaEntity::CreateResponse(scag::Scag *ScagApp)
     throw Exception("SmppManager not defined");
   }
   MetaEntityInfo mei;
-  mei.systemId=systemId;
-  mei.policy=(BalancingPolicy)policy;
-  mei.type=(MetaEntityType)type;
-  mei.persistanceEnabled=persistance;
-  smppMan->addMetaEntity(mei.systemId.c_str(),mei);
+  if(!smppMan->LoadMetaEntityFromConfig(mei,systemId.c_str()))
+  {
+    throw Exception("Failed to load metaentity from config:'%s'",systemId.c_str());
+  }
+
+  smppMan->addMetaEntity(mei);
   return new Response(Response::Ok,"Meta entity added");
 }
 
@@ -875,11 +841,11 @@ Response * CommandUpdateMetaEntity::CreateResponse(scag::Scag *ScagApp)
     throw Exception("SmppManager not defined");
   }
   MetaEntityInfo mei;
-  mei.systemId=systemId;
-  mei.policy=(BalancingPolicy)policy;
-  mei.type=(MetaEntityType)type;
-  mei.persistanceEnabled=persistance;
-  smppMan->updateMetaEntity(mei.systemId.c_str(),mei);
+  if(!smppMan->LoadMetaEntityFromConfig(mei,systemId.c_str()))
+  {
+    throw Exception("Failed to load metaentity from config:'%s'",systemId.c_str());
+  }
+  smppMan->updateMetaEntity(mei);
   return new Response(Response::Ok,"Meta entity updated");
 }
 
