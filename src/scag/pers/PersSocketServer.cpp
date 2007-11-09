@@ -113,10 +113,6 @@ void PersSocketServer::processWriteSocket(Socket* s)
     SerialBuffer& sb = ctx->outbuf;
 
     len = sb.GetSize();
-    if (len == 0) {
-      //smsc_log_debug(log,"Nothing to write to %p", s);
-      return;
-    }
 
     smsc_log_debug(log, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d", len, s, sb.GetCurPtr(), sb.GetPos());
     j = s->Write(sb.GetCurPtr(), len - sb.GetPos());
