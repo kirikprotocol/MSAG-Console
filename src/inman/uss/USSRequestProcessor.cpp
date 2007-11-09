@@ -13,6 +13,13 @@ USSRequestProcessor::USSRequestProcessor(smsc::inman::interaction::Connect* conn
   : _conn(conn), _logger(Logger::getInstance("smsc.uss.BalanceService")),
     _mapSess(NULL), _mapDialog(NULL), _cfg(cfg), _dialogId(0), _resultAsLatin1(false), _dcs(0) {}
 
+USSRequestProcessor::~USSRequestProcessor() {
+  try {
+    smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
+    if ( _mapDialog) _mapDialog->endMapDlg();
+  } catch(...) {}
+}
+
 void
 USSRequestProcessor::setDialogId(uint32_t dialogId)
 {
@@ -28,7 +35,9 @@ USSRequestProcessor::sendNegativeResponse()
   smsc_log_debug(_logger, "USSRequestProcessor::sendNegativeResponse::: send negative response=[%s]",
                  resultPacket.Cmd().toString().c_str());
   resultPacket.setDialogId(_dialogId);
-  _conn->sendPck(&resultPacket);
+  if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
+    _conn->Close(); _conn=NULL;
+  }
 }
 
 void
@@ -82,6 +91,7 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
 
 void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg)
 {
+  smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
   if ( arg->getUSSDataAsLatin1Text(_resultUssAsString) ) {
     _resultAsLatin1 = true;
     smsc_log_debug(_logger, "USSRequestProcessor::onMapResult::: got USSData=[%s]",
@@ -99,6 +109,7 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
 //if ercode != 0, no result has been got from MAP service
 void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
 {
+  smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
   smsc::inman::interaction::SPckUSSResult resultPacket;
   if (!ercode) {
     // success and send result 
@@ -130,9 +141,11 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
   smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: send response object=[%s]",
                  resultPacket.Cmd().toString().c_str());
   resultPacket.setDialogId(_dialogId);
-  _conn->sendPck(&resultPacket);
+  if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
+    _conn->Close(); _conn=NULL;
+  }
 
-  delete _mapDialog;
+  delete _mapDialog; _mapDialog=NULL;
 }
 
 }
