@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.Constants;
 
 import java.io.PrintWriter;
 
@@ -55,8 +56,8 @@ public class Center {
     private int inQueueLimit = 0;
     private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
-
     private Category logger = Category.getInstance(this.getClass());
+    private String metaGroup = "";
 
     public Center(String id, int timeout,
                   byte mode, String host, int port, String altHost,
@@ -109,7 +110,7 @@ public class Center {
                   int altPort, boolean enabled, final Provider provider,
                   final int uid, final String bindSystemId, final String bindPassword, final String systemType,
                   final String addressRange, final int inQueueLimit, final int outQueueLimit,
-                  final int maxSmsPerSec)
+                  final int maxSmsPerSec, final String metaGroup)
                   throws NullPointerException {
         if (null == id || bindSystemId == null)
             throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
@@ -130,6 +131,7 @@ public class Center {
         this.inQueueLimit = inQueueLimit;
         this.outQueueLimit = outQueueLimit;
         this.maxSmsPerSec = maxSmsPerSec;
+        this.metaGroup = metaGroup;
     }
 
     public Center(final Element centersElement, final ProviderManager providerManager) throws NullPointerException {
@@ -173,6 +175,8 @@ public class Center {
                     outQueueLimit = Integer.decode(value).intValue();
                 } else if (MAX_SMS_PER_SEC.equals(name)) {
                     maxSmsPerSec = Integer.decode(value).intValue();
+                } else if ("metaGroup".equals(name)) {
+                    metaGroup = StringEncoderDecoder.encode(value);
                 }
 
             } catch (NumberFormatException e) {
@@ -200,15 +204,16 @@ public class Center {
         this.inQueueLimit = center.getInQueueLimit();
         this.outQueueLimit = center.getOutQueueLimit();
         this.maxSmsPerSec = center.getMaxSmsPerSec();
+        this.metaGroup = center.getMetaGroup();
     }
 
     protected PrintWriter storeHeader(final PrintWriter out) {
-        out.println("  <smscrecord>");
+        out.println("  <" + Constants.SMSC_RECORD_TAG + ">");
         return out;
     }
 
     protected PrintWriter storeFooter(final PrintWriter out) {
-        out.println("  </smscrecord>");
+        out.println("  </" + Constants.SMSC_RECORD_TAG + ">");
         return out;
     }
 
@@ -217,23 +222,24 @@ public class Center {
     }
 
     protected PrintWriter storeBody(final PrintWriter out) {
-        out.println("    <param name=\"systemId\"       value=\"" + StringEncoderDecoder.encode(id) + "\"/>");
-        out.println("    <param name=\"bindSystemId\"   value=\"" + StringEncoderDecoder.encode(bindSystemId) + "\"/>");
-        out.println("    <param name=\"bindPassword\"   value=\"" + StringEncoderDecoder.encode(bindPassword) + "\"/>");
-        out.println("    <param name=\"systemType\"     value=\"" + StringEncoderDecoder.encode(systemType) + "\"/>");
-        out.println("    <param name=\"timeout\"        value=\"" + timeout + "\"/>");
-        out.println("    <param name=\"mode\"           value=\"" + getModeStr() + "\"/>");
-        out.println("    <param name=\"host\"           value=\"" + host + "\"/>");
-        out.println("    <param name=\"port\"           value=\"" + port + "\"/>");
-        out.println("    <param name=\"althost\"        value=\"" + altHost + "\"/>");
-        out.println("    <param name=\"altport\"        value=\"" + altPort + "\"/>");
-        out.println("    <param name=\"enabled\"        value=\"" + enabled + "\"/>");
-        out.println("    <param name=\"uid\"            value=\"" + uid + "\"/>");
-        out.println("    <param name=\"providerId\"     value=\"" + -1/*provider.getId()*/ + "\"/>");
-        out.println("    <param name=\"addressRange\"   value=\"" + addressRange.trim() + "\"/>");
-        out.println("    <param name=\""+ IN_QUEUE_LIMIT +"\"   value=\"" + intToString(inQueueLimit) + "\"/>");
-        out.println("    <param name=\""+ OUT_QUEUE_LIMIT +"\"   value=\"" + intToString(outQueueLimit) + "\"/>");
-        out.println("    <param name=\""+ MAX_SMS_PER_SEC +"\"   value=\"" + intToString(maxSmsPerSec) + "\"/>");
+        out.println("    <param name=\"systemId\"\tvalue=\"" + StringEncoderDecoder.encode(id) + "\"/>");
+        out.println("    <param name=\"bindSystemId\"\tvalue=\"" + StringEncoderDecoder.encode(bindSystemId) + "\"/>");
+        out.println("    <param name=\"bindPassword\"\tvalue=\"" + StringEncoderDecoder.encode(bindPassword) + "\"/>");
+        out.println("    <param name=\"systemType\"\tvalue=\"" + StringEncoderDecoder.encode(systemType) + "\"/>");
+        out.println("    <param name=\"timeout\"\tvalue=\"" + timeout + "\"/>");
+        out.println("    <param name=\"mode\"\tvalue=\"" + getModeStr() + "\"/>");
+        out.println("    <param name=\"host\"\tvalue=\"" + host + "\"/>");
+        out.println("    <param name=\"port\"\tvalue=\"" + port + "\"/>");
+        out.println("    <param name=\"althost\"\tvalue=\"" + altHost + "\"/>");
+        out.println("    <param name=\"altport\"\tvalue=\"" + altPort + "\"/>");
+        out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
+        out.println("    <param name=\"uid\"\tvalue=\"" + uid + "\"/>");
+        out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
+        out.println("    <param name=\"addressRange\"\tvalue=\"" + addressRange.trim() + "\"/>");
+        out.println("    <param name=\""+ IN_QUEUE_LIMIT +"\"\tvalue=\"" + intToString(inQueueLimit) + "\"/>");
+        out.println("    <param name=\""+ OUT_QUEUE_LIMIT +"\"\tvalue=\"" + intToString(outQueueLimit) + "\"/>");
+        out.println("    <param name=\""+ MAX_SMS_PER_SEC +"\"\tvalue=\"" + intToString(maxSmsPerSec) + "\"/>");
+        out.println("    <param name=\"metaGroup\"\tvalue=\"" + StringEncoderDecoder.encode(metaGroup) + "\"/>");
         return out;
     }
 
@@ -468,4 +474,13 @@ public class Center {
     public int getMaxSmsPerSec() {
         return maxSmsPerSec;
     }
+
+    public String getMetaGroup() {
+        return metaGroup;
+    }
+
+    public void setMetaGroup(String metaGroup) {
+        this.metaGroup = metaGroup;
+    }
+
 }
