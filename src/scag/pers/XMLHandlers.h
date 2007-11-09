@@ -10,19 +10,25 @@
 #include <core/buffers/IntHash.hpp>
 #include <logger/Logger.h>
 
+#include "PersSocketServer.h"
+
 namespace scag { namespace cpers {
 
 using namespace smsc::util;
 using namespace smsc::logger;
 using smsc::core::buffers::Hash;
+using scag::pers::ConnectionContext;
 
 XERCES_CPP_NAMESPACE_USE
 
 class RegionInfo
 {
 public:
+  RegionInfo():id(0), ctx(0) {}
+public:
     std::string name, passwd;
     uint32_t id;
+    ConnectionContext *ctx;
 };
 
 class XMLBasicHandler : public HandlerBase

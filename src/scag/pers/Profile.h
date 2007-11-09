@@ -45,6 +45,11 @@ public:
 
     void Serialize(SerialBuffer& buf, bool toFSDB = false);
     void Deserialize(SerialBuffer& buf, bool fromFSDB = false);
+    ProfileState getState() const { return state; };
+    void setLocked() { state = LOCKED; };
+    void setDeleted() { state = DELETED; };
+    void addNewProperty(Property& prop);
+    void copyPropertiesTo(Profile* pf);
 };
 
 }}

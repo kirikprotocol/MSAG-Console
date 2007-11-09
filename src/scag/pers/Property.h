@@ -64,7 +64,7 @@ public:
     void ReadAccess();
     void WriteAccess();
 
-    const std::string& getName() { return name; };
+    const std::string& getName() const { return name; };
     void setName(const std::string& nm) { name = nm; };
     uint32_t getIntValue() { return i_val; };
     bool getBoolValue() { return b_val; };

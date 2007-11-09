@@ -113,6 +113,10 @@ void PersSocketServer::processWriteSocket(Socket* s)
     SerialBuffer& sb = ctx->outbuf;
 
     len = sb.GetSize();
+    if (len == 0) {
+      //smsc_log_debug(log,"Nothing to write to %p", s);
+      return;
+    }
 
     smsc_log_debug(log, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d", len, s, sb.GetCurPtr(), sb.GetPos());
     j = s->Write(sb.GetCurPtr(), len - sb.GetPos());
@@ -128,6 +132,7 @@ void PersSocketServer::processWriteSocket(Socket* s)
     {
         smsc_log_debug(log, "written to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
         ctx->inbuf.Empty();
+        ctx->outbuf.Empty();
 		ctx->lastActivity = time(NULL);
         listener.addR(s);
 		ctx->wantRead = true;
@@ -185,6 +190,8 @@ int PersSocketServer::Execute()
 
     while(!isStopped())
     {
+        bindToCP();
+
         if(listener.canReadWrite(read, write, err, timeout * 1000))
         {
             if(isStopped())
@@ -224,10 +231,13 @@ int PersSocketServer::Execute()
                 } 
                 else
 				{
-					if(!((ConnectionContext*)read[i]->getData(0))->wantRead)	// in the case if we want to write and unexpected data arrive or EOF
-						removeSocket(read[i]);
-					else
-	                    processReadSocket(read[i]);
+					if(!((ConnectionContext*)read[i]->getData(0))->wantRead) {	// in the case if we want to write and unexpected data arrive or EOF
+                      smsc_log_error(log, "unexpected data arrive in %p ", read[i]);
+                      removeSocket(read[i]);
+                    }
+					else {
+                      processReadSocket(read[i]);
+                    }
 				}
             }
 

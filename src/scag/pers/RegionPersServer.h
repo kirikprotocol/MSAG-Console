@@ -1,0 +1,88 @@
+#ifndef __SCAG_PERS_REGIONPERSSERVER_H__
+#define __SCAG_PERS_REGIONPERSSERVER_H__
+
+#include "PersServer.h"
+#include "core/buffers/XHash.hpp"
+#include "CPersCmd.h"
+
+namespace scag { namespace pers {
+
+using namespace scag::cpers;
+
+struct CmdContext {
+  PersCmd cmd_id;
+  SerialBuffer isb;
+  SerialBuffer* osb;
+  CmdContext();
+  CmdContext(const CmdContext& ctx);
+  CmdContext(PersCmd _cmd_id, SerialBuffer& _isb, SerialBuffer* _osb);
+  CmdContext& operator=(const CmdContext& ctx);
+};
+
+class RegionPersServer : public PersServer {
+public:
+  RegionPersServer(const char* persHost_, int persPort_, int maxClientCount_, 
+                   int timeout_, StringProfileStore *abonent, IntProfileStore *service,
+                   IntProfileStore *oper, IntProfileStore *provider, const string& _central_host,
+                   int _central_port, uint32_t _region_id, const string& _region_psw);
+  virtual bool processPacket(ConnectionContext &ctx);
+
+protected:
+  virtual void onDisconnect(ConnectionContext &ctx);
+  //virtual void processUplinkPacket(ConnectionContext &ctx) {
+  //}
+  virtual bool bindToCP();
+  virtual void execCommand(SerialBuffer& isb, SerialBuffer& osb);
+
+private:
+  void connectToCP();
+  bool processPacketFromCP(ConnectionContext &ctx);
+
+  bool sendCommandToCP(const CPersCmd& cmd);
+
+  void getProfileCmdHandler(ConnectionContext& ctx);
+  void profileRespCmdHandler(ConnectionContext& ctx);
+  void doneCmdHandler(ConnectionContext& ctx);
+  void doneRespCmdHandler(ConnectionContext& ctx);
+  void checkOwnCmdHandler(ConnectionContext& ctx);
+  void execCommand(PersCmd cmd, ProfileType pt, uint32_t int_key, const string& str_key,
+                   SerialBuffer& isb, SerialBuffer& osb);
+  void execCommand(PersCmd cmd, Profile *pf, const string& str_key,
+                   SerialBuffer& isb, SerialBuffer& osb);
+
+  void DelCmdHandler(ProfileType pt, uint32_t int_key, const string& name, SerialBuffer& osb);
+  void GetCmdHandler(ProfileType pt, uint32_t int_key, const string& name, SerialBuffer& osb);
+  void SetCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb);
+  void IncCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb);
+  void IncModCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, int mod, SerialBuffer& osb);
+
+  void DelCmdHandler(Profile* pf, const string& str_key, const string& name, SerialBuffer& osb);
+  void GetCmdHandler(Profile* pf, const string& str_key, const string& name, SerialBuffer& osb);
+  void SetCmdHandler(Profile* pf, const string& str_key, Property& prop, SerialBuffer& osb);
+  void IncCmdHandler(Profile* pf, const string& str_key, Property& prop, SerialBuffer& osb);
+  void IncModCmdHandler(Profile* pf, const string& str_key, Property& prop, int mod, SerialBuffer& osb);
+
+
+  //void setProperty(Profile* pf, Property& prop);
+  //bool delProperty(Profile* pf, const char* nm);
+  //bool getProperty(Profile* pf, const char* nm, Property& prop);
+  //bool incProperty(Profile* pf, Property& prop);
+  //bool incModProperty(Profile* pf, Property& prop, uint32_t mod, int& res);
+
+private:
+  Socket *central_socket;
+  string central_host;
+  int central_port;
+  uint32_t region_id;
+  string region_psw;
+  bool connected;
+
+  smsc::core::buffers::XHash<AbntAddr, CmdContext, AbntAddr> commands;
+  smsc::core::buffers::XHash<AbntAddr, uint8_t, AbntAddr> profiles_states;
+  Logger* rplog;
+};
+
+}//pers
+}//scag
+#endif 
+

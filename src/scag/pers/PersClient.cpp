@@ -132,7 +132,7 @@ void PersClient::Init(const scag::config::PersClientConfig& cfg)// throw(PersCli
             PersClient::inited = true;
         }
     }
-}
+} 
 
 void PersClientImpl::init_internal(const char *_host, int _port, int _timeout, int _pingTimeout) //throw(PersClientException)
 {

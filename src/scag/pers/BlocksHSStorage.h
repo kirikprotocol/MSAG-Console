@@ -98,6 +98,7 @@ public:
 	static const int defaultBlockSize = 56; // in bytes
 	static const int defaultFileSize = 3; // in blocks 
 	static const long BLOCK_USED	= (long)1 << 63;
+    //static const long BLOCK_USED	= (long)1 << 10;
 
 	BlocksHSStorage():running(false), iterBlockIndex(0)
 	{

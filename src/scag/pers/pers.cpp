@@ -17,6 +17,7 @@
 
 #include "ProfileStore.h"
 #include "PersServer.h"
+#include "RegionPersServer.h"
 
 #include "string"
 #include "Glossary.h"
@@ -151,8 +152,54 @@ int main(int argc, char* argv[])
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 		
 	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
-		
-		ps = new PersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore, &ServiceStore, &OperatorStore, &ProviderStore);
+
+        bool heirarchical_mode = false;
+        string central_host;
+        int central_port = 0;
+        string region_psw;
+        uint32_t region_id = 0;
+        try {
+          heirarchical_mode = persConfig.getBool("hierarchicalMode");
+          try {
+            central_host = persConfig.getString("centralHost");
+          } catch (...) {
+            smsc_log_warn(logger, "Parameter <pers.centralHost> missed. heirarchicalMode=false");
+            heirarchical_mode = false;
+          }
+          try {
+            central_port = persConfig.getInt("centralPort");
+          } catch (...) {
+            smsc_log_warn(logger, "Parameter <pers.centralPort> missed. heirarchicalMode=false");
+            heirarchical_mode = false;
+          }
+          try {
+            region_psw = persConfig.getString("regionPassword");
+          } catch (...) {
+            smsc_log_warn(logger, "Parameter <pers.regionPassword> missed. heirarchicalMode=false");
+            heirarchical_mode = false;
+          }
+          try {
+            region_id = persConfig.getInt("regionId");
+          } catch (...) {
+            smsc_log_warn(logger, "Parameter <pers.regionId> missed. heirarchicalMode=false");
+            heirarchical_mode = false;
+          }
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <pers.hierarchicalMode> missed. Defaul value is false");
+          heirarchical_mode = false;
+        }
+
+		if (heirarchical_mode) {
+          ps = new RegionPersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore,
+                                    &ServiceStore, &OperatorStore, &ProviderStore, central_host,
+                                    central_port, region_id, region_psw);
+
+          smsc_log_info(logger, "PersServer start in hierarchical mode");
+
+        } else {
+          ps = new PersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore,
+                               &ServiceStore, &OperatorStore, &ProviderStore);
+        }
 
         auto_ptr<PersServer> pp(ps);
 

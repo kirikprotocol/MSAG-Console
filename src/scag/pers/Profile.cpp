@@ -139,4 +139,19 @@ void Profile::AddProperty(Property& prop)
     }
 }
 
+void Profile::addNewProperty(Property& prop) {
+  properties.Insert(prop.getName().c_str(),  new Property(prop));
+}
+
+void Profile::copyPropertiesTo(Profile* pf) {
+  char *key = 0;
+  Property* prop;
+
+  PropertyHash::Iterator it = properties.getIterator();
+
+  while(it.Next(key, prop)) {
+    pf->addNewProperty(*prop);
+  }
+}
+
 }}

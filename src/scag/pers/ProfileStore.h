@@ -199,7 +199,7 @@ public:
 //        pf->DeleteExpired();
 		sb.Empty();
         pf->Serialize(sb, true);
-//        delete pf;
+//        delete pf;  ??????????? where profile should be deleted
         key.setNumberingPlan(1);
         key.setTypeOfNumber(1);
         store.Set(key, sb);
@@ -221,6 +221,12 @@ public:
         delete pf;
         return NULL;
     };
+
+    Profile* createProfile(Key& key) {
+      key.setNumberingPlan(1);
+      key.setTypeOfNumber(1);
+      return new Profile(key.toString(), dblog);
+    }
 
 protected:
 	std::string storeName;
@@ -300,6 +306,13 @@ class ProfileStore : public StorageType
     Mutex mtx;
 public:
 
+  void deleteProfile(Key& key) {
+    MutexGuard mt(mtx);
+    key.setNumberingPlan(1);
+    key.setTypeOfNumber(1);
+    store.Remove(key);
+  }
+
     void setProperty(RKey rkey, Property& prop)
     {
         MutexGuard mt(mtx);
@@ -309,6 +322,31 @@ public:
             return;
 
         Profile* pf = getProfile(key, true);
+        Property* p = pf->GetProperty(prop.getName().c_str());
+        if(p != NULL)
+        {
+            p->setValue(prop);
+            p->WriteAccess();
+        }
+        else
+            pf->AddProperty(prop);
+        storeProfile(key, pf);
+        smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
+    };
+
+    void setProperty(Profile* pf, RKey rkey, Property& prop)
+    {
+        MutexGuard mt(mtx);
+        Key key(rkey);
+
+        if(prop.isExpired())
+            return;
+
+        if (!pf) {
+          pf = new Profile(key, dblog);
+        }
+
+        //Profile* pf = getProfile(key, true);
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {
@@ -338,12 +376,56 @@ public:
         return res;
     };
 
+    bool delProperty(Profile* pf, RKey rkey, const char* nm)
+    {
+        MutexGuard mt(mtx);
+        Key key(rkey);
+        //Profile *pf = getProfile(key, false);
+
+        bool res = false;
+
+        if(pf != NULL)
+        {
+            res = pf->DeleteProperty(nm);
+            storeProfile(key, pf);
+            smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
+        }
+        return res;
+    };
+
     bool getProperty(RKey rkey, const char* nm, Property& prop)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
 
         Profile* pf = getProfile(key, false);
+
+//        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
+        if(pf != NULL)
+        {
+            Property* p = pf->GetProperty(nm);
+
+            if(p != NULL)
+            {
+                if(p->getTimePolicy() == R_ACCESS)
+                {
+                    p->ReadAccess();
+                    storeProfile(key, pf);
+                }
+                prop = *p;
+                smsc_log_debug(log, "profile %s, getProperty=%s", key.toString().c_str(), prop.toString().c_str());
+                return true;
+            }
+        }
+        return false;
+    };
+
+    bool getProperty(Profile* pf, RKey rkey, const char* nm, Property& prop)
+    {
+        MutexGuard mt(mtx);
+        Key key(rkey);
+
+        //Profile* pf = getProfile(key, false);
 
 //        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
         if(pf != NULL)
@@ -400,11 +482,84 @@ public:
         return false;
     };
 
+    bool incProperty(Profile* pf, RKey rkey, Property& prop)
+    {
+        MutexGuard mt(mtx);
+        Key key(rkey);
+        //Profile* pf = getProfile(key, true);
+        if (!pf) {
+          pf = new Profile(key, dblog);
+        }
+        Property* p = pf->GetProperty(prop.getName().c_str());
+        if(p != NULL)
+        {
+            if(p->getType() == INT && prop.getType() == INT)
+            {
+                p->setIntValue(p->getIntValue() + prop.getIntValue());
+                p->WriteAccess();
+                storeProfile(key, pf);
+                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+                return true;
+            }
+            else if(p->getType() == DATE && prop.getType() == DATE)
+            {
+                p->setDateValue(p->getDateValue() + prop.getDateValue());
+                p->WriteAccess();
+                storeProfile(key, pf);
+                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+                return true;
+            }
+        }
+        else
+        {
+            pf->AddProperty(prop);
+            storeProfile(key, pf);
+            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());                                    
+            return true;
+        }
+        return false;
+    };
+
     bool incModProperty(RKey rkey, Property& prop, uint32_t mod, int& res)
     {
         MutexGuard mt(mtx);
         Key key(rkey);
         Profile* pf = getProfile(key, true);
+        Property* p = pf->GetProperty(prop.getName().c_str());
+        if(p != NULL)
+        {
+            if(p->getType() == INT && prop.getType() == INT)
+            {
+                res = p->getIntValue() + prop.getIntValue();
+                if(mod) res %= mod;
+                p->setIntValue(res);
+                p->WriteAccess();
+                storeProfile(key, pf);
+                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+                return true;
+            }
+        }
+        else
+        {
+            res = prop.getIntValue();
+            if(mod) res %= mod;
+            prop.setIntValue(res);
+            pf->AddProperty(prop);
+            storeProfile(key, pf);
+            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());            
+            return true;
+        }
+        return false;
+    };
+
+    bool incModProperty(Profile *pf, RKey rkey, Property& prop, uint32_t mod, int& res)
+    {
+        MutexGuard mt(mtx);
+        Key key(rkey);
+        //Profile* pf = getProfile(key, true);
+        if (!pf) {
+          pf = new Profile(key, dblog);
+        }
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
         {

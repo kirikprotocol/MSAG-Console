@@ -14,7 +14,8 @@ enum ProfileType{
 };
 
 enum PersCmd{
-    PC_DEL = 1,
+    PC_UNKNOWN,
+    PC_DEL,
     PC_SET,
     PC_GET,
     PC_INC,
@@ -26,11 +27,11 @@ enum PersCmd{
 namespace CentralPersCmd{
     enum{
         UNKNOWN,
-        GET,
-        ACK,
-        PROFILE,
+        GET_PROFILE,
+        PROFILE_RESP,
         DONE,
-        CHECK_OWN,
+        DONE_RESP,
+        CHECK_OWN, //if transaction not complite
         LOGIN
     };
 };

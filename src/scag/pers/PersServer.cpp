@@ -130,7 +130,7 @@ void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::s
         smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
         exists = is->incModProperty(int_key, prop, mod, res);
     }
-    if(exists)
+    if(exists) 
     {
         SendResponse(osb, RESPONSE_OK);
         osb.WriteInt32(res);
@@ -148,9 +148,13 @@ bool PersServer::processPacket(ConnectionContext& ctx)
 		SetPacketSize(osb);
 		return true;
     }
-    catch(SerialBufferOutOfBounds &e)
+    catch(const SerialBufferOutOfBounds &e)
     {
-        smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+        smsc_log_debug(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+    }
+    catch(const Exception& e)
+    {
+        smsc_log_debug(plog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
     }
     catch(...)
     {
@@ -219,6 +223,16 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
         default:
             smsc_log_debug(plog, "Bad command %d", cmd);
     }
+}
+
+Profile* PersServer::getProfile(const string& key) {
+  AbntAddr addr(key.c_str());
+  Profile *pf = AbonentStore->_getProfile(addr, false);
+  return pf; 
+}
+
+Profile* PersServer::createProfile(AbntAddr& addr) {
+  return  AbonentStore->createProfile(addr);
 }
 
 }}

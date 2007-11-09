@@ -14,11 +14,13 @@ using smsc::logger::Logger;
 
 class ConnectionContext{
 public:
-	ConnectionContext() : wantRead(true), lastActivity(time(NULL)), authed(false) {};
+	ConnectionContext() : wantRead(true), lastActivity(time(NULL)),
+                          authed(false), region_id(0) {};
 	SerialBuffer inbuf, outbuf;
 	bool wantRead, authed;
 	time_t lastActivity;
 	uint32_t packetLen;
+    uint32_t region_id;
 };
 
 class PersSocketServer {
@@ -35,6 +37,7 @@ protected:
     virtual bool processPacket(ConnectionContext& ctx) { return true; };
     virtual void processUplinkPacket(ConnectionContext& ctx) {};
     virtual void onDisconnect(ConnectionContext& ctx) {};    
+    virtual bool bindToCP() { return true; };
 
     void processReadSocket(Socket* sock);
     void processWriteSocket(Socket* sock);
