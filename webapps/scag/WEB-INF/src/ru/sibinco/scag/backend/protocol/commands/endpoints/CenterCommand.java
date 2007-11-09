@@ -23,17 +23,17 @@ public class CenterCommand  extends Command {
 
     protected void fillParams(final Center center) {
         createStringParam("systemId", center.getId());
-        createStringParam("bindSystemId", center.getBindSystemId());
-        createStringParam("bindPassword", center.getBindPassword());
-        createStringParam("systemType", center.getSystemType());
-        createIntParam("timeout", center.getTimeout());
-        createStringParam("mode", center.getModeStr());
-        createStringParam("host", center.getHost());
-        createIntParam("port", center.getPort());
-        createStringParam("altHost", center.getAltHost());
-        createIntParam("altPort", center.getAltPort());
-        createIntParam("uid", center.getUid());
-        createIntParam("providerId", -1/*center.getProvider().getId()*/);
-        createStringParam("addressRange", center.getAddressRange());
+//        createStringParam("bindSystemId", center.getBindSystemId());
+//        createStringParam("bindPassword", center.getBindPassword());
+//        createStringParam("systemType", center.getSystemType());
+//        createIntParam("timeout", center.getTimeout());
+//        createStringParam("mode", center.getModeStr());
+//        createStringParam("host", center.getHost());
+//        createIntParam("port", center.getPort());
+//        createStringParam("altHost", center.getAltHost());
+//        createIntParam("altPort", center.getAltPort());
+//        createIntParam("uid", center.getUid());
+//        createIntParam("providerId", -1/*center.getProvider().getId()*/);
+//        createStringParam("addressRange", center.getAddressRange());
    }
 }

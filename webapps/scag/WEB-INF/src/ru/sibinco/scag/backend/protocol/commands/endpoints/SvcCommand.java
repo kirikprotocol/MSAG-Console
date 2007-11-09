@@ -23,9 +23,9 @@ public class SvcCommand extends Command {
 
     protected void fillParams(final Svc svc) {
         createStringParam("systemId", svc.getId());
-        createStringParam("password", svc.getPassword());
-        createIntParam("timeout", svc.getTimeout());
-        createStringParam("mode", svc.getModeStr());
-        createIntParam("providerId", -1/*svc.getProvider().getId()*/);
+//        createStringParam("password", svc.getPassword());
+//        createIntParam("timeout", svc.getTimeout());
+//        createStringParam("mode", svc.getModeStr());
+//        createIntParam("providerId", -1/*svc.getProvider().getId()*/);
    }
 }

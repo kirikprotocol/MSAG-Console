@@ -20,6 +20,6 @@ public class DeleteSvc extends Command
   {
     super("deleteSme", "command_gw.dtd");
     createStringParam("systemId", svcId);
-    createIntParam("disconnect",disconnect);
+//    createIntParam("disconnect",disconnect);
   }
 }
