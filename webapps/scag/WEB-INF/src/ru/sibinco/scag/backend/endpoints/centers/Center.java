@@ -110,6 +110,33 @@ public class Center {
                   int altPort, boolean enabled, final Provider provider,
                   final int uid, final String bindSystemId, final String bindPassword, final String systemType,
                   final String addressRange, final int inQueueLimit, final int outQueueLimit,
+                  final int maxSmsPerSec)
+                  throws NullPointerException {
+        if (null == id || bindSystemId == null)
+            throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
+        this.id = id;
+        this.timeout = timeout;
+        this.mode = mode;
+        this.host = host;
+        this.port = port;
+        this.altHost = altHost;
+        this.altPort = altPort;
+        this.enabled = enabled;
+        this.provider = provider;
+        this.uid = uid;
+        this.bindSystemId = bindSystemId;
+        this.bindPassword = bindPassword;
+        this.systemType = systemType;
+        this.addressRange = addressRange;
+        this.inQueueLimit = inQueueLimit;
+        this.outQueueLimit = outQueueLimit;
+        this.maxSmsPerSec = maxSmsPerSec;
+    }
+
+    public Center(String id, int timeout, byte mode, String host, int port, String altHost,
+                  int altPort, boolean enabled, final Provider provider,
+                  final int uid, final String bindSystemId, final String bindPassword, final String systemType,
+                  final String addressRange, final int inQueueLimit, final int outQueueLimit,
                   final int maxSmsPerSec, final String metaGroup)
                   throws NullPointerException {
         if (null == id || bindSystemId == null)
