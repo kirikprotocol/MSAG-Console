@@ -92,9 +92,11 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         }
         destinations = new HashMap();
         logger.debug("Edit.java:process():middle");
+        logger.debug("Edit.java:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet());
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
             final Map.Entry entry = (Map.Entry) i.next();
             final String s = (String) entry.getKey();
+            logger.error( "key=" + s + " | value='" + entry.getValue().getClass() + "'" );
             if (s.startsWith(DST_SME_PREFIX)) {
                 final String subjName = s.substring(DST_SME_PREFIX.length());
                 final String[] smeNameStrings = (String[]) entry.getValue();
@@ -475,8 +477,10 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public List getAllSmes() {
         SortedList list = new SortedList();
-        list.addAll(appContext.getSmppManager().getSvcs().keySet());
-        list.addAll(appContext.getSmppManager().getCenters().keySet());
+        list.addAll(appContext.getSmppManager().getServicesByMetaGroupId("").keySet());
+        list.addAll(appContext.getSmppManager().getCentersByMetaGroupId("").keySet());
+        list.addAll(appContext.getSmppManager().getMetaServices().keySet());
+        list.addAll(appContext.getSmppManager().getMetaCenters().keySet());
         return list;
     }
 

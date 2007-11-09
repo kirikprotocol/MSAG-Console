@@ -18,10 +18,13 @@ public class MetaCommand  extends Command {
     }
 
     protected void fillParams(final MetaEndpoint meta) {
-
         createStringParam( "systemId", meta.getId() );
-        createStringParam( "type", meta.getType() );
-        createStringParam( "policy", meta.getPolicy() );
-        createBoolParam  ( "enabled", meta.getEnabled() );
+   }
+
+   protected void fillPair( String []pairMetaSys){
+       logger.info( "MetaCommand:fillpair():metaId=" + pairMetaSys[0]);
+       logger.info( "MetaCommand:fillpair():sysId=" + pairMetaSys[1]);
+       createStringParam( "metaId", pairMetaSys[0] );
+       createStringParam( "sysId", pairMetaSys[1] );
    }
 }

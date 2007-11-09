@@ -297,6 +297,20 @@ public class Edit extends EditBean {
         return result.toString();
     }
 
+    public String getUngroupedSmeIds() {
+        final StringBuffer result = new StringBuffer();
+        SortedList smes = new SortedList();
+        smes.addAll(appContext.getSmppManager().getServicesByMetaGroupId("").keySet());
+        smes.addAll(appContext.getSmppManager().getCentersByMetaGroupId("").keySet());
+        smes.addAll(appContext.getSmppManager().getMetaServices().keySet());
+        smes.addAll(appContext.getSmppManager().getMetaCenters().keySet());
+        for (Iterator i = smes.iterator(); i.hasNext();) {
+            result.append((String) i.next());
+            if (i.hasNext())
+                result.append(",");
+        }
+        return result.toString();
+    }
 
     private User getUser(SCAGAppContext appContext) throws SCAGJspException {
         Principal userPrincipal = super.getLoginedPrincipal();

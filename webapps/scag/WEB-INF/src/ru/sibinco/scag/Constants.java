@@ -14,6 +14,13 @@ public class Constants {
     public static final String SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME = "SCAG_ERROR_MESSAGES_ATTRIBUTE";
     public static final String APP_CONTEXT = "appContext";
     public static final String HTTP_TRANSPORT = "HTTP_TRANSPORT";
+    public static final String META_SME_RECORD_TAG = "metasmerecord";
+    public static final String META_SMSC_RECORD_TAG = "metasmscrecord";
+    public static final String SME_RECORD_TAG = "smerecord";
+    public static final String SMSC_RECORD_TAG = "smscrecord";    
+
+    public static final int STORE_TYPE_SVC = 1;
+    public static final int STORE_TYPE_CENTER = 2;
 
     public interface errors {
         public interface status {
@@ -122,6 +129,7 @@ public class Constants {
             public static final Constants COULDNT_DISCONNECT0 = new Constants("error.sme.couldnt_disconnect0");
             public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.sme.couldnt_save_config");
             public static final Constants COULDNT_SAVE_NOT_VALID_ID = new Constants("error.sme.couldnt_save_not_valid_id");
+            public static final Constants METAEP_ALREADY_EXISTS = new Constants("error.sme.metaep_already_exists");
         }
 
         public interface services {

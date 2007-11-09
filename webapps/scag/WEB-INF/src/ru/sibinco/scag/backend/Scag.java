@@ -10,6 +10,7 @@ import ru.sibinco.scag.backend.daemon.Proxy;
 import ru.sibinco.scag.backend.daemon.ServiceInfo;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.meta.MetaEndpoint;
 import ru.sibinco.scag.backend.protocol.commands.Apply;
 import ru.sibinco.scag.backend.protocol.commands.ApplyConfig;
 import ru.sibinco.scag.backend.protocol.commands.CommandCall;
@@ -97,6 +98,13 @@ public class Scag extends Proxy {
             throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
 
+    protected void updateSvc(final Svc svc) throws SibincoException {
+        final Response response = super.runCommand(new UpdateSvc(svc));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+
     protected void deleteSvc(final String svcId) throws SibincoException {
         final Response response = super.runCommand(new DeleteSvc(svcId,0));
         if (Response.STATUS_OK != response.getStatus())
@@ -133,6 +141,38 @@ public class Scag extends Proxy {
         if (Response.STATUS_OK != response.getStatus())
             throw new SibincoException("Couldn't delete Smsc, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
     }
+// META
+    protected void addMetaEntity(final MetaEndpoint meta) throws SibincoException {
+        logger.info( "addMetaEntity");
+        final Response response = super.runCommand(new AddMetaEntity(meta));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't register MetaEntity , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    protected void updateMetaEntity(final MetaEndpoint meta) throws SibincoException {
+        final Response response = super.runCommand(new UpdateMetaEntity(meta));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't modify MetaEntity , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    protected void deleteMetaEntity(final MetaEndpoint meta) throws SibincoException {
+        final Response response = super.runCommand(new DeleteMetaEntity(meta));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't delete MetaEntity, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    protected void addMetaEndpoint(final String[] pair) throws SibincoException {
+        final Response response = super.runCommand(new AddMetaEndpoint(pair));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't add MetaEndpoint, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    protected void removeMetaEndpoint(final String[] pair) throws SibincoException {
+        final Response response = super.runCommand(new RemoveMetaEndpoint(pair));
+        if (Response.STATUS_OK != response.getStatus())
+            throw new SibincoException("Couldn't delete MetaEntity, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+//META
 
     //rules command invoked directly(not by invokeCommand(...)) because of specific logic
     public void removeRule(final String ruleId, final String transport) throws SibincoException {
@@ -356,7 +396,9 @@ public class Scag extends Proxy {
 
     //common logic of command executing
     //1. "save" or "delete" button pressed
-    public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,  final Manager manager, final String configFilename) throws SibincoException {
+    public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,
+                              final Manager manager, final String configFilename)
+                              throws SibincoException {
      try{
        //2.save current config to temporary file(smpp.xml->smpp.xml.old)
        File configFile = new File(configFilename);
@@ -364,6 +406,72 @@ public class Scag extends Proxy {
        Functions.RenameFile(configFile,temporary);
        //3.save config
        manager.store();
+       //3.1 parse method used to localy validate saved config
+       try {
+         manager.parse();
+       } catch (Throwable e) {
+         Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+         throw new SibincoException(e);
+       }
+       //4.send command
+      try {
+       try {
+         Method commandMethod;
+         if (paramsObject==null) {
+           commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
+           commandMethod.invoke(appContext.getScag(),null);
+         } else {
+           commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
+           commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
+         }
+       }catch (NoSuchMethodException e) {
+         logger.error("scag doesn't support command "+commandName,e);
+         e.printStackTrace();
+       } catch (IllegalAccessException e) {
+         e.printStackTrace();
+       } catch (InvocationTargetException e) {
+         throw (SibincoException)e.getTargetException();
+        }
+      } catch (SibincoException se) {
+        //5. does service started?
+        if (getStatus() == STATUS_DISCONNECTED) {
+          //5. N0(service isn't started)
+          //9. save smpp.xml to backup!
+          //10. delete smpp.xml.old
+          Functions.SavedFileToBackup(temporary,".old");
+          appContext.getHSDaemon().store(configFile);
+          throw new StatusDisconnectedException(host,port);
+        } else {
+          //5. YES(service is started)
+          //6. service return error
+          //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
+          Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+          //Paint error on the screen by throwing exception(next string)
+          throw se;
+        }
+      }
+      //we don't have any exception, so
+      //9. save smpp.xml to backup!
+      //10. delete smpp.xml.new
+      Functions.SavedFileToBackup(temporary,".old");
+      appContext.getHSDaemon().store(configFile);
+   } catch (IOException e) {
+     //e.printStackTrace();
+     logger.error("IO operation failed - couldn't save config",e);
+     throw new SibincoException("IO operation failed - couldn't save config");
+   }
+  }
+    public void invokeCommand(final String commandName, final Object paramsObject, final SCAGAppContext appContext,
+                              final Manager manager, final String configFilename, boolean store) throws SibincoException {
+     try{
+       //2.save current config to temporary file(smpp.xml->smpp.xml.old)
+       File configFile = new File(configFilename);
+       File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
+       Functions.RenameFile(configFile,temporary);
+       //3.save config
+       if( store ){
+        manager.store();
+       }
        //3.1 parse method used to localy validate saved config
        try {
          manager.parse();

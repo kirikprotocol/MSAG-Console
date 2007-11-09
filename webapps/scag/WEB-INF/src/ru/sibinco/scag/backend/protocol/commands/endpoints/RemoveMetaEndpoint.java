@@ -13,6 +13,7 @@ public class RemoveMetaEndpoint  extends MetaCommand{
 
     public RemoveMetaEndpoint(final String[] pair) throws SibincoException {
         super("removeMetaEndpoint", "command_gw.dtd");
+        logger.info( "removeMetaEndpoint" + pair[0] + "|" + pair[1] );
         fillPair(pair);
     }
 }
