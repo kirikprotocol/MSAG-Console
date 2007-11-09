@@ -83,7 +83,7 @@
       </script>
       <c:choose>
       <c:when test="${bean.transportId == 1}">
-          <c:set var="smes" value="${bean.smeIds}"/>
+          <c:set var="smes" value="${bean.ungroupedSmeIds}"/>
           <table cellpadding="2">
               <col width="50%">
               <col width="50%">
