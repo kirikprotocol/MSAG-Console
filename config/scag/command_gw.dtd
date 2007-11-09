@@ -1,16 +1,17 @@
 <?xml encoding="ISO-8859-1"?>
 
 <!ELEMENT command (param*)>
-    <!ATTLIST command name (applyConfig|updateSmeInfo|addSmsc|
-    deleteSmsc|updateSmsc|statusSme|addSme|applySmppRoutes|
-    loadSmppTraceRoutes|traceSmppRoute|deleteSme|addRule|
-    updateRule|removeRule|reloadOperators|reloadServices|
-    reloadTariffMatrix|applyHttpRoutes|loadHttpTraceRoutes|
-    traceHttpRoute|getLogCategories|setLogCategories|storeLogCategories|
-    listSme|listSmsc|
-    addMetaEntity|updateMetaEntity|
-    deleteMetaEntity|addMetaEndpoint|removeMetaEndpoint
-    ) #REQUIRED>
+    <!ATTLIST command name (applyConfig|
+    statusSme|listSme|listSmsc|
+    addSme|deleteSme|updateSme|
+    addSmsc|deleteSmsc|updateSmsc|
+    addMetaEntity|updateMetaEntity|deleteMetaEntity|
+    addMetaEndpoint|removeMetaEndpoint|
+    applySmppRoutes|loadSmppTraceRoutes|traceSmppRoute|
+    addRule|updateRule|removeRule|
+    reloadOperators|reloadServices|reloadTariffMatrix|
+    applyHttpRoutes|loadHttpTraceRoutes|traceHttpRoute|
+    getLogCategories|setLogCategories|storeLogCategories) #REQUIRED>
     <!ATTLIST command returnType (string|int|bool|stringlist) #IMPLIED>
     
 <!ELEMENT service (#PCDATA)>
