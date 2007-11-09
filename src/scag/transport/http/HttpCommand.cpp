@@ -374,7 +374,7 @@ const std::string& HttpRequest::serialize()
         headers += CRLF;
 
         setHeaderField(connection_field, close);
-        removeHeaderField(accept_encoding);
+        //removeHeaderField(accept_encoding); // TODO: Why it was here?
         removeHeaderField("TE");
 
         if(httpMethod == POST && !strcasecmp(contentType.c_str(), "application/x-www-form-url-encoded"))
