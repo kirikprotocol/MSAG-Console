@@ -9,6 +9,7 @@ import org.w3c.dom.NodeList;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.Constants;
 
 import java.io.PrintWriter;
 
@@ -48,6 +49,7 @@ public class Svc {
     private int inQueueLimit = 0;
     private int outQueueLimit = 0;
     private int maxSmsPerSec = 0;
+    private String metaGroup = "";
 
     private byte type = SMPP;
 
@@ -129,6 +131,8 @@ public class Svc {
                    outQueueLimit = Integer.decode(value).intValue();
                 } else if (MAX_SMS_PER_SEC.equals(name)) {
                     maxSmsPerSec = Integer.decode(value).intValue();
+                } else if ("metaGroup".equals(name)) {
+                    metaGroup = StringEncoderDecoder.encode(value);
                 }
             } catch (NumberFormatException e) {
                 logger.warn("Int parameter \"" + name + "\" misformatted: '" + value + "', skipped");
@@ -152,12 +156,12 @@ public class Svc {
 
 
     protected PrintWriter storeHeader(final PrintWriter out) {
-        out.println("  <smerecord>");
+        out.println("  <" + Constants.SME_RECORD_TAG + ">");
         return out;
     }
 
     protected PrintWriter storeFooter(final PrintWriter out) {
-        out.println("  </smerecord>");
+        out.println("  </" + Constants.SME_RECORD_TAG + ">");
         return out;
     }
 
@@ -168,9 +172,10 @@ public class Svc {
         out.println("    <param name=\"mode\"\t\tvalue=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
         out.println("    <param name=\"providerId\"\tvalue=\"" + -1/*provider.getId()*/ + "\"/>");
-        out.println("    <param name=\"" + IN_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
+        out.println("    <param name=\"" + IN_QUEUE_LIMIT +  "\"\tvalue=\"" + intToString(getInQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + OUT_QUEUE_LIMIT + "\"\tvalue=\"" + intToString(getOutQueueLimit()) + "\"/>");
         out.println("    <param name=\"" + MAX_SMS_PER_SEC + "\"\tvalue=\"" + intToString(getMaxSmsPerSec()) + "\"/>");
+        out.println("    <param name=\"metaGroup\"\tvalue=\"" + StringEncoderDecoder.encode(metaGroup) + "\"/>");
         return out;
     }
 
@@ -339,6 +344,16 @@ public class Svc {
     public int getMaxSmsPerSec() {
         return maxSmsPerSec;
     }
+
+    public String getMetaGroup() {
+        return metaGroup;
+    }
+
+    public void setMetaGroup(String metaEndpoint) {
+        this.metaGroup = metaEndpoint;
+    }
+
+
 }
 
 
