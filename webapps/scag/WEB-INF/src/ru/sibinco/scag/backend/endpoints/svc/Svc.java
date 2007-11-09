@@ -152,6 +152,7 @@ public class Svc {
         this.inQueueLimit = svc.getInQueueLimit();
         this.outQueueLimit = svc.getOutQueueLimit();
         this.maxSmsPerSec = svc.getMaxSmsPerSec();
+        this.metaGroup = svc.getMetaGroup();
     }
 
 
