@@ -35,8 +35,10 @@ public class TopMenu  extends ArrayList {
 
             Collection endpointItems = new ArrayList();
             endpointItems.add(new MenuItem("menu.endpoint.services","/endpoints/services/index.jsp", new String[]{"routing"}));
+            endpointItems.add(new MenuItem("menu.endpoint.metaservices","/endpoints/metaservices/index.jsp", new String[]{"routing"}));
             endpointItems.add(new MenuItem("menu.endpoint.services.monitor","","/endpoints/services/monitor/index.jsp', '', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');",new String[]{"stat"}));
             endpointItems.add(new MenuItem("menu.endpoint.centers","/endpoints/centers/index.jsp",new String[]{"routing"}));
+            endpointItems.add(new MenuItem("menu.endpoint.metacenters","/endpoints/metacenters/index.jsp",new String[]{"routing"}));            
             endpointItems.add(new MenuItem("menu.endpoint.centers.monitor","","/endpoints/centers/monitor/index.jsp', '', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');",new String[]{"stat"}));
             add(new MenuItem("menu.endpoint", "", endpointItems, new String[]{"routing","stat"}));
 
