@@ -810,7 +810,6 @@ Response * CommandListSmppEntity::CreateResponse(scag::Scag * ScagApp)
 void CommandMetaEntity::init()
 {
   smsc_log_info(logger, "CommandMetaEntity got parameters:");
-  std::string systemId;
   BEGIN_SCAN_PARAMS
   GETSTRPARAM_(systemId,    "systemId")
   END_SCAN_PARAMS
