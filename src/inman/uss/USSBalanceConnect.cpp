@@ -8,28 +8,22 @@ namespace smsc {
 namespace inman {
 namespace uss {
 
-class USSProcSearchCrit {
-public:
-  USSProcSearchCrit(unsigned char ssn,
-                    const TonNpiAddress& addr)
-    : _ssn(ssn), _addr(addr) {}
-
-  bool operator<(const USSProcSearchCrit& rhs) const {
-    if ( _ssn < rhs._ssn ||
-         _addr.toString() < rhs._addr.toString() ) return true;
-    else return false;
-  }
-private:
-  unsigned char _ssn;
-  TonNpiAddress _addr;
-};
-
 USSBalanceConnect::USSBalanceConnect(smsc::logger::Logger* logger,
                                      const UssService_CFG& cfg)
   : _logger(logger), _cfg(cfg) {}
 
+USSBalanceConnect::~USSBalanceConnect()
+{
+  for (CreatedSearchCritList_t::iterator begin_iter=_searchCritForCreatedReqProcessors.begin(), end_iter=_searchCritForCreatedReqProcessors.end();
+       begin_iter != end_iter; ++begin_iter) {
+    USSRequestProcessor* ussReqProc = 
+      ObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toUnregisterObject(*begin_iter);
+    delete ussReqProc;
+  }
+}
+
 //##ModelId=4575350D008E
-void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, // указатель на объект, обслуживающий соединение с smsc
+void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, // указатель на объект, обслуживающий соединение с клиентом ussman'a
                                          std::auto_ptr<smsc::inman::interaction::SerializablePacketAC>& recv_cmd) throw(std::exception)
 {
   smsc_log_debug(_logger, "USSBalanceConnect::onCommandReceived::: Enter it");
@@ -45,7 +39,8 @@ void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn
     ObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().getObject
     (
      USSProcSearchCrit(requestObject->get_IN_SSN(),
-                       requestObject->get_IN_ISDNaddr())
+                       requestObject->get_IN_ISDNaddr(),
+                       conn)
      );
 
   if ( !ussReqProc ) {
@@ -53,8 +48,12 @@ void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn
     ObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toRegisterObject
       (
        ussReqProc, USSProcSearchCrit(requestObject->get_IN_SSN(),
-                                     requestObject->get_IN_ISDNaddr())
+                                     requestObject->get_IN_ISDNaddr(),
+                                     conn)
        );
+    _searchCritForCreatedReqProcessors.push_back(USSProcSearchCrit(requestObject->get_IN_SSN(),
+                                                                   requestObject->get_IN_ISDNaddr(),
+                                                                   conn));
   }
 
   ussReqProc->setDialogId(requestPacket->dialogId());
