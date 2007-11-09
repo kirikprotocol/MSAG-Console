@@ -173,9 +173,9 @@ public:
     virtual bool Change(const Key& key, const DataBlock& data)
     {
         long idx;
-        bool ret;
         if(indexStorage.Get(key, idx))
             return dataStorage.Change(idx, data, key);
+        return false;
     }
     
     virtual void Remove(const Key& key)
