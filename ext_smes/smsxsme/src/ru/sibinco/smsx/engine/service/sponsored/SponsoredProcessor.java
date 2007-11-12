@@ -108,15 +108,11 @@ class SponsoredProcessor implements SponsoredRegisterAbonentCmd.Receiver, Sponso
 // =====================================================================================================================
 
       final DistributionInfo info = getOrCreateSubscriptionInfo(cmd.getAbonentAddress());
-      boolean exists = info.isExists();
-      if (!exists) {
-        info.setTodayCount(0);
-        info.setCurrentCount(0);
-        info.setCnt(cmd.getCount());
-        ds.saveDistributionInfo(info);
-      }
+      
+      info.setCnt(cmd.getCount());
+      ds.saveDistributionInfo(info);
 
-      cmd.setAbonentExists(exists);
+      cmd.setAbonentExists(info.isExists());
       cmd.setProfileChangeDate(getNextDayStartTime(System.currentTimeMillis()));
       cmd.update(SponsoredRegisterAbonentCmd.STATUS_SUCCESS);
 

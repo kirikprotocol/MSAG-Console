@@ -11,8 +11,8 @@ import java.util.Date;
 public class DistributionInfo {
 
   private String abonent;
-  private int todayCount;
-  private long currentCount;
+  private int todayCount = 0;
+  private long currentCount = 0;
   private int cnt;
   private boolean exists = false;
 

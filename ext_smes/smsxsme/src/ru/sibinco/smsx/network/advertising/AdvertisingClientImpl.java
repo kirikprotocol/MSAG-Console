@@ -32,11 +32,11 @@ class AdvertisingClientImpl implements AdvertisingClient {
   }
 
   public String getBanner(String serviceName, String abonentAddress) throws AdvertisingClientException {
-    return getBanner(serviceName, abonentAddress, 1, 0, 2, 1, 0);
+    return getBanner(serviceName, abonentAddress, 1, 0, 1, 1, 0);
   }
 
   public String getBanner(String serviceName, String abonentAddress, int maxBannerLength) throws AdvertisingClientException {
-    return getBanner(serviceName, abonentAddress, 1, maxBannerLength, 2, 1, 0);
+    return getBanner(serviceName, abonentAddress, 1, maxBannerLength, 1, 1, 0);
   }
 
   public String getBanner(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingClientException {
@@ -48,7 +48,7 @@ class AdvertisingClientImpl implements AdvertisingClient {
                                                  serviceName.getBytes("ISO8859-1"),
                                                  transportType, maxBannerLength, charSet, clientId, transactionId);
 
-      return banner == null ? null : Encode.decodeGSM(banner, true);
+      return banner == null ? null : Encode.decodeUTF16(banner);
 
     } catch (Throwable e) {
       throw new AdvertisingClientException(e);

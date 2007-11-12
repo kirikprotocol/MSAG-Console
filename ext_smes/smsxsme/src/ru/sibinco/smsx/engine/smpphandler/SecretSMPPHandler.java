@@ -32,9 +32,9 @@ class SecretSMPPHandler extends SMPPHandler {
   private final static Pattern SEC = Pattern.compile("(((S|s)(E|e|\u0415|\u0435)(C|c|\u0421|\u0441))|#)");
   private final static Pattern SMS = Pattern.compile("((G|g)(E|e|\u0415|\u0435)(T|t|\u0422|\u0442)|(S|s)(M|m|\u041C)(S|s))");
 
-  private final static Pattern ONE_OR_MORE_SPACES = Pattern.compile("\\s+");
-  private final static Pattern ANY_NONSPACE_STRING_AFTER_SPACE = Pattern.compile("\\s+\\S+");
-  private final static Pattern ANY_STRING_AFTER_SPACE = Pattern.compile("(\\s*|\\s+.+)");
+  private final static Pattern ONE_OR_MORE_SPACES = Pattern.compile(" +");
+  private final static Pattern ANY_NONSPACE_STRING_AFTER_SPACE = Pattern.compile(ONE_OR_MORE_SPACES.pattern() + "\\S+");
+  private final static Pattern ANY_STRING_AFTER_SPACE = Pattern.compile("( *| +.+)");
 //  private final static String ANY_WORD = "\\s*\\S+\\s*";
 
   private final static Pattern SECRET_ON_REGEX = Pattern.compile(SECRET_ON.pattern()  + ANY_NONSPACE_STRING_AFTER_SPACE.pattern());
@@ -323,6 +323,8 @@ class SecretSMPPHandler extends SMPPHandler {
     return removePrefix(message, SMS);
   }
 
-
+  public static void main(String[] args) {
+    System.out.println(SECRET_MESSAGE_REGEX.matcher("SEC lfgskldfglksdfg").matches());
+  }
 
 }

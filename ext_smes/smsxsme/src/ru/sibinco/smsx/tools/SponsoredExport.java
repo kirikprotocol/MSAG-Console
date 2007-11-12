@@ -45,7 +45,7 @@ public class SponsoredExport {
 
   private static ConnectionPool pool;
 
-  private static void unload(Date startDate, Date endDate, String fileDir, double cost) {
+  private static void unload(Date startDate, Date endDate, String fileDir, float cost) {
     Timestamp start = new Timestamp(getDayStartTime(startDate.getTime()).getTime());
     Timestamp end = new Timestamp(getDayStartTime(endDate.getTime()).getTime());
 
@@ -58,14 +58,14 @@ public class SponsoredExport {
     FileWriter log = null;
 
     try {
-      writer = new FileWriter(new File(fileDir, "extra" + df.format(end)));
+      writer = new FileWriter(new File(fileDir, "extra" + df.format(end) + ".csv"));
 
-      log = new FileWriter(new File(fileDir, "extra" + df.format(end) + ".log"));
-
-      log.write("Unload started at " + new Date() + "\n");
-      log.write("Start date = " + start + "\n");
-      log.write("End date = " + end + "\n");
-      log.write("================================================================================================\n");
+//      log = new FileWriter(new File(fileDir, "extra" + df.format(end) + ".log"));
+//
+//      log.write("Unload started at " + new Date() + "\n");
+//      log.write("Start date = " + start + "\n");
+//      log.write("End date = " + end + "\n");
+//      log.write("================================================================================================\n");
 
       conn = pool.getConnection();
 
@@ -82,7 +82,7 @@ public class SponsoredExport {
 
         String abonent;
         int cnt;
-        double totalCost;
+        float totalCost;
         count = 0;
         while(rs.next()) {
           count ++;
@@ -94,10 +94,10 @@ public class SponsoredExport {
             abonent = abonent.substring(1);
 
           cnt = rs.getInt(2);
-          totalCost = cnt*cost;
+          totalCost = cost * 100 * cnt / 100;
 
           if (cnt > 0) {
-            log.write(abonent + "|" + totalCost + "\n");
+//            log.write(abonent + "|" + totalCost + "\n");
             writer.write(abonent + "|" + totalCost + "\n");
 //            log.write("|" + totalCost + "|||" + "bonus SMS Extra " + abonent + "\n");
 //            writer.write("|" + totalCost + "|||" + "bonus SMS Extra " + abonent + "\n");
@@ -114,7 +114,7 @@ public class SponsoredExport {
 
     } catch (Throwable e) {
       e.printStackTrace();
-      e.printStackTrace(new PrintWriter(log));
+      // e.printStackTrace(new PrintWriter(log));
     } finally {
       try {
         if (rs != null)
@@ -136,11 +136,11 @@ public class SponsoredExport {
           writer.close();
       } catch (Exception e) {
       }
-      try {
-        if (log != null)
-          log.close();
-      } catch (Exception e) {
-      }
+//      try {
+//        if (log != null)
+//          log.close();
+//      } catch (Exception e) {
+//      }
 
       pool.release();
     }
@@ -207,14 +207,17 @@ public class SponsoredExport {
     String configDir;
     String outputDir;
     Date endDate, startDate;
-    double cost;
+    float cost;
 
     try {
       configDir = args[0];
       outputDir = args[1];
-      startDate = df.parse(args[2]);
-      endDate = df.parse(args[3]);
-      cost = Double.parseDouble(args[4]);
+//      startDate = df.parse(args[2]);
+//      endDate = df.parse(args[3]);
+      endDate = getDayStartTime(System.currentTimeMillis());
+      startDate = new Date(endDate.getTime() - Integer.parseInt(args[2])*DAY_COUNT);
+
+      cost = Float.parseFloat(args[3]);
     } catch (Throwable e) {
       System.out.println("invalid arguments");
       e.printStackTrace();

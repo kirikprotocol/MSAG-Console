@@ -33,7 +33,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
   private static final Pattern NONE = Pattern.compile("(N|n)(O|o)(N|n)(E|e)");
   private static final Pattern ANY_NUMBER = Pattern.compile("\\d+");
   private static final Pattern SPACE = Pattern.compile(" ");
-  private static final Pattern ONE_OR_MORE_SPACES = Pattern.compile("\\s+");
+  private static final Pattern ONE_OR_MORE_SPACES = Pattern.compile(" +");
   private static final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
 
   private static final Pattern SPONSORED_SUBSCRIBE = Pattern.compile(SPONSORED.pattern() + ONE_OR_MORE_SPACES.pattern() + ANY_NUMBER.pattern());
@@ -86,6 +86,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
           }
 
           if (SPONSOR.matcher(msg).matches()) {
+            sendResponse(inObj.getIncomingMessage(), Data.ESME_ROK);
             sendMessage(serviceAddress, sourceAddress, msgInvitation);
             return true;
 
