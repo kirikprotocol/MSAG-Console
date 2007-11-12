@@ -17,27 +17,12 @@
     <jsp:body>
         <script>
     var global_counter = 0;
-
-  function removeSmeRow_( tblId, rowId ){
-    alert( "REMOVE" );
-      tbl = document.getElementById("smeTable");
-//      var rows = tbl.rows.getElementById(1);
-      var row = document.getElementById( rowId );
-      alert( row.rowIndex );
-//      for(row in rows){
-//        alert( "ROW:" + row );
-//      }
-//      var rowElem = tbl.rows(rowId);
-
-      tbl.deleteRow(row.rowIndex);
-  }
-
   function removeSmeRow( tblId, rowId ){
       tbl = document.getElementById("smeTable");
       var rowElem = tbl.rows[rowId];
       var selectElem = document.getElementById('smeSelect');
       var oOption = document.createElement("OPTION");
-//      alert( "SME:" + rowElem.childNodes[3].innerHTML );
+//      alert( "SME DELETE:" + rowElem.childNodes[3].innerHTML );
       var smeValue = rowElem.childNodes[3].innerHTML;
       oOption.innerText = smeValue;
       oOption.text = smeValue;
@@ -52,7 +37,6 @@
 
       function addSmeRow(){
 //      alert("add sme='" + document.getElementById("newSme").value +"'");
-//      if( validateField(document.getElementById("newSme")) ){
 //      selectElem.options[selectElem.selectedIndex] = null;
         var selectElem = document.getElementById('smeSelect');
 //         if( document.getElementById("newSme").value!=null && document.getElementById("newSme").value != ""){
@@ -69,26 +53,14 @@
 
           newCell = document.createElement("td");
 <%--          newCell.innerHTML = '<img src="content/images/mask.gif">';--%>
-          newCell.setAttribute( 'width', '154');
+//          newCell.setAttribute( 'width', '154');
           newCell.innerHTML = '<input type=hidden name="selected_sme_' + sme + '">';
           newRow.appendChild(newCell);
 
           newCell = document.createElement("td");
 //          newCell.innerHTML = sme + '<input type=hidden name="selected_sme_' + sme + '">';
             newCell.innerHTML = sme;
-            newCell.setAttribute( 'width', '230');
           newRow.appendChild(newCell);
-
-//          newCell = document.createElement("td");
-//          newCell.innerHTML = smesSelectText;
-//          newSelect = newCell.all.newSmesSelect;
-//          newSelect.name = "sme_" + sme;
-//          newSelect.all["option_" + sme].selected = true;
-//          newRow.appendChild(newCell);
-
-//          newCell = document.createElement("td");
-//          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(document.getElementById("smeTable"), \'' + newRow.id + '\')" style="cursor: hand;">';
-//          newRow.appendChild(newCell);
 
           newCell = document.createElement("td");
           var img     = document.createElement('IMG');
@@ -98,7 +70,7 @@
               var rowElem = tbl.rows[newRow.id];
               var selectElem = document.getElementById('smeSelect');
               var oOption = document.createElement("OPTION");
-//              alert( "SME:" + rowElem.childNodes[1].innerHTML );
+              alert( "SME:" + rowElem.childNodes[1].innerHTML );
               var smeValue = rowElem.childNodes[1].innerHTML;
               oOption.innerText = smeValue;
               oOption.text = smeValue;
@@ -117,20 +89,10 @@
 //            alert( "Empty SME" );
 //         }
     }
-            function setNewSme(){
-//                alert("set new sme");
-//                opForm.all.newSme.value = opForm.all.smeSelect.value;
-//                elem.value = elem1.value;
-//                alert( "getElementById=" + elem.value + "|" + elem1.value);
-                document.getElementById("newSme").value = document.getElementById("smeSelect").value;
-            }
-
         </script>
             <br>
 <%--                <c:set var="sps" value="${fn:join(bean.spIds, ',')}"/>--%>
-<%--                <c:set var="centers" value="${fn:join(bean.allSmes, ',')}"/>--%>
-<%--                <c:set var="smes" value="${fn:join(bean.allSmes, ',')}"/>--%>
-                <sm-ep:properties title="metaservice.edit.properties">
+                <sm-ep:properties title="metacenter.edit.properties">
                     <br>
                     <sm-ep:txt title="metaeps.edit.txt.id" name="id" maxlength="15" validation=""/>
                     <sm-ep:list title="metaeps.edit.txt.policy" name="policy"
@@ -138,10 +100,11 @@
                                 valueTitles="${fn:join(bean.policyTitles,',')}"/>
                     <sm-ep:check title="centers.edit.check.enabled.title" head="metaep.edit.check.persistent.head" name="enabled"/>
          <tr>
-                <td nowrap width="135" ><fmt:message>${fn:escapeXml("metacenter.edit.centerid")}</fmt:message></td>
+                <td nowrap valign="top" width="135" ><fmt:message>${fn:escapeXml("metacenter.edit.centerid")}</fmt:message></td>
                 <td>
-                    <table cellpadding="0" border=0>
+                    <table cellpadding="0" border=0 id=smeTable>
                     <tr>
+                        <td></td>
                         <td width="229" >
                             <select id=smeSelect onchange="setNewSme()" name=smeSelect >
 <%--                        <option value="">select services</option>--%>
@@ -152,31 +115,23 @@
                         </td>
                         <td><img src="content/images/but_add.gif" onclick="addSmeRow();" style="cursor:pointer;"></td>
                     </tr>
+                  <c:forEach items="${bean.selectedSmes}" var="i">
+                    <c:set var="sme" value="${fn:escapeXml(i)}"/>
+    <%--                <tr class="row${rowN%2}" id="smeRow_${sme}">--%>
+                    <tr class="row${rowN%2}" id="smeRow_${sme}">
+                      <td>
+    <%--                    <img src="content/images/subject.gif">--%>
+                        <input type=hidden name="selected_sme_${sme}" value="sme"}">
+                      </td>
+                      <td>${sme}</td>
+                      <td><img src="content/images/but_del.gif" onClick="removeSmeRow( 'smeTable', 'smeRow_${sme}');" style="cursor: pointer;"></td>
+                    </tr>
+                    <c:set var="rowN" value="${rowN+1}"/>
+                  </c:forEach>
+
                     </table>
                 </td>
             </tr>
                 </sm-ep:properties>
-            <table class=properties_list cellspacing=0 cellpadding=0 id=smeTable border=0>
-<%--              <c:if test="${!empty bean.selectedSmes}">  --%>
-<%--                <tr>--%>
-<%--                <td></td>--%>
-<%--                <td>SME</td>--%>
-<%--                <td></td>--%>
-<%--                </tr>--%>
-<%--              </c:if>--%>
-              <c:forEach items="${bean.selectedSmes}" var="i">
-                <c:set var="sme" value="${fn:escapeXml(i)}"/>
-<%--                <tr class="row${rowN%2}" id="smeRow_${sme}">--%>
-                <tr class="row${rowN%2}" id="smeRow_${sme}">
-                  <td width=154>
-<%--                    <img src="content/images/subject.gif">--%>
-                        <input type=hidden name="selected_sme_${sme}" value="sme"}">
-                  </td>
-                  <td width="230" >${sme}</td>
-                  <td><img src="content/images/but_del.gif" onClick="removeSmeRow( 'smeTable', 'smeRow_${sme}');" style="cursor: pointer;"></td>
-                </tr>
-                <c:set var="rowN" value="${rowN+1}"/>
-              </c:forEach>
-            </table>
     </jsp:body>
 </sm:page>
