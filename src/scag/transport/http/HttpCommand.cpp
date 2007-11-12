@@ -374,8 +374,8 @@ const std::string& HttpRequest::serialize()
         headers += CRLF;
 
         setHeaderField(connection_field, close);
-        //removeHeaderField(accept_encoding); // TODO: Why it was here?
-        removeHeaderField("TE");
+        //removeHeaderField(accept_encoding);   // Was inserted to skip ubsupported encodings
+        //removeHeaderField("TE");              // in responses (on message body processing).
 
         if(httpMethod == POST && !strcasecmp(contentType.c_str(), "application/x-www-form-url-encoded"))
         {
