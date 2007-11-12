@@ -39,7 +39,7 @@ import java.util.regex.Matcher;
 public class Edit extends EditBean {
 
     public static final String SELECTED_SME_PREFFIX = "selected_sme_";
-    protected boolean enabled = true;
+    protected boolean enabled;
     private String userName = "";
     protected String id = null;
     protected String policy = "";
