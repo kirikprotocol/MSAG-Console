@@ -331,7 +331,7 @@ function removeParams(paramsName)
             finishSection(out);
         }
         finishSection(out); // counters
-        startSectionPre(out, "default.severity", "smnp.severities", false);
+        startSectionPre(out, "default.severity", getLocString("snmp.severities"), false);
         java.util.Map defSeverities = bean.defaultSeverities;
         java.util.Map.Entry entry;
         for (Iterator i = defSeverities.entrySet().iterator(); i.hasNext();) {
@@ -376,7 +376,7 @@ function removeParams(paramsName)
                 printAddSectionCounter(out,obj.id+".counter");
                 finishSection(out);
 
-                startSectionPre(out, obj.id + ".severity", "smnp.severities", false);
+                startSectionPre(out, obj.id + ".severity", getLocString("snmp.severities"), false);
                 map = obj.severities;
 
                 for (Iterator j = map.entrySet().iterator(); j.hasNext();) {
