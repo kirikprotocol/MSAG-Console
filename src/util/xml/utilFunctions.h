@@ -26,17 +26,17 @@ public:
   XmlStr(const char * const str);
   ~XmlStr();
 
-  const char * const c_str();
+  const char * const c_str()const;
   const XMLCh * const x_str();
   char * c_release();
   XMLCh * x_release();
 
-  bool operator==(const char* str)
+  bool operator==(const char* str)const
   {
     return !strcmp(c_str(),str);
   }
 
-  bool operator!=(const char* str)
+  bool operator!=(const char* str)const
   {
     return strcmp(c_str(),str);
   }

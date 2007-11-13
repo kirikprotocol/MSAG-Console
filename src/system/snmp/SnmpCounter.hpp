@@ -90,6 +90,28 @@ public:
     }
   };
 
+  struct SmeTrapSeverities{
+    int onRegister;
+    int onRegisterFailed;
+    int onUnregister;
+    int onUnregisterFailed;
+    SmeTrapSeverities()
+    {
+      onRegister=smsc::snmp::SnmpAgent::NORMAL;
+      onRegisterFailed=smsc::snmp::SnmpAgent::MAJOR;
+      onUnregister=smsc::snmp::SnmpAgent::WARNING;
+      onUnregisterFailed=smsc::snmp::SnmpAgent::MAJOR;
+    }
+  };
+
+  SmeTrapSeverities getSmeSeverities(const char* sysId)
+  {
+    sync::MutexGuard mg(cfgMtx);
+    SmeTrapSeverities* ptr=smeTrpSvrts.GetPtr(sysId);
+    if(!ptr)return defTrpSvrt;
+    return *ptr;
+  }
+
 protected:
   struct Counters
   {
@@ -130,6 +152,10 @@ protected:
   sync::Mutex cfgMtx;
   buf::Hash<SeverityLimits> svrtHash;
   SeverityLimits defSvrtLim;
+
+  sync::Mutex smeSvrtsMtx;
+  buf::Hash<SmeTrapSeverities> smeTrpSvrts;
+  SmeTrapSeverities defTrpSvrt;
 
   struct CounterEvent{
     CounterId id;

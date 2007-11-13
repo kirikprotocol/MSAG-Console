@@ -18,7 +18,7 @@ using namespace smsc::util;
 char * getNodeText(const DOMNode &node)
 {
   std::string s;
-  
+
   DOMNodeList *childs = node.getChildNodes();
   unsigned childsLength = childs->getLength();
   for (unsigned i=0; i<childsLength; i++)
@@ -63,9 +63,9 @@ XmlStr::XmlStr(const XMLCh * const str)
   std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor(INTERNAL_SMSC_ENCODING, resValue, 0x7FFF));
   if (resValue != XMLTransService::Ok)
     throw Exception("could not create transcoder for internal SMSC encoding (\"%s\")", INTERNAL_SMSC_ENCODING);
-  
+
   unsigned int srcCount = XMLString::stringLen(str);
-  size_t cstrLen =srcCount +16; 
+  size_t cstrLen =srcCount +16;
   cstr = new char[cstrLen+1];
   unsigned int dstCount = cstrLen;
   unsigned int charsEaten = 0;
@@ -82,9 +82,9 @@ XmlStr::XmlStr(const char * const str)
   std::auto_ptr<XMLTranscoder> transcoder(XMLPlatformUtils::fgTransService->makeNewTranscoderFor(INTERNAL_SMSC_ENCODING, resValue, 0x7FFF));
   if (resValue != XMLTransService::Ok)
     throw Exception("could not create transcoder for internal SMSC encoding (\"%s\")", INTERNAL_SMSC_ENCODING);
-  
+
   unsigned int srcCount = XMLString::stringLen(str);
-  size_t xstrLen =srcCount +16; 
+  size_t xstrLen =srcCount +16;
   xstr = new XMLCh[xstrLen+1];
   unsigned int dstCount = xstrLen;
   unsigned int bytesEaten = 0;
@@ -103,8 +103,8 @@ XmlStr::~XmlStr()
       delete cstr;
   }
 }
-  
-const char * const XmlStr::c_str()
+
+const char * const XmlStr::c_str()const
 {
   return cstr;
 }
