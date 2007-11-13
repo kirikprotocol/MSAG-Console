@@ -113,7 +113,7 @@ uint32_t DistrListProcess::getNextSequenceNumber()
 
 static void lowercase(string& str)
 {
-  for(int i=0;i<str.length();i++)str[i]=tolower(str[i]);
+  for(int i=0;i<str.length();i++)str[i]=tolower((unsigned char)str[i]);
 }
 
 //uint32_t DistrListProcess::getUniqueId() const {__unreachable__("must be implemented in proxy or wrapper");return 0;}
