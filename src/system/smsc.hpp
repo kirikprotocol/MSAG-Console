@@ -317,6 +317,7 @@ public:
 
   void SaveStats()
   {
+    /*
     FILE *f=fopen("stats.txt","wt");
     if(f)
     {
@@ -330,6 +331,7 @@ public:
       );
       fclose(f);
     }
+    */
   }
   void abortSmsc()
   {

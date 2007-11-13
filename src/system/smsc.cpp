@@ -554,6 +554,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     delete params;
   }*/
 
+  /*
   if(!ishs)
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
@@ -578,6 +579,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     tp.startTask(sm);
     smsc_log_info(log, "Speedmonitor started" );
   }
+  */
   /*
   {
     using namespace smsc::db;
@@ -1238,6 +1240,7 @@ void Smsc::run()
     smsc_log_info(log, "Aliases loaded" );
 
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
+    /*
     FILE *f=fopen("stats.txt","rt");
     if(f)
     {
@@ -1256,6 +1259,7 @@ void Smsc::run()
       fclose(f);
       remove("stats.txt");
     }
+    */
     tp.startTask(sm);
     smsc_log_info(log, "Speedmonitor started" );
 
