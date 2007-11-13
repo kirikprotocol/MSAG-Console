@@ -17,7 +17,9 @@ public class Constants {
     public static final String META_SME_RECORD_TAG = "metasmerecord";
     public static final String META_SMSC_RECORD_TAG = "metasmscrecord";
     public static final String SME_RECORD_TAG = "smerecord";
-    public static final String SMSC_RECORD_TAG = "smscrecord";    
+    public static final String SMSC_RECORD_TAG = "smscrecord";
+    public static final String META_TYPE_SERVICE = "MetaService";
+    public static final String META_TYPE_SMSC = "MetaSmsc";
 
     public static final int STORE_TYPE_SVC = 1;
     public static final int STORE_TYPE_CENTER = 2;
