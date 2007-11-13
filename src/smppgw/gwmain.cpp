@@ -3,7 +3,7 @@
 #include <exception>
 #include <sys/stat.h>
 #include "smppgw/smsc.hpp"
-#include "alias/aliasman.h"
+//#include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include <admin/service/ComponentManager.h>
