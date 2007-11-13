@@ -14,6 +14,7 @@
 #include <resourcemanager/ResourceManager.hpp>
 #include <system/smscsignalhandlers.h>
 #include <core/threads/Thread.hpp>
+#include <locale.h>
 
 #include "system/version.inc"
 
@@ -69,6 +70,10 @@ int main(int argc,char* argv[])
 {
   Logger::Init();
   tzset();
+  if(setlocale(LC_CTYPE,"")==0)
+  {
+    fprintf(stderr,"Failed to set LC_CTYPE\n");
+  }
 
   atexit(atExitHandler);
   smsc::system::clearThreadSignalMask();
@@ -199,6 +204,6 @@ int main(int argc,char* argv[])
   }
   //graceful shutdown
   //we don't need to restore stats on next startup in this case
-  remove("stats.txt");
+  //remove("stats.txt");
   return 0;
 }
