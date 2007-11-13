@@ -45,7 +45,7 @@ public class Edit extends EditBean {
     protected String policy = "";
     private String[] policyTypes = new String[]{"RoundRobin","Random"};
     private String[] policyTitles = new String[]{"RoundRobin","Random"};
-    private final String type = "MetaService";
+    private final String type = Constants.META_TYPE_SERVICE;
 //    protected String[] selectedSmes = null;
     protected SortedList selectedSmes = new SortedList();
 //    protected SortedList deSelectedSmes = new SortedList();
