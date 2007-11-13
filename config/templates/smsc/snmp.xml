@@ -14,6 +14,13 @@
     <counter name="0x00d">10,20,30,40</counter>
     <counter name="SDP">10,20,30,40</counter>
     <counter name="other">10,20,30,40</counter>
+    <severity event="register" value="normal"/>
+    <severity event="unregister" value="warning"/>
+    <!--severity event="unregister" value="critical"/-->
+    <!--
+    <severity event="register" value="off"/>
+    <severity event="unregister" value="off"/>
+    -->
   </default>
   <object id="GLOBAL" enabled="false">
     <counter name="accepted">0,0,0,0</counter>
