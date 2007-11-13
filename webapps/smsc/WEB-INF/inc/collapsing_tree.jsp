@@ -152,14 +152,14 @@
     }
 
     void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue) throws IOException {
-        paramSelect(out, label, id, values, selectedValue, null, null);
+        paramSelect(out, label, id, values, selectedValue, null, null, null);
     }
 
     void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange) throws IOException {
-        paramSelect(out, label, id, values, selectedValue, onChange, null);
+        paramSelect(out, label, id, values, selectedValue, onChange, null, null);
     }
 
-    void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange, String style) throws IOException {
+    void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange, String style, String additional) throws IOException {
         out.print("<tr class=row" + ((row++) & 1) + ">");
         out.print("<th nowrap>" + getLocString(label) + "</th>");
         out.print("<td><select name=\"" + id + "\" id=\"" + id + "\""
@@ -175,6 +175,10 @@
             out.print(">" + encValue + "</option>");
         }
         out.print("</select></td>");
+        if (additional != null) {
+          out.print("<td nowrap>" + additional + "</td>");
+        }
+
         out.print("</tr>");
     }
 

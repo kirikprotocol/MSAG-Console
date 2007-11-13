@@ -24,6 +24,25 @@ public class ConfigBean extends PageBean {
     public static final String COUNTER_INTERVAL = "counterInterval";
     public static final String OBJECT_SECTION = "object";
 
+    public static final Collection SEVERITY_VALUES;
+    public static final Collection SEVERITY_NAMES;
+
+    static {
+      SEVERITY_VALUES = new LinkedList();
+      SEVERITY_VALUES.add("off");
+      SEVERITY_VALUES.add("normal");
+      SEVERITY_VALUES.add("warning");
+      SEVERITY_VALUES.add("minor");
+      SEVERITY_VALUES.add("major");
+      SEVERITY_VALUES.add("critical");
+
+      SEVERITY_NAMES = new LinkedList();
+      SEVERITY_NAMES.add("register");
+      SEVERITY_NAMES.add("registerFailed");
+      SEVERITY_NAMES.add("unregister");
+      SEVERITY_NAMES.add("unregisterFailed");
+    }
+
     private String mbSave = null;
     private String mbReset = null;
     private Map params = new HashMap();
@@ -33,6 +52,8 @@ public class ConfigBean extends PageBean {
 
     public Map defaultCounters = new HashMap();
     private boolean defaultEnabled = false;
+    public Map defaultSeverities = new HashMap();
+
     public Map objects = new HashMap();
 
     protected int init(List errors) {
@@ -70,34 +91,58 @@ public class ConfigBean extends PageBean {
     private int processApply() {
         try {
             objects.clear();
+            defaultCounters.clear();
+            defaultSeverities.clear();
             for (Iterator i = params.keySet().iterator(); i.hasNext();) {
                 String name = (String) i.next();
                 String value = (String) params.get(name);
                 StringTokenizer tkn = new StringTokenizer(name, ".");
                 String firstToken = tkn.nextToken();
+                String secondToken = tkn.nextToken();
+
                 if (firstToken.endsWith("_counters")) {
                     firstToken = firstToken.substring(0, firstToken.lastIndexOf("_counters"));
                 }
-                Map counters = null;
-                if (firstToken.equals("default"))
+
+                if (secondToken.equals("counter")) {
+                  Map counters = null;
+                  if (firstToken.equals("default"))
                     counters = defaultCounters;
-                else {
+                  else {
                     SnmpObject obj = (SnmpObject) objects.get(firstToken);
                     if (obj == null) {
-                        obj = new SnmpObject();
-                        obj.id = firstToken;
-                        objects.put(firstToken, obj);
+                      obj = new SnmpObject();
+                      obj.id = firstToken;
+                      objects.put(firstToken, obj);
                     }
                     counters = obj.counters;
-                }
-                String secondToken = tkn.nextToken();
+                  }
+                  System.out.println(name);
+                  String thirdToken = tkn.nextToken();
+                  String fourthToken = tkn.nextToken();
 
-                if (secondToken.equals("enabled")) {
+                  SnmpObject.setCounter(counters, thirdToken, fourthToken, value);
+
+                } else if (secondToken.equals("enabled")) {
                     ((SnmpObject) objects.get(firstToken)).enabled = Boolean.valueOf(value).booleanValue();
-                    continue;
+
+                } else if (secondToken.equals("severity")) {
+                  Map severities = null;
+                  if (firstToken.equals("default"))
+                    severities = defaultSeverities;
+                  else {
+                    SnmpObject obj = (SnmpObject) objects.get(firstToken);
+                    if (obj == null) {
+                      obj = new SnmpObject();
+                      obj.id = firstToken;
+                      objects.put(firstToken, obj);
+                    }
+                    severities = obj.severities;
+                  }
+                  String thirdToken = tkn.nextToken();
+                  severities.put(thirdToken, value);
                 }
-                String thirdToken = tkn.nextToken();
-                SnmpObject.setCounter(counters, secondToken, thirdToken, value);
+
             }
             appContext.getStatuses().setSNMPChanged(true);
             journalAppend(SubjectTypes.TYPE_snmp, "config changed", Actions.ACTION_MODIFY);
@@ -126,12 +171,14 @@ public class ConfigBean extends PageBean {
         out.println("   <counterInterval value=\"" + String.valueOf(counterInterval) + "\"/>");
         out.println("   <default enabled=\"" + (defaultEnabled) + "\">");
         SnmpObject.writeCounters(out, defaultCounters);
+        SnmpObject.writeSeverities(out, defaultSeverities);
         out.println("   </default>");
         for (Iterator i = objects.keySet().iterator(); i.hasNext();) {
             String name = (String) i.next();
             SnmpObject obj = (SnmpObject) objects.get(name);
             out.println("   <object id=\"" + obj.id + "\" enabled=\"" + Boolean.toString(obj.enabled) + "\">");
             SnmpObject.writeCounters(out, obj.counters);
+            SnmpObject.writeSeverities(out, obj.severities);
             out.println("   </object>");
         }
         Functions.storeConfigFooter(out, "config");
@@ -145,6 +192,7 @@ public class ConfigBean extends PageBean {
         try {
             Document doc = Utils.parse(config.getAbsolutePath());
 
+            // Load counter interval
             if (counterInterval == 0) {
               try {
                 final NodeList counterInt = doc.getElementsByTagName(COUNTER_INTERVAL);
@@ -156,11 +204,14 @@ public class ConfigBean extends PageBean {
               }
             }
 
+            // Load default
             NodeList a = doc.getElementsByTagName(DEFAULT_SECTION);
             if (a.getLength() > 0) {
                 Element defaultNode = ((Element) a.item(0));
                 defaultEnabled = defaultNode.getAttribute("enabled") != null && defaultNode.getAttribute("enabled").equalsIgnoreCase("true");
-                NodeList defaultCounterNodes = ((Element) a.item(0)).getElementsByTagName("counter");
+
+                final Element elem = (Element) a.item(0);
+                NodeList defaultCounterNodes = elem.getElementsByTagName("counter");
                 for (int i = 0; i < defaultCounterNodes.getLength(); i++) {
                     Element cnt = (Element) defaultCounterNodes.item(i);
                     String name = cnt.getAttribute("name");
@@ -171,12 +222,23 @@ public class ConfigBean extends PageBean {
                         limits.add(tkn.nextToken());
                     defaultCounters.put(name, limits);
                 }
+
+                final NodeList severityNodes = elem.getElementsByTagName("severity");
+                Element cnt;
+                for (int i = 0; i < severityNodes.getLength(); i++) {
+                  cnt = (Element) severityNodes.item(i);
+                  defaultSeverities.put(cnt.getAttribute("event"), cnt.getAttribute("value"));
+                }
             }
+
+            // Load objects
             a = doc.getElementsByTagName(OBJECT_SECTION);
             for (int i = 0; i < a.getLength(); i++) {
                 SnmpObject obj = new SnmpObject((Element) a.item(i));
                 objects.put(obj.id, obj);
             }
+
+
         } catch (FactoryConfigurationError error) {
             logger.error("Couldn't configure xml parser factory", error);
             throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
@@ -208,6 +270,8 @@ public class ConfigBean extends PageBean {
         while (parameterNames.hasMoreElements()) {
             String s = (String) parameterNames.nextElement();
             if (s.indexOf('.') <= 0 || s.startsWith("newParamName_") || s.startsWith("newParamValue_")) continue;
+            if (s.indexOf('.') <= 0 || s.startsWith("newSeverityInput_")) continue;
+            if (s.indexOf('.') <= 0 || s.startsWith("newSectionCounterInput_")) continue;
 
             final String parameter = request.getParameter(s);
             if (parameter.trim().length() > 0)
