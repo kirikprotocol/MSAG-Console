@@ -9,6 +9,7 @@ import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.meta.MetaEndpoint;
 import ru.sibinco.scag.backend.routing.MaskList;
 import ru.sibinco.scag.backend.routing.Subject;
 import ru.sibinco.scag.backend.routing.http.HttpRoutingManager;
@@ -73,6 +74,12 @@ public class Edit extends EditBean {
                 defaultSme = null != subject.getSvc() ? subject.getSvc().getId() : null;
                 if (defaultSme == null) {
                     defaultSme = null != subject.getCenter() ? subject.getCenter().getId() : null;
+                    if (defaultSme == null) {
+                        defaultSme = null != subject.getMetaSvc() ? subject.getMetaSvc().getId() : null;
+                        if (defaultSme == null) {
+                            defaultSme = null != subject.getMetaCenter() ? subject.getMetaCenter().getId() : null;
+                        }
+                    }
                 }
                 description = subject.getNotes();
 
@@ -117,8 +124,10 @@ public class Edit extends EditBean {
         final Map httpSites = appContext.getHttpRoutingManager().getSites();
         final Svc defSvc = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
         final Center defCenter = (Center) appContext.getSmppManager().getCenters().get(defaultSme);
+        final MetaEndpoint defMetaSvc = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(defaultSme);
+        final MetaEndpoint defMetaCenter = (MetaEndpoint) appContext.getSmppManager().getMetaCenters().get(defaultSme);
         if (transportId == Transport.SMPP_TRANSPORT_ID) {
-            if (defSvc == null && defCenter == null)
+            if (defSvc == null && defCenter == null && defMetaSvc == null && defMetaCenter == null)
                 throw new SCAGJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
         }
         if (isAdd()) {
@@ -130,8 +139,22 @@ public class Edit extends EditBean {
                 if (subjects.containsKey(getName()))
                     throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                 try {
-                    subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
-                            : new Subject(getName(), defSvc, masks, getDescription()));
+//                    subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
+//                            : new Subject(getName(), defSvc, masks, getDescription()));
+                    if( defSvc!=null ){
+                        subjects.put( getName(), new Subject(getName(), defSvc, masks, getDescription()) );
+                    }
+                    else if( defCenter!=null ) {
+                        subjects.put( getName(), new Subject(getName(), defCenter, masks, getDescription()) );
+                    }
+                    else if( defMetaSvc!=null ) {
+                        logger.info( "Subject:Create with metaSvc");
+                        subjects.put( getName(), new Subject(getName(), defMetaSvc, masks, getDescription()) );
+                    }
+                    else if( defMetaCenter!=null ) {
+                        logger.info( "Subject:Create with metaCenter");
+                        subjects.put( getName(), new Subject(getName(), defMetaCenter, masks, getDescription()) );
+                    }
                     messagetxt = "Added new subject: '" + getName() + "'.";
                 } catch (SibincoException e) {
                     logger.debug("Could not create new subject", e);
@@ -191,9 +214,20 @@ public class Edit extends EditBean {
                         throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, getName());
                     subjects.remove(getEditId());
                     try {
-                        subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
-                                : new Subject(getName(), defSvc, masks, getDescription()));
-
+//                        subjects.put(getName(), defSvc == null ? new Subject(getName(), defCenter, masks, getDescription())
+//                                : new Subject(getName(), defSvc, masks, getDescription()));
+                        if( defSvc!=null ) {
+                            subjects.put( getName(), new Subject(getName(), defSvc, masks, getDescription()) );
+                        }
+                        else if( defCenter!=null ) {
+                            subjects.put( getName(), new Subject(getName(), defCenter, masks, getDescription()) );
+                        }
+                        else if( defMetaSvc!=null ) {
+                            subjects.put( getName(), new Subject(getName(), defMetaSvc, masks, getDescription()) );
+                        }
+                        else if( defMetaCenter!=null ) {
+                            subjects.put( getName(), new Subject(getName(), defMetaCenter, masks, getDescription()) );
+                        }
                     } catch (SibincoException e) {
                         logger.debug("Could not create new subject", e);
                         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
@@ -201,11 +235,15 @@ public class Edit extends EditBean {
                 } else {
                     final Subject subject = (Subject) subjects.get(getName());
                     if (defSvc != null) {
-                        subject.setSvc(defSvc);
-                        subject.setCenter(null);
-                    } else {
-                        subject.setCenter(defCenter);
-                        subject.setSvc(null);
+                        subject.setSvcWithNullOther(defSvc);
+                    } else if(defCenter!=null) {
+                        subject.setCenterWithNullOther(defCenter);
+                    } else if(defMetaSvc!=null){
+                        logger.info( "Subject:Update with metaSvc");
+                        subject.setMetaSvcWithNullOther(defMetaSvc);
+                    } else if(defMetaCenter!= null){
+                        logger.info( "Subject:Update with metaCenter");
+                        subject.setMetaCenterWithNullOther(defMetaCenter);
                     }
                     try {
                         subject.setMasks(new MaskList(masks));

@@ -5,7 +5,9 @@ package ru.sibinco.scag.backend.routing;
 
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
+import ru.sibinco.scag.backend.endpoints.meta.MetaEndpoint;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
@@ -31,6 +33,8 @@ public class Subject {
     private Center center = null;
     private MaskList masks;
     private String notes = "";
+    private MetaEndpoint metaSvc = null;
+    private MetaEndpoint metaCenter = null;
 
 
     public Subject(Element subjElement, SmppManager smppManager) throws SibincoException {
@@ -44,7 +48,9 @@ public class Subject {
         }
         svc = (Svc) smppManager.getSvcs().get(subjElement.getAttribute("defSme"));
         center = (Center) smppManager.getCenters().get(subjElement.getAttribute("defSme"));
-        if (svc == null && center == null)
+        metaSvc = (MetaEndpoint) smppManager.getMetaServices().get(subjElement.getAttribute("defSme"));
+        metaCenter = (MetaEndpoint) smppManager.getMetaCenters().get(subjElement.getAttribute("defSme"));
+        if (svc == null && center == null && metaSvc == null && metaCenter == null)
             throw new SibincoException("Unknown default Sme \"" + subjElement.getAttribute("defSme") + "\" for subject \"" + name + "\"");
 
         NodeList notesList = subjElement.getElementsByTagName("notes");
@@ -66,6 +72,12 @@ public class Subject {
             this.svc = (Svc)defaultSme;
         }else if(defaultSme instanceof Center){
             this.center = (Center)defaultSme;
+        }else if(defaultSme instanceof MetaEndpoint &&
+                ((MetaEndpoint)defaultSme).getType().equals(Constants.META_TYPE_SERVICE)){
+            this.metaSvc = (MetaEndpoint)defaultSme;
+        }else if(defaultSme instanceof MetaEndpoint &&
+                ((MetaEndpoint)defaultSme).getType().equals(Constants.META_TYPE_SMSC)){
+            this.metaCenter = (MetaEndpoint)defaultSme;
         }
         this.masks = new MaskList(masksStrings);
         if (masks.size() == 0)
@@ -91,12 +103,26 @@ public class Subject {
             this.svc = (Svc)defaultSme;
         }else if(defaultSme instanceof Center){
             this.center = (Center)defaultSme;
+        }else if(defaultSme instanceof MetaEndpoint &&
+                ((MetaEndpoint)defaultSme).getType().equals(Constants.META_TYPE_SERVICE)){
+            this.metaSvc = (MetaEndpoint)defaultSme;
+        }else if(defaultSme instanceof MetaEndpoint &&
+                ((MetaEndpoint)defaultSme).getType().equals(Constants.META_TYPE_SMSC)){
+            this.metaCenter = (MetaEndpoint)defaultSme;
         }
+
     }
 
     public PrintWriter store(PrintWriter out) {
         out.println("  <subject_def id=\"" + StringEncoderDecoder.encode(getName()) + "\" defSme=\"" +
-                StringEncoderDecoder.encode(getSvc() == null ? getCenter().getId() : getSvc().getId()) + "\">");
+//                StringEncoderDecoder.encode(getSvc() == null ? getCenter().getId() : getSvc().getId()) + "\">");
+                StringEncoderDecoder.encode(
+                        getSvc()!=null ? getSvc().getId() :
+                        getCenter()!=null ? getCenter().getId() :
+                        getMetaSvc()!=null?getMetaSvc().getId():
+                        getMetaCenter().getId()
+                ) + "\">");
+
         if (notes != null)
             out.println("    <notes>" + notes + "</notes>");
         getMasks().store(out);
@@ -151,4 +177,48 @@ public class Subject {
     public void setNotes(final String notes) {
         this.notes = notes;
     }
+    public MetaEndpoint getMetaSvc() {
+        return metaSvc;
+    }
+
+    public void setMetaSvc(final MetaEndpoint meta) {
+        this.metaSvc = meta;
+    }
+
+    public MetaEndpoint getMetaCenter() {
+        return metaCenter;
+    }
+
+    public void setMetaCenter(MetaEndpoint meta) {
+        this.metaCenter = meta;
+    }
+
+    public void setSvcWithNullOther(final Svc svc) {
+        this.svc = svc;
+        this.center = null;
+        this.metaSvc = null;
+        this.metaCenter = null;
+    }
+
+    public void setCenterWithNullOther(final Center center) {
+        this.svc = null;
+        this.center = center;
+        this.metaSvc = null;
+        this.metaCenter = null;
+    }
+
+    public void setMetaSvcWithNullOther(final MetaEndpoint meta) {
+        this.svc = null;
+        this.center = null;
+        this.metaSvc = meta;
+        this.metaCenter = null;
+    }
+
+    public void setMetaCenterWithNullOther(final MetaEndpoint meta) {
+        this.svc = null;
+        this.center = null;
+        this.metaSvc = null;
+        this.metaCenter = meta;
+    }
+
 }
