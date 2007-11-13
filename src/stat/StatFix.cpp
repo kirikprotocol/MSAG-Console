@@ -102,15 +102,25 @@ int WriteBuff(int fd, char* buff, int sz)
     return 0;
 }
 
+const int MAX_FILEREC_SIZE = 1024*1000; // 1Mb
+char buff[MAX_FILEREC_SIZE+1];
+char skip[MAX_FILEREC_SIZE+1];
+int bytesSkipped = 0;
+
+void dumpSkipped(bool showall)
+{
+    if (bytesSkipped >= MAX_FILEREC_SIZE || (showall && bytesSkipped)) { 
+	printf("Skipped %d bytes:\n", bytesSkipped);
+	for (int i=0; i<bytesSkipped; i++) printf("%02X ", (uint8_t)skip[i]); printf("("); 
+	for (int i=0; i<bytesSkipped; i++) printf("%c", skip[i]); printf(")\n");
+	bytesSkipped = 0;
+    }
+}
+
 int parse(int fdR, int fdW)
 {	
-    int status = 0;
-    const int MAX_FILEREC_SIZE = 1024*1000; // 1Mb
-    char buff[MAX_FILEREC_SIZE+1];
-    char skip[MAX_FILEREC_SIZE+1];
-
-    uint16_t int16 = 0; uint32_t int32 = 0;
-    offset_type offR = 0; offset_type offW = 0;
+    int status = 0; bytesSkipped = 0;
+    uint16_t int16 = 0; uint32_t int32 = 0; offset_type offR = 0;
 
     if (status = SetPos(fdR, 0)) return status;
     if (status = SetPos(fdW, 0)) return status;
@@ -127,10 +137,8 @@ int parse(int fdR, int fdW)
     if (status = WriteBuff(fdW, buff, 9)) return status;
     if (status = WriteInt16(fdW, int16)) return status;
 
-    int empty = 0;
-    int bytesSkipped = 0;
-    uint32_t sz1, sz2;
-    offR += 11; offW = offR;
+    int recordsRestored = 0;
+    uint32_t sz1, sz2; offR += 11; 
     offset_type maxOffR = FileSize(fdR);
     printf("File size %lld\n", maxOffR);
         
@@ -139,49 +147,31 @@ int parse(int fdR, int fdW)
     {
 	//printf("offR=%lld\n", offR);
 	if (status = ReadInt32(fdR, sz1)) return status;
-	if (sz1 >= maxOffR-offR || sz1 >= MAX_FILEREC_SIZE) { // skip 1 byte
-	    printf("sz1=%d is too big\n", sz1);
-    	    if (bytesSkipped >= MAX_FILEREC_SIZE) { //TODO: print skipped bytes
-		printf("Skipped %d bytes\n", bytesSkipped);
-		bytesSkipped = 0;
-	    }
-	    skip[bytesSkipped++] = (uint8_t)(htonl(sz1)>>24);
+	if (!sz1 || sz1 >= maxOffR-offR || sz1 >= MAX_FILEREC_SIZE) { // skip 1 byte
+	    printf("sz1=%d isn't seems to be valid, off=%lld\n", sz1, offR);
+	    dumpSkipped(false);
+	    skip[bytesSkipped++] = (uint8_t)((htonl(sz1)>>24)&0x00000000000000ff);
 	    if (status = SetPos(fdR, ++offR)) return status;
 	    continue;
 	}
 	if (status = ReadBuff(fdR, buff, sz1)) return status;
 	if (status = ReadInt32(fdR, sz2)) return status;
-	if (sz1 == 0 && sz2 == 0) {
-	    empty++; continue;
-	}
 	if (sz1 != sz2) { // skip 1 byte
-	    printf("sz1=%d, sz2=%d\n", sz1, sz2);
-    	    if (bytesSkipped >= MAX_FILEREC_SIZE) { //TODO: print skipped bytes
-		printf("Skipped %d bytes\n", bytesSkipped);
-		bytesSkipped = 0;
-	    }
-	    skip[bytesSkipped++] = (uint8_t)(htonl(sz1)>>24);
+	    printf("sz1=%d, sz2=%d isn't valid, off=%lld\n", sz1, sz2, offR);
+	    dumpSkipped(false);
+	    skip[bytesSkipped++] = (uint8_t)((htonl(sz1)>>24)&0x00000000000000ff);
 	    if (status = SetPos(fdR, ++offR)) return status;
 	    continue;
 	}
-	if (bytesSkipped) {
-	    //TODO: print skipped bytes
-	    printf("Skipped %d bytes\n", bytesSkipped);
-	    bytesSkipped = 0;
-	}
-	
+	dumpSkipped(true);
 	if (status = WriteInt32(fdW, sz1)) return status;
 	if (status = WriteBuff(fdW, buff, sz1)) return status;
 	if (status = WriteInt32(fdW, sz2)) return status;
-	offR += (8 + sz1);
+	offR += (8 + sz1); recordsRestored++;
+	printf("Record restored, count=%d\n", recordsRestored);
     }
 
-    if (bytesSkipped) { //TODO: print skipped bytes
-        printf("Skipped %d bytes\n", bytesSkipped);
-        bytesSkipped = 0;
-    }
-    if (empty) printf("WARN: %d empty record(s) skipped\n", empty);
-    
+    dumpSkipped(true);
     return status;
 }
 
