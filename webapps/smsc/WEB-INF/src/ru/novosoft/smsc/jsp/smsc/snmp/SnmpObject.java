@@ -10,6 +10,7 @@ public class SnmpObject {
     public String id = "";
     public boolean enabled = false;
     public Map counters = new HashMap();
+    public Map severities = new HashMap();
 
     public SnmpObject() {
     }
@@ -28,6 +29,13 @@ public class SnmpObject {
             while (tkn.hasMoreElements())
                 limits.add(tkn.nextToken());
             counters.put(name, limits);
+        }
+
+        final NodeList severityNodes = elem.getElementsByTagName("severity");
+        Element svrt;
+        for (int i = 0; i < severityNodes.getLength(); i++) {
+          svrt = (Element) severityNodes.item(i);
+          severities.put(svrt.getAttribute("event"), svrt.getAttribute("value"));
         }
     }
 
@@ -58,6 +66,13 @@ public class SnmpObject {
             Vector vct = (Vector) counters.get(name);
             out.print((String) vct.elementAt(0) + "," + (String)vct.elementAt(1) + "," + (String)vct.elementAt(2) + "," + (String)vct.elementAt(3));
             out.println("</counter>");
+        }
+    }
+
+    public static void writeSeverities(PrintWriter out, Map severities) throws Exception {
+      for (Iterator i = severities.keySet().iterator(); i.hasNext();) {
+            String name = (String) i.next();
+            out.println("       <severity event=\"" + name + "\" value=\"" + severities.get(name) + "\"/>");
         }
     }
 }
