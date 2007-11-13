@@ -886,7 +886,7 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
   {
     registry.Insert(info.systemId,new SmppEntity(info));
   }
-  if(info.type==etSmsc)
+  if(info.type==etSmsc && info.enabled)
   {
     SmscConnectInfo ci;
     ci.regSysId=info.systemId.c_str();
@@ -898,7 +898,6 @@ void SmppManagerImpl::addSmppEntity(const SmppEntityInfo& info)
     ci.ports[1]=info.altPort;
     ci.addressRange=info.addressRange.c_str();
     ci.systemType=info.systemType.c_str();
-
     sm.getSmscConnectorAdmin()->addSmscConnect(ci);
   }
 }
@@ -914,7 +913,34 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
   }
   SmppEntity& ent=**ptr;
   MutexGuard emg(ent.mtx);
+  bool oldEnabled=ent.info.enabled;
   ent.info=info;
+
+  if(ent.info.type==etSmsc)
+  {
+    SmscConnectInfo ci;
+    ci.regSysId=info.systemId.c_str();
+    ci.sysId=info.bindSystemId.c_str();
+    ci.pass=info.bindPassword.c_str();
+    ci.hosts[0]=info.host.c_str();
+    ci.ports[0]=info.port;
+    ci.hosts[1]=info.altHost.c_str();
+    ci.ports[1]=info.altPort;
+    ci.addressRange=info.addressRange.c_str();
+    ci.systemType=info.systemType.c_str();
+
+    if(oldEnabled==false && ent.info.enabled==true)
+    {
+      sm.getSmscConnectorAdmin()->addSmscConnect(ci);
+    }else if(oldEnabled==true && ent.info.enabled==false)
+    {
+      sm.getSmscConnectorAdmin()->deleteSmscConnect(info.systemId.c_str());
+    }else if(oldEnabled==true && ent.info.enabled==true)
+    {
+      sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
+    }
+  }
+
   switch(ent.bt)
   {
     case btTransceiver:
@@ -931,21 +957,6 @@ void SmppManagerImpl::updateSmppEntity(const SmppEntityInfo& info)
       break;
   }
 
-  if(ent.info.type==etSmsc)
-  {
-    SmscConnectInfo ci;
-    ci.regSysId=info.systemId.c_str();
-    ci.sysId=info.bindSystemId.c_str();
-    ci.pass=info.bindPassword.c_str();
-    ci.hosts[0]=info.host.c_str();
-    ci.ports[0]=info.port;
-    ci.hosts[1]=info.altHost.c_str();
-    ci.ports[1]=info.altPort;
-    ci.addressRange=info.addressRange.c_str();
-    ci.systemType=info.systemType.c_str();
-
-    sm.getSmscConnectorAdmin()->updateSmscConnect(ci);
-  }
 }
 
 void SmppManagerImpl::disconnectSmppEntity(const char* sysId)
