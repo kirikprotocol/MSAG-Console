@@ -23,8 +23,8 @@ import org.apache.log4j.Category;
 public class MetaEndpoint {
 
     private String id;
-    private String policy = "defaultPolicy";
-    private String type = "defaultType";
+    private String policy = "";
+    private String type = "";
     private boolean enabled;
 
 //    private String[] centerIds = { "c1", "c2", "c3" };
@@ -117,7 +117,7 @@ public class MetaEndpoint {
 
     protected PrintWriter storeBody(final PrintWriter out) {
         out.println("\t<param name=\"metaGroup\"\tvalue=\"" + StringEncoderDecoder.encode(id) + "\"/>");
-        out.println("\t<param name=\"type\"\tvalue=\"" + StringEncoderDecoder.encode(type) + "\"/>");
+//        out.println("\t<param name=\"type\"\tvalue=\"" + StringEncoderDecoder.encode(type) + "\"/>");
         out.println("\t<param name=\"policy\"\tvalue=\"" + StringEncoderDecoder.encode(policy) + "\"/>");
         out.println("\t<param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
 //        for(Iterator iter = smeIds.iterator(); iter.hasNext(); ){
