@@ -8,6 +8,7 @@ import ru.sibinco.scag.Constants;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.endpoints.centers.Center;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.meta.MetaEndpoint;
 import ru.sibinco.scag.backend.routing.Destination;
 import ru.sibinco.scag.backend.routing.Route;
 import ru.sibinco.scag.backend.routing.Source;
@@ -98,11 +99,15 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             final String s = (String) entry.getKey();
             logger.error( "key=" + s + " | value='" + entry.getValue().getClass() + "'" );
             if (s.startsWith(DST_SME_PREFIX)) {
+                logger.error( "startsWith(DST_SME_PREFIX)");
                 final String subjName = s.substring(DST_SME_PREFIX.length());
+                logger.error( "startsWith(DST_SME_PREFIX):subjName=" + subjName);
                 final String[] smeNameStrings = (String[]) entry.getValue();
+                logger.error( "startsWith(DST_SME_PREFIX):smeNameStrings=" + smeNameStrings);
                 final StringBuffer smeName = new StringBuffer();
                 for (int j = 0; j < smeNameStrings.length; j++) {
                     final String smeNameString = smeNameStrings[j];
+                    logger.error( "startsWith(DST_SME_PREFIX):" + j + "smeNameString=" + smeNameString);
                     if (null != smeNameString)
                         smeName.append(smeNameString.trim());
                 }
@@ -114,13 +119,21 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
                 final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(smeId);
                 final Center center = (Center) appContext.getSmppManager().getCenters().get(smeId);
-                if (svc == null && center == null) {
+                final MetaEndpoint mService = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(smeId);
+                final MetaEndpoint mCenter = (MetaEndpoint) appContext.getSmppManager().getMetaCenters().get(smeId);
+                if( svc == null && center == null && mService == null && mCenter == null){
+                    logger.error( "1");
                     throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
                 }
 
 
                 try {
-                    final Destination destination = svc == null ? new Destination(subj, center) : new Destination(subj, svc);
+//                    final Destination destination = svc == null ? new Destination(subj, center) : new Destination(subj, svc);
+                    Destination destination;
+                    if( svc != null ) destination = new Destination(subj, svc);
+                    else if( center != null ) destination = new Destination(subj, center);
+                    else if( mService != null ) destination = new Destination(subj, mService);
+                    else destination = new Destination(subj, mCenter);
                     destinations.put(destination.getName(), destination);
                 } catch (SibincoException e) {
                     logger.debug("Could not create destination", e);
@@ -148,11 +161,20 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
                     final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(smeId);
                     final Center center = (Center) appContext.getSmppManager().getCenters().get(smeId);
-                    if (null == svc && center == null)
+                    final MetaEndpoint mService = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(smeId);
+                    final MetaEndpoint mCenter = (MetaEndpoint) appContext.getSmppManager().getMetaCenters().get(smeId);
+                    if( null == svc && center == null && null == mService && mCenter == null ){
+                        logger.error( "2");
                         throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
+                    }
 
                     try {
-                        final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
+//                        final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
+                        Destination destination;
+                        if( svc != null ) destination = new Destination(mask, svc);
+                        else if( center != null ) destination = new Destination(mask, center);
+                        else if( mService != null ) destination = new Destination(mask, mService);
+                        else destination = new Destination(mask, mCenter);
                         destinations.put(destination.getName(), destination);
                     } catch (SibincoException e) {
                         logger.debug("Could not create destination ", e);
@@ -172,10 +194,19 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             }
             final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(new_dst_mask_sme_);
             final Center center = (Center) appContext.getSmppManager().getCenters().get(new_dst_mask_sme_);
-            if (null == svc && center == null)
+            final MetaEndpoint mService = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(new_dst_mask_sme_);
+            final MetaEndpoint mCenter = (MetaEndpoint) appContext.getSmppManager().getMetaCenters().get(new_dst_mask_sme_);
+            if( null == svc && center == null && null == mService && mCenter == null ){
+                logger.error( "3");
                 throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, new_dst_mask_sme_);
+            }
             try {
-                final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
+//                final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
+                Destination destination;
+                if( svc != null ) destination = new Destination(mask, svc);
+                else if( center != null ) destination = new Destination(mask, center);
+                else if( mService != null ) destination = new Destination(mask, mService);
+                else destination = new Destination(mask, mCenter);
                 destinations.put(destination.getName(), destination);
                 if (0 < appContext.getSmppManager().getSvcs().size())
                     new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
@@ -494,7 +525,16 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         final Map result = new TreeMap();
         for (Iterator i = appContext.getScagRoutingManager().getSubjects().values().iterator(); i.hasNext();) {
             final Subject subject = (Subject) i.next();
-            result.put(subject.getName(), subject.getSvc() == null ? subject.getCenter().getId() : subject.getSvc().getId());
+            logger.info( "Routing:Edit:dstSubjectsSet=" + dstSubjectsSet);
+            logger.info( "Routing:Edit:getSubject from routingmanager=" + subject.getId());
+
+            if( !dstSubjectsSet.contains( subject.getId()) ){
+                result.put( subject.getName(),
+                    subject.getSvc() != null ? subject.getSvc().getId():
+                    subject.getCenter() != null ? subject.getCenter().getId():
+                    subject.getMetaSvc() != null ? subject.getMetaSvc().getId():
+                    subject.getMetaCenter().getId() );
+            }
         }
         return result;
     }
@@ -508,6 +548,12 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     final Destination destination = (Destination) i.next();
                     if (destination.isSubject())
                         result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+                      result.put( destination.getName(),
+                            destination.getSvc() != null ? destination.getSvc().getId():
+                            destination.getCenter() != null ? destination.getCenter().getId():
+                            destination.getMetaSvc() != null ? destination.getMetaSvc().getId():
+                            destination.getMetaCenter().getId() );
+
                 }
             }
             return result;
@@ -523,7 +569,12 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
                     final Destination destination = (Destination) i.next();
                     if (!destination.isSubject() )
-                        result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+                        result.put(destination.getName(),
+//                                destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+                                destination.getSvc() != null ? destination.getSvc().getId():
+                                destination.getCenter() != null? destination.getCenter().getId() :
+                                destination.getMetaSvc() != null? destination.getMetaSvc().getId():
+                                destination.getMetaCenter().getId());
                 }
             }
             return result;
