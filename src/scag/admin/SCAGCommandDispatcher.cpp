@@ -55,6 +55,9 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
         return result;
     } catch (AdminException &e) {
         return new Response(Response::Error, e.what());
+    } catch(std::exception& e)
+    {
+      return new Response(Response::Error, e.what());
     } catch (const char * const e) {
         return new Response(Response::Error, e);
     } catch (...) {
