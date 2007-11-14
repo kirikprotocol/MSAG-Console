@@ -19,14 +19,17 @@
 
         var global_subj_counter = 0;
 
-        function removeRow(tbl, rowId) {
+        function removeRow(tblName, rowId) {
+            var tbl = document.getElementById( tblName );
             var rowElem = tbl.rows(rowId);
             tbl.deleteRow(rowElem.rowIndex);
         }
 
-        function addpElement(valueElem, pname){
+        function addpElement(elemName, pname){
+            var valueElem = document.getElementById( elemName );
             if(validateField(valueElem)){
-                var tbl = opForm.all.sources_table;
+//                var tbl = opForm.all.sources_table;
+                var tbl = document.getElementById( 'sources_table' );
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
                 newRow.id = "srcRow_" + (global_subj_counter++);
@@ -37,7 +40,7 @@
                 newCell.innerHTML = valueElem.value + '<input type="hidden" + name="' + pname + '" value="' + valueElem.value + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(\'sources_table\', \'' + newRow.id + '\')" style="cursor: pointer;">';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();
@@ -47,9 +50,14 @@
             }
         }
 
+        function test(){
+            alert("TEST");
+        }
+
         function addPathElement(valueElem, pname){
             if(trimStr(valueElem.value).length > 0){
-                var tbl = opForm.all.path_table;
+//                var tbl = opForm.all.path_table;
+                var tbl = document.getElementById( 'path_table' );
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
                 newRow.id = "srcRow_" + (global_subj_counter++);
@@ -60,7 +68,7 @@
                 newCell.innerHTML = valueElem.value + '<input type="hidden" + name="' + pname + '" value="' + valueElem.value + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(opForm.all.path_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(\'path_table\', \'' + newRow.id + '\')" style="cursor: pointer;">';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();
@@ -115,8 +123,8 @@
                               <td><input id="newSrcMask" class="txt" name="masks" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
-                                       onclick="addpElement(opForm.all.newSrcMask, 'masks')"
-                                       style="cursor:hand;"></td>
+                                       onclick="addpElement('newSrcMask', 'masks')"
+                                       style="cursor:pointer;"></td>
                           </tr>
                       </table>
                       <hr width="100%" align="left">
@@ -133,8 +141,8 @@
                                   <td><img src="content/images/mask.gif"></td>
                                   <td>${emask}<input type="hidden" name="masks" value="${emask}"></td>
                                   <td><img src="content/images/but_del.gif"
-                                           onClick="removeRow(opForm.all.sources_table, 'maskRow_${emask}')"
-                                           style="cursor: hand;"></td>
+                                           onClick="removeRow('sources_table', 'maskRow_${emask}')"
+                                           style="cursor: pointer;"></td>
                               </tr>
                               <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
@@ -181,8 +189,8 @@
                               <td><input id="newAddress" class="txt" name="address" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
-                                       onclick="addpElement(opForm.all.newAddress, 'address')"
-                                       style="cursor:hand;"></td>
+                                       onclick="addpElemet('newAddress', 'address')"
+                                       style="cursor:pointer;"></td>
                           </tr>
                       </table>
                       <hr width="100%" align="left">
@@ -199,8 +207,8 @@
                                   <td><img src="content/images/mask.gif"></td>
                                   <td>${eaddress}<input type="hidden" name="address" value="${eaddress}"></td>
                                   <td><img src="content/images/but_del.gif"
-                                           onClick="removeRow(opForm.all.sources_table, 'addressRow_${eaddress}')"
-                                           style="cursor: hand;"></td>
+                                           onClick="removeRow('sources_table', 'addressRow_${eaddress}')"
+                                           style="cursor: pointer;"></td>
                               </tr>
                               <c:set var="rowN" value="${rowN+1}"/>
                           </c:forEach>
@@ -249,7 +257,7 @@
                   </td>
                   <td><img src="content/images/but_add.gif" alt="Add new Site"
                            onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
-                           style="cursor: hand;"></td>
+                           style="cursor: pointer;"></td>
               </tr>
           </table>
             <hr>
