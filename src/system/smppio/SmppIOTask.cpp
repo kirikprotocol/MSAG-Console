@@ -55,7 +55,9 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
   std::string sysId=proxy?proxy->getSystemId():"unknown";
   if(proxy && cnt==0)
   {
+#ifdef SNMP
     smsc::system::SnmpCounter::SmeTrapSeverities smeTrpSvrt=SnmpCounter::getInstance().getSmeSeverities(sysId.c_str());
+#endif
     try{
 #ifdef SNMP
       if(ct==ctTransceiver)
