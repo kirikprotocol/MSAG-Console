@@ -43,7 +43,7 @@ public class Edit extends EditBean {
     private String userName = "";
     protected String id = null;
     protected String policy = "";
-    private String[] policyTypes = new String[]{"RoundRobin","Random"};
+    private String[] policyTypes = new String[]{"roundrobin","random"};
     private String[] policyTitles = new String[]{"RoundRobin","Random"};
     private final String type = Constants.META_TYPE_SMSC;
 //    protected String[] selectedSmes = null;
