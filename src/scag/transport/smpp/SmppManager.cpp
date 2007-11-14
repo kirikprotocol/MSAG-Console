@@ -654,7 +654,7 @@ static void FillMetaEntity(MetaEntityInfo& entity,DOMNode* record)
       FillStringValue(attrs,entity.systemId);
       continue;
     }
-    if(paramName=="persistance")
+    if(paramName=="persistence")
     {
       entity.persistanceEnabled=GetBoolValue(attrs);
       continue;
