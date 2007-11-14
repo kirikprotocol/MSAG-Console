@@ -136,12 +136,13 @@ public class Route {
     {
         Map result = new HashMap();
         NodeList list = routeElem.getElementsByTagName("destination");
+        logger.error( "Destination list=" + list + " size=" +list.getLength() );
         for (int i = 0; i < list.getLength(); i++) {
             Destination destination = null;
             try {
                 destination = new Destination((Element) list.item(i), subjects, smppManager);
             } catch (SibincoException e) {
-                logger.warn( "Cann't create destination with id" + list.item(i) );
+                logger.warn( "Cann't create destination with id=" + list.item(i).getLocalName() + "child=" + list.item(i).getFirstChild().getLocalName() );
                 e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
             }
             result.put(destination.getName(), destination);
