@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef SMSC_INMAN_SUBSCR_CONTRACT_HPP
 #define SMSC_INMAN_SUBSCR_CONTRACT_HPP
 
@@ -39,13 +39,25 @@ struct AbonentContractInfo {
     }
 
     void Reset(void) { ab_type = abtUnknown; abImsi[0] = 0; tdpSCF.clear();  }
-    void Merge(const AbonentContractInfo & use_info)
-    {
-        ab_type = use_info.ab_type;
-        if (use_info.getImsi())
-            strlcpy(abImsi, use_info.abImsi, sizeof(abImsi));
 
-        tdpSCF.Merge(use_info.tdpSCF);
+    //Returns true if at least one parameter was updated
+    bool Merge(const AbonentContractInfo & use_info)
+    {
+        bool rval = false;
+
+        if (use_info.ab_type != AbonentContractInfo::abtUnknown) {
+            ab_type = use_info.ab_type;
+            rval = true;
+        }
+        if (use_info.getImsi()) {
+            strlcpy(abImsi, use_info.abImsi, sizeof(abImsi));
+            rval = true;
+        }
+        if (!use_info.tdpSCF.empty()) {
+            tdpSCF.Merge(use_info.tdpSCF);
+            rval = true;
+        }
+        return rval;
     }
 
     inline bool isUnknown(void) const { return (bool)(ab_type == abtUnknown); }

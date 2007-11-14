@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan abonent contract data cache interface and helper classes definitions
  * ************************************************************************* */
@@ -26,17 +26,14 @@ struct AbonentRecord : public AbonentContractInfo {
                                 const char * p_imsi = NULL, time_t qryTm = 0)
         : AbonentContractInfo(abType, p_imsi), tm_queried(qryTm)
     { }
-/*
-    AbonentRecord(const AbonentRecord & ab_rec)
-        : AbonentContractInfo(ab_rec.ab_type, ab_rec.getSCFinfo(), ab_rec.getImsi())
-        , tm_queried(ab_rec.tm_queried)
-    { }
-*/
-    void Merge(const AbonentRecord & use_rcd)
+
+    //Returns true if at least one parameter was updated
+    bool Merge(const AbonentRecord & use_rcd)
     {
-        AbonentContractInfo::Merge(use_rcd);
-        if (use_rcd.tm_queried)
+        bool rval = AbonentContractInfo::Merge(use_rcd);
+        if (rval && use_rcd.tm_queried)
             tm_queried = use_rcd.tm_queried;
+        return rval;
     }
 
     void reset(void)    { tm_queried = 0; AbonentContractInfo::Reset(); }
