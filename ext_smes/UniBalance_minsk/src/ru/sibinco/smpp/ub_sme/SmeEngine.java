@@ -69,6 +69,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private int maxProcessingRequests = 10000;
 
   private ThreadsPool threadsPool = null;
+  private ThreadsPool bannerThreadsPool = null;
   private Multiplexor multiplexor = null;
   private OutgoingQueue outgoingQueue;
 
@@ -255,10 +256,11 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   }
 
-  public SmeEngine(Multiplexor multiplexor, OutgoingQueue messagesQueue, ThreadsPool threadsPool) {
+  public SmeEngine(Multiplexor multiplexor, OutgoingQueue messagesQueue, ThreadsPool threadsPool, ThreadsPool banneThreadsPool) {
     this.multiplexor = multiplexor;
     this.outgoingQueue = messagesQueue;
     this.threadsPool = threadsPool;
+    this.bannerThreadsPool = banneThreadsPool;
   }
 
   public String getName() {
@@ -519,20 +521,17 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private void processIncomingMessage(Message message, long abonentRequestTime) {
     RequestState state;
 
-    if (logger.isDebugEnabled())
-      logger.debug("Got request from " + message.getSourceAddress());
+    logger.info("Got request from " + message.getSourceAddress());
     state = getRequestState(message.getSourceAddress());
 
     if (state != null) {
-      if (logger.isDebugEnabled())
-        logger.debug("Request rejected because another request from this abonent is already processing");
+      logger.warn("Request rejected because another request from this abonent is already processing");
       sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
       return;
     }
 
     if (states.size() >= maxProcessingRequests) {
-      if (logger.isDebugEnabled())
-        logger.debug("Request rejected because max processing requests count is reached");
+      logger.warn("Request rejected because max processing requests count is reached");
       sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
       return;
     }
@@ -556,7 +555,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
     if (bannerEngineClientEnabled) {
       try {
-        threadsPool.execute(new BannerRequestThread(state));
+        bannerThreadsPool.execute(new BannerRequestThread(state));
       } catch (RuntimeException e) {
         logger.error("Exception occured during creating banner processor: "+e, e);
       }
@@ -716,6 +715,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
     public void run() {
       try {
+        state.setBannerRequestTime(System.currentTimeMillis());
         String banner = getBanner(state.getAbonentRequest().getSourceAddress());
         synchronized (state) {
           state.setBanner(banner);

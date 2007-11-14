@@ -140,10 +140,11 @@ public class Sme {
 
     // Init threads pool
     ThreadsPool threadsPool = new ThreadsPool(config, "threads.pool");
+    ThreadsPool bannerThreadsPool = new ThreadsPool(config, "banner.thpool");
 
     // SME engine
 
-    SmeEngine engine = new SmeEngine(multiplexor, outQueue, threadsPool);
+    SmeEngine engine = new SmeEngine(multiplexor, outQueue, threadsPool, bannerThreadsPool);
     engine.init(config);
     multiplexor.setMessageListener(engine);
     multiplexor.setResponseListener(engine);

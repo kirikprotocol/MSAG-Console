@@ -15,6 +15,7 @@ public class RequestState {
   private long abonentResponseTime = 0;
 
   private String banner;
+  private long bannerRequestTime;
   private long bannerResponseTime;
 
   private boolean error = false;
@@ -55,6 +56,15 @@ public class RequestState {
     this.banner = banner;
     bannerReady=true;
     bannerResponseTime = System.currentTimeMillis();
+  }
+
+
+  public long getBannerRequestTime() {
+    return bannerRequestTime;
+  }
+
+  public void setBannerRequestTime(long bannerRequestTime) {
+    this.bannerRequestTime = bannerRequestTime;
   }
 
   public long getAbonentRequestTime() {
@@ -139,7 +149,7 @@ public class RequestState {
     long bannerEngineDelay = 0;
     if(bannerReady){
       sb.append("; banner engine response=");
-      bannerEngineDelay = bannerResponseTime-abonentRequestTime;
+      bannerEngineDelay = bannerResponseTime-bannerRequestTime;
       sb.append(bannerEngineDelay);
       sb.append(" ms");
     }
