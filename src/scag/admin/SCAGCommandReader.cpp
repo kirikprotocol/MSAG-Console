@@ -117,6 +117,9 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
 
     case CommandIds::addMetaEntity: return new CommandAddMetaEntity(data);
     case CommandIds::updateMetaEntity: return new CommandUpdateMetaEntity(data);
+    case CommandIds::deleteMetaEntity:return new CommandDeleteMetaEntity(data);
+    case CommandIds::addMetaEndpoint:return new CommandAddMetaEndpoint(data);
+    case CommandIds::removeMetaEndpoint:return new CommandRemoveMetaEndpoint(data);
 
     default:
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);
