@@ -40,6 +40,7 @@ int SetPos(int fd, offset_type off)
 	printf("SetPos failed. Cause=%s\n", strerror(errno));
 	return errno;
     }
+    return 0;
 }
 int ReadInt32(int fd, uint32_t& ret)
 {
