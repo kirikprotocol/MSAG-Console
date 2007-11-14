@@ -264,3 +264,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2) MSAG CHANGE: Sme, SMSC & Meta admin commands support (moved from AdminCommands to SMPP Manager)
 3) MSAG Admin CHANGE: Sme, SMSC & Meta admin commands were refactored (pass systemId only)
 
+=================================================================================================================
+14.11.2007 19:00 makar [!!! CVS: revision marked by tag BUILD_09_11_2007 !!!]
+1) MSAG FIX: SMSC connectors refactored (was connect attempts on disabled SMSC)
+2) MSAG Admin FIX: Some fixes in endpoint management (Sme, SMSC & Meta)
+3) MSAG Admin FIX: Disconnect parameter restored in deleteSme command
