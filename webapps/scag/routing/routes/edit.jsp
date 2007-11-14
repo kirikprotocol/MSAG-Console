@@ -19,9 +19,10 @@
   <jsp:body>
   <script>
   var global_counter = 0;
-  function removeRow(tbl, rowId){
-      var rowElem = tbl.rows(rowId);
-      tbl.deleteRow(rowElem.rowIndex);
+  function removeRow(tblName, rowId){
+      table = document.getElementById( tblName );
+      var rowElem = table.rows(rowId);
+      table.deleteRow(rowElem.rowIndex);
   }
 
   function removeSrcSubj(rowId){
@@ -251,13 +252,13 @@
                 <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
               </c:forEach></select>
             </td>
-            <td><img src="content/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addSourceSubj()" style="cursor:pointer;"></td>
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-            <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)">
+            <td><input id=newSrcMask class=txt name=srcMasks validation="routeMaskNonEmpty" onkeyup="resetValidation(this)">
             </td>
-            <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addSourceMask()" style="cursor:pointer;"></td>
           </tr>
           </table>
 
@@ -272,7 +273,7 @@
             <tr class="row${rowN%2}" id="subjRow_${esubj}">
               <td><img src="content/images/subject.gif"></td>
               <td>${esubj}<input id=subjSrc type=hidden name=srcSubjs value="${esubj}"></td>
-              <td><img src="content/images/but_del.gif" onClick="removeSrcSubj('subjRow_${esubj}');" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeSrcSubj('subjRow_${esubj}');" style="cursor:pointer;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
@@ -281,12 +282,13 @@
             <tr class="row${rowN%2}" id="maskRow_${emask}">
               <td><img src="content/images/mask.gif"></td>
               <td>${emask}<input type=hidden name=srcMasks value="${emask}"></td>
-              <td><img src="content/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, 'maskRow_${emask}')" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeRow('sources_table', 'maskRow_${emask}')" style="cursor:pointer;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
           </table>
         </td>
+
         <td valign="top">
           <div class=page_subtitle><fmt:message>routes.edit.label.destinations</fmt:message></div>
           <table cellspacing=0 cellpadding=0>
@@ -306,11 +308,11 @@
                 <option id="${fn:escapeXml(i)}" value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
               </c:forEach>
             </select></td>
-            <td><img src="content/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addDestSubj()" style="cursor:pointer;"></td>
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-              <td><input id=newDstMask class=txt name=new_dstMask validation="routeMask" onkeyup="resetValidation(this)">
+              <td><input id=newDstMask class=txt name=new_dstMask validation="routeMaskNonEmpty" onkeyup="resetValidation(this)">
               </td>
             <td><select name=new_dst_mask_sme_ id=newDstMaskSme>
               <c:forEach items="${bean.allSmes}" var="i">
@@ -318,7 +320,7 @@
               </c:forEach>
               </select>
             </td>
-            <td><img src="content/images/but_add.gif" onclick="addDestMask()" style="cursor:hand;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addDestMask()" style="cursor:pointer;"></td>
           </tr>
           </table>
           <hr>
@@ -338,7 +340,7 @@
                 </c:forEach>
                 </select>
               </td>
-              <td><img src="content/images/but_del.gif" onClick="removeDestSubj('subjRow_${fn:escapeXml(i.key)}');" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeDestSubj('subjRow_${fn:escapeXml(i.key)}');" style="cursor: pointer;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
@@ -352,7 +354,7 @@
                 </c:forEach>
                 </select>
               </td>
-              <td><img src="content/images/but_del.gif" onClick="removeRow(opForm.all.destinations_table, 'maskRow_${fn:escapeXml(i.key)}')" style="cursor: hand;"></td>
+              <td><img src="content/images/but_del.gif" onClick="removeRow('destinations_table', 'maskRow_${fn:escapeXml(i.key)}')" style="cursor: pointer;"></td>
             </tr>
             <c:set var="rowN" value="${rowN+1}"/>
           </c:forEach>
