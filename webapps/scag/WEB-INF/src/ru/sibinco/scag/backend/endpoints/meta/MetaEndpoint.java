@@ -116,10 +116,10 @@ public class MetaEndpoint {
     }
 
     protected PrintWriter storeBody(final PrintWriter out) {
-        out.println("\t<param name=\"metaGroup\"\tvalue=\"" + StringEncoderDecoder.encode(id) + "\"/>");
+        out.println("\t<param name=\"systemId\"\tvalue=\"" + StringEncoderDecoder.encode(id) + "\"/>");
 //        out.println("\t<param name=\"type\"\tvalue=\"" + StringEncoderDecoder.encode(type) + "\"/>");
         out.println("\t<param name=\"policy\"\tvalue=\"" + StringEncoderDecoder.encode(policy) + "\"/>");
-        out.println("\t<param name=\"enabled\"\tvalue=\"" + enabled + "\"/>");
+        out.println("\t<param name=\"persistence\"\tvalue=\"" + enabled + "\"/>");
 //        for(Iterator iter = smeIds.iterator(); iter.hasNext(); ){
 //            String sme = (String)iter.next();
 //            out.println("\t<param name=\"policy" + policy + "\"\tvalue=\"" + StringEncoderDecoder.encode(sme) + "\"/>");

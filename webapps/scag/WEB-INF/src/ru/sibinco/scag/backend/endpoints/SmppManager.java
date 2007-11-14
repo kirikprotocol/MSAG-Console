@@ -505,8 +505,8 @@ public class SmppManager extends Manager {
         try {
             if (isAdd) {
                 messageText = "Added new meta point: ";
-                appContext.getScag().invokeCommand("addMetaEntity", meta, appContext, this, configFilename);
                 logger.error("SAVE MEP, id=" + meta.getId() );
+                appContext.getScag().invokeCommand("addMetaEntity", meta, appContext, this, configFilename);
             } else {
                 messageText = "Changed meta point: ";
                 logger.error("UPDATE MEP, id=" + meta.getId() );
@@ -517,7 +517,7 @@ public class SmppManager extends Manager {
             if (!(e instanceof StatusDisconnectedException)) {
                 map.remove(meta.getId());
                 if (!isAdd) map.put(oldMeta.getId(), oldMeta);
-                logger.error("Couldn't apply meta service " + meta.getId() + " ", e);
+                logger.error("Couldn't apply meta " + meta.getId() + " ", e);
                 throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, meta.getId(), e);
             }
         } finally {
