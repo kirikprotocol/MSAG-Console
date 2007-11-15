@@ -547,7 +547,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
                     final Destination destination = (Destination) i.next();
                     if (destination.isSubject())
-                        result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
+//                        result.put(destination.getName(), destination.getSvc() == null ? destination.getCenter().getId() : destination.getSvc().getId());
                       result.put( destination.getName(),
                             destination.getSvc() != null ? destination.getSvc().getId():
                             destination.getCenter() != null ? destination.getCenter().getId():
