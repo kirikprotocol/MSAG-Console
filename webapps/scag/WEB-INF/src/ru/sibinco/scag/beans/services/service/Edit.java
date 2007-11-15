@@ -80,6 +80,7 @@ public class Edit extends TabledEditBeanImpl {
             path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
             throw new CancelChildException(path);
         } else if (getMbSave() != null) {
+            logger.info( "SERVICE:SAVE" );
             save();
         } else if (getMbAddSmppRoute() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
@@ -214,7 +215,9 @@ public class Edit extends TabledEditBeanImpl {
             if( serviceProvidersManager.isUniqueServiceName(name, "-1") ){
                     Service service = new Service(getName(), getDescription());
                     serviceProviderId = Long.decode(getParentId());
+//                    editId = parentId;
                     id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
+//                    parentId = String.valueOf(id);
             } else {
                 logger.error( "services.Edit:save():new service:name '" + name + "' is not unique" );
                 throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
@@ -269,7 +272,7 @@ public class Edit extends TabledEditBeanImpl {
                     }
                 }
             } else {
-                logger.debug( "service:Edit:if (editChild)" );
+                logger.debug( "service:Edit:else (editChild)" );
                 if (!serviceProviders.containsKey(Long.decode(getParentId())))
                     throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId());
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getParentId()));
