@@ -53,7 +53,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>com.sibinco.soap_balance.client.Main</mainClass>
+              <mainClass>com.sibinco.soap_balance.client.Server</mainClass>
               <addClasspath>true</addClasspath>
             </manifest>
           </archive>

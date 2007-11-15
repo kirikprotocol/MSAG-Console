@@ -1,15 +1,14 @@
-package com.eyelinecom.whoisd.phones.tcp;
+package com.sibinco.soap_balance.client;
 
-import com.eyelinecom.whoisd.sptp.SPTPServerThread;
 import com.eyelinecom.whoisd.sptp.PDU;
 import com.eyelinecom.whoisd.sptp.ProcessException;
 import com.eyelinecom.whoisd.sptp.SPTPServer;
-import com.eyelinecom.whoisd.phones.storage.StorageManager;
-
-import java.net.Socket;
-import java.io.IOException;
-
+import com.eyelinecom.whoisd.sptp.SPTPServerThread;
+import com.sibinco.soap_balance.service.BalanceService;
 import org.apache.log4j.Category;
+
+import java.io.IOException;
+import java.net.Socket;
 
 /**
  * Copyright (c)
@@ -18,11 +17,11 @@ import org.apache.log4j.Category;
  */
 public class ServerThread extends SPTPServerThread {
   private final static Category logger = Category.getInstance(ServerThread.class);
-  private StorageManager storageManager;
+  private BalanceService service;
 
-  public ServerThread(SPTPServer server, Socket socket, StorageManager storageManager) throws IOException {
+  public ServerThread(SPTPServer server, Socket socket, BalanceService service) throws IOException {
     super(server, socket);
-    this.storageManager = storageManager;
+    this.service = service;
   }
 
   protected void processPDU(PDU pdu) throws ProcessException {
@@ -30,22 +29,16 @@ public class ServerThread extends SPTPServerThread {
       case Command.SEND_PING:
         returnResponse(Command.defaultResponse());
         break;
-      case Command.SEND_ABONENT_DATA:
-        SendAbonentData sendAbonentData = new SendAbonentData(pdu);
-        storageManager.processRequest(sendAbonentData.getAbonent(), sendAbonentData.getUserAgent(), sendAbonentData.getUrlSpecification(), sendAbonentData.getDiffs());
-        returnResponse(new SendAbonentDataResp());
-        break;
-      case Command.GET_ABONENT_PROFILE_ENTRY:
-        GetAbonentProfileEntry getAbonentProfileEntry = new GetAbonentProfileEntry(pdu);
-        String value = storageManager.getAbonentProfileEntry(getAbonentProfileEntry.getAbonent(), getAbonentProfileEntry.getEntryKey());
-        GetAbonentProfileEntryResp resp = new GetAbonentProfileEntryResp();
-        resp.setAbonent(getAbonentProfileEntry.getAbonent());
-        resp.setEntryKey(getAbonentProfileEntry.getEntryKey());
-        if(value==null){
-          value="";
-        }
-        resp.setEntryValue(value);
-        returnResponse(resp);
+      case Command.GET_BALANCE:
+        BalanceRequest balance_request = new BalanceRequest(pdu);
+        String abonent = balance_request.getAbonent();
+        //todo retrieve abonent from pdu
+        double balance = service.getBalance(abonent);
+        //todo send balance in pdu
+        BalanceResponse balance_response = new BalanceResponse(pdu);
+        balance_response.setAbonent(abonent);
+        balance_response.setBalance(balance);
+        returnResponse(balance_response);
         break;
       default:
         logger.error("Unsupported command_id: " + pdu.getCommand());

@@ -1,4 +1,4 @@
-package com.eyelinecom.whoisd.phones.tcp;
+package com.sibinco.soap_balance.client;
 
 import com.eyelinecom.whoisd.sptp.PDU;
 import com.eyelinecom.whoisd.sptp.ProcessException;
@@ -13,8 +13,8 @@ public abstract class Command {
 
   public final static int SEND_PING =0x0000;
 
-  public final static int SEND_ABONENT_DATA=0x0001;
-  public final static int SEND_ABONENT_DATA_RESP=0x0101;
+  public final static int GET_BALANCE=0x0001;
+  public final static int GET_BALANCE_RESP=0x0101;
 
   public final static int GET_ABONENT_PROFILE_ENTRY=0x0002;
   public final static int GET_ABONENT_PROFILE_ENTRY_RESP=0x0102;
