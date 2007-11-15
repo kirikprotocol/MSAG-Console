@@ -20,16 +20,18 @@
   function removeSmeRow( tblId, rowId ){
       tbl = document.getElementById("smeTable");
       var rowElem = tbl.rows[rowId];
-      var selectElem = document.getElementById('smeSelect');
+//      var selectElem = document.getElementById('smeSelect');
+        var selectElem = opForm.all.smeSelect;
       var oOption = document.createElement("OPTION");
+      selectElem.options.add(oOption);
 //      alert( "SME DELETE:" + rowElem.childNodes[3].innerHTML );
-      var smeValue = rowElem.childNodes[3].innerHTML;
+//      var smeValue = rowElem.childNodes[3].innerHTML;
+      var smeValue = rowElem.all.smeSrc.value;
+//      alert( "smeValue " + smeValue );
       oOption.innerText = smeValue;
       oOption.text = smeValue;
       oOption.value = smeValue;
-      selectElem.options.add(oOption);
-
-      var rowElem = tbl.rows[rowId];
+//      var rowElem = tbl.rows[rowId];
 //      alert( "REMOVE INDEX:" + rowElem.rowIndex );
       tbl.deleteRow( rowElem.rowIndex )
   }
@@ -54,7 +56,7 @@
           newCell = document.createElement("td");
 <%--          newCell.innerHTML = '<img src="content/images/mask.gif">';--%>
 //          newCell.setAttribute( 'width', '154');
-          newCell.innerHTML = '<input type=hidden name="selected_sme_' + sme + '">';
+          newCell.innerHTML = '<input type=hidden name="selected_sme_' + sme + '">' + '<input id="smeSrc" type=hidden name="smeSubjs" value="' + sme +'">';
           newRow.appendChild(newCell);
 
           newCell = document.createElement("td");
@@ -80,8 +82,8 @@
 //                alert( "RREMOVE INDEX:" + rowElem.rowIndex );
                 tbl.deleteRow( rowElem.rowIndex )
           }
-          newCell.appendChild(img);
-//          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSmeRow(opForm.all.smeTable, \'' + newRow.id + '\')" style="cursor: hand;">';
+//          newCell.appendChild(img);
+          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSmeRow(opForm.all.smeTable, \'' + newRow.id + '\')" style="cursor: pointer;">';
           newRow.appendChild(newCell);
 
 //          alert( "Table=" + tbl.rows.length);
@@ -121,7 +123,8 @@
                     <tr class="row${rowN%2}" id="smeRow_${sme}">
                       <td>
     <%--                    <img src="content/images/subject.gif">--%>
-                        <input type=hidden name="selected_sme_${sme}" value="sme"}">
+                        <input type=hidden name="selected_sme_${sme}" value="${sme}" id="${sme}">
+                        <input id=smeSrc type=hidden name=smeSubjs value="${sme}">
                       </td>
                       <td>${sme}</td>
                       <td><img src="content/images/but_del.gif" onClick="removeSmeRow( 'smeTable', 'smeRow_${sme}');" style="cursor: pointer;"></td>
