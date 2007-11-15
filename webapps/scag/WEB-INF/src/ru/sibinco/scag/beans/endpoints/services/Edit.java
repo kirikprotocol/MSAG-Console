@@ -134,7 +134,7 @@ public class Edit extends EditBean {
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
         svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                      inQueueLimit, outQueueLimit, maxSmsPerSec);
+                      inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup());
         svcs.put(getId(), svc);
         final Scag scag = appContext.getScag();
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),

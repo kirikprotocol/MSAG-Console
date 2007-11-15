@@ -162,7 +162,7 @@ public class Edit extends EditBean
 //                getAddressRange(), inQueueLimit, maxSmsPerSec);
         center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
                 enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec);
+                getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup());
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
