@@ -92,6 +92,7 @@ public class Edit extends TabledEditBeanImpl {
 
     protected void load() throws SCAGJspException {
         if (!isAdd() && getTabledItems() != null) {
+            logger.info( "SERVICES:LOAD: " + getEditId() );
             final Map serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
             final Long longLoadId = Long.decode(getEditId());
             if (!serviceProviders.containsKey(longLoadId))
