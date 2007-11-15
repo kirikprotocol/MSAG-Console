@@ -195,7 +195,7 @@ using smsc::core::network::Socket;
 
             const int RESP_OK = 23;
             const int RESP_EXPIRED = 24;
-            const int RESP_REJECTED = 25;            
+            const int RESP_REJECTED = 25;
             const int RESP_GW_REJECTED = 26;
             const int RESP_FAILED = 27;
         }
@@ -255,7 +255,9 @@ using smsc::core::network::Socket;
         if(dst != NULL)
             strncpy(dstId, dst, sizeof(dstId));
         dstType = _dstType;
-        strncpy(routeId, rid, sizeof(routeId));
+        routeId[0]=0;
+        if(rid!=NULL)
+          strncpy(routeId, rid, sizeof(routeId));
         event = cnt;
         errCode = errcode;
       }
