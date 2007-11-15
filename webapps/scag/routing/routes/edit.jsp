@@ -59,6 +59,7 @@
       } else
           return false;
   }
+
   function addSourceSubj() {
       var selectElem = opForm.all.srcSubjSelect;
       if (selectElem.options.length > 0) {
@@ -258,7 +259,7 @@
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
             <td><input id=newSrcMask class=txt name=srcMasks validation="routeMaskNonEmpty" onkeyup="resetValidation(this)">
             </td>
-            <td><img src="content/images/but_add.gif" onclick="addSourceMask()" style="cursor:pointer;"></td>
+            <td><img src="content/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:pointer;"></td>
           </tr>
           </table>
 
