@@ -57,13 +57,13 @@ public class MetaEndpoint {
             final String name = paramElem.getAttribute("name");
             final String value = paramElem.getAttribute("value");
 //            try {
-                if ("metaGroup".equals(name)) {
+                if ("systemId".equals(name)) {
                     id = StringEncoderDecoder.encode(value);
                 } else if (name.startsWith("type")) {
                     type = value;
                 } else if (name.startsWith("policy")){
                     policy = value;
-                } else if ("enabled".equals(name)) {
+                } else if ("persistence".equals(name)) {
                     enabled = Boolean.valueOf(value).booleanValue();
                 }
 //            } catch (NumberFormatException e) {
