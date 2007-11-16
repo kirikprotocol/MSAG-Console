@@ -52,9 +52,9 @@ public class Edit extends EditBean {
     protected SortedList newSelectedSmes = new SortedList();
 
     private void init() throws SCAGJspException {
-        logger.error( "META:INIT");
+        logger.info( "MEMETACNETER:TA:INIT");
         if(isAdd()){
-            logger.error( "META:INIT:ADD" );
+            logger.error( "METACENTER:INIT:ADD" );
         }else{
             logger.error( "META:INIT:UPDATE:" + getId() );
 //            selectedSmes = readSelectedSmes();
@@ -88,9 +88,9 @@ public class Edit extends EditBean {
     }
 
     protected void load(String loadId) throws SCAGJspException {
-        logger.error( "META:LOAD:start" );
+        logger.info( "METACNETER:LOAD:start" );
         final MetaEndpoint meta = (MetaEndpoint) appContext.getSmppManager().getMetaCenters().get(loadId);
-        logger.error( "META:LOAD:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
+        logger.info( "METACNETER:LOAD:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
                     + meta.isEnabled() );
         if( meta == null ){
             throw new SCAGJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
@@ -102,7 +102,7 @@ public class Edit extends EditBean {
     }
 
     protected void save() throws SCAGJspException {
-        logger.error( "META:SAVE:1" );
+        logger.info( "METACNETER:SAVE:start" );
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 //        if( Functions.valdateString( id, Functions.VALIDATION_TYPE_ID )){
@@ -111,11 +111,10 @@ public class Edit extends EditBean {
         if( !validateString(id, VALIDATION_TYPE_ID) ){
             throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID);
         }
-        logger.error( "META:SAVE:2" );
 //        final Map svcs = appContext.getSmppManager().getSvcs();
         final Map metas = appContext.getSmppManager().getMetaCenters();
         if( metas.containsKey( id ) && isAdd() ){
-            logger.warn( "Such id allready exist!!!");
+            logger.warn( "METACNETER:Such id allready exist!!!");
             throw new SCAGJspException(Constants.errors.sme.METAEP_ALREADY_EXISTS, id);
         }
         MetaEndpoint oldMetaCenter = null;
@@ -123,18 +122,15 @@ public class Edit extends EditBean {
             oldMetaCenter = (MetaEndpoint) metas.get(getEditId());
             metas.remove( getEditId() );
         }
-
-        logger.error( "META:SAVE:4:getId()=" +getId() );
         MetaEndpoint meta = new MetaEndpoint( getId() );
-        logger.error( "META:SAVE:4:getPolicy()=" +getPolicy() );
         meta.setPolicy( getPolicy() );
         meta.setType( type );
         meta.setEnabled( isEnabled() );
-        logger.error( "META:SAVE:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
+        logger.info( "METACENTER:SAVE:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
                     + meta.isEnabled() );
         metas.put( getId(), meta );
         if( appContext == null ){
-            logger.error( "NULL APPCONTEXT" );
+            logger.error( "METACENTER:NULL APPCONTEXT" );
             appContext = getAppContext();
         }
         appContext.getSmppManager().createUpdateMetaEntity( userName, meta, oldMetaCenter, isAdd(), appContext,
@@ -145,71 +141,36 @@ public class Edit extends EditBean {
 
     public void updateMetaEPs(MetaEndpoint meta){
         Map smes = appContext.getSmppManager().getCenters();
-        logger.info( "updateMetaEPs:newSelectedCenters=" + newSelectedSmes);
+        logger.info( "METACENTER:updateMetaEPs:newSelectedCenters=" + newSelectedSmes + " selectedSmes=" + selectedSmes );
         for(Iterator iter = newSelectedSmes.iterator(); iter.hasNext();){
             String key = (String)iter.next();
+            logger.info( "METACENTER:updateMetaEPs:add:center:" + key);
             if(!selectedSmes.contains( key )){
                 try {
                     Center center = (Center)smes.get( key );
                     center.setMetaGroup( meta.getId() );
-                    logger.info( "updateMetaEPs:updateMetaEndpoint:" + meta.getId() + " | " + key);
+                    logger.info( "METACENTER:updateMetaEPs:addMetaEndpoint:" + meta.getId() + " | " + key);
                     appContext.getSmppManager().updateMetaEndpoint( userName, meta, key, appContext, true);
                 } catch (SCAGJspException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
         }
-        logger.info( "updateMetaEPs:selectedCenters=" + selectedSmes);
-        selectedSmes = readSelectedSmes( meta.getId() );
-        logger.info( "updateMetaEPs:after read selectedCenters=" + selectedSmes);
+        logger.info( "METACENTER:updateMetaEPs:before delete" );
         for(Iterator iter = selectedSmes.iterator(); iter.hasNext();){
             String key = (String)iter.next();
+            logger.info( "METACENTER:updateMetaEPs:delete:center:" + key);
             if(!newSelectedSmes.contains( key )){
                 try {
                     Center center = (Center)smes.get( key );
                     center.setMetaGroup( "" );
-                    logger.info( "updateMetaEPs:deleteMetaEndpoint:" + meta.getId() + " | " + key);
+                    logger.info( "METACENTER:updateMetaEPs:deleteMetaEndpoint:" + meta.getId() + " | " + key);
                     appContext.getSmppManager().updateMetaEndpoint( userName, meta, key, appContext, false);
                 } catch (SCAGJspException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
         }
-    }
-    public void updateCenters(){
-        Map smes = appContext.getSmppManager().getCenters();
-        logger.error( "META:updateServices():start:" + smes.keySet() + "|" );
-        int count = 0 ;
-        for( Iterator iterator = smes.keySet().iterator(); iterator.hasNext(); ){
-            logger.error( "ITER:" + ++count );
-            Center center = null;
-            String key = (String)iterator.next();
-            if( newSelectedSmes.contains(key) && !readSelectedSmes().contains(key) ){
-                logger.error( "Center id in selected=" + key );
-                center = (Center)smes.get( key );
-                center.setMetaGroup( getId() );
-            } else if( readSelectedSmes().contains(key) && !newSelectedSmes.contains(key) ){
-                logger.error( "Center id in deselected=" + key );
-                center = (Center)smes.get( key );
-                center.setMetaGroup( "" );
-            }
-            if( center != null ){
-                try {
-                    logger.error( "Update svc with id='" + center.getId() + "'" );
-                    appContext.getSmppManager().createUpdateCenter( userName,
-                            false, center.isEnabled(), center, appContext, center);
-                } catch (SCAGJspException e) {
-                    logger.error( "Exception while updateSmes:Svcs" );
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-        }
-//        try {
-//            appContext.getSmppManager().store();
-//        } catch (SibincoException e) {
-//            logger.error( "Exception while update SME for MetaEndpoint" );
-//            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//        }
     }
 
     private final static int VALIDATION_TYPE_ID = 0;
@@ -227,22 +188,21 @@ public class Edit extends EditBean {
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         loginedPrincipal = request.getUserPrincipal();
         userName = loginedPrincipal.getName();
-        logger.error( "META:INIT:USERNAME" + userName);
         if (getMbCancel() != null){
             throw new CancelException();
         }
-        logger.error( "PROCESS:1");
         appContext = getAppContext();
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
 //        super.process(request, response);
-        if (getId() == null && !isAdd())
+        if (getId() == null && !isAdd()){
             load(getEditId());
-
+            logger.error( "METACENTER:PROCESS:getId():selectedSmes=" + selectedSmes );
+        }
         if (getMbSave() != null){
-            logger.debug("meta:Edit:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet() );
-            logger.debug("meta:Edit:process():request.getParameterMap().keySet()=" + request.getParameterMap().keySet() );
+            logger.debug("METACENTER:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet() );
+            logger.debug("METACENTER:process():request.getParameterMap().keySet()=" + request.getParameterMap().keySet() );
             for( Iterator iter = request.getParameterMap().keySet().iterator(); iter.hasNext();){
                 String key = (String)iter.next();
                 String smeName = null;
@@ -252,16 +212,12 @@ public class Edit extends EditBean {
                     smeName = key.substring( SELECTED_SME_PREFFIX.length() );
                     newSelectedSmes.add( smeName );
                 }
-//                if( key.startsWith( DESELECTED_SME_PREFFIX) ){
-//                    logger.error( "META:EDIT:PROCESS:DESELECTED_SME:KEY=" + key + "|'" + request.getParameterMap().get(key) + "'");
-//                    smeName = key.substring( SELECTED_SME_PREFFIX.length() );
-//                    deSelectedSmes.add( smeName );
-//                }
+
             }
+            selectedSmes = readSelectedSmes(getId());
             save();
         }
-        this.init();
-        logger.error( "PROCESS:2");
+        logger.info( "METACENTER:PROCESS:end");
     }
 
     public void setId(String id) {
@@ -300,7 +256,7 @@ public class Edit extends EditBean {
         }
 //        list.addAll(appContext.getSmppManager().getCenters().keySet());
 //        list.addAll(appContext.getSmppManager().getSvcs().keySet());
-        logger.error( "Available smes=" + list );
+        logger.debug( "Available smes=" + list );
         return list;
     }
 

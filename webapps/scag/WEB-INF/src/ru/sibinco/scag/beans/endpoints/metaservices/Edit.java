@@ -76,9 +76,8 @@ public class Edit extends EditBean {
     }
 
     protected void load(String loadId) throws SCAGJspException {
-        logger.error( "META:LOAD:start" );
         final MetaEndpoint meta = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(loadId);
-        logger.error( "META:LOAD:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
+        logger.error( "METASERVICE:LOAD:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
                     + meta.isEnabled() );
         if( meta == null ){
             throw new SCAGJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
@@ -87,27 +86,26 @@ public class Edit extends EditBean {
         this.policy = meta.getPolicy();
         this.enabled = meta.isEnabled();
         this.selectedSmes = readSelectedSmes(loadId);
-        logger.info( "selectedSmes=" + this.selectedSmes );
+        logger.info( "METASERVICE:selectedSmes=" + this.selectedSmes );
     }
 
     private SortedList readSelectedSmes( String id ){
         SortedList list = new SortedList();
         Map smes = appContext.getSmppManager().getSvcs();
-        logger.error( "smes.keySet:" + smes.keySet() );
+        logger.error( "METASERVICE:readSelectedSmes:smes.keySet:" + smes.keySet() );
         for( Iterator iter = smes.keySet().iterator(); iter.hasNext();){
             String key = (String)iter.next();
-            logger.error( "READ KEY=" + key + " | metaGroup=" + ((Svc)smes.get(key)).getMetaGroup());
+//            logger.error( "READ KEY=" + key + " | metaGroup=" + ((Svc)smes.get(key)).getMetaGroup());
             if( ((Svc)smes.get(key)).getMetaGroup().equals(id) ){
-                logger.error( "READ LOAD KEY=" + key );
+//                logger.error( "READ LOAD KEY=" + key );
                 list.add( key );
             }
         }
-        logger.info( "Load selected:" + list );
+        logger.info( "METASERVICE:Load selected:" + list );
         return list;
     }
 
     protected void save() throws SCAGJspException {
-        logger.error( "META:SAVE:1" );
         if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
             throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 //        if( Functions.valdateString( id, Functions.VALIDATION_TYPE_ID )){
@@ -116,11 +114,9 @@ public class Edit extends EditBean {
         if( !validateString(id, VALIDATION_TYPE_ID) ){
             throw new SCAGJspException(Constants.errors.sme.COULDNT_SAVE_NOT_VALID_ID);
         }
-        logger.error( "META:SAVE:2" );
-//        final Map svcs = appContext.getSmppManager().getSvcs();
         final Map metas = appContext.getSmppManager().getMetaServices();
         if( metas.containsKey( id ) && isAdd() ){
-            logger.warn( "Such id allready exist!!!");
+            logger.warn( "METASERVICE:Such id allready exist!!!");
             throw new SCAGJspException(Constants.errors.sme.METAEP_ALREADY_EXISTS, id);
         }
         MetaEndpoint oldMetaSvc = null;
@@ -129,17 +125,14 @@ public class Edit extends EditBean {
             metas.remove( getEditId() );
         }
 
-        logger.error( "META:SAVE:4:getId()=" +getId() );
         MetaEndpoint meta = new MetaEndpoint( getId() );
-        logger.error( "META:SAVE:4:getPolicy()=" +getPolicy() );
         meta.setPolicy( getPolicy() );
         meta.setType( type );
         meta.setEnabled( isEnabled() );
-        logger.error( "META:SAVE:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | "
-                    + meta.isEnabled() );
+        logger.error( "METASERVICE:SAVE:" + meta.getId() + " | " + meta.getPolicy() + " | " + meta.getType() + " | " + meta.isEnabled() );
         metas.put( getId(), meta );
         if( appContext == null ){
-            logger.error( "NULL APPCONTEXT" );
+            logger.error( "METASERVICE:NULL APPCONTEXT" );
             appContext = getAppContext();
         }
 //        logger.error( "super.Principal:" + super.getLoginedPrincipal().getName() );
@@ -157,30 +150,29 @@ public class Edit extends EditBean {
 
     public void updateMetaEPs(MetaEndpoint meta){
         Map smes = appContext.getSmppManager().getSvcs();
-        logger.info( "updateMetaEPs:newSelectedSmes=" + newSelectedSmes);
+        logger.info( "METASERVICE:updateMetaEPs:newSelectedCenters=" + newSelectedSmes + " selectedSmes=" + selectedSmes );
         for(Iterator iter = newSelectedSmes.iterator(); iter.hasNext();){
             String key = (String)iter.next();
+            logger.info( "METASERVICE:updateMetaEPs:add:service:" + key);
             if(!selectedSmes.contains( key )){
                 try {
                     Svc svc = (Svc)smes.get( key );
                     svc.setMetaGroup( meta.getId() );
-                    logger.info( "updateMetaEPs:updateMetaEndpoint:" + meta.getId() + " | " + key);
+                    logger.info( "METASERVICE:updateMetaEPs:addMetaEndpoint:" + meta.getId() + " | " + key);
                     appContext.getSmppManager().updateMetaEndpoint( userName, meta, key, appContext, true);
                 } catch (SCAGJspException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
         }
-        logger.info( "updateMetaEPs:selectedSmes=" + selectedSmes);
-        selectedSmes = readSelectedSmes( meta.getId() );
-        logger.info( "updateMetaEPs:after read selectedSmes=" + selectedSmes);
         for(Iterator iter = selectedSmes.iterator(); iter.hasNext();){
             String key = (String)iter.next();
+            logger.info( "METASERVICE:updateMetaEPs:delete:service:" + key);
             if(!newSelectedSmes.contains( key )){
                 try {
                     Svc svc = (Svc)smes.get( key );
                     svc.setMetaGroup( "" );
-                    logger.info( "updateMetaEPs:deleteMetaEndpoint:" + meta.getId() + " | " + key);
+                    logger.info( "METASERVICE:updateMetaEPs:deleteMetaEndpoint:" + meta.getId() + " | " + key);
                     appContext.getSmppManager().updateMetaEndpoint( userName, meta, key, appContext, false);
                 } catch (SCAGJspException e) {
                     e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
@@ -189,40 +181,6 @@ public class Edit extends EditBean {
         }
     }
 
-    public void updateServices(){
-        Map smes = appContext.getSmppManager().getSvcs();
-        logger.error( "META:updateServices():start:" + smes.keySet() + "|" );
-        int count = 0 ;
-        for( Iterator iterator = smes.keySet().iterator(); iterator.hasNext(); ){
-            logger.error( "ITER:" + ++count );
-            Svc svc = null;
-            String key = (String)iterator.next();
-            if( newSelectedSmes.contains(key) && !readSelectedSmes().contains(key) ){
-                logger.error( "Svc id in selected=" + key );
-                svc = (Svc)smes.get( key );
-                svc.setMetaGroup( getId() );
-            } else if( readSelectedSmes().contains(key) && !newSelectedSmes.contains(key) ){
-                logger.error( "Svc id in deselected=" + key );
-                svc = (Svc)smes.get( key );
-                svc.setMetaGroup( "" );
-            }
-            if( svc != null ){
-                try {
-                    logger.error( "Update svc with id='" + svc.getId() + "'" );
-                    appContext.getSmppManager().createUpdateServicePoint( userName, svc, false, appContext, svc);
-                } catch (SCAGJspException e) {
-                    logger.error( "Exception while updateSmes:Svcs" );
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                }
-            }
-        }
-//        try {
-//            appContext.getSmppManager().store();
-//        } catch (SibincoException e) {
-//            logger.error( "Exception while update SME for MetaEndpoint" );
-//            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-//        }
-    }
 
     private final static int VALIDATION_TYPE_ID = 0;
 
@@ -239,11 +197,10 @@ public class Edit extends EditBean {
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
         loginedPrincipal = request.getUserPrincipal();
         userName = loginedPrincipal.getName();
-        logger.error( "META:process:USERNAME " + userName);
-        if (getMbCancel() != null){
+        logger.info( "METASERVICE:process:USERNAME " + userName);
+                if (getMbCancel() != null){
             throw new CancelException();
         }
-        logger.error( "PROCESS:1");
         appContext = getAppContext();
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
@@ -253,8 +210,8 @@ public class Edit extends EditBean {
             load(getEditId());
 
         if (getMbSave() != null){
-            logger.debug("meta:Edit:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet() );
-            logger.debug("meta:Edit:process():request.getParameterMap().keySet()=" + request.getParameterMap().keySet() );
+            logger.debug("METASERVICE:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet() );
+            logger.debug("METASERVICE:process():request.getParameterMap().keySet()=" + request.getParameterMap().keySet() );
             for( Iterator iter = request.getParameterMap().keySet().iterator(); iter.hasNext();){
                 String key = (String)iter.next();
                 String smeName = null;
@@ -270,10 +227,10 @@ public class Edit extends EditBean {
 //                    deSelectedSmes.add( smeName );
 //                }
             }
+            selectedSmes = readSelectedSmes(getId());
             save();
         }
-        this.init();
-        logger.error( "PROCESS:2");
+        logger.info( "METASERVICE:PROCESS:end");
     }
 
     public void setId(String id) {
@@ -303,26 +260,19 @@ public class Edit extends EditBean {
         Map smes = appContext.getSmppManager().getSvcs();
         for( Iterator iter = smes.keySet().iterator(); iter.hasNext();){
             String key = (String)iter.next();
-            logger.error( "KEY=" + key );
+//            logger.error( "KEY=" + key );
             Svc  svc = (Svc)smes.get(key);
             if( svc.getMetaGroup().equals("") ){
-                logger.error( "ADD TO AVAILABLE '" + svc.getId() + "'");
+//                logger.error( "METASERVICE:ADD TO AVAILABLE '" + svc.getId() + "'");
                 list.add( key );
             }
         }
 //        list.addAll(appContext.getSmppManager().getCenters().keySet());
 //        list.addAll(appContext.getSmppManager().getSvcs().keySet());
-        logger.error( "Available smes=" + list );
+        logger.debug( "METASERVICE:Available smes=" + list );
         return list;
     }
 
-    public List getHardSmes(){
-        SortedList list = new SortedList();
-        list.add( "smehard1" );
-        list.add( "smehard2" );
-        list.add( "smehard3" );
-        return list;
-    }
 
     public SortedList getSelectedSmes(){
 //        logger.error( "getSelectedSmes:" + selectedSmes );
