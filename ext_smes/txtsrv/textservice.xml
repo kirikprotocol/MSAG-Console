@@ -91,7 +91,7 @@
     <pathelement location="${module.textservice.basedir}/lib/jsmppapi.jar"/>
     <pathelement location="${module.textservice.basedir}/lib/connpoll.jar"/>
     <pathelement location="${module.textservice.basedir}/lib/tpool.jar"/>
-    <pathelement location="${module.textservice.basedir}/lib/mailapi.jar"/>
+    <pathelement location="${module.textservice.basedir}/lib/mail.jar"/>
     <pathelement location="${module.textservice.basedir}/lib/sme.jar"/>
     <pathelement location="${module.textservice.basedir}/lib/log4j.jar"/>
     <pathelement location="${module.textservice.basedir}/lib/activation.jar"/>
