@@ -15,14 +15,11 @@
         <sm-ep:properties title="service.edit.properties.service_info">
             <c:if test="${!bean.add}"><input type="hidden" name="id" id="id" value="${fn:escapeXml(bean.id)}"></c:if>
             <c:if test="${!param.add}">
-<%--                <sm-ep:txt  title="service.edit.txt.id" name="parentId" readonly ="true" validation="nonEmpty"/>--%>
             <c:choose>
                 <c:when test="${bean.editChild}">
-<%--                    <input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.parentId)}">--%>
                     <sm-ep:txt  title="service.edit.txt.id" name="parentId" readonly ="true" validation="nonEmpty"/>
                 </c:when>
                 <c:otherwise>
-<%--                    <input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.editId)}">--%>
                     <sm-ep:txt  title="service.edit.txt.id" name="editId" readonly ="true" validation="nonEmpty"/>
                 </c:otherwise>
             </c:choose>
@@ -30,11 +27,6 @@
             </c:if>
             <sm-ep:txt title="service.edit.txt.name" name="name" validation="nonEmpty"/>
             <sm-ep:txtBox title="service.edit.txtbox.description" cols="0" rows="0" name="description"/>
-<%--            <c:choose>--%>
-<%--                <c:when test="${bean.editChild}"><input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.parentId)}"></c:when>--%>
-<%--                <c:otherwise><input type="hidden" id="parentId" name="parentId" value="${fn:escapeXml(bean.editId)}"></c:otherwise>--%>
-<%--            </c:choose>--%>
-<%--           <tr>NEW parentId ${bean.parentId}</tr>--%>
         </sm-ep:properties>
 
         <div class=page_subtitle>&nbsp;</div>
@@ -148,9 +140,16 @@
                     opForm.submit();
                 }
             </script>
-
-            <iframe id="rulesFrame" onload="fireRulesState()" src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.parentId}"  width='0px' height="0px"></iframe>
-
+        <iframe id="rulesFrame" onload="fireRulesState()"
+          <c:choose>
+              <c:when test="${bean.editChild}">
+        src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.parentId}"
+              </c:when>
+              <c:otherwise>
+        src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.editId}"
+              </c:otherwise>
+          </c:choose>
+        width='0px' height="0px"></iframe>
             <sm-ep:properties title="service.edit.properties.service_rules" noEdit="true" id="rulesT">
               <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp"/>
               <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http"/>
