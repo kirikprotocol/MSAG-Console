@@ -185,6 +185,15 @@ public:
     {
       throw Exception("addMetaEndPoint::incompatible type '%s' and '%s'",metaId,sysId);
     }
+    MetaEntity &me=**mptr;
+    MetaEntity::MetaEntsVector::iterator it;
+    for(it=me.ents.begin();it!=me.ents.end();it++)
+    {
+      if(it->ptr==*sptr)
+      {
+        throw Exception("addMetaEndPoint::duplicate entity '%s' in meta entity '%s'",sysId,metaId);
+      }
+    }
     MetaEntity::MetaInfo mi;
     mi.ptr=*sptr;
     (*mptr)->ents.push_back(mi);
