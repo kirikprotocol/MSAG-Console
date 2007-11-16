@@ -1,0 +1,32 @@
+B2912:
+    SMSC 	postpaid abonents with mt tarification fix.
+    SMSC 	billing of multipart sms in forward mode fix
+    INMan	abonent contract type is added to ChargSmsResult
+B2913:
+    SMSC	short_message overflow fix
+    SMSC	scheduler fix for lost chains (inProcMap expiration)
+    SMSC	getSmeInfo exception fix
+    SMSC	refactored directives processing logging
+    SMSC	fix ports & sars in multipart sms processing
+    SMSC	possible fix for expiration of commands for very slow service
+    SMSC	removed unnecessary replaceSms
+    SMSC	MT+Postpaid=> forward mode+charge on delivery
+    INMan	RAM Cache record lifetime is fixed
+    INMan	handling of CapSMDlg abort in monitoring state
+    INMan	_chargeType is added to CSV as field (usefull for MT tarrification)
+    MCISme 	Removed loop in sending messages to one abonent (mcanames version)
+    MCISme	CalcHash() for XHash added
+    MCISme	send event from unknown caller as event from configured address
+    emailsme	return EX_UNAVAILABLE when abonent's message limit reached
+B2914:
+    SMSC	snmp severities for register/unregister sme now can be configured
+    SMSC	stats.txt removed - invalid uptime report fix
+    SMSC	setlocale LC_CTYPE added russian names of distr list toLower fix
+    SMSC	scheduler stall chain fix
+    SMSC	inman interaction expiration processing fix
+    INMan	Failed abonent contract info query now will not erase data of last successfull query in cache
+    USSMan	added passing IMSI value as last parameter in requestSS method
+    USSMan	added connect info in searching for USSRequestProcessor
+    USSMan	added destructor. made USSProcSearchCrit as inner class
+    USSMan	destISDN is added to USSDArg, destIMSI is added to UserInfo
+    USSMan	text encoding refactored
