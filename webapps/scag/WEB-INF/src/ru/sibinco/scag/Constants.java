@@ -21,10 +21,15 @@ public class Constants {
     public static final String META_TYPE_SERVICE = "MetaService";
     public static final String META_TYPE_SMSC = "MetaSmsc";
 
+    public static final String FORBIDDEN_CHARACTER = "~";
+
     public static final int STORE_TYPE_SVC = 1;
     public static final int STORE_TYPE_CENTER = 2;
 
     public interface errors {
+
+        public static final Constants CAN_NOT_SAVE_NAME_WITH_FORBIDDEN_CHARACTER = new Constants("error.can_not_save_name_with_forbidden_character");
+
         public interface status {
             public static final Constants COULDNT_APPLY_CONFIG = new Constants("error.status.couldnt_apply_config");
             public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.status.couldnt_save_config");
@@ -144,6 +149,7 @@ public class Constants {
             public static final Constants COULDNT_DELETE_SERVICE_RULE_IS_EDITING = new Constants("error.services.couldntDelete");
             public static final Constants CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME = new Constants("error.services.can_not_save_service_not_unique_name");
             public static final Constants CAN_NOT_SAVE_SERVICE_EMPTY_NAME = new Constants("error.services.can_not_save_service_empty_name");
+//            public static final Constants CAN_NOT_SAVE_SERVICE_FORBIDDEN_CHARACTER = new Constants("error.services.can_not_save_service_forbidden_character");
         }
 
         public interface providers {
