@@ -87,15 +87,16 @@ public class Index extends SCAGBean {
                                     serviceIds.add(service.getId().toString()+"//"+prId);
                                     serviceNames.add(service.getName());
                                }else{
-                                   logger.error( "Service name contain forbidden character - '" +
-                                           Constants.FORBIDDEN_CHARACTER + "' " + service.getName() );
+                                   logger.error( "Service name contain forbidden character '" +
+                                           Constants.FORBIDDEN_CHARACTER + "' in '" + service.getName() + "' " +
+                                           "Provider name '" + provider.getName() + "'" );
                                }
                            }
                         }
                         ids.add(prId);
                     }else{
-                        logger.error( "Provider name contain forbidden character - '" +
-                                           Constants.FORBIDDEN_CHARACTER + "' "+ provider.getName() );
+                        logger.error( "Provider name contain forbidden character '" +
+                                           Constants.FORBIDDEN_CHARACTER + "' in '"+ provider.getName() + "'");
                     }
                 }
             }
