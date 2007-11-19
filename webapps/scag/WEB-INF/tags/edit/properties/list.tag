@@ -17,7 +17,7 @@
 <sm-ep:property title="${title}" rowId="${rowId}">
     <c:set var="values" value="${fn:split(values, ',')}"/>
     <c:choose>
-        <c:when test="${title == 'statistics.list.services'}">
+        <c:when test="${title == 'statistics.list.services' || title == 'statistics.list.service_providers'}">
             <c:set var="valueTitles" value="${fn:split(valueTitles, '~')}"/>
         </c:when>
         <c:otherwise>
@@ -38,10 +38,9 @@
                             <option value=""></option>
                     </c:if>
                     <c:forEach var="i" items="${values}" varStatus="st">
-                        <option value="${i}"
-                                <c:if test="${i == bean[name]}">
-                                    selected
-                                </c:if>>${valueTitles[st.count-1]}</option>
+                        <option value="${i}" <c:if test="${i == bean[name]}">selected</c:if>>
+                            ${valueTitles[st.count-1]}
+                        </option>
                     </c:forEach>
                     <!--<option value="-1">-->
                         <%--<c:out value="${name}"/>--%>
