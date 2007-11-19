@@ -3,6 +3,7 @@
 #ifndef __SCAG_PERS_RWMULTIPLEXER_HPP__
 #define __SCAG_PERS_RWMULTIPLEXER_HPP__
 
+#include <logger/Logger.h>
 #include "core/network/Socket.hpp"
 #include "core/buffers/Array.hpp"
 #include "core/network/Multiplexer.hpp"
@@ -13,13 +14,13 @@ namespace scag{ namespace pers{
 using smsc::core::buffers::Array;
 using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
+using smsc::logger::Logger;
 
 class RWMultiplexer: public Multiplexer{
-protected:
-  int add(Socket* sock, int type);
-
 public:
-  RWMultiplexer(){}
+  RWMultiplexer() {
+    logger = Logger::getInstance("mplexer");
+  }
   virtual ~RWMultiplexer(){}
 
   int addR(Socket* sock) { return add(sock, POLLIN); }
@@ -37,6 +38,13 @@ public:
 	sockets.Delete(i);
     fds.Delete(i);
   }
+
+protected:
+  int add(Socket* sock, int type);
+
+private:
+  Logger* logger;
+  
 };
 
 }}

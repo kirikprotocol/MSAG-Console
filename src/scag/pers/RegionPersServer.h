@@ -1,6 +1,6 @@
 #ifndef __SCAG_PERS_REGIONPERSSERVER_H__
 #define __SCAG_PERS_REGIONPERSSERVER_H__
-
+ 
 #include "PersServer.h"
 #include "core/buffers/XHash.hpp"
 #include "CPersCmd.h"
@@ -13,9 +13,10 @@ struct CmdContext {
   PersCmd cmd_id;
   SerialBuffer isb;
   SerialBuffer* osb;
+  Socket* socket;         
   CmdContext();
   CmdContext(const CmdContext& ctx);
-  CmdContext(PersCmd _cmd_id, SerialBuffer& _isb, SerialBuffer* _osb);
+  CmdContext(PersCmd _cmd_id, SerialBuffer& _isb, SerialBuffer* _osb, Socket *s);
   CmdContext& operator=(const CmdContext& ctx);
 };
 
@@ -32,13 +33,16 @@ protected:
   //virtual void processUplinkPacket(ConnectionContext &ctx) {
   //}
   virtual bool bindToCP();
-  virtual void execCommand(SerialBuffer& isb, SerialBuffer& osb);
 
 private:
   void connectToCP();
   bool processPacketFromCP(ConnectionContext &ctx);
+  bool processPacketFromClient(ConnectionContext &ctx);
+  void execCommand(ConnectionContext &ctx);
+  void sendCommandToClient(CmdContext &ctx);
 
   bool sendCommandToCP(const CPersCmd& cmd);
+  void createResponseForClient(SerialBuffer *sb, PersServerResponseType r);
 
   void getProfileCmdHandler(ConnectionContext& ctx);
   void profileRespCmdHandler(ConnectionContext& ctx);

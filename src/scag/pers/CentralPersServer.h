@@ -63,6 +63,8 @@ private:
   void doneCmdHandler(ConnectionContext& ctx);
   void doneRespCmdHandler(ConnectionContext& ctx);
   void checkOwnCmdHandler(ConnectionContext& ctx);
+  void sendCommand(CPersCmd& cmd, ConnectionContext* ctx);
+  bool authorizeRegion(ConnectionContext& ctx);
 };
 
 }}

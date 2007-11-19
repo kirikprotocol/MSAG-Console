@@ -117,7 +117,28 @@ public:
 		rbtRecovery(newNode);
 		changesObserver->completeChanges();
 		return 1;
-	}
+    }
+
+    bool Set(const Key& k, const Value& val) {
+
+      RBTreeNode*	node = rootNode;
+      while( (node != nilNode) && (node->key != k) )
+      {
+          if(node->key < k)
+              node = realAddr(node->right);
+          else
+              node = realAddr(node->left);
+      }
+      if (node == nilNode) {
+        Insert(k, val);
+        return false;
+      }
+      node->value = val;
+      changesObserver->nodeChanged(node);
+      changesObserver->completeChanges();
+      return true;
+    }
+
 	bool Get(const Key& k, Value& val)
 	{
 		//printf("Get\n");

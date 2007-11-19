@@ -27,7 +27,7 @@ protected:
         IntProfileStore* store;
     } IntStore;
 
-	virtual void execCommand(SerialBuffer& isb, SerialBuffer& osb);
+	void execCommand(SerialBuffer& isb, SerialBuffer& osb);
     IntProfileStore* findStore(ProfileType pt);
     Profile* getProfile(const string& key);
     Profile* createProfile(AbntAddr& addr);

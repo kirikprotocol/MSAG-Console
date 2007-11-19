@@ -25,6 +25,17 @@ class RegionInfo
 {
 public:
   RegionInfo():id(0), ctx(0) {}
+  RegionInfo(const RegionInfo& ri):id(ri.id), ctx(ri.ctx), name(ri.name), passwd(ri.passwd) { }
+  RegionInfo& operator=(const RegionInfo& ri) {
+    if (this == &ri) {
+      return *this;
+    }
+    name = ri.name;
+    passwd = ri.passwd;
+    id = ri.id;
+    ctx = ri.ctx;
+    return *this;
+  }
 public:
     std::string name, passwd;
     uint32_t id;

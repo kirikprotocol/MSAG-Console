@@ -148,8 +148,10 @@ void Profile::copyPropertiesTo(Profile* pf) {
   Property* prop;
 
   PropertyHash::Iterator it = properties.getIterator();
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("profile");
 
   while(it.Next(key, prop)) {
+    smsc_log_debug(logger, "copy property key=\'%s\' prop=\'%s\'", key, prop->toString().c_str());
     pf->addNewProperty(*prop);
   }
 }

@@ -486,6 +486,7 @@ void PersClientImpl::ReadPacket(SerialBuffer& bsb)
     bsb.Append(tmp_buf, sizeof(uint32_t));
     bsb.SetPos(0);
     sz = bsb.ReadInt32() - sizeof(uint32_t);
+    smsc_log_debug(log, "%d bytes will be read from socket", sz);
 
     while(sz > 1024)
     {

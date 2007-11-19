@@ -35,18 +35,19 @@ void PersSocketServer::InitServer()
 
     if(!listener.addR(&sock))
         throw Exception("Failed to init PersSocketServer");
+    bindToCP();
 }
 
 void PersSocketServer::processReadSocket(Socket* s)
 {
-    int j;
     long k;
 	ConnectionContext* ctx = (ConnectionContext*)s->getData(0);
     SerialBuffer& sb = ctx->inbuf;
 
     if(sb.GetSize() < sizeof(uint32_t))
     {
-        j = s->Read(tmp_buf, sizeof(uint32_t) - sb.GetSize());
+      int j = s->Read(tmp_buf, sizeof(uint32_t) - sb.GetSize());
+
         smsc_log_debug(log, "read(len) %u bytes from %p", j, s);
         if(j > 0)
         {
@@ -68,19 +69,24 @@ void PersSocketServer::processReadSocket(Socket* s)
         }
         else
         {
-            if(j) smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
-//            if(errno != EWOULDBLOCK)
+            if(j)  { 
+              smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
+            }
+//          if(errno != EWOULDBLOCK)
                 removeSocket(s);
             return;
         }
     }
     if(sb.GetSize() >= sizeof(uint32_t))
     {
-        j = ctx->packetLen - sb.GetSize();
+        int j = ctx->packetLen - sb.GetSize();
         j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
+
         smsc_log_debug(log, "read %u bytes from %p", j, s);
-        if(j > 0)
-            sb.Append(tmp_buf, j);
+
+        if(j > 0) {
+          sb.Append(tmp_buf, j);
+        }
         else if(errno != EWOULDBLOCK)
         {
             if(j) smsc_log_debug(log, "Error: %s(%d)", strerror(errno), errno);
@@ -94,13 +100,25 @@ void PersSocketServer::processReadSocket(Socket* s)
             ctx->inbuf.SetPos(4);
             if(processPacket(*ctx))
             {
+                if (ctx->inbuf.GetPos() == ctx->inbuf.GetSize()) {
+                  smsc_log_debug(log, "processReadSocket : Empty inbuf in socket %p", s);
+                  ctx->inbuf.Empty();
+                }
     			ctx->lastActivity = time(NULL);			
                 ctx->outbuf.SetPos(0);
-                listener.addRW(s);
-    			ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
+                if (ctx->outbuf.length()) {
+                  smsc_log_debug(log, "processReadSocket : add socket %p as READ/WRITE", s);
+                  listener.addRW(s);
+                  ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
+                } else {
+                  smsc_log_debug(log, "processReadSocket : add socket %p as READ", s);
+                  listener.addR(s);
+                  ctx->wantRead = true;
+                }
             }
-            else
-                removeSocket(s);                
+            else {
+              removeSocket(s);                
+            }
         }
     }
 }
@@ -113,6 +131,9 @@ void PersSocketServer::processWriteSocket(Socket* s)
     SerialBuffer& sb = ctx->outbuf;
 
     len = sb.GetSize();
+    //if (len == 0) {
+      //return;
+    //}
 
     smsc_log_debug(log, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d", len, s, sb.GetCurPtr(), sb.GetPos());
     j = s->Write(sb.GetCurPtr(), len - sb.GetPos());
@@ -126,7 +147,8 @@ void PersSocketServer::processWriteSocket(Socket* s)
     }
     if(sb.GetPos() >= len)
     {
-        smsc_log_debug(log, "written to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
+        //smsc_log_debug(log, "written to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
+        smsc_log_debug(log, "written to socket: len=%d, data=%s", j, sb.toString().c_str());
         ctx->inbuf.Empty();
         ctx->outbuf.Empty();
 		ctx->lastActivity = time(NULL);
@@ -186,7 +208,7 @@ int PersSocketServer::Execute()
 
     while(!isStopped())
     {
-        bindToCP();
+        //bindToCP();
 
         if(listener.canReadWrite(read, write, err, timeout * 1000))
         {
@@ -219,7 +241,7 @@ int PersSocketServer::Execute()
                             sock1->Write("OK", 2);
                             clientCount++;
                             sock1->setNonBlocking(1);
-                            sock1->setData(0, new ConnectionContext());
+                            sock1->setData(0, new ConnectionContext(sock1));
                             listener.addR(sock1);
                         }
                     } else

@@ -202,7 +202,11 @@ public:
 //        delete pf;  ??????????? where profile should be deleted
         key.setNumberingPlan(1);
         key.setTypeOfNumber(1);
-        store.Set(key, sb);
+        if (store.Set(key, sb)) {
+          smsc_log_debug(log, "Set return TRUE");
+        } else {
+          smsc_log_debug(log, "Set return FALSE");
+        }
     }
 
     Profile* _getProfile(Key& key, bool create)
@@ -342,8 +346,11 @@ public:
         if(prop.isExpired())
             return;
 
+        //if (!pf) {
+          //pf = new Profile(key, dblog);
+        //}
         if (!pf) {
-          pf = new Profile(key, dblog);
+          return;
         }
 
         //Profile* pf = getProfile(key, true);
@@ -487,8 +494,11 @@ public:
         MutexGuard mt(mtx);
         Key key(rkey);
         //Profile* pf = getProfile(key, true);
+        //if (!pf) {
+          //pf = new Profile(key, dblog);
+        //}
         if (!pf) {
-          pf = new Profile(key, dblog);
+          return false;
         }
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)
@@ -557,8 +567,11 @@ public:
         MutexGuard mt(mtx);
         Key key(rkey);
         //Profile* pf = getProfile(key, true);
+        //if (!pf) {
+          //pf = new Profile(key, dblog);
+        //}
         if (!pf) {
-          pf = new Profile(key, dblog);
+          return false;
         }
         Property* p = pf->GetProperty(prop.getName().c_str());
         if(p != NULL)

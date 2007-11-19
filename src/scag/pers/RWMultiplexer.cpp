@@ -39,10 +39,13 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
 		error.Push(sockets[i]);
 		continue;
 	}
-    if(fds[i].revents & POLLIN)
+    if(fds[i].revents & POLLIN) {
       read.Push(sockets[i]);
-    else if(fds[i].revents & POLLOUT)
+      smsc_log_debug(logger, "socket: %p ready for Read", sockets[i]);
+    } else if(fds[i].revents & POLLOUT) {
       write.Push(sockets[i]);
+      smsc_log_debug(logger, "socket: %p ready for Write", sockets[i]);
+    }
   }
 
   return read.Count() + write.Count() + error.Count();

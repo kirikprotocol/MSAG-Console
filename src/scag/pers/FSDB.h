@@ -148,7 +148,12 @@ public:
         long idx;
         if(indexStorage.Get(key, idx))
     	{
-    		return dataStorage.Change(idx, data, key);
+    		//return dataStorage.Change(idx, data, key);
+          if (!dataStorage.Change(idx, data, key)) {
+            dataStorage.Add(data, idx, key);
+            return false;
+          }
+          return true;
     	}
         dataStorage.Add(data, idx, key);
     	indexStorage.Insert(key, idx);
