@@ -33,7 +33,7 @@
                 <sm-ep:property title="">&nbsp;</sm-ep:property>
                             <sm-ep:list title="statistics.list.services" name="serviceId"
                                   values="${fn:join(bean.serviceIds,',')}"
-                                       valueTitles="${fn:join(bean.serviceNames,',')}" onChange="serviceChanged();"/>
+                                       valueTitles="${fn:join(bean.serviceNames,'~')}" onChange="serviceChanged();"/>
                 <sm-ep:calendar title="statistics.calendar.tilldate" name="tillDate"/>
             </sm-ep:properties>
          </td>
@@ -51,15 +51,19 @@
     var providersHash;
 
     function toggleVisible(p, c) {
+    alert("tog");
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
         c.runtimeStyle.display = o ? "none" : "block";
     }
 
     function populateArray() {
+    alert("pop");
         servicesHash = new Array();
         providersHash = new Array();
+        alert("LENGTH=" + opForm.all.serviceId.length);
         for (var i=1;i<opForm.all.serviceId.length;i++) {
+//            alert(opForm.all.serviceId.options[i].value);
           curserv = opForm.all.serviceId.options[i].value;
           serviceproviderid = curserv.split('//');
           var providerId = serviceproviderid[1];
@@ -68,7 +72,7 @@
           if (servicesHash[providerId]) {
             array = servicesHash[providerId];
             array[array.length] = {value:serviceId, text:opForm.all.serviceId.options[i].text};
-            servicesHash[providerId] = array;             
+            servicesHash[providerId] = array;
           } else {
             servicesHash[providerId] = [{value:serviceId, text:opForm.all.serviceId.options[i].text}];
           }
@@ -80,6 +84,7 @@
     }
 
     function providerChanged() {
+    alert("prov");
       opForm.all.serviceId.options.length=0;
       opForm.all.serviceId.options[0] = new Option("ALL_SERVICES","-1",true,true);
       var providerId = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
@@ -104,6 +109,7 @@
     }
 
     function serviceChanged() {
+    alert("serv");
       var serviceId = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].value;
       if (serviceId == "-1") return;
       var prId = providersHash[serviceId];
