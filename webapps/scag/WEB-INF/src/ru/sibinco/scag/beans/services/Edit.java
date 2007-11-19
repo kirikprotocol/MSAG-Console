@@ -108,6 +108,12 @@ public class Edit extends TabledEditBeanImpl {
     protected void save() throws SCAGJspException {
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         ServiceProvider oldProvider = null;
+        if( !serviceProvidersManager.checkForbiddenChars(name) ){
+            logger.error( "Attempt to set illegal character into provider name - '" +
+                    name + "' with '" + Constants.FORBIDDEN_CHARACTER + "'");
+            throw new SCAGJspException( Constants.errors.CAN_NOT_SAVE_NAME_WITH_FORBIDDEN_CHARACTER,
+                        Constants.FORBIDDEN_CHARACTER );
+        }
         if( serviceProvidersManager.isUniqueProviderName(name, id) ){
             if( isAdd() ) {
                     id = serviceProvidersManager.createServiceProvider(userLogin, getName(), description);

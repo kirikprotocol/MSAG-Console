@@ -202,7 +202,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void save() throws SCAGJspException {
-        logger.error( "services.Edit:save():service - name is - " + name );
+        logger.info( "SERVICES:save():service, name is - " + name );
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         Service oldService = null;
         Long serviceProviderId = null;
@@ -210,6 +210,12 @@ public class Edit extends TabledEditBeanImpl {
         if( name == null || name.equals("") ){
             logger.error( "services.Edit:save():name is empty" );
             throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_EMPTY_NAME, name );
+        }
+        if( !serviceProvidersManager.checkForbiddenChars(name) ){
+            logger.error( "Attempt to set illegal character into service name - '"  +
+                    name + "' with '" + Constants.FORBIDDEN_CHARACTER + "'");
+            throw new SCAGJspException( Constants.errors.CAN_NOT_SAVE_NAME_WITH_FORBIDDEN_CHARACTER,
+                        Constants.FORBIDDEN_CHARACTER );
         }
         if (getEditId() == null ) {
             if( serviceProvidersManager.isUniqueServiceName(name, "-1") ){

@@ -69,34 +69,44 @@ public class Index extends SCAGBean {
             Map providers = context.getServiceProviderManager().getServiceProviders(); //context.getProviderManager().getProviders();
             ArrayList ids = new ArrayList(100);
             ArrayList names = new ArrayList(100);
-            ArrayList serviceids = new ArrayList(100);
-            ArrayList servicenames = new ArrayList(100);
+            ArrayList serviceIds = new ArrayList(100);
+            ArrayList serviceNames = new ArrayList(100);
             String prId;
             for (Iterator i = providers.values().iterator(); i.hasNext();) {
                 Object obj = i.next();
                 if (obj != null && obj instanceof ServiceProvider) {
                     ServiceProvider provider = (ServiceProvider) obj;
                     prId = provider.getId().toString();
-                    names.add(provider.getName());
-                    for(Iterator ii = provider.getServices().values().iterator();ii.hasNext();) {
-                       Object obj1 = ii.next();
-                       if (obj1 != null && obj1 instanceof Service) {
-                         Service service = (Service) obj1;
-                         serviceids.add(service.getId().toString()+"//"+prId);
-                         servicenames.add(service.getName());
-                       }
+                    if( context.getServiceProviderManager().checkForbiddenChars(provider.getName()) ){
+                        names.add(provider.getName());
+                        for(Iterator ii = provider.getServices().values().iterator();ii.hasNext();) {
+                           Object obj1 = ii.next();
+                           if (obj1 != null && obj1 instanceof Service) {
+                             Service service = (Service) obj1;
+                               if( context.getServiceProviderManager().checkForbiddenChars(service.getName()) ){
+                                    serviceIds.add(service.getId().toString()+"//"+prId);
+                                    serviceNames.add(service.getName());
+                               }else{
+                                   logger.error( "Service name contain forbidden character - '" +
+                                           Constants.FORBIDDEN_CHARACTER + "' " + service.getName() );
+                               }
+                           }
+                        }
+                        ids.add(prId);
+                    }else{
+                        logger.error( "Provider name contain forbidden character - '" +
+                                           Constants.FORBIDDEN_CHARACTER + "' "+ provider.getName() );
                     }
-                    ids.add(prId);
                 }
             }
             ids.add(0, Long.toString(StatQuery.ALL_PROVIDERS));
             names.add(0, ALL_PROVIDERS); // TODO: sort names ?
             providerIds = (String[]) (ids.toArray(new String[0]));
             providerNames = (String[]) (names.toArray(new String[0]));
-            serviceids.add(0, Long.toString(StatQuery.ALL_SERVICES));
-            servicenames.add(0, ALL_SERVICES);
-            serviceIds = (String[]) (serviceids.toArray(new String[0]));
-            serviceNames = (String[]) (servicenames.toArray(new String[0]));
+            serviceIds.add(0, Long.toString(StatQuery.ALL_SERVICES));
+            serviceNames.add(0, ALL_SERVICES);
+            this.serviceIds = (String[]) (serviceIds.toArray(new String[0]));
+            this.serviceNames = (String[]) (serviceNames.toArray(new String[0]));
         } else {
             query.setProviderId(userProviderId);
             Object obj = context.getProviderManager().getProviders().get(new Long(userProviderId));
@@ -168,10 +178,12 @@ public class Index extends SCAGBean {
     }
 
     public String[] getServiceIds() {
+        logger.info( "STAT:serviceIds=" + serviceIds );
         return serviceIds;
     }
 
     public String[] getServiceNames() {
+        logger.info( "STAT:serviceNames=" + serviceNames );
         return serviceNames;
     }
 
