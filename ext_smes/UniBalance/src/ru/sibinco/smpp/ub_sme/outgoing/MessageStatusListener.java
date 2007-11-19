@@ -1,4 +1,4 @@
-package ru.sibinco.smpp.ub_sme;
+package ru.sibinco.smpp.ub_sme.outgoing;
 
 /**
  * Created by IntelliJ IDEA.
@@ -7,6 +7,7 @@ package ru.sibinco.smpp.ub_sme;
  * Time: 1:01:37 PM
  */
 public interface MessageStatusListener {
-  public String getName();
-  public void statusChanged(int messageId, int status);
+    public String getName();
+
+    public void statusChanged(int messageId, int status);
 }
