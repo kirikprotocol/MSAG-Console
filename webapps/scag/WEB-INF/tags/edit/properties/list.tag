@@ -16,7 +16,14 @@
 
 <sm-ep:property title="${title}" rowId="${rowId}">
     <c:set var="values" value="${fn:split(values, ',')}"/>
-    <c:set var="valueTitles" value="${fn:split(valueTitles, ',')}"/>
+    <c:choose>
+        <c:when test="${title == 'statistics.list.services'}">
+            <c:set var="valueTitles" value="${fn:split(valueTitles, '~')}"/>
+        </c:when>
+        <c:otherwise>
+            <c:set var="valueTitles" value="${fn:split(valueTitles, ',')}"/>
+        </c:otherwise>
+    </c:choose>
     <c:choose>
         <c:when test="${readonly}">
             <input class=txt type="text" readonly name="${name}" value="${bean[name]}">
