@@ -49,7 +49,7 @@ public class LocaleMessages {
             }
             catch (MissingResourceException ex) {
                 try {
-                    System.err.println("locale resource not found: key=\"" + key + "\", locale=\"" + locale.getLanguage() + "\"");
+//                    System.err.println("locale resource not found: key=\"" + key + "\", locale=\"" + locale.getLanguage() + "\"");
                     res = getResourceBundle(new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE));
                     result = res.getString(key);
                 }
