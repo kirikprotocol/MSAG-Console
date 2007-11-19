@@ -19,7 +19,7 @@
                         <c:when test="${bean.administrator}">
                             <sm-ep:list title="statistics.list.service_providers" name="providerId"
                                         values="${fn:join(bean.providerIds, ',')}"
-                                        valueTitles="${fn:join(bean.providerNames, ',')}" onChange="providerChanged();"/>
+                                        valueTitles="${fn:join(bean.providerNames, '~')}" onChange="providerChanged();"/>
                         </c:when>
                         <c:otherwise>
                             <sm-ep:const title="statistics.const.service_provider" name="providerName" value="${bean.providerName}"/>
@@ -58,10 +58,10 @@
     }
 
     function populateArray() {
-    alert("pop");
+//    alert("pop");
         servicesHash = new Array();
         providersHash = new Array();
-        alert("LENGTH=" + opForm.all.serviceId.length);
+//        alert("LENGTH=" + opForm.all.serviceId.length);
         for (var i=1;i<opForm.all.serviceId.length;i++) {
 //            alert(opForm.all.serviceId.options[i].value);
           curserv = opForm.all.serviceId.options[i].value;
