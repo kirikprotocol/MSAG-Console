@@ -2,6 +2,7 @@
 #include "profiler/profiler-types.hpp"
 #include "core/buffers/File.hpp"
 #include "sms/sms_util.h"
+#include <set>
 
 using namespace smsc::core::buffers;
 using namespace smsc::profiler;
@@ -23,7 +24,11 @@ int main(int argc,char* argv[])
     std::string repFileName=argv[2];
     const char* filename=argv[1];
     const char sig[]="SMSCPROF";
-    const uint32_t ver=0x00010000;
+#ifdef SMSEXTRA
+  const uint32_t ver=0x00010100;
+#else
+  const uint32_t ver=0x00010001;
+#endif
     //storeFileName=filename;
     hrtime_t st=gethrtime();
 
@@ -75,6 +80,13 @@ int main(int argc,char* argv[])
 
     char magic[9]={0,};
 
+    std::set<Address> pset;
+
+    int cntwr=0;
+    int bsk=0;
+    int psk=0;
+    int unused=0;
+
     while(pos<sz)
     {
       uint8_t used=storeFile.ReadByte();
@@ -83,28 +95,44 @@ int main(int argc,char* argv[])
       {
         pos+=1;
         storeFile.Seek(pos);
-        printf("skip:%lld\n",pos);
+        bsk++;
+//        printf("skip:%lld\n",pos);
         continue;
       }
       ReadAddress(storeFile,addr);
       p.Read(storeFile);
-      printf("write from %lld\n",pos);
+//      printf("write from %lld\n",pos);
       if(used)
       {
-        repFile.WriteByte(1);
-        repFile.Write(profileMagic,8);
-        WriteAddress(repFile,addr);
-        p.Write(repFile);
-        repFile.Flush();
+        if(pset.find(addr)==pset.end())
+        {
+          cntwr++;
+          pset.insert(addr);
+          repFile.WriteByte(1);
+          repFile.Write(profileMagic,8);
+          WriteAddress(repFile,addr);
+          p.Write(repFile);
+          repFile.Flush();
+        }else
+        {
+          psk++;
+//          printf("skipped duplicate profile for %s\n",addr.toString().c_str());
+        }
       }else
       {
-        printf("skip unused at %lld\n",pos);
+        unused++;
+//        printf("skip unused at %lld\n",pos);
       }
       pos+=1+8+AddressSize()+Profile::Size();
     }
+    printf("Profiles written:%d\n",cntwr);
+    printf("Bytes skipped:%d\n",bsk);
+    printf("Duplicate profiles skipped:%d\n",psk);
+    printf("Unused entries:%d\n",unused);
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
   }
   return 0;
 }
+
