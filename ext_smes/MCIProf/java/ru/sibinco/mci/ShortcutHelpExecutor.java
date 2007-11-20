@@ -28,8 +28,7 @@ public class ShortcutHelpExecutor extends EntryExecutor
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    super.loadup(); // loadup MCISme strategy
-
+    super.init(properties);
     try {
       helpBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_HELP);
       pageShortcuts = helpBundle.getString(Constants.PAGE_SHORTCUTS);
