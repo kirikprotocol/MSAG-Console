@@ -1,7 +1,7 @@
 <!ELEMENT config (counterInterval,default,object*) >
 <!ELEMENT counterInterval EMPTY>
 <!ATTLIST counterInterval value CDATA #REQUIRED>
-<!ELEMENT default (counter*)>
+<!ELEMENT default ((counter|severity)*)>
 <!ATTLIST default enabled (true|false) #REQUIRED>
 <!ELEMENT severity EMPTY>
 <!ATTLIST severity event (register|registerFailed|unregister|unregisterFailed) #REQUIRED
