@@ -67,7 +67,6 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
         message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
         message.setType(Message.TYPE_SUBMIT);
 
-
         try {
             smeEngine.assingSequenceNumber(message, state);
         } catch (SMPPException e) {
@@ -98,7 +97,7 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
                 state.addHistory(endHistoryRecord);
                 smeEngine.addResponseHandler(smeEngine.getSequenceNumber(message), new PDUHandle(this, state));
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Send Mg request for abonent " + state.getSourceMessage().getSourceAddress());
+                        logger.debug("MSG sent. ConnID #" + message.getConnectionId() + "; SeqN #" + message.getSequenceNumber() + "; USSD #" + message.getUssdServiceOp() + "; destination #" + message.getDestinationAddress() + "; source #" + message.getSourceAddress() + "; msg: " + message.getMessageString());
                 }
             } else {
                 state.addHistory(failedHistoryRecord);
@@ -114,10 +113,9 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
         synchronized (state) {
             state.addHistory(failedHistoryRecord);
             if (logger.isDebugEnabled()) {
-                logger.debug("PDU error");
+                logger.debug("PDU error, status class:"+pdu.getStatusClass());
             }
         }
-        smeEngine.removeOutgoingObject(pdu);
     }
 
 

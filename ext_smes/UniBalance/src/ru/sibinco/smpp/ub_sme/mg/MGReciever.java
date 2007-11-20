@@ -43,6 +43,7 @@ public class MGReciever extends AbstractStateProcessor {
             abonent = state.getSourceMessage().getDestinationAddress();
             if (logger.isDebugEnabled()) {
                 logger.debug("Process state ");
+                logger.debug("Message from mg "+body);
             }
         }
         State abonentState = getStates().getRequestState(abonent);
