@@ -40,7 +40,7 @@ public class States extends LinkedList {
 
     synchronized public void removeRequestState(State state) {
         if (logger.isDebugEnabled()) {
-            logger.debug("remove state: " + state);
+            logger.debug("Remove state: " + state);
         }
         remove(state);
     }

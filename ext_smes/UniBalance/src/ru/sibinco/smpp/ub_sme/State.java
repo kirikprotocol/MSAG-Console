@@ -74,9 +74,13 @@ public class State {
 
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("Abonent request: ");
-        String date;
         synchronized (this) {
+            sb.append("src=");
+            sb.append(sourceMessage.getSourceAddress());
+            sb.append(",dest=");
+            sb.append(sourceMessage.getDestinationAddress());
+            sb.append("; ");
+            String date;
             synchronized (dateFormat) {
                 date = dateFormat.format(new Date(abonentRequestTime));
             }

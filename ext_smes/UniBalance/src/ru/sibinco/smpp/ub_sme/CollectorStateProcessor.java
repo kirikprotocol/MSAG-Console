@@ -53,9 +53,7 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
                 return;
             }
             state.addHistory(startHistoryRecord);
-            states.removeRequestState(state);
         }
-
 
         String balance = (String) state.getResultObject(mgResultKey);
         if (null == balance) {
@@ -66,7 +64,6 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
             synchronized (state) {
                 state.addHistory(errorHistoryRecord);
             }
-            return;
         } else {
             sendResponse(state, balance);
             synchronized (state) {
@@ -77,6 +74,7 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
         synchronized (state) {
             state.setAbonentResponseTime(System.currentTimeMillis());
         }
+        states.removeRequestState(state);
 
     }
 

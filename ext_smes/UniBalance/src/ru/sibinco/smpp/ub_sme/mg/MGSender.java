@@ -53,7 +53,7 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
                 return;
             }
             if (logger.isDebugEnabled()) {
-                logger.debug("Process state " );
+                logger.debug("Process state: "+state);
             }
             state.addHistory(startHistoryRecord);
             sourceAddress = state.getSourceMessage().getSourceAddress();
@@ -76,21 +76,6 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
             }
             return;
         }
-        //TODO delete it
-/*
-        Message testMessage = new Message();
-        testMessage.setSourceAddress(mgAddress);
-        testMessage.setDestinationAddress(state.getSourceMessage().getSourceAddress());
-        testMessage.setMessageString("123");
-        try {
-            Thread.sleep(10000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
-        states.addRequestState(new State(testMessage,System.currentTimeMillis()));
-        state.addHistory(endHistoryRecord);
-        if(true) return;
-  */
         synchronized (state) {
             boolean status = smeEngine.sendMessage(message);
             if (status) {
