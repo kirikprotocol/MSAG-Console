@@ -522,9 +522,14 @@ sub process{
     my $infields={};
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
+    my $makeoutrec=1;
+    if($infields->{SRC_SME_ID} eq 'MCSme')
+    {
+      $makeoutrec=0;
+    }
     my $outfields={};
     %$outfields=%$infields;
-    $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:0;
+    $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?22:$infields->{SERVICE_ID};
     $outfields->{SERVICE_TYPE}='0';
     $outfields->{ACTION_CODE}='';
     if( $infields->{BEARER_TYPE} == 1 )
@@ -584,7 +589,7 @@ sub process{
       #DIVERTED_FOR = C - real destination
       $outfields->{OTHER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       # A -> B
-      $billed|=outrow($out,$outfields);
+      $billed|=outrow($out,$outfields) if $makeoutrec;
       
 #      $outfields->{RECORD_TYPE}=10;
       $outfields->{RECORD_TYPE}=30;
@@ -594,14 +599,20 @@ sub process{
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DIVERTED_FOR});
       # B -> C
-      $billed|=outrow($out,$outfields);
+      $billed|=outrow($out,$outfields) if $makeoutrec;
 
       
       $outfields->{RECORD_TYPE}=20;
       $outfields->{CALL_DIRECTION}='I';
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-      $outfields->{INV_SERVICE_ID}=21;
+      if( $infields->{BEARER_TYPE} == 1 )
+      {
+        $outfields->{INV_SERVICE_ID}='ff';
+      }else
+      {
+        $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?21:$infields->{SERVICE_ID};
+      }
       # B <- A
       $billed|=outrow($out,$outfields);
       
@@ -615,7 +626,7 @@ sub process{
     }else
     {
       
-      $billed|=outrow($out,$outfields);
+      $billed|=outrow($out,$outfields) if $makeoutrec;
       
       $outfields->{RECORD_TYPE}=20;
       $outfields->{CALL_DIRECTION}='I';
@@ -624,7 +635,13 @@ sub process{
       $outfields->{PAYER_MSC}=$infields->{DST_MSC};
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
-      $outfields->{INV_SERVICE_ID}=21;
+      if( $infields->{BEARER_TYPE} == 1 )
+      {
+        $outfields->{INV_SERVICE_ID}='ff';
+      }else
+      {
+        $outfields->{INV_SERVICE_ID}=$infields->{SERVICE_ID}==0?21:$infields->{SERVICE_ID};
+      }
       $billed|=outrow($out,$outfields);
     }
   }
