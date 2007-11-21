@@ -13,9 +13,6 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
     private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(MGSender.class);
     private String serviceAddress;
     private String mgAddress;
-    private final String startHistoryRecord = "mg_sender_start";
-    private final String endHistoryRecord = "mg_sender_finish";
-    private final String failedHistoryRecord = "mg_sender_failed";
 
     public MGSender(SmeEngine engine, States states) {
         super(engine, states);
@@ -57,10 +54,9 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
             }
             state.addHistory(startHistoryRecord);
             sourceAddress = state.getSourceMessage().getSourceAddress();
-            abonent = state.getSourceMessage().getSourceAddress();
         }
-        String messageBody = abonent + "*balance";
-        Message message = new Message();
+        String messageBody = sourceAddress + "*balance";
+        Message message = new Message();      
         message.setSourceAddress(sourceAddress);
         message.setDestinationAddress(mgAddress);
         message.setMessageString(messageBody);
@@ -72,12 +68,12 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
         } catch (SMPPException e) {
             logger.error("Could not send MG request", e);
             synchronized (state) {
-                state.addHistory(failedHistoryRecord);
+                state.addHistory(errorHistoryRecord);
             }
             return;
         }
-        synchronized (state) {
-            boolean status = smeEngine.sendMessage(message);
+       synchronized (state) {
+           boolean status = smeEngine.sendMessage(message);
             if (status) {
                 state.addHistory(endHistoryRecord);
                 smeEngine.addResponseHandler(smeEngine.getSequenceNumber(message), new PDUHandle(this, state));
@@ -85,7 +81,7 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
                         logger.debug("MSG sent. ConnID #" + message.getConnectionId() + "; SeqN #" + message.getSequenceNumber() + "; USSD #" + message.getUssdServiceOp() + "; destination #" + message.getDestinationAddress() + "; source #" + message.getSourceAddress() + "; msg: " + message.getMessageString());
                 }
             } else {
-                state.addHistory(failedHistoryRecord);
+                state.addHistory(errorHistoryRecord);
                 logger.error("Could not send MG request");
             }
         }
@@ -96,7 +92,7 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
     public void handleResponse(PDU pdu, State state) {
         smeEngine.removeResponseHandler(smeEngine.getSequenceNumber(pdu));
         synchronized (state) {
-            state.addHistory(failedHistoryRecord);
+            state.addHistory(errorHistoryRecord);
             if (logger.isDebugEnabled()) {
                 logger.debug("PDU error, status class:"+pdu.getStatusClass());
             }

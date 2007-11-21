@@ -38,7 +38,7 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
 
     }
 
-    protected boolean checkState(State state) {
+    protected boolean checkState(State state) {        
         synchronized (state) {
             if (!serviceAddress.equals(state.getSourceMessage().getDestinationAddress())) {
                 return false;
@@ -62,7 +62,7 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
             }
             sendErrorMessage(state);
             synchronized (state) {
-                state.addHistory(errorHistoryRecord);
+                state.addHistory(endHistoryRecord);
             }
         } else {
             sendResponse(state, balance);
@@ -84,7 +84,7 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
         synchronized (state) {
             message.setSourceAddress(state.getSourceMessage().getDestinationAddress());
             message.setDestinationAddress(state.getSourceMessage().getSourceAddress());
-            if (state.getSourceMessage().hasUssdServiceOp()) {
+            if (state.getSourceMessage().hasUssdServiceOp()&&!state.isUssdSessionClosed()) {
                 message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
             }
             message.setUserMessageReference(state.getSourceMessage().getUserMessageReference());
@@ -136,7 +136,7 @@ public class CollectorStateProcessor extends AbstractStateProcessor {
         Message message = new Message();
         message.setSourceAddress(state.getSourceMessage().getDestinationAddress());
         message.setDestinationAddress(state.getSourceMessage().getSourceAddress());
-        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP); 
         message.setUserMessageReference(state.getSourceMessage().getUserMessageReference());
         message.setMessageString(ResponsePatternManager.getResponsePatternManager().getPattern(keyForSmsResponsePattern, waitForSmsResponseDefaultPattern));
         message.setType(Message.TYPE_SUBMIT);
