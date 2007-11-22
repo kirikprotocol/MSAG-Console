@@ -111,9 +111,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
             } else {
                 if (responseSequenceMap.containsKey(getSequenceNumber(pdu))) {
                     PDUHandle pduHandle = (PDUHandle) responseSequenceMap.get(getSequenceNumber(pdu));
-                    if(null==pduHandle){
-                        logger.warn("pdu handle is null");
-                    }
                     pduHandle.handleResponse(pdu);
                 }
                 removeOutgoingObject(pdu);

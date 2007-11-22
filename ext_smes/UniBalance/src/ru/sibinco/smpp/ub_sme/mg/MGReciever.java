@@ -51,7 +51,7 @@ public class MGReciever extends AbstractStateProcessor {
             state.addHistory(endHistoryRecord);
             getStates().removeRequestState(state);
          }
-        State abonentState = getStates().getRequestState("+"+abonent);
+        State abonentState = getStates().getRequestState(abonent);
         String balance = body;
         synchronized (abonentState) {
             abonentState.addHistory(startHistoryRecord);

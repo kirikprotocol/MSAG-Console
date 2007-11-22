@@ -17,6 +17,7 @@ class RequestStatesController extends Thread {
     private long ussdSessionTimeout = 5000L;
     private String waitForSmsResponseDefaultPattern = "{0}";
     private String keyForSmsResponsePattern = "balance.wait.for.sms.response.pattern";
+    private long stateTimeout=3600000l;
 
     public RequestStatesController(Properties config, SmeEngine engine) {
         setName("RequestStatesController");
@@ -32,6 +33,13 @@ class RequestStatesController extends Thread {
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"ussd.session.timeout\": " + config.getProperty("ussd.session.timeout"));
         }
+
+        try {
+            stateTimeout = Long.parseLong(config.getProperty("state.timeout", Long.toString(stateTimeout)));
+        } catch (NumberFormatException e) {
+            throw new InitializationException("Invalid value for config parameter \"state.timeout\": " + config.getProperty("state.timeout"));
+        }
+
         this.states = engine.getStates();
         this.engine = engine;
         smsResponseMode = Boolean.valueOf(config.getProperty("sms.response.mode", "false")).booleanValue();
@@ -92,6 +100,12 @@ class RequestStatesController extends Thread {
                 return;
             }
             if (state.getAbonentRequestTime() + ussdSessionTimeout > System.currentTimeMillis()) {
+                break;
+            }
+            if(state.getAbonentRequestTime()+stateTimeout>System.currentTimeMillis()){
+                synchronized(state){
+                    logger.warn("State timeout!State:"+state);
+                }
                 break;
             }
             boolean sendWaitMessage = false;

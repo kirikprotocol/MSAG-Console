@@ -56,9 +56,14 @@ public class MGSender extends AbstractStateProcessor implements StateResponsePro
             sourceAddress = state.getSourceMessage().getSourceAddress();
         }
         String messageBody = sourceAddress + "*balance";
-        Message message = new Message();      
+        Message message = new Message();
         message.setSourceAddress(sourceAddress);
         message.setDestinationAddress(mgAddress);
+
+        synchronized(state){
+          message.setUserMessageReference(state.getSourceMessage().getUserMessageReference());
+        }
+
         message.setMessageString(messageBody);
         message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
         message.setType(Message.TYPE_SUBMIT);

@@ -73,14 +73,20 @@ public abstract class AbstractStateProcessor implements Runnable {
     }
 
     public void run() {
+        State state=null;
         while (true) {
             try {
                 for (int i = 0; i < states.size(); i++) {
-                    State state = (State) states.get(i);
+                    state = (State) states.get(i);
                     processState(state);
                 }
             } catch (ArrayIndexOutOfBoundsException e) {
+            }catch(NullPointerException e){
+                if(logger.isDebugEnabled()){
+                    logger.debug("state: "+state+" is null");
+                }
             }
+
             try {
                 Thread.sleep(threadTimeout);
             } catch (InterruptedException e) {
