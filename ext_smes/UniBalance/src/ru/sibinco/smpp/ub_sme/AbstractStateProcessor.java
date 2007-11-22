@@ -80,14 +80,8 @@ public abstract class AbstractStateProcessor implements Runnable {
                     state = (State) states.get(i);
                     processState(state);
                 }
-            } catch (ArrayIndexOutOfBoundsException e) {
-            }catch(NullPointerException e){
-                if(logger.isDebugEnabled()){
-                    logger.debug("state: "+state+" is null");
-                }
-            }
-
-            try {
+            } catch (ArrayIndexOutOfBoundsException e) {     }
+             try {
                 Thread.sleep(threadTimeout);
             } catch (InterruptedException e) {
                 logger.warn("thread was interrupted", e);
