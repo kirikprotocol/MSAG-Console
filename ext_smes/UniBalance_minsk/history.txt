@@ -11,6 +11,8 @@ Date       | Author    | Version | Message
 2007/05/25 | danger    | 1.04    | Fixed some problems with connections
 -----------|-----------|---------|--------------------------------------------------------------------------------
 2007/11/13 | serge     | 1.05    | Separate thread pool for banner requests, banner requests timings fix
+-----------|-----------|---------|--------------------------------------------------------------------------------
+2007/11/21 | serge     | 1.06    | States refactored - states storage now HashMap, watch dog now LinkedList
            |           |         |
            |           |         |
            |           |         |

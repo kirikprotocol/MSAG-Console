@@ -74,7 +74,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
   private OutgoingQueue outgoingQueue;
 
   private DBConnectionManager connectionManager = DBConnectionManager.getInstance();
-  private List states = new ArrayList();
+  private Map states = new HashMap();
+  private List statesExpire = new LinkedList();
 
   private Map cbossStatements = new HashMap();
 
@@ -328,37 +329,32 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   protected void addRequestState(RequestState state) {
     synchronized (states) {
-      states.add(state);
+      states.put(state.getAbonentRequest().getSourceAddress(), state);
     }
-    if (logger.isDebugEnabled())
-      logger.debug(state.getAbonentRequest().getSourceAddress() + " request state added.");
+    synchronized(statesExpire){
+      statesExpire.add(state);
+    }
   }
 
   protected RequestState getRequestState(String abonent) {
     synchronized (states) {
-      int index = states.indexOf(new RequestStateIndex(abonent));
-      if (index == -1) {
-        if (logger.isDebugEnabled())
-          logger.debug(abonent + " request state not found.");
-        return null;
-      }
-      return (RequestState) states.get(index);
+      return (RequestState)states.get(abonent);
     }
   }
 
-  protected RequestState extractRequestState(String abonent) {
+  protected RequestState removeRequestState( RequestState state ) {
     synchronized (states) {
-      int index = states.indexOf(new RequestStateIndex(abonent));
-      if (index == -1) {
-        if (logger.isDebugEnabled())
-          logger.debug(abonent + " request state not found.");
-        return null;
-      }
-      return (RequestState) states.remove(index);
+      return (RequestState)states.remove(state.getAbonentRequest().getSourceAddress());
     }
   }
 
-  protected void closeRequestState(String abonent) {
+  /*protected RequestState extractRequestState(String abonent) {
+    synchronized (states) {
+      return (RequestState)states.remove(abonent);
+    }
+  } */
+
+  /*protected void closeRequestState(String abonent) {
     if (abonent == null) {
       return;
     }
@@ -366,7 +362,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     if (state == null)
       return;
     closeRequestState(state);
-  }
+  }*/
 
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
@@ -396,7 +392,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
         sendResponse(state);
         state.setClosed(true);
-        extractRequestState(abonent);
+        removeRequestState(state);
         if (logger.isInfoEnabled())
           logger.info(state.toString());
       }
@@ -408,37 +404,21 @@ public class SmeEngine implements MessageListener, ResponseListener {
     if (logger.isDebugEnabled()) {
       logger.debug("Processing requests count: " + states.size());
     }
-    for (int i = 0; i < states.size(); i++) {
-      try {
-        state = (RequestState) states.get(i);
-      } catch (IndexOutOfBoundsException e) {
-        return;
-      }
-      /*
-      }
-      while (states.size() > 0) {
-        state = (RequestState) states.get(0);
-      */
-      if (state.getAbonentRequestTime() + ussdSessionTimeout > System.currentTimeMillis()) {
-        break;
+    while( !statesExpire.isEmpty() ) {
+      long tm = System.currentTimeMillis();
+      synchronized(statesExpire) {
+        state = (RequestState) statesExpire.get(0);
+        if (state.getAbonentRequestTime() + ussdSessionTimeout > tm) return;
+        statesExpire.remove(0);
       }
       boolean sendWaitMessage = false;
       synchronized (state) {
-        /*
-        if (state.getAbonentRequestTime() + requestLifeTime <= System.currentTimeMillis() && !state.isClosed()) {
-          if (logger.isDebugEnabled()) logger.debug(state.getAbonentRequest().getSourceAddress() + " request state expired.");
-          if (!state.isUssdSessionClosed()) {
-            sendDeliverSmResponse(state.getAbonentRequest(), Data.ESME_RSYSERR);
-          }
-          state.setClosed(true);
-          states.remove(0);
-          continue;
-        }
-        */
-        if (!state.isUssdSessionClosed()) {
+        if (!state.isClosed() && !state.isUssdSessionClosed()) {
+          // if state is in process state send ussd resp to release session and then it will be sms on closeRequestState
+          logger.warn("Request expired for "+state.getAbonentRequest().getSourceAddress());
           sendWaitMessage = true;
           state.setUssdSessionClosed(true);
-        }
+        } // else state already processed, skip it here
       }
       if (sendWaitMessage) {
         sendWaitForSmsMessage(state);
@@ -549,7 +529,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
       synchronized (state) {
         state.setError(true);
       }
-      extractRequestState(message.getSourceAddress());
+      removeRequestState(state);
       sendDeliverSmResponse(message, Data.ESME_RTHROTTLED);
       return;
     }
