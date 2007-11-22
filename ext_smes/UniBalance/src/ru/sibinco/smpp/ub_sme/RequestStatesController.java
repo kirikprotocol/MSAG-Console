@@ -145,7 +145,7 @@ class RequestStatesController extends Thread {
         Message message = new Message();
         message.setSourceAddress(state.getSourceMessage().getDestinationAddress());
         message.setDestinationAddress(state.getSourceMessage().getSourceAddress());
-        //message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
         message.setUserMessageReference(state.getSourceMessage().getUserMessageReference());
         message.setMessageString(ResponsePatternManager.getResponsePatternManager().getPattern(keyForSmsResponsePattern, waitForSmsResponseDefaultPattern));
         message.setType(Message.TYPE_SUBMIT);
