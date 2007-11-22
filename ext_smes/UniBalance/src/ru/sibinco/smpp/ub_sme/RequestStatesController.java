@@ -18,6 +18,7 @@ class RequestStatesController extends Thread {
     private String waitForSmsResponseDefaultPattern = "{0}";
     private String keyForSmsResponsePattern = "balance.wait.for.sms.response.pattern";
     private long stateTimeout=3600000l;
+    private String serviceAddress;
 
     public RequestStatesController(Properties config, SmeEngine engine) {
         setName("RequestStatesController");
@@ -38,6 +39,10 @@ class RequestStatesController extends Thread {
             stateTimeout = Long.parseLong(config.getProperty("state.timeout", Long.toString(stateTimeout)));
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"state.timeout\": " + config.getProperty("state.timeout"));
+        }
+        serviceAddress = config.getProperty("service.address");
+        if(null==serviceAddress||"".equals(serviceAddress)){
+            throw new InitializationException("Invalid value for config parameter \"service.address\"");
         }
 
         this.states = engine.getStates();
@@ -109,6 +114,7 @@ class RequestStatesController extends Thread {
                 break;
             }
             boolean sendWaitMessage = false;
+
             synchronized (state) {
                 /*
                 if (state.getAbonentRequestTime() + requestLifeTime <= System.currentTimeMillis() && !state.isClosed()) {
@@ -121,7 +127,7 @@ class RequestStatesController extends Thread {
                   continue;
                 }
                 */
-                if (!state.isUssdSessionClosed()) {
+                if (state.getSourceMessage().getDestinationAddress().equals(serviceAddress)&&!state.isUssdSessionClosed()) {
                     sendWaitMessage = true;
                     state.setUssdSessionClosed(true);
                 }
