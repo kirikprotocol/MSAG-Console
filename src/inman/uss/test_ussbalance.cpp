@@ -215,7 +215,7 @@ int main(int argc, char** argv)
     dataSz += appendDataToBuf(buf, (uint8_t*)&cfg.inSSN, sizeof(cfg.inSSN), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)&inAddrLen, sizeof(inAddrLen), &offset);
     dataSz += appendDataToBuf(buf, (uint8_t*)cfg.inAddr.c_str(), inAddrLen, &offset);
-    dataSz += appendDataToBuf(buf, (uint8_t*)cfg.inAddr.c_str(), inAddrLen, &offset);
+
     if ( imsi )
       dataSz += appendDataToBuf(buf, (uint8_t*)imsi, strlen(imsi), &offset);
 
