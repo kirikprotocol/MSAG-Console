@@ -180,14 +180,17 @@ public:
         long idx;
         if(indexStorage.Get(key, idx))
             return dataStorage.Change(idx, data, key);
-        return false;
+        return false; 
     }
     
     virtual void Remove(const Key& key)
     {
         long idx;
-        if(indexStorage.Get(key, idx))
-            dataStorage.Remove(idx);
+        __trace2__("Remove: key=%s", key.toString().c_str());
+        if(indexStorage.Get(key, idx)) {
+          __trace2__("Remove: idx=%d", idx);
+          dataStorage.Remove(idx);
+        }
     }
 
     virtual void Reset()

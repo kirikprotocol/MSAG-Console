@@ -213,6 +213,8 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
   isb.ReadString(str_key);
   smsc_log_debug(rplog, "profile key = \'%s\'", str_key.c_str());
   AbntAddr addr(str_key.c_str());
+  addr.setNumberingPlan(1);
+  addr.setTypeOfNumber(1);
   uint8_t pf_state = OK;
   profiles_states.Get(addr, pf_state);
   if (pf_state != OK) {
@@ -236,7 +238,7 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
     createResponseForClient(&osb, RESPONSE_ERROR);
     return;
   }
-  commands.Insert(AbntAddr(str_key.c_str()), CmdContext(cmd, isb, &osb, ctx.socket));
+  commands.Insert(addr, CmdContext(cmd, isb, &osb, ctx.socket));
 }
   
 void RegionPersServer::execCommand(PersCmd cmd, Profile *pf, const string& str_key,
@@ -315,12 +317,14 @@ void RegionPersServer::getProfileCmdHandler(ConnectionContext &ctx) {
   Profile *pf = getProfile(get_profile_cmd.key);
   ProfileRespCmd profile_resp(get_profile_cmd.key);
   if (!pf) {
-    // profile not found
     profile_resp.is_ok = 0;
     smsc_log_warn(rplog, "getProfileCmdHandler : profile with key=%s not found", get_profile_cmd.key.c_str());
-    //return;
+    sendCommandToCP(profile_resp);
+    return;
   }
   AbntAddr addr(get_profile_cmd.key.c_str());
+  addr.setNumberingPlan(1);
+  addr.setTypeOfNumber(1);
   uint8_t pf_state = OK;
   profiles_states.Get(addr, pf_state);
   //if (pf->getState() == LOCKED) {
@@ -337,13 +341,28 @@ void RegionPersServer::getProfileCmdHandler(ConnectionContext &ctx) {
     //pf->setLocked();
     profiles_states.Insert(addr, LOCKED);
     smsc_log_warn(rplog, "getProfileCmdHandler : set profile state LOCKED key=%s", get_profile_cmd.key.c_str());
-    profile_resp.profile = pf;
+    profile_resp.setProfile(pf);
     break;
   default:
     profile_resp.is_ok = 0;
     smsc_log_warn(rplog, "getProfileCmdHandler : profile with key=%s has unknown state", get_profile_cmd.key.c_str());
   }
   sendCommandToCP(profile_resp);
+}
+
+void RegionPersServer::sendResponseError(CmdContext& cmd_ctx, const string& key) {
+  if (cmd_ctx.osb) {
+    createResponseForClient(cmd_ctx.osb, RESPONSE_ERROR);
+    sendCommandToClient(cmd_ctx);
+  } else {
+    smsc_log_error(rplog, "sendResponseError : client connection error key=%s", key.c_str());
+  }
+  DoneCmd done(0, key);
+  sendCommandToCP(done);
+  AbntAddr addr(key.c_str());
+  addr.setNumberingPlan(1);
+  addr.setTypeOfNumber(1);
+  commands.Delete(addr);
 }
 
 void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
@@ -353,6 +372,8 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "profileRespCmdHandler key = \'%s\'", profile_resp.key.c_str());
   CmdContext cmd_ctx;
   AbntAddr addr(profile_resp.key.c_str());
+  addr.setNumberingPlan(1);
+  addr.setTypeOfNumber(1);
   if (!(commands.Get(addr, cmd_ctx))) {
     smsc_log_warn(rplog, "profileRespCmdHandler : command conntext with key=%s not found",
                     profile_resp.key.c_str());
@@ -360,24 +381,19 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
   if (!profile_resp.is_ok) {
     smsc_log_warn(rplog, "profileRespCmdHandler : receive error ProfileResp with key=%s",
                    profile_resp.key.c_str());
-    if (cmd_ctx.osb) {
-      createResponseForClient(cmd_ctx.osb, RESPONSE_ERROR);
-      sendCommandToClient(cmd_ctx);
-    } else {
-      smsc_log_error(rplog, "profileRespCmdHandler : client connection error key=%s ctx=%p",
-                      profile_resp.key.c_str(), &ctx);
-    }
-    commands.Delete(addr);
+    sendResponseError(cmd_ctx, profile_resp.key);
     return;
   }
-  AbntAddr store_addr(profile_resp.key.c_str());
-  //Profile* new_profile = store->createProfile(store_addr);
-  std::auto_ptr<Profile> profile(getAbonentStore()->createProfile(store_addr));
-  if (profile_resp.profile) {
+  Profile* profile = getAbonentStore()->createProfile(addr);
+  if (!profile) {
+    smsc_log_warn(rplog, "profileRespCmdHandler : can't create new profile");
+    sendResponseError(cmd_ctx, profile_resp.key);
+    return;
+  }
+  if (profile_resp.getProfile()) {
     smsc_log_debug(rplog, "profileRespCmdHandler : response has profile");
-    profile_resp.profile->copyPropertiesTo(profile.get());
-    //profile.get()->setLocked();
-    getAbonentStore()->storeProfile(store_addr, profile.get());
+    profile_resp.getProfile()->copyPropertiesTo(profile);
+    getAbonentStore()->storeProfile(addr, profile);
     profiles_states.Insert(addr, LOCKED);
     DoneCmd done(1, profile_resp.key);
     sendCommandToCP(done);
@@ -385,7 +401,7 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
   }
   smsc_log_debug(rplog, "profileRespCmdHandler : response has NOT profile");
   if (cmd_ctx.osb) {
-    execCommand(cmd_ctx.cmd_id, profile.get(), profile_resp.key, cmd_ctx.isb, *cmd_ctx.osb);
+    execCommand(cmd_ctx.cmd_id, profile, profile_resp.key, cmd_ctx.isb, *cmd_ctx.osb);
     sendCommandToClient(cmd_ctx);
   } else {
     smsc_log_error(rplog, "profileRespCmdHandler : client connection error key=%s ctx=%p",
@@ -399,6 +415,8 @@ void RegionPersServer::doneCmdHandler(ConnectionContext &ctx) {
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   DoneCmd done(isb);
   AbntAddr addr(done.key.c_str());
+  addr.setNumberingPlan(1);
+  addr.setTypeOfNumber(1);
   profiles_states.Delete(addr);
   if (done.is_ok) {
     smsc_log_debug(rplog, "doneCmdHandler : delete profile key=\'%s\'", done.key.c_str());
@@ -407,6 +425,7 @@ void RegionPersServer::doneCmdHandler(ConnectionContext &ctx) {
     sendCommandToCP(done_resp);
     //profiles_states.Insert(addr, DELETED);
   } else {
+    smsc_log_debug(rplog, "doneCmdHandler : receive error DONE", done.key.c_str());
     //profiles_states.Insert(addr, OK);
     //что делать если пришёл DONE=ERROR
   }
@@ -417,6 +436,8 @@ void RegionPersServer::doneRespCmdHandler(ConnectionContext &ctx) {
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   DoneCmd done_resp(isb);
   AbntAddr addr(done_resp.key.c_str());
+  addr.setNumberingPlan(1);
+  addr.setTypeOfNumber(1);
   CmdContext cmd_ctx;
   if (!(commands.Get(addr, cmd_ctx))) {
     smsc_log_warn(rplog, "doneRespCmdHandler : command conntext with key=%s not found ctx=%p",
@@ -426,28 +447,31 @@ void RegionPersServer::doneRespCmdHandler(ConnectionContext &ctx) {
     smsc_log_warn(rplog, "doneRespCmdHandler : client connection error key=%s ctx=%p",
                     done_resp.key.c_str(), &ctx);
   }
-
+  profiles_states.Delete(addr);
   if (done_resp.is_ok) {
-    profiles_states.Insert(addr, OK);
-    std::auto_ptr<Profile> profile(getProfile(done_resp.key));
-    if (profile.get() && cmd_ctx.osb) {
-      execCommand(cmd_ctx.cmd_id, profile.get(), done_resp.key, cmd_ctx.isb, *cmd_ctx.osb);
-      sendCommandToClient(cmd_ctx);
-    } else {
+    //profiles_states.Insert(addr, OK);
+    Profile* profile = getProfile(done_resp.key);
+    if (!profile) {
       smsc_log_debug(rplog, "doneRespCmdHandler : profile with key=%s not found ctx=%p",
                       done_resp.key.c_str(), &ctx);
+      createResponseForClient(cmd_ctx.osb, RESPONSE_ERROR);
+      sendCommandToClient(cmd_ctx);
+      commands.Delete(addr);
+      return;
     }
+    execCommand(cmd_ctx.cmd_id, profile, done_resp.key, cmd_ctx.isb, *cmd_ctx.osb);
+    sendCommandToClient(cmd_ctx);
   } else {
-    //что делать если пришёл DONE_RESP=ERROR
     smsc_log_warn(rplog, "doneRespCmdHandler : receive error DONE_RESP key=\'%s\'",
                    done_resp.key.c_str());
-    profiles_states.Insert(addr, DELETED);
+    //profiles_states.Insert(addr, DELETED);
     getAbonentStore()->deleteProfile(addr);
     if (cmd_ctx.osb) {
       createResponseForClient(cmd_ctx.osb, RESPONSE_ERROR);
       sendCommandToClient(cmd_ctx);
     }
   }
+  commands.Delete(addr);
 }
 
 void RegionPersServer::checkOwnCmdHandler(ConnectionContext &ctx) {

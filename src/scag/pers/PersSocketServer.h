@@ -39,11 +39,11 @@ protected:
     virtual void processUplinkPacket(ConnectionContext& ctx) {};
     virtual void onDisconnect(ConnectionContext& ctx) {};    
     virtual bool bindToCP() { return true; };
+    virtual void checkTimeouts();
 
     void processReadSocket(Socket* sock);
     void processWriteSocket(Socket* sock);
     void removeSocket(Socket* s, int i = -1);
-	void checkTimeouts();
 
     Logger * log;
     std::string persHost;

@@ -40,6 +40,7 @@ private:
   bool processPacketFromClient(ConnectionContext &ctx);
   void execCommand(ConnectionContext &ctx);
   void sendCommandToClient(CmdContext &ctx);
+  void sendResponseError(CmdContext& cmd_ctx, const string& key);
 
   bool sendCommandToCP(const CPersCmd& cmd);
   void createResponseForClient(SerialBuffer *sb, PersServerResponseType r);

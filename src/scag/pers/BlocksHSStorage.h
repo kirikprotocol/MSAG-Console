@@ -48,8 +48,9 @@ const int DESCR_FILE_MAP_FAILED     = -6;
 const int defaultBlockSize = 56; // in bytes
 const int defaultFileSize = 3; // in blocks 
 const long long BLOCK_USED   = (long long)1 << 63;
+//const long long BLOCK_USED   = static_cast<long long>(1) << 63;
 
-struct DescriptionFile
+struct DescriptionFile   
 {
     char preamble[20];
     int version;

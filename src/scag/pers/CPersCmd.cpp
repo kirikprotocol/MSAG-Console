@@ -35,7 +35,7 @@ void ProfileRespCmd::writeData(SerialBuffer &sb) const {
 
 bool ProfileRespCmd::deserialize(SerialBuffer &sb) {
   CPersCmd::deserialize(sb);
-  if (profile) {
+  if (must_del_profile && profile) {
     delete profile;
     profile = 0;
   }
@@ -46,12 +46,28 @@ bool ProfileRespCmd::deserialize(SerialBuffer &sb) {
   if (sb.length() > sb.getPos()) {
     profile = new Profile(key);
     profile->Deserialize(sb);
+    must_del_profile = true;
   }
   return true;
 }
 
+void ProfileRespCmd::setProfile(Profile* pf) {
+  if (!pf) {
+    return;
+  }
+  if (must_del_profile && profile) {
+    delete profile;
+  }
+  profile = pf;
+  must_del_profile = false;
+}
+
+Profile* ProfileRespCmd::getProfile() {
+  return profile;
+}
+
 ProfileRespCmd::~ProfileRespCmd() {
-  if (profile) {
+  if (must_del_profile && profile) {
     delete profile;
   }
 }

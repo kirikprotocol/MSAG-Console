@@ -29,13 +29,16 @@ class ProfileInfo
 {
 public:
     uint32_t owner;
+    ProfileInfo() : owner(0) {};
 };
 
 class TransactionInfo
 {
 public:
-  TransactionInfo(): startTime(time(NULL)) {};
-  uint32_t owner, candidate, startTime;
+  TransactionInfo(): startTime(time(NULL)), last_cmd(CentralPersCmd::GET_PROFILE) {};
+  uint32_t owner, candidate;
+  time_t startTime;
+  uint8_t last_cmd;
 };
 
 class CentralPersServer : public PersSocketServer {
@@ -53,9 +56,10 @@ protected:
   Mutex regionsReloadMutex, regionsMapMutex;
   IntHash<RegionInfo>* regions;
   bool getRegionInfo(uint32_t id, RegionInfo& ri);
-  bool getProfileInfo(std::string& key, ProfileInfo& pi);
+  bool getProfileInfo(AbntAddr& key, ProfileInfo& pi);
   void reloadRegions(const char* regionsFileName);
   void ParseFile(const char* _xmlFile, HandlerBase* handler);
+  void checkTimeouts();
 
 private:
   void getProfileCmdHandler(ConnectionContext& ctx);
@@ -64,7 +68,13 @@ private:
   void doneRespCmdHandler(ConnectionContext& ctx);
   void checkOwnCmdHandler(ConnectionContext& ctx);
   void sendCommand(CPersCmd& cmd, ConnectionContext* ctx);
+  void sendCommand(CPersCmd& cmd, uint32_t region_id);
   bool authorizeRegion(ConnectionContext& ctx);
+  void checkTransactionsTimeouts();
+  void transactionTimeout(const AbntAddr& addr, const TransactionInfo& tr_info);
+
+private:
+  time_t lastCheckTime;
 };
 
 }}

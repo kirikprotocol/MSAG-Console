@@ -227,7 +227,8 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
 
 Profile* PersServer::getProfile(const string& key) {
   AbntAddr addr(key.c_str());
-  Profile *pf = AbonentStore->_getProfile(addr, false);
+  Profile *pf = AbonentStore->getProfile(addr, false); //- будет ошибка
+  //Profile *pf = AbonentStore->_getProfile(addr, false);
   return pf; 
 }
 

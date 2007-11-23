@@ -102,10 +102,11 @@ public:
     Profile *pf;
 
     CacheItem(Key& k, Profile *p) { key = k; pf = p; };
-    ~CacheItem()
-	{ 
-		delete pf; 
-	};
+    ~CacheItem() {
+      if (pf) {
+        delete pf; 
+      }
+    }
 };
 
 template <class Key>
@@ -151,6 +152,17 @@ public:
         delete pf;
         return NULL;
     };
+protected:
+    Profile* _createProfile(Key &key) {
+      return new Profile(key.toString(), dblog);
+    }
+
+    void _deleteProfile(Key &key) {
+      store.deleteRecord(key);
+    }
+
+    void normalizeKey(Key &key) {
+    }
 
 /*    bool getProfile(Key& key, Profile& pf, bool create)
     {
@@ -197,11 +209,10 @@ public:
     void storeProfile(Key& key, Profile *pf)
     {
 //        pf->DeleteExpired();
+      normalizeKey(key);
 		sb.Empty();
         pf->Serialize(sb, true);
-//        delete pf;  ??????????? where profile should be deleted
-        key.setNumberingPlan(1);
-        key.setTypeOfNumber(1);
+//        delete pf;  
         if (store.Set(key, sb)) {
           smsc_log_debug(log, "Set return TRUE");
         } else {
@@ -211,8 +222,6 @@ public:
 
     Profile* _getProfile(Key& key, bool create)
     {
-        key.setNumberingPlan(1);
-        key.setTypeOfNumber(1);
         Profile *pf = new Profile(key.toString(), dblog);
 		sb.Empty();
         if(store.Get(key, sb))
@@ -226,10 +235,18 @@ public:
         return NULL;
     };
 
-    Profile* createProfile(Key& key) {
+protected:
+    Profile* _createProfile(Key& key) {
+      return new Profile(key.toString(), dblog);
+    }
+
+    void _deleteProfile(Key &key) {
+      store.Remove(key);
+    }
+
+    void normalizeKey(Key& key) {
       key.setNumberingPlan(1);
       key.setTypeOfNumber(1);
-      return new Profile(key.toString(), dblog);
     }
 
 protected:
@@ -267,20 +284,28 @@ public:
         max_cache_size = _max_cache_size;
         cache = new CacheItem<Key>*[_max_cache_size];
         memset(cache, 0, sizeof(CacheItem<Key>*) * _max_cache_size);
+        cache_log = smsc::logger::Logger::getInstance("cachestore");
     };
 
     Profile* getProfile(Key& key, bool create)
     {
+      normalizeKey(key);
         uint32_t i = key.HashCode(0) % max_cache_size;
         if(cache[i] != NULL)
         {
-            if(cache[i]->key == key)
-                return cache[i]->pf;
+            if(cache[i]->key == key) {
+              return cache[i]->pf;
+            }
 
             Profile* pf = _getProfile(key, create);
             if(pf)
             {
+              if (cache[i]->pf) {
                 delete cache[i]->pf;
+              } else {
+                smsc_log_warn(cache_log, "getProfile: cache[%d] profile already deleted, key=%s ",
+                               i, cache[i]->key.toString().c_str());
+              }
                 cache[i]->key = key;
                 cache[i]->pf = pf;
                 return pf;
@@ -297,11 +322,53 @@ public:
             
     };
 
+    Profile* createCachedProfile(Key& key) {
+      normalizeKey(key);
+      uint32_t i = key.HashCode(0) % max_cache_size;
+      Profile* pf = _createProfile(key);
+      if (!pf) {
+        return NULL;
+      }
+      if(cache[i] != NULL) {
+        if (cache[i]->pf) {
+          delete cache[i]->pf;
+        } else {
+          smsc_log_warn(cache_log, "createCachedProfile: cache[%d] profile already deleted, key=%s ",
+                         i, cache[i]->key.toString().c_str());
+        }
+        cache[i]->key = key;
+        cache[i]->pf = pf;
+      } else {
+        cache[i] = new CacheItem<Key>(key, pf);
+      }
+      return pf;
+    }
+
+    void deleteCachedProfile(Key& key) {
+      normalizeKey(key);
+      uint32_t i = key.HashCode(0) % max_cache_size;
+      if(cache[i] != NULL && cache[i]->key == key) {
+        if (!cache[i]->pf) {
+          smsc_log_warn(cache_log, "deleteCachedProfile: cache[%d] profile already deleted, key=%s",
+                         i, cache[i]->key.toString().c_str());
+        }
+          delete cache[i];
+          cache[i] = NULL;
+      }
+      _deleteProfile(key);
+    }
+
 	virtual Profile* _getProfile(Key& key, bool create) = 0;
+
+protected:
+    virtual Profile* _createProfile(Key& key) = 0;
+    virtual void _deleteProfile(Key& key) = 0;
+    virtual void normalizeKey(Key& key) = 0;
 	
 protected:
     uint32_t max_cache_size;
     CacheItem<Key> **cache;
+    smsc::logger::Logger* cache_log;
 };
 
 template <class Key, class RKey, class StorageType>
@@ -311,10 +378,13 @@ class ProfileStore : public StorageType
 public:
 
   void deleteProfile(Key& key) {
-    MutexGuard mt(mtx);
-    key.setNumberingPlan(1);
-    key.setTypeOfNumber(1);
-    store.Remove(key);
+    MutexGuard mg(mtx);
+    deleteCachedProfile(key);
+  }
+
+  Profile* createProfile(Key &key) {
+    MutexGuard mg(mtx);
+    return createCachedProfile(key);
   }
 
     void setProperty(RKey rkey, Property& prop)
@@ -345,10 +415,6 @@ public:
 
         if(prop.isExpired())
             return;
-
-        //if (!pf) {
-          //pf = new Profile(key, dblog);
-        //}
         if (!pf) {
           return;
         }
@@ -494,9 +560,6 @@ public:
         MutexGuard mt(mtx);
         Key key(rkey);
         //Profile* pf = getProfile(key, true);
-        //if (!pf) {
-          //pf = new Profile(key, dblog);
-        //}
         if (!pf) {
           return false;
         }
@@ -567,9 +630,6 @@ public:
         MutexGuard mt(mtx);
         Key key(rkey);
         //Profile* pf = getProfile(key, true);
-        //if (!pf) {
-          //pf = new Profile(key, dblog);
-        //}
         if (!pf) {
           return false;
         }
