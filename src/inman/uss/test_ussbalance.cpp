@@ -233,9 +233,14 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    if ( readn(sockfd, (uchar_t*)&netDataSz, sizeof(netDataSz)) != sizeof(netDataSz) ) {
-      fprintf(stderr,"read: errno=%d\n", errno);
-      perror("read failed");
+    st = readn(sockfd, (uchar_t*)&netDataSz, sizeof(netDataSz));
+    if ( st != sizeof(netDataSz) ) {
+      if ( !st )
+        fprintf(stderr,"got EOF\n");
+      else {
+        fprintf(stderr,"read: errno=%d\n", errno);
+        perror("read failed");
+      }
       return 1;
     }
     dataSz = ntohl(netDataSz);
