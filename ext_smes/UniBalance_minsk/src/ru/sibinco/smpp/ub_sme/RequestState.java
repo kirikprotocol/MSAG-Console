@@ -18,6 +18,10 @@ public class RequestState {
   private long bannerRequestTime;
   private long bannerResponseTime;
 
+  private long startCloseRequestTime;
+  private long sendingResponseTime;
+  private long responseSentTime;
+
   private boolean error = false;
   private boolean bannerReady = false;
   private boolean balanceReady = false;
@@ -124,11 +128,23 @@ public class RequestState {
     billingSystemsResponseTime[systemID] = time;
   }
 
+  public void setStartCloseRequestTime() {
+    startCloseRequestTime = System.currentTimeMillis();
+  }
+
+  public void setSendingResponseTime() {
+    sendingResponseTime = System.currentTimeMillis();
+  }
+
+  public void setResponseSentTime() {
+    responseSentTime = System.currentTimeMillis();
+  }
+
   private final static DateFormat dateFormat=new SimpleDateFormat("HH:mm:ss.SSS");
 
   public String toString() {
     StringBuffer sb = new StringBuffer();
-    sb.append("Abonent request: ");
+    sb.append("Abonent ").append(getAbonentRequest().getSourceAddress()).append(' ');
     String date;
     synchronized(dateFormat){
       date=dateFormat.format(new Date(abonentRequestTime));
@@ -156,9 +172,13 @@ public class RequestState {
     sb.append("; abonent response=");
     long delay=abonentResponseTime-abonentRequestTime;
     sb.append(delay);
-    sb.append(" ms; SME clean delay=");
+    sb.append(" ms; SME delay=");
     sb.append(delay-(Math.max(billingSystemDelay, bannerEngineDelay)));
     sb.append(" ms");
+    sb.append(" inter times: ");
+    sb.append(String.valueOf(startCloseRequestTime-abonentRequestTime)).append('/');
+    sb.append(String.valueOf(sendingResponseTime-abonentRequestTime)).append('/');
+    sb.append(String.valueOf(responseSentTime-abonentRequestTime));
     return sb.toString();
   }
 }

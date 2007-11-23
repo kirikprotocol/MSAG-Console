@@ -369,6 +369,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     synchronized (state) {
       if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed())
       {
+        state.setStartCloseRequestTime();
         if (state.isError() || state.getAbonentResponse() == null) {
           Message message = new Message();
           message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
@@ -390,7 +391,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
             logger.debug(abonent + " request state closed.");
         }
 
+        state.setSendingResponseTime();
         sendResponse(state);
+        state.setResponseSentTime();
         state.setClosed(true);
         removeRequestState(state);
         if (logger.isInfoEnabled())

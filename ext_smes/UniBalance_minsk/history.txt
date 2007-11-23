@@ -13,6 +13,8 @@ Date       | Author    | Version | Message
 2007/11/13 | serge     | 1.05    | Separate thread pool for banner requests, banner requests timings fix
 -----------|-----------|---------|--------------------------------------------------------------------------------
 2007/11/21 | serge     | 1.06    | States refactored - states storage now HashMap, watch dog now LinkedList
+-----------|-----------|---------|--------------------------------------------------------------------------------
+2007/11/23 | serge     | 1.07    | Add more request times info
            |           |         |
            |           |         |
            |           |         |
