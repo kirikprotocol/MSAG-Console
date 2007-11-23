@@ -100,8 +100,8 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
     _resultUssData = arg->getUSSData();
     _dcs = arg->getDCS();
 
-    smsc_log_debug(_logger, "USSRequestProcessor::onMapResult::: got USSData=[%s]",
-                   smsc::util::DumpHex(_resultUssData.size(), &_resultUssData[0]).c_str());
+    smsc_log_debug(_logger, "USSRequestProcessor::onMapResult::: got USSData=[%s], _dcs=%d",
+                   smsc::util::DumpHex(_resultUssData.size(), &_resultUssData[0]).c_str(), _dcs);
   }
 }
 
@@ -114,6 +114,7 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
   if (!ercode) {
     // success and send result 
     // process std::vector result
+    smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: _dcs=%02X _resultAsLatin1=%d", _dcs, _resultAsLatin1);
     if ( _resultAsLatin1 )
       resultPacket.Cmd().setUSSData(_resultUssAsString.c_str(), _resultUssAsString.size());
     else {
@@ -146,6 +147,7 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
   }
 
   delete _mapDialog; _mapDialog=NULL;
+  _resultAsLatin1 = false; _dcs = 0; _resultUssData.clear();
 }
 
 }
