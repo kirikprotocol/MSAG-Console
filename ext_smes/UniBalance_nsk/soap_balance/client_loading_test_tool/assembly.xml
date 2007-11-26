@@ -1,0 +1,16 @@
+<assembly>
+  <formats>
+    <format>dir</format>
+  </formats>
+  <dependencySets>
+    <dependencySet>
+      <unpack>false</unpack>
+      <scope>runtime</scope>
+    </dependencySet>
+  </dependencySets>
+  <files>  
+    <file>
+      <source>target/${artifactId}-${version}.jar</source>
+    </file>
+  </files>
+</assembly>

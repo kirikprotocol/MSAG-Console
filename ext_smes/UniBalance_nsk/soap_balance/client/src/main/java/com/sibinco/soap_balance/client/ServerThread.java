@@ -6,6 +6,7 @@ import com.eyelinecom.whoisd.sptp.SPTPServer;
 import com.eyelinecom.whoisd.sptp.SPTPServerThread;
 import com.sibinco.soap_balance.service.BalanceService;
 import org.apache.log4j.Category;
+import org.codehaus.xfire.XFireRuntimeException;
 
 import java.io.IOException;
 import java.net.Socket;
@@ -30,15 +31,24 @@ public class ServerThread extends SPTPServerThread {
         returnResponse(Command.defaultResponse());
         break;
       case Command.GET_BALANCE:
-        BalanceRequest balance_request = new BalanceRequest(pdu);
-        String abonent = balance_request.getAbonent();
-        //todo retrieve abonent from pdu
-        double balance = service.getBalance(abonent);
-        //todo send balance in pdu
-        BalanceResponse balance_response = new BalanceResponse(pdu);
-        balance_response.setAbonent(abonent);
-        balance_response.setBalance(balance);
-        returnResponse(balance_response);
+        try
+        {
+            BalanceRequest balance_request = new BalanceRequest(pdu);
+            String abonent = balance_request.getAbonent();
+            double balance = service.getBalance(abonent);
+            BalanceResponse balance_response = new BalanceResponse();
+            balance_response.setAbonent(abonent);
+            balance_response.setBalance(balance);
+            returnResponse(balance_response);
+        } catch(XFireRuntimeException during_retrieving_balance)
+        {
+            logger.warn(during_retrieving_balance);
+            returnResponse(Command.defaultResponse());
+        } catch(ProcessException during_parsing_input_pdu)
+        {
+            logger.warn(during_parsing_input_pdu);
+            returnResponse(Command.defaultResponse());
+        }
         break;
       default:
         logger.error("Unsupported command_id: " + pdu.getCommand());

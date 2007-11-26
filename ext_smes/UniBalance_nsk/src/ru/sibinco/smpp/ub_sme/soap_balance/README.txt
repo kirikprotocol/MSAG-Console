@@ -1,0 +1,1 @@
+there will be SPTP-client to SoapClient-SPTP-server

@@ -33,8 +33,9 @@
   </build>
 
   <modules>
-    <module>client</module>
     <module>service</module>
+    <module>client</module>
+    <module>client_loading_test_tool</module>
     <module>service_webapp</module>
   </modules>
 
