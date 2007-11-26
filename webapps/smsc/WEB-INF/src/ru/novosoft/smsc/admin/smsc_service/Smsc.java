@@ -740,6 +740,10 @@ public class Smsc extends Service {
         return ((Integer) defaultProfileProps.get(paramName)).intValue();
     }
 
+    public int getDefaultProfilePropInt(final String paramName, int defaultValue) {
+      return defaultProfileProps.get(paramName) != null ? ((Integer) defaultProfileProps.get(paramName)).intValue() : defaultValue;
+    }
+
     public void initDefaultProfileProps() throws AdminException {
         Config config = getSmscConfig();
         try {

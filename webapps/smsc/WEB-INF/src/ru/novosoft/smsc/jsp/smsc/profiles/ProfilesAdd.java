@@ -42,8 +42,8 @@ public class ProfilesAdd extends ProfilesBean {
           divertModifiable = smsc.getDefaultProfilePropBoolean("DivertModifiable");
           udhConcat = smsc.getDefaultProfilePropBoolean("UdhConcat");
           locale = smsc.getDefaultProfilePropString("Locale");
-          inputAccessMask = smsc.getDefaultProfilePropInt("AccessMaskIn");
-          outputAccessMask = smsc.getDefaultProfilePropInt("AccessMaskOut");
+          inputAccessMask = smsc.getDefaultProfilePropInt("AccessMaskIn", 1);
+          outputAccessMask = smsc.getDefaultProfilePropInt("AccessMaskOut", 1);
         }
       } catch (Throwable e) {
         logger.error("Couldn't set default values to profile", e);
