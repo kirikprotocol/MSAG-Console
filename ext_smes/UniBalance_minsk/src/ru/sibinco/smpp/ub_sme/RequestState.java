@@ -144,38 +144,38 @@ public class RequestState {
 
   public String toString() {
     StringBuffer sb = new StringBuffer();
-    sb.append("Abonent ").append(getAbonentRequest().getSourceAddress()).append(' ');
     String date;
     synchronized(dateFormat){
       date=dateFormat.format(new Date(abonentRequestTime));
     }
-    sb.append(date);
+    sb.append(date).append(' ').append(getAbonentRequest().getSourceAddress()).append(':').append(' ');
     long billingSystemDelay = 0;
     for(int i = 0; i < SmeEngine.BILLING_SYSTEMS_COUNT; i++) {
       if(billingSystemQueried[i]){
-        sb.append("; ");
         sb.append(SmeEngine.BILLING_SYSTEMS[i]);
         sb.append(" response=");
         long delay=billingSystemsResponseTime[i]-billingSystemsRequestTime[i];
-        sb.append(delay);
-        sb.append(" ms");
+        sb.append(String.valueOf(delay)).append('/');
+        sb.append(String.valueOf(billingSystemsRequestTime[i]-abonentRequestTime));
+        sb.append(" ms; ");
         billingSystemDelay = billingSystemDelay + delay;
       }
     }
     long bannerEngineDelay = 0;
     if(bannerReady){
-      sb.append("; banner engine response=");
+      sb.append("BE response=");
       bannerEngineDelay = bannerResponseTime-bannerRequestTime;
-      sb.append(bannerEngineDelay);
-      sb.append(" ms");
+      sb.append(String.valueOf(bannerEngineDelay)).append('/');
+      sb.append(String.valueOf(bannerRequestTime - abonentRequestTime));
+      sb.append(" ms; ");
     }
-    sb.append("; abonent response=");
+    sb.append("abonent response=");
     long delay=abonentResponseTime-abonentRequestTime;
-    sb.append(delay);
+    sb.append(String.valueOf(delay));
     sb.append(" ms; SME delay=");
-    sb.append(delay-(Math.max(billingSystemDelay, bannerEngineDelay)));
+    sb.append(String.valueOf(delay-(Math.max(billingSystemDelay, bannerEngineDelay))));
     sb.append(" ms");
-    sb.append(" inter times: ");
+    sb.append("; inter times: ");
     sb.append(String.valueOf(startCloseRequestTime-abonentRequestTime)).append('/');
     sb.append(String.valueOf(sendingResponseTime-abonentRequestTime)).append('/');
     sb.append(String.valueOf(responseSentTime-abonentRequestTime));

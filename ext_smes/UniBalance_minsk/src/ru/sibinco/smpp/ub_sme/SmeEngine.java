@@ -1,26 +1,26 @@
 package ru.sibinco.smpp.ub_sme;
 
 import com.logica.smpp.Data;
-import com.lorissoft.advertising.syncclient.IAdvertisingClient;
 import com.lorissoft.advertising.syncclient.AdvertisingClientImpl;
+import com.lorissoft.advertising.syncclient.IAdvertisingClient;
 import ru.aurorisoft.smpp.*;
-import ru.sibinco.util.threads.ThreadsPool;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
+import ru.sibinco.util.threads.ThreadsPool;
 
-import java.util.*;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.CallableStatement;
-import java.sql.Statement;
-import java.text.DecimalFormatSymbols;
-import java.text.NumberFormat;
-import java.text.DecimalFormat;
-import java.text.MessageFormat;
-import java.io.UnsupportedEncodingException;
-import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.MessageFormat;
+import java.text.NumberFormat;
+import java.util.*;
 
 public class SmeEngine implements MessageListener, ResponseListener {
 
@@ -331,20 +331,20 @@ public class SmeEngine implements MessageListener, ResponseListener {
     synchronized (states) {
       states.put(state.getAbonentRequest().getSourceAddress(), state);
     }
-    synchronized(statesExpire){
+    synchronized (statesExpire) {
       statesExpire.add(state);
     }
   }
 
   protected RequestState getRequestState(String abonent) {
     synchronized (states) {
-      return (RequestState)states.get(abonent);
+      return (RequestState) states.get(abonent);
     }
   }
 
-  protected RequestState removeRequestState( RequestState state ) {
+  protected RequestState removeRequestState(RequestState state) {
     synchronized (states) {
-      return (RequestState)states.remove(state.getAbonentRequest().getSourceAddress());
+      return (RequestState) states.remove(state.getAbonentRequest().getSourceAddress());
     }
   }
 
@@ -366,9 +366,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
-    synchronized (state) {
-      if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed())
-      {
+    if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed())
+    {
+      synchronized (state) {
         state.setStartCloseRequestTime();
         if (state.isError() || state.getAbonentResponse() == null) {
           Message message = new Message();
@@ -390,15 +390,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
           if (logger.isDebugEnabled())
             logger.debug(abonent + " request state closed.");
         }
-
         state.setSendingResponseTime();
         sendResponse(state);
         state.setResponseSentTime();
         state.setClosed(true);
-        removeRequestState(state);
-        if (logger.isInfoEnabled())
-          logger.info(state.toString());
       }
+      removeRequestState(state);
+      if (logger.isInfoEnabled())
+        logger.info(state.toString());
     }
   }
 
@@ -407,9 +406,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
     if (logger.isDebugEnabled()) {
       logger.debug("Processing requests count: " + states.size());
     }
-    while( !statesExpire.isEmpty() ) {
+    while (!statesExpire.isEmpty()) {
       long tm = System.currentTimeMillis();
-      synchronized(statesExpire) {
+      synchronized (statesExpire) {
         state = (RequestState) statesExpire.get(0);
         if (state.getAbonentRequestTime() + ussdSessionTimeout > tm) return;
         statesExpire.remove(0);
@@ -418,7 +417,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
       synchronized (state) {
         if (!state.isClosed() && !state.isUssdSessionClosed()) {
           // if state is in process state send ussd resp to release session and then it will be sms on closeRequestState
-          logger.warn("Request expired for "+state.getAbonentRequest().getSourceAddress());
+          logger.warn("Request expired for " + state.getAbonentRequest().getSourceAddress());
           sendWaitMessage = true;
           state.setUssdSessionClosed(true);
         } // else state already processed, skip it here
@@ -528,10 +527,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
     try {
       threadsPool.execute(new BalanceProcessor(this, state));
     } catch (RuntimeException e) {
-      logger.error("Exception occured during creating balance processor: "+e, e);
-      synchronized (state) {
-        state.setError(true);
-      }
+      logger.error("Exception occured during creating balance processor: " + e, e);
+      state.setError(true);
       removeRequestState(state);
       sendDeliverSmResponse(message, Data.ESME_RTHROTTLED);
       return;
@@ -540,7 +537,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
       try {
         bannerThreadsPool.execute(new BannerRequestThread(state));
       } catch (RuntimeException e) {
-        logger.error("Exception occured during creating banner processor: "+e, e);
+        logger.error("Exception occured during creating banner processor: " + e, e);
       }
     }
     sendDeliverSmResponse(message, Data.ESME_ROK);
@@ -603,7 +600,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     synchronized (cbossStatements) {
       cbossStatements.remove(Thread.currentThread().getName());
     }
-    if (stmt != null){
+    if (stmt != null) {
       try {
         stmt.close();
       } catch (SQLException e1) {
@@ -611,7 +608,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
       }
       try {
         Connection connection = stmt.getConnection();
-        if (connection != null){
+        if (connection != null) {
           connection.close();
           connection = null;
         }
@@ -700,14 +697,10 @@ public class SmeEngine implements MessageListener, ResponseListener {
       try {
         state.setBannerRequestTime(System.currentTimeMillis());
         String banner = getBanner(state.getAbonentRequest().getSourceAddress());
-        synchronized (state) {
-          state.setBanner(banner);
-        }
+        state.setBanner(banner);
         closeRequestState(state);
       } catch (Throwable t) {
-        synchronized (state) {
-          state.setError(true);
-        }
+        state.setError(true);
         if (logger.isInfoEnabled())
           logger.info("Can not get banner for " + state.getAbonentRequest().getSourceAddress());
         logger.error("Unexpected exception occured during processing request.", t);

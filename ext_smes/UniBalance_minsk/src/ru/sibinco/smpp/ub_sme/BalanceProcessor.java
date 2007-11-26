@@ -54,15 +54,11 @@ public class BalanceProcessor implements Runnable {
       message.setMessageString(smeEngine.getMessageFormat().format(new String[]{balance.getBalance()}));
       message.setType(Message.TYPE_SUBMIT);
       state.setAbonentResponse(message);
-      synchronized (state) {
-        state.setBalanceReady(true);
-      }
+      state.setBalanceReady(true);
     } else {
       if (logger.isInfoEnabled())
         logger.info("Can not get balance for " + abonent);
-      synchronized (state) {
-        state.setError(true);
-      }
+      state.setError(true);
     }
     smeEngine.closeRequestState(state);
   }
@@ -167,9 +163,7 @@ public class BalanceProcessor implements Runnable {
     try {
       process();
     } catch (Throwable t) {
-      synchronized (state) {
-        state.setError(true);
-      }
+      state.setError(true);
       if (logger.isInfoEnabled())
         logger.info("Can not get balance for " + state.getAbonentRequest().getSourceAddress());
       logger.error("Unexpected exception occured during processing request.", t);

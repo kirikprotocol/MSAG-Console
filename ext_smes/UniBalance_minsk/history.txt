@@ -15,6 +15,8 @@ Date       | Author    | Version | Message
 2007/11/21 | serge     | 1.06    | States refactored - states storage now HashMap, watch dog now LinkedList
 -----------|-----------|---------|--------------------------------------------------------------------------------
 2007/11/23 | serge     | 1.07    | Add more request times info
+-----------|-----------|---------|--------------------------------------------------------------------------------
+2007/11/26 | kpv       | 1.08    | Added more times info, removed some syncs
            |           |         |
            |           |         |
            |           |         |
