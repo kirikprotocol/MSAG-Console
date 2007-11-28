@@ -56,7 +56,7 @@ CapSMSDlg::~CapSMSDlg()
     ssfHdl = NULL;
     endCapSMS();
     reportType = MessageType_notification; //do PREARRANED_END if TC dialog is still active
-    endTCap(); 
+    endTCap(false, true);
 }
 
 void CapSMSDlg::abortSMS(void)
@@ -80,7 +80,7 @@ RCHash CapSMSDlg::Init(void) _THROWS_NONE
     snprintf(_logId, sizeof(_logId)-1, "%s[0x%X]", _logPfx, capId);
 
     dialog->setInvokeTimeout(invTimeout);
-    dialog->addListener(this);
+    dialog->bindUser(this);
     _fsmState = SMS_SSF_Fsm::fsmWaitReq;
     return 0;
 }
@@ -104,7 +104,7 @@ RCHash CapSMSDlg::initialDPSMS(const InitialDPSMSArg* arg) _THROWS_NONE
     smsc_log_debug(logger, "%s: --> %s{%u}: InitialDPSMS", _logId, nmScf, arg->ServiceKey());
     try {
         //Create and send IDPSm invoke, start Tssf
-        _timer = dialog->sendInvoke(CapSMSOp::InitialDPSMS, arg, this); //throws
+        _timer = dialog->sendInvoke(CapSMSOp::InitialDPSMS, arg); //throws
         dialog->beginDialog();  //throws
     } catch (const CustomException & c_exc) {
         _timer = 0;
@@ -136,13 +136,13 @@ RCHash CapSMSDlg::reportSubmission(bool submitted) _THROWS_NONE
  * InvokeListener interface
  * ------------------------------------------------------------------------ */
 //Called if Operation got ResultError
-void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
+void CapSMSDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
-        UCHAR_T opcode = op->getOpcode();
+        UCHAR_T opcode = pInv->getOpcode();
         smsc_log_error(logger, "%s: Invoke[%u]{%u} got a returnError: %u",
-            _logId, (unsigned)op->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
+            _logId, (unsigned)pInv->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
     
         //call operation errors handler
         switch (opcode) {
@@ -162,7 +162,7 @@ void CapSMSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
 }
 
 //Called if initiated Operation got L_CANCEL (possibly while waiting result)
-void CapSMSDlg::onInvokeLCancel(Invoke *op)
+void CapSMSDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     RCHash  errcode = 0;
     bool    doAbort = false;
@@ -192,7 +192,7 @@ void CapSMSDlg::onInvokeLCancel(Invoke *op)
         default:;
         }
         //check if current timer is expired
-        if (_timer == op->getId())
+        if (_timer == pInv->getId())
             _timer = 0;
     }
     if (doAbort && ssfHdl)
@@ -470,7 +470,7 @@ RCHash CapSMSDlg::eventReportSMS(bool submitted) _THROWS_NONE
     smsc_log_debug(logger, "%s: --> %s: EventReportSMS %s", _logId, nmScf, arg.print(dump).c_str());
     UCHAR_T invId = 0;
     try {
-        invId = dialog->sendInvoke(CapSMSOp::EventReportSMS, &arg, this,
+        invId = dialog->sendInvoke(CapSMSOp::EventReportSMS, &arg,
                 (reportType == MessageType_request) ? 0/*dflt*/ : CAPSMS_END_TIMEOUT); //throws
         dialog->continueDialog();   //throws
     } catch (const CustomException & c_exc) {
@@ -501,19 +501,22 @@ void CapSMSDlg::endCapSMS(void)
     //and wait for T_END_IND or L_CANCEL
     if (_fsmState == SMS_SSF_Fsm::fsmMonitoring) {
         if (eventReportSMS(false))
-            endTCap(true); //send 
+            endTCap(true, true); //send 
     } else if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) && !_capState.s.smsReport)
-        endTCap(true); //send U_ABORT to SCF
+        endTCap(true, true); //send U_ABORT to SCF
 }
 
 //Ends TC dialog depending on CapSMS state, releases Dialog()
-void CapSMSDlg::endTCap(bool u_abort/* = false*/)
+void CapSMSDlg::endTCap(bool u_abort/* = false*/, bool check_ref/* = false*/)
 {
     _fsmState = SMS_SSF_Fsm::fsmDone;
     _relation = SMS_SSF_Fsm::relNone;
     _timer = 0;
     if (dialog) {
-        dialog->removeListener(this);
+        unsigned refNum = dialog->unbindUser();
+        if (check_ref && refNum)
+            smsc_log_warn(logger, "%s: %u references from underlying TCDlg exists",
+                          _logId, refNum);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2 smsSSF-to-gsmSCF SMS related messages
             try {

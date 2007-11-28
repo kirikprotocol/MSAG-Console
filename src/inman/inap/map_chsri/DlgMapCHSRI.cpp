@@ -43,7 +43,7 @@ void MapCHSRIDlg::endMapDlg(void)
 {
     MutexGuard  grd(_sync);
     sriHdl = NULL;
-    endTCap();
+    endTCap(true);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -59,14 +59,14 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
 
     if (timeout)
         dialog->setInvokeTimeout(timeout);
-    dialog->addListener(this);
+    dialog->bindUser(this);
     sriId = (unsigned)dialog->getId();
 
     CHSendRoutingInfoArg     arg;
     arg.setGMSCorSCFaddress(session->getOwnAdr());
     arg.setSubscrMSISDN(tnpi_adr);
 
-    dialog->sendInvoke(MAP_CH_SRI_OpCode::sendRoutingInfo, &arg, this);  //throws
+    dialog->sendInvoke(MAP_CH_SRI_OpCode::sendRoutingInfo, &arg);  //throws
     dialog->beginDialog(); //throws
     _sriState.s.ctrInited = MapCHSRIDlg::operInited;
 
@@ -85,11 +85,11 @@ void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*
 /* ------------------------------------------------------------------------ *
  * InvokeListener interface
  * ------------------------------------------------------------------------ */
-void MapCHSRIDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
+void MapCHSRIDlg::onInvokeResultNL(InvokeRFP pInv, TcapEntity* res)
 {
     MutexGuard  grd(_sync);
     smsc_log_debug(logger, "MapSRI[%u]: Invoke[%u:%u] got a returnResultNL: %u",
-        sriId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+        sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
         (unsigned)res->getOpcode());
 
     _sriState.s.ctrResulted = MapCHSRIDlg::operInited;
@@ -99,13 +99,13 @@ void MapCHSRIDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
     }
 }
 
-void MapCHSRIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
+void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
 {
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
         smsc_log_debug(logger, "MapSRI[%u]: Invoke[%u:%u] got a returnResult: %u",
-            sriId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+            sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
 
         _sriState.s.ctrInited = _sriState.s.ctrResulted = MapCHSRIDlg::operDone;
@@ -122,12 +122,12 @@ void MapCHSRIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
 }
 
 //Called if Operation got ResultError
-void MapCHSRIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
+void MapCHSRIDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapSRI[%u]: Invoke[%u:%u] got a returnError: %u",
-            sriId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+            sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         _sriState.s.ctrInited = MapCHSRIDlg::operDone;
@@ -137,12 +137,12 @@ void MapCHSRIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
-void MapCHSRIDlg::onInvokeLCancel(Invoke *op)
+void MapCHSRIDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapSRI[%u]: Invoke[%u:%u] got a LCancel",
-            sriId, (unsigned)op->getId(), (unsigned)op->getOpcode());
+            sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         _sriState.s.ctrInited = MapCHSRIDlg::operFailed;
         endTCap();
     }
@@ -243,10 +243,12 @@ void MapCHSRIDlg::onDialogREnd(bool compPresent)
  * Private/protected methods
  * ------------------------------------------------------------------------ */
 //ends TC dialog, releases Dialog()
-void MapCHSRIDlg::endTCap(void)
+void MapCHSRIDlg::endTCap(bool check_ref/* = false*/)
 {
     if (dialog) {
-        dialog->removeListener(this);
+        unsigned refNum = dialog->unbindUser();
+        if (check_ref && refNum)
+            smsc_log_warn(logger, "MapSRI[%u]: %u references from underlying TCDlg exists", sriId, refNum);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {  // do TC_PREARRANGED if still active
                 dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ?

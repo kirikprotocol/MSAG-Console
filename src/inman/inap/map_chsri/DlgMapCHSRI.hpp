@@ -11,8 +11,7 @@ using smsc::core::synchronization::Mutex;
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::DialogListener;
-using smsc::inman::inap::InvokeListener;
+using smsc::inman::inap::TCDialogUserITF;
 
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoRes;
@@ -44,7 +43,7 @@ typedef union {
 
 //NOTE: MapCHSRI doesn't maintain own timer for operations, it uses instead the 
 //innate timer of the SS7 stack for Invoke lifetime.
-class MapCHSRIDlg : DialogListener, InvokeListener { // GMSC/SCF -> HLR
+class MapCHSRIDlg : TCDialogUserITF { // GMSC/SCF -> HLR
 public:
     MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler, Logger * uselog = NULL);
     virtual ~MapCHSRIDlg();
@@ -58,7 +57,7 @@ public:
 
 protected:
     friend class smsc::inman::inap::Dialog;
-    // DialogListener interface
+    // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp) { }
     void onDialogContinue(bool compPresent);
     void onDialogPAbort(UCHAR_T abortCause);
@@ -69,14 +68,13 @@ protected:
                         TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
                         UCHAR_T invId = 0, UCHAR_T opCode = 0);
 
-    // InvokeListener interface
-    void onInvokeResult(Invoke* inv, TcapEntity* res);
-    void onInvokeError(Invoke* inv, TcapEntity* resE);
-    void onInvokeResultNL(Invoke* inv, TcapEntity* res);
-    void onInvokeLCancel(Invoke* inv);
+    void onInvokeResult(InvokeRFP pInv, TcapEntity* res);
+    void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
+    void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
+    void onInvokeLCancel(InvokeRFP pInv);
 
 private:
-    void endTCap(void); //ends TC dialog, releases Dialog()
+    void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
 
     Mutex       _sync;
     unsigned    sriId;

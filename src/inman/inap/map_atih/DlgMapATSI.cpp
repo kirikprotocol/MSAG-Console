@@ -40,7 +40,7 @@ void MapATSIDlg::endATSI(void)
 {
     MutexGuard  grd(_sync);
     atsiHdl = NULL;
-    endTCap();
+    endTCap(true);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -62,7 +62,7 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
 
     if (timeout)
         dialog->setInvokeTimeout(timeout);
-    dialog->addListener(this);
+    dialog->bindUser(this);
     atsiId = (unsigned)dialog->getId();
 
     ATSIArg     arg;
@@ -73,7 +73,7 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
         arg.setSubscriberId(subcr_adr, imsi);
     arg.setRequestedCSI(RequestedCAMEL_SubscriptionInfo_o_CSI);
 
-    dialog->sendInvoke(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, &arg, this); //throws
+    dialog->sendInvoke(MAPATIH_OpCode::anyTimeSubscriptionInterrogation, &arg); //throws
     dialog->beginDialog(); //throws
     _atsiState.s.ctrInited = MapATSIDlg::operInited;
 }
@@ -81,13 +81,13 @@ void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
 /* ------------------------------------------------------------------------ *
  * InvokeListener interface
  * ------------------------------------------------------------------------ */
-void MapATSIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
+void MapATSIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
 {
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
         smsc_log_debug(logger, "MapATSI[%u]: Invoke[%u:%u] got a returnResult: %u",
-            atsiId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+            atsiId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
 
         _atsiState.s.ctrResulted = 1;
@@ -102,12 +102,12 @@ void MapATSIDlg::onInvokeResult(Invoke* op, TcapEntity* res)
 }
 
 //Called if Operation got ResultError
-void MapATSIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
+void MapATSIDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapATSI[%u]: Invoke[%u:%u] got a returnError: %u",
-            atsiId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+            atsiId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         _atsiState.s.ctrInited = MapATSIDlg::operDone;
@@ -117,12 +117,12 @@ void MapATSIDlg::onInvokeError(Invoke *op, TcapEntity * resE)
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
-void MapATSIDlg::onInvokeLCancel(Invoke *op)
+void MapATSIDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapATSI[%u]: Invoke[%u:%u] got a LCancel",
-            atsiId, (unsigned)op->getId(), (unsigned)op->getOpcode());
+            atsiId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         _atsiState.s.ctrInited = MapATSIDlg::operFailed;
         endTCap();
     }
@@ -224,10 +224,12 @@ void MapATSIDlg::onDialogREnd(bool compPresent)
  * Private/protected methods
  * ------------------------------------------------------------------------ */
 //ends TC dialog, releases Dialog()
-void MapATSIDlg::endTCap(void)
+void MapATSIDlg::endTCap(bool check_ref/* = false*/)
 {
     if (dialog) {
-        dialog->removeListener(this);
+        unsigned refNum = dialog->unbindUser();
+        if (check_ref && refNum)
+            smsc_log_warn(logger, "MapATSI[%u]: %u references from underlying TCDlg exists", atsiId, refNum);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {    // do TC_PREARRANGED if still active
                 dialog->endDialog((_atsiState.s.ctrInited < MapATSIDlg::operDone) ?

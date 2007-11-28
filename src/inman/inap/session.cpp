@@ -217,10 +217,11 @@ SSNSession::~SSNSession()
         for (DialogsMAP::iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
             USHORT_T dId = (*it).first;
             Dialog* pDlg = (*it).second;
-            if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK))
+            unsigned invNum = 0;
+            if (!pDlg->isFinished(&invNum))
                 smsc_log_warn(logger,
                     "SSN[%u]: Dialog[0x%X](0x%x) is active, %u invokes pending",
-                    (unsigned)_SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
+                    (unsigned)_SSN, dId, pDlg->getState().value, invNum);
             delete (*it).second;
         }
         dialogs.clear();
@@ -371,15 +372,20 @@ void SSNSession::releaseDialog(USHORT_T dId)
 
     Dialog* pDlg = (*it).second;
     dialogs.erase(it);
-    if (pDlg){
-        if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
+    if (pDlg) {
+        unsigned invNum = 0;
+        if (!pDlg->isFinished(&invNum)) {
             DlgTime     dtm;
             gettimeofday(&dtm.tms, 0);
             dtm.dlg = pDlg;
             pending.insert(DlgTimesMAP::value_type(dId, dtm));
-            smsc_log_warn(logger,
-                "SSN[%u]: Pushed aside unterminated Dialog[0x%X](0x%x), %u invokes pending",
-                (unsigned)_SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
+            if (invNum)
+                smsc_log_warn(logger,
+                    "SSN[%u]: Put aside Dialog[0x%X](0x%x), %u invokes pending",
+                    (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+            else
+                smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X](0x%x)",
+                    (unsigned)_SSN, dId, pDlg->getState().value);
         } else
             dischargeDlg(pDlg);
     }
@@ -399,14 +405,19 @@ void SSNSession::releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid/* = 0
         return;
     }
     dialogs.erase(it);
-    if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
+    unsigned invNum = 0;
+    if (!pDlg->isFinished(&invNum)) {
         DlgTime     dtm;
         gettimeofday(&dtm.tms, 0);
         dtm.dlg = pDlg;
         pending.insert(DlgTimesMAP::value_type(dId, dtm));
-        smsc_log_warn(logger,
-            "SSN[%u]: Pushed aside unterminated Dialog[0x%X](0x%x), %u invokes pending",
-            (unsigned)_SSN, dId, pDlg->getState().value, pDlg->pendingInvokes());
+        if (invNum)
+            smsc_log_warn(logger,
+                "SSN[%u]: Put aside Dialog[0x%X](0x%x), %u invokes pending",
+                (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+        else
+            smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X](0x%x)",
+                (unsigned)_SSN, dId, pDlg->getState().value);
     } else {
         dischargeDlg(pDlg, tc_suid);
     }
@@ -425,13 +436,19 @@ void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
         Dialog* pDlg = (*it).second;
         USHORT_T dId = (*it).first;
 
-        if (!(pDlg->getState().value & TC_DLG_CLOSED_MASK)) {
+        unsigned invNum = 0;
+        if (!pDlg->isFinished(&invNum)) {
             DlgTime     dtm;
             gettimeofday(&dtm.tms, 0);
             dtm.dlg = pDlg;
             pending.insert(DlgTimesMAP::value_type(dId, dtm));
-            smsc_log_warn(logger, "SSN[%u]: Pushed aside unterminated Dialog[0x%X], %u invokes pending",
-                           (unsigned)_SSN, dId, pDlg->pendingInvokes());
+            if (invNum)
+                smsc_log_warn(logger,
+                    "SSN[%u]: Put aside Dialog[0x%X](0x%x), %u invokes pending",
+                    (unsigned)_SSN, dId, pDlg->getState().value, invNum);
+            else
+                smsc_log_debug(logger, "SSN[%u]: Put aside Dialog[0x%X](0x%x)",
+                    (unsigned)_SSN, dId, pDlg->getState().value);
         } else {
             dischargeDlg(pDlg, tc_suid);
         }
@@ -518,7 +535,7 @@ void SSNSession::cleanUpDialogs(void)
     while (it != pending.end()) {
         DlgTime dtm = (*it).second;
         DlgTimesMAP::iterator curr = it++;
-        if ((dtm.dlg->getState().value & TC_DLG_CLOSED_MASK) != 0) {
+        if (dtm.dlg->isFinished()) {
             pending.erase(curr);
             dischargeDlg(dtm.dlg, &(dtm.dlg->getSUId()));
         }

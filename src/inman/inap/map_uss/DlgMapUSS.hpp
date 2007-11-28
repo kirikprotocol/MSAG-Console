@@ -13,8 +13,7 @@ using smsc::core::synchronization::Mutex;
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionSR;
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::DialogListener;
-using smsc::inman::inap::InvokeListener;
+using smsc::inman::inap::TCDialogUserITF;
 
 #include "inman/comp/map_uss/MapUSSComps.hpp"
 using smsc::inman::comp::uss::MAPUSS2CompAC;
@@ -49,7 +48,7 @@ typedef union {
 
 //NOTE: MapUSSDlg doesn't maintain own timer for operations, it uses instead the 
 //innate timer of the SS7 stack for Invoke lifetime.
-class MapUSSDlg : DialogListener, InvokeListener { //  -> gsmSCF
+class MapUSSDlg : TCDialogUserITF { //  -> gsmSCF
 public:
     MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler, Logger * uselog = NULL);
     virtual ~MapUSSDlg();
@@ -67,7 +66,7 @@ public:
 
 protected:
     friend class smsc::inman::inap::Dialog;
-    // DialogListener interface
+    // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp) { }
     void onDialogContinue(bool compPresent);
     void onDialogPAbort(UCHAR_T abortCause);
@@ -78,17 +77,16 @@ protected:
                         TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
                         UCHAR_T invId = 0, UCHAR_T opCode = 0);
 
-    // InvokeListener interface
-    void onInvokeResult(Invoke* inv, TcapEntity* res);
-    void onInvokeError(Invoke* inv, TcapEntity* resE);
-    void onInvokeResultNL(Invoke* inv, TcapEntity* res);
-    void onInvokeLCancel(Invoke* inv);
+    void onInvokeResult(InvokeRFP pInv, TcapEntity* res);
+    void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
+    void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
+    void onInvokeLCancel(InvokeRFP pInv);
 
 private:
     void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL,
                       const char * subscr_imsi = NULL) throw (CustomException);
 
-    void endTCap(void); //ends TC dialog, releases Dialog()
+    void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
 
     Mutex       _sync;
     unsigned    dlgId;

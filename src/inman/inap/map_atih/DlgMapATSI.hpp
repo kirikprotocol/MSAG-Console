@@ -11,8 +11,7 @@ using smsc::core::synchronization::Mutex;
 #include "inman/inap/dialog.hpp"
 using smsc::inman::inap::TCSessionMA;
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::DialogListener;
-using smsc::inman::inap::InvokeListener;
+using smsc::inman::inap::TCDialogUserITF;
 
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 using smsc::inman::comp::atih::ATSIArg;
@@ -45,7 +44,7 @@ typedef union {
 
 //NOTE: DlgATSI doesn't maintain own timer for operations, it uses instead the 
 //innate timer of the SS7 stack for Invoke lifetime.
-class MapATSIDlg : DialogListener, InvokeListener { // SCF -> HLR
+class MapATSIDlg : TCDialogUserITF { // SCF -> HLR
 public:
     MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler, Logger * uselog = NULL);
     virtual ~MapATSIDlg();
@@ -58,7 +57,7 @@ public:
 
 protected:
     friend class smsc::inman::inap::Dialog;
-    // DialogListener interface
+    // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp) { }
     void onDialogContinue(bool compPresent);
     void onDialogPAbort(UCHAR_T abortCause);
@@ -69,14 +68,14 @@ protected:
                         TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
                         UCHAR_T invId = 0, UCHAR_T opCode = 0);
 
-    // InvokeListener interface (no OPs with returnResult defined)
-    void onInvokeResult(Invoke* inv, TcapEntity* res);
-    void onInvokeError(Invoke* inv, TcapEntity* resE);
-    void onInvokeResultNL(Invoke* inv, TcapEntity* res) { }
-    void onInvokeLCancel(Invoke* inv);
+    // no OPs with returnResult defined
+    void onInvokeResult(InvokeRFP pInv, TcapEntity* res);
+    void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
+    void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res) { }
+    void onInvokeLCancel(InvokeRFP pInv);
 
 private:
-    void endTCap(void); //ends TC dialog, releases Dialog()
+    void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
 
     Mutex       _sync;
     unsigned    atsiId;

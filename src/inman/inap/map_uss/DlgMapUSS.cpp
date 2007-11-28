@@ -130,7 +130,7 @@ MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                             "MapUSS", "unable to create TC dialog");
     dlgId = dialog->getId();
-    dialog->addListener(this);
+    dialog->bindUser(this);
 }
 
 MapUSSDlg::~MapUSSDlg()
@@ -142,7 +142,7 @@ void MapUSSDlg::endMapDlg(void)
 {
     MutexGuard  grd(_sync);
     resHdl = NULL;
-    endTCap();
+    endTCap(true);
 }
 
 /* ------------------------------------------------------------------------ *
@@ -176,11 +176,11 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
 /* ------------------------------------------------------------------------ *
  * InvokeListener interface
  * ------------------------------------------------------------------------ */
-void MapUSSDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
+void MapUSSDlg::onInvokeResultNL(InvokeRFP pInv, TcapEntity* res)
 {
     MutexGuard  grd(_sync);
     smsc_log_warn(logger, "MapUSS[%u]: Invoke[%u:%u] got a ResultNL: %u",
-        dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+        dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
         (unsigned)res->getOpcode());
 
     dlgState.s.ctrResulted = MapUSSDlg::operInited;
@@ -188,13 +188,13 @@ void MapUSSDlg::onInvokeResultNL(Invoke* op, TcapEntity* res)
     res->setParam(NULL);
 }
 
-void MapUSSDlg::onInvokeResult(Invoke* op, TcapEntity* res)
+void MapUSSDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
 {
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
         smsc_log_debug(logger, "MapUSS[%u]: Invoke[%u:%u] got a Result: %u",
-            dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+            dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
 
         dlgState.s.ctrInited = dlgState.s.ctrResulted = MapUSSDlg::operDone;
@@ -209,12 +209,12 @@ void MapUSSDlg::onInvokeResult(Invoke* op, TcapEntity* res)
 }
 
 //Called if Operation got ResultError
-void MapUSSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
+void MapUSSDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapUSS[%u]: Invoke[%u:%u] got a Error: %u",
-            dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode(),
+            dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         dlgState.s.ctrInited = MapUSSDlg::operDone;
@@ -224,12 +224,12 @@ void MapUSSDlg::onInvokeError(Invoke *op, TcapEntity * resE)
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
-void MapUSSDlg::onInvokeLCancel(Invoke *op)
+void MapUSSDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
         smsc_log_error(logger, "MapUSS[%u]: Invoke[%u:%u] got a LCancel",
-            dlgId, (unsigned)op->getId(), (unsigned)op->getOpcode());
+            dlgId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         dlgState.s.ctrInited = MapUSSDlg::operFailed;
         endTCap();
     }
@@ -338,7 +338,7 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
     MutexGuard  grd(_sync);
     if (subsc_adr)
         arg.setMSISDNadr(*subsc_adr);
-    dialog->sendInvoke(MAPUSS_OpCode::processUSS_Request, &arg, this);
+    dialog->sendInvoke(MAPUSS_OpCode::processUSS_Request, &arg);
     //GVR NOTE: though MAP specifies that msISDN address in USS request may
     //present in component portion of TCAP invoke, the Ericsson tools transfers
     //and expects it only in user info section (see makeUI() comments).
@@ -360,10 +360,12 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
 }
 
 //ends TC dialog, releases Dialog()
-void MapUSSDlg::endTCap(void)
+void MapUSSDlg::endTCap(bool check_ref/* = false*/)
 {
     if (dialog) {
-        dialog->removeListener(this);
+        unsigned refNum = dialog->unbindUser();
+        if (check_ref && refNum)
+            smsc_log_warn(logger, "MapUSS[%u]: %u references from underlying TCDlg exists", dlgId, refNum);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {   // do TC_PREARRANGED if still active
                 dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ?

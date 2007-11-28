@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * cap3SMS CONTRACT implementation (over TCAP dialog)
  * ************************************************************************* */
@@ -44,7 +44,7 @@ namespace inap {
         SSF <- ResetTimerSMS ]
 */
 
-//3GPP TS 23.078 version 6.x.x Release 6, clause 7.5.2.1)
+//3GPP TS 23.078 version 6.x.x Release 6, clause 7.5.5)
 class CapSMS_SSFhandlerITF { //SSF <- CapSMSDlg <- SCF
 public:
     //Stands for following signals to MSC/SGSN:
@@ -75,7 +75,7 @@ public:
 //      a small timeout (CAPSMS_END_TIMEOUT) on last EventReportSMS Invoke
 //      and releases TC Dialog either on receiving T_END_IND or LCancel for
 //      EventReportSMS.
-class CapSMSDlg : SMS_SSF_Fsm, DialogListener, InvokeListener {
+class CapSMSDlg : SMS_SSF_Fsm, TCDialogUserITF {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
     CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
@@ -101,7 +101,7 @@ public:
 
 protected:
     friend class Dialog;
-    // DialogListener interface
+    // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp);
     void onDialogContinue(bool compPresent);
     void onDialogPAbort(UCHAR_T abortCause);
@@ -113,17 +113,17 @@ protected:
                         UCHAR_T invId = 0, UCHAR_T opCode = 0);
 
     // InvokeListener interface (no OPs with returnResult defined)
-    void onInvokeResult(Invoke* inv, TcapEntity* res) { }
-    void onInvokeError(Invoke* inv, TcapEntity* resE);
-    void onInvokeResultNL(Invoke* inv, TcapEntity* res) { }
-    void onInvokeLCancel(Invoke* inv);
+    void onInvokeResult(InvokeRFP pInv, TcapEntity* res) { }
+    void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
+    void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res) { }
+    void onInvokeLCancel(InvokeRFP pInv);
 
 private:
     //Forcedly ends CapSMS dialog: sends to SCF 
     //either submission failure report or U_ABORT 
     void endCapSMS(void);
     //Ends TC dialog depending on CapSMS state, releases Dialog()
-    void endTCap(bool u_abort = false);
+    void endTCap(bool u_abort = false, bool check_ref = false);
     // reports delivery status (continues capSMS dialog)
     RCHash eventReportSMS(bool submitted) _THROWS_NONE;
     inline void setTimer(UCHAR_T new_op)
