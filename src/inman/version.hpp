@@ -5,7 +5,7 @@
 
 const unsigned INMAN_VER_HIGH    = 0;    //major verison
 const unsigned INMAN_VER_LOW     = 6;    //minor version
-const unsigned INMAN_VER_FIX     = 20;   //bug fix version
+const unsigned INMAN_VER_FIX     = 21;   //bug fix version
 
 #endif /* __SMSC_INMAN_VERSION__ */
 
