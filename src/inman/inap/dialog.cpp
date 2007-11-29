@@ -242,10 +242,10 @@ UCHAR_T /*inv_id*/ Dialog::sendInvoke(UCHAR_T opcode, const Component *p_arg,
     const Invoke * linked = inv->getLinkedTo();
     smsc_log_debug(logger, "EINSS7_I97TInvokeReq("
                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                "invokeId=%d, lunkedused=\"%s\", linkedid=%d, "
+                "invokeId=%d, lunkedused=\"%s\", linkedid=%d, timeout=%u,"
                 "tag=\"LOCAL\", opcode[%d]={%s}, parameters[%d]={%s})",
-                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
-                inv->getId(), linked ? "YES" : "NO", linked ? linked->getId() : 0,
+                dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, inv->getId(),
+                linked ? "YES" : "NO", linked ? linked->getId() : 0, inv->getTimeout(),
                 op.size(), DumpHex(op.size(), &op[0], _HexDump_CVSD).c_str(),
                 params.size(), DumpHex(params.size(), &params[0]).c_str());
 
