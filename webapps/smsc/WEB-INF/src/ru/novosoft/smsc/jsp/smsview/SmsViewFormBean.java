@@ -603,4 +603,8 @@ public class SmsViewFormBean extends IndexBean {
   public void setMbSave(String mbSave) {
     this.mbSave = mbSave;
   }
+
+  public boolean isAllowToShowSmsText(HttpServletRequest request) {
+    return request.isUserInRole("smsView_smstext");
+  }
 }

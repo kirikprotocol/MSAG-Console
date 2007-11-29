@@ -140,11 +140,13 @@
             <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? odesc : StringEncoderDecoder.encode(odesc)%>
                 &nbsp;</td>
         </tr>
+        <% if (bean.isAllowToShowSmsText(request)) {%>
         <tr class=row<%=rowN++&1%>0>
             <th width="1%" nowrap valign=top><%=getLocString("smsview.decodedMessage")%></th>
             <td valign=top><%= (row.getText() != null && row.isTextEncoded()) ? row.getText() : StringEncoderDecoder.encode(row.getText())%>
                 &nbsp;</td>
         </tr>
+        <% } %>
     </tbody>
 </table>
 

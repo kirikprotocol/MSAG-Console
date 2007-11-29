@@ -35,6 +35,7 @@
             paramCheck(out, "users.roles.smsView", "roles", "role07", "smsView", bean.isUserInRole("smsView"), null);
             paramCheck(out, "users.roles.smsViewArch", "roles", "role08", "smsView_archive", bean.isUserInRole("smsView_archive"), null);
             paramCheck(out, "users.roles.smsViewOper", "roles", "role09", "smsView_operative", bean.isUserInRole("smsView_operative"), null);
+            paramCheck(out, "users.roles.smsViewSmsText", "roles", "role35", "smsView_smstext", bean.isUserInRole("smsView_smstext"), null);
             paramCheck(out, "users.roles.smsStat", "roles", "role10", "smsstat", bean.isUserInRole("smsstat"), null);
             paramCheck(out, "users.roles.mscman", "roles", "role11", "mscman", bean.isUserInRole("mscman"), null);
             paramCheck(out, "users.roles.users", "roles", "role12", "users", bean.isUserInRole("users"), null);
