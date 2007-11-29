@@ -3,6 +3,7 @@ package ru.sibinco.smpp.ub_sme.mg;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smpp.ub_sme.*;
 import ru.sibinco.util.threads.ThreadsPool;
+import com.logica.smpp.Data;
 
 /**
  * Created by Serge Lugovoy
@@ -30,6 +31,7 @@ public class MGState implements StateInterface {
     protected Message abonentRequest;
     protected long requestTime;
     protected String encoding;
+    protected Object expireObject=new Object();
 
     public String getMgBalance() {
         return mgBalance;
@@ -82,10 +84,8 @@ public class MGState implements StateInterface {
     public synchronized void closeProcessing() {
         if (expired || closed) return;
 
-        if (mgState == MG_OK) {
-            if (bannerState == 0 || profState == 0 || bannerState == BE_RESP_WAIT || profState == PROF_WAIT) {
-                return;
-            }
+
+        if (mgState == MG_OK&&(profState==PROF_ERR||profState==PROF_OK)&&(bannerState==BE_RESP_ERR||bannerState==BE_RESP_OK)){
             String message = Sme.getSmeEngine().prepareBalanceMessage(getMgBalance(), getBanner(), getEncoding());
             setMessage(message);
             Sme.getSmeEngine().sendResponse(this);
@@ -96,6 +96,14 @@ public class MGState implements StateInterface {
             close();
         }
 
+    }
+    public void response(Message msg){
+              if (isExpired()) {
+                Sme.getSmeEngine().sendDeliverSmResponse(msg, Data.ESME_RSYSERR);
+            }
+            setMgBalance(msg.getMessageString());
+            setMgState(MGState.MG_OK);
+            closeProcessing();
     }
 
     public Message getAbonentRequest() {
@@ -141,6 +149,10 @@ public class MGState implements StateInterface {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Object getExpireObject() {
+        return expireObject;
     }
 
     public String toString() {

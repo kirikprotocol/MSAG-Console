@@ -332,7 +332,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
     }
 
-    private void sendDeliverSmResponse(Message msg, int status) {
+    public void sendDeliverSmResponse(Message msg, int status) {
         try {
             msg.setStatus(status);
             multiplexor.sendResponse(msg);
@@ -445,12 +445,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
             MGState state = (MGState) mgAbonentRequests.remove(Utils.trimAbonent(message.getDestinationAddress()));
-            if (state.isExpired()) {
-                sendDeliverSmResponse(message, Data.ESME_RSYSERR);
-            }
-            state.setMgBalance(message.getMessageString());
-            state.setMgState(MGState.MG_OK);
-            state.closeProcessing();
+            state.response(message);
         } else {
             if (requests != null) {
                 requests.count();

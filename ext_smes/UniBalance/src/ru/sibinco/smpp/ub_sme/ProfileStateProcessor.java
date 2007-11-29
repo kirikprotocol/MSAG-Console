@@ -23,5 +23,6 @@ public class ProfileStateProcessor implements Runnable {
             state.setEncoding(encoding);
             state.setProfState(MGState.PROF_OK);
         }
+        state.closeProcessing();
     }
 }

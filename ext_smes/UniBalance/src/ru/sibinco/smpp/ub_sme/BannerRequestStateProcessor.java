@@ -23,6 +23,8 @@ public class BannerRequestStateProcessor implements Runnable {
         if(logger.isDebugEnabled()){
             logger.debug("Got banner:"+banner);
         }
+        //TODO delete it
+        banner ="banner";
 
         if (null == banner) {
             state.setBannerState(MGState.BE_RESP_ERR);
@@ -30,5 +32,6 @@ public class BannerRequestStateProcessor implements Runnable {
             state.setBanner(banner);
             state.setBannerState(MGState.BE_RESP_OK);
         }
+        state.closeProcessing();
     }
 }
