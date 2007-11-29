@@ -25,6 +25,7 @@ public class MgRequestStateProcessor implements Runnable {
         message.setType(Message.TYPE_SUBMIT);
         state.setMgState(MGState.MG_WAIT_RESP);
         smeEngine.sendMgRequest(state, message);
+        state.closeProcessing();
     }
 
 }

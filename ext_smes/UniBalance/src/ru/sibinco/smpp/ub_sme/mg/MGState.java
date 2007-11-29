@@ -131,6 +131,9 @@ public class MGState implements StateInterface {
     }
 
     public synchronized void close() {
+        synchronized (expireObject){
+            notify();
+        }
         this.closed = true;
     }
 
