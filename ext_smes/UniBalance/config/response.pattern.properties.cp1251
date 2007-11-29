@@ -1,12 +1,13 @@
-balance.response.pattern=Баланс {0} {1}
-balance.negative.response.pattern=Задолженность {0} {1}
-balance.wait.for.sms.response.pattern=Баланс будет выслан вам СМС сообщением через несколько минут
-balance.error.pattern=Ошибка получения баланса
+balance.response.pattern=Р‘Р°Р»Р°РЅСЃ {0} {1}
+balance.negative.response.pattern=Р—Р°РґРѕР»Р¶РµРЅРЅРѕСЃС‚СЊ {0} {1}
+balance.wait.for.sms.response.pattern=Р‘Р°Р»Р°РЅСЃ Р±СѓРґРµС‚ РІС‹СЃР»Р°РЅ РІР°Рј РЎРњРЎ СЃРѕРѕР±С‰РµРЅРёРµРј С‡РµСЂРµР· РЅРµСЃРєРѕР»СЊРєРѕ РјРёРЅСѓС‚
+balance.error.pattern=РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ Р±Р°Р»Р°РЅСЃР°
 
-balance.currency.default=у.е.
+balance.currency.default=Сѓ.Рµ.
 
 balance.currency.1.code=810
-balance.currency.1.name=руб.
+balance.currency.1.name=СЂСѓР±.
 
 balance.currency.2.code=840
-balance.currency.2.name=у.е.
+balance.currency.2.name=Сѓ.Рµ.
+
