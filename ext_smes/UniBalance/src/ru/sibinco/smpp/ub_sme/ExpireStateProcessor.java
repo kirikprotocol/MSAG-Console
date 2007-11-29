@@ -22,12 +22,11 @@ public class ExpireStateProcessor implements Runnable {
     public void run() {
         synchronized (state.getExpireObject()){
             try {
-                wait(timeout);
+                state.getExpireObject().wait(timeout);
             } catch (InterruptedException e) {
                  logger.warn("thread was interrupt", e);
             }
         }
-
         if (!state.isClosed()) {
             state.expire();
             Sme.getSmeEngine().sendErrorSmsMessage(state);
