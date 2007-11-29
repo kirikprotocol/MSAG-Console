@@ -502,6 +502,9 @@
     <role-name>smsView_operative</role-name>
   </security-role>
   <security-role>
+    <role-name>smsView_smstext</role-name>
+  </security-role>
+  <security-role>
     <role-name>smsstat</role-name>
   </security-role>
   <security-role>
