@@ -16,7 +16,7 @@ Date       | Author    | Version | Message
 -----------|-----------|---------|--------------------------------------------------------------------------------
 2007/11/23 | serge     | 1.07    | Add more request times info
 -----------|-----------|---------|--------------------------------------------------------------------------------
-2007/11/26 | kpv       | 1.08    | Added more times info, removed some syncs
+2007/11/26 | kpv       | 1.08    | Added more times info, removed some syncs, optimized syncs of SmeEngine
            |           |         |
            |           |         |
            |           |         |
