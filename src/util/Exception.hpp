@@ -64,9 +64,10 @@ public:
         SMSC_UTIL_EX_FILL(fmt);
     }
     CustomException(const CustomException & org_exc)
-        : Exception(), errCode(org_exc.errCode), exId(org_exc.excId)
-        , message(org_exc.message)
-    { }
+        : Exception(), errCode(org_exc.errCode), exId(org_exc.exId)
+    {
+        message = org_exc.message;
+    }
 
     ~CustomException() throw()
     {}
