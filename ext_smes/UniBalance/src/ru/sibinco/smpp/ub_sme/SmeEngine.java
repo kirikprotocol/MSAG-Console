@@ -440,10 +440,14 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
 
     private void processIncomingMessage(Message message, long abonentRequestTime) {
+
         if (message.getSourceAddress().equals(mgAddress)) { // abonent request
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
             MGState state = (MGState) mgAbonentRequests.remove(Utils.trimAbonent(message.getDestinationAddress()));
+            if(state==null){
+                logger.error("Can't get state for abonent:"+message.getDestinationAddress());
+            }
             state.response(message);
         } else {
             if (requests != null) {
