@@ -55,13 +55,14 @@ public class Sme {
         }
 
         // init DB connection manager
+        /*
         try {
             DBConnectionManager.getInstance();
         } catch (InitializationException e) {
             Logger.error("Could not get DB connection manager.", e);
             throw new InitializationException("Could not get DB connection manager.", e);
         }
-
+          */
         boolean outqueueEnabled = Utils.getBooleanProperty(config, "outqueue.enabled", true);
 
         OutgoingQueue outQueue = null;
