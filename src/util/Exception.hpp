@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef __UTIL_EXCEPTION_HPP__
 #define __UTIL_EXCEPTION_HPP__
 
@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <inttypes.h>
 
 #include "util/vformat.hpp"
 
@@ -40,11 +41,11 @@ protected:
 
 class CustomException : public Exception {
 protected:
-    int         errCode;
+    int32_t     errCode;
     std::string exId;
 
 public:
-    CustomException(int err_code, const char * msg, const char * err_desc = NULL)
+    CustomException(int32_t err_code, const char * msg, const char * err_desc = NULL)
         : Exception(), errCode(err_code), exId("CustomException")
     {
         if (msg)
@@ -62,10 +63,15 @@ public:
     {
         SMSC_UTIL_EX_FILL(fmt);
     }
+    CustomException(const CustomException & org_exc)
+        : Exception(), errCode(org_exc.errCode), exId(org_exc.excId)
+        , message(org_exc.message)
+    { }
+
     ~CustomException() throw()
     {}
 
-    int errorCode(void) const { return errCode; }
+    int32_t errorCode(void) const { return errCode; }
     const char * excId(void) const { return exId.c_str(); }
     void setExcId(const char * ids) { exId = ids ? ids : ""; }
 };
