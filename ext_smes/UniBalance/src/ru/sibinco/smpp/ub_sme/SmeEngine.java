@@ -440,7 +440,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
 
     private void processIncomingMessage(Message message, long abonentRequestTime) {
-
         if (message.getSourceAddress().equals(mgAddress)) { // abonent request
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
