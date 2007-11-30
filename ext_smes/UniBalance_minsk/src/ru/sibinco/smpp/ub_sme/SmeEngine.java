@@ -366,39 +366,38 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
-    if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed())
-    {
-      synchronized (state) {
-        state.setStartCloseRequestTime();
-        if (state.isError() || state.getAbonentResponse() == null) {
-          Message message = new Message();
-          message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
-          message.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
-          if (state.getAbonentRequest().hasUssdServiceOp() && !state.isUssdSessionClosed()) {
-            message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
-          } else {
-            message.setDestAddrSubunit(1); // for Flash SMS
-          }
-          message.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
-          message.setMessageString(errorPattern);
-          message.setType(Message.TYPE_SUBMIT);
-          state.setAbonentResponse(message);
-
-          if (logger.isDebugEnabled())
-            logger.debug(abonent + " request state closed with error.");
-        } else {
-          if (logger.isDebugEnabled())
-            logger.debug(abonent + " request state closed.");
-        }
-        state.setSendingResponseTime();
-        sendResponse(state);
-        state.setResponseSentTime();
-        state.setClosed(true);
-      }
-      removeRequestState(state);
-      if (logger.isInfoEnabled())
-        logger.info(state.toString());
+    synchronized (state) {
+      if( state.isClosed() ) return;
+      if( !state.isError() && (!state.isBalanceReady() || (bannerEngineClientEnabled && !state.isBannerReady())) ) return;
+      state.setClosed(true);
     }
+    state.setStartCloseRequestTime();
+    if (state.isError() || state.getAbonentResponse() == null) {
+      Message message = new Message();
+      message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
+      message.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
+      if (state.getAbonentRequest().hasUssdServiceOp() && !state.isUssdSessionClosed()) {
+        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+      } else {
+        message.setDestAddrSubunit(1); // for Flash SMS
+      }
+      message.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
+      message.setMessageString(errorPattern);
+      message.setType(Message.TYPE_SUBMIT);
+      state.setAbonentResponse(message);
+
+      if (logger.isDebugEnabled())
+        logger.debug(abonent + " request state closed with error.");
+    } else {
+      if (logger.isDebugEnabled())
+        logger.debug(abonent + " request state closed.");
+    }
+    state.setSendingResponseTime();
+    sendResponse(state);
+    state.setResponseSentTime();
+    removeRequestState(state);
+    if (logger.isInfoEnabled())
+      logger.info(state.toString());
   }
 
   private void processRequestStates() {
