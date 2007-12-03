@@ -321,6 +321,7 @@ int TaskProcessor::Execute()
                     task->currentPriorityFrameCounter < task->getPriority())
                 {
                     task->currentPriorityFrameCounter++;
+                    smsc_log_debug(logger, "TaskProcessor::Execute::: processTask for taskId=%s", task->getId().c_str());
                     if (!processTask(task)) {
                         task->currentPriorityFrameCounter = task->getPriority();
                         if (!task->isEnabled()) task->setEnabled(false); // to reset inProcess
