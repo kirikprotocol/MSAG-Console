@@ -10,14 +10,17 @@ namespace scag { namespace pers {
 using namespace scag::cpers;
 
 struct CmdContext {
-  PersCmd cmd_id;
-  SerialBuffer isb;
-  SerialBuffer* osb;
-  Socket* socket;         
   CmdContext();
   CmdContext(const CmdContext& ctx);
   CmdContext(PersCmd _cmd_id, SerialBuffer& _isb, SerialBuffer* _osb, Socket *s);
   CmdContext& operator=(const CmdContext& ctx);
+
+  PersCmd cmd_id;
+  uint8_t last_cmd_id;
+  SerialBuffer isb;
+  SerialBuffer* osb;
+  Socket* socket;     
+  time_t start_time;
 };
 
 class RegionPersServer : public PersServer {
@@ -33,14 +36,15 @@ protected:
   //virtual void processUplinkPacket(ConnectionContext &ctx) {
   //}
   virtual bool bindToCP();
+  void checkTimeouts();
 
 private:
   void connectToCP();
   bool processPacketFromCP(ConnectionContext &ctx);
   bool processPacketFromClient(ConnectionContext &ctx);
   void execCommand(ConnectionContext &ctx);
-  void sendCommandToClient(CmdContext &ctx);
-  void sendResponseError(CmdContext& cmd_ctx, const string& key);
+  void sendCommandToClient(CmdContext *ctx);
+  void sendResponseError(CmdContext* cmd_ctx, const string& key);
 
   bool sendCommandToCP(const CPersCmd& cmd);
   void createResponseForClient(SerialBuffer *sb, PersServerResponseType r);
@@ -67,12 +71,8 @@ private:
   void IncCmdHandler(Profile* pf, const string& str_key, Property& prop, SerialBuffer& osb);
   void IncModCmdHandler(Profile* pf, const string& str_key, Property& prop, int mod, SerialBuffer& osb);
 
-
-  //void setProperty(Profile* pf, Property& prop);
-  //bool delProperty(Profile* pf, const char* nm);
-  //bool getProperty(Profile* pf, const char* nm, Property& prop);
-  //bool incProperty(Profile* pf, Property& prop);
-  //bool incModProperty(Profile* pf, Property& prop, uint32_t mod, int& res);
+  void commandTimeout(const AbntAddr& addr, CmdContext& ctx);
+  void doneTimeout(const AbntAddr& addr);
 
 private:
   Socket *central_socket;
@@ -81,9 +81,11 @@ private:
   uint32_t region_id;
   string region_psw;
   bool connected;
+  time_t last_check_time;
 
   smsc::core::buffers::XHash<AbntAddr, CmdContext, AbntAddr> commands;
   smsc::core::buffers::XHash<AbntAddr, uint8_t, AbntAddr> profiles_states;
+  smsc::core::buffers::XHash<AbntAddr, time_t, AbntAddr> requested_profiles;
   Logger* rplog;
 };
 

@@ -186,9 +186,7 @@ public:
     virtual void Remove(const Key& key)
     {
         long idx;
-        __trace2__("Remove: key=%s", key.toString().c_str());
         if(indexStorage.Get(key, idx)) {
-          __trace2__("Remove: idx=%d", idx);
           dataStorage.Remove(idx);
         }
     }

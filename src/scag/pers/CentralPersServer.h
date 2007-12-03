@@ -30,6 +30,9 @@ class ProfileInfo
 public:
     uint32_t owner;
     ProfileInfo() : owner(0) {};
+    operator int() const {
+      return owner;
+    }
 };
 
 class TransactionInfo
@@ -60,6 +63,7 @@ protected:
   void reloadRegions(const char* regionsFileName);
   void ParseFile(const char* _xmlFile, HandlerBase* handler);
   void checkTimeouts();
+  void onDisconnect(ConnectionContext& ctx);  
 
 private:
   void getProfileCmdHandler(ConnectionContext& ctx);
@@ -74,7 +78,7 @@ private:
   void transactionTimeout(const AbntAddr& addr, const TransactionInfo& tr_info);
 
 private:
-  time_t lastCheckTime;
+  time_t last_check_time;
 };
 
 }}

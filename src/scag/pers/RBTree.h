@@ -109,7 +109,7 @@ public:
        
 		newNode->key = k;
 		newNode->value = v;
-        smsc_log_debug(logger, "Insert: %s val=%d", k.toString().c_str(), v);
+        smsc_log_debug(logger, "Insert: %s val=%d", k.toString().c_str(), (int)v);
 		changesObserver->startChanges(newNode, RBTreeChangesObserver<Key, Value>::OPER_INSERT);
 		bstInsert(newNode);
 		newNode->color = RED;
@@ -153,7 +153,7 @@ public:
 		
 		if(node == nilNode) return false;
 		val = node->value;
-        smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), val);
+        smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), (int)val);
 		return true;
 	}
     void Reset()

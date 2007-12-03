@@ -11,6 +11,8 @@
 
 namespace scag { namespace cpers {
 
+const int ADDR_PREFIX_SIZE = 5;
+
 using std::string;
 using namespace scag::pers::CentralPersCmd;
 using scag::pers::Profile;

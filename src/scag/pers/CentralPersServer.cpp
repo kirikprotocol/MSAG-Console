@@ -88,7 +88,7 @@ void CentralPersServer::reloadRegions(const char* regionsFileName)
 CentralPersServer::CentralPersServer(const char* persHost_, int persPort_, int maxClientCount_,
                                      int timeout_, const std::string& dbPath, const std::string& dbName,
                                      uint32_t indexGrowth, const char* regionsFileName):
- PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), lastCheckTime(time(NULL)),
+ PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), last_check_time(time(NULL)),
    logger(Logger::getInstance("cpersserv")), regions(NULL)
 {
     reloadRegions(regionsFileName);
@@ -145,7 +145,6 @@ bool CentralPersServer::processPacket(ConnectionContext& ctx)
         smsc_log_debug(logger, "cmd=%d", cmd);
         if(cmd == CentralPersCmd::LOGIN)
         {
-            //isb.Empty();
             return authorizeRegion(ctx);
         }
         else if(!ctx.authed) {
@@ -222,7 +221,7 @@ void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
   RegionInfo ri;
   if (!getRegionInfo(profile_info.owner, ri) || !ri.ctx) {
     //region not found, but it can't be because in this case region wouldn't be authorised
-    string err_msg = !ri.ctx ? "not found" : "unavailable";
+    string err_msg = !ri.ctx ? "unavailable" : "not found";
     smsc_log_warn(logger, "getProfileCmdHandler: region with id=%d %s",
                    profile_info.owner, err_msg.c_str());
     ProfileRespCmd profile_resp(get_profile.key);
@@ -234,6 +233,8 @@ void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
   tr_info.owner = profile_info.owner;
   tr_info.candidate = ctx.region_id;
   transactions.Insert(addr, tr_info);
+  smsc_log_debug(logger, "getProfileCmdHandler: create transaction key = \'%s\' owner=%d candidate=%d",
+                  get_profile.key.c_str(), tr_info.owner, tr_info.candidate);
 
   //get_profile.serialize(ri.ctx->outbuf);
   sendCommand(get_profile, ri.ctx);
@@ -289,7 +290,7 @@ void CentralPersServer::doneCmdHandler(ConnectionContext& ctx) {
   RegionInfo ri;
   if (!getRegionInfo(pti->owner, ri) || !ri.ctx) {
     //region not found, but it can't be because in this case region wouldn't be authorised
-    string err_msg = !ri.ctx ? "not found" : "unavailable";
+    string err_msg = !ri.ctx ?  "unavailable" : "not found";;
     smsc_log_warn(logger, "doneCmdHandler: region with id=%d %s", pti->candidate, err_msg.c_str());
     DoneRespCmd done_resp(0, done.key);
     done_resp.serialize(osb);
@@ -334,7 +335,7 @@ void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
   RegionInfo ri;
   if (!getRegionInfo(owner, ri) || !ri.ctx) {
     //region not found, but it can't be because in this case region wouldn't be authorised
-    string err_msg = !ri.ctx ? "not found" : "unavailable";
+    string err_msg = !ri.ctx ?  "unavailable" : "not found";;
     smsc_log_warn(logger, "doneRespCmdHandler: region with id=%d %s", owner, err_msg.c_str());
     //smsc_log_debug(logger, "doneCmdHandler: delete transaction key=\'%s\'", done_resp.key.c_str());
   }
@@ -369,8 +370,8 @@ void CentralPersServer::transactionTimeout(const AbntAddr& addr, const Transacti
   uint8_t last_cmd(tr_info.last_cmd);
   smsc_log_warn(logger, "transaction timeout key=\'%s\' last operation id=%d",
                  addr.toString().c_str(), last_cmd);
-  int addr_prefix_size = 5;
-  string key(addr.toString(), addr_prefix_size);
+  //int addr_prefix_size = 5;
+  string key(addr.toString(), ADDR_PREFIX_SIZE);
   switch (last_cmd) {
   case CentralPersCmd::GET_PROFILE: {
     ProfileRespCmd profile_resp(key);
@@ -381,13 +382,14 @@ void CentralPersServer::transactionTimeout(const AbntAddr& addr, const Transacti
   case CentralPersCmd::PROFILE_RESP: {
     DoneCmd done(0, key);
     sendCommand(done, tr_info.owner);
+    transactions.Delete(addr);
     break;
   }
   case CentralPersCmd::DONE: 
     break;
     //не знаю чё делать если не пришёл DONE_RESP
   }
-  transactions.Delete(addr);
+ // transactions.Delete(addr);
 
 }
 
@@ -402,7 +404,7 @@ void CentralPersServer::sendCommand(CPersCmd &cmd, uint32_t region_id) {
 
 void CentralPersServer::checkTransactionsTimeouts() {
   time_t time_bound = time(NULL) - TRANSACT_CHECK_PERIOD;
-  if (lastCheckTime > time_bound) {
+  if (last_check_time > time_bound) {
     return;
   }
   time_bound = time(NULL) - timeout / 2;
@@ -414,7 +416,17 @@ void CentralPersServer::checkTransactionsTimeouts() {
       transactionTimeout(key, tr_info);
     }
   }
-  lastCheckTime = time(NULL);
+  last_check_time = time(NULL);
 }
+
+void CentralPersServer::onDisconnect(ConnectionContext& ctx) {
+  MutexGuard mt(regionsMapMutex);
+  RegionInfo* pri = regions->GetPtr(ctx.region_id);
+  if (!pri) {
+    return;
+  }
+  pri->ctx = NULL;
+}
+
 
 }}

@@ -109,12 +109,13 @@ void PersSocketServer::processReadSocket(Socket* s)
                 if (ctx->outbuf.length()) {
                   smsc_log_debug(log, "processReadSocket : add socket %p as READ/WRITE", s);
                   listener.addRW(s);
-                  ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
+                  //ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
                 } else {
                   smsc_log_debug(log, "processReadSocket : add socket %p as READ", s);
                   listener.addR(s);
-                  ctx->wantRead = true;
+                  //ctx->wantRead = true;
                 }
+                ctx->wantRead = true;
             }
             else {
               removeSocket(s);                
@@ -159,6 +160,9 @@ void PersSocketServer::processWriteSocket(Socket* s)
 
 void PersSocketServer::removeSocket(Socket* s, int i)
 {
+  if (!s) {
+    return;
+  }
     char b[256];
     s->GetPeer(b);
     ConnectionContext *ctx = (ConnectionContext*)s->getData(0);
@@ -175,6 +179,7 @@ void PersSocketServer::removeSocket(Socket* s, int i)
     if(clientCount) clientCount--;
     s->Close();
     delete s;
+    s = NULL;
 }
 
 void PersSocketServer::checkTimeouts()
