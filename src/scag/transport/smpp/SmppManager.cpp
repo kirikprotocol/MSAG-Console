@@ -1267,7 +1267,10 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
     sms.setDestinationAddress(to);
     sms.setIntProperty(Tag::SMPP_MSG_STATE, state);
     sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x4);
-    sms.setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE, netErrCode);
+    if(netErrCode)
+    {
+      sms.setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE, netErrCode);
+    }
 
     SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
     cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
