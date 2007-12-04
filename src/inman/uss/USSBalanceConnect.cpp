@@ -50,13 +50,13 @@ USSBalanceConnect::~USSBalanceConnect()
 void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn, // указатель на объект, обслуживающий соединение с клиентом ussman'a
                                          std::auto_ptr<smsc::inman::interaction::SerializablePacketAC>& recv_cmd) throw(std::exception)
 {
-  smsc_log_debug(_logger, "USSBalanceConnect::onCommandReceived::: Enter it");
+  smsc_log_debug(_logger, "USSBalanceConnect::onPacketReceived::: Enter it");
   smsc::inman::interaction::USSPacketAC* requestPacket =
     static_cast<smsc::inman::interaction::USSPacketAC*>(recv_cmd.get());
 
   smsc::inman::interaction::USSRequestMessage* requestObject = 
     static_cast<smsc::inman::interaction::USSRequestMessage*>(requestPacket->pCmd());
-  smsc_log_debug(_logger, "USSBalanceConnect::onCommandReceived::: got request object=[%s]",
+  smsc_log_debug(_logger, "USSBalanceConnect::onPacketReceived::: got request object=[%s]",
                  requestObject->toString().c_str());
 
   USSProcSearchCrit ussProcSearchCrit(requestObject->get_IN_SSN(),
@@ -64,7 +64,11 @@ void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn
                                       requestPacket->dialogId(),
                                       conn);
 
-  if ( DuplicateRequestChecker::getInstance().isRequestRegistered(ussProcSearchCrit) ) return;
+  if ( DuplicateRequestChecker::getInstance().isRequestRegistered(ussProcSearchCrit) ) {
+    smsc_log_error(_logger, "USSBalanceConnect::onPacketReceived::: got request object [%s] with duplicate reqId",
+                   requestObject->toString().c_str());
+    return;
+  }
   DuplicateRequestChecker::getInstance().registerRequest(ussProcSearchCrit);
 
   //smsc::core::buffers::RefPtr<USSRequestProcessor, smsc::core::synchronization::Mutex> ussReqProc =
@@ -85,7 +89,7 @@ void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn
   ussReqProc->setDialogId(requestPacket->dialogId());
   ussReqProc->handleRequest(requestObject);
 
-  smsc_log_debug(_logger, "USSBalanceConnect::onCommandReceived::: Leave it");
+  smsc_log_debug(_logger, "USSBalanceConnect::onPacketReceived::: Leave it");
 }
 
 //##ModelId=45753514006F
