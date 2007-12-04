@@ -6,10 +6,45 @@
 # include <memory>
 # include <logger/Logger.h>
 # include "UssServiceCfg.hpp"
+# include <set>
+# include <util/Singleton.hpp>
 
 namespace smsc {
 namespace inman {
 namespace uss {
+
+class USSProcSearchCrit {
+public:
+  USSProcSearchCrit(unsigned char ssn,
+                    const TonNpiAddress& addr,
+                    uint32_t dialogId,
+                    const smsc::inman::interaction::Connect* conn)
+    : _ssn(ssn), _addr(addr), _dialogId(dialogId), _conn(conn) {}
+
+  bool operator<(const USSProcSearchCrit& rhs) const {
+    if ( _ssn < rhs._ssn ||
+         _addr.toString() < rhs._addr.toString() ||
+         _dialogId < rhs._dialogId ||
+         _conn < rhs._conn ) return true;
+    else return false;
+  }
+private:
+  unsigned char _ssn;
+  TonNpiAddress _addr;
+  uint32_t _dialogId;
+  const smsc::inman::interaction::Connect* _conn;
+};
+
+class DuplicateRequestChecker : public smsc::util::Singleton<DuplicateRequestChecker> {
+public:
+  bool isRequestRegistered(const USSProcSearchCrit& ussProcSearchCrit) const;
+  void registerRequest(const USSProcSearchCrit& ussProcSearchCrit);
+  void unregisterRequest(const USSProcSearchCrit& ussProcSearchCrit);
+private:
+  typedef std::set<USSProcSearchCrit> registered_req_t;
+  registered_req_t _registeredRequests;
+  mutable smsc::core::synchronization::Mutex _lock;
+};
 
 //##ModelId=457534DE0050
 class USSBalanceConnect : public smsc::inman::interaction::ConnectListenerITF {
@@ -26,25 +61,6 @@ public:
 private:
   smsc::logger::Logger *_logger;
   const UssService_CFG& _cfg;
-
-  class USSProcSearchCrit {
-  public:
-    USSProcSearchCrit(unsigned char ssn,
-                      const TonNpiAddress& addr,
-                      const smsc::inman::interaction::Connect* conn)
-      : _ssn(ssn), _addr(addr), _conn(conn) {}
-
-    bool operator<(const USSProcSearchCrit& rhs) const {
-      if ( _ssn < rhs._ssn ||
-           _addr.toString() < rhs._addr.toString() ||
-           _conn < rhs._conn ) return true;
-      else return false;
-    }
-  private:
-    unsigned char _ssn;
-    TonNpiAddress _addr;
-    const smsc::inman::interaction::Connect* _conn;
-  };
 
   typedef std::vector<USSProcSearchCrit>  CreatedSearchCritList_t;
   CreatedSearchCritList_t _searchCritForCreatedReqProcessors;
