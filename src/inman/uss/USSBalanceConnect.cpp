@@ -3,10 +3,34 @@
 #include "ussmessages.hpp"
 #include "USSRequestProcessor.hpp"
 #include <util/ObjectRegistry.hpp>
+#include <core/buffers/RefPtr.hpp>
 
 namespace smsc {
 namespace inman {
 namespace uss {
+
+bool
+DuplicateRequestChecker::isRequestRegistered(const USSProcSearchCrit& ussProcSearchCrit) const
+{
+  smsc::core::synchronization::MutexGuard mg(_lock);
+  if ( _registeredRequests.find(ussProcSearchCrit) == _registeredRequests.end() ) return false;
+  else return true;
+}
+
+void
+DuplicateRequestChecker::registerRequest(const USSProcSearchCrit& ussProcSearchCrit)
+{
+  smsc::core::synchronization::MutexGuard mg(_lock);
+  _registeredRequests.insert(ussProcSearchCrit);
+}
+
+void
+DuplicateRequestChecker::unregisterRequest(const USSProcSearchCrit& ussProcSearchCrit)
+{
+  smsc::core::synchronization::MutexGuard mg(_lock);
+  _registeredRequests.erase(ussProcSearchCrit);
+
+}
 
 USSBalanceConnect::USSBalanceConnect(smsc::logger::Logger* logger,
                                      const UssService_CFG& cfg)
@@ -14,12 +38,12 @@ USSBalanceConnect::USSBalanceConnect(smsc::logger::Logger* logger,
 
 USSBalanceConnect::~USSBalanceConnect()
 {
-  for (CreatedSearchCritList_t::iterator begin_iter=_searchCritForCreatedReqProcessors.begin(), end_iter=_searchCritForCreatedReqProcessors.end();
-       begin_iter != end_iter; ++begin_iter) {
-    USSRequestProcessor* ussReqProc = 
-      ObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toUnregisterObject(*begin_iter);
-    delete ussReqProc;
-  }
+  //for (CreatedSearchCritList_t::iterator begin_iter=_searchCritForCreatedReqProcessors.begin(), end_iter=_searchCritForCreatedReqProcessors.end();
+  //       begin_iter != end_iter; ++begin_iter) {
+  //USSRequestProcessor* ussReqProc = 
+  //    smsc::util::RefObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toUnregisterObject(*begin_iter);
+  //delete ussReqProc;
+  //  }
 }
 
 //##ModelId=4575350D008E
@@ -35,26 +59,28 @@ void USSBalanceConnect::onPacketReceived(smsc::inman::interaction::Connect* conn
   smsc_log_debug(_logger, "USSBalanceConnect::onCommandReceived::: got request object=[%s]",
                  requestObject->toString().c_str());
 
-  USSRequestProcessor* ussReqProc = 
-    ObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().getObject
-    (
-     USSProcSearchCrit(requestObject->get_IN_SSN(),
-                       requestObject->get_IN_ISDNaddr(),
-                       conn)
-     );
+  USSProcSearchCrit ussProcSearchCrit(requestObject->get_IN_SSN(),
+                                      requestObject->get_IN_ISDNaddr(),
+                                      requestPacket->dialogId(),
+                                      conn);
 
-  if ( !ussReqProc ) {
-    ussReqProc = new USSRequestProcessor(conn, _cfg);
-    ObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toRegisterObject
-      (
-       ussReqProc, USSProcSearchCrit(requestObject->get_IN_SSN(),
-                                     requestObject->get_IN_ISDNaddr(),
-                                     conn)
-       );
-    _searchCritForCreatedReqProcessors.push_back(USSProcSearchCrit(requestObject->get_IN_SSN(),
-                                                                   requestObject->get_IN_ISDNaddr(),
-                                                                   conn));
-  }
+  if ( DuplicateRequestChecker::getInstance().isRequestRegistered(ussProcSearchCrit) ) return;
+  DuplicateRequestChecker::getInstance().registerRequest(ussProcSearchCrit);
+
+  //smsc::core::buffers::RefPtr<USSRequestProcessor, smsc::core::synchronization::Mutex> ussReqProc =
+  //smsc::util::RefObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().getObject(ussProcSearchCrit);
+
+  USSRequestProcessor* ussReqProc = new USSRequestProcessor(conn, _cfg, ussProcSearchCrit);
+
+  // if ( !ussReqProc.Get() ) {
+  //     ussReqProc = smsc::core::buffers::RefPtr<USSRequestProcessor, smsc::core::synchronization::Mutex>(new USSRequestProcessor(conn, _cfg, ussProcSearchCrit));
+  //     smsc::util::RefObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toRegisterObject
+  //       (
+  //        ussReqProc,ussProcSearchCrit
+  //        );
+
+  //     _searchCritForCreatedReqProcessors.push_back(ussProcSearchCrit);
+  //   }
 
   ussReqProc->setDialogId(requestPacket->dialogId());
   ussReqProc->handleRequest(requestObject);
