@@ -18,13 +18,39 @@ public class PerfInfoTable extends Canvas
   static final Color shadowColor = SystemColor.controlShadow;
   static final Color lightShadowColor = SystemColor.controlLtHighlight;
   static final Color textColor = SystemColor.textText;
-  static final Color headsColor[] = {
-    new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue() + colorShift),
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift),
-    new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift),
-    new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue()),
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue()),
-    new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue())
+  static Color[] headsColor = null;
+  static {
+    headsColor = new Color[numHeads];
+    try {
+      headsColor[0] = new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue() + colorShift);
+    } catch (Exception e) {
+      headsColor[0] = bgColor;
+    }
+    try {
+      headsColor[1] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift);
+    } catch (Exception e) {
+      headsColor[1] = bgColor;
+    }
+    try {
+      headsColor[2] = new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift);
+    } catch (Exception e) {
+      headsColor[2] = bgColor;
+    }
+    try {
+      headsColor[3] = new Color(bgColor.getRed(), bgColor.getGreen() + colorShift, bgColor.getBlue());
+    } catch (Exception e) {
+      headsColor[3] = bgColor;
+    }
+    try {
+      headsColor[4] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen(), bgColor.getBlue());
+    } catch (Exception e) {
+      headsColor[4] = bgColor;
+    }
+    try {
+      headsColor[5] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue());
+    } catch (Exception e) {
+      headsColor[5] = bgColor;
+    }
   };
 
   PerfSnap snap;
