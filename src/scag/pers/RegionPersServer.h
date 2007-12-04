@@ -21,6 +21,7 @@ struct CmdContext {
   SerialBuffer* osb;
   Socket* socket;     
   time_t start_time;
+  bool batch;
 };
 
 class RegionPersServer : public PersServer {

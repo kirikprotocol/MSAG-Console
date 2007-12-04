@@ -104,13 +104,24 @@ void PersSocketServer::processReadSocket(Socket* s)
                   smsc_log_debug(log, "processReadSocket : Empty inbuf in socket %p", s);
                   ctx->inbuf.Empty();
                 }
-    			ctx->lastActivity = time(NULL);			
+    			ctx->lastActivity = time(NULL);	
+                if (ctx->batch && ctx->batch_cmd_count > 0) {
+                  smsc_log_debug(log, "processReadSocket : batch not complite", s);
+                  smsc_log_debug(log, "processReadSocket : add socket %p as READ", s);
+                  listener.addR(s);
+                  ctx->wantRead = true;
+                  return;
+                }
+                ctx->batch = false;
+                ctx->batch_cmd_count = 0;
                 ctx->outbuf.SetPos(0);
-                if (ctx->outbuf.length()) {
+                if (ctx->outbuf.length() > sizeof(uint32_t)) {
                   smsc_log_debug(log, "processReadSocket : add socket %p as READ/WRITE", s);
+                  smsc_log_debug(log, "processReadSocket : outbuf length = %d", ctx->outbuf.length());
                   listener.addRW(s);
                   //ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
                 } else {
+                  ctx->outbuf.SetPos(4);
                   smsc_log_debug(log, "processReadSocket : add socket %p as READ", s);
                   listener.addR(s);
                   //ctx->wantRead = true;
@@ -160,7 +171,7 @@ void PersSocketServer::processWriteSocket(Socket* s)
 
 void PersSocketServer::removeSocket(Socket* s, int i)
 {
-  if (!s) {
+  if (!s || !clientCount) {
     return;
   }
     char b[256];
@@ -171,12 +182,12 @@ void PersSocketServer::removeSocket(Socket* s, int i)
         onDisconnect(*ctx);
         delete ctx;
     }
-    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount - 1);    
+    if(clientCount) clientCount--;
+    smsc_log_info(log, "Socket disconnected: %s. Client count: %u", b, clientCount);    
 	if(i == -1)
 	    listener.remove(s);
 	else
 	    listener._remove(i);
-    if(clientCount) clientCount--;
     s->Close();
     delete s;
     s = NULL;

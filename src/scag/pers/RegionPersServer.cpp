@@ -139,7 +139,11 @@ bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
   smsc_log_debug(rplog, "processPacketFromClient");
   SerialBuffer &isb = ctx.inbuf;
   try {
+    ctx.outbuf.SetPos(sizeof(uint32_t));
     execCommand(ctx);
+    if (ctx.outbuf.GetPos() > sizeof(uint32_t)) {
+      SetPacketSize(ctx.outbuf);
+    }
     return true;
   } catch(const SerialBufferOutOfBounds &e) {
     smsc_log_debug(rplog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
@@ -151,6 +155,7 @@ bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
     smsc_log_debug(rplog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
   }
   createResponseForClient(&ctx.outbuf, RESPONSE_BAD_REQUEST);
+  SetPacketSize(ctx.outbuf);
   return true;
 }
 
@@ -169,10 +174,20 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
   }
   if (cmd == PC_BATCH) {
     uint16_t cnt = isb.ReadInt16();
+    ctx.batch = true;
+    ctx.batch_cmd_count = cnt;
+    smsc_log_debug(rplog, "Batch start. commands count=%d", cnt);
     while(cnt--) {
       execCommand(ctx);
+      //osb.SetPos(ctx.outbuf.GetSize());
     }
+    //SetPacketSize(osb);
+    
+    smsc_log_debug(rplog, "Batch end");
     return;
+  }
+  if (ctx.batch && ctx.batch_cmd_count) {
+    --ctx.batch_cmd_count;
   }
   pt = (ProfileType)isb.ReadInt8();
   smsc_log_debug(rplog, "profile type = %d", pt);
@@ -180,7 +195,7 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
     int_key = isb.ReadInt32();
     string name;
     Property prop;
-    osb.SetPos(4);
+    //osb.SetPos(4);
     switch(cmd) {
     case PC_DEL:
       isb.ReadString(name);
@@ -208,7 +223,7 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
     default:
       smsc_log_debug(rplog, "Bad command %d", cmd);
     }
-    SetPacketSize(osb);
+    //SetPacketSize(osb);
     return;
   } 
   isb.ReadString(str_key);
@@ -239,6 +254,9 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
     createResponseForClient(&osb, RESPONSE_ERROR);
     return;
   }
+  if (ctx.batch) {
+    ++ctx.batch_cmd_count;
+  }
   commands.Insert(addr, CmdContext(cmd, isb, &osb, ctx.socket));
 }
   
@@ -247,7 +265,7 @@ void RegionPersServer::execCommand(PersCmd cmd, Profile *pf, const string& str_k
   smsc_log_debug(rplog, "execCommand");
   string name;
   Property prop;
-  osb.SetPos(4);
+  //osb.SetPos(4);
   switch(cmd) {
   case PC_DEL:
     isb.ReadString(name);
@@ -275,7 +293,7 @@ void RegionPersServer::execCommand(PersCmd cmd, Profile *pf, const string& str_k
   default:
     smsc_log_debug(rplog, "Bad command %d", cmd);
   }
-  SetPacketSize(osb);
+  //SetPacketSize(osb);
 }
 
 void RegionPersServer::onDisconnect(ConnectionContext &ctx) {
@@ -316,6 +334,7 @@ void RegionPersServer::getProfileCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "getProfileCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   GetProfileCmd get_profile_cmd(isb);
+  smsc_log_debug(rplog, "getProfileCmdHandler: key=\'%s\'", get_profile_cmd.key.c_str());
   Profile *pf = getProfile(get_profile_cmd.key);
   ProfileRespCmd profile_resp(get_profile_cmd.key);
   if (!pf) {
@@ -422,6 +441,7 @@ void RegionPersServer::doneCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "doneCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   DoneCmd done(isb);
+  smsc_log_debug(rplog, "doneCmdHandler: key=\'%s\'", done.key.c_str());
   AbntAddr addr(done.key.c_str());
   addr.setNumberingPlan(1);
   addr.setTypeOfNumber(1);
@@ -445,6 +465,7 @@ void RegionPersServer::doneRespCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "doneRespCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   DoneRespCmd done_resp(isb);
+  smsc_log_debug(rplog, "doneRespCmdHandler: key=\'%s\'", done_resp.key.c_str());
   AbntAddr addr(done_resp.key.c_str());
   addr.setNumberingPlan(1);
   addr.setTypeOfNumber(1);
@@ -609,36 +630,58 @@ void RegionPersServer::createResponseForClient(SerialBuffer* sb, PersServerRespo
     return;
   }
   smsc_log_debug(rplog, "createResponseForClient : response=%d", static_cast<int>(r));
-  sb->SetPos(4);
+  //sb->SetPos(4);
   SendResponse(*sb, r);
-  SetPacketSize(*sb);
+  //SetPacketSize(*sb);
 }
 
-void RegionPersServer::sendCommandToClient(CmdContext* ctx) {
-  if (!ctx || !ctx->osb) {
-    smsc_log_warn(rplog, "sendCommandToClient : serial buffer error in ctx=%p", &ctx);
+void RegionPersServer::sendCommandToClient(CmdContext* cmd_ctx) {
+  if (!cmd_ctx || !cmd_ctx->osb) {
+    smsc_log_warn(rplog, "sendCommandToClient : serial buffer error in ctx=%p", &cmd_ctx);
     return;
   }
-  ctx->osb->SetPos(0);
-  listener.addRW(ctx->socket);
+  if (!cmd_ctx->socket) {
+    smsc_log_warn(rplog, "sendCommandToClient : client connection error");
+  }
+  ConnectionContext* ctx = (ConnectionContext*)cmd_ctx->socket->getData(0);
+  if (!ctx) {
+    smsc_log_warn(rplog, "sendCommandToClient : empty connection context");
+    return;
+  }
+  smsc_log_debug(rplog, "sendCommandToClient : outbuf length=%d", ctx->outbuf.GetSize());
+  if (!ctx->batch || !ctx->batch_cmd_count) {
+    SetPacketSize(ctx->outbuf);
+    ctx->outbuf.SetPos(0);
+    listener.addRW(cmd_ctx->socket);
+    return;
+  }
+  --ctx->batch_cmd_count;
+  smsc_log_debug(rplog, "sendCommandToClient : batch commands count = %d", ctx->batch_cmd_count);
+  if (ctx->batch_cmd_count == 0) {
+    ctx->batch = false;
+    smsc_log_debug(rplog, "sendCommandToClient : send batch");
+    SetPacketSize(ctx->outbuf);
+    ctx->outbuf.SetPos(0);
+    listener.addRW(cmd_ctx->socket);
+  }
 }
 
 void RegionPersServer::commandTimeout(const AbntAddr& addr, CmdContext& ctx) {
   if (ctx.last_cmd_id == CentralPersCmd::GET_PROFILE) {
-    smsc_log_warn(rplog, "commandTimeout: PROFILE_RESP timeout key=\'%s\'", addr.toString());
+    smsc_log_warn(rplog, "commandTimeout: PROFILE_RESP timeout key=\'%s\'", addr.toString().c_str());
     string key(addr.toString(), ADDR_PREFIX_SIZE);
     sendResponseError(&ctx, key);
     return;
   }
   if (ctx.last_cmd_id == CentralPersCmd::PROFILE_RESP) {
-    smsc_log_warn(rplog, "commandTimeout: DONE_RESP timeout key=\'%s\'", addr.toString());
+    smsc_log_warn(rplog, "commandTimeout: DONE_RESP timeout key=\'%s\'", addr.toString().c_str());
     //не пришёл DONE_RESP
     commands.Delete(addr);
   }
 }
 
 void RegionPersServer::doneTimeout(const AbntAddr& addr) {
-  smsc_log_warn(rplog, "doneTimeout: DONE timeout key=\'%s\'", addr.toString());
+  smsc_log_warn(rplog, "doneTimeout: DONE timeout key=\'%s\'", addr.toString().c_str());
   string key(addr.toString(), ADDR_PREFIX_SIZE);
   DoneRespCmd done_resp(0, key);
   sendCommandToCP(done_resp);
@@ -668,10 +711,10 @@ void RegionPersServer::checkTimeouts()
 			i++;
 	}
 
-    time_bound = time(NULL) - COMMANDS_CHECK_PERIOD;
-    if (last_check_time > time_bound) {
-      return;
-    }
+    //time_bound = time(NULL) - COMMANDS_CHECK_PERIOD;
+    //if (last_check_time > time_bound) {
+      //return;
+    //}
     time_bound = time(NULL) - timeout / 2;
     AbntAddr key;
     CmdContext ctx;
@@ -736,7 +779,7 @@ CmdContext::CmdContext(PersCmd _cmd_id, SerialBuffer& _isb, SerialBuffer* _osb, 
 }
 
 CmdContext::CmdContext(const CmdContext& ctx):cmd_id(ctx.cmd_id), osb(ctx.osb), socket(ctx.socket),
-                                              start_time(ctx.start_time), last_cmd_id(ctx.last_cmd_id) {
+                                              start_time(ctx.start_time), last_cmd_id(ctx.last_cmd_id){
   isb.blkwrite(ctx.isb.c_curPtr(), ctx.isb.length() - ctx.isb.getPos());
   isb.setPos(0);
 }

@@ -35,6 +35,7 @@ void PersServer::SetPacketSize(SerialBuffer& sb)
 {
     sb.SetPos(0);
     sb.WriteInt32(sb.GetSize());
+    smsc_log_warn(plog, "SetPacketSize: packet size=%d", sb.GetSize());
 }
 
 void PersServer::DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)

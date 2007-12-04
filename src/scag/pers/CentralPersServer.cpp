@@ -244,6 +244,7 @@ void CentralPersServer::profileRespCmdHandler(ConnectionContext& ctx) {
   smsc_log_debug(logger, "profileRespCmdHandler");
   SerialBuffer &isb = ctx.inbuf, &osb = ctx.outbuf;
   ProfileRespCmd profile_resp(isb);
+  smsc_log_debug(logger, "profileRespCmdHandler: profile key = \'%s\'", profile_resp.key.c_str());
   AbntAddr addr(profile_resp.key.c_str());
   addr.setNumberingPlan(1);
   addr.setTypeOfNumber(1);
@@ -277,6 +278,7 @@ void CentralPersServer::doneCmdHandler(ConnectionContext& ctx) {
   smsc_log_debug(logger, "doneCmdHandler");
   SerialBuffer &isb = ctx.inbuf, &osb = ctx.outbuf;
   DoneCmd done(isb);
+  smsc_log_debug(logger, "doneCmdHandler: profile key = \'%s\'", done.key.c_str());
   AbntAddr addr(done.key.c_str());
   addr.setNumberingPlan(1);
   addr.setTypeOfNumber(1);
@@ -315,6 +317,7 @@ void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
   smsc_log_debug(logger, "doneRespCmdHandler");
   SerialBuffer &isb = ctx.inbuf, &osb = ctx.outbuf;
   DoneCmd done_resp(isb);
+  smsc_log_debug(logger, "doneRespCmdHandler: profile key = \'%s\'", done_resp.key.c_str());
   AbntAddr addr(done_resp.key.c_str());
   addr.setNumberingPlan(1);
   addr.setTypeOfNumber(1);
@@ -403,11 +406,11 @@ void CentralPersServer::sendCommand(CPersCmd &cmd, uint32_t region_id) {
 }
 
 void CentralPersServer::checkTransactionsTimeouts() {
-  time_t time_bound = time(NULL) - TRANSACT_CHECK_PERIOD;
-  if (last_check_time > time_bound) {
-    return;
-  }
-  time_bound = time(NULL) - timeout / 2;
+  //time_t time_bound = time(NULL) - TRANSACT_CHECK_PERIOD;
+  //if (last_check_time > time_bound) {
+    //return;
+  //}
+  time_t time_bound = time(NULL) - timeout / 2;
   AbntAddr key;
   TransactionInfo tr_info;
   transactions.First();

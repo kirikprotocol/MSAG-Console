@@ -412,6 +412,7 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
+        normalizeKey(key);
 
         if(prop.isExpired())
             return;
@@ -453,6 +454,7 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
+        normalizeKey(key);
         //Profile *pf = getProfile(key, false);
 
         bool res = false;
@@ -497,6 +499,7 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
+        normalizeKey(key);
 
         //Profile* pf = getProfile(key, false);
 
@@ -559,6 +562,7 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
+        normalizeKey(key);
         //Profile* pf = getProfile(key, true);
         if (!pf) {
           return false;
@@ -629,6 +633,7 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
+        normalizeKey(key);
         //Profile* pf = getProfile(key, true);
         if (!pf) {
           return false;

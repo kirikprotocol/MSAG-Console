@@ -15,13 +15,15 @@ using smsc::logger::Logger;
 class ConnectionContext{
 public:
 	ConnectionContext(Socket* s) : wantRead(true), lastActivity(time(NULL)),
-                          authed(false), region_id(0), socket(s) {};
+                          authed(false), region_id(0), socket(s), batch(false), batch_cmd_count(0) {};
 	SerialBuffer inbuf, outbuf;
 	bool wantRead, authed;
 	time_t lastActivity;
 	uint32_t packetLen;
     uint32_t region_id;
     Socket* socket;
+    bool batch;
+    uint16_t batch_cmd_count;
 };
 
 class PersSocketServer {
