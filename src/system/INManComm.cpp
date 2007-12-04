@@ -247,8 +247,8 @@ void INManComm::ProcessExpiration()
         );
       delete it->second->second->fwdCtx;
     }
-    reqDataMap.erase(it->second);
     delete it->second->second;
+    reqDataMap.erase(it->second);
     timeMap.erase(it);
     sync::MutexGuard mg2(queueMtx);
     queue.Push(cmd);
