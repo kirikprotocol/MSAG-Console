@@ -83,7 +83,7 @@ typedef RefPtr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
 
 class SmsIndex{
 public:
-  SmsIndex(const char* location,int maxmemuse=4*1024*1024*1024)
+  SmsIndex(const char* location,uint64_t maxmemuse=((uint64_t)4)*1024*1024*1024)
   {
     loc=location;
     maxCacheMemUsage=maxmemuse;
