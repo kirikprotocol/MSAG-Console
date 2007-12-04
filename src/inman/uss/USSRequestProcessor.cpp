@@ -3,15 +3,18 @@
 #include <inman/common/cvtutil.hpp>
 #include <vector>
 #include <sys/types.h>
+#include <util/ObjectRegistry.hpp>
+#include <inman/uss/USSBalanceConnect.hpp>
 
 namespace smsc {
 namespace inman {
 namespace uss {
 
 USSRequestProcessor::USSRequestProcessor(smsc::inman::interaction::Connect* conn,
-                                         const UssService_CFG& cfg)
+                                         const UssService_CFG& cfg,
+                                         const USSProcSearchCrit& ussProcSearchCrit)
   : _conn(conn), _logger(Logger::getInstance("smsc.uss.BalanceService")),
-    _mapSess(NULL), _mapDialog(NULL), _cfg(cfg), _dialogId(0), _resultAsLatin1(false), _dcs(0) {}
+    _mapSess(NULL), _mapDialog(NULL), _cfg(cfg), _dialogId(0), _resultAsLatin1(false), _dcs(0), _ussProcSearchCrit(ussProcSearchCrit) {}
 
 USSRequestProcessor::~USSRequestProcessor() {
   try {
@@ -109,45 +112,51 @@ void USSRequestProcessor::onMapResult(smsc::inman::comp::uss::MAPUSS2CompAC* arg
 //if ercode != 0, no result has been got from MAP service
 void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
 {
-  smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
-  smsc::inman::interaction::SPckUSSResult resultPacket;
-  if (!ercode) {
-    // success and send result 
-    // process std::vector result
-    smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: _dcs=%02X _resultAsLatin1=%d", _dcs, _resultAsLatin1);
-    if ( _resultAsLatin1 )
-      resultPacket.Cmd().setUSSData(_resultUssAsString.c_str(), _resultUssAsString.size());
-    else {
-      smsc::cbs::CBS_DCS cbs;
-      if (smsc::cbs::parseCBS_DCS(_dcs, cbs) == smsc::cbs::CBS_DCS::dcUCS2 && 
-          !cbs.compressed &&
-          !cbs.UDHind ) {
-        smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: got UCS2 encoded message response");
-        if ( cbs.lngPrefix == smsc::cbs::CBS_DCS::lng4UCS2 )
-          resultPacket.Cmd().setUCS2USSData(std::vector<uint8_t>(&_resultUssData[0]+2,
-                                                                &_resultUssData[0]+_resultUssData.size()));
-        else
-          resultPacket.Cmd().setUCS2USSData(_resultUssData);
-      } else
-        resultPacket.Cmd().setRAWUSSData(_dcs, _resultUssData);
-    }
-    resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK);
-    resultPacket.Cmd().setMSISDNadr(_msISDNAddr);
-  } else {
+  {
+    smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
+    smsc::inman::interaction::SPckUSSResult resultPacket;
+    if (!ercode) {
+      // success and send result 
+      // process std::vector result
+      smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: _dcs=%02X _resultAsLatin1=%d", _dcs, _resultAsLatin1);
+      if ( _resultAsLatin1 )
+        resultPacket.Cmd().setUSSData(_resultUssAsString.c_str(), _resultUssAsString.size());
+      else {
+        smsc::cbs::CBS_DCS cbs;
+        if (smsc::cbs::parseCBS_DCS(_dcs, cbs) == smsc::cbs::CBS_DCS::dcUCS2 && 
+            !cbs.compressed &&
+            !cbs.UDHind ) {
+          smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: got UCS2 encoded message response");
+          if ( cbs.lngPrefix == smsc::cbs::CBS_DCS::lng4UCS2 )
+            resultPacket.Cmd().setUCS2USSData(std::vector<uint8_t>(&_resultUssData[0]+2,
+                                                                   &_resultUssData[0]+_resultUssData.size()));
+          else
+            resultPacket.Cmd().setUCS2USSData(_resultUssData);
+        } else
+          resultPacket.Cmd().setRAWUSSData(_dcs, _resultUssData);
+      }
+      resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_OK);
+      resultPacket.Cmd().setMSISDNadr(_msISDNAddr);
+    } else {
       smsc_log_error(_logger, "USSRequestProcessor::onEndMapDlg: error %u: %s",
-          ercode, URCRegistry::explainHash(ercode).c_str());
+                     ercode, URCRegistry::explainHash(ercode).c_str());
       resultPacket.Cmd().setStatus(smsc::inman::interaction::USS2CMD::STATUS_USS_REQUEST_FAILED);
-  }
+    }
 
-  smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: send response object=[%s]",
-                 resultPacket.Cmd().toString().c_str());
-  resultPacket.setDialogId(_dialogId);
-  if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
-    _conn->Close(); _conn=NULL;
-  }
+    smsc_log_debug(_logger, "USSRequestProcessor::onEndMapDlg::: send response object=[%s]",
+                   resultPacket.Cmd().toString().c_str());
+    resultPacket.setDialogId(_dialogId);
+    if ( _conn && _conn->sendPck(&resultPacket) == -1 ) {
+      _conn->Close(); _conn=NULL;
+    }
 
-  delete _mapDialog; _mapDialog=NULL;
-  _resultAsLatin1 = false; _dcs = 0; _resultUssData.clear();
+    delete _mapDialog; _mapDialog=NULL;
+    _resultAsLatin1 = false; _dcs = 0; _resultUssData.clear();
+
+    //  smsc::util::RefObjectRegistry<USSRequestProcessor,USSProcSearchCrit>::getInstance().toUnregisterObject(_ussProcSearchCrit);
+    DuplicateRequestChecker::getInstance().unregisterRequest(_ussProcSearchCrit);
+  }
+  delete this;
 }
 
 }
