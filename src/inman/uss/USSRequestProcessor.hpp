@@ -13,6 +13,7 @@
 
 # include "UssServiceCfg.hpp"
 # include <core/synchronization/Mutex.hpp>
+# include <inman/uss/USSBalanceConnect.hpp>
 
 namespace smsc {
 namespace inman {
@@ -20,7 +21,7 @@ namespace uss {
 
 class USSRequestProcessor : public smsc::inman::inap::uss::USSDhandlerITF {
 public:
-  USSRequestProcessor(smsc::inman::interaction::Connect* conn, const UssService_CFG& cfg);
+  USSRequestProcessor(smsc::inman::interaction::Connect* conn, const UssService_CFG& cfg, const USSProcSearchCrit& ussProcSearchCrit);
   ~USSRequestProcessor();
   void setDialogId(uint32_t dialogId);
   void handleRequest(const smsc::inman::interaction::USSRequestMessage* requestObject);
@@ -49,6 +50,8 @@ private:
   unsigned char _dcs;
 
   smsc::core::synchronization::Mutex _callbackActivityLock;
+
+  const USSProcSearchCrit _ussProcSearchCrit;
 };
 
 }
