@@ -1,16 +1,20 @@
 package ru.sibinco.smpp.ub_sme.mg;
 
+import com.logica.smpp.Data;
+import com.lorissoft.advertising.syncclient.IAdvertisingResponseHandler;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smpp.ub_sme.*;
 import ru.sibinco.util.threads.ThreadsPool;
-import com.logica.smpp.Data;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Created by Serge Lugovoy
  * Date: Nov 22, 2007
  * Time: 3:33:49 PM
  */
-public class MGState implements StateInterface {
+public class MGState implements StateInterface, IAdvertisingResponseHandler {
+     private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(MGState.class);
     public static final byte MG_WAIT_RESP = 1;
     public static final byte MG_ERR = 2;
     public static final byte MG_OK = 3;
@@ -76,7 +80,8 @@ public class MGState implements StateInterface {
 
     public void startProcessing() {
         pool.execute(new MgRequestStateProcessor(this));
-        pool.execute(new BannerRequestStateProcessor(this));
+//        pool.execute(new BannerRequestStateProcessor(this));
+        Sme.getSmeEngine().requestBanner(this);
         pool.execute(new ProfileStateProcessor(this));
         pool.execute(new ExpireStateProcessor(this));
     }
@@ -168,5 +173,30 @@ public class MGState implements StateInterface {
         sb.append(" bannerState:"+getBannerState());
         sb.append(" profState:"+getProfState());
         return sb.toString();
+    }
+
+    public void responseBanner(byte[] bytes) {
+//                state.setBannerState(MGState.BE_RESP_WAIT);
+//        String banner = Sme.getSmeEngine().getBanner(state);
+        String encoding = "UTF-16BE";
+        String banner = null;
+        if(bytes!=null){
+            try {
+                banner = new String(bytes,encoding);
+            } catch (UnsupportedEncodingException e) {
+                logger.error("Unsupported encoding: " + encoding, e);
+            }
+        }
+        if(logger.isDebugEnabled()){
+            logger.debug("Got banner:"+banner);
+        }
+
+        if (null == banner) {
+           setBannerState(MGState.BE_RESP_ERR);
+        } else {
+           setBanner(banner);
+           setBannerState(MGState.BE_RESP_OK);
+        }
+        closeProcessing();
     }
 }

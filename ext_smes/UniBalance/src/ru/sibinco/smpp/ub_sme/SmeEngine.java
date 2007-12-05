@@ -392,7 +392,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         msg.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
         msg.setMessageString(state.getMessage());
         if (state.getAbonentRequest().hasUssdServiceOp() && !sms) {
-            msg.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+             msg.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
         }
         msg.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
         msg.setType(Message.TYPE_SUBMIT);
@@ -478,11 +478,10 @@ public class SmeEngine implements MessageListener, ResponseListener {
     }
 
 
-    public String getBanner(MGState state) {
+    public void requestBanner(MGState state) {
         String abonent = state.getAbonentRequest().getSourceAddress();
         byte[] banner = null;
 
-        String encoding = "UTF-16BE";
         if (abonent.startsWith("+")) {
             abonent = ".1.1." + abonent.substring(1);
         } else if (!abonent.startsWith(".")) {
@@ -492,19 +491,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
         synchronized (bannerEngineTransactionIdSyncMonitor) {
             transactionId = bannerEngineTransactionId++;
         }
-        //  state.setBannerRequested();
-        banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
-
-        if (banner == null) {
-            return null;
-        }
-
-        try {
-            return new String(banner, encoding);
-        } catch (UnsupportedEncodingException e) {
-            logger.error("Unsupported encoding: " + encoding, e);
-            return null;
-        }
+        bannerEngineClient.requestLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId,state);
+    
     }
 
     protected MessageFormat getMessageFormat(double balance) {
