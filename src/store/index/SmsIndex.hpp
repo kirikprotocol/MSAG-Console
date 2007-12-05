@@ -142,6 +142,7 @@ public:
 
     if(memUse>maxCacheMemUsage)
     {
+       __trace2__("IDX: mem used by cache: %lld greater then limit: %lld",memUse,maxCacheMemUsage);
       for(std::set<MemUseStat>::iterator sit=memStat.begin();sit!=memStat.end();sit++)
       {
         toKill.push_back(sit->key);
@@ -293,7 +294,7 @@ protected:
   };
 
   Hash<CacheItem*> cache;
-  int maxCacheMemUsage;
+  uint64_t maxCacheMemUsage;
   int cacheLifeTime;
   //std::string cacheDir;
   //Hash<AutoChunkHandle> srcIdCache,dstIdCache,routeIdCache;
