@@ -35,7 +35,6 @@ void PersServer::SetPacketSize(SerialBuffer& sb)
 {
     sb.SetPos(0);
     sb.WriteInt32(sb.GetSize());
-    smsc_log_warn(plog, "SetPacketSize: packet size=%d", sb.GetSize());
 }
 
 void PersServer::DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
@@ -228,7 +227,7 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
 
 Profile* PersServer::getProfile(const string& key) {
   AbntAddr addr(key.c_str());
-  Profile *pf = AbonentStore->getProfile(addr, false); //- будет ошибка
+  Profile *pf = AbonentStore->getProfile(addr, false); 
   //Profile *pf = AbonentStore->_getProfile(addr, false);
   return pf; 
 }

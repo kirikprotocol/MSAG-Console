@@ -12,6 +12,8 @@ namespace scag { namespace pers {
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 
+const uint32_t PACKET_LENGTH_SIZE = 4;
+
 class ConnectionContext{
 public:
 	ConnectionContext(Socket* s) : wantRead(true), lastActivity(time(NULL)),

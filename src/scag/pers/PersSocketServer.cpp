@@ -95,9 +95,9 @@ void PersSocketServer::processReadSocket(Socket* s)
         }
         if(sb.GetSize() >= ctx->packetLen)
         {
-            smsc_log_debug(log, "read from socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
-			ctx->outbuf.Empty();
-            ctx->inbuf.SetPos(4);
+            smsc_log_debug(log, "read from socket:%p len=%d, data=%s", s, sb.length(), sb.toString().c_str());
+			//ctx->outbuf.Empty();
+            ctx->inbuf.SetPos(PACKET_LENGTH_SIZE);
             if(processPacket(*ctx))
             {
                 if (ctx->inbuf.GetPos() == ctx->inbuf.GetSize()) {
@@ -106,8 +106,7 @@ void PersSocketServer::processReadSocket(Socket* s)
                 }
     			ctx->lastActivity = time(NULL);	
                 if (ctx->batch && ctx->batch_cmd_count > 0) {
-                  smsc_log_debug(log, "processReadSocket : batch not complite", s);
-                  smsc_log_debug(log, "processReadSocket : add socket %p as READ", s);
+                  smsc_log_debug(log, "processReadSocket : batch not complite, add socket %p as READ", s);
                   listener.addR(s);
                   ctx->wantRead = true;
                   return;
@@ -116,12 +115,12 @@ void PersSocketServer::processReadSocket(Socket* s)
                 ctx->batch_cmd_count = 0;
                 ctx->outbuf.SetPos(0);
                 if (ctx->outbuf.length() > sizeof(uint32_t)) {
-                  smsc_log_debug(log, "processReadSocket : add socket %p as READ/WRITE", s);
-                  smsc_log_debug(log, "processReadSocket : outbuf length = %d", ctx->outbuf.length());
+                  smsc_log_debug(log, "processReadSocket : add socket %p as READ/WRITE outbuf length = %d",
+                                  s, ctx->outbuf.length());
                   listener.addRW(s);
                   //ctx->wantRead = false; // indicate that we want write and read is only for EOF signalling
                 } else {
-                  ctx->outbuf.SetPos(4);
+                  ctx->outbuf.SetPos(PACKET_LENGTH_SIZE);
                   smsc_log_debug(log, "processReadSocket : add socket %p as READ", s);
                   listener.addR(s);
                   //ctx->wantRead = true;
@@ -143,9 +142,6 @@ void PersSocketServer::processWriteSocket(Socket* s)
     SerialBuffer& sb = ctx->outbuf;
 
     len = sb.GetSize();
-    //if (len == 0) {
-      //return;
-    //}
 
     smsc_log_debug(log, "write %u bytes to %p, GetCurPtr: %x, GetPos: %d", len, s, sb.GetCurPtr(), sb.GetPos());
     j = s->Write(sb.GetCurPtr(), len - sb.GetPos());
@@ -159,10 +155,10 @@ void PersSocketServer::processWriteSocket(Socket* s)
     }
     if(sb.GetPos() >= len)
     {
-        //smsc_log_debug(log, "written to socket: len=%d, data=%s", sb.length(), sb.toString().c_str());
         smsc_log_debug(log, "written to socket: len=%d, data=%s", j, sb.toString().c_str());
         ctx->inbuf.Empty();
         ctx->outbuf.Empty();
+        ctx->outbuf.SetPos(sizeof(uint32_t));
 		ctx->lastActivity = time(NULL);
         listener.addR(s);
 		ctx->wantRead = true;

@@ -3,18 +3,24 @@
 namespace scag { namespace cpers {
 
 bool CPersCmd::serialize(SerialBuffer& sb) const {
-  sb.setPos(4);
+  //sb.setPos(4);
+  if (sb.GetSize() == 0) {
+    sb.SetPos(4);
+  } else {
+    sb.SetPos(sb.GetSize());
+  }
   sb.WriteInt8(cmd_id);
   sb.WriteString(key.c_str());
   writeData(sb);
   sb.setPos(0);
   sb.WriteInt32(sb.length());
+  sb.SetPos(sb.length());
   return true;
 }
 
 bool CPersCmd::deserialize(SerialBuffer& sb) {
-  sb.setPos(4);
-  cmd_id = sb.ReadInt8();
+  //sb.setPos(4);
+  //cmd_id = sb.ReadInt8();
   sb.ReadString(key);
   return true;
 }
@@ -28,6 +34,7 @@ void ProfileRespCmd::writeData(SerialBuffer &sb) const {
   if (!is_ok) {
     return;
   }
+  sb.WriteInt8(has_profile);  
   if (profile) {
     profile->Serialize(sb);
   }
@@ -43,7 +50,8 @@ bool ProfileRespCmd::deserialize(SerialBuffer &sb) {
   if (!is_ok) {
     return true;
   }
-  if (sb.length() > sb.getPos()) {
+  has_profile = sb.ReadInt8();
+  if (has_profile) {
     profile = new Profile(key);
     profile->Deserialize(sb);
     must_del_profile = true;
@@ -59,6 +67,7 @@ void ProfileRespCmd::setProfile(Profile* pf) {
     delete profile;
   }
   profile = pf;
+  has_profile = 1;
   must_del_profile = false;
 }
 

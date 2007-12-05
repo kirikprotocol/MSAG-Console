@@ -15,8 +15,6 @@ using namespace scag::exceptions;
 using smsc::util::Exception;
 using smsc::logger::Logger;
 
-const int TRANSACT_CHECK_PERIOD = 100;
-
 void CentralPersServer::ParseFile(const char* _xmlFile, HandlerBase* handler)
 {
     SAXParser parser;
@@ -136,61 +134,86 @@ bool CentralPersServer::authorizeRegion(ConnectionContext& ctx) {
   return true;
 }
 
+void CentralPersServer::execCommand(ConnectionContext& ctx) {
+  SerialBuffer &isb = ctx.inbuf, &osb = ctx.outbuf;
+  uint8_t cmd = isb.ReadInt8();
+  //std::string key;    
+  //isb.ReadString(key);
+  //smsc_log_debug(logger, "key=\'%s\'", key.c_str());
+  //ProfileInfo profileInfo;
+  //TransactionInfo transactInfo, *pti;
+  //AbntAddr addr(key.c_str());
+  //bool profile_exist = profileInfoStore.Get(addr, profileInfo);
+  //if(pti = transactions.GetPtr(addr))
+      //transactInfo = *pti;
+  switch(cmd)
+  {
+      case CentralPersCmd::GET_PROFILE:
+        smsc_log_debug(logger, "GET_PROFILE Profile received");
+        getProfileCmdHandler(ctx);
+        break;
+      case CentralPersCmd::PROFILE_RESP:
+        smsc_log_debug(logger, "PROFILE Resp received");
+        profileRespCmdHandler(ctx);
+        break;
+      case CentralPersCmd::DONE_RESP:
+        smsc_log_debug(logger, "DONE_RESP received");
+        doneRespCmdHandler(ctx);
+        break;
+      case CentralPersCmd::DONE:
+        smsc_log_debug(logger, "DONE received");
+        doneCmdHandler(ctx);
+        break;
+      case CentralPersCmd::CHECK_OWN:
+        smsc_log_debug(logger, "CHECK_OWN received");
+      //checkOwnCmdHandler(ctx);
+        break;
+  default:
+    smsc_log_warn(logger, "UNKNOWN command received cmd_id=%d", cmd);
+    return;
+  }
+  if (isb.getPos() < isb.GetSize()) {
+    smsc_log_debug(logger, "execCommand: continue processing packet %p region id=%d",
+                    &ctx, ctx.region_id);
+    smsc_log_debug(logger, "execCommand: inbuf pos=%d length=%d", isb.getPos(), isb.GetSize());
+    execCommand(ctx);
+  }
+}
+
 bool CentralPersServer::processPacket(ConnectionContext& ctx)
 {
-    SerialBuffer &isb = ctx.inbuf, &osb = ctx.outbuf;
-
-    try {
-        uint8_t cmd = isb.ReadInt8();
-        smsc_log_debug(logger, "cmd=%d", cmd);
-        if(cmd == CentralPersCmd::LOGIN)
-        {
-            return authorizeRegion(ctx);
-        }
-        else if(!ctx.authed) {
-          smsc_log_warn(logger, "RP not authorized");
-          return false;
-        }
-        smsc_log_debug(logger, "RP authorized");
-   
-        //std::string key;    
-        //isb.ReadString(key);
-        //smsc_log_debug(logger, "key=\'%s\'", key.c_str());
-        //ProfileInfo profileInfo;
-        //TransactionInfo transactInfo, *pti;
-        //AbntAddr addr(key.c_str());
-        //bool profile_exist = profileInfoStore.Get(addr, profileInfo);
-        //if(pti = transactions.GetPtr(addr))
-            //transactInfo = *pti;
-        switch(cmd)
-        {
-            case CentralPersCmd::GET_PROFILE:
-              smsc_log_debug(logger, "GET_PROFILE Profile received");
-              getProfileCmdHandler(ctx);
-              break;
-            case CentralPersCmd::PROFILE_RESP:
-              smsc_log_debug(logger, "PROFILE Resp received");
-              profileRespCmdHandler(ctx);
-              break;
-            case CentralPersCmd::DONE_RESP:
-              smsc_log_debug(logger, "DONE_RESP received");
-              doneRespCmdHandler(ctx);
-              break;
-            case CentralPersCmd::DONE:
-              smsc_log_debug(logger, "DONE received");
-              doneCmdHandler(ctx);
-              break;
-            case CentralPersCmd::CHECK_OWN:
-              //checkOwnCmdHandler(ctx);
-              smsc_log_debug(logger, "CHECK_OWN received");
-              break;
-        }
-    }
-    catch(...)
+  try {
+    smsc_log_debug(logger, "processPacket: Start process packet %p from region id=%d",
+                    &ctx, ctx.region_id);
+    ctx.inbuf.SetPos(PACKET_LENGTH_SIZE);
+    uint8_t cmd = ctx.inbuf.ReadInt8();
+    smsc_log_debug(logger, "processPacket: cmd=%d", cmd);
+    if(cmd == CentralPersCmd::LOGIN)
     {
-      smsc_log_warn(logger, "Exception in processPacket ctx=%p", &ctx);
+        return authorizeRegion(ctx);
     }
-    return true;
+    else if(!ctx.authed) {
+      smsc_log_warn(logger, "processPacket: RP not authorized");
+      return false;
+    }
+    smsc_log_debug(logger, "processPacket: RP authorized id=%d", ctx.region_id);
+    ctx.inbuf.SetPos(PACKET_LENGTH_SIZE);
+    execCommand(ctx);
+    smsc_log_debug(logger, "End process packet %p", &ctx);
+  }
+  catch(const SerialBufferOutOfBounds &e) {
+    smsc_log_debug(logger, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
+                    ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+  }
+  catch(const Exception& e) {
+    smsc_log_debug(logger, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s",
+                    e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+  }
+  catch(...) {
+    smsc_log_debug(logger, "Exception. Bad data in buffer received len=%d, data=%s",
+                    ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+  }
+  return true;
 }
 
 void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
@@ -236,7 +259,6 @@ void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
   smsc_log_debug(logger, "getProfileCmdHandler: create transaction key = \'%s\' owner=%d candidate=%d",
                   get_profile.key.c_str(), tr_info.owner, tr_info.candidate);
 
-  //get_profile.serialize(ri.ctx->outbuf);
   sendCommand(get_profile, ri.ctx);
 }
 
@@ -316,7 +338,7 @@ void CentralPersServer::doneCmdHandler(ConnectionContext& ctx) {
 void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
   smsc_log_debug(logger, "doneRespCmdHandler");
   SerialBuffer &isb = ctx.inbuf, &osb = ctx.outbuf;
-  DoneCmd done_resp(isb);
+  DoneRespCmd done_resp(isb);
   smsc_log_debug(logger, "doneRespCmdHandler: profile key = \'%s\'", done_resp.key.c_str());
   AbntAddr addr(done_resp.key.c_str());
   addr.setNumberingPlan(1);
@@ -337,10 +359,8 @@ void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
   }
   RegionInfo ri;
   if (!getRegionInfo(owner, ri) || !ri.ctx) {
-    //region not found, but it can't be because in this case region wouldn't be authorised
     string err_msg = !ri.ctx ?  "unavailable" : "not found";;
     smsc_log_warn(logger, "doneRespCmdHandler: region with id=%d %s", owner, err_msg.c_str());
-    //smsc_log_debug(logger, "doneCmdHandler: delete transaction key=\'%s\'", done_resp.key.c_str());
   }
   if (!done_resp.is_ok) {
     smsc_log_warn(logger, "doneRespCmdHandler: receive error DONE_RESP profile \'%s\'",
@@ -350,6 +370,7 @@ void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
     profileInfoStore.Set(addr, pi);
   }
   transactions.Delete(addr);
+  smsc_log_debug(logger, "doneRespCmdHandler: delete transaction key=\'%s\'", addr.toString().c_str());
   //done_resp.serialize(ri.ctx->outbuf);
   sendCommand(done_resp, ri.ctx);
 }
@@ -358,7 +379,7 @@ void CentralPersServer::sendCommand(CPersCmd& cmd, ConnectionContext* ctx) {
   if (!ctx) {
     return;
   }
-  smsc_log_debug(logger, "sendCommand : cmd id=%d", cmd.cmd_id);
+  smsc_log_debug(logger, "sendCommand : send cmd id=%d to region id=%d", cmd.cmd_id, ctx->region_id);
   cmd.serialize(ctx->outbuf);
   ctx->outbuf.SetPos(0);
   listener.addRW(ctx->socket);
@@ -406,10 +427,6 @@ void CentralPersServer::sendCommand(CPersCmd &cmd, uint32_t region_id) {
 }
 
 void CentralPersServer::checkTransactionsTimeouts() {
-  //time_t time_bound = time(NULL) - TRANSACT_CHECK_PERIOD;
-  //if (last_check_time > time_bound) {
-    //return;
-  //}
   time_t time_bound = time(NULL) - timeout / 2;
   AbntAddr key;
   TransactionInfo tr_info;

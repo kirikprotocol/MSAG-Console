@@ -65,7 +65,8 @@ protected:
   void checkTimeouts();
   void onDisconnect(ConnectionContext& ctx);  
 
-private:
+private: 
+  void execCommand(ConnectionContext& ctx);
   void getProfileCmdHandler(ConnectionContext& ctx);
   void profileRespCmdHandler(ConnectionContext& ctx);
   void doneCmdHandler(ConnectionContext& ctx);

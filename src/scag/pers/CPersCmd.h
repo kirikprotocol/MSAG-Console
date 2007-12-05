@@ -50,10 +50,11 @@ protected:
 
 struct ProfileRespCmd : public CPersCmd {
 public:
-  ProfileRespCmd():CPersCmd(PROFILE_RESP), profile(0), is_ok(1), must_del_profile(false) {}
-  ProfileRespCmd(const string& _key):CPersCmd(PROFILE_RESP, _key), profile(0),
+  ProfileRespCmd():CPersCmd(PROFILE_RESP), profile(0), is_ok(1), must_del_profile(false),
+                   has_profile(0) {}
+  ProfileRespCmd(const string& _key):CPersCmd(PROFILE_RESP, _key), profile(0), has_profile(0),
                                       is_ok(1), must_del_profile(false) {}
-  ProfileRespCmd(SerialBuffer &sb):CPersCmd(PROFILE_RESP), profile(0),
+  ProfileRespCmd(SerialBuffer &sb):CPersCmd(PROFILE_RESP), profile(0), has_profile(0),
                                    is_ok(0), must_del_profile(false) {
     deserialize(sb);
   }
@@ -68,7 +69,8 @@ public:
 protected:
   virtual void writeData(SerialBuffer &sb) const;
 
-private:
+private:  
+  uint8_t has_profile;
   Profile *profile;
   bool must_del_profile;
 
