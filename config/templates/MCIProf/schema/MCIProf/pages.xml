@@ -151,6 +151,7 @@
 
     <page id="shortcut_smshelp" question="0" shortcut="0">
       <pageExecutor name="SHORTCUT_HELP_EXEC">
+        <bundle name="system"/>
         <bundle name="help"/>
       </pageExecutor>
     </page>

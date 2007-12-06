@@ -2,6 +2,58 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
+
+  <section name="admin">
+    <param name="host" type="string">@listen.host@</param>
+    <param name="port" type="int">@smsc.admin.port@</param>
+  </section>
+
+  <section name="core">
+    <param name="state_machines_count" type="int">5</param>
+    <param name="mainLoopsCount" type="int">1</param>
+    <param name="eventQueueLimit" type="int">1000</param>
+    <param name="reschedule_config" type="string">schedule.xml</param>
+    <param name="service_center_address" type="string">@smsc.sc.address@</param>
+    <param name="ussd_center_address" type="string">@smsc.ussd.address@</param>
+    <param name="ussd_ssn" type="int">@smsc.ussd.ssn@</param>
+    <param name="add_ussd_ssn" type="int"></param>
+    <param name="systemId" type="string">smscsme</param>
+    <param name="service_type" type="string">SMSC</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="locales" type="string">en_en, ru_ru</param>
+    <param name="default_locale" type="string">en_en</param>
+    <param name="mergeTimeout" type="int">600</param>
+    <param name="timezones_config" type="string">timezones.xml</param>
+    <param name="smartMultipartForward" type="bool">true</param>
+    <section name="performance">
+      <param name="host" type="string">@listen.host@</param>
+      <param name="port" type="int">@perfmon.smsc.port@</param>
+    </section>
+    <section name="smeperformance">
+      <param name="host" type="string">@listen.host@</param>
+      <param name="port" type="int">@smemon.smsc.port@</param>
+    </section>
+  </section>
+
+  <section name="sms">
+    <param name="max_valid_time" type="int">1209600</param>
+  </section>
+  
+  <section name="map">
+    <param name="busyMTDelay" type="int">20</param>
+    <param name="lockedByMODelay" type="int">20</param>
+    <param name="MOLockTimeout" type="int">45</param>
+    <param name="allowCallBarred" type="bool">false</param>
+    <param name="ussdV1Enabled" type="bool">false</param>
+    <param name="ussdV1UseOrigEntityNumber" type="bool">false</param>
+  </section>
+  
+  <section name="trafficControl">
+    <param name="maxSmsPerSecond" type="int">10</param>
+    <param name="shapeTimeFrame" type="int">1</param>
+    <param name="statTimeFrame" type="int">1</param>
+  </section>
+  
   <section name="MessageStore">
     <param name="archiveDir" type="string">@smsc.arcnew.dir@</param>
     <param name="archiveInterval" type="int">60</param>
@@ -16,65 +68,16 @@
 
   </section>
 
-  <section name="abonentinfo">
-    <param name="mobile_access_address" type="string">@smsc.abinfo.mobile.address@</param>
-    <param name="protocol_id" type="int">34</param>
-    <param name="service_type" type="string">abnfo</param>
-    <param name="smpp_access_address" type="string">smsc.abinfo.sme.address</param>
-    <param name="systemId" type="string">abonentinfo</param>
-  </section>
-
-  <section name="admin">
+  <section name="smpp">
     <param name="host" type="string">@listen.host@</param>
-    <param name="port" type="int">@smsc.admin.port@</param>
+    <param name="port" type="int">@smsc.smpp.port@</param>
+    <param name="readTimeout" type="int">60</param>
+    <param name="inactivityTime" type="int">60</param>
+    <param name="inactivityTimeOut" type="int">600</param>
+    <param name="bindTimeout" type="int">10</param>
+    <param name="defaultConnectionsLimit" type="int">1000</param>
   </section>
-
-  <section name="core">
-    <param name="mainLoopsCount" type="int">1</param>
-    <param name="default_locale" type="string">en_en</param>
-    <param name="locales" type="string">en_en, ru_ru</param>
-    <param name="protocol_id" type="int">34</param>
-    <param name="service_center_address" type="string">@smsc.sc.address@</param>
-    <param name="ussd_center_address" type="string">@smsc.ussd.address@</param>
-    <param name="ussd_ssn" type="int">@smsc.ussd.ssn@</param>
-    <param name="service_type" type="string">SMSC</param>
-    <param name="state_machines_count" type="int">5</param>
-    <param name="systemId" type="string">smscsme</param>
-    <param name="timezones_config" type="string">timezones.xml</param>
-    <param name="reschedule_config" type="string">schedule.xml</param>
-    <section name="performance">
-      <param name="host" type="string">@listen.host@</param>
-      <param name="port" type="int">@perfmon.smsc.port@</param>
-    </section>
-    <section name="smeperformance">
-      <param name="host" type="string">@listen.host@</param>
-      <param name="port" type="int">@smemon.smsc.port@</param>
-    </section>
-
-    <param name="eventQueueLimit" type="int">1000</param>
-    <param name="mergeTimeout" type="int">600</param>
-    <param name="smartMultipartForward" type="bool">true</param>
-  </section>
-
-  <section name="directives">
-    <param name="d" type="string">def</param>
-    <param name="t" type="string">template</param>
-    <param name="a" type="string">ack</param>
-    <param name="na" type="string">noack</param>
-    <param name="h" type="string">hide</param>
-    <param name="nh" type="string">unhide</param>
-    <param name="f" type="string">flash</param>
-    <param name="nt" type="string">notrans</param>
-  </section>
-
-  <section name="map">
-    <param name="busyMTDelay" type="int">20</param>
-    <param name="lockedByMODelay" type="int">20</param>
-    <param name="MOLockTimeout" type="int">45</param>
-    <param name="allowCallBarred" type="bool">false</param>
-    <param name="ussdV1Enabled" type="bool">false</param>
-    <param name="ussdV1UseOrigEntityNumber" type="bool">false</param>
-  </section>
+  
 
   <section name="profiler">
 
@@ -84,20 +87,20 @@
       <param name="dir" type="string">@profiler.notify.dir@</param>
     </section>
 
+    <param name="systemId" type="string">profiler</param>
+    <param name="service_type" type="string">prflr</param>
+    <param name="protocol_id" type="int">34</param>
     <param name="storeFile" type="string">@localstore.dir@/profiles.bin</param>
     <param name="defaultDataCoding" type="string">DEFAULT</param>
     <param name="defaultReport" type="string">NONE</param>
     <param name="defaultHide" type="bool">true</param>
-    <param name="defaultUssdIn7Bit" type="bool">false</param>
     <param name="defaultHideModifiable" type="bool">false</param>
     <param name="defaultDivertModifiable" type="bool">false</param>
+    <param name="defaultUssdIn7Bit" type="bool">false</param>
     <param name="defaultUdhConcat" type="bool">true</param>
     <param name="defaultAccessMaskIn" type="int">1</param>
     <param name="defaultAccessMaskOut" type="int">1</param>
 
-    <param name="protocol_id" type="int">34</param>
-    <param name="service_type" type="string">prflr</param>
-    <param name="systemId" type="string">profiler</param>
     <param name="originatingAddress" type="string">0</param>
     <section name="ussdOpsMapping">
       <param name="REPORT NONE" type="int">0</param>
@@ -121,23 +124,13 @@
     </section>
   </section>
 
-  <section name="smpp">
-    <param name="host" type="string">@listen.host@</param>
-    <param name="port" type="int">@smsc.smpp.port@</param>
-    <param name="defaultConnectionsLimit" type="int">1000</param>
-    <param name="readTimeout" type="int">60</param>
-    <param name="inactivityTime" type="int">60</param>
-    <param name="inactivityTimeOut" type="int">600</param>
-  </section>
 
-  <section name="sms">
-    <param name="max_valid_time" type="int">1209600</param>
-  </section>
-
-  <section name="trafficControl">
-    <param name="maxSmsPerSecond" type="int">10</param>
-    <param name="shapeTimeFrame" type="int">1</param>
-    <param name="statTimeFrame" type="int">1</param>
+  <section name="abonentinfo">
+    <param name="mobile_access_address" type="string">@smsc.abinfo.mobile.address@</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="service_type" type="string">abnfo</param>
+    <param name="smpp_access_address" type="string">smsc.abinfo.sme.address</param>
+    <param name="systemId" type="string">abonentinfo</param>
   </section>
 
   <section name="MscManager">
@@ -157,24 +150,37 @@
     <param name="storeDir" type="string">@localstore.dir@/acl</param>
   </section>
 
-  <section name="cluster">
-    <param name="mode" type="string">single</param>
-  </section>
-
   <section name="inman">
+    <param name="host" type="string">@inman.host@</param>
+    <param name="port" type="int">@inman.port@</param>
     <section name="chargingPolicy">
       <param name="peer2peer" type="string">deliver</param>
       <param name="other" type="string">deliver</param>
     </section>
-    <param name="host" type="string">@inman.host@</param>
-    <param name="port" type="int">@inman.port@</param>
   </section>
+
   <section name="aliasman">
     <param name="storeFile" type="string">@localstore.dir@/aliases.bin</param>
   </section>
+  
+  <section name="cluster">
+    <param name="mode" type="string">single</param>
+  </section>
+
   <section name="snmp">
     <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
     <param name="csvFileRollInterval" type="int">60</param>
     <param name="cacheTimeout" type="int">60</param>
+  </section>
+  
+  <section name="directives">
+    <param name="d" type="string">def</param>
+    <param name="t" type="string">template</param>
+    <param name="a" type="string">ack</param>
+    <param name="na" type="string">noack</param>
+    <param name="h" type="string">hide</param>
+    <param name="nh" type="string">unhide</param>
+    <param name="f" type="string">flash</param>
+    <param name="nt" type="string">notrans</param>
   </section>
 </config>
