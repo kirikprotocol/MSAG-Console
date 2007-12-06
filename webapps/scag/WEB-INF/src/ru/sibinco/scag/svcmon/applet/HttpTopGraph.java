@@ -6,6 +6,7 @@ package ru.sibinco.scag.svcmon.applet;
 
 import ru.sibinco.scag.svcmon.SvcSnap;
 import ru.sibinco.scag.svcmon.snap.HttpSnap;
+import ru.sibinco.scag.svcmon.snap.SmppSnap;
 import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import java.awt.*;
@@ -15,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Comparator;
+import java.util.HashSet;
 
 /**
  * The <code>HttpTopGraph</code> class represents
@@ -90,6 +92,8 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int graphTextWidth;
     int barSeparator = 4;
 
+    HashSet httpViewList;
+
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
                         int graphHead, RemoteResourceBundle localeText,
@@ -110,9 +114,50 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     }
 
+    public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
+                        int graphGrid, int graphHiGrid,
+                        int graphHead, RemoteResourceBundle localeText,
+                        SnapHttpHistory snapHttpHistory, HashSet httpViewList) {
+        super();
+        this.maxSpeed = maxSpeed;
+        this.localeText = localeText;
+        this.graphScale = graphScale;
+        this.graphGrid = graphGrid;
+        this.graphHiGrid = graphHiGrid;
+        this.graphHead = graphHead;
+        this.snapHttpHistory = snapHttpHistory;
+        this.httpViewList = httpViewList;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addKeyListener(this);
+        graphFont = new Font("dialog", Font.PLAIN, 10);
+        setSnap(snap);
+
+    }
     public void setSnap(SvcSnap snap) {
         snapHttpHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
+        if (httpComparator != null)
+            this.snap.sortHttpSnaps(httpComparator);
+
+        repaint();
+    }
+
+    public void setSnap(SvcSnap snap, HashSet viewList) {
+        snapHttpHistory.addSnap(snap);
+        this.snap = new SvcSnap(snap);
+        this.httpViewList = viewList;
+        if (httpComparator != null)
+            this.snap.sortHttpSnaps(httpComparator);
+
+        repaint();
+    }
+
+    public void setSnap(SvcSnap snap, HashSet viewList, int scale) {
+        snapHttpHistory.addSnap(snap);
+        this.snap = new SvcSnap(snap);
+        this.httpViewList = viewList;
+        this.graphScale = scale;
         if (httpComparator != null)
             this.snap.sortHttpSnaps(httpComparator);
 
@@ -204,13 +249,17 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         //y = pad + fh + 3;
         y = pad + fh + 1;
         x = httpListStart;
+        int ii = 0;
         for (int i = 0; i < snap.httpCount; i++) {
-            if ((i % 2) == 0) {
-                g.setColor(colorHiBackground);
-                g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+            if(  httpViewList == null || httpViewList.contains( ((HttpSnap)snap.httpSnaps[i]).httpId ) ){
+                if ((ii % 2) == 0) {
+                    g.setColor(colorHiBackground);
+                    g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+                }
+                drawHttpSnap(g, i, x, y, size, fm);
+                y += rowHeight;
+                ii++;
             }
-            drawHttpSnap(g, i, x, y, size, fm);
-            y += rowHeight;
         }
         g.setClip(0, size.height - split + separatorWidth, size.width, split - separatorWidth);
         drawGraph(g, size);
