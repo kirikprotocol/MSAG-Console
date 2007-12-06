@@ -9,6 +9,7 @@
   </section>
 
   <section name="core">
+    <param name="srcSmeSeparateRouting" type="bool">false</param>
     <param name="state_machines_count" type="int">5</param>
     <param name="mainLoopsCount" type="int">1</param>
     <param name="eventQueueLimit" type="int">1000</param>
