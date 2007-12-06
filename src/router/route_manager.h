@@ -56,6 +56,7 @@ struct RouteSrcTreeNode
     record = 0;
     for ( unsigned i=0; i< child.size(); ++i )
       { if ( child[i] ) delete child[i]; }
+    child.clear();
   }
 };
 
@@ -73,36 +74,80 @@ struct RouteTreeNode
       { if ( child[i] ) delete child[i]; }
     for ( unsigned i=0; i< sources.size(); ++i )
       { if ( sources[i] ) delete sources[i]; }
+    child.clear();
+    sources.clear();
   }
 };
 
 
 class RouteManager : public RouteAdmin, public RouteTable
 {
+protected:
   SmeTable* sme_table;
+
+  struct SmeRouter{
+    RouteRecord* first_record;
+    RouteRecord* new_first_record;
+    RouteTreeNode  root;
+
+    SmeRouter():first_record(0),new_first_record(0)
+    {
+
+    }
+    ~SmeRouter()
+    {
+      ClearList(first_record);
+      ClearList(new_first_record);
+    }
+
+  };
+
+  std::vector<SmeRouter*> smeRouters;
+  int maxSmeRouter;
+
   RouteRecord* first_record;
   RouteRecord* new_first_record;
   RouteTreeNode  root;
   vector<string> trace_;
   bool trace_enabled_;
+
+  static bool smeRoutersEnabled;
+
+  static void ClearList(RouteRecord*& list)
+  {
+    while(list)
+    {
+      RouteRecord* r=list;
+      list=list->next;
+      delete r;
+    }
+  }
+
 public :
   RouteManager() : sme_table(0),first_record(0),new_first_record(0),trace_enabled_(false)
-  {}
+  {
+    smeRouters.resize(smsc::smeman::MAX_SME_PROXIES,0);
+    maxSmeRouter=0;
+  }
 
   virtual ~RouteManager()
   {
-    while ( first_record )
+    ClearList(first_record);
+    ClearList(new_first_record);
+    for(std::vector<SmeRouter*>::iterator it=smeRouters.begin();it!=smeRouters.end();it++)
     {
-      RouteRecord* r = first_record;
-      first_record = first_record->next;
-      delete r;
+      if(*it)
+      {
+        delete *it;
+        *it=0;
+      }
     }
-    while ( new_first_record )
-    {
-      RouteRecord* r = new_first_record;
-      new_first_record = new_first_record->next;
-      delete r;
-    }
+    smeRouters.clear();
+  }
+
+  static void EnableSmeRuters(bool value)
+  {
+    smeRoutersEnabled=value;
   }
 
   void assign(SmeTable* smetable); // for detach call with NULL;

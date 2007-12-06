@@ -30,9 +30,9 @@ public:
 
   SmeStats()
   {
-    smeStats.resize(MAX_SME_PROXIES);
-    smeErrors.resize(MAX_SME_PROXIES);
-    for(int i=0;i<MAX_SME_PROXIES;i++)
+    smeStats.resize(smsc::smeman::MAX_SME_PROXIES);
+    smeErrors.resize(smsc::smeman::MAX_SME_PROXIES);
+    for(int i=0;i<smsc::smeman::MAX_SME_PROXIES;i++)
     {
       smeErrors[i].resize(MAX_ERROR_INDEX,0);
     }

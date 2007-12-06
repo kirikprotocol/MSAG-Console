@@ -20,6 +20,9 @@ typedef int SmeNType;
 
 const int32_t INVALID_SME_INDEX = -1;
 
+const int32_t MAX_SME_PROXIES=2000;
+
+
 class SmeError : public std::exception
 {
   virtual const char* what() const  throw()

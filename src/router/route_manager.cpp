@@ -35,6 +35,8 @@ using std::auto_ptr;
 using std::sort;
 using namespace std;
 
+bool RouteManager::smeRoutersEnabled=false;
+
 int calcDefLengthAndCheck(Address* addr)
 {
   int cnt = 0;
@@ -202,17 +204,44 @@ void RouteManager::addRoute(const RouteInfo& routeInfo)
 __synchronized__
   __require__(sme_table);
   auto_ptr<RouteRecord> r(new RouteRecord);
+  int srcProxyIdx=-1;
+  if ( routeInfo.srcSmeSystemId.length() != 0 )
+  {
+    srcProxyIdx = sme_table->lookup(routeInfo.srcSmeSystemId);
+  }
+  if(smeRoutersEnabled && srcProxyIdx!=-1)
+  {
+    if(smeRouters[srcProxyIdx]==0)
+    {
+      smeRouters[srcProxyIdx]=new SmeRouter();
+      if(srcProxyIdx>maxSmeRouter)
+      {
+        maxSmeRouter=srcProxyIdx;
+      }
+    }
+  }
+
   r->info = routeInfo;
   r->src_def = calcDefLengthAndCheck(&r->info.source);
   r->dest_def = calcDefLengthAndCheck(&r->info.dest);
-  r->next = new_first_record;
-  r->proxyIdx = r->srcProxyIdx = 0;
+  r->next = smeRoutersEnabled && srcProxyIdx!=-1?smeRouters[srcProxyIdx]->new_first_record:new_first_record;
+  r->proxyIdx = r->srcProxyIdx = -1;
   r->alternate_pair = 0;
   if ( r->info.smeSystemId.length() != 0 )
+  {
     r->proxyIdx = sme_table->lookup(r->info.smeSystemId);
+  }
   if ( r->info.srcSmeSystemId.length() != 0 )
-    r->srcProxyIdx = sme_table->lookup(r->info.srcSmeSystemId);
-  new_first_record = r.release();
+  {
+    r->srcProxyIdx = srcProxyIdx;
+  }
+  if(smeRoutersEnabled && srcProxyIdx!=-1)
+  {
+    smeRouters[srcProxyIdx]->new_first_record=r.release();
+  }else
+  {
+    new_first_record = r.release();
+  }
 }
 
 static
@@ -583,62 +612,81 @@ int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_
 void RouteManager::commit(bool traceit)
 {
   __trace__("commit!");
-  int count = 0;
-  RouteRecord* r = new_first_record;
-  for ( ; r != 0; r = r->next ) { ++count; }
-  if ( !count ) return;
-  auto_ptr<RouteRecord*> table(new RouteRecord*[count]);
-  r = new_first_record;
-  for ( int i=0; i < count; ++i )
+
+  int idx=0;
+  bool main=true;
+  std::vector<RouteRecord*> table;
+
+  while(main || idx<=maxSmeRouter)
   {
-    __require__(r != 0);
-    table.get()[i] = r;
-    r = r->next;
-  }
-  __qsort__(table.get(),count,sizeof(RouteRecord*),compare_patterns);
-
-  {__synchronized__
-    root.clean();
-
-    for ( int i=0; i < count; ++i )
+    if(!main && !smeRouters[idx])
     {
-      print(table.get()[i],"@@@");
+      idx++;
+      continue;
     }
-
-    typedef std::map<std::string,int> DupsMap;
-    DupsMap dups;
-
+    RouteRecord*& nfr=main?new_first_record:smeRouters[idx]->new_first_record;
+    int count = 0;
+    RouteRecord* r = nfr;
+    for ( ; r != 0; r = r->next ) { ++count; }
+    if ( !count ) return;
+    table.clear();
+    table.reserve(count);
+    r = nfr;
     for ( int i=0; i < count; ++i )
     {
-      if ( table.get()[i] != 0 )
+      __require__(r != 0);
+      table[i] = r;
+      r = r->next;
+    }
+    __qsort__(&table[0],count,sizeof(RouteRecord*),compare_patterns);
+
+    {__synchronized__
+      RouteTreeNode& rootRef=main?root:smeRouters[idx]->root;
+      rootRef.clean();
+
+      for ( int i=0; i < count; ++i )
       {
-        int dup=0;
-        addRouteIntoTree(&root,table.get()[i],traceit?&trace_:0,dup);
-        if(dup)
+        print(table[i],"@@@");
+      }
+
+      typedef std::map<std::string,int> DupsMap;
+      DupsMap dups;
+
+      for ( int i=0; i < count; ++i )
+      {
+        if ( table[i] != 0 )
         {
-          DupsMap::iterator it=dups.find(table.get()[i]->info.routeId);
-          if(it!=dups.end())
+          int dup=0;
+          addRouteIntoTree(&rootRef,table[i],traceit?&trace_:0,dup);
+          if(dup)
           {
-            it->second+=dup;
-          }else
-          {
-            dups.insert(DupsMap::value_type(table.get()[i]->info.routeId,dup));
+            DupsMap::iterator it=dups.find(table[i]->info.routeId);
+            if(it!=dups.end())
+            {
+              it->second+=dup;
+            }else
+            {
+              dups.insert(DupsMap::value_type(table[i]->info.routeId,dup));
+            }
           }
         }
       }
+      for(DupsMap::iterator it=dups.begin();it!=dups.end();it++)
+      {
+        __warning2__("%d duplicates found in route %s",it->second,it->first.c_str());
+      }
+      RouteRecord*& fr=main?first_record:smeRouters[idx]->first_record;
+      ClearList(fr);
+      fr=nfr;
+      nfr=0;
     }
-    for(DupsMap::iterator it=dups.begin();it!=dups.end();it++)
+    if(main)
     {
-      __warning2__("%d duplicates found in route %s",it->second,it->first.c_str());
-    }
-    while ( first_record )
+      main=false;
+    }else
     {
-      RouteRecord* r = first_record;
-      first_record = first_record->next;
-      delete r;
+      idx++;
     }
-    first_record = new_first_record;
-    new_first_record = 0;
   }
 #ifndef DISABLE_TRACING
   dump(&root,0);
@@ -648,11 +696,13 @@ void RouteManager::commit(bool traceit)
 
 void RouteManager::cancel()
 {
-  while ( new_first_record )
+  ClearList(new_first_record);
+  for(int i=0;i<=maxSmeRouter;i++)
   {
-    RouteRecord* r = new_first_record;
-    new_first_record = new_first_record->next;
-    delete r;
+    if(smeRouters[i])
+    {
+      ClearList(smeRouters[i]->new_first_record);
+    }
   }
 }
 
@@ -666,19 +716,27 @@ __synchronized__
   __require__(sme_table);
   // ....
 
+  RouteTreeNode* rootPtr=srcidx!=-1 && smeRouters[srcidx]?&smeRouters[srcidx]->root:&root;
+
   smsc::smeman::SmeInfo src_smeinfo;
   if(trace_enabled_)
   {
-    if ( srcidx ) src_smeinfo = sme_table->getSmeInfo(srcidx);
+    if ( srcidx!=-1 )
+    {
+      src_smeinfo = sme_table->getSmeInfo(srcidx);
+    }
   }
 
   if ( trace_enabled_ )
+  {
     trace_.push_back(string("lookup for: ")+AddrToString(source)+"("+
-      (srcidx?src_smeinfo.systemId:string("default"))
+      (srcidx!=-1?src_smeinfo.systemId:string("default"))
       +") -> "+AddrToString(dest));
+  }
 
-  RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
-  if ( !rec ) {
+  RouteRecord* rec =  findInTree(rootPtr,&source,&dest,trace_enabled_?&trace_:0);
+  if ( !rec )
+  {
     if(trace_enabled_)
     {
       trace_.push_back("route not found");
@@ -688,9 +746,10 @@ __synchronized__
   // изменение от 4 июля 2003, ищем альтернативный маршрут
   RouteRecord* rec0 = 0;
 
-  if ( trace_enabled_ ) {
+  if ( trace_enabled_ )
+  {
     string s("lookup for alternative route with src proxy: '");
-    if ( srcidx ) {
+    if ( srcidx!=-1 ) {
       s += src_smeinfo.systemId;
     }else{
       s += "default";
@@ -699,54 +758,78 @@ __synchronized__
     trace_.push_back(s);
   }
 
-  for ( ; rec != 0 ; rec = rec->alternate_pair ) {
-    if ( trace_enabled_ ) {
+  for ( ; rec != 0 ; rec = rec->alternate_pair )
+  {
+    if ( trace_enabled_ )
+    {
       ostringstream ost;
       ost << "check alternative route with src proxy: '" <<
-        (rec->srcProxyIdx?rec->info.srcSmeSystemId:string("default")) << "'";
+        (rec->srcProxyIdx!=-1?rec->info.srcSmeSystemId:string("default")) << "'";
       trace_.push_back(ost.str());
     }
-    if ( srcidx != 0 && rec->srcProxyIdx == srcidx ) {
-      if ( trace_enabled_ ) {
+    if ( srcidx != -1 && rec->srcProxyIdx == srcidx )
+    {
+      if ( trace_enabled_ )
+      {
         ostringstream ost;
         ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId << "'";
         trace_.push_back(ost.str());
       }
       break;
     }
-    if ( rec->srcProxyIdx == 0 ) {
+    if ( rec->srcProxyIdx == -1 )
+    {
       if ( trace_enabled_ )
+      {
         trace_.push_back("found default src proxy for route");
+      }
       rec0 = rec;
     }
   }
 
   if ( !rec ) rec = rec0;
-  if ( !rec ) {
+  if ( !rec )
+  {
     if ( trace_enabled_ )
+    {
       trace_.push_back("src proxy matching not found");
+    }
     return false; // не найден
   }
 
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
 
-  if ( trace_enabled_ ) {
+  if ( trace_enabled_ )
+  {
     ostringstream ost;
     ost << "route found, "
       << AddrToString(rec->info.source) << "(" << rec->info.srcSmeSystemId << ") -> "
       << AddrToString(rec->info.dest) << "(" << rec->info.smeSystemId << ")";
     trace_.push_back(ost.str());
   }
-  if ( info ) *info = rec->info;
-  if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
-  if (!rec->info.enabling) return false;
-  return rec->info.enabling;
+  if ( info )
+  {
+    *info = rec->info;
+  }
+  if ( idx && rec->info.enabling )
+  {
+    *idx = rec->proxyIdx;
+  }
+  if (!rec->info.enabling)
+  {
+    if(trace_enabled_)
+    {
+      trace_.push_back("Route disabled");
+    }
+    return false;
+  }
+  return true;
 }
 
 // RoutingTable implementation
 bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx, RouteInfo* info)
 {
-  return lookup(0,source,dest,proxy,idx,info);
+  return lookup(-1,source,dest,proxy,idx,info);
 }
 
 void RouteManager::getTrace(vector<string>& tracelist)

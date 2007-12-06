@@ -33,7 +33,6 @@ using std::runtime_error;
 using std::string;
 using namespace smsc::admin::service;
 
-#define MAX_SME_PROXIES 2000
 
 class SmeProxyWrap;
 

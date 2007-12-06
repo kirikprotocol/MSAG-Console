@@ -401,6 +401,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     smsc_log_info(log, "SME registration done" );
   }
 
+  try{
+    RouteManager::EnableSmeRuters(cfg.cfgman->getBool("core.srcSmeSeparateRouting"));
+  }catch(...)
+  {
+    __warning__("src sme routing disabled by default");
+  }
+
   aliaser=new smsc::alias::AliasManImpl(cfg.cfgman->getString("aliasman.storeFile"));
 
   if(!ishs)
