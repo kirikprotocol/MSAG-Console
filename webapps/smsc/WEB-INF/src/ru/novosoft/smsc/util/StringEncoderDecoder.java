@@ -46,13 +46,31 @@ public class StringEncoderDecoder
     return result.toString();
   }
 
+  private static byte[] stringToBytes(String str) {
+    byte[] bytes = new byte[str.length() * 2];
+    int c;
+    for (int i=0; i<str.length(); i++) {
+      c = str.charAt(i);
+      bytes[i*2] = (byte)(c >> 8);
+      bytes[i*2+1] = (byte)c;
+    }
+    return bytes;
+  }
+
+  private static String bytesToString(byte[] bytes) {
+    StringBuffer buffer = new StringBuffer();
+    for (int i=0; i < bytes.length; i+=2)
+      buffer.append((char)((bytes[i] << 8) | (bytes[i+1])));
+    return buffer.toString();
+  }
+
   public static String encodeHEX(String str)
   {
     if (str == null) return "";
-    byte b[] = str.getBytes();
+    byte b[] = stringToBytes(str);
     int c = 0;
     StringBuffer sb = new StringBuffer(b.length * 2);
-    for (int i = 0; i < str.length(); i++) {
+    for (int i = 0; i < b.length; i++) {
       c = (((int) b[i]) >> 4) & 0xf;
       if (c < 10)
         sb.append((char) ('0' + c));
@@ -94,6 +112,6 @@ public class StringEncoderDecoder
       b[i / 2] = (byte) ci;
       i += 2;
     }
-    return new String(b);
+    return bytesToString(b);
   }
 }
