@@ -387,6 +387,7 @@ public class ServiceProvidersManager extends Manager {
         return true;
     }
     public boolean checkForbiddenChars( String strToCheck ){
-        return strToCheck.contains( Constants.FORBIDDEN_CHARACTER )? false: true;
+//        return strToCheck.contains( Constants.FORBIDDEN_CHARACTER )? false: true;
+        return strToCheck.indexOf(Constants.FORBIDDEN_CHARACTER)!=-1? false: true;        
     }
 }
