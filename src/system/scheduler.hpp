@@ -343,6 +343,8 @@ public:
       c=CreateChain(sms.getNextTime(),sms.getDealiasedDestinationAddress(),smeIndex);
     }
 
+    time_t oldntt=sms.getNextTime();
+    bool sethead=false;
     if(sms.attempts==0)
     {
       ChainPush(c,SchedulerData(id,sms.getValidTime()));
@@ -351,13 +353,14 @@ public:
     {
       debug2(log,"Resched: set sms %lld as head (%d),c=%p",id,sms.getNextTime(),c);
       ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
+      sethead=true;
     }
     //smsCount++;
 
 
-
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
+    info2(log,"Resched: smsId=%lld,oa=%s,oldntt=%lu,newntt=%lu,hdt=%lu,sethead=%s",id,sms.getOriginatingAddress().toString().c_str(),oldntt,sms.getNextTime(),c->headTime,sethead?"true":"false");
 
     if(c->timedQueue.size()>0)
       return c->headTime;
