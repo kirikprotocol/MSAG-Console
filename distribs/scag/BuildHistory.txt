@@ -274,3 +274,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
 16.11.2007 20:00 makar [!!! CVS: revision marked by tag BUILD_09_11_2007 !!!]
 1) MSAG Admin FIX: Some fixes in META-entity management
 2) MSAG Admin CRITICAL FIX: Valid ruleId, serviceId on creating new service
+
+=================================================================================================================
+06.12.2007 15:00 makar [!!! CVS: revision marked by tag BUILD_06_12_2007 !!!]
+1) MSAG FIX: Skip network_error_code in receipt packet if it wasn't set in action smpp:receipt
+2) MSAG CRITICAL FIX: Duplicate receipts fix (was sent on session destroy)
+3) MSAG Admin FIX: ',' simbols in services & providers names fix ('~' used as separator)
+4) MSAG Admin CHANGE: Endpoints filter (popup window) added to endpoints monitors
