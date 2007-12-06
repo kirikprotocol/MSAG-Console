@@ -7,6 +7,7 @@ import ru.sibinco.scag.svcmon.SvcSnap;
 import ru.sibinco.scag.svcmon.snap.SmppSnap;
 import ru.sibinco.scag.util.RemoteResourceBundle;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -14,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Comparator;
+import java.util.HashSet;
 
 /**
  * The <code>SmppTopGraph</code> class represents
@@ -86,6 +88,9 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     Font graphFont;
     int graphTextWidth;
     int barSeparator = 4;
+    java.util.HashSet smppViewList;
+
+//    JButton propButton = new JButton( "Properties" );
 
     public SmppTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
@@ -107,9 +112,52 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     }
 
+    public SmppTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
+                        int graphGrid, int graphHiGrid,
+                        int graphHead, RemoteResourceBundle localeText,
+                        SnapSmppHistory snapSmppHistory, HashSet viewList) {
+        super();
+        this.maxSpeed = maxSpeed;
+        this.localeText = localeText;
+        this.graphScale = graphScale;
+        this.graphGrid = graphGrid;
+        this.graphHiGrid = graphHiGrid;
+        this.graphHead = graphHead;
+        this.snapSmppHistory = snapSmppHistory;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addKeyListener(this);
+        graphFont = new Font("dialog", Font.PLAIN, 10);
+        setSnap(snap);
+        this.smppViewList = viewList;
+    }
+
+
     public void setSnap(SvcSnap snap) {
         snapSmppHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
+        if (smppComparator != null)
+            this.snap.sortSmppSnaps(smppComparator);
+
+        repaint();
+    }
+
+    public void setSnap(SvcSnap snap, HashSet viewList) {
+        this.smppViewList = viewList;
+        snapSmppHistory.addSnap(snap);
+        this.snap = new SvcSnap(snap);
+        if (smppComparator != null)
+            this.snap.sortSmppSnaps(smppComparator);
+
+        repaint();
+    }
+
+    public void setSnap(SvcSnap snap, HashSet viewList, int scale) {
+        System.out.println( "SmppTopGraph:setSnap() " + snap + "\n" + viewList + "\n" + scale );
+        snapSmppHistory.addSnap(snap);
+        this.snap = new SvcSnap(snap);
+        this.smppViewList = viewList;
+        this.graphScale = scale;
         if (smppComparator != null)
             this.snap.sortSmppSnaps(smppComparator);
 
@@ -145,7 +193,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         offscreen = null;
         super.invalidate();
     }
-
+    int cou = 0 ;
     public void paint(Graphics gg) {
         Dimension size = getSize();
         if (!(size.width > 0 && size.height > 0)) return;
@@ -173,12 +221,12 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.setColor(smeColor);
         g.drawString(localeText.getString("snh.smename"), x + pad, hpos);
         x += smeNameWidth;
-        String avgstr = localeText.getString("snh.count.avg");
+        String avgStr = localeText.getString("snh.count.avg");
         for (int i = 0; i < SmppSnap.COUNTERS; i++) {
             g.setColor(columnsColor[i]);
             drawCounterHead(g, localeText.getString("snh.count." + i), x + pad, hpos, fm);
             x += pad + counterWidth;
-            drawCounterHead(g, avgstr, x + pad, hpos, fm);
+            drawCounterHead(g, avgStr, x + pad, hpos, fm);
             x += pad + counterWidth;
         }
         // draw graph scale
@@ -199,14 +247,27 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         x = 0;
         y = pad + fh + 1;
         x = smppListStart;
+        int ii = 0;
         for (int i = 0; i < snap.smppCount; i++) {
-            if ((i % 2) == 0) {
-                g.setColor(colorHiBackground);
-                g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+            if(  smppViewList == null || smppViewList.contains( ((SmppSnap)snap.smppSnaps[i]).smppId ) ){
+                if ((ii % 2) == 0) {
+                    g.setColor(colorHiBackground);
+                    g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+                }
+                drawSmppSnap(g, i, x, y, size, fm);
+                y += rowHeight;
+                ii++;
             }
-            drawSmppSnap(g, i, x, y, size, fm);
-            y += rowHeight;
         }
+        cou++;
+        if(cou==10){
+            System.out.println("cou = 10");
+            cou = 0;
+            if(maxSpeed==50) maxSpeed=70;
+            else maxSpeed=50;
+        }
+        System.out.println("setClip:" + 0 + "," + (size.height - split + separatorWidth) + "," +
+                        size.width + "," + (split - separatorWidth) + "\nmaxSpeed=" + maxSpeed );
         g.setClip(0, size.height - split + separatorWidth, size.width, split - separatorWidth);
         drawGraph(g, size);
         g.setClip(0, 0, size.width, size.height);
@@ -307,21 +368,33 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     void drawGraph(Graphics g, Dimension size) {
+//        System.out.println("drawGraph():start");
         g.setColor(graphHiGridColor);
         FontMetrics fm = getFontMetrics(graphFont);
         int fh = fm.getHeight();
         int height = split - separatorWidth - pad;
-        int top = size.height - height;
+        if(height==0){
+            System.out.println("height=0");
+             height=100;}
+        System.out.println( "Height=" + size.height + " Width=" + size.getWidth() );
+        int top = size.height - (int)height*2;
+        System.out.println("TOP="+ top + " | heigth=" + height);
         int y = size.height - pad - fh - pad;
         int barwidth = (graphTextWidth - 3 * barSeparator - 2 * pad) / 2;
         g.setFont(graphFont);
         // draw bars
         int barx = pad + graphTextWidth + barSeparator;
         g.setColor(graphBarBGColor);
+        Color col = new Color(255, 255, 255);
+        g.setColor(col);
         g.fillRect(barx, top - pad, barwidth, height - fh - pad);
 
         SmppSnap smesnap = snapSmppHistory.getSmppLast();
+
+//        System.out.println("drawGraph():in1");
         if (smesnap == null) return;
+//        System.out.println("drawGraph():in2");
+
         int spent = 0;
         // last Rejected
         g.setColor(colorGraphRejected);
@@ -420,6 +493,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(0, top - 1, 0, size.height);
         g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
         g.setFont(getFont());
+        System.out.println("drawGraph():end");
     }
 
     protected void drawGraphLine(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
