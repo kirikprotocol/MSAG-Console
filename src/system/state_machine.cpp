@@ -3523,7 +3523,15 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
       try{
         smsc->getScheduler()->InvalidSms(t.msgId);
-        store->changeSmsStateToExpired(t.msgId);
+        if(dgortr)
+        {
+          sms.state=EXPIRED;
+          finalizeSms(t.msgId,sms);
+          return EXPIRED_STATE;
+        }else
+        {
+          store->changeSmsStateToExpired(t.msgId);
+        }
       }catch(...)
       {
         __warning__("DLVRSP: failed to change state to expired");
