@@ -650,7 +650,7 @@ function refreshSCAGStatusObject()
 {
    <%if (request.getUserPrincipal() != null) {%>
         serviceStatusDataSource.update();
-        window.setTimeout(refreshSCAGStatusObject, 10000);
+        window.setTimeout(refreshSCAGStatusObject, 5000);
    <%}%>
 }
 
