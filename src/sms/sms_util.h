@@ -2,7 +2,7 @@
 #define __SMSC_SMS_SMS_UTIL_H__
 
 #include "sms.h"
-#include "core/buffers/File.hpp"
+//#include "core/buffers/File.hpp"
 #include "util/int.h"
 
 namespace smsc{
