@@ -53,6 +53,10 @@ public:
     void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);
     void reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout = 0) throw(CustomException);
 
+    //Attempts to unbind handler.
+    //Returns false on succsess, number of active references otherwise
+    unsigned Unbind(void);
+    //
     void endMapDlg(void);
 
 protected:
@@ -75,6 +79,7 @@ protected:
 
 private:
     void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
+    unsigned unRefHdl(void);
 
     Mutex       _sync;
     unsigned    sriId;
@@ -82,7 +87,8 @@ private:
     TCSessionMA* session;    //TCAP dialogs factory
     Logger*     logger;
     CHSRIhandlerITF * sriHdl;
-    CHSRIState   _sriState;  //current state of dialog
+    unsigned    hdlRefs;    //references to handler
+    CHSRIState  _sriState;  //current state of dialog
     CHSendRoutingInfoRes reqRes;
 };
 

@@ -15,7 +15,9 @@ using smsc::core::threads::ThreadPool;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;
-using smsc::core::synchronization::Mutex;
+
+#include "core/synchronization/EventMonitor.hpp"
+using smsc::core::synchronization::EventMonitor;
 
 namespace smsc {
 namespace inman {
@@ -42,7 +44,7 @@ public:
 
 class IAPQueryAC : public ThreadedTask {
 protected:
-    Mutex               _mutex;
+    EventMonitor        _mutex;
     IAPQueryManagerITF* _owner;
     unsigned long       usage;  //counter of runs
     unsigned            timeOut;

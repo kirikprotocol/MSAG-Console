@@ -171,17 +171,21 @@ int IAPQuerySRI::Execute(void)
         if (isStopping || !_owner->hasListeners(abonent))
             //query was cancelled by either QueryManager or ThreadPool
             return _qStatus = IAPQStatus::iqCancelled;
-    }
-    try {
-        sriDlg = new MapCHSRIDlg(_cfg.mapSess, this);
-        sriDlg->reqRoutingInfo(abonent, _cfg.mapTimeout);
-        if (qsig.Wait(_cfg.mapTimeout*1000 + 10) != 0)
-            _qStatus = IAPQStatus::iqTimeout;
-    } catch (const std::exception & exc) {
-        smsc_log_error(logger, "%s(%s): %s", taskName(),
+
+        try {
+            sriDlg = new MapCHSRIDlg(_cfg.mapSess, this);
+            sriDlg->reqRoutingInfo(abonent, _cfg.mapTimeout); //throws
+
+            if (_mutex.wait(_cfg.mapTimeout*1000 + 10) != 0) //Unlocks, waits, locks
+                _qStatus = IAPQStatus::iqTimeout;
+        } catch (const std::exception & exc) {
+            smsc_log_error(logger, "%s(%s): %s", taskName(),
                        abonent.getSignals(), exc.what());
-        _qStatus = IAPQStatus::iqError;
-        _exc = exc.what();
+            _qStatus = IAPQStatus::iqError;
+            _exc = exc.what();
+        }
+        while (sriDlg->Unbind()) //MAPDlg refers this query
+            _mutex.wait();
     }
     if (sriDlg) {
         delete sriDlg;  //synchronization point, waits for sriDlg mutex
@@ -195,7 +199,7 @@ void IAPQuerySRI::stop(void)
     MutexGuard  grd(_mutex);
     isStopping = true;
     _qStatus = IAPQStatus::iqCancelled;
-    qsig.Signal();
+    _mutex.notify();
 }
 // ****************************************
 // -- CHSRIhandlerITF implementation:
@@ -232,10 +236,12 @@ void IAPQuerySRI::onEndMapDlg(RCHash ercode/* = 0*/)
     if (ercode) {
         _qStatus = IAPQStatus::iqError;
         _exc = URCRegistry::explainHash(ercode);
-        smsc_log_error(logger, "%s(%s): query failed: code 0x%x, %s\n",
+        smsc_log_error(logger, "%s(%s): query failed: code 0x%x, %s",
                         taskName(), abonent.getSignals(), ercode, _exc.c_str());
-    }
-    qsig.Signal();
+    } else
+        smsc_log_debug(logger, "%s(%s): query succeeded",
+                        taskName(), abonent.getSignals());
+    _mutex.notify();
 }
 
 } //sri

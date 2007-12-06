@@ -26,7 +26,7 @@ namespace chsri {
 MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler,
                         Logger * uselog/* = NULL*/)
     : sriHdl(sri_handler), session(pSession), sriId(0), dialog(NULL)
-    , logger(uselog)
+    , hdlRefs(0), logger(uselog)
 {
     assert(sri_handler && pSession);
     _sriState.value = 0;
@@ -38,10 +38,21 @@ MapCHSRIDlg::~MapCHSRIDlg()
 {
     endMapDlg();
 }
+//Attempts to unbind handler.
+//Returns false on succsess, number of active references otherwise
+unsigned MapCHSRIDlg::Unbind(void)
+{
+    MutexGuard  grd(_sync);
+    if (!hdlRefs)
+        sriHdl = NULL;
+    return hdlRefs;
+}
 
 void MapCHSRIDlg::endMapDlg(void)
 {
     MutexGuard  grd(_sync);
+    if (hdlRefs)
+        smsc_log_error(logger, "MapSRI[0x%X]: %u references to handler exists", sriId, hdlRefs);
     sriHdl = NULL;
     endTCap(true);
 }
@@ -70,7 +81,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
     dialog->beginDialog(); //throws
     _sriState.s.ctrInited = MapCHSRIDlg::operInited;
 
-    smsc_log_debug(logger, "MapSRI[%u]: quering %s info", sriId, tnpi_adr.getSignals());
+    smsc_log_debug(logger, "MapSRI[0x%X]: quering %s info", sriId, tnpi_adr.getSignals());
 }
 
 void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*/) throw(CustomException)
@@ -88,14 +99,14 @@ void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*
 void MapCHSRIDlg::onInvokeResultNL(InvokeRFP pInv, TcapEntity* res)
 {
     MutexGuard  grd(_sync);
-    smsc_log_debug(logger, "MapSRI[%u]: Invoke[%u:%u] got a returnResultNL: %u",
+    smsc_log_debug(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a returnResultNL: %u",
         sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
         (unsigned)res->getOpcode());
 
     _sriState.s.ctrResulted = MapCHSRIDlg::operInited;
     try { reqRes.mergeSegment(res->getParam());
     } catch (const CustomException & exc) {
-        smsc_log_error(logger, "MapSRI[%u]: %s", exc.what());
+        smsc_log_error(logger, "MapSRI[0x%X]: %s", exc.what());
     }
 }
 
@@ -104,21 +115,25 @@ void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
-        smsc_log_debug(logger, "MapSRI[%u]: Invoke[%u:%u] got a returnResult: %u",
+        ++hdlRefs;  //guards sriHdl
+        smsc_log_debug(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a returnResult: %u",
             sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
 
         _sriState.s.ctrInited = _sriState.s.ctrResulted = MapCHSRIDlg::operDone;
         try { reqRes.mergeSegment(res->getParam());
         } catch (const CustomException & exc) {
-            smsc_log_error(logger, "MapSRI[%u]: %s", exc.what());
+            smsc_log_error(logger, "MapSRI[0x%X]: %s", exc.what());
         }
-        sriHdl->onMapResult(&reqRes);
         if ((do_end = _sriState.s.ctrFinished) != 0)
             endTCap();
     }
-    if (do_end)
-        sriHdl->onEndMapDlg();
+    if (sriHdl) {
+        sriHdl->onMapResult(&reqRes);
+        if (do_end)
+            sriHdl->onEndMapDlg();
+    }
+    unRefHdl();
 }
 
 //Called if Operation got ResultError
@@ -126,14 +141,17 @@ void MapCHSRIDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
-        smsc_log_error(logger, "MapSRI[%u]: Invoke[%u:%u] got a returnError: %u",
+        ++hdlRefs; //guards sriHdl
+        smsc_log_error(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a returnError: %u",
             sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         _sriState.s.ctrInited = MapCHSRIDlg::operDone;
         endTCap();
     }
-    sriHdl->onEndMapDlg(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
+    if (sriHdl)
+        sriHdl->onEndMapDlg(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
+    unRefHdl();
 }
 
 //Called if Operation got L_CANCEL, possibly while waiting result
@@ -141,12 +159,15 @@ void MapCHSRIDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
-        smsc_log_error(logger, "MapSRI[%u]: Invoke[%u:%u] got a LCancel",
+        ++hdlRefs; //guards sriHdl
+        smsc_log_error(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a LCancel",
             sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         _sriState.s.ctrInited = MapCHSRIDlg::operFailed;
         endTCap();
     }
-    sriHdl->onEndMapDlg(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
+    if (sriHdl)
+        sriHdl->onEndMapDlg(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
+    unRefHdl();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -157,7 +178,7 @@ void MapCHSRIDlg::onDialogContinue(bool compPresent)
 {
     MutexGuard  grd(_sync);
     if (!compPresent)
-        smsc_log_error(logger, "MapSRI[%u]: missing component in TC_CONT_IND", sriId);
+        smsc_log_error(logger, "MapSRI[0x%X]: missing component in TC_CONT_IND", sriId);
      //else wait for ongoing Invoke result/error
     return;
 }
@@ -168,12 +189,15 @@ void MapCHSRIDlg::onDialogPAbort(UCHAR_T abortCause)
 {
     {
         MutexGuard  grd(_sync);
+        ++hdlRefs; //guards sriHdl
         _sriState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, P_ABORT: %s ", sriId,
+        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, P_ABORT: %s ", sriId,
                         _sriState.value, _RCS_TC_Abort->code2Txt(abortCause));
         endTCap();
     }
-    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
+    if (sriHdl)
+        sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
+    unRefHdl();
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
@@ -182,14 +206,17 @@ void MapCHSRIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
 {
     {
         MutexGuard  grd(_sync);
+        ++hdlRefs; //guards sriHdl
         _sriState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, U_ABORT: %s", sriId,
+        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, U_ABORT: %s", sriId,
                         _sriState.value, !abortInfo_len ? "userInfo" :
                         _RCS_TC_Abort->code2Txt(*pAbortInfo));
         endTCap();
     }
-    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+    if (sriHdl)
+        sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
                         TC_AbortCause::userAbort : *pAbortInfo));
+    unRefHdl();
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -199,6 +226,7 @@ void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
 {
     {
         MutexGuard  grd(_sync);
+        ++hdlRefs; //guards sriHdl
         _sriState.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
@@ -211,11 +239,13 @@ void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "MapSRI[%u]: NOTICE_IND at state 0x%x%s", sriId,
+        smsc_log_error(logger, "MapSRI[0x%X]: NOTICE_IND at state 0x%x%s", sriId,
                        _sriState.value, dstr.c_str());
         endTCap();
     }
-    sriHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));
+    if (sriHdl)
+        sriHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));
+    unRefHdl();
 }
 
 //SCF sent DialogEnd, it's either succsesfull contract completion,
@@ -227,36 +257,49 @@ void MapCHSRIDlg::onDialogREnd(bool compPresent)
         MutexGuard  grd(_sync);
         _sriState.s.ctrFinished = 1;
         if (!compPresent) {
+            ++hdlRefs; //guards sriHdl
             endTCap();
             if (!_sriState.s.ctrResulted) {
-                smsc_log_error(logger, "MapSRI[%u]: T_END_IND, state 0x%x", sriId, _sriState.value);
+                smsc_log_error(logger, "MapSRI[0x%X]: T_END_IND, state 0x%x", sriId, _sriState.value);
                 errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
             }
         }
     }
-    if (!compPresent)
-        sriHdl->onEndMapDlg(errcode);
+    if (!compPresent) {
+        if (sriHdl)
+            sriHdl->onEndMapDlg(errcode);
+        unRefHdl();
+    }
     //else wait for ongoing Invoke result/error
 }
 
 /* ------------------------------------------------------------------------ *
  * Private/protected methods
  * ------------------------------------------------------------------------ */
+//Locks _sync
+unsigned MapCHSRIDlg::unRefHdl(void)
+{
+    MutexGuard tmp(_sync);
+    if (hdlRefs)
+        --hdlRefs;
+    return hdlRefs;
+}
+
 //ends TC dialog, releases Dialog()
 void MapCHSRIDlg::endTCap(bool check_ref/* = false*/)
 {
     if (dialog) {
         unsigned refNum = dialog->unbindUser();
         if (check_ref && refNum)
-            smsc_log_warn(logger, "MapSRI[%u]: %u references from underlying TCDlg exists", sriId, refNum);
+            smsc_log_warn(logger, "MapSRI[0x%X]: %u references from underlying TCDlg exists", sriId, refNum);
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {  // do TC_PREARRANGED if still active
                 dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ?
                                     Dialog::endPrearranged : Dialog::endBasic);
-                smsc_log_debug(logger, "MapSRI[%u]: T_END_REQ, state: 0x%x", sriId,
+                smsc_log_debug(logger, "MapSRI[0x%X]: T_END_REQ, state: 0x%x", sriId,
                                 _sriState.value);
             } catch (const std::exception & exc) {
-                smsc_log_error(logger, "MapSRI[%u]: T_END_REQ: %s", sriId, exc.what());
+                smsc_log_error(logger, "MapSRI[0x%X]: T_END_REQ: %s", sriId, exc.what());
                 dialog->releaseAllInvokes();
             }
         }

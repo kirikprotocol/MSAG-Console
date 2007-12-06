@@ -70,7 +70,6 @@ protected:
 
     IAPQuerySRI_CFG _cfg;
     MapCHSRIDlg *   sriDlg;
-    Event           qsig;
 };
 
 class IAPQuerySRIFactory : public IAPQueryFactoryITF {
