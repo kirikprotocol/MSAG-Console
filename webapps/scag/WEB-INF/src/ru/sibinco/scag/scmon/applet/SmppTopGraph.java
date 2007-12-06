@@ -16,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
 import java.util.ResourceBundle;
 import java.util.Comparator;
+import java.util.HashSet;
 
 public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionListener, KeyListener {
     static final int pad = 1;
@@ -82,6 +83,8 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int graphTextWidth;
     int barSeparator = 4;
 
+    HashSet smppViewList;
+
     public SmppTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
                         int graphHead, RemoteResourceBundle localeText,
@@ -102,9 +105,41 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     }
 
+    public SmppTopGraph(ScSnap snap, int maxSpeed, int graphScale,
+                        int graphGrid, int graphHiGrid,
+                        int graphHead, RemoteResourceBundle localeText,
+                        SnapSmppHistory snapSmppHistory, HashSet viewList) {
+        super();
+        this.maxSpeed = maxSpeed;
+        this.localeText = localeText;
+        this.graphScale = graphScale;
+        this.graphGrid = graphGrid;
+        this.graphHiGrid = graphHiGrid;
+        this.graphHead = graphHead;
+        this.snapSmppHistory = snapSmppHistory;
+        this.smppViewList = viewList;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addKeyListener(this);
+        graphFont = new Font("dialog", Font.PLAIN, 10);
+        setSnap(snap);
+
+    }
+
     public void setSnap(ScSnap snap) {
         snapSmppHistory.addSnap(snap);
         this.snap = new ScSnap(snap);
+        if (smppComparator != null)
+            this.snap.sortSmppSnaps(smppComparator);
+
+        repaint();
+    }
+
+    public void setSnap(ScSnap snap, HashSet viewList, int scale) {
+        snapSmppHistory.addSnap(snap);
+        this.snap = new ScSnap(snap);
+        this.smppViewList = viewList;
+        this.graphScale = scale;
         if (smppComparator != null)
             this.snap.sortSmppSnaps(smppComparator);
 
@@ -194,13 +229,17 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         x = 0;
         y = pad + fh + 1;
         x = smppListStart;
+        int ii=0 ;
         for (int i = 0; i < snap.smppCount; i++) {
-            if ((i % 2) == 0) {
-                g.setColor(colorHiBackground);
-                g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+            if(  smppViewList == null || smppViewList.contains( ((SmppSnap)snap.smppSnaps[i]).smppId ) ){
+                if ((ii % 2) == 0) {
+                    g.setColor(colorHiBackground);
+                    g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+                }
+                drawSmppSnap(g, i, x, y, size, fm);
+                y += rowHeight;
+                ii++;
             }
-            drawSmppSnap(g, i, x, y, size, fm);
-            y += rowHeight;
         }
         g.setClip(0, size.height - split + separatorWidth, size.width, split - separatorWidth);
         drawGraph(g, size);

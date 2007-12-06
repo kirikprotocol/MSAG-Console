@@ -16,6 +16,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.KeyEvent;
 import java.util.ResourceBundle;
 import java.util.Comparator;
+import java.util.HashSet;
 
 /**
  * The <code>HttpTopGraph</code> class represents
@@ -95,6 +96,8 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int graphTextWidth;
     int barSeparator = 4;
 
+    HashSet httpViewList;
+
     public HttpTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
                         int graphHead, RemoteResourceBundle localeText,
@@ -115,9 +118,41 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     }
 
+    public HttpTopGraph(ScSnap snap, int maxSpeed, int graphScale,
+                        int graphGrid, int graphHiGrid,
+                        int graphHead, RemoteResourceBundle localeText,
+                        SnapHttpHistory snapHttpHistory, HashSet viewList) {
+        super();
+        this.maxSpeed = maxSpeed;
+        this.localeText = localeText;
+        this.graphScale = graphScale;
+        this.graphGrid = graphGrid;
+        this.graphHiGrid = graphHiGrid;
+        this.graphHead = graphHead;
+        this.snapHttpHistory = snapHttpHistory;
+        this.httpViewList = viewList;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addKeyListener(this);
+        graphFont = new Font("dialog", Font.PLAIN, 10);
+        setSnap(snap);
+
+    }
+
     public void setSnap(ScSnap snap) {
         snapHttpHistory.addSnap(snap);
         this.snap = new ScSnap(snap);
+        if (httpComparator != null)
+            this.snap.sortHttpSnaps(httpComparator);
+
+        repaint();
+    }
+
+    public void setSnap(ScSnap snap, HashSet viewList, int scale) {
+        snapHttpHistory.addSnap(snap);
+        this.snap = new ScSnap(snap);
+        this.httpViewList = viewList;
+        this.graphScale = scale;
         if (httpComparator != null)
             this.snap.sortHttpSnaps(httpComparator);
 
