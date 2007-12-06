@@ -515,11 +515,15 @@ function byteToHexStr(bth)
     else
         return String.fromCharCode(0x41 + bth - 10);
 }
+
 function encodeHEX(str) {
-    var c = 0;
+    var a,b = 0;
     var result = "";
     for (i = 0; i < str.length; i++) {
-        result += byteToHexStr((str.charCodeAt(i) >> 4) & 0xF) + byteToHexStr((str.charCodeAt(i)) & 0xF);
+        a = str.charCodeAt(i) >> 8 & 0xFF;
+        b = str.charCodeAt(i) & 0xFF;
+        result += byteToHexStr((a >> 4) & 0xF) + byteToHexStr((a) & 0xF);
+        result += byteToHexStr((b >> 4) & 0xF) + byteToHexStr((b) & 0xF);
     }
     return result;
 }

@@ -114,6 +114,7 @@ public class RoutesEdit extends RouteBody {
                 if (0 < strings.length) {
                     final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(subjprefix.length()));
                     selectedSmes.put(dstName, strings[0]);
+                    System.out.println("TEST: " + dstName + "   " + strings[0] + "  " + paramName.substring(subjprefix.length()));
                 }
             } else if (paramName.startsWith(maskprefix)) {
                 final String[] strings = (String[]) requestParameters.get(paramName);
