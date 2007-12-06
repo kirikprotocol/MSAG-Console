@@ -125,7 +125,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
             final JButton zoomOutPropButton = new JButton(BUTTON_ZOOM_OUT);
 //            JButton hardButton = new JButton("HARD");
 
-            HardListener hardListener = new HardListener();
+//            HardListener hardListener = new HardListener();
 //            hardButton.addActionListener(hardListener);
 
             setLayout( new GridLayout(1,3) );
@@ -203,7 +203,6 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
             setLayout( new BorderLayout() );
 
             ScrollPane checkPane = new ScrollPane(ScrollPane.SCROLLBARS_AS_NEEDED);
-//            checkPane.setSize(200, 200);
             CheckboxPanel checkPanel = new CheckboxPanel(TYPE_SMPP);
             checkPane.add(checkPanel);
             SelectPanel selectPanel = new SelectPanel(checkPanel);
@@ -220,13 +219,15 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         public HttpPropertyPanel(JFrame frame){
             setLayout( new BorderLayout() );
 
+            ScrollPane checkPane = new ScrollPane(ScrollPane.SCROLLBARS_AS_NEEDED);
             CheckboxPanel checkPanel = new CheckboxPanel(TYPE_HTTP);
+            checkPane.add(checkPanel);
             SelectPanel selectPanel = new SelectPanel(checkPanel);
             OkCancelPanel okPanel = new OkCancelPanel( frame, checkPanel, TYPE_HTTP );
 
             add(selectPanel, BorderLayout.NORTH);
             add(okPanel, BorderLayout.SOUTH);
-            add(checkPanel, BorderLayout.CENTER);
+            add(checkPane, BorderLayout.CENTER);
         }
 
     }
