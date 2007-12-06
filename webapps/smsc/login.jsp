@@ -13,14 +13,27 @@ if(request.getParameter("loginError")!=null) {
 <col width="99%">
 <tr class="row0">
 	<th><%=getLocString("login.login")%></th>
-	<td><input class="txt" name="j_username"></td>
+	<td><input class="txt" name="j_username" onKeyPress="return submitFormOnEnter(event)"></td>
 </tr>
 <tr class="row0">
 	<th><%=getLocString("login.password")%></th>
-	<td><input class="txt" type="password" name="j_password"></td>
+	<td><input class="txt" type="password" name="j_password" onKeyPress="return submitFormOnEnter(event)"></td>
 </tr>
 </table>
 </div>
+<script>
+function submitFormOnEnter(e) {
+  if (!e)
+    e = window.event;
+  var keyCode = e.keyCode; // For IE
+  if (!keyCode)
+    keyCode = e.which; // For Firefox
+  if (keyCode == 13) // On Enter
+    return opFormSubmit();
+
+  return true;
+}
+</script>
 <%
 page_menu_begin(out);
 page_menu_button(session, out, "jsubmit", "login.loginButton", "login.loginButtonHint");
