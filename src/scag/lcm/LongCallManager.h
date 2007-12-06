@@ -9,7 +9,7 @@
 
 #include <stack>
 
-namespace scag { namespace re { namespace actions { 
+namespace scag { namespace re { namespace actions {
     class ActionContext;
 }}}
 
@@ -26,7 +26,7 @@ enum LongCallCommandId{
     PERS_DEL,
     PERS_INC,
     PERS_INC_MOD,
-	PERS_BATCH,
+  PERS_BATCH,
     BILL_OPEN,
     BILL_COMMIT,
     BILL_ROLLBACK
@@ -53,7 +53,7 @@ class PostProcessAction
 public:
     PostProcessAction* next;
     PostProcessAction() : next(NULL) {};
-    virtual void run() = 0;   
+    virtual void run() = 0;
     virtual ~PostProcessAction() {};
 };
 
@@ -61,11 +61,11 @@ class LongCallContext
 {
     LongCallParams *params;
     ActionContext  *actionContext;
-    PostProcessAction *actions, *actionsTail;    
+    PostProcessAction *actions, *actionsTail;
 public:
-    LongCallContext(): initiator(NULL), stateMachineContext(NULL), 
-	next(NULL), params(NULL), actionContext(NULL), continueExec(false), actions(NULL) {};
-    
+    LongCallContext(): initiator(NULL), stateMachineContext(NULL),
+  next(NULL), params(NULL), actionContext(NULL), continueExec(false), actions(NULL) {};
+
     uint32_t systemType, callCommandId;
     void *stateMachineContext;
     LongCallInitiator *initiator;
@@ -99,16 +99,19 @@ public:
     }
     void runPostProcessActions()
     {
-        PostProcessAction* p = actions;
-        while(p)
+        PostProcessAction* p;
+        while(actions)
         {
-            p->run();
-            p = p->next;
+            actions->run();
+            p = actions->next;
+            delete actions;
+            actions=p;
         }
+        actionsTail=actions;
     }
 
     void clear();
-    
+
     ~LongCallContext();
 };
 
@@ -127,8 +130,8 @@ public:
     static LongCallManager& Instance();
     static void Init(uint32_t maxThr);
     static void Init(const LongCallManagerConfig& cfg);
-    static void shutdown();    
-    
+    static void shutdown();
+
     virtual bool call(LongCallContext* context) = 0;
 
 protected:
