@@ -41,7 +41,7 @@ var StringTableDataSource = XHR.extend({
     if (i > 0) {
 
       var services = new Array();
-      services = txt.substring(0, i).split(', ');
+      services = txt.substring(0, i-1).split(', ');
       var statuses = new Array();
       statuses = txt.substring(i, txt.length).split(', ');
 
