@@ -1,11 +1,13 @@
 /* $Id$ */
 
 #include "PersServer.h"
+#include "sms/sms.h"
 
 namespace scag { namespace pers {
 
 using smsc::util::Exception;
 using smsc::logger::Logger;
+using smsc::sms::Address;
 
 PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider):
         PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), plog(Logger::getInstance("persserver"))
@@ -61,23 +63,23 @@ void PersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const std::stri
     bool exists = false;
     if(pt == PT_ABONENT)
     {
-        smsc_log_debug(plog, "GetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), name.c_str());
+        smsc_log_info(plog, "GetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), name.c_str());
         exists = AbonentStore->getProperty(str_key.c_str(), name.c_str(), prop);
     }
     else if(is = findStore(pt))
     {
-        smsc_log_debug(plog, "GetCmdHandler store=%d, key=%d, name=%s", pt, int_key, name.c_str());
+        smsc_log_info(plog, "GetCmdHandler store=%d, key=%d, name=%s", pt, int_key, name.c_str());
         exists = is->getProperty(int_key, name.c_str(), prop);
     }
     if(exists)
     {   
-        smsc_log_debug(plog, "GetCmdHandler prop=%s", prop.toString().c_str());
+        smsc_log_info(plog, "GetCmdHandler prop=%s", prop.toString().c_str());
         SendResponse(osb, RESPONSE_OK);
         prop.Serialize(osb);
     }
     else
     {
-        smsc_log_debug(plog, "GetCmdHandler property not found: store=%d, key=%s(%d), name=%s", pt, str_key.c_str(), int_key, name.c_str());    
+        smsc_log_info(plog, "GetCmdHandler property not found: store=%d, key=%s(%d), name=%s", pt, str_key.c_str(), int_key, name.c_str());    
         SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
     }        
 }
@@ -87,12 +89,12 @@ void PersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, const std::stri
     IntProfileStore *is;
     if(pt == PT_ABONENT)
     {
-        smsc_log_debug(plog, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
+        smsc_log_info(plog, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
         AbonentStore->setProperty(str_key.c_str(), prop);
     }
     else if(is = findStore(pt))    
     {
-        smsc_log_debug(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
+        smsc_log_info(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
         is->setProperty(int_key, prop);
     }
     SendResponse(osb, RESPONSE_OK);
@@ -130,7 +132,7 @@ void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::s
         smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
         exists = is->incModProperty(int_key, prop, mod, res);
     }
-    if(exists) 
+    if(exists)
     {
         SendResponse(osb, RESPONSE_OK);
         osb.WriteInt32(res);
@@ -139,30 +141,27 @@ void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::s
         SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
 }
 
-bool PersServer::processPacket(ConnectionContext& ctx)
+void PersServer::processPacket(SerialBuffer& isb, SerialBuffer& osb)
 {
-    SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
     osb.SetPos(4);
     try{
 		execCommand(isb, osb);
 		SetPacketSize(osb);
-		return true;
+		return;
     }
-    catch(const SerialBufferOutOfBounds &e)
+    catch(SerialBufferOutOfBounds &e)
     {
-        smsc_log_debug(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+        smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
     }
-    catch(const Exception& e)
-    {
-        smsc_log_debug(plog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
+    catch(const std::runtime_error& e) {
+      smsc_log_debug(plog, "Error profile key: %s", e.what());
     }
     catch(...)
     {
         smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
     }
     SendResponse(osb, RESPONSE_BAD_REQUEST);
-	SetPacketSize(osb);
-    return true;
+	SetPacketSize(osb);	
 }
 
 void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
@@ -171,6 +170,7 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
     ProfileType pt;
     uint32_t int_key;
     string str_key;
+    string profKey;
     string name;
     Property prop;
     cmd = (PersCmd)isb.ReadInt8();
@@ -183,57 +183,54 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
     if(cmd != PC_BATCH)
     {
         pt = (ProfileType)isb.ReadInt8();
-        if(pt != PT_ABONENT)
-            int_key = isb.ReadInt32();
-        else
-            isb.ReadString(str_key);
+        if(pt != PT_ABONENT) {
+          int_key = isb.ReadInt32();
+        }
+        else {
+          isb.ReadString(str_key);
+          Address addr_key(str_key.c_str());
+          if (str_key[0] != '.') {
+            addr_key.setNumberingPlan(1);
+            addr_key.setTypeOfNumber(1);
+          }
+          profKey = addr_key.toString();
+          smsc_log_debug(plog, "abonent profile key=%s", profKey.c_str());
+        }
     }
     switch(cmd)
     {
         case PC_DEL:
             isb.ReadString(name);
-            DelCmdHandler(pt, int_key, str_key, name, osb);
+            DelCmdHandler(pt, int_key, profKey, name, osb);
             return;
         case PC_SET:
             prop.Deserialize(isb);
-            SetCmdHandler(pt, int_key, str_key, prop, osb);
+            SetCmdHandler(pt, int_key, profKey, prop, osb);
             return;
         case PC_GET:
             isb.ReadString(name);
-            GetCmdHandler(pt, int_key, str_key, name, osb);
+            GetCmdHandler(pt, int_key, profKey, name, osb);
             return;
         case PC_INC:
             prop.Deserialize(isb);
-            IncCmdHandler(pt, int_key, str_key, prop, osb);
+            IncCmdHandler(pt, int_key, profKey, prop, osb);
             return;
         case PC_INC_MOD:
         {
             int inc = isb.ReadInt32();
             prop.Deserialize(isb);
-            IncModCmdHandler(pt, int_key, str_key, prop, inc, osb);
-			return;
+            IncModCmdHandler(pt, int_key, profKey, prop, inc, osb);
+	    return;
         }
         case PC_BATCH:
         {
             uint16_t cnt = isb.ReadInt16();
-            while(cnt--)
-                    execCommand(isb, osb);
-			return;
+            while(cnt--) execCommand(isb, osb);
+	    return;
         }
         default:
             smsc_log_debug(plog, "Bad command %d", cmd);
     }
-}
-
-Profile* PersServer::getProfile(const string& key) {
-  AbntAddr addr(key.c_str());
-  Profile *pf = AbonentStore->getProfile(addr, false); 
-  //Profile *pf = AbonentStore->_getProfile(addr, false);
-  return pf; 
-}
-
-Profile* PersServer::createProfile(AbntAddr& addr) {
-  return  AbonentStore->createProfile(addr);
 }
 
 }}
