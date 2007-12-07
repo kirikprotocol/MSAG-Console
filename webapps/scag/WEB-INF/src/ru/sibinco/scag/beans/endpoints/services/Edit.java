@@ -126,16 +126,19 @@ public class Edit extends EditBean {
         if (svcs.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
         Svc oldSvc = null;
+        final Svc svc;
         if (!isAdd()) {
             oldSvc = (Svc) svcs.get(getEditId());
+            svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
+                          inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup());
+        }else{
+            svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
+                          inQueueLimit, outQueueLimit, maxSmsPerSec);
         }
         svcs.remove(getEditId());
-        final Svc svc;
+        svcs.put(getId(), svc);
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj);
 //        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj, inQueueLimit, maxSmsPerSec);
-        svc = new Svc(getId(), getPassword(), timeout, enabled, mode, providerObj,
-                      inQueueLimit, outQueueLimit, maxSmsPerSec, oldSvc.getMetaGroup());
-        svcs.put(getId(), svc);
         final Scag scag = appContext.getScag();
         appContext.getSmppManager().createUpdateServicePoint(getLoginedPrincipal().getName(),
                 svc, isAdd(), isEnabled(), appContext, oldSvc);

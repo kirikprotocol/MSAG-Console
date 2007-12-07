@@ -146,12 +146,6 @@ public class Edit extends EditBean
         final Map centers = appContext.getSmppManager().getCenters();
         if (centers.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
-        Center oldCenter = null;
-        if (!isAdd()) {
-            oldCenter = (Center) centers.get(getEditId());
-        }
-        centers.remove(getEditId());
-        final Center center;
         if (altHost == null || getAltHost().length() == 0) altHost = "";
         if (bindPassword == null || getBindPassword().length() == 0) bindPassword = "";
         if (systemType == null || getSystemType().length() == 0) systemType = "";
@@ -160,9 +154,20 @@ public class Edit extends EditBean
 //        center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
 //                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
 //                getAddressRange(), inQueueLimit, maxSmsPerSec);
-        center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
-                enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
-                getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup());
+
+        Center oldCenter = null;
+        final Center center;
+        if (!isAdd()) {
+            oldCenter = (Center) centers.get(getEditId());
+            center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
+                    enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec, oldCenter.getMetaGroup());
+        }else{
+            center = new Center(getId(), timeout, mode, getHost(), port, getAltHost(), altPort,
+                    enabled, providerObj, uid, getBindSystemId(), getBindPassword(), getSystemType(),
+                    getAddressRange(), inQueueLimit, outQueueLimit, maxSmsPerSec);
+        }
+        centers.remove(getEditId());
         centers.put(id, center);
 
         appContext.getSmppManager().createUpdateCenter(getLoginedPrincipal().getName(),
