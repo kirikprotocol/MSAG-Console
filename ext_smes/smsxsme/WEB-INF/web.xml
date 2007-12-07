@@ -22,6 +22,11 @@
     <load-on-startup>1</load-on-startup>
   </servlet>
 
+  <filter>
+    <filter-name>SOAPFilter</filter-name>
+    <filter-class>ru.sibinco.smsx.engine.soaphandler.SOAPFilter</filter-class>
+  </filter>
+
   <servlet-mapping>
     <servlet-name>AxisServlet</servlet-name>
     <url-pattern>/servlet/AxisServlet</url-pattern>
@@ -41,6 +46,11 @@
     <!-- Default to 5 minute session timeouts -->
     <session-timeout>5</session-timeout>
   </session-config>
+
+  <filter-mapping>
+    <filter-name>SOAPFilter</filter-name>
+    <servlet-name>AxisServlet</servlet-name>
+  </filter-mapping>
 
   <!-- currently the W3C havent settled on a media type for WSDL;
   http://www.w3.org/TR/2003/WD-wsdl12-20030303/#ietf-draft

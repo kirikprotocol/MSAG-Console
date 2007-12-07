@@ -106,8 +106,8 @@ public class BlacklistSoapStub extends org.apache.axis.client.Stub implements Bl
     }
     org.apache.axis.client.Call _call = createCall();
     _call.setOperation(_operations[0]);
-    _call.setUseSOAPAction(true);
-    _call.setSOAPActionURI("http://mts.qmobile.ru/api/Add");
+    _call.setUseSOAPAction(false);
+//    _call.setSOAPActionURI("http://mts.qmobile.ru/api/Add");
     _call.setEncodingStyle(null);
     _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
     _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);
@@ -140,8 +140,8 @@ public class BlacklistSoapStub extends org.apache.axis.client.Stub implements Bl
     }
     org.apache.axis.client.Call _call = createCall();
     _call.setOperation(_operations[1]);
-    _call.setUseSOAPAction(true);
-    _call.setSOAPActionURI("http://mts.qmobile.ru/api/Remove");
+    _call.setUseSOAPAction(false);
+//    _call.setSOAPActionURI("http://mts.qmobile.ru/api/Remove");
     _call.setEncodingStyle(null);
     _call.setProperty(org.apache.axis.client.Call.SEND_TYPE_ATTR, Boolean.FALSE);
     _call.setProperty(org.apache.axis.AxisEngine.PROP_DOMULTIREFS, Boolean.FALSE);

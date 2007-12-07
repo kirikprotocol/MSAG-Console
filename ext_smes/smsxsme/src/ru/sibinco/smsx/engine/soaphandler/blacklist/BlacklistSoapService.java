@@ -36,7 +36,8 @@ public class BlacklistSoapService implements BlacklistSoap, org.apache.axis.wsdl
     _oper = new org.apache.axis.description.OperationDesc("add", _params, new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "AddResult"));
     _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
     _oper.setElementQName(new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "Add"));
-    _oper.setSoapAction("http://mts.qmobile.ru/api/Add");
+//    _oper.setSoapAction("http://mts.qmobile.ru/api/Add");
+    _oper.setSoapAction("");
     _myOperationsList.add(_oper);
     if (_myOperations.get("add") == null) {
       _myOperations.put("add", new java.util.ArrayList());
@@ -48,7 +49,8 @@ public class BlacklistSoapService implements BlacklistSoap, org.apache.axis.wsdl
     _oper = new org.apache.axis.description.OperationDesc("remove", _params, new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "RemoveResult"));
     _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "boolean"));
     _oper.setElementQName(new javax.xml.namespace.QName("http://mts.qmobile.ru/api/", "Remove"));
-    _oper.setSoapAction("http://mts.qmobile.ru/api/Remove");
+//    _oper.setSoapAction("http://mts.qmobile.ru/api/Remove");
+    _oper.setSoapAction("");
     _myOperationsList.add(_oper);
     if (_myOperations.get("remove") == null) {
       _myOperations.put("remove", new java.util.ArrayList());

@@ -2,16 +2,17 @@ package ru.sibinco.smsx.engine.soaphandler.smsxsender;
 
 import com.eyeline.sme.utils.config.ConfigException;
 import com.eyeline.sme.utils.config.properties.PropertiesConfig;
+import com.eyeline.sme.utils.worker.IterativeWorker;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.CmdStatusObserver;
 import ru.sibinco.smsx.engine.service.ServiceManager;
-import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
-import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
-import ru.sibinco.smsx.engine.service.secret.commands.SecretSendMessageCmd;
-import ru.sibinco.smsx.engine.service.secret.commands.SecretGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListCheckMsisdnCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
+import ru.sibinco.smsx.engine.service.secret.commands.SecretGetMessageStatusCmd;
+import ru.sibinco.smsx.engine.service.secret.commands.SecretSendMessageCmd;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
@@ -52,6 +53,7 @@ class SmsXSenderHandler implements SmsXSender {
   private final int advertisingRestriction;
   private final String advertisingDelimiter;
   private final String advertisingClientName;
+  private boolean appendAdvertising;
 
   private final OperatorsList operatorsList;
   private final AdvertisingClient advertisingClient;
@@ -61,15 +63,20 @@ class SmsXSenderHandler implements SmsXSender {
     this.operatorsList = operatorsList;
     this.advertisingClient = advertisingClient;
 
+    final File configFile = new File(configDir, "soaphandlers/smsxsendhandler.properties");
+
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "soaphandlers/smsxsendhandler.properties"));
+      final PropertiesConfig config = new PropertiesConfig(configFile);
       serviceAddress = config.getString("service.address");
+      appendAdvertising = config.getBool("append.advertising");
       advertisingClientName = config.getString("advertising.service.name");
       advertisingRestriction = config.getInt("advertising.restriction");
       advertisingDelimiter = config.getString("advertising.delimiter");
     } catch (ConfigException e) {
       throw new SOAPHandlerInitializationException(e);
     }
+
+    new ConfigChecker(configFile, 60000).start();
   }
 
   public SmsXSenderResponse sendSms(String msisdn, String message, boolean express, boolean secret, boolean calendar, long calendarTimeUTC, boolean advertising) throws RemoteException {
@@ -104,8 +111,8 @@ class SmsXSenderHandler implements SmsXSender {
       }
 
       // Prepare message
-      if (advertising) {
-        final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(msisdn, advertisingRestriction - message.length()) : getBannerForAbonent(msisdn);
+      if (advertising && appendAdvertising) {
+        final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(msisdn, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(msisdn);
         log.info("Append banner: " + banner);
         if (banner != null)
           message += advertisingDelimiter + banner;
@@ -373,5 +380,31 @@ class SmsXSenderHandler implements SmsXSender {
       return null;
     }
   }
+
+  private class ConfigChecker extends IterativeWorker {
+
+    private final File configFile;
+
+    ConfigChecker(File configFile, int checkInterval) {
+      super(log, checkInterval);
+
+      this.configFile = configFile;
+    }
+
+    public void iterativeWork() {
+      try {
+        final PropertiesConfig cfg = new PropertiesConfig(configFile);
+
+        appendAdvertising = cfg.getBool("append.advertising");
+        log.info("Append advertising = " + appendAdvertising);
+
+      } catch (ConfigException e) {
+        log.error(e,e);
+      }
+    }
+
+    protected void stopCurrentWork() {
+    }
+}
 
 }
