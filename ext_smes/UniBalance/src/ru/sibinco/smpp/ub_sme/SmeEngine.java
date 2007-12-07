@@ -127,12 +127,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"ussd.session.timeout\": " + config.getProperty("ussd.session.timeout"));
         }
-        long requestStatesControllerPollingInterval;
-        try {
-            requestStatesControllerPollingInterval = Long.parseLong(config.getProperty("request.states.controller.polling.interval", Long.toString(ussdSessionTimeout)));
-        } catch (NumberFormatException e) {
-            throw new InitializationException("Invalid value for config parameter \"request.states.controller.polling.interval\": " + config.getProperty("request.states.controller.polling.interval"));
-        }
         try {
             maxProcessingRequests = Integer.parseInt(config.getProperty("max.processing.requests.count", Integer.toString(maxProcessingRequests)));
         } catch (NumberFormatException e) {
