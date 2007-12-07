@@ -2,6 +2,7 @@ package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
+import ru.novosoft.smsc.infosme.backend.InfoSmeTransport;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageFilter;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.jsp.SMSCJspException;
@@ -42,7 +43,7 @@ public class Messages extends InfoSmeBean
 
   private MessageFilter  msgFilter = new MessageFilter();
   private String message2update;
-  private List messages = null;
+  private Collection messages = null;
 
   private String mbQuery     = null;
   private String mbResend    = null;
@@ -125,8 +126,9 @@ public class Messages extends InfoSmeBean
 
     try {
       out.clear();
-      final List messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+      final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
                                    (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
+      final Collection messages = result.getMessages();
 
       StringBuffer buffer = new StringBuffer();
       Message msg;
@@ -191,14 +193,16 @@ public class Messages extends InfoSmeBean
     if (messages != null)
       messages.clear();
 
-    messages = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+    final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
                                    (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), getInfoSmeContext().getMaxMessagesTotalSize()+1);
 
-    if (messages.size() > getInfoSmeContext().getMaxMessagesTotalSize())
-      return _error(new SMSCJspException("Messages size is more than " + getInfoSmeContext().getMaxMessagesTotalSize() + ", show first " + getInfoSmeContext().getMaxMessagesTotalSize() + " messages",
-                    SMSCJspException.ERROR_CLASS_MESSAGE));
+    messages = result.getMessages();
 
-    return RESULT_OK;
+//    if (messages.size() > getInfoSmeContext().getMaxMessagesTotalSize())
+//      return _error(new SMSCJspException("Messages size is more than " + getInfoSmeContext().getMaxMessagesTotalSize() + ", show first " + getInfoSmeContext().getMaxMessagesTotalSize() + " messages",
+//                    SMSCJspException.ERROR_CLASS_MESSAGE));
+
+    return message("Total messages count: " + result.getTotalCount());
   }
 
   private int processDelete() throws AdminException {
@@ -285,7 +289,7 @@ public class Messages extends InfoSmeBean
     checkedSet = new HashSet(Arrays.asList(checked));
   }
 
-  public List getMessages() {
+  public Collection getMessages() {
     return messages;
   }
   public int getTotalSize() {

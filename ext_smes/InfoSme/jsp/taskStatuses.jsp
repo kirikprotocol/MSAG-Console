@@ -7,28 +7,28 @@ List c = new ArrayList(bean.getTaskIds());
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
   final String taskIdHex = StringEncoderDecoder.encodeHEX((String) i.next());
-  out.print("\"gen" + taskIdHex + "\", \"prc" + taskIdHex + '"');
+  out.print("gen" + taskIdHex + ", prc" + taskIdHex + '"');
 	if (i.hasNext())
 		out.print(", ");
 }
-out.println();
+out.print("\r\n");
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
 	String taskId = (String) i.next();
   if (bean.isTaskGenerating(taskId)){
-    out.print("\"<span><img src='/images/ic_running.gif' title='generating'></span>\"");
+    out.print("<span><img src='/images/ic_running.gif' title='generating'></span>");
     //out.print("generating");
   }else{
-    out.print("\"<span><img src='/images/ic_stopped.gif' title='idle'></span>\"");
+    out.print("<span><img src='/images/ic_stopped.gif' title='idle'></span>");
     //out.print("notGenerating");
   }
 
   out.print(", ");
   if (bean.isTaskProcessing(taskId)) {
-    out.print("\"<span><img src='/images/ic_running.gif' title='processing'><span>\"");
+    out.print("<span><img src='/images/ic_running.gif' title='processing'><span>");
     //out.print("processing");
   }else{
-    out.print("\"<span><img src='/images/ic_stopped.gif' title='idle'></span>\"");
+    out.print("<span><img src='/images/ic_stopped.gif' title='idle'></span>");
     //out.print("notProcessing");
   }
 	if (i.hasNext())

@@ -13,7 +13,7 @@ import java.text.ParseException;
  * Date: 24.09.2003
  * Time: 17:21:16
  */
-class InfoSmeTransport extends Service
+public class InfoSmeTransport extends Service
 {
   private static final String SME_COMPONENT_ID = "InfoSme";
   private static final String method_startTaskProcessor_ID = "startTaskProcessor";
@@ -199,7 +199,7 @@ class InfoSmeTransport extends Service
   }
 
 
-  public List getMessages(final String taskId, final Message.State state, final Date fromSendDate, final Date toSendDate, final String address,
+  public GetMessagesResult getMessages(final String taskId, final Message.State state, final Date fromSendDate, final Date toSendDate, final String address,
                           final String orderBy, final boolean orderAsc, final int limit) throws AdminException {
     if (taskId == null)
       throw new AdminException("Task id is null");
@@ -217,35 +217,42 @@ class InfoSmeTransport extends Service
     return translateGetMessagesResult((List)callMethod(SELECT_TASK_MESSAGES_METHOD_ID, Type.Types[Type.StringListType], args));
   }
 
-  private List translateGetMessagesResult(List messages) throws AdminException {
+  private GetMessagesResult translateGetMessagesResult(List messages) throws AdminException {
     final List result = new LinkedList();
+    int total = 0;
 
     try {
-
+      String str;
       for (Iterator iter = messages.iterator(); iter.hasNext();) {
-        final StringTokenizer st = new StringTokenizer((String) iter.next(), "|");
+        str = (String) iter.next();
 
-        final Message message = new Message();
+        if (iter.hasNext()) {
+          final StringTokenizer st = new StringTokenizer(str, "|");
+          final Message message = new Message();
 
-        if (st.hasMoreTokens())
-          message.setTaskId(st.nextToken());
-        if (st.hasMoreTokens())
-          message.setState(Message.State.getById(Integer.parseInt(st.nextToken())));
-        if (st.hasMoreTokens())
-          message.setAbonent(st.nextToken());
-        if (st.hasMoreTokens())
-          message.setSendDate(stringToDate(st.nextToken()));
-        if (st.hasMoreTokens())
-          message.setMessage(st.nextToken());
+          if (st.hasMoreTokens())
+            message.setTaskId(st.nextToken());
+          if (st.hasMoreTokens())
+            message.setState(Message.State.getById(Integer.parseInt(st.nextToken())));
+          if (st.hasMoreTokens())
+            message.setAbonent(st.nextToken());
+          if (st.hasMoreTokens())
+            message.setSendDate(stringToDate(st.nextToken()));
+          if (st.hasMoreTokens())
+            message.setMessage(st.nextToken());
 
-        result.add(message);
+          result.add(message);
+
+        } else
+          total = Integer.parseInt(str);
+
       }
 
     } catch (Throwable e) {
       throw new AdminException(e.getMessage());
     }
 
-    return result;
+    return new GetMessagesResult(result, total);
   }
 
   public void resendMessages(String taskId, String id, Message.State newState, Date newDate) throws AdminException {
@@ -445,5 +452,23 @@ class InfoSmeTransport extends Service
     Map params = new HashMap();
     params.put("id", taskId);
     callMethod(END_DELIVERY_MESSAGE_GENERATION_ID, Type.Types[Type.StringType], params);
+  }
+
+  public static class GetMessagesResult {
+    private final Collection messages;
+    private final int totalCount;
+
+    public GetMessagesResult(Collection messages, int totalCount) {
+      this.messages = messages;
+      this.totalCount = totalCount;
+    }
+
+    public Collection getMessages() {
+      return messages;
+    }
+
+    public int getTotalCount() {
+      return totalCount;
+    }
   }
 }

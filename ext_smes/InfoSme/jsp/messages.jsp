@@ -97,7 +97,7 @@ page_menu_space(out);
 page_menu_end(out);
 if (bean.isInitialized()) {
 %><div class=content><%
-List allMessages = bean.getMessages();
+Collection allMessages = bean.getMessages();
 if (allMessages == null || allMessages.size() == 0)
 {%><span style='color:blue;'><%= getLocString("infosme.msg.no_messages_matched")%></span><%}
 else
