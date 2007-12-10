@@ -18,6 +18,7 @@ public class ProfileStateProcessor implements Runnable {
     }
 
     public void run() {
+        
         state.setProfState(MGState.PROF_WAIT);
         String encoding = ProfileAbonentManager.getProfileAbonentLang().getLangProfile(state.getAbonentRequest().getSourceAddress());
         if(logger.isDebugEnabled()){
@@ -31,4 +32,5 @@ public class ProfileStateProcessor implements Runnable {
         }
         state.closeProcessing();
     }
+
 }

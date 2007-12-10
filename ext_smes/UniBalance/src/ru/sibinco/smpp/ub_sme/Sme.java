@@ -147,7 +147,7 @@ public class Sme {
         //TODO переделать
         smeEngine = new SmeEngine(multiplexor, outQueue, threadsPool);
         smeEngine.init(config);
-        ProfileAbonentManager.init(config);
+        //ProfileAbonentManager.init(config);
 
         multiplexor.setMessageListener(smeEngine);
         multiplexor.setResponseListener(smeEngine);

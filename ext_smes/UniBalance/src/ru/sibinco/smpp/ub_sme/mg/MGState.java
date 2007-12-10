@@ -21,9 +21,11 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     public static final byte BE_RESP_WAIT = 4;
     public static final byte BE_RESP_ERR = 5;
     public static final byte BE_RESP_OK = 6;
+    /*
     public static final byte PROF_ERR = 7;
     public static final byte PROF_OK = 8;
     public static final byte PROF_WAIT = 9;
+    */
     protected int mgState;
     protected String mgBalance;
     protected String message;
@@ -89,7 +91,7 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
         if (expired || closed) return;
 
 
-        if (mgState == MG_OK&&(profState==PROF_ERR||profState==PROF_OK)&&(bannerState==BE_RESP_ERR||bannerState==BE_RESP_OK)){
+        if (mgState == MG_OK&&(bannerState==BE_RESP_ERR||bannerState==BE_RESP_OK)){
             String message = Sme.getSmeEngine().prepareBalanceMessage(getMgBalance(), getBanner(), getEncoding());
             setMessage(message);
             Sme.getSmeEngine().sendResponse(this);
