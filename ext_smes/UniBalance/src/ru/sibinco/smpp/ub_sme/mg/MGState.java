@@ -138,11 +138,11 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     }
 
     public synchronized void close() {
+        this.closed = true;
         synchronized (expireObject){
             expireObject.notify();
         }
-        this.closed = true;
-    }
+     }
 
 
     public synchronized int getBannerState() {
