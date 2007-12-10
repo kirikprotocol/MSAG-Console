@@ -22,11 +22,16 @@ public:
     : _ssn(ssn), _addr(addr), _dialogId(dialogId), _conn(conn) {}
 
   bool operator<(const USSProcSearchCrit& rhs) const {
-    if ( _ssn < rhs._ssn ||
-         _addr.toString() < rhs._addr.toString() ||
-         _dialogId < rhs._dialogId ||
-         _conn < rhs._conn ) return true;
-    else return false;
+    if (_ssn != rhs._ssn)
+      return _ssn < rhs._ssn;
+    else if (_addr.toString() != rhs._addr.toString())
+      return _addr.toString() < rhs._addr.toString();
+    else if (_dialogId != rhs._dialogId)
+      return _dialogId < rhs._dialogId;
+    else if (_conn != rhs._conn)
+      return _conn < rhs._conn;
+    else 
+      return false;
   }
 private:
   unsigned char _ssn;
