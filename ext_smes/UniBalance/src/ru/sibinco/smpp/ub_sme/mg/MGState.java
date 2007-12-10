@@ -80,7 +80,6 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
 
     public void startProcessing() {
         pool.execute(new MgRequestStateProcessor(this));
-//        pool.execute(new BannerRequestStateProcessor(this));
         Sme.getSmeEngine().requestBanner(this);
         pool.execute(new ProfileStateProcessor(this));
         pool.execute(new ExpireStateProcessor(this));

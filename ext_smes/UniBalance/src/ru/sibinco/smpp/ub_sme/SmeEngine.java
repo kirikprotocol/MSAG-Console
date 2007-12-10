@@ -127,6 +127,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"ussd.session.timeout\": " + config.getProperty("ussd.session.timeout"));
         }
+
         try {
             maxProcessingRequests = Integer.parseInt(config.getProperty("max.processing.requests.count", Integer.toString(maxProcessingRequests)));
         } catch (NumberFormatException e) {
