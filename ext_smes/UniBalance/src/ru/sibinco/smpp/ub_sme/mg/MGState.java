@@ -21,11 +21,9 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     public static final byte BE_RESP_WAIT = 4;
     public static final byte BE_RESP_ERR = 5;
     public static final byte BE_RESP_OK = 6;
-    /*
     public static final byte PROF_ERR = 7;
     public static final byte PROF_OK = 8;
     public static final byte PROF_WAIT = 9;
-    */
     protected int mgState;
     protected String mgBalance;
     protected String message;
