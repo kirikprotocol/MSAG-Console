@@ -104,6 +104,9 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     public void response(Message msg){
               if (isExpired()) {
                 Sme.getSmeEngine().sendDeliverSmResponse(msg, Data.ESME_RSYSERR);
+                 setMgState(MGState.MG_ERR);
+                 closeProcessing();
+                 return;
             }
             setMgBalance(msg.getMessageString());
             setMgState(MGState.MG_OK);
