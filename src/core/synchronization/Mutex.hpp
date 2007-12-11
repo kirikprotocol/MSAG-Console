@@ -1,3 +1,4 @@
+#pragma ident "$Id$"
 #ifndef __CORE_SYNCHRONIZATION_MUTEX_HPP__
 #define __CORE_SYNCHRONIZATION_MUTEX_HPP__
 
@@ -12,7 +13,6 @@
 namespace smsc{
 namespace core{
 namespace synchronization{
-
 
 class Event;
 
@@ -60,6 +60,14 @@ public:
     return pthread_mutex_trylock(&mutex)==0;
 #endif
   }
+#ifndef _WIN32
+  //Condition variable should be properly initialized !
+  inline int WaitCondition(pthread_cond_t & cond_var)
+  {
+      return pthread_cond_wait(&cond_var, &mutex);
+  }
+#endif /* _WIN32 */
+
 protected:
 #ifdef _WIN32
   HANDLE mutex;
