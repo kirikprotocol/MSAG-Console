@@ -884,12 +884,14 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
     NotifyGetAdapter	adapter(abnt, ph.c_str());					//"11111");//callers[i].getText().c_str());
     messageFormatter->format(msg.message, adapter, ctx);
     msg.abonent = callers[i].getText();//"444"
+
     try{checkAddress(msg.abonent.c_str());}catch(Exception e)
     {
       smsc_log_error(logger, "Skip notification message - bad address %s", e.what());
       continue;
     }
     smsc_log_debug(logger, "Notify message = %s", msg.message.c_str());
+    msg.caller_abonent = abnt;
     messageSender->send(messageSender->getSequenceNumber(), msg);
   }
 }
