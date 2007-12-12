@@ -1,10 +1,12 @@
 #include "RegionPersServer.h"
 #include "util/Exception.hpp"
 #include "Types.h"
+#include "sms/sms.h"
 
 namespace scag { namespace pers {
 
 using smsc::util::Exception;
+using smsc::sms::Address;
 
 RegionPersServer::RegionPersServer(const char* persHost_, int persPort_, int maxClientCount_, 
                    int timeout_, StringProfileStore *abonent, IntProfileStore *service,
@@ -63,9 +65,9 @@ bool RegionPersServer::bindToCP() {
     central_socket->setNonBlocking(1);
     central_socket->setData(0, ctx);
     //listener.addRW(central_socket);
-    ctx->outbuf.SetPos(sizeof(uint32_t));
+    ctx->outbuf.SetPos(PACKET_LENGTH_SIZE);
     listener.addR(central_socket);
-    smsc_log_debug(rplog, "bindToCP : region perserver bound to CP socket:%p cxt:%p",
+    smsc_log_debug(rplog, "bindToCP: region perserver bound to CP socket:%p cxt:%p",
                     central_socket, ctx);
     return true;
   } catch (const Exception& e) {
@@ -87,7 +89,7 @@ bool RegionPersServer::processPacket(ConnectionContext &ctx) {
   if (!central_ctx) {
     connected = false;
     removeSocket(central_socket);
-    smsc_log_debug(rplog, "processPacket : central_socket hasn't ctx");
+    smsc_log_debug(rplog, "processPacket: central_socket hasn't ctx");
     //return false;
     return processPacketFromClient(ctx);
     //return PersServer::processPacket(ctx);
@@ -101,10 +103,14 @@ bool RegionPersServer::processPacket(ConnectionContext &ctx) {
     } catch(const SerialBufferOutOfBounds &e) {
       smsc_log_debug(rplog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
                       ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+      ctx.inbuf.Empty();
     }
     catch(const Exception& e) {
       smsc_log_debug(rplog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s",
                       e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+    }
+    catch(const std::runtime_error& e) {
+      smsc_log_debug(rplog, "Error profile key: %s", e.what());
     }
     catch(...) {
       smsc_log_debug(rplog, "Some Exception. Bad data in buffer received len=%d, data=%s",
@@ -126,12 +132,12 @@ bool RegionPersServer::processPacketFromCP(ConnectionContext &ctx) {
     switch(cmd) {
 
     case CentralPersCmd::GET_PROFILE:
-      smsc_log_debug(rplog, "GET_PROFILE Profile received");
+      smsc_log_debug(rplog, "GET_PROFILE received");
       getProfileCmdHandler(ctx);
       break;
 
     case CentralPersCmd::PROFILE_RESP:
-      smsc_log_debug(rplog, "PROFILE Resp received");
+      smsc_log_debug(rplog, "PROFILE_RESP received");
       profileRespCmdHandler(ctx);
       break;
 
@@ -165,12 +171,15 @@ bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
   try {
     ctx.outbuf.SetPos(PACKET_LENGTH_SIZE);
     execCommand(ctx);
-    if (ctx.outbuf.GetPos() > sizeof(uint32_t)) {
+    if (ctx.outbuf.GetPos() > PACKET_LENGTH_SIZE) {
       SetPacketSize(ctx.outbuf);
     }
     return true;
   } catch(const SerialBufferOutOfBounds &e) {
     smsc_log_debug(rplog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+  }
+  catch(const std::runtime_error& e) {
+    smsc_log_debug(rplog, "Error profile key: %s", e.what());
   }
   catch(const Exception& e) {
     smsc_log_debug(rplog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
@@ -184,7 +193,7 @@ bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
 }
 
 void RegionPersServer::execCommand(ConnectionContext& ctx) {
-  smsc_log_debug(rplog, "execCommand(isb, osb)");
+  smsc_log_debug(rplog, "execCommand(ctx)");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   PersCmd cmd;
   ProfileType pt;
@@ -192,26 +201,26 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
   string str_key;
   cmd = (PersCmd)isb.ReadInt8();
   if(cmd == PC_PING) {
+    smsc_log_debug(rplog, "execCommand(ctx): Ping received");
     createResponseForClient(&osb, RESPONSE_OK);
-    smsc_log_debug(rplog, "Ping received");
     return;
   }
   if (cmd == PC_BATCH) {
     uint16_t cnt = isb.ReadInt16();
     ctx.batch = true;
     ctx.batch_cmd_count = cnt;
-    smsc_log_debug(rplog, "Batch start. commands count=%d", cnt);
+    smsc_log_debug(rplog, "execCommand(ctx): Batch start. Commands count=%d", cnt);
     while(cnt--) {
       execCommand(ctx);
     }
-    smsc_log_debug(rplog, "Batch end");
+    smsc_log_debug(rplog, "execCommand(ctx): Batch end");
     return;
   }
   if (ctx.batch && ctx.batch_cmd_count) {
     --ctx.batch_cmd_count;
   }
   pt = (ProfileType)isb.ReadInt8();
-  smsc_log_debug(rplog, "profile type = %d", pt);
+  smsc_log_debug(rplog, "execCommand(ctx): profile type = %d", pt);
   if(pt != PT_ABONENT) {
     int_key = isb.ReadInt32();
     string name;
@@ -242,36 +251,35 @@ void RegionPersServer::execCommand(ConnectionContext& ctx) {
       break;
     }
     default:
-      smsc_log_debug(rplog, "Bad command %d", cmd);
+      smsc_log_debug(rplog, "execCommand(ctx): Bad command %d", cmd);
     }
     //SetPacketSize(osb);
     return;
   } 
   isb.ReadString(str_key);
-  smsc_log_debug(rplog, "profile key = \'%s\'", str_key.c_str());
-  AbntAddr addr(str_key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  string profKey = getProfileKey(str_key);
+  smsc_log_debug(rplog, "execCommand(ctx): profile key=%s", profKey.c_str());
+  AbntAddr addr(profKey.c_str());
   uint8_t pf_state = OK;
   profiles_states.Get(addr, pf_state);
   if (pf_state != OK) {
-    smsc_log_debug(rplog, "execCommand(isb, osb) : profile key=%s LOCKED or DELETED",
-                    str_key.c_str());
+    smsc_log_debug(rplog, "execCommand(ctx): profile key=%s LOCKED",
+                    profKey.c_str());
     createResponseForClient(&osb, RESPONSE_ERROR);
     return;
   }
-  Profile *pf = getProfile(str_key);
+  Profile *pf = getProfile(profKey);
   if (pf) {
-    smsc_log_debug(rplog, "execCommand(isb, osb) : profile key=%s found int local storage", 
-                   str_key.c_str());
-    execCommand(cmd, pf, str_key, isb, osb);
+    smsc_log_debug(rplog, "execCommand(ctx): profile key=%s found int local storage", 
+                   profKey.c_str());
+    execCommand(cmd, pf, profKey, isb, osb);
     return;
   }
-  smsc_log_debug(rplog, "execCommand(isb, osb) : profile key=%s NOT found int local storage",
-                  str_key.c_str());
-  GetProfileCmd get_profile_cmd(str_key);
+  smsc_log_debug(rplog, "execCommand(ctx): profile key=%s NOT found int local storage",
+                  profKey.c_str());
+  GetProfileCmd get_profile_cmd(profKey);
   if (!sendCommandToCP(get_profile_cmd)) {
-    smsc_log_warn(rplog, "execCommand(isb, osb) : can't send command to CP");
+    smsc_log_warn(rplog, "execCommand(ctx): can't send command to CP");
     createResponseForClient(&osb, RESPONSE_ERROR);
     return;
   }
@@ -312,7 +320,7 @@ void RegionPersServer::execCommand(PersCmd cmd, Profile *pf, const string& str_k
     break;
   }
   default:
-    smsc_log_debug(rplog, "Bad command %d", cmd);
+    smsc_log_debug(rplog, "execCommand: Bad command %d", cmd);
   }
   //SetPacketSize(osb);
 }
@@ -325,11 +333,11 @@ void RegionPersServer::onDisconnect(ConnectionContext &ctx) {
   ConnectionContext *central_ctx = (ConnectionContext *)central_socket->getData(0);
   if (!central_ctx) {
     connected = false;
-    smsc_log_debug(rplog, "onDisconnect : central_socket hasn't ctx");
+    smsc_log_debug(rplog, "onDisconnect: central_socket hasn't ctx");
   }
   if (central_ctx == &ctx) {
     connected = false;
-    smsc_log_debug(rplog, "onDisconnect : central_socket disconnected");
+    smsc_log_warn(rplog, "onDisconnect: central_socket disconnected");
     //сохранить контекст чтоб потом его продолжить обрабатывать после переподключения
   }
 }
@@ -353,38 +361,38 @@ void RegionPersServer::getProfileCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "getProfileCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   GetProfileCmd get_profile_cmd(isb);
-  smsc_log_debug(rplog, "getProfileCmdHandler: key=\'%s\'", get_profile_cmd.key.c_str());
+  smsc_log_debug(rplog, "getProfileCmdHandler: key=%s", get_profile_cmd.key.c_str());
   Profile *pf = getProfile(get_profile_cmd.key);
   ProfileRespCmd profile_resp(get_profile_cmd.key);
   if (!pf) {
     profile_resp.is_ok = 0;
-    smsc_log_warn(rplog, "getProfileCmdHandler : profile with key=%s not found", get_profile_cmd.key.c_str());
+    smsc_log_warn(rplog, "getProfileCmdHandler: profile not found key=%s", get_profile_cmd.key.c_str());
     sendCommandToCP(profile_resp);
     return;
   }
   AbntAddr addr(get_profile_cmd.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   uint8_t pf_state = OK;
   profiles_states.Get(addr, pf_state);
   switch (pf_state) {
   case LOCKED : 
     profile_resp.is_ok = 0;
-    smsc_log_warn(rplog, "getProfileCmdHandler : profile with key=%s LOCKED", get_profile_cmd.key.c_str());
+    smsc_log_warn(rplog, "getProfileCmdHandler: profile key=%s LOCKED", get_profile_cmd.key.c_str());
     break;
   case DELETED :
     profile_resp.is_ok = 0;
-    smsc_log_warn(rplog, "getProfileCmdHandler : profile with key=%s DELETED", get_profile_cmd.key.c_str());
+    smsc_log_warn(rplog, "getProfileCmdHandler: profile key=%s DELETED", get_profile_cmd.key.c_str());
     break;
   case OK : 
     profiles_states.Insert(addr, LOCKED);
     requested_profiles.Insert(addr, time(NULL));
-    smsc_log_debug(rplog, "getProfileCmdHandler : set profile state LOCKED key=%s", get_profile_cmd.key.c_str());
+    smsc_log_debug(rplog, "getProfileCmdHandler: set profile LOCKED key=%s", get_profile_cmd.key.c_str());
     profile_resp.setProfile(pf);
     break;
   default:
     profile_resp.is_ok = 0;
-    smsc_log_warn(rplog, "getProfileCmdHandler : profile with key=%s has unknown state", get_profile_cmd.key.c_str());
+    smsc_log_warn(rplog, "getProfileCmdHandler: profile with key=%s has unknown state", get_profile_cmd.key.c_str());
   }
   sendCommandToCP(profile_resp);
 }
@@ -393,32 +401,32 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "profileRespCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   ProfileRespCmd profile_resp(isb);
-  smsc_log_debug(rplog, "profileRespCmdHandler key = \'%s\'", profile_resp.key.c_str());
+  smsc_log_debug(rplog, "profileRespCmdHandler: profile key=%s", profile_resp.key.c_str());
   CmdContext* cmd_ctx;
   AbntAddr addr(profile_resp.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   if (!(cmd_ctx = commands.GetPtr(addr))) {
-    smsc_log_warn(rplog, "profileRespCmdHandler : command conntext with key=%s not found",
-                    profile_resp.key.c_str());
+    smsc_log_warn(rplog, "profileRespCmdHandler: command conntext key=%s not found",
+                    addr.toString().c_str());
   } else {
     cmd_ctx->last_cmd_id = CentralPersCmd::PROFILE_RESP;
     cmd_ctx->start_time = time(NULL);
   }
   if (!profile_resp.is_ok) {
-    smsc_log_warn(rplog, "profileRespCmdHandler : receive error ProfileResp with key=%s",
+    smsc_log_warn(rplog, "profileRespCmdHandler: receive ERROR PROFILE_RESP key=%s",
                    profile_resp.key.c_str());
     sendResponseError(cmd_ctx, profile_resp.key);
     return;
   }
   Profile* profile = getAbonentStore()->createProfile(addr);
   if (!profile) {
-    smsc_log_warn(rplog, "profileRespCmdHandler : can't create new profile");
+    smsc_log_warn(rplog, "profileRespCmdHandler: can't create new profile");
     sendResponseError(cmd_ctx, profile_resp.key);
     return;
   }
   if (profile_resp.getProfile()) {
-    smsc_log_debug(rplog, "profileRespCmdHandler : response has profile");
+    smsc_log_debug(rplog, "profileRespCmdHandler: response has profile");
     profile_resp.getProfile()->copyPropertiesTo(profile);
     getAbonentStore()->storeProfile(addr, profile);
     profiles_states.Insert(addr, LOCKED);
@@ -426,12 +434,12 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
     sendCommandToCP(done);
     return;
   }
-  smsc_log_debug(rplog, "profileRespCmdHandler : response has NOT profile");
+  smsc_log_debug(rplog, "profileRespCmdHandler: response has NOT profile");
   if (cmd_ctx && listener.exists(cmd_ctx->socket)) {
     execCommand(cmd_ctx->cmd_id, profile, profile_resp.key, cmd_ctx->isb, *cmd_ctx->osb);
     sendCommandToClient(cmd_ctx);
   } else {
-    smsc_log_error(rplog, "profileRespCmdHandler : client connection error key=%s ctx=%p socket %p disconnected",
+    smsc_log_warn(rplog, "profileRespCmdHandler: client connection error key=%s ctx=%p socket %p disconnected",
                     profile_resp.key.c_str(), &ctx, cmd_ctx->socket);
   }
   commands.Delete(addr);
@@ -441,19 +449,19 @@ void RegionPersServer::doneCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "doneCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   DoneCmd done(isb);
-  smsc_log_debug(rplog, "doneCmdHandler: key=\'%s\'", done.key.c_str());
+  smsc_log_debug(rplog, "doneCmdHandler: profile key=%s", done.key.c_str());
   AbntAddr addr(done.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   profiles_states.Delete(addr);
   requested_profiles.Delete(addr);
   DoneRespCmd done_resp(1, done.key);
   if (done.is_ok) {
-    smsc_log_debug(rplog, "doneCmdHandler : delete profile key=\'%s\'", done.key.c_str());
+    smsc_log_debug(rplog, "doneCmdHandler: receive OK DONE, delete profile key=%s", addr.toString().c_str());
     getAbonentStore()->deleteProfile(addr);
     //profiles_states.Insert(addr, DELETED);
   } else {
-    smsc_log_debug(rplog, "doneCmdHandler : receive error DONE", done.key.c_str());
+    smsc_log_debug(rplog, "doneCmdHandler: receive ERROR DONE");
     done_resp.is_ok = 0;
      //profiles_states.Insert(addr, OK);
     //что делать если пришёл DONE=ERROR
@@ -465,28 +473,28 @@ void RegionPersServer::doneRespCmdHandler(ConnectionContext &ctx) {
   smsc_log_debug(rplog, "doneRespCmdHandler");
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   DoneRespCmd done_resp(isb);
-  smsc_log_debug(rplog, "doneRespCmdHandler: key=\'%s\'", done_resp.key.c_str());
+  smsc_log_debug(rplog, "doneRespCmdHandler: profile key=%s", done_resp.key.c_str());
   AbntAddr addr(done_resp.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   CmdContext cmd_ctx;
   if (!(commands.Get(addr, cmd_ctx))) {
-    smsc_log_warn(rplog, "doneRespCmdHandler : command conntext with key=%s not found ctx=%p",
-                    done_resp.key.c_str(), &ctx);
+    smsc_log_warn(rplog, "doneRespCmdHandler: command conntext key=%s not found ctx=%p",
+                    addr.toString().c_str(), &ctx);
     return;
   }
   bool client_connected = listener.exists(cmd_ctx.socket);
   if (!client_connected) {
-    smsc_log_warn(rplog, "doneRespCmdHandler : client connection error key=%s ctx=%p socket %p disconnected",
-                    done_resp.key.c_str(), &ctx, client_connected);
+    smsc_log_warn(rplog, "doneRespCmdHandler: client connection error key=%s ctx=%p socket %p disconnected",
+                    addr.toString().c_str(), &ctx, cmd_ctx.socket);
   }
   profiles_states.Delete(addr);
   if (done_resp.is_ok) {
     //profiles_states.Insert(addr, OK);
     Profile* profile = getProfile(done_resp.key);
     if (!profile) {
-      smsc_log_debug(rplog, "doneRespCmdHandler : profile with key=%s not found ctx=%p",
-                      done_resp.key.c_str(), &ctx);
+      smsc_log_debug(rplog, "doneRespCmdHandler: profile key=%s not found ctx=%p",
+                      addr.toString().c_str(), &ctx);
       if (client_connected) {
         createResponseForClient(cmd_ctx.osb, RESPONSE_ERROR);
         sendCommandToClient(&cmd_ctx);
@@ -499,10 +507,10 @@ void RegionPersServer::doneRespCmdHandler(ConnectionContext &ctx) {
       sendCommandToClient(&cmd_ctx);
     }
   } else {
-    smsc_log_warn(rplog, "doneRespCmdHandler : receive error DONE_RESP key=\'%s\'",
-                   done_resp.key.c_str());
+    smsc_log_warn(rplog, "doneRespCmdHandler: receive ERROR DONE_RESP key=%s", done_resp.key.c_str());
     //profiles_states.Insert(addr, DELETED);
     getAbonentStore()->deleteProfile(addr);
+    smsc_log_debug(rplog, "doneRespCmdHandler: delete profile key=%s", addr.toString().c_str());
     if (client_connected) {
       createResponseForClient(cmd_ctx.osb, RESPONSE_ERROR);
       sendCommandToClient(&cmd_ctx);
@@ -515,18 +523,16 @@ void RegionPersServer::checkOwnCmdHandler(ConnectionContext &ctx) {
 }
 
 void RegionPersServer::DelCmdHandler(ProfileType pt, uint32_t int_key, const string& name, SerialBuffer& osb) {
-  smsc_log_debug(rplog, "DelCmdHandler");
   IntProfileStore *is;
   bool exists = false;
   if(is = findStore(pt)) {
-    smsc_log_debug(rplog, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
+    smsc_log_debug(rplog, "DelCmdHandler store=%d, key=%d, name=%s", pt, int_key, name.c_str());
     exists = is->delProperty(int_key, name.c_str());
   }
   SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
 }
 
 void RegionPersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const string& name, SerialBuffer& osb) {
-  smsc_log_debug(rplog, "GetCmdHandler");
   IntProfileStore *is;
   Property prop;
   bool exists = false;
@@ -545,7 +551,6 @@ void RegionPersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const str
 }
 
 void RegionPersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb) {
-  smsc_log_debug(rplog, "SetCmdHandler");
   IntProfileStore *is;
   if(is = findStore(pt)) {
     smsc_log_debug(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
@@ -555,7 +560,6 @@ void RegionPersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, Property&
 }
 
 void RegionPersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb) {
-  smsc_log_debug(rplog, "IncCmdHandler");
   IntProfileStore *is;
   bool exists = false;
   if(is = findStore(pt)) {
@@ -631,10 +635,10 @@ void RegionPersServer::IncModCmdHandler(Profile *pf, const string& str_key,
 
 void RegionPersServer::createResponseForClient(SerialBuffer* sb, PersServerResponseType r) {
   if (!sb) {
-    smsc_log_warn(rplog, "createResponseForClient : serial buffer error");
+    smsc_log_warn(rplog, "createResponseForClient: serial buffer error");
     return;
   }
-  smsc_log_debug(rplog, "createResponseForClient : response=%d", static_cast<int>(r));
+  smsc_log_debug(rplog, "createResponseForClient: response=%d", static_cast<int>(r));
   //sb->SetPos(4);
   SendResponse(*sb, r);
   //SetPacketSize(*sb);
@@ -645,32 +649,32 @@ void RegionPersServer::sendResponseError(CmdContext* cmd_ctx, const string& key)
     createResponseForClient(cmd_ctx->osb, RESPONSE_ERROR);
     sendCommandToClient(cmd_ctx);
   } else {
-    smsc_log_error(rplog, "sendResponseError : socket %p disconnected", key.c_str(), cmd_ctx->socket);
+    smsc_log_error(rplog, "sendResponseError: socket %p disconnected", key.c_str(), cmd_ctx->socket);
   }
   DoneCmd done(0, key);
   sendCommandToCP(done);
   AbntAddr addr(key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   commands.Delete(addr);
 }
 
 void RegionPersServer::sendCommandToClient(CmdContext* cmd_ctx) {
   if (!cmd_ctx || !cmd_ctx->osb) {
-    smsc_log_warn(rplog, "sendCommandToClient : serial buffer error in ctx=%p", &cmd_ctx);
+    smsc_log_warn(rplog, "sendCommandToClient: serial buffer error in ctx=%p", &cmd_ctx);
     return;
   }
   if (!listener.exists(cmd_ctx->socket)) {
-    smsc_log_warn(rplog, "sendCommandToClient : client connection error socket %p desconnectd",
+    smsc_log_warn(rplog, "sendCommandToClient: client connection error socket %p desconnectd",
                   cmd_ctx->socket);
     return;
   }
   ConnectionContext* ctx = (ConnectionContext*)cmd_ctx->socket->getData(0);
   if (!ctx) {
-    smsc_log_warn(rplog, "sendCommandToClient : empty connection context");
+    smsc_log_warn(rplog, "sendCommandToClient: empty connection context");
     return;
   }
-  smsc_log_debug(rplog, "sendCommandToClient : outbuf length=%d", ctx->outbuf.GetSize());
+  smsc_log_debug(rplog, "sendCommandToClient: outbuf length=%d", ctx->outbuf.GetSize());
   if (!ctx->batch || !ctx->batch_cmd_count) {
     SetPacketSize(ctx->outbuf);
     ctx->outbuf.SetPos(0);
@@ -678,7 +682,7 @@ void RegionPersServer::sendCommandToClient(CmdContext* cmd_ctx) {
     return;
   }
   --ctx->batch_cmd_count;
-  smsc_log_debug(rplog, "sendCommandToClient : batch commands count = %d", ctx->batch_cmd_count);
+  smsc_log_debug(rplog, "sendCommandToClient: batch commands count = %d", ctx->batch_cmd_count);
   if (ctx->batch_cmd_count == 0) {
     ctx->batch = false;
     smsc_log_debug(rplog, "sendCommandToClient : send batch");
@@ -690,21 +694,23 @@ void RegionPersServer::sendCommandToClient(CmdContext* cmd_ctx) {
 
 void RegionPersServer::commandTimeout(const AbntAddr& addr, CmdContext& ctx) {
    if (ctx.last_cmd_id == CentralPersCmd::GET_PROFILE) {
-     smsc_log_warn(rplog, "commandTimeout: PROFILE_RESP timeout key=\'%s\'", addr.toString().c_str());
-     string key(addr.toString(), ADDR_PREFIX_SIZE);
+     smsc_log_warn(rplog, "commandTimeout: PROFILE_RESP timeout key=%s", addr.toString().c_str());
+     //string key(addr.toString(), ADDR_PREFIX_SIZE);
+     string key(addr.toString());
      sendResponseError(&ctx, key);
      return;
    }
    if (ctx.last_cmd_id == CentralPersCmd::PROFILE_RESP) {
-     smsc_log_warn(rplog, "commandTimeout: DONE_RESP timeout key=\'%s\'", addr.toString().c_str());
+     smsc_log_warn(rplog, "commandTimeout: DONE_RESP timeout key=%s", addr.toString().c_str());
      //не пришёл DONE_RESP
      commands.Delete(addr);
    }
 }
 
 void RegionPersServer::doneTimeout(const AbntAddr& addr) {
-  smsc_log_warn(rplog, "doneTimeout: DONE timeout key=\'%s\'", addr.toString().c_str());
-  string key(addr.toString(), ADDR_PREFIX_SIZE);
+  smsc_log_warn(rplog, "doneTimeout: DONE timeout key=%s", addr.toString().c_str());
+  //string key(addr.toString(), ADDR_PREFIX_SIZE);
+  string key(addr.toString());
   DoneRespCmd done_resp(0, key);
   sendCommandToCP(done_resp);
   requested_profiles.Delete(addr);
@@ -715,24 +721,33 @@ void RegionPersServer::checkTimeouts()
 {
 	time_t time_bound = time(NULL) - timeout;
 	int i = 1;
-	smsc_log_debug(log, "Checking timeouts...");
+	smsc_log_debug(rplog, "Checking timeouts...");
 	while(i < listener.count())
 	{
 		Socket* s = listener.get(i);
-        if (s == central_socket) {
-          ++i;
-          continue;
-        }
 		ConnectionContext* ctx = (ConnectionContext*)s->getData(0);
 		if(ctx->lastActivity  < time_bound)
 		{
-		    smsc_log_info(log, "Disconnecting inactive user by timeout");		
-			removeSocket(s, i);
+          if (s == central_socket) {
+            smsc_log_debug(rplog, "central socket inactive");		
+            if (!pingCP()) {
+              removeSocket(s, i);
+            }
+            ++i;
+          } else {
+            smsc_log_info(rplog, "Disconnecting inactive user by timeout");		
+            removeSocket(s, i);
+          }
 		}
 		else
 			i++;
 	}
-
+    if (isStopping) {
+      return;
+    }
+    if (!connected) {
+      bindToCP(); 
+    }
     time_bound = time(NULL) - timeout / 2;
     AbntAddr key;
     CmdContext ctx;
@@ -749,43 +764,98 @@ void RegionPersServer::checkTimeouts()
         doneTimeout(key);
       }
     }
-
     last_check_time = time(NULL);
 }
 
-
-/*
-void RegionPersServer::setProperty(Profile* pf, Property& prop) {
-  if (!pf) {
-    return;
+bool RegionPersServer::pingCP() {
+  if (!connected) {
+    return false;
   }
-  MutexGuard mt(store_mtx);
-  if(prop.isExpired()) {
-    return;
+  try {
+    SerialBuffer sb;
+    sb.SetPos(PACKET_LENGTH_SIZE);
+    sb.WriteInt8(CentralPersCmd::PING);
+    sb.SetPos(0);
+    sb.WriteInt32(sb.GetSize());
+    sb.SetPos(0);
+    WriteAllToCP(sb.c_ptr(), sb.length());
+    smsc_log_debug(rplog, "Ping sent length=%d data=%s", sb.length(), sb.toString().c_str());			
+    sb.Empty();
+    char buf[1024];
+    ReadAllFromCP(buf, PACKET_LENGTH_SIZE);
+    sb.Append(buf, PACKET_LENGTH_SIZE);
+    sb.SetPos(0);
+    uint32_t size = sb.ReadInt32() - PACKET_LENGTH_SIZE;
+    if (size != sizeof(uint8_t)) {
+      smsc_log_warn(rplog, "Ping failed packet size=%d", size);
+      return false;
+    }
+    ReadAllFromCP(buf, sizeof(uint8_t));
+    sb.Append(buf, sizeof(uint8_t));
+    sb.SetPos(PACKET_LENGTH_SIZE);
+    if (sb.ReadInt8() != CentralPersCmd::PING_OK) {
+      smsc_log_warn(rplog, "Ping failed");
+      return false;
+    }
+    smsc_log_debug(rplog, "Ping OK");			
+    return true;
+  } catch (const Exception& e) {
+    smsc_log_warn(rplog, "Ping failed: %s", e.what());
+    return false;
+  } catch (const SerialBufferOutOfBounds &e) {
+    smsc_log_warn(rplog, "Ping failed: SerialBufferOutOfBounds bad data in buffer");
+    return false;
   }
-  Property* p = pf->GetProperty(prop.getName().c_str());
-  if(p != NULL) {
-    p->setValue(prop);
-    p->WriteAccess();
-  } else {
-    pf->AddProperty(prop);
-  }
-  //Abonen storeProfile(key, pf);
-  //smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
 }
 
-bool RegionPersServer::delProperty(Profile* pf, const char* nm) {
+void RegionPersServer::ReadAllFromCP(char* buf, uint32_t sz)
+{
+    int cnt;
+    uint32_t rd = 0;
+    struct pollfd pfd;
+
+    while(sz)
+    {
+		pfd.fd = central_socket->getSocket();
+		pfd.events = POLLIN;
+        //if(poll(&pfd, 1, timeout * 1000) <= 0 || !(pfd.revents & POLLIN))
+        if(poll(&pfd, 1, timeout) <= 0 || !(pfd.revents & POLLIN))
+            throw Exception("timeout");
+
+        cnt = central_socket->Read(buf + rd, sz);
+        if(cnt <= 0)
+            throw Exception("read failed");
+
+        rd += cnt;
+        sz -= cnt;
+    }
 }
 
-bool RegionPersServer::getProperty(Profile* pf, const char* nm, Property& prop) {
+void RegionPersServer::WriteAllToCP(const char* buf, uint32_t sz)
+{
+    int cnt;
+    uint32_t wr = 0;
+    struct pollfd pfd;    
+
+    while(sz)
+    {
+		pfd.fd = central_socket->getSocket();
+		pfd.events = POLLOUT | POLLIN;
+        //if(poll(&pfd, 1, timeout * 1000) <= 0)
+        if(poll(&pfd, 1, timeout) <= 0)
+          throw Exception("timeout");
+		else if(!(pfd.revents & POLLOUT) || (pfd.revents & POLLIN))
+          throw Exception("send failed");
+
+        cnt = central_socket->Write(buf + wr, sz);
+        if(cnt <= 0)
+          throw Exception("send failed");
+
+        wr += cnt;
+        sz -= cnt;
+    }
 }
 
-bool RegionPersServer::incProperty(Profile* pf, Property& prop) {
-}
-
-bool RegionPersServer::incModProperty(Profile* pf, Property& prop, uint32_t mod, int& res) {
-}
-*/
 CmdContext::CmdContext():cmd_id(PC_UNKNOWN), osb(0), socket(0),
                          start_time(time(NULL)), last_cmd_id(CentralPersCmd::GET_PROFILE) {};
 

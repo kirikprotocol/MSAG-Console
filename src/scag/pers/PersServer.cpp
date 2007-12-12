@@ -1,11 +1,13 @@
 /* $Id$ */
 
 #include "PersServer.h"
+#include "sms/sms.h"
 
 namespace scag { namespace pers {
 
 using smsc::util::Exception;
 using smsc::logger::Logger;
+using smsc::sms::Address;
 
 PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider):
         PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), plog(Logger::getInstance("persserver"))
@@ -152,6 +154,9 @@ bool PersServer::processPacket(ConnectionContext& ctx)
     {
         smsc_log_debug(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
     }
+    catch(const std::runtime_error& e) {
+      smsc_log_debug(plog, "Error profile key: %s", e.what());
+    }
     catch(const Exception& e)
     {
         smsc_log_debug(plog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
@@ -171,6 +176,7 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
     ProfileType pt;
     uint32_t int_key;
     string str_key;
+    string profKey;
     string name;
     Property prop;
     cmd = (PersCmd)isb.ReadInt8();
@@ -183,34 +189,37 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
     if(cmd != PC_BATCH)
     {
         pt = (ProfileType)isb.ReadInt8();
-        if(pt != PT_ABONENT)
-            int_key = isb.ReadInt32();
-        else
-            isb.ReadString(str_key);
+        if(pt != PT_ABONENT) {
+          int_key = isb.ReadInt32();
+        }
+        else {
+          isb.ReadString(str_key);
+          profKey = getProfileKey(str_key);
+        }
     }
     switch(cmd)
     {
         case PC_DEL:
             isb.ReadString(name);
-            DelCmdHandler(pt, int_key, str_key, name, osb);
+            DelCmdHandler(pt, int_key, profKey, name, osb);
             return;
         case PC_SET:
             prop.Deserialize(isb);
-            SetCmdHandler(pt, int_key, str_key, prop, osb);
+            SetCmdHandler(pt, int_key, profKey, prop, osb);
             return;
         case PC_GET:
             isb.ReadString(name);
-            GetCmdHandler(pt, int_key, str_key, name, osb);
+            GetCmdHandler(pt, int_key, profKey, name, osb);
             return;
         case PC_INC:
             prop.Deserialize(isb);
-            IncCmdHandler(pt, int_key, str_key, prop, osb);
+            IncCmdHandler(pt, int_key, profKey, prop, osb);
             return;
         case PC_INC_MOD:
         {
             int inc = isb.ReadInt32();
             prop.Deserialize(isb);
-            IncModCmdHandler(pt, int_key, str_key, prop, inc, osb);
+            IncModCmdHandler(pt, int_key, profKey, prop, inc, osb);
 			return;
         }
         case PC_BATCH:
@@ -235,5 +244,15 @@ Profile* PersServer::getProfile(const string& key) {
 Profile* PersServer::createProfile(AbntAddr& addr) {
   return  AbonentStore->createProfile(addr);
 }
+
+string PersServer::getProfileKey(const string& key) const {
+  Address addr(key.c_str());
+  if (key[0] != '.') {
+    addr.setNumberingPlan(1);
+    addr.setTypeOfNumber(1);
+  }
+  return addr.toString();
+}
+
 
 }}

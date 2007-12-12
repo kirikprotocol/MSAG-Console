@@ -41,6 +41,7 @@ protected:
 
 private:
   void connectToCP();
+  bool pingCP();
   bool processPacketFromCP(ConnectionContext &ctx);
   bool processPacketFromClient(ConnectionContext &ctx);
   void execCommand(ConnectionContext &ctx);
@@ -74,6 +75,10 @@ private:
 
   void commandTimeout(const AbntAddr& addr, CmdContext& ctx);
   void doneTimeout(const AbntAddr& addr);
+
+  void WriteAllToCP(const char* buf, uint32_t sz);
+  void ReadAllFromCP(char* buf, uint32_t sz);
+
 
 private:
   Socket *central_socket;

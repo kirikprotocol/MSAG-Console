@@ -30,6 +30,7 @@ protected:
 	void execCommand(SerialBuffer& isb, SerialBuffer& osb);
     IntProfileStore* findStore(ProfileType pt);
     Profile* getProfile(const string& key);
+   string getProfileKey(const string& key) const;
     Profile* createProfile(AbntAddr& addr);
     StringProfileStore* getAbonentStore() { return AbonentStore; };
     void SendResponse(SerialBuffer& sb, PersServerResponseType r);

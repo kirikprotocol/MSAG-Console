@@ -1,6 +1,9 @@
 #include "CPersCmd.h"
+#include "sms/sms.h"
 
 namespace scag { namespace cpers {
+
+using smsc::sms::Address;
 
 bool CPersCmd::serialize(SerialBuffer& sb) const {
   //sb.setPos(4);
@@ -21,7 +24,14 @@ bool CPersCmd::serialize(SerialBuffer& sb) const {
 bool CPersCmd::deserialize(SerialBuffer& sb) {
   //sb.setPos(4);
   //cmd_id = sb.ReadInt8();
-  sb.ReadString(key);
+  string str_key;
+  sb.ReadString(str_key);
+  Address addr(str_key.c_str());
+  if (str_key[0] != '.') {
+    addr.setNumberingPlan(1);
+    addr.setNumberingPlan(1);
+  }
+  key = addr.toString();
   return true;
 }
 

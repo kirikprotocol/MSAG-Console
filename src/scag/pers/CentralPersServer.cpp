@@ -168,6 +168,13 @@ void CentralPersServer::execCommand(ConnectionContext& ctx) {
         smsc_log_debug(logger, "CHECK_OWN received");
       //checkOwnCmdHandler(ctx);
         break;
+  case CentralPersCmd::PING:
+    smsc_log_debug(logger, "PING received");
+    ctx.outbuf.SetPos(PACKET_LENGTH_SIZE);
+    ctx.outbuf.WriteInt8(CentralPersCmd::PING_OK);
+    ctx.outbuf.SetPos(0);
+    ctx.outbuf.WriteInt32(ctx.outbuf.GetSize());
+    return;
   default:
     smsc_log_warn(logger, "UNKNOWN command received cmd_id=%d", cmd);
     return;
@@ -223,8 +230,8 @@ void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
   smsc_log_debug(logger, "getProfileCmdHandler: profile key = \'%s\'", get_profile.key.c_str());
   ProfileInfo profile_info;
   AbntAddr addr(get_profile.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   if (!getProfileInfo(addr, profile_info)) {
     smsc_log_debug(logger, "getProfileCmdHandler: profile key = \'%s\' not registered", get_profile.key.c_str());
     profile_info.owner = ctx.region_id;
@@ -268,8 +275,8 @@ void CentralPersServer::profileRespCmdHandler(ConnectionContext& ctx) {
   ProfileRespCmd profile_resp(isb);
   smsc_log_debug(logger, "profileRespCmdHandler: profile key = \'%s\'", profile_resp.key.c_str());
   AbntAddr addr(profile_resp.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   TransactionInfo *pti;
   if(!(pti = transactions.GetPtr(addr))) {
     smsc_log_warn(logger, "profileRespCmdHandler: Transcation with key=%s not found", profile_resp.key.c_str());
@@ -302,8 +309,8 @@ void CentralPersServer::doneCmdHandler(ConnectionContext& ctx) {
   DoneCmd done(isb);
   smsc_log_debug(logger, "doneCmdHandler: profile key = \'%s\'", done.key.c_str());
   AbntAddr addr(done.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   TransactionInfo *pti;
   if(!(pti = transactions.GetPtr(addr))) {
     smsc_log_warn(logger, "doneCmdHandler: Transcation with key=%s not found", done.key.c_str());
@@ -341,8 +348,8 @@ void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
   DoneRespCmd done_resp(isb);
   smsc_log_debug(logger, "doneRespCmdHandler: profile key = \'%s\'", done_resp.key.c_str());
   AbntAddr addr(done_resp.key.c_str());
-  addr.setNumberingPlan(1);
-  addr.setTypeOfNumber(1);
+  //addr.setNumberingPlan(1);
+  //addr.setTypeOfNumber(1);
   TransactionInfo *pti;
   uint32_t owner = 0;
   if(!(pti = transactions.GetPtr(addr))) {
@@ -387,6 +394,9 @@ void CentralPersServer::sendCommand(CPersCmd& cmd, ConnectionContext* ctx) {
 
 void CentralPersServer::checkTimeouts() {
   PersSocketServer::checkTimeouts();
+  if (isStopping) {
+    return;
+  }
   checkTransactionsTimeouts();
 }
 
@@ -395,7 +405,8 @@ void CentralPersServer::transactionTimeout(const AbntAddr& addr, const Transacti
   smsc_log_warn(logger, "transaction timeout key=\'%s\' last operation id=%d",
                  addr.toString().c_str(), last_cmd);
   //int addr_prefix_size = 5;
-  string key(addr.toString(), ADDR_PREFIX_SIZE);
+  //string key(addr.toString(), ADDR_PREFIX_SIZE);
+  string key(addr.toString());
   switch (last_cmd) {
   case CentralPersCmd::GET_PROFILE: {
     ProfileRespCmd profile_resp(key);

@@ -161,9 +161,6 @@ protected:
       store.deleteRecord(key);
     }
 
-    void normalizeKey(Key &key) {
-    }
-
 /*    bool getProfile(Key& key, Profile& pf, bool create)
     {
         if(store.getRecord(key, &pf))
@@ -209,15 +206,15 @@ public:
     void storeProfile(Key& key, Profile *pf)
     {
 //        pf->DeleteExpired();
-      normalizeKey(key);
 		sb.Empty();
         pf->Serialize(sb, true);
 //        delete pf;  
-        if (store.Set(key, sb)) {
-          smsc_log_debug(log, "Set return TRUE");
-        } else {
-          smsc_log_debug(log, "Set return FALSE");
-        }
+        store.Set(key, sb);
+        //if (store.Set(key, sb)) {
+          //smsc_log_debug(log, "Set return TRUE");
+        //} else {
+          //smsc_log_debug(log, "Set return FALSE");
+        //}
     }
 
     Profile* _getProfile(Key& key, bool create)
@@ -242,11 +239,6 @@ protected:
 
     void _deleteProfile(Key &key) {
       store.Remove(key);
-    }
-
-    void normalizeKey(Key& key) {
-      key.setNumberingPlan(1);
-      key.setTypeOfNumber(1);
     }
 
 protected:
@@ -289,7 +281,6 @@ public:
 
     Profile* getProfile(Key& key, bool create)
     {
-      normalizeKey(key);
         uint32_t i = key.HashCode(0) % max_cache_size;
         if(cache[i] != NULL)
         {
@@ -323,7 +314,6 @@ public:
     };
 
     Profile* createCachedProfile(Key& key) {
-      normalizeKey(key);
       uint32_t i = key.HashCode(0) % max_cache_size;
       Profile* pf = _createProfile(key);
       if (!pf) {
@@ -345,7 +335,6 @@ public:
     }
 
     void deleteCachedProfile(Key& key) {
-      normalizeKey(key);
       uint32_t i = key.HashCode(0) % max_cache_size;
       if(cache[i] != NULL && cache[i]->key == key) {
         if (!cache[i]->pf) {
@@ -363,7 +352,6 @@ public:
 protected:
     virtual Profile* _createProfile(Key& key) = 0;
     virtual void _deleteProfile(Key& key) = 0;
-    virtual void normalizeKey(Key& key) = 0;
 	
 protected:
     uint32_t max_cache_size;
@@ -412,7 +400,6 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
-        normalizeKey(key);
 
         if(prop.isExpired())
             return;
@@ -454,7 +441,6 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
-        normalizeKey(key);
         //Profile *pf = getProfile(key, false);
 
         bool res = false;
@@ -499,7 +485,6 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
-        normalizeKey(key);
 
         //Profile* pf = getProfile(key, false);
 
@@ -562,7 +547,6 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
-        normalizeKey(key);
         //Profile* pf = getProfile(key, true);
         if (!pf) {
           return false;
@@ -633,7 +617,6 @@ public:
     {
         MutexGuard mt(mtx);
         Key key(rkey);
-        normalizeKey(key);
         //Profile* pf = getProfile(key, true);
         if (!pf) {
           return false;

@@ -138,6 +138,7 @@ public:
 	static int GetValueByKey(const string& key)
 	{
 		MutexGuard lock(mutex);
+		smsc_log_debug(logger, "GetValueByKey %s", key.c_str());
 		if(!opened)
 		{
 			smsc_log_debug(logger, "cancel GetValueByKey - Glossary not opened");
@@ -159,6 +160,7 @@ public:
 	static int GetKeyByValue(const int value, string& key)
 	{
 		MutexGuard lock(mutex);
+		smsc_log_debug(logger, "GetKeyByValue %d", value);
 		if(!opened)
 		{
 			smsc_log_debug(logger, "cancel GetKeyByValue - Glossary not opened");
