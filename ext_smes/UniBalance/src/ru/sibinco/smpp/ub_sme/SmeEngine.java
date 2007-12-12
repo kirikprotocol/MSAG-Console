@@ -22,7 +22,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmeEngine.class);
 
     private String mgAddress = null;
-
+    private String balanceGatewayAddress=null;
 
     private String bannerEngineServiceName = "UniBalance";
     private int bannerEngineClientID = 1;
@@ -86,6 +86,10 @@ public class SmeEngine implements MessageListener, ResponseListener {
             throw new InitializationException("Mandatory config parameter \"mg.address\" is missed");
         }
 
+        balanceGatewayAddress= config.getProperty("balance.gateway.address");
+        if (balanceGatewayAddress.length() == 0) {
+            throw new InitializationException("Mandatory config parameter \"balance.gateway.address\" is missed");
+        }
 
         numberFormatPattern = config.getProperty("balance.number.format.pattern", numberFormatPattern);
         numberFormatNegativePattern = config.getProperty("balance.number.format.negative.pattern", numberFormatNegativePattern);
@@ -370,7 +374,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         Message message = new Message();
         message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
         message.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
-        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);                                                    h
         message.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
         message.setType(Message.TYPE_SUBMIT);
         return message;
@@ -439,7 +443,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         if (message.getSourceAddress().equals(mgAddress)) { // abonent request
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
-            MGState state = (MGState) mgAbonentRequests.remove(Utils.trimAbonent(message.getDestinationAddress()));
+            MGState state = (MGState) mgAbonentRequests.remove(new Integer(message.getUserMessageReference()));
             if(state==null){
                 logger.error("Can't get state for abonent:"+message.getDestinationAddress());
             }
@@ -457,10 +461,12 @@ public class SmeEngine implements MessageListener, ResponseListener {
 
 
     public void sendMgRequest(MGState state, Message msg) {
+        msg.setSourceAddress(balanceGatewayAddress);
+        msg.setDestinationAddress(mgAddress);
         try {
             multiplexor.assingSequenceNumber(msg, state.getAbonentRequest().getConnectionName());
             mgRequests.put(new Long(((long) msg.getConnectionId()) << 32 | msg.getSequenceNumber()), state);
-            mgAbonentRequests.put(Utils.trimAbonent(state.getAbonentRequest().getSourceAddress()), state);
+            mgAbonentRequests.put(new Integer(msg.getUserMessageReference()), state);
             multiplexor.sendMessage(msg, false);
             if (logger.isDebugEnabled())
                 logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
