@@ -30,6 +30,17 @@ public:
 
     virtual void Destroy(void) { this->~ObjectRefereeAC_T(); }
 
+    //Returns number of references set to old object.
+    //NOTE: it's a caller responsibility to check for existing
+    //references to designated object prior to changing it !
+    virtual unsigned Reset(TArg * use_obj = NULL)
+    {
+        unsigned i = pObj ? refCount : 0;
+        pObj = use_obj;
+        refCount = 0;
+        return i;
+    }
+
     //Returns pointer to designated object
     virtual TArg * get(void) const = 0;
     //Returns number of references to designated object
@@ -67,22 +78,18 @@ public:
         : ObjectRefereeAC_T<TArg>(use_obj)
     { }
 
+    // ***********************************************
+    // * ObjectRefereeAC_T<> interface implementation
+    // ***********************************************
+
     //Returns number of references set to old object.
     //NOTE: it's a caller responsibility to check for existing
     //references to designated object prior to changing it !
     unsigned Reset(TArg * use_obj = NULL)
     {
         MutexGuard tmp(lock);
-        unsigned i = ObjectRefereeAC_T<TArg>::pObj ?
-                        ObjectRefereeAC_T<TArg>::refCount : 0;
-        ObjectRefereeAC_T<TArg>::pObj = use_obj;
-        ObjectRefereeAC_T<TArg>::refCount = 0;
-        return i;
+        return ObjectRefereeAC_T<TArg>::Reset(use_obj);
     }
-
-    // ***********************************************
-    // * ObjectRefereeAC_T<> interface implementation
-    // ***********************************************
 
     //Returns pointer to designated object
     TArg * get(void) const
@@ -167,6 +174,15 @@ public:
     // ***********************************************
     // * ObjectRefereeAC_T<> interface implementation
     // ***********************************************
+
+    //Returns number of references set to old object.
+    //NOTE: it's a caller responsibility to check for existing
+    //references to designated object prior to changing it !
+    unsigned Reset(TArg * use_obj = NULL)
+    {
+        MutexGuard tmp(lock);
+        return ObjectRefereeAC_T<TArg>::Reset(use_obj);
+    }
 
     //Returns pointer to designated object
     TArg * get(void) const
@@ -294,6 +310,28 @@ public:
     { }
     ~URefPtr_T()
     { }
+
+    URefPtr_T & operator=(ObjectRefereeAC_T<TArg> * use_referee)
+    {
+        ((XRefPtr_T<TArg>*)this)->operator=(use_referee);
+        return *this;
+    }
+
+    URefPtr_T & operator=(const URefPtr_T & src)
+    {
+        return this->operator=(src.objData);
+    }
+
+    URefPtr_T & operator=(TArg * use_obj)
+    {
+        ((XRefPtr_T<TArg>*)this)->operator=(use_obj);
+        return *this;
+    }
+
+    inline bool operator== (const URefPtr_T & ref2) const
+    {
+        return (objData == ref2.objData) ? true : false;
+    }
 };
 
 // ********************************************************************
