@@ -1306,7 +1306,7 @@ public:
         code=processSms(buf,addr.value);
       }catch(std::exception& e)
       {
-        __warn2__("Exception in processSms:%s",e.what());
+        __warning2__("Exception in processSms:%s",e.what());
       }
       __trace2__("processSms: code=%d",code);
       switch(code)
