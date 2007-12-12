@@ -54,6 +54,7 @@ protected:
     Logger *            logger;
     std::string         tName;  //task name for logging
     IAPQStatus::Code    _qStatus;   //query completion status, is to return by Execute()
+    RCHash              _qError;
     std::string         _exc;   //query error/exception message
 
     //Composes taskName, it's recommended to call it in successors constructor
@@ -83,28 +84,8 @@ public:
     inline unsigned                 getId(void)             const { return _qId; }
     inline unsigned long            Usage(void)             const { return usage; }
     inline IAPQStatus::Code         Status(void)            const { return _qStatus; }
-    std::string                     Status2Str(void)        const
-    {
-        std::string st;
-        switch (_qStatus) {
-        case IAPQStatus::iqOk:  st += "finished"; break;
-        case IAPQStatus::iqCancelled: st += "cancelled"; break;
-        case IAPQStatus::iqTimeout: {
-            st += "timed out";
-            if (!_exc.empty()) {
-                st += ", "; st += _exc;
-            }
-        } break;
-        default: {
-            st += "failed";
-            if (!_exc.empty()) {
-                st += ", "; st += _exc;
-            }
-        }
-        } /* eosw */
-        return st;
-    }
-
+    inline RCHash                   Error(void)             const { return _qError; }
+    std::string                     Status2Str(void)        const;
 
 protected:
     friend class smsc::core::threads::ThreadPool;

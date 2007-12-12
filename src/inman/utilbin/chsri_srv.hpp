@@ -45,6 +45,8 @@ protected:
     //dialog finalization/error handling:
     //if ercode != 0, no result has been got from MAP service,
     void onEndMapDlg(RCHash ercode = 0);
+    //
+    inline void Awake(void) { /* TODO: */ }
 
 private:
     Mutex           _sync;

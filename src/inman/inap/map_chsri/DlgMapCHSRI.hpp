@@ -1,11 +1,12 @@
-#ident "$Id$"
-// MAP_SEND_ROUTING_INFO service: dialog implementation (over TCAP dialog)
-
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * MAP_SEND_ROUTING_INFO service: dialog implementation (over TCAP dialog)
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_CHSRI__
 #define __SMSC_INMAN_INAP_MAP_CHSRI__
 
-#include "core/synchronization/Mutex.hpp"
-using smsc::core::synchronization::Mutex;
+#include "core/synchronization/EventMonitor.hpp"
+using smsc::core::synchronization::EventMonitor;
 
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
@@ -29,6 +30,8 @@ public:
     //if ercode != 0, no result has been got from MAP service,
     //NOTE: MAP dialog may be deleted only from this callback !!!
     virtual void onEndMapDlg(RCHash ercode = 0) = 0;
+
+    virtual void Awake(void) = 0;
 };
 
 typedef union {
@@ -46,6 +49,7 @@ typedef union {
 class MapCHSRIDlg : TCDialogUserITF { // GMSC/SCF -> HLR
 public:
     MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler, Logger * uselog = NULL);
+    //May be called only after successfull Unbind() call
     virtual ~MapCHSRIDlg();
 
     enum MapOperState  { operInited = 1, operFailed = 2, operDone = 3 };
@@ -53,10 +57,11 @@ public:
     void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);
     void reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout = 0) throw(CustomException);
 
-    //Attempts to unbind handler.
-    //Returns false on succsess, number of active references otherwise
-    unsigned Unbind(void);
-    //
+    //Attempts to unbind TC User.
+    //Returns true on succsess, false result means that this object has 
+    //established references to handler.
+    bool Unbind(void);
+    //May be called only after successfull Unbind() call
     void endMapDlg(void);
 
 protected:
@@ -76,19 +81,22 @@ protected:
     void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
     void onInvokeLCancel(InvokeRFP pInv);
+    //
+    inline void Awake(void) { _sync.notify(); }
 
 private:
-    void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
-    unsigned unRefHdl(void);
+    typedef smsc::core::synchronization::MTRefWrapper_T<CHSRIhandlerITF>    SRIUserRef;
 
-    Mutex       _sync;
-    unsigned    sriId;
-    Dialog*     dialog;     //TCAP dialog
-    TCSessionMA* session;    //TCAP dialogs factory
-    Logger*     logger;
-    CHSRIhandlerITF * sriHdl;
-    unsigned    hdlRefs;    //references to handler
-    CHSRIState  _sriState;  //current state of dialog
+    void endTCap(void); //ends TC dialog, releases Dialog()
+    void unRefHdl(void);
+
+    EventMonitor    _sync;
+    unsigned        sriId;
+    Dialog *        dialog;     //TCAP dialog
+    TCSessionMA *   session;    //TCAP dialogs factory
+    Logger*         logger;
+    SRIUserRef      sriHdl;
+    CHSRIState      _sriState;  //current state of dialog
     CHSendRoutingInfoRes reqRes;
 };
 

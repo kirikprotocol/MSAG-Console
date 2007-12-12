@@ -11,6 +11,7 @@ using smsc::inman::cache::AbonentCacheITF;
 using smsc::inman::cache::AbonentRecord;
 
 #include "inman/abprov/IAPErrors.hpp"
+using smsc::util::RCHash;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;
@@ -44,7 +45,7 @@ struct AbonentSubscription {
 class IAPQueryListenerITF {
 public:
     virtual void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
-                                                        IAPQStatus::Code qry_status) = 0;
+                                                        RCHash qry_status) = 0;
 };
 
 class IAProviderITF {

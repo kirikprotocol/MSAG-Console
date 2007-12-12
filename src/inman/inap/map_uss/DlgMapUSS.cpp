@@ -142,7 +142,7 @@ void MapUSSDlg::endMapDlg(void)
 {
     MutexGuard  grd(_sync);
     resHdl = NULL;
-    endTCap(true);
+    endTCap();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -360,12 +360,12 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
 }
 
 //ends TC dialog, releases Dialog()
-void MapUSSDlg::endTCap(bool check_ref/* = false*/)
+void MapUSSDlg::endTCap(void)
 {
     if (dialog) {
-        unsigned refNum = dialog->unbindUser();
-        if (check_ref && refNum)
-            smsc_log_warn(logger, "MapUSS[%u]: %u references from underlying TCDlg exists", dlgId, refNum);
+        while (!dialog->unbindUser()) //TCDlg refers this object
+            _sync.wait();
+
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {   // do TC_PREARRANGED if still active
                 dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ?

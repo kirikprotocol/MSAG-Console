@@ -18,6 +18,7 @@ using smsc::inman::comp::OperationFactory;
 #include "inman/inap/TCDlgErrors.hpp"
 
 #include "inman/common/XRefPtr.hpp"
+#include "inman/common/MTRefWrapper.hpp"
 
 namespace smsc {
 namespace inman {
@@ -72,6 +73,8 @@ public:
     virtual void onInvokeResult(InvokeRFP pInv, TcapEntity* res) = 0;
     virtual void onInvokeError(InvokeRFP pInv, TcapEntity* resE) = 0;
     virtual void onInvokeLCancel(InvokeRFP pInv) = 0; //Local invoke timer is expired
+
+    virtual void Awake(void) = 0;
 };
 
 class SSNSession;
@@ -79,14 +82,15 @@ class SSNSession;
 //NOTE: All thrown CustomExceptions has errcode set to RCHash
 class Dialog {
 private:
-    typedef smsc::core::synchronization::MTObjectReferee_T<TCDialogUserITF> DlgUserRef;
-    typedef smsc::core::synchronization::OBJRefGuard_T<TCDialogUserITF>     DlgUserRFP;
+//    typedef smsc::core::synchronization::MTObjectReferee_T<TCDialogUserITF> DlgUserRef;
+//    typedef smsc::core::synchronization::OBJRefGuard_T<TCDialogUserITF>     DlgUserRFP;
+    typedef smsc::core::synchronization::MTRefWrapper_T<TCDialogUserITF>     DlgUserRef;
     typedef std::map<UCHAR_T, InvokeRFP> InvokeMap;
 
     std::string     _tcSUId;    //TC session signature
     InvokeMap       invMap;     //locally initiated Invokes
     mutable Mutex   dlgGrd;     //state, listeners guard
-    DlgUserRef *    refUser;    //
+    DlgUserRef      pUser;    //
     TC_DlgState     _state;
 
     SCCP_ADDRESS_T  ownAddr;
@@ -137,25 +141,35 @@ private:
             clearInvokes();
     }
 
+    void unlockUser(void)
+    {
+        MutexGuard tmp(dlgGrd);
+        pUser.UnLock();
+        if (pUser.get())
+            pUser->Awake();
+        return;
+    }
+
 public:
     static const USHORT_T   _DFLT_INVOKE_TIMER = 30; //seconds
     enum Ending { endBasic = 0, endPrearranged, endUAbort };
 
-    //Returns number of active reference this dialog has established
-    //to previous user (non-zero value means that calling code has big problem :))
-    unsigned bindUser(TCDialogUserITF * p_user)
+    //Returns pointer to previously set user.
+    //(non-zero value means that calling code has big problem :))
+    TCDialogUserITF * bindUser(TCDialogUserITF * p_user)
     {
         MutexGuard  tmp(dlgGrd);
-        unsigned i = refUser->get() ? refUser->RefCount() : 0;
-        refUser->Reset(p_user);
-        refUser->Ref();
-        return i;
+        TCDialogUserITF * old = pUser.get();
+        pUser.Reset(p_user);
+        return old;
     }
-    //returns number of active reference this dialog has established to user
-    unsigned unbindUser(void)
+    //Attempts to unbind TC User.
+    //Returns true on succsess, false result means that this dialog has
+    //established references to user
+    bool unbindUser(void)
     {
         MutexGuard  tmp(dlgGrd);
-        return refUser->UnRef();
+        return pUser.Unref();
     }
     //
     TC_DlgState getState(void) const
@@ -174,7 +188,7 @@ public:
         if (p_invNum) 
             *p_invNum = invMap.size();
         return ((_state.value & TC_DLG_CLOSED_MASK)
-                && invMap.empty() && !refUser->RefCount()) ? true : false;
+                && invMap.empty() && !pUser.get()) ? true : false;
     }
     //Returns true is dialog has some Invokes pending (awaiting Result or LCancel)
     unsigned  pendingInvokes(void) const

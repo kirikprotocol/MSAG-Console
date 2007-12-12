@@ -789,7 +789,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
 void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
-                            IAPQStatus::Code qry_status)
+                            RCHash qry_status)
 {
     MutexGuard grd(bilMutex);
 
@@ -800,8 +800,8 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     }
     StopTimer(state);
     state = bilQueried;
-    if (qry_status != IAPQStatus::iqOk) {
-        billErr = _RCS_IAPQStatus->mkhash(qry_status);
+    if (qry_status) {
+        billErr = qry_status;
         abCsi.abRec.Merge(ab_info.abRec); //merge known abonent info
     } else
         abCsi.abRec = ab_info.abRec; //renew abonent info, overwrite TDPScfMAP

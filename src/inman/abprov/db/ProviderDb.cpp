@@ -143,9 +143,11 @@ int IAPQueryDB::Execute(void)
 { 
     {
         MutexGuard tmp(_mutex);
-        if (isStopping || !_owner->hasListeners(abonent))
+        if (isStopping || !_owner->hasListeners(abonent)) {
             //query was cancelled by either QueryManager or ThreadPool
-            return _qStatus = IAPQStatus::iqCancelled;
+            _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqCancelled);
+            return _qStatus;
+        }
     }
     //sleep(24); //for debugging
 
@@ -159,7 +161,7 @@ int IAPQueryDB::Execute(void)
     } catch (const std::exception& exc) {
         smsc_log_error(logger, "%s(%s): %s", taskName(),
                        abonent.getSignals(), exc.what());
-        _qStatus = IAPQStatus::iqError;
+        _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqError);
         _exc = exc.what();
     }
 
@@ -167,7 +169,7 @@ int IAPQueryDB::Execute(void)
         MutexGuard tmp(_mutex);
         if (isStopping || !_owner->hasListeners(abonent)) {
             //query was cancelled by either QueryManager or ThreadPool
-            _qStatus = IAPQStatus::iqCancelled;
+            _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqCancelled);
             rtq = NULL;
         }
     }
@@ -185,7 +187,7 @@ int IAPQueryDB::Execute(void)
         } catch (const std::exception& exc) {
             smsc_log_error(logger, "%s(%s): %s", taskName(), 
                            abonent.getSignals(), exc.what());
-            _qStatus = IAPQStatus::iqError;
+            _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqError);
             _exc = exc.what();
         }
     }

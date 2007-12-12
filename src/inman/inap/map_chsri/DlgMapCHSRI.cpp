@@ -25,8 +25,7 @@ namespace chsri {
  * ************************************************************************** */
 MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler,
                         Logger * uselog/* = NULL*/)
-    : sriHdl(sri_handler), session(pSession), sriId(0), dialog(NULL)
-    , hdlRefs(0), logger(uselog)
+    : sriHdl(sri_handler), session(pSession), sriId(0), dialog(NULL), logger(uselog)
 {
     assert(sri_handler && pSession);
     _sriState.value = 0;
@@ -34,27 +33,29 @@ MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler,
         logger = Logger::getInstance("smsc.inman.inap");
 }
 
+//May be called only after successfull Unbind() call
 MapCHSRIDlg::~MapCHSRIDlg()
 {
     endMapDlg();
 }
-//Attempts to unbind handler.
-//Returns false on succsess, number of active references otherwise
-unsigned MapCHSRIDlg::Unbind(void)
+
+//Attempts to unbind TC User.
+//Returns true on succsess, false result means that this object has 
+//established references to handler.
+bool MapCHSRIDlg::Unbind(void)
 {
     MutexGuard  grd(_sync);
-    if (!hdlRefs)
-        sriHdl = NULL;
-    return hdlRefs;
+    return sriHdl.Unref();
 }
 
+//May be called only after successfull Unbind() call
 void MapCHSRIDlg::endMapDlg(void)
 {
     MutexGuard  grd(_sync);
-    if (hdlRefs)
-        smsc_log_error(logger, "MapSRI[0x%X]: %u references to handler exists", sriId, hdlRefs);
-    sriHdl = NULL;
-    endTCap(true);
+    if (sriHdl.get())
+        smsc_log_error(logger, "MapSRI[0x%X]: endMapDlg(): reference to handler exists", sriId);
+    sriHdl.Reset(NULL);
+    endTCap();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -115,7 +116,6 @@ void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
     unsigned do_end = 0;
     {
         MutexGuard  grd(_sync);
-        ++hdlRefs;  //guards sriHdl
         smsc_log_debug(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a returnResult: %u",
             sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)res->getOpcode());
@@ -127,12 +127,12 @@ void MapCHSRIDlg::onInvokeResult(InvokeRFP pInv, TcapEntity* res)
         }
         if ((do_end = _sriState.s.ctrFinished) != 0)
             endTCap();
+        if (!sriHdl.Lock())
+            return;
     }
-    if (sriHdl) {
-        sriHdl->onMapResult(&reqRes);
-        if (do_end)
-            sriHdl->onEndMapDlg();
-    }
+    sriHdl->onMapResult(&reqRes);
+    if (do_end)
+        sriHdl->onEndMapDlg();
     unRefHdl();
 }
 
@@ -141,16 +141,16 @@ void MapCHSRIDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
-        ++hdlRefs; //guards sriHdl
         smsc_log_error(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a returnError: %u",
             sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode(),
             (unsigned)resE->getOpcode());
 
         _sriState.s.ctrInited = MapCHSRIDlg::operDone;
         endTCap();
+        if (!sriHdl.Lock())
+            return;
     }
-    if (sriHdl)
-        sriHdl->onEndMapDlg(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
+    sriHdl->onEndMapDlg(_RCS_MAPOpErrors->mkhash(resE->getOpcode()));
     unRefHdl();
 }
 
@@ -159,14 +159,14 @@ void MapCHSRIDlg::onInvokeLCancel(InvokeRFP pInv)
 {
     {
         MutexGuard  grd(_sync);
-        ++hdlRefs; //guards sriHdl
         smsc_log_error(logger, "MapSRI[0x%X]: Invoke[%u:%u] got a LCancel",
             sriId, (unsigned)pInv->getId(), (unsigned)pInv->getOpcode());
         _sriState.s.ctrInited = MapCHSRIDlg::operFailed;
         endTCap();
+        if (!sriHdl.Lock())
+            return;
     }
-    if (sriHdl)
-        sriHdl->onEndMapDlg(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
+    sriHdl->onEndMapDlg(_RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse));
     unRefHdl();
 }
 
@@ -189,14 +189,14 @@ void MapCHSRIDlg::onDialogPAbort(UCHAR_T abortCause)
 {
     {
         MutexGuard  grd(_sync);
-        ++hdlRefs; //guards sriHdl
         _sriState.s.ctrAborted = 1;
         smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, P_ABORT: %s ", sriId,
                         _sriState.value, _RCS_TC_Abort->code2Txt(abortCause));
         endTCap();
+        if (!sriHdl.Lock())
+            return;
     }
-    if (sriHdl)
-        sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
+    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
     unRefHdl();
 }
 
@@ -206,15 +206,15 @@ void MapCHSRIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
 {
     {
         MutexGuard  grd(_sync);
-        ++hdlRefs; //guards sriHdl
         _sriState.s.ctrAborted = 1;
         smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, U_ABORT: %s", sriId,
                         _sriState.value, !abortInfo_len ? "userInfo" :
                         _RCS_TC_Abort->code2Txt(*pAbortInfo));
         endTCap();
+        if (!sriHdl.Lock())
+            return;
     }
-    if (sriHdl)
-        sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
+    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
                         TC_AbortCause::userAbort : *pAbortInfo));
     unRefHdl();
 }
@@ -226,7 +226,6 @@ void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
 {
     {
         MutexGuard  grd(_sync);
-        ++hdlRefs; //guards sriHdl
         _sriState.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
@@ -242,9 +241,10 @@ void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
         smsc_log_error(logger, "MapSRI[0x%X]: NOTICE_IND at state 0x%x%s", sriId,
                        _sriState.value, dstr.c_str());
         endTCap();
+        if (!sriHdl.Lock())
+            return;
     }
-    if (sriHdl)
-        sriHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));
+    sriHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));
     unRefHdl();
 }
 
@@ -256,42 +256,40 @@ void MapCHSRIDlg::onDialogREnd(bool compPresent)
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrFinished = 1;
-        if (!compPresent) {
-            ++hdlRefs; //guards sriHdl
-            endTCap();
-            if (!_sriState.s.ctrResulted) {
-                smsc_log_error(logger, "MapSRI[0x%X]: T_END_IND, state 0x%x", sriId, _sriState.value);
-                errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
-            }
+        if (compPresent)
+            return; //wait for ongoing Invoke result/error
+
+        endTCap();
+        if (!_sriState.s.ctrResulted) {
+            smsc_log_error(logger, "MapSRI[0x%X]: T_END_IND, state 0x%x", sriId, _sriState.value);
+            errcode = _RCS_MAPService->mkhash(MAPServiceRC::noServiceResponse);
         }
+        if (!sriHdl.Lock())
+            return;
     }
-    if (!compPresent) {
-        if (sriHdl)
-            sriHdl->onEndMapDlg(errcode);
-        unRefHdl();
-    }
-    //else wait for ongoing Invoke result/error
+    sriHdl->onEndMapDlg(errcode);
+    unRefHdl();
 }
 
 /* ------------------------------------------------------------------------ *
  * Private/protected methods
  * ------------------------------------------------------------------------ */
-//Locks _sync
-unsigned MapCHSRIDlg::unRefHdl(void)
+void MapCHSRIDlg::unRefHdl(void)
 {
     MutexGuard tmp(_sync);
-    if (hdlRefs)
-        --hdlRefs;
-    return hdlRefs;
+    sriHdl.UnLock();
+    if (sriHdl.get())
+        sriHdl->Awake();
 }
 
-//ends TC dialog, releases Dialog()
-void MapCHSRIDlg::endTCap(bool check_ref/* = false*/)
+//Ends TC dialog, releases Dialog()
+//NOTE: _sync MUST BE locked upon entry
+void MapCHSRIDlg::endTCap(void)
 {
     if (dialog) {
-        unsigned refNum = dialog->unbindUser();
-        if (check_ref && refNum)
-            smsc_log_warn(logger, "MapSRI[0x%X]: %u references from underlying TCDlg exists", sriId, refNum);
+        while (!dialog->unbindUser()) //TCDlg refers this object
+            _sync.wait();
+
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {  // do TC_PREARRANGED if still active
                 dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ?

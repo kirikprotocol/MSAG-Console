@@ -56,7 +56,7 @@ CapSMSDlg::~CapSMSDlg()
     ssfHdl = NULL;
     endCapSMS();
     reportType = MessageType_notification; //do PREARRANED_END if TC dialog is still active
-    endTCap(false, true);
+    endTCap(false);
 }
 
 void CapSMSDlg::abortSMS(void)
@@ -209,7 +209,6 @@ void CapSMSDlg::onDialogContinue(bool compPresent)
     if (!compPresent)
         smsc_log_error(logger, "%s: missing component in TC_CONT_IND", _logId);
     //else wait for ongoing Invoke result/error
-    return;
 }
 
 //TCAP indicates DialogPAbort: either due to TC layer error on SSF side or
@@ -501,22 +500,22 @@ void CapSMSDlg::endCapSMS(void)
     //and wait for T_END_IND or L_CANCEL
     if (_fsmState == SMS_SSF_Fsm::fsmMonitoring) {
         if (eventReportSMS(false))
-            endTCap(true, true); //send 
+            endTCap(true); //send 
     } else if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) && !_capState.s.smsReport)
-        endTCap(true, true); //send U_ABORT to SCF
+        endTCap(true); //send U_ABORT to SCF
 }
 
 //Ends TC dialog depending on CapSMS state, releases Dialog()
-void CapSMSDlg::endTCap(bool u_abort/* = false*/, bool check_ref/* = false*/)
+//NOTE: _sync MUST BE locked upon entry
+void CapSMSDlg::endTCap(bool u_abort/* = false*/)
 {
     _fsmState = SMS_SSF_Fsm::fsmDone;
     _relation = SMS_SSF_Fsm::relNone;
     _timer = 0;
     if (dialog) {
-        unsigned refNum = dialog->unbindUser();
-        if (check_ref && refNum)
-            smsc_log_warn(logger, "%s: %u references from underlying TCDlg exists",
-                          _logId, refNum);
+        while (!dialog->unbindUser()) //TCDlg refers this object
+            _sync.wait();
+
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2 smsSSF-to-gsmSCF SMS related messages
             try {

@@ -26,7 +26,7 @@ Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_
     : logger(uselog), _tcSUId(sess_uid), _dId(dlg_id), ownAddr(loc_addr)
     , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
     , _timeout(_DFLT_INVOKE_TIMER), _lastInvId(0), _ac_idx(dialog_ac_idx)
-    , msgUserId(msg_user_id), refUser(new DlgUserRef(0))
+    , msgUserId(msg_user_id)
 {
     _state.value = 0;
     dSSN = sender_ssn ? sender_ssn : ownAddr.addr[1];
@@ -43,7 +43,6 @@ Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_
 Dialog::~Dialog()
 {
     MutexGuard  tmp(dlgGrd);
-    refUser->Destroy();
     clearInvokes();
 }
 
@@ -67,13 +66,14 @@ void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
 {
     MutexGuard dtmp(dlgGrd);
     unsigned cnt = invMap.size();
-    unsigned refs = refUser->Reset(NULL);
-    if (cnt || refs) {
-        smsc_log_error(logger, "%s: resetting to 0x%X, %u invokes pending, %u user refs exist!",
-                      _logId, (unsigned)new_id, cnt, refs);
+    if (cnt || pUser.get()) {
+        smsc_log_error(logger, "%s: resetting to 0x%X, %u invokes pending",
+                      _logId, (unsigned)new_id, cnt, pUser.get() ? ", user refs exist":"");
         clearInvokes();
     } else if (_dId != new_id) //otherwise dialog was just created
         smsc_log_debug(logger, "%s: resetting to 0x%X", _logId, (unsigned)new_id);
+
+    pUser.Reset(NULL);
     _lastInvId = 0;
     _dId = new_id;
     snprintf(_logId, sizeof(_logId)-1, "Dialog[0x%X]", _dId);
@@ -382,21 +382,20 @@ USHORT_T Dialog::handleBeginDialog(bool compPresent)
 */
 USHORT_T Dialog::handleContinueDialog(bool compPresent)
 {
-    DlgUserRFP  pUser(NULL);
     {
         MutexGuard tmp(dlgGrd);
         _state.s.dlgRContinued = compPresent ? TCAP_DLG_COMP_WAIT : TCAP_DLG_COMP_LAST;
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser;  //increases dlgUser ref count
+        pUser.Lock();
     }
     pUser->onDialogContinue(compPresent);
+    unlockUser();
     return MSG_OK;
 }
 
 USHORT_T Dialog::handleEndDialog(bool compPresent)
 {
-    DlgUserRFP  pUser(NULL);
     {
         MutexGuard tmp(dlgGrd);
         if (!compPresent) {
@@ -404,43 +403,44 @@ USHORT_T Dialog::handleEndDialog(bool compPresent)
             clearInvokes();
         } else //wait for ongoing invoke/result/error
             _state.s.dlgREnded = TCAP_DLG_COMP_WAIT;
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
     pUser->onDialogREnd(compPresent);
+    unlockUser();
     return MSG_OK;
 }
 
 //Reports dialog abort to dialogListener
 USHORT_T Dialog::handlePAbortDialog(UCHAR_T abortCause)
 {
-    DlgUserRFP  pUser(NULL);
     {
         MutexGuard dtmp(dlgGrd);
         _state.s.dlgPAborted = 1;
         clearInvokes();
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
     pUser->onDialogPAbort(abortCause);
+    unlockUser();
     return MSG_OK;
 }
 
 USHORT_T Dialog::handleUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                           USHORT_T userInfo_len, UCHAR_T *pUserInfo)
 {
-    DlgUserRFP  pUser(NULL);
-    {
+        {
         MutexGuard  dtmp(dlgGrd);
         _state.s.dlgRUAborted = 1;
         clearInvokes();
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
     pUser->onDialogUAbort(abortInfo_len, pAbortInfo, userInfo_len, pUserInfo);
+    unlockUser();
     return MSG_OK;
 }
 
@@ -460,7 +460,6 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
         return MSG_OK;
     }
 
-    DlgUserRFP  pUser(NULL);
     Invoke  invoke(invId, op[0]);
     {
         MutexGuard tmp(dlgGrd);
@@ -484,18 +483,18 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
                                _logId, (unsigned)invId, (unsigned)op[0]);
             }
         }
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
     pUser->onDialogInvoke(&invoke, lastComp);
+    unlockUser();
     return MSG_OK;
 }
 
 USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
 {
     InvokeRFP pInv(NULL);
-    DlgUserRFP  pUser(NULL);
     {
         MutexGuard  dtmp(dlgGrd);
         InvokeMap::iterator it = invMap.find(invId);
@@ -512,9 +511,9 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
         smsc_log_debug(logger, "%s: releasing %s", _logId,
                        pInv->strStatus().c_str());
 
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
     try { pUser->onInvokeLCancel(pInv);
     } catch (const std::exception & exc) {
@@ -524,6 +523,7 @@ USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
         smsc_log_error(logger, "%s: Invoke[%u].LCancel, listener: unknown exception",
                        _logId, (unsigned)invId);
     }
+    unlockUser();
     return MSG_OK;
 }
 
@@ -539,7 +539,6 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
     }
 
     InvokeRFP   pInv(NULL);
-    DlgUserRFP  pUser(NULL);
     TCResult    result(invId, op[0]);
     {
         MutexGuard dtmp(dlgGrd);
@@ -571,12 +570,12 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
                             _logId, (unsigned)invId, (unsigned)op[0]);
         }
 
-        if (!refUser->get()) {
+        if (!pUser.get()) {
             updateState(true);
             return MSG_OK;
         }
         updateState(); //postponing invokes cleanUp on T_END
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
 
     try { pUser->onInvokeResult(pInv, &result);
@@ -592,6 +591,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
         clenUpInvokes();
     }
     smsc_log_debug(logger, "%s: releasing %s", _logId, pInv->strStatus().c_str());
+    unlockUser();
     return MSG_OK;
 }
 
@@ -607,7 +607,6 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
     }
     
     InvokeRFP   pInv(NULL);
-    DlgUserRFP  pUser(NULL);
     TCResultNL  result(invId, op[0]);
     {   //search for originating Invoke
         MutexGuard dtmp(dlgGrd);
@@ -638,9 +637,9 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
                             _logId, (unsigned)invId, (unsigned)op[0]);
         }
 
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
 
     try { pUser->onInvokeResultNL(pInv, &result);
@@ -651,6 +650,7 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
         smsc_log_error(logger, "%s: Invoke[%u].ResultNL[%u] listener: unknown exception", 
                        _logId, (unsigned)invId, (unsigned)op[0]);
     }
+    unlockUser();
     return MSG_OK;
 }
 
@@ -666,7 +666,6 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
     }
 
     InvokeRFP   pInv(NULL);
-    DlgUserRFP  pUser(NULL);
     TCError  resErr(invId, op[0]);
     {
         MutexGuard dtmp(dlgGrd);
@@ -701,12 +700,12 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
             smsc_log_error(logger, "%s: Invoke[%u]: unregistered Error[%u]",
                             _logId, (unsigned)invId, (unsigned)op[0]);
 
-        if (!refUser->get()) {
+        if (!pUser.get()) {
             updateState(true);
             return MSG_OK;
         }
         updateState();  //postponing invokes cleanUp on T_END
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
 
     try { pUser->onInvokeError(pInv, &resErr);
@@ -722,6 +721,7 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
         clenUpInvokes();
     }
     smsc_log_debug(logger, "%s: releasing %s", _logId, pInv->strStatus().c_str());
+    unlockUser();
     return MSG_OK;
 }
 
@@ -731,15 +731,14 @@ USHORT_T Dialog::handleNoticeInd(UCHAR_T reportCause,
 {
     //if component is returned, it must have only local operation tag
     assert(!oplen || (oplen == 1));
-
-    DlgUserRFP  pUser(NULL);
     {
         MutexGuard dtmp(dlgGrd);
-        if (!refUser->get())
+        if (!pUser.get())
             return MSG_OK;
-        pUser = refUser; //increases dlgUser ref count
+        pUser.Lock();
     }
     pUser->onDialogNotice(reportCause, comp_kind, invokeId, !oplen ? 0 : op[0]);
+    unlockUser();
     return MSG_OK;
 }
 

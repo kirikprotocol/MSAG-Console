@@ -5,8 +5,8 @@
 #ifndef __SMSC_INMAN_INAP_CAP3SMS__
 #define __SMSC_INMAN_INAP_CAP3SMS__
 
-#include "core/synchronization/Mutex.hpp"
-using smsc::core::synchronization::Mutex;
+#include "core/synchronization/EventMonitor.hpp"
+using smsc::core::synchronization::EventMonitor;
 
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
@@ -117,13 +117,15 @@ protected:
     void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res) { }
     void onInvokeLCancel(InvokeRFP pInv);
+    //
+    inline void Awake(void) { _sync.notify(); }
 
 private:
     //Forcedly ends CapSMS dialog: sends to SCF 
     //either submission failure report or U_ABORT 
     void endCapSMS(void);
     //Ends TC dialog depending on CapSMS state, releases Dialog()
-    void endTCap(bool u_abort = false, bool check_ref = false);
+    void endTCap(bool u_abort = false);
     // reports delivery status (continues capSMS dialog)
     RCHash eventReportSMS(bool submitted) _THROWS_NONE;
     inline void setTimer(UCHAR_T new_op)
@@ -145,11 +147,11 @@ private:
                         _capState.s.Print().c_str());
     }
 
-    Mutex       _sync;
-    unsigned    capId;
+    EventMonitor    _sync;
+    unsigned        capId;
     //prefix for logging info
-    const char *_logPfx; //"CapSMS"
-    char        _logId[sizeof("CapSMS[0x%X]") + sizeof(unsigned)*3 + 1];
+    const char *    _logPfx; //"CapSMS"
+    char            _logId[sizeof("CapSMS[0x%X]") + sizeof(unsigned)*3 + 1];
 
     Dialog*         dialog;     //TCAP dialog
     TCSessionSR*    session;    //TCAP dialogs factory

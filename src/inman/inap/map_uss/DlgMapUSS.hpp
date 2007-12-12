@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP-PROCESS-UNSTRUCTURED-SS-REQUEST service:
  * dialog implementation (over TCAP dialog)
@@ -6,8 +6,8 @@
 #ifndef __SMSC_INMAN_INAP_MAP_USS__
 #define __SMSC_INMAN_INAP_MAP_USS__
 
-#include "core/synchronization/Mutex.hpp"
-using smsc::core::synchronization::Mutex;
+#include "core/synchronization/EventMonitor.hpp"
+using smsc::core::synchronization::EventMonitor;
 
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
@@ -81,14 +81,11 @@ protected:
     void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res);
     void onInvokeLCancel(InvokeRFP pInv);
+    //
+    inline void Awake(void) { _sync.notify(); }
 
 private:
-    void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL,
-                      const char * subscr_imsi = NULL) throw (CustomException);
-
-    void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
-
-    Mutex       _sync;
+    EventMonitor  _sync;
     unsigned    dlgId;
     Dialog*     dialog;     //TCAP dialog
     TCSessionSR* session;   //TCAP dialogs factory
@@ -96,6 +93,12 @@ private:
     USSDhandlerITF * resHdl;   //request result handler
     USSDState   dlgState;   //current state of dialog
     std::auto_ptr<MAPUSS2CompAC> reqRes;
+
+
+    void initSSDialog(ProcessUSSRequestArg & arg, const TonNpiAddress * subsc_adr = NULL,
+                      const char * subscr_imsi = NULL) throw (CustomException);
+
+    void endTCap(void); //ends TC dialog, releases Dialog()
 };
 
 } //uss

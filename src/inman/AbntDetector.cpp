@@ -213,7 +213,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
 void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
-                                    IAPQStatus::Code qry_status)
+                                    RCHash qry_status)
 {
     MutexGuard grd(_mutex);
     if (_state != adIAPQuering) {
@@ -224,7 +224,7 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
     providerQueried = false;
     StopTimer();
     if (qry_status != IAPQStatus::iqOk) {
-        _wErr = _RCS_IAPQStatus->mkhash(qry_status);
+        _wErr = qry_status;
         abRec.Merge(ab_info.abRec); //merge known abonent info
     } else
         abRec = ab_info.abRec;      //renew abonent info, overwrite TDPScfMAP

@@ -30,6 +30,7 @@ bool IAPQueryAC::init(const AbonentId & ab_number)
 {
     MutexGuard tmp(_mutex);
     _qStatus = IAPQStatus::iqOk;
+    _qError = 0;
     abonent = ab_number;
     abInfo.reset();
     isReleased = isStopping = false;
@@ -38,6 +39,29 @@ bool IAPQueryAC::init(const AbonentId & ab_number)
     _exc.clear();
     return true;
 }
+
+std::string IAPQueryAC::Status2Str(void) const
+{
+    std::string st;
+    switch (_qStatus) {
+    case IAPQStatus::iqOk:  st += "finished"; break;
+    case IAPQStatus::iqCancelled: st += "cancelled"; break;
+    case IAPQStatus::iqTimeout: {
+        st += "timed out";
+        if (!_exc.empty()) {
+            st += ", "; st += _exc;
+        }
+    } break;
+    default: {
+        st += "failed";
+        if (!_exc.empty()) {
+            st += ", "; st += _exc;
+        }
+    }
+    } /* eosw */
+    return st;
+}
+
 
 //This one is called by ThreadPool on Exceute() completion
 void IAPQueryAC::onRelease(void)
@@ -122,7 +146,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
                     qry_rec->cbList.pop_front();
                     qrsGuard.Unlock();
                     try { hdl->onIAPQueried(query->getAbonentId(),
-                                        query->getAbonentInfo(), query->Status());
+                                        query->getAbonentInfo(), query->Error());
                     } catch (std::exception &exc) {
                         smsc_log_error(logger, "IAPrvd: %s(%s): listener exception: %s",
                                 query->taskName(), (query->getAbonentId()).getSignals(),

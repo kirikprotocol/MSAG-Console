@@ -40,7 +40,7 @@ void MapATSIDlg::endATSI(void)
 {
     MutexGuard  grd(_sync);
     atsiHdl = NULL;
-    endTCap(true);
+    endTCap();
 }
 
 /* ------------------------------------------------------------------------ *
@@ -224,12 +224,12 @@ void MapATSIDlg::onDialogREnd(bool compPresent)
  * Private/protected methods
  * ------------------------------------------------------------------------ */
 //ends TC dialog, releases Dialog()
-void MapATSIDlg::endTCap(bool check_ref/* = false*/)
+void MapATSIDlg::endTCap(void)
 {
     if (dialog) {
-        unsigned refNum = dialog->unbindUser();
-        if (check_ref && refNum)
-            smsc_log_warn(logger, "MapATSI[%u]: %u references from underlying TCDlg exists", atsiId, refNum);
+        while (!dialog->unbindUser()) //TCDlg refers this object
+            _sync.wait();
+
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {    // do TC_PREARRANGED if still active
                 dialog->endDialog((_atsiState.s.ctrInited < MapATSIDlg::operDone) ?

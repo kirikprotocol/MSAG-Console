@@ -67,6 +67,9 @@ protected:
     //dialog finalization/error handling:
     //if ercode != 0, dialog is aborted by reason = errcode
     void onEndMapDlg(RCHash ercode = 0);
+    //
+    inline void Awake(void) { _mutex.notify(); }
+
 
     IAPQuerySRI_CFG _cfg;
     MapCHSRIDlg *   sriDlg;

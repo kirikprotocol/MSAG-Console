@@ -1,11 +1,12 @@
-#ident "$Id$"
-// mapATIH service: ATSI dialog implementation (over TCAP dialog)
-
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * mapATIH service: ATSI dialog implementation (over TCAP dialog)
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_INAP_MAP_ATSI__
 #define __SMSC_INMAN_INAP_MAP_ATSI__
 
-#include "core/synchronization/Mutex.hpp"
-using smsc::core::synchronization::Mutex;
+#include "core/synchronization/EventMonitor.hpp"
+using smsc::core::synchronization::EventMonitor;
 
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
@@ -73,17 +74,19 @@ protected:
     void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
     void onInvokeResultNL(InvokeRFP pInv, TcapEntity* res) { }
     void onInvokeLCancel(InvokeRFP pInv);
+    //
+    inline void Awake(void) { _sync.notify(); }
 
 private:
-    void endTCap(bool check_ref = false); //ends TC dialog, releases Dialog()
-
-    Mutex       _sync;
-    unsigned    atsiId;
-    Dialog*     dialog;     //TCAP dialog
-    TCSessionMA* session;    //TCAP dialogs factory
-    Logger*     logger;
+    EventMonitor    _sync;
+    unsigned        atsiId;
+    Dialog *        dialog;     //TCAP dialog
+    TCSessionMA *   session;    //TCAP dialogs factory
+    Logger *        logger;
     ATSIhandlerITF * atsiHdl;
-    ATSIState   _atsiState;  //current state of mapATSI dialog
+    ATSIState       _atsiState;  //current state of mapATSI dialog
+
+    void endTCap(void); //ends TC dialog, releases Dialog()
 };
 
 } //atih
