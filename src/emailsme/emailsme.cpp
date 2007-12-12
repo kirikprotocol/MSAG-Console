@@ -1301,7 +1301,13 @@ public:
       ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
       ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
       ((PduXSm*)pdu)->get_message().get_source().get_value());
-      int code=processSms(buf,addr.value);
+      int code=ProcessSmsCodes::INVALIDSMS;
+      try{
+        code=processSms(buf,addr.value);
+      }catch(std::exception& e)
+      {
+        __warn2__("Exception in processSms:%s",e.what());
+      }
       __trace2__("processSms: code=%d",code);
       switch(code)
       {
