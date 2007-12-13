@@ -304,6 +304,7 @@ int TaskProcessor::Execute()
                 if (task && task->isReady(currentTime, true)) {
                     taskGuards.Push(new TaskGuard(task));
                     task->currentPriorityFrameCounter = 0;
+                    task->resetSuspendedRegions();
                 }
         }
 
@@ -429,8 +430,9 @@ bool TaskProcessor::processTask(Task* task)
                         info.id.c_str(), message.id, seqNum, message.abonent.c_str());
         } else {
           const smsc::util::config::region::Region* region = smsc::util::config::region::RegionFinder::getInstance().getRegionById(message.regionId);
-          smsc_log_info(logger, "TaskId=[%s]: Traffic for region %s with id %s was suspeded",
+          smsc_log_info(logger, "TaskId=[%s]: Traffic for region %s with id %s was suspended",
                         info.id.c_str(), region->getName().c_str(), region->getId().c_str());
+          return false;
         }
     }
     else
