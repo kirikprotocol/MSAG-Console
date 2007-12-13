@@ -66,6 +66,17 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     public MGState(ThreadsPool pool, Message message) {
         this.pool = pool;
         this.abonentRequest = message;
+        if(abonentRequest.hasCodeSet()){
+           if(abonentRequest.getCodeset()==0){
+               encoding="tr";
+           }
+           if(abonentRequest.getCodeset()==8){
+               encoding="rus";
+           }
+           if(logger.isDebugEnabled()){
+               logger.debug("Set abonent message encoding:"+encoding);               
+           }
+        }
         requestTime = System.currentTimeMillis();
     }
 
@@ -108,6 +119,7 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
                  closeProcessing();
                  return;
             }
+            Sme.getSmeEngine().sendDeliverSmResponse(msg, Data.ESME_ROK);
             setMgBalance(msg.getMessageString());
             setMgState(MGState.MG_OK);
             closeProcessing();
