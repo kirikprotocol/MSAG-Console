@@ -22,7 +22,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
     private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmeEngine.class);
 
     private String mgAddress = null;
-    private String balanceGatewayAddress=null;
+    private String balanceGatewayAddress = null;
 
     private String bannerEngineServiceName = "UniBalance";
     private int bannerEngineClientID = 1;
@@ -86,7 +86,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             throw new InitializationException("Mandatory config parameter \"mg.address\" is missed");
         }
 
-        balanceGatewayAddress= config.getProperty("balance.gateway.address");
+        balanceGatewayAddress = config.getProperty("balance.gateway.address");
         if (balanceGatewayAddress.length() == 0) {
             throw new InitializationException("Mandatory config parameter \"balance.gateway.address\" is missed");
         }
@@ -285,7 +285,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             }
             */
             if (logger.isDebugEnabled())
-                logger.debug("MSG handled. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
+                logger.debug("MSG handled. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; UserMessageReference:  " + msg.getUserMessageReference() + "; msg: " + msg.getMessageString());
 
             processIncomingMessage(msg, requestTime);
             return true;
@@ -374,7 +374,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         Message message = new Message();
         message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
         message.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
-        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);                                                    h
+        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
         message.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
         message.setType(Message.TYPE_SUBMIT);
         return message;
@@ -391,7 +391,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         msg.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
         msg.setMessageString(state.getMessage());
         if (state.getAbonentRequest().hasUssdServiceOp() && !sms) {
-             msg.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+            msg.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
         }
         msg.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
         msg.setType(Message.TYPE_SUBMIT);
@@ -444,15 +444,20 @@ public class SmeEngine implements MessageListener, ResponseListener {
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
             MGState state = (MGState) mgAbonentRequests.remove(new Integer(message.getUserMessageReference()));
-            if(state==null){
-                logger.error("Can't get state for abonent:"+message.getDestinationAddress());
+            if (state == null) {
+                if (logger.isDebugEnabled())
+                    logger.debug("Request rejected because state not found");
+                sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
+            } else {
+                sendDeliverSmResponse(message, Data.ESME_ROK);
+                state.response(message);
             }
-            state.response(message);
         } else {
             if (requests != null) {
                 requests.count();
             }
             MGState state = new MGState(threadsPool, message);
+            sendDeliverSmResponse(message, Data.ESME_ROK);
             state.startProcessing();
         }
         //TODO  max request
@@ -469,7 +474,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             mgAbonentRequests.put(new Integer(msg.getUserMessageReference()), state);
             multiplexor.sendMessage(msg, false);
             if (logger.isDebugEnabled())
-                logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; msg: " + msg.getMessageString());
+                logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; UserMessageReference:  " + msg.getUserMessageReference() + "; msg: " + msg.getMessageString());
         } catch (SMPPException e) {
             logger.error("Could not send MG request", e);
             state.setMgState(MGState.MG_ERR);
@@ -492,8 +497,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
         synchronized (bannerEngineTransactionIdSyncMonitor) {
             transactionId = bannerEngineTransactionId++;
         }
-        bannerEngineClient.requestLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId,state);
-    
+        bannerEngineClient.requestLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId, state);
+
     }
 
     protected MessageFormat getMessageFormat(double balance) {
