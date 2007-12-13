@@ -455,8 +455,8 @@ public class SmeEngine implements MessageListener, ResponseListener {
             if (requests != null) {
                 requests.count();
             }
-            MGState state = new MGState(threadsPool, message);
             sendDeliverSmResponse(message, Data.ESME_ROK);
+            MGState state = new MGState(threadsPool, message);
             state.startProcessing();
         }
         //TODO  max request
