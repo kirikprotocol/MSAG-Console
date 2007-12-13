@@ -7,6 +7,8 @@
 #include <string.h>
 #include <inttypes.h>
 #include <string>
+#include <list>
+#include <set>
 
 #include <util/debug.h>
 #include <logger/Logger.h>
@@ -178,16 +180,20 @@ namespace smsc { namespace infosme
         bool        infoSme_T_storageWasDestroyed;
 
         Mutex           messagesCacheLock;
-        Array<Message>  messagesCache;
+      //Array<Message>  messagesCache;
+      std::list<Message> messagesCache;
 
-        struct suspended_msg_inf {
-          suspended_msg_inf() : lastUseOfTime(::time(0)) {}
-          std::vector<Message> messages;
-          time_t lastUseOfTime;
-        };
+//         struct suspended_msg_inf {
+//           suspended_msg_inf() : lastUseOfTime(::time(0)) {}
+//           std::vector<Message> messages;
+//           time_t lastUseOfTime;
+//         };
 
-        typedef std::map<std::string /*region id value*/, suspended_msg_inf*>  suspendedMessagesCache_t;
-        suspendedMessagesCache_t                           suspendedMessagesCache;
+      //typedef std::map<std::string /*region id value*/, suspended_msg_inf*>  suspendedMessagesCache_t;
+      typedef std::set<std::string /*region id value*/>  suspendedRegions_t;
+      suspendedRegions_t                                 _suspendedRegions;
+      std::list<Message>::iterator                       _messagesCacheIter;
+      //suspendedMessagesCache_t                           _suspendedMessagesCache;
         time_t          lastMessagesCacheEmpty;
         
         void  doFinalization();
@@ -371,6 +377,8 @@ namespace smsc { namespace infosme
         void putToSuspendedMessagesQueue(const Message& suspendedMessage);
 
         bool fetchMessageFromCache(Message& message);
+
+        void resetSuspendedRegions();
     };
     
     class TaskGuard
