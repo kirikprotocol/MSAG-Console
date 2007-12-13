@@ -214,6 +214,7 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
 
 void Task::doFinalization()
 {
+  smsc_log_error(logger, "Task::doFinalization::: taskId=%s",getId().c_str());
     {
         MutexGuard guard(finalizingLock);
         bFinalizing = true;
@@ -233,6 +234,7 @@ void Task::finalize()
 }
 bool Task::destroy()
 {
+  smsc_log_error(logger, "Task::destroy::: taskId=%s",getId().c_str());
     doFinalization();
     bool result = false;
     try { dropTable(); result = true;
@@ -248,6 +250,7 @@ bool Task::destroy()
 }
 bool Task::shutdown()
 {
+  smsc_log_error(logger, "Task::shutdown::: taskId=%s",getId().c_str());
     doFinalization(); bool result = false;
     try { resetWaiting(); result = true;
     } catch (std::exception& exc) {
@@ -938,36 +941,41 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
 void
 Task::putToSuspendedMessagesQueue(const Message& suspendedMessage)
 {
-  smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%s': exceeded region bandwidth (regionId=%s), put message with id=%d to suspendedMessagesCache",
+  smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%s': exceeded region bandwidth (regionId=%s), return message with id=%d to messagesCache",
                 info.id.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
   MutexGuard guard(messagesCacheLock);
-  suspendedMessagesCache_t::iterator iter = suspendedMessagesCache.find(suspendedMessage.regionId);
-  if ( iter == suspendedMessagesCache.end() ) {
-    std::pair<suspendedMessagesCache_t::iterator, bool> ins_res = suspendedMessagesCache.insert(std::make_pair(suspendedMessage.regionId, new suspended_msg_inf()));
-    iter = ins_res.first;
-  }
-  iter->second->messages.push_back(suspendedMessage);
-  iter->second->lastUseOfTime = ::time(0);
+  _suspendedRegions.insert(suspendedMessage.regionId);
+  messagesCache.push_back(suspendedMessage);
 }
 
 bool
 Task::fetchMessageFromCache(Message& message)
 {
   MutexGuard guard(messagesCacheLock);
-  while (messagesCache.Count() > 0) {
-    messagesCache.Shift(message);
-    suspendedMessagesCache_t::iterator iter = suspendedMessagesCache.find(message.regionId);
-    if ( iter == suspendedMessagesCache.end() ) {
-      // return message for region for which bandwidth congestion condition isn't occured yet
-      setInProcess(isEnabled());
+  std::string regionForPreviouslyFetchedMessage;
+  while(_messagesCacheIter != messagesCache.end() ) {
+    const Message& fetchedMessage = *_messagesCacheIter;
+    if ( regionForPreviouslyFetchedMessage != fetchedMessage.regionId && 
+         _suspendedRegions.find(fetchedMessage.regionId) == _suspendedRegions.end() ) {
+      message = fetchedMessage; setInProcess(isEnabled());
+      _messagesCacheIter = messagesCache.erase(_messagesCacheIter);
+      smsc_log_debug(logger, "Task::fetchMessageFromCache::: task '%s', fetched next message [id=%ld,abonent=%s,regionId=%s]",info.id.c_str(), message.id, message.abonent.c_str(), message.regionId.c_str());
       return true;
-    } else {
-      iter->second->messages.push_back(message);
-      iter->second->lastUseOfTime = ::time(0);
     }
+    ++_messagesCacheIter;
+    regionForPreviouslyFetchedMessage = fetchedMessage.regionId;
   }
-
+  smsc_log_debug(logger, "Task::fetchMessageFromCache::: cache bypassed, there are no messages meeting search criterion; messagesCache.size = %d", messagesCache.size());
   return false;
+}
+
+void
+Task::resetSuspendedRegions()
+{
+  MutexGuard guard(messagesCacheLock);
+  smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%s'",info.id.c_str());
+  _messagesCacheIter = messagesCache.begin();
+  _suspendedRegions.clear();
 }
 
 bool Task::getNextMessage(Connection* connection, Message& message)
@@ -977,48 +985,29 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     __require__(connection);
 
     if (!isEnabled())
-        return setInProcess(false);
+      return setInProcess(false);
 
     // selecting from cache
     if ( fetchMessageFromCache(message) )
       return true;
 
-    // Cache is empty here
+    // Cache is empty here or maybe we have bypassed all cache elements but there are ones with region id values for which suspended condition is true
 
     if (info.trackIntegrity && !isGenerationSucceeded())
       return setInProcess(false); // for track integrity check that generation finished ok
 
+    time_t currentTime = time(NULL);
+    size_t messagesCacheSz;
     {
       MutexGuard guard(messagesCacheLock);
-      if ( suspendedMessagesCache.size() > 0 ) {
-        smsc_log_info(logger, "Task::getNextMessage::: check timed out messages in suspendedMessagesCache");
-        // move all timed out messages from suspendedMessagesCache to messagesCache
-        for(suspendedMessagesCache_t::iterator iter = suspendedMessagesCache.begin(), end_iter = suspendedMessagesCache.end(); iter != end_iter; ++iter) {
-          if ( ::time(0) - iter->second->lastUseOfTime >= 1 ) {
-            for (std::vector<Message>::iterator msg_iter = iter->second->messages.begin(), msg_end_iter = iter->second->messages.end(); msg_iter != msg_end_iter; ++msg_iter) {
-              messagesCache.Push(*msg_iter);
-              smsc_log_debug(logger, "Task::getNextMessage::: move message with id=%ld from suspendedMessagesCache to messagesCache", msg_iter->id);
-            }
-            delete iter->second;
-            suspendedMessagesCache.erase(iter);
-          }
-        }
-        if ( messagesCache.Count() > 0 ) {
-          smsc_log_debug(logger, "Task::getNextMessage::: There is message in messagesCache after checking timed out messages in suspendedMessagesCache");
-          messagesCache.Shift(message);
-          return true;
-        } else
-          return false;
-      }
+      messagesCacheSz = messagesCache.size();
     }
-    time_t currentTime = time(NULL);
-    if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
+
+    if ( messagesCacheSz > 0 ) return false;
+    else if (currentTime-lastMessagesCacheEmpty > info.messagesCacheSleep)
       lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
     else if (bSelectedAll && !isInGeneration()) 
       return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
-    else {
-     
-    }
     smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
                   info.id.c_str());
 
@@ -1071,7 +1060,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
                 // TODO: analyse it !
             {
                 MutexGuard guard(messagesCacheLock);
-                messagesCache.Push(fetchedMessage);
+                messagesCache.push_back(fetchedMessage);
             }
             
             if (info.dsUncommitedInProcess <= 0 || ++uncommited >= info.dsUncommitedInProcess) {
@@ -1103,7 +1092,7 @@ bool Task::getNextMessage(Connection* connection, Message& message)
     
     dsInt->stopTimer(wdTimerId);
     smsc_log_debug(logger, "Selected %d messages from DB for task '%s'",
-                   messagesCache.Count(), info.id.c_str());
+                   messagesCache.size(), info.id.c_str());
 
     // selecting from cache
     if ( fetchMessageFromCache(message) )
@@ -1452,14 +1441,13 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
   size_t fetchedCount=0, numOfRowsProcessed=0;
   while (rs->fetchNext()) {
     if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+      if ( msgLimit && fetchedCount++ >= msgLimit ) continue;
       smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%lld,%d,%s,%lld,%s] into messagesList", rs->getUint64(1), rs->getUint8(2), rs->getString(3), rs->getDateTime(4), rs->getString(5));
       messagesList.push_back(MessageDescription(rs->getUint64(1),
                                                 rs->getUint8(2),
                                                 rs->getString(3),
                                                 rs->getDateTime(4),
                                                 rs->getString(5)));
-      if ( msgLimit && ++fetchedCount == msgLimit )
-        break;
     }
     if ( ++numOfRowsProcessed % 5000 == 0 )
       smsc::util::millisleep(1);
@@ -1500,8 +1488,10 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
     smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message=[%s] to taskMessages", messageBuf.str().c_str());
     taskMessages.Push(messageBuf.str());
   }
-
-  return taskMessages; 
+  std::ostringstream fetchedCountAsStr;
+  fetchedCountAsStr << fetchedCount;
+  taskMessages.Push(fetchedCountAsStr.str());
+  return taskMessages;
 }
 
 void
