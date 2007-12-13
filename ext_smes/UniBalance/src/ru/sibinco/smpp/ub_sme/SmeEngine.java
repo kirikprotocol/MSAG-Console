@@ -449,7 +449,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
                     logger.debug("Request rejected because state not found");
                 sendDeliverSmResponse(message, Data.ESME_RMSGQFUL);
             } else {
-                sendDeliverSmResponse(message, Data.ESME_ROK);
                 state.response(message);
             }
         } else {
