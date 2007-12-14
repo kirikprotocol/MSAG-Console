@@ -510,7 +510,7 @@ protected:
                 throw ConfigException("'ss7UserId' should fall into the range [1..20]");
             ss7.userId = (unsigned char)tmo;
         }
-        smsc_log_info(logger, "  ss7UserId: %s%u", !tmo ? "default ":"", ss7.userId);
+        smsc_log_info(logger, "  ss7UserId: %u%s", ss7.userId, !tmo ? " (default)":"");
 
         tmo = 0;    //maxTimeout
         try { tmo = (uint32_t)ss7Cfg.getInt("maxTimeout"); }
@@ -520,7 +520,7 @@ protected:
                 throw ConfigException("'maxTimeout' should be less than 65535 seconds");
             ss7.capTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "  maxTimeout: %s%u secs", !tmo ? "default ":"", ss7.capTimeout);
+        smsc_log_info(logger, "  maxTimeout: %u secs%s", ss7.capTimeout, !tmo ? " (default)":"");
 
         tmo = 0;    //maxDialogs
         try { tmo = (uint32_t)ss7Cfg.getInt("maxDialogs"); }
@@ -530,7 +530,7 @@ protected:
                 throw ConfigException("'maxDialogs' should fall into the range [2..65530]");
             ss7.maxDlgId = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "  maxDialogs: %s%u", !tmo ? "default ":"", ss7.maxDlgId);
+        smsc_log_info(logger, "  maxDialogs: %u%s", ss7.maxDlgId, !tmo ? " (default)":"");
         return;
     }
 
@@ -632,6 +632,7 @@ protected:
         static const char * _abReq[] = { "onDemand", "always" };
         uint32_t tmo = 0;
         char * cstr = NULL;
+        char * policyNm = NULL; //abonent contract determination policy
 
         if (!manager.findSection("Billing"))
             throw ConfigException("'Billing' section is missed");
@@ -640,17 +641,6 @@ protected:
 
         //read BillingModes subsection
         readBillingModes(billCfg);
-
-        cstr = NULL;
-        char * policyNm = NULL;
-        try { policyNm = billCfg.getString("abonentPolicy");
-        } catch (ConfigException& exc) {
-            throw ConfigException("'abonentPolicy' is unknown or missing!");
-        }
-        if (!policyNm || !policyNm[0]) {
-            policyNm = NULL;
-            smsc_log_warn(logger, "Default abonent policy is not set!");
-        }
 
         cstr = NULL;
         bill.cntrReq = BillingCFG::reqOnDemand;
@@ -662,8 +652,21 @@ protected:
             } else if (strcmp(_abReq[BillingCFG::reqOnDemand], cstr))
                 throw ConfigException("illegal 'abonentTypeRequest' value");
         } else
-            smsc_log_warn(logger, "parameter 'abonentTypeRequest' is missed");
-        smsc_log_info(logger, "abonentTypeRequest: %s", _abReq[bill.cntrReq]);
+            cstr = NULL;
+        smsc_log_info(logger, "abonentTypeRequest: %s%s", _abReq[bill.cntrReq],
+                      !cstr ? " (default)":"");
+
+        if ((bill.cntrReq == BillingCFG::reqAlways)
+            || bill.mo_billMode.useIN() || bill.mt_billMode.useIN()) {
+            //abonent contract determination policy is required
+            cstr = NULL;
+            try { policyNm = billCfg.getString("abonentPolicy");
+            } catch (ConfigException& exc) { }
+
+            if (!policyNm || !policyNm[0])
+                throw ConfigException("abonent contract determination policy is not set!");
+        } else
+            smsc_log_info(logger, "abonent contract determination policy is not used");
 
         tmo = 0;    //abtTimeout
         try { tmo = (uint32_t)billCfg.getInt("abonentTypeTimeout"); }
@@ -673,7 +676,8 @@ protected:
                 throw ConfigException("'abonentTypeTimeout' should fall into the range [1 ..65535] seconds");
             bill.abtTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "abonentTypeTimeout: %s%u secs", !tmo ? "default ":"", bill.abtTimeout);
+        smsc_log_info(logger, "abonentTypeTimeout: %u secs%s", bill.abtTimeout,
+                      !tmo ? " (default)":"");
 
         cstr = NULL;
         try { cstr = billCfg.getString("cdrMode");
@@ -737,7 +741,8 @@ protected:
         catch (ConfigException& exc) { }
         if (tmo)
             cachePrm.fileRcrd = (int)tmo;
-        smsc_log_info(logger, "cacheRecords: %s%d", !tmo ? "default ":"", cachePrm.fileRcrd);
+        smsc_log_info(logger, "cacheRecords: %d%s", cachePrm.fileRcrd,
+                      !tmo ? " (default)":"");
 
         tmo = 0;    //maxBillings
         try { tmo = (uint32_t)billCfg.getInt("maxBillings"); }
@@ -748,7 +753,8 @@ protected:
                                              _in_CFG_MAX_BILLINGS).c_str());
             bill.maxBilling = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "maxBillings: %s%u per connect", !tmo ? "default ":"", bill.maxBilling);
+        smsc_log_info(logger, "maxBillings: %u per connect%s", bill.maxBilling,
+                      !tmo ? " (default)":"");
 
         tmo = 0;    //maxTimeout
         try { tmo = (uint32_t)billCfg.getInt("maxTimeout"); }
@@ -758,7 +764,8 @@ protected:
                 throw ConfigException("'maxTimeout' should fall into the range [5 ..65535] seconds");
             sock.timeout = bill.maxTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "maxTimeout: %s%u secs", !tmo ? "default ":"", bill.maxTimeout);
+        smsc_log_info(logger, "maxTimeout: %u secs%s", bill.maxTimeout,
+                      !tmo ? " (default)":"");
 
 #ifdef SMSEXTRA
         /* ********************************* *
@@ -861,7 +868,7 @@ public:
         catch (ConfigException& exc) { }
         if (tmo)
             sock.maxConn = (unsigned short)tmo;
-        smsc_log_info(logger, "maxClients: %s%u", !tmo ? "default ":"", sock.maxConn);
+        smsc_log_info(logger, "maxClients: %u%s", sock.maxConn, !tmo ? " (default)":"");
 
         /* ******************** *
          * Billing parameters:  *
@@ -873,8 +880,6 @@ public:
          * ***************************************************************** */
         if (policyNm) { //default policy
             abPolicies.setPreferred(readPolicyCFG(manager, policyNm));
-        } else if (bill.cntrReq == BillingCFG::reqAlways) {
-            throw ConfigException("Default abonent policy is not set!");
         }
         //todo: policies address pool mask is not supported yet!
 
@@ -884,7 +889,7 @@ public:
         if (bill.mo_billMode.useIN() || bill.mt_billMode.useIN() || abPolicies.useSS7())
             readSS7CFG(manager, bill.ss7);
         else
-            smsc_log_warn(logger, "SS7 stack not in use!");
+            smsc_log_info(logger, "SS7 stack not in use!");
 
         /**/
         return;
