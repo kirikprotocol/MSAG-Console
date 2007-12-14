@@ -55,7 +55,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
     private Map currency;
 
     private int ussdMaxLength = 67;
-    private long ussdSessionTimeout = 5000L;
 
     private int maxProcessingRequests = 10000;
     private int expireTime = 5000;
@@ -125,11 +124,6 @@ public class SmeEngine implements MessageListener, ResponseListener {
             ussdMaxLength = Integer.parseInt(config.getProperty("ussd.message.max.length", Integer.toString(ussdMaxLength)));
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"ussd.abonentRequest.max.length\": " + config.getProperty("ussd.message.max.length"));
-        }
-        try {
-            ussdSessionTimeout = Long.parseLong(config.getProperty("ussd.session.timeout", Long.toString(ussdSessionTimeout)));
-        } catch (NumberFormatException e) {
-            throw new InitializationException("Invalid value for config parameter \"ussd.session.timeout\": " + config.getProperty("ussd.session.timeout"));
         }
 
         try {
