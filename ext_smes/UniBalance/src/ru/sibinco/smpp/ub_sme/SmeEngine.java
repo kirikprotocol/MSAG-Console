@@ -80,12 +80,12 @@ public class SmeEngine implements MessageListener, ResponseListener {
     public void init(Properties config) throws InitializationException {
         if (logger.isDebugEnabled()) logger.debug("UniBalance SME init started");
 
-        mgAddress = config.getProperty("mg.address", "");
+        mgAddress = config.getProperty("unibalance.mg.address", "");
         if (mgAddress.length() == 0) {
             throw new InitializationException("Mandatory config parameter \"mg.address\" is missed");
         }
 
-        balanceGatewayAddress = config.getProperty("balance.gateway.address");
+        balanceGatewayAddress = config.getProperty("uniblance.balance.gateway.address");
         if (balanceGatewayAddress.length() == 0) {
             throw new InitializationException("Mandatory config parameter \"balance.gateway.address\" is missed");
         }
@@ -121,7 +121,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
         flashSmsEnabled = Boolean.valueOf(config.getProperty("sms.response.flash", Boolean.toString(flashSmsEnabled))).booleanValue();
 
         try {
-            ussdMaxLength = Integer.parseInt(config.getProperty("ussd.message.max.length", Integer.toString(ussdMaxLength)));
+            ussdMaxLength = Integer.parseInt(config.getProperty("unibalance.ussd.message.max.length", Integer.toString(ussdMaxLength)));
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"ussd.abonentRequest.max.length\": " + config.getProperty("ussd.message.max.length"));
         }
@@ -181,7 +181,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             bannerEngineClient.init(bannerEngineClientConfig);
         }
         try {
-            expireTime = Integer.parseInt(config.getProperty("expire.time"));
+            expireTime = Integer.parseInt(config.getProperty("unibalance.expire.time"));
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"expire.time\": " + config.getProperty("expire.time"));
         }
@@ -207,7 +207,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             productivityController.startService();
         }
 
-        defaultEncoding = config.getProperty("default.encoding", defaultEncoding);
+        defaultEncoding = config.getProperty("unibalance.default.encoding", defaultEncoding);
         // new RequestStatesController(requestStatesControllerPollingInterval).startService();
 
         if (logger.isDebugEnabled()) logger.debug("UniBalance SME init fineshed");
@@ -368,7 +368,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
         Message message = new Message();
         message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
         message.setDestinationAddress(state.getAbonentRequest().getSourceAddress());
-        message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+        if (state.getAbonentRequest().hasUssdServiceOp()) {
+            message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
+        }
         message.setUserMessageReference(state.getAbonentRequest().getUserMessageReference());
         message.setType(Message.TYPE_SUBMIT);
         return message;
@@ -438,6 +440,7 @@ public class SmeEngine implements MessageListener, ResponseListener {
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
             MGState state = (MGState) mgAbonentRequests.remove(new Integer(message.getUserMessageReference()));
+
             if (state == null) {
                 if (logger.isDebugEnabled())
                     logger.debug("Request rejected because state not found");
