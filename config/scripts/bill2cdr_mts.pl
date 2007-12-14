@@ -523,7 +523,7 @@ sub process{
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
     my $makeoutrec=1;
-    if($infields->{SRC_SME_ID} eq 'MCSme')
+    if($infields->{SRC_SME_ID} eq 'MCISme')
     {
       $makeoutrec=0;
     }
@@ -591,8 +591,8 @@ sub process{
       # A -> B
       $billed|=outrow($out,$outfields) if $makeoutrec;
       
-#      $outfields->{RECORD_TYPE}=10;
-      $outfields->{RECORD_TYPE}=30;
+      $outfields->{RECORD_TYPE}=10;
+#      $outfields->{RECORD_TYPE}=30;
       $outfields->{PAYER_ADDR}=conv_addr_payer($infields->{DST_ADDR});
       $outfields->{PAYER_IMSI}='';#$infields->{DST_IMSI};
       $outfields->{PAYER_MSC}='';#$infields->{DST_MSC};
@@ -625,7 +625,6 @@ sub process{
       $billed|=outrow($out,$outfields);
     }else
     {
-      
       $billed|=outrow($out,$outfields) if $makeoutrec;
       
       $outfields->{RECORD_TYPE}=20;
