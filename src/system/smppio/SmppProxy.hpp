@@ -32,7 +32,8 @@ const int proxyTransceiver=smeTRX;
 
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock),shapeCounter(5)
+  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock),
+    shapeCounterIn(60,500),shapeCounterOut(60,500)
   {
     smppReceiverSocket->assignProxy(this);
     dualChannel=false;
@@ -157,9 +158,17 @@ public:
       {
         throw ProxyQueueLimitException(outqueue.Count(),totalLimit);
       }
+      if(!ussdSession && cmd->get_commandId()!=SUBMIT_RESP && shapeLimit>0 && shapeCounterOut.Get()>shapeLimit)
+      {
+        throw ProxyQueueLimitException(shapeCounterOut.Get(),shapeLimit);
+      }
       if(!ussdSession && cmd->get_commandId()==DELIVERY)
       {
         checkProcessLimit(cmd);//can throw ProxyQueueLimitException
+      }
+      if(shapeLimit>0)
+      {
+        shapeCounterOut.Inc(1);
       }
       debug2(log,"put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
@@ -324,14 +333,14 @@ public:
         {
           throw ProxyQueueLimitException(submitCount,submitLimit);
         }
-        if(!ussdSession && shapeLimit>0 && shapeCounter.Get()/5>shapeLimit)
+        if(!ussdSession && shapeLimit>0 && shapeCounterIn.Get()>shapeLimit)
         {
-          debug2(log,"Shaping limit exceeded for sme '%s' - %d/%d",id.c_str(),shapeCounter.Get()/5,shapeLimit);
-          throw ProxyQueueLimitException(shapeCounter.Get()/5,shapeLimit);
+          debug2(log,"Shaping limit exceeded for sme '%s' - %d/%d",id.c_str(),shapeCounterIn.Get(),shapeLimit);
+          throw ProxyQueueLimitException(shapeCounterIn.Get(),shapeLimit);
         }
         if(shapeLimit>0)
         {
-          shapeCounter.Inc(1);
+          shapeCounterIn.Inc(1);
         }
 
         if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
@@ -785,7 +794,7 @@ protected:
   int submitLimit;
   int submitCount;
 
-  smsc::util::TimeSlotCounter<> shapeCounter;
+  smsc::util::TimeSlotCounter<> shapeCounterOut,shapeCounterIn;
   int shapeLimit;
 
   bool disconnecting;
