@@ -4,6 +4,10 @@
 #include <sys/time.h>
 #include <signal.h>
 #include <time.h>
+#ifdef SNMP
+#include "snmp/SnmpAgent.hpp"
+#include "system/snmp/SnmpCounter.hpp"
+#endif
 
 #define MAXENTRIES 600
 #define MY_USER_ID USER01_ID
@@ -37,21 +41,50 @@ extern "C" {
   USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   {
     __map_warn2__("%s: confirmation received ssn=%d status=%d",__func__,lssn,status);
-    if( status == 0  ) {
-      for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
-        if( MapDialogContainer::localSSNs[i] == lssn ) {
+    if( status == 0  )
+    {
+      for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+      {
+        if( MapDialogContainer::localSSNs[i] == lssn )
+        {
           MapDialogContainer::boundLocalSSNs[i] = 1;
           __map_warn2__("%s: local ssn=%d bound",__func__,lssn);
+
           break;
         }
       }
-    } else if( status == 1 ) {
+    } else if( status == 1 )
+    {
       __map_warn2__("Et96MapBindConf SSN %d is already bound trying to reconnect",lssn);
       MAP_disconnectDetected = true;
-    } else {
+    } else
+    {
       __map_warn2__("Et96MapBindConf SSN %d is not bound trying to reconnect",lssn);
       MAP_disconnectDetected = true;
     }
+#ifdef SNMP
+    const char* sid="MAP_PROXY";
+    smsc::system::SnmpCounter::SmeTrapSeverities trpSvrt=smsc::system::SnmpCounter::getInstance().getSmeSeverities(sid);
+    char snmpMsg[1024];
+    if(MAP_disconnectDetected)
+    {
+      if(trpSvrt.onRegisterFailed!=-1)
+      {
+        sprintf(snmpMsg,"ACTIVE ESME %s registration failed (AlaramID=%s; severity=%d)",sid,sid,trpSvrt.onRegisterFailed);
+        smsc::snmp::SnmpAgent::trap(sid,"ESME",(smsc::snmp::SnmpAgent::alertSeverity)trpSvrt.onRegisterFailed,snmpMsg);
+      }
+    }else
+    {
+      if(trpSvrt.onRegister!=-1)
+      {
+        if(isMapBound())
+        {
+          sprintf(snmpMsg,"CLEARED ESME %s registration successful (AlaramID=%s; severity=%d)",sid,sid,trpSvrt.onRegister);
+          smsc::snmp::SnmpAgent::trap(sid,"ESME",(smsc::snmp::SnmpAgent::alertSeverity)trpSvrt.onRegister,snmpMsg);
+        }
+      }
+    }
+#endif
     return ET96MAP_E_OK;
   }
 
@@ -164,6 +197,16 @@ void MapIoTask::init(unsigned timeout)
 
 void MapIoTask::disconnect()
 {
+#ifdef SNMP
+  smsc::system::SnmpCounter::SmeTrapSeverities smeTrpSvrt=smsc::system::SnmpCounter::getInstance().getSmeSeverities("MAP_PROXY");
+  if(smeTrpSvrt.onUnregister!=-1)
+  {
+    char buf[1024];
+    const char* sysId="MAP_PROXY";
+    sprintf(buf,"ACTIVE ESME %s unregistered successfully (AlaramID=%s; severity=%d)",sysId,sysId,smeTrpSvrt.onUnregister);
+    smsc::snmp::SnmpAgent::trap(sysId,"ESME",(smsc::snmp::SnmpAgent::alertSeverity)smeTrpSvrt.onUnregister,buf);
+  }
+#endif
   USHORT_T result;
   __map_warn__("disconnect from MAP stack");
 
@@ -174,7 +217,7 @@ void MapIoTask::disconnect()
     }
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
-  
+
   result = MsgRel(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK) {
     __map_warn2__("error at MsgRel errcode 0x%hx",result);
@@ -636,7 +679,7 @@ void MAPSTATS_Update_(MAPSTATS stats)
   default:; // nothing
   }
   if( stats != MAPSTATS_GSMRECV )
-  smsc_log_debug(MAPSTATS_GetLoggerUpdate(), 
+  smsc_log_debug(MAPSTATS_GetLoggerUpdate(),
                 "updated %s dlg %d/%d/%d",
                 MAPSTATS_types[stats],
                 MAPSTATS_dialogs_in,
@@ -644,11 +687,11 @@ void MAPSTATS_Update_(MAPSTATS stats)
                 MapDialogContainer::getInstance()->getDialogCount()
                 );
 //  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
-//    smsc_log_warn(MAPSTATS_GetLoggerUpdate(),"Number of dialogs unbalanced %d/%d/%d", 
+//    smsc_log_warn(MAPSTATS_GetLoggerUpdate(),"Number of dialogs unbalanced %d/%d/%d",
 //                  MAPSTATS_dialogs_in,
 //                  MAPSTATS_dialogs_out,
 //                  MapDialogContainer::getInstance()->getDialogCount()
-//                  ); 
+//                  );
 //  }
 }
 
