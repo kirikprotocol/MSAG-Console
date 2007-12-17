@@ -37,6 +37,7 @@ public:
     }
     f.Write(str,strlen(str));
     f.Flush();
+    Close();
   }
 
   void Close()
@@ -61,6 +62,7 @@ protected:
   std::string prefix;
 };
 
+/*
 class CsvRollingThread:public smsc::core::threads::Thread{
 public:
   CsvRollingThread(CsvFileHandle& fh):csvFile(fh)
@@ -99,6 +101,7 @@ protected:
     csvFile.Close();
   }
 };
+*/
 
 const char* getLogLocation()
 {
@@ -136,6 +139,7 @@ extern "C" void SnmpTrap(const char* prefix,const char* obj,const char* alarmId,
 {
   try{
     static CsvFileHandle fh(getLogLocation(),prefix);
+    /*
     static CsvRollingThread crt(fh);
     static bool crtStarted=false;
     if(!crtStarted)
@@ -143,6 +147,7 @@ extern "C" void SnmpTrap(const char* prefix,const char* obj,const char* alarmId,
       crt.Start();
       crtStarted=true;
     }
+    */
     time_t t=time(NULL);
     tm t2;
     gmtime_r(&t,&t2);
