@@ -274,12 +274,14 @@ void AbonentDetector::ConfigureSCF(void)
         if (!abScf)
             smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
     }
-    if (!abScf && (abRec.ab_type == AbonentContractInfo::abtPrepaid))
-        abRec.ab_type = AbonentContractInfo::abtUnknown;
-    else {
-        uint32_t skeyMOSM = abScf->getSKey(&abRec.tdpSCF);
-        //renew MO-SM SCF params
-        abRec.tdpSCF[TDPCategory::dpMO_SM] = GsmSCFinfo(abScf->scfAdr, skeyMOSM);
+    if (abRec.ab_type == AbonentContractInfo::abtPrepaid) {
+        if (!abScf) {
+            abRec.ab_type = AbonentContractInfo::abtUnknown;
+        } else {
+            uint32_t skeyMOSM = abScf->getSKey(&abRec.tdpSCF);
+            if (skeyMOSM) //renew MO-SM SCF params
+                abRec.tdpSCF[TDPCategory::dpMO_SM] = GsmSCFinfo(abScf->scfAdr, skeyMOSM);
+        }
     }
 }
 
