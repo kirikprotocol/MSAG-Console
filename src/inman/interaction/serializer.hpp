@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 
 #ifndef __SMSC_INMAN_INTERACTION_SERIALIZER__
 #define __SMSC_INMAN_INTERACTION_SERIALIZER__
@@ -44,29 +44,29 @@ typedef smsc::core::buffers::ExtendingBuffer<unsigned char,1024> ObjectBuffer;
  */
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::vector<unsigned char>& arr)
 {
-    int   len = (int)arr.size();
+    unsigned   len = (unsigned)arr.size();
     do {
         unsigned char l7b = (unsigned char)(len & 0x7F);
         if (len >>= 7)
             l7b |= 0x80;
         buf.Append(&l7b, 1);
     } while (len);
-    buf.Append(&arr[0], (int)arr.size());
+    buf.Append(&arr[0], (unsigned)arr.size());
     return buf;
 }
 inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& arr ) throw(SerializerException)
 {
-    int len = 0;
+    unsigned len = 0, i = 0;
     unsigned char l7b;
     do {
         if (buf.Read(&l7b, 1) < 1)
             throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
                                       SerializerException::invObjData, 
                                       ">> vector: corrupted size");
-        len = (len << 7) + (l7b & 0x7F);
+        len |= ((l7b & 0x7F) << (7*i++));
     } while (l7b >= 0x80);
 
-    int oldLen = arr.size();
+    unsigned oldLen = (unsigned)arr.size();
     arr.resize(len + oldLen);
     if (buf.Read(&arr[oldLen], len) < len)
         throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
@@ -77,26 +77,26 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& a
 
 inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
 {
-    int   len = (int)str.size();
+    unsigned   len = (int)str.size();
     do {
         unsigned char l7b = (unsigned char)(len & 0x7F);
         if (len >>= 7)
             l7b |= 0x80;
         buf.Append(&l7b, 1);
     } while (len);
-    buf.Append((const unsigned char*)str.c_str(), (int)str.size());
+    buf.Append((const unsigned char*)str.c_str(), (unsigned)str.size());
     return buf;
 }
 inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(SerializerException)
 {
-    int len = 0;
+    unsigned len = 0, i = 0;
     unsigned char l7b;
     do {
         if (buf.Read(&l7b, 1) < 1)
             throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
                                         SerializerException::invObjData,
                                         " >> string: corrupted size");
-        len = (len << 7) + (l7b & 0x7F);
+        len |= ((l7b & 0x7F) << (7*i++));
     } while (l7b >= 0x80);
 
     while (len) {
