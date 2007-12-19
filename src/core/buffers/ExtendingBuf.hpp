@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 
 #ifndef __SMSC_CORE_EXTENDING_BUFFER_HPP
 #define __SMSC_CORE_EXTENDING_BUFFER_HPP
@@ -139,7 +139,7 @@ public:
 
     //Writes data to buffer at given position, extending buffer and 
     //effective data size if necessary. Doesn't change current position!!!
-    void Write(unsigned use_pos, const T* data, int count)
+    void Write(unsigned use_pos, const T* data, unsigned count)
     {
         if (!count)
             return;
@@ -155,7 +155,7 @@ public:
     //Writes/Appends data to buffer starting from current position and adjusts it.
     //NOTE: if position is set within existing data, it's overwritten.
     //Returns adjusted position.
-    unsigned Append(const T* data, int count)
+    unsigned Append(const T* data, unsigned count)
     {
         Write(pos, data, count);
         return (pos += count);
