@@ -219,7 +219,51 @@ protected:
     };
 
     // -- RAM Cache definition
-    typedef std::list<AbonentId> AbonentsList;
+    class AbonentsList {    //LILO list
+    protected:
+        typedef std::list<AbonentId> AbntIdList;
+
+        AbntIdList  idList;
+        AbntIdList::size_type   size;
+
+    public:
+        typedef std::list<AbonentId>::iterator iterator;
+        typedef std::list<AbonentId>::size_type size_type;
+
+        AbonentsList() : size(0)
+        { }
+        ~AbonentsList()
+        { }
+
+        inline size_type Size(void) const { return size; }
+        inline bool empty(void) const    { return idList.empty(); }
+        inline void clear(void)          { idList.clear(); size = 0; }
+
+        inline AbonentId front(void)     { return idList.front(); }
+        inline iterator  begin(void)     { return idList.begin(); }
+        inline iterator  end(void)       { return idList.end(); }
+        inline void erase(iterator & it) { idList.erase(it); }
+
+        inline void push_back(AbonentId new_id)
+        {
+            idList.push_back(new_id);
+            ++size;
+            return;
+        }
+        inline void pop_front(void)
+        {
+            idList.pop_front();
+            if (size)
+                --size;
+            return;
+        }
+        inline void move_back(iterator & it_from)
+        {
+            idList.splice(idList.end(), idList, it_from);
+        }
+    };
+
+
     struct AbonentRecordRAM : public AbonentRecord {
     public:
         bool toUpdate;  //indicates that record awaits for transfer to external
@@ -317,7 +361,7 @@ protected:
             if (_running) {
                 _running = false;
                 if (do_abort && !updList.empty()) {
-                    smsc_log_warn(logger, "FSCache: aborting, %u records lost ..", updList.size());
+                    smsc_log_warn(logger, "FSCache: aborting, %u records lost ..", updList.Size());
                     updList.clear();
                 }
             }

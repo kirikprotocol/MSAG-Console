@@ -142,7 +142,8 @@ AbonentCacheMTR::AbonentRecordRAM *
 {
     AbonentRecordRAM * pabRec = GetPtr(AbonentHashKey(ab_number));
     if (pabRec) {
-        accList.splice(accList.end(), accList, pabRec->accIt);
+//        accList.splice(accList.end(), accList, pabRec->accIt);
+        accList.move_back(pabRec->accIt);
         pabRec->accIt = --accList.end();
         if (pabRec->isExpired(lfInterval))
             pabRec->ab_type = AbonentRecord::abtUnknown;
@@ -165,7 +166,8 @@ int AbonentCacheMTR::RAMCache::Update(const AbonentId & ab_number,
         pabRec = GetPtr(hkey);
         accList.push_back(ab_number);
     } else {        //update
-        accList.splice(accList.end(), accList, pabRec->accIt);
+//        accList.splice(accList.end(), accList, pabRec->accIt);
+        accList.move_back(pabRec->accIt);
         *pabRec = ramRec;
     }
     pabRec->accIt = --accList.end();
@@ -174,7 +176,7 @@ int AbonentCacheMTR::RAMCache::Update(const AbonentId & ab_number,
 
 void AbonentCacheMTR::RAMCache::makeSpace(void)
 {
-    if ((accList.size() >= maxRamIt)) {
+    if ((accList.Size() >= maxRamIt)) {
         AbonentsList::iterator it = accList.begin();
         while (it != accList.end()) {
             AbonentsList::iterator  cit = it++;
@@ -263,7 +265,7 @@ void AbonentCacheMTR::FSCacheMonitor::onRehashDone(FileCache * new_hf,
     _rehashOn = false;
     if (!new_hf) {
         smsc_log_error(logger, "FSCache: rehash failed: %s", error ? error : "unknown reason");
-        smsc_log_error(logger, "FSCache: aborting, %u records lost ..", updList.size());
+        smsc_log_error(logger, "FSCache: aborting, %u records lost ..", updList.Size());
         _running = false;
         updList.clear();
     } else {
