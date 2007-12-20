@@ -81,9 +81,11 @@ protected:
 };//Mutex
 
 typedef MutexGuardTmpl<Mutex> MutexGuard;
+typedef MutexTryGuard_T<Mutex> MutexTryGuard;
 
 }//synchronization
 }//core
 }//smsc
 
-#endif
+#endif /* __CORE_SYNCHRONIZATION_MUTEX_HPP__ */
+
