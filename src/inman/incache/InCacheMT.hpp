@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan abonent contract data cache. Multithreaded implementation with
  * real-time response. Two-layers schema is used: preemptive RAM cache over
@@ -242,8 +242,12 @@ protected:
         inline AbonentId front(void)     { return idList.front(); }
         inline iterator  begin(void)     { return idList.begin(); }
         inline iterator  end(void)       { return idList.end(); }
-        inline void erase(iterator & it) { idList.erase(it); }
-
+        inline void erase(iterator & it)
+        {
+            idList.erase(it); 
+            if (size)
+                --size;
+        }
         inline void push_back(AbonentId new_id)
         {
             idList.push_back(new_id);
