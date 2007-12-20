@@ -63,7 +63,7 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& a
             throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
                                       SerializerException::invObjData, 
                                       ">> vector: corrupted size");
-        len |= ((l7b & 0x7F) << (7*i++));
+        len |= ((unsigned)(l7b & 0x7F) << (7*i++));
     } while (l7b >= 0x80);
 
     unsigned oldLen = (unsigned)arr.size();
@@ -96,7 +96,7 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str ) throw(Seri
             throw SerializerException(format("ObjectBuffer[pos: %u]", buf.getPos()).c_str(),
                                         SerializerException::invObjData,
                                         " >> string: corrupted size");
-        len |= ((l7b & 0x7F) << (7*i++));
+        len |= ((unsigned)(l7b & 0x7F) << (7*i++));
     } while (l7b >= 0x80);
 
     while (len) {
