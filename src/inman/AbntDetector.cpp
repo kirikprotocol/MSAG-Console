@@ -239,18 +239,23 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-void AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
+short AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 {
-    MutexGuard grd(_mutex);
+    MutexTryGuard grd(_mutex);
+    if (!grd.tgtLocked()) //detector is busy, request resignalling
+        return -1;
+
     smsc_log_debug(logger, "%s: timer[%u] signaled at state %s", _logId,
                    iapTimer->getId(), State2Str());
     if (_state > adIAPQuering)
-        return;
+        return 0;
+
     iapTimer = NULL;
     _state = adTimedOut;
     abRec.reset(); //abtUnknown
     _wErr = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
     reportAndExit();
+    return 0;
 }
 
 /* ---------------------------------------------------------------------------------- *

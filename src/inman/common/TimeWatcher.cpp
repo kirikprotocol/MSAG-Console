@@ -105,19 +105,22 @@ void StopWatch::signalStatus(SWStatus status)
     _tmrState = tmrIsToSignal;
 }
 
-void StopWatch::signal(void)
+int StopWatch::signal(void)
 {
 //    smsc_log_debug(logger, "Timer[%u]: signaling at state %u, argKind: %d", _id, _tmrState, _opaqueObj.kind);
     MutexGuard  tmp(_sync);
     if (_tmrState == tmrIsToSignal) {
-        if ((_result != tmrStopped) &&_cb_event)
-            _cb_event->onTimerEvent(this, (_opaqueObj.kind != OPAQUE_OBJ::objNone) ?
-                                    &_opaqueObj : NULL);
+        if ((_result != tmrStopped) &&_cb_event) {
+            int rval = _cb_event->onTimerEvent(this,
+                        (_opaqueObj.kind != OPAQUE_OBJ::objNone) ? &_opaqueObj : NULL);
+            if (rval)
+                return rval;
+        }
         _sigEvent.Signal();
     }
     _tmrState = tmrSignaled;
     deactivate(false); //stop timer
-    return;
+    return 0;
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -186,15 +189,18 @@ int TimeNotifier::Execute(void)
                 StopWatch * tmr = *(timers.begin());
                 timers.pop_front();
                 _sync.Unlock();
+                int rval = 0;
                 try {
                     smsc_log_debug(logger, "TmNtfr: signaling timer[%u]", tmr->getId());
-                    tmr->signal(); //also stops timer
+                    rval = tmr->signal(); //also stops timer
                 } catch (std::exception& exc) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener exception: %s", tmr->getId(), exc.what());
                 } catch (...) {
                     smsc_log_error(logger, "TmNtfr: timer[%u] listener unknown exception", tmr->getId());
                 }
                 _sync.Lock();
+                if (rval) //listener requested resignalling
+                    timers.push_back(tmr);
             } while (!timers.empty());
         }
         _sync.wait(TIMEOUT_STEP); //unlocks and waits

@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef _SMSC_INMAN_SYNCHRONIZATION_HPP
 #define _SMSC_INMAN_SYNCHRONIZATION_HPP
 
@@ -41,7 +41,14 @@ struct OPAQUE_OBJ {
         unsigned ui;
         void * ptr;
     } val;
-    OPAQUE_OBJ() : kind(objNone) { }
+
+    OPAQUE_OBJ() : kind(objNone)
+    { val.ui = 0; }
+    OPAQUE_OBJ(unsigned o_ui) : kind(objUint)
+    { val.ui = o_ui; }
+    OPAQUE_OBJ(void * o_ptr) : kind(objPtr)
+    { val.ptr = o_ptr; }
+
     void setPtr(void * o_ptr) { kind = objPtr; val.ptr = o_ptr;  }
     void setUInt(unsigned o_ui) { kind = objUint; val.ui = o_ui;  }
 };
@@ -85,7 +92,7 @@ protected:
     void signalStatus(SWStatus status);
 
     friend class TimeNotifier;
-    void signal(void);
+    int signal(void);
 
 private:
     void reset(void);
@@ -106,7 +113,8 @@ private:
 
 class TimerListenerITF {
 public:
-    virtual void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj = NULL) = 0;
+    //Returning the non-zero value listener requests resignaling of event
+    virtual short onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj = NULL) = 0;
 };
 
 typedef std::list<StopWatch*> TimersLIST;

@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * Billing: implements Billing process logic:
  * 1) determination of abonent contract type by quering abonent provider
@@ -50,7 +50,7 @@ public:
     void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                                     RCHash qry_status);
     //-- TimerListenerITF interface methods:
-    void onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
+    short onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
 
 protected:
     bool verifyReq(AbntContractRequest* req);

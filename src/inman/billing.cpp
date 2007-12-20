@@ -27,6 +27,8 @@ using smsc::inman::iaprvd::_RCS_IAPQStatus;
 using smsc::inman::inap::_RCS_TC_Dialog;
 using smsc::inman::inap::TC_DlgError;
 
+using smsc::core::synchronization::MutexTryGuard;
+
 
 namespace smsc  {
 namespace inman {
@@ -731,11 +733,13 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
+short Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
 {
     assert(opaque_obj);
-    MutexGuard grd(bilMutex);
-    
+    MutexTryGuard grd(bilMutex);
+    if (!grd.tgtLocked()) //billing is busy, request resignalling
+        return -1;
+
     smsc_log_debug(logger, "%s: timer[%u] signaled, states: %u -> %u",
         _logId, timer->getId(), opaque_obj->val.ui, (unsigned)state);
 
@@ -753,7 +757,7 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             providerQueried = false;
             if (ConfigureSCFandCharge() == Billing::pgEnd)
                 doFinalize();
-            return;
+            return 0;
         }
         if (state == Billing::bilInited) { //CapSMTask lasts too long
             RCHash err = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
@@ -773,15 +777,15 @@ void Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             }
             if (chargeResult(doCharge, err) == Billing::pgEnd)
                 doFinalize();
-            return;
+            return 0;
         }
         if (state == Billing::bilContinued) {
             //SMSC doesn't respond with DeliveryResult
             abortThis("SMSC DeliverySmsResult is timed out");
-            return;
+            return 0;
         }
     } //else: operation already finished
-    return; //grd off
+    return 0; //grd off
 }
 
 /* -------------------------------------------------------------------------- *
