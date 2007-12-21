@@ -28,7 +28,7 @@ public:
         : pObj(use_obj), refCount(0)
     { }
 
-    virtual void Destroy(void) { this->~ObjectRefereeAC_T(); }
+    virtual void Destroy(void) { delete this; }
 
     //Returns number of references set to old object.
     //NOTE: it's a caller responsibility to check for existing
