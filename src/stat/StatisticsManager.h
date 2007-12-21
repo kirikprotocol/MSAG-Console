@@ -15,28 +15,28 @@
 
 #include <util/timeslotcounter.hpp>
 
-namespace smsc { namespace stat 
+namespace smsc { namespace stat
 {
     using namespace core::buffers;
     using namespace core::threads;
     using namespace core::synchronization;
-    
+
     using smsc::logger::Logger;
     using smsc::util::TimeSlotCounter;
-    
+
     struct SmsStat
     {
-        int accepted, rejected;                       
+        int accepted, rejected;
         int delivered, failed, rescheduled, temporal;
         int peak_i, peak_o;
         IntHash<int> errors;
-        
+
         TimeSlotCounter<int>* i_counter;
         TimeSlotCounter<int>* o_counter;
-        
-        SmsStat(int accepted = 0, int rejected = 0, 
-                int delivered = 0, int failed = 0, 
-                int rescheduled = 0, int temporal = 0) 
+
+        SmsStat(int accepted = 0, int rejected = 0,
+                int delivered = 0, int failed = 0,
+                int rescheduled = 0, int temporal = 0)
             : accepted(accepted), rejected(rejected),
               delivered(delivered), failed(failed),
               rescheduled(rescheduled), temporal(temporal),
@@ -44,11 +44,11 @@ namespace smsc { namespace stat
         {
             initCounters();
         };
-        SmsStat(const SmsStat& stat) 
-            : accepted(stat.accepted), rejected(stat.rejected), 
+        SmsStat(const SmsStat& stat)
+            : accepted(stat.accepted), rejected(stat.rejected),
               delivered(stat.delivered), failed(stat.failed),
               rescheduled(stat.rescheduled), temporal(stat.temporal),
-              peak_i(stat.peak_i), peak_o(stat.peak_o), 
+              peak_i(stat.peak_i), peak_o(stat.peak_o),
               errors(stat.errors), i_counter(0), o_counter(0)
         {
             initCounters();
@@ -56,7 +56,7 @@ namespace smsc { namespace stat
         virtual ~SmsStat() {
             deleteCounters();
         }
-        
+
         SmsStat& operator =(const SmsStat& stat) {
             accepted = stat.accepted; rejected = stat.rejected;
             delivered = stat.delivered; failed = stat.failed;
@@ -68,7 +68,7 @@ namespace smsc { namespace stat
         };
 
         inline void Empty() {
-            accepted = 0; rejected = 0; delivered = 0; 
+            accepted = 0; rejected = 0; delivered = 0;
             failed = 0; rescheduled = 0; temporal = 0;
             peak_i = 0; peak_o = 0;
             errors.Empty();
@@ -89,7 +89,7 @@ namespace smsc { namespace stat
             int count = o_counter->Get();
             if (count > peak_o) peak_o = count;
         }
-    
+
     protected:
 
         inline void deleteCounters() {
@@ -104,21 +104,21 @@ namespace smsc { namespace stat
             deleteCounters();
             initCounters();
         };
-        
+
     };
 
     struct RouteStat : public SmsStat
     {
         signed long providerId, categoryId;
 
-        RouteStat(int accepted = 0, int rejected = 0, 
-                  int delivered = 0, int failed = 0, 
+        RouteStat(int accepted = 0, int rejected = 0,
+                  int delivered = 0, int failed = 0,
                   int rescheduled = 0, int temporal = 0,
-                  signed long _providerId = -1, signed long _categoryId = -1) 
-            : SmsStat(accepted, rejected, delivered, rescheduled, temporal), 
+                  signed long _providerId = -1, signed long _categoryId = -1)
+            : SmsStat(accepted, rejected, delivered, failed, rescheduled, temporal),
               providerId(_providerId), categoryId(_categoryId) {};
 
-        RouteStat(const RouteStat& stat) 
+        RouteStat(const RouteStat& stat)
             : SmsStat(stat), providerId(stat.providerId), categoryId(stat.categoryId) {};
 
         virtual ~RouteStat() {};
@@ -127,54 +127,54 @@ namespace smsc { namespace stat
     class StatStorage
     {
     private:
-    
+
         smsc::logger::Logger    *logger;
 
         std::string     location;
         bool            bFileTM;
         tm              fileTM;
         File            statFile;
-    
+
         static void truncateFile(const char* path, off_t length);
         static bool createDir(const std::string& dir);
         bool createStatDir();
-    
+
     public:
-    
+
         StatStorage(const std::string& location);
         ~StatStorage();
-        
+
         void dump(const uint8_t* buff, int buffLen, const tm& flushTM);
     };
-    
+
     class StatisticsManager : public Statistics, public ThreadedTask
     {
     protected:
-    
-		smsc::logger::Logger    *logger;
-        
+
+    smsc::logger::Logger    *logger;
+
         SmsStat         statGeneral[2];
         Hash<SmsStat>   statBySmeId[2];
         Hash<RouteStat> statByRoute[2];
-        
+
         short   currentIndex;
         bool    bExternalFlush;
-        
+
         Mutex   stopLock, switchLock, flushLock;
         Event   awakeEvent, exitEvent, doneEvent;
         bool    isStarted;
 
         StatStorage storage;
-        
+
         short switchCounters();
         void  resetCounters(short index);
         void  flushCounters(short index);
-        
+
         void  calculateTime(tm& flushTM);
         int   calculateToSleep(); // returns msecs to next minute
 
     public:
-        
+
         virtual const char* taskName() { return "StatisticsTask"; };
         virtual int Execute();
         virtual void stop();
@@ -186,11 +186,11 @@ namespace smsc { namespace stat
         virtual void updateTemporal (const StatInfo& info);
         virtual void updateChanged  (const StatInfo& info);
         virtual void updateScheduled(const StatInfo& info);
-        
+
         static void addError(IntHash<int>& hash, int errcode, int count=1);
         static void flush(const tm& flushTM, StatStorage& storage, SmsStat& general,
                           Hash<SmsStat>& statSme, Hash<RouteStat>& statRoute);
-        
+
         StatisticsManager(const std::string& location);
         virtual ~StatisticsManager();
     };

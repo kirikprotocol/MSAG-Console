@@ -2819,6 +2819,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
     smsc_log_warn(smsLog, "FWD: msgId=%lld denied by inman(%s->%s)",t.msgId,bufsrc,bufdst);
     sms.setLastResult(Status::DENIEDBYINMAN);
+//    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     try{
       sendNotifyReport(sms,t.msgId,"destination unavailable");
@@ -4464,10 +4465,6 @@ StateType StateMachine::alert(Tuple& t)
   sms.getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
   sms.getDestinationAddress().toString(bufdst,sizeof(bufdst));
   info2(smsLog, "ALERT: delivery timed out(%s->%s), msgId=%lld",bufsrc,bufdst,t.msgId);
-  smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
-#ifdef SNMP
-  incSnmpCounterForError(Status::DELIVERYTIMEDOUT,sms.getDestinationSmeId());
-#endif
 
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1 ||
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
@@ -4508,6 +4505,10 @@ StateType StateMachine::alert(Tuple& t)
     return EXPIRED_STATE;
   }else
   {
+    smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
+  #ifdef SNMP
+    incSnmpCounterForError(Status::DELIVERYTIMEDOUT,sms.getDestinationSmeId());
+  #endif
     try{
       changeSmsStateToEnroute(sms,t.msgId,d,Status::DELIVERYTIMEDOUT,rescheduleSms(sms));
     }catch(std::exception& e)
