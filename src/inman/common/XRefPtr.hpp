@@ -256,7 +256,7 @@ public:
         src.objData->Ref();
         objData = src.objData;
     }
-    ~XRefPtr_T()
+    virtual ~XRefPtr_T()
     {
         Unref();
     }
@@ -274,7 +274,7 @@ public:
 
     XRefPtr_T & operator=(const XRefPtr_T & src)
     {
-        return this->operator=(src.objData);
+        return (this != &src) ? this->operator=(src.objData) : *this;
     }
 
     XRefPtr_T & operator=(TArg * use_obj)
@@ -319,7 +319,7 @@ public:
 
     URefPtr_T & operator=(const URefPtr_T & src)
     {
-        return this->operator=(src.objData);
+        return (this != &src) ? this->operator=(src.objData) : *this;
     }
 
     URefPtr_T & operator=(TArg * use_obj)
@@ -356,7 +356,7 @@ public:
 
     MTRefPtr_T & operator=(const MTRefPtr_T & src)
     {
-        return this->operator=(src.objData);
+        return (this != &src) ? this->operator=(src.objData) : *this;
     }
 
     MTRefPtr_T & operator=(TArg * use_obj)
