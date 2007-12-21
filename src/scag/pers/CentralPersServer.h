@@ -46,7 +46,8 @@ public:
 
 class CentralPersServer : public PersSocketServer {
 public:
-  CentralPersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, const std::string& dbPath, const std::string& dbName, uint32_t indexGrowth, const char* regionsFileName);
+  CentralPersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, int transactTimeout_,
+                    const std::string& dbPath, const std::string& dbName, uint32_t indexGrowth, const char* regionsFileName);
   virtual bool processPacket(ConnectionContext& ctx);
 
 protected:
@@ -62,7 +63,7 @@ protected:
   bool getProfileInfo(AbntAddr& key, ProfileInfo& pi);
   void reloadRegions(const char* regionsFileName);
   void ParseFile(const char* _xmlFile, HandlerBase* handler);
-  void checkTimeouts();
+  void checkTransactionsTimeouts();
   void onDisconnect(ConnectionContext& ctx);  
 
 private: 
@@ -75,7 +76,6 @@ private:
   void sendCommand(CPersCmd& cmd, ConnectionContext* ctx);
   void sendCommand(CPersCmd& cmd, uint32_t region_id);
   bool authorizeRegion(ConnectionContext& ctx);
-  void checkTransactionsTimeouts();
   void transactionTimeout(const AbntAddr& addr, const TransactionInfo& tr_info);
 
 private:

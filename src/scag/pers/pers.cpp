@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     int resultCode = 0;
     std::string host;
     int port = 9988;
-    int maxClientCount = 100, recCnt = 1000, timeout = 600;
+    int maxClientCount = 100, recCnt = 1000, timeout = 300;
 
     Logger::Init();
     Logger* logger = Logger::getInstance("pers");
@@ -158,6 +158,7 @@ int main(int argc, char* argv[])
         int central_port = 0;
         string region_psw;
         uint32_t region_id = 0;
+        int transactTimeout = 0;
         try {
           heirarchical_mode = persConfig.getBool("hierarchicalMode");
           try {
@@ -184,20 +185,26 @@ int main(int argc, char* argv[])
             smsc_log_warn(logger, "Parameter <pers.regionId> missed. heirarchicalMode=false");
             heirarchical_mode = false;
           }
+          try {
+            transactTimeout = persConfig.getInt("transactTimeout");
+          } catch (...) {
+            transactTimeout = 200;
+            smsc_log_warn(logger, "Parameter <pers.transactTimeout> missed. Default value is %d", transactTimeout);
+          }
         } catch (...) {
           smsc_log_warn(logger, "Parameter <pers.hierarchicalMode> missed. Defaul value is false");
           heirarchical_mode = false;
         }
 
 		if (heirarchical_mode) {
-          ps = new RegionPersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore,
+          ps = new RegionPersServer(host.c_str(), port, maxClientCount, timeout, transactTimeout, &AbonentStore,
                                     &ServiceStore, &OperatorStore, &ProviderStore, central_host,
                                     central_port, region_id, region_psw);
 
           smsc_log_info(logger, "PersServer start in hierarchical mode");
 
         } else {
-          ps = new PersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore,
+          ps = new PersServer(host.c_str(), port, maxClientCount, timeout, transactTimeout, &AbonentStore,
                                &ServiceStore, &OperatorStore, &ProviderStore);
         }
 

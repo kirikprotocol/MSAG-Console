@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
     std::string host;
     int port = 9988;
     int maxClientCount = 100, timeout = 600;
+    int transactTimeout = 100;
 
     Logger::Init();
     Logger* logger = Logger::getInstance("cpers");
@@ -98,11 +99,18 @@ int main(int argc, char* argv[])
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
+        try { 
+          transactTimeout = persConfig.getInt("transactTimeout"); 
+        } catch (...) {
+          smsc_log_warn(logger, "Parameter <pers.transactTimeout> missed. Defaul value is %d",
+                         transactTimeout);
+        };
         
         std::string regionsFileName;
 	    try { regionsFileName = persConfig.getString("regionsConfigFileName"); } catch (...) {};
 
-		ps = new CentralPersServer(host.c_str(), port, maxClientCount, timeout, storagePath, storageName, indexGrowth, regionsFileName.c_str());
+		ps = new CentralPersServer(host.c_str(), port, maxClientCount, timeout, transactTimeout,
+                                   storagePath, storageName, indexGrowth, regionsFileName.c_str());
 
         auto_ptr<CentralPersServer> pp(ps);
 

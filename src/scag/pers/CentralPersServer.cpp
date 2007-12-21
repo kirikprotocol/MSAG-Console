@@ -84,9 +84,9 @@ void CentralPersServer::reloadRegions(const char* regionsFileName)
 }
 
 CentralPersServer::CentralPersServer(const char* persHost_, int persPort_, int maxClientCount_,
-                                     int timeout_, const std::string& dbPath, const std::string& dbName,
+                                     int timeout_, int transactTimeout_, const std::string& dbPath, const std::string& dbName,
                                      uint32_t indexGrowth, const char* regionsFileName):
- PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), last_check_time(time(NULL)),
+ PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_, transactTimeout_), last_check_time(time(NULL)),
    logger(Logger::getInstance("cpersserv")), regions(NULL)
 {
     reloadRegions(regionsFileName);
@@ -96,6 +96,7 @@ CentralPersServer::CentralPersServer(const char* persHost_, int persPort_, int m
         
    	profileInfoStore.SetAllocator(&profileInfoAllocator);
    	profileInfoStore.SetChangesObserver(&profileInfoAllocator);
+    smsc_log_info(logger, "transactTimeout = %d", transactTimeout);
 }
 
 bool CentralPersServer::getRegionInfo(uint32_t id, RegionInfo& ri)
@@ -123,10 +124,14 @@ bool CentralPersServer::authorizeRegion(ConnectionContext& ctx) {
   //LoginCmd login_cmd(isb);
   //uint32_t id = login_cmd.rp_id;
   //std::string psw = login_cmd.rp_psw;
-  smsc_log_debug(logger, "RP id=%d pswd=%s", id, psw.c_str());
+  smsc_log_debug(logger, "authorizeRegion: RP id=%d pswd=%s", id, psw.c_str());
   MutexGuard mt(regionsMapMutex);
   RegionInfo* pri = regions->GetPtr(id);
   if (!pri || !(ctx.authed = !strncmp(pri->passwd.c_str(), psw.c_str(), 30))) {
+    return false;
+  }
+  if (pri->ctx != NULL) {
+    smsc_log_warn(logger, "authorizeRegion: RP id=%d pswd=%s already connected", id, psw.c_str());
     return false;
   }
   ctx.region_id = id;
@@ -245,6 +250,7 @@ void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
                   ctx.region_id, get_profile.key.c_str());
     ProfileRespCmd profile_resp(get_profile.key);
     profile_resp.serialize(osb);
+    return;//????????
   }
   smsc_log_debug(logger, "getProfileCmdHandler: profile key=\'%s\' registered owner=%d",
                   get_profile.key.c_str(), profile_info.owner);
@@ -275,8 +281,6 @@ void CentralPersServer::profileRespCmdHandler(ConnectionContext& ctx) {
   ProfileRespCmd profile_resp(isb);
   smsc_log_debug(logger, "profileRespCmdHandler: profile key = \'%s\'", profile_resp.key.c_str());
   AbntAddr addr(profile_resp.key.c_str());
-  //addr.setNumberingPlan(1);
-  //addr.setTypeOfNumber(1);
   TransactionInfo *pti;
   if(!(pti = transactions.GetPtr(addr))) {
     smsc_log_warn(logger, "profileRespCmdHandler: Transcation with key=%s not found", profile_resp.key.c_str());
@@ -335,11 +339,13 @@ void CentralPersServer::doneCmdHandler(ConnectionContext& ctx) {
     ProfileInfo profile_info;
     profile_info.owner = pti->candidate;
     profileInfoStore.Set(addr, profile_info);
+    pti->last_cmd = CentralPersCmd::DONE;
+    pti->startTime = time(NULL);
+  } else {
+    transactions.Delete(addr);
   }
   //done.serialize(ri.ctx->outbuf);
   sendCommand(done, ri.ctx);
-  pti->last_cmd = CentralPersCmd::DONE;
-  pti->startTime = time(NULL);
 }
 
 void CentralPersServer::doneRespCmdHandler(ConnectionContext& ctx) {
@@ -392,14 +398,6 @@ void CentralPersServer::sendCommand(CPersCmd& cmd, ConnectionContext* ctx) {
   listener.addRW(ctx->socket);
 }
 
-void CentralPersServer::checkTimeouts() {
-  PersSocketServer::checkTimeouts();
-  if (isStopping) {
-    return;
-  }
-  checkTransactionsTimeouts();
-}
-
 void CentralPersServer::transactionTimeout(const AbntAddr& addr, const TransactionInfo& tr_info) {
   uint8_t last_cmd(tr_info.last_cmd);
   smsc_log_warn(logger, "transaction timeout key=\'%s\' last operation id=%d",
@@ -412,11 +410,16 @@ void CentralPersServer::transactionTimeout(const AbntAddr& addr, const Transacti
     ProfileRespCmd profile_resp(key);
     profile_resp.is_ok = 0;
     sendCommand(profile_resp, tr_info.candidate);
+    DoneCmd done(0, key);
+    sendCommand(done, tr_info.owner);
+    transactions.Delete(addr);
     break;
   }
   case CentralPersCmd::PROFILE_RESP: {
     DoneCmd done(0, key);
     sendCommand(done, tr_info.owner);
+    DoneRespCmd done_resp(0, key);
+    sendCommand(done_resp, tr_info.candidate);
     transactions.Delete(addr);
     break;
   }
@@ -438,7 +441,11 @@ void CentralPersServer::sendCommand(CPersCmd &cmd, uint32_t region_id) {
 }
 
 void CentralPersServer::checkTransactionsTimeouts() {
-  time_t time_bound = time(NULL) - timeout / 2;
+  if (isStopped()) {
+    return;
+  }
+  smsc_log_debug(logger, "Checking transactions timeouts...");
+  time_t time_bound = time(NULL) - transactTimeout;
   AbntAddr key;
   TransactionInfo tr_info;
   transactions.First();

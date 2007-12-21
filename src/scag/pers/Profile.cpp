@@ -7,14 +7,15 @@ namespace scag{ namespace pers{
 
 void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 {
-    char *key = 0;
     uint16_t cnt;
-    Property* prop;
 
-    PropertyHash::Iterator it = properties.getIterator();
     cnt = properties.GetCount();
+    buf.WriteInt8(state);
     buf.WriteInt16(cnt);
 
+    PropertyHash::Iterator it = properties.getIterator();
+    Property* prop;
+    char *key = 0;
     while(it.Next(key, prop))
         prop->Serialize(buf, toFSDB);
 }
@@ -24,6 +25,7 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
     uint16_t cnt;
     Property* prop;
 
+    state = static_cast<ProfileState>(buf.ReadInt8());
     Empty();
     cnt = buf.ReadInt16();
 
@@ -139,11 +141,34 @@ void Profile::AddProperty(Property& prop)
     }
 }
 
+Profile& Profile::operator=(const Profile& pf) {
+  if (this == &pf) {
+    return *this;
+  }
+  const smsc::logger::Logger* _log = pf.getLog();
+  if (_log) {
+    log = smsc::logger::Logger::getInstance(_log->getName());
+  }
+  log = NULL;
+  pkey = pf.getKey();
+  state = pf.getState();
+
+  Empty();
+
+  char *key = 0;
+  Property* prop;
+  PropertyHash::Iterator pf_it = pf.getProperties().getIterator();
+  while (pf_it.Next(key, prop)) {
+    properties.Insert(key, new Property(*prop));
+  }
+  return *this;
+}
+
 void Profile::addNewProperty(Property& prop) {
   properties.Insert(prop.getName().c_str(),  new Property(prop));
 }
 
-void Profile::copyPropertiesTo(Profile* pf) {
+void Profile::copyPropertiesTo(Profile* pf) const {
   char *key = 0;
   Property* prop;
 

@@ -30,7 +30,8 @@ public:
 
 class PersSocketServer {
 public:
-    PersSocketServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_);
+    PersSocketServer(const char* persHost_, int persPort_, int maxClientCount_,
+                     int timeout_, int transactTimeout_);
     virtual ~PersSocketServer();
     void InitServer();
     int Execute();
@@ -44,6 +45,7 @@ protected:
     virtual void onDisconnect(ConnectionContext& ctx) {};    
     virtual bool bindToCP() { return true; };
     virtual void checkTimeouts();
+    virtual void checkTransactionsTimeouts() {};
 
     void processReadSocket(Socket* sock);
     void processWriteSocket(Socket* sock);
@@ -52,6 +54,7 @@ protected:
     Logger * log;
     std::string persHost;
     int persPort, timeout, maxClientCount, clientCount;
+    int transactTimeout;
     Socket sock;
     bool isStopping;
     RWMultiplexer listener;

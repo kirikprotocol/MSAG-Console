@@ -95,7 +95,7 @@ PersServer* initRegionPersServer(int argc, char* argv[], Manager& manager, const
   int resultCode = 0;
   string host;
   int port = 47111;
-  int maxClientCount = 100, recCnt = 1000, timeout = 600;
+  int maxClientCount = 100, recCnt = 1000, timeout = 300;
   ConfigView persConfig(manager, section_name.c_str());
   try { storageDir = persConfig.getString("storage_dir"); } catch (...) {};
   int len = storageDir.length();
@@ -180,6 +180,7 @@ PersServer* initRegionPersServer(int argc, char* argv[], Manager& manager, const
   int central_port = 0;
   string region_psw;
   uint32_t region_id = 0;
+  int transactTimeout = 200;
   try {
     heirarchical_mode = persConfig.getBool("hierarchicalMode");
     try {
@@ -210,6 +211,13 @@ PersServer* initRegionPersServer(int argc, char* argv[], Manager& manager, const
                     section_name.c_str());
       heirarchical_mode = false;
     }
+    try {
+      transactTimeout = persConfig.getInt("transactTimeout");
+    } catch (...) {
+      transactTimeout = 200;
+      smsc_log_warn(logger, "Parameter <pers.transactTimeout> missed. Default value is %d", transactTimeout);
+    }
+
   } catch (...) {
     smsc_log_warn(logger, "Parameter <%s.hierarchicalMode> missed. Defaul value is false",
                   section_name.c_str());
@@ -218,13 +226,13 @@ PersServer* initRegionPersServer(int argc, char* argv[], Manager& manager, const
 
   if (heirarchical_mode) {
     smsc_log_info(logger, "PersServer start in hierarchical mode");
-    return new RegionPersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore,
+    return new RegionPersServer(host.c_str(), port, maxClientCount, timeout, transactTimeout, &AbonentStore,
                               &ServiceStore, &OperatorStore, &ProviderStore, central_host,
                               central_port, region_id, region_psw);
 
 
   } else {
-    return new PersServer(host.c_str(), port, maxClientCount, timeout, &AbonentStore,
+    return new PersServer(host.c_str(), port, maxClientCount, timeout, transactTimeout, &AbonentStore,
                          &ServiceStore, &OperatorStore, &ProviderStore);
   }
 }
@@ -282,11 +290,19 @@ int main(int argc, char* argv[])
         try { port = persConfig.getInt("port"); } catch (...) {};
         try { maxClientCount = persConfig.getInt("connections"); } catch (...) {};
 	    try { timeout = persConfig.getInt("timeout"); } catch (...) {};
+        int transactTimeout = 100;
+        try { 
+          transactTimeout = persConfig.getInt("transactTimeout"); 
+        } catch (...) {
+          smsc_log_warn(clog, "Parameter <pers.transactTimeout> missed. Defaul value is %d",
+                         transactTimeout);
+        };
         
         std::string regionsFileName;
 	    try { regionsFileName = persConfig.getString("regionsConfigFileName"); } catch (...) {};
 
-		central_ps = new CentralPersServer(host.c_str(), port, maxClientCount, timeout, storagePath, storageName, indexGrowth, regionsFileName.c_str());
+		central_ps = new CentralPersServer(host.c_str(), port, maxClientCount, timeout, transactTimeout,
+                                            storagePath, storageName, indexGrowth, regionsFileName.c_str());
 
         auto_ptr<CentralPersServer> pp(central_ps);
 

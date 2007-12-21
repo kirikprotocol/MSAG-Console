@@ -7,7 +7,8 @@ using smsc::util::Exception;
 
 #define MAX_PACKET_SIZE 100000
 
-PersSocketServer::PersSocketServer(const char *persHost_, int persPort_, int maxClientCount_, int timeout_)
+PersSocketServer::PersSocketServer(const char *persHost_, int persPort_, int maxClientCount_,
+                                    int timeout_, int transactTimeout_)
     : log(Logger::getInstance("server")), persHost(""), persPort(0), isStopping(false)
 {
     persHost = persHost_;
@@ -15,6 +16,7 @@ PersSocketServer::PersSocketServer(const char *persHost_, int persPort_, int max
     maxClientCount = maxClientCount_;
     clientCount = 0;
 	timeout = timeout_;
+    transactTimeout = transactTimeout_;
 }
 
 PersSocketServer::~PersSocketServer()
@@ -283,6 +285,11 @@ int PersSocketServer::Execute()
                 }
                 else
                     removeSocket(err[i]);
+        }
+        if (transactTimeout && (lastTimeoutCheck + transactTimeout < time(NULL))) {
+          smsc_log_debug(log, "checking transactions timeouts");
+          checkTransactionsTimeouts();
+          lastTimeoutCheck = time(NULL);
         }
 		
 		if(lastTimeoutCheck + timeout < time(NULL))

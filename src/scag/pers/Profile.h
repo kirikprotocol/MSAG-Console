@@ -34,6 +34,7 @@ class Profile : public Serializable
 public:
     ~Profile();
     Profile(const std::string& _pkey, smsc::logger::Logger* _log = NULL) : state(OK), pkey(_pkey), log(_log) {};
+    Profile& operator=(const Profile& pf);
 
     Property* GetProperty(const char* name);
     bool PropertyExists(const char* str);
@@ -42,14 +43,18 @@ public:
     void DeleteExpired();
     void Empty();
     uint32_t GetCount() { return properties.GetCount(); };
+    const PropertyHash& getProperties() const { return properties; }
+    const string getKey() const { return pkey; }
+    const smsc::logger::Logger* getLog() const { return log; }
 
     void Serialize(SerialBuffer& buf, bool toFSDB = false);
     void Deserialize(SerialBuffer& buf, bool fromFSDB = false);
     ProfileState getState() const { return state; };
     void setLocked() { state = LOCKED; };
     void setDeleted() { state = DELETED; };
+    void setOk() { state = OK; };
     void addNewProperty(Property& prop);
-    void copyPropertiesTo(Profile* pf);
+    void copyPropertiesTo(Profile* pf) const;
 };
 
 }}

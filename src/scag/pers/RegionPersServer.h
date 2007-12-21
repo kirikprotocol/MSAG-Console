@@ -26,8 +26,8 @@ struct CmdContext {
 
 class RegionPersServer : public PersServer {
 public:
-  RegionPersServer(const char* persHost_, int persPort_, int maxClientCount_, 
-                   int timeout_, StringProfileStore *abonent, IntProfileStore *service,
+  RegionPersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_,
+                   int transactTimeout, StringProfileStore *abonent,IntProfileStore *service,
                    IntProfileStore *oper, IntProfileStore *provider, const string& _central_host,
                    int _central_port, uint32_t _region_id, const string& _region_psw);
   virtual bool processPacket(ConnectionContext &ctx);
@@ -58,7 +58,7 @@ private:
   void checkOwnCmdHandler(ConnectionContext& ctx);
   void execCommand(PersCmd cmd, ProfileType pt, uint32_t int_key, const string& str_key,
                    SerialBuffer& isb, SerialBuffer& osb);
-  void execCommand(PersCmd cmd, Profile *pf, const string& str_key,
+  bool execCommand(PersCmd cmd, Profile *pf, const string& str_key,
                    SerialBuffer& isb, SerialBuffer& osb);
 
   void DelCmdHandler(ProfileType pt, uint32_t int_key, const string& name, SerialBuffer& osb);
@@ -68,11 +68,12 @@ private:
   void IncModCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, int mod, SerialBuffer& osb);
 
   void DelCmdHandler(Profile* pf, const string& str_key, const string& name, SerialBuffer& osb);
-  void GetCmdHandler(Profile* pf, const string& str_key, const string& name, SerialBuffer& osb);
+  bool GetCmdHandler(Profile* pf, const string& str_key, const string& name, SerialBuffer& osb);
   void SetCmdHandler(Profile* pf, const string& str_key, Property& prop, SerialBuffer& osb);
   void IncCmdHandler(Profile* pf, const string& str_key, Property& prop, SerialBuffer& osb);
   void IncModCmdHandler(Profile* pf, const string& str_key, Property& prop, int mod, SerialBuffer& osb);
 
+  void checkTransactionsTimeouts();
   void commandTimeout(const AbntAddr& addr, CmdContext& ctx);
   void doneTimeout(const AbntAddr& addr);
 

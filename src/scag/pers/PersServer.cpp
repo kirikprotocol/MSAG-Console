@@ -9,8 +9,9 @@ using smsc::util::Exception;
 using smsc::logger::Logger;
 using smsc::sms::Address;
 
-PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider):
-        PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_), plog(Logger::getInstance("persserver"))
+PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, int transactTimeout_,
+                        StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider):
+        PersSocketServer(persHost_, persPort_, maxClientCount_, timeout_, transactTimeout_), plog(Logger::getInstance("persserver"))
 {
     int_store[0].pt = PT_SERVICE;
     int_store[1].pt = PT_OPERATOR;

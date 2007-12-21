@@ -17,7 +17,9 @@ class PersServer : public PersSocketServer {
     StringProfileStore* AbonentStore;
 
 public:
-    PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper, IntProfileStore *provider);
+    PersServer(const char* persHost_, int persPort_, int maxClientCount_, int timeout_, int transactTimeout_,
+                StringProfileStore *abonent, IntProfileStore *service, IntProfileStore *oper,
+                IntProfileStore *provider);
     virtual ~PersServer() {};
     virtual bool processPacket(ConnectionContext& ctx);
 
