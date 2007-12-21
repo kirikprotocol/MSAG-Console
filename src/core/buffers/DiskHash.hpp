@@ -120,6 +120,7 @@ protected:
   bool inplaceval;
   bool isFileOpen;
   bool isCached;
+  bool isChanged;
   bool isReadOnly;
 
   int count;
@@ -220,6 +221,7 @@ protected:
 #ifndef NOLOGGERPLEASE
     __warning__("rehashing finished");
 #endif
+    isChanged=true;
   }
 
 public:
@@ -250,6 +252,7 @@ public:
     }
     name=file;
     isCached=cached;
+    isChanged=false;
     isReadOnly=readonly;
     //f.SetUnbuffered();
     if(cached)f.OpenInMemory(0);
@@ -293,6 +296,7 @@ public:
     size=h.size;
     count=0;
     isFileOpen=true;
+    isChanged=false;
   }
 
   File::offset_type Size()
@@ -303,6 +307,7 @@ public:
   void Flush(int maxSpeed=0)
   {
     f.MemoryFlush(maxSpeed);
+    isChanged=false;
   }
 
   void Close()
@@ -318,14 +323,18 @@ public:
       f.Seek(0);
       h.Write(f);
       f.Flush();
-      if(isCached)f.MemoryFlush();
+      if(isCached && isChanged)f.MemoryFlush();
     }
     f.Close();
   }
 
   void DiscardCache()
   {
-    if(isCached)f.DiscardCache();
+    if(isCached)
+    {
+      isChanged=false;
+      f.DiscardCache();
+    }
   }
 
   //Inserts/Updates record.
@@ -372,6 +381,7 @@ public:
       value.Write(f);
       f.Flush();
       count++;
+      isChanged=true;
       return;
     }
   }
