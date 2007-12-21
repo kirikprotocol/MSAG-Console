@@ -239,7 +239,6 @@ int AbonentCacheMTR::FSCacheMonitor::Execute(void)
                                           fsCache->FileName().c_str(), fsCache->Used(), fsCache->Size());
                             rehasher.reset(new FileCache::HFRehasher(this, fsCache.get()));
                             rehasher->Start();
-                            break;
                         }
                     }
                 } catch (const std::exception& exc) {
