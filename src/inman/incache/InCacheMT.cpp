@@ -33,7 +33,7 @@ AbonentCacheMTR::AbonentCacheMTR(AbonentCacheCFG * cfg, Logger * uselog/* = NULL
     uint32_t maxRamIt = ((((_cfg.RAM ? _cfg.RAM : DFLT_RAM)<<10)-1)/DFLT_FACTOR)<<10;
     smsc_log_info(logger, "InCache: RAM cache: %u abonents (factor: %u).",
                   maxRamIt, DFLT_FACTOR);
-    ramCache.Init(_cfg.interval, maxRamIt);
+    ramCache.Init(maxRamIt);
 
     std::string nmFile(_cfg.nmDir);
     if (nmFile[nmFile.length()] != DIRECTORY_SEPARATOR)
@@ -65,9 +65,8 @@ AbonentCacheMTR::AbonentCacheMTR(AbonentCacheCFG * cfg, Logger * uselog/* = NULL
     } while (attNum);
 
     if (flCache.get()) {
-        smsc_log_info(logger, "InCache: %s cache file %s(%u records of %u)",
-                      present ? "red" : "created", nmFile.c_str(),
-                      flCache->Used(), flCache->Size());
+        smsc_log_info(logger, "InCache: %s cache file %s",
+                      present ? "red" : "created", flCache->Details().c_str());
         fscMgr.reset(new FSCacheMonitor(flCache.release(), &ramCache, logger));
         fscMgr->Start();
     } else {
@@ -85,43 +84,34 @@ AbonentCacheMTR::~AbonentCacheMTR()
 // ----------------------------------------
 // AbonentCacheITF interface methods:
 // ----------------------------------------
-void AbonentCacheMTR::setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec)
+void AbonentCacheMTR::setAbonentInfo(const AbonentId & ab_number,
+                                        const AbonentRecord & ab_rec)
 {
-    int  status = 0;
-    bool toUpdate = true;//(bool)(ab_rec.ab_type != AbonentRecord::abtUnknown);
-    {
-        MutexGuard grd(ramCache.Sync());
-        status = ramCache.Update(ab_number, ab_rec, toUpdate); //sets queried time
-    }
-    if (toUpdate && fscMgr.get())
-        fscMgr->Update(ab_number);
+    int  status = ramCache.Update(ab_number, ab_rec); //sets queried time
 //    smsc_log_debug(logger, "InCache: %s abonent(%s) %s, SCF %s",
 //                    status ? "added" : "updated", ab_number.getSignals(), 
 //                    ab_rec.type2Str(), ab_rec.gsmSCF.toString().c_str());
+    if (fscMgr.get())
+        fscMgr->Awake();
 }
 
 AbonentRecord::ContractType 
     AbonentCacheMTR::getAbonentInfo(const AbonentId & ab_number,
-                                             AbonentRecord * p_ab_rec/* = NULL*/)
+                                        AbonentRecord * p_ab_rec/* = NULL*/)
 {
-    {
-        MutexGuard  guard(ramCache.Sync());
-        AbonentRecordRAM *  rabRec = ramCache.LookUp(ab_number);
-        if (rabRec && !rabRec->isExpired(_cfg.interval)) {
-            if (p_ab_rec)
-                *p_ab_rec = *(rabRec->getAbonentRecord());
-            return rabRec->ab_type;
-        }
-    }
-    AbonentHashData     ab_rec;
+    AbonentHashData abData; //abtUnknown
+    if (!p_ab_rec)
+        p_ab_rec = &abData.abRecord();
+    if (ramCache.LookUp(ab_number, *p_ab_rec, _cfg.interval))
+        return p_ab_rec->ab_type;
+
     if (fscMgr.get()) { //look in file cache
         try {
-            if (fscMgr->LookUp(AbonentHashKey(ab_number), ab_rec)) {
-                if (ab_rec.isExpired(_cfg.interval)) {
-                    ab_rec.reset();
-                } else if (ab_rec.ab_type != AbonentHashData::abtUnknown) {
-                    MutexGuard  guard(ramCache.Sync());
-                    ramCache.Update(ab_number, *ab_rec.getAbonentRecord());
+            if (fscMgr->LookUp(AbonentHashKey(ab_number), abData)) {
+                if (abData.abRecord().isExpired(_cfg.interval)) {
+                    abData.abRecord().reset();
+                } else if (abData.abRecord().ab_type != AbonentRecord::abtUnknown) {
+                    ramCache.Update(ab_number, abData.abRecord());
                 }
             }
         } catch (std::exception & exc) {
@@ -129,36 +119,49 @@ AbonentRecord::ContractType
                             ab_number.getSignals(), exc.what());
         }
     }
-    if (p_ab_rec)
-        *p_ab_rec = ab_rec;
-    return ab_rec.ab_type;
+    *p_ab_rec = abData.abRecord();
+    return p_ab_rec->ab_type;
 }
 
 /* ************************************************************************** *
  * class AbonentCacheMTR::RAMCache implementation:
  * ************************************************************************** */
-AbonentCacheMTR::AbonentRecordRAM * 
-    AbonentCacheMTR::RAMCache::LookUp(const AbonentId & ab_number)
+bool AbonentCacheMTR::RAMCache::LookUp(const AbonentId & ab_number,
+                                    AbonentRecord & ab_rec, long expire_tm/* = 0*/)
 {
-    AbonentRecordRAM * pabRec = GetPtr(AbonentHashKey(ab_number));
-    if (pabRec) {
-//        accList.splice(accList.end(), accList, pabRec->accIt);
-        accList.move_back(pabRec->accIt);
-        pabRec->accIt = --accList.end();
-        if (pabRec->isExpired(lfInterval))
-            pabRec->ab_type = AbonentRecord::abtUnknown;
+    MutexGuard grd(rcSync);
+    AbonentHashKey      abNum(ab_number);
+    AbonentRecordRAM *  pabRec = GetPtr(abNum);
+    if (!pabRec)
+        return false;
+
+    if (expire_tm && pabRec->isExpired(expire_tm)) {
+        accList.erase(pabRec->accIt);
+        Delete(abNum);
+        return false;
     }
-    return pabRec;
+    accList.move_back(pabRec->accIt);
+    pabRec->accIt = --accList.end();
+    ab_rec = pabRec->abRecord();
+    return true;
+}
+
+bool AbonentCacheMTR::RAMCache::Mark(const AbonentId & ab_number)
+{
+    MutexGuard grd(rcSync);
+    AbonentRecordRAM * pabRec = GetPtr(AbonentHashKey(ab_number));
+    return pabRec ? (pabRec->marked = true) : false;
 }
 
 //Returns: 0 - update, 1 - addition
 int AbonentCacheMTR::RAMCache::Update(const AbonentId & ab_number,
-                            const AbonentRecord & ab_rec, bool to_update/* = false*/)
+                            const AbonentRecord & ab_rec)
 {
+    MutexGuard grd(rcSync);
     int status = 0; 
     AbonentHashKey      hkey(ab_number);
     AbonentRecordRAM *  pabRec = GetPtr(hkey);
-    AbonentRecordRAM    ramRec(ab_rec, to_update); //accIt not inited yet!!!
+    AbonentRecordRAM    ramRec(ab_rec, true); //accIt not inited yet!!!
 
     if (!pabRec) {  //insert
         makeSpace();
@@ -166,33 +169,57 @@ int AbonentCacheMTR::RAMCache::Update(const AbonentId & ab_number,
         pabRec = GetPtr(hkey);
         accList.push_back(ab_number);
     } else {        //update
-//        accList.splice(accList.end(), accList, pabRec->accIt);
         accList.move_back(pabRec->accIt);
         *pabRec = ramRec;
     }
     pabRec->accIt = --accList.end();
+    updList.push_back(ab_number);
     return status;
+}
+
+bool AbonentCacheMTR::RAMCache::NextMarked(AbonentId & ab_num,
+                                           AbonentRecord & ab_rec)
+{
+    MutexGuard grd(rcSync);
+    if (!updList.empty()) {
+        AbonentHashKey  abNum(updList.front());
+        AbonentRecordRAM * pabRec = GetPtr(abNum);
+
+        updList.pop_front();
+        if (pabRec && pabRec->marked) {
+            ab_num = (AbonentId)abNum;
+            ab_rec = pabRec->abRecord();
+            pabRec->marked = false;
+            return true;
+        }
+    }
+    return false;
 }
 
 void AbonentCacheMTR::RAMCache::makeSpace(void)
 {
     if ((accList.Size() >= maxRamIt)) {
+        uint32_t    attNum = maxSpaceAtt;
         AbonentsList::iterator it = accList.begin();
+
         while (it != accList.end()) {
             AbonentsList::iterator  cit = it++;
             AbonentHashKey          hkey(*cit);
             AbonentRecordRAM *      pabRec = GetPtr(hkey);
-            if (!pabRec) //"RAMCache inconsistent! Fixing .."
+            if (!pabRec) {
+            //record was deleted from hash: it was a previous 'victim'
                 accList.erase(cit);
-            else if ((pabRec->ab_type == AbonentRecordRAM::abtUnknown)
-                     || !pabRec->toUpdate) {
+            } else if (!pabRec->marked ||
+                       (pabRec->ab_type == AbonentRecordRAM::abtUnknown)) {
                 Delete(hkey);
                 accList.erase(cit);
                 return;
             }
+            if (!--attNum)
+                break;
         }
-        //cache is fullfilled with records are to update;
-        //delete the last accessed one
+        //cache is fullfilled with marked records;
+        //just delete the last accessed one.
         Delete(AbonentHashKey(accList.front()));
         accList.pop_front();
     }
@@ -205,54 +232,59 @@ void AbonentCacheMTR::RAMCache::makeSpace(void)
 #define TIMEOUT_STEP 50 //millisecs
 int AbonentCacheMTR::FSCacheMonitor::Execute(void)
 {
-    smsc_log_info(logger, "FSCache: started %s (%u records of %u)",
-                  fsCache->FileName().c_str(), fsCache->Used(), fsCache->Size());
+    smsc_log_info(logger, "FSCache: started %s", fsCache->Details().c_str());
+    
     _sync.Lock();
     _running = true;
-    while (_running || !updList.empty()) {
-        if (!updList.empty() && !_rehashOn) {
-            do {
-                AbonentId ab_number = *(updList.begin());
-                _sync.Unlock();
+    while (_running) {
+        bool            doUpd = false;
+        AbonentId       abNum;
+        AbonentHashData abRec;
+
+        if (!_rehashOn) {
+            _sync.Unlock();
+            while (ramCache->NextMarked(abNum, abRec.abRecord())) {
+                MutexGuard grd(_sync);
                 try {
-                    AbonentRecordRAM *  prRec = NULL;
-                    {
-                        MutexGuard  grd(ramCache->Sync());
-                        prRec = ramCache->LookUp(ab_number);
-                    }
-                    if (prRec) { //Update hashFile
-                        MutexGuard grd(_sync);
-                        AbonentHashData  abRec(*(prRec->getAbonentRecord()));
-                        uint32_t r_num = fsCache->Insert(AbonentHashKey(ab_number), &abRec, true);
-                        if (r_num) {
-                            updList.pop_front();
-                            smsc_log_debug(logger, "FSCache: rcd[%u.%u]: %s, %s, %s",
-                                           fsCache->Size(), r_num, ab_number.getSignals(),
+                    uint32_t r_num = fsCache->Insert(AbonentHashKey(abNum), &abRec, true);
+                    if (r_num) {
+                        smsc_log_debug(logger, "FSCache: rcd[%u.%u]: %s, %s, %s",
+                                           fsCache->Size(), r_num, abNum.getSignals(),
                                            abRec.type2Str(), abRec.tdpSCF.toString().c_str());
-                            MutexGuard  grd(ramCache->Sync());
-                            if ((prRec = ramCache->LookUp(ab_number)))
-                                prRec->toUpdate = false;
+                    } else if (!r_num && _rehashMode) {
+                        _rehashMode = fsCache->rehashAllowed();
+                        if (!_rehashMode) {
+                            smsc_log_info(logger, "FSCache: rehash mode is OFF for %s",
+                                            fsCache->Details().c_str());
+                            smsc_log_debug(logger, "FSCache: ignored: %s, %s, %s",
+                                            abNum.getSignals(), abRec.type2Str(),
+                                            abRec.tdpSCF.toString().c_str());
                         } else {
+                            ramCache->Mark(abNum); //mark back abonent
                             _rehashOn = true;
                             fsCache->Flush();
-                            smsc_log_info(logger, "FSCache: rehashing %s (%u records of %u) ..",
-                                          fsCache->FileName().c_str(), fsCache->Used(), fsCache->Size());
                             rehasher.reset(new FileCache::HFRehasher(this, fsCache.get()));
+                            smsc_log_info(logger, "FSCache: rehashing %s ..",
+                                           fsCache->Details().c_str());
                             rehasher->Start();
+                            break; //sleep and wait for onRehashDone()
                         }
-                    }
+                    } else
+                        smsc_log_debug(logger, "FSCache: ignored: %s, %s, %s",
+                                        abNum.getSignals(), abRec.type2Str(),
+                                        abRec.tdpSCF.toString().c_str());
                 } catch (const std::exception& exc) {
-                    smsc_log_error(logger, "FSCache: error on abonent(%s): %s",
-                                   ab_number.getSignals(), exc.what());
+                    smsc_log_error(logger, "FSCache: exception on abonent(%s): %s",
+                                   abNum.getSignals(), exc.what());
+                    _rehashOn = false;
                 }
-                _sync.Lock();
-            } while (!updList.empty() && !_rehashOn);
+            }
+            _sync.Lock();
         }
         _sync.wait(TIMEOUT_STEP); //unlocks and waits
     }
     _sync.Unlock();
-    smsc_log_info(logger, "FSCache: stopped %s (%u records of %u)",
-                  fsCache->FileName().c_str(), fsCache->Used(), fsCache->Size());
+    smsc_log_info(logger, "FSCache: stopped %s", fsCache->Details().c_str());
     return 0;
 }
 
@@ -263,20 +295,21 @@ void AbonentCacheMTR::FSCacheMonitor::onRehashDone(FileCache * new_hf,
     MutexGuard grd(_sync);
     _rehashOn = false;
     if (!new_hf) {
-        smsc_log_error(logger, "FSCache: rehash failed: %s", error ? error : "unknown reason");
-        smsc_log_error(logger, "FSCache: aborting, %u records lost ..", updList.Size());
-        _running = false;
-        updList.clear();
+        smsc_log_error(logger, "FSCache: rehash failed: %s",
+                       error ? error : "unknown reason");
+        //no more new abonents, only looking for and update of existing ones
+        _rehashMode = false;
+        smsc_log_info(logger, "FSCache: rehash mode is OFF for %s",
+                      fsCache->Details().c_str());
     } else {
         try {
             std::string nfName(fsCache->FileName());
             fsCache->Destroy();
             fsCache.reset(new_hf);
             fsCache->Rename(nfName.c_str());
-            smsc_log_info(logger, "FSCache: rehashed %s (%u records of %u)",
-                          fsCache->FileName().c_str(), fsCache->Used(), fsCache->Size());
+            smsc_log_info(logger, "FSCache: rehashed %s", fsCache->Details().c_str());
         } catch (const std::exception & exc) {
-            smsc_log_error(logger, "FSCache: onRehash: %s", exc.what());
+            smsc_log_error(logger, "FSCache: onRehashDone: %s", exc.what());
         }
     }
     _sync.notify();

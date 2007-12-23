@@ -19,8 +19,11 @@ using smsc::core::synchronization::EventMonitor;
 
 #include "inman/InCacheDefs.hpp"
 #include "inman/common/adrutil.hpp"
+#include "inman/common/cvtutil.hpp"
 using smsc::cvtutil::packMAPAddress2OCTS;
 using smsc::cvtutil::unpackOCTS2MAPAddress;
+using smsc::cvtutil::packNumString2BCD;
+using smsc::cvtutil::unpackBCD2NumString;
 
 #define HFREHASH_LOG_ON
 #include "inman/incache/MTHashFile.hpp"
@@ -55,12 +58,26 @@ protected:
     // -----------------------------------------------
     // -- MTHashFileT<> template arguments implementation
     // -----------------------------------------------
-    //MTHashFileT<> HFKeyTA argument implementation
+    //MTHashFileT<> HFKeyTA argument implementation:
+    //maintain signals of ISDN International address as its BCD form
     class AbonentHashKey : public AbonentId, public HashFileKeyITF {
     public:
-        static const uint32_t _maxSize = MAX_ABONENT_ID_LEN;
-        AbonentHashKey() { }
-        AbonentHashKey(const AbonentId & ab_num) : AbonentId(ab_num) { }
+        static const uint32_t _maxSize = MAP_MAX_ISDN_AddressLength;
+
+    protected:
+        unsigned char bcd[_maxSize + 2];
+        uint32_t      bcdSz;
+
+    public:
+        AbonentHashKey() : bcdSz(0)
+        { }
+        AbonentHashKey(const AbonentId & ab_num) _THROWS_HFE
+            : AbonentId(ab_num)
+        {
+            bcdSz = packNumString2BCD(bcd, signals, length);
+            if (bcdSz > _maxSize)
+                throw Exception("AbonentHashKey(): invalid length %u", length);
+        }
 
         inline bool operator== (const AbonentHashKey & key2) const
         {
@@ -73,31 +90,35 @@ protected:
         }
 
         // -- HashFileKeyITF interface methods
-        uint32_t Read(File& fh, uint32_t max_octs = 0) /* throw (FileException) */
+        uint32_t Read(File& fh, uint32_t max_octs = 0) _THROWS_HFE
         {
+            if (!max_octs || (max_octs > _maxSize))
+                max_octs = _maxSize;
             //File::Read() throws if reads less bytes than requested
-            uint32_t rv = fh.Read(signals, max_octs ? max_octs : _maxSize);
-            signals[length = rv] = 0;
+            bcdSz = fh.Read(bcd, max_octs);
+            length = unpackBCD2NumString(bcd, signals, bcdSz);
+            signals[length] = 0;
+            if (!length)
+                throw Exception("AbonentHashKey::Read(): zero length");
+
             //isdn international address only
             numPlanInd = typeOfNumber = 1;
-            return rv;
+            return bcdSz;
         }
         uint32_t Write(File& fh) _THROWS_HFE const
         {
-            uint32_t sz = length > _maxSize ? _maxSize : length;
-            fh.Write(signals, sz); //throws
-            return sz;
+            fh.Write(bcd, bcdSz); //throws
+            return bcdSz;
         }
 
-        //NOTE: for simplicity just return max key size
-        uint32_t Size(void) const { return (length > _maxSize) ? _maxSize : length; }
+        inline uint32_t Size(void) const { return bcdSz; }
 
         uint32_t HashCode(uint32_t attempt = 0) const
         {
             uint32_t hcode = attempt;
-            for (uint32_t i = 0; i < (uint32_t)length; i++)
-                hcode += 37 * hcode + signals[i];
-            hcode = ((hcode * (uint32_t)19 ) + (uint32_t)12451) % (uint32_t)8882693L;
+            for (uint32_t i = 0; i < bcdSz; i++)
+                hcode += 37 * hcode + bcd[i];
+            hcode = ((hcode * (uint32_t)19) + (uint32_t)12451) % (uint32_t)8882693L;
             return hcode;
         }
 
@@ -114,7 +135,7 @@ protected:
     };
 
     //MTHashFileT<> HFValueTA argument implementation
-    class AbonentHashData : public AbonentRecord, public HashFileEntityITF {
+    class AbonentHashData : public HashFileEntityITF, public AbonentRecord {
     public:
         static const uint32_t _maxSize = sizeof(time_t) + 1 + 1 
             + (TDPCategory::dpRESERVED_MAX - 1)
@@ -122,10 +143,10 @@ protected:
 
         AbonentHashData() : AbonentRecord()
         { }
-        AbonentHashData(const AbonentRecord & ab_rec) : AbonentRecord(ab_rec)
-        { if (!tm_queried) tm_queried = time(NULL); }
+        ~AbonentHashData()
+        { }
 
-        inline AbonentRecord * getAbonentRecord(void) { return (AbonentRecord *)this; }
+        inline AbonentRecord & abRecord(void) { return *(AbonentRecord*)this; }
 
         static inline uint32_t WriteTimeT(File& fh, time_t val) _THROWS_HFE
         {
@@ -270,42 +291,58 @@ protected:
 
     struct AbonentRecordRAM : public AbonentRecord {
     public:
-        bool toUpdate;  //indicates that record awaits for transfer to external
+        bool marked;    //record marked for transfer to external
                         //storage, so cann't be evicted
         AbonentsList::iterator accIt;
 
-        AbonentRecordRAM() : AbonentRecord(), toUpdate(false)
-        {  }
-        AbonentRecordRAM(const AbonentRecord & ab_rec, bool to_update = false)
-            : AbonentRecord(ab_rec), toUpdate(to_update)
+        AbonentRecordRAM()
+            : AbonentRecord(), marked(false)
+        { }
+        AbonentRecordRAM(const AbonentRecord & ab_rec, bool do_mark = false)
+            : AbonentRecord(ab_rec), marked(do_mark)
         { if (!tm_queried) tm_queried = time(NULL); }
 
-        inline AbonentRecord * getAbonentRecord(void) { return (AbonentRecord *)this; }
+        inline const AbonentRecord & abRecord(void)
+        {
+            return *(const AbonentRecord *)this;
+        }
     };
 
     class RAMCache : XHash<AbonentHashKey, AbonentRecordRAM, AbonentHashKey> {
     protected:
-        Mutex           rcSync;
-        AbonentsList    accList; //LILO
-        uint32_t        maxRamIt;
-        long            lfInterval;
+        mutable Mutex   rcSync;
+         //abonents sorted by access time (first is the last accessed one)
+        AbonentsList    accList;
+        //abonents marked for transfer to external storage
+        AbonentsList    updList;
+        uint32_t        maxRamIt;   //maximum number of elements in hash
+        uint32_t        maxSpaceAtt;//maximum number of 'victim search'
+                                    //attempts for makeSpace()
 
         void makeSpace(void);
 
     public:
-        RAMCache() : lfInterval(0), maxRamIt(/* must be != 0*/ 1) { }
-        ~RAMCache() { }
+        RAMCache() : maxRamIt(/* must be != 0*/ 1)
+        { }
+        ~RAMCache()
+        { }
 
-        inline void Init(long lf_interval, uint32_t max_size)
-        { 
-            lfInterval = lf_interval;
-            maxRamIt = max_size ? max_size : 1;
+        inline void Init(uint32_t max_size, uint32_t max_space_att = 250)
+        {
+            maxRamIt = max_size ? max_size : 10000;
+            maxSpaceAtt = max_space_att;
         }
-
         inline Mutex & Sync(void) { return rcSync; }
-        AbonentRecordRAM * LookUp(const AbonentId & ab_number);
-        int Update(const AbonentId & ab_number,
-                   const AbonentRecord & ab_rec, bool to_update = false);
+
+        bool LookUp(const AbonentId & ab_number,
+                            AbonentRecord & ab_rec, long expire_tm = 0);
+        //Marks the record, preventing it from eviction,
+        //returns false if no such abonent exists
+        bool Mark(const AbonentId & ab_number);
+        //Updates abonent record. NOTE: also marks the record
+        int  Update(const AbonentId & ab_number, const AbonentRecord & ab_rec);
+        //Extracts marked abonent record, unmarking the latter
+        bool NextMarked(AbonentId & ab_num, AbonentRecord & ab_rec);
     };
 
     typedef MTHashFileT<AbonentHashKey, AbonentHashData,
@@ -316,7 +353,7 @@ protected:
         EventMonitor            _sync;
         volatile bool           _rehashOn;
         volatile bool           _running;
-        AbonentsList            updList;
+        volatile bool           _rehashMode; //
         RAMCache *              ramCache;
         std::auto_ptr<FileCache> fsCache;
         std::auto_ptr<FileCache::HFRehasher> rehasher;
@@ -327,10 +364,14 @@ protected:
     public:
         //Takes ownership of fs_cache!!!
         FSCacheMonitor(FileCache * fs_cache, RAMCache *ram_cache, Logger * use_log = NULL)
-            : ramCache(ram_cache), _running(false), _rehashOn(false)
+            : ramCache(ram_cache), _running(false), _rehashOn(false), _rehashMode(true)
         { 
             logger = use_log ? use_log : Logger::getInstance("smsc.inman.InCache");
             fsCache.reset(fs_cache);
+            _rehashMode = fsCache->rehashAllowed();
+            if (!_rehashMode)
+                smsc_log_info(logger, "FSCache: rehash mode is OFF for %s",
+                              fsCache->Details().c_str());
         }
         ~FSCacheMonitor()
         {
@@ -338,13 +379,14 @@ protected:
             WaitFor();
             MutexGuard  grd(_sync);
             try {
-                uint32_t num = fsCache->Close();
-                smsc_log_info(logger, "FSCache: %s closed (%u records of %u)",
-                              fsCache->FileName().c_str(), num, fsCache->Size());
+                fsCache->Close();
+                smsc_log_info(logger, "FSCache: closed %s", fsCache->Details().c_str());
             } catch (std::exception & exc) {
                 smsc_log_error(logger, "FSCache: %s", exc.what());
             }
         }
+
+        inline void Awake(void) { _sync.notify(); }
 
         uint32_t LookUp(const AbonentHashKey & key, AbonentHashData & val) _THROWS_HFE
         {
@@ -352,23 +394,20 @@ protected:
             return fsCache->LookUp(key, &val);
         }
 
-        void    Update(const AbonentId & ab_number)
-        {
-            MutexGuard  grd(_sync);
-            updList.push_back(ab_number);
-            _sync.notify();
-        }
-
         void    Stop(bool do_abort = false) //waits for thread being finished
         {
-            MutexGuard  grd(_sync);
-            if (_running) {
-                _running = false;
-                if (do_abort && !updList.empty()) {
-                    smsc_log_warn(logger, "FSCache: aborting, %u records lost ..", updList.Size());
-                    updList.clear();
+            bool stopHFRH = false;
+            {
+                MutexGuard  grd(_sync);
+                stopHFRH = _rehashOn;
+                if (_running) {
+                    _running = false;
+                    if (do_abort)
+                        smsc_log_warn(logger, "FSCache: aborting ..");
                 }
             }
+            if (stopHFRH && rehasher.get())
+                rehasher->Stop();
         }
 
         // -- HFRehashAcquirerITF methods
