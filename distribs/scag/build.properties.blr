@@ -1,0 +1,7 @@
+BUILD_DIR=/opt/home/msag_test/msag_build
+DISTR_DIR=/opt/home/msag_test/msag_blr
+SMSC_DIR=/opt/home/msag_test/cvs/smsc
+MAKE_ARGS=B64=YES DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES UNICODE=YES MSAG_FAKE_STAT=NO MSAG_INMAN_BILL=NO LEAKTRACE=NO
+CATALINA_HOME=/opt/home/msag_test/msag_blr/tomcat
+CATALINA_BASE=/opt/home/msag_test/msag_blr
+TEMPLATE_PROPS=msag.properties.blr

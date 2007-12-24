@@ -1,0 +1,78 @@
+installation.type=HS
+installation.mirrorpath=/mnt
+
+catalina.control.port=22800
+catalina.connector.port=22801
+logger.default.category=DEBUG
+logs.dir=logs
+
+WHOISD.url-pattern=/WHOISD/*
+
+scag.service.name=scag
+scag.service.args=MSA Gateway
+scag.service.autostart=true
+
+listen.host=whoisd-blr-msag
+connect.host=whoisd-blr-msag
+
+daemon.admin.port=22810
+daemon.dir=daemon
+daemon.hsadmin.link.name =msag_admin
+daemon.bin.name          =hs_smsc_ssdaemon
+daemon.link.name         =hs_msag_ssdaemon
+#daemon.bin.name          =smsc_ssdaemon
+#daemon.link.name         =msag_ssdaemon
+
+gateway.admin.port=22811
+gateway.smpp.port=22830
+gateway.http.port=22840
+
+bill.config_dir=conf
+bill.server_host=127.0.0.1
+bill.server_port=22989
+bill.time_out=1
+bill.reconnect_time_out=60
+
+status.show_interval=86400000
+language.default=ru
+
+session.location=/opt/whoisd/msag/storage/sessions
+session.expireInterval=60000
+
+logger.properties_file=/opt/whoisd/msag/services/scag/logger.properties
+
+rules.path      =/opt/whoisd/msag/services/scag/conf/rules
+stat.dir        =/opt/whoisd/msag/storage/statistics
+stat.traffic_dir=/opt/whoisd/msag/storage/statistics/traffic
+
+stat.perf_host=whoisd-blr-msag
+stat.perf_port=22981
+stat.perf_applet.port=22982
+stat.perf_svc_port=22983
+stat.perf_svc_applet.port=22984
+stat.perf_sc_port=22985
+stat.perf_sc_applet.port=22986
+
+stat.sacc_port=22700
+stat.sacc_host=127.0.0.1
+stat.sacc_connect_timeout=60
+stat.sacc_queue_length=10000
+
+pers.port=22880
+pers.listen_host=whoisd-blr-pers
+pers.connect_host=whoisd-blr-pers
+pers.connections=1000
+pers.io_timeout=100
+pers.ping_timeout=300
+pers.storage_dir=/opt/whoisd/msag/storage/pers
+pers.service.args=MSAG Personalization
+pers.service.autostart=true
+
+rule_editor.ping_port=22987
+rule_editor.ping_timeout=10000
+
+LC_ALL=ru_RU.WINDOWS-1251
+NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
+#JAVA_HOME=/usr/jdk/j2sdk1.4.2_08
+JAVA_HOME=/usr/jdk/jdk1.5.0_06
+JAVA_OPTS=-Dscag_site -Xms64m -Xmx256m -Dfile.encoding=windows-1251 -Duser.timezone=Asia/Novosibirsk
