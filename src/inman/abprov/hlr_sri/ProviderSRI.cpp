@@ -173,6 +173,11 @@ int IAPQuerySRI::Execute(void)
             _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqCancelled);
             return _qStatus;
         }
+        //MAP_SRI serves only ISDN International numbers
+        if (!abonent.interISDN()) {
+            _qError = _RCS_IAPQStatus->mkhash(_qStatus = IAPQStatus::iqBadArg);
+            return _qStatus;
+        }
 
         try {
             sriDlg = new MapCHSRIDlg(_cfg.mapSess, this); //binds this as user
