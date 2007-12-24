@@ -121,11 +121,11 @@ get_infosme_id_mapping_file_dispatcher(const std::string& dbSubDir)
 
   DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::operation_status_t
     st =storage.open();
-  if ( !(st == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ||
-         ( st == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::NO_SUCH_FILE &&
-           storage.create() == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK )
-         )
-       )
+  if ( st == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK )
+    storage.drop();
+
+  st = storage.create();
+  if (st != DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK )
     throw smsc::db::SQLException("StorageHelper::getInfoSme_Id_Mapping_Storage::: can't create storage");
 
   return &storage;
