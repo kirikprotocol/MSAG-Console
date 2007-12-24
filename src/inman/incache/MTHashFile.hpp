@@ -17,6 +17,8 @@
 #endif /* HFREHASH_LOG_DBG */
 
 #include "util/crc32.h"
+using smsc::util::crc32;
+
 #include "util/vformat.hpp"
 #include "core/buffers/File.hpp"
 using smsc::core::buffers::File;
@@ -290,8 +292,8 @@ public:
                 + ((maxValSzTA >= 0xFF) ? 2 : 1);
     }
 
-    inline uint32_t setHashCode(uint32_t attempt_num = 0)
-    { return hdr.hashCode = key.HashCode(hcAttempt = attempt_num); }
+//    inline uint32_t setHashCode(uint32_t attempt_num = 0)
+//    { return hdr.hashCode = key.HashCode(hcAttempt = attempt_num); }
 
     inline void setHashKey(const HFKeyTA & use_key)
     { key = use_key; hdr.keySz = use_key.Size(); }
