@@ -29,7 +29,6 @@ public class LoggingManager {
     private File loggerFile;
 
     public LoggingManager(final String lfile, HSDaemon hsDaemon){
-        logger.error( "LoggingManager:LoggingManager( String, HSDaemon):" + lfile + "|" + hsDaemon.toString() );
         loggerFile = new File(lfile);
         if(!loggerFile.exists()){
             logger.error("Cannot find file: " + loggerFile.getAbsolutePath());
