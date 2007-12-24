@@ -281,3 +281,8 @@ TO ALL: Insert log record for all significant changes & fixes here.
 2) MSAG CRITICAL FIX: Duplicate receipts fix (was sent on session destroy)
 3) MSAG Admin FIX: ',' simbols in services & providers names fix ('~' used as separator)
 4) MSAG Admin CHANGE: Endpoints filter (popup window) added to endpoints monitors
+
+=================================================================================================================
+07.12.2007 15:00 makar [!!! CVS: revision marked by tag BUILD_06_12_2007 !!!]
+1) PVSS CRITICAL FIX: '7913... >> +7913...' logic improved. Cache fix
+2) MSAG Admin CRITICAL FIX: NullPointerException fixed on SME add
