@@ -17,7 +17,9 @@ struct IAPQStatus {
         iqOk = 0,       //query completed
         iqCancelled,    //query has been cancelled
         iqTimeout,      //query is timed out
-        iqError         //query execution error
+        iqError,        //query execution error
+        iqBadArg,       //invalid query argument
+        iqReserved      //just a max cap
     };
 };
 extern const char * rc2Txt_IAPQStatus(uint32_t err_code);
@@ -30,13 +32,14 @@ const char * rc2Txt_IAPQStatus(uint32_t err_code) { \
     case IAPQStatus::iqCancelled: return "query has been cancelled"; \
     case IAPQStatus::iqTimeout: return "query is timed out"; \
     case IAPQStatus::iqError: return "query execution error"; \
+    case IAPQStatus::iqBadArg: return "invalid query argument"; \
     default:; } \
     return "unknown IAP query status"; \
 }
 
 #define ODECL_RCS_IAPQStatus() FDECL_rc2Txt_IAPQStatus() \
 URCSpacePTR  _RCS_IAPQStatus("iapQueryRC", IAPQStatus::iqOk, \
-                                IAPQStatus::iqError, rc2Txt_IAPQStatus)
+                                IAPQStatus::iqReserved, rc2Txt_IAPQStatus)
 
 /* ------------------------------------------------------------------------- *
  * Macro for all return code spaces global initialization
