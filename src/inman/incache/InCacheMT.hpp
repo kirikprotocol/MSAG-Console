@@ -115,10 +115,9 @@ protected:
 
         uint32_t HashCode(uint32_t attempt = 0) const
         {
-            uint32_t hcode = attempt;
-            for (uint32_t i = 0; i < bcdSz; i++)
-                hcode += 37 * hcode + bcd[i];
-            hcode = ((hcode * (uint32_t)19) + (uint32_t)12451) % (uint32_t)8882693L;
+            uint32_t hcode = 0;
+            for (uint32_t i = 0; i<= attempt; ++i)
+                hcode = crc32(hcode, bcd, bcdSz);
             return hcode;
         }
 
@@ -130,7 +129,7 @@ protected:
         //-- XHash<> argument HF implemenatation
         static inline unsigned int CalcHash(const AbonentHashKey & key)
         {
-            return key.HashCode(0); 
+            return key.HashCode(0);
         }
     };
 
