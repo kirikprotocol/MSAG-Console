@@ -143,10 +143,10 @@
         <iframe id="rulesFrame" onload="fireRulesState()"
           <c:choose>
               <c:when test="${bean.editChild}">
-        src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.parentId}"
+                src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.parentId}"
               </c:when>
               <c:otherwise>
-        src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.editId}"
+                src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.editId}"
               </c:otherwise>
           </c:choose>
         width='0px' height="0px"></iframe>
