@@ -70,6 +70,7 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+        logger.error("process():start:startPosition=" + startPosition + " \tpageSize=" + pageSize);
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
@@ -113,6 +114,7 @@ public class Edit extends TabledEditBeanImpl {
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(
                 appContext.getScagRoutingManager().getRoutes(), servIdForRout);
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
+        logger.error("process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
         totalSize = results.size();
         if (totalSize > startPosition)
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
