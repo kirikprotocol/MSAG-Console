@@ -124,32 +124,32 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
             <td rowspan=2 width=2px></td>
             <td rowspan=2><div class=calendarTimeH id=calendarTimeHour>00</div></td>
             <td valign=bottom align=center>
-              <div name=calendarTimeHourUp style="background-color:#f0f0f0;border-top:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">5</div>
+              <div name=calendarTimeHourUp style="background-color:#f0f0f0;border-top:solid 1px #000000;width:9px;height:6px;font-family:Webdings;font-size:7px">5</div>
             </td>
             <td rowspan=2><div class=calendarTimeM id=calendarTimeMinute>00</div></td>
             <td valign=bottom align=center>
-              <div name=calendarTimeMinuteUp style="background-color:#f0f0f0;border-top:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">5</div>
+              <div name=calendarTimeMinuteUp style="background-color:#f0f0f0;border-top:solid 1px #000000;width:9px;height:6px;font-family:Webdings;font-size:7px">5</div>
             </td>
             <td rowspan=2><div class=calendarTimeS id=calendarTimeSecond>00</div></td>
             <td valign=bottom align=center>
-              <div name=calendarTimeSecondUp style="background-color:#f0f0f0;border-top:solid 1px #000000;border-right:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">5</div>
+              <div name=calendarTimeSecondUp style="background-color:#f0f0f0;border-top:solid 1px #000000;border-right:solid 1px #000000;width:9px;height:6px;font-family:Webdings;font-size:7px">5</div>
             </td>
             <td rowspan=2 width=30px align=right>
-              <div id=calendarAMPMsv name=calendarAMPMsv align=center style="padding:0px; padding-left:2px; background-color:#f0f0f0;border:solid 1px #000000;width=24px;height=16px;font-family:Tahoma,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;visibility: hidden;">PM</div>
+              <div id=calendarAMPMsv name=calendarAMPMsv align=center style="padding:0px; padding-left:2px; background-color:#f0f0f0;border:solid 1px #000000;width:24px;height:16px;font-family:Tahoma,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;visibility: hidden;">PM</div>
             </td>
             <td rowspan=2 width=40px align=right>
-              <div name=calendarTimeOk align=center style="padding:0px; background-color:#f0f0f0;border:solid 1px #000000;width=30px;height=16px;font-family:Tahoma,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;">Ok</div>
+              <div name=calendarTimeOk align=center style="padding:0px; background-color:#f0f0f0;border:solid 1px #000000;width:30px;height:16px;font-family:Tahoma,Arial,Helvetica,sans-serif;font-size:11px;font-weight:bold;">Ok</div>
             </td>
           </tr>
           <tr>
             <td align=center>
-              <div name=calendarTimeHourDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">6</div>
+              <div name=calendarTimeHourDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;width:9px;height:6px;font-family:Webdings;font-size:7px">6</div>
             </td>
             <td align=center>
-              <div name=calendarTimeMinuteDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">6</div>
+              <div name=calendarTimeMinuteDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;width:9px;height:6px;font-family:Webdings;font-size:7px">6</div>
             </td>
             <td align=center>
-              <div name=calendarTimeSecondDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;border-right:solid 1px #000000;width=9px;height=6px;font-family:Webdings;font-size:7px">6</div>
+              <div name=calendarTimeSecondDown style="background-color:#f0f0f0;border-bottom:solid 1px #000000;border-right:solid 1px #000000;width:9px;height:6px;font-family:Webdings;font-size:7px">6</div>
             </td>
           </tr>
           </table>
@@ -230,10 +230,11 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <form name="opForm" id=opForm
                 <c:if test="${!empty form_uri}">action="${form_uri}"</c:if>
                 method="<c:choose><c:when test="${!empty form_method}">${form_method}</c:when><c:otherwise>post</c:otherwise></c:choose>"
-                <c:if test="${!empty form_method}">method="${form_method}"</c:if>
+<%--                <c:if test="${!empty form_method}">method="${form_method}"</c:if>--%>
                 <c:if test="${!empty form_enctype}">enctype="${form_enctype}"</c:if>
                 onSubmit="return validateForm(this)">
                 <input type=hidden ID=jbutton value=jbutton>
+<%--                <input type=hidden name=startPosition ID=startPosition value="">--%>
 
         <c:choose>
           <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.scag.beans.${beanClass}"/></c:when>
