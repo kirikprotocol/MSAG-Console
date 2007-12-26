@@ -16,10 +16,10 @@ namespace inman {
 namespace cache {
 
 struct AbonentCacheCFG {
-    long    interval;   //default abonent info expiration interval, units: seconds
-    long    RAM;        //abonents cache RAM buffer size, units: Mb
-    int     fileRcrd;   //initial number of cache file records
-    std::string nmDir;  //directory storing cache files
+    uint32_t    interval;   //default abonent info expiration interval, units: seconds
+    uint32_t    RAM;        //abonents cache RAM buffer size, units: Mb
+    int         fileRcrd;   //initial number of cache file records
+    std::string nmDir;      //directory storing cache files
 
     AbonentCacheCFG() {
         interval = RAM = fileRcrd = 0;
