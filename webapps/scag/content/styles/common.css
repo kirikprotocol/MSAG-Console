@@ -10,7 +10,7 @@ body
 	color: #161E49;
 	display: block;
 }
-body*
+body *
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: x-small;
@@ -28,7 +28,8 @@ img
 img.button
 {
 	behavior : url(content/scripts/click_submit.htc);
-	cursor: hand;
+/*	cursor: hand; */
+	cursor: pointer;
 /*	position: relative;
 	top: 3px;*/
 }
@@ -57,7 +58,7 @@ th
 	font-weight : normal;
 	white-space: nowrap;
 }
-hr 
+hr
 {
 	color: #C8BE9E;
 	height: 1px;
@@ -95,7 +96,8 @@ input.radio
 
 .clickable
 {
-  cursor: hand;
+/*  cursor: hand; */
+  cursor: pointer;
 }
 
 
@@ -121,7 +123,7 @@ div.secSmsc
 	font-weight: bold;
 }
 
-div.page_subtitle_medium,
+div.page_subtitle_medium
 {
 	background-position: left;
 	background-repeat: no-repeat;
