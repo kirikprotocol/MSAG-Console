@@ -1,4 +1,5 @@
-.jsdomenuarrow {
+.jsdomenuarrow
+{
 	background-image: url(office_xp_arrow.png);
 	/*background-color: #DFD4AE;*/
 	background-repeat: no-repeat; /* Do not alter this line! */
@@ -8,7 +9,8 @@
 	width: 4px;
 }
 
-.jsdomenuarrowover {
+.jsdomenuarrowover
+{
 	background-image: url(office_xp_arrow.png);
 	/*background-color: #DFD4AE;*/
 	background-repeat: no-repeat; /* Do not alter this line! */
@@ -18,7 +20,8 @@
 	width: 4px;
 }
 
-.jsdomenubardiv {
+.jsdomenubardiv
+{
 	z-index: 10;
 	background-position: left;
 	background-repeat: no-repeat;
@@ -31,7 +34,9 @@
 	position: absolute; /* Do not alter this line! */
 	visibility: visible;
 }
-.jsdomenubardragdiv {
+
+.jsdomenubardragdiv
+{
 	cursor: move;
 	display: inline;
 	font-family: Arial, Tahoma, Helvetica, sans, sans-serif;
@@ -45,7 +50,8 @@
 	width: 0px;
 }
 
-.jsdomenubaritem {
+.jsdomenubaritem
+{
 	z-index: 10;
 /*background-color: #EFEDDE;*/
 	border: none;
@@ -60,7 +66,8 @@
 	position: relative; /* Do not alter this line! */
 }
 
-.jsdomenubaritemclick {
+.jsdomenubaritemclick
+{
 	z-index: 10;
 /*background-color: #EFEDDE;*/
 	border: none;
@@ -73,10 +80,12 @@
 	padding-right: 10px;
 	padding-top: 0px;
 	position: relative; /* Do not alter this line! */
-	cursor: hand;
+/*	cursor: hand; */
+	cursor: pointer;
 }
 
-.jsdomenubaritemover {
+.jsdomenubaritemover
+{
 	background-color: #C1D2EE;
 	border: 1px solid #8A867A;
 	color: white;
@@ -88,11 +97,13 @@
 	padding-right: 9px;
 	padding-top: 2px;
 	position: relative; /* Do not alter this line! */
-	cursor: hand;
+/*	cursor: hand; */
+	cursor: pointer;
 }
 
 /*Drop-down box style:*/
-.jsdomenudiv {
+.jsdomenudiv
+{
 	background-color: #3A5867;
 /*background-image: url(office_xp_menu_left.png);*/
 	background-repeat: repeat-y;
@@ -105,7 +116,8 @@
 	z-index: 10;
 }
 
-.jsdomenuitem {
+.jsdomenuitem
+{
 /*background: blue;*/
 	border: none;
 	color: #F2E275;
@@ -114,7 +126,7 @@
 	font-size: 12px;
 
 	padding-bottom: 1px;
-	padding-left: 10px;//
+	padding-left: 10px;
 	padding-right: 10px;
 	padding-top: 1px;
 	position: relative; /* Do not alter this line! */
@@ -122,7 +134,8 @@
        white-space:nowrap;
 }
 
-.jsdomenuitemover {
+.jsdomenuitemover
+{
 /*background-color: blue;*/
 	border: none;
 	color: yellow;
@@ -133,11 +146,12 @@
 	padding-bottom: 1px;
 	margin-left: 0px;
 	margin-right: 0px;
-	padding-left: 10px;//
+	padding-left: 10px;
 	padding-right: 10px;
 	padding-top: 1px;
 	position: relative; /* Do not alter this line! */
-	cursor: hand;
+/*	cursor: hand; */
+	cursor: pointer;
 
        white-space:nowrap;
 }
@@ -156,13 +170,14 @@
 /************************ main menu *************************/
 table.main_menu_background
 {
-	position: absolute; 
-	z-index: 1; 
-	visibility: visible; 
-	top: 45; 
-	left: 0px; 
-	height: 30px; 
+	position: absolute;
+	z-index: 1;
+	visibility: visible;
+	top: 45;
+	left: 0px;
+	height: 30px;
 }
+
 table.main_menu
 {
 	color: #F2E275;
@@ -170,18 +185,21 @@ table.main_menu
 	z-index: 2;
 	position: relative;
 }
+
 table.main_menu td
 {
 	padding-left: 12px;
 	padding-right: 12px;
 }
+
 table.main_menu a,
 table.main_menu a:visited,
 table.main_menu a:hover
 {
 	text-decoration: none;
 	color: #F2E275;
-	cursor: hand;
+/*	cursor: hand; */
+	cursor: pointer;
 }
 
 table.main_menu table.submenu,
@@ -191,31 +209,37 @@ table.main_menu iframe.hiddenLayer
 	top: 25px;
 	left:0px;
 }
-table.main_menu table.submenu,
+
+table.main_menu table.submenu
 {
 	border: 1px solid #4E6E82;
 	background-color: #3A5867;
 	visibility: hidden;
 	z-index: 4;
 }
+
 table.main_menu table.submenu td
 {
 	padding : 2px 7px 2px 7px;
 }
+
 table.main_menu table.submenu td.submenu_sel
 {
 	background-color: #4E6E82;
 }
+
 table.main_menu table.submenu td.submenu_sel a
 {
 	color: black;
 }
+
 table.main_menu table.submenu td a:hover
 {
 	color: white;
 }
+
 table.main_menu iframe.hiddenLayerl
 {
-  z-index: 3;
+    z-index: 3;
 	visibility: hidden;
 }
