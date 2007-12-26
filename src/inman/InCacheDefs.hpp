@@ -15,9 +15,18 @@ namespace smsc {
 namespace inman {
 namespace cache {
 
-typedef TonNpiAddress AbonentId; //isdn international number assumed
+struct AbonentCacheCFG {
+    long    interval;   //default abonent info expiration interval, units: seconds
+    long    RAM;        //abonents cache RAM buffer size, units: Mb
+    int     fileRcrd;   //initial number of cache file records
+    std::string nmDir;  //directory storing cache files
 
-enum { MAX_ABONENT_ID_LEN =  11 }; //only isdn international numbers supported
+    AbonentCacheCFG() {
+        interval = RAM = fileRcrd = 0;
+    }
+};
+
+typedef TonNpiAddress AbonentId; //isdn international number assumed
 
 struct AbonentRecord : public AbonentContractInfo {
     time_t  tm_queried;
@@ -39,17 +48,16 @@ struct AbonentRecord : public AbonentContractInfo {
     void reset(void)    { tm_queried = 0; AbonentContractInfo::Reset(); }
 
     //NOTE: tm_queried = zero, means record ALWAYS expired!
-    inline bool isExpired(long interval) const
+    inline bool isExpired(uint32_t interval) const
     { return (bool)(time(NULL) >= (tm_queried + interval)); }
 };
-
-//typedef AbonentContractInfo::ContractType AbonentContractType;
 
 
 class AbonentCacheITF {
 public:
     virtual AbonentContractInfo::ContractType
-            getAbonentInfo(const AbonentId & ab_number, AbonentRecord * ab_rec = NULL) = 0;
+            getAbonentInfo(const AbonentId & ab_number,
+                           AbonentRecord * ab_rec = NULL, uint32_t exp_timeout = 0) = 0;
     virtual void
             setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec) = 0;
 };

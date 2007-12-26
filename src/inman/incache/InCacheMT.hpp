@@ -32,17 +32,6 @@ namespace smsc {
 namespace inman {
 namespace cache {
 
-struct AbonentCacheCFG {
-    long    interval;   //abonent info refreshing interval, units: seconds
-    long    RAM;        //abonents cache RAM buffer size, units: Mb
-    int     fileRcrd;   //initial number of cache file records
-    std::string nmDir;  //directory storing cache files
-
-    AbonentCacheCFG() {
-        interval = RAM = fileRcrd = 0;
-    }
-};
-
 class AbonentCacheMTR: public AbonentCacheITF {
 public:
     AbonentCacheMTR(AbonentCacheCFG * cfg, Logger * uselog = NULL);
@@ -50,7 +39,8 @@ public:
 
     // -- AbonentCacheITF interface methods
     AbonentContractInfo::ContractType
-        getAbonentInfo(const AbonentId & ab_number, AbonentRecord * ab_rec = NULL);
+        getAbonentInfo(const AbonentId & ab_number,
+                       AbonentRecord * ab_rec = NULL, uint32_t exp_timeout = 0);
     void
         setAbonentInfo(const AbonentId & ab_number, const AbonentRecord & ab_rec);
 
@@ -334,7 +324,7 @@ protected:
         inline Mutex & Sync(void) { return rcSync; }
 
         bool LookUp(const AbonentId & ab_number,
-                            AbonentRecord & ab_rec, long expire_tm = 0);
+                            AbonentRecord & ab_rec, uint32_t exp_timeout = 0);
         //Marks the record, preventing it from eviction,
         //returns false if no such abonent exists
         bool Mark(const AbonentId & ab_number);

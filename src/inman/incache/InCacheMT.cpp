@@ -97,18 +97,21 @@ void AbonentCacheMTR::setAbonentInfo(const AbonentId & ab_number,
 
 AbonentRecord::ContractType 
     AbonentCacheMTR::getAbonentInfo(const AbonentId & ab_number,
-                                        AbonentRecord * p_ab_rec/* = NULL*/)
+                                    AbonentRecord * p_ab_rec/* = NULL*/,
+                                    uint32_t exp_timeout/* = 0*/)
 {
     AbonentHashData abData; //abtUnknown
     if (!p_ab_rec)
         p_ab_rec = &abData.abRecord();
-    if (ramCache.LookUp(ab_number, *p_ab_rec, _cfg.interval))
+    if (!exp_timeout)
+        exp_timeout = _cfg.interval;
+    if (ramCache.LookUp(ab_number, *p_ab_rec, exp_timeout))
         return p_ab_rec->ab_type;
 
     if (fscMgr.get()) { //look in file cache
         try {
             if (fscMgr->LookUp(AbonentHashKey(ab_number), abData)) {
-                if (abData.abRecord().isExpired(_cfg.interval)) {
+                if (abData.abRecord().isExpired(exp_timeout)) {
                     abData.abRecord().reset();
                 } else if (abData.abRecord().ab_type != AbonentRecord::abtUnknown) {
                     ramCache.Update(ab_number, abData.abRecord());
@@ -127,7 +130,7 @@ AbonentRecord::ContractType
  * class AbonentCacheMTR::RAMCache implementation:
  * ************************************************************************** */
 bool AbonentCacheMTR::RAMCache::LookUp(const AbonentId & ab_number,
-                                    AbonentRecord & ab_rec, long expire_tm/* = 0*/)
+                                    AbonentRecord & ab_rec, uint32_t exp_timeout/* = 0*/)
 {
     MutexGuard grd(rcSync);
     AbonentHashKey      abNum(ab_number);
@@ -135,7 +138,7 @@ bool AbonentCacheMTR::RAMCache::LookUp(const AbonentId & ab_number,
     if (!pabRec)
         return false;
 
-    if (expire_tm && pabRec->isExpired(expire_tm)) {
+    if (exp_timeout && pabRec->isExpired(exp_timeout)) {
         accList.erase(pabRec->accIt);
         Delete(abNum);
         return false;
