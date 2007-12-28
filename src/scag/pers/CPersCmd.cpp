@@ -5,6 +5,17 @@ namespace scag { namespace cpers {
 
 using smsc::sms::Address;
 
+namespace commands_name {
+  const char* UNKNOWN = "UNKNOWN";
+  const char* GET_PROFILE = "GET_PROFILE";
+  const char* PROFILE_RESP = "PROFILE_RESP";
+  const char* DONE = "DONE";
+  const char* DONE_RESP = "DONE_RESP";
+  const char* CHECK_OWN = "CHECK_OWN";
+  const char* CHECK_OWN_RESP = "CHECK_OWN_RESP";
+};
+
+
 bool CPersCmd::serialize(SerialBuffer& sb) const {
   //sb.setPos(4);
   if (sb.GetSize() == 0) {
@@ -12,7 +23,7 @@ bool CPersCmd::serialize(SerialBuffer& sb) const {
   } else {
     sb.SetPos(sb.GetSize());
   }
-  sb.WriteInt8(cmd_id);
+  sb.WriteInt8(id);
   sb.WriteString(key.c_str());
   writeData(sb);
   sb.setPos(0);
@@ -108,6 +119,16 @@ void DoneRespCmd::writeData(SerialBuffer &sb) const {
 bool DoneRespCmd::deserialize(SerialBuffer &sb) {
   CPersCmd::deserialize(sb);
   is_ok = sb.ReadInt8();
+  return true;
+}
+
+void CheckOwnRespCmd::writeData(SerialBuffer &sb) const {
+  sb.WriteInt8(result);
+}
+
+bool CheckOwnRespCmd::deserialize(SerialBuffer &sb) {
+  CPersCmd::deserialize(sb);
+  result = sb.ReadInt8();
   return true;
 }
 

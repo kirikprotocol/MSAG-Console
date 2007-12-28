@@ -12,11 +12,12 @@ using namespace scag::cpers;
 struct CmdContext {
   CmdContext();
   CmdContext(const CmdContext& ctx);
-  CmdContext(PersCmd _cmd_id, SerialBuffer& _isb, SerialBuffer* _osb, Socket *s);
+  CmdContext(PersCmd _cmd_id, const SerialBuffer& _isb, SerialBuffer* _osb, Socket *s);
+  CmdContext(uint8_t _wait_cmd_id);
   CmdContext& operator=(const CmdContext& ctx);
 
   PersCmd cmd_id;
-  uint8_t last_cmd_id;
+  uint8_t wait_cmd_id;
   SerialBuffer isb;
   SerialBuffer* osb;
   Socket* socket;     
@@ -46,7 +47,7 @@ private:
   bool processPacketFromClient(ConnectionContext &ctx);
   void execCommand(ConnectionContext &ctx);
   void sendCommandToClient(CmdContext *ctx);
-  void sendResponseError(CmdContext* cmd_ctx, const string& key);
+  void sendResponseError(CmdContext* cmd_ctx, const string& key, bool send_done = true);
 
   bool sendCommandToCP(const CPersCmd& cmd);
   void createResponseForClient(SerialBuffer *sb, PersServerResponseType r);
@@ -55,7 +56,7 @@ private:
   void profileRespCmdHandler(ConnectionContext& ctx);
   void doneCmdHandler(ConnectionContext& ctx);
   void doneRespCmdHandler(ConnectionContext& ctx);
-  void checkOwnCmdHandler(ConnectionContext& ctx);
+  void checkOwnRespCmdHandler(ConnectionContext& ctx);
   void execCommand(PersCmd cmd, ProfileType pt, uint32_t int_key, const string& str_key,
                    SerialBuffer& isb, SerialBuffer& osb);
   bool execCommand(PersCmd cmd, Profile *pf, const string& str_key,
@@ -74,11 +75,12 @@ private:
   void IncModCmdHandler(Profile* pf, const string& str_key, Property& prop, int mod, SerialBuffer& osb);
 
   void checkTransactionsTimeouts();
-  void commandTimeout(const AbntAddr& addr, CmdContext& ctx);
-  void doneTimeout(const AbntAddr& addr);
+  void commandTimeout(const AbntAddr& addr, CmdContext* ctx);
 
   void WriteAllToCP(const char* buf, uint32_t sz);
   void ReadAllFromCP(char* buf, uint32_t sz);
+
+  void checkProfilesStates();
 
 
 private:
@@ -91,8 +93,8 @@ private:
   time_t last_check_time;
 
   smsc::core::buffers::XHash<AbntAddr, CmdContext, AbntAddr> commands;
-  smsc::core::buffers::XHash<AbntAddr, uint8_t, AbntAddr> profiles_states;
-  smsc::core::buffers::XHash<AbntAddr, time_t, AbntAddr> requested_profiles;
+  //smsc::core::buffers::XHash<AbntAddr, uint8_t, AbntAddr> profiles_states;
+  //smsc::core::buffers::XHash<AbntAddr, time_t, AbntAddr> requested_profiles;
   Logger* rplog;
 };
 

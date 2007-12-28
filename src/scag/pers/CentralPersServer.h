@@ -38,10 +38,15 @@ public:
 class TransactionInfo
 {
 public:
-  TransactionInfo(): startTime(time(NULL)), last_cmd(CentralPersCmd::GET_PROFILE) {};
+  TransactionInfo(): startTime(time(NULL)), wait_cmd(CentralPersCmd::PROFILE_RESP),
+                     owner(0), candidate(0) {};
+  TransactionInfo(uint32_t _owner, uint32_t _candidate)
+   :startTime(time(NULL)), owner(_owner), candidate(_candidate), wait_cmd(CentralPersCmd::PROFILE_RESP) 
+  {
+  };
   uint32_t owner, candidate;
   time_t startTime;
-  uint8_t last_cmd;
+  uint8_t wait_cmd;
 };
 
 class CentralPersServer : public PersSocketServer {
@@ -71,15 +76,14 @@ private:
   void getProfileCmdHandler(ConnectionContext& ctx);
   void profileRespCmdHandler(ConnectionContext& ctx);
   void doneCmdHandler(ConnectionContext& ctx);
-  void doneRespCmdHandler(ConnectionContext& ctx);
+  //void doneRespCmdHandler(ConnectionContext& ctx);
   void checkOwnCmdHandler(ConnectionContext& ctx);
+  void pingCmdHandler(ConnectionContext& ctx);
   void sendCommand(CPersCmd& cmd, ConnectionContext* ctx);
   void sendCommand(CPersCmd& cmd, uint32_t region_id);
   bool authorizeRegion(ConnectionContext& ctx);
   void transactionTimeout(const AbntAddr& addr, const TransactionInfo& tr_info);
 
-private:
-  time_t last_check_time;
 };
 
 }}

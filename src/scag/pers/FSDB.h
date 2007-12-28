@@ -155,8 +155,9 @@ public:
           }
           return true;
     	}
-        dataStorage.Add(data, idx, key);
-    	indexStorage.Insert(key, idx);
+        //dataStorage.Add(data, idx, key);
+    	//indexStorage.Insert(key, idx);
+        Add(key, data);
     	return true;
     }
     virtual bool Get(const Key& key, DataBlock& data)
@@ -195,6 +196,21 @@ public:
     {
        indexStorage.Reset();
     }
+
+    void resetStorage() {
+      indexStorage.Reset();
+      dataStorage.Reset();
+    }
+
+    bool dataStorageNext(Key& key, DataBlock& dataBlock) {
+      long blockIndex;
+      if (dataStorage.Next(blockIndex, dataBlock, key)) {
+        //smsc_log_debug(logger, "Next1: key=%s, idx=%d dataLength=%d",
+          //              key.toString().c_str(), blockIndex, dataBlock.length());
+        return true;
+      }
+      return false;
+    }
     
     virtual bool Next(Key& key, DataBlock& data)
     {
@@ -205,8 +221,9 @@ public:
 //          if(ret = dataStorage.Get(idx, data))
 //              cache.Add(key, data);
 			ret = dataStorage.Get(idx, data);
-			smsc_log_debug(logger, "Next: %s, %d", key.toString().c_str(), data.length());
+			smsc_log_debug(logger, "Next: %s, %d ret=%d", key.toString().c_str(), data.length(), ret);
             return ret;
+            //return true;
 		}
 		smsc_log_debug(logger, "Next: %s, No data", key.toString().c_str());
         return false;

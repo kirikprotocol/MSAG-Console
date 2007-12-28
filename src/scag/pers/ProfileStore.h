@@ -101,7 +101,7 @@ public:
     Key key;
     Profile *pf;
 
-    CacheItem(Key& k, Profile *p) { key = k; pf = p; };
+    CacheItem(const Key& k, Profile *p) { key = k; pf = p; };
     ~CacheItem() {
       if (pf) {
         delete pf; 
@@ -128,7 +128,7 @@ public:
         smsc_log_debug(log, "Inited: %s", storeName.c_str());
     };
 
-    void storeProfile(Key& key, Profile* pf)
+    void storeProfile(const Key& key, Profile* pf)
     {
 //        pf->DeleteExpired();
 
@@ -144,7 +144,7 @@ public:
             store.deleteRecord(key);
     }
 
-    Profile* _getProfile(Key& key, bool create)
+    Profile* _getProfile(const Key& key, bool create)
     {
         Profile *pf = new Profile(key.toString(), dblog);
         if(store.getRecord(key, pf) || create)
@@ -152,12 +152,19 @@ public:
         delete pf;
         return NULL;
     };
+
+    //void Reset() {}
+
+    //bool Next(Key& key, uint8_t& profile_state) {
+      //return false;
+    //}
+
 protected:
-    Profile* _createProfile(Key &key) {
+    Profile* _createProfile(const Key &key) {
       return new Profile(key.toString(), dblog);
     }
 
-    void _deleteProfile(Key &key) {
+    void _deleteProfile(const Key &key) {
       store.deleteRecord(key);
     }
 
@@ -203,7 +210,7 @@ public:
 //		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
 	};
 
-    void storeProfile(Key& key, Profile *pf)
+    void storeProfile(const Key& key, Profile *pf)
     {
 //        pf->DeleteExpired();
 		sb.Empty();
@@ -217,7 +224,7 @@ public:
         //}
     }
 
-    Profile* _getProfile(Key& key, bool create)
+    Profile* _getProfile(const Key& key, bool create)
     {
         Profile *pf = new Profile(key.toString(), dblog);
 		sb.Empty();
@@ -232,12 +239,24 @@ public:
         return NULL;
     };
 
+    void Reset() {
+      store.resetStorage();
+    }
+    bool Next(Key& key, uint8_t& profile_state) {
+      sb.Empty();
+      if (store.dataStorageNext(key, sb)) {
+        profile_state = sb.ReadInt8();
+        return true;
+      }
+      return false;
+    }
+
 protected:
-    Profile* _createProfile(Key& key) {
+    Profile* _createProfile(const Key& key) {
       return new Profile(key.toString(), dblog);
     }
 
-    void _deleteProfile(Key &key) {
+    void _deleteProfile(const Key &key) {
       store.Remove(key);
     }
 
@@ -279,7 +298,7 @@ public:
         cache_log = smsc::logger::Logger::getInstance("cachestore");
     };
 
-    Profile* getProfile(Key& key, bool create)
+    Profile* getProfile(const Key& key, bool create)
     {
         uint32_t i = key.HashCode(0) % max_cache_size;
         if(cache[i] != NULL)
@@ -313,7 +332,7 @@ public:
             
     };
 
-    Profile* createCachedProfile(Key& key) {
+    Profile* createCachedProfile(const Key& key) {
       uint32_t i = key.HashCode(0) % max_cache_size;
       Profile* pf = _createProfile(key);
       if (!pf) {
@@ -334,7 +353,7 @@ public:
       return pf;
     }
 
-    void deleteCachedProfile(Key& key) {
+    void deleteCachedProfile(const Key& key) {
       uint32_t i = key.HashCode(0) % max_cache_size;
       if(cache[i] != NULL && cache[i]->key == key) {
         if (!cache[i]->pf) {
@@ -347,11 +366,13 @@ public:
       _deleteProfile(key);
     }
 
-	virtual Profile* _getProfile(Key& key, bool create) = 0;
+	virtual Profile* _getProfile(const Key& key, bool create) = 0;
 
 protected:
-    virtual Profile* _createProfile(Key& key) = 0;
-    virtual void _deleteProfile(Key& key) = 0;
+    virtual Profile* _createProfile(const Key& key) = 0;
+    virtual void _deleteProfile(const Key& key) = 0;
+    //virtual void Reset() = 0;
+    //virtual bool Next(Key& key, uint8_t& profile_state) = 0;
 	
 protected:
     uint32_t max_cache_size;
@@ -365,12 +386,12 @@ class ProfileStore : public StorageType
     Mutex mtx;
 public:
 
-  void deleteProfile(Key& key) {
+  void deleteProfile(const Key& key) {
     MutexGuard mg(mtx);
     deleteCachedProfile(key);
   }
 
-  Profile* createProfile(Key &key) {
+  Profile* createProfile(const Key &key) {
     MutexGuard mg(mtx);
     return createCachedProfile(key);
   }

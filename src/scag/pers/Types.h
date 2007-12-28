@@ -32,6 +32,7 @@ namespace CentralPersCmd{
         DONE,
         DONE_RESP,
         CHECK_OWN, //if transaction not complite
+        CHECK_OWN_RESP,
         LOGIN,
         PING,
         PING_OK

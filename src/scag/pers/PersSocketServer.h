@@ -46,6 +46,7 @@ protected:
     virtual bool bindToCP() { return true; };
     virtual void checkTimeouts();
     virtual void checkTransactionsTimeouts() {};
+    virtual void checkProfilesStates() {};
 
     void processReadSocket(Socket* sock);
     void processWriteSocket(Socket* sock);

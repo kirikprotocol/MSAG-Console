@@ -38,6 +38,7 @@ void PersSocketServer::InitServer()
     if(!listener.addR(&sock))
         throw Exception("Failed to init PersSocketServer");
     bindToCP();
+    checkProfilesStates();
 }
 
 void PersSocketServer::processReadSocket(Socket* s)
@@ -46,15 +47,15 @@ void PersSocketServer::processReadSocket(Socket* s)
 	ConnectionContext* ctx = (ConnectionContext*)s->getData(0);
     SerialBuffer& sb = ctx->inbuf;
 
-    if(sb.GetSize() < sizeof(uint32_t))
+    if(sb.GetSize() < PACKET_LENGTH_SIZE)
     {
-      int j = s->Read(tmp_buf, sizeof(uint32_t) - sb.GetSize());
+      int j = s->Read(tmp_buf, PACKET_LENGTH_SIZE - sb.GetSize());
 
         smsc_log_debug(log, "read(len) %u bytes from %p", j, s);
         if(j > 0)
         {
             sb.Append(tmp_buf, j);
-            if(sb.GetSize() >= sizeof(uint32_t))
+            if(sb.GetSize() >= PACKET_LENGTH_SIZE)
             {
                 j = sb.GetPos();
                 sb.SetPos(0);
@@ -79,7 +80,7 @@ void PersSocketServer::processReadSocket(Socket* s)
             return;
         }
     }
-    if(sb.GetSize() >= sizeof(uint32_t))
+    if(sb.GetSize() >= PACKET_LENGTH_SIZE)
     {
         int j = ctx->packetLen - sb.GetSize();
         j = s->Read(tmp_buf, j > 1024 ? 1024 : j);
@@ -116,7 +117,7 @@ void PersSocketServer::processReadSocket(Socket* s)
                 ctx->batch = false;
                 ctx->batch_cmd_count = 0;
                 ctx->outbuf.SetPos(0);
-                if (ctx->outbuf.length() > sizeof(uint32_t)) {
+                if (ctx->outbuf.length() > PACKET_LENGTH_SIZE) {
                   smsc_log_debug(log, "processReadSocket : add socket %p as READ/WRITE outbuf length = %d",
                                   s, ctx->outbuf.length());
                   listener.addRW(s);
@@ -160,7 +161,7 @@ void PersSocketServer::processWriteSocket(Socket* s)
         smsc_log_debug(log, "written to socket: len=%d, data=%s", j, sb.toString().c_str());
         ctx->inbuf.Empty();
         ctx->outbuf.Empty();
-        ctx->outbuf.SetPos(sizeof(uint32_t));
+        ctx->outbuf.SetPos(PACKET_LENGTH_SIZE);
 		ctx->lastActivity = time(NULL);
         listener.addR(s);
 		ctx->wantRead = true;
@@ -213,6 +214,7 @@ void PersSocketServer::checkTimeouts()
 int PersSocketServer::Execute()
 {
 	int lastTimeoutCheck = time(NULL);
+    int lastTransactTimeoutCheck = time(NULL);
     Multiplexer::SockArray read, write, err;
 
     if(isStopped()) return 1;
@@ -286,10 +288,9 @@ int PersSocketServer::Execute()
                 else
                     removeSocket(err[i]);
         }
-        if (transactTimeout && (lastTimeoutCheck + transactTimeout < time(NULL))) {
-          smsc_log_debug(log, "checking transactions timeouts");
+        if (transactTimeout && (lastTransactTimeoutCheck + transactTimeout < time(NULL))) {
           checkTransactionsTimeouts();
-          lastTimeoutCheck = time(NULL);
+          lastTransactTimeoutCheck = time(NULL);
         }
 		
 		if(lastTimeoutCheck + timeout < time(NULL))
