@@ -1,5 +1,5 @@
 static char const ident[] = "$Id$";
-#include "snmp/sctp/TrapSender.hpp"
+#include "snmp/sctp/SnmpTrapSender.hpp"
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <net-snmp/agent/net-snmp-agent-includes.h>
@@ -25,12 +25,16 @@ static const char *         fileLogLocation = ".";
 static unsigned long        fileLogRollInterval = 60;
 static Logger* logger = 0;
 
-void TrapSender::Stop()
+void SnmpTrapSender::run()
+{
+  Start();
+}
+void SnmpTrapSender::stop()
 {
   keep_running = 0;
 }
 
-TrapSender::TrapSender()
+SnmpTrapSender::SnmpTrapSender()
 {
   logger = Logger::getInstance("sctp.trap");
   snmp_enable_stderrlog();
@@ -39,7 +43,7 @@ TrapSender::TrapSender()
   init_snmp(cfgname); /* example-demon will be used to read example-demon.conf files. */
 }
 
-int TrapSender::Execute(void)
+int SnmpTrapSender::Execute(void)
 {
   Manager& manager = Manager::getInstance();
   try { fileLogLocation = manager.getString("sctpmon.csvFileDir");
@@ -74,7 +78,7 @@ static oid new_alarm_oid[]   = { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 4 };
 static oid clear_alarm_oid[] = { 1, 3, 6, 1, 4, 1, 26757, 1, 0, 5 };
 
 
-void TrapSender::trap(SnmpAgent::alertStatus st,
+void SnmpTrapSender::trap(SnmpAgent::alertStatus st,
                       const char * const alarmId,
                       const char * const object,
                       SnmpAgent::alertSeverity svr,

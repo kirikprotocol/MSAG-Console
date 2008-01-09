@@ -9,6 +9,8 @@ static char const ident[] = "$Id$";
 #include "snmp/sctp/SctpMonitor.hpp"
 #include "snmp/sctp/util.hpp"
 #include "snmp/sctp/TrapSender.hpp"
+#include "snmp/sctp/NullTrapSender.hpp"
+#include "snmp/sctp/SnmpTrapSender.hpp"
 #include <string>
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
@@ -18,6 +20,8 @@ static char const ident[] = "$Id$";
 using smsc::core::buffers::XHash;
 using smsc::snmp::sctp::SctpMonitor;
 using smsc::snmp::sctp::TrapSender;
+using smsc::snmp::sctp::SnmpTrapSender;
+using smsc::snmp::sctp::NullTrapSender;
 using smsc::snmp::SnmpAgent;
 using smsc::snmp::sctp::AssociationChangeListener;
 using smsc::snmp::sctp::AssociationChangeEvent;
@@ -25,6 +29,7 @@ using smsc::snmp::sctp::getAssociationStateDescription;
 using smsc::logger::Logger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigView;
+using smsc::util::config::ConfigException;
 using std::string;
 
 struct Association {
@@ -35,7 +40,8 @@ struct Association {
 
 
 static Logger* logger = 0;
-static TrapSender* sender = 0;
+class Coordinator;
+static Coordinator *coord = 0;
 
 class hash_func_said{
 public:
@@ -47,10 +53,28 @@ public:
 class Coordinator: public AssociationChangeListener{
   private:
     SctpMonitor *monitor;
+    TrapSender *sender;
     XHash<unsigned,Association*,hash_func_said> assocs;
   public:
-    Coordinator() { monitor = 0; }
+    Coordinator() { monitor = 0; sender = 0; }
     void setSctpMonitor(SctpMonitor *_monitor) { monitor = _monitor; }
+    void setTrapSender(TrapSender *_sender) { sender = _sender; }
+    void start()
+    {
+      if ( monitor == 0 || sender == 0 )
+      {
+        smsc_log_debug(logger, "Signalling monitor or Trap sender is invalid. Exiting...");
+        return;
+      }
+      monitor->addAssociationChangeListener(this);
+      sender->run();
+      monitor->run();
+      sender->stop();
+    }
+    void stop() {
+      monitor->removeAssociationChangeListener();
+      monitor->stop();
+    }
     void setAssociationDescription(uint16_t said, string description) {
       Association* ptr = findAssociation(said);
       ptr->descr = description;
@@ -122,42 +146,21 @@ class Coordinator: public AssociationChangeListener{
 
 extern "C"
 static void sighandler( int signal ) {
-  SctpMonitor *m = SctpMonitor::instance();
-  if (m)
-  {
-    m->removeAssociationChangeListener();
-    m->stop();
-  }
-  if (sender) sender->Stop();
+  if (coord) coord->stop();
 }
 
 int main (int argc, char *argv[])
 {
-#if 0
-  if (getppid() != 1)
-  {
-    signal(SIGTTOU, SIG_IGN);
-    signal(SIGTTIN, SIG_IGN);
-    signal(SIGTSTP, SIG_IGN);
-    int dpid;
-    if ((dpid = fork()) != 0)
-    {
-      printf("%s pid=%d\n",argv[0],dpid);
-      exit(0);
-    }
-    setsid();
-  }
-  struct rlimit flim;
-  getrlimit(RLIMIT_NOFILE, &flim);
-  for (int fd = 0; fd < flim.rlim_max; fd ++)
-  {
-    close(fd);
-  }
-#endif
   Logger::Init();
+  logger = Logger::getInstance("sctpmon");
+  coord = new Coordinator();
+  if ( !coord )
+  {
+    smsc_log_debug(logger, "Association Coordinator has not been created. Exiting...");
+    return -1;
+  }
   smsc::util::config::Manager::init(findConfigFile("config.xml"));
   Manager& manager = Manager::getInstance();
-  Coordinator coord;
   ConfigView assocs_cfg(manager, "sctpmon.associations");
   std::auto_ptr< std::set<std::string> > setGuard(assocs_cfg.getShortSectionNames());
   std::set<std::string>* set = setGuard.get();
@@ -171,28 +174,30 @@ int main (int argc, char *argv[])
 
     const char* description = addressConfig->getString("description");
     uint16_t said = addressConfig->getInt("said");
-    coord.setAssociationDescription(said,description);
+    coord->setAssociationDescription(said,description);
   }
-  logger = Logger::getInstance("sctpmon");
-  sender = new TrapSender();
-  sender->Start();
-  SctpMonitor *monitor = SctpMonitor::instance();
-  monitor->addAssociationChangeListener(&coord);
-  coord.setSctpMonitor(monitor);
-  sigset( SIGTERM, sighandler );
-#if 0
-  int i = 0;
-  while(true)
+  static const char *trapSenderType = "snmp";
+  try
   {
-    AssociationChangeEvent event;
-    time(&event.time);
-    event.said = i % 5;
-    event.state = i % 10;
-    coord.associationChange(event);
-    i++;
-    sleep(10);
+    trapSenderType = manager.getString("sctpmon.trapSenderType");
+  } 
+  catch (ConfigException& exc)
+  { 
+    smsc_log_debug(logger, "trapSenderType is not defined, \"snmp\" will be used");
+    trapSenderType="snmp";
   }
-#endif
-  monitor->run();
-  sender->Stop();
+  TrapSender *sender = 0;
+  if (strcmp(trapSenderType,"snmp") == 0)
+  { 
+    sender = new SnmpTrapSender();
+  }
+  else if (strcmp(trapSenderType,"null") == 0)
+  {
+    sender = new NullTrapSender();
+  }
+  SctpMonitor *monitor = SctpMonitor::instance();
+  coord->setSctpMonitor(monitor);
+  coord->setTrapSender(sender);
+  sigset( SIGTERM, sighandler );
+  coord->start();
 }
