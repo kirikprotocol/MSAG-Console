@@ -30,6 +30,23 @@ B2914:
     USSMan	added destructor. made USSProcSearchCrit as inner class
     USSMan	destISDN is added to USSDArg, destIMSI is added to UserInfo
     USSMan	text encoding refactored
-B2915:
-    SMSC
+B2917:
+    SMSC	statistics by routes fix, probably lost increments of counters on some events
+    SMSC	schedlimit limits in and out speed of sme
+    SMSC	speedmonitor fix in non hs/ha mode
+    INMan	explicit expiration timeout in get abonent type
+    INMan	abonent storage performance optimization, new hash function, limit tries to find free items in inmem cache
+    INMan	FSCache synchroniation while rehashing is fixed
+    INMan	Resolved possible deadlock on timer being signaled
+    INMan	Crash in case of no SCF determined for abonent is fixed
+    INMan	AbonentPolicy is red only if required
+    INMan	TC Dialogs synchronization refactored
+    INMan	Fixed interaction of MapCHSRI dialog and its handler
     Archiver	increased inmem cache storage, avoid extra flush and index reread
+    Archiver	double flush fix
+    InfoSme	cleanup of INFOSME_ID_MAPPING.db on retstart
+    InfoSme	traffic control on region basis fix
+    MCISme	set msg.caller_abonent before call to messageSender->send in TaskProcessor::SendAbntOnlineNotifications
+    SNMP	roll csv files after each record in cluster RG methods
+    SNMP	make traps on connect and disconnect to SS7 stack
+    USSMan	fixed bug (strict weak ordering violation) in USSProcSearchCrit::operator<()
