@@ -30,3 +30,6 @@ B2914:
     USSMan	added destructor. made USSProcSearchCrit as inner class
     USSMan	destISDN is added to USSDArg, destIMSI is added to UserInfo
     USSMan	text encoding refactored
+B2915:
+    SMSC
+    Archiver	increased inmem cache storage, avoid extra flush and index reread
