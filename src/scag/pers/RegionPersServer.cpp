@@ -428,7 +428,7 @@ void RegionPersServer::getProfileCmdHandler(ConnectionContext &ctx) {
   }
   sendCommandToCP(profile_resp);
 }
-
+/*
 void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
   ProfileRespCmd profile_resp(isb);
@@ -485,6 +485,47 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
   sendCommandToCP(done);
   commands.Delete(addr);
 }
+*/
+void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
+  SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
+  ProfileRespCmd profile_resp(isb);
+  CmdContext* cmd_ctx;
+  AbntAddr addr(profile_resp.key.c_str());
+  if (!(cmd_ctx = commands.GetPtr(addr))) {
+    smsc_log_warn(rplog, "profileRespCmdHandler: command conntext key=%s not found",
+                    addr.toString().c_str());
+    //послать Done Error, т.к. это означает что пришёл профиль который платформа не запрашивала
+    DoneCmd done(0, profile_resp.key);
+    sendCommandToCP(done);
+    return;
+  } else {
+    cmd_ctx->wait_cmd_id = CentralPersCmd::DONE_RESP;
+    cmd_ctx->start_time = time(NULL);
+  }
+  if (!profile_resp.is_ok) {
+    smsc_log_warn(rplog, "profileRespCmdHandler: receive PROFILE_RESP=ERROR profile key=%s",
+                   profile_resp.key.c_str());
+    sendResponseError(cmd_ctx, profile_resp.key, false);
+    return;
+  }
+  Profile* profile = getAbonentStore()->createProfile(addr);
+  if (!profile) {
+    smsc_log_warn(rplog, "profileRespCmdHandler: can't create new profile");
+    sendResponseError(cmd_ctx, profile_resp.key);
+    return;
+  }
+  string log_msg("not registered");
+  if (profile_resp.getProfile()) {
+    profile_resp.getProfile()->copyPropertiesTo(profile);
+    log_msg = "registered";
+  }
+  smsc_log_debug(rplog, "profileRespCmdHandler: receive PROFILE_RESP=OK, profile was %s, set profile key=%s locked",
+                 log_msg.c_str(), profile_resp.key.c_str());
+  profile->setLocked();
+  getAbonentStore()->storeProfile(addr, profile);
+  DoneCmd done(1, profile_resp.key);
+  sendCommandToCP(done);
+}
 
 void RegionPersServer::doneCmdHandler(ConnectionContext &ctx) {
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
@@ -504,13 +545,7 @@ void RegionPersServer::doneCmdHandler(ConnectionContext &ctx) {
   } else {
     smsc_log_debug(rplog, "doneCmdHandler: receive DONE=ERROR profile key=%s, set profile OK",
                     done.key.c_str());
-    //Profile *pf = getProfile(done.key);
-    //if (!pf) {
-      //smsc_log_warn(rplog, "doneCmdHandler: profile key=%s not found", done.key.c_str());
-      //return;
-    //}
     pf->setOk();
-    //getAbonentStore()->storeProfile(addr, pf);
   }
   getAbonentStore()->storeProfile(addr, pf);
 }
@@ -532,7 +567,7 @@ void RegionPersServer::doneRespCmdHandler(ConnectionContext &ctx) {
   Profile* profile = getProfile(done_resp.key);
   if (done_resp.is_ok) {
     //Profile* profile = getProfile(done_resp.key);
-    smsc_log_warn(rplog, "doneRespCmdHandler: receive DONE_RESP=OK profile key=%s", done_resp.key.c_str());
+    smsc_log_debug(rplog, "doneRespCmdHandler: receive DONE_RESP=OK profile key=%s", done_resp.key.c_str());
     if (!profile) {
       smsc_log_warn(rplog, "doneRespCmdHandler: profile key=%s not found", done_resp.key.c_str());
       if (client_connected) {
@@ -595,7 +630,9 @@ void RegionPersServer::checkOwnRespCmdHandler(ConnectionContext &ctx) {
     //getAbonentStore()->deleteProfile(addr);
     break;
   case ownership::UNKNOWN:
-    smsc_log_warn(rplog, "checkOwnRespCmdHandler: profile key=%s not registered", check_own_resp.key.c_str());
+    smsc_log_debug(rplog, "checkOwnRespCmdHandler: profile key=%s not registered", check_own_resp.key.c_str());
+    pf->setDeleted();
+    getAbonentStore()->storeProfile(addr, pf);
     break;
   default:
     smsc_log_warn(rplog, "checkOwnRespCmdHandler: profile key=%s unknown result", check_own_resp.key.c_str());

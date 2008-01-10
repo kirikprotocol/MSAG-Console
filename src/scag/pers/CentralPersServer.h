@@ -79,8 +79,9 @@ private:
   //void doneRespCmdHandler(ConnectionContext& ctx);
   void checkOwnCmdHandler(ConnectionContext& ctx);
   void pingCmdHandler(ConnectionContext& ctx);
-  void sendCommand(CPersCmd& cmd, ConnectionContext* ctx);
-  void sendCommand(CPersCmd& cmd, uint32_t region_id);
+  void sendCommand(const CPersCmd& cmd, ConnectionContext* ctx);
+  void sendResponse(const CPersCmd& cmd, ConnectionContext& ctx);
+  void sendCommand(const CPersCmd& cmd, uint32_t region_id);
   bool authorizeRegion(ConnectionContext& ctx);
   void transactionTimeout(const AbntAddr& addr, const TransactionInfo& tr_info);
 

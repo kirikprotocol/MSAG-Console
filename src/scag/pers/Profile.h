@@ -51,7 +51,7 @@ public:
     void Deserialize(SerialBuffer& buf, bool fromFSDB = false);
     ProfileState getState() const { return state; };
     void setLocked() { state = LOCKED; };
-    void setDeleted() { state = DELETED; };
+    void setDeleted() { Empty(); state = DELETED; };
     void setOk() { state = OK; };
     void addNewProperty(Property& prop);
     void copyPropertiesTo(Profile* pf) const;

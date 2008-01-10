@@ -35,6 +35,7 @@ bool CPersCmd::serialize(SerialBuffer& sb) const {
 bool CPersCmd::deserialize(SerialBuffer& sb) {
   //sb.setPos(4);
   //cmd_id = sb.ReadInt8();
+/*
   string str_key;
   sb.ReadString(str_key);
   Address addr(str_key.c_str());
@@ -43,6 +44,8 @@ bool CPersCmd::deserialize(SerialBuffer& sb) {
     addr.setNumberingPlan(1);
   }
   key = addr.toString();
+  */
+  sb.ReadString(key);
   return true;
 }
 
