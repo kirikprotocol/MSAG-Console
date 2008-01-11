@@ -99,7 +99,7 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
   {
     uint32_t nec = htonl(sms->getIntProperty(Tag::SMPP_NETWORK_ERROR_CODE));
     optional.set_networkErrorCode((uint8_t*)&nec + 1);
-  }    
+  }
 
   if ( sms->hasBinProperty(Tag::SMSC_RAW_PAYLOAD) ){
     unsigned len;
@@ -143,6 +143,15 @@ inline void fillOptional(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( sms->hasIntProperty(Tag::SMSC_SUPPORTED_CODESET) )
     optional.set_supported_codeset( sms->getIntProperty(Tag::SMSC_SUPPORTED_CODESET) );
+
+  if(sms->hasIntProperty(Tag::SMPP_ITS_SESSION_INFO))
+  {
+    uint16_t val=sms->getIntProperty(Tag::SMPP_ITS_SESSION_INFO);
+    uint8_t arr[2];
+    arr[0]=val&0xff;
+    arr[1]=(val&0xff00u)>>8;
+    optional.set_itsSessionInfo(arr);
+  }
 
   if(sms->hasBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS))
   {
@@ -307,13 +316,13 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
   {
     sms->setIntProperty(Tag::SMPP_PRIVACYINDICATOR,optional.get_privacyIndicator());
   }
-  
+
   if(optional.has_networkErrorCode())
   {
     uint32_t nec = 0;
     memcpy((uint8_t*)&nec + 1, optional.get_networkErrorCode(), 3);
     sms->setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE,ntohl(nec));
-  }    
+  }
 
   if(!forceDC)
   {
@@ -370,6 +379,13 @@ inline void fetchOptionals(SmppOptional& optional,SMS* sms,bool forceDC=false)
 
   if ( optional.has_supported_codeset() )
     sms->setIntProperty( Tag::SMSC_SUPPORTED_CODESET, optional.get_supported_codeset() );
+
+  if(optional.has_itsSessionInfo())
+  {
+    const uint8_t* arr=optional.get_itsSessionInfo();
+    uint16_t val=arr[0]|(arr[1]<<8);
+    sms->setIntProperty(Tag::SMPP_ITS_SESSION_INFO,val);
+  }
   if(optional.has_unknownFields())
   {
     sms->setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS,optional.get_unknownFields(),optional.size_unknownFields());
