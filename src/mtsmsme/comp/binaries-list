@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 # binary name source name libraries         
 
-mtsmsme/ulprint     ulprint  -lmtsmsme-comp -lmtsmsme-processor-codec -lmtsmsme-processor-ulcodec -lmtsmsme-processor-asn1rt -lmtsmsme-processor
+mtsmsme/ulprint     ulprint  -lmtsmsme-comp -lmtsmsme-processor-tcap -lmtsmsme-processor-ros -lmtsmsme-processor-codec -lmtsmsme-processor-ulcodec -lmtsmsme-processor-asn1rt -lmtsmsme-processor

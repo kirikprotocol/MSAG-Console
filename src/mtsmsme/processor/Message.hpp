@@ -10,7 +10,7 @@
 
 extern "C" {
 #include <constr_TYPE.h>
-#include <MessageType.h>
+#include <TCMessage.h>
 }
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -89,9 +89,9 @@ class ContMsg {
   public:
     ContMsg()
     {
-      cont.present = MessageType_PR_contiinue;
+      cont.present = TCMessage_PR_contiinue;
       cont.choice.contiinue.dialoguePortion = 0;
-      cont.choice.contiinue.componenets = 0;
+      cont.choice.contiinue.components = 0;
       dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.size=0;
       dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf=0;
     }
@@ -138,30 +138,29 @@ class ContMsg {
       if(result)
       {
         comp.present = Component_PR_returnError;
-        comp.choice.returnError.invokeID = iid;
-        comp.choice.returnError.errorCode.present = Error_PR_local;
-        comp.choice.returnError.errorCode.choice.local = 31;
+        comp.choice.returnError.invokeId = iid;
+        comp.choice.returnError.errcode.present = Error_PR_local;
+        comp.choice.returnError.errcode.choice.local = 31;
         comp.choice.returnError.parameter = 0;
       }
       else
       {
         comp.present = Component_PR_returnResultLast;
-        comp.choice.returnResultLast.invokeID = iid;
+        comp.choice.returnResultLast.invokeId = iid;
         comp.choice.returnResultLast.result = 0;
       }
       arr[0]= &comp;
       comps.list.count = 1;
       comps.list.size = 1;
       comps.list.array = arr;
-      cont.choice.contiinue.componenets = &comps;
+      cont.choice.contiinue.components = &comps;
     }
 
-    MessageType_t cont;
+    TCMessage_t cont;
     EXT_t         dp;
     ComponentPortion_t comps;
     Component_t *arr[1];
     Component_t comp;
-    Error_t errcode;
     AC ac;
     uint8_t otid[4];
     uint8_t dtid[4];
@@ -171,7 +170,7 @@ class EndMsg {
   public:
     EndMsg()
     {
-      end.present = MessageType_PR_end;
+      end.present = TCMessage_PR_end;
       end.choice.end.dialoguePortion = 0;
       end.choice.end.components = 0;
       dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.size=0;
@@ -213,15 +212,15 @@ class EndMsg {
       if(result)
       {
         comp.present = Component_PR_returnError;
-        comp.choice.returnError.invokeID = iid;
-        comp.choice.returnError.errorCode.present = Error_PR_local;
-        comp.choice.returnError.errorCode.choice.local = 31;
+        comp.choice.returnError.invokeId = iid;
+        comp.choice.returnError.errcode.present = Error_PR_local;
+        comp.choice.returnError.errcode.choice.local = 31;
         comp.choice.returnError.parameter = 0;
       }
       else
       {
         comp.present = Component_PR_returnResultLast;
-        comp.choice.returnResultLast.invokeID = iid;
+        comp.choice.returnResultLast.invokeId = iid;
         comp.choice.returnResultLast.result = 0;
       }
       arr[0]= &comp;
@@ -231,12 +230,11 @@ class EndMsg {
       end.choice.end.components = &comps;
     }
 
-    MessageType_t end;
+    TCMessage_t end;
     EXT_t         dp;
     ComponentPortion_t comps;
     Component_t *arr[1];
     Component_t comp;
-    Error_t errcode;
     AC ac;
 
     uint8_t trid[4];

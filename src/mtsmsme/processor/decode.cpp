@@ -8,7 +8,7 @@ static char const ident[] = "$Id$";
 
 extern "C" {
 #include <constr_TYPE.h>
-#include <MessageType.h>
+#include <TCMessage.h>
 }
 
 /*
@@ -21,7 +21,7 @@ void ASN_DEBUG_f(const char *fmt, ...) {
 }
 */
 
-extern asn_TYPE_descriptor_t asn_DEF_MessageType;
+extern asn_TYPE_descriptor_t asn_DEF_TCMessage;
 extern asn_TYPE_descriptor_t asn_DEF_MT_forward;
 
 
@@ -29,7 +29,7 @@ namespace smsc{namespace mtsmsme{namespace processor{namespace decode{
 
 using std::vector;
 
-static asn_TYPE_descriptor_t *def = &asn_DEF_MessageType;
+static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
 static asn_TYPE_descriptor_t *mtdef = &asn_DEF_MT_forward;
 
 using smsc::logger::Logger;

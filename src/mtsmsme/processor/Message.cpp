@@ -5,9 +5,9 @@ static char const ident[] = "$Id$";
 
 extern "C" {
 #include <constr_TYPE.h>
-#include <MessageType.h>
+#include <TCMessage.h>
 }
-extern asn_TYPE_descriptor_t asn_DEF_MessageType;
+extern asn_TYPE_descriptor_t asn_DEF_TCMessage;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;
@@ -17,7 +17,7 @@ extern Logger* MtSmsProcessorLogger;
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
-static asn_TYPE_descriptor_t *def = &asn_DEF_MessageType;
+static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
 using std::vector;
 using std::string;
 /*
@@ -53,15 +53,15 @@ TrId Message::getOTID()
   TrId otid;
   if(structure)
   {
-    MessageType_t* pmsg = (MessageType_t*)structure;
-    if(pmsg->present == MessageType_PR_begin)
+    TCMessage_t* pmsg = (TCMessage_t*)structure;
+    if(pmsg->present == TCMessage_PR_begin)
     {
       OCTET_STRING_t *tid = &(pmsg->choice.begin.otid);
       otid.size = tid->size;
       memcpy(otid.buf,tid->buf,tid->size);
       //otid.insert(otid.end(),tid->buf, tid->buf + tid->size);
     }
-    if(pmsg->present == MessageType_PR_contiinue)
+    if(pmsg->present == TCMessage_PR_contiinue)
     {
       OCTET_STRING_t *tid = &(pmsg->choice.contiinue.otid);
       otid.size = tid->size;
@@ -76,15 +76,15 @@ TrId Message::getDTID()
   TrId dtid;
   if(structure)
   {
-    MessageType_t* pmsg = (MessageType_t*)structure;
-    if(pmsg->present == MessageType_PR_contiinue)
+    TCMessage_t* pmsg = (TCMessage_t*)structure;
+    if(pmsg->present == TCMessage_PR_contiinue)
     {
       OCTET_STRING_t *tid = &(pmsg->choice.contiinue.dtid);
       dtid.size = tid->size;
       memcpy(dtid.buf,tid->buf,tid->size);
       //otid.insert(otid.end(),tid->buf, tid->buf + tid->size);
     }
-    if(pmsg->present == MessageType_PR_end)
+    if(pmsg->present == TCMessage_PR_end)
     {
       OCTET_STRING_t *tid = &(pmsg->choice.end.dtid);
       dtid.size = tid->size;
@@ -98,19 +98,19 @@ TrId Message::getDTID()
 bool Message::isBegin()
 {
   bool res = false;
-  if(structure) res = (((MessageType_t*)structure)->present == MessageType_PR_begin);
+  if(structure) res = (((TCMessage_t*)structure)->present == TCMessage_PR_begin);
   return res;
 }
 bool Message::isContinue()
 {
   bool res = false;
-  if(structure) res = (((MessageType_t*)structure)->present == MessageType_PR_contiinue);
+  if(structure) res = (((TCMessage_t*)structure)->present == TCMessage_PR_contiinue);
   return res;
 }
 bool Message::isEnd()
 {
   bool res = false;
-  if(structure) res = (((MessageType_t*)structure)->present == MessageType_PR_end);
+  if(structure) res = (((TCMessage_t*)structure)->present == TCMessage_PR_end);
   return res;
 }
 
@@ -122,15 +122,15 @@ bool Message::isComponentPresent()
   bool res = false;
   if(structure)
   {
-    MessageType_t* pmsg = (MessageType_t*)structure;
-    if(pmsg->present == MessageType_PR_begin)
+    TCMessage_t* pmsg = (TCMessage_t*)structure;
+    if(pmsg->present == TCMessage_PR_begin)
     {
       void *comps = pmsg->choice.begin.components;
       res = (comps != 0);
     }
-    if(pmsg->present == MessageType_PR_contiinue)
+    if(pmsg->present == TCMessage_PR_contiinue)
     {
-      void *comps = pmsg->choice.contiinue.componenets;
+      void *comps = pmsg->choice.contiinue.components;
       res = (comps != 0);
     }
   }
@@ -141,8 +141,8 @@ bool Message::isDialoguePortionExist()
   bool res = false;
   if(structure)
   {
-    MessageType_t* pmsg = (MessageType_t*)structure;
-    if(pmsg->present == MessageType_PR_begin)
+    TCMessage_t* pmsg = (TCMessage_t*)structure;
+    if(pmsg->present == TCMessage_PR_begin)
     {
       void *comps = pmsg->choice.begin.dialoguePortion;
       res = (comps != 0);
@@ -156,8 +156,8 @@ void Message::getAppContext(AC& ac)
   unsigned long null_buf[] = {0,0,0,0,0,0,0,0};
   ac.init(null_buf,sizeof(null_buf)/sizeof(unsigned long));
 
-  MessageType_t* pmsg = (MessageType_t*)structure;
-  if(pmsg->present == MessageType_PR_begin)
+  TCMessage_t* pmsg = (TCMessage_t*)structure;
+  if(pmsg->present == TCMessage_PR_begin)
   {
     EXT_t *dp_ptr = (EXT_t*)pmsg->choice.begin.dialoguePortion;
 
@@ -228,10 +228,10 @@ void Message::getAppContext(AC& ac)
 
 int Message::getInvokeId()
 {
-  MessageType_t* pmsg = (MessageType_t*)structure;
+  TCMessage_t* pmsg = (TCMessage_t*)structure;
   ComponentPortion_t *comps = 0;
-  if(pmsg->present == MessageType_PR_begin) comps = pmsg->choice.begin.components;
-  if(pmsg->present == MessageType_PR_contiinue) comps = pmsg->choice.contiinue.componenets;
+  if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
+  if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
   if (comps)
   {
     /* obtain first component */
@@ -242,7 +242,7 @@ int Message::getInvokeId()
       Component_t *comp = (Component_t *)(list->array[0]);
       if (comp->present == Component_PR_invoke)
       {
-        return comp->choice.invoke.invokeID;
+        return comp->choice.invoke.invokeId;
       }
     }
   }
@@ -252,10 +252,10 @@ int Message::getInvokeId()
 vector<unsigned char> Message::getComponent()
 {
   vector<unsigned char> buf;
-  MessageType_t* pmsg = (MessageType_t*)structure;
+  TCMessage_t* pmsg = (TCMessage_t*)structure;
   ComponentPortion_t *comps = 0;
-  if(pmsg->present == MessageType_PR_begin) comps = pmsg->choice.begin.components;
-  if(pmsg->present == MessageType_PR_contiinue) comps = pmsg->choice.contiinue.componenets;
+  if(pmsg->present == TCMessage_PR_begin) comps = pmsg->choice.begin.components;
+  if(pmsg->present == TCMessage_PR_contiinue) comps = pmsg->choice.contiinue.components;
   if (comps)
   {
     /* obtain first component */

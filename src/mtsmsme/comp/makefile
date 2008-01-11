@@ -1,5 +1,5 @@
 # $Id$
-CXXFLAGS := $(CXXFLAGS) -I../processor/codec -I../processor/asn1rt -I../processor -I../processor/ulcodec
+CXXFLAGS := $(CXXFLAGS) -I../processor/ros -I../processor/tcap -I../processor/codec -I../processor/asn1rt -I../processor -I../processor/ulcodec
 PACKAGE := mtsmsme.comp
 
 LDFLAGS := $(LDFLAGS) -z verbose

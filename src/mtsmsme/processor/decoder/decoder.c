@@ -18,7 +18,7 @@
 #include <sysexits.h> /* for EX_* exit codes */
 
 #include <constr_TYPE.h>
-#include <MessageType.h>
+#include <TCMessage.h>
 #include <Begin.h>
 #include <ComponentPortion.h>
 extern asn_TYPE_descriptor_t asn_DEF; /* ASN.1 type to be decoded */
@@ -153,8 +153,8 @@ decoder(int ac, char **av) {
 }
 
 int getoid(void* ptr) {
-  MessageType_t* pmsg = (MessageType_t*)ptr;
-  if((*pmsg).present == MessageType_PR_begin) {
+  TCMessage_t* pmsg = (TCMessage_t*)ptr;
+  if((*pmsg).present == TCMessage_PR_begin) {
     printf("This is BEGIN\n");
     struct ComponentPortion* comps = pmsg->choice.begin.components;
     if (comps) {

@@ -4,9 +4,9 @@ static char const ident[] = "$Id$";
 
 extern "C" {
 #include <constr_TYPE.h>
-#include <MessageType.h>
+#include <TCMessage.h>
 }
-extern asn_TYPE_descriptor_t asn_DEF_MessageType;
+extern asn_TYPE_descriptor_t asn_DEF_TCMessage;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;
@@ -24,27 +24,27 @@ static void *prepMtResponse();
 static void DialogResp(EXT_t *obj);
 static std::vector<unsigned char> sample_encode_mt_resp();
 
-static asn_TYPE_descriptor_t *def = &asn_DEF_MessageType;
+static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
 
 int Encoder::encodeACNotSupported(TrId dtid,AC& ac,vector<unsigned char>& buf)
 {
   uint8_t trid[] = {0x00,0x00,0x00,0x00};
-  MessageType_t abort;
+  TCMessage_t abort;
   struct Abort::reason reason;
 
-  abort.present = MessageType_PR_abort;
+  abort.present = TCMessage_PR_abort;
   memcpy(trid,dtid.buf,dtid.size);
   abort.choice.abort.dtid.buf = trid;
   abort.choice.abort.dtid.size = dtid.size;
 
-  reason.present = reason_PR_dialoguePortion;
-  reason.choice.dialoguePortion.direct_reference = &pduoid;
-  reason.choice.dialoguePortion.indirect_reference = 0;
-  reason.choice.dialoguePortion.data_value_descriptor = 0;
-  reason.choice.dialoguePortion.encoding.present = encoding_PR_single_ASN1_type;
+  reason.present = reason_PR_u_abortCause;
+  reason.choice.u_abortCause.direct_reference = &pduoid;
+  reason.choice.u_abortCause.indirect_reference = 0;
+  reason.choice.u_abortCause.data_value_descriptor = 0;
+  reason.choice.u_abortCause.encoding.present = encoding_PR_single_ASN1_type;
 
-  reason.choice.dialoguePortion.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueResponse;
-  AARE_apdu_t& r = reason.choice.dialoguePortion.encoding.choice.single_ASN1_type.choice.dialogueResponse;
+  reason.choice.u_abortCause.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueResponse;
+  AARE_apdu_t& r = reason.choice.u_abortCause.encoding.choice.single_ASN1_type.choice.dialogueResponse;
 
   r.protocol_version = &tcapversion;
   r.application_context_name.size=0;
@@ -78,10 +78,10 @@ int Encoder::encodeACNotSupported(TrId dtid,AC& ac,vector<unsigned char>& buf)
 int Encoder::encodeBadTrPortion(TrId dtid,vector<unsigned char>& buf)
 {
   uint8_t trid[] = {0x00,0x00,0x00,0x00};
-  MessageType_t abort;
+  TCMessage_t abort;
   struct Abort::reason reason;
 
-  abort.present = MessageType_PR_abort;
+  abort.present = TCMessage_PR_abort;
   memcpy(trid,dtid.buf,dtid.size);
   abort.choice.abort.dtid.buf = trid;
   abort.choice.abort.dtid.size = dtid.size;
@@ -104,10 +104,10 @@ int Encoder::encodeBadTrPortion(TrId dtid,vector<unsigned char>& buf)
 int Encoder::encodeResourceLimitation(TrId dtid,vector<unsigned char>& buf)
 {
   uint8_t trid[] = {0x00,0x00,0x00,0x00};
-  MessageType_t abort;
+  TCMessage_t abort;
   struct Abort::reason reason;
 
-  abort.present = MessageType_PR_abort;
+  abort.present = TCMessage_PR_abort;
   memcpy(trid,dtid.buf,dtid.size);
   abort.choice.abort.dtid.buf = trid;
   abort.choice.abort.dtid.size = dtid.size;

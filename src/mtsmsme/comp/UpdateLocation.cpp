@@ -21,7 +21,7 @@ using std::string;
 
 UpdateLocationMessage::UpdateLocationMessage()
 {
-  begin.present = MessageType_PR_begin;
+  begin.present = TCMessage_PR_begin;
   begin.choice.begin.dialoguePortion = 0;
   begin.choice.begin.components = 0;
   //initialize empty application context
@@ -54,7 +54,7 @@ void UpdateLocationMessage::setOTID(TrId _otid)
   begin.choice.begin.otid.size = _otid.size;
 }
 /*
-    MessageType_t begin;
+    TCMessage_t begin;
     EXT_t         dp;
     ComponentPortion_t comps;
     Component_t *arr[1];
@@ -104,8 +104,8 @@ void UpdateLocationMessage::setComponent(const string& imsi, const string& msc, 
 
   // intialize invoke with invokeID and operation code
   comp.present = Component_PR_invoke;
-  comp.choice.invoke.invokeID = 1;
-  comp.choice.invoke.linkedID = 0;
+  comp.choice.invoke.invokeId = 1;
+  comp.choice.invoke.linkedId = 0;
   comp.choice.invoke.opcode.present = Code_PR_local;
   comp.choice.invoke.opcode.choice.local = 2; /* updateLocation operation */
 
@@ -134,7 +134,7 @@ void UpdateLocationMessage::encode(vector<unsigned char>& buf)
   argument.size = arg_buf.size();
   argument.buf = &arg_buf[0];
   comp.choice.invoke.argument = &argument;
-  er = der_encode(&asn_DEF_MessageType, &begin, print2vec, &buf);
+  er = der_encode(&asn_DEF_TCMessage, &begin, print2vec, &buf);
 }
 void UpdateLocationMessage::decode(const vector<unsigned char>& buf)
 {

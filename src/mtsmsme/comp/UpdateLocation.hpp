@@ -28,7 +28,7 @@ class UpdateLocationMessage: public  CompIF {
     virtual void encode(vector<unsigned char>& buf);
     virtual void decode(const vector<unsigned char>& buf);
 private:
-    MessageType_t begin;
+    TCMessage_t begin;
     EXT_t         dp;
     ComponentPortion_t comps;
     Component_t *arr[1];
