@@ -618,17 +618,25 @@ function checkDefaultRoute() {
 
 function disableCtrlKeyCombination(e, id) {
 	var disabled = {n:0};
-  var ctrlMod = window.event.ctrlKey ;
-  var key = window.event.keyCode;
-	key = String.fromCharCode(key).toLowerCase();
+//  var ctrlMod = window.event.ctrlKey ;
+//  var key = window.event.keyCode;
+    var e = (window.event)? window.event: e;
+    var ctrlMod = e.ctrlKey ;
+    var key;
+    if( window.event ){
+        key = e.keyCode;
+    }else{
+        key = e.which;
+    }
+    key = String.fromCharCode(key).toLowerCase();
 	if (ctrlMod && (key in disabled)) {
-   if (id && (document.location.href.indexOf("editId")==-1))
-     window.open(document.location+"&editId="+id,"");
-   else
-     window.open(document.location,"");
-   return false;
-  }
-  return true;
+        if (id && (document.location.href.indexOf("editId")==-1))
+            window.open(document.location+"&editId="+id,"");
+        else
+            window.open(document.location,"");
+        return false;
+    }
+    return true;
 }
 
 function assignOpener() {
