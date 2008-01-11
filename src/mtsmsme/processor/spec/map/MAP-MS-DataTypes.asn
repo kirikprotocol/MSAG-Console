@@ -1,0 +1,186 @@
+/* $Id$ */
+/* ************************************************************************** *
+ * Module: MAP Mobile Service data types.                                     *
+ * -- 3GPP TS 29.002 V6.9.0 (2005-03)					      *
+ * ************************************************************************** *
+ * Author: Victor Ryzhkov                                                     *
+ * ************************************************************************** */
+
+-- 17.7	MAP constants and data types
+-- 17.7.1	Mobile Service data types
+
+MAP-MS-DataTypes {
+    itu-t identified-organization (4) etsi (0) mobileDomain (0)
+    gsm-Network (1) modules (3) map-MS-DataTypes (11) version9 (9)}
+
+DEFINITIONS IMPLICIT TAGS ::=
+-- this is reduced version of original module containing only types required for IN-Manager
+BEGIN
+EXPORTS
+    UpdateLocationArg,
+    UpdateLocationRes,
+    InsertSubscriberDataArg,
+    SubscriberData
+;
+
+IMPORTS
+    ISDN-AddressString,
+    IMSI,
+    IMEI,
+    LMSI,
+    Identity
+FROM MAP-CommonDataTypes {itu-t(0) identified-organization(4) etsi(0)
+      mobileDomain(0) gsm-Network(1) modules(3) map-CommonDataTypes(18) version10(10)}
+
+    ExtensionContainer
+FROM MAP-ExtensionDataTypes {itu-t(0) identified-organization(4) etsi(0)
+      mobileDomain(0) gsm-Network(1) modules(3) map-ExtensionDataTypes(21) version10(10)}
+;
+
+-- ***************************** --
+-- location registration types
+-- ***************************** --
+
+UpdateLocationArg ::= SEQUENCE {
+    imsi IMSI,
+    msc-Number [1] ISDN-AddressString,
+    vlr-Number ISDN-AddressString,
+    lmsi [10] LMSI OPTIONAL,
+    extensionContainer ExtensionContainer OPTIONAL,
+    ... ,
+    vlr-Capability [6] VLR-Capability OPTIONAL,
+    informPreviousNetworkEntity [11] NULL OPTIONAL,
+    cs-LCS-NotSupportedByUE [12] NULL OPTIONAL,
+    v-gmlc-Address [2] GSN-Address OPTIONAL,
+    add-info [13] ADD-Info OPTIONAL
+}
+
+VLR-Capability ::= SEQUENCE{
+    supportedCamelPhases [0] SupportedCamelPhases OPTIONAL,
+    extensionContainer ExtensionContainer OPTIONAL,
+    ... ,
+    solsaSupportIndicator [2] NULL OPTIONAL,
+    istSupportIndicator [1] IST-SupportIndicator OPTIONAL,
+    superChargerSupportedInServingNetworkEntity [3] SuperChargerInfo OPTIONAL,
+    longFTN-Supported [4] NULL OPTIONAL,
+    supportedLCS-CapabilitySets [5] SupportedLCS-CapabilitySets OPTIONAL,
+    offeredCamel4CSIs [6] OfferedCamel4CSIs OPTIONAL
+}
+
+GSN-Address ::= OCTET STRING (SIZE (5..17))
+-- Octets are coded according to TS 3GPP TS 23.003 [17]
+
+SuperChargerInfo ::= CHOICE {
+    sendSubscriberData [0] NULL,
+    subscriberDataStored [1] AgeIndicator
+}
+
+AgeIndicator ::= OCTET STRING (SIZE (1..6))
+-- The internal structure of this parameter is implementation specific.
+
+SupportedLCS-CapabilitySets ::= BIT STRING {
+    lcsCapabilitySet1 (0),
+    lcsCapabilitySet2 (1),
+    lcsCapabilitySet3 (2),
+    lcsCapabilitySet4 (3) } (SIZE (2..16))
+-- Core network signalling capability set1 indicates LCS Release98 or Release99 version.
+-- Core network signalling capability set2 indicates LCS Release4.
+-- Core network signalling capability set3 indicates LCS Release5.
+-- Core network signalling capability set4 indicates LCS Release6 or later version.
+-- A node shall mark in the BIT STRING all LCS capability sets it supports.
+-- If no bit is set then the sending node does not support LCS.
+-- If the parameter is not sent by an VLR then the VLR may support at most capability set1.
+-- If the parameter is not sent by an SGSN then no support for LCS is assumed.
+-- An SGSN is not allowed to indicate support of capability set1.
+-- Other bits than listed above shall be discarded.
+
+UpdateLocationRes ::= SEQUENCE {
+    hlr-Number ISDN-AddressString,
+    extensionContainer ExtensionContainer OPTIONAL,
+    ...,
+    add-Capability NULL OPTIONAL
+}
+
+ADD-Info ::= SEQUENCE {
+    imeisv [0] IMEI,
+    skipSubscriberDataUpdate [1] NULL OPTIONAL,
+    ...
+}
+
+CancelLocationArg ::= [3] SEQUENCE {
+    identity Identity,
+    cancellationType CancellationType OPTIONAL,
+    extensionContainer ExtensionContainer OPTIONAL,
+    ...
+}
+
+CancellationType ::= ENUMERATED {
+    updateProcedure (0),
+    subscriptionWithdraw (1),
+    ...
+}
+
+-- The HLR shall not send values other than listed above
+CancelLocationRes ::= SEQUENCE {
+    extensionContainer ExtensionContainer OPTIONAL,
+    ...
+}
+
+SupportedCamelPhases ::= BIT STRING {
+    phase1 (0),
+    phase2 (1),
+    phase3 (2),
+    phase4 (3)} (SIZE (1..16))
+-- A node shall mark in the BIT STRING all CAMEL Phases it supports.
+-- Other values than listed above shall be discarded.
+
+OfferedCamel4CSIs ::= BIT STRING {
+    o-csi (0),
+    d-csi (1),
+    vt-csi (2),
+    t-csi (3),
+    mt-sms-csi (4),
+    mg-csi (5),
+    psi-enhancements (6) } (SIZE (7..16))
+-- A node supporting Camel phase 4 shall mark in the BIT STRING all Camel4 CSIs
+-- it offers.
+-- Other values than listed above shall be discarded.
+
+IST-SupportIndicator ::= ENUMERATED {
+    basicISTSupported (0),
+    istCommandSupported (1),
+    ...
+}
+-- exception handling:
+-- reception of values > 1 shall be mapped to ' istCommandSupported '
+
+-- the structure of this type is not valuable so don't interpret
+InsertSubscriberDataArg ::= OCTET STRING
+/*InsertSubscriberDataArg ::= SEQUENCE {
+
+    imsi [0] IMSI OPTIONAL,
+    COMPONENTS OF SubscriberData,
+    extensionContainer [14] ExtensionContainer OPTIONAL,
+    ... ,
+    naea-PreferredCI [15] NAEA-PreferredCI OPTIONAL,
+    -- naea-PreferredCI is included at the discretion of the HLR operator.
+    gprsSubscriptionData [16] GPRSSubscriptionData OPTIONAL,
+    roamingRestrictedInSgsnDueToUnsupportedFeature [23] NULL OPTIONAL,
+    networkAccessMode [24] NetworkAccessMode OPTIONAL,
+    lsaInformation [25] LSAInformation OPTIONAL,
+    lmu-Indicator [21] NULL OPTIONAL,
+    lcsInformation [22] LCSInformation OPTIONAL,
+    istAlertTimer [26] IST-AlertTimerValue OPTIONAL,
+    superChargerSupportedInHLR [27] AgeIndicator OPTIONAL,
+    mc-SS-Info [28] MC-SS-Info OPTIONAL,
+    cs-AllocationRetentionPriority [29] CS-AllocationRetentionPriority OPTIONAL,
+    sgsn-CAMEL-SubscriptionInfo [17] SGSN-CAMEL-SubscriptionInfo OPTIONAL,
+    chargingCharacteristics [18] ChargingCharacteristics OPTIONAL,
+    accessRestrictionData [19] AccessRestrictionData OPTIONAL
+}*/
+
+-- If the Network Access Mode parameter is sent, it shall be present only in
+-- the first sequence if seqmentation is used
+
+END -- 17.7.1 MAP-MS-DataTypes
+

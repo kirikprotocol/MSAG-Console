@@ -1,0 +1,34 @@
+TCAP-EXTERNAL
+DEFINITIONS EXPLICIT TAGS ::=
+
+BEGIN
+
+EXPORTS
+    EXT,MEXT
+;
+IMPORTS
+    DialoguePDU
+FROM DialoguePDUs
+;
+
+EXT ::= [UNIVERSAL 8] IMPLICIT SEQUENCE {
+    direct-reference            OBJECT IDENTIFIER OPTIONAL,
+    indirect-reference          INTEGER OPTIONAL,
+    data-value-descriptor       ObjectDescriptor OPTIONAL,
+    encoding                    CHOICE {
+        single-ASN1-type        [0] DialoguePDU,
+        octet-aligned           [1] IMPLICIT OCTET STRING,
+        arbitrary               [2] IMPLICIT BIT STRING
+    }
+}
+MEXT ::= [UNIVERSAL 8] IMPLICIT SEQUENCE {
+    direct-reference            OBJECT IDENTIFIER OPTIONAL,
+    indirect-reference          INTEGER OPTIONAL,
+    data-value-descriptor       ObjectDescriptor OPTIONAL,
+    mencoding                    CHOICE {
+        single-ASN1-type        [0] ANY,
+        octet-aligned           [1] IMPLICIT OCTET STRING,
+        arbitrary               [2] IMPLICIT BIT STRING
+    }
+}
+END
