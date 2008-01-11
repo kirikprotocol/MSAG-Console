@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
     
-        ConfigView persConfig(manager, "CentralPersConfig");
+        ConfigView persConfig(manager, "CentralPers");
     
         string storageName;
         try { storageName = persConfig.getString("storageName"); } catch (...) { storageName = "abonent";
