@@ -186,14 +186,14 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       <table cellspacing=0 cellpadding=0>
       <tr>
         <td width=380><IMG SRC="content/images/smsc_04.jpg" HEIGHT=45 width=380 ALT=""></td>
-        <td bgcolor="#161E49"><span style="color: #6F77A3; font: bold 11px; vertical-align: -10px;">Version&nbsp;1.0</span></td>
+        <td bgcolor="#161E49"><span style="color: #6F77A3; font-size: 11px; font-weight:bold; vertical-align: -10px;">Version&nbsp;1.0</span></td>
         <td width=12 background="content/images/smsc_06.jpg"></td>
       </tr>
       </table>
       <!-- main menu -->
       <sm-mm:top_menu/>
 
-    <table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
+      <table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
 		 <tr>
 			<td background="content/images/smsc_13.jpg" width="26"></td>
 			<td background="content/images/smsc_14.jpg" width="100%">&nbsp;</td>
@@ -226,11 +226,10 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
              <td width=12px background="content/images/smsc_19.jpg" style="padding-right:0px;"></td>
            </tr>
         </table>
-
-      <form name="opForm" id=opForm
+        <form name="opForm" id=opForm
                 <c:if test="${!empty form_uri}">action="${form_uri}"</c:if>
                 method="<c:choose><c:when test="${!empty form_method}">${form_method}</c:when><c:otherwise>post</c:otherwise></c:choose>"
-<%--                <c:if test="${!empty form_method}">method="${form_method}"</c:if>--%>
+                <c:if test="${!empty form_method}">method="${form_method}"</c:if>
                 <c:if test="${!empty form_enctype}">enctype="${form_enctype}"</c:if>
                 onSubmit="return validateForm(this)">
                 <input type=hidden ID=jbutton value=jbutton>
@@ -243,10 +242,11 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
         <%--sm:message></sm:message--%>
 <%
   //errorMessages=(java.util.List)request.getAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME);
-
   if (errorMessages.size() > 0)
-   {
-   	%><div class=content><%
+  {
+%>
+    <div class=content>
+<%
    	for(java.util.Iterator it = errorMessages.iterator(); it.hasNext();)
    	{
    		ru.sibinco.scag.beans.MessageException exc = (ru.sibinco.scag.beans.MessageException) it.next();
@@ -255,15 +255,25 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       String text=exc.getMessage();
        //String text = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
            if(code.startsWith("errors."))
-             {%><div class=error><div class=header>Error:</div><div class=header><%=text%></div></div><%}
-           else if(code.startsWith("warning."))
-             {%><div class=warning><div class=warning_header>Warning:</div><%=text%></div><%}
-           else
-             {%><div class=message><div class=message_header>Attention!</div><%=text%></div><%}
+           {
+%>
+             <div class=error><div class=header>Error:</div><div class=header><%=text%></div></div>
+<%
+           }else if(code.startsWith("warning.")){
+%>
+            <div class=warning><div class=warning_header>Warning:</div><%=text%></div>
+<%
+           }else{
+%>
+            <div class=message><div class=message_header>Attention!</div><%=text%></div>
+<%
+           }
    	}
-   	%></div><%
+%>
+    </div>
+<%
    }
-  %>
+%>
         <c:choose>
           <c:when test="${!empty rawBody}">${rawBody}</c:when>
           <c:otherwise>
