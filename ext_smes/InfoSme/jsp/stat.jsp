@@ -68,7 +68,7 @@ page_menu_end(out);
       {
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
-        c.style.display = o ? "none" : "block";
+        c.style.display = o ? "none" : "";
       }
     </script>
     <table class=list cellspacing=0>
@@ -97,7 +97,7 @@ page_menu_end(out);
           <td><%=dateCounters.delivered%></td>
           <td><%=dateCounters.retried%></td>
           <td><%=dateCounters.failed%></td>
-        </tr><tr id="c<%=dateHex%>" style="display:<%=i.hasNext() ? "none" : "block"%>"><td colspan=5><table class=list cellspacing=0 cellpadding=0 border=0>
+        </tr><tr id="c<%=dateHex%>" style="display:<%=i.hasNext() ? "none" : ""%>"><td colspan=5><table class=list cellspacing=0 cellpadding=0 border=0>
           <col width="60%">
           <col width="10%">
           <col width="10%">

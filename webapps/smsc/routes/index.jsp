@@ -112,9 +112,9 @@
         var _head = document.all(headId);
         var _body = document.all(bodyId);
 
-        if (_body.style.display == 'none' || _body.style.display == '') {
+        if (_body.style.display == 'none') {
             _head.className = 'collapsing_list_opened';
-            _body.style.display = 'block';
+            _body.style.display = '';
         }
         else {
             _head.className = 'collapsing_list_closed';
