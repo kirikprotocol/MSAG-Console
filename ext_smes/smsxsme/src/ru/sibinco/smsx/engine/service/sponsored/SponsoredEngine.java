@@ -273,7 +273,7 @@ class SponsoredEngine {
     private String getBannerForAbonent(String abonent) {
       try {
         return advertisingClient.getBanner(advertisingClientName, abonent);
-      } catch (AdvertisingClientException e) {
+      } catch (Throwable e) {
         log.error("Can't get banner for abonent", e);
         return null;
       }
