@@ -150,7 +150,8 @@ public class Index extends SmscBean
         Object value = params.get(paramName);
         if (value instanceof Boolean) {
           final String parameter = request.getParameter(paramName);
-          params.put(paramName, Boolean.valueOf(parameter));
+          if (parameter != null)
+            params.put(paramName, Boolean.valueOf(parameter));
         }
       }
     }
