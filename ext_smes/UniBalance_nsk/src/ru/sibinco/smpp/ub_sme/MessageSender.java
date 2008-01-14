@@ -118,7 +118,8 @@ public class MessageSender extends Thread implements ProductivityControllable {
           multiplexor.assingSequenceNumber(msg, connector.getName());
           outQueue.messageSubmitted(obj);
           if (Logger.isInfoEnabled())
-            Logger.info("Sending message in async mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress());
+            //Logger.info("Sending message in async mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress());
+            Logger.info("OUT from " + msg.getSourceAddress() + ", to " + msg.getDestinationAddress()+"; msg: "+msg.getMessageString());
           multiplexor.sendMessage(msg, connector.getName(), false);
           count();
           if (sendDelay > 0) {

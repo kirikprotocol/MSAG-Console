@@ -1,6 +1,7 @@
 package ru.sibinco.smpp.ub_sme.inbalance;
 
 import org.apache.log4j.Category;
+import ru.sibinco.smpp.ub_sme.util.VarString;
 
 /**
  * Created by IntelliJ IDEA.
@@ -20,8 +21,8 @@ public class InBalanceResult extends InBalancePDU {
 
   private byte flg;
   private byte DCS = -1;
-  private String UssData;
-  private String msISDN;
+  private VarString UssData;
+  private VarString msISDN;
 
   private boolean parsed = false;
 
@@ -47,6 +48,7 @@ public class InBalanceResult extends InBalancePDU {
       int p = HEADER_LENGTH;
       status = ((0xFF & data[p++]) << 8) | (0xFF & data[p++]);
       if(status!=STATUS_OK){
+        parsed = true;
         return;
       }
       flg = data[p++];
@@ -60,16 +62,29 @@ public class InBalanceResult extends InBalancePDU {
           break;
         case FLG_TEXT_UCS2:
           ussDataEnc = "UTF-16BE";
+          //ussDataEnc = "UTF-16LE";
           break;
         default:
           throw new InBalancePDUException("Unexpected \"flg\" pdu field value: "+flg);
       }
-      int ussDataLen = 0xFF & data[p++];
-      UssData = new String(data, p, ussDataLen, ussDataEnc);
-      p = p + ussDataLen;
-      int msISDNLen = 0xFF & data[p++];
-      msISDN = new String(data, p, msISDNLen);
-      p = p + msISDNLen;
+      //System.out.println("p: "+p);
+      //int ussDataLen = 0xFF & data[p++];
+      //p++;
+      //System.out.println("ussDataLen: "+ussDataLen);
+      //UssData = new String(data, p, ussDataLen, ussDataEnc);
+      UssData = new VarString(data, p, ussDataEnc);
+      p = p + UssData.getLength();
+
+      //p = p + ussDataLen;
+      //int msISDNLen = 0xFF & data[p++];
+      //System.out.println("msISDNLen: "+msISDNLen);
+      //System.out.println("p: "+p);
+      //System.out.println("data.length: "+data.length);
+      //msISDN = new String(data, p, msISDNLen);
+      //p = p + msISDNLen;
+      msISDN = new VarString(data, p);
+      p = p + msISDN.getLength();
+
       parsed = true;
     } catch (Exception e) {
       throw new InBalancePDUException("PDU Parse error", e);
@@ -94,30 +109,43 @@ public class InBalanceResult extends InBalancePDU {
     if (!parsed) {
       parsePDU();
     }
-    return UssData;
+    return UssData != null ? UssData.getStringValue() : null;
   }
 
   public String getMsISDN() throws InBalancePDUException {
     if (!parsed) {
       parsePDU();
     }
-    return msISDN;
+    return msISDN != null ? msISDN.getStringValue() : null;
+  }
+
+  public byte getFlg() throws InBalancePDUException {
+    if (!parsed) {
+      parsePDU();
+    }
+    return flg;
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer("AbonentContractResult: requestId=");
-    sb.append(requestId);
-    sb.append(", status=");
-    sb.append(status);
-    if(status == STATUS_OK) {
-      sb.append(", DCS=");
-      sb.append(DCS);
-      sb.append(", ussData=");
-      sb.append(UssData);
-      sb.append(", msISDN=");
-      sb.append(msISDN);
+    try {
+      StringBuffer sb = new StringBuffer("InBalanceResult: requestId=");
+      sb.append(getRequestId());
+      sb.append(", status=");
+      sb.append(getStatus());
+      sb.append(", flg=");
+      sb.append(getFlg());
+      if(getStatus() == STATUS_OK) {
+        sb.append(", DCS=");
+        sb.append(getDCS());
+        sb.append(", ussData=");
+        sb.append(getUssData());
+        sb.append(", msISDN=");
+        sb.append(getMsISDN());
+      }
+      return sb.toString();
+    } catch (InBalancePDUException e) {
+      return "InBalanceResult: " + e.getMessage();
     }
-    return sb.toString();
   }
 
 }

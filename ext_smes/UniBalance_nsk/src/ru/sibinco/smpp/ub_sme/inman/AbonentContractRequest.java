@@ -1,5 +1,7 @@
 package ru.sibinco.smpp.ub_sme.inman;
 
+import ru.sibinco.smpp.ub_sme.util.VarString;
+
 /**
  * Created by IntelliJ IDEA.
  * User: danger

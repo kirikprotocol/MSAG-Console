@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class RequestState {
+  private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(RequestState.class);
 
   private Message abonentRequest = null;
   private long abonentRequestTime = 0;
@@ -38,6 +39,7 @@ public class RequestState {
   private long[] billingSystemsResponseTime=new long[SmeEngine.BILLING_SYSTEMS_COUNT];
 
   private int currentBillingSystemIndex = 0;
+  private int currentInBalanceIN_ISDNIndex = 0;
 
   private boolean closed = false;
 
@@ -176,11 +178,20 @@ public class RequestState {
     this.currentBillingSystemIndex = currentBillingSystemIndex;
   }
 
+  public int getCurrentInBalanceIN_ISDNIndex() {
+    return currentInBalanceIN_ISDNIndex;
+  }
+
+  public void setCurrentInBalanceIN_ISDNIndex(int currentInBalanceIN_ISDNIndex) {
+    this.currentInBalanceIN_ISDNIndex = currentInBalanceIN_ISDNIndex;
+  }
+
   private final static DateFormat dateFormat=new SimpleDateFormat("HH:mm:ss.SSS");
 
   public String toString() {
     StringBuffer sb = new StringBuffer();
-    sb.append("Abonent request: ");
+    //sb.append(abonentRequest.getSourceAddress()+" request: ");
+    sb.append("Request: ");
     String date;
     synchronized(dateFormat){
       date=dateFormat.format(new Date(abonentRequestTime));
@@ -191,7 +202,7 @@ public class RequestState {
       if(billingSystemQueried[i]){
         sb.append("; ");
         sb.append(SmeEngine.BILLING_SYSTEMS[i]);
-        sb.append(" response=");
+        sb.append(": ");
         long delay=billingSystemsResponseTime[i]-billingSystemsRequestTime[i];
         sb.append(delay);
         sb.append(" ms");
@@ -200,16 +211,18 @@ public class RequestState {
     }
     long bannerEngineDelay = 0;
     if(bannerRequested){
-      sb.append("; banner engine response=");
+      sb.append("; banner: ");
       bannerEngineDelay = bannerResponseTime-bannerRequestTime;
       sb.append(bannerEngineDelay);
       sb.append(" ms");
     }
-    sb.append("; abonent response=");
+    sb.append("; resp=");
     long delay=abonentResponseTime-abonentRequestTime;
     sb.append(delay);
-    sb.append(" ms; SME clean delay=");
-    sb.append(delay-(Math.max(billingSystemDelay, bannerEngineDelay)));
+    if(logger.isDebugEnabled()){
+      sb.append(" ms; SME clean delay=");
+      sb.append(delay-(Math.max(billingSystemDelay, bannerEngineDelay)));
+    }
     sb.append(" ms");
     return sb.toString();
   }

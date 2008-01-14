@@ -7,6 +7,7 @@ import ru.aurorisoft.smpp.*;
 import ru.sibinco.util.threads.ThreadsPool;
 import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
+import ru.sibinco.smpp.ub_sme.util.Matcher;
 import ru.sibinco.smpp.ub_sme.inman.*;
 import ru.sibinco.smpp.ub_sme.inbalance.*;
 
@@ -33,8 +34,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   public final static byte BILLING_SYSTEM_CBOSS_ORACLE = 2;
   public final static byte BILLING_SYSTEM_FORIS_MG = 3;
   public final static byte BILLING_SYSTEM_IN_BALANCE = 4;
+  public final static byte BILLING_SYSTEM_MEDIO_SCP = 5;
 
-  public final static int BILLING_SYSTEMS_COUNT = 5;
+  public final static int BILLING_SYSTEMS_COUNT = 6;
 
   public final static byte CONTRACT_TYPE_UNKNOWN = 0x00;
   public final static byte CONTRACT_TYPE_POSTPAID = 0x01;
@@ -42,17 +44,24 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   public final static int CONTRACT_TYPES_COUNT = 3;
 
-  public final static String[] BILLING_SYSTEMS = {"IN_MAN_CONTRACT_TYPE", "IN_MAN_INFORMIX", "CBOSS_ORACLE", "FORIS_MG", "IN_BALANCE"};
+  //public final static String[] BILLING_SYSTEMS = {"IN_MAN_CONTRACT_TYPE", "IN_MAN_INFORMIX", "CBOSS_ORACLE", "FORIS_MG", "IN_BALANCE", "MEDIO_SCP"};
+  public final static String[] BILLING_SYSTEMS = {"CT", "IFX", "CBOSS", "MG", "INB", "MEDIO"};
 
   private String mgAddress = null;
   private String cbossPoolName = null;
   private String inManPoolName = null;
+  private String medioScpPoolName = null;
+
   private String cbossQuery = null;
   private String inManQuery = null;
+  private String medioScpQuery = null;
 
   private String cbossConnectionErrorPattern = "Connection,NullPointerException";
   private String inManConnectionErrorPattern = "System or internal error,already closed";
+  private String medioScpConnectionErrorPattern = "Connection,NullPointerException";
   private String inManInIsdnPattern = null;
+  private String medioScpInIsdnPattern = null;
+  private String inBalanceInIsdnPattern = null;
 
   private String inManHost = "localhost";
   private String inManPort = "5678";
@@ -61,7 +70,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String inBalanceHost = "localhost";
   private String inBalancePort = "9687";
   private String inBalanceUssData = "100";
-  private byte inBalanceIN_SSN = (byte)147;
+  private byte inBalanceIN_SSN = (byte) 147;
+  private String[] inBalanceIN_ISDNS;
+  private Matcher[] inBalanceResponsePatterns;
 
   private byte[][] billingSystemOrder = new byte[CONTRACT_TYPES_COUNT][];
   private boolean[][] billingSystemEnabled = new boolean[CONTRACT_TYPES_COUNT][BILLING_SYSTEMS.length];
@@ -93,6 +104,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String waitForSmsResponsePattern = "{0}";
   private String bannerAddPattern = "{0}\n{1}";
   private String errorPattern = "Error occurred";
+  private String accessDeniedPattern = "Access denied";
   private boolean flashSmsEnabled = false;
 
   private Map currency;
@@ -102,6 +114,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private int maxProcessingRequests = 10000;
 
+  boolean contractTypeDetectionEnabled = false;
   private InManClient inManClient = null;
   private InBalanceClient inBalanceClient = null;
 
@@ -116,6 +129,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   private Map cbossStatements = new HashMap();
   private Map inManStatements = new HashMap();
+  private Map medioScpStatements = new HashMap();
 
   private ProductivityControlObject requests;
   private ProductivityControlObject responses;
@@ -127,7 +141,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   public void init(Properties config) throws InitializationException {
     if (logger.isDebugEnabled()) logger.debug("UniBalance SME init started");
 
-    boolean contractTypeDetectionEnabled = Boolean.valueOf(config.getProperty("contract.type.detection.enabled", "false")).booleanValue();
+    contractTypeDetectionEnabled = Boolean.valueOf(config.getProperty("contract.type.detection.enabled", "false")).booleanValue();
 
     List billingSystemsOrderList = new ArrayList(5);
     int i = 1;
@@ -210,7 +224,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
 
       inManInIsdnPattern = config.getProperty("inman.in.isdn", inManInIsdnPattern);
-      if(inManInIsdnPattern!=null){
+      if (inManInIsdnPattern != null) {
         inManInIsdnPattern = Utils.aggregateRegexp(inManInIsdnPattern);
       }
 
@@ -236,6 +250,32 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
     }
 
+    if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_MEDIO_SCP)) {
+      medioScpPoolName = config.getProperty("medioscp.pool.name", "");
+      if (medioScpPoolName.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"medioscp.pool.name\" is missed");
+      }
+      medioScpQuery = config.getProperty("medioscp.query", "");
+      if (medioScpQuery.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"medioscp.query\" is missed");
+      }
+      medioScpConnectionErrorPattern = config.getProperty("medioscp.connection.error.pattern", medioScpConnectionErrorPattern);
+      if (medioScpConnectionErrorPattern.length() == 0) {
+        throw new InitializationException("Mandatory config parameter \"medioscp.connection.error.pattern\" is missed");
+      }
+      try {
+        medioScpConnectionErrorPattern = Utils.aggregateRegexp(medioScpConnectionErrorPattern);
+      } catch (IllegalArgumentException e) {
+        throw new InitializationException(e.getMessage(), e);
+      }
+
+      medioScpInIsdnPattern = config.getProperty("medioscp.in.isdn", medioScpInIsdnPattern);
+      if (medioScpInIsdnPattern != null) {
+        medioScpInIsdnPattern = Utils.aggregateRegexp(medioScpInIsdnPattern);
+      }
+
+    }
+
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_FORIS_MG)) {
       mgAddress = config.getProperty("mg.address", "");
       if (mgAddress.length() == 0) {
@@ -257,10 +297,41 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         throw new InitializationException("Mandatory config parameter \"inbalance.uss.data\" is missed");
       }
       try {
-        inBalanceIN_SSN = (byte)Integer.parseInt(config.getProperty("inbalance.in.ssn", Byte.toString(inBalanceIN_SSN)));
+        inBalanceIN_SSN = (byte) Integer.parseInt(config.getProperty("inbalance.in.ssn", Byte.toString(inBalanceIN_SSN)));
       } catch (NumberFormatException e) {
         throw new InitializationException("Mandatory config parameter \"inbalance.in.ssn\" is invalid");
       }
+
+      inBalanceInIsdnPattern = config.getProperty("inbalance.in.isdn", inBalanceInIsdnPattern);
+      if (inBalanceInIsdnPattern != null) {
+        inBalanceInIsdnPattern = Utils.aggregateRegexp(inBalanceInIsdnPattern);
+      }
+
+      List IN_ISDNS = new ArrayList();
+      i = 1;
+      while ((s = config.getProperty("inbalance.in.isdn." + i)) != null) {
+        IN_ISDNS.add(s);
+        i++;
+      }
+      inBalanceIN_ISDNS = new String[IN_ISDNS.size()];
+      for (int j = 0; j < IN_ISDNS.size(); j++) {
+        inBalanceIN_ISDNS[j] = (String) IN_ISDNS.get(j);
+      }
+      List responsePatterns = new ArrayList();
+      i = 1;
+      while ((s = config.getProperty("inbalance.response.pattern." + i)) != null) {
+        responsePatterns.add(s);
+        i++;
+      }
+      inBalanceResponsePatterns = new Matcher[responsePatterns.size()];
+      for (int j = 0; j < responsePatterns.size(); j++) {
+        try {
+          inBalanceResponsePatterns[j] = new Matcher((String) responsePatterns.get(j));
+        } catch (Exception e) {
+          throw new InitializationException("Illegal value of inbalance.response.pattern."+j+" property: "+e, e);
+        }
+      }
+
     }
 
     numberFormatPattern = config.getProperty("balance.number.format.pattern", numberFormatPattern);
@@ -292,7 +363,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
     smsResponseMode = Boolean.valueOf(config.getProperty("sms.response.mode", "false")).booleanValue();
     flashSmsEnabled = Boolean.valueOf(config.getProperty("sms.response.flash", Boolean.toString(flashSmsEnabled))).booleanValue();
-    
+
     try {
       ussdMaxLength = Integer.parseInt(config.getProperty("ussd.message.max.length", Integer.toString(ussdMaxLength)));
     } catch (NumberFormatException e) {
@@ -415,12 +486,13 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     balanceWithAccumulatorNegativeResponsePattern = patternConfig.getProperty("balance.with.accumulator.negative.response.pattern");
     waitForSmsResponsePattern = patternConfig.getProperty("balance.wait.for.sms.response.pattern", waitForSmsResponsePattern);
     errorPattern = patternConfig.getProperty("balance.error.pattern", errorPattern);
+    accessDeniedPattern = patternConfig.getProperty("access.denied.pattern", accessDeniedPattern);
 
     bannerAddPattern = patternConfig.getProperty("balance.banner.add.pattern", bannerAddPattern);
 
     currency = new HashMap();
     String defaultCurrency = patternConfig.getProperty("balance.currency.default", "usd");
-
+    
     currency.put("default", defaultCurrency);
 
     String code;
@@ -570,7 +642,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
           if (state.getAbonentRequest().hasUssdServiceOp() && !state.isUssdSessionClosed()) {
             message.setUssdServiceOp(Message.USSD_OP_PROC_SS_REQ_RESP);
           } else {
-            if(flashSmsEnabled){
+            if (flashSmsEnabled) {
               message.setDestAddrSubunit(1); // for Flash SMS
             }
           }
@@ -633,7 +705,16 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         }
       }
       if (sendWaitMessage) {
-        sendWaitForSmsMessage(state);
+        if (contractTypeDetectionEnabled && state.getAbonentContractType() == CONTRACT_TYPE_UNKNOWN) {
+          synchronized (state) {
+            if (logger.isInfoEnabled())
+              logger.info("Abonent " + state.getAbonentRequest().getSourceAddress() + " request aborted by timeout & unknown contract type");
+            state.setError(true);
+          }
+          closeRequestState(state);
+        } else {
+          sendWaitForSmsMessage(state);
+        }
       }
     }
   }
@@ -686,7 +767,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
     if (state.isUssdSessionClosed()) {
       msg.setUssdServiceOp(-1);
-      if(flashSmsEnabled){
+      if (flashSmsEnabled) {
         msg.setDestAddrSubunit(1); // for Flash SMS
       }
     }
@@ -813,26 +894,33 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   }
 
   protected void requestInBalance(RequestState state) {
-    Integer key=null;
-    try {
+    if (state.getInManContractResult() != null && state.getAbonentContractType() != CONTRACT_TYPE_UNKNOWN) {
       String IN_ISDN = null;
-      if(state.getInManContractResult()!=null){
-        try {
-          IN_ISDN=state.getInManContractResult().getGsmSCFAddress();
-        } catch (InManPDUException e) {
-          logger.error(e.getMessage(), e);
-        }
+      try {
+        IN_ISDN = state.getInManContractResult().getGsmSCFAddress();
+      } catch (InManPDUException e) {
+        logger.error(e.getMessage(), e);
+        return;
       }
+      requestInBalance(state, IN_ISDN);
+    } else {
+      logger.debug("Abonent " + state.getAbonentRequest().getSourceAddress() + " contract type is UNKNOWN");
+    }
+  }
+
+  protected void requestInBalance(RequestState state, String IN_ISDN) {
+    Integer key = null;
+    try {
       int requestId = inBalanceClient.assignRequestId();
       if (logger.isDebugEnabled())
-        logger.debug("Send InBalance request for abonent " + state.getAbonentRequest().getSourceAddress() + ", sn=" + requestId);
-      key=new Integer(requestId);
+        logger.debug("Send InBalance request for abonent " + state.getAbonentRequest().getSourceAddress() + ", IN_ISDN=" + IN_ISDN + ", sn=" + requestId);
+      key = new Integer(requestId);
       synchronized (inBalanceRequests) {
         inBalanceRequests.put(key, state);
       }
       inBalanceClient.sendBalanceRequest(state.getAbonentRequest().getSourceAddress(), inBalanceUssData, inBalanceIN_SSN, IN_ISDN, requestId);
     } catch (InBalanceClientException e) {
-      if(key!=null){
+      if (key != null) {
         inBalanceRequests.remove(key);
       }
       synchronized (state) {
@@ -844,18 +932,18 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   }
 
   protected void requestAbonentContractType(RequestState state) {
-    Integer key=null;
+    Integer key = null;
     try {
       int dialogID = inManClient.assignDialogID();
       if (logger.isDebugEnabled())
         logger.debug("Send InMan request for abonent " + state.getAbonentRequest().getSourceAddress() + ", sn=" + dialogID);
-      key=new Integer(dialogID);
+      key = new Integer(dialogID);
       synchronized (inManRequests) {
         inManRequests.put(key, state);
       }
       inManClient.sendContractRequest(state.getAbonentRequest().getSourceAddress(), dialogID, inManUseCache);
     } catch (InManClientException e) {
-      if(key!=null){
+      if (key != null) {
         inManRequests.remove(key);
       }
       synchronized (state) {
@@ -980,6 +1068,29 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return billingSystemOrder[contractType].length;
   }
 
+  protected int getInBalanceIN_ISDNSCount() {
+    return inBalanceIN_ISDNS.length;
+  }
+
+  protected String getInBalanceIN_ISDN(int index) {
+    if (index >= 0 && index < inBalanceIN_ISDNS.length) {
+      return inBalanceIN_ISDNS[index];
+    } else {
+      return null;
+    }
+  }
+
+  protected String parseInBalanceResponse(String response){
+    for (int i = 0; i < inBalanceResponsePatterns.length; i++) {
+      Matcher matcher = inBalanceResponsePatterns[i];
+      String result = matcher.match(response);
+      if(result!=null){
+        return result;
+      }
+    }
+    return null;
+  }
+
   protected NumberFormat getNumberFormat(double balance) {
     if (balance >= 0) {
       return new DecimalFormat(numberFormatPattern, decimalFormatSymbols);
@@ -1002,6 +1113,10 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     } else {
       return new MessageFormat(balanceWithAccumulatorNegativeResponsePattern);
     }
+  }
+
+  protected String getAccessDeniedMessage(){
+    return accessDeniedPattern;
   }
 
   protected String getCurrency(String code) {
@@ -1035,17 +1150,16 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     synchronized (cbossStatements) {
       cbossStatements.remove(Thread.currentThread().getName());
     }
-    if (stmt != null){
+    if (stmt != null) {
       try {
         stmt.close();
-        stmt = null;
       } catch (SQLException e1) {
         logger.warn("Could not close oracle CallableStatement: " + e1);
       }
       Connection connection = null;
       try {
         connection = stmt.getConnection();
-        if (connection != null){
+        if (connection != null) {
           connection.close();
           connection = null;
         }
@@ -1086,17 +1200,16 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     synchronized (inManStatements) {
       inManStatements.remove(Thread.currentThread().getName());
     }
-    if (stmt != null){
+    if (stmt != null) {
       try {
         stmt.close();
-        stmt = null;
       } catch (SQLException e1) {
         logger.warn("Could not close oracle CallableStatement: " + e1);
       }
       Connection connection = null;
       try {
         connection = stmt.getConnection();
-        if (connection != null){
+        if (connection != null) {
           connection.close();
           connection = null;
         }
@@ -1108,6 +1221,56 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
   protected boolean isInManConnectionError(Exception e) {
     if (e.toString().matches(inManConnectionErrorPattern)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  protected String getMedioScpQuery() {
+    return medioScpQuery;
+  }
+
+  protected CallableStatement getMedioScpStatement() throws SQLException {
+    CallableStatement result;
+    synchronized (medioScpStatements) {
+      result = (CallableStatement) medioScpStatements.get(Thread.currentThread().getName());
+    }
+    if (result == null) {
+      logger.debug("Creating MedioSCP statement for " + Thread.currentThread().getName());
+      result = getMedioScpConnection().prepareCall(getMedioScpQuery());
+      synchronized (medioScpStatements) {
+        medioScpStatements.put(Thread.currentThread().getName(), result);
+      }
+    }
+    return result;
+  }
+
+  protected void closeMedioScpStatement(Statement stmt) {
+    synchronized (medioScpStatements) {
+      medioScpStatements.remove(Thread.currentThread().getName());
+    }
+    if (stmt != null) {
+      try {
+        stmt.close();
+      } catch (SQLException e1) {
+        logger.warn("Could not close MedioSCP CallableStatement: " + e1);
+      }
+      Connection connection = null;
+      try {
+        connection = stmt.getConnection();
+        if (connection != null) {
+          connection.close();
+          connection = null;
+        }
+      } catch (SQLException e1) {
+        logger.warn("Could not close MedioSCP Connection: " + e1);
+      }
+    }
+  }
+
+  protected boolean isMedioScpConnectionError(Exception e) {
+    if (e.toString().matches(medioScpConnectionErrorPattern)) {
       return true;
     } else {
       return false;
@@ -1126,8 +1289,20 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return connectionManager.getConnection(inManPoolName);
   }
 
-  protected String getInManInIsdnPattern(){
+  protected Connection getMedioScpConnection() throws SQLException {
+    return connectionManager.getConnection(medioScpPoolName);
+  }
+
+  protected String getInManInIsdnPattern() {
     return inManInIsdnPattern;
+  }
+
+  protected String getMedioScpInIsdnPattern() {
+    return medioScpInIsdnPattern;
+  }
+
+  protected String getInBalanceInIsdnPattern() {
+    return inBalanceInIsdnPattern;
   }
 
   class RequestStatesController extends Thread {

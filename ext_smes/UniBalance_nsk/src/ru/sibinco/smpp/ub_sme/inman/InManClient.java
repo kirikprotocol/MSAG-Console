@@ -54,27 +54,28 @@ public class InManClient {
   }
 
   public boolean connect() {
-    if (isConnected()) {
-      return true;
-    }
-    if (shutdown) {
-      return false;
-    }
-    if (logger.isDebugEnabled()) logger.debug("Connecting to server");
-    try {
-      socket = new Socket(serverHost, serverPort);
-      socket.setKeepAlive(true);
-      socket.setTcpNoDelay(true);
-      is = socket.getInputStream();
-      os = socket.getOutputStream();
-    } catch (IOException e) {
-      logger.error("I/O Error: " + e, e);
-      connected = false;
-      return false;
-    }
-    connected = true;
-    if (logger.isInfoEnabled()) logger.info("Connected to " + serverHost + ":" + serverPort);
     synchronized (connectMonitor) {
+      if (isConnected()) {
+        return true;
+      }
+
+      if (shutdown) {
+        return false;
+      }
+      if (logger.isDebugEnabled()) logger.debug("Connecting to server");
+      try {
+        socket = new Socket(serverHost, serverPort);
+        socket.setKeepAlive(true);
+        socket.setTcpNoDelay(true);
+        is = socket.getInputStream();
+        os = socket.getOutputStream();
+      } catch (IOException e) {
+        logger.error("I/O Error: " + e, e);
+        connected = false;
+        return false;
+      }
+      connected = true;
+      if (logger.isInfoEnabled()) logger.info("Connected to " + serverHost + ":" + serverPort);
       connectMonitor.notifyAll();
     }
     return true;

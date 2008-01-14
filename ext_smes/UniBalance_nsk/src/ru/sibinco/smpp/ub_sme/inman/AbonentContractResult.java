@@ -1,6 +1,7 @@
 package ru.sibinco.smpp.ub_sme.inman;
 
 import org.apache.log4j.Category;
+import ru.sibinco.smpp.ub_sme.util.VarString;
 
 /**
  * Created by IntelliJ IDEA.
@@ -87,11 +88,11 @@ public class AbonentContractResult extends InManPDU {
     return serviceKey;
   }
 
-  public VarString getAbImsi() throws InManPDUException {
+  public String getAbImsi() throws InManPDUException {
     if (!parsed) {
       parsePDU();
     }
-    return abImsi;
+    return abImsi != null ? abImsi.getStringValue() : null;
   }
 
   public int getError() throws InManPDUException {
@@ -101,32 +102,39 @@ public class AbonentContractResult extends InManPDU {
     return error;
   }
 
-  public VarString getErrorMsg() {
-    return errorMsg;
-  }
-
-  public void setErrorMsg(VarString errorMsg) {
-    this.errorMsg = errorMsg;
+  public String getErrorMsg() throws InManPDUException {
+    if (!parsed) {
+      parsePDU();
+    }
+    return errorMsg != null ? errorMsg.getStringValue() : null;
   }
 
   public String toString() {
-    StringBuffer sb = new StringBuffer("AbonentContractResult: sn=");
-    sb.append(dialogID);
-    sb.append(", nmPolicy=");
-    sb.append(nmPolicy);
-    sb.append(", contractType=");
-    sb.append(contractType);
-    sb.append(", gsmSCFAddress=");
-    sb.append(gsmSCFAddress);
-    sb.append(", serviceKey=");
-    sb.append(serviceKey);
-    sb.append(", error=");
-    sb.append(error);
-    sb.append(", abIMSI=");
-    sb.append(abImsi);
-    sb.append(", errorMsg=");
-    sb.append(errorMsg);
-    return sb.toString();
+    try {
+      StringBuffer sb = new StringBuffer("AbonentContractResult: sn=");
+      sb.append(getDialogID());
+      sb.append(", nmPolicy=");
+      sb.append(getNmPolicy());
+      sb.append(", contractType=");
+      sb.append(getContractType());
+      sb.append(", gsmSCFAddress=");
+      sb.append(getGsmSCFAddress());
+      if(serviceKey!=-1){
+        sb.append(", serviceKey=");
+        sb.append(getServiceKey());
+      }
+      sb.append(", abIMSI=");
+      sb.append(getAbImsi());
+      if(error!=-1){
+        sb.append(", error=");
+        sb.append(getError());
+        sb.append(", errorMsg=");
+        sb.append(getErrorMsg());        
+      }
+      return sb.toString();
+    } catch (InManPDUException e) {
+      return "AbonentContractResult: " + e.getMessage();
+    }
   }
 
 }

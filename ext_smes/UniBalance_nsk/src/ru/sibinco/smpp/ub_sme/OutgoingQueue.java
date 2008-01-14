@@ -107,7 +107,7 @@ public class OutgoingQueue implements OutgoingQueueProxy {
       obj.setRetryPeriod(retryPeriod);
     }
     outQueue.add(obj);
-    if (Logger.isInfoEnabled()) Logger.info("OUT " + (obj.getSendTime() > -1 ? "readded" : "added") + ", queue size=" + outQueue.size() + "; sent size = " + sendTasks.size() + "; retry size = " + retryTasks.size());
+    if (Logger.isDebugEnabled()) Logger.debug("OUT " + (obj.getSendTime() > -1 ? "readded" : "added") + ", queue size=" + outQueue.size() + "; sent size = " + sendTasks.size() + "; retry size = " + retryTasks.size());
     synchronized (sendNotifyMonitor) {
       sendNotifyMonitor.notifyAll();
     }
