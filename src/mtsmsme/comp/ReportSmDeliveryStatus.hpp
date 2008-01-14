@@ -1,6 +1,6 @@
 #ident "$Id$"
-#ifndef __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP_
-#define __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP_
+#ifndef __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__
+#define __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__
 
 #include "mtsmsme/processor/Message.hpp"
 #include "Component.hpp"
@@ -43,4 +43,4 @@ private:
 };
 
 /* namespace comp */ } /* namespace mtsmsme */ } /* namespace smsc */ }
-#endif /* __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP_ */
+#endif /* __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__ */
