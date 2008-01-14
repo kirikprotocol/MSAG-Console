@@ -45,7 +45,8 @@ class CalendarEngine extends IterativeWorker {
   public void iterativeWork() {
     nextReloadTime.setTime(System.currentTimeMillis() + workingInterval);
 
-    log.info("Start new period: enddate=" + nextReloadTime);
+    if (log.isInfoEnabled())
+      log.info("New period: enddate=" + nextReloadTime);
 
     messagesQueue.setMaxDate(nextReloadTime);
     loadList();
@@ -70,13 +71,15 @@ class CalendarEngine extends IterativeWorker {
 
   private void sendMessage(final CalendarMessage message) {
     try {
-      log.info("Send msg: srcaddr=" + message.getSourceAddress() + "; dstaddr=" + message.getDestinationAddress() + "; senddate=" + message.getSendDate());
+      if (log.isInfoEnabled())
+        log.info("Send msg: srcaddr=" + message.getSourceAddress() + "; dstaddr=" + message.getDestinationAddress() + "; senddate=" + message.getSendDate());
 
       final Message msg = new Message();
       msg.setSourceAddress(message.getSourceAddress());
       msg.setDestinationAddress(message.getDestinationAddress());
       msg.setMessageString(message.getMessage());
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
+      msg.setConnectionName(message.getConnectionName());
 
       final CalendarTransportObject outObj = new CalendarTransportObject(message);
       outObj.setOutgoingMessage(msg);
@@ -91,8 +94,6 @@ class CalendarEngine extends IterativeWorker {
     try {
       for (Iterator iter = ds.loadCalendarMessages(nextReloadTime, 10000).iterator(); iter.hasNext();)
         messagesQueue.add((CalendarMessage)iter.next());
-
-      log.info("List loaded, count=" + messagesQueue.size());
 
     } catch (Throwable e) {
       log.error("Can't load msgs list: ", e);

@@ -6,7 +6,6 @@ import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
-import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
 import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
 
@@ -52,14 +51,14 @@ class MessageSender {
 
   public void sendInformMessage(SecretMessage secretMessage) {
     try {
-      sendMessage(serviceAddress, secretMessage.getDestinationAddress(), prepareInformMessage(secretMessage.getDestinationAddress(), secretMessage.getSourceAddress()));
+      sendMessage(serviceAddress, secretMessage.getDestinationAddress(), prepareInformMessage(secretMessage.getDestinationAddress(), secretMessage.getSourceAddress()), "smsx");
     } catch (DataSourceException e) {
       log.error("Can't send inform message", e);
     }
   }
 
   public void sendInvitationMessage(String destinationAddress) {
-    sendMessage(serviceAddress, destinationAddress, msgDestinationAbonentInvitation);
+    sendMessage(serviceAddress, destinationAddress, msgDestinationAbonentInvitation, "smsx");
   }
 
   public void sendSecretMessage(SecretMessage message) {
@@ -69,6 +68,7 @@ class MessageSender {
     outMsg.setDestinationAddress(message.getDestinationAddress());
     outMsg.setDestAddrSubunit(message.getDestAddressSubunit());
     outMsg.setMessageString(message.getMessage());
+    outMsg.setConnectionName(message.getConnectionName());
 
     final SecretTransportObject outObj = new SecretTransportObject(message);
     outObj.setOutgoingMessage(outMsg);
@@ -83,14 +83,15 @@ class MessageSender {
 
     // Send notification to originator
     if (message.isNotifyOriginator())
-      sendMessage(serviceAddress, message.getSourceAddress(), prepareDeliveryReport(message.getDestinationAddress(), message.getSendDate()));
+      sendMessage(serviceAddress, message.getSourceAddress(), prepareDeliveryReport(message.getDestinationAddress(), message.getSendDate()), message.getConnectionName());
   }
 
-  private void sendMessage(String sourceAddress, String destinationAddress, String msg) {
+  private void sendMessage(String sourceAddress, String destinationAddress, String msg, String connectionName) {
     final Message notificationMessage = new Message();
     notificationMessage.setSourceAddress(sourceAddress);
     notificationMessage.setDestinationAddress(destinationAddress);
     notificationMessage.setMessageString(msg);
+    notificationMessage.setConnectionName(connectionName);
     final SMPPTransportObject outObj1 = new SMPPTransportObject();
     outObj1.setOutgoingMessage(notificationMessage);
     outQueue.addOutgoingObject(outObj1);

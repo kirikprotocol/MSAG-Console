@@ -7,7 +7,6 @@ import com.logica.smpp.Data;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.*;
 import ru.sibinco.smsx.InitializationException;
-import ru.sibinco.smsx.test.testcase.sponsored.SponsoredTestMultiplexor;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -132,13 +131,16 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
     try {
       switch(pdu.getType()) {
         case Data.ENQUIRE_LINK_RESP:
-          log.debug("ENQUIRE_LINK_RESP handled. Status #" + pdu.getStatus());
+          if (log.isDebugEnabled())
+            log.debug("ENQUIRE_LINK_RESP handled. Status #" + pdu.getStatus());
           break;
         case Data.DATA_SM_RESP:
-          log.debug("DATA_SM_RESP handled. Status #" + pdu.getStatus());
+          if (log.isDebugEnabled())
+            log.debug("DATA_SM_RESP handled. Status #" + pdu.getStatus());
           break;
         default:
-          log.debug("SUBMIT_SM_RESP handled. Status #" + pdu.getStatus());
+          if (log.isDebugEnabled())
+            log.debug("SUBMIT_SM_RESP handled. Status #" + pdu.getStatus());
       }
 
       if (pdu.getType() != Data.SUBMIT_SM_RESP && pdu.getType() != Data.DATA_SM_RESP)
@@ -165,7 +167,8 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
           log.warn("Sync mode is enabled, but no lock found, con=" + pdu.getConnectionId() + ", sn=" + pdu.getSequenceNumber());
 
         if (pdu.getStatus() == Data.ESME_RTHROTTLED) {
-          log.debug("OUT inserted in queue head by throttled error");
+          if (log.isDebugEnabled())
+            log.debug("OUT inserted in queue head by throttled error");
           outQueue.restoreOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber());
           return;
         }
@@ -209,19 +212,22 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
           skip = (source.lastIndexOf('.') >= 0 && source.lastIndexOf('.') + 1 == source.length()) ||
               (source.lastIndexOf('+') >= 0 && source.lastIndexOf('+') + 1 == source.length());
         if (skip) {
-          log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
+          if (log.isInfoEnabled())
+            log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: empty Source Address");
           sendResponse(msg, Data.ESME_ROK);
           return false;
         }
       }
 
       if (checkBinary && msg.getEncoding() == Message.ENCODING_BINARY) {
-        log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: unsupported encoding: BINARY ");
+        if (log.isInfoEnabled())
+          log.info("SKIP MSG FROM #" + msg.getSourceAddress() + ". REASON: unsupported encoding: BINARY ");
         sendResponse(msg, Data.ESME_ROK);
         return true;
       }
 
-      log.debug("Received MSG, USSD #" + msg.getUssdServiceOp() + "; address #" + msg.getDestinationAddress() + "; abonent #" + msg.getSourceAddress()  + "; type: " + msg.getType() + "; msg: " + msg.getMessageString());
+      if (log.isDebugEnabled())
+        log.debug("Received MSG, USSD #" + msg.getUssdServiceOp() + "; address #" + msg.getDestinationAddress() + "; abonent #" + msg.getSourceAddress()  + "; type: " + msg.getType() + "; msg: " + msg.getMessageString());
 
 //      sendResponse(msg, Data.ESME_ROK);
 
@@ -243,7 +249,8 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
     try {
       msg.setStatus(status);
       transportMultiplexor.sendResponse(msg);
-      log.debug("Delivery response sent, address #" + msg.getDestinationAddress() + "; abonent #" + msg.getSourceAddress() + "; status #" + msg.getStatus());
+      if (log.isDebugEnabled())
+        log.debug("Delivery response sent, address #" + msg.getDestinationAddress() + "; abonent #" + msg.getSourceAddress() + "; status #" + msg.getStatus());
     } catch (Throwable e) {
       log.error("Exception occured sending delivery response.", e);
     }
@@ -310,7 +317,8 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
 
     private void sendMessage(SMPPTransportObject outObj, Connector connector, boolean sendFlag) {
       if (outObj.getRepeatNumber() > maxRetries || (outObj.getOutgoingMessage().hasUssdServiceOp() && outObj.getRepeatNumber() > 1)) {
-        log.debug("OUT [CID=" + outObj.getOutgoingMessage().getConnectionId() + ";SN=" + outObj.getOutgoingMessage().getSequenceNumber() + "] finalized, max attempts value was reached");
+        if (log.isDebugEnabled())
+          log.debug("OUT [CID=" + outObj.getOutgoingMessage().getConnectionId() + ";SN=" + outObj.getOutgoingMessage().getSequenceNumber() + "] finalized, max attempts value was reached");
         outObj.handleSendError();
         return;
       }
@@ -335,8 +343,6 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
       SMPPTransportObject obj = null;
 
       try {
-        log.debug("wait new messages ==========================================================");
-
         obj = outQueue.removeNextOutgoingObject();
         if (!isStarted())
           return;
@@ -361,7 +367,8 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
             sendMonitor.setSeqNum(msg.getSequenceNumber());
             sendMonitor.setLocked(true);
 
-            log.debug("Sending message in sync mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress());
+            if (log.isDebugEnabled())
+              log.debug("Sending message in sync mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress());
 
             sendMessage(obj, connector, false);
 
@@ -373,7 +380,7 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
 
             if (sendMonitor.isLocked()) // timeout !!!
               log.warn("Syncronized send timeout reached, con=" + sendMonitor.getConnId() + ", sn=" + sendMonitor.getSeqNum());
-            else
+            else if (log.isDebugEnabled())
               log.debug("Syncronized send completed, con=" + sendMonitor.getConnId() + ", sn=" + sendMonitor.getSeqNum() + ", status=" + sendMonitor.getStatus());
 
             if (sendMonitor.getStatus() == Data.ESME_RTHROTTLED && throttledErrorDelay > 0) {
@@ -388,7 +395,8 @@ public class SMPPMultiplexor implements ResponseListener, MessageListener {
           }
 
         } else {
-          log.debug("Sending message in async mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress() + "; msg = " + msg.getMessageString());
+          if (log.isDebugEnabled())
+            log.debug("Sending message in async mode, address #" + msg.getSourceAddress() + "; abonent #" + msg.getDestinationAddress() + "; msg = " + msg.getMessageString());
           sendMessage(obj, connector, false);
         }
 

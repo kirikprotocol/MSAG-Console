@@ -11,8 +11,8 @@
 
 calendar.message.load.max.id = SELECT max(id) FROM calendar_messages;
 
-calendar.message.load.by.date = SELECT id, source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status FROM calendar_messages WHERE send_time < ? AND status=0 ORDER BY send_time LIMIT 0, ?
-calendar.message.load.by.id = SELECT id, source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status FROM calendar_messages WHERE id=?
+calendar.message.load.by.date = SELECT id, source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, conn FROM calendar_messages WHERE send_time < ? AND status=0 ORDER BY send_time LIMIT 0, ?
+calendar.message.load.by.id = SELECT id, source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, conn FROM calendar_messages WHERE id=?
 calendar.message.remove.by.id = DELETE FROM calendar_messages WHERE id=?
-calendar.message.insert = INSERT INTO calendar_messages(source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, id) VALUES(?,?,?,?,?,?,?,?,?)
-calendar.message.update = UPDATE calendar_messages set source_address=?, destination_address=?, send_time=?, dest_addr_subunit=?, message=?, status=?, save_delivery_status=?, smpp_status=? WHERE id=?
+calendar.message.insert = INSERT INTO calendar_messages(source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, conn, id) VALUES(?,?,?,?,?,?,?,?,?,?)
+calendar.message.update = UPDATE calendar_messages set source_address=?, destination_address=?, send_time=?, dest_addr_subunit=?, message=?, status=?, save_delivery_status=?, smpp_status=?, conn=? WHERE id=?

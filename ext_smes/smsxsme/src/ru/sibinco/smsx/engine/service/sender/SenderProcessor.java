@@ -6,6 +6,7 @@ import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
+import ru.sibinco.smsx.engine.service.Command;
 
 /**
  * User: artem
@@ -26,13 +27,15 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
 
   public void execute(SenderSendMessageCmd cmd) {
     try {
-      log.info("Send msg: srcaddr=" + cmd.getSourceAddress() + "; dstaddr=" + cmd.getDestinationAddress() + "; storable=" + cmd.isStorable());
+      if (log.isInfoEnabled())
+        log.info("Send msg: srcaddr=" + cmd.getSourceAddress() + "; dstaddr=" + cmd.getDestinationAddress() + "; storable=" + cmd.isStorable());
       final SenderMessage msg = new SenderMessage();
       msg.setSourceAddress(cmd.getSourceAddress());
       msg.setDestinationAddress(cmd.getDestinationAddress());
       msg.setMessage(cmd.getMessage());
       msg.setDestAddrSubunit(cmd.getDestAddressSubunit());
       msg.setStorable(cmd.isStorable());
+      msg.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsx" : "websms");
 
       if (cmd.isStorable())
         ds.saveSenderMessage(msg);
@@ -50,14 +53,16 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
 
   public void execute(SenderGetMessageStatusCmd cmd) {
     try {
-      log.info("Get msg status: id=" + cmd.getMsgId());
+      if (log.isInfoEnabled())
+        log.info("Get msg status: id=" + cmd.getMsgId());
       final SenderMessage senderMessage = ds.loadSenderMessageById(cmd.getMsgId());
 
       if (senderMessage != null && senderMessage.isStorable()) {
         cmd.setMessageStatus(senderMessage.getStatus());
         cmd.setSmppStatus(senderMessage.getSmppStatus());
       } else {
-        log.info("Msg with id=" + cmd.getMsgId() + " not found");
+        if (log.isInfoEnabled())
+          log.info("Msg with id=" + cmd.getMsgId() + " not found");
         cmd.setMessageStatus(SenderGetMessageStatusCmd.MESSAGE_STATUS_UNKNOWN);
       }
 

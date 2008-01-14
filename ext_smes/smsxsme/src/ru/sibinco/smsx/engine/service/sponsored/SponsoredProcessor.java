@@ -59,7 +59,8 @@ class SponsoredProcessor implements SponsoredRegisterAbonentCmd.Receiver, Sponso
 
   public void execute(SponsoredRegisterAbonentCmd cmd) {
     try {
-      log.info("Subscr req srcaddr=" + cmd.getAbonentAddress() + "; cnt=" + cmd.getCount());
+      if (log.isInfoEnabled())
+        log.info("Subscr req srcaddr=" + cmd.getAbonentAddress() + "; cnt=" + cmd.getCount());
 
       if (subscriptionLocked) {
         log.warn("Subscription locked");
@@ -124,7 +125,8 @@ class SponsoredProcessor implements SponsoredRegisterAbonentCmd.Receiver, Sponso
 
   public void execute(SponsoredUnregisterAbonentCmd cmd) {
     try {
-      log.info("Unsubscr req srcaddr=" + cmd.getAbonentAddress());
+      if (log.isInfoEnabled())
+        log.info("Unsubscr req srcaddr=" + cmd.getAbonentAddress());
 
       DistributionInfo distribution = ds.getDistributionInfoByAbonent(cmd.getAbonentAddress());
 
@@ -172,12 +174,14 @@ class SponsoredProcessor implements SponsoredRegisterAbonentCmd.Receiver, Sponso
 
   public void lockSubscription() {
     subscriptionLocked = true;
-    log.info("Subscription locked");
+    if (log.isInfoEnabled())
+      log.info("Subscription locked");
   }
 
   public void unlockSubscription() {
     subscriptionLocked = false;
-    log.info("Subscription unlocked");
+    if (log.isInfoEnabled())
+      log.info("Subscription unlocked");
   }
 
   public void execute(SponsoredRegisterDeliveryCmd cmd) {

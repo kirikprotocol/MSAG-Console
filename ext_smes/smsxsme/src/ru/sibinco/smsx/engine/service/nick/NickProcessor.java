@@ -31,7 +31,8 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
       return;
 
     try {
-      log.info("Reg nick req: abonent=" + cmd.getAbonentAddress());
+      if (log.isInfoEnabled())
+        log.info("Reg nick req: abonent=" + cmd.getAbonentAddress());
 
       // Check source address
       if (cmd.getAbonentAddress() == null || cmd.getAbonentAddress().length() == 0) {
@@ -77,7 +78,8 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
       return;
 
     try {
-      log.info("Send nick req: srcAddr=" + cmd.getSourceAddress() + "; dstAddr=" + cmd.getDestinationAddress());
+      if (log.isInfoEnabled())
+        log.info("Send nick req: srcAddr=" + cmd.getSourceAddress() + "; dstAddr=" + cmd.getDestinationAddress());
 
       // Check source address
       if (cmd.getSourceAddress() == null || cmd.getSourceAddress().length() == 0) {
@@ -126,7 +128,8 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
       return;
 
     try {
-      log.info("Unreg nick req: srcAddr=" + cmd.getAbonentAddress());
+      if (log.isInfoEnabled())
+        log.info("Unreg nick req: srcAddr=" + cmd.getAbonentAddress());
 
       final Message msg = new Message();
       msg.setSourceAddress(cmd.getAbonentAddress());

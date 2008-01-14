@@ -11,6 +11,9 @@ import java.util.Iterator;
 
 public class Command {
 
+  // Sources
+  public static final int SOURCE_SMPP = 0;
+  public static final int SOURCE_SOAP = 1;
   // Statuses
   public static final int STATUS_SUCCESS = 0;
   public static final int STATUS_SYSTEM_ERROR = 1;
@@ -19,7 +22,7 @@ public class Command {
   private int status = STATUS_SUCCESS;
 
   private final Collection observers;
-
+  private int sourceId;
 
   protected Command() {
     observers = new LinkedList();
@@ -41,6 +44,14 @@ public class Command {
   public void update(int status) {
     this.status = status;
     notifyObservers();
+  }
+
+  public int getSourceId() {
+    return sourceId;
+  }
+
+  public void setSourceId(int sourceId) {
+    this.sourceId = sourceId;
   }
 
 }

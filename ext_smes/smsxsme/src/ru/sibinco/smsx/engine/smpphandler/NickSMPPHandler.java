@@ -91,6 +91,7 @@ class NickSMPPHandler extends SMPPHandler {
   private void unregisterNick(String sourceAddress, final Message message) {
     final NickUnregisterCmd cmd = new NickUnregisterCmd();
     cmd.setAbonentAddress(sourceAddress);
+    cmd.setSourceId(Command.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver() {
       public void update(Command command) {
         final NickUnregisterCmd cmd = (NickUnregisterCmd)command;
@@ -111,6 +112,7 @@ class NickSMPPHandler extends SMPPHandler {
     final NickRegisterCmd cmd = new NickRegisterCmd();
     cmd.setAbonentAddress(sourceAddress);
     cmd.setNick(nick);
+    cmd.setSourceId(Command.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver() {
       public void update(Command command) {
         final NickRegisterCmd cmd = (NickRegisterCmd)command;
@@ -139,6 +141,7 @@ class NickSMPPHandler extends SMPPHandler {
     cmd.setMessage(message);
     cmd.setMscAddress(msg.getMscAddress());
     cmd.setImsi(msg.getImsi());
+    cmd.setSourceId(Command.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver() {
       public void update(Command command) {
         final NickSendMessageCmd cmd = (NickSendMessageCmd)command;

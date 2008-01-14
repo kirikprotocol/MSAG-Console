@@ -6,6 +6,7 @@ import com.eyeline.sme.utils.worker.IterativeWorker;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.CmdStatusObserver;
 import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.service.Command;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListCheckMsisdnCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
@@ -126,6 +127,7 @@ class SmsXSenderHandler implements SmsXSender {
         c.setMessage(message);
         c.setDestAddressSubunit(express ? 1 : -1);
         c.setStoreDeliveryStatus(true);
+        c.setSourceId(Command.SOURCE_SOAP);
         final CmdStatusObserver observer = new CmdStatusObserver(null);
         c.addExecutionObserver(observer);
 
@@ -156,6 +158,7 @@ class SmsXSenderHandler implements SmsXSender {
         c.setDestAddressSubunit(express ? 1 : -1);
         c.setSaveDeliveryStatus(true);
         c.setNotifyOriginator(false);
+        c.setSourceId(Command.SOURCE_SOAP);
         final CmdStatusObserver observer = new CmdStatusObserver(null);
         c.addExecutionObserver(observer);
         ServiceManager.getInstance().getSecretService().execute(c);
@@ -182,6 +185,7 @@ class SmsXSenderHandler implements SmsXSender {
         c.setMessage(message);
         c.setDestAddressSubunit(express ? 1 : -1);
         c.setStorable(true);
+        c.setSourceId(Command.SOURCE_SOAP);
         final CmdStatusObserver observer = new CmdStatusObserver(null);
         c.addExecutionObserver(observer);
         ServiceManager.getInstance().getSenderService().execute(c);

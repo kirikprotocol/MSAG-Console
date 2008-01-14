@@ -25,7 +25,9 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
 
   private static String prepareMsisdn(String msisdn) throws SMPPAddressException {
     final Address addr = new Address(msisdn);
-    return "." + addr.getTon() + "." + addr.getNpi() + "." + addr.getAddress();
+    final StringBuffer buffer = new StringBuffer();
+    buffer.append('.').append(addr.getTon()).append('.').append(addr.getNpi()).append('.').append(addr.getAddress());
+    return buffer.toString();
   }
 
   public void execute(BlackListAddCmd cmd) {
@@ -35,7 +37,8 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
     String msisdn = cmd.getMsisdn();
 
     try {
-      log.info("Add msisdn=" + msisdn);
+      if (log.isInfoEnabled())
+        log.info("Add msisdn=" + msisdn);
       msisdn = prepareMsisdn(msisdn);
 
       if (!ds.isMsisdnInBlackList(msisdn))
@@ -56,7 +59,8 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
     String msisdn = cmd.getMsisdn();
 
     try {
-      log.info("Remove msisdn=" + msisdn);
+      if (log.isInfoEnabled())
+        log.info("Remove msisdn=" + msisdn);
       msisdn = prepareMsisdn(msisdn);
 
       ds.removeMsisdnFromBlackList(msisdn);
@@ -76,7 +80,8 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
     String msisdn = cmd.getMsisdn();
 
     try {
-      log.info("Chk msisdn=" + msisdn);
+      if (log.isInfoEnabled())
+        log.info("Chk msisdn=" + msisdn);
       msisdn = prepareMsisdn(msisdn);
 
       cmd.setInBlackList(ds.isMsisdnInBlackList(msisdn));

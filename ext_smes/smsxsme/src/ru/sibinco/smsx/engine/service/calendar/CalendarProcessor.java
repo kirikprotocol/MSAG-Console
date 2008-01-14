@@ -6,6 +6,7 @@ import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStat
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
+import ru.sibinco.smsx.engine.service.Command;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -39,16 +40,19 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
 
   public void execute(CalendarSendMessageCmd cmd) {
     try {
-      log.info("Req: srcaddr=" + cmd.getSourceAddress() + "; dstaddr=" + cmd.getDestinationAddress() + "; senddate=" + cmd.getSendDate());
+      if (log.isInfoEnabled())
+        log.info("Req: srcaddr=" + cmd.getSourceAddress() + "; dstaddr=" + cmd.getDestinationAddress() + "; senddate=" + cmd.getSendDate());
 
       // Check send date
       if (cmd.getSendDate() == null || cmd.getSendDate().getTime() > maxDate || cmd.getSendDate().getTime() < System.currentTimeMillis()) {
-        log.info("Send date is empty, in the past or after max year");
+        if (log.isInfoEnabled())
+          log.info("Send date is empty, in the past or after max year");
         cmd.update(CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE);
         return;
 
       } else if (!ALLOWED_DEST_ADDR.matcher(cmd.getDestinationAddress()).matches()) {
-        log.info("Destination address is not allowed");
+        if (log.isInfoEnabled())
+          log.info("Destination address is not allowed");
         cmd.update(CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS);
         return;
 
@@ -62,12 +66,14 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
         calendarMessage.setDestAddressSubunit(cmd.getDestAddressSubunit());
         calendarMessage.setMessage(cmd.getMessage());
         calendarMessage.setSaveDeliveryStatus(cmd.isStoreDeliveryStatus());
+        calendarMessage.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsx" : "websms");
 
         // Save message
         ds.saveCalendarMessage(calendarMessage);
-        log.info("Msg was stored in DB");
+        if (log.isInfoEnabled())
+          log.info("Msg was stored in DB");
 
-        if (messagesQueue.add(calendarMessage))
+        if (messagesQueue.add(calendarMessage) && log.isInfoEnabled())
           log.info("Msg was puted into msgs list");
 
         cmd.setMsgId(calendarMessage.getId());
@@ -83,7 +89,8 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
 
   public void execute(CalendarCheckMessageStatusCmd cmd) {
     try {
-      log.info("Get msg status: id=" + cmd.getMsgId());
+      if (log.isInfoEnabled())
+        log.info("Get msg status: id=" + cmd.getMsgId());
 
       final CalendarMessage msg = ds.loadCalendarMessageById(cmd.getMsgId());
 
@@ -93,7 +100,8 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
         cmd.setSaveDeliveryStatus(msg.isSaveDeliveryStatus());
 
       } else {
-        log.info("Msg with id=" + cmd.getMsgId() + " not found");
+        if (log.isInfoEnabled())
+          log.info("Msg with id=" + cmd.getMsgId() + " not found");
         cmd.setMessageStatus(CalendarCheckMessageStatusCmd.MESSAGE_STATUS_UNKNOWN);
       }
 

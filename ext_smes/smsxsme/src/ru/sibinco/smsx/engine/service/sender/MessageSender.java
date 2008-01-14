@@ -32,6 +32,7 @@ class MessageSender {
     msg.setDestinationAddress(message.getDestinationAddress());
     msg.setMessageString(message.getMessage());
     msg.setDestAddrSubunit(message.getDestAddrSubunit());
+    msg.setConnectionName(message.getConnectionName());
 
     final SenderSMPPTransportObject outObj = new SenderSMPPTransportObject(message);
     outObj.setOutgoingMessage(msg);

@@ -20,6 +20,7 @@ public class SenderMessage {
   private String message;
   private int destAddrSubunit;
   private boolean storable = true;
+  private String connectionName;
 
   public SenderMessage() {
   }
@@ -90,6 +91,14 @@ public class SenderMessage {
 
   public void setStatus(int status) {
     this.status = status;
+  }
+
+  public String getConnectionName() {
+    return connectionName;
+  }
+
+  public void setConnectionName(String connectionName) {
+    this.connectionName = connectionName;
   }
 
   public boolean isExists() {

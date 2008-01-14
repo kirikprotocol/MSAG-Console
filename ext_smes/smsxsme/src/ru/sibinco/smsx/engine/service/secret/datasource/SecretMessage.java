@@ -24,6 +24,7 @@ public class SecretMessage {
   private int smppStatus = -1;
   private boolean saveDeliveryStatus;
   private boolean notifyOriginator;
+  private String connectionName;
 
   public SecretMessage() {
     this(-1);
@@ -111,6 +112,14 @@ public class SecretMessage {
 
   public void setNotifyOriginator(boolean notifyOriginator) {
     this.notifyOriginator = notifyOriginator;
+  }
+
+  public String getConnectionName() {
+    return connectionName;
+  }
+
+  public void setConnectionName(String connectionName) {
+    this.connectionName = connectionName;
   }
 
   public boolean isExists() {

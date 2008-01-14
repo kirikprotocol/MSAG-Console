@@ -23,6 +23,7 @@ public class CalendarMessage  {
   private int status = STATUS_NEW;
   private int smppStatus = -1;
   private boolean saveDeliveryStatus;
+  private String connectionName;
 
 
   CalendarMessage(final int id) {
@@ -103,6 +104,14 @@ public class CalendarMessage  {
 
   public void setSaveDeliveryStatus(boolean saveDeliveryStatus) {
     this.saveDeliveryStatus = saveDeliveryStatus;
+  }
+
+  public String getConnectionName() {
+    return connectionName;
+  }
+
+  public void setConnectionName(String connectionName) {
+    this.connectionName = connectionName;
   }
 
   public boolean isExists() {

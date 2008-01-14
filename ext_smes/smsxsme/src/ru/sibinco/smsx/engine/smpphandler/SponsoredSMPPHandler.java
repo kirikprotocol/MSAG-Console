@@ -96,6 +96,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
               final SponsoredRegisterAbonentCmd cmd = new SponsoredRegisterAbonentCmd();
               cmd.setAbonentAddress(sourceAddress);
               cmd.setCount(count);
+              cmd.setSourceId(Command.SOURCE_SMPP);
               cmd.addExecutionObserver(new CommandObserver(){
                 public void update(Command command) {
                   final SponsoredRegisterAbonentCmd cmd = (SponsoredRegisterAbonentCmd)command;
@@ -135,6 +136,7 @@ class SponsoredSMPPHandler extends SMPPHandler {
           } else if (SPONSORED_UNSUBSCRIBE.matcher(msg).matches()) {
             final SponsoredUnregisterAbonentCmd cmd = new SponsoredUnregisterAbonentCmd();
             cmd.setAbonentAddress(sourceAddress);
+            cmd.setSourceId(Command.SOURCE_SMPP);
             cmd.addExecutionObserver(new CommandObserver() {
               public void update(Command command) {
                 SponsoredUnregisterAbonentCmd cmd = (SponsoredUnregisterAbonentCmd)command;

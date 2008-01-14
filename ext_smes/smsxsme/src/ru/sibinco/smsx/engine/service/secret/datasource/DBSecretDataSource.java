@@ -192,6 +192,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setSaveDeliveryStatus(rs.getInt(8) == 1);
         msg.setSmppStatus(rs.getInt(9));
         msg.setNotifyOriginator(rs.getInt(10) == 1);
+        msg.setConnectionName(rs.getString(11));
         messages.add(msg);
       }
 
@@ -228,6 +229,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setSaveDeliveryStatus(rs.getInt(8) == 1);
         msg.setSmppStatus(rs.getInt(9));
         msg.setNotifyOriginator(rs.getInt(10) == 1);
+        msg.setConnectionName(rs.getString(11));
         return msg;
       }
 
@@ -281,6 +283,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
       ps.setInt(6, secretMessage.isSaveDeliveryStatus() ? 1 : 0);
       ps.setInt(7, secretMessage.getSmppStatus());
       ps.setInt(8, secretMessage.isNotifyOriginator() ? 1 : 0);
+      ps.setString(9, secretMessage.getConnectionName());
 
       if (!secretMessage.isExists()) {
         synchronized (idLock) {
@@ -289,7 +292,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         }
       }
 
-      ps.setInt(9, secretMessage.getId());
+      ps.setInt(10, secretMessage.getId());
 
       ps.executeUpdate();
 
@@ -354,6 +357,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setSaveDeliveryStatus(rs.getInt(9) == 1);
         msg.setSmppStatus(rs.getInt(10));
         msg.setNotifyOriginator(rs.getInt(11) == 1);
+        msg.setConnectionName(rs.getString(12));
         messages.add(msg);
       }
 
@@ -369,6 +373,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
         msg.setSaveDeliveryStatus(rs.getInt(9) == 1);
         msg.setSmppStatus(rs.getInt(10));
         msg.setNotifyOriginator(rs.getInt(11) == 1);
+        msg.setConnectionName(rs.getString(12));
         messages.add(msg);
       }
 

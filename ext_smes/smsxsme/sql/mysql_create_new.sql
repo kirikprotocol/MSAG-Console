@@ -9,6 +9,7 @@ CREATE TABLE calendar_messages (
   save_delivery_status INT NOT NULL,
   message TEXT NOT NULL,
   smpp_status INT,
+  conn CHAR(10),
 
   PRIMARY KEY(id),
   INDEX(send_time)
@@ -33,6 +34,7 @@ CREATE TABLE sec_messages (
   status INT NOT NULL,
   save_delivery_status INT NOT NULL,
   notify_originator INT NOT NULL,
+  conn CHAR(10),
 
   PRIMARY KEY(id),
   INDEX(destination_address, status)

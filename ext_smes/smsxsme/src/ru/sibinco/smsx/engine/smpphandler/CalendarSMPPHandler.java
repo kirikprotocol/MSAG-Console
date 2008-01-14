@@ -126,6 +126,7 @@ class CalendarSMPPHandler extends SMPPHandler {
         cmd.setMessage(result.message);
         cmd.setDestAddressSubunit(inObj.getIncomingMessage().getDestAddrSubunit());
         cmd.setStoreDeliveryStatus(false);
+        cmd.setSourceId(Command.SOURCE_SMPP);
         cmd.addExecutionObserver(new CommandObserver() {
           public void update(Command command) {
             final CalendarSendMessageCmd cmd = (CalendarSendMessageCmd)command;

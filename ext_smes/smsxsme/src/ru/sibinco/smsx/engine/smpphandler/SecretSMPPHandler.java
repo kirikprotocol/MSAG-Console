@@ -230,6 +230,7 @@ class SecretSMPPHandler extends SMPPHandler {
     cmd.setDestAddressSubunit(msg.getDestAddrSubunit());
     cmd.setSaveDeliveryStatus(false);
     cmd.setNotifyOriginator(true);
+    cmd.setSourceId(Command.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver(){
       public void update(Command command) {
         final SecretSendMessageCmd cmd = (SecretSendMessageCmd)command;
