@@ -2,17 +2,18 @@ package ru.sibinco.smpp.ub_sme.mg;
 
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
-import ru.sibinco.smpp.ub_sme.Sme;
 import ru.sibinco.smpp.ub_sme.SmeEngine;
 
 
 public class MgRequestStateProcessor implements Runnable {
+    private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(MgRequestStateProcessor.class);
     protected MGState state;
     protected SmeEngine smeEngine;
+    protected MGRequestManager requestManager;
 
-    public MgRequestStateProcessor(MGState state) {
+    public MgRequestStateProcessor(MGState state, MGRequestManager requestManager) {
         this.state = state;
-        smeEngine = Sme.getSmeEngine();
+        this.requestManager = requestManager;
     }
 
     public void run() {
@@ -22,8 +23,9 @@ public class MgRequestStateProcessor implements Runnable {
         message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
         message.setType(Message.TYPE_SUBMIT);
         state.setMgState(MGState.MG_WAIT_RESP);
-        smeEngine.sendMgRequest(state, message);
+        requestManager.sendMgRequest(message, state);
         state.closeProcessing();
     }
+
 
 }

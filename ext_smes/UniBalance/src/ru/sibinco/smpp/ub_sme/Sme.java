@@ -2,9 +2,7 @@ package ru.sibinco.smpp.ub_sme;
 
 import ru.aurorisoft.smpp.Multiplexor;
 import ru.aurorisoft.smpp.SMPPException;
-import ru.sibinco.smpp.ub_sme.util.DBConnectionManager;
 import ru.sibinco.smpp.ub_sme.util.Utils;
-import ru.sibinco.smpp.ub_sme.InitializationException;
 import ru.sibinco.util.threads.ThreadsPool;
 
 import java.io.IOException;
@@ -18,7 +16,6 @@ public class Sme {
     private final static org.apache.log4j.Category Logger = org.apache.log4j.Category.getInstance(Sme.class);
 
     public static String version = " SibInfoConsulting UniBalance ";
-    private static SmeEngine smeEngine;
 
     static {
         URL codeBase = Sme.class.getProtectionDomain().getCodeSource().getLocation();
@@ -144,8 +141,7 @@ public class Sme {
         ThreadsPool threadsPool = new ThreadsPool(config, "threads.pool");
 
         // SME engine
-        //TODO переделать
-        smeEngine = new SmeEngine(multiplexor, outQueue, threadsPool);
+        SmeEngine smeEngine = new SmeEngine(multiplexor, outQueue, threadsPool);
         smeEngine.init(config);
         //ProfileAbonentManager.init(config);
 
@@ -167,7 +163,4 @@ public class Sme {
         }
     }
 
-    public static SmeEngine getSmeEngine() {
-        return smeEngine;
-    }
 }

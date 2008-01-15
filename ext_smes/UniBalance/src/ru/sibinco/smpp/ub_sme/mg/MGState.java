@@ -1,9 +1,9 @@
 package ru.sibinco.smpp.ub_sme.mg;
 
-import com.logica.smpp.Data;
 import com.lorissoft.advertising.syncclient.IAdvertisingResponseHandler;
 import ru.aurorisoft.smpp.Message;
-import ru.sibinco.smpp.ub_sme.*;
+import ru.sibinco.smpp.ub_sme.ExpireStateProcessor;
+import ru.sibinco.smpp.ub_sme.StateInterface;
 import ru.sibinco.util.threads.ThreadsPool;
 
 import java.io.UnsupportedEncodingException;
@@ -14,7 +14,8 @@ import java.io.UnsupportedEncodingException;
  * Time: 3:33:49 PM
  */
 public class MGState implements StateInterface, IAdvertisingResponseHandler {
-     private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(MGState.class);
+    //TODO SMS mode
+    private final static org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(MGState.class);
     public static final byte MG_WAIT_RESP = 1;
     public static final byte MG_ERR = 2;
     public static final byte MG_OK = 3;
@@ -35,7 +36,8 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     protected Message abonentRequest;
     protected long requestTime;
     protected String encoding;
-    protected Object expireObject=new Object();
+    protected Object expireObject = new Object();
+    MGRequestManager requestManager;
 
     public String getMgBalance() {
         return mgBalance;
@@ -63,19 +65,20 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
         this.banner = banner;
     }
 
-    public MGState(ThreadsPool pool, Message message) {
+    public MGState(ThreadsPool pool, Message message, MGRequestManager requestManager) {
         this.pool = pool;
         this.abonentRequest = message;
-        if(abonentRequest.hasCodeSet()){
-           if(abonentRequest.getCodeset()==0){
-               encoding="tr";
-           }
-           if(abonentRequest.getCodeset()==8){
-               encoding="rus";
-           }
-           if(logger.isDebugEnabled()){
-               logger.debug("Set abonent message encoding:"+encoding);               
-           }
+        this.requestManager = requestManager;
+        if (abonentRequest.hasCodeSet()) {
+            if (abonentRequest.getCodeset() == 0) {
+                encoding = "tr";
+            }
+            if (abonentRequest.getCodeset() == 8) {
+                encoding = "rus";
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Set abonent message encoding:" + encoding);
+            }
         }
         requestTime = System.currentTimeMillis();
     }
@@ -90,40 +93,28 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     }
 
     public void startProcessing() {
-        pool.execute(new MgRequestStateProcessor(this));
-        Sme.getSmeEngine().requestBanner(this);
-//        pool.execute(new ProfileStateProcessor(this));
-        pool.execute(new ExpireStateProcessor(this));
+        pool.execute(new MgRequestStateProcessor(this, requestManager));
+        requestManager.requestBanner(this);
+        pool.execute(new ExpireStateProcessor(this, requestManager));
     }
 
     public synchronized void closeProcessing() {
         if (expired || closed) return;
 
 
-        if (mgState == MG_OK&&(bannerState==BE_RESP_ERR||bannerState==BE_RESP_OK)){
-            String message = Sme.getSmeEngine().prepareBalanceMessage(getMgBalance(), getBanner(), getEncoding());
+        if (mgState == MG_OK && (bannerState == BE_RESP_ERR || bannerState == BE_RESP_OK)) {
+            String message = requestManager.prepareBalanceMessage(getMgBalance(), getBanner(), getEncoding());
             setMessage(message);
-            Sme.getSmeEngine().sendResponse(this);
+            requestManager.sendResponse(this);
             close();
         }
         if (mgState == MG_ERR) {
-            Sme.getSmeEngine().sendErrorSmsMessage(this);
+            requestManager.sendErrorSmsMessage(this);
             close();
         }
 
     }
-    public void response(Message msg){
-              if (isExpired()) {
-                Sme.getSmeEngine().sendDeliverSmResponse(msg, Data.ESME_RSYSERR);
-                 setMgState(MGState.MG_ERR);
-                 closeProcessing();
-                 return;
-            }
-            Sme.getSmeEngine().sendDeliverSmResponse(msg, Data.ESME_ROK);
-            setMgBalance(msg.getMessageString());
-            setMgState(MGState.MG_OK);
-            closeProcessing();
-    }
+
 
     public Message getAbonentRequest() {
         return abonentRequest;
@@ -151,10 +142,10 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
 
     public synchronized void close() {
         this.closed = true;
-        synchronized (expireObject){
+        synchronized (expireObject) {
             expireObject.notify();
         }
-     }
+    }
 
 
     public synchronized int getBannerState() {
@@ -183,9 +174,9 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
         sb.append(abonentRequest.getSourceAddress());
         sb.append(" dst:");
         sb.append(abonentRequest.getDestinationAddress());
-        sb.append(" mgState:"+getMgState());
-        sb.append(" bannerState:"+getBannerState());
-        sb.append(" profState:"+getProfState());
+        sb.append(" mgState:" + getMgState());
+        sb.append(" bannerState:" + getBannerState());
+        sb.append(" profState:" + getProfState());
         return sb.toString();
     }
 
@@ -194,22 +185,22 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
 //        String banner = Sme.getSmeEngine().getBanner(state);
         String encoding = "UTF-16BE";
         String banner = null;
-        if(bytes!=null){
+        if (bytes != null) {
             try {
-                banner = new String(bytes,encoding);
+                banner = new String(bytes, encoding);
             } catch (UnsupportedEncodingException e) {
                 logger.error("Unsupported encoding: " + encoding, e);
             }
         }
-        if(logger.isDebugEnabled()){
-            logger.debug("Got banner:"+banner);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Got banner:" + banner);
         }
 
         if (null == banner) {
-           setBannerState(MGState.BE_RESP_ERR);
+            setBannerState(MGState.BE_RESP_ERR);
         } else {
-           setBanner(banner);
-           setBannerState(MGState.BE_RESP_OK);
+            setBanner(banner);
+            setBannerState(MGState.BE_RESP_OK);
         }
         closeProcessing();
     }
