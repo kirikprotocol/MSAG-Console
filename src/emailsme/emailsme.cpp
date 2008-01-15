@@ -605,7 +605,12 @@ public:
     while(running)
     {
       std::auto_ptr<smsc::core::network::Socket> clnt(sck.Accept());
-      if(!clnt.get())break;
+      if(!clnt.get())
+      {
+        int err=errno;
+        smsc_log_warn(log,"Accept returned NULL. Errno=%d, Errstr='%s'",err,strerror(err));
+        break;
+      }
       char szbuf[4]={0,};
       int sz=0;
       while(sz<4)
