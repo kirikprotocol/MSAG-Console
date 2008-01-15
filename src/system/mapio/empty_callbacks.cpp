@@ -5,7 +5,7 @@ extern "C"{
 
 #define _CB(a) unsigned short a() {__warning2__("MAP::%s callback was called\n",#a); /*return ET96MAP_E_OK;*/ return 1;}
 
-_CB(MapSubmitSMInd)              
+_CB(MapSubmitSMInd)
 _CB(MapReportSMInd)
 _CB(MapAlertInd)
 _CB(MapBeginInd)
@@ -42,17 +42,18 @@ _CB(Et96MapV1EnhancedImeiCheckInd)
 //_CB(Et96MapV2UnstructuredSSNotifyConf)
 _CB(Et96MapV2SendImsiConf)
 
-_CB(Et96MapV3ProvideSubscriberLCSConf) 
+_CB(Et96MapV3ProvideSubscriberLCSConf)
 _CB(Et96MapV3SendRInfoForLCSConf)
 _CB(Et96MapV3SubscriberLCSReportInd)
-//_CB(Et96MapV3ForwardSmMTConf)    
+//_CB(Et96MapV3ForwardSmMTConf)
 _CB(Et96MapV3SendRInfoForSmConf)
 //_CB(Et96MapV3ForwardSmMOInd)
-_CB(Et96MapV3ReportSmDelStatConf)   
+_CB(Et96MapV3ReportSmDelStatConf)
 _CB(Et96MapV3InformSCInd)
 _CB(Et96MapV3AnyTimeInterrogationConf)
 _CB(Et96MapV3AnyTimeInterrogationInd)
 _CB(Et96MapV3ProvideSubscriberInfoConf)
 
+_CB(Et96MapGetACVersionConf)
 
 }

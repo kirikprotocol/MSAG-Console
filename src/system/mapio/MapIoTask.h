@@ -10,10 +10,13 @@ $Id$
 #include <memory.h>
 #include <time.h>
 #include "util/debug.h"
-#include "../../util/smstext.h"
-#include "../../sms/sms.h"
-#include "../../smeman/smsccmd.h"
-#include "../../smeman/smeman.h"
+#include "util/smstext.h"
+#include "sms/sms.h"
+#include "smeman/smsccmd.h"
+#include "smeman/smeman.h"
+#include "core/synchronization/RecursiveMutex.hpp"
+#include "core/threads/ThreadPool.hpp"
+
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
@@ -34,10 +37,10 @@ using namespace smsc::util;
 #define __mapdlg_trace2__(format,...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,__VA_ARGS__)
 #define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
 
-#include "../../core/buffers/XHash.hpp"
-#include "../../core/synchronization/Mutex.hpp"
-#include "../../core/synchronization/Event.hpp"
-#include "../../core/threads/ThreadedTask.hpp"
+#include "core/buffers/XHash.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "core/threads/ThreadedTask.hpp"
 
 #include "MapProxy.h"
 
@@ -163,6 +166,29 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 
 static const unsigned MAX_DIALOGID_POOLED  = 8*2000+1;
 
+struct WaitListNode{
+  EventMonitor& monRef;
+  pthread_cond_t waitvar;
+  WaitListNode* next;
+  WaitListNode(EventMonitor& mon):monRef(mon)
+  {
+    pthread_cond_init(&waitvar,0);
+    next=0;
+  }
+  void wait()
+  {
+    monRef.wait(&waitvar);
+  }
+  void notify()
+  {
+    monRef.notify(&waitvar);
+  }
+  ~WaitListNode()
+  {
+    pthread_cond_destroy(&waitvar);
+  }
+};
+
 /**
   \class MapDialog
 */
@@ -178,7 +204,7 @@ struct MapDialog{
   bool isQueryAbonentStatus:1;
   bool dropChain:1;
   bool id_opened:1;
-//  Mutex mutex;
+  Mutex mutex;
   MapState state;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
   unsigned dialogid_smsc;
@@ -212,6 +238,9 @@ struct MapDialog{
   unsigned udhiMsgCount;
   long long maked_at_mks;
   time_t   lockedAt;
+  bool dlgInUse;
+  WaitListNode* wlhead;
+  WaitListNode* wltail;
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) :
@@ -242,7 +271,10 @@ struct MapDialog{
     udhiMsgNum(0),
     udhiMsgCount(0),
     lockedAt(0),
-    ref_count(1)
+    ref_count(1),
+    dlgInUse(false),
+    wlhead(0),
+    wltail(0)
   {
     memset(&m_msAddr, 0, sizeof(ET96MAP_ADDRESS_T));
     memset(&m_scAddr, 0, sizeof(ET96MAP_ADDRESS_T));
@@ -256,37 +288,42 @@ struct MapDialog{
     gettimeofday( &tv, 0 );
     maked_at_mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
   }
-  virtual ~MapDialog(){
+  virtual ~MapDialog()
+  {
     require ( ref_count == 0 );
     require ( chain.size() == 0 );
 //    if ( dialogid_smsc != 0 && dialogid_map != 0){
 //      require(dialogid_map < MAX_DIALOGID_POOLED);
     if ( dialogid_map < MAX_DIALOGID_POOLED )
+    {
       freeDialogueId(dialogid_map);
+    }
     //}
     if ( associate ) associate->Release();
     associate = 0;
     MAPSTATS_DumpDialogLC(this);
   }
 //  Mutex& getMutex(){return mutex;}
-  void Release(){
+  void Release()
+  {
     unsigned x = 0;
-//    mutex.Lock();
+    mutex.Lock();
     x = --ref_count;
-//    mutex.Unlock();
-    if ( x == 0 ){
+    mutex.Unlock();
+    if ( x == 0 )
+    {
       delete this;
     }
   }
 
   MapDialog* AddRef(){
-//    MutexGuard g(mutex);
+    MutexGuard g(mutex);
     ++ref_count;
     return this;
   }
 
   void Clean() {
-//    MutexGuard g(mutex);
+    MutexGuard g(mutex);
     state = MAPST_START;
     //dialogid_map = 0;
     //dialogid_smsc;
@@ -306,6 +343,38 @@ struct MapDialog{
     mms = false;
     isUSSD = false;
   }
+
+  //MUST be called when monitor locked
+  void MarkInUse(WaitListNode& wln)
+  {
+    if(dlgInUse)
+    {
+      if(wlhead)
+      {
+        wltail->next=&wln;
+        wltail=&wln;
+      }else
+      {
+        wlhead=&wln;
+      }
+    }else
+    {
+      dlgInUse=true;
+    }
+  }
+
+  //MUST be called when monitor locked
+  void RemoveInUse()
+  {
+    dlgInUse=false;
+    if(wlhead)
+    {
+      wlhead->notify();
+      if(wlhead==wltail)wltail=0;
+      wlhead=wlhead->next;
+    }
+  }
+
 private:
   unsigned ref_count;
 };
@@ -340,7 +409,7 @@ class MapDialogContainer{
   };
   static MapDialogContainer* container;
 //  static Mutex sync_object;
-//  Mutex sync;
+  RecursiveMutex sync;
   static MapProxy* proxy;
   time_t last_dump_time;
   XHash<unsigned,MapDialog*,hash_func_ET96MAP_DID> hash_;
@@ -360,7 +429,8 @@ class MapDialogContainer{
   int    processTimeout;
   int    processLimit;
 
-  void Dump() {
+  void Dump()
+  {
     static smsc::logger::Logger* dlogger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
     if ( time(0) < last_dump_time+60 ) return;
     last_dump_time = time(0);
@@ -368,12 +438,15 @@ class MapDialogContainer{
     MapDialog* dlg;
     hash_.First();
     time_t now = time(NULL);
-    while(hash_.Next(key,dlg)) {
-      if((now-(dlg->maked_at_mks/1000000))>processTimeout*2) {
+    while(hash_.Next(key,dlg))
+    {
+      if((now-(dlg->maked_at_mks/1000000))>processTimeout*2)
+      {
         MAPSTATS_DumpDialog(dlg, now, true);
         AbortMapDialog(dlg->dialogid_map, dlg->ssn);
-        for (;!dlg->chain.empty();dlg->chain.pop_front())
+        while(!dlg->chain.empty())
         {
+          dlg->chain.pop_front();
           //drop chain elements
         }
         _dropDialog(dlg);
@@ -382,7 +455,7 @@ class MapDialogContainer{
       }
     }
   }
-  
+
 public:
   static ET96MAP_LOCAL_SSN_T *localSSNs;
   static int                *boundLocalSSNs;
@@ -390,6 +463,9 @@ public:
   static int                 numLocalSSNs;
   static smsc::logger::Logger* loggerStatDlg;
   static smsc::logger::Logger* loggerMapPdu;
+
+  //used by MapIoTask
+  EventMonitor receiveMon;
 
   void setPerformanceLimits(int newTimeOut,int newProcLimit)
   {
@@ -411,12 +487,14 @@ public:
   /**
    * need for statistics
    **/
-  void restartStatistics() {
+  void restartStatistics()
+  {
 //    MutexGuard g(sync);
     MAPSTATS_Restart();
   }
 
-  static void destroyInstance(){
+  static void destroyInstance()
+  {
 //    MutexGuard g(sync_object);
     if ( container ) {
       delete container;
@@ -424,12 +502,15 @@ public:
     }
   }
 
-  void DropAllDialogs() {
+  void DropAllDialogs()
+  {
+    MutexGuard g(sync);
     unsigned key;
     MapDialog* dlg;
     hash_.First();
     __mapdlg_trace2__("%s: dropping all dialogs",__func__);
-    while(hash_.Next(key,dlg)) {
+    while(hash_.Next(key,dlg))
+    {
       for (;!dlg->chain.empty();dlg->chain.pop_front())
       {
         //drop chain elements
@@ -440,7 +521,8 @@ public:
 
   static MapDialogContainer* getInstance(){
 //    MutexGuard g(sync_object);
-    if ( !container ) {
+    if ( !container )
+    {
       loggerStatDlg = smsc::logger::Logger::getInstance("map.stat.dlg");
       loggerMapPdu = smsc::logger::Logger::getInstance("map.pdu");
       container = new MapDialogContainer();
@@ -456,7 +538,8 @@ public:
   static string GetUSSDAdress() { return USSD_ADRESS_VALUE; }
   static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
   static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
-  static void SetUSSDSSN(int ssn, const string& addUssdSSN) { 
+  static void SetUSSDSSN(int ssn, const string& addUssdSSN)
+  {
     ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn;
     int addssns = 0;
     if( addUssdSSN.length() > 0 ) {
@@ -505,19 +588,23 @@ public:
   }
 
   unsigned getDialogCount() {
+    MutexGuard g(sync);
     return hash_.Count();
   }
 
   unsigned getNumberOfDialogs()
   {
+    MutexGuard g(sync);
     return lock_map.Count();
   }
 
 
-  MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
-//    MutexGuard g(sync);
+  MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn)
+  {
+    MutexGuard g(sync);
     MapDialog* dlg = 0;
-    if ( hash_.Get(MKDID(dialogueid,lssn),dlg) ) {
+    if ( hash_.Get(MKDID(dialogueid,lssn),dlg) )
+    {
       dlg->AddRef();
       return dlg;
     }
@@ -527,9 +614,10 @@ public:
     }
   }
 
-  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2){
-//    MutexGuard g(sync);
+  MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2)
+  {
     if( MAPSTATS_dialogs_in >= processLimit ) {
+      MutexGuard g(sync);
       Dump();
       throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
     }
@@ -538,6 +626,8 @@ public:
       throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
     }
     MAPSTATS_Update(MAPSTATS_NEWDIALOG_IN);
+
+    MutexGuard g(sync);
     MapDialog* dlg = new MapDialog(dialogueid,lssn,version);
     hash_.Insert(MKDID(dialogueid,lssn),dlg);
     __mapdlg_trace2__("created new dialog 0x%p for dialogid 0x%x",dlg,dialogueid);
@@ -545,8 +635,9 @@ public:
     return dlg;
   }
 
-  MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate){
-//    MutexGuard g(sync);
+  MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate)
+  {
+    MutexGuard g(sync);
     if ( dialogId_pool.empty() ) {
       Dump();
       throw runtime_error("MAP:: POOL is empty");
@@ -564,54 +655,68 @@ public:
   }
 
 
-  MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
-//    MutexGuard g(sync);
-    if ( dialogId_pool.empty() ) {
+  MapDialog* createOrAttachSMSCDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
+  {
+    MutexGuard g(sync);
+    if ( dialogId_pool.empty() )
+    {
       smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
     __mapdlg_trace2__("try to create SMSC dialog on abonent %s",abonent.c_str());
-    if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) ) {
+    if ( ( abonent.length() != 0 ) && lock_map.Exists(abonent) )
+    {
       MapDialog* item = lock_map[abonent];
-      if ( item == 0 ) {
+      if ( item == 0 )
+      {
         __mapdlg_trace2__("dialog for abonent %s is not present!",abonent.c_str());
         throw runtime_error("MAP::createOrAttachSMSCDialog: has no dialog for abonent ");
       }
       // check if dialog is opened too long
       time_t curtime = time(NULL);
-      if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME ) {
+      if( curtime - item->lockedAt >= MAX_MT_LOCK_TIME )
+      {
         // drop locked dialog and all msg in chain, and create dialog as new.
         __warn2__(smsc::logger::_mapdlg_cat,"Dialog locked too long id=%x.",item->dialogid_map);
-        for (;!item->chain.empty();item->chain.pop_front())
+        while(!item->chain.empty())
         {
-    //drop chain elements
+          //drop chain elements
+          item->chain.pop_front();
         }
         _dropDialog( item->dialogid_map, item->ssn );
-      } else {
-        if( item->sms.get() && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
+      } else
+      {
+        if( item->sms.get() && item->sms.get()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+        {
           // check if it's really next part of concatenated message
-          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) ) {
+          if( !cmd->get_sms()->hasBinProperty(Tag::SMSC_CONCATINFO) )
+          {
             throw NextMMSPartWaiting("Waiting next part of concat message");
           }
-          if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() ) {
+          if( item->sms.get()->getConcatMsgRef() != cmd->get_sms()->getConcatMsgRef() )
+          {
             __mapdlg_trace2__("Waiting next part of other concat message: %d != %d",item->sms.get()->getConcatMsgRef(),cmd->get_sms()->getConcatMsgRef());
             throw NextMMSPartWaiting("Waiting next part of other concat message");
           }
-          if( item->state == MAPST_WaitNextMMS ) {
+          if( item->state == MAPST_WaitNextMMS )
+          {
             item->state = MAPST_SendNextMMS;
             item->dialogid_smsc = smsc_did;
             item->abonent = abonent;
             item->AddRef();
             item->lockedAt = time(NULL);
             return item;
-          } else {
+          } else
+          {
             __mapdlg_trace2__("add command to chain, size %d",item->chain.size());
             item->chain.push_back(cmd);
             return 0;
           }
-        } else {
-          if ( item->chain.size() > 25 ) {
+        } else
+        {
+          if ( item->chain.size() > 25 )
+          {
             __mapdlg_trace2__("chain is vely long (%d)",item->chain.size());
             throw ChainIsVeryLong("chain is very long");
           }
@@ -621,7 +726,8 @@ public:
         }
       }
     }
-    if( MAPSTATS_dialogs_out >= processLimit*2 ) {
+    if( MAPSTATS_dialogs_out >= processLimit*2 )
+    {
       Dump();
       throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
     }
@@ -639,16 +745,19 @@ public:
     return dlg;
   }
 
-  MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd){
+  MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
+  {
     //if ( abonent.length() == 0 )
     //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
-//    MutexGuard g(sync);
-    if ( dialogId_pool.empty() ) {
+    MutexGuard g(sync);
+    if ( dialogId_pool.empty() )
+    {
       smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
-    if( MAPSTATS_dialogs_out >= processLimit*2 ) {
+    if( MAPSTATS_dialogs_out >= processLimit*2 )
+    {
       Dump();
       throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
     }
@@ -666,25 +775,30 @@ public:
     return dlg;
   }
 
-  USHORT_T reAssignDialog(unsigned did,unsigned oldssn,unsigned ssn){
-//    MutexGuard g(sync);
+  USHORT_T reAssignDialog(unsigned did,unsigned oldssn,unsigned ssn)
+  {
+    MutexGuard g(sync);
     MapDialog* dlg = 0;
     hash_.Get(MKDID(did,oldssn),dlg);
-    if ( dlg == 0 ){
+    if ( dlg == 0 )
+    {
       __mapdlg_trace2__("couldn't reassign dialog, here is no did 0x%x",did);
       throw runtime_error("MAP:: reassign dialog: here is no did");
     }
     MAPSTATS_DumpDialogLC(dlg);
-    if ( dialogId_pool.empty() ) {
+    if ( dialogId_pool.empty() )
+    {
       smsc_log_warn(smsc::logger::_mapdlg_cat, "Dialog id POOL is empty" );
       Dump();
       throw runtime_error("MAP:: POOL is empty");
     }
     ET96MAP_DIALOGUE_ID_T dialogid_map = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
-    if ( did < MAX_DIALOGID_POOLED ) {
+    if ( did < MAX_DIALOGID_POOLED )
+    {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
       dialogId_pool.push_back(did);
-    } else {
+    } else
+    {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
     }
     MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
@@ -701,42 +815,59 @@ public:
     return dialogid_map;
   }
 
-  void releaseDialog(MapDialog *dialog){
+  void releaseDialog(MapDialog *dialog)
+  {
 //    MutexGuard g(sync);
     dialog->Release();
   }
 
-  void eraseLockMapEntry(const std::string& abonent){
-//    MutexGuard g(sync);
-    if ( abonent.length() != 0 ) {
+  void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
+  {
+    MutexGuard g(sync);
+    dialogId_pool.push_back(dialogueId);
+  }
+
+  void eraseLockMapEntry(const std::string& abonent)
+  {
+    MutexGuard g(sync);
+    if ( abonent.length() != 0 )
+    {
       lock_map.Delete(abonent);
     }
   }
 
-  void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
-//    MutexGuard g(sync);
+  void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn)
+  {
+    MutexGuard g(sync);
     _dropDialog(dialogueid,ssn);
   }
 
-  void _dropDialog(MapDialog* item){
-    if ( item->abonent.length() != 0 && !item->isUSSD) {
+  void _dropDialog(MapDialog* item)
+  {
+    if ( item->abonent.length() != 0 && !item->isUSSD)
+    {
       lock_map.Delete(item->abonent);
     }
     hash_.Delete(MKDID(item->dialogid_map,item->ssn));
     item->state = MAPST_END;
-    if(item->dialogid_map < MAX_DIALOGID_POOLED ) {
+    if(item->dialogid_map < MAX_DIALOGID_POOLED )
+    {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
-    } else {
+    } else
+    {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
     }
     item->Release();
   }
 
-  void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn){
+  void _dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid,unsigned ssn)
+  {
     MapDialog* item = 0;
-    if ( hash_.Get(MKDID(dialogueid,ssn),item) ){
+    if ( hash_.Get(MKDID(dialogueid,ssn),item) )
+    {
       _dropDialog(item);
-    }else{
+    }else
+    {
       __mapdlg_trace2__("has no dialog for dialogid 0x%x",dialogueid);
     }
   }
@@ -747,26 +878,68 @@ public:
 
 class DialogRefGuard{
   MapDialog* dialog;
+  bool inuse;
   DialogRefGuard(const DialogRefGuard&);
+
 public:
-  DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
-  ~DialogRefGuard(){
-    if ( dialog ) {
-      MapDialogContainer::getInstance()->releaseDialog(dialog);
-    }
+  DialogRefGuard(MapDialog* d = 0):dialog(d),inuse(false){/*d->AddRef();*/}
+  ~DialogRefGuard()
+  {
+    release();
   }
   void assign(MapDialog* d){
-    if ( dialog == d ) return;
-    if ( dialog ) {
-      MapDialogContainer::getInstance()->releaseDialog(dialog);
+    if ( dialog == d )
+    {
+      return;
+    }
+    if ( dialog )
+    {
+      release();
     }
     dialog = d;
     dialog->lockedAt = time(NULL);
   }
-  bool isnull(){return dialog==0;}
-  void forget(){dialog = 0;}
-  MapDialog* operator->() { return dialog; }
-  MapDialog* get() { return dialog; }
+  void release()
+  {
+    if ( dialog )
+    {
+      if(inuse)
+      {
+        MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
+        dialog->RemoveInUse();
+        inuse=false;
+      }
+      MapDialogContainer::getInstance()->releaseDialog(dialog);
+    }
+    dialog=0;
+  }
+  void MarkInUse()
+  {
+    if(!dialog)
+    {
+      return;
+    }
+    MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
+    WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
+    dialog->MarkInUse(wln);
+  }
+  bool isnull()
+  {
+    return dialog==0;
+  }
+  void forget()
+  {
+    dialog = 0;
+    inuse=false;
+  }
+  MapDialog* operator->()
+  {
+    return dialog;
+  }
+  MapDialog* get()
+  {
+    return dialog;
+  }
 };
 
 
@@ -774,7 +947,7 @@ inline
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
 {
 //  __mapdlg_trace2__("Dialogid 0x%x retuned to pool",dialogueId);
-  MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
+  MapDialogContainer::getInstance()->freeDialogueId(dialogueId);
 }
 
 class MapTracker : public ThreadedTask{
@@ -785,10 +958,9 @@ public:
 
 /*
 */
-class MapIoTask : public ThreadedTask{
+class MapIoTask{
 public:
-  virtual int Execute();
-  virtual const char* taskName() { return "MapIoTask";}
+
   bool isStarted() {return is_started;}
   MapProxy proxy;
   MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, const string& addUssdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent),is_started(false)
@@ -803,13 +975,57 @@ public:
     MapDialogContainer::setAllowCallBarred(allowCallBarred);
     MapDialogContainer::setUssdV1Enabled(ussdV1Enabled);
     MapDialogContainer::setUssdV1UseOrigEntityNumber(ussdV1UseOrigEntityNumber);
+    mapIoTaskCount=1;
+    inReceive=false;
+    deinited=false;
   }
-  ~MapIoTask() {
+  void Start();
+  void setMapIoTaskCount(int newcnt)
+  {
+    mapIoTaskCount=newcnt;
+  }
+  ~MapIoTask()
+  {
     __mapdlg_trace__("Destroying MapIoTask");
     MapDialogContainer::setProxy( 0 );
   }
+protected:
+  class DispatcherExecutor;
+  friend class MapIoTask::DispatcherExecutor;
+  class DispatcherExecutor:public smsc::core::threads::ThreadedTask{
+  public:
+    DispatcherExecutor(MapIoTask* mit):mapIoTask(mit)
+    {
+    }
+    virtual int Execute()
+    {
+      while(!mapIoTask->isStopping)
+      {
+        try{
+          mapIoTask->dispatcher();
+        }catch(std::exception& e)
+        {
+          __map_warn2__("Exception in dispatcher:'%s'",e.what());
+        }
+      }
+      return 0;
+    }
+    virtual void stop()
+    {
+      mapIoTask->isStopping=true;
+    }
+    virtual const char* taskName() { return "MapIoTask::dispatcher";}
+  protected:
+    MapIoTask* mapIoTask;
+  };
+
 private:
+  int mapIoTaskCount;
+  smsc::core::threads::ThreadPool tp;
   Event* startevent;
+  bool inReceive;
+  bool isStopping;
+  bool deinited;
   bool is_started;
   void dispatcher();
   void init(unsigned timeout=0);
