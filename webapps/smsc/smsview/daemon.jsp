@@ -123,6 +123,7 @@
         startParams(out);
         param(out, "common.util.host", "ArchiveDaemon.View.host", bean.getStringParam("ArchiveDaemon.View.host"));
         param(out, "common.util.port", "ArchiveDaemon.View.port", bean.getIntParam("ArchiveDaemon.View.port"));
+        param(out, "common.util.timeout", "ArchiveDaemon.View.timeout", bean.getIntParam("ArchiveDaemon.View.timeout"));
         finishParams(out);
         finishSection(out);
         //################################## Queries #############################
@@ -172,6 +173,7 @@
         param(out, "smsview.routeIdChunkSize", "ArchiveDaemon.Indexator.routeIdChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.routeIdChunkSize"));
         param(out, "smsview.addrRootSize", "ArchiveDaemon.Indexator.addrRootSize", bean.getIntParam("ArchiveDaemon.Indexator.addrRootSize"));
         param(out, "smsview.defAddrChunkSize", "ArchiveDaemon.Indexator.defAddrChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
+        param(out, "smsview.maxFlushSpeed", "ArchiveDaemon.Indexator.maxFlushSpeed", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
         finishParams(out);
         startSection(out, "smeAddrChunkSize", "smsview.smeAddrChunkSize", true);
         final String baseSmeSection = SmsDaemonFormBean.SME_PARAMS_SECTION;
