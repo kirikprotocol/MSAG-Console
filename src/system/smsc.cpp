@@ -1303,6 +1303,7 @@ void Smsc::run()
 #if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber);
+    mapioptr=mapio;
     //tp.startTask(mapio);
     mapio->setMapIoTaskCount(mapIOTasksCount);
     mapio->Start();
@@ -1406,6 +1407,10 @@ void Smsc::shutdown()
   smeman.unregisterSmeProxy(scheduler);
 
   tp2.shutdown();
+
+#if defined(USE_MAP)
+  MapIoTask *mapio=(MapIoTask*)mapioptr;
+#endif
 
   smsc::closedgroups::ClosedGroupsManager::Shutdown();
 

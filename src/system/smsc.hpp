@@ -159,6 +159,7 @@ public:
     nodeIndex=0;
     mainLoopsCount=1;
     mapIOTasksCount=1;
+    mapioptr=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg, const char * node);
@@ -739,6 +740,7 @@ protected:
 
   int mainLoopsCount;
   int mapIOTasksCount;
+  void* mapioptr;
 };
 
 }//system

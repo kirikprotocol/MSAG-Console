@@ -357,6 +357,7 @@ struct MapDialog{
         wlhead=&wln;
       }
       wltail=&wln;
+      wln.monRef.wait(&wln.waitvar);
     }else
     {
       dlgInUse=true;
