@@ -41,6 +41,7 @@
   </section>
   
   <section name="map">
+    <param name="mapIOTasksCount" type="int">5</param>
     <param name="busyMTDelay" type="int">20</param>
     <param name="lockedByMODelay" type="int">20</param>
     <param name="MOLockTimeout" type="int">45</param>
