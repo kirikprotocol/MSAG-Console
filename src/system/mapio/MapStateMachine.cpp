@@ -1535,7 +1535,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){
-  MutexGuard mapMutexGuard(mapMutex);
+//  MutexGuard mapMutexGuard(mapMutex);
   MAPIO_PutCommand(cmd, 0 );
 }
 

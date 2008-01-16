@@ -260,6 +260,7 @@ struct ReceiveGuard{
   ReceiveGuard(EventMonitor& m,bool& inrec,bool& isst):mon(m),
     inReceive(inrec),isStopping(isst),active(true)
   {
+    MutexGuard mg(mon);
     while(inReceive && !isStopping)
     {
       mon.wait();
@@ -463,7 +464,7 @@ void MapIoTask::dispatcher()
         }
       }else
       {
-        dlg=MapDialogContainer::getInstance()->getDialog(dlgId,lssn);
+        dlg.assign(MapDialogContainer::getInstance()->getDialog(dlgId,lssn));
         if(dlg.isnull())
         {
           __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)message.primitive,(unsigned int)dlgId,(unsigned int)lssn);
@@ -476,8 +477,11 @@ void MapIoTask::dispatcher()
       MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
       inReceive=false;
       MapDialogContainer::getInstance()->receiveMon.notify();
-      WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
-      dlg->MarkInUse(wln);
+      if( !dlg.isnull() ) {
+        WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
+        dlg->MarkInUse(wln);
+	dlg.ExternalInUse();
+      }
     }
 
     /*

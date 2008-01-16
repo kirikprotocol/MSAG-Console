@@ -352,11 +352,11 @@ struct MapDialog{
       if(wlhead)
       {
         wltail->next=&wln;
-        wltail=&wln;
       }else
       {
         wlhead=&wln;
       }
+      wltail=&wln;
     }else
     {
       dlgInUse=true;
@@ -588,7 +588,7 @@ public:
   }
 
   unsigned getDialogCount() {
-    MutexGuard g(sync);
+//    MutexGuard g(sync);
     return hash_.Count();
   }
 
@@ -880,7 +880,7 @@ class DialogRefGuard{
   MapDialog* dialog;
   bool inuse;
   DialogRefGuard(const DialogRefGuard&);
-
+  void operator==(const DialogRefGuard&);
 public:
   DialogRefGuard(MapDialog* d = 0):dialog(d),inuse(false){/*d->AddRef();*/}
   ~DialogRefGuard()
@@ -922,6 +922,11 @@ public:
     MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
     WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
     dialog->MarkInUse(wln);
+    inuse=true;
+  }
+  void ExternalInUse()
+  {
+    inuse=true;
   }
   bool isnull()
   {
@@ -963,7 +968,7 @@ public:
 
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, const string& addUssdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent),is_started(false)
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, const string& addUssdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent)
   {
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
@@ -978,6 +983,8 @@ public:
     mapIoTaskCount=1;
     inReceive=false;
     deinited=false;
+    is_started=false;
+    isStopping=false;
   }
   void Start();
   void setMapIoTaskCount(int newcnt)
