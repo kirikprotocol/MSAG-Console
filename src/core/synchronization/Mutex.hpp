@@ -39,8 +39,8 @@ public:
 #ifdef _WIN32
     WaitForSingleObject(mutex,INFINITE);
 #else
-    ltid=pthread_self();
     pthread_mutex_lock(&mutex);
+    ltid=pthread_self();
 #endif
   }
   void Unlock()
