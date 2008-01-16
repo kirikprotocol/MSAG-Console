@@ -158,6 +158,7 @@ public:
     smartMultipartForward=false;
     nodeIndex=0;
     mainLoopsCount=1;
+    mapIOTasksCount=1;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg, const char * node);
@@ -737,6 +738,7 @@ protected:
   bool smartMultipartForward;
 
   int mainLoopsCount;
+  int mapIOTasksCount;
 };
 
 }//system

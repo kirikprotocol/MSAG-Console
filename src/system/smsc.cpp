@@ -866,6 +866,12 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   {
     __warning2__("mainLoopsCount set to default %d",mainLoopsCount);
   }
+  try{
+    mapIOTasksCount=cfg.cfgman->getInt("map.mapIOTasksCount");
+  }catch(...)
+  {
+    __warning2__("mapIOTasksCount set to default %d",mapIOTasksCount);
+  }
 
   smsc_log_info(log, "MR cache loaded" );
 
@@ -1297,7 +1303,9 @@ void Smsc::run()
 #if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber);
-    tp.startTask(mapio);
+    //tp.startTask(mapio);
+    mapio->setMapIoTaskCount(mapIOTasksCount);
+    mapio->Start();
     mapiostarted.Wait();
     __trace__("MAPIO started");
     if(!acc->isStarted()||!mapio->isStarted())
