@@ -32,9 +32,14 @@ function clearForm() {
 }
 
 
-function edit(idToEdit, child, parentId) {              
-    opForm.mbEdit.value = idToEdit;
-    opForm.editId.value = idToEdit;
+function edit(idToEdit, child, parentId) {
+//    opForm.mbEdit.value = idToEdit;
+    var mbEdit = document.getElementById("mbEdit");
+    edit.value = idToEdit;
+//    opForm.editId.value = idToEdit;
+    var editId = document.getElementById("editId");
+    editId.value = idToEdit;
+
     var addPath = (child == null || child == '') ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
     var actions = '';
     if ((parentId == undefined || parentId == '')) {
@@ -44,8 +49,9 @@ function edit(idToEdit, child, parentId) {
     } else {
         actions = "<%=request.getContextPath()%>" + child + "/edit.jsp?editId=" + idToEdit + "&parentId=" + parentId;
     }
-    opForm.action = actions;
-    opForm.submit();
+    var form = getElementByIdUni("opForm");
+    form.action = actions;
+    form.submit();
 
     return false;
 }
