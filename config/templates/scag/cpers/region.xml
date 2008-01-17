@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE regions SYSTEM "region.dtd">
+
+<regions>
+  <region id="1" name="region1" passwd="psw1"/>
+  <region id="2" name="region2" passwd="psw2"/>
+  <region id="3" name="region3" passwd="psw3"/>
+  <region id="4" name="region4" passwd="psw4"/>
+</regions>
