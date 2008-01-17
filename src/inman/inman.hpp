@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef __SMSC_INMAN_HPP__
 #define __SMSC_INMAN_HPP__
 
@@ -14,8 +14,7 @@ using smsc::inman::common::RPCList;
 #include "inman/abprov/IAProvider.hpp"   //includes cache defs
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
-using smsc::inman::iaprvd::IAProviderType;
-using smsc::inman::iaprvd::IAProviderAbility_e;
+using smsc::inman::iaprvd::IAProvider;
 
 
 namespace smsc  {
@@ -70,32 +69,31 @@ class AbonentPolicy {
 protected:
     friend class INManConfig;
 
-    Mutex           _sync;
-    AbonentCacheITF * cache;
-    IAProviderITF * prvd;
-    IAProviderCreatorITF * provAllc;
+    mutable Mutex   _sync;
     std::string     ident;
+    IAProviderCreatorITF * provAllc;
 
 public:
     INScfsMAP      scfMap;
 
     AbonentPolicy(const char * nm_pol)
-        : ident(nm_pol), prvd(NULL), provAllc(NULL), cache(NULL)
+        : ident(nm_pol), provAllc(NULL)
     { }
     ~AbonentPolicy()
     {
+        MutexGuard grd(_sync);
         if (provAllc)
              delete provAllc;
     }
 
-    const char * Ident(void) const { return ident.c_str(); }
+    inline const char * Ident(void) const { return ident.c_str(); }
     bool useSS7(void) const
     {
-        IAProviderType provType = !provAllc ? smsc::inman::iaprvd::iapCACHE : 
+        IAProvider::Type provType = !provAllc ? IAProvider::iapCACHE : 
                                                 provAllc->type();
         return (!scfMap.empty()
-                || (provType == smsc::inman::iaprvd::iapIN)
-                || (provType == smsc::inman::iaprvd::iapHLR));
+                || (provType == IAProvider::iapIN)
+                || (provType == IAProvider::iapHLR));
     }
 
     const INScfCFG * getSCFparms(const TonNpiAddress* scf) const
@@ -104,35 +102,15 @@ public:
         return (it != scfMap.end()) ? it->second : NULL;
     }
 
-    IAProviderAbility_e getIAPAbilities(void) const
+    inline IAProvider::Ability getIAPAbilities(void) const
     {
-        return provAllc ? provAllc->ability() : smsc::inman::iaprvd::abNone;
+        return provAllc ? provAllc->ability() : IAProvider::abNone;
     }
 
-    IAProviderITF * getIAProvider(Logger * use_log)
+    IAProviderITF * getIAProvider(void)
     {
         MutexGuard grd(_sync);
-        if (!prvd && provAllc) {
-            if (!(prvd = provAllc->create(use_log)))
-                smsc_log_error(use_log, "%s: AbonentProvider %s initialization failed!",
-                               ident.c_str(), provAllc->ident());
-            else {
-                smsc_log_info(use_log, "%s: AbonentProvider %s inited",
-                              ident.c_str(), provAllc->ident());
-                provAllc->logConfig(use_log);
-                if (cache)
-                    prvd->bindCache(cache);
-            }
-        }
-        return prvd;
-    }
-
-    void bindCache(AbonentCacheITF * use_cache)
-    {
-        MutexGuard grd(_sync);
-        cache = use_cache;
-        if (prvd)
-            prvd->bindCache(cache);
+        return provAllc->getProvider();
     }
 };
 

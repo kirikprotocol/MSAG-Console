@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * DB Abonent Provider: implements functionality for quering Oracle DB
  * for abonent contract.
@@ -34,8 +34,7 @@
 #define SMSC_INMAN_IAPROVIDER_DB_HPP
 
 #include "inman/abprov/IAProvider.hpp"
-using smsc::inman::iaprvd::IAProviderType;
-using smsc::inman::iaprvd::IAProviderAbility_e;
+using smsc::inman::iaprvd::IAProvider;
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
 
@@ -102,9 +101,7 @@ public:
 
 class IAProviderCreatorDB: public IAProviderCreatorITF {
 protected:
-    typedef std::list<IAProviderThreaded *> ProvidersLIST;
-
-    ProvidersLIST           prvdList;
+    std::auto_ptr<IAProviderThreaded> prvd;
     IAProviderThreadedCFG   prvdCfg;
     IAPQueryDB_CFG          qryCfg;
     Logger *                logger;
@@ -116,11 +113,12 @@ public:
     // ****************************************
     // -- IAProviderCreatorITF interface
     // ****************************************
-    IAProviderType      type(void)      const { return smsc::inman::iaprvd::iapDB; }
-    IAProviderAbility_e ability(void)   const { return smsc::inman::iaprvd::abContract; }
+    IAProvider::Type    type(void)      const { return IAProvider::iapDB; }
+    IAProvider::Ability ability(void)   const { return IAProvider::abContract; }
     const char *        ident(void)     const { return "iapDB_OCI"; }
-    IAProviderITF *     create(Logger * use_log);
-    void                logConfig(Logger * use_log) const;
+    void                logConfig(Logger * use_log = NULL) const;
+    //Ensures the provider is properly initialized and returns its interface
+    IAProviderITF *     getProvider(void);
 };
 
 

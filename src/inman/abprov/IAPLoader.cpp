@@ -1,4 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static const char ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
 
 #include <dlfcn.h>
 #include "inman/abprov/IAPLoader.hpp"

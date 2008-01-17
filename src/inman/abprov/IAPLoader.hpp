@@ -1,4 +1,7 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************** *
+ * Abonent Provider shared library loader.
+ * ************************************************************************** */
 #ifndef SMSC_INMAN_IAPLOADER_HPP
 #define SMSC_INMAN_IAPLOADER_HPP
 
@@ -12,8 +15,8 @@ namespace smsc {
 namespace inman {
 namespace iaprvd { //(I)NMan (A)bonent (P)roviders
 
-extern const char * const _IAPTypes[]; //according to IAProviderType
-extern const char * const _IAPAbilities[]; //according to IAProviderAbility_e
+extern const char * const _IAPTypes[];      //according to IAProviderType
+extern const char * const _IAPAbilities[];  //according to IAProviderAbility_e
 
 //This is the Abonent Provider dynamic library entry point
 extern "C" IAProviderCreatorITF * 
@@ -28,7 +31,6 @@ public:
 /* LoadIAP expects Provider configuration formed as follow:
 
 <section name="SampleProvider">
-    <param name="type" type="string">IAProviderType</param>
     <param name="loadup" type="string">libinman_iap_db.so</param>
     <section name="Config">
          <!-- SampleProvider configuration -->

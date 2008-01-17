@@ -241,7 +241,7 @@ void Billing::doCleanUp(void)
 {
     //check for pending query to AbonentProvider
     if (providerQueried) {
-        abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
+        abPolicy->getIAProvider()->cancelQuery(abNumber, this);
         providerQueried = false;
     }
     if (!timers.empty()) { //release active timers
@@ -545,7 +545,7 @@ Billing::PGraphState Billing::onChargeSms(void)
         askProvider = true;
     //check if AbonentProvider should be requested for current abonent location
     if (abCsi.vlrNum.empty() && abPolicy
-        && (abPolicy->getIAPAbilities() & smsc::inman::iaprvd::abSCF))
+        && (abPolicy->getIAPAbilities() & IAProvider::abSCF))
         askProvider = true;
 
     //verify that abonent number is in ISDN international format
@@ -556,7 +556,7 @@ Billing::PGraphState Billing::onChargeSms(void)
         smsc_log_debug(logger, "%s: using policy %s for %s", _logId, abPolicy->Ident(),
                         abNumber.toString().c_str());
         // configure SCF by quering provider first
-        IAProviderITF *prvd = abPolicy->getIAProvider(logger);
+        IAProviderITF *prvd = abPolicy->getIAProvider();
         if (prvd) {
             if (StartTimer(_cfg.abtTimeout)
                 && (providerQueried = prvd->startQuery(abNumber, this))) {
@@ -617,7 +617,6 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
                 if ((cfgMOSM != recMOSM) && cfgMOSM) {
                     recMOSM = cfgMOSM;
                     abCsi.abRec.tdpSCF[TDPCategory::dpMO_SM] = GsmSCFinfo(abScf->scfAdr, recMOSM);
-                    _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
                 }
                 if (!recMOSM)
                     errmsg = "unable to determine IN MO-SM serviceKey";
@@ -752,7 +751,7 @@ TimeWatcherITF::SignalResult
         //target operation doesn't complete yet.
         if (state == Billing::bilStarted) {
             //abonent provider query is expired
-            abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
+            abPolicy->getIAProvider()->cancelQuery(abNumber, this);
             providerQueried = false;
             if (ConfigureSCFandCharge() == Billing::pgEnd)
                 doFinalize();
@@ -806,8 +805,10 @@ void Billing::onIAPQueried(const AbonentId & ab_number, const AbonentSubscriptio
     if (qry_status) {
         billErr = qry_status;
         abCsi.abRec.Merge(ab_info.abRec); //merge known abonent info
-    } else
+    } else {
         abCsi.abRec = ab_info.abRec; //renew abonent info, overwrite TDPScfMAP
+        _cfg.abCache->setAbonentInfo(abNumber, abCsi.abRec);
+    }
     if (!ab_info.vlrNum.empty())
         abCsi.vlrNum = ab_info.vlrNum;
 

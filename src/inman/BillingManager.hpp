@@ -17,6 +17,9 @@ using smsc::inman::filestore::InBillingFileStorage;
 using smsc::inman::WorkerAC;
 using smsc::inman::ConnectManagerT;
 
+#include "inman/InCacheDefs.hpp"
+using smsc::inman::cache::AbonentCacheITF;
+
 #include "inman/common/TaskSchedulerDefs.hpp"
 using smsc::util::TaskSchedulerFactoryITF;
 

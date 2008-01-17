@@ -189,7 +189,7 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
         smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->Ident());
         if ((abRec.ab_type == AbonentContractInfo::abtUnknown) || !abRec.getSCFinfo(TDPCategory::dpMO_SM)) {
             // configure SCF by quering provider first
-            IAProviderITF *prvd = abPolicy->getIAProvider(logger);
+            IAProviderITF *prvd = abPolicy->getIAProvider();
             if (prvd) {
                 if (StartTimer() && (providerQueried = prvd->startQuery(abNumber, this))) {
                     _state = adIAPQuering;
@@ -222,12 +222,13 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
     _state = adIAPQueried;
     providerQueried = false;
     StopTimer();
-    if (qry_status != IAPQStatus::iqOk) {
+    if (qry_status) {
         _wErr = qry_status;
         abRec.Merge(ab_info.abRec); //merge known abonent info
-    } else
+    } else {
         abRec = ab_info.abRec;      //renew abonent info, overwrite TDPScfMAP
-
+        _cfg.abCache->setAbonentInfo(abNumber, abRec);
+    }
     if (abRec.ab_type == AbonentContractInfo::abtPrepaid)
         //lookup config.xml for extra SCF parms (serviceKey, RPC lists)
         ConfigureSCF();
@@ -293,7 +294,7 @@ void AbonentDetector::ConfigureSCF(void)
 void AbonentDetector::doCleanUp(void)
 {
     if (providerQueried) {  //check for pending query to AbonentProvider
-        abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
+        abPolicy->getIAProvider()->cancelQuery(abNumber, this);
         providerQueried = false;
     }
     StopTimer();

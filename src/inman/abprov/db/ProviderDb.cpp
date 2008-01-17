@@ -75,7 +75,9 @@ extern "C" IAProviderCreatorITF *
 IAProviderCreatorDB::IAProviderCreatorDB(const DBSourceCFG & use_cfg,
                                          Logger * use_log/* = NULL*/)
 {
-    logger = use_log ? use_log : Logger::getInstance("smsc.inman.iaprvd.db");
+    std::string ctgr(use_log ? use_log->getName() : "smsc.inman");
+    ctgr += ".iap.db";
+    logger = Logger::getInstance(ctgr.c_str());
     qryCfg = use_cfg.qryCfg;
     prvdCfg.init_threads = use_cfg.init_threads;
     prvdCfg.max_queries = use_cfg.max_queries;
@@ -85,26 +87,23 @@ IAProviderCreatorDB::IAProviderCreatorDB(const DBSourceCFG & use_cfg,
 
 IAProviderCreatorDB::~IAProviderCreatorDB()
 {
-    ProvidersLIST::iterator it = prvdList.begin();
-    for (; it != prvdList.end(); it++)
-        delete (*it);
-    prvdList.clear();
-
     if (qryCfg.ds)
         delete qryCfg.ds;
     if (prvdCfg.qryPlant)
         delete prvdCfg.qryPlant;
 }
 
-IAProviderITF * IAProviderCreatorDB::create(Logger * use_log)
+IAProviderITF * IAProviderCreatorDB::getProvider(void)
 {
-    IAProviderThreaded * prov = new IAProviderThreaded(prvdCfg, use_log);
-    prvdList.push_back(prov);
-    return prov;
+    if (!prvd.get()) 
+        prvd.reset(new IAProviderThreaded(prvdCfg, logger));
+    return prvd.get();
 }
 
-void  IAProviderCreatorDB::logConfig(Logger * use_log) const
+void  IAProviderCreatorDB::logConfig(Logger * use_log/* = NULL*/) const
 {
+    if (!use_log)
+        use_log = logger;
     smsc_log_info(use_log, "FUNCTION %s(%s IN VARCHAR)", qryCfg.rtId, qryCfg.rtKey);
     smsc_log_info(use_log, "Max.queries: %u", prvdCfg.max_queries);
     smsc_log_info(use_log, "Query timeout: %u secs", qryCfg.timeOut_secs);

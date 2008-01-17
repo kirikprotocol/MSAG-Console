@@ -14,6 +14,9 @@ using smsc::inman::INScfCFG;
 using smsc::inman::WorkerAC;
 using smsc::inman::ConnectManagerT;
 
+#include "inman/InCacheDefs.hpp"
+using smsc::inman::cache::AbonentCacheITF;
+
 namespace smsc    {
 namespace inman   {
 

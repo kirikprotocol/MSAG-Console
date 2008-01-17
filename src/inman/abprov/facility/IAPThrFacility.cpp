@@ -85,7 +85,6 @@ IAProviderThreaded::IAProviderThreaded(const IAProviderThreadedCFG & in_cfg, Log
 
 IAProviderThreaded::~IAProviderThreaded()
 { 
-    cache = NULL;
     cancelAllQueries();
     pool.shutdown(); //waits or kills threads
     for (QueriesList::iterator it = qryPool.begin(); it != qryPool.end(); it++) {
@@ -126,10 +125,6 @@ bool IAProviderThreaded::hasListeners(const AbonentId & ab_number)
 //Notifies query listeners and releases query.
 void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 {
-    //Update cache: NOTE: cache implementation should not block !!!
-    if (cache && (query->Status() == IAPQStatus::iqOk))
-        cache->setAbonentInfo(query->getAbonentId(), query->getAbonentInfo().abRec);
-
     //Notify listeners if any, and remove query from active queries cache
     {
         qrsGuard.Lock();
@@ -186,11 +181,6 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 // ----------------------------------------------
 // InAbonentProviderITF interface implementation:
 // ----------------------------------------------
-void IAProviderThreaded::bindCache(AbonentCacheITF * use_cache)
-{
-    MutexGuard  guard(qrsGuard);
-    cache = use_cache; 
-} 
 //Starts query and binds listener to it.
 //Returns true if query succesfully started, false otherwise
 //NOTE: the AbonentId is copied into AbonentQuery

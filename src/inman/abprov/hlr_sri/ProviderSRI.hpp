@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * HLR(SRI) Abonent Provider: implements functionality for quering the HLR 
  * for abonent Camel Subscription Information via SEND_ROUTING_INFO service,
@@ -21,8 +21,7 @@
 #define SMSC_INMAN_IAPROVIDER_HLR_SRI_HPP
 
 #include "inman/abprov/IAProvider.hpp"
-using smsc::inman::iaprvd::IAProviderType;
-using smsc::inman::iaprvd::IAProviderAbility_e;
+using smsc::inman::iaprvd::IAProvider;
 using smsc::inman::iaprvd::IAProviderCreatorITF;
 using smsc::inman::iaprvd::IAProviderITF;
 
@@ -113,9 +112,7 @@ struct IAPCreatorSRI_CFG {
 
 class IAProviderCreatorSRI: public IAProviderCreatorITF {
 protected:
-    typedef std::list<IAProviderThreaded *> ProvidersLIST;
-
-    ProvidersLIST           prvdList;
+    std::auto_ptr<IAProviderThreaded> prvd;
     IAProviderThreadedCFG   prvdCfg;
     IAPCreatorSRI_CFG       cfg;
     Logger *                logger;
@@ -127,12 +124,14 @@ public:
     // ****************************************
     // -- IAProviderCreatorITF interface
     // ****************************************
-    IAProviderType      type(void)      const { return smsc::inman::iaprvd::iapHLR; }
-    IAProviderAbility_e ability(void)   const { return smsc::inman::iaprvd::abContractSCF; }
+    IAProvider::Type    type(void)      const { return IAProvider::iapHLR; }
+    IAProvider::Ability ability(void)   const { return IAProvider::abContractSCF; }
     const char *        ident(void)     const { return "iapHLR_SRI"; }
+    void                logConfig(Logger * use_log = NULL) const;
+    //Ensures the provider is properly initialized and returns its interface
     //NOTE: Requires the TCAPDispatcher to be connected !!!
-    IAProviderITF *     create(Logger * use_log);
-    void                logConfig(Logger * use_log) const;
+    IAProviderITF *     getProvider(void);
+
 };
 
 

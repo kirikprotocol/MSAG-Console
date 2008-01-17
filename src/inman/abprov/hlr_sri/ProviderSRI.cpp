@@ -68,7 +68,9 @@ IAProviderCreatorSRI::IAProviderCreatorSRI(const IAPCreatorSRI_CFG & use_cfg,
                                          Logger * use_log/* = NULL*/)
     : cfg(use_cfg)
 {
-    logger = use_log ? use_log : Logger::getInstance("smsc.inman.iap.sri");
+    std::string ctgr(use_log ? use_log->getName() : "smsc.inman");
+    ctgr += ".iap.sri";
+    logger = Logger::getInstance(ctgr.c_str());
     prvdCfg.init_threads = use_cfg.init_threads;
     prvdCfg.max_queries = use_cfg.max_queries;
     prvdCfg.qryMultiRun = true; //MapCHSRI dialogs are reused !!!
@@ -77,48 +79,42 @@ IAProviderCreatorSRI::IAProviderCreatorSRI(const IAPCreatorSRI_CFG & use_cfg,
 
 IAProviderCreatorSRI::~IAProviderCreatorSRI()
 {
-    ProvidersLIST::iterator it = prvdList.begin();
-    for (; it != prvdList.end(); it++)
-        delete (*it);
-    prvdList.clear();
-
     if (prvdCfg.qryPlant)
         delete prvdCfg.qryPlant;
 }
 
-IAProviderITF * IAProviderCreatorSRI::create(Logger * use_log)
+IAProviderITF * IAProviderCreatorSRI::getProvider(void)
 {
-    if (!use_log)
-        use_log = logger;
-
     if (!prvdCfg.qryPlant) { //openSSN, initialize TCSessionMA
         TCAPDispatcher * disp = TCAPDispatcher::getInstance();
         if (disp->getState() != TCAPDispatcher::ss7CONNECTED) {
-            smsc_log_error(use_log, "TCAPDispatcher is not connected!");
+            smsc_log_error(logger, "TCAPDispatcher is not connected!");
             return NULL;
         }
         SSNSession * session = disp->openSSN(cfg.ownSsn, cfg.max_queries);
         if (!session) {
-            smsc_log_error(use_log, "SSN[%u] is unavailable!", (unsigned)cfg.ownSsn);
+            smsc_log_error(logger, "SSN[%u] is unavailable!", (unsigned)cfg.ownSsn);
             return NULL;
         }
         if (!(cfg.qryCfg.mapSess = session->newMAsession(cfg.owdAddr.toString().c_str(),
             ACOID::id_ac_map_locInfoRetrieval_v3, 6, cfg.fakeSsn))) {
-            smsc_log_error(use_log, "Unable to init MAP session: %s -> %u:*",
+            smsc_log_error(logger, "Unable to init MAP session: %s -> %u:*",
                                   cfg.owdAddr.toString().c_str(), 6);
             return NULL;
         }
-        smsc_log_info(use_log, "iapSRI: TCMA[%u:%u] inited",
+        smsc_log_info(logger, "iapSRI: TCMA[%u:%u] inited",
                       (unsigned)cfg.ownSsn, cfg.qryCfg.mapSess->getUID());
         prvdCfg.qryPlant = new IAPQuerySRIFactory(cfg.qryCfg, cfg.qryCfg.mapTimeout, logger);
+        prvd.reset(new IAProviderThreaded(prvdCfg, logger));
     }
-    IAProviderThreaded * prov = new IAProviderThreaded(prvdCfg, use_log);
-    prvdList.push_back(prov);
-    return prov;
+    return prvd.get();
 }
 
-void  IAProviderCreatorSRI::logConfig(Logger * use_log) const
+void  IAProviderCreatorSRI::logConfig(Logger * use_log/* = NULL*/) const
 {
+    if (!use_log)
+        use_log = logger;
+
     if (cfg.fakeSsn)
         smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%u(fake=%u)",
                         cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn, (unsigned)cfg.fakeSsn);

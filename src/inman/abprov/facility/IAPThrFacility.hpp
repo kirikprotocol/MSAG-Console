@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * Threaded Abonent Provider facility.
  * In order to use IAProviderThreaded functionlity implement IAPQueryAC and
@@ -115,7 +115,6 @@ private:
     Mutex               qrsGuard;
     QueriesList         qryPool;
     QueriesHash         qryCache;
-    AbonentCacheITF *   cache;
     unsigned            _lastQId;
     IAProviderThreadedCFG _cfg;
     Logger *            logger;
@@ -133,9 +132,7 @@ public:
     // ****************************************
     // IAProviderITF implementation:
     // ****************************************
-    void bindCache(AbonentCacheITF * use_cache); 
-    //Starts query and binds listener to it. If AbonentCache is bound, the abonent info
-    //will be stored in it on query completion. 
+    //Starts query and binds listener to it.
     //Returns true if query succesfully started, false otherwise
     bool startQuery(const AbonentId & ab_number, IAPQueryListenerITF * pf_cb);
     //Unbinds query listener, cancels query if no listeners remain.

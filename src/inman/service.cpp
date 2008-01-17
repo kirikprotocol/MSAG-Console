@@ -45,8 +45,7 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     for (AbonentPolicies::iterator pit = _cfg->abPolicies.begin(); 
                                     pit != _cfg->abPolicies.end(); pit++) {
         AbonentPolicy *pol = *pit;
-        pol->bindCache(_cfg->bill.abCache);
-        pol->getIAProvider(logger);
+        pol->getIAProvider();
     }
 
     INPSerializer::getInstance();
