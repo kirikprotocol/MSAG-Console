@@ -57,7 +57,7 @@ Targets:
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
   </target>
 
-  <target name="makegw">
+  <target name="makegw" unless="FIRST_TARGET_INSTALLED">
     <echo message="${MAKE_ARGS}"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
@@ -155,7 +155,7 @@ Targets:
       <fileset dir="${SMSC_DIR}/config"
                includes="scag/smpp.dtd scag/operators.dtd scag/tariffs.dtd scag/services.dtd scag/smpp_routes.dtd scag/http_routes.dtd"/>
     </copy>      
-
+    
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
@@ -277,7 +277,7 @@ Targets:
     <mkdir dir="${stat.traffic_dir}" description="create traffic dir"/>
   </target>
 
-  <target name="extra_libs" depends="">
+  <target name="extra_libs" depends="" unless="FIRST_TARGET_INSTALLED">
     <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
       <fileset dir="/" includesfile="./extra_libs.list"/>
     </copy>
@@ -439,7 +439,212 @@ Targets:
 
   <target name="distr" depends="create_distr, extra_libs, configure">
     <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="install"/>
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+    <property name="MSAG_INSTALLED" value="true"/>
   </target>
+
+<!--Personalization-->
+
+  <target name="rmdistr_pers" unless="FIRST_TARGET_INSTALLED">
+    <delete dir="${DISTR_DIR}"/>
+  </target>
+
+  <target name="create_distr_tree_pers_common" depends="rmdistr_pers" unless="FIRST_TARGET_INSTALLED">
+    <mkdir dir="${DISTR_DIR}"/>
+    <mkdir dir="${DISTR_DIR}/conf"/>
+    <mkdir dir="${DISTR_DIR}/lib"/>
+    <mkdir dir="${DISTR_DIR}/logs"/>
+    <mkdir dir="${DISTR_DIR}/daemon"/>
+    <mkdir dir="${DISTR_DIR}/daemon/bin"/>
+    <mkdir dir="${DISTR_DIR}/daemon/lib"/>
+    <mkdir dir="${DISTR_DIR}/daemon/conf"/>
+    <mkdir dir="${DISTR_DIR}/services"/>
+    <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
+    <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
+  </target>
+
+  <target name="create_distr_tree_pers" depends="create_distr_tree_pers_common" >
+    <mkdir dir="${DISTR_DIR}/services/pers"/>
+    <mkdir dir="${DISTR_DIR}/services/pers/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/pers/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/pers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/pers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/pers/conf"/>
+  </target>
+
+  <target name="create_distr_tree_cpers" depends="create_distr_tree_pers_common" >
+    <mkdir dir="${DISTR_DIR}/services/cpers"/>
+    <mkdir dir="${DISTR_DIR}/services/cpers/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/cpers/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/cpers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/cpers"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/cpers/conf"/>
+  </target>
+
+  <target name="configure_pers_common" unless="FIRST_TARGET_INSTALLED">
+    <!-- daemon configuration-->
+    <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
+    <copy todir="${DISTR_DIR}" flatten="yes">
+      <fileset dir="${TEMPL_DIR}" includes="start_daemon.sh stop_daemon.sh"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/daemon/bin/daemon.sh" file="${TEMPL_DIR}/daemon_alt.sh">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <!-- turn scripts be executable -->
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
+    </chmod>
+  </target>
+  
+  <target name="copy_pers_cpers_daemon" depends="" if="CPERS_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/pers/daemon_cpers.xml" overwrite="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="copy_pers_daemon" depends="copy_pers_cpers_daemon" unless="FIRST_TARGET_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/pers/daemon_pers.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="copy_cpers_pers_daemon" depends="" if="PERS_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/cpers/daemon_pers.xml" overwrite="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="copy_msag_cpers_pers_daemon" depends="" if="MSAG_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/cpers/daemon.xml" overwrite="yes">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="copy_cpers_daemon" depends="copy_cpers_pers_daemon, copy_msag_cpers_pers_daemon" unless="FIRST_TARGET_INSTALLED">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/cpers/daemon_cpers.xml">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+  </target>
+
+  <target name="configure_pers" depends="copy_to_dist_dir_pers, configure_pers_common, copy_pers_daemon">
+    <!--pers-->
+    <copy tofile="${DISTR_DIR}/services/pers/logger.properties" file="${TEMPL_DIR}/logger/msag_pers.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/services/pers/bin/service" file="${TEMPL_DIR}/service/msag_pers">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod file="${DISTR_DIR}/services/pers/bin/service" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/pers/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag/pers" includes="config.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <mkdir dir="${pers.storage_dir}" description="create pers storage dir"/>
+  </target>
+
+  <target name="configure_cpers" depends="copy_to_dist_dir_cpers, configure_pers_common, copy_cpers_daemon">
+    <!--cpers-->
+    <copy tofile="${DISTR_DIR}/services/cpers/logger.properties" file="${TEMPL_DIR}/logger/msag_cpers.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/services/cpers/bin/service" file="${TEMPL_DIR}/service/msag_cpers">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod file="${DISTR_DIR}/services/cpers/bin/service" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/cpers/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag/cpers" includes="config.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <mkdir dir="${cpers.storage_dir}" description="create cpers storage dir"/>
+  </target>
+
+  <target name="create_distr_pers" unless="FIRST_TARGET_INSTALLED">
+    <copy file="${DISTR_DIR}/lib/liblogger.so" todir="${DISTR_DIR}/daemon/lib"/>
+    <copy file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/smsc_ssdaemon.cur"/>
+    <copy file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" tofile="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon.cur"/>
+    <copy file="${DISTR_DIR}/daemon/bin/hsadmin" tofile="${DISTR_DIR}/daemon/bin/hsadmin.cur"/>
+    <copy file="${TEMPL_DIR}/update_daemon.sh" tofile="${DISTR_DIR}/daemon/update_daemon.sh" >
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}/daemon"     includes="update_daemon.sh"/>
+      <fileset dir="${DISTR_DIR}/daemon/lib" includes="liblogger.so"/>
+      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hsadmin.cur"/>
+      <fileset dir="${DISTR_DIR}/daemon/bin" includes="smsc_ssdaemon"/>
+      <fileset dir="${DISTR_DIR}/daemon/bin" includes="smsc_ssdaemon.cur"/>
+      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hs_smsc_ssdaemon"/>
+      <fileset dir="${DISTR_DIR}/daemon/bin" includes="hs_smsc_ssdaemon.cur"/>
+    </chmod>
+    <symlink resource="./${daemon.bin.name}.cur" link="${DISTR_DIR}/daemon/bin/${daemon.link.name}"/>
+    <symlink resource="./hsadmin.cur" link="${DISTR_DIR}/daemon/bin/${daemon.hsadmin.link.name}"/>
+  </target>
+
+  <target name="copy_to_dist_dir_pers_common" unless="FIRST_TARGET_INSTALLED">
+    <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}/lib" includes="*"/>
+    </chmod>
+    <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
+      <fileset dir="${SMSC_DIR}/config"
+               includes="command.dtd configuration.dtd response.dtd resourcemanager/locale_resources.dtd"/>
+    </copy>
+    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/admin/daemon/hs_smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/hs_smsc_ssdaemon" perm="755"/>
+    <copy file="${BUILD_BIN}/admin/daemon/hsadmin" todir="${DISTR_DIR}/daemon/bin"/>
+    <chmod file="${DISTR_DIR}/daemon/bin/hsadmin" perm="755"/>
+  </target>
+
+  <target name="copy_to_dist_dir_pers" depends="copy_to_dist_dir_pers_common">
+    <copy file="${BUILD_BIN}/scag/pers" todir="${DISTR_DIR}/services/pers/bin"/>
+    <chmod file="${DISTR_DIR}/services/pers/bin/pers" perm="755"/>
+  </target>
+
+  <target name="copy_to_dist_dir_cpers" depends="copy_to_dist_dir_pers_common">
+    <copy file="${BUILD_BIN}/scag/cpers" todir="${DISTR_DIR}/services/cpers/bin"/>
+    <chmod file="${DISTR_DIR}/services/cpers/bin/cpers" perm="755"/>
+  </target>
+
+  <target name="clear_pers_build_bin_dir" unless="FIRST_TARGET_INSTALLED">
+    <delete dir="${BUILD_BIN}"/>
+  </target>
+
+<!--cpers-->
+
+  <target name="distr_cpers" depends="create_distr_tree_cpers, makegw, configure_cpers, create_distr_pers, extra_libs">
+    <copy file="${SMSC_DIR}/config/scag/region.dtd" todir="${DISTR_DIR}/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/region.dtd"    link="${DISTR_DIR}/services/cpers/conf"/>
+    <copy todir="${DISTR_DIR}/services/cpers/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag/cpers" includes="region.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+    <property name="CPERS_INSTALLED" value="true"/>
+  </target>
+
+  <target name="update_cpers" depends="clear_pers_build_bin_dir, makegw, copy_to_dist_dir_cpers">
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+  </target>
+
+<!--pers-->
+
+  <target name="distr_pers" depends="create_distr_tree_pers, makegw, configure_pers, create_distr_pers, extra_libs">
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+    <property name="PERS_INSTALLED" value="true"/>
+  </target>
+
+  <target name="update_pers" depends="clear_pers_build_bin_dir, makegw, copy_to_dist_dir_pers">
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
+  </target>
+
+<!--Personalization End-->
 
   <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
     <delete>
