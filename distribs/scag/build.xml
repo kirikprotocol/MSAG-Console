@@ -57,7 +57,7 @@ Targets:
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
   </target>
 
-  <target name="makegw" unless="FIRST_TARGET_INSTALLED">
+  <target name="makegw">
     <echo message="${MAKE_ARGS}"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
@@ -616,9 +616,15 @@ Targets:
     <delete dir="${BUILD_BIN}"/>
   </target>
 
+  <target name="makegw_pers" unless="FIRST_TARGET_INSTALLED">
+    <echo message="${MAKE_ARGS}"/>
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag.pers"/>
+  </target>
+
 <!--cpers-->
 
-  <target name="distr_cpers" depends="create_distr_tree_cpers, makegw, configure_cpers, create_distr_pers, extra_libs">
+  <target name="distr_cpers" depends="create_distr_tree_cpers, makegw_pers, configure_cpers, create_distr_pers, extra_libs">
     <copy file="${SMSC_DIR}/config/scag/region.dtd" todir="${DISTR_DIR}/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/region.dtd"    link="${DISTR_DIR}/services/cpers/conf"/>
     <copy todir="${DISTR_DIR}/services/cpers/conf" flatten="yes">
@@ -629,18 +635,18 @@ Targets:
     <property name="CPERS_INSTALLED" value="true"/>
   </target>
 
-  <target name="update_cpers" depends="clear_pers_build_bin_dir, makegw, copy_to_dist_dir_cpers">
+  <target name="update_cpers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_cpers">
     <property name="FIRST_TARGET_INSTALLED" value="true"/>
   </target>
 
 <!--pers-->
 
-  <target name="distr_pers" depends="create_distr_tree_pers, makegw, configure_pers, create_distr_pers, extra_libs">
+  <target name="distr_pers" depends="create_distr_tree_pers, makegw_pers, configure_pers, create_distr_pers, extra_libs">
     <property name="FIRST_TARGET_INSTALLED" value="true"/>
     <property name="PERS_INSTALLED" value="true"/>
   </target>
 
-  <target name="update_pers" depends="clear_pers_build_bin_dir, makegw, copy_to_dist_dir_pers">
+  <target name="update_pers" depends="clear_pers_build_bin_dir, makegw_pers, copy_to_dist_dir_pers">
     <property name="FIRST_TARGET_INSTALLED" value="true"/>
   </target>
 
