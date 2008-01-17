@@ -367,12 +367,14 @@ struct MapDialog{
   //MUST be called when monitor locked
   void RemoveInUse()
   {
-    dlgInUse=false;
     if(wlhead)
     {
       wlhead->notify();
       if(wlhead==wltail)wltail=0;
       wlhead=wlhead->next;
+    }else
+    {
+      dlgInUse=false;
     }
   }
 
