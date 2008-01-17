@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * BillingManager: manages SMSC billing requests on given Connect in
  * asynchronous mode
@@ -9,9 +9,6 @@
 #include "inman/inman.hpp"
 using smsc::inman::AbonentPolicies;
 using smsc::inman::INScfCFG;
-
-#include "inman/common/TimeWatcher.hpp"
-using smsc::inman::sync::TimeWatcher;
 
 #include "inman/storage/CDRStorage.hpp"
 using smsc::inman::filestore::InBillingFileStorage;
@@ -93,14 +90,15 @@ public:
     }
 };
 
+
 struct BillingCFG {
-    typedef enum { cdrNONE = 0, cdrBILLMODE = 1, cdrALL = 2} CDR_MODE;
+    enum CDR_MODE { cdrNONE = 0, cdrBILLMODE = 1, cdrALL = 2};
     enum ContractReqMode { reqOnDemand = 0, reqAlways };
 
     TaskSchedulerFactoryITF * schedMgr;
     AbonentCacheITF *   abCache;
     InBillingFileStorage * bfs;
-    TimeWatcher *       tmWatcher;
+    TimeWatchersRegistry * twReg;
 //billing parameters
     AbonentPolicies * policies;
     BillModes       mo_billMode;
@@ -109,9 +107,9 @@ struct BillingCFG {
     CDR_MODE        cdrMode;
     std::string     cdrDir;         //location to store CDR files
     long            cdrInterval;    //rolling interval for CDR files
-    unsigned short  maxTimeout;     //maximum timeout for TCP operations,
+    TimeoutHDL      maxTimeout;     //maximum timeout for TCP operations,
                                     //billing aborts on its expiration
-    unsigned short  abtTimeout;     //maximum timeout on abonent type requets,
+    TimeoutHDL      abtTimeout;     //maximum timeout on abonent type requets,
                                     //(HLR & DB interaction), on expiration billing
                                     //continues in CDR mode 
     unsigned short  maxBilling;     //maximum number of Billings per connect
@@ -119,11 +117,11 @@ struct BillingCFG {
     SS7_CFG         ss7;            //SS7 interaction:
     SmsXServiceMap  smsXMap;        //SMS Extra services iDs and addresses
 
-    BillingCFG() : abCache(NULL), bfs(NULL), tmWatcher(NULL)
+
+    BillingCFG() : abCache(NULL), bfs(NULL), twReg(NULL)
         , cdrMode(cdrBILLMODE), cntrReq(reqOnDemand), schedMgr(0)
-    {
-        cdrInterval = maxTimeout = abtTimeout = maxBilling = 0;
-    }
+        , cdrInterval(0), maxBilling(0)
+    { }
 
     static const char * cdrModeStr(CDR_MODE mode_id)
     {
@@ -147,6 +145,9 @@ public:
     {
         logger = uselog ? uselog : Logger::getInstance("smsc.inman");
         snprintf(_logId, sizeof(_logId)-1, "BillMgr[%u]", _cmId);
+
+        _cfg.abtTimeout.Init(_cfg.twReg, _cfg.maxBilling);
+        _cfg.maxTimeout.Init(_cfg.twReg, _cfg.maxBilling);
     }
     ~BillingManager() { }
 

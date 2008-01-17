@@ -25,21 +25,19 @@ ChargeSmsResult     <-   | bilProcessed ]
 */
 
 #include "inman/BillingManager.hpp"
+using smsc::core::timers::TimeWatcherITF;
+using smsc::util::TaskRefereeITF;
+using smsc::util::ScheduledTaskAC;
+
 using smsc::inman::AbonentPolicy;
-using smsc::inman::sync::StopWatch;
-using smsc::inman::sync::TimerListenerITF;
-using smsc::inman::sync::OPAQUE_OBJ;
 using smsc::inman::iaprvd::IAPQStatus;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
-using smsc::util::TaskRefereeITF;
-using smsc::util::ScheduledTaskAC;
 
 #include "inman/CAPSmTask.hpp"
 using smsc::inman::CAPSmTaskAC;
 
 #include "inman/interaction/MsgBilling.hpp"
-//using smsc::inman::interaction::INPBillingHandlerITF;
 using smsc::inman::interaction::SMCAPSpecificInfo;
 
 namespace smsc    {
@@ -100,7 +98,8 @@ public:
     void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                                     RCHash qry_status);
     //-- TimerListenerITF interface methods: --//
-    short onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
+    TimeWatcherITF::SignalResult
+        onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
 
 protected:
     //-- INPBillingHandlerITF analogous methods:
@@ -108,7 +107,7 @@ protected:
     PGraphState onDeliverySmsResult(void);
 
 private:
-    typedef std::map<unsigned, StopWatch*> TimersMAP;
+    typedef std::map<unsigned, TimerHdl> TimersMAP;
 
     //Returns false if PDU contains invalid data preventing request processing
     bool verifyChargeSms(void);
@@ -118,7 +117,7 @@ private:
     void doFinalize(bool doReport = true);
     void abortThis(const char * reason = NULL, bool doReport = true);
     RCHash startCAPSmTask(void);
-    void StartTimer(unsigned short timeout);
+    bool StartTimer(TimeoutHDL & tmo_hdl);
     void StopTimer(BillingState bilState);
     PGraphState chargeResult(bool do_charge, RCHash last_err = 0);
     PGraphState ConfigureSCFandCharge(void);
@@ -143,8 +142,6 @@ private:
     RCHash          billErr;    //global error code made by URCRegistry
     const BModesPrio * billPrio;   //billing modes priority 
     ChargeObj::BILL_MODE billMode;//current billing mode
-//    TaskId          smTaskId;   //id of CAPSmTask if started
-//    TaskSchedulerITF * capSched;   //scheduler for CAPSmTask
     CAPSmTaskAC     *capTask;
 };
 

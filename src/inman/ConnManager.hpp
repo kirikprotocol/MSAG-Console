@@ -1,4 +1,7 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * 
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_CONNECT_MANAGER_HPP
 #define __SMSC_INMAN_CONNECT_MANAGER_HPP
 
@@ -8,6 +11,13 @@ using smsc::inman::interaction::ConnectListenerITF;
 
 #include "inman/interaction/messages.hpp"
 using smsc::inman::interaction::INPPacketAC;
+
+#include "inman/common/TimeWatcher.hpp"
+using smsc::core::timers::TimeWatchersRegistry;
+using smsc::core::timers::TimeWatcherTMO;
+using smsc::core::timers::TimerHdl;
+using smsc::core::timers::TimerListenerITF;
+using smsc::core::timers::OPAQUE_OBJ;
 
 namespace smsc    {
 namespace inman   {
@@ -135,6 +145,40 @@ public:
 
     const ConfigTA & getConfig(void) const { return _cfg;}
 };
+
+
+class TimeoutHDL {
+protected:
+    unsigned short  _tmo; //timeout in seconds
+    TimeWatcherTMO * _tw;
+
+public:
+    TimeoutHDL(unsigned short tmo_secs = 0)
+        : _tmo(tmo_secs), _tw(0)
+    { }
+    ~TimeoutHDL()
+    { }
+
+    inline unsigned short Value(void) const { return _tmo; }
+
+    inline void Init(TimeWatchersRegistry * tw_reg, uint32_t num_tmrs = 0)
+    {
+        _tw = tw_reg->getTmoTimeWatcher((long)_tmo, false, num_tmrs);
+    }
+
+    inline TimerHdl CreateTimer(TimerListenerITF * listener,
+                                OPAQUE_OBJ * opaque_obj = NULL)
+    {
+        return _tw->CreateTimer(listener, opaque_obj);
+    }
+
+    inline TimeoutHDL & operator= (unsigned short tmo_secs)
+    {
+        _tmo = tmo_secs;
+        return *this;
+    }
+};
+
 
 } //inman
 } //smsc

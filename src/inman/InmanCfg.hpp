@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * INMan service config file parsing.
  * ************************************************************************** */
@@ -676,7 +676,7 @@ protected:
                 throw ConfigException("'abonentTypeTimeout' should fall into the range [1 ..65535] seconds");
             bill.abtTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "abonentTypeTimeout: %u secs%s", bill.abtTimeout,
+        smsc_log_info(logger, "abonentTypeTimeout: %u secs%s", (unsigned)bill.abtTimeout.Value(),
                       !tmo ? " (default)":"");
 
         cstr = NULL;
@@ -762,9 +762,10 @@ protected:
         if (tmo) {
             if ((tmo >= 65535) || (tmo < 5))
                 throw ConfigException("'maxTimeout' should fall into the range [5 ..65535] seconds");
-            sock.timeout = bill.maxTimeout = (unsigned short)tmo;
+            sock.timeout = (unsigned short)tmo;
+            bill.maxTimeout = (unsigned short)tmo;
         }
-        smsc_log_info(logger, "maxTimeout: %u secs%s", bill.maxTimeout,
+        smsc_log_info(logger, "maxTimeout: %u secs%s", (unsigned)bill.maxTimeout.Value(),
                       !tmo ? " (default)":"");
 
 #ifdef SMSEXTRA
@@ -827,7 +828,8 @@ public:
         //OPTIONAL PARAMETERS:
         sock.maxConn = _in_CFG_DFLT_CLIENT_CONNS;
         bill.maxBilling = _in_CFG_DFLT_BILLINGS;
-        sock.timeout = bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
+        sock.timeout = _in_CFG_DFLT_BILL_TIMEOUT;
+        bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
         cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
         scfMap.Init(logger);

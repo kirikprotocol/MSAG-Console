@@ -1,10 +1,15 @@
-#ident "$Id$"
-#ifndef _SMSC_INMAN_TIME_OPS_HPP
-#define _SMSC_INMAN_TIME_OPS_HPP
+#pragma ident "$Id$"
+#ifndef _SMSC_CORE_TIME_OPS_HPP
+#define _SMSC_CORE_TIME_OPS_HPP
 
 #include <sys/time.h>
 
 //NOTE: timevals should be normalized(microsecs adjusted) !
+inline bool operator== (const struct timeval& tm1, const struct timeval& tm2)
+{
+    return ((tm1.tv_sec == tm2.tv_sec) && (tm1.tv_usec == tm2.tv_usec));
+}
+
 inline bool operator< (const struct timeval& tm1, const struct timeval& tm2)
 {
     if (tm1.tv_sec > tm2.tv_sec)
@@ -12,7 +17,7 @@ inline bool operator< (const struct timeval& tm1, const struct timeval& tm2)
     if (tm1.tv_sec < tm2.tv_sec)
         return true;
     //equal secs, compare microsecs
-    return tm1.tv_usec < tm2.tv_usec ? true : false;
+    return tm1.tv_usec < tm2.tv_usec;
 }
 
 inline bool operator>= (const struct timeval& tm1, const struct timeval& tm2)
@@ -22,7 +27,7 @@ inline bool operator>= (const struct timeval& tm1, const struct timeval& tm2)
     if (tm1.tv_sec < tm2.tv_sec)
         return false;
     //equal secs, compare microsecs
-    return tm1.tv_usec >= tm2.tv_usec ? true : false;
+    return tm1.tv_usec >= tm2.tv_usec;
 }
 
 //NOTE: tm1 should be >= tm2
@@ -53,5 +58,5 @@ inline long operator- (const struct timeval& tm1, const struct timeval& tm2)
     }
     return (tm.tv_usec >= 500000L) ? tm.tv_sec : tm.tv_sec + 1;
 }
-#endif /* _SMSC_INMAN_TIME_OPS_HPP */
+#endif /* _SMSC_CORE_TIME_OPS_HPP */
 

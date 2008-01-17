@@ -244,12 +244,12 @@ void Billing::doCleanUp(void)
         abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
         providerQueried = false;
     }
-    if (timers.size()) { //release active timers
-        for (TimersMAP::iterator it = timers.begin(); it != timers.end(); it++) {
-            StopWatch * timer = (*it).second;
-            timer->release();
-            smsc_log_debug(logger, "%s: Released timer[%u] at state %u",
-                        _logId, timer->getId(), state);
+    if (!timers.empty()) { //release active timers
+        for (TimersMAP::iterator it = timers.begin(); it != timers.end(); ++it) {
+            TimerHdl & timer = it->second;
+            timer.Stop();
+            smsc_log_debug(logger, "%s: Released timer[%s] at state %u",
+                        _logId, timer.IdStr(), state);
         }
         timers.clear();
     }
@@ -408,17 +408,19 @@ RCHash Billing::startCAPSmTask(void)
 }
 
 //NOTE: bilMutex should be locked upon entry!
-//NOTE: Billing uses only those timers, which autorelease on signalling
-void Billing::StartTimer(unsigned short timeout)
+bool Billing::StartTimer(TimeoutHDL & tmo_hdl)
 {
-    OPAQUE_OBJ  timerArg;
-    timerArg.setUInt((unsigned)state);
-    StopWatch * timer = _cfg.tmWatcher->createTimer(this, &timerArg, false);
-    smsc_log_debug(logger, "%s: Starting timer[%u]:%u",
-                _logId, timer->getId(), state);
+    OPAQUE_OBJ  timerArg((unsigned)state);
+    TimerHdl timer = tmo_hdl.CreateTimer(this, &timerArg);
+    if (timer.Start() != TimeWatcherITF::errOk) {
+        smsc_log_error(logger, "%s: failed to start timer[%s]:%u",
+                    _logId, timer.IdStr(), state);
+        return false;
+    }
     timers.insert(TimersMAP::value_type((unsigned)state, timer));
-    timer->start((long)timeout, false);
-    return;
+    smsc_log_debug(logger, "%s: started timer[%s]:%u",
+                _logId, timer.IdStr(), state);
+    return true;
 }
 
 //NOTE: bilMutex should be locked upon entry!
@@ -426,14 +428,13 @@ void Billing::StopTimer(Billing::BillingState bilState)
 {
     TimersMAP::iterator it = timers.find((unsigned)bilState);
     if (it != timers.end()) {
-        StopWatch * timer = (*it).second;
-        timer->release();
+        smsc_log_debug(logger, "%s: releasing timer[%s]:%u at state %u",
+            _logId, it->second.IdStr(), (unsigned)bilState, (unsigned)state);
+        it->second.Stop();
         timers.erase(it);
-        smsc_log_debug(logger, "%s: Released timer[%u]:%u at state %u",
-                    _logId, timer->getId(), bilState, state);
     } else
         smsc_log_warn(logger, "%s: no active timer for state: %u",
-                    _logId, bilState);
+                    _logId, (unsigned)bilState);
     return;
 }
 
@@ -557,9 +558,8 @@ Billing::PGraphState Billing::onChargeSms(void)
         // configure SCF by quering provider first
         IAProviderITF *prvd = abPolicy->getIAProvider(logger);
         if (prvd) {
-            if (prvd->startQuery(abNumber, this)) {
-                providerQueried = true;
-                StartTimer(_cfg.abtTimeout);
+            if (StartTimer(_cfg.abtTimeout)
+                && (providerQueried = prvd->startQuery(abNumber, this))) {
                 //execution will continue in onIAPQueried() by another thread.
                 return Billing::pgCont;
             }
@@ -733,21 +733,20 @@ Billing::PGraphState Billing::chargeResult(bool do_charge, RCHash last_err /* = 
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks bilMutex !!!
-short Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
+TimeWatcherITF::SignalResult
+    Billing::onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
 {
     assert(opaque_obj);
     MutexTryGuard grd(bilMutex);
     if (!grd.tgtLocked()) //billing is busy, request resignalling
-        return -1;
+        return TimeWatcherITF::evtResignal;
 
-    smsc_log_debug(logger, "%s: timer[%u] signaled, states: %u -> %u",
-        _logId, timer->getId(), opaque_obj->val.ui, (unsigned)state);
+    smsc_log_debug(logger, "%s: timer[%s] signaled, states: %u -> %u",
+        _logId, tm_hdl.IdStr(), opaque_obj->val.ui, (unsigned)state);
 
     TimersMAP::iterator it = timers.find(opaque_obj->val.ui);
-    if (it == timers.end())
-        smsc_log_warn(logger, "%s: timer[%u] is not registered!", _logId);
-    else
-        timers.erase(it);
+    if (it != timers.end())
+        timers.erase(it); //deletes handle (unrefs timer)
 
     if (opaque_obj->val.ui == (unsigned)state) {
         //target operation doesn't complete yet.
@@ -757,7 +756,7 @@ short Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             providerQueried = false;
             if (ConfigureSCFandCharge() == Billing::pgEnd)
                 doFinalize();
-            return 0;
+            return TimeWatcherITF::evtOk;
         }
         if (state == Billing::bilInited) { //CapSMTask lasts too long
             RCHash err = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
@@ -777,15 +776,15 @@ short Billing::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
             }
             if (chargeResult(doCharge, err) == Billing::pgEnd)
                 doFinalize();
-            return 0;
+            return TimeWatcherITF::evtOk;
         }
         if (state == Billing::bilContinued) {
             //SMSC doesn't respond with DeliveryResult
             abortThis("SMSC DeliverySmsResult is timed out");
-            return 0;
+            return TimeWatcherITF::evtOk;
         }
     } //else: operation already finished
-    return 0; //grd off
+    return TimeWatcherITF::evtOk; //grd off
 }
 
 /* -------------------------------------------------------------------------- *

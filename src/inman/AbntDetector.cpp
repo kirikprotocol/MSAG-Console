@@ -94,7 +94,7 @@ void AbntDetectorManager::onPacketReceived(Connect* conn,
  * ************************************************************************** */
 AbonentDetector::AbonentDetector(unsigned w_id, AbntDetectorManager * owner, Logger * uselog/* = NULL*/)
         : WorkerAC(w_id, owner, uselog), providerQueried(false), abScf(0)
-        , abPolicy(NULL), iapTimer(NULL), _wErr(0), _state(adIdle)
+        , abPolicy(NULL), _wErr(0), _state(adIdle)
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman");
     _cfg = owner->getConfig();
@@ -191,11 +191,10 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
             // configure SCF by quering provider first
             IAProviderITF *prvd = abPolicy->getIAProvider(logger);
             if (prvd) {
-                if ((providerQueried = prvd->startQuery(abNumber, this))) {
+                if (StartTimer() && (providerQueried = prvd->startQuery(abNumber, this))) {
                     _state = adIAPQuering;
-                    StartTimer(_cfg.abtTimeout);
                     //execution will continue in onIAPQueried()/onTimerEvent() by another thread.
-                    return false; 
+                    return false;
                 }
                 smsc_log_error(logger, "%s: startQuery(%s) failed!", _logId,
                                abNumber.getSignals());
@@ -239,23 +238,24 @@ void AbonentDetector::onIAPQueried(const AbonentId & ab_number, const AbonentSub
  * TimerListenerITF interface implementation:
  * -------------------------------------------------------------------------- */
 //NOTE: it's the processing graph entry point, so locks Mutex !!!
-short AbonentDetector::onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj)
+TimeWatcherITF::SignalResult
+    AbonentDetector::onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj)
 {
     MutexTryGuard grd(_mutex);
     if (!grd.tgtLocked()) //detector is busy, request resignalling
-        return -1;
+        return TimeWatcherITF::evtResignal;
 
-    smsc_log_debug(logger, "%s: timer[%u] signaled at state %s", _logId,
-                   iapTimer->getId(), State2Str());
+    smsc_log_debug(logger, "%s: timer[%s] signaled at state %s", _logId,
+                   tm_hdl.IdStr(), State2Str());
     if (_state > adIAPQuering)
-        return 0;
+        return TimeWatcherITF::evtOk;
 
-    iapTimer = NULL;
+    iapTimer.reset();
     _state = adTimedOut;
     abRec.reset(); //abtUnknown
     _wErr = _RCS_INManErrors->mkhash(INManErrorId::logicTimedOut);
     reportAndExit();
-    return 0;
+    return TimeWatcherITF::evtOk;
 }
 
 /* ---------------------------------------------------------------------------------- *
@@ -296,8 +296,7 @@ void AbonentDetector::doCleanUp(void)
         abPolicy->getIAProvider(logger)->cancelQuery(abNumber, this);
         providerQueried = false;
     }
-    if (iapTimer) //release active timer
-        StopTimer();
+    StopTimer();
     return;
 }
 

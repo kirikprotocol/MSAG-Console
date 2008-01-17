@@ -72,8 +72,8 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     } else
         _cfg->bill.bfs = NULL;
 
-    _cfg->bill.tmWatcher = new TimeWatcher(logger);
-    assert(_cfg->bill.tmWatcher);
+    _cfg->bill.twReg = new TimeWatchersRegistry(logger);
+    assert(_cfg->bill.twReg);
     _cfg->bill.schedMgr = this;
     smsc_log_debug(logger, "%s: TimeWatcher inited", _logId);
 }
@@ -101,9 +101,9 @@ Service::~Service()
             delete roller;
         delete _cfg->bill.bfs;
     }
-    if (_cfg->bill.tmWatcher) {
-        smsc_log_debug(logger, "%s: Deleting TimeWatcher ..", _logId);
-        delete _cfg->bill.tmWatcher;
+    if (_cfg->bill.twReg) {
+        smsc_log_debug(logger, "%s: Deleting TimeWatchers ..", _logId);
+        delete _cfg->bill.twReg;
     }
     if (abCache) {
         smsc_log_debug(logger, "%s: Closing AbonentsCache ..", _logId);
@@ -121,11 +121,6 @@ Service::~Service()
 
 bool Service::start()
 {
-    smsc_log_debug(logger, "%s: Starting TimeWatcher ..", _logId);
-    _cfg->bill.tmWatcher->Start();
-    if (!_cfg->bill.tmWatcher->isRunning())
-        return false;
-
     smsc_log_debug(logger, "%s: Starting TCP server ..", _logId);
     if (!server->Start())
         return false;
@@ -146,10 +141,9 @@ void Service::stop()
         server->Stop();
     }
 
-    smsc_log_debug(logger, "%s: Stopping TimeWatcher ..", _logId);
-    _cfg->bill.tmWatcher->Stop();
-    _cfg->bill.tmWatcher->WaitFor();
-
+    smsc_log_debug(logger, "%s: Stopping TimeWatchers ..", _logId);
+    _cfg->bill.twReg->StopAll();
+    
     if (disp) {
         smsc_log_debug(logger, "%s: Stopping TCAP dispatcher ..", _logId);
         disp->Stop();
@@ -248,7 +242,7 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
         newSess.sId = ++lastSessId;
 
         AbonentDetectorCFG sCfg;
-        sCfg.tmWatcher = _cfg->bill.tmWatcher;
+        sCfg.twReg = _cfg->bill.twReg;
         sCfg.abCache = _cfg->bill.abCache;
         sCfg.policies = _cfg->bill.policies;
         sCfg.abtTimeout = _cfg->bill.abtTimeout;

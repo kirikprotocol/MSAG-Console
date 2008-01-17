@@ -8,10 +8,8 @@
 #define __SMSC_INMAN_ABNT_DETECTOR_HPP
 
 #include "inman/AbntDetManager.hpp"
+using smsc::core::timers::TimeWatcherITF;
 using smsc::inman::AbonentPolicy;
-using smsc::inman::sync::StopWatch;
-using smsc::inman::sync::TimerListenerITF;
-using smsc::inman::sync::OPAQUE_OBJ;
 using smsc::inman::iaprvd::IAPQStatus;
 using smsc::inman::iaprvd::IAPQueryListenerITF;
 using smsc::inman::iaprvd::AbonentSubscription;
@@ -50,14 +48,13 @@ public:
     void onIAPQueried(const AbonentId & ab_number, const AbonentSubscription & ab_info,
                                                     RCHash qry_status);
     //-- TimerListenerITF interface methods:
-    short onTimerEvent(StopWatch* timer, OPAQUE_OBJ * opaque_obj);
+    TimeWatcherITF::SignalResult
+        onTimerEvent(TimerHdl & tm_hdl, OPAQUE_OBJ * opaque_obj);
 
 protected:
     bool verifyReq(AbntContractRequest* req);
     //-- AbntContractReqHandlerITF interface methods:
     bool onContractReq(AbntContractRequest* req, uint32_t req_id);
-
-    typedef std::map<unsigned, StopWatch*> TimersMAP;
 
     void doCleanUp(void);
     void ConfigureSCF(void);
@@ -74,20 +71,26 @@ protected:
     const INScfCFG* abScf;      ////corresponding IN-point configuration 
     bool            providerQueried;
     uint32_t        _wErr;
-    StopWatch *     iapTimer;   //timer for InAbonentProvider quering
+    std::auto_ptr<TimerHdl> iapTimer;   //timer for InAbonentProvider quering
     AbonentPolicy * abPolicy;
     
-    inline void StartTimer(unsigned short timeout)
+    bool StartTimer(void)
     {
-        iapTimer = _cfg.tmWatcher->createTimer(this, NULL, false);
-        smsc_log_debug(logger, "%s: Starting timer[%u]", _logId, iapTimer->getId());
-        iapTimer->start((long)timeout, false);
+        iapTimer.reset(new TimerHdl(_cfg.abtTimeout.CreateTimer(this)));
+        if (iapTimer->Id() && (iapTimer->Start() == TimeWatcherITF::errOk)) {
+            smsc_log_debug(logger, "%s: started timer[%s]", _logId, iapTimer->IdStr());
+            return true;
+        }
+        smsc_log_error(logger, "%s: failed to start timer[%s]", _logId, iapTimer->IdStr());
+        return false;
     }
-    inline void StopTimer(void)
+    void StopTimer(void)
     {
-        iapTimer->release();
-        smsc_log_debug(logger, "%s: Released timer[%u]", _logId, iapTimer->getId());
-        iapTimer = NULL;
+        if (iapTimer.get()) {
+            smsc_log_debug(logger, "%s: releasing timer[%s]", _logId, iapTimer->IdStr());
+            iapTimer->Stop();
+            iapTimer.reset();
+        }
     }
     inline void SetState(ADState new_state)
     {

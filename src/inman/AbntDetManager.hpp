@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * AbntDetectorManager: manages abonent contract requests on given Connect
  * in asynchronous mode.
@@ -10,9 +10,6 @@
 using smsc::inman::AbonentPolicies;
 using smsc::inman::INScfCFG;
 
-#include "inman/common/TimeWatcher.hpp"
-using smsc::inman::sync::TimeWatcher;
-
 #include "inman/ConnManager.hpp"
 using smsc::inman::WorkerAC;
 using smsc::inman::ConnectManagerT;
@@ -21,18 +18,17 @@ namespace smsc    {
 namespace inman   {
 
 struct AbonentDetectorCFG {
-    TimeWatcher *       tmWatcher;
+    TimeWatchersRegistry * twReg;
     AbonentCacheITF *   abCache;
     AbonentPolicies *   policies;
-    unsigned short      abtTimeout;     //maximum timeout on abonent type requests,
+    TimeoutHDL          abtTimeout;     //maximum timeout on abonent type requests,
                                         //(HLR & DB interaction)
     unsigned short      maxRequests;    //maximum number of requests per connect
     SS7_CFG             ss7;            //SS7 interaction:
 
-    AbonentDetectorCFG()
+    AbonentDetectorCFG() : twReg(0)
     {
-        tmWatcher = NULL;
-        abtTimeout = maxRequests = ss7.maxDlgId = ss7.capTimeout = 0;
+        maxRequests = ss7.maxDlgId = ss7.capTimeout = 0;
         ss7.own_ssn = ss7.userId = 0;
     }
 };
@@ -45,8 +41,11 @@ public:
     {
         logger = uselog ? uselog : Logger::getInstance("smsc.inman");
         snprintf(_logId, sizeof(_logId)-1, "AbntMgr[%u]", _cmId);
+        //there is only one timeout value AbonentDetectors use.
+        _cfg.abtTimeout.Init(_cfg.twReg, _cfg.maxRequests);
     }
-    ~AbntDetectorManager() { }
+    ~AbntDetectorManager()
+    { }
 
     //-- ConnectListenerITF interface
     void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
