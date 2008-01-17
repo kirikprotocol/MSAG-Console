@@ -169,6 +169,7 @@ Targets:
   </target>
 
   <target name="updategw" depends="clear_build_bin_dir, makegw, copy_to_dist_dir, copy_rules_files">
+    <property name="FIRST_TARGET_INSTALLED" value="true"/>
   </target>
   
   <target name="updateweb" depends="distjedit, makeweb">
