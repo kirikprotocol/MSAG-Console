@@ -9,7 +9,15 @@
     <param name="connections" type="int">@pers.connections@</param>
     <param name="storage_dir" type="string">@pers.storage_dir@</param>
     <param name="init_record_count" type="int">10000</param>
-	<param name="timeout" type="int">600</param>
+    <param name="timeout" type="int">600</param>
+    
+    <param name="hierarchicalMode" type="bool">@pers.hierarchical_mode@</param>
+    <param name="centralHost" type="string">@pers.central_host@</param>
+    <param name="centralPort" type="int">@pers.central_port@</param>
+    <param name="regionId" type="int">@pers.region_id@</param>
+    <param name="regionPassword" type="string">@pers.region_password@</param>
+    <param name="transactTimeout" type="int">@pers.transact_timeout@</param>
+    
 
     <section name="AbntProfStorage">
         <param name="storageName" type="string">abonent</param>
@@ -28,5 +36,5 @@
     </section>
 
   </section>
-
+  
 </config>
