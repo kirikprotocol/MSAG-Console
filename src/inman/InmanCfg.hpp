@@ -95,8 +95,8 @@ protected:
     //"[algId :] algArg [: algParams] "
     SKAlgorithmAC * readSkeyAlg(ConfigView * scf_cfg, TDPCategory::Id tdp_type, const char * str)
     {
-        CSVList algStr(':');
-        CSVList::size_type n = algStr.init(str);
+        CSVList algStr(str, ':');
+        CSVList::size_type n = algStr.size();
         if (!n)
             return NULL;
         if (n == 1) //just a value
@@ -378,31 +378,6 @@ protected:
     Logger *            logger;
 
 //protected methods:
-    //Cuts off leading/ending blanks
-    std::string & cutBlanks(std::string & use_str)
-    {
-        if (use_str.empty())
-            return use_str;
-        std::string::size_type bpos = 0, cnt = 0;
-        //erase leading blanks
-        while ((use_str[bpos] == ' ') || (use_str[bpos] == '\t'))
-            bpos++;
-        if (bpos)
-            use_str.erase(0, bpos);
-        //erase ending blanks
-        bpos = use_str.length();
-        while (bpos) { 
-            bpos--;
-            if ((use_str[bpos] == ' ') || (use_str[bpos] == '\t')) {
-                cnt++;
-            } else {
-                if (cnt) 
-                    use_str.erase(bpos + 1, cnt);
-                break;
-            }
-        }
-        return use_str;
-    }
 
     AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol) throw(ConfigException)
     {
@@ -539,26 +514,24 @@ protected:
         if (!m_str || !m_str[0])
             throw ConfigException("Invalid billMode");
 
+        CSVList bmList(m_str);
+        if (bmList.empty() || (bmList.size() > 2))
+            throw ConfigException("Invalid billMode '%s'", m_str);
+
         pbm[0] = pbm[1] = ChargeObj::billOFF;
-        unsigned short i = 0;
-        std::string csvlist(m_str);
-        std::string::size_type pos = 0, commaPos;
+        CSVList::size_type i = 0;
         do {
-            commaPos = csvlist.find_first_of(',', pos);
-            std::string mode = csvlist.substr(pos, commaPos);
-            if (!cutBlanks(mode).empty()) {
-                if (!strcmp(_BILLmodes[ChargeObj::bill2IN], mode.c_str()))
-                    pbm[i] = ChargeObj::bill2IN;
-                else if (!strcmp(_BILLmodes[ChargeObj::bill2CDR], mode.c_str())) {
-                    pbm[i] = ChargeObj::bill2CDR; // no need to read next value
-                    pbm[++i] = ChargeObj::bill2CDR; 
-                } else if (!strcmp(_BILLmodes[ChargeObj::billOFF], mode.c_str()))
-                    ++i; // no need to read next value
-                else
-                    throw ConfigException("Invalid billMode '%s'", mode.c_str());
-            }
-            pos = commaPos + 1;
-        } while ((++i < 2) && (commaPos != csvlist.npos));
+            if (!strcmp(_BILLmodes[ChargeObj::bill2IN], bmList[i].c_str()))
+                pbm[i] = ChargeObj::bill2IN;
+            else if (!strcmp(_BILLmodes[ChargeObj::bill2CDR], bmList[i].c_str())) {
+                pbm[i] = ChargeObj::bill2CDR; // no need to check next value
+                pbm[++i] = ChargeObj::bill2CDR; 
+            } else if (!strcmp(_BILLmodes[ChargeObj::billOFF], bmList[i].c_str()))
+                ++i; // no need to check next value
+            else
+                throw ConfigException("Invalid billMode '%s'", bmList[i].c_str());
+        } while (++i < bmList.size());
+
         //check bill2IN setting ..
         if ((pbm[0] == ChargeObj::bill2IN) && (pbm[0] == pbm[1]))
             throw ConfigException("Invalid billMode '%s'", m_str);
