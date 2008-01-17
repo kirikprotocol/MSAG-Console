@@ -2,13 +2,16 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
-  <section name="CentralPersConfig">
+
+  <section name="CentralPers">
     <param name="host" type="string">@cpers.listen_host@</param>
     <param name="port" type="int">@cpers.port@</param>
     <param name="connections" type="int">@cpers.connections@</param>
-	<param name="timeout" type="int">600</param>
+    <param name="transactTimeout" type="int">@cpers.transact_timeout@</param>
     <param name="storageName" type="string">abonent</param>
     <param name="storagePath" type="string">@cpers.storage_dir@</param>
     <param name="indexGrowth" type="int">200000</param>
+    <param name="regionsConfigFileName" type="string">@cpers.regions_config_name@</param>
   </section>
+
 </config>
