@@ -278,7 +278,6 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     smsc_log_debug(log, "Submit: got %s", cmd.hasSession() ? "continued..." : "");
     uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL; SmppEntity *dst = NULL;
-    bool bSibincoUSSD = true; int original_ussd_op = -1;
     scag::sessions::SessionPtr session;
     scag::sessions::CSessionKey key;
     router::RouteInfo ri;
@@ -297,7 +296,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         smsc_log_debug(log, "Submit: Not Sibinco USSD dialog for %s", 
                        sms.getDestinationAddress().toString().c_str());
         sms.dropProperty(Tag::SMPP_USSD_SERVICE_OP);
-        original_ussd_op = ussd_op; ussd_op = -1; umr = -1; bSibincoUSSD = false;
+        smscmd.original_ussd_op = ussd_op; ussd_op = -1; umr = -1;
     }
 
     smscmd.dir = dsdSrv2Sc;
@@ -516,7 +515,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     return;
   }
 
-  if (!bSibincoUSSD) sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, original_ussd_op);
+  if (smscmd.original_ussd_op != -1) // Not Sibinco USSD
+    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
   failed = putCommand(SUBMIT, src, dst, ri, cmd);
 
   session->getLongCallContext().runPostProcessActions();
@@ -740,7 +740,6 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     smsc_log_debug(log, "Delivery: got %s", cmd.hasSession() ? "continued..." : "");
     uint32_t rcnt = 0, failed = 0;
     SmppEntity *src = NULL; SmppEntity *dst = NULL;
-    bool bSibincoUSSD = true; int original_ussd_op = -1;
     scag::sessions::SessionPtr session;
     scag::sessions::CSessionKey key;
     router::RouteInfo ri;
@@ -766,7 +765,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
         smsc_log_debug(log, "Deliver: Not Sibinco USSD dialog for %s", 
                        sms.getOriginatingAddress().toString().c_str());
         sms.dropProperty(Tag::SMPP_USSD_SERVICE_OP);
-        original_ussd_op = ussd_op; ussd_op = -1; umr = -1; bSibincoUSSD = false;
+        smscmd.original_ussd_op = ussd_op; ussd_op = -1; umr = -1;
     }
 
     smscmd.dir = dsdSc2Srv;
@@ -966,7 +965,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
     return;
   }
 
-  if (!bSibincoUSSD) sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, original_ussd_op);
+  if (smscmd.original_ussd_op != -1) // Not Sibinco USSD
+    sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
   failed = putCommand(DELIVERY, src, dst, ri, cmd);
   
   session->getLongCallContext().runPostProcessActions();

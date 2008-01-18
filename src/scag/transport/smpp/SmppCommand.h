@@ -308,13 +308,12 @@ struct BindCommand{
 };
 
 struct SmsCommand{
-  SmsCommand():dir(dsdUnknown){}
-  SmsCommand(const SMS& sms):sms(sms),dir(dsdUnknown)
-  {
-  }
+  SmsCommand():dir(dsdUnknown),original_ussd_op(-1) {}
+  SmsCommand(const SMS& sms):sms(sms),dir(dsdUnknown),original_ussd_op(-1) {}
   SMS sms;
   Address orgSrc,orgDst;
   DataSmDirection dir;
+  int original_ussd_op;
 };
 
 namespace SmppCommandFlags{
