@@ -375,6 +375,7 @@ function clickCancel()
 //	document.all.jbutton.name = "mbCancel";
     var button = getElementByIdUni("jbutton");
 	button.name = "mbCancel";
+	var opForm = getElementByIdUni("opForm");
 	opForm.submit();
 	return false;
 }
@@ -393,6 +394,7 @@ function clickClear()
 //	document.all.jbutton.name = "mbClear";
 	var button = getElementByIdUni("jbutton");
 	button.name = "mbClear";
+    var opForm = getElementByIdUni("opForm");
 	opForm.submit();
 	return false;
 }
@@ -491,6 +493,7 @@ function clickFilter()
 //	var button = document.getElementById("jbutton");
 	var button = getElementByIdUni("jbutton");
 	button.name = "mbFilter";
+	var opForm = getElementByIdUni("opForm");
 	opForm.submit();
 	return false;
 }
@@ -500,10 +503,11 @@ function noValidationSubmit(buttonElem)
 //  document.all.jbutton.value = buttonElem.jbuttonValue;
 //  document.all.jbutton.name  = buttonElem.jbuttonName;
 //  var button = document.getElementById("jbutton");
-  var button = getElementByIdUni("jbutton");
-  button.value = buttonElem.jbuttonValue;
-  button.name  = buttonElem.jbuttonName;
-  opForm.submit();
+    var button = getElementByIdUni("jbutton");
+    button.value = buttonElem.jbuttonValue;
+    button.name  = buttonElem.jbuttonName;
+    var opForm = getElementByIdUni("opForm");
+    opForm.submit();
   return false;
 }
 
@@ -515,6 +519,7 @@ function editSomething(editObjectName)
 //	opForm.all.edit.value = editObjectName;
     var button = getElementByIdUni("edit");
     buttont.value = editObjectName;
+	var opForm = getElementByIdUni("opForm");
 	opForm.submit();
 	return false;
 }
@@ -527,6 +532,7 @@ function navigate(direction)
     var button = getElementByIdUni("jbutton");
 	button.name = direction;
 	button.value = direction;
+	var opForm = getElementByIdUni("opForm");
 	opForm.submit();
 	return false;
 }
@@ -548,7 +554,8 @@ function checkCheckboxes(elem)
 
 function checkCheckboxesForMbDeleteButton()
 {
-  return checkCheckboxes(opForm.all.mbDelete);
+
+    return checkCheckboxes(opForm.all.mbDelete);
 }
 
 function byteToHexStr(bth)
@@ -573,7 +580,10 @@ function removeRow(tbl, rowId)
 }
 
 function changeTransportId() {
-    var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+    var opForm = getElementByIdUni("opForm");
+//o    var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+    var transportId = getElementByIdUni("transportId");
+    var transport = transportId.options[transportId.selectedIndex].value;
     opForm.submit();
     return true;
 }
@@ -590,6 +600,7 @@ function changeTransportId() {
 
 function tableTag_sort(sort) {
 //    if (document.all.sort.value == sort)
+    var opForm = getElementByIdUni("opForm");
     if (getElementByIdUni("sort").value == sort)
         opForm.sort.value = "-" + sort;
     else
@@ -603,17 +614,14 @@ function tableTag_checkChecks(targetElemId) {
     if (targetElemId) marker = true;
     var buttonsEnabled;
     buttonsEnabled = false;
+    var opForm = getElementByIdUni("opForm");
     for (i = 0; i < opForm.elements.length; i++) {
         var elem = opForm.elements[i];
         if (elem.tagName == "INPUT" && elem.className == "check" && elem.checked && ((marker)?(elem.id==(targetElemId+"Check")):true))
             buttonsEnabled = true;
     }
-//    for (i = 0; i < document.all.length; i++) {
-//        var elem = document.all[i];
-//        if (elem.tagName == "A" && elem.isCheckSensible && ((marker)?(elem.id==targetElemId):true))
-//            elem.disabled = !buttonsEnabled;
-//    }
     var elemArr = document.getElementsByTagName("*");
+
     for (i = 0; i < elemArr.length; i++) {
         var elem = elemArr[i];
         if (elem.tagName == "A" && elem.isCheckSensible && ((marker)?(elem.id==targetElemId):true))
@@ -632,11 +640,12 @@ function deleteConfirm() {
 
 function checkCount() {
     //alert(opForm.elements["checked"].length);
+    var opForm = getElementByIdUni("opForm");
     var allRoutes = opForm.elements["checked"];
     if (!allRoutes) return false;
     var checkedHttpRoutesCounter = 0;
     for (var i=0; i<allRoutes.length; i++) {
-        if (allRoutes[i].checked && document.getElementById("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutesCounter = checkedHttpRoutesCounter + 1 ;
+        if (allRoutes[i].checked && getElementByIdUni("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutesCounter = checkedHttpRoutesCounter + 1 ;
     }
     if (checkedHttpRoutesCounter!=1) {
         alert('<fmt:message>scripts.routes.checked</fmt:message>');
@@ -646,24 +655,25 @@ function checkCount() {
 }
 
 function checkDefaultRoute() {
+    var opForm = getElementByIdUni("opForm");
     var allRoutes = opForm.elements["checked"];
     var httpRoutesCounter = 0;
     var defaultRouteElement;
     //count http routes
     for (var i=0; i<allRoutes.length; i++) {
-       if (document.getElementById("defaultRoute_"+allRoutes[i].value)) httpRoutesCounter++;
+       if (getElementByIdUni("defaultRoute_"+allRoutes[i].value)) httpRoutesCounter++;
     }
     if (httpRoutesCounter<=1) return true;
     //checked routes
     var checkedHttpRoutes = new Array();
     for (var i=0; i<allRoutes.length; i++) {
-        if (allRoutes[i].checked && document.getElementById("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutes[checkedHttpRoutes.length] = allRoutes[i].value;
+        if (allRoutes[i].checked && getElementByIdUni("defaultRoute_"+allRoutes[i].value)) checkedHttpRoutes[checkedHttpRoutes.length] = allRoutes[i].value;
     }
 
     if (checkedHttpRoutes.length == httpRoutesCounter) return true;
 
     for (var i=0; i<checkedHttpRoutes.length; i++) {
-        defaultRouteElement = document.getElementById("defaultRoute_"+checkedHttpRoutes[i]);
+        defaultRouteElement = getElementByIdUni("defaultRoute_"+checkedHttpRoutes[i]);
         if (trim(defaultRouteElement.firstChild.id) == "true") {
             alert("<fmt:message>scripts.routes.delete_default_route</fmt:message>");
             return false;
@@ -680,6 +690,11 @@ function disableCtrlKeyCombination(evt, id) {
     var evt = (window.event)? window.event: evt;
     var ctrlMod = evt.ctrlKey ;
     var key = evt.keyCode? evt.keyCode: evt.which;
+//    if( window.event ){
+//        key = evt.keyCode;
+//    }else{
+//        key = evt.which;
+//    }
     key = String.fromCharCode(key).toLowerCase();
 	if (ctrlMod && (key in disabled)) {
         if (id && (document.location.href.indexOf("editId")==-1))
@@ -723,9 +738,9 @@ function refreshTdcSCAGStatusObject()
    <%}%>
 }
 
-function changeIcon() {
-  var evt = window.event;
-  var elem=evt.srcElement;
+function changeIcon(evt) {
+  var evt = window.event? window.event: event;
+  var elem=evt.srcElement? evt.srcElement: evt.target;
   if (evt.type=="mouseover") {
     elem.style.visibility="hidden";
     elem.filters["revealTrans"].apply();
@@ -742,6 +757,9 @@ function changeIcon() {
 
 function getElementByIdUni(eId)
 {
-//    alert("UNI");
     return ( (document.getElementById)?document.getElementById(eId):( (document.all)?document.all[eId]:null ) );
+}
+
+function getEventUni(evt){
+    return( (window.event)? window.event: evt );
 }
