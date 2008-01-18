@@ -3,7 +3,8 @@
                  java.util.*, ru.novosoft.smsc.util.Functions,
                  ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.infosme.beans.InfoSmeBean"%>
+                 ru.novosoft.smsc.infosme.beans.InfoSmeBean,
+                 java.text.SimpleDateFormat"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -176,11 +177,12 @@ function setSort(sorting)
     <table class=list cellspacing=0>
     <col width="1%"             > <!--checkbox-->
     <col width="1%" align=center> <!--enabled-->
-    <col width="94%"            > <!--name-->
-    <col width="1%" align=center> <!--generating-->
-    <col width="1%" align=center> <!--processing-->
-    <col width="1%" align=center> <!--priority-->
-    <col width="1%" align=center> <!--trackIntegrity-->
+    <col width="73%"            > <!--name-->
+    <col width="5%" align=center> <!--generating-->
+    <col width="5%" align=center> <!--processing-->
+    <col width="5%" align=center> <!--priority-->
+    <col width="5%" align=center> <!--trackIntegrity-->
+    <col width="5%" align=center> <!--endDate-->
     <tr>
       <th>&nbsp;</th>
       <th><a href="#" <%=bean.getSort().endsWith("enabled")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_enabled")%>"   onclick='return setSort("enabled")'       ><%= getLocString("infosme.label.on")%></a></th>
@@ -189,9 +191,11 @@ function setSort(sorting)
       <th><a href="#" <%=bean.getSort().endsWith("processing")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_proc_flag")%>" onclick='return setSort("processing")'    ><%= getLocString("infosme.label.sending")%></a></th>
       <th><a href="#" <%=bean.getSort().endsWith("priority")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_priority")%>"  onclick='return setSort("priority")'      ><%= getLocString("infosme.label.priority")%></a></th>
       <th><a href="#" <%=bean.getSort().endsWith("trackIntegrity") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_integrity")%>" onclick='return setSort("trackIntegrity")'><%= getLocString("infosme.label.integrity")%></a></th>
+      <th><a href="#" <%=bean.getSort().endsWith("endDate")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_end_date")%>"  onclick='return setSort("endDate")'>      <%= getLocString("infosme.label.end_date")%></a></th>
     </tr>
     <%
     int rowN = 0;
+    final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
     for (Iterator i = tasks.iterator(); i.hasNext();) {
       TaskDataItem task = (TaskDataItem) i.next();
 
@@ -199,6 +203,7 @@ function setSort(sorting)
       String name = task.getName();
       //String provider = task.getProvider();
       int priority = task.getPriority();
+      String endDate = task.getEndDate() == null ? "" : endDateFormat.format(task.getEndDate());
       boolean enabled = task.isEnabled();
       boolean generating = task.isGenerating();
       boolean processing = task.isProcessing();
@@ -214,13 +219,14 @@ function setSort(sorting)
       //String svcTypeEnc = StringEncoderDecoder.encode(svcType);
 
       %><tr class=row<%=rowN++&1%>>
-        <td><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkTasks();"></td>
-        <td><%if (enabled){%><img src="/images/ic_checked.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></td>
+        <td align=center><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkTasks();"></td>
+        <td align=center><%if (enabled){%><img src="/images/ic_checked.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></td>
         <td><label for=checked<%=idHex%>><%=nameEnc%></label></td>
-        <td><span id="gen<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
-        <td><span id="prc<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
-        <td><%=priority%></td>
-        <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td align=center><span id="gen<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td align=center><span id="prc<%=idHex%>" datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td align=center><%=priority%></td>
+        <td align=center><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+        <td align=center nowrap><label><%=endDate%></label></td>
       </tr>
       <script>
         taskStatusesDS.addObserver(new ElementObserver({elementId: 'gen<%=idHex%>', field: 'gen<%=idHex%>'}));

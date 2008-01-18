@@ -2,6 +2,8 @@ package ru.novosoft.smsc.infosme.backend.tables.tasks;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
+import java.util.Date;
+
 /**
  * Created by igork
  * Date: Sep 2, 2003
@@ -9,7 +11,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
  */
 public class TaskDataItem extends AbstractDataItem
 {
-  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, boolean generating, boolean processing, boolean trackIntegrity)
+  public TaskDataItem(String id, String name, String provider, boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage, String svcType, boolean generating, boolean processing, boolean trackIntegrity, Date endDate)
   {
     values.put("id", id);
     values.put("name", name);
@@ -22,6 +24,7 @@ public class TaskDataItem extends AbstractDataItem
     values.put("generating", new Boolean(generating));
     values.put("processing", new Boolean(processing));
     values.put("trackIntegrity", new Boolean(trackIntegrity));
+    values.put("endDate", endDate);
   }
 
   public String getId()
@@ -77,5 +80,10 @@ public class TaskDataItem extends AbstractDataItem
   public boolean isTrackIntegrity()
   {
     return ((Boolean) values.get("trackIntegrity")).booleanValue();
+  }
+
+  public Date getEndDate()
+  {
+    return (Date)values.get("endDate");
   }
 }

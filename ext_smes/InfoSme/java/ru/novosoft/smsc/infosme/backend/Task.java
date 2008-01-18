@@ -28,6 +28,7 @@ public class Task
   private boolean replaceMessage = false;
   private String svcType = "";
   private String endDate = "";
+  private String startDate = ""; // This parameter should not store in config file.
   private String retryTime = "";
   private String validityPeriod = "";
   private String validityDate = "";
@@ -71,6 +72,11 @@ public class Task
     replaceMessage = config.getBool(prefix + ".replaceMessage");
     svcType = config.getString(prefix + ".svcType");
     endDate = config.getString(prefix + ".endDate");
+    try {
+      startDate = config.getString(prefix + ".startDate");
+    } catch (Config.ParamNotFoundException e) {
+      startDate = "";
+    }
     retryTime = config.getString(prefix + ".retryTime");
     validityPeriod = config.getString(prefix + ".validityPeriod");
     validityDate = config.getString(prefix + ".validityDate");
@@ -111,6 +117,7 @@ public class Task
     config.setBool(prefix + ".retryOnFail", retryOnFail);
     config.setBool(prefix + ".replaceMessage", replaceMessage);
     config.setString(prefix + ".svcType", svcType);
+    config.setString(prefix + ".startDate", startDate);
     config.setString(prefix + ".endDate", endDate);
     config.setString(prefix + ".retryTime", retryTime);
     config.setString(prefix + ".validityPeriod", validityPeriod);
@@ -172,6 +179,7 @@ public class Task
               && this.replaceMessage == task.replaceMessage
               && this.svcType.equals(task.svcType)
               && this.endDate.equals(task.endDate)
+              && this.startDate.equals(task.startDate)
               && this.retryTime.equals(task.retryTime)
               && this.validityPeriod.equals(task.validityPeriod)
               && this.validityDate.equals(task.validityDate)
@@ -269,6 +277,14 @@ public class Task
   }
   public void setEndDate(String endDate) {
     this.endDate = endDate;
+  }
+
+  public String getStartDate() {
+    return startDate;
+  }
+
+  public void setStartDate(String startDate) {
+    this.startDate = startDate;
   }
 
   public String getRetryTime() {

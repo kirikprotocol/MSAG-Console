@@ -9,6 +9,7 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.*;
+import java.text.SimpleDateFormat;
 
 /**
  * Created by igork
@@ -18,6 +19,7 @@ import java.util.*;
 public class TaskDataSource extends AbstractDataSourceImpl
 {
   public static final String TASKS_PREFIX = "InfoSme.Tasks";
+  private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy hh:mm:ss");
   private Category logger = Category.getInstance(this.getClass());
   private final InfoSme infoSme;
 
@@ -42,6 +44,8 @@ public class TaskDataSource extends AbstractDataSourceImpl
       String taskId = (String) i.next();
       final String currentTaskPrefix = TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId);
       try {
+        String endDateStr = config.getString(currentTaskPrefix + ".endDate");
+        Date endDate = endDateStr == null || endDateStr.length() == 0 ? null : endDateFormat.parse(endDateStr);
         add(new TaskDataItem(taskId,
                              config.getString(currentTaskPrefix + ".name"),
                              config.getString(currentTaskPrefix + ".dsId"),
@@ -52,7 +56,8 @@ public class TaskDataSource extends AbstractDataSourceImpl
                              config.getString(currentTaskPrefix + ".svcType"),
                              generatingTasks != null ? generatingTasks.contains(taskId) : false,
                              processingTasks != null ? processingTasks.contains(taskId) : false,
-                             config.getBool(currentTaskPrefix + ".trackIntegrity")));
+                             config.getBool(currentTaskPrefix + ".trackIntegrity"),
+                             endDate));
       } catch (Exception e) {
         logger.error("Couldn't get parameter for task \"" + taskId + "\", task skipped", e);
       }

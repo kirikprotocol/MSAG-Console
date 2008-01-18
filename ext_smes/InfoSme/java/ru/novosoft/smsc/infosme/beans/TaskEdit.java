@@ -203,6 +203,14 @@ public class TaskEdit extends InfoSmeBean
     this.task.setEndDate(endDate);
   }
 
+  public String getStartDate() {
+    return task.getStartDate();
+  }
+
+  public void setStartDate(String startDate) {
+    this.task.setStartDate(startDate);
+  }
+
   public String getRetryTime() {
     return task.getRetryTime();
   }

@@ -42,7 +42,7 @@ public class Deliveries extends InfoSmeBean
     private final static String STATUS_STR_DONE       = "Finished";
     private final static String STATUS_STR_ERR        = "Error - ";
 
-    private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy");
+    private static final SimpleDateFormat endDateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
     private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("hh:mm:ss");
 
     private int status = STATUS_OK;
@@ -312,8 +312,9 @@ public class Deliveries extends InfoSmeBean
                 generateThreadRunning = true;
                 logger.debug("Starting messages generating for task '"+taskId+"'");
 
-                java.util.Date currentTime = new java.util.Date();
-
+                java.util.Date currentTime = (task.getStartDate() == null || task.getStartDate().trim().length() == 0)? new java.util.Date() : endDateFormat.parse(task.getStartDate());
+                currentTime = new java.util.Date(currentTime.getTime() + Math.round(fileCount/1000) * 1000);
+              
                 task.storeToConfig(oldConfig);
                 oldConfig.save();
 
@@ -614,7 +615,21 @@ public class Deliveries extends InfoSmeBean
         if (task.isContainsInConfigByName(getConfig()))
             error("Task with name='"+taskName+"' already exists. Please specify another name");
 
-        if (!isUserAdmin(request))
+      try {
+        if (task.getStartDate() != null && task.getStartDate().trim().length() > 0)
+          endDateFormat.parse(task.getStartDate());
+      } catch (ParseException e) {
+        error("Invalid task start date");
+      }
+
+      try {
+        if (task.getEndDate() != null && task.getEndDate().trim().length() > 0)
+          endDateFormat.parse(task.getEndDate());
+      } catch (ParseException e) {
+        error("Invalid task end date");
+      }
+
+      if (!isUserAdmin(request))
           calculateRetryOnFail();
 
         if (errors.size() > 0) return false;
@@ -689,6 +704,15 @@ public class Deliveries extends InfoSmeBean
     public void setEndDate(String endDate) {
       this.task.setEndDate(endDate);
     }
+
+    public String getStartDate() {
+      return task.getStartDate();
+    }
+
+    public void setStartDate(String startDate) {
+      this.task.setStartDate(startDate);
+    }
+
 
     public String getValidityPeriod() {
       return task.getValidityPeriod();
