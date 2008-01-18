@@ -31,9 +31,11 @@
 </script>
 <script>
     function edit(idToEdit, child, parentId) {
-        opForm.mbEdit.value = idToEdit;
-        opForm.editId.value = idToEdit;
-
+    var mbEdit = getElementByIdUni("mbEdit");
+    edit.value = idToEdit;
+    var editId = getElementByIdUni("editId");
+    editId.value = idToEdit;
+    var opForm = getElementByIdUni("opForm");
         opForm.action = "<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
                           ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
                           : request.getServletPath())%>" + "/edit.jsp";

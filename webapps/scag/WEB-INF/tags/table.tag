@@ -23,6 +23,7 @@
 <script>
 
 function clearForm() {
+    var opFrom = getElementByIdUni("opForm");
     opForm.target = "_self";
     opForm.action = "<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
                       ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
@@ -39,7 +40,6 @@ function edit(idToEdit, child, parentId) {
 //    opForm.editId.value = idToEdit;
     var editId = document.getElementById("editId");
     editId.value = idToEdit;
-
     var addPath = (child == null || child == '') ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
     var actions = '';
     if ((parentId == undefined || parentId == '')) {
@@ -49,9 +49,9 @@ function edit(idToEdit, child, parentId) {
     } else {
         actions = "<%=request.getContextPath()%>" + child + "/edit.jsp?editId=" + idToEdit + "&parentId=" + parentId;
     }
-    var form = getElementByIdUni("opForm");
-    form.action = actions;
-    form.submit();
+    var opForm = getElementByIdUni("opForm");
+    opForm.action = actions;
+    opForm.submit();
 
     return false;
 }
