@@ -22,7 +22,8 @@ table.page_menu a:hover,
 table.page_menu a:visited
 {
 	border: 0px;
-	cursor: hand;
+/*	cursor: hand; */
+	cursor: pointer;
 	color: #161E49;
 	text-decoration : none;
 	behavior : url(content/scripts/click_submit.htc);
