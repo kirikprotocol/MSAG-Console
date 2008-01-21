@@ -10,7 +10,8 @@
 <%@attribute name="type"       required="false"%>
 <%@attribute name="validation" required="false"%>
 <sm-ep:property title="${title}">
-    <input class=txt type="${empty type ? 'text' : type}" maxlength="${maxlength}" style="width:${styleWidth}"
+    <input class=txt type="${empty type ? 'text' : type}" maxlength="${maxlength}"
+            <c:if test="${!empty styleWidth}">style="width:${styleWidth}"</c:if>
             name="${fn:escapeXml(name)}"
             value=
             <c:choose>
