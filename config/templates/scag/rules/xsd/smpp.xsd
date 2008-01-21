@@ -20,6 +20,20 @@
         </restriction>
     </simpleType>
 
+    <simpleType name="TLVType">
+        <restriction base="string">
+            <enumeration value="STR"/>
+            <enumeration value="INT8"/>
+            <enumeration value="INT16"/>
+            <enumeration value="INT32"/>
+            <enumeration value="INT64"/>
+            <enumeration value="UINT8"/>
+            <enumeration value="UINT16"/>
+            <enumeration value="UINT32"/>
+            <enumeration value="HEXDUMP"/>
+        </restriction>
+    </simpleType>
+    
     <group name="Actions">
         <choice>
             <element name="redirect">
@@ -37,6 +51,7 @@
                     <attribute name="tag" type="scag:Value" use="optional"/>
                     <attribute name="name" type="scag:Value" use="optional"/>
                     <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="type" type="smpp:TLVType" use="optional"/>
                 </complexType>
             </element>
             
@@ -44,7 +59,8 @@
                 <complexType>
                     <attribute name="tag" type="scag:Value" use="optional"/>
                     <attribute name="name" type="scag:Value" use="optional"/>
-                    <attribute name="var" type="scag:Value" use="required"/>                    
+                    <attribute name="var" type="scag:Value" use="required"/>
+                    <attribute name="type" type="smpp:TLVType" use="optional"/>
                 </complexType>
             </element>
             
