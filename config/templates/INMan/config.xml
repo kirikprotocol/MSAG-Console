@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.6.20 or higher -->
+<!-- configuration for INMan v0.6.23 or higher -->
 <config>
-  <param name="version" type="string">0.6.20</param>   <!-- config version -->
+  <param name="version" type="string">0.6.23</param>   <!-- config version -->
   <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
   <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
   <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
+
+  <section name="AbonentDetector"> <!-- Abonent contract type and gsmSCF
+   params determination -->
+    <param name="abonentPolicy" type="string">MTC_Nsk_SRI</param> <!-- 
+      preferred abonent policy (defined in section AbonentPolicies) , if
+      it's missing,  the policy is to use will be determined according to
+      sender address and specified  policies address pool.  -->
+    <param name="maxRequests" type="int">500</param>   <!--
+     maximium number of simultaneous requests per client  connection ,
+     [1 .. 100000] , default 1000;  0 - means use default value-->
+    <param name="abonentTypeTimeout" type="int">8</param>  <!-- 
+    maximum allowed time for determining abonent contract type, 
+    units: seconds, [1 .. 65535],   default 8
+     -->
+    <param name="cacheExpiration" type="int">20</param>   <!--
+     abonent info cache data expiration interval, units: minutes, 
+     [1 .. 65535], default 60,  0 - means the default cache  interval is used
+    -->
+  </section>
 
   <section name="Billing">
    <section name="BillingModes"> <!--
