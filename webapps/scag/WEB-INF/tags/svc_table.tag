@@ -31,7 +31,9 @@
 </script>
 <script>
 
-  function edit(idToEdit, child, parentId) {
+    function edit(idToEdit, child, parentId) {
+//        opForm.mbEdit.value = idToEdit;
+//        opForm.editId.value = idToEdit;
     var mbEdit = getElementByIdUni("mbEdit");
     edit.value = idToEdit;
     var editId = getElementByIdUni("editId");
@@ -53,9 +55,9 @@
     }
 
     function disableDisconnect() {
-        var SCAGStatusSpan = getElementById("SCAGStatusSpan");
+        var SCAGStatusSpan = getElementByIdUni("SCAGStatusSpan");
         if (SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>' || SCAGStatusSpan.innerText == ' <fmt:message>status.stopping</fmt:message>') {
-          var items = opForm.all("mbDisconnect");
+          var items = document.getElementsByName("mbDisconnect");
           for (var i = 0; i < items.length; i++) {
              items[i].disabled = true;
           }
