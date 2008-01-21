@@ -23,6 +23,7 @@
     <simpleType name="TLVType">
         <restriction base="string">
             <enumeration value="STR"/>
+            <enumeration value="STRN"/>
             <enumeration value="INT8"/>
             <enumeration value="INT16"/>
             <enumeration value="INT32"/>
