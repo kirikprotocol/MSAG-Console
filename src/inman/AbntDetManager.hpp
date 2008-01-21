@@ -24,14 +24,16 @@ struct AbonentDetectorCFG {
     TimeWatchersRegistry * twReg;
     AbonentCacheITF *   abCache;
     AbonentPolicies *   policies;
+    std::string         policyNm;       //name of default AbonenPolicy
     TimeoutHDL          abtTimeout;     //maximum timeout on abonent type requests,
                                         //(HLR & DB interaction)
     unsigned short      maxRequests;    //maximum number of requests per connect
+    uint32_t            cacheTmo;       //abonent cache data expiration timeout in secs
     SS7_CFG             ss7;            //SS7 interaction:
 
     AbonentDetectorCFG() : twReg(0)
     {
-        maxRequests = ss7.maxDlgId = ss7.capTimeout = 0;
+        cacheTmo = maxRequests = ss7.maxDlgId = ss7.capTimeout = 0;
         ss7.own_ssn = ss7.userId = 0;
     }
 };

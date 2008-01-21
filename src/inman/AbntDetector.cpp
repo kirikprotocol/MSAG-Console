@@ -175,15 +175,15 @@ bool AbonentDetector::onContractReq(AbntContractRequest* req, uint32_t req_id)
                   req->subscrAddr().c_str(), req->cacheMode() ? "true" : "false");
 
     if (req->cacheMode())
-        _cfg.abCache->getAbonentInfo(abNumber, &abRec);
+        _cfg.abCache->getAbonentInfo(abNumber, &abRec, _cfg.cacheTmo);
     
     if (abRec.ab_type == AbonentContractInfo::abtPostpaid) {
         _state = adCompleted;
         return true;
     }
         
-    if (!(abPolicy = _cfg.policies->getPolicy(&abNumber))) {
-        smsc_log_error(logger, "%s: no policy set for %s", _logId, 
+    if (!(abPolicy = _cfg.policies->getPolicy(_cfg.policyNm))) {
+        smsc_log_error(logger, "%s: no policy set for %s", _logId,
                        abNumber.toString().c_str());
     } else {
         smsc_log_debug(logger, "%s: using policy: %s", _logId, abPolicy->Ident());
@@ -275,8 +275,8 @@ void AbonentDetector::ConfigureSCF(void)
             abScf = abPolicy->getSCFparms(&(p_scf->scfAddress));
     } else if (abPolicy) {  //attempt to determine SCF and its params from config.xml
         //look for single IN serving
-        if (abPolicy->scfMap.size() == 1)
-            abScf = abPolicy->scfMap.begin()->second;
+        if (abPolicy->ScfMap().size() == 1)
+            abScf = abPolicy->ScfMap().begin()->second;
         if (!abScf)
             smsc_log_error(logger, "%s: unable to get gsmSCF from config.xml", _logId);
     }

@@ -22,6 +22,9 @@ using smsc::inman::BillingCFG;
 using smsc::inman::filestore::InFileStorageRoller;
 using smsc::inman::interaction::INPCommandSetAC;
 
+#include "inman/AbntDetManager.hpp"
+using smsc::inman::AbonentDetectorCFG;
+
 #include "inman/common/TaskScheduler.hpp"
 using smsc::util::TaskSchedulerITF;
 using smsc::util::TaskSchedulerAC;
@@ -37,12 +40,14 @@ struct InService_CFG {
 public:
     ServSocketCFG       sock;
     BillingCFG          bill;
+    AbonentDetectorCFG  dtcr;
     AbonentCacheCFG     cachePrm;
     AbonentPolicies     abPolicies;
+    IAPrvdsRegistry     abPrvds;
 
     InService_CFG()
     {
-        bill.policies = &abPolicies;
+        dtcr.policies = bill.policies = &abPolicies;
         sock.port = sock.maxConn = sock.timeout = 0;
     }
 };

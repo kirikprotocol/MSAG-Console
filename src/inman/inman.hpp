@@ -65,28 +65,26 @@ struct SS7_CFG {    //SS7 stack interaction:
 
 typedef std::map<std::string, const INScfCFG *> INScfsMAP;
 
+
 class AbonentPolicy {
 protected:
     friend class INManConfig;
 
-    mutable Mutex   _sync;
     std::string     ident;
     IAProviderCreatorITF * provAllc;
+    INScfsMAP       scfMap;
 
 public:
-    INScfsMAP      scfMap;
-
     AbonentPolicy(const char * nm_pol)
         : ident(nm_pol), provAllc(NULL)
     { }
     ~AbonentPolicy()
-    {
-        MutexGuard grd(_sync);
-        if (provAllc)
-             delete provAllc;
-    }
+    { }
 
     inline const char * Ident(void) const { return ident.c_str(); }
+    inline const std::string & IdentStr(void) const { return ident; }
+    inline const INScfsMAP & ScfMap(void) const { return scfMap; }
+
     bool useSS7(void) const
     {
         IAProvider::Type provType = !provAllc ? IAProvider::iapCACHE : 
@@ -107,49 +105,94 @@ public:
         return provAllc ? provAllc->ability() : IAProvider::abNone;
     }
 
-    IAProviderITF * getIAProvider(void)
+    inline IAProviderITF * getIAProvider(void)
     {
-        MutexGuard grd(_sync);
-        return provAllc->getProvider();
+        return provAllc ? provAllc->getProvider() : NULL;
     }
 };
 
-//NOTE: the first policy is a preferred one !!!
-class AbonentPolicies : public std::list<AbonentPolicy*> {
+typedef std::map<std::string, AbonentPolicy*> IAPoliciesMap;
+class AbonentPolicies : IAPoliciesMap {
 public:
     AbonentPolicies()
     { }
     ~AbonentPolicies()
     { 
-        for (AbonentPolicies::iterator it = begin(); it != end(); it++)
-            delete (*it);
+        for (IAPoliciesMap::iterator it = begin(); it != end(); ++it)
+            delete it->second;
+    }
+
+    bool Init(void)
+    {
+        bool rval = true;
+        for (IAPoliciesMap::iterator pit = begin(); pit != end(); ++pit) {
+            AbonentPolicy *pol = pit->second;
+            rval &= (pol->getIAProvider() != 0);
+        }
+        return rval;
     }
 
     bool useSS7(void) const
     {
-        for (AbonentPolicies::const_iterator it = begin(); it != end(); it++) {
-            if ((*it)->useSS7())
+        for (IAPoliciesMap::const_iterator it = begin(); it != end(); ++it) {
+            if (it->second->useSS7())
                 return true;
         }
         return false;
     }
 
-    void setPreferred(AbonentPolicy* def_pol)
-    { 
-        if (def_pol) push_front(def_pol); 
-    }
-    void addPolicy(AbonentPolicy* use_pol)
+    inline bool addPolicy(AbonentPolicy* use_pol)
     {
-        if (use_pol) push_back(use_pol); 
+        std::pair<IAPoliciesMap::iterator, bool> res = 
+            insert(IAPoliciesMap::value_type(use_pol->IdentStr(), use_pol));
+        return res.second;
     }
 
-    AbonentPolicy* getPolicy(const TonNpiAddress * an_number = NULL) const
+    AbonentPolicy* getPolicy(const std::string & nm_pol) const
     {
-//        if (!ab_number)
-            return !empty() ? *begin() : NULL;
-//        else { /* todo: search policy by matching the address pools */ }
+        IAPoliciesMap::const_iterator it = find(nm_pol);
+        return (it != end()) ? it->second : NULL;
     }
 };
+
+
+template <class _TArg>
+class STRKeyRegistry_T {
+protected:
+    typedef std::map<std::string, _TArg *> TRegistry;
+    TRegistry  registry;
+
+public:
+    STRKeyRegistry_T()
+    { }
+    ~STRKeyRegistry_T()
+    {
+        for (TRegistry::iterator sit = registry.begin(); sit != registry.end(); ++sit)
+            delete sit->second;
+    }
+
+    inline bool empty(void) const { return registry.empty(); }
+
+    inline bool insert(const std::string & use_key, _TArg * p_obj)
+    {
+        std::pair<TRegistry::iterator, bool> res =
+            registry.insert(TRegistry::value_type(use_key, p_obj));
+        return res.second;
+    }
+
+    _TArg * find(const std::string & use_key) const
+    {
+        TRegistry::const_iterator it = registry.find(use_key);
+        return (it != registry.end()) ? it->second : NULL;
+    }
+
+    inline _TArg * find(const char *use_key) const
+    {
+        return find(std::string(use_key));
+    }
+};
+
+typedef STRKeyRegistry_T<IAProviderCreatorITF> IAPrvdsRegistry;
 
 } //inman
 } //smsc

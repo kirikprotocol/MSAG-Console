@@ -36,18 +36,16 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
                 smsc_log_error(logger, "%s: SSN[%u] unavailable!!!", _logId, _cfg->bill.ss7.own_ssn);
         }
     }                                         
-
-    _cfg->bill.abCache = (abCache = new AbonentCacheMTR(&_cfg->cachePrm, logger));
+    _cfg->dtcr.ss7 = _cfg->bill.ss7;
+    _cfg->dtcr.abCache = _cfg->bill.abCache =
+        (abCache = new AbonentCacheMTR(&_cfg->cachePrm, logger));
     assert(_cfg->bill.abCache);
     smsc_log_debug(logger, "%s: AbonentCache inited", _logId);
 
     //initialize IAProviders for defined policies
-    for (AbonentPolicies::iterator pit = _cfg->abPolicies.begin(); 
-                                    pit != _cfg->abPolicies.end(); pit++) {
-        AbonentPolicy *pol = *pit;
-        pol->getIAProvider();
-    }
+    _cfg->abPolicies.Init();
 
+    //initialize TCP server
     INPSerializer::getInstance();
     server = new Server(&_cfg->sock, logger);
     assert(server);
@@ -71,7 +69,7 @@ Service::Service(InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     } else
         _cfg->bill.bfs = NULL;
 
-    _cfg->bill.twReg = new TimeWatchersRegistry(logger);
+    _cfg->dtcr.twReg = _cfg->bill.twReg = new TimeWatchersRegistry(logger);
     assert(_cfg->bill.twReg);
     _cfg->bill.schedMgr = this;
     smsc_log_debug(logger, "%s: TimeWatcher inited", _logId);
@@ -239,16 +237,7 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
     case smsc::inman::interaction::csAbntContract: {
         MutexGuard tmp(_mutex);
         newSess.sId = ++lastSessId;
-
-        AbonentDetectorCFG sCfg;
-        sCfg.twReg = _cfg->bill.twReg;
-        sCfg.abCache = _cfg->bill.abCache;
-        sCfg.policies = _cfg->bill.policies;
-        sCfg.abtTimeout = _cfg->bill.abtTimeout;
-        sCfg.maxRequests = _cfg->bill.maxBilling;
-        sCfg.ss7 = _cfg->bill.ss7;
-
-        newSess.hdl = new AbntDetectorManager(&sCfg, newSess.sId, conn, logger);
+        newSess.hdl = new AbntDetectorManager(&_cfg->dtcr, newSess.sId, conn, logger);
     } break;
 
     default: //force connect closing by TCPSrv

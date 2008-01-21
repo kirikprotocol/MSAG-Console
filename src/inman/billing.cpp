@@ -528,9 +528,6 @@ Billing::PGraphState Billing::onChargeSms(void)
     }
 
     //Here goes either abtPrepaid or abtUnknown ..
-    if (!(abPolicy = _cfg.policies->getPolicy(&abNumber)))
-        smsc_log_error(logger, "%s: no policy set for %s", _logId, 
-                        abNumber.toString().c_str());
 
     //check if AbonentProvider should be requested for contract type
     bool askProvider = ((abCsi.abRec.ab_type == AbonentContractInfo::abtUnknown)
@@ -552,7 +549,7 @@ Billing::PGraphState Billing::onChargeSms(void)
     if (!abNumber.interISDN())
         askProvider = false;
 
-    if (askProvider && abPolicy) {
+    if (askProvider && (abPolicy = _cfg.policies->getPolicy(_cfg.policyNm))) {
         smsc_log_debug(logger, "%s: using policy %s for %s", _logId, abPolicy->Ident(),
                         abNumber.toString().c_str());
         // configure SCF by quering provider first
@@ -598,8 +595,8 @@ Billing::PGraphState Billing::ConfigureSCFandCharge(void)
                 errmsg = "unable to determine IN params (no policy set)";
             } else {
                 //look for single IN serving
-                if (abPolicy->scfMap.size() == 1)
-                    abScf = abPolicy->scfMap.begin()->second;
+                if (abPolicy->ScfMap().size() == 1)
+                    abScf = abPolicy->ScfMap().begin()->second;
                 else
                     errmsg = "unable to determine IN params (too many INs)";
             }

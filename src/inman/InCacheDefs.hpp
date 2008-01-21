@@ -15,12 +15,18 @@ namespace inman {
 namespace cache {
 
 struct AbonentCacheCFG {
+    static const uint32_t   _MAX_CACHE_INTERVAL = 65535; //minutes >= 45 days
+    static const uint32_t   _DFLT_CACHE_INTERVAL = 60;   //minutes
+    static const int        _DFLT_CACHE_RECORDS = 10000;
+    static const uint32_t   _DFLT_RAMCACHE_SZ = 5;       // Mb
+
     uint32_t    interval;   //default abonent info expiration interval, units: seconds
     uint32_t    RAM;        //abonents cache RAM buffer size, units: Mb
     int         fileRcrd;   //initial number of cache file records
     std::string nmDir;      //directory storing cache files
 
-    AbonentCacheCFG() {
+    AbonentCacheCFG()
+    {
         interval = RAM = fileRcrd = 0;
     }
 };

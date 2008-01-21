@@ -291,17 +291,16 @@ public:
 
 class INManConfig : public InService_CFG {
 public:
-    static const unsigned int _in_CFG_DFLT_CLIENT_CONNS = 3;
-    static const long _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
-    static const unsigned int _in_CFG_MAX_BILLINGS = 100000;
-    static const unsigned int _in_CFG_DFLT_BILLINGS = 500;
+    static const unsigned int   _in_CFG_DFLT_CLIENT_CONNS = 3;
+    static const long           _in_CFG_MIN_BILLING_INTERVAL = 10; //in seconds
+    static const unsigned int   _in_CFG_MAX_BILLINGS = 100000;
+    static const unsigned int   _in_CFG_DFLT_BILLINGS = 1000;
     static const unsigned short _in_CFG_DFLT_CAP_TIMEOUT = 20;
     static const unsigned short _in_CFG_DFLT_BILL_TIMEOUT = 120;
-    static const unsigned short _in_CFG_DFLT_ABTYPE_TIMEOUT = 5;
-    static const unsigned char _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
+    static const uint16_t       _in_CFG_DFLT_ABTYPE_TIMEOUT = 8;
+    static const uint16_t       _in_CFG_MAX_ABTYPE_TIMEOUT = 300;
+    static const unsigned char  _in_CFG_DFLT_SS7_USER_ID = 3; //USER03_ID
     static const unsigned short _in_CFG_DFLT_TCAP_DIALOGS = 2000;
-    static const long _in_CFG_DFLT_CACHE_INTERVAL = 1440;
-    static const int  _in_CFG_DFLT_CACHE_RECORDS = 10000;
 
 protected:
     typedef std::list<const char *> CPTRList;
@@ -379,10 +378,45 @@ protected:
 
 //protected methods:
 
-    AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol) throw(ConfigException)
+    IAProviderCreatorITF * readProviderCFG(Manager & manager, const char * nm_prvd)
+        throw(ConfigException)
     {
-        AbonentPolicyXCFG   polXCFG(nm_pol);
+        std::string nmPrvd(nm_prvd);
+        STDString::cutBlanks(nmPrvd);
+        IAProviderCreatorITF * pAllc = abPrvds.find(nmPrvd);
+        if (pAllc) {
+            smsc_log_info(logger, "Loaded AbonentProvider '%s'", nmPrvd.c_str());
+            return pAllc;
+        }
 
+        if (!manager.findSection("AbonentProviders"))
+            throw ConfigException("'AbonentProviders' section is missed");
+        ConfigView  prvdSec(manager, "AbonentProviders");
+        if (!prvdSec.findSubSection(nmPrvd.c_str()))
+            throw ConfigException("'%s' abonent provider is missed", nmPrvd.c_str());
+        std::auto_ptr<ConfigView> provCfg(prvdSec.getSubConfig(nmPrvd.c_str()));
+
+        smsc_log_info(logger, "Loading AbonentProvider '%s'", nmPrvd.c_str());
+        std::auto_ptr<IAProviderCreatorITF> provAllc(IAProviderLoader::LoadIAP(provCfg.get(), logger)); //throws
+        smsc_log_info(logger, "AbonentProvider '%s': type %s, ident: %s, ability: %s",
+                      nmPrvd.c_str(), _IAPTypes[provAllc->type()],
+                      provAllc->ident(), _IAPAbilities[provAllc->ability()]);
+        provAllc->logConfig(logger);
+
+        abPrvds.insert(nmPrvd, provAllc.get());
+        return provAllc.release();
+    }
+
+    AbonentPolicy * readPolicyCFG(Manager & manager, const char * nm_pol)
+        throw(ConfigException)
+    {
+        AbonentPolicy * pPol = abPolicies.getPolicy(std::string(nm_pol));
+        if (pPol) {
+            smsc_log_info(logger, "Configured %s policy", nm_pol);
+            return pPol;
+        }
+
+        AbonentPolicyXCFG   polXCFG(nm_pol);
         if (!manager.findSection("AbonentPolicies"))
             throw ConfigException("'AbonentPolicies' section is missed");
 
@@ -391,7 +425,6 @@ protected:
             throw ConfigException("'%s' policy is not specified", polXCFG.ident);
 
         std::auto_ptr<AbonentPolicy> policyCFG(new AbonentPolicy(nm_pol));
-
         std::auto_ptr<ConfigView> polCfg(polSec.getSubConfig(polXCFG.ident));
         //parse policy cfg
         smsc_log_info(logger, "Reading %s policy config ..", polXCFG.ident);
@@ -430,23 +463,10 @@ protected:
             }
         }
         //lookup Abonent Provider config and load it
-        if (polXCFG.prvdNm) {
-            if (!manager.findSection("AbonentProviders"))
-                throw ConfigException("'AbonentProviders' section is missed");
-            ConfigView  prvdSec(manager, "AbonentProviders");
-            if (!prvdSec.findSubSection(polXCFG.prvdNm))
-                throw ConfigException("'%s' abonent provider is missed", polXCFG.prvdNm);
+        if (polXCFG.prvdNm)
+            policyCFG->provAllc = readProviderCFG(manager, polXCFG.prvdNm);
 
-            std::auto_ptr<ConfigView> provCfg(prvdSec.getSubConfig(polXCFG.prvdNm));
-            smsc_log_info(logger, "Loading AbonentProvider '%s'", polXCFG.prvdNm);
-            policyCFG->provAllc = IAProviderLoader::LoadIAP(provCfg.get(), logger); //throws
-            smsc_log_info(logger, "AbonentProvider '%s': type %s, ident: %s, ability: %s",
-                          polXCFG.prvdNm, _IAPTypes[policyCFG->provAllc->type()],
-                          policyCFG->provAllc->ident(), 
-                          _IAPAbilities[policyCFG->provAllc->ability()]);
-            policyCFG->provAllc->logConfig(logger);
-        }
-
+        abPolicies.addPolicy(policyCFG.get());
         return policyCFG.release();
     }
 
@@ -598,14 +618,71 @@ protected:
         }
     }
 
-    //returns default policy name
-    const char * readBillCFG(Manager & manager) throw(ConfigException)
+    //returns true if SS7 stack required for billing
+    bool readDtcrCFG(Manager & manager) throw(ConfigException)
+    {
+        static const uint16_t   _MAX_REQUESTS_NUM = 0xFFFF;
+        static const uint16_t   _DFLT_REQUESTS_NUM = 1000;
+
+        if (!manager.findSection("AbonentDetector"))
+            throw ConfigException("'AbonentDetector' section is missed");
+        ConfigView cfgSec(manager, "AbonentDetector");
+        smsc_log_info(logger, "Reading AbonentDetector settings ..");
+
+        //abonent contract determination policy is required
+        try {
+            dtcr.policyNm = cfgSec.getString("abonentPolicy");
+            STDString::cutBlanks(dtcr.policyNm);
+        } catch (const ConfigException & exc) { }
+        if (dtcr.policyNm.empty())
+            throw ConfigException("abonent contract determination policy is invalid or missing!");
+        AbonentPolicy * pol = readPolicyCFG(manager, dtcr.policyNm.c_str());
+        bool reqSS7 = pol->useSS7();
+        abPolicies.addPolicy(pol);
+
+        uint32_t tmo = 0;    //abtTimeout
+        try { tmo = (uint32_t)cfgSec.getInt("abonentTypeTimeout");
+        } catch (const ConfigException & exc) { tmo = _in_CFG_MAX_ABTYPE_TIMEOUT; }
+        if (tmo >= _in_CFG_MAX_ABTYPE_TIMEOUT)
+            throw ConfigException("'abonentTypeTimeout' should fall into the"
+                                      " range [1 ..%u) seconds", _in_CFG_MAX_ABTYPE_TIMEOUT);
+        dtcr.abtTimeout = tmo ? (uint16_t)tmo : _in_CFG_DFLT_ABTYPE_TIMEOUT;
+        smsc_log_info(logger, "abonentTypeTimeout: %u secs%s", (unsigned)dtcr.abtTimeout.Value(),
+                      !tmo ? " (default)":"");
+
+        tmo = 0;    //maxRequests
+        try { tmo = (uint32_t)cfgSec.getInt("maxRequests");
+        } catch (const ConfigException & exc) { tmo = _MAX_REQUESTS_NUM; }
+        if (tmo >= _MAX_REQUESTS_NUM)
+            throw ConfigException("'maxRequests' is invalid or missing,"
+                                  " allowed range [1..%u)", _MAX_REQUESTS_NUM);
+        dtcr.maxRequests = tmo ? (uint16_t)tmo : _DFLT_REQUESTS_NUM;
+        smsc_log_info(logger, "maxRequests: %u per connect%s", dtcr.maxRequests,
+                      !tmo ? " (default)":"");
+
+        //cache parameters
+        tmo = 0;
+        try { tmo = (uint32_t)cfgSec.getInt("cacheExpiration");
+        } catch (const ConfigException & exc) { tmo = AbonentCacheCFG::_MAX_CACHE_INTERVAL; }
+        if (tmo >= AbonentCacheCFG::_MAX_CACHE_INTERVAL)
+            throw ConfigException("'cacheExpiration' is invalid or missing,"
+                                  " allowed range [1..%u)", AbonentCacheCFG::_MAX_CACHE_INTERVAL);
+        dtcr.cacheTmo = tmo ? tmo : AbonentCacheCFG::_DFLT_CACHE_INTERVAL;
+        smsc_log_info(logger, "cacheExpiration: %u minutes%s", dtcr.cacheTmo,
+                      !tmo ? " (default)":"");
+        dtcr.cacheTmo *= 60;         //convert minutes to seconds
+
+        return reqSS7;
+    }
+
+    //returns true if SS7 stack required for billing
+    bool readBillCFG(Manager & manager) throw(ConfigException)
     {
         //according to BillingCFG::ContractReqMode
         static const char * _abReq[] = { "onDemand", "always" };
+        bool reqSS7 = false;
         uint32_t tmo = 0;
         char * cstr = NULL;
-        char * policyNm = NULL; //abonent contract determination policy
 
         if (!manager.findSection("Billing"))
             throw ConfigException("'Billing' section is missed");
@@ -613,7 +690,8 @@ protected:
         smsc_log_info(logger, "Reading Billing settings ..");
 
         //read BillingModes subsection
-        readBillingModes(billCfg);
+        readBillingModes(billCfg); //throws
+        reqSS7 |= bill.mo_billMode.useIN() || bill.mt_billMode.useIN();
 
         cstr = NULL;
         bill.cntrReq = BillingCFG::reqOnDemand;
@@ -629,26 +707,27 @@ protected:
         smsc_log_info(logger, "abonentTypeRequest: %s%s", _abReq[bill.cntrReq],
                       !cstr ? " (default)":"");
 
-        if ((bill.cntrReq == BillingCFG::reqAlways)
-            || bill.mo_billMode.useIN() || bill.mt_billMode.useIN()) {
+        if ((bill.cntrReq == BillingCFG::reqAlways) || reqSS7) {
             //abonent contract determination policy is required
-            cstr = NULL;
-            try { policyNm = billCfg.getString("abonentPolicy");
-            } catch (ConfigException& exc) { }
-
-            if (!policyNm || !policyNm[0])
-                throw ConfigException("abonent contract determination policy is not set!");
+            try {
+                bill.policyNm = billCfg.getString("abonentPolicy");
+                STDString::cutBlanks(bill.policyNm);
+            } catch (const ConfigException & exc) { }
+            if (bill.policyNm.empty())
+                throw ConfigException("abonent contract determination policy is invalid or missing!");
+            AbonentPolicy * pol = readPolicyCFG(manager, bill.policyNm.c_str());
+            reqSS7 |= pol->useSS7();
+            abPolicies.addPolicy(pol);
         } else
             smsc_log_info(logger, "abonent contract determination policy is not used");
 
         tmo = 0;    //abtTimeout
-        try { tmo = (uint32_t)billCfg.getInt("abonentTypeTimeout"); }
-        catch (ConfigException& exc) { }
-        if (tmo) {
-            if (tmo >= 65535)
-                throw ConfigException("'abonentTypeTimeout' should fall into the range [1 ..65535] seconds");
-            bill.abtTimeout = (unsigned short)tmo;
-        }
+        try { tmo = (uint32_t)billCfg.getInt("abonentTypeTimeout");
+        } catch (const ConfigException & exc) { tmo = _in_CFG_MAX_ABTYPE_TIMEOUT; }
+        if (tmo >= _in_CFG_MAX_ABTYPE_TIMEOUT)
+            throw ConfigException("'abonentTypeTimeout' is invalid or missing,"
+                                " allowed range [1 ..%u) seconds", _in_CFG_MAX_ABTYPE_TIMEOUT);
+        bill.abtTimeout = tmo ? (uint16_t)tmo : _in_CFG_DFLT_ABTYPE_TIMEOUT;
         smsc_log_info(logger, "abonentTypeTimeout: %u secs%s", (unsigned)bill.abtTimeout.Value(),
                       !tmo ? " (default)":"");
 
@@ -685,15 +764,17 @@ protected:
             smsc_log_info(logger, "cdrInterval: %d secs", bill.cdrInterval);
         }
         //cache parameters
-        try {
-            if (!(cachePrm.interval = (long)billCfg.getInt("cacheInterval")))
-                cachePrm.interval = _in_CFG_DFLT_CACHE_INTERVAL;
-            smsc_log_info(logger, "cacheInterval: %d minutes", cachePrm.interval);
-            //convert minutes to seconds
-            cachePrm.interval *= 60;
-        } catch (ConfigException& exc) {
-            throw ConfigException("'cacheInterval' is missing");
-        }
+        tmo = 0;
+        try { tmo = (uint32_t)billCfg.getInt("cacheInterval");
+        } catch (const ConfigException & exc) { tmo = AbonentCacheCFG::_MAX_CACHE_INTERVAL; }
+        if (tmo >= AbonentCacheCFG::_MAX_CACHE_INTERVAL)
+            throw ConfigException("'cacheInterval' is invalid or missing,"
+                                  " allowed range [1..%u)", AbonentCacheCFG::_MAX_CACHE_INTERVAL);
+        cachePrm.interval = tmo ? tmo : AbonentCacheCFG::_DFLT_CACHE_INTERVAL;
+        smsc_log_info(logger, "cacheInterval: %u minutes%s", dtcr.cacheTmo,
+                      !tmo ? " (default)":"");
+        cachePrm.interval *= 60;         //convert minutes to seconds
+
         try {
             if (!(cachePrm.RAM = (long)billCfg.getInt("cacheRAM")))
                 throw ConfigException("'cacheRAM' is missing or invalid");
@@ -753,7 +834,7 @@ protected:
             smsXcfg += cstr;
         }
 #endif /* SMSEXTRA */
-        return policyNm;
+        return reqSS7;
     }
 
     void readXServiceParms(ConfigView * cfg, const std::string & nm_srv) throw(ConfigException)
@@ -804,7 +885,7 @@ public:
         sock.timeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.maxTimeout = _in_CFG_DFLT_BILL_TIMEOUT;
         bill.abtTimeout = _in_CFG_DFLT_ABTYPE_TIMEOUT;
-        cachePrm.fileRcrd = _in_CFG_DFLT_CACHE_RECORDS;
+        cachePrm.fileRcrd = AbonentCacheCFG::_DFLT_CACHE_RECORDS;
         scfMap.Init(logger);
     }
 
@@ -848,24 +929,18 @@ public:
         /* ******************** *
          * Billing parameters:  *
          * ******************** */
-        const char * policyNm = readBillCFG(manager);
-
-        /* ***************************************************************** *
-         * AbonentPolicies: (IN-platforms and AbonentProviders) parameters:  *
-         * ***************************************************************** */
-        if (policyNm) { //default policy
-            abPolicies.setPreferred(readPolicyCFG(manager, policyNm));
-        }
-        //todo: policies address pool mask is not supported yet!
-
+        bool reqSS7 = readBillCFG(manager);
+        /* **************************** *
+         * AbonentDetector parameters:  *
+         * **************************** */
+        reqSS7 |= readDtcrCFG(manager);
         /* ********************************* *
          * SS7 stack interaction parameters: *
          * ********************************* */
-        if (bill.mo_billMode.useIN() || bill.mt_billMode.useIN() || abPolicies.useSS7())
+        if (reqSS7)
             readSS7CFG(manager, bill.ss7);
         else
             smsc_log_info(logger, "SS7 stack not in use!");
-
         /**/
         return;
     }

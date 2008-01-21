@@ -104,6 +104,7 @@ struct BillingCFG {
     TimeWatchersRegistry * twReg;
 //billing parameters
     AbonentPolicies * policies;
+    std::string     policyNm;       //name of default AbonenPolicy
     BillModes       mo_billMode;
     BillModes       mt_billMode;
     ContractReqMode cntrReq;
