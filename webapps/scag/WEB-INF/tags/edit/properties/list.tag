@@ -26,14 +26,12 @@
     </c:choose>
     <c:choose>
         <c:when test="${readonly}">
-            <input class=txt type="text" readonly name="${name}" value="${bean[name]}">
+            <input id="${name}" class=txt type="text" readonly name="${name}" value="${bean[name]}">
         </c:when>
         <c:otherwise>
             <div class=select>
-                <c:if test="${!empty label}"><label><fmt:message>${label}</fmt:message>&nbsp;</label></c:if><select name="${name}"
-                    <c:if test="${!empty onChange}">
-                        onChange="${onChange}"
-                    </c:if> >
+                <c:if test="${!empty label}"><label><fmt:message>${label}</fmt:message>&nbsp;</label></c:if>
+                <select id="${name}" name="${name}" <c:if test="${!empty onChange}">onChange="${onChange}"</c:if> >
                     <c:if test="${name == 'srcSmeId'}">
                             <option value=""></option>
                     </c:if>
