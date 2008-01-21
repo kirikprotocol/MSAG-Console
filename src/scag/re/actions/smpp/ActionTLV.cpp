@@ -4,12 +4,28 @@
 
 namespace scag { namespace re { namespace actions {
 
+enum // tlv_types constants
+{
+    TT_UNKNOWN = 0,
+    TT_STR, TT_STRN, TT_INT8, TT_INT16, TT_INT32, TT_INT64,
+    TT_UINT8, TT_UINT16, TT_UINT32, TT_HEXDUMP
+};
+
 Hash<int> ActionTLV::namesHash = ActionTLV::InitNames();
+Hash<int> ActionTLV::typesHash = ActionTLV::InitTypes();
 
 Hash<int> ActionTLV::InitNames()
 {
-    Hash<int> hs;    
-    hs["name1"] = 11;
+    Hash<int> hs;
+    hs["name1"] = 11; // ??
+    return hs;
+}
+Hash<int> ActionTLV::InitTypes()
+{
+    Hash<int> hs;
+    hs["STR"] = TT_STR; hs["STRN"] = TT_STRN; hs["HEXDUMP"] = TT_HEXDUMP;
+    hs["INT8"] = TT_INT8; hs["INT16"] = TT_INT16; hs["INT32"] = TT_INT32; hs["INT64"] = TT_INT64;
+    hs["UINT8"] = TT_UINT8; hs["UINT16"] = TT_UINT16; hs["UINT32"] = TT_UINT32;
     return hs;
 }
 
@@ -39,7 +55,7 @@ void ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::
 {
     uint32_t i = findField(buff, len, fieldId);
     tmp.assign(buff, i < len ? i : len);
-    if(i <= len - 4)
+    if(i <= len - 4) 
     {
         i = i + 4 + *(uint16_t *)(buff + i + 2);
         if(i < len)
@@ -51,7 +67,6 @@ bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, std::string& str)
 {
     uint32_t len, i;
     const char* buff;
-
     if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
     {
         uint16_t valueLen = *(uint16_t *)(buff + i + 2);
@@ -59,7 +74,6 @@ bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, std::string& str)
         if(valueLen) str.assign((buff + i + 4), valueLen);
         return true;
     }
-
     return false;
 }
 
@@ -84,7 +98,6 @@ bool ActionTLV::delUnknown(SMS& data, uint16_t fieldId)
         data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
         return true;
     }
-
     return false;
 }
 
@@ -109,7 +122,7 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 {
     bool bExist;
 
-    m_tag = 0;
+    m_tag = 0; tlv_type = TT_UNKNOWN;
     ftTag = CheckParameter(params, propertyObject, "tlv", "tag", false, true, strTag, byTag);
     if(!byTag)
     {
@@ -127,8 +140,20 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
     
     if(type == TLV_SET || type == TLV_GET || type == TLV_EXIST)
         ftVar = CheckParameter(params, propertyObject, "tlv", type != TLV_EXIST ? "var" : "exist", true, type == TLV_SET, strVar, bExist);
+    
+    if(type != TLV_EXIST && type != TLV_DEL) // init tlv_type
+    { 
+        ftTLVType = CheckParameter(params, propertyObject, "tlv", "type", false, true, strTag, bExist);
+        if(bExist) {
+            int *p = namesHash.GetPtr(strTag.c_str());
+            if(ftTLVType != ftUnknown || !p) 
+                throw SCAGException("Action 'tlv': Invalid TYPE argument"); // should be defined constant
+            tlv_type = *p;
+        }
+        else smsc_log_debug(logger, "Action 'tlv': TLV type treated as unknown");
+    }
 
-    smsc_log_debug(logger,"Action 'tlv':: init");
+    smsc_log_debug(logger,"Action 'tlv':: inited");
 }
 
 bool ActionTLV::run(ActionContext& context)
@@ -142,16 +167,12 @@ bool ActionTLV::run(ActionContext& context)
     if(!tag)
     {
         Property* p = context.getProperty(strTag);
-        if(!p)
-            throw SCAGException("Action 'tlv': Invalid TAG property: %s", strTag.c_str());
-        if(byTag)
-        {
+        if(!p) throw SCAGException("Action 'tlv': Invalid TAG property: %s", strTag.c_str());
+        if(byTag) {
             tag = strtol(p->getStr().c_str(), NULL, 0);
             if(!tag)
                 throw SCAGException("Action 'tlv': Invalid TAG value");
-        }
-        else
-        {
+        } else  {
             int *i = namesHash.GetPtr(p->getStr().c_str());
             if(!i)
                 throw SCAGException("Action 'tlv': Invalid NAME value");
@@ -165,8 +186,7 @@ bool ActionTLV::run(ActionContext& context)
     if(type != TLV_DEL && ftVar != ftUnknown)
     {
         prop = context.getProperty(strVar);
-        if (!prop) 
-        {
+        if (!prop) {
             smsc_log_warn(logger,"Action 'tlv':: invalid result property '%s'",strVar.c_str());
             return true;
         }
@@ -174,33 +194,29 @@ bool ActionTLV::run(ActionContext& context)
         
     if(type == TLV_EXIST)
     {
-        prop->setBool(tag < 256 ? sms.hasProperty(tag) : existUnknown(sms, tag));
+        prop->setBool(tag <= SMS_LAST_TAG ? sms.hasProperty(tag) : existUnknown(sms, tag));
         smsc_log_debug(logger, "Action 'tlv': Tag: %d is %s", tag, prop->getBool() ? "set" : "not set");
     }
     else if(type == TLV_DEL)
     {
-        if(tag < 256)
-            sms.dropProperty(tag);
-        else
-            delUnknown(sms, tag);
+        if(tag <= SMS_LAST_TAG) sms.dropProperty(tag);
+        else delUnknown(sms, tag);
         smsc_log_debug(logger, "Action 'tlv': Tag: %d deleted", tag);
     }
     else if(type == TLV_GET)
     {
-        if(tag < 256)
+        // TODO: add tlv_type required conversion
+        if(tag <= SMS_LAST_TAG)
         {
-            if(!sms.hasProperty(tag))
-            {
+            if(!sms.hasProperty(tag)) {
                 smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
                 return true;
             }
-            if(tt == SMS_INT_TAG)
-            {
+            if(tt == SMS_INT_TAG) {
                 prop->setInt(sms.getIntProperty(tag));
                 smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
             }
-            else if(tt == SMS_STR_TAG)
-            {
+            else if(tt == SMS_STR_TAG) {
                 prop->setStr(sms.getStrProperty(tag | (SMS_STR_TAG << 8)));
                 smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
             }
@@ -215,7 +231,8 @@ bool ActionTLV::run(ActionContext& context)
     }
     else if(type == TLV_SET)
     {
-        if(tag < 256)
+        // TODO: add tlv_type required conversion
+        if(tag <= SMS_LAST_TAG)
         {
             if(tt == SMS_INT_TAG)
             {
@@ -223,8 +240,7 @@ bool ActionTLV::run(ActionContext& context)
                 if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
                 {
                     val = strtol(strVar.c_str(), NULL, 0);
-                    if(!val && (strVar[0] != '0' || strVar.length() != 1))
-                    {
+                    if(!val && (strVar[0] != '0' || strVar.length() != 1)) {
                         smsc_log_error(logger, "Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, strVar.c_str());
                         return true;
                     }
@@ -240,11 +256,11 @@ bool ActionTLV::run(ActionContext& context)
         }
         else
         {
-            setUnknown(sms, tag, prop ? prop->getStr() : strVar);
-            smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%s", tag, prop ? prop->getStr().c_str() : strVar.c_str());
+            const std::string& strValue = prop ? prop->getStr() : strVar;
+            setUnknown(sms, tag, strValue);
+            smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%s", tag, strValue.c_str());
         }
     }
-
     return true;
 }
 

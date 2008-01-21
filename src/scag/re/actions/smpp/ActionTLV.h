@@ -16,13 +16,15 @@ class ActionTLV : public Action
 {
     ActionTLV(const ActionTLV &);
     
-    int type, m_tag;
+    int  type, tlv_type, m_tag;
     std::string strVar, strTag;
     static Hash<int> namesHash;
+    static Hash<int> typesHash;
     bool byTag;
-    FieldType ftVar, ftTag;
+    FieldType ftVar, ftTag, ftTLVType;
 
 protected:
+
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 
@@ -33,12 +35,16 @@ protected:
     bool existUnknown(SMS& data, uint16_t fieldId);
     bool delUnknown(SMS& data, uint16_t fieldId);
     void setUnknown(SMS& data, uint16_t fieldId, const std::string& str);
+    
 public:
+   
     virtual bool run(ActionContext& context);
 
     ActionTLV(int t) : type(t) {};
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
+
     static Hash<int> InitNames();
+    static Hash<int> InitTypes();
 };
 
 
