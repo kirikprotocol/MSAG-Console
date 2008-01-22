@@ -10,6 +10,7 @@
             function loadSaved() {
                 return "Date of saved file is ${bean.restoreDate}. Are you sure to load this file?";
             }
+
             function enableDisableButtonsById(itemId, isDisabled){
 
                 var items = document.getElementsByName(itemId);
@@ -18,6 +19,7 @@
                     items[i].disabled = isDisabled;
                 }
             }
+
             function enableDisableButtons(){
                 enableDisableButtonsById('mbApply', ${(!bean.routesChanged)});
                 enableDisableButtonsById('mbLoad',  ${(bean.routesRestored)} );
@@ -31,11 +33,14 @@
             }
 
             function changeTransportId() {
-                var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+//                var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+                var opForm = getElementByIdUni("opForm");
+                var transportId = getElementByIdUni("transportId");
+                var transport = transportId.options[transportId.selectedIndex].value;
                 if (location.href.indexOf("transportId")!=-1) {
                   var action = location.href.substring(0,location.href.indexOf("transportId")-1);
                   opForm.action=action;
-                }                
+                }
                 opForm.submit();
                 return true;
             }
