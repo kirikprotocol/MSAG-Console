@@ -1,6 +1,7 @@
 function clickSubmit()
 {
         alert("clickSubmit()");
+        var opForm = getElementByIdUni("opForm");
 /*      if (this.onclick != null && this.onclick() == false)
                 return false;*/
         if (this.disabled)
@@ -27,22 +28,27 @@ function clickSubmit()
 function resetValidation(elem)
 {
 	elem.errorMessage = null;
-//	alert("Color:'" + elem.style.color + "'" + rgb(255,0,0));
-
+//	alert("RESETVALIDATION " + elem.style.Color);
+    elem.style.color = "";
+    elem.style.borderColor = "";
     try{
-        if (typeof(elem.style.baseColor) == "undefined") {
+//        if (typeof(elem.style.baseColor) == "undefined")
+        if (elem.style.baseColor == "undefined")
+        {
     //	    alert( "undef baseColor!");
             elem.style.baseColor = elem.style.color;
+            elem.style.color = "";
         }
         elem.style.color = elem.style.baseColor;
     }catch(ex){ alert( "Exception resetVal Color!" ); }
 
-        if(elem.tagName == "SELECT")
-        {
+    if(elem.tagName == "SELECT")
+    {
             elem = elem.parentElement;
-        }
+    }
     try{
-        if (typeof(elem.style.baseBorderColor) == "undefined") {
+        if (typeof(elem.style.baseBorderColor) == "undefined")
+        {
             elem.style.baseBorderColor = elem.style.borderColor;
         }
         elem.style.borderColor = elem.style.baseBorderColor;
@@ -54,6 +60,7 @@ function resetValidation(elem)
 		errPointer.style.display = "none";
 	}*/
 }
+
 function validateShowErrors(elem)
 {
 	if(elem.errorMessage == null) return;
@@ -575,6 +582,7 @@ function encodeHEX( str ) {
 }
 function removeRow(tbl, rowId)
 {
+//    var tbl =
 	var rowElem = tbl.rows[rowId];
 	tbl.deleteRow(rowElem.rowIndex);
 }
@@ -601,10 +609,11 @@ function changeTransportId() {
 function tableTag_sort(sort) {
 //    if (document.all.sort.value == sort)
     var opForm = getElementByIdUni("opForm");
-    if (getElementByIdUni("sort").value == sort)
-        opForm.sort.value = "-" + sort;
+    var sort = getElementByIdUni("sort");
+    if (sort.value == sort)
+        sort.value = "-" + sort;
     else
-        opForm.sort.value = sort;
+        sort.value = sort;
     opForm.submit();
     return false;
 }
@@ -739,13 +748,13 @@ function refreshTdcSCAGStatusObject()
 }
 
 function changeIcon(evt) {
-  var evt = window.event? window.event: event;
+  var evt = window.event? window.event: evt;
   var elem=evt.srcElement? evt.srcElement: evt.target;
   if (evt.type=="mouseover") {
     elem.style.visibility="hidden";
-    elem.filters["revealTrans"].apply();
+//    elem.filters["revealTrans"].apply();
     elem.height=parseInt(elem.height)+5;
-    elem.filters["revealTrans"].play();
+//    elem.filters["revealTrans"].play();
     elem.style.visibility="visible";
     return true;
   } else if (evt.type=="mouseout") {
