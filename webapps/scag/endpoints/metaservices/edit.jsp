@@ -35,6 +35,7 @@
       oOption.text = smeValue;
       oOption.value = smeValue;
       tbl.deleteRow( rowElem.rowIndex )
+      selectElem.disabled = false;
   }
 
 
@@ -86,7 +87,8 @@
 //          newCell.appendChild(img);
           newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSmeRow(\'' + sme + '\', \'' + newRow.id + '\')" style="cursor: pointer;">';
           newRow.appendChild(newCell);
-
+          if (selectElem.options.length == 0)
+              selectElem.disabled = true;
 //          alert( "Table=" + tbl.rows.length);
          }else{
             alert( "Empty ID" );
