@@ -2,8 +2,8 @@
 <sm:page>
     <jsp:attribute name="title">
         <c:choose>
-            <c:when test="${param.add}">metaservice.add.title</c:when>
-            <c:otherwise>metaservice.edit.title</c:otherwise>
+            <c:when test="${param.add}">metacenter.add.title</c:when>
+            <c:otherwise>metacenter.edit.title</c:otherwise>
         </c:choose>
     </jsp:attribute>
     <jsp:attribute name="menu">
@@ -17,31 +17,26 @@
     <jsp:body>
         <script>
     var global_counter = 0;
-  function removeSmeRow( tblId, rowId ){
-      tbl = document.getElementById("smeTable");
+  function removeSmeRow( sme, rowId ){
+      tbl = getElementByIdUni("smeTable");
       var rowElem = tbl.rows[rowId];
-//      var selectElem = document.getElementById('smeSelect');
-        var selectElem = opForm.all.smeSelect;
+      var selectElem = getElementByIdUni('smeSelect');
       var oOption = document.createElement("OPTION");
       selectElem.options.add(oOption);
-//      alert( "SME DELETE:" + rowElem.childNodes[3].innerHTML );
-//      var smeValue = rowElem.childNodes[3].innerHTML;
-      var smeValue = rowElem.all.smeSrc.value;
-//      alert( "smeValue " + smeValue );
+      var elem = getElementByIdUni('selected_sme_'+sme);
+      var smeValue = elem.value;
+
       oOption.innerText = smeValue;
       oOption.text = smeValue;
       oOption.value = smeValue;
-//      var rowElem = tbl.rows[rowId];
-//      alert( "REMOVE INDEX:" + rowElem.rowIndex );
       tbl.deleteRow( rowElem.rowIndex )
   }
 
 
       function addSmeRow(){
-//      alert("add sme='" + document.getElementById("newSme").value +"'");
 //      selectElem.options[selectElem.selectedIndex] = null;
         var selectElem = document.getElementById('smeSelect');
-//         if( document.getElementById("newSme").value!=null && document.getElementById("newSme").value != ""){
+        if( selectElem.value!=null && selectElem.value != ""){
 //          document.getElementById('newSme').value = "";
 //          var mask = opForm.all.newDstMask.value;
 //          var sme = document.getElementById("newSme").value;
@@ -56,7 +51,8 @@
           newCell = document.createElement("td");
 <%--          newCell.innerHTML = '<img src="content/images/mask.gif">';--%>
 //          newCell.setAttribute( 'width', '154');
-          newCell.innerHTML = '<input type=hidden name="selected_sme_' + sme + '">' + '<input id="smeSrc" type=hidden name="smeSubjs" value="' + sme +'">';
+//          newCell.innerHTML = '<input type=hidden name="selected_sme_' + sme + '">' + '<input id="smeSrc_' + sme + '" type=hidden name="smeSubjs" value="' + sme +'">';
+          newCell.innerHTML = '<input type=hidden id="selected_sme_' + sme  + '" name="selected_sme_' + sme + '" value="' + sme + '">';
           newRow.appendChild(newCell);
 
           newCell = document.createElement("td");
@@ -65,33 +61,14 @@
           newRow.appendChild(newCell);
 
           newCell = document.createElement("td");
-          var img     = document.createElement('IMG');
-          img.setAttribute('src', 'content/images/but_del.gif');
-          img.setAttribute('style', 'cursor:pointer');
-          img.onclick = function(){
-              var rowElem = tbl.rows[newRow.id];
-              var selectElem = document.getElementById('smeSelect');
-              var oOption = document.createElement("OPTION");
-              alert( "SME:" + rowElem.childNodes[1].innerHTML );
-              var smeValue = rowElem.childNodes[1].innerHTML;
-              oOption.innerText = smeValue;
-              oOption.text = smeValue;
-              oOption.value = smeValue;
-              selectElem.options.add(oOption);
-//                var rowElem = tbl.rows[newRow.id];
-//                alert( "RREMOVE INDEX:" + rowElem.rowIndex );
-                tbl.deleteRow( rowElem.rowIndex )
-          }
-//          newCell.appendChild(img);
-          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSmeRow(opForm.all.smeTable, \'' + newRow.id + '\')" style="cursor: pointer;">';
+          newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSmeRow(\'' + sme + '\', \'' + newRow.id + '\')" style="cursor: pointer;">';
           newRow.appendChild(newCell);
 
-//          alert( "Table=" + tbl.rows.length);
-//         }else{
-//            alert( "Empty SME" );
-//         }
+       }else{
+            alert( "Empty ID" );
+       }
     }
-        </script>
+    </script>
             <br>
 <%--                <c:set var="sps" value="${fn:join(bean.spIds, ',')}"/>--%>
                 <sm-ep:properties title="metacenter.edit.properties">
@@ -108,7 +85,7 @@
                     <tr>
                         <td></td>
                         <td width="229" >
-                            <select id=smeSelect onchange="setNewSme()" name=smeSelect >
+                            <select id=smeSelect onchange="" name=smeSelect >
 <%--                        <option value="">select services</option>--%>
                             <c:forEach items="${bean.availableSmes}" var="i">
                                 <option id="${fn:escapeXml(i)}" value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
@@ -123,11 +100,11 @@
                     <tr class="row${rowN%2}" id="smeRow_${sme}">
                       <td>
     <%--                    <img src="content/images/subject.gif">--%>
-                        <input type=hidden name="selected_sme_${sme}" value="${sme}" id="${sme}">
-                        <input id=smeSrc type=hidden name=smeSubjs value="${sme}">
+                        <input id="selected_sme_${sme}" type=hidden name="selected_sme_${sme}" value="${sme}">
+<%--                        <input id=smeSrc type=hidden name=smeSubjs value="${sme}">--%>
                       </td>
                       <td>${sme}</td>
-                      <td><img src="content/images/but_del.gif" onClick="removeSmeRow( 'smeTable', 'smeRow_${sme}');" style="cursor: pointer;"></td>
+                      <td><img src="content/images/but_del.gif" onClick="removeSmeRow( '${sme}', 'smeRow_${sme}');" style="cursor: pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                   </c:forEach>
