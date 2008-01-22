@@ -20,16 +20,19 @@
         var global_subj_counter = 0;
 
         function removeRow(tblName, rowId) {
-            var tbl = document.getElementById( tblName );
-            var rowElem = tbl.rows(rowId);
+            var tbl = getElementByIdUni( tblName );
+            var rowElem = tbl.rows[rowId];
             tbl.deleteRow(rowElem.rowIndex);
         }
 
         function addpElement(elemName, pname){
             var valueElem = document.getElementById( elemName );
-            if(validateField(valueElem)){
-//                var tbl = opForm.all.sources_table;
-                var tbl = document.getElementById( 'sources_table' );
+            if( getElementByIdUni("maskRow_"+valueElem.value)!=null){
+                alert( "Such mask allready exists");
+                return false;
+            }
+            if( validateField(valueElem) ){
+                var tbl = getElementByIdUni( 'sources_table' );
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
                 newRow.id = "srcRow_" + (global_subj_counter++);
@@ -120,7 +123,7 @@
                           <col width="100%" align="left">
                           <tr>
                               <td><fmt:message>subjects.edit.label.mask</fmt:message></td>
-                              <td><input id="newSrcMask" class="txt" name="masks" validation="routeMask"
+                              <td><input id="newSrcMask" class="txt" name="masks" validation="routeMaskNonEmpty"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
                                        onclick="addpElement('newSrcMask', 'masks')"
