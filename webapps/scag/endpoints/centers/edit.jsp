@@ -16,7 +16,10 @@
     <jsp:body>
         <script>
             function changeTransportId() {
-                var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+                var opForm = getElementByIdUni("opForm");
+//                var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+                var selectTransportId = getElementByIdUni("transportId");
+                var transport = selectTransportId.options[selectTransportId.selectedIndex].value;
                 opForm.submit();
                 return true;
             }
