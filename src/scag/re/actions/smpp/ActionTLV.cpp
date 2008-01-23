@@ -2,7 +2,13 @@
 #include "scag/re/CommandAdapter.h"
 #include "scag/re/CommandBrige.h"
 
+#include "util/Uint64Converter.h"
+
 namespace scag { namespace re { namespace actions {
+
+const std::string HEX_CHARS("0123456789abcdefABCDEF ");
+const smsc::util::HexDumpCFG HEX_DUMP_CFG = { 1, 0, " ", 0};
+const MAX_INT_SIZE = sizeof(int64_t);
 
 enum // tlv_types constants
 {
@@ -77,6 +83,95 @@ bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, std::string& str)
     return false;
 }
 
+bool ActionTLV::checkHexString(const std::string& str) {
+  size_t pos = str.find_first_not_of(HEX_CHARS);
+  return pos == std::string::npos ? true : false;
+}
+
+int64_t ActionTLV::convertToIntX(const char* buf, uint16_t valueLen) {
+  valueLen = valueLen > MAX_INT_SIZE ? MAX_INT_SIZE : valueLen;
+  uint64_t buf_val = 0;
+  memcpy(&buf_val, buf, valueLen);
+  int64_t value = (int64_t)smsc::util::Uint64Converter::toHostOrder(buf_val);
+  value >>= (MAX_INT_SIZE - valueLen) * 8;
+  return value;
+}
+
+bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, Property* prop)
+{
+    uint32_t len, i;
+    const char* buff;
+    if(getOptionalProperty(data, buff, len) && (i = findField(buff, len, fieldId)) <= len - 4)
+    {
+        uint16_t valueLen = *(uint16_t *)(buff + i + 2);
+        if(i + 4 + valueLen > len) return false;
+        bool int_val = true;
+        if (!valueLen) {
+          return true;
+        }
+        const char* valueStart = buff + i + 4;
+        switch (tlv_type) {
+        case TT_UINT8:
+        case TT_INT8: {
+          if (valueLen > sizeof(int8_t)) {
+            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d byte)",
+                           valueLen, sizeof(int8_t));
+          }
+          prop->setInt(convertToIntX(valueStart, valueLen));
+          break;
+        }
+        case TT_UINT16:
+        case TT_INT16: {
+          if (valueLen > sizeof(int16_t)) {
+            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                           valueLen, sizeof(int16_t));
+          }
+          prop->setInt(convertToIntX(valueStart, valueLen));
+          break;
+        }
+        case TT_UINT32: 
+        case TT_INT32: {
+          if (valueLen > sizeof(int32_t)) {
+            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                           valueLen, sizeof(int32_t));
+          }
+          prop->setInt(convertToIntX(valueStart, valueLen));
+          break;
+        }
+        case TT_INT64: {
+          if (valueLen > sizeof(int64_t)) {
+            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                           valueLen, sizeof(int64_t));
+          }
+          prop->setInt(convertToIntX(valueStart, valueLen));
+          break;
+        }
+        case TT_UNKNOWN:
+        case TT_HEXDUMP: {
+          std::string hexDump;
+          smsc::util::DumpHex(hexDump, valueLen, (unsigned char*)valueStart, HEX_DUMP_CFG);
+          prop->setStr(hexDump);
+          int_val = false;
+          break;
+        }
+        case TT_STR: 
+        case TT_STRN: {
+          std::string str(valueStart, valueLen);
+          prop->setStr(str);
+          int_val = false;
+          break;
+        }
+        }
+        if (int_val) {
+          smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", fieldId, prop->getInt());
+        } else {
+          smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", fieldId, prop->getStr().c_str());
+        }
+        return true;
+    }
+    return false;
+}
+
 bool ActionTLV::existUnknown(SMS& data, uint16_t fieldId)
 {
     uint32_t len;
@@ -118,6 +213,101 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, const std::string& str)
     data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
 }
 
+void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str)
+{
+    uint16_t valueLen = 0;
+    int64_t int_val = 0;
+    std::string str_val;
+    uint32_t len = 0;
+    std::string tmp;
+    const char* buff;
+
+    if(getOptionalProperty(data, buff, len))
+        cutField(buff, len, fieldId, tmp);
+
+    if ((tlv_type >= TT_UNKNOWN && tlv_type <= TT_STRN) || (tlv_type == TT_HEXDUMP)) {
+        str_val = prop? prop->getStr() : str;
+        smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%s", fieldId, str_val.c_str());
+    }
+    if (tlv_type >= TT_INT8 && tlv_type <= TT_UINT32) {
+      if (prop) {
+        int_val = prop->getInt();
+      } else {
+        int_val = atoll(str.c_str());
+        if(!int_val && (str[0] != '0' || str.size() != 1)) {
+            smsc_log_warn(logger, "Action 'tlv': Invalid value for Unknown TAG %d, val=%s", fieldId, str.c_str());
+        }
+      }
+      smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%d", fieldId, int_val);
+    }
+    uint16_t netFieldId = htons(fieldId);
+    tmp.append((char*)&netFieldId, 2);
+    switch (tlv_type) {
+    case TT_UNKNOWN:
+    case TT_STR: {
+      valueLen = str_val.size();
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      tmp.append(str_val);
+      break;
+    }
+    case TT_STRN: {
+      valueLen = str_val.size() + 1;
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      tmp.append(str_val);
+      tmp += '\0';
+      break;
+    }
+    case TT_INT8: 
+    case TT_UINT8: {
+      valueLen = sizeof(uint8_t);
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      uint8_t val = (uint8_t)int_val;
+      tmp.append((char*)&val, valueLen);
+      break;
+    }
+    case TT_INT16: 
+    case TT_UINT16: {
+      valueLen = sizeof(uint16_t);
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      uint16_t val = htons((uint16_t)int_val);
+      tmp.append((char*)&val, valueLen);
+      break;
+    }
+    case TT_INT32: 
+    case TT_UINT32: {
+      valueLen = sizeof(uint32_t);
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      uint32_t val = htonl((uint32_t)int_val);
+      tmp.append((char*)&val, valueLen);
+      break;
+    }
+    case TT_INT64: {
+      valueLen = sizeof(int64_t);
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      uint64_t val = smsc::util::Uint64Converter::toNetworkOrder((uint64_t)int_val);
+      tmp.append((char*)&val, valueLen);
+      break;
+    }
+    case TT_HEXDUMP: {
+      valueLen = str_val.size();
+      uint16_t netValueLen = htons(valueLen);
+      tmp.append((char*)&netValueLen, 2);
+      tmp.append(str_val);
+      if (!checkHexString(str_val)) {
+        smsc_log_warn(logger, "Action 'tlv': invalid hex string: \'%s\'", str_val.c_str());
+      }
+      break;
+    }
+    }
+    data.setBinProperty(Tag::SMSC_UNKNOWN_OPTIONALS, tmp.data(), tmp.size());
+}
+
 void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
 {
     bool bExist;
@@ -145,7 +335,7 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
     { 
         ftTLVType = CheckParameter(params, propertyObject, "tlv", "type", false, true, strTag, bExist);
         if(bExist) {
-            int *p = namesHash.GetPtr(strTag.c_str());
+            int *p = typesHash.GetPtr(strTag.c_str());
             if(ftTLVType != ftUnknown || !p) 
                 throw SCAGException("Action 'tlv': Invalid TYPE argument"); // should be defined constant
             tlv_type = *p;
@@ -223,10 +413,13 @@ bool ActionTLV::run(ActionContext& context)
         }
         else
         {
-            if(getUnknown(sms, tag, prop->_setStr()))
-                smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
-            else
-                smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
+            //if(getUnknown(sms, tag, prop->_setStr()))
+              //  smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+            //else
+              //  smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
+            if(!getUnknown(sms, tag, prop)) {
+              smsc_log_warn(logger, "Action 'tlv': Get of not set tag %d.", tag);
+            }
         }
     }
     else if(type == TLV_SET)
@@ -256,9 +449,10 @@ bool ActionTLV::run(ActionContext& context)
         }
         else
         {
-            const std::string& strValue = prop ? prop->getStr() : strVar;
-            setUnknown(sms, tag, strValue);
-            smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%s", tag, strValue.c_str());
+            //const std::string& strValue = prop ? prop->getStr() : strVar;
+            //setUnknown(sms, tag, strValue);
+            //smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%s", tag, strValue.c_str());
+          setUnknown(sms, tag, prop, strVar);
         }
     }
     return true;

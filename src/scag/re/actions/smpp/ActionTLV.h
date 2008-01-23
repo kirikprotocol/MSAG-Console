@@ -2,6 +2,7 @@
 #define __SCAG_RULE_ENGINE_ACTION_TLV__
 
 #include "scag/re/actions/Action.h"
+#include "util/BinDump.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -32,10 +33,15 @@ protected:
     uint32_t findField(const char* buff, uint32_t len, uint16_t fieldId);
     void cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp);
     bool getUnknown(SMS& data, uint16_t fieldId, std::string& str);
+    bool getUnknown(SMS& data, uint16_t fieldId, Property* prop);
     bool existUnknown(SMS& data, uint16_t fieldId);
     bool delUnknown(SMS& data, uint16_t fieldId);
     void setUnknown(SMS& data, uint16_t fieldId, const std::string& str);
-    
+    void setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str);
+
+    bool checkHexString(const std::string& str);
+    int64_t convertToIntX(const char* buf, uint16_t valeLen);
+
 public:
    
     virtual bool run(ActionContext& context);
