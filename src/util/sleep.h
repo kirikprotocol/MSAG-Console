@@ -13,7 +13,7 @@ namespace util{
 
 inline uint64_t getmillis()
 {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(linux)
   return 0;
 #else
   return gethrtime()/1000000l;

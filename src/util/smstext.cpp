@@ -1,5 +1,10 @@
 #include "util/smstext.h"
+#ifndef NOLOGGERPLEASE
 #include "util/debug.h"
+#else
+#define __trace2__(...)
+#define __warning2(...)
+#endif
 #include <memory>
 #include "core/buffers/TmpBuf.hpp"
 
