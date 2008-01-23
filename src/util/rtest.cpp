@@ -12,6 +12,8 @@
 #include <vector>
 #include "core/buffers/File.hpp"
 #include "core/buffers/Hash.hpp"
+#include "util/sleep.h"
+#include "util/int.h"
 
 using namespace std;
 
@@ -192,13 +194,17 @@ int main(int argc,char* argv[])
     int idx;
     RouteInfo ri;
     smsc::smeman::SmeProxy* prx;
-    if(rm.lookup(smeIdx,src,dst,prx,&idx,&ri))
+    hrtime_t lookup_start=gethrtime();
+    bool lookupresult=rm.lookup(smeIdx,src,dst,prx,&idx,&ri);
+    hrtime_t lookup_end=gethrtime();
+    if(lookupresult)
     {
       printf("Found:%s\n",ri.routeId.c_str());
     }else
     {
       printf("Not found\n");
     }
+    printf("Lookup time:%llu\n",lookup_end-lookup_start);
   }catch(std::exception& e)
   {
     fprintf(stderr,"exception: %s\n",e.what());
