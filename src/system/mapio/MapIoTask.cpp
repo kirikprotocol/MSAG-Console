@@ -215,9 +215,11 @@ void MapIoTask::disconnect()
   USHORT_T result;
   __map_warn__("disconnect from MAP stack");
 
-  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+  {
     result = Et96MapUnbindReq(MapDialogContainer::localSSNs[i]);
-    if ( result != ET96MAP_E_OK) {
+    if ( result != ET96MAP_E_OK)
+    {
       __map_warn2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",MapDialogContainer::localSSNs[i],result);
     }
     MapDialogContainer::boundLocalSSNs[i] = 0;
@@ -477,10 +479,11 @@ void MapIoTask::dispatcher()
       MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
       inReceive=false;
       MapDialogContainer::getInstance()->receiveMon.notify();
-      if( !dlg.isnull() ) {
+      if( !dlg.isnull() )
+      {
         WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
         dlg->MarkInUse(wln);
-	dlg.ExternalInUse();
+        dlg.ExternalInUse();
       }
     }
 
