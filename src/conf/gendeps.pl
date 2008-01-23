@@ -75,6 +75,7 @@ while(<IN>)
   $gccflags=~s/(?<=\s)\+w2?\s//gsm;
   $gccflags=~s/-library=stlport4//;
   $gccflags=~s/-x(arch|target|memalign|code)=\w+//g;
+  $gccflags=~s/-fast//g;
   #print STDERR "Exec:g++ -MM $gccflags $srcdir/$pdir/$src.cpp\n";
   my $dep=`g++ -MM $gccflags $srcdir/$pdir/$src.cpp`;
   $dep=~s/^#.*?$//mg;

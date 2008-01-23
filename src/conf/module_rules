@@ -130,7 +130,9 @@ __emptylib__:
 
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
 	@echo "compiling $<"
-#	@echo @$(CXX) $(CXXFLAGS) $(COMPFLAGS) -c -o $@ $< 1>&2
+ifdef VERBOSE
+	@echo @$(CXX) $(CXXFLAGS) $(COMPFLAGS) -c -o $@ $< 1>&2
+endif
 	@$(CXX) $(CXXFLAGS) $(COMPFLAGS) -c -o $@ $<
 
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.c
