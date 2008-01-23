@@ -16,6 +16,7 @@ $Id$
 #include "smeman/smeman.h"
 #include "core/synchronization/RecursiveMutex.hpp"
 #include "core/threads/ThreadPool.hpp"
+#include "core/buffers/CyclicQueue.hpp"
 
 using namespace std;
 using namespace smsc::sms;
@@ -166,28 +167,28 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 
 static const unsigned MAX_DIALOGID_POOLED  = 8*2000+1;
 
-struct WaitListNode{
-  EventMonitor& monRef;
-  pthread_cond_t waitvar;
-  WaitListNode* next;
-  WaitListNode(EventMonitor& mon):monRef(mon)
+
+struct DialogCommand{
+  MSG_T msg;
+  unsigned char buffer[1024];
+  DialogCommand()
   {
-    pthread_cond_init(&waitvar,0);
-    next=0;
+    msg.size=0;
   }
-  void wait()
+  DialogCommand(const MSG_T& argMsg)
   {
-    monRef.wait(&waitvar);
+    msg=argMsg;
+    msg.msg_p=buffer;
+    memcpy(msg.msg_p,argMsg.msg_p,msg.size);
   }
-  void notify()
+  DialogCommand(const DialogCommand& rhs)
   {
-    monRef.notify(&waitvar);
-  }
-  ~WaitListNode()
-  {
-    pthread_cond_destroy(&waitvar);
+    msg=rhs.msg;
+    msg.msg_p=buffer;
+    memcpy(msg.msg_p,rhs.msg.msg_p,msg.size);
   }
 };
+
 
 /**
   \class MapDialog
@@ -238,9 +239,10 @@ struct MapDialog{
   unsigned udhiMsgCount;
   long long maked_at_mks;
   time_t   lockedAt;
-  bool dlgInUse;
-  WaitListNode* wlhead;
-  WaitListNode* wltail;
+
+  smsc::core::buffers::CyclicQueue<DialogCommand> cmdQueue;
+  bool isLocked;
+
 //  bool isMOreq;
 //  unsigned dialogid_req;
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) :
@@ -272,9 +274,7 @@ struct MapDialog{
     udhiMsgCount(0),
     lockedAt(0),
     ref_count(1),
-    dlgInUse(false),
-    wlhead(0),
-    wltail(0)
+    isLocked(false)
   {
     memset(&m_msAddr, 0, sizeof(ET96MAP_ADDRESS_T));
     memset(&m_scAddr, 0, sizeof(ET96MAP_ADDRESS_T));
@@ -342,40 +342,8 @@ struct MapDialog{
     version = 0;
     mms = false;
     isUSSD = false;
-  }
-
-  //MUST be called when monitor locked
-  void MarkInUse(WaitListNode& wln)
-  {
-    if(dlgInUse)
-    {
-      if(wlhead)
-      {
-        wltail->next=&wln;
-      }else
-      {
-        wlhead=&wln;
-      }
-      wltail=&wln;
-      wln.monRef.wait(&wln.waitvar);
-    }else
-    {
-      dlgInUse=true;
-    }
-  }
-
-  //MUST be called when monitor locked
-  void RemoveInUse()
-  {
-    if(wlhead)
-    {
-      wlhead->notify();
-      if(wlhead==wltail)wltail=0;
-      wlhead=wlhead->next;
-    }else
-    {
-      dlgInUse=false;
-    }
+    isLocked=false;
+    cmdQueue.Clear();
   }
 
 private:
@@ -881,11 +849,10 @@ public:
 
 class DialogRefGuard{
   MapDialog* dialog;
-  bool inuse;
   DialogRefGuard(const DialogRefGuard&);
   void operator==(const DialogRefGuard&);
 public:
-  DialogRefGuard(MapDialog* d = 0):dialog(d),inuse(false){/*d->AddRef();*/}
+  DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
   ~DialogRefGuard()
   {
     release();
@@ -906,30 +873,9 @@ public:
   {
     if ( dialog )
     {
-      if(inuse)
-      {
-        MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
-        dialog->RemoveInUse();
-        inuse=false;
-      }
       MapDialogContainer::getInstance()->releaseDialog(dialog);
     }
     dialog=0;
-  }
-  void MarkInUse()
-  {
-    if(!dialog)
-    {
-      return;
-    }
-    MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
-    WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
-    dialog->MarkInUse(wln);
-    inuse=true;
-  }
-  void ExternalInUse()
-  {
-    inuse=true;
   }
   bool isnull()
   {
@@ -938,7 +884,6 @@ public:
   void forget()
   {
     dialog = 0;
-    inuse=false;
   }
   MapDialog* operator->()
   {
@@ -1042,6 +987,8 @@ private:
   void connect(unsigned timeout=0);
   void deinit(bool connected);
   void disconnect();
+
+  void handleMessage(MSG_T& message);
 };
 
 #endif // __header_MAPIO_h__

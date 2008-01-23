@@ -1576,7 +1576,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 dialogid_map = it->second&0xFFFF; // low short value is dlgid
                 dialog_ssn = (it->second>>16)&0xFF; //high short value is ssn
                 dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
-                dialog.MarkInUse();
                 if( !dialog.isnull() )
                 {
                   if ( !dialog->isUSSD )
@@ -1660,7 +1659,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                                 SSN,
                                 string(cmd->get_sms()->getDestinationAddress().value),
                                 cmd));
-                      dialog.MarkInUse();
                     } catch (ChainIsVeryLong& e) {
                       __map_trace2__("%s: %s ",__func__,e.what());
                       SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MSGQFUL));
@@ -1681,7 +1679,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                     // command taken from chain
                     dialog_ssn = SSN;
                     dialog.assign(dialog2->AddRef());
-                    dialog.MarkInUse();
                     dialogid_map = dialog->dialogid_map;
                     dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,SSN);
                     __require__(dialog->ssn == dialog_ssn);
@@ -1738,7 +1735,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               dialog.assign(MapDialogContainer::getInstance()->createOrAttachSMSCDialog(
                           dialogid_smsc,SSN,"",cmd));
             }
-            dialog.MarkInUse();
           } catch (ChainIsVeryLong& e) {
             __map_trace2__("%s: %s ",__func__,e.what());
             SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MSGQFUL));
@@ -1763,7 +1759,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           // DELIVERY SMS chained dialog
           dialog_ssn = SSN;
           dialog.assign(dialog2->AddRef());
-          dialog.MarkInUse();
           dialogid_map = dialog->dialogid_map;
           dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,SSN);
           __require__(dialog->ssn == dialog_ssn);
@@ -1813,7 +1808,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         __map_warn2__("MAP::putCommand: dialog not found for submit resp x0%x",dialogid_smsc);
         return;
       }
-      dialog.MarkInUse();
       //dialog->state = MAPST_START;
       dialogid_smsc = 0;
       __require__(dialog->ssn == dialog_ssn);

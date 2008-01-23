@@ -291,14 +291,10 @@ void MapIoTask::dispatcher()
 {
   MSG_T message;
   USHORT_T result;
-  USHORT_T map_result;
-  unsigned timecounter = 0;
-  time_t last_msg;
-  time_t cur_time;
-  struct timeval utime, curtime;
-  APP_EVENT_T *eventlist = NULL;
-  INT_T        eventlist_len = 0;
-  smsc::logger::Logger *time_logger = smsc::logger::Logger::getInstance("map.itime");
+
+  //struct timeval utime, curtime;
+
+  //smsc::logger::Logger *time_logger = smsc::logger::Logger::getInstance("map.itime");
 
   message.receiver = MY_USER_ID;
   for (;;)
@@ -315,19 +311,6 @@ void MapIoTask::dispatcher()
       return;
     }
     MAP_dispatching = true;
-    gettimeofday( &curtime, 0 );
-
-
-    ReceiveGuard rg(MapDialogContainer::getInstance()->receiveMon,inReceive,isStopping);
-    /*
-    sync msgrecvgard{
-      if(inmsgrecv)
-      {
-        wait();
-      }
-      inmsgrecv=true;
-    }
-    */
 
     if ( isStopping )
     {
@@ -340,37 +323,55 @@ void MapIoTask::dispatcher()
       return;
     }
 
+    DialogRefGuard dlg;
+    {
+      MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
+
 #if EINSS7_THREADSAFE == 1
-    result = EINSS7CpMsgRecv_r(&message,1000);
+      result = EINSS7CpMsgRecv_r(&message,1000);
 #else
-    result = MsgRecvEvent( &message, 0, 0, 1000 );
+      result = MsgRecvEvent( &message, 0, 0, 1000 );
 #endif
 
 
-    if ( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
+      //if ( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
 
-    MAP_dispatching = false;
+      MAP_dispatching = false;
 
-    if ( result == MSG_TIMEOUT )
-    {
-      if (MAP_disconnectDetected && !isStopping)
+      if ( result == MSG_TIMEOUT )
       {
-        MutexGuard mapMutexGuard(mapMutex);
-        if(MAP_disconnectDetected)
+        if (MAP_disconnectDetected && !isStopping)
         {
-          disconnect();
-          connect();
-          MAP_disconnectDetected = false;
+          MutexGuard mapMutexGuard(mapMutex);
+          if(MAP_disconnectDetected)
+          {
+            disconnect();
+            connect();
+            MAP_disconnectDetected = false;
 
+          }
+          continue;
+        }
+        if( memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ) continue;
+        __map_warn2__("MAP:: check binders %d", bindTimer);
+        if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
+        __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
+        if ( !isStopping )
+        {
+          MAP_disconnectDetected=true;
+          MutexGuard mapMutexGuard(mapMutex);
+          if(MAP_disconnectDetected)
+          {
+            disconnect();
+            connect();
+            MAP_disconnectDetected = false;
+          }
         }
         continue;
       }
-      if( memcmp( MapDialogContainer::boundLocalSSNs, MapDialogContainer::patternBoundLocalSSNs, MapDialogContainer::numLocalSSNs*sizeof(int)) == 0 ) continue;
-      __map_warn2__("MAP:: check binders %d", bindTimer);
-      if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
-      __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
-      if ( !isStopping )
+      if ( result == MSG_BROKEN_CONNECTION && !isStopping)
       {
+        __map_warn2__("Broken connection %d", result);
         MAP_disconnectDetected=true;
         MutexGuard mapMutexGuard(mapMutex);
         if(MAP_disconnectDetected)
@@ -379,204 +380,107 @@ void MapIoTask::dispatcher()
           connect();
           MAP_disconnectDetected = false;
         }
+        continue;
       }
-      continue;
-    }
-    if ( result == MSG_BROKEN_CONNECTION && !isStopping)
-    {
-      __map_warn2__("Broken connection %d", result);
-      MAP_disconnectDetected=true;
-      MutexGuard mapMutexGuard(mapMutex);
-      if(MAP_disconnectDetected)
+      if ( result != MSG_OK )
       {
-        disconnect();
-        connect();
-        MAP_disconnectDetected = false;
-      }
-      continue;
-    }
-    if ( result != MSG_OK )
-    {
-      __map_warn2__("Error at MsgRecv with code %d",result);
-      if ( !(MAP_aborting || isStopping) )
-      {
-//        MAP_aborting = true;
-//        abort();
-        MutexGuard mapMutexGuard(mapMutex);
-        disconnect();
-        connect();
-        MAP_disconnectDetected = false;
-      }
-      continue;
-    }
-
-    __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
-    if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 1024)
-    {
-      char text[4097];
-      int k = 0;
-      for ( int i=0; i<message.size; i++)
-      {
-        k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
-      }
-      text[k]=0;
-      __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv msg: %s",text);
-    }
-    if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 )
-    {
-      __map_trace__("MsgRecv hatching msg to reset priority order " );
-      message.msg_p[6] = 0;
-    } else if ( message.primitive == 0x8d && message.msg_p[4] >= 0x04 )
-    {
-      __map_trace__("MsgRecv hatching msg to reset priority order " );
-      message.msg_p[4] = 0;
-    } else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
-    {
-      __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
-      message.msg_p[5] = 0x24;
-    } else if ( message.primitive == 0x9f && message.size == 11 && message.msg_p[8] == 0x22 )
-    {
-      __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
-      message.msg_p[8] = 0x24;
-    }
-
-    DialogRefGuard dlg;
-    ET96MAP_APP_CNTX_T ctx;
-
-    if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
-       message.primitive!=MAP_GET_AC_VERSION_CONF)
-    {
-      ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
-        //(message.msg_p[2]<<8)| message.msg_p[3];
-      ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
-      if(message.primitive==MAP_OPEN_IND)
-      {
-        ctx.acType=(ET96MAP_APP_CONTEXT_T)message.msg_p[4];
-        reinterpret_cast<int&>(ctx.version)=message.msg_p[5];
-        try{
-          dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,ctx.version));
-        }
-        catch(ProxyQueueLimitException& e)
+        __map_warn2__("Error at MsgRecv with code %d",result);
+        if ( !(MAP_aborting || isStopping) )
         {
-          __map_warn2__("%s: dialogid 0x%x %s",__func__,dlgId,e.what());
-          ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-          warnMapReq( Et96MapOpenResp(lssn,dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
-          warnMapReq( Et96MapCloseReq(lssn,dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
-          continue;
+  //        MAP_aborting = true;
+  //        abort();
+          MutexGuard mapMutexGuard(mapMutex);
+          disconnect();
+          connect();
+          MAP_disconnectDetected = false;
         }
-      }else
+        continue;
+      }
+
+      __map_trace2__("MsgRecv receive msg with receiver 0x%hx sender 0x%hx prim 0x%hx size %d",message.receiver,message.sender,message.primitive,message.size);
+      if ( smsc::logger::_mapmsg_cat->isDebugEnabled() && message.size <= 1024)
       {
-        dlg.assign(MapDialogContainer::getInstance()->getDialog(dlgId,lssn));
-        if(dlg.isnull())
+        char text[4097];
+        int k = 0;
+        for ( int i=0; i<message.size; i++)
         {
-          __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)message.primitive,(unsigned int)dlgId,(unsigned int)lssn);
+          k+=sprintf(text+k,"%02x ",(unsigned)message.msg_p[i]);
+        }
+        text[k]=0;
+        __log2__(smsc::logger::_mapmsg_cat,smsc::logger::Logger::LEVEL_DEBUG, "MsgRecv msg: %s",text);
+      }
+      if ( message.primitive == 0x8b && message.msg_p[6] >= 0x04 )
+      {
+        __map_trace__("MsgRecv hatching msg to reset priority order " );
+        message.msg_p[6] = 0;
+      } else if ( message.primitive == 0x8d && message.msg_p[4] >= 0x04 )
+      {
+        __map_trace__("MsgRecv hatching msg to reset priority order " );
+        message.msg_p[4] = 0;
+      } else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
+      {
+        __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
+        message.msg_p[5] = 0x24;
+      } else if ( message.primitive == 0x9f && message.size == 11 && message.msg_p[8] == 0x22 )
+      {
+        __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
+        message.msg_p[8] = 0x24;
+      }
+
+      ET96MAP_APP_CNTX_T ctx;
+      if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
+         message.primitive!=MAP_GET_AC_VERSION_CONF)
+      {
+        ET96MAP_DIALOGUE_ID_T dlgId=((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8);
+          //(message.msg_p[2]<<8)| message.msg_p[3];
+        ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
+        if(message.primitive==MAP_OPEN_IND)
+        {
+          ctx.acType=(ET96MAP_APP_CONTEXT_T)message.msg_p[4];
+          reinterpret_cast<int&>(ctx.version)=message.msg_p[5];
+          try{
+            dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,ctx.version));
+          }
+          catch(ProxyQueueLimitException& e)
+          {
+            __map_warn2__("%s: dialogid 0x%x %s",__func__,dlgId,e.what());
+            ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
+            warnMapReq( Et96MapOpenResp(lssn,dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+            warnMapReq( Et96MapCloseReq(lssn,dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+            continue;
+          }
+        }else
+        {
+          dlg.assign(MapDialogContainer::getInstance()->getDialog(dlgId,lssn));
+          if(dlg.isnull())
+          {
+            __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)message.primitive,(unsigned int)dlgId,(unsigned int)lssn);
+            continue;
+          }
+        }
+        if(dlg->isLocked)
+        {
+          dlg->cmdQueue.Push(message);
           continue;
         }
       }
-    }
-    rg.Deactivate();
-    {
-      MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
-      inReceive=false;
-      MapDialogContainer::getInstance()->receiveMon.notify();
-      if( !dlg.isnull() )
-      {
-        WaitListNode wln(MapDialogContainer::getInstance()->receiveMon);
-        dlg->MarkInUse(wln);
-        dlg.ExternalInUse();
-      }
+
     }
 
-    /*
-    dlg=dlgcont.getorcreate_dialog();
-    sync msgrecvgard{
-      inmsgrecv=false
-      msgrecvgard.notify();
-      if( dlg->inuse ) {
-        event e;
-        dlg->push_wait_event(e);
-        wait(msgrecvgard,e)
-      }else
-        dlg->inuse=true
-    }
-    */
-
-    try {
-      //MutexGuard mapMutexGuard(mapMutex);
-      MapDialogContainer::getInstance()->mapPacketReceived();
-      if( message.primitive == 0x88 )
-      {
-        // MapOpenInd
-        const int destAddrPos = 6;
-        const int destRefPos = destAddrPos+message.msg_p[destAddrPos]+1;
-        const int orgAddrPos = destRefPos+message.msg_p[destRefPos]+1;
-        const int orgRefPos = orgAddrPos+message.msg_p[orgAddrPos]+1;
-        const int specificInfoLenPos = orgRefPos+(message.msg_p[orgRefPos]+1)/2+1+(message.msg_p[orgRefPos]?1:0);
-        ET96MAP_USERDATA_T specificInfo;
-        specificInfo.specificInfoLen = ((USHORT_T)message.msg_p[specificInfoLenPos])|(((USHORT_T)message.msg_p[specificInfoLenPos+1])<<8);
-        if( specificInfo.specificInfoLen > 0 )
-        {
-          memcpy(specificInfo.specificData, message.msg_p+specificInfoLenPos+2, specificInfo.specificInfoLen );
-        }
-        map_result = Et96MapOpenInd(
-                                    (ET96MAP_LOCAL_SSN_T)message.msg_p[1], // SSN
-                                    ((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8), // Dialogue ID
-                                    &ctx, // AC version
-                                    (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
-                                    (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
-#ifdef MAP_R12
-                                    (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_OR_MSISDN_T*)(message.msg_p+destRefPos):0, // dest ref
-#else
-                                    (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_T*)(message.msg_p+destRefPos):0, // dest ref
-#endif
-                                    (message.msg_p[orgRefPos]>0)?(ET96MAP_ADDRESS_T*)(message.msg_p+orgRefPos):0, // dest ref
-                                    (specificInfo.specificInfoLen>0)?&specificInfo:0
-                                    );
-      } else
-      {
-        map_result = Et96MapHandleIndication(&message);
-      }
-    } catch(exception& e) {
-      __map_warn2__("Exception occured during processing MAP primitive: %s", e.what());
-      continue;
-    } catch (...) {
-      __map_warn__("Unknown exception occured during processing MAP primitive");
-      continue;
-    }
-
-    if ( map_result != ET96MAP_E_OK && smsc::logger::_map_cat->isWarnEnabled() )
-    {
-      smsc::core::buffers::TmpBuf<char,1024> text(message.size*4+1);
-      //char *text = new char[message.size*4+1];
-      int k = 0;
-      for ( int i=0; i<message.size; i++)
-      {
-        k+=sprintf(text.get()+k,"%02x ",(unsigned)message.msg_p[i]);
-      }
-      text[k]=0;
-      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text.get());
-    }
-
-    dlg.release();
-    /*
-    sync msgrecvgard{
-      dlg->inuse=false;
-      event e;
-      dlg->pop_event(e);
-      e->notify();
-    }
-    dlgcont.release_dialog(dlg);
-    */
-
+    handleMessage(message);
 #if EINSS7_THREADSAFE == 1
     EINSS7CpReleaseMsgBuffer(&message);
 #endif
-    if ( time_logger->isDebugEnabled() )
+
+    if(!dlg.isnull())
     {
-      long usecs;
-      gettimeofday( &curtime, 0 );
-      usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      smsc_log_debug(time_logger, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
+      MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
+      while(dlg->cmdQueue.Count())
+      {
+        handleMessage(dlg->cmdQueue.Front().msg);
+        dlg->cmdQueue.Pop();
+      }
+      dlg->isLocked=false;
     }
 
     if (MAP_disconnectDetected && !isStopping)
@@ -591,6 +495,79 @@ void MapIoTask::dispatcher()
     }
   }
 }
+
+void MapIoTask::handleMessage(MSG_T& message)
+{
+  USHORT_T map_result;
+  try {
+    MapDialogContainer::getInstance()->mapPacketReceived();
+    if( message.primitive == 0x88 )
+    {
+      // MapOpenInd
+      const int destAddrPos = 6;
+      const int destRefPos = destAddrPos+message.msg_p[destAddrPos]+1;
+      const int orgAddrPos = destRefPos+message.msg_p[destRefPos]+1;
+      const int orgRefPos = orgAddrPos+message.msg_p[orgAddrPos]+1;
+      const int specificInfoLenPos = orgRefPos+(message.msg_p[orgRefPos]+1)/2+1+(message.msg_p[orgRefPos]?1:0);
+      ET96MAP_USERDATA_T specificInfo;
+      specificInfo.specificInfoLen = ((USHORT_T)message.msg_p[specificInfoLenPos])|(((USHORT_T)message.msg_p[specificInfoLenPos+1])<<8);
+      if( specificInfo.specificInfoLen > 0 )
+      {
+        memcpy(specificInfo.specificData, message.msg_p+specificInfoLenPos+2, specificInfo.specificInfoLen );
+      }
+      ET96MAP_APP_CNTX_T ctx;
+      ctx.acType=(ET96MAP_APP_CONTEXT_T)message.msg_p[4];
+      reinterpret_cast<int&>(ctx.version)=message.msg_p[5];
+      map_result = Et96MapOpenInd(
+                                  (ET96MAP_LOCAL_SSN_T)message.msg_p[1], // SSN
+                                  ((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8), // Dialogue ID
+                                  &ctx, // AC version
+                                  (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
+                                  (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
+#ifdef MAP_R12
+                                  (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_OR_MSISDN_T*)(message.msg_p+destRefPos):0, // dest ref
+#else
+                                  (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_T*)(message.msg_p+destRefPos):0, // dest ref
+#endif
+                                  (message.msg_p[orgRefPos]>0)?(ET96MAP_ADDRESS_T*)(message.msg_p+orgRefPos):0, // dest ref
+                                  (specificInfo.specificInfoLen>0)?&specificInfo:0
+                                  );
+    } else
+    {
+      map_result = Et96MapHandleIndication(&message);
+    }
+  } catch(exception& e) {
+    __map_warn2__("Exception occured during processing MAP primitive: %s", e.what());
+    return;
+  } catch (...) {
+    __map_warn__("Unknown exception occured during processing MAP primitive");
+    return;
+  }
+
+  if ( map_result != ET96MAP_E_OK && smsc::logger::_map_cat->isWarnEnabled() )
+  {
+    smsc::core::buffers::TmpBuf<char,1024> text(message.size*4+1);
+    //char *text = new char[message.size*4+1];
+    int k = 0;
+    for ( int i=0; i<message.size; i++)
+    {
+      k+=sprintf(text.get()+k,"%02x ",(unsigned)message.msg_p[i]);
+    }
+    text[k]=0;
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "error at Et96MapHandleIndication with code x%hx msg: %s",map_result,text.get());
+  }
+
+  /*
+  if ( time_logger->isDebugEnabled() )
+  {
+    long usecs;
+    gettimeofday( &curtime, 0 );
+    usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
+    smsc_log_debug(time_logger, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
+  }
+  */
+}
+
 
 #else
 void MapIoTask::connect(unsigned)
