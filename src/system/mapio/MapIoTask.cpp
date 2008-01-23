@@ -463,6 +463,7 @@ void MapIoTask::dispatcher()
           dlg->cmdQueue.Push(message);
           continue;
         }
+        dlg->isLocked=true;
       }
 
     }
