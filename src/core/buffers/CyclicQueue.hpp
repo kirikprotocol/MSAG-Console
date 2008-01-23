@@ -92,6 +92,22 @@ public:
   }
   int Count()const{return count;}
 
+  void Clear()
+  {
+    head=data;
+    tail=data;
+    count=0;
+  }
+  void Purge()
+  {
+    delete [] data;
+    data=0;
+    end=0;
+    head=0;
+    tail=0;
+    count=0;
+    size=0;
+  }
 protected:
   void Realloc(int sz)
   {
