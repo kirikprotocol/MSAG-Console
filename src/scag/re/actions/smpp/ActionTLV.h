@@ -32,15 +32,14 @@ protected:
     bool getOptionalProperty(SMS& data, const char*& buff, uint32_t& len);
     uint32_t findField(const char* buff, uint32_t len, uint16_t fieldId);
     void cutField(const char* buff, uint32_t len, uint16_t fieldId, std::string& tmp);
-    bool getUnknown(SMS& data, uint16_t fieldId, std::string& str);
     bool getUnknown(SMS& data, uint16_t fieldId, Property* prop);
     bool existUnknown(SMS& data, uint16_t fieldId);
     bool delUnknown(SMS& data, uint16_t fieldId);
-    void setUnknown(SMS& data, uint16_t fieldId, const std::string& str);
     void setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str);
 
     bool checkHexString(const std::string& str);
     int64_t convertToIntX(const char* buf, uint16_t valeLen);
+    int64_t convertToUIntX(const char* buf, uint16_t valeLen);
 
 public:
    
