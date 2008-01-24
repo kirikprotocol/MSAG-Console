@@ -427,7 +427,6 @@ void MapIoTask::dispatcher()
         message.msg_p[8] = 0x24;
       }
 
-      ET96MAP_APP_CNTX_T ctx;
       if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
          message.primitive!=MAP_GET_AC_VERSION_CONF)
       {
@@ -436,10 +435,8 @@ void MapIoTask::dispatcher()
         ET96MAP_LOCAL_SSN_T lssn=message.msg_p[1];
         if(message.primitive==MAP_OPEN_IND)
         {
-          ctx.acType=(ET96MAP_APP_CONTEXT_T)message.msg_p[4];
-          reinterpret_cast<int&>(ctx.version)=message.msg_p[5];
           try{
-            dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,ctx.version));
+            dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,message.msg_p[5]));
           }
           catch(ProxyQueueLimitException& e)
           {
@@ -458,12 +455,15 @@ void MapIoTask::dispatcher()
             continue;
           }
         }
-        if(dlg->isLocked)
         {
-          dlg->cmdQueue.Push(message);
-          continue;
+          MutexGuard dlgMg(dlg->mutex);
+          if(dlg->isLocked)
+          {
+            dlg->cmdQueue.Push(message);
+            continue;
+          }
+          dlg->isLocked=true;
         }
-        dlg->isLocked=true;
       }
 
     }
@@ -475,13 +475,22 @@ void MapIoTask::dispatcher()
 
     if(!dlg.isnull())
     {
-      MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
-      while(dlg->cmdQueue.Count())
+      bool haveCmds=false;
+      do
       {
-        handleMessage(dlg->cmdQueue.Front().msg);
-        dlg->cmdQueue.Pop();
+        DialogCommand cmd;
+        {
+          MutexGuard dlgMg(dlg->mutex);
+          dlg->cmdQueue.Pop(cmd);
+          haveCmds=dlg->cmdQueue.Count()!=0;
+        }
+        handleMessage(cmd.msg);
+      }while(haveCmds);
+
+      {
+        MutexGuard dlgMg(dlg->mutex);
+        dlg->isLocked=false;
       }
-      dlg->isLocked=false;
     }
 
     if (MAP_disconnectDetected && !isStopping)
