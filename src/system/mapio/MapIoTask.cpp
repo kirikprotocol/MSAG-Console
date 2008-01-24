@@ -10,6 +10,7 @@
 #include "system/snmp/SnmpCounter.hpp"
 #endif
 
+
 #define MAXENTRIES 600
 #define MY_USER_ID USER01_ID
 using namespace std;
@@ -17,6 +18,11 @@ using namespace std;
 Mutex mapMutex;
 
 #ifdef USE_MAP
+
+#if !(EINSS7_THREADSAFE == 1)
+#error "EINSS7_THREADSAFE REQUIRED!"
+#endif
+
 
 //#define SMSC_FORWARD_RESPONSE 0x001
 
@@ -327,12 +333,7 @@ void MapIoTask::dispatcher()
     {
       MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
 
-#if EINSS7_THREADSAFE == 1
       result = EINSS7CpMsgRecv_r(&message,1000);
-#else
-      result = MsgRecvEvent( &message, 0, 0, 1000 );
-#endif
-
 
       //if ( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
 
@@ -460,9 +461,6 @@ void MapIoTask::dispatcher()
           if(dlg->isLocked)
           {
             dlg->cmdQueue.Push(message);
-#if EINSS7_THREADSAFE == 1
-            EINSS7CpReleaseMsgBuffer(&message);
-#endif
             continue;
           }
           dlg->isLocked=true;
@@ -472,22 +470,21 @@ void MapIoTask::dispatcher()
     }
 
     handleMessage(message);
-#if EINSS7_THREADSAFE == 1
     EINSS7CpReleaseMsgBuffer(&message);
-#endif
 
     if(!dlg.isnull())
     {
       bool haveCmds=false;
       do
       {
-        DialogCommand cmd;
+        MSG_T msg;
         {
           MutexGuard dlgMg(dlg->mutex);
-          dlg->cmdQueue.Pop(cmd);
+          dlg->cmdQueue.Pop(msg);
           haveCmds=dlg->cmdQueue.Count()!=0;
         }
-        handleMessage(cmd.msg);
+        handleMessage(msg);
+        EINSS7CpReleaseMsgBuffer(&msg);
       }while(haveCmds);
 
       {

@@ -168,6 +168,7 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 static const unsigned MAX_DIALOGID_POOLED  = 8*2000+1;
 
 
+/*
 struct DialogCommand{
   MSG_T msg;
   unsigned char buffer[1024];
@@ -190,6 +191,7 @@ struct DialogCommand{
     memcpy(msg.msg_p,rhs.msg.msg_p,msg.size);
   }
 };
+*/
 
 
 /**
@@ -242,7 +244,7 @@ struct MapDialog{
   long long maked_at_mks;
   time_t   lockedAt;
 
-  smsc::core::buffers::CyclicQueue<DialogCommand> cmdQueue;
+  smsc::core::buffers::CyclicQueue<MSG_T> cmdQueue;
   bool isLocked;
 
 //  bool isMOreq;
