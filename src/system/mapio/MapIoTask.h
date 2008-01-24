@@ -179,6 +179,8 @@ struct DialogCommand{
   {
     msg=argMsg;
     msg.msg_p=buffer;
+    msg.remoteInstance=0;
+    msg.cp_p=0;
     memcpy(msg.msg_p,argMsg.msg_p,msg.size);
   }
   DialogCommand(const DialogCommand& rhs)
