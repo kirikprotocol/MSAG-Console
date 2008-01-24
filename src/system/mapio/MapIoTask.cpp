@@ -460,6 +460,9 @@ void MapIoTask::dispatcher()
           if(dlg->isLocked)
           {
             dlg->cmdQueue.Push(message);
+#if EINSS7_THREADSAFE == 1
+            EINSS7CpReleaseMsgBuffer(&message);
+#endif
             continue;
           }
           dlg->isLocked=true;
