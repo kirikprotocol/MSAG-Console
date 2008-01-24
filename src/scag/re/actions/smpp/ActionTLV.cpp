@@ -6,7 +6,6 @@
 
 namespace scag { namespace re { namespace actions {
 
-const std::string HEX_CHARS("0123456789abcdefABCDEF ");
 const smsc::util::HexDumpCFG HEX_DUMP_CFG = { 1, 0, " ", 0};
 const MAX_INT_SIZE = sizeof(int64_t);
 
@@ -67,11 +66,6 @@ void ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::
         if(i < len)
             tmp.append(buff + i, len - i);
     }
-}
-
-bool ActionTLV::checkHexString(const std::string& str) {
-  size_t pos = str.find_first_not_of(HEX_CHARS);
-  return pos == std::string::npos ? true : false;
 }
 
 int64_t ActionTLV::convertToIntX(const char* buf, uint16_t valueLen) {
@@ -212,6 +206,27 @@ bool ActionTLV::delUnknown(SMS& data, uint16_t fieldId)
     return false;
 }
 
+bool ActionTLV::hexDumpToBytes(const std::string& hex_dump, std::string& bytes) {
+  const char* dump_ptr = hex_dump.c_str();
+  char hex_val[3];
+  memset(hex_val, 0, 3);
+  char byte = 0;
+  while (*dump_ptr) {
+    if (isspace(*dump_ptr)) {
+      ++dump_ptr;
+      continue;
+    }
+    if (!isxdigit(*dump_ptr) || !isxdigit(*(dump_ptr + 1))) {
+      return false;
+    }
+    strncpy(hex_val, dump_ptr, 2);
+    byte = strtol(hex_val, NULL, 16);
+    bytes.append(&byte, 1);
+    dump_ptr = dump_ptr + 2;
+  }
+  return true;
+}
+
 void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str)
 {
     uint16_t valueLen = 0;
@@ -293,12 +308,18 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
       break;
     }
     case TT_HEXDUMP: {
-      valueLen = str_val.size();
-      uint16_t netValueLen = htons(valueLen);
-      tmp.append((char*)&netValueLen, 2);
-      tmp.append(str_val);
-      if (!checkHexString(str_val)) {
-        smsc_log_warn(logger, "Action 'tlv': invalid hex string: \'%s\'", str_val.c_str());
+      std::string bytes("");
+      if (hexDumpToBytes(str_val, bytes) && bytes.size() > 0) {
+        valueLen = (uint16_t)bytes.size();
+        uint16_t netValueLen = htons(valueLen);
+        tmp.append((char*)&netValueLen, 2);
+        tmp.append(bytes, 0, valueLen);
+      } else {
+        valueLen = (uint16_t)len;
+        uint16_t netValueLen = htons(valueLen);
+        tmp.append((char*)&netValueLen, 2);
+        tmp.append(buff, valueLen);
+        smsc_log_warn(logger, "Action 'tlv': invalid hex dump: \'%s\'", str_val.c_str());
       }
       break;
     }

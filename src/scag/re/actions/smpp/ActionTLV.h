@@ -37,9 +37,9 @@ protected:
     bool delUnknown(SMS& data, uint16_t fieldId);
     void setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str);
 
-    bool checkHexString(const std::string& str);
     int64_t convertToIntX(const char* buf, uint16_t valeLen);
     int64_t convertToUIntX(const char* buf, uint16_t valeLen);
+    bool hexDumpToBytes(const std::string& hex_dump, std::string& bytes); 
 
 public:
    
