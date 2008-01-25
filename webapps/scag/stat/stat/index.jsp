@@ -51,45 +51,73 @@
     var providersHash;
 
     function toggleVisible(p, c) {
+        var p = getElementByIdUni(p);
+        var c = getElementByIdUni(c);
+//        alert( "p=" + p + " | c=" + c);
+        var o = p.className == "collapsing_list_opened";
+        p.className = (p.className == "collapsing_list_opened") ? "collapsing_list_closed"  : "collapsing_list_opened";
+//        c.runtimeStyle.display = o ? "none" : "block";
+        c.style.display = o ? "none" : "block";
+    }
+
+    function toggleVisible_(p, c) {
+//        var p = getElementByIdUni(p);
+//        var c = getElementByIdUni(c);
+        alert( "p=" + p + " | c=" + c);
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
-        c.runtimeStyle.display = o ? "none" : "block";
+//        c.runtimeStyle.display = o ? "none" : "block";
+        c.style.display = o ? "none" : "block";
     }
 
     function populateArray() {
         servicesHash = new Array();
         providersHash = new Array();
-        for (var i=1;i<opForm.all.serviceId.length;i++) {
-          curserv = opForm.all.serviceId.options[i].value;
+//        var serviceId = getElementByIdUni("serviceId");
+//        for (var i=1;i<opForm.all.serviceId.length;i++) {
+        for (var i=1;i<getElementByIdUni("serviceId").length;i++) {
+//          curserv = opForm.all.serviceId.options[i].value;
+          curserv = getElementByIdUni("serviceId").options[i].value;
           serviceproviderid = curserv.split('//');
           var providerId = serviceproviderid[1];
           var serviceId = serviceproviderid[0];
           providersHash[serviceId] = providerId;
           if (servicesHash[providerId]) {
             array = servicesHash[providerId];
-            array[array.length] = {value:serviceId, text:opForm.all.serviceId.options[i].text};
+//            array[array.length] = {value:serviceId, text:opForm.all.serviceId.options[i].text};
+            array[array.length] = {value:serviceId, text:getElementByIdUni("serviceId").options[i].text};
             servicesHash[providerId] = array;
           } else {
-            servicesHash[providerId] = [{value:serviceId, text:opForm.all.serviceId.options[i].text}];
+//            servicesHash[providerId] = [{value:serviceId, text:opForm.all.serviceId.options[i].text}];
+            servicesHash[providerId] = [{value:serviceId, text:getElementByIdUni("serviceId").options[i].text}];
           }
         }
-        selectedText = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].text;
+//        selectedText = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].text;
+        selectedText = getElementByIdUni("serviceId").options[getElementByIdUni("serviceId").selectedIndex].text;
         providerChanged();
-        for(var i=1;i<opForm.all.serviceId.length;i++)
-          if (selectedText == opForm.all.serviceId.options[i].text) opForm.all.serviceId.options[i].selected = true;
+//        for(var i=1;i<opForm.all.serviceId.length;i++)
+        for(var i=1;i<serviceId.length;i++){
+//          if (selectedText == opForm.all.serviceId.options[i].text) opForm.all.serviceId.options[i].selected = true;
+          if (selectedText == getElementByIdUni("serviceId").options[i].text) getElementByIdUni("serviceId").options[i].selected = true;
+        }
     }
 
     function providerChanged() {
-      opForm.all.serviceId.options.length=0;
-      opForm.all.serviceId.options[0] = new Option("ALL_SERVICES","-1",true,true);
-      var providerId = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
+      var serviceId = getElementByIdUni("serviceId");
+//      opForm.all.serviceId.options.length=0;
+      serviceId.options.length=0;
+//      opForm.all.serviceId.options[0] = new Option("ALL_SERVICES","-1",true,true);
+      serviceId.options[0] = new Option("ALL_SERVICES","-1",true,true);
+//      var providerId = opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value;
+      var providerId = getElementByIdUni("providerId").options[getElementByIdUni("providerId").selectedIndex].value
       var j = 1;
       if (providerId == "-1") {
          for (var i=1;i<servicesHash.length;i++) {
            var array = servicesHash[i];
            if (array && array.length && array.length>0)
            for (var y=0;y<array.length;y++) {
-             opForm.all.serviceId.options[j] = new Option(array[y].text, array[y].value);
+//             opForm.all.serviceId.options[j] = new Option(array[y].text, array[y].value);
+             serviceId.options[j] = new Option(array[y].text, array[y].value);
              j=j+1;
            }
          }
@@ -98,19 +126,23 @@
       var services = servicesHash[providerId];
       if (services && services.length && services.length>0)
       for (var i=0;i<services.length;i++) {
-           opForm.all.serviceId.options[j] = new Option(services[i].text, services[i].value);
+//           opForm.all.serviceId.options[j] = new Option(services[i].text, services[i].value);
+           serviceId.options[j] = new Option(services[i].text, services[i].value);
            j=j+1;
       }
     }
 
     function serviceChanged() {
-      var serviceId = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].value;
+//      var serviceId = opForm.all.serviceId.options[opForm.all.serviceId.selectedIndex].value;
+      var serviceId = getElementByIdUni("serviceId").options[getElementByIdUni("serviceId").selectedIndex].value;
       if (serviceId == "-1") return;
       var prId = providersHash[serviceId];
-      if (opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value == prId) return;
-      for(i=1;i<opForm.all.providerId.length;i++) {
-         if (opForm.all.providerId.options[i].value == prId) {
-            opForm.all.providerId.options[i].selected = true;
+//      if (opForm.all.providerId.options[opForm.all.providerId.selectedIndex].value == prId) return;
+      if (getElementByIdUni("providerId").options[getElementByIdUni("providerId").selectedIndex].value == prId) return;
+//      for(i=1;i<opForm.all.providerId.length;i++) {
+      for(i=1;i<getElementByIdUni("providerId").length;i++) {
+         if (getElementByIdUni("providerId").options[i].value == prId) {
+            getElementByIdUni("providerId").options[i].selected = true;
             return;
          }
       }
@@ -122,6 +154,7 @@
 
 <c:if test="${!(empty httpStatistics)}">
     <table class=properties_list cellspacing=0 cellspadding=0 border=0>
+    <tr><td>HTTP ST</td></tr>
         <c:set var="disNo" value="${1}"/>
         <c:set var="total" value="${httpStatistics.total}"/>
         <c:set var="byDates" value="${httpStatistics.dateStat}"/>
@@ -156,7 +189,8 @@
                     <c:forEach var="dayStat" items="${byDates}" varStatus="i">
                         <tr class=row0>
                             <td style="cursor:hand;text-align:left"
-                                onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+<%--                                onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                                onClick="toggleVisible('p${disNo}', 'c${disNo}');">
                                 <div align=left id="p${disNo}" class="collapsing_list_closed"><fmt:formatDate
                                         value="${dayStat.date}" pattern="dd MMMM, yyyy"/></div>
                             </td>
@@ -218,7 +252,8 @@
                     <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
                         <tr class=row0>
                             <td style="cursor:hand;text-align:left"
-                                onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+<%--                                onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                                onClick="toggleVisible('p${disNo}', 'c${disNo}');">
                                 <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smf:getHttpRouteNameById(pageContext.request,routeStat.routeid))}</div>
                             </td>
                             <td style="text-align:left">${routeStat.request}</td>
@@ -282,7 +317,8 @@
                 <c:forEach var="smeStat" items="${bySme}" varStatus="i">
                     <tr class=row0>
                         <td style="cursor:hand;text-align:left"
-                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+<%--                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                            onClick="toggleVisible('p${disNo}', 'c${disNo}');">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smeStat.smeid)}</div>
                         </td>
                         <td style="text-align:left">${smeStat.request}</td>
@@ -330,12 +366,12 @@
     <c:set var="byDates" value="${statistics.dateStat}"/>
     <tr><td colspan="9">&nbsp;</td></tr>
     <tr><td style="cursor:hand;text-align:left"
-            onClick="toggleVisible(pgs,cgs);">
+            onClick="toggleVisible_(pgs,cgs);">
         <div align="left" id="pgs" class="collapsing_list_opened"><div class="page_subtitle">
            <fmt:message>statistics.label.general</fmt:message></div>
         </div></td>
         <tr id="cgs" style="display:block"><td colspan="9" width="100%">
-            <table>
+            <table border=0>
                 <tr>
                     <th width="27%" style="text-align:left">&nbsp;</th>
                     <th width="8%" style="text-align:left">Accepted</th>
@@ -358,12 +394,15 @@
                     <th width="15%" style="text-align:left">${total.recieptOk}/${total.recieptFailed}</th>
                     <th style="text-align:left">&nbsp;</th>
                 </tr>
+<%--                <tr><td>111</td></tr>--%>
                 <c:forEach var="dayStat" items="${byDates}" varStatus="i">
                     <tr class=row0>
                         <td style="cursor:hand;text-align:right"
-                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
-                            <div align=left id="p${disNo}" class="collapsing_list_closed"><fmt:formatDate
-                                    value="${dayStat.date}" pattern="dd MMMM, yyyy"/></div>
+<%--                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                            onClick="toggleVisible('p${disNo}', 'c${disNo}');">
+                            <div align=left id="p${disNo}" class="collapsing_list_closed">
+                                <fmt:formatDate value="${dayStat.date}" pattern="dd MMMM, yyyy"/>
+                            </div>
                         </td>
                         <td style="text-align:left">${dayStat.accepted}</td>
                         <td style="text-align:left">${dayStat.rejected}</td>
@@ -374,14 +413,17 @@
                         <td style="text-align:left">${dayStat.recieptOk}/${dayStat.recieptFailed}</td>
                         <td style="text-align:left">&nbsp;</td>
                     </tr>
-                    <tr id="c${disNo}" style="display:none">
+                    <tr id="1c${disNo}" style="display:block">
                         <td colspan="9" width="100%">
-                            <table class=list cellspacing=0 cellpadding=0 border=0 width="100%">
+                            <table class=list cellspacing=0 cellpadding=0 border=0 width="100%" id="c${disNo}"  style="display:none">
+<%--                                <tr><td>222</td></tr>--%>
                                 <c:forEach var="hourStat" items="${dayStat.hourStat}">
                                     <tr class=row1>
                                         <td width="27%" style="text-align:right">
-                                             <div align=left style="padding-left:87px"><fmt:formatNumber
-                                                value="${hourStat.hour}" minIntegerDigits="2"/> </div></td>
+                                             <div align=left style="padding-left:87px">
+                                                <fmt:formatNumber value="${hourStat.hour}" minIntegerDigits="2"/>
+                                             </div>
+                                        </td>
                                         <td width="8%" style="text-align:left">${hourStat.accepted}</td>
                                         <td width="8%" style="text-align:left">${hourStat.rejected}</td>
                                         <td width="8%" style="text-align:left">${hourStat.delivered}</td>
@@ -425,7 +467,8 @@
                 <c:forEach var="routeStat" items="${byRoute}" varStatus="i">
                     <tr class=row0>
                         <td style="cursor:hand;text-align:left"
-                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+<%--                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                            onClick="toggleVisible('p${disNo}', 'c${disNo}');">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(routeStat.routeid)}</div>
                         </td>
                         <td style="text-align:left">${routeStat.accepted}</td>
@@ -489,7 +532,8 @@
                 <c:forEach var="smeStat" items="${bySme}" varStatus="i">
                     <tr class=row0>
                         <td style="cursor:hand;text-align:left"
-                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+<%--                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                            onClick="toggleVisible('p${disNo}', 'c${disNo}');">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smeStat.smeid)}</div>
                         </td>
                         <td style="text-align:left">${smeStat.accepted}</td>
@@ -551,7 +595,8 @@
                 <c:forEach var="smscStat" items="${bySmsc}" varStatus="i">
                     <tr class=row0>
                         <td style="cursor:hand;text-align:left"
-                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">
+<%--                            onClick="toggleVisible(opForm.all.p${disNo}, opForm.all.c${disNo});">--%>
+                            onClick="toggleVisible('p${disNo}', 'c${disNo}');">
                             <div id="p${disNo}" class="collapsing_list_closed">${fn:escapeXml(smscStat.smscid)}</div>
                         </td>
                         <td style="text-align:left">${smscStat.accepted}</td>
