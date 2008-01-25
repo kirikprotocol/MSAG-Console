@@ -1,5 +1,10 @@
-function trim(str){	return str.replace(/^\s+|\s+$/g,'');}
-function makeYear(year, curYear){ // +2:-7; +20:-79; +200:-799; ... etc
+function trim(str)
+{
+    return str.replace(/^\s+|\s+$/g,'');
+}
+
+function makeYear(year, curYear)
+{ // +2:-7; +20:-79; +200:-799; ... etc
 	year = trim(year);
 	if (year<0||curYear<0||year-1+1!=year) return false;
 	curYear+="";year+="";
@@ -15,6 +20,7 @@ function makeYear(year, curYear){ // +2:-7; +20:-79; +200:-799; ... etc
 	}
 	return calcYear;
 }
+
 if (!("isLocalized" in this))
 {
   var calendarMonths = new Array("January","February","March","April","May","June","July","August","September","October","November","December");
@@ -40,13 +46,19 @@ var calendarMouseDown=false;
 var calendarUS=false;
 var calendarTime=false;
 var calendarActivePanel=null;
-function calendarMakeDateStr(year,month,day,hour,minute,second,PM){
+function calendarMakeDateStr(year,month,day,hour,minute,second,PM)
+{
 	return calendarUS?(((month+1)<10?"0":"")+(month+1)+"/"+(day<10?"0":"")+day+"/"+year+(calendarTime?("  "+hour+":"+(minute<10?"0":"")+minute+":"+(second<10?"0":"")+second+" "+(PM?"PM":"AM")):"")):(day+"."+((month+1)<10?"0":"")+(month+1)+"."+year+(calendarTime?("  "+hour+":"+(minute<10?"0":"")+minute+":"+(second<10?"0":"")+second):""));
 }
+
 function calendarClose(){
-	calendarPanel.releaseCapture();
-	calendarPanel.runtimeStyle.display="none";
-	document.all.calendarIFrame.runtimeStyle.display="none";
+//    alert("calendarClose!");
+    var calendarPanel = getElementByIdUni("calendarPanel");
+	if(calendarPanel.releaseCapture) calendarPanel.releaseCapture();
+//o	calendarPanel.runtimeStyle.display="none";
+//o	document.all.calendarIFrame.runtimeStyle.display="none";
+	calendarPanel.style.display="none";
+	getElementByIdUni("calendarIFrame").style.display="none";
 	calendarMouseDown=false;
 	calendarPressedTime=false;
 	calendarPressedHour=false;
@@ -54,46 +66,57 @@ function calendarClose(){
 	calendarPressedSecond=false;
 	return false;
 }
-function createCalendarPanel(year,month,day,hour,minute,second,PM) {
+
+function createCalendarPanel(year,month,day,hour,minute,second,PM)
+{
+//    alert("createCalendarPanelcreateCalendarPanel");
 	calendarActivePanel.value=calendarMakeDateStr(year,month,day,hour,minute,second,PM);
 	calendarCurYear=year;
 	calendarCurMonth=month;
 	var startDay=calendarUS?-1:0;
 	var date;
-	for (i=calendarDaysTable.rows.length-1;i>=0;i--)calendarDaysTable.deleteRow(calendarDaysTable.rows(i));
+	var calendarDaysTable = getElementByIdUni("calendarDaysTable");
+	for (i=calendarDaysTable.rows.length-1;i>=0;i--)calendarDaysTable.deleteRow(calendarDaysTable.rows[i]);
 	while((new Date(year,month,startDay)).getDay()!=(calendarUS?0:1)) startDay--;
 	var dayPos=startDay;
 	var curDate = new Date();
 	curDate = new Date(curDate.getYear(), curDate.getMonth(), curDate.getDate());
+//	alert("createCalendarPanel:" + calendarDaysTable + " 1");
 	for (j=0;j<6;j++){
-		row = calendarDaysTable.insertRow();
+		row = calendarDaysTable.insertRow(calendarDaysTable.rows.length);
 		row.align="center";
 		for (i=0;i<7;i++){
-			cell = row.insertCell();
+			cell = row.insertCell(i);
+//			cell = document.createElement("td");
+//			row.appendChild(cell);
 			date=new Date(year,month,dayPos);
-			if (date.getMonth()==month)
+			if (date.getMonth()==month){
 				if(date.getDate()==day) {
 					cell.className="calendarDown";
 					calendarLastPos = ((j*7)+i);
 					calendarLastDayPos = dayPos;
-				} else cell.className="calendarUp";
-			else cell.className="calendarGreyUp";
-			if (curDate.getTime()==date.getTime()) cell.style.fontWeight="bolder";
+				} else
+				    cell.className="calendarUp";
+			} else
+			    cell.className="calendarGreyUp";
+			if (curDate.getTime()==date.getTime())
+			    cell.style.fontWeight="bolder";
 			cell.name = "calendarCell" + ((""+dayPos).length<2?" ":"") + dayPos + "" +((j*7)+i);
 			cell.innerHTML=date.getDate();
 			dayPos++;
 		}
 	}
-	if (calendarTime) {
-		if(calendarUS)if(calendarCurPM) calendarAMPMsv.innerHTML="PM"; else calendarAMPMsv.innerHTML="AM";
-		calendarTimeHour.innerHTML = (calendarCurHour<10?"0":"")+calendarCurHour;
-		calendarTimeMinute.innerHTML = (calendarCurMinute<10?"0":"")+calendarCurMinute;
-		calendarTimeSecond.innerHTML = (calendarCurSecond<10?"0":"")+calendarCurSecond;
-	}
-	calendarYearPanel.innerHTML=calendarMonths[month]+"&nbsp;"+year;
+//o	calendarYearPanel.innerHTML=calendarMonths[month]+"&nbsp;"+year;
+	getElementByIdUni("calendarYearPanel").innerHTML=calendarMonths[month]+"&nbsp;"+year;
+//	alert("createCalendarPanelcreateCalendarPanel-");
 }
-function showCalendar(calendarInputText, us, showTime){
-	calendarActivePanel=calendarInputText;
+
+function showCalendar(calendarInputText, us, showTime)
+{
+    calendarActivePanel=calendarInputText;
+	var calendarTimePanel = getElementByIdUni("calendarTimePanel");
+	var calendarDaysPanel = getElementByIdUni("calendarDaysPanel");
+	var calendarAMPMsv = getElementByIdUni("calendarAMPMsv");
 	if (showTime) {
 		calendarTimePanel.style.display="block";
 		calendarDaysPanel.style.borderBottom="solid 1px #000000";
@@ -116,33 +139,40 @@ function showCalendar(calendarInputText, us, showTime){
 	var second=0;
 	var PM=true;
 	var pos1 = dtText.indexOf((calendarUS?"/":"."));
-	if (pos1!=-1){
-	var pos2 = dtText.indexOf((calendarUS?"/":"."),pos1+1);
-	if (pos2!=-1){
-	if (calendarUS) {
-		var dtMonth = dtText.substring(0,pos1)-1;
-		var dtDate  = dtText.substring(pos1+1,pos2);
-	} else {
-		var dtMonth = dtText.substring(pos1+1,pos2)-1;
-		var dtDate  = dtText.substring(0,pos1);
+	if (pos1!=-1)
+	{
+	    var pos2 = dtText.indexOf((calendarUS?"/":"."),pos1+1);
+	    if (pos2!=-1)
+	    {
+	        if (calendarUS) {
+		        var dtMonth = dtText.substring(0,pos1)-1;
+		        var dtDate  = dtText.substring(pos1+1,pos2);
+	        } else {
+		    var dtMonth = dtText.substring(pos1+1,pos2)-1;
+		    var dtDate  = dtText.substring(0,pos1);
+	        }
+	        var pos3=-1;
+	        var dtYear=-1;
+            if (!calendarTime) dtYear=dtText.substring(pos2+1);
+            else {
+                pos3=dtText.indexOf(" ",pos2+1);
+                if (pos3!=-1) dtYear=dtText.substring(pos2+1,pos3);
+                    else dtYear=dtText.substring(pos2+1);
+            }
+            if (dtYear=makeYear(dtYear,(new Date()).getYear()))
+            {
+                var dt = new Date(dtYear, dtMonth, dtDate);
+                if( (dt.getDate()		== dtDate) &&
+                    (dt.getMonth()		== dtMonth) &&
+                    (dt.getFullYear()	== dtYear))
+                {
+                        month = dtMonth/1;
+                        day = dtDate/1;
+                        year = dtYear/1;
+                }
+            }
+    	}
 	}
-	var pos3=-1;
-	var dtYear=-1;
-	if (!calendarTime) dtYear=dtText.substring(pos2+1);
-		else {
-			pos3=dtText.indexOf(" ",pos2+1);
-			if (pos3!=-1) dtYear=dtText.substring(pos2+1,pos3);
-				else dtYear=dtText.substring(pos2+1);
-		}
-	if (dtYear=makeYear(dtYear,(new Date()).getYear())){
-	var dt = new Date(dtYear, dtMonth, dtDate);
-	if( (dt.getDate()		== dtDate) &&
-		(dt.getMonth()		== dtMonth) &&
-		(dt.getFullYear()	== dtYear)){
-		month = dtMonth/1;
-		day = dtDate/1;
-		year = dtYear/1;
-	}}}}
 	if (year==-1) {
 		var tdate = new Date();
 		if (calendarCurYear==-1) {
@@ -187,116 +217,176 @@ function showCalendar(calendarInputText, us, showTime){
 				}
 			}
 		}
-		if (calendarUS) {hour%=12;if (hour==0) hour=12;}
+		if (calendarUS)
+		{
+		    hour%=12;
+		    if (hour==0) hour=12;
+		}
 		calendarCurHour = hour;
 		calendarCurMinute = minute;
 		calendarCurSecond = second;
 		calendarCurPM = PM;
 	}
 //-------------------------------------------------
-	var PageX=0;var PageY=0;var E=calendarInputText;
-	while(E!=null){
-	  if (E.offsetParent != null)
-	    PageX+=E.offsetLeft;
-
-	  PageY+=E.offsetTop;
-	  E=E.offsetParent;
+	var PageX=0;
+	var PageY=0;
+	var E=calendarInputText;
+//	var E=getElementByIdUni("calendarInputText");
+//	alert("OFF=" + E);
+    while(E!=null)
+    {
+	    if( E.offsetParent != null ){
+	        PageX += E.offsetLeft;
+        }
+	    PageY += E.offsetTop;
+	    E = E.offsetParent;
 	}
-	var row=calendarWeekDays;
-	if (row.cells(0)==null)
-	for (i=0;i<7;i++) {
-		var cell=row.insertCell();
-		cell.innerHTML=calendarWD[(calendarUS?0:1)+i];
-		cell.style.width="22px";
+//	var row = calendarWeekDays;
+	var row = getElementByIdUni("calendarWeekDays");
+	if (row.cells[0]==null){
+        for (i=0;i<7;i++) {
+            var cell=row.insertCell(i);
+//            var cell=document.createElement("td");
+            cell.innerHTML=calendarWD[(calendarUS?0:1)+i];
+            cell.style.width="22px";
+        }
 	}
-	calendarPanel.style.posLeft=PageX;
-	calendarPanel.style.posTop=PageY+calendarInputText.offsetHeight;
+    var calendarPanel = getElementByIdUni("calendarPanel");
+//	calendarPanel.style.posLeft=PageX;
+	calendarPanel.style.left=PageX;
+//	calendarPanel.style.posTop=PageY+calendarInputText.offsetHeight;
+	calendarPanel.style.top=PageY+calendarInputText.offsetHeight;
+//	alert("12 " + year + "," + month + "," + day + "," + hour + "," + minute + "," + second + "," + PM);
 	createCalendarPanel(year,month,day,hour,minute,second,PM);
-	calendarPanel.runtimeStyle.display="block";
-	document.all.calendarIFrame.runtimeStyle.posLeft=PageX;
-	document.all.calendarIFrame.runtimeStyle.posTop=PageY+calendarInputText.offsetHeight;
-	document.all.calendarIFrame.runtimeStyle.width=calendarPanel.offsetWidth;
-	document.all.calendarIFrame.runtimeStyle.height=calendarPanel.offsetHeight;
-	document.all.calendarIFrame.runtimeStyle.display="block";
-	calendarPanel.setCapture();
+//  alert("created " + calendarPanel + " X=" + PageX + "=" + calendarPanel.style.posLeft + " Y=" + PageY + "=" + calendarInputText.offsetHeight + "=" + calendarPanel.style.posTop);
+//	calendarPanel.runtimeStyle.display="block";
+	calendarPanel.style.display="block";
+    var calendarIFrame = getElementByIdUni("calendarIFrame");
+//	document.all.calendarIFrame.runtimeStyle.posLeft=PageX;
+//	calendarIFrame.style.posLeft=PageX;
+	calendarIFrame.style.left=PageX;
+//	document.all.calendarIFrame.runtimeStyle.posTop=PageY+calendarInputText.offsetHeight;
+//	calendarIFrame.style.posTop=PageY+calendarInputText.offsetHeight;
+	calendarIFrame.style.top=PageY+calendarInputText.offsetHeight;
+//	document.all.calendarIFrame.runtimeStyle.width=calendarPanel.offsetWidth;
+    calendarIFrame.style.width=calendarPanel.offsetWidth;
+//	document.all.calendarIFrame.runtimeStyle.height=calendarPanel.offsetHeight;
+	calendarIFrame.style.height=calendarPanel.offsetHeight;
+//	document.all.calendarIFrame.runtimeStyle.display="block";
+	calendarIFrame.style.display="block";
+	if(calendarPanel.setCapture)
+	    calendarPanel.setCapture();
  	return false;
 }
+
 function isCalendarOwner(o){
 	while (o!=null){
-    //alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
-		if (o==calendarPanel) return true;
-		o=o.parentElement;
+//  alert("o:" + o + " tag:" + o.tagName + " id:" + o.id);
+//		if (o==calendarPanel) return true;
+		if (o==getElementByIdUni("calendarPanel")) return true;
+//		o=o.parentElement;
+		o = (o.parentElement) ? o.parentElement : o.parentNode;
 	}
 	return false;
 }
-function calendarMD(){
-	calendarPanel.setCapture();
-	var a = window.event.srcElement;
+
+function calendarMD(e)
+{
+//    alert("calendarMD");
+    var calendarPanel = getElementByIdUni("calendarPanel")
+	if(calendarPanel.setCapture) calendarPanel.setCapture();
+//	var a = window.event.srcElement;
+	var a = e.target || window.event.srcElement;
 	//alert("owner:" + isCalendarOwner(a) + " pt:" + calendarPressedTime);
 	if (!isCalendarOwner(a)&&!calendarPressedTime) return calendarClose();
-	var b = window.event.button;
+//o	var b = window.event.button;
+//	var b = (isMSIE()) ? e.button : e.which;
+	var b = (e.button) ? e.button : e.which;
+	if (!a.name)
+      a.name = a.getAttribute("name");
 	if (a!=null&&a.name!=null&&b==1){
 		if(a.name.indexOf("calendarCell")!=-1){
 			var dayPos=a.name.substring(12,14);
 			var pos=a.name.substring(14);
+			var calendarDaysTable = getElementByIdUni("calendarDaysTable");
 			if ((new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos)).getMonth()==calendarCurMonth)
-				calendarDaysTable.rows((calendarLastPos-calendarLastPos%7)/7).cells(calendarLastPos%7).className="calendarUp"; else
-				calendarDaysTable.rows((calendarLastPos-calendarLastPos%7)/7).cells(calendarLastPos%7).className="calendarGreyUp";
+				calendarDaysTable.rows[(calendarLastPos-calendarLastPos%7)/7].cells[calendarLastPos%7].className="calendarUp";
+		    else
+				calendarDaysTable.rows[(calendarLastPos-calendarLastPos%7)/7].cells[calendarLastPos%7].className="calendarGreyUp";
 			var date=new Date(calendarCurYear, calendarCurMonth, dayPos);
 			var year=date.getFullYear();
 			var day=date.getDate();
 			var month=date.getMonth();
 			calendarActivePanel.value=calendarMakeDateStr(year,month,day,calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
 			if (date.getMonth()==calendarCurMonth)
-				calendarDaysTable.rows((pos-pos%7)/7).cells(pos%7).className="calendarDown"; else
-				calendarDaysTable.rows((pos-pos%7)/7).cells(pos%7).className="calendarGreyDown";
+				calendarDaysTable.rows[(pos-pos%7)/7].cells[pos%7].className="calendarDown";
+			else
+				calendarDaysTable.rows[(pos-pos%7)/7].cells[pos%7].className="calendarGreyDown";
 			calendarLastPos=pos;
 			calendarLastDayPos=dayPos;
 			calendarMouseDown=true;
 		} else if (calendarTime) {
 			if (calendarUS&&a.name.indexOf("calendarAMPMsv")!=-1) {
-				if(a.innerHTML=="AM") {calendarCurPM=true;a.innerHTML="PM";} else {calendarCurPM=false;a.innerHTML="AM";}
+				if(a.innerHTML=="AM") {calendarCurPM=true;a.innerHTML="PM";}
+				else {calendarCurPM=false;a.innerHTML="AM";}
 				var date=new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos);
 				calendarActivePanel.value=calendarMakeDateStr(date.getFullYear(),date.getMonth(),date.getDate(),calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
 			} else if(a.name.indexOf("calendarTime")!=-1){
 				if (a.name.indexOf("Ok")!=-1) return calendarClose(); else
 				if (a.name.indexOf("Hour")!=-1){
-					if (a.name.indexOf("Up")!=-1) calendarCurHour = (calendarCurHour + 1)%(calendarUS?12:24); else calendarCurHour = (calendarCurHour + 23)%(calendarUS?12:24);
-					if (calendarCurHour==0) calendarCurHour=12;
-					calendarTimeHour.innerHTML = (calendarCurHour<10?"0":"")+calendarCurHour;
+					if (a.name.indexOf("Up")!=-1)
+					    calendarCurHour = (calendarCurHour + 1)%(calendarUS?12:24);
+					else
+					    calendarCurHour = (calendarCurHour + 23)%(calendarUS?12:24);
+					if (calendarCurHour==0)
+					    calendarCurHour=12;
+					getElementByIdUni("calendarTimeHour").innerHTML = (calendarCurHour<10?"0":"")+calendarCurHour;
 					var date=new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos);
 					calendarActivePanel.value=calendarMakeDateStr(date.getFullYear(),date.getMonth(),date.getDate(),calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
 					calendarPressedTime=true;
 					calendarPressedHour=true;
-					calendarPressedYPos=event.y;
+					//calendarPressedYPos=event.y;
+					calendarPressedYPos=e.y;
 					calendarCurHour1=calendarCurHour;
 				} else
 				if (a.name.indexOf("Minute")!=-1){
-					if (a.name.indexOf("Up")!=-1) calendarCurMinute = (calendarCurMinute + 1)%60; else calendarCurMinute = (calendarCurMinute + 59)%60;
-					calendarTimeMinute.innerHTML = (calendarCurMinute<10?"0":"")+calendarCurMinute;
+					if (a.name.indexOf("Up")!=-1)
+					    calendarCurMinute = (calendarCurMinute + 1)%60;
+					else
+					    calendarCurMinute = (calendarCurMinute + 59)%60;
+					getElementByIdUni("calendarTimeMinute").innerHTML = (calendarCurMinute<10?"0":"")+calendarCurMinute;
 					var date=new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos);
 					calendarActivePanel.value=calendarMakeDateStr(date.getFullYear(),date.getMonth(),date.getDate(),calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
 					calendarPressedTime=true;
 					calendarPressedMinute=true;
-					calendarPressedYPos=event.y;
+					//calendarPressedYPos=event.y;
+					calendarPressedYPos=e.y;
 					calendarCurMinute1=calendarCurMinute;
 				} else
 				if (a.name.indexOf("Second")!=-1){
-					if (a.name.indexOf("Up")!=-1) calendarCurSecond = (calendarCurSecond + 1)%60; else calendarCurSecond = (calendarCurSecond + 59)%60;
-					calendarTimeSecond.innerHTML = (calendarCurSecond<10?"0":"")+calendarCurSecond;
+					if (a.name.indexOf("Up")!=-1)
+					    calendarCurSecond = (calendarCurSecond + 1)%60;
+					else
+					    calendarCurSecond = (calendarCurSecond + 59)%60;
+					getElementByIdUni("calendarTimeSecond").innerHTML = (calendarCurSecond<10?"0":"")+calendarCurSecond;
 					var date=new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos);
 					calendarActivePanel.value=calendarMakeDateStr(date.getFullYear(),date.getMonth(),date.getDate(),calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
 					calendarPressedTime=true;
 					calendarPressedSecond=true;
-					calendarPressedYPos=event.y;
+					//calendarPressedYPos=event.y;
+					calendarPressedYPos=e.y;
 					calendarCurSecond1=calendarCurSecond;
 				}
 			}
 		}
 	}
 }
-function calendarMU(){
-	var a = window.event.srcElement;
+
+function calendarMU(e)
+{
+//	var a = window.event.srcElement;
+//    alert("calendarMU");
+	var a = e.target || window.event.srcElement;
 	if (calendarTime&&calendarPressedTime) {
 		var date=new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos);
 		calendarActivePanel.value=calendarMakeDateStr(date.getFullYear(),date.getMonth(),date.getDate(),calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
@@ -306,7 +396,9 @@ function calendarMU(){
 		calendarPressedSecond=false;
 		return;
 	}
-	if (!isCalendarOwner(a)) return calendarClose();
+	if (!isCalendarOwner(a)){
+	    return calendarClose();
+	}
 	if (a!=null&&a.name!=null) if (a.name.indexOf("calendarCell")!=-1&&calendarMouseDown){
 		if (!calendarTime) return calendarClose();
 		} else if (a.name.indexOf("calendarMonth")!=-1) {
@@ -321,41 +413,60 @@ function calendarMU(){
 	}
 	calendarMouseDown=false;
 }
-function calendarMM(){
-	var a = window.event.srcElement;
-	var b = window.event.button;
+
+function calendarMM(e)
+{
+//	var a = window.event.srcElement;
+//	var b = window.event.button;
+    var a = e.target || window.event.srcElement;
+    var b = e.button;
 	if (calendarTime&&calendarPressedTime) {
-		var inc = calendarPressedYPos - event.y;
+		var inc = calendarPressedYPos - e.y;
 		inc = (inc-inc%5)/5;
 		if (calendarPressedHour) {
-			calendarCurHour = (calendarCurHour1 + 1536 + inc)%(calendarUS?12:24);
-			if (calendarCurHour==0) calendarCurHour=12;
-			calendarTimeHour.innerHTML = (calendarCurHour<10?"0":"")+calendarCurHour;
+		    var calendarTimeHour = getElementByIdUni("calendarTimeHour");
+		    if(calendarTimeHour.innerHTML=='NaN') calendarTimeHour.innerHTML = "00";
+		    else{
+                calendarCurHour = (calendarCurHour1 + 1536 + inc)%(calendarUS?12:24);
+                if(calendarTimeHour.innerHTML=='NaN') calendarTimeHour.innerHTML = "00";
+                if (calendarCurHour==0)
+                    calendarCurHour=12;
+                calendarTimeHour.innerHTML = (calendarCurHour<10?"0":"")+calendarCurHour;
+			}
 		} else if (calendarPressedMinute) {
+		    var calendarTimeMinute = getElementByIdUni("calendarTimeMinute");
 			calendarCurMinute = (calendarCurMinute1 + 1560 + inc)%60;
 			calendarTimeMinute.innerHTML = (calendarCurMinute<10?"0":"")+calendarCurMinute;
+
 		} else if (calendarPressedSecond) {
+		    var calendarTimeSecond = getElementByIdUni("calendarTimeSecond");
 			calendarCurSecond = (calendarCurSecond1 + 1560 + inc)%60;
 			calendarTimeSecond.innerHTML = (calendarCurSecond<10?"0":"")+calendarCurSecond;
 		}
 	} else if (a!=null&&a.name!=null&&a.name.indexOf("calendarCell")!=-1)
-		if (b!=1) calendarMouseDown=false; else {
-		var dayPos=a.name.substring(12,14);
-		var pos=a.name.substring(14);
-		if (pos!=calendarLastPos){
-			if ((new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos)).getMonth()==calendarCurMonth)
-				calendarDaysTable.rows((calendarLastPos-calendarLastPos%7)/7).cells(calendarLastPos%7).className="calendarUp"; else
-				calendarDaysTable.rows((calendarLastPos-calendarLastPos%7)/7).cells(calendarLastPos%7).className="calendarGreyUp";
-			var date=new Date(calendarCurYear, calendarCurMonth, dayPos);
-			var year=date.getFullYear();
-			var day=date.getDate();
-			var month=date.getMonth();
-			calendarActivePanel.value=calendarMakeDateStr(year,month,day,calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
-			if (date.getMonth()==calendarCurMonth)
-				calendarDaysTable.rows((pos-pos%7)/7).cells(pos%7).className="calendarDown"; else
-				calendarDaysTable.rows((pos-pos%7)/7).cells(pos%7).className="calendarGreyDown";
-			calendarLastPos=pos;
-			calendarLastDayPos=dayPos;
-		}
-	}
+		if (b!=1)
+		    calendarMouseDown=false;
+		else {
+            var dayPos=a.name.substring(12,14);
+            var pos=a.name.substring(14);
+            if (pos!=calendarLastPos){
+                var calendarDaysTable = getElementByIdUni("calendarDaysTable");
+                if ((new Date(calendarCurYear, calendarCurMonth, calendarLastDayPos)).getMonth()==calendarCurMonth)
+                    calendarDaysTable.rows[(calendarLastPos-calendarLastPos%7)/7].cells[calendarLastPos%7].className="calendarUp";
+                else
+                    calendarDaysTable.rows[(calendarLastPos-calendarLastPos%7)/7].cells[calendarLastPos%7].className="calendarGreyUp";
+                var date=new Date(calendarCurYear, calendarCurMonth, dayPos);
+                var year=date.getFullYear();
+                var day=date.getDate();
+                var month=date.getMonth();
+//                calendarActivePanel.value=calendarMakeDateStr(year,month,day,calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
+                getElementByIdUni("calendarActivePanel").value=calendarMakeDateStr(year,month,day,calendarCurHour,calendarCurMinute,calendarCurSecond,calendarCurPM);
+                if (date.getMonth()==calendarCurMonth)
+                    calendarDaysTable.rows[(pos-pos%7)/7].cells[pos%7].className="calendarDown";
+                else
+                    calendarDaysTable.rows[(pos-pos%7)/7].cells[pos%7].className="calendarGreyDown";
+                calendarLastPos=pos;
+                calendarLastDayPos=dayPos;
+		    }
+	    }
 }

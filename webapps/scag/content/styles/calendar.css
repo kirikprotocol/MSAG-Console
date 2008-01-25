@@ -3,7 +3,7 @@
 	position: absolute;
 	display: none;
 	cursor: default;
-	z-index: 3;
+	z-index: 103;
 	width: 10px;
 	height: 10px;
 	background-color: red;
@@ -11,7 +11,7 @@
 
 .calendarHiddenLayer2
 {
-	z-index: 2;
+	z-index: 102;
 }
 
 .calendarTd {
