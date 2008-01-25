@@ -20,20 +20,56 @@
                     items[i].disabled = isDisabled;
                 }
             }
-            function enableDisableStartStopButtonsForSCAGStatusPage() {
+            function enableDisableStartStopButtonsForSCAGStatusPage_() {
+                var status = getElementByIdUni("SCAGStatusSpan");
+//                if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>') {
+                if (getElementByIdUni("SCAGStatusSpan").innerText == ' <fmt:message>status.running</fmt:message>') {
+//o                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>');
+//o                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>');
+//o                    var status = document.getElementById("SCAGStatusSpan");
 
-                if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>') {
-                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>');
-                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>');
-                } else if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>' || document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopping</fmt:message>') {
-                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>');
-                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>');
-                } else if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>') {
-                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>');
-                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>');
+//                    var status = getElementByIdUni("SCAGStatusSpan");
+                    enableDisableByIdFunction('mbStart', status.innerText == ' <fmt:message>status.running</fmt:message>');
+
+                    enableDisableByIdFunction('mbStop', status.innerText == ' <fmt:message>status.stopped</fmt:message>');
+
+//                } else if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>' || document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopping</fmt:message>') {
+//                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.stopped</fmt:message>');
+//                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.running</fmt:message>');
+//                } else if (document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>') {
+//                    enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>');
+//                    enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText == ' <fmt:message>status.unknown</fmt:message>');
+//                }
+                } else if (status.innerText == ' <fmt:message>status.stopped</fmt:message>' || status.innerText == ' <fmt:message>status.stopping</fmt:message>') {
+                    enableDisableByIdFunction('mbStop', status.innerText == ' <fmt:message>status.stopped</fmt:message>');
+                    enableDisableByIdFunction('mbStart', status.innerText == ' <fmt:message>status.running</fmt:message>');
+                } else if (status.innerText == ' <fmt:message>status.unknown</fmt:message>') {
+                    enableDisableByIdFunction('mbStop', status.innerText == ' <fmt:message>status.unknown</fmt:message>');
+                    enableDisableByIdFunction('mbStart', status.innerText == ' <fmt:message>status.unknown</fmt:message>');
+                }
+
+                window.setTimeout(enableDisableStartStopButtonsForSCAGStatusPage, 1000);
+            }
+
+            function enableDisableStartStopButtonsForSCAGStatusPage() {
+//                var status = document.getElementById("SCAGStatusSpan");
+                var status = getElementByIdUni("SCAGStatusSpan");
+                if (status.innerText == ' <fmt:message>status.running</fmt:message>') {
+
+                    enableDisableByIdFunction('mbStart', status.innerText == ' <fmt:message>status.running</fmt:message>');
+
+                    enableDisableByIdFunction('mbStop', status.innerText == ' <fmt:message>status.stopped</fmt:message>');
+
+                } else if (status.innerText == ' <fmt:message>status.stopped</fmt:message>' || status.innerText == ' <fmt:message>status.stopping</fmt:message>') {
+                    enableDisableByIdFunction('mbStop', status.innerText == ' <fmt:message>status.stopped</fmt:message>');
+                    enableDisableByIdFunction('mbStart', status.innerText == ' <fmt:message>status.running</fmt:message>');
+                } else if (status.innerText == ' <fmt:message>status.unknown</fmt:message>') {
+                    enableDisableByIdFunction('mbStop', status.innerText == ' <fmt:message>status.unknown</fmt:message>');
+                    enableDisableByIdFunction('mbStart', status.innerText == ' <fmt:message>status.unknown</fmt:message>');
                 }
                 window.setTimeout(enableDisableStartStopButtonsForSCAGStatusPage, 1000);
             }
+
         </script>
     </jsp:body>
 </sm:page>
