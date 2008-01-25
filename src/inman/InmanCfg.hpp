@@ -624,8 +624,14 @@ protected:
         static const uint16_t   _MAX_REQUESTS_NUM = 0xFFFF;
         static const uint16_t   _DFLT_REQUESTS_NUM = 1000;
 
-        if (!manager.findSection("AbonentDetector"))
-            throw ConfigException("'AbonentDetector' section is missed");
+//        if (!manager.findSection("AbonentDetector"))
+//            throw ConfigException("'AbonentDetector' section is missed");
+        //Temporary hot patch
+        if (!manager.findSection("AbonentDetector")) {
+            smsc_log_warn(logger, "Abonent Detector is not configured!");
+            return false;
+        }
+
         ConfigView cfgSec(manager, "AbonentDetector");
         smsc_log_info(logger, "Reading AbonentDetector settings ..");
 
@@ -636,6 +642,7 @@ protected:
         } catch (const ConfigException & exc) { }
         if (dtcr.policyNm.empty())
             throw ConfigException("abonent contract determination policy is invalid or missing!");
+
         AbonentPolicy * pol = readPolicyCFG(manager, dtcr.policyNm.c_str());
         bool reqSS7 = pol->useSS7();
         abPolicies.addPolicy(pol);

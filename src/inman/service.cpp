@@ -235,13 +235,18 @@ void Service::onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC
     } break;
 
     case smsc::inman::interaction::csAbntContract: {
+        //Temporary hot patch
+        if (_cfg->dtcr.policyNm.empty())
+            throw CustomException("%s: unsupported CommandSet: %s (%u)", _logId,
+                                  pCs->CsName(), pCs->CsId());
+
         MutexGuard tmp(_mutex);
         newSess.sId = ++lastSessId;
         newSess.hdl = new AbntDetectorManager(&_cfg->dtcr, newSess.sId, conn, logger);
     } break;
 
     default: //force connect closing by TCPSrv
-        throw CustomException("%s: unsupported CommandSet: %s (%u)",
+        throw CustomException("%s: unsupported CommandSet: %s (%u)", _logId,
                               pCs->CsName(), pCs->CsId());
     }
     _mutex.Lock();
