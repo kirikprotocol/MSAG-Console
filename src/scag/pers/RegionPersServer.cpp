@@ -982,10 +982,10 @@ void RegionPersServer::checkProfilesStates() {
   smsc_log_info(rplog, "Checking profiles states...");
   StringProfileStore* store = getAbonentStore();
   AbntAddr addr;
-  uint8_t state = 0;
+  uint16_t state_cnt = 0;
   store->Reset();
-  while (store->Next(addr, state))  {
-    ProfileState pf_state = static_cast<ProfileState>(state);
+  while (store->Next(addr, state_cnt))  {
+    ProfileState pf_state = static_cast<ProfileState>(state_cnt >> PROPERTIES_COUNT_SIZE);
     string pf_key(addr.toString());
     switch (pf_state) {
     case OK:

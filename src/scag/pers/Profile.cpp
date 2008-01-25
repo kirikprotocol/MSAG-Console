@@ -5,13 +5,16 @@
 
 namespace scag{ namespace pers{
 
+const uint8_t PROPERTIES_COUNT_SIZE = 14; //14 bits for profile properties count
+const uint16_t MAX_PROPERTIES_COUNT = 16383; 
+
 void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 {
-    uint16_t cnt;
-
-    cnt = properties.GetCount();
-    buf.WriteInt8(state);
-    buf.WriteInt16(cnt);
+    uint16_t cnt = properties.GetCount();
+    uint16_t serialized_state = (uint16_t)state << PROPERTIES_COUNT_SIZE;
+    serialized_state |= cnt;
+    //buf.WriteInt8(state);
+    buf.WriteInt16(serialized_state);
 
     PropertyHash::Iterator it = properties.getIterator();
     Property* prop;
@@ -22,13 +25,14 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 
 void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
 {
-    uint16_t cnt;
-    Property* prop;
+    //state = static_cast<ProfileState>(buf.ReadInt8());
+    uint16_t state_cnt = buf.ReadInt16();
+    uint16_t cnt = state_cnt & MAX_PROPERTIES_COUNT;
+    state_cnt >>= PROPERTIES_COUNT_SIZE;
+    state = static_cast<ProfileState>(state_cnt);
 
-    state = static_cast<ProfileState>(buf.ReadInt8());
     Empty();
-    cnt = buf.ReadInt16();
-
+    Property* prop;
 	time_t cur_time = time(0);
     while(cnt) {
         prop = new Property();
@@ -136,6 +140,12 @@ void Profile::AddProperty(Property& prop)
     }
     catch(HashInvalidKeyException& e)
     {
+      uint16_t cnt = properties.GetCount();
+      if (cnt == MAX_PROPERTIES_COUNT) {
+        smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
+                      prop.getName().c_str(), pkey.c_str(), cnt);
+        return;
+      }
         if(!prop.isExpired())
             properties.Insert(prop.getName().c_str(), new Property(prop));
     }

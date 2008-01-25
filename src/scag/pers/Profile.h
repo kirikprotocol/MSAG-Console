@@ -19,8 +19,11 @@ using namespace smsc::core::buffers;
 
 typedef Hash<Property*> PropertyHash;
 
+extern const uint8_t PROPERTIES_COUNT_SIZE;
+extern const uint16_t MAX_PROPERTIES_COUNT; 
+
 enum ProfileState{
-    OK = 1,
+    OK,
     LOCKED,
     DELETED
 };

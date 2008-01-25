@@ -242,10 +242,11 @@ public:
     void Reset() {
       store.resetStorage();
     }
-    bool Next(Key& key, uint8_t& profile_state) {
+
+    bool Next(Key& key, uint16_t& state_cnt) {
       sb.Empty();
       if (store.dataStorageNext(key, sb)) {
-        profile_state = sb.ReadInt8();
+        state_cnt = sb.ReadInt16();
         return true;
       }
       return false;
