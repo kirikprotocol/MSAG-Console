@@ -100,13 +100,48 @@ public:
   }
   void Purge()
   {
-    delete [] data;
+    if(size)
+    {
+      delete [] data;
+    }
     data=0;
     end=0;
     head=0;
     tail=0;
     count=0;
     size=0;
+  }
+  CyclicQueue& operator=(const CyclicQueue& src)
+  {
+    if(size)
+    {
+      delete [] data;
+    }
+    if(src.size==0)
+    {
+      data=0;
+      end=0;
+      head=0;
+      tail=0;
+      size=0;
+      count=0;
+    }else
+    {
+      data=new T[src.size];
+      head=data;
+      tail=data;
+      size=src.size;
+      end=data+size;
+      count=0;
+      T* ptr=src.tail;
+      for(int i=0;i<src.count;i++)
+      {
+        Push(*ptr);
+        ptr++;
+        if(ptr==src.end)ptr=src.data;
+      }
+    }
+    return *this;
   }
 protected:
   void Realloc(int sz)
