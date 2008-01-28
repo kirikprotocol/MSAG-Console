@@ -55,6 +55,8 @@ public class RuleManager
     private boolean savePermissionHTTP = true;
     private boolean savePermissionMMS  = true;
 
+    public static final String SPACE4 = "    ";
+
     public void setSavePermissionSMPP(boolean savePermissionSMPP) {
         this.savePermissionSMPP = savePermissionSMPP;
     }
@@ -619,7 +621,13 @@ public class RuleManager
             case 1:
                 System.out.println("STRING WRITER");
                 String s;
+                StringBuffer sb = new StringBuffer();
+                sb.delete(0,sb.length());
                 while( (s=r.readLine() ) != null ) {
+                    int tabIndex = 0;
+                    while( ( tabIndex=s.indexOf( "\t") )!=-1 ){
+                        s = s.substring(0,tabIndex) + SPACE4 + s.substring(tabIndex+1);
+                    }
                     out.println(s);
                 }
                 break;
