@@ -190,9 +190,11 @@ void MapIoTask::connect(unsigned timeout) {
 void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
-  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ ) {
+  for( int i = 0; i < MapDialogContainer::numLocalSSNs; i++ )
+  {
     MapDialogContainer::boundLocalSSNs[i] = 0;
     MapDialogContainer::patternBoundLocalSSNs[i] = 1;
+    MapDialogContainer::getInstance()->InitLSSN(MapDialogContainer::localSSNs[i]);
   }
 //  __pingPongWaitCounter = 0;
   err = EINSS7CpMsgInitNoSig(MAXENTRIES);
@@ -331,7 +333,7 @@ void MapIoTask::dispatcher()
 
     DialogRefGuard dlg;
     {
-      MutexGuard mg(MapDialogContainer::getInstance()->receiveMon);
+      MutexGuard mg(receiveMon);
 
       result = EINSS7CpMsgRecv_r(&message,1000);
 
@@ -437,7 +439,7 @@ void MapIoTask::dispatcher()
         if(message.primitive==MAP_OPEN_IND)
         {
           try{
-            dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,message.msg_p[5]));
+            dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,message.msg_p[5],true));
           }
           catch(ProxyQueueLimitException& e)
           {
@@ -449,7 +451,7 @@ void MapIoTask::dispatcher()
           }
         }else
         {
-          dlg.assign(MapDialogContainer::getInstance()->getDialog(dlgId,lssn));
+          dlg.assign(MapDialogContainer::getInstance()->getDialog(dlgId,lssn,true));
           if(dlg.isnull())
           {
             __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)message.primitive,(unsigned int)dlgId,(unsigned int)lssn);
@@ -461,7 +463,7 @@ void MapIoTask::dispatcher()
           if(dlg->isLocked)
           {
             dlg->cmdQueue.Push(message);
-	    __map_trace2__("MAPIO::Enqueed msg:p=%x,sz=%d,dlgid=%x",message.primitive,message.size,dlgId);
+      __map_trace2__("MAPIO::Enqueed msg:p=%x,sz=%d,dlgid=%x",message.primitive,message.size,dlgId);
             continue;
           }
           dlg->isLocked=true;
@@ -480,11 +482,11 @@ void MapIoTask::dispatcher()
         MSG_T msg;
         {
           MutexGuard dlgMg(dlg->mutex);
-	  if(!dlg->cmdQueue.Count())
-	  {
+          if(!dlg->cmdQueue.Count())
+          {
             dlg->isLocked=false;
-	    break;
-	  }
+            break;
+          }
           dlg->cmdQueue.Pop(msg);
         }
         handleMessage(msg);
@@ -519,8 +521,9 @@ void MapIoTask::handleMessage(MSG_T& message)
     __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "MAPIO:LMessage dump: %s",text.get());
   }
   USHORT_T map_result;
+  __require__(message.size!=0);
   try {
-    MapDialogContainer::getInstance()->mapPacketReceived();
+    //MapDialogContainer::getInstance()->mapPacketReceived();
     if( message.primitive == 0x88 )
     {
       // MapOpenInd
@@ -720,10 +723,12 @@ void setMapProxyLimits(int timeout, int limit)
 }
 
 
-Mutex& MAPSTATS_GetMutex(){
-  static Mutex mutex;
-  return mutex;
-}
+/*
+  Mutex& MAPSTATS_GetMutex(){
+    static Mutex mutex;
+    return mutex;
+ }
+*/
 
 smsc::logger::Logger* MAPSTATS_GetLoggerSec() {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.sec");
@@ -879,7 +884,7 @@ void MAPSTATS_Update_(MAPSTATS stats)
 
 void MAPSTATS_Restart()
 {
-  MutexGuard _mg(MAPSTATS_GetMutex());
+  //MutexGuard _mg(MAPSTATS_GetMutex());
   MAPSTATS_Flush(MAPSTATS__SEC,false);
   MAPSTATS_Flush(MAPSTATS__MIN,false);
   MAPSTATS_Flush(MAPSTATS__HOUR,false);
@@ -893,7 +898,7 @@ void MAPSTATS_Restart()
 
 void MAPSTATS_Update(MAPSTATS stats)
 {
-  MutexGuard _mg(MAPSTATS_GetMutex());
+  //MutexGuard _mg(MAPSTATS_GetMutex());
   time_t cur_time = time(0);
   if ( cur_time > MAPSTATS_last_time_hour+60*60 ) {
     // dump one hour stats

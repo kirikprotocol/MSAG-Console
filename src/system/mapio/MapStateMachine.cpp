@@ -493,7 +493,9 @@ static void SendOkToSmsc(MapDialog* dialog)
   desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
   cmd->get_resp()->setDescriptor(desc);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-  __map_trace2__("Sent OK to SMSC: dlg 0x%x MSC = %s, IMSI = %s, %s",dialog->dialogid_map,dialog->s_msc.c_str(), dialog->s_imsi.c_str(), RouteToString(dialog).c_str());
+  __map_trace2__("Sent OK to SMSC: dlg 0x%x MSC(%d) = %s, IMSI(%d) = %s, %s",
+                   dialog->dialogid_map,dialog->s_msc.length(),dialog->s_msc.c_str(),
+                 dialog->s_imsi.length(),dialog->s_imsi.c_str(), RouteToString(dialog).c_str());
 }
 
 static void QueryHlrVersion(MapDialog* dialog)

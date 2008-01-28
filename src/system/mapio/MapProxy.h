@@ -100,7 +100,7 @@ public:
       if( cmd->get_commandId() == SUBMIT && inqueue.Count()==MAP_PROXY_QUEUE_LIMIT )
       {
         __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
-        throw ProxyQueueLimitException();
+        throw ProxyQueueLimitException(inqueue.Count(),MAP_PROXY_QUEUE_LIMIT);
       }
       inqueue.Push(cmd);
     }
