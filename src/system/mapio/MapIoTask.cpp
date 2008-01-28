@@ -461,6 +461,7 @@ void MapIoTask::dispatcher()
           if(dlg->isLocked)
           {
             dlg->cmdQueue.Push(message);
+	    __map_trace2__("MAPIO::Enqueed msg:p=%x,sz=%d,dlgid=%x",message.primitive,message.size,dlgId);
             continue;
           }
           dlg->isLocked=true;
@@ -474,22 +475,20 @@ void MapIoTask::dispatcher()
 
     if(!dlg.isnull())
     {
-      bool haveCmds=false;
-      do
+      for(;;)
       {
         MSG_T msg;
         {
           MutexGuard dlgMg(dlg->mutex);
+	  if(!dlg->cmdQueue.Count())
+	  {
+            dlg->isLocked=false;
+	    break;
+	  }
           dlg->cmdQueue.Pop(msg);
-          haveCmds=dlg->cmdQueue.Count()!=0;
         }
         handleMessage(msg);
         EINSS7CpReleaseMsgBuffer(&msg);
-      }while(haveCmds);
-
-      {
-        MutexGuard dlgMg(dlg->mutex);
-        dlg->isLocked=false;
       }
     }
 
@@ -508,6 +507,17 @@ void MapIoTask::dispatcher()
 
 void MapIoTask::handleMessage(MSG_T& message)
 {
+  __map_trace2__("MAPIO::Handled msg:p=%d,sz=%d,buf=%p",message.primitive,message.size,message.msg_p);
+  if(smsc::logger::_map_cat->isDebugEnabled())
+  {
+    smsc::core::buffers::TmpBuf<char,1024> text(message.size*4+1);
+    int k = 0;
+    for ( int i=0; i<message.size; i++)
+    {
+      k+=sprintf(text.get()+k,"%02x ",(unsigned)message.msg_p[i]);
+    }
+    __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "MAPIO:LMessage dump: %s",text.get());
+  }
   USHORT_T map_result;
   try {
     MapDialogContainer::getInstance()->mapPacketReceived();
