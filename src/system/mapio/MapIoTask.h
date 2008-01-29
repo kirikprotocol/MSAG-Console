@@ -389,6 +389,16 @@ struct MapDialog{
     return this;
   }
 
+  MapDialog* AddRefIfAllocated()
+  {
+    MutexGuard g(mutex);
+    if(!isAllocated)return 0;
+    ++ref_count;
+    __map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
+    return this;
+  }
+
+
   void Clean() {
     MutexGuard g(mutex);
     state = MAPST_START;
@@ -680,17 +690,9 @@ public:
     }
     if(dlgPool[lssn]==0)
     {
-      return 0;
+      throw Exception("Unsupported ssn:%d",lssn);
     }
-    MapDialog* dlg = dlgPool[lssn][dialogueid];
-    if ( dlg->isAllocated )
-    {
-      return dlg->AddRef();
-    }
-    else
-    {
-      return 0;
-    }
+    return dlgPool[lssn][dialogueid]->AddRefIfAllocated();
   }
 
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2,bool incStat=false)
