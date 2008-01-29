@@ -37,10 +37,19 @@ protected:
     bool delUnknown(SMS& data, uint16_t fieldId);
     void setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str);
 
+    void getIntTag(uint32_t val, Property* prop, int tag);
+    void getStrTag(const std::string& val, Property* prop, int tag);
+    void getBinTag(const char* val, uint16_t val_len, Property* prop, int tag);
+    void setIntTag(SMS& sms, int tag, Property* prop, const std::string& var);
+    void setStrTag(SMS& sms, int tag, Property* prop, const std::string& var);
+    void setBinTag(SMS& sms, int tag, Property* prop, const std::string& var);
+
     int64_t convertToIntX(const char* buf, uint16_t valeLen);
     int64_t convertToUIntX(const char* buf, uint16_t valeLen);
     bool hexDumpToBytes(const std::string& hex_dump, std::string& bytes); 
-
+    std::string uint32ToStr(uint32_t uint_val);
+    void getPropertyValue(Property* prop, uint16_t tag, const std::string& var,
+                          int64_t& int_val, std::string& str_val);
 public:
    
     virtual bool run(ActionContext& context);

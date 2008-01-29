@@ -8,6 +8,7 @@ namespace scag { namespace re { namespace actions {
 
 const smsc::util::HexDumpCFG HEX_DUMP_CFG = { 1, 0, " ", 0};
 const MAX_INT_SIZE = sizeof(int64_t);
+const size_t UINT32_STR_MAX_SIZE = 12;
 
 enum // tlv_types constants
 {
@@ -94,89 +95,7 @@ bool ActionTLV::getUnknown(SMS& data, uint16_t fieldId, Property* prop)
     {
         uint16_t valueLen = *(uint16_t *)(buff + i + 2);
         if(i + 4 + valueLen > len) return false;
-        bool int_val = true;
-        if (!valueLen) {
-          return true;
-        }
-        const char* valueStart = buff + i + 4;
-        switch (tlv_type) {
-        case TT_INT8: {
-          if (valueLen > sizeof(int8_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d byte)",
-                           valueLen, sizeof(int8_t));
-          }
-          prop->setInt(convertToIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_UINT8: {
-          if (valueLen > sizeof(uint8_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d byte)",
-                           valueLen, sizeof(uint8_t));
-          }
-          prop->setInt(convertToUIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_INT16: {
-          if (valueLen > sizeof(int16_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
-                           valueLen, sizeof(int16_t));
-          }
-          prop->setInt(convertToIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_UINT16: {
-          if (valueLen > sizeof(uint16_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
-                           valueLen, sizeof(uint16_t));
-          }
-          prop->setInt(convertToUIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_INT32: {
-          if (valueLen > sizeof(int32_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
-                           valueLen, sizeof(int32_t));
-          }
-          prop->setInt(convertToIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_UINT32: {
-          if (valueLen > sizeof(uint32_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
-                           valueLen, sizeof(uint32_t));
-          }
-          prop->setInt(convertToUIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_INT64: {
-          if (valueLen > sizeof(int64_t)) {
-            smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
-                           valueLen, sizeof(int64_t));
-          }
-          prop->setInt(convertToIntX(valueStart, valueLen));
-          break;
-        }
-        case TT_UNKNOWN:
-        case TT_HEXDUMP: {
-          std::string hexDump;
-          smsc::util::DumpHex(hexDump, valueLen, (unsigned char*)valueStart, HEX_DUMP_CFG);
-          prop->setStr(hexDump);
-          int_val = false;
-          break;
-        }
-        case TT_STR: 
-        case TT_STRN: {
-          std::string str(valueStart, valueLen);
-          prop->setStr(str);
-          int_val = false;
-          break;
-        }
-        }
-        if (int_val) {
-          smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", fieldId, prop->getInt());
-        } else {
-          smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", fieldId, prop->getStr().c_str());
-        }
+        getBinTag(buff + i + 4, valueLen, prop, fieldId);
         return true;
     }
     return false;
@@ -227,7 +146,24 @@ bool ActionTLV::hexDumpToBytes(const std::string& hex_dump, std::string& bytes) 
   return true;
 }
 
-void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& str)
+void ActionTLV::getPropertyValue(Property* prop, uint16_t tag, const std::string& var, int64_t& int_val, std::string& str_val) {
+  if (tlv_type == TT_UNKNOWN || tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_HEXDUMP) {
+      str_val = prop? prop->getStr() : var;
+      smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%s", tag, str_val.c_str());
+  } else  {
+    if (prop) {
+      int_val = prop->getInt();
+    } else {
+      int_val = atoll(var.c_str());
+      if(!int_val && (var[0] != '0' || var.size() != 1)) {
+          smsc_log_warn(logger, "Action 'tlv': Invalid value for TAG %d, val=%s", tag, var.c_str());
+      }
+    }
+    smsc_log_debug(logger, "Action 'tlv': TAG: %d. SetValue=%d", tag, int_val);
+  }
+}
+
+void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const std::string& var)
 {
     uint16_t valueLen = 0;
     int64_t int_val = 0;
@@ -239,20 +175,8 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
     if(getOptionalProperty(data, buff, len))
         cutField(buff, len, fieldId, tmp);
 
-    if (tlv_type == TT_UNKNOWN || tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_HEXDUMP) {
-        str_val = prop? prop->getStr() : str;
-        smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%s", fieldId, str_val.c_str());
-    } else  {
-      if (prop) {
-        int_val = prop->getInt();
-      } else {
-        int_val = atoll(str.c_str());
-        if(!int_val && (str[0] != '0' || str.size() != 1)) {
-            smsc_log_warn(logger, "Action 'tlv': Invalid value for Unknown TAG %d, val=%s", fieldId, str.c_str());
-        }
-      }
-      smsc_log_debug(logger, "Action 'tlv': Unknown Tag: %d. SetValue=%d", fieldId, int_val);
-    }
+    getPropertyValue(prop, fieldId, var, int_val, str_val);
+
     uint16_t netFieldId = htons(fieldId);
     tmp.append((char*)&netFieldId, 2);
     switch (tlv_type) {
@@ -365,6 +289,210 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
     smsc_log_debug(logger,"Action 'tlv':: inited");
 }
 
+std::string ActionTLV::uint32ToStr(uint32_t uint_val) {
+  char buf[UINT32_STR_MAX_SIZE];
+  memset(buf, 0, UINT32_STR_MAX_SIZE);
+  int n = snprintf(buf, UINT32_STR_MAX_SIZE - 1, "%u", uint_val);
+  return n ? std::string(buf, n) : std::string("");
+}
+
+void ActionTLV::getIntTag(uint32_t val, Property* prop, int tag) {
+  if (tlv_type == TT_STRN || tlv_type == TT_STR) {
+    prop->setStr(uint32ToStr(val));
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+  } else if (tlv_type == TT_HEXDUMP) {
+    std::string hexDump;
+    smsc::util::DumpHex(hexDump, sizeof(uint32_t), (unsigned char*)&val, HEX_DUMP_CFG);
+    prop->setStr(hexDump);
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+  } else {
+    prop->setInt(val);
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
+  }
+}
+
+void ActionTLV::getStrTag(const std::string& val, Property* prop, int tag) {
+  if (tlv_type == TT_STRN || tlv_type == TT_STR || tlv_type == TT_UNKNOWN) {
+    prop->setStr(val);
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+  } else if (tlv_type == TT_HEXDUMP) {
+    std::string hexDump;
+    smsc::util::DumpHex(hexDump, val.size(), (unsigned char*)val.c_str(), HEX_DUMP_CFG);
+    prop->setStr(hexDump);
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+  } else {
+    prop->setInt(atoll(val.c_str()));
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
+  }
+}
+
+void ActionTLV::getBinTag(const char* val, uint16_t val_len, Property* prop, int tag) {
+  bool int_val = true;
+  if (!val || !val_len) {
+    return;
+  }
+  switch (tlv_type) {
+  case TT_INT8: {
+    if (val_len > sizeof(int8_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d byte)",
+                     val_len, sizeof(int8_t));
+    }
+    prop->setInt(convertToIntX(val, val_len));
+    break;
+  }
+  case TT_UINT8: {
+    if (val_len > sizeof(uint8_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d byte)",
+                     val_len, sizeof(uint8_t));
+    }
+    prop->setInt(convertToUIntX(val, val_len));
+    break;
+  }
+  case TT_INT16: {
+    if (val_len > sizeof(int16_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                     val, sizeof(int16_t));
+    }
+    prop->setInt(convertToIntX(val, val_len));
+    break;
+  }
+  case TT_UINT16: {
+    if (val_len > sizeof(uint16_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                     val_len, sizeof(uint16_t));
+    }
+    prop->setInt(convertToUIntX(val, val_len));
+    break;
+  }
+  case TT_INT32: {
+    if (val_len > sizeof(int32_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                     val_len, sizeof(int32_t));
+    }
+    prop->setInt(convertToIntX(val, val_len));
+    break;
+  }
+  case TT_UINT32: {
+    if (val_len > sizeof(uint32_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                     val_len, sizeof(uint32_t));
+    }
+    prop->setInt(convertToUIntX(val, val_len));
+    break;
+  }
+  case TT_INT64: {
+    if (val_len > sizeof(int64_t)) {
+      smsc_log_warn(logger,"Action 'tlv':: value length (%d bytes) greater than, size of value type (%d bytes)",
+                     val_len, sizeof(int64_t));
+    }
+    prop->setInt(convertToIntX(val, val_len));
+    break;
+  }
+  case TT_UNKNOWN:
+  case TT_HEXDUMP: {
+    std::string hexDump;
+    smsc::util::DumpHex(hexDump, val_len, (unsigned char*)val, HEX_DUMP_CFG);
+    prop->setStr(hexDump);
+    int_val = false;
+    break;
+  }
+  case TT_STR: 
+  case TT_STRN: {
+    std::string str(val, val_len);
+    prop->setStr(str);
+    int_val = false;
+    break;
+  }
+  }
+  if (int_val) {
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, prop->getInt());
+  } else {
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+  }
+}
+
+void ActionTLV::setIntTag(SMS& sms, int tag, Property* prop, const std::string& var) {
+  if (tlv_type == TT_STR || tlv_type == TT_STRN) {
+    smsc_log_warn(logger, "Action 'tlv': Tag: %d. Can't set string value to int tag", tag);
+    return;
+  }
+  if (tlv_type == TT_HEXDUMP) {
+    smsc_log_warn(logger, "Action 'tlv': Tag: %d. Can't set hex dump value to int tag", tag);
+    return;
+  }
+  int int_val;
+  if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
+  {
+      int_val = strtol(var.c_str(), NULL, 0);
+      if(!int_val && (var[0] != '0' || var.length() != 1)) {
+          smsc_log_error(logger, "Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, var.c_str());
+          return;
+      }
+  }
+  sms.setIntProperty(tag, prop ? (uint32_t)prop->getInt() : int_val);
+  smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? (uint32_t)prop->getInt() : int_val);
+}
+
+void ActionTLV::setStrTag(SMS& sms, int tag, Property* prop, const std::string& var) {
+  if (tlv_type == TT_STR || tlv_type == TT_STRN || tlv_type == TT_UNKNOWN) {
+    sms.setStrProperty(tag, prop ? prop->getStr().c_str() : var.c_str());
+    smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%s", tag, prop ? prop->getStr().c_str() : var.c_str());
+    return;
+  }
+  if (tlv_type == TT_HEXDUMP) {
+    smsc_log_warn(logger, "Action 'tlv': Tag: %d. Can't set hex dump value to string tag", tag);
+    return;
+  }
+  smsc_log_warn(logger, "Action 'tlv': Tag: %d. Can't set int value to string tag", tag);
+}
+
+void ActionTLV::setBinTag(SMS& sms, int tag, Property* prop, const std::string& var) {
+  string str_val;
+  int64_t int_val = 0;
+  getPropertyValue(prop, tag, var, int_val, str_val);
+
+  switch (tlv_type) {
+  case TT_UNKNOWN:
+  case TT_HEXDUMP: {
+    std::string bytes("");
+    if (hexDumpToBytes(str_val, bytes) && bytes.size() > 0) {
+      sms.setBinProperty(tag, bytes.c_str(), bytes.size());
+      smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%s", tag, bytes.c_str());
+    } else {
+      smsc_log_warn(logger, "Action 'tlv': Tag: %d. Invalid hex dump: \'%s\'",
+                     tag, str_val.c_str());
+    }
+    break;
+  }
+  case TT_INT8:
+  case TT_UINT8: {
+    uint8_t set_val = (uint8_t)int_val;
+    sms.setBinProperty(tag, (char *)&set_val, sizeof(uint8_t));
+  }
+  case TT_INT16:
+  case TT_UINT16: {
+    uint16_t set_val = (uint16_t)int_val;
+    sms.setBinProperty(tag, (char *)&set_val, sizeof(uint16_t));
+  }
+  case TT_INT32:
+  case TT_UINT32: {
+    uint32_t set_val = (uint32_t)int_val;
+    sms.setBinProperty(tag, (char *)&set_val, sizeof(uint32_t));
+  }
+  case TT_INT64: {
+    sms.setBinProperty(tag, (char *)&int_val, sizeof(int64_t));
+  }
+  case TT_STR: {
+    sms.setBinProperty(tag, str_val.c_str(), str_val.size());
+    break;
+  }
+  case TT_STRN: {
+    sms.setBinProperty(tag, str_val.c_str(), str_val.size() + 1);
+    break;
+  }
+  }
+}
+
 bool ActionTLV::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'tlv' type=%d, %d", type, ftVar);
@@ -421,12 +549,17 @@ bool ActionTLV::run(ActionContext& context)
                 return true;
             }
             if(tt == SMS_INT_TAG) {
-                prop->setInt(sms.getIntProperty(tag));
-                smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%d", tag, (uint32_t)prop->getInt());
+              uint32_t val = sms.getIntProperty(tag);
+              getIntTag(val, prop, tag);
             }
             else if(tt == SMS_STR_TAG) {
-                prop->setStr(sms.getStrProperty(tag | (SMS_STR_TAG << 8)));
-                smsc_log_debug(logger, "Action 'tlv': Tag: %d. GetValue=%s", tag, prop->getStr().c_str());
+              std::string val = sms.getStrProperty(tag | (SMS_STR_TAG << 8));
+              getStrTag(val, prop, tag);
+            } 
+            else if (tt == SMS_BIN_TAG) {
+              unsigned val_len = 0;
+              const char* val = sms.getBinProperty(tag | (SMS_BIN_TAG << 8), &val_len);
+              getBinTag(val, (uint16_t)val_len, prop, tag);
             }
         }
         else
@@ -440,25 +573,18 @@ bool ActionTLV::run(ActionContext& context)
     {
         if(tag <= SMS_LAST_TAG)
         {
-            if(tt == SMS_INT_TAG)
-            {
-                int val;
-                if(ftVar == ftUnknown && (tag >> 8) == SMS_INT_TAG)
-                {
-                    val = strtol(strVar.c_str(), NULL, 0);
-                    if(!val && (strVar[0] != '0' || strVar.length() != 1)) {
-                        smsc_log_error(logger, "Action 'tlv': Invalid value for integer TAG %d, var=%s", tag, strVar.c_str());
-                        return true;
-                    }
-                }
-                sms.setIntProperty(tag, prop ? (uint32_t)prop->getInt() : val);
-                smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%d", tag, prop ? (uint32_t)prop->getInt() : val);
-            }
-            else if(tt == SMS_STR_TAG)
-            {
-                sms.setStrProperty(tag, prop ? prop->getStr().c_str() : strVar.c_str());
-                smsc_log_debug(logger, "Action 'tlv': Tag: %d. SetValue=%s", tag, prop ? prop->getStr().c_str() : strVar.c_str());
-            }
+          if(tt == SMS_INT_TAG)
+          {
+            setIntTag(sms, tag, prop, strVar);
+          }
+          else if(tt == SMS_STR_TAG)
+          {
+            setStrTag(sms, tag, prop, strVar);
+          } 
+          else if (tt == SMS_BIN_TAG)
+          {
+            setBinTag(sms, tag, prop, strVar);
+          }
         }
         else
         {
