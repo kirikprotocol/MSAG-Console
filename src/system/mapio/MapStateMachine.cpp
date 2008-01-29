@@ -1166,12 +1166,6 @@ static bool SendSms(MapDialog* dialog){
   //__map_trace2__("%s: chain size is %d mms=%d dlg->mms=%s dlg->invoke=%d",__func__,dialog->chain.size(),mms,dialog->mms?"true":"false", (int)dialog->invokeId);
 
   dialog->state = MAPST_WaitSmsConf;
-  if ( !dialog->mms ) {
-    dialog->invokeId = 0;
-    dialog->state = MAPST_WaitOpenConf;
-    checkMapReq( Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0), __func__);
-    dialog->id_opened = true;
-  }
 
   dialog->smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
   dialog->smRpOa.addrLen = (dialog->m_scAddr.addressLength+1)/2+1;
@@ -1181,6 +1175,15 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
+
+  if ( !dialog->mms )
+  {
+    dialog->invokeId = 0;
+    dialog->state = MAPST_WaitOpenConf;
+    checkMapReq( Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0), __func__);
+    dialog->id_opened = true;
+  }
+
   if ( dialog->version > 1
        && !dialog->mms
        && (ui->signalInfoLen > (143-(dialog->smRpOa.addrLen+1)-(dialog->smRpDa.addrLen+1)-(dialog->scAddr.ss7AddrLen))

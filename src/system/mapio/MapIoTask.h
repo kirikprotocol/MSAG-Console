@@ -737,6 +737,7 @@ public:
     MutexGuard mg(dlg->mutex);
     if(!dlg->isAllocated)
     {
+      __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)msg.primitive,(unsigned int)dialogueid,(unsigned int)lssn);
       return 0;
     }
     if(dlg->isLocked)
@@ -895,8 +896,6 @@ public:
 
   MapDialog* createOrAttachSMSCUSSDDialog(unsigned smsc_did,ET96MAP_LOCAL_SSN_T lssn,const string& abonent, const SmscCommand& cmd)
   {
-    //if ( abonent.length() == 0 )
-    //  throw runtime_error("MAP::createOrAttachSMSCDialog: can't create MT dialog without abonent");
     ET96MAP_DIALOGUE_ID_T map_dialog;
     {
       MutexGuard g(sync);
@@ -1046,7 +1045,10 @@ public:
   DialogRefGuard(MapDialog* d = 0):dialog(d){/*d->AddRef();*/}
   ~DialogRefGuard()
   {
-    release();
+    if(dialog)
+    {
+      dialog->Release();
+    }
   }
   void assign(MapDialog* d){
     if ( dialog == d )
@@ -1055,18 +1057,10 @@ public:
     }
     if ( dialog )
     {
-      release();
+      dialog->Release();
     }
     dialog = d;
     dialog->lockedAt = time(NULL);
-  }
-  void release()
-  {
-    if ( dialog )
-    {
-      dialog->Release();
-    }
-    dialog=0;
   }
   bool isnull()
   {

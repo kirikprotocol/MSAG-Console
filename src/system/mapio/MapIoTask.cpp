@@ -454,7 +454,6 @@ void MapIoTask::dispatcher()
           dlg.assign(MapDialogContainer::getInstance()->getLockedDialogOrEnqueue(dlgId,lssn,message));
           if(dlg.isnull())
           {
-            __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)message.primitive,(unsigned int)dlgId,(unsigned int)lssn);
             continue;
           }
         }
