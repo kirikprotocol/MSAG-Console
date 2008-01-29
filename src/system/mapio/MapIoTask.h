@@ -165,7 +165,7 @@ public:
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 
-static const unsigned MAX_DIALOGID_POOLED  = 8*2000+1;
+static const unsigned MAX_DIALOGID_POOLED  = 32*1024-1;
 
 
 /*
@@ -790,6 +790,7 @@ public:
     }catch(...)
     {
       MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+      throw;
     }
   }
 
