@@ -375,38 +375,34 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
   }
   __require__(dialog->ssn==ssn);
   try{
-    if ( !dialog.isnull() )
+    bool isChainEmpty=dialog->chain.empty();
+
+    __map_trace2__("%s: dropping dlg 0x%x, chain is empty %s , dropChain %d, associate:%p",__func__,dialog->dialogid_map,isChainEmpty?"yes":"no",dialog->dropChain, dialog->associate);
+    if ( isChainEmpty )
     {
-      __map_trace2__("%s: dropping dlg 0x%x, chain size %d , dropChain %d, associate:%p",__func__,dialog->dialogid_map,dialog->chain.size(),dialog->dropChain, dialog->associate);
-//      unsigned __dialogid_map = dialog->dialogid_map;
-//      unsigned __dialogid_smsc = 0;
-      if ( dialog->chain.size() == 0 ) {
-        if ( dialog->associate != 0 && dialog->state != MAPST_END )
-        {
-          dialog->associate->hlrVersion = dialog->hlrVersion;
-          ContinueImsiReq(dialog->associate,"","",dialog->routeErr);
-          dialog->state = MAPST_END;
-        }
-        else if ( NeedNotifyHLR(dialog.get()) )
-        {
-          try{
-            NotifyHLR(dialog.get());
-            return; // do not drop dialog!
-          }catch(exception& e){
-            // drop dialog
-            if ( dialog->id_opened ) {
-              AbortMapDialog(dialog->dialogid_map,dialog->ssn);
-              dialog->id_opened = false;
-            }
-            __map_warn2__("%s: <exception> %s",__func__,e.what());
-          }
-        }
-        //MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
-        //__map_trace2__("MAP::%s: 0x%x - closed and droped - ",__func__,dialog->dialogid_map);
-        //if ( dialog
-        //return;
-        goto dropDialogLabel;
+      if ( dialog->associate != 0 && dialog->state != MAPST_END )
+      {
+        dialog->associate->hlrVersion = dialog->hlrVersion;
+        ContinueImsiReq(dialog->associate,"","",dialog->routeErr);
+        dialog->state = MAPST_END;
       }
+      else if ( NeedNotifyHLR(dialog.get()) )
+      {
+        try{
+          NotifyHLR(dialog.get());
+          return; // do not drop dialog!
+        }catch(exception& e)
+        {
+          // drop dialog
+          if ( dialog->id_opened )
+          {
+            AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+            dialog->id_opened = false;
+          }
+          __map_warn2__("%s: <exception> %s",__func__,e.what());
+        }
+      }
+      dialog->dropChain=true;
     }
   } catch (std::exception &e) {
     __map_warn2__("%s: exception %s",__func__,e.what());
@@ -414,26 +410,39 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
     __map_warn2__("%s: unknown exception",__func__);
   }
   __map_trace2__("%s: restart on next in chain",__func__);
-  if ( dialog->dropChain ) {
-    //MutexGuard(dialog->mutex);
-dropDialogLabel:
-    MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map,dialog->ssn);
-    for (;!dialog->chain.empty();dialog->chain.pop_front())
+  if ( dialog->dropChain )
+  {
     {
-      try{
-        SmscCommand cmd = dialog->chain.front();
-        SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::SUBSCRBUSYMT));
-      }catch(exception& e){
-        __map_warn2__("%s: exception %s",__func__,e.what());
-      }catch(...){
-        __map_warn2__("%s: unknown exception",__func__);
+      MutexGuard(dialog->mutex);
+      for (;!dialog->chain.empty();dialog->chain.pop_front())
+      {
+        try{
+          SmscCommand cmd = dialog->chain.front();
+          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::SUBSCRBUSYMT));
+        }catch(exception& e){
+          __map_warn2__("%s: exception %s",__func__,e.what());
+        }catch(...){
+          __map_warn2__("%s: unknown exception",__func__);
+        }
       }
     }
-  }else{
-    SmscCommand cmd = dialog->chain.front();
-    dialog->chain.pop_front();
-    dialog->Clean();
-    MAPIO_PutCommand(cmd, dialog.get());
+    MapDialogContainer::getInstance()->dropDialog(dialog.get());
+  }else
+  {
+    SmscCommand cmd;
+    {
+      MutexGuard mg(dialog->mutex);
+      if(!dialog->chain.empty())
+      {
+        cmd = dialog->chain.front();
+        dialog->chain.pop_front();
+        dialog->Clean();
+      }
+    }
+    if(cmd.IsOk())
+    {
+      MAPIO_PutCommand(cmd, dialog.get());
+    }
   }
 }
 
@@ -1142,7 +1151,7 @@ static bool SendSms(MapDialog* dialog){
 
   bool mms = FALSE;
   if( dialog->version > 1 ) {
-    if( dialog->chain.size() != 0 ) {
+    if( !dialog->chain.empty() ) {
       mms = TRUE;
     } else if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) ) {
       mms = TRUE;
@@ -1154,7 +1163,7 @@ static bool SendSms(MapDialog* dialog){
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   SetVersion(appContext,dialog->version);
   bool segmentation = false;
-  __map_trace2__("%s: chain size is %d mms=%d dlg->mms=%s dlg->invoke=%d",__func__,dialog->chain.size(),mms,dialog->mms?"true":"false", (int)dialog->invokeId);
+  //__map_trace2__("%s: chain size is %d mms=%d dlg->mms=%s dlg->invoke=%d",__func__,dialog->chain.size(),mms,dialog->mms?"true":"false", (int)dialog->invokeId);
 
   dialog->state = MAPST_WaitSmsConf;
   if ( !dialog->mms ) {
@@ -1196,22 +1205,30 @@ static bool SendSms(MapDialog* dialog){
 static void SendNextMMS(MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x  (state %d/NEXTMMS)",__func__,dialog->dialogid_map,dialog->state);
-  if ( dialog->chain.size() == 0 ) {
-    if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) ) {
-      if( !dialog->wasDelivered ) {
+  if ( dialog->chain.empty() )
+  {
+    if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) )
+    {
+      if( !dialog->wasDelivered )
+      {
         __map_trace__("SendNextMMS: messages was not delivered. Aborting long message sending");
         AbortMapDialog( dialog->dialogid_map, dialog->ssn );
         DropMapDialog(dialog);
         return;
-      } else {
+      } else
+      {
         __map_trace2__("SendNextMMS: no messages in chain. Waiting long message next part for %d", dialog->sms.get()->getConcatMsgRef());
         dialog->state = MAPST_WaitNextMMS;
         return;
       }
     } else throw runtime_error("SendNextMMS: has no messages to send");
   }
-  SmscCommand cmd = dialog->chain.front();
-  dialog->chain.pop_front();
+  SmscCommand cmd;
+  {
+    MutexGuard mg(dialog->mutex);
+    cmd = dialog->chain.front();
+    dialog->chain.pop_front();
+  }
   dialog->dialogid_smsc = cmd->get_dialogId();
   dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
   SendSms(dialog);
@@ -1610,6 +1627,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
                 // Seems PSSR_RESP goes earlier than submitResp
                 __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
+                MutexGuard mg(dialog->mutex);
                 dialog->chain.insert(dialog->chain.begin(), cmd);
                 return;
               } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
@@ -1636,6 +1654,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf ) {
                   // Seems deliver goes earlier than submitResp
                   __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
+                  MutexGuard mg(dialog->mutex);
                   dialog->chain.insert(dialog->chain.begin(), cmd);
                   return;
                 } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce)) {
@@ -1824,11 +1843,18 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             DoUSSRUserResponceError(cmd,dialog.get());
           } else
           {
-            if( dialog->chain.size() > 0 )
+            SmscCommand cmd_c;
             {
-              SmscCommand cmd_c = dialog->chain.front();
-              dialog->chain.pop_front();
-              __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+              MutexGuard mg(dialog->mutex);
+              if( !dialog->chain.empty() )
+              {
+                SmscCommand cmd_c = dialog->chain.front();
+                dialog->chain.pop_front();
+                __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+              }
+            }
+            if(cmd_c.IsOk())
+            {
               MAPIO_PutCommand(cmd_c, 0);
             }
           }
@@ -1849,10 +1875,18 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           DropMapDialog(dialog.get());
         } else {
           dialog->state = MAPST_ReadyNextUSSDCmd;
-          if( dialog->chain.size() > 0 ) {
-            SmscCommand cmd_c = dialog->chain.front();
-            dialog->chain.pop_front();
-            __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+          SmscCommand cmd_c;
+          {
+            MutexGuard mg(dialog->mutex);
+            if( !dialog->chain.empty() )
+            {
+              SmscCommand cmd_c = dialog->chain.front();
+              dialog->chain.pop_front();
+              __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+            }
+          }
+          if(cmd_c.IsOk())
+          {
             MAPIO_PutCommand(cmd_c, 0);
           }
         }
@@ -1871,11 +1905,18 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         } else
         {
           dialog->state = MAPST_ReadyNextUSSDCmd;
-          if( dialog->chain.size() > 0 )
+          SmscCommand cmd_c;
           {
-            SmscCommand cmd_c = dialog->chain.front();
-            dialog->chain.pop_front();
-            __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+            MutexGuard mg(dialog->mutex);
+            if( !dialog->chain.empty() )
+            {
+              SmscCommand cmd_c = dialog->chain.front();
+              dialog->chain.pop_front();
+              __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
+            }
+          }
+          if(cmd_c.IsOk())
+          {
             MAPIO_PutCommand(cmd_c, 0);
           }
         }
@@ -2481,6 +2522,7 @@ USHORT_T Et96MapOpenInd (
   ET96MAP_ADDRESS_T *origRef_sp,
   ET96MAP_USERDATA_T *specificInfo_sp)
 {
+  DialogRefGuard dialog;
   try{
     __map_trace2__("%s: dialog 0x%x ctx=%d ver=%d dstref=%p orgref=%p",__func__,dialogueId,appContext_sp->acType,appContext_sp->version,destRef_sp,origRef_sp );
     if( appContext_sp->version == 1 && appContext_sp->acType == ET96MAP_NETWORK_FUNCTIONAL_SS_CONTEXT && !MapDialogContainer::getUssdV1Enabled()) {
@@ -2489,7 +2531,7 @@ USHORT_T Et96MapOpenInd (
       warnMapReq( Et96MapUAbortReq( localSsn, dialogueId, 0, 0, 0, 0 ), __func__);
       return ET96MAP_E_OK;
     }
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));//,appContext_sp->version));
+    dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));//,appContext_sp->version));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
     if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen >= 3 )
@@ -2510,18 +2552,14 @@ USHORT_T Et96MapOpenInd (
       throw runtime_error("MAP:: can't create dialog");
     dialog->state = MAPST_WaitSms;
   }
-  catch(ProxyQueueLimitException& e)
-  {
-    __map_warn2__("%s: dialogid 0x%x %s",__func__,dialogueId,e.what());
-    ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    warnMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
-    warnMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
-  }
   catch(exception& e)
   {
     __map_warn2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-    MapDialogContainer::getInstance()->dropDialog(dialogueId,localSsn);
+    if(!dialog.isnull())
+    {
+      MapDialogContainer::getInstance()->dropDialog(dialog.get());
+    }
     warnMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
     warnMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
   }

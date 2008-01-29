@@ -439,7 +439,7 @@ void MapIoTask::dispatcher()
         if(message.primitive==MAP_OPEN_IND)
         {
           try{
-            dlg.assign(MapDialogContainer::getInstance()->createDialog(dlgId,lssn,message.msg_p[5],true));
+            dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,message.msg_p[5]));
           }
           catch(ProxyQueueLimitException& e)
           {
@@ -451,22 +451,12 @@ void MapIoTask::dispatcher()
           }
         }else
         {
-          dlg.assign(MapDialogContainer::getInstance()->getDialog(dlgId,lssn,true));
+          dlg.assign(MapDialogContainer::getInstance()->getLockedDialogOrEnqueue(dlgId,lssn,message));
           if(dlg.isnull())
           {
             __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)message.primitive,(unsigned int)dlgId,(unsigned int)lssn);
             continue;
           }
-        }
-        {
-          MutexGuard dlgMg(dlg->mutex);
-          if(dlg->isLocked)
-          {
-            dlg->cmdQueue.Push(message);
-      __map_trace2__("MAPIO::Enqueed msg:p=%x,sz=%d,dlgid=%x",message.primitive,message.size,dlgId);
-            continue;
-          }
-          dlg->isLocked=true;
         }
       }
 
