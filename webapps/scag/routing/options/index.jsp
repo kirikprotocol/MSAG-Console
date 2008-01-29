@@ -56,8 +56,8 @@
                         <input type="hidden" name="abonAddrType" value="${pls.name}_${rowN}">
                     </td>
                     <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
-                    <td width="65%"><img src="content/images/but_del.gif" alt="" onClick="removeRow(opForm.all.abon_address_tbl, 'address_place_${pls.name}_${rowN}');"
-                                style="cursor:hand;"></td>
+                    <td width="65%"><img src="content/images/but_del.gif" alt="" onClick="removeRow('abon_address_tbl', 'address_place_${pls.name}_${rowN}');"
+                                style="cursor:pointer;"></td>
                 </tr>
                 <c:set var="rowN" value="${rowN+1}"/>
             </c:forEach>
@@ -80,8 +80,8 @@
                     <input id="newAbonAddress" class="txt" size="50" name="newAbonAddress">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Global Address place"
-                         onclick="addGlobAddressPlace(opForm.all.newAbonAddress, opForm.all.typeSelectAddress.options[typeSelectAddress.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addGlobAddressPlace('newAbonAddress', 'typeSelectAddress')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -113,8 +113,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_address_tbl, 'site_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('site_address_tbl', 'site_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -137,8 +137,8 @@
                         <input id="new_site_address" class="txt" size="50" name="new_site_address">
                     </td>
                     <td width="68%"><img src="content/images/but_add.gif" alt="Add new Default Address place"
-                                         onclick="addDefaultAddressPlace(opForm.all.new_site_address, opForm.all.typeSelectSite.options[typeSelectSite.selectedIndex].value)"
-                                         style="cursor:hand;"></td>
+                                         onclick="addDefaultAddressPlace('new_site_address', 'typeSelectSite')"
+                                         style="cursor:pointer;"></td>
                     <td>&nbsp;</td>
                 </tr>
             </table>
@@ -183,8 +183,8 @@
                         </td>
 
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.abon_usr_tbl, 'abon_usr_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('abon_usr_tbl', 'abon_usr_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -206,8 +206,8 @@
                     <input id="new_abon_usr" class="txt" size="50" name="new_abon_usr">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent USR"
-                         onclick="addAbonDefaultUSRplace(opForm.all.new_abon_usr, opForm.all.typeAbonSelectUsr.options[typeAbonSelectUsr.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addAbonDefaultUSRplace('new_abon_usr', 'typeAbonSelectUsr')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -247,8 +247,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_usr_tbl, 'site_usr_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('site_usr_tbl', 'site_usr_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -270,8 +270,8 @@
                     <input id="new_site_usr" class="txt" size="50" name="new_site_usr">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site  USR"
-                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addSiteDefaultUSRplace('new_site_usr', 'typeSelectUsrSite')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -315,8 +315,8 @@
                         </td>
 
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.abon_route_id_tbl, 'abon_route_id_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('abon_route_id_tbl', 'abon_route_id_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -338,8 +338,8 @@
                     <input id="new_abon_route_id" class="txt" size="50" name="new_abon_route_id">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent Route Id"
-                         onclick="addAbonDefaultRouteIdplace(opForm.all.new_abon_route_id, opForm.all.typeAbonSelectRouteId.options[typeAbonSelectRouteId.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addAbonDefaultRouteIdplace('new_abon_route_id', 'typeAbonSelectRouteId')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -379,8 +379,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_route_id_tbl, 'site_route_id_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('site_route_id_tbl', 'site_route_id_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -402,8 +402,8 @@
                     <input id="new_site_route_id" class="txt" size="50" name="new_site_route_id">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site  Route id"
-                         onclick="addSiteDefaultRouteIdplace(opForm.all.new_site_route_id, opForm.all.typeSelectRouteIdSite.options[typeSelectRouteIdSite.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addSiteDefaultRouteIdplace('new_site_route_id', 'typeSelectRouteIdSite')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -447,8 +447,8 @@
                         </td>
 
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.abon_service_id_tbl, 'abon_service_id_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('abon_service_id_tbl', 'abon_service_id_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -470,8 +470,8 @@
                     <input id="new_abon_service_id" class="txt" size="50" name="new_abon_service_id">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent Service Id"
-                         onclick="addAbonDefaultServiceIdplace(opForm.all.new_abon_service_id, opForm.all.typeAbonSelectServiceId.options[typeAbonSelectServiceId.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addAbonDefaultServiceIdplace('new_abon_service_id', 'typeAbonSelectServiceId')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -511,8 +511,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_service_id_tbl, 'site_service_id_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             onClick="removeRow('site_service_id_tbl', 'site_service_id_place_${pls.name}_${rowN}');"
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -534,8 +534,8 @@
                     <input id="new_site_service_id" class="txt" size="50" name="new_site_service_id">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site Service id"
-                         onclick="addSiteDefaultServiceIdplace(opForm.all.new_site_service_id, opForm.all.typeSelectServiceIdSite.options[typeSelectServiceIdSite.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         onclick="addSiteDefaultServiceIdplace('new_site_service_id', 'typeSelectServiceIdSite')"
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
