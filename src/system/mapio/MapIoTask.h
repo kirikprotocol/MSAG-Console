@@ -251,9 +251,9 @@ struct MapDialog{
   {
     InitDialog(0,0,0);
   }
-  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2)
+  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned argVersion=2)
   {
-    InitDialog(dialogid,lssn,version);
+    InitDialog(dialogid,lssn,argVersion);
   }
 
   void InitDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned argVersion=2)
@@ -672,6 +672,7 @@ public:
       throw Exception("DialogContainer: unsupported lssn:%d",lssn);
     }
     MapDialog* dlg=dlgPool[lssn][dialogueid];
+    MutexGuard mg(dlg->mutex);
     if(dlg->isAllocated)
     {
       throw Exception("DialogContainer: attempt to allocate already allocated dialog:%d/%d",dialogueid,lssn);
@@ -861,7 +862,11 @@ public:
     if(dlgPool[oldssn]!=0)
     {
       dlg = dlgPool[oldssn][did];
-      if ( !dlg->isAllocated )
+      bool isAllocated;
+      dlg->mutex.Lock();
+      isAllocated=dlg->isAllocated;
+      dlg->mutex.Unlock();
+      if ( !isAllocated )
       {
         dlg = 0;
       }
