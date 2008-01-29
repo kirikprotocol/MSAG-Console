@@ -6,7 +6,8 @@
 
         <script>
         function changeTransportId() {
-              var transport = opForm.all.transportId.options[opForm.all.transportId.selectedIndex].value;
+              var transport = getElementByIdUni("transportId").options[getElementByIdUni("transportId").selectedIndex].value;
+              var opForm = getElementByIdUni("opForm");
               if (location.href.indexOf("transportId")!=-1) {
                 var action = location.href.substring(0,location.href.indexOf("transportId")-1);
                 opForm.action=action;
@@ -15,6 +16,7 @@
               return true;
         }
         </script>
+        
         <table class=properties_list cellspacing=0 cellpadding=0>
             <col width="15%">
             <col width="100%">
