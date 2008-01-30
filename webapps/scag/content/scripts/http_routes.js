@@ -371,17 +371,50 @@ function toggleVisible(p, c) {
         c.runtimeStyle.display = o ? "none" : "block";
 }
 
-function removeAbonetSubj(rowId) {
+function removeAbonetSubj_(rowId) {
 //    var selectElem = opForm.all.abonSubjSelect;
 //    var tbl = opForm.all.abonents_table;
     var selectElem = getElementByIdUni("abonSubjSelect");
     var tbl = getElementByIdUni("abonents_table");
-    var rowElem = tbl.rows(rowId);
-    var subjValue = rowElem.all.subjAbon.value;
+    var rowElem = tbl.rows[rowId];
+//    var subjValue = rowElem.all.subjAbon.value;
+    var subjValue;
+    for(var i =0; i<rowElem.cells.length; i++){
+        var cell = rowElem.cells[i];
+        if(cell.id == 'td_subjAbon'){
+            subjValue = cell.innerHTML;
+        }
+    }
+//    alert('td_subjAbon' + subjValue);
     var oOption = document.createElement("OPTION");
     selectElem.options.add(oOption);
-    oOption.innerText = subjValue;
+//    oOption.innerText = subjValue;
+    oOption.text = subjValue;
     oOption.value = subjValue;
+    selectElem.disabled = false;
+    tbl.deleteRow(rowElem.rowIndex);
+}
+
+function removeAbonetSubj(rowId, subjName) {
+//    var selectElem = opForm.all.abonSubjSelect;
+//    var tbl = opForm.all.abonents_table;
+    var selectElem = getElementByIdUni("abonSubjSelect");
+    var tbl = getElementByIdUni("abonents_table");
+    var rowElem = tbl.rows[rowId];
+//    var subjValue = rowElem.all.subjAbon.value;
+//    var subjValue ;
+//    for(var i =0; i<rowElem.cells.length; i++){
+//        var cell = rowElem.cells[i];
+//        if(cell.id == 'td_subjAbon'){
+//            subjValue = cell.innerHTML;
+//        }
+//    }
+//    alert('td_subjAbon' + subjValue);
+    var oOption = document.createElement("OPTION");
+    selectElem.options.add(oOption);
+//    oOption.innerText = subjValue;
+    oOption.text = subjName;
+    oOption.value = subjName;
     selectElem.disabled = false;
     tbl.deleteRow(rowElem.rowIndex);
 }
@@ -397,7 +430,8 @@ function removeSiteSubj(rowId) {
           return false;
         }
     }
-    var selectElem = opForm.all.siteSubjSelect;
+//    var selectElem = opForm.all.siteSubjSelect;
+    var selectElem = getElementByIdUni("siteSubjSelect");
 //    var tbl = opForm.all.sites_table;
     var tbl = getElementByIdUni("sites_table");
     var rowElem = tbl.rows(rowId);
@@ -443,7 +477,8 @@ function addAbonentSubj() {
         newCell.innerHTML = subjValue + '<input id="subjAbon" type="hidden" name="abonSubj" value="' + subjValue + '">';
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeAbonetSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
+//        newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeAbonetSubj(\'' + newRow.id + '\');" style="cursor: pointer;">';
+        newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeAbonetSubj(\'' + newRow.id + '\',\'' + subjValue + '\');" style="cursor: pointer;">';
         newRow.appendChild(newCell);
         selectElem.options[selectElem.selectedIndex] = null;
         selectElem.focus();
@@ -479,6 +514,7 @@ function addSiteSubj() {
 }
 
 function addAbonentMask(valueElem) {
+    var valueElem = getElementByIdUni(valueElem);
     if (validateField(valueElem)) {
 //        var tbl = opForm.all.abonents_table;
         var tbl = getElementByIdUni("abonents_table");
@@ -542,7 +578,7 @@ function removeSection_(sectionName) {
         }
     }
     sectionElem = document.getElementById("sectionHeader_" + sectionName);
-    alert(sectionElem);
+//    alert(sectionElem);
 
       table = getElementByIdUni( "div_site_table" );
 //      var rowElem = table.rows[rowId];
@@ -578,7 +614,7 @@ function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
     var valueElem = getElementByIdUni(valueElem);
     var portElem = getElementByIdUni(portElem);
     if(document.getElementById(trim(valueElem.value)) != null){
-        alert(msgVal);
+        alert("! " + msgVal);
         return false;
     }
     if (!trimStr(portElem.value).length > 0)
