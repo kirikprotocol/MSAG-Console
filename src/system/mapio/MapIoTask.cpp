@@ -253,10 +253,7 @@ void MapIoTask::deinit( bool connected )
 {
   USHORT_T result;
   __map_warn__("deinitialize MAP_PROXY");
-  {
-    MutexGuard mapMutexGuard(mapMutex);
-    MapDialogContainer::destroyInstance();
-  }
+  MapDialogContainer::destroyInstance();
   if( connected ) disconnect();
 
   MsgExit();
@@ -310,24 +307,12 @@ void MapIoTask::dispatcher()
     MAP_isAlive = true;
     if ( isStopping )
     {
-      MutexGuard mapMutexGuard(mapMutex);
-      if(!deinited)
-      {
-        deinit(true);
-        deinited=true;
-      }
       return;
     }
     MAP_dispatching = true;
 
     if ( isStopping )
     {
-      MutexGuard mapMutexGuard(mapMutex);
-      if(!deinited)
-      {
-        deinit(true);
-        deinited=true;
-      }
       return;
     }
 

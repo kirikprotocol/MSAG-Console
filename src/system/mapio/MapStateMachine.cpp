@@ -374,8 +374,17 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
     return;
   }
   __require__(dialog->ssn==ssn);
+  //
   try{
-    bool isChainEmpty=dialog->chain.empty();
+    bool isChainEmpty;
+    {
+      MutexGuard mg(dialog->mutex);
+      isChainEmpty=dialog->chain.empty();
+      if(isChainEmpty || dialog->dropChain)
+      {
+        dialog->isDropping=true;
+      }
+    }
 
     __map_trace2__("%s: dropping dlg 0x%x, chain is empty %s , dropChain %d, associate:%p",__func__,dialog->dialogid_map,isChainEmpty?"yes":"no",dialog->dropChain, dialog->associate);
     if ( isChainEmpty )
@@ -402,7 +411,8 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
           __map_warn2__("%s: <exception> %s",__func__,e.what());
         }
       }
-      dialog->dropChain=true;
+      MapDialogContainer::getInstance()->dropDialog(dialog.get());
+      return;
     }
   } catch (std::exception &e) {
     __map_warn2__("%s: exception %s",__func__,e.what());
@@ -413,7 +423,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
   if ( dialog->dropChain )
   {
     {
-      MutexGuard(dialog->mutex);
+      MutexGuard mg(dialog->mutex);
       for (;!dialog->chain.empty();dialog->chain.pop_front())
       {
         try{
@@ -429,6 +439,8 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
     MapDialogContainer::getInstance()->dropDialog(dialog.get());
   }else
   {
+    // chain is not empty and !dropChain.
+    // clean dialog and processing next command in chain
     SmscCommand cmd;
     {
       MutexGuard mg(dialog->mutex);
@@ -1150,14 +1162,14 @@ static bool SendSms(MapDialog* dialog){
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
 
   bool mms = FALSE;
-  if( dialog->version > 1 ) {
-    if( !dialog->chain.empty() ) {
-      mms = TRUE;
-    } else if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) ) {
-      mms = TRUE;
-    }
+  if( dialog->version > 1 )
+  {
+    mms=!dialog->chain.empty() || dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND);
   }
-  if ( dialog->version < 2 ) mms = false;
+  if ( dialog->version < 2 )
+  {
+    mms = false;
+  }
 //  mms = false;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
@@ -1175,7 +1187,6 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-
   if ( !dialog->mms )
   {
     dialog->invokeId = 0;
@@ -1208,33 +1219,43 @@ static bool SendSms(MapDialog* dialog){
 static void SendNextMMS(MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x  (state %d/NEXTMMS)",__func__,dialog->dialogid_map,dialog->state);
-  if ( dialog->chain.empty() )
-  {
-    if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) )
-    {
-      if( !dialog->wasDelivered )
-      {
-        __map_trace__("SendNextMMS: messages was not delivered. Aborting long message sending");
-        AbortMapDialog( dialog->dialogid_map, dialog->ssn );
-        DropMapDialog(dialog);
-        return;
-      } else
-      {
-        __map_trace2__("SendNextMMS: no messages in chain. Waiting long message next part for %d", dialog->sms.get()->getConcatMsgRef());
-        dialog->state = MAPST_WaitNextMMS;
-        return;
-      }
-    } else throw runtime_error("SendNextMMS: has no messages to send");
-  }
   SmscCommand cmd;
+  bool needAbortDialog=false;
   {
     MutexGuard mg(dialog->mutex);
-    cmd = dialog->chain.front();
-    dialog->chain.pop_front();
+    if ( dialog->chain.empty() )
+    {
+      if( dialog->sms.get()->hasIntProperty(Tag::SMPP_MORE_MESSAGES_TO_SEND) )
+      {
+        if( !dialog->wasDelivered )
+        {
+          __map_trace__("SendNextMMS: messages was not delivered. Aborting long message sending");
+          needAbortDialog=true;
+          dialog->isDropping=true;
+        } else
+        {
+          __map_trace2__("SendNextMMS: no messages in chain. Waiting long message next part for %d", dialog->sms.get()->getConcatMsgRef());
+          dialog->state = MAPST_WaitNextMMS;
+          return;
+        }
+      } else throw runtime_error("SendNextMMS: has no messages to send");
+    }
+    if(!needAbortDialog)
+    {
+      cmd = dialog->chain.front();
+      dialog->chain.pop_front();
+    }
   }
-  dialog->dialogid_smsc = cmd->get_dialogId();
-  dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-  SendSms(dialog);
+  if(needAbortDialog)
+  {
+    AbortMapDialog( dialog->dialogid_map, dialog->ssn );
+    DropMapDialog(dialog);
+  }else
+  {
+    dialog->dialogid_smsc = cmd->get_dialogId();
+    dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+    SendSms(dialog);
+  }
 }
 
 static void SendSegmentedSms(MapDialog* dialog)
@@ -1631,7 +1652,15 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 // Seems PSSR_RESP goes earlier than submitResp
                 __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                 MutexGuard mg(dialog->mutex);
-                dialog->chain.insert(dialog->chain.begin(), cmd);
+                if(!dialog->isDropping)
+                {
+                  dialog->chain.insert(dialog->chain.begin(), cmd);
+                }else
+                {
+                  throw MAPDIALOG_FATAL_ERROR(
+                    FormatText("putCommand: Opss, dialogid 0x%x isDropping while trying to chain new command",
+                      dialog->dialogid_map));
+                }
                 return;
               } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
                 throw MAPDIALOG_BAD_STATE(FormatText("putCommand:  ussd resp bad state %d, dialogid 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
@@ -1658,7 +1687,15 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   // Seems deliver goes earlier than submitResp
                   __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                   MutexGuard mg(dialog->mutex);
-                  dialog->chain.insert(dialog->chain.begin(), cmd);
+                  if(!dialog->isDropping)
+                  {
+                    dialog->chain.insert(dialog->chain.begin(), cmd);
+                  }else
+                  {
+                    throw MAPDIALOG_FATAL_ERROR(
+                      FormatText("putCommand: Opss, dialogid 0x%x isDropping while trying to chain new command",
+                        dialog->dialogid_map));
+                  }
                   return;
                 } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce)) {
                   throw MAPDIALOG_BAD_STATE(

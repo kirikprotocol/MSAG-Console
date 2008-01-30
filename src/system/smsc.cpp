@@ -1410,6 +1410,8 @@ void Smsc::shutdown()
 
 #if defined(USE_MAP)
   MapIoTask *mapio=(MapIoTask*)mapioptr;
+  mapio->Stop();
+  delete mapio;
 #endif
 
   smsc::closedgroups::ClosedGroupsManager::Shutdown();
