@@ -51,81 +51,88 @@
     <br>
     <table class="properties_list" cellspacing="0" cellspadding="0" border="0">
 <%--        <tr><td style="cursor:hand;text-align:left"--%>
-        <tr><td style="cursor:pointer;text-align:left"
-                onClick="toggleVisible(pgs_http,cgs_http);">
-        <div align="left" id="pgs_http" class="collapsing_list_closed"><div class="page_subtitle">
-               <u><font size="2"><fmt:message>options.item.title.address.usr</fmt:message></font></u></div>
-            </div></td>
-            <tr id="cgs_http" style="display:none;"><td colspan="9" width="100%">
+        <tr>
+            <td style="cursor:pointer;text-align:left" onClick="toggleVisible('pgs_http','cgs_http');">
+                <div align="left" id="pgs_http" class="collapsing_list_closed">
+                    <div class="page_subtitle">
+                        <u><font size="2"><fmt:message>options.item.title.address.usr</fmt:message></font></u>
+                    </div>
+                </div>
+             </td>
+        </tr>
+        <tr id="cgs_http" style="display:block;"><td colspan="9" width="100%">
     <%--<sm-et:section title="Address/USR Placement Options" opened="false"  name="allplacement">--%>
-    <table cellpadding="0" cellspacing="0" width="100%">
+    <table id="cgs_http1" style="display:none" cellpadding="0" cellspacing="0" width="100%">
         <tr>
             <td align="left"><hr></td>
             <td align="left"><hr></td>
         </tr>
     </table>
     <br>
-    <table width="100%" cellpadding="0" cellspacing="0">
-        <tr><td>
-        <div class="page_subtitle">USR place:</div>
-        <br>
-            <table id="abon_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">
-                <c:set var="rowN" value="0"/>
-                <c:forEach items="${bean.abonentUsr}" var="pls">
-                    <tr class="row${rowN%3}" id="abon_usr_place_${pls.name}_${rowN}">
-                        <td width="7%"><select id="abonUsrSelect_${pls.name}_${rowN}"
-                                               name="abonUsrSelect_${pls.name}_${rowN}" class="txt">
-                            <c:forEach items="${bean.optionTypes}" var="i">
-                                <c:choose>
-                                    <c:when test="${pls.type==i}">
-                                        <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </select>
-                        </td>
-                        <td>&nbsp;</td>
-                            <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
-                        <td>
-                            <input type="text" size="45" style="color:black;" value="${pls.name}"
-                                   readonly="true"/>
-                            <input type="hidden" name="abonentUsrName" value="${pls.name}">
-                            <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
-                        </td>
+    <table id="cgs_http2" style="display:none" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td>
+                <div class="page_subtitle">USR place:</div>
+                <br>
+                <table id="abon_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">
+                    <c:set var="rowN" value="0"/>
+                    <c:forEach items="${bean.abonentUsr}" var="pls">
+                        <tr class="row${rowN%3}" id="abon_usr_place_${pls.name}_${rowN}">
+                            <td width="7%"><select id="abonUsrSelect_${pls.name}_${rowN}"
+                                                   name="abonUsrSelect_${pls.name}_${rowN}" class="txt">
+                                <c:forEach items="${bean.optionTypes}" var="i">
+                                    <c:choose>
+                                        <c:when test="${pls.type==i}">
+                                            <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                            </select>
+                            </td>
+                            <td>&nbsp;</td>
+                                <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
+                            <td>
+                                <input type="text" size="45" style="color:black;" value="${pls.name}"
+                                       readonly="true"/>
+                                <input type="hidden" name="abonentUsrName" value="${pls.name}">
+                                <input type="hidden" name="abonentUsrType" value="${pls.name}_${rowN}">
+                            </td>
 
-                        <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.abon_usr_tbl, 'abon_usr_place_${pls.name}_${rowN}');"
-                                             style="cursor:pointer;"></td>
-                    </tr>
-                    <c:set var="rowN" value="${rowN+1}"/>
-                </c:forEach>
-            </table>
-        <!--<br>-->
-        <hr width="50%" align="left"/>
-        <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
-            <col width="40%" align="left">
-            <col width="50%" align="left">
-            <col width="0%" align="left">
-            <tr valign="top">
-                <td width="7%"><select id="typeAbonSelectUsr" name="typeAbonSelectUsr" class="txt">
-                    <c:forEach items="${bean.optionTypes}" var="i">
-                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                            <td width="65%"><img src="content/images/but_del.gif" alt=""
+<%--                                                 onClick="removeRow(opForm.all.abon_usr_tbl, 'abon_usr_place_${pls.name}_${rowN}');"--%>
+                                                 onClick="removeRow('abon_usr_tbl', 'abon_usr_place_${pls.name}_${rowN}');"
+                                                 style="cursor:pointer;"></td>
+                        </tr>
+                        <c:set var="rowN" value="${rowN+1}"/>
                     </c:forEach>
-                </select>
-                </td>
-                <td width="25%">
-                    <input id="new_abon_usr" class="txt" size="50" name="new_abon_usr">
-                </td>
-                <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent USR"
-                         onclick="addAbonDefaultUSRplace(opForm.all.new_abon_usr, opForm.all.typeAbonSelectUsr.options[typeAbonSelectUsr.selectedIndex].value)"
-                         style="cursor:pointer;"></td>
-                <td>&nbsp;</td>
-            </tr>
-        </table>
-    </td>
+                </table>
+        <!--<br>-->
+            <hr width="50%" align="left"/>
+            <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+                <col width="40%" align="left">
+                <col width="50%" align="left">
+                <col width="0%" align="left">
+                <tr valign="top">
+                    <td width="7%"><select id="typeAbonSelectUsr" name="typeAbonSelectUsr" class="txt">
+                        <c:forEach items="${bean.optionTypes}" var="i">
+                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                        </c:forEach>
+                    </select>
+                    </td>
+                    <td width="25%">
+                        <input id="new_abon_usr" class="txt" size="50" name="new_abon_usr">
+                    </td>
+                    <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent USR"
+<%--                             onclick="addAbonDefaultUSRplace(opForm.all.new_abon_usr, opForm.all.typeAbonSelectUsr.options[typeAbonSelectUsr.selectedIndex].value)"--%>
+                             onclick="addAbonDefaultUSRplace('new_abon_usr', 'typeAbonSelectUsr')"
+                             style="cursor:pointer;"></td>
+                    <td>&nbsp;</td>
+                </tr>
+            </table>
+        </td>
         <td width="473">
         <div class="page_subtitle">USR place:</div>
         <br>
@@ -157,7 +164,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_usr_tbl, 'site_usr_place_${pls.name}_${rowN}');"
+<%--                                             onClick="removeRow(opForm.all.site_usr_tbl, 'site_usr_place_${pls.name}_${rowN}');"--%>
+                                             onClick="removeRow('site_usr_tbl', 'site_usr_place_${pls.name}_${rowN}');"
                                              style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
@@ -181,7 +189,8 @@
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
 <%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
-                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"
+<%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
+                         onclick="addSiteDefaultUSRplace('new_site_usr', 'typeSelectUsrSite')"
                          style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
@@ -191,7 +200,7 @@
     </table>
     <br>
     <!------------------------ address prefix| address place---------------->
-    <table width="100%" cellpadding="0" cellspacing="0">
+    <table id="cgs_http3" style="display:none" width="100%" cellpadding="0" cellspacing="0">
         <tr><td>
         <div class="page_subtitle">&nbsp;</div>
         <br>
@@ -249,7 +258,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_address_tbl, 'site_place_${pls.name}_${rowN}');"
+<%--                                             onClick="removeRow(opForm.all.site_address_tbl, 'site_place_${pls.name}_${rowN}');"--%>
+                                             onClick="removeRow('site_address_tbl', 'site_place_${pls.name}_${rowN}');"
                                              style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
@@ -273,7 +283,8 @@
                         <input id="new_site_address" class="txt" size="50" name="new_site_address">
                     </td>
                     <td width="68%"><img src="content/images/but_add.gif" alt="Add new Default Address place"
-                                         onclick="addDefaultAddressPlace(opForm.all.new_site_address, opForm.all.typeSelectSite.options[typeSelectSite.selectedIndex].value)"
+<%--                                         onclick="addDefaultAddressPlace(opForm.all.new_site_address, opForm.all.typeSelectSite.options[typeSelectSite.selectedIndex].value)"--%>
+                                         onclick="addDefaultAddressPlace('new_site_address', 'typeSelectSite')"
                                          style="cursor:pointer;"></td>
                     <td>&nbsp;</td>
                 </tr>
@@ -284,7 +295,7 @@
         </table>
 <%--</sm-et:section>--%>
     <!-- empty | route id-->
-    <table width="100%" cellpadding="0" cellspacing="0">
+    <table id="cgs_http4" style="display:none" width="100%" cellpadding="0" cellspacing="0">
         <tr><td>
         <div class="page_subtitle">&nbsp;</div>
         <br>
@@ -339,7 +350,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_route_id_tbl, 'site_route_id_place_${pls.name}_${rowN}');"
+<%--                                             onClick="removeRow(opForm.all.site_route_id_tbl, 'site_route_id_place_${pls.name}_${rowN}');"--%>
+                                             onClick="removeRow('site_route_id_tbl', 'site_route_id_place_${pls.name}_${rowN}');"
                                              style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
@@ -362,17 +374,19 @@
                     <input id="new_site_route_id" class="txt" size="50" name="new_site_route_id">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
-                         onclick="addSiteDefaultRouteIdplace(opForm.all.new_site_route_id, opForm.all.typeSelectRouteIdSite.options[typeSelectRouteIdSite.selectedIndex].value)"
+<%--                         onclick="addSiteDefaultRouteIdplace(opForm.all.new_site_route_id, opForm.all.typeSelectRouteIdSite.options[typeSelectRouteIdSite.selectedIndex].value)"--%>
+                         onclick="addSiteDefaultRouteIdplace('new_site_route_id', 'typeSelectRouteIdSite')"
                          style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
-        </td>         </tr>
+        </td>
+        </tr>
         </table>
     <!-- empty | route id-->
     <br>
     <!-- empty | service id-->
-    <table width="100%" cellpadding="0" cellspacing="0">
+    <table id="cgs_http5" style="display:none" width="100%" cellpadding="0" cellspacing="0">
         <tr><td>
         <div class="page_subtitle">&nbsp;</div>
         <br>
@@ -427,7 +441,8 @@
                         </td>
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
-                                             onClick="removeRow(opForm.all.site_service_id_tbl, 'site_service_id_place_${pls.name}_${rowN}');"
+<%--                                             onClick="removeRow(opForm.all.site_service_id_tbl, 'site_service_id_place_${pls.name}_${rowN}');"--%>
+                                             onClick="removeRow('site_service_id_tbl', 'site_service_id_place_${pls.name}_${rowN}');"
                                              style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
@@ -450,7 +465,8 @@
                     <input id="new_site_service_id" class="txt" size="50" name="new_site_service_id">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
-                         onclick="addSiteDefaultServiceIdplace(opForm.all.new_site_service_id, opForm.all.typeSelectServiceIdSite.options[typeSelectServiceIdSite.selectedIndex].value)"
+<%--                         onclick="addSiteDefaultServiceIdplace(opForm.all.new_site_service_id, opForm.all.typeSelectServiceIdSite.options[typeSelectServiceIdSite.selectedIndex].value)"--%>
+                         onclick="addSiteDefaultServiceIdplace('new_site_service_id', 'typeSelectServiceIdSite')"
                          style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
