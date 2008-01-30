@@ -30,7 +30,7 @@ const char*    SMSC_TRNS_FILE_NAME_FORMAT = "%02d.trs";
 StatisticsManager::StatisticsManager(const std::string& _location)
     :  logger(Logger::getInstance("smsc.stat.StatisticsManager")),
        currentIndex(0), bExternalFlush(false), isStarted(false), storage(_location)
-{     
+{
     resetCounters(0); resetCounters(1);
 }
 
@@ -50,10 +50,10 @@ void StatisticsManager::addError(IntHash<int>& hash, int errcode, int count/*=1*
 void StatisticsManager::updateAccepted(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
-    
-    statGeneral[currentIndex].accepted++; 
+
+    statGeneral[currentIndex].accepted++;
     statGeneral[currentIndex].incICounter();
-    
+
     const char* srcSmeId = info.smeId.c_str();
     if (srcSmeId && srcSmeId[0])
     {
@@ -65,7 +65,7 @@ void StatisticsManager::updateAccepted(const StatInfo& info)
         }
         if (stat) stat->incICounter();
     }
-    
+
     const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
@@ -121,7 +121,7 @@ void StatisticsManager::updateRejected(const StatInfo& info)
     StatisticsManager::addError(statGeneral[currentIndex].errors, info.errcode);
 }
 
-// SMS was't delivered by SMSC with temporal error. Affects temporal && errors only 
+// SMS was't delivered by SMSC with temporal error. Affects temporal && errors only
 void StatisticsManager::updateTemporal(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
@@ -144,7 +144,7 @@ void StatisticsManager::updateTemporal(const StatInfo& info)
                 statBySmeId[currentIndex].Insert(dstSmeId, newStat);
             }
         }
-        
+
         const char* routeId = info.routeId.c_str();
         if (routeId && routeId[0])
         {
@@ -187,7 +187,7 @@ void StatisticsManager::updateChanged(const StatInfo& info)
         }
         if (info.errcode == 0 && stat) stat->incOCounter();
     }
-    
+
     const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
@@ -208,7 +208,7 @@ void StatisticsManager::updateChanged(const StatInfo& info)
         }
         if (info.errcode == 0 && stat) stat->incOCounter();
     }
-    
+
     if (info.errcode == 0) {
         statGeneral[currentIndex].delivered++;
         statGeneral[currentIndex].incOCounter();
@@ -225,9 +225,9 @@ void StatisticsManager::updateScheduled(const StatInfo& info)
     {
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
         if (stat) stat->rescheduled++;
-        else statBySmeId[currentIndex].Insert(dstSmeId, SmsStat(0, 0, 0, 0, 1, 0)); 
+        else statBySmeId[currentIndex].Insert(dstSmeId, SmsStat(0, 0, 0, 0, 1, 0));
     }
-    
+
     const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
@@ -238,7 +238,7 @@ void StatisticsManager::updateScheduled(const StatInfo& info)
             statByRoute[currentIndex].Insert(routeId, newStat);
         }
     }
-    
+
     statGeneral[currentIndex].rescheduled++;
 }
 
@@ -317,7 +317,7 @@ int StatisticsManager::calculateToSleep() // returns msecs to next minute
 StatStorage::StatStorage(const std::string& _location)
     : logger(Logger::getInstance("smsc.stat.StatStorage")), location(_location), bFileTM(false)
 {
-    if (!createStatDir()) 
+    if (!createStatDir())
         throw Exception("Can't open statistics directory: '%s'", location.c_str());
 }
 StatStorage::~StatStorage()
@@ -336,7 +336,7 @@ bool StatStorage::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
         if (errno == EEXIST) return false;
-        throw Exception("Failed to create directory '%s'. Details: %s", 
+        throw Exception("Failed to create directory '%s'. Details: %s",
                         dir.c_str(), strerror(errno));
     }
     return true;
@@ -397,7 +397,7 @@ bool StatStorage::createStatDir()
 
         DIR* dirp = opendir( (*it).c_str() );
         if(dirp){
-            closedir(dirp);            
+            closedir(dirp);
         }else{
             try{
                 createDir(std::string( (*it).c_str() ));
@@ -406,7 +406,7 @@ bool StatStorage::createStatDir()
             }
         }
     }
-    
+
     return true;
 
 }
@@ -438,16 +438,16 @@ const int MAX_STACK_BUFFER_SIZE = 64*1024;
 
 void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 {
-    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
+    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT",
                    flushTM.tm_hour, flushTM.tm_min);
-    
-    try 
+
+    try
     {
-        char dirName[128]; char fileName[128]; 
+        char dirName[128]; char fileName[128];
         sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
         sprintf(fileName, SMSC_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
         std::string fullPath = location; fullPath += '/'; fullPath += (const char*)dirName;
-        std::string statPath = fullPath; statPath += '/'; statPath += (const char*)fileName; 
+        std::string statPath = fullPath; statPath += '/'; statPath += (const char*)fileName;
         const char* statPathStr = statPath.c_str();
 
         if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
@@ -461,9 +461,9 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         {
             // close old RTS file (if it was opened)
             if (statFile.isOpened()) statFile.Close();
-            
+
             needHeader = true;
-            if (File::Exists(statPathStr)) { 
+            if (File::Exists(statPathStr)) {
                 needHeader = false;
                 statFile.WOpen(statPathStr);
             } else {
@@ -476,25 +476,31 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         }
 
         sprintf(fileName, SMSC_TRNS_FILE_NAME_FORMAT, fileTM.tm_mday);
-        std::string trnsPath = fullPath; trnsPath += '/'; trnsPath += (const char*)fileName; 
+        std::string trnsPath = fullPath; trnsPath += '/'; trnsPath += (const char*)fileName;
         const char* trnsPathStr = trnsPath.c_str();
 
         File trnsFile;
         if (File::Exists(trnsPathStr)) // transaction file exists => last record(s) in RTS file invalid
-        { 
+        {
             smsc_log_warn(logger, "Found transaction file '%s'", trnsPathStr);
             trnsFile.ROpen(trnsPathStr);
-            uint64_t fpos = trnsFile.ReadNetInt64();
-            //TODO: how to truncate stat file ???
-            StatStorage::truncateFile(statPathStr, (off_t)fpos); // truncate RTS file
+            if(trnsFile.Size()>8)
+            {
+              uint64_t fpos = trnsFile.ReadNetInt64();
+              //TODO: how to truncate stat file ???
+              StatStorage::truncateFile(statPathStr, (off_t)fpos); // truncate RTS file
+              if (fpos <= 0) needHeader = true;
+              smsc_log_warn(logger, "Rollback to RTS file position %lld in file '%s'",
+                            fpos, statPathStr);
+            }else
+            {
+              if(statFile.Size()==0)needHeader=true;
+            }
             statFile.SeekEnd(0); // set RTS file position to EOF
 
-            if (fpos <= 0) needHeader = true; 
-            smsc_log_warn(logger, "Rollback to RTS file position %lld in file '%s'",
-                          fpos, statPathStr);
-        } 
+        }
         else // create new TRANS file & write RTS position to it
-        { 
+        {
             trnsFile.WOpen(trnsPathStr);
             statFile.SeekEnd(0); // set RTS file position to EOF
             uint64_t fpos = (uint64_t)statFile.Pos();
@@ -504,7 +510,7 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 
         TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> writeBuff(MAX_STACK_BUFFER_SIZE);
         if (needHeader) // create header (if new file created)
-        { 
+        {
             writeBuff.Append((uint8_t *)SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
             uint16_t version = htons(SMSC_STAT_VERSION_INFO);
             writeBuff.Append((uint8_t *)&version, sizeof(version));
@@ -523,14 +529,14 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
     {
         if (statFile.isOpened()) statFile.Close();
         bFileTM = false;
-        throw exc;
+        throw;
     }
 }
 
 void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat& general,
                               Hash<SmsStat>& statSme, Hash<RouteStat>& statRoute)
 {
-    
+
     TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> buff(MAX_STACK_BUFFER_SIZE);
 
     // General statistics dump
@@ -538,7 +544,7 @@ void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat&
     value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
     value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
 
-    int32_t value32 = 0; 
+    int32_t value32 = 0;
     value32 = htonl(general.accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
     value32 = htonl(general.rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
     value32 = htonl(general.delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
@@ -562,7 +568,7 @@ void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat&
     }
 
     // Sme statistics dump
-    value32 = statSme.GetCount(); 
+    value32 = statSme.GetCount();
     value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
     statSme.First();
     char* smeId = 0; SmsStat* smeStat = 0;
@@ -586,7 +592,7 @@ void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat&
         //smsc_log_debug(logger, "Sme '%s' peak i/o: %d/%d", smeId, smeStat->peak_i, smeStat->peak_o);
 
         // Sme error statistics dump
-        value32 = smeStat->errors.Count(); 
+        value32 = smeStat->errors.Count();
         value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
         IntHash<int>::Iterator sit = smeStat->errors.First();
         int secError, seCounter;
@@ -599,7 +605,7 @@ void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat&
     }
 
     // Route statistics dump
-    value32 = statRoute.GetCount(); 
+    value32 = statRoute.GetCount();
     value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
     statRoute.First();
     char* routeId = 0; RouteStat* routeStat = 0;
@@ -628,7 +634,7 @@ void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat&
         //smsc_log_debug(logger, "Route '%s' peak i/o: %d/%d", routeId, routeStat->peak_i, routeStat->peak_o);
 
         // Route errors statistics dump
-        value32 = routeStat->errors.Count(); 
+        value32 = routeStat->errors.Count();
         value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
         IntHash<int>::Iterator rit = routeStat->errors.First();
         int recError, reCounter;
@@ -649,15 +655,15 @@ void StatisticsManager::flushCounters(short index)
     smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
                    flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
-    try 
+    try
     {
         StatisticsManager::flush(flushTM, storage, statGeneral[index],
                                  statBySmeId[index], statByRoute[index]);
-    } 
+    }
     catch (std::exception& exc) {
         smsc_log_error(logger, "Statistics flush failed. Cause: %s", exc.what());
     }
-    
+
     resetCounters(index);
 }
 void StatisticsManager::resetCounters(short index)
