@@ -53,10 +53,6 @@
             }
         }
 
-        function test(){
-            alert("TEST");
-        }
-
         function addPathElement(valueElem, pname){
             if(trimStr(valueElem.value).length > 0){
 //                var tbl = opForm.all.path_table;
@@ -192,7 +188,7 @@
                               <td><input id="newAddress" class="txt" name="address" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
-                                       onclick="addpElemet('newAddress', 'address')"
+                                       onclick="addpElement('newAddress', 'address')"
                                        style="cursor:pointer;"></td>
                           </tr>
                       </table>
@@ -251,15 +247,13 @@
               <tr>
                   <td><fmt:message>routes.edit.site.port</fmt:message></td>
 
-                  <td nowrap="true"><input id="newSite" class="midtxt" name="newSite"><b>:</b><input id="newPort"
-                                                                                                     class="mintxt"
-                                                                                                     name="newPort"
-                                                                                                     value="80"
-                                                                                                     validation="port"
-                                                                                                     onkeyup="resetValidation(this)">
+                  <td nowrap="true">
+                        <input id="newSite" class="midtxt" name="newSite"><b>:</b>
+                        <input id="newPort" class="mintxt"name="newPort" value="80" validation="port" onkeyup="resetValidation(this)">
                   </td>
                   <td><img src="content/images/but_add.gif" alt="Add new Site"
-                           onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
+<%--                           onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"--%>
+                           onclick="addSite('newSite','newPort','<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>')"
                            style="cursor: pointer;"></td>
               </tr>
           </table>

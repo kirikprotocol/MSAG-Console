@@ -6,8 +6,7 @@
 <%@attribute name="type" required="true"%>
             <sm-et:section title="Sites List" opened="true"  name="allsites" width="${width}" >
                 <table id="div_site_table" cellpadding="0" cellspacing="0" class="properties_list">
-                    <tr><td>
-
+<%--                    <tr><td>--%>
                         <c:forEach items="${bean.sites}" var="i">
                             <c:set var="esite" value="${fn:escapeXml(i.host)}"/>
                             <c:set var="eport" value="${fn:escapeXml(i.port)}"/>
@@ -15,10 +14,9 @@
                             <c:set var="sectHeader" value="sectionHeader_${esite_sub}"/>
                             <c:set var="esite_table" value="sitesp_table_${esite_sub}"/>
                             <c:set var="defaultSiteObjId" value="${fn:escapeXml((type=='route')?bean.defaultSiteObjId:i.defaultSite)}"/>
-
-                            <div class="collapsing_tree_opened" id="${sectHeader}" style="width:100%;background-image:none">
+                    <tr id="${sectHeader}"><td>
+<%--                            <div class="collapsing_tree_opened" id="${sectHeader}" style="width:100%;background-image:none">--%>
                                  <%--onclick="collasping_tree_showhide_section('${esite_sub}')">--%>
-
                                 <table id="${esite_table}" cellpadding="0" cellspacing="0" class="properties_list">
                                     <col width="1%">
                                     <col width="99%">
@@ -28,8 +26,9 @@
                                                                               value="${esite}">
                                             <input type="hidden" name="sitesPort" value="${esite}_${eport}"></td>
                                         <td><img src="content/images/but_del.gif"
-                                                 onClick="removeSection('${esite_sub}')"
-                                                 style="cursor:hand;"></td>
+<%--                                                 onClick="removeSection('${esite_sub}')"--%>
+                                                 onClick="removeSection('${esite_sub}', '${sectHeader}', 'div_site_table')"
+                                                 style="cursor:pointer;"></td>
                                     </tr>
 
                                     <tr>
@@ -37,8 +36,9 @@
                                         <td align="right"><input id="newPath_${esite_sub}" class="txt"
                                                                  name="newPath_${esite_sub}" onkeyup="resetValidation(this)"></td>
                                         <td><img src="content/images/but_add.gif" alt="Add new path"
-                                                 onclick="addPath(opForm.all.newPath_${esite_sub}, '${esite}', opForm.all.sitesp_table_${esite_sub}, '${esite_sub}')"
-                                                 style="cursor:hand;"></td>
+<%--                                                 onclick="addPath(opForm.all.newPath_${esite_sub}, '${esite}', opForm.all.sitesp_table_${esite_sub}, '${esite_sub}')"--%>
+                                                 onclick="addPath('newPath_${esite_sub}', '${esite}', 'sitesp_table_${esite_sub}', '${esite_sub}')"
+                                                 style="cursor:pointer;"></td>
                                     </tr>
                                     <c:set var="rowN" value="0"/>
                                     <c:forEach items="${i.pathLinks}" var="j">
@@ -50,14 +50,16 @@
                                                                                              value="${esite}^${epath}">
                                             </td>
                                             <td><img src="content/images/but_del.gif"
-                                                     onClick="removeRow(opForm.all.sitesp_table_${esite_sub}, 'pathRow_${esite_sub}_${epath}')"
-                                                     style="cursor:hand;"></td>
+<%--                                                     onClick="removeRow(opForm.all.sitesp_table_${esite_sub}, 'pathRow_${esite_sub}_${epath}')"--%>
+                                                     onClick="removeRow('sitesp_table_${esite_sub}', 'pathRow_${esite_sub}_${epath}')"
+                                                     style="cursor:pointer;"></td>
                                         </tr>
                                         <c:set var="rowN" value="${rowN+1}"/>
                                     </c:forEach>
                                 </table>
-                            </div>
-                        </c:forEach>
+<%--                            </div>--%>
                     </td></tr>
+                        </c:forEach>
+<%--                    </td></tr>--%>
                 </table>
             </sm-et:section>

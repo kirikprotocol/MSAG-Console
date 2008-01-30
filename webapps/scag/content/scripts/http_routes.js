@@ -503,6 +503,8 @@ function addAbonentMask(valueElem) {
 }
 
 function addPath(valueElem, prefElem, tblElem, tableName) {
+    var valueElem = getElementByIdUni(valueElem);
+    var tblElem = getElementByIdUni(tblElem);
     if (trimStr(valueElem.value).length > 0) {
         var tbl = tblElem;
         var newRow = tbl.insertRow(tbl.rows.length);
@@ -529,7 +531,7 @@ function createImgButton(imgUrl, onclickT, tooltipText) {
     return "<img src=\"" + imgUrl + "\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\">";
 }
 
-function removeSection(sectionName) {
+function removeSection_(sectionName) {
     var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
     var sN = sectionName.replace(/_/g,'.');
     if (defaultSiteRadios.length>1)
@@ -540,12 +542,41 @@ function removeSection(sectionName) {
         }
     }
     sectionElem = document.getElementById("sectionHeader_" + sectionName);
-    sectionElem.removeNode(true);
-    sectionElem = document.getElementById("sectionValue_" + sectionName);
-    if (sectionElem) sectionElem.removeNode(true);
+    alert(sectionElem);
+
+      table = getElementByIdUni( "div_site_table" );
+//      var rowElem = table.rows[rowId];
+      var rowElem = table.rows["sectionHeader_" + sectionName];
+      table.deleteRow(rowElem.rowIndex);
+
+//    sectionElem.removeNode(true);
+//    sectionElem = document.getElementById("sectionValue_" + sectionName);
+//    if (sectionElem) sectionElem.removeNode(true);
+}
+
+function removeSection(sectionName, rowId, tblId) {
+    var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
+    var sN = sectionName.replace(/_/g,'.');
+    if (defaultSiteRadios.length>1)
+    for (var i=0; i<defaultSiteRadios.length;i++ ) {
+        if (trimStr(defaultSiteRadios[i].value) == sN && defaultSiteRadios[i].checked) {
+          alert("Couldn't remove default site");
+          return false;
+        }
+    }
+    sectionElem = document.getElementById("sectionHeader_" + sectionName);
+//    alert( "removeSection " + sectionElem);
+
+      table = getElementByIdUni( tblId );
+//      var rowElem = table.rows[rowId];
+      var rowElem = table.rows[rowId];
+      table.deleteRow(rowElem.rowIndex);
 }
 
 function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
+//    alert("addSite");
+    var valueElem = getElementByIdUni(valueElem);
+    var portElem = getElementByIdUni(portElem);
     if(document.getElementById(trim(valueElem.value)) != null){
         alert(msgVal);
         return false;
@@ -559,9 +590,11 @@ function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
 //        var tbl = opForm.all.div_site_table;
         var tbl = getElementByIdUni("div_site_table");
         var newRow = tbl.insertRow(tbl.rows.length);
+        newRow.id = "sectionHeader_"+siteName;
 //        newCell = newRow.insertCell();
         newCell = document.createElement("TD");
-        newCell.innerHTML = addSiteSectionBody(siteName, trimStr(valueElem.value), trimStr(portElem.value), addPathStr);
+//        newCell.innerHTML = addSiteSectionBody(siteName, trimStr(valueElem.value), trimStr(portElem.value), addPathStr);
+        newCell.innerHTML = addSiteSectionBody(siteName, trimStr(valueElem.value), trimStr(portElem.value), addPathStr, div_site_table);
         newRow.appendChild(newCell);
         valueElem.value = "";
         portElem.value = '80';
@@ -571,12 +604,13 @@ function addSite(valueElem, portElem, addPathStr, msgVal, msgVal1) {
         return false;
 }
 
-function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
+function addSiteSectionBody_(siteName, siteFullName, sitePort, addPathStr) {
     var sectionHeader_ = "sectionHeader_" + siteName;
     var newPSN = getElementByIdUni( "newPath_" + "siteName" );
     var sitespTSN = getElementByIdUni( "sitesp_table_" + "siteName" );
+    var rowId = "sectionHeader_" + siteName;
     return ""
-            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" style=\"width:100%;background-image:none\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
+//            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" style=\"width:100%;background-image:none\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
             + " <table id=\"sitesp_table_" + siteName + "\" cellpadding=\"0\" cellspacing=\"0\" class=\"properties_list\">"
             + " <col width=\"1%\">"
             + " <col width=\"99%\">"
@@ -585,16 +619,49 @@ function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr) {
             + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
             + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
             + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
+//            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','sectionHeader_" + siteName + "','div_site_table' )\"></td>"
+//            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','" + rowId + "','div_site_table' )\"></td>"
             + " </tr>"
             + " <tr>"
             + " <td nowrap=\"true\" align=\"right\">" + addPathStr + "&nbsp;</td>"
             + " <td align=\"right\"><input id=\"newPath_" + siteName + "\" class=\"txt\" name=\"newPath_" + siteName + "\" onkeyup=\"resetValidation(this)\"></td>"
             + " <td><img src=\"content/images/but_add.gif\" alt=\"" + addPathStr + "\" "
-            + "onclick=\"addPath(opForm.all.newPath_" + siteName + ", '" + siteFullName + "', opForm.all.sitesp_table_" + siteName + ", '" + siteName + "')\" "
+//            + "onclick=\"addPath(opForm.all.newPath_" + siteName + ", '" + siteFullName + "', opForm.all.sitesp_table_" + siteName + ", '" + siteName + "')\" "
+            + "onclick=\"addPath('newPath_" + siteName + "', '" + siteFullName + "', 'sitesp_table_" + siteName + "', '" + siteName + "')\" "
             + "style=\"cursor:pointer;\"></td>"
             + " </tr>"
             + " </table>"
-            + "</div>";
+//            + "</div>";
+}
+
+function addSiteSectionBody(siteName, siteFullName, sitePort, addPathStr, tblId) {
+    var sectionHeader_ = "sectionHeader_" + siteName;
+    var newPSN = getElementByIdUni( "newPath_" + "siteName" );
+    var sitespTSN = getElementByIdUni( "sitesp_table_" + "siteName" );
+    var rowId = "sectionHeader_" + siteName;
+    return ""
+//            + "<div class=\"collapsing_tree_opened\" id=\"" + sectionHeader_ + "\" style=\"width:100%;background-image:none\">"// onclick=\"collasping_tree_showhide_section('" + siteName + "')\">"
+            + " <table id=\"sitesp_table_" + siteName + "\" cellpadding=\"0\" cellspacing=\"0\" class=\"properties_list\">"
+            + " <col width=\"1%\">"
+            + " <col width=\"99%\">"
+            + " <tr>"
+            + " <td width=\"100%\"><input type=\"radio\" name=\"defaultSiteObjId\" " +isSiteChecked() + " value=\"" + siteFullName + "\">&nbsp;" + siteFullName +":"+sitePort+ "</td>"
+            + " <td align=\"left\" nowrap=\"true\"><input type=\"hidden\" name=\"sitesHost\" id=\"" + siteFullName + "\"  value=\"" + siteFullName + "\">"
+            + " <input type=\"hidden\" name=\"sitesPort\" value=\"" + siteFullName + "_" + sitePort + "\"></td>"
+//            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "')\"></td>"
+//            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','sectionHeader_" + siteName + "','div_site_table' )\"></td>"
+            + " <td><img src=\"content/images/but_del.gif\" onClick=\"removeSection('" + siteName + "','" + rowId + "','div_site_table' )\" style=\"cursor:pointer;\"></td>"
+            + " </tr>"
+            + " <tr>"
+            + " <td nowrap=\"true\" align=\"right\">" + addPathStr + "&nbsp;</td>"
+            + " <td align=\"right\"><input id=\"newPath_" + siteName + "\" class=\"txt\" name=\"newPath_" + siteName + "\" onkeyup=\"resetValidation(this)\"></td>"
+            + " <td><img src=\"content/images/but_add.gif\" alt=\"" + addPathStr + "\" "
+//            + "onclick=\"addPath(opForm.all.newPath_" + siteName + ", '" + siteFullName + "', opForm.all.sitesp_table_" + siteName + ", '" + siteName + "')\" "
+            + "onclick=\"addPath('newPath_" + siteName + "', '" + siteFullName + "', 'sitesp_table_" + siteName + "', '" + siteName + "')\" "
+            + "style=\"cursor:pointer;\"></td>"
+            + " </tr>"
+            + " </table>"
+//            + "</div>";
 }
 
 function isSiteChecked() {
@@ -623,7 +690,9 @@ function validateHttpSubj() {
 }
 
 function validateHttpSite() {
-  var div_sections = document.getElementById("div_site_table").getElementsByTagName("div");
+//  var div_sections = document.getElementById("div_site_table").getElementsByTagName("div");
+//  var div_sections = document.getElementById("div_site_table").getElementsByTagName("div");
+  var div_sections = document.getElementById("div_site_table").getElementsByTagName("table");
   if (!div_sections || div_sections.length==0) {
     alert('<fmt:message>error.routing.sites.http_site_sites_not_exists</fmt:message>');
     return false;
@@ -655,7 +724,8 @@ function getHostNameForSection(section) {
 }
 
 function openSitesList() {
-  var dt_sec = opForm.all["collapsing_tree_Sites List"];
+//  var dt_sec = opForm.all["collapsing_tree_Sites List"];
+  var dt_sec = getElementByIdUni("collapsing_tree_Sites List");
   if (dt_sec.className=="opened")
     return;
   dt_sec.click();
