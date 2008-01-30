@@ -250,6 +250,7 @@ function addDefaultAddressPlace(valueElem, selectElem) {
     var valueElem = getElementByIdUni( valueElem );
     var typeSelectAddress = getElementByIdUni( selectElem );
     var selectElem = typeSelectAddress.options[typeSelectAddress.selectedIndex].value;
+
     if ((trimStr(valueElem.value).length > 0)) {
         var inner__counter = global_counter++;
         var sitePlaceName = valueElem.value;
@@ -366,9 +367,26 @@ function commonOnLoad() {
 }
 
 function toggleVisible(p, c) {
+        var c1 = getElementByIdUni(c+"1");
+        var c2 = getElementByIdUni(c+"2");
+        var c3 = getElementByIdUni(c+"3");
+        var c4 = getElementByIdUni(c+"4");
+        var c5 = getElementByIdUni(c+"5");
+
+        var p = getElementByIdUni(p);
+        var c = getElementByIdUni(c);
         var o = p.className == "collapsing_list_opened";
         p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
-        c.runtimeStyle.display = o ? "none" : "block";
+//        c.runtimeStyle.display = o ? "none" : "block";
+//        c.style.display = o ? "none" : "block";
+
+//        alert( "B c1.style.display=" + c1.style.display + " o=" + o);
+        c1.style.display = ( o ? "none" : "block" );
+        c2.style.display = ( o ? "none" : "block" );
+        c3.style.display = ( o ? "none" : "block" );
+        c4.style.display = ( o ? "none" : "block" );
+        c5.style.display = ( o ? "none" : "block" );
+//        alert( "A c1.style.display=" + c1.style.display);
 }
 
 function removeAbonetSubj_(rowId) {
