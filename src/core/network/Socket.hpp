@@ -29,7 +29,7 @@ namespace network{
 #define SOCKET_MAX_KEY 8
 
 class Socket{
-private:
+protected:
   sockaddr_in sockAddr;
   fd_set fd;
   timeval tv;
