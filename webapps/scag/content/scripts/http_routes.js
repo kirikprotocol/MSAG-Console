@@ -419,30 +419,6 @@ function removeAbonetSubj(rowId, subjName) {
     tbl.deleteRow(rowElem.rowIndex);
 }
 //-
-function removeSiteSubj(rowId) {
-    var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
-    var siteSubRow="siteSubRow_";
-    var _rowId=rowId.substr(siteSubRow.length, rowId.length);
-    if (defaultSiteRadios.length>1)
-    for (var i=0; i<defaultSiteRadios.length;i++ ) {
-        if (defaultSiteRadios[i].checked && (_rowId == defaultSiteRadios[i].value || (""+(parseInt(_rowId)+1)) == defaultSiteRadios[i].id) ) {
-          alert("Couldn't remove default site subject");
-          return false;
-        }
-    }
-//    var selectElem = opForm.all.siteSubjSelect;
-    var selectElem = getElementByIdUni("siteSubjSelect");
-//    var tbl = opForm.all.sites_table;
-    var tbl = getElementByIdUni("sites_table");
-    var rowElem = tbl.rows(rowId);
-    var subjValue = rowElem.all.subSite.value;
-    var oOption = document.createElement("OPTION");
-    selectElem.options.add(oOption);
-    oOption.innerText = subjValue;
-    oOption.value = subjValue;
-    selectElem.disabled = false;
-    tbl.deleteRow(rowElem.rowIndex);
-}
 
 function checkAbonentSubj() {
 //    var selectElem = opForm.all.abonSubjSelect;
@@ -505,12 +481,65 @@ function addSiteSubj() {
         newCell.innerHTML = subjValue + '<input id="subSite" type="hidden" name="siteSubj" value="' + subjValue + '">';
         newRow.appendChild(newCell);
         newCell = document.createElement("td");
-        newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSiteSubj(\'' + newRow.id + '\');" style=cursor: pointer;">';
+//        newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSiteSubj(\'' + newRow.id + '\');" style=cursor: pointer;">';
+        newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeSiteSubj(\'' + newRow.id + '\',\'' + subjValue + '\');" style="cursor: pointer;">';
         newRow.appendChild(newCell);
         selectElem.options[selectElem.selectedIndex] = null;
         selectElem.focus();
     }
     checkSiteSubj();
+}
+
+function removeSiteSubj(rowId, subjValue) {
+    var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
+    var siteSubRow="siteSubRow_";
+    var _rowId=rowId.substr(siteSubRow.length, rowId.length);
+    if (defaultSiteRadios.length>1)
+    for (var i=0; i<defaultSiteRadios.length;i++ ) {
+        if (defaultSiteRadios[i].checked && (_rowId == defaultSiteRadios[i].value || (""+(parseInt(_rowId)+1)) == defaultSiteRadios[i].id) ) {
+          alert("Couldn't remove default site subject");
+          return false;
+        }
+    }
+//    var selectElem = opForm.all.siteSubjSelect;
+    var selectElem = getElementByIdUni("siteSubjSelect");
+//    var tbl = opForm.all.sites_table;
+    var tbl = getElementByIdUni("sites_table");
+//    var rowElem = tbl.rows(rowId);
+    var rowElem = tbl.rows[rowId];
+//    var subjValue = rowElem.all.subSite.value;
+    var oOption = document.createElement("OPTION");
+    selectElem.options.add(oOption);
+//    oOption.innerText = subjValue;
+    oOption.text = subjValue;
+    oOption.value = subjValue;
+    selectElem.disabled = false;
+    tbl.deleteRow(rowElem.rowIndex);
+}
+
+function removeSiteSubj_(rowId) {
+    var defaultSiteRadios = document.getElementsByName("defaultSiteObjId");
+    var siteSubRow="siteSubRow_";
+    var _rowId=rowId.substr(siteSubRow.length, rowId.length);
+    if (defaultSiteRadios.length>1)
+    for (var i=0; i<defaultSiteRadios.length;i++ ) {
+        if (defaultSiteRadios[i].checked && (_rowId == defaultSiteRadios[i].value || (""+(parseInt(_rowId)+1)) == defaultSiteRadios[i].id) ) {
+          alert("Couldn't remove default site subject");
+          return false;
+        }
+    }
+//    var selectElem = opForm.all.siteSubjSelect;
+    var selectElem = getElementByIdUni("siteSubjSelect");
+//    var tbl = opForm.all.sites_table;
+    var tbl = getElementByIdUni("sites_table");
+    var rowElem = tbl.rows(rowId);
+    var subjValue = rowElem.all.subSite.value;
+    var oOption = document.createElement("OPTION");
+    selectElem.options.add(oOption);
+    oOption.innerText = subjValue;
+    oOption.value = subjValue;
+    selectElem.disabled = false;
+    tbl.deleteRow(rowElem.rowIndex);
 }
 
 function addAbonentMask(valueElem) {

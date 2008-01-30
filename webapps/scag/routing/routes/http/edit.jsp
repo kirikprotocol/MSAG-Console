@@ -8,7 +8,7 @@
     </c:choose>
 </jsp:attribute>
 
-<jsp:attribute name="menu">                         
+<jsp:attribute name="menu">
     <sm-pm:menu>
         <sm-pm:item name="mbSave" value="routes.edit.item.mbsave.value" title="routes.edit.item.mbsave.title" onclick="return validateHttpRoute()"/>
         <sm-pm:item name="mbCancel" value="routes.edit.item.mbcancel.value" title="routes.edit.item.mbcancel.title" onclick="clickCancel()"/>
@@ -50,12 +50,13 @@
 </table>
     <br>
     <table class="properties_list" cellspacing="0" cellspadding="0" border="0">
-        <tr><td style="cursor:hand;text-align:left"
+<%--        <tr><td style="cursor:hand;text-align:left"--%>
+        <tr><td style="cursor:pointer;text-align:left"
                 onClick="toggleVisible(pgs_http,cgs_http);">
         <div align="left" id="pgs_http" class="collapsing_list_closed"><div class="page_subtitle">
                <u><font size="2"><fmt:message>options.item.title.address.usr</fmt:message></font></u></div>
             </div></td>
-            <tr id="cgs_http" style="display:none"><td colspan="9" width="100%">
+            <tr id="cgs_http" style="display:none;"><td colspan="9" width="100%">
     <%--<sm-et:section title="Address/USR Placement Options" opened="false"  name="allplacement">--%>
     <table cellpadding="0" cellspacing="0" width="100%">
         <tr>
@@ -97,7 +98,7 @@
 
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
                                              onClick="removeRow(opForm.all.abon_usr_tbl, 'abon_usr_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -120,7 +121,7 @@
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Abonent USR"
                          onclick="addAbonDefaultUSRplace(opForm.all.new_abon_usr, opForm.all.typeAbonSelectUsr.options[typeAbonSelectUsr.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -157,7 +158,7 @@
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
                                              onClick="removeRow(opForm.all.site_usr_tbl, 'site_usr_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -179,8 +180,9 @@
                     <input id="new_site_usr" class="txt" size="50" name="new_site_usr">
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
+<%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
                          onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -248,7 +250,7 @@
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
                                              onClick="removeRow(opForm.all.site_address_tbl, 'site_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -272,7 +274,7 @@
                     </td>
                     <td width="68%"><img src="content/images/but_add.gif" alt="Add new Default Address place"
                                          onclick="addDefaultAddressPlace(opForm.all.new_site_address, opForm.all.typeSelectSite.options[typeSelectSite.selectedIndex].value)"
-                                         style="cursor:hand;"></td>
+                                         style="cursor:pointer;"></td>
                     <td>&nbsp;</td>
                 </tr>
             </table>
@@ -338,7 +340,7 @@
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
                                              onClick="removeRow(opForm.all.site_route_id_tbl, 'site_route_id_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -361,7 +363,7 @@
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
                          onclick="addSiteDefaultRouteIdplace(opForm.all.new_site_route_id, opForm.all.typeSelectRouteIdSite.options[typeSelectRouteIdSite.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -426,7 +428,7 @@
                             <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
                         <td width="65%"><img src="content/images/but_del.gif" alt=""
                                              onClick="removeRow(opForm.all.site_service_id_tbl, 'site_service_id_place_${pls.name}_${rowN}');"
-                                             style="cursor:hand;"></td>
+                                             style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -449,7 +451,7 @@
                 </td>
                 <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
                          onclick="addSiteDefaultServiceIdplace(opForm.all.new_site_service_id, opForm.all.typeSelectServiceIdSite.options[typeSelectServiceIdSite.selectedIndex].value)"
-                         style="cursor:hand;"></td>
+                         style="cursor:pointer;"></td>
                 <td>&nbsp;</td>
             </tr>
         </table>
@@ -479,14 +481,15 @@
                         </c:forEach>
                     </select>
                     </td>
-                    <td><img src="content/images/but_add.gif" onclick="addAbonentSubj()" style="cursor:hand;"></td>
+                    <td><img src="content/images/but_add.gif" onclick="addAbonentSubj()" style="cursor:pointer;"></td>
                 </tr>
                 <tr>
                     <td><fmt:message>routes.edit.address</fmt:message></td>
-                    <td><input id="newAbonMask" class="txt" name="newAbonMask" validation="routeMask"
+                    <td><input id="newAbonMask" class="txt" name="newAbonMask" validation="routeMaskNonEmpty"
                                onkeyup="resetValidation(this)"></td>
-                    <td><img src="content/images/but_add.gif" onclick="addAbonentMask(opForm.all.newAbonMask)"
-                             alt="Add Http Subject" style="cursor: hand;"></td>
+<%--                    <td><img src="content/images/but_add.gif" onclick="addAbonentMask(opForm.all.newAbonMask)"--%>
+                    <td><img src="content/images/but_add.gif" onclick="addAbonentMask('newAbonMask')"
+                             alt="Add Http Subject" style="cursor: pointer;"></td>
                 </tr>
             </table>
             <hr>
@@ -495,23 +498,27 @@
                 <col width="1%">
                 <col width="100%">
                 <c:forEach items="${bean.abonSubj}" var="i">
-                        <c:set var="esubj" value="${fn:escapeXml(i)}"/>
-                <tr class="row${rowN%3}" id="subjRow_${esubj}">
-                    <td><img src="content/images/subject.gif" alt=""></td>
-                    <td>${esubj}<input id="subjAbon" type="hidden" name="abonSubj" value="${esubj}"></td>
-                    <td><img src="content/images/but_del.gif" alt="" onclick="removeAbonetSubj('subjRow_${esubj}');"
-                             style="cursor: hand;"></td>
-                </tr>
-                <c:set var="rowN" value="${rowN+1}"/>
+                    <c:set var="esubj" value="${fn:escapeXml(i)}"/>
+                    <tr class="row${rowN%3}" id="subjRow_${esubj}">
+                        <td><img src="content/images/subject.gif" alt="">
+                            <input id="subjAbon" type="hidden" name="abonSubj" value="${esubj}">
+<%--                            <input id="subjAbon_${esubj}" type="hidden" name="abonSubj" value="${esubj}">--%>
+                        </td>
+                        <td id="td_subjAbon">${esubj}</td>
+                        <td><img src="content/images/but_del.gif" alt="" onclick="removeAbonetSubj('subjRow_${esubj}', '${esubj}');"
+                                 style="cursor: pointer;"></td>
+                    </tr>
+                    <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
                 <c:forEach items="${bean.abonAddress}" var="i">
                     <c:set var="emask" value="${fn:escapeXml(i)}"/>
                     <tr class="row${rowN%2}" id="maskRow_${emask}">
-                        <td><img src="content/images/mask.gif"></td>
-                        <td>${emask}<input type="hidden" name="abonAddress" value="${emask}"></td>
+                        <td><img src="content/images/mask.gif"><input type="hidden" name="abonAddress" value="${emask}"></td>
+                        <td id="td_abonAddress">${emask}</td>
                         <td><img src="content/images/but_del.gif"
-                                 onClick="removeRow(opForm.all.abonents_table, 'maskRow_${emask}')"
-                                 style="cursor: hand;"></td>
+<%--                                 onClick="removeRow(opForm.all.abonents_table, 'maskRow_${emask}')"--%>
+                                 onClick="removeRow('abonents_table', 'maskRow_${emask}')"
+                                 style="cursor: pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
@@ -531,16 +538,18 @@
                             </c:forEach>
                         </select>
                     </td>
-                    <td><img src="content/images/but_add.gif" alt="HTTP Site List" onclick="addSiteSubj()" style="cursor:hand;"></td>
+                    <td><img src="content/images/but_add.gif" alt="HTTP Site List" onclick="addSiteSubj()" style="cursor:pointer;"></td>
                 </tr>
                 <tr>
                     <td><fmt:message>routes.edit.site.port</fmt:message></td>
 
                     <td nowrap="true"><input id="newSite" class="txt" name="newSite"><b>:</b><input id="newPort" class="mintxt" name="newPort" value="80" validation="port" onkeyup="resetValidation(this)"></td>
-                    <td><img src="content/images/but_add.gif" alt="Add new Site" onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>','<fmt:message>scripts.site.name.error</fmt:message>')"
-                        style="cursor: hand;"></td>
+                    <td><img src="content/images/but_add.gif" alt="Add new Site"
+<%--                        onclick="addSite(opForm.all.newSite,opForm.all.newPort,'<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>','<fmt:message>scripts.site.name.error</fmt:message>')"--%>
+                        onclick="addSite('newSite','newPort','<fmt:message>routes.edit.add.new.path</fmt:message>','<fmt:message>scripts.site.already.exist</fmt:message>','<fmt:message>scripts.site.name.error</fmt:message>')"
+                        style="cursor: pointer;"></td>
                 </tr>
-            </table>                            
+            </table>
             <hr>
             <table id="sites_table" class="properties_list" cellpadding="0" cellspacing="0">
                 <col width="1%">
@@ -552,8 +561,9 @@
                     <tr class="row${rowN%3}" id="siteSubRow_${ssubj}">
                         <td><input type="radio" name="defaultSiteObjId" <c:if test="${defaultSiteObjId==ssubj}">checked</c:if> value="${ssubj}"><img src="content/images/subject.gif" alt=""></td>
                         <td>${ssubj}<input id="subSite" type="hidden" name="siteSubj" value="${ssubj}"></td>
-                        <td><img src="content/images/but_del.gif" alt="" onclick="removeSiteSubj('siteSubRow_${ssubj}');"
-                                style="cursor:hand;"></td>
+<%--                        <td><img src="content/images/but_del.gif" alt="" onclick="removeSiteSubj('siteSubRow_${ssubj}');"--%>
+                        <td><img src="content/images/but_del.gif" alt="" onclick="removeSiteSubj('siteSubRow_${ssubj}', '${ssubj}');"
+                                style="cursor:pointer;"></td>
                     </tr>
                     <c:set var="rowN" value="${rowN+1}"/>
                 </c:forEach>
