@@ -81,6 +81,8 @@
     param(out, "smsc.core.mergeTime", "core.mergeTimeout", bean.getIntParam("core.mergeTimeout"));
     param(out, "smsc.core.tzConfig", "core.timezones_config", bean.getStringParam("core.timezones_config"));
     param(out, "smsc.core.smartMultipart", "core.smartMultipartForward", bean.getBoolParam("core.smartMultipartForward"));
+    param(out, "smsc.core.srcSmeSeparateRouting", "core.srcSmeSeparateRouting", bean.getBoolParam("core.srcSmeSeparateRouting"));
+    
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.perfomance ~~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "core.performance", "smsc.core.perfmon", false);
