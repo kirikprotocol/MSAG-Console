@@ -1310,12 +1310,11 @@ StateType StateMachine::submit(Tuple& t)
   }
 #endif
 
+  bool dropMergeConcat=false;
+
   if(c.ri.transit)
   {
-    if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
-    {
-      sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
-    }
+    dropMergeConcat=true;
   }
 
   c.isForwardTo = false;
@@ -1327,8 +1326,32 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty( Tag::SMPP_ESM_CLASS, sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x02 );
     c.isForwardTo = true;
 
-    sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    dropMergeConcat=true;
     sms->getMessageBody().dropProperty(Tag::SMSC_DC_LIST);
+  }
+
+  if(dropMergeConcat)
+  {
+    if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+    {
+      dropMergeConcat=true;
+      unsigned char *body;
+      unsigned int len;
+      if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+      {
+        body=(unsigned char*)sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      }else
+      {
+        body=(unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      }
+      uint16_t mr;
+      uint8_t idx,num;
+      bool havemoreudh;
+      smsc::util::findConcatInfo(body,mr,idx,num,havemoreudh);
+
+      smsc->submitMrKill(sms->getOriginatingAddress(),sms->getDestinationAddress(),mr);
+      sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    }
   }
 
 

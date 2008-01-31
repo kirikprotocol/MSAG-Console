@@ -218,7 +218,21 @@ public:
 
   void submitMrKill(const Address& org,const Address& dst,uint16_t mr)
   {
-    smscsme->putIncomingCommand(SmscCommand::makeKillMrCacheItemCmd(org,dst,mr));
+    //smscsme->putIncomingCommand(SmscCommand::makeKillMrCacheItemCmd(org,dst,mr));
+    MergeCacheItem mci;
+    mci.mr=mr;
+    mci.oa=org;
+    mci.da=dst;
+
+    MutexGuard mg(mergeCacheMtx);
+    SMSId* pid=mergeCache.GetPtr(mci);
+    if(pid)
+    {
+      //info2(log,"msgId=%lld: kill mr cache item for %s,%s,%d",*pid,ki.org.toString().c_str(),ki.dst.toString().c_str(),(int)ki.mr);
+      SMSId killId=*pid;
+      reverseMergeCache.Delete(killId);
+      mergeCache.Delete(mci);
+    }
   }
 
   void unregisterSmeProxy(SmeProxy* smeProxy)
