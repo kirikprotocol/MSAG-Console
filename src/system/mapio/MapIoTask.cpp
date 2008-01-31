@@ -405,7 +405,9 @@ void MapIoTask::dispatcher()
       {
         __map_trace__("MsgRecv hatching msg to reset priority order " );
         message.msg_p[4] = 0;
-      } else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
+      }
+      /*
+      else if ( message.primitive == 0xa3 && message.size == 8 && message.msg_p[5] == 0x22 )
       {
         __map_trace__("MsgRecv hatching msg to fix sysfailure cause in ForwardMTConf " );
         message.msg_p[5] = 0x24;
@@ -414,6 +416,7 @@ void MapIoTask::dispatcher()
         __map_trace__("MsgRecv hatching msg to fix sysfailure cause in SendRinfoForSmConf " );
         message.msg_p[8] = 0x24;
       }
+      */
 
       if(message.primitive!=MAP_BIND_CONF && message.primitive!=MAP_STATE_IND &&
          message.primitive!=MAP_GET_AC_VERSION_CONF)
@@ -483,7 +486,8 @@ void MapIoTask::dispatcher()
 
 void MapIoTask::handleMessage(MSG_T& message)
 {
-  __map_trace2__("MAPIO::Handled msg:p=%d,sz=%d,buf=%p",message.primitive,message.size,message.msg_p);
+  //__map_trace2__("MAPIO::Handled msg:p=%d,sz=%d,buf=%p",message.primitive,message.size,message.msg_p);
+  /*
   if(smsc::logger::_map_cat->isDebugEnabled())
   {
     smsc::core::buffers::TmpBuf<char,1024> text(message.size*4+1);
@@ -494,6 +498,7 @@ void MapIoTask::handleMessage(MSG_T& message)
     }
     __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "MAPIO:LMessage dump: %s",text.get());
   }
+  */
   USHORT_T map_result;
   __require__(message.size!=0);
   try {

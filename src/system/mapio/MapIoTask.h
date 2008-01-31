@@ -370,7 +370,7 @@ struct MapDialog{
     unsigned dlgid=0xffffffff;
     MapDialog* ass=0;
     ref_count--;
-    __map_trace2__("release: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
+    //__map_trace2__("release: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
     if ( ref_count == 0 )
     {
       ass=associate;
@@ -401,14 +401,14 @@ struct MapDialog{
   MapDialog* AddRef(){
     MutexGuard g(mutex);
     ++ref_count;
-    __map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
+    //__map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
     return this;
   }
 
   MapDialog* AddRefUnlocked()
   {
     ++ref_count;
-    __map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
+    //__map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
     return this;
   }
 
@@ -417,7 +417,7 @@ struct MapDialog{
     MutexGuard g(mutex);
     if(!isAllocated)return 0;
     ++ref_count;
-    __map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
+    //__map_trace2__("addref: dlgId=0x%x, refcnt=%d",dialogid_map,ref_count);
     return this;
   }
 
