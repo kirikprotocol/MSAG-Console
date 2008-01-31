@@ -46,7 +46,25 @@ B2917:
     Archiver	double flush fix
     InfoSme	cleanup of INFOSME_ID_MAPPING.db on retstart
     InfoSme	traffic control on region basis fix
-    MCISme	set msg.caller_abonent before call to messageSender->send in TaskProcessor::SendAbntOnlineNotifications
+    MCISme	fix for empty caller addr in notification messages
+    emailsme	fix for crash if sms get from alphanumric oa
     SNMP	roll csv files after each record in cluster RG methods
     SNMP	make traps on connect and disconnect to SS7 stack
     USSMan	fixed bug (strict weak ordering violation) in USSProcSearchCrit::operator<()
+    Webadm	SMSC configuration page updated
+    Webadm	dynamic refreshing items fixed bug fith last field processing
+    Webadm	add login on enter
+    Webadm	fix HEX encoding and decoding in java and javascript
+    Webadm	fix perfmon for Safari 3 support
+    Webadm	"SmsView Show sms text" role added
+    Webadm	Input/Output Access mask fix for defaultProfile
+B3001:
+    SMSC	Parallel MAP fixes.
+    SMSC	Fix for unable to write stats to file if empty transaction file exists for it
+    SMSC	Multipart SMS for transit and forward routes will now have different ids for parts, fix archiving issues
+    INMan	Separate strategy for abonent type requests got from outter sources or from internal billing logic
+    INMan	FileCache perfomance improvement
+    INMan	Timewatcher facility perfomance improvement
+    MCISme	Advertising client synchronization fix
+    InfoSme	Add start time into Task and posibility to set this parameter in deliveries
+    Webadm	Option mapIOTasksCount to section map of smsc configuration
