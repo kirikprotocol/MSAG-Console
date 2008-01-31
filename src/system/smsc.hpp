@@ -144,6 +144,14 @@ public:
     deliverErrTempCounter=0;
     deliverErrPermCounter=0;
     rescheduleCounter=0;
+
+    msu_submitOkCounter=0;
+    msu_submitErrCounter=0;
+    msu_deliverOkCounter=0;
+    msu_deliverErrTempCounter=0;
+    msu_deliverErrPermCounter=0;
+    msu_rescheduleCounter=0;
+
     startTime=time(NULL);
     //tcontrol=0;
     license.maxsms=0;
@@ -244,6 +252,45 @@ public:
 
   void RejectSms(const SmscCommand&);
 
+  void registerMsuStatEvent(int eventType,const SMS* sms)
+  {
+    using namespace smsc::stat;
+    using namespace StatEvents;
+    switch(eventType)
+    {
+      case etSubmitOk:
+      {
+        MutexGuard g(perfMutex);
+        msu_submitOkCounter++;
+      }break;
+      case etSubmitErr:
+      {
+        MutexGuard g(perfMutex);
+        msu_submitErrCounter++;
+      }break;
+      case etDeliveredOk:
+      {
+        MutexGuard g(perfMutex);
+        msu_deliverOkCounter++;
+      }break;
+      case etDeliverErr:
+      {
+        MutexGuard g(perfMutex);
+        msu_deliverErrTempCounter++;
+      }break;
+      case etUndeliverable:
+      {
+        MutexGuard g(perfMutex);
+        msu_deliverErrPermCounter++;
+      }break;
+      case etRescheduled:
+      {
+        MutexGuard g(perfMutex);
+        msu_rescheduleCounter++;
+      }break;
+    }
+  }
+
   void registerStatisticalEvent(int eventType,const SMS* sms)
   {
     using namespace smsc::stat;
@@ -274,6 +321,7 @@ public:
         statMan->updateRejected(*sms);
         MutexGuard g(perfMutex);
         submitErrCounter++;
+        msu_submitErrCounter+=sms->hasIntProperty(Tag::SMSC_ORIGINALPARTSNUM)?sms->getIntProperty(Tag::SMSC_ORIGINALPARTSNUM):1;
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
 #ifdef SNMP
         SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
@@ -297,8 +345,18 @@ public:
       case etDeliverErr:
       {
         statMan->updateTemporal(StatInfo(*sms,false));
+        int msuCnt=1;
+        if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+        {
+          ConcatInfo* ci=0;
+          unsigned len;
+          ci=(ConcatInfo*)sms->getBinProperty(Tag::SMSC_CONCATINFO,&len);
+          msuCnt=ci->num-sms->getConcatSeqNum();
+        }
+
         MutexGuard g(perfMutex);
         deliverErrTempCounter++;
+        msu_deliverErrTempCounter+=msuCnt;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
         int smeIdx=smeman.lookup(sms->getDestinationSmeId());
@@ -308,9 +366,18 @@ public:
       }break;
       case etUndeliverable:
       {
+        int msuCnt=1;
+        if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+        {
+          ConcatInfo* ci=0;
+          unsigned len;
+          ci=(ConcatInfo*)sms->getBinProperty(Tag::SMSC_CONCATINFO,&len);
+          msuCnt=ci->num-sms->getConcatSeqNum();
+        }
         statMan->updateChanged(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         deliverErrPermCounter++;
+        msu_deliverErrTempCounter+=msuCnt;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
         int smeIdx=smeman.lookup(sms->getDestinationSmeId());
@@ -376,6 +443,12 @@ public:
     cnt[3]=deliverErrTempCounter;
     cnt[4]=deliverErrPermCounter;
     cnt[5]=rescheduleCounter;
+    cnt[6]=msu_submitOkCounter;
+    cnt[7]=msu_submitErrCounter;
+    cnt[8]=msu_deliverOkCounter;
+    cnt[9]=msu_deliverErrTempCounter;
+    cnt[10]=msu_deliverErrPermCounter;
+    cnt[11]=msu_rescheduleCounter;
   }
 
   uint8_t* getSmePerfData(uint32_t& smePerfDataSize)
@@ -678,6 +751,14 @@ protected:
   uint64_t deliverErrTempCounter;
   uint64_t deliverErrPermCounter;
   uint64_t rescheduleCounter;
+
+  uint64_t msu_submitOkCounter;
+  uint64_t msu_submitErrCounter;
+  uint64_t msu_deliverOkCounter;
+  uint64_t msu_deliverErrTempCounter;
+  uint64_t msu_deliverErrPermCounter;
+  uint64_t msu_rescheduleCounter;
+
   string scAddr;
   string ussdCenterAddr;
   int    ussdSSN;

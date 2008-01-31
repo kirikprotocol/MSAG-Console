@@ -29,7 +29,7 @@ struct PerformanceCounter{
   uint64_t total;
 };
 
-const int performanceCounters=6;
+const int performanceCounters=12;
 
 struct PerformanceData{
   uint32_t size;
@@ -55,12 +55,12 @@ struct SmePerformanceCounter
     TimeSlotCounter<int>*   slots   [SME_PERF_CNT_COUNT];
     uint16_t                counters[SME_PERF_CNT_COUNT];
 
-    SmePerformanceCounter() { 
+    SmePerformanceCounter() {
         memset(counters, 0, sizeof(counters));
         memset(slots, 0, sizeof(slots));
     };
     virtual ~SmePerformanceCounter() {
-        for (int i=0; i<SME_PERF_CNT_COUNT; i++) 
+        for (int i=0; i<SME_PERF_CNT_COUNT; i++)
             if (slots[i]) delete slots[i];
     };
     inline void clear() {
@@ -83,7 +83,7 @@ class SmePerformanceMonitor
 private:
 
     Mutex                           countersLock;
-    
+
     Hash   <SmePerformanceCounter*>  smeCounters;
     IntHash<SmeErrorCounter*>        errCounters;
 
@@ -101,11 +101,11 @@ private:
             counter = new SmeErrorCounter();
             errCounter = 0; errCounters.Delete(errcode);
         }
-        
+
         counter->errors++;
         if (!counter->slot) counter->slot = newSlotCounter();
         counter->slot->Inc();
-        
+
         if (!errCounter) errCounters.Insert(errcode, counter);
     };
 
@@ -183,7 +183,7 @@ public:
     {
         MutexGuard guard(countersLock);
 
-        smePerfDataSize = sizeof(uint32_t)+sizeof(uint16_t)*2+ 
+        smePerfDataSize = sizeof(uint32_t)+sizeof(uint16_t)*2+
             (sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+
              sizeof(uint16_t)*2*SME_PERF_CNT_COUNT)*smeCounters.GetCount()+
             (sizeof(uint32_t)+sizeof(uint16_t)*2)*errCounters.Count();
@@ -195,7 +195,7 @@ public:
         *((uint32_t*)packet) = htonl(smePerfDataSize-sizeof(uint32_t)); packet += sizeof(uint32_t);
         // uint16_t     Sme(s) count
         *((uint16_t*)packet) = htons((uint16_t)smeCounters.GetCount()); packet += sizeof(uint16_t);
-        
+
         smeCounters.First();
         char* sme = 0; SmePerformanceCounter* smeCounter = 0;
         while (smeCounters.Next(sme, smeCounter))
@@ -203,7 +203,7 @@ public:
             // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
             if (sme) strncpy((char *)packet, sme, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
             packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
-            
+
             for (int i=0; i<SME_PERF_CNT_COUNT; i++)
             {
                 // uint16_t(2)  xxx counter + avg (hour)
@@ -212,7 +212,7 @@ public:
                 *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             }
             if (smeCounter) smeCounter->clear();
-        }   
+        }
 
         // uint16_t     Errors count
         *((uint16_t*)packet) = htons((uint16_t)errCounters.Count()); packet += sizeof(uint16_t);
@@ -229,7 +229,7 @@ public:
             *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
             if (errCounter) errCounter->errors = 0;
         }
-        
+
         return data;
     };
 };
@@ -308,7 +308,7 @@ public:
         __trace2__("invalid sme performance data (size=%d)", size);
         return;
     }
-    
+
     for(int i=0;i<sockets.Count();i++)
     {
       int wr=sockets[i]->WriteAll((char*)data, size);

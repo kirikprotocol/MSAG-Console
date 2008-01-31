@@ -3725,6 +3725,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
+  sms.setLastResult(Status::OK);
+  smsc->registerMsuStatEvent(StatEvents::etDeliveredOk,&sms);
   /*
   if(sms.getIntProperty(Tag::SMPP_SET_DPF)==1 && sms.getAttemptsCount()>0)
   {
@@ -3749,7 +3751,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
   */
 
-  sms.setLastResult(Status::OK);
 
 #ifdef SMSEXTRA
   if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO) ||

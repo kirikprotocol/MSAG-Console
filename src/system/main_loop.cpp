@@ -55,6 +55,7 @@ void Smsc::RejectSms(const SmscCommand& cmd)
     sms->setSourceSmeId(src_proxy->getSystemId());
     sms->setLastResult(Status::LICENSELIMITREJECT);
     registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+    registerMsuStatEvent(StatEvents::etSubmitErr,sms);
 
     src_proxy->putCommand
     (
@@ -469,6 +470,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
         id=store->getNextId();
       }
       __trace2__("main loop submit: seq=%d, id=%lld",cmd->get_dialogId(),id);
+      registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
       break;
     }
     case __CMD__(DELIVERY_RESP):
@@ -600,6 +602,7 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     }
     case __CMD__(FORWARD):
     {
+      registerMsuStatEvent(StatEvents::etRescheduled,0);
       id=cmd->get_forwardMsgId();
       break;
     }
