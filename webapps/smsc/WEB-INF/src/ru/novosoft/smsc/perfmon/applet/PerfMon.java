@@ -24,12 +24,14 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   AdvancedLabel uptimeLabel;
   AdvancedLabel sctimeLabel;
   PerformanceBar perfbar;
+  LabelGroup    perfTableLG;
   PerfInfoTable perfTable;
   PerfQueueTable perfQueue;
   PerformanceGraph perfGraph;
   Label connectingLabel;
   PopupMenu popupMenu;
   MenuItem menuSwitch;
+  MenuItem menuMsu;
   CheckboxMenuItem menuInput;
   CheckboxMenuItem menuOutput;
   CheckboxMenuItem menuSubmitErr;
@@ -67,6 +69,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public static boolean viewDeliverErrEnabled = true;
   public static boolean viewTempErrEnabled = true;
 
+  public static boolean showMsu = false;
+
   public void init()
   {
     System.out.println("Initing...");
@@ -96,6 +100,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
       vMinuteGrid = Integer.valueOf(getParameter("vMinuteGrid")).intValue();
     } catch (Exception ex) {
     }
+    showMsu = false;
+    String s = getParameter("vMinuteGrid");
+    if( s != null && (s.equalsIgnoreCase("true") || s.equalsIgnoreCase("on") || s.equalsIgnoreCase("yes") || s.equalsIgnoreCase("1")) ) {
+      showMsu = true;
+    }
 
     setFont(new Font("dialog", Font.BOLD, 12));
     setLayout(new GridBagLayout());
@@ -119,6 +128,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     popupMenu = new PopupMenu(localeText.getString("popup.options"));
     menuSwitch = new MenuItem(localeText.getString("popup.switch"));
     menuSwitch.addActionListener(this);
+    menuMsu = new MenuItem(showMsu?localeText.getString("popup.msu.true"):localeText.getString("popup.msu.false"));
+    menuMsu.addActionListener(this);
     menuInput = new CheckboxMenuItem(localeText.getString("popup.input"), viewInputEnabled);
     menuInput.addItemListener(this);
     menuOutput = new CheckboxMenuItem(localeText.getString("popup.output"), viewOutputEnabled);
@@ -163,6 +174,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     popupMenu.add(menuIncrease);
     popupMenu.add(menuDecrease);
     popupMenu.add(menuSwitch);
+    popupMenu.add(menuMsu);
     popupMenu.add(new MenuItem("-"));
     if (viewMode == VIEWMODE_IO) {
       popupMenu.add(menuInput);
@@ -238,7 +250,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     gbc.weightx = 3;
     add(lg, gbc);
 
-    lg = new LabelGroup(localeText.getString("glab.pinfo"), LabelGroup.NORTHWEST);
+    lg = new LabelGroup(localeText.getString(showMsu?"glab.pinfo.msu":"glab.pinfo"), LabelGroup.NORTHWEST);
+    perfTableLG = lg;
     lg.setLayout(new BorderLayout());
     lg.add(perfTable, BorderLayout.CENTER);
 
@@ -396,6 +409,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         popupMenu.add(menuInput);
         popupMenu.add(menuOutput);
       }
+    }
+    else if (e.getSource() == menuMsu ) {
+      showMsu = !showMsu;
+      menuMsu.setLabel(showMsu?localeText.getString("popup.msu.true"):localeText.getString("popup.msu.false"));
+      perfTableLG.setLabel(showMsu?localeText.getString("glab.pinfo.msu"):localeText.getString("glab.pinfo"));
     }
     else if (e.getSource() == menuIncrScale) {
       scale += 10;

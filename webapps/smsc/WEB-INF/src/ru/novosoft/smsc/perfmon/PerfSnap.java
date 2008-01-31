@@ -9,9 +9,9 @@ import java.util.Date;
 
 public class PerfSnap
 {
-  public long last[] = {0, 0, 0, 0, 0, 0};
-  public long avg[] = {0, 0, 0, 0, 0, 0};
-  public long total[] = {0, 0, 0, 0, 0, 0};
+  public long last[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  public long avg[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  public long total[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   public long uptime;
   public long sctime;
@@ -28,6 +28,12 @@ public class PerfSnap
   public final static int IDX_DELIVER = 3;
   public final static int IDX_DELIVERERR = 4;
   public final static int IDX_TEMPERR = 5;
+  public final static int IDX_MSU_SUBMIT = 6+IDX_SUBMIT;
+  public final static int IDX_MSU_SUBMITERR = 6+IDX_SUBMITERR;
+  public final static int IDX_MSU_RETRY = 6+IDX_RETRY;
+  public final static int IDX_MSU_DELIVER = 6+IDX_DELIVER;
+  public final static int IDX_MSU_DELIVERERR = 6+IDX_DELIVERERR;
+  public final static int IDX_MSU_TEMPERR = 6+IDX_TEMPERR;
 
   public PerfSnap()
   {
@@ -118,24 +124,12 @@ public class PerfSnap
     out.writeInt(queueSize);
     out.writeInt(processingSize);
     out.writeInt(schedulerSize);
-    out.writeLong(last[IDX_DELIVER]);
-    out.writeLong(last[IDX_DELIVERERR]);
-    out.writeLong(last[IDX_TEMPERR]);
-    out.writeLong(last[IDX_SUBMIT]);
-    out.writeLong(last[IDX_SUBMITERR]);
-    out.writeLong(last[IDX_RETRY]);
-    out.writeLong(avg[IDX_DELIVER]);
-    out.writeLong(avg[IDX_DELIVERERR]);
-    out.writeLong(avg[IDX_TEMPERR]);
-    out.writeLong(avg[IDX_SUBMIT]);
-    out.writeLong(avg[IDX_SUBMITERR]);
-    out.writeLong(avg[IDX_RETRY]);
-    out.writeLong(total[IDX_DELIVER]);
-    out.writeLong(total[IDX_DELIVERERR]);
-    out.writeLong(total[IDX_TEMPERR]);
-    out.writeLong(total[IDX_SUBMIT]);
-    out.writeLong(total[IDX_SUBMITERR]);
-    out.writeLong(total[IDX_RETRY]);
+    for(int i = 0; i < last.length; i++ )
+      out.writeLong(last[i]);
+    for(int i = 0; i < avg.length; i++ )
+      out.writeLong(avg[i]);
+    for(int i = 0; i < total.length; i++ )
+      out.writeLong(total[i]);
   }
 
   public void read(java.io.DataInputStream in)
@@ -151,24 +145,13 @@ public class PerfSnap
     queueSize = in.readInt();
     processingSize = in.readInt();
     schedulerSize = in.readInt();
-    last[IDX_DELIVER] = in.readLong();
-    last[IDX_DELIVERERR] = in.readLong();
-    last[IDX_TEMPERR] = in.readLong();
-    last[IDX_SUBMIT] = in.readLong();
-    last[IDX_SUBMITERR] = in.readLong();
-    last[IDX_RETRY] = in.readLong();
-    avg[IDX_DELIVER] = in.readLong();
-    avg[IDX_DELIVERERR] = in.readLong();
-    avg[IDX_TEMPERR] = in.readLong();
-    avg[IDX_SUBMIT] = in.readLong();
-    avg[IDX_SUBMITERR] = in.readLong();
-    avg[IDX_RETRY] = in.readLong();
-    total[IDX_DELIVER] = in.readLong();
-    total[IDX_DELIVERERR] = in.readLong();
-    total[IDX_TEMPERR] = in.readLong();
-    total[IDX_SUBMIT] = in.readLong();
-    total[IDX_SUBMITERR] = in.readLong();
-    total[IDX_RETRY] = in.readLong();
+    for(int i = 0; i < last.length; i++ )
+      last[i] = in.readLong();
+    for(int i = 0; i < avg.length; i++ )
+      avg[i] = in.readLong();
+    for(int i = 0; i < total.length; i++ )
+      total[i] = in.readLong();
+
   }
 
   public void init(SnapBufferReader in) throws IOException
@@ -197,6 +180,30 @@ public class PerfSnap
     last[PerfSnap.IDX_RETRY] = (long) in.readNetworkInt();
     avg[PerfSnap.IDX_RETRY] = (long) in.readNetworkInt();
     total[PerfSnap.IDX_RETRY] = in.readNetworkLong();
+
+    last[PerfSnap.IDX_MSU_SUBMIT] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_MSU_SUBMIT] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_MSU_SUBMIT] = in.readNetworkLong();
+
+    last[PerfSnap.IDX_MSU_SUBMITERR] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_MSU_SUBMITERR] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_MSU_SUBMITERR] = in.readNetworkLong();
+
+    last[PerfSnap.IDX_MSU_DELIVER] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_MSU_DELIVER] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_MSU_DELIVER] = in.readNetworkLong();
+
+    last[PerfSnap.IDX_MSU_TEMPERR] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_MSU_TEMPERR] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_MSU_TEMPERR] = in.readNetworkLong();
+
+    last[PerfSnap.IDX_MSU_DELIVERERR] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_MSU_DELIVERERR] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_MSU_DELIVERERR] = in.readNetworkLong();
+
+    last[PerfSnap.IDX_MSU_RETRY] = (long) in.readNetworkInt();
+    avg[PerfSnap.IDX_MSU_RETRY] = (long) in.readNetworkInt();
+    total[PerfSnap.IDX_MSU_RETRY] = in.readNetworkLong();
 
     if( Support64Bit.enabled ) {
       uptime = in.readNetworkLong();

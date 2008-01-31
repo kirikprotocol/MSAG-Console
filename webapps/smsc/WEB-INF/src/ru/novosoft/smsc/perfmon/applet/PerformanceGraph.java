@@ -151,6 +151,7 @@ public class PerformanceGraph extends Canvas
     //draw graph
     // prepare arrays for polyline
     if (snaps.size() > 1) {
+      int msuShift = PerfMon.showMsu?6:0;
       int maxheight = gmax * 5;
       int viewableGraph = graphWidth / PerfMon.pixPerSecond;
       int idx = snaps.size() - 1;
@@ -165,42 +166,42 @@ public class PerformanceGraph extends Canvas
         if (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewInputEnabled)) {
           if (PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewSubmitErrEnabled))
             drawGraphLine(g, posy, posx,
-                    (int) snap.last[PerfSnap.IDX_SUBMITERR],
-                    (int) prevSnap.last[PerfSnap.IDX_SUBMITERR],
+                    (int) snap.last[PerfSnap.IDX_SUBMITERR+msuShift],
+                    (int) prevSnap.last[PerfSnap.IDX_SUBMITERR+msuShift],
                     0,
                     0,
                     maxheight, colorGraphSubmitErr);
           if (PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewRetryEnabled))
             drawGraphLine(g, posy, posx,
-                    (int) snap.last[PerfSnap.IDX_RETRY], (int) prevSnap.last[PerfSnap.IDX_RETRY],
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) snap.last[PerfSnap.IDX_SUBMITERR] : 0,
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) prevSnap.last[PerfSnap.IDX_SUBMITERR] : 0,
+                    (int) snap.last[PerfSnap.IDX_RETRY+msuShift], (int) prevSnap.last[PerfSnap.IDX_RETRY+msuShift],
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) snap.last[PerfSnap.IDX_SUBMITERR+msuShift] : 0,
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) prevSnap.last[PerfSnap.IDX_SUBMITERR+msuShift] : 0,
                     maxheight, colorGraphRetry);
           if (PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewSubmitEnabled))
             drawGraphLine(g, posy, posx,
-                    (int) snap.last[PerfSnap.IDX_SUBMIT], (int) prevSnap.last[PerfSnap.IDX_SUBMIT],
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (snap.last[PerfSnap.IDX_SUBMITERR] + snap.last[PerfSnap.IDX_RETRY]) : 0,
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (prevSnap.last[PerfSnap.IDX_SUBMITERR] + prevSnap.last[PerfSnap.IDX_RETRY]) : 0,
+                    (int) snap.last[PerfSnap.IDX_SUBMIT+msuShift], (int) prevSnap.last[PerfSnap.IDX_SUBMIT+msuShift],
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (snap.last[PerfSnap.IDX_SUBMITERR+msuShift] + snap.last[PerfSnap.IDX_RETRY+msuShift]) : 0,
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (prevSnap.last[PerfSnap.IDX_SUBMITERR+msuShift] + prevSnap.last[PerfSnap.IDX_RETRY+msuShift]) : 0,
                     maxheight, colorGraphSubmit);
         }
         //draw deliver graphs
         if (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE || (PerfMon.viewMode == PerfMon.VIEWMODE_IO && PerfMon.viewOutputEnabled)) {
           if (PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliverErrEnabled))
             drawGraphLine(g, posy, posx,
-                    (int) snap.last[PerfSnap.IDX_DELIVERERR], (int) prevSnap.last[PerfSnap.IDX_DELIVERERR],
+                    (int) snap.last[PerfSnap.IDX_DELIVERERR+msuShift], (int) prevSnap.last[PerfSnap.IDX_DELIVERERR+msuShift],
                     0, 0,
                     maxheight, colorGraphDeliverErr);
           if (PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewTempErrEnabled))
             drawGraphLine(g, posy, posx,
-                    (int) snap.last[PerfSnap.IDX_TEMPERR], (int) prevSnap.last[PerfSnap.IDX_TEMPERR],
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) snap.last[PerfSnap.IDX_DELIVERERR] : 0,
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) prevSnap.last[PerfSnap.IDX_DELIVERERR] : 0,
+                    (int) snap.last[PerfSnap.IDX_TEMPERR+msuShift], (int) prevSnap.last[PerfSnap.IDX_TEMPERR+msuShift],
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) snap.last[PerfSnap.IDX_DELIVERERR+msuShift] : 0,
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) prevSnap.last[PerfSnap.IDX_DELIVERERR+msuShift] : 0,
                     maxheight, colorGraphTempErr);
           if (PerfMon.viewMode == PerfMon.VIEWMODE_IO || (PerfMon.viewMode == PerfMon.VIEWMODE_SEPARATE && PerfMon.viewDeliverEnabled))
             drawGraphLine(g, posy, posx,
-                    (int) snap.last[PerfSnap.IDX_DELIVER], (int) prevSnap.last[PerfSnap.IDX_DELIVER],
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (snap.last[PerfSnap.IDX_TEMPERR] + snap.last[PerfSnap.IDX_DELIVERERR]) : 0,
-                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (prevSnap.last[PerfSnap.IDX_TEMPERR] + prevSnap.last[PerfSnap.IDX_DELIVERERR]) : 0,
+                    (int) snap.last[PerfSnap.IDX_DELIVER+msuShift], (int) prevSnap.last[PerfSnap.IDX_DELIVER+msuShift],
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (snap.last[PerfSnap.IDX_TEMPERR+msuShift] + snap.last[PerfSnap.IDX_DELIVERERR+msuShift]) : 0,
+                    (PerfMon.viewMode == PerfMon.VIEWMODE_IO) ? (int) (prevSnap.last[PerfSnap.IDX_TEMPERR+msuShift] + prevSnap.last[PerfSnap.IDX_DELIVERERR+msuShift]) : 0,
                     maxheight, colorGraphDeliver);
         }
       }
@@ -227,4 +228,5 @@ public class PerformanceGraph extends Canvas
   {
     paint(gg);
   }
+
 }
