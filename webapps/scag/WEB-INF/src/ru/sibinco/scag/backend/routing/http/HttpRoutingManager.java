@@ -384,7 +384,7 @@ public class HttpRoutingManager extends Manager{
         List result = new ArrayList();
         for (Iterator it = routes.values().iterator(); it.hasNext();) {
             final HttpRoute route = (HttpRoute) it.next();
-            if(route.getService().getId().equals(svcId)){
+            if(route != null && route.getService().getId().equals(svcId)){
                result.add(route);
             }
         }
