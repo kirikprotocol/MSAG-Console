@@ -7,3 +7,4 @@ util/repairProfile repair -L$(SMSC_BUILDDIR)/bin -llogger
 -migration/profile_convert-1_00-1_01 convert-1_00-1_01 -L$(SMSC_BUILDDIR)/bin -ldb -llogger -lcore-threads -lpthread -ldl -lrt -lsms
 migration/profile_convert-1_01-1_0100 convert-1_01-1_0100 -L$(SMSC_BUILDDIR)/bin -ldb -llogger -lcore-threads -lpthread -ldl -lrt -lsms
 util/AllProfilesUpdate AllProfilesUpdate -lutil -lutil-config -lxerces-c -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger
+util/renameProfiles renameProfiles -lsms
