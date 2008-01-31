@@ -414,6 +414,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
       showMsu = !showMsu;
       menuMsu.setLabel(showMsu?localeText.getString("popup.msu.true"):localeText.getString("popup.msu.false"));
       perfTableLG.setLabel(showMsu?localeText.getString("glab.pinfo.msu"):localeText.getString("glab.pinfo"));
+      perfTableLG.invalidate();
     }
     else if (e.getSource() == menuIncrScale) {
       scale += 10;

@@ -198,8 +198,9 @@ public class PerfInfoTable extends Canvas
     g.setColor(textColor);
     int y = fm.getHeight() + 2 * pad + grid;
     int x = columnWidth;
-    for (int i = PerfMon.showMsu?6:0; i < numHeads; i++) {
-      char counter[] = String.valueOf(counters[i]).toCharArray();
+    int msuShift = PerfMon.showMsu?6:0;
+    for (int i = 0; i < numHeads; i++) {
+      char counter[] = String.valueOf(counters[i+msuShift]).toCharArray();
       g.drawChars(counter, 0, counter.length,
               (i + 2) * x - fm.charsWidth(counter, 0, counter.length) - pad,
               (col) * y + fm.getAscent() + pad);
