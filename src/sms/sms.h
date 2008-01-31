@@ -1703,7 +1703,7 @@ struct SMS
     concatSeqNum=newval;
   }
 
-  inline uint8_t getConcatSeqNum()
+  inline uint8_t getConcatSeqNum()const
   {
     return concatSeqNum;
   }
