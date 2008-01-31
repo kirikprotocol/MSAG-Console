@@ -62,9 +62,11 @@ B3001:
     SMSC	Parallel MAP fixes.
     SMSC	Fix for unable to write stats to file if empty transaction file exists for it
     SMSC	Multipart SMS for transit and forward routes will now have different ids for parts, fix archiving issues
+    SMSC	Add collecting performance stats in messages parts
     INMan	Separate strategy for abonent type requests got from outter sources or from internal billing logic
     INMan	FileCache perfomance improvement
     INMan	Timewatcher facility perfomance improvement
     MCISme	Advertising client synchronization fix
     InfoSme	Add start time into Task and posibility to set this parameter in deliveries
     Webadm	Option mapIOTasksCount to section map of smsc configuration
+    Webadm	Perfmon now can switch between messages and message's parts viewing modes
