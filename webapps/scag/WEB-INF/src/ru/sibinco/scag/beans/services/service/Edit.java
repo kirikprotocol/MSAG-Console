@@ -36,14 +36,11 @@ public class Edit extends TabledEditBeanImpl {
     private long id = -1;
     private String name;
     private String description;
+    private String parentId;
     private boolean add = false;
     private String editId = null;
     private String mbSave = null;
     private String mbCancel = null;
-    private String deleteRuleSMPP = null;
-    private String deleteRuleHTTP = null;
-    private String deleteRuleMMS = null;
-    private String parentId;
     private String dirName = "service";
     private boolean editChild = false;
     private String path = "";
@@ -54,23 +51,39 @@ public class Edit extends TabledEditBeanImpl {
     private String childEitId;
     private String mbDeleteHttpRoute;
     private String mbDefaultHttpRoute;
+
     private String unlockRuleSMPP = null;
     private String unlockRuleHTTP = null;
     private String unlockRuleMMS  = null;
     private String editRuleSMPP = null;
     private String editRuleHTTP = null;
     private String editRuleMMS  = null;
+    private String deleteRuleSMPP = null;
+    private String deleteRuleHTTP = null;
+    private String deleteRuleMMS = null;
 
     private List httpRuteItems = new ArrayList();
 
     private int totalHttpSize = 0;
+
+    private String editId1 = "null";
+
+    public String getEditId1() {
+        return editId1;
+    }
+
+    public void setEditId1(String editId) {
+        this.editId1 = editId;
+    }
+
 
     protected Collection getDataSource() {
         return routes.values();
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-        logger.error("process():start:startPosition=" + startPosition + " \tpageSize=" + pageSize);
+//        logger.error("services/service/Edit:process():start:startPosition=" + startPosition + " \tpageSize=" + pageSize);
+        logger.error("services/service/Edit:process():start:editId =" + getEditId() + " editId1 =" + getEditId1() );
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
@@ -81,7 +94,7 @@ public class Edit extends TabledEditBeanImpl {
             path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
             throw new CancelChildException(path);
         } else if (getMbSave() != null) {
-            logger.info( "SERVICE:SAVE" );
+            logger.info( "services/service/Edit:process SAVE" );
             save();
         } else if (getMbAddSmppRoute() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
@@ -96,6 +109,7 @@ public class Edit extends TabledEditBeanImpl {
         }
         Long servIdForRout;
         if( getEditId() != null ) {
+            logger.info("services/service/Edit:process: ( getEditId() != null ) = " + getEditId());
             servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
         } else {
             servIdForRout = Long.decode(getParentId());
@@ -112,9 +126,9 @@ public class Edit extends TabledEditBeanImpl {
         pageSize = Integer.parseInt(String.valueOf(session.getAttribute(TabledBeanImpl.PAGE_SIZE)));
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(
-                appContext.getScagRoutingManager().getRoutes(), servIdForRout);
+                                                            appContext.getScagRoutingManager().getRoutes(), servIdForRout);
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
-        logger.error("process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
+        logger.error("services/service/Edit:process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
         totalSize = results.size();
         if (totalSize > startPosition)
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
@@ -135,7 +149,6 @@ public class Edit extends TabledEditBeanImpl {
 
         if (deleteRuleSMPP != null) {
             deleteRule(Transport.SMPP_TRANSPORT_NAME);
-            System.out.println("!!!!!!deleteRuleSMPP!!!!!!!!!!!!");
         }
         if (deleteRuleHTTP != null) {
             deleteRule(Transport.HTTP_TRANSPORT_NAME);
@@ -146,24 +159,24 @@ public class Edit extends TabledEditBeanImpl {
         if (mbDefaultHttpRoute!=null) setDefaultHttpRoute(new Long(id));
 //unlock rule forcibly if clicked "unlock" button
         if( unlockRuleSMPP != null ) {
-            logger.warn( "Edit:unlockRuleSMPP" );
+            logger.warn( "services/service/Edit:unlockRuleSMPP" );
             unlockRule( Transport.SMPP_TRANSPORT_NAME );
         } else if( unlockRuleHTTP != null ) {
-            logger.warn( "Edit:unlockRuleHTTP" );
+            logger.warn( "services/service/Edit:unlockRuleHTTP" );
             unlockRule( Transport.HTTP_TRANSPORT_NAME );
         } else if( unlockRuleMMS != null )  {
-            logger.warn( "Edit:unlockRuleMMS" );
+            logger.warn( "services/service/Edit:unlockRuleMMS" );
             unlockRule( Transport.MMS_TRANSPORT_NAME );
         }
 //set permission true if clicked "edit" button
         if( editRuleSMPP != null ) {
-            logger.debug( "Edit:editRuleSMPP" );
+            logger.debug( "services/service/Edit:editRuleSMPP" );
             setPermissionRule( Transport.SMPP_TRANSPORT_NAME, true );
         } else if( editRuleHTTP != null ) {
-            logger.debug( "Edit:editRuleHTTP" );
+            logger.debug( "services/service/Edit:editRuleHTTP" );
             setPermissionRule( Transport.HTTP_TRANSPORT_NAME, true );
         } else if( editRuleMMS != null ) {
-            logger.debug( "Edit:editRuleMMS" );
+            logger.debug( "services/service/Edit:editRuleMMS" );
             setPermissionRule( Transport.MMS_TRANSPORT_NAME, true );
         }
 
@@ -204,17 +217,17 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void save() throws SCAGJspException {
-        logger.info( "SERVICES:save():service, name is - " + name );
+        logger.info( "services/service/Edit:save(): name is - " + name );
         final ServiceProvidersManager serviceProvidersManager = appContext.getServiceProviderManager();
         Service oldService = null;
         Long serviceProviderId = null;
         if (description == null) description = "";
         if( name == null || name.equals("") ){
-            logger.error( "services.Edit:save():name is empty" );
+            logger.error( "services/service/Edit:save():name is empty" );
             throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_EMPTY_NAME, name );
         }
         if( !serviceProvidersManager.checkForbiddenChars(name) ){
-            logger.error( "Attempt to set illegal character into service name - '"  +
+            logger.error( "services/service/Edit:save() Attempt to set illegal character into service name - '"  +
                     name + "' with '" + Constants.FORBIDDEN_CHARACTER + "'");
             throw new SCAGJspException( Constants.errors.CAN_NOT_SAVE_NAME_WITH_FORBIDDEN_CHARACTER,
                         Constants.FORBIDDEN_CHARACTER );
@@ -227,12 +240,12 @@ public class Edit extends TabledEditBeanImpl {
                     id = serviceProvidersManager.createService(getLoginedPrincipal().getName(), serviceProviderId.longValue(), service);
 //                    parentId = String.valueOf(id);
             } else {
-                logger.error( "services.Edit:save():new service:name '" + name + "' is not unique" );
+                logger.error( "services/service/Edit:save():new service:name '" + name + "' is not unique" );
                 throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
             }
         } else {
             if( !serviceProvidersManager.isUniqueServiceName(name, getEditId()) ){
-                logger.error( "services.Edit:save():edit service:name '" + name + "' is not unique" );
+                logger.error( "services/service/Edit:save():edit service:name '" + name + "' is not unique" );
                 throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
             }
             if( editChild ) {
@@ -263,12 +276,19 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     protected void load() throws SCAGJspException {
+        logger.debug( "services/service/Edit:load" );
+        logger.debug( "services/service/Edit: load: getParentId()=" + getParentId() + " getEdittId()=" + getEditId() );
         if (!isAdd() && getTabledItems() != null) {
 
             if (editChild) {
-                logger.debug( "service:Edit:if (editChild)" );
+                logger.debug( "services/service/Edit: load if (editChild): getParentId()=" + getParentId() + " getEditId()=" + getEditId() );
+                logger.debug( "services/service/Edit: load if (editChild): getEditId1()=" + getEditId1() );
                 if (!serviceProviders.containsKey(Long.decode(getEditId())))
-                    throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId());
+                {
+                    if (!serviceProviders.containsKey(Long.decode(getEditId1()))){
+                        throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId()+"|"+getEditId1()+"|c");
+                    }
+                }
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getEditId()));
                 if (getParentId() != null) {
                     final Long longLoadId = Long.decode(getParentId());
@@ -280,9 +300,11 @@ public class Edit extends TabledEditBeanImpl {
                     }
                 }
             } else {
-                logger.debug( "service:Edit:else (editChild)" );
-                if (!serviceProviders.containsKey(Long.decode(getParentId())))
-                    throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId());
+                logger.debug( "services/service/Edit:load else (editChild): getParentId()=" + getParentId() + " getEdittId()=" + getEditId() );
+                if (!serviceProviders.containsKey(Long.decode(getParentId()))){
+//                    throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId());
+                    throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getParentId()+"|"+getEditId()+"|"+getEditId1());
+                }
                 ServiceProvider serviceProvider = (ServiceProvider) serviceProviders.get(Long.decode(getParentId()));
                 if (getEditId() != null) {
                     final Long longLoadId = Long.decode(getEditId());
