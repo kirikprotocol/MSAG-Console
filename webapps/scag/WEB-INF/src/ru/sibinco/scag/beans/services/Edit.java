@@ -95,8 +95,10 @@ public class Edit extends TabledEditBeanImpl {
             logger.info( "SERVICES:LOAD: " + getEditId() );
             final Map serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
             final Long longLoadId = Long.decode(getEditId());
-            if (!serviceProviders.containsKey(longLoadId))
-                throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId());
+            if (!serviceProviders.containsKey(longLoadId)){
+                logger.debug( "services/Edit: load(): longLoadId=" + longLoadId );
+                throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId()+" ss");
+            }
             serviceProvider = (ServiceProvider) serviceProviders.get(longLoadId);
             this.id = serviceProvider.getId().longValue();
             this.name = serviceProvider.getName();
