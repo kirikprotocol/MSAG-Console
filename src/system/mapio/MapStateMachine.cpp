@@ -364,16 +364,15 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 static void NotifyHLR(MapDialog* dialog);
 static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
 
-static void DropMapDialog_(unsigned dialogid,unsigned ssn)
+static void DropMapDialog(MapDialog* dlg)
 {
-  if ( dialogid == 0 ) return;
-  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid,ssn));
-  if ( dialog.isnull() )
+//  if ( dialogid == 0 ) return;
+  if ( !dlg )
   {
-    __map_warn2__( "%s: dlg 0x%x is null",__func__,dialogid);
+    __map_warn2__( "%s: dlg is null",__func__);
     return;
   }
-  __require__(dialog->ssn==ssn);
+  DialogRefGuard dialog(dlg->AddRef());
   //
   try{
     bool isChainEmpty;
@@ -458,9 +457,6 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn)
   }
 }
 
-static void DropMapDialog(MapDialog* dialog){
-  DropMapDialog_(dialog->dialogid_map,dialog->ssn);
-}
 
 static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
   dialog->id_opened = false;
@@ -1118,7 +1114,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
   }catch(...){
     __map_warn__("TryDestroyDialog: catched unexpected exception");
   }
-  DropMapDialog_(dialogid,ssn);
+  DropMapDialog(dialog.get());
 }
 
 static string RouteToString(MapDialog* dialog)
@@ -2565,13 +2561,15 @@ USHORT_T Et96MapOpenInd (
   DialogRefGuard dialog;
   try{
     __map_trace2__("%s: dialog 0x%x ctx=%d ver=%d dstref=%p orgref=%p",__func__,dialogueId,appContext_sp->acType,appContext_sp->version,destRef_sp,origRef_sp );
-    if( appContext_sp->version == 1 && appContext_sp->acType == ET96MAP_NETWORK_FUNCTIONAL_SS_CONTEXT && !MapDialogContainer::getUssdV1Enabled()) {
+    dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));//,appContext_sp->version));
+    if( appContext_sp->version == 1 && appContext_sp->acType == ET96MAP_NETWORK_FUNCTIONAL_SS_CONTEXT && !MapDialogContainer::getUssdV1Enabled())
+    {
       // reject USSD request version 1
       __map_trace2__("%s: aborting USSD v1 dialog 0x%x", __func__, dialogueId );
       warnMapReq( Et96MapUAbortReq( localSsn, dialogueId, 0, 0, 0, 0 ), __func__);
+      DropMapDialog(dialog.get());
       return ET96MAP_E_OK;
     }
-    dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));//,appContext_sp->version));
     __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
     if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen >= 3 )
@@ -2588,8 +2586,6 @@ USHORT_T Et96MapOpenInd (
         dialog->hasIndAddress = true;
       }
     }
-    if ( dialog.isnull() )
-      throw runtime_error("MAP:: can't create dialog");
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)

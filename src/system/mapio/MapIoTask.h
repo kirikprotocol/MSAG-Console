@@ -734,6 +734,7 @@ public:
     }
     if(dlgPool[lssn]==0)
     {
+      EINSS7CpReleaseMsgBuffer(&msg);
       throw Exception("Unsupported ssn:%d",lssn);
     }
     MapDialog* dlg=dlgPool[lssn][dialogueid];
@@ -741,6 +742,12 @@ public:
     if(!dlg->isAllocated)
     {
       __map_warn2__("Failed to get dialog for prim=0x%x,dlgId=0x%x,lssn=%u",(unsigned int)msg.primitive,(unsigned int)dialogueid,(unsigned int)lssn);
+      EINSS7CpReleaseMsgBuffer(&msg);
+      return 0;
+    }
+    if(dlg->isDropping)
+    {
+      EINSS7CpReleaseMsgBuffer(&msg);
       return 0;
     }
     if(dlg->isLocked)

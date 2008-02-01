@@ -459,7 +459,7 @@ void MapIoTask::dispatcher()
         MSG_T msg;
         {
           MutexGuard dlgMg(dlg->mutex);
-          if(!dlg->cmdQueue.Count())
+          if(!dlg->cmdQueue.Count() || dlg->isDropping)
           {
             dlg->isLocked=false;
             break;
