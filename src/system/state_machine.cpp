@@ -2812,10 +2812,18 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     return UNDELIVERABLE_STATE;
   }
 
+  if(sms.getAttemptsCount()==0 && sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+  {
+    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
+    smsc->registerMsuStatEvent(StatEvents::etSubmitOk,&sms);
+  }else
+  {
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+  }
+
   if(sms.getLastTime()>sms.getValidTime())
   {
     sms.setLastResult(Status::EXPIRED);
-    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
     try{
       smsc->getScheduler()->InvalidSms(t.msgId);
@@ -2892,14 +2900,6 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   //
   ////
 
-
-  if(sms.getAttemptsCount()==0 && sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
-  {
-    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
-  }else
-  {
-    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
-  }
 
   SmeProxy *dest_proxy=0;
   int dest_proxy_index;
@@ -3543,7 +3543,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
        RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
     {
       sms.setLastResult(Status::EXPIRED);
-      smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+      //smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
       smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
       try{
         smsc->getScheduler()->InvalidSms(t.msgId);

@@ -377,7 +377,7 @@ public:
         statMan->updateChanged(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         deliverErrPermCounter++;
-        msu_deliverErrTempCounter+=msuCnt;
+        msu_deliverErrPermCounter+=msuCnt;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
 #ifdef SNMP
         int smeIdx=smeman.lookup(sms->getDestinationSmeId());
@@ -390,6 +390,7 @@ public:
         statMan->updateScheduled(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         rescheduleCounter++;
+        msu_rescheduleCounter++;
         smePerfMonitor.incRescheduled(sms->getDestinationSmeId());
 #ifdef SNMP
         smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntRetried);

@@ -602,7 +602,6 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     }
     case __CMD__(FORWARD):
     {
-      registerMsuStatEvent(StatEvents::etRescheduled,0);
       id=cmd->get_forwardMsgId();
       break;
     }
