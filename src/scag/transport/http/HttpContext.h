@@ -34,7 +34,7 @@ public:
 
     HttpContext(Socket* userSocket) : action(READ_REQUEST),
         user(userSocket), site(NULL), command(NULL),
-        unparsed(DFLT_BUF_SIZE)
+        unparsed(DFLT_BUF_SIZE), requestFailed(false)
     {
         setContext(user, this); 
     }
@@ -117,6 +117,8 @@ public:
     unsigned int flags;
     unsigned int position;
     int result;
+
+    bool requestFailed;
 
 protected:
     enum DataKeys {

@@ -298,7 +298,8 @@ public:
     typedef StringHashIterator ParameterIterator;
 
     HttpRequest(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_REQUEST),
-        queryParametersIterator(queryParameters), isInitialRequest(false) {}
+        queryParametersIterator(queryParameters), isInitialRequest(false),
+        failedBeforeSessionCreate(false) {}
 
     HttpMethod getMethod() {
         return httpMethod;
@@ -330,7 +331,10 @@ public:
     void setQueryParameterEncoded(const std::string& paramName, const std::string& _paramValue);
 
     const std::string& serialize();
-    virtual bool isResponse();
+    virtual bool isResponse(); 
+
+    bool isFailedBeforeSessionCreate() const { return failedBeforeSessionCreate; };
+    void setFailedBeforeSessionCreate(bool failed) { failedBeforeSessionCreate = failed; };
 
 protected:
     void serializeQuery(std::string& s);
@@ -346,6 +350,7 @@ protected:
     std::string URLField;    
     
     bool isInitialRequest;
+    bool failedBeforeSessionCreate;
 };
 
 /**

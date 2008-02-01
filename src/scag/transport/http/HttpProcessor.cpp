@@ -353,23 +353,30 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
             {
                 registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
                 smsc_log_debug( logger, "http_request path parse error %s", request.getSitePath().c_str());
+                request.setFailedBeforeSessionCreate(true);
                 return scag::re::STATUS_FAILED;
             }
-            
-            if(request.getRouteId() > 0)
-            {
-                r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
-                request.setSite(r.defSite.host);
-                request.setSitePort(r.defSite.port);
+            try {
+              if(request.getRouteId() > 0)
+              {
+                  r = router.findRouteByRouteId(request.getAbonent(), request.getRouteId(), request.getSitePath() + request.getSiteFileName());
+                  request.setSite(r.defSite.host);
+                  request.setSitePort(r.defSite.port);
+              }
+              else if(request.getServiceId() > 0)
+              {
+                  r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
+                  request.setSite(r.defSite.host);
+                  request.setSitePort(r.defSite.port);
+              }
+              else
+                  r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
+            } catch (const RouteNotFoundException& e) {
+              smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
+              registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
+              request.setFailedBeforeSessionCreate(true);
+              return  scag::re::STATUS_FAILED;
             }
-            else if(request.getServiceId() > 0)
-            {
-                r = router.findRouteByServiceId(request.getAbonent(), request.getServiceId(), request.getSitePath() + request.getSiteFileName());
-                request.setSite(r.defSite.host);
-                request.setSitePort(r.defSite.port);
-            }
-            else
-                r = router.findRoute(request.getAbonent(), request.getSite(), request.getSitePath() + request.getSiteFileName(), request.getSitePort());        
             
             if(r.id && !request.getAbonent().length())
             {
@@ -443,6 +450,10 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
     {
         smsc_log_error(logger, "error processing request. %s", e.what());
     }
+    catch(const std::runtime_error& e)
+    {
+      smsc_log_error( logger, "error processing request. runtime_error: %s", e.what());
+    }
 
     if(se.Get())
         SessionManager::Instance().releaseSession(se);
@@ -502,6 +513,10 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
     {
         smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d. %s", response.getAbonent().c_str(), response.getUSR(), e.what());
     }
+    catch(const std::runtime_error& e)
+    {
+      smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d. runtime_error: %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+    }
     catch(...)
     {
         smsc_log_error( logger, "http_response error processing abonent=%s, USR=%d.", response.getAbonent().c_str(), response.getUSR());
@@ -532,12 +547,13 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     try{
         if(!response.hasSession())
         {
-            CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
+          CSessionKey sk = {response.getUSR(), response.getAddress().c_str()};
             if(!SessionManager::Instance().getSession(sk, se, response))
                 return scag::re::STATUS_PROCESS_LATER;
         }
-        else
-            se = response.getSession();
+        else {
+          se = response.getSession();
+        }
 
         RuleStatus rs;
         if(se.Get())
@@ -565,6 +581,10 @@ int HttpProcessorImpl::statusResponse(HttpResponse& response, bool delivered)
     catch(Exception& e)
     {
         smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d. %s", response.getAbonent().c_str(), response.getUSR(), e.what());
+    }
+    catch(const std::runtime_error& e)
+    {
+      smsc_log_error( logger, "http_status_response error processing abonent=%s, USR=%d. runtime_error: %s", response.getAbonent().c_str(), response.getUSR(), e.what());
     }
     catch(...)
     {
