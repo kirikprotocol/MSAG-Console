@@ -36,7 +36,7 @@ function clearForm() {
 function edit(idToEdit, child, parentId) {
 //    opForm.mbEdit.value = idToEdit;
     var mbEdit = document.getElementById("mbEdit");
-    edit.value = idToEdit;
+    mbEdit.value = idToEdit;
 //    opForm.editId.value = idToEdit;
     var editId = document.getElementById("editId");
     editId.value = idToEdit;
