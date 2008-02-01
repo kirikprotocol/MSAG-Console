@@ -33,16 +33,22 @@ function clearForm() {
 }
 
 
-function edit(idToEdit, child, parentId) {
-//    opForm.mbEdit.value = idToEdit;
+function edit(idToEdit, child, parentId, ei) {
+    alert("table.tag idToEdit=" + idToEdit + " child=" + child + " parentId=" + parentId + " ei=" + ei);
+//o    opForm.mbEdit.value = idToEdit;
     var mbEdit = document.getElementById("mbEdit");
     mbEdit.value = idToEdit;
-//    opForm.editId.value = idToEdit;
+    alert( "editId is " + getElementByIdUni("editId") );
+//o    opForm.editId.value = idToEdit;
     var editId = document.getElementById("editId");
+//    alert( "editId=" + editId);
     editId.value = idToEdit;
     var addPath = (child == null || child == '') ? "/edit.jsp" : (child + "/edit.jsp?parentId=" + idToEdit + "&editChild=true");
+    if(child=='/service'){
+        addPath = addPath + "&editId="+parentId;
+    }
     var actions = '';
-    if ((parentId == undefined || parentId == '')) {
+    if ((parentId == undefined || parentId == '' || child == '/service')) {
         actions = "<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
                           ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
                           : request.getServletPath())%>" + addPath;
