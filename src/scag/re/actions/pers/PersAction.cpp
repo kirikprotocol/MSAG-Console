@@ -342,7 +342,10 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
                     return false;
                 md = rp->getInt();
             }
-            md = mod;
+            else {
+              md = mod;
+            }
+            //md = mod;
         }
     }
 
@@ -470,7 +473,10 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
                     return false;
                 params->mod = rp->getInt();
             }
-            params->mod = mod;
+            else {
+              params->mod = mod;
+            }
+            //params->mod = mod;
         }
     }
     
@@ -497,7 +503,7 @@ void PersAction::ContinueRunning(ActionContext& context)
             }
             return;
         }
-  		throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), profile, var.c_str(), params->exception.c_str());
+  		throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->exception.c_str());
     }
     else if(params->exception.length())
     {
