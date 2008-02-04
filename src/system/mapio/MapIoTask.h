@@ -213,6 +213,7 @@ struct MapDialog{
   bool isLocked:1;
   bool isAllocated:1;
   bool isDropping:1;
+  bool needReportMsc:1;
   MapState state;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
   unsigned dialogid_smsc;
@@ -290,6 +291,7 @@ struct MapDialog{
     isLocked=false;
     isAllocated=false;
     isDropping=false;
+    needReportMsc=false;
     memset(&m_msAddr, 0, sizeof(ET96MAP_ADDRESS_T));
     memset(&m_scAddr, 0, sizeof(ET96MAP_ADDRESS_T));
     memset(&scAddr, 0, sizeof(ET96MAP_SS7_ADDR_T));

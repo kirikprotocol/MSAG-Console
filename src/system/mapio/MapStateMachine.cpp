@@ -1154,8 +1154,14 @@ static string RouteToString(MapDialog* dialog)
 static bool SendSms(MapDialog* dialog){
   dialog->wasDelivered = false;
 
-  if ( !MscManager::getMscStatus().check(dialog->s_msc.c_str()) )
+  MscState mscSt=MscManager::getMscStatus().check(dialog->s_msc.c_str());
+  if ( mscSt == mscLocked)
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",Status::BLOCKEDMSC);
+
+  if(mscSt==mscUnlockedOnce)
+  {
+    dialog->needReportMsc=true;
+  }
 
   bool mms = FALSE;
   if( dialog->version > 1 )
@@ -2773,6 +2779,13 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
 
       if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
         MscManager::getMscStatus().report(dialog->s_msc.c_str(),false);
+      }else
+      {
+        if(dialog->needReportMsc)
+        {
+          MscManager::getMscStatus().report(dialog->s_msc.c_str(),true);
+          dialog->needReportMsc=false;
+        }
       }
       if ( errorForwardSMmt_sp )
       {

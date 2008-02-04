@@ -110,7 +110,7 @@ namespace mscman {
 
         /* MscStatus implementation */
         virtual void report(const char* msc, bool status);
-        virtual bool check(const char* msc);
+        virtual MscState check(const char* msc);
 
         /* MscAdmin implementation */
         virtual void registrate(const char* msc);
@@ -460,25 +460,25 @@ void MscManagerImpl::report(const char* msc, bool status)
   changes.Push(MscInfoChange(MSCOP_REPORT,msc,status?1:0));
 }
 
-bool MscManagerImpl::check(const char* msc)
+MscState MscManagerImpl::check(const char* msc)
 {
-  if (!msc || !msc[0]) return false;
+  if (!msc || !msc[0]) return mscLocked;
   MutexGuard  guard(mon);
 
   MscInfo** infoptr=mscs.GetPtr(msc);
-  if (!infoptr) return true;
+  if (!infoptr) return mscUnlocked;
   MscInfo& info = **infoptr;
-  if(info.manualLock)return false;
+  if(info.manualLock)return mscLocked;
   if(info.automaticLock)
   {
     time_t now=time(NULL);
     if(now-info.blockTime>singleAttemptTimeout)
     {
       info.blockTime=now;
-      return true;
+      return mscUnlockedOnce;
     }
   }
-  return !info.automaticLock;
+  return info.automaticLock?mscLocked:mscUnlocked;
 }
 
 /* ------------------------ MscAdmin implementation ------------------------ */
