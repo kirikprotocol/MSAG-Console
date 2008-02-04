@@ -3620,6 +3620,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms,
             t.msgId,
             sms.getDestinationDescriptor(),
+            GET_STATUS_CODE(t.command->get_resp()->get_status())?
+            GET_STATUS_CODE(t.command->get_resp()->get_status()):
             Status::RESCHEDULEDNOW,
             rt,
             true
