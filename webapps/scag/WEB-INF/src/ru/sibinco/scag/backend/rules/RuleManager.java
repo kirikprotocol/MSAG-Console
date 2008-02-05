@@ -382,7 +382,7 @@ public class RuleManager
     errorInfo = errorsImitator(r);
     r = new BufferedReader(new StringReader(buffer));
   }
-
+  logger.debug("Rulemanager:AddRule():saverule()");
   saveRule(r,ruleId, transport);
 // moved from below
     if (mode!=TERM_MODE) {
@@ -392,14 +392,17 @@ public class RuleManager
 
   if (!DEBUG) {
   try {
+      logger.debug("Rulemanager:AddRule():scag.addRule");
     errorInfo =(LinkedList) scag.addRule(ruleId, transport);
   } catch (SibincoException e) {
     if (!(e instanceof StatusDisconnectedException)) {
+        logger.debug("Rulemanager:AddRule():!StatusDisconnectedException");
       if (mode!=TERM_MODE)
           saveMessage("Failed to add rule: ", user, ruleId, transport);
       removeRuleFile(ruleId, transport);
       finishOperation(ruleId,transport,HSDaemon.REMOVE);
     } else {
+        logger.debug("Rulemanager:AddRule():StatusDisconnectedException");
       if (mode!=TERM_MODE) {
 //        finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
         saveMessage("Added rule: ", user, ruleId, transport);
@@ -410,6 +413,7 @@ public class RuleManager
     throw e;
    }
   }
+  logger.debug("Rulemanager:AddRule():done");
 // moved above
 //  if (errorInfo == null || errorInfo.size() == 0) {
 //    if (mode!=TERM_MODE) {
