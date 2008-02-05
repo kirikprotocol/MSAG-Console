@@ -1374,14 +1374,14 @@ public:
 
   bool delayInit;
   public:
-    bool getChainInfo(const Address& addr,Chain& out)
-    {
-      MutexGuard g(mon);
-      Chain *c=GetChain(addr);
-      if(!c)return false;
-      out=*c;
-      return true;
-    }
+  bool getChainInfo(const Address& addr,Chain& out)
+  {
+    MutexGuard g(mon);
+    Chain *c=GetChain(addr);
+    if(!c)return false;
+    out=*c;
+    return true;
+  }
 };
 
 }//system
