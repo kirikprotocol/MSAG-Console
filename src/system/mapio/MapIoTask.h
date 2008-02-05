@@ -1,7 +1,3 @@
-/*
-$Id$
-*/
-
 #ifndef __header_MAPIO_h__
 #define __header_MAPIO_h__
 
