@@ -1151,7 +1151,8 @@ static string RouteToString(MapDialog* dialog)
   TryDestroyDialog(__dialogid_map,true,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MAPINTERNALFAILURE),__ssn);\
 }
 
-static bool SendSms(MapDialog* dialog){
+static bool SendSms(MapDialog* dialog)
+{
   dialog->wasDelivered = false;
 
   MscState mscSt=MscManager::getMscStatus().check(dialog->s_msc.c_str());
@@ -1200,18 +1201,25 @@ static bool SendSms(MapDialog* dialog){
   if ( dialog->version > 1
        && !dialog->mms
        && (ui->signalInfoLen > (143-(dialog->smRpOa.addrLen+1)-(dialog->smRpDa.addrLen+1)-(dialog->scAddr.ss7AddrLen))
-       || mms ) ) {
+       || mms ) )
+  {
     checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
     segmentation = true;
     dialog->state = MAPST_WaitSpecOpenConf;
-  }else{
+  }else
+  {
     dialog->invokeId++;
-    if ( dialog->version == 2 ) {
+    if ( dialog->version == 2 )
+    {
       checkMapReq( Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE), __func__);
-    }else if ( dialog->version == 1 ){
+    }else if ( dialog->version == 1 )
+    {
       checkMapReq( Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get()), __func__);
-    }else throw runtime_error(
+    }else
+    {
+      throw runtime_error(
       FormatText("MAP::SendSMSCToMT: incorrect dialog version %d",dialog->version));
+    }
     checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
   }
   dialog->mms = mms;
@@ -1591,11 +1599,16 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   unsigned dialog_ssn = 0;
   DialogRefGuard dialog;
     MAP_TRY {
-    if( !isMapBound() || MAP_disconnectDetected ) throw runtime_error("MAP is not bound yet");
+    if( !isMapBound() || MAP_disconnectDetected )
+    {
+      throw runtime_error("MAP is not bound yet");
+    }
     if ( cmd->get_commandId() != SUBMIT_RESP )
     {
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
+      {
         throw MAPDIALOG_BAD_STATE("putCommand: must be DELIVERY or QUERYABONENTSTATUS");
+      }
       // this is deliver command
       try
       {
@@ -1782,18 +1795,22 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             ussd_map.erase(sequence);
             throw;
           }
-        }else if ( !dialog2  ) { // end of DELIVERY ussd operation
+        }else
+        if ( !dialog2  )
+        { // end of DELIVERY ussd operation
           // DELIVERY SMS no chained dialog
           try {
             dialog_ssn = SSN;
-            if ( cmd->get_commandId() == DELIVERY ) {
+            if ( cmd->get_commandId() == DELIVERY )
+            {
               dialog.assign(MapDialogContainer::getInstance()->
                         createOrAttachSMSCDialog(
                           dialogid_smsc,
                           SSN,
                           string(cmd->get_sms()->getDestinationAddress().value),
                           cmd));
-            } else {
+            } else
+            {
               // QUERYABONENTSTATUS
               dialog.assign(MapDialogContainer::getInstance()->createOrAttachSMSCDialog(
                           dialogid_smsc,SSN,"",cmd));
@@ -1818,7 +1835,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             __map_trace2__("%s: was scheduled (state:NONE) dialogid_smsc 0x%x",__func__, dialogid_smsc);
             return;
           }
-        }else{
+        }else
+        {
           // DELIVERY SMS chained dialog
           dialog_ssn = SSN;
           dialog.assign(dialog2->AddRef());
@@ -1836,10 +1854,12 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
         throw MAPDIALOG_FATAL_ERROR("putCommand: can't create dialog");
       }
-      if ( dialog.isnull() ) {
+      if ( dialog.isnull() )
+      {
         __map_trace__("putCommand: can't create SMSC->MS dialog (locked), request has bean attached");
         // command has bean attached by dialog container
-      }else{
+      }else
+      {
         dialog->isQueryAbonentStatus = (cmd->get_commandId() == QUERYABONENTSTATUS);
         if ( dialog->isQueryAbonentStatus )
         {
@@ -1848,11 +1868,13 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             throw MAPDIALOG_FATAL_ERROR("incorrect address");
         }
         dialogid_map = dialog->dialogid_map;
-        if( dialog->state != MAPST_SendNextMMS ) {
+        if( dialog->state != MAPST_SendNextMMS )
+        {
           dialog->state = MAPST_START;
           __map_trace2__("%s: dialogid 0x%x  (state %d)",__func__,dialog->dialogid_map,dialog->state);
           StartDialogProcessing(dialog.get(),cmd);
-        } else {
+        } else
+        {
           dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
           SendSms(dialog.get());
         }
@@ -1890,7 +1912,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               MutexGuard mg(dialog->mutex);
               if( !dialog->chain.empty() )
               {
-                SmscCommand cmd_c = dialog->chain.front();
+                cmd_c = dialog->chain.front();
                 dialog->chain.pop_front();
                 __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
               }
@@ -1922,7 +1944,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             MutexGuard mg(dialog->mutex);
             if( !dialog->chain.empty() )
             {
-              SmscCommand cmd_c = dialog->chain.front();
+              cmd_c = dialog->chain.front();
               dialog->chain.pop_front();
               __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
             }
@@ -1952,7 +1974,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             MutexGuard mg(dialog->mutex);
             if( !dialog->chain.empty() )
             {
-              SmscCommand cmd_c = dialog->chain.front();
+              cmd_c = dialog->chain.front();
               dialog->chain.pop_front();
               __map_trace2__("%s found chained USSD deliver for that dialog", __func__);
             }
