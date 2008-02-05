@@ -46,27 +46,39 @@ public class HSDaemon {
   public void store(final File configFile, SavingStrategy saver) throws SibincoException {
     doOperation(configFile,UPDATEORADD,saver);
   }
-
+//1
   public void doOperation(final File configFile, final byte operationType) throws SibincoException {
+      logger.info("HSDaemon:doOperation()1");
     doOperation(configFile, operationType, new CommonSaver(configFile));
   }
-
+//2
   private synchronized void doOperation(final File configFile, final byte operationType, final SavingStrategy saver) throws SibincoException {
-    if (type.equals(typeSingle))
-      return;
+    logger.info("HSDaemon:doOperation()2");
+    if (type.equals(typeSingle)){
+        logger.info("HSDaemon:doOperation()2:typeSingle");
+        return;
+    }
     else if (type.equals(typeHS)) {
+      logger.info("HSDaemon:doOperation()2:typeHS");
       checkOperationType(operationType);
       File mirrorFile = getMirrorFile(configFile);
       switch(operationType)
       {
-       case UPDATEORADD: saver.storeToMirror(mirrorFile); break;
-       case REMOVE: remove(mirrorFile); break;
+        case UPDATEORADD:
+          logger.info("HSDaemon:doOperation()2:typeHS:UPDATEORADD");
+          saver.storeToMirror(mirrorFile);
+          break;
+       case REMOVE:
+          logger.info("HSDaemon:doOperation()2:typeHS:REMOVE");
+          remove(mirrorFile);
+          break;
       }
     }
   }
 
   private File getMirrorFile(final File configFile) {
-    if (!DEBUG) return new File(mirrorPath+configFile.getAbsolutePath());
+    if (!DEBUG)
+        return new File(mirrorPath+configFile.getAbsolutePath());
     else {
       //compose path for debugging
       File debugMirrorFile = new File(configFile.getParent() + mirrorPath + configFile.getName());
@@ -119,7 +131,7 @@ public class HSDaemon {
         }
         catch (IOException ioe)
         {
-          logger.error( "HS:ERROR:\nCouldn't copy file from path " + source.getAbsolutePath() + " to path " + dest.getAbsolutePath(),ioe );
+          logger.error( "HSDaemon:CommonSaver:storeToMirror:HS:ERROR:\nCouldn't copy file from path " + source.getAbsolutePath() + " to path " + dest.getAbsolutePath(),ioe );
           logger.error( "HS:ERROR." );
     //      throw new SibincoException("Couldn't copy file from path "+source.getAbsolutePath()+" to path "+dest.getAbsolutePath());
         }
