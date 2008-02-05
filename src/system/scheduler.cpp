@@ -251,7 +251,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
       }
 
       cnt++;
-      if(cnt%100)
+      if(cnt%10)
       {
         smsc::core::threads::Thread::Yield();
       }
@@ -357,10 +357,16 @@ int LocalFileStore::Execute()
       mon.Unlock();
       bool ok=true;
       try{
+        int i=0;
         for(IdSeqPairList::iterator it=snap.begin();it!=snap.end();it++)
         {
           __trace2__("roll:id=%lld, seq=%d",it->first,it->second);
           sched.StoreSms(it->first,it->second);
+          i++;
+          if((i%10)==0)
+          {
+            Thread::Yield();
+          }
         }
       }catch(exception& e)
       {
