@@ -103,7 +103,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 final String subjName = s.substring(DST_SME_PREFIX.length());
                 logger.error( "startsWith(DST_SME_PREFIX):subjName=" + subjName);
                 final String[] smeNameStrings = (String[]) entry.getValue();
-                logger.error( "startsWith(DST_SME_PREFIX):smeNameStrings=" + smeNameStrings);
+                logger.debug( "startsWith(DST_SME_PREFIX):smeNameStrings=" + smeNameStrings);
                 final StringBuffer smeName = new StringBuffer();
                 for (int j = 0; j < smeNameStrings.length; j++) {
                     final String smeNameString = smeNameStrings[j];
