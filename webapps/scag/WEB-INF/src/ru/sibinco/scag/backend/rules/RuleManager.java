@@ -384,93 +384,113 @@ public class RuleManager
   }
 
   saveRule(r,ruleId, transport);
+// moved from below
+    if (mode!=TERM_MODE) {
+        finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+        saveMessage("Added rule: ", user, ruleId, transport);
+    }
 
   if (!DEBUG) {
   try {
     errorInfo =(LinkedList) scag.addRule(ruleId, transport);
   } catch (SibincoException e) {
     if (!(e instanceof StatusDisconnectedException)) {
-      if (mode!=TERM_MODE) saveMessage("Failed to add rule: ", user, ruleId, transport);
+      if (mode!=TERM_MODE)
+          saveMessage("Failed to add rule: ", user, ruleId, transport);
       removeRuleFile(ruleId, transport);
+      finishOperation(ruleId,transport,HSDaemon.REMOVE);
     } else {
       if (mode!=TERM_MODE) {
-        finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+//        finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
         saveMessage("Added rule: ", user, ruleId, transport);
       }
     }
+    logger.error("RuleManager:addRule():error");// e.printStackTrace();
     logger.error(e.getMessage());// e.printStackTrace();
     throw e;
    }
   }
-
-  if (errorInfo == null || errorInfo.size() == 0) {
-    if (mode!=TERM_MODE) {
-      finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
-      saveMessage("Added rule: ", user, ruleId, transport);
-    }
-  }  else  {
-    if (mode!=TERM_MODE) saveMessage("Failed to add rule: ", user, ruleId, transport);
-    removeRuleFile(ruleId, transport);
-  }
+// moved above
+//  if (errorInfo == null || errorInfo.size() == 0) {
+//    if (mode!=TERM_MODE) {
+//      finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+//      saveMessage("Added rule: ", user, ruleId, transport);
+//    }
+//  }  else  {
+//    if (mode!=TERM_MODE) saveMessage("Failed to add rule: ", user, ruleId, transport);
+//    removeRuleFile(ruleId, transport);
+//  }
   return errorInfo;
 }
 
   public synchronized LinkedList updateRule(BufferedReader r, final String ruleId, final String transport, int mode, String user) throws SibincoException,  IOException
- {
+  {
    //String ruleId=fileName.substring(5,fileName.length()-4);
-   Rule rule = getRule(ruleId,transport);
-   logger.debug("updateRule ruleId= "+ruleId+" ,transport = "+transport);
-   LinkedList errorInfo = new LinkedList();
+     Rule rule = getRule(ruleId,transport);
+    logger.debug("updateRule ruleId= "+ruleId+" ,transport = "+transport);
+    LinkedList errorInfo = new LinkedList();
 
    //instead of scag.updateRule(ruleId, transport);
-   if (DEBUG) {
-    String buffer = buffertostring(r);
-    r = new BufferedReader(new StringReader(buffer));
-    errorInfo = errorsImitator(r);
-    r = new BufferedReader(new StringReader(buffer));
-   }
+    if (DEBUG) {
+        String buffer = buffertostring(r);
+        r = new BufferedReader(new StringReader(buffer));
+        errorInfo = errorsImitator(r);
+        r = new BufferedReader(new StringReader(buffer));
+    }
 
-   LinkedList curbody = rule.getBody();
+    LinkedList curbody = rule.getBody();
    // rule_1.xml -> rule_1.xml.new(rule_1.xml.new contains current rule body)
-   File currentRuleFile = saveCurrentRule(curbody,ruleId, transport);
-   saveRule(r,ruleId, transport);
+    File currentRuleFile = saveCurrentRule(curbody,ruleId, transport);
+    saveRule(r,ruleId, transport);
+//moved from end
+    if (mode!=TERM_MODE) {
+        logger.error("RuleManager:updateRule:(mode!=TERM_MODE)");
+        Functions.SavedFileToBackup(currentRuleFile, ".new");
+        finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+        saveMessage("Updated rule: ", user, ruleId, transport);
+    }
 
-   if (!DEBUG)  {
-   try    {
-     errorInfo=(LinkedList) scag.updateRule(ruleId, transport);
-   }    catch (SibincoException e)    {
-     if (e instanceof StatusDisconnectedException) {
-       if (mode != TERM_MODE) {
-           logger.error("RuleManager:StatusDisconnectedException:if:1");
-         Functions.SavedFileToBackup(currentRuleFile,".new");
-         finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
-         saveMessage("Updated rule: ", user, ruleId, transport);
-       }
-     } else {
-       if (mode != TERM_MODE) {
-        saveRule(curbody,ruleId,rule.getTransport());
-        currentRuleFile.delete();
-        saveMessage("Failed to update rule: ", user, ruleId, transport);
-       }
-     }
-     logger.error(e.getMessage());// e.printStackTrace();
-     throw e;
-    }
-   }
-    if (errorInfo == null || errorInfo.size()==0) {
-        if (mode!=TERM_MODE) {
-            logger.error("RuleManager:StatusDisconnectedException:if2:");
-          Functions.SavedFileToBackup(currentRuleFile, ".new");
-          finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
-          saveMessage("Updated rule: ", user, ruleId, transport);
+    if (!DEBUG) {
+        try {
+            errorInfo=(LinkedList) scag.updateRule(ruleId, transport);
+        } catch (SibincoException e) {
+            if (e instanceof StatusDisconnectedException) {
+                logger.error("RuleManager:updateRule():StatusDisconnectedException");
+                if (mode != TERM_MODE) {
+                    logger.error("RuleManager:updateRule():StatusDisconnectedException:(mode != TERM_MODE)");
+                    Functions.SavedFileToBackup(currentRuleFile,".new");
+                    //finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+                    hsDaemon.doOperation(currentRuleFile,HSDaemon.UPDATEORADD);
+                    saveMessage("Updated rule: ", user, ruleId, transport);
+                }
+            } else {
+                logger.error("RuleManager:updateRule():SibincoException");
+                if (mode != TERM_MODE) {
+                    logger.error("RuleManager:updateRule():SibincoException:(mode != TERM_MODE)");
+                    saveRule(curbody,ruleId,rule.getTransport());
+                    finishOperation(ruleId,rule.getTransport(),HSDaemon.UPDATEORADD);
+                    currentRuleFile.delete();
+                    saveMessage("Failed to update rule: ", user, ruleId, transport);
+                }
+            }
+            logger.error("RuleManager:updateRule():SibincoException" + e.getMessage());// e.printStackTrace();
+            throw e;
         }
-    } else {
-       if (mode != TERM_MODE) {
-         saveMessage("Failed to update rule: ", user, ruleId, transport);
-         saveRule(curbody,ruleId,rule.getTransport());
-         currentRuleFile.delete();
-       }
-    }
+   }
+//   if (errorInfo == null || errorInfo.size()==0) {
+//        if (mode!=TERM_MODE) {
+//            logger.error("RuleManager:StatusDisconnectedException:if2:");
+//          Functions.SavedFileToBackup(currentRuleFile, ".new");
+//          finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
+//          saveMessage("Updated rule: ", user, ruleId, transport);
+//        }
+//   } else {
+//       if (mode != TERM_MODE) {
+//         saveMessage("Failed to update rule: ", user, ruleId, transport);
+//         saveRule(curbody,ruleId,rule.getTransport());
+//         currentRuleFile.delete();
+//       }
+//   }
    return errorInfo;
  }
 
@@ -535,7 +555,7 @@ public class RuleManager
   public void saveRule(LinkedList li,String ruleId, String transport) throws SibincoException
   {
     if( checkPermission(transport) ){
-        logger.debug("RESAVING current rule body to disc!!!!");
+        logger.debug("RuleManager:saveRule():RESAVING current rule body to disc!!!!");
         try {
             File newFile= composeRuleFile(transport,ruleId);
             final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "UTF-8"));
@@ -555,8 +575,9 @@ public class RuleManager
     }
   }
 
-    public static int CHAR_WRITER = 0;
-    public static int STRING_WRITER = 1;
+    public static final int STRING_WRITER = 1;
+    public static final int CHAR_WRITER   = 0;
+
 
   private void saveRule(BufferedReader reader,String ruleId, String transport) throws SibincoException
   {
@@ -607,22 +628,23 @@ public class RuleManager
 
     void ruleWriter( BufferedReader r, PrintWriter out, int type ) throws IOException {
         switch( type ){
-            case 0:
+            case CHAR_WRITER:
                System.out.println("CHAR WRITER");
                logger.info( "CHAR WRITER" );
                int ch;
                Reader reader = r;
-                System.getProperties();
+               System.getProperties();
                while( (ch = reader.read()) != -1 ){
                    if(ch=='\n')
                    out.print( (char)ch );
                }
-                break;
-            case 1:
+               break;
+            case STRING_WRITER:
                 System.out.println("STRING WRITER");
                 String s;
                 StringBuffer sb = new StringBuffer();
                 sb.delete(0,sb.length());
+                System.getProperties();
                 while( (s=r.readLine() ) != null ) {
                     int tabIndex = 0;
                     while( ( tabIndex=s.indexOf( "\t") )!=-1 ){
@@ -695,7 +717,7 @@ public class RuleManager
     public void removeRuleFile(String ruleId, String transport) throws SibincoException
     {
         File fileForDeleting= composeRuleFile(transport,ruleId);
-        logger.debug("Trying to delete : " + fileForDeleting);
+        logger.debug("RuleManager:removeRuleFile:Trying to delete : " + fileForDeleting);
         if (fileForDeleting.exists())
           if (fileForDeleting.delete()!=true) throw new SibincoException("Couldn't delete rule " + fileForDeleting.getAbsolutePath());
     }
