@@ -70,3 +70,11 @@ B3001:
     InfoSme	Add start time into Task and posibility to set this parameter in deliveries
     Webadm	Option mapIOTasksCount to section map of smsc configuration
     Webadm	Perfmon now can switch between messages and message's parts viewing modes
+B3002:
+    SMSC	Fix for USSD chained commands, when deliver earlier than submit resp
+    SMSC	Yield after each 10 sms in rolling
+    SMSC	MSC automatic unlock fix
+    SMSC	Do not replace code to reschedulenow for status reschedule now if code supplied not 0
+    SMSC	Extra check for dialogs in isDropping state
+    SMSC	Message's parts stat fixes
+    
