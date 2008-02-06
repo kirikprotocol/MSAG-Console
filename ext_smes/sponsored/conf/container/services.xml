@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+  
+  <!-- SERVICES -->
+  <service>
+    <service-name>receipt</service-name>
+    <service-class>com.eyeline.sponsored.distribution.advert.distr.smpp.ReceiptAcceptService</service-class>
+  </service>
+
+  <service>
+    <service-name>subscription</service-name>
+    <service-class>com.eyeline.sponsored.subscription.service.smpp.SubscriptionService</service-class>
+    <init-param>
+      <param-name>volumes</param-name>
+      <param-value>10,20</param-value>
+    </init-param>
+    <init-param>
+      <param-name>successResponse</param-name>
+      <param-value>Сервис SMS-Спонсор активирован. Изменения вступят в силу завтра в 00 ч 00 мин.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>subscriptionClosedResponse</param-name>
+      <param-value>Подписка на данный сервис закрыта.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>invalidVolumeResponse</param-name>
+      <param-value>Неверная команда. Для получения справки отправьте «Help» на номер 741. SMS бесплатное.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respConnName</param-name>
+      <param-value>smsx</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respSrcAddr</param-name>
+      <param-value>741</param-value>
+    </init-param>
+  </service>
+  
+  <service>
+    <service-name>unsubscription</service-name>
+    <service-class>com.eyeline.sponsored.subscription.service.smpp.UnsubscriptionService</service-class>
+    <init-param>
+      <param-name>successResponse</param-name>
+      <param-value>Запрос на отключение сервиса "SMS-Спонсор" принят. Изменения вступят в силу завтра в 00 ч 00 мин.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respConnName</param-name>
+      <param-value>smsx</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respSrcAddr</param-name>
+      <param-value>741</param-value>
+    </init-param>
+  </service>    
+  
+  <service>
+    <service-name>help</service-name>
+    <service-class>com.eyeline.sme.smppcontainer.services.SimpleResponder</service-class>
+    <init-param>
+      <param-name>responseCode</param-name>
+      <param-value>0</param-value>
+    </init-param>    
+    <init-param>
+      <param-name>responseText</param-name>
+      <param-value>Уважаемый Абонент, после подключения сервиса, Вам будет начисляться бонус в размере 28 коп. за каждое входящее рекламное SMS. Подпишитесь на сервис и вам на телефон в течение дня будет  поступать  10 или 20 входящих  рекламных SMS. Зачисление бонусов на Ваш счет будет производиться 2 раза в месяц за все полученные рекламные SMS за 2 недели . Чтобы подписаться на 10 сообщений в день необходимо отправить на номер 741 текст: " 10" , чтобы подписаться на 20: "20" . SMS бесплатное.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respConnName</param-name>
+      <param-value>mar</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respSrcAddr</param-name>
+      <param-value>741</param-value>
+    </init-param>
+  </service>  
+  
+  <service>
+    <service-name>error</service-name>
+    <service-class>com.eyeline.sme.smppcontainer.services.SimpleResponder</service-class>
+    <init-param>
+      <param-name>responseConnectionName</param-name>
+      <param-value>smsx</param-value>
+    </init-param>
+    <init-param>
+      <param-name>responseCode</param-name>
+      <param-value>0</param-value>
+    </init-param>
+    <init-param>
+      <param-name>responseText</param-name>
+      <param-value>Неверная команда. Для получения справки отправьте «Help» на номер 741. SMS бесплатное.</param-value>
+    </init-param> 
+    <init-param>
+      <param-name>respConnName</param-name>
+      <param-value>smsx</param-value>
+    </init-param>
+    <init-param>
+      <param-name>respSrcAddr</param-name>
+      <param-value>741</param-value>
+    </init-param>
+  </service>  
+  
+  <!-- REQUESTS -->
+  <request>
+    <request-name>receipt</request-name>
+    <receipt>true</receipt>
+  </request>
+
+  <request>
+    <request-name>help</request-name>
+    <message-pattern>help|хелп</message-pattern>    
+  </request>
+  
+  <request>
+    <request-name>sponsored_subscription</request-name>
+    <message-pattern>\s*(\d+)\s*</message-pattern>     
+    <request-param>
+      <param-name>distributionName</param-name>
+      <param-value>sponsored</param-value>
+    </request-param>    
+    <request-param>
+      <param-name>distributionVolume</param-name>
+      <param-value>{1}</param-value>
+    </request-param>    
+  </request>    
+  
+  <request>
+    <request-name>sponsored_unsubscription</request-name>
+    <message-pattern>sponsor\s+none</message-pattern>     
+    <request-param>
+      <param-name>distributionName</param-name>
+      <param-value>sponsored</param-value>
+    </request-param>    
+  </request>
+  
+  <!-- REQUEST MAPPING -->
+  <request-mapping>
+    <request-name>receipt</request-name>
+    <service-name>receipt</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>sponsored_subscription</request-name>
+    <service-name>subscription</service-name>
+  </request-mapping>   
+  
+  <request-mapping>    
+    <request-name>sponsored_unsubscription</request-name>
+    <service-name>unsubscription</service-name>
+  </request-mapping> 
+  
+  <request-mapping>
+    <request-name>help</request-name>
+    <service-name>help</service-name>
+  </request-mapping>
+  
+  <default-service>
+    <service-name>error</service-name>
+  </default-service>
+  
+  
+</config>
+

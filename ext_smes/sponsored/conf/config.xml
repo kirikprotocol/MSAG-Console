@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+
+  <param name="containerConfigFile">conf/container/container.xml</param>
+
+  <!-- ENVIRONMENT CONFIG -->
+
+  <param name="timezonesFile">conf/timezones.xml</param>
+  <param name="routesFile">conf/routes.xml</param>
+  <param name="smppConfigFile">conf/smpp.properties</param>
+
+
+  <section name="advertising">
+    <param name="host">phoenix</param>
+    <param name="port">25000</param>
+    <param name="connectionTimeout">100000</param>
+  </section>
+
+  <section name="storage">
+    <param name="driver">com.mysql.jdbc.Driver</param>
+    <param name="url">jdbc:mysql://localhost/sponsored?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</param>
+    <param name="login">root</param>
+    <param name="password">laefeeza</param>
+    <param name="connectionTimeout">60000</param>
+    <param name="poolSize">10</param>
+  </section>
+
+  <!-- DISTRIBUTION SECTION -->
+
+  <section name="advert_distribution">
+
+    <param name="deliveriesFetchInterval">10000</param>
+    <param name="deliveriesSendSpeedLimit">450</param>
+
+    <section name="distributions">
+
+      <section name="sponsored">
+        <param name="srcAddress">741</param>
+        <param name="startTime">15:00:00</param>
+        <param name="endTime">23:01:02</param>
+        <param name="advServiceName">SPONSORED</param>
+      </section>
+
+    </section>
+
+    <section name="storage">
+      <param name="subscriptionSql">conf/subscr.sql</param>
+      <param name="distributionSql">conf/distr.sql</param>
+    </section>
+  </section>
+
+  <!-- SUBSCRIPTION SECTION -->
+
+  <section name="subscription">
+    
+    <section name="storage">
+      <param name="subscriptionSql">conf/subscr.sql</param>
+    </section>
+    
+  </section>
+</config>

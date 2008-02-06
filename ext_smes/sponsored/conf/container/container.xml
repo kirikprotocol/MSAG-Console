@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : config.xml.xml
+    Created on : 18 Январь 2008 г., 12:35
+    Author     : artem
+    Description:
+        Purpose of the document follows.
+-->
+
+<config>
+  <param name="poolSize">1</param>
+  <param name="servicesConfig">conf/container/services.xml</param>
+  <param name="smppConfig">conf/container/smpp.properties</param>    
+</config>
