@@ -202,6 +202,92 @@ string MscToString(const ET96MAP_ADDRESS_T* msc)
   return result;
 }
 
+
+string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
+{
+  if(addr==0 || addr->ss7AddrLen==0)return "";
+
+  uint8_t ind=addr->ss7Addr[0];
+  bool spcInd=(ind&1)!=0;
+  bool ssnInd=(ind&2)!=0;
+  uint8_t gtInd=(ind>>2)&0x0f;
+  uint8_t *ptr=(uint8_t*)(addr->ss7Addr);
+  uint8_t *end=ptr+addr->ss7AddrLen;
+
+  ptr++;//indicator
+
+  if(spcInd)
+  {
+    // if 7th and 8th bits of second octet are zero,
+    // 14 bit spc ind, 24 bit spc otherwise.
+    if(ptr[1]&0xc0)
+    {
+      ptr++;
+    }
+    ptr+=2;
+  }
+  if(ssnInd)
+  {
+    ptr++;
+  }
+
+  bool isOdd=false;
+  switch(gtInd)
+  {
+    case 1:
+    {
+      isOdd=(*ptr&0x80)!=0;
+      ptr++;
+    }break;
+    case 2:
+    {
+      ptr++;
+    }break;
+    case 3:
+    {
+      ptr++;//trans type
+      isOdd=(ptr[1]&0x0f)==1;
+      ptr++;
+    }break;
+    case 4:
+    {
+      ptr++;//trans type
+      isOdd=(ptr[1]&0x0f)==1;
+      ptr+=2;//(num plan, enc scheme), nature of addr
+    }break;
+    default:return "";
+  }
+
+  std::string rv;
+  for ( ; ptr!=end; ptr++)
+  {
+    unsigned x0 = *ptr&0x0f;
+    unsigned x1 = (*ptr>>4)&0x0f;
+    if ( x0 <= 9 )
+    {
+      rv+=x0+'0';
+    }
+    else
+    {
+      break;
+    }
+    if ( x1 <= 9 )
+    {
+      rv+=x1+'0';
+    }
+    else
+    {
+      break;
+    }
+  }
+  if((rv.length()&1)==0 && isOdd)
+  {
+    rv.erase(rv.length()-1);
+  }
+  return rv;
+}
+
+
 string LocationInfoToString(const ET96MAP_LOCATION_INFO_T* msc)
 {
   unsigned bytes = (msc->addressLength+1)/2;
@@ -2614,6 +2700,7 @@ USHORT_T Et96MapOpenInd (
         dialog->hasIndAddress = true;
       }
     }
+    dialog->origAddress=SS7AddressToString(ss7OrigAddr_sp);
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
@@ -3086,6 +3173,7 @@ unsigned char  lll_8bit_2_7bit[256] = {
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr )
 {
   __map_trace2__("%s: ismsi %s, msc: %s, state: %d, code: %d",__func__,s_imsi.c_str(),s_msc.c_str(), dialog->state, routeErr);
+  static smsc::logger::Logger* fraudLog=smsc::logger::Logger::getInstance("map.fraud");
   if ( dialog->state == MAPST_END ){// already closed
     return;
   }
@@ -3102,6 +3190,30 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   }
   else
   {
+    if(fraudLog->isWarnEnabled())
+    {
+      if(s_msc.length() && dialog->origAddress!=s_msc)
+      {
+        if(dialog->sms.get())
+        {
+          smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, oa=%s, da=%s",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str(),
+                        dialog->sms->getOriginatingAddress().toString().c_str(),
+                        dialog->sms->getDestinationAddress().toString().c_str());
+        }else
+        {
+          smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, sms is null",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str());
+        }
+        if(fraudLog->isInfoEnabled())
+        {
+          smsc_log_info(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
+          ResponseMO(dialog,9);
+          dialog->state = MAPST_WaitSubmitCmdConf;
+          CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+          DropMapDialog(dialog);
+          return;
+        }
+      }
+    }
     dialog->state = MAPST_WaitSubmitCmdConf;
     dialog->s_imsi = s_imsi;
     dialog->s_msc = s_msc;
