@@ -115,7 +115,7 @@ void PersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, const std::stri
         smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
         exists = is->incProperty(int_key, prop);
     }
-    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
+    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_TYPE_INCONSISTENCE);
 }
 
 void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb)
@@ -139,7 +139,7 @@ void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::s
         osb.WriteInt32(res);
     }
     else
-        SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
+        SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
 }
 
 bool PersServer::processPacket(ConnectionContext& ctx)

@@ -71,6 +71,7 @@ public:
     time_t getDateValue() { return d_val; };
     const std::string& getStringValue() { return s_val; };
     void setValue(const Property& cp);
+    void setValue(const char* str);
     void setIntValue(int32_t i) { i_val = i; type = INT; };
     void setBoolValue(bool b) { b_val = b; type = BOOL; };
     void setDateValue(time_t d) { d_val = d; type = DATE; };
@@ -91,6 +92,8 @@ public:
 
     void Serialize(SerialBuffer& buf, bool fromFSDB = false);
     void Deserialize(SerialBuffer& buf, bool toFSDB = false);
+
+    bool convertToInt();
 };
 
 }}

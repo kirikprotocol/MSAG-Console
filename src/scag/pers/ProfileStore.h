@@ -554,6 +554,15 @@ public:
                 smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
             }
+            if (p->convertToInt() && prop.convertToInt())
+            {
+                p->setIntValue(p->getIntValue() + prop.getIntValue());
+                p->WriteAccess();
+                storeProfile(key, pf);
+                smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
+                smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+                return true;
+            }
         }
         else
         {
@@ -592,6 +601,15 @@ public:
                 smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
             }
+            if (p->convertToInt() && prop.convertToInt())
+            {
+                p->setIntValue(p->getIntValue() + prop.getIntValue());
+                p->WriteAccess();
+                storeProfile(key, pf);
+                smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
+                smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+                return true;
+            }
         }
         else
         {
@@ -620,6 +638,17 @@ public:
                 storeProfile(key, pf);
                 smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
+            } 
+            if (p->convertToInt() && prop.convertToInt())
+            {
+              res = p->getIntValue() + prop.getIntValue();
+              if(mod) res %= mod;
+              p->setIntValue(res);
+              p->WriteAccess();
+              storeProfile(key, pf);
+              smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
+              smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+              return true;
             }
         }
         else
@@ -655,6 +684,17 @@ public:
                 storeProfile(key, pf);
                 smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
                 return true;
+            }
+            if (p->convertToInt() && prop.convertToInt())
+            {
+              res = p->getIntValue() + prop.getIntValue();
+              if(mod) res %= mod;
+              p->setIntValue(res);
+              p->WriteAccess();
+              storeProfile(key, pf);
+              smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
+              smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+              return true;
             }
         }
         else

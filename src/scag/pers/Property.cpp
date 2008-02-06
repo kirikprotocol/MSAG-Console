@@ -8,23 +8,34 @@ namespace scag{ namespace pers{
 
 void Property::assign(const char *nm, const char *str, TimePolicy policy, time_t fd, uint32_t lt)
 {
-    char *ep;
-    uint32_t i;
-
     name = nm;
     setTimePolicy(policy, fd, lt);
+    setValue(str);
+}
 
-    if(!strcmp(str, "false"))
-        setBoolValue(false);
-    else if(!strcmp(str, "true"))
-        setBoolValue(true);
-    else if((str[0] >= '0' && str[0] <= '9' || str[0] == '-' || str[0] == '+') 
-        && ((i = strtol(str, &ep, 0)) || ep != str) && !*ep)
-        setIntValue(i);
+void Property::setValue(const char* str) {
+  if (!str) {
+    setStringValue("");
+    return;
+  }
+  char *ep;
+  int32_t i = 0;
+  if(!strcmp(str, "false"))
+      setBoolValue(false);
+  else if(!strcmp(str, "true"))
+      setBoolValue(true);
+  else if((!(i = strtol(str, &ep, 0)) && (*str != '0' || strlen(str) != 1))
+             || i == LONG_MAX || i == LONG_MIN || *ep)
+    setStringValue(str);
+  else
+    setIntValue(i);
+  //else if((str[0] >= '0' && str[0] <= '9' || str[0] == '-' || str[0] == '+') 
+    //  && ((i = strtol(str, &ep, 0)) || ep != str) && !*ep)
+     // setIntValue(i);
 //    else if((s = strptime(str, "%d.%m.%Y %T", &time)) && !*s)
 //        setDateValue(mktime(&time));
-    else
-        setStringValue(str);
+  //else
+      //setStringValue(str);
 }
 
 void Property::setValue(const Property &cp)
@@ -229,6 +240,25 @@ void Property::Deserialize(SerialBuffer& buf, bool fromFSDB)
         case BOOL:  b_val = (bool)buf.ReadInt8();   break;
         case DATE:  d_val = (time_t)buf.ReadInt32();break;
     }
+}
+
+bool Property::convertToInt() {
+  switch (type) {
+  case STRING: {
+    char *ep;
+    int32_t conv_val = strtol(s_val.c_str(), &ep, 0);
+    if((!conv_val && (s_val[0] != '0' || s_val.size() != 1)) 
+       || conv_val == LONG_MAX || conv_val == LONG_MIN || *ep) {
+      return false;
+    }
+    setIntValue(conv_val);
+    return true;
+  }
+  case INT: return true;
+  case BOOL: setIntValue((int32_t)b_val); return true;
+  case DATE: return false;
+  }
+  return  false;
 }
 
 }}
