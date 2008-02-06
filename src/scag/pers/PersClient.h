@@ -19,7 +19,7 @@ using scag::lcm::LongCallParams;
 using scag::lcm::LongCallContext;
 
 enum PersClientExceptionType{
-    CANT_CONNECT,
+    CANT_CONNECT = 1,
     SERVER_BUSY,
     UNKNOWN_RESPONSE,
     SEND_FAILED,
@@ -30,10 +30,13 @@ enum PersClientExceptionType{
     SERVER_ERROR,
     PROPERTY_NOT_FOUND,
     INVALID_KEY,
-    INVALID_PROPERTY_TYPE
+    INVALID_PROPERTY_TYPE,
+  BAD_REQUEST,
+  TYPE_INCONSISTENCE
 };
 
     static const char* strs[] = {
+      "Unknown exception",
         "Cant connect to persserver",
         "Server busy",
         "Unknown server response",
@@ -45,7 +48,9 @@ enum PersClientExceptionType{
         "Server error",
         "Property not found",
         "Invalid key",
-        "Invalid property type(should be int or date)"
+        "Invalid property type(should be int or date)",
+      "Bad request",
+      "Types inconsistence"
     };
 
 class PersClientException{
@@ -76,7 +81,7 @@ public:
 	Property prop;
     uint32_t mod;
     
-    uint32_t error;
+    int32_t error;
     uint32_t result;
     std::string exception;
 };
@@ -93,6 +98,7 @@ public:
     virtual void SetProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
     virtual void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop) = 0;
     virtual bool DelProperty(ProfileType pt, const PersKey& key, const char *property_name) = 0;
+    //virtual void DelProperty(ProfileType pt, const PersKey& key, const char *property_name) = 0;
     virtual void IncProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
     virtual int IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod) = 0;
 
@@ -105,6 +111,7 @@ public:
     virtual void SetPropertyResult(SerialBuffer& bsb) = 0;
     virtual void GetPropertyResult(Property& prop, SerialBuffer& bsb) = 0;
     virtual bool DelPropertyResult(SerialBuffer& bsb) = 0;
+    //virtual void DelPropertyResult(SerialBuffer& bsb) = 0;
     virtual void IncPropertyResult(SerialBuffer& bsb) = 0;
     virtual int IncModPropertyResult(SerialBuffer& bsb) = 0;
 

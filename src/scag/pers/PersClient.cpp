@@ -31,6 +31,7 @@ public:
     void SetProperty(ProfileType pt, const PersKey& key, Property& prop);
     void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop);
     bool DelProperty(ProfileType pt, const PersKey& key, const char *property_name);
+    //void DelProperty(ProfileType pt, const PersKey& key, const char *property_name);
     void IncProperty(ProfileType pt, const PersKey& key, Property& prop);
     int IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod);
     
@@ -43,6 +44,7 @@ public:
     void SetPropertyResult(SerialBuffer& bsb);
     void GetPropertyResult(Property& prop, SerialBuffer& bsb);
     bool DelPropertyResult(SerialBuffer& bsb);
+    //void DelPropertyResult(SerialBuffer& bsb);
     void IncPropertyResult(SerialBuffer& bsb);
     int IncModPropertyResult(SerialBuffer& bsb);
 	
@@ -80,6 +82,9 @@ protected:
     LongCallContext* getContext();
     void ping();
     void ExecutePersCall(LongCallContext* ctx);
+
+    void CheckServerResponse(SerialBuffer& bsb);
+
 
     std::string host;
     int port;
@@ -193,8 +198,9 @@ void PersClientImpl::SetPropertyPrepare(ProfileType pt, const PersKey& key, Prop
 
 void PersClientImpl::SetPropertyResult(SerialBuffer& bsb)
 {
-    if(GetServerResponse(bsb) != RESPONSE_OK)
-        throw PersClientException(SERVER_ERROR);
+    //if(GetServerResponse(bsb) != RESPONSE_OK)
+      //  throw PersClientException(SERVER_ERROR);
+  CheckServerResponse(bsb);
 }
 
 void PersClientImpl::SetProperty(ProfileType pt, const PersKey& key, Property& prop)
@@ -216,7 +222,9 @@ void PersClientImpl::GetPropertyPrepare(ProfileType pt, const PersKey& key, cons
 
 void PersClientImpl::GetPropertyResult(Property& prop, SerialBuffer& bsb)
 {
-    ParseProperty(prop, bsb);
+    //ParseProperty(prop, bsb);
+  CheckServerResponse(bsb);
+  prop.Deserialize(bsb);
 }
 
 void PersClientImpl::GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop)
@@ -238,7 +246,9 @@ void PersClientImpl::DelPropertyPrepare(ProfileType pt, const PersKey& key, cons
 }
 
 bool PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
+//void PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
 {
+/*
 	int resp;
 	
 	try{
@@ -253,9 +263,13 @@ bool PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
         throw PersClientException(SERVER_ERROR);
 		
 	return resp != RESPONSE_PROPERTY_NOT_FOUND;
+    */
+  CheckServerResponse(bsb);
+  return  true;
 }
 
 bool PersClientImpl::DelProperty(ProfileType pt, const PersKey& key, const char *property_name)
+//void PersClientImpl::DelProperty(ProfileType pt, const PersKey& key, const char *property_name)
 {
     MutexGuard mt(mtx);
 
@@ -279,8 +293,9 @@ void PersClientImpl::IncPropertyPrepare(ProfileType pt, const PersKey& key, Prop
 
 void PersClientImpl::IncPropertyResult(SerialBuffer& bsb)
 {
-    if(GetServerResponse(bsb) != RESPONSE_OK)
-        throw PersClientException(SERVER_ERROR);
+    //if(GetServerResponse(bsb) != RESPONSE_OK)
+      //  throw PersClientException(SERVER_ERROR);
+  CheckServerResponse(bsb);
 }
 
 void PersClientImpl::IncProperty(ProfileType pt, const PersKey& key, Property& prop)
@@ -306,10 +321,24 @@ void PersClientImpl::IncModPropertyPrepare(ProfileType pt, const PersKey& key, P
     prop.Serialize(bsb);
 }
 
+void PersClientImpl::CheckServerResponse(SerialBuffer& bsb)
+{
+  switch (GetServerResponse(bsb)) {
+  case RESPONSE_OK: break;
+  case RESPONSE_PROPERTY_NOT_FOUND: throw PersClientException(PROPERTY_NOT_FOUND);
+  case RESPONSE_ERROR: throw PersClientException(SERVER_ERROR);
+  case RESPONSE_BAD_REQUEST: throw PersClientException(BAD_REQUEST);
+  case RESPONSE_TYPE_INCONSISTENCE: throw PersClientException(TYPE_INCONSISTENCE);
+  default: throw PersClientException(UNKNOWN_RESPONSE);
+  }
+}
+
 int PersClientImpl::IncModPropertyResult(SerialBuffer& bsb)
 {
-    if(GetServerResponse(bsb) != RESPONSE_OK)
-        throw PersClientException(SERVER_ERROR);
+  CheckServerResponse(bsb);
+  
+    //if(GetServerResponse(bsb) != RESPONSE_OK)
+      //  throw PersClientException(SERVER_ERROR);
 
     try{
         return bsb.ReadInt32();
@@ -628,7 +657,8 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
             {
                 case PERS_GET: GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
                 case PERS_SET: SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-                case PERS_DEL: if(!DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
+                //case PERS_DEL: if(!DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
+                case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
                 case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
                 case PERS_INC: IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
             }
@@ -637,7 +667,8 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
             {
                 case PERS_GET: GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
                 case PERS_SET: SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-                case PERS_DEL: if(!DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
+                //case PERS_DEL: if(!DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
+                case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
                 case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
                 case PERS_INC: IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
             }
@@ -649,12 +680,12 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
     }
     catch(Exception& exc)
     {
-        persParams->error = 0;        
+        persParams->error = -1;        
         persParams->exception = exc.what();
     }
     catch(...)
     {
-        persParams->error = 0;        
+        persParams->error = -1;        
         persParams->exception = "LongCallManager: Unknown exception";
     }
 }
