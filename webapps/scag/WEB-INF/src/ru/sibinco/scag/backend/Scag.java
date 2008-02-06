@@ -400,73 +400,73 @@ public class Scag extends Proxy {
                               final Manager manager, final String configFilename)
                               throws SibincoException {
      try{
-       //2.save current config to temporary file(smpp.xml->smpp.xml.old)
-       File configFile = new File(configFilename);
-       File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
-       Functions.RenameFile(configFile,temporary);
+        //2.save current config to temporary file(smpp.xml->smpp.xml.old)
+        File configFile = new File(configFilename);
+        File temporary = Functions.createTempFilename(configFile.getName(),".old",configFile.getParentFile());
+        Functions.RenameFile(configFile,temporary);
        //3.save config
-       logger.debug("Scag:invokeCommand1:store file");
-       manager.store();
-
+        logger.debug("Scag:invokeCommand1:store file");
+        manager.store();
 //moved from end
-      logger.debug("Scag:invokeCommand1:store file:daemon");
-      appContext.getHSDaemon().store(configFile);
+        logger.debug("Scag:invokeCommand1:store file:daemon");
+        appContext.getHSDaemon().store(configFile);
 
        //3.1 parse method used to localy validate saved config
         try {
-         manager.parse();
+            manager.parse();
         } catch (Throwable e) {
-         Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-         throw new SibincoException(e);
+            Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+            throw new SibincoException(e);
         }
        //4.send command
-      try
-      {
-        try {
-            Method commandMethod;
-            logger.debug("Scag:invokeCommand1:commandMethod");
-            if (paramsObject==null) {
-                commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
-                commandMethod.invoke(appContext.getScag(),null);
+        try
+        {
+          try
+          {
+              Method commandMethod;
+              logger.debug("Scag:invokeCommand1:commandMethod");
+              if (paramsObject==null) {
+                  commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{});
+                  commandMethod.invoke(appContext.getScag(),null);
+              } else {
+                  commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
+                  commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
+              }
+          } catch (NoSuchMethodException e) {
+              logger.error("Scag:invokeCommand1:scag doesn't support command "+commandName,e);
+              e.printStackTrace();
+          } catch (IllegalAccessException e) {
+              e.printStackTrace();
+          } catch (InvocationTargetException e) {
+              throw (SibincoException)e.getTargetException();
+          }
+        } catch (SibincoException se) {
+            //5. does service started?
+            if (getStatus() == STATUS_DISCONNECTED) {
+              //5. N0(service isn't started)
+              //9. save smpp.xml to backup!
+              //10. delete smpp.xml.old
+            //          Functions.SavedFileToBackup(temporary,".old");
+            //          appContext.getHSDaemon().store(configFile);
+                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
+                appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
+                throw new StatusDisconnectedException(host,port);
             } else {
-                commandMethod = this.getClass().getDeclaredMethod(commandName, new Class[]{paramsObject.getClass()});
-                commandMethod.invoke(appContext.getScag(),new Object[]{paramsObject});
+                //5. YES(service is started)
+                //6. service return error
+                //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
+                logger.error("Scag:invokeCommand1:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
+                Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
+                appContext.getHSDaemon().store(configFile);
+                //Paint error on the screen by throwing exception(next string)
+                throw se;
             }
-        } catch (NoSuchMethodException e) {
-            logger.error("Scag:invokeCommand1:scag doesn't support command "+commandName,e);
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            throw (SibincoException)e.getTargetException();
-        }
-      } catch (SibincoException se) {
-        //5. does service started?
-        if (getStatus() == STATUS_DISCONNECTED) {
-          //5. N0(service isn't started)
-          //9. save smpp.xml to backup!
-          //10. delete smpp.xml.old
-        //          Functions.SavedFileToBackup(temporary,".old");
-        //          appContext.getHSDaemon().store(configFile);
-            logger.error("Scag:invokeCommand1:SibincoException:(getStatus() == STATUS_DISCONNECTED)");
-            appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
-            throw new StatusDisconnectedException(host,port);
-        } else {
-            //5. YES(service is started)
-            //6. service return error
-            //7. Restore config from temporary file(smpp.xml.new -> smpp.xml)
-            logger.error("Scag:invokeCommand1:SibincoException:(getStatus() != STATUS_DISCONNECTED)");
-            Functions.renameNewSavedFileToOriginal(temporary,configFile,true);
-            appContext.getHSDaemon().store(configFile);
-            //Paint error on the screen by throwing exception(next string)
-            throw se;
-        }
       }
       //we don't have any exception, so
       //9. save smpp.xml to backup!
       //10. delete smpp.xml.new
 //o      Functions.SavedFileToBackup(temporary,".old");
-      logger.error("Scag:invokeCommand1:done!");
+      logger.error("Scag:invokeCommand1:done!ReturnSavedFileToBackup");
       appContext.getHSDaemon().store(Functions.ReturnSavedFileToBackup(temporary,".old"));
 //moved above
 //o      appContext.getHSDaemon().store(configFile);
