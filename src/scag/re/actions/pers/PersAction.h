@@ -38,6 +38,8 @@ using namespace scag::re;
 		FieldType lifeTimeFieldType, finalDateFieldType, varType;
 		std::string sLifeTime, sFinalDate;
 
+        std::string status_str, msg_str;
+
         virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
         virtual bool FinishXMLSubSection(const std::string& name);
 

@@ -102,7 +102,14 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         throw SCAGException("PersAction '%s' : missing or unknown 'type' parameter", getStrCmd());
     
     varType = CheckParameter(params, propertyObject, "PersAction", "var", true, true, var, bExist);
-
+/////////////////////////////////////////////
+    bool statusExist = false;
+    CheckParameter(params, propertyObject, "PersAction", "status", false, false,
+                    status_str, statusExist);
+    bool msgExist = false;
+    CheckParameter(params, propertyObject, "PersAction", "msg", false, false,
+                    msg_str, msgExist);
+//////////////////////////////////////////////
     if(cmd == PC_DEL)
     {
         smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
@@ -232,9 +239,10 @@ static void setPersPropFromREProp(Property& prop, REProperty& rep)
         case reprop::pt_date:
             prop.setDateValue(rep.getDate());
             break;
-        case reprop::pt_str:
-            prop.setStringValue(rep.getStr().c_str());
-            break;
+        case reprop::pt_str: 
+          prop.setValue(rep.getStr().c_str());
+          //prop.setStringValue(rep.getStr().c_str());
+          break;
     }
 }
 
@@ -345,7 +353,6 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
             else {
               md = mod;
             }
-            //md = mod;
         }
     }
 
@@ -373,7 +380,17 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
 {
     smsc_log_debug(logger,"ContinueRunning BatchAction 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 	PersClient& pc = PersClient::Instance();
+
+    REProperty *statusProp = context.getProperty(status_str);
+    if (statusProp) {
+      statusProp->setInt(0);
+    }
+    REProperty *msgProp = context.getProperty(msg_str);
+    if (msgProp) {
+      msgProp->setStr("Ok");
+    }
 	try{
+
 		switch(cmd)
 		{
 			case PC_GET:
@@ -386,9 +403,9 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
 			}
 			case PC_SET: pc.SetPropertyResult(sb); break;
 			case PC_DEL: 
-				if(!pc.DelPropertyResult(sb))
-	        	    smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
-				break;		
+				//if(!pc.DelPropertyResult(sb))
+	        	  //  smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
+                pc.DelPropertyResult(sb); break;		
 			case PC_INC: pc.IncPropertyResult(sb); break;		
 			case PC_INC_MOD:
 				uint32_t i = pc.IncModPropertyResult(sb);
@@ -399,7 +416,16 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
 	}
 	catch(PersClientException& e)		
 	{
-		throw SCAGException("PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), e.what());
+      if (statusProp) {
+        statusProp->setInt(e.getType());
+      }
+      if (msgProp) {
+        msgProp->setStr(e.what());
+      }
+      smsc_log_warn(logger, "PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, error code=%d : %s",
+                     getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(),
+                     getKey(context.getCommandProperty(), profile), var.c_str(), e.getType(), e.what());
+		//throw SCAGException("PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), e.what());
 	}
 }
 
@@ -476,7 +502,6 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
             else {
               params->mod = mod;
             }
-            //params->mod = mod;
         }
     }
     
@@ -489,28 +514,26 @@ void PersAction::ContinueRunning(ActionContext& context)
     smsc_log_debug(logger,"ContinueRunning Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 
     PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
-    if(params->error)
+    REProperty *statusProp = context.getProperty(status_str);
+    if (statusProp) {
+      statusProp->setInt(params->error);
+    }
+    REProperty *msgProp = context.getProperty(msg_str);
+    if (msgProp) {
+      msgProp->setStr(params->error == 0 ? "Ok" : params->exception);
+    }
+    if(params->error != 0)
     {
-        if(params->error == PROPERTY_NOT_FOUND)
+        if(params->error == PROPERTY_NOT_FOUND && cmd == PC_GET)
         {
-            if(cmd == PC_DEL)
-                smsc_log_warn(logger, "PersClientException: Property not found on deletion: profileType=%d, key=%s(%d), name=%s", profile, params->skey.c_str(), params->ikey, var.c_str());
-            else if(cmd == PC_GET)
-            {
-                REProperty *rep = context.getProperty(value_str);
-                rep->setStr("");
-                smsc_log_warn(logger, "PersClientException: GetProperty not found: profileType=%d, key=%s(%d), name=%s", profile, params->skey.c_str(), params->ikey, var.c_str());
-            }
-            return;
+          REProperty *rep = context.getProperty(value_str);
+          rep->setStr("");
         }
-  		throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->exception.c_str());
+        smsc_log_warn(logger, "PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, error code=%d : %s",
+                       getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->error, params->exception.c_str());
+        return;
+  		//throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->exception.c_str());
     }
-    else if(params->exception.length())
-    {
-        smsc_log_error(logger, params->exception);
-        throw Exception(params->exception.c_str());
-    }
-
     if(cmd == PC_INC_MOD)
     {
         REProperty *rep = context.getProperty(result_str);
