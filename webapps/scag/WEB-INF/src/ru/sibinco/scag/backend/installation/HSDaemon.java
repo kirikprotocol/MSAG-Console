@@ -118,6 +118,7 @@ public class HSDaemon {
       }
 
       public void storeToMirror(final File dest) throws SibincoException {
+          logger.debug("HSDaemon:CommonSaver:storeToMirror:dest-" + dest);
         OutputStream fos = null;
         InputStream fis = null;
         try
