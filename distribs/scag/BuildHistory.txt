@@ -286,3 +286,17 @@ TO ALL: Insert log record for all significant changes & fixes here.
 07.12.2007 15:00 makar [!!! CVS: revision marked by tag BUILD_06_12_2007 !!!]
 1) PVSS CRITICAL FIX: '7913... >> +7913...' logic improved. Cache fix
 2) MSAG Admin CRITICAL FIX: NullPointerException fixed on SME add
+
+=================================================================================================================
+06.02.2008 15:00 makar [!!! CVS: revision marked by tag BUILD_06_02_2008 !!!]
+1) MSAG CHANGE: USSD dialogs for service_op = 35 support as SMS added
+2) MSAG CHANGE: type argument added for TLV actions (type conversions)
+3) MSAG FIX: HTTP transport fixes (processing when route not found, no connection to dest host)
+4) PVSS CRITICAL CHANGE: CPers support included in build (hierarchical PVSS)
+5) MSAG FIX: profile:xxx actions fixes (coredump on PVSS server error)
+6) PVSS CHANGE: added property type conversion for profile:set, inc, inc-mod (INT <> STR)
+7) MSAG Admin FIX: config store & command run order in HS installation
+8) MSAG Admin CRITICAL CHANGE: FireFox (Safari, Opera) support (presentation code refactoring)
+9) MSAG/PVSS CHANGE: added status & msag arguments to profile:xxx actions
+10) Ant CHANGE: added cpers & pers targets (separate distribs)
+
