@@ -382,7 +382,7 @@ public class RuleManager
     errorInfo = errorsImitator(r);
     r = new BufferedReader(new StringReader(buffer));
   }
-  logger.debug("Rulemanager:AddRule():saverule()");
+  logger.debug("Rulemanager:AddRule():saveRule()");
   saveRule(r,ruleId, transport);
 // moved from below
     if (mode!=TERM_MODE) {
@@ -449,7 +449,6 @@ public class RuleManager
 //moved from end
     if (mode!=TERM_MODE) {
         logger.error("RuleManager:updateRule:(mode!=TERM_MODE)");
-        Functions.SavedFileToBackup(currentRuleFile, ".new");
         finishOperation(ruleId,transport,HSDaemon.UPDATEORADD);
         saveMessage("Updated rule: ", user, ruleId, transport);
     }
@@ -481,6 +480,11 @@ public class RuleManager
             throw e;
         }
    }
+      logger.error("RuleManager:updateRule():SibincoException:before end");
+      if (mode!=TERM_MODE) {
+        hsDaemon.doOperation( Functions.ReturnSavedFileToBackup(currentRuleFile, ".new"), HSDaemon.UPDATEORADD);
+      }
+      logger.error("RuleManager:updateRule():SibincoException:end");
 //   if (errorInfo == null || errorInfo.size()==0) {
 //        if (mode!=TERM_MODE) {
 //            logger.error("RuleManager:StatusDisconnectedException:if2:");
