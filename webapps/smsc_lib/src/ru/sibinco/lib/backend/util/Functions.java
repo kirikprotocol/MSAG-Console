@@ -218,10 +218,12 @@ public class Functions
 
     public static final File ReturnSavedFileToBackup(File newCreatedFile, String suffixToDelete) throws IOException
     {
+        logger.debug("Functions:ReturnSavedFileToBackup():start with newCreatedFile - " + newCreatedFile + " | suffixToDelete - " + suffixToDelete );
       final String suffix = suffixDateFormat.format(new Date());
       File backupFile = null;
       // rename old config file to bakup file
       String newCreated = newCreatedFile.getAbsolutePath();
+      File backFile = null;
       if (newCreatedFile.exists()) {
         File backupDir = new File(newCreatedFile.getParentFile(), backup_dir_name);
         if (!backupDir.exists()) {
@@ -230,13 +232,16 @@ public class Functions
             backupDir = newCreatedFile.getParentFile();
           }
         }
-        final File backFile = Functions.createTempFilename(newCreatedFile.getName().substring(0,newCreatedFile.getName().length()-suffixToDelete.length()), suffix, backupDir);
-        if (!(backupFile=new File(newCreated)).renameTo(backFile)) {
+//        final File backFile = Functions.createTempFilename(newCreatedFile.getName().substring(0,newCreatedFile.getName().length()-suffixToDelete.length()), suffix, backupDir);
+        backFile = Functions.createTempFilename(newCreatedFile.getName().substring(0,newCreatedFile.getName().length()-suffixToDelete.length()), suffix, backupDir);
+        backupFile=new File(newCreated);
+        if (!backupFile.renameTo(backFile)) {
           logger.error("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
           throw new IOException("Couldn't rename old file \"" + newCreated + "\" to backup file \"" + backFile.getAbsolutePath() + '"');
         }
       }
-      return backupFile;
+        logger.debug("Functions:ReturnSavedFileToBackup():end: new backupFile - " + backFile );
+      return backFile;
     }
 
 
