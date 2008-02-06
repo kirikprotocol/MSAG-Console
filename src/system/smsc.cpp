@@ -1404,14 +1404,24 @@ void Smsc::shutdown()
 
   tp.shutdown();
 
+#if defined(USE_MAP)
+  if(mapioptr)
+  {
+    MapIoTask *mapio=(MapIoTask*)mapioptr;
+    mapio->Stop();
+  }
+#endif
+
   smeman.unregisterSmeProxy(scheduler);
 
   tp2.shutdown();
 
 #if defined(USE_MAP)
-  MapIoTask *mapio=(MapIoTask*)mapioptr;
-  mapio->Stop();
-  delete mapio;
+  if(mapioptr)
+  {
+    MapIoTask *mapio=(MapIoTask*)mapioptr;
+    delete mapio;
+  }
 #endif
 
   smsc::closedgroups::ClosedGroupsManager::Shutdown();
