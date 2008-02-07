@@ -203,6 +203,13 @@ string MscToString(const ET96MAP_ADDRESS_T* msc)
 }
 
 
+bool FixedAddrCompare(const std::string& addr1,const std::string& addr2)
+{
+  if(addr1==addr2)return true;
+  if(addr1.find(addr2)==0)return true;
+  return false;
+}
+
 string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
 {
   if(addr==0 || addr->ss7AddrLen==0)return "";
@@ -3192,7 +3199,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   {
     if(fraudLog->isWarnEnabled())
     {
-      if(s_msc.length() && dialog->origAddress!=s_msc)
+      if(s_msc.length() && dialog->origAddress.length() && !FixedAddrCompare(dialog->origAddress,s_msc))
       {
         if(dialog->sms.get())
         {
@@ -3203,9 +3210,9 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
         {
           smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, sms is null",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str());
         }
-        if(fraudLog->isInfoEnabled())
+        if(fraudLog->isDebugEnabled())
         {
-          smsc_log_info(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
+          smsc_log_debug(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
           ResponseMO(dialog,9);
           dialog->state = MAPST_WaitSubmitCmdConf;
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
