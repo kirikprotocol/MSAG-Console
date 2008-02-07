@@ -584,6 +584,7 @@ public class Deliveries extends InfoSmeBean
         task.setActivePeriodStart("10:00:00");
         task.setActivePeriodEnd("21:00:00");
         task.setTransactionMode(false);
+        task.setStartDate(endDateFormat.format(new Date()));
         task.setValidityPeriod(isUserAdmin(request) ? "01:00:00" : "00:45:00");
     }
 

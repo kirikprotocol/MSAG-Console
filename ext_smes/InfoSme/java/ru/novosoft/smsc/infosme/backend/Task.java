@@ -28,7 +28,7 @@ public class Task
   private boolean replaceMessage = false;
   private String svcType = "";
   private String endDate = "";
-  private String startDate = ""; // This parameter should not store in config file.
+  private String startDate = "";
   private String retryTime = "";
   private String validityPeriod = "";
   private String validityDate = "";
