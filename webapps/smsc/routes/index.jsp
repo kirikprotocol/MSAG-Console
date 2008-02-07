@@ -182,10 +182,10 @@
     </tr>
     <tr>
         <td align="left" width="10%">
-            <%= getLocString("common.util.SMEs") %>: &nbsp;
+            <%= getLocString("common.util.SrcSMEs") %>: &nbsp;
         </td>
         <td width="40%" align="left">
-            <input:text name="querySMEs" default="<%= bean.getQuerySMEs() %>"/>
+            <input:text name="querySrcSMEs" default="<%= bean.getQuerySrcSMEs() %>"/>
         </td>
         <td align="left" width="10%">
             <%= getLocString("common.util.Mask") %>: &nbsp;
@@ -195,6 +195,20 @@
         </td>
     </tr>
     <tr>
+      <td align="left" width="10%">
+        <%= getLocString("common.util.DstSMEs") %>: &nbsp;
+      </td>
+      <td width="40%" align="left">
+        <input:text name="queryDestSMEs" default="<%= bean.getQueryDestSMEs() %>"/>
+      </td>
+      <td align="left" width="10%">
+        <%= getLocString("common.util.Categories") %>: &nbsp;
+      </td>
+      <td width="40%" align="left">
+        <input:text name="queryCategory" default="<%= bean.getQueryCategory() %>"/>
+      </td>
+    </tr>
+    <tr>
         <td align="left" width="10%">
             <%= getLocString("common.util.Providers") %>: &nbsp;
         </td>
@@ -202,10 +216,10 @@
             <input:text name="queryProvider" default="<%= bean.getQueryProvider() %>"/>
         </td>
         <td align="left" width="10%">
-            <%= getLocString("common.util.Categories") %>: &nbsp;
+            &nbsp;
         </td>
         <td width="40%" align="left">
-            <input:text name="queryCategory" default="<%= bean.getQueryCategory() %>"/>
+            &nbsp;
         </td>
     </tr>
     <tr>

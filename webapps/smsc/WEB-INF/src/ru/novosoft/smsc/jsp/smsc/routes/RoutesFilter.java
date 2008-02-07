@@ -10,7 +10,6 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.jsp.smsc.*;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.util.Functions;
 
@@ -25,7 +24,8 @@ public class RoutesFilter extends SmscBean
   protected String[] srcMasks = null;
   protected String[] dstChks = null;
   protected String[] dstMasks = null;
-  protected String[] smeChks = null;
+  protected String[] dstSmeChks = null;
+  protected String[] srcSmeChks = null;
   private String[] names = null;
 
   public static final int RESULT_ClEAR = 4;
@@ -62,7 +62,8 @@ public class RoutesFilter extends SmscBean
       srcMasks = filter.getSourceMaskStrings();
       dstChks = filter.getDestinationSubjectNames();
       dstMasks = filter.getDestinationMaskStrings();
-      smeChks = filter.getSmeIds();
+      dstSmeChks = filter.getDestSmeIds();
+      srcSmeChks = filter.getSrcSmeIds();
       names = filter.getNames();
       strict = filter.isIntersection();
       strict1 = filter.getIntersection();
@@ -72,7 +73,8 @@ public class RoutesFilter extends SmscBean
 
     if (srcChks == null) srcChks = new String[0];
     if (dstChks == null) dstChks = new String[0];
-    if (smeChks == null) smeChks = new String[0];
+    if (dstSmeChks == null) dstSmeChks = new String[0];
+    if (srcSmeChks == null) srcSmeChks = new String[0];
 
     srcChks = Functions.trimStrings(srcChks);
     if (!initialized) {
@@ -103,11 +105,12 @@ public class RoutesFilter extends SmscBean
     } catch (AdminException e) {
       return error(SMSCErrors.error.routes.invalidDestinationMask, e);
     }
-    smeChks = Functions.trimStrings(smeChks);
+    dstSmeChks = Functions.trimStrings(dstSmeChks);
+    srcSmeChks = Functions.trimStrings(srcSmeChks);
 
     srcChksSet = new HashSet(Arrays.asList(srcChks));
     dstChksSet = new HashSet(Arrays.asList(dstChks));
-    smeChksSet = new HashSet(Arrays.asList(smeChks));
+    smeChksSet = new HashSet(Arrays.asList(dstSmeChks));
 
     return RESULT_OK;
   }
@@ -167,7 +170,8 @@ public class RoutesFilter extends SmscBean
       }
       filter.setSourceSubjectNames(srcChks);
       filter.setDestinationSubjectNames(dstChks);
-      filter.setSmeIds(smeChks);
+      filter.setDestSmeIds(dstSmeChks);
+      filter.setSrcSmeIds(srcSmeChks);
 
       /*  int strict1;
        if (strict) strict1=0;
@@ -201,7 +205,8 @@ public class RoutesFilter extends SmscBean
       filter.setDestinationSubjectNames(new String[0]);
       filter.setSourceMaskStrings(new String[0]);
       filter.setDestinationMaskStrings(new String[0]);
-      filter.setSmeIds(new String[0]);
+      filter.setDestSmeIds(new String[0]);
+      filter.setSrcSmeIds(new String[0]);
       //this.errors.clear();
     } catch (AdminException e) {
       return error(SMSCErrors.error.routes.CantUpdateFilter, e);
@@ -278,14 +283,22 @@ public class RoutesFilter extends SmscBean
     this.dstMasks = dstMasks;
   }
 
-  public String[] getSmeChks()
+  public String[] getDstSmeChks()
   {
-    return smeChks;
+    return dstSmeChks;
   }
 
-  public void setSmeChks(String[] smeChks)
+  public void setDstSmeChks(String[] dstSmeChks)
   {
-    this.smeChks = smeChks;
+    this.dstSmeChks = dstSmeChks;
+  }
+
+  public String[] getSrcSmeChks() {
+    return srcSmeChks;
+  }
+
+  public void setSrcSmeChks(String[] srcSmeChks) {
+    this.srcSmeChks = srcSmeChks;
   }
 
   public boolean isStrict()

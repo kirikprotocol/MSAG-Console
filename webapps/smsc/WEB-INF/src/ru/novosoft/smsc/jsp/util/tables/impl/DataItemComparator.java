@@ -49,6 +49,12 @@ class DataItemComparator implements Comparator
         return ((Boolean) val2).booleanValue() ? -1 : 0;
 
     } else if (val1 instanceof Comparable) {
+      if (val1 == null && val2 != null)
+        return -1;
+      else if (val2 == null && val1 != null)
+        return 1;
+      else if (val1 == val2)
+        return 0;
       return ((Comparable)val1).compareTo(val2);
 
     } else

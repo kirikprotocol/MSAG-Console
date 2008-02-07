@@ -23,7 +23,8 @@ public class RouteFilter implements Filter {
     private MaskList src_masks = null;
     private Set dst_subjects = null;
     private MaskList dst_masks = null;
-    private List smes = null;
+    private List destSmes = null;
+    private List srcSmes = null;
     private List names = null;
     private List providers = null;
     private List categories = null;
@@ -45,7 +46,8 @@ public class RouteFilter implements Filter {
         src_masks = new MaskList();
         dst_subjects = new HashSet();
         dst_masks = new MaskList();
-        smes = new Vector();
+        destSmes = new Vector();
+        srcSmes = new Vector();
         names = new Vector();
         providers = new Vector();
         categories = new Vector();
@@ -56,7 +58,7 @@ public class RouteFilter implements Filter {
                        String src_masks,
                        Set destination_selected,
                        String dst_masks,
-                       List smes, List names, List providers, List categories) {
+                       List destSmes, List names, List providers, List categories) {
         intersection = Intersection;
         // get sources
         this.src_subjects = source_selected;
@@ -66,7 +68,7 @@ public class RouteFilter implements Filter {
         this.dst_subjects = destination_selected;
         this.dst_masks = new MaskList(dst_masks);
 
-        this.smes = smes;
+        this.destSmes = destSmes;
         this.names = names;
         this.providers = providers;
         this.categories = categories;
@@ -77,7 +79,7 @@ public class RouteFilter implements Filter {
                        String src_masks,
                        Set destination_selected,
                        String dst_masks,
-                       List smes, List names, List providers, List categories, ProviderManager providerManager, CategoryManager categoryManager) {
+                       List destSmes, List names, List providers, List categories, ProviderManager providerManager, CategoryManager categoryManager) {
         intersection = Intersection;
         // get sources
         this.src_subjects = source_selected;
@@ -87,7 +89,7 @@ public class RouteFilter implements Filter {
         this.dst_subjects = destination_selected;
         this.dst_masks = new MaskList(dst_masks);
 
-        this.smes = smes;
+        this.destSmes = destSmes;
         this.names = names;
         this.providers = providers;
         this.categories = categories;
@@ -99,7 +101,7 @@ public class RouteFilter implements Filter {
     public boolean isEmpty() {
         return this.src_subjects.isEmpty() && this.src_masks.isEmpty()
                 && this.dst_subjects.isEmpty() && this.dst_masks.isEmpty()
-                && this.smes.isEmpty() && this.names.isEmpty() && this.providers.isEmpty() && this.categories.isEmpty();
+                && this.destSmes.isEmpty() && this.srcSmes.isEmpty() && this.names.isEmpty() && this.providers.isEmpty() && this.categories.isEmpty();
     }
 
     protected static int isSubjectAllowed(Set subjects, String subj) {
@@ -210,28 +212,28 @@ public class RouteFilter implements Filter {
     }
 
     protected int isSMEsAllowed(DestinationList dsts) {
-        if (smes.isEmpty())
+        if (destSmes.isEmpty())
             return UNKNOWN;
 
         for (Iterator i = dsts.iterator(); i.hasNext();) {
             Destination dst = (Destination) i.next();
             if (intersection == 0) {
 
-                if (!smes.contains(dst.getSme().getId()) && !smes.contains(dst.getSme().getId().toLowerCase()))
+                if (!destSmes.contains(dst.getSme().getId()) && !destSmes.contains(dst.getSme().getId().toLowerCase()))
 
                     return NOT_ALLOWED;
                 else {
-                    for (Iterator j = smes.iterator(); j.hasNext();) {
+                    for (Iterator j = destSmes.iterator(); j.hasNext();) {
                         String subject = (String) j.next();
                         if (dst.getSme().getId().toLowerCase().indexOf(subject.toLowerCase()) == -1)
                             return NOT_ALLOWED;
                     }
                 }
             } else {
-                if (smes.contains(dst.getSme().getId()) || smes.contains(dst.getSme().getId().toLowerCase()))
+                if (destSmes.contains(dst.getSme().getId()) || destSmes.contains(dst.getSme().getId().toLowerCase()))
                     return ALLOWED;
                 else {
-                    for (Iterator j = smes.iterator(); j.hasNext();) {
+                    for (Iterator j = destSmes.iterator(); j.hasNext();) {
                         String subject = (String) j.next();
                         if (dst.getSme().getId().toLowerCase().indexOf(subject.toLowerCase()) != -1)
                             return ALLOWED;
@@ -293,6 +295,21 @@ public class RouteFilter implements Filter {
         return NOT_ALLOWED;
     }
 
+    protected int isSrcSmeAllowed(String srcSmeId) {
+      System.out.println("!!! " + srcSmeId + " " + srcSmes);
+      if (srcSmes.isEmpty())
+        return UNKNOWN;
+
+      if (srcSmeId != null) {
+        for (Iterator iter = srcSmes.iterator(); iter.hasNext();) {
+          String sme = (String) iter.next();
+          if(srcSmeId.toLowerCase().indexOf(sme) != -1)
+            return ALLOWED;
+        }
+      }
+      return NOT_ALLOWED;
+    }
+
     public boolean isItemAllowed(DataItem item) {
         if (isEmpty())
             return true;
@@ -301,6 +318,7 @@ public class RouteFilter implements Filter {
         Long categoryId = (Long) item.getValue("categoryId");
         SourceList srcs = (SourceList) item.getValue("sources");
         DestinationList dsts = (DestinationList) item.getValue("destinations");
+        String srcSmeId = (String) item.getValue("srcSmeId");
 
         switch (intersection) {
             case 0:
@@ -308,6 +326,7 @@ public class RouteFilter implements Filter {
                 return isSourcesAllowed(srcs, 0) != NOT_ALLOWED
                         && isDestinationsAllowed(dsts, 0) != NOT_ALLOWED
                         && isSMEsAllowed(dsts) != NOT_ALLOWED
+                        && isSrcSmeAllowed(srcSmeId) != NOT_ALLOWED
                         && isNamesAllowed(name) != NOT_ALLOWED
                         && isProvidersAllowed(providerId) == ALLOWED
                         && isCategoriesAllowed(categoryId) == ALLOWED;
@@ -319,6 +338,7 @@ public class RouteFilter implements Filter {
                         || isSourcesAllowed(srcs, Mask) == ALLOWED
                         || isDestinationsAllowed(dsts, Mask) == ALLOWED
                         || isSMEsAllowed(dsts) == ALLOWED
+                        || isSrcSmeAllowed(srcSmeId) == ALLOWED
                         || isNamesAllowed(name) == ALLOWED
                         || isProvidersAllowed(providerId) == ALLOWED
                         || isCategoriesAllowed(categoryId) == ALLOWED;
@@ -328,6 +348,7 @@ public class RouteFilter implements Filter {
                 return isSourcesAllowed(srcs, 0) == ALLOWED
                         || isDestinationsAllowed(dsts, 0) == ALLOWED
                         || isSMEsAllowed(dsts) == ALLOWED
+                        || isSrcSmeAllowed(srcSmeId) == ALLOWED
                         || isNamesAllowed(name) == ALLOWED
                         || isProvidersAllowed(providerId) == ALLOWED
                         || isCategoriesAllowed(categoryId) == ALLOWED;
@@ -356,8 +377,12 @@ public class RouteFilter implements Filter {
         return (String[]) dst_masks.getNames().toArray(new String[0]);
     }
 
-    public String[] getSmeIds() {
-        return (String[]) smes.toArray(new String[0]);
+    public String[] getDestSmeIds() {
+        return (String[]) destSmes.toArray(new String[0]);
+    }
+
+    public String[] getSrcSmeIds() {
+      return (String[]) srcSmes.toArray(new String[0]);
     }
 
     public String[] getNames() {
@@ -399,8 +424,12 @@ public class RouteFilter implements Filter {
         this.dst_masks = new MaskList(dstMasks);
     }
 
-    public void setSmeIds(String[] smes) {
-        this.smes = Arrays.asList(smes);
+    public void setDestSmeIds(String[] smes) {
+        this.destSmes = Arrays.asList(smes);
+    }
+
+    public void setSrcSmeIds(String[] smes) {
+        this.srcSmes = Arrays.asList(smes);
     }
 
     public void setNames(String[] names) {

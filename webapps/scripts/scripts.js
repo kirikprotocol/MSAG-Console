@@ -185,10 +185,10 @@ function validateField_hex(elem)
 function validateField_int_range(elem)
 {
     var intValue = elem.value / 1;
-    var intMin = elem.range_min == null ? (1 / 0) : (elem.range_min / 1);
-    var intMax = elem.range_max == null ? (1 / 0) : (elem.range_max / 1);
+    var intMin = elem.getAttribute("range_min") == null ? (1 / 0) : (elem.getAttribute("range_min") / 1);
+    var intMax = elem.getAttribute("range_max") == null ? (1 / 0) : (elem.getAttribute("range_max") / 1);
     return isNaN(intValue) || ((!isNaN(intMin)) && intValue < intMin) || ((!isNaN(intMax)) && intValue > intMax)
-            ? validationError(elem, rangeValueErrorMsg_pre + elem.range_min + ", " + elem.range_max + "]")
+            ? validationError(elem, rangeValueErrorMsg_pre + elem.getAttribute("range_min") + ", " + elem.getAttribute("range_max") + "]")
             : true;
 }
 

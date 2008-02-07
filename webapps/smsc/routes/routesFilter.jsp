@@ -1,6 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp" %>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter
                  " %>
+<%@ page import="java.util.*"%>
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter"/>
 <jsp:setProperty name="bean" property="*"/>
@@ -69,7 +70,7 @@ String encName = StringEncoderDecoder.encode(name);
 --%>
 <%
     TreeMap osrc = new TreeMap();
-    HashMap asrc = new HashMap();
+    java.util.HashMap asrc = new HashMap();
     Collection srcs = bean.getAllSubjects();
     if (srcs.size() < 10)
         asrc.put("size", String.valueOf(srcs.size()));
@@ -99,97 +100,89 @@ String encName = StringEncoderDecoder.encode(name);
     adst.put("multiple", "1");
 %>
 <input type=hidden name=initialized value=true>
-<table with="100%">
-    <tr>
-        <td align="left" with="10%"><%=getLocString("common.util.Name")%>: &nbsp;</td><td with="40%" align="left">
-        <input:text name="filteredName" default="<%=bean.getFilteredName()%>"/></td>
-        <td align="left" with="10%">     &nbsp;</td><td with="40%" align="left">&nbsp;</td>
-    </tr>
-    <tr>
-        <td align="left" with="10%"><%=getLocString("common.util.Provider")%>: &nbsp;</td><td with="40%" align="left">
-        <input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/></td>
-        <td align="left" with="10%"><%=getLocString("common.util.Category")%>: &nbsp;</td><td with="40%" align="left">
-        <input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/></td>
-    </tr>
-</table>
-<table with="100%">
-    <tr>
-        <td with="45%">
-            <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-            <div class=page_subtitle><%=getLocString("common.titles.sources")%></div>
-            <table with="100%">
-                <tr>
-                    <td><input:select name="srcChks" bean="bean"
-                                      attributes="<%= asrc %>" options="<%= osrc %>"/></td></tr>
-            </table>
 
-        </td>
-        <td width=10%>
-            &nbsp;
-        </td>
-        <td with="45%">
-            <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
+<table width="100%" class=properties_list cellspacing=0 cellspadding=0>
+  <col width="1%"/>
+  <col width="49%"/>
+  <col width="1%"/>
+  <col width="49%"/>
+  <tr>
+    <td colspan="2"><div class=page_subtitle><%=getLocString("common.titles.general")%></div></td>
+    <td colspan="2"><div class=page_subtitle><%=getLocString("common.titles.options")%></div></td>
+  </tr>
 
-            <div class=page_subtitle><%=getLocString("common.titles.destinations")%></div>
+  <tr class=row<%=(rowN++) & 1%>>
+    <td align="left" nowrap><%=getLocString("common.util.Name")%>: &nbsp;</td>
+    <td align="left"><input:text name="filteredName" default="<%=bean.getFilteredName()%>"/></td>
+    <td nowrap align="left"><%=getLocString("common.util.Filter")%>&nbsp;</td>
+    <td nowrap align="left">
+      <select name="strict1" id="strict1">
+        <option value="1" <%=bean.getStrict1()==1 ? "selected" : ""%>><%=getLocString("routes.softFilter")%></option>
+        <option value="2" <%=bean.getStrict1()==2 ? "selected" : ""%>><%=getLocString("routes.halfSoftFilter")%></option>
+        <option value="0" <%=bean.getStrict1()==0 ? "selected" : ""%>><%=getLocString("routes.hardFilter")%></option>
+      </select>
+  </tr>
 
+  <tr class=row<%=(rowN++) & 1%>>
+    <td align="left" nowrap><%=getLocString("common.util.Provider")%>: &nbsp;</td>
+    <td align="left"><input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/></td>
+    <td nowrap align="left"><%=getLocString("routes.showSourcesList")%>&nbsp;</td>
+    <td nowrap align="left"><input id=options_show_src class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>></td>
+  </tr>
 
-            <table with="100%">
-                <tr>
-                    <td><input:select name="dstChks" bean="bean"
-                                      attributes="<%= adst %>" options="<%= odst %>"/></td></tr>
-            </table>
-        </td>
-    </tr>
-</table>
-
-
-<table class=properties_list cellspacing=0 cellspadding=0>
-    <tr>
-        <td width=45%>
-            <table class=properties_list cellspacing=0 cellspadding=0>
-                <%
-                    for (int i = 0; i < bean.getSrcMasks().length; i++) {
-                %>
-                <tr class=row<%=(rowN++) & 1%>>
-                    <td colspan=1><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask"
-                                         onkeyup="resetValidation(this)"></td>
-                </tr>
-                <%}%>
-                <tr class=row<%=(rowN++) & 1%>>
-                    <td width=100%><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)">
-                    </td>
-                    <td><%addButton(out, "mbAdd", "Add", "routes.addMask2SourcesHint");%></td>
-                </tr>
-            </table>
-        </td>
-        <td width=3%>
-            &nbsp;
-        </td>
-        <td width=52%>
-            <table class=properties_list cellspacing=0 cellspadding=0>
-                <%
-                    for (int i = 0; i < bean.getDstMasks().length; i++) {
-                %>
-                <tr class=row<%=(rowN++) & 1%>>
-                    <td colspan=1><input class=txtW name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask"
-                                         onkeyup="resetValidation(this)"></td>
-                </tr>
-                <%}%>
-                <tr class=row<%=(rowN++) & 1%>>
-                    <td width=100%><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)">
-                    </td>
-                    <td><%addButton(out, "mbAdd", "Add", "routes.addMask2DestHint");%></td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-
-<table with="100%">
-<tr>
-<td with="45%">
-    <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-    <div class=page_subtitle><%=getLocString("common.titles.smes")%></div>
+  <tr class=row<%=(rowN++) & 1%>>
+    <td align="left" nowrap><%=getLocString("common.util.Category")%>: &nbsp;</td>
+    <td align="left"><input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/></td>
+    <td nowrap align="left"><%=getLocString("routes.showDestinationsList")%>&nbsp;</td>
+    <td nowrap align="left"><input id=options_show_dst class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>></td>
+  </tr>
+  <tr class=row<%=(rowN++) & 1%>>
+    <td colspan=2><div class=page_subtitle><%=getLocString("common.titles.sources")%></div></td>
+    <td colspan=2><div class=page_subtitle><%=getLocString("common.titles.destinations")%></div></td>
+  </tr>
+  <tr class=row<%=(rowN++) & 1%>>
+    <td>Subjects</td>
+    <td><input:select name="srcChks" bean="bean" attributes="<%= asrc %>" options="<%= osrc %>"/></td>
+    <td>Subjects</td>
+    <td><input:select name="dstChks" bean="bean" attributes="<%= adst %>" options="<%= odst %>"/></td>
+  </tr>
+  <tr class=row<%=(rowN++) & 1%>>
+    <td>Masks</td>
+    <td>
+      <table cellspacing=0 cellspadding=0>
+        <col width="70%">
+        <col width="30%">
+        <% for (int i = 0; i < bean.getSrcMasks().length; i++) { %>
+        <tr>
+          <td><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+          <td>&nbsp;</td>
+        </tr>
+        <%}%>
+        <tr>
+          <td><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
+          <td align="left"><%addButton(out, "mbAdd", "Add", "routes.addMask2SourcesHint");%></td>
+        </tr>
+      </table>
+    </td>
+    <td>Masks</td>
+    <td>
+      <table cellspacing=0 cellspadding=0>
+        <col width="70%">
+        <col width="30%">
+        <%for (int i = 0; i < bean.getDstMasks().length; i++) { %>
+        <tr>
+          <td><input class=txtW name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+          <td>&nbsp;</td>
+        </tr>
+        <%}%>
+        <tr>
+          <td><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
+          <td align="left"><%addButton(out, "mbAdd", "Add", "routes.addMask2DestHint");%></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr class=row<%=(rowN++) & 1%>>
     <%
         TreeMap osme = new TreeMap();
         HashMap asme = new HashMap();
@@ -207,103 +200,11 @@ String encName = StringEncoderDecoder.encode(name);
             asme.put("size", "10");
         asme.put("multiple", "1");
     %>
-    <%--
-    <table  with="100%">
-    <tr>
-    <td>
-
-    <%
-      if (sme.size()<10) {
-    %>
-     <select name=smeChks bean=bean multiple=true size=<%=sme.size()%>>
-    <%
-          } else {
-    %>
-    <select name=smeChks bean=bean multiple=true size=10>
-    <%
-      }
-      // Iterator i = bean.getAllSmes().iterator();
-      for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
-    {
-    String name = (String) i.next();
-    String encName = StringEncoderDecoder.encode(name);
-
-          if (bean.isSmeChecked(name) ) {
-    %>
-             <option value=<%=name%> selected><%=name%></option>
-    <%
-          } else {
-    %>
-             <option value=<%=name%>><%=name%></option>
-    <%
-          }
-       }
-    %>
-     </select>
-    </td></tr>
-    </table>
-    --%>
-    <table with="100%">
-        <tr>
-            <td><input:select name="smeChks" bean="bean"
-                              attributes="<%= asme %>" options="<%= osme %>"/>
-            </td></tr>
-    </table>
-
-</td>
-<td width=10%>
-    &nbsp;
-</td>
-<td with="45%">
-
-    <%--
-    <table class=properties_list cellspacing=0 cellspadding=0>
-    <%
-    rowN = 0;
-    for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
-    {
-    String name = (String) i.next();
-    String encName = StringEncoderDecoder.encode(name);
-    %>
-    <tr class=row<%=(rowN++)&1%>>
-        <td nowrap><input class=check id="sme_<%=encName%>" type=checkbox name=smeChks value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>>&nbsp;<label for="sme_<%=encName%>"><%=encName%></label></td>
-    </tr>
-    <%}%>
-    </table>
-    --%>
-    <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-    <div class=page_subtitle><%=getLocString("common.titles.options")%></div>
-    <table class=properties_list cellspacing=0 cellspadding=0>
-        <%rowN = 0;%>
-        <%--<tr class=row<%=(rowN++)&1%>>
-           <td nowrap><input id=options_strict_filter class=check type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>&nbsp;<label for=options_strict_filter>Strict Filter</label></td>
-       </tr> --%>
-        <tr class=row<%=(rowN++) & 1%>>
-            <td nowrap><input:radio name="strict1" value="2" default="<%=String.valueOf(bean.getStrict1()) %>"/>&nbsp;
-                <label for=options_strict_filter><%=getLocString("routes.softFilter")%></label></td>
-        </tr>
-        <tr class=row<%=(rowN++) & 1%>>
-            <td nowrap><input:radio name="strict1" value="1" default="<%=String.valueOf(bean.getStrict1()) %>"/>&nbsp;
-                <label for=options_strict_filter><%=getLocString("routes.halfSoftFilter")%></label></td>
-        </tr>
-        <tr class=row<%=(rowN++) & 1%>>
-            <td nowrap><input:radio name="strict1" value="0" default="<%=String.valueOf(bean.getStrict1()) %>"/>&nbsp;
-                <label for=options_strict_filter><%=getLocString("routes.hardFilter")%></label></td>
-        </tr>
-        <tr class=row<%=(rowN++) & 1%>>
-            <td nowrap><input id=options_show_src class=check type="checkbox"
-                              name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>&nbsp;<label
-                    for=options_show_src><%=getLocString("routes.showSourcesList")%></label></td>
-        </tr>
-        <tr class=rowLast>
-            <td nowrap><input id=options_show_dst class=check type="checkbox"
-                              name=showDst <%=bean.isShowDst() ? "checked" : ""%>>&nbsp;<label
-                    for=options_show_dst><%=getLocString("routes.showDestinationsList")%></label></td>
-        </tr>
-
-    </table>
-</td>
-</tr>
+    <td>SMEs</td>
+    <td><input:select name="srcSmeChks" bean="bean" attributes="<%= asme %>" options="<%= osme %>"/></td>
+    <td>SMEs</td>
+    <td><input:select name="dstSmeChks" bean="bean" attributes="<%= asme %>" options="<%= osme %>"/></td>
+  </tr>
 </table>
 
 </div>

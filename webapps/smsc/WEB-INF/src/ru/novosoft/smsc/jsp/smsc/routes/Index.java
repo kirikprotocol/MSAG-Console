@@ -42,7 +42,8 @@ public class Index extends IndexBean {
     protected String queryName = null;
     protected String querySubj = null;
     protected String queryMask = null;
-    protected String querySMEs = null;
+    protected String queryDestSMEs = null;
+    protected String querySrcSMEs = null;
     protected String queryProvider = null;
     protected String queryCategory = null;
     protected String queryProviderId = null;
@@ -62,7 +63,8 @@ public class Index extends IndexBean {
     protected String[] srcMasks = null;
     protected String[] dstChks = null;
     protected String[] dstMasks = null;
-    protected String[] smeChks = null;
+    protected String[] destSmeChks = null;
+    protected String[] srcSmeChks = null;
     protected String[] names = null;
     protected String[] providerNames = null;
     protected String[] categoryNames = null;
@@ -102,7 +104,8 @@ public class Index extends IndexBean {
             srcMasks = routesFilter.getSourceMaskStrings();
             dstChks = routesFilter.getDestinationSubjectNames();
             dstMasks = routesFilter.getDestinationMaskStrings();
-            smeChks = routesFilter.getSmeIds();
+            destSmeChks = routesFilter.getDestSmeIds();
+            srcSmeChks = routesFilter.getSrcSmeIds();
             names = routesFilter.getNames();
             providerNames = routesFilter.getProviders();
             categoryNames = routesFilter.getCategories();
@@ -111,7 +114,7 @@ public class Index extends IndexBean {
             } catch (Exception e) {
                 queryName = "";
             }
-            if (srcChks.length == 1) { //если записан вручную
+            if (srcChks.length == 1) { //пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 try {
                     querySubj = srcChks[0];
                 }
@@ -125,9 +128,14 @@ public class Index extends IndexBean {
                 queryMask = "";
             }
             try {
-                querySMEs = smeChks[0];
+                queryDestSMEs = destSmeChks[0];
             } catch (Exception e) {
-                querySMEs = "";
+                queryDestSMEs = "";
+            }
+          try {
+                querySrcSMEs = srcSmeChks[0];
+            } catch (Exception e) {
+                querySrcSMEs = "";
             }
             try {
                 queryProvider = providerNames[0];
@@ -232,7 +240,7 @@ public class Index extends IndexBean {
                 routesFilter.setDestinationSubjectNames(new String[0]);
             }
             if (queryMask != null) {
-                /*чтобы при поиске в рутах по маске шёл заодно поиск и в алиасах*/
+                /*пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ*/
                 AliasFilter aliasFilter = preferences.getAliasesFilter();
                 String[] oldAliases = aliasFilter.getAliases();
                 String[] oldAddresses = aliasFilter.getAddresses();
@@ -259,7 +267,7 @@ public class Index extends IndexBean {
                 aliasFilter.setAddresses(oldAddresses);
                 aliasFilter.setAliases(oldAliases);
                 aliasFilter.setHide(oldHide);
-                /*если указана в фильтре рутов маска, то поискать ее сначала в сабжектах, и искать в рутах еще и имя этого сабжекта*/
+                /*пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ*/
                 if (querySubj == null) {
                     SubjectFilter subjFilter = preferences.getSubjectsFilter();
                     List oldSubjectsMasks = subjFilter.getMaskStrings();
@@ -285,10 +293,15 @@ public class Index extends IndexBean {
                 routesFilter.setSourceMaskStrings(new String[0]);
                 routesFilter.setDestinationMaskStrings(new String[0]);
             }
-            if (querySMEs != null) {
-                routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
+            if (queryDestSMEs != null) {
+                routesFilter.setDestSmeIds(new String[]{queryDestSMEs.toLowerCase()});
             } else {
-                routesFilter.setSmeIds(new String[0]);
+                routesFilter.setDestSmeIds(new String[0]);
+            }
+            if (querySrcSMEs != null) {
+                routesFilter.setSrcSmeIds(new String[]{querySrcSMEs.toLowerCase()});
+            } else {
+                routesFilter.setSrcSmeIds(new String[0]);
             }
             if (queryProvider != null) {
                 routesFilter.setProviders(new String[]{queryProvider.toLowerCase()});
@@ -321,7 +334,8 @@ public class Index extends IndexBean {
             routesFilter.setDestinationSubjectNames(new String[0]);
             routesFilter.setSourceMaskStrings(new String[0]);
             routesFilter.setDestinationMaskStrings(new String[0]);
-            routesFilter.setSmeIds(new String[0]);
+            routesFilter.setDestSmeIds(new String[0]);
+            routesFilter.setSrcSmeIds(new String[0]);
         } catch (AdminException e) {
             return error(SMSCErrors.error.routes.CantUpdateFilter, e);
         }
@@ -506,12 +520,20 @@ public class Index extends IndexBean {
         this.queryMask = queryMask;
     }
 
-    public String getQuerySMEs() {
-        return querySMEs;
+    public String getQueryDestSMEs() {
+        return queryDestSMEs;
     }
 
-    public void setQuerySMEs(String querySMEs) {
-        this.querySMEs = querySMEs;
+    public void setQueryDestSMEs(String queryDestSMEs) {
+        this.queryDestSMEs = queryDestSMEs;
+    }
+
+    public String getQuerySrcSMEs() {
+        return querySrcSMEs;
+    }
+
+    public void setQuerySrcSMEs(String querySrcSMEs) {
+        this.querySrcSMEs = querySrcSMEs;
     }
 
     public String getQueryCategory() {
