@@ -77,4 +77,6 @@ B3002:
     SMSC	Do not replace code to reschedulenow for status reschedule now if code supplied not 0
     SMSC	Extra check for dialogs in isDropping state
     SMSC	Message's parts stat fixes
-    
+B3003:
+    SMSC	Fraud control. Warn if MSC number from SendRInfo for SM is not suffix of calling address. 
+		Created logger category map.fraud. Turn it to DEBUG to block fraud MO messages.
