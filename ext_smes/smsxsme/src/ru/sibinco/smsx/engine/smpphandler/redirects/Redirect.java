@@ -13,8 +13,8 @@ public class Redirect {
   private final String address;
 
   public Redirect(String format, String prefix, String newPrefix, String address) {
-    this.format = Pattern.compile(format, Pattern.CASE_INSENSITIVE);
-    this.prefix = Pattern.compile(prefix, Pattern.CASE_INSENSITIVE);
+    this.format = Pattern.compile(format, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    this.prefix = Pattern.compile(prefix, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
     this.newPrefix = newPrefix;
     this.address = address;
   }
