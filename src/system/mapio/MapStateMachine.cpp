@@ -3197,19 +3197,15 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   }
   else
   {
-    if(fraudLog->isWarnEnabled())
+    if(fraudLog->isWarnEnabled() && dialog->sms.get())
     {
-      if(s_msc.length() && dialog->origAddress.length() && !FixedAddrCompare(dialog->origAddress,s_msc))
+      if(s_msc.length() && dialog->origAddress.length() &&
+         !dialog->sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+         !FixedAddrCompare(dialog->origAddress,s_msc))
       {
-        if(dialog->sms.get())
-        {
-          smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, oa=%s, da=%s",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str(),
-                        dialog->sms->getOriginatingAddress().toString().c_str(),
-                        dialog->sms->getDestinationAddress().toString().c_str());
-        }else
-        {
-          smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, sms is null",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str());
-        }
+        smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, oa=%s, da=%s",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str(),
+                      dialog->sms->getOriginatingAddress().toString().c_str(),
+                      dialog->sms->getDestinationAddress().toString().c_str());
         if(fraudLog->isDebugEnabled())
         {
           smsc_log_debug(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
