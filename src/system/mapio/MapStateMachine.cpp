@@ -3200,7 +3200,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
     if(fraudLog->isWarnEnabled() && dialog->sms.get())
     {
       if(s_msc.length() && dialog->origAddress.length() &&
-         !dialog->sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) &&
+         !dialog->isUSSD &&
          !FixedAddrCompare(dialog->origAddress,s_msc))
       {
         smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, oa=%s, da=%s",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str(),
