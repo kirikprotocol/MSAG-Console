@@ -410,6 +410,7 @@ function selectFirstTextInput()
 {
 //	var inputs = document.all.tags("INPUT");
 	var inputs = document.getElementsByTagName("INPUT");
+//    alert("FIRST | " + inputs.length);
 	if (inputs!=null)
 	{
 		for (i=0; i<inputs.length; i++)
@@ -419,9 +420,9 @@ function selectFirstTextInput()
                 if (inputs[i].type == "text"
                     && !inputs[i].readOnly
                     && !inputs[i].disabled
-                    && inputs[i].currentStyle.display != "none"
-                    )
+                    && inputs[i].style.display != "none")
                 {
+                    alert("input.focus=" + inputs[i]);
                     inputs[i].focus();
                     return;
                 }
