@@ -17,7 +17,7 @@ using namespace scag::re;
 	{
 	public:
 		virtual bool batchPrepare(ActionContext& context, SerialBuffer& sb) = 0;
-		virtual void batchResult(ActionContext& context, SerialBuffer& sb) = 0;
+		virtual int batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode = false) = 0;
 	};
 	
     class PersAction : public PersBatchAction
@@ -54,7 +54,7 @@ using namespace scag::re;
         PersAction(PersCmd c) : cmd(c), final_date(-1), life_time(-1), policy(UNKNOWN), lifeTimeFieldType(ftUnknown), finalDateFieldType(ftUnknown) {}
         ~PersAction() {}
 		virtual bool batchPrepare(ActionContext& context, SerialBuffer& sb);
-		virtual void batchResult(ActionContext& context, SerialBuffer& sb);
+		virtual int batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode = false);
         virtual bool RunBeforePostpone(ActionContext& context);
         virtual void ContinueRunning(ActionContext& context);
         virtual void init(const SectionParams& params,PropertyObject propertyObject);

@@ -116,8 +116,11 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         return;
     }
 
-    if(cmd == PC_INC_MOD || cmd == PC_INC)
-        value_str = params.Exists("inc") ? params["inc"] : "1";
+    if(cmd == PC_INC_MOD || cmd == PC_INC) {
+      value_str = params.Exists("inc") ? params["inc"] : "1";
+      bool resultExist = false;
+      CheckParameter(params, propertyObject, "PersAction", "result", false, false, result_str, resultExist);
+    }
     else
     {
         if(!params.Exists("value"))
@@ -158,21 +161,20 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
         if(ftModValue == ftUnknown && strcmp(mod_str.c_str(), "0") && !(mod = atoi(mod_str.c_str())))
             throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(), mod_str.c_str());
 
-        if(!params.Exists("result"))
-            throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
+        //if(!params.Exists("result"))
+            //throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
 
-        result_str = params["result"];
 
-        FieldType ftResultValue = ActionContext::Separate(result_str, name);
-        if(ftResultValue == ftUnknown || ftValue == ftConst)
-            throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
+        //FieldType ftResultValue = ActionContext::Separate(result_str, name);
+        //if(ftResultValue == ftUnknown || ftValue == ftConst)
+            //throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
 
-        if(ftResultValue == ftField)
-        {
-            AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
-            if(!(at & atWrite))
-                throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
-        }
+        //if(ftResultValue == ftField)
+        //{
+            //AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
+            //if(!(at & atWrite))
+                //throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
+        //}
     }
 
     if(!params.Exists("policy") || (policy = getPolicyFromStr(params["policy"])) == UNKNOWN)
@@ -335,8 +337,11 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
                 prop.setName(svar);
                 prop.setTimePolicy(policy, fd, lt);
             }
-            else
+            else 
+            {
+                smsc_log_error(logger, "parameter '%s' not found in action context", value_str.c_str());
                 return false;
+            }
         }
         else
             prop.assign(svar.c_str(), value_str.c_str(), policy, fd, lt);
@@ -346,8 +351,10 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
             if(ftModValue != ftUnknown)
             {
                 REProperty *rp = context.getProperty(mod_str);
-                if(!rp)
-                    return false;
+                if(!rp) {
+                  smsc_log_error(logger, "mod parameter '%s' not found in action context", mod_str.c_str());
+                  return false;
+                }
                 md = rp->getInt();
             }
             else {
@@ -376,7 +383,7 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
     return true;
 }
 
-void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
+int PersAction::batchResult(ActionContext& context, SerialBuffer& sb, bool transactMode)
 {
     smsc_log_debug(logger,"ContinueRunning BatchAction 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
 	PersClient& pc = PersClient::Instance();
@@ -406,15 +413,16 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
 				//if(!pc.DelPropertyResult(sb))
 	        	  //  smsc_log_warn(logger, "PersClientException: Property not found on deletion: %s", var.c_str());
                 pc.DelPropertyResult(sb); break;		
-			case PC_INC: pc.IncPropertyResult(sb); break;		
+			case PC_INC: 
 			case PC_INC_MOD:
 				uint32_t i = pc.IncModPropertyResult(sb);
 		        REProperty *rep = context.getProperty(result_str);
 		        if(rep) rep->setInt(i);
 				break;		
 		}
+        return 0;
 	}
-	catch(PersClientException& e)		
+	catch(const PersClientException& e)		
 	{
       if (statusProp) {
         statusProp->setInt(e.getType());
@@ -426,6 +434,10 @@ void PersAction::batchResult(ActionContext& context, SerialBuffer& sb)
                      getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(),
                      getKey(context.getCommandProperty(), profile), var.c_str(), e.getType(), e.what());
 		//throw SCAGException("PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), e.what());
+      if (transactMode) {
+        throw;
+      }
+      return e.getType();
 	}
 }
 
@@ -534,10 +546,12 @@ void PersAction::ContinueRunning(ActionContext& context)
         return;
   		//throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->exception.c_str());
     }
-    if(cmd == PC_INC_MOD)
+    if(cmd == PC_INC_MOD || cmd == PC_INC)
     {
         REProperty *rep = context.getProperty(result_str);
-        rep->setInt(params->result);
+        if (rep) {
+          rep->setInt(params->result);
+        }
     }
     else if(cmd == PC_GET)
     {
