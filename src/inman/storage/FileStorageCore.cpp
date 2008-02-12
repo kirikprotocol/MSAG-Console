@@ -14,6 +14,8 @@ namespace smsc {
 namespace inman {
 namespace filestore {
 
+using smsc::core::synchronization::MutexGuard;
+
 /* ************************************************************************** *
  * class FileSystemException implementation:
  * ************************************************************************** */
@@ -71,7 +73,7 @@ void FSEntry::findEntries(const std::string& location, FSEntriesArray& entries,
         throw FileSystemException(errno, "Failed to open directory '%s'. Details: %s",
                                    locationStr, strerror(errno));
     }
-    
+
     TmpBuf<char, 1024> entryGuard(sizeof(struct dirent) + pathconf(locationStr, _PC_NAME_MAX));
     char* entry = entryGuard.get();
     struct dirent* pentry = 0;
@@ -129,7 +131,7 @@ void FSEntry::deleteFile(const std::string& fullPath)
 {
     try { File::Unlink(fullPath.c_str()); }
     catch ( FileException& exc) {
-        throw FileSystemException(exc.getErrNo(), exc.what()); 
+        throw FileSystemException(exc.getErrNo(), exc.what());
     }
 }
 void FSEntry::deleteFile(const std::string& location, const std::string& fileName)
@@ -159,7 +161,7 @@ File::offset_type FSEntry::getFilePos(File & currFile)
 {
     File::offset_type    pos;
 
-    try { pos = currFile.Pos(); } 
+    try { pos = currFile.Pos(); }
     catch (FileException& exc) {
         try { currFile.Close(); } catch (...) {}
         throw FileSystemException(exc.getErrNo(), exc.what());
@@ -250,7 +252,7 @@ RollingFileStorage::~RollingFileStorage()
     if (_currFile.isOpened()) { //if file is empty -> delete it
         File::offset_type    pos;
 
-        try { pos = _currFile.Pos(); } 
+        try { pos = _currFile.Pos(); }
         catch (...) { pos = _headerLen + 1; }
 
         try { _currFile.Close(); }
@@ -281,7 +283,7 @@ bool RollingFileStorage::FSOpen(bool rollOld/* = true*/)
             FSEntry::rollFileEnding(fullName, _Ext.c_str(), _lastExt.c_str());
         }
 
-        
+
         if (!rollOld) { //delete all old files
             FSEntry::findFiles(_location, _Ext.c_str(), files);
             for (int i = 0; i < files.Count(); i++)
@@ -316,7 +318,7 @@ void RollingFileStorage::FSClose(void)
     if (_currFile.isOpened()) {
         File::offset_type    pos;
 
-        try { pos = _currFile.Pos(); } 
+        try { pos = _currFile.Pos(); }
         catch (FileException& exc) {
             throw FileSystemException(exc.getErrNo(), exc.what());
         }
@@ -406,7 +408,7 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
             catch (FileException& exc) {
                 throw FileSystemException(exc.getErrNo(), exc.what());
             }
-            return false; 
+            return false;
         }
         //roll and close file
         try { _currFile.Close(); }
@@ -418,17 +420,17 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
     }
 
     filePath += _lastExt;
-    
+
     if (File::Exists(filePath.c_str()))
         throw FileSystemException(EEXIST, "Failed to create new file '%s'. File already exists!",
                                    filePath.c_str());
 
-    try { _currFile.RWCreate(filePath.c_str()); } 
+    try { _currFile.RWCreate(filePath.c_str()); }
     catch (FileException& exc) {
         throw FileSystemException(exc.getErrNo(), "Failed to create new file '%s'. Details: %s",
                                    filePath.c_str(), exc.what());
     }
-    
+
     //write header
     if (_Parms.fileHeaderText) {
         try { _currFile.Write(_Parms.fileHeaderText, strlen(_Parms.fileHeaderText)); }
