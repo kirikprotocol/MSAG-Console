@@ -22,9 +22,6 @@
 #include <errno.h>
 #include "util/sleep.h"
 #include "util/int.h"
-#ifndef NOLOGGERPLEASE
-#include "util/debug.h"
-#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -301,9 +298,6 @@ public:
   {
     if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     std::string tmp=filename+".tmp";
-#ifndef NOLOGGERPLEASE
-    __trace2__("File: memflush %s->%s",filename.c_str(),tmp.c_str());
-#endif
     int g=open(tmp.c_str(),O_WRONLY | O_CREAT | O_TRUNC| O_LARGEFILE,0644);
     if(g==-1)throw FileException(FileException::errOpenFailed,filename.c_str());
     offset_type written=0;
@@ -360,9 +354,6 @@ public:
     if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     flags&=~FLG_INMEMORY;
     int sz=(int)Size();
-#ifndef NOLOGGERPLEASE
-    __trace2__("File: discard %s, oldsz=%d, newsz=%d",filename.c_str(),fileSize,sz);
-#endif
     if(bufferSize<sz)
     {
       if(buffer!=initBuffer)delete [] buffer;
