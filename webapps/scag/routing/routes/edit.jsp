@@ -232,7 +232,7 @@
       var subjValue = getElementByIdUni( "subjDst_" + key).value;
       var subjDefaultSme = getElementByIdUni( "defaultSme_" + key).value;
 
-      alert( subjValue + " | " + subjDefaultSme);
+//      alert( subjValue + " | " + subjDefaultSme);
       var oOption = document.createElement("OPTION");
       selectElem.options.add(oOption);
 //o      oOption.innerText = subjValue;
@@ -250,7 +250,7 @@
           var subjValue = selectElem.options[selectElem.selectedIndex].value;
 //          var subjDefaultSme = selectElem.options[selectElem.selectedIndex].defaultSme;
           var subjDefaultSme = selectElem.options[selectElem.selectedIndex].id;
-          alert( "subjValue=" + subjValue + " | subjDefaultSme=" + subjDefaultSme);
+//          alert( "subjValue=" + subjValue + " | subjDefaultSme=" + subjDefaultSme);
 //o          var tbl = opForm.all.destinations_table;
           var tbl = getElementByIdUni("destinations_table");
 //o          var smeSelect = opForm.all.dstSubjSmeSelect;
@@ -270,7 +270,7 @@
 //          newCell.id = 'subjDst';
 //o          newCell.all.subjDst.defaultSme = subjDefaultSme;
 //          newCell.lastChild.defaultSme = subjDefaultSme;
-          alert( "LCC = " + newCell.lastChild.value + "," + newCell.lastChild.id );
+//          alert( "LCC = " + newCell.lastChild.value + "," + newCell.lastChild.id );
           newRow.appendChild(newCell);
 
           newCell = document.createElement("td");
