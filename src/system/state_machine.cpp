@@ -2640,7 +2640,18 @@ StateType StateMachine::forward(Tuple& t)
     }
   }
 
-  if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery  && sms.billingRequired())
+  bool firstPart=true;
+  if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    unsigned len;
+    ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
+    if(sms.getConcatSeqNum()!=0)
+    {
+      firstPart=false;
+    }
+  }
+
+  if(sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery  && sms.billingRequired() && firstPart)
   {
     try{
       smsc->ChargeSms(t.msgId,sms,ctx);
@@ -3447,14 +3458,21 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
 
   bool wasBillReport=false;
+  bool firstPart=false;
+  bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
 
   if(sms.billingRequired() && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
     bool final=
       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK ||
-      GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_PERM;
-    bool firstPart=false;
-    bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
+      GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_PERM ||
+      (
+       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_TEMP &&
+       (
+        sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)||
+        (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2
+       )
+      );
     if(GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK)
     {
       if(multiPart)
@@ -3468,7 +3486,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
     }
     smsc_log_debug(smsLog,"multiPart=%s, firstPart=%s, final=%s",multiPart?"true":"false",firstPart?"true":"false",final?"true":"false");
-    if(!multiPart || firstPart || !final)
+    if(!multiPart || firstPart)
     {
       int savedLastResult=sms.getLastResult();
       try{
@@ -3562,7 +3580,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       }
       info2(smsLog, "DLVRSP: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
       sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-      if(!wasBillReport)
+      if(!wasBillReport && (firstPart || !multiPart))
       {
         try{
           smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
