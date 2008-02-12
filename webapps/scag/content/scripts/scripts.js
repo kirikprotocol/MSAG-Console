@@ -422,7 +422,6 @@ function selectFirstTextInput()
                     && !inputs[i].disabled
                     && inputs[i].style.display != "none")
                 {
-                    alert("input.focus=" + inputs[i]);
                     inputs[i].focus();
                     return;
                 }
