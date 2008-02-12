@@ -1,4 +1,3 @@
-#ident "$Id$"
 #ifndef __FILE_HPP__
 #define __FILE_HPP__
 
