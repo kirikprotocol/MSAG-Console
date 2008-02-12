@@ -31,8 +31,7 @@ public:
     void SetProperty(ProfileType pt, const PersKey& key, Property& prop);
     void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop);
     bool DelProperty(ProfileType pt, const PersKey& key, const char *property_name);
-    //void DelProperty(ProfileType pt, const PersKey& key, const char *property_name);
-    void IncProperty(ProfileType pt, const PersKey& key, Property& prop);
+    int IncProperty(ProfileType pt, const PersKey& key, Property& prop);
     int IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod);
     
     void SetPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb);
@@ -44,11 +43,10 @@ public:
     void SetPropertyResult(SerialBuffer& bsb);
     void GetPropertyResult(Property& prop, SerialBuffer& bsb);
     bool DelPropertyResult(SerialBuffer& bsb);
-    //void DelPropertyResult(SerialBuffer& bsb);
-    void IncPropertyResult(SerialBuffer& bsb);
+    int IncPropertyResult(SerialBuffer& bsb);
     int IncModPropertyResult(SerialBuffer& bsb);
 	
-	void PrepareBatch(SerialBuffer& bsb);
+	void PrepareBatch(SerialBuffer& bsb, bool transactMode = false);
 	void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb);
 	void RunBatch(SerialBuffer& bsb);
 
@@ -246,7 +244,6 @@ void PersClientImpl::DelPropertyPrepare(ProfileType pt, const PersKey& key, cons
 }
 
 bool PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
-//void PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
 {
 /*
 	int resp;
@@ -269,7 +266,6 @@ bool PersClientImpl::DelPropertyResult(SerialBuffer& bsb)
 }
 
 bool PersClientImpl::DelProperty(ProfileType pt, const PersKey& key, const char *property_name)
-//void PersClientImpl::DelProperty(ProfileType pt, const PersKey& key, const char *property_name)
 {
     MutexGuard mt(mtx);
 
@@ -291,14 +287,12 @@ void PersClientImpl::IncPropertyPrepare(ProfileType pt, const PersKey& key, Prop
     prop.Serialize(bsb);
 }
 
-void PersClientImpl::IncPropertyResult(SerialBuffer& bsb)
+int PersClientImpl::IncPropertyResult(SerialBuffer& bsb)
 {
-    //if(GetServerResponse(bsb) != RESPONSE_OK)
-      //  throw PersClientException(SERVER_ERROR);
-  CheckServerResponse(bsb);
+  return IncModPropertyResult(bsb);
 }
 
-void PersClientImpl::IncProperty(ProfileType pt, const PersKey& key, Property& prop)
+int PersClientImpl::IncProperty(ProfileType pt, const PersKey& key, Property& prop)
 {
     MutexGuard mt(mtx);
 
@@ -306,9 +300,10 @@ void PersClientImpl::IncProperty(ProfileType pt, const PersKey& key, Property& p
     IncPropertyPrepare(pt, key, prop, sb);
     SendPacket(sb);
     ReadPacket(sb);
-    IncPropertyResult(sb);
+    int i = IncPropertyResult(sb);
 		
     actTS = time(NULL);
+    return i;
 }
 
 void PersClientImpl::IncModPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod, SerialBuffer& bsb)
@@ -369,10 +364,10 @@ void PersClientImpl::setBatchCount(uint32_t cnt, SerialBuffer& bsb)
 	bsb.SetPos(i);
 }
 
-void PersClientImpl::PrepareBatch(SerialBuffer& bsb)
+void PersClientImpl::PrepareBatch(SerialBuffer& bsb, bool transactMode)
 {
 	bsb.setPos(4);
-	bsb.WriteInt8(PC_BATCH);
+	transactMode ? bsb.WriteInt8(PC_TRANSACT_BATCH) : bsb.WriteInt8(PC_BATCH);
 	bsb.WriteInt16(0);
 }
 
@@ -648,30 +643,39 @@ void PersClientImpl::ExecutePersCall(LongCallContext* ctx)
     PersCallParams* persParams = (PersCallParams*)ctx->getParams();
     smsc_log_debug(log, "ExecutePersCall: command=%d %s", ctx->callCommandId, persParams->skey.c_str());
     try{
-        persParams->error = 0;
-        persParams->exception.assign("");
-		if(ctx->callCommandId == PERS_BATCH)
-			RunBatch(persParams->sb);
-		else if(persParams->pt == PT_ABONENT)        
-            switch(ctx->callCommandId)
-            {
-                case PERS_GET: GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
-                case PERS_SET: SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-                //case PERS_DEL: if(!DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
-                case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
-                case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
-                case PERS_INC: IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
-            }
-        else
-            switch(ctx->callCommandId)
-            {
-                case PERS_GET: GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
-                case PERS_SET: SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-                //case PERS_DEL: if(!DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
-                case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
-                case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
-                case PERS_INC: IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
-            }
+        //persParams->error = 0;
+        //persParams->exception.assign("");
+		if(ctx->callCommandId == PERS_BATCH) {
+          if (persParams->error == 0) {
+            RunBatch(persParams->sb);
+          }
+        }
+		else if(persParams->pt == PT_ABONENT)   {     
+          persParams->error = 0;
+          persParams->exception.assign("");
+          switch(ctx->callCommandId)
+          {
+              case PERS_GET: GetProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str(), persParams->prop); break;
+              case PERS_SET: SetProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
+              //case PERS_DEL: if(!DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
+              case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
+              case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->skey.c_str(), persParams->prop, persParams->mod); break;
+              case PERS_INC: persParams->result = IncProperty(persParams->pt, persParams->skey.c_str(), persParams->prop); break;
+          }
+        }
+        else {
+          persParams->error = 0;
+          persParams->exception.assign("");
+          switch(ctx->callCommandId)
+          {
+              case PERS_GET: GetProperty(persParams->pt, persParams->ikey, persParams->propName.c_str(), persParams->prop); break;
+              case PERS_SET: SetProperty(persParams->pt, persParams->ikey, persParams->prop); break;
+              //case PERS_DEL: if(!DelProperty(persParams->pt, persParams->ikey, persParams->propName.c_str())) persParams->error = PROPERTY_NOT_FOUND; break;
+              case PERS_DEL: DelProperty(persParams->pt, persParams->skey.c_str(), persParams->propName.c_str());  break;
+              case PERS_INC_MOD: persParams->result = IncModProperty(persParams->pt, persParams->ikey, persParams->prop, persParams->mod); break;
+              case PERS_INC: persParams->result = IncProperty(persParams->pt, persParams->ikey, persParams->prop); break;
+          }
+        }
     }
     catch(PersClientException& exc)
     {

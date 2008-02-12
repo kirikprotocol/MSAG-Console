@@ -29,7 +29,7 @@ protected:
         IntProfileStore* store;
     } IntStore;
 
-	void execCommand(SerialBuffer& isb, SerialBuffer& osb);
+	PersServerResponseType execCommand(SerialBuffer& isb, SerialBuffer& osb);
     IntProfileStore* findStore(ProfileType pt);
     Profile* getProfile(const string& key);
     //void deleteProfile();
@@ -38,14 +38,18 @@ protected:
     StringProfileStore* getAbonentStore() { return AbonentStore; };
     void SendResponse(SerialBuffer& sb, PersServerResponseType r);
     void SetPacketSize(SerialBuffer& sb);
-    void DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
-    void GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
-    void SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
-    void IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
-    void IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb);
+    PersServerResponseType DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
+    PersServerResponseType GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb);
+    PersServerResponseType SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
+    PersServerResponseType IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb);
+    PersServerResponseType IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb);
+
+    void rollbackCommands(PersServerResponseType error_code);
+    void resetStroragesBackup();
 
 protected:
     Logger * plog;
+    bool transactBatch;
 #define INT_STORE_CNT 3
     IntStore int_store[INT_STORE_CNT];
 };

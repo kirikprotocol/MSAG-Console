@@ -20,6 +20,7 @@ PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_
     int_store[1].store = oper;
     int_store[2].store = provider;
     AbonentStore = abonent;
+    transactBatch = false;
 }
 
 IntProfileStore* PersServer::findStore(ProfileType pt)
@@ -40,24 +41,26 @@ void PersServer::SetPacketSize(SerialBuffer& sb)
     sb.WriteInt32(sb.GetSize());
 }
 
-void PersServer::DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
+PersServerResponseType PersServer::DelCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
 {
     IntProfileStore *is;
     bool exists = false;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "DelCmdHandler AbonetStore: key=%s, name=%s", str_key.c_str(), name.c_str());
-        exists = AbonentStore->delProperty(str_key.c_str(), name.c_str());
+        exists = AbonentStore->delProperty(str_key.c_str(), name.c_str(), transactBatch);
     }
     else if(is = findStore(pt))
     {
         smsc_log_debug(plog, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
-        exists = is->delProperty(int_key, name.c_str());
+        exists = is->delProperty(int_key, name.c_str(), transactBatch);
     }
-    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
+    PersServerResponseType result = exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND;
+    SendResponse(osb, result);
+    return result;
 }
 
-void PersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
+PersServerResponseType PersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, const std::string& name, SerialBuffer& osb)
 {
     IntProfileStore *is;
     Property prop;
@@ -77,48 +80,60 @@ void PersServer::GetCmdHandler(ProfileType pt, uint32_t int_key, const std::stri
         smsc_log_debug(plog, "GetCmdHandler prop=%s", prop.toString().c_str());
         SendResponse(osb, RESPONSE_OK);
         prop.Serialize(osb);
+        return RESPONSE_OK;
     }
     else
     {
         smsc_log_debug(plog, "GetCmdHandler property not found: store=%d, key=%s(%d), name=%s", pt, str_key.c_str(), int_key, name.c_str());    
         SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
+        return RESPONSE_PROPERTY_NOT_FOUND;
     }        
 }
 
-void PersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
+PersServerResponseType PersServer::SetCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
 {
     IntProfileStore *is;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
-        AbonentStore->setProperty(str_key.c_str(), prop);
+        AbonentStore->setProperty(str_key.c_str(), prop, transactBatch);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
-        is->setProperty(int_key, prop);
+        is->setProperty(int_key, prop, transactBatch);
     }
     SendResponse(osb, RESPONSE_OK);
+    return RESPONSE_OK;
 }
 
-void PersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
+PersServerResponseType PersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
 {
     IntProfileStore *is;
     bool exists = false;
+    int result = 0;
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
-        exists = AbonentStore->incProperty(str_key.c_str(), prop);
+        exists = AbonentStore->incProperty(str_key.c_str(), prop, result, transactBatch);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
-        exists = is->incProperty(int_key, prop);
+        exists = is->incProperty(int_key, prop, result, transactBatch);
     }
-    SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_TYPE_INCONSISTENCE);
+    if (exists) {
+      SendResponse(osb, RESPONSE_OK);
+      //result.Serialize(osb);
+      osb.WriteInt32(result);
+      return RESPONSE_OK;
+    } else {
+      SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
+      return RESPONSE_TYPE_INCONSISTENCE;
+    }
 }
 
-void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb)
+PersServerResponseType PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb)
 {
     IntProfileStore *is;
     bool exists = false;
@@ -126,20 +141,23 @@ void PersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::s
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
-        exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res);
+        exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res, transactBatch);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
-        exists = is->incModProperty(int_key, prop, mod, res);
+        exists = is->incModProperty(int_key, prop, mod, res, transactBatch);
     }
     if(exists) 
     {
         SendResponse(osb, RESPONSE_OK);
         osb.WriteInt32(res);
+        return RESPONSE_OK;
     }
-    else
-        SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
+    else {
+      SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
+      return RESPONSE_TYPE_INCONSISTENCE;
+    }
 }
 
 bool PersServer::processPacket(ConnectionContext& ctx)
@@ -147,31 +165,35 @@ bool PersServer::processPacket(ConnectionContext& ctx)
     SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
     osb.SetPos(4);
     try{
+        transactBatch = false;
 		execCommand(isb, osb);
 		SetPacketSize(osb);
 		return true;
     }
     catch(const SerialBufferOutOfBounds &e)
     {
-        smsc_log_debug(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+        smsc_log_warn(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
     }
     catch(const std::runtime_error& e) {
-      smsc_log_debug(plog, "Error profile key: %s", e.what());
+      smsc_log_warn(plog, "Error profile key: %s", e.what());
     }
     catch(const Exception& e)
     {
-        smsc_log_debug(plog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
+        smsc_log_warn(plog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
     }
     catch(...)
     {
-        smsc_log_debug(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+        smsc_log_warn(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+    }
+    if (transactBatch) {
+      rollbackCommands(RESPONSE_BAD_REQUEST);
     }
     SendResponse(osb, RESPONSE_BAD_REQUEST);
 	SetPacketSize(osb);
     return true;
 }
 
-void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
+PersServerResponseType PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
 {
     PersCmd cmd;
     ProfileType pt;
@@ -185,9 +207,9 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
     {
 		osb.WriteInt8(RESPONSE_OK);
         smsc_log_debug(plog, "Ping received");
-        return;
+        return RESPONSE_OK;
     }
-    if(cmd != PC_BATCH)
+    if(cmd != PC_BATCH && cmd != PC_TRANSACT_BATCH)
     {
         pt = (ProfileType)isb.ReadInt8();
         if(pt != PT_ABONENT) {
@@ -202,36 +224,48 @@ void PersServer::execCommand(SerialBuffer& isb, SerialBuffer& osb)
     {
         case PC_DEL:
             isb.ReadString(name);
-            DelCmdHandler(pt, int_key, profKey, name, osb);
-            return;
+            return DelCmdHandler(pt, int_key, profKey, name, osb);
         case PC_SET:
             prop.Deserialize(isb);
-            SetCmdHandler(pt, int_key, profKey, prop, osb);
-            return;
+            return SetCmdHandler(pt, int_key, profKey, prop, osb);
         case PC_GET:
             isb.ReadString(name);
-            GetCmdHandler(pt, int_key, profKey, name, osb);
-            return;
+            return GetCmdHandler(pt, int_key, profKey, name, osb);
         case PC_INC:
             prop.Deserialize(isb);
-            IncCmdHandler(pt, int_key, profKey, prop, osb);
-            return;
+            return IncCmdHandler(pt, int_key, profKey, prop, osb);
         case PC_INC_MOD:
         {
-            int inc = isb.ReadInt32();
+            int mod = isb.ReadInt32();
             prop.Deserialize(isb);
-            IncModCmdHandler(pt, int_key, profKey, prop, inc, osb);
-			return;
+            return IncModCmdHandler(pt, int_key, profKey, prop, mod, osb);
         }
         case PC_BATCH:
         {
             uint16_t cnt = isb.ReadInt16();
             while(cnt--)
                     execCommand(isb, osb);
-			return;
+			return RESPONSE_OK;
         }
-        default:
-            smsc_log_debug(plog, "Bad command %d", cmd);
+        case PC_TRANSACT_BATCH: 
+        {
+          transactBatch = true;
+          uint16_t cnt = isb.ReadInt16();
+          while(cnt--) {
+            PersServerResponseType result = execCommand(isb, osb);
+            if (result != RESPONSE_OK) {
+              rollbackCommands(result);
+              return result;
+            }
+          }
+          resetStroragesBackup();
+          return RESPONSE_OK;
+        }
+        default: {
+          smsc_log_warn(plog, "Bad command %d", cmd);
+          SendResponse(osb, RESPONSE_BAD_REQUEST);
+          return RESPONSE_BAD_REQUEST;
+        }
     }
 }
 
@@ -253,6 +287,21 @@ string PersServer::getProfileKey(const string& key) const {
     addr.setTypeOfNumber(1);
   }
   return addr.toString();
+}
+
+void PersServer::rollbackCommands(PersServerResponseType error_code) {
+  smsc_log_warn(plog, "Rollback batch commands. Error in transactional batch, error code=%d", error_code);
+  AbonentStore->rollBack();
+  for (int i = 0; i < INT_STORE_CNT; ++i) {
+    int_store[i].store->rollBack();
+  }
+}
+
+void PersServer::resetStroragesBackup() {
+  AbonentStore->resetBackup();
+  for (int i = 0; i < INT_STORE_CNT; ++i) {
+    int_store[i].store->resetBackup();
+  }
 }
 
 

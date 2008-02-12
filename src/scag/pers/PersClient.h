@@ -32,7 +32,8 @@ enum PersClientExceptionType{
     INVALID_KEY,
     INVALID_PROPERTY_TYPE,
   BAD_REQUEST,
-  TYPE_INCONSISTENCE
+  TYPE_INCONSISTENCE,
+  BATCH_ERROR
 };
 
     static const char* strs[] = {
@@ -50,7 +51,8 @@ enum PersClientExceptionType{
         "Invalid key",
         "Invalid property type(should be int or date)",
       "Bad request",
-      "Types inconsistence"
+      "Types inconsistence",
+      "Batch prepare error"
     };
 
 class PersClientException{
@@ -58,7 +60,7 @@ protected:
     PersClientExceptionType et;
 public:
     PersClientException(PersClientExceptionType e) { et = e; };
-    PersClientExceptionType getType() { return et; };
+    PersClientExceptionType getType() const { return et; };
     const char* what() const { return strs[et]; };
 };
 
@@ -98,8 +100,7 @@ public:
     virtual void SetProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
     virtual void GetProperty(ProfileType pt, const PersKey& key, const char *property_name, Property& prop) = 0;
     virtual bool DelProperty(ProfileType pt, const PersKey& key, const char *property_name) = 0;
-    //virtual void DelProperty(ProfileType pt, const PersKey& key, const char *property_name) = 0;
-    virtual void IncProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
+    virtual int IncProperty(ProfileType pt, const PersKey& key, Property& prop) = 0;
     virtual int IncModProperty(ProfileType pt, const PersKey& key, Property& prop, uint32_t mod) = 0;
 
     virtual void SetPropertyPrepare(ProfileType pt, const PersKey& key, Property& prop, SerialBuffer& bsb) = 0;
@@ -111,11 +112,10 @@ public:
     virtual void SetPropertyResult(SerialBuffer& bsb) = 0;
     virtual void GetPropertyResult(Property& prop, SerialBuffer& bsb) = 0;
     virtual bool DelPropertyResult(SerialBuffer& bsb) = 0;
-    //virtual void DelPropertyResult(SerialBuffer& bsb) = 0;
-    virtual void IncPropertyResult(SerialBuffer& bsb) = 0;
+    virtual int IncPropertyResult(SerialBuffer& bsb) = 0;
     virtual int IncModPropertyResult(SerialBuffer& bsb) = 0;
 
-	virtual void PrepareBatch(SerialBuffer& bsb) = 0;
+	virtual void PrepareBatch(SerialBuffer& bsb, bool transactMode = false) = 0;
 	virtual void RunBatch(SerialBuffer& sb) = 0;
 	virtual void FinishPrepareBatch(uint32_t cnt, SerialBuffer& bsb) = 0;
 	
