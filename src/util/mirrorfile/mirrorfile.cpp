@@ -93,7 +93,7 @@ struct DupeFile:smsc::core::buffers::FileEventHandler{
         }break;
         case openAppend:
         {
-          if(File::Exists(newFn.c_str()))
+          if(smsc::core::buffers::File::Exists(newFn.c_str()))
           {
             dupe.Append(newFn.c_str());
           }
@@ -194,7 +194,7 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
     }
     recursion=false;
   }
-  virtual void onCreateFileObject(File* f)
+  virtual void onCreateFileObject(smsc::core::buffers::File* f)
   {
     //fprintf(stderr,"onCreateFileObject\n");
     if(recursion || broken)return;
@@ -202,7 +202,7 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
     f->SetEventHandler(new DupeFile());
     recursion=false;
   }
-  virtual void onDestroyFileObject(File* f)
+  virtual void onDestroyFileObject(smsc::core::buffers::File* f)
   {
     if(f->GetEventHandler())delete f->GetEventHandler();
   }
