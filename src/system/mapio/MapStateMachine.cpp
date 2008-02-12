@@ -469,10 +469,21 @@ static void DropMapDialog(MapDialog* dlg)
   //
   try{
     bool isChainEmpty;
+    bool needNotifyHLR=false;
     {
       MutexGuard mg(dialog->mutex);
       isChainEmpty=dialog->chain.empty();
-      if(isChainEmpty || dialog->dropChain)
+      if(isChainEmpty)
+      {
+        if(!(dialog->associate != 0 && dialog->state != MAPST_END) && NeedNotifyHLR(dialog.get()))
+        {
+          needNotifyHLR=true;
+        }else
+        {
+          dialog->isDropping=true;
+        }
+      }
+      if(!isChainEmpty && dialog->dropChain)
       {
         dialog->isDropping=true;
       }
@@ -487,7 +498,7 @@ static void DropMapDialog(MapDialog* dlg)
         ContinueImsiReq(dialog->associate,"","",dialog->routeErr);
         dialog->state = MAPST_END;
       }
-      else if ( NeedNotifyHLR(dialog.get()) )
+      else if ( needNotifyHLR )
       {
         try{
           NotifyHLR(dialog.get());
