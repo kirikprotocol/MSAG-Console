@@ -312,7 +312,7 @@ static void PrintTrace()
   for(int i=0;i<MAXTRACESIZE;i++)
   {
     if(!trace[i])break;
-    fprintf(stderr,"l *0x%p\n",trace[i]);
+    fprintf(stderr,"whereis -a 0x%p\n",trace[i]);
   }
 }
 
