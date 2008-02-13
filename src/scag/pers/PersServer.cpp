@@ -124,7 +124,31 @@ PersServerResponseType PersServer::IncCmdHandler(ProfileType pt, uint32_t int_ke
     }
     if (exists) {
       SendResponse(osb, RESPONSE_OK);
-      //result.Serialize(osb);
+      //osb.WriteInt32(result);
+      return RESPONSE_OK;
+    } else {
+      SendResponse(osb, RESPONSE_TYPE_INCONSISTENCE);
+      return RESPONSE_TYPE_INCONSISTENCE;
+    }
+}
+
+PersServerResponseType PersServer::IncResultCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
+{
+    IntProfileStore *is;
+    bool exists = false;
+    int result = 0;
+    if(pt == PT_ABONENT)
+    {
+        smsc_log_debug(plog, "IncResultCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+        exists = AbonentStore->incProperty(str_key.c_str(), prop, result, transactBatch);
+    }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(plog, "IncResultCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+        exists = is->incProperty(int_key, prop, result, transactBatch);
+    }
+    if (exists) {
+      SendResponse(osb, RESPONSE_OK);
       osb.WriteInt32(result);
       return RESPONSE_OK;
     } else {
@@ -234,6 +258,9 @@ PersServerResponseType PersServer::execCommand(SerialBuffer& isb, SerialBuffer& 
         case PC_INC:
             prop.Deserialize(isb);
             return IncCmdHandler(pt, int_key, profKey, prop, osb);
+        case PC_INC_RESULT:
+            prop.Deserialize(isb);
+            return IncResultCmdHandler(pt, int_key, profKey, prop, osb);
         case PC_INC_MOD:
         {
             int mod = isb.ReadInt32();

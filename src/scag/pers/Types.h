@@ -22,7 +22,8 @@ enum PersCmd{
     PC_INC_MOD,
     PC_PING,
 	PC_BATCH,
-  PC_TRANSACT_BATCH
+    PC_TRANSACT_BATCH,
+    PC_INC_RESULT
 };
 
 namespace CentralPersCmd{

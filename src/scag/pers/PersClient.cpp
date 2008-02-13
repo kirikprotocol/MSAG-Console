@@ -283,7 +283,8 @@ void PersClientImpl::IncPropertyPrepare(ProfileType pt, const PersKey& key, Prop
     if(prop.getType() != INT && prop.getType() != DATE)
         throw PersClientException(INVALID_PROPERTY_TYPE);
 
-    FillHead(PC_INC, pt, key, bsb);
+    //FillHead(PC_INC, pt, key, bsb);
+    FillHead(PC_INC_RESULT, pt, key, bsb);
     prop.Serialize(bsb);
 }
 

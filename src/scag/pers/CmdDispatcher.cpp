@@ -114,7 +114,31 @@ void CommandDispatcher::IncCmdHandler(ProfileType pt, uint32_t int_key, const st
         exists = is->incProperty(int_key, prop, result);
     }
     SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
-    osb.WriteInt32(result);
+    //osb.WriteInt32(result);
+}
+
+void CommandDispatcher::IncResultCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, SerialBuffer& osb)
+{
+    IntProfileStore *is;
+    bool exists = false;
+    int result = 0;
+    if(pt == PT_ABONENT)
+    {
+        smsc_log_debug(log, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+        exists = AbonentStore->incProperty(str_key.c_str(), prop, result);
+    }
+    else if(is = findStore(pt))    
+    {
+        smsc_log_debug(log, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+        exists = is->incProperty(int_key, prop, result);
+    }
+    if(exists)
+    {
+        SendResponse(osb, RESPONSE_OK);
+        osb.WriteInt32(result);
+    }
+    else
+        SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
 }
 
 void CommandDispatcher::IncModCmdHandler(ProfileType pt, uint32_t int_key, const std::string& str_key, Property& prop, int mod, SerialBuffer& osb)

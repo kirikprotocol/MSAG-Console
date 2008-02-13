@@ -348,6 +348,10 @@ bool RegionPersServer::execCommand(PersCmd cmd, Profile *pf, const string& str_k
     prop.Deserialize(isb);
     IncCmdHandler(pf, str_key, prop, osb);
     break;
+  case PC_INC_RESULT:
+    prop.Deserialize(isb);
+    IncResultCmdHandler(pf, str_key, prop, osb);
+    break;
   case PC_INC_MOD:
   {
     int inc = isb.ReadInt32();
@@ -686,7 +690,22 @@ void RegionPersServer::IncCmdHandler(ProfileType pt, uint32_t int_key, Property&
     exists = is->incProperty(int_key, prop, result);
   }
   SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
-  osb.WriteInt32(result);
+}
+
+void RegionPersServer::IncResultCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, SerialBuffer& osb) {
+  IntProfileStore *is;
+  bool exists = false;
+  int result = 0;
+  if(is = findStore(pt)) {
+    smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+    exists = is->incProperty(int_key, prop, result);
+  }
+  if(exists) {
+    SendResponse(osb, RESPONSE_OK);
+    osb.WriteInt32(result);
+  } else {
+    SendResponse(osb, RESPONSE_PROPERTY_NOT_FOUND);
+  }
 }
 
 void RegionPersServer::IncModCmdHandler(ProfileType pt, uint32_t int_key, Property& prop, int mod, SerialBuffer& osb) {
@@ -743,6 +762,14 @@ void RegionPersServer::IncCmdHandler(Profile *pf, const string& str_key,
   smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
   bool exists = getAbonentStore()->incProperty(pf, str_key.c_str(), prop);
   SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
+}
+
+void RegionPersServer::IncResultCmdHandler(Profile *pf, const string& str_key,
+                                Property& prop, SerialBuffer& osb) {
+  smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+  bool exists = getAbonentStore()->incProperty(pf, str_key.c_str(), prop);
+  SendResponse(osb, exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND);
+  //osb.WriteInt32(res);
 }
 
 void RegionPersServer::IncModCmdHandler(Profile *pf, const string& str_key,
