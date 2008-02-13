@@ -6,7 +6,7 @@ namespace scag { namespace re { namespace actions {
 void ActionLength::init(const SectionParams& params,PropertyObject propertyObject)
 {
     FieldType ft; bool bExist;
-    m_varFieldType = CheckParameter(params, propertyObject, "length", "var", true, false, m_strVar, bExist);
+    m_varFieldType = CheckParameter(params, propertyObject, "length", "var", true, true, m_strVar, bExist);
     ft = CheckParameter(params, propertyObject, "length", "result", true, false, m_strResult, bExist);
     
     smsc_log_debug(logger,"Action 'length':: init");
