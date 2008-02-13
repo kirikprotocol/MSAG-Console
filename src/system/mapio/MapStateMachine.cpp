@@ -1170,9 +1170,14 @@ static void SendSubmitCommand(MapDialog* dialog)
 
 static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code,unsigned ssn)
 {
+  if(dialogid==0 || ssn==0)
+  {
+    __map_trace2__("%s: invalid dialogid/ssn 0x%x/%d",dialogid,ssn);
+    return;
+  }
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid,ssn));
   if ( dialog.isnull() ) {
-    __map_trace2__("%s: has no dlg 0x%x",__func__,dialogid);
+    __map_trace2__("%s: there is no dlg 0x%x",__func__,dialogid);
     return;
   }
   __require__(dialog->ssn==ssn);
@@ -1243,7 +1248,7 @@ static string RouteToString(MapDialog* dialog)
 #define MAP_TRY  try {
 #define MAP_CATCH(__dialogid_map,__dialogid_smsc,__ssn)     \
 }catch(MAPDIALOG_HEREISNO_ID& x){\
-  __map_warn2__("%s: here is no dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc,x.what());\
+  __map_warn2__("%s: There is no dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc,x.what());\
 }catch(MAPDIALOG_ERROR& err){\
   __map_warn2__("%s: error dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc,err.what());\
   TryDestroyDialog(__dialogid_map,true,err.code,__ssn);\
@@ -1742,7 +1747,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 {
                   if ( !dialog->isUSSD )
                     throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
+                      FormatText("putCommand: Found dialog is not USSD for smsc_id:0x%x, ussd_seq: %s",dialogid_smsc,s_seq.c_str()));
                   __require__(dialog->ssn == dialog_ssn);
                   dlg_found = true;
                 } else
@@ -1754,16 +1759,18 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
             }
             if ( serviceOp == USSD_PSSR_RESP )
             {
-              if ( !dlg_found ) {
+              if ( !dlg_found )
+              {
                 SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
+                throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: USSD dialog not found for smsc_id:0x%x ussd_seq: %s",dialogid_smsc,s_seq.c_str()));
               }
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
-                if ( dialog->ussdMrRef != mr ) {
+                if ( dialog->ussdMrRef != mr )
+                {
                   SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
                   throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("putCommand: Opss, dialogid 0x%x bad message_reference 0x%x must be 0x%x",
+                    FormatText("putCommand: Bad message_reference for dlgId:0x%x - 0x%x must be 0x%x",
                       dialog->dialogid_map,mr,dialog->ussdMrRef));
                 }
               }
@@ -1777,7 +1784,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 }else
                 {
                   throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("putCommand: Opss, dialogid 0x%x isDropping while trying to chain new command",
+                    FormatText("putCommand: dlgId:0x%x isDropping while trying to chain new command",
                       dialog->dialogid_map));
                 }
                 return;
@@ -1796,7 +1803,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   if ( dialog->ussdMrRef != mr ) {
                     SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
                     throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: Opss, dialogid 0x%x bad message_reference 0x%x must be 0x%x",
+                      FormatText("putCommand: dlgId:0x%x bad message_reference 0x%x, must be 0x%x",
                         dialog->dialogid_map,mr,dialog->ussdMrRef));
                   }
                 }
@@ -1812,7 +1819,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   }else
                   {
                     throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: Opss, dialogid 0x%x isDropping while trying to chain new command",
+                      FormatText("putCommand: dlgId:0x%x isDropping while trying to chain new command",
                         dialog->dialogid_map));
                   }
                   return;
@@ -1827,7 +1834,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               } else {
                 if( cmd->get_sms()->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
                   SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
-                  throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: Here is no USSD dialog for MR %d smsc_dlg 0x%x seq: %s",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,s_seq.c_str()), Status::USSDDLGNFOUND);
+                  throw MAPDIALOG_FATAL_ERROR( FormatText("putCommand: There is no USSD dialog for MR %d smsc_dlg 0x%x seq: %s",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,s_seq.c_str()), Status::USSDDLGNFOUND);
                 }
                 __map_trace2__("%s: trying to create USSD network intiated session dialogid_smsc 0x%x",__func__,dialogid_smsc);
                 try{
@@ -3098,10 +3105,11 @@ USHORT_T Et96MapDelimiterInd(
   catch(exception& e)
   {
     __map_trace2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
-    if ( !open_confirmed ){
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
+    if ( !open_confirmed )
+    {
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
       //MapDialogContainer::getInstance()->dropDialog(dialogueId);
-      DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
@@ -3110,16 +3118,19 @@ USHORT_T Et96MapDelimiterInd(
         DropMapDialog(dialog.get());
       }
     } else {
-      TryDestroyDialog(dialogueId,localSsn);
+      if(!dialog.isnull())
+      {
+        TryDestroyDialog(dialogueId,dialog->dialogid_smsc!=0,Status::MAPINTERNALFAILURE,localSsn);
+      }
     }
   }
   catch(...)
   {
     __map_trace2__("%s: dialogid 0x%x <exception>: ...",__func__,dialogueId);
+    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
       //MapDialogContainer::getInstance()->dropDialog(dialogueId);
-      DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
@@ -3128,7 +3139,10 @@ USHORT_T Et96MapDelimiterInd(
         DropMapDialog(dialog.get());
       }
     } else {
-      TryDestroyDialog(dialogueId,localSsn);
+      if(!dialog.isnull())
+      {
+        TryDestroyDialog(dialogueId,dialog->dialogid_smsc!=0,Status::MAPINTERNALFAILURE,localSsn);
+      }
     }
   }
   return ET96MAP_E_OK;
@@ -3322,14 +3336,17 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
     if ( dialog.isnull() )
+    {
       throw runtime_error(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__func__,dialogueId));
+    }
     __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
     __dialogid_map = dialogueId;
     dialog->invokeId = invokeId;
     dialog->origInvokeId = invokeId;
-    if( msisdn_sp != 0 ) {
+    if( msisdn_sp != 0 )
+    {
       dialog->m_msAddr.addressLength = msisdn_sp->addressLength;
       dialog->m_msAddr.typeOfAddress = msisdn_sp->typeOfAddress;
       memcpy(dialog->m_msAddr.address, msisdn_sp->address,ET96MAP_ADDRESS_LEN);
