@@ -59,6 +59,7 @@
 
     <complexType name="incType">
         <attribute name="inc" type="scag:Value" use="optional" />
+        <attribute name="result" type="scag:Var" use="optional" />
         <attribute name="policy" type="profile:TimePolicy" use="required" />
         <attribute name="finaldate" type="scag:Value" use="optional" />
         <attribute name="lifetime" type="scag:Value" use="optional" />
@@ -68,7 +69,7 @@
     <complexType name="inc-modType">
         <attribute name="inc" type="scag:Value" use="optional" />
         <attribute name="mod" type="scag:Value" use="optional" />
-        <attribute name="result" type="scag:Var" use="required" />
+        <attribute name="result" type="scag:Var" use="optional" />
         <attribute name="policy" type="profile:TimePolicy" use="required" />
         <attribute name="finaldate" type="scag:Value" use="optional" />
         <attribute name="lifetime" type="scag:Value" use="optional" />
@@ -89,6 +90,8 @@
     <complexType name="batchType">
 	    <group ref="profile:batchElements" minOccurs="0" maxOccurs="unbounded"/>
 	    <attribute name="mode" type="profile:BatchMode" use="optional"/>
+            <attribute name="status" type="scag:Var" use="optional"/>
+            <attribute name="msg" type="scag:Var" use="optional"/>
     </complexType>
 					
     <group name="Actions">
