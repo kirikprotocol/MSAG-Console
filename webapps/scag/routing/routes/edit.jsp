@@ -302,7 +302,7 @@
       <tr>
           <td valign="top">
               <sm-ep:properties title="routes.edit.properties.route_info" noColoredLines="false">
-                  <sm-ep:txt title="routes.edit.txt.id" name="id" maxlength="60" readonly="${!bean.add}" validation="nonEmpty"/>
+                  <sm-ep:txt title="routes.edit.txt.id" name="id" maxlength="32" readonly="${!bean.add}" validation="nonEmpty"/>
                   <sm-ep:txt title="routes.edit.txt.notes" name="notes"/>
                   <sm-ep:list title="routes.edit.list.srcsmeid" name="srcSmeId"
                               values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
