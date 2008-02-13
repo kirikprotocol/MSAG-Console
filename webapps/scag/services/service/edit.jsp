@@ -92,44 +92,23 @@
                  }
                }
 
-               function submit0(invokedBy) {
-                 window.rulesFrame.location.href="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
+               function submit0(invokedBy)
+               {
+//                   alert("edit:submit0():rulesFrame=" + rulesFrame);
+//o                 window.rulesFrame.location.href="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
+//                 getElementByIdUni("rulesFrame").location.href = "${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
+                 getElementByIdUni("rulesFrame").src = "${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.id}";
                  if (window.childW && !window.childW.closed && window.childW!=invokedBy && window.childW.submit0) {
-                   //alert('window.childW.submit0(window)');
+                   alert('edit:window.childW.submit0(window)');
                    window.childW.submit0(window);
                  }
                  if (opener && !opener.closed && opener!=invokedBy && opener.submit0) {
-                   //alert('opener.submit0(window)');
+                   alert('edit:opener.submit0(window)');
                    opener.submit0(window);
                  }
                }
 
-               function fireRulesState(){
-                  var rules = window.rulesFrame.rulesState;
-                  var rulesTable = document.getElementById("rulesT");
-                  var spans = rulesTable.getElementsByTagName("span");
-//                  alert("CHECK1");
-                  for (var i=0;i<rules.length;i++) {
-                    //alert(rules[i].exists + " " + spans[i*2].id+ " " + spans[i*2+1].id);
-//                    alert("CHECK2");
-                    if (rules[i].exists) {
-                      spans[i*3].style.display="inline";
-                      spans[i*3+1].style.display="none";
-                      spans[i*3+2].style.display="inline";
-                     } else {
-                      spans[i*3].style.display="none";
-                      spans[i*3+1].style.display="inline";
-                      spans[i*3+2].style.display="inline";
-                     }
-                     lockRuleButtons(rules[i].locked, spans[i*3].getElementsByTagName("input"));
-                     lockRuleButtons(rules[i].locked, spans[i*3+1].getElementsByTagName("input"));
-                     lockRuleButtons(!rules[i].locked, spans[i*3+2].getElementsByTagName("input"));
-                  }
-//                  alert("CHECK3");
-                  return false;
-               }
-
-               function lockRuleButtons(isLocked, buttons) {
+               function lockRuleButtons_(isLocked, buttons) {
                  for (var j=0;j<buttons.length;j++)
                    if (isLocked)
                      buttons[j].disabled = true;
@@ -139,6 +118,108 @@
                 function submitOpForm(){
                     opForm.submit();
                 }
+
+                function isMSIE()
+                {
+                  return navigator.appName == "Microsoft Internet Explorer";
+                }
+
+               function fireRulesState(){
+                  var fr = getElementByIdUni("rulesFrame");
+//                  alert("rulesFrame.contentDocument=" + rulesFrame.contentDocument);
+                var rules;
+                if( isMSIE() ){
+                  rules = window.rulesFrame.rulesState;
+                } else{
+                  rules = getRules();
+                }
+                  var rulesTable = document.getElementById("rulesT");
+                  var spans = rulesTable.getElementsByTagName("span");
+//                  alert("CHECK1");
+                  for (var i=0;i<rules.length;i++) {
+//                    alert("rules[i]=" +rules[i].exists + " | " + rules[i].locked );
+                    if (rules[i].exists) {
+                      spans[i*3].style.display="inline";
+                      spans[i*3+1].style.display="none";
+                      spans[i*3+2].style.display="inline";
+                     } else {
+                      spans[i*3].style.display="none";
+                      spans[i*3+1].style.display="inline";
+                      spans[i*3+2].style.display="inline";
+                     }
+                     if( spans[i*3].style.display!="none" ){
+                         lockRuleButtons( rules[i].locked, spans[i*3].getElementsByTagName("input") );
+                     }
+                     if( spans[i*3+1].style.display!="none" ){
+                        lockRuleButtons( rules[i].locked, spans[i*3+1].getElementsByTagName("input") );
+                     }
+                     if( spans[i*3+2].style.display!="none"){
+                         lockRuleButtons( !rules[i].locked, spans[i*3+2].getElementsByTagName("input") );
+                     }
+                  }
+//                  alert("CHECK3");
+                  return false;
+               }
+
+               function unlock()
+               {
+                 alert("unlock");
+               }
+
+               function lockRuleButtons(isLocked, buttons) {
+                 for (var j=0;j<buttons.length;j++){
+//                   alert( "buttons[j]=" + buttons[j]);
+                   if (isLocked){
+                     buttons[j].disabled = true;
+                     buttons[j].style.color = "gray";
+                   }
+                   else{
+                     buttons[j].disabled = false;
+                     buttons[j].style.color = "black";
+                   }
+                 }
+               }
+
+                function getRules()
+                {
+                    var x=document.getElementById("rulesFrame").contentDocument;
+                    var arr = x.getElementsByTagName("*");
+                    var smppRuleStateE;
+                    var smppRuleStateL;
+                    var httpRuleStateE;
+                    var httpRuleStateL;
+                    var mmsRuleStateE;
+                    var mmsRuleStateL;
+                    for(var i=0; i<arr.length; i++){
+                        if( arr[i].type != 'undefined' && arr[i].type == "hidden" ){
+    //                        alert("HIDDEN :" + arr[i].id + " value = " + arr[i].value );
+                            if( arr[i].id=='smppRuleStateE' ){
+                                smppRuleStateE = tf(arr[i].value);
+                            } else if( arr[i].id=='smppRuleStateL' ){
+                                smppRuleStateL = tf(arr[i].value);
+                            } else if( arr[i].id=='httpRuleStateE' ){
+                                httpRuleStateE = tf(arr[i].value);
+                            } else if( arr[i].id=='httpRuleStateL' ){
+                                httpRuleStateL = tf(arr[i].value);
+                            } else if( arr[i].id=='mmsRuleStateE' ){
+                                mmsRuleStateE = tf(arr[i].value);
+                            } else if( arr[i].id=='mmsRuleStateL' ){
+                                mmsRuleStateL = tf(arr[i].value);
+                            }
+                        }
+                    }
+                    var rules = new Array();
+                    rules[0]={exists:smppRuleStateE,locked:smppRuleStateL};
+                    rules[1]={exists:httpRuleStateE,locked:httpRuleStateL};
+                    rules[2]={exists:mmsRuleStateE ,locked:mmsRuleStateL};
+                    return rules;
+                }
+
+                function tf(val)
+                {
+                    return val=='true'? true: false;
+                }
+
             </script>
         <iframe id="rulesFrame" onload="fireRulesState()"
           <c:choose>
