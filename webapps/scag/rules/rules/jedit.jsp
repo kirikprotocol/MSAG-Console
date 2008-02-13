@@ -14,13 +14,17 @@
               {
                 var checkResult = null;
                 if (action == "edit") checkResult = document.jedit.openRule(id);
-                  else checkResult = document.jedit.newRule(id);
+                else checkResult = document.jedit.newRule(id);
                 if (checkResult)
                 {
                   alertError(checkResult);
                 }
-                if (opener.submit0) opener.submit0();
-                document.focus();
+                if (opener.submit0)
+                {
+                    opener.submit0();
+                }
+//o                document.focus();
+                window.focus();
               }
 
               function alertError(checkResult) {
@@ -34,23 +38,53 @@
 
               function openjEditWindow(action,id)
               {
-                opener.jEditStarting();
-                opener.assignjEditOpener(window,false);
+//o                opener.jEditStarting();
+                jEditStarting();
+//o                opener.assignjEditOpener(window,false);
+                assignjEditOpener(window, false);
+
                 openjEditView(action,id);
                 toClose();
               }
+// added
+                function jEditStarting()
+                {
+                    if (opener && !opener.closed) {
+                      opener.status = "<fmt:message>jEdit.starting</fmt:message>";
+                    } else {
+                      window.status = "<fmt:message>jEdit.starting</fmt:message>";
+                    }
+                }
+
+                function assignjEditOpener(jEditwindow, marker)
+                {
+                    if (opener && !opener.closed) {
+                        opener.jEdit = jEditwindow;
+                        if (marker) opener.status = "<fmt:message>jEdit.started</fmt:message>";
+                    } else {
+                        window.jEdit = jEditwindow;
+                        if (marker) window.status = "<fmt:message>jEdit.started</fmt:message>";
+                    }
+                }
+//-added
 
               function toClose()
               {
                 var action = document.jedit.isWindowClosed();
                 if (action) {
-                   if (opener.submit0) opener.submit0();
+                   if (opener.submit0) {
+                        opener.submit0();
+                   }
                    if (document.jedit.isStopped()) {
-                     if (opener.closejEditWindow) opener.closejEditWindow();
+                     if (opener.closejEditWindow) {
+                        opener.closejEditWindow();
+                     }
                      return;
                    }
                 } else {
-                  if (opener.assignjEditOpener) opener.assignjEditOpener(window,true);
+                  if (opener.assignjEditOpener) {
+                    opener.assignjEditOpener(window,true);
+                  }
                 }
                 setTimeout(toClose,1000);
               }

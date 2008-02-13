@@ -12,11 +12,21 @@
 <html><head></head>
 <script>
   var rulesState = new Array();
+//  window.opener.test = "BINGO!!!";
+//alert("rules");
   function populateArray() {
     rulesState[0]={exists:${bean.smppRuleState.exists},locked:${bean.smppRuleState.locked}};
     rulesState[1]={exists:${bean.httpRuleState.exists},locked:${bean.httpRuleState.locked}};
     rulesState[2]={exists:${bean.mmsRuleState.exists},locked:${bean.mmsRuleState.locked}};
   }
 </script>
-<body onload="populateArray()"></body>
+<body onload="populateArray()">
+<input type="hidden" name="smppRuleStateE" id="smppRuleStateE" value="${bean.smppRuleState.exists}"/>
+<input type="hidden" name="smppRuleStateL" id="smppRuleStateL" value="${bean.smppRuleState.locked}"/>
+<input type="hidden" name="httpRuleStateE" id="httpRuleStateE" value="${bean.httpRuleState.exists}"/>
+<input type="hidden" name="httpRuleStateL" id="httpRuleStateL" value="${bean.httpRuleState.locked}"/>
+<input type="hidden" name="mmsRuleStateE"  id="mmsRuleStateE"  value="${bean.mmsRuleState.exists}"/>
+<input type="hidden" name="mmsRuleStateL"  id="mmsRuleStateL"  value="${bean.mmsRuleState.locked}"/>
+
+</body>
 </html>
