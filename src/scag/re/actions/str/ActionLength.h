@@ -9,7 +9,8 @@ class ActionLength : public Action
 {
     ActionLength(const ActionLength &);
 
-    std::auto_ptr<ActionParameter> paramVar, paramResult;
+    std::string m_strVar, m_strResult;
+    FieldType   m_varFieldType;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

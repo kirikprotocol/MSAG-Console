@@ -5,8 +5,9 @@ namespace scag { namespace re { namespace actions {
 
 void ActionLength::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    paramVar    = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "length", "var", true, true, logger));
-    paramResult = std::auto_ptr<ActionParameter>(new ActionParameter(params, propertyObject, "length", "result", true, false, logger));
+    FieldType ft; bool bExist;
+    m_varFieldType = CheckParameter(params, propertyObject, "length", "var", true, false, m_strVar, bExist);
+    ft = CheckParameter(params, propertyObject, "length", "result", true, false, m_strResult, bExist);
     
     smsc_log_debug(logger,"Action 'length':: init");
 }
@@ -16,14 +17,27 @@ bool ActionLength::run(ActionContext& context)
 {
     smsc_log_debug(logger,"Run Action 'length'");
 
+    Property * property = context.getProperty(m_strResult);
+    if (!property) {
+        smsc_log_warn(logger,"Action 'length':: invalid property '%s'",m_strResult.c_str());
+        return true;
+    }
     
-    if (!paramVar->prepareValue(context)) return true;
-    if (!paramResult->prepareValue(context)) return true;
-
-    paramResult->setIntValue(paramVar->getStrValue().size());
-
-    smsc_log_debug(logger,"Action 'length':: result is '%d'", paramResult->getIntValue());
-
+    if (m_varFieldType == ftUnknown)
+    {
+        property->setInt(m_strVar.size());
+    }
+    else
+    {
+        Property* var = context.getProperty(m_strVar);
+        if (var) property->setInt(var->getStr().size());
+        else {
+            smsc_log_warn(logger,"Action 'length': cannot set '%s' with '%s' value - no such property",
+                          m_strResult.c_str(), m_strVar.c_str());
+        }
+    }
+    
+    smsc_log_debug(logger,"Action 'length':: result is '%d'", property->getInt());
     return true;
 }
 
