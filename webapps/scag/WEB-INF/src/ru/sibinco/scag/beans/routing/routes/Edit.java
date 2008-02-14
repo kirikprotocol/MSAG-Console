@@ -62,6 +62,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     private String new_dstMask;
     private String new_dst_mask_sme_;
     private Map destinations;
+    private Map destSubjs;
+    private Map destMasks;
     private static final String DST_SME_PREFIX = "dst_sme_";
     private static final String DST_MASK_PREFIX = "dst_mask_sme_";
     private HttpSession session;
@@ -75,6 +77,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         logger.debug("Edit.java:process():start");
+        logger.debug("Edit.java:process():start:getSrcMasks=" + getSrcMasks().toString());
+        logger.debug("Edit.java:process():start:getSrcSubjs=" + getSrcSubjs().toString());
         path = request.getContextPath();
         appContext = getAppContext();
         session = request.getSession();
@@ -92,6 +96,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             id = getEditId();
         }
         destinations = new HashMap();
+        destSubjs = new HashMap();
+        destMasks = new HashMap();
         logger.debug("Edit.java:process():middle");
         logger.debug("Edit.java:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet());
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
@@ -99,9 +105,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             final String s = (String) entry.getKey();
             logger.error( "key=" + s + " | value='" + entry.getValue().getClass() + "'" );
             if (s.startsWith(DST_SME_PREFIX)) {
-                logger.error( "startsWith(DST_SME_PREFIX)");
                 final String subjName = s.substring(DST_SME_PREFIX.length());
-                logger.error( "startsWith(DST_SME_PREFIX):subjName=" + subjName);
+                logger.debug( "startsWith(DST_SME_PREFIX):subjName=" + subjName);
                 final String[] smeNameStrings = (String[]) entry.getValue();
                 logger.debug( "startsWith(DST_SME_PREFIX):smeNameStrings=" + smeNameStrings);
                 final StringBuffer smeName = new StringBuffer();
@@ -130,11 +135,13 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 try {
 //                    final Destination destination = svc == null ? new Destination(subj, center) : new Destination(subj, svc);
                     Destination destination;
-                    if( svc != null ) destination = new Destination(subj, svc);
-                    else if( center != null ) destination = new Destination(subj, center);
-                    else if( mService != null ) destination = new Destination(subj, mService);
-                    else destination = new Destination(subj, mCenter);
+                    String id = null;
+                    if( svc != null ) {destination = new Destination(subj, svc); id = svc.getId();}
+                    else if( center != null ){ destination = new Destination(subj, center); id = center.getId();}
+                    else if( mService != null ){ destination = new Destination(subj, mService); id = mService.getId();}
+                    else{ destination = new Destination(subj, mCenter); id = mCenter.getId();}
                     destinations.put(destination.getName(), destination);
+                    destSubjs.put(destination.getName(), id);
                 } catch (SibincoException e) {
                     logger.debug("Could not create destination", e);
                     throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
@@ -171,13 +178,15 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                     try {
 //                        final Destination destination = svc == null ? new Destination(mask, center) : new Destination(mask, svc);
                         Destination destination;
-                        if( svc != null ) destination = new Destination(mask, svc);
-                        else if( center != null ) destination = new Destination(mask, center);
-                        else if( mService != null ) destination = new Destination(mask, mService);
-                        else destination = new Destination(mask, mCenter);
+                        String id = null;
+                        if( svc != null ){ destination = new Destination(mask, svc); id = svc.getId();}
+                        else if( center != null ){ destination = new Destination(mask, center); id = center.getId();}
+                        else if( mService != null ){ destination = new Destination(mask, mService); id = mService.getId();}
+                        else{ destination = new Destination(mask, mCenter); id = mCenter.getId();}
                         destinations.put(destination.getName(), destination);
+                        destMasks.put(destination.getName(), id);
                     } catch (SibincoException e) {
-                        logger.debug("Could not create destination ", e);
+                        logger.error("Could not create destination ", e);
                         throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
                     }
                 }
@@ -222,7 +231,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             logger.debug("Edit.java:process(): (getMbSave() != null) in");
             save();
         }
-        logger.debug("Edit.java:process(): (getMbSave() != null) after");
+        logger.debug("Edit.java:process():load(id)");
         load(id);
         super.process(request, response);
 
@@ -305,16 +314,16 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             srcMasks = removeEmptyFromArr( srcMasks );
             dstMasks = removeEmptyFromArr( dstMasks );
             if( sources == null || sources.isEmpty() ){
-                logger.debug( "Edit.java:save():empty SOURCE MAP|srcMasks.length is:'" + srcMasks.length + "'" );
+                logger.warn( "Edit.java:save():empty SOURCE MAP|srcMasks.length is:'" + srcMasks.length + "'" );
                 if( destinations == null || destinations.isEmpty() ){
-                    logger.debug( "Edit.java:save():empty DESTINATONS MAP|destinations" );
+                    logger.warn( "Edit.java:save():empty DESTINATONS MAP|destinations" );
                     emptyDestinations = true;
                     throw new SCAGJspException( Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR_DEST );
                 }
                 throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR);
             }
             if( destinations == null || destinations.isEmpty() ){
-                logger.debug("Edit.java:save():empty DESTINATION MAP");
+                logger.warn("Edit.java:save():empty DESTINATION MAP: editId=" + getEditId());
                 final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
                 emptyDestinations = true;
                 throw new SCAGJspException(Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_DEST);
@@ -541,8 +550,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     public Map getDstSubjPairs() {
         final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
+        Map result = new TreeMap();
         if (null != route) {
-            final Map result = new TreeMap();
             if( !emptyDestinations ){
                 for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
                     final Destination destination = (Destination) i.next();
@@ -557,14 +566,19 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 }
             }
             return result;
+
+        } else if (isAdd() ){
+            return destSubjs;
         }
+
         return null;
     }
 
     public Map getDstMaskPairs() {
         final Route route = (Route) appContext.getScagRoutingManager().getRoutes().get(getEditId());
+        final Map result = new TreeMap();
         if( route != null) {
-            final Map result = new TreeMap();
+//            final Map result = new TreeMap();
             if( !emptyDestinations ){
                 for (Iterator i = route.getDestinations().values().iterator(); i.hasNext();) {
                     final Destination destination = (Destination) i.next();
@@ -578,7 +592,11 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 }
             }
             return result;
+
+        } else if (isAdd() ){
+            return destMasks;
         }
+
         return null;
     }
 
