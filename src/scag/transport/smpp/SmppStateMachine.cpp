@@ -176,13 +176,14 @@ int StateMachine::Execute()
         }
         switch(cmd->get_commandId())
         {
-          case SUBMIT:          processSubmit(cmd);         break;
-          case SUBMIT_RESP:     processSubmitResp(cmd);     break;
-          case DELIVERY:        processDelivery(cmd);       break;
-          case DELIVERY_RESP:   processDeliveryResp(cmd);   break;
-          case DATASM:          processDataSm(cmd);         break;
-          case DATASM_RESP:     processDataSmResp(cmd);     break;
-          case PROCESSEXPIREDRESP: processExpiredResps();   break;
+          case SUBMIT:              processSubmit(cmd);         break;
+          case SUBMIT_RESP:         processSubmitResp(cmd);     break;
+          case DELIVERY:            processDelivery(cmd);       break;
+          case DELIVERY_RESP:       processDeliveryResp(cmd);   break;
+          case DATASM:              processDataSm(cmd);         break;
+          case DATASM_RESP:         processDataSmResp(cmd);     break;
+          case PROCESSEXPIREDRESP:  processExpiredResps();      break;
+          case ALERT_NOTIFICATION:
           default:
             smsc_log_warn(log,"Unprocessed command id %d",cmd->get_commandId());
             break;
@@ -221,10 +222,10 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
   const char *cmdName = cmdType == SUBMIT ? "SubmitSm" : cmdType == DELIVERY ? "DeliverySm" : "DataSm";
   uint32_t failed = 0;
   SMS& sms = *cmd->get_sms();
-  
+
   if(cmd.hasSession())
     cmd.setSession(SessionPtr(NULL)); // cmd can lay in out queue quite long time, so let's free session right now.
-  
+
   try{
       if(dst->getBindType() == btNone)
       {
@@ -234,7 +235,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
       }
       else
       {
-        stripUnknownSmppOptionals(sms,allowedUnknownOptionals);      
+        stripUnknownSmppOptionals(sms,allowedUnknownOptionals);
 
         uint32_t cnt;
         if(ri.slicing != SlicingType::NONE && !isSliced(sms) && (cnt = getPartsCount(sms)) > 1)
@@ -259,9 +260,9 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
             int newSeq=dst->getNextSeq();
             if (!reg.Register(dst->getUid(), newSeq, cmd))
               throw Exception("%s: Register cmd for uid=%d, seq=%d failed", cmdName, dst->getUid(), newSeq);
-            dst->putCommand(cmd);            
-        }            
-        
+            dst->putCommand(cmd);
+        }
+
         registerEvent(scag::stat::events::smpp::ACCEPTED, src, dst, (char*)ri.routeId, -1);
       }
   } catch(std::exception& e)
@@ -269,7 +270,7 @@ uint32_t StateMachine::putCommand(CommandId cmdType, SmppEntity* src, SmppEntity
     failed = smsc::system::Status::SYSFAILURE;
     smsc_log_info(log,"%s: Failed to putCommand into %s:%s", cmdName, dst->getSystemId(),e.what());
   }
-  
+
   return failed;
 }
 
@@ -293,7 +294,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                   sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
     if (ussd_op == 35) // Not Sibinco USSD dialog
     {
-        smsc_log_debug(log, "Submit: Not Sibinco USSD dialog for %s", 
+        smsc_log_debug(log, "Submit: Not Sibinco USSD dialog for %s",
                        sms.getDestinationAddress().toString().c_str());
         sms.dropProperty(Tag::SMPP_USSD_SERVICE_OP);
         smscmd.original_ussd_op = ussd_op; ussd_op = -1; umr = -1;
@@ -528,7 +529,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
     SmppCommand resp=SmppCommand::makeSubmitSmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
     resp->get_resp()->setOrgCmd(cmd);
-    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);    
+    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);
     processSubmitResp(resp);
   }
 }
@@ -586,7 +587,7 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
 
       if(!orgCmd->essentialSlicedResponse(cmd->get_resp()->get_status() || cmd->get_resp()->expiredResp))
         return;
-      
+
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
@@ -762,7 +763,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                   sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
     if (ussd_op == 35) // Not Sibinco USSD dialog
     {
-        smsc_log_debug(log, "Deliver: Not Sibinco USSD dialog for %s", 
+        smsc_log_debug(log, "Deliver: Not Sibinco USSD dialog for %s",
                        sms.getOriginatingAddress().toString().c_str());
         sms.dropProperty(Tag::SMPP_USSD_SERVICE_OP);
         smscmd.original_ussd_op = ussd_op; ussd_op = -1; umr = -1;
@@ -968,7 +969,7 @@ void StateMachine::processDelivery(SmppCommand& cmd)
   if (smscmd.original_ussd_op != -1) // Not Sibinco USSD
     sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, smscmd.original_ussd_op);
   failed = putCommand(DELIVERY, src, dst, ri, cmd);
-  
+
   session->getLongCallContext().runPostProcessActions();
   sm.releaseSession(session);
   smsc_log_debug(log, "Delivery: processed");
@@ -1353,7 +1354,7 @@ void StateMachine::processDataSm(SmppCommand& cmd)
     SmppCommand resp=SmppCommand::makeDataSmResp("0",cmd->get_dialogId(),failed);
     resp.setEntity(dst);
     resp->get_resp()->setOrgCmd(cmd);
-    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);    
+    resp->setFlag(SmppCommandFlags::FAILED_COMMAND_RESP);
     processDataSmResp(resp);
   }
 }
@@ -1587,6 +1588,28 @@ void StateMachine::processExpiredResps()
     expProc=false;
   }
 }
+
+void StateMachine::processAlertnotification(SmppCommand& cmd)
+{
+  RouteInfo ri;
+  SmppEntity *dst;
+  dst=routeMan->RouteSms(cmd.getEntity()->getSystemId(),cmd->get_alertNotification().src,
+                     cmd->get_alertNotification().dst,ri);
+  if(!dst)
+  {
+    smsc_log_warn(log,"Route not found for alert notification %s->%s",
+                  cmd->get_alertNotification().src.toString().c_str(),
+                  cmd->get_alertNotification().dst.toString().c_str());
+    return;
+  }
+  try{
+    dst->putCommand(cmd);
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log,"Failed to putCommand alert notification:'%s'",e.what());
+  }
+}
+
 
 }//smpp
 }//transport

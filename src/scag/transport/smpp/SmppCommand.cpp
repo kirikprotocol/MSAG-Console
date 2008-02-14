@@ -11,10 +11,10 @@ smsc::core::synchronization::Mutex _SmppCommand::cntMutex;
 uint32_t _SmppCommand::commandCounter = 0;
 uint32_t _SmppCommand::stuid = 0;
 
-uint32_t _SmppCommand::getCommandStatus() const 
+uint32_t _SmppCommand::getCommandStatus() const
 {
-    return (cmdid == DELIVERY_RESP || cmdid == SUBMIT_RESP || cmdid == DATASM_RESP) 
-	    ? ((SmsResp*)dta)->get_status() : status;
+    return (cmdid == DELIVERY_RESP || cmdid == SUBMIT_RESP || cmdid == DATASM_RESP)
+      ? ((SmsResp*)dta)->get_status() : status;
 }
 
 _SmppCommand::~_SmppCommand()
@@ -28,7 +28,7 @@ _SmppCommand::~_SmppCommand()
         }
         smsc_log_debug(logger, "Command destroy: count=%d, addr=%s, usr=%d, uid=%d", sc, session.Get() ? session->getSessionKey().abonentAddr.toString().c_str() : "", session.Get() ?  session->getSessionKey().USR : 0, uid);
     }
-  
+
     switch ( cmdid )
     {
     case DELIVERY:
@@ -65,6 +65,9 @@ _SmppCommand::~_SmppCommand()
       break;
     case BIND_TRANSCEIVER:
       delete ((BindCommand*)dta);
+      break;
+    case ALERT_NOTIFICATION:
+      delete ((AlertNotification*)dta);
       break;
 
     case UNKNOWN:
@@ -175,6 +178,12 @@ _SmppCommand::~_SmppCommand()
         _cmd->cmdid=ENQUIRELINK;
         goto end_construct;
       }
+      case SmppCommandSet::ALERT_NOTIFICATION:
+      {
+        _cmd->cmdid=ALERT_NOTIFICATION;
+        _cmd->dta=new AlertNotification((PduAlertNotification*)pdu);
+        goto end_construct;
+      }
       case SmppCommandSet::ENQUIRE_LINK_RESP:
       {
         _cmd->cmdid=ENQUIRELINK_RESP;
@@ -278,7 +287,7 @@ _SmppCommand::~_SmppCommand()
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  
+
    SmppCommand SmppCommand::makeSubmitSm(const SMS& sms,uint32_t dialogId)
   {
     SmppCommand cmd;
@@ -794,6 +803,22 @@ _SmppCommand::~_SmppCommand()
         pdu->header.set_commandStatus(c.status);
         return reinterpret_cast<SmppHeader*>(pdu.release());
       }
+    case ALERT_NOTIFICATION:
+      {
+        auto_ptr<PduAlertNotification> pdu(new PduAlertNotification);
+        AlertNotification& an=c.get_alertNotification();
+        pdu->header.set_commandId(SmppCommandSet::ALERT_NOTIFICATION);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(0);
+        pdu->source.set_typeOfNumber(an.src.type);
+        pdu->source.set_numberingPlan(an.src.plan);
+        pdu->source.set_value(an.src.value);
+        pdu->esme.set_typeOfNumber(an.dst.type);
+        pdu->esme.set_numberingPlan(an.dst.plan);
+        pdu->esme.set_value(an.dst.value);
+        pdu->optional.set_msAvailableStatus(an.status);
+        return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
 
     default:
       throw runtime_error("unknown commandid");
@@ -817,7 +842,7 @@ _SmppCommand::~_SmppCommand()
   {
     orgCmd = o; bHasOrgCmd = true;
   }
-  
+
   void SmsResp::getOrgCmd(SmppCommand& o)
   {
     o = orgCmd;

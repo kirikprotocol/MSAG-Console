@@ -35,13 +35,14 @@ public:
   void processDataSm(SmppCommand& cmd);
   void processDataSmResp(SmppCommand& cmd);
   void processExpiredResps();
+  void processAlertnotification(SmppCommand& cmd);
 
   static void addTransitOptional(int tag)
   {
     allowedUnknownOptionals.push_back(tag);
     smsc_log_debug(smsc::logger::Logger::getInstance("statmach"), "Transitional tag added: %x", tag);
   }
-    
+
 protected:
   SmppCommandQueue* queue;
   SmppRouter* routeMan;
@@ -56,9 +57,9 @@ protected:
 
   void registerEvent(int event, SmppEntity* src, SmppEntity* dst, const char* rid, int errCode);
   uint32_t putCommand(CommandId cmdType, SmppEntity* src, SmppEntity* dst, router::RouteInfo& ri, SmppCommand& cmd);
-  
+
   bool makeLongCall(SmppCommand& cx, SessionPtr& session);
-  
+
   struct ResponseRegistry;
   static ResponseRegistry reg;
 

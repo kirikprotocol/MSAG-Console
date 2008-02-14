@@ -64,7 +64,8 @@ enum CommandId
   BIND_TRANCIEVER_RESP,   //22
   DATASM,                 //23
   DATASM_RESP,            //24
-  PROCESSEXPIREDRESP      //25
+  PROCESSEXPIREDRESP,     //25
+  ALERT_NOTIFICATION      //26
 };
 
 /*
@@ -307,6 +308,19 @@ struct BindCommand{
   BindCommand(const char* id,const char* pwd,const char* rng,const char* st):sysId(id),pass(pwd),addrRange(rng),systemType(st){}
 };
 
+struct AlertNotification{
+  AlertNotification(PduAlertNotification* pdu)
+  {
+    src=PduAddress2Address(pdu->get_source());
+    dst=PduAddress2Address(pdu->get_esme());
+    status=pdu->optional.get_msAvailableStatus();
+  }
+  Address src;
+  Address dst;
+  int status;
+
+};
+
 struct SmsCommand{
   SmsCommand():dir(dsdUnknown),original_ussd_op(-1) {}
   SmsCommand(const SMS& sms):sms(sms),dir(dsdUnknown),original_ussd_op(-1) {}
@@ -389,15 +403,15 @@ struct _SmppCommand
   bool essentialSlicedResponse(bool failed)
   {
     MutexGuard mg(slicedMutex);
-    
+
     sliceCount--;
-    
+
     if(!slicedRespSent && (failed || slicingRespPolicy == router::SlicingRespPolicy::ANY || !sliceCount))
         return slicedRespSent = true;
-    
-    return false;   
+
+    return false;
   }
-  
+
   CommandId get_commandId() const { return cmdid; }
 
   SMS* get_sms()
@@ -430,6 +444,11 @@ struct _SmppCommand
   //SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
 
   BindCommand& get_bindCommand(){return *((BindCommand*)dta);}
+
+  AlertNotification& get_alertNotification()
+  {
+    return *((AlertNotification*)dta);
+  }
 
   int get_smeIndex(){return VoidPtr2Int(dta);}
 
