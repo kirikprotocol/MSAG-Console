@@ -302,6 +302,8 @@ struct MapDialog{
     maked_at_mks = ((long long)tv.tv_sec)*1000*1000 + (long long)tv.tv_usec;
     __require__(cmdQueue.Count()==0);
     chain.clear();
+    sms = auto_ptr<SMS>(0);
+    auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
   }
 /*
   void CopyFrom(MapDialog& dlg)
@@ -376,6 +378,8 @@ struct MapDialog{
       dlgid=dialogid_map;
       associate = 0;
       MAPSTATS_DumpDialogLC(this);
+      sms = auto_ptr<SMS>(0);
+      auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
       chain.clear();
       isLocked=false;
       while(cmdQueue.Count())
