@@ -176,14 +176,14 @@ int StateMachine::Execute()
         }
         switch(cmd->get_commandId())
         {
-          case SUBMIT:              processSubmit(cmd);         break;
-          case SUBMIT_RESP:         processSubmitResp(cmd);     break;
-          case DELIVERY:            processDelivery(cmd);       break;
-          case DELIVERY_RESP:       processDeliveryResp(cmd);   break;
-          case DATASM:              processDataSm(cmd);         break;
-          case DATASM_RESP:         processDataSmResp(cmd);     break;
-          case PROCESSEXPIREDRESP:  processExpiredResps();      break;
-          case ALERT_NOTIFICATION:
+          case SUBMIT:              processSubmit(cmd);             break;
+          case SUBMIT_RESP:         processSubmitResp(cmd);         break;
+          case DELIVERY:            processDelivery(cmd);           break;
+          case DELIVERY_RESP:       processDeliveryResp(cmd);       break;
+          case DATASM:              processDataSm(cmd);             break;
+          case DATASM_RESP:         processDataSmResp(cmd);         break;
+          case PROCESSEXPIREDRESP:  processExpiredResps();          break;
+          case ALERT_NOTIFICATION:  processAlertNotification(cmd);  break;
           default:
             smsc_log_warn(log,"Unprocessed command id %d",cmd->get_commandId());
             break;
@@ -1589,8 +1589,10 @@ void StateMachine::processExpiredResps()
   }
 }
 
-void StateMachine::processAlertnotification(SmppCommand& cmd)
+void StateMachine::processAlertNotification(SmppCommand& cmd)
 {
+  smsc_log_debug(log, "AlertNotification: processing...");
+  
   RouteInfo ri;
   SmppEntity *dst;
   dst=routeMan->RouteSms(cmd.getEntity()->getSystemId(),cmd->get_alertNotification().src,
@@ -1608,6 +1610,8 @@ void StateMachine::processAlertnotification(SmppCommand& cmd)
   {
     smsc_log_warn(log,"Failed to putCommand alert notification:'%s'",e.what());
   }
+  
+  smsc_log_debug(log, "AlertNotification: processed.");
 }
 
 

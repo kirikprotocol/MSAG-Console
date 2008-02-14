@@ -35,7 +35,7 @@ public:
   void processDataSm(SmppCommand& cmd);
   void processDataSmResp(SmppCommand& cmd);
   void processExpiredResps();
-  void processAlertnotification(SmppCommand& cmd);
+  void processAlertNotification(SmppCommand& cmd);
 
   static void addTransitOptional(int tag)
   {
