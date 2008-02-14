@@ -24,6 +24,17 @@ use CommaSeparated2;
 
 #use re 'debug';
 
+my $guard=FileGuard->new('/data/conf/scripts/bill2cdr.running');
+unless($guard->guard())
+{
+  print "bill2cdr already running\n";
+  exit;
+}
+
+$SIG{INT}=sub
+{
+  die "Aborting";
+};
 
 my $header='';
 my $footer='';
@@ -735,6 +746,34 @@ sub DESTROY{
       $self->print($self->{footer});
     }
     $self->{handle}=undef;
+  }
+}
+
+1;
+
+package FileGuard;
+
+sub new {
+  my $class=shift;
+  $class=ref($class) if ref($class);
+  my $fn=shift;
+  die "Filename wasn't specified in constructor of FileGuard" unless $fn;
+  return bless {filename=>$fn},$class;
+}
+
+sub guard{
+  my $self=shift;
+  return 0 if -f $self->{filename};
+  open($self->{handle},'>'.$self->{filename});
+  return 1;
+}
+
+sub DESTROY{
+  my $self=shift;
+  if($self->{handle})
+  {
+    close($self->{handle});
+    unlink $self->{filename};
   }
 }
 
