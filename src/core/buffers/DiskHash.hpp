@@ -1,4 +1,3 @@
-#ident "$Id$"
 #ifndef __DISKHASH_HPP__
 #define __DISKHASH_HPP__
 
