@@ -11,7 +11,7 @@
 #endif
 
 
-#define MAXENTRIES 600
+#define MAXENTRIES 8192
 #define MY_USER_ID USER01_ID
 using namespace std;
 
@@ -435,6 +435,7 @@ void MapIoTask::dispatcher()
             ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
             warnMapReq( Et96MapOpenResp(lssn,dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
             warnMapReq( Et96MapCloseReq(lssn,dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
+	    EINSS7CpReleaseMsgBuffer(&message);
             continue;
           }
         }else
