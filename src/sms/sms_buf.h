@@ -44,7 +44,7 @@ public:
   {
     if(len>=size)
     {
-      delete [] buf;
+      if(buf)delete [] buf;
       buf=new char[len+1];
       size=len+1;
     }

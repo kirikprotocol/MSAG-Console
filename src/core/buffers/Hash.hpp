@@ -301,7 +301,7 @@ private:
       }
       _buckets[i].Reset(0);
     }
-    delete [] _buckets;
+    if(_buckets)delete [] _buckets;
     _buckets=newbuckets;
     _bucketsnum=newbucketsnum;
     return 1;
@@ -325,7 +325,10 @@ public:
     _buckets=NULL;
     Assign(src);
   }
-  virtual ~Hash<T>(){delete [] _buckets;};
+  virtual ~Hash<T>()
+  {
+    if(_buckets)delete [] _buckets;
+  };
 
 
   int Exists(pchashstr key)const
@@ -552,7 +555,7 @@ public:
   }
   void Empty()
   {
-    delete [] _buckets;
+    if(_buckets)delete [] _buckets;
     _buckets=NULL;
     _bucketsnum=0;
     _count=0;
