@@ -2,7 +2,6 @@
 #define __SCAG_RULE_ENGINE_ACTION_TLV__
 
 #include "scag/re/actions/Action.h"
-#include "util/BinDump.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -16,7 +15,7 @@ enum{
 class ActionTLV : public Action
 {
     ActionTLV(const ActionTLV &);
-    
+
     int  type, tlv_type, m_tag;
     std::string strVar, strTag;
     static Hash<int> namesHash;
@@ -46,12 +45,12 @@ protected:
 
     int64_t convertToIntX(const char* buf, uint16_t valeLen);
     int64_t convertToUIntX(const char* buf, uint16_t valeLen);
-    bool hexDumpToBytes(const std::string& hex_dump, std::string& bytes); 
+    bool hexDumpToBytes(const std::string& hex_dump, std::string& bytes);
     std::string uint32ToStr(uint32_t uint_val);
     void getPropertyValue(Property* prop, uint16_t tag, const std::string& var,
                           int64_t& int_val, std::string& str_val);
 public:
-   
+
     virtual bool run(ActionContext& context);
 
     ActionTLV(int t) : type(t) {};

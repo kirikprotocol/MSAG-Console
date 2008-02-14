@@ -3,6 +3,7 @@
 #include "scag/re/CommandBrige.h"
 
 #include "util/Uint64Converter.h"
+#include "util/BinDump.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -51,7 +52,7 @@ bool ActionTLV::getOptionalProperty(SMS& data, const char*& buff, uint32_t& len)
 uint32_t ActionTLV::findField(const char* buff, uint32_t len, uint16_t fieldId)
 {
     uint32_t i = 0;
-    while (i <= len - 4 && *(uint16_t *)(buff + i) != fieldId) 
+    while (i <= len - 4 && *(uint16_t *)(buff + i) != fieldId)
         i = i + 4 + *(uint16_t *)(buff + i + 2);
     if(i > len) smsc_log_warn(logger, "Error in TLV field. Index out of bounds.");
     return i;
@@ -61,7 +62,7 @@ void ActionTLV::cutField(const char* buff, uint32_t len, uint16_t fieldId, std::
 {
     uint32_t i = findField(buff, len, fieldId);
     tmp.assign(buff, i < len ? i : len);
-    if(i <= len - 4) 
+    if(i <= len - 4)
     {
         i = i + 4 + *(uint16_t *)(buff + i + 2);
         if(i < len)
@@ -196,7 +197,7 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
       tmp += '\0';
       break;
     }
-    case TT_INT8: 
+    case TT_INT8:
     case TT_UINT8: {
       valueLen = sizeof(uint8_t);
       uint16_t netValueLen = htons(valueLen);
@@ -205,7 +206,7 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
       tmp.append((char*)&val, valueLen);
       break;
     }
-    case TT_INT16: 
+    case TT_INT16:
     case TT_UINT16: {
       valueLen = sizeof(uint16_t);
       uint16_t netValueLen = htons(valueLen);
@@ -214,7 +215,7 @@ void ActionTLV::setUnknown(SMS& data, uint16_t fieldId, Property* prop, const st
       tmp.append((char*)&val, valueLen);
       break;
     }
-    case TT_INT32: 
+    case TT_INT32:
     case TT_UINT32: {
       valueLen = sizeof(uint32_t);
       uint16_t netValueLen = htons(valueLen);
@@ -264,22 +265,22 @@ void ActionTLV::init(const SectionParams& params,PropertyObject propertyObject)
         {
             int *p = namesHash.GetPtr(strTag.c_str());
             if(!p)
-                throw SCAGException("Action 'tlv': Invalid NAME value");            
+                throw SCAGException("Action 'tlv': Invalid NAME value");
             m_tag = *p;
         }
     }
     else if(ftTag == ftUnknown && !(m_tag = strtol(strTag.c_str(), NULL, 0)))
         throw SCAGException("Action 'tlv': Invalid TAG value");
-    
+
     if(type == TLV_SET || type == TLV_GET || type == TLV_EXIST)
         ftVar = CheckParameter(params, propertyObject, "tlv", type != TLV_EXIST ? "var" : "exist", true, type == TLV_SET, strVar, bExist);
-    
+
     if(type != TLV_EXIST && type != TLV_DEL) // init tlv_type
-    { 
+    {
         ftTLVType = CheckParameter(params, propertyObject, "tlv", "type", false, true, strTag, bExist);
         if(bExist) {
             int *p = typesHash.GetPtr(strTag.c_str());
-            if(ftTLVType != ftUnknown || !p) 
+            if(ftTLVType != ftUnknown || !p)
                 throw SCAGException("Action 'tlv': Invalid TYPE argument"); // should be defined constant
             tlv_type = *p;
         }
@@ -396,7 +397,7 @@ void ActionTLV::getBinTag(const char* val, uint16_t val_len, Property* prop, int
     int_val = false;
     break;
   }
-  case TT_STR: 
+  case TT_STR:
   case TT_STRN: {
     std::string str(val, val_len);
     prop->setStr(str);
@@ -516,7 +517,7 @@ bool ActionTLV::run(ActionContext& context)
             tag = *i;
         }
     }
-    
+
     int tt = tag >> 8;
 
     Property* prop = NULL;
@@ -528,7 +529,7 @@ bool ActionTLV::run(ActionContext& context)
             return true;
         }
     }
-        
+
     if(type == TLV_EXIST)
     {
         prop->setBool(tag <= SMS_LAST_TAG ? sms.hasProperty(tag) : existUnknown(sms, tag));
@@ -555,7 +556,7 @@ bool ActionTLV::run(ActionContext& context)
             else if(tt == SMS_STR_TAG) {
               std::string val = sms.getStrProperty(tag | (SMS_STR_TAG << 8));
               getStrTag(val, prop, tag);
-            } 
+            }
             else if (tt == SMS_BIN_TAG) {
               unsigned val_len = 0;
               const char* val = sms.getBinProperty(tag | (SMS_BIN_TAG << 8), &val_len);
@@ -580,7 +581,7 @@ bool ActionTLV::run(ActionContext& context)
           else if(tt == SMS_STR_TAG)
           {
             setStrTag(sms, tag, prop, strVar);
-          } 
+          }
           else if (tt == SMS_BIN_TAG)
           {
             setBinTag(sms, tag, prop, strVar);
