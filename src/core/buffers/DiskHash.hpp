@@ -6,6 +6,9 @@
 
 #include "File.hpp"
 #include "util/crc32.h"
+#ifndef NOLOGGERPLEASE
+#include "util/debug.h"
+#endif
 
 namespace smsc{
 namespace core{
