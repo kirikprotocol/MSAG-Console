@@ -172,10 +172,12 @@
                    if (isLocked){
                      buttons[j].disabled = true;
                      buttons[j].style.color = "gray";
+                     buttons[j].style.cursor = "none";
                    }
                    else{
                      buttons[j].disabled = false;
                      buttons[j].style.color = "black";
+                     buttons[j].style.cursor = "pointer";
                    }
                  }
                }
