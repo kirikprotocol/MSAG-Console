@@ -40,7 +40,8 @@
                     <c:if test="${!empty enabled && !enabled}">disabled</c:if>
                     <c:if test="${!empty onclick}">jbuttonOnclick="${onclick}"</c:if>
                     <c:if test="${!empty onclick}">onclick="${onclick}"</c:if>
-                    <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>>
+                    <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>
+                    style="cursor:pointer">
                 </input>
             </td>
         <c:set var="page_menu_delimiter_needed" value="true" scope="request"></c:set>
@@ -55,7 +56,8 @@ else{
                     <c:if test="${!empty enabled && !enabled}">disabled</c:if>
                     <c:if test="${!empty onclick}">jbuttonOnclick="${onclick}"</c:if>
                     <c:if test="${isCheckSensible}">isCheckSensible="${isCheckSensible}"</c:if>
-                    <c:if test="${!empty onclick}">onclick="${onclick}"</c:if>>
+                    <c:if test="${!empty onclick}">onclick="${onclick}"</c:if>
+                    style="cursor:pointer">
                 </input>
             </td>
         <c:set var="page_menu_delimiter_needed" value="true" scope="request"></c:set>
