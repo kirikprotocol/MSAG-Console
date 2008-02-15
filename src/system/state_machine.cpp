@@ -2793,8 +2793,8 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
           SmscCommand::makeAlertNotificationCommand
           (
             proxy->getNextSequenceNumber(),
-            sms.getOriginatingAddress(),
             sms.getDestinationAddress(),
+            sms.getOriginatingAddress(),
             2
           )
         );

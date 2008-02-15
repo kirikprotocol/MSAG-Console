@@ -736,8 +736,8 @@ void Scheduler::sendAlertNotification(SMSId id,int status)
         SmscCommand::makeAlertNotificationCommand
         (
           proxy->getNextSequenceNumber(),
-          sms.getOriginatingAddress(),
           sms.getDestinationAddress(),
+          sms.getOriginatingAddress(),
           status
         )
       );
