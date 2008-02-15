@@ -14,13 +14,13 @@
 
   <sm-ep:property title = "${ttitle}">
     <span style="display:none">
-      <input type=submit  name="editRule${tname}" onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','edit'); " value="<fmt:message>service.edit.rule.edit</fmt:message>">
-      <input type=submit  name="deleteRule${tname}" value="<fmt:message>service.edit.rule.delete</fmt:message>">
+      <input style="cursor:pointer" type=submit  name="editRule${tname}" onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','edit'); " value="<fmt:message>service.edit.rule.edit</fmt:message>">
+      <input style="cursor:pointer" type=submit  name="deleteRule${tname}" value="<fmt:message>service.edit.rule.delete</fmt:message>">
     </span>
     <span style="display:none">
-      <input type=submit onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','add')" value="<fmt:message>service.edit.rule.add</fmt:message>">
+      <input style="cursor:pointer" type=submit onClick="return openJedit('${smf:getComplexRuleId(bean.id,tname)}','add')" value="<fmt:message>service.edit.rule.add</fmt:message>">
     </span>
     <span style="display:inline">
-        <input type=submit  name="unlockRule${tname}" value="<fmt:message>service.edit.rule.unlock</fmt:message>">
+        <input style="cursor:pointer" type=submit  name="unlockRule${tname}" onlock="onlock();" value="<fmt:message>service.edit.rule.unlock</fmt:message>">
     </span>
   </sm-ep:property>
