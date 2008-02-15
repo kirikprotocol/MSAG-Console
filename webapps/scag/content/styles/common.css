@@ -104,10 +104,17 @@ input.radio
 /*************************************************************************/
 div.content
 {
+	width:100%;
 	padding: 20px 21px 20px 21px;
-	width: 100%
+/*	width: 100%  */
 }
 
+div.contentFF
+{
+/*	padding: 20px; */
+	padding: 20px 21px 20px 21px;
+/*	width: 95%; */
+}
 /*************************************************************************/
 div.page_subtitle,
 div.secSmsc
@@ -174,4 +181,13 @@ div.query_result
 img.langicon
 {
   filter: revealTrans(transition=12,duration=1);
+}
+
+test{
+    background-color:#f0f0f0;
+    border-top:solid 1px #000000;
+    width:9px;
+    height:6px;
+    font-family:Webdings;
+    font-size:7px
 }
