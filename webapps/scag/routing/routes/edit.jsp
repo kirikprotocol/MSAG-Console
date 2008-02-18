@@ -302,7 +302,7 @@
       <tr>
           <td valign="top">
               <sm-ep:properties title="routes.edit.properties.route_info" noColoredLines="false">
-                  <sm-ep:txt title="routes.edit.txt.id" name="id" maxlength="32" readonly="${!bean.add}" validation="nonEmpty"/>
+                  <sm-ep:txt title="routes.edit.txt.id" name="id" maxlength="50" readonly="${!bean.add}" validation="nonEmpty"/>
                   <sm-ep:txt title="routes.edit.txt.notes" name="notes"/>
                   <sm-ep:list title="routes.edit.list.srcsmeid" name="srcSmeId"
                               values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
@@ -353,7 +353,7 @@
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-            <td><input id=newSrcMask class=txt name=srcMasks validation="routeMaskNonEmpty" onkeyup="resetValidation(this)">
+            <td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)">
             </td>
             <td><img src="content/images/but_add.gif" onclick="addSourceMask('newSrcMask')" style="cursor:pointer;"></td>
           </tr>
@@ -411,7 +411,7 @@
           </tr>
           <tr>
             <td><fmt:message>routes.edit.label.mask</fmt:message></td>
-              <td><input id=newDstMask class=txt name=new_dstMask validation="routeMaskNonEmpty" onkeyup="resetValidation(this)">
+              <td><input id=newDstMask class=txt name=new_dstMask validation="routeMask" onkeyup="resetValidation(this)">
               </td>
             <td><select name=new_dst_mask_sme_ id=newDstMaskSme>
               <c:forEach items="${bean.allSmes}" var="i">
@@ -468,3 +468,4 @@
     <script>selectDefaultSme()</script>
   </jsp:body>
 </sm:page>
+<%--last--%>
