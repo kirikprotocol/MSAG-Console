@@ -100,7 +100,7 @@ public:
   struct MemUseStat{
     char* key;
     time_t lastUsage;
-    int mem;
+    uint64_t mem;
     bool operator<(const MemUseStat& st)const
     {
       return lastUsage<st.lastUsage;
@@ -129,7 +129,7 @@ public:
       }else
       {
         MemUseStat mus;
-        mus.mem=(int)v->ds.Size();
+        mus.mem=v->ds.Size();
         memUse+=mus.mem;
         mus.key=k;
         mus.lastUsage=v->lastUsage;
@@ -142,7 +142,7 @@ public:
 
     if(memUse>maxCacheMemUsage)
     {
-       __trace2__("IDX: mem used by cache: %lld greater then limit: %lld",memUse,maxCacheMemUsage);
+       __trace2__("IDX: mem used by cache: %llu greater then limit: %llu",memUse,maxCacheMemUsage);
       for(std::set<MemUseStat>::iterator sit=memStat.begin();sit!=memStat.end();sit++)
       {
         toKill.push_back(sit->key);
