@@ -27,16 +27,16 @@ time_t RollingIntervalAppender::roundTime(time_t dat, struct ::tm* rtm)
 #else
   localtime_r(&dat, &t);
 #endif
-  if(!(interval % 60)) t.tm_sec = 0;  
+  if(!(interval % 60)) t.tm_sec = 0;
   if(!(interval % 3600)) t.tm_min = 0;
   if(!(interval % 86400)) t.tm_hour = 0;
   t.tm_isdst = -1;
   if(rtm)
   {
-	  *rtm = t;
-	  rtm->tm_year += 1900;
-	  rtm->tm_mon++;
-  }	  
+    *rtm = t;
+    rtm->tm_year += 1900;
+    rtm->tm_mon++;
+  }
   return mktime(&t);
 }
 
@@ -48,9 +48,9 @@ bool RollingIntervalAppender::findLastFile(time_t dat, std::string& lastFileName
   std::string fname_ = fileName + suffixFormat;
   uint32_t curInterval = interval;
   lastFileName.clear();
-  while(dp = readdir(dirp)) 
+  while(dp = readdir(dirp))
   {
-    tm rtm;    
+    tm rtm;
     if(sscanf(dp->d_name, fname_.c_str(), &rtm.tm_year, &rtm.tm_mon, &rtm.tm_mday, &rtm.tm_hour, &rtm.tm_min, &rtm.tm_sec) == numFieldsInSuffix)
     {
         rtm.tm_year -= 1900;
@@ -76,7 +76,7 @@ void RollingIntervalAppender::clearLogDir(time_t curTime)
   DIR *dirp = opendir(path.c_str());
   if(!dirp) return;
   std::vector<std::string> fnames;
-  struct tm rtm;    
+  struct tm rtm;
   rtm.tm_isdst = -1;
 
   std::string fname_ = fileName + suffixFormat;
@@ -100,14 +100,14 @@ RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const
 {
   if (properties.Exists("maxindex"))
     maxBackupIndex = atoi(properties["maxindex"]);
-    
+
   if (properties.Exists("interval"))
   {
     uint32_t hour, min, sec;
     if(sscanf(properties["interval"], "%u:%u:%u", &hour, &min, &sec) == 3)
         interval = hour * 3600 + min * 60 + sec;
   }
-  
+
   suffixFormat = properties.Exists("suffixFormat") ? properties["suffixFormat"] : suffix ? suffix : ".%04d%02d%02d%02d%02d%02d";
   if(suffixFormat[0] != '.') suffixFormat = '.' + suffixFormat;
   const char* p = suffixFormat.c_str();
@@ -118,7 +118,7 @@ RollingIntervalAppender::RollingIntervalAppender(const char * const _name, const
     if(*p == '%' && p[1] && p[1] != '%' && !is_esc) numFieldsInSuffix++;
     is_esc = *p++ == '%' && !is_esc;
   }
-  
+
   fullFileName = properties.Exists("name") ? properties["name"] : "smsc.log";
 
   const char *c = fullFileName.c_str();
@@ -138,17 +138,17 @@ void RollingIntervalAppender::rollover(time_t dat, bool useLast) throw()
 
   if(maxBackupIndex > 0)
     clearLogDir(lastIntervalStart);
-    
+
   if(useLast)
   {
     std::string lastFile;
     if(findLastFile(dat, lastFile))
     {
-      file.Append(lastFile.c_str());
+      file.Append((path+'/'+lastFile).c_str());
       return;
-    }      
+    }
   }
-  
+
   char name_[128];
   sprintf(name_, suffixFormat.c_str(), rtm.tm_year, rtm.tm_mon, rtm.tm_mday, rtm.tm_hour, rtm.tm_min, rtm.tm_sec);
   std::string p = fullFileName + name_;
