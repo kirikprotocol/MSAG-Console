@@ -21,14 +21,16 @@
 
         var global_counter = 0;
 
-        function removeRow(tbl, rowId) {
-            var rowElem = tbl.rows(rowId);
+        function removeRow(tblName, rowId) {
+            var tbl = getElementByIdUni(tblName);
+            var rowElem = tbl.rows[rowId];
             tbl.deleteRow(rowElem.rowIndex);
         }
 
-        function addMask(valueElem) {
+        function addMask(valueName) {
+            var valueElem = getElementByIdUni( valueName );
             if (validateField(valueElem)) {
-                var tbl = opForm.all.sources_table;
+                var tbl = getElementByIdUni("sources_table");
                 var newRow = tbl.insertRow(tbl.rows.length);
                 newRow.className = "row" + ((tbl.rows.length + 1) & 1);
                 newRow.id = "srcRow_" + (global_counter++);
@@ -39,7 +41,7 @@
                 newCell.innerHTML = valueElem.value + '<input type=hidden name=srcMasks value="' + valueElem.value + '">';
                 newRow.appendChild(newCell);
                 newCell = document.createElement("td");
-                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(opForm.all.sources_table, \'' + newRow.id + '\')" style="cursor: hand;">';
+                newCell.innerHTML = '<img src="content/images/but_del.gif" onClick="removeRow(\'sources_table\', \'' + newRow.id + '\')" style="cursor: pointer;">';
                 newRow.appendChild(newCell);
                 valueElem.value = "";
                 valueElem.focus();
@@ -78,8 +80,9 @@
                         <td><fmt:message>operators.edit.label.mask</fmt:message></td>
                         <td><input id="newSrcMask" class="txt" name="srcMasks" validation="routeMask"
                                    onkeyup="resetValidation(this)"></td>
-                        <td><img src="content/images/but_add.gif" onclick="addMask(opForm.all.newSrcMask)"
-                                 style="cursor:hand;"></td>
+<%--                        <td><img src="content/images/but_add.gif" onclick="addMask(opForm.all.newSrcMask)"--%>
+                        <td><img src="content/images/but_add.gif" onclick="addMask('newSrcMask')"
+                                 style="cursor:pointer;"></td>
                     </tr>
                 </table>
                 <hr width="100%" align="left">
@@ -95,8 +98,8 @@
                             <td><img src="content/images/mask.gif"></td>
                             <td>${emask}<input type="hidden" name="srcMasks" value="${emask}"></td>
                             <td><img src="content/images/but_del.gif"
-                                     onClick="removeRow(opForm.all.sources_table, 'maskRow_${emask}')"
-                                     style="cursor: hand;"></td>
+                                     onClick="removeRow('sources_table', 'maskRow_${emask}')"
+                                     style="cursor: pointer;"></td>
                         </tr>
                         <c:set var="rowN" value="${rowN+1}"/>
                     </c:forEach>
