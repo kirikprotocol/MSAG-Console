@@ -323,6 +323,7 @@ function validateField_transitOptionalTags(elem)
 
 function validateField(elem)
 {
+//    alert( "validateField by '" + elem.getAttribute("validation") + "'" );
 	switch(elem.getAttribute("validation"))
 	{
 		case "port":return validateField_port(elem);
@@ -352,6 +353,7 @@ function validateField(elem)
 
 function validateForm(frm)
 {
+//    alert("validateForm");
     var result = true;
     var button = getElementByIdUni("jbutton");
 //    if( document.all.jbutton.name != "mbCancel" ){
@@ -364,7 +366,8 @@ function validateForm(frm)
                 var validationClass = elem.getAttribute("validation");
                 if(validationClass != null){
                     if( validationClass == "routeMask" ){
-                        elem.validation="routeMaskNonEmpty";
+//                        alert("routeMask " + validationClass);
+                        elem.setAttribute("validation", "routeMaskNonEmpty");
                     }
                     var r = validateField(elem);
                     validateShowErrors(elem);
