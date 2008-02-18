@@ -2,8 +2,8 @@
 <sm:page title="metacenters.index.title">
   <jsp:attribute name="menu">
     <sm-pm:menu>
-      <sm-pm:item name="mbAdd" value="metaeps.index.item.mbadd.value" title="metaeps.index.item.mbadd.title"/>
-      <sm-pm:item name="mbDelete" value="metaeps.index.item.mbdelete.value" title="metaeps.index.item.mbdelete.title"
+      <sm-pm:item name="mbAdd" value="metacenter.index.item.mbadd.value" title="metacenter.index.item.mbadd.title"/>
+      <sm-pm:item name="mbDelete" value="metacenter.index.item.mbdelete.value" title="metacenter.index.item.mbdelete.title"
                   onclick="return deleteConfirm()" isCheckSensible="true"/>
       <sm-pm:space/>
     </sm-pm:menu>

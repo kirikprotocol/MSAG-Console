@@ -8,8 +8,8 @@
     </jsp:attribute>
     <jsp:attribute name="menu">
         <sm-pm:menu>
-            <sm-pm:item name="mbSave" value="metaeps.edit.item.mbsave.value" title="metaeps.edit.item.mbsave.title"/>
-            <sm-pm:item name="mbCancel" value="metaeps.edit.item.mbcancel.value" title="metaeps.edit.item.mbcancel.title"
+            <sm-pm:item name="mbSave" value="metaeps.edit.item.mbsave.value" title="metaservice.edit.item.mbsave.title"/>
+            <sm-pm:item name="mbCancel" value="metaeps.edit.item.mbcancel.value" title="metaservice.edit.item.mbcancel.title"
                         onclick="clickCancel()"/>
             <sm-pm:space/>
         </sm-pm:menu>
