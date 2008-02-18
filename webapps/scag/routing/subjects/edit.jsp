@@ -119,7 +119,7 @@
                           <col width="100%" align="left">
                           <tr>
                               <td><fmt:message>subjects.edit.label.mask</fmt:message></td>
-                              <td><input id="newSrcMask" class="txt" name="masks" validation="routeMaskNonEmpty"
+                              <td><input id="newSrcMask" class="txt" name="masks" validation="routeMask"
                                          onkeyup="resetValidation(this)"></td>
                               <td><img src="content/images/but_add.gif"
                                        onclick="addpElement('newSrcMask', 'masks')"
