@@ -105,9 +105,9 @@ void Logger::Reload()
   MutexGuard guard(static_mutex);
   if(!initialized)
   {
-      __loggerError("setCategoryLogLevel: Logger not initialized");  
+      __loggerError("setCategoryLogLevel: Logger not initialized");
       return;
-  }      
+  }
   char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
   smsc::logger::Logger::reconfigure(logFileName ? logFileName : "logger.properties");
 }
@@ -117,9 +117,9 @@ void Logger::Store()
   MutexGuard guard(static_mutex);
   if(!initialized)
   {
-      __loggerError("setCategoryLogLevel: Logger not initialized");  
+      __loggerError("setCategoryLogLevel: Logger not initialized");
       return;
-  }      
+  }
   char * logFileName = getenv("SMSC_LOGGER_PROPERTIES");
   smsc::logger::Logger::storeConfig(logFileName ? logFileName : "logger.properties");
 }
@@ -202,7 +202,7 @@ void Logger::setLogLevels(const Logger::LogLevels & _logLevels)
           {
               ConfigReader::CatInfo** ci = configReader.cats.GetPtr(k);
               if(ci) (*ci)->level.reset(cStringCopy(getLogLevel(l)));
-          }              
+          }
       }
     }
     {
@@ -306,7 +306,7 @@ void Logger::configureAppenders(const ConfigReader & configs) throw (Exception)
       appenders.Insert(key, new RollingIntervalAppender(key, *info->params, ".%04d-%02d-%02d"));
     else if (strcasecmp(info->type.get(), "intervalfile") == 0)
       appenders.Insert(key, new RollingIntervalAppender(key, *info->params));
-    else 
+    else
     {
       std::string msg("Unknown appender type: \"");
       msg += info->type.get();
@@ -357,10 +357,10 @@ void Logger::configureRoot(const ConfigReader & cr) throw (Exception)
 void Logger::configure(const char * const configFileName) throw (Exception)
 {
   Properties props(configFileName);
-  
+
   if(props.Exists("configReloadInterval"))
     reloadConfigInterval = atoi(props["configReloadInterval"]);
-  
+
   configReader.init(props);
   configureAppenders(configReader);
   configureCatAppenders(configReader);
@@ -508,7 +508,7 @@ void Logger::log_(const LogLevel _logLevel, const std::string &message) throw()
 {
 #ifdef LOGGER_TIMED_CONFIG_RELOAD
     timedConfigReload();
-#endif    
+#endif
 
   if (isInitialized()) {
     try {
@@ -525,7 +525,7 @@ void Logger::log_(const LogLevel _logLevel, const char * const stringFormat, ...
 {
 #ifdef LOGGER_TIMED_CONFIG_RELOAD
     timedConfigReload();
-#endif    
+#endif
 
   va_list args;
   va_start(args, stringFormat);
@@ -541,7 +541,11 @@ void Logger::logva_(const LogLevel _logLevel, const char * const stringFormat, v
   std::auto_ptr<char> messageBuf(msg==buf?0:msg);
   if (isInitialized())
   {
-    appender->log(logChars[_logLevel], this->name, msg);
+    try{
+      appender->log(logChars[_logLevel], this->name, msg);
+    }catch(...)
+    {
+    }
   } else
   {
     __loggerError("logva_: Logger not initialized");
