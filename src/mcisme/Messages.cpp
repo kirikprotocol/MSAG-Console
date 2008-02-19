@@ -234,6 +234,124 @@ void MessageFormatter::formatMessage(const AbntAddr& abnt, const vector<MCEvent>
   }
 }
 
+void MessageFormatter::formatMessage(Message& message, const AbntAddr& abnt, const vector<MCEvent>& mc_events, uint8_t start_from, vector<MCEvent>& for_send, int timeOffset/*=0*/)
+{
+  message.message = "";
+  if (mc_events.size() <= 0) return;
+
+  std::string test_msg;
+  std::string rows = "";
+  std::string toAbnt = abnt.getText();
+  ContextEnvironment ctx;
+  const std::string unknownCaller = formatter->getUnknownCaller();
+  OutputFormatter*  multiFormatter = formatter->getMultiFormatter();
+  OutputFormatter*  singleFormatter = formatter->getSingleFormatter();
+  size_t	mc_events_count = mc_events.size();
+  int hibit=0;
+
+  if(formatter->isGroupping())
+  {
+    Hash<bool>	callers;
+    int total = 0;
+    for (int i = start_from; i < mc_events_count; i++)
+    {
+      int	count = 0;
+      time_t convertedTime = 0;
+      AbntAddr from(&(mc_events[i].caller));
+      const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
+      if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
+        fromStr = unknownCaller.c_str();
+      if(!callers.Exists(fromStr))
+      {
+        callers.Insert(fromStr, true);
+        convertedTime = mc_events[i].dt + timeOffset; //timeOffset*3600;
+        for_send.push_back(mc_events[i]);
+        count++;
+
+        for(int j = i + 1; j < mc_events_count; j++)
+        {
+          AbntAddr test(&(mc_events[j].caller));
+          const char* testStr = (test.getText().length() > 0) ? test.getText().c_str():UNKNOWN_CALLER;
+          if (testStr == UNKNOWN_CALLER || (strcmp(testStr, UNKNOWN_CALLER) == 0))
+            testStr = unknownCaller.c_str();
+          if(0 == strcmp(testStr, fromStr))
+          {
+            time_t t = mc_events[j].dt + timeOffset; //*3600;
+            if(t > convertedTime) 
+              convertedTime = t;
+            for_send.push_back(mc_events[j]);
+            count++;
+          }
+        }
+        total += count;
+        InformGetAdapter info_adapter(toAbnt, fromStr, count, convertedTime);
+        if( count > 1 ) multiFormatter->format(rows, info_adapter, ctx);
+        else singleFormatter->format(rows, info_adapter, ctx);
+
+        OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
+        MessageGetAdapter msg_adapter(toAbnt, rows, total);
+        messageFormatter->format(test_msg, msg_adapter, ctx);
+        hibit = hasHighBit(test_msg.c_str(), test_msg.length()); 
+        if(test_msg.length() < MAX_MSG_LENS[hibit])
+        {
+          message.message = test_msg;
+          test_msg="";
+        }
+        else
+        {
+          if(i == start_from)
+          {	
+            // обрезать смску.
+            message.message = test_msg;
+            message.message.resize(MAX_MSG_LENS[hibit]);
+          }
+          else
+            for_send.erase(for_send.end()-count, for_send.end());
+          break;
+        }
+      }
+    }
+    callers.Empty();
+  }
+  else
+  {
+    for (int i = start_from; i < mc_events_count; i++)
+    {
+      AbntAddr from(&(mc_events[i].caller));
+      const char* fromStr = (from.getText().length() > 0) ? from.getText().c_str():UNKNOWN_CALLER;
+      if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
+        fromStr = unknownCaller.c_str();
+      time_t convertedTime = mc_events[i].dt + timeOffset;//*3600;
+
+      InformGetAdapter info_adapter(toAbnt, fromStr, 1, convertedTime);
+      singleFormatter->format(rows, info_adapter, ctx);
+
+      OutputFormatter*  messageFormatter = formatter->getMessageFormatter();
+      MessageGetAdapter msg_adapter(toAbnt, rows, i+1);
+      messageFormatter->format(test_msg, msg_adapter, ctx);
+      hibit = hasHighBit(test_msg.c_str(), test_msg.length()); 
+      if(test_msg.length() < MAX_MSG_LENS[hibit])
+      {
+        message.message = test_msg;
+        test_msg="";
+        for_send.push_back(mc_events[i]);
+      }
+      else
+      {
+        if(i == start_from)
+        {	
+          // обрезать смску.
+          message.message = test_msg;
+          message.message.resize(MAX_MSG_LENS[hibit]);
+          for_send.push_back(mc_events[i]);
+        }
+        break;
+      }
+    }
+  }
+}
+
+
 void MessageFormatter::addBanner(Message& message, const string& banner)
 {
   if( (message.abonent == "+79139139704") || (message.abonent == "+79137141001") || (message.abonent == "+79139419998") || (message.abonent == "+79139064438")) message.message += "Privet ot MikeR!"; else
