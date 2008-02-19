@@ -284,7 +284,12 @@ public:
 
 
     Address oa, da;
-    const char* oaStr = message.caller_abonent.c_str();
+    const char* oaStr;
+    if ( processor.isGroupSmsByCallingAbonent() )
+      oaStr = message.caller_abonent.c_str();
+    else
+      oaStr = processor.getAddress();
+
     if (!oaStr || !convertMSISDNStringToAddress(oaStr, oa)) {
       smsc_log_error(logger, "Invalid originating address '%s'", oaStr ? oaStr:"-");
       return false;
@@ -489,14 +494,14 @@ public:
 class MCISmePduListener: public SmppPduEventListener
 {
 protected:
-    
+
   TaskProcessor&      processor;
-    
+
   SmppTransmitter*    syncTransmitter;
   SmppTransmitter*    asyncTransmitter;
 
 public:
-    
+
   MCISmePduListener(TaskProcessor& proc) : SmppPduEventListener(),
                                            processor(proc), syncTransmitter(0), asyncTransmitter(0) {};
   virtual ~MCISmePduListener() {};
@@ -507,7 +512,8 @@ public:
   void setAsyncTransmitter(SmppTransmitter *transmitter) {
     asyncTransmitter = transmitter;
   }
-    
+
+private:
   void processDataSmResp(SmppHeader *pdu)
   {
     if (!pdu) return;
@@ -593,7 +599,7 @@ public:
     smResp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
     asyncTransmitter->sendDeliverySmResp(smResp);
   }
-
+public:
   void handleEvent(SmppHeader *pdu)
   {
 
