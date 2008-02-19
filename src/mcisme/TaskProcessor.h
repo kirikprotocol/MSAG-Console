@@ -130,6 +130,8 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   CyclicQueue<MissedCallEvent>    inQueue;
   CyclicQueue<Message>            outQueue;
 
+  bool   _groupSmsByCallingAbonent;
+
   void openInQueue();
   void closeInQueue();
   bool putToInQueue(const MissedCallEvent& event, bool skip=true);
@@ -155,6 +157,9 @@ public:
 
   int getDaysValid()       { return daysValid;  };
   int getProtocolId()      { return protocolId; };
+
+  bool isGroupSmsByCallingAbonent() const { return _groupSmsByCallingAbonent; }
+
   const char* getSvcType() { return (svcType.c_str()!="") ? svcType.c_str():"MCISme"; };
   const char* getAddress() { return address.c_str(); };
 
