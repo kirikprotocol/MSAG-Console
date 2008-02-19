@@ -89,3 +89,4 @@ B3004:
     SMSC	Fix for release buffer on incoming  MAP pxlimit
     SMSC	Sms field cleanup in mapdialog on release
     SMSC	Inman final not OK report delivery fixes for USSD
+    Webadm	Add Src Sme ID filter into routes. Fix FIlter in routes
