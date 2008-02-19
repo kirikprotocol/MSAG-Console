@@ -603,21 +603,41 @@ int MissedCallProcessor::run()
       switch(message.sender)
       {
         case ISUP_ID:
-          result = EINSS7_I97IsupHandleInd(&message);
-          if( EINSS7_I97_REQUEST_OK != result )
-          {
-            smsc_log_error(missedCallProcessorLogger,
-                           "ISUP callback function return code %d(%s)",
-                           result,getReturnCodeDescription(result));
+          try {
+            result = EINSS7_I97IsupHandleInd(&message);
+            if( EINSS7_I97_REQUEST_OK != result )
+            {
+              smsc_log_error(missedCallProcessorLogger,
+                             "ISUP callback function return code %d(%s)",
+                             result,getReturnCodeDescription(result));
+            }
+          }
+          catch (std::exception& exc) {
+            smsc_log_error(missedCallProcessorLogger, "Exception occured in call of EINSS7_I97IsupHandleInd. Reason: %s", exc.what());
+            going = 0;
+          }
+          catch (...) {
+            smsc_log_error(missedCallProcessorLogger, "Unknown exception occured in call of EINSS7_I97IsupHandleInd");
+            going = 0;
           }
           break;
         case MGMT_ID:
-          result = EINSS7_MgmtApiReceivedXMMsg(&message);
-          if( EINSS7_MGMTAPI_RETURN_OK != result )
-          {
-            smsc_log_error(missedCallProcessorLogger,
-                           "MGMT callback function return code %d(%s)",
-                           result,getReturnCodeDescription(result));
+          try {
+            result = EINSS7_MgmtApiReceivedXMMsg(&message);
+            if( EINSS7_MGMTAPI_RETURN_OK != result )
+            {
+              smsc_log_error(missedCallProcessorLogger,
+                             "MGMT callback function return code %d(%s)",
+                             result,getReturnCodeDescription(result));
+            }
+          }
+          catch (std::exception& exc) {
+            smsc_log_error(missedCallProcessorLogger, "Exception occured in call of EINSS7_MgmtApiReceivedXMMsg. Reason: %s", exc.what());
+            going = 0;
+          }
+          catch (...) {
+            smsc_log_error(missedCallProcessorLogger, "Unknown exception occured in call of EINSS7_MgmtApiReceivedXMMsg");
+            going = 0;
           }
           break;
       }
