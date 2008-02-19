@@ -80,3 +80,12 @@ B3002:
 B3003:
     SMSC	Fraud control. Warn if MSC number from SendRInfo for SM is not suffix of calling address. 
 		Created logger category map.fraud. Turn it to DEBUG to block fraud MO messages.
+B3004:
+    Logger	Misplaced log files fix in RollingIntervalAppender
+    Logger	Add try/catch on logva method to prevent throw exception to upper layer
+    Archiver	Fix for memsize calculation for big indexes
+    SMSC	SNMP fix for new message parts counters
+    SMSC	Alert notification addresses fix
+    SMSC	Fix for release buffer on incoming  MAP pxlimit
+    SMSC	Sms field cleanup in mapdialog on release
+    SMSC	Inman final not OK report delivery fixes for USSD
