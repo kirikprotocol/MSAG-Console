@@ -109,6 +109,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   catch(ConfigException& exc) { svcType = ""; };
   try { daysValid = config->getInt("DaysValid"); }
   catch(ConfigException& exc) { daysValid = 1; };
+  try { daysValid = config->getInt("GroupSmsByCallingAbonent"); }
+  catch(ConfigException& exc) { _groupSmsByCallingAbonent = false; };
 
   std::string callingMask = config->getString("CallingMask");
   std::string calledMask = config->getString("CalledMask");
@@ -660,33 +662,64 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
   int			seqNum=0;
 
   int timeOffset = smsc::system::common::TimeZoneManager::getInstance().getTimeZone(abnt.getAddress())+timezone;
-  std::vector <MCEventOut> mcEventsOut;
-  formatter.formatMessage(abnt, events, 0, mcEventsOut, address, timeOffset);
 
-  for (std::vector <MCEventOut>::iterator iter = mcEventsOut.begin(), end_iter = mcEventsOut.end(); iter !=end_iter; ++iter) {
+  if ( isGroupSmsByCallingAbonent() ) {
+    std::vector <MCEventOut> mcEventsOut;
+    formatter.formatMessage(abnt, events, 0, mcEventsOut, address, timeOffset);
+
+    for (std::vector <MCEventOut>::iterator iter = mcEventsOut.begin(), end_iter = mcEventsOut.end(); iter !=end_iter; ++iter) {
+      Message  msg;
+
+      if(profile.informTemplateId == STK_PROFILE_ID)
+        msg.secured_data = true;
+      else
+        msg.data_sm = true;
+
+      msg.abonent = abnt.getText();
+      msg.message = iter->msg;
+      msg.caller_abonent = iter->caller;
+
+      smsc_log_debug(logger, "ProcessAbntEvents: prepare message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
+
+      if(useAdvert) formatter.addBanner(msg, getBanner(abnt));
+      {
+        MutexGuard Lock(smsInfoMutex);
+        seqNum = messageSender->getSequenceNumber();
+        sms_info*		pInfo = new sms_info;
+
+        pInfo->sending_time = time(0);
+        pInfo->abnt = abnt;
+        pInfo->events = iter->srcEvents;
+
+        int res = smsInfo.Insert(seqNum, pInfo);
+        if(!messageSender->send(seqNum, msg))
+        {
+          smsc_log_debug(logger, "Send DATA_SM for Abonent %s failed", pInfo->abnt.toString().c_str());
+          pDeliveryQueue->Reschedule(pInfo->abnt);
+          smsInfo.Delete(seqNum);
+          delete pInfo;
+          return;
+        }
+      }
+    }
+  } else {
     Message  msg;
-
+    sms_info*	 pInfo = new sms_info;
+    pInfo->abnt = abnt;
+        
     if(profile.informTemplateId == STK_PROFILE_ID)
       msg.secured_data = true;
     else
       msg.data_sm = true;
 
-    msg.abonent = abnt.getText();
-    msg.message = iter->msg;
-    msg.caller_abonent = iter->caller;
-
-    smsc_log_debug(logger, "ProcessAbntEvents: prepare message = '%s' for sending to %s from %s", msg.message.c_str(), msg.abonent.c_str(), msg.caller_abonent.c_str());
-
+    formatter.formatMessage(msg, abnt, events, 0, pInfo->events, timeOffset);
+    smsc_log_debug(logger, "ProcessAbntEvents: msg = %s", msg.message.c_str());
+    msg.abonent = abnt.getText();//"777";
     if(useAdvert) formatter.addBanner(msg, getBanner(abnt));
     {
       MutexGuard Lock(smsInfoMutex);
       seqNum = messageSender->getSequenceNumber();
-      sms_info*		pInfo = new sms_info;
-
       pInfo->sending_time = time(0);
-      pInfo->abnt = abnt;
-      pInfo->events = iter->srcEvents;
-
       int res = smsInfo.Insert(seqNum, pInfo);
       if(!messageSender->send(seqNum, msg))
       {
@@ -696,6 +729,7 @@ void TaskProcessor::ProcessAbntEvents(const AbntAddr& abnt)
         delete pInfo;
         return;
       }
+//		timeoutMonitor->addSeqNum(seqNum);
     }
   }
 }
