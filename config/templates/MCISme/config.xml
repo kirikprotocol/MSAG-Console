@@ -36,10 +36,10 @@
 	<param name="forceSeparate" type="bool">false</param>
 
 	<param name="CountryCode" type="string">@mcisme.CountryCode@</param>
-        <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>^M
-        <param name="routesFileLocation" type="string">@routesFileLocation@</param>^M
+        <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>
+        <param name="routesFileLocation" type="string">@routesFileLocation@</param>
 			
-			
+        <param name="routesFileLocation" type="bool">GroupSmsByCallingAbonent</param>
 			
         <section name="SMPPThreadPool">
             <param name="max" type="int">15</param>
