@@ -189,6 +189,7 @@ public:
     buffer=initBuffer;
     bufferSize=sizeof(initBuffer);
     bufferPosition=0;
+    maxFlushSpeed=0;
     fileSize=0;
     eventHandler=0;
     if(GlobalFileEventHandler::getGlobalFileEventHandler())
@@ -293,7 +294,7 @@ public:
     }
   }
 
-  void MemoryFlush(int maxSpeed=0)
+  void MemoryFlush()
   {
     if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     std::string tmp=filename+".tmp";
@@ -302,9 +303,9 @@ public:
     offset_type written=0;
 
     int blockSize=8192;
-    if(maxSpeed>0)
+    if(maxFlushSpeed>0)
     {
-      blockSize=maxSpeed;
+      blockSize=maxFlushSpeed;
     }
     uint64_t writeTime;
     if(eventHandler)
@@ -312,7 +313,7 @@ public:
       eventHandler->onSeek(SEEK_SET,0);
     }
     do{
-      if(maxSpeed>0)writeTime=smsc::util::getmillis();
+      if(maxFlushSpeed>0)writeTime=smsc::util::getmillis();
       size_t piece=(size_t)(fileSize-written<blockSize?fileSize-written:blockSize);
 
       if(write(g,buffer+written,(size_t)piece)!=(ssize_t)piece)
@@ -326,7 +327,7 @@ public:
         eventHandler->onWrite(buffer+written,(size_t)piece);
       }
       written+=piece;
-      if(maxSpeed>0)
+      if(maxFlushSpeed>0)
       {
         writeTime=smsc::util::getmillis()-writeTime;
         if(writeTime<1000)smsc::util::millisleep((unsigned)(1000-writeTime));
@@ -817,13 +818,40 @@ public:
     {
       if(bufferPosition>0)
       {
-        if(write(fd,buffer,bufferPosition)!=bufferPosition)
-          throw FileException(FileException::errWriteFailed,filename.c_str());
-        if(eventHandler)eventHandler->onWrite(buffer,bufferPosition);
-        bufferPosition=0;
+        if(maxFlushSpeed==0)
+        {
+          if(write(fd,buffer,bufferPosition)!=bufferPosition)
+            throw FileException(FileException::errWriteFailed,filename.c_str());
+          if(eventHandler)eventHandler->onWrite(buffer,bufferPosition);
+          bufferPosition=0;
+        }else
+        {
+          uint64_t writeTime;
+          uint64_t written=0;
+          while(written<bufferPosition)
+          {
+            uint64_t pieceSize=bufferPosition-written<maxFlushSpeed?bufferPosition-written:maxFlushSpeed;
+            writeTime=smsc::util::getmillis();
+            if(write(fd,buffer+written,pieceSize)!=pieceSize)
+              throw FileException(FileException::errWriteFailed,filename.c_str());
+            if(eventHandler)eventHandler->onWrite(buffer+written,pieceSize);
+            writeTime=smsc::util::getmillis()-writeTime;
+            if(writeTime<1000)
+            {
+              smsc::util::millisleep((unsigned)(1000-writeTime));
+            }
+            written+=pieceSize;
+          }
+          bufferPosition=0;
+        }
       }
       flags&=~FLG_WRBUF;
     }
+  }
+
+  void setMaxFlushSpeed(int mxflsp)
+  {
+    maxFlushSpeed=mxflsp;
   }
 
   bool ReadLine(std::string& str)
@@ -936,7 +964,7 @@ public:
   }
 
 protected:
-  enum{INIT_BUFFER_SIZE=4096};
+  enum{INIT_BUFFER_SIZE=8192};
   enum{MAX_BUFFER_SIZE=2000*1024*1024};
   enum{
     FLG_BUFFERED=1,
@@ -947,13 +975,14 @@ protected:
   };
   char  initBuffer[INIT_BUFFER_SIZE];
   char *buffer;
-  int   fd;
   size_t bufferSize,bufferUsed;
   size_t bufferPosition;
-  int   flags;
   offset_type fileSize;
-  std::string filename;
   FileEventHandler* eventHandler;
+  std::string filename;
+  int   fd;
+  int   flags;
+  int maxFlushSpeed;
 
   bool isBuffered()
   {
