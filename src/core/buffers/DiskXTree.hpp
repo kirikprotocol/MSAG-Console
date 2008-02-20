@@ -311,15 +311,22 @@ protected:
 
     void Clear()
     {
-      DataArrayList* ptr;
-      while(next)
+      DataArrayList* ptr=this,*toKill;
+      while(ptr)
       {
-        ptr=next->next;
-        if(data)
+        if(ptr->data)
         {
-          delete [] data;
+          delete [] ptr->data;
         }
-        next=ptr;
+        if(ptr!=this)
+        {
+          toKill=ptr;
+          ptr=ptr->next;
+          delete toKill;
+        }else
+        {
+          ptr=ptr->next;
+        }
       }
     }
     void Push(const T& value)
