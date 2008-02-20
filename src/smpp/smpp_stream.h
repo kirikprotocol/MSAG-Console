@@ -109,7 +109,7 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
                       BadStreamException );
   memcpy(&data,stream->buffer+stream->dataOffset,sizeof(T));
   __require__(sizeof(T)>0);
-  stream->dataOffset+=sizeof(T);
+  stream->dataOffset+=(unsigned)sizeof(T);
 //  int wasread = read(stream->chanel,&data,sizeof(T));
         //__watch__(wasread);
         //__watch__((int)stream->dataOffset);
@@ -146,7 +146,7 @@ inline void __fill_x__ (SmppStream* stream, T& data)
   //*((T*)stream->buffer) = data;
   __require__(sizeof(T)>0);
   memcpy(stream->buffer+stream->dataOffset,&data,sizeof(T));
-  stream->dataOffset+=sizeof(T);
+  stream->dataOffset+=(unsigned)sizeof(T);
 //  int writen = write(stream->chanel,&data,sizeof(T));
 //  __throw_if_fail__(writen==sizeof(T),BadStreamException);
   //stream->dataOffset+=sizeof(T);

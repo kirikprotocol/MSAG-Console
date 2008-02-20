@@ -36,7 +36,7 @@ public:
   void Write(const void* buf,size_t sz)
   {
     if(!bufferOwned)throw std::runtime_error("Attempt to write to released buffer");
-    resize(bufferPos+sz);
+    resize((uint32_t)(bufferPos+sz));
     memcpy(buffer+bufferPos,buf,sz);
     bufferPos+=sz;
   }
@@ -176,13 +176,13 @@ public:
     }
     if(sizeof(StrLenType)==1)
     {
-      WriteByte(str.length());
+      WriteByte((uint8_t)str.length());
     }else if(sizeof(StrLenType)==2)
     {
-      WriteNetInt16(str.length());
+      WriteNetInt16((uint16_t)str.length());
     }else
     {
-      WriteNetInt32(str.length());
+      WriteNetInt32((uint32_t)str.length());
     }
     Write(str.c_str(),str.length());
   }

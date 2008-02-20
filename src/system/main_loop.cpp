@@ -103,7 +103,7 @@ void Smsc::mainLoop(int idx)
     {
       hrtime_t eqStart=gethrtime();
       eventqueue.enqueueEx(enqueueVector);
-      int sz=enqueueVector.size();
+      int sz=(int)enqueueVector.size();
       enqueueVector.clear();
       hrtime_t eqEnd=gethrtime();
       debug2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
@@ -244,7 +244,7 @@ void Smsc::mainLoop(int idx)
 
     if(findTaskVector.size())
     {
-      int sz=findTaskVector.size();
+      int sz=(int)findTaskVector.size();
       hrtime_t frStart=gethrtime();
       tasks.findAndRemoveTaskEx(findTaskVector);
       SMSId id;
@@ -269,7 +269,7 @@ void Smsc::mainLoop(int idx)
     {
       hrtime_t eqStart=gethrtime();
       eventqueue.enqueueEx(enqueueVector);
-      int sz=enqueueVector.size();
+      int sz=(int)enqueueVector.size();
       enqueueVector.clear();
       hrtime_t eqEnd=gethrtime();
       debug2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);

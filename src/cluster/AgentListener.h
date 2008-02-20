@@ -34,6 +34,7 @@ public:
     {
       psmsc=smscptr;
     }
+    using Thread::Start;
     void Start();
     void Stop();
     virtual int Execute();

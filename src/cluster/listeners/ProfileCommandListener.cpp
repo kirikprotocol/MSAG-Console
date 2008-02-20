@@ -55,7 +55,7 @@ void ProfileCommandListener::profileUpdate(const Command& command)
 
     try {
 
-      Address addr(strlen(address), type, plan, address);
+      Address addr((uint8_t)strlen(address), type, plan, address);
 
 #ifdef SMSC_DEBUG
       char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
@@ -90,7 +90,7 @@ void ProfileCommandListener::profileDelete(const Command& command)
 
         ProfilerInterface *proInterface = profiler;
 
-        Address addr(strlen(address), plan, type, address);
+        Address addr((uint8_t)strlen(address), plan, type, address);
         proInterface->remove(addr);
     }catch (...)
     {

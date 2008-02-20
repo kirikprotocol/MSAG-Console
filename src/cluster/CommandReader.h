@@ -48,6 +48,7 @@ public:
       if(clntSock)delete clntSock;
       clntSock=0;
     };
+  using Thread::Start;
   void Start();
   void Stop()
   {

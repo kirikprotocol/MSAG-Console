@@ -150,7 +150,7 @@ public:
           d.counters[i].total=perf[i];
         }
 
-        int secs=now.tv_sec-perfStart;
+        int secs=(int)(now.tv_sec-perfStart);
         int mcnt=secs/60;
         int curIdx=mcnt%60;
         if(lastIdx!=curIdx)

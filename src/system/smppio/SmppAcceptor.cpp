@@ -32,7 +32,7 @@ int SmppAcceptor::Execute()
   linger l;
   l.l_onoff=1;
   l.l_linger=0;
-  setsockopt(srv.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  setsockopt(srv.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,(int)sizeof(l));
 
   for(;;)
   {

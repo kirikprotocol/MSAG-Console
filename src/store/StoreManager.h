@@ -192,6 +192,7 @@ namespace smsc { namespace store
         virtual ~RemoteStore();
 
         virtual int Execute();
+        using Thread::Start;
         void Start();
         void Stop();
 

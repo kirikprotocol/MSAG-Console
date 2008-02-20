@@ -289,7 +289,7 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
             buf.Append(&x,1);
           }
           debug2(log,"added %d bytes to unknownFields",buf.GetPos());
-          opt->unknownFields.append((char*)buf.get(),buf.GetPos());
+          opt->unknownFields.append((char*)buf.get(),(int)buf.GetPos());
           break;
         }
       }

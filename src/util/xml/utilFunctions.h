@@ -80,8 +80,8 @@ bool AttrGetBoolValue(DOMNamedNodeMap* attr,const char* attrName)
 {
   char value[16];
   AttrFillStringValue(attr,attrName,value);
-  int len=strlen(value);
-  for(int i=0;i<len;i++)value[i]=tolower(value[i]);
+  size_t len=strlen(value);
+  for(size_t i=0;i<len;i++)value[i]=tolower(value[i]);
   if     (!strcmp(value,"true")) return true;
   else if(!strcmp(value,"false")) return false;
   throw smsc::util::Exception("Invalid value for boolean attribute '%s':%s",attrName,value);

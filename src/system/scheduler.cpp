@@ -333,7 +333,7 @@ bool LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const smsc::sms::SMS&
   smsbuf<<sz<<id<<seq<<fin;
 
   Serialize(sms,smsbuf);
-  sz=smsbuf.GetPos()-sizeof(sz);
+  sz=(uint32_t)(smsbuf.GetPos()-sizeof(sz));
   smsbuf.SetPos(0);
   smsbuf<<sz;
   smsbuf.SetPos(sz+sizeof(sz));

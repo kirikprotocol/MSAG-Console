@@ -382,8 +382,8 @@ bool StatStorage::createStatDir()
            return false;
 
        int direclen = dirlen + 1;
-       TmpBuf<char, 512> tmpBuff(direclen);
-       char * dir = tmpBuff.get();
+       TmpBuf<char, 512> tmpBuff2(direclen);
+       char * dir = tmpBuff2.get();
        memcpy(dir, buff, dirlen);
        dir[dirlen] = 0;
        dirs.push_back(std::string(dir));

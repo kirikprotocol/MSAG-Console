@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <functional>
 #include "util/config/Manager.h"
+#include "util/int.h"
 
 //#include "db/DataSource.h"
 
@@ -18,7 +19,7 @@ inline const AclPhoneNumber MakeAclPhoneNumber(const std::string& val) { return 
 
 typedef std::string    AclName;
 typedef std::string    AclDescription;
-typedef unsigned long  AclIdent;
+typedef uint32_t  AclIdent;
 
 typedef const char*    AclPChar;
 typedef std::pair<AclIdent,AclName> AclNamedIdent;

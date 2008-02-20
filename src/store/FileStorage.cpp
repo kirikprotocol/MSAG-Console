@@ -331,7 +331,7 @@ void BillingStorage::roll()
     MutexGuard guard(storageFileLock);
     if (storageFile.isOpened()) BillingStorage::create(true);
 }
-void BillingStorage::create(bool roll/*=false*/)
+void BillingStorage::create(uint8_t roll/*=false*/)
 {
     if (RollingStorage::create(true, roll)) {
         FileStorage::write(SMSC_BILLING_HEADER_TEXT, strlen(SMSC_BILLING_HEADER_TEXT));
@@ -341,9 +341,9 @@ void BillingStorage::create(bool roll/*=false*/)
 void ArchiveStorage::roll()
 {
     MutexGuard guard(storageFileLock);
-    if (storageFile.isOpened()) ArchiveStorage::create(true);
+    if (storageFile.isOpened()) this->ArchiveStorage::create(true);
 }
-void ArchiveStorage::create(bool roll/*=false*/)
+void ArchiveStorage::create(uint8_t roll/*=false*/)
 {
     if (RollingStorage::create(false, roll)) {
         FileStorage::write(SMSC_ARCHIVE_HEADER_TEXT, strlen(SMSC_ARCHIVE_HEADER_TEXT));

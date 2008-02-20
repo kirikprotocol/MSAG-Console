@@ -43,8 +43,8 @@ public:
     returnType = cstr2Type(XmlStr(methodElem->getAttribute(XmlStr("returnType"))));
     id = 0;
     DOMNodeList *childs = methodElem->getElementsByTagName(XmlStr("param"));
-    unsigned childsLength = childs->getLength();
-    for (unsigned i=0; i<childsLength; i++)
+    size_t childsLength = childs->getLength();
+    for (size_t i=0; i<childsLength; i++)
     {
       DOMNode *paramNode = childs->item(i);
       DOMElement *elem = (DOMElement*) paramNode;
@@ -118,7 +118,7 @@ public:
       if (!paramIsEqual)
         break;
     }
-		
+
     return (paramIsEqual
             && name != 0 && method.name != 0
             && strcmp(name,  method.name) == 0

@@ -176,7 +176,7 @@ static void SendGNack(SmppSocket* ss,int seq,int status)
   int size=pdu.size();
   __require__(size<(int)sizeof(buf));
   SmppStream s;
-  assignStreamWith(&s,buf,sizeof(buf),false);
+  assignStreamWith(&s,buf,(unsigned)sizeof(buf),false);
   fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pdu));
   int wroff=0,wr;
   while(wroff<size)
@@ -751,7 +751,7 @@ int SmppInputThread::Execute()
                 int size=resppdu.size();
                 __require__(size<(int)sizeof(buf));
                 SmppStream s;
-                assignStreamWith(&s,buf,sizeof(buf),false);
+                assignStreamWith(&s,buf,(unsigned)sizeof(buf),false);
                 fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&resppdu));
                 int wroff=0,wr;
                 while(wroff<size)
@@ -876,7 +876,7 @@ int SmppInputThread::Execute()
                     pduresp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
                     char buf[64];
                     SmppStream s;
-                    assignStreamWith(&s,buf,sizeof(buf),false);
+                    assignStreamWith(&s,buf,(unsigned)sizeof(buf),false);
                     fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pduresp));
                     ss->getSocket()->WriteAll(buf,pduresp.size());
                   }

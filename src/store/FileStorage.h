@@ -27,7 +27,7 @@ namespace smsc { namespace store
     using namespace smsc::sms;
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
-    
+
     extern const char* SMSC_LAST_BILLING_FILE_EXTENSION;
     extern const char* SMSC_PREV_BILLING_FILE_EXTENSION;
     extern const char* SMSC_LAST_ARCHIVE_FILE_EXTENSION;
@@ -48,20 +48,20 @@ namespace smsc { namespace store
         static void truncateFile(const std::string& location, const std::string& fileName, off_t length);
         static void rollErrorFile(const std::string& location, const std::string& fileName);
         static void rollFileExtension(const std::string& location, const char* fileName, bool bill=true);
-        
-        static void findEntries(const std::string& location, Array<std::string>& entries, 
+
+        static void findEntries(const std::string& location, Array<std::string>& entries,
                                 bool files=false, const char* ext=0);
         static void findDirs (const std::string& location, Array<std::string>& dirs);
         static void findFiles(const std::string& location, const char* ext, Array<std::string>& files);
-        
+
         static uint64_t toHostOrder(uint64_t value);
         static uint64_t toNetworkOrder(uint64_t value);
-        
+
         bool read(void* data, size_t size);
         void write(const void* data, size_t size);
         void flush();
         void close();
-        
+
         void getPos(File::offset_type* pos);
         void setPos(const File::offset_type* pos);
 
@@ -70,19 +70,19 @@ namespace smsc { namespace store
         };
 
     protected:
-        
+
         smsc::logger::Logger *log;
 
         File            storageFile;
         Mutex           storageFileLock;
         std::string     storageLocation;
-        
+
         virtual void initialize(bool flag) = 0;
 
         void save(SMSId id, SMS& sms, File::offset_type* pos=0);
         bool load(SMSId& id, SMS& sms, const File::offset_type* pos=0);
         void bill(SMSId id, SMS& sms, std::string& out);
-        
+
         FileStorage() : log(Logger::getInstance("smsc.store.FileStorage")) {};
     };
 
@@ -93,17 +93,17 @@ namespace smsc { namespace store
         uint32_t        storageInterval;
         char            storageFileName[256];
 
-        bool create(bool bill, bool roll=false);
+        bool create(bool bill, bool roll);
         virtual void initialize(bool flag) = 0;
-        
+
         RollingStorage() : FileStorage(), storageInterval(0) {};
 
     public:
 
         virtual ~RollingStorage() {};
-        
+
         void init(Manager& config, bool bill);
-        
+
         inline uint32_t getStorageInterval() {
             return storageInterval;
         };
@@ -117,31 +117,35 @@ namespace smsc { namespace store
     protected:
 
         virtual void initialize(bool flag) { this->create(); };
-        void create(bool roll=false);
+        using RollingStorage::create;
+        void create(uint8_t roll=false);
 
     public:
 
         BillingStorage() : RollingStorage() {};
         virtual ~BillingStorage() {};
 
+        using RollingStorage::init;
         void init(Manager& config)  { RollingStorage::init(config, true); };
         void roll();
 
         void createRecord(SMSId id, SMS& sms);
     };
-    
+
     class ArchiveStorage : public RollingStorage
     {
     protected:
 
         virtual void initialize(bool flag) { this->create(); };
-        void create(bool roll=false);
-        
+        using RollingStorage::create;
+        void create(uint8_t roll=false);
+
     public:
-        
+
         ArchiveStorage() : RollingStorage() {};
         virtual ~ArchiveStorage() {};
 
+        using RollingStorage::init;
         void init(Manager& config)  { RollingStorage::init(config, false); };
         void roll();
 
@@ -151,7 +155,7 @@ namespace smsc { namespace store
     class PersistentStorage : public FileStorage
     {
     protected:
-        
+
         std::string storageFileName;
 
         virtual void initialize(bool flag) { this->open(flag); };
@@ -160,13 +164,13 @@ namespace smsc { namespace store
 
     public:
 
-        PersistentStorage(const std::string& location, const std::string& filename) 
+        PersistentStorage(const std::string& location, const std::string& filename)
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~PersistentStorage() {};
 
         void openRead(const File::offset_type* pos=0);
         bool readRecord(SMSId& id, SMS& sms, const File::offset_type* pos=0);
-        
+
         void openWrite(File::offset_type* pos=0);
         void writeRecord(SMSId id, SMS& sms, File::offset_type* pos=0);
     };
@@ -183,7 +187,7 @@ namespace smsc { namespace store
 
     public:
 
-        TextDumpStorage(const std::string& location, const std::string& filename) 
+        TextDumpStorage(const std::string& location, const std::string& filename)
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~TextDumpStorage() {};
 
@@ -194,16 +198,16 @@ namespace smsc { namespace store
     class TransactionStorage : public FileStorage
     {
     protected:
-        
+
         std::string storageFileName;
-    
+
         virtual void initialize(bool flag) {};
         bool open(bool create);
 
     public:
 
         TransactionStorage(const std::string& location, const std::string& filename)
-            : FileStorage(), storageFileName(location+"/"+filename) { storageLocation = location; }; 
+            : FileStorage(), storageFileName(location+"/"+filename) { storageLocation = location; };
         TransactionStorage(const std::string& fullFileName)
             : FileStorage(), storageFileName(fullFileName) {};
         virtual ~TransactionStorage() {};

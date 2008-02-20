@@ -100,7 +100,7 @@ public:
                 {
                   debug2(log,"sending %s",str.c_str());
                   str+='\n';
-                  if(s.WriteAll(str.c_str(),str.length())==-1)
+                  if(s.WriteAll(str.c_str(),(int)str.length())==-1)
                   {
                     debug1(log,"write failed");
                     socketOk=false;
@@ -147,7 +147,7 @@ public:
         {
           debug2(log,"PN: writing to socket:%s",str.c_str());
           mon.Unlock();
-          if(s.WriteAll(str.c_str(),str.length())==-1)
+          if(s.WriteAll(str.c_str(),(int)str.length())==-1)
           {
             debug1(log,"PN: write to socket failed");
             socketOk=false;

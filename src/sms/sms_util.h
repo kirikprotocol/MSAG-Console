@@ -15,7 +15,7 @@ inline void ReadAddress(T& f,Address& addr)
   addr.plan=f.ReadByte();
   f.Read(addr.value,sizeof(addr.value));
   addr.value[sizeof(addr.value)-1]=0;
-  addr.length=strlen(addr.value);
+  addr.length=(uint8_t)strlen(addr.value);
 }
 
 template <class T>
@@ -30,7 +30,7 @@ inline void WriteAddress(T& f,const Address& addr)
 
 inline uint32_t AddressSize()
 {
-  return 1+1+sizeof(AddressValue);
+  return 1+1+(int)sizeof(AddressValue);
 }
 
 }//sms

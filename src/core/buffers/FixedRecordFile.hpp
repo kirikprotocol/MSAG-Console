@@ -24,7 +24,7 @@ template <class RecordType>
 class FixedRecordFile{
 public:
   FixedRecordFile(const char* argSig,uint32_t argVer):sig(argSig),
-    sigLen(strlen(argSig)),ver(argVer),filePos(0),fileSize(0)
+    sigLen((int)strlen(argSig)),ver(argVer),filePos(0),fileSize(0)
   {
   }
 

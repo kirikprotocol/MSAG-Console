@@ -14,7 +14,7 @@ namespace profiler{
 
 class BlackList{
 public:
-  BlackList(int ci):checkInterval(ci)
+  BlackList(time_t ci):checkInterval(ci)
   {
   }
   void Load(const char* file=0)

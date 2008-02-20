@@ -43,7 +43,7 @@ class TimeSlotCounter{
 public:
   TimeSlotCounter(unsigned int nsec,unsigned int msecres=100)
   {
-    slotsCount=nsec*1000UL/msecres;
+    slotsCount=(int)(nsec*1000UL/msecres);
     slotRes=msecres;
     slot=new T[slotsCount];
     lastTime=0;

@@ -8,10 +8,10 @@ namespace smsc{
 namespace core{
 namespace buffers{
 
-template <typename T,int SZ>
+template <typename T,size_t SZ>
 class TmpBuf{
 public:
-  explicit TmpBuf(int size)
+  explicit TmpBuf(size_t size)
   {
     if(size>SZ)
     {
@@ -27,7 +27,7 @@ public:
     pos=0;
   }
 
-  T* setSize(int size)
+  T* setSize(size_t size)
   {
     if(size>SZ)
     {
@@ -42,12 +42,12 @@ public:
     return realBuf;
   }
 
-  int  getSize(void)
+  size_t  getSize(void)
   {
       return heapSize ? heapSize : SZ;
   }
 
-  void Append(const T* data,int count)
+  void Append(const T* data,size_t count)
   {
     if(count==0)return;
     if(pos+count>SZ)
@@ -75,26 +75,26 @@ public:
     pos+=count;
   }
 
-  void SetPos(int newpos)
+  void SetPos(size_t newpos)
   {
     pos=newpos;
   }
 
-  int GetPos()
+  size_t GetPos()
   {
     return pos;
   }
 
-  void Read(T* dst,int count)
+  void Read(T* dst,size_t count)
   {
     std::copy(realBuf+pos,realBuf+pos+count,dst);
     pos+=count;
   }
 
   //Checks for ABR, returns number of objects have been red
-  int ReadSafe(T* dst,int count)
+  int ReadSafe(T* dst,size_t count)
   {
-      int maxPos = heapSize ? heapSize : SZ;
+      size_t maxPos = heapSize ? heapSize : SZ;
 
       if ((pos + count) >= maxPos)
           count = maxPos - pos;
@@ -134,8 +134,8 @@ protected:
   T  stackBuf[SZ];
   T* heapBuf;
   T* realBuf;
-  int heapSize;
-  int pos;
+  size_t heapSize;
+  size_t pos;
 };
 
 }//namespace buffers

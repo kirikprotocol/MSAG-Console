@@ -13,13 +13,13 @@
 #include "Interconnect.h"
 #include "logger/Logger.h"
 
-namespace smsc { namespace cluster 
+namespace smsc { namespace cluster
 {
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
-    
+
     using smsc::core::threads::Thread;
-    
+
     class CommandDispatcher : public Thread
     {
     private:
@@ -33,7 +33,7 @@ namespace smsc { namespace cluster
         bool isStoped();
 
         bool isStopping;
-        
+
     public:
 
         CommandDispatcher();
@@ -41,7 +41,8 @@ namespace smsc { namespace cluster
 
         void addCommand(Command* command);
         void addListener(CommandType type, CommandListener* listener);
-        
+
+        using Thread::Start;
         void Start();
         void Stop();
 

@@ -116,7 +116,7 @@ int AbonentInfoSme::Execute()
   SMS s;
   char msc[]="";
   char imsi[]="";
-  s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+  s.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
   s.setDeliveryReport(0);
   s.setArchivationRequested(false);
   s.setEServiceType(servType.c_str());
@@ -147,7 +147,7 @@ int AbonentInfoSme::Execute()
         Status::OK);
       putIncomingCommand(resp);
 
-      getSmsText(sms,body,sizeof(body));
+      getSmsText(sms,body,(unsigned)sizeof(body));
       try{
         Address a(body);
         Address d;
@@ -265,7 +265,7 @@ int AbonentInfoSme::Execute()
         __trace__("AbonentInfo: Formatter exception unknown");
       }
 
-      int len=answ.length();
+      int len=(int)answ.length();
       //char buf7[MAX_SHORT_MESSAGE_LENGTH];
       //int len7=ConvertTextTo7Bit(answ,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 

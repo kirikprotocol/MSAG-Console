@@ -71,7 +71,7 @@ namespace smsc { namespace mscman
 
         static int Size()
         {
-          return sizeof(MscInfo::mscNum)+1+1+4;
+          return (int)sizeof(MscInfo::mscNum)+1+1+4;
         }
 
         char    mscNum[22];

@@ -29,34 +29,34 @@
 namespace smsc { namespace store
 {
     using smsc::logger::Logger;
-    
+
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
-    
+
     using namespace smsc::core::synchronization;
     using namespace smsc::core::threads;
     using namespace smsc::core::buffers;
     using namespace smsc::store::index;
 
     using smsc::core::network::Socket;
-    
+
     struct DirEntry
     {
         std::string dir;
         uint64_t   code;
-        
+
         DirEntry(std::string _dir="", uint64_t _code=0) : dir(_dir), code(_code) {};
     };
-    
+
     class Query : public ThreadedTask
     {
     friend class ArchiveProcessor;
     private:
-    
+
         static Mutex        readLock;
         static EventMonitor writeMonitor;
         static int          activeCounter;
-        
+
         struct ProcessQueryGuard {
             ProcessQueryGuard();
             ~ProcessQueryGuard();
@@ -80,34 +80,34 @@ namespace smsc { namespace store
         bool checkMessage(QueryMessage* query, SMSId id, SMS& sms);
         bool sendMessage(DaemonCommunicator& communicator, SMSId id, SMS& sms);
 
-        void findDirsByQuery(QueryMessage* query, const std::string& location, 
+        void findDirsByQuery(QueryMessage* query, const std::string& location,
                              Array<DirEntry>& dirs);
-        void findFilesByQuery(QueryMessage* query, const std::string& location, 
-                              uint64_t dirCode, Array<uint8_t>& files); 
-    
+        void findFilesByQuery(QueryMessage* query, const std::string& location,
+                              uint64_t dirCode, Array<uint8_t>& files);
+
     public:
-        
+
         Query(ArchiveProcessor* processor, Socket *socket);
         virtual ~Query();
-    
+
         virtual int Execute();
         virtual const char* taskName() {
             return "ArchiveQueryTask";
         };
     };
-    
+
     class ArchiveProcessor : public Thread
     {
     private:
-    
+
         smsc::logger::Logger*     log;
 
         Hash<std::string>   locations;
         std::string         baseDirectory, textDirectory;
         Mutex               locationsLock, directoriesLock;
-        
+
         ThreadPool      queriesPool;
-        
+
         Socket      serverSocket;
         Event       exited;
         bool        bStarted, bNeedExit;
@@ -131,14 +131,15 @@ namespace smsc { namespace store
         bool process(const std::string& location, const Array<std::string>& files);
 
     public:
-    
+
         ArchiveProcessor(ConfigView* config);
         virtual ~ArchiveProcessor();
-    
+
         void init(ConfigView* config);
         void process();
 
         virtual int Execute(); // for socket accept && process queries on thread pool
+        using Thread::Start;
         void Start();
         void Stop();
 

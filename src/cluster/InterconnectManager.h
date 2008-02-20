@@ -87,6 +87,7 @@ using smsc::core::synchronization::Mutex;
         virtual void changeRole(Role role_);
         virtual void addChangeRoleHandler(ChangeRoleHandler * fun, void* arg);
 
+        using Thread::Start;
         void Start();
         void Stop();
 

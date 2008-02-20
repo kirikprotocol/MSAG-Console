@@ -391,10 +391,10 @@ public:
     MutexGuard g(mon);
 
     scCnt.timeLineCount=smsCount;
-    scCnt.timeLineSize=timeLine.size();
+    scCnt.timeLineSize=(int)timeLine.size();
     scCnt.firstTimeCount=firstQueue.Count();
-    scCnt.regSize=chainRegistry.size();
-    scCnt.inProcCount=procMap.size();
+    scCnt.regSize=(int)chainRegistry.size();
+    scCnt.inProcCount=(int)procMap.size();
   }
 
   virtual void close(){}
@@ -994,7 +994,7 @@ public:
       return queueSize;
     }
 
-    int getTimedHead()
+    time_t getTimedHead()
     {
       if(timedQueue.empty())return 0;
       return timedQueue.begin()->first;
@@ -1255,7 +1255,7 @@ public:
       i->second->RemoveChain(c);
     }
 
-    int size()const
+    size_t size()const
     {
       return tmap.size();
     }

@@ -91,7 +91,7 @@ namespace smsc { namespace distrlist
       static uint32_t Size()
       {
         MemberRecord* ptr=0;
-        return sizeof(ptr->list)+AddressSize();
+        return (uint32_t)sizeof(ptr->list)+AddressSize();
       }
     };
     typedef MemberRecord SubmitterRecord;
@@ -138,7 +138,7 @@ namespace smsc { namespace distrlist
       static uint32_t Size()
       {
         DistrList* ptr=0;
-        return sizeof(ptr->name)+4+1+smsc::sms::AddressSize();
+        return (uint32_t)sizeof(ptr->name)+4+1+smsc::sms::AddressSize();
       }
     };
 

@@ -704,7 +704,7 @@ int Profiler::Execute()
       Address& addr=sms->getOriginatingAddress();
 
       try{
-        len=getSmsText(sms,body,sizeof(body));
+        len=getSmsText(sms,body,(unsigned)sizeof(body));
         if(len<0)throw Exception("sms for profiler too large");
       }catch(...)
       {
@@ -750,7 +750,7 @@ int Profiler::Execute()
               strcpy(body,scmd.c_str());
               __trace2__("Profiler: command mapped to %s",body);
               i=0;
-              len=strlen(body);
+              len=(int)strlen(body);
             }
           }
         }
@@ -947,7 +947,7 @@ int Profiler::Execute()
             if(isValidAlias(orgArg))
             {
               std::string lcarg=orgArg;
-              for(int i=0;i<lcarg.length();i++)lcarg[i]=tolower(lcarg[i]);
+              for(int x=0;x<lcarg.length();x++)lcarg[x]=tolower(lcarg[x]);
               if(blklst && blklst->check(lcarg))
               {
                 msg=msgAliasInvalid;
@@ -1271,7 +1271,7 @@ int Profiler::Execute()
       ans.setDestinationAddress(sms->getOriginatingAddress());
       char msc[]="";
       char imsi[]="";
-      ans.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      ans.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
       ans.setDeliveryReport(0);
       ans.setArchivationRequested(false);
       ans.setEServiceType(serviceType.c_str());
@@ -1316,17 +1316,17 @@ int Profiler::Execute()
       }*/
       if(msg==msgDivertStatus && ans.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
       {
-        fillSms(&ans,shortmsg.c_str(),shortmsg.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        fillSms(&ans,shortmsg.c_str(),(int)shortmsg.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
         SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
         putIncomingCommand(answer);
-        fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        fillSms(&ans,msgstr.c_str(),(int)msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
         ans.getMessageBody().dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
         ans.setIntProperty(Tag::SMPP_ESM_CLASS,ans.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3));
         answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
         putIncomingCommand(answer);
       }else
       {
-        fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        fillSms(&ans,msgstr.c_str(),(int)msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
         SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
         putIncomingCommand(answer);
       }

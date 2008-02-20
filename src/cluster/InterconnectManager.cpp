@@ -210,7 +210,7 @@ void InterconnectManager::internalInit()
   linger l;
   l.l_onoff=1;
   l.l_linger=0;
-  setsockopt(socket.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  setsockopt(socket.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,(int)sizeof(l));
 
 
   if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 0) )

@@ -94,7 +94,7 @@ void AgentListener::init(const std::string& host, int port, pid_t pid_)
     linger l;
     l.l_onoff=1;
     l.l_linger=0;
-    setsockopt(srvSock.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+    setsockopt(srvSock.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,(int)sizeof(l));
 };
 
 void AgentListener::Stop()

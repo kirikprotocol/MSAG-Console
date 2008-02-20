@@ -112,6 +112,7 @@ public:
   SmppThread():stopped(0)
   {
   }
+  using Thread::Start;
   void Start()
   {
     stopped=0;

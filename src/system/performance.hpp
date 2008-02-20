@@ -183,16 +183,18 @@ public:
     {
         MutexGuard guard(countersLock);
 
-        smePerfDataSize = sizeof(uint32_t)+sizeof(uint16_t)*2+
+        size_t dmpsz = sizeof(uint32_t)+sizeof(uint16_t)*2+
             (sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+
              sizeof(uint16_t)*2*SME_PERF_CNT_COUNT)*smeCounters.GetCount()+
             (sizeof(uint32_t)+sizeof(uint16_t)*2)*errCounters.Count();
+
+        smePerfDataSize=(uint32_t)dmpsz;
 
         uint8_t* data = new uint8_t[smePerfDataSize];
         uint8_t* packet = data; memset(packet, 0, smePerfDataSize);
 
         // uint32_t     Total packet size
-        *((uint32_t*)packet) = htonl(smePerfDataSize-sizeof(uint32_t)); packet += sizeof(uint32_t);
+        *((uint32_t*)packet) = htonl(smePerfDataSize-(uint32_t)sizeof(uint32_t)); packet += sizeof(uint32_t);
         // uint16_t     Sme(s) count
         *((uint16_t*)packet) = htons((uint16_t)smeCounters.GetCount()); packet += sizeof(uint16_t);
 
@@ -257,7 +259,7 @@ public:
     PerformanceData ld=*data;
     int high,low;
 
-    ld.size=htonl(sizeof(ld));
+    ld.size=htonl((uint32_t)sizeof(ld));
     ld.countersNumber=htonl(ld.countersNumber);
 
 
@@ -291,7 +293,7 @@ public:
 
     for(int i=0;i<sockets.Count();i++)
     {
-      int wr=sockets[i]->WriteAll((char*)&ld,sizeof(ld));
+      int wr=sockets[i]->WriteAll((char*)&ld,(int)sizeof(ld));
 
       if(wr!=sizeof(ld))
       {
@@ -360,7 +362,7 @@ public:
     linger l;
     l.l_onoff=1;
     l.l_linger=0;
-    setsockopt(srv.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+    setsockopt(srv.getSocket(),SOL_SOCKET,SO_LINGER,(char*)&l,(int)sizeof(l));
     while(!isStopping)
     {
       Socket *clnt=srv.Accept();

@@ -1,4 +1,5 @@
 #include "int.h"
+#include <stdio.h>
 
 static const uint32_t crc_table[256] = {
   0x00000000L, 0x77073096L, 0xee0e612cL, 0x990951baL, 0x076dc419L,
@@ -63,7 +64,7 @@ static const uint32_t crc_table[256] = {
 namespace smsc{
 namespace util{
 
-uint32_t crc32(uint32_t crc,const void* _buf,uint32_t len)
+uint32_t crc32(uint32_t crc,const void* _buf,size_t len)
 {
   if (!_buf) return crc;
   const unsigned char *buf=(const unsigned char *)_buf;
