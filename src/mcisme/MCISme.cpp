@@ -531,14 +531,14 @@ private:
     PduAlertNotification* alert = (PduAlertNotification*)pdu;
     int cmdId	= pdu->get_commandId();
     int status	= pdu->get_commandStatus();
-    int ton = alert->get_esme().get_typeOfNumber();
-    int npi = alert->get_esme().get_numberingPlan();
+    int ton = alert->get_source().get_typeOfNumber();
+    int npi = alert->get_source().get_numberingPlan();
     int ms_availability_status = 0xFF;
 		
     if(alert->get_optional().has_msAvailableStatus())
       ms_availability_status = alert->get_optional().get_msAvailableStatus();
 
-    const char* source_addr = alert->get_esme().get_value();
+    const char* source_addr = alert->get_source().get_value();
     int source_addr_size = strlen(source_addr);
 		
     smsc_log_debug(logger, "MCISme: Recieved Alert Notification: ton=%d, npi=%d, source_addr=%s, addr_size=%d avalible = %X", 
