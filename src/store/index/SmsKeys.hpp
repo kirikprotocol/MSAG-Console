@@ -49,7 +49,7 @@ public:
   }
   StrKey(const char* s)
   {
-    int l=strlen(s);
+    uint8_t l=(uint8_t)strlen(s);
     strncpy(str,s,N);
     str[N]=0;
     len=l>N?N:l;
@@ -149,4 +149,48 @@ struct IdLttKey{
   {
     return key<cmp.key?true:ltt<cmp.ltt;
   }
+};
+
+/*
+struct Offset40{
+  uint32_t low;
+  uint8_t high;
+  Offset40():high(0),low(0)
+  {
+  }
+  Offset40(uint64_t v)
+  {
+    high=(uint8_t)((v>>32)&0xff);
+    low=(uint32_t)(v&0xffffffffull);
+  }
+  operator uint64_t()
+  {
+    uint64_t rv=high;
+    rv<<=32;
+    rv|=low;
+    return rv;
+  }
+  bool operator <(const Offset40& rhs)
+  {
+    return high<rhs.high || (high==rhs.high && low<rhs.low);
+  }
+};
+*/
+
+struct OffsetLtt{
+  uint64_t off;
+  uint32_t ltt;
+  OffsetLtt():off(0),ltt(0){
+  }
+  OffsetLtt(uint64_t o,time_t l):off(o),ltt((uint32_t)l){
+  }
+  bool operator<(const OffsetLtt& rhs)const
+  {
+    return ltt<rhs.ltt || (ltt==rhs.ltt && off<rhs.off);
+  }
+  bool operator==(const OffsetLtt& rhs)const
+  {
+    return off==rhs.off && ltt==rhs.ltt;
+  }
+
 };

@@ -9,6 +9,7 @@
 #include "core/buffers/ChunkFile.hpp"
 #include "util/crc32.h"
 #include "util/debug.h"
+#include "core/buffers/DiskXTree.hpp"
 
 
 #include <sms/sms.h>
@@ -77,17 +78,17 @@ typedef DiskHash<StrKey<32>,Int64Key> RouteIdDiskHash;
 typedef DiskHash<StrKey<28>,Int64Key> AddrDiskHash;
 
 
+typedef DiskXTree<OffsetLtt> OffsetXTree;
+
 typedef ChunkFile<IdLttKey> IntLttChunkFile;
 typedef RefPtr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
 
 
 class SmsIndex{
 public:
-  SmsIndex(const char* location,uint64_t maxmemuse=((uint64_t)4)*1024*1024*1024)
+  SmsIndex(const char* location)
   {
     loc=location;
-    maxCacheMemUsage=maxmemuse;
-    cacheLifeTime=1;//in hours
   }
   void Init(ConfigView*);
   void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms);
@@ -95,211 +96,168 @@ public:
   void BeginTransaction()
   {
     __trace__("IDX: begin transaction");
-  }
-
-  struct MemUseStat{
-    char* key;
-    time_t lastUsage;
-    uint64_t mem;
-    bool operator<(const MemUseStat& st)const
+    char* k;
+    CacheItem* v;
+    cache.First();
+    while(cache.Next(k,v))
     {
-      return lastUsage<st.lastUsage;
+      v->usedInLastTransaction=false;
     }
-  };
+  }
 
   void EndTransaction()
   {
     __trace__("IDX: flushing transaction");
-    cache.First();
     char* k;
-    CacheItem*  v;
-    std::list<std::string> toKill;
-    time_t now=time(NULL);
+    CacheItem* v;
     cache.First();
-    uint64_t memUse=0;
-    std::set<MemUseStat> memStat;
+    std::list<std::string> toKill;
     while(cache.Next(k,v))
     {
-      if(v->usedInLastTransaction)v->ds.Flush();
-      v->usedInLastTransaction=false;
-      if(now-v->lastUsage>cacheLifeTime*60*60)
+      if(v->usedInLastTransaction)
       {
-        __trace2__("IDX: cached location %s marked to kill",k);
-        toKill.push_back(k);
+        if(!File::Exists((v->ds.dir+".version2").c_str()))
+        {
+          File f;
+          f.RWCreate((v->ds.dir+".version2").c_str());
+        }
+        v->ds.Flush();
       }else
       {
-        MemUseStat mus;
-        mus.mem=v->ds.Size();
-        memUse+=mus.mem;
-        mus.key=k;
-        mus.lastUsage=v->lastUsage;
-        memStat.insert(mus);
+        toKill.push_back(k);
       }
     }
-
-    __trace2__("IDX: mem used by cache: %lld",memUse);
-
-
-    if(memUse>maxCacheMemUsage)
+    for(std::list<std::string>::iterator it=toKill.begin();it!=toKill.end();it++)
     {
-       __trace2__("IDX: mem used by cache: %llu greater then limit: %llu",memUse,maxCacheMemUsage);
-      for(std::set<MemUseStat>::iterator sit=memStat.begin();sit!=memStat.end();sit++)
-      {
-        toKill.push_back(sit->key);
-        memUse-=sit->mem;
-        if(memUse<maxCacheMemUsage)
-        {
-          break;
-        }
-      }
-    }
-
-
-    for(std::list<std::string>::iterator i=toKill.begin();i!=toKill.end();i++)
-    {
-      delete cache.Get(i->c_str());
-      cache.Delete(i->c_str());
+      CacheItem* ci=cache.Get(it->c_str());
+      delete ci;
+      cache.Delete(it->c_str());
     }
     __trace__("IDX: transaction finished");
   }
   void RollBack()
   {
+    __trace__("IDX: rollback transaction");
     char* k;
-    CacheItem*  v;
+    CacheItem* v;
     cache.First();
     while(cache.Next(k,v))
     {
       if(v->usedInLastTransaction)
       {
-        __trace2__("IDX: rollback transaction %s",k);
         v->ds.Discard();
-        v->usedInLastTransaction=false;
       }
     }
+
+    __trace__("IDX: rollback transaction finished");
   }
 
 protected:
   std::string loc;
 
-  struct IndexConfig{
-    int smsIdHashSize;
-    int smeIdHashSize;
-    int routeIdHashSize;
-    int addrHashSize;
+  int QuerySmsV1(const char* dir,const ParamArray& params,ResultArray& res);
 
-    int smeIdRootSize;
-    int smeIdChunkSize;
-    int routeIdRootSize;
-    int routeIdChunkSize;
-    int addrRootSize;
-    int defAddrChunkSize;
-    Hash<int> smeAddrChunkSize;
-
-    int maxFlushSpeed;
-  }config;
 
   struct DataSet{
 
+    void CreateNew(const char* argDir,int argHour,int argFlushSpeed);
+    struct RenameGuard{
+      std::string fn;
+      std::string normfn;
+      bool released;
+      bool needUnlink;
+      RenameGuard(const char* f):fn(f),released(false)
+      {
+        std::string::size_type pos=fn.rfind('.');
+        normfn=fn.substr(0,pos);
+        needUnlink=File::Exists(normfn.c_str());
+      }
+      ~RenameGuard()
+      {
+        if(released)
+        {
+          try{
+            if(needUnlink)File::Unlink(normfn.c_str());
+            File::Rename(fn.c_str(),normfn.c_str());
+          }catch(std::exception& e)
+          {
+            smsc_log_error(smsc::logger::Logger::getInstance("sms.idx"),"Failed to unlink+rename index file:'%s'",e.what());
+          }
+        }else
+        {
+          try{
+            File::Unlink(fn.c_str());
+          }catch(std::exception& e)
+          {
+            smsc_log_error(smsc::logger::Logger::getInstance("sms.idx"),"Failed to unlink index file:'%s'",e.what());
+          }
+        }
+      }
+      void release()
+      {
+        released=true;
+      }
+    };
 
-    void CreateNew(int flushSpeed)
+    void Flush();
+
+    char* MakeFileName(const char* name,char* buf,bool isNew)
     {
-      maxFlushSpeed=flushSpeed;
-
-      idHash=new SmsIdDiskHash;
-      srcIdHash=new SmeIdDiskHash;
-      dstIdHash=new SmeIdDiskHash;
-      routeIdHash=new RouteIdDiskHash;
-      srcAddrHash=new AddrDiskHash;
-      dstAddrHash=new AddrDiskHash;
-
-      srcIdData=new IntLttChunkFile;
-      dstIdData=new IntLttChunkFile;
-      srcAddrData=new IntLttChunkFile;
-      dstAddrData=new IntLttChunkFile;
-      routeIdData=new IntLttChunkFile;
+      sprintf(buf,"%s/%s_%02d.idx%s",dir.c_str(),name,hour,isNew?".new":"");
+      return buf;
     }
 
-    File::offset_type Size()
-    {
-      return
-        idHash->Size()+
-        srcIdHash->Size()+
-        dstIdHash->Size()+
-        routeIdHash->Size()+
-        srcAddrHash->Size()+
-        dstAddrHash->Size()+
+    OffsetXTree* CreateOrReadIdx(const char* idxname);
 
-        srcIdData->Size()+
-        dstIdData->Size()+
-        srcAddrData->Size()+
-        dstAddrData->Size()+
-        routeIdData->Size();
+    RefPtr<OffsetXTree> GetIdx(const std::string name)
+    {
+      if(name=="smsid")
+      {
+        return idIdx;
+      }else if(name=="srcid")
+      {
+        return srcIdIdx;
+      }else if(name=="dstid")
+      {
+        return dstIdIdx;
+      }else if(name=="routeid")
+      {
+        return routeIdIdx;
+      }else if(name=="srcaddr")
+      {
+        return srcAddrIdx;
+      }else if(name=="dstaddr")
+      {
+        return dstAddrIdx;
+      }
+      throw smsc::util::Exception("Unknown index:%s",name.c_str());
     }
 
-    void Flush()
-    {
-      idHash->Flush(maxFlushSpeed);
-      srcIdHash->Flush(maxFlushSpeed);
-      dstIdHash->Flush(maxFlushSpeed);
-      routeIdHash->Flush(maxFlushSpeed);
-      srcAddrHash->Flush(maxFlushSpeed);
-      dstAddrHash->Flush(maxFlushSpeed);
-
-      srcIdData->Flush(maxFlushSpeed);
-      dstIdData->Flush(maxFlushSpeed);
-      srcAddrData->Flush(maxFlushSpeed);
-      dstAddrData->Flush(maxFlushSpeed);
-      routeIdData->Flush(maxFlushSpeed);
-    }
-
-    void Discard()
-    {
-      idHash->DiscardCache();
-      srcIdHash->DiscardCache();
-      dstIdHash->DiscardCache();
-      routeIdHash->DiscardCache();
-      srcAddrHash->DiscardCache();
-      dstAddrHash->DiscardCache();
-
-      srcIdData->DiscardCache();
-      dstIdData->DiscardCache();
-      srcAddrData->DiscardCache();
-      dstAddrData->DiscardCache();
-      routeIdData->DiscardCache();
-    }
+    void Discard();
 
     int maxFlushSpeed;
+    int hour;
+    std::string dir;
 
-    RefPtr<SmsIdDiskHash> idHash;
-    RefPtr<SmeIdDiskHash> srcIdHash;
-    RefPtr<SmeIdDiskHash> dstIdHash;
-    RefPtr<RouteIdDiskHash> routeIdHash;
-    RefPtr<AddrDiskHash> srcAddrHash;
-    RefPtr<AddrDiskHash> dstAddrHash;
+    RefPtr<OffsetXTree> idIdx;
+    RefPtr<OffsetXTree> srcIdIdx;
+    RefPtr<OffsetXTree> dstIdIdx;
+    RefPtr<OffsetXTree> routeIdIdx;
+    RefPtr<OffsetXTree> srcAddrIdx;
+    RefPtr<OffsetXTree> dstAddrIdx;
 
-    RefPtr<IntLttChunkFile> srcIdData;
-    RefPtr<IntLttChunkFile> dstIdData;
-    RefPtr<IntLttChunkFile> srcAddrData;
-    RefPtr<IntLttChunkFile> dstAddrData;
-    RefPtr<IntLttChunkFile> routeIdData;
   };
 
   struct CacheItem;
   friend struct smsc::store::index::SmsIndex::CacheItem;
 
   struct CacheItem{
-    time_t lastUsage;
     bool   usedInLastTransaction;
     DataSet ds;
   };
 
+  int maxFlushSpeed;
   Hash<CacheItem*> cache;
-  uint64_t maxCacheMemUsage;
-  int cacheLifeTime;
-  //std::string cacheDir;
-  //Hash<AutoChunkHandle> srcIdCache,dstIdCache,routeIdCache;
-  //Hash<uint64_t> srcAddrCache,dstAddrCache;
-
 };
 
 }//namespace index

@@ -10,35 +10,41 @@ namespace smsc{
 namespace store{
 namespace index{
 
+size_t XTDataSize(const OffsetLtt& data)
+{
+  return 5+4;
+}
+
+void XTWriteData(smsc::core::buffers::File& file,const OffsetLtt& data)
+{
+  //file.WriteByte(data.off.high);
+  //file.WriteNetInt32(data.off.low);
+  uint8_t high=(uint8_t)((data.off>>32)&0xff);
+  uint32_t low=(uint32_t)(data.off&0xffffffffu);
+  file.WriteByte(high);
+  file.WriteNetInt32(low);
+  file.WriteNetInt32(data.ltt);
+}
+
+smsc::core::buffers::File::offset_type XTReadData(smsc::core::buffers::File& file,OffsetLtt& data)
+{
+  uint8_t high=file.ReadByte();
+  uint32_t low=file.ReadNetInt32();
+  data.off=high;
+  data.off<<=32;
+  data.off|=low;
+  data.ltt=file.ReadNetInt32();
+  return 5+4;
+}
+
+
 void SmsIndex::Init(ConfigView* cfg_)
 {
   if(!cfg_)throw std::runtime_error("SmeIndex::Init : ConfigView is NULL!!!");
   ConfigView& cfg=*cfg_;
-  config.smsIdHashSize=cfg.getInt("smsIdHashSize");
-  config.smeIdHashSize=cfg.getInt("smeIdHashSize");
-  config.routeIdHashSize=cfg.getInt("routeIdHashSize");
-  config.addrHashSize=cfg.getInt("addrHashSize");
-
-  config.smeIdRootSize=cfg.getInt("smeIdRootSize");
-  config.smeIdChunkSize=cfg.getInt("smeIdChunkSize");
-  config.routeIdRootSize=cfg.getInt("routeIdRootSize");
-  config.routeIdChunkSize=cfg.getInt("routeIdChunkSize");
-  config.addrRootSize=cfg.getInt("addrRootSize");
-  config.defAddrChunkSize=cfg.getInt("defAddrChunkSize");
-  config.maxFlushSpeed=cfg.getInt("maxFlushSpeed");
-
-  using smsc::util::config::CStrSet;
-  auto_ptr<ConfigView> smeConfig(cfg.getSubConfig("smeAddrChunkSize"));
-  if(smeConfig.get())
-  {
-    auto_ptr<CStrSet> params(smeConfig->getIntParamNames());
-    CStrSet::iterator i=params->begin();
-    for(;i!=params->end();i++)
-    {
-      config.smeAddrChunkSize.Insert(i->c_str(),smeConfig->getInt(i->c_str()));
-    }
-  }
+  maxFlushSpeed=cfg.getInt("maxFlushSpeed");
 }
+
 
 void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 {
@@ -48,8 +54,43 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
   path+=dir;
   path+='/';
 
-  DataSet ds;
+  DataSet* ds;
 
+  tm t;
+  gmtime_r(&sms.lastTime,&t);
+  int hour=t.tm_hour;
+
+  char hrbuf[32];
+  sprintf(hrbuf,"%02d",hour);
+  std::string cacheKey=path+hrbuf;
+
+  CacheItem** ciptr=cache.GetPtr(cacheKey.c_str());
+  if(ciptr)
+  {
+    ds=&(*ciptr)->ds;
+    (*ciptr)->usedInLastTransaction=true;
+  }else
+  {
+    CacheItem* ci=new CacheItem;
+    ci->ds.CreateNew(path.c_str(),hour,maxFlushSpeed);
+    ci->usedInLastTransaction=true;
+    cache.Insert(cacheKey.c_str(),ci);
+    ds=&ci->ds;
+  }
+
+  OffsetLtt val(offset,sms.lastTime);
+  char keybuf[128];
+  sprintf(keybuf,"%lld",id);
+  ds->idIdx->Insert(keybuf,val,true);
+  ds->srcIdIdx->Insert(sms.getSourceSmeId(),val);
+  ds->dstIdIdx->Insert(sms.getDestinationSmeId(),val);
+  ds->routeIdIdx->Insert(sms.getRouteId(),val);
+  ds->srcAddrIdx->Insert(sms.getOriginatingAddress().toString().c_str(),val);
+  ds->dstAddrIdx->Insert(sms.getDealiasedDestinationAddress().toString().c_str(),val);
+
+
+  /*
+  DataSet ds;
   bool cached=true;
 
   {
@@ -159,6 +200,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
 #undef IDX
   //idxtime=gethrtime()-idxtime;
   //__warning2__("indexed in %lld mcsec",idxtime/1000);
+  */
 }
 
 typedef vector<pair<uint32_t,uint64_t> > ResVector;
@@ -238,7 +280,205 @@ struct CmpPair{
 };
 */
 
+struct FileAndKey{
+  std::string file;
+  std::string key;
+  FileAndKey* orfk;
+  FileAndKey():orfk(0)
+  {
+  }
+  FileAndKey(std::string argFile,std::string argKey):file(argFile),key(argKey),orfk(0)
+  {
+  }
+  FileAndKey(const FileAndKey& fk)
+  {
+    file=fk.file;
+    key=fk.key;
+    if(fk.orfk)
+    {
+      orfk=new FileAndKey(*fk.orfk);
+    }else
+    {
+      orfk=0;
+    }
+  }
+  ~FileAndKey()
+  {
+    if(orfk)delete orfk;
+  }
+
+};
+
+struct DataFilter{
+  time_t fromDate;
+  time_t tillDate;
+  DataFilter(time_t argFrom,time_t argTo):fromDate(argFrom),tillDate(argTo)
+  {
+
+  }
+  bool operator()(const OffsetLtt& key)const
+  {
+    return key.ltt<fromDate || key.ltt>tillDate;
+  }
+};
+
 int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res)
+{
+  string path=loc;
+  if(*path.rbegin()!='/')path+='/';
+  path+=dir;
+  path+='/';
+  if(!File::Exists((path+".version2").c_str()))
+  {
+    return QuerySmsV1(dir,params,res);
+  }
+
+  typedef std::vector<OffsetLtt> LookupVector;
+  time_t fromDate=0;
+  time_t tillDate=0xFFFFFFFFFFULL;
+
+  typedef std::vector<FileAndKey> FileKeyVector;
+
+  FileKeyVector fkVector;
+
+  for(int i=0;i<params.Count();i++)
+  {
+    const Param& p=params[i];
+    switch(p.type)
+    {
+      case Param::tSmsId:{
+        FileAndKey fk;
+        fk.file="smsid";
+        char buf[64];
+        sprintf(buf,"%lld",p.iValue);
+        fk.key=buf;
+        fkVector.push_back(fk);
+      }break;
+      case Param::tFromDate:{
+        fromDate=p.dValue;
+      }break;
+      case Param::tTillDate:{
+        tillDate=p.dValue;
+      }break;
+      case Param::tSrcAddress:{
+        fkVector.push_back(FileAndKey("srcaddr",p.sValue));
+      }break;
+      case Param::tDstAddress:{
+        fkVector.push_back(FileAndKey("dstaddr",p.sValue));
+      }break;
+      case Param::tSrcSmeId:{
+        fkVector.push_back(FileAndKey("srcid",p.sValue));
+      }break;
+      case Param::tDstSmeId:{
+        fkVector.push_back(FileAndKey("dstid",p.sValue));
+      }break;
+      case Param::tRouteId:{
+        fkVector.push_back(FileAndKey("routeid",p.sValue));
+      }break;
+      case Param::tAbnAddress:{
+        FileAndKey fk("srcaddr",p.sValue);
+        fk.orfk=new FileAndKey("dstaddr",p.sValue);
+        fkVector.push_back(fk);
+      }break;
+      case Param::tSmeId:{
+        FileAndKey fk("srcid",p.sValue);
+        fk.orfk=new FileAndKey("dstid",p.sValue);
+        fkVector.push_back(fk);
+      }break;
+    }
+  }
+  int fromh=0;
+  int toh=23;
+  /*
+  if(fromDate!=0)
+  {
+    tm t;
+    gmtime_r(&fromDate,&t);
+    fromh=t.tm_hour;
+  }
+  if(tillDate!=0xffffffffffull)
+  {
+    tm t;
+    gmtime_r(&tillDate,&t);
+    toh=t.tm_hour;
+  }
+  */
+
+  bool firstFK=true;
+  LookupVector lv,lvtmp,lvtmp2;
+  ResultArray rv;
+
+  for(FileKeyVector::iterator it=fkVector.begin();it!=fkVector.end();it++)
+  {
+    for(int i=fromh;i<=toh;i++)
+    {
+      char hbuf[32];
+      char hbuf2[32];
+      sprintf(hbuf2,"%02d",i);
+      sprintf(hbuf,"_%02d.idx",i);
+      std::string fileName=path+it->file+hbuf;
+      std::string cacheKey=path+hbuf2;
+      CacheItem** ciptr=cache.GetPtr(cacheKey.c_str());
+      if(ciptr)
+      {
+        RefPtr<OffsetXTree> idx=(*ciptr)->ds.GetIdx(it->file);
+        idx->Lookup(it->key.c_str(),lvtmp);
+      }else
+      {
+        if(!File::Exists(fileName.c_str()))continue;
+        File f;
+        f.ROpen(fileName.c_str());
+        OffsetXTree::Lookup(f,it->key.c_str(),lvtmp);
+      }
+
+      if(it->orfk)
+      {
+        if(ciptr)
+        {
+          RefPtr<OffsetXTree> idx=(*ciptr)->ds.GetIdx(it->orfk->file);
+          idx->Lookup(it->orfk->key.c_str(),lvtmp);
+        }else
+        {
+          fileName=path+it->orfk->file+hbuf;
+          if(File::Exists(fileName.c_str()))
+          {
+            File f;
+            f.ROpen(fileName.c_str());
+            OffsetXTree::Lookup(f,it->orfk->key.c_str(),lvtmp);
+          }
+        }
+      }
+    }
+    //fromdate tilldate!!!
+    DataFilter df(fromDate,tillDate);
+    std::insert_iterator<LookupVector> ins1(lvtmp2,lvtmp2.begin());
+    std::remove_copy_if(lvtmp.begin(),lvtmp.end(),ins1,df);
+    std::sort(lvtmp2.begin(),lvtmp2.end());
+    lvtmp.clear();
+    std::insert_iterator<LookupVector> ins2(lvtmp,lvtmp.begin());
+    std::unique_copy(lvtmp2.begin(),lvtmp2.end(),ins2);
+    if(firstFK)
+    {
+      lv=lvtmp;
+    }else
+    {
+      lvtmp2.swap(lv);
+      lv.clear();
+      std::insert_iterator<LookupVector> ins3(lv,lv.begin());
+      std::set_intersection(lvtmp.begin(),lvtmp.end(),lvtmp2.begin(),lvtmp2.end(),ins3);
+    }
+  }
+  for(LookupVector::iterator it=lv.begin();it!=lv.end();it++)
+  {
+    QueryResult qr;
+    qr.lastTryTime=it->ltt;
+    qr.offset=it->off;
+    res.Push(qr);
+  }
+  return res.Count();
+}
+
+int SmsIndex::QuerySmsV1(const char* dir,const ParamArray& params,ResultArray& res)
 {
   string path=loc;
   if(*path.rbegin()!='/')path+='/';
@@ -279,10 +519,10 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
         }
       }break;
       case Param::tFromDate:{
-        fromDate=p.dValue;
+        fromDate=(uint32_t)p.dValue;
       }break;
       case Param::tTillDate:{
-        tillDate=p.dValue;
+        tillDate=(uint32_t)p.dValue;
       }break;
 
 #define SRC(hash,name) \
@@ -427,7 +667,7 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
       qr.lastTryTime=i->first;
       res.Push(qr);
     }
-    return rv.size();
+    return (int)rv.size();
   }
   ReadToVector(sources.front().Get(),rv,fromDate,tillDate);
   sort(rv.begin(),rv.end());
@@ -465,7 +705,88 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
     res.Push(qr);
   }
 
-  return rv.size();
+  return (int)rv.size();
+}
+
+
+void SmsIndex::DataSet::Flush()
+{
+  char buf[1024];
+  File f;
+  f.setMaxFlushSpeed(maxFlushSpeed);
+  f.WOpen(MakeFileName("smsid",buf,true));
+  RenameGuard smsidguard(buf);
+  idIdx->WriteToFile(f);
+  f.WOpen(MakeFileName("srcid",buf,true));
+  RenameGuard srcidguard(buf);
+  srcIdIdx->WriteToFile(f);
+  f.WOpen(MakeFileName("dstid",buf,true));
+  dstIdIdx->WriteToFile(f);
+  RenameGuard dstidguard(buf);
+  f.WOpen(MakeFileName("routeid",buf,true));
+  RenameGuard routeidguard(buf);
+  routeIdIdx->WriteToFile(f);
+  f.WOpen(MakeFileName("srcaddr",buf,true));
+  RenameGuard srcaddrguard(buf);
+  srcAddrIdx->WriteToFile(f);
+  f.WOpen(MakeFileName("dstaddr",buf,true));
+  RenameGuard dstaddrguard(buf);
+  dstAddrIdx->WriteToFile(f);
+
+  smsidguard.release();
+  srcidguard.release();
+  dstidguard.release();
+  routeidguard.release();
+  srcaddrguard.release();
+  dstaddrguard.release();
+}
+
+void SmsIndex::DataSet::Discard()
+{
+  char buf[1024];
+  File f;
+  f.setMaxFlushSpeed(maxFlushSpeed);
+  f.ROpen(MakeFileName("smsid",buf,false));
+  idIdx->ReadFromFile(f);
+  f.ROpen(MakeFileName("srcid",buf,false));
+  srcIdIdx->ReadFromFile(f);
+  f.ROpen(MakeFileName("dstid",buf,false));
+  dstIdIdx->ReadFromFile(f);
+  f.ROpen(MakeFileName("routeid",buf,false));
+  routeIdIdx->ReadFromFile(f);
+  f.ROpen(MakeFileName("srcaddr",buf,false));
+  srcAddrIdx->ReadFromFile(f);
+  f.ROpen(MakeFileName("dstaddr",buf,false));
+  dstAddrIdx->ReadFromFile(f);
+}
+
+
+OffsetXTree* SmsIndex::DataSet::CreateOrReadIdx(const char* idxname)
+{
+  OffsetXTree* idx=new OffsetXTree;
+  char buf[1024];
+  File f;
+  MakeFileName(idxname,buf,false);
+  if(File::Exists(buf))
+  {
+    f.ROpen(buf);
+    idx->ReadFromFile(f);
+  }
+  return idx;
+}
+
+void SmsIndex::DataSet::CreateNew(const char* argDir,int argHour,int argFlushSpeed)
+{
+  maxFlushSpeed=argFlushSpeed;
+  dir=argDir;
+  hour=argHour;
+
+  idIdx=CreateOrReadIdx("smsid");
+  srcIdIdx=CreateOrReadIdx("srcid");
+  dstIdIdx=CreateOrReadIdx("dstid");
+  routeIdIdx=CreateOrReadIdx("routeid");
+  srcAddrIdx=CreateOrReadIdx("srcaddr");
+  dstAddrIdx=CreateOrReadIdx("dstaddr");
 }
 
 
