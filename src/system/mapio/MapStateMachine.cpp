@@ -429,7 +429,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   dialog->id_opened = false;
   if ( !dialog->isQueryAbonentStatus )
   {
-    dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+    dialog->AssignSms(cmd->get_sms_and_forget());
     __map_trace2__("%s: DELIVERY_SM dlg 0x%x %s",__func__,dialog->dialogid_map,RouteToString(dialog).c_str());
     mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress() );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
@@ -1132,7 +1132,7 @@ none_validity:;
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
-  dialog->sms = _sms;
+  dialog->AssignSms(_sms.release());
 }
 
 static void SendSubmitCommand(MapDialog* dialog)
@@ -1372,7 +1372,7 @@ static void SendNextMMS(MapDialog* dialog)
   }else
   {
     dialog->dialogid_smsc = cmd->get_dialogId();
-    dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+    dialog->AssignSms(cmd->get_sms_and_forget());
     SendSms(dialog);
   }
 }
@@ -1793,7 +1793,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               }
               dialog->dialogid_smsc = dialogid_smsc;
               dialog->isQueryAbonentStatus = false;
-              dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+              dialog->AssignSms(cmd->get_sms_and_forget());
               DoUSSRUserResponce(dialog.get());
               return;
             } else if(serviceOp == USSD_USSR_REQ || serviceOp == USSD_USSN_REQ) {
@@ -1828,7 +1828,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                     FormatText("putCommand: ussd req/notify bad state %d, MAP.did 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
                 }
                 dialog->isQueryAbonentStatus = false;
-                dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+                dialog->AssignSms(cmd->get_sms_and_forget());
                 DoUSSDRequestOrNotifyReq(dialog.get());
                 return;
               } else {
@@ -1986,7 +1986,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           StartDialogProcessing(dialog.get(),cmd);
         } else
         {
-          dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
+          dialog->AssignSms(cmd->get_sms_and_forget());
           SendSms(dialog.get());
         }
       }
@@ -3389,7 +3389,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
     sms.setMessageReference(0);
     sms.setDestinationAddress(dest_addr);
-    dialog->sms = _sms;
+    dialog->AssignSms(_sms.release());
     dialog->state = MAPST_WaitUssdDelimiter;
     //dialog->ussdSequence = NextSequence();
     dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_IND);
@@ -3442,7 +3442,6 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     }*/
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
-    SMS* old_sms = dialog->sms.get();
     Address originator = Address(dialog->subsystem.c_str());
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
@@ -3477,7 +3476,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     sms.setDestinationAddress(originator);
     sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR_CONF);
     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
-    dialog->sms = _sms;
+    dialog->AssignSms(_sms.release());
     dialog->state = MAPST_WaitUSSDReqDelim;
     dialog->invokeId = invokeId;
   }MAP_CATCH(dialogueId,0,localSsn);
@@ -3517,7 +3516,6 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     SendOkToSmsc(dialog.get());
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
-    SMS* old_sms = dialog->sms.get();
     Address originator = Address(dialog->subsystem.c_str());
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
@@ -3529,7 +3527,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     sms.setDestinationAddress(originator);
     sms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSN_CONF);
     sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,dialog->ussdMrRef);
-    dialog->sms = _sms;
+    dialog->AssignSms(_sms.release());
     dialog->state = MAPST_WaitUSSDNotifyClose;
     dialog->invokeId = invokeId;
   }MAP_CATCH(dialogueId,0,localSsn);
@@ -3855,7 +3853,7 @@ USHORT_T Et96MapV1BeginSubscriberActivityInd(
     } else {
       sms.setOriginatingAddress(imsi);
     }
-    dialog->sms = _sms;
+    dialog->AssignSms(_sms.release());
   }MAP_CATCH(__dialogid_map,0,localSsn);
   return ET96MAP_E_OK;
 }

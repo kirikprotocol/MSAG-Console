@@ -424,6 +424,11 @@ struct MapDialog{
     return this;
   }
 
+  void AssignSms(SMS* argSms)
+  {
+    MutexGuard g(mutex);
+    sms.reset(argSms);
+  }
 
   void Clean()
   {
