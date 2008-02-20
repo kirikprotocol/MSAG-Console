@@ -328,6 +328,7 @@ void XTPrintData(const IdLtt& data)
   printf("(%lld:%d)",data.offset,data.ltt);
 }
 
+/*
 int memsz[256]={
   0,
 };
@@ -414,7 +415,7 @@ void operator delete[](void* ptr)throw()
   mem-=sz;
   free(ptr);
 }
-
+*/
 
 int main()
 {
