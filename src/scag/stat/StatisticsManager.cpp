@@ -788,7 +788,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     }catch(std::exception & exc){
         if (file.isOpened()) file.Close();
         fileTM.tm_year = 0;
-        throw exc;
+        throw;
     }
 }
 
