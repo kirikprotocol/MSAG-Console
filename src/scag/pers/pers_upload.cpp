@@ -22,11 +22,14 @@
 
 #include "BlocksHSReader.h"
 
+#include "PersClient.h"
+#include "scag/config/ConfigManager.h"
+
 using std::string;
 using namespace scag::pers;
 using namespace smsc::util::config;
-
-static PersServer *ps = NULL;
+using namespace scag::pers::client;
+using scag::config::ConfigManager;
 
 extern "C" static void appSignalHandler(int sig)
 {
@@ -34,7 +37,6 @@ extern "C" static void appSignalHandler(int sig)
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
     {
-        if(ps) ps->Stop();
         smsc_log_info(logger, "Stopping ...");
     }
     else if(sig == SIGHUP)
@@ -48,6 +50,8 @@ extern "C" static void atExitHandler(void)
 {
     smsc::logger::Logger::Shutdown();
 }
+
+
 
 int main(int argc, char* argv[])
 {
@@ -77,6 +81,8 @@ int main(int argc, char* argv[])
 
     try{
         smsc_log_info(logger,  "Starting up %s", getStrVersion());
+
+        ConfigManager::Init();
 
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
@@ -119,6 +125,12 @@ int main(int argc, char* argv[])
 			smsc_log_warn(logger, "Parameter <pers.AbntProfStorage.blocksInFile> missed. Defaul value is 10000");
 		}
 
+        bool sendToPers = false;
+        try { sendToPers = persConfig.getBool("sendToPers"); } 
+        catch (...) { 
+            smsc_log_warn(logger, "Parameter <pers_upload.sendToPers> missed. Defaul value is false");
+        }
+
         if(argc > 1 && !strcmp(argv[1], "--rebuild-index"))
         {
       		smsc_log_info(logger, "Index rebuilding started");                        
@@ -138,15 +150,34 @@ int main(int argc, char* argv[])
         try { host = persConfig.getString("host"); } catch (...) {};
         try { port = persConfig.getInt("port"); } catch (...) {};
 
-        BlocksHSReader<AbntAddr> reader(storageName, storagePath, dataBlockSize, blocksInFile);
+
+        smsc_log_debug(logger, "Client connect to %s:%d", host.c_str(), port);  
+        int timeOut = 1000;
+        int pingTimeOut = 1000;
         int filesCount = 0;
         if (argc > 1) {
           filesCount = atoi(argv[1]);
         } 
-        smsc_log_debug(logger, "will be read %d files", filesCount);
-        reader.readDataFiles(filesCount);
+
+        if (sendToPers) {
+          PersClient::Init(host.c_str(), port, timeOut, pingTimeOut);
+          PersClient& pc = PersClient::Instance();
+          BlocksHSReader<AbntAddr> reader(pc, storageName, storagePath, dataBlockSize, blocksInFile);
+          smsc_log_debug(logger, "will be read %d files", filesCount);
+          reader.readDataFiles(filesCount, sendToPers);
+        } else {
+          PersClient* pc = 0;
+          BlocksHSReader<AbntAddr> reader(*pc, storageName, storagePath, dataBlockSize, blocksInFile);
+          smsc_log_debug(logger, "will be read %d files", filesCount);
+          reader.readDataFiles(filesCount, sendToPers);
+        }
     }
-      
+
+    catch (PersClientException& exc) 
+    {
+        smsc_log_error(logger, "PersClientException: %s Exiting.", exc.what());
+        resultCode = -21;
+    }
     catch (ConfigException& exc) 
     {
         smsc_log_error(logger, "Configuration invalid. Details: %s Exiting.", exc.what());
