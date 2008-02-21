@@ -5,24 +5,22 @@
  attribute name="title" required="true"%><%@
  attribute name="name" required="true"%><%@
  attribute name="opened" required="false"%><%@
+ attribute name="type" required="false"%><%@
+ attribute name="tname" required="false"%><%@
  attribute name="width" required="false"%>
 <c:set var="COLLAPSING_TREE_PREFIX" value="${smf:concat(!empty COLLAPSING_TREE_PREFIX ? COLLAPSING_TREE_PREFIX : '', smf:concat(name, '.'))}" scope="request"/>
 <c:choose>
-    <c:when test="${name=='BillingManager' || name=='SessionManager' || name=='StatisticsManager' || name=='RuleEngine' || name=='admin'
-                    || name=='smpp' || name=='HttpTransport' || name=='Personalization' || name=='LongCallManager' || name=='core'
-                    || name=='perfmon' || name=='smpp' || name=='http' || name=='scmon' || name=='svcmon' || name=='test'
-                    }">
-    <%--           || name=='perfmon1' || name=='perfmon11' || name=='perfmon12' || name=='scmon1' || name=='svcmon1' || name=='smpp1' || name=='http1'--%>
-    <%--                || name=='SessionManager' || name=='StatisticsManager'--%>
-    <%--                || name=='RuleEngine' || name=='admin' || name=='smpp' || name=='HttpTransport' || name=='Personalization' || name=='LongCallManager'--%>
+    <c:when test="${type == 'table'}">
         <table border=0>
-            <tr>
-              <td colaspan=2
-                  <c:choose>
-                    <c:when test="${opened}">class="collapsing_tree_opened"</c:when>
-                    <c:otherwise>            class="closed"</c:otherwise>
-                  </c:choose> onclick="closeProp('${name}');" >
-                <div class="collapsing_tree_closed" id="${name}_div">${title}</div>
+            <tr class="">
+              <td colaspan=2 <c:choose>
+                                <c:when test="${opened}">class="collapsing_tree_opened"</c:when>
+                                <c:otherwise>            class="closed"</c:otherwise>
+                             </c:choose>
+                             <c:choose>
+                                <c:when test="${! empty tname}">onclick="closeProp('${tname}');"> <div class="collapsing_tree_closed" id="${tname}_div">${title}</div></c:when>
+                                <c:otherwise>onclick="closeProp('${name}');"> <div class="collapsing_tree_closed" id="${name}_div">${title}</div></c:otherwise>
+                             </c:choose>
               </td>
             </tr>
             <tr>
