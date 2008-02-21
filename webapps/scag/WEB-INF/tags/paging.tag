@@ -15,7 +15,7 @@
         elem = document.getElementById("startPosition");
         elem.value = pageNum * ${bean.pageSize};
 //       alert("pageNum='" + pageNum + "' startPosition='" + elem.value + "'");
-       opForm.submit();
+       getElementByIdUni("opForm").submit();
        return false;
    }
 </script>
