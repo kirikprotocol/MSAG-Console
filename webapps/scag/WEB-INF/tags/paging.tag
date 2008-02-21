@@ -19,11 +19,11 @@
        return false;
    }
 </script>
-<table class=navbar cellspacing=1 cellpadding=0>
+<table class=navbar cellspacing=1 cellpadding=0 border=0>
     <tr>
-        <td class=first onclick="return tableTag_navigatePage(0)" title="First page"><a href="#">&nbsp;</a></td>
+        <td class=first onclick="return tableTag_navigatePage(0)" title="First page"><a href="#">&nbsp;&nbsp;&nbsp;</a></td>
         <c:if test="${pageCurrent > 0}">
-        <td class=prev onclick="return tableTag_navigatePage(${pageCurrent-1})" title="Previous page"><a href="#">&nbsp;</a></td>
+        <td class=prev onclick="return tableTag_navigatePage(${pageCurrent-1})" title="Previous page"><a href="#">&nbsp;&nbsp;&nbsp;</a></td>
         </c:if>
         <c:forEach var="i"  begin="${pageFirst}" end="${pageLast < 0 ? 0 : pageLast}">
           <td class="<c:choose>
@@ -35,9 +35,9 @@
           </td>
         </c:forEach>
         <c:if test="${pageCurrent+1 < pageTotal}">
-        <td class=next title="Next page" onclick="return tableTag_navigatePage(${pageCurrent+1})"><a href="#">&nbsp;</a></td>
+        <td class=next title="Next page" onclick="return tableTag_navigatePage(${pageCurrent+1})"><a href="#">&nbsp;&nbsp;&nbsp;</a></td>
         </c:if>
-        <td class=last onclick="return tableTag_navigatePage(${pageTotal > 0 ? pageTotal-1 : 0})" title="Last page"><a href="#">&nbsp;</a></td>
+        <td class=last onclick="return tableTag_navigatePage(${pageTotal > 0 ? pageTotal-1 : 0})" title="Last page"><a href="#">&nbsp;&nbsp;&nbsp;</a></td>
         <td class=total><fmt:message>common.table.total</fmt:message>:${bean.totalSize} <fmt:message>common.table.items</fmt:message></td>
         <td class=pageSize><select id="pageSize" name="pageSize" onchange="document.all.startPosition.value=0; opForm.submit();" >
           <option value=  "3" <c:if test="${bean.pageSize ==   3}">selected</c:if>  >3</option>
