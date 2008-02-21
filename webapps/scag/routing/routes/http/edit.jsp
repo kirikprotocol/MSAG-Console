@@ -62,16 +62,16 @@
         </tr>
         <tr id="cgs_http" style="display:block;"><td colspan="9" width="100%">
     <%--<sm-et:section title="Address/USR Placement Options" opened="false"  name="allplacement">--%>
-    <table id="cgs_http1" style="display:none" cellpadding="0" cellspacing="0" width="100%">
-        <tr>
-            <td align="left"><hr></td>
-            <td align="left"><hr></td>
-        </tr>
-    </table>
-    <br>
-    <table id="cgs_http2" style="display:none" width="100%" cellpadding="0" cellspacing="0">
-        <tr>
-            <td>
+        <table id="cgs_http1" style="display:none" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+                <td align="left"><hr></td>
+                <td align="left"><hr></td>
+            </tr>
+        </table>
+        <br>
+        <table id="cgs_http2" style="display:none" width="100%" cellpadding="0" cellspacing="0" border=0>
+            <tr>
+              <td width="45%">
                 <div class="page_subtitle">USR place:</div>
                 <br>
                 <table id="abon_usr_tbl" class="properties_list" cellpadding="0" cellspacing="0">
@@ -172,131 +172,130 @@
                 </c:forEach>
             </table>
         <!--<br>-->
-        <hr width="50%" align="left"/>
-        <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
-            <col width="40%" align="left">
-            <col width="50%" align="left">
-            <col width="0%" align="left">
-            <tr valign="top">
-                <td width="7%"><select id="typeSelectUsrSite" class="txt">
-                    <c:forEach items="${bean.optionTypes}" var="i">
-                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                    </c:forEach>
-                </select>
-                </td>
-                <td width="25%">
-                    <input id="new_site_usr" class="txt" size="50" name="new_site_usr">
-                </td>
-                <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
-<%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
-<%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
-                         onclick="addSiteDefaultUSRplace('new_site_usr', 'typeSelectUsrSite')"
-                         style="cursor:pointer;"></td>
-                <td>&nbsp;</td>
-            </tr>
-        </table>
-        </td>
-    </tr>
-    </table>
-    <br>
-    <!------------------------ address prefix| address place---------------->
-    <table id="cgs_http3" style="display:none" width="100%" cellpadding="0" cellspacing="0">
-        <tr><td>
-        <div class="page_subtitle">&nbsp;</div>
-        <br>
-        <table  width="50%" id="abon_address_tbl" class="properties_list" cellpadding="0" cellspacing="0">
-            <tr>
-                <td>&nbsp;</td>
-                <td valign="top" width="100%">
-                    <sm-ep:properties title="routes.edit.prefix.address" noColoredLines="false" noHeaders="false">
-                        <sm-ep:txt title="routes.edit.ton" name="ton" maxlength="1" styleWidth="20px" validation="port"/>
-                        <sm-ep:txt title="routes.edit.npi" name="npi" maxlength="1" styleWidth="20px" validation="port"/>
-                        <sm-pm:space/>
-                    </sm-ep:properties>
-                </td>
-            </tr>
-        </table>
-            <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
-                <col width="40%" align="left">
-                <col width="50%" align="left">
-                <col width="0%" align="left">
-                <tr valign="top">
-                    <td width="25%">
-                    </td>
-                    <td width="68%">&nbsp;
-                    </td>
-                    <td>&nbsp;</td>
-                </tr>
-            </table>
-        </td>
-            <td width="475" valign="">
-            <div class="page_subtitle">Address place:</div>
-            <br>
-            <table width="50%" id="site_address_tbl" class="properties_list" cellpadding="0" cellspacing="0">
-                <c:set var="rowN" value="0"/>
-                <c:forEach items="${bean.siteAddress}" var="pls">
-                    <tr class="row${rowN%3}" id="site_place_${pls.name}_${rowN}">
-                        <td width="7%"><select id="siteSelect_${pls.name}_${rowN}" name="siteSelect_${pls.name}_${rowN}" class="txt">
-                            <c:forEach items="${bean.optionTypes}" var="i">
-                                <c:choose>
-                                    <c:when test="${pls.type==i}">
-                                        <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
-                                    </c:when>
-                                    <c:otherwise>
-                                        <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
-                                    </c:otherwise>
-                                </c:choose>
-                            </c:forEach>
-                        </select>
-                        </td>
-                        <td>&nbsp;</td>
-                            <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
-                        <td>
-                            <input type="text" size="45" style="color:black;" value="${pls.name}" readonly="true"/>
-                            <input type="hidden" name="siteAddrName" value="${pls.name}">
-                            <input type="hidden" name="siteAddrType" value="${pls.name}_${rowN}">
-                        </td>
-                            <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
-                        <td width="65%"><img src="content/images/but_del.gif" alt=""
-<%--                                             onClick="removeRow(opForm.all.site_address_tbl, 'site_place_${pls.name}_${rowN}');"--%>
-                                             onClick="removeRow('site_address_tbl', 'site_place_${pls.name}_${rowN}');"
-                                             style="cursor:pointer;"></td>
-                    </tr>
-                    <c:set var="rowN" value="${rowN+1}"/>
-                </c:forEach>
-
-            </table>
-            <!--<br>-->
             <hr width="50%" align="left"/>
             <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
                 <col width="40%" align="left">
                 <col width="50%" align="left">
                 <col width="0%" align="left">
                 <tr valign="top">
-                    <td width="7%"><select id="typeSelectSite" class="txt">
+                    <td width="7%"><select id="typeSelectUsrSite" class="txt">
                         <c:forEach items="${bean.optionTypes}" var="i">
                             <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
                         </c:forEach>
                     </select>
                     </td>
                     <td width="25%">
-                        <input id="new_site_address" class="txt" size="50" name="new_site_address">
+                        <input id="new_site_usr" class="txt" size="50" name="new_site_usr">
                     </td>
-                    <td width="68%"><img src="content/images/but_add.gif" alt="Add new Default Address place"
-<%--                                         onclick="addDefaultAddressPlace(opForm.all.new_site_address, opForm.all.typeSelectSite.options[typeSelectSite.selectedIndex].value)"--%>
-                                         onclick="addDefaultAddressPlace('new_site_address', 'typeSelectSite')"
-                                         style="cursor:pointer;"></td>
+                    <td width="68%"><img src="content/images/but_add.gif" alt="Add new Site"
+    <%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
+    <%--                         onclick="addSiteDefaultUSRplace(opForm.all.new_site_usr, opForm.all.typeSelectUsrSite.options[typeSelectUsrSite.selectedIndex].value)"--%>
+                             onclick="addSiteDefaultUSRplace('new_site_usr', 'typeSelectUsrSite')"
+                             style="cursor:pointer;"></td>
                     <td>&nbsp;</td>
                 </tr>
             </table>
-
-        </td>
-         </tr>
+            </td>
+          </tr>
+        </table>
+    <br>
+    <!------------------------ address prefix| address place---------------->
+        <table id="cgs_http3" style="display:none" width="100%" cellpadding="0" cellspacing="0" border=0>
+            <tr>
+              <td width="45%" valign="top">
+<%--                <div class="page_subtitle">&nbsp;</div>--%>
+<%--                <br>--%>
+                <table  width="50%" id="abon_address_tbl" class="properties_list" cellpadding="0" cellspacing="0" border=0>
+                  <tr>
+                    <td valign="top" width="100%">
+                        <sm-ep:properties title="routes.edit.prefix.address" noColoredLines="false" noHeaders="false">
+                        <br>
+                            <sm-ep:txt title="routes.edit.ton" name="ton" maxlength="1" styleWidth="20px" validation="port"/>
+                            <sm-ep:txt title="routes.edit.npi" name="npi" maxlength="1" styleWidth="20px" validation="port"/>
+                            <sm-pm:space/>
+                        </sm-ep:properties>
+                    </td>
+                  </tr>
+                </table>
+                <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+                    <col width="40%" align="left">
+                    <col width="50%" align="left">
+                    <col width="0%" align="left">
+                    <tr valign="top">
+                        <td width="25%">
+                        </td>
+                        <td width="68%">&nbsp;
+                        </td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </table>
+              </td>
+              <td width="473" valign="">
+                <div class="page_subtitle">Address place:</div>
+                <br>
+                <table width="50%" id="site_address_tbl" class="properties_list" cellpadding="0" cellspacing="0">
+                    <c:set var="rowN" value="0"/>
+                    <c:forEach items="${bean.siteAddress}" var="pls">
+                        <tr class="row${rowN%3}" id="site_place_${pls.name}_${rowN}">
+                            <td width="7%"><select id="siteSelect_${pls.name}_${rowN}" name="siteSelect_${pls.name}_${rowN}" class="txt">
+                                <c:forEach items="${bean.optionTypes}" var="i">
+                                    <c:choose>
+                                        <c:when test="${pls.type==i}">
+                                            <option value="${fn:escapeXml(i)}" selected="true">${fn:escapeXml(i)}</option>
+                                        </c:when>
+                                        <c:otherwise>
+                                            <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                                        </c:otherwise>
+                                    </c:choose>
+                                </c:forEach>
+                            </select>
+                            </td>
+                            <td>&nbsp;</td>
+                                <%--<td width="43%">Priority:&nbsp;${pls.name}</td>--%>
+                            <td>
+                                <input type="text" size="45" style="color:black;" value="${pls.name}" readonly="true"/>
+                                <input type="hidden" name="siteAddrName" value="${pls.name}">
+                                <input type="hidden" name="siteAddrType" value="${pls.name}_${rowN}">
+                            </td>
+                                <%--<td>Priority:&nbsp;${pls.priority}</td>--%>
+                            <td width="65%"><img src="content/images/but_del.gif" alt=""
+    <%--                                             onClick="removeRow(opForm.all.site_address_tbl, 'site_place_${pls.name}_${rowN}');"--%>
+                                                 onClick="removeRow('site_address_tbl', 'site_place_${pls.name}_${rowN}');"
+                                                 style="cursor:pointer;"></td>
+                        </tr>
+                        <c:set var="rowN" value="${rowN+1}"/>
+                    </c:forEach>
+                  </table>
+                <!--<br>-->
+                  <hr width="50%" align="left"/>
+                  <table width="50%" class="properties_list" cellpadding="0" cellspacing="0">
+                    <col width="40%" align="left">
+                    <col width="50%" align="left">
+                    <col width="0%" align="left">
+                    <tr valign="top">
+                        <td width="7%"><select id="typeSelectSite" class="txt">
+                            <c:forEach items="${bean.optionTypes}" var="i">
+                                <option value="${fn:escapeXml(i)}">${fn:escapeXml(i)}</option>
+                            </c:forEach>
+                        </select>
+                        </td>
+                        <td width="25%">
+                            <input id="new_site_address" class="txt" size="50" name="new_site_address">
+                        </td>
+                        <td width="68%"><img src="content/images/but_add.gif" alt="Add new Default Address place"
+    <%--                                         onclick="addDefaultAddressPlace(opForm.all.new_site_address, opForm.all.typeSelectSite.options[typeSelectSite.selectedIndex].value)"--%>
+                                             onclick="addDefaultAddressPlace('new_site_address', 'typeSelectSite')"
+                                             style="cursor:pointer;"></td>
+                        <td>&nbsp;</td>
+                    </tr>
+                </table>
+            </td>
+          </tr>
         </table>
 <%--</sm-et:section>--%>
     <!-- empty | route id-->
-    <table id="cgs_http4" style="display:none" width="100%" cellpadding="0" cellspacing="0">
-        <tr><td>
+    <table id="cgs_http4" style="display:none" width="100%" cellpadding="0" cellspacing="0" border=0>
+        <tr><td width="45%">
         <div class="page_subtitle">&nbsp;</div>
         <br>
         <table  width="50%" class="properties_list" cellpadding="0" cellspacing="0">
@@ -386,8 +385,8 @@
     <!-- empty | route id-->
     <br>
     <!-- empty | service id-->
-    <table id="cgs_http5" style="display:none" width="100%" cellpadding="0" cellspacing="0">
-        <tr><td>
+    <table id="cgs_http5" style="display:none" width="100%" cellpadding="0" cellspacing="0" border=0>
+        <tr><td width="45%">
         <div class="page_subtitle">&nbsp;</div>
         <br>
         <table  width="50%" class="properties_list" cellpadding="0" cellspacing="0">
