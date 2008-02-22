@@ -102,6 +102,10 @@ public:
         key++;
         if(!*key)
         {
+          if(unique && ptr->data)
+          {
+            throw DuplicateKeyException(orgkey);
+          }
           ptr->StoreData(value);
         }
       }
