@@ -57,7 +57,7 @@
             }
         }
     </script>
-    <sm-et:section title="Billing Manager" name="BillingManager">
+    <sm-et:section title="Billing Manager" name="BillingManager" type="table">
 <%--        <sm-et:properties>--%>
         <table id="BillingManager" style="display:none">
                 <sm-et:txt title="Config Dir" name="configDir" validation="nonEmpty" onchanged="configChanged();"/>
@@ -71,7 +71,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Session Manager" name="SessionManager">
+    <sm-et:section title="Session Manager" name="SessionManager" type="table">
 <%--        <sm-et:properties>--%>
         <table id="SessionManager" style="display:none">
             <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
@@ -80,7 +80,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Statistics Manager" name="StatisticsManager">
+    <sm-et:section title="Statistics Manager" name="StatisticsManager" type="table">
 <%--        <sm-et:properties>--%>
         <table id="StatisticsManager" style="display:none">
             <sm-et:txt title="statistics Dir" name="statisticsDir" validation="nonEmpty" onchanged="configChanged();"/>
@@ -97,7 +97,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Rule Engine" name="RuleEngine">
+    <sm-et:section title="Rule Engine" name="RuleEngine" type="table">
 <%--        <sm-et:properties>--%>
         <table id="RuleEngine" style="display:none">
             <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
@@ -105,7 +105,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Administration" name="admin">
+    <sm-et:section title="Administration" name="admin" type="table">
 <%--        <sm-et:properties>--%>
         <table id="admin" style="display:none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
@@ -114,7 +114,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="SMPP" name="smpp">
+    <sm-et:section title="SMPP" name="smpp" type="table">
 <%--        <sm-et:properties>--%>
         <table id="smpp" style="display:none" border=0>
             <sm-et:txt title="Host" name="host" type="string" onchanged="configChanged();"/>
@@ -126,7 +126,7 @@
             <sm-et:txt title="Transit Optional Tags" name="transitOptionalTags" type="string" validation="transitOptionalTags" onchanged="configChanged();" comments="config.section.txt.transit_optional_tags.comments"/>
 <%--        </sm-et:properties>--%>
             <tr><td colspan=2>
-                <sm-et:section title="Core" name="core">
+                <sm-et:section title="Core" name="core" type="table">
 <%--            <sm-et:properties>--%>
                     <table id="core" style="display:none">
                         <sm-et:txt title="Event Queue Limit" name="eventQueueLimit" type="int" onchanged="configChanged();"/>
@@ -142,7 +142,7 @@
         </table>
     </sm-et:section>
 
-    <sm-et:section title="Http Transport" name="HttpTransport">
+    <sm-et:section title="Http Transport" name="HttpTransport" type="table">
 <%--        <sm-et:properties>--%>
         <table id="HttpTransport" style="display:none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
@@ -158,7 +158,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Personalization" name="Personalization">
+    <sm-et:section title="Personalization" name="Personalization" type="table">
 <%--        <sm-et:properties>--%>
         <table id="Personalization" style="display:none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
@@ -169,7 +169,7 @@
 <%--        </sm-et:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Long Call Manager" name = "LongCallManager">
+    <sm-et:section title="Long Call Manager" name = "LongCallManager" type="table">
 <%--        <sm-et:properties>--%>
         <table id="LongCallManager" style="display:none">
             <sm-et:txt name="maxTasks" type="int" onchanged="configChanged();"/>

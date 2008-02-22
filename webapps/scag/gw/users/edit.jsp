@@ -67,52 +67,14 @@ function closeProp(id)
             <sm-ep:checks title="users.edit.checks.title" name="roles" values="gw,super_admin,management,routing,stat"
                           valueTitles="users.edit.checks.values.gw,users.edit.checks.values.super_admin,users.edit.checks.values.management,users.edit.checks.values.routing,users.edit.checks.values.stat"/>
             <sm-ep:property title="users.edit.property.preferences">
-<%--                  <sm-et:section title="Performance monitor" name="perfmon">--%>
-<%--                        <sm-et:section title="smpp" name="smpp">--%>
-<%--                        <sm-et:properties>--%>
-<%--                          <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>--%>
-<%--                          <sm-et:txt title="scale" name="scale" validation="positive"/>--%>
-<%--                          <sm-et:txt title="block" name="block" validation="positive"/>--%>
-<%--                        </sm-et:properties>--%>
-<%--                      </sm-et:section>--%>
-<%--                     <sm-et:section title="http" name="http">--%>
-<%--                        <sm-et:properties>--%>
-<%--                          <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>--%>
-<%--                          <sm-et:txt title="scale" name="scale" validation="positive"/>--%>
-<%--                          <sm-et:txt title="block" name="block" validation="positive"/>--%>
-<%--                        </sm-et:properties>--%>
-<%--                      </sm-et:section>--%>
-<%--                      <sm-et:properties>--%>
-<%--                          <sm-et:txt title="vLightGrid" name="vLightGrid" validation="positive"/>--%>
-<%--                          <sm-et:txt title="vMinuteGrid" name="vMinuteGrid" validation="positive"/>--%>
-<%--                      </sm-et:properties>--%>
-<%--                  </sm-et:section>--%>
-<%--                  <sm-et:section title="Center monitor" name="scmon">--%>
-<%--                      <sm-et:properties>--%>
-<%--                          <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>--%>
-<%--                          <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>--%>
-<%--                          <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>--%>
-<%--                          <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>--%>
-<%--                          <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>--%>
-<%--                      </sm-et:properties>--%>
-<%--                  </sm-et:section>--%>
-<%--                  <sm-et:section title="Service points monitor" name="svcmon">--%>
-<%--                      <sm-et:properties>--%>
-<%--                          <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>--%>
-<%--                          <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>--%>
-<%--                          <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>--%>
-<%--                          <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>--%>
-<%--                          <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>--%>
-<%--                      </sm-et:properties>--%>
-<%--                  </sm-et:section>--%>
                 <table border=0>
                   <tr>
 <%--                    <td>&nbsp</td>--%>
                     <td>
-                        <sm-et:section title="Performance monitor" name="perfmon">
+                        <sm-et:section title="Performance monitor" name="perfmon" type="table">
                             <table id="perfmon" style="display:none" border=0>
                                 <tr><td>
-                                  <sm-et:section title="SMPP" name="smpp">
+                                  <sm-et:section title="SMPP" name="smpp" type="table">
                                     <table id="smpp" style="display:none">
                                         <tr><td>
                                           <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
@@ -121,7 +83,7 @@ function closeProp(id)
                                         </td></tr>
                                     </table>
                                   </sm-et:section>
-                                  <sm-et:section title="HTTP" name="http">
+                                  <sm-et:section title="HTTP" name="http" type="table">
                                     <table id="http" style="display:none">
                                         <tr><td>
                                           <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
@@ -138,7 +100,7 @@ function closeProp(id)
                             </table>
                         </sm-et:section>
 
-                 <sm-et:section title="Center monitor" name="scmon">
+                 <sm-et:section title="Center monitor" name="scmon" type="table">
 <%--                     <sm-et:section title="smpp" name="smpp">--%>
 <%--                        <sm-et:properties>--%>
                         <table id="scmon" style="display:none">
@@ -151,7 +113,7 @@ function closeProp(id)
                             </td></tr>
                         </table>
                   </sm-et:section>
-                  <sm-et:section title="Service points monitor" name="svcmon">
+                  <sm-et:section title="Service points monitor" name="svcmon" type="table">
 <%--                     <sm-et:section title="smpp" name="smpp">--%>
 <%--                        <sm-et:properties>--%>
                         <table id="svcmon" style="display:none">
