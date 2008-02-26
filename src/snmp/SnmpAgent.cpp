@@ -104,7 +104,7 @@ static char const ident[] = "$Id$";
         if (vars)
         {
           netsnmp_variable_list *notification_vars = NULL;
-          u_char* buf; int buflen;
+          u_char* buf; size_t buflen;
           if (vars->text.length())
           {
             buf = (u_char*)vars->text.c_str();buflen = vars->text.length();
@@ -136,7 +136,7 @@ static char const ident[] = "$Id$";
                                       buf,buflen);
           }
           oid* poid = 0;
-          int  oidlen = 0;
+          size_t  oidlen = 0;
           switch (vars->status)
           {
             case SnmpAgent::INFO : poid = smscAlertFFMROid; oidlen = OID_LENGTH(smscAlertFFMROid); break;
@@ -327,7 +327,7 @@ static char const ident[] = "$Id$";
       {
         trap(INFO,alarmId,alarmObjCategory,severity,text);
       }
-      void SnmpAgent::trap(alertStatus status,
+      void SnmpAgent::trap(alertStatus argStatus,
                            const char * const alarmId,
                            const char * const alarmObjCategory,
                            alertSeverity severity,
@@ -345,7 +345,7 @@ static char const ident[] = "$Id$";
         rec.alarmObjCategory = alarmObjCategory;
         rec.severity = severity;
         rec.text = text;
-        rec.status = status;
+        rec.status = argStatus;
         smsc::core::synchronization::MutexGuard mg(trapsQueueMon);
         trapsQueue.Push(rec);
         /*

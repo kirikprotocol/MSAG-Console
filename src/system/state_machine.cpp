@@ -813,7 +813,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     memcpy(ptr,body+lastDirectiveSymbol,tailLen);
     ptr+=tailLen;
   }
-  int newlen=tailLen+udhLen;
+  size_t newlen=tailLen+udhLen;
   if(newtext.length())
   {
     bool hb=hasHighBit(newtext.c_str(),newtext.length());
@@ -871,23 +871,23 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     }
   }
   __require__(newlen>=0 && newlen<=65535);
-  smsc_log_info(log,"DIRECT: newlen=%d",newlen);
+  smsc_log_info(log,"DIRECT: newlen=%ld",newlen);
   //#def N# #ack# #noack# #template=name# {name}="value"
   if(newlen>255)
   {
     sms.getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
     sms.getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,0);
-    sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,newlen);
+    sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,(unsigned)newlen);
   }else
   {
     if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
-      sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,newlen);
+      sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,newBody,(unsigned)newlen);
     }else
     {
-      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,newBody,newlen);
-      sms.setIntProperty(Tag::SMPP_SM_LENGTH,newlen);
+      sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,newBody,(unsigned)newlen);
+      sms.setIntProperty(Tag::SMPP_SM_LENGTH,(unsigned)newlen);
     }
   }
 }
@@ -2413,7 +2413,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
         if(srcprof.nick.length())
         {
           try{
-            Address nick(srcprof.nick.length(),5,0,srcprof.nick.c_str());
+            Address nick((uint8_t)srcprof.nick.length(),5,0,srcprof.nick.c_str());
             sms->setOriginatingAddress(nick);
           }catch(...)
           {
@@ -4336,7 +4336,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       rpt.setOriginatingAddress(scAddress);
       char msc[]="";
       char imsi[]="";
-      rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      rpt.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
       rpt.setValidTime(0);
       rpt.setDeliveryReport(0);
       rpt.setArchivationRequested(false);
@@ -4357,8 +4357,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
       char addr[64];
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
-      rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
-      rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,sms.getSubmitTime());
+      rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
+      rpt.setIntProperty(Tag::SMSC_RECEIPTED_MSG_SUBMIT_TIME,(unsigned)sms.getSubmitTime());
       SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
       if((si.interfaceVersion&0xf0)==0x50)
       {
@@ -4948,7 +4948,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   char msc[]="";
   char imsi[]="";
   rpt.lastResult=sms.lastResult;
-  rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+  rpt.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
   rpt.setValidTime(0);
   rpt.setDeliveryReport(0);
   rpt.setArchivationRequested(false);
@@ -4973,7 +4973,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   char addr[64];
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
-  rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+  rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
 
   SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
   if((si.interfaceVersion&0xf0)==0x50)
@@ -5048,7 +5048,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     char msc[]="";
     char imsi[]="";
     rpt.lastResult=sms.lastResult;
-    rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+    rpt.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
     rpt.setValidTime(0);
     rpt.setDeliveryReport(0);
     rpt.setArchivationRequested(false);
@@ -5061,7 +5061,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     char addr[64];
     sms.getDestinationAddress().getText(addr,sizeof(addr));
     rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
-    rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+    rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,(unsigned)time(NULL));
 
     SmeInfo si=smsc->getSmeInfo(sms.getSourceSmeId());
     if((si.interfaceVersion&0xf0)==0x50)
@@ -5460,7 +5460,7 @@ bool StateMachine::processMerge(SbmContext& c)
       c.sms->setIntProperty(Tag::SMPP_DATA_CODING,DataCoding::BINARY);
       dc=DataCoding::BINARY;
     }
-    c.sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
+    c.sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(unsigned)tmp.length());
     c.sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
     c.sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
     c.sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
@@ -5702,8 +5702,8 @@ bool StateMachine::processMerge(SbmContext& c)
             {
               if(order[j]==i)
               {
-                int partlen=j==num-1?tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
-                newci[i-1]=newtmp.length();
+                int partlen=j==num-1?(int)tmp.length()-ci->getOff(j):ci->getOff(j+1)-ci->getOff(j);
+                newci[i-1]=(uint16_t)newtmp.length();
                 newtmp.append(tmp.c_str()+ci->getOff(j),partlen);
 
               }
@@ -5723,7 +5723,7 @@ bool StateMachine::processMerge(SbmContext& c)
         string newtmp;
         for(int i=1;i<=ci->num;i++)
         {
-          int partlen=i==num?tmp.length()-ci->getOff(i-1):ci->getOff(i)-ci->getOff(i-1);
+          int partlen=i==num?(int)tmp.length()-ci->getOff(i-1):ci->getOff(i)-ci->getOff(i-1);
           const unsigned char * part=(const unsigned char *)tmp.c_str()+ci->getOff(i-1);
           partlen-=*part+1;
           part+=*part+1;

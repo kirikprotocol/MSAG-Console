@@ -53,7 +53,7 @@ using smsc::core::buffers::TmpBuf;
 void FileStorage::findEntries(const std::string& location, Array<std::string>& entries,
                               bool files, const char* ext)
 {
-    int extFileLen  = 0;
+    size_t extFileLen  = 0;
     const char* locationStr = location.c_str();
 
     if (files) {
@@ -89,7 +89,7 @@ void FileStorage::findEntries(const std::string& location, Array<std::string>& e
             //printf("%s\tmode:%d\n", pentry->d_name, description.st_mode);
             if (files) {                                        // file
                 if (!(description.st_mode & S_IFDIR)) {
-                    int fileNameLen = strlen(pentry->d_name);
+                    size_t fileNameLen = strlen(pentry->d_name);
                     if (fileNameLen > extFileLen) {
                         const char* extPos = pentry->d_name+(fileNameLen-extFileLen);
                         if ((*extPos == '.') && !strcmp(extPos+1, ext)) entries.Push(pentry->d_name);
@@ -257,12 +257,12 @@ void RollingStorage::init(Manager& config, bool bill)
     Array<std::string> files;
     const char* extension = bill ? SMSC_LAST_BILLING_FILE_EXTENSION:SMSC_LAST_ARCHIVE_FILE_EXTENSION;
     FileStorage::findFiles(storageLocation, extension, files);
-    int extLen = strlen(extension)+1;
+    size_t extLen = strlen(extension)+1;
 
     for (int i=0; i<files.Count(); i++)
     {
         std::string file = files[i];
-        int fileNameLen = file.length();
+        size_t fileNameLen = file.length();
         const char* fileNameStr = file.c_str();
         smsc_log_debug(log, "Found old %s file: %s", (bill ? "billing":"archive"), fileNameStr);
 
@@ -279,7 +279,7 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
     if (storageFile.isOpened()) {
         if (!roll) return false;
         File::offset_type fpos = 0; FileStorage::getPos(&fpos);
-        int headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
+        size_t headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
             (strlen(SMSC_ARCHIVE_HEADER_TEXT) + sizeof(SMSC_ARCHIVE_VERSION_INFO)))+2;
         if (fpos <= headerPos) return false; // file is empty => no rolling
     }
@@ -465,21 +465,21 @@ void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getP
     std::string oa  = sms.originatingAddress.toString();
     std::string da  = sms.destinationAddress.toString();
     std::string dda = sms.dealiasedDestinationAddress.toString();
-    int8_t oaSize   = oa.length();
-    int8_t daSize   = da.length();
-    int8_t ddaSize  = dda.length();
-    int8_t svcSize    = strlen(sms.eServiceType);
-    int8_t odMscSize  = strlen(sms.originatingDescriptor.msc);
-    int8_t odImsiSize = strlen(sms.originatingDescriptor.imsi);
-    int8_t ddMscSize  = strlen(sms.destinationDescriptor.msc);
-    int8_t ddImsiSize = strlen(sms.destinationDescriptor.imsi);
-    int8_t routeSize  = strlen(sms.routeId);
-    int8_t srcSmeSize = strlen(sms.srcSmeId);
-    int8_t dstSmeSize = strlen(sms.dstSmeId);
+    int8_t oaSize   = (int8_t)oa.length();
+    int8_t daSize   = (int8_t)da.length();
+    int8_t ddaSize  = (int8_t)dda.length();
+    int8_t svcSize    = (int8_t)strlen(sms.eServiceType);
+    int8_t odMscSize  = (int8_t)strlen(sms.originatingDescriptor.msc);
+    int8_t odImsiSize = (int8_t)strlen(sms.originatingDescriptor.imsi);
+    int8_t ddMscSize  = (int8_t)strlen(sms.destinationDescriptor.msc);
+    int8_t ddImsiSize = (int8_t)strlen(sms.destinationDescriptor.imsi);
+    int8_t routeSize  = (int8_t)strlen(sms.routeId);
+    int8_t srcSmeSize = (int8_t)strlen(sms.srcSmeId);
+    int8_t dstSmeSize = (int8_t)strlen(sms.dstSmeId);
     int32_t bodyBufferLen = sms.messageBody.getBufferLength();
     int32_t textLen       = 0;
 
-    uint32_t recordSize = sizeof(id)+sizeof(smsState)+sizeof(uint32_t)+sizeof(uint32_t)+
+    uint32_t recordSize =(uint32_t)( sizeof(id)+sizeof(smsState)+sizeof(uint32_t)+sizeof(uint32_t)+
         sizeof(sms.attempts)+sizeof(sms.lastResult)+sizeof(uint32_t)+sizeof(uint32_t)+
         sizeof(oaSize)+oaSize+sizeof(daSize)+daSize+sizeof(ddaSize)+ddaSize+sizeof(sms.messageReference)+
         sizeof(svcSize)+svcSize+sizeof(sms.deliveryReport)+sizeof(sms.billingRecord)+
@@ -487,9 +487,9 @@ void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getP
         sizeof(ddMscSize)+ddMscSize+sizeof(ddImsiSize)+ddImsiSize+sizeof(sms.destinationDescriptor.sme)+
         sizeof(routeSize)+routeSize+sizeof(sms.serviceId)+sizeof(sms.priority)+
         sizeof(srcSmeSize)+srcSmeSize+sizeof(dstSmeSize)+dstSmeSize+
-        sizeof(bodyBufferLen)+bodyBufferLen;
+        sizeof(bodyBufferLen)+bodyBufferLen);
 
-    uint32_t writeBufferSize = recordSize+sizeof(recordSize)*2;
+    uint32_t writeBufferSize = (uint32_t)(recordSize+sizeof(recordSize)*2);
     TmpBuf<char, 2048> writeBufferGuard(writeBufferSize);
     char* writeBuffer = writeBufferGuard.get(); char* position = writeBuffer;
 
@@ -499,13 +499,13 @@ void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getP
     memcpy(position, &idd, sizeof(idd)); position+=sizeof(idd);
     memcpy(position, &smsState, sizeof(smsState)); position+=sizeof(smsState);
 
-    uint32_t writeTime = htonl(sms.submitTime);
+    uint32_t writeTime = htonl((uint32_t)sms.submitTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
-    writeTime = htonl(sms.validTime);
+    writeTime = htonl((uint32_t)sms.validTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
-    writeTime = htonl(sms.lastTime);
+    writeTime = htonl((uint32_t)sms.lastTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
-    writeTime = htonl(sms.nextTime);
+    writeTime = htonl((uint32_t)sms.nextTime);
     memcpy(position, &writeTime, sizeof(writeTime)); position+=sizeof(writeTime);
 
     uint32_t attempts = htonl(sms.attempts);
@@ -810,7 +810,7 @@ void PersistentStorage::open(bool read)
     if (PersistentStorage::create(!read))
     {
         if (read) {
-            int  headerTextLen = strlen(SMSC_ARCHIVE_HEADER_TEXT);
+            size_t  headerTextLen = strlen(SMSC_ARCHIVE_HEADER_TEXT);
             char headerText[128];
             if (FileStorage::read(headerText, headerTextLen)) {
                 headerText[headerTextLen] = '\0';

@@ -48,7 +48,7 @@ int StatusSme::Execute()
   //string answer;
   char msc[]="123";
   char imsi[]="321";
-  s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+  s.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
   s.setDeliveryReport(0);
   s.setArchivationRequested(false);
   s.setEServiceType(servType.c_str());
@@ -79,8 +79,8 @@ int StatusSme::Execute()
     Descriptor d;
     std::string d_imsi="123456";
     std::string d_msc="123456";
-    d.setImsi(d_imsi.length(),d_imsi.c_str());
-    d.setMsc(d_msc.length(),d_msc.c_str());
+    d.setImsi((uint8_t)d_imsi.length(),d_imsi.c_str());
+    d.setMsc((uint8_t)d_msc.length(),d_msc.c_str());
     resp->get_resp()->setDescriptor(d);
     putIncomingCommand(resp);
 
