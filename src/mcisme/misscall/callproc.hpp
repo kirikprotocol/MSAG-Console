@@ -8,6 +8,8 @@
 
 #include <core/buffers/Hash.hpp>
 #include <core/synchronization/Mutex.hpp>
+#include <logger/Logger.h>
+#include <core/network/Socket.hpp>
 
 namespace smsc{
 namespace misscall{
@@ -74,24 +76,42 @@ bool setCalledMask(const char* rx);
 
 class MissedCallProcessor
 {
-  public:
-    static MissedCallProcessor* instance();
-    int  run();
-    void stop();
-    void addMissedCallListener(MissedCallListener* listener);
-    void removeMissedCallListener();
-    void fireMissedCallEvent(MissedCallEvent& event);
-    void setCircuits(Hash<Circuits>& cics);
-    void setRules(vector<Rule>& rules);
-    void setReleaseSettings(ReleaseSettings params);
-    void setRedirectionAddress(const char* address);
-  bool setCountryCode(const char* _countryCode);
+public:
+  typedef enum {REAL_CALL_PROCESOR, CALL_PROCESOR_EMULATOR} instance_type_t;
+  static void setInstanceType(instance_type_t instance_type);
+  static MissedCallProcessor* instance();
+  virtual int  run();
+  virtual void stop();
+  virtual void addMissedCallListener(MissedCallListener* listener);
+  virtual void removeMissedCallListener();
+  virtual void fireMissedCallEvent(MissedCallEvent& event);
+  virtual void setCircuits(Hash<Circuits>& cics);
+  virtual void setRules(vector<Rule>& rules);
+  virtual void setReleaseSettings(ReleaseSettings params);
+  virtual void setRedirectionAddress(const char* address);
+  virtual bool setCountryCode(const char* _countryCode);
 
-  private:
-    MissedCallProcessor();
-    MissedCallListener* listener;
-    static MissedCallProcessor* volatile processor;
-    static Mutex lock;
+protected:
+  MissedCallProcessor();
+
+  MissedCallListener* listener;
+  static MissedCallProcessor* volatile processor;
+  static Mutex lock;
+  static instance_type_t _instanceType;
+};
+
+class MissedCallProcessorEmulator : public MissedCallProcessor
+{
+public:
+  MissedCallProcessorEmulator();
+  virtual int  run();
+  static void setHost(const std::string& host);
+  static void setPort(int port);
+private:
+  smsc::logger::Logger* _logger;
+  smsc::core::network::Socket _serverSocket;
+  static std::string _host;
+  static in_port_t _port;
 };
 
 }//namespace misscall
