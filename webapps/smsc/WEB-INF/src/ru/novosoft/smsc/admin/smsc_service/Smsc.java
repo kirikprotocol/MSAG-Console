@@ -728,7 +728,7 @@ public class Smsc extends Service {
 
     public void applyFraud() throws AdminException {
       if (getInfo().isOnline()) {
-        call(SMSC_COMPONENT_ID, APPLY_FRAUD, Type.Types[Type.BooleanType], new HashMap());
+        call(SMSC_COMPONENT_ID, APPLY_FRAUD, Type.Types[Type.StringType], new HashMap());
       } else {
         throw new AdminException("Can't apply fraud config: SMSC is not running");
       }
