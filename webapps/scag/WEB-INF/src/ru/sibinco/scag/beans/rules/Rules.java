@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class Rules extends SCAGBean {
   private String id;
+    
   public void setId(String id) {
     this.id = id;
   }
