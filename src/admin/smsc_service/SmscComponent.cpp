@@ -18,6 +18,7 @@
 #ifdef SNMP
 #include "system/snmp/SnmpCounter.hpp"
 #endif
+#include "system/mapio/FraudControl.hpp"
 
 namespace smsc {
 namespace admin {
@@ -240,6 +241,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
   Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
   Method apply_timezones       ((unsigned)applyTimeZonesMethod,      "apply_timezones",       empty_params, StringType);
+  Method apply_fraudcontrol    ((unsigned)applyFraudControlMethod,    "apply_fraud",          empty_params, StringType);
 #ifdef SNMP
   Method apply_snmp            ((unsigned)applySnmpMethod,           "apply_snmp",            empty_params, StringType);
 #endif
@@ -335,6 +337,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[apply_services       .getName()] = apply_services;
   methods[apply_locale_resource.getName()] = apply_locale_resource;
   methods[apply_timezones      .getName()] = apply_timezones;
+  methods[apply_fraudcontrol   .getName()] = apply_fraudcontrol;
 #ifdef SNMP
   methods[apply_snmp           .getName()] = apply_snmp;
 #endif
@@ -483,7 +486,9 @@ throw (AdminException)
       case applyTimeZonesMethod:
         applyTimeZones();
         return Variant("");
-
+      case applyFraudControlMethod:
+        applyFraudControl();
+        return Variant("");
       case mscRegistrateMethod:
         mscRegistrate(args);
         return Variant("");
@@ -1837,6 +1842,16 @@ void SmscComponent::applyTimeZones()throw(AdminException)
 {
   try{
     smsc::system::common::TimeZoneManager::getInstance().Reload();
+  }catch(std::exception& e)
+  {
+    throw AdminException("%s",e.what());
+  }
+}
+
+void SmscComponent::applyFraudControl()throw(AdminException)
+{
+  try{
+    smsc::system::mapio::FraudControl::getInstance()->Reload();
   }catch(std::exception& e)
   {
     throw AdminException("%s",e.what());

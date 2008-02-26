@@ -71,6 +71,7 @@ protected:
   void reloadConfigsAndRestart() throw (AdminException);
   void reReadConfigs() throw (AdminException);
   void applyTimeZones()throw(AdminException);
+  void applyFraudControl()throw(AdminException);
 
 #ifdef SNMP
   void applySnmp();
@@ -153,7 +154,7 @@ protected:
   Methods methods;
   enum
   {
-    applyRoutesMethod, applyAliasesMethod, applyRescheduleMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,applyTimeZonesMethod,
+    applyRoutesMethod, applyAliasesMethod, applyRescheduleMethod, applyServicesMethod, applySmscConfigMethod, applyLocaleResourceMethod,applyTimeZonesMethod,applyFraudControlMethod,
     profileLookupMethod, profileUpdateMethod, profileLookupExMethod, profileDeleteMethod,
     flushStatisticsMethod,
     processCancelMessagesMethod,

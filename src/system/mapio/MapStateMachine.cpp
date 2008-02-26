@@ -9,6 +9,7 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
+#include "FraudControl.hpp"
 
 using namespace std;
 
@@ -203,11 +204,21 @@ string MscToString(const ET96MAP_ADDRESS_T* msc)
 }
 
 
-bool FixedAddrCompare(const std::string& addr1,const std::string& addr2)
+bool FixedAddrCompare(const std::string& addr1,const std::string& addr2,int ignoreTail)
 {
   if(addr1==addr2)return true;
   if(addr1.find(addr2)==0)return true;
-  return false;
+  if(ignoreTail==0)return false;
+  size_t l=addr1.length()-1;
+  if(l>addr2.length()-1)l=addr2.length()-1;
+  if(ignoreTail>l)return true;
+  l-=ignoreTail;
+  while(l)
+  {
+    if(addr1[l]!=addr2[l])return false;
+    l--;
+  }
+  return true;
 }
 
 string SS7AddressToString(const ET96MAP_SS7_ADDR_T* addr)
@@ -3204,6 +3215,7 @@ unsigned char  lll_8bit_2_7bit[256] = {
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc, const unsigned routeErr )
 {
+  using namespace smsc::system::mapio;
   __map_trace2__("%s: ismsi %s, msc: %s, state: %d, code: %d",__func__,s_imsi.c_str(),s_msc.c_str(), dialog->state, routeErr);
   static smsc::logger::Logger* fraudLog=smsc::logger::Logger::getInstance("map.fraud");
   if ( dialog->state == MAPST_END ){// already closed
@@ -3222,23 +3234,26 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   }
   else
   {
-    if(fraudLog->isWarnEnabled() && dialog->sms.get())
+    if(FraudControl::getInstance()->enabledCheck && dialog->sms.get())
     {
       if(s_msc.length() && dialog->origAddress.length() &&
          !dialog->isUSSD &&
-         !FixedAddrCompare(dialog->origAddress,s_msc))
+         !FixedAddrCompare(dialog->origAddress,s_msc,FraudControl::getInstance()->ignoreTail))
       {
-        smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, oa=%s, da=%s",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str(),
-                      dialog->sms->getOriginatingAddress().toString().c_str(),
-                      dialog->sms->getDestinationAddress().toString().c_str());
-        if(fraudLog->isDebugEnabled())
+        if(!FraudControl::getInstance()->checkWhiteList(dialog->origAddress.c_str()))
         {
-          smsc_log_debug(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
-          ResponseMO(dialog,9);
-          dialog->state = MAPST_WaitSubmitCmdConf;
-          CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-          DropMapDialog(dialog);
-          return;
+          smsc_log_warn(fraudLog,"FRAUD:dlgId=0x%x, ca=%s, msc=%s, oa=%s, da=%s",dialog->dialogid_map,dialog->origAddress.c_str(),s_msc.c_str(),
+                        dialog->sms->getOriginatingAddress().toString().c_str(),
+                        dialog->sms->getDestinationAddress().toString().c_str());
+          if(FraudControl::getInstance()->enableReject)
+          {
+            smsc_log_debug(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
+            ResponseMO(dialog,9);
+            dialog->state = MAPST_WaitSubmitCmdConf;
+            CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+            DropMapDialog(dialog);
+            return;
+          }
         }
       }
     }
