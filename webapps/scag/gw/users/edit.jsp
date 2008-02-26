@@ -118,7 +118,7 @@ function closeProp(id)
 <%--                        <sm-et:properties>--%>
                         <table id="svcmon" style="display:none">
                           <tr><td>
-                          <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>
+                          <sm-et:txt title="graph.scale" name="graph.scale" validation="positive" readonly="true"/>
                           <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
                           <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>
                           <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>
