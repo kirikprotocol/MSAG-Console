@@ -37,6 +37,7 @@ public class TopMenu extends ArrayList {
               smsItems.add(new MenuItem("menu.smsc.smscenters", "/smsc/smscenters/index.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.regions", "/smsc/regions/regions.jsp", MenuItem.VISIBLE_IN_ALL));
             smsItems.add(new MenuItem("menu.smsc.switch", "/smsc/smsc_service/switch.jsp", MenuItem.VISIBLE_IN_HA));
+            smsItems.add(new MenuItem("menu.smsc.fraud", "/smsc/fraud/fraud.jsp", MenuItem.VISIBLE_IN_ALL));
             add(new MenuItem("menu.smsc", "", smsItems));
 
             Collection statisticItems = new ArrayList();

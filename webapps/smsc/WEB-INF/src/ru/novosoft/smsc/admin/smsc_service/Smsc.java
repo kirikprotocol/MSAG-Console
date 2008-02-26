@@ -94,6 +94,8 @@ public class Smsc extends Service {
 
     private static final String CG_IS_GROUP_USED = "cg_is_group_used";
 
+    private static final String APPLY_FRAUD = "apply_fraud";
+
     public HashMap defaultProfileProps = new HashMap();
 
     private File configFolder = null;
@@ -722,6 +724,14 @@ public class Smsc extends Service {
             throw new AdminException("Error in response");
 
         return ((Boolean) result).booleanValue();
+    }
+
+    public void applyFraud() throws AdminException {
+      if (getInfo().isOnline()) {
+        call(SMSC_COMPONENT_ID, APPLY_FRAUD, Type.Types[Type.BooleanType], new HashMap());
+      } else {
+        throw new AdminException("Can't apply fraud config: SMSC is not running");
+      }
     }
 
     public String getDefaultProfilePropString(final String paramName) {

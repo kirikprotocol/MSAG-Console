@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.fraud.FraudConfigManager;
 import ru.novosoft.smsc.admin.region.RegionsManager;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
@@ -42,6 +43,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     private SmeManager smeManager = null;
     private RouteSubjectManager routeSubjectManager = null;
     private RegionsManager regionsManager = null;
+    private FraudConfigManager fraudConfigManager = null;
     private ResourcesManager resourcesManager = null;
     private ProviderManager providerManager = null;
     private CategoryManager categoryManager = null;
@@ -97,6 +99,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             serviceManager.add(smsc);
             routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
             regionsManager = RegionsManager.getInstance();
+            fraudConfigManager = FraudConfigManager.getInstance();
             switch (Constants.instType) {
                 case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
                     DaemonManagerImpl daemonManagerImpl = new DaemonManagerImpl(smeManager, webappConfig);
@@ -299,6 +302,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
     public RegionsManager getRegionsManager() {
         return regionsManager;
+    }
+
+    public FraudConfigManager getFraudConfigManager() {
+      return fraudConfigManager;
     }
 }
 

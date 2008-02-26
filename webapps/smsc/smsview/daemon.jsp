@@ -162,18 +162,8 @@
         finishSection(out);
         //################################## Indexator #############################
         startSection(out, "Indexator", "smsview.indexator", true);
-        startParams(out);
-        param(out, "smsview.smsIdHashSize", "ArchiveDaemon.Indexator.smsIdHashSize", bean.getIntParam("ArchiveDaemon.Indexator.smsIdHashSize"));
-        param(out, "smsview.smeIdHashSize", "ArchiveDaemon.Indexator.smeIdHashSize", bean.getIntParam("ArchiveDaemon.Indexator.smeIdHashSize"));
-        param(out, "smsview.routeIdHashSize", "ArchiveDaemon.Indexator.routeIdHashSize", bean.getIntParam("ArchiveDaemon.Indexator.routeIdHashSize"));
-        param(out, "smsview.addrHashSize", "ArchiveDaemon.Indexator.addrHashSize", bean.getIntParam("ArchiveDaemon.Indexator.addrHashSize"));
-        param(out, "smsview.smeIdRootSize", "ArchiveDaemon.Indexator.smeIdRootSize", bean.getIntParam("ArchiveDaemon.Indexator.smeIdRootSize"));
-        param(out, "smsview.smeIdChunkSize", "ArchiveDaemon.Indexator.smeIdChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.smeIdChunkSize"));
-        param(out, "smsview.routeIdRootSize", "ArchiveDaemon.Indexator.routeIdRootSize", bean.getIntParam("ArchiveDaemon.Indexator.routeIdRootSize"));
-        param(out, "smsview.routeIdChunkSize", "ArchiveDaemon.Indexator.routeIdChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.routeIdChunkSize"));
-        param(out, "smsview.addrRootSize", "ArchiveDaemon.Indexator.addrRootSize", bean.getIntParam("ArchiveDaemon.Indexator.addrRootSize"));
-        param(out, "smsview.defAddrChunkSize", "ArchiveDaemon.Indexator.defAddrChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
-        param(out, "smsview.maxFlushSpeed", "ArchiveDaemon.Indexator.maxFlushSpeed", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
+        startParams(out);        
+        param(out, "smsview.maxFlushSpeed", "ArchiveDaemon.Indexator.maxFlushSpeed", bean.getIntParam("ArchiveDaemon.Indexator.maxFlushSpeed"));
         finishParams(out);
         startSection(out, "smeAddrChunkSize", "smsview.smeAddrChunkSize", true);
         final String baseSmeSection = SmsDaemonFormBean.SME_PARAMS_SECTION;

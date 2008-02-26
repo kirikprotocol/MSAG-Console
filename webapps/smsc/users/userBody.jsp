@@ -62,6 +62,7 @@
             paramCheck(out, "users.roles.snmp", "roles", "role33", "snmp", bean.isUserInRole("snmp"), null);
             if (SupportExtProfile.enabled)
               paramCheck(out, "users.roles.smscenters", "roles", "role34", "smscenters", bean.isUserInRole("smscenters"), null);
+            paramCheck(out, "users.roles.fraud", "roles", "role35", "fraud", bean.isUserInRole("fraud"), null);
 
             if (bean.getServiceRoles().size() > 0)
                 for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();) {

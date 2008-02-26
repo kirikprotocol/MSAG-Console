@@ -50,7 +50,7 @@
 </tr>
 <tr class=row<%=(rowN++) & 1%>>
     <th><%=getLocString("services.rangeOfAddress")%></th>
-    <td><input class=txt maxlength="41" type="text" name="rangeOfAddress"
+    <td><input class=txt type="text" name="rangeOfAddress"
                value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>"></td>
 </tr>
 <tr class=row<%=(rowN++) & 1%>>
