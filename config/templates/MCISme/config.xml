@@ -39,8 +39,11 @@
         <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>
         <param name="routesFileLocation" type="string">@routesFileLocation@</param>
 			
-        <param name="routesFileLocation" type="bool">GroupSmsByCallingAbonent</param>
-			
+        <param name="GroupSmsByCallingAbonent" type="bool">true</param>
+        <param name="HasStackEmulator" type="bool">false</param>
+        <param name="StackEmulatorHost" type="string">127.0.0.1</param>
+        <param name="StackEmulatorPort" type="int">37000</param>
+
         <section name="SMPPThreadPool">
             <param name="max" type="int">15</param>
             <param name="init" type="int">5</param>
