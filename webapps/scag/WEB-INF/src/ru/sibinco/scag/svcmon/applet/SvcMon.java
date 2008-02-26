@@ -39,7 +39,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     private ScreenSplitter screenSplitter;
 
     private int maxSpeed = 100;
-    private int graphScale = 200;
+    private int graphScale = 1;
     private int graphGrid = 5;
     private int graphHiGrid = 25;
     private int graphHead = 50;
@@ -82,7 +82,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
         locale=localText.getLocale();
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
-        graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
+//        graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
         graphGrid = Integer.valueOf(getParameter("graph.grid")).intValue();
         graphHiGrid = Integer.valueOf(getParameter("graph.higrid")).intValue();
         graphHead = Integer.valueOf(getParameter("graph.head")).intValue();
@@ -179,11 +179,11 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             yScale += SCALE_STEP_Y;
-                            System.out.println("SMPP zoomYInListener " + graphScale);
+                            System.out.println("SMPP zoomYInListener. new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
                         }else if( type.equals(TYPE_HTTP) ){
 //                            graphScale+=SCALE_STEP;
 //                            maxSpeed = 100;
-                            System.out.println("HTTP zoomYInListener " + graphScale);
+                            System.out.println("HTTP zoomYInListener new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
                         }
 //                        smppTopGraph.maxSpeed = 200;
                         smppTopGraph.invalidate();
@@ -215,9 +215,9 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             xScale += SCALE_STEP_X;
-                            System.out.println("SMPP zoomXInListener " + graphScale);
+                            System.out.println("SMPP zoomXInListener new is " + yScale + " Before " + (xScale-SCALE_STEP_X) );
                         }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomXInListener " + graphScale);
+                            System.out.println("HTTP zoomXInListener new is " + yScale + " Before " + (xScale-SCALE_STEP_X) );
                         }
                         smppTopGraph.invalidate();
                     }
