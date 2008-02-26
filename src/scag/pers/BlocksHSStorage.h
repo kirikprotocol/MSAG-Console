@@ -95,6 +95,8 @@ public:
 	static const int DESCR_FILE_CREATE_FAILED		= -6;
 	static const int DESCR_FILE_OPEN_FAILED		= -7;
 	//static const int RBTREE_FILE_ERROR		= -10;
+    static const int CANNOT_OPEN_EXISTS_DESCR_FILE = -8;
+    static const int CANNOT_OPEN_EXISTS_DATA_FILE = -9;
 
 	static const int defaultBlockSize = 56; // in bytes
 	static const int defaultFileSize = 3; // in blocks 
@@ -491,15 +493,20 @@ private:
 
 	int OpenDescriptionFile(void)
 	{
+      string name = dbPath + '/' + dbName;
 		try
 		{
-			descrFile_f.RWOpen((dbPath + '/' + dbName).c_str());
+			descrFile_f.RWOpen(name.c_str());
 			descrFile_f.SetUnbuffered();
 		}
-		catch(FileException ex)
+		catch(const FileException& ex)
 		{
-		    smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
-			return DESCR_FILE_OPEN_FAILED;
+          if (File::Exists(name.c_str())) {
+            smsc_log_error(logger, "FSStorage: idx_file - exists, but can't be opened : %s\n", ex.what());
+            return CANNOT_OPEN_EXISTS_DESCR_FILE;
+          }
+          smsc_log_debug(logger, "FSStorage: error idx_file - %s\n", ex.what());
+          return DESCR_FILE_OPEN_FAILED;
 		}
 		descrFile_f.Read((char*)&descrFile, sizeof(DescriptionFile));
         smsc_log_debug(logger, "OpenDescrFile: files_count=%d, block_size=%d, file_size=%d, blocks_used=%d, blocks_free=%d, first_free_block=%d",
@@ -521,7 +528,7 @@ private:
 				dataFile_f[i]->RWOpen(name.c_str());
 				dataFile_f[i]->SetUnbuffered();
 			}
-			catch(FileException ex)
+			catch(const FileException& ex)
 			{
                 smsc_log_error(logger, "Cannot open data file: %s", ex.what());
 				return CANNOT_OPEN_DATA_FILE;

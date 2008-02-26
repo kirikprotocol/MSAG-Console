@@ -120,8 +120,13 @@ public:
 //      cache.Init(cacheSize);//, (dbPath + dbName).c_str(), dbName + "-cache", mode & FSDB_CLEAR_CACHE);
         if(0 != (ret=dataStorage.Open(dbName + "-data", dbPath + '/' + dbName)))
         {
-    		smsc_log_info(logger, "Create Data Storage %d", ret);
-    		dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize);
+          if (ret == BlocksHSStorage<Key>::CANNOT_OPEN_DATA_FILE ||
+              ret == BlocksHSStorage<Key>::CANNOT_OPEN_EXISTS_DESCR_FILE) {
+            smsc_log_error(logger, "Data Storage Open Failed %d", ret);
+            return ret;
+          } 
+          smsc_log_info(logger, "Create Data Storage %d", ret);
+          dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize);
         }
     	smsc_log_info(logger, "Inited: storageName = '%s',  storagePath = '%s'", dbName.c_str(), dbPath.c_str());
     	smsc_log_info(logger, "Inited: indexGrowth = %d,  blocksInFile = %d", indexGrowth, blocksInFile);
