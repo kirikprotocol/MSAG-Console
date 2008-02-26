@@ -1,6 +1,6 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
- * Generic factory template.
+ * Generic factories templates.
  * ************************************************************************** */
 #ifndef __SMSC_UTIL_FACTORYT_HPP__
 #define __SMSC_UTIL_FACTORYT_HPP__
@@ -32,29 +32,33 @@ protected:
     ProductsMap producers;
 
 public:
+    bool registerProduct(KeyType key, Producer* producer)
+    {
+        std::pair<ProductsMap::iterator, bool> res =
+            producers.insert(ProductsMap::value_type(key, producer));
+        return res.second;
+    }
+    //
+    ProductType* create(KeyType key) const
+    {
+        ProductsMap::const_iterator it = producers.find(key);
+        return (it == producers.end()) ? NULL : it->second->create();
+    }
     //usefull for determining wether the product is registered or not
     Producer * getProducer(KeyType key) const
     {
         ProductsMap::const_iterator it = producers.find(key);
-        if (it == producers.end())
-            return NULL;
-        return (*it).second;
+        return (it == producers.end()) ? NULL : it->second;
     }
 
-    ProductType* create(KeyType key) const
+    //destroys all producers
+    void eraseAll(void)
     {
-        ProductsMap::const_iterator it = producers.find(key);
-        if (it == producers.end())
-            return NULL;
-        return (*it).second->create();
-    }
-
-    void registerProduct(KeyType key, Producer* producer)
-    {
-        producers.insert(ProductsMap::value_type(key, producer));
+        for (ProductsMap::iterator it = producers.begin(); it != producers.end(); ++it)
+            delete it->second;
+        producers.clear();
     }
 };
-
 
 } //util
 } //smsc
