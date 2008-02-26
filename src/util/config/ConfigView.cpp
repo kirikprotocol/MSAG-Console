@@ -23,15 +23,27 @@ char* ConfigView::prepareSubSection(const char* sub)
     }
     return section;
 }
+
 ConfigView::ConfigView(Manager& manager, const char* cat)
     : log(Logger::getInstance("smsc.util.config.ConfigView")),
-        config(manager), category(0)
+        config(manager.getConfig()), category(0)
 {
     if (cat)
     {
         category = prepareSubSection(cat);
     }
 }
+
+ConfigView::ConfigView(Config & use_config, const char* cat)
+    : log(Logger::getInstance("smsc.util.config.ConfigView")),
+        config(use_config), category(0)
+{
+    if (cat)
+    {
+        category = prepareSubSection(cat);
+    }
+}
+
 ConfigView::~ConfigView()
 {
     if (category) delete category;
@@ -97,13 +109,16 @@ int32_t ConfigView::getInt(const char* param, const char* error)
     {
         result = config.getInt(section);
     }
-    catch (ConfigException& exc)
+    catch (const HashInvalidKeyException & exc)
     {
+        std::string s("Int key \"");
+        s += section;
+        s += "\" not found";
+
         smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                  section, (error) ? error:"");
         if (section) delete section;
-        throw;
-
+        throw ConfigException(s.c_str());
     }
     if (section) delete section;
     return result;
@@ -119,13 +134,16 @@ char* ConfigView::getString(const char* param, const char* error, bool check)
         result = new char[strlen(tmp)+1];
         strcpy(result, tmp);
     }
-    catch (ConfigException& exc)
+    catch (const HashInvalidKeyException & exc)
     {
+        std::string s("String key \"");
+        s += section;
+        s += "\" not found";
         if (check)
             smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                      section, (error) ? error:"");
         if (section) delete section;
-        if (check) throw;
+        if (check) throw ConfigException(s.c_str());
         return 0;
     }
     if (section) delete section;
@@ -140,12 +158,17 @@ bool ConfigView::getBool(const char* param, const char* error)
     {
         result = config.getBool(section);
     }
-    catch (ConfigException& exc)
+    catch (const HashInvalidKeyException & exc)
     {
+        std::string s("Bool key \"");
+        s += section;
+        s += "\" not found";
+
         smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
+
         if (section) delete section;
-        throw;
+        throw ConfigException(s.c_str());
     }
     if (section) delete section;
     return result;

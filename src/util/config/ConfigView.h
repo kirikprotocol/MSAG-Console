@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef SMSC_UTIL_CONFIG_CONFIG_VIEW
 #define SMSC_UTIL_CONFIG_CONFIG_VIEW
 
@@ -10,10 +10,13 @@
 
 #include "Manager.h"
 
-namespace smsc { namespace util { namespace config
-{
+namespace smsc {
+namespace util {
+namespace config {
+
     using smsc::logger::Logger;
     using smsc::util::config::Manager;
+    using smsc::util::config::Config;
     using smsc::util::config::ConfigException;
 
     class ConfigView
@@ -22,14 +25,15 @@ namespace smsc { namespace util { namespace config
         
         smsc::logger::Logger *log;
 
-        Manager&    config;
+        Config &    config;
         char*       category;
     
         char* prepareSubSection(const char* sub);
 
     public:
 
-        ConfigView(Manager& manager, const char* cat=0);
+        ConfigView(Manager & manager, const char* cat = 0);
+        ConfigView(Config & use_config, const char* cat = 0);
         virtual ~ConfigView();
         
         inline const char* getInstance() {
