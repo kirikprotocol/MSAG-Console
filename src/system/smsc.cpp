@@ -37,6 +37,7 @@
 #include "closedgroups/ClosedGroupsManager.hpp"
 #include "system/common/TimeZoneMan.hpp"
 #include "alias/AliasManImpl.hpp"
+#include "mapio/FraudControl.hpp"
 
 #ifdef SMSEXTRA
 #include "Extra.hpp"
@@ -419,6 +420,11 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   reloadRoutes(cfg);
   smsc_log_info(log, "Routes loaded" );
 
+  if(!ishs)
+  {
+    mapio::FraudControl::Init(findConfigFile("fraud.xml"));
+  }
+
   /*auto_ptr<RouteManager> router(new RouteManager());
 
   // initialize router (all->all)
@@ -466,6 +472,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   //store=smsc::store::StoreManager::getMessageStore();
   store=scheduler;
   smsc_log_info(log, "Initializing scheduler" );
+  scheduler->DelayInit(this,cfg.cfgman);
+  /*
   if(ishs)
   {
     scheduler->DelayInit(this,cfg.cfgman);
@@ -474,6 +482,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   {
     scheduler->Init(this,cfg.cfgman);
   }
+  */
 
   smeman.registerInternallSmeProxy("scheduler",scheduler);
 
@@ -1248,6 +1257,8 @@ void Smsc::run()
 
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
+
+    mapio::FraudControl::Init(findConfigFile("fraud.xml"));
 
     aliaser->Load();
     smsc_log_info(log, "Aliases loaded" );
