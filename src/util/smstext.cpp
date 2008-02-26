@@ -23,24 +23,24 @@ static inline bool isEscapedChar(char c)
          c=='\\'|| c=='~';
 }
 
-static inline int countEscapedChars(const char* text,int length)
+static inline int countEscapedChars(const char* text,size_t length)
 {
   int res=0;
-  for(int i=0;i<length;i++)
+  for(size_t i=0;i<length;i++)
   {
     if(isEscapedChar(text[i]))res++;
   }
   return res;
 }
 
-int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,Array<SMS*>& dest)
+int splitSms(SMS* tmplSms,const char *text,size_t length,ConvEncodingEnum encoding,int datacoding,Array<SMS*>& dest)
 {
   dest.Clean();
-  int buflen=length*2+4;
+  size_t buflen=length*2+4;
   auto_ptr<char> buf(new char[buflen]);
   bool hb=hasHighBit(text,length);
   int dc;
-  int datalen;
+  size_t datalen;
   if(hb && datacoding==DataCoding::UCS2)
   {
     ConvertMultibyteToUCS2(text,length,(short*)buf.get(),buflen,encoding);
@@ -59,29 +59,29 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
     dc=DataCoding::LATIN1;
   }
   __trace2__("splitSms:dc=%d",dc);
-  int maxlen=dc==DataCoding::LATIN1?160:140;
-  int sent=0;
+  size_t maxlen=dc==DataCoding::LATIN1?160:140;
+  size_t sent=0;
   while(sent<datalen)
   {
     SMS *s=new SMS(*tmplSms);
-    int piece=datalen-sent>maxlen?maxlen:datalen-sent;
+    size_t piece=datalen-sent>maxlen?maxlen:datalen-sent;
     if(dc==DataCoding::LATIN1 && piece==maxlen)piece-=countEscapedChars(buf.get()+sent,piece);
     s->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,dc);
-    s->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get()+sent,piece);
-    s->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,piece);
+    s->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get()+sent,(unsigned)piece);
+    s->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,(unsigned)piece);
     dest.Push(s);
     sent+=piece;
   }
   return dest.Count();
 }
 
-int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,int trimLen)
+size_t fillSms(SMS* sms,const char *text,size_t length,ConvEncodingEnum encoding,int datacoding,int trimLen)
 {
-  int buflen=length*2+4;
+  size_t buflen=length*2+4;
   auto_ptr<char> buf(new char[buflen]);
   bool hb=hasHighBit(text,length);
   int dc;
-  int datalen;
+  size_t datalen;
   if(hb && (datacoding&DataCoding::UCS2)==DataCoding::UCS2)
   {
     ConvertMultibyteToUCS2(text,length,(short*)buf.get(),buflen,encoding);
@@ -148,11 +148,11 @@ int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
   {
     //sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,"",0);
     sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,0);
-    sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),datalen);
+    sms->setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,buf.get(),(unsigned)datalen);
   }else
   {
-    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),datalen);
-    sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,datalen);
+    sms->setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf.get(),(unsigned)datalen);
+    sms->setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,(unsigned)datalen);
   }
   return datalen;
 }
@@ -341,7 +341,7 @@ int partitionSms(SMS* sms)
   {
     msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
   }
-  __trace2__("partitionSms: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
+  __trace2__("partitionSms: len=%ld, dc=%d, dstdc=%d",len,dc,dstdc);
   bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
   int  udhilen=udhi?(1+*((unsigned char*)msg)):0;
   int maxfulllen=140;

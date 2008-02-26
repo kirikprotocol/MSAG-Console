@@ -15,7 +15,7 @@ using namespace smsc::sms;
 using namespace smsc::smpp;
 using namespace smsc::core::buffers;
 
-inline int getSmsText(SMS* sms,char* buf,unsigned bufsize,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
+inline int getSmsText(SMS* sms,char* buf,size_t bufsize,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
@@ -90,7 +90,7 @@ inline int getSmsText(SMS* sms,string& res,ConvEncodingEnum enc=CONV_ENCODING_CP
 }
 
 
-static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
+static inline int getPduText(PduXSm* pdu,char* buf,size_t bufsize)
 {
   int coding;
   unsigned len;
@@ -146,19 +146,19 @@ static inline int getPduText(PduXSm* pdu,char* buf,unsigned bufsize)
   return len;
 }
 
-static inline bool hasHighBit(const char* buf,int len)
+static inline bool hasHighBit(const char* buf,size_t len)
 {
-  for(int i=0;i<len;i++)
+  for(size_t i=0;i<len;i++)
   {
     if((((unsigned char)buf[i])&0x80)!=0)return true;
   }
   return false;
 }
 
-int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,
+int splitSms(SMS* tmplSms,const char *text,size_t length,ConvEncodingEnum encoding,int datacoding,
              Array<SMS*>& dest);
 
-int fillSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int datacoding,int trimLen=65535);
+size_t fillSms(SMS* sms,const char *text,size_t length,ConvEncodingEnum encoding,int datacoding,int trimLen=65535);
 
 void transLiterateSms(SMS* sms,int datacoding);
 

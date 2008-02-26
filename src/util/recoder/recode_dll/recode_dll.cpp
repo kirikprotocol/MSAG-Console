@@ -13,6 +13,7 @@
 #include <ctype.h>
 using namespace std;
 
+
 unsigned char* GetW2CRussionTable(ConvEncodingEnum encoding)
 {
   switch ( encoding ){
@@ -115,10 +116,10 @@ const unsigned char* Translit(unsigned char ch, ConvEncodingEnum encoding, unsig
   }else return res;
 }
 
-int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,int destlen)
+int Transliterate(const char* buf,size_t len,ConvEncodingEnum encoding,char *dest,size_t destlen)
 {
   if(len==0)return 0;
-  int j=0;
+  size_t j=0;
   const unsigned char* res;
   bool prev_is_capital,next_is_capital;
   if(len>1)
@@ -160,9 +161,9 @@ int Transliterate(const char* buf,int len,ConvEncodingEnum encoding,char *dest,i
   return j;
 }
 
-int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, int ucs2buff_size,char* text, int textbuff_size, ConvEncodingEnum encoding)
+int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, size_t ucs2buff_size,char* text, size_t textbuff_size, ConvEncodingEnum encoding)
 {
-  int i;
+  size_t i;
   short c;
   for ( i = 0; i < ucs2buff_size/2; ++i )
   {
@@ -177,9 +178,9 @@ int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, int ucs2buff_size,char
   return i;
 }
 
-int RECODE_DECL ConvertMultibyteToUCS2(const char* text, int textbuff_size,short* ucs2, int ucs2buff_size, ConvEncodingEnum encoding)
+int RECODE_DECL ConvertMultibyteToUCS2(const char* text, size_t textbuff_size,short* ucs2, size_t ucs2buff_size, ConvEncodingEnum encoding)
 {
-  int i;
+  size_t i;
   short c;
   for ( i = 0; i < textbuff_size; ++i )
   {
@@ -195,7 +196,7 @@ struct OutBitStream{
   unsigned char* start;
   unsigned char* out;
   unsigned char* out_end;
-  OutBitStream(unsigned char* out, unsigned size){
+  OutBitStream(unsigned char* out, size_t size){
     mask = 1;
     this->out = out;
     this->start = out;
@@ -220,7 +221,7 @@ struct OutBitStream{
     }
   }
   int Size(){
-    XMessage(("out %x, size %d",out,(out-start)+((mask>1)?1:0)));
+    XMessage(("out %x, size %ld",out,(out-start)+((mask>1)?1:0)));
     return (out-start)+((mask>1)?1:0);
   }
 };
@@ -230,7 +231,7 @@ struct InBitStream{
   const unsigned char* start;
   const unsigned char* in;
   const unsigned char* in_end;
-  InBitStream(const unsigned char* in, unsigned size){
+  InBitStream(const unsigned char* in, size_t size){
     mask = 1;
     this->in = in;
     this->start = in;
@@ -264,10 +265,10 @@ struct InBitStream{
   }
 };
 
-int RECODE_DECL Convert7BitToText(const char* bit7buf, int bit7buf_size,char* text, int textbuf_size)
+int RECODE_DECL Convert7BitToText(const char* bit7buf, size_t bit7buf_size,char* text, size_t textbuf_size)
 {
   InBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
-  int i;
+  size_t i;
   memset(text,0,textbuf_size);
   for ( i=0; i < textbuf_size; ++i ){
     text[i] = bstream.Get();
@@ -275,9 +276,9 @@ int RECODE_DECL Convert7BitToText(const char* bit7buf, int bit7buf_size,char* te
   return i;
 }
 
-int RECODE_DECL ConvertTextTo7Bit(const char* text, int textbuf_size, char* bit7buf, int bit7buf_size,ConvEncodingEnum encoding)
+int RECODE_DECL ConvertTextTo7Bit(const char* text, size_t textbuf_size, char* bit7buf, size_t bit7buf_size,ConvEncodingEnum encoding)
 {
-  XMessage(("ConvertTextTo7Bit(_,text:%d,_,bits:%d,enc:%d)",textbuf_size,bit7buf_size,encoding));
+  XMessage(("ConvertTextTo7Bit(_,text:%ld,_,bits:%ld,enc:%d)",textbuf_size,bit7buf_size,encoding));
   OutBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
   bool prev_is_capital;
   if ( textbuf_size > 1 ) {
@@ -302,8 +303,8 @@ int RECODE_DECL ConvertTextTo7Bit(const char* text, int textbuf_size, char* bit7
   return bstream.Size();
 }
 
-int RECODE_DECL Convert7BitToUCS2(const char* bit7buf, int bit7buf_size,
-                                     short* ucs2, int ucs2buff_size)
+int RECODE_DECL Convert7BitToUCS2(const char* bit7buf, size_t bit7buf_size,
+                                     short* ucs2, size_t ucs2buff_size)
 {
   InBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
   memset(ucs2,0,ucs2buff_size);
@@ -314,10 +315,10 @@ int RECODE_DECL Convert7BitToUCS2(const char* bit7buf, int bit7buf_size,
   return i;
 }
 
-int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
-                                     char* bit7buf, int bit7buf_size)
+int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, size_t ucs2buff_size,
+                                     char* bit7buf, size_t bit7buf_size)
 {
-  XMessage(("ConvertUCS2To7Bit(_,text:%d,_,bits:%d)",ucs2buff_size,bit7buf_size));
+  XMessage(("ConvertUCS2To7Bit(_,text:%ld,_,bits:%ld)",ucs2buff_size,bit7buf_size));
   OutBitStream bstream((unsigned char*)bit7buf,bit7buf_size);
   bool prev_is_capital;
   if ( ucs2buff_size >= 4 ) {
@@ -326,7 +327,7 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
     }else if ( ucs2[1] >= 'A' && ucs2[1] <= 'Z' ) prev_is_capital = true;
     else prev_is_capital = false;
   }
-  for ( int i=0; i < ucs2buff_size/2; ++i )
+  for ( size_t i=0; i < ucs2buff_size/2; ++i )
   {
     unsigned short ch;
     memcpy(&ch,ucs2+i,2);
@@ -345,9 +346,9 @@ int RECODE_DECL ConvertUCS2To7Bit(const short* ucs2, int ucs2buff_size,
   return bstream.Size();
 }
 
-unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, unsigned chars,char* out){
-  unsigned k = 0;
-  for(unsigned i=0; i<chars; ++i){
+unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, size_t chars,char* out){
+  size_t k = 0;
+  for(size_t i=0; i<chars; ++i){
     if ( (in[i]&0x7f) == 0x1b ) {
       if ( ++i>=chars ) throw runtime_error("incorrect input buffer");
       switch(in[i]&0x7f){
@@ -379,9 +380,9 @@ unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, unsigned chars,char
   return k;
 }
 
-unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, unsigned chars,char* out){
-  unsigned k = 0;
-  for(unsigned i=0; i<chars; ++i){
+unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, size_t chars,char* out){
+  size_t k = 0;
+  for(size_t i=0; i<chars; ++i){
     switch(in[i]){
     case '^': out[k++] = 0x1b; out[k++] = 0x14; break;
     case '\f':out[k++] = 0x1b; out[k++] = 0x0a; break;
