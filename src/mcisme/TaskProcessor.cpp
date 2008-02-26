@@ -109,8 +109,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   catch(ConfigException& exc) { svcType = ""; };
   try { daysValid = config->getInt("DaysValid"); }
   catch(ConfigException& exc) { daysValid = 1; };
-  try { daysValid = config->getInt("GroupSmsByCallingAbonent"); }
-  catch(ConfigException& exc) { _groupSmsByCallingAbonent = false; };
+  try { _groupSmsByCallingAbonent = config->getBool("GroupSmsByCallingAbonent"); }
+  catch(ConfigException& exc) { _groupSmsByCallingAbonent = false; }
 
   std::string callingMask = config->getString("CallingMask");
   std::string calledMask = config->getString("CalledMask");
@@ -220,9 +220,33 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   try { countryCode = config->getString("CountryCode"); } catch (...){countryCode = "7";
     smsc_log_warn(logger, "Parameter <MCISme.CountryCode> missed. Default value is '7'(Russia).");}
 
+  smsc::misscall::MissedCallProcessor::instance_type_t instance_type;
+
+  bool hasStackEmulator = false;
+  try {
+    hasStackEmulator = config->getBool("HasStackEmulator");
+    hasStackEmulator = true;
+  } catch(ConfigException& exc) {}
+
+  if ( hasStackEmulator) {
+    smsc::misscall::MissedCallProcessor::setInstanceType(smsc::misscall::MissedCallProcessor::CALL_PROCESOR_EMULATOR);
+    std::string stackEmulatorHost("127.0.0.1");
+    try {
+      stackEmulatorHost = config->getString("StackEmulatorHost");
+    } catch(ConfigException& exc) {}
+
+    int stackEmulatorPort=37000;
+    try {
+      stackEmulatorPort = config->getInt("StackEmulatorPort");
+    } catch(ConfigException& exc) {}
+    smsc::misscall::MissedCallProcessorEmulator::setHost(stackEmulatorHost);
+    smsc::misscall::MissedCallProcessorEmulator::setPort(stackEmulatorPort);
+  } else
+    smsc::misscall::MissedCallProcessor::setInstanceType(smsc::misscall::MissedCallProcessor::REAL_CALL_PROCESOR);
+
   mciModule = new MCIModule(circuitsMap, rules, releaseSettings, redirectionAddress,
                             callingMask.c_str(), calledMask.c_str(), countryCode.c_str());
-    
+
   smsc_log_info(logger, "MCI Module starting...");
   mciModule->Start();
   smsc_log_info(logger, "MCI Module started.");
