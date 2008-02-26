@@ -169,9 +169,9 @@ struct RouteInfo
   std::string dstSubj;
   TrafficRules trafRules;
   bool allowBlocked;
-  signed long providerId;
+  int32_t providerId;
   BillingId billingId;
-  signed long categoryId;
+  int32_t categoryId;
 };
 
 } // namespace router
