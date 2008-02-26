@@ -39,6 +39,8 @@ Logger* missedCallProcessorLogger = 0;
 Mutex MissedCallProcessor::lock;
 MissedCallProcessor* volatile MissedCallProcessor::processor = 0;
 
+MissedCallProcessor::instance_type_t MissedCallProcessor::_instanceType;
+
 int going;
 char countryCode[COUNTRY_CODE_MAX_LEN + 1];
 
@@ -362,13 +364,23 @@ void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
   if (relCauses.strategy == REDIREC_RULE_STRATEGY) strategy = redirect_rule;
 }
 
+void
+MissedCallProcessor::setInstanceType(instance_type_t instance_type)
+{
+  _instanceType = instance_type;
+}
+
 MissedCallProcessor* MissedCallProcessor::instance()
 {
   if ( processor == 0 ) {
     MutexGuard g(lock);
     if ( processor == 0 )
     {
-      processor = new MissedCallProcessor();
+      if ( _instanceType == REAL_CALL_PROCESOR )
+        processor = new MissedCallProcessor();
+      else
+        processor = new MissedCallProcessorEmulator();
+
       smsc::util::regexp::RegExp::InitLocale();
     }
   }
