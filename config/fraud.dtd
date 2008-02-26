@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!ELEMENT fraud (policy, whitelist)>
+<!ELEMENT policy (tail, enableCheck, enableReject)>
+<!ELEMENT whitelist (msc*)>
+
+<!ELEMENT tail EMPTY>
+<!ATTLIST tail  value CDATA #REQUIRED>
+
+<!ELEMENT enableCheck EMPTY>
+<!ATTLIST enableCheck value (true|false) #REQUIRED>
+
+<!ELEMENT enableReject EMPTY>
+<!ATTLIST enableReject value (true|false) #REQUIRED>
+
+<!ELEMENT msc EMPTY>
+<!ATTLIST msc   value CDATA #REQUIRED>

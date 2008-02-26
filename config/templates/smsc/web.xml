@@ -154,6 +154,19 @@
       <transport-guarantee>NONE</transport-guarantee>
     </user-data-constraint>
   </security-constraint>
+  
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/fraud/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>fraud</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
 
   <security-constraint>
     <web-resource-collection>
@@ -566,6 +579,9 @@
   </security-role>
   <security-role>
     <role-name>regions</role-name>
+  </security-role>
+  <security-role>
+    <role-name>fraud</role-name>
   </security-role>
   <security-role>
     <description>Access Control List manager</description>

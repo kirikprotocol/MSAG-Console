@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE fraud SYSTEM "fraud.dtd">
+
+<fraud>
+  <policy>
+    <tail value="0"/>
+    <enableCheck value="false"/>
+    <enableReject value="false"/>
+  </policy>
+  <whitelist>
+  </whitelist>
+</fraud>
