@@ -6,7 +6,7 @@
 <jsp:setProperty name="bean" property="*"/>
 
 <%
-  TITLE=getLocString("infosme.title");
+  TITLE=getLocString("regions.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 
   int beanResult = bean.process(request);
