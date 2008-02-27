@@ -17,7 +17,8 @@ const uint32_t PACKET_LENGTH_SIZE = 4;
 class ConnectionContext{
 public:
 	ConnectionContext(Socket* s) : wantRead(true), lastActivity(time(NULL)),
-                          authed(false), region_id(0), socket(s), batch(false), batch_cmd_count(0) {};
+                                   authed(false), region_id(0), socket(s), batch(false),
+                                   batch_cmd_count(0), transact_batch(false) {};
 	SerialBuffer inbuf, outbuf;
 	bool wantRead, authed;
 	time_t lastActivity;
@@ -25,7 +26,13 @@ public:
     uint32_t region_id;
     Socket* socket;
     bool batch;
+    bool transact_batch;
     uint16_t batch_cmd_count;
+    void cancelBatch() {
+      batch = false;
+      transact_batch = false;
+      batch_cmd_count = 0;
+    }
 };
 
 class PersSocketServer {

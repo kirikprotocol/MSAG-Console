@@ -394,8 +394,125 @@ enum PropertyCmd {
 template <class Key, class RKey, class StorageType>
 class ProfileStore : public StorageType
 {
-private:
-    Mutex mtx;
+public:
+
+  ProfilesStore():needBackup(false) {}; 
+
+  void deleteProfile(const Key& key) {
+    MutexGuard mg(mtx);
+    deleteCachedProfile(key);
+  }
+
+  Profile* createProfile(const Key &key) {
+    MutexGuard mg(mtx);
+    return createCachedProfile(key);
+  }
+
+  void rollBack() {
+    while (!backup.empty()) {
+      Profile *pf = getProfile(backup.back().key, false);
+      if (!pf) {
+        continue;
+      }
+      backup.back().rollBack(pf, dblog);
+      storeProfile(backup.back().key, pf);
+      backup.pop_back();
+    }
+    needBackup = false;
+  }
+
+  void resetBackup() {
+    backup.clear();
+    needBackup = false;
+  }
+
+  void setNeedBackup(bool _needBackup) {
+    needBackup = _needBackup;
+  }
+
+
+  void setProperty(RKey rkey, Property& prop)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      if(prop.isExpired()) {
+        return;
+      }
+      Profile* pf = getProfile(key, true);
+      setProperty(pf, key, prop);
+  };
+
+  bool setProperty(Profile* pf, RKey rkey, Property& prop)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      if(prop.isExpired()) {
+        return false;
+      }
+      setProperty(pf, key, prop);
+      return true;
+  };
+
+  bool delProperty(RKey rkey, const char* nm)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      Profile *pf = getProfile(key, false);
+      return delProperty(pf, key, nm);
+  };
+
+  bool delProperty(Profile* pf, RKey rkey, const char* nm)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      return delProperty(pf, key, nm);
+  };
+
+  bool getProperty(RKey rkey, const char* nm, Property& prop)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      Profile* pf = getProfile(key, false);
+      return getProperty(pf,key,nm,prop);
+  };
+
+  bool getProperty(Profile* pf, RKey rkey, const char* nm, Property& prop)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      return getProperty(pf,key,nm,prop);
+  };
+
+  bool incProperty(RKey rkey, Property& prop, int& result)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      Profile* pf = getProfile(key, true);
+      return incModProperty(pf, key, prop, 0, result);
+  };
+
+  bool incProperty(Profile* pf, RKey rkey, Property& prop, int& result)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      return incModProperty(pf, key, prop, 0, result);
+  };
+
+  bool incModProperty(RKey rkey, Property& prop, uint32_t mod, int& result)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      Profile* pf = getProfile(key, true);
+      return incModProperty(pf, key, prop, mod, result);
+  };
+
+  bool incModProperty(Profile *pf, RKey rkey, Property& prop, uint32_t mod, int& result)
+  {
+      MutexGuard mt(mtx);
+      Key key(rkey);
+      return incModProperty(pf, key, prop, mod, result);
+  };
+
 private:
   struct BackupProperty {
     Key key;
@@ -433,382 +550,132 @@ private:
     private:
     BackupProperty() {};
   };
-  vector<BackupProperty> backup;
-public:
 
-  void deleteProfile(const Key& key) {
-    MutexGuard mg(mtx);
-    deleteCachedProfile(key);
-  }
-
-  Profile* createProfile(const Key &key) {
-    MutexGuard mg(mtx);
-    return createCachedProfile(key);
-  }
-
-  void rollBack() {
-    while (!backup.empty()) {
-      Profile *pf = getProfile(backup.back().key, false);
-      if (!pf) {
-        continue;
+  void setProperty(Profile* pf, const Key& key, Property& prop) {
+    if (!pf) {
+      return;
+    }
+    Property* p = pf->GetProperty(prop.getName().c_str());
+    if(p != NULL)
+    {
+      if (needBackup) {
+        backup.push_back(BackupProperty(key, *p, PROP_SET));
       }
-      backup.back().rollBack(pf, dblog);
-      storeProfile(backup.back().key, pf);
+      p->setValue(prop);
+      p->WriteAccess();
+    }
+    else {
+      if (needBackup) {
+        backup.push_back(BackupProperty(key, prop, PROP_ADD));
+      }
+      pf->AddProperty(prop);
+    }
+    storeProfile(key, pf);
+    smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
+  }
+
+  bool delProperty(Profile *pf, const Key& key, const char* nm) {
+    if (!pf) {
+      return false;
+    }
+    if (needBackup) {
+      Property *p = pf->GetProperty(nm);
+      if (p) {
+        backup.push_back(BackupProperty(key, *p, PROP_DEL));
+      }
+    }
+    if (!pf->DeleteProperty(nm)) {
+      smsc_log_debug(log, "profile %s, property '%s' not found", key.toString().c_str(), nm);
+      return false;
+    }
+    storeProfile(key, pf);
+    smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
+    return true;
+  }
+
+  bool getProperty(Profile *pf, const Key& key, const char* nm, Property& prop) {
+    if (!pf) {
+      return false;
+    }
+    Property* p = pf->GetProperty(nm);
+    if (!p) {
+      smsc_log_debug(log, "profile %s, property '%s' not found", key.toString().c_str(), nm);
+      return false;
+    }
+    if(p->getTimePolicy() == R_ACCESS)
+    {
+        p->ReadAccess();
+        storeProfile(key, pf);
+    }
+    prop = *p;
+    smsc_log_debug(log, "profile %s, getProperty=%s", key.toString().c_str(), prop.toString().c_str());
+    return true;
+  }
+
+  bool incModProperty(Profile *pf, Key key, Property& prop, uint32_t mod, int& result) {
+    if (!pf) {
+      smsc_log_warn(log, "profile key=%s is NULL", key.toString().c_str());
+      return false;
+    }
+    Property* p = pf->GetProperty(prop.getName().c_str());
+
+    if (!p) {
+      if (needBackup) {
+        backup.push_back(BackupProperty(key, prop, PROP_ADD));
+      }
+      result = prop.getIntValue();
+      if(mod) result %= mod;
+      prop.setIntValue(result);
+      pf->AddProperty(prop);
+      storeProfile(key, pf);
+      smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());            
+      return true;
+    }
+
+    if (needBackup) {
+      backup.push_back(BackupProperty(key, *p, PROP_SET));
+    }
+    if(p->getType() == INT && prop.getType() == INT)
+    {
+        result = p->getIntValue() + prop.getIntValue();
+        if(mod) result %= mod;
+        p->setIntValue(result);
+        p->WriteAccess();
+        storeProfile(key, pf);
+        smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+        return true;
+    }
+    /*
+    if(p->getType() == DATE && prop.getType() == DATE)
+    {
+        p->setDateValue(p->getDateValue() + prop.getDateValue());
+        //p->setDateValue(result.getDateValue());
+        p->WriteAccess();
+        storeProfile(key, pf);
+        smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+        return true;
+    }*/
+    if (p->convertToInt() && prop.convertToInt())
+    {
+        result = p->getIntValue() + prop.getIntValue();
+        if(mod) result %= mod;
+        p->setIntValue(result);
+        p->WriteAccess();
+        storeProfile(key, pf);
+        smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
+        smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
+        return true;
+    }
+    if (needBackup) {
       backup.pop_back();
     }
+    return false;
   }
+private:
+    Mutex mtx;
+    bool needBackup;
+    vector<BackupProperty> backup;
 
-  void resetBackup() {
-    backup.clear();
-  }
-
-    void setProperty(RKey rkey, Property& prop, bool needBackup = false)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-
-        if(prop.isExpired())
-            return;
-
-        Profile* pf = getProfile(key, true);
-        Property* p = pf->GetProperty(prop.getName().c_str());
-        if(p != NULL)
-        {
-          if (needBackup) {
-            backup.push_back(BackupProperty(key, *p, PROP_SET));
-          }
-          p->setValue(prop);
-          p->WriteAccess();
-        }
-        else {
-          pf->AddProperty(prop);
-          if (needBackup) {
-            backup.push_back(BackupProperty(key, prop, PROP_ADD));
-          }
-        }
-        storeProfile(key, pf);
-        smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
-    };
-
-    void setProperty(Profile* pf, RKey rkey, Property& prop)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-
-        if(prop.isExpired())
-            return;
-        if (!pf) {
-          return;
-        }
-
-        //Profile* pf = getProfile(key, true);
-        Property* p = pf->GetProperty(prop.getName().c_str());
-        if(p != NULL)
-        {
-            p->setValue(prop);
-            p->WriteAccess();
-        }
-        else
-            pf->AddProperty(prop);
-        storeProfile(key, pf);
-        smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
-    };
-
-    bool delProperty(RKey rkey, const char* nm, bool needBackup = false)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-        Profile *pf = getProfile(key, false);
-
-        bool res = false;
-
-        if(pf != NULL)
-        {
-          if (needBackup) {
-            Property *p = pf->GetProperty(nm);
-            if (p) {
-              backup.push_back(BackupProperty(key, *p, PROP_DEL));
-            }
-          }
-            res = pf->DeleteProperty(nm);
-            storeProfile(key, pf);
-            smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
-        }
-        return res;
-    };
-
-    bool delProperty(Profile* pf, RKey rkey, const char* nm)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-        //Profile *pf = getProfile(key, false);
-
-        bool res = false;
-
-        if(pf != NULL)
-        {
-            res = pf->DeleteProperty(nm);
-            storeProfile(key, pf);
-            smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
-        }
-        return res;
-    };
-
-    bool getProperty(RKey rkey, const char* nm, Property& prop)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-
-        Profile* pf = getProfile(key, false);
-
-//        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
-        if(pf != NULL)
-        {
-            Property* p = pf->GetProperty(nm);
-
-            if(p != NULL)
-            {
-                if(p->getTimePolicy() == R_ACCESS)
-                {
-                    p->ReadAccess();
-                    storeProfile(key, pf);
-                }
-                prop = *p;
-                smsc_log_debug(log, "profile %s, getProperty=%s", key.toString().c_str(), prop.toString().c_str());
-                return true;
-            }
-        }
-        return false;
-    };
-
-    bool getProperty(Profile* pf, RKey rkey, const char* nm, Property& prop)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-
-        //Profile* pf = getProfile(key, false);
-
-//        smsc_log_debug(dblog, "G key=\"%s\" name=\"%s\"", key.toString().c_str(), nm);
-        if(pf != NULL)
-        {
-            Property* p = pf->GetProperty(nm);
-
-            if(p != NULL)
-            {
-                if(p->getTimePolicy() == R_ACCESS)
-                {
-                    p->ReadAccess();
-                    storeProfile(key, pf);
-                }
-                prop = *p;
-                smsc_log_debug(log, "profile %s, getProperty=%s", key.toString().c_str(), prop.toString().c_str());
-                return true;
-            }
-        }
-        return false;
-    };
-
-    bool incProperty(RKey rkey, Property& prop, int& result, bool needBackup = false)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-        Profile* pf = getProfile(key, true);
-        Property* p = pf->GetProperty(prop.getName().c_str());
-        if(p != NULL)
-        {
-          if (needBackup) {
-            backup.push_back(BackupProperty(key, *p, PROP_SET));
-          }
-            if(p->getType() == INT && prop.getType() == INT)
-            {
-                result = p->getIntValue() + prop.getIntValue();
-                p->setIntValue(result);
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-            else if(p->getType() == DATE && prop.getType() == DATE)
-            {
-                p->setDateValue(p->getDateValue() + prop.getDateValue());
-                //p->setDateValue(result.getDateValue());
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-            if (p->convertToInt() && prop.convertToInt())
-            {
-                result = p->getIntValue() + prop.getIntValue();
-                p->setIntValue(result);
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
-                smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-
-            if (needBackup) {
-              backup.pop_back();
-            }
-            return false;
-        }
-        else
-        {
-          if (needBackup) {
-            backup.push_back(BackupProperty(key, prop, PROP_ADD));
-          }
-            pf->AddProperty(prop);
-            storeProfile(key, pf);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());                                    
-            return true;
-        }
-    };
-
-    bool incProperty(Profile* pf, RKey rkey, Property& prop)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-        //Profile* pf = getProfile(key, true);
-        if (!pf) {
-          return false;
-        }
-        Property* p = pf->GetProperty(prop.getName().c_str());
-        if(p != NULL)
-        {
-            if(p->getType() == INT && prop.getType() == INT)
-            {
-                p->setIntValue(p->getIntValue() + prop.getIntValue());
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-            else if(p->getType() == DATE && prop.getType() == DATE)
-            {
-                p->setDateValue(p->getDateValue() + prop.getDateValue());
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-            if (p->convertToInt() && prop.convertToInt())
-            {
-                p->setIntValue(p->getIntValue() + prop.getIntValue());
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
-                smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-        }
-        else
-        {
-            pf->AddProperty(prop);
-            storeProfile(key, pf);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());                                    
-            return true;
-        }
-        return false;
-    };
-
-    bool incModProperty(RKey rkey, Property& prop, uint32_t mod, int& res, bool needBackup = false)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-        Profile* pf = getProfile(key, true);
-        Property* p = pf->GetProperty(prop.getName().c_str());
-        if(p != NULL)
-        {
-          if (needBackup) {
-            backup.push_back(BackupProperty(key, *p, PROP_SET));
-          }
-            if(p->getType() == INT && prop.getType() == INT)
-            {
-                res = p->getIntValue() + prop.getIntValue();
-                if(mod) res %= mod;
-                p->setIntValue(res);
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            } 
-            if (p->convertToInt() && prop.convertToInt())
-            {
-              res = p->getIntValue() + prop.getIntValue();
-              if(mod) res %= mod;
-              p->setIntValue(res);
-              p->WriteAccess();
-              storeProfile(key, pf);
-              smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
-              smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-              return true;
-            }
-            if (needBackup) {
-              backup.pop_back();
-            }
-            return false;
-        }
-        else
-        {
-          if (needBackup) {
-            backup.push_back(BackupProperty(key, prop, PROP_ADD));
-          }
-            res = prop.getIntValue();
-            if(mod) res %= mod;
-            prop.setIntValue(res);
-            pf->AddProperty(prop);
-            storeProfile(key, pf);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());            
-            return true;
-        }
-    };
-
-    bool incModProperty(Profile *pf, RKey rkey, Property& prop, uint32_t mod, int& res)
-    {
-        MutexGuard mt(mtx);
-        Key key(rkey);
-        //Profile* pf = getProfile(key, true);
-        if (!pf) {
-          return false;
-        }
-        Property* p = pf->GetProperty(prop.getName().c_str());
-        if(p != NULL)
-        {
-            if(p->getType() == INT && prop.getType() == INT)
-            {
-                res = p->getIntValue() + prop.getIntValue();
-                if(mod) res %= mod;
-                p->setIntValue(res);
-                p->WriteAccess();
-                storeProfile(key, pf);
-                smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-                return true;
-            }
-            if (p->convertToInt() && prop.convertToInt())
-            {
-              res = p->getIntValue() + prop.getIntValue();
-              if(mod) res %= mod;
-              p->setIntValue(res);
-              p->WriteAccess();
-              storeProfile(key, pf);
-              smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
-              smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
-              return true;
-            }
-        }
-        else
-        {
-            res = prop.getIntValue();
-            if(mod) res %= mod;
-            prop.setIntValue(res);
-            pf->AddProperty(prop);
-            storeProfile(key, pf);
-            smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());            
-            return true;
-        }
-        return false;
-    };
 };
 
 typedef ProfileStore<IntProfileKey, uint32_t, HashProfileStore<IntProfileKey> > IntProfileStore;

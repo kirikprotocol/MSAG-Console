@@ -47,6 +47,7 @@ protected:
 
     void rollbackCommands(PersServerResponseType error_code);
     void resetStroragesBackup();
+    void setNeedBackup(bool needBackup);
 
 protected:
     Logger * plog;

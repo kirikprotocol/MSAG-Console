@@ -19,8 +19,8 @@ PersServer::PersServer(const char* persHost_, int persPort_, int maxClientCount_
     int_store[0].store = service;
     int_store[1].store = oper;
     int_store[2].store = provider;
-    AbonentStore = abonent;
     transactBatch = false;
+    AbonentStore = abonent;
 }
 
 IntProfileStore* PersServer::findStore(ProfileType pt)
@@ -48,12 +48,12 @@ PersServerResponseType PersServer::DelCmdHandler(ProfileType pt, uint32_t int_ke
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "DelCmdHandler AbonetStore: key=%s, name=%s", str_key.c_str(), name.c_str());
-        exists = AbonentStore->delProperty(str_key.c_str(), name.c_str(), transactBatch);
+        exists = AbonentStore->delProperty(str_key.c_str(), name.c_str());
     }
     else if(is = findStore(pt))
     {
         smsc_log_debug(plog, "DelCmdHandler store= %d, key=%d, name=%s", pt, int_key, name.c_str());
-        exists = is->delProperty(int_key, name.c_str(), transactBatch);
+        exists = is->delProperty(int_key, name.c_str());
     }
     PersServerResponseType result = exists ? RESPONSE_OK : RESPONSE_PROPERTY_NOT_FOUND;
     SendResponse(osb, result);
@@ -96,12 +96,12 @@ PersServerResponseType PersServer::SetCmdHandler(ProfileType pt, uint32_t int_ke
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "SetCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.toString().c_str());
-        AbonentStore->setProperty(str_key.c_str(), prop, transactBatch);
+        AbonentStore->setProperty(str_key.c_str(), prop);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "SetCmdHandler store=%d, key=%d, prop=%s", pt, int_key, prop.toString().c_str());
-        is->setProperty(int_key, prop, transactBatch);
+        is->setProperty(int_key, prop);
     }
     SendResponse(osb, RESPONSE_OK);
     return RESPONSE_OK;
@@ -115,12 +115,12 @@ PersServerResponseType PersServer::IncCmdHandler(ProfileType pt, uint32_t int_ke
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
-        exists = AbonentStore->incProperty(str_key.c_str(), prop, result, transactBatch);
+        exists = AbonentStore->incProperty(str_key.c_str(), prop, result);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
-        exists = is->incProperty(int_key, prop, result, transactBatch);
+        exists = is->incProperty(int_key, prop, result);
     }
     if (exists) {
       SendResponse(osb, RESPONSE_OK);
@@ -140,12 +140,12 @@ PersServerResponseType PersServer::IncResultCmdHandler(ProfileType pt, uint32_t 
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "IncResultCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
-        exists = AbonentStore->incProperty(str_key.c_str(), prop, result, transactBatch);
+        exists = AbonentStore->incProperty(str_key.c_str(), prop, result);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "IncResultCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
-        exists = is->incProperty(int_key, prop, result, transactBatch);
+        exists = is->incProperty(int_key, prop, result);
     }
     if (exists) {
       SendResponse(osb, RESPONSE_OK);
@@ -165,12 +165,12 @@ PersServerResponseType PersServer::IncModCmdHandler(ProfileType pt, uint32_t int
     if(pt == PT_ABONENT)
     {
         smsc_log_debug(plog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
-        exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res, transactBatch);
+        exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res);
     }
     else if(is = findStore(pt))    
     {
         smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
-        exists = is->incModProperty(int_key, prop, mod, res, transactBatch);
+        exists = is->incModProperty(int_key, prop, mod, res);
     }
     if(exists) 
     {
@@ -189,7 +189,6 @@ bool PersServer::processPacket(ConnectionContext& ctx)
     SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
     osb.SetPos(4);
     try{
-        transactBatch = false;
 		execCommand(isb, osb);
 		SetPacketSize(osb);
 		return true;
@@ -276,7 +275,7 @@ PersServerResponseType PersServer::execCommand(SerialBuffer& isb, SerialBuffer& 
         }
         case PC_TRANSACT_BATCH: 
         {
-          transactBatch = true;
+          setNeedBackup(true);
           uint16_t cnt = isb.ReadInt16();
           while(cnt--) {
             PersServerResponseType result = execCommand(isb, osb);
@@ -322,14 +321,24 @@ void PersServer::rollbackCommands(PersServerResponseType error_code) {
   for (int i = 0; i < INT_STORE_CNT; ++i) {
     int_store[i].store->rollBack();
   }
+  transactBatch = false;
 }
 
 void PersServer::resetStroragesBackup() {
+  smsc_log_debug(plog, "Reset strorages backup");
   AbonentStore->resetBackup();
   for (int i = 0; i < INT_STORE_CNT; ++i) {
     int_store[i].store->resetBackup();
   }
+  transactBatch = false;
 }
 
+void PersServer::setNeedBackup(bool needBackup) {
+  transactBatch = needBackup;
+  AbonentStore->setNeedBackup(needBackup);
+  for (int i = 0; i < INT_STORE_CNT; ++i) {
+    int_store[i].store->setNeedBackup(needBackup);
+  }
+}
 
 }}
