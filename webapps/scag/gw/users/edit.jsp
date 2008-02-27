@@ -61,73 +61,60 @@ function closeProp(id)
                 </c:otherwise>
             </c:choose>
 
-            <%--sm-ep:list title="provider" name="providerId" values="${fn:join(bean.providerIds, ',')}"
-                        valueTitles="${fn:join(bean.providerNames, ',')}" rowId="id_Providers_list"/--%>
-
             <sm-ep:checks title="users.edit.checks.title" name="roles" values="gw,super_admin,management,routing,stat"
                           valueTitles="users.edit.checks.values.gw,users.edit.checks.values.super_admin,users.edit.checks.values.management,users.edit.checks.values.routing,users.edit.checks.values.stat"/>
+            <c:set var="prop_rowN_prev" value="${prop_rowN}" scope="request"/>
             <sm-ep:property title="users.edit.property.preferences">
-                <table border=0>
+                <sm-ep:properties>
                   <tr>
-<%--                    <td>&nbsp</td>--%>
                     <td>
                         <sm-et:section title="Performance monitor" name="perfmon" type="table">
-                            <table id="perfmon" style="display:none" border=0>
+                            <sm-ep:properties id="perfmon" display="none">
                                 <tr><td>
                                   <sm-et:section title="SMPP" name="smpp" type="table">
-                                    <table id="smpp" style="display:none">
-                                        <tr><td>
+                                    <sm-ep:properties id="smpp" display="none">
                                           <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
                                           <sm-et:txt title="scale" name="scale" validation="positive"/>
                                           <sm-et:txt title="block" name="block" validation="positive"/>
-                                        </td></tr>
-                                    </table>
+                                    </sm-ep:properties>
                                   </sm-et:section>
                                   <sm-et:section title="HTTP" name="http" type="table">
-                                    <table id="http" style="display:none">
-                                        <tr><td>
+                                      <sm-ep:properties id="http" display="none">
                                           <sm-et:txt title="pixPerSecond" name="pixPerSecond" validation="positive"/>
                                           <sm-et:txt title="scale" name="scale" validation="positive"/>
                                           <sm-et:txt title="block" name="block" validation="positive"/>
-                                        </td></tr>
-                                    </table>
+                                      </sm-ep:properties>
                                   </sm-et:section>
-                                  <table><tr><td>
+                                  <table class="list">
                                   <sm-et:txt title="vLightGrid" name="vLightGrid" validation="positive"/>
                                   <sm-et:txt title="vMinuteGrid" name="vMinuteGrid" validation="positive"/>
-                                  </td></tr></table>
+                                  </table>
                                 </td></tr>
-                            </table>
+                              </sm-ep:properties>
                         </sm-et:section>
 
                  <sm-et:section title="Center monitor" name="scmon" type="table">
-<%--                     <sm-et:section title="smpp" name="smpp">--%>
-<%--                        <sm-et:properties>--%>
-                        <table id="scmon" style="display:none">
-                            <tr><td>
+                        <sm-ep:properties id="scmon" display="none">
                               <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>
                               <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
                               <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>
                               <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>
                               <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>
-                            </td></tr>
-                        </table>
+                        </sm-ep:properties>
                   </sm-et:section>
                   <sm-et:section title="Service points monitor" name="svcmon" type="table">
-<%--                     <sm-et:section title="smpp" name="smpp">--%>
-<%--                        <sm-et:properties>--%>
-                        <table id="svcmon" style="display:none">
-                          <tr><td>
+                        <sm-ep:properties id="svcmon" display="none">
                           <sm-et:txt title="graph.scale" name="graph.scale" validation="positive" readonly="true"/>
                           <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
                           <sm-et:txt title="graph.higrid" name="graph.higrid" validation="positive"/>
                           <sm-et:txt title="graph.head" name="graph.head" validation="positive"/>
                           <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>
-                          </td></tr>
-                        </table>
+                        </sm-ep:properties>
                   </sm-et:section>
-                  </td></tr></table>
+                </td></tr>
+              </sm-ep:properties>
             </sm-ep:property>
+            <c:set var="prop_rowN" value="${prop_rowN_prev+1}" scope="request"/>
             <sm-ep:txt title="users.edit.txt.firstname" name="firstName" validation="nonEmpty"/>
             <sm-ep:txt title="users.edit.txt.lastmame" name="lastName" validation="nonEmpty"/>
             <sm-ep:txt title="users.edit.txt.dept" name="dept"/>
