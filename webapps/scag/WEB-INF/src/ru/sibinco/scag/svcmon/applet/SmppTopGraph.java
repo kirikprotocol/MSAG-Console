@@ -127,8 +127,8 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.maxSpeed = maxSpeed;
         this.localeText = localeText;
         this.graphScale = graphScale;
-        this.graphGrid = graphGrid;
-        this.graphGrid = (int)Math.round(graphGrid*0.1)*10;
+//        this.graphGrid = graphGrid;
+        this.graphGrid = graphGrid<=5? 5:(int)Math.round(graphGrid*0.1)*10;
         this.graphHiGrid = graphHiGrid;
         this.graphHead = graphHead;
         this.snapSmppHistory = snapSmppHistory;
@@ -138,6 +138,8 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         graphFont = new Font("dialog", Font.PLAIN, 10);
         setSnap(snap);
         this.smppViewList = viewList;
+//        System.out.println("--------\nSmppTopGraphstart: SmppTopGraphstart(): \nthis.maxSpeed=" + this.maxSpeed + "\nthis.graphScale=" + this.graphScale +
+//                "\nthis.graphGrid=" + this.graphGrid + "\nthis.graphHiGrid=" + this.graphHiGrid + "\nthis.graphHead=" + this.graphHead + "\n---------");
     }
 
 
@@ -461,7 +463,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         barHeight = new Float(smesnap.smppSpeed[SmppSnap.DELIVERED_INDEX] * graphScale * yScale).intValue();
         g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
 //        spent += barHeight;
-    //        int graphStart = barx+barwidth;
+//        int graphStart = barx+barwidth;
 //  Y
         g.setColor(graphColor);
         System.out.println("drawGraph():fm.getHeight()='" + fm.getHeight() + "'\t top='" + top + "'");
@@ -475,23 +477,26 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(lineLeft, y, size.width - pad - pad, y);
         y--;
 
-        int gridStep = 5;
+        int gridStep =5;
+        gridStep = this.graphGrid;
         int endBar = barx + barwidth*3;
+//System.out.println("---------\nSmppTopGraphstart: drawGraph(): \nthis.maxSpeed=" + this.maxSpeed + "\nthis.graphScale=" + this.graphScale +
+//                "\nthis.graphGrid=" + this.graphGrid + "\nthis.graphHiGrid=" + this.graphHiGrid + "\nthis.graphHead=" + this.graphHead + "\n---------");
 //  horizontal line
         for (int i = graphGrid; ; i += graphGrid) {
             int pos = y - i * graphScale;
             g.setColor(graphGridColor);
-            for( int ii= pos+gridStep; ii<pos+graphGrid; ii += gridStep ){
-                g.drawLine(lineLeft, ii, size.width - pad, ii);
+//            for( int ii= pos+gridStep; ii<pos+graphGrid; ii += gridStep ){
+//                g.drawLine(lineLeft, ii, size.width - pad, ii);
 //                g.drawLine(endBar, ii, size.width - pad, ii);
-            }
+//            }
             if (pos <= top) break;
             if ((i % graphHiGrid) == 0) {
                 g.setColor(graphHiGridColor);
             } else {
                 g.setColor(graphGridColor);
             }
-            g.setColor(graphHiGridColor);
+//            g.setColor(graphHiGridColor);
             g.drawLine(lineLeft, pos, size.width - pad, pos);
         }
 // draw vertical scale
@@ -518,14 +523,14 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
             if ((i % graphHiGrid) == 0)
                 g.setColor(graphHiGridColor);
             else
-            g.setColor(graphHiGridColor);
+                g.setColor(graphGridColor);
             g.drawLine(pos, top+1, pos, y-1);
 //            g.drawLine(pos-1, top, pos-1, y);
-            g.setColor(graphGridColor);
-            for( int ii= pos-gridStep; ii>pos-graphGrid; ii -= gridStep ){
-                if(ii>endBar)
-                    g.drawLine(ii, top+1, ii, y);
-            }
+//            g.setColor(graphGridColor);
+//            for( int ii= pos-gridStep; ii>pos-graphGrid; ii -= gridStep ){
+//                if(ii>endBar)
+//                    g.drawLine(ii, top+1, ii, y);
+//            }
         }
 //        int gsz = (snapSmppHistory.countSmmp - 1) * graphScale;
         int gsz = (snapSmppHistory.countSmmp - 1) * xScale;
