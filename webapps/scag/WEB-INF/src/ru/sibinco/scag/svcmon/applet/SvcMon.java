@@ -87,7 +87,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         graphHiGrid = Integer.valueOf(getParameter("graph.higrid")).intValue();
         graphHead = Integer.valueOf(getParameter("graph.head")).intValue();
 
-        System.out.println("INIT:maxSpeed=" + maxSpeed);
+        System.out.println("INIT:\nmaxSpeed=" + maxSpeed + "\ngraph.grid=" + graphGrid + "\ngraph.hiGrid=" + graphHiGrid + "\ngraph.head=" + graphHead );
         setFont(new Font("Dialog", Font.BOLD, 14));
         setLayout(new GridBagLayout());
         setBackground(SystemColor.control);
