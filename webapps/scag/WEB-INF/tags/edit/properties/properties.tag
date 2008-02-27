@@ -7,7 +7,7 @@
 <%@ attribute name="noHeaders" required="false" %>
 <%@ attribute name="noEdit" required="false" %>
 <%@ attribute name="id" required="false" %>
-<%@ attribute name="closed" required="false" %>
+<%@ attribute name="display" required="false" %>
 
 <c:set var="SCAG_EDIT_PROPERTIES_noColoredLines" value="${noColoredLines}" scope="request"/>
 <c:set var="SCAG_EDIT_PROPERTIES_noHeaders" value="${noHeaders}" scope="request"/>
@@ -19,11 +19,12 @@
 
 <div class=page_subtitle><c:if test="${!empty title}"><fmt:message>${fn:escapeXml(title)}</fmt:message></c:if></div>
 
-<table <c:if test="${!empty id}">id="${id}"</c:if> <c:if test="${closed}">style="display:none"</c:if> class=properties_list cellspacing=0 cellpadding=0>
-    <c:if test="${!SCAG_EDIT_PROPERTIES_noHeaders}">
-        <col width="15%">
-        <col width="100%">
-    </c:if>
-    <c:set var="prop_rowN" value="0" scope="request"/>
+<table  <c:if test="${!empty id}">id="${id}"</c:if>
+        <c:if test="${! empty display}">style="display:${display}"</c:if> class=properties_list cellspacing=0 cellpadding=0>
+        <c:if test="${!SCAG_EDIT_PROPERTIES_noHeaders}">
+            <col width="15%">
+            <col width="100%">
+        </c:if>
+        <c:set var="prop_rowN" value="0" scope="request"/>
     <jsp:doBody/>
 </table>
