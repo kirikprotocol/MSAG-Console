@@ -7,25 +7,32 @@
  attribute name="opened" required="false"%><%@
  attribute name="type" required="false"%><%@
  attribute name="tname" required="false"%><%@
+ attribute name="classs" required="false"%><%@
  attribute name="width" required="false"%>
+
 <c:set var="COLLAPSING_TREE_PREFIX" value="${smf:concat(!empty COLLAPSING_TREE_PREFIX ? COLLAPSING_TREE_PREFIX : '', smf:concat(name, '.'))}" scope="request"/>
 <c:choose>
     <c:when test="${type == 'table'}">
-        <table border=0>
-            <tr class="">
-              <td colaspan=2 <c:choose>
-                                <c:when test="${opened}">class="collapsing_tree_opened"</c:when>
-                                <c:otherwise>            class="closed"</c:otherwise>
-                             </c:choose>
-                             <c:choose>
-                                <c:when test="${! empty tname}">onclick="closeProp('${tname}');"> <div class="collapsing_tree_closed" id="${tname}_div">${title}</div></c:when>
-                                <c:otherwise>onclick="closeProp('${name}');"> <div class="collapsing_tree_closed" id="${name}_div">${title}</div></c:otherwise>
-                             </c:choose>
+        <table class="list" border=0>
+            <tr <c:if test="${!empty classs}">class="${classs}"</c:if> >
+              <td colaspan=2
+                    <c:choose>
+                        <c:when test="${opened}">class="collapsing_tree_opened"</c:when>
+                        <c:otherwise>            class="closed"</c:otherwise>
+                    </c:choose>
+                    <c:choose>
+                        <c:when test="${! empty tname}">onclick="closeProp('${tname}');">
+                                    <div class="collapsing_tree_closed" id="${tname}_div">${title}</div>
+                        </c:when>
+                        <c:otherwise>onclick="closeProp('${name}');">
+                                    <div class="collapsing_tree_closed" id="${name}_div">${title}</div>
+                        </c:otherwise>
+                    </c:choose>
               </td>
             </tr>
-            <tr>
-                <td><%--<table id="${name}" style="display:none"><tr><td>--%>
-                    <jsp:doBody/> <%--        </td></tr></table>--%>
+            <tr <c:if test="${!empty classs}">class="${classs}"</c:if> >
+                <td>                            <%--<table id="${name}" style="display:none"><tr><td>--%>
+                    <jsp:doBody/>               <%--        </td></tr></table>--%>
                 </td>
             </tr>
         </table>

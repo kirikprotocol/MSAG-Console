@@ -68,7 +68,7 @@ function closeProp(id)
                 <sm-ep:properties>
                   <tr>
                     <td>
-                        <sm-et:section title="Performance monitor" name="perfmon" type="table">
+                        <sm-et:section title="Performance monitor" name="perfmon" type="table" classs="row${prop_rowN_prev%2}">
                             <sm-ep:properties id="perfmon" display="none">
                                 <tr><td>
                                   <sm-et:section title="SMPP" name="smpp" type="table">
@@ -93,7 +93,7 @@ function closeProp(id)
                               </sm-ep:properties>
                         </sm-et:section>
 
-                 <sm-et:section title="Center monitor" name="scmon" type="table">
+                 <sm-et:section title="Center monitor" name="scmon" type="table" classs="row${prop_rowN_prev%2}">
                         <sm-ep:properties id="scmon" display="none">
                               <sm-et:txt title="graph.scale" name="graph.scale" validation="positive"/>
                               <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
@@ -102,7 +102,7 @@ function closeProp(id)
                               <sm-et:txt title="max.speed" name="max.speed" validation="positive"/>
                         </sm-ep:properties>
                   </sm-et:section>
-                  <sm-et:section title="Service points monitor" name="svcmon" type="table">
+                  <sm-et:section title="Service points monitor" name="svcmon" type="table" classs="row${prop_rowN_prev%2}">
                         <sm-ep:properties id="svcmon" display="none">
                           <sm-et:txt title="graph.scale" name="graph.scale" validation="positive" readonly="true"/>
                           <sm-et:txt title="graph.grid" name="graph.grid" validation="positive"/>
