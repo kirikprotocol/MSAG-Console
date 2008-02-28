@@ -55,9 +55,11 @@ public class Edit extends TabledEditBeanImpl {
     private String unlockRuleSMPP = null;
     private String unlockRuleHTTP = null;
     private String unlockRuleMMS  = null;
+
     private String editRuleSMPP = null;
     private String editRuleHTTP = null;
     private String editRuleMMS  = null;
+
     private String deleteRuleSMPP = null;
     private String deleteRuleHTTP = null;
     private String deleteRuleMMS = null;
@@ -234,6 +236,7 @@ public class Edit extends TabledEditBeanImpl {
         }
         if (getEditId() == null ) {
             if( serviceProvidersManager.isUniqueServiceName(name, "-1") ){
+                logger.error( "services/service/Edit:save():new service:name '" + name + "' is unique" );
                     Service service = new Service(getName(), getDescription());
                     serviceProviderId = Long.decode(getParentId());
 //                    editId = parentId;
@@ -244,10 +247,10 @@ public class Edit extends TabledEditBeanImpl {
                 throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
             }
         } else {
-            if( !serviceProvidersManager.isUniqueServiceName(name, getEditId()) ){
-                logger.error( "services/service/Edit:save():edit service:name '" + name + "' is not unique" );
-                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-            }
+//            if( !serviceProvidersManager.isUniqueServiceName(name, getEditId()) ){
+//                logger.error( "services/service/Edit:save():edit service:name '" + name + "' is not unique" );
+//                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+//            }
             if( editChild ) {
                     serviceProviderId = Long.decode(getEditId());
                     ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
@@ -326,8 +329,8 @@ public class Edit extends TabledEditBeanImpl {
         try {
             appContext.getRuleManager().removeRule(Long.toString(id), transport, RuleManager.NON_TERM_MODE, getLoginedPrincipal().getName());
         } catch (SibincoException se) {
-           logger.error("Couldn't remove rule",se);
-           throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
+            logger.error("Couldn't remove rule",se);
+            throw new SCAGJspException(Constants.errors.rules.COULD_NOT_REMOVE_RULE, se);
         } finally {
             appContext.getRuleManager().unlockRule(Long.toString(id), transport);
         }
@@ -530,5 +533,22 @@ public class Edit extends TabledEditBeanImpl {
     public void setUnlockRuleMMS(String unlockRuleMMS) {
         this.unlockRuleMMS = unlockRuleMMS;
     }
+
+//    public RuleState getSmppRuleState() {
+//        return (appContext.getRuleManager().getRuleState(
+//                editChild? getEditId(): getParentId(),
+//                Transport.SMPP_TRANSPORT_NAME));
+//    }
+//
+//    public RuleState getHttpRuleState() {
+//        return (appContext.getRuleManager().getRuleState(
+//                editChild? getEditId(): getParentId(), Transport.HTTP_TRANSPORT_NAME));
+//    }
+//
+//    public RuleState getMmsRuleState() {
+//        return (appContext.getRuleManager().getRuleState(
+//                editChild? getEditId(): getParentId(), Transport.MMS_TRANSPORT_NAME));
+//    }
+
 
 }
