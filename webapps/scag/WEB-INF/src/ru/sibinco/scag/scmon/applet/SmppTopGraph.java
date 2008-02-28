@@ -17,6 +17,8 @@ import java.awt.event.KeyEvent;
 import java.util.ResourceBundle;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionListener, KeyListener {
     static final int pad = 1;
@@ -52,7 +54,9 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     int topSpace = pad;
     int counterWidth = 0;
     int smeNameWidth = 0;
-    int maxSpeed = 50;
+    int maxSpeed = 200;
+    int yScale = 1;
+    int xScale = 10;
     int rowHeight = SmppSnap.COUNTERS * 2;
     RemoteResourceBundle localeText;
     int graphScale;
@@ -85,6 +89,8 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     HashSet smppViewList;
 
+    int rest = 0;
+
     public SmppTopGraph(ScSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
                         int graphHead, RemoteResourceBundle localeText,
@@ -113,7 +119,8 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.maxSpeed = maxSpeed;
         this.localeText = localeText;
         this.graphScale = graphScale;
-        this.graphGrid = graphGrid;
+//        this.graphGrid = graphGrid;
+        this.graphGrid = graphGrid<=5? 5:(int)Math.round(graphGrid*0.1)*10;
         this.graphHiGrid = graphHiGrid;
         this.graphHead = graphHead;
         this.snapSmppHistory = snapSmppHistory;
@@ -142,7 +149,20 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.graphScale = scale;
         if (smppComparator != null)
             this.snap.sortSmppSnaps(smppComparator);
+        repaint();
+    }
 
+    public void setSnap(ScSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, float yScale) {
+        snapSmppHistory.addSnap(snap);
+        this.snap = new ScSnap(snap);
+        this.smppViewList = viewList;
+        this.graphScale = scale;
+        this.maxSpeed = maxSpeed;
+        this.yScale = (int)yScale;
+        this.xScale = (int)xScale;
+        if (smppComparator != null)
+            this.snap.sortSmppSnaps(smppComparator);
+        rest += 1;
         repaint();
     }
 
@@ -252,6 +272,23 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     void drawSeparator(Graphics g, Dimension size) {
         g.setColor(SystemColor.control);
+        int stepUp = 10;
+        g.fillRect(pad, 0, separatorWidth, size.height);
+        if (split > 0) g.fillRect(0, size.height - split - stepUp, size.width, separatorWidth);
+        int sl = (separatorWidth - 2) / 2;
+        //int vp = errListWidth + pad + sl;
+        int vp = pad + sl;
+        int hp = size.height - split + sl - stepUp;
+        g.setColor(SystemColor.controlHighlight);
+        g.drawLine(vp + 1, pad + 1, vp + 1, size.height - pad);
+        if (split > 0) g.drawLine(pad + 1, hp + 1, size.width - pad - 1, hp + 1);
+        g.setColor(SystemColor.controlShadow);
+        g.drawLine(vp, pad, vp, size.height - pad - 1);
+        if (split > 0) g.drawLine(pad, hp, size.width - pad, hp);
+    }
+
+    void drawSeparator_(Graphics g, Dimension size) {
+        g.setColor(SystemColor.control);
         g.fillRect(pad, 0, separatorWidth, size.height);
         if (split > 0) g.fillRect(0, size.height - split, size.width, separatorWidth);
         int sl = (separatorWidth - 2) / 2;
@@ -341,6 +378,192 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     void drawGraph(Graphics g, Dimension size) {
+//        System.out.println("drawGraph():start");
+        g.setColor(graphHiGridColor);
+        FontMetrics fm = getFontMetrics(graphFont);
+        int fh = fm.getHeight();
+        int height = split - separatorWidth - pad;
+        System.out.println( "size.height=" + size.height + " size.width=" + size.getWidth() );
+        int top = size.height - height;
+        System.out.println("top="+ top + " | heigth=" + height);
+        int y = size.height - pad - fh - pad;
+        int barwidth = (graphTextWidth - 3 * barSeparator - 5 * pad) / 2;
+        g.setFont(graphFont);
+// draw bars
+        int barx = pad + graphTextWidth + barSeparator + pad + barwidth-2;
+        g.setColor(graphBarBGColor);
+        SmppSnap smesnap = snapSmppHistory.getSmppLast();
+
+        if (smesnap == null) return;
+        int spent = 0;
+// last Rejected
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top+1, barwidth, maxSpeed);
+        g.setColor(colorGraphRejected);
+        int barHeight = new Float(smesnap.smppSpeed[SmppSnap.REJECTED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight, barwidth, barHeight);
+        spent += barHeight;
+// last Gw Rejected
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top+1, barwidth, maxSpeed);
+        g.setColor(colorGraphGwRejected);
+        barHeight = new Float(smesnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+        spent += barHeight;
+// last Accepted
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top+1, barwidth, maxSpeed);
+        g.setColor(colorGraphAccepted);
+        barHeight = new Float(smesnap.smppSpeed[SmppSnap.ACCEPTED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+        spent = 0;
+// last Failed
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top+1, barwidth, maxSpeed);
+        g.setColor(colorGraphFailed);
+        barHeight = new Float(smesnap.smppSpeed[SmppSnap.FAILED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight, barwidth, barHeight);
+        spent += barHeight;
+// last Deliver
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top+1, barwidth, maxSpeed);
+        g.setColor(colorGraphDeliver);
+        barHeight = new Float(smesnap.smppSpeed[SmppSnap.DELIVERED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+//        spent += barHeight;
+//        int graphStart = barx+barwidth;
+//  Y
+        g.setColor(graphColor);
+        System.out.println("drawGraph():fm.getHeight()='" + fm.getHeight() + "'\t top='" + top + "'");
+        for (int i = 0; y - (i * graphScale) >= top; i += graphHead) {
+//        for (int i = 0; (i * graphScale) <maxSpeed; i += graphHead) {
+            String s = String.valueOf( new Float(i/yScale).intValue() );
+            g.drawString(s, graphTextWidth - fm.stringWidth(s), y - (i * graphScale) + fm.getDescent()+5);
+        }
+//  time line
+        int lineLeft = pad + graphTextWidth + pad;
+        g.drawLine(lineLeft, y, size.width - pad - pad, y);
+        y--;
+
+        int gridStep =5;
+        gridStep = this.graphGrid;
+        int endBar = barx + barwidth*3;
+//System.out.println("---------\nSmppTopGraphstart: drawGraph(): \nthis.maxSpeed=" + this.maxSpeed + "\nthis.graphScale=" + this.graphScale +
+//                "\nthis.graphGrid=" + this.graphGrid + "\nthis.graphHiGrid=" + this.graphHiGrid + "\nthis.graphHead=" + this.graphHead + "\n---------");
+//  horizontal line
+        for (int i = graphGrid; ; i += graphGrid) {
+            int pos = y - i * graphScale;
+            g.setColor(graphGridColor);
+//            for( int ii= pos+gridStep; ii<pos+graphGrid; ii += gridStep ){
+//                g.drawLine(lineLeft, ii, size.width - pad, ii);
+//                g.drawLine(endBar, ii, size.width - pad, ii);
+//            }
+            if (pos <= top) break;
+            if ((i % graphHiGrid) == 0) {
+                g.setColor(graphHiGridColor);
+            } else {
+                g.setColor(graphGridColor);
+            }
+//            g.setColor(graphHiGridColor);
+            g.drawLine(lineLeft, pos, size.width - pad, pos);
+        }
+// draw vertical scale
+        int right = size.width - pad - pad;
+        int graphStart = 2 * pad + separatorWidth;
+
+        SmppSnap prevsnap = smesnap;
+        int lastVert = 0 ;
+        //  draw separator bars/graph
+        int posX = endBar;
+        g.setColor(colorBackground);
+        for(int ii = 1; ii<=barwidth; ii++){
+            posX = endBar-ii;
+            g.drawLine(posX, top, posX, y+1);
+        }
+
+        for (int i = 0; ; i += graphGrid) {
+            int pos = right - i * graphScale;
+//            if (pos < graphStart) break;
+            if (pos < endBar) {
+                break;
+            }
+            lastVert = pos;
+            if ((i % graphHiGrid) == 0){
+                g.setColor(graphHiGridColor);
+//                if(rest*graphGrid>graphHiGrid){
+//                    rest = 0;
+//                }
+//                pos = (pos-rest*graphGrid)>endBar? pos-rest*graphGrid: pos;
+            } else {
+                g.setColor(graphGridColor);
+            }
+            g.drawLine(pos, top+1, pos, y-1);
+//            g.drawLine(pos-1, top, pos-1, y);
+//            g.setColor(graphGridColor);
+//            for( int ii= pos-gridStep; ii>pos-graphGrid; ii -= gridStep ){
+//                if(ii>endBar)
+//                    g.drawLine(ii, top+1, ii, y);
+//            }
+        }
+//        int gsz = (snapSmppHistory.countSmmp - 1) * graphScale;
+        int gsz = (snapSmppHistory.countSmmp - 1) * xScale;
+//  draw graph
+        for (int i = 0; i < gsz; i += xScale) {
+//        for (int i = 0; i < gsz; i += graphScale) {
+//            cou++;
+            int pos = right - i;
+            if (pos < graphStart) break;
+            if (pos < lastVert) break;
+
+            if (prevsnap != null) {
+                smesnap = snapSmppHistory.getPrevSmpp();
+                if (smesnap != null && pos>endBar) {
+//                    cou = 0;
+                    drawGraphLine(g, pos, y, smesnap.smppSpeed[SmppSnap.REJECTED_INDEX], prevsnap.smppSpeed[SmppSnap.REJECTED_INDEX], 0, 0, colorGraphRejected);
+
+                    drawGraphLine(g, pos, y, smesnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX], prevsnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX],
+                                  smesnap.smppSpeed[SmppSnap.REJECTED_INDEX], prevsnap.smppSpeed[SmppSnap.REJECTED_INDEX], colorGraphGwRejected);
+
+                    drawGraphLine(g, pos, y, smesnap.smppSpeed[SmppSnap.ACCEPTED_INDEX], prevsnap.smppSpeed[SmppSnap.ACCEPTED_INDEX],
+                                  smesnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX]+smesnap.smppSpeed[SmppSnap.REJECTED_INDEX],
+                                  prevsnap.smppSpeed[SmppSnap.GW_REJECTED_INDEX]+prevsnap.smppSpeed[SmppSnap.REJECTED_INDEX], colorGraphAccepted);
+
+                    drawGraphLine(g, pos, y, smesnap.smppSpeed[SmppSnap.FAILED_INDEX], prevsnap.smppSpeed[SmppSnap.FAILED_INDEX], 0, 0, colorGraphFailed);
+
+                    drawGraphLine(g, pos, y, smesnap.smppSpeed[SmppSnap.DELIVERED_INDEX], prevsnap.smppSpeed[SmppSnap.DELIVERED_INDEX],
+                                  smesnap.smppSpeed[SmppSnap.FAILED_INDEX], prevsnap.smppSpeed[SmppSnap.FAILED_INDEX], colorGraphDeliver);
+                }
+                prevsnap = smesnap;
+            }
+        }
+        g.setColor(graphColor);
+//  draw time scale
+        int ty = size.height - pad - fm.getDescent();
+//        SimpleDateFormat sdf = new SimpleDateFormat("yyyy MMMM dd HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        Calendar cal = Calendar.getInstance();
+        for (int i = graphHead; ; i += graphHead) {
+            int pos = right - (int)(i * graphScale);
+            String s = String.valueOf((int)(i/xScale));
+            cal.add( Calendar.SECOND, -(graphHead/xScale));
+            s = sdf.format( cal.getTime() );
+            int sw = fm.stringWidth(s) / 2;
+//            if (pos - sw < graphStart) break;
+            if (pos - sw < endBar) break;
+            g.drawString(s, pos - sw, ty);
+        }
+        g.setColor(colorBackground);
+        g.drawLine(0, top - 1, 0, size.height);
+        g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
+        g.setFont(getFont());
+        System.out.println("drawGraph():end");
+    }
+
+    void drawGraph_(Graphics g, Dimension size) {
         g.setColor(graphHiGridColor);
         FontMetrics fm = getFontMetrics(graphFont);
         int fh = fm.getHeight();
@@ -460,6 +683,18 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     }
 
     protected void drawGraphLine(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
+        if (snapVal == 0 && prevSnapVal == 0) return;
+        g.setColor(color);
+        int y1 = (y - (snapVal * yScale + underGraphVal*yScale) );
+        int y2 = ( y - ( (prevSnapVal + underGraphPrevVal)*yScale ) );
+        int x1 = new Float( (x - xScale) ).intValue();
+        int x2 = new Float(x).intValue();
+        System.out.println("x1='" + x1 + "'\tx2='" + x2+ "'\ty1='" + y1+ "'\ty2='" + y2 + "'\n-------------");
+        g.drawLine(x1, y1, x2, y2);
+//        g.drawLine(x - graphScale, y - (snapVal + underGraphVal) * graphScale, x, y - (prevSnapVal + underGraphPrevVal) * graphScale);
+    }
+
+    protected void drawGraphLine_(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
         if (snapVal == 0 && prevSnapVal == 0) return;
         g.setColor(color);
         g.drawLine(x - graphScale, y - (snapVal + underGraphVal) * graphScale, x, y - (prevSnapVal + underGraphPrevVal) * graphScale);
