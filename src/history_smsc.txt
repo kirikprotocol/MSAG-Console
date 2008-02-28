@@ -90,3 +90,10 @@ B3004:
     SMSC	Sms field cleanup in mapdialog on release
     SMSC	Inman final not OK report delivery fixes for USSD
     Webadm	Add Src Sme ID filter into routes. Fix FIlter in routes
+B3005:
+    SMSC	Fraud control white list, number detection now tunable
+    MCISme	Send from abonent address feature now configurable, can be turned on o off
+    Archiver	Use radix trees instead of diskhash for indexes.
+    Archiver	Indexes now build on hourly basis instead of days
+    Webadm	Range of address limit extended to 512
+    Webadm	Fraud control configuration and management
