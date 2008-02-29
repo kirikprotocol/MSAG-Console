@@ -247,10 +247,10 @@ public class Edit extends TabledEditBeanImpl {
                 throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
             }
         } else {
-//            if( !serviceProvidersManager.isUniqueServiceName(name, getEditId()) ){
-//                logger.error( "services/service/Edit:save():edit service:name '" + name + "' is not unique" );
-//                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
-//            }
+            if( !serviceProvidersManager.isUniqueServiceName( name, (isEditChild()?getParentId():getEditId()) ) ){
+                logger.error( "services/service/Edit:save():edit service:name '" + name + "' is not unique" );
+                throw new SCAGJspException( Constants.errors.services.CAN_NOT_SAVE_SERVICE_NOT_UNIQUE_NAME, name );
+            }
             if( editChild ) {
                     serviceProviderId = Long.decode(getEditId());
                     ServiceProvider serviceProvider = (ServiceProvider) serviceProvidersManager.getServiceProviders().get(serviceProviderId);
