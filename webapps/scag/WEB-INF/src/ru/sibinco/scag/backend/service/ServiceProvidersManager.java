@@ -379,7 +379,9 @@ public class ServiceProvidersManager extends Manager {
             while( serviceIterator.hasNext() ){
                 Long currentId = (Long)serviceIterator.next();
                 Service service = getServiceById( currentId );
-                if( service.getName().equals(name) && service.getId().longValue() != Long.parseLong(id) ){
+                if( service.getId().longValue() != Long.parseLong(id) && service.getName().equals(name) ){
+                    logger.debug("ServicProviderManager:isUniqueServiceName:service.getName()='" + service.getName() +"' name='" + name+
+                            "\nservice.getId().longValue()='" + service.getId().longValue() + "' id=" + id + "'");
                     return false;
                 }
             }
