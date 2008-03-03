@@ -95,9 +95,9 @@ public class Edit extends TabledEditBeanImpl {
             String path = Utils.getPath(request);
             path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
             throw new CancelChildException(path);
-        } else if (getMbSave() != null) {
-            logger.info( "services/service/Edit:process SAVE" );
-            save();
+//        } else if (getMbSave() != null) {
+//            logger.info( "services/service/Edit:process SAVE" );
+//            save();
         } else if (getMbAddSmppRoute() != null) {
             throw new AddChildException(request.getContextPath() + "/routing/routes", (!editChild ? getEditId() : getParentId()));
         } else if (getMbAddHttpRoute() != null) {
@@ -114,6 +114,7 @@ public class Edit extends TabledEditBeanImpl {
             logger.info("services/service/Edit:process: ( getEditId() != null ) = " + getEditId());
             servIdForRout = (!editChild ? Long.decode(getEditId()) : Long.decode(getParentId()));
         } else {
+            logger.info("services/service/Edit:process: ( getEditId() == null ) = " + getEditId());
             servIdForRout = Long.decode(getParentId());
         }
         HttpSession session = request.getSession();
@@ -128,7 +129,7 @@ public class Edit extends TabledEditBeanImpl {
         pageSize = Integer.parseInt(String.valueOf(session.getAttribute(TabledBeanImpl.PAGE_SIZE)));
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(
-                                                            appContext.getScagRoutingManager().getRoutes(), servIdForRout);
+                                       appContext.getScagRoutingManager().getRoutes(), servIdForRout);
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
         logger.error("services/service/Edit:process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
         totalSize = results.size();
@@ -146,7 +147,10 @@ public class Edit extends TabledEditBeanImpl {
             httpRuteItems = results2.subList(startPosition, Math.min(totalHttpSize, startPosition + pageSize));
         else
             httpRuteItems = new LinkedList();
-
+        if (getMbSave() != null) {
+            logger.info( "services/service/Edit:process SAVE" );
+            save();
+        }
         load();
 
         if (deleteRuleSMPP != null) {
