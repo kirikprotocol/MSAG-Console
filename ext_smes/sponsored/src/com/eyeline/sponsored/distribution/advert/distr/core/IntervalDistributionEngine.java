@@ -40,7 +40,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
     this.advClient = advClient;
-    this.distrInfos = new HashMap<String, DistributionInfo>();
+    this.distrInfos = new HashMap<String, DistributionInfo>(10);
     this.executor = Executors.newSingleThreadScheduledExecutor();
   }
 
@@ -83,7 +83,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
     }
 
     private void sendDeliveries(List<Delivery> deliveries, Date end) {
-      if (deliveries.size() == 0)
+      if (deliveries.isEmpty())
         return;
 
       final int shiftInterval = 1000 / sendSpeedLimit;
@@ -97,14 +97,14 @@ public class IntervalDistributionEngine implements DistributionEngine {
       for (Iterator<Delivery> iter = deliveries.iterator(); iter.hasNext(); i++) {
         Delivery d = iter.next();
 
-        long endDate = d.getEndDate().getTime();
-        long startDate = d.getStartDate().getTime();
+        double endDate = d.getEndDate().getTime();
+        double startDate = d.getStartDate().getTime();
 
-        long sendInterval = (( endDate - startDate) / (d.getTotal() - 1));
+        double sendInterval = (( endDate - startDate) / (d.getTotal() - 1));
 
         int msgNumber = (int)((end.getTime() - startDate) / sendInterval);
 
-        long sendTime = startDate + msgNumber * sendInterval;
+        long sendTime = Math.round(startDate + msgNumber * sendInterval);
 
         if (sendTime != curSendTime) {
           curSendTime = sendTime;

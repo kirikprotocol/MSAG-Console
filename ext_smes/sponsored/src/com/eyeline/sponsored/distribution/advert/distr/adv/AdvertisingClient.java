@@ -8,7 +8,6 @@ import ru.aurorisoft.smpp.Address;
  * Date: 17.07.2007
  */
 
-// TODO
 public class AdvertisingClient {
 
   private final com.lorissoft.advertising.syncclient.AdvertisingClientImpl impl;
@@ -21,7 +20,7 @@ public class AdvertisingClient {
   }
 
   public void connect() {
-//    impl.init(null);
+    impl.init(null);
   }
 
   public void close() {
@@ -41,19 +40,18 @@ public class AdvertisingClient {
   }
 
   public String getBanner(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingException {
-    return "test banner";
-//    try {
-//      final Address address = new Address(abonentAddress);
-//      final String abonent = "." + address.getTon() + "." + address.getNpi() + "." + address.getAddress();
-//
-//      final byte[] banner = impl.getLikelyBanner(abonent.getBytes("ISO8859-1"), abonent.length(),
-//                                                 serviceName.getBytes("ISO8859-1"),
-//                                                 transportType, maxBannerLength, charSet, clientId, transactionId);
-//
-//      return banner == null ? null : Encode.decodeUTF16(banner);
-//
-//    } catch (Throwable e) {
-//      throw new AdvertisingException(e);
-//    }
+    try {
+      final Address address = new Address(abonentAddress);
+      final String abonent = "." + address.getTon() + "." + address.getNpi() + "." + address.getAddress();
+
+      final byte[] banner = impl.getLikelyBanner(abonent.getBytes("ISO8859-1"), abonent.length(),
+                                                 serviceName.getBytes("ISO8859-1"),
+                                                 transportType, maxBannerLength, charSet, clientId, transactionId);
+
+      return banner == null ? null : Encode.decodeUTF16(banner);
+
+    } catch (Throwable e) {
+      throw new AdvertisingException(e);
+    }
   }
 }

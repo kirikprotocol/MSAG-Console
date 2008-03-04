@@ -38,7 +38,7 @@ public class Sme {
 
       final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
 
-      smppTranceiver = new SMPPTransceiver(new DistrSmeTest.Multiplexor(), smppProps, "");
+      smppTranceiver = new SMPPTransceiver(smppProps, "");
 
       handler = new MessageHandler(conf.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
 
