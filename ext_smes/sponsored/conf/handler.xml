@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+  <param name="poolSize">1</param>   // todo
+  <param name="servicesConfig">conf/services.xml</param>
+</config>
