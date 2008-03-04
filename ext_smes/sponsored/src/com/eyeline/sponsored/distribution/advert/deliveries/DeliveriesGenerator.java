@@ -49,7 +49,7 @@ public class DeliveriesGenerator {
 
 
   private Map<Integer, VolumeGroup> createVolumeGroups(String distributionName, Date startDate, Date endDate, TimeZone tz) throws DataSourceException {
-    final long distrInterval = endDate.getTime() - startDate.getTime();
+    final double distrInterval = endDate.getTime() - startDate.getTime();
 
     DataSourceTransaction stx = null;
 
@@ -68,8 +68,9 @@ public class DeliveriesGenerator {
         group.numberOfSubscribers = stat.getNumberOfSubscribers();
         group.totalNumberOfMessages = stat.getVolume() * stat.getNumberOfSubscribers();
         group.delayBetweenMessages = distrInterval / group.totalNumberOfMessages;
+        group.msgPerSecond = group.totalNumberOfMessages / (distrInterval / 1000);
         volumeGroups.put(group.volume, group);
-        System.out.println("Volume group: vol=" + group.volume + "; subscr=" + group.numberOfSubscribers + "; msgs=" + group.totalNumberOfMessages + "; delay=" + group.delayBetweenMessages);
+        System.out.println("Volume group: vol=" + group.volume + "; subscr=" + group.numberOfSubscribers + "; msgs=" + group.totalNumberOfMessages + "; delay=" + group.delayBetweenMessages + "; sndSpeed=" + group.msgPerSecond);
       }
 
     } catch (DataSourceException e) {
@@ -115,9 +116,9 @@ public class DeliveriesGenerator {
 
         // Schedule delivery
         VolumeGroup g = volumeGroups.get(row.getSubscription().getVolume());
-        delivery.setStartDate(new Date(startDate.getTime() + g.abonentNumber * g.delayBetweenMessages));
+        delivery.setStartDate(new Date(startDate.getTime() + Math.round(g.abonentNumber * g.delayBetweenMessages)));
         delivery.setSendDate(delivery.getStartDate());
-        delivery.setEndDate(new Date(endDate.getTime() - (g.numberOfSubscribers - g.abonentNumber - 1) * g.delayBetweenMessages));
+        delivery.setEndDate(new Date(endDate.getTime() - Math.round((g.numberOfSubscribers - g.abonentNumber - 1) * g.delayBetweenMessages)));
         g.abonentNumber++;
 
         // Store delivery
@@ -175,7 +176,7 @@ public class DeliveriesGenerator {
         // Check deliveries already created
         int deliveriesCount;
         try {
-          deliveriesCount = distributionDS.getDeliveriesCount(startDate, tz); // todo for dirtribution
+          deliveriesCount = distributionDS.getDeliveriesCount(startDate, tz, info.getDistributionName());
         } catch (DataSourceException e) {
           e.printStackTrace();
           return;
@@ -220,11 +221,12 @@ public class DeliveriesGenerator {
 
   private static class VolumeGroup {
     private int volume;
-    private int numberOfSubscribers;
-    private int totalNumberOfMessages;
-    private long delayBetweenMessages;
+    private double numberOfSubscribers;
+    private double totalNumberOfMessages;
+    private double delayBetweenMessages;
+    private double msgPerSecond;
     //
-    private int abonentNumber;
+    private double abonentNumber;
   }
 
 

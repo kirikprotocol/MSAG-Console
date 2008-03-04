@@ -1,9 +1,12 @@
 package com.eyeline.sponsored;
 
-import com.eyeline.sme.smppcontainer.SMPPServiceContainer;
-import com.eyeline.sponsored.distribution.advert.distr.DistributionSme;
-import com.eyeline.sponsored.subscription.service.SubscriptionSme;
+import com.eyeline.sme.handler.MessageHandler;
+import com.eyeline.sme.smpp.SMPPTransceiver;
 import com.eyeline.sponsored.config.Config;
+import com.eyeline.sponsored.distribution.advert.distr.DistributionSme;
+import com.eyeline.sponsored.distribution.advert.distr.DistrSmeTest;
+import com.eyeline.sponsored.subscription.service.SubscriptionSme;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import org.apache.log4j.Category;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
@@ -19,7 +22,9 @@ import java.io.File;
 public class Sme {
 
   public static void main(String[] args) {
-    SMPPServiceContainer container = null;
+
+    MessageHandler handler = null;
+    SMPPTransceiver smppTranceiver = null;
     SubscriptionSme subscriptionSme = null;
     DistributionSme distributionSme = null;
 
@@ -31,19 +36,22 @@ public class Sme {
 
       final SmscTimezonesList timezones = new SmscTimezonesList(conf.getTimezonesFile(), conf.getRoutesFile());
 
-      container = new SMPPServiceContainer();
-      container.init(conf.getContainerConfigFile(), conf.getSmppConfigFile());
+      final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
+
+      smppTranceiver = new SMPPTransceiver(new DistrSmeTest.Multiplexor(), smppProps, "");
+
+      handler = new MessageHandler(conf.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
+
+      smppTranceiver.connect();
+      handler.start();
       
       subscriptionSme = new SubscriptionSme(xmlConfig, timezones);
-      distributionSme = new DistributionSme(xmlConfig, timezones, container.getOutgoingQueue());
+      distributionSme = new DistributionSme(xmlConfig, timezones, smppTranceiver.getOutQueue());
 
       new ConfigUpdater(600000, timezones).start();
 
-      container.start();
-
     } catch (Throwable e) {
       e.printStackTrace();
-      container.stop();
       subscriptionSme.stop();
       distributionSme.stop();
     }

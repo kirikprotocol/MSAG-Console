@@ -11,7 +11,7 @@ import com.eyeline.utils.config.xml.XmlConfigSection;
 
 public class Config {
 
-  private String containerConfigFile;
+  private String handlerConfigFile;
   private String timezonesFile;
   private String routesFile;
   private String smppConfigFile;
@@ -28,7 +28,7 @@ public class Config {
   private int storagePoolSize;
 
   public Config (XmlConfig config) throws ConfigException {
-    containerConfigFile = config.getString("containerConfigFile");
+    handlerConfigFile = config.getString("handlerConfigFile");
     timezonesFile = config.getString("timezonesFile");
     routesFile = config.getString("routesFile");
     smppConfigFile = config.getString("smppConfigFile");
@@ -54,8 +54,8 @@ public class Config {
     storagePoolSize = storage.getInt("poolSize");
   }
 
-  public String getContainerConfigFile() {
-    return containerConfigFile;
+  public String getHandlerConfigFile() {
+    return handlerConfigFile;
   }
 
   public String getTimezonesFile() {

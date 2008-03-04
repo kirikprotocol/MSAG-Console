@@ -1,10 +1,12 @@
 package com.eyeline.sponsored.subscription.service;
 
-import com.eyeline.sme.test.smpp.SimpleResponse;
-import com.eyeline.sme.test.smpp.TestMultiplexor;
-import com.eyeline.sme.smppcontainer.SMPPServiceContainer;
-import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.sme.handler.MessageHandler;
+import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.sme.smpp.test.SimpleResponse;
+import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sponsored.subscription.config.Config;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
@@ -24,27 +26,31 @@ public class SmeLoadTest extends SubscriptionSme {
   }
 
   public static void main(String[] args) {
-    Multiplexor m = new Multiplexor();
-
-    SMPPServiceContainer container = null;
+    SMPPTransceiver smppTranceiver = null;
     SubscriptionSme sme = null;
+    MessageHandler handler = null;
+
     try {
       final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
       xmlConfig.load();
 
       Config conf = new Config(xmlConfig);
 
+      final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
+
+      smppTranceiver = new SMPPTransceiver(new Multiplexor(), smppProps, "");
+
+      handler = new MessageHandler(conf.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
+
       final SmscTimezonesList timezones = new SmscTimezonesList(conf.getTimezonesFile(), conf.getRoutesFile());
-      container = new SMPPServiceContainer(m);
-      container.init(conf.getContainerConfigFile(), conf.getSmppConfigFile());
 
       sme = new SubscriptionSme(xmlConfig, timezones);
 
-      container.start();
+      smppTranceiver.connect();
+      handler.start();
 
     } catch (Exception e) {
       e.printStackTrace();
-      container.stop();
       sme.stop();
     }
   }

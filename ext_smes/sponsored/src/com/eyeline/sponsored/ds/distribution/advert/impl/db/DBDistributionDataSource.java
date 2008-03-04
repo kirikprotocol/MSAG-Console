@@ -80,11 +80,11 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements Di
     }
   }
 
-  public int getDeliveriesCount(Date date, TimeZone tz) throws DataSourceException {
+  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
-      return tx.getDeliveriesCount(date, tz);
+      return tx.lookupActiveDeliveries(start, end);
     } finally {
       if (tx != null) {
         tx.close();
@@ -92,7 +92,19 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements Di
     }
   }
 
-  public int getDeliveriesCount(Date date, TimeZone tz, DataSourceTransaction tx) throws DataSourceException {
-    return ((DBTransaction)tx).getDeliveriesCount(date, tz);
+  public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException {
+    DBTransaction tx = null;
+    try {
+      tx = createDBTransaction(true);
+      return tx.getDeliveriesCount(date, tz, distrName);
+    } finally {
+      if (tx != null) {
+        tx.close();
+      }
+    }
+  }
+
+  public int getDeliveriesCount(Date date, TimeZone tz, String distrName, DataSourceTransaction tx) throws DataSourceException {
+    return ((DBTransaction)tx).getDeliveriesCount(date, tz, distrName);
   }
 }

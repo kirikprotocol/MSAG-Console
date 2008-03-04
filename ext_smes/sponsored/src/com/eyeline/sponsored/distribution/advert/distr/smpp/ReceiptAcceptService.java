@@ -1,20 +1,24 @@
 package com.eyeline.sponsored.distribution.advert.distr.smpp;
 
-import com.eyeline.sme.smppcontainer.SMPPService;
-import com.eyeline.sme.smppcontainer.SMPPRequest;
 import com.eyeline.sponsored.distribution.advert.distr.core.DeliveryStatsProcessor;
 import com.eyeline.sponsored.distribution.advert.distr.core.ProcessorException;
+import com.eyeline.sme.handler.SMPPService;
+import com.eyeline.sme.handler.SMPPRequest;
+import com.eyeline.sme.handler.SMPPServiceException;
+import com.eyeline.sme.smpp.OutgoingQueue;
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
+
+import java.util.Properties;
 
 /**
  * User: artem
  * Date: 02.02.2008
  */
 
-public class ReceiptAcceptService extends SMPPService{
+public class ReceiptAcceptService implements SMPPService {
 
   private static final Category log = Category.getInstance("RECEIPT");
 
@@ -42,5 +46,8 @@ public class ReceiptAcceptService extends SMPPService{
     } else {
       log.error("Not receipt handled!");
     }
+  }
+
+  public void init(OutgoingQueue outgoingQueue, Properties properties) throws SMPPServiceException {    
   }
 }

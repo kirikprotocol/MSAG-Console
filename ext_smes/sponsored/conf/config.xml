@@ -2,7 +2,7 @@
 
 <config>
 
-  <param name="containerConfigFile">conf/container/container.xml</param>
+  <param name="handlerConfigFile">conf/handler.xml</param>
 
   <!-- ENVIRONMENT CONFIG -->
 
@@ -30,19 +30,35 @@
 
   <section name="advert_distribution">
 
-    <param name="deliveriesFetchInterval">10000</param>
+    <!-- Engine parameters -->
+
+    <!-- Allowed engine types: conservative, interval-->
+    <param name="engineType">interval</param>
+    <param name="deliveriesFetchInterval">1000</param>
     <param name="deliveriesSendSpeedLimit">450</param>
+    <param name="deliveriesPrepareInterval">5000</param>    
+
+    <!-- Distributions parameters -->
 
     <section name="distributions">
 
       <section name="sponsored">
         <param name="srcAddress">741</param>
-        <param name="startTime">15:00:00</param>
-        <param name="endTime">23:01:02</param>
+        <param name="startTime">13:45:00</param>
+        <param name="endTime">18:45:02</param>
+        <param name="advServiceName">SPONSORED</param>
+      </section>
+
+      <section name="sponsored1">
+        <param name="srcAddress">741</param>
+        <param name="startTime">19:00:00</param>
+        <param name="endTime">19:20:00</param>
         <param name="advServiceName">SPONSORED</param>
       </section>
 
     </section>
+
+    <!-- Storage parameters -->
 
     <section name="storage">
       <param name="subscriptionSql">conf/subscr.sql</param>

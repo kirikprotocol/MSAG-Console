@@ -1,11 +1,15 @@
 package com.eyeline.sponsored.distribution.advert.distr;
 
-import com.eyeline.sme.smppcontainer.SMPPServiceContainer;
-import com.eyeline.sme.test.smpp.SimpleResponse;
-import com.eyeline.sme.test.smpp.TestMultiplexor;
-import com.eyeline.sme.utils.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.test.TestMultiplexor;
+import com.eyeline.sme.smpp.test.SimpleResponse;
+import com.eyeline.sme.smpp.MessageListener;
+import com.eyeline.sme.smpp.MessageSender;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
@@ -26,32 +30,36 @@ public class DistrSmeTest extends DistributionSme {
   }
 
   public static void main(String[] args) {
-    SMPPServiceContainer container = null;
+    SMPPTransceiver smppTranceiver = null;
     DistributionSme sme = null;
-    try {
+    MessageHandler handler = null;
 
+    try {
       final XmlConfig config = new XmlConfig(new File("conf/config.xml"));
       config.load();
 
       Config c= new Config(config);
 
+      final PropertiesConfig smppProps = new PropertiesConfig(c.getSmppConfigFile());
+
+      smppTranceiver = new SMPPTransceiver(new Multiplexor(), smppProps, "");
+
+      handler = new MessageHandler(c.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
+
       final SmscTimezonesList timezones = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
 
-      container = new SMPPServiceContainer(new Multiplexor());
-      container.init(c.getContainerConfigFile(), c.getSmppConfigFile());
+      sme = new DistributionSme(config, timezones, smppTranceiver.getOutQueue());
 
-      sme = new DistributionSme(config, timezones, container.getOutgoingQueue());
-
-      container.start();
+      smppTranceiver.connect();
+      handler.start();
 
     } catch (Exception e) {
       e.printStackTrace();
-      container.stop();
       sme.stop();
     }
   }
 
-  private static class Multiplexor extends TestMultiplexor {
+  public static class Multiplexor extends TestMultiplexor {
 
     private long start = -1;
     private int counter = 0;
@@ -87,6 +95,7 @@ public class DistrSmeTest extends DistributionSme {
       receipt.setDestinationAddress("741");
       receipt.setConnectionName("smsx");
       receipt.setMessageString("");
+      receipt.setMessageState(Message.MSG_STATE_DELIVERED);
       receipt.setReceipt(true);
       receipt.setSequenceNumber(sn);
       handleMessage(receipt);

@@ -1,9 +1,11 @@
 package com.eyeline.sponsored.distribution.advert.distr;
 
-import com.eyeline.sme.smppcontainer.SMPPServiceContainer;
-import com.eyeline.sme.test.smpp.TestMultiplexor;
-import com.eyeline.sme.utils.smpp.OutgoingQueue;
+import com.eyeline.sme.handler.MessageHandler;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sponsored.distribution.advert.config.Config;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
@@ -24,27 +26,31 @@ public class ReceiptTest extends DistributionSme {
   }
 
   public static void main(String[] args) {
-    SMPPServiceContainer container = null;
+    SMPPTransceiver smppTranceiver = null;
     DistributionSme sme = null;
-    try {
+    MessageHandler handler = null;
 
+    try {
       final XmlConfig config = new XmlConfig(new File("conf/config.xml"));
       config.load();
 
       Config c= new Config(config);
 
+      final PropertiesConfig smppProps = new PropertiesConfig(c.getSmppConfigFile());
+
+      smppTranceiver = new SMPPTransceiver(new Multiplexor(), smppProps, "");
+
+      handler = new MessageHandler(c.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
+
       final SmscTimezonesList timezones = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
 
-      container = new SMPPServiceContainer(new Multiplexor());
-      container.init(c.getContainerConfigFile(), c.getSmppConfigFile());
+      sme = new DistributionSme(config, timezones, smppTranceiver.getOutQueue());
 
-      sme = new DistributionSme(config, timezones, container.getOutgoingQueue());
-
-      container.start();
+      smppTranceiver.connect();
+      handler.start();
 
     } catch (Exception e) {
       e.printStackTrace();
-      container.stop();
       sme.stop();
     }
   }

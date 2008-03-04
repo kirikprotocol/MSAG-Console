@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="windows-1251"?>
+<?xml version="1.0" encoding="UTF-8"?>
 
 <config>
   
@@ -17,15 +17,15 @@
     </init-param>
     <init-param>
       <param-name>successResponse</param-name>
-      <param-value>Сервис SMS-Спонсор активирован. Изменения вступят в силу завтра в 00 ч 00 мин.</param-value>
+      <param-value>РЎРµСЂРІРёСЃ SMS-РЎРїРѕРЅСЃРѕСЂ Р°РєС‚РёРІРёСЂРѕРІР°РЅ. РР·РјРµРЅРµРЅРёСЏ РІСЃС‚СѓРїСЏС‚ РІ СЃРёР»Сѓ Р·Р°РІС‚СЂР° РІ 00 С‡ 00 РјРёРЅ.</param-value>
     </init-param>
     <init-param>
       <param-name>subscriptionClosedResponse</param-name>
-      <param-value>Подписка на данный сервис закрыта.</param-value>
+      <param-value>РџРѕРґРїРёСЃРєР° РЅР° РґР°РЅРЅС‹Р№ СЃРµСЂРІРёСЃ Р·Р°РєСЂС‹С‚Р°.</param-value>
     </init-param>
     <init-param>
       <param-name>invalidVolumeResponse</param-name>
-      <param-value>Неверная команда. Для получения справки отправьте «Help» на номер 741. SMS бесплатное.</param-value>
+      <param-value>РќРµРІРµСЂРЅР°СЏ РєРѕРјР°РЅРґР°. Р”Р»СЏ РїРѕР»СѓС‡РµРЅРёСЏ СЃРїСЂР°РІРєРё РѕС‚РїСЂР°РІСЊС‚Рµ В«HelpВ» РЅР° РЅРѕРјРµСЂ 741. SMS Р±РµСЃРїР»Р°С‚РЅРѕРµ.</param-value>
     </init-param>
     <init-param>
       <param-name>respConnName</param-name>
@@ -42,7 +42,7 @@
     <service-class>com.eyeline.sponsored.subscription.service.smpp.UnsubscriptionService</service-class>
     <init-param>
       <param-name>successResponse</param-name>
-      <param-value>Запрос на отключение сервиса "SMS-Спонсор" принят. Изменения вступят в силу завтра в 00 ч 00 мин.</param-value>
+      <param-value>Р—Р°РїСЂРѕСЃ РЅР° РѕС‚РєР»СЋС‡РµРЅРёРµ СЃРµСЂРІРёСЃР° "SMS-РЎРїРѕРЅСЃРѕСЂ" РїСЂРёРЅСЏС‚. РР·РјРµРЅРµРЅРёСЏ РІСЃС‚СѓРїСЏС‚ РІ СЃРёР»Сѓ Р·Р°РІС‚СЂР° РІ 00 С‡ 00 РјРёРЅ.</param-value>
     </init-param>
     <init-param>
       <param-name>respConnName</param-name>
@@ -56,14 +56,14 @@
   
   <service>
     <service-name>help</service-name>
-    <service-class>com.eyeline.sme.smppcontainer.services.SimpleResponder</service-class>
+    <service-class>com.eyeline.sme.handler.services.SimpleResponder</service-class>
     <init-param>
       <param-name>responseCode</param-name>
       <param-value>0</param-value>
     </init-param>    
     <init-param>
       <param-name>responseText</param-name>
-      <param-value>Уважаемый Абонент, после подключения сервиса, Вам будет начисляться бонус в размере 28 коп. за каждое входящее рекламное SMS. Подпишитесь на сервис и вам на телефон в течение дня будет  поступать  10 или 20 входящих  рекламных SMS. Зачисление бонусов на Ваш счет будет производиться 2 раза в месяц за все полученные рекламные SMS за 2 недели . Чтобы подписаться на 10 сообщений в день необходимо отправить на номер 741 текст: " 10" , чтобы подписаться на 20: "20" . SMS бесплатное.</param-value>
+      <param-value>РЈРІР°Р¶Р°РµРјС‹Р№ РђР±РѕРЅРµРЅС‚, РїРѕСЃР»Рµ РїРѕРґРєР»СЋС‡РµРЅРёСЏ СЃРµСЂРІРёСЃР°, Р’Р°Рј Р±СѓРґРµС‚ РЅР°С‡РёСЃР»СЏС‚СЊСЃСЏ Р±РѕРЅСѓСЃ РІ СЂР°Р·РјРµСЂРµ 28 РєРѕРї. Р·Р° РєР°Р¶РґРѕРµ РІС…РѕРґСЏС‰РµРµ СЂРµРєР»Р°РјРЅРѕРµ SMS. РџРѕРґРїРёС€РёС‚РµСЃСЊ РЅР° СЃРµСЂРІРёСЃ Рё РІР°Рј РЅР° С‚РµР»РµС„РѕРЅ РІ С‚РµС‡РµРЅРёРµ РґРЅСЏ Р±СѓРґРµС‚  РїРѕСЃС‚СѓРїР°С‚СЊ  10 РёР»Рё 20 РІС…РѕРґСЏС‰РёС…  СЂРµРєР»Р°РјРЅС‹С… SMS. Р—Р°С‡РёСЃР»РµРЅРёРµ Р±РѕРЅСѓСЃРѕРІ РЅР° Р’Р°С€ СЃС‡РµС‚ Р±СѓРґРµС‚ РїСЂРѕРёР·РІРѕРґРёС‚СЊСЃСЏ 2 СЂР°Р·Р° РІ РјРµСЃСЏС† Р·Р° РІСЃРµ РїРѕР»СѓС‡РµРЅРЅС‹Рµ СЂРµРєР»Р°РјРЅС‹Рµ SMS Р·Р° 2 РЅРµРґРµР»Рё . Р§С‚РѕР±С‹ РїРѕРґРїРёСЃР°С‚СЊСЃСЏ РЅР° 10 СЃРѕРѕР±С‰РµРЅРёР№ РІ РґРµРЅСЊ РЅРµРѕР±С…РѕРґРёРјРѕ РѕС‚РїСЂР°РІРёС‚СЊ РЅР° РЅРѕРјРµСЂ 741 С‚РµРєСЃС‚: " 10" , С‡С‚РѕР±С‹ РїРѕРґРїРёСЃР°С‚СЊСЃСЏ РЅР° 20: "20" . SMS Р±РµСЃРїР»Р°С‚РЅРѕРµ.</param-value>
     </init-param>
     <init-param>
       <param-name>respConnName</param-name>
@@ -77,7 +77,7 @@
   
   <service>
     <service-name>error</service-name>
-    <service-class>com.eyeline.sme.smppcontainer.services.SimpleResponder</service-class>
+    <service-class>com.eyeline.sme.handler.services.SimpleResponder</service-class>
     <init-param>
       <param-name>responseConnectionName</param-name>
       <param-value>smsx</param-value>
@@ -88,7 +88,7 @@
     </init-param>
     <init-param>
       <param-name>responseText</param-name>
-      <param-value>Неверная команда. Для получения справки отправьте «Help» на номер 741. SMS бесплатное.</param-value>
+      <param-value>РќРµРІРµСЂРЅР°СЏ РєРѕРјР°РЅРґР°. Р”Р»СЏ РїРѕР»СѓС‡РµРЅРёСЏ СЃРїСЂР°РІРєРё РѕС‚РїСЂР°РІСЊС‚Рµ В«HelpВ» РЅР° РЅРѕРјРµСЂ 741. SMS Р±РµСЃРїР»Р°С‚РЅРѕРµ.</param-value>
     </init-param> 
     <init-param>
       <param-name>respConnName</param-name>
@@ -108,7 +108,7 @@
 
   <request>
     <request-name>help</request-name>
-    <message-pattern>help|хелп</message-pattern>    
+    <message-pattern>help|С…РµР»Рї</message-pattern>    
   </request>
   
   <request>

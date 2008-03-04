@@ -33,7 +33,9 @@ public interface DistributionDataSource {
 
   public List<Delivery> lookupActiveDeliveries(Date end, int limit) throws DataSourceException;
 
-  public int getDeliveriesCount(Date date, TimeZone tz) throws DataSourceException;
+  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException;
 
-  public int getDeliveriesCount(Date date, TimeZone tz, DataSourceTransaction tx) throws DataSourceException;
+  public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException;
+
+  public int getDeliveriesCount(Date date, TimeZone tz, String distrName, DataSourceTransaction tx) throws DataSourceException;
 }

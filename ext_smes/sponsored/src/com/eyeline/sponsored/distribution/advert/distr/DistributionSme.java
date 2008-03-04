@@ -1,13 +1,16 @@
 package com.eyeline.sponsored.distribution.advert.distr;
 
-import com.eyeline.sme.smppcontainer.SMPPServiceContainer;
-import com.eyeline.sme.utils.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sponsored.Sme;
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClient;
 import com.eyeline.sponsored.distribution.advert.distr.core.DeliveryStatsProcessor;
+import com.eyeline.sponsored.distribution.advert.distr.core.ConservativeDistributionEngine;
 import com.eyeline.sponsored.distribution.advert.distr.core.DistributionEngine;
+import com.eyeline.sponsored.distribution.advert.distr.core.IntervalDistributionEngine;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
@@ -15,7 +18,6 @@ import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * User: artem
@@ -44,14 +46,20 @@ public class DistributionSme extends Sme {
       advClient = new AdvertisingClient(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
       advClient.connect();
 
-      // Load distribution infos
-      final List<DistributionInfo> distrInfos = c.getDistrInfos();
-
       // Init distribution engine
-      distrEngine = new DistributionEngine(outQueue, distrDS, advClient);
-      distrEngine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval());
-      for (Iterator<DistributionInfo> iter = c.getDistrInfos().iterator(); iter.hasNext();)
-        distrEngine.addDistribution(iter.next());
+      if (c.getEngineType().equals("conservative")) {
+        ConservativeDistributionEngine engine = new ConservativeDistributionEngine(outQueue, distrDS, advClient);
+        engine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval());
+        distrEngine = engine;
+      } else if (c.getEngineType().equals("interval")) {
+        IntervalDistributionEngine engine = new IntervalDistributionEngine(outQueue, distrDS, advClient);
+        engine.init(c.getDeliveriesFetchInterval(), c.getDeliveriesPrepareInterval(), c.getDeliveriesSendSpeedLimit());
+        distrEngine = engine;
+      } else
+        throw new InitException("Unknown distribution engine type: " + c.getEngineType());
+
+      // Load distribution infos
+      for (DistributionInfo distributionInfo : c.getDistrInfos()) distrEngine.addDistribution(distributionInfo);
 
       distrEngine.start();
 
@@ -67,27 +75,32 @@ public class DistributionSme extends Sme {
   }
 
   public static void main(String[] args) {
-    SMPPServiceContainer container = null;
-    DistributionSme sme = null;
-    try {
 
+    SMPPTransceiver smppTranceiver = null;
+    DistributionSme sme = null;
+    MessageHandler handler = null;
+
+    try {
       final XmlConfig config = new XmlConfig(new File("conf/config.xml"));
       config.load();
 
       Config c= new Config(config);
 
+      final PropertiesConfig smppProps = new PropertiesConfig(c.getSmppConfigFile());
+
+      smppTranceiver = new SMPPTransceiver(smppProps, "");
+
+      handler = new MessageHandler(c.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
+
       final SmscTimezonesList timezones = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
 
-      container = new SMPPServiceContainer();
-      container.init(c.getContainerConfigFile(), c.getSmppConfigFile());
+      sme = new DistributionSme(config, timezones, smppTranceiver.getOutQueue());
 
-      sme = new DistributionSme(config, timezones, container.getOutgoingQueue());
-
-      container.start();
+      smppTranceiver.connect();
+      handler.start();
 
     } catch (Exception e) {
       e.printStackTrace();
-      container.stop();
       sme.stop();
     }
   }

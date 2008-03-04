@@ -36,6 +36,9 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
     if (!sql.containsKey("delivery.lookupactive")) {
       throw new DataSourceException("delivery.lookupactive not found");
     }
+    if (!sql.containsKey("delivery.lookupactive1")) {
+      throw new DataSourceException("delivery.lookupactive1 not found");
+    }
     if (!sql.containsKey("delivery.count")) {
       throw new DataSourceException("delivery.count not found");
     }
@@ -129,7 +132,41 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
     }
   }
 
-  public int getDeliveriesCount(Date date, TimeZone timezone) throws DataSourceException {
+  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException {
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+    try {
+      ps = conn.prepareStatement(sql.getProperty("delivery.lookupactive1"));
+      ps.setTimestamp(1, new Timestamp(start.getTime()));
+      ps.setTimestamp(2, new Timestamp(end.getTime()));
+
+      rs = ps.executeQuery();
+
+      final List<Delivery> result = new LinkedList<Delivery>();
+
+      while (rs.next()) {
+        final DeliveryImpl delivery = new DeliveryImpl(ds);
+        delivery.setSubscriberAddress(rs.getString(1));
+        delivery.setDistributionName(rs.getString(2));
+        delivery.setSended(rs.getInt(3));
+        delivery.setTotal(rs.getInt(4));
+        delivery.setStartDate(new Date(rs.getTimestamp(5).getTime()));
+        delivery.setEndDate(new Date(rs.getTimestamp(6).getTime()));
+        delivery.setSendDate(new Date(rs.getTimestamp(7).getTime()));
+        delivery.setTimezone(TimeZone.getTimeZone(rs.getString(8)));
+        result.add(delivery);
+      }
+
+      return result;
+
+    } catch (SQLException e) {
+      throw new DataSourceException(e);
+    } finally {
+      close(rs,ps);
+    }
+  }
+
+  public int getDeliveriesCount(Date date, TimeZone timezone, String distrName) throws DataSourceException {
     PreparedStatement ps = null;
     ResultSet rs = null;
 
@@ -137,6 +174,7 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
       ps = conn.prepareStatement(sql.getProperty("delivery.count"));
       ps.setTimestamp(1, new Timestamp(date.getTime()));
       ps.setString(2, timezone.getID());
+      ps.setString(3, distrName);
 
       rs = ps.executeQuery();
       if (!rs.next())

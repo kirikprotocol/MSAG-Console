@@ -1,10 +1,10 @@
 package com.eyeline.sponsored.subscription.service.smpp;
 
-import com.eyeline.sme.smppcontainer.SMPPRequest;
-import com.eyeline.sme.smppcontainer.SMPPServiceException;
-import com.eyeline.sme.smppcontainer.services.BasicService;
-import com.eyeline.sme.utils.smpp.IncomingObject;
-import com.eyeline.sme.utils.smpp.ShutdownedException;
+import com.eyeline.sme.handler.services.BasicService;
+import com.eyeline.sme.handler.SMPPServiceException;
+import com.eyeline.sme.handler.SMPPRequest;
+import com.eyeline.sme.smpp.IncomingObject;
+import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.sponsored.subscription.service.core.ProcessorException;
 import com.eyeline.sponsored.subscription.service.core.SubscriptionProcessor;
 import com.logica.smpp.Data;
@@ -23,7 +23,7 @@ public class UnsubscriptionService extends BasicService {
   private String successResponse;  
 
   @Override
-  protected void init(Properties initParams) throws SMPPServiceException {  
+  protected void init(Properties initParams) throws SMPPServiceException {
     super.init(initParams);
     this.successResponse = initParams.getProperty("successResponse");    
     if (successResponse == null) {
