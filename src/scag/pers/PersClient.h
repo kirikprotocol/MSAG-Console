@@ -33,7 +33,8 @@ enum PersClientExceptionType{
     INVALID_PROPERTY_TYPE,
   BAD_REQUEST,
   TYPE_INCONSISTENCE,
-  BATCH_ERROR
+  BATCH_ERROR,
+  PROFILE_LOCKED
 };
 
     static const char* strs[] = {
@@ -52,7 +53,8 @@ enum PersClientExceptionType{
         "Invalid property type(should be int or date)",
       "Bad request",
       "Types inconsistence",
-      "Batch prepare error"
+      "Batch prepare error",
+      "Profile locked"
     };
 
 class PersClientException{

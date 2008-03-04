@@ -54,8 +54,8 @@ bool GetProfileCmd::deserialize(SerialBuffer &sb) {
 }
 
 void ProfileRespCmd::writeData(SerialBuffer &sb) const {
-  sb.WriteInt8(is_ok);
-  if (!is_ok) {
+  sb.WriteInt8(status);
+  if (!isOk()) {
     return;
   }
   sb.WriteInt8(has_profile);  
@@ -70,8 +70,8 @@ bool ProfileRespCmd::deserialize(SerialBuffer &sb) {
     delete profile;
     profile = 0;
   }
-  is_ok = sb.ReadInt8();
-  if (!is_ok) {
+  status = sb.ReadInt8();
+  if (!isOk()) {
     return true;
   }
   has_profile = sb.ReadInt8();

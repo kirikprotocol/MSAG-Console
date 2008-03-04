@@ -26,6 +26,12 @@ namespace ownership {
   };
 };
 
+enum ProfileRespStatus {
+  STATUS_OK,
+  STATUS_ERROR,
+  STATUS_LOCKED
+};
+
 namespace commands_name {
   extern const char* UNKNOWN;
   extern const char* GET_PROFILE;
@@ -70,21 +76,24 @@ protected:
 
 struct ProfileRespCmd : public CPersCmd {
 public:
-  ProfileRespCmd():CPersCmd(PROFILE_RESP, commands_name::PROFILE_RESP), profile(0), is_ok(1),
-                   must_del_profile(false), has_profile(0) {}
+  ProfileRespCmd():CPersCmd(PROFILE_RESP, commands_name::PROFILE_RESP), profile(0),
+                   must_del_profile(false), has_profile(0), status(STATUS_OK) {}
   ProfileRespCmd(const string& _key):CPersCmd(PROFILE_RESP, _key, commands_name::PROFILE_RESP),
-                                     profile(0), has_profile(0), is_ok(1), must_del_profile(false) {}
+                                     profile(0), has_profile(0), status(STATUS_OK) ,must_del_profile(false) {}
   ProfileRespCmd(SerialBuffer &sb):CPersCmd(PROFILE_RESP, commands_name::PROFILE_RESP), profile(0),
-                                   has_profile(0), is_ok(0), must_del_profile(false) {
+                                   has_profile(0), status(STATUS_OK), must_del_profile(false) {
     deserialize(sb);
   }
   ~ProfileRespCmd();
   virtual bool deserialize(SerialBuffer &sb);
   void setProfile(Profile* pf);
   Profile* getProfile();
+  void setStatus(ProfileRespStatus _status) { status = _status;};
+  ProfileRespStatus getStatus() const { return static_cast<ProfileRespStatus>(status); };
+  bool isOk() const { return status == STATUS_OK ? true : false; };
 
 public:
-  uint8_t is_ok;
+  uint8_t status;
 
 protected:
   virtual void writeData(SerialBuffer &sb) const;

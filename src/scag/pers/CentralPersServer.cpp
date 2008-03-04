@@ -223,7 +223,8 @@ void CentralPersServer::getProfileCmdHandler(ConnectionContext& ctx) {
   if (transactions.Get(addr, ti)) {
     smsc_log_warn(logger, "getProfileCmdHandler: profile key=%s in process", get_profile.key.c_str());
     ProfileRespCmd profile_resp(get_profile.key);
-    profile_resp.is_ok = 0;
+    //profile_resp.is_ok = 0;
+    profile_resp.setStatus(STATUS_LOCKED);
     sendResponse(profile_resp, ctx);
     return;
   }
@@ -285,14 +286,15 @@ void CentralPersServer::profileRespCmdHandler(ConnectionContext& ctx) {
     transactions.Delete(addr);
     return;
   }
-  if (profile_resp.is_ok) {
+  if (profile_resp.isOk()) {
     smsc_log_debug(logger, "profileRespCmdHandler: receive PROFILE_RESP=OK profile key=%s",
                     profile_resp.key.c_str());
     pti->wait_cmd = CentralPersCmd::DONE;
     pti->startTime = time(NULL);
   } else {
-    smsc_log_debug(logger, "profileRespCmdHandler: receive PROFILE_RESP=ERROR profile key=%s, delete transaction",
-                   profile_resp.key.c_str());
+    string resp_status = profile_resp.getStatus() == STATUS_ERROR ? "ERROR" : "LOCKED";
+    smsc_log_debug(logger, "profileRespCmdHandler: receive PROFILE_RESP=%s profile key=%s, delete transaction",
+                   resp_status.c_str(), profile_resp.key.c_str());
     transactions.Delete(addr);
   }
   sendCommand(profile_resp, ri.ctx);
@@ -442,7 +444,8 @@ void CentralPersServer::transactionTimeout(const AbntAddr& addr, const Transacti
     smsc_log_warn(logger, "PROFILE_RESP timeout, profile key=%s owner=%d candidate=%d",
                    key.c_str(), tr_info.owner, tr_info.candidate);
     ProfileRespCmd profile_resp(key);
-    profile_resp.is_ok = 0;
+    //profile_resp.is_ok = 0;
+    profile_resp.setStatus(STATUS_ERROR);
     sendCommand(profile_resp, tr_info.candidate);
     DoneCmd done(0, key);
     sendCommand(done, tr_info.owner);

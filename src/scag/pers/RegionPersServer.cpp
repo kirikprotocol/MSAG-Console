@@ -95,7 +95,7 @@ bool RegionPersServer::processPacket(ConnectionContext &ctx) {
   }
   if (central_ctx == &ctx) {
     try {
-      smsc_log_debug(rplog, "Start process packet from CP");
+      smsc_log_debug(rplog, "Start process packet %p from CP", &ctx);
       ctx.inbuf.setPos(PACKET_LENGTH_SIZE);
       processPacketFromCP(ctx);
       smsc_log_debug(rplog, "End process packet from CP");
@@ -122,7 +122,7 @@ bool RegionPersServer::processPacket(ConnectionContext &ctx) {
 }
 
 bool RegionPersServer::processPacketFromCP(ConnectionContext &ctx) {
-  smsc_log_debug(rplog, "process packet %p from CP", &ctx);
+  //smsc_log_debug(rplog, "process packet %p from CP", &ctx);
   SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
 
     uint8_t cmd = isb.ReadInt8();
@@ -164,7 +164,7 @@ bool RegionPersServer::processPacketFromCP(ConnectionContext &ctx) {
 }
 
 bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
-  smsc_log_debug(rplog, "process packet %p from client", &ctx);
+  smsc_log_debug(rplog, "Start process packet %p from client", &ctx);
   SerialBuffer &isb = ctx.inbuf;
   try {
     ctx.outbuf.SetPos(PACKET_LENGTH_SIZE);
@@ -316,7 +316,6 @@ PersServerResponseType RegionPersServer::execCommand(ConnectionContext& ctx) {
 
   isb.ReadString(str_key);
   string profKey = getProfileKey(str_key);
-  smsc_log_debug(rplog, "profile key=%s", profKey.c_str());
 //
   Profile *pf = getProfile(profKey);
   if (!pf || pf->getState() == DELETED) {
@@ -324,11 +323,14 @@ PersServerResponseType RegionPersServer::execCommand(ConnectionContext& ctx) {
     smsc_log_debug(rplog, "profile key=%s %s in local storage",
                     profKey.c_str(), err_str.c_str());
     AbntAddr addr(profKey.c_str());
-    if (commands.Exists(addr)) {
+    if (commands.GetPtr(addr)) {
+    //if (commands.Exists(addr)) {
       smsc_log_debug(rplog, "profile key=%s in process", profKey.c_str());
-      createResponseForClient(&osb, RESPONSE_ERROR);
+      //createResponseForClient(&osb, RESPONSE_ERROR);
+      createResponseForClient(&osb, RESPONSE_PROFILE_LOCKED);
       skipCommand(cmd, isb);
-      return RESPONSE_ERROR;
+      //return RESPONSE_ERROR;
+      return RESPONSE_PROFILE_LOCKED;
     }
     GetProfileCmd get_profile_cmd(profKey);
     if (!sendCommandToCP(get_profile_cmd)) {
@@ -350,9 +352,11 @@ PersServerResponseType RegionPersServer::execCommand(ConnectionContext& ctx) {
     return execCommand(cmd, pf, profKey, isb, osb);
   case LOCKED:
     smsc_log_debug(rplog, "profile key=%s locked", profKey.c_str());
-    createResponseForClient(&osb, RESPONSE_ERROR);
+    //createResponseForClient(&osb, RESPONSE_ERROR);
+    createResponseForClient(&osb, RESPONSE_PROFILE_LOCKED);
     skipCommand(cmd, isb);
-    return RESPONSE_ERROR;
+    //return RESPONSE_ERROR;
+    return  RESPONSE_PROFILE_LOCKED;
   default:
     smsc_log_debug(rplog, "profile key=%s has unknown state", profKey.c_str());
     createResponseForClient(&osb, RESPONSE_ERROR);
@@ -437,31 +441,36 @@ void RegionPersServer::getProfileCmdHandler(ConnectionContext &ctx) {
   Profile *pf = getProfile(get_profile_cmd.key);
   ProfileRespCmd profile_resp(get_profile_cmd.key);
   if (!pf) {
-    profile_resp.is_ok = 0;
+    //profile_resp.is_ok = 0;
+    profile_resp.setStatus(scag::cpers::STATUS_ERROR);
     smsc_log_warn(rplog, "getProfileCmdHandler: profile key=%s not found ", get_profile_cmd.key.c_str());
     sendCommandToCP(profile_resp);
     return;
   }
   switch (pf->getState()) {
   case LOCKED : 
-    profile_resp.is_ok = 0;
+    //profile_resp.is_ok = 0;
+    profile_resp.setStatus(scag::cpers::STATUS_LOCKED);
     smsc_log_warn(rplog, "getProfileCmdHandler: profile key=%s locked", get_profile_cmd.key.c_str());
     break;
   case DELETED :
-    profile_resp.is_ok = 0;
+    profile_resp.setStatus(scag::cpers::STATUS_ERROR);
+    //profile_resp.is_ok = 0;
     smsc_log_warn(rplog, "getProfileCmdHandler: profile key=%s deleted", get_profile_cmd.key.c_str());
     break;
   case OK : {
     AbntAddr addr(get_profile_cmd.key.c_str());
     commands.Insert(addr, CmdContext());
     smsc_log_debug(rplog, "getProfileCmdHandler: set profile key=%s locked", get_profile_cmd.key.c_str());
+    profile_resp.setStatus(scag::cpers::STATUS_OK);
     profile_resp.setProfile(pf);
     pf->setLocked();
     getAbonentStore()->storeProfile(addr, pf);
     break;
   }
   default:
-    profile_resp.is_ok = 0;
+    //profile_resp.is_ok = 0;
+    profile_resp.setStatus(scag::cpers::STATUS_ERROR);
     smsc_log_warn(rplog, "getProfileCmdHandler: profile key=%s has unknown state", get_profile_cmd.key.c_str());
   }
   sendCommandToCP(profile_resp);
@@ -483,10 +492,16 @@ void RegionPersServer::profileRespCmdHandler(ConnectionContext &ctx) {
     cmd_ctx->wait_cmd_id = CentralPersCmd::DONE_RESP;
     cmd_ctx->start_time = time(NULL);
   }
-  if (!profile_resp.is_ok) {
-    smsc_log_warn(rplog, "profileRespCmdHandler: receive PROFILE_RESP=ERROR profile key=%s",
-                   profile_resp.key.c_str());
-    sendResponseError(cmd_ctx, profile_resp.key, false);
+  if (!profile_resp.isOk()) {
+    PersServerResponseType response = RESPONSE_ERROR;
+    string status_text = "ERROR";
+    if (profile_resp.getStatus() == scag::cpers::STATUS_LOCKED) {
+      response = RESPONSE_PROFILE_LOCKED;
+      status_text = "LOCKED";
+    }
+    smsc_log_warn(rplog, "profileRespCmdHandler: receive PROFILE_RESP=%s profile key=%s",
+                   status_text.c_str(), profile_resp.key.c_str());
+    sendResponseError(cmd_ctx, profile_resp.key, false, response);
     return;
   }
   Profile* profile = getAbonentStore()->createProfile(addr);
@@ -833,12 +848,14 @@ void RegionPersServer::createResponseForClient(SerialBuffer* sb, PersServerRespo
   //SetPacketSize(*sb);
 }
 
-void RegionPersServer::sendResponseError(CmdContext* cmd_ctx, const string& key, bool send_done) {
+void RegionPersServer::sendResponseError(CmdContext* cmd_ctx, const string& key,
+                                          bool send_done, PersServerResponseType response) {
   if (cmd_ctx && listener.exists(cmd_ctx->socket)) {
-    createResponseForClient(cmd_ctx->osb, RESPONSE_ERROR);
-    sendResponseToClient(cmd_ctx, RESPONSE_ERROR);
+    createResponseForClient(cmd_ctx->osb, response);
+    sendResponseToClient(cmd_ctx, response);
   } else {
-    smsc_log_error(rplog, "sendResponseError: profile key=%s, socket %p disconnected", key.c_str(), cmd_ctx->socket);
+    smsc_log_error(rplog, "sendResponseError: profile key=%s, socket %p disconnected",
+                    key.c_str(), cmd_ctx->socket);
   }
   AbntAddr addr(key.c_str());
   commands.Delete(addr);

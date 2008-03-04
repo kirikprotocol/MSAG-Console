@@ -325,6 +325,7 @@ void PersClientImpl::CheckServerResponse(SerialBuffer& bsb)
   case RESPONSE_ERROR: throw PersClientException(SERVER_ERROR);
   case RESPONSE_BAD_REQUEST: throw PersClientException(BAD_REQUEST);
   case RESPONSE_TYPE_INCONSISTENCE: throw PersClientException(TYPE_INCONSISTENCE);
+  case RESPONSE_PROFILE_LOCKED: throw PersClientException(PROFILE_LOCKED);
   default: throw PersClientException(UNKNOWN_RESPONSE);
   }
 }

@@ -48,7 +48,8 @@ private:
   bool processPacketFromClient(ConnectionContext &ctx);
   PersServerResponseType execCommand(ConnectionContext &ctx);
   void sendResponseToClient(CmdContext *ctx, PersServerResponseType response);
-  void sendResponseError(CmdContext* cmd_ctx, const string& key, bool send_done = true);
+  void sendResponseError(CmdContext* cmd_ctx, const string& key, bool send_done = true,
+                          PersServerResponseType response = RESPONSE_ERROR);
   void continueExecBatch(ConnectionContext* ctx, CmdContext* cmd_ctx);
 
   bool sendCommandToCP(const CPersCmd& cmd);
