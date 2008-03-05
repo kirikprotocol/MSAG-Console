@@ -140,21 +140,21 @@ public:
     void removeSection(const char * const sectionName);
 
     //checks does the section with given absolute name exist having parameters defined
-    bool    findSection(const char * const sectionName);
+    bool    findSection(const char * const sectionName) const;
     //returns all nonempty root sections
-    CStrSet *getRootSectionNames(void);
-    CStrSet *getChildSectionNames(const char * const sectionName);
-  CStrSet* getChildShortSectionNames(const char * const sectionName);
-    CStrSet *getChildIntParamNames(const char * const sectionName);
-    CStrSet *getChildBoolParamNames(const char * const sectionName);
-    CStrSet *getChildStrParamNames(const char * const sectionName);
+    CStrSet *getRootSectionNames(void) const;
+    CStrSet *getChildSectionNames(const char * const sectionName) const;
+  CStrSet* getChildShortSectionNames(const char * const sectionName) const;
+    CStrSet *getChildIntParamNames(const char * const sectionName) const;
+    CStrSet *getChildBoolParamNames(const char * const sectionName) const;
+    CStrSet *getChildStrParamNames(const char * const sectionName) const;
 
 //protected:
   template<void(*collect_func)(CStrSet &,
                 const char * const ,
                 const size_t ,
                 const char * const)>
-  CStrSet* _getChildSectionNames(const char * const sectionName);
+  CStrSet* _getChildSectionNames(const char * const sectionName) const;
 
     typedef Hash<int32_t> intParamsType;
     typedef Hash<char *> strParamsType;
