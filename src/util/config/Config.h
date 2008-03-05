@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef SMSC_UTIL_CONFIG_CONFIG
 #define SMSC_UTIL_CONFIG_CONFIG
 
@@ -41,36 +41,13 @@ public:
 
     ~Config()
     {
+        char * value = NULL;
+        char * _name = NULL;
+        for (strParams.First(); strParams.Next(_name, value);)
+            delete [] value;
         strParams.Empty();
         intParams.Empty();
         boolParams.Empty();
-        /*
-        char * name;
-        char * value;
-        for (strParamsType::Iterator i = strParams.getIterator(); i.Next(name, value);)
-        {
-            strParams.Delete(name);
-            if (value != 0)
-            {
-                delete value;
-                delete name;
-            }
-        }
-
-        int32_t ival;
-        for (intParamsType::Iterator i = intParams.getIterator(); i.Next(name, ival);)
-        {
-            intParams.Delete(name);
-            delete name;
-        }
-
-        bool bval;
-        for (boolParamsType::Iterator i = boolParams.getIterator(); i.Next(name, bval);)
-        {
-            boolParams.Delete(name);
-            delete name;
-        }
-        */
     }
     /**
      *
@@ -228,16 +205,12 @@ public:
         }*/
         ~ConfigTree()
         {
-            ConfigTree * value;
-            char * _name;
+            ConfigTree * value = NULL;
+            char * _name = NULL;
             for (sections.First(); sections.Next(_name, value);)
-            {
                 delete value;
-                delete _name;
-                sections[_name]=0;
-            }
+            sections.Empty();
             params.clear();
-            free(name);
         }
 
         void addParam(const char * const name,
