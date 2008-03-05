@@ -24,23 +24,18 @@ public class RemoteResourceBundle {
     }
   }
   public String getString(String key) {
+    final String codePage = "cp1251";
     String message = "undefined";
     message = (String)properties.get(key);
     if (message!=null) return message;
     BufferedReader br = null;
     try {
     URL url = new URL(resource_url.toString() + "key="+key);
-
-        InputStream s =url.openStream();
-        byte[] mess = new byte[s.available()];
-        s.read( mess );
-        message = new String(mess, "cp1251");
-
-//    InputStreamReader is = new InputStreamReader(url.openStream());
-//    br = new BufferedReader(new InputStreamReader(url.openStream()));
-//    message = br.readLine();
-        
-    System.out.println("_MESSAGE='" + message );
+    InputStream s =url.openStream();
+    byte[] mess = new byte[s.available()];
+    s.read( mess );
+    message = new String(mess, codePage);
+    System.out.println("RRB:getString:message='" + message + "'");
     properties.put(key,message);
     } catch(Exception e) {
       e.printStackTrace();
