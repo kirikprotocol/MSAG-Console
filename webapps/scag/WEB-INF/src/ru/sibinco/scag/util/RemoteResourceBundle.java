@@ -30,13 +30,13 @@ public class RemoteResourceBundle {
     if (message!=null) return message;
     BufferedReader br = null;
     try {
-    URL url = new URL(resource_url.toString() + "key="+key);
-    InputStream s =url.openStream();
-    byte[] mess = new byte[s.available()];
-    s.read( mess );
-    message = new String(mess, codePage);
-    System.out.println("RRB:getString:message='" + message + "'");
-    properties.put(key,message);
+        URL url = new URL(resource_url.toString() + "key="+key);
+        InputStream s =url.openStream();
+        byte[] mess = new byte[s.available()];
+        s.read( mess );
+        message = new String(mess, codePage);
+        System.out.println("RRB:getString:message='" + message + "'");
+        properties.put(key,message);
     } catch(Exception e) {
       e.printStackTrace();
     } finally {
