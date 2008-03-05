@@ -30,8 +30,17 @@ public class RemoteResourceBundle {
     BufferedReader br = null;
     try {
     URL url = new URL(resource_url.toString() + "key="+key);
-    br = new BufferedReader(new InputStreamReader(url.openStream()));
-    message = br.readLine();
+
+        InputStream s =url.openStream();
+        byte[] mess = new byte[s.available()];
+        s.read( mess );
+        message = new String(mess, "cp1251");
+
+//    InputStreamReader is = new InputStreamReader(url.openStream());
+//    br = new BufferedReader(new InputStreamReader(url.openStream()));
+//    message = br.readLine();
+        
+    System.out.println("_MESSAGE='" + message );
     properties.put(key,message);
     } catch(Exception e) {
       e.printStackTrace();
