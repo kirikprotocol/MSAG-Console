@@ -289,7 +289,7 @@ int testBatch(PersClient& pc, int pf_number1, int pf_number2, int pf_number3, in
     ++success_req;
   } catch(const PersClientException &e) {
     if (e.getType() == CANT_CONNECT) throw;
-    smsc_log_error(logger, "testBatch: BATCH >>ABONENT %s: set property %s persclientexception: %s",
+    smsc_log_error(logger, "BATCH >>ABONENT %s: set property %s persclientexception: %s",
                     s1, tv, e.what());
     int_val = 0;
   }
@@ -302,7 +302,7 @@ int testBatch(PersClient& pc, int pf_number1, int pf_number2, int pf_number3, in
     smsc_log_debug(logger,  "BATCH >>ABONENT %s: get int %s", s1, prop.toString().c_str());
   } catch(const PersClientException &e) {
     if (e.getType() == CANT_CONNECT) throw;
-    smsc_log_error(logger, "testBatch: BATCH >>ABONENT %s: get property %s persclientexception: %s",
+    smsc_log_error(logger, "BATCH >>ABONENT %s: get property %s persclientexception: %s",
                     s1, tv, e.what());
   }
 
@@ -311,7 +311,7 @@ int testBatch(PersClient& pc, int pf_number1, int pf_number2, int pf_number3, in
     ++success_req;
   } catch(const PersClientException &e) {
     if (e.getType() == CANT_CONNECT) throw;
-    smsc_log_error(logger, "testBatch: BATCH >>ABONENT %s: set property %s persclientexception: %s",
+    smsc_log_error(logger, "BATCH >>ABONENT %s: set property %s persclientexception: %s",
                     s2, tvb, e.what());
     bool_val = true;
   }
@@ -324,7 +324,7 @@ int testBatch(PersClient& pc, int pf_number1, int pf_number2, int pf_number3, in
     ++success_req;
   } catch(const PersClientException &e) {
     if (e.getType() == CANT_CONNECT) throw;
-    smsc_log_error(logger, "testBatch: BATCH >>ABONENT %s: get property %s persclientexception: %s",
+    smsc_log_error(logger, "BATCH >>ABONENT %s: get property %s persclientexception: %s",
                     s2, tvb, e.what());
   }
 
@@ -333,7 +333,7 @@ int testBatch(PersClient& pc, int pf_number1, int pf_number2, int pf_number3, in
     ++success_req;
   } catch(const PersClientException &e) {
     if (e.getType() == CANT_CONNECT) throw;
-    smsc_log_error(logger, "testBatch: BATCH >>ABONENT %s: set property %s persclientexception: %s",
+    smsc_log_error(logger, "BATCH >>ABONENT %s: set property %s persclientexception: %s",
                     s3, tvs, e.what());
   }
   try {
@@ -345,7 +345,7 @@ int testBatch(PersClient& pc, int pf_number1, int pf_number2, int pf_number3, in
     ++success_req;
   } catch(const PersClientException &e) {
     if (e.getType() == CANT_CONNECT) throw;
-    smsc_log_error(logger, "testBatch: BATCH >>ABONENT %s: get property %s persclientexception: %s",
+    smsc_log_error(logger, "BATCH >>ABONENT %s: get property %s persclientexception: %s",
                     s3, tvs, e.what());
   }
   smsc_log_warn(logger,  "BATCH: success requests %d, error requests %d, total requests=%d",
@@ -367,6 +367,7 @@ int main(int argc, char* argv[])
         ConfigManager::Init();
 
         PersClientConfig &client_config = ConfigManager::Instance().getPersClientConfig();
+        sleep(10);
 
         PersClient::Init(client_config.host.c_str(), client_config.port, client_config.timeout,
                           client_config.pingTimeout);
