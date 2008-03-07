@@ -57,6 +57,7 @@ public:
 
 protected:
   Logger *logger;
+  Logger *info_log;
   typedef RBTreeHSAllocator<AbntAddr, ProfileInfo> ProfileInfoAllocator;
   typedef RBTree<AbntAddr, ProfileInfo> ProfileInfoStorage;
   ProfileInfoAllocator profileInfoAllocator;

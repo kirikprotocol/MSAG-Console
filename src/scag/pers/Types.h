@@ -51,6 +51,18 @@ enum PersServerResponseType{
     RESPONSE_PROFILE_LOCKED
 };
 
+    static const char* RESPONSE_TEXT[] = {
+      "unknown",
+      "ok",
+      "error",
+      "property not found",
+      "bad request",
+      "type inconsistence",
+      "command in process",
+      "profile locked"
+    };
+
+
 }}
 
 #endif

@@ -38,7 +38,6 @@ void PersSocketServer::InitServer()
     if(!listener.addR(&sock))
         throw Exception("Failed to init PersSocketServer");
     bindToCP();
-    checkProfilesStates();
 }
 
 void PersSocketServer::processReadSocket(Socket* s)

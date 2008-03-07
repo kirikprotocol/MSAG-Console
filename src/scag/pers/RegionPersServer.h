@@ -47,13 +47,13 @@ private:
   bool processPacketFromCP(ConnectionContext &ctx);
   bool processPacketFromClient(ConnectionContext &ctx);
   PersServerResponseType execCommand(ConnectionContext &ctx);
-  void sendResponseToClient(CmdContext *ctx, PersServerResponseType response);
+  void sendResponseToClient(Socket *socket, PersServerResponseType response);
   void sendResponseError(CmdContext* cmd_ctx, const string& key, bool send_done = true,
                           PersServerResponseType response = RESPONSE_ERROR);
-  void continueExecBatch(ConnectionContext* ctx, CmdContext* cmd_ctx);
+  void continueExecBatch(ConnectionContext* ctx, Socket* socket);
 
   bool sendCommandToCP(const CPersCmd& cmd);
-  void createResponseForClient(SerialBuffer *sb, PersServerResponseType r);
+  void createResponseForClient(SerialBuffer *sb, PersServerResponseType r, const std::string& key);
   void sendPacketToClient(SerialBuffer& packet, Socket* socket);
   void abortTransactBatch(SerialBuffer& packet, Socket* socket);
   void execClientRequest(CmdContext* cmd_ctx, Profile *profile, const std::string& pf_key);
@@ -105,6 +105,7 @@ private:
   //smsc::core::buffers::XHash<AbntAddr, uint8_t, AbntAddr> profiles_states;
   //smsc::core::buffers::XHash<AbntAddr, time_t, AbntAddr> requested_profiles;
   Logger* rplog;
+  Logger* info_log;
 };
 
 }//pers
