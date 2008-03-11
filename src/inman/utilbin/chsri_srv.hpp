@@ -1,11 +1,12 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************** *
+ * Simple console application testing MAP Send Routing Info (Call Handling)
+ * service of HLR.
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_CHSRI_SERVICE__
 #define __SMSC_INMAN_CHSRI_SERVICE__
 
-#include <map>
-
-#include "inman/comp/acdefs.hpp"
-using smsc::ac::ACOID;
+//#include <map>
 
 #include "inman/inap/dispatcher.hpp"
 using smsc::inman::inap::TCAPDispatcher;
@@ -17,6 +18,9 @@ using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::inap::chsri::CHSRIhandlerITF;
 using smsc::inman::inap::chsri::MapCHSRIDlg;
+
+#include "inman/utilbin/MAPUsrCfg.hpp"
+using smsc::inman::inap::MAPUsr_CFG;
 
 namespace smsc  {
 namespace inman {
@@ -46,10 +50,10 @@ protected:
     //if ercode != 0, no result has been got from MAP service,
     void onEndMapDlg(RCHash ercode = 0);
     //
-    inline void Awake(void) { /* TODO: */ }
+    inline void Awake(void) { _sync.notify(); }
 
 private:
-    Mutex           _sync;
+    mutable EventMonitor   _sync;
     volatile bool   _active;
     TCSessionMA *    tcSesssion;
     MapCHSRIDlg *   sriDlg;
@@ -61,27 +65,18 @@ private:
 };
 
 
-struct SS7_CFG {
-//SS7 interaction:
-    unsigned char   userId;         //PortSS7 user id [1..20]
-    unsigned short  mapTimeout;     //optional timeout for operations with HLR platform
-    const char*     scf_addr;       //
-    int             scf_ssn;        //
-    int             hlr_ssn;        //
-};
-
 struct ServiceCHSRI_CFG {
-    SS7_CFG         hlr;
+    MAPUsr_CFG      mapCfg;
     SRI_CSIListener * client;
 };
 
 class ServiceCHSRI: SRI_CSIListener {
 public:
-    ServiceCHSRI(const ServiceCHSRI_CFG * in_cfg, Logger * uselog = NULL);
-    virtual ~ServiceCHSRI();
+    ServiceCHSRI(const ServiceCHSRI_CFG & in_cfg, Logger * uselog = NULL);
+    ~ServiceCHSRI();
 
-    bool start();
-    void stop();
+    bool start(void);
+    void stop(bool do_wait = false);
 
     //sets subscriber identity: MSISDN addr
     bool requestCSI(const std::string &subcr_addr);
@@ -96,11 +91,12 @@ private:
     typedef std::map<std::string, SRIInterrogator *> IntrgtrMAP;
     typedef std::list<SRIInterrogator *> IntrgtrLIST;
 
+    bool getSession(void);
     SRIInterrogator * newWorker(void);
 
-    Mutex           _sync;
+    mutable Mutex   _sync;
     Logger*         logger;
-    SSNSession*     session;
+    const char *    _logId;
     TCSessionMA *   mapSess;
     TCAPDispatcher* disp;
     volatile bool   running;

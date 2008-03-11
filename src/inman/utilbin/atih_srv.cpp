@@ -1,7 +1,15 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-//#include <assert.h>
+#endif /* MOD_IDENT_OFF */
 
-#include "atih_srv.hpp"
+#include "inman/comp/map_atih/MapATIHFactory.hpp"
+using smsc::inman::comp::atih::initMAPATIH3Components;
+using smsc::inman::comp::_ac_map_anyTimeInfoHandling_v3;
+
+#include "inman/utilbin/atih_srv.hpp"
+using smsc::inman::comp::MAPServiceRC;
+using smsc::inman::comp::_RCS_MAPService;
+using smsc::inman::inap::TCAPDispatcherITF;
 
 namespace smsc  {
 namespace inman {
@@ -9,82 +17,98 @@ namespace inman {
 /* ************************************************************************** *
  * class ServiceATIH implementation:
  * ************************************************************************** */
-ServiceATIH::ServiceATIH(const ServiceATIH_CFG * in_cfg, Logger * uselog/* = NULL*/)
-    : logger(uselog), _cfg(*in_cfg), session(0), disp(0)
+ServiceATIH::ServiceATIH(const ServiceATIH_CFG & in_cfg, Logger * uselog/* = NULL*/)
+    : logger(uselog), _cfg(in_cfg), mapSess(0), disp(new TCAPDispatcher())
+    , _logId("ATIHSrv"), running(false)
 {
     if (!logger)
-        logger = Logger::getInstance("smsc.inman.ServiceATIH");
-
-    smsc_log_debug(logger, "ServiceATIH: Creating ..");
-
-    disp = TCAPDispatcher::getInstance();
-    _cfg.hlr.userId += 39; //adjust USER_ID to PortSS7 units id
-    if (!disp->connect(_cfg.hlr.userId))
-        smsc_log_error(logger, "ATIHSrv: EINSS7 stack unavailable!!!");
-    else {
-        smsc_log_debug(logger, "ATIHSrv: TCAP dispatcher has connected to SS7 stack");
-        if (!(session = disp->openSSN(_cfg.hlr.scf_ssn, 1000))) {
-            smsc_log_error(logger, "ATIHSrv: SSN[%u] unavailable!!!", _cfg.hlr.scf_ssn);
-        } else {
-            if (!(mapSess = session->newMAsession(_cfg.hlr.scf_addr,
-                    ACOID::id_ac_map_anyTimeInfoHandling_v3, _cfg.hlr.hlr_ssn))) {
-                smsc_log_error(logger, "ATIHSrv: Unable to init MAP session: %s -> %u:*",
-                               _cfg.hlr.scf_addr, _cfg.hlr.hlr_ssn);
-            } else
-                smsc_log_debug(logger, "ATIHSrv: TCMA[%u:%u] session inited",
-                               _cfg.hlr.scf_ssn, mapSess->getUID());
-        }
-    }
+        logger = Logger::getInstance("smsc.inman.ATIH");
+    disp->Init(_cfg.mapCfg.ss7);
 }
 
 ServiceATIH::~ServiceATIH()
 {
-    smsc_log_debug(logger, "ATIHSrv: Releasing ..");
+    smsc_log_debug(logger, "%s: Releasing ..", _logId);
     {
         MutexGuard  grd(_sync);
-        if (workers.size()) {
-            smsc_log_error(logger, "ATIHSrv: there %u interrogators active, killing ..", 
-                           workers.size());
-            for (IntrgtrMAP::iterator it = workers.begin(); it != workers.end(); it++) {
-                ATIInterrogator * worker = (*it).second;
+        if (!workers.empty()) {
+            smsc_log_error(logger, "%s: there %u interrogators active, killing ..",
+                           _logId, workers.size());
+            for (IntrgtrMAP::iterator it = workers.begin(); it != workers.end(); ++it) {
+                ATIInterrogator * worker = it->second;
                 worker->cancel();
                 pool.push_back(worker);
             }
             workers.clear();
         }
     }
-    if (running)
-      stop();
-
-    MutexGuard  grd(_sync);
-    smsc_log_debug(logger, "ATIHSrv: Disconnecting SS7 stack ..");
-    disp->disconnect();
-    smsc_log_debug( logger, "ATIHSrv: Released." );
-
+    stop(true);
     //release workers
-    for (IntrgtrLIST::iterator it = pool.begin(); it != pool.end(); it++) {
-        ATIInterrogator * worker = (*it);
-        delete worker;
+    {
+        MutexGuard  grd(_sync);
+        for (IntrgtrLIST::iterator it = pool.begin(); it != pool.end(); ++it) {
+            ATIInterrogator * worker = (*it);
+            delete worker;
+        }
+        pool.clear();
+        delete disp;
     }
-    pool.clear();
-
+    smsc_log_debug(logger, "%s: Released.", _logId);
 }
 
-bool ServiceATIH::start()
+bool ServiceATIH::start(void)
 {
     MutexGuard  grd(_sync);
-    running = true;
-    smsc_log_debug(logger, "ATIHSrv: Started.");
+    if (running)
+        return true;
+    if ((running = (disp->Start() && getSession())))
+        smsc_log_debug(logger, "%s: Started.", _logId);
     return running;
 }
 
-void ServiceATIH::stop()
+void ServiceATIH::stop(bool do_wait/* = false*/)
 {
     MutexGuard  grd(_sync);
-    smsc_log_debug(logger, "ATIHSrv: Stopping TCAP dispatcher ..");
-    disp->Stop();
-    running = false;
-    smsc_log_debug(logger, "ATIHSrv: Stopped.");
+    if (running) {
+        smsc_log_debug(logger, "%s: Stopping TCAP dispatcher ..", _logId);
+        disp->Stop(do_wait);
+        running = false;
+    }
+    if (do_wait)
+        disp->Stop(true);
+    smsc_log_debug(logger, "%s: Stopped.", _logId);
+}
+
+//Must be called with _sync locked
+bool ServiceATIH::getSession(void)
+{
+    if (!mapSess) { //openSSN, initialize TCSessionMA
+        if (disp->ss7State() != TCAPDispatcherITF::ss7CONNECTED) {
+            smsc_log_error(logger, "%s: TCAPDispatcher is not connected!", _logId);
+            return false;
+        }
+        if (!disp->acRegistry()->getFactory(_ac_map_anyTimeInfoHandling_v3)
+            && !disp->acRegistry()->regFactory(initMAPATIH3Components)) {
+            smsc_log_fatal(logger, "%s: ROS factory registration failed: %s!", _logId,
+                            _ac_map_anyTimeInfoHandling_v3.nick());
+            return false;
+        }
+        SSNSession * session = disp->openSSN(_cfg.mapCfg.usr.ownSsn, _cfg.mapCfg.usr.maxDlgId);
+        if (!session) {
+            smsc_log_error(logger, "%s: SSN[%u] is unavailable!", _logId, 
+                           (unsigned)_cfg.mapCfg.usr.ownSsn);
+            return false;
+        }
+        if (!(mapSess = session->newMAsession(_cfg.mapCfg.usr.ownAddr.toString().c_str(),
+                                _ac_map_anyTimeInfoHandling_v3, 6, _cfg.mapCfg.usr.fakeSsn))) {
+            smsc_log_error(logger, "%s: Unable to init MAP session: %s -> %u:*", _logId,
+                                  _cfg.mapCfg.usr.ownAddr.toString().c_str(), 6);
+            return false;
+        }
+        smsc_log_info(logger, "%s: TCMA[%u:%u] inited", _logId,
+                      (unsigned)_cfg.mapCfg.usr.ownSsn, mapSess->getUID());
+    }
+    return (mapSess != 0);
 }
 
 
@@ -101,9 +125,9 @@ bool ServiceATIH::requestCSI(const std::string &subcr_addr, bool imsi/* = true*/
             }
             pool.push_back(worker);
         } else
-            smsc_log_error(logger, "ATIHSrv: SSN is not bound!");
+            smsc_log_error(logger, "%s: SSN is not bound!", _logId);
     } else
-        smsc_log_error(logger, "ATIHSrv: CSI request already active!");
+        smsc_log_error(logger, "%s: CSI request already active!", _logId);
     return false;
 }
 
@@ -115,7 +139,7 @@ void ServiceATIH::onCSIresult(const std::string & subcr_addr, const GsmSCFinfo* 
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
     if (it != workers.end()) {
-        ATIInterrogator * worker = (*it).second;
+        ATIInterrogator * worker = it->second;
         workers.erase(it);
         if (_cfg.client)
             _cfg.client->onCSIresult(subcr_addr, scfInfo);
@@ -128,7 +152,7 @@ void ServiceATIH::onCSIabort(const std::string &subcr_addr, RCHash ercode)
     MutexGuard  grd(_sync);
     IntrgtrMAP::iterator it = workers.find(subcr_addr);
     if (it != workers.end()) {
-        ATIInterrogator * worker = (*it).second;
+        ATIInterrogator * worker = it->second;
         workers.erase(it);
         if (_cfg.client)
             _cfg.client->onCSIabort(subcr_addr, ercode);
@@ -141,16 +165,14 @@ void ServiceATIH::onCSIabort(const std::string &subcr_addr, RCHash ercode)
  * ------------------------------------------------------------------------ */
 ATIInterrogator * ServiceATIH::newWorker(void)
 {
-    ATIInterrogator * worker;
-    for (IntrgtrLIST::iterator it = pool.begin(); it != pool.end(); it++) {
-        worker = (*it);
+    for (IntrgtrLIST::iterator it = pool.begin(); it != pool.end(); ++it) {
+        ATIInterrogator * worker = (*it);
         if (!worker->isActive()) {
             pool.erase(it);
             return worker;
         }
     }
-    worker = new ATIInterrogator(mapSess, this);
-    return worker;
+    return new ATIInterrogator(mapSess, this);
 }
 
 /* ************************************************************************** *

@@ -1,12 +1,12 @@
-#ident "$Id$"
-
+#pragma ident "$Id$"
+/* ************************************************************************** *
+ * Simple console application testing MAP Any Time Subscription Interrogation
+ * service of HLR.
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_ATIH_SERVICE__
 #define __SMSC_INMAN_ATIH_SERVICE__
 
 #include <map>
-
-#include "inman/comp/acdefs.hpp"
-using smsc::ac::ACOID;
 
 #include "inman/inap/dispatcher.hpp"
 using smsc::inman::inap::TCAPDispatcher;
@@ -18,6 +18,9 @@ using smsc::inman::comp::atih::ATSIArg;
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 using smsc::inman::inap::atih::ATSIhandlerITF;
 using smsc::inman::inap::atih::MapATSIDlg;
+
+#include "inman/utilbin/MAPUsrCfg.hpp"
+using smsc::inman::inap::MAPUsr_CFG;
 
 namespace smsc  {
 namespace inman {
@@ -41,14 +44,15 @@ public:
 
 protected:
     friend class smsc::inman::inap::atih::MapATSIDlg;
-    //ATSIhandler interface
+    //ATSIhandlerITF interface
     void onATSIResult(ATSIRes* arg);
     //dialog finalization/error handling:
     //if ercode != 0, no result has been got from MAP service,
     void onEndATSI(RCHash ercode = 0);
+//    inline void Awake(void) {  }
 
 private:
-    Mutex           _sync;
+    mutable Mutex   _sync;
     volatile bool   _active;
     TCSessionMA *   tcSesssion;
     MapATSIDlg *    mapDlg;
@@ -58,28 +62,18 @@ private:
     Logger *        logger;
 };
 
-
-struct SS7_CFG {
-//SS7 interaction:
-    unsigned char   userId;         //PortSS7 user id [1..20]
-    unsigned short  mapTimeout;     //optional timeout for operations with HLR platform
-    const char*     scf_addr;       //
-    int             scf_ssn;        //
-    int             hlr_ssn;        //
-};
-
 struct ServiceATIH_CFG {
-    SS7_CFG         hlr;
+    MAPUsr_CFG      mapCfg;
     ATCSIListener * client;
 };
 
 class ServiceATIH: ATCSIListener {
 public:
-    ServiceATIH(const ServiceATIH_CFG * in_cfg, Logger * uselog = NULL);
+    ServiceATIH(const ServiceATIH_CFG & in_cfg, Logger * uselog = NULL);
     virtual ~ServiceATIH();
 
     bool start();
-    void stop();
+    void stop(bool do_wait = false);
 
     //sets subscriber identity: IMSI or MSISDN addr
     bool requestCSI(const std::string &subcr_addr, bool imsi = true);
@@ -94,11 +88,12 @@ private:
     typedef std::map<std::string, ATIInterrogator *> IntrgtrMAP;
     typedef std::list<ATIInterrogator *> IntrgtrLIST;
 
+    bool getSession(void);
     ATIInterrogator * newWorker(void);
 
-    Mutex           _sync;
+    mutable Mutex   _sync;
     Logger*         logger;
-    SSNSession*     session;
+    const char *    _logId;
     TCSessionMA *   mapSess;
     TCAPDispatcher* disp;
     volatile bool   running;

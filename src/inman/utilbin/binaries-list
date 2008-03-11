@@ -1,8 +1,10 @@
 #
 # $Id$
 #
-inman/atih_test atih_test $(SOCKETLIB) -lutil -linman-utilbin -linman-inap -linman-inap-map_atih -linman-comp -linman-comp-map_atih -linman-codecs-map_atih -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl -l$(SS7_LIBRARY_NAME) -lutil -linman-asn1rt -linman-inap -linman-comp -linman -lutil-URCdb
-inman/chsri_test chsri_test $(SOCKETLIB) -lutil -linman-utilbin  -linman-inap -linman-inap-map_chsri -linman-comp -linman-comp-map_chsri  -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl -linman-inap -linman-comp -lutil -linman -lutil-URCdb
+inman/atih_test atih_test -linman-utilbin -linman-inap-map_atih -linman-comp-map_atih -linman-comp -linman-inap -linman-codecs-map_atih -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -linman -lutil -lutil-URCdb -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network $(SOCKETLIB) -lnsl -ldl 
+
+inman/chsri_test chsri_test -linman-utilbin -linman-inap-map_chsri -linman-comp-map_chsri -linman-comp -linman-inap -linman-codec_inc-map -linman-codec_inc-ros -linman-asn1rt -linman-common -linman -lutil -lutil-URCdb -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network $(SOCKETLIB) -lnsl -ldl
+
 inman/RFSTest RFSTest -linman-common -linman-storage -lrt -L$(SMSC_BUILDDIR)/bin -lutil -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-inap -linman-comp -lutil
 inman/cvtest cvtest -zrescan -lrt -L$(SMSC_BUILDDIR)/bin -linman-common -linman-inap -linman-comp -lutil
 
