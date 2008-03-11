@@ -12,7 +12,8 @@ namespace filestore {
 InRollingFileStorage::InRollingFileStorage(const std::string & location,
                         const char *lastExt, const char *storageExt,
                         unsigned long rollInterval/* = 0*/,
-                        const RollingFileStorageParms * parms/* = NULL*/, Logger * uselog/* = NULL*/)
+                        const RollingFileStorageParms * parms/* = NULL*/,
+                        Logger * uselog/* = NULL*/)
     : RollingFileStorage(location, lastExt, storageExt, rollInterval, parms)
 {
     if (!(logger = uselog))
@@ -131,15 +132,16 @@ void InFileStorageRoller::Start(void)
 
 void InFileStorageRoller::Stop(bool wait_for/* = false*/)
 {
-    _mutex.Lock();
-    if (_running) {
+    {
+        MutexGuard grd(_mutex);
+        if (!_running)
+            return;
         _running = false;
         _mutex.notify();
+        if (!wait_for)
+            return;
     }
-    _mutex.Unlock();
-
-    if (wait_for)
-        Thread::WaitFor();
+    Thread::WaitFor();
 }
 
 
@@ -159,14 +161,14 @@ int InFileStorageRoller::Execute(void)
     _mutex.Lock();
     _running = true;
     while(_running) {
-        time_t          nextTm, awakeTm;
+        time_t          awakeTm;
         int             sleepSecs;
 
         RolledFSMap::iterator it = rfsMap.begin();
         if (it != rfsMap.end()) {
             awakeTm = checkRoll(it);
-            for (it++; it != rfsMap.end(); it++) {
-                nextTm = checkRoll(it);
+            for (++it; it != rfsMap.end(); ++it) {
+                time_t nextTm = checkRoll(it);
                 if (nextTm < awakeTm)
                     awakeTm = nextTm;
             }
@@ -176,40 +178,13 @@ int InFileStorageRoller::Execute(void)
         if ((sleepSecs = (int)(awakeTm - time(NULL))) > 0)
             //NOTE: sleepSecs should be converted to millisecs, so check
             //for overflow. Consider sleepSecs*1000 ~~ sleepSecs*1024,
-            //hence limit is 2**22 (= 4194304 = 0x400000)
-            _mutex.wait(sleepSecs > 0x400000 ? 0x400000 : sleepSecs*1000);
+            //hence limit is 2**(32-10) = 2**22 = 4194304 = 0x400000
+            _mutex.wait((sleepSecs > 0x400000 ? 0x400000 : sleepSecs)*1000);
     }
     _mutex.Unlock();
     return 0;
 }
 
-
-/*
-int InFileStorageRoller::Execute(void)
-{
-    time_t          nextTm;
-    int             sleepSecs;
-
-    rolEvent.Signal();
-    _mutex.Lock();
-    _running = true;
-    while(_running) {
-        _mutex.Unlock();
-        if (time(NULL) >= (nextTm = (_rFS->getLastRollingTime() + _interval))) {
-            _rFS->RFSRoll();
-            nextTm = _rFS->getLastRollingTime() + _interval;
-        }
-        _mutex.Lock();
-        if ((sleepSecs = (int)(nextTm - time(NULL))) > 0)
-            //NOTE: sleepSecs should be converted to millisecs, so check
-            //for overflow. Consider sleepSecs*1000 ~~ sleepSecs*1024,
-            //hence limit is 2**22 (= 4194304 = 0x400000)
-            _mutex.wait(sleepSecs > 0x400000 ? 0x400000 : sleepSecs*1000);
-    }
-    _mutex.Unlock();
-    return 0;
-}
-*/
 } //filestore
 } //inman
 } //smsc
