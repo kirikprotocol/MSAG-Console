@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<!--  "$Id$" -->
+<config>
+  <section name="ussbalance">
+    <param name="host" type="string">0.0.0.0</param>
+    <param name="port" type="int">9687</param> 
+    <param name="maxConn" type="int">10</param>
+    <param name="tcapUser" type="string">TCAPUserUSS</param>  <!--
+    section name for TCAP user configuration this USS service uses
+    -->
+  </section>
+
+  <section name="SS7"> <!-- SS7 stack interaction parameters -->
+    <param name="ss7UserId" type="int">03</param>     <!--  PortSS7 user id [1..20], default: 03  -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxMsgNum" type="int">800</param>     <!--
+     max input SS7 messages buffer size,   [1..65535], default: 512,
+     NOTE: is overriden by value from cp.cnf  -->
+  </section>
+
+  <section name="TCAPUserUSS"> <!-- USS specific TCUser configuration -->
+    <param name="ownSsn" type="int">160</param>
+    <param name="ownAddress" type="string">@ussman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">1000</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">6</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">20</param>   <!--
+    timeout on ROS operations (MAP/CAP), units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+</config>
