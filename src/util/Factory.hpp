@@ -60,6 +60,66 @@ public:
     }
 };
 
+
+//Generic factory that allows to set an optional argument
+//for product creation.
+//NOTE: _TArg(_ArgTArg * use_arg = NULL) must be defined
+template <typename _KeyTArg, class _ProductAC_TArg, class _ArgTArg>
+class FactoryXArg_T {
+public:
+    typedef typename _KeyTArg KeyType;
+
+    struct ProducerITF
+    {
+        virtual _ProductAC_TArg* create(_ArgTArg * use_arg = NULL) const = 0;
+    };
+
+    template< class _TArg /* : public _ProductAC_TArg*/>
+    struct ProducerT : public ProducerITF
+    {
+        virtual _ProductAC_TArg * create(_ArgTArg * use_arg = NULL) const
+        { return new _TArg(use_arg); }
+    };
+
+protected:
+    typedef std::map<KeyType, ProducerITF*> ProductsMap;
+    ProductsMap producers;
+
+public:
+    FactoryXArg_T()
+    { }
+    ~FactoryXArg_T()
+    { }
+
+    bool registerProduct(KeyType key, ProducerITF * producer)
+    {
+        std::pair<ProductsMap::iterator, bool> res =
+            producers.insert(ProductsMap::value_type(key, producer));
+        return res.second;
+    }
+
+    _ProductAC_TArg * create(KeyType key, _ArgTArg * use_arg = NULL) const
+    {
+        ProductsMap::const_iterator it = producers.find(key);
+        return (it == producers.end()) ? NULL : it->second->create(use_arg);
+    }
+
+    //usefull for determining wether the product is registered or not
+    ProducerITF * getProducer(KeyType key) const
+    {
+        ProductsMap::const_iterator it = producers.find(key);
+        return (it == producers.end()) ? NULL : it->second;
+    }
+
+    //destroys all producers
+    void eraseAll(void)
+    {
+        for (ProductsMap::iterator it = producers.begin(); it != producers.end(); ++it)
+            delete it->second;
+        producers.clear();
+    }
+};
+
 } //util
 } //smsc
 
