@@ -1,0 +1,6 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name source name libraries
+#-linman-services-tcapdsp
+inman/ldlib/libinman_ics_tcapdsp.so TCAPDspLoader $(SHARED_OPT) -linman-inap $(__LIBRARIES) -linman-inap -linman-comp -linman-common -ldl -lrt
