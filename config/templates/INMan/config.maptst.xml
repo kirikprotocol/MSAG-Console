@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+<!--  "$Id$" -->
+<!-- configuration for testing MAP services -->
+<config>
+  <param name="ATIH" type="string">TCAPUserVLR-HLR</param>  <!-- AnyTimeSubscriptionInterrogation -->
+  <param name="CH-SRI" type="string">TCAPUserVLR-HLR</param>  <!-- SendRoutingInfo (Call Handling) -->
+
+  <section name="SS7"> <!-- EIN SS7 stack interaction parameters -->
+    <param name="ss7UserId" type="int">03</param>     <!--  PortSS7 user id [1..20], default: 03  -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxMsgNum" type="int">800</param>     <!--
+     max input SS7 messages buffer size,   [1..65535], default: 512,
+     NOTE: is overriden by value from cp.cnf  -->
+  </section>
+
+  <section name="TCAPUser"> <!-- Common TCUser configuration -->
+    <param name="ownSsn" type="int">146</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">1000</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">0</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">20</param>   <!--
+    timeout on ROS operations (MAP/CAP), units: seconds, max: 65535, default 20
+    -->
+ </section>
+
+ <section name="TCAPUserVLR-HLR"> <!-- TCUser configuration, that emulates VLR - HLR interaction -->
+   <param name="ownSsn" type="int">146</param>
+   <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+   <!-- OPTIONAL PARAMETERS follow:: -->
+   <param name="maxDialogs" type="int">500</param>   <!--
+   maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+   -->
+   <param name="fakeSsn" type="int">8</param>    <!--
+   SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+   -->
+   <param name="rosTimeout" type="int">6</param>   <!--
+   timeout on ROS operations (MAP/CAP), units: seconds, max: 65535, default 20
+   -->
+ </section>
+
+</config>
+
+<!--
+Novosibirsk SCCP configuration
+----------   - ----
+GT           =  SSN
+----------   - ----
+79139869981  = 146
+791398699810 =   7
+791398699811 = 160
+79139869998  =   6
+79139869999  =   8
+-->
+
