@@ -9,7 +9,8 @@
 using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::AbonentsDB;
 
-#include "inman/interaction/MsgContract.hpp"
+#include "inman/interaction/msgdtcr/MsgContract.hpp"
+using smsc::inman::interaction::INPSerializer;
 using smsc::inman::interaction::INPCSAbntContract;
 using smsc::inman::interaction::AbntContractRequest;
 using smsc::inman::interaction::AbntContractResult;
@@ -162,6 +163,7 @@ public:
         , _abDB(AbonentsDB::getInstance())
     {
         strcpy(_logId, "TFDtcr");
+        INPSerializer::getInstance()->registerCmdSet(INPCSAbntContract::getInstance());
     }
 
     virtual ~DtcrFacade()

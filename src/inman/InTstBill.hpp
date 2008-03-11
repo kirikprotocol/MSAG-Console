@@ -9,7 +9,8 @@
 using smsc::inman::test::TSTFacadeAC;
 using smsc::inman::test::AbonentsDB;
 
-#include "inman/interaction/MsgBilling.hpp"
+#include "inman/interaction/msgbill/MsgBilling.hpp"
+using smsc::inman::interaction::INPSerializer;
 using smsc::inman::interaction::INPCSBilling;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
@@ -91,6 +92,7 @@ public:
         , _abDB(AbonentsDB::getInstance())
     { 
         strcpy(_logId, "TFBill");
+        INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
     }
 
     virtual ~BillFacade()

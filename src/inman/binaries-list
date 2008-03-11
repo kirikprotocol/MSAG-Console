@@ -1,8 +1,9 @@
 #
 # $Id$
 #
-inman/inmanTest inmanTest $(SOCKETLIB) $(__OCI_LIB_SO__) -lrt -L$(SMSC_BUILDDIR)/bin -lutil -linman -linman-storage -lcore-threads -lthread -llogger -lcore-network -lnsl -linman-interaction -linman-common  -lutil -lcore-network -lcore-threads
-inman/inman inman $(SOCKETLIB) -linman -linman-incache -ldb -linman-abprov -linman-storage -linman-inap  -linman-inap-cap_sms -linman-comp -linman-comp-cap_sms  -linman-codec_inc-cap -linman-codec_inc-map -linman-codec_inc-in_cs -linman-codec_inc-ros   -linman-asn1rt -linman-interaction -linman-common -lutil -lutil-config -lutil-xml $(XERCES_LIB) -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl -lutil-mirrorfile -lutil -lcore-network -lcore-threads -linman-comp -linman -lutil-URCdb
+inman/inmanTest inmanTest -linman -linman-interaction-msgbill -linman-interaction-msgdtcr -linman-interaction -linman-common -linman-storage $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lutil  -lcore-threads -lthread -llogger -lcore-network -lnsl -lutil
 
+inman/inman inman $(SOCKETLIB) -linman -linman-services -linman-services-tcpsrv -linman-services-tmwatch -linman-interaction -linman-common -lutil-config -lutil-xml $(XERCES_LIB) $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl -ldl -lutil-mirrorfile -lutil -lutil-URCdb
+#-lcore-network -lcore-threads -linman 
 
 

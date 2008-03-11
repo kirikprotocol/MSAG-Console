@@ -10,7 +10,7 @@ using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 
-#include "inman/common/adrutil.hpp"
+#include "inman/AbntContract.hpp"
 using smsc::inman::AbonentImsi;
 using smsc::inman::AbonentContractInfo;
 

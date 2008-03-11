@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * INMan error codes.
  * ************************************************************************* */
@@ -55,5 +55,8 @@ URCSpacePTR  _RCS_INManErrors("errINMan", INManErrorId::protocolGeneralError, \
 
 } //inman
 } //smsc
+
+#define _RCS_INManErrorsGET() smsc::inman::_RCS_INManErrors.get()
+
 #endif /* __SMSC_INMAN_ERRORS__ */
 
