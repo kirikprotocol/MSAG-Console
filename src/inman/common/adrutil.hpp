@@ -1,18 +1,14 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
- * Various Address packing utilities.
+ * Various Address packing utilities for SCCP, TCAP, MAP, CAP.
  * ************************************************************************** */
 #ifndef __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 #define __SMSC_CONVERSION_ADDRESS_UTL_HPP__
 
-#include <inttypes.h>   //OS dependent
-#include <string.h>
-#include <stdio.h>
+#include "util/TonNpiAddress.hpp"
+using smsc::util::TonNpiAddress;
 
-#include <string>
-
-#include "inman/common/types.hpp"
-#include "inman/AbntContract.hpp"
+#include "inman/inap/SS7Types.hpp"
 
 #define CAP_MAX_LocationNumber_Length   8
 #define CAP_MAX_TimeAndTimezoneLength   8
