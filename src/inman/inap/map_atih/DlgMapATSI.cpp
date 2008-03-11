@@ -1,6 +1,6 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-
-#include <assert.h>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/inap/map_atih/DlgMapATSI.hpp"
 using smsc::inman::comp::atih::MAPATIH_OpCode;
@@ -9,8 +9,10 @@ using smsc::inman::comp::MAPServiceRC;
 using smsc::inman::comp::_RCS_MAPService;
 
 #include "inman/inap/TCAPErrors.hpp"
-using smsc::inman::inap::TC_AbortCause;
-using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::TC_PAbortCause;
+using smsc::inman::inap::_RCS_TC_PAbort;
+using smsc::inman::inap::TC_UAbortCause;
+using smsc::inman::inap::_RCS_TC_UAbort;
 using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
@@ -25,7 +27,6 @@ MapATSIDlg::MapATSIDlg(TCSessionMA* pSession, ATSIhandlerITF * atsi_handler,
     : atsiHdl(atsi_handler), session(pSession), atsiId(0), dialog(NULL)
     , logger(uselog)
 {
-    assert(atsi_handler && pSession);
     _atsiState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Inap.MapATSIDlg");
@@ -47,15 +48,20 @@ void MapATSIDlg::endATSI(void)
  * ATSIcontractor interface
  * ------------------------------------------------------------------------ */
 void MapATSIDlg::subsciptionInterrogation(const char * subcr_adr,
-                    bool imsi/* = false*/, USHORT_T timeout/* = 0*/) throw(CustomException)
+                    bool imsi/* = false*/, uint16_t timeout/* = 0*/) throw(CustomException)
 {
     MutexGuard  grd(_sync);
+
+    if (!atsiHdl || !session)
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapATSI", "invalid initialization");
+    
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
-                    "MapATSI: inalid subscriber addr", subcr_adr);
+                    "MapATSI: invalid subscriber addr", subcr_adr);
 
-    dialog = session->openDialog(tnAdr);
+    dialog = session->openDialog(tnAdr, logger);
     if (!dialog)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                     "MapATSI", "unable to create TC dialog");
@@ -144,45 +150,45 @@ void MapATSIDlg::onDialogContinue(bool compPresent)
 
 //TCAP indicates DialogPAbort: either due to TC layer error on SCF/HLR side or
 //because of local TC dialog timeout is expired (no T_END_IND from HLR).
-void MapATSIDlg::onDialogPAbort(UCHAR_T abortCause)
+void MapATSIDlg::onDialogPAbort(uint8_t abortCause)
 {
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapATSI[%u]: state 0x%x, P_ABORT: %s ", atsiId,
-                        _atsiState.value, _RCS_TC_Abort->code2Txt(abortCause));
+        smsc_log_error(logger, "MapATSI[%u]: state 0x%x, P_ABORT: '%s'", atsiId,
+                        _atsiState.value, _RCS_TC_PAbort->code2Txt(abortCause));
         endTCap();
     }
-    atsiHdl->onEndATSI(_RCS_TC_Abort->mkhash(abortCause));
+    atsiHdl->onEndATSI(_RCS_TC_PAbort->mkhash(abortCause));
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
-void MapATSIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                                    USHORT_T userInfo_len, UCHAR_T *pUserInfo)
+void MapATSIDlg::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                                    uint16_t userInfo_len, uint8_t *pUserInfo)
 {
+    uint32_t abortCause = (abortInfo_len == 1) ?
+        *pAbortInfo : TC_UAbortCause::userDefinedAS;
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, U_ABORT: %s", atsiId,
-                        _atsiState.value, !abortInfo_len ? "userInfo" :
-                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
+        smsc_log_error(logger, "MapSRI[%u]: state 0x%x, U_ABORT: '%s'", atsiId,
+                        _atsiState.value, _RCS_TC_UAbort->code2Txt(abortCause));
         endTCap();
     }
-    atsiHdl->onEndATSI(_RCS_TC_Abort->mkhash(!abortInfo_len ?
-                        TC_AbortCause::userAbort : *pAbortInfo));
+    atsiHdl->onEndATSI(_RCS_TC_UAbort->mkhash(abortCause));
 }
 
 //Underlying layer unable to deliver message, just abort dialog
-void MapATSIDlg::onDialogNotice(UCHAR_T reportCause,
+void MapATSIDlg::onDialogNotice(uint8_t reportCause,
                         TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
-                        UCHAR_T invId/* = 0*/, UCHAR_T opCode/* = 0*/)
+                        uint8_t invId/* = 0*/, uint8_t opCode/* = 0*/)
 {
     {
         MutexGuard  grd(_sync);
         _atsiState.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
-            format(dstr, ", Invoke[%u]", invId);
+            format(dstr, "Invoke[%u]", invId);
             switch (comp_kind) {
             case TcapEntity::tceError:      dstr += ".Error"; break;
             case TcapEntity::tceResult:     dstr += ".Result"; break;
@@ -191,8 +197,9 @@ void MapATSIDlg::onDialogNotice(UCHAR_T reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "MapATSI[%u]: NOTICE_IND at state 0x%x%s", atsiId,
-                       _atsiState.value, dstr.c_str());
+        smsc_log_error(logger, "MapATSI[%u]: state 0x%x, NOTICE_IND: '%s', %s", atsiId,
+                       _atsiState.value, _RCS_TC_Report->code2Txt(reportCause),
+                       dstr.c_str());
         endTCap();
     }
     atsiHdl->onEndATSI(_RCS_TC_Report->mkhash(reportCause));

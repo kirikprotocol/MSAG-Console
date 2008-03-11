@@ -2,8 +2,6 @@
 static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
-#include <assert.h>
-
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::comp::chsri::CHSendRoutingInfoArg;
 using smsc::inman::comp::chsri::MAP_CH_SRI_OpCode;
@@ -12,8 +10,10 @@ using smsc::inman::comp::MAPServiceRC;
 using smsc::inman::comp::_RCS_MAPService;
 
 #include "inman/inap/TCAPErrors.hpp"
-using smsc::inman::inap::TC_AbortCause;
-using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::TC_PAbortCause;
+using smsc::inman::inap::_RCS_TC_PAbort;
+using smsc::inman::inap::TC_UAbortCause;
+using smsc::inman::inap::_RCS_TC_UAbort;
 using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
@@ -27,7 +27,6 @@ MapCHSRIDlg::MapCHSRIDlg(TCSessionMA* pSession, CHSRIhandlerITF * sri_handler,
                         Logger * uselog/* = NULL*/)
     : sriHdl(sri_handler), session(pSession), sriId(0), dialog(NULL), logger(uselog)
 {
-    assert(sri_handler && pSession);
     _sriState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap");
@@ -61,10 +60,15 @@ void MapCHSRIDlg::endMapDlg(void)
 /* ------------------------------------------------------------------------ *
  * MAP_SEND_ROUTING_INFO interface
  * ------------------------------------------------------------------------ */
-void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout/* = 0*/) throw(CustomException)
+void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, uint16_t timeout/* = 0*/) throw(CustomException)
 {
     MutexGuard  grd(_sync);
-    dialog = session->openDialog(tnpi_adr);
+
+    if (!sriHdl.get() || !session)
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapSRI", "invalid initialization");
+
+    dialog = session->openDialog(tnpi_adr, logger);
     if (!dialog)
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                     "MapSRI", "unable to create TC dialog");
@@ -85,7 +89,7 @@ void MapCHSRIDlg::reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeou
     smsc_log_debug(logger, "MapSRI[0x%X]: quering %s info", sriId, tnpi_adr.getSignals());
 }
 
-void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, USHORT_T timeout/* = 0*/) throw(CustomException)
+void MapCHSRIDlg::reqRoutingInfo(const char * subcr_adr, uint16_t timeout/* = 0*/) throw(CustomException)
 {
     TonNpiAddress   tnAdr;
     if (!tnAdr.fromText(subcr_adr))
@@ -185,51 +189,51 @@ void MapCHSRIDlg::onDialogContinue(bool compPresent)
 
 //TCAP indicates DialogPAbort: either due to TC layer error on SCF/HLR side or
 //because of local TC dialog timeout is expired (no T_END_IND from HLR).
-void MapCHSRIDlg::onDialogPAbort(UCHAR_T abortCause)
+void MapCHSRIDlg::onDialogPAbort(uint8_t abortCause)
 {
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, P_ABORT: %s ", sriId,
-                        _sriState.value, _RCS_TC_Abort->code2Txt(abortCause));
+        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, P_ABORT: '%s'", sriId,
+                        _sriState.value, _RCS_TC_PAbort->code2Txt(abortCause));
         endTCap();
         if (!sriHdl.Lock())
             return;
     }
-    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
+    sriHdl->onEndMapDlg(_RCS_TC_PAbort->mkhash(abortCause));
     unRefHdl();
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
-void MapCHSRIDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                                    USHORT_T userInfo_len, UCHAR_T *pUserInfo)
+void MapCHSRIDlg::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                                    uint16_t userInfo_len, uint8_t *pUserInfo)
 {
+    uint32_t abortCause = (abortInfo_len == 1) ?
+        *pAbortInfo : TC_UAbortCause::userDefinedAS;
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, U_ABORT: %s", sriId,
-                        _sriState.value, !abortInfo_len ? "userInfo" :
-                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
+        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, U_ABORT: '%s'", sriId,
+                        _sriState.value, _RCS_TC_UAbort->code2Txt(abortCause));
         endTCap();
         if (!sriHdl.Lock())
             return;
     }
-    sriHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
-                        TC_AbortCause::userAbort : *pAbortInfo));
+    sriHdl->onEndMapDlg(_RCS_TC_UAbort->mkhash(abortCause));
     unRefHdl();
 }
 
 //Underlying layer unable to deliver message, just abort dialog
-void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
+void MapCHSRIDlg::onDialogNotice(uint8_t reportCause,
                         TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
-                        UCHAR_T invId/* = 0*/, UCHAR_T opCode/* = 0*/)
+                        uint8_t invId/* = 0*/, uint8_t opCode/* = 0*/)
 {
     {
         MutexGuard  grd(_sync);
         _sriState.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
-            format(dstr, ", Invoke[%u]", invId);
+            format(dstr, "Invoke[%u]", invId);
             switch (comp_kind) {
             case TcapEntity::tceError:      dstr += ".Error"; break;
             case TcapEntity::tceResult:     dstr += ".Result"; break;
@@ -238,8 +242,9 @@ void MapCHSRIDlg::onDialogNotice(UCHAR_T reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "MapSRI[0x%X]: NOTICE_IND at state 0x%x%s", sriId,
-                       _sriState.value, dstr.c_str());
+        smsc_log_error(logger, "MapSRI[0x%X]: state 0x%x, NOTICE_IND: '%s', %s", sriId,
+                       _sriState.value, _RCS_TC_Report->code2Txt(reportCause),
+                       dstr.c_str());
         endTCap();
         if (!sriHdl.Lock())
             return;

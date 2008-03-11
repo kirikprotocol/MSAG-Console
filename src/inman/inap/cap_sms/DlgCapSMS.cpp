@@ -4,8 +4,6 @@ static char const ident[] = "$Id$";
 /* ************************************************************************* *
  * cap3SMS CONTRACT implementation (over TCAP dialog)
  * ************************************************************************* */
-#include <assert.h>
-
 #include "util/vformat.hpp"
 using smsc::util::format;
 
@@ -23,8 +21,10 @@ using smsc::inman::comp::CAPServiceRC;
 using smsc::inman::comp::_RCS_CAPService;
 
 #include "inman/inap/TCAPErrors.hpp"
-using smsc::inman::inap::TC_AbortCause;
-using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::TC_PAbortCause;
+using smsc::inman::inap::_RCS_TC_PAbort;
+using smsc::inman::inap::TC_UAbortCause;
+using smsc::inman::inap::_RCS_TC_UAbort;
 using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
@@ -35,14 +35,13 @@ namespace inap {
  * class CapSMSDlg implementation:
  * ************************************************************************** */
 CapSMSDlg::CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
-           USHORT_T inv_timeout/* = 0*/, const char * scf_ident/* = NULL*/,
+           uint16_t inv_timeout/* = 0*/, const char * scf_ident/* = NULL*/,
             Logger * uselog/* = NULL*/) _THROWS_NONE
     : SMS_SSF_Fsm(EventTypeSMS_sms_CollectedInfo), _logPfx("CapSMS")
     , session(pSession), ssfHdl(ssfHandler), nmScf(scf_ident), logger(uselog)
     , rPCause(0), _timer(0), reportType(MessageType_request), dialog(0)
     , capId(0), invTimeout(inv_timeout)
 {
-    assert(ssfHandler && pSession);
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.CapSMS");
     if (!nmScf)
@@ -73,8 +72,7 @@ RCHash CapSMSDlg::Init(void) _THROWS_NONE
         return _RCS_CAPService->mkhash(CAPServiceRC::contractViolation);
 
     //Initialize TCAP dialog
-    dialog = session->openDialog();
-    if (!dialog)
+    if (!session || !(dialog = session->openDialog(logger)))
         return _RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit);
     capId = (unsigned)dialog->getId();
     snprintf(_logId, sizeof(_logId)-1, "%s[0x%X]", _logPfx, capId);
@@ -140,7 +138,7 @@ void CapSMSDlg::onInvokeError(InvokeRFP pInv, TcapEntity * resE)
 {
     {
         MutexGuard  grd(_sync);
-        UCHAR_T opcode = pInv->getOpcode();
+        uint8_t opcode = pInv->getOpcode();
         smsc_log_error(logger, "%s: Invoke[%u]{%u} got a returnError: %u",
             _logId, (unsigned)pInv->getId(), (unsigned)opcode, (unsigned)resE->getOpcode());
     
@@ -213,17 +211,17 @@ void CapSMSDlg::onDialogContinue(bool compPresent)
 
 //TCAP indicates DialogPAbort: either due to TC layer error on SSF side or
 //because of TC dialog timeout is expired on SSF (no T_END_IND from SCF).
-void CapSMSDlg::onDialogPAbort(UCHAR_T abortCause)
+void CapSMSDlg::onDialogPAbort(uint8_t abortCause)
 {
     RCHash  errcode = 0;
     {
         MutexGuard  grd(_sync);
         _capState.s.smsAbort |= CAPSmsStateS::idSSF;
         smsc_log_error(logger, "%s: P_ABORT{%s} at state %s", _logId, 
-                        _RCS_TC_Abort->explainCode(abortCause).c_str(),
+                        _RCS_TC_PAbort->explainCode(abortCause).c_str(),
                         State2Str().c_str());
         if (_fsmState != SMS_SSF_Fsm::fsmDone)
-            errcode = _RCS_TC_Abort->mkhash(abortCause);
+            errcode = _RCS_TC_PAbort->mkhash(abortCause);
         //else time out on T_END_IND from SCF
         endTCap();
     }
@@ -232,24 +230,27 @@ void CapSMSDlg::onDialogPAbort(UCHAR_T abortCause)
 }
 
 //SCF sent DialogUAbort (some logic error on SCF side).
-void CapSMSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                                    USHORT_T userInfo_len, UCHAR_T *pUserInfo)
+void CapSMSDlg::onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                                    uint16_t userInfo_len, uint8_t *pUserInfo)
 {
+    uint32_t abortCause = (abortInfo_len == 1) ?
+        *pAbortInfo : TC_UAbortCause::userDefinedAS;
     {
         MutexGuard  grd(_sync);
         _capState.s.smsAbort |= CAPSmsStateS::idSCF;
-        smsc_log_error(logger, "%s: U_ABORT_IND at state %s", _logId,
+        smsc_log_error(logger, "%s: U_ABORT_IND{%s} at state %s", _logId,
+                        _RCS_TC_UAbort->explainCode(abortCause).c_str(),
                         State2Str().c_str());
         endTCap();
     }
     if (ssfHdl)
-        ssfHdl->onEndCapDlg(capId, _RCS_TC_Abort->mkhash(TC_AbortCause::userAbort));
+        ssfHdl->onEndCapDlg(capId, _RCS_TC_UAbort->mkhash(abortCause));
 }
 
 //Underlying layer unable to deliver message, just abort dialog
-void CapSMSDlg::onDialogNotice(UCHAR_T reportCause,
+void CapSMSDlg::onDialogNotice(uint8_t reportCause,
                         TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
-                        UCHAR_T invId/* = 0*/, UCHAR_T opCode/* = 0*/)
+                        uint8_t invId/* = 0*/, uint8_t opCode/* = 0*/)
 {
     {
         MutexGuard  grd(_sync);
@@ -318,7 +319,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
                 if (_tDPs.front() == EventTypeSMS_sms_CollectedInfo) {
                     _capState.s.smsRlse = 1;
                     ReleaseSMSArg * arg = static_cast<ReleaseSMSArg*>(op->getParam());
-                    rPCause = arg->rPCause;
+                    rPCause = arg->rPCause();
                     smsc_log_debug(logger, "%s: <-- %s: ReleaseSMS { RP cause: %u }",
                                     _logId, nmScf, (unsigned)rPCause);
                     doReport = doEnd = true;
@@ -401,7 +402,7 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
                 _capState.s.smsTimer = 1;
                 ResetTimerSMSArg* arg = static_cast<ResetTimerSMSArg*>(op->getParam());
                 smsc_log_debug(logger, "%s: <-- %s: ResetTimerSMS { value: %lu secs }",
-                               _logId, nmScf, (long)(arg->timerValue));
+                               _logId, nmScf, (long)(arg->timerValue()));
                 resetTimer();
             } else
                 logBadInvoke(op->getOpcode());
@@ -465,9 +466,10 @@ RCHash CapSMSDlg::eventReportSMS(bool submitted) _THROWS_NONE
                     MessageType_request : MessageType_notification;
 
     std::string dump;
-    EventReportSMSArg    arg(eventType, reportType);
+    EventReportSMSArg    arg(logger);
+    arg.setReportParms(eventType, reportType);
     smsc_log_debug(logger, "%s: --> %s: EventReportSMS %s", _logId, nmScf, arg.print(dump).c_str());
-    UCHAR_T invId = 0;
+    uint8_t invId = 0;
     try {
         invId = dialog->sendInvoke(CapSMSOp::EventReportSMS, &arg,
                 (reportType == MessageType_request) ? 0/*dflt*/ : CAPSMS_END_TIMEOUT); //throws

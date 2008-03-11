@@ -79,7 +79,7 @@ class CapSMSDlg : SMS_SSF_Fsm, TCDialogUserITF {
 public:
     //NOTE: timeout is for OPERATIONs Invokes lifetime
     CapSMSDlg(TCSessionSR* pSession, CapSMS_SSFhandlerITF * ssfHandler,
-                USHORT_T inv_timeout = 0, const char * scf_ident = NULL,
+                uint16_t inv_timeout = 0, const char * scf_ident = NULL,
                 Logger * uselog = NULL) _THROWS_NONE;
     virtual ~CapSMSDlg(); //Dialog is not deleted, but just released !!!
 
@@ -104,13 +104,13 @@ protected:
     // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp);
     void onDialogContinue(bool compPresent);
-    void onDialogPAbort(UCHAR_T abortCause);
+    void onDialogPAbort(uint8_t abortCause);
     void onDialogREnd(bool compPresent);
-    void onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                        USHORT_T userInfo_len, UCHAR_T *pUserInfo);
-    void onDialogNotice(UCHAR_T reportCause,
+    void onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                        uint16_t userInfo_len, uint8_t *pUserInfo);
+    void onDialogNotice(uint8_t reportCause,
                         TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
-                        UCHAR_T invId = 0, UCHAR_T opCode = 0);
+                        uint8_t invId = 0, uint8_t opCode = 0);
 
     // InvokeListener interface (no OPs with returnResult defined)
     void onInvokeResult(InvokeRFP pInv, TcapEntity* res) { }
@@ -128,7 +128,7 @@ private:
     void endTCap(bool u_abort = false);
     // reports delivery status (continues capSMS dialog)
     RCHash eventReportSMS(bool submitted) _THROWS_NONE;
-    inline void setTimer(UCHAR_T new_op)
+    inline void setTimer(uint8_t new_op)
     {
         if (_timer)
             dialog->releaseInvoke(_timer);
@@ -140,7 +140,7 @@ private:
         if (_timer)
             dialog->resetInvokeTimer(_timer);
     }
-    inline void logBadInvoke(UCHAR_T op_code)
+    inline void logBadInvoke(uint8_t op_code)
     {
         smsc_log_error(logger, "%s: inconsistent %s, state %s(%s), {%s}", _logId,
                         CapSMSOp::code2Name(op_code), nmFSMState(), nmRelations(),
@@ -157,12 +157,12 @@ private:
     TCSessionSR*    session;    //TCAP dialogs factory
     CapSMS_SSFhandlerITF* ssfHdl;
     unsigned char   rPCause;    //result or reject cause
-    UCHAR_T         _timer;     //last initiated operation (invoke) id
+    uint8_t         _timer;     //last initiated operation (invoke) id
     const char *    nmScf;
     Logger*         logger;
     messageType_e   reportType; //notification or request
     std::auto_ptr<ConnectSMSArg> smsParams;
-    USHORT_T        invTimeout;
+    uint16_t        invTimeout;
 };
 
 } //inap

@@ -5,7 +5,6 @@ static char const ident[] = "$Id$";
  * MAP-PROCESS-UNSTRUCTURED-SS-REQUEST service:
  * dialog implementation (over TCAP dialog)
  * ************************************************************************* */
-#include <assert.h>
 
 #include "util/BinDump.hpp"
 using smsc::util::DumpHex;
@@ -20,8 +19,10 @@ using smsc::inman::comp::MAPServiceRC;
 using smsc::inman::comp::_RCS_MAPService;
 
 #include "inman/inap/TCAPErrors.hpp"
-using smsc::inman::inap::TC_AbortCause;
-using smsc::inman::inap::_RCS_TC_Abort;
+using smsc::inman::inap::TC_PAbortCause;
+using smsc::inman::inap::_RCS_TC_PAbort;
+using smsc::inman::inap::TC_UAbortCause;
+using smsc::inman::inap::_RCS_TC_UAbort;
 using smsc::inman::inap::_RCS_TC_Report;
 
 namespace smsc {
@@ -122,11 +123,14 @@ MapUSSDlg::MapUSSDlg(TCSessionSR* pSession, USSDhandlerITF * res_handler,
     : resHdl(res_handler), session(pSession), dlgId(0), dialog(NULL)
     , logger(uselog)
 {
-    assert(res_handler && pSession);
     dlgState.value = 0;
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap");
-    if (!(dialog = session->openDialog()))
+
+    if (!resHdl || !session)
+        throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
+                    "MapUSS", "invalid initialization");
+    if (!(dialog = session->openDialog(logger)))
         throw CustomException((int)_RCS_TC_Dialog->mkhash(TC_DlgError::dlgInit),
                             "MapUSS", "unable to create TC dialog");
     dlgId = dialog->getId();
@@ -154,7 +158,7 @@ void MapUSSDlg::requestSS(const char * txt_data,
                             const char * subscr_imsi/* = NULL*/) throw (CustomException)
 {
     //create Component for TCAP invoke
-    ProcessUSSRequestArg    arg;
+    ProcessUSSRequestArg    arg(logger);
     arg.setUSSData((const unsigned char*)txt_data);
     smsc_log_debug(logger, "MapUSS[%u]: USS request: '%s'", dlgId, txt_data);
     initSSDialog(arg, subsc_adr, subscr_imsi);
@@ -165,7 +169,7 @@ void MapUSSDlg::requestSS(const std::vector<unsigned char> & rq_data, unsigned c
                     const TonNpiAddress * subsc_adr/* = NULL*/, const char * subscr_imsi/* = NULL*/) throw (CustomException)
 {
     //create Component for TCAP invoke
-    ProcessUSSRequestArg    arg;
+    ProcessUSSRequestArg    arg(logger);
     arg.setRAWUSSData(dcs, &rq_data[0], rq_data.size());
     smsc_log_debug(logger, "MapUSS[%u]: USS request: 0x%s", dlgId,
                     DumpHex(rq_data.size(), &rq_data[0]).c_str());
@@ -257,27 +261,27 @@ void MapUSSDlg::onDialogPAbort(UCHAR_T abortCause)
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, P_ABORT: %s ", dlgId,
-                        dlgState.value, _RCS_TC_Abort->code2Txt(abortCause));
+        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, P_ABORT: '%s'", dlgId,
+                        dlgState.value, _RCS_TC_PAbort->code2Txt(abortCause));
         endTCap();
     }
-    resHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(abortCause));
+    resHdl->onEndMapDlg(_RCS_TC_PAbort->mkhash(abortCause));
 }
 
 //SCF/HLR sent DialogUAbort (some logic error on remote point).
 void MapUSSDlg::onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
                                     USHORT_T userInfo_len, UCHAR_T *pUserInfo)
 {
+    uint32_t abortCause = (abortInfo_len == 1) ?
+        *pAbortInfo : TC_UAbortCause::userDefinedAS;
     {
         MutexGuard  grd(_sync);
         dlgState.s.ctrAborted = 1;
-        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, U_ABORT: %s", dlgId,
-                        dlgState.value, !abortInfo_len ? "userInfo" :
-                        _RCS_TC_Abort->code2Txt(*pAbortInfo));
+        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, U_ABORT: '%s'", dlgId,
+                        dlgState.value, _RCS_TC_UAbort->code2Txt(abortCause));
         endTCap();
     }
-    resHdl->onEndMapDlg(_RCS_TC_Abort->mkhash(!abortInfo_len ?
-                        TC_AbortCause::userAbort : *pAbortInfo));
+    resHdl->onEndMapDlg(_RCS_TC_UAbort->mkhash(abortCause));
 }
 
 //Underlying layer unable to deliver message, just abort dialog
@@ -290,7 +294,7 @@ void MapUSSDlg::onDialogNotice(UCHAR_T reportCause,
         dlgState.s.ctrAborted = 1;
         std::string dstr;
         if (comp_kind != TcapEntity::tceNone) {
-            format(dstr, ", Invoke[%u]", invId);
+            format(dstr, "Invoke[%u]", invId);
             switch (comp_kind) {
             case TcapEntity::tceError:      dstr += ".Error"; break;
             case TcapEntity::tceResult:     dstr += ".Result"; break;
@@ -299,8 +303,9 @@ void MapUSSDlg::onDialogNotice(UCHAR_T reportCause,
             }
             dstr += " not delivered.";
         }
-        smsc_log_error(logger, "MapUSS[%u]: NOTICE_IND at state 0x%x%s", dlgId,
-                       dlgState.value, dstr.c_str());
+        smsc_log_error(logger, "MapUSS[%u]: state 0x%x, NOTICE_IND: '%s', %s", dlgId,
+                       dlgState.value, _RCS_TC_Report->code2Txt(reportCause),
+                       dstr.c_str());
         endTCap();
     }
     resHdl->onEndMapDlg(_RCS_TC_Report->mkhash(reportCause));

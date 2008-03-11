@@ -54,8 +54,8 @@ public:
 
     enum MapOperState  { operInited = 1, operFailed = 2, operDone = 3 };
 
-    void reqRoutingInfo(const char * subcr_adr, USHORT_T timeout = 0) throw(CustomException);
-    void reqRoutingInfo(const TonNpiAddress & tnpi_adr, USHORT_T timeout = 0) throw(CustomException);
+    void reqRoutingInfo(const char * subcr_adr, uint16_t timeout = 0) throw(CustomException);
+    void reqRoutingInfo(const TonNpiAddress & tnpi_adr, uint16_t timeout = 0) throw(CustomException);
 
     //Attempts to unbind TC User.
     //Returns true on succsess, false result means that this object has 
@@ -69,13 +69,13 @@ protected:
     // TCDialogUserITF interface
     void onDialogInvoke(Invoke* op, bool lastComp) { }
     void onDialogContinue(bool compPresent);
-    void onDialogPAbort(UCHAR_T abortCause);
+    void onDialogPAbort(uint8_t abortCause);
     void onDialogREnd(bool compPresent);
-    void onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                        USHORT_T userInfo_len, UCHAR_T *pUserInfo);
-    void onDialogNotice(UCHAR_T reportCause,
+    void onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                        uint16_t userInfo_len, uint8_t *pUserInfo);
+    void onDialogNotice(uint8_t reportCause,
                         TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
-                        UCHAR_T invId = 0, UCHAR_T opCode = 0);
+                        uint8_t invId = 0, uint8_t opCode = 0);
 
     void onInvokeResult(InvokeRFP pInv, TcapEntity* res);
     void onInvokeError(InvokeRFP pInv, TcapEntity* resE);
