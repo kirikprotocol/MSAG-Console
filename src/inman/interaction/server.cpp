@@ -80,31 +80,32 @@ bool Server::Start(void)
     return true;
 }
 
-void Server::Stop(unsigned int timeOutMilliSecs/* = 400*/)
+void Server::Stop(unsigned int timeOutMilliSecs/* = _SHUTDOWN_TMO_MS*/)
 {
-    if (_runState == Server::lstStopped)
-        return;
-
-    //adjust timeout for TIMEOUT_STEP millsecs
-    timeOutMilliSecs = TIMEOUT_STEP*((timeOutMilliSecs + (TIMEOUT_STEP/2))/TIMEOUT_STEP);
-
-    smsc_log_debug(logger, "TCPSrv: stopping Listener thread, timeout = %u ms ..",
-                   timeOutMilliSecs);
-    Sync().Lock();
-    if (_runState == Server::lstRunning)
+    {
+        MutexGuard  tmp(Sync());
+        if (_runState == Server::lstStopped)
+            return;
         _runState = Server::lstStopping;
-    Sync().Unlock();
-
-    lstEvent.Wait(timeOutMilliSecs);
-
-    Sync().Lock();
-    if (_runState != Server::lstStopped) {
-        smsc_log_debug(logger, "TCPSrv: timeout expired, %u connects are still active",
-                       connects.size());
-        _runState = Server::lstStopped;  //forcedly stop Listener thread
+        if (!timeOutMilliSecs) {
+            smsc_log_debug(logger, "TCPSrv: stopping Listener ..");
+            return;
+        }
+        //adjust timeout for TIMEOUT_STEP millsecs
+        timeOutMilliSecs = TIMEOUT_STEP*((timeOutMilliSecs + (TIMEOUT_STEP/2))/TIMEOUT_STEP);
+        smsc_log_debug(logger, "TCPSrv: stopping Listener, timeout = %u ms ..",
+                       timeOutMilliSecs);
     }
-    Sync().Unlock();
-    WaitFor();
+    lstEvent.Wait(timeOutMilliSecs);
+    {
+        MutexGuard  tmp(Sync());
+        if (_runState != Server::lstStopped) {
+            _runState = Server::lstStopped;  //forcedly stop Listener thread
+            smsc_log_debug(logger, "TCPSrv: timeout expired, %u connects are still active",
+                           connects.size());
+        }
+    }
+    Thread::WaitFor();
 }
 
 /* -------------------------------------------------------------------------- *
@@ -167,7 +168,7 @@ void Server::closeConnect(ConnectAC* connect, bool abort/* = false*/)
     }
     connect->Close(abort);
     delete connect;
-    smsc_log_debug(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
+    smsc_log_info(logger, "TCPSrv: Socket[%u] closed.", (unsigned)sockId);
 }
 
 

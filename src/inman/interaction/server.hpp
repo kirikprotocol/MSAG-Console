@@ -26,28 +26,35 @@ namespace smsc  {
 namespace inman {
 namespace interaction  {
 
-typedef struct {
+struct ServSocketCFG {
     std::string     host;
-    int             port;
+    unsigned int    port;
     unsigned int    maxConn;
     unsigned int    timeout; //units: secs
-} ServSocketCFG;
+
+    ServSocketCFG()
+    { port = maxConn = timeout = 0; }
+};
 
 class ServerListenerITF;
 class Server : Thread, public GRDObservatoryOfT<ServerListenerITF> {
 public:
-    typedef enum { lstStopped = 0, lstStopping, lstRunning } ServerState;
-    typedef enum {
+    static const unsigned int _SHUTDOWN_TMO_MS = 400; //millisecs
+
+    enum ServerState { lstStopped = 0, lstStopping, lstRunning };
+    enum ShutdownReason {
         srvUnexpected = -1, //listener caught unexpected fatal exception
         srvStopped = 0,     //normal shutdown
         srvError = 1        //server socket fatal error
-    } ShutdownReason;
+    };
 
     Server(const ServSocketCFG * in_cfg, Logger* uselog = NULL);
     virtual ~Server();
 
     bool Start(void);
-    void Stop(unsigned int timeOutMilliSecs = 400);
+    //Stops listener: no new connect will be accepted, active ones are served for a while.
+    //If timeout is not zero, then method blocks until listener will be completed.
+    void Stop(unsigned int timeOutMilliSecs = _SHUTDOWN_TMO_MS);
 
     void setPollTimeout(unsigned long  milli_secs);
 
