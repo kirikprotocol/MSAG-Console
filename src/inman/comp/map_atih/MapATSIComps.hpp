@@ -1,14 +1,18 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * MAP ATIH AnyTimeSubscriptionInterrogation Components definition.
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPATSI_COMPS_HPP__
 #define __SMSC_INMAN_MAPATSI_COMPS_HPP__
 
-#include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
-#include "inman/comp/compdefs.hpp"
-#include "inman/comp/MapOpErrors.hpp"
-
 using smsc::logger::Logger;
+
+#include "inman/common/adrutil.hpp"
+#include "inman/comp/compdefs.hpp"
 using smsc::inman::comp::Component;
+
+#include "inman/comp/MapOpErrors.hpp"
 using smsc::inman::comp::MAPOpErrorId;
 
 /* GVR NOTE: while linking the below enums are taken from generated *
@@ -57,24 +61,25 @@ struct ERR_ATSI {
 
 class ATSIArg : public Component {
 public:
-    ATSIArg(enum RequestedCAMEL_SubscriptionInfo
-            csi2ask = RequestedCAMEL_SubscriptionInfo_o_CSI)
-        : askCSI(csi2ask)
-    { compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.ATSIArg"); }
-
-    ~ATSIArg() { }
+    ATSIArg(Logger * use_log = NULL)
+        : askCSI(RequestedCAMEL_SubscriptionInfo_o_CSI)
+        , compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.ATSIArg"))
+    { }
+    ~ATSIArg()
+    { }
 
     //sets ISDN address of requesting point
     void setSCFaddress(const char * addr) throw(CustomException);
-    void setSCFaddress(const TonNpiAddress& addr) { scfAdr = addr; }
+    inline void setSCFaddress(const TonNpiAddress& addr) { scfAdr = addr; }
 
     //sets subscriber identity: IMSI or MSISDN addr
     void setSubscriberId(const char * addr, bool imsi = true) throw(CustomException);
     //set subscriber identity as MSISDN addr
-    void setSubscriberId(const TonNpiAddress& addr)
+    inline void setSubscriberId(const TonNpiAddress& addr)
     { subscrAdr = addr; subscrImsi = false; }
 
-    void setRequestedCSI(enum RequestedCAMEL_SubscriptionInfo csi2ask) { askCSI = csi2ask; }
+    inline void setRequestedCSI(enum RequestedCAMEL_SubscriptionInfo csi2ask)
+    { askCSI = csi2ask; }
 
     void encode(std::vector<unsigned char>& buf) const throw(CustomException);
 
@@ -88,9 +93,12 @@ private:
 
 class ATSIRes : public Component {
 public:
-    ATSIRes(): mask(0)
-    { compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.ATSIRes"); }
-    ~ATSIRes() { }
+    ATSIRes(Logger * use_log = NULL)
+        : mask(0), compLogger(use_log ? use_log : 
+                                Logger::getInstance("smsc.inman.comp.ATSIRes"))
+    { }
+    ~ATSIRes()
+    { }
 
     bool isCSIpresent(enum RequestedCAMEL_SubscriptionInfo req_csi) const
     { return (mask & (1 << req_csi)) ? true : false; }

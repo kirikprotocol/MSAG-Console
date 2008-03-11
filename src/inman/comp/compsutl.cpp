@@ -1,15 +1,14 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-
-#include <vector>
-#include <stdexcept>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/asn1rt/asn_internal.h"
-#include "compsutl.hpp"
+#include "inman/comp/compsutl.hpp"
+#include "inman/common/adrutil.hpp"
 
 namespace smsc {
 namespace inman {
 namespace comp {
-using std::vector;
 
 extern "C" int print2vec(const void *buffer, size_t size, void *app_key)
 {

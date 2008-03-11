@@ -1,11 +1,12 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-#include <vector>
-#include <assert.h>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/codecs/map_atih/AnyTimeSubscriptionInterrogationArg.h"
 #include "inman/codecs/map_atih/AnyTimeSubscriptionInterrogationRes.h"
 #include "inman/comp/map_atih/MapATSIComps.hpp"
 #include "inman/comp/compsutl.hpp"
+#include "inman/common/cvtutil.hpp"
 #include "util/vformat.hpp"
 using smsc::util::format;
 
@@ -130,7 +131,7 @@ void ATSIRes::decode(const std::vector<unsigned char>& buf) throw(CustomExceptio
     asn_dec_rval_t  drc;    /* Decoder return value  */
 
     drc = ber_decode(0, &asn_DEF_AnyTimeSubscriptionInterrogationRes, (void **)&dcmd, &buf[0], buf.size());
-    ASNCODEC_LOG_DEC(drc, asn_DEF_AnyTimeSubscriptionInterrogationRes, "mapATIH");
+    ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_AnyTimeSubscriptionInterrogationRes, "ATSIRes");
     smsc_log_component(compLogger, &asn_DEF_AnyTimeSubscriptionInterrogationRes, dcmd);
 
     try {

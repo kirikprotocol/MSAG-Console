@@ -1,22 +1,20 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * ROS Components factory for CAMEL phase 3 SMS service.
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_CAPSMS_COMFACTORY__
 #define __SMSC_INMAN_CAPSMS_COMFACTORY__
 
-#include "inman/comp/acdefs.hpp"
-#include "inman/comp/operfactory.hpp"
-
-using smsc::ac::ACOID;
-using smsc::inman::comp::OperationFactory;
-using smsc::inman::comp::OperationFactoryInstanceT;
-using smsc::inman::comp::ApplicationContextFactory;
+#include "inman/comp/ROSFactory.hpp"
+using smsc::inman::comp::ROSComponentsFactory;
 
 namespace smsc {
 namespace inman {
 namespace comp {
 
-typedef OperationFactoryInstanceT <ACOID::id_ac_cap3_sms_AC> CAP3SMSFactory;
-
-OperationFactory * initCAP3SMSComponents(OperationFactory * fact);
+extern EncodedOID _ac_cap3_sms;
+//ROSFactoryProducer declaration
+ROSComponentsFactory * initCAP3SMSComponents(void);
 
 } //comp
 } //inman

@@ -10,12 +10,6 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
-		: eventType( et ), messageType( mt )
-{
-    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.EventReportSMSArg");
-}
-
 std::string & EventReportSMSArg::print(std::string & dump) const
 {
     dump += "{";
@@ -41,9 +35,8 @@ void EventReportSMSArg::encode(std::vector<unsigned char>& buf) const throw(Cust
     erp.eventTypeSMS = eventType;
 
     smsc_log_component(compLogger, &asn_DEF_EventReportSMSArg, &erp); 
-
     er = der_encode(&asn_DEF_EventReportSMSArg, &erp, print2vec, &buf);
-    INMAN_LOG_ENC(er, asn_DEF_EventReportSMSArg);
+    ASNCODEC_LOG_ENC(er, asn_DEF_EventReportSMSArg, "ERSmsArg");
 }
 
 }//namespace comp

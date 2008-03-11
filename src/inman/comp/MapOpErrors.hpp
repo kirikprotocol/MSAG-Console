@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * MAP operations error codes according to inman/codec_inc/map_errors.asn
  * ************************************************************************* */
@@ -117,5 +117,10 @@ URCSpacePTR  _RCS_MAPService("errMAPSrv", MAPServiceRC::noServiceResponse, \
 } //comp
 } //inman
 } //smsc
+
+#define _RCS_MapOpErrorsGET() \
+smsc::inman::comp::_RCS_MAPOpErrors.get(); \
+smsc::inman::comp::_RCS_MAPService.get()
+
 #endif /* __SMSC_INMAN_INAP_MAP_OPS_ERRORS__ */
 

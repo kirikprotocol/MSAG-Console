@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * 3GPP TS 24.011 Annex E-2: RP-cause definition mobile originating SM-transfer.
  * ************************************************************************* */
@@ -147,6 +147,8 @@ URCSpacePTR  _RCS_MOSM_RPCause("moSmRPCause", 1, 127, rc2Txt_MOSM_RPCause)
 }//namespace comp
 }//namespace inman
 }//namespace smsc
+
+#define _RCS_MOSM_RPCauseGET() smsc::inman::comp::_RCS_MOSM_RPCause.get()
 
 #endif /* _SMSC_INMAN_COMP_CAPSMS_RP_CAUSES_HPP */
 

@@ -6,6 +6,8 @@ static char const ident[] = "$Id$";
 #include "inman/codec_inc/cap/InitialDPSMSArg.h"
 #include "inman/comp/cap_sms/CapSMSComps.hpp"
 #include "inman/comp/compsutl.hpp"
+#include "inman/common/adrutil.hpp"
+#include "inman/common/cvtutil.hpp"
 
 using smsc::cvtutil::packTimeT2BCD7;
 using smsc::cvtutil::packTimeT2BCD8;
@@ -23,12 +25,8 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-class PrivateInitialDPSMSArg
-{
-  public:
-    PrivateInitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serv_key);
-    ~PrivateInitialDPSMSArg();
-
+class PrivateInitialDPSMSArg {
+public:
     InitialDPSMSArg_t	idp;
     EventTypeSMS_t	_dlvrMode;
     OCTET_STRING_DECL(_destSN, sizeof(TONNPI_ADDRESS_OCTS));
@@ -47,19 +45,36 @@ class PrivateInitialDPSMSArg
     OCTET_STRING_DECL(_locNumber, sizeof(LOCATION_ADDRESS_OCTS));
     CellGlobalIdOrServiceAreaIdOrLAI_t	_cGidOrSAIorLAI;
     unsigned char			_cGidOrSAIfl[7];
+
+    PrivateInitialDPSMSArg(void)
+    {
+        memset(&idp, 0, sizeof(idp)); //clear _asn_ctx & optionals
+    }
+    ~PrivateInitialDPSMSArg()
+    { }
+
+    void setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKey)
+    {
+        idp.serviceKey = serviceKey;
+        _dlvrMode = (EventTypeSMS_t)idpMode;
+        idp.eventTypeSMS = &_dlvrMode;
+    }
 };
 
-PrivateInitialDPSMSArg::PrivateInitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey)
-{
-    memset(&idp, 0, sizeof(idp)); //clear _asn_ctx & optionals
-    idp.serviceKey = serviceKey;
+InitialDPSMSArg::InitialDPSMSArg(Logger * use_log/* = NULL*/)
+    : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.IDPSmsArg"))
+    , servKey(0), comp(new PrivateInitialDPSMSArg())
+{ }
 
-    _dlvrMode = (EventTypeSMS_t)idpMode;
-    idp.eventTypeSMS = &_dlvrMode;
+InitialDPSMSArg::~InitialDPSMSArg()
+{
+    delete(comp);
 }
 
-PrivateInitialDPSMSArg::~PrivateInitialDPSMSArg() { }
-
+void InitialDPSMSArg::setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKey)
+{
+    comp->setIDPParms(idpMode, servKey = serviceKey);
+}
 
 /*
  * NOTE: The CAP4 specifies that the packed address in DestinationSubscriberNumber
@@ -138,7 +153,7 @@ void InitialDPSMSArg::setTimeAndTimezone(time_t tmVal) throw(CustomException)
     ZERO_OCTET_STRING(comp->_tmTz);
     int res = packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal);
     if (res)
-        throw CustomException(res, "IDPSMSArg: bad timeTZ");
+        throw CustomException(res, "IDPSmsArg: bad timeTZ");
     comp->_tmTz.size = 8;
     //smsc_log_debug( compLogger, "BCD time: %s", dump(comp->_tmTz.size, comp->_tmTz.buf).c_str() );
     comp->idp.timeAndTimezone = &(comp->_tmTz);
@@ -185,10 +200,10 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt) t
         int res;
 	comp->_tPVP.size = 7;
 	if ((res = packTimeT2BCD7((unsigned char (*)[7])(comp->_tPVP.buf), vpVal)) != 0)
-	    throw CustomException(res, "IDPSMSArg: bad time value");
+	    throw CustomException(res, "IDPSmsArg: bad time value");
     }   break;
     default:
-	throw CustomException("IDPSMSArg: unsupported TP-VP format: %u", (unsigned)fmt);
+	throw CustomException("IDPSmsArg: unsupported TP-VP format: %u", (unsigned)fmt);
     }
     comp->idp.tPValidityPeriod = &(comp->_tPVP);
 }
@@ -199,7 +214,7 @@ void InitialDPSMSArg::setLocationInformationMSC(const TonNpiAddress& sadr) throw
     TonNpiAddress addr = sadr;
     /* NOTE: _vlrNumber may be only the ISDN INTERNATIONAL address */
     if (!addr.fixISDN())
-        throw CustomException(-1, "IDPSMSArg: invalid VLR address",
+        throw CustomException(-1, "IDPSmsArg: invalid VLR address",
                               addr.toString().c_str());
 
     memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
@@ -235,20 +250,10 @@ void InitialDPSMSArg::setLocationInformationMSC(const char* text) throw(CustomEx
 {
     TonNpiAddress   sadr;
     if (!sadr.fromText(text))
-        throw CustomException(-1, "IDPSMSArg: invalid VLR address",
+        throw CustomException(-1, "IDPSmsArg: invalid VLR address",
                               sadr.toString().c_str());
     InitialDPSMSArg::setLocationInformationMSC(sadr);
 }
-
-
-InitialDPSMSArg::InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey)
-{
-    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.IDPSMSArg");
-    comp = new PrivateInitialDPSMSArg(idpMode, servKey = serviceKey);
-}
-InitialDPSMSArg::~InitialDPSMSArg() { delete(comp); }
-
-
 
 void InitialDPSMSArg::encode(std::vector<unsigned char>& buf) const throw(CustomException)
 {
@@ -256,9 +261,8 @@ void InitialDPSMSArg::encode(std::vector<unsigned char>& buf) const throw(Custom
 
     //debug: print structure content
     smsc_log_component(compLogger, &asn_DEF_InitialDPSMSArg, &comp->idp); 
-
     er = der_encode(&asn_DEF_InitialDPSMSArg, &comp->idp, print2vec, &buf);
-    INMAN_LOG_ENC(er, asn_DEF_InitialDPSMSArg);
+    ASNCODEC_LOG_ENC(er, asn_DEF_InitialDPSMSArg, "IDPSmsArg");
 }
 
 }//namespace comp

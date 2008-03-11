@@ -1,11 +1,14 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************** *
+ * Various helper functions for use in ROS component encoding/decoding.
+ * ************************************************************************** */
 #ifndef __SMSC_INMAN_INAP_COMPS_UTL_HPP__
 #define __SMSC_INMAN_INAP_COMPS_UTL_HPP__
 
-#include "inman/common/adrutil.hpp"
-#include "inman/common/cvtutil.hpp"
-#include "inman/comp/compdefs.hpp"
+#include "util/TonNpiAddress.hpp"
+using smsc::util::TonNpiAddress;
 
+#include "inman/comp/compdefs.hpp"
 using smsc::inman::comp::ASN1DecodeError;
 using smsc::inman::comp::ASN1EncodeError;
 
@@ -16,20 +19,17 @@ extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 #include "logger/Logger.h"
 using smsc::logger::Logger;
 
-#define ASNCODEC_LOG_ENC(er, asnDef, modName)	if (er.encoded == -1) { \
+#define ASNCODEC_LOG_ENC(er, asnDef, compId)	if (er.encoded == -1) { \
 	smsc_log_error(compLogger, \
-	"ASN1 Encoding of %s failed at %s", asnDef.name, er.failed_type->name); \
-	throw ASN1EncodeError(asnDef.name, er.failed_type->name); }
+	"%s: ASN1 Encoding of %s failed at %s", compId, asnDef.name, er.failed_type->name); \
+	throw ASN1EncodeError(asnDef.name, er.failed_type->name, compId); }
 
-#define ASNCODEC_LOG_DEC(drc, asnDef, modName)	if (drc.code != RC_OK) { \
+#define ASNCODEC_LOG_DEC(dcmd, drc, asnDef, compId)  if (drc.code != RC_OK) { \
 	smsc_log_error(compLogger, \
-	"ASN1 Decoding of %s failed with code %s at byte: %d\n", asnDef.name, \
-	drc.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE", drc.consumed); \
-	throw ASN1DecodeError(asnDef.name, drc.code, drc.consumed); }
-
-#define INMAN_LOG_ENC(er, asnDef) ASNCODEC_LOG_ENC(er, asnDef, "InMan")
-#define INMAN_LOG_DEC(drc, asnDef) ASNCODEC_LOG_DEC(drc, asnDef, "InMan")
-
+	"%s: ASN1 Decoding of %s failed with code %s at byte: %d\n", compId, asnDef.name, \
+	(drc.code == RC_FAIL) ? "RC_FAIL" : "RC_WMORE", drc.consumed); \
+        asnDef.free_struct(&asnDef, dcmd, 0); \
+	throw ASN1DecodeError(asnDef.name, drc.code, drc.consumed, compId); }
 
 namespace smsc {
 namespace inman {

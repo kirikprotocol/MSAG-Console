@@ -10,19 +10,13 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-ConnectSMSArg::ConnectSMSArg() : mask(0)
-{
-    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.ConnectSMSArg");
-}
-ConnectSMSArg::~ConnectSMSArg() { }
-
 void ConnectSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     ConnectSMSArg_t *dcmd = NULL;	/* decoded structure */
     asn_dec_rval_t	drc;		/* Decoder return value  */
 
     drc = ber_decode(0, &asn_DEF_ConnectSMSArg, (void **)&dcmd, &buf[0], buf.size());
-    INMAN_LOG_DEC(drc, asn_DEF_ConnectSMSArg);
+    ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_ConnectSMSArg, "ConnSmsArg");
 
     if (OCTET_STRING_2_Address(dcmd->destinationSubscriberNumber, dstSN))
         mask |= ConnectSMSArg::connDSN;

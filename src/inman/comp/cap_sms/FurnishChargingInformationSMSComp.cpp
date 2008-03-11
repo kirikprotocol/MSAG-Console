@@ -12,15 +12,6 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-FurnishChargingInformationSMSArg::FurnishChargingInformationSMSArg()
-{
-    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.CapSMS");
-}
-
-FurnishChargingInformationSMSArg::~FurnishChargingInformationSMSArg()
-{ 
-}
-
 void FurnishChargingInformationSMSArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
 {
     FurnishChargingInformationSMSArg_t *dcmd = NULL;	/* decoded structure */
@@ -29,17 +20,16 @@ void FurnishChargingInformationSMSArg::decode(const std::vector<unsigned char>& 
 
     drc = ber_decode(0, &asn_DEF_FurnishChargingInformationSMSArg, (void **)&dcmd,
                      &buf[0], buf.size());
-    INMAN_LOG_DEC(drc, asn_DEF_FurnishChargingInformationSMSArg);
+    ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_FurnishChargingInformationSMSArg, "FCISmsArg");
     smsc_log_component(compLogger, &asn_DEF_FurnishChargingInformationSMSArg, dcmd);
 
     //dcmd keeps BER-encoded value of type CAMEL-FCISMSBillingChargingCharacteristics
     drc = ber_decode(0, &asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics, (void **)&dcmd2,
                      dcmd->buf, dcmd->size);
-    INMAN_LOG_DEC(drc, asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics);
+    ASNCODEC_LOG_DEC(dcmd2, drc, asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics, "FCISmsArg");
     smsc_log_component(compLogger, &asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics, dcmd2);
 
     //to do: store content
-
     asn_DEF_FurnishChargingInformationSMSArg.free_struct(
             &asn_DEF_FurnishChargingInformationSMSArg, dcmd, 0);
     asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics.free_struct(

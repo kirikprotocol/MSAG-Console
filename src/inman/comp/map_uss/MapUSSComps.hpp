@@ -1,14 +1,20 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * MAP Network Unstructured Supplementary Service v2 Components definition.
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPUSS_COMPS_HPP__
 #define __SMSC_INMAN_MAPUSS_COMPS_HPP__
 
-#include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
-#include "inman/comp/compdefs.hpp"
-#include "inman/comp/MapOpErrors.hpp"
-
 using smsc::logger::Logger;
+
+#include "util/TonNpiAddress.hpp"
+using smsc::util::TonNpiAddress;
+
+#include "inman/comp/compdefs.hpp"
 using smsc::inman::comp::Component;
+
+#include "inman/comp/MapOpErrors.hpp"
 using smsc::inman::comp::MAPOpErrorId;
 
 #define MAP_MAX_USSD_StringLength   160 //encoded or GSM 7bit packed
@@ -56,8 +62,12 @@ struct ERR_ProcessUSS_Request {
 //The base class for MAP USS2 requests/results
 class MAPUSS2CompAC : public Component {
 public:
-    MAPUSS2CompAC() {}
-    virtual ~MAPUSS2CompAC() {}
+    MAPUSS2CompAC(Logger * use_log = NULL)
+        : _dCS(0), compLogger(use_log ? use_log :
+                              Logger::getInstance("smsc.inman.comp.uss"))
+    { }
+    virtual ~MAPUSS2CompAC()
+    { }
 
     //Setters:
     //assigns USS data, that is plain LATIN1 text,
@@ -76,17 +86,21 @@ public:
 protected:
     unsigned char	        _dCS;	    // unparsed data coding scheme (CBS CS)
     std::vector<unsigned char>  _uSSData;   // encoded USS data string (GSM 7-bit, UCS2, etc)
+    Logger*		        compLogger; // 
 };
 
 class ProcessUSSRequestArg : public MAPUSS2CompAC {
 public:
-    ProcessUSSRequestArg();
-    ~ProcessUSSRequestArg() { }
+    ProcessUSSRequestArg(Logger * use_log = NULL)
+        : MAPUSS2CompAC(use_log), _alrt(alertingNotSet)
+    { }
+    ~ProcessUSSRequestArg()
+    { }
 
     //Setters:
     //Optional parameters
-    void setAlertingPattern(enum AlertingPattern alrt) { _alrt = alrt; }
-    void setMSISDNadr(const TonNpiAddress& msadr) { _msAdr = msadr; }
+    inline void setAlertingPattern(enum AlertingPattern alrt) { _alrt = alrt; }
+    inline void setMSISDNadr(const TonNpiAddress & msadr) { _msAdr = msadr; }
     void setMSISDNadr(const char * adrStr) throw(CustomException);
 
     //Getters:
@@ -94,9 +108,9 @@ public:
     bool  msISDNadr_present(void) const;
     bool  msAlerting_present(void) const;
     //returns empty TonNpiAddress if msISDN adr absent
-    const TonNpiAddress& getMSISDNadr(void) const   { return _msAdr; }
+    inline const TonNpiAddress& getMSISDNadr(void) const   { return _msAdr; }
     //returns alertingNotSet if alerting absent
-    enum AlertingPattern getAlertingPattern(void) const { return _alrt; }
+    inline enum AlertingPattern getAlertingPattern(void) const { return _alrt; }
 
     void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
@@ -105,25 +119,24 @@ private:
     //Optional parameters:
     AlertingPattern_e 	_alrt;		// == alertingNotSet for absence
     TonNpiAddress      	_msAdr; 	// MS ISDN address, '\0' or "0" for absence
-    Logger*		compLogger;
 };
 
 class ProcessUSSRequestRes : public MAPUSS2CompAC {
 public:
-    ProcessUSSRequestRes();
-    ~ProcessUSSRequestRes();
+    ProcessUSSRequestRes(Logger * use_log = NULL)
+        : MAPUSS2CompAC(use_log)
+    { }
+    ~ProcessUSSRequestRes()
+    { }
 
     void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
-
-private:
-    Logger*		compLogger;
 };
 
 } //uss
-} //namespace usscomp
-} //namespace inman
-} //namespace smsc
+} //comp
+} //inman
+} //smsc
 
 #endif /* __SMSC_INMAN_MAPUSS_COMPS_HPP__ */
 

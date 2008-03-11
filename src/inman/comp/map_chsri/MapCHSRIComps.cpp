@@ -1,13 +1,15 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-#include <vector>
-#include <assert.h>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/codec_inc/map/SendRoutingInfoArg.h"
 #include "inman/codec_inc/map/SendRoutingInfoRes.h"
 #include "inman/comp/map_chsri/MapCHSRIComps.hpp"
 #include "inman/comp/compsutl.hpp"
+#include "inman/common/cvtutil.hpp"
 #include "util/vformat.hpp"
 using smsc::util::format;
+
 using smsc::cvtutil::packNumString2BCD;
 using smsc::cvtutil::packMAPAddress2OCTS;
 using smsc::cvtutil::unpackBCD2NumString;
@@ -31,10 +33,6 @@ namespace chsri {
 /* ************************************************************************** *
  * class CHSendRoutingInfoArg implementation:
  * ************************************************************************** */
-CHSendRoutingInfoArg::CHSendRoutingInfoArg()
-{
-    compLogger = Logger::getInstance("smsc.inman.comp.CHSRIArg");
-}
 
 //sets ISDN address of requesting point
 void CHSendRoutingInfoArg::setGMSCorSCFaddress(const char * addr) throw(CustomException)
@@ -99,7 +97,7 @@ void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) const throw(C
 
     smsc_log_component(compLogger, &asn_DEF_SendRoutingInfoArg, &cmd);
     erc = der_encode(&asn_DEF_SendRoutingInfoArg, &cmd, print2vec, &buf);
-    ASNCODEC_LOG_ENC(erc, asn_DEF_SendRoutingInfoArg, "mapSRI");
+    ASNCODEC_LOG_ENC(erc, asn_DEF_SendRoutingInfoArg, "SRIArg");
     return;
 }
 
@@ -107,11 +105,6 @@ void CHSendRoutingInfoArg::encode(std::vector<unsigned char>& buf) const throw(C
 /* ************************************************************************** *
  * class CHSendRoutingInfoRes implementation:
  * ************************************************************************** */
-CHSendRoutingInfoRes::CHSendRoutingInfoRes()
-{
-    compLogger = Logger::getInstance("smsc.inman.comp.CHSRIRes");
-    mask.value = 0; 
-}
 
 static bool parse_O_CSI(O_CSI_t *csi, GsmSCFinfo *scf_inf) throw(CustomException)
 {
@@ -165,7 +158,7 @@ void CHSendRoutingInfoRes::decode(const std::vector<unsigned char>& buf) throw(C
     asn_dec_rval_t  drc;    /* Decoder return value  */
 
     drc = ber_decode(0, &asn_DEF_SendRoutingInfoRes, (void **)&dcmd, &buf[0], buf.size());
-    ASNCODEC_LOG_DEC(drc, asn_DEF_SendRoutingInfoRes, "mapSRI");
+    ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_SendRoutingInfoRes, "SRIRes");
     smsc_log_component(compLogger, &asn_DEF_SendRoutingInfoRes, dcmd);
 
     try {

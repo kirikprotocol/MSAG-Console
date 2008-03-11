@@ -1,14 +1,20 @@
-#ident "$Id$"
-#ifndef __SMSC_INMAN_CAPSMS_COMPS_HPP__
-#define __SMSC_INMAN_CAPSMS_COMPS_HPP__
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * CAMEL phase 3 SMS Service components definition.
+ * ************************************************************************* */
+#ifndef __SMSC_INMAN_CAP3SMS_COMPS_HPP__
+#define __SMSC_INMAN_CAP3SMS_COMPS_HPP__
 
 #include <map>
 
+#include "logger/Logger.h"
+using smsc::logger::Logger;
+
+#include "util/TonNpiAddress.hpp"
+using smsc::util::TonNpiAddress;
+
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/CapOpErrors.hpp"
-#include "logger/Logger.h"
-
-using smsc::logger::Logger;
 
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
@@ -135,7 +141,7 @@ class PrivateInitialDPSMSArg;
 //NOTE: requires the preceeding call of tzset()
 class InitialDPSMSArg: public Component { //SSF -> SCF
 public:
-    InitialDPSMSArg(DeliveryMode_e idpMode, unsigned int serviceKey);
+    InitialDPSMSArg(Logger * use_log = NULL);
     ~InitialDPSMSArg();
 
     enum { //errors in addition to CAP3SMSerrCode
@@ -144,6 +150,7 @@ public:
 
     inline uint32_t ServiceKey(void) const { return servKey; }
 
+    void setIDPParms(DeliveryMode_e idpMode, unsigned int serviceKey);
     void setDestinationSubscriberNumber(const TonNpiAddress& addr); // missing for MT
     void setDestinationSubscriberNumber(const char * text);
 
@@ -184,16 +191,24 @@ private:
 //  the gsmSCF in a RequestReportSMSEvent operation.
 class EventReportSMSArg: public Component { //SSF -> SCF
 public:
-    EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
-    ~EventReportSMSArg() {}
+    EventReportSMSArg(Logger * use_log = NULL)
+        : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.ERSmsArg"))
+    { }
+    ~EventReportSMSArg()
+    { }
+
+    inline void setReportParms(EventTypeSMS_e et, messageType_e mt)
+    {
+        eventType = et; messageType = mt;
+    }
 
     void encode(std::vector<unsigned char>& buf) const throw(CustomException);
     std::string & print(std::string & dump) const;
 
 private:
-    EventTypeSMS_e	eventType;
-    messageType_e	messageType;
-    Logger*  compLogger;
+    EventTypeSMS_e  eventType;
+    messageType_e   messageType;
+    Logger *        compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trrbsms
@@ -203,8 +218,11 @@ private:
 //  NOTE: Inman uses only SCF -> SSF
 class RequestReportSMSEventArg: public Component { //SSF -> SCF, SCF -> SSF
 public:
-    RequestReportSMSEventArg();
-    ~RequestReportSMSEventArg() { }
+    RequestReportSMSEventArg(Logger * use_log = NULL)
+        : compLogger(use_log ? use_log : Logger::getInstance("smsc.inman.comp.RRSmsEvtArg"))
+    { }
+    ~RequestReportSMSEventArg()
+    { }
 
     const SMSEventDPs& SMSEvents(void) const { return events; }
     const std::string & printEvents(std::string & dump);
@@ -223,8 +241,12 @@ class ConnectSMSArg: public Component { //SCF -> SSF
 public:
     enum Params { connNone = 0, connDSN = 0x01, connCPN = 0x02, connSMSC = 0x04 };
 
-    ConnectSMSArg();
-    ~ConnectSMSArg();
+    ConnectSMSArg(Logger * use_log = NULL)
+        : mask(0), compLogger(use_log ? use_log :
+                              Logger::getInstance("smsc.inman.comp.ConnSmsArg"))
+    { }
+    ~ConnectSMSArg()
+    { }
 
     inline unsigned char paramsMask(void) const { return mask; }
     inline const TonNpiAddress&	destinationSubscriberNumber(void) const { return dstSN; }
@@ -234,11 +256,9 @@ public:
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
 protected:
-    TonNpiAddress	dstSN, clngPN, sMSCAdr;
-    unsigned char       mask;
-
-private:
-    Logger* compLogger;
+    TonNpiAddress   dstSN, clngPN, sMSCAdr;
+    unsigned char   mask;
+    Logger *        compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tfcisms 
@@ -248,8 +268,12 @@ private:
 //  Short Message.
 class FurnishChargingInformationSMSArg: public Component { //SCF -> SSF 
 public:
-    FurnishChargingInformationSMSArg();
-    ~FurnishChargingInformationSMSArg();
+    FurnishChargingInformationSMSArg(Logger * use_log = NULL)
+        : compLogger(use_log ? use_log :
+                        Logger::getInstance("smsc.inman.comp.FCISmsArg"))
+    { }
+    ~FurnishChargingInformationSMSArg()
+    { }
 
     void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 
@@ -261,37 +285,45 @@ private:
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
 //  This operation is used to prevent an attempt to submit or deliver a short message. 
 class ReleaseSMSArg: public Component { //SCF -> SSF 
-public:
-    unsigned char rPCause;
-
-    ReleaseSMSArg();
-    ~ReleaseSMSArg();
-
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
-
 private:
     Logger* compLogger;
+    unsigned char _rPCause;
+
+public:
+    ReleaseSMSArg(Logger * use_log = NULL)
+        : _rPCause(0), compLogger(use_log ? use_log :
+                    Logger::getInstance("smsc.inman.comp.RLSSmsArg"))
+    { }
+    ~ReleaseSMSArg()
+    { }
+
+    inline unsigned char rPCause(void) const { return _rPCause; }
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
 // This operation is used to request the smsSSF to refresh an application
 // timer in the smsSSF.
 class ResetTimerSMSArg: public Component { //SCF -> SSF 
-public:
-    time_t	timerValue;
-
-    ResetTimerSMSArg();
-    ~ResetTimerSMSArg();
-
-    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
-
 private:
     Logger* compLogger;
+    time_t  tmrValue;
+
+public:
+    ResetTimerSMSArg(Logger * use_log = NULL)
+        : tmrValue(0), compLogger(use_log ? use_log :
+                Logger::getInstance("smsc.inman.comp.RSTSmsArg"))
+    { }
+    ~ResetTimerSMSArg()
+    { }
+
+    inline time_t timerValue(void) const { return tmrValue; }
+    void decode(const std::vector<unsigned char>& buf) throw(CustomException);
 };
 
 }//namespace comp
 }//namespace inman
 }//namespace smsc
 
-#endif /* __SMSC_INMAN_CAPSMS_COMPS_HPP__ */
+#endif /* __SMSC_INMAN_CAP3SMS_COMPS_HPP__ */
 

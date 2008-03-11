@@ -1,12 +1,13 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * ROS Operations Component interface definition.
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_COMP_DEFS_HPP__
 #define __SMSC_INMAN_COMP_DEFS_HPP__
 
 #include <vector>
 
-#include "inman/common/adrutil.hpp"
 #include "util/Exception.hpp"
-using smsc::util::format;
 using smsc::util::CustomException;
 
 namespace smsc {
@@ -15,18 +16,25 @@ namespace comp {
 
 class ASN1EncodeError : public CustomException {
 public:
-    ASN1EncodeError(const char * def_name, const char * failed_type)
-        : CustomException(format("ASN1 Encoding of %s failed at %s",
-                                 def_name, failed_type).c_str(), -1, NULL)
+    ASN1EncodeError(const char * def_name, const char * failed_type,
+                    const char * comp_id = NULL)
+        : CustomException("%s%sASN1 Encoding of %s failed at %s",
+                          comp_id ? comp_id : "", comp_id ? ": " : "",
+                          def_name, failed_type)
     { setExcId("ASN1EncodeError"); }
 };
 
 class ASN1DecodeError : public CustomException {
 public:
-    ASN1DecodeError(const char * def_name, int er_code, size_t pos)
-        : CustomException(format("ASN1 Decoding of %s failed at %d byte",
-                                 def_name, pos).c_str(), er_code, NULL)
-    { setExcId("ASN1DecodeError"); }
+    ASN1DecodeError(const char * def_name, int er_code, size_t pos,
+                    const char * comp_id = NULL)
+        : CustomException("%s%sASN1 Decoding of %s failed at %d byte",
+                          comp_id ? comp_id : "", comp_id ? ": " : "",
+                          def_name, pos)
+    {
+        errCode = er_code;
+        setExcId("ASN1DecodeError");
+    }
 };
 
 

@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * CAP operations error codes according to inman/codec_inc/cap_err_codes.asn
  * ************************************************************************* */
@@ -103,5 +103,10 @@ URCSpacePTR  _RCS_CAPService("errCAPSrv", CAPServiceRC::noServiceResponse, \
 } //comp
 } //inman
 } //smsc
+
+#define _RCS_CapOpErrorsGET() \
+smsc::inman::comp::_RCS_CAPOpErrors.get(); \
+smsc::inman::comp::_RCS_CAPService.get()
+
 #endif /* __SMSC_INMAN_INAP_CAP_OPS_ERRORS__ */
 

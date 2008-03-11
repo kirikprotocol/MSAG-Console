@@ -1,9 +1,12 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * MAP CallHandling service SEND_ROUTING_INFO (v3) Components definition.
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
 #define __SMSC_INMAN_MAPCHSRI_COMPS_HPP__
 
-#include "inman/common/adrutil.hpp"
 #include "logger/Logger.h"
+#include "inman/common/adrutil.hpp"
 #include "inman/comp/compdefs.hpp"
 #include "inman/comp/MapOpErrors.hpp"
 
@@ -46,8 +49,12 @@ struct ERR_CHSendRountigInfo {
 
 class CHSendRoutingInfoArg : public Component {
 public:
-    CHSendRoutingInfoArg();
-    ~CHSendRoutingInfoArg() { }
+    CHSendRoutingInfoArg(Logger * use_log = NULL)
+        : compLogger(use_log ? use_log : 
+                     Logger::getInstance("smsc.inman.comp.CHSRIArg"))
+    { }
+    ~CHSendRoutingInfoArg()
+    { }
 
     //sets ISDN address of requesting point
     void setGMSCorSCFaddress(const char * addr) throw(CustomException);
@@ -68,8 +75,14 @@ private:
 
 class CHSendRoutingInfoRes : public MAPComponent {
 public:
-    CHSendRoutingInfoRes();
-    ~CHSendRoutingInfoRes() {}
+    CHSendRoutingInfoRes(Logger * use_log = NULL)
+        : compLogger(use_log ? use_log : 
+                 Logger::getInstance("smsc.inman.comp.CHSRIRes"))
+    {
+        mask.value = o_imsi[0] = 0;
+    }
+    ~CHSendRoutingInfoRes()
+    {}
 
     unsigned short getSCFinfo(GsmSCFinfo * scf_dat) const;
     unsigned short getIMSI(char *imsi) const;

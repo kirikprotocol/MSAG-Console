@@ -1,25 +1,24 @@
-#ident "$Id$"
+#pragma ident "$Id$"
+/* ************************************************************************* *
+ * ROS Components factory for MAP Unstructured Supplementary Services (v2)
+ * ************************************************************************* */
 #ifndef __SMSC_INMAN_MAPUSS_COMFACTORY__
 #define __SMSC_INMAN_MAPUSS_COMFACTORY__
 
-#include "inman/comp/acdefs.hpp"
-#include "inman/comp/operfactory.hpp"
-
-using smsc::ac::ACOID;
-using smsc::inman::comp::OperationFactory;
-using smsc::inman::comp::OperationFactoryInstanceT;
-using smsc::inman::comp::ApplicationContextFactory;
+#include "inman/comp/ROSFactory.hpp"
+using smsc::inman::comp::ROSComponentsFactory;
 
 namespace smsc {
 namespace inman {
 namespace comp {
+
+extern EncodedOID _ac_map_networkUnstructuredSs_v2;
+
 namespace uss {
-
-typedef OperationFactoryInstanceT <ACOID::id_ac_map_networkUnstructuredSs_v2> MAPUSS2Factory;
-    //FactoryInitFunction declaration
-OperationFactory * initMAPUSS2Components(OperationFactory * fact);
-
+//ROSFactoryProducer declaration
+ROSComponentsFactory * initMAPUSS2Components(void);
 } //uss
+
 } //comp
 } //inman
 } //smsc

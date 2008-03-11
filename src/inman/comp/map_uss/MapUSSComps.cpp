@@ -3,13 +3,13 @@ static char const ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include <vector>
-#include <assert.h>
 
 #include "inman/codec_inc/map/USSD-Arg.h"
+#include "inman/codec_inc/map/USSD-Res.h"
 #include "inman/comp/map_uss/MapUSSComps.hpp"
+#include "inman/common/adrutil.hpp"
+#include "inman/common/cvtutil.hpp"
 #include "inman/comp/compsutl.hpp"
-#include "util/vformat.hpp"
-using smsc::util::format;
 
 using smsc::inman::comp::smsc_log_component;
 using smsc::inman::comp::OCTET_STRING_2_Address;
@@ -65,14 +65,8 @@ void MAPUSS2CompAC::setRAWUSSData(unsigned char dcs, const unsigned char * data,
 }
 
 /* ************************************************************************** *
- * class ProcessUSSRequestArg implementation:
+ * class USSReqArg implementation:
  * ************************************************************************** */
-ProcessUSSRequestArg::ProcessUSSRequestArg()
-{
-    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.uss");
-    _alrt = alertingNotSet;
-}
-
 bool ProcessUSSRequestArg::msISDNadr_present(void) const
 {
     return (_msAdr.signals[0] && (_msAdr.signals[1] || _msAdr.signals[0] != '0')) ? true : false;
@@ -86,40 +80,50 @@ bool ProcessUSSRequestArg::msAlerting_present(void) const
 void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr) throw(CustomException)
 {
     if (!_msAdr.fromText(adrStr))
-        throw CustomException(-1, "ProcessUSSRequestArg: invalid msisdn", adrStr);
+        throw CustomException(-1, "USSReqArg: invalid msisdn", adrStr);
 }
 
-void ProcessUSSRequestArg::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+void ProcessUSSRequestArg::decode(const std::vector<unsigned char>& buf)
+    throw(CustomException)
 {
-    USSD_Arg_t *  dcmd = NULL;  /* decoded structure */
-    asn_dec_rval_t  drc;    /* Decoder return value  */
+    USSD_Arg_t *  dcmd = NULL;  /* ASN decoded structure */
+    asn_dec_rval_t  drc;        /* Decoder return value  */
 
     drc = ber_decode(0, &asn_DEF_USSD_Arg, (void **)&dcmd, &buf[0], buf.size());
-    ASNCODEC_LOG_DEC(drc, asn_DEF_USSD_Arg, "mapUSS");
+    ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_USSD_Arg, "USSReqArg"); //throws
     smsc_log_component(compLogger, &asn_DEF_USSD_Arg, dcmd);
 
-    /* decode ussd string */
-    assert(dcmd->ussd_DataCodingScheme.size == 1);
-    this->setRAWUSSData(dcmd->ussd_DataCodingScheme.buf[0],
-                        dcmd->ussd_String.buf, dcmd->ussd_String.size);
+    //deserialize content of decoded component
+    try {
+        if (dcmd->ussd_DataCodingScheme.size != 1)
+            throw CustomException("USSReqArg: unsupported DCS length: %u",
+                                  dcmd->ussd_DataCodingScheme.size);
+        setRAWUSSData(dcmd->ussd_DataCodingScheme.buf[0],
+                            dcmd->ussd_String.buf, dcmd->ussd_String.size);
 
-    if (dcmd->msisdn) {
-        if (!OCTET_STRING_2_Address(dcmd->msisdn, _msAdr))
-            smsc_log_error(compLogger, "ProcessUSSRequestArg: bad msISDN adr");
-    } else
-        _msAdr.clear();
+        if (!dcmd->msisdn)
+            _msAdr.clear();
+        else if (!OCTET_STRING_2_Address(dcmd->msisdn, _msAdr))
+            throw CustomException("USSReqArg: invalid msISDN adr");
 
-    if (dcmd->alertingPattern) {
-        assert(dcmd->alertingPattern->size == 1);
-        _alrt = (AlertingPattern_e)(dcmd->alertingPattern->buf[0]);
-    } else
-        _alrt = alertingNotSet;
+        if (dcmd->alertingPattern) {
+            if (dcmd->alertingPattern->size != 1)
+                throw CustomException("USSReqArg: "
+                                "invalid alertingPattern length: %u",
+                                dcmd->alertingPattern->size);
+            _alrt = (AlertingPattern_e)(dcmd->alertingPattern->buf[0]);
+        } else
+            _alrt = alertingNotSet;
+
+    } catch (const CustomException & exc) {
+        asn_DEF_USSD_Arg.free_struct(&asn_DEF_USSD_Arg, dcmd, 0);
+        throw;
+    }
     
     asn_DEF_USSD_Arg.free_struct(&asn_DEF_USSD_Arg, dcmd, 0);
-
     //check for constraints not specified in ASN.1 notation
     if (_uSSData.size() > MAP_MAX_USSD_StringLength)
-        smsc_log_warn(compLogger, "ProcessUSSRequestArg: ussdStrSz is too large: %u",
+        smsc_log_warn(compLogger, "USSReqArg: ussdStrSz is too large: %u",
                       _uSSData.size());
 }
 
@@ -144,7 +148,7 @@ void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) const throw(C
 
     /* prepare ussd string */
     if (_uSSData.size() > MAP_MAX_USSD_StringLength)
-        throw CustomException("ProcessUSSRequestArg: ussdata size is too large: %u",
+        throw CustomException("USSReqArg: ussdata size is too large: %u",
                               _uSSData.size());
 
     cmd.ussd_String.size = _uSSData.size();
@@ -169,7 +173,59 @@ void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) const throw(C
     smsc_log_component(compLogger, &asn_DEF_USSD_Arg, &cmd);
 
     er = der_encode(&asn_DEF_USSD_Arg, &cmd, print2vec, &buf);
-    ASNCODEC_LOG_ENC(er, asn_DEF_USSD_Arg, "mapUSS");
+    ASNCODEC_LOG_ENC(er, asn_DEF_USSD_Arg, "USSReqArg");
+}
+
+/* ************************************************************************** *
+ * class USSReqArg implementation:
+ * ************************************************************************** */
+void ProcessUSSRequestRes::decode(const std::vector<unsigned char>& buf) throw(CustomException)
+{
+    USSD_Res_t *        dcmd = NULL;    /* decoded structure */
+    asn_dec_rval_t      drc;            /* Decoder return value  */
+
+    drc = ber_decode(0, &asn_DEF_USSD_Res, (void **)&dcmd, &buf[0], buf.size());
+    ASNCODEC_LOG_DEC(dcmd, drc, asn_DEF_USSD_Res, "USSReqRes");
+
+    /* decode ussd string */
+    assert(dcmd->ussd_DataCodingScheme.size == 1);
+    this->setRAWUSSData(dcmd->ussd_DataCodingScheme.buf[0],
+                        dcmd->ussd_String.buf, dcmd->ussd_String.size);
+
+    smsc_log_component(compLogger, &asn_DEF_USSD_Res, dcmd);
+    asn_DEF_USSD_Res.free_struct(&asn_DEF_USSD_Res, dcmd, 0);
+    if (_uSSData.size() > MAP_MAX_USSD_StringLength)
+        smsc_log_warn(compLogger, "USSReqRes: ussdata size is too large: %u",
+                      _uSSData.size());
+}
+
+void ProcessUSSRequestRes::encode(std::vector<unsigned char>& buf) const throw(CustomException)
+{
+    asn_enc_rval_t      er;
+    /* construct USSD_Arg */
+    USSD_Res_t          cmd;
+    uint8_t             fdcsbuf;
+    uint8_t             fussdsbuf[MAP_MAX_USSD_StringLength];
+
+
+    memset(&cmd, 0x00, sizeof(cmd)); //clear optionals and asn_ctx
+    cmd.ussd_DataCodingScheme.size = 1;
+    cmd.ussd_DataCodingScheme.buf = &fdcsbuf;
+    cmd.ussd_DataCodingScheme.buf[0] = _dCS;
+    
+    /* prepare ussd string */
+    if (_uSSData.size() > MAP_MAX_USSD_StringLength)
+        throw CustomException("USSReqRes: ussdata size is too large: %u",
+                              _uSSData.size());
+
+    cmd.ussd_String.size = _uSSData.size();
+    cmd.ussd_String.buf = &fussdsbuf[0];
+    memcpy(cmd.ussd_String.buf, &_uSSData[0], cmd.ussd_String.size);
+
+    smsc_log_component(compLogger, &asn_DEF_USSD_Res, &cmd); 
+
+    er = der_encode(&asn_DEF_USSD_Res, &cmd, print2vec, &buf);
+    ASNCODEC_LOG_ENC(er, asn_DEF_USSD_Res, "USSReqRes");
 }
 
 } //uss
