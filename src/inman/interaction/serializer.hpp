@@ -339,11 +339,11 @@ public:
 class SerializerITF {
 public:
     virtual SerializablePacketAC*
-            deserialize(ObjectBuffer& in) throw(SerializerException) = 0;
+            deserialize(ObjectBuffer& in) const throw(SerializerException) = 0;
     //this method able to take ownership of ObjectBuffer, it's usefull
     //in case of partial or deferred deserialization
     virtual SerializablePacketAC*
-            deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(SerializerException) = 0;
+            deserialize(std::auto_ptr<ObjectBuffer>& p_in) const throw(SerializerException) = 0;
 };
 
 } //interaction

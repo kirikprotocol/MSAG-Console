@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-CXXFLAGS := -I../inap -I../util $(CXXFLAGS)
+#CXXFLAGS := -I../common $(CXXFLAGS)
 PACKAGE := inman.interaction
 
 ifndef SMSC_SRCDIR

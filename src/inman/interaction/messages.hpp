@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef __SMSC_INMAN_INTERACTION_MESSAGES__
 #define __SMSC_INMAN_INTERACTION_MESSAGES__
 
@@ -6,42 +6,11 @@
 using smsc::util::FactoryT;
 
 #include "inman/interaction/serializer.hpp"
+#include "inman/interaction/INPMsgDefs.hpp"
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
-//NOTE: the plain numbering of object Ids through all
-//command sets is used for simplicity!
-typedef enum {
-    csBilling  = 1, //SMS Charging dialog, objIds [1..5]
-    csAbntContract,  //Subscriber contract and gsmSCF parms determination [6..9]
-    csSession,      //Session establishment and control, objIds [10..15]
-    csControl,      //INman service control (radmin), objIds [16...] 
-    //...
-    csUndefined  // just a max cap, reserved
-} INPCommandSetId;
-
-static INPCommandSetId csIdbyCmdId(unsigned cmd_id)
-{
-    if (cmd_id >= 16)
-        return csControl;
-    if (cmd_id >= 10)
-        return csSession;
-    if (cmd_id >= 6)
-        return csAbntContract;
-    return cmd_id ? csBilling : csUndefined;
-}
-
-static const char * csNamebyCmdId(unsigned cmd_id)
-{
-    if (cmd_id >= 16)
-        return "csControl";
-    if (cmd_id >= 10)
-        return "csSession";
-    if (cmd_id >= 6)
-        return "csAbntContract";
-    return cmd_id ? "csBilling" : "csUndefined";
-}
 
 //INMan Protocol CommandSet: factory of commands and their subobjects
 class INPCommandSetAC;
@@ -52,7 +21,7 @@ class INPCommandAC: public SerializableObjectAC {
 public:
     INPCommandAC(unsigned short use_id) : SerializableObjectAC(use_id)
     { }
-    virtual INPCommandSetAC * commandSet(void) const = 0;
+    virtual const INPCommandSetAC * commandSet(void) const = 0;
 };
 /*
  * Inman messages are transferred as length prefixed packet of two
@@ -107,11 +76,14 @@ protected:
     typedef FactoryT<uint32_t, INPPacketAC> PckFactory;
     PckFactory  pckFct;
 
-    inline uint32_t mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm)
-        { return ((cmd_id << 16) | (hdr_frm & 0xFFFF)); }
+    inline uint32_t 
+        mkPckIdx(unsigned short cmd_id, unsigned short hdr_frm) const
+    {
+        return ((cmd_id << 16) | (hdr_frm & 0xFFFF));
+    }
 
-//    typedef FactoryT<unsigned short, INPCommandAC> ObjFactory;
-//    ObjFactory  objFct;
+//    typedef FactoryT<unsigned short, INPCommandAC> CmdFactory;
+//    CmdFactory  cmdFct;
 //    typedef FactoryT<unsigned short, INPHeaderAC> HdrFactory; 
 //    HdrFactory  hdrFct;
 
@@ -122,46 +94,57 @@ public:
         lmFull          //deserialize full packet
     } INPLoadMode;
 
-    virtual INPCommandSetId CsId(void) const = 0;
+    virtual INProtocol::CSId CsId(void) const = 0;
     virtual const char *    CsName(void) const = 0;
     virtual INPLoadMode loadMode(unsigned short cmd_id) const = 0;
 
     //creates solid packet (header + command)
-    INPPacketAC * createPck(unsigned short cmd_id, unsigned short hdr_frm)
-        { return pckFct.create(mkPckIdx(cmd_id, hdr_frm)); }
+    inline INPPacketAC * 
+        createPck(unsigned short cmd_id, unsigned short hdr_frm) const
+    {
+        return pckFct.create(mkPckIdx(cmd_id, hdr_frm));
+    }
 
-//    INPHeaderAC * createHdr(unsigned short hdr_frm)
+//    inline INPHeaderAC * createHdr(unsigned short hdr_frm) const
 //        { return hdrFct.create(hdr_frm); }
-//    INPCommandAC * createObj(unsigned short cmd_id)
-//        { return objFct.create(obj_id); }
+//    inline INPCommandAC * createCmd(unsigned short cmd_id) const
+//        { return cmdFct.create(obj_id); }
 };
 
 
 //DeSerializer for Inman packets, transferred over TCP connect
 class INPSerializer : public SerializerITF {
-public:
-    virtual ~INPSerializer() { }
-
-    INPCommandSetAC * commandSet(unsigned short cmd_id);
-    //SerializerITF interface:
-    INPPacketAC *   deserialize(ObjectBuffer& in) throw(SerializerException); 
-    INPPacketAC *   deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(SerializerException);
-
-    static INPSerializer* getInstance();
-
-protected:
-    INPSerializer();
-    INPCommandSetAC* loadHdr(ObjectBuffer & in, std::auto_ptr<INPPacketAC> & pck)
-                        throw(SerializerException);
-    //Returns false if deserialization of ObjectBuffer is deferred.
-    bool            loadObj(INPCommandSetAC * cmd_set, INPPacketAC * pck,
-                            ObjectBuffer * in, bool ownBuf = false)
-                        throw(SerializerException);
-
 private:
-    typedef std::map<INPCommandSetId, INPCommandSetAC*> INPCsMap;
+    typedef std::map<INProtocol::CSId, const INPCommandSetAC*> INPCsMap;
 
     INPCsMap cmdSets;
+
+protected:
+    INPSerializer()
+    { }
+    const INPCommandSetAC *
+        loadHdr(ObjectBuffer & in, std::auto_ptr<INPPacketAC> & pck) const
+            throw(SerializerException);
+    //Returns false if deserialization of ObjectBuffer is deferred.
+    bool loadObj(const INPCommandSetAC * cmd_set, INPPacketAC * pck,
+                        ObjectBuffer * in, bool ownBuf = false) const
+            throw(SerializerException);
+public:
+    virtual ~INPSerializer()
+    { }
+
+    inline bool registerCmdSet(const INPCommandSetAC * p_cs)
+    {
+        std::pair<INPCsMap::iterator, bool> res =
+            cmdSets.insert(INPCsMap::value_type(p_cs->CsId(), p_cs));
+        return res.second;
+    }
+    const INPCommandSetAC * commandSet(unsigned short cmd_id) const;
+    //SerializerITF interface:
+    INPPacketAC *   deserialize(ObjectBuffer& in) const throw(SerializerException); 
+    INPPacketAC *   deserialize(std::auto_ptr<ObjectBuffer>& p_in) const throw(SerializerException);
+
+    static INPSerializer* getInstance();
 };
 
 } //interaction

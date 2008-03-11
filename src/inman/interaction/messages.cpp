@@ -1,12 +1,8 @@
+#ifndef MOD_IDENT_OFF
 static char const ident[] = "$Id$";
-
-#include <assert.h>
-#include <string>
-#include <stdexcept>
+#endif /* MOD_IDENT_OFF */
 
 #include "inman/interaction/messages.hpp"
-#include "inman/interaction/MsgBilling.hpp"
-#include "inman/interaction/MsgContract.hpp"
 
 namespace smsc  {
 namespace inman {
@@ -14,44 +10,41 @@ namespace interaction {
 /* ************************************************************************** *
  * class INPSerializer implementation:
  * ************************************************************************** */
-INPSerializer::INPSerializer()
-{
-    cmdSets.insert(INPCsMap::value_type(csBilling, INPCSBilling::getInstance()));
-    cmdSets.insert(INPCsMap::value_type(csAbntContract, INPCSAbntContract::getInstance()));
-}
-
 INPSerializer* INPSerializer::getInstance()
 {
     static INPSerializer instance;
     return &instance;
 }
 
-INPCommandSetAC * INPSerializer::commandSet(unsigned short cmd_id)
+const INPCommandSetAC *
+    INPSerializer::commandSet(unsigned short cmd_id) const
 {
-    INPCommandSetAC *   cmdSet = NULL;
-    INPCommandSetId     csId = csIdbyCmdId(cmd_id);
-    if (csId != csUndefined) {
-        INPCsMap::iterator cit = cmdSets.find(csId);
-        assert(cit != cmdSets.end()); //verify INPSerializer()
-        cmdSet = (*cit).second;
+    const INPCommandSetAC * cmdSet = NULL;
+    INProtocol::CSId    csId = INProtocol::csIdbyCmdId(cmd_id);
+    if (csId != INProtocol::csUndefined) {
+        INPCsMap::const_iterator cit = cmdSets.find(csId);
+        if (cit != cmdSets.end())
+            cmdSet = cit->second;
     }
     return cmdSet;
 }
 
-INPPacketAC* INPSerializer::deserialize(ObjectBuffer& in) throw(SerializerException)
+INPPacketAC * INPSerializer::deserialize(ObjectBuffer& in) const
+        throw(SerializerException)
 {
     std::auto_ptr<INPPacketAC> pck; 
-    INPCommandSetAC * cmdSet = loadHdr(in, pck);     //throws
+    const INPCommandSetAC * cmdSet = loadHdr(in, pck);     //throws
     loadObj(cmdSet, pck.get(), &in, false);     //throws
     return pck.release();
 }
 
-INPPacketAC* INPSerializer::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
-                                        throw(SerializerException)
+INPPacketAC * 
+    INPSerializer::deserialize(std::auto_ptr<ObjectBuffer>& p_in) const
+        throw(SerializerException)
 {
     ObjectBuffer * in = p_in.get();
     std::auto_ptr<INPPacketAC> pck;             //throws
-    INPCommandSetAC * cmdSet = loadHdr(*in, pck);    //throws
+    const INPCommandSetAC * cmdSet = loadHdr(*in, pck);    //throws
     if (!loadObj(cmdSet, pck.get(), in, true))  //throws
         p_in.release(); //take ownership of ObjectBuffer for deferred deserialization!
     return pck.release();
@@ -60,8 +53,9 @@ INPPacketAC* INPSerializer::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
 /* -------------------------------------------------------------------------- *
  * Private/Protected methods:
  * -------------------------------------------------------------------------- */
-INPCommandSetAC* INPSerializer::loadHdr(ObjectBuffer & in, std::auto_ptr<INPPacketAC> & pck)
-                                    throw(SerializerException)
+const INPCommandSetAC *
+    INPSerializer::loadHdr(ObjectBuffer & in, std::auto_ptr<INPPacketAC> & pck) const
+        throw(SerializerException)
 {
     unsigned short cmdId = 0, hdrFrm = 0;
     try {
@@ -71,7 +65,7 @@ INPCommandSetAC* INPSerializer::loadHdr(ObjectBuffer & in, std::auto_ptr<INPPack
         throw SerializerException("INPSrlzr: invalid packet structure",
                                   SerializerException::invPacket, exc.what());
     }
-    INPCommandSetAC * cmdSet = commandSet(cmdId);
+    const INPCommandSetAC * cmdSet = commandSet(cmdId);
     if (!cmdSet)
         throw SerializerException("INPSrlzr: illegal command",
                                   SerializerException::invObject);
@@ -89,9 +83,9 @@ INPCommandSetAC* INPSerializer::loadHdr(ObjectBuffer & in, std::auto_ptr<INPPack
 }
 
 //Returns false if deserialization of ObjectBuffer is deferred.
-bool INPSerializer::loadObj(INPCommandSetAC * cmd_set, INPPacketAC * pck,
-                            ObjectBuffer * in, bool ownBuf/* = false*/)
-                        throw(SerializerException)
+bool INPSerializer::loadObj(const INPCommandSetAC * cmd_set, INPPacketAC * pck,
+                            ObjectBuffer * in, bool ownBuf/* = false*/) const
+        throw(SerializerException)
 {
     if (cmd_set->loadMode((pck->pCmd())->Id()) == INPCommandSetAC::lmHeader) {
         (pck->pCmd())->setDataBuf(in, ownBuf);
