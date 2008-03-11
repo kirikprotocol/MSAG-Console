@@ -8,8 +8,7 @@
 
 #ifdef MSAG_INMAN_BILL
 #include "inman/interaction/connect.hpp"
-#include "inman/interaction/MsgBilling.hpp"
-#include "inman/inman.hpp"
+#include "inman/interaction/msgbill/MsgBilling.hpp"
 #endif
 
 #include "scag/exc/SCAGExceptions.h"
@@ -169,7 +168,7 @@ public:
      max_t = 0, min_t = 1000000000, billcount = 0, start_t = time(NULL);
         #ifdef MSAG_INMAN_BILL
         socket = new Socket();
-
+        INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
         pipe = new Connect(socket, INPSerializer::getInstance(), logger);
         pipe->addListener(this);
         #endif

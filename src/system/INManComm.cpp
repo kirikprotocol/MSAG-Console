@@ -1,6 +1,6 @@
 /* "$Id$" */
 #include "INManComm.hpp"
-#include "inman/interaction/MsgBilling.hpp"
+#include "inman/interaction/msgbill/MsgBilling.hpp"
 #include "util/Exception.hpp"
 #include "system/smsc.hpp"
 
@@ -27,8 +27,10 @@ void INManComm::Init(const char* argHost,int argPort)
 {
   host=argHost;
   port=argPort;
-//  smsc::inman::interaction::SerializerInap::getInstance();
-  smsc::inman::interaction::INPSerializer::getInstance();
+
+  smsc::inman::interaction::INPSerializer::getInstance()->
+      registerCmdSet(smsc::inman::interaction::INPCSBilling::getInstance());
+
   if(socket->Init(host.c_str(),port,0)==-1)
   {
     throw smsc::util::Exception("Failed to resolve %s:%d",host.c_str(),port);
