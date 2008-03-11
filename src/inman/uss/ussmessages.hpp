@@ -48,8 +48,8 @@ class SerializerUSS : public SerializerITF,
 public:
   virtual ~SerializerUSS() { }
 
-  SerializablePacketAC * deserialize(ObjectBuffer & in) throw(SerializerException);
-  SerializablePacketAC * deserialize(std::auto_ptr<ObjectBuffer>& p_in) throw(SerializerException);
+  SerializablePacketAC * deserialize(ObjectBuffer & in) const throw(SerializerException);
+  SerializablePacketAC * deserialize(std::auto_ptr<ObjectBuffer>& p_in) const throw(SerializerException);
 
   static SerializerUSS* getInstance();
 

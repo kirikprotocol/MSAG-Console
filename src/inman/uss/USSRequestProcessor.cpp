@@ -1,10 +1,18 @@
-#include "USSRequestProcessor.hpp"
-#include <inman/inap/dispatcher.hpp>
-#include <inman/common/cvtutil.hpp>
-#include <vector>
+#ifndef MOD_IDENT_OFF
+static char const ident[] = "$Id$";
+#endif /* MOD_IDENT_OFF */
+
 #include <sys/types.h>
-#include <util/ObjectRegistry.hpp>
-#include <inman/uss/USSBalanceConnect.hpp>
+#include <vector>
+
+#include "util/ObjectRegistry.hpp"
+
+#include "inman/inap/dispatcher.hpp"
+#include "inman/common/cvtutil.hpp"
+#include "inman/comp/map_uss/MapUSSFactory.hpp"
+using smsc::inman::comp::_ac_map_networkUnstructuredSs_v2;
+
+#include "USSRequestProcessor.hpp"
 
 namespace smsc {
 namespace inman {
@@ -12,14 +20,21 @@ namespace uss {
 
 USSRequestProcessor::USSRequestProcessor(smsc::inman::interaction::Connect* conn,
                                          const UssService_CFG& cfg,
-                                         const USSProcSearchCrit& ussProcSearchCrit)
-  : _conn(conn), _logger(Logger::getInstance("smsc.uss.BalanceService")),
-    _mapSess(NULL), _mapDialog(NULL), _cfg(cfg), _dialogId(0), _resultAsLatin1(false), _dcs(0), _ussProcSearchCrit(ussProcSearchCrit) {}
+                                         const USSProcSearchCrit& ussProcSearchCrit,
+                                         Logger * use_log/* = NULL*/)
+  : _conn(conn), _logger(use_log ? use_log : Logger::getInstance("smsc.ussman.BalanceService")),
+    _mapDialog(NULL), _cfg(cfg), _dialogId(0), _resultAsLatin1(false), _dcs(0),
+    _ussProcSearchCrit(ussProcSearchCrit)
+{ }
 
-USSRequestProcessor::~USSRequestProcessor() {
+USSRequestProcessor::~USSRequestProcessor()
+{
   try {
     smsc::core::synchronization::MutexGuard mg(_callbackActivityLock);
-    if ( _mapDialog) _mapDialog->endMapDlg();
+    if ( _mapDialog) {
+        _mapDialog->endMapDlg();
+        delete _mapDialog;
+    }
   } catch(...) {}
 }
 
@@ -46,35 +61,14 @@ USSRequestProcessor::sendNegativeResponse()
 void
 USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMessage* requestObject)
 {
-  smsc::inman::inap::TCAPDispatcher * disp = smsc::inman::inap::TCAPDispatcher::getInstance();
-  smsc::inman::inap::SSNSession * ssnSess = disp->findSession(_cfg.ss7.own_ssn);
-  if (!ssnSess) //attempt to open SSN
-    ssnSess = disp->openSSN(_cfg.ss7.own_ssn, _cfg.ss7.maxDlgId);
-
-  if (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) {
-    smsc_log_error(_logger, "USSRequestProcessor::handleRequest::: SSN session is not available/bound");
+  TCSessionSR * _mapSess = getMAPSession(requestObject->get_IN_SSN(),
+                    requestObject->get_IN_ISDNaddr(), "USSRequestProcessor::handleRequest");
+  if (!_mapSess) {
     sendNegativeResponse();
     return;
   }
-
-  smsc::util::TonNpiAddress IN_ISDNAddr = requestObject->get_IN_ISDNaddr();
-  if ( !_mapSess ) 
-    if (!(_mapSess = ssnSess->newSRsession(_cfg.ss7.ssf_addr,
-                                           ACOID::id_ac_map_networkUnstructuredSs_v2,
-                                           requestObject->get_IN_SSN(),
-                                           IN_ISDNAddr,
-                                           _cfg.ss7.fake_ssn))) {
-      std::string sid;
-      smsc::inman::inap::TCSessionAC::mkSignature(sid, _cfg.ss7.own_ssn, _cfg.ss7.ssf_addr,
-                                                  ACOID::id_ac_cap3_sms_AC, requestObject->get_IN_SSN(),
-                                                  &IN_ISDNAddr);
-      smsc_log_error(_logger, "USSRequestProcessor::handleRequest::: Unable to init TCSR session: %s", sid.c_str());
-      sendNegativeResponse();
-      return;
-    }
-
   try {
-    _mapDialog = new smsc::inman::inap::uss::MapUSSDlg(_mapSess, this);
+    _mapDialog = new smsc::inman::inap::uss::MapUSSDlg(_mapSess, this, _logger);
 
     if ( requestObject->getFlg() == smsc::inman::interaction::USSMessageAC::PREPARED_USS_REQ )
       _mapDialog->requestSS(requestObject->getUSSData(),  requestObject->getDCS(),
@@ -82,7 +76,6 @@ USSRequestProcessor::handleRequest(const smsc::inman::interaction::USSRequestMes
     else if ( requestObject->getFlg() == smsc::inman::interaction::USSMessageAC::LATIN1_USS_TEXT )
       _mapDialog->requestSS(requestObject->getLatin1Text(),
                             &(requestObject->getMSISDNadr()), requestObject->getIMSI().c_str());
-
 
     _msISDNAddr = requestObject->getMSISDNadr();
   } catch (std::exception & ex) {
@@ -157,6 +150,32 @@ void USSRequestProcessor::onEndMapDlg(RCHash ercode/* =0*/)
     DuplicateRequestChecker::getInstance().unregisterRequest(_ussProcSearchCrit);
   }
   delete this;
+}
+
+
+TCSessionSR * USSRequestProcessor::getMAPSession(uint8_t rmt_ssn, const TonNpiAddress & rnpi,
+                                        const char * _logId)
+{
+    if (_cfg.tcDisp->ss7State() != smsc::inman::inap::TCAPDispatcherITF::ss7CONNECTED) {
+        smsc_log_error(_logger, "%s: TCAPDispatcher is not connected!", _logId);
+        return NULL;
+    }
+    SSNSession * ssnSess = _cfg.tcDisp->openSSN(_cfg.tcUsr.ownSsn, _cfg.tcUsr.maxDlgId, 1, _logger);
+    if (!ssnSess || (ssnSess->getState() != smsc::inman::inap::ssnBound)) {
+        smsc_log_error(_logger, "%s: SSN[%u] is not available/bound!", _logId,
+                       (unsigned)_cfg.tcUsr.ownSsn);
+        return NULL;
+    }
+    TCSessionSR * mapSess = ssnSess->newSRsession(_cfg.tcUsr.ownAddr,
+                _ac_map_networkUnstructuredSs_v2, rmt_ssn, rnpi, _cfg.tcUsr.fakeSsn);
+    if (!mapSess) {
+        std::string sid = ssnSess->mkSignature(_cfg.tcUsr.ownAddr,
+                                     _ac_map_networkUnstructuredSs_v2, rmt_ssn, &rnpi);
+        smsc_log_error(_logger, "%s: Unable to init TCSR session: %s", _logId, sid.c_str());
+    } else
+        smsc_log_debug(_logger, "%s: using TCSR[%u]: %s", _logId, mapSess->getUID(),
+                       mapSess->Signature().c_str());
+    return mapSess;
 }
 
 }

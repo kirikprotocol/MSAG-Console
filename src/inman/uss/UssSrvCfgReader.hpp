@@ -1,0 +1,85 @@
+#pragma ident "$Id$"
+/* ************************************************************************** *
+ * 
+ * ************************************************************************** */
+#ifndef __SMSC_USSMAN_CFG_READER_HPP__
+# define __SMSC_USSMAN_CFG_READER_HPP__
+
+#include "UssServiceCfg.hpp"
+#include "inman/inap/TCXCfgParser.hpp"
+using smsc::inman::inap::TCDspCfgParser;
+using smsc::inman::inap::TCAPUsrCfgParser;
+
+namespace smsc  {
+namespace inman {
+namespace uss  {
+
+class USSSrvCfgReader {
+private:
+    Logger *        logger;
+    const char *    nmSrv; //name of USS Service
+     //structure containing parsed configuration
+    std::auto_ptr<UssService_CFG> stCfg;
+
+public:
+    static const uint32_t _DFLT_CLIENT_CONNS = 5;
+
+    USSSrvCfgReader(const char * nm_uss_srv, Logger * use_log)
+        : nmSrv(nm_uss_srv), logger(use_log)
+    { }
+    ~USSSrvCfgReader()
+    { }
+
+    void readConfig(Config & root_sec) throw(ConfigException)
+    {
+        stCfg.reset(new UssService_CFG());
+        const char * cstr = NULL;
+
+        /* read USS Service user parameters */
+        if (!root_sec.findSection(nmSrv))
+            throw ConfigException("section '%s' is missing!", nmSrv);
+        {
+            XConfigView usrCfg(root_sec, nmSrv);
+            stCfg->sock.host = usrCfg.getString("host"); //throws
+            stCfg->sock.port = usrCfg.getInt("port");   //throws
+            smsc_log_info(logger, "%s : host=%s,port=%d", nmSrv,
+                          stCfg->sock.host.c_str(), stCfg->sock.port);
+
+            uint32_t tmo = 0;
+            try { tmo = (uint32_t)usrCfg.getInt("maxConn");
+            } catch (const ConfigException & exc) { }
+            stCfg->sock.maxConn = tmo ? tmo : _DFLT_CLIENT_CONNS;
+            smsc_log_info(logger, "%s: maxConn %u%s", nmSrv,
+                          stCfg->sock.maxConn, !tmo ? " (default)":"");
+
+            //read name of TCAPUser configuration section
+            try { cstr = usrCfg.getString("tcapUser");
+            } catch (const ConfigException & exc) { }
+            if (!cstr || !cstr[0])
+                throw ConfigException("parameter '%s' is invalid or missing!");
+        }
+
+        /* read SS7 interaction parameters */
+        TCAPUsrCfgParser    usrParser(logger, cstr);
+        if (!root_sec.findSection(usrParser.nmCfgSection()))
+            throw ConfigException("section %s' is missing!", usrParser.nmCfgSection());
+        smsc_log_info(logger, "Reading settings from '%s' ..", usrParser.nmCfgSection());
+        usrParser.readConfig(root_sec, stCfg->tcUsr); //throws
+
+        TCDspCfgParser  dspParser(logger);
+        if (!root_sec.findSection(dspParser.nmCfgSection()))
+            throw ConfigException("section %s' is missing!", dspParser.nmCfgSection());
+        smsc_log_info(logger, "Reading settings from '%s' ..", dspParser.nmCfgSection());
+        dspParser.readConfig(root_sec, stCfg->ss7); //throws
+    }
+
+    inline UssService_CFG * rlseConfig(void) { return stCfg.release(); }
+    inline UssService_CFG * getConfig(void) const { return stCfg.get(); }
+};
+
+} //uss
+} //inman
+} //smsc
+
+#endif /* __SMSC_USSMAN_CFG_READER_HPP__ */
+

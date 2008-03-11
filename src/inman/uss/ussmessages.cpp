@@ -27,7 +27,7 @@ SerializerUSS::SerializerUSS()
 {
   registerProduct(USS2CMD::PROCESS_USS_REQUEST_TAG, new ProducerT<USSRequestMessage>());
   registerProduct(USS2CMD::PROCESS_USS_RESULT_TAG, new ProducerT<USSResultMessage>());
-  _logger = smsc::logger::Logger::getInstance("smsc.ussbalance");
+  _logger = smsc::logger::Logger::getInstance("smsc.ussman.ussbalance");
 }
 
 SerializerUSS* SerializerUSS::getInstance()
@@ -66,23 +66,23 @@ There are next flg values for text string encoding:
 0x02 - UCS2
 */
 //NOTE: SerializerUSS doesn't provide partial deserialization of packets
-SerializablePacketAC * SerializerUSS::deserialize(std::auto_ptr<ObjectBuffer>& p_in)
+SerializablePacketAC * SerializerUSS::deserialize(std::auto_ptr<ObjectBuffer>& p_in) const
         throw(SerializerException)
 {
   return deserialize(*(p_in.get()));
 }
 
-SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in)
+SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in) const
         throw(SerializerException)
 {
-  smsc_log_debug(_logger, "SerializerUSS::deserialize::: enter it");
+//  smsc_log_debug(_logger, "SerializerUSS::deserialize::: enter it");
   unsigned short objectId;
   uint32_t       reqId;
   try {
     in >> objectId;
-    smsc_log_debug(_logger, "SerializerUSS::deserialize::: read objId=%d", objectId);
+//    smsc_log_debug(_logger, "SerializerUSS::deserialize::: read objId=%d", objectId);
     in >> reqId;
-    smsc_log_debug(_logger, "SerializerUSS::deserialize::: read reqId=%d", reqId);
+//    smsc_log_debug(_logger, "SerializerUSS::deserialize::: read reqId=%d", reqId);
   } catch (SerializerException & exc) {
     throw SerializerException("USSrlzr: invalid packet structure",
                               SerializerException::invPacket, exc.what());
@@ -96,7 +96,7 @@ SerializablePacketAC* SerializerUSS::deserialize(ObjectBuffer& in)
 
   std::auto_ptr<USSPacketAC> pck(new USSPacketAC(reqId));
   pck->assignObj(0, obj.release());
-  smsc_log_debug(_logger, "SerializerUSS::deserialize::: return new packet");
+//  smsc_log_debug(_logger, "SerializerUSS::deserialize::: return new packet");
   return pck.release();
 }
 
@@ -114,7 +114,7 @@ void USSMessageAC::save(ObjectBuffer& out) const
 
 void USSMessageAC::load(ObjectBuffer& in) throw(SerializerException)
 {
-  smsc_log_debug(_logger, "USSMessageAC::load::: enter it");
+//  smsc_log_debug(_logger, "USSMessageAC::load::: enter it");
   in >> _flg;
   if ( _flg != PREPARED_USS_REQ &&
        _flg != LATIN1_USS_TEXT) 
@@ -123,16 +123,16 @@ void USSMessageAC::load(ObjectBuffer& in) throw(SerializerException)
   if ( _flg == PREPARED_USS_REQ ) {
     in >> _dCS;
     _dCS_wasRead = true;
-    smsc_log_debug(_logger, "USSMessageAC::load::: read dcs=%d", _dCS);
+//    smsc_log_debug(_logger, "USSMessageAC::load::: read dcs=%d", _dCS);
   }
   in >> _ussData;
   if ( _flg == LATIN1_USS_TEXT )
     _latin1Text.assign((char*)&_ussData[0], _ussData.size());
 
-  smsc_log_debug(_logger, "USSMessageAC::load::: read ussdata");
+//  smsc_log_debug(_logger, "USSMessageAC::load::: read ussdata");
   std::string sadr;
   in >> sadr;
-  smsc_log_debug(_logger, "USSMessageAC::load::: read sadr=%s", sadr.c_str());
+//  smsc_log_debug(_logger, "USSMessageAC::load::: read sadr=%s", sadr.c_str());
   if (!_msAdr.fromText(sadr.c_str()))
     throw SerializerException("invalid msisdn" , SerializerException::invObjData
 , NULL);
@@ -189,13 +189,13 @@ bool  USSResultMessage::getUSSDataAsLatin1Text(std::string & str)
 
 void USSRequestMessage::load(ObjectBuffer& in) throw(SerializerException)
 {
-  smsc_log_debug(_logger, "USSRequestMessage::load::: Enter it");
+//  smsc_log_debug(_logger, "USSRequestMessage::load::: Enter it");
   USSMessageAC::load(in);
   in >> _inSSN;
-  smsc_log_debug(_logger, "USSRequestMessage::load::: read inSSN=%d", _inSSN);
+//  smsc_log_debug(_logger, "USSRequestMessage::load::: read inSSN=%d", _inSSN);
   std::string inSaddr;
   in >> inSaddr;
-  smsc_log_debug(_logger, "USSRequestMessage::load::: read inSaddr=%s", inSaddr.c_str());
+//  smsc_log_debug(_logger, "USSRequestMessage::load::: read inSaddr=%s", inSaddr.c_str());
   if (!_inAddr.fromText(inSaddr.c_str()))
     throw SerializerException("invalid IN isdn" , SerializerException::invObjData, NULL);
   in >> _imsi;
@@ -212,9 +212,9 @@ void USSRequestMessage::save(ObjectBuffer& out) const
 
 void USSResultMessage::load(ObjectBuffer& in) throw(SerializerException)
 {
-  smsc_log_debug(_logger, "USSResultMessage::load::: enter it");
+//  smsc_log_debug(_logger, "USSResultMessage::load::: enter it");
   in >> _status;
-  smsc_log_debug(_logger, "USSResultMessage::load::: read status=%d", _status);
+//  smsc_log_debug(_logger, "USSResultMessage::load::: read status=%d", _status);
   if (_status)
     return;
   USSMessageAC::load(in);
