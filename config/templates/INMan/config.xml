@@ -1,33 +1,45 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 <!--  "$Id$" -->
-<!-- configuration for INMan v0.6.23 or higher -->
+<!-- configuration for INMan v0.7.0 or higher -->
 <config>
-  <param name="version" type="string">0.6.23</param>   <!-- config version -->
-  <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
-  <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
-  <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
+  <param name="version" type="string">0.7.0</param>   <!-- config version -->
 
-  <section name="AbonentDetector"> <!-- Abonent contract type and gsmSCF
-   params determination -->
-    <param name="abonentPolicy" type="string">MTC_Nsk_SRI</param> <!-- 
-      preferred abonent policy (defined in section AbonentPolicies) , if
-      it's missing,  the policy is to use will be determined according to
-      sender address and specified  policies address pool.  -->
-    <param name="maxRequests" type="int">500</param>   <!--
-     maximium number of simultaneous requests per client  connection ,
-     [1 .. 100000] , default 1000;  0 - means use default value-->
-    <param name="abonentTypeTimeout" type="int">8</param>  <!-- 
-    maximum allowed time for determining abonent contract type, 
-    units: seconds, [1 .. 65535],   default 8
-     -->
-    <param name="cacheExpiration" type="int">20</param>   <!--
-     abonent info cache data expiration interval, units: minutes, 
-     [1 .. 65535], default 60,  0 - means the default cache  interval is used
-    -->
+  <section name="Services">
+    <param name="Host" type="string">uid: icsTCPSrv</param> <!--  -->
+    <!-- SMS/USSD messages charging -->
+    <param name="Billing" type="string">uid: icsBilling</param> <!-- dll: libinman_srv_bill.so -->
+    <!-- Abonent contract type and gsmSCF params determination -->
+    <param name="AbonentDetector" type="string">uid: icsAbntDetector</param> <!-- dll: libinman_srv_dtcr.so -->
   </section>
 
-  <section name="Billing">
+  <section name="Host">
+    <param name="host" type="string">@inman.host@</param>  <!-- InMan service host -->
+    <param name="port" type="int">@inman.port@</param>        <!-- InMan service port -->
+    <param name="maxClients" type="int">3</param>       <!--  max allowed INMan client connections, default: 3 -->
+  </section>
+
+  <section name="AbonentDetector"> <!-- Abonent contract type and gsmSCF params determination -->
+    <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
+      preferred abonent policy (defined in section AbonentPolicies) , if it's missing, 
+      the policy is to use will be determined according to sender address and specified
+      policies address pool.
+     -->
+    <param name="maxRequests" type="int">500</param>   <!--  [1 .. 100000] , default 1000 
+     maximium number of simultaneous requests per client  connection ,
+     0 - means use default value-->
+    <param name="abonentTypeTimeout" type="int">8</param> <!-- units: seconds, [1 .. 65535],
+    maximum allowed time for determining abonent contract type,   default 8
+     -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="useCache" type="bool">true</param>    <!--
+    switches abonents cache usage, default: true  -->
+    <param name="cacheExpiration" type="int">20</param>   <!--
+     abonent info cache data expiration interval, units: minutes, [1 .. 65535], default 20,
+     0 - means the default cache  interval is used -->
+  </section>
+
+  <section name="Billing">   <!-- SMS/USSD messages charging -->
    <section name="BillingModes"> <!--
      Sets billing mode depending on message type. The following types are
      recognized:
@@ -42,39 +54,38 @@
               of failure follow the secondary mode.
      -->
     <section name="SMS"> <!-- ordinary SMS message -->
-      <param name="MO" type="string">OFF</param>
-      <param name="MT" type="string">IN,CDR</param>
+      <param name="MO" type="string"> OFF </param>
+      <param name="MT" type="string">IN, CDR</param>
     </section>
     <section name="USSD"> <!-- ordinary USSD message -->
-      <param name="MO" type="string">IN,CDR</param>
-      <param name="MT" type="string">IN,CDR</param>
+      <param name="MO" type="string">IN, CDR</param>
+      <param name="MT" type="string">IN, CDR</param>
     </section>
     <section name="XSMS"> <!-- SMS Extra message -->
-      <param name="MO" type="string">IN,OFF</param>
-      <param name="MT" type="string">IN,OFF</param>
+      <param name="MO" type="string">IN, OFF</param>
+      <param name="MT" type="string">IN, OFF</param>
     </section>
    </section>
 
-   <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
-     preferred abonent policy (defined in section AbonentPolicies) , if it's missing, 
-     the policy is to use will be determined according to sender address and specified
-     policies address pool.
-    -->
     <param name="abonentTypeRequest" type="string">onDemand</param> <!-- [onDemand, always]
     mode of abonent contract type determination (request to AbonentProvider)
     onDemand : determine only if required for billing, default
     always   : always determine
     -->
-    <param name="abonentTypeTimeout" type="int">5</param> <!-- units: seconds, [1 .. 65535],
-    maximum allowed time for determining abonent contract type,
-    (AbonentProvider request), billing continues on its expiration in CDR mode,
-    default 5 -->
-
-    <param name="maxBillings" type="int">20</param>   <!--  [1 .. 100000] , default 500 
-     maximium simultaneous billing requests per INMan client  connect -->
-    <param name="maxTimeout" type="int">20</param>  <!-- units: seconds, [5 .. 65535], default 120 
-    maximum allowed value for billing suspending time (SMSC interaction), billing aborts on its expiration  -->
-
+    <param name="abonentPolicy" type="string">MTC_Nsk_Default</param> <!-- 
+      preferred abonent contract determination policy (defined in section AbonentPolicies) ,
+      obligatory if there is at least one billing mode set to IN or abonentTypeRequest is set to always
+     -->
+    <param name="abonentTypeTimeout" type="int">8</param> <!-- units: seconds, [1 .. 65535],
+    maximum allowed time for determining abonent contract type,  default 8
+     billing continues on its expiration in CDR mode
+     -->
+    <param name="maxBillings" type="int">200</param>   <!--  [1 .. 100000] , default 1000 
+     maximium simultaneous billing requests per INMan client  connect,
+     0 - means use default value-->
+    <param name="maxTimeout" type="int">30</param>  <!-- units: seconds, [5 .. 65535], default 120 
+    maximum allowed value for billing suspending time (SMSC interaction), billing aborts on its expiration
+     -->
     <param name="cdrDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
     <param name="cdrInterval" type="int">120</param>   <!-- CDR storage rolling interval, units: seconds -->
     <param name="cdrMode" type="string">billMode</param>    <!-- 
@@ -83,23 +94,66 @@
       all:    always write CDR for each transaction perfomed;
       billMode: write CDR according to billMode setting (default)
     -->
-    <param name="cacheRAM" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
-    <param name="cacheInterval" type="int">2</param>   <!-- abonent info refreshing interval, units: minutes -->
-    <param name="cacheDir" type="string">./cache</param>  <!-- directory to store abonents cache -->
-    <param name="cacheRecords" type="int">1</param>  <!-- initial number of cache file records, 
-     units: abonents :) , default: 10000 -->
     <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="useCache" type="bool">true</param>    <!--
+    switches abonents cache usage, default: true  -->
+    <param name="cacheExpiration" type="int">20</param>   <!--
+     abonent info cache data expiration interval, units: minutes, [1 .. 65535], default 20,
+     0 - means the default cache  interval is used
+    -->
     <param name="smsExtraConfig" type="string">cfg_extra.xml</param>   <!-- config file for extra SMS services -->
+    <param name="CAP3Sms" type="string">TCAPUser</param>  <!--
+    section name for TCAP user configuration CAP3Sms uses, defualt: TCAPUser
+    -->
   </section>
 
   <section name="SS7"> <!-- SS7 stack interaction parameters -->
-    <param name="ssfAddress" type="string">@inman.ssfAddress@</param>  <!-- InMan ISDN address -->
-    <param name="ssn" type="int">146</param>
+    <param name="ss7UserId" type="int">03</param>     <!--  PortSS7 user id [1..20], default: 03  -->
     <!-- OPTIONAL PARAMETERS follow:: -->
-    <param name="ss7UserId" type="int">03</param>     <!-- PortSS7 user id [1..20], default: 03  -->
-    <param name="maxTimeout" type="int">20</param>   <!-- timeout on MAP/CAP operations, units: seconds, max: 65535, default 20 -->
-    <param name="maxDialogs" type="int">2000</param>   <!-- maximum number of simultaneous TC dialogs per SSN, [2..65530], default 2000-->
- </section>
+    <param name="maxMsgNum" type="int">800</param>     <!--
+     max input SS7 messages buffer size,   [1..65535], default: 512,
+     NOTE: is overriden by value from cp.cnf  -->
+  </section>
+
+  <section name="TCAPUser"> <!-- SCF specific TCUser configuration -->
+    <param name="ownSsn" type="int">146</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">2000</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">0</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">20</param>   <!--
+    timeout on ROS operations (MAP/CAP), units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+  <section name="TCAPUserSRI"> <!-- SRI specific TCUser configuration -->
+    <param name="ownSsn" type="int">146</param>
+    <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- ISDN address -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="maxDialogs" type="int">500</param>   <!--
+    maximum number of simultaneous TC dialogs per SSN, [2..65510], default 800
+    -->
+    <param name="fakeSsn" type="int">8</param>    <!--
+    SSN to substitute in TCAP dialog org addr, 0 - means not used, default: 0
+    -->
+    <param name="rosTimeout" type="int">6</param>   <!--
+    timeout on MAP operations, units: seconds, max: 65535, default 20
+    -->
+  </section>
+
+  <section name="AbonentsCache">
+    <param name="cacheExpiration" type="int">20</param>   <!-- default abonent
+    cache data expiration interval, units: minutes, [1 .. 65535], default 20 -->
+    <param name="cacheRAM" type="int">40</param>   <!-- abonents cache RAM buffer size, units: Mb -->
+    <param name="cacheDir" type="string">./cache</param>  <!-- directory to store abonents cache -->
+    <!-- OPTIONAL PARAMETERS follow:: -->
+    <param name="cacheRecords" type="int">1</param>  <!-- initial number of cache file records, 
+     units: abonents :) , default: 10000 -->
+  </section>
 
   <section name="AbonentPolicies">
  <!--  policy value is a CSV list of  two parts, which are both optional:
