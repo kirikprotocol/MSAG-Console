@@ -1,0 +1,6 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name source name libraries
+#-linman-services-abcache
+inman/ldlib/libinman_ics_abcache.so AbCacheLoader -linman-incache-solid -linman-common -lutil $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt
