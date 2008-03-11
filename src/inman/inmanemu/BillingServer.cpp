@@ -18,6 +18,7 @@ using namespace smsc::util;
 BillingServer::BillingServer() : buff(0), clnt(0)
 {
     needToStop = false;
+    INPSerializer::getInstance()->registerCmdSet(INPCSBilling::getInstance());
 }
 
 BillingServer::~BillingServer()

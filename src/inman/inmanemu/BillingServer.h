@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 #ifndef _INMANEMU_BILL_BILLING_SERVER_
 #define _INMANEMU_BILL_BILLING_SERVER_
 
@@ -6,8 +6,7 @@
 #include "BillProcessor.h"
 //#include <inman/storage/CDRStorage.hpp>
 #include "core/network/Socket.hpp"
-//#include "inman/interaction/messages.hpp"
-#include "inman/interaction/MsgBilling.hpp"
+#include "inman/interaction/msgbill/MsgBilling.hpp"
 
 namespace inmanemu { namespace server {
 
