@@ -2,7 +2,7 @@
 /* ************************************************************************** *
  * HLR(SRI) Abonent Provider: implements functionality for quering the HLR 
  * for abonent Camel Subscription Information via SEND_ROUTING_INFO service,
- * detrmining abonent contract and gsmSCF parameters (address & serviceKey)
+ * determining abonent contract and gsmSCF parameters (address & serviceKey)
  * in case of prepaid type of contract.
  * ************************************************************************** *
  * Expects Provider Config subsection formed as follow:
@@ -28,6 +28,11 @@ using smsc::inman::iaprvd::IAProviderITF;
 #include "inman/abprov/facility/IAPThrFacility.hpp"
 using smsc::inman::iaprvd::IAPQueryAC;
 using smsc::inman::iaprvd::IAPQueryManagerITF;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
+
+#include "inman/inap/TCDspDefs.hpp"
+using smsc::inman::inap::TCAPUsr_CFG;
 
 #include "inman/inap/map_chsri/DlgMapCHSRI.hpp"
 using smsc::inman::inap::chsri::MapCHSRIDlg;
@@ -92,29 +97,22 @@ public:
 
 
 struct IAPCreatorSRI_CFG {
-    IAPQuerySRI_CFG qryCfg;
-    TonNpiAddress   owdAddr;
-    UCHAR_T         ownSsn;
-    UCHAR_T         fakeSsn;
-    unsigned        max_queries;
     unsigned        init_threads;
-    struct {
-        bool    queries;
-        bool    mapTmo;
-    } defVal;
+    IAPQuerySRI_CFG qryCfg;
+    TCAPUsr_CFG     sriCfg;
 
-    IAPCreatorSRI_CFG()
-    {
-        max_queries = init_threads = fakeSsn = 0;
-        defVal.mapTmo = defVal.queries = false;
-    }
+    IAPCreatorSRI_CFG() : init_threads(0)
+    { }
 };
 
 class IAProviderCreatorSRI: public IAProviderCreatorITF {
 protected:
+    mutable Mutex           _sync;
     std::auto_ptr<IAProviderThreaded> prvd;
     IAProviderThreadedCFG   prvdCfg;
     IAPCreatorSRI_CFG       cfg;
+    ICSIdsSet               icsDeps;
+    const ICServicesHostITF * icsHost;
     Logger *                logger;
 
 public:
@@ -124,14 +122,16 @@ public:
     // ****************************************
     // -- IAProviderCreatorITF interface
     // ****************************************
-    IAProvider::Type    type(void)      const { return IAProvider::iapHLR; }
-    IAProvider::Ability ability(void)   const { return IAProvider::abContractSCF; }
-    const char *        ident(void)     const { return "iapHLR_SRI"; }
+    inline IAProvider::Type    type(void)      const { return IAProvider::iapHLR; }
+    inline IAProvider::Ability ability(void)   const { return IAProvider::abContractSCF; }
+    inline const char *        ident(void)     const { return "iapHLR_SRI"; }
+    inline const ICSIdsSet &   ICSDeps(void) const { return icsDeps; }
+    //
     void                logConfig(Logger * use_log = NULL) const;
     //Ensures the provider is properly initialized and returns its interface
     //NOTE: Requires the TCAPDispatcher to be connected !!!
-    IAProviderITF *     getProvider(void);
-
+    IAProviderITF *     startProvider(const ICServicesHostITF * use_host);
+    void                stopProvider(bool do_wait = false);
 };
 
 

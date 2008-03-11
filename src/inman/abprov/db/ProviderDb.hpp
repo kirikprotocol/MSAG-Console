@@ -41,6 +41,8 @@ using smsc::inman::iaprvd::IAProviderITF;
 #include "inman/abprov/facility/IAPThrFacility.hpp"
 using smsc::inman::iaprvd::IAPQueryAC;
 using smsc::inman::iaprvd::IAPQueryManagerITF;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
 #include "db/DataSource.h"
 using smsc::db::DataSource;
@@ -52,11 +54,14 @@ namespace db {
 
 struct IAPQueryDB_CFG {
     DataSource *    ds;
-    const char *    rtId;   //SQL function name
-    const char *    rtKey;  //SQL function argument name
+    std::string     sqlRtId;   //SQL function name
+    std::string     sqlRtKey;  //SQL function argument name
     unsigned        timeOut_secs;
 
-    IAPQueryDB_CFG() { ds = NULL; rtId = rtKey = NULL; timeOut_secs = 0; }
+    IAPQueryDB_CFG() : ds(0), timeOut_secs(0)
+    { }
+    inline const char * rtId(void) const { return sqlRtId.c_str(); }
+    inline const char * rtKey(void) const { return sqlRtKey.c_str(); }
 };
 
 class IAPQueryDB : public IAPQueryAC {
@@ -101,10 +106,12 @@ public:
 
 class IAProviderCreatorDB: public IAProviderCreatorITF {
 protected:
+    mutable Mutex           _sync;
     std::auto_ptr<IAProviderThreaded> prvd;
     IAProviderThreadedCFG   prvdCfg;
     IAPQueryDB_CFG          qryCfg;
     Logger *                logger;
+    ICSIdsSet               icsDeps; //there are no dependencies!
 
 public:
     IAProviderCreatorDB(const DBSourceCFG & use_cfg, Logger * use_log = NULL);
@@ -113,12 +120,15 @@ public:
     // ****************************************
     // -- IAProviderCreatorITF interface
     // ****************************************
-    IAProvider::Type    type(void)      const { return IAProvider::iapDB; }
-    IAProvider::Ability ability(void)   const { return IAProvider::abContract; }
-    const char *        ident(void)     const { return "iapDB_OCI"; }
+    inline IAProvider::Type    type(void)      const { return IAProvider::iapDB; }
+    inline IAProvider::Ability ability(void)   const { return IAProvider::abContract; }
+    inline const char *        ident(void)     const { return "iapDB_OCI"; }
+    inline const ICSIdsSet &   ICSDeps(void)   const { return icsDeps; }
+    //
     void                logConfig(Logger * use_log = NULL) const;
     //Ensures the provider is properly initialized and returns its interface
-    IAProviderITF *     getProvider(void);
+    IAProviderITF *     startProvider(const ICServicesHostITF * use_host);
+    void                stopProvider(bool do_wait = false);
 };
 
 

@@ -3,12 +3,21 @@ static const char ident[] = "$Id$";
 #endif /* MOD_IDENT_OFF */
 
 #include "inman/abprov/IAPLoader.hpp"
+using smsc::inman::ICSIdent;
+
 #include "inman/abprov/hlr_sri/ProviderSRI.hpp"
-#include "inman/inap/dispatcher.hpp"
-using smsc::inman::inap::TCAPDispatcher;
+using smsc::inman::inap::TCAPDispatcherITF;
+
+#include "inman/inap/TCXCfgParser.hpp"
+using smsc::inman::inap::TCAPUsrCfgParser;
+
+#include "inman/inap/session.hpp"
+using smsc::inman::inap::SSNSession;
 
 #include "inman/comp/map_chsri/MapCHSRIFactory.hpp"
+using smsc::inman::comp::_ac_map_locInfoRetrieval_v3;
 using smsc::inman::comp::chsri::initMAPCHSRI3Components;
+
 
 using smsc::util::URCRegistry;
 
@@ -17,47 +26,27 @@ namespace inman {
 namespace iaprvd {
 namespace sri {
 
-static const unsigned int _CFG_DFLT_QUERIES = 500;
-static const unsigned int _CFG_DFLT_MAP_TIMEOUT = 20;
-
 //This is the HLR(CH-SRI) Provider dynamic library entry point
 extern "C" IAProviderCreatorITF * 
-    loadupAbonentProvider(ConfigView* hlrCfg, Logger * use_log) throw(ConfigException)
+    loadupAbonentProvider(XConfigView* hlrCfg, Logger * use_log) throw(ConfigException)
 {
+    const char * cstr = NULL;
+    try { cstr = hlrCfg->getString("tcapUser");
+    } catch (const ConfigException & exc) { }
+
+    if (!cstr || !cstr[0])
+        throw ConfigException("parameter 'tcapUser' isn't set!");
+
+    Config & rootSec = hlrCfg->relConfig();
+    if (!rootSec.findSection(cstr))
+        throw ConfigException("section %s' is missing!", cstr);
+    smsc_log_info(use_log, "Reading settings from '%s' ..", cstr);
+
     IAPCreatorSRI_CFG cfg;
-    char * cstr = NULL;
-
-    if (!(cstr = hlrCfg->getString("ownAddress")))
-        throw ConfigException("'ownAddress' isn't set!");
-    if (!cfg.owdAddr.fromText(cstr) || !cfg.owdAddr.fixISDN())
-        throw ConfigException("'ownAddress' is invalid: %s !", cstr);
-
-    if (!(cfg.ownSsn = (UCHAR_T)hlrCfg->getInt("ownSsn")))
-        throw ConfigException("'ownSsn' is not set!", cstr);
-
-    UCHAR_T tmp = 0;
-    try { tmp = (UCHAR_T)hlrCfg->getInt("fakeSsn"); }
-    catch (ConfigException & exc) { }
-    if (tmp && (tmp != cfg.ownSsn))
-        cfg.fakeSsn = tmp;
-
-    try { cfg.max_queries = (unsigned)hlrCfg->getInt("maxQueries");
-    } catch (ConfigException & exc) { }
-    if (!cfg.max_queries) {
-        cfg.defVal.queries = true;
-        cfg.max_queries = _CFG_DFLT_QUERIES;
-    }
-
-    try { cfg.qryCfg.mapTimeout = (unsigned)hlrCfg->getInt("mapTimeout");
-    } catch (ConfigException & exc) { }
-    if (!cfg.qryCfg.mapTimeout) {
-        cfg.defVal.mapTmo = true;
-        cfg.qryCfg.mapTimeout = _CFG_DFLT_MAP_TIMEOUT;
-    }
-
-    if (!ApplicationContextFactory::Init(ACOID::id_ac_map_locInfoRetrieval_v3,
-                                        initMAPCHSRI3Components))
-        throw ConfigException("map_locInfoRetrieval_v3 component factory failure!");
+    TCAPUsrCfgParser parser(use_log, cstr);
+    parser.readConfig(rootSec, cfg.sriCfg); //throws
+    cfg.qryCfg.mapTimeout = cfg.sriCfg.rosTimeout;
+    /**/
     return new IAProviderCreatorSRI(cfg, use_log);
 }
 
@@ -66,15 +55,17 @@ extern "C" IAProviderCreatorITF *
  * ************************************************************************** */
 IAProviderCreatorSRI::IAProviderCreatorSRI(const IAPCreatorSRI_CFG & use_cfg,
                                          Logger * use_log/* = NULL*/)
-    : cfg(use_cfg)
+    : cfg(use_cfg), icsHost(0)
 {
     std::string ctgr(use_log ? use_log->getName() : "smsc.inman");
     ctgr += ".iap.sri";
     logger = Logger::getInstance(ctgr.c_str());
     prvdCfg.init_threads = use_cfg.init_threads;
-    prvdCfg.max_queries = use_cfg.max_queries;
+    prvdCfg.max_queries = use_cfg.sriCfg.maxDlgId;
     prvdCfg.qryMultiRun = true; //MapCHSRI dialogs are reused !!!
     prvdCfg.qryPlant = NULL;    //will be inited later
+    //
+    icsDeps.insert(ICSIdent::icsIdTCAPDisp);
 }
 
 IAProviderCreatorSRI::~IAProviderCreatorSRI()
@@ -83,54 +74,71 @@ IAProviderCreatorSRI::~IAProviderCreatorSRI()
         delete prvdCfg.qryPlant;
 }
 
-IAProviderITF * IAProviderCreatorSRI::getProvider(void)
+IAProviderITF * IAProviderCreatorSRI::startProvider(const ICServicesHostITF * use_host)
 {
+    MutexGuard grd(_sync);
     if (!prvdCfg.qryPlant) { //openSSN, initialize TCSessionMA
-        TCAPDispatcher * disp = TCAPDispatcher::getInstance();
-        if (disp->getState() != TCAPDispatcher::ss7CONNECTED) {
-            smsc_log_error(logger, "TCAPDispatcher is not connected!");
+        icsHost = use_host;
+        TCAPDispatcherITF * disp = (TCAPDispatcherITF *)
+                                icsHost->getInterface(ICSIdent::icsIdTCAPDisp);
+        if (!disp || (disp->ss7State() != TCAPDispatcherITF::ss7CONNECTED)) {
+            smsc_log_error(logger, "iapSRI: TCAPDispatcher is not connected!");
             return NULL;
         }
-        SSNSession * session = disp->openSSN(cfg.ownSsn, cfg.max_queries);
+        if (!disp->acRegistry()->getFactory(_ac_map_locInfoRetrieval_v3)
+            && !disp->acRegistry()->regFactory(initMAPCHSRI3Components)) {
+            smsc_log_fatal(logger, "iapSRI: ROS factory registration failed: %s!",
+                            _ac_map_locInfoRetrieval_v3.nick());
+            return NULL;
+        }
+        SSNSession * session = disp->openSSN(cfg.sriCfg.ownSsn, cfg.sriCfg.maxDlgId, 1, logger);
         if (!session) {
-            smsc_log_error(logger, "SSN[%u] is unavailable!", (unsigned)cfg.ownSsn);
+            smsc_log_error(logger, "iapSRI: SSN[%u] is unavailable!", (unsigned)cfg.sriCfg.ownSsn);
             return NULL;
         }
-        if (!(cfg.qryCfg.mapSess = session->newMAsession(cfg.owdAddr.toString().c_str(),
-            ACOID::id_ac_map_locInfoRetrieval_v3, 6, cfg.fakeSsn))) {
-            smsc_log_error(logger, "Unable to init MAP session: %s -> %u:*",
-                                  cfg.owdAddr.toString().c_str(), 6);
+        if (!(cfg.qryCfg.mapSess = session->newMAsession(cfg.sriCfg.ownAddr.toString().c_str(),
+            _ac_map_locInfoRetrieval_v3, 6, cfg.sriCfg.fakeSsn))) {
+            smsc_log_error(logger, "iapSRI: Unable to init MAP session: %s -> %u:*",
+                                  cfg.sriCfg.ownAddr.toString().c_str(), 6);
             return NULL;
         }
         smsc_log_info(logger, "iapSRI: TCMA[%u:%u] inited",
-                      (unsigned)cfg.ownSsn, cfg.qryCfg.mapSess->getUID());
+                      (unsigned)cfg.sriCfg.ownSsn, cfg.qryCfg.mapSess->getUID());
         prvdCfg.qryPlant = new IAPQuerySRIFactory(cfg.qryCfg, cfg.qryCfg.mapTimeout, logger);
         prvd.reset(new IAProviderThreaded(prvdCfg, logger));
+        prvd->Start();
     }
     return prvd.get();
 }
 
-void  IAProviderCreatorSRI::logConfig(Logger * use_log/* = NULL*/) const
+void IAProviderCreatorSRI::stopProvider(bool do_wait/* = false*/)
 {
+    MutexGuard grd(_sync);
+    if (prvd.get())
+        prvd->Stop(do_wait);
+}
+
+void IAProviderCreatorSRI::logConfig(Logger * use_log/* = NULL*/) const
+{
+    MutexGuard grd(_sync);
     if (!use_log)
         use_log = logger;
 
-    if (cfg.fakeSsn)
+    if (cfg.sriCfg.fakeSsn)
         smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%u(fake=%u)",
-                        cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn, (unsigned)cfg.fakeSsn);
+                      cfg.sriCfg.ownAddr.getSignals(), (unsigned)cfg.sriCfg.ownSsn,
+                      (unsigned)cfg.sriCfg.fakeSsn);
     else
         smsc_log_info(use_log, "iapSRI: GT=%s, SSN=%u",
-                        cfg.owdAddr.getSignals(), (unsigned)cfg.ownSsn);
+                        cfg.sriCfg.ownAddr.getSignals(), (unsigned)cfg.sriCfg.ownSsn);
     if (cfg.qryCfg.mapSess)
         smsc_log_info(use_log, "iapSRI: TCMA[%u:%u]",
-                      (unsigned)cfg.ownSsn, cfg.qryCfg.mapSess->getUID());
+                      (unsigned)cfg.sriCfg.ownSsn, cfg.qryCfg.mapSess->getUID());
     else
         smsc_log_info(use_log, "iapSRI: TCMA uninitialized yet");
 
-    smsc_log_info(use_log, "iapSRI: Max.queries: %u%s", prvdCfg.max_queries,
-                  cfg.defVal.queries ? " (default)" : "");
-    smsc_log_info(use_log, "iapSRI: Query timeout: %u secs%s", cfg.qryCfg.mapTimeout,
-                  cfg.defVal.mapTmo ? " (default)" : "");
+    smsc_log_info(use_log, "iapSRI: Max.queries: %u", prvdCfg.max_queries);
+    smsc_log_info(use_log, "iapSRI: Query timeout: %u secs", cfg.qryCfg.mapTimeout);
 }
 
 /* ************************************************************************** *

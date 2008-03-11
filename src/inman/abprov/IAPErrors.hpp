@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * Abonent Provider query status definition and description.
  * ************************************************************************* */
@@ -49,5 +49,8 @@ URCSpacePTR  _RCS_IAPQStatus("iapQueryRC", IAPQStatus::iqOk, \
 } //iaprvd
 } //inman
 } //smsc
+
+#define _RCS_IAPQStatusGET() smsc::inman::iaprvd::_RCS_IAPQStatus.get()
+
 #endif /* __SMSC_INMAN_IAPRVD_ERRORS__ */
 

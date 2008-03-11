@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-inman/abprov/libinman_iap_sri.so ProviderSRI $(SHARED_OPT) -linman-inap-map_chsri -linman-comp-map_chsri -linman-codec_inc-map -ldl $(__LIBRARIES) -lrt -linman-asn1rt
+inman/ldlib/libinman_iap_sri.so ProviderSRI $(SHARED_OPT) -linman-inap-map_chsri -linman-comp-map_chsri -linman-comp -linman-common -linman-codec_inc-map -ldl $(__LIBRARIES) -lrt -linman-asn1rt

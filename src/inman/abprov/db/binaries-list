@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-inman/abprov/libinman_iap_db.so ProviderDb $(SHARED_OPT) -ldl -ldb $(__LIBRARIES) -lrt
+inman/ldlib/libinman_iap_db.so ProviderDb -lutil-config $(SHARED_OPT) -ldl -ldb $(__LIBRARIES) -lrt

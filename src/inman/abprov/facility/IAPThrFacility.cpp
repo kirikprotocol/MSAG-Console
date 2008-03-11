@@ -14,8 +14,7 @@ IAPQueryAC::IAPQueryAC(unsigned q_id, IAPQueryManagerITF * owner,
                        unsigned timeout_secs, Logger * use_log/* = NULL*/)
     : ThreadedTask(), _qId(q_id), _owner(owner), _qStatus(IAPQStatus::iqOk)
     , timeOut(timeout_secs), usage(0), logger(use_log)
-{
-}
+{ }
 
 IAPQueryAC::~IAPQueryAC()
 {
@@ -75,37 +74,56 @@ void IAPQueryAC::onRelease(void)
  * class IAProviderThreaded implementation:
  * ************************************************************************** */
 IAProviderThreaded::IAProviderThreaded(const IAProviderThreadedCFG & in_cfg, Logger * uselog/* = NULL*/)
-    : _cfg(in_cfg), _lastQId(0)
+    : _cfg(in_cfg), _lastQId(0), _logId("IAPrvd")
 {
     logger = uselog ? uselog : Logger::getInstance("smsc.inman.iaprvd");
     pool.setMaxThreads((int)_cfg.max_queries);
-    if (_cfg.init_threads)
-        pool.preCreateThreads((int)_cfg.init_threads);
 }
 
 IAProviderThreaded::~IAProviderThreaded()
-{ 
-    cancelAllQueries();
-    pool.shutdown(); //waits or kills threads
-    for (QueriesList::iterator it = qryPool.begin(); it != qryPool.end(); it++) {
+{
+    //stop and wait for active quieries
+    Stop(true);
+    //clean up quieries pool
+    for (QueriesList::iterator it = qryPool.begin(); it != qryPool.end(); ++it)
         delete *it;
-    }
+    //clean up quieries cache
     if (qryCache.GetUsage())
-        smsc_log_warn(logger, "IAPrvd: shutdown - queries cache is not empty!");
+        smsc_log_warn(logger, "%s: shutdown - queries cache is not empty!", _logId);
     qryCache.Empty();
-    smsc_log_debug(logger, "IAPrvd: shutdown complete");
+    smsc_log_debug(logger, "%s: shutdown complete", _logId);
+}
+
+bool IAProviderThreaded::Start(void)
+{
+    MutexGuard  guard(qrsGuard);
+    if (_cfg.init_threads) {
+        pool.preCreateThreads((int)_cfg.init_threads);
+        _cfg.init_threads = 0;
+    }
+    return true;
+}
+
+void IAProviderThreaded::Stop(bool do_wait/* = false*/)
+{
+    cancelAllQueries();
+    if (do_wait)
+        pool.shutdown(); //waits for  threads (kills if necessary)
+    else
+        pool.stopNotify();
+    return;
 }
 
 void IAProviderThreaded::cancelAllQueries(void)
 {
     MutexGuard  guard(qrsGuard);
 
-    char*       ab_number = NULL; //AbonentId.value !!!
+    char *          ab_number = NULL; //AbonentId.value !!!
     CachedQuery *   ab_rec = NULL;
 
     QueriesHash::Iterator cit = qryCache.getIterator();
     while (cit.Next(ab_number, ab_rec)) {
-        smsc_log_debug(logger, "IAPrvd: %s(%s): cancelling, %u listeners set",
+        smsc_log_debug(logger, "%s: %s(%s): cancelling, %u listeners set", _logId,
                        ab_rec->query->taskName(), ab_number, ab_rec->cbList.size());
         ab_rec->cbList.clear();
         ab_rec->query->stop();
@@ -132,7 +150,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
 
         if (qry_rec) {
             if (qry_rec->cbList.empty())
-                smsc_log_debug(logger, "IAPrvd: %s(%s): has been cancelled",
+                smsc_log_debug(logger, "%s: %s(%s): has been cancelled", _logId,
                                query->taskName(), (query->getAbonentId()).getSignals());
             else {
                 //tell listeners the contract type, even if query was failed (abtUnknown)
@@ -143,7 +161,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
                     try { hdl->onIAPQueried(query->getAbonentId(),
                                         query->getAbonentInfo(), query->Error());
                     } catch (std::exception &exc) {
-                        smsc_log_error(logger, "IAPrvd: %s(%s): listener exception: %s",
+                        smsc_log_error(logger, "%s: %s(%s): listener exception: %s", _logId,
                                 query->taskName(), (query->getAbonentId()).getSignals(),
                                 exc.what());
                     }
@@ -152,7 +170,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
             }
             qryCache.Delete((query->getAbonentId()).getSignals());
         } else
-            smsc_log_error(logger, "IAPrvd: %s(%s): not in cache",
+            smsc_log_error(logger, "%s: %s(%s): not in cache", _logId,
                            query->taskName(), (query->getAbonentId()).getSignals());
         qrsGuard.Unlock();
     }
@@ -163,7 +181,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
         //else query is being deleted by PooledThread::Execute()
         if (query->Status() == IAPQStatus::iqOk)
             smsc_log_info(logger,
-                    "IAPrvd: %s(%s): finished, contract %s, IMSI %s, MSC %s, %s",
+                    "%s: %s(%s): finished, contract %s, IMSI %s, MSC %s, %s", _logId,
                     query->taskName(), (query->getAbonentId()).getSignals(),
                     query->getAbonentInfo().abRec.type2Str(),
                     query->getAbonentInfo().abRec.imsiCStr(),
@@ -171,7 +189,7 @@ void IAProviderThreaded::releaseQuery(IAPQueryAC * query)
                     query->getAbonentInfo().abRec.tdpSCF.toString().c_str()
                 );
         else
-            smsc_log_info(logger, "IAPrvd: %s(%s): %s",
+            smsc_log_info(logger, "%s: %s(%s): %s", _logId,
                 query->taskName(), (query->getAbonentId()).getSignals(),
                 query->Status2Str().c_str());
     }
@@ -193,7 +211,7 @@ bool IAProviderThreaded::startQuery(const AbonentId & ab_number,
         CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
         if (qry_rec) { //allocated query exists, just add callback to list
             qry_rec->cbList.push_back(pf_cb);
-            smsc_log_debug(logger, "IAPrvd: %s(%s): listener is added",
+            smsc_log_debug(logger, "%s: %s(%s): listener is added", _logId,
                            qry_rec->query->taskName(), ab_number.getSignals());
             return true;
         }
@@ -209,12 +227,12 @@ bool IAProviderThreaded::startQuery(const AbonentId & ab_number,
         }
         qryRec.cbList.push_back(pf_cb);
         if (!qryRec.query->init(ab_number)) {
-            smsc_log_error(logger, "IAPrvd: %s(%s): failed to init",
+            smsc_log_error(logger, "%s: %s(%s): failed to init", _logId,
                             qryRec.query->taskName(), ab_number.getSignals());
             return false;
         }
         qryCache.Insert(ab_number.getSignals(), qryRec);
-        smsc_log_debug(logger, "IAPrvd: %s(%s): added to queue",
+        smsc_log_debug(logger, "%s: %s(%s): added to queue", _logId,
                         qryRec.query->taskName(), ab_number.getSignals());
     }
     pool.startTask(qryRec.query, !_cfg.qryMultiRun); //do not delete task on completion !!!
@@ -227,7 +245,7 @@ void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListen
     MutexGuard  guard(qrsGuard);
     CachedQuery * qry_rec = qryCache.GetPtr(ab_number.getSignals());
     if (!qry_rec) {
-        smsc_log_error(logger, "IAPrvd: attempt to cancel unexisting query!");
+        smsc_log_error(logger, "%s: attempt to cancel unexisting query!", _logId);
         return;
     }
     QueryCBList::iterator it = std::find(qry_rec->cbList.begin(),
@@ -235,11 +253,11 @@ void IAProviderThreaded::cancelQuery(const AbonentId & ab_number, IAPQueryListen
     if (it != qry_rec->cbList.end())
         qry_rec->cbList.erase(it);
     if (qry_rec->cbList.size())
-        smsc_log_debug(logger, "IAPrvd: %s(%s): %u listeners remain",
+        smsc_log_debug(logger, "%s: %s(%s): %u listeners remain", _logId,
                        qry_rec->query->taskName(), ab_number.getSignals(),
                        qry_rec->cbList.size());
     else
-        smsc_log_debug(logger, "IAPrvd: %s(%s): cancelled",
+        smsc_log_debug(logger, "%s: %s(%s): cancelled", _logId,
                         qry_rec->query->taskName(), ab_number.getSignals());
     return;
 }

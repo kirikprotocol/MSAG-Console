@@ -8,12 +8,16 @@
 #include "inman/abprov/IAPErrors.hpp"
 using smsc::util::RCHash;
 
-#include "logger/Logger.h"
-using smsc::logger::Logger;
+//#include "logger/Logger.h"
+//using smsc::logger::Logger;
 
 #include "inman/AbntContract.hpp"
 using smsc::inman::AbonentId;
 using smsc::inman::AbonentRecord;
+
+#include "inman/services/ICSrvDefs.hpp"
+using smsc::inman::ICSIdsSet;
+using smsc::inman::ICServicesHostITF;
 
 namespace smsc {
 namespace inman {
@@ -65,9 +69,11 @@ public:
     virtual IAProvider::Type    type(void) const = 0;
     virtual IAProvider::Ability ability(void) const = 0;
     virtual const char *        ident(void) const = 0;
+    virtual const ICSIdsSet &   ICSDeps(void) const = 0;
     virtual void                logConfig(Logger * use_log = NULL) const = 0;
     //Ensures the provider is properly initialized and returns its interface
-    virtual IAProviderITF *     getProvider(void) = 0;
+    virtual IAProviderITF *     startProvider(const ICServicesHostITF * use_host) = 0;
+    virtual void                stopProvider(bool do_wait = false) = 0;
 
     virtual ~IAProviderCreatorITF()
     { }

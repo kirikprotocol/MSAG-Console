@@ -5,8 +5,8 @@
 #ifndef SMSC_INMAN_IAPLOADER_HPP
 #define SMSC_INMAN_IAPLOADER_HPP
 
-#include "util/config/ConfigView.h"
-using smsc::util::config::ConfigView;
+#include "inman/common/XCFView.hpp"
+using smsc::util::config::XConfigView;
 using smsc::util::config::ConfigException;
 
 #include "inman/abprov/IAProvider.hpp"
@@ -20,13 +20,13 @@ extern const char * const _IAPAbilities[];  //according to IAProviderAbility_e
 
 //This is the Abonent Provider dynamic library entry point
 extern "C" IAProviderCreatorITF * 
-    loadupAbonentProvider(ConfigView* provCfg, Logger * use_log)
+    loadupAbonentProvider(XConfigView* provCfg, Logger * use_log)
                                             throw(ConfigException);
 
 class IAProviderLoader {
 public:
     static IAProviderCreatorITF *
-        LoadIAP(ConfigView* provCfg, Logger * use_log) throw(ConfigException);
+        LoadIAP(XConfigView* provCfg, Logger * use_log) throw(ConfigException);
 
 /* LoadIAP expects Provider configuration formed as follow:
 

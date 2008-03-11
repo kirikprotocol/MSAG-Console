@@ -118,6 +118,7 @@ private:
     unsigned            _lastQId;
     IAProviderThreadedCFG _cfg;
     Logger *            logger;
+    const char *        _logId; //prefix for logging info
 
 protected:
     friend class IAPQueryAC;
@@ -128,6 +129,9 @@ protected:
 public:
     IAProviderThreaded(const IAProviderThreadedCFG & in_cfg, Logger * use_log = NULL);
     ~IAProviderThreaded();
+
+    bool Start(void);
+    void Stop(bool do_wait = false);
 
     // ****************************************
     // IAProviderITF implementation:
