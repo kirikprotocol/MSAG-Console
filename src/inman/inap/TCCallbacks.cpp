@@ -4,7 +4,6 @@ static char const ident[] = "$Id$";
 /* ************************************************************************* *
  * EINSS7 TCAP API Callbacks implementation
  * ************************************************************************* */
-#include <assert.h>
 
 #include "util/BinDump.hpp"
 using smsc::util::DumpHex;
@@ -20,27 +19,70 @@ using smsc::inman::inap::TNoticeParms;
 using smsc::inman::inap::TCAPDispatcher;
 using smsc::inman::inap::rc2Txt_TC_BindResult;
 
-#define tcapLogger TCAPDispatcher::getInstance()->TCAPLogger()
+//-------------------------------- TC API Callbacks link functions -------------
+#include "inman/inap/TCCallbacks.hpp"
+#include "inman/inap/EINTCLink.hpp"
 
-//-------------------------------- Util functions --------------------------------
+namespace smsc {
+namespace inman {
+namespace inap {
+
+Mutex  TCCbkLink::_TCCbkSync;
+
+TCCbkLink::TCCbkLink()
+    : _disp(0), logger(Logger::getInstance("smsc.inman.inap.TCcb"))
+{
+    static struct EINSS7_I97TCAPINIT _cbTC;
+    _cbTC.EINSS7_I97TBeginInd = EINSS7_I97TBeginInd;
+    _cbTC.EINSS7_I97TBindConf = EINSS7_I97TBindConf;
+    _cbTC.EINSS7_I97TContinueInd = EINSS7_I97TContinueInd;
+    _cbTC.EINSS7_I97TEndInd = EINSS7_I97TEndInd;
+    _cbTC.EINSS7_I97TIndError = EINSS7_I97TIndError;
+    _cbTC.EINSS7_I97TInvokeInd = EINSS7_I97TInvokeInd;
+    _cbTC.EINSS7_I97TLCancelInd = EINSS7_I97TLCancelInd;
+    _cbTC.EINSS7_I97TLRejectInd = EINSS7_I97TLRejectInd;
+    _cbTC.EINSS7_I97TNoticeInd = EINSS7_I97TNoticeInd;
+    _cbTC.EINSS7_I97TPAbortInd = EINSS7_I97TPAbortInd;
+    _cbTC.EINSS7_I97TResultLInd = EINSS7_I97TResultLInd;
+    _cbTC.EINSS7_I97TResultNLInd = EINSS7_I97TResultNLInd;
+    _cbTC.EINSS7_I97TRRejectInd = EINSS7_I97TRRejectInd;
+    _cbTC.EINSS7_I97TStateInd = EINSS7_I97TStateInd;
+    _cbTC.EINSS7_I97TUAbortInd = EINSS7_I97TUAbortInd;
+    _cbTC.EINSS7_I97TUErrorInd = EINSS7_I97TUErrorInd;
+    _cbTC.EINSS7_I97TUniInd = EINSS7_I97TUniInd;
+    _cbTC.EINSS7_I97TURejectInd = EINSS7_I97TURejectInd;
+    _cbTC.EINSS7_I97TAddressInd = EINSS7_I97TAddressInd;
+}
+
+} //inap
+} //inman
+} //smsc
+
+using smsc::inman::inap::TCCbkLink;
+
+#define tcapLogger TCCbkLink::get().tcapLogger()
+
+#define tccb_log_fatal(...) if (tcapLogger && tcapLogger->isFatalEnabled()) tcapLogger->log_(smsc::logger::Logger::LEVEL_FATAL, __VA_ARGS__)
+#define tccb_log_error(...) if (tcapLogger && tcapLogger->isErrorEnabled()) tcapLogger->log_(smsc::logger::Logger::LEVEL_ERROR, __VA_ARGS__)
+#define tccb_log_warn(...)  if (tcapLogger && tcapLogger->isWarnEnabled()) tcapLogger->log_(smsc::logger::Logger::LEVEL_WARN, __VA_ARGS__)
+#define tccb_log_info(...)  if (tcapLogger && tcapLogger->isInfoEnabled()) tcapLogger->log_(smsc::logger::Logger::LEVEL_INFO, __VA_ARGS__)
+#define tccb_log_debug(...) if (tcapLogger && tcapLogger->isDebugEnabled()) tcapLogger->log_(smsc::logger::Logger::LEVEL_DEBUG, __VA_ARGS__)
+
 static SSNSession* findSSNsession(UCHAR_T ssn)
 {
-    TCAPDispatcher *dsp = TCAPDispatcher::getInstance();
-    assert(dsp);
-
-    SSNSession* pSession = dsp->findSession(ssn);
-    if (!pSession)
-        smsc_log_warn(dsp->TCAPLogger(), "SS7TC: Invalid/inactive session, SSN[%u]", ssn);
+    SSNSession* pSession = NULL;
+    TCAPDispatcher * dsp = TCCbkLink::get().tcapDisp();
+    if (dsp && !(pSession = dsp->findSession(ssn)))
+        tccb_log_warn("SS7TC: Invalid/inactive session, SSN[%u]", (unsigned)ssn);
     return pSession;
 }
+
 static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
     Dialog* pDlg = NULL;
     SSNSession* pSession = findSSNsession(ssn);
-    if (pSession) {
-        if (!(pDlg = pSession->findDialog(dialogueId)))
-            smsc_log_warn(tcapLogger, "SS7TC: Invalid(closed) Dialog[0x%X]", dialogueId);
-    }
+    if (pSession && !(pDlg = pSession->findDialog(dialogueId)))
+        tccb_log_warn("SS7TC: Invalid(closed) Dialog[0x%X]", (unsigned)dialogueId);
     return pDlg;
 }
 
@@ -48,14 +90,13 @@ static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 USHORT_T EINSS7_I97TBindConf(UCHAR_T ssn, USHORT_T userId,
                             EINSS7INSTANCE_T tcapInstanceId, UCHAR_T bindResult)
 {
-    TCAPDispatcher *dsp = TCAPDispatcher::getInstance();
-    assert(dsp);
+    tccb_log_debug("SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s))",
+                   (unsigned)ssn, (unsigned)userId, (unsigned)tcapInstanceId,
+                   (unsigned)bindResult, rc2Txt_TC_BindResult(bindResult));
 
-    smsc_log_debug(dsp->TCAPLogger(),
-                 "SS7_I97TBindConf(SSN=%u, UserId=%u, TcapInstanceId=%u, bindResult=%u(%s))",
-                   ssn, userId, tcapInstanceId, bindResult, rc2Txt_TC_BindResult(bindResult));
-
-    dsp->confirmSSN(ssn, bindResult);
+    TCAPDispatcher * dsp = TCCbkLink::get().tcapDisp();
+    if (dsp)
+        dsp->confirmSSN(ssn, bindResult);
     return MSG_OK;
 }
 
@@ -68,8 +109,7 @@ USHORT_T EINSS7_I97TStateInd(UCHAR_T          ssn,
                              ULONG_T          localSpc,
                              UCHAR_T          subsysMultiplicityInd)
 {
-    smsc_log_debug(tcapLogger, 
-                   "SS7_I97TStateInd(SSN=%u, UserId=%u, TcapInstanceId=%u, "
+    tccb_log_debug("SS7_I97TStateInd(SSN=%u, UserId=%u, TcapInstanceId=%u, "
                     "UserState=%u, AffectedSsn=%u, AffectedSpc=%u, LocalSpc =%u, "
                     "SubsysMultiplicityInd=%u)",
                     ssn, userId, tcapInstanceId, userState, affectedSsn,
@@ -91,7 +131,7 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
-    smsc_log_debug(tcapLogger, "CONTINUE_IND {"
+    tccb_log_debug("CONTINUE_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
@@ -119,7 +159,7 @@ USHORT_T EINSS7_I97TAddressInd(UCHAR_T ssn,
 				UCHAR_T addressLength,
 				UCHAR_T *orgAdr_p)
 {
-    smsc_log_debug(tcapLogger, "ADDRESS_IND {"
+    tccb_log_debug("ADDRESS_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  Bitmask: 0x%X\n"
@@ -144,7 +184,7 @@ USHORT_T EINSS7_I97TEndInd(UCHAR_T          ssn,
                            USHORT_T         userInfoLength,
                            UCHAR_T          *userInfo_p)
 {
-    smsc_log_debug(tcapLogger, "END_IND {"
+    tccb_log_debug("END_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
@@ -157,7 +197,7 @@ USHORT_T EINSS7_I97TEndInd(UCHAR_T          ssn,
                    DumpHex(appContextLength, appContext_p, _HexDump_CVSD).c_str(),
                    DumpHex(userInfoLength, userInfo_p, _HexDump_CVSD).c_str()
                    );
-    Dialog* dlg = findDialog( ssn, dialogueId );
+    Dialog* dlg = findDialog(ssn, dialogueId);
     if (dlg)
         dlg->handleEndDialog(compPresent ? true : false);
     return MSG_OK;
@@ -177,7 +217,7 @@ USHORT_T EINSS7_I97TInvokeInd(UCHAR_T          ssn,
                               USHORT_T         paramLength,
                               UCHAR_T          *pm)
 {
-    smsc_log_debug(tcapLogger, "INVOKE_IND {"
+    tccb_log_debug("INVOKE_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X, LinkedId: %s\n"
@@ -224,7 +264,7 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                                 USHORT_T         paramLength,
                                 UCHAR_T          *pm)
 {
-    smsc_log_debug(tcapLogger, "RESULT_NL_IND {"
+    tccb_log_debug("RESULT_NL_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
@@ -270,7 +310,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                                 USHORT_T         paramLength,
                                 UCHAR_T          *pm)
 {
-    smsc_log_debug(tcapLogger, "RESULT_L_IND {"
+    tccb_log_debug("RESULT_L_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
@@ -316,7 +356,7 @@ USHORT_T EINSS7_I97TUErrorInd(UCHAR_T          ssn,
                               USHORT_T         paramLength,
                               UCHAR_T          *pm)
 {
-    smsc_log_debug(tcapLogger, "U_ERROR_IND {"
+    tccb_log_debug("U_ERROR_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeID: 0x%X\n"
@@ -358,7 +398,7 @@ USHORT_T EINSS7_I97TPAbortInd(UCHAR_T          ssn,
                               UCHAR_T          qualityOfService,
                               UCHAR_T          abortCause)
 {
-    smsc_log_debug(tcapLogger, "P_ABORT_IND {"
+    tccb_log_error("P_ABORT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
@@ -386,7 +426,7 @@ USHORT_T EINSS7_I97TUAbortInd(UCHAR_T          ssn,
                               USHORT_T         userInfoLength,
                               UCHAR_T          *userInfo_p)
 {
-    smsc_log_debug(tcapLogger, "U_ABORT_IND {"
+    tccb_log_error("U_ABORT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
@@ -412,7 +452,7 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
                                 USHORT_T         dialogueId,
                                 UCHAR_T          invokeId)
 {
-    smsc_log_debug(tcapLogger, "L_CANCEL_IND {"
+    tccb_log_debug("L_CANCEL_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], InvokeId: 0x%X\n"
                     "}",
@@ -437,7 +477,7 @@ USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
                               UCHAR_T          orgAddrLength,
                               UCHAR_T          *orgAddr_p)
 {
-    smsc_log_error(tcapLogger, "NOTICE_IND {"
+    tccb_log_error("NOTICE_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], RelDialog[0x%X]\n"
                     "  ReportCause: 0x%X, ReturnIndicator: 0x%X\n"
@@ -469,9 +509,6 @@ USHORT_T EINSS7_I97TNoticeInd(UCHAR_T          ssn,
     return MSG_OK;
 }
 
-//-------------------------------------------------------------------------------------
-// TODO: Implement
-//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
                              USHORT_T         userId,
                              EINSS7INSTANCE_T tcapInstanceId,
@@ -488,7 +525,7 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
                              USHORT_T         userInfoLength,
                              UCHAR_T          *userInfo_p)
 {
-    smsc_log_debug(tcapLogger, "BEGIN_IND {"
+    tccb_log_debug("BEGIN_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
@@ -510,7 +547,7 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
     //so just send AARE-apdu with Associate-source-diagnostic set to
     //dialogue-service-user : application-context-name-not-supported(2)
     UCHAR_T abInfo = 0x02;
-    smsc_log_debug(tcapLogger, "U_ABORT_REQ {"
+    tccb_log_debug("U_ABORT_REQ {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
@@ -525,6 +562,10 @@ USHORT_T EINSS7_I97TBeginInd(UCHAR_T          ssn,
                         priOrder, qualityOfService, 1, &abInfo, 0, NULL, 0, NULL);
     return MSG_OK;
 }
+
+//------------------------------------------------------------------------------
+//-- TODO: Implement
+//------------------------------------------------------------------------------
 
 USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
                            USHORT_T         userId,
@@ -541,7 +582,7 @@ USHORT_T EINSS7_I97TUniInd(UCHAR_T          ssn,
                            USHORT_T         userInfoLength,
                            UCHAR_T          *userInfo_p)
 {
-    smsc_log_debug(tcapLogger, "UNI_IND {"
+    tccb_log_debug("UNI_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  PriOrder: 0x%X, QoS: 0x%X\n"
                     "  Comp. present: %s\n"
@@ -571,7 +612,7 @@ USHORT_T EINSS7_I97TURejectInd( UCHAR_T          ssn,
                                 UCHAR_T          problemCodeTag,
                                 UCHAR_T          problemCode)
 {
-    smsc_log_debug(tcapLogger, "U_REJECT_IND {"
+    tccb_log_debug("U_REJECT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeId: %s\n"
@@ -595,7 +636,7 @@ USHORT_T EINSS7_I97TLRejectInd(UCHAR_T          ssn,
                                UCHAR_T          problemCodeTag,
                                UCHAR_T          problemCode)
 {
-    smsc_log_debug(tcapLogger, "L_REJECT_IND {"
+    tccb_log_debug("L_REJECT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X]\n"
                     "  InvokeId: %s\n"
@@ -619,7 +660,7 @@ USHORT_T EINSS7_I97TRRejectInd(UCHAR_T          ssn,
                                UCHAR_T          problemCodeTag,
                                UCHAR_T          problemCode)
 {
-    smsc_log_debug(tcapLogger, "R_REJECT_IND {"
+    tccb_log_debug("R_REJECT_IND {"
                     "  SSN: %u, UserID: %u, TcapInstanceID: %u\n"
                     "  Dialog[0x%X], LastComponent: %s\n"
                     "  InvokeId: %s\n"
@@ -634,12 +675,9 @@ USHORT_T EINSS7_I97TRRejectInd(UCHAR_T          ssn,
     return MSG_OK;
 }
 
-
-//-------------------------------------------------------------------------------------
-
 USHORT_T EINSS7_I97TIndError(USHORT_T errorCode, MSG_T *msg_sp)
 {
-    smsc_log_debug(tcapLogger, "IND_ERROR (errorCode: 0x%X)", errorCode);
+    tccb_log_debug("IND_ERROR (errorCode: 0x%X)", errorCode);
     // TODO: Implement
     return MSG_OK;
 }
