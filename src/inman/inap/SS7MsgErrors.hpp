@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * EINSS7 Common parts error codes descriptions(Release 5)
  * ************************************************************************* */
@@ -181,5 +181,6 @@ URCSpacePTR  _RCS_SS7_Msg("errSS7Msg", 1000, 1510, rc2Txt_SS7_CP)
 } //inman
 } //smsc
 
+#define _RCS_SS7_CP_GET() smsc::inman::inap::_RCS_SS7_Msg.get()
 #endif /* __SMSC_INMAN_INAP_SS7_MSG_ERRORS__ */
 

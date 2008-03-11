@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * Transaction Component: ROS::Invoke
  * ************************************************************************* */
@@ -20,7 +20,7 @@ public:
     typedef enum { respNone = 0, respError, respResultOrError
     } InvokeResponse;
 
-    Invoke(UCHAR_T tId = 0, UCHAR_T tOpCode = 0, InvokeResponse resp = Invoke::respNone)
+    Invoke(uint8_t tId = 0, uint8_t tOpCode = 0, InvokeResponse resp = Invoke::respNone)
         : TcapEntity(tId, TcapEntity::tceInvoke, tOpCode), _linkedTo(NULL)
         , _timeout(0), _status(Invoke::resWait), _respType(resp)
     {}
@@ -35,8 +35,8 @@ public:
     inline void  linkTo(Invoke * linkedInv) { _linkedTo = linkedInv; }
     inline const Invoke * getLinkedTo(void) const { return _linkedTo; }
 
-    inline void setTimeout(USHORT_T timeOut) { _timeout = timeOut; }
-    inline USHORT_T getTimeout(void) const   { return _timeout; }
+    inline void setTimeout(uint16_t timeOut) { _timeout = timeOut; }
+    inline uint16_t getTimeout(void) const   { return _timeout; }
 
     std::string strStatus(void)
     {
@@ -50,7 +50,7 @@ public:
 protected:
     InvokeStatus     _status;   //
     Invoke *         _linkedTo; //invoke to which this one linked to
-    USHORT_T         _timeout;  //response waiting timeout
+    uint16_t         _timeout;  //response waiting timeout
     InvokeResponse   _respType; //
 };
 

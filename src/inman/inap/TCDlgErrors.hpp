@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCAP dialog error codes.
  * ************************************************************************* */
@@ -53,5 +53,6 @@ URCSpacePTR  _RCS_TC_Dialog("errTCDlg", TC_DlgError::dlgInit, \
 } //inman
 } //smsc
 
+#define _RCS_TC_DialogGET() smsc::inman::inap::_RCS_TC_Dialog.get()
 #endif /* __SMSC_INMAN_INAP_TCDIALOG_ERR__ */
 

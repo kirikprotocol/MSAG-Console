@@ -1,11 +1,10 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * Transaction Component with local operation tag (no objId as opcode).
  * ************************************************************************* */
 #ifndef __SMSC_INMAN_TCAP_ENTITY__
 #define __SMSC_INMAN_TCAP_ENTITY__
 
-#include "inman/common/types.hpp"
 #include "inman/comp/compdefs.hpp"
 
 using smsc::inman::comp::Component;
@@ -23,14 +22,14 @@ public:
         tceNone = 0, tceInvoke, tceResult, tceResultNL, tceError
     } TCEntityKind;
 
-    TcapEntity(UCHAR_T tId, TCEntityKind e_kind = tceNone, UCHAR_T tOpCode = 0)
+    TcapEntity(uint8_t tId, TCEntityKind e_kind = tceNone, uint8_t tOpCode = 0)
         : id(tId), ekind(e_kind), opcode(tOpCode), param(NULL), ownComp(false) { }
 
     virtual ~TcapEntity() { if (ownComp) delete param; }
 
     inline TCEntityKind kind() const           { return ekind; }
-    inline UCHAR_T     getId() const           { return id; }
-    inline UCHAR_T     getOpcode() const       { return opcode; }
+    inline uint8_t     getId() const           { return id; }
+    inline uint8_t     getOpcode() const       { return opcode; }
     inline Component*  getParam() const        { return param; }
     //sets 'param' without passing ownership, it's caller responsibility to free Component
     inline void        setParam(Component* p)  { param = p; ownComp = false; }
@@ -47,30 +46,30 @@ public:
     }
 
 protected:
-    UCHAR_T     id;
+    uint8_t     id;
     TCEntityKind ekind;
-    UCHAR_T     opcode;
+    uint8_t     opcode;
     Component*	param;
     bool        ownComp; //this Entity is owner of 'param'
 };
 
 class TCResult : public TcapEntity {
 public:
-    TCResult(UCHAR_T tId, UCHAR_T tOpCode)
+    TCResult(uint8_t tId, uint8_t tOpCode)
         : TcapEntity(tId, TcapEntity::tceResult, tOpCode)
     { }
 };
 
 class TCResultNL : public TcapEntity {
 public:
-    TCResultNL(UCHAR_T tId, UCHAR_T tOpCode)
+    TCResultNL(uint8_t tId, uint8_t tOpCode)
         : TcapEntity(tId, TcapEntity::tceResultNL, tOpCode)
     { }
 };
 
 class TCError : public TcapEntity {
 public:
-    TCError(UCHAR_T tId, UCHAR_T tOpCode)
+    TCError(uint8_t tId, uint8_t tOpCode)
         : TcapEntity(tId, TcapEntity::tceError, tOpCode)
     { }
 };

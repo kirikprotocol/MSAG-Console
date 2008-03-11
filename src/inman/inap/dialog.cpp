@@ -13,30 +13,23 @@ using smsc::util::DumpHex;
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/TCAPErrors.hpp"
-
-using smsc::inman::comp::ApplicationContextFactory;
-
+#include "inman/inap/TCCallbacks.hpp"
 namespace smsc  {
 namespace inman {
 namespace inap  {
 
 Dialog::Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
-               ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
+               const ROSComponentsFactory * use_fact, const SCCP_ADDRESS_T & loc_addr,
                UCHAR_T sender_ssn/* = 0*/, Logger * uselog/* = NULL*/)
     : logger(uselog), _tcSUId(sess_uid), _dId(dlg_id), ownAddr(loc_addr)
     , qSrvc(EINSS7_I97TCAP_QLT_BOTH), priority(EINSS7_I97TCAP_PRI_HIGH_0)
-    , _timeout(_DFLT_INVOKE_TIMER), _lastInvId(0), _ac_idx(dialog_ac_idx)
-    , msgUserId(msg_user_id)
+    , _timeout(_DFLT_INVOKE_TIMER), _lastInvId(0), acFab(use_fact)
+    , ac(use_fact->acOID()), msgUserId(msg_user_id)
 {
     _state.value = 0;
     dSSN = sender_ssn ? sender_ssn : ownAddr.addr[1];
     if (!logger)
         logger = Logger::getInstance("smsc.inman.inap.Dialog");
-    APP_CONTEXT_T * acPtr = (APP_CONTEXT_T *)ACOID::OIDbyIdx(dialog_ac_idx);
-    assert(acPtr);
-    ac = *acPtr;
-    ac_fact = ApplicationContextFactory::getFactory(_ac_idx);
-    assert(ac_fact);
     snprintf(_logId, sizeof(_logId)-1, "Dialog[0x%X]", _dId);
 }
 
@@ -93,7 +86,7 @@ void Dialog::checkSS7res(const char * descr, USHORT_T result) throw(CustomExcept
 {
     if (result) {
         if ((MSG_BROKEN_CONNECTION == result) || (MSG_NOT_CONNECTED == result))
-            TCAPDispatcher::getInstance()->onDisconnect();
+            TCCbkLink::get().tcapDisp()->onDisconnect();
         throw CustomException((int)_RCS_TC_APIError->mkhash(result),
                             descr, _RCS_TC_APIError->explainCode(result).c_str());
     }
@@ -114,7 +107,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                    dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
                    DumpHex(rmtAddr.addrLen, rmtAddr.addr, _HexDump_CVSD).c_str(),
                    DumpHex(ownAddr.addrLen, ownAddr.addr, _HexDump_CVSD).c_str(),
-                   DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str(),
+                   DumpHex(ac.length(), ac.octets(), _HexDump_CVSD).c_str(),
                    uilen, DumpHex(uilen, ui).c_str()
                    );
     MutexGuard  tmp(dlgGrd);
@@ -123,7 +116,7 @@ void Dialog::beginDialog(UCHAR_T* ui/* = NULL*/, USHORT_T uilen/* = 0*/) throw (
                         _dId, priority, qSrvc,
                         rmtAddr.addrLen, rmtAddr.addr,
                         ownAddr.addrLen, ownAddr.addr,
-                        ac.acLen, ac.ac,
+                        ac.length(), (unsigned char*)ac.octets(),
                         uilen, ui);
     checkSS7res("TBeginReq failed", result);
     _state.s.dlgLInited = 1;
@@ -148,14 +141,14 @@ void Dialog::continueDialog(void) throw (CustomException)
                     "}",
                     dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc, 
                     "", // DumpHex(ownAddr.addrLen, ownAddr.addr, _HexDump_CVSD).c_str(),
-                    ac.acLen, DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str()
+                    ac.length(), DumpHex(ac.length(), ac.octets(), _HexDump_CVSD).c_str()
                    );
 
     MutexGuard  tmp(dlgGrd);
     USHORT_T result =
         EINSS7_I97TContinueReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                                priority, qSrvc, 0, NULL, //ownAddr.addrLen, ownAddr.addr,
-                               ac.acLen, ac.ac, 0, NULL);
+                               ac.length(), (unsigned char*)ac.octets(), 0, NULL);
 
     checkSS7res("TContinueReq failed", result);
     _state.s.dlgLContinued = 1;
@@ -198,13 +191,13 @@ void Dialog::endDialog(Dialog::Ending type/* = endBasic*/) throw (CustomExceptio
                             "  App. context[%u]: %s\n"
                             "}",
                            dSSN, msgUserId, TCAP_INSTANCE_ID, _dId, priority, qSrvc,
-                           (type == Dialog::endBasic) ? "BASIC" : "PREARRANGED", ac.acLen, 
-                           DumpHex(ac.acLen, ac.ac, _HexDump_CVSD).c_str());
+                           (type == Dialog::endBasic) ? "BASIC" : "PREARRANGED", ac.length(), 
+                           DumpHex(ac.length(), ac.octets(), _HexDump_CVSD).c_str());
     
             USHORT_T result =
                 EINSS7_I97TEndReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
                                   priority, qSrvc, termination,
-                                  ac.acLen, ac.ac, 0, NULL);
+                                  ac.length(), (unsigned char*)ac.octets(), 0, NULL);
     
             checkSS7res("TEndReq failed", result); //throws
             _state.s.dlgLEnded = 1;
@@ -230,9 +223,9 @@ UCHAR_T /*inv_id*/ Dialog::sendInvoke(UCHAR_T opcode, const Component *p_arg,
     }
 
     Invoke::InvokeResponse  resp = Invoke::respNone;
-    if (ac_fact->hasErrors(opcode))
+    if (acFab->hasErrors(opcode))
         resp = Invoke::respError;
-    if (ac_fact->hasResult(opcode))
+    if (acFab->hasResult(opcode))
         resp = Invoke::respResultOrError;
 
     UCHAR_T invId = getNextInvokeId();
@@ -467,7 +460,7 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
             updateState(true);
 
         if (pmlen) { //operation parameters present
-            Component* comp = ac_fact->createArg(op[0]);
+            Component* comp = acFab->createArg(op[0], logger);
             if (comp) {
                 try {
                     std::vector<unsigned char> code( pm, pm + pmlen );
@@ -554,7 +547,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
         invMap.erase(it); //remove invoke from list of being monitored ones
         
         //prepare result
-        Component* resParm = ac_fact->createRes(op[0]);
+        Component* resParm = acFab->createRes(op[0], logger);
         if (resParm) {
             try {
                 std::vector<unsigned char> code(pm, pm + pmlen);
@@ -621,7 +614,7 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
         pInv->setStatus(Invoke::resNotLast);
 
         //prepare result
-        Component* resParm = ac_fact->createRes(op[0]);
+        Component* resParm = acFab->createRes(op[0], logger);
         if (resParm) {
             try {
                 std::vector<unsigned char> code(pm, pm + pmlen);
@@ -681,8 +674,8 @@ USHORT_T Dialog::handleResultError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, c
         invMap.erase(it);
         
         //prepare resultError
-        if (ac_fact->hasError(pInv->getOpcode(), op[0])) {
-            Component* resParm = ac_fact->createErr(op[0]);
+        if (acFab->hasError(pInv->getOpcode(), op[0])) {
+            Component* resParm = acFab->createErr(op[0], logger);
             if (resParm) {
                 try {
                     std::vector<unsigned char> code(pm, pm + pmlen);
@@ -729,7 +722,8 @@ USHORT_T Dialog::handleNoticeInd(UCHAR_T reportCause,
                 TcapEntity::TCEntityKind comp_kind/* = TcapEntity::tceNone*/,
                 UCHAR_T invokeId/* = 0*/, USHORT_T oplen/* = 0*/, const UCHAR_T *op/* = NULL*/)
 {
-    //if component is returned, it must have only local operation tag
+    //if component is returned, it must have only local operation tag,
+    //otherwise it's a misslinkage issue.
     assert(!oplen || (oplen == 1));
     {
         MutexGuard dtmp(dlgGrd);

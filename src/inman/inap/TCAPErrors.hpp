@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * Various TC provider return/error codes.
  * ************************************************************************* */
@@ -14,40 +14,70 @@ namespace inap {
 
 /* ------------------------------------------------------------------------- *
  * TC Abort Cause: indicates the reason why transaction is aborted by the
- * TCAP itself.
+ * TCAP provider (returned by T_PABORT_IND).
  * ------------------------------------------------------------------------- */
-struct TC_AbortCause {
+struct TC_PAbortCause {
     enum {
+        //Q.773 P-AbortCause:
         unrecognizedMessageType = EINSS7_I97TCAP_ABORT_UNREC_MES,
         unrecognizedTransactionID = EINSS7_I97TCAP_ABORT_UNREC_ID,
         badFormatTransactionPortion = EINSS7_I97TCAP_ABORT_BAD_TP,
         incorrectTransactionPortion = EINSS7_I97TCAP_ABORT_INCORRECT_TP,
         resourceLimitation = EINSS7_I97TCAP_ABORT_RESOURCE_LIMIT,
-        abnormalDialogue = 0x05 /*EINSS7_I97TCAP_ABORT_ABNORMAL_DIALOGUE*/,
-        userAbort = 0x06
+        //EINSS7_I97TCAP additional codes
+        abnormalDialogue = 0x05 /*EINSS7_I97TCAP_ABORT_ABNORMAL_DIALOGUE*/
     };
 };
-extern const char * rc2Txt_TC_AbortCause(uint32_t rc_code);
-extern URCSpacePTR  _RCS_TC_Abort;
+extern const char * rc2Txt_TC_PAbortCause(uint32_t rc_code);
+extern URCSpacePTR  _RCS_TC_PAbort;
 
-#define FDECL_rc2Txt_TC_AbortCause()    \
-const char * rc2Txt_TC_AbortCause(uint32_t rc_code) { \
+#define FDECL_rc2Txt_TC_PAbortCause()    \
+const char * rc2Txt_TC_PAbortCause(uint32_t rc_code) { \
     switch (rc_code) { \
-    case TC_AbortCause::unrecognizedMessageType: return "Unrecognized message type"; \
-    case TC_AbortCause::unrecognizedTransactionID: return "Unrecognized Transaction ID"; \
-    case TC_AbortCause::badFormatTransactionPortion: return "Badly formatted Transaction Portion"; \
-    case TC_AbortCause::incorrectTransactionPortion: return "Incorrect Transaction Portion"; \
-    case TC_AbortCause::resourceLimitation: return "Resource Limitation"; \
-    case TC_AbortCause::abnormalDialogue: return "Abnormal Dialogue"; \
-    case TC_AbortCause::userAbort: return "User abort(ABRT APDU or user-defined AS)"; \
+    case TC_PAbortCause::unrecognizedMessageType: return "Unrecognized message type"; \
+    case TC_PAbortCause::unrecognizedTransactionID: return "Unrecognized Transaction ID"; \
+    case TC_PAbortCause::badFormatTransactionPortion: return "Badly formatted Transaction Portion"; \
+    case TC_PAbortCause::incorrectTransactionPortion: return "Incorrect Transaction Portion"; \
+    case TC_PAbortCause::resourceLimitation: return "Resource Limitation"; \
+    case TC_PAbortCause::abnormalDialogue: return "Abnormal Dialogue"; \
     default:; } \
-    return "unknown TC Abort cause"; \
+    return "unknown TC PAbort cause"; \
 }
 
-#define ODECL_RCS_TC_AbortCause() FDECL_rc2Txt_TC_AbortCause() \
-URCSpacePTR  _RCS_TC_Abort("errTCAbort", TC_AbortCause::unrecognizedMessageType, \
-                    TC_AbortCause::userAbort, rc2Txt_TC_AbortCause)
+#define ODECL_RCS_TC_PAbortCause() FDECL_rc2Txt_TC_PAbortCause() \
+URCSpacePTR  _RCS_TC_PAbort("errTCPAbort", TC_PAbortCause::unrecognizedMessageType, \
+                    TC_PAbortCause::abnormalDialogue, rc2Txt_TC_PAbortCause)
 
+/* ------------------------------------------------------------------------- *
+ * TC User Abort Cause: indicates the reason why transaction is aborted by
+ * the TCAP user (returned by T_UABORT_IND).
+ * ------------------------------------------------------------------------- */
+struct TC_UAbortCause {
+    enum {
+        //Q.773 Associate-source-diagnostic : dialogue-service-user
+        null = 0, no_reason_given = 1,
+        application_context_not_supported = 2,
+        //additional codes
+        userDefinedAS
+    };
+};
+extern const char * rc2Txt_TC_UAbortCause(uint32_t rc_code);
+extern URCSpacePTR  _RCS_TC_UAbort;
+
+#define FDECL_rc2Txt_TC_UAbortCause()    \
+const char * rc2Txt_TC_UAbortCause(uint32_t rc_code) { \
+    switch (rc_code) { \
+    case TC_UAbortCause::null: return "0"; \
+    case TC_UAbortCause::no_reason_given: return "no reason given"; \
+    case TC_UAbortCause::application_context_not_supported: return "application context not supported"; \
+    case TC_UAbortCause::userDefinedAS: return "User abort(ABRT APDU or user-defined AS)"; \
+    default:; } \
+    return "unknown TC UAbort cause"; \
+}
+
+#define ODECL_RCS_TC_UAbortCause() FDECL_rc2Txt_TC_UAbortCause() \
+URCSpacePTR  _RCS_TC_UAbort("errTCUAbort", TC_UAbortCause::null, \
+                    TC_UAbortCause::userDefinedAS, rc2Txt_TC_UAbortCause)
 
 /* ------------------------------------------------------------------------- *
  * TC Bind Result: TC subsystem bind request error codes
@@ -202,7 +232,8 @@ URCSpacePTR  _RCS_TC_APIError("errTCApi", TC_APIError::invInvokeId, \
  * Macro for all return code spaces global initialization
  * ------------------------------------------------------------------------- */
 #define _RCS_TCAPErrorsINIT()  \
-    ODECL_RCS_TC_AbortCause(); \
+    ODECL_RCS_TC_PAbortCause(); \
+    ODECL_RCS_TC_UAbortCause(); \
     ODECL_RCS_TC_Bind(); \
     ODECL_RCS_TC_ReportCause(); \
     ODECL_RCS_TC_APIError()
@@ -211,6 +242,13 @@ URCSpacePTR  _RCS_TC_APIError("errTCApi", TC_APIError::invInvokeId, \
 } //inap
 } //inman
 } //smsc
+
+#define _RCS_TCAPErrorsGET() \
+smsc::inman::inap::_RCS_TC_PAbort.get(); \
+smsc::inman::inap::_RCS_TC_UAbort.get(); \
+smsc::inman::inap::_RCS_TC_Bind.get(); \
+smsc::inman::inap::_RCS_TC_Report.get(); \
+smsc::inman::inap::_RCS_TC_APIError.get()
 
 #endif /* __SMSC_INMAN_INAP_TCAP_ERRORS__ */
 

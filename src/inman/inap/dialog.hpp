@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************* *
  * TCAP dialog implementation (initiated by local point).
  * ************************************************************************* */
@@ -8,14 +8,17 @@
 #include <map>
 #include <list>
 
-#include "inman/comp/acdefs.hpp"
-using smsc::ac::ACOID;
+#include "core/synchronization/Mutex.hpp"
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
-#include "inman/comp/operfactory.hpp"
-using smsc::inman::comp::OperationFactory;
+#include "logger/Logger.h"
+using smsc::logger::Logger;
 
+#include "inman/inap/ACRegistry.hpp"
 #include "inman/inap/invoke.hpp"
 #include "inman/inap/TCDlgErrors.hpp"
+#include "inman/inap/SS7Types.hpp"
 
 #include "inman/common/XRefPtr.hpp"
 #include "inman/common/MTRefWrapper.hpp"
@@ -59,12 +62,12 @@ public:
     virtual void onDialogInvoke(Invoke*, bool lastComp) = 0;
     virtual void onDialogContinue(bool compPresent) = 0;
     virtual void onDialogREnd(bool compPresent) = 0;
-    virtual void onDialogPAbort(UCHAR_T abortCause) = 0;
-    virtual void onDialogUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                                    USHORT_T userInfo_len, UCHAR_T *pUserInfo) = 0;
-    virtual void onDialogNotice(UCHAR_T reportCause,
+    virtual void onDialogPAbort(uint8_t abortCause) = 0;
+    virtual void onDialogUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                                    uint16_t userInfo_len, uint8_t *pUserInfo) = 0;
+    virtual void onDialogNotice(uint8_t reportCause,
                                 TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
-                                UCHAR_T invId = 0, UCHAR_T opCode = 0) = 0;
+                                uint8_t invId = 0, uint8_t opCode = 0) = 0;
     // -- Component layer indications 
 
     //NOTE: below methods should either take ownership of TcapEntity::param or copy it
@@ -82,10 +85,8 @@ class SSNSession;
 //NOTE: All thrown CustomExceptions has errcode set to RCHash
 class Dialog {
 private:
-//    typedef smsc::core::synchronization::MTObjectReferee_T<TCDialogUserITF> DlgUserRef;
-//    typedef smsc::core::synchronization::OBJRefGuard_T<TCDialogUserITF>     DlgUserRFP;
     typedef smsc::core::synchronization::MTRefWrapper_T<TCDialogUserITF>     DlgUserRef;
-    typedef std::map<UCHAR_T, InvokeRFP> InvokeMap;
+    typedef std::map<uint8_t, InvokeRFP> InvokeMap;
 
     std::string     _tcSUId;    //TC session signature
     InvokeMap       invMap;     //locally initiated Invokes
@@ -95,25 +96,26 @@ private:
 
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  rmtAddr;
-    UCHAR_T         dSSN;       //TC SubSystem Number dialog uses
-    USHORT_T        msgUserId;  //EINSS7 Common part message port user id
-    APP_CONTEXT_T   ac;
-    USHORT_T        _dId;
+    uint8_t         dSSN;       //TC SubSystem Number dialog uses
+    uint16_t        msgUserId;  //EINSS7 Common part message port user id
+    const EncodedOID & ac;
+    const ROSComponentsFactory * acFab; //applicatiojn context Components factory
+    uint16_t        _dId;
                     //prefix for logging info
     char            _logId[sizeof("Dialog[0x%X]") + sizeof(unsigned int)*3 + 1];
-    USHORT_T        _timeout;
-    UCHAR_T         qSrvc;
-    UCHAR_T         priority;
-    UCHAR_T         _lastInvId;
+    uint16_t        _timeout;
+    uint8_t         qSrvc;
+    uint8_t         priority;
+    uint8_t         _lastInvId;
     Logger*         logger;
-    ACOID::DefinedOIDidx   _ac_idx; //ApplicationContext index, see acdefs.hpp
-    OperationFactory * ac_fact;     //TC Components factory
+
+
 
     void clearInvokes(void);
     //
-    void checkSS7res(const char * descr, USHORT_T result) throw(CustomException);
+    void checkSS7res(const char * descr, uint16_t result) throw(CustomException);
     //
-    UCHAR_T  getNextInvokeId(void)
+    uint8_t  getNextInvokeId(void)
     {
         MutexGuard  tmp(dlgGrd);
         return ++_lastInvId;
@@ -150,8 +152,20 @@ private:
         return;
     }
 
+protected:
+    friend class TCSessionAC;
+    Dialog(const std::string & sess_uid, uint16_t dlg_id, uint16_t msg_user_id,
+           const ROSComponentsFactory * use_fact, const SCCP_ADDRESS_T & loc_addr,
+           uint8_t sender_ssn = 0, Logger * uselog = NULL);
+    //reinitializes Dialog to be reused with other id and remote address
+    void reset(uint16_t new_id, const SCCP_ADDRESS_T * rmt_addr);
+
+protected:
+    friend class SSNSession;
+    virtual ~Dialog();
+
 public:
-    static const USHORT_T   _DFLT_INVOKE_TIMER = 30; //seconds
+    static const uint16_t   _DFLT_INVOKE_TIMER = 30; //seconds
     enum Ending { endBasic = 0, endPrearranged, endUAbort };
 
     //Returns pointer to previously set user.
@@ -177,7 +191,7 @@ public:
         MutexGuard  tmp(dlgGrd);
         return _state; 
     }
-    inline USHORT_T     getId(void)     const  { return _dId; }
+    inline uint16_t     getId(void)     const  { return _dId; }
     inline const std::string & getSUId(void)  const { return _tcSUId;  }
 
     //Returns false if there are invokes pending or dialog has
@@ -198,67 +212,55 @@ public:
     }
 
     //Returns the default timeout for Invokes
-    inline USHORT_T     getTimeout(void) const { return _timeout; }
+    inline uint16_t     getTimeout(void) const { return _timeout; }
     //Sets the default timeout for Invoke result waiting
-    void                setInvokeTimeout(USHORT_T timeout);
+    void                setInvokeTimeout(uint16_t timeout);
 
-    void    releaseInvoke(UCHAR_T invId);
+    void    releaseInvoke(uint8_t invId);
     void    releaseAllInvokes(void);
     //Resets the Invoke timer, extending its lifetime (response waiting),
     //Returns TC_APIError
-    USHORT_T  resetInvokeTimer(UCHAR_T inv_id);
+    uint16_t  resetInvokeTimer(uint8_t inv_id);
 
     // -- Component layer requests -- //
     //Creates and sends Invoke, timeout value equal to zero forces the
     //Invoke timer being set to the Dialog default timeout value,
     //doesn't take ownership of Component
-    UCHAR_T /*inv_id*/ sendInvoke(UCHAR_T opcode, const Component *p_arg, USHORT_T timeout = 0)
+    uint8_t /*inv_id*/ sendInvoke(uint8_t opcode, const Component *p_arg, uint16_t timeout = 0)
                         throw(CustomException);
     void    sendResultLast(TcapEntity* res) throw(CustomException);
     void    sendResultNotLast(TcapEntity* res) throw(CustomException);
     void    sendResultError(TcapEntity* res) throw(CustomException);
 
     // Transaction layer requests
-    void beginDialog(UCHAR_T* ui = NULL, USHORT_T uilen = 0) throw(CustomException);
+    void beginDialog(uint8_t* ui = NULL, uint16_t uilen = 0) throw(CustomException);
     //start dialog with new remote address
     void beginDialog(const SCCP_ADDRESS_T& remote_addr,
-                     UCHAR_T* ui = NULL, USHORT_T uilen = 0) throw(CustomException);
+                     uint8_t* ui = NULL, uint16_t uilen = 0) throw(CustomException);
     void continueDialog(void) throw(CustomException);
     void endDialog(Dialog::Ending type = endBasic) throw(CustomException);
 
     // Transaction layer callbacks (indications)
-    // USHORT_T handleBeginDialog(); //NOTE: Unimplemented yet!
-    USHORT_T handleContinueDialog(bool compPresent);
-    USHORT_T handleEndDialog(bool compPresent);
-    USHORT_T handlePAbortDialog(UCHAR_T abortCause);
-    USHORT_T handleUAbort(USHORT_T abortInfo_len, UCHAR_T *pAbortInfo,
-                          USHORT_T userInfo_len, UCHAR_T *pUserInfo);
+    // uint16_t handleBeginDialog(); //NOTE: Unimplemented yet!
+    uint16_t handleContinueDialog(bool compPresent);
+    uint16_t handleEndDialog(bool compPresent);
+    uint16_t handlePAbortDialog(uint8_t abortCause);
+    uint16_t handleUAbort(uint16_t abortInfo_len, uint8_t *pAbortInfo,
+                          uint16_t userInfo_len, uint8_t *pUserInfo);
 
     // Component layer callbacks (indications)
-    USHORT_T handleInvoke(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
-                                const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm,
+    uint16_t handleInvoke(uint8_t invokeId, uint8_t tag, uint16_t oplen,
+                                const uint8_t *op, uint16_t pmlen, const uint8_t *pm,
                                 bool lastComp);
-    USHORT_T handleResultLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
-                                const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
-    USHORT_T handleResultNotLast(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
-                                const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
-    USHORT_T handleResultError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen,
-                                const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
-    USHORT_T handleLCancelInvoke(UCHAR_T invokeId);
-    USHORT_T handleNoticeInd(UCHAR_T reportCause, TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
-                             UCHAR_T invokeId = 0, USHORT_T oplen = 0, const UCHAR_T *op = NULL);
-
-protected:
-    friend class TCSessionAC;
-    Dialog(const std::string & sess_uid, USHORT_T dlg_id, USHORT_T msg_user_id,
-           ACOID::DefinedOIDidx dialog_ac_idx, const SCCP_ADDRESS_T & loc_addr,
-           UCHAR_T sender_ssn = 0, Logger * uselog = NULL);
-    //reinitializes Dialog to be reused with other id and remote address
-    void reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr);
-
-protected:
-    friend class SSNSession;
-    virtual ~Dialog();
+    uint16_t handleResultLast(uint8_t invokeId, uint8_t tag, uint16_t oplen,
+                                const uint8_t *op, uint16_t pmlen, const uint8_t *pm);
+    uint16_t handleResultNotLast(uint8_t invokeId, uint8_t tag, uint16_t oplen,
+                                const uint8_t *op, uint16_t pmlen, const uint8_t *pm);
+    uint16_t handleResultError(uint8_t invokeId, uint8_t tag, uint16_t oplen,
+                                const uint8_t *op, uint16_t pmlen,  const uint8_t *pm);
+    uint16_t handleLCancelInvoke(uint8_t invokeId);
+    uint16_t handleNoticeInd(uint8_t reportCause, TcapEntity::TCEntityKind comp_kind = TcapEntity::tceNone,
+                             uint8_t invokeId = 0, uint16_t oplen = 0, const uint8_t *op = NULL);
 };
 
 } //inap

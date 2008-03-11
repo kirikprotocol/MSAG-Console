@@ -5,12 +5,14 @@ static char const ident[] = "$Id$";
 #include "util/vformat.hpp"
 using smsc::util::format;
 
+#include "inman/common/TimeOps.hpp"
 #include "inman/common/adrutil.hpp"
+using smsc::cvtutil::packSCCPAddress;
+using smsc::cvtutil::unpackSCCP2SSN_GT;
+
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/dispatcher.hpp"
-using smsc::cvtutil::packSCCPAddress;
-using smsc::cvtutil::unpackSCCP2SSN_GT;
 
 #define MAX_ID_ATTEMPTS (maxId - minId)
 
@@ -21,9 +23,9 @@ namespace inap  {
 /* ************************************************************************** *
  * class TCSessionAC implementation:
  * ************************************************************************** */
-TCSessionAC::TCSessionAC(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
-                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
-    : tcUID(uid), _owner(owner), ac_idx(dlg_ac_idx), ownAdr(own_addr)
+TCSessionAC::TCSessionAC(uint16_t uid, SSNSession * owner, uint8_t fake_ssn,
+                const TonNpiAddress & own_addr, const ROSComponentsFactory * use_fact)
+    : tcUID(uid), _owner(owner), acFab(use_fact), ownAdr(own_addr)
 {
     ownAdr.fixISDN();
     senderSsn = _owner->getSSN();
@@ -35,26 +37,11 @@ TCSessionAC::~TCSessionAC(void)
     MutexGuard  tmp(dlgGrd);
     if (pool.size()) {
         TCDialogsLIST::iterator it = pool.begin();
-        for (; it != pool.end(); it++)
+        for (; it != pool.end(); ++it)
             delete (*it);
         pool.clear();
     }
 }
-//NOTE: it's important that mkSignature doesn't rely on addresses .Ton.Npi
-void TCSessionAC::mkSignature(std::string & sid, UCHAR_T own_ssn, const TonNpiAddress & onpi,
-                             ACOID::DefinedOIDidx dlg_ac_idx,
-                             UCHAR_T rmt_ssn, const TonNpiAddress * rnpi)
-{
-    char rssn[8]; // sizeof("255")
-    if (rmt_ssn)
-        snprintf(rssn, sizeof(rssn), "%u", rmt_ssn);
-    else {
-        rssn[0] = '*'; rssn[1] = 0;
-    }
-    format(sid, "%u:%s[%u]->%s:%s", own_ssn, onpi.getSignals(), dlg_ac_idx, rssn,
-           rnpi ? rnpi->getSignals() : "*");
-}
-
 
 void TCSessionAC::release(void)
 {
@@ -74,9 +61,10 @@ void TCSessionAC::releaseDialog(Dialog* pDlg)
     _owner->releaseDialog(pDlg, &sign);
 }
 
-Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr)
+Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr,
+                                 Logger * use_log/* = NULL*/)
 {
-    USHORT_T dId = 0;
+    uint16_t dId = 0;
     if ((_owner->getState() != smsc::inman::inap::ssnBound)
         || !_owner->getDialogId(dId))
         return NULL; //todo: throw ?
@@ -88,8 +76,8 @@ Dialog * TCSessionAC::initDialog(const SCCP_ADDRESS_T & rmt_addr)
             pDlg = *(pool.begin());
             pool.pop_front();
         } else
-            pDlg = new Dialog(sign, dId, _owner->getMsgUserId(), ac_idx,
-                              locAddr, senderSsn, NULL);
+            pDlg = new Dialog(sign, dId, _owner->getMsgUserId(), acFab,
+                              locAddr, senderSsn, use_log);
     }
     pDlg->reset(dId, &rmt_addr);
     _owner->markDialog(pDlg);
@@ -101,50 +89,29 @@ void TCSessionAC::toPool(Dialog * p_dlg)
     MutexGuard  tmp(dlgGrd);
     pool.push_back(p_dlg);
 }
-/* ************************************************************************** *
- * class TCSessionMR implementation:
- * ************************************************************************** */
-TCSessionMR::TCSessionMR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
-                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx)
-    : TCSessionAC(uid, owner, fake_ssn, own_addr, dlg_ac_idx)
-{
-    mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, 0, NULL);
-}
-
-Dialog* TCSessionMR::openDialog(UCHAR_T rmt_ssn, const char* rmt_addr)
-{
-    TonNpiAddress   rnpi;
-    SCCP_ADDRESS_T  rmtAddr;
-
-    if (!rnpi.fromText(rmt_addr) || !rnpi.fixISDN())
-        return NULL;
-
-    packSCCPAddress(&rmtAddr, rnpi.getSignals(), rmt_ssn);
-    return initDialog(rmtAddr);
-}
 
 /* ************************************************************************** *
  * class TCSessionMA implementation:
  * ************************************************************************** */
-TCSessionMA::TCSessionMA(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
-                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                UCHAR_T rmt_ssn)
-    : TCSessionAC(uid, owner, fake_ssn, own_addr, dlg_ac_idx)
+TCSessionMA::TCSessionMA(uint16_t uid, SSNSession * owner, uint8_t fake_ssn,
+                const TonNpiAddress & own_addr, const ROSComponentsFactory * use_fact,
+                uint8_t rmt_ssn)
+    : TCSessionAC(uid, owner, fake_ssn, own_addr, use_fact)
     , rmtSSN(rmt_ssn)
 {
-    mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, rmtSSN, NULL);
+    sign = owner->mkSignature(own_addr, use_fact->acOID(), rmt_ssn, NULL);
 }
 
-Dialog* TCSessionMA::openDialog(const char* rmt_addr)
+Dialog* TCSessionMA::openDialog(const char* rmt_addr, Logger * use_log/* = NULL*/)
 {
     TonNpiAddress   rnpi;
     if (!rnpi.fromText(rmt_addr) || !rnpi.fixISDN())
         return NULL;
 
-    return openDialog(rnpi);
+    return openDialog(rnpi, use_log);
 }
 
-Dialog* TCSessionMA::openDialog(const TonNpiAddress & rnpi)
+Dialog* TCSessionMA::openDialog(const TonNpiAddress & rnpi, Logger * use_log/* = NULL*/)
 {
     if ((rnpi.numPlanInd != NUMBERING_ISDN)
         || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
@@ -152,36 +119,37 @@ Dialog* TCSessionMA::openDialog(const TonNpiAddress & rnpi)
 
     SCCP_ADDRESS_T  rmtAddr;
     packSCCPAddress(&rmtAddr, rnpi.getSignals(), rmtSSN);
-    return initDialog(rmtAddr);
+    return initDialog(rmtAddr, use_log);
 }
 
 /* ************************************************************************** *
  * class TCSessionSR implementation:
  * ************************************************************************** */
-TCSessionSR::TCSessionSR(USHORT_T uid, SSNSession * owner, UCHAR_T fake_ssn,
-                const TonNpiAddress & own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                UCHAR_T rmt_ssn, const TonNpiAddress & rmt_addr)
-    : TCSessionAC(uid, owner, fake_ssn, own_addr, dlg_ac_idx)
+TCSessionSR::TCSessionSR(uint16_t uid, SSNSession * owner, uint8_t fake_ssn,
+                const TonNpiAddress & own_addr, const ROSComponentsFactory * use_fact,
+                uint8_t rmt_ssn, const TonNpiAddress & rmt_addr)
+    : TCSessionAC(uid, owner, fake_ssn, own_addr, use_fact)
     , rmtNpi(rmt_addr)
 {
-    mkSignature(sign, owner->getSSN(), own_addr, dlg_ac_idx, rmt_ssn, &rmtNpi);
+    sign = owner->mkSignature(own_addr, use_fact->acOID(), rmt_ssn, &rmtNpi);
     packSCCPAddress(&rmtAddr, rmtNpi.getSignals(), rmt_ssn);
 }
 
-Dialog* TCSessionSR::openDialog(void)
+Dialog* TCSessionSR::openDialog(Logger * use_log/* = NULL*/)
 {
     if (!rmtNpi.fixISDN())
         return NULL;
-    return initDialog(rmtAddr);
+    return initDialog(rmtAddr, use_log);
 }
 
 /* ************************************************************************** *
  * class SSNSession implementation (TCAP dialogs/sessions factory):
  * ************************************************************************** */
-SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, USHORT_T max_dlg_id/* = 2000*/,
-                       USHORT_T min_dlg_id/* = 1*/, Logger * uselog/* = NULL*/)
-    : logger(uselog), _SSN(ownssn), msgUserId(user_id), state(ssnIdle)
-    , maxId(max_dlg_id), lastTCSUId(0)
+SSNSession::SSNSession(TCAPDispatcherITF * use_dsp, uint8_t ownssn,
+                       uint16_t user_id, uint16_t max_dlg_id/* = 2000*/,
+                       uint16_t min_dlg_id/* = 1*/, Logger * uselog/* = NULL*/)
+    : tcDsp(use_dsp), _SSN(ownssn), msgUserId(user_id), state(ssnIdle)
+    , maxId(max_dlg_id), lastTCSUId(0), logger(uselog)
 {
     if (!min_dlg_id)
         min_dlg_id++;
@@ -196,40 +164,41 @@ SSNSession::SSNSession(UCHAR_T ownssn, USHORT_T user_id, USHORT_T max_dlg_id/* =
 SSNSession::~SSNSession()
 {
     MutexGuard tmp(mutex);
-    if (tcSessions.size()) { //kill TC sessions
+    cleanUpDialogs(); //adjusts tcSessions pools
+    if (!tcSessions.empty()) { //kill TC sessions
         for (TCSessionsMAP::iterator sit = tcSessions.begin();
-                                    sit != tcSessions.end(); sit++)
-            delete (*sit).second;
+                                    sit != tcSessions.end(); ++sit)
+            delete sit->second;
     }
-    if (deadSess.size()) {
+    if (!deadSess.empty()) {
         for (TCSessionsLIST::iterator sit = deadSess.begin();
-                                    sit != deadSess.end(); sit++)
+                                    sit != deadSess.end(); ++sit)
             delete (*sit);
     }
-    cleanUpDialogs();
 
-    if (!(dialogs.size() + pending.size()))
+    if (dialogs.empty() && pending.empty())
         return;
 
     smsc_log_debug(logger, "SSN[%u]: Closing %u dialogs ..",
                     (unsigned)_SSN, dialogs.size() + pending.size());
-    if (dialogs.size()) {
-        for (DialogsMAP::iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
-            USHORT_T dId = (*it).first;
-            Dialog* pDlg = (*it).second;
+    if (!dialogs.empty()) {
+        for (DialogsMAP::iterator it = dialogs.begin();
+                                (it != dialogs.end()) && it->second; ++it) {
+            uint16_t dId = it->first;
+            Dialog* pDlg = it->second;
             unsigned invNum = 0;
             if (!pDlg->isFinished(&invNum))
                 smsc_log_warn(logger,
                     "SSN[%u]: Dialog[0x%X](0x%x) is active, %u invokes pending",
                     (unsigned)_SSN, dId, pDlg->getState().value, invNum);
-            delete (*it).second;
+            delete it->second;
         }
         dialogs.clear();
     }
-    if (pending.size()) {
-        for (DlgTimesMAP::iterator it = pending.begin(); it != pending.end(); it++) {
-            USHORT_T dId = (*it).first;
-            DlgTime dtm  = (*it).second;
+    if (!pending.empty()) {
+        for (DlgTimesMAP::iterator it = pending.begin(); it != pending.end(); ++it) {
+            uint16_t dId = it->first;
+            DlgTime dtm  = it->second;
             smsc_log_warn(logger, "SSN[%u]: Dialog[0x%X](0x%x) is active, %u invokes pending",
                            (unsigned)_SSN, dId, dtm.dlg->getState().value, dtm.dlg->pendingInvokes());
             delete dtm.dlg;
@@ -238,67 +207,47 @@ SSNSession::~SSNSession()
     }
 }
 
-TCSessionMR * SSNSession::newMRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                                       UCHAR_T fake_ssn/* = 0*/)
+std::string SSNSession::mkSignature(const TonNpiAddress & onpi, const EncodedOID & dlg_ac,
+                            uint8_t rmt_ssn, const TonNpiAddress * rnpi) const
 {
-    TonNpiAddress   onpi;
-    if (!onpi.fromText(own_addr))
-        return NULL;
-    return newMRsession(onpi, dlg_ac_idx, fake_ssn);
-}
-
-TCSessionMR * SSNSession::newMRsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                       UCHAR_T fake_ssn/* = 0*/)
-{
-    TCSessionMR *   pSess = NULL;
-
-    if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
-        return NULL;
-//    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
-    {
-        MutexGuard tmp(mutex);
-        std::string sid;
-        TCSessionAC::mkSignature(sid, _SSN, onpi, dlg_ac_idx, 0, NULL);
-
-        TCSessionsMAP::iterator it = tcSessions.find(sid);
-        if (it != tcSessions.end())
-            pSess = static_cast<TCSessionMR*>((*it).second);
-        else {
-            pSess = new TCSessionMR(++lastTCSUId, this, fake_ssn, onpi, dlg_ac_idx);
-            tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
-        }
+    char rssn[8]; // sizeof("255")
+    if (rmt_ssn)
+        snprintf(rssn, sizeof(rssn), "%u", rmt_ssn);
+    else {
+        rssn[0] = '*'; rssn[1] = 0;
     }
-    return pSess;
+    return format("%u:%s{%s}->%s:%s", _SSN, onpi.getSignals(), dlg_ac.nick(), rssn,
+           rnpi ? rnpi->getSignals() : "*");
 }
 
-
-TCSessionMA * SSNSession::newMAsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                            UCHAR_T rmt_ssn, UCHAR_T fake_ssn/* = 0*/)
+TCSessionMA * SSNSession::newMAsession(const char* own_addr,
+                                       const EncodedOID & dlg_ac,
+                                       uint8_t rmt_ssn, uint8_t fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi;
     if (!onpi.fromText(own_addr) || !onpi.fixISDN())
         return NULL;
-    return newMAsession(onpi, dlg_ac_idx, rmt_ssn, fake_ssn);
+    return newMAsession(onpi, dlg_ac, rmt_ssn, fake_ssn);
 }
 
-TCSessionMA * SSNSession::newMAsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                            UCHAR_T rmt_ssn, UCHAR_T fake_ssn/* = 0*/)
+TCSessionMA * SSNSession::newMAsession(const TonNpiAddress & onpi,
+                                       const EncodedOID & dlg_ac,
+                                       uint8_t rmt_ssn, uint8_t fake_ssn/* = 0*/)
 {
     TCSessionMA *   pSess = NULL;
 
     if ((onpi.numPlanInd != NUMBERING_ISDN) || (onpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
-//    onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
-    {
+    const ROSComponentsFactory * acFab = tcDsp->acRegistry()->getFactory(dlg_ac);
+    if (acFab) {
+//        onpi.typeOfNumber = ToN_INTERNATIONAL; //correct isdn unknown
         MutexGuard tmp(mutex);
-        std::string sid;
-        TCSessionAC::mkSignature(sid, _SSN, onpi, dlg_ac_idx, rmt_ssn, NULL);
-
+        std::string sid = mkSignature(onpi, acFab->acOID(), rmt_ssn, NULL);
         TCSessionsMAP::iterator it = tcSessions.find(sid);
         if (it != tcSessions.end())
-            pSess = static_cast<TCSessionMA*>((*it).second);
+            pSess = static_cast<TCSessionMA*>(it->second);
         else {
-            pSess = new TCSessionMA(++lastTCSUId, this, fake_ssn, onpi, dlg_ac_idx, rmt_ssn);
+            pSess = new TCSessionMA(++lastTCSUId, this, fake_ssn, onpi, acFab, rmt_ssn);
             tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
         }
     }
@@ -306,19 +255,23 @@ TCSessionMA * SSNSession::newMAsession(const TonNpiAddress & onpi, ACOID::Define
 }
 
 
-TCSessionSR * SSNSession::newSRsession(const char* own_addr, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, const char* rmt_addr, UCHAR_T fake_ssn/* = 0*/)
+TCSessionSR * 
+    SSNSession::newSRsession(const char* own_addr,
+                             const EncodedOID & dlg_ac, uint8_t rmt_ssn,
+                             const char* rmt_addr, uint8_t fake_ssn/* = 0*/)
 {
     TonNpiAddress   onpi, rnpi;
     if (!onpi.fromText(own_addr) || !onpi.fixISDN())
         return NULL;
     if (!rnpi.fromText(own_addr) || !rnpi.fixISDN())
         return NULL;
-    return newSRsession(onpi, dlg_ac_idx, rmt_ssn, rnpi, fake_ssn);
+    return newSRsession(onpi, dlg_ac, rmt_ssn, rnpi, fake_ssn);
 }
 
-TCSessionSR * SSNSession::newSRsession(const TonNpiAddress & onpi, ACOID::DefinedOIDidx dlg_ac_idx,
-                                UCHAR_T rmt_ssn, const TonNpiAddress & rnpi, UCHAR_T fake_ssn/* = 0*/)
+TCSessionSR * 
+    SSNSession::newSRsession(const TonNpiAddress & onpi,
+                             const EncodedOID & dlg_ac, uint8_t rmt_ssn,
+                             const TonNpiAddress & rnpi, uint8_t fake_ssn/* = 0*/)
 {
     TCSessionSR *   pSess = NULL;
 
@@ -327,16 +280,15 @@ TCSessionSR * SSNSession::newSRsession(const TonNpiAddress & onpi, ACOID::Define
     if ((rnpi.numPlanInd != NUMBERING_ISDN) || (rnpi.typeOfNumber > ToN_INTERNATIONAL))
         return NULL;
 
-    {
+    const ROSComponentsFactory * acFab = tcDsp->acRegistry()->getFactory(dlg_ac);
+    if (acFab) {
         MutexGuard tmp(mutex);
-        std::string sid;
-        TCSessionAC::mkSignature(sid, _SSN, onpi, dlg_ac_idx, rmt_ssn, &rnpi);
-
+        std::string sid = mkSignature(onpi, acFab->acOID(), rmt_ssn, &rnpi);
         TCSessionsMAP::iterator it = tcSessions.find(sid);
         if (it != tcSessions.end())
             pSess = static_cast<TCSessionSR*>((*it).second);
         else {
-            pSess = new TCSessionSR(++lastTCSUId, this, fake_ssn, onpi, dlg_ac_idx, rmt_ssn, rnpi);
+            pSess = new TCSessionSR(++lastTCSUId, this, fake_ssn, onpi, acFab, rmt_ssn, rnpi);
             tcSessions.insert(TCSessionsMAP::value_type(pSess->Signature(), pSess));
         }
     }
@@ -357,13 +309,13 @@ void SSNSession::closeTCSession(TCSessionAC * p_sess)
 }
 
 
-Dialog* SSNSession::findDialog(USHORT_T dId)
+Dialog* SSNSession::findDialog(uint16_t dId)
 {
     MutexGuard tmp(mutex);
     return locateDialog(dId);
 }
 
-void SSNSession::releaseDialog(USHORT_T dId)
+void SSNSession::releaseDialog(uint16_t dId)
 {
     MutexGuard tmp(mutex);
     DialogsMAP::iterator it = dialogs.find(dId);
@@ -397,7 +349,7 @@ void SSNSession::releaseDialog(Dialog* pDlg, const TCSessionSUID * tc_suid/* = 0
     if (!pDlg)
         return;
     MutexGuard tmp(mutex);
-    USHORT_T dId = pDlg->getId();
+    uint16_t dId = pDlg->getId();
     DialogsMAP::iterator it = dialogs.find(dId);
     if ((it == dialogs.end()) || (pDlg != (*it).second)) {
         smsc_log_error(logger, "SSN[%u]: Unregistered/illegal Dialog[0x%X]",
@@ -432,9 +384,10 @@ void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
     else
         smsc_log_debug(logger, "SSN[%u]: Releasing %s dialogs ..", (unsigned)_SSN, tc_suid->c_str());
 
-    for (DialogsMAP::iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
-        Dialog* pDlg = (*it).second;
-        USHORT_T dId = (*it).first;
+    for (DialogsMAP::iterator it = dialogs.begin();
+                                (it != dialogs.end()) && it->second; ++it) {
+        Dialog* pDlg = it->second;
+        uint16_t dId = it->first;
 
         unsigned invNum = 0;
         if (!pDlg->isFinished(&invNum)) {
@@ -456,7 +409,7 @@ void SSNSession::releaseDialogs(const TCSessionSUID * tc_suid/* = 0*/)
     dialogs.clear();
 }
 
-bool SSNSession::getDialogId(USHORT_T & dId)
+bool SSNSession::getDialogId(uint16_t & dId)
 {
     MutexGuard tmp(mutex);
     cleanUpDialogs();
@@ -482,7 +435,7 @@ void SSNSession::markDialog(Dialog * p_dlg)
     dialogs.insert(DialogsMAP::value_type(p_dlg->getId(), p_dlg));
 }
 
-void SSNSession::noticeInd(USHORT_T dlg_id, USHORT_T rel_id, UCHAR_T reportCause)
+void SSNSession::noticeInd(uint16_t dlg_id, uint16_t rel_id, uint8_t reportCause)
 {
     MutexGuard tmp(mutex);
     TNoticeParms    parms(rel_id, reportCause);
@@ -494,7 +447,7 @@ void SSNSession::noticeInd(USHORT_T dlg_id, USHORT_T rel_id, UCHAR_T reportCause
         dialogs.insert(DialogsMAP::value_type(dlg_id, NULL));
 }
 
-bool SSNSession::noticeParms(USHORT_T dlg_id, TNoticeParms & parms)
+bool SSNSession::noticeParms(uint16_t dlg_id, TNoticeParms & parms)
 {
     MutexGuard tmp(mutex);
     NoticedDLGs::iterator it = ntcdDlgs.find(dlg_id);
@@ -542,9 +495,9 @@ void SSNSession::cleanUpDialogs(void)
     }
 }
 
-bool SSNSession::nextDialogId(USHORT_T & dId)
+bool SSNSession::nextDialogId(uint16_t & dId)
 {
-    USHORT_T attempt = 0;
+    uint16_t attempt = 0;
     do {
         dId = lastDlgId;
         if (++lastDlgId  > maxId)
@@ -554,7 +507,7 @@ bool SSNSession::nextDialogId(USHORT_T & dId)
 }
 
 
-Dialog* SSNSession::locateDialog(USHORT_T dId)
+Dialog* SSNSession::locateDialog(uint16_t dId)
 {
     Dialog* pDlg = NULL;
     DialogsMAP::const_iterator it = dialogs.find(dId);
@@ -577,16 +530,17 @@ void SSNSession::dumpDialogs(void)
         struct timeval ctm;
         gettimeofday(&ctm, 0);
 
-        for (DlgTimesMAP::const_iterator it = pending.begin(); it != pending.end(); it++) {
-            DlgTime dtm = (*it).second;
+        for (DlgTimesMAP::const_iterator it = pending.begin(); it != pending.end(); ++it) {
+            DlgTime dtm = it->second;
             long tdif = ctm - dtm.tms;
             format(dump, "%u(0x%x):%lus ", (*it).first, dtm.dlg->getState().value, tdif);
         }
     }
     format(dump, "active(%u): ", dialogs.size());
-    for (DialogsMAP::const_iterator it = dialogs.begin(); (it != dialogs.end()) && (*it).second; it++) {
-        Dialog* pDlg = (*it).second;
-        format(dump, "%u(0x%x) ", (*it).first, pDlg->getState().value);
+    for (DialogsMAP::const_iterator it = dialogs.begin();
+                                (it != dialogs.end()) && it->second; ++it) {
+        Dialog* pDlg = it->second;
+        format(dump, "%u(0x%x) ", it->first, pDlg->getState().value);
     }
     smsc_log_debug(logger, dump.c_str());
 }
