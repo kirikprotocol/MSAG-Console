@@ -2,17 +2,19 @@
 #include "scag/stat/Statistics.h"
 #include "scag/util/properties/Properties.h"
 #include "scag/re/CommandAdapter.h"
-#include "scag/pers/PersClient.h"
 #include "scag/pers/Property.h"
+
+#include "sms/sms.h"
 
 namespace scag { namespace pers {
 
 typedef scag::util::properties::Property REProperty;
 
 using namespace scag::stat;
-using namespace scag::pers::client;
 
 char buf; // crashs without this :)
+
+const char* OPTIONAL_KEY = "key";
 
 const char* PersAction::getStrCmd()
 {
@@ -84,6 +86,20 @@ uint32_t PersAction::parseLifeTime(const std::string& s)
     return hour * 3600 + min * 60 + sec;
 }
 
+void PersAction::getOptionalKey(const std::string& key_str) {
+  if (profile == PT_ABONENT) {
+    try {
+      optional_skey = getAbntAddress(key_str);
+    } catch(const std::runtime_error& e) {
+        throw SCAGException("PersAction '%s' : '%s' parameter has error abonent profile key: %s",
+                            getStrCmd(), OPTIONAL_KEY, e.what());
+    }
+  } else if (strcmp(key_str.c_str(), "0") && !(optional_ikey = atoi(key_str.c_str()))) {
+      throw SCAGException("PersAction '%s' : '%s' parameter not a number in not abonent profile type. key=%s",
+                           getStrCmd(), OPTIONAL_KEY, key_str.c_str());
+  }
+}
+
 void PersAction::init(const SectionParams& params, PropertyObject propertyObject)
 {
 	bool bExist;
@@ -110,6 +126,14 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     CheckParameter(params, propertyObject, "PersAction", "msg", false, false,
                     msg_str, msgExist);
 //////////////////////////////////////////////
+    ftOptionalKey = CheckParameter(params,propertyObject, "PersAction", OPTIONAL_KEY, false, true,
+                                       optional_key_str, has_optional_key);
+    if (has_optional_key && ftOptionalKey == ftUnknown) {
+      smsc_log_debug(logger, "PersAction: optional_key_str=%s, optional key exists",
+                      optional_key_str.c_str(), has_optional_key);
+      getOptionalKey(optional_key_str);
+    }
+// /////////////////
     if(cmd == PC_DEL)
     {
         smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s", getStrCmd(), profile, var.c_str());
@@ -160,21 +184,6 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
 
         if(ftModValue == ftUnknown && strcmp(mod_str.c_str(), "0") && !(mod = atoi(mod_str.c_str())))
             throw SCAGException("PersAction '%s' : 'mod' parameter not a number. mod=%s", getStrCmd(), mod_str.c_str());
-
-        //if(!params.Exists("result"))
-            //throw SCAGException("PersAction '%s' : missing 'result' parameter", getStrCmd());
-
-
-        //FieldType ftResultValue = ActionContext::Separate(result_str, name);
-        //if(ftResultValue == ftUnknown || ftValue == ftConst)
-            //throw InvalidPropertyException("PersAction '%s': 'result' parameter should be an lvalue. Got %s", getStrCmd(), value_str.c_str());
-
-        //if(ftResultValue == ftField)
-        //{
-            //AccessType at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name, propertyObject.transport);
-            //if(!(at & atWrite))
-                //throw InvalidPropertyException("PersAction '%s': cannot modify property '%s' - no access", value_str.c_str());
-        //}
     }
 
     if(!params.Exists("policy") || (policy = getPolicyFromStr(params["policy"])) == UNKNOWN)
@@ -209,7 +218,8 @@ void PersAction::init(const SectionParams& params, PropertyObject propertyObject
     	    throw SCAGException("PersAction '%s' : invalid 'lifetime' parameter", getStrCmd());
     }
 
-    smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d, mod=%d", getStrCmd(), profile, var.c_str(), policy, life_time, mod);
+    smsc_log_debug(logger, "PersAction: params: cmd = %s, profile=%d, var=%s, policy=%d, life_time=%d, mod=%d, optional key='%s'",
+                    getStrCmd(), profile, var.c_str(), policy, life_time, mod, optional_key_str.c_str());
 }
 
 uint32_t PersAction::getKey(const CommandProperty& cp, ProfileType pt)
@@ -280,6 +290,15 @@ static uint32_t cmdToLongCallCmd(uint32_t c)
     return 0;
 }
 
+std::string PersAction::getAbntAddress(const std::string& _address) {
+  Address address(_address.c_str());
+  if (_address[0] != '.') {
+    address.setNumberingPlan(1);
+    address.setTypeOfNumber(1);
+  }
+  return address.toString();
+}
+
 bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
 {
 	std::string skey;
@@ -297,15 +316,44 @@ bool PersAction::batchPrepare(ActionContext& context, SerialBuffer& sb)
 		return false;
 	}
 	const std::string& svar = varType == ftUnknown ? var : p->getStr();
-    
+
     PersKey pk;
-	if(profile == PT_ABONENT)
-	{
-		skey = cp.abonentAddr.toString();
-		pk.skey = skey.c_str();
-	}
-    else
-        pk.ikey = getKey(cp, profile);
+    if (has_optional_key) {
+      if (ftOptionalKey == PT_UNKNOWN) {
+        if (profile == PT_ABONENT) {
+          pk.skey = optional_skey.c_str();
+          skey = optional_skey;
+        } else {
+          pk.ikey = optional_ikey;
+        }
+      } else {
+        REProperty *rp = context.getProperty(optional_key_str);
+        if(!rp) {
+          smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
+                          OPTIONAL_KEY, optional_key_str.c_str());
+          return false;
+        }
+        if (profile == PT_ABONENT) {
+          try {
+            skey = getAbntAddress(rp->getStr());
+            pk.skey = skey.c_str();
+          } catch(const std::runtime_error& e) {
+            smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s", OPTIONAL_KEY, e.what());
+            return false;
+          }
+        } else {
+          pk.ikey = rp->getInt();
+        }
+      }
+    } else {
+      if(profile == PT_ABONENT)
+      {
+          skey = cp.abonentAddr.toString();
+          pk.skey = skey.c_str();
+      }
+      else
+          pk.ikey = getKey(cp, profile);
+    }
 		
 	if(lifeTimeFieldType != ftUnknown)
 	{
@@ -460,11 +508,33 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
     context.getSession().getLongCallContext().callCommandId = cmdToLongCallCmd(cmd);
     params->pt = profile;
     params->propName = svar;
-    
-    if(params->pt == PT_ABONENT)
-        params->skey = cp.abonentAddr.toString();
-    else
-        params->ikey = getKey(cp, profile);
+    if (has_optional_key) {
+      if (ftOptionalKey != PT_UNKNOWN) {
+        REProperty *rp = context.getProperty(optional_key_str);
+        if(!rp) {
+          smsc_log_error(logger, "'%s' parameter '%s' not found in action context",
+                          OPTIONAL_KEY, optional_key_str.c_str());
+          return false;
+        }
+        if (profile == PT_ABONENT) {
+          try {
+            optional_skey = getAbntAddress(rp->getStr());
+          } catch(const std::runtime_error& e) {
+            smsc_log_error(logger, "'%s' parameter has error abonent profile key: %s", OPTIONAL_KEY, e.what());
+            return false;
+          }
+        } else {
+          optional_ikey = rp->getInt();
+        }
+      }
+      params->skey = optional_skey;
+      params->ikey = optional_ikey;
+    } else {
+      if(params->pt == PT_ABONENT)
+          params->skey = cp.abonentAddr.toString();
+      else
+          params->ikey = getKey(cp, profile);
+    }
 
 	if(lifeTimeFieldType != ftUnknown)
 	{
@@ -523,7 +593,8 @@ bool PersAction::RunBeforePostpone(ActionContext& context)
 
 void PersAction::ContinueRunning(ActionContext& context)
 {
-    smsc_log_debug(logger,"ContinueRunning Action 'PersAction cmd=%s. var=%s'...", getStrCmd(), var.c_str());
+    smsc_log_debug(logger,"ContinueRunning Action 'PersAction cmd=%s. var=%s'...",
+                    getStrCmd(), var.c_str());
 
     PersCallParams *params = (PersCallParams*)context.getSession().getLongCallContext().getParams();
     REProperty *statusProp = context.getProperty(status_str);
