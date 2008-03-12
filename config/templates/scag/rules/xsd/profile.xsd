@@ -35,6 +35,7 @@
 
     <attributeGroup name="commonAttributes">
 	    <attribute name="type" type="profile:ProfileType" use="required"/>
+	    <attribute name="key" type="scag:Value" use="optional"/>
         <attribute name="var" type="scag:Value" use="required"/>
         <attribute name="status" type="scag:Var" use="optional"/>
         <attribute name="msg" type="scag:Var" use="optional"/>
