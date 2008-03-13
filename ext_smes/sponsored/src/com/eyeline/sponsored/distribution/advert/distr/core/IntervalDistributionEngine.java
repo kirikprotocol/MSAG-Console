@@ -158,8 +158,8 @@ public class IntervalDistributionEngine implements DistributionEngine {
         }
       }
 
-      if (log.isDebugEnabled())
-        log.debug("Get banner average time: " + totalTime / i);
+      if (log.isInfoEnabled())
+        log.info("Get banner: total time=" + totalTime + "; average time=" + totalTime / i);
 
     }
 
@@ -170,12 +170,16 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
         long start = System.currentTimeMillis();
         deliveries = distrDS.lookupActiveDeliveries(new Date(startTime), endDate);
-        if (log.isDebugEnabled())
-          log.debug("Deliveries fetch time: " + (System.currentTimeMillis() - start));
+        if (log.isInfoEnabled())
+          log.info("Deliveries fetch time: " + (System.currentTimeMillis() - start) + "; size=" + deliveries.size());
 
         // Process messages
-        if (!deliveries.isEmpty())
+        if (!deliveries.isEmpty()) {
+          long startTime = System.currentTimeMillis();
           sendDeliveries(deliveries, endDate);
+          if (log.isInfoEnabled())
+            log.info("Send deliveries time=" + (System.currentTimeMillis() - startTime));
+        }
         else if (log.isDebugEnabled())
           log.debug("Deliveries is empty: start=" + new Date(startTime) + "; end=" + endDate);
 

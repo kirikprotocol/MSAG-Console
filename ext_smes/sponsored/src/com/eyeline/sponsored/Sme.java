@@ -40,13 +40,13 @@ public class Sme {
 
       smppTranceiver = new SMPPTransceiver(smppProps, "");
 
+      subscriptionSme = new SubscriptionSme(xmlConfig, timezones);
+      distributionSme = new DistributionSme(xmlConfig, timezones, smppTranceiver.getOutQueue());
+
       handler = new MessageHandler(conf.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
 
       smppTranceiver.connect();
       handler.start();
-      
-      subscriptionSme = new SubscriptionSme(xmlConfig, timezones);
-      distributionSme = new DistributionSme(xmlConfig, timezones, smppTranceiver.getOutQueue());
 
       new ConfigUpdater(600000, timezones).start();
 

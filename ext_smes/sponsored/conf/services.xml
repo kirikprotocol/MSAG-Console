@@ -116,7 +116,7 @@
     <message-pattern>\s*(\d+)\s*</message-pattern>     
     <request-param>
       <param-name>distributionName</param-name>
-      <param-value>sponsored</param-value>
+      <param-value>sponsored1</param-value>
     </request-param>    
     <request-param>
       <param-name>distributionVolume</param-name>

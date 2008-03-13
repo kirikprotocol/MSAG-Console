@@ -39,8 +39,8 @@ public class DeliveryStatExport {
         final DeliveryStat stat = rs.get();
 
         if (stat.getDelivered() > 0) {
-          float cost = stat.getDelivered() * 100 * coeff / 100;
-          final StringBuffer st = new StringBuffer();
+          float cost = stat.getDelivered() * 100000 * coeff / 100000;
+          final StringBuilder st = new StringBuilder(40);
           st.append(stat.getSubscriberAddress()).append('|').append(cost).append('\n');
           os.write(st.toString());
         }
@@ -132,7 +132,7 @@ public class DeliveryStatExport {
       ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
 
       final SimpleDateFormat df = new SimpleDateFormat("dd_MM_yyyy");
-      os = new FileWriter(new File(req.getDir(), "export." + df.format(req.getFromDate()) + "-" + df.format(req.getToDate()) + ".csv"));
+      os = new FileWriter(new File(req.getDir(), "export." + df.format(req.getFromDate()) + '-' + df.format(CalendarUtils.getPrevDayStart(req.getToDate())) + ".csv"));
 
       exportStat(ds, req.getFromDate(), req.getToDate(), req.getCost(), os);
 
@@ -188,7 +188,7 @@ public class DeliveryStatExport {
 
     public void setToDate(String toDate) {
       try {
-        this.toDate = CalendarUtils.getDayStart(df.parse(toDate));
+        this.toDate = CalendarUtils.getNextDayStart(df.parse(toDate));
       } catch (ParseException e) {
         throw new IllegalArgumentException("Invalid end date. Format is dd-mm-yyyy");
       }

@@ -10,11 +10,7 @@ import java.util.TimeZone;
  */
 
 public class CalendarUtils {
-  /**
-   * Translates date in specified dimezone to date in current
-   * @param tz
-   * @return
-   */
+  
   public static Date convertFromTZToLocal(Date date, TimeZone tz) {
     final long d1 = tz.getOffset(date.getTime());
     final long d2 = TimeZone.getDefault().getOffset(date.getTime());
@@ -34,6 +30,28 @@ public class CalendarUtils {
     c.set(Calendar.MINUTE, 0);
     c.set(Calendar.SECOND, 0);
     c.set(Calendar.MILLISECOND, 0);
+    return c.getTime();
+  }
+
+  public static Date getPrevDayStart(Date date) {
+    final Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    c.set(Calendar.DAY_OF_YEAR, c.get(Calendar.DAY_OF_YEAR) - 1);
+    return c.getTime();
+  }
+
+  public static Date getNextDayStart(Date date) {
+    final Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    c.set(Calendar.DAY_OF_YEAR, c.get(Calendar.DAY_OF_YEAR) + 1);
     return c.getTime();
   }
 

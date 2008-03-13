@@ -35,7 +35,7 @@ public class DeliveryStatsProcessor {
     return instance;
   }
 
-  public synchronized void registerDelivery(String subscriberAddress, int deliveryInc) throws ProcessorException {
+  public void registerDelivery(String subscriberAddress, int deliveryInc) throws ProcessorException {
 
     // Calculate date according subscriber's time zone
     Date tzDayStart;
