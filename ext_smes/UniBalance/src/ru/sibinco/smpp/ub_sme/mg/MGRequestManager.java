@@ -40,16 +40,16 @@ public class MGRequestManager implements RequestManager {
         this.threadsPool = threadsPool;
         balanceGatewayAddress = config.getProperty("unibalance.gateway.address");
         if (balanceGatewayAddress==null||balanceGatewayAddress.length() == 0) {
-            throw new InitializationException("Mandatory config parameter \"balance.gateway.address\" is missed");
+            throw new InitializationException("Mandatory config parameter \"unibalance.gateway.address\" is missed");
         }
         mgAddress = config.getProperty("unibalance.mg.address", "");
         if (mgAddress.length() == 0) {
-            throw new InitializationException("Mandatory config parameter \"mg.address\" is missed");
+            throw new InitializationException("Mandatory config parameter \"unibalance.mg.address\" is missed");
         }
         try {
             expireTime = Integer.parseInt(config.getProperty("unibalance.expire.time"));
         } catch (NumberFormatException e) {
-            throw new InitializationException("Invalid value for config parameter \"expire.time\": " + config.getProperty("expire.time"));
+            throw new InitializationException("Invalid value for config parameter \"uniblance.expire.time\": " + config.getProperty("uniblance.expire.time"));
         }
         try{
             mgRequestFormat = new MessageFormat(config.getProperty("unibalance.mg.request.format"));
