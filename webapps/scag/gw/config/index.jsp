@@ -57,8 +57,9 @@
             }
         }
     </script>
-    <sm-et:section title="Billing Manager" name="BillingManager" type="table" classs="row1">
-        <sm-ep:properties id="BillingManager" display="none">
+    <sm-et:section title="Billing Manager" name="BillingManager" type="table" >
+<%--        <sm-ep:properties id="BillingManager" display="none">--%>
+        <table id="BillingManager" style="display:none">
                 <sm-et:txt title="Config Dir" name="configDir" validation="nonEmpty" onchanged="configChanged();"/>
                 <sm-et:txt title="Billing Server Host" name="BillingServerHost" validation="nonEmpty"
                            onchanged="configChanged();"/>
@@ -66,18 +67,22 @@
                            onchanged="configChanged();"/>
                 <sm-et:txt title="Billing Time Out" name="BillingTimeOut" validation="nonEmpty"
                            onchanged="configChanged();"/>
-        </sm-ep:properties>
+        </table>
+<%--        </sm-ep:properties>--%>
     </sm-et:section>
 
-    <sm-et:section title="Session Manager" name="SessionManager" type="table"  classs="row0">
+    <sm-et:section title="Session Manager" name="SessionManager" type="table" >
         <sm-ep:properties id="SessionManager" display="none">
+<%--        <table id="SessionManager" style="display:none">--%>
             <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
             <sm-et:txt title="Expire Interval" name="expireInterval" type="int" onchanged="configChanged();"/>
+<%--        </table>--%>
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Statistics Manager" name="StatisticsManager" type="table" classs="row1">
+    <sm-et:section title="Statistics Manager" name="StatisticsManager" type="table">
         <sm-ep:properties id="StatisticsManager" display="none">
+<%--        <table id="StatisticsManager" style="display:none">--%>
             <sm-et:txt title="statistics Dir" name="statisticsDir" validation="nonEmpty" onchanged="configChanged();"/>
             <sm-et:txt title="Perf. Host" name="perfHost" validation="nonEmpty" onchanged="configChanged();"/>
             <sm-et:txt title="Perf. Gen Port" name="perfGenPort" validation="port" onchanged="configChanged();"/>
@@ -88,23 +93,28 @@
             <sm-et:txt title="Connect Timeout" name="connect_timeout" validation="nonEmpty"
                        onchanged="configChanged();"/>
             <sm-et:txt title="Queue Length" name="queue_length" validation="nonEmpty" onchanged="configChanged();"/>
+<%--        </table>--%>
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Rule Engine" name="RuleEngine" type="table" classs="row0">
+    <sm-et:section title="Rule Engine" name="RuleEngine" type="table" >
         <sm-ep:properties id="RuleEngine" display="none">
+<%--        <table id="RuleEngine" style="display:none">--%>
             <sm-et:txt title="Location" name="location" type="string" onchanged="configChanged();"/>
+<%--        </table>--%>
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Administration" name="admin" type="table" classs="row1">
+    <sm-et:section title="Administration" name="admin" type="table" >
         <sm-ep:properties id="admin" display="none">
+<%--        <table id="admin" style="display:none">--%>
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
+<%--        </table>--%>
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="SMPP" name="smpp" type="table" classs="row0">
+    <sm-et:section title="SMPP" name="smpp" type="table" >
         <sm-ep:properties id="smpp" display="none">
             <sm-et:txt title="Host" name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt title="Port" name="port" type="int" validation="port" onchanged="configChanged();"/>
@@ -128,7 +138,7 @@
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Http Transport" name="HttpTransport" type="table" classs="row1">
+    <sm-et:section title="Http Transport" name="HttpTransport" type="table" >
         <sm-ep:properties id="HttpTransport" display="none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
@@ -142,7 +152,7 @@
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Personalization" name="Personalization" type="table" classs="row0">
+    <sm-et:section title="Personalization" name="Personalization" type="table" >
         <sm-ep:properties id="Personalization" display="none">
             <sm-et:txt name="host" type="string" onchanged="configChanged();"/>
             <sm-et:txt name="port" type="int" validation="port" onchanged="configChanged();"/>
@@ -151,7 +161,7 @@
         </sm-ep:properties>
     </sm-et:section>
 
-    <sm-et:section title="Long Call Manager" name = "LongCallManager" type="table" classs="row1">
+    <sm-et:section title="Long Call Manager" name = "LongCallManager" type="table" >
 <%--        <sm-et:properties>--%>
 <%--        <table id="LongCallManager" style="display:none">--%>
         <sm-ep:properties id="LongCallManager" display="none">
