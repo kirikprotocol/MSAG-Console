@@ -23,10 +23,17 @@ function isIE6() { // Private method
 }
 
 /*
+Determine whether the browser is IE7.
+*/
+function isIE7() { // Private method
+  return ( (navigator.userAgent.indexOf("MSIE 7") > -1) );
+}
+
+/*
 Determine whether the browser is IE.
 */
 function isIE() { // Private method
-	return (isIE5() || isIE6());
+	return (isIE5() || isIE6() || isIE7());
 }
 
 /*
