@@ -7,6 +7,7 @@ import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.smpp.ub_sme.*;
 import ru.sibinco.smpp.ub_sme.util.Convertor;
+import ru.sibinco.smpp.ub_sme.util.Matcher;
 import ru.sibinco.util.threads.ThreadsPool;
 
 import java.text.MessageFormat;
@@ -14,6 +15,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.log4j.Category;
 
 /**
  * User: pasha
@@ -29,13 +32,14 @@ public class MGRequestManager implements RequestManager {
     private Map mgAbonentRequests = Collections.synchronizedMap(new HashMap());
     private ThreadsPool threadsPool;
     private BannerManager bannerManager;
+    private MessageFormat mgRequestFormat;
     private int expireTime = 5000;
-
+    private Matcher abonentMatcher;
     public MGRequestManager(SmeEngine smeEngine, Properties config, ThreadsPool threadsPool) {
         this.smeEngine = smeEngine;
         this.threadsPool = threadsPool;
         balanceGatewayAddress = config.getProperty("unibalance.gateway.address");
-        if (balanceGatewayAddress.length() == 0) {
+        if (balanceGatewayAddress==null||balanceGatewayAddress.length() == 0) {
             throw new InitializationException("Mandatory config parameter \"balance.gateway.address\" is missed");
         }
         mgAddress = config.getProperty("unibalance.mg.address", "");
@@ -47,7 +51,16 @@ public class MGRequestManager implements RequestManager {
         } catch (NumberFormatException e) {
             throw new InitializationException("Invalid value for config parameter \"expire.time\": " + config.getProperty("expire.time"));
         }
-
+        try{
+            mgRequestFormat = new MessageFormat(config.getProperty("unibalance.mg.request.format"));
+        }catch (Exception e){
+            throw new InitializationException("Invalid value for config parameter unibalance.mg.request.format:"+config.getProperty("unibalance.mg.request.format"));
+        }
+        try{
+           abonentMatcher = new Matcher(config.getProperty("unibalance.mg.abonent.pattern"));
+        }catch(Exception e){
+          throw new InitializationException("Invlaid value for config parameter unibalance.mg.abonent.pattern:"+config.getProperty("unibalance.mg.abonent.pattern"),e);
+       }
         bannerManager = new BannerManager(config);
     }
 
@@ -175,8 +188,7 @@ public class MGRequestManager implements RequestManager {
         if (message.getSourceAddress().equals(mgAddress)) { // abonent request
             if (logger.isDebugEnabled())
                 logger.debug("Got request from " + message.getSourceAddress());
-            MGState state = (MGState) mgAbonentRequests.remove(new Integer(message.getUserMessageReference()));
-
+           MGState state = (MGState) mgAbonentRequests.remove(new Integer(message.getUserMessageReference()));
             if (state == null) {
                 if (logger.isDebugEnabled())
                     logger.debug("Request rejected because state not found");
@@ -213,5 +225,17 @@ public class MGRequestManager implements RequestManager {
 
     public int getExpireTime() {
         return expireTime;
+    }
+
+    public static Category getLogger() {
+        return logger;
+    }
+
+    public MessageFormat getMgRequestFormat() {
+        return mgRequestFormat;
+    }
+
+    public Matcher getAbonentMatcher() {
+        return abonentMatcher;
     }
 }

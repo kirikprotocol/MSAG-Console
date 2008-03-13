@@ -30,7 +30,6 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     protected String message;
     protected boolean closed = false;
     protected int bannerState;
-    protected int profState;
     protected boolean expired = false;
     protected ThreadsPool pool;
     protected Message abonentRequest;
@@ -120,13 +119,6 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
         return abonentRequest;
     }
 
-    public synchronized int getProfState() {
-        return profState;
-    }
-
-    public synchronized void setProfState(int profState) {
-        this.profState = profState;
-    }
 
     public synchronized int getMgState() {
         return mgState;
@@ -176,7 +168,6 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
         sb.append(abonentRequest.getDestinationAddress());
         sb.append(" mgState:" + getMgState());
         sb.append(" bannerState:" + getBannerState());
-        sb.append(" profState:" + getProfState());
         return sb.toString();
     }
 
