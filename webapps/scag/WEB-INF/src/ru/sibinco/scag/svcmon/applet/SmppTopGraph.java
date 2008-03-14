@@ -191,14 +191,14 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         repaint();
     }
 
-    public void setSnap(SvcSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, float yScale) {
+    public void setSnap(SvcSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale) {
         System.out.println( "SmppTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
         snapSmppHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
         this.smppViewList = viewList;
         this.graphScale = scale;
         this.maxSpeed = maxSpeed;
-        this.yScale = yScale==0? 0.5: yScale;
+        this.yScale = yScale;
         this.xScale = (int)xScale;
         if (smppComparator != null)
             this.snap.sortSmppSnaps(smppComparator);
