@@ -61,7 +61,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     public HashSet httpViewList;
 
     public float xScale = 5;
-    public float yScale = 1;
+    public double yScale = 1;
 
     public int SMPP_COUNT = 15;
     public int HTTP_COUNT = 10;
@@ -183,7 +183,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                 ActionListener(){
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
-                            yScale += SCALE_STEP_Y;
+                            yScale = yScale<1? yScale*2: yScale+SCALE_STEP_Y;
                             System.out.println("SMPP zoomYInListener. new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
                         }else if( type.equals(TYPE_HTTP) ){
 //                            graphScale+=SCALE_STEP;
@@ -201,7 +201,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             System.out.println("SMPP zoomYOutListener");
-                            yScale = yScale>1?yScale-SCALE_STEP_Y:0;
+                            yScale = yScale>1?yScale-SCALE_STEP_Y:yScale>0.125? yScale/2: yScale;
                         }else if( type.equals(TYPE_HTTP) ){
                             System.out.println("HTTP zoomYOutListener");
 //                            if ( graphScale>1) {
