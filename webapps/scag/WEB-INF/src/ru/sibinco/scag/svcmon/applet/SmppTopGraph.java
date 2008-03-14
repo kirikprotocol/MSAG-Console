@@ -95,7 +95,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     java.util.HashSet smppViewList;
 
     boolean swich = false;
-    float yScale = 1;
+    double yScale = 1;
     int xScale = 10;
     int rest = 0;
     float yParam = 1;
@@ -198,7 +198,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         this.smppViewList = viewList;
         this.graphScale = scale;
         this.maxSpeed = maxSpeed;
-        this.yScale = (int)yScale;
+        this.yScale = yScale==0? 0.5: yScale;
         this.xScale = (int)xScale;
         if (smppComparator != null)
             this.snap.sortSmppSnaps(smppComparator);
@@ -576,7 +576,7 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
             cou++;
             int pos = right - i;
             if (pos < graphStart){ System.out.println("SmppTopGraph:drawGraph():"); break; }
-            if (pos < lastVert+xScale) { break; }
+            if (pos < lastVert+xScale+xScale) { break; }
 
             if (prevsnap != null) {
                 smesnap = snapSmppHistory.getPrevSmpp();

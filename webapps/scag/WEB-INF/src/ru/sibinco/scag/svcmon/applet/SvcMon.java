@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.Locale;
 import java.util.HashSet;
+import java.io.InputStream;
 
 /**
  * The <code>SvcMon</code> class represents
@@ -50,12 +51,6 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     public static final String BUTTON_DESELECT = "Deselect all";
     public static final String BUTTON_OK = "Ok";
     public static final String BUTTON_CLOSE = "Close";
-    public static final String BUTTON_SMPP_PROPERTIES = "Endpoints filter";
-    public static final String BUTTON_HTTP_PROPERTIES = "Endpoints filter";
-    public static final String BUTTON_SCALE_Y_IN = "Y scale +";
-    public static final String BUTTON_SCALE_Y_OUT = "Y scale -";
-    public static final String BUTTON_SCALE_X_IN = "X scale +";
-    public static final String BUTTON_SCALE_X_OUT = "X scale -";
 
     public static final String TYPE_SMPP = "SMPP";
     public static final String TYPE_HTTP = "HTTP";
@@ -67,9 +62,6 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
     public float xScale = 5;
     public float yScale = 1;
-
-    public static final int SCALE_STEP_Y = 1;
-    public static final int SCALE_STEP_X = 1;
 
     public int SMPP_COUNT = 15;
     public int HTTP_COUNT = 10;
@@ -110,7 +102,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 //        gbc.gridheight = 4;
 //        gbc.weightx = 1;
 //        gbc.weighty = 1;
-            System.out.println("add smppTopGraph");
+//            System.out.println("add smppTopGraph");
             add(smppTopGraph, BorderLayout.CENTER );
             setFont( new Font("Dialog", Font.BOLD, 12) );
 
@@ -122,11 +114,23 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     }
 
     class ViewButtonPanel extends JPanel{
+
+        public static final String BUTTON_SMPP_PROPERTIES = "Endpoints filter";
+        public static final String BUTTON_HTTP_PROPERTIES = "Endpoints filter";
+        public static final String BUTTON_SCALE_Y_IN = "Y scale +";
+        public static final String BUTTON_SCALE_Y_OUT = "Y scale -";
+        public static final String BUTTON_SCALE_X_IN = "X scale +";
+        public static final String BUTTON_SCALE_X_OUT = "X scale -";
+        public static final int SCALE_STEP_Y = 1;
+        public static final int SCALE_STEP_X = 1;
+
         public ViewButtonPanel(final String type){
             final JButton viewPropertiesButton;
             if( type.equals(TYPE_SMPP) ){
                 viewPropertiesButton = new JButton(BUTTON_SMPP_PROPERTIES);
-            }else{
+            }else if( type.equals(TYPE_HTTP) ){
+                viewPropertiesButton = new JButton(BUTTON_HTTP_PROPERTIES);
+            }else {
                 viewPropertiesButton = new JButton(BUTTON_HTTP_PROPERTIES);
             }
             final JButton zoomYInPropButton = new JButton(BUTTON_SCALE_Y_IN);
@@ -163,6 +167,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
             gbc.gridy = 2;
             gbc.gridx = 3;
             add(zoomXOutPropButton, gbc);
+
 //            add(hardButton);
 
             ActionListener viewPropertiesListener = new
@@ -196,7 +201,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             System.out.println("SMPP zoomYOutListener");
-                            yScale = yScale>1?yScale-SCALE_STEP_Y:yScale;
+                            yScale = yScale>1?yScale-SCALE_STEP_Y:0;
                         }else if( type.equals(TYPE_HTTP) ){
                             System.out.println("HTTP zoomYOutListener");
 //                            if ( graphScale>1) {
@@ -563,8 +568,8 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         snapSmppHistory = new SnapSmppHistory();
         snapHttpHistory = new SnapHttpHistory();
         maxSpeed = ( maxSpeed<getSpeed() )? getSpeed(): maxSpeed;
-        System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" +
-                "\nmaxSpeed=" + maxSpeed);
+
+        System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" + "\nmaxSpeed=" + maxSpeed);
         smppTopGraph = new SmppTopGraph(snap, maxSpeed, graphScale, graphGrid,
                 graphHiGrid, graphHead, localText, snapSmppHistory, smppViewList );
 
@@ -597,11 +602,16 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         Socket sock = null;
         DataInputStream is = null;
         isStopping = false;
+        System.out.println("SvcMon:run():host='" + getParameter("host") + "' port='" +  Integer.valueOf(getParameter("port")).intValue() + "'");
         try {
             while (!isStopping) {
                 try {
+                    System.out.println("SvcMon:run():sock");
                     sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
-                    is = new DataInputStream(sock.getInputStream());
+                    System.out.println("SvcMon:run():getInputStream");
+                    InputStream is1 = sock.getInputStream();
+                    System.out.println("SvcMon:run():is1.available() from sock='" + is1.available() + "'");
+                    is = new DataInputStream(is1);
                     SvcSnap snap = new SvcSnap();
                     snap.read(is);
                     if(hard){
@@ -611,9 +621,9 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     gotFirstSnap(snap);
                     while (!isStopping) {
                         snap.read(is);
-                        if(hard){
-                            snap = initHardSnaps();
-                        }
+//                        if(hard){
+//                            snap = initHardSnaps();
+//                        }
                         svcSnap = snap;
 //                        System.out.println("run():graphScale=" + graphScale);
                         smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, xScale, yScale);
