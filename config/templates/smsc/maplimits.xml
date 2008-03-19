@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <section name="dlglimit">
+    <param name="in"     type="integer">2000</param>
+    <param name="insri"  type="integer">2000</param>
+    <param name="ussd"   type="integer">1000</param>
+    <param name="out"    type="integer">2000</param>
+    <param name="niussd" type="integer">500</param>
+  </section>
+<config>
