@@ -198,7 +198,7 @@ void INManComm::FullReport(SMSId id,const SMS& sms)
 
 void INManComm::Report(int dlgId,const SMS& sms,bool final)
 {
-  info2(log,"Report:dlgid=%d, lr=%d, cp=%d",dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY));
+  info2(log,"Report:dlgid=%d, lr=%d, cp=%d, final=%s",dlgId,sms.lastResult,sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY),final?"Y":"N");
 
   smsc::inman::interaction::SPckDeliverySmsResult pck;
   pck.Hdr().dlgId = dlgId;
