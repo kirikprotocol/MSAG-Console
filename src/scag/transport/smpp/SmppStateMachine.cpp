@@ -294,14 +294,15 @@ void StateMachine::processSubmit(SmppCommand& cmd)
                   sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
     if (ussd_op == 35) // Not Sibinco USSD dialog
     {
-        smsc_log_debug(log, "Submit: Not Sibinco USSD dialog for %s",
-                       sms.getDestinationAddress().toString().c_str());
+        smsc_log_info(log, "Submit: Not Sibinco USSD dialog=%d for %s",
+                      ussd_op, sms.getDestinationAddress().toString().c_str());
         sms.dropProperty(Tag::SMPP_USSD_SERVICE_OP);
         smscmd.original_ussd_op = ussd_op; ussd_op = -1; umr = -1;
     }
 
     smscmd.dir = dsdSrv2Sc;
-    smscmd.orgSrc=sms.getOriginatingAddress();    smscmd.orgDst=sms.getDestinationAddress();
+    smscmd.orgSrc=sms.getOriginatingAddress();
+    smscmd.orgDst=sms.getDestinationAddress();
     src=cmd.getEntity();
 
     cmd->set_orgDialogId(cmd->get_dialogId());
@@ -606,6 +607,9 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       key.abonentAddr=sms->getDestinationAddress();
       int umr = sms->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
       ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+      if (ussd_op == 35) { // Not Sibinco USSD dialog
+        sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
+      }
       key.USR = (ussd_op < 0) ? umr : src->getUSR(key.abonentAddr, umr);
 
       if(!scag::sessions::SessionManager::Instance().getSession(key, session, cmd))
@@ -620,7 +624,9 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
       smsc_log_debug(log, "SubmitResp: continued...");
       dst = cmd.getDstEntity();
       sms = cmd->get_resp()->get_sms();
-
+      if (ussd_op == 35) { // Not Sibinco USSD dialog
+        sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
+      }
       ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
 
       session = cmd.getSession();
@@ -763,8 +769,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
                   sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
     if (ussd_op == 35) // Not Sibinco USSD dialog
     {
-        smsc_log_debug(log, "Deliver: Not Sibinco USSD dialog for %s",
-                       sms.getOriginatingAddress().toString().c_str());
+        smsc_log_info(log, "Delivery: Not Sibinco USSD dialog=%d for %s",
+                      ussd_op, sms.getOriginatingAddress().toString().c_str());
         sms.dropProperty(Tag::SMPP_USSD_SERVICE_OP);
         smscmd.original_ussd_op = ussd_op; ussd_op = -1; umr = -1;
     }
@@ -989,6 +995,7 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
   int rs = -2;
   scag::re::RuleStatus st;
   SmppEntity *dst, *src;
+  int ussd_op = -1;
   SMS* sms;
 
   scag::sessions::SessionPtr session;
@@ -1045,6 +1052,11 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
+      ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+      if (ussd_op == 35) { // Not Sibinco USSD dialog
+        sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
+      }
 
       cmd->get_resp()->set_sms(sms);
       cmd->set_serviceId(orgCmd->get_serviceId());
@@ -1072,6 +1084,11 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_debug(log, "DeliveryResp: continued...");
     dst = cmd.getDstEntity();
     sms = cmd->get_resp()->get_sms();
+    ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+              sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+    if (ussd_op == 35) { // Not Sibinco USSD dialog
+      sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
+    }
 
     session = cmd.getSession();
     smsc_log_debug(log, "DeliveryResp: session got from command USR=%d Address=%s", session->getSessionKey().USR, session->getSessionKey().abonentAddr.toString().c_str());
