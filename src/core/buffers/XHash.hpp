@@ -247,7 +247,7 @@ private:
       }
       _buckets[i].Reset(0);
     }
-    delete [] _buckets;
+    if(_buckets)delete [] _buckets;
     _buckets=newbuckets;
     _bucketsnum=newbucketsnum;
     return 1;
@@ -275,7 +275,7 @@ public:
     _buckets=NULL;
     Assign(src);
   }
-  virtual ~XHash(){delete [] _buckets;};
+  virtual ~XHash(){if(_buckets)delete [] _buckets;};
 
 
   int Exists(const KT& key){ return FindLink(key)!=NULL;}
@@ -540,7 +540,7 @@ public:
   }
   void Clean()
   {
-    delete [] _buckets;
+    if(_buckets)delete [] _buckets;
     _buckets=NULL;
     _bucketsnum=0;
     _count=0;
