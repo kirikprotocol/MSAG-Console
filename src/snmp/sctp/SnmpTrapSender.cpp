@@ -92,9 +92,9 @@ void SnmpTrapSender::trap(SnmpAgent::alertStatus st,
     snmp_varlist_add_variable(&notification_vars,alarmid_oid,OID_LENGTH(alarmid_oid),ASN_OCTET_STR,(u_char*)alarmId,strlen(alarmId));
     oid* poid = 0; int  oidlen = 0;
     switch (st) {
-      case SnmpAgent::INFO : poid = alarm_oid; oidlen = OID_LENGTH(alarm_oid); break;
-      case SnmpAgent::NEW  : poid = new_alarm_oid; oidlen = OID_LENGTH(new_alarm_oid); break;
-      case SnmpAgent::CLEAR: poid = clear_alarm_oid; oidlen = OID_LENGTH(clear_alarm_oid); break;
+      case SnmpAgent::INFO : poid = alarm_oid; oidlen = (int)OID_LENGTH(alarm_oid); break;
+      case SnmpAgent::NEW  : poid = new_alarm_oid; oidlen = (int)OID_LENGTH(new_alarm_oid); break;
+      case SnmpAgent::CLEAR: poid = clear_alarm_oid; oidlen = (int)OID_LENGTH(clear_alarm_oid); break;
     }
     send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
     snmp_free_varbind(notification_vars);

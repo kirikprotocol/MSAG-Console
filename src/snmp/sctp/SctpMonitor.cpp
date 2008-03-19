@@ -73,9 +73,9 @@ enum State{
       WORKING
 } state;
 
-std::string getStateDescription(State state)
+std::string getStateDescription(State astate)
 {
-  switch(state)
+  switch(astate)
   {
     case INIT: return "INIT";
     case MGMTBINDING: return "MGMTBINDING";
@@ -166,7 +166,7 @@ USHORT_T setalarm()
   res = EINSS7_MgmtApiSendAlarmReq(USERID,   /* senderId */
                                    MGMT_ID,  /*receiverID*/
                                    MTPL3_ID, /* moduleID = 6 = MTPL3 */
-                                   sizeof(alarms)/sizeof(ALARM_T),        /* noOfAlarms */
+                                   (UCHAR_T)(sizeof(alarms)/sizeof(ALARM_T)),        /* noOfAlarms */
                                    alarms,
                                    NO_WAIT);
   return res;
@@ -656,10 +656,10 @@ USHORT_T EINSS7_MgmtApiHandleAlarmInd(USHORT_T moduleId,
 
 USHORT_T EINSS7_MgmtApiHandleErrorInd(UCHAR_T len,
                                       USHORT_T ec,
-                                      UCHAR_T state,
+                                      UCHAR_T astate,
                                       UCHAR_T event)
 {
-  printf("EINSS7_MgmtApiHandleErrorInd(len=%d,errorCode=%d,state=%d,event=%d)\n",len,ec,state,event);
+  printf("EINSS7_MgmtApiHandleErrorInd(len=%d,errorCode=%d,state=%d,event=%d)\n",len,ec,astate,event);
   return EINSS7_MGMTAPI_RETURN_OK;
 }
 

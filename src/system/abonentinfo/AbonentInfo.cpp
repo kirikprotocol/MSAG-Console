@@ -244,7 +244,7 @@ int AbonentInfoSme::Execute()
           ce.exportInt("status",as.status);
           ce.exportInt("encoding",p.codepage);
           ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
-          ce.exportStr("imsi",as.imsi.length()?as.msc.c_str():"");
+          ce.exportStr("imsi",as.imsi.length()?as.imsi.c_str():"");
           Profile pr=smsc->getProfiler()->lookup(as.sourceAddr);
           OutputFormatter* f=ResourceManager::getInstance()->getFormatter(pr.locale,"abonentinfo.smeFormat");
           __trace2__("AbonentInfo: formatter=%p",f);
