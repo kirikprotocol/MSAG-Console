@@ -3,10 +3,10 @@
 
 <config>
   <section name="dlglimit">
-    <param name="in"     type="integer">2000</param>
-    <param name="insri"  type="integer">2000</param>
-    <param name="ussd"   type="integer">1000</param>
-    <param name="out"    type="integer">2000</param>
-    <param name="niussd" type="integer">500</param>
+    <param name="in"     type="int">2000</param>
+    <param name="insri"  type="int">2000</param>
+    <param name="ussd"   type="int">1000</param>
+    <param name="out"    type="int">2000</param>
+    <param name="niussd" type="int">500</param>
   </section>
 <config>
