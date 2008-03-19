@@ -44,5 +44,5 @@ protected:
   Timer t;
 };
 
-#define TIMETHIS(msg,n) if(TimeThis tt=TimeThis(msg,n));else for(int i=0;i<n;i++)
+#define TIMETHIS(msg,n) if(TimeThis tt=TimeThis(msg,n));else for(int tt_timer_count=0;tt_timer_count<n;tt_timer_count++)
 #endif
