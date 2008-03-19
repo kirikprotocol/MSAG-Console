@@ -410,6 +410,7 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
 
   for(FileKeyVector::iterator it=fkVector.begin();it!=fkVector.end();it++)
   {
+    lvtmp.clear();
     for(int i=fromh;i<=toh;i++)
     {
       char hbuf[32];
@@ -450,22 +451,40 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
       }
     }
     //fromdate tilldate!!!
+    __trace__("loaded:");    
+    for(LookupVector::iterator it=lvtmp.begin();it!=lvtmp.end();it++)
+    {
+      __trace2__("%d,%d",it->off,it->ltt);
+    }
     DataFilter df(fromDate,tillDate);
+    lvtmp2.clear();
     std::insert_iterator<LookupVector> ins1(lvtmp2,lvtmp2.begin());
     std::remove_copy_if(lvtmp.begin(),lvtmp.end(),ins1,df);
     std::sort(lvtmp2.begin(),lvtmp2.end());
     lvtmp.clear();
     std::insert_iterator<LookupVector> ins2(lvtmp,lvtmp.begin());
     std::unique_copy(lvtmp2.begin(),lvtmp2.end(),ins2);
+    __trace__("filtered and sorted:");    
+    for(LookupVector::iterator it=lvtmp.begin();it!=lvtmp.end();it++)
+    {
+      __trace2__("%d,%d",it->off,it->ltt);
+    }
     if(firstFK)
     {
+      __trace__("first param - make copy");
       lv=lvtmp;
+      firstFK=false;
     }else
     {
+      __trace__("additional param - set_intersection");
       lvtmp2.swap(lv);
       lv.clear();
       std::insert_iterator<LookupVector> ins3(lv,lv.begin());
       std::set_intersection(lvtmp.begin(),lvtmp.end(),lvtmp2.begin(),lvtmp2.end(),ins3);
+      for(LookupVector::iterator it=lv.begin();it!=lv.end();it++)
+      {
+        __trace2__("%d,%d",it->off,it->ltt);
+      }
     }
   }
   for(LookupVector::iterator it=lv.begin();it!=lv.end();it++)
