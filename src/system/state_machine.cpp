@@ -3457,9 +3457,44 @@ StateType StateMachine::deliveryResp(Tuple& t)
     sms.setStrProperty(Tag::SMSC_DESCRIPTORS,buf);
   }
 
-  bool wasBillReport=false;
   bool firstPart=false;
   bool multiPart=sms.hasBinProperty(Tag::SMSC_CONCATINFO);
+
+  if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
+  {
+    time_t now=time(NULL);
+    if((sms.getValidTime()<=now) || //expired or
+       RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
+    {
+      sms.setLastResult(Status::EXPIRED);
+      //smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
+      smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
+      try{
+        smsc->getScheduler()->InvalidSms(t.msgId);
+        if(dgortr)
+        {
+          sms.state=EXPIRED;
+          finalizeSms(t.msgId,sms);
+          return EXPIRED_STATE;
+        }else
+        {
+          store->changeSmsStateToExpired(t.msgId);
+        }
+      }catch(...)
+      {
+        __warning__("DLVRSP: failed to change state to expired");
+      }
+      info2(smsLog, "DLVRSP: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
+      sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
+      try{
+        smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
+      }catch(std::exception& e)
+      {
+        smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
+      }
+      return EXPIRED_STATE;
+    }
+  }
 
   if(sms.billingRequired() && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
@@ -3500,7 +3535,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }else
         {
           smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,final,Smsc::chargeOnDelivery);
-          wasBillReport=true;
         }
       }catch(std::exception& e)
       {
@@ -3556,41 +3590,6 @@ StateType StateMachine::deliveryResp(Tuple& t)
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
     sms.setLastResult(GET_STATUS_CODE(t.command->get_resp()->get_status()));
-    time_t now=time(NULL);
-    if((sms.getValidTime()<=now) || //expired or
-       RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
-    {
-      sms.setLastResult(Status::EXPIRED);
-      //smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
-      smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
-      try{
-        smsc->getScheduler()->InvalidSms(t.msgId);
-        if(dgortr)
-        {
-          sms.state=EXPIRED;
-          finalizeSms(t.msgId,sms);
-          return EXPIRED_STATE;
-        }else
-        {
-          store->changeSmsStateToExpired(t.msgId);
-        }
-      }catch(...)
-      {
-        __warning__("DLVRSP: failed to change state to expired");
-      }
-      info2(smsLog, "DLVRSP: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
-      sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
-      if(!wasBillReport && (firstPart || !multiPart))
-      {
-        try{
-          smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);
-        }catch(std::exception& e)
-        {
-          smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
-        }
-      }
-      return EXPIRED_STATE;
-    }
 
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
        sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
