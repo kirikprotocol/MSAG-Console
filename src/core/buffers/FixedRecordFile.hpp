@@ -113,6 +113,7 @@ public:
     storeFile.Seek(off);
     storeFile.WriteByte(0);
     storeFile.Flush();
+    holes.push_back(off);
   }
 
 protected:
