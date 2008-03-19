@@ -24,7 +24,7 @@ inline void WriteAddress(T& f,const Address& addr)
   f.WriteByte(addr.type);
   f.WriteByte(addr.plan);
   AddressValue buf={0,};
-  strcpy(buf,addr.value);
+  memcpy(buf,addr.value,addr.length);
   f.Write(buf,sizeof(buf));
 }
 
