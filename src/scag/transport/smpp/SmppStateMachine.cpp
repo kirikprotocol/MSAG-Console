@@ -1052,8 +1052,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
       dst=orgCmd.getEntity();
       cmd.setDstEntity(dst);
       sms=orgCmd->get_sms();
-      ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-                sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+      ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+                sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
       if (ussd_op == 35) { // Not Sibinco USSD dialog
         sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
       }
@@ -1084,8 +1084,8 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     smsc_log_debug(log, "DeliveryResp: continued...");
     dst = cmd.getDstEntity();
     sms = cmd->get_resp()->get_sms();
-    ussd_op = sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
-              sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
+    ussd_op = sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ?
+              sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP) : -1;
     if (ussd_op == 35) { // Not Sibinco USSD dialog
       sms->dropProperty(Tag::SMPP_USSD_SERVICE_OP); ussd_op = -1;
     }
