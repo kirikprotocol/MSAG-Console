@@ -268,8 +268,8 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
     {
       __trace__("weak eqaul");
       RouteRecord* rec;
-      int left = 1;
-      int right = node->child.size();
+      size_t left = 1;
+      size_t right = node->child.size();
       __trace2__("+childs :%d",right);
 
       //for ( int i=0; i < right; ++i ) print(node->child[i]->record,"+@SRC@");
@@ -277,7 +277,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
       //if ( right > 0 )
       for(;right>=left;)
       {
-        int ptr = (right+left) >> 1;
+        size_t ptr = (right+left) >> 1;
         rec = findInSrcTreeRecurse(node->child[ptr-1],r,cmp,trace_);
         if ( rec ) return rec;
         __require__( cmp != 0 );
@@ -323,8 +323,8 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
     find_child:
       // find by dest
       RouteRecord* rec;
-      int left = 1;
-      int right = node->child.size();
+      size_t left = 1;
+      size_t right = node->child.size();
 
       __trace2__("dest child: %d",right);
       //for ( int i=0; i < right; ++i ) print(node->child[i]->record,"@DST@");
@@ -332,7 +332,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vect
       //if ( right > 0 )
       for(;right>=left;)
       {
-        int ptr = (right+left) >> 1;
+        size_t ptr = (right+left) >> 1;
         rec = findInTreeRecurse(node->child[ptr-1],r,cmp,trace_);
         if ( rec ) return rec; // found
         //if ( right > left )
@@ -356,14 +356,14 @@ find_by_source:
 
     {
       RouteRecord* rec;
-      int left = 1;
-      int right = node->sources.size();
+      size_t left = 1;
+      size_t right = node->sources.size();
      // for ( int i=0; i < right; ++i ) print(node->sources[i]->record,"@SRC@");
       __require__ ( right > 0 );
       __trace2__("sorces: %d",right);
       for(;right>=left;)
       {
-        int ptr = (right+left) >> 1;
+        size_t ptr = (right+left) >> 1;
         __require__ ( ptr > 0 );
         rec = findInSrcTreeRecurse(node->sources[ptr-1],r,cmp,trace_);
         if ( rec ) return rec;
@@ -493,11 +493,11 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
     else //  weak
     {
       __trace__("week equal");
-      int left = 1;
-      int right = node->child.size();
+      size_t left = 1;
+      size_t right = node->child.size();
       if ( right > 0 ) for(;right>=left;)
       {
-        int ptr = (right+left) >> 1;
+        size_t ptr = (right+left) >> 1;
         int cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec,trace_,dup);
         if ( cmp == 0 ) return 0;
         //if ( right > left )
@@ -536,13 +536,13 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
   {
     if ( strong )
     {
-      int left = 1;
-      int right = node->sources.size();
+      size_t left = 1;
+      size_t right = node->sources.size();
       //if ( right > 0 )
       __require__(right>0);
       for(;right >= left;)
       {
-        int ptr = (right+left) >> 1;
+        size_t ptr = (right+left) >> 1;
         __require__(ptr > 0);
         int cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec,trace_,dup);
         if ( cmp == 0 ) return 0;
@@ -568,11 +568,11 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
       __unreachable__("incorrect tree");
     }
   find_child:
-    int left = 1;
-    int right = node->child.size();
+    size_t left = 1;
+    size_t right = node->child.size();
     if ( right > 0 ) for(;right>=left;)
     {
-      int ptr = (right+left) >> 1;
+      size_t ptr = (right+left) >> 1;
       int cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec,trace_,dup);
       if ( cmp == 0 ) return 0;
       //if ( right > left )
@@ -628,7 +628,17 @@ void RouteManager::commit(bool traceit)
     int count = 0;
     RouteRecord* r = nfr;
     for ( ; r != 0; r = r->next ) { ++count; }
-    if ( !count ) return;
+    if ( !count )
+    {
+      if(main)
+      {
+        main=false;
+      }else
+      {
+        idx++;
+      }
+      continue;
+    }
     table.clear();
     table.reserve(count);
     r = nfr;
