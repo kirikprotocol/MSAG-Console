@@ -40,33 +40,46 @@ public:
     smsc_log_info(log,"addAlias:%s->%s",ai.addr.toString().c_str(),ai.alias.toString().c_str());
     sync::MutexGuard mg(mtx);
     Record* tmp;
-    char buf[32];
-    ai.addr.toString(buf,sizeof(buf));
-    if(addr2alias.Find(buf,tmp))
+    char bufAddr[32];
+    char bufAlias[32];
+    ai.addr.toString(bufAddr,sizeof(bufAddr));
+    bool duplAddr2Alias=false;
+    bool duplAlias2Addr=false;
+    if(addr2alias.Find(bufAddr,tmp))
     {
       if(ai.addr==tmp->addr)
       {
-        smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
-        throw smsc::util::Exception("Duplicate alias found:%s",buf);
+        duplAddr2Alias=true;
       }
     }
 
-    ai.alias.toString(buf,sizeof(buf));
-    if(alias2addr.Find(buf,tmp))
+    ai.alias.toString(bufAlias,sizeof(bufAlias));
+    if(alias2addr.Find(bufAlias,tmp))
     {
       if(ai.alias==tmp->alias)
       {
-        smsc_log_warn(log,"duplicate add<->alias:%s<->%s",ai.addr.toString().c_str(),buf);
-        throw smsc::util::Exception("Duplicate alias found:%s",buf);
+        duplAlias2Addr=true;
       }
     }
+    if(duplAddr2Alias && !duplAlias2Addr)
+    {
+      smsc_log_warn(log,"duplicate addr<->alias:%s<->%s",bufAddr,bufAlias);
+      throw smsc::util::Exception("Duplicate alias(addr2alias) found:%s->%s",bufAlias,bufAddr);
+    }else if(duplAlias2Addr && !duplAddr2Alias)
+    {
+      smsc_log_warn(log,"duplicate alias<->addr:%s<->%s",bufAlias,bufAddr);
+      throw smsc::util::Exception("Duplicate alias(alias2addr) found:%s->%s",bufAlias,bufAddr);
+    }else if(duplAddr2Alias && duplAlias2Addr)
+    {
+      smsc_log_warn(log,"duplicate2 alias<->addr:%s<->%s",bufAlias,bufAddr);
+      throw smsc::util::Exception("Duplicate alias(alias2addr & addr2alias) found:%s->%s",bufAlias,bufAddr);
+    }
+
     Record *recptr=new Record(ai.addr,ai.alias,ai.hide);
-    alias2addr.Insert(buf,recptr);
+    alias2addr.Insert(bufAlias,recptr);
     if(ai.hide)
     {
-      char buf2[32];
-      ai.addr.toString(buf2,sizeof(buf2));
-      addr2alias.Insert(buf2,recptr);
+      addr2alias.Insert(bufAddr,recptr);
     }
     recptr->offset=store.Append(*recptr);
   }
