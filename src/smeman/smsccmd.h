@@ -81,7 +81,7 @@ enum CommandStatus{
   CMD_OK=0,
   CMD_ERR_TEMP=1,
   CMD_ERR_PERM=2,
-  CMD_ERR_FATAL=3,
+  CMD_ERR_FATAL=2,
   CMD_ERR_RESCHEDULENOW=4
 };
 
