@@ -50,14 +50,16 @@ int ScagTask::Execute()
             {
                 int status = cx->result;
 
+                /*
                 if (status)
                 {
                     cx->createFakeResponse(status);
-                    smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, status);
+                    smsc_log_warn(logger, "%p: %p, status %d, fake response created, request failed before session create",
+                                   this, cx, status);
                     status = 0;
-                }
+                }*/
 
-                if (!cx->requestFailed)
+                if (status == 0 && !cx->requestFailed)
                 {
                     smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
                     st = processor.processResponse(cx->getResponse());
@@ -71,7 +73,7 @@ int ScagTask::Execute()
                         smsc_log_info(logger, "%p: %p, response denied", this, cx);
                         status = 503;
                     }
-                }
+                }  
                 if (status)
                 {
                     cx->createFakeResponse(status);
