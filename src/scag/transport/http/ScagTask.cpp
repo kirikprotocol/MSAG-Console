@@ -42,22 +42,16 @@ int ScagTask::Execute()
             }
             else if(st == scag::re::STATUS_LONG_CALL || st == scag::re::STATUS_PROCESS_LATER)
 				break;
-            cx->requestFailed = cx->getRequest().isFailedBeforeSessionCreate();
-            smsc_log_info(logger, "%p: %p, request denied", this, cx);
-            cx->result = 503;          
-            // no break, go to the case PROCESS_RESPONSE
+            else if (st == scag::re::STATUS_FAILED) {
+              cx->requestFailed = cx->getRequest().isFailedBeforeSessionCreate();
+              smsc_log_info(logger, "%p: %p, request denied", this, cx);
+              int processResult = cx->getRequest().trc.result;
+              cx->result = processResult != 0 ? processResult : 503;          
+              // no break, go to the case PROCESS_RESPONSE
+            }
         case PROCESS_RESPONSE:
             {
                 int status = cx->result;
-
-                /*
-                if (status)
-                {
-                    cx->createFakeResponse(status);
-                    smsc_log_warn(logger, "%p: %p, status %d, fake response created, request failed before session create",
-                                   this, cx, status);
-                    status = 0;
-                }*/
 
                 if (status == 0 && !cx->requestFailed)
                 {
@@ -79,28 +73,6 @@ int ScagTask::Execute()
                     cx->createFakeResponse(status);
                     smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, status);
                 }
-/*
-                if (status == 0)
-                {
-                    smsc_log_debug(logger, "%p: %p, call to processResponse()", this, cx);
-                    st = processor.processResponse(cx->getResponse());
-                    if (st == scag::re::STATUS_OK)
-                        smsc_log_info(logger, "%p: %p, response approved", this, cx);
-                    else
-                    {
-                        if(st == scag::re::STATUS_LONG_CALL || st == scag::re::STATUS_PROCESS_LATER)
-                            break;
-
-                        smsc_log_info(logger, "%p: %p, response denied", this, cx);
-                        status = 503;
-                    }
-                }
-                if (status)
-                {
-                    cx->createFakeResponse(status);
-                    smsc_log_warn(logger, "%p: %p, status %d, fake response created", this, cx, status);
-                }
-*/
             }
 
             cx->getResponse().serialize();
@@ -110,7 +82,7 @@ int ScagTask::Execute()
         case PROCESS_STATUS_RESPONSE:
             {
               if (cx->requestFailed) {
-                smsc_log_warn(logger, "%p: %p, do not call to statusResponse(). request failed before session create", this, cx);
+                smsc_log_warn(logger, "%p: %p, do not call to statusResponse(). request failed before session created", this, cx);
                 delete cx;
                 break;
               }

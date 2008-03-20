@@ -375,6 +375,7 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
               smsc_log_warn(logger, "Session not created. Route not found for abonent:%s, site:[%s]:[%d][%s][%s], route_id=%d, service_id=%d", request.getAbonent().c_str(), request.getSite().c_str(), request.getSitePort(), request.getSitePath().c_str(), request.getSiteFileName().c_str(), request.getRouteId(), request.getServiceId());
               registerEvent(scag::stat::events::http::REQUEST_FAILED, request);
               request.setFailedBeforeSessionCreate(true);
+              request.trc.result = 404;
               return  scag::re::STATUS_FAILED;
             }
             
@@ -438,6 +439,10 @@ int HttpProcessorImpl::processRequest(HttpRequest& request)
 
                 smsc_log_debug(logger, "SERIALIZED REQUEST AFTER PROCESSING: %s", request.serialize().c_str());
                 return rs.status;
+            }
+
+            if (rs.status == scag::re::STATUS_FAILED) {
+              request.trc.result = rs.result;
             }
         } else
             smsc_log_error( logger, "session not found for addr=%s, USR=%d", request.getAddress().c_str(), request.getUSR());

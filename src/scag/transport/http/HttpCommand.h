@@ -45,6 +45,8 @@ struct TransactionContext {
     int ruleId;
     uint16_t usr;
 
+    int result;
+
     TransactionContext() {
         operationId = -1;
         serviceId = 0;
@@ -54,6 +56,7 @@ struct TransactionContext {
         usr = 0;
         status = 503;
         sitePort = 80;
+        result = 0;
     }
 /*    TransactionContext(TransactionContext& cp) {
         operationId = cp.operationId;
