@@ -9,4 +9,4 @@
     <param name="out"    type="int">2000</param>
     <param name="niussd" type="int">500</param>
   </section>
-<config>
+</config>
