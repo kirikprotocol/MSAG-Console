@@ -15,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadFactory;
 
 import ru.aurorisoft.smpp.Message;
 
@@ -41,7 +42,11 @@ public class IntervalDistributionEngine implements DistributionEngine {
     this.distrDS = distrDS;
     this.advClient = advClient;
     this.distrInfos = new HashMap<String, DistributionInfo>(10);
-    this.executor = Executors.newSingleThreadScheduledExecutor();
+    this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+      public Thread newThread(Runnable r) {
+        return new Thread(r, "IntDistrEngineThread");
+      }
+    });
   }
 
   public void init(long fetchInterval, long prepareInterval, int sendSpeedLimit) {

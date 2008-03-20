@@ -2,13 +2,18 @@ package com.eyeline.sponsored;
 
 import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sme.smpp.SMPPTransceiver;
+import com.eyeline.sme.smpp.test.SimpleResponse;
+import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sponsored.config.Config;
 import com.eyeline.sponsored.distribution.advert.distr.DistributionSme;
-import com.eyeline.sponsored.distribution.advert.distr.DistrSmeTest;
 import com.eyeline.sponsored.subscription.service.SubscriptionSme;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.logica.smpp.Data;
 import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
+import ru.aurorisoft.smpp.PDU;
+import ru.aurorisoft.smpp.SMPPException;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
 
@@ -38,7 +43,11 @@ public class Sme {
 
       final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
 
-      smppTranceiver = new SMPPTransceiver(smppProps, "");
+      if (args.length > 0 && args[0].equals("-t")) {
+        System.out.println("Sponsored started in test mode");
+        smppTranceiver = new SMPPTransceiver(new Multiplexor(), smppProps, "");
+      } else
+        smppTranceiver = new SMPPTransceiver(smppProps, "");
 
       subscriptionSme = new SubscriptionSme(xmlConfig, timezones);
       distributionSme = new DistributionSme(xmlConfig, timezones, smppTranceiver.getOutQueue());
@@ -64,6 +73,7 @@ public class Sme {
     private final SmscTimezonesList timezones;
 
     public ConfigUpdater(long delay, SmscTimezonesList timezones) {
+      super("ConfReloadThread");
       this.delay = delay;
       this.timezones = timezones;
     }
@@ -93,6 +103,40 @@ public class Sme {
 
     public InitException(Throwable cause) {
       super(cause);
+    }
+  }
+
+  private static class Multiplexor extends TestMultiplexor {
+
+    private int count;
+
+    public void sendResponse(PDU pdu) {
+
+    }
+
+    public void sendMessage(Message message) throws SMPPException {
+      SimpleResponse simpleResponse = new SimpleResponse(message);
+      simpleResponse.setStatus(Data.ESME_ROK);
+      simpleResponse.setStatusClass(PDU.STATUS_CLASS_NO_ERROR);
+      handleResponse(simpleResponse);
+
+      final Message receipt = new Message();
+      receipt.setSourceAddress(message.getDestinationAddress());
+      receipt.setDestinationAddress("741");
+      receipt.setConnectionName("smsx");
+      receipt.setMessageState(Message.MSG_STATE_DELIVERED);
+      receipt.setMessageString("");
+      receipt.setReceipt(true);
+      receipt.setSequenceNumber(count++);
+      handleMessage(receipt);
+    }
+
+    public void connect() throws SMPPException {
+
+    }
+
+    public void shutdown() {
+
     }
   }
 }

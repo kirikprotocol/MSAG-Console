@@ -66,6 +66,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
     private final int sendSpeedLimit;
 
     public Work(long fetchInterval, int sendSpeedLimit) {
+      super("ConsDistrEngineThread");
       this.fetchInterval = fetchInterval;
       this.sendSpeedLimit = sendSpeedLimit;
     }
