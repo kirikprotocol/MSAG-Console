@@ -38,6 +38,7 @@
 #include "system/common/TimeZoneMan.hpp"
 #include "alias/AliasManImpl.hpp"
 #include "mapio/FraudControl.hpp"
+#include "mapio/MapLimits.hpp"
 
 #ifdef SMSEXTRA
 #include "Extra.hpp"
@@ -423,6 +424,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   if(!ishs)
   {
     mapio::FraudControl::Init(findConfigFile("fraud.xml"));
+    mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
   }
 
   /*auto_ptr<RouteManager> router(new RouteManager());
@@ -1259,6 +1261,7 @@ void Smsc::run()
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
 
     mapio::FraudControl::Init(findConfigFile("fraud.xml"));
+    mapio::MapLimits::Init(findConfigFile("maplimits.xml"));
 
     aliaser->Load();
     smsc_log_info(log, "Aliases loaded" );
@@ -1434,6 +1437,9 @@ void Smsc::shutdown()
     delete mapio;
   }
 #endif
+
+  mapio::MapLimits::Shutdown();
+
 
   smsc::closedgroups::ClosedGroupsManager::Shutdown();
 

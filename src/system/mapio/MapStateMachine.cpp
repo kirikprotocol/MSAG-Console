@@ -1183,7 +1183,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
 {
   if(dialogid==0 || ssn==0)
   {
-    __map_trace2__("%s: invalid dialogid/ssn 0x%x/%d",dialogid,ssn);
+    __map_trace2__("%s: invalid dialogid/ssn 0x%x/%d",__func__, dialogid,ssn);
     return;
   }
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid,ssn));
@@ -3247,7 +3247,7 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
                         dialog->sms->getDestinationAddress().toString().c_str());
           if(FraudControl::getInstance()->enableReject)
           {
-            smsc_log_debug(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
+            smsc_log_info(fraudLog,"REJECTED:0x%x",dialog->dialogid_map);
             ResponseMO(dialog,9);
             dialog->state = MAPST_WaitSubmitCmdConf;
             CloseMapDialog(dialog->dialogid_map,dialog->ssn);

@@ -427,16 +427,17 @@ void MapIoTask::dispatcher()
         if(message.primitive==MAP_OPEN_IND)
         {
           try{
-            dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,message.msg_p[5]));
+            bool isUSSD=message.msg_p[4]==0x13 || message.msg_p[4]==0x14;
+            dlg.assign(MapDialogContainer::getInstance()->createLockedDialog(dlgId,lssn,message.msg_p[5],isUSSD));
           }
-          catch(ProxyQueueLimitException& e)
+          catch(std::exception& e)
           {
             __map_warn2__("%s: dialogid 0x%x %s",__func__,dlgId,e.what());
             ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
             warnMapReq( Et96MapOpenResp(lssn,dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
             warnMapReq( Et96MapCloseReq(lssn,dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
             // dailog limit reached - have to drop message
-	    EINSS7CpReleaseMsgBuffer(&message);
+	          EINSS7CpReleaseMsgBuffer(&message);
             continue;
           }
         }else
@@ -732,15 +733,24 @@ static time_t MAPSTATS_last_time_sec = 0;
 static time_t MAPSTATS_last_time_min = 0;
 static time_t MAPSTATS_last_time_hour = 0;
 
-int MAPSTATS_open_in[3] = {0,0,0};
-int MAPSTATS_open_out[3] = {0,0,0};
-int MAPSTATS_close_in[3] = {0,0,0};
-int MAPSTATS_close_out[3] = {0,0,0};
-int MAPSTATS_recv[3] = {0,0,0};
-int MAPSTATS_dialogs_in = 0;
-int MAPSTATS_dialogs_out = 0;
-int MAPSTATS_reassign[3] = {0,0,0};
-char *MAPSTATS_types[] = { "GSMRECV", "NEWDIALOG_IN", "DISPOSEDIALOG_IN", "NEWDIALOG_OUT", "DISPOSEDIALOG_OUT" };
+int MAPSTATS_open[MAPSTATS_COUNT][3] = {0,};
+int MAPSTATS_close[MAPSTATS_COUNT][3] = {0,};
+int MAPSTATS_recv[3] = {0,};
+
+int MAPSTATS_dialogs[MAPSTATS_COUNT]={0,};
+char *MAPSTATS_types[] = {
+  "GSMRECV",
+  "NEWDIALOG_IN",
+  "DISPOSEDIALOG_IN",
+  "NEWDIALOG_INSRI",
+  "DISPOSEDIALOG_INSRI",
+  "NEWDIALOG_USSD",
+  "DISPOSEDIALOG_USSD",
+  "NEWDIALOG_OUT",
+  "DISPOSEDIALOG_OUT",
+  "NEWDIALOG_NIUSSD",
+  "DISPOSEDIALOG_NIUSSD"
+};
 
 enum {
   MAPSTATS__SEC,
@@ -765,53 +775,48 @@ void MAPSTATS_DumpDialogLC(MapDialog* dialog)
   }
 }
 
+static void MAPSTATS_Flush2(int idx)
+{
+  smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
+  smsc_log_info(log, "open %d/%d/%d/%d/%d, closed %d/%d/%d/%d/%d, dlg %d/%d/%d/%d/%d:%d, rcv %d",
+            MAPSTATS_open[0][idx],
+            MAPSTATS_open[1][idx],
+            MAPSTATS_open[2][idx],
+            MAPSTATS_open[3][idx],
+            MAPSTATS_open[4][idx],
+
+            MAPSTATS_close[0][idx],
+            MAPSTATS_close[1][idx],
+            MAPSTATS_close[2][idx],
+            MAPSTATS_close[3][idx],
+            MAPSTATS_close[4][idx],
+            MAPSTATS_dialogs[0],
+            MAPSTATS_dialogs[1],
+            MAPSTATS_dialogs[2],
+            MAPSTATS_dialogs[3],
+            MAPSTATS_dialogs[4],
+            MapDialogContainer::getInstance()->getDialogCount(),
+            MAPSTATS_recv[idx]
+           );
+}
+
 void MAPSTATS_Flush(unsigned x,bool dump)
 {
   if ( dump ) {
     switch ( x ) {
     case MAPSTATS__SEC:
       {
-        smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
-        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d/%d, rcv %d",
-                  MAPSTATS_open_in[0],
-                  MAPSTATS_open_out[0],
-                  MAPSTATS_close_in[0],
-                  MAPSTATS_close_out[0],
-                  MAPSTATS_dialogs_in,
-                  MAPSTATS_dialogs_out,
-                  MapDialogContainer::getInstance()->getDialogCount(),
-                  MAPSTATS_recv[0]
-                 );
+        MAPSTATS_Flush2(0);
       }
       break;
     case MAPSTATS__MIN:
       {
-        smsc::logger::Logger* log = MAPSTATS_GetLoggerMin();
-        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d/%d, rcv %d",
-                  MAPSTATS_open_in[1],
-                  MAPSTATS_open_out[1],
-                  MAPSTATS_close_in[1],
-                  MAPSTATS_close_out[1],
-                  MAPSTATS_dialogs_in,
-                  MAPSTATS_dialogs_out,
-                  MapDialogContainer::getInstance()->getDialogCount(),
-                  MAPSTATS_recv[1]
-                 );
+        MAPSTATS_Flush2(1);
       }
       break;
     case MAPSTATS__HOUR:
       {
-        smsc::logger::Logger* log = MAPSTATS_GetLoggerHour();
-        smsc_log_info(log, "op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d/%d, rcv %d",
-                  MAPSTATS_open_in[2],
-                  MAPSTATS_open_out[2],
-                  MAPSTATS_close_in[2],
-                  MAPSTATS_close_out[2],
-                  MAPSTATS_dialogs_in,
-                  MAPSTATS_dialogs_out,
-                  MapDialogContainer::getInstance()->getDialogCount(),
-                  MAPSTATS_recv[2]
-                 );
+        MAPSTATS_Flush2(2);
       }
       break;
     }
@@ -822,38 +827,57 @@ void MAPSTATS_Flush(unsigned x,bool dump)
   case MAPSTATS__MIN: from = 1; to = 2; break;
   case MAPSTATS__HOUR: from = 2; to = -1; break;
   }
-  if ( to != -1 ) {
-    MAPSTATS_open_in[to] += MAPSTATS_open_in[from];
-    MAPSTATS_open_out[to] += MAPSTATS_open_out[from];
-    MAPSTATS_close_in[to] += MAPSTATS_close_in[from];
-    MAPSTATS_close_out[to] += MAPSTATS_close_out[from];
+  if ( to != -1 )
+  {
+    for(int i=0;i<MAPSTATS_COUNT;i++)
+    {
+      MAPSTATS_open[i][to] += MAPSTATS_open[i][from];
+      MAPSTATS_close[i][to] += MAPSTATS_close[i][from];
+    }
     MAPSTATS_recv[to] += MAPSTATS_recv[from];
   }
-  MAPSTATS_open_in[from] = 0;
-  MAPSTATS_open_out[from] = 0;
-  MAPSTATS_close_in[from] = 0;
-  MAPSTATS_close_out[from] = 0;
+  for(int i=0;i<MAPSTATS_COUNT;i++)
+  {
+    MAPSTATS_open[i][from] = 0;
+    MAPSTATS_close[i][from] = 0;
+  }
   MAPSTATS_recv[from] = 0;
 }
 
 void MAPSTATS_Update_(MAPSTATS stats)
 {
-  switch ( stats ) {
-  case MAPSTATS_GSMRECV:            ++MAPSTATS_recv[0]; break;
-  case MAPSTATS_DISPOSEDIALOG_IN:   --MAPSTATS_dialogs_in; ++MAPSTATS_close_in[0]; break;
-  case MAPSTATS_NEWDIALOG_IN:       ++MAPSTATS_dialogs_in; ++MAPSTATS_open_in[0]; break;
-  case MAPSTATS_DISPOSEDIALOG_OUT:  --MAPSTATS_dialogs_out; ++MAPSTATS_close_out[0]; break;
-  case MAPSTATS_NEWDIALOG_OUT:      ++MAPSTATS_dialogs_out; ++MAPSTATS_open_out[0]; break;
-  default:; // nothing
+  if(stats==MAPSTATS_GSMRECV)
+  {
+    ++MAPSTATS_recv[0];
+  }else if(stats<=MAPSTATS_DISPOSEDIALOG_NIUSSD)
+  {
+    int idx=stats;
+    idx--;
+    if(idx&1)
+    {
+      idx=(idx-1)/2;
+      MAPSTATS_close[idx][0]++;
+      MAPSTATS_dialogs[idx]--;
+    }else
+    {
+      idx/=2;
+      MAPSTATS_open[idx][0]++;
+      MAPSTATS_dialogs[idx]++;
+    }
   }
   if( stats != MAPSTATS_GSMRECV )
-  smsc_log_debug(MAPSTATS_GetLoggerUpdate(),
-                "updated %s dlg %d/%d/%d",
-                MAPSTATS_types[stats],
-                MAPSTATS_dialogs_in,
-                MAPSTATS_dialogs_out,
-                MapDialogContainer::getInstance()->getDialogCount()
-                );
+  {
+    smsc_log_debug(MAPSTATS_GetLoggerUpdate(),
+                  "updated %s dlg %d/%d/%d/%d/%d:%d",
+                   MAPSTATS_types[stats],
+                   MAPSTATS_dialogs[0],
+                   MAPSTATS_dialogs[1],
+                   MAPSTATS_dialogs[2],
+                   MAPSTATS_dialogs[3],
+                   MAPSTATS_dialogs[4],
+                   MapDialogContainer::getInstance()->getDialogCount()
+                  );
+  }
 //  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
 //    smsc_log_warn(MAPSTATS_GetLoggerUpdate(),"Number of dialogs unbalanced %d/%d/%d",
 //                  MAPSTATS_dialogs_in,
@@ -873,25 +897,27 @@ void MAPSTATS_Restart()
   MAPSTATS_last_time_sec = cur_time;
   MAPSTATS_last_time_min = cur_time;
   MAPSTATS_last_time_hour = cur_time;
-  MAPSTATS_dialogs_in = 0;
-  MAPSTATS_dialogs_out = 0;
+  memset(MAPSTATS_dialogs,0,sizeof(MAPSTATS_dialogs));
 }
 
 void MAPSTATS_Update(MAPSTATS stats)
 {
   //MutexGuard _mg(MAPSTATS_GetMutex());
   time_t cur_time = time(0);
-  if ( cur_time > MAPSTATS_last_time_hour+60*60 ) {
+  if ( cur_time > MAPSTATS_last_time_hour+60*60 )
+  {
     // dump one hour stats
     MAPSTATS_last_time_hour = cur_time;
     MAPSTATS_Flush(MAPSTATS__HOUR,true);
   }
-  if ( cur_time > MAPSTATS_last_time_min+60 ) {
+  if ( cur_time > MAPSTATS_last_time_min+60 )
+  {
     // dump one minute stats
     MAPSTATS_last_time_min = cur_time;
     MAPSTATS_Flush(MAPSTATS__MIN,true);
   }
-  if ( cur_time >= MAPSTATS_last_time_sec+1 ) {
+  if ( cur_time >= MAPSTATS_last_time_sec+1 )
+  {
     // dump one second stats
     MAPSTATS_last_time_sec = cur_time;
     MAPSTATS_Flush(MAPSTATS__SEC,true);

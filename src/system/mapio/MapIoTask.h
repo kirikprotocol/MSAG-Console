@@ -13,6 +13,7 @@
 #include "core/synchronization/RecursiveMutex.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "core/buffers/CyclicQueue.hpp"
+#include "MapLimits.hpp"
 
 using namespace std;
 using namespace smsc::sms;
@@ -78,11 +79,27 @@ enum MAPSTATS{
   MAPSTATS_GSMRECV = 0,
   MAPSTATS_NEWDIALOG_IN,
   MAPSTATS_DISPOSEDIALOG_IN,
+  MAPSTATS_NEWDIALOG_INSRI,
+  MAPSTATS_DISPOSEDIALOG_INSRI,
+  MAPSTATS_NEWDIALOG_USSD,
+  MAPSTATS_DISPOSEDIALOG_USSD,
   MAPSTATS_NEWDIALOG_OUT,
-  MAPSTATS_DISPOSEDIALOG_OUT
+  MAPSTATS_DISPOSEDIALOG_OUT,
+  MAPSTATS_NEWDIALOG_NIUSSD,
+  MAPSTATS_DISPOSEDIALOG_NIUSSD
 };
-extern int MAPSTATS_dialogs_in;
-extern int MAPSTATS_dialogs_out;
+
+enum {
+  MAPSTAT_DLGIN,
+  MAPSTAT_DLGINSRI,
+  MAPSTAT_DLGUSSD,
+  MAPSTAT_DLGOUT,
+  MAPSTAT_DLGNIUSSD,
+
+  MAPSTATS_COUNT
+};
+
+extern int MAPSTATS_dialogs[];
 
 class MapDialog;
 
@@ -211,6 +228,7 @@ struct MapDialog{
   bool isDropping:1;
   bool needReportMsc:1;
   MapState state;
+  int dlgType;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
   unsigned dialogid_smsc;
   ET96MAP_INVOKE_ID_T invokeId;
@@ -257,6 +275,7 @@ struct MapDialog{
 
   void InitDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned argVersion=2)
   {
+    dlgType=MAPSTAT_DLGOUT;
     isUSSD=false;
     mms=false;
     hasIndAddress=false;
@@ -707,7 +726,7 @@ public:
     return dlg->AddRefUnlocked();
   }
 
-  MapDialog* newLockedDialogAndRef(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,unsigned version)
+  MapDialog* newLockedDialogAndRef(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,unsigned version,int dlgType)
   {
     if(!dlgPool[lssn])
     {
@@ -722,6 +741,7 @@ public:
     dlg->InitDialog(dialogueid,lssn,version);
     dlg->isAllocated=true;
     dlg->isLocked=true;
+    dlg->dlgType=dlgType;
     return dlg->AddRefUnlocked();
   }
 
@@ -767,30 +787,57 @@ public:
     return dlg->AddRefUnlocked();
   }
 
-  MapDialog* createLockedDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn/*,const char* abonent*/,unsigned version=2)
+  MapDialog* createLockedDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn,unsigned version,bool isUSSD)
   {
-    if( MAPSTATS_dialogs_in >= processLimit )
+    using smsc::system::mapio::MapLimits;
+    if(isUSSD)
     {
-      MutexGuard g(sync);
-      Dump();
-      throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
+      if( MAPSTATS_dialogs[MAPSTAT_DLGUSSD] >= MapLimits::getInstance().getLimitUSSD() )
+      {
+        MutexGuard g(sync);
+        Dump();
+        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGUSSD] , MapLimits::getInstance().getLimitUSSD());
+      }
+    }else
+    {
+      if( MAPSTATS_dialogs[MAPSTAT_DLGIN] >= MapLimits::getInstance().getLimitIn() )
+      {
+        MutexGuard g(sync);
+        Dump();
+        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGIN] , MapLimits::getInstance().getLimitIn());
+      }
     }
     if( dialogueid <= MAX_DIALOGID_POOLED )
     {
       __warn2__(smsc::logger::_mapdlg_cat,"Dialog form SS7 network has too low ID 0x%x.",dialogueid);
-      throw ProxyQueueLimitException(MAPSTATS_dialogs_in,processLimit);
+      throw ProxyQueueLimitException(dialogueid , MAX_DIALOGID_POOLED);
     }
     {
       MutexGuard g(sync);
-      MAPSTATS_Update(MAPSTATS_NEWDIALOG_IN);
+      MAPSTATS_Update(isUSSD?MAPSTATS_NEWDIALOG_USSD:MAPSTATS_NEWDIALOG_IN);
       MAPSTATS_Update(MAPSTATS_GSMRECV);
     }
     __mapdlg_trace2__("created new dialog for dialogid 0x%x",dialogueid);
-    return newLockedDialogAndRef(dialogueid,lssn,version);
+    try
+    {
+      return newLockedDialogAndRef(dialogueid,lssn,version,isUSSD?MAPSTAT_DLGUSSD:MAPSTAT_DLGIN);
+    } catch(std::exception& e)
+    {
+      MutexGuard g(sync);
+      MAPSTATS_Update(isUSSD?MAPSTATS_DISPOSEDIALOG_USSD:MAPSTATS_DISPOSEDIALOG_IN);
+      throw;
+    }
   }
 
   MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate)
   {
+    using smsc::system::mapio::MapLimits;
+    if(MAPSTATS_dialogs[MAPSTAT_DLGINSRI]>=MapLimits::getInstance().getLimitInSRI())
+    {
+      MutexGuard g(sync);
+      Dump();
+      throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGINSRI],MapLimits::getInstance().getLimitInSRI());
+    }
     MutexGuard g(sync);
     try{
       if ( dialogId_pool.empty() ) {
@@ -798,8 +845,9 @@ public:
         throw runtime_error("MAP:: POOL is empty");
       }
       ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
-      MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
+      MAPSTATS_Update(MAPSTATS_NEWDIALOG_INSRI);
       MapDialog* dlg=newDialog(map_dialog,lssn,2);
+      dlg->dlgType=MAPSTAT_DLGINSRI;
       dialogId_pool.pop_front();
       __mapdlg_trace2__("create new 'IMSI' dialog 0x%p for dialogid 0x%x",dlg,map_dialog);
       require ( dlg != associate );
@@ -807,7 +855,7 @@ public:
       return dlg;
     }catch(...)
     {
-      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_INSRI);
       throw;
     }
   }
@@ -888,17 +936,19 @@ public:
         }
       }
     }
-    if( MAPSTATS_dialogs_out >= processLimit*2 )
+    using smsc::system::mapio::MapLimits;
+    if( MAPSTATS_dialogs[MAPSTAT_DLGOUT] >= MapLimits::getInstance().getLimitOut() )
     {
 //      MutexGuard g(sync);
       Dump();
-      throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
+      throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGOUT] , MapLimits::getInstance().getLimitOut());
     }
 //    MutexGuard g(sync);
     try{
       ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
       MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
       MapDialog* dlg=newDialog(map_dialog,lssn);
+      dlg->dlgType=MAPSTAT_DLGOUT;
       dialogId_pool.pop_front();
       dlg->dialogid_smsc = smsc_did;
       dlg->abonent = abonent;
@@ -928,18 +978,20 @@ public:
         Dump();
         throw runtime_error("MAP:: POOL is empty");
       }
-      if( MAPSTATS_dialogs_out >= processLimit*2 )
+      using smsc::system::mapio::MapLimits;
+      if( MAPSTATS_dialogs[MAPSTAT_DLGNIUSSD] >= MapLimits::getInstance().getLimitNIUSSD() )
       {
         Dump();
-        throw ProxyQueueLimitException(MAPSTATS_dialogs_out,processLimit);
+        throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGNIUSSD] , MapLimits::getInstance().getLimitNIUSSD());
       }
       map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
       dialogId_pool.pop_front();
-      MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
+      MAPSTATS_Update(MAPSTATS_NEWDIALOG_NIUSSD);
     }
     MapDialog* dlg;
     try{
       dlg = newDialog(map_dialog,lssn);
+      dlg->dlgType=MAPSTAT_DLGNIUSSD;
       dlg->dialogid_smsc = smsc_did;
       dlg->abonent = abonent;
       dlg->lockedAt = time(NULL);
@@ -948,7 +1000,7 @@ public:
     {
       MutexGuard g(sync);
       dialogId_pool.push_back(map_dialog);
-      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_NIUSSD);
       throw;
     }
     return dlg;
@@ -991,12 +1043,36 @@ public:
       dialogId_pool.pop_front();
       if ( did < MAX_DIALOGID_POOLED )
       {
-        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+        if(dlg->dlgType==MAPSTAT_DLGOUT)
+        {
+          MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+        }else if(dlg->dlgType==MAPSTAT_DLGNIUSSD)
+        {
+          MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_NIUSSD);
+        }else
+        if(dlg->dlgType==MAPSTAT_DLGINSRI)
+        {
+          MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_INSRI);
+        }else
+        {
+          smsc_log_warn(smsc::logger::_mapdlg_cat,"unexpected dlgType=%d for out dlg",dlg->dlgType);
+        }
         dialogId_pool.push_back(did);
       } else
       {
-        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
+        if(dlg->dlgType==MAPSTAT_DLGIN)
+        {
+          MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
+        }else
+        if(dlg->dlgType==MAPSTAT_DLGUSSD)
+        {
+          MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_USSD);
+        }else
+        {
+          __map_warn2__("unexpected dlgType=%d for in dlg",dlg->dlgType);
+        }
       }
+
       MAPSTATS_Update(MAPSTATS_NEWDIALOG_OUT);
       {
         MapDialog* swpdlg=dlgPool[ssn][dialogid_map];
@@ -1051,12 +1127,35 @@ public:
     item->state = MAPST_END;
     if(item->dialogid_map < MAX_DIALOGID_POOLED )
     {
-      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+      if(item->dlgType==MAPSTAT_DLGOUT)
+      {
+        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_OUT);
+      }else if(item->dlgType==MAPSTAT_DLGNIUSSD)
+      {
+        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_NIUSSD);
+      }else
+      if(item->dlgType==MAPSTAT_DLGINSRI)
+      {
+        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_INSRI);
+      }else
+      {
+        __map_warn2__("unexpected dlgType=%d for out dlg",item->dlgType);
+      }
     } else
     {
-      MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
+      if(item->dlgType==MAPSTAT_DLGIN)
+      {
+        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_IN);
+      }else
+      if(item->dlgType==MAPSTAT_DLGUSSD)
+      {
+        MAPSTATS_Update(MAPSTATS_DISPOSEDIALOG_USSD);
+      }else
+      {
+        __map_warn2__("unexpected dlgType=%d for in dlg",item->dlgType);
+      }
     }
-    __mapdlg_trace2__("drop dialog 0x%x",item->dialogid_map);
+    __mapdlg_trace2__("drop dialog(%d) 0x%x",item->dlgType,item->dialogid_map);
   }
 
   void registerSelf(SmeManager* smeman);
