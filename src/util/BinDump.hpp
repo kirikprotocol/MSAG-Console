@@ -76,7 +76,7 @@ public:
     unsigned append(const char* add_str)
     {
         std::string * p_str = get();
-        unsigned n_old = p_str->length();
+        size_t n_old = p_str->length();
         (*p_str) += add_str;
         return (unsigned)(p_str->length() - n_old);
     }
@@ -91,7 +91,7 @@ public:
     unsigned fappend(const char *fmt, ...)
     {
         std::string * p_str = get();
-        unsigned n_old = p_str->length();
+        size_t n_old = p_str->length();
         va_list arg_list;
         va_start(arg_list, fmt);
         vformat(*p_str, fmt, arg_list);

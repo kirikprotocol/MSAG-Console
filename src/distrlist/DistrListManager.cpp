@@ -258,7 +258,7 @@ Array<Address> DistrListManager::members(string dlName)
     DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
     if(!lstPtr)throw ListNotExistsException();
     DistrListRecord& lst=**lstPtr;
-    Array<Address> members(lst.members.size());
+    Array<Address> members((int)lst.members.size());
     for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
     {
       members.Push(it->addr);
@@ -278,7 +278,7 @@ Array<Address> DistrListManager::members(string dlName, const Address& submitter
     if(submitter.length && lst.submitters.find(SubmitterRecord(lst,submitter))==lst.submitters.end())
       throw IllegalSubmitterException();
 
-    Array<Address> members(lst.members.size());
+    Array<Address> members((int)lst.members.size());
     for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
     {
       members.Push(it->addr);

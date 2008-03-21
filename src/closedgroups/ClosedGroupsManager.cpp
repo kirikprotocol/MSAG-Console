@@ -27,8 +27,8 @@ void ClosedGroupsManager::Load(const char* filename)
   //lastId=AttrGetIntValue(list->item(0)->getAttributes(),"value");
 
   list = elem->getElementsByTagName(XmlStr("group"));
-  unsigned listLength = list->getLength();
-  for (unsigned i=0; i<listLength; i++)
+  size_t listLength = list->getLength();
+  for (size_t i=0; i<listLength; i++)
   {
     DOMNode *group = list->item(i);
     std::auto_ptr<Group> grp(new Group);

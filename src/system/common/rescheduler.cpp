@@ -123,8 +123,8 @@ void RescheduleCalculator::init(const char* filename){
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("section"));
-    unsigned listLength = list->getLength();
-    for (unsigned i=0; i<listLength; i++)
+    size_t listLength = list->getLength();
+    for (size_t i=0; i<listLength; i++)
     {
       DOMNode *node = list->item(i);
       DOMNamedNodeMap *attrs = node->getAttributes();
@@ -133,8 +133,8 @@ void RescheduleCalculator::init(const char* filename){
       {
 
         DOMNodeList *childs = node->getChildNodes();
-        unsigned childsLength = childs->getLength();
-        for (unsigned j=0; j<childsLength; j++)
+        size_t childsLength = childs->getLength();
+        for (size_t j=0; j<childsLength; j++)
         {
           DOMNode *child = childs->item(j);
           if (child->getNodeType() == DOMNode::ELEMENT_NODE)
@@ -146,8 +146,8 @@ void RescheduleCalculator::init(const char* filename){
                 InitDefault(value.c_str());
             }else if(strcmp(name, "reschedule table") == 0){
                 DOMNodeList *tab_childs = child->getChildNodes();
-                unsigned tab_childsLength = tab_childs->getLength();
-                for(int k=0; k<tab_childsLength; k++){
+                size_t tab_childsLength = tab_childs->getLength();
+                for(size_t k=0; k<tab_childsLength; k++){
                     DOMNode *tab_child = tab_childs->item(k);
                     if (tab_child->getNodeType() == DOMNode::ELEMENT_NODE){
                         DOMNamedNodeMap *tab_childAttrs = tab_child->getAttributes();

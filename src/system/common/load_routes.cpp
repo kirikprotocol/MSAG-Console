@@ -105,9 +105,9 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.forceDelivery=route->isForceDelivery();
               rinfo.aclId=route->getAclId();
               rinfo.allowBlocked=route->isAllowBlocked();
-              rinfo.providerId=route->getProviderId();
+              rinfo.providerId=(int32_t)route->getProviderId();
               rinfo.billingId=route->getBillingRuleId();
-              rinfo.categoryId=route->getCategoryId();
+              rinfo.categoryId=(int32_t)route->getCategoryId();
               rinfo.transit=route->isTransit();
 //              __trace2__("dest mask: %s",dest_mask_it->c_str());
 //              __trace2__("src mask: %s",src_mask_it->c_str());
