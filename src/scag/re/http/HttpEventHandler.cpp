@@ -38,7 +38,7 @@ void HttpEventHandler::processRequest(HttpRequest& command, ActionContext& conte
         return;
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "HttpEventHandler: cannot process request command - %s", e.what());
+        smsc_log_warn(logger, "HttpEventHandler: cannot process request command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
    
@@ -65,7 +65,7 @@ void HttpEventHandler::processResponse(HttpResponse& command, ActionContext& con
         return;
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "HttpEventHandler: cannot process response command - %s", e.what());
+        smsc_log_warn(logger, "HttpEventHandler: cannot process response command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
     session.closeCurrentOperation();
@@ -87,12 +87,14 @@ void HttpEventHandler::processDelivery(HttpResponse& command, ActionContext& con
 
         RunActions(context);
 
-        session.closeCurrentOperation();
+        if (rs.status != STATUS_LONG_CALL) {
+          session.closeCurrentOperation();
+        }
 
         return;
     } catch (SCAGException& e)
     {
-        smsc_log_debug(logger, "HttpEventHandler: cannot process delivery command - %s", e.what());
+        smsc_log_warn(logger, "HttpEventHandler: cannot process delivery command - %s", e.what());
         //TODO: отлуп в стейт-машину
     }
 
