@@ -873,7 +873,7 @@ void MAPSTATS_Update_(MAPSTATS stats)
                    MAPSTATS_dialogs[1],
                    MAPSTATS_dialogs[2],
                    MAPSTATS_dialogs[3],
-                   MAPSTATS_dialogs[4],
+                   MAPSTATS_dialogs[4]
                   );
   }
 //  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
