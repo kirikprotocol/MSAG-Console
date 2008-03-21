@@ -87,7 +87,7 @@ public class MapLimits extends SmscBean {
   {
     Config config = appContext.getSmsc().getMapLimitsConfig();
     if (config == null)
-      return error(SMSCErrors.error.smsc.couldntGetConfig);    
+      return error(SMSCErrors.error.smsc.couldntGetConfig);
 
     for (Iterator i = config.getParameterNames().iterator(); i.hasNext();) {
       String name = (String) i.next();
@@ -115,10 +115,14 @@ public class MapLimits extends SmscBean {
         if (oldValue != null) {
           if (oldValue instanceof Integer) {
             try {
-              if (parameter != null && parameter.trim().length() > 0)
-                params.put(s, Integer.decode(parameter.trim()));
-              else
-                params.put(s, new Integer(0));
+              if (parameter != null && parameter.trim().length() > 0) {
+                Integer value = Integer.decode(parameter.trim());
+                if (value.intValue() > 0)
+                  params.put(s, Integer.decode(parameter.trim()));
+                else
+                  throw new NumberFormatException();
+              } else
+                  throw new NumberFormatException();
             } catch (NumberFormatException e) {
               logger.error("Invalid integer parameter: " + s + "=" + parameter);
               result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
