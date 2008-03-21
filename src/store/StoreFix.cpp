@@ -194,6 +194,7 @@ int main(int argc, char* argv[])
   char wfname[256];
   for (int fcount=1; fcount<argc; fcount++)
   {
+    bytesSkipped=0;
     const char* fname = argv[fcount];
     int fdR = open(fname, O_RDONLY|O_LARGEFILE, 0644);
     if (fdR == -1)
