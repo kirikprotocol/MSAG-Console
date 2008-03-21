@@ -932,6 +932,17 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  // check scheduler limit
+  if(smsc->checkSchedulerHardLimit())
+  {
+    submitResp(t,sms,Status::SCHEDULERLIMIT);
+    info2(smsLog,"SBM: sms denied by hard scheduler limit oa=%s;da=%s;srcprx=%s",
+          sms->getOriginatingAddress().toString().c_str(),
+          sms->getDestinationAddress().toString().c_str(),
+          c.src_proxy->getSystemId());
+    return ERROR_STATE;
+  }
+
   ////
   //
   //  SMS validity checks started
@@ -3463,10 +3474,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
     time_t now=time(NULL);
+    bool softLimit=smsc->checkSchedulerSoftLimit();
     if((sms.getValidTime()<=now) || //expired or
-       RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1) //max attempts count reached
+       RescheduleCalculator::calcNextTryTime(now,sms.getLastResult(),sms.getAttemptsCount())==-1 || //max attempts count reached or
+       softLimit  //soft limit reached
+       ) 
     {
-      sms.setLastResult(Status::EXPIRED);
+      sms.setLastResult(softLimit?Status::SCHEDULERLIMIT:Status::EXPIRED);
       //smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
       smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
       try{
@@ -3484,7 +3498,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       {
         __warning__("DLVRSP: failed to change state to expired");
       }
-      info2(smsLog, "DLVRSP: %lld expired (valid:%u - now:%u), attempts=%d",t.msgId,sms.getValidTime(),now,sms.getAttemptsCount());
+      info2(smsLog, "DLVRSP: %lld %s (valid:%u - now:%u), attempts=%d",t.msgId,softLimit?"denied by soft sched limit":"expired",sms.getValidTime(),now,sms.getAttemptsCount());
       sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
       try{
         smsc->ReportDelivery(t.command->get_resp()->get_inDlgId(),sms,true,Smsc::chargeOnDelivery);

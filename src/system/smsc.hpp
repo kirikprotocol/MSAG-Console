@@ -679,6 +679,17 @@ public:
 
   int nodeIndex;
 
+  bool checkSchedulerSoftLimit()
+  {
+    return scheduler->getStoreSize()>schedulerSoftLimit;
+  }
+
+  bool checkSchedulerHardLimit()
+  {
+    return scheduler->getStoreSize()>schedulerHardLimit;
+  }
+
+
 protected:
 
   void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
@@ -771,6 +782,9 @@ protected:
   bool   ussdV1Enabled;
   bool   ussdV1UseOrigEntityNumber;
   time_t startTime;
+
+  int schedulerSoftLimit;
+  int schedulerHardLimit;
 
   performance::SmePerformanceMonitor smePerfMonitor;
 

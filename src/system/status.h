@@ -77,6 +77,7 @@ static const int DENIEDBYACCESSMASK=1042;  // access mask prohibited submit
 static const int NOCONNECTIONTOINMAN=1043; // failed to connect to inman
 static const int MSMEMCAPACITYFULL=1044;  // mobile station cannot receive sms due to memory limit
 static const int MAPINTERNALFAILURE=1045;  // map internal exception
+static const int SCHEDULERLIMIT=1046;     //either soft or hard scheduler limit reached
 
 
 static const int MAP_UR_NO_REASON=1109;
@@ -1195,7 +1196,7 @@ static const bool errorStatus[1280] = {
 0, // NOCONNECTIONTOINMAN=1043
 0, // MSMEMCAPACITYFULL=1044
 0, // MAPINTERNALFAILURE=1045
-1,
+1, // SCHEDULERLIMIT=1046
 1,
 1,
 1,

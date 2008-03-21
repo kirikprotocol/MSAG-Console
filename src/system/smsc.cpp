@@ -469,6 +469,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   // create scheduler here, and start later in run
   scheduler=new Scheduler();
 
+  schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
+  schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");
+
 
   //smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   //store=smsc::store::StoreManager::getMessageStore();

@@ -540,6 +540,11 @@ public:
   Mutex storeMtx;
   std::vector<StoreData*> storeDataPool;
 
+  int getStoreSize()
+  {
+    return store.Count();
+  }
+
   StoreData* newStoreData(const SMS& argSms,int argSeq=0)
   {
     if(storeDataPool.empty())
