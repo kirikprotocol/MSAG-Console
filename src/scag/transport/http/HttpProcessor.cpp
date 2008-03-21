@@ -511,6 +511,10 @@ int HttpProcessorImpl::processResponse(HttpResponse& response)
                 makeLongCall(response, se);
                 return rs.status;
             }
+
+            if (rs.status == scag::re::STATUS_FAILED) {
+              response.trc.result = rs.result;
+            }
         } else
             smsc_log_error( logger, "http_response session not found abonent=%s, USR=%d", response.getAddress().c_str(), response.getUSR());
     }

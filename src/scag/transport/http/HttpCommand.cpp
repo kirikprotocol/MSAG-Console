@@ -463,6 +463,8 @@ void HttpResponse::fillFakeResponse(int s)
 {
     const char *sl;
     int len;
+
+    fake = true;
     
     switch (s) {
     case 405:

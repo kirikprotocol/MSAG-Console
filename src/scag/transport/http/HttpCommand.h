@@ -363,7 +363,7 @@ class HttpResponse : public HttpCommand {
     friend class HttpParser;
 
 public:
-    HttpResponse(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_RESPONSE) {};
+    HttpResponse(HttpContext* cx, TransactionContext& tcx) : HttpCommand(cx, tcx, HTTP_RESPONSE), fake(false) {};
 
     const std::string& getStatusLine() {
         return statusLine;
@@ -378,9 +378,13 @@ public:
     void fillFakeResponse(int s);
     const std::string& serialize();
     virtual bool isResponse();
+    bool isFake() const {
+      return  fake;
+    }
     
 protected:
     bool delivered;
+    bool fake;
     std::string statusLine;
 };
 
