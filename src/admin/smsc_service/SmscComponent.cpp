@@ -19,6 +19,7 @@
 #include "system/snmp/SnmpCounter.hpp"
 #endif
 #include "system/mapio/FraudControl.hpp"
+#include "system/mapio/MapLimits.hpp"
 
 namespace smsc {
 namespace admin {
@@ -241,7 +242,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
   Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
   Method apply_timezones       ((unsigned)applyTimeZonesMethod,      "apply_timezones",       empty_params, StringType);
-  Method apply_fraudcontrol    ((unsigned)applyFraudControlMethod,    "apply_fraud",          empty_params, StringType);
+  Method apply_fraudcontrol    ((unsigned)applyFraudControlMethod,   "apply_fraud",           empty_params, StringType);
+  Method apply_maplimits       ((unsigned)applyMapLimitsMethod,      "apply_maplimits",       empty_params, StringType);
+
 #ifdef SNMP
   Method apply_snmp            ((unsigned)applySnmpMethod,           "apply_snmp",            empty_params, StringType);
 #endif
@@ -338,6 +341,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[apply_locale_resource.getName()] = apply_locale_resource;
   methods[apply_timezones      .getName()] = apply_timezones;
   methods[apply_fraudcontrol   .getName()] = apply_fraudcontrol;
+  methods[apply_maplimits      .getName()] = apply_maplimits;
+
 #ifdef SNMP
   methods[apply_snmp           .getName()] = apply_snmp;
 #endif
@@ -488,6 +493,9 @@ throw (AdminException)
         return Variant("");
       case applyFraudControlMethod:
         applyFraudControl();
+        return Variant("");
+      case applyMapLimitsMethod:
+        applyMapLimits();
         return Variant("");
       case mscRegistrateMethod:
         mscRegistrate(args);
@@ -1854,7 +1862,18 @@ void SmscComponent::applyFraudControl()throw(AdminException)
     smsc::system::mapio::FraudControl::getInstance()->Reload();
   }catch(std::exception& e)
   {
-    throw AdminException("%s",e.what());
+    throw AdminException("FraudControl::Reload - %s",e.what());
+  }
+}
+
+void SmscComponent::applyMapLimits()throw(AdminException)
+{
+  try
+  {
+    smsc::system::mapio::MapLimits::getInstance().Reinit();
+  } catch(std::exception& e)
+  {
+    throw AdminException("MapLimits::Reinit - %s",e.what());
   }
 }
 
