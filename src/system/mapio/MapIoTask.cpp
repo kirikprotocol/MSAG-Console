@@ -778,7 +778,7 @@ void MAPSTATS_DumpDialogLC(MapDialog* dialog)
 static void MAPSTATS_Flush2(int idx)
 {
   smsc::logger::Logger* log = MAPSTATS_GetLoggerSec();
-  smsc_log_info(log, "open %d/%d/%d/%d/%d, closed %d/%d/%d/%d/%d, dlg %d/%d/%d/%d/%d:%d, rcv %d",
+  smsc_log_info(log, "open %d/%d/%d/%d/%d, closed %d/%d/%d/%d/%d, dlg %d/%d/%d/%d/%d, rcv %d",
             MAPSTATS_open[0][idx],
             MAPSTATS_open[1][idx],
             MAPSTATS_open[2][idx],
@@ -795,7 +795,6 @@ static void MAPSTATS_Flush2(int idx)
             MAPSTATS_dialogs[2],
             MAPSTATS_dialogs[3],
             MAPSTATS_dialogs[4],
-            MapDialogContainer::getInstance()->getDialogCount(),
             MAPSTATS_recv[idx]
            );
 }
@@ -868,14 +867,13 @@ void MAPSTATS_Update_(MAPSTATS stats)
   if( stats != MAPSTATS_GSMRECV )
   {
     smsc_log_debug(MAPSTATS_GetLoggerUpdate(),
-                  "updated %s dlg %d/%d/%d/%d/%d:%d",
+                  "updated %s dlg %d/%d/%d/%d/%d",
                    MAPSTATS_types[stats],
                    MAPSTATS_dialogs[0],
                    MAPSTATS_dialogs[1],
                    MAPSTATS_dialogs[2],
                    MAPSTATS_dialogs[3],
                    MAPSTATS_dialogs[4],
-                   MapDialogContainer::getInstance()->getDialogCount()
                   );
   }
 //  if( MAPSTATS_dialogs_in + MAPSTATS_dialogs_out - MapDialogContainer::getInstance()->getDialogCount() > 1 ) {
