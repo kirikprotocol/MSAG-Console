@@ -39,6 +39,7 @@
       <url-pattern>/smsc/smsc_service/index.jsp</url-pattern>
       <url-pattern>/smsc/smsc_service/logging.jsp</url-pattern>
       <url-pattern>/smsc/smsc_service/switch.jsp</url-pattern>
+      <url-pattern>/smsc/smsc_service/maplimits.jsp</url-pattern>
       <url-pattern>/smsc/reshedule/*</url-pattern>
       <url-pattern>/smsc/directives/*</url-pattern>
     </web-resource-collection>
