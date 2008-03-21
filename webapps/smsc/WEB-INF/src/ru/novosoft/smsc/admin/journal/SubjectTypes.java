@@ -29,6 +29,7 @@ public abstract class SubjectTypes {
     public static final byte TYPE_statview = 19;
     public static final byte TYPE_smsview = 20;
     public static final byte TYPE_snmp = 21;
+    public static final byte TYPE_maplimits = 22;
 
 
     public final static String typeToString(byte subjectType) {
@@ -75,6 +76,8 @@ public abstract class SubjectTypes {
                 return "sms view";
             case TYPE_snmp:
                 return "snmp";
+            case TYPE_maplimits:
+                return "map limits";
             default:
                 return "unknown";
         }
@@ -123,6 +126,8 @@ public abstract class SubjectTypes {
             return TYPE_smsview;
         if ("snmp".equals(subjectType))
             return TYPE_snmp;
+        if ("map limits".equals(subjectType))
+            return TYPE_maplimits;
         return TYPE_UNKNOWN;
     }
 }

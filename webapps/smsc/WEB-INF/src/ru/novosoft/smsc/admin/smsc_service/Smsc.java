@@ -95,6 +95,7 @@ public class Smsc extends Service {
     private static final String CG_IS_GROUP_USED = "cg_is_group_used";
 
     private static final String APPLY_FRAUD = "apply_fraud";
+    private static final String APPLY_MAPLIMITS = "apply_maplimits";
 
     public HashMap defaultProfileProps = new HashMap();
 
@@ -351,6 +352,32 @@ public class Smsc extends Service {
 
     public synchronized void flushStatistics() throws AdminException {
         call(SMSC_COMPONENT_ID, FLUSH_STATISTICS_METHOD_ID, Type.Types[Type.StringType], new HashMap());
+    }
+
+    public synchronized Config getMapLimitsConfig() {
+      try {
+        final File confFile = new File(WebAppFolders.getSmscConfFolder(), "maplimits.xml");
+        return new Config(confFile);
+      } catch (Throwable t) {
+        logger.error("Couldn't get Map limits config", t);
+        return null;
+      }
+    }
+
+    public synchronized void saveMapLimitsConfig(final Config config) throws AdminException {
+        try {
+            config.save();
+        } catch (Throwable t) {
+            logger.error("Couldn't store Map limits config", t);
+            throw new AdminException("Couldn't store map limits config: " + t.getMessage());
+        }
+    }
+
+    public synchronized void applyMapLimitsConfig() throws AdminException {
+      if (getInfo().isOnline()) {
+            call(SMSC_COMPONENT_ID, APPLY_MAPLIMITS, Type.Types[Type.StringType], new HashMap());
+        } else
+            throw new AdminException("Couldn't apply Map limits: SMSC is not running");
     }
 
     public synchronized Config getSmscConfig() {
