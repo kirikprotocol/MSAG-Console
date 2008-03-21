@@ -1,10 +1,10 @@
 
 #define VER_MAJOR 0
-#define VER_MINOR 93
-#define VER_BUILD 13032008
+#define VER_MINOR 94
+#define VER_BUILD 21032008
 #define VER_MAKE_STR2(X) #X
 #define VER_MAKE_STR(X) VER_MAKE_STR2(X)
-#define VER_DATE  "Thu Mar 13 16:00:00 NOVT 2008"
+#define VER_DATE  "Fri Mar 21 15:00:00 NOVT 2008"
 
 #define VER_STR "Mobile Services Agregation Gateway ver " VER_MAKE_STR(VER_MAJOR) "." VER_MAKE_STR(VER_MINOR) " build " VER_MAKE_STR(VER_BUILD) " date " VER_DATE
 
