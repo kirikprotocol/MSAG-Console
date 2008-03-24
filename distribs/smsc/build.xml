@@ -182,12 +182,12 @@ Targets:
     <chmod file="${DISTR_DIR}/services/SMSC/bin/agent" perm="755"/>
     <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
     <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
-    <copy file="${BUILD_BIN}/inman/abprov/libinman_iap_db.so" todir="${DISTR_DIR}/services/INMan/bin"/>
-    <chmod file="${DISTR_DIR}/services/INMan/bin/libinman_iap_db.so" perm="755"/>
-    <copy file="${BUILD_BIN}/inman/abprov/libinman_iap_fclt.so" todir="${DISTR_DIR}/services/INMan/bin"/>
-    <chmod file="${DISTR_DIR}/services/INMan/bin/libinman_iap_fclt.so" perm="755"/>
-    <copy file="${BUILD_BIN}/inman/abprov/libinman_iap_sri.so" todir="${DISTR_DIR}/services/INMan/bin"/>
-    <chmod file="${DISTR_DIR}/services/INMan/bin/libinman_iap_sri.so" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/INMan/bin">
+      <fileset dir="${BUILD_BIN}/inman/ldlib" includes="*.so"/>
+    </copy>
+    <chmod perm="755">
+      <fileset dir="${DISTR_DIR}/services/INMan/bin" includes="*.so"/>
+    </chmod>
     <copy file="${BUILD_BIN}/store/ArchiveDaemon" todir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
     <chmod file="${DISTR_DIR}/services/ArchiveDaemon/bin/ArchiveDaemon" perm="755"/>
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
