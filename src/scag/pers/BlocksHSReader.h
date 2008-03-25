@@ -33,9 +33,12 @@ namespace scag { namespace pers {
     "maze.last.enemy.4",
     "maze.last.enemy.5",
 
-    "maze.room.searched"
+    "maze.room.searched",
+
+    "maze.abonent.money.portal",
+    "maze.abonent.money.portal.stage.2"
   };
-  const int RESTORE_PROPERTIES_COUNT = 22;
+  const int RESTORE_PROPERTIES_COUNT = 24;
 
   const char* INC_PROPERTY_NAME = "maze.abonent.money.portal";
   const char* STATUS_PROPERTY   = "maze.game.status";
@@ -164,14 +167,14 @@ private:
         pc.PrepareBatch(batch);
       }
       Property* prop = 0;
-      if (prop = pf.GetProperty(INC_PROPERTY_NAME)) {
+      /*if (prop = pf.GetProperty(INC_PROPERTY_NAME)) {
         if (sendToPers) {
           pc.IncPropertyPrepare(PT_ABONENT, key.toString().c_str(), *prop, batch);
         }
         ++prop_count;
       } else {
         smsc_log_debug(logger, "property %s not found in profile %s", INC_PROPERTY_NAME, pf.getKey().c_str());               
-      }
+      }*/
       for (int i = 0; i < RESTORE_PROPERTIES_COUNT; ++i) {
         if (prop = pf.GetProperty(restore_properties[i])) {
           if (sendToPers) {
