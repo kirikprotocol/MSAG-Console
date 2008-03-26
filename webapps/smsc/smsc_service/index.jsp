@@ -114,7 +114,7 @@
     param(out, "smsc.map.allowCallBarred", "map.allowCallBarred", bean.getBoolParam("map.allowCallBarred"));
     param(out, "smsc.map.ussdV1Enabled", "map.ussdV1Enabled", bean.getBoolParam("map.ussdV1Enabled"));
     param(out, "smsc.map.ussdV1UseOrigEntityNumber", "map.ussdV1UseOrigEntityNumber", bean.getBoolParam("map.ussdV1UseOrigEntityNumber"));
-    param(out, "smsc.map.mapIOTasksCount", "map.mapIOTasksCount", bean.getBoolParam("map.mapIOTasksCount"));
+    param(out, "smsc.map.mapIOTasksCount", "map.mapIOTasksCount", bean.getIntParam("map.mapIOTasksCount"));
     finishParams(out);
     finishSection(out);
     //################################## traffic control #############################
