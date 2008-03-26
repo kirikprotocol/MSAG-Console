@@ -396,7 +396,7 @@ private:
     
 	int startTransaction(void)
 	{
-		//printf("startTransaction\n");
+		printf("startTransaction\n");
 		transFileHeader		hdr;
 		list<RBTreeNode*>::iterator It;
 		long			nodeAddr;
@@ -405,7 +405,7 @@ private:
 		hdr.version = TRX_VER_1;
 		hdr.operation = currentOperation;
 		hdr.nodes_count = changedNodes.size();
-//	    smsc_log_debug(logger, "Start transaction: nodes changed=%d", changedNodes.size());
+	    smsc_log_debug(logger, "Start transaction: nodes changed=%d", changedNodes.size());
 		//printf("header->root_cell = %d (%d)\n", header->root_cell, sizeof(header->root_cell));
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&hdr, sizeof(transFileHeader));
@@ -424,7 +424,7 @@ private:
 	}
 	int writeChanges(void)
 	{
-//	    smsc_log_debug(logger, "Write Changes: nodes changed=%d", changedNodes.size());
+	    smsc_log_debug(logger, "Write Changes: nodes changed=%d", changedNodes.size());
 	    int stat = STAT_WRITE_RBT;
 	    trans_f.Seek(0, SEEK_SET);
 	    trans_f.Write((char*)&stat, sizeof(int));
@@ -438,12 +438,12 @@ private:
     		rbtree_f.Seek((long)*It - (long)rbtree_addr , SEEK_SET);
 	    	rbtree_f.Write((char*)*It, sizeof(RBTreeNode));
 	    }
-//	    smsc_log_debug(logger, "Write Changes: finish");        
+	    smsc_log_debug(logger, "Write Changes: finish");        
 	    return 0;
 	}
 	int endTransaction()
 	{
-//		smsc_log_debug(logger, "endTransaction");
+		smsc_log_debug(logger, "endTransaction");
 		int stat = STAT_OK;
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&stat, sizeof(int));

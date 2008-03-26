@@ -142,6 +142,7 @@ public:
     virtual void Add(const Key& key, const DataBlock& data)
     {
         long idx;
+        smsc_log_debug(logger, "Add: %s, %d", key.toString().c_str(), data.length());
         dataStorage.Add(data, idx, key);
         indexStorage.Insert(key, idx);
 //      cache.Add(key, data);

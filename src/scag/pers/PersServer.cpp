@@ -195,18 +195,32 @@ bool PersServer::processPacket(ConnectionContext& ctx)
     }
     catch(const SerialBufferOutOfBounds &e)
     {
-        smsc_log_warn(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+        smsc_log_warn(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
+                       isb.length(), isb.toString().c_str());
     }
     catch(const std::runtime_error& e) {
-      smsc_log_warn(plog, "Error profile key: %s", e.what());
+      smsc_log_warn(plog, "std::runtime_error: Error profile key: %s. received buffer len=%d, data=%s",
+                     e.what(), isb.length(), isb.toString().c_str());
     }
+
+    catch(const FileException& e) {
+      smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
+                     e.what(), isb.length(), isb.toString().c_str());
+    }
+    /*
     catch(const Exception& e)
     {
-        smsc_log_warn(plog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
+        smsc_log_warn(plog, "Exception: \'%s\'. received buffer len=%d, data=%s",
+                       e.what(), isb.length(), isb.toString().c_str());
+    }*/
+    catch(const std::exception& e) {
+      smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
+                     e.what(), isb.length(), isb.toString().c_str());
     }
     catch(...)
     {
-        smsc_log_warn(plog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
+        smsc_log_warn(plog, "Unknown exception. received buffer len=%d, data=%s",
+                       isb.length(), isb.toString().c_str());
     }
     if (transactBatch) {
       rollbackCommands(RESPONSE_BAD_REQUEST);
@@ -296,10 +310,15 @@ PersServerResponseType PersServer::execCommand(SerialBuffer& isb, SerialBuffer& 
 }
 
 Profile* PersServer::getProfile(const string& key) {
-  AbntAddr addr(key.c_str());
-  Profile *pf = AbonentStore->getProfile(addr, false); 
-  //Profile *pf = AbonentStore->_getProfile(addr, false);
-  return pf; 
+  try {
+    AbntAddr addr(key.c_str());
+    Profile *pf = AbonentStore->getProfile(addr, false); 
+    //Profile *pf = AbonentStore->_getProfile(addr, false);
+    return pf; 
+  } catch (const std::exception& e) {
+    smsc_log_warn(plog, "std::exception: %s", e.what());
+    return NULL;
+  }
 }
 
 Profile* PersServer::createProfile(AbntAddr& addr) {

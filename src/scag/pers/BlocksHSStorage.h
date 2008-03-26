@@ -163,6 +163,7 @@ public:
 
 	int Add(const DataBlock& data, long& blockIndex, Key key)
 	{
+      smsc_log_debug(logger, "start add data block, blockIndex=%d", blockIndex);
 		DataBlockHeader hdr;
 		long effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
 		
@@ -172,7 +173,7 @@ public:
 		hdr.total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 1;
 		hdr.data_size = data.length();//effectiveBlockSize;
 
-//        smsc_log_debug(logger, "data_len=%d, block_used=%d, key=%s, total_blocks=%d", data.length(), hdr.block_used, hdr.key.getText().c_str(), hdr.total_blocks);
+        smsc_log_debug(logger, "data_len=%d, block_used=%d, key=%s, total_blocks=%d", data.length(), hdr.block_used, hdr.key.getText().c_str(), hdr.total_blocks);
 //		printf("data.length() = %d\n", data.length());
 //		printf("sizeof(DataBlockHeader) = %d\n", sizeof(DataBlockHeader));
 //		printf("hdr.block_used = 0x%X\n", hdr.block_used);
@@ -188,7 +189,9 @@ public:
 //			int fd = dataFile_fd[file_number];
 //            smsc_log_debug(logger, "ffb=%d, file_size=%d, fn=%d", descrFile.first_free_block, descrFile.file_size, file_number);
 			File* f = dataFile_f[file_number];
+            smsc_log_debug(logger, "seek offset=%d", offset);
 			f->Seek(offset, SEEK_SET);
+            smsc_log_debug(logger, "read");
 			f->Read((void*)&(descrFile.first_free_block), sizeof(descrFile.first_free_block));
 //            smsc_log_debug(logger, "ffb=%d offset=%d", descrFile.first_free_block, offset);
 			if(descrFile.first_free_block == -1)
@@ -199,15 +202,24 @@ public:
 			}
 			size_t curBlockSize = (i == hdr.total_blocks - 1) ? data.length() - effectiveBlockSize*i:effectiveBlockSize;
 			hdr.next_block = (i < hdr.total_blocks - 1) ? descrFile.first_free_block : -1;
+            smsc_log_debug(logger, "seek offset=%d", offset);
 			f->Seek(offset, SEEK_SET);
+            //TODO: make 1 write to data file
+            smsc_log_debug(logger, "start write data block header next_block=%d, next_free_block=%d, total_blocks=%d",
+                            hdr.next_block, hdr.next_free_block, hdr.total_blocks);
 			f->Write((void*)&hdr, sizeof(DataBlockHeader));
+            smsc_log_debug(logger, "start write data block", blockIndex);
 			f->Write((void*)(data.c_ptr()+i*(effectiveBlockSize)), curBlockSize);
 			if(i == 0) blockIndex = curBlockIndex;
 //            smsc_log_debug(logger, "i=%d block_idx=%d", i, blockIndex);
 //			printf("hdr.next_block = %d\n", hdr.next_block);
 		}
+        smsc_log_debug(logger, "seek descrFile blockIndex=%d", blockIndex);
 		descrFile_f.Seek(0, SEEK_SET);
+        smsc_log_debug(logger, "write descrFile blockIndex=%d files_count=%d, first_free_block=%d", 
+                       blockIndex, descrFile.files_count, descrFile.first_free_block);
 		descrFile_f.Write((char*)&descrFile, sizeof(DescriptionFile));
+        smsc_log_debug(logger, "end add data block index=%d", blockIndex);
 		return 0;
 	}
 

@@ -101,6 +101,7 @@ public:
 	{
 		//printf("Insert\n");
 // 		sleep(1);
+      smsc_log_debug(logger, "Start Insert: %s val=%d", k.toString().c_str(), (int)v);
 		
 		RBTreeNode* newNode = allocator->allocateNode();
 		rootNode = allocator->getRootNode();
@@ -116,6 +117,7 @@ public:
 		changesObserver->nodeChanged(newNode);
 		rbtRecovery(newNode);
 		changesObserver->completeChanges();
+        smsc_log_debug(logger, "End Insert: %s val=%d", k.toString().c_str(), (int)v);
 		return 1;
     }
 
@@ -151,7 +153,10 @@ public:
 				node = realAddr(node->left);
 		}
 		
-		if(node == nilNode) return false;
+		if(node == nilNode) {
+          smsc_log_debug(logger, "Get: %s. Index not found", k.toString().c_str());
+          return false;
+        } 
 		val = node->value;
         smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), (int)val);
 		return true;
