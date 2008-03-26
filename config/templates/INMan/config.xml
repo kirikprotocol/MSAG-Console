@@ -8,7 +8,7 @@
   <section name="Services">
     <param name="Host" type="string">uid: icsTCPSrv</param> <!--  -->
     <!-- SMS/USSD messages charging -->
-    <param name="Billing" type="string">uid: icsBilling</param> <!-- dll: libinman_srv_bill.so -->
+    <param name="Billing" type="string">uid: icsSmBilling</param> <!-- dll: libinman_srv_bill.so -->
     <!-- Abonent contract type and gsmSCF params determination -->
     <param name="AbonentDetector" type="string">uid: icsAbntDetector</param> <!-- dll: libinman_srv_dtcr.so -->
   </section>
