@@ -275,16 +275,12 @@
 
   <section name="AbonentProviders"> <!-- abonent contract/gsmSCF params  providers -->
       <section name="HLR_Nsk_SRI">
-          <param name="loadup" type="string">libinman_iap_sri.so</param>
-          <section name="Config"> 
-              <param name="ownAddress" type="string">@inman.ssfAddress@</param>  <!-- Provider ISDN address -->
-              <param name="ownSsn" type="int">146</param>
-              <param name="maxQueries" type="int">500</param>  <!--  max allowed simultaneous HLR queries -->
-              <param name="mapTimeout" type="int">20</param>   <!-- timeout on MAP operations, units: seconds, max: 65535, default 20 -->
-              <param name="msrnTimeout" type="int">300</param>  <!--  msrnExpiration timeout, units: secs -->
-              <!-- OPTIONAL PARAMETERS follow:: -->
-              <param name="fakeSsn" type="int">8</param>    <!--  ssn to substitute in TCAP dialog org addr -->
-          </section>
+        <param name="loadup" type="string">libinman_iap_sri.so</param>
+        <section name="Config">
+          <param name="tcapUser" type="string">TCAPUserSRI</param> <!--
+          section name for TCAP user configuration this provider uses
+          -->
+        </section>
       </section>
 
       <section name="DB_Contract"> <!-- DB provides abonent contract (prepaid or postpaid) only -->
