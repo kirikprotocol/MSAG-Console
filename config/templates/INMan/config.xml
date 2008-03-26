@@ -6,7 +6,7 @@
   <param name="version" type="string">0.7.0</param>   <!-- config version -->
 
   <section name="Services">
-    <param name="Host" type="string">uid: icsTCPSrv</param> <!--  -->
+    <param name="Host" type="string">uid: icsTCPServer</param> <!--  -->
     <!-- SMS/USSD messages charging -->
     <param name="Billing" type="string">uid: icsSmBilling</param> <!-- dll: libinman_srv_bill.so -->
     <!-- Abonent contract type and gsmSCF params determination -->
