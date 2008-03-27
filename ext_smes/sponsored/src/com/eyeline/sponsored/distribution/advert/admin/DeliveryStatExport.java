@@ -2,19 +2,19 @@ package com.eyeline.sponsored.distribution.advert.admin;
 
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.distribution.advert.utils.CalendarUtils;
-import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.DistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.DataSourceTransaction;
-import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.ResultSet;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.FileDeliveryStatDataSource;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.Writer;
 import java.io.IOException;
+import java.io.Writer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -27,13 +27,11 @@ import java.util.Date;
 
 public class DeliveryStatExport {
 
-  public static void exportStat(DistributionDataSource ds, Date fromDate, Date toDate, float coeff, Writer os)  {
-    DataSourceTransaction tx = null;
+  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, Writer os)  {
     ResultSet<DeliveryStat> rs = null;
     try {
-      tx = ds.createTransaction();
 
-      rs = ds.aggregateDeliveryStats(fromDate, toDate, tx);
+      rs = ds.aggregateDeliveryStats(fromDate, toDate);
 
       while(rs.next()) {
         final DeliveryStat stat = rs.get();
@@ -58,8 +56,6 @@ public class DeliveryStatExport {
         e.printStackTrace();
       }
 
-      if (tx != null)
-        tx.close();
     }
   }
 
@@ -92,7 +88,7 @@ public class DeliveryStatExport {
   public static void main(String[] args) {
     final Request req = new Request();
 
-    DBDistributionDataSource ds = null;
+    DeliveryStatsDataSource ds = null;
     Writer os = null;
     try {
 
@@ -128,16 +124,23 @@ public class DeliveryStatExport {
 
       final Config c = new Config(xmlConfig);
 
-      ds = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
-      ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      if (c.getDeliveryStatsDataSource().equals("db")) {
+        ds = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        ((DBDistributionDataSource)ds).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      } else if (c.getDeliveryStatsDataSource().equals("file")) {
+        ds = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
+      }
 
       final SimpleDateFormat df = new SimpleDateFormat("dd_MM_yyyy");
       os = new FileWriter(new File(req.getDir(), "export." + df.format(req.getFromDate()) + '-' + df.format(CalendarUtils.getPrevDayStart(req.getToDate())) + ".csv"));
 
+      long time = System.currentTimeMillis();
+
       exportStat(ds, req.getFromDate(), req.getToDate(), req.getCost(), os);
 
       os.flush();
-      
+
+      System.out.println("Stats aggregated in " + (System.currentTimeMillis() - time) + " ms");
     } catch (IllegalArgumentException e) {
       System.out.println(e.getMessage());
     } catch (Throwable e) {

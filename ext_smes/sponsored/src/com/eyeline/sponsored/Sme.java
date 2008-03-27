@@ -59,10 +59,36 @@ public class Sme {
 
       new ConfigUpdater(600000, timezones).start();
 
+      Runtime.getRuntime().addShutdownHook(new ShutdownHook(subscriptionSme, distributionSme));
+
     } catch (Throwable e) {
       e.printStackTrace();
       subscriptionSme.stop();
       distributionSme.stop();
+    }
+  }
+
+  private static class ShutdownHook extends Thread {
+    private final SubscriptionSme subscriptionSme;
+    private final DistributionSme distributionSme;
+
+    public ShutdownHook(SubscriptionSme subscriptionSme, DistributionSme distributionSme) {
+      this.subscriptionSme = subscriptionSme;
+      this.distributionSme = distributionSme;
+    }
+
+    public void run() {
+      System.out.println("Shutdown called");
+      try {
+        subscriptionSme.stop();
+      } catch (Throwable e) {
+        e.printStackTrace();
+      }
+      try {
+        distributionSme.stop();
+      } catch (Throwable e) {
+        e.printStackTrace();
+      }
     }
   }
 

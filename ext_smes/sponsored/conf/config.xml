@@ -26,6 +26,10 @@
     <param name="poolSize">10</param>
   </section>
 
+  <section name="file_storage">
+    <param name="storeDir">store</param>
+  </section>
+
   <!-- DISTRIBUTION SECTION -->
 
   <section name="advert_distribution">
@@ -37,6 +41,11 @@
     <param name="deliveriesFetchInterval">1000</param>
     <param name="deliveriesSendSpeedLimit">450</param>
     <param name="deliveriesPrepareInterval">5000</param>    
+
+    <!-- Delivery stats collector parameters -->
+
+    <!-- Allowed data sources: db, file -->
+    <param name="deliveryStatsDataSource">file</param>
 
     <!-- Distributions parameters -->
 

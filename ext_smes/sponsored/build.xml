@@ -37,6 +37,7 @@
     <mkdir dir="${SME_DISTR_DIR}/conf"/>
     <mkdir dir="${SME_DISTR_DIR}/lib"/>
     <mkdir dir="${SME_DISTR_DIR}/logs"/>
+    <mkdir dir="${SME_DISTR_DIR}/store"/>
 
     <copydir src="${java_lib}" dest="${SME_DISTR_DIR}/lib"/>
 
@@ -48,7 +49,8 @@
       <fileset file="start"/>
       <fileset file="deliveries"/>
       <fileset file="statexport"/>
-    </copy>    
+      <fileset file="statview"/>
+    </copy>
   </target>
 
   <target name="conf" depends="install">

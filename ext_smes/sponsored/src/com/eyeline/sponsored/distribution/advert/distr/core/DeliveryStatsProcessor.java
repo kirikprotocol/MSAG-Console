@@ -1,14 +1,14 @@
 package com.eyeline.sponsored.distribution.advert.distr.core;
 
-import com.eyeline.sponsored.ds.distribution.advert.DistributionDataSource;
-import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.distribution.advert.utils.CalendarUtils;
+import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
-import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 
-import java.util.TimeZone;
 import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * User: artem
@@ -19,15 +19,15 @@ public class DeliveryStatsProcessor {
 
   private static DeliveryStatsProcessor instance;
 
-  private final DistributionDataSource ds;
+  private final DeliveryStatsDataSource ds;
   private final SmscTimezonesList timezones;
 
-  public DeliveryStatsProcessor(DistributionDataSource ds, SmscTimezonesList timezones) {
+  public DeliveryStatsProcessor(DeliveryStatsDataSource ds, SmscTimezonesList timezones) {
     this.ds = ds;
     this.timezones = timezones;
   }
 
-  public static void init(DistributionDataSource ds, SmscTimezonesList timezones) {
+  public static void init(DeliveryStatsDataSource ds, SmscTimezonesList timezones) {
     instance = new DeliveryStatsProcessor(ds, timezones);
   }
 

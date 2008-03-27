@@ -5,8 +5,9 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
-import com.eyeline.sponsored.ds.distribution.advert.DistributionDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -19,7 +20,7 @@ import java.util.TimeZone;
  *
  * @author artem
  */
-public class DBDistributionDataSource extends AbstractDBDataSource implements DistributionDataSource {
+public class DBDistributionDataSource extends AbstractDBDataSource implements DeliveriesDataSource, DeliveryStatsDataSource {
 
   private final Properties sql;
 
@@ -60,12 +61,20 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements Di
     }
   }
 
-  public void updateDeliveryStat(String subscriberAddress, Date date, int deliveredInc, DataSourceTransaction tx) throws DataSourceException {
-    ((DBTransaction)tx).updateDeliveryStat(subscriberAddress, date, deliveredInc);
+  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate) throws DataSourceException {
+    DBTransaction tx = null;
+    try {
+      tx = createDBTransaction(true);
+      return tx.aggregateDeliveryStats(startDate, endDate);
+    } finally {
+      if (tx != null) {
+        tx.close();
+      }
+    }
   }
 
-  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate, DataSourceTransaction tx) throws DataSourceException {
-    return ((DBTransaction)tx).aggregateDeliveryStats(startDate, endDate);
+  public ResultSet<DeliveryStat> getDeliveryStats(Date date) throws DataSourceException {
+    return null;
   }
 
   public List<Delivery> lookupActiveDeliveries(Date end, int limit) throws DataSourceException {

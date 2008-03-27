@@ -1,23 +1,22 @@
 package com.eyeline.sponsored.distribution.advert.distr.core;
 
-import org.apache.log4j.Category;
-import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.ShutdownedException;
-import com.eyeline.sponsored.ds.distribution.advert.DistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.Delivery;
-import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClient;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingException;
-import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
+import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.Delivery;
+import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
 
 import java.util.*;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-
-import ru.aurorisoft.smpp.Message;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: artem
@@ -28,7 +27,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
   private static final Category log = Category.getInstance("DISTRIBUTION");
 
   private final OutgoingQueue outQueue;
-  private final DistributionDataSource distrDS;
+  private final DeliveriesDataSource distrDS;
   private final AdvertisingClient advClient;
   private final Map<String, DistributionInfo> distrInfos;
   private final ScheduledExecutorService executor;
@@ -37,7 +36,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
   private int sendSpeedLimit;
   private long prepareInterval;
 
-  public IntervalDistributionEngine(OutgoingQueue outQueue, DistributionDataSource distrDS, AdvertisingClient advClient) {
+  public IntervalDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClient advClient) {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
     this.advClient = advClient;

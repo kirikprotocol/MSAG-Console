@@ -23,6 +23,8 @@ public class Config extends com.eyeline.sponsored.config.Config {
   private int deliveriesPrepareInterval;
   private String engineType;
 
+  private String deliveryStatsDataSource;
+
   private String storageSubscriptionSql;
   private String storageDistributionSql;
 
@@ -43,6 +45,8 @@ public class Config extends com.eyeline.sponsored.config.Config {
     deliveriesSendSpeedLimit = distr.getInt("deliveriesSendSpeedLimit");
     deliveriesPrepareInterval = distr.getInt("deliveriesPrepareInterval");
     engineType = distr.getString("engineType");
+
+    deliveryStatsDataSource = distr.getString("deliveryStatsDataSource");
 
     storageSubscriptionSql = storage.getString("subscriptionSql");
     storageDistributionSql = storage.getString("distributionSql");
@@ -108,5 +112,9 @@ public class Config extends com.eyeline.sponsored.config.Config {
 
   public String getEngineType() {
     return engineType;
+  }
+
+  public String getDeliveryStatsDataSource() {
+    return deliveryStatsDataSource;
   }
 }

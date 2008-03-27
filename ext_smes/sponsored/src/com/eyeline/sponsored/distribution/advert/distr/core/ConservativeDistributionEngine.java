@@ -8,7 +8,7 @@ import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingException;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
-import com.eyeline.sponsored.ds.distribution.advert.DistributionDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 
@@ -26,7 +26,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private static final Category log = Category.getInstance("DISTRIBUTION");
 
   private final OutgoingQueue outQueue;
-  private final DistributionDataSource distrDS;  
+  private final DeliveriesDataSource distrDS;
   private final AdvertisingClient advClient;
   private final Map<String, DistributionInfo> distrInfos;
 
@@ -34,7 +34,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private boolean started = true;
 
 
-  public ConservativeDistributionEngine(OutgoingQueue outQueue, DistributionDataSource distrDS, AdvertisingClient advClient) {
+  public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClient advClient) {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
     this.advClient = advClient;

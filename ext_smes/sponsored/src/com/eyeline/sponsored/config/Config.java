@@ -27,6 +27,8 @@ public class Config {
   private int storageConnTimeout;
   private int storagePoolSize;
 
+  private String fileStorageStoreDir;
+
   public Config (XmlConfig config) throws ConfigException {
     handlerConfigFile = config.getString("handlerConfigFile");
     timezonesFile = config.getString("timezonesFile");
@@ -52,6 +54,12 @@ public class Config {
     storagePwd = storage.getString("password");
     storageConnTimeout = storage.getInt("connectionTimeout");
     storagePoolSize = storage.getInt("poolSize");
+
+    final XmlConfigSection fileStorage = config.getSection("file_storage");
+    if (fileStorage == null)
+      throw new ConfigException("file_storage section not found");
+
+    fileStorageStoreDir = fileStorage.getString("storeDir");
   }
 
   public String getHandlerConfigFile() {
@@ -104,5 +112,9 @@ public class Config {
 
   public int getStoragePoolSize() {
     return storagePoolSize;
+  }
+
+  public String getFileStorageStoreDir() {
+    return fileStorageStoreDir;
   }
 }

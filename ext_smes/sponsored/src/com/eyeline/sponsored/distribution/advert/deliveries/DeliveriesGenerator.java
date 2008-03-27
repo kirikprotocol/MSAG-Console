@@ -3,8 +3,8 @@ package com.eyeline.sponsored.distribution.advert.deliveries;
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.DistributionDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
 import com.eyeline.sponsored.ds.subscription.SubscriptionDataSource;
 import com.eyeline.sponsored.ds.subscription.VolumeStat;
@@ -27,12 +27,12 @@ import java.util.*;
 
 public class DeliveriesGenerator {
 
-  private final DistributionDataSource distributionDS;
+  private final DeliveriesDataSource distributionDS;
   private final SubscriptionDataSource subscriptionDS;
   private final List<DistributionInfo> distrInfos;
   private final Set<TimeZone> timezones;
 
-  public DeliveriesGenerator(DistributionDataSource distributionDS, SubscriptionDataSource subscriptionDS) {
+  public DeliveriesGenerator(DeliveriesDataSource distributionDS, SubscriptionDataSource subscriptionDS) {
     this.distributionDS = distributionDS;
     this.subscriptionDS = subscriptionDS;
     this.distrInfos = new LinkedList<DistributionInfo>();

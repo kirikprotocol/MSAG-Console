@@ -1,13 +1,13 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import java.util.Date;
 
 /**
  *
  * @author artem
  */
 public abstract class AbstractDeliveryStatImpl implements DeliveryStat {
+
   private String subscriberAddress;
   private int delivered;
 
@@ -25,6 +25,16 @@ public abstract class AbstractDeliveryStatImpl implements DeliveryStat {
 
   public void setDelivered(int delivered) {
     this.delivered = delivered;
+  }
+
+  public int hashCode() {
+    return subscriberAddress.hashCode();
+  }
+
+  public boolean equals(Object o) {
+    if (!(o instanceof AbstractDeliveryStatImpl))
+      return false;
+    return subscriberAddress.equals(((AbstractDeliveryStatImpl)o).subscriberAddress);
   }
 
 }
