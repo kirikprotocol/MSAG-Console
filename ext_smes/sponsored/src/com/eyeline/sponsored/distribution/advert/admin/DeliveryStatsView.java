@@ -9,6 +9,7 @@ import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.Sme;
 
 import java.util.Date;
 import java.text.SimpleDateFormat;
@@ -39,6 +40,9 @@ public class DeliveryStatsView {
         ((DBDistributionDataSource)ds).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
         ds = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
+      } else {
+        System.out.println("Unknown delivery stats storage type: " + c.getDeliveryStatsDataSource());
+        return;
       }
 
       ResultSet<DeliveryStat> rs = null;

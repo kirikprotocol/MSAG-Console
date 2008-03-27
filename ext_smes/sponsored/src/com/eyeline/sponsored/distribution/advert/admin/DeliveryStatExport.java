@@ -8,6 +8,7 @@ import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.impl.file.FileDeliveryStatDataSource;
+import com.eyeline.sponsored.Sme;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 
@@ -129,6 +130,9 @@ public class DeliveryStatExport {
         ((DBDistributionDataSource)ds).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
         ds = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
+      } else {
+        System.out.println("Unknown delivery stats storage type: " + c.getDeliveryStatsDataSource());
+        return;
       }
 
       final SimpleDateFormat df = new SimpleDateFormat("dd_MM_yyyy");

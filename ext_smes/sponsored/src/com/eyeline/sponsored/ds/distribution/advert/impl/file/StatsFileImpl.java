@@ -1,6 +1,7 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import org.apache.log4j.Category;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -16,6 +17,8 @@ import java.util.Map;
 
 public class StatsFileImpl implements StatsFile {
 
+  private static final Category log = Category.getInstance(StatsFileImpl.class);
+
   private static final int AGGR_BUFFER_SIZE = 200000;
   private static final int IO_BUFFER_SIZE = 4096;
   private static final int EOR = 255;
@@ -29,7 +32,7 @@ public class StatsFileImpl implements StatsFile {
     open(true);
   }
 
-  private static void verifyAndRepairFile(File file)  {
+  private static void verifyAndRepairFile(File file) throws IOException {
     if (!file.exists())
       return;
 
@@ -43,11 +46,13 @@ public class StatsFileImpl implements StatsFile {
 
       f.seek(endPos);
       if (f.read() != EOR) {
-        System.out.println("File " + file.getAbsolutePath() + " is corrupted and will be repaired.");
+        log.warn("File " + file.getAbsolutePath() + " is corrupted and will be repaired.");
 
         // Search last EOR
+        log.warn("Search for last EOR label");
         long pos = -1;
-        for (int step = 1; pos == -1; step++) {
+        int step = 1;
+        do {
           long startPos = f.length() - step * MAX_RECORD_SIZE;
 
           if (startPos < 0) {
@@ -60,7 +65,10 @@ public class StatsFileImpl implements StatsFile {
                 pos = f.getFilePointer();
             }
           }
-        }
+          step++;
+        } while (pos == -1);
+
+        log.warn("Last EOR label pos is " + pos + ". Truncate file.");
 
         // Truncate file after last EOR
         FileChannel fc = null;
@@ -71,17 +79,21 @@ public class StatsFileImpl implements StatsFile {
           if (fc != null)
             fc.close();
         }
+
+        log.warn("File was successfully repaired.");
       }
 
     } catch (EOFException e) {
     } catch (FileNotFoundException e) {
     } catch (IOException e) {
-      System.out.println(e.getMessage());
+      log.error("Verify and repair error",e);
+      throw new IOException(e.getMessage());
     } finally {
       try {
         if (f != null)
           f.close();
       } catch (IOException e) {
+        log.error(e,e);
       }
     }
   }
@@ -93,7 +105,7 @@ public class StatsFileImpl implements StatsFile {
     if (check)
       verifyAndRepairFile(file);
 
-    this.os = new BufferedOutputStream(new FileOutputStream(file, true), IO_BUFFER_SIZE);
+    os = new BufferedOutputStream(new FileOutputStream(file, true), IO_BUFFER_SIZE);
   }
 
   public String getName() {
@@ -120,7 +132,7 @@ public class StatsFileImpl implements StatsFile {
     IOUtils.readByte(is);   // EOR
   }
 
-  public void transferTo(WritableByteChannel target) throws IOException {
+  public void transferTo(WritableByteChannel target) throws StatsFileException {
     FileInputStream is = null;
     try {
       os.flush();
@@ -132,26 +144,35 @@ public class StatsFileImpl implements StatsFile {
         fc = is.getChannel();
 
         fc.transferTo(0, fc.size(), target);
+      } catch (IOException e) {
+        throw new StatsFileException(e.getMessage(), e);
       } finally {
         if (fc != null)
           fc.close();
       }
 
     } catch (EOFException e) {
+    } catch (IOException e) {
+      throw new StatsFileException(e.getMessage(), e);
     } finally {
       try {
         if (is != null)
           is.close();
       } catch (IOException e) {
+        log.error(e,e);
       }
     }
   }
 
-  public void addStat(DeliveryStat stat) throws IOException {
-    writeDeliveryStat(stat, os);
+  public void addStat(DeliveryStat stat) throws StatsFileException {
+    try {
+      writeDeliveryStat(stat, os);
+    } catch (IOException e) {
+      throw new StatsFileException("Can't add stats to file " + file, e);      
+    }
   }
 
-  public ArrayList<DeliveryStatImpl> getRecords(int start, int count) throws IOException {
+  public ArrayList<DeliveryStatImpl> getRecords(int start, int count) throws StatsFileException {
     ArrayList<DeliveryStatImpl> result = new ArrayList<DeliveryStatImpl>(count);
     InputStream is = null;
     try {
@@ -164,23 +185,29 @@ public class StatsFileImpl implements StatsFile {
         result.add(readDeliveryStat(is));
 
     } catch (EOFException e) {
+    } catch (IOException e) {
+      log.error("Can't get stats from file " + file, e);
+      throw new StatsFileException("Can't get stats from file " + file, e);
     } finally {
       try {
         if (is != null)
           is.close();
       } catch (IOException e) {
+        log.error(e,e);
       }
     }
 
     return result;
   }
 
-  public void compress() throws IOException {
-    final boolean opened = os != null;
+  public void compress() throws StatsFileException {
 
+    // Close output stream if it was opened and save status to variable
+    final boolean opened = os != null;
     if (os != null)
       close();
 
+    // Create buffer
     final Map<String, DeliveryStat> buffer = new HashMap<String, DeliveryStat>(AGGR_BUFFER_SIZE);
 
     final File compressedFile = new File(file.getAbsolutePath() + ".compressed");
@@ -190,20 +217,21 @@ public class StatsFileImpl implements StatsFile {
 
       compressedFileWriter = new BufferedOutputStream(new FileOutputStream(compressedFile), IO_BUFFER_SIZE);
 
-      File tmpFile, curFile = file;
+      File tmpFile = null, curFile = file;
 
-      for (int iterNo = 0; curFile != null; iterNo++) {
+      int iterNo = 0;
+      do {
 
         buffer.clear();
 
         InputStream curFileReader = null;
         OutputStream tmpFileWriter = null;
 
-        tmpFile = null;
         try {
           curFileReader = new BufferedInputStream(new FileInputStream(curFile), IO_BUFFER_SIZE);
 
           // Fill buffer
+          // We read file until buffer size < AGGR_BUFFER_SIZE or EOF reached. Every delivery stat we put into buffer.
           while (buffer.size() < AGGR_BUFFER_SIZE) {
             DeliveryStat stat = readDeliveryStat(curFileReader);
             DeliveryStat oldStat = buffer.get(stat.getSubscriberAddress());
@@ -213,6 +241,8 @@ public class StatsFileImpl implements StatsFile {
               oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
           }
 
+          // We fill buffer but EOF was not reached
+          // This mean that there are other delivery stats. We copy them into tmp file
           tmpFile = new File(file.getAbsolutePath() + ".tmp" + iterNo);
 
           tmpFileWriter = new BufferedOutputStream(new FileOutputStream(tmpFile), IO_BUFFER_SIZE);
@@ -221,75 +251,101 @@ public class StatsFileImpl implements StatsFile {
           // Update counters in buffer and write other records to tmp file
           while(true) {
             DeliveryStat stat = readDeliveryStat(curFileReader);
-
             DeliveryStat oldStat = buffer.get(stat.getSubscriberAddress());
-            if (oldStat != null)
-              oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
-            else
+            if (oldStat == null)
               writeDeliveryStat(stat, tmpFileWriter);
+            else
+              oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
           }
 
         } catch (EOFException e) {
-
+          // EOF is expected
         } finally {
           try {
             if (curFileReader != null)
               curFileReader.close();
           } catch (IOException e) {
+            log.error(e,e);
           }
-
           try {
-            if (tmpFileWriter != null) {
-              tmpFileWriter.flush();
+            if (tmpFileWriter != null)
               tmpFileWriter.close();
-            }
           } catch (IOException e) {
+            log.error(e,e);
           }
         }
 
-        if (buffer.isEmpty())
+        // Remove current (temp) file if it not equals to initial file
+        if (curFile != file) {
+          if (!curFile.delete())
+            log.warn("Can't delete tmp file " + curFile.getAbsolutePath());
+        }
+
+        if (buffer.isEmpty()) // No records in file. Break
           break;
 
-        // At this moment we have buffer and temp file with records outside buffer
+        // At this moment we have buffer and temp file with records outside buffer.
 
+        // We flush aggregated records into .compressed file
         for (DeliveryStat e : buffer.values())
           writeDeliveryStat(e,compressedFileWriter);
 
-        // Remove current file if it not equals to initial file
-        if (curFile != file)
-          curFile.delete();
-
         curFile = tmpFile;
-      }
+        tmpFile = null;
 
-      // Remove current file if it not equals to initial file
-      if (curFile != null && curFile != file)
-        curFile.delete();
+        // Increment counter
+        iterNo++;
+      } while (curFile != null);
 
+    } catch (IOException e) {
+      log.error(e,e);
+      throw new StatsFileException("Compression file " + file + " error", e);
     } finally {
       try {
-        if (compressedFileWriter != null) {
-          compressedFileWriter.flush();
+        if (compressedFileWriter != null)
           compressedFileWriter.close();
-        }
       } catch (IOException e) {
+        log.error(e,e);
       }
     }
 
     File bakFile = new File(file.getAbsolutePath() + ".bak");
-    file.renameTo(bakFile);
-    compressedFile.renameTo(file);
+    if (file.renameTo(bakFile)) { // Rename stats file to .bak
 
-    if (opened)
-      open(false);
+      if (compressedFile.renameTo(file)) { // Rename compressed file to stats file
 
-    bakFile.delete();
+        if (!bakFile.delete()) // Delete .bak file
+          log.warn("Can't delete file " + bakFile);
+
+      } else { // Can't rename compressed file to stats file. Try to rollback rename stats file to .bak
+        log.warn("Can't rename compressed file " + compressedFile + " to " + file);
+
+        if (!bakFile.renameTo(file))  // ERROR! We have no stats file!
+          log.error("Can't rename file " + bakFile + " to " + file);
+      }
+
+    } else {
+      log.warn("Can't rename uncompressed file " + file + " to " + bakFile);
+    }
+
+    // If file was opened before compression we open it
+    if (opened) {
+      try {
+        open(false);
+      } catch (IOException e) {
+        log.error(e,e);
+        throw new StatsFileException("Can't open output stream to file " + file, e);
+      }
+    }
   }
 
-  public void close() throws IOException {
+  public void close() throws StatsFileException {
     if (os != null) {
-      os.flush();
-      os.close();
+      try {
+        os.close();
+      } catch (IOException e) {
+        throw new StatsFileException("Can't close stats file " + file, e);
+      }
       os = null;
     }
   }
@@ -301,10 +357,17 @@ public class StatsFileImpl implements StatsFile {
       System.out.println("Open time = " + (System.currentTimeMillis() - time));
 
       time = System.currentTimeMillis();
+      final Object o = new Object();
       for (int i=0; i<20; i++) {
-        for (int j=100000; j<300002; j++) {
+        for (int j=100000; j<900002; j++) {
           final DeliveryStat s = new DeliveryStatImpl();
           s.setSubscriberAddress("+79139" + j);
+          synchronized(o) {
+            try {
+              o.wait(1);
+            } catch (InterruptedException e) {
+            }
+          }
           s.setDelivered(1);
           impl.addStat(s);
         }
@@ -316,6 +379,8 @@ public class StatsFileImpl implements StatsFile {
       System.out.println("Compress time = " + (System.currentTimeMillis() - time));
 
     } catch (IOException e) {
+      e.printStackTrace();
+    } catch (StatsFileException e) {
       e.printStackTrace();
     }
   }

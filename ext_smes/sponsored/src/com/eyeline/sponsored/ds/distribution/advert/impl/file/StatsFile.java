@@ -16,9 +16,9 @@ import java.nio.channels.WritableByteChannel;
 
 public interface StatsFile {
   public String getName();
-  public void addStat(DeliveryStat stat) throws IOException;
-  public ArrayList<DeliveryStatImpl> getRecords(int start, int count) throws IOException;
-  public void transferTo(WritableByteChannel target) throws IOException;
-  public void compress() throws IOException;
-  public void close() throws IOException;
+  public void addStat(DeliveryStat stat) throws StatsFileException;
+  public ArrayList<DeliveryStatImpl> getRecords(int start, int count) throws StatsFileException;
+  public void transferTo(WritableByteChannel target) throws StatsFileException;
+  public void compress() throws StatsFileException;
+  public void close() throws StatsFileException;
 }

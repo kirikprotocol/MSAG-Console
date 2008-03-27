@@ -4,19 +4,18 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import org.apache.log4j.Category;
 
-import java.io.IOException;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.nio.channels.WritableByteChannel;
-import java.nio.channels.FileChannel;
-
-import org.apache.log4j.Category;
 
 /**
  * User: artem
@@ -72,7 +71,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
 
           try {
             e.getValue().impl.close();
-          } catch (IOException e1) {
+          } catch (StatsFileException e1) {
             log.error(e1,e1);
           }
 
@@ -136,17 +135,21 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     StatsFile file = null;
     try {
       file = getFile(date);
-      DeliveryStat stat = new DeliveryStatImpl();
-      stat.setSubscriberAddress(subscriberAddress);
-      stat.setDelivered(deliveredInc);
-      file.addStat(stat);
-    } catch (IOException e) {
+      if (file != null) {
+        DeliveryStat stat = new DeliveryStatImpl();
+        stat.setSubscriberAddress(subscriberAddress);
+        stat.setDelivered(deliveredInc);
+        file.addStat(stat);
+      } else
+        throw new DataSourceException("Null file for " + date);
+    } catch (StatsFileException e) {
       throw new DataSourceException(e);
     } finally {
       if (file != null)
         try {
           file.close();
-        } catch (IOException e) {
+        } catch (StatsFileException e) {
+          log.error(e,e);
         }
     }
   }
@@ -157,7 +160,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     if (files.isEmpty())
       return null;
 
-    final File aggregateFile = new File(storeDir, df.format(startDate) + "-" + df.format(endDate) + ".stats");
+    final File aggregateFile = new File(storeDir, df.format(startDate) + '-' + df.format(endDate) + ".stats");
 
     // Concat stat files
     FileOutputStream os = null;
@@ -174,6 +177,8 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
           fc.close();
       }
 
+    } catch (StatsFileException e) {
+      throw new DataSourceException(e);
     } catch (IOException e) {
       throw new DataSourceException(e);
     } finally {
@@ -198,10 +203,12 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       };
 
     } catch (IOException e) {
+      throw new DataSourceException(e);
+    } catch (StatsFileException e) {
       try {
-        if (impl != null)
-          impl.close();
-      } catch (IOException e1) {
+        impl.close();
+      } catch (StatsFileException e1) {
+        log.error(e,e);
       }
       throw new DataSourceException(e);
     }
@@ -241,7 +248,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       return impl.getName();
     }
 
-    public void addStat(DeliveryStat stat) throws IOException {
+    public void addStat(DeliveryStat stat) throws StatsFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
@@ -251,7 +258,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       }
     }
 
-    public ArrayList<DeliveryStatImpl> getRecords(int start, int end) throws IOException {
+    public ArrayList<DeliveryStatImpl> getRecords(int start, int end) throws StatsFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
@@ -261,7 +268,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       }
     }
 
-    public void transferTo(WritableByteChannel target) throws IOException {
+    public void transferTo(WritableByteChannel target) throws StatsFileException {
       try {
         lock.lock();
         impl.transferTo(target);
@@ -271,7 +278,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       }
     }
 
-    public void compress() throws IOException {
+    public void compress() throws StatsFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
@@ -332,7 +339,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
             return false;
           start += buffer.size();
           pos = 0;
-        } catch (IOException e) {
+        } catch (StatsFileException e) {
           throw new DataSourceException(e);
         }
       } else {
@@ -344,7 +351,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     public void close() throws DataSourceException {
       try {
         file.close();
-      } catch (IOException e) {
+      } catch (StatsFileException e) {
         throw new DataSourceException(e);
       }
     }
@@ -367,7 +374,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     public void run() {
       try {
         file.compress();
-      } catch (IOException e) {
+      } catch (StatsFileException e) {
         log.error(e,e);
       }
 

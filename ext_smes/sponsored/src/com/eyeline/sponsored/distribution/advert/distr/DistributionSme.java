@@ -48,7 +48,9 @@ public class DistributionSme extends Sme {
         deliveryStatsDS = deliveriesDS;
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
         deliveryStatsDS = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
-      }
+      } else
+        throw new InitException("Unknown delivery stats storage type: " + c.getDeliveryStatsDataSource());
+
       DeliveryStatsProcessor.init(deliveryStatsDS, timezones);
 
       // Init advertising client
