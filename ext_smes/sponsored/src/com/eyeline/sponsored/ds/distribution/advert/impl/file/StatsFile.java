@@ -14,7 +14,7 @@ import java.nio.channels.WritableByteChannel;
  * Date: 24.03.2008
  */
 
-public interface StatsFile {
+interface StatsFile {
   public String getName();
   public void addStat(DeliveryStat stat) throws StatsFileException;
   public ArrayList<DeliveryStatImpl> getRecords(int start, int count) throws StatsFileException;

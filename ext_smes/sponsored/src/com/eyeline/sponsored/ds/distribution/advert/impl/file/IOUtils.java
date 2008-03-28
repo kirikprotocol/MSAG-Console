@@ -10,7 +10,7 @@ import java.io.OutputStream;
  * Date: 25.03.2008
  */
 
-public class IOUtils {
+class IOUtils {
 
   public static int readByte(InputStream is) throws IOException {
     int b = is.read();

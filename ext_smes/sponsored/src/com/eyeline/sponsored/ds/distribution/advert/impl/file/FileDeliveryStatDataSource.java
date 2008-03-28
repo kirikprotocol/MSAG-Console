@@ -26,7 +26,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
 
   private static final Category log = Category.getInstance(FileDeliveryStatDataSource.class);
 
-  private static final int CACHE_CLEAN_INTERVAL = 2000;
+  private static final int CACHE_CLEAN_INTERVAL = 3600000;
   private static final SimpleDateFormat df = new SimpleDateFormat("yyyyMMdd");
 
   private final String storeDir;

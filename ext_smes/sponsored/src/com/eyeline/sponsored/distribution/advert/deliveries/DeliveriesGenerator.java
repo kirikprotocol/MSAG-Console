@@ -36,7 +36,7 @@ public class DeliveriesGenerator {
     this.distributionDS = distributionDS;
     this.subscriptionDS = subscriptionDS;
     this.distrInfos = new LinkedList<DistributionInfo>();
-    this.timezones = new HashSet<TimeZone>();
+    this.timezones = new HashSet<TimeZone>(50);
   }
 
   public void addDistribution(DistributionInfo info) {
@@ -54,7 +54,7 @@ public class DeliveriesGenerator {
     DataSourceTransaction stx = null;
 
     // Create Volume groups
-    final Map<Integer, VolumeGroup> volumeGroups = new HashMap<Integer, VolumeGroup>();
+    final Map<Integer, VolumeGroup> volumeGroups = new HashMap<Integer, VolumeGroup>(50);
     ResultSet<VolumeStat> volumeStats = null;
     try {
       stx = subscriptionDS.createTransaction();
@@ -192,7 +192,7 @@ public class DeliveriesGenerator {
         try {
           // Create volume groups
           final Map<Integer, VolumeGroup> volumeGroups = createVolumeGroups(info.getDistributionName(), startDate, endDate, tz);
-          if (volumeGroups.size() > 0) {
+          if (!volumeGroups.isEmpty()) {
             // Schedule
             scheduleDeliveries(info.getDistributionName(), startDate, endDate, volumeGroups, tz);
           }

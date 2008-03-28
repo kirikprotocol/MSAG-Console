@@ -15,7 +15,7 @@ import java.util.Map;
  * Date: 24.03.2008
  */
 
-public class StatsFileImpl implements StatsFile {
+class StatsFileImpl implements StatsFile {
 
   private static final Category log = Category.getInstance(StatsFileImpl.class);
 
@@ -168,7 +168,7 @@ public class StatsFileImpl implements StatsFile {
     try {
       writeDeliveryStat(stat, os);
     } catch (IOException e) {
-      throw new StatsFileException("Can't add stats to file " + file, e);      
+      throw new StatsFileException("Can't add stats to file " + file, e);
     }
   }
 

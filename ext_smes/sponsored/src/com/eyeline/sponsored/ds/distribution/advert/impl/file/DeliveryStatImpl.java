@@ -7,5 +7,5 @@ import com.eyeline.sponsored.ds.distribution.advert.impl.AbstractDeliveryStatImp
  * Date: 24.03.2008
  */
 
-public class DeliveryStatImpl extends AbstractDeliveryStatImpl {
+class DeliveryStatImpl extends AbstractDeliveryStatImpl {
 }
