@@ -54,13 +54,14 @@ function edit(idToEdit, child, parentId) {
         actions = "<%=request.getContextPath()%>" + child + "/edit.jsp?editId=" + idToEdit + "&parentId=" + parentId;
     }
     var opForm = getElementByIdUni("opForm");
+    document.getElementById ('startPosition').value=0;
     opForm.action = actions;
     opForm.submit();
 
     return false;
 }
 </script>
-<table class=list cellspacing=0>
+<table class=list cellspacing=0 border=0>
 <thead>
   <tr>
     <c:forEach var="_column" items="${columns}" varStatus="status">
@@ -137,4 +138,4 @@ function edit(idToEdit, child, parentId) {
   </c:forEach>
 </tbody>
 </table>
-<%@ include file="paging.tag" %>
+<%@ include file="paging.tag"%>
