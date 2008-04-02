@@ -70,6 +70,8 @@ public class Edit extends TabledEditBeanImpl {
 
     private String editId1 = "null";
 
+//    private int startPosition = 0;
+
     public String getEditId1() {
         return editId1;
     }
@@ -86,6 +88,7 @@ public class Edit extends TabledEditBeanImpl {
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
 //        logger.error("services/service/Edit:process():start:startPosition=" + startPosition + " \tpageSize=" + pageSize);
         logger.error("services/service/Edit:process():start:editId =" + getEditId() + " editId1 =" + getEditId1() );
+        logger.error("services/service/Edit:process():start:startPosition =" + startPosition );
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
@@ -126,6 +129,7 @@ public class Edit extends TabledEditBeanImpl {
                 session.setAttribute(TabledBeanImpl.PAGE_SIZE, new Integer(pageSize));
             }
         }
+        logger.info("services/service/Edit:process: servIdForRout = " + servIdForRout);
         pageSize = Integer.parseInt(String.valueOf(session.getAttribute(TabledBeanImpl.PAGE_SIZE)));
         serviceProviders = appContext.getServiceProviderManager().getServiceProviders();
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(
@@ -133,20 +137,28 @@ public class Edit extends TabledEditBeanImpl {
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
         logger.error("services/service/Edit:process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
         totalSize = results.size();
-        if (totalSize > startPosition)
+        if (totalSize > startPosition){
+            logger.error("services/service/Edit:process():(totalSize > startPosition)");
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
-        else
-            tabledItems = new LinkedList();
+        }
+        else{
+            logger.error("services/service/Edit:process():!(totalSize > startPosition)");
+//            tabledItems = new LinkedList();
+            tabledItems = results.subList(0, Math.min(totalSize, pageSize));
+        }
 
         final SortedList results2 = new SortedList(
                 appContext.getServiceProviderManager().getHttpRoutesByServiceId(
                         appContext.getHttpRoutingManager().getRoutes(), servIdForRout).values(),
                 new SortByPropertyComparator(sort));
         totalHttpSize = results2.size();
-        if (totalHttpSize > startPosition)
+        if (totalHttpSize > startPosition){
             httpRuteItems = results2.subList(startPosition, Math.min(totalHttpSize, startPosition + pageSize));
-        else
-            httpRuteItems = new LinkedList();
+        }
+        else {
+//            httpRuteItems = new LinkedList();
+            httpRuteItems = results2.subList(0, Math.min(totalHttpSize, pageSize));
+        }
         if (getMbSave() != null) {
             logger.info( "services/service/Edit:process SAVE" );
             save();
@@ -292,7 +304,9 @@ public class Edit extends TabledEditBeanImpl {
                 logger.debug( "services/service/Edit: load if (editChild): getEditId1()=" + getEditId1() );
                 if (!serviceProviders.containsKey(Long.decode(getEditId())))
                 {
+                    logger.debug( "services/service/Edit: load if (editChild): if1(): getEditId1()=" + getEditId1() );
                     if (!serviceProviders.containsKey(Long.decode(getEditId1()))){
+                        logger.debug( "services/service/Edit: load if (editChild): if1(): if(): getEditId1()=" + getEditId1() );
                         throw new SCAGJspException(Constants.errors.serviceProviders.SERVICE_PROVIDER_NOT_FOUND, getEditId()+"|"+getEditId1()+"|c");
                     }
                 }
