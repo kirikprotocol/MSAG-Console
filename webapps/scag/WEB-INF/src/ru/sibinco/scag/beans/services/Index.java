@@ -10,6 +10,8 @@ import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.SibincoException;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -27,6 +29,35 @@ public class Index extends TabledBeanImpl {
 
     protected Collection getDataSource() {
         return appContext.getServiceProviderManager().getServiceProviders().values();
+    }
+
+    public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+
+        getFromSession(request);
+        request.getSession().setAttribute( Constants.START_POSITION_SI, new Integer(startPosition) );
+        logger.debug("services:process():Edit:sp_services=" + request.getSession().getAttribute(Constants.START_POSITION_SI) );
+
+        super.process( request, response);
+    }
+
+    void getFromSession( final HttpServletRequest request ){
+        String get = null;
+        logger.debug( "services:Edit:get_sp_services=" + request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SI) );
+        if( request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SI) != null ){
+            get = (String)request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SI);
+        }
+        if( get != null && get.equals("true") ){
+            logger.debug( "services:process():Edit:get_sp_services=" + get );
+            request.getSession().setAttribute( Constants.GET_FROM_SESSION_START_POSITION_SI, "false" );
+            int sp_services_i = 0;
+            if( request.getSession().getAttribute(Constants.START_POSITION_SI) != null ){
+                logger.debug( "services:process():Edit:get_sp_services=" + request.getSession().getAttribute( Constants.START_POSITION_SI ) );
+                Integer inte = (Integer)request.getSession().getAttribute(Constants.START_POSITION_SI);
+                sp_services_i = inte.intValue();
+                logger.debug( "services:process():Edit:sp_services=" + sp_services_i );
+                startPosition = sp_services_i;
+            }
+        }
     }
 
     protected void delete() throws SCAGJspException {

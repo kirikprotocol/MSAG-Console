@@ -43,13 +43,19 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
+
+        getFromSession(request);
+        storeToSessionSP(request);
+
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
         userLogin = request.getUserPrincipal().getName();
         if (getMbCancel() != null) {
+            storeToSessionGetFlagParent( request, Constants.GSP_TRUE );
             throw new CancelException();
         } else if (getMbSave() != null) {
+            storeToSessionGetFlagParent( request, Constants.GSP_TRUE );
             save();
         } else if (getMbAddChild() != null) {
             throw new AddChildException("service", Long.toString(id));
@@ -61,6 +67,41 @@ public class Edit extends TabledEditBeanImpl {
         if (!isAdd()) {
             super.process(request, response);
         }
+    }
+
+    void getFromSession( final HttpServletRequest request ){
+        String get = null;
+        logger.debug( "services/Edit:getFromSession():start:get_sp_services=" + request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_S) );
+        if( request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_S) != null ){
+            get = (String)request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_S);
+        }
+        if( get != null && get.equals(Constants.GSP_TRUE) ){
+            request.getSession().setAttribute(Constants.GET_FROM_SESSION_START_POSITION_S, Constants.GSP_FALSE );
+            logger.debug( "services/Edit:getFromSession():Edit:set top false get_sp_services=" +
+                           request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_S) );
+            int sp_services = 0;
+            if( request.getSession().getAttribute(Constants.START_POSITION_S) != null ){
+                logger.debug( "services/Edit:getFromSesion():sp_services=" + request.getSession().getAttribute( Constants.START_POSITION_S ) );
+                Integer inte = (Integer)request.getSession().getAttribute(Constants.START_POSITION_S);
+                sp_services = inte.intValue();
+                logger.debug( "services/Edit:getFromSesion():sp_services=" + sp_services );
+                if(sp_services!=-1){
+                    startPosition = sp_services;
+                }
+            }
+        }
+    }
+
+
+    void storeToSessionGetFlagParent( final HttpServletRequest request, String value ){
+        request.getSession().setAttribute(Constants.GET_FROM_SESSION_START_POSITION_SI, value );
+        logger.debug("services/Edit:storeToSessionGetFlag():"  +
+                      request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SI) );
+    }
+
+    void storeToSessionSP( final HttpServletRequest request ){
+        request.getSession().setAttribute( Constants.START_POSITION_S, new Integer(startPosition) );
+        logger.debug("services:process():Edit:sp_services=" + request.getSession().getAttribute(Constants.START_POSITION_S) );
     }
 
 

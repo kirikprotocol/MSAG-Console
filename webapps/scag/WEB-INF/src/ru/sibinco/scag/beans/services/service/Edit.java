@@ -70,7 +70,10 @@ public class Edit extends TabledEditBeanImpl {
 
     private String editId1 = "null";
 
-//    private int startPosition = 0;
+    private int startPosition_local = 0;
+
+//    public static final String START_POSITION = "sp_services_service";
+//    public static final String GET_FROM_SESSION_START_POSITION = "get_sp_services_service";
 
     public String getEditId1() {
         return editId1;
@@ -86,9 +89,16 @@ public class Edit extends TabledEditBeanImpl {
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-//        logger.error("services/service/Edit:process():start:startPosition=" + startPosition + " \tpageSize=" + pageSize);
-        logger.error("services/service/Edit:process():start:editId =" + getEditId() + " editId1 =" + getEditId1() );
-        logger.error("services/service/Edit:process():start:startPosition =" + startPosition );
+        logger.debug("services/service/Edit:process():start:editId =" + getEditId() + " editId1 =" + getEditId1() );
+
+        getFromSession(request);
+        storeToSessionSP(request);
+//        if( request.getAttribute("service_position") != null){
+//            startPosition_local = Integer.parseInt( (String)request.getAttribute("service_position") );
+//            startPosition = startPosition_local;
+//        }
+
+        logger.debug("services/service/Edit:process():start:new startPosition =" + startPosition );
         if (appContext == null) {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
@@ -97,6 +107,7 @@ public class Edit extends TabledEditBeanImpl {
         if (getMbCancel() != null) {
             String path = Utils.getPath(request);
             path = path.substring(0, (path.length() - (dirName.length() + 1))) + "edit.jsp?editId=" + (editChild ? getEditId() : getParentId());
+            storeToSessionParentGetFlag( request, Constants.GSP_TRUE );
             throw new CancelChildException(path);
 //        } else if (getMbSave() != null) {
 //            logger.info( "services/service/Edit:process SAVE" );
@@ -135,22 +146,22 @@ public class Edit extends TabledEditBeanImpl {
         routes = appContext.getServiceProviderManager().getRoutesByServiceId(
                                        appContext.getScagRoutingManager().getRoutes(), servIdForRout);
         final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort = (sort == null) ? "id" : sort));
-        logger.error("services/service/Edit:process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
+        logger.debug("services/service/Edit:process():results=" + results.size() + "\tstartPosition=" + startPosition + " \tpageSize=" + pageSize);
         totalSize = results.size();
         if (totalSize > startPosition){
-            logger.error("services/service/Edit:process():(totalSize > startPosition)");
+            logger.debug("services/service/Edit:process():(totalSize > startPosition)");
             tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
         }
         else{
-            logger.error("services/service/Edit:process():!(totalSize > startPosition)");
+            logger.debug("services/service/Edit:process():!(totalSize > startPosition)");
 //            tabledItems = new LinkedList();
             tabledItems = results.subList(0, Math.min(totalSize, pageSize));
         }
 
         final SortedList results2 = new SortedList(
-                appContext.getServiceProviderManager().getHttpRoutesByServiceId(
-                        appContext.getHttpRoutingManager().getRoutes(), servIdForRout).values(),
-                new SortByPropertyComparator(sort));
+                appContext.getServiceProviderManager().getHttpRoutesByServiceId(appContext.getHttpRoutingManager().getRoutes(), servIdForRout).values(),
+                new SortByPropertyComparator(sort)
+                );
         totalHttpSize = results2.size();
         if (totalHttpSize > startPosition){
             httpRuteItems = results2.subList(startPosition, Math.min(totalHttpSize, startPosition + pageSize));
@@ -160,7 +171,8 @@ public class Edit extends TabledEditBeanImpl {
             httpRuteItems = results2.subList(0, Math.min(totalHttpSize, pageSize));
         }
         if (getMbSave() != null) {
-            logger.info( "services/service/Edit:process SAVE" );
+            logger.debug( "services/service/Edit:process():getMbSave()" );
+            storeToSessionParentGetFlag( request, Constants.GSP_TRUE );
             save();
         }
         load();
@@ -197,7 +209,6 @@ public class Edit extends TabledEditBeanImpl {
             logger.debug( "services/service/Edit:editRuleMMS" );
             setPermissionRule( Transport.MMS_TRANSPORT_NAME, true );
         }
-
         if (getEditId() != null && !editChild) {
             super.process(request, response);
         }
@@ -218,6 +229,41 @@ public class Edit extends TabledEditBeanImpl {
             ruleManager.setSavePermissionHTTP( permission );
         }else if( transport.equals(Transport.MMS_TRANSPORT_NAME) ){
             ruleManager.setSavePermissionMMS( permission );
+        }
+    }
+
+    void storeToSessionParentGetFlag( HttpServletRequest request, String value){
+        request.getSession().setAttribute(Constants.GET_FROM_SESSION_START_POSITION_S, value);
+        logger.debug("services/service/Edit:storeToSessionGetFlagParent():"  +
+                      request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_S) );
+
+    }
+
+    void storeToSessionSP( final HttpServletRequest request ){
+        request.getSession().setAttribute( Constants.START_POSITION_SS, new Integer(startPosition) );
+        logger.debug("services/service/Edit:storeToSessionSP:" + request.getSession().getAttribute(Constants.START_POSITION_SS) );
+    }
+
+    void getFromSession( final HttpServletRequest request ){
+        String get = null;
+        if( request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SS) != null ){
+            get = (String)request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SS);
+        }
+        if( get != null && get.equals(Constants.GSP_TRUE) ){
+            request.getSession().setAttribute( Constants.GET_FROM_SESSION_START_POSITION_SS, Constants.GSP_FALSE );
+            logger.debug("services/service/Edit:set to false get_sp_services_service=" +
+                    request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SS) );
+            int sp_services_service = 0;
+            if( request.getSession().getAttribute( Constants.START_POSITION_SS ) != null ){
+                logger.debug( "services/service/Edit:sp_services_service=" + request.getSession().getAttribute( Constants.START_POSITION_SS ) );
+                sp_services_service = ((Integer)request.getSession().getAttribute(Constants.START_POSITION_SS) ).intValue();
+//                request.getSession().setAttribute( Constants.START_POSITION_SS, new Integer(startPosition) );
+//                storeToSessionSP( request );
+                logger.debug( "services/service/Edit:sp_services_service=" + sp_services_service );
+                if(sp_services_service!=-1){
+                    startPosition = sp_services_service;
+                }
+            }
         }
     }
 

@@ -76,9 +76,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
-        logger.debug("Edit.java:process():start");
-        logger.debug("Edit.java:process():start:getSrcMasks=" + getSrcMasks().toString());
-        logger.debug("Edit.java:process():start:getSrcSubjs=" + getSrcSubjs().toString());
+        logger.debug("routing/routes/Edit:process():start:\ngetSrcMasks()=" + getSrcMasks().toString() + "\ngetSrcSubjs()=" + getSrcSubjs().toString());
         path = request.getContextPath();
         appContext = getAppContext();
         session = request.getSession();
@@ -87,6 +85,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             appContext = (SCAGAppContext) request.getAttribute(Constants.APP_CONTEXT);
         }
         if (getMbCancel() != null) {
+            logger.debug("routing/routes/Edit:process():getMbCancel()");
+            storeToSessionParentGetFlag(request, Constants.GSP_TRUE);
             throw new CancelChildException(new StringBuffer().append(path).
                     append("/services/service/edit.jsp?parentId=").append(getParentId()).
                     append("&editId=").append(appContext.getServiceProviderManager().getServiceProviderByServiceId(
@@ -98,8 +98,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         destinations = new HashMap();
         destSubjs = new HashMap();
         destMasks = new HashMap();
-        logger.debug("Edit.java:process():middle");
-        logger.debug("Edit.java:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet());
+        logger.debug("routing/routes/Edit.java:process():request.getParameterMap().entrySet()=" + request.getParameterMap().entrySet());
         for (Iterator i = request.getParameterMap().entrySet().iterator(); i.hasNext();) {
             final Map.Entry entry = (Map.Entry) i.next();
             final String s = (String) entry.getKey();
@@ -112,7 +111,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 final StringBuffer smeName = new StringBuffer();
                 for (int j = 0; j < smeNameStrings.length; j++) {
                     final String smeNameString = smeNameStrings[j];
-                    logger.error( "startsWith(DST_SME_PREFIX):" + j + "smeNameString=" + smeNameString);
+                    logger.debug( "startsWith(DST_SME_PREFIX):" + j + "smeNameString=" + smeNameString);
                     if (null != smeNameString)
                         smeName.append(smeNameString.trim());
                 }
@@ -127,7 +126,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 final MetaEndpoint mService = (MetaEndpoint) appContext.getSmppManager().getMetaServices().get(smeId);
                 final MetaEndpoint mCenter = (MetaEndpoint) appContext.getSmppManager().getMetaCenters().get(smeId);
                 if( svc == null && center == null && mService == null && mCenter == null){
-                    logger.error( "1");
+                    logger.error( "routing/routes/Edit:process():SCAGJspException");
                     throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
                 }
 
@@ -227,16 +226,23 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         }
         logger.debug("Edit.java:process(): (getMbSave() != null) before");
         if (getMbSave() != null) {
+            logger.debug("routing/routes/Edit:process():getMbSave()");
+            storeToSessionParentGetFlag(request, Constants.GSP_TRUE);
             super.process(request, response);
-            logger.debug("Edit.java:process(): (getMbSave() != null) in");
+            logger.debug("routing/routes/Edit:process():getMbSave()1");
             save();
         }
-        logger.debug("Edit.java:process():load(id)");
+        logger.debug("Edit.java:process():load(id):id=" + id);
         load(id);
         super.process(request, response);
 
     }
 
+    void storeToSessionParentGetFlag( final HttpServletRequest request, String value ){
+        request.getSession().setAttribute(Constants.GET_FROM_SESSION_START_POSITION_SS, value);
+        logger.debug("routing/routes/Edit:storeToSessionGetFlag()"  +
+                      request.getSession().getAttribute(Constants.GET_FROM_SESSION_START_POSITION_SS) );
+    }
 
     protected Collection getDataSource() {
         return new LinkedList();
@@ -247,7 +253,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     protected void load(final String loadId) throws SCAGJspException {
-        logger.debug("Edit.java:load():start");
+        logger.debug("routing/routes/Edit:load():start");
         if (null == new_dst_mask_sme_ && 0 < appContext.getSmppManager().getSvcs().size())
             new_dst_mask_sme_ = (String) appContext.getSmppManager().getSvcs().keySet().iterator().next();
 
@@ -298,7 +304,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
                 serviceName = route.getService().getName();
             }
         }
-        logger.debug("Edit.java:load():after");
+        logger.debug("routing/routes/Edit:load():after");
         if (isAdd()) {
             enabled = true;
             active = true;
@@ -306,7 +312,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
     }
 
     protected void save() throws SCAGJspException {
-        logger.debug("Edit.java:save():start");
+        logger.debug("routing/routes/Edit:save():start");
         final Map routes = appContext.getScagRoutingManager().getRoutes();
         String messagetxt = "";
         try {
@@ -314,9 +320,9 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             srcMasks = removeEmptyFromArr( srcMasks );
             dstMasks = removeEmptyFromArr( dstMasks );
             if( sources == null || sources.isEmpty() ){
-                logger.warn( "Edit.java:save():empty SOURCE MAP|srcMasks.length is:'" + srcMasks.length + "'" );
+                logger.warn( "routing/routes/Edit:save():empty SOURCE MAP|srcMasks.length is:'" + srcMasks.length + "'" );
                 if( destinations == null || destinations.isEmpty() ){
-                    logger.warn( "Edit.java:save():empty DESTINATONS MAP|destinations" );
+                    logger.warn( "routing/routes/Edit:save():empty DESTINATONS MAP|destinations" );
                     emptyDestinations = true;
                     throw new SCAGJspException( Constants.errors.routing.routes.CAN_NOT_SAVE_ROUTE_SOUR_DEST );
                 }
@@ -368,7 +374,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
 
     private Map createSources() throws SibincoException {
         final Map result = new HashMap();
-        logger.debug("Edit.java:createSources():start");
+        logger.debug("routing/routes/Edit:createSources():start");
         for (int i = 0; i < srcSubjs.length; i++) {
             final String srcSubj = srcSubjs[i];
             final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(srcSubj);
@@ -534,8 +540,8 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
         final Map result = new TreeMap();
         for (Iterator i = appContext.getScagRoutingManager().getSubjects().values().iterator(); i.hasNext();) {
             final Subject subject = (Subject) i.next();
-            logger.info( "Routing:Edit:dstSubjectsSet=" + dstSubjectsSet);
-            logger.info( "Routing:Edit:getSubject from routingmanager=" + subject.getId());
+            logger.info( "routing/routes/Edit:getAllUncheckedDstSubjects():dstSubjectsSet=" + dstSubjectsSet);
+            logger.info( "routing/routes/Edit:getAllUncheckedDstSubjects():getSubject from routingmanager=" + subject.getId());
 
             if( !dstSubjectsSet.contains( subject.getId()) ){
                 result.put( subject.getName(),
@@ -656,7 +662,7 @@ public class Edit extends EditBean {//TabledEditBeanImpl {
             }
         }
         String[] result = new String[count];
-        logger.debug("Edit.java:removeEmptyFromArr():not empty count='" + count + "'");
+        logger.debug("routing/routes/Edit:removeEmptyFromArr():not empty count='" + count + "'");
 
         for( int i = 0; i < srcMasks.length; i++){
             if( srcMasks[i].trim().length() != 0 ){
