@@ -140,11 +140,12 @@
         opt.value = "${fn:escapeXml(i)}";
         opt.text = "${fn:escapeXml(i)}";
         opt.id = "option_${fn:escapeXml(i)}";
+        if( opt.valu == sme ){
+            opt.selected = true;
+        }
         smeSelectHard.options.add(opt);
         i++;
     </c:forEach>
-    smeSelectHard.options[3].selected = true;
-    smeSelectHard.selectedIndex = 3;
 
           newCell = document.createElement("td");
           newCell.innerHTML = smesSelectText;
