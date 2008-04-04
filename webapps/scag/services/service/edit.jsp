@@ -232,7 +232,9 @@
                 src="${pageContext.request.contextPath}/rules/rules/rules.jsp?id=${bean.editId}"
               </c:otherwise>
           </c:choose>
-        width='0px' height="0px"></iframe>
+          width='0px' height="0px">
+        </iframe>
+
             <sm-ep:properties title="service.edit.properties.service_rules" noEdit="true" id="rulesT">
               <sm:rule tname="SMPP" ttitle="service.edit.rule.transport.smpp"/>
               <sm:rule tname="HTTP" ttitle="service.edit.rule.transport.http"/>
@@ -242,8 +244,8 @@
             <div class=page_subtitle>&nbsp;</div>
             <div class=page_subtitle><fmt:message>service.edit.label.smpp.routes_list</fmt:message></div>
             <sm:table columns="checkbox,id,active,enabled,archived,notes"
-                      names="c,service.edit.table.names.id,service.edit.table.names.active,service.edit.table.names.enabled,service.edit.table.names.archived,service.edit.table.names.notes" widths="1,60,20,20,39,59"
-                      child="/routing/routes" parentId="${bean.parentId}" edit="id" targetElemId="mbDelete"/>
+                      names="c,service.edit.table.names.id,service.edit.table.names.active,service.edit.table.names.enabled,service.edit.table.names.archived,service.edit.table.names.notes"
+                      widths="1,60,20,20,39,59" child="/routing/routes" parentId="${bean.parentId}" edit="id" targetElemId="mbDelete"/>
             <div class=page_subtitle>&nbsp;</div>
             <sm-pm:menu>
                 <sm-pm:item name="mbAddSmppRoute" value="service.edit.item.mbaddchild.value" title="service.edit.item.mbaddchild.title"/>
