@@ -29,7 +29,9 @@
 
             <div class=page_subtitle><fmt:message>services.edit.label.services_list</fmt:message></div>
 <%--            <sm:table columns="checkbox,id,name" names="c,services.edit.table.names.id,services.edit.table.names.name,services num" widths="1,20" child="/service" edit="name"/>--%>
-            <sm:table parentId="${bean.id}" columns="checkbox,id,name" names="c,services.edit.table.names.id,services.edit.table.names.name,services num" widths="1,20" child="/service" edit="name"/>
+            <sm:table parentId="${bean.id}" columns="checkbox,id,name"
+                      names="c,services.edit.table.names.id,services.edit.table.names.name,services num"
+                      widths="1,20" child="/service" edit="name"/>
         </c:if>
         <div class=page_subtitle>&nbsp;</div>
         <sm-pm:menu>
