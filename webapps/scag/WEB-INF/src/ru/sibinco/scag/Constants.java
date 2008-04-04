@@ -26,9 +26,22 @@ public class Constants {
     public static final int STORE_TYPE_SVC = 1;
     public static final int STORE_TYPE_CENTER = 2;
 
+    public static final String START_POSITION_SS = "sp_services_service";
+    public static final String GET_FROM_SESSION_START_POSITION_SS = "get_sp_services_service";
+
+    public static final String START_POSITION_S = "sp_services_edit";
+    public static final String GET_FROM_SESSION_START_POSITION_S = "get_sp_services_edit";
+
+    public static final String START_POSITION_SI = "sp_services_index";
+    public static final String GET_FROM_SESSION_START_POSITION_SI = "get_sp_services_index";
+
+    public static final String GSP_TRUE = "true";   // GSP = Get_Start_Position
+    public static final String GSP_FALSE = "false"; // GSP = Get_Start_Position
+
     public interface errors {
 
         public static final Constants CAN_NOT_SAVE_NAME_WITH_FORBIDDEN_CHARACTER = new Constants("error.can_not_save_name_with_forbidden_character");
+
 
         public interface status {
             public static final Constants COULDNT_APPLY_CONFIG = new Constants("error.status.couldnt_apply_config");
