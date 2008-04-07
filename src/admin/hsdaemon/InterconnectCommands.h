@@ -19,14 +19,14 @@ namespace buf=smsc::core::buffers;
 inline uint16_t readUInt16(net::Socket* sck)
 {
   uint16_t rv;
-  if(sck->ReadAll(reinterpret_cast<char*>(&rv),sizeof(rv))==-1)throw Exception("Failed to read uint16_t from socket");
+  if(sck->ReadAll(reinterpret_cast<char*>(&rv),sizeof(rv),60)==-1)throw Exception("Failed to read uint16_t from socket");
   return ntohs(rv);
 }
 
 inline uint32_t readUInt32(net::Socket* sck)
 {
   uint32_t rv;
-  if(sck->ReadAll(reinterpret_cast<char*>(&rv),sizeof(rv))==-1)throw Exception("Failed to read uint32_t from socket");
+  if(sck->ReadAll(reinterpret_cast<char*>(&rv),sizeof(rv),60)==-1)throw Exception("Failed to read uint32_t from socket");
   return ntohl(rv);
 }
 
@@ -34,7 +34,7 @@ inline std::string readString(net::Socket* sck)
 {
   uint16_t len=readUInt16(sck);
   TmpBuf<char,64> buf(len);
-  if(sck->ReadAll(buf.get(),len)==-1)throw Exception("Failed to read string of length %d from socket",len);
+  if(sck->ReadAll(buf.get(),len,60)==-1)throw Exception("Failed to read string of length %d from socket",len);
   std::string rv;
   return std::string(buf.get(),len);
 }
