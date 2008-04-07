@@ -512,7 +512,7 @@ int main(void)
                 const char* msg = exc.what();
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s\n", (msg) ? msg:"unknown");
                 setNeedReconnect(true);
-                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
+                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
                 session.close();
                 runner.shutdown();

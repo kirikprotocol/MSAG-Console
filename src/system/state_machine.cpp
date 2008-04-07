@@ -1740,6 +1740,19 @@ StateType StateMachine::submit(Tuple& t)
       }
     }
 
+    if((isDatagram || isTransaction) && sms->hasBinProperty(Tag::SMSC_DC_LIST))
+    {
+      try
+      {
+        smsc_log_debug(smsLog,"SBM:Delete fwd/dgm mode merged smsId=%lld from store",t.msgId);
+        c.createSms=scsDoNotCreate;
+        store->changeSmsStateToDeleted(t.msgId);
+      } catch(std::exception& e)
+      {
+        smsc_log_warn(smsLog,"SBM: merged miltipart->forward: failed to change smsId=%lld to deleted",t.msgId);
+      }
+    }
+
     ////
     //
     //  Directives
@@ -1921,7 +1934,7 @@ StateType StateMachine::submit(Tuple& t)
         if(!sms->Invalidate(__FILE__,__LINE__))
         {
            warn2(smsLog, "Invalidate of %lld failed",t.msgId);
-           throw "Invalid sms";
+           throw Exception("Invalid sms");
         }
         bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
 
@@ -2107,7 +2120,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
       if(!sms->Invalidate(__FILE__,__LINE__))
       {
          warn2(smsLog, "Invalidate of %lld failed",t.msgId);
-         throw "Invalid sms";
+         throw Exception("Invalid sms");
       }
       bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
 
@@ -2126,7 +2139,16 @@ StateType StateMachine::submitChargeResp(Tuple& t)
     }
   }else if(createSms==scsReplace)
   {
-    store->replaceSms(t.msgId,*sms);
+    try
+    {
+      store->replaceSms(t.msgId,*sms);
+    } catch(std::exception& e)
+    {
+      __warning2__("failed to create/replace sms with id %lld:%s",t.msgId,e.what());
+      submitResp(t,sms,Status::SYSERR);
+      smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true,Smsc::chargeAlways);
+      return ERROR_STATE;
+    }
   }
 
 
@@ -4775,7 +4797,7 @@ StateType StateMachine::query(Tuple& t)
     store->retriveSms(t.msgId,sms);
     if(!(sms.getOriginatingAddress()==addr))
     {
-      throw 0;
+      throw Exception("addr not match");
     }
   }catch(...)
   {

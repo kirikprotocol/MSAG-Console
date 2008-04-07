@@ -256,7 +256,7 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
                 try { connection->rollback(); } catch (...) {
                     smsc_log_error(log, "Failed to rollback");
                 }
-                throw exc;
+                throw;
             }
             catch (...) {
                 try { connection->rollback(); } catch (...) {
@@ -310,7 +310,7 @@ SMSId RemoteStore::doCreateSms(StorageConnection* connection,
         try { connection->rollback(); } catch (...) {
             smsc_log_error(log, "Failed to rollback");
         }
-        throw exc;
+        throw;
     }
     catch (...) {
         try { connection->rollback(); } catch (...) {
@@ -408,7 +408,7 @@ void RemoteStore::doChangeSmsConcatSequenceNumber(
         try { connection->rollback(); } catch (...) {
             smsc_log_error(log, "Failed to rollback");
         }
-        throw exc;
+        throw;
     }
 
     if (!seqNumStmt->wasUpdated())
@@ -930,7 +930,7 @@ void RemoteStore::doChangeSmsStateToEnroute(StorageConnection* connection,
         try { connection->rollback(); } catch (...) {
             smsc_log_error(log, "Failed to rollback");
         }
-        throw exc;
+        throw;
     }
 
     if (!toEnrouteStmt->wasUpdated())

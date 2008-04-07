@@ -112,7 +112,7 @@ Variant WSmeComponent::call(const Method& method, const Arguments& args)
     }
     catch (AdminException &e) {
         smsc_log_debug(log, "AdminException: %s", e.what());
-        throw e;
+        throw;
     }
     catch (...) {
         smsc_log_debug(log, "... Exception");
