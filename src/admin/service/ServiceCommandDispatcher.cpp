@@ -48,7 +48,7 @@ Response * ServiceCommandDispatcher::handle(const Command * const command)
 	}
 	catch (AdminException &e)
 	{
-		throw e;
+		throw;
 	}
 	catch (...) {
 		throw AdminException("Unknown exception in command dispatcher");
