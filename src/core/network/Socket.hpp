@@ -118,7 +118,7 @@ public:
   int canRead(int to=0);
   int canWrite(int to=0);
   int Read(char *buf,int bufsize);
-  int ReadAll(char* buf,int size);
+  int ReadAll(char* buf,int size,int to=0);
   int readChar();
   int Write(const char *buf,int bufsize);
   int WriteAll(const void *buf,int bufsize);
