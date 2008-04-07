@@ -311,12 +311,12 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
     {
         if (e.getLineNumber()>0) smsc_log_error(logger,"Error at line %d: %s",e.getLineNumber(), e.what());
         else smsc_log_error(logger,"Error: %s",e.what());
-        throw e;
+        throw;
     }
     catch (SCAGException& e)
     {
         smsc_log_error(logger,"Terminate parsing Rule: %s",e.what());
-        throw e;
+        throw;
     }
     catch (...)
     {

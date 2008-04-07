@@ -275,7 +275,7 @@ void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
     {
         if (statFile.isOpened()) statFile.Close();
         bFileTM = false;
-        throw exc;
+        throw;
     }
 }
 uint64_t toNetworkOrder(uint64_t value)

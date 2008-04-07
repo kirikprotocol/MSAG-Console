@@ -81,7 +81,7 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
         } catch (SCAGException& e)
         {
             delete action;
-            throw e;
+            throw;
         }
 
         if (FillThenSection) 

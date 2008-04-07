@@ -206,7 +206,7 @@ void StatisticsWriter::dumpCounters(const uint8_t* buff, int buffLen, const tm& 
   }catch(std::exception & exc){
     if (file.isOpened()) file.Close();
     bFileTM = false;
-    throw exc;
+    throw;
   }
 }
 

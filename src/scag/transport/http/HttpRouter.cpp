@@ -550,7 +550,7 @@ void HttpRouterImpl::ReloadRoutes()
         delete ph;
         delete inap;
         delete outap;
-        throw e; 
+        throw; 
     }
 
     smsc_log_info(logger, "Routes reloading finished");
@@ -587,7 +587,7 @@ void HttpRouterImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
     }
     catch (Exception& e)
     {
-        throw e;
+        throw;
     }
     catch (...)
     {

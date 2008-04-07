@@ -143,7 +143,7 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
     } catch (SCAGException& e)
     {
         if (eh) delete eh;
-        throw e;
+        throw;
     }
     if (Handlers.Exist(nHId)) 
     {

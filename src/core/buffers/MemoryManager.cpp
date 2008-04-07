@@ -2,6 +2,8 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <stdexcept>
+#include <string>
 
 namespace smsc{
 namespace core{
@@ -446,7 +448,7 @@ void MemoryHeap::freeMem(void*& block)
       }
     }
     fprintf(stderr,"ATTEMPT TO FREE UNALLOCATED BLOCK\n");
-    throw 0;
+    throw std::runtime_error("ATTEMPT TO FREE UNALLOCATED BLOCK");
   }else
   {
     for(i=0;i<varBlocks.Count();i++)
@@ -464,11 +466,11 @@ void MemoryHeap::freeMem(void*& block)
           }
         }
         fprintf(stderr,"ATTEMPT TO FREE UNALLOCATED BLOCK\n");
-        throw 0;
+        throw std::runtime_error("ATTEMPT TO FREE UNALLOCATED BLOCK");
       }
     }
     fprintf(stderr,"ATTEMPT TO FREE UNALLOCATED BLOCK\n");
-    throw 0;
+    throw std::runtime_error("ATTEMPT TO FREE UNALLOCATED BLOCK");
   }
   block=0;
 }

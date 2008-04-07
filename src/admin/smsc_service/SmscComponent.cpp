@@ -629,7 +629,7 @@ throw (AdminException)
   }
   catch (AdminException &e)
   {
-    throw e;
+    throw;
   }
   catch (...)
   {
@@ -1352,7 +1352,7 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
     else
       throw   AdminException("SMSC is not running");
   } catch (AdminException &e) {
-    throw e;
+    throw;
   } catch (std::exception &e) {
     throw AdminException(e.what());
   } catch (...) {

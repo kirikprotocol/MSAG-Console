@@ -494,7 +494,7 @@ void PersClientImpl::SendPacket(SerialBuffer& bsb)
             smsc_log_debug(log, "PersClientException: %s", e.what());		
             connected = false;
             sock.Close();
-            if(++t >= 2) throw e;
+            if(++t >= 2) throw;
         }
     }
 }

@@ -43,7 +43,7 @@ IParserHandler * ActionTrafficCheck::StartXMLSubSection(const std::string& name,
     } catch (SCAGException& e)
     {
         delete action;
-        throw e;
+        throw;
     }
     Actions.push_back(action);
     return action;

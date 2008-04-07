@@ -49,7 +49,7 @@ void CentralPersServer::ParseFile(const char* _xmlFile, HandlerBase* handler)
     catch (Exception& e)
     {
         smsc_log_error(logger,"Terminate parsing: %s",e.what());
-        throw e;
+        throw;
     }
     catch (...)
     {

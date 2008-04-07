@@ -656,7 +656,7 @@ int main(int argc, char** argv)
                 const char* msg = exc.what();
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 bInfoSmeIsConnecting = false;
-                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw exc;
+                if (exc.getReason() == SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
                 session.close();
                 continue;

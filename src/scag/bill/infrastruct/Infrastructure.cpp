@@ -110,7 +110,7 @@ void InfrastructureImpl::ReloadProviderMap()
     {
         smsc_log_info(logger, "Provider Map reload was not successful");
         delete hash;
-        throw e;
+        throw;
     }
 
     smsc_log_info(logger, "ReloadProviderMap Finished");
@@ -135,7 +135,7 @@ void InfrastructureImpl::ReloadOperatorMap()
     {
         smsc_log_info(logger, "Operator Map reload was not successful");
         delete hash;
-        throw e;
+        throw;
     }
 
     smsc_log_info(logger, "ReloadOperatorMap Finished");
@@ -177,7 +177,7 @@ void InfrastructureImpl::ReloadTariffMatrix()
         delete cat_str_hash;
         delete mt_str_hash;
         delete t_hash;
-        throw e;
+        throw;
     }
 
     smsc_log_info(logger, "ReloadTariffMatrix Finished");
@@ -320,7 +320,7 @@ void InfrastructureImpl::ParseFile(const char* _xmlFile, HandlerBase* handler)
     catch (Exception& e)
     {
         smsc_log_error(logger,"Terminate parsing: %s",e.what());
-        throw e;
+        throw;
     }
     catch (...)
     {

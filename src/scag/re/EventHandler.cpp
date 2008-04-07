@@ -42,7 +42,7 @@ IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const 
     } catch (SCAGException& e)
     {
         delete action;
-        throw e;
+        throw;
     }
 
     actions.push_back(action);

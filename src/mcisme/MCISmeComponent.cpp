@@ -89,7 +89,7 @@ Variant MCISmeComponent::call(const Method& method, const Arguments& args)
   }
   catch (AdminException &e) {
     smsc_log_error(logger, "AdminException: %s", e.what());
-    throw e;
+    throw;
   }
   catch (std::exception& exc) {
     smsc_log_error(logger, "Exception: %s", exc.what());

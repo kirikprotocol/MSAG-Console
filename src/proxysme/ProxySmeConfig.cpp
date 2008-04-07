@@ -98,7 +98,7 @@ ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc:
     } catch (ParseException &e) {
       throw Exception("couldn't read or parse config file, nested: %s", e.what());
     } catch (Exception &e) {
-      throw e;
+      throw;
     } catch (std::exception & e) {
       throw Exception("%s", e.what());
     } catch (...) {
