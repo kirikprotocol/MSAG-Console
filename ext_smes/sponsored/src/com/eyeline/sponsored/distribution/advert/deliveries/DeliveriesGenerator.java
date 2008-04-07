@@ -3,6 +3,7 @@ package com.eyeline.sponsored.distribution.advert.deliveries;
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries.FileDeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
@@ -12,6 +13,7 @@ import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.ResultSet;
+import com.eyeline.sponsored.Sme;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
@@ -231,7 +233,7 @@ public class DeliveriesGenerator {
 
 
   public static void main(String[] args) {
-    DBDistributionDataSource distrDS = null;
+    DeliveriesDataSource distrDS = null;
     DBSubscriptionDataSource subscrDS = null;
     try {
       final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
@@ -239,8 +241,16 @@ public class DeliveriesGenerator {
 
       final Config c = new Config(xmlConfig);
 
-      distrDS = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
-      distrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      if (c.getDeliveriesDataSource().equals("db")) {
+        distrDS = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        ((DBDistributionDataSource)distrDS).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      } else if (c.getDeliveriesDataSource().equals("file")) {
+        distrDS = new FileDeliveriesDataSource(c.getFileStorageStoreDir());
+      } else {
+        System.out.println("Unknown deliveries storage type: " + c.getDeliveriesDataSource());
+        return;
+      }
+
 
       subscrDS = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
       subscrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());

@@ -112,8 +112,4 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
       }
     }
   }
-
-  public int getDeliveriesCount(Date date, TimeZone tz, String distrName, DataSourceTransaction tx) throws DataSourceException {
-    return ((DBTransaction)tx).getDeliveriesCount(date, tz, distrName);
-  }
 }

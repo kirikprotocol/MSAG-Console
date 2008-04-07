@@ -1,4 +1,4 @@
-package com.eyeline.sponsored.ds.distribution.advert.impl.file;
+package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 /**
  * User: artem

@@ -4,12 +4,11 @@ import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.FileDeliveryStatDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.FileDeliveryStatDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.DataSourceException;
-import com.eyeline.sponsored.Sme;
 
 import java.util.Date;
 import java.text.SimpleDateFormat;

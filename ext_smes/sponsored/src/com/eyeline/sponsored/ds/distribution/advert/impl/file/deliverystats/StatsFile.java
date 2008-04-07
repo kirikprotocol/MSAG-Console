@@ -1,11 +1,8 @@
-package com.eyeline.sponsored.ds.distribution.advert.impl.file;
+package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.DeliveryStatImpl;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.DeliveryStatImpl;
 
-import java.io.IOException;
-import java.io.FileNotFoundException;
-import java.util.Collection;
 import java.util.ArrayList;
 import java.nio.channels.WritableByteChannel;
 

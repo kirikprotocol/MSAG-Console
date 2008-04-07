@@ -90,13 +90,13 @@ public class IntervalDistributionEngine implements DistributionEngine {
       if (deliveries.isEmpty())
         return;
 
-      final int shiftInterval = 1000 / sendSpeedLimit;
+//      final int shiftInterval = 1000 / sendSpeedLimit;
 
       int i = 0;
       long totalTime = 0;
 
-      long curSendTime = 0;
-      long curTimeShift = 0;
+//      long curSendTime = 0;
+//      long curTimeShift = 0;
 
       for (Iterator<Delivery> iter = deliveries.iterator(); iter.hasNext(); i++) {
         Delivery d = iter.next();
@@ -110,12 +110,12 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
         long sendTime = Math.round(startDate + msgNumber * sendInterval);
 
-        if (sendTime != curSendTime) {
-          curSendTime = sendTime;
-          curTimeShift = 0;
-        } else {
-          curTimeShift += shiftInterval;
-        }
+//        if (sendTime != curSendTime) {
+//          curSendTime = sendTime;
+//          curTimeShift = 0;
+//        } else {
+//          curTimeShift += shiftInterval;
+//        }
 
         try {
           // Lookup distribution info
@@ -140,10 +140,10 @@ public class IntervalDistributionEngine implements DistributionEngine {
               o.setMessage(m);
 
               try {
-                if (log.isDebugEnabled()) {
-                  log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner + "; time=" + new Date(sendTime + curTimeShift));
-                }
-                outQueue.offer(o, sendTime + curTimeShift);
+                if (log.isDebugEnabled())
+                  log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner + "; time=" + new Date(sendTime));
+
+                outQueue.offer(o, sendTime);
               } catch (ShutdownedException e) {
                 log.error("Out queue shutdowned", e);
                 return;
@@ -190,6 +190,8 @@ public class IntervalDistributionEngine implements DistributionEngine {
         startTime += fetchInterval;
       } catch (DataSourceException e) {
         log.error("Distribution failed.", e);
+      } catch (Throwable e) {
+        log.error(e,e);
       } finally {
         if (deliveries != null)
           deliveries.clear();

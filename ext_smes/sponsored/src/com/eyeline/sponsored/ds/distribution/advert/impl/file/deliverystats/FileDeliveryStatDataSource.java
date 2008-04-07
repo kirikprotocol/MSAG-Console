@@ -1,4 +1,4 @@
-package com.eyeline.sponsored.ds.distribution.advert.impl.file;
+package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.ResultSet;
@@ -67,7 +67,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       for (Iterator<Map.Entry<String, HashedStatsFile>> entries = cache.entrySet().iterator(); entries.hasNext();) {
         e = entries.next();
 
-        if (all || ((now - e.getValue().getTime()) > CACHE_CLEAN_INTERVAL)) {
+        if (all || ((now - e.getValue().getTime()) > CACHE_CLEAN_INTERVAL) && !e.getValue().isOpened()) {
 
           try {
             e.getValue().impl.close();
@@ -100,6 +100,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
         cache.put(id, page);
       }
 
+      page.open();
       return page;
     } catch (IOException e) {
       return null;
@@ -108,8 +109,8 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     }
   }
 
-  private StatsFile getFile(Date date) {
-    return getFile(df.format(date), true, true);
+  private StatsFile getFile(Date date, boolean create) {
+    return getFile(df.format(date), create, true);
   }
 
   private  ArrayList<StatsFile> getFiles(Date from, Date till) {
@@ -134,7 +135,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
   public void updateDeliveryStat(String subscriberAddress, Date date, int deliveredInc) throws DataSourceException {
     StatsFile file = null;
     try {
-      file = getFile(date);
+      file = getFile(date, true);
       if (file != null) {
         DeliveryStat stat = new DeliveryStatImpl();
         stat.setSubscriberAddress(subscriberAddress);
@@ -215,7 +216,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
   }
 
   public ResultSet<DeliveryStat> getDeliveryStats(Date date) throws DataSourceException {
-    final StatsFile file = getFile(date);
+    final StatsFile file = getFile(date, false);
     return (file == null) ? null : new ListResultSet(file);
   }
 
@@ -232,16 +233,20 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
 
 
 
-  private static class HashedStatsFile implements StatsFile {
+  private static final class HashedStatsFile implements StatsFile {
 
     private final StatsFileImpl impl;
     private final boolean compressible;
     private final ReentrantLock lock = new ReentrantLock();
-    private long time = System.currentTimeMillis();
+    private long time;
+    private boolean opened;
 
     public HashedStatsFile(StatsFileImpl impl, boolean compressible) {
       this.impl = impl;
       this.compressible = compressible;
+      this.opened = false;
+      this.time = System.currentTimeMillis();
+      open();
     }
 
     public String getName() {
@@ -297,9 +302,29 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       }
     }
 
+    public void open() {
+      try {
+        lock.lock();
+        opened = true;
+        time = System.currentTimeMillis();
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    public boolean isOpened() {
+      try {
+        lock.lock();
+        return opened;
+      } finally {
+        lock.unlock();
+      }
+    }
+
     public void close() {
       try {
         lock.lock();
+        opened = false;
         time = System.currentTimeMillis();
       } finally {
         lock.unlock();

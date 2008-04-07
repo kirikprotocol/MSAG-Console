@@ -1,4 +1,4 @@
-package com.eyeline.sponsored.distribution.advert.utils;
+package com.eyeline.sponsored.utils;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -33,6 +33,16 @@ public class CalendarUtils {
     return c.getTime();
   }
 
+  public static long getDayStartInMillis(Date date) {
+    final Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    return c.getTimeInMillis();
+  }
+
   public static Date getPrevDayStart(Date date) {
     final Calendar c = Calendar.getInstance();
     c.setTime(date);
@@ -52,6 +62,16 @@ public class CalendarUtils {
     c.set(Calendar.SECOND, 0);
     c.set(Calendar.MILLISECOND, 0);
     c.set(Calendar.DAY_OF_YEAR, c.get(Calendar.DAY_OF_YEAR) + 1);
+    return c.getTime();
+  }
+
+  public static Date getNextHourStart(Date date) {
+    final Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    c.set(Calendar.HOUR, c.get(Calendar.HOUR) + 1);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
     return c.getTime();
   }
 

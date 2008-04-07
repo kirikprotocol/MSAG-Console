@@ -1,26 +1,37 @@
 package com.eyeline.sponsored.distribution.advert.distr;
 
+import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.SMPPTransceiver;
-import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sponsored.Sme;
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
+import com.eyeline.sponsored.distribution.advert.deliveries.DeliveriesGenerator;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClient;
-import com.eyeline.sponsored.distribution.advert.distr.core.DeliveryStatsProcessor;
 import com.eyeline.sponsored.distribution.advert.distr.core.ConservativeDistributionEngine;
+import com.eyeline.sponsored.distribution.advert.distr.core.DeliveryStatsProcessor;
 import com.eyeline.sponsored.distribution.advert.distr.core.DistributionEngine;
 import com.eyeline.sponsored.distribution.advert.distr.core.IntervalDistributionEngine;
-import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.FileDeliveryStatDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries.FileDeliveriesDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.FileDeliveryStatDataSource;
+import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
+import com.eyeline.sponsored.utils.CalendarUtils;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 
 import java.io.File;
+import java.util.Date;
 import java.util.Iterator;
+import java.util.TimeZone;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: artem
@@ -29,9 +40,12 @@ import java.util.Iterator;
 
 public class DistributionSme extends Sme {
 
-  private DBDistributionDataSource deliveriesDS;
-  private DeliveryStatsDataSource deliveryStatsDS;
-  private AdvertisingClient advClient;
+  private DeliveriesDataSource deliveriesDataSource;
+  private DeliveryStatsDataSource deliveryStatsDataSource;
+  private AdvertisingClient advertisingClient;
+  private DeliveriesGenerator deliveriesGenerator;
+  private DBSubscriptionDataSource subscriptionDataSource;
+  private ScheduledExecutorService deliveriesGeneratorExecutor;
   private DistributionEngine distrEngine;
 
   public DistributionSme(XmlConfig config, SmscTimezonesList timezones, OutgoingQueue outQueue) {
@@ -40,39 +54,79 @@ public class DistributionSme extends Sme {
       Config c = new Config(config);
 
       // Init distr data source
-      deliveriesDS = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
-      deliveriesDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      if (c.getDeliveriesDataSource().equals("db")) {
+        deliveriesDataSource = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        ((DBDistributionDataSource)deliveriesDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      } else if (c.getDeliveriesDataSource().equals("file")) {
+        deliveriesDataSource = new FileDeliveriesDataSource(c.getFileStorageStoreDir());
+      } else
+        throw new InitException("Unknown deliveries storage type: " + c.getDeliveriesDataSource());
 
       // Init delivery stats processor
       if (c.getDeliveryStatsDataSource().equals("db")) {
-        deliveryStatsDS = deliveriesDS;
+        if (c.getDeliveriesDataSource().equals("db"))
+          deliveryStatsDataSource = (DBDistributionDataSource)deliveriesDataSource;
+        else {
+          deliveryStatsDataSource = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+          ((DBDistributionDataSource)deliveryStatsDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+        }
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
-        deliveryStatsDS = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
+        deliveryStatsDataSource = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
       } else
         throw new InitException("Unknown delivery stats storage type: " + c.getDeliveryStatsDataSource());
 
-      DeliveryStatsProcessor.init(deliveryStatsDS, timezones);
+      // Init subscription data source
+      subscriptionDataSource = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
+      subscriptionDataSource.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
 
       // Init advertising client
-      advClient = new AdvertisingClient(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
-      advClient.connect();
+      advertisingClient = new AdvertisingClient(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
+      advertisingClient.connect();
+
+      DeliveryStatsProcessor.init(deliveryStatsDataSource, timezones);
 
       // Init distribution engine
       if (c.getEngineType().equals("conservative")) {
-        ConservativeDistributionEngine engine = new ConservativeDistributionEngine(outQueue, deliveriesDS, advClient);
+        ConservativeDistributionEngine engine = new ConservativeDistributionEngine(outQueue,
+                                                                                   deliveriesDataSource,
+                                                                                   advertisingClient);
         engine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval());
         distrEngine = engine;
       } else if (c.getEngineType().equals("interval")) {
-        IntervalDistributionEngine engine = new IntervalDistributionEngine(outQueue, deliveriesDS, advClient);
+        IntervalDistributionEngine engine = new IntervalDistributionEngine(outQueue,
+                                                                           deliveriesDataSource,
+                                                                           advertisingClient);
         engine.init(c.getDeliveriesFetchInterval(), c.getDeliveriesPrepareInterval(), c.getDeliveriesSendSpeedLimit());
         distrEngine = engine;
       } else
         throw new InitException("Unknown distribution engine type: " + c.getEngineType());
 
+      // Init deliveries generator
+      deliveriesGenerator = new DeliveriesGenerator(deliveriesDataSource, subscriptionDataSource);
+      for (Iterator iter = timezones.getTimezones().iterator(); iter.hasNext();) {
+        SmscTimezone tz = (SmscTimezone)iter.next();
+        deliveriesGenerator.addTimezone(TimeZone.getTimeZone(tz.getName()));
+      }
+
       // Load distribution infos
-      for (DistributionInfo distributionInfo : c.getDistrInfos()) distrEngine.addDistribution(distributionInfo);
+      for (DistributionInfo distributionInfo : c.getDistrInfos()) {
+        distrEngine.addDistribution(distributionInfo);
+        deliveriesGenerator.addDistribution(distributionInfo);
+      }
 
       distrEngine.start();
+
+      deliveriesGeneratorExecutor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+          return new Thread(r, "delivGen");
+        }
+      });
+
+      deliveriesGeneratorExecutor.scheduleAtFixedRate(new Runnable() {
+        public void run() {
+          deliveriesGenerator.run();
+        }
+      }, CalendarUtils.getNextHourStart(new Date()).getTime() - System.currentTimeMillis(), 3600, TimeUnit.SECONDS);
 
     } catch (Exception e) {
       throw new InitException(e);
@@ -81,9 +135,11 @@ public class DistributionSme extends Sme {
 
   public void stop() {
     distrEngine.stop();
-    advClient.close();
-    deliveriesDS.shutdown();
-    deliveryStatsDS.shutdown();
+    advertisingClient.close();
+    deliveriesDataSource.shutdown();
+    deliveryStatsDataSource.shutdown();
+    subscriptionDataSource.shutdown();
+    deliveriesGeneratorExecutor.shutdown();
   }
 
   public static void main(String[] args) {

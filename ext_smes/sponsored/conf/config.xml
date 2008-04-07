@@ -38,7 +38,7 @@
 
     <!-- Allowed engine types: conservative, interval-->
     <param name="engineType">interval</param>
-    <param name="deliveriesFetchInterval">1000</param>
+    <param name="deliveriesFetchInterval">10000</param>
     <param name="deliveriesSendSpeedLimit">450</param>
     <param name="deliveriesPrepareInterval">5000</param>    
 
@@ -47,14 +47,19 @@
     <!-- Allowed data sources: db, file -->
     <param name="deliveryStatsDataSource">file</param>
 
+    <!-- Deliveries data source parameters -->
+
+    <!-- Allowed data sources: db, file -->
+    <param name="deliveriesDataSource">db</param>
+
     <!-- Distributions parameters -->
 
     <section name="distributions">
 
       <section name="sponsored">
         <param name="srcAddress">741</param>
-        <param name="startTime">13:45:00</param>
-        <param name="endTime">18:45:02</param>
+        <param name="startTime">15:27:00</param>
+        <param name="endTime">19:45:02</param>
         <param name="advServiceName">SPONSORED</param>
       </section>
 

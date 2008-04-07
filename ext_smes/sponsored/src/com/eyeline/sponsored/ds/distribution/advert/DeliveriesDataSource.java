@@ -23,5 +23,5 @@ public interface DeliveriesDataSource {
 
   public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException;
 
-  public int getDeliveriesCount(Date date, TimeZone tz, String distrName, DataSourceTransaction tx) throws DataSourceException;
+  public void shutdown();
 }

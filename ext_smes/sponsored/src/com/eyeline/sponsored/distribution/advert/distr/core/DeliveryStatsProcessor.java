@@ -1,6 +1,6 @@
 package com.eyeline.sponsored.distribution.advert.distr.core;
 
-import com.eyeline.sponsored.distribution.advert.utils.CalendarUtils;
+import com.eyeline.sponsored.utils.CalendarUtils;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;

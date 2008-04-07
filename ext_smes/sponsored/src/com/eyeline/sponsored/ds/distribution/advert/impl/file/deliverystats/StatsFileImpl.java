@@ -1,6 +1,10 @@
-package com.eyeline.sponsored.ds.distribution.advert.impl.file;
+package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.DeliveryStatImpl;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.IOUtils;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.StatsFile;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.StatsFileException;
 import org.apache.log4j.Category;
 
 import java.io.*;
