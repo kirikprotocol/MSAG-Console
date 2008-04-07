@@ -1,14 +1,10 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries;
 
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
+import org.apache.log4j.Category;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.apache.log4j.Category;
 
 /**
  * User: artem
@@ -356,8 +352,6 @@ public class DeliveriesFile {
 
   private class Section {
 
-    private final Lock lock = new ReentrantLock();
-
     private final String distrName;
     private final TimeZone tz;
     private final int volume;
@@ -456,71 +450,57 @@ public class DeliveriesFile {
     }
 
     public void saveDelivery(DeliveryImpl delivery) throws DeliveriesFileException, IOException {
-      try {
-        lock.lock();
+      if (crushed)
+        throw new DeliveriesFileException("Section is crushed");
 
-        if (crushed)
-          throw new DeliveriesFileException("Section is crushed");
-
-        if (delivery.getId() >= 0) {
-          f.seek(delivery.getId());
-        } else {
-          if (!extendable)
-            throw new DeliveriesFileException("Section is closed");
-          f.seek(sectionEndPos);
-        }
-        writeDelivery(delivery);
-        sectionEndPos = f.length();
-
-      } finally {
-        lock.unlock();
+      if (delivery.getId() >= 0) {
+        f.seek(delivery.getId());
+      } else {
+        if (!extendable)
+          throw new DeliveriesFileException("Section is closed");
+        f.seek(sectionEndPos);
       }
+      writeDelivery(delivery);
+      sectionEndPos = f.length();
     }
 
     public List<Delivery> getDeliveries(DeliveriesQuery st) throws IOException {
-      try {
-        lock.lock();
+      final LinkedList<Delivery> result = new LinkedList<Delivery>();
 
-        final LinkedList<Delivery> result = new LinkedList<Delivery>();
+      if (crushed) {
+        log.error("Section crushed: name=" + distrName + "; vol=" + volume + "; tz=" + tz.getID());
 
-        if (crushed) {
-          log.error("Section crushed: name=" + distrName + "; vol=" + volume + "; tz=" + tz.getID());
+      } else {
 
-        } else {
-
-          long startPos = getFilePointer();
-          boolean f1=false, f2;
-          do {
-            if (getFilePointer() >= sectionEndPos) {
-              bufferStartPos = sectionStartPos;
-              bufferPos=0;
-              bufferSize = 0;
-            }
-
-            DeliveryImpl d = readDelivery();
-
-            if (st.add(d)) {
-              f1=f2=true;
-              result.add(d);
-            } else
-              f2=false;
-
-          } while (f1==f2 && getFilePointer() != startPos);
+        if (getFilePointer() >= sectionEndPos) {
+          bufferStartPos = sectionStartPos;
+          bufferPos=0;
+          bufferSize = 0;
         }
-        return result;
 
-      } finally {
-        lock.unlock();
+        long startPos = getFilePointer();
+        boolean f1=false, f2;
+        do {
+          DeliveryImpl d = readDelivery();
+          if (getFilePointer() >= sectionEndPos) {
+            bufferStartPos = sectionStartPos;
+            bufferPos=0;
+            bufferSize = 0;
+          }
+
+          if (st.add(d)) {
+            f1=f2=true;
+            result.add(d);
+          } else
+            f2=false;
+
+        } while (f1==f2 && getFilePointer() != startPos);
       }
+      return result;
     }
 
     public void close() {
-      try {
-        lock.lock();
-        extendable = false;
-      } finally {
-        lock.unlock();
-      }
+      extendable = false;
     }
 
     private long getFilePointer() {

@@ -50,7 +50,7 @@
     <!-- Deliveries data source parameters -->
 
     <!-- Allowed data sources: db, file -->
-    <param name="deliveriesDataSource">db</param>
+    <param name="deliveriesDataSource">file</param>
 
     <!-- Distributions parameters -->
 
@@ -58,7 +58,7 @@
 
       <section name="sponsored">
         <param name="srcAddress">741</param>
-        <param name="startTime">15:27:00</param>
+        <param name="startTime">17:37:00</param>
         <param name="endTime">19:45:02</param>
         <param name="advServiceName">SPONSORED</param>
       </section>

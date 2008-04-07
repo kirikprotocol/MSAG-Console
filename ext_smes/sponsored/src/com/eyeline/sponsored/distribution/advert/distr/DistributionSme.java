@@ -126,7 +126,7 @@ public class DistributionSme extends Sme {
         public void run() {
           deliveriesGenerator.run();
         }
-      }, CalendarUtils.getNextHourStart(new Date()).getTime() - System.currentTimeMillis(), 3600, TimeUnit.SECONDS);
+      }, CalendarUtils.getNextHourStart(new Date()).getTime() - System.currentTimeMillis(), 3600000, TimeUnit.MILLISECONDS);
 
     } catch (Exception e) {
       throw new InitException(e);

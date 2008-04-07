@@ -125,7 +125,7 @@ public class DeliveriesGenerator {
 
         // Store delivery
         delivery.save(dtx);
-      }
+      }                                                                                                 
 
       // Commit distribution DS transaction
       dtx.commit();

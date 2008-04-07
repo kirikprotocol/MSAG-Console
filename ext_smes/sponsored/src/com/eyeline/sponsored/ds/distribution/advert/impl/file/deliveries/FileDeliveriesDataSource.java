@@ -224,6 +224,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
 
   private static final class HashedDeliveriesFile {
     private final DeliveriesFile impl;
+    private final Lock lock = new ReentrantLock();
 
     private long time;
     private boolean opened;
@@ -236,41 +237,81 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     }
 
     public void saveDelivery(DeliveryImpl delivery) throws DeliveriesFileException {
-      time = System.currentTimeMillis();
-      impl.saveDelivery(delivery);
+      try {
+        lock.lock();
+        time = System.currentTimeMillis();
+        impl.saveDelivery(delivery);
+      } finally {
+        lock.unlock();
+      }
     }
 
     public List<Delivery> readDeliveries(final Date startDate, final Date endDate) throws DeliveriesFileException {
-      time = System.currentTimeMillis();
-      return impl.readDeliveries(startDate, endDate);
+      try {
+        lock.lock();
+        time = System.currentTimeMillis();
+        return impl.readDeliveries(startDate, endDate);
+      } finally {
+        lock.unlock();
+      }
     }
 
     public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DeliveriesFileException {
-      time = System.currentTimeMillis();
-      return impl.getDeliveriesCount(date, tz, distrName);
+      try {
+        lock.lock();
+        time = System.currentTimeMillis();
+        return impl.getDeliveriesCount(date, tz, distrName);
+      } finally {
+        lock.unlock();
+      }
     }
 
     public List<Delivery> readDeliveries(final Date date, final int limit) throws DeliveriesFileException {
-      time = System.currentTimeMillis();
-      return impl.readDeliveries(date, limit);
+      try {
+        lock.lock();
+        time = System.currentTimeMillis();
+        return impl.readDeliveries(date, limit);
+      } finally {
+        lock.unlock();
+      }
     }
     
     public void open() {
-      opened = true;
-      time = System.currentTimeMillis();
+      try {
+        lock.lock();
+        opened = true;
+        time = System.currentTimeMillis();
+      } finally {
+        lock.unlock();
+      }
     }
 
     public void close() {
-      opened = false;
-      time = System.currentTimeMillis();
+      try {
+        lock.lock();
+        opened = false;
+        time = System.currentTimeMillis();
+      } finally {
+        lock.unlock();
+      }
     }
 
     public boolean isOpened() {
-      return opened;
+      try {
+        lock.lock();
+        return opened;
+      } finally {
+        lock.unlock();
+      }
     }
 
     public long getTime() {
-      return time;
+      try {
+        lock.lock();
+        return time;
+      } finally {
+        lock.unlock();
+      }
     }
   }
 
@@ -292,7 +333,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
         c.set(Calendar.MINUTE, c.get(Calendar.MINUTE) + 1);
         long start = System.currentTimeMillis();
         List<Delivery> deliveries = impl.lookupActiveDeliveries(d, c.getTime());
-         System.out.println((System.currentTimeMillis() - start) + " : " + deliveries.size());
+        System.out.println((System.currentTimeMillis() - start) + " : " + deliveries.size());
       }
 
     } catch (DataSourceException e) {
