@@ -27,6 +27,17 @@ public:
     pos=0;
   }
 
+  /*use to read from external buffer.
+    never ever even try to write to TmpBuf created with this constructor.
+  */
+  TmpBuf(T* extbuf,int extbufsize)
+  {
+    realBuf=extbuf;
+    heapBuf=0;
+    heapSize=extbufsize;
+    pos=0;
+  }
+
   T* setSize(size_t size)
   {
     if(size>SZ)
