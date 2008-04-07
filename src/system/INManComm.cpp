@@ -39,8 +39,6 @@ void INManComm::Init(const char* argHost,int argPort)
   if(socket->Connect()==-1)
   {
     warn2(log,"Failed to connect to %s:%d",host.c_str(),port);
-    socket=new net::Socket;
-    packetWriter.assignSocket(socket);
     return;
   }
   socketOk=true;
@@ -267,6 +265,8 @@ int INManComm::Execute()
     {
       ProcessExpiration();
       sync::MutexGuard mg(mon);
+      socket=new net::Socket();
+      packetWriter.assignSocket(socket);
       if(socket->Init(host.c_str(),port,0)==-1 || socket->Connect()==-1)
       {
         warn2(log,"reconnect attempt to %s:%d failed",host.c_str(),port);
@@ -275,7 +275,6 @@ int INManComm::Execute()
       }else
       {
         socketOk=true;
-        packetWriter.assignSocket(socket);
       }
     }
 
@@ -296,7 +295,6 @@ int INManComm::Execute()
       socketOk=false;
       socket->Close();
       sleep(2);
-      socket=new net::Socket();
       continue;
     }
     packetSize=ntohl(packetSize);
@@ -306,7 +304,6 @@ int INManComm::Execute()
       socketOk=false;
       socket->Close();
       sleep(2);
-      socket=new net::Socket();
       continue;
     }
     buf.reset(packetSize);
@@ -316,7 +313,6 @@ int INManComm::Execute()
       socketOk=false;
       socket->Close();
       sleep(2);
-      socket=new net::Socket();
       continue;
     }
     buf.setDataSize(packetSize);
@@ -333,7 +329,6 @@ int INManComm::Execute()
       socket->Close();
       socketOk=false;
       sleep(2);
-      socket=new net::Socket();
       continue;
     }
 
