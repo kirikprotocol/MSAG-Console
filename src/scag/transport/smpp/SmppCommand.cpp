@@ -493,7 +493,7 @@ _SmppCommand::~_SmppCommand()
     _cmd.ref_count = 1;
     _cmd.cmdid = BIND_TRANSCEIVER;
     _cmd.dta = new BindCommand(sysId,pwd,addrRange,sysType);
-    _cmd.dialogId = 0;
+    _cmd.dialogId = 1;
     return cmd;
   }
 
