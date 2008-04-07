@@ -315,11 +315,18 @@ void Socket::setNonBlocking(int mode)
 #endif
 }
 
-int Socket::ReadAll(char* buf,int size)
+int Socket::ReadAll(char* buf,int size,int to)
 {
   int rd=0,res;
   while(rd<size)
   {
+    if(to)
+    {
+      if(!canRead(to))
+      {
+        return -1;
+      }
+    }
     res=Read(buf+rd,size-rd);
     if(res<=0)
     {
