@@ -311,7 +311,7 @@ int StatisticsManager::calculateToSleep() // returns msecs to next minute
     time_t nextTime = currTime + SMSC_STAT_DUMP_INTERVAL;
     tm tmNT; localtime_r(&nextTime, &tmNT);
     tmNT.tm_sec = 0; nextTime = mktime(&tmNT);
-    return (((nextTime-currTime)*1000)+1);
+    return (int)(((nextTime-currTime)*1000)+1);
 }
 
 StatStorage::StatStorage(const std::string& _location)
@@ -347,7 +347,7 @@ bool StatStorage::createStatDir()
 
     const char * dir_ = location.c_str();
 
-    int len = strlen(dir_);
+    size_t len = strlen(dir_);
     if(len == 0)
         return false;
 
@@ -372,23 +372,23 @@ bool StatStorage::createStatDir()
     std::vector<std::string> dirs(0);
 
     char* p1 = buff+1;
-    int dirlen = 0;
+    size_t dirlen = 0;
     char* p2 = strchr(p1, '/');
-    int pos = p2 - buff;
+    //size_t pos = p2 - buff;
     while(p2){
-       int len = p2 - p1;
-       dirlen += len + 1;
-       if(len == 0)
+       size_t len2 = p2 - p1;
+       dirlen += len2 + 1;
+       if(len2 == 0)
            return false;
 
-       int direclen = dirlen + 1;
+       size_t direclen = dirlen + 1;
        TmpBuf<char, 512> tmpBuff2(direclen);
        char * dir = tmpBuff2.get();
        memcpy(dir, buff, dirlen);
        dir[dirlen] = 0;
        dirs.push_back(std::string(dir));
 
-       p1 = p1 + len + 1;
+       p1 = p1 + len2 + 1;
        p2 = strchr(p1, '/');
     }
     dirs.push_back(std::string(buff));
@@ -411,18 +411,44 @@ bool StatStorage::createStatDir()
 
 }
 
+static uint16_t nativeNetOrderTest=1;
+static const bool nativeNetOrder=*((uint8_t*)&nativeNetOrderTest)==0;
+
 uint64_t toNetworkOrder(uint64_t value)
 {
-    uint64_t result = 0;
+    if(nativeNetOrder)
+    {
+      return value;
+    }
+    uint32_t h=htonl((uint32_t)((value>>32)&0xFFFFFFFFUL));
+    uint32_t l=htonl((uint32_t)(value&0xFFFFFFFFUL));
+    uint64_t result;
+    uint32_t* rptr=(uint32_t*)&result;
+    rptr[0]=h;
+    rptr[1]=l;
+/*
     unsigned char *ptr=(unsigned char *)&result;
     ptr[0]=(value>>56)&0xFF; ptr[1]=(value>>48)&0xFF;
     ptr[2]=(value>>40)&0xFF; ptr[3]=(value>>32)&0xFF;
     ptr[4]=(value>>24)&0xFF; ptr[5]=(value>>16)&0xFF;
     ptr[6]=(value>>8 )&0xFF; ptr[7]=(value    )&0xFF;
+*/
     return result;
 }
 uint64_t toHostOrder(uint64_t value)
 {
+  if(nativeNetOrder)
+  {
+    return value;
+  }
+    uint32_t h=htonl((uint32_t)((value>>32)&0xFFFFFFFFUL));
+    uint32_t l=htonl((uint32_t)(value&0xFFFFFFFFUL));
+    uint64_t result=l;
+    result<<=32;
+    result|=h;
+    return result;
+
+    /*
     unsigned char *ptr=(unsigned char *)&value;
     return (((((uint64_t)ptr[0])<<56)&0xFF00000000000000)|
             ((((uint64_t)ptr[1])<<48)&0x00FF000000000000)|
@@ -432,6 +458,8 @@ uint64_t toHostOrder(uint64_t value)
             ((((uint64_t)ptr[5])<<16)&0x0000000000FF0000)|
             ((((uint64_t)ptr[6])<< 8)&0x000000000000FF00)|
             ((((uint64_t)ptr[7])    )&0x00000000000000FF));
+    */
+
 }
 
 const int MAX_STACK_BUFFER_SIZE = 64*1024;
@@ -646,7 +674,7 @@ void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat&
         routeStat = 0; // ???
     }
 
-    _storage.dump(buff, buff.GetPos(), flushTM);
+    _storage.dump(buff, (int)buff.GetPos(), flushTM);
 }
 
 void StatisticsManager::flushCounters(short index)
