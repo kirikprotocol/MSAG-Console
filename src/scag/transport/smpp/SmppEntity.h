@@ -56,7 +56,7 @@ struct SmppEntity
     channel=0;
     recvChannel=0;
     transChannel=0;
-    seq=0;
+    seq=1;
     queueCount=0;
     connected = false;
     slicingSeq = 0;
