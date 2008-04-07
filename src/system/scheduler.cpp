@@ -27,7 +27,14 @@ struct LoadUpInfo{
   SMSId id;
   uint32_t seq;
   bool final;
-  SMS* sms;
+  char* smsBuf;
+  int smsBufSize;
+  void assignBuf(const char* argBuf,int argBufSize)
+  {
+    smsBuf=new char[argBufSize];
+    smsBufSize=argBufSize;
+    memcpy(smsBuf,argBuf,smsBufSize);
+  }
 };
 
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
@@ -79,6 +86,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     __trace__("schedulerMon->Unlock();");
     sched.mon.Unlock();
   }
+  uint32_t fileVer;
   try{
     if(File::Exists(mainFileName.c_str()))
     {
@@ -104,9 +112,8 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
       {
         File* pf=*it;
         char sigBuf[sizeof(storeSig)];
-        uint32_t fileVer;
         LoadUpInfo item;
-        item.sms=0;
+        item.smsBuf=0;
         BufOps::SmsBuffer smsBuf(0);
         uint32_t sz,sz2;
         LoadUpInfo* itemPtr;
@@ -146,9 +153,10 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
             fPos+=4;
             item.final=pf->ReadByte();
             fPos+=1;
-            smsBuf.setSize(sz-8-4-1);
-            pf->Read(smsBuf.get(),sz-8-4-1);
-            fPos+=sz-8-4-1;
+            int bufSz=sz-8-4-1;
+            smsBuf.setSize(bufSz);
+            pf->Read(smsBuf.get(),bufSz);
+            fPos+=bufSz;
             sz2=pf->ReadNetInt32();
             fPos+=4;
 
@@ -166,34 +174,38 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
               }
               if(item.final)
               {
-                if(itemPtr->sms)
+                if(itemPtr->smsBuf)
                 {
-                  delete itemPtr->sms;
-                  itemPtr->sms=0;
+                  delete [] itemPtr->smsBuf;
+                  itemPtr->smsBuf=0;
                 }
                 itemPtr->final=true;
                 continue;
               }
             }
 
-            smsBuf.SetPos(0);
             if(!item.final)
             {
-              item.sms=new SMS;
-              Deserialize(smsBuf,*item.sms,fileVer);
+              item.assignBuf(smsBuf.get(),bufSz);
+              __trace2__("allocated smsbuf=%p(%d) for id=%lld",item.smsBuf,item.smsBufSize,item.id);
             }else
             {
-              item.sms=0;
+              item.smsBuf=0;
             }
 
             if(itemPtr)
             {
-              if(itemPtr->sms)delete itemPtr->sms;
+              if(itemPtr->smsBuf)
+              {
+                __trace2__("delete (before assign) smsbuf=%p for id=%lld",itemPtr->smsBuf,itemPtr->id);
+                delete [] itemPtr->smsBuf;
+              }
               *itemPtr=item;
             }else
             {
               luHash.Insert(item.id,item);
               itemPtr=luHash.GetPtr(item.id);
+              __trace2__("insert smsBuf=%p(%d) %lld",item.smsBuf,item.smsBufSize,item.id);
               luVector.push_back(itemPtr);
             }
           };
@@ -225,17 +237,22 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   int cnt=0;
   for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
   {
-    if((*it)->final)continue;
-    if(!(*it)->sms)
+    LoadUpInfo& item=**it;
+    if(item.final)continue;
+    if(!item.smsBuf)
     {
       __warning2__("Loading error!!! Sms point==NULL!!! msgId=%lld",(*it)->id);
       continue;
     }
     {
       MutexGuard mg(sched.storeMtx);
-      Save((*it)->id,(*it)->seq,*(*it)->sms);
+      Save(item.id,item.seq,item.smsBuf,item.smsBufSize);
     }
-    SMS& sms=*(*it)->sms;
+    SMS sms;
+    __trace2__("init smsbuf from %p(%d) for id=%lld",item.smsBuf,item.smsBufSize,item.id);
+    BufOps::SmsBuffer buf(item.smsBuf,item.smsBufSize);
+    Deserialize(buf,sms,fileVer);
+
     __trace2__("srcsmeid=%s",sms.getSourceSmeId());
     try{
       int smeIndex=smsc->getSmeIndex(sms.getSourceSmeId());
@@ -256,7 +273,10 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         smsc::core::threads::Thread::Yield();
       }
 
-      Scheduler::StoreData* sd=new Scheduler::StoreData(sms,(*it)->seq);
+      Scheduler::StoreData* sd=new Scheduler::StoreData(item.smsBuf,item.smsBufSize,item.seq);
+      __trace2__("init sd from %p(%d) for id=%lld",item.smsBuf,item.smsBufSize,item.id);
+      item.smsBuf=0;
+      item.smsBufSize=0;
       if(delayInit)
       {
         sched.mon.Lock();
@@ -264,18 +284,18 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
 
       {
         MutexGuard mg(sched.storeMtx);
-        sched.store.Insert((*it)->id,sd);
-        sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(&sd->sms,(*it)->id));
-        sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair((*it)->id,(*it)->seq));
+        sched.store.Insert(item.id,sd);
+        sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(sms,item.id));
+        sd->it=sched.currentSnap.insert(sched.currentSnap.begin(),IdSeqPair(item.id,item.seq));
       }
     }catch(...)
     {
       __warning2__("systemId=%s not found. sms %lld dropped",sms.getSourceSmeId(),(*it)->id);
     }
-    if((*it)->sms)
+    if(item.smsBuf)
     {
-      delete (*it)->sms;
-      (*it)->sms=0;
+      delete [] item.smsBuf;
+      item.smsBuf=0;
     }
   }
 
@@ -318,25 +338,23 @@ bool LocalFileStore::StartRoll(const IdSeqPairList& argSnap)
 }
 
 
-bool LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const smsc::sms::SMS& sms,bool final)
+bool LocalFileStore::Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBufPtr,int smsBufSize,bool final)
 {
-  __trace2__("Save:%lld, %s->%s",id,
-    sms.getOriginatingAddress().toString().c_str(),
-    sms.getDestinationAddress().toString().c_str()
-  );
+  __trace2__("Save:%lld",id);
   using namespace smsc::sms;
   using namespace smsc::sms::BufOps;
-  SmsBuffer smsbuf(0);
-  uint32_t sz=0;
+  SmsBuffer smsbuf(4+8+4+1+smsBufSize+4);
+  uint32_t sz=8+4+1+smsBufSize;
   uint8_t fin=final?1:0;
 
   smsbuf<<sz<<id<<seq<<fin;
+  smsbuf.Append(smsBufPtr,smsBufSize);
 
-  Serialize(sms,smsbuf);
-  sz=(uint32_t)(smsbuf.GetPos()-sizeof(sz));
-  smsbuf.SetPos(0);
-  smsbuf<<sz;
-  smsbuf.SetPos(sz+sizeof(sz));
+  //Serialize(sms,smsbuf);
+  //sz=(uint32_t)(smsbuf.GetPos()-sizeof(sz));
+  //smsbuf.SetPos(0);
+  //smsbuf<<sz;
+  //smsbuf.SetPos(sz+sizeof(sz));
   smsbuf<<sz;
   MutexGuard mg(mtx);
   primaryFile.Write(smsbuf.get(),smsbuf.GetPos());
@@ -580,12 +598,12 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
 
   if(flag==smsc::store::SMPP_OVERWRITE_IF_PRESENT)
   {
-    ReplaceIfPresentMap::iterator it=replMap.find(&sms);
+    ReplaceIfPresentMap::iterator it=replMap.find(sms);
     if(it!=replMap.end())
     {
       StoreData *ptr=store.Get(it->second);
       ptr->it->second=++(ptr->seq);
-      LocalFileStoreSave(it->second,ptr->seq,ptr->sms,true);
+      LocalFileStoreSave(it->second,ptr,true);
       currentSnap.erase(ptr->it);
       replMap.erase(it);
       store.Delete(it->second);
@@ -600,10 +618,10 @@ SMSId Scheduler::createSms(SMS& sms, SMSId id,const smsc::store::CreateMode flag
   }
   StoreData* sd=newStoreData(sms);
   store.Insert(id,sd);
-  sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(&sd->sms,id));
+  sd->rit=replMap.insert(ReplaceIfPresentMap::value_type(sms,id));
   sd->it=currentSnap.insert(currentSnap.end(),LocalFileStore::IdSeqPair(id,0));
 
-  LocalFileStoreSave(id,0,sms);
+  LocalFileStoreSave(id,sd);
   return rv;
 }
 
@@ -612,8 +630,8 @@ void Scheduler::retriveSms(SMSId id, SMS &sms)
 {
   MutexGuard mg(storeMtx);
   StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException();
-  sms=(*ptr)->sms;
+  if(!ptr)throw NoSuchMessageException(id);
+  (*ptr)->LoadSms(sms);
 }
 
 void Scheduler::changeSmsStateToEnroute(SMSId id,
@@ -624,8 +642,10 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   debug2(log,"changeSmsStateToEnroute: msgId=%lld",id);
   MutexGuard mg(storeMtx);
   StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException();
-  SMS& sms=(*ptr)->sms;
+  if(!ptr)throw NoSuchMessageException(id);
+  //SMS& sms=(*ptr)->sms;
+  SMS sms;
+  (*ptr)->LoadSms(sms);
   sms.state = ENROUTE;
   sms.destinationDescriptor=dst;
   sms.lastTime=time(NULL);
@@ -633,7 +653,8 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   sms.setNextTime(nextTryTime);
   sms.setAttemptsCount(attempts);
   (*ptr)->it->second=++(*ptr)->seq;
-  LocalFileStoreSave(id,(*ptr)->seq,sms);
+  (*ptr)->SaveSms(sms);
+  LocalFileStoreSave(id,*ptr);
 }
 
 void Scheduler::changeSmsStateToDelivered(SMSId id,
@@ -675,32 +696,38 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
 {
   MutexGuard mg(storeMtx);
   StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException();
-  SMS& sms=(*ptr)->sms;
+  if(!ptr)throw NoSuchMessageException(id);
+  //SMS& sms=(*ptr)->sms;
+  SMS sms;
+  (*ptr)->LoadSms(sms);
   sms.setConcatSeqNum(sms.getConcatSeqNum()+inc);
   (*ptr)->it->second=++(*ptr)->seq;
-  LocalFileStoreSave(id,(*ptr)->seq,sms);
+  (*ptr)->SaveSms(sms);
+  LocalFileStoreSave(id,*ptr);
 }
 
 void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc)
 {
   StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException();
+  if(!ptr)throw NoSuchMessageException(id);
   currentSnap.erase((*ptr)->it);
   StoreData* sd=*ptr;
   store.Delete(id);
   replMap.erase(sd->rit);
-  sd->sms.state=state;
-  sd->sms.lastResult=lastResult;
-  sd->sms.lastTime = time(NULL);
-  sd->sms.nextTime = 0;
-  sd->sms.destinationDescriptor=dstDsc;
-
-  LocalFileStoreSave(id,++sd->seq,sd->sms,true);
-  if (sd->sms.needArchivate)
+  SMS sms;
+  sd->LoadSms(sms);
+  sms.state=state;
+  sms.lastResult=lastResult;
+  sms.lastTime = time(NULL);
+  sms.nextTime = 0;
+  sms.destinationDescriptor=dstDsc;
+  sd->SaveSms(sms);
+  sd->seq++;
+  LocalFileStoreSave(id,sd,true);
+  if (sms.needArchivate)
   {
     try{
-      archiveStorage.createRecord(id, sd->sms);
+      archiveStorage.createRecord(id, sms);
     }catch(std::exception& e)
     {
       warn2(log,"archiveStorage.createRecord failed:%s",e.what());
@@ -716,10 +743,10 @@ void Scheduler::replaceSms(SMSId id, SMS& sms)
 {
   MutexGuard mg(storeMtx);
   StoreData** ptr=store.GetPtr(id);
-  if(!ptr)throw NoSuchMessageException();
-  (*ptr)->sms=sms;
+  if(!ptr)throw NoSuchMessageException(id);
+  (*ptr)->SaveSms(sms);
   (*ptr)->it->second=++(*ptr)->seq;
-  LocalFileStoreSave(id,(*ptr)->seq,sms);
+  LocalFileStoreSave(id,*ptr);
 }
 
 

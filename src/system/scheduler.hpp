@@ -22,7 +22,7 @@
 #include "util/config/Manager.h"
 #include "core/threads/Thread.hpp"
 #include "smeman/smeproxy.h"
-
+#include "core/buffers/FixedLengthString.hpp"
 #include "store/FileStorage.h"
 
 
@@ -76,7 +76,7 @@ public:
   }
 
   void Init(smsc::util::config::Manager* cfgman,Smsc* smsc);
-  bool Save(smsc::sms::SMSId id,uint32_t seq,const smsc::sms::SMS& sms,bool final=false);
+  bool Save(smsc::sms::SMSId id,uint32_t seq,const char* smsBuf,int smsBufSize,bool final=false);
   bool StartRoll(const IdSeqPairList& argSnap);
 
 protected:
@@ -490,28 +490,32 @@ public:
 
 
   struct ReplaceIfPresentKey{
-    const SMS* sms;
-    ReplaceIfPresentKey(const SMS* argSms):sms(argSms)
+    Address org;
+    Address dst;
+    FixedLengthString<6> esvctype;
+    ReplaceIfPresentKey(const SMS& argSms)
     {
-      __trace2__("ReplaceIfPresentKey: %s",dump().c_str());
+      org=argSms.getOriginatingAddress();
+      dst=argSms.getDealiasedDestinationAddress();
+      esvctype=argSms.getEServiceType();
     }
     string dump()const
     {
-      return sms->getOriginatingAddress().toString()+"/"+
-             sms->getDealiasedDestinationAddress().toString()+"/"+
-             sms->getEServiceType();
+      return org.toString()+"/"+
+             dst.toString()+"/"+
+             esvctype.c_str();
     }
     bool operator<(const ReplaceIfPresentKey& rhs)const
     {
-      return sms->getOriginatingAddress()<rhs.sms->getOriginatingAddress() ||
+      return org<rhs.org ||
              (
-               sms->getOriginatingAddress()==rhs.sms->getOriginatingAddress() &&
-               sms->getDealiasedDestinationAddress()<rhs.sms->getDealiasedDestinationAddress()
+               org==rhs.org &&
+               dst<rhs.dst
              ) ||
              (
-               sms->getOriginatingAddress()==rhs.sms->getOriginatingAddress() &&
-               sms->getDealiasedDestinationAddress()==rhs.sms->getDealiasedDestinationAddress() &&
-               strcmp(sms->getEServiceType(),rhs.sms->getEServiceType())<0
+               org==rhs.org &&
+               dst==rhs.dst &&
+               esvctype<rhs.esvctype
              );
     }
   };
@@ -521,14 +525,54 @@ public:
 
   struct StoreData
   {
-    SMS sms;
+    char* smsBuf;
+    int smsBufSize;
     int seq;
     ReplaceIfPresentMap::iterator rit;
     LocalFileStore::IdSeqPairList::iterator it;
 
-    StoreData(const SMS& argSms,int argSeq=0):sms(argSms),seq(argSeq)
+    void SaveSms(const SMS& argSms)
     {
+      if(smsBuf!=0)
+      {
+        delete [] smsBuf;
+        smsBuf=0;
+      }
+      BufOps::SmsBuffer buf(0);
+      Serialize(argSms,buf);
+      smsBufSize=(int)buf.GetPos();
+      smsBuf=new char[smsBufSize];
+      memcpy(smsBuf,buf.get(),smsBufSize);
     }
+
+    void LoadSms(SMS& sms)
+    {
+      BufOps::SmsBuffer buf(smsBuf,smsBufSize);
+      Deserialize(buf,sms,LocalFileStore::storeVer);
+    }
+
+    StoreData(char* argBuf,int argBufSize,int argSeq=0):seq(argSeq)
+    {
+      smsBuf=argBuf;
+      smsBufSize=argBufSize;
+
+    }
+
+    StoreData(const SMS& argSms,int argSeq=0):seq(argSeq)
+    {
+      smsBuf=0;
+      smsBufSize=0;
+      SaveSms(argSms);
+    }
+    ~StoreData()
+    {
+      if(smsBuf)
+      {
+        delete [] smsBuf;
+      }
+    }
+    protected:
+      StoreData(const StoreData&){}
   };
   struct SMSIdHashFunc{
     static inline unsigned int CalcHash(SMSId key)
@@ -554,7 +598,7 @@ public:
     {
       StoreData* sd=storeDataPool.back();
       storeDataPool.pop_back();
-      sd->sms=argSms;
+      sd->SaveSms(argSms);
       sd->seq=argSeq;
       return sd;
     }
@@ -581,13 +625,13 @@ public:
   friend class LocalFileStore;
   LocalFileStore localFileStore;
 
-  void LocalFileStoreSave(smsc::sms::SMSId id,uint32_t seq,const smsc::sms::SMS& sms,bool final=false)
+  void LocalFileStoreSave(smsc::sms::SMSId id,StoreData* sd,bool final=false)
   {
     while(delayInit)
     {
       sched_yield();
     }
-    if(localFileStore.Save(id,seq,sms,final))
+    if(localFileStore.Save(id,sd->seq,sd->smsBuf,sd->smsBufSize,final))
     {
       localFileStore.StartRoll(currentSnap);
     }
@@ -599,7 +643,7 @@ public:
     StoreData** sd=store.GetPtr(id);
     if(!sd)return;
     if((*sd)->seq!=seq)return;
-    localFileStore.Save(id,(*sd)->seq,(*sd)->sms);
+    localFileStore.Save(id,(*sd)->seq,(*sd)->smsBuf,(*sd)->smsBufSize);
   }
 
 
@@ -703,10 +747,10 @@ public:
         void getMassCancelIds(const SMS& sms,Array<SMSId>& ids)
         {
           MutexGuard mg(storeMtx);
-          ReplaceIfPresentMap::iterator from=replMap.lower_bound(&sms);
+          ReplaceIfPresentMap::iterator from=replMap.lower_bound(sms);
           if(from!=replMap.end())
           {
-            ReplaceIfPresentMap::iterator to=replMap.upper_bound(&sms);
+            ReplaceIfPresentMap::iterator to=replMap.upper_bound(sms);
             for(;from!=to;from++)
             {
               debug2(log,"id for cancel:%lld",from->second);
@@ -714,7 +758,7 @@ public:
             }
           }else
           {
-            debug2(log,"getMassCancelIds nothing found:%s",ReplaceIfPresentKey(&sms).dump().c_str());
+            debug2(log,"getMassCancelIds nothing found:%s",ReplaceIfPresentKey(sms).dump().c_str());
           }
         }
 
@@ -828,18 +872,17 @@ public:
 
   struct Chain{
     Address addr;
-    int smeIndex;
+    SMSId dpfId;
     time_t headTime;
     time_t lastValidTime;
-    bool inTimeLine;
     time_t inProcMap;
-
+    int smeIndex;
+    int queueSize;
+    bool inTimeLine;
     bool dpfPresent;
-    SMSId dpfId;
 
     typedef std::multiset<SchedulerData> ScQueue;
     ScQueue queue;
-    int queueSize;
     typedef std::multimap<time_t,SchedulerData> ScTimedQueue;
     ScTimedQueue timedQueue;
 
