@@ -7,8 +7,14 @@ use File::Copy;
 use Time::Local qw(timegm timelocal);
 use Fcntl ':flock';
 
-
 use constant EXTRAMSC => '79169860220';
+
+use constant POSTPAID=>1;
+use constant PREPAID=>2;
+
+use constant CHARGE_SUBMIT=>0;
+use constant CHARGE_DELIVERY=>1;
+use constant CHARGE_DATACOLLECTED=>2;
 
 my $f;
 open($f,'>>/data/conf/scripts/lock') || die "Failed to open lock file:$!";
@@ -283,6 +289,11 @@ sub process{
         #$$addrref=~s/^(?!ussd:)/ussd:/i;
       }
     }
+    
+    
+    #by request of Igor G at 7.4.2008
+    $outfields->{SRC_ADDR}=~s/^\.5\.0\.//;
+    $outfields->{DST_ADDR}=~s/^\.5\.0\.//;
 
     $outfields->{ISPRECHARGED}=0;
     if($infields->{SMSX_SRV}&0x80000000)
@@ -301,16 +312,16 @@ sub process{
       $extraOut=$EXTRA_MAPPING{int($infields->{SERVICE_ID})};
     }
 
-    if($infields->{CONTRACT}==2 && $infields->{SERVICE_ID}!=4 && $infields->{SERVICE_ID}!=7 && $infields->{SERVICE_ID}!=8)
+    if($infields->{CONTRACT}==PREPAID && $infields->{SERVICE_ID}!=4 && $infields->{SERVICE_ID}!=7 && $infields->{SERVICE_ID}!=8)
     {
       $makeOutRec=0;
     }
 
-    if($infields->{CHARGE}==2)
+    if($infields->{CHARGE}==CHARGE_DATACOLLECTED)
     {
       $makeOutRec=0;
       $extraOut=undef;
-    }elsif($infields->{CHARGE}==0)
+    }elsif($infields->{CHARGE}==CHARGE_SUBMIT)
     {
       $makeInRec=0;
     }
