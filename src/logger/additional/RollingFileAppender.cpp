@@ -120,6 +120,9 @@ void RollingFileAppender::rollover() throw()
   }catch(std::exception& e)
   {
     fprintf(stderr,"RollingFileAppender::rollover exception:%s\n",e.what());
+  }catch(...)
+  {
+    fprintf(stderr,"RollingFileAppender::rollover unknown exception\n");
   }
 
   currentFilePos = 0;
@@ -152,20 +155,27 @@ void RollingFileAppender::log(const char logLevelName, const char * const catego
   const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, msec, thrId, category, message);
   buffer[desiredLength] = 0;
 
+  try
   {
-    smsc::core::synchronization::MutexGuard guard(mutex);
-    if(file.isOpened())
     {
-      file.Write(buffer, length < desiredLength ? length : desiredLength);
-      file.Flush();
-    }else
-    {
-      fwrite(buffer, length < desiredLength ? length : desiredLength, 1, stderr);
+      smsc::core::synchronization::MutexGuard guard(mutex);
+      if(file.isOpened())
+      {
+        file.Write(buffer, length < desiredLength ? length : desiredLength);
+        file.Flush();
+      }else
+      {
+        fwrite(buffer, length < desiredLength ? length : desiredLength, 1, stderr);
+      }
+      //fflush(file);
+      currentFilePos += length;
+      if (currentFilePos > maxFileSize)
+        rollover();
     }
-    //fflush(file);
-    currentFilePos += length;
-    if (currentFilePos > maxFileSize)
-      rollover();
+    
+  } catch(std::exception& e)
+  {
+    fprintf(stderr,"EXCEPTION IN LOGGER:%s\n",e.what());
   }
 }
 
