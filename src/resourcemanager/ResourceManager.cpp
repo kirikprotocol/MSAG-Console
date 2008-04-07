@@ -38,7 +38,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
   for (const char * ptr = strchr(str, ','); ptr != 0; ptr = strchr(str, ','))
   {
     while ((*str == ' ') || (*str == '\t')) str++;
-    const unsigned int length = ptr-str;
+    size_t length = ptr-str;
     //char tmp[length+1];
     TmpBuf<char,64> tmp(length+1);
     strncpy(tmp,  str, length);
@@ -53,7 +53,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
   if ((*str != 0) && (strlen(str) > 0))
   {
     while ((*str == ' ') || (*str == '\t')) str++;
-    const unsigned int length = strlen(str);
+    size_t length = strlen(str);
     //char tmp[length+1];
     TmpBuf<char,64> tmp(length+1);
     strncpy(tmp,  str, length);
@@ -106,8 +106,8 @@ ResourceManager::ResourceManager() throw ()
   smsc::logger::Logger * logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.ResourceManager");
   const char * const prefix = "resources_";
   const char * const suffix = ".xml";
-  unsigned int prefixLength = strlen(prefix);
-  unsigned int suffixLength = strlen(suffix);
+  size_t prefixLength = strlen(prefix);
+  size_t suffixLength = strlen(suffix);
 
   const char * dirName = "";
   DIR* configDir = opendir(dirName = "conf");
@@ -122,7 +122,7 @@ ResourceManager::ResourceManager() throw ()
 
   for (dirent* entry = readdir(configDir); entry != 0; entry = readdir(configDir))
   {
-    unsigned int entryLength = strlen(entry->d_name);
+    size_t entryLength = strlen(entry->d_name);
     const char * const entrySuffix = entry->d_name + (entryLength - suffixLength);
     if ((strncmp(entry->d_name,  prefix, prefixLength) == 0)
         && (strcmp(entrySuffix, suffix) == 0))
