@@ -55,12 +55,12 @@ class CalendarSMPPHandler extends SMPPHandler {
                                                                ZERO_OR_MORE_SPACES.pattern() + ONE_OR_TWO_DIGITS.pattern());
 
   // Messages regexes
-  private final static Pattern AFT_REGEX = Pattern.compile(AFT_SPACE.pattern() + ONE_TO_FOUR_DIGITS.pattern() + ANY_STRING_AFTER_SPACE.pattern());
-  private final static Pattern AT_REGEX_DATE = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE.pattern() + ANY_STRING_AFTER_SPACE.pattern());
-  private final static Pattern AT_REGEX_DATE_TIME_MIN = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE_TIME_MIN.pattern() + ANY_STRING_AFTER_SPACE.pattern());
-  private final static Pattern AT_REGEX_DATE_TIME_SEC = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE_TIME_SEC.pattern() + ANY_STRING_AFTER_SPACE.pattern());
-  private final static Pattern AT_REGEX_NOW = Pattern.compile(AT.pattern() + ANY_STRING_AFTER_SPACE.pattern());
-  private final static Pattern AFT_REGEX_NOW = Pattern.compile(AFT.pattern() + ANY_STRING.pattern());
+  private final static Pattern AFT_REGEX = Pattern.compile(AFT_SPACE.pattern() + ONE_TO_FOUR_DIGITS.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern AT_REGEX_DATE = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern AT_REGEX_DATE_TIME_MIN = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE_TIME_MIN.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern AT_REGEX_DATE_TIME_SEC = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE_TIME_SEC.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern AT_REGEX_NOW = Pattern.compile(AT.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern AFT_REGEX_NOW = Pattern.compile(AFT.pattern() + ANY_STRING.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 
   // Properties
@@ -140,7 +140,7 @@ class CalendarSMPPHandler extends SMPPHandler {
               case CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE:
                 sendResponse(inObj.getIncomingMessage(), Data.ESME_ROK);
                 sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
-                sendMessage(sourceAddress, destinationAddress, cmd.getMessage());
+                sendMessage(sourceAddress, destinationAddress, cmd.getMessage(), cmd.getDestAddressSubunit());
                 break;
               case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
                 sendResponse(inObj.getIncomingMessage(), Data.ESME_RINVDSTADR);

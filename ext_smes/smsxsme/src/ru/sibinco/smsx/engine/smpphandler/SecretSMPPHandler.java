@@ -37,11 +37,11 @@ class SecretSMPPHandler extends SMPPHandler {
   private final static Pattern ANY_STRING_AFTER_SPACE = Pattern.compile("( *| +.+)");
 //  private final static String ANY_WORD = "\\s*\\S+\\s*";
 
-  private final static Pattern SECRET_ON_REGEX = Pattern.compile(SECRET_ON.pattern()  + ANY_NONSPACE_STRING_AFTER_SPACE.pattern());
-  private final static Pattern SECRET_CHANGE_PASSWORD_REGEX = Pattern.compile(SECRET_ON.pattern() + ANY_NONSPACE_STRING_AFTER_SPACE.pattern() + ANY_NONSPACE_STRING_AFTER_SPACE.pattern());
-  private final static Pattern SECRET_OFF_REGEX = Pattern.compile('(' + SECRET.pattern() + ONE_OR_MORE_SPACES.pattern() + NONE.pattern() + "|-" + P.pattern() + ')');
-  private final static Pattern SECRET_MESSAGE_REGEX = Pattern.compile(SEC.pattern() + ANY_STRING_AFTER_SPACE.pattern());
-  private final static Pattern SECRET_GET_REGEX = Pattern.compile(SMS.pattern() + ANY_STRING_AFTER_SPACE.pattern());
+  private final static Pattern SECRET_ON_REGEX = Pattern.compile(SECRET_ON.pattern()  + ANY_NONSPACE_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern SECRET_CHANGE_PASSWORD_REGEX = Pattern.compile(SECRET_ON.pattern() + ANY_NONSPACE_STRING_AFTER_SPACE.pattern() + ANY_NONSPACE_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern SECRET_OFF_REGEX = Pattern.compile('(' + SECRET.pattern() + ONE_OR_MORE_SPACES.pattern() + NONE.pattern() + "|-" + P.pattern() + ')', Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern SECRET_MESSAGE_REGEX = Pattern.compile(SEC.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private final static Pattern SECRET_GET_REGEX = Pattern.compile(SMS.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 
   // Properties

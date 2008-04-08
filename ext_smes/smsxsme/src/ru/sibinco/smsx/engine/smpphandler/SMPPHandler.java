@@ -38,6 +38,15 @@ public abstract class SMPPHandler {
     multiplexor.sendResponse(msg, status);
   }
 
+  protected void sendMessage(String sourceAddress, String destinationAddress, String message, int destAddrSubunit) {
+    final Message msg = new Message();
+    msg.setSourceAddress(sourceAddress);
+    msg.setDestinationAddress(destinationAddress);
+    msg.setMessageString(message);
+    msg.setDestAddrSubunit(destAddrSubunit);
+    sendMessage(msg);
+  }
+
   protected void sendMessage(String sourceAddress, String destinationAddress, String message) {
     final Message msg = new Message();
     msg.setSourceAddress(sourceAddress);
