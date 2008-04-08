@@ -1,0 +1,85 @@
+#include <set>
+#include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
+#include <sua/sua_layer/io_dispatcher/ConnectMgr.hpp>
+#include "AspMaintenanceMessageHandlers.hpp"
+#include "SuaConnect.hpp"
+#include "LinkSetsRegistry.hpp"
+
+namespace sua_stack {
+
+AspMaintenanceMessageHandlers*
+utilx::Singleton<AspMaintenanceMessageHandlers>::_instance;
+
+AspMaintenanceMessageHandlers::AspMaintenanceMessageHandlers()
+  : _logger(smsc::logger::Logger::getInstance("sua_stack")), _cMgr(io_dispatcher::ConnectMgr::getInstance()) {}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::ActiveMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_error(_logger, "AspMaintenanceMessageHandlers::handle::: handle ActiveMessage [%s]", message.toString().c_str());
+  throw io_dispatcher::ProtocolException("AspMaintenanceMessageHandlers::handle::: ActiveMessage isn't accepted - IPSP-IPSP configuration not supported.");
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::ActiveAckMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle ActiveAckMessage [%s]", message.toString().c_str());
+  //  _cMgr.changeProtocolState(linkId, message);
+
+  std::set<communication::LinkId> linkSetIds = LinkSetsRegistry::getInstance().getLinkSetsByLink(linkId);
+  for(std::set<communication::LinkId>::iterator iter = linkSetIds.begin(), end_iter = linkSetIds.end(); iter != end_iter; ++iter) {
+    _cMgr.addLinkToLinkSet(*iter, linkId);
+  }
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::InactiveMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle InactiveMessage [%s]", message.toString().c_str());
+  throw io_dispatcher::ProtocolException("AspMaintenanceMessageHandlers::handle::: InactiveMessage isn't accepted - IPSP-IPSP configuration not supported.");
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::InactiveAckMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle InactiveAckMessage [%s]", message.toString().c_str());
+  _cMgr.removeLinkFromLinkSets(_cMgr.getLinkSetIds(linkId), linkId);
+  sua_messages::DownMessage downMessage;
+  _cMgr.send(linkId, downMessage);
+  //  _cMgr.changeProtocolState(linkId, message);
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::UPMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle UPMessage [%s]", message.toString().c_str());
+  throw io_dispatcher::ProtocolException("AspMaintenanceMessageHandlers::handle::: ActiveMessage isn't accepted - IPSP-IPSP configuration not supported.");
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::UPAckMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle UPAckMessage [%s]", message.toString().c_str());
+  //  _cMgr.changeProtocolState(linkId, message);
+  sua_messages::ActiveMessage activeMessage;
+  _cMgr.send(linkId, activeMessage);
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::DownMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle DownMessage [%s]", message.toString().c_str());
+  throw io_dispatcher::ProtocolException("AspMaintenanceMessageHandlers::handle::: DownMessage isn't accepted - IPSP-IPSP configuration not supported.");
+}
+
+void
+AspMaintenanceMessageHandlers::handle(const sua_messages::DownAckMessage& message, const communication::LinkId& linkId)
+{
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle DownAckMessage [%s]", message.toString().c_str());
+  //  _cMgr.changeProtocolState(linkId, message);
+  io_dispatcher::LinkPtr linkPtr = _cMgr.removeLink(linkId, false);
+  // connection closing will make in desctructor
+  smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: link=[%s] has been removed from ConnectMgr", linkPtr->getLinkId().getValue().c_str());
+}
+
+}
