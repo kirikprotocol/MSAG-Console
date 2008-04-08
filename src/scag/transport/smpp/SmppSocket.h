@@ -175,17 +175,7 @@ struct SmppSocket:SmppChannel{
     return time(NULL)-lastActivity>to;
   }
 
-  void genEnquireLink(int to)
-  {
-    MutexGuard mg(outMtx);
-    time_t now=time(NULL);
-    if(now-lastEnquireLink<to)
-    {
-      return;
-    }
-    lastEnquireLink=now;
-    outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,0,0,0));
-  }
+  void genEnquireLink(int to);
 
   virtual std::string getPeer()
   {

@@ -2,6 +2,7 @@
 #include "smpp/smpp.h"
 #include "util/int.h"
 #include "system/status.h"
+#include "SmppManager.h"
 
 namespace scag{
 namespace transport{
@@ -251,6 +252,20 @@ void SmppSocket::sendData()
   wrBufSent=0;
   wrBufUsed=sz;
   smsc_log_debug(log,"Prepared buffer size %d",wrBufUsed);
+}
+
+
+void SmppSocket::genEnquireLink(int to)
+{
+  MutexGuard mg(outMtx);
+  time_t now=time(NULL);
+  if(now-lastEnquireLink<to)
+  {
+    return;
+  }
+  lastEnquireLink=now;
+  SmppEntity* se=SmppManager::Instance().getSmppEntity(systemId.c_str());
+  outQueue.Push(SmppCommand::makeCommand(ENQUIRELINK,se?se->getNextSeq():1,0,0));
 }
 
 }//smpp
