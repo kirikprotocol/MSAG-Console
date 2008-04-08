@@ -13,6 +13,8 @@
     <param name="maxMessagesPerSecond" type="int">20</param>
     <param name="unrespondedMessagesMax" type="int">100</param>
     <param name="unrespondedMessagesSleep" type="int">5</param><!--sec-->
+    <param name="regions_config_filename" type="string">/path_to_infosme_install_dir/conf/regions.xml</param>
+    <param name="route_config_filename" type="string">/path_to_infosme_install_dir/conf/routes.xml</param>
 
     <section name="Admin">
       <param name="host" type="string">@listen.host@</param>
