@@ -197,7 +197,7 @@ sub outrow{
 
 sub conv_addr{
   my $addr=shift;
-  if($addr=~/(\d)\.(\d)\.(\d+)/)
+  if($addr=~/(\d)\.(\d)\.(\w+)/)
   {
     return $3;
 #    if($1 eq '1')
@@ -292,8 +292,8 @@ sub process{
     
     
     #by request of Igor G at 7.4.2008
-    $outfields->{SRC_ADDR}=~s/^\.5\.0\.//;
-    $outfields->{DST_ADDR}=~s/^\.5\.0\.//;
+    #$outfields->{SRC_ADDR}=~s/^\.5\.0\.//;
+    #$outfields->{DST_ADDR}=~s/^\.5\.0\.//;
 
     $outfields->{ISPRECHARGED}=0;
     if($infields->{SMSX_SRV}&0x80000000)
