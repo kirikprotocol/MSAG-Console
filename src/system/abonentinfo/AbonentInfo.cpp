@@ -163,7 +163,7 @@ int AbonentInfoSme::Execute()
 	{
 	  src_proxy_index=smsc->getSmeIndex(sms->getSourceSmeId());
 	}
-	bool has_route = smsc->routeSms(src_proxy_index,sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri,src_proxy_idx);
+	bool has_route = smsc->routeSms(sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri,src_proxy_index);
 
         Address oa=sms->getOriginatingAddress();
         Address da=sms->getDestinationAddress();
