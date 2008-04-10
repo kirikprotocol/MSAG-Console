@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * Acquisition Connect: accumulates data from socket until whole length
  * prefixed packet is get, deserializes it and then passes to listeners.
@@ -13,9 +13,6 @@ using smsc::logger::Logger;
 
 #include "inman/interaction/serializer.hpp"
 using smsc::inman::interaction::SerializablePacketAC;
-
-//#include "inman/common/observable.hpp"
-//using smsc::inman::common::ObservableT;
 
 #include "inman/common/Observatory.hpp"
 using smsc::util::GRDObservatoryOfT;
@@ -49,7 +46,8 @@ protected:
 
 public:
     PckAcquirer()
-        : SocketAcquirerAC(len.buf, 4), _state(pckIdle), logId(""), logger(NULL)
+        : SocketAcquirerAC(len.buf, 4), _state(pckIdle), logId("")
+        , logger(NULL), maxPckSz(1024)
     { }
 
     PckAcquirer(uint32_t max_pckSize, const char * log_id, Logger * use_log)
@@ -65,7 +63,9 @@ public:
     void Reset(void)
     { 
         SocketAcquirerAC::Reset(len.buf, 4);
-        _state = pckIdle; objBuf.reset(NULL); exc.reset(NULL);
+        _state = pckIdle; exc.reset(NULL);
+        if (objBuf.get())
+            objBuf->reset();
     }
 
     // -- SocketAcquirerAC interface methods inmplemenation:

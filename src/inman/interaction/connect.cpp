@@ -41,7 +41,10 @@ SocketAcquirerAC::SAcqStatus PckAcquirer::onBytesReceived(unsigned lastRed)
                                           logId, oct2read));
             return SocketAcquirerAC::acqDataErr;
         }
-        objBuf.reset(new ObjectBuffer(oct2read));
+        if (objBuf.get())
+            objBuf->reset(oct2read);
+        else
+            objBuf.reset(new ObjectBuffer(oct2read));
         dbuf = objBuf->get();
         numRed = 0;
         num2Read = oct2read;
