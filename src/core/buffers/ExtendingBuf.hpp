@@ -56,8 +56,14 @@ public:
     inline unsigned  getDataSize(void) const { return dataSz; }
     inline unsigned  getMaxSize(void)  const { return heapBufSz ? heapBufSz : SZ; }
 
-    //reallocates buffer if needed, destroying all previously set data
-    T* reset(int size)
+    //resets buffer, destroys all previously set data
+    T * reset(void)
+    {
+        pos = dataSz = 0;
+        return dataBuf;
+    }
+    //resets buffer, resizing it if needed, destroys all previously set data
+    T* reset(unsigned size)
     {
         if (heapBuf) {
             if (size > heapBufSz) { //reallocate heap buffer
