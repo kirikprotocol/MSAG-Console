@@ -4,6 +4,7 @@
 # include <string>
 # include <sys/types.h>
 # include <sua/communication/TP.hpp>
+# include <sua/communication/MessageHandlingDispatcherIface.hpp>
 
 namespace communication {
 
@@ -28,7 +29,7 @@ public:
   static const size_t TOTAL_NUM_OF_PARAMETERS=64;
   static const size_t MAX_MESSAGE_SIZE=TOTAL_NUM_OF_PARAMETERS*64*1024;
 
-  virtual void dispatch_handle(const LinkId& linkId) const = 0;
+  virtual MessageHandlingDispatcherIface* getHandlingDispatcher();
 
 protected:
   virtual uint32_t getLength() const = 0;
