@@ -329,3 +329,10 @@ TO ALL: Insert log record for all significant changes & fixes here.
 1) MSAG CRITICAL FIX: HTTP transport fixes (writers task locking)
 2) MSAG CRITICAL FIX: HTTP LCM in <delivery> block fix (+statistics fix)
 3) MSAG CRITICAL FIX: HTTP rules fix for <return> action, result wasn't set in response paket.
+
+=================================================================================================================
+08.04.2008 12:30 makar
+1) MSAG FIX: Now seqNum starts from 1 for ENQUIRE_LINK & BIND packets
+2) MSAG CHANGE: Some annoing warnings removed for <strings:xxx /> actions
+3) MSAG Admin FIX: Pagination on 'Service' page fixed. Some labels fixed (button names).
+4) MSAG CHANGE: <datetime:xxx /> actions were added (not tested yet).
