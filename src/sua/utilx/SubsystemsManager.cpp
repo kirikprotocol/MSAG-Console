@@ -66,7 +66,6 @@ SubsystemsManager::initialize()
     sigdelset(&_blocked_signals, SIGLWP);
     sigdelset(&_blocked_signals, SIGCANCEL);
 
-    //sigdelset(&_blocked_signals, SIGTERM);
     sigdelset(&_blocked_signals, SIGCHLD);
     sigdelset(&_blocked_signals, SIGUSR1);
 
@@ -93,15 +92,15 @@ SubsystemsManager::startup()
 void
 SubsystemsManager::waitForCompletion()
 {
-  int sig, out_signals;
+  int ret, out_signal=0;
 
-  sig = sigwait(&_blocked_signals, &out_signals);
-#if _XOPEN_SOURCE == 500
-  if ( sig || (!sig && sig != SIGTERM) )
-#else
-  if ( sig && sig != SIGTERM )
-#endif
-    abort();
+  do {
+    ret = sigwait(&_blocked_signals, &out_signal);
+    smsc_log_debug(_logger,"SubsystemsManager::waitForCompletion::: sigwait return: out_signal=%d, ret=%d", out_signal, ret);
+  } while (!ret && out_signal != SIGTERM );
+
+  if ( ret ) 
+    throw smsc::util::SystemError("SubsystemsManager::waitForCompletion::: call to sigwait failed");
 
   while( !_subsystemsRegistry.empty() ) {
     {
