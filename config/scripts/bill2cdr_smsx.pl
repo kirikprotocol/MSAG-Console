@@ -197,7 +197,7 @@ sub outrow{
 
 sub conv_addr{
   my $addr=shift;
-  if($addr=~/^(\d)\.(\d)\.(.+)$/)
+  if($addr=~/^\.(\d)\.(\d)\.(.+)$/)
   {
     return $3;
 #    if($1 eq '1')
