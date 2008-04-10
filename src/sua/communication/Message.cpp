@@ -7,3 +7,9 @@ communication::Message::generateMessageIndexValue()
 {
   return ++_MSG_IDX;
 }
+
+communication::MessageHandlingDispatcherIface*
+communication::Message::getHandlingDispatcher()
+{
+  return NULL;
+}
