@@ -19,8 +19,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   std::string getAppId() const;
 
   void setAppId(const std::string& appid);

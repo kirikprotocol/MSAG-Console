@@ -16,8 +16,6 @@ public:
 
   virtual std::string toString() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   const char* getMsgCodeTextDescription() const;
 private:
   static const uint32_t _MSG_CODE=0x42;

@@ -26,8 +26,6 @@ public:
 
   virtual const sua_messages::SUAMessage* getContainedSuaMessage() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   static const uint32_t _MIN_MSG_CODE=0x01, _MAX_MSG_CODE=0x0A;
 
   static const uint32_t ENCAPSULATED_SUA_ERROR_MESSAGE_CODE = 0x01;
