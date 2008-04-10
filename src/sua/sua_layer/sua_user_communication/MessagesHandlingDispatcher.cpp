@@ -1,32 +1,28 @@
-#include <sua/communication/libsua_messages/BindMessage.hpp>
-#include <sua/communication/libsua_messages/EncapsulatedSuaMessage.hpp>
-#include <sua/communication/libsua_messages/MErrorMessage.hpp>
-#include <sua/communication/libsua_messages/UnbindMessage.hpp>
-
+#include "MessagesHandlingDispatcher.hpp"
 #include "MessageHandlers.hpp"
 
-namespace libsua_messages {
+namespace sua_user_communication {
 
 void
-BindMessage::dispatch_handle(const communication::LinkId& linkId) const
+BindMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_user_communication::MessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-EncapsulatedSuaMessage::dispatch_handle(const communication::LinkId& linkId) const
+EncapsulatedSuaMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_user_communication::MessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-MErrorMessage::dispatch_handle(const communication::LinkId& linkId) const
+MErrorMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_user_communication::MessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-UnbindMessage::dispatch_handle(const communication::LinkId& linkId) const
+UnbindMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_user_communication::MessageHandlers::getInstance().handle(*this, linkId);
 }
