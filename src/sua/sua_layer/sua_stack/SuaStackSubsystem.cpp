@@ -18,6 +18,7 @@
 #include "AspMaintenanceMessageHandlers.hpp"
 #include "CLCOMessageHandlers.hpp"
 #include "LinkSetsRegistry.hpp"
+#include "initializer.hpp"
 
 namespace sua_stack {
 
@@ -82,6 +83,7 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   CLCOMessageHandlers::init();
 
   sua_messages::initialize();
+  registerMessageCreators();
 
   runtime_cfg::CompositeParameter& sgpLinksParameter = rconfig.find<runtime_cfg::CompositeParameter>("config.sgp_links");
 
