@@ -23,21 +23,32 @@ namespace sua_user_communication {
 
 bool registerMessageCreators()
 {
-  libsua_messages::BindMessage bindMessage;
-  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator(libsua_messages::LibsuaMessage::getMessageIndex(bindMessage.getMsgCode()), new io_dispatcher::SuaLayerMessagesInstancer<BindMessage_HandlingDispatcher>());
+  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator
+    (
+     libsua_messages::LibsuaMessage::getMessageIndex(libsua_messages::BindMessage().getMsgCode()),
+     new io_dispatcher::SuaLayerMessagesInstancer<BindMessage_HandlingDispatcher>()
+     );
 
   for(uint32_t msgCode=libsua_messages::EncapsulatedSuaMessage::_MIN_MSG_CODE;
       msgCode <= libsua_messages::EncapsulatedSuaMessage::_MAX_MSG_CODE;
-      ++msgCode) {
-    io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator(libsua_messages::LibsuaMessage::getMessageIndex(msgCode), new io_dispatcher::SuaLayerMessagesInstancer<EncapsulatedSuaMessage_HandlingDispatcher>(msgCode));
-  }
+      ++msgCode)
+    io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator
+      (
+       libsua_messages::LibsuaMessage::getMessageIndex(msgCode),
+       new io_dispatcher::SuaLayerMessagesInstancer<EncapsulatedSuaMessage_HandlingDispatcher>(msgCode)
+       );
 
-  libsua_messages::MErrorMessage mErrorMessage;
-  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator(libsua_messages::LibsuaMessage::getMessageIndex(mErrorMessage.getMsgCode()), new io_dispatcher::SuaLayerMessagesInstancer<MErrorMessage_HandlingDispatcher>());
+  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator
+    (
+     libsua_messages::LibsuaMessage::getMessageIndex(libsua_messages::MErrorMessage().getMsgCode()),
+     new io_dispatcher::SuaLayerMessagesInstancer<MErrorMessage_HandlingDispatcher>()
+     );
 
-  libsua_messages::UnbindMessage unbindMessage;
-  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator(libsua_messages::LibsuaMessage::getMessageIndex(unbindMessage.getMsgCode()), new io_dispatcher::SuaLayerMessagesInstancer<UnbindMessage_HandlingDispatcher>());
-
+  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator
+    (
+     libsua_messages::LibsuaMessage::getMessageIndex(libsua_messages::UnbindMessage().getMsgCode()),
+     new io_dispatcher::SuaLayerMessagesInstancer<UnbindMessage_HandlingDispatcher>()
+     );
   return true;
 }
 
