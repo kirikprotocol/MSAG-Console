@@ -9,6 +9,7 @@
 #include "ProtocolStates.hpp"
 #include "MessageHandlers.hpp"
 #include "LinkSetInfoRegistry.hpp"
+#include "initializer.hpp"
 
 namespace sua_user_communication {
 
@@ -42,6 +43,7 @@ SuaUserCommunicationSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   LibSua_State_Bind::init();
 
   libsua_messages::initialize();
+  registerMessageCreators();
 
   runtime_cfg::Parameter& listeningHostParameter = rconfig.find<runtime_cfg::Parameter>("config.local_ip");
   runtime_cfg::Parameter& listeningPortParameter = rconfig.find<runtime_cfg::Parameter>("config.local_port");
