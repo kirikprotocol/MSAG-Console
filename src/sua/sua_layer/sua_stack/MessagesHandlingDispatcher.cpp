@@ -1,125 +1,109 @@
-#include <sua/communication/sua_messages/ActiveAckMessage.hpp>
-#include <sua/communication/sua_messages/CLDTMessage.hpp>
-#include <sua/communication/sua_messages/DAUDMessage.hpp>
-#include <sua/communication/sua_messages/DAVAMessage.hpp>
-#include <sua/communication/sua_messages/DRSTMessage.hpp>
-#include <sua/communication/sua_messages/DUNAMessage.hpp>
-#include <sua/communication/sua_messages/DUPUMessage.hpp>
-#include <sua/communication/sua_messages/DownAckMessage.hpp>
-#include <sua/communication/sua_messages/DownMessage.hpp>
-#include <sua/communication/sua_messages/ErrorMessage.hpp>
-#include <sua/communication/sua_messages/InactiveAckMessage.hpp>
-#include <sua/communication/sua_messages/InactiveMessage.hpp>
-#include <sua/communication/sua_messages/NotifyMessage.hpp>
-#include <sua/communication/sua_messages/SCONMessage.hpp>
-#include <sua/communication/sua_messages/UPAckMessage.hpp>
-#include <sua/communication/sua_messages/UPMessage.hpp>
-
+#include "MessagesHandlingDispatcher.hpp"
 #include "AspMaintenanceMessageHandlers.hpp"
 #include "CLCOMessageHandlers.hpp"
 #include "SignalingNetworkManagementMessageHandlers.hpp"
 #include "SUAManagementMessageHandlers.hpp"
 
-namespace sua_messages {
+namespace sua_stack {
 
 void
-ActiveAckMessage::dispatch_handle(const communication::LinkId& linkId) const
+ActiveAckMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-ActiveMessage::dispatch_handle(const communication::LinkId& linkId) const
+ActiveMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-CLDTMessage::dispatch_handle(const communication::LinkId& linkId) const
+CLDTMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::CLCOMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DAUDMessage::dispatch_handle(const communication::LinkId& linkId) const
+DAUDMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DAVAMessage::dispatch_handle(const communication::LinkId& linkId) const
+DAVAMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DRSTMessage::dispatch_handle(const communication::LinkId& linkId) const
+DRSTMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DUNAMessage::dispatch_handle(const communication::LinkId& linkId) const
+DUNAMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DUPUMessage::dispatch_handle(const communication::LinkId& linkId) const
+DUPUMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-SCONMessage::dispatch_handle(const communication::LinkId& linkId) const
+SCONMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DownAckMessage::dispatch_handle(const communication::LinkId& linkId) const
+DownAckMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-DownMessage::dispatch_handle(const communication::LinkId& linkId) const
+DownMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-ErrorMessage::dispatch_handle(const communication::LinkId& linkId) const
+ErrorMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SUAManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-NotifyMessage::dispatch_handle(const communication::LinkId& linkId) const
+NotifyMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SUAManagementMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-InactiveAckMessage::dispatch_handle(const communication::LinkId& linkId) const
+InactiveAckMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-InactiveMessage::dispatch_handle(const communication::LinkId& linkId) const
+InactiveMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-UPAckMessage::dispatch_handle(const communication::LinkId& linkId) const
+UPAckMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
 
 void
-UPMessage::dispatch_handle(const communication::LinkId& linkId) const
+UPMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::AspMaintenanceMessageHandlers::getInstance().handle(*this, linkId);
 }
