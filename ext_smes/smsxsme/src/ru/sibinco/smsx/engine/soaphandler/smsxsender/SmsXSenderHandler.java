@@ -165,11 +165,9 @@ class SmsXSenderHandler implements SmsXSender {
         observer.waitStatus();
         switch(c.getStatus()) {
           case SecretSendMessageCmd.STATUS_SUCCESS:
+          case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
             status = STATUS_ACCEPTED;
             id_message = SECRET_MSG_ID_PREFIX + c.getMsgId();
-            break;
-          case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
-            status = STATUS_SECRET_DESTINATION_ABONENT_NOT_REGISTERED;
             break;
           case SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
             status = STATUS_SECRET_WRONG_DESTINATION_ADDRESS;

@@ -163,14 +163,6 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
         return;
       }
 
-      if (users.get(cmd.getDestinationAddress()) == null) { // destinationAddress has not been registered
-        if (log.isInfoEnabled())
-          log.info("Dst abonent " + cmd.getDestinationAddress() + " not registered in DB");
-        messageSender.sendInvitationMessage(cmd.getDestinationAddress());
-        cmd.update(SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED);
-        return;
-      }
-
       // Store message
       final SecretMessage secretMessage = new SecretMessage();
       secretMessage.setDestinationAddress(cmd.getDestinationAddress());
@@ -182,8 +174,17 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
       secretMessage.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsx" : "websms");
       ds.saveSecretMessage(secretMessage);
 
-      messageSender.sendInformMessage(secretMessage);
       cmd.setMsgId(secretMessage.getId());
+
+      if (users.get(cmd.getDestinationAddress()) == null) { // destinationAddress has not been registered
+        if (log.isInfoEnabled())
+          log.info("Dst abonent " + cmd.getDestinationAddress() + " not registered in DB");
+        messageSender.sendInvitationMessage(cmd.getDestinationAddress());
+        cmd.update(SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED);
+        return;
+      }
+
+      messageSender.sendInformMessage(secretMessage);
       cmd.update(SecretSendMessageCmd.STATUS_SUCCESS);
 
     } catch (Throwable e) {

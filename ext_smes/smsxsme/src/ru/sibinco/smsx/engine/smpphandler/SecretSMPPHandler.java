@@ -236,16 +236,12 @@ class SecretSMPPHandler extends SMPPHandler {
         final SecretSendMessageCmd cmd = (SecretSendMessageCmd)command;
         switch (cmd.getStatus()) {
           case SecretSendMessageCmd.STATUS_SUCCESS:
+          case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
             sendResponse(msg, Data.ESME_ROK);
             break;
 
           case SecretSendMessageCmd.STATUS_SOURCE_ABONENT_NOT_REGISTERED:
             sendResponse(msg, Data.ESME_RX_P_APPN);
-            break;
-
-          case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
-            sendResponse(msg, Data.ESME_ROK);
-            sendMessage(serviceAddress, sourceAddress, msgDestinationAbonentNotRegistered.replaceAll("\\{dest_abonent}", destinationAddress));
             break;
 
           case SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED:

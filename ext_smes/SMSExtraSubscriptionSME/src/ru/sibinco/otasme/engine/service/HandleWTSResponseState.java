@@ -40,6 +40,10 @@ class HandleWTSResponseState extends AbstractSubscriptionState {
       // Remove repeats count for abonent
       Integer repeatsCount = (Integer)abonentsRepeatsCounts.remove(abonentAddress);
 
+      // TODO Temporary simulate OTA error!!!!!!!!!
+      code = 1;
+      status = Message.WTS_ERROR_STATUS_PERM;
+
       if (code != 0) { // Error occured
 
         log.info("OTA Platform return error with code = " + code + " for " + abonentAddress);

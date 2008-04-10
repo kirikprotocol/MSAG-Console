@@ -177,7 +177,7 @@ public class SMPPWorker extends IterativeWorker {
     msg.setSourceAddress(sourceAddress);
     msg.setDestinationAddress(destinationAddress);
     msg.setMessageString(message);
-    msg.setConnectionName(connectionName);
+    msg.setConnectionName("smsx"); // TODO
 
     final SMPPTransportObject outObj = new SMPPTransportObject();
     outObj.setOutgoingMessage(msg);
