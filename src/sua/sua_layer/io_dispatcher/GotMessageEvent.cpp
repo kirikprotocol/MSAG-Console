@@ -19,7 +19,9 @@ GotMessageEvent::handle()
   if ( message ) {
     message->deserialize(*_tp);
     smsc_log_info(_logger, "GotMessageEvent::handle::: got new message=[%s]", message->toString().c_str());
-    message->dispatch_handle(_curLinkId);
+    communication::MessageHandlingDispatcherIface* handlingDispatcher = message->getHandlingDispatcher();
+    if ( handlingDispatcher )
+      handlingDispatcher->dispatch_handle(_curLinkId);
   } else
     throw smsc::util::Exception ("GotMessageEvent::handle::: can't instantiate message from with packet type [=%d]", _tp->packetType);
 }
