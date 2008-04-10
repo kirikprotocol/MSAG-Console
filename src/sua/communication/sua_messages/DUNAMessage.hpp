@@ -18,8 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   void setRoutingContext(const TLV_RoutingContext& routingContext);
   const TLV_RoutingContext& getRoutingContext() const;
 

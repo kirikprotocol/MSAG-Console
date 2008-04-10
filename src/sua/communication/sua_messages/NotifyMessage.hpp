@@ -18,8 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   void setStatus(const TLV_ApplicationStatus& status);
   const TLV_ApplicationStatus& getStatus() const;
 

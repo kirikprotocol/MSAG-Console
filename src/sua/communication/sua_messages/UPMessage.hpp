@@ -18,8 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   void setAspIdentifier(const TLV_AspIdentifier& aspId);
   const TLV_AspIdentifier& getAspIdentifier() const;
 

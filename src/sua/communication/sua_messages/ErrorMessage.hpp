@@ -18,8 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-
   void setErrorCode(const TLV_ErrorCode& errorCode);
   const TLV_ErrorCode& getErrorCode() const;
 
