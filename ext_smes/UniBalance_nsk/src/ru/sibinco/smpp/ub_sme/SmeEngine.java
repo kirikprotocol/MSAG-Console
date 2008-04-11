@@ -633,8 +633,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected void closeRequestState(RequestState state) {
     String abonent = state.getAbonentRequest().getSourceAddress();
     synchronized (state) {
-      if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed())
-      {
+      if(logger.isDebugEnabled())
+        logger.debug("Trying close state "+state.getAbonentRequest().getSourceAddress());
+      if (((state.isBalanceReady() && (state.isBannerReady() || !bannerEngineClientEnabled)) || state.isError()) && !state.isClosed()) {
         if (state.isError() || state.getAbonentResponse() == null) {
           Message message = new Message();
           message.setSourceAddress(state.getAbonentRequest().getDestinationAddress());
@@ -663,6 +664,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
         extractRequestState(abonent);
         if (logger.isInfoEnabled())
           logger.info(state.toString());
+      } else {
+        if(logger.isDebugEnabled())
+          logger.debug("State is not ready to close");
       }
     }
   }
@@ -821,7 +825,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       state = new RequestState(message, abonentRequestTime);
       addRequestState(state);
       try {
+        if(logger.isDebugEnabled())
+          logger.debug("Starting BalanceProcessor thread");
         threadsPool.execute(new BalanceProcessor(this, state));
+        if(logger.isDebugEnabled())
+          logger.debug("BalanceProcessor thread started");        
       } catch (RuntimeException e) {
         logger.error("Exception occured during creating balance processor: " + e, e);
         synchronized (state) {
@@ -833,7 +841,11 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
       if (bannerEngineClientEnabled) {
         try {
+          if(logger.isDebugEnabled())
+            logger.debug("Starting BannerRequest thread");
           threadsPool.execute(new BannerRequestThread(state));
+          if(logger.isDebugEnabled())
+            logger.debug("BannerRequest thread started");
         } catch (RuntimeException e) {
           logger.error("Exception occured during creating banner processor: " + e, e);
         }
@@ -1000,7 +1012,16 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
 
 
   private String getBanner(RequestState state) {
+    if (state == null){
+      logger.error("Call getBanner() with null state!");
+      return null;
+    }
+
     String abonent = state.getAbonentRequest().getSourceAddress();
+
+    if(logger.isDebugEnabled())
+      logger.debug("getBanner("+abonent+")");
+
     byte[] banner = null;
 
     String encoding = "UTF-16BE";
@@ -1015,6 +1036,9 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
     state.setBannerRequested();
     banner = bannerEngineClient.getLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId);
+
+    if(logger.isDebugEnabled())
+      logger.debug("Got banner for "+abonent+": "+banner);
 
     if (banner == null) {
       return null;

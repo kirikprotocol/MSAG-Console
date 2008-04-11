@@ -190,8 +190,9 @@ public class RequestState {
 
   public String toString() {
     StringBuffer sb = new StringBuffer();
-    //sb.append(abonentRequest.getSourceAddress()+" request: ");
-    sb.append("Request: ");
+    sb.append(abonentRequest.getSourceAddress());
+    sb.append(" request: ");
+    //sb.append("Request: ");
     String date;
     synchronized(dateFormat){
       date=dateFormat.format(new Date(abonentRequestTime));

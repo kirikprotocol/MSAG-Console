@@ -23,11 +23,18 @@ public class BalanceProcessor implements Runnable {
   }
 
   private void process() {
-    if (state == null)
+    if (state == null){
+      logger.error("Call BalanceProcessor.process() with null state!");
       return;
+    }
+
+    String abonent = state.getAbonentRequest().getSourceAddress();
+
+    if(logger.isDebugEnabled())
+      logger.debug("BalanceProcessor.process("+abonent+")");
 
     String balance = null;
-    String abonent = state.getAbonentRequest().getSourceAddress();
+
 
     int currentBillingSystemId = smeEngine.getBillingSystemByOrder(state.getAbonentContractType(), state.getCurrentBillingSystemIndex());
 
@@ -38,6 +45,9 @@ public class BalanceProcessor implements Runnable {
         break;
       }
       loopDetector++;
+
+      if(logger.isDebugEnabled())
+        logger.debug("currentBillingSystemId="+currentBillingSystemId);
 
       switch (currentBillingSystemId) {
         case SmeEngine.BILLING_SYSTEM_IN_MAN_CONTRACT_TYPE:
@@ -508,6 +518,7 @@ public class BalanceProcessor implements Runnable {
   private String getMedioScpBalance(String abonent) {
     double balance;
     String currency;
+    Integer accumulator = null;
     CallableStatement stmt = null;
     try {
       stmt = smeEngine.getMedioScpStatement();
@@ -515,16 +526,23 @@ public class BalanceProcessor implements Runnable {
         logger.error("Couldn't get MedioSCP statement");
         return null;
       }
+
+      //FUNCTION get_accurate_date_by_num (num VARCHAR2, balance_date OUT date, result_type OUT VARCHAR2, currency_code OUT VARCHAR2, acc_value OUT NUMBER) RETURN NUMBER;
       synchronized (stmt) {
         stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
         stmt.setString(2, cutAbonentAddress(abonent));
         stmt.registerOutParameter(3, java.sql.Types.DATE);
         stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
         stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
+        stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
         stmt.execute();
         if ("ACCURATE".equalsIgnoreCase(stmt.getString(4)) || "CACHED".equalsIgnoreCase(stmt.getString(4))) {
           balance = Double.parseDouble(stmt.getString(1));
           currency = smeEngine.getCurrency(stmt.getString(5));
+          accumulator = new Integer(stmt.getInt(6));
+          if(stmt.wasNull()){
+            accumulator=null;
+          }
         } else {
           logger.warn("Abonent " + abonent + " MedioSCP balance corrupted: " + stmt.getString(4));
           return null;
@@ -552,10 +570,15 @@ public class BalanceProcessor implements Runnable {
           stmt.registerOutParameter(3, java.sql.Types.DATE);
           stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
           stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
+          stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
           stmt.execute();
           if ("ACCURATE".equalsIgnoreCase(stmt.getString(4)) || "CACHED".equalsIgnoreCase(stmt.getString(4))) {
             balance = Double.parseDouble(stmt.getString(1));
             currency = smeEngine.getCurrency(stmt.getString(5));
+            accumulator = new Integer(stmt.getInt(6));
+            if(stmt.wasNull()){
+              accumulator=null;
+            }
           } else {
             logger.warn("Abonent " + abonent + " MedioSCP balance corrupted: " + stmt.getString(4));
             return null;
@@ -572,8 +595,13 @@ public class BalanceProcessor implements Runnable {
       currency = smeEngine.getCurrency("default");
     }
     MessageFormat messageFormat;
-    messageFormat = smeEngine.getMessageFormat(balance);
-    return messageFormat.format(new String[]{smeEngine.getNumberFormat(balance).format(balance), currency});
+    if (accumulator != null) {
+      messageFormat = smeEngine.getMessageFormatWithAccumulator(balance);
+    } else {
+      messageFormat = smeEngine.getMessageFormat(balance);
+    }
+    return messageFormat.format(new Object[]{smeEngine.getNumberFormat(balance).format(balance), currency, accumulator});
+
   }
 
   private static String cutAbonentAddress(String abonent) {
