@@ -73,7 +73,8 @@ int main(int argc, char* argv[])
     sigprocmask(SIG_SETMASK, &set, NULL);
     sigset(SIGTERM, appSignalHandler);
     sigset(SIGINT, appSignalHandler);
-    sigset(SIGHUP, appSignalHandler);    
+    sigset(SIGHUP, appSignalHandler); 
+    int glossaryOpened = Glossary::GLOSSARY_CLOSED;
 
     try{
         smsc_log_info(logger,  "Starting up %s", getStrVersion());
@@ -133,7 +134,7 @@ int main(int argc, char* argv[])
         
         AbonentStore.init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize, cacheSize,
             Logger::getInstance("pvss.abnt"));
-		Glossary::Open(storagePath + "/glossary");
+		glossaryOpened = Glossary::Open(storagePath + "/glossary");
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	Init cache Params 
         ConfigView cacheConfig(manager, "pers.cache_max");
@@ -234,7 +235,8 @@ int main(int argc, char* argv[])
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting.");
         resultCode = -5;
     }
-	
-    Glossary::Close();
+	if (glossaryOpened == Glossary::SUCCESS) {
+      Glossary::Close();
+    }
     return resultCode;
 }
