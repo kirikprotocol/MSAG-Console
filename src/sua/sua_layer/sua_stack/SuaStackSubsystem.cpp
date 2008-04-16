@@ -17,6 +17,9 @@
 #include "ProtocolStates.hpp"
 #include "AspMaintenanceMessageHandlers.hpp"
 #include "CLCOMessageHandlers.hpp"
+#include "SUAManagementMessageHandlers.hpp"
+#include "SignalingNetworkManagementMessageHandlers.hpp"
+
 #include "LinkSetsRegistry.hpp"
 #include "initializer.hpp"
 
@@ -41,12 +44,16 @@ SuaStackSubsystem::stop()
        iter != end_iter; ++iter) {
     const communication::LinkId& linkId = *iter;
     smsc_log_info(_logger, "SuaStackSubsystem::stop::: shutdown link [linkId=%s]", linkId.getValue().c_str());
-    sua_messages::InactiveMessage inactiveMessage;
     try {
-      io_dispatcher::ConnectMgr::getInstance().send(*iter, inactiveMessage);
+      io_dispatcher::ConnectMgr::getInstance().send(*iter, sua_messages::InactiveMessage());
     } catch (io_dispatcher::ProtocolException& ex) {
-      smsc_log_info(_logger, "SuaStackSubsystem::stop::: link is not in Active state");
-      io_dispatcher::LinkPtr linkPtr = io_dispatcher::ConnectMgr::getInstance().removeLink(linkId, false);
+      smsc_log_info(_logger, "SuaStackSubsystem::stop::: link is not in ACTIVE state, send Down message");
+      try {
+        io_dispatcher::ConnectMgr::getInstance().send(linkId, sua_messages::DownMessage());
+      } catch (io_dispatcher::ProtocolException& ex) {
+        smsc_log_info(_logger, "SuaStackSubsystem::stop::: link is not in INACTIVE state, remove link");
+        io_dispatcher::LinkPtr linkPtr = io_dispatcher::ConnectMgr::getInstance().removeLink(linkId, false);
+      }
     }
   }
 }
@@ -81,9 +88,16 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
 
   AspMaintenanceMessageHandlers::init();
   CLCOMessageHandlers::init();
+  SUAManagementMessageHandlers::init();
+  SignalingNetworkManagementMessageHandlers::init();
 
   sua_messages::initialize();
   registerMessageCreators();
+
+  try {
+    runtime_cfg::Parameter& trafficModeForSGP = rconfig.find<runtime_cfg::Parameter>("config.traffic-mode-for-sgp");
+    AspMaintenanceMessageHandlers::getInstance().setSGPTrafficMode(trafficModeForSGP.getValue());
+  } catch (std::exception& ex) {}
 
   runtime_cfg::CompositeParameter& sgpLinksParameter = rconfig.find<runtime_cfg::CompositeParameter>("config.sgp_links");
 
@@ -95,6 +109,10 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
 
     std::vector<std::string> l_addr, r_addr;
     in_port_t r_port = atoi(nextParameter->getParameter<runtime_cfg::Parameter>("remote_port")->getValue().c_str());
+    runtime_cfg::Parameter* localPortCfgParam = nextParameter->getParameter<runtime_cfg::Parameter>("local_port");
+    in_port_t l_port = 0;
+    if ( localPortCfgParam )
+      l_port = atoi(localPortCfgParam->getValue().c_str());
 
     extractAddressParameters(&l_addr, nextParameter, "local_address");
     extractAddressParameters(&r_addr, nextParameter, "remote_address");
@@ -103,7 +121,12 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
     if ( ! LinkSetsRegistry::getInstance().checkLinkIsMemberOfAnyLinkset(linkIdToSgp) )
       throw smsc::util::Exception("SuaStackSubsystem::initialize::: wrong configuration - linkId=[%s] isn't a member of any LinkSet");
 
-    SuaConnect* suaConnect = new SuaConnect(r_addr, r_port, linkIdToSgp);
+    SuaConnect* suaConnect;
+    if ( l_port ) 
+      suaConnect = new SuaConnect(r_addr, r_port, l_addr, l_port, linkIdToSgp);
+    else
+      suaConnect = new SuaConnect(r_addr, r_port, linkIdToSgp);
+
     suaConnect->setListener(this);
 
     smsc_log_info(_logger, "SuaStackSubsystem::initialize::: try establish sctp association");
