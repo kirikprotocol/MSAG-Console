@@ -34,7 +34,7 @@ ConnectAcceptor*
 ConnectMgr::removeConnectAcceptor(const std::string& acceptorName)
 {
   ConnectAcceptor* result=NULL;
-  smsc_log_info(_logger, "ConnectMgr::removeConnectAcceptor::: try remove ConnectAcceptor with acceptorName=[%s]", acceptorName.c_str());
+  smsc_log_debug(_logger, "ConnectMgr::removeConnectAcceptor::: try remove ConnectAcceptor with acceptorName=[%s]", acceptorName.c_str());
   {
     smsc::core::synchronization::MutexGuard guard(_connAcceptorsLock);
 
@@ -112,7 +112,7 @@ ConnectMgr::removeLink(const communication::LinkId& linkId, bool cleanUpAcceptor
     }
 
     _ioObjectsPool.remove(curConnect->getSocket()->getInputStream());
-    smsc_log_debug(_logger, "ConnectMgr::removeLink::: link=[%s] has been removed", curConnect->getLinkId().getValue().c_str());
+    smsc_log_info(_logger, "ConnectMgr::removeLink::: link=[%s] has been removed", curConnect->getLinkId().getValue().c_str());
     return curConnect;
   } else
     return LinkPtr(NULL);
@@ -134,7 +134,7 @@ ConnectMgr::readPacketAndMakeEvent(LinkPtr& curConnect, bool fillUpInputBuffer /
     communication::TP* transportPacket = curConnect->receive(); // return pointer to TP from preallocated memory
     utilx::alloc_mem_desc_t *ptr_desc = utilx::PreallocatedMemoryManager::getInstance().getMemory<utilx::PreallocatedMemoryManager::MEM_FOR_EVENT>();
     smsc_log_info(_logger, "ConnectMgr::readPacketAndMakeEvent::: new packet has been read from connect=[%s], packetType=%d, packetLen=%d", curConnect->getLinkId().getValue().c_str(), transportPacket->packetType, transportPacket->packetLen);
-    smsc_log_info(_logger, "ConnectMgr::readPacketAndMakeEvent::: sizeof(GotMessageEvent)=%d", sizeof(GotMessageEvent(transportPacket, curConnect->getLinkId())));
+
     return new (ptr_desc->allocated_memory) GotMessageEvent(transportPacket, curConnect->getLinkId());
   }
   return NULL;
@@ -156,12 +156,12 @@ IOEvent*
 ConnectMgr::processReadReadyEvent(int* listenStatus)
 {
   if ( *listenStatus & corex::io::IOObjectsPool::OK_READ_READY ) {
-    smsc_log_info(_logger, "ConnectMgr::processReadReadyEvent::: try process all ready input streams");
+    smsc_log_debug(_logger, "ConnectMgr::processReadReadyEvent::: try process all ready input streams");
     corex::io::InputStream* iStream;
     while ( iStream = _ioObjectsPool.getNextReadyInputStream() ) {
       corex::io::IOObject* curSocket = iStream->getOwner();
       std::string curSocketFingerPrint = curSocket->toString();
-      smsc_log_info(_logger, "ConnectMgr::processReadReadyEvent::: got InputStream for socket [=%s]", curSocketFingerPrint.c_str());
+      smsc_log_debug(_logger, "ConnectMgr::processReadReadyEvent::: got InputStream for socket [=%s]", curSocketFingerPrint.c_str());
       socket2link_t::iterator s2lnk_map_iter;
 
       {
@@ -198,7 +198,7 @@ ConnectMgr::createNewConnectIndicationEvent(const std::string& serverSocketFinge
   smsc::core::synchronization::MutexGuard guard(_connAcceptorsLock);
   if ( (s2ca_map_iter=_socket2connectAcceptor.find(serverSocketFingerPrint)) != _socket2connectAcceptor.end()) {
     ConnectAcceptor* connectAcceptor = s2ca_map_iter->second;
-    smsc_log_info(_logger, "ConnectMgr::createNewConnectIndicationEvent::: found connectAcceptor object with name=[%s] for active server socket object=[%s]", connectAcceptor->getName().c_str(), serverSocketFingerPrint.c_str());
+    smsc_log_debug(_logger, "ConnectMgr::createNewConnectIndicationEvent::: found connectAcceptor object with name=[%s] for active server socket object=[%s]", connectAcceptor->getName().c_str(), serverSocketFingerPrint.c_str());
     Link* newConnection = connectAcceptor->accept();
 
     smsc_log_info(_logger, "ConnectMgr::createNewConnectIndicationEvent::: new connection accepted (connectionId=[%s]/socket=[%s]", newConnection->getLinkId().getValue().c_str(), newConnection->getSocket()->toString().c_str());
@@ -245,7 +245,7 @@ ConnectMgr::getEvent()
   smsc::core::synchronization::MutexGuard guard(_synchronize);
   if ( _shutdownInProgress ) throw smsc::util::Exception("ConnectMgr::getEvent::: shutdown in progress");
 
-  smsc_log_info(_logger, "ConnectMgr::getEvent::: Enter it, _curConnectId=%s", (_curConnect.Get() ? _curConnect->getLinkId().getValue().c_str() : "NULL"));
+  smsc_log_debug(_logger, "ConnectMgr::getEvent::: Enter it, _curConnectId=%s", (_curConnect.Get() ? _curConnect->getLinkId().getValue().c_str() : "NULL"));
 
   IOEvent* ioEvent = NULL;
   if ( _curConnect.Get() )
@@ -255,16 +255,16 @@ ConnectMgr::getEvent()
   else _curConnect = NULL;
 
   while (true) {
-    smsc_log_info(_logger, "ConnectMgr::getEvent::: _listenStatus=%d", _listenStatus);
+    smsc_log_debug(_logger, "ConnectMgr::getEvent::: _listenStatus=%d", _listenStatus);
 
     if ( (ioEvent = processReadReadyEvent(&_listenStatus)) ||
          (ioEvent = processAcceptReadyEvent(&_listenStatus)) )
       return ioEvent;
 
-    smsc_log_info(_logger, "ConnectMgr::getEvent::: call _ioObjectsPool.listen()");
+    smsc_log_debug(_logger, "ConnectMgr::getEvent::: call _ioObjectsPool.listen()");
     _listenStatus = _ioObjectsPool.listen(); //waiting for events on sockets
 
-    smsc_log_info(_logger, "ConnectMgr::getEvent::: _ioObjectsPool.listen returned, _listenStatus=%d", _listenStatus);
+    smsc_log_debug(_logger, "ConnectMgr::getEvent::: _ioObjectsPool.listen returned, _listenStatus=%d", _listenStatus);
   }
 }
 
@@ -281,11 +281,13 @@ ConnectMgr::sendToLinkSet(const communication::LinkId& outLinkId, const communic
   }
 
   if ( foundConnection.Get() ) {
-    smsc_log_debug(_logger, "ConnectMgr::sendToLinkSet::: found LinkSet object for linkSetId value=[%s]", outLinkId.getValue().c_str());
+    smsc_log_info(_logger, "ConnectMgr::sendToLinkSet::: found LinkSet object for linkSetId value=[%s]", outLinkId.getValue().c_str());
     foundConnection->send(message);
     return true;
-  } else
+  } else {
+    smsc_log_info(_logger, "ConnectMgr::sendToLinkSet::: LinkSet object not found for linkSetId value=[%s]", outLinkId.getValue().c_str());
     return false;
+  }
 }
 
 void
@@ -301,9 +303,10 @@ ConnectMgr::sendToLink(const communication::LinkId& outLinkId, const communicati
   }
 
   if ( foundConnection.Get() ) {
-    smsc_log_debug(_logger, "ConnectMgr::sendToLink::: found Link object for linkId value=[%s]", outLinkId.getValue().c_str());
+    smsc_log_info(_logger, "ConnectMgr::sendToLink::: found Link object for linkId value=[%s]", outLinkId.getValue().c_str());
     foundConnection->send(message);
-  }
+  } else
+    smsc_log_info(_logger, "ConnectMgr::sendToLink::: Link object not found for linkId value=[%s]", outLinkId.getValue().c_str());
 }
 
 void
@@ -361,7 +364,7 @@ LinkPtr
 ConnectMgr::removeLinkFromLinkSet(const communication::LinkId& linkSetId, const communication::LinkId& linkId)
 {
   smsc::core::synchronization::MutexGuard guard(_linkSetLock);
-  smsc_log_info(_logger, "ConnectMgr::removeLinkFromLinkSet::: try remove link (linkId=[%s]) from linkSet (linkSetId=[%s])", linkId.getValue().c_str(), linkSetId.getValue().c_str());
+  smsc_log_debug(_logger, "ConnectMgr::removeLinkFromLinkSet::: try remove link (linkId=[%s]) from linkSet (linkSetId=[%s])", linkId.getValue().c_str(), linkSetId.getValue().c_str());
   linksets_t::iterator iter = _linkSets.find(linkSetId);
   if ( iter != _linkSets.end() ) {
     smsc::core::synchronization::MutexGuard guard(_linkLock);

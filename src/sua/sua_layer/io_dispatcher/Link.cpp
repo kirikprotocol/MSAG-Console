@@ -77,7 +77,7 @@ void
 Link::sendToStream(corex::io::OutputStream* oStream, const communication::TP* packetToSend)
 {
   smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("io_dsptch");
-  smsc_log_info(logger, "Link::sendToStream::: next buffer will be written to oStream [%s]", hexdmp(packetToSend->packetBody, packetToSend->packetLen).c_str());
+  smsc_log_debug(logger, "Link::sendToStream::: next buffer will be written to oStream [%s]", hexdmp(packetToSend->packetBody, packetToSend->packetLen).c_str());
   const uint8_t* bufPositionPtr = packetToSend->packetBody;
   size_t leftToSend = packetToSend->packetLen;
   while (leftToSend > 0) {

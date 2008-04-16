@@ -13,7 +13,7 @@ GotMessageEvent::GotMessageEvent(communication::TP* transportPacket, const commu
 void
 GotMessageEvent::handle()
 {
-  smsc_log_info(_logger, "GotMessageEvent::handle::: processing transport packet with packet type [=%d]", _tp->packetType);
+  smsc_log_debug(_logger, "GotMessageEvent::handle::: processing transport packet with packet type [=%d]", _tp->packetType);
   communication::Message* message = io_dispatcher::SuaLayerMessagesFactory::getInstance().instanceMessage(_tp->packetType);
 
   if ( message ) {
