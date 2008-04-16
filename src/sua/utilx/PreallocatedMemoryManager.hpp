@@ -8,9 +8,6 @@
 # include <pthread.h>
 # include <errno.h>
 
-#include <logger/Logger.h>
-extern smsc::logger::Logger *logger;
-
 namespace utilx {
 
 typedef struct {
@@ -40,7 +37,7 @@ private:
           int errNum;
           if ( (errNum=pthread_key_create(&_tsd_memory_key, NULL)) != 0 ) {
             pthread_mutex_unlock(&_tsd_init_lock);
-            throw SystemError("TSD_Init_Helper::TSD_Init_Helper::: call to pthread_key_create failed", errNum);
+            throw smsc::util::SystemError("TSD_Init_Helper::TSD_Init_Helper::: call to pthread_key_create failed", errNum);
           }
         }
         pthread_mutex_unlock(&_tsd_init_lock);
@@ -55,8 +52,6 @@ pthread_mutex_t PreallocatedMemoryManager::TSD_Init_Helper<MEMTYP>::_tsd_init_lo
 
 template <PreallocatedMemoryManager::mem_type_t MEMTYP>
 bool PreallocatedMemoryManager::TSD_Init_Helper<MEMTYP>::_wasInitialized=false;
-
-//#include <sua/utilx/PreallocatedMemoryManager_impl.hpp>
 
 }
 
