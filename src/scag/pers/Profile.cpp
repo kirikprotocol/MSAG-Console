@@ -11,7 +11,7 @@ const uint16_t MAX_PROPERTIES_COUNT = 16383;
 void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 {
     uint16_t cnt = properties.GetCount();
-    if (cnt == 0) {
+    if (cnt == 0 && toFSDB && state != LOCKED) {
       return;
     }
     uint16_t serialized_state = (uint16_t)state << PROPERTIES_COUNT_SIZE;
