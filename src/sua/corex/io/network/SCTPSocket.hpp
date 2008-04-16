@@ -34,8 +34,6 @@ private:
 class SctpOutputStream : public OutputStream {
 public:
   SctpOutputStream(IOObject* owner, int fd);
-  //  void setStreamNo(uint16_t streamNo);
-  //  void setStreamOrdering(bool on);
   virtual ssize_t write(const uint8_t *buf, size_t bufSz, uint16_t streamNo=0, bool ordered=false) const;
   virtual ssize_t writev(const struct iovec *iov, int iovcnt) const;
   virtual IOObject* getOwner();
@@ -61,6 +59,8 @@ public:
   virtual void setSoLinger(bool on, int timeout=0);
 
   virtual std::string toString() const;
+
+  void bindx(const std::string localAddresses[], size_t addressesNum, in_port_t localPort);
 protected:
   explicit SCTPSocket(int sockfd);
   explicit SCTPSocket(in_port_t port);
