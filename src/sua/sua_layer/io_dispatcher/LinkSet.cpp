@@ -33,7 +33,7 @@ LinkSet::send(const communication::Message& message)
 {
   if ( _connections.empty() ) {
     smsc_log_error(_logger, "LinkSet::send::: there aren't connections in LinkSet");
-    return;
+    throw smsc::util::Exception("LinkSet::send::: there aren't connections in LinkSet");
   }
 
   if ( !_wasConnIterInitilized ) {
