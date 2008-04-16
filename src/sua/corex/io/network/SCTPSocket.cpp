@@ -242,21 +242,43 @@ SCTPSocket::_getDescriptor()
   return _sockfd;
 }
 
+void
+SCTPSocket::bindx(const std::string localAddresses[], size_t addressesCount, in_port_t localPort)
+{
+  if ( addressesCount > 0 ) {
+    sockaddr_in localIfaceAddress;
+
+    localIfaceAddress.sin_family = AF_INET;
+    localIfaceAddress.sin_port = htons(localPort);
+    if ( inet_pton(AF_INET, localAddresses[0].c_str(), &localIfaceAddress.sin_addr) < 1 )
+      throw smsc::util::Exception("SCTPSocket::bindx::: local interface address mustn't be host name");
+
+    if ( ::bind(_sockfd, (struct sockaddr*)&localIfaceAddress, sizeof(localIfaceAddress)) )
+      throw smsc::util::SystemError("SCTPSocket::bindx::: call to bind() failed");
+
+    if ( addressesCount > 1 ) {
+      struct sockaddr_in *bindxAddrList;
+      bindxAddrList = new sockaddr_in[addressesCount-1];
+
+      for (int i=0; i<addressesCount-1; i++) {
+        if ( inet_pton(AF_INET, localAddresses[i+1].c_str(), &localIfaceAddress.sin_addr) < 1 )
+          throw smsc::util::Exception("SCTPSocket::bindx::: local interface address mustn't be host name");
+        bindxAddrList[i] = localIfaceAddress;
+      }
+
+      if ( addressesCount > 1 ) {
+        if ( ::sctp_bindx(_sockfd, bindxAddrList, addressesCount-1, SCTP_BINDX_ADD_ADDR) ) {
+          delete [] bindxAddrList;
+          throw smsc::util::SystemError("SCTPSocket::bindx::: call to sctp_bindx() failed");
+        }
+      }
+      delete [] bindxAddrList;
+    }
+  }
+}
+
 SctpOutputStream::SctpOutputStream(IOObject* owner, int fd)
   : _owner(owner), _fd(fd)/*, _streamNo(0), _sendFlags(0)*/ {}
-
-// void
-// SctpOutputStream::setStreamNo(uint16_t streamNo)
-// {
-//   _streamNo = streamNo;
-// }
-
-// void
-// SctpOutputStream::setStreamOrdering(bool on)
-// {
-//   if ( on ) _sendFlags |= MSG_UNORDERED;
-//   else _sendFlags &= ~MSG_UNORDERED;
-// }
 
 ssize_t
 SctpOutputStream::write(const uint8_t *buf, size_t bufSz, uint16_t streamNo, bool ordered) const
@@ -306,9 +328,6 @@ SctpInputStream::read(uint8_t *buf, size_t bufSz)
   do {
     msg_flags=0;
     result = sctp_recvmsg(_fd, buf, bufSz,  (sockaddr*)&from, &fromlen, &_sinfo, &msg_flags);
-    // REMOVE DEBUG OUTPUT
-    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sctp");
-    smsc_log_info(logger, "SctpInputStream::read::: sctp_recvmsg returned %d, errno=%d, msg_flags & MSG_NOTIFICATION=%d", result, errno, (msg_flags & MSG_NOTIFICATION));
 
     if ( msg_flags & MSG_NOTIFICATION ) {
       sctp_notification* snp = (sctp_notification*)buf;
@@ -322,7 +341,6 @@ SctpInputStream::read(uint8_t *buf, size_t bufSz)
           
           inet_ntop(AF_INET, &sin_addr->sin_addr, ip_address, sizeof(ip_address));
         }
-        //        printf("sac->spc_state =%d for address=[%s]", sac.spc_state, ip_address);
       }
     }
   } while (msg_flags & MSG_NOTIFICATION);
