@@ -11,9 +11,11 @@ const uint16_t MAX_PROPERTIES_COUNT = 16383;
 void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 {
     uint16_t cnt = properties.GetCount();
+    if (cnt == 0) {
+      return;
+    }
     uint16_t serialized_state = (uint16_t)state << PROPERTIES_COUNT_SIZE;
     serialized_state |= cnt;
-    //buf.WriteInt8(state);
     buf.WriteInt16(serialized_state);
 
     PropertyHash::Iterator it = properties.getIterator();
@@ -25,7 +27,6 @@ void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
 
 void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
 {
-    //state = static_cast<ProfileState>(buf.ReadInt8());
     uint16_t state_cnt = buf.ReadInt16();
     uint16_t cnt = state_cnt & MAX_PROPERTIES_COUNT;
     state_cnt >>= PROPERTIES_COUNT_SIZE;
