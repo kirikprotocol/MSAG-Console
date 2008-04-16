@@ -2,4 +2,5 @@ corex
 sua_layer
 utilx
 communication
-#emulators
+emulators
+libsua

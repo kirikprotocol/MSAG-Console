@@ -27,7 +27,7 @@ public:
 
   const LibsuaMessage* getOriginalMessage() const;
 
-  enum {NO_SESSION_ESTABLISHED=0x01, BIND_PROCESSING_ERROR};
+  enum {NO_SESSION_ESTABLISHED=0x01, BIND_PROCESSING_ERROR=0x02, MESSAGE_FORWARDING_ERROR_TO_SGP=0x03};
 
 private:
   smsc::logger::Logger* _logger;

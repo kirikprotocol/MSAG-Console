@@ -16,6 +16,8 @@ public:
 
   EncapsulatedSuaMessage(const sua_messages::SUAMessage* suaMessage);
 
+  EncapsulatedSuaMessage(uint32_t msgCode, const uint8_t* suaMessageBody, uint32_t suaMessageBodySz);
+
   virtual size_t serialize(communication::TP* resultBuf) const;
 
   virtual size_t deserialize(const communication::TP& packetBuf);
@@ -55,7 +57,7 @@ template<> inline
 alloc_mem_desc_t*
 PreallocatedMemoryManager::getMemory<PreallocatedMemoryManager::MEM_FOR_ENCAPSULATED_MESSAGE>() {
   static TSD_Init_Helper<MEM_FOR_ENCAPSULATED_MESSAGE> tsd_init;
-  alloc_mem_desc_t* res = allocateMemory(sizeof(libsua_messages::EncapsulatedSuaMessage), tsd_init._tsd_memory_key);
+  alloc_mem_desc_t* res = allocateMemory(communication::Message::MAX_MESSAGE_SIZE, tsd_init._tsd_memory_key);
   return res;
 }
 

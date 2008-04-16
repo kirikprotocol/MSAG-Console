@@ -16,6 +16,15 @@ ActiveAckMessage::serialize(communication::TP* resultBuf) const
 {
   size_t offset = SUAMessage::serialize(resultBuf);
 
+  if ( _routingContext.isSetValue() )
+    offset = _routingContext.serialize(resultBuf, offset);
+
+  if ( _trafficModeType.isSetValue() )
+    offset = _trafficModeType.serialize(resultBuf, offset);
+
+  if ( _infoString.isSetValue() )
+    offset = _infoString.serialize(resultBuf, offset);
+
   return offset;
 }
 

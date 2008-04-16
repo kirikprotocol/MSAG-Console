@@ -9,7 +9,10 @@ namespace sua_messages {
 const uint32_t CLDTMessage::_MSG_CODE;
 
 CLDTMessage::CLDTMessage ()
-  : SUAMessage(_MSG_CODE) {}
+  : SUAMessage(_MSG_CODE)
+{
+  setStreamNo(1);
+}
 
 size_t
 CLDTMessage::serialize(communication::TP* resultBuf) const
@@ -60,6 +63,8 @@ CLDTMessage::serialize(communication::TP* resultBuf) const
     offset = _data.serialize(resultBuf, offset);
   else
     throw smsc::util::Exception("CLDT::serialize::: data is a mandatory field and wasn't set");
+
+  resultBuf->pkt_sctp_props.streamNo = getStreamNo();
 
   return offset;
 }

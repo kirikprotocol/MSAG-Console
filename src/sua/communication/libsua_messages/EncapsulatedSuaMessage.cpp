@@ -47,6 +47,24 @@ EncapsulatedSuaMessage::EncapsulatedSuaMessage(const sua_messages::SUAMessage* s
   smsc_log_debug(_logger, "EncapsulatedSuaMessage::EncapsulatedSuaMessage::: created message object. source suaMessage=[%s], msgCode for created LibsuaMessage=[%d]", suaMessage->toString().c_str(), getMsgCode());
 }
 
+EncapsulatedSuaMessage::EncapsulatedSuaMessage(uint32_t msgCode, const uint8_t* suaMessageBody, uint32_t suaMessageBodySz)
+  : LibsuaMessage(msgCode),
+    _logger(smsc::logger::Logger::getInstance("libsua")), _suaMessage(NULL)
+{
+  if ( msgCode < _MIN_MSG_CODE ||
+       msgCode > _MAX_MSG_CODE )
+    throw smsc::util::Exception("EncapsulatedSuaMessage::EncapsulatedSuaMessage::: unexpected msgCode=[%d]", msgCode);
+
+  if ( suaMessageBodySz > sizeof(_encapsulatedMessageTP.packetBody) - sua_messages::SUAMessage::HEADER_SIZE )
+    throw smsc::util::Exception("EncapsulatedSuaMessage::EncapsulatedSuaMessage::: too large message body size=[%d]", suaMessageBodySz);
+
+  setLength(_MSGCODE_SZ + suaMessageBodySz);
+  _encapsulatedMessagePtr = _encapsulatedMessageTP.packetBody + sua_messages::SUAMessage::HEADER_SIZE;
+  
+  memcpy(_encapsulatedMessagePtr, suaMessageBody, suaMessageBodySz);
+  _encapsulatedMessageSz = suaMessageBodySz;
+}
+
 size_t
 EncapsulatedSuaMessage::serialize(communication::TP* resultBuf) const
 {
@@ -85,7 +103,6 @@ EncapsulatedSuaMessage::deserialize(const communication::TP& packetBuf)
   if ( encapsulatedSuaMessage ) {
     encapsulatedSuaMessage->deserialize(_encapsulatedMessageTP);
     setEncapsulatedSuaMessage(encapsulatedSuaMessage);
-    //    smsc_log_info(_logger, "EncapsulatedSuaMessage::deserialize::: _encapsulatedMessage=[%s]", encapsulatedSuaMessage->toString().c_str());
   } else {
     _encapsulatedMessagePtr = NULL;
     throw smsc::util::Exception("EncapsulatedSuaMessage::deserialize::: can't instantiate message with type=[%d]", _encapsulatedMessageTP.packetType);
@@ -97,7 +114,8 @@ EncapsulatedSuaMessage::deserialize(const communication::TP& packetBuf)
 std::string
 EncapsulatedSuaMessage::toString() const
 {
-  return LibsuaMessage::toString() + ", encapsulated SUA message=[" + getContainedSuaMessage()->toString() + "]";
+  const sua_messages::SUAMessage* containedMessage = getContainedSuaMessage();
+  return LibsuaMessage::toString() + ", encapsulated SUA message=[" + (containedMessage ? getContainedSuaMessage()->toString() : std::string("")) + "]";
 }
 
 const char*
