@@ -145,6 +145,9 @@ RuntimeConfig::initialize(smsc::util::config::ConfigView* suaLayerCfg)
   suaConfigCompositeParameter->addParameter(new Parameter("local_ip",suaLayerCfg->getString("LocalAddress")));
   suaConfigCompositeParameter->addParameter(new Parameter("local_port",suaLayerCfg->getInt("LocalPort")));
   suaConfigCompositeParameter->addParameter(new Parameter("state_machines_count",suaLayerCfg->getInt("state_machines_count")));
+  try {
+    suaConfigCompositeParameter->addParameter(new Parameter("traffic-mode-for-sgp",suaLayerCfg->getString("traffic-mode-for-sgp")));
+  } catch (smsc::util::config::ConfigException& ex) {}
 
   std::auto_ptr<smsc::util::config::ConfigView> suaApplicationsCfg(suaLayerCfg->getSubConfig("sua_applications"));
 
@@ -187,6 +190,30 @@ RuntimeConfig::initialize(smsc::util::config::ConfigView* suaLayerCfg)
     linkCompositeParameter->addParameter(new Parameter("remote_address", rHost));
     linkCompositeParameter->addParameter(new Parameter("remote_port", linkToSGPConfig->getInt("remote_port")));
     smsc_log_info(_logger, "RuntimeConfig::initialize::: added remote_address parameter [%s]", remoteAddresses.c_str());
+
+    bool localAddressWasConfigured=false;
+    try {
+      std::string localAddresses(linkToSGPConfig->getString("local_addresses"));
+      smsc_log_debug(_logger, "RuntimeConfig::initialize::: processing 'local_addresses' parameter: [%s]", localAddresses.c_str());
+      old_pos=0;
+      while( (pos=localAddresses.find_first_of(", ", old_pos)) != std::string::npos) {
+        const std::string& lHost = localAddresses.substr(old_pos, pos - old_pos);
+        smsc_log_debug(_logger, "RuntimeConfig::initialize::: added 'local_address' runtime parameter=[%s]", lHost.c_str());
+        linkCompositeParameter->addParameter(new Parameter("local_address", lHost));
+        ++pos;
+        while (localAddresses[pos] == ' ') pos++;
+        old_pos = pos;
+      }
+      const std::string& lHost = localAddresses.substr(old_pos);
+      linkCompositeParameter->addParameter(new Parameter("local_address", lHost));
+      localAddressWasConfigured = true;
+    } catch (smsc::util::config::ConfigException& ex) {}
+
+    try {
+      linkCompositeParameter->addParameter(new Parameter("local_port", linkToSGPConfig->getInt("local_port")));
+    } catch (smsc::util::config::ConfigException& ex) {
+      if ( localAddressWasConfigured ) throw;
+    }
   }
 
   processRoutingKeysSection(suaLayerCfg, "incoming-routing-keys", "sua_applications", "application_id", suaConfigCompositeParameter);
