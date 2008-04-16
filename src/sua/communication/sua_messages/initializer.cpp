@@ -1,3 +1,5 @@
+#include <logger/Logger.h>
+
 #include "initializer.hpp"
 #include "ActiveAckMessage.hpp"
 #include "ActiveMessage.hpp"
