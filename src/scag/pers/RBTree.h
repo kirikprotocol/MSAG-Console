@@ -30,8 +30,6 @@ struct templRBTreeNode
 
 };
 
-//typedef SimpleAllocator DefaultAllocator;
-
 template<class Key=long, class Value=long, class DefaultAllocator = SimpleAllocator<Key, Value>, class DefaultChangesObserver = EmptyChangesObserver<Key, Value> >
 class RBTree
 {
@@ -99,15 +97,11 @@ public:
 
 	int Insert(const Key& k, const Value& v)
 	{
-		//printf("Insert\n");
-// 		sleep(1);
-      smsc_log_debug(logger, "Start Insert: %s val=%d", k.toString().c_str(), (int)v);
-		
+        smsc_log_debug(logger, "Start Insert: %s val=%d", k.toString().c_str(), (int)v);
 		RBTreeNode* newNode = allocator->allocateNode();
 		rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
 		offset = allocator->getOffset();
-       
 		newNode->key = k;
 		newNode->value = v;
         smsc_log_debug(logger, "Insert: %s val=%d", k.toString().c_str(), (int)v);
@@ -143,7 +137,6 @@ public:
 
 	bool Get(const Key& k, Value& val)
 	{
-		//printf("Get\n");
 		RBTreeNode*	node = rootNode;
 		while( (node != nilNode) && (node->key != k) )
 		{
@@ -161,13 +154,27 @@ public:
         smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), (int)val);
 		return true;
 	}
+
+    RBTreeNode* Get(const Key& k) {
+      RBTreeNode* node = rootNode;
+      while ((node != nilNode) && (node->key != k)) {
+        node = node->key < k ? realAddr(node->right) : realAddr(node->left);
+      }
+      if(node == nilNode) {
+        smsc_log_debug(logger, "Get: %s. Index not found", k.toString().c_str());
+        return 0;
+      } 
+      smsc_log_debug(logger, "Get: %s val=%d", k.toString().c_str(), (int)node->value);
+      return node;
+    }
+
+
     void Reset()
     {
         iterNode = nilNode;
     }
 	bool Next(Key& k, Value& val)
 	{
-		//printf("Get\n");
         if(rootNode == nilNode || iterNode == rootNode) return false;
         if(iterNode == nilNode) iterNode = rootNode;
         
