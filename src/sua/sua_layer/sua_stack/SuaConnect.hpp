@@ -23,6 +23,10 @@ public:
   //## Параметры соединения оппеделяются конструктором.
   SuaConnect(const std::vector<std::string> peerAddrList, in_port_t port, const communication::LinkId& linkId);
 
+  SuaConnect(const std::vector<std::string> remoteAddrList, in_port_t remotePort,
+             const std::vector<std::string> localAddrList, in_port_t localPort,
+             const communication::LinkId& linkId);
+
   virtual ~SuaConnect();
 
   virtual communication::TP* receive();

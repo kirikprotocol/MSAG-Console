@@ -41,9 +41,23 @@ SuaConnect::SuaConnect(const std::vector<std::string> peerAddrList, in_port_t po
     _peerAddrList(peerAddrList), _r_port(port), _subsystemListener(NULL),
     _logger(smsc::logger::Logger::getInstance("sua_stack"))
 {
-  _socket = new corex::io::network::SCTPSocket(peerAddrList[0], port);
+  _socket = new corex::io::network::SCTPSocket(_peerAddrList[0], port);
   if ( !_socket )
     throw smsc::util::SystemError("SuaConnect::SuaConnect::: can't create SCTPSocket");
+  setLinkId(linkId);
+}
+
+SuaConnect::SuaConnect(const std::vector<std::string> remoteAddrList, in_port_t remotePort,
+                       const std::vector<std::string> localAddrList, in_port_t localPort,
+                       const communication::LinkId& linkId)
+  : Link(sua_stack::SUA_State_NoConnection::getInstance()), _currentPacketSize(0),
+    _peerAddrList(remoteAddrList), _r_port(remotePort), _subsystemListener(NULL),
+    _logger(smsc::logger::Logger::getInstance("sua_stack"))
+{
+  _socket = new corex::io::network::SCTPSocket(_peerAddrList[0], _r_port);
+  if ( !_socket )
+    throw smsc::util::SystemError("SuaConnect::SuaConnect::: can't create SCTPSocket");
+  _socket->bindx(&localAddrList[0], localAddrList.size(), localPort);
   setLinkId(linkId);
 }
 
