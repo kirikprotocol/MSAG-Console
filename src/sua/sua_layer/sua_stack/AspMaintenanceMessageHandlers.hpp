@@ -29,9 +29,12 @@ public:
   void handle(const sua_messages::UPAckMessage& message, const communication::LinkId& linkId);
   void handle(const sua_messages::DownMessage& message, const communication::LinkId& linkId);
   void handle(const sua_messages::DownAckMessage& message, const communication::LinkId& linkId);
+
+  void setSGPTrafficMode(const std::string& trafficModeValue);
 private:
   smsc::logger::Logger* _logger;
   io_dispatcher::ConnectMgr& _cMgr;
+  uint32_t _trafficMode;
 };
 
 }
