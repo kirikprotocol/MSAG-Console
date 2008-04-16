@@ -7,7 +7,7 @@
 #include "SerialBuffer.h"
 #include "PersSocketServer.h"
 #include "FSDB.h"
-#include "mcisme/AbntAddr.hpp"
+#include "AbntAddr.hpp"
 #include "core/buffers/XHash.hpp"
 #include "core/buffers/IntHash.hpp"
 
@@ -22,7 +22,7 @@ namespace scag { namespace cpers {
 XERCES_CPP_NAMESPACE_USE
 
 using namespace scag::pers;
-using smsc::mcisme::AbntAddr;
+using scag::pers::AbntAddr;
 using smsc::logger::Logger;
 
 class ProfileInfo
