@@ -103,7 +103,7 @@ SUAMessage::registerMessageCode(msg_code_t msgCode)
   uint8_t msgClass = (msgCode & 0x0000FF00) >> 8, msgType = msgCode & 0x000000FF;
 
   if ( msgClass > MAX_MSG_CLASS_VALUE ) throw smsc::util::Exception("SUAMessage::registerMessageCode::: msgClass value [=0x%x] is greater than max allowable value [=0x%x]", msgClass, MAX_MSG_CLASS_VALUE);
-  if ( msgType > MAX_MSG_TYPE_VALUE) throw Exception("SUAMessage::registerMessageCode::: msgType value [=0x%x] is greater than max allowable value [=0x%x]", msgType, MAX_MSG_TYPE_VALUE);
+  if ( msgType > MAX_MSG_TYPE_VALUE) throw smsc::util::Exception("SUAMessage::registerMessageCode::: msgType value [=0x%x] is greater than max allowable value [=0x%x]", msgType, MAX_MSG_TYPE_VALUE);
   _msgClassTypeToMessageIdx[msgClass][msgType] = generateMessageIndexValue();
 }
 
@@ -113,7 +113,7 @@ SUAMessage::getMessageIndex(msg_code_t msgCode)
   uint8_t msgClass = (msgCode & 0x0000FF00) >> 8, msgType = msgCode & 0x000000FF;
 
   if ( msgClass > MAX_MSG_CLASS_VALUE ) throw smsc::util::Exception("SUAMessage::getMessageIndex::: msgClass value [=0x%x] is greater than max allowable value [=0x%x]", msgClass, MAX_MSG_CLASS_VALUE);
-  if ( msgType > MAX_MSG_TYPE_VALUE) throw Exception("SUAMessage::getMessageIndex::: msgType value [=0x%x] is greater than max allowable value [=0x%x]", msgType, MAX_MSG_TYPE_VALUE);
+  if ( msgType > MAX_MSG_TYPE_VALUE) throw smsc::util::Exception("SUAMessage::getMessageIndex::: msgType value [=0x%x] is greater than max allowable value [=0x%x]", msgType, MAX_MSG_TYPE_VALUE);
 
   unsigned int idx = _msgClassTypeToMessageIdx[msgClass][msgType];
   if ( idx == 0 )
