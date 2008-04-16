@@ -50,11 +50,21 @@ IOObjectsPool_tmpl<LOCK>::listen()
   int fd, idx=0;
 
   // REMOVE DEBUG OUTPUT
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("poll");
-  smsc_log_info(logger, "IOObjectsPool::listen::: call to poll");
-  errno = 0;
+  //smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("poll");
+  //   smsc_log_info(logger, "IOObjectsPool::listen::: call to poll");
+  //   errno = 0;
+  //   {
+  //     char strBuf[1024];
+  //     int strBufOffset = 0;
+  //     for(int i=0;i<_socketsCount;++i) {
+  //       strBufOffset += sprintf(strBuf + strBufOffset, "%d:event=%d,", _snaphots_fds[i].fd, _snaphots_fds[i].events);
+  //     }
+  //     strBuf[strlen(strBuf)-1]=0;
+  //     smsc_log_debug(logger, "IOObjectsPool::listen::: _socketsCount=%d, socketsFdList=[%s]", _socketsCount, strBuf);
+  //   }
+  // END DEBUG
   int st = ::poll(_snaphots_fds, _socketsCount, INFTIM);
-  smsc_log_info(logger, "IOObjectsPool::listen::: poll returned, st=%d, errno=%d; _socketsCount=%d", st, errno, _socketsCount);
+  //smsc_log_info(logger, "IOObjectsPool::listen::: poll returned, st=%d, errno=%d; _socketsCount=%d", st, errno, _socketsCount);
   if ( st < 0 ) {
     if ( errno == EINTR )
       throw utilx::InterruptedException("IOObjectsPool_tmpl::listen::: poll() was interrupted");
@@ -65,19 +75,19 @@ IOObjectsPool_tmpl<LOCK>::listen()
   smsc::core::synchronization::MutexGuard guard(_lock);
   for (int j=0; j<_socketsCount; ++j) {
     int readyFd;
-    smsc_log_info(logger, "IOObjectsPool::listen::: check descriptor %d", j);
+    //    smsc_log_info(logger, "IOObjectsPool::listen::: check descriptor %d", j);
     if ( (readyFd = _snaphots_fds[j].fd) > -1 && _snaphots_fds[j].revents ) {
       // bypass each ready fd
       if ( _snaphots_fds[j].revents & POLLRDNORM ) {
         in_mask_t::iterator in_iter = _inMask.find(readyFd);
         if ( in_iter != _inMask.end() ) {
           _inputEventsReady.push_back(in_iter->second);
-          smsc_log_info(logger, "IOObjectsPool::listen::: added input ready event");
+          //          smsc_log_info(logger, "IOObjectsPool::listen::: added input ready event");
         } else {
           accept_mask_t::iterator accept_iter = _acceptMask.find(readyFd);
           if ( accept_iter != _acceptMask.end() ) {
             _newConnectionEventsReady.push_back(accept_iter->second);
-            smsc_log_info(logger, "IOObjectsPool::listen::: added accept ready event");
+            //            smsc_log_info(logger, "IOObjectsPool::listen::: added accept ready event");
           }
         }
       }
@@ -85,7 +95,7 @@ IOObjectsPool_tmpl<LOCK>::listen()
         out_mask_t::iterator out_iter = _outMask.find(readyFd);
         if ( out_iter != _outMask.end() ) {
           _outputEventsReady.push_back(out_iter->second);
-          smsc_log_info(logger, "IOObjectsPool::listen::: added output ready event");
+          //          smsc_log_info(logger, "IOObjectsPool::listen::: added output ready event");
         }
       }
       --st;
@@ -101,7 +111,7 @@ IOObjectsPool_tmpl<LOCK>::listen()
 
   if ( !_newConnectionEventsReady.empty() )
     retVal |= OK_ACCEPT_READY;
-  smsc_log_info(logger, "IOObjectsPool::listen::: we have bypassed all events, retVal = 0x%x", retVal);
+  //  smsc_log_info(logger, "IOObjectsPool::listen::: we have bypassed all events, retVal = 0x%x", retVal);
   return retVal;
 }
 
@@ -112,11 +122,16 @@ IOObjectsPool_tmpl<LOCK>::insert(InputStream* iStream)
   int fd = iStream->getOwner()->getDescriptor();
   int idx;
   smsc::core::synchronization::MutexGuard guard(_lock);
+
   if ( (idx=_used_fds[fd]) == -1 ) {
     if ( _socketsCount == _maxPoolSize )
       throw smsc::util::Exception("IOObjectsPool_tmpl::insert(iStream=%p)::: exceeded max pool size", iStream);
     _fds[_socketsCount].events = POLLRDNORM;
     _fds[_socketsCount].fd = fd;
+
+//     smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("poll");
+//     smsc_log_debug(logger, "IOObjectsPool::insert(InputStream)::: insert fd=%d,event=%d", _fds[_socketsCount].fd, _fds[_socketsCount].events);
+
     _used_fds[fd] = _socketsCount++;
     _inMask.insert(std::make_pair(fd, iStream));
   } else {
