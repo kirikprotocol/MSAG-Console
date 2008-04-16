@@ -206,9 +206,16 @@ bool CentralPersServer::processPacket(ConnectionContext& ctx)
     smsc_log_debug(logger, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
                     ctx.inbuf.length(), ctx.inbuf.toString().c_str());
   }
-  catch(const Exception& e) {
-    smsc_log_debug(logger, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s",
-                    e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+  catch(const std::runtime_error& e) {
+    smsc_log_debug(rplog, "Error profile key: %s", e.what());
+  }
+  catch(const FileException& e) {
+    smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
+                   e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+  }
+  catch(const std::exception& e) {
+    smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
+                   e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
   }
   catch(...) {
     smsc_log_debug(logger, "Exception. Bad data in buffer received len=%d, data=%s",
