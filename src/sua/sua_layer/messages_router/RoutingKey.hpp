@@ -35,7 +35,7 @@ public:
     int pos=0;
     if ( _isSetDestinationGT )
       pos += snprintf(strBuf, sizeof(strBuf), "destinationGT=%s,", _destinationGT.c_str());
-    if ( _isSetIncomingLinkId )
+    if ( _isSetDestinationSsn )
       pos += snprintf(strBuf + pos, sizeof(strBuf) - pos, "destinationSSN=%d,", _destinationSsn);
     if ( _isSetIncomingLinkId )
       pos += snprintf(strBuf + pos, sizeof(strBuf) - pos, "incomingLinkId=%s,", _incomingLinkId.getValue().c_str());
