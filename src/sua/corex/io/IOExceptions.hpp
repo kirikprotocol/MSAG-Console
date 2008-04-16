@@ -41,14 +41,6 @@ public:
   }
 };
 
-class ProtocolException : public IOException {
-public:
-  ProtocolException(const char * fmt, ...)
-  {
-    SMSC_UTIL_EX_FILL(fmt);
-  }
-};
-
 }}
 
 #endif
