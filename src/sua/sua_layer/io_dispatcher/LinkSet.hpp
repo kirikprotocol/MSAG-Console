@@ -19,7 +19,7 @@ namespace io_dispatcher {
 //## может принимать сообщение на любом из соединений, входящих в набор.
 class LinkSet : public Connection {
 public:
-  typedef enum {OVERRIDE=1, LOADSHARE=2, BROADCAST=3} linkset_mode_t;
+  typedef enum {UNSPECIFIED=0, OVERRIDE=1, LOADSHARE=2, BROADCAST=3} linkset_mode_t;
 
   LinkSet(linkset_mode_t mode, const communication::LinkId& linkSetId);
 
