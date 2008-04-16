@@ -16,12 +16,11 @@
 #include "VarRecSizeStore.h"
 #include "Profile.h"
 #include "Property.h"
-#include "mcisme/AbntAddr.hpp"
+#include "AbntAddr.hpp"
 #include "FSDB.h"
 #include "scag/exc/SCAGExceptions.h"
 
-namespace scag{ namespace pers{
-using smsc::mcisme::AbntAddr;
+namespace scag { namespace pers {
 using std::string;
 using std::stack;
 using std::vector;
@@ -117,14 +116,15 @@ template <class Key>
 class HashProfileStore : public CachedProfileStore<Key>
 {
 public:
-    HashProfileStore() { };
-    ~HashProfileStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str());};
+    HashProfileStore():log(smsc::logger::Logger::getInstance("hashstore")) { };
+    ~HashProfileStore() { 
+        smsc_log_debug(log, "Shutdown store %s", storeName.c_str());
+    };
 
     void init(const std::string& _storeName, uint32_t initRecCnt, uint32_t cacheSize, smsc::logger::Logger *_log)
     {
 		CachedProfileStore::init(cacheSize);
 		
-        log = smsc::logger::Logger::getInstance("hashstore");
         dblog = _log;
 
 		storeName = _storeName;
@@ -216,7 +216,7 @@ public:
 
     void storeProfile(const Key& key, Profile *pf)
     {
-//        pf->DeleteExpired();
+        //pf->DeleteExpired();
 		sb.Empty();
         pf->Serialize(sb, true);
 //        delete pf;  
@@ -230,8 +230,9 @@ public:
 
     Profile* _getProfile(const Key& key, bool create)
     {
-        Profile *pf = new Profile(key.toString(), dblog);
-		sb.Empty();
+      Profile *pf = new Profile(key.toString(), dblog);
+      try {
+        sb.Empty();
         if(store.Get(key, sb))
         {
             pf->Deserialize(sb, true);
@@ -241,6 +242,10 @@ public:
             return pf;
         delete pf;
         return NULL;
+      } catch (...) {
+        delete pf;
+        throw;
+      }
     };
 
     void Reset() {
@@ -436,10 +441,12 @@ public:
       MutexGuard mt(mtx);
       Key key(rkey);
       if(prop.isExpired()) {
+        smsc_log_info(dblog, "E key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
         return;
       }
       Profile* pf = getProfile(key, true);
-      setProperty(pf, key, prop);
+      //TODO if (!pf) ?
+      _setProperty(pf, key, prop);
   };
 
   bool setProperty(Profile* pf, RKey rkey, Property& prop)
@@ -447,9 +454,10 @@ public:
       MutexGuard mt(mtx);
       Key key(rkey);
       if(prop.isExpired()) {
+        smsc_log_info(dblog, "E key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
         return false;
       }
-      setProperty(pf, key, prop);
+      _setProperty(pf, key, prop);
       return true;
   };
 
@@ -458,14 +466,14 @@ public:
       MutexGuard mt(mtx);
       Key key(rkey);
       Profile *pf = getProfile(key, false);
-      return delProperty(pf, key, nm);
+      return _delProperty(pf, key, nm);
   };
 
   bool delProperty(Profile* pf, RKey rkey, const char* nm)
   {
       MutexGuard mt(mtx);
       Key key(rkey);
-      return delProperty(pf, key, nm);
+      return _delProperty(pf, key, nm);
   };
 
   bool getProperty(RKey rkey, const char* nm, Property& prop)
@@ -473,14 +481,14 @@ public:
       MutexGuard mt(mtx);
       Key key(rkey);
       Profile* pf = getProfile(key, false);
-      return getProperty(pf,key,nm,prop);
+      return _getProperty(pf,key,nm,prop);
   };
 
   bool getProperty(Profile* pf, RKey rkey, const char* nm, Property& prop)
   {
       MutexGuard mt(mtx);
       Key key(rkey);
-      return getProperty(pf,key,nm,prop);
+      return _getProperty(pf,key,nm,prop);
   };
 
   bool incProperty(RKey rkey, Property& prop, int& result)
@@ -488,14 +496,14 @@ public:
       MutexGuard mt(mtx);
       Key key(rkey);
       Profile* pf = getProfile(key, true);
-      return incModProperty(pf, key, prop, 0, result);
+      return _incModProperty(pf, key, prop, 0, result);
   };
 
   bool incProperty(Profile* pf, RKey rkey, Property& prop, int& result)
   {
       MutexGuard mt(mtx);
       Key key(rkey);
-      return incModProperty(pf, key, prop, 0, result);
+      return _incModProperty(pf, key, prop, 0, result);
   };
 
   bool incModProperty(RKey rkey, Property& prop, uint32_t mod, int& result)
@@ -503,14 +511,14 @@ public:
       MutexGuard mt(mtx);
       Key key(rkey);
       Profile* pf = getProfile(key, true);
-      return incModProperty(pf, key, prop, mod, result);
+      return _incModProperty(pf, key, prop, mod, result);
   };
 
   bool incModProperty(Profile *pf, RKey rkey, Property& prop, uint32_t mod, int& result)
   {
       MutexGuard mt(mtx);
       Key key(rkey);
-      return incModProperty(pf, key, prop, mod, result);
+      return _incModProperty(pf, key, prop, mod, result);
   };
 
 private:
@@ -551,8 +559,10 @@ private:
     BackupProperty() {};
   };
 
-  void setProperty(Profile* pf, const Key& key, Property& prop) {
+  void _setProperty(Profile* pf, const Key& key, Property& prop) {
     if (!pf) {
+      //TODO require?
+      smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
       return;
     }
     Property* p = pf->GetProperty(prop.getName().c_str());
@@ -574,8 +584,9 @@ private:
     smsc_log_info(dblog, "%c key=\"%s\" property=%s", p ? 'U' : 'A', key.toString().c_str(), p ? p->toString().c_str() : prop.toString().c_str());
   }
 
-  bool delProperty(Profile *pf, const Key& key, const char* nm) {
+  bool _delProperty(Profile *pf, const Key& key, const char* nm) {
     if (!pf) {
+      smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
       return false;
     }
     if (needBackup) {
@@ -593,8 +604,9 @@ private:
     return true;
   }
 
-  bool getProperty(Profile *pf, const Key& key, const char* nm, Property& prop) {
+  bool _getProperty(Profile *pf, const Key& key, const char* nm, Property& prop) {
     if (!pf) {
+      smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
       return false;
     }
     Property* p = pf->GetProperty(nm);
@@ -612,9 +624,9 @@ private:
     return true;
   }
 
-  bool incModProperty(Profile *pf, Key key, Property& prop, uint32_t mod, int& result) {
+  bool _incModProperty(Profile *pf, Key key, Property& prop, uint32_t mod, int& result) {
     if (!pf) {
-      smsc_log_warn(log, "profile key=%s is NULL", key.toString().c_str());
+      smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
       return false;
     }
     Property* p = pf->GetProperty(prop.getName().c_str());
