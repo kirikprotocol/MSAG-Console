@@ -1,4 +1,8 @@
 #include "SUAManagementMessageHandlers.hpp"
+#include <sua/communication/sua_messages/InactiveMessage.hpp>
+#include <sua/communication/sua_messages/DownMessage.hpp>
+#include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
+#include <sua/communication/sua_messages/ActiveMessage.hpp>
 
 namespace sua_stack {
 
@@ -11,13 +15,19 @@ SUAManagementMessageHandlers::SUAManagementMessageHandlers()
 void
 SUAManagementMessageHandlers::handle(const sua_messages::ErrorMessage& message, const communication::LinkId& linkId)
 {
-  smsc_log_error(_logger, "SUAManagementMessageHandlers::handle::: handle ErrorMessage [%s]", message.toString().c_str());
+  smsc_log_info(_logger, "SUAManagementMessageHandlers::handle::: handle ErrorMessage [%s]", message.toString().c_str());
+  try {
+    _cMgr.send(linkId, sua_messages::InactiveMessage());
+  } catch (io_dispatcher::ProtocolException& ex) {
+    smsc_log_info(_logger, "SUAManagementMessageHandlers::handle::: ASP is not in ACTIVE state, send Down mesage [%s]", message.toString().c_str());
+    _cMgr.send(linkId, sua_messages::DownMessage());
+  }
 }
 
 void
 SUAManagementMessageHandlers::handle(const sua_messages::NotifyMessage& message, const communication::LinkId& linkId)
 {
-  smsc_log_error(_logger, "SUAManagementMessageHandlers::handle::: handle NotifyMessage [%s]", message.toString().c_str());
+  smsc_log_info(_logger, "SUAManagementMessageHandlers::handle::: handle NotifyMessage [%s]", message.toString().c_str());
 }
 
 }
