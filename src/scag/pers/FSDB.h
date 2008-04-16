@@ -25,9 +25,6 @@
 
 using std::string;
 
-//const int defaultBlockSize = 8192 // in bytes
-//typedef char* defaultKeyType;
-
 const int FSDB_CREATE       = 0x00000001;
 const int FSDB_OPEN         = 0x00000002;
 const int FSDB_TRUNC        = 0x00000004;
@@ -47,7 +44,6 @@ public:
     FSDB(){}
     virtual ~FSDB(){}
 
-//  virtual int Init(const string& _dbName, const string& _dbPath, long indexGrowth, int mode) = 0;
     virtual int Close(void) = 0;
 
     virtual void Add(const Key& key, const Value& data) = 0;
@@ -61,9 +57,9 @@ public:
 template<class Key = char*>
 class FSDBProfiles: public FSDB<Key, DataBlock>
 {
-//  typedef FSDBCache<Key, DataBlock>       Cache;
-    typedef RBTreeHSAllocator<Key, long>      IndexAllocator;
+    typedef RBTreeHSAllocator<Key, long>    IndexAllocator;
     typedef RBTree<Key, long>               IndexStorage;
+    typedef templRBTreeNode<Key, long>      IndexNode;
 
 public:
 	FSDBProfiles():logger(smsc::logger::Logger::getInstance("FSDB")), indexAllocator(0) {}
@@ -107,17 +103,14 @@ public:
 			return ERR_DB_NOTEXISTS;
 		}
         }
-//        indexAllocator = new RBTreeHSAllocator<Key, long>(dbPath + dbName + '/' + dbName + "-index", indexGrowth);
     	indexAllocator = new IndexAllocator();
     	if(0 != (ret = indexAllocator->Init(dbPath + dbName + '/' + dbName + "-index", indexGrowth)))
     	{
     		smsc_log_info(logger, "Init FSDB failed %d", ret);
-    		//printf("Init FSDB failed %d\n", ret);
     		return ret;
     	}
     	indexStorage.SetAllocator(indexAllocator);
     	indexStorage.SetChangesObserver(indexAllocator);
-//      cache.Init(cacheSize);//, (dbPath + dbName).c_str(), dbName + "-cache", mode & FSDB_CLEAR_CACHE);
         if(0 != (ret=dataStorage.Open(dbName + "-data", dbPath + '/' + dbName)))
         {
           if (ret == BlocksHSStorage<Key>::CANNOT_OPEN_DATA_FILE ||
@@ -126,7 +119,10 @@ public:
             return ret;
           } 
           smsc_log_info(logger, "Create Data Storage %d", ret);
-          dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize);
+          if (0 != (ret = dataStorage.Create(dbName + "-data", dbPath + '/' + dbName, blocksInFile, blockSize))) {
+            smsc_log_error(logger, "Data Storage Create Failed %d", ret);
+            return ret;
+          }
         }
     	smsc_log_info(logger, "Inited: storageName = '%s',  storagePath = '%s'", dbName.c_str(), dbPath.c_str());
     	smsc_log_info(logger, "Inited: indexGrowth = %d,  blocksInFile = %d", indexGrowth, blocksInFile);
@@ -135,7 +131,6 @@ public:
     
     virtual int Close(void)
     {
-//      cache.Release();
         return 0;
     }
 
@@ -143,11 +138,13 @@ public:
     {
         long idx;
         smsc_log_debug(logger, "Add: %s, %d", key.toString().c_str(), data.length());
-        dataStorage.Add(data, idx, key);
+        if (!dataStorage.Add(data, key, idx)) {
+          smsc_log_warn(logger, "Error Add: %s, %d", key.toString().c_str(), data.length());
+          return;
+        }
         indexStorage.Insert(key, idx);
-//      cache.Add(key, data);
-//      printf("FSDB - Add\n");
     }
+    /*
     virtual bool Set(const Key& key, const DataBlock& data)
     {
     	smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
@@ -165,15 +162,27 @@ public:
     	//indexStorage.Insert(key, idx);
         Add(key, data);
     	return true;
+    }*/
+
+    virtual bool Set(const Key& key, const DataBlock& data)
+    {
+        smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
+        IndexNode* node = indexStorage.Get(key);
+        if (node) {
+          bool res = dataStorage.Change(data, key, node->value);
+          smsc_log_debug(logger, "After Set: new_index=%d", node->value);
+          return res;
+        }
+        Add(key, data);
+        return true;
     }
+
     virtual bool Get(const Key& key, DataBlock& data)
     {
         long idx;
 		bool ret;
         if(indexStorage.Get(key, idx))
 		{
-//          if(ret = dataStorage.Get(idx, data))
-//              cache.Add(key, data);
 			ret = dataStorage.Get(idx, data);
 			smsc_log_debug(logger, "Get: %s, %d", key.toString().c_str(), data.length());
             return ret;
@@ -186,7 +195,7 @@ public:
     {
         long idx;
         if(indexStorage.Get(key, idx))
-            return dataStorage.Change(idx, data, key);
+            return dataStorage.Change(data, key, idx);
         return false; 
     }
     
@@ -211,8 +220,6 @@ public:
     bool dataStorageNext(Key& key, DataBlock& dataBlock) {
       long blockIndex;
       if (dataStorage.Next(blockIndex, dataBlock, key)) {
-        //smsc_log_debug(logger, "Next1: key=%s, idx=%d dataLength=%d",
-          //              key.toString().c_str(), blockIndex, dataBlock.length());
         return true;
       }
       return false;
@@ -224,12 +231,9 @@ public:
 		bool ret;
         if(indexStorage.Next(key, idx))
 		{
-//          if(ret = dataStorage.Get(idx, data))
-//              cache.Add(key, data);
 			ret = dataStorage.Get(idx, data);
 			smsc_log_debug(logger, "Next: %s, %d ret=%d", key.toString().c_str(), data.length(), ret);
             return ret;
-            //return true;
 		}
 		smsc_log_debug(logger, "Next: %s, No data", key.toString().c_str());
         return false;
@@ -291,9 +295,7 @@ private:
 	
 	IndexAllocator*     indexAllocator;
 	IndexStorage        indexStorage;
-	//  Cache               cache;
 	BlocksHSStorage<Key> dataStorage;
-	//  BlocksMappedFileStorage dataStorage;
 	
 	bool dbPathExists(void)
 	{
@@ -314,16 +316,8 @@ private:
 		string path = dbPath + dbName + '/';
 		while(pos != path.length() - 1)
 		{
-		pos = path.find('/', pos + 1);
-		//printf("%s - ", (path.substr(0, pos)).c_str());
-		ret = mkdir((path.substr(0, pos)).c_str(), 0700);
-		//if(-1 == (ret = mkdir((path.substr(0, pos)).c_str(), 0700)))
-		//{
-		//  printf(":(((((((\n");
-		//}
-		//else
-		//  printf(":))))))))\n");
-	
+          pos = path.find('/', pos + 1);
+          ret = mkdir((path.substr(0, pos)).c_str(), 0700);
 		}
 		if(-1 == ret)
 		return false;
