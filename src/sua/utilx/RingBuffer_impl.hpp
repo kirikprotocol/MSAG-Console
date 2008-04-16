@@ -4,6 +4,8 @@
 # include <string.h>
 # include <util/Exception.hpp>
 
+std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
+
 namespace utilx {
 
 template<int BUFSZ>
