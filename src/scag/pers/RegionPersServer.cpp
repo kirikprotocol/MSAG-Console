@@ -105,12 +105,16 @@ bool RegionPersServer::processPacket(ConnectionContext &ctx) {
                       ctx.inbuf.length(), ctx.inbuf.toString().c_str());
       ctx.inbuf.Empty();
     }
-    catch(const Exception& e) {
-      smsc_log_debug(rplog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s",
-                      e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
-    }
     catch(const std::runtime_error& e) {
       smsc_log_debug(rplog, "Error profile key: %s", e.what());
+    }
+    catch(const FileException& e) {
+      smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
+                     e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
+    }
+    catch(const std::exception& e) {
+      smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
+                     e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
     }
     catch(...) {
       smsc_log_debug(rplog, "Some Exception. Bad data in buffer received len=%d, data=%s",
@@ -167,6 +171,7 @@ bool RegionPersServer::processPacketFromCP(ConnectionContext &ctx) {
 bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
   smsc_log_debug(rplog, "Start process packet %p from client", &ctx);
   SerialBuffer &isb = ctx.inbuf;
+  PersServerResponseType response = RESPONSE_ERROR;
   try {
     ctx.outbuf.SetPos(PACKET_LENGTH_SIZE);
     execCommand(ctx);
@@ -176,20 +181,27 @@ bool RegionPersServer::processPacketFromClient(ConnectionContext& ctx) {
     return true;
   } catch(const SerialBufferOutOfBounds &e) {
     smsc_log_warn(rplog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s, pos=%d", isb.length(), isb.toString().c_str(), isb.getPos());
+    response = RESPONSE_BAD_REQUEST;
   }
   catch(const std::runtime_error& e) {
     smsc_log_warn(rplog, "Error profile key: %s", e.what());
+    response = RESPONSE_BAD_REQUEST;
   }
-  catch(const Exception& e) {
-    smsc_log_warn(rplog, "Exception: \'%s\'. Bad data in buffer received len=%d, data=%s", e.what(), isb.length(), isb.toString().c_str());
+  catch(const FileException& e) {
+    smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
+                   e.what(), isb.length(), isb.toString().c_str());
+  }
+  catch(const std::exception& e) {
+    smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
+                   e.what(), isb.length(), isb.toString().c_str());
   }
   catch(...) {
     smsc_log_warn(rplog, "Bad data in buffer received len=%d, data=%s", isb.length(), isb.toString().c_str());
   }
   if (ctx.transact_batch) {
-    rollbackCommands(RESPONSE_BAD_REQUEST);
+    rollbackCommands(response);
   }
-  createResponseForClient(&ctx.outbuf, RESPONSE_BAD_REQUEST, "");
+  createResponseForClient(&ctx.outbuf, response, "");
   SetPacketSize(ctx.outbuf);
   return true;
 }
