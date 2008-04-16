@@ -188,44 +188,38 @@ bool PersServer::processPacket(ConnectionContext& ctx)
 {
     SerialBuffer &osb = ctx.outbuf, &isb = ctx.inbuf;
     osb.SetPos(4);
-    try{
-		execCommand(isb, osb);
-		SetPacketSize(osb);
-		return true;
+    PersServerResponseType response = RESPONSE_ERROR;
+    try {
+      execCommand(isb, osb);
+      SetPacketSize(osb);
+      return true;
     }
-    catch(const SerialBufferOutOfBounds &e)
-    {
-        smsc_log_warn(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
-                       isb.length(), isb.toString().c_str());
+    catch(const SerialBufferOutOfBounds &e) {
+      smsc_log_warn(plog, "SerialBufferOutOfBounds Bad data in buffer received len=%d, data=%s",
+                     isb.length(), isb.toString().c_str());
+      response = RESPONSE_BAD_REQUEST;
     }
     catch(const std::runtime_error& e) {
       smsc_log_warn(plog, "std::runtime_error: Error profile key: %s. received buffer len=%d, data=%s",
                      e.what(), isb.length(), isb.toString().c_str());
+      response = RESPONSE_BAD_REQUEST;
     }
-
     catch(const FileException& e) {
       smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
                      e.what(), isb.length(), isb.toString().c_str());
     }
-    /*
-    catch(const Exception& e)
-    {
-        smsc_log_warn(plog, "Exception: \'%s\'. received buffer len=%d, data=%s",
-                       e.what(), isb.length(), isb.toString().c_str());
-    }*/
     catch(const std::exception& e) {
       smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
                      e.what(), isb.length(), isb.toString().c_str());
     }
-    catch(...)
-    {
-        smsc_log_warn(plog, "Unknown exception. received buffer len=%d, data=%s",
-                       isb.length(), isb.toString().c_str());
+    catch(...) {
+      smsc_log_warn(plog, "Unknown exception. received buffer len=%d, data=%s",
+                     isb.length(), isb.toString().c_str());
     }
     if (transactBatch) {
-      rollbackCommands(RESPONSE_BAD_REQUEST);
+      rollbackCommands(response);
     }
-    SendResponse(osb, RESPONSE_BAD_REQUEST);
+    SendResponse(osb, response);
 	SetPacketSize(osb);
     return true;
 }
