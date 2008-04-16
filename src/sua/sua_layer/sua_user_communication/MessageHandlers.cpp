@@ -47,18 +47,25 @@ MessageHandlers::handle(const libsua_messages::EncapsulatedSuaMessage& message,
                         const communication::LinkId& linkId)
 {
   smsc_log_info(_logger, "MessageHandlers::handle::: handle EncapsulatedSuaMessage [%s]", message.toString().c_str());
-  messages_router::RoutingKey routingKey;
-  routingKey.setIncomingLinkId(linkId);
 
-  const sua_messages::SUAMessage& messageForSending = *message.getContainedSuaMessage();
-  const sua_messages::TLV_GlobalTitle& tlvGT = messageForSending.getDestinationAddress().getGlobalTitle();
-  const sua_messages::GlobalTitle& gt = tlvGT.getGlobalTitle();
-  const std::string& gtStringValue = gt.getGlobalTitleDigits();
-  routingKey.setDestinationGT(gtStringValue);
+  try {
+    messages_router::RoutingKey routingKey;
+    routingKey.setIncomingLinkId(linkId);
 
-  communication::LinkId outLinkId = messages_router::MessagesRouter::getInstance().getOutLink(routingKey);
-  smsc_log_info(_logger, "MessageHandlers::handle::: send encapsulated SUAMessage [%s] to link with linkid=[%s]", message.toString().c_str(), outLinkId.getValue().c_str());
-  _cMgr.send(outLinkId, messageForSending);
+    const sua_messages::SUAMessage& messageForSending = *message.getContainedSuaMessage();
+    const sua_messages::TLV_GlobalTitle& tlvGT = messageForSending.getDestinationAddress().getGlobalTitle();
+    const sua_messages::GlobalTitle& gt = tlvGT.getGlobalTitle();
+    const std::string& gtStringValue = gt.getGlobalTitleDigits();
+    routingKey.setDestinationGT(gtStringValue);
+
+    communication::LinkId outLinkId = messages_router::MessagesRouter::getInstance().getOutLink(routingKey);
+    smsc_log_info(_logger, "MessageHandlers::handle::: send encapsulated SUAMessage [%s] to link with linkid=[%s]", message.toString().c_str(), outLinkId.getValue().c_str());
+
+    _cMgr.send(outLinkId, messageForSending);
+  } catch (smsc::util::Exception& ex) {
+    smsc_log_error(_logger, "MessageHandlers::handle::: catched exception [%s], send MErrorMessage to messages's originator", ex.what());
+    _cMgr.send(linkId, libsua_messages::MErrorMessage(libsua_messages::MErrorMessage::MESSAGE_FORWARDING_ERROR_TO_SGP, &message));
+  }
 }
 
 }
