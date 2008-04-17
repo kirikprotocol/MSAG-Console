@@ -5,16 +5,20 @@
 
 namespace communication {
 
-class TP {
-public:
+struct TP {
   TP()
-    : packetType(0), packetLen(0) {}
+    : packetType(0), packetLen(0), packetBody(packetBodyMem) {}
+
+  TP(int aPacketType, size_t aPacketLen, uint8_t* packetBodyPtr)
+    : packetType(aPacketType), packetLen(aPacketLen), packetBody(packetBodyPtr) {}
 
   int packetType; // class of transport packet contained message, eg. packet contained SUA messages, or packet contained Libsua messages.
 
   size_t packetLen; // length of data in packetBody array
   enum { MAX_PACKET_SIZE = 64*1024 };
-  uint8_t packetBody[MAX_PACKET_SIZE]; // contains all packet data including length field
+  uint8_t* packetBody;
+  uint8_t packetBodyMem[MAX_PACKET_SIZE]; // contains all packet data including length field
+
   struct packet_sctp_properties {
     packet_sctp_properties()
       : streamNo(0), orderingTransfer(false) {}
