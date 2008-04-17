@@ -539,6 +539,8 @@ private:
   int _numsOfMandatoryTlvObjects;
 
   unsigned int getTagIdx(uint16_t tag);
+  void setPositionTo4BytesBoundary(size_t* offset);
+  void generateProtocolException();
 };
 
 }
