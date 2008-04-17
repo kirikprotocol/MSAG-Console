@@ -55,7 +55,7 @@ MessagesRouter::getOutLink(const RoutingKey& messageRoutingInfo,
     smsc_log_info(_logger, "MessagesRouter::getOutLink::: found LinkId=[%s] for routing key=[%s], callTerminationIndicator=[CALL TERMINATED]", outLinkId.getValue().c_str(), messageRoutingInfo.toString().c_str());
   } else {
     *callTerminationIndicator = false;
-    smsc_log_info(_logger, "MessagesRouter::getOutLink::: route not found for routing key=[%s], callTerminationIndicator=[CALL FORWARDING]", outLinkId.getValue().c_str(), messageRoutingInfo.toString().c_str());
+    smsc_log_info(_logger, "MessagesRouter::getOutLink::: route not found for routing key=[%s], callTerminationIndicator=[CALL FORWARDING]", messageRoutingInfo.toString().c_str());
   }
   return outLinkId;
 }
