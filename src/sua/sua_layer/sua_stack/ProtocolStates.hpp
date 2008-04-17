@@ -40,8 +40,18 @@ private:
   uint32_t _upMessageCode, _sctpConnectReleasedInd_MessageCode;
 };
 
+class SUA_Incoming_ManagmentMessages_Permitted : public io_dispatcher::ProtocolState {
+protected:
+  SUA_Incoming_ManagmentMessages_Permitted();
+
+  void checkIfGotManagementMessage(const communication::Message& message, const std::string& where);
+private:
+  uint32_t _notifyMessageCode, _errorMessageCode;
+};
+
+
 // this is state when DOWN message was sent but DOWN ACK message wasn't received
-class SUA_State_ASPDownPending : public io_dispatcher::ProtocolState,
+class SUA_State_ASPDownPending : public SUA_Incoming_ManagmentMessages_Permitted,
                                  public utilx::Singleton<SUA_State_ASPDownPending*> {
 public: 
   virtual void checkState(io_dispatcher::ProtocolStateController* protocolController, const communication::Message& message);
@@ -58,7 +68,7 @@ private:
 };
 
 // this state is actual when ASPUP message was sent but ASPUP-Ack messages wasn't received
-class SUA_State_ASPInactivePending : public io_dispatcher::ProtocolState,
+class SUA_State_ASPInactivePending : public SUA_Incoming_ManagmentMessages_Permitted,
                                      public utilx::Singleton<SUA_State_ASPInactivePending*> {
 public: 
   virtual void checkState(io_dispatcher::ProtocolStateController* protocolController, const communication::Message& message);
@@ -77,7 +87,7 @@ private:
 
 // this state is actual when got ASPUP-Ack message in response to sending ASPUP message,
 // or was received INACTIVE-ACK message in response to sending INACTIVE messages
-class SUA_State_ASPInactive : public io_dispatcher::ProtocolState,
+class SUA_State_ASPInactive : public SUA_Incoming_ManagmentMessages_Permitted,
                               public utilx::Singleton<SUA_State_ASPInactive*> {
 public: 
   virtual void checkState(io_dispatcher::ProtocolStateController* protocolController, const communication::Message& message);
@@ -94,7 +104,7 @@ private:
 };
 
 // this state is actual when ACTIVE message was sent but ACTIVE-ACK message wasn't received
-class SUA_State_ASPActivePending : public io_dispatcher::ProtocolState,
+class SUA_State_ASPActivePending : public SUA_Incoming_ManagmentMessages_Permitted,
                                    public utilx::Singleton<SUA_State_ASPActivePending*> {
 public: 
   virtual void checkState(io_dispatcher::ProtocolStateController* protocolController, const communication::Message& message);
@@ -108,6 +118,7 @@ private:
   SUA_State_ASPActivePending& operator=(const SUA_State_ASPActivePending& rhs);
 
   uint32_t _activeAckMessageCode, _sctpConnectReleasedInd_MessageCode;
+  uint32_t _downMessageCode;
 };
 
 // ACTIVE ACK message was received
@@ -128,7 +139,7 @@ private:
 };
 
 // in ACTIVE state ASP has sent INACTIVE message and is waiting for INACTIVE ACK message
-class SUA_State_ASPActiveShutdown : public io_dispatcher::ProtocolState,
+class SUA_State_ASPActiveShutdown : public SUA_Incoming_ManagmentMessages_Permitted,
                                     public utilx::Singleton<SUA_State_ASPActiveShutdown*> {
 public: 
   virtual void checkState(io_dispatcher::ProtocolStateController* protocolController, const communication::Message& message);
