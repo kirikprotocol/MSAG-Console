@@ -32,13 +32,46 @@ SuaTLVFactory::registerExpectedMandatoryTlv(SuaTLV* expectedTlv)
   ++_numsOfMandatoryTlvObjects;
 }
 
+void
+SuaTLVFactory::setPositionTo4BytesBoundary(size_t* offset)
+{
+  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
+  int paddingTo4bytes = *offset & 0x03;
+  if ( paddingTo4bytes ) { // if tag length is not a multiple of 4 bytes
+    *offset += 0x04 - paddingTo4bytes;
+    smsc_log_debug(logger, "SuaTLVFactory::setPositionTo4BytesBoundary::: skip %d bytes for 4 bytes boundary", 0x04 - paddingTo4bytes);
+  }
+}
+
+void
+SuaTLVFactory::generateProtocolException()
+{
+  SuaTLV* tlvObj;
+  int i=0, offset=0;
+  char bufForTagsList[NUM_OF_TAGS*7+1]; // 7 bytes (including space for comma) for each tag presentation
+  while (_numsOfMandatoryTlvObjects-- > 0) {
+    while (i<NUM_OF_TAGS) {
+      if ( (tlvObj = _mandatoryTlvTypeToTLVObject[i++] ) ) {
+        offset=sprintf(bufForTagsList+offset, "0x%04X,",tlvObj->getTag()); break;
+      }
+    }
+  }
+  bufForTagsList[strlen(bufForTagsList)-1]=0;
+  throw io_dispatcher::ProtocolException("SuaTLVFactory::generateProtocolException::: missing mandatory tlv(s) with next tag values [%s] when parsing input buffer", bufForTagsList);
+}
+
 size_t
 SuaTLVFactory::parseInputBuffer(const communication::TP& packetBuf, size_t offset)
 {
   uint16_t tag, valLen;
   smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
   smsc_log_debug(logger, "SuaTLVFactory::parseInputBuffer::: enter it");
+
   while ( offset < packetBuf.packetLen ) {
+    setPositionTo4BytesBoundary(&offset);
+
+    if ( offset >= packetBuf.packetLen ) break;
+
     offset = communication::extractField(packetBuf, offset, &tag);
     offset = communication::extractField(packetBuf, offset, &valLen);
 
@@ -60,26 +93,12 @@ SuaTLVFactory::parseInputBuffer(const communication::TP& packetBuf, size_t offse
       offset = suaTLVObject->deserialize(packetBuf, offset, valLen);
       _optionalTlvTypeToTLVObject[getTagIdx(tag)] = NULL;
     } else throw io_dispatcher::ProtocolException("parseInputBuffer::: unexpected or duplicate tlv with tag value [=0x%04X]", tag);
-    int paddingTo4bytes = offset & 0x03;
-    if ( paddingTo4bytes ) { // if tag length is not a multiple of 4 bytes
-      offset += 0x04 - paddingTo4bytes;
-      smsc_log_debug(logger, "SuaTLVFactory::parseInputBuffer::: skip %d bytes for 4 bytes boundary", 0x04 - paddingTo4bytes);
-    }
+    
   }
-  if ( _numsOfMandatoryTlvObjects ) {
-    SuaTLV* tlvObj;
-    int i=0, offset=0;
-    char bufForTagsList[NUM_OF_TAGS*7+1]; // 7 bytes (including space for comma) for each tag presentation
-    while (_numsOfMandatoryTlvObjects-- > 0) {
-      while (i<NUM_OF_TAGS) {
-        if ( (tlvObj = _mandatoryTlvTypeToTLVObject[i++] ) ) {
-          offset=sprintf(bufForTagsList+offset, "0x%04X,",tlvObj->getTag()); break;
-        }
-      }
-    }
-    bufForTagsList[strlen(bufForTagsList)-1]=0;
-    throw io_dispatcher::ProtocolException("parseInputBuffer::: missing mandatory tlv(s) with next tag values [%s]", bufForTagsList);
-  }
+
+  if ( _numsOfMandatoryTlvObjects )
+    generateProtocolException();
+
   return offset;
 }
 
@@ -1282,16 +1301,12 @@ TLV_Address::deserialize(const communication::TP& packetBuf,
   tlvFactory.registerExpectedOptionalTlv(&_ssn);
   tlvFactory.registerExpectedOptionalTlv(&_gt);
 
-  communication::TP tmpPacketBuf;
-  tmpPacketBuf.packetLen = valLen - sizeof(_addressIndicator) - sizeof(_addressIndicator);
-  memcpy(tmpPacketBuf.packetBody, packetBuf.packetBody + offset,tmpPacketBuf.packetLen);
-  
+  communication::TP tmpPacketBuf (packetBuf.packetType, valLen - sizeof(_addressIndicator) - sizeof(_addressIndicator), packetBuf.packetBody + offset);
+
   smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
   smsc_log_debug(logger, "TLV_Address::deserialize::: try parse buf=[%s]", hexdmp(tmpPacketBuf.packetBody, tmpPacketBuf.packetLen).c_str());
 
   offset += tlvFactory.parseInputBuffer(tmpPacketBuf, 0);
-
-  //  offset = tlvFactory.parseInputBuffer(packetBuf, offset);
 
   _isValueSet = true;
 
