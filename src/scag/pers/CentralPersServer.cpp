@@ -207,14 +207,14 @@ bool CentralPersServer::processPacket(ConnectionContext& ctx)
                     ctx.inbuf.length(), ctx.inbuf.toString().c_str());
   }
   catch(const std::runtime_error& e) {
-    smsc_log_debug(rplog, "Error profile key: %s", e.what());
+    smsc_log_debug(logger, "Error profile key: %s", e.what());
   }
   catch(const FileException& e) {
-    smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
+    smsc_log_warn(logger, "FileException: '%s'. received buffer len=%d, data=%s",
                    e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
   }
   catch(const std::exception& e) {
-    smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
+    smsc_log_warn(logger, "std::exception: %s. received buffer len=%d, data=%s",
                    e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
   }
   catch(...) {
