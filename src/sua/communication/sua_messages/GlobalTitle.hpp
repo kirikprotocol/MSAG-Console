@@ -17,6 +17,8 @@ public:
   typedef enum { UNKNOWN_NATURE_OF_ADDRESS = 0, SUBSCRIBER_NUMBER_T = 1, RESERVED_FOR_NATIONAL_USE = 2,
                  NATIONAL_SIGNIFICANT_NUMBER = 3, INTERNATIONAL_NUMBER = 4 } nature_addr_t;
 
+  typedef enum { TRANSLATION_TYPE_UNKNOWN=0, TRANSLATION_TYPE_INTERNATIONAL_SERVICE_1 } translation_type_t;
+
   GlobalTitle();
 
   GlobalTitle(const uint8_t* buf, size_t bufSz);
