@@ -4,6 +4,7 @@
 #include "ActiveAckMessage.hpp"
 #include "ActiveMessage.hpp"
 #include "CLDTMessage.hpp"
+#include "CLDRMessage.hpp"
 #include "DAUDMessage.hpp"
 #include "DAVAMessage.hpp"
 #include "DRSTMessage.hpp"
@@ -36,6 +37,10 @@ initialize ()
   CLDTMessage cldtMessage;
   SUAMessage::registerMessageCode(cldtMessage.getMsgCode());
   smsc_log_info(logger, "sua_messages::initialize::: for message [%s] assigned message index=[%d]", cldtMessage.getMsgCodeTextDescription(), SUAMessage::getMessageIndex(cldtMessage.getMsgCode()));
+
+  CLDRMessage cldrMessage;
+  SUAMessage::registerMessageCode(cldrMessage.getMsgCode());
+  smsc_log_info(logger, "sua_messages::initialize::: for message [%s] assigned message index=[%d]", cldrMessage.getMsgCodeTextDescription(), SUAMessage::getMessageIndex(cldrMessage.getMsgCode()));
 
   DAUDMessage daudMessage;
   SUAMessage::registerMessageCode(daudMessage.getMsgCode());
