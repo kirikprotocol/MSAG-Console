@@ -25,6 +25,12 @@ CLDTMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& lin
 }
 
 void
+CLDRMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
+{
+  sua_stack::CLCOMessageHandlers::getInstance().handle(*this, linkId);
+}
+
+void
 DAUDMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_stack::SignalingNetworkManagementMessageHandlers::getInstance().handle(*this, linkId);
