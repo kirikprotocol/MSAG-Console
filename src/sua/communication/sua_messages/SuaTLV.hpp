@@ -8,6 +8,7 @@
 # include <sua/communication/sua_messages/SSN.hpp>
 # include <sua/communication/sua_messages/ProtocolClass.hpp>
 # include <sua/communication/sua_messages/GlobalTitle.hpp>
+# include <sua/communication/types.hpp>
 
 namespace sua_messages {
 
@@ -27,6 +28,8 @@ public:
   virtual uint16_t getLength() const = 0;
 
   uint16_t getTag() const { return _tag; }
+
+  virtual bool isSetValue() const = 0;
 
   virtual std::string toString() const = 0;
 protected:
@@ -49,8 +52,9 @@ public:
 
   virtual uint16_t getLength() const;
 
-  uint32_t getValue() const;
-  bool isSetValue() const;
+  virtual uint32_t getValue() const;
+
+  virtual bool isSetValue() const;
 private:
   uint32_t _value; // value stored in host bytes order
   bool _isValueSet;
@@ -80,7 +84,8 @@ public:
   virtual uint16_t getLength() const;
 
   std::string getPrintableValue() const;
-  bool isSetValue() const;
+
+  virtual bool isSetValue() const;
 private:
   char _value[SZ];
   uint16_t _valLen;
@@ -108,7 +113,8 @@ public:
   virtual uint16_t getLength() const;
 
   const uint8_t* getValue() const;
-  bool isSetValue() const;
+
+  virtual bool isSetValue() const;
 protected:
   uint16_t getValueLength() const;
 
@@ -487,7 +493,7 @@ public:
 
   const TLV_GlobalTitle& getGlobalTitle() const;
 
-  bool isSetValue() const;
+  virtual bool isSetValue() const;
 private:
   enum { INDICATORS_FIELDS_SZ = 4 };
 
@@ -521,6 +527,27 @@ public:
   virtual std::string toString() const;
 private:
   static const uint16_t TAG = 0x0103;
+};
+
+class TLV_SCCP_Cause : public TLV_OctetArrayPrimitive<sizeof(uint32_t)> {
+public:
+  TLV_SCCP_Cause();
+  TLV_SCCP_Cause(communication::return_cause_type_t causeType, uint8_t causeValue);
+  virtual size_t deserialize(const communication::TP& packetBuf,
+                             size_t offset /*position inside buffer where tag's data started*/,
+                             uint16_t valLen);
+  virtual std::string toString() const;
+
+  communication::return_cause_type_t getCauseType() const;
+
+  uint8_t getCauseValue() const;
+private:
+  struct temporary_buf {
+    temporary_buf(uint8_t causeType, uint8_t causeValue);
+    uint8_t array[sizeof(uint32_t)];
+  };
+
+  static const uint16_t TAG = 0x0106;
 };
 
 class SuaTLVFactory {
