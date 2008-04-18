@@ -1324,6 +1324,10 @@ TLV_Address::getLength() const
   if ( _gt.isSetValue() )
     sz += _gt.getLength();
 
+  int paddingTo4bytesSz = sz & 0x03;
+  if ( paddingTo4bytesSz )
+    sz += 0x04 - paddingTo4bytesSz;
+
   return sz;
 }
 
@@ -1429,6 +1433,62 @@ TLV_DestinationAddress::toString() const
 {
   std::string strBuf("destinationAddress=[");
   return strBuf + TLV_Address::toString() + "]";
+}
+
+TLV_SCCP_Cause::TLV_SCCP_Cause()
+  : TLV_OctetArrayPrimitive(TAG)
+{}
+
+TLV_SCCP_Cause::TLV_SCCP_Cause(communication::return_cause_type_t causeType, uint8_t causeValue)
+  : TLV_OctetArrayPrimitive(TAG, temporary_buf(uint8_t(causeType), causeValue).array, sizeof(uint32_t))
+{}
+
+size_t
+TLV_SCCP_Cause::deserialize(const communication::TP& packetBuf,
+                            size_t offset /*position inside buffer where tag's data started*/,
+                            uint16_t valLen)
+{
+  offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
+  const uint8_t* value = getValue();
+  if ( value[2] == 0 || 
+       value[2] > communication::ERROR_CAUSE )
+    throw smsc::util::Exception("TLV_SCCP_Cause::deserialize::: wrong cause type value=[%d], expected value from range [0x01-0x05]", value[2]);
+  return offset;
+}
+
+std::string
+TLV_SCCP_Cause::toString() const
+{
+  if ( isSetValue() ) {
+    char strBuf[128];
+    snprintf(strBuf, sizeof(strBuf), "causeType=[%d],causeValue=[%d]", getCauseType(), getCauseValue());
+    return std::string(strBuf);
+  } else
+    return "";
+}
+
+communication::return_cause_type_t
+TLV_SCCP_Cause::getCauseType() const
+{
+  const uint8_t* value = getValue();
+  return communication::return_cause_type_t(value[2]);
+}
+
+uint8_t
+TLV_SCCP_Cause::getCauseValue() const
+{
+  const uint8_t* value = getValue();
+  return value[3];
+}
+
+TLV_SCCP_Cause::temporary_buf::temporary_buf(uint8_t causeType, uint8_t causeValue)
+{
+  array[0] = array[1] = 0;
+
+  if ( causeType == 0 || 
+       causeType > communication::ERROR_CAUSE )
+    throw smsc::util::Exception("TLV_SCCP_Cause::temporary_buf::: wrong cause type value=[%d], expected value from range [0x01-0x05]", causeType);
+  array[2] = causeType; array[3] = causeValue;
 }
 
 }
