@@ -25,6 +25,12 @@ bool registerMessageCreators()
 
   io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator
     (
+     sua_messages::SUAMessage::getMessageIndex(sua_messages::CLDRMessage().getMsgCode()),
+     new io_dispatcher::SuaLayerMessagesInstancer<CLDRMessage_HandlingDispatcher>()
+     );
+
+  io_dispatcher::SuaLayerMessagesFactory::getInstance().registerMessageCreator
+    (
      sua_messages::SUAMessage::getMessageIndex(sua_messages::DAUDMessage().getMsgCode()),
      new io_dispatcher::SuaLayerMessagesInstancer<DAUDMessage_HandlingDispatcher>()
      );
