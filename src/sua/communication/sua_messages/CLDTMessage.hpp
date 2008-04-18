@@ -56,8 +56,6 @@ protected:
 private:
   TLV_RoutingContext _routingContext;
   TLV_ProtocolClass _protocolClass;
-  //  TLV_SourceAddress _sourceAddress;
-  //  TLV_DestinationAddress _destinationAddress;
   TLV_SequenceControl _sequenceControl;
   TLV_SS7HopCount _hopCount;
   TLV_Importance _importance;
