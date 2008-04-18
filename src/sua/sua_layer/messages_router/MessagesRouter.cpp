@@ -81,7 +81,7 @@ void
 MessagesRouter::addOutcomingRouteEntry(const std::string& destinationGtMask,
                                        const communication::LinkId& linkToSGP)
 {
-  smsc_log_info(_logger, "MessagesRouterSubsystem::addOutcomingRouteEntry::: add outcoming route entry=[destinationGTPrefix=[%s],linkSetId=[%s]]", destinationGtMask.c_str(), linkToSGP.getValue().c_str());
+  smsc_log_info(_logger, "MessagesRouter::addOutcomingRouteEntry::: add outcoming route entry=[destinationGTPrefix=[%s],linkSetId=[%s]]", destinationGtMask.c_str(), linkToSGP.getValue().c_str());
   _outRoutingTable[DEFAULT_RTABLE_ENTRY]->Insert(destinationGtMask.c_str(), linkToSGP);
 }
 
@@ -90,7 +90,7 @@ MessagesRouter::addOutcomingRouteEntry(const std::string& destinationGtMask,
                                        uint8_t destinationSSN,
                                        const communication::LinkId& linkToSGP)
 {
-  smsc_log_info(_logger, "MessagesRouterSubsystem::addOutcomingRouteEntry::: add outcoming route entry=[destinationGTPrefix=[%s],destinationSSN=[%d],linkSetId=[%s]]", destinationGtMask.c_str(), destinationSSN, linkToSGP.getValue().c_str());
+  smsc_log_info(_logger, "MessagesRouter::addOutcomingRouteEntry::: add outcoming route entry=[destinationGTPrefix=[%s],destinationSSN=[%d],linkSetId=[%s]]", destinationGtMask.c_str(), destinationSSN, linkToSGP.getValue().c_str());
   _outRoutingTable[destinationSSN]->Insert(destinationGtMask.c_str(), linkToSGP);
 }
 
