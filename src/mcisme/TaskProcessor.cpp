@@ -260,6 +260,12 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   try { forceNotify = config->getBool("forceNotify"); } catch (...){ forceInform = true;
     smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Default value is 'true'.");}
 
+  try { _isReverseNotifyPolicy = config->getBool("reverseNotifyPolicy"); }
+  catch (...){
+    _isReverseNotifyPolicy = false;
+    smsc_log_warn(logger, "Parameter <MCISme.reverseNotifyPolicy> missed. Default value is 'true'.");
+  }
+
   bool bDefaultInform, bDefaultNotify;
   try { bDefaultInform = config->getBool("defaultInform"); } catch (...) { bDefaultInform = true;
     smsc_log_warn(logger, "Parameter <MCISme.defaultInform> missed. Defaul profile inform flag is on");
@@ -895,6 +901,24 @@ bool TaskProcessor::GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>&  events
 //� ����������� �������. ������ ��� ����� �������� ��� � ����������� �������, �� ������ ������ ���� ��� ����������� ������ ���������, ������� ���� ��������� � ���������� ���� ����������� �������������� �������. ��������������, ���� �������� ���� ����������� ��������� ��� � ����������� ������� � � ���� � ������� �� ���������� ���� ����������� ������� �� ������������ ���������, �� �������� ������� 
 
 
+bool
+TaskProcessor::noNeedNotify(const AbonentProfile& profile, const sms_info* pInfo) const
+{
+  if ( _isReverseNotifyPolicy ) {
+    if ( profile.notify ) {
+      smsc_log_debug(logger, "Notify prohibition is ON for Abonent %s", pInfo->abnt.toString().c_str());
+      return true;
+    }
+  } else {
+    if(!forceNotify && !profile.notify)
+    {
+      smsc_log_debug(logger, "Notify is off for Abonent %s", pInfo->abnt.toString().c_str());
+      return true;
+    }
+  }
+  return false;
+}
+
 void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
 {
   //	AbonentProfile	profile(AbonentProfiler::getProfile(pInfo->abnt.getText().c_str()));
@@ -903,11 +927,8 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
 
   smsc_log_debug(logger, "Process Notify message");
   statistics->incNotified();
-  if(!forceNotify && !profile.notify)
-  {
-    smsc_log_debug(logger, "Notify is off for Abonent %s - cancel sending", pInfo->abnt.toString().c_str());
-    return;
-  }
+
+  if ( noNeedNotify(profile, pInfo) ) return;
 
   vector<AbntAddr>	callers;				// use Hash
   int events_count = pInfo->events.size();
