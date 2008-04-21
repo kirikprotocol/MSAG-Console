@@ -16,6 +16,7 @@
     <param name="defaultReasonsMask" type="int">31</param>
     <param name="forceInform" type="bool">false</param>
     <param name="forceNotify" type="bool">false</param>
+    <param name="reverseNotifyPolicy" type="bool">false</param>
     <param name="forceSeparate" type="bool">false</param>
     <param name="inputQueueSize" type="int">1000</param>
     <param name="maxCallersCount" type="int">-1</param>
