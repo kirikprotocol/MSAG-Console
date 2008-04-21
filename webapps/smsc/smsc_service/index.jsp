@@ -82,6 +82,8 @@
     param(out, "smsc.core.tzConfig", "core.timezones_config", bean.getStringParam("core.timezones_config"));
     param(out, "smsc.core.smartMultipart", "core.smartMultipartForward", bean.getBoolParam("core.smartMultipartForward"));
     param(out, "smsc.core.srcSmeSeparateRouting", "core.srcSmeSeparateRouting", bean.getBoolParam("core.srcSmeSeparateRouting"));
+    param(out, "smsc.core.schedulerSoftLimit", "core.schedulerSoftLimit", bean.getIntParam("core.schedulerSoftLimit"));
+    param(out, "smsc.core.schedulerHardLimit", "core.schedulerHardLimit", bean.getIntParam("core.schedulerHardLimit"));
     
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.perfomance ~~~~~~~~~~~~~~~~~~~~~~~~~

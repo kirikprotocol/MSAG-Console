@@ -97,3 +97,19 @@ B3005:
     Archiver	Indexes now build on hourly basis instead of days
     Webadm	Range of address limit extended to 512
     Webadm	Fraud control configuration and management
+B3006:
+    INMan	PckAcquirer minor optimization
+    INMan	minor corrections to reset()
+    INMan	Configurable dynamically loaded services design
+    USSMan	Core logic is singled out, ported to new INAP lib
+    SMSX	bill2cdr address prefix stripping fix. Now it works like this: .d.d.anything -> anything
+    SMSX	bill2cdr conv_addr \d->\w to handle alpha-numeric addresses
+    SMSC	abonentinfo query fix, source sme id added to routing calculation
+    SMSC	Sheduler memory optimization for operative store
+    SMSC	Fix for socket work with inman
+    SMSC	Separate limits for different MAP events
+    SMSC	Add max sheduled messages limit to operative store
+    SMSC	final inman report and perm error, fix expiration inman report
+    Logger	Fix for unexpected exception in file operations
+    HSDaemon	Fix for interconnect read timeouts
+    Webadm	mapio task count param fix
