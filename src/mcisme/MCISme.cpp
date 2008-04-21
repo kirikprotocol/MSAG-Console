@@ -248,6 +248,8 @@ private:
   SmppSession*    session;
   Mutex           sendLock;
 
+  MCISmeMessageSender(const MCISmeMessageSender& rhs);
+  MCISmeMessageSender& operator=(const MCISmeMessageSender& rhs);
 public:
     
   MCISmeMessageSender(TaskProcessor& processor, SmppSession* session) 
