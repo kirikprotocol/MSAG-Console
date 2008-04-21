@@ -98,7 +98,7 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
 
   }
 
-  public List<Delivery> lookupActiveDeliveries(Date end, int limit) throws DataSourceException {
+  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
     PreparedStatement ps = null;
     ResultSet rs = null;
     try {
@@ -108,8 +108,6 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
 
       rs = ps.executeQuery();
 
-      final List<Delivery> result = new ArrayList<Delivery>(limit);
-
       while (rs.next()) {
         final DeliveryImpl delivery = new DeliveryImpl(ds);
         delivery.setSubscriberAddress(rs.getString(1));
@@ -123,8 +121,6 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
         result.add(delivery);
       }
 
-      return result;
-
     } catch (SQLException e) {
       throw new DataSourceException(e);
     } finally {
@@ -132,7 +128,7 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
     }
   }
 
-  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException {
+  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
     PreparedStatement ps = null;
     ResultSet rs = null;
     try {
@@ -142,8 +138,6 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
 
       rs = ps.executeQuery();
 
-      final List<Delivery> result = new LinkedList<Delivery>();
-
       while (rs.next()) {
         final DeliveryImpl delivery = new DeliveryImpl(ds);
         delivery.setSubscriberAddress(rs.getString(1));
@@ -156,8 +150,6 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
         delivery.setTimezone(TimeZone.getTimeZone(rs.getString(8)));
         result.add(delivery);
       }
-
-      return result;
 
     } catch (SQLException e) {
       throw new DataSourceException(e);
@@ -207,7 +199,9 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
           try {
             final DeliveryStatImpl result = new DeliveryStatImpl();
             result.setSubscriberAddress(rs.getString(1));
-            result.setDelivered(rs.getInt(2));
+            result.setAdvertiserId(rs.getInt(2));
+            result.setDelivered(rs.getInt(3));
+            result.setSended(rs.getInt(4));
             return result;
           } catch (SQLException e) {
             throw new DataSourceException(e);
@@ -216,18 +210,21 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
       };
 
     } catch (SQLException e) {
-      close(rs, ps);
       throw new DataSourceException(e);
+    } finally {
+      close(rs, ps);
     }
   }
 
-  public void updateDeliveryStat(String subscriberAddress, Date date, int deliveredInc) throws DataSourceException {
+  public void updateDeliveryStat(String subscriberAddress, int advertiserId, Date date, int deliveredInc, int sendedInc) throws DataSourceException {
     PreparedStatement ps = null, ps1 = null;
     try {
       ps = conn.prepareStatement(sql.getProperty("deliverystat.increase"));
       ps.setInt(1, deliveredInc);
-      ps.setString(2, subscriberAddress);
-      ps.setDate(3, new java.sql.Date(date.getTime()));
+      ps.setInt(2, sendedInc);
+      ps.setString(3, subscriberAddress);
+      ps.setDate(4, new java.sql.Date(date.getTime()));
+      ps.setInt(5, advertiserId);
 
       final int updatedRows = ps.executeUpdate();
 
@@ -236,6 +233,8 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
         ps1.setString(1, subscriberAddress);
         ps1.setDate(2, new java.sql.Date(date.getTime()));
         ps1.setInt(3, deliveredInc);
+        ps1.setInt(4, advertiserId);
+        ps1.setInt(5, sendedInc);
         ps1.executeUpdate();
       }
     } catch (SQLException e) {

@@ -29,7 +29,7 @@ public class DeliveriesFile {
   private static final int SECTION_TZ_LEN = 40;
   private static final int SECTIONS_NUMBER = 100;
 
-  private static final int SECTION_DESCRIPTION_LEN = SECTION_NAME_LEN + SECTION_TZ_LEN + 1/*Volume*/ + 8/*start*/ + 8/*end*/ + 1/*EOR*/;
+  private static final int SECTION_DESCRIPTION_LEN = SECTION_NAME_LEN + SECTION_TZ_LEN + 1/*Volume*/ + 8/*start*/  + 1/*EOR*/;
 
   private final File file;
   private final long date;
@@ -39,7 +39,6 @@ public class DeliveriesFile {
   private Section lastSection;
 
   private RandomAccessFile f;
-  private boolean extended = false;
 
   public DeliveriesFile(FileDeliveriesDataSource ds, File file, long date) throws DeliveriesFileException {
     this.ds = ds;
@@ -57,7 +56,6 @@ public class DeliveriesFile {
         this.f = new RandomAccessFile(file, "rw");
         if (exists) {
           readSections();
-          validate();
         } else
           writeSections();
       }
@@ -137,47 +135,53 @@ public class DeliveriesFile {
            );
   }
 
-  private void validate() throws IOException {
-    long len = f.length();
-    for (Section s : sections.sections()) {
-      // Check start, end
-      if (s.sectionStartPos > len || s.sectionEndPos > len) {
-        log.error("Section header crushed: name=" + s.distrName + "; vol=" + s.volume + "; tz=" + s.tz.getID());
-        s.crushed = true;
-        continue;
-      }
-      f.seek(s.sectionEndPos -1);
-      byte b = f.readByte();
-      if (b != EOR) {
-        log.error("Section body crushed: name=" + s.distrName + "; vol=" + s.volume + "; tz=" + s.tz.getID());
-        s.crushed = true;
-      }
-    }
-  }
-
   private void readSections() throws IOException {
     f.seek(0);
     byte[] bytes = new byte[SECTIONS_NUMBER * SECTION_DESCRIPTION_LEN];
     f.readFully(bytes);
 
+    Section prevSection = null;
     for (int i = 0; i < SECTIONS_NUMBER; i++) {
+
       int pos = i * SECTION_DESCRIPTION_LEN;
+
+      // Read section descriptor
       String name = readString(bytes, pos, SECTION_NAME_LEN);
       pos += SECTION_NAME_LEN;
       String tz = readString(bytes, pos, SECTION_TZ_LEN);
       pos += SECTION_TZ_LEN;
       byte volume = bytes[pos];
       long start = readLong(bytes, pos + 1);
-      long end = readLong(bytes, pos + 9);
-      byte eor = bytes[pos + 17];
+      byte eor = bytes[pos + 9];
+
       if (name.length() != 0) {
         if (eor != EOR) {
-          log.error("Section header is crushed: name=" + name + "; vol=" + volume + "; tz=" + tz);
+          log.error("Section descriptor is crushed: name=" + name + "; vol=" + volume + "; tz=" + tz);
+          // clear section descriptor
+          f.seek(pos);
+          for (long j = pos; j < pos + SECTION_DESCRIPTION_LEN; j++)
+            f.write(0);
           continue;
         }
-        sections.addSection(new Section(name, TimeZone.getTimeZone(tz), volume, start, end));
+
+        final Section s = new Section(name, TimeZone.getTimeZone(tz), volume, start);
+        if (prevSection != null) {
+          prevSection.sectionEndPos = start;
+          prevSection.extendable = false;
+        }
+        sections.addSection(s);
+        prevSection = s;
       }
     }
+
+    if (prevSection != null) {
+      prevSection.sectionEndPos = f.length();
+      lastSection = prevSection;
+    }
+
+    // Validate and repair last section
+    if (lastSection != null)
+      lastSection.validateAndRepair();
   }
 
   private void writeSections() throws IOException {
@@ -194,9 +198,8 @@ public class DeliveriesFile {
       pos+=SECTION_TZ_LEN;
       bytes[pos] = (byte)s.volume;
       writeLong(s.sectionStartPos, bytes, pos + 1);
-      writeLong(s.sectionEndPos, bytes, pos + 9);
-      bytes[pos + 17] = (byte)EOR;
-      pos += 18;
+      bytes[pos + 9] = (byte)EOR;
+      pos += 10;
     }
     f.seek(0);
     f.write(bytes);
@@ -215,7 +218,7 @@ public class DeliveriesFile {
       if (s == null) { // If section does not exists create it
         final long flen = f.length();
 
-        s = new Section(delivery.getDistributionName(), delivery.getTimezone(), delivery.getTotal(), flen, flen);
+        s = new Section(delivery.getDistributionName(), delivery.getTimezone(), delivery.getTotal(), flen);
 
         if (lastSection != null)
           lastSection.close();
@@ -226,7 +229,6 @@ public class DeliveriesFile {
         writeSections();
       }
       s.saveDelivery(delivery);
-      extended = true;
     } catch (IOException e) {
       throw new DeliveriesFileException("Save error", e);
     }
@@ -236,33 +238,31 @@ public class DeliveriesFile {
    *
    * @param startDate
    * @param endDate
-   * @return
    * @throws DeliveriesFileException
    */
-  public List<Delivery> readDeliveries(final Date startDate, final Date endDate) throws DeliveriesFileException {
-    return readDeliveries(new DeliveriesQuery() {
+  public void readDeliveries(final Date startDate, final Date endDate, Collection<Delivery> result) throws DeliveriesFileException {
+    readDeliveries(new DeliveriesQuery() {
       public boolean add(DeliveryImpl d) {
         double a1 = (double)(d.getTotal() - 1) * (startDate.getTime() - d.getStartDate().getTime()) / (d.getEndDate().getTime() - d.getStartDate().getTime());
         double a2 = (double)(d.getTotal() - 1) * (endDate.getTime() - d.getStartDate().getTime()) / (d.getEndDate().getTime() - d.getStartDate().getTime());
         return ((Math.ceil(a1)>=0 || a2 > 0) && Math.ceil(a1) < d.getTotal() && Math.ceil(a1) < a2);
       }
-    });
+    }, result);
   }
 
   /**
    *
    * @param date
    * @param limit
-   * @return
    * @throws DeliveriesFileException
    */
-  public List<Delivery> readDeliveries(final Date date, final int limit) throws DeliveriesFileException {
-    return readDeliveries(new DeliveriesQuery() {
+  public void readDeliveries(final Date date, final int limit, Collection<Delivery> result) throws DeliveriesFileException {
+    readDeliveries(new DeliveriesQuery() {
       int total = 0;
       public boolean add(DeliveryImpl d) {
         return (total++ < limit && d.getSended() < d.getTotal() && d.getSendDate().getTime() < date.getTime());
       }
-    });
+    }, result);
   }
 
   public int getDeliveriesCount(final Date date, TimeZone tz, String distrName) throws DeliveriesFileException {
@@ -275,8 +275,11 @@ public class DeliveriesFile {
       };
 
       for (Section s : sections.sections()) {
-        if (s.distrName.equals(distrName) && s.tz.equals(tz))
-          count += s.getDeliveries(ds).size();
+        List<Delivery> lst = new LinkedList<Delivery>();
+        if (s.distrName.equals(distrName) && s.tz.equals(tz)) {
+          s.getDeliveries(ds, lst);
+          count += lst.size();
+        }
       }
 
     } catch (EOFException e) {
@@ -286,28 +289,23 @@ public class DeliveriesFile {
     return count;
   }
 
-  private List<Delivery> readDeliveries(DeliveriesQuery st) throws DeliveriesFileException {
-    List<Delivery> result = new LinkedList<Delivery>();
+  private void readDeliveries(DeliveriesQuery st, Collection<Delivery> result) throws DeliveriesFileException {
     try {
       for (Section s : sections.sections())
-        result.addAll(s.getDeliveries(st));
+        s.getDeliveries(st, result);
 
     } catch (EOFException e) {
     } catch (IOException e) {
       throw new DeliveriesFileException("Can't read deliveries", e);
 
     }
-    return result;
   }
 
 
   public void close() throws DeliveriesFileException {
     try {
-      if (f != null) {
-        if (extended)
-          writeSections();
+      if (f != null)
         f.close();
-      }
     } catch (IOException e) {
       throw new DeliveriesFileException("Can't close file", e);
     }
@@ -359,32 +357,62 @@ public class DeliveriesFile {
     private final long sectionStartPos;
     private long sectionEndPos;
 
-    private boolean crushed;
     private boolean extendable;
 
     private byte[] buffer;
     private long bufferStartPos;
     private int bufferPos;
     private int bufferSize;
+    private DeliveryImpl curDelivery;
 
     public Section(String distrName, TimeZone timezone, int volume, long startPos) {
-      this(distrName, timezone, volume, startPos, startPos);
-    }
-
-    public Section(String distrName, TimeZone timezone, int volume,long startPos, long endPos) {
       this.distrName = distrName;
       this.volume = volume;
       this.tz = timezone;
 
+      this.curDelivery = null;
       this.sectionStartPos = startPos;
-      this.sectionEndPos = endPos;
+      this.sectionEndPos = startPos;
 
-      this.extendable = (startPos == endPos);
-      this.crushed = false;
+      this.extendable = true;
+
       this.buffer = new byte[65536];
       bufferStartPos = startPos;
       bufferPos = 0;
       bufferSize = 0;
+    }
+
+    private void validateAndRepair() throws IOException {
+      // Check last byte
+      long endPos = sectionEndPos -1;
+      if (endPos < sectionStartPos)
+        return;
+
+      f.seek(endPos);
+      byte eor = (byte)f.read();
+      if (eor != EOR) {
+        log.warn("Section is corrupted and will be repaired: distrName=" + distrName + "; tz=" + tz.getID() + "; vol=" + volume);
+
+        long pos = -1;
+        int step = 1;
+        do {
+          long startPos = sectionEndPos - step * 10;
+
+          if (startPos < sectionStartPos) {
+            pos = sectionStartPos;
+          } else {
+            f.seek(startPos);
+            int b;
+            while ((b = f.read()) != -1) {
+              if ((byte)b == EOR)
+                pos = f.getFilePointer();
+            }
+          }
+          step++;
+        } while (pos == -1);
+
+        sectionEndPos = pos;
+      }
     }
 
     private void writeDelivery(DeliveryImpl impl) throws IOException {
@@ -450,9 +478,6 @@ public class DeliveriesFile {
     }
 
     public void saveDelivery(DeliveryImpl delivery) throws DeliveriesFileException, IOException {
-      if (crushed)
-        throw new DeliveriesFileException("Section is crushed");
-
       if (delivery.getId() >= 0) {
         f.seek(delivery.getId());
       } else {
@@ -464,39 +489,39 @@ public class DeliveriesFile {
       sectionEndPos = f.length();
     }
 
-    public List<Delivery> getDeliveries(DeliveriesQuery st) throws IOException {
-      final LinkedList<Delivery> result = new LinkedList<Delivery>();
+    public void getDeliveries(DeliveriesQuery st, Collection<Delivery> result) throws IOException {
+      if (getFilePointer() >= sectionEndPos) {
+        bufferStartPos = sectionStartPos;
+        bufferPos=0;
+        bufferSize = 0;
+      }
 
-      if (crushed) {
-        log.error("Section crushed: name=" + distrName + "; vol=" + volume + "; tz=" + tz.getID());
+      long startPos = getFilePointer();
+      boolean f1=false, f2=false;
+      do {
 
-      } else {
-
-        if (getFilePointer() >= sectionEndPos) {
-          bufferStartPos = sectionStartPos;
-          bufferPos=0;
-          bufferSize = 0;
+        if (curDelivery != null) {
+          if (st.add(curDelivery)) {
+            f1=f2=true;
+            result.add(curDelivery);
+            curDelivery = null;
+          } else {
+            f2=false;
+            if (!f1)
+              curDelivery = null;
+          }
         }
 
-        long startPos = getFilePointer();
-        boolean f1=false, f2;
-        do {
-          DeliveryImpl d = readDelivery();
+        if (curDelivery == null) {
+          curDelivery = readDelivery();
           if (getFilePointer() >= sectionEndPos) {
             bufferStartPos = sectionStartPos;
             bufferPos=0;
             bufferSize = 0;
           }
+        }
 
-          if (st.add(d)) {
-            f1=f2=true;
-            result.add(d);
-          } else
-            f2=false;
-
-        } while (f1==f2 && getFilePointer() != startPos);
-      }
-      return result;
+      } while (f1==f2 && getFilePointer() != startPos);
     }
 
     public void close() {

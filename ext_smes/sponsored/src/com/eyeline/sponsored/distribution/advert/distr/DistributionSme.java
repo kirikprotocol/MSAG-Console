@@ -18,6 +18,8 @@ import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSo
 import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries.FileDeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.FileDeliveryStatDataSource;
 import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
+import com.eyeline.sponsored.ds.banner.BannerMap;
+import com.eyeline.sponsored.ds.banner.impl.JNIBannerMapImpl;
 import com.eyeline.sponsored.utils.CalendarUtils;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
@@ -47,6 +49,7 @@ public class DistributionSme extends Sme {
   private DBSubscriptionDataSource subscriptionDataSource;
   private ScheduledExecutorService deliveriesGeneratorExecutor;
   private DistributionEngine distrEngine;
+  private BannerMap bannerMap;
 
   public DistributionSme(XmlConfig config, SmscTimezonesList timezones, OutgoingQueue outQueue) {
 
@@ -83,20 +86,25 @@ public class DistributionSme extends Sme {
       advertisingClient = new AdvertisingClient(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
       advertisingClient.connect();
 
-      DeliveryStatsProcessor.init(deliveryStatsDataSource, timezones);
+      // Init banner map
+      bannerMap = new JNIBannerMapImpl(new File(c.getFileStorageStoreDir(), "banner.bin").getAbsolutePath(), 360, 10000);
+
+      DeliveryStatsProcessor.init(deliveryStatsDataSource, timezones, bannerMap);
 
       // Init distribution engine
       if (c.getEngineType().equals("conservative")) {
         ConservativeDistributionEngine engine = new ConservativeDistributionEngine(outQueue,
                                                                                    deliveriesDataSource,
-                                                                                   advertisingClient);
+                                                                                   advertisingClient,
+                                                                                   bannerMap);
         engine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval());
         distrEngine = engine;
       } else if (c.getEngineType().equals("interval")) {
         IntervalDistributionEngine engine = new IntervalDistributionEngine(outQueue,
                                                                            deliveriesDataSource,
-                                                                           advertisingClient);
-        engine.init(c.getDeliveriesFetchInterval(), c.getDeliveriesPrepareInterval(), c.getDeliveriesSendSpeedLimit());
+                                                                           advertisingClient,
+                                                                           bannerMap);
+        engine.init(c.getDeliveriesFetchInterval(), c.getDeliveriesPrepareInterval(), c.getPoolSize());
         distrEngine = engine;
       } else
         throw new InitException("Unknown distribution engine type: " + c.getEngineType());

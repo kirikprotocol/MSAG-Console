@@ -119,20 +119,26 @@ class StatsFileImpl implements StatsFile {
   private static DeliveryStatImpl readDeliveryStat(InputStream is) throws IOException {
     final DeliveryStatImpl s = new DeliveryStatImpl();
     s.setSubscriberAddress(IOUtils.readString(is));
+    s.setAdvertiserId(IOUtils.readInt(is));
     s.setDelivered(IOUtils.readByte(is));
+    s.setSended(IOUtils.readByte(is));
     IOUtils.readByte(is); // EOR
     return s;
   }
 
   private static void writeDeliveryStat(DeliveryStat stat, OutputStream os) throws IOException {
     IOUtils.writeString(stat.getSubscriberAddress(), os);
+    IOUtils.writeInt(stat.getAdvertiserId(), os);
     os.write(stat.getDelivered());
+    os.write(stat.getSended());
     os.write(EOR);
   }
 
   private static void skipDeliveryStat(InputStream is) throws IOException {
     IOUtils.skipString(is); // msisdn
-    IOUtils.readByte(is);   // count
+    IOUtils.readInt(is);    // advertiser id
+    IOUtils.readByte(is);   // delivered
+    IOUtils.readByte(is);   // sended
     IOUtils.readByte(is);   // EOR
   }
 
@@ -212,7 +218,7 @@ class StatsFileImpl implements StatsFile {
       close();
 
     // Create buffer
-    final Map<String, DeliveryStat> buffer = new HashMap<String, DeliveryStat>(AGGR_BUFFER_SIZE);
+    final Map<DeliveryStat, DeliveryStat> buffer = new HashMap<DeliveryStat, DeliveryStat>(AGGR_BUFFER_SIZE);
 
     final File compressedFile = new File(file.getAbsolutePath() + ".compressed");
     OutputStream compressedFileWriter = null;
@@ -238,11 +244,13 @@ class StatsFileImpl implements StatsFile {
           // We read file until buffer size < AGGR_BUFFER_SIZE or EOF reached. Every delivery stat we put into buffer.
           while (buffer.size() < AGGR_BUFFER_SIZE) {
             DeliveryStat stat = readDeliveryStat(curFileReader);
-            DeliveryStat oldStat = buffer.get(stat.getSubscriberAddress());
+            DeliveryStat oldStat = buffer.get(stat);
             if (oldStat == null)
-              buffer.put(stat.getSubscriberAddress(), stat);
-            else
+              buffer.put(stat, stat);
+            else {
               oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
+              oldStat.setSended(oldStat.getSended() + stat.getSended());
+            }
           }
 
           // We fill buffer but EOF was not reached
@@ -255,11 +263,13 @@ class StatsFileImpl implements StatsFile {
           // Update counters in buffer and write other records to tmp file
           while(true) {
             DeliveryStat stat = readDeliveryStat(curFileReader);
-            DeliveryStat oldStat = buffer.get(stat.getSubscriberAddress());
+            DeliveryStat oldStat = buffer.get(stat);
             if (oldStat == null)
               writeDeliveryStat(stat, tmpFileWriter);
-            else
+            else {
               oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
+              oldStat.setSended(oldStat.getSended() + stat.getSended());
+            }
           }
 
         } catch (EOFException e) {

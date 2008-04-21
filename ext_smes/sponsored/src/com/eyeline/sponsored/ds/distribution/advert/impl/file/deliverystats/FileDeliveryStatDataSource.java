@@ -132,7 +132,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
 
 
 
-  public void updateDeliveryStat(String subscriberAddress, Date date, int deliveredInc) throws DataSourceException {
+  public void addDeliveryStat(String subscriberAddress, int advertiserId, Date date, int deliveredInc, int sendedInc) throws DataSourceException {
     StatsFile file = null;
     try {
       file = getFile(date, true);
@@ -140,6 +140,8 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
         DeliveryStat stat = new DeliveryStatImpl();
         stat.setSubscriberAddress(subscriberAddress);
         stat.setDelivered(deliveredInc);
+        stat.setSended(sendedInc);
+        stat.setAdvertiserId(advertiserId);
         file.addStat(stat);
       } else
         throw new DataSourceException("Null file for " + date);
@@ -421,11 +423,11 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     try {
       Calendar c = Calendar.getInstance();
       c.setTimeInMillis(System.currentTimeMillis());
-      for (int k=0; k<15; k++) {
+      for (int k=0; k<10; k++) {
         Date date = c.getTime();
         for (int i = 0; i < k; i++) {
           for (int j = 100000; j < 300002; j++)
-            ds.updateDeliveryStat("+79139" + j, date, 1);
+            ds.addDeliveryStat("+79139" + j, 1, date, 1, 1);
         }
         c.set(Calendar.DATE, c.get(Calendar.DATE) + 1);
       }

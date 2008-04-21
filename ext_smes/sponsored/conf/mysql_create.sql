@@ -49,5 +49,7 @@ CREATE TABLE delivery_stats (
   subscriber_address varchar(20) not null,
   date date not null,
   delivered smallint not null,
+  sended smallint not null,
+  advertiser_id int not null,
   PRIMARY KEY (subscriber_address, date)
 ) ENGINE InnoDB;

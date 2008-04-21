@@ -12,6 +12,21 @@ import java.io.OutputStream;
 
 class IOUtils {
 
+  public static void writeInt(int value, OutputStream writer) throws IOException {
+    writer.write(((value >> 24) & 0xFF));
+    writer.write((value >> 16) & 0xFF);
+    writer.write((value >> 8) & 0xFF);
+    writer.write((value) & 0xFF);
+  }
+
+  public static int readInt(InputStream is) throws IOException {
+    int ch1 = readByte(is);
+    int ch2 = readByte(is);
+    int ch3 = readByte(is);
+    int ch4 = readByte(is);
+    return (((ch1 << 24) & 0xFF000000) | ((ch2 << 16) & 0x00FF0000) | ((ch3 << 8) & 0x0000FF00) | (ch4 & 0x000000FF));
+  }
+
   public static int readByte(InputStream is) throws IOException {
     int b = is.read();
     if (b == -1)

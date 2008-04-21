@@ -38,7 +38,7 @@ public class ReceiptAcceptService implements SMPPService {
     if (reqMsg.isReceipt()) {
       if (reqMsg.getMessageState() == Message.MSG_STATE_DELIVERED) {
         try {
-          DeliveryStatsProcessor.getInstance().registerDelivery(reqMsg.getSourceAddress(), 1);
+          DeliveryStatsProcessor.getInstance().registerDelivery(reqMsg.getSourceAddress(), reqMsg.getReceiptedMessageId(), 1);
         } catch (ProcessorException e) {
           log.error("Handle receipt failed", e);
         }

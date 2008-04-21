@@ -3,4 +3,4 @@
 cd ..
 for i in lib/*.jar ; do cls=$cls:$i ; done
 
-java -cp $cls -Xmx128M -Dfile.encoding=windows-1251 com.eyeline.sponsored.distribution.advert.admin.DeliveryStatExport $1 $2 $3 $4 $5 $6 $7 $8
+java -cp $cls -Xmx128M -Dfile.encoding=windows-1251 com.eyeline.sponsored.distribution.advert.admin.DeliveryStatExport $@

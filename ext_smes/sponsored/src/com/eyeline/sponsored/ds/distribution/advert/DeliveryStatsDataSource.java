@@ -13,7 +13,7 @@ import java.util.Date;
 
 public interface DeliveryStatsDataSource {
 
-  public void updateDeliveryStat(String subscriberAddress, Date startDate, int deliveredInc) throws DataSourceException;
+  public void addDeliveryStat(String subscriberAddress, int advertiserId, Date startDate, int deliveredInc, int sendedInc) throws DataSourceException;
 
   public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate) throws DataSourceException;
 

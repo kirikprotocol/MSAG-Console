@@ -1,21 +1,21 @@
 package com.eyeline.sponsored.distribution.advert.distr.core;
 
-import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.ShutdownedException;
+import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClient;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingException;
-import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.ds.DataSourceException;
-import com.eyeline.sponsored.ds.distribution.advert.Delivery;
+import com.eyeline.sponsored.ds.banner.BannerMap;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
+import ru.aurorisoft.smpp.PDU;
+import ru.aurorisoft.smpp.SubmitResponse;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 /**
  * User: artem
@@ -27,6 +27,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
 
   private final OutgoingQueue outQueue;
   private final DeliveriesDataSource distrDS;
+  private final BannerMap bannerMap;
   private final AdvertisingClient advClient;
   private final Map<String, DistributionInfo> distrInfos;
 
@@ -34,9 +35,10 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private boolean started = true;
 
 
-  public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClient advClient) {
+  public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClient advClient, BannerMap bannerMap) {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
+    this.bannerMap = bannerMap;
     this.advClient = advClient;
     this.distrInfos = new HashMap<String, DistributionInfo>();
   }
@@ -104,7 +106,17 @@ public class ConservativeDistributionEngine implements DistributionEngine {
               m.setDestinationAddress(d.getSubscriberAddress());
               m.setMessageString(banner);
               m.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
-              final OutgoingObject o = new OutgoingObject();
+              final OutgoingObject o = new OutgoingObject() {
+                protected void handleResponse(PDU response) {
+                  if (response.getStatusClass() == Message.STATUS_CLASS_NO_ERROR) {
+                    try {
+                      bannerMap.put(Long.parseLong(((SubmitResponse)response).getMessageId()), 0);
+                    } catch (NumberFormatException e) {
+                      log.error(e,e);
+                    }
+                  }
+                }
+              };
               o.setMessage(m);
 
               try {
@@ -159,7 +171,8 @@ public class ConservativeDistributionEngine implements DistributionEngine {
 
           // Fetch active deliveries (deliveries with send date in [startTime, startTime + fetchInterval])
           final int totalLimit = (int)(sendSpeedLimit * fetchInterval / 1000);
-          final List<Delivery> deliveries = distrDS.lookupActiveDeliveries(end, totalLimit);
+          final List<Delivery> deliveries = new LinkedList<Delivery>();
+          distrDS.lookupActiveDeliveries(end, totalLimit, deliveries);
 
           // Send message by every delivery but no more than totalLimit
           sendDeliveries(deliveries, end, totalLimit);

@@ -10,10 +10,7 @@ import org.apache.log4j.Category;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -133,41 +130,35 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     }
   }
 
-  public List<Delivery> lookupActiveDeliveries(Date end, int limit) throws DataSourceException {
+  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
     try {
-      final LinkedList<Delivery> result = new LinkedList<Delivery>();
-
       HashedDeliveriesFile f = getFile(end, false);
       if (f != null) {
         try {
           f.open();
-          result.addAll(f.readDeliveries(end,limit));
+          f.readDeliveries(end,limit, result);
         } finally {
           f.close();
         }
       }
 
-      return result;
     } catch (DeliveriesFileException e) {
       throw new DataSourceException(e);
     }
   }
 
-  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException {
+  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
     try {
-      final LinkedList<Delivery> result = new LinkedList<Delivery>();
-
       HashedDeliveriesFile f = getFile(end, false);
       if (f != null) {
         try {
           f.open();
-          result.addAll(f.readDeliveries(start, end));
+          f.readDeliveries(start, end, result);
         } finally {
           f.close();
         }
       }
 
-      return result;
     } catch (DeliveriesFileException e) {
       throw new DataSourceException(e);
     }
@@ -246,11 +237,11 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
       }
     }
 
-    public List<Delivery> readDeliveries(final Date startDate, final Date endDate) throws DeliveriesFileException {
+    public void readDeliveries(final Date startDate, final Date endDate, Collection<Delivery> result) throws DeliveriesFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
-        return impl.readDeliveries(startDate, endDate);
+        impl.readDeliveries(startDate, endDate, result);
       } finally {
         lock.unlock();
       }
@@ -266,11 +257,11 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
       }
     }
 
-    public List<Delivery> readDeliveries(final Date date, final int limit) throws DeliveriesFileException {
+    public void readDeliveries(final Date date, final int limit, Collection<Delivery> result) throws DeliveriesFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
-        return impl.readDeliveries(date, limit);
+        impl.readDeliveries(date, limit, result);
       } finally {
         lock.unlock();
       }
@@ -332,12 +323,13 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
         d = c.getTime();
         c.set(Calendar.MINUTE, c.get(Calendar.MINUTE) + 1);
         long start = System.currentTimeMillis();
-        List<Delivery> deliveries = impl.lookupActiveDeliveries(d, c.getTime());
+        Collection<Delivery> deliveries = new ArrayBlockingQueue<Delivery>(1000);
+        impl.lookupActiveDeliveries(d, c.getTime(), deliveries);
         System.out.println((System.currentTimeMillis() - start) + " : " + deliveries.size());
       }
 
     } catch (DataSourceException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      e.printStackTrace();
     } finally {
       impl.shutdown();
     }

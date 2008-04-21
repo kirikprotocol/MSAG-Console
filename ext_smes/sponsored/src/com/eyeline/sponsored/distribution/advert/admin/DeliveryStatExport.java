@@ -27,14 +27,23 @@ import java.util.Date;
 
 public class DeliveryStatExport {
 
-  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, Writer os)  {
+  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, Integer advId, Integer notAdvId, Writer os)  {
     ResultSet<DeliveryStat> rs = null;
     try {
 
       rs = ds.aggregateDeliveryStats(fromDate, toDate);
 
+      if (rs == null)
+        return;
+
       while(rs.next()) {
         final DeliveryStat stat = rs.get();
+
+        if (advId != null && stat.getAdvertiserId() != advId)
+          continue;
+
+        if (notAdvId != null && stat.getAdvertiserId() == notAdvId)
+          continue;
 
         if (stat.getDelivered() > 0) {
           float cost = stat.getDelivered() * 100000 * coeff / 100000;
@@ -66,6 +75,8 @@ public class DeliveryStatExport {
    * -c cost
    * -i days interval
    * -d output directory
+   * -a advertiser id
+   * -n advertiser id not equals to
    *
    * Example 1:
    * Export stats from 14-10-2007 to 20-10-2007 with cost = 0.01
@@ -108,6 +119,12 @@ public class DeliveryStatExport {
         if (args[i].equalsIgnoreCase("-d")) {
           req.setDir(args[i + 1]);
         }
+        if (args[i].equalsIgnoreCase("-a")) {
+          req.setAdvertiserId(Integer.valueOf(args[i + 1]));
+        }
+        if (args[i].equalsIgnoreCase("-n")) {
+          req.setNotAdvertiserId(Integer.valueOf(args[i + 1]));
+        }
       }
 
       req.validate();
@@ -118,6 +135,10 @@ public class DeliveryStatExport {
       System.out.println("From date " + req.getFromDate());
       System.out.println("To date " + req.getToDate());
       System.out.println("Cost " + req.getCost());
+      if (req.getAdvertiserId() != null)
+        System.out.println("Advertiser " + req.getAdvertiserId());
+      if (req.getNotAdvertiserId() != null)
+        System.out.println("Advertiser does not equals " + req.getNotAdvertiserId());
 
       final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
       xmlConfig.load();
@@ -139,7 +160,7 @@ public class DeliveryStatExport {
 
       long time = System.currentTimeMillis();
 
-      exportStat(ds, req.getFromDate(), req.getToDate(), req.getCost(), os);
+      exportStat(ds, req.getFromDate(), req.getToDate(), req.getCost(), req.getAdvertiserId(), req.getNotAdvertiserId(), os);
 
       os.flush();
 
@@ -167,12 +188,16 @@ public class DeliveryStatExport {
     float cost;
     int interval;
     String dir;
+    Integer advertiserId;
+    Integer notAdvertiserId;
 
     private Request() {
       this.fromDate = null;
       this.toDate = CalendarUtils.getDayStart(new Date());
       this.cost = -1;
       this.interval = -1;
+      this.advertiserId = null;
+      this.notAdvertiserId = null;
       this.dir = ".";
     }
 
@@ -222,6 +247,22 @@ public class DeliveryStatExport {
       } catch (NumberFormatException e) {
         throw new IllegalArgumentException("Invalid interval");
       }
+    }
+
+    public Integer getAdvertiserId() {
+      return advertiserId;
+    }
+
+    public void setAdvertiserId(Integer advertiserId) {
+      this.advertiserId = advertiserId;
+    }
+
+    public Integer getNotAdvertiserId() {
+      return notAdvertiserId;
+    }
+
+    public void setNotAdvertiserId(Integer notAdvertiserId) {
+      this.notAdvertiserId = notAdvertiserId;
     }
 
     public String getDir() {

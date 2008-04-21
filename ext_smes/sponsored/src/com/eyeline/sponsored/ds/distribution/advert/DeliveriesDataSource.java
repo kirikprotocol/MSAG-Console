@@ -6,6 +6,7 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import java.util.List;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.Collection;
 
 /**
  * User: artem
@@ -17,9 +18,9 @@ public interface DeliveriesDataSource {
 
   public Delivery createDelivery();
 
-  public List<Delivery> lookupActiveDeliveries(Date end, int limit) throws DataSourceException;
+  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException;
 
-  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException;
+  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException;
 
   public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException;
 

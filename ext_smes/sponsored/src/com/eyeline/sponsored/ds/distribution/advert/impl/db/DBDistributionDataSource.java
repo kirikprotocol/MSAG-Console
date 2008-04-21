@@ -11,10 +11,7 @@ import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  *
@@ -28,7 +25,7 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     // Check SQL
     DBTransaction.checkSql(sql);
     this.sql = sql;
-  }  
+  }
 
   DBTransaction createDBTransaction(boolean autoCommit) throws DataSourceException {
     try {
@@ -49,11 +46,11 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     return new DeliveryImpl(this);
   }
 
-  public void updateDeliveryStat(String subscriberAddress, Date date, int deliveredInc) throws DataSourceException {
+  public void addDeliveryStat(String subscriberAddress, int advertiserId, Date date, int deliveredInc, int sendedInc) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
-      tx.updateDeliveryStat(subscriberAddress, date, deliveredInc);
+      tx.updateDeliveryStat(subscriberAddress, advertiserId, date, deliveredInc, sendedInc);
     } finally {
       if (tx != null) {
         tx.close();
@@ -77,11 +74,11 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     return null;
   }
 
-  public List<Delivery> lookupActiveDeliveries(Date end, int limit) throws DataSourceException {
+  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
-      return tx.lookupActiveDeliveries(end, limit);
+      tx.lookupActiveDeliveries(end, limit, result);
     } finally {
       if (tx != null) {
         tx.close();
@@ -89,11 +86,11 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     }
   }
 
-  public List<Delivery> lookupActiveDeliveries(Date start, Date end) throws DataSourceException {
+  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
-      return tx.lookupActiveDeliveries(start, end);
+      tx.lookupActiveDeliveries(start, end, result);
     } finally {
       if (tx != null) {
         tx.close();

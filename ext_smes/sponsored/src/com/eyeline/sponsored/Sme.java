@@ -25,6 +25,7 @@ import java.io.File;
  */
 
 public class Sme {
+  
 
   public static void main(String[] args) {
 
@@ -63,8 +64,10 @@ public class Sme {
 
     } catch (Throwable e) {
       e.printStackTrace();
-      subscriptionSme.stop();
-      distributionSme.stop();
+      if (subscriptionSme != null)
+        subscriptionSme.stop();
+      if (distributionSme != null)
+        distributionSme.stop();
     }
   }
 
@@ -135,13 +138,14 @@ public class Sme {
   private static class Multiplexor extends TestMultiplexor {
 
     private int count;
+    private long msgId;
 
     public void sendResponse(PDU pdu) {
 
     }
 
     public void sendMessage(Message message) throws SMPPException {
-      SimpleResponse simpleResponse = new SimpleResponse(message);
+      SimpleResponse simpleResponse = new SimpleResponse(0,0,0,String.valueOf(msgId++), message);
       simpleResponse.setStatus(Data.ESME_ROK);
       simpleResponse.setStatusClass(PDU.STATUS_CLASS_NO_ERROR);
       handleResponse(simpleResponse);
@@ -153,6 +157,7 @@ public class Sme {
       receipt.setMessageState(Message.MSG_STATE_DELIVERED);
       receipt.setMessageString("");
       receipt.setReceipt(true);
+      receipt.setReceiptedMessageId(String.valueOf(msgId));
       receipt.setSequenceNumber(count++);
       handleMessage(receipt);
     }

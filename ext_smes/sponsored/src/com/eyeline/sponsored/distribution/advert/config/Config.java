@@ -21,6 +21,7 @@ public class Config extends com.eyeline.sponsored.config.Config {
   private int deliveriesFetchInterval;
   private int deliveriesSendSpeedLimit;
   private int deliveriesPrepareInterval;
+  private int poolSize;
   private String engineType;
 
   private String deliveryStatsDataSource;
@@ -45,6 +46,7 @@ public class Config extends com.eyeline.sponsored.config.Config {
     deliveriesFetchInterval = distr.getInt("deliveriesFetchInterval");
     deliveriesSendSpeedLimit = distr.getInt("deliveriesSendSpeedLimit");
     deliveriesPrepareInterval = distr.getInt("deliveriesPrepareInterval");
+    poolSize = distr.getInt("poolSize");
     engineType = distr.getString("engineType");
 
     deliveryStatsDataSource = distr.getString("deliveryStatsDataSource");
@@ -122,5 +124,9 @@ public class Config extends com.eyeline.sponsored.config.Config {
 
   public String getDeliveriesDataSource() {
     return deliveriesDataSource;
+  }
+
+  public int getPoolSize() {
+    return poolSize;
   }
 }

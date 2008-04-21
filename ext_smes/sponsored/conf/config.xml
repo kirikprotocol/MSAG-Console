@@ -12,8 +12,10 @@
 
 
   <section name="advertising">
-    <param name="host">phoenix</param>
-    <param name="port">25000</param>
+    <!--<param name="host">phoenix</param>-->
+    <!--<param name="port">25000</param>-->
+    <param name="host">niagara</param>
+    <param name="port">25100</param>
     <param name="connectionTimeout">100000</param>
   </section>
 
@@ -40,7 +42,8 @@
     <param name="engineType">interval</param>
     <param name="deliveriesFetchInterval">10000</param>
     <param name="deliveriesSendSpeedLimit">450</param>
-    <param name="deliveriesPrepareInterval">5000</param>    
+    <param name="deliveriesPrepareInterval">5000</param>
+    <param name="poolSize">5</param>
 
     <!-- Delivery stats collector parameters -->
 

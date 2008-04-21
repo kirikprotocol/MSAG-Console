@@ -2,18 +2,17 @@ package com.eyeline.sponsored.distribution.advert.deliveries;
 
 import com.eyeline.sponsored.distribution.advert.config.Config;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
-import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries.FileDeliveriesDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.Delivery;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
-import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
-import com.eyeline.sponsored.ds.subscription.SubscriptionDataSource;
-import com.eyeline.sponsored.ds.subscription.VolumeStat;
-import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.ResultSet;
-import com.eyeline.sponsored.Sme;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.Delivery;
+import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries.FileDeliveriesDataSource;
+import com.eyeline.sponsored.ds.subscription.SubscriptionDataSource;
+import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
+import com.eyeline.sponsored.ds.subscription.VolumeStat;
+import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
@@ -170,8 +169,8 @@ public class DeliveriesGenerator {
         final Date endDate = getDistrTimeLocal(tz, info.getEndTime());
 
         // StartDate will be after now when new day started in TZ
-        if (startDate.before(now)) {
-          System.out.println("Start date in the past: distr=" + info.getDistributionName() + "; tz=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);
+        if (endDate.before(now)) {
+          System.out.println("End date in the past: distr=" + info.getDistributionName() + "; tz=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);
           continue;
         }
 
@@ -250,7 +249,6 @@ public class DeliveriesGenerator {
         System.out.println("Unknown deliveries storage type: " + c.getDeliveriesDataSource());
         return;
       }
-
 
       subscrDS = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
       subscrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
