@@ -17,6 +17,8 @@
 #include "scag/re/actions/pers/PersAction.h"
 #include "scag/re/actions/pers/BatchAction.h"
 
+#include "scag/re/actions/datetime/DateTimeAction.h"
+
 #include "scag/re/actions/http/HttpCookieAction.h"
 
 #include "scag/re/actions/misc/ActionBinOperations.h"
@@ -101,6 +103,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="smpp:del_tlv") return new ActionTLV(TLV_DEL);    
     if (name=="smpp:exist_tlv") return new ActionTLV(TLV_EXIST);
     if (name=="smpp:receipt") return new ActionReceipt();
+
+    if (name=="datetime:current") return new CurrentDateTimeAction();
+    if (name=="datetime:change") return new ChangeDateTimeAction();
+    if (name=="datetime:add") return new AddDateTimeAction();
+    if (name=="datetime:dec") return new DecDateTimeAction();
 
     Action * action = 0;
 
