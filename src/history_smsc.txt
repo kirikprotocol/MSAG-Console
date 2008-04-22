@@ -113,3 +113,5 @@ B3006:
     Logger	Fix for unexpected exception in file operations
     HSDaemon	Fix for interconnect read timeouts
     Webadm	mapio task count param fix
+    MCISme	disable copying for MCISmeMessageSender class
+    MCISme	add reversed notify policy for new requirements
