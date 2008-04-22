@@ -74,7 +74,7 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     return null;
   }
 
-  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
+  public void lookupDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
@@ -86,7 +86,7 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     }
   }
 
-  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
+  public void lookupDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);

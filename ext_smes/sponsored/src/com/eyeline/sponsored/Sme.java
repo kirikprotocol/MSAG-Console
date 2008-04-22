@@ -163,11 +163,11 @@ public class Sme {
     }
 
     public void connect() throws SMPPException {
-
+      super.connect();
     }
 
     public void shutdown() {
-
+      super.shutdown();
     }
   }
 }

@@ -130,7 +130,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     }
   }
 
-  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
+  public void lookupDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
     try {
       HashedDeliveriesFile f = getFile(end, false);
       if (f != null) {
@@ -147,7 +147,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     }
   }
 
-  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
+  public void lookupDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
     try {
       HashedDeliveriesFile f = getFile(end, false);
       if (f != null) {
@@ -324,7 +324,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
         c.set(Calendar.MINUTE, c.get(Calendar.MINUTE) + 1);
         long start = System.currentTimeMillis();
         Collection<Delivery> deliveries = new ArrayBlockingQueue<Delivery>(1000);
-        impl.lookupActiveDeliveries(d, c.getTime(), deliveries);
+        impl.lookupDeliveries(d, c.getTime(), deliveries);
         System.out.println((System.currentTimeMillis() - start) + " : " + deliveries.size());
       }
 

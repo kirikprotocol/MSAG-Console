@@ -5,6 +5,7 @@ import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClient;
+import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClientFactory;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingException;
 import com.eyeline.sponsored.distribution.advert.distr.adv.BannerWithInfo;
 import com.eyeline.sponsored.ds.DataSourceException;
@@ -12,11 +13,10 @@ import com.eyeline.sponsored.ds.banner.BannerMap;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import org.apache.log4j.Category;
-import ru.aurorisoft.smpp.Message;
-import ru.aurorisoft.smpp.PDU;
-import ru.aurorisoft.smpp.SubmitResponse;
 
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -29,38 +29,40 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
   private final OutgoingQueue outQueue;
   private final DeliveriesDataSource distrDS;
-  private final AdvertisingClient advClient;
   private final Map<String, DistributionInfo> distrInfos;
-  private final ScheduledExecutorService executor;
-  private DeliveriesSender[] senders;
-  private final BlockingQueue<Delivery> deliveriesQueue;
   private final BannerMap bannerMap;
+
+  private final ScheduledExecutorService deliveriesFetcher;
+  private final DeliveriesSender[] senders;
+  private final DeliveriesQueue deliveriesQueue;
 
   private long fetchInterval;
   private long prepareInterval;
-  private Date end;
 
-  public IntervalDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClient advClient, BannerMap bannerMap) {
+  public IntervalDistributionEngine(OutgoingQueue outQueue,
+                                    DeliveriesDataSource distrDS,
+                                    AdvertisingClientFactory advClientFactory,
+                                    BannerMap bannerMap,
+                                    long fetchInterval, long prepareInterval, int poolSize) {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
-    this.advClient = advClient;
     this.distrInfos = new HashMap<String, DistributionInfo>(10);
     this.bannerMap = bannerMap;
-    this.deliveriesQueue = new ArrayBlockingQueue<Delivery>(100000);
-    this.senders = null;
-    this.executor = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+
+    this.deliveriesQueue = new DeliveriesQueue();
+    this.fetchInterval = fetchInterval;
+    this.prepareInterval = prepareInterval;
+
+    this.senders = new DeliveriesSender[poolSize];
+    for (int i=0; i<senders.length; i++)
+      senders[i] = new DeliveriesSender(i, advClientFactory.createClient());
+
+    this.deliveriesFetcher = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
         return new Thread(r, "IntDistrEngineThread");
       }
     });
-  }
 
-  public void init(long fetchInterval, long prepareInterval, int poolSize) {
-    this.fetchInterval = fetchInterval;
-    this.prepareInterval = prepareInterval;
-    this.senders = new DeliveriesSender[poolSize];
-    for (int i=0; i<senders.length; i++)
-      senders[i] = new DeliveriesSender(i);
   }
 
   public void addDistribution(DistributionInfo distr) {
@@ -68,53 +70,57 @@ public class IntervalDistributionEngine implements DistributionEngine {
   }
 
   public void start() {
-    final Work worker = new Work(fetchInterval);
-    worker.setStartTime(System.currentTimeMillis() + prepareInterval);
-
-    executor.scheduleAtFixedRate(worker, 0, fetchInterval, TimeUnit.MILLISECONDS);
+    deliveriesFetcher.scheduleAtFixedRate(new DeliveriesFetcherTask(), 0, fetchInterval, TimeUnit.MILLISECONDS);
     for(DeliveriesSender s : senders)
       s.start();
   }
 
   public void stop() {
-    executor.shutdown();
+    deliveriesFetcher.shutdown();
     try {
-      executor.awaitTermination(fetchInterval, TimeUnit.MILLISECONDS);
+      deliveriesFetcher.awaitTermination(fetchInterval, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
       log.error(e,e);
     }
     for(DeliveriesSender s : senders)
-      s.shuldown();
+      s.shutdown();
   }
 
 
-  private class Work implements Runnable {
 
-    private volatile long startTime;
 
-    private final long fetchInterval;
-
-    public Work(long fetchInterval) {
-      this.fetchInterval = fetchInterval;
-    }
-
-    public void setStartTime(long startTime) {
-      this.startTime = startTime;
-    }
+  private class DeliveriesFetcherTask implements Runnable {
 
     public void run() {
       try {
-        final Date endDate = new Date(startTime + fetchInterval);
-        end = endDate;
+        final Date startDate = new Date(System.currentTimeMillis() + prepareInterval);
+        final Date endDate = new Date(startDate.getTime() + fetchInterval);
 
-        long start = System.currentTimeMillis();
-        distrDS.lookupActiveDeliveries(new Date(startTime), endDate, deliveriesQueue);
+        deliveriesQueue.setModificator(new DeliveryModificator() {
+          public void modifyDelivery(Delivery d) {
+            double endDateD = d.getEndDate().getTime();
+            double startDateD = d.getStartDate().getTime();
+
+            double sendInterval = ((endDateD - startDateD) / (d.getTotal() - 1));
+
+            int msgNumber = (int)((endDate.getTime() - startDateD) / sendInterval);
+
+            d.setSendDate(new Date(Math.round(startDateD + msgNumber * sendInterval)));
+          }
+        });
+
         if (log.isInfoEnabled())
-          log.info("Deliveries fetch time: " + (System.currentTimeMillis() - start));
+          log.info("Fetch deliveries: from=" + startDate + "; to=" + endDate);
+        if (!deliveriesQueue.isEmpty())
+          log.error("Deliveries queue is not empty. But new deliveries loaded");
 
-        startTime += fetchInterval;
+        long startTime = System.nanoTime();
+        distrDS.lookupDeliveries(startDate, endDate, deliveriesQueue);
+        if (log.isInfoEnabled())
+          log.info("Deliveries fetch time: " + (System.nanoTime() - startTime) + "; ~size=" + deliveriesQueue.size());
+
       } catch (DataSourceException e) {
-        log.error("Distribution failed.", e);
+        log.error("Fetch deliveries failed.", e);
       } catch (Throwable e) {
         log.error(e,e);
       }
@@ -122,32 +128,33 @@ public class IntervalDistributionEngine implements DistributionEngine {
   }
 
 
-  private class DeliveriesSender extends Thread {
+
+
+  private final class DeliveriesSender extends Thread {
+
+    private final AdvertisingClient advClient;
     private boolean started = true;
 
-    public DeliveriesSender(int number) {
+    public DeliveriesSender(int number, AdvertisingClient advClient) {
       super("DeliveriesSender-" + number);
+      this.advClient = advClient;
     }
 
     public void run() {
-      int i = 0;
-      long totalTime = 0;
+
+      // Connect advertising client
+      try {
+        advClient.connect();
+      } catch (Throwable e) {
+        log.error(e,e);
+      }
+
       while(started) {
         try {
 
-          Delivery d = deliveriesQueue.poll(10, TimeUnit.SECONDS);
+          Delivery d = deliveriesQueue.poll(3, TimeUnit.SECONDS);
           if (d == null)
             continue;
-
-          i++;
-          double endDate = d.getEndDate().getTime();
-          double startDate = d.getStartDate().getTime();
-
-          double sendInterval = (( endDate - startDate) / (d.getTotal() - 1));
-
-          int msgNumber = (int)((end.getTime() - startDate) / sendInterval);
-
-          long sendTime = Math.round(startDate + msgNumber * sendInterval);
 
           try {
             // Lookup distribution info
@@ -156,36 +163,18 @@ public class IntervalDistributionEngine implements DistributionEngine {
             if (distr != null) {
 
               // Lookup banner
-              long start = System.currentTimeMillis();
-              final BannerWithInfo banner = advClient.getBannerExt(distr.getAdvServiceName(), d.getSubscriberAddress());
-              totalTime += System.currentTimeMillis() - start;
+              final BannerWithInfo banner = advClient.getBannerWithInfo(distr.getAdvServiceName(), d.getSubscriberAddress());
 
               if (banner != null) {
 
                 // Send message
-                final Message m = new Message();
-                m.setSourceAddress(distr.getSrcAddress());
-                m.setDestinationAddress(d.getSubscriberAddress());
-                m.setMessageString(banner.getBannerText());
-                m.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
-                final OutgoingObject o = new OutgoingObject() {
-                  protected void handleResponse(PDU response) {
-                    if (response.getStatusClass() == Message.STATUS_CLASS_NO_ERROR) {
-                      try {
-                        bannerMap.put(Long.parseLong(((SubmitResponse)response).getMessageId()), banner.getAdvertiserId());
-                      } catch (NumberFormatException e) {
-                        log.error(e,e);
-                      }
-                    }
-                  }
-                };
-                o.setMessage(m);
+                final OutgoingObject o = new OutgoingObjectWithBanner(distr.getSrcAddress(), d.getSubscriberAddress(), bannerMap, banner);
 
                 try {
                   if (log.isDebugEnabled())
-                    log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner.getBannerText() + "; advId=" + banner.getAdvertiserId() + "; time=" + new Date(sendTime));
+                    log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner.getBannerText() + "; advId=" + banner.getAdvertiserId() + "; time=" + d.getSendDate());
 
-                  outQueue.offer(o, sendTime);
+                  outQueue.offer(o, d.getSendDate().getTime());
                 } catch (ShutdownedException e) {
                   log.error("Out queue shutdowned", e);
                   return;
@@ -199,13 +188,6 @@ public class IntervalDistributionEngine implements DistributionEngine {
               log.warn("Distr is unknown: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress());
             }
 
-            if (i >= 1000) {
-              if (log.isInfoEnabled())
-                log.info("Get banner average time=" + totalTime/i);
-              i = 0;
-              totalTime = 0;
-            }
-
           } catch (AdvertisingException e) {
             log.error("Get banner failed", e);
           }
@@ -214,9 +196,16 @@ public class IntervalDistributionEngine implements DistributionEngine {
           log.error(e,e);
         }
       }
+
+      // Close advertising client
+      try {
+        advClient.close();
+      } catch (Throwable e) {
+        log.error(e,e);
+      }
     }
 
-    public void shuldown() {
+    public void shutdown() {
       this.started = false;
     }
   }

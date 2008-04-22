@@ -33,15 +33,15 @@ public class AdvertisingClient {
     return impl.isConnected();
   }
 
-  public BannerWithInfo getBannerExt(String serviceName, String abonentAddress) throws AdvertisingException {
-    return getBannerExt(serviceName, abonentAddress, 1, 0, 1, 1, 0);
+  public BannerWithInfo getBannerWithInfo(String serviceName, String abonentAddress) throws AdvertisingException {
+    return getBannerWithInfo(serviceName, abonentAddress, 1, 0, 1, 1, 0);
   }
 
-  public BannerWithInfo getBannerExt(String serviceName, String abonentAddress, int maxBannerLength) throws AdvertisingException {
-    return getBannerExt(serviceName, abonentAddress, 1, maxBannerLength, 1, 1, 0);
+  public BannerWithInfo getBannerWithInfo(String serviceName, String abonentAddress, int maxBannerLength) throws AdvertisingException {
+    return getBannerWithInfo(serviceName, abonentAddress, 1, maxBannerLength, 1, 1, 0);
   }
 
-  public BannerWithInfo getBannerExt(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingException {
+  public BannerWithInfo getBannerWithInfo(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingException {
     try {
       final Address address = new Address(abonentAddress);
       final String abonent = "." + address.getTon() + '.' + address.getNpi() + '.' + address.getAddress();

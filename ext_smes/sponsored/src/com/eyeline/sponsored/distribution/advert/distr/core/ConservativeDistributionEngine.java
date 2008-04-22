@@ -5,15 +5,14 @@ import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.sponsored.distribution.advert.config.DistributionInfo;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClient;
+import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingClientFactory;
 import com.eyeline.sponsored.distribution.advert.distr.adv.AdvertisingException;
+import com.eyeline.sponsored.distribution.advert.distr.adv.BannerWithInfo;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.banner.BannerMap;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import org.apache.log4j.Category;
-import ru.aurorisoft.smpp.Message;
-import ru.aurorisoft.smpp.PDU;
-import ru.aurorisoft.smpp.SubmitResponse;
 
 import java.util.*;
 
@@ -35,12 +34,12 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private boolean started = true;
 
 
-  public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClient advClient, BannerMap bannerMap) {
+  public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClientFactory advClientFactory, BannerMap bannerMap) {
     this.outQueue = outQueue;
     this.distrDS = distrDS;
     this.bannerMap = bannerMap;
-    this.advClient = advClient;
-    this.distrInfos = new HashMap<String, DistributionInfo>();
+    this.advClient = advClientFactory.createClient();
+    this.distrInfos = new HashMap<String, DistributionInfo>(50);
   }
 
   public void addDistribution(DistributionInfo distr) {
@@ -65,7 +64,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private class Work extends Thread {
 
     private final long fetchInterval;
-    private final int sendSpeedLimit;
+    private final int sendSpeedLimit;     
 
     public Work(long fetchInterval, int sendSpeedLimit) {
       super("ConsDistrEngineThread");
@@ -96,32 +95,16 @@ public class ConservativeDistributionEngine implements DistributionEngine {
           if (distr != null) {
 
             // Lookup banner
-            final String banner = advClient.getBanner(distr.getAdvServiceName(), d.getSubscriberAddress());
+            final BannerWithInfo banner = advClient.getBannerWithInfo(distr.getAdvServiceName(), d.getSubscriberAddress());
 
             if (banner != null) {
 
               // Send message
-              final Message m = new Message();
-              m.setSourceAddress(distr.getSrcAddress());
-              m.setDestinationAddress(d.getSubscriberAddress());
-              m.setMessageString(banner);
-              m.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
-              final OutgoingObject o = new OutgoingObject() {
-                protected void handleResponse(PDU response) {
-                  if (response.getStatusClass() == Message.STATUS_CLASS_NO_ERROR) {
-                    try {
-                      bannerMap.put(Long.parseLong(((SubmitResponse)response).getMessageId()), 0);
-                    } catch (NumberFormatException e) {
-                      log.error(e,e);
-                    }
-                  }
-                }
-              };
-              o.setMessage(m);
+              final OutgoingObject o = new OutgoingObjectWithBanner(distr.getSrcAddress(), d.getSubscriberAddress(), bannerMap, banner);
 
               try {
                 if (log.isDebugEnabled()) {
-                  log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner);
+                  log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner.getBannerText());
                 }
                 outQueue.offer(o, startTime + sendDelay * i);
               } catch (ShutdownedException e) {
@@ -160,9 +143,16 @@ public class ConservativeDistributionEngine implements DistributionEngine {
       }
     }
 
-    public synchronized void run() {
+    public void run() {
+
+      try {
+        advClient.connect();
+      } catch (Throwable e) {
+        log.error(e,e);
+      }
 
       long endTime = System.currentTimeMillis() + fetchInterval;
+      final Object o = new Object();
 
       while(started) {
 
@@ -172,17 +162,21 @@ public class ConservativeDistributionEngine implements DistributionEngine {
           // Fetch active deliveries (deliveries with send date in [startTime, startTime + fetchInterval])
           final int totalLimit = (int)(sendSpeedLimit * fetchInterval / 1000);
           final List<Delivery> deliveries = new LinkedList<Delivery>();
-          distrDS.lookupActiveDeliveries(end, totalLimit, deliveries);
+          distrDS.lookupDeliveries(end, totalLimit, deliveries);
 
           // Send message by every delivery but no more than totalLimit
           sendDeliveries(deliveries, end, totalLimit);
 
           // Wait next iteration (up to the end of current fetch interval)
-          if (endTime - System.currentTimeMillis() > 0) {
-            try {
-              wait(endTime - System.currentTimeMillis());
-            } catch (Throwable e) {
-              log.error("Interrupted", e);
+
+          long waitInterval = endTime - System.currentTimeMillis();
+          if (waitInterval > 0) {
+            synchronized(o) {
+              try {
+                o.wait(waitInterval);
+              } catch (Throwable e) {
+                log.error("Interrupted", e);
+              }
             }
           }
 
@@ -191,6 +185,12 @@ public class ConservativeDistributionEngine implements DistributionEngine {
         } catch (DataSourceException e) {
           log.error("Distribution failed.", e);
         }
+      }
+
+      try {
+        advClient.close();
+      } catch (Throwable e) {
+        log.error(e,e);
       }
     }
 

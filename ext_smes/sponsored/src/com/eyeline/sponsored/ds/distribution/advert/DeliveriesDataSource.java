@@ -18,9 +18,9 @@ public interface DeliveriesDataSource {
 
   public Delivery createDelivery();
 
-  public void lookupActiveDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException;
+  public void lookupDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException;
 
-  public void lookupActiveDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException;
+  public void lookupDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException;
 
   public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException;
 
