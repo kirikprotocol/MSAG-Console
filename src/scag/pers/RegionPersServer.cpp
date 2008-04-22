@@ -109,11 +109,11 @@ bool RegionPersServer::processPacket(ConnectionContext &ctx) {
       smsc_log_debug(rplog, "Error profile key: %s", e.what());
     }
     catch(const FileException& e) {
-      smsc_log_warn(plog, "FileException: '%s'. received buffer len=%d, data=%s",
+      smsc_log_warn(rplog, "FileException: '%s'. received buffer len=%d, data=%s",
                      e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
     }
     catch(const std::exception& e) {
-      smsc_log_warn(plog, "std::exception: %s. received buffer len=%d, data=%s",
+      smsc_log_warn(rplog, "std::exception: %s. received buffer len=%d, data=%s",
                      e.what(), ctx.inbuf.length(), ctx.inbuf.toString().c_str());
     }
     catch(...) {
