@@ -8,12 +8,20 @@ const char* CURRENT_DATETIME_ACTION = "datetime:current";
 const char* ADD_DATETIME_ACTION     = "datetime:add";
 const char* DEC_DATETIME_ACTION     = "datetime:dec";
 const char* CHANGE_DATETIME_ACTION  = "datetime:change";
-const char* DATETIME_ACTION = "DateTimeAction";
-const char* DATE_PROPERTY = "date";
-const char* TIME_PROPERTY = "time";
-const char* DATETIME_PROPERTY = "datetime";
-const char* DST_TRUE = "TRUE";
-const char* DST_FALSE = "FALSE";
+const char* DATETIME_ACTION         = "DateTimeAction";
+const char* DATE_PROPERTY           = "date";
+const char* TIME_PROPERTY           = "time";
+const char* DATETIME_PROPERTY       = "datetime";
+const char* DST_TRUE                = "TRUE";
+const char* DST_FALSE               = "FALSE";
+
+const char* DATETIME_FORMAT = "%d.%m.%Y %H:%M:%S";
+const char* DATE_FORMAT = "%d.%m.%Y";
+const char* TIME_FORMAT = "%H:%M:%S";
+
+const size_t MIN_YEAR = 1900;
+const size_t MAX_YEAR = 2100;
+
 
 enum DateProperties {
   DATE_YEAR,
@@ -165,18 +173,25 @@ void CurrentDateTimeAction::init(const SectionParams &params, PropertyObject pro
   getDst(params, propertyObject);
 }
 
+bool CurrentDateTimeAction::checkTimeZone(int timeZone) {
+  if (timeZone >= -12 && timeZone <= 13) {
+    return true;
+  } else {
+    smsc_log_warn(logger, "%s 'datetime:current' : error time zone %d", DATETIME_ACTION, timeZone);
+    return false;
+  }
+}
+
 bool CurrentDateTimeAction::run(ActionContext &context) {
   smsc_log_debug(logger, "Run Action 'datetime:current'");
   time_t t = time(NULL);
-  //struct tm time_struct = *gmtime(&t);
   struct tm time_struct;
   gmtime_r(&t, &time_struct);
   ActionProperty* p = properties.GetPtr(timeProperties[TIME_TIMEZONE]);
   int time_zone = 0;
-  if (p && (time_zone = p->getIntValue(context)) != 0) {
+  if (p && (time_zone = p->getIntValue(context)) != 0 && checkTimeZone(time_zone)) {
     smsc_log_debug(logger, "Run 'datetime:current' action: timezone = %d", time_zone);
     t += time_zone * 3600;
-    //time_struct = *gmtime(&t);
     gmtime_r(&t, &time_struct);
     if (isDst) {
       mktime(&time_struct);
@@ -185,19 +200,19 @@ bool CurrentDateTimeAction::run(ActionContext &context) {
   p = properties.GetPtr(DATETIME_PROPERTY);
   if (p) {
     char buf[DATETIME_BUF_SIZE];
-    strftime(buf, DATETIME_BUF_SIZE, "%d.%m.%Y %H:%M:%S", &time_struct);
+    strftime(buf, DATETIME_BUF_SIZE, DATETIME_FORMAT, &time_struct);
     p->setStrValue(buf, context);
   }
   p = properties.GetPtr(DATE_PROPERTY);
   if (p) {
     char buf[DATETIME_BUF_SIZE];
-    strftime(buf, DATETIME_BUF_SIZE, "%d.%m.%Y", &time_struct);
+    strftime(buf, DATETIME_BUF_SIZE, DATE_FORMAT, &time_struct);
     p->setStrValue(buf, context);
   }
   p = properties.GetPtr(TIME_PROPERTY);
   if (p) {
     char buf[DATETIME_BUF_SIZE];
-    strftime(buf, DATETIME_BUF_SIZE, "%H:%M:%S", &time_struct);
+    strftime(buf, DATETIME_BUF_SIZE, TIME_FORMAT, &time_struct);
     p->setStrValue(buf, context);
   }
   p = properties.GetPtr(timeProperties[TIME_HOUR]);
@@ -226,7 +241,8 @@ bool CurrentDateTimeAction::run(ActionContext &context) {
   }
   p = properties.GetPtr(dateProperties[DATE_WDAY]);
   if (p) {
-    p->setIntValue(time_struct.tm_wday, context);
+    size_t wday = time_struct.tm_wday == 0 ? 1 : time_struct.tm_wday;
+    p->setIntValue(wday, context);
   }
   p = properties.GetPtr(dateProperties[DATE_YDAY]);
   if (p) {
@@ -286,8 +302,14 @@ bool DecDateTimeAction::run(ActionContext &context) {
   return true;
 }
 
-bool DateTimeModifier::checkYear(int year) {
-  return (year > 1900 && year < 2038) ? true : false;
+bool DateTimeModifier::checkYear(int year, const char* actionName) {
+  if (year > MIN_YEAR && year < MAX_YEAR) {
+    return true;
+  } else {
+    smsc_log_warn(logger, "%s '%s' action : error year value %d. Should be: %d < year < %d",
+                  DATETIME_ACTION, actionName, year, MIN_YEAR, MAX_YEAR);
+    return false;
+  }
 }
 
 bool DateProperty::getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime) {
@@ -306,9 +328,7 @@ bool DateProperty::getOldDateTime(ActionContext &context, const char* actionName
                   DATETIME_ACTION, actionName, dateTimeStr.c_str());
     return false;
   }
-  if (!checkYear(old_year)) {
-    smsc_log_warn(logger, "%s '%s' action : error year value %d. Should be: 1900 < year < 2038",
-                  DATETIME_ACTION, actionName, old_year);
+  if (!checkYear(old_year, actionName)) {
     return false;
   }
   memset(&dateTime, 0, sizeof(tm));
@@ -316,19 +336,6 @@ bool DateProperty::getOldDateTime(ActionContext &context, const char* actionName
   dateTime.tm_mon = old_mon - 1;
   dateTime.tm_mday = old_day;
   return true;
-}
-
-string DateProperty::getDateTime(struct tm& dateTime, const char* actionName) {
-  if (mktime(&dateTime) == -1) {
-    char buf[DATETIME_BUF_SIZE];
-    strftime(buf, DATETIME_BUF_SIZE, "%d.%m.%Y", &dateTime);
-    smsc_log_warn(logger, "%s '%s' action : error date format. mktime can't normalize struct tm. date: '%s'",
-                  DATETIME_ACTION, actionName, buf);
-    return "";
-  }
-  char buf[DATETIME_BUF_SIZE];
-  strftime(buf, DATETIME_BUF_SIZE, "%d.%m.%Y", &dateTime);
-  return buf;
 }
 
 bool DateProperty::add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign) {
@@ -348,11 +355,7 @@ bool DateProperty::add(ActionContext &context, Hash<ActionProperty>& properties,
   if (p) {
     date.tm_mday += p->getIntValue(context) * sign;
   }
-  string dateStr = getDateTime(date, actionName);
-  if (dateStr.empty()) {
-    return false;
-  }
-  property.setStrValue(dateStr, context);
+  setDateTime(actionName, DATE_FORMAT, date, context);
   return true;
 }
 
@@ -364,17 +367,14 @@ bool DateProperty::change(ActionContext &context, Hash<ActionProperty>& properti
   ActionProperty* p = properties.GetPtr(dateProperties[DATE_YEAR]);
   if (p) {
     int new_year = p->getIntValue(context);
-    if (checkYear(new_year)) {
+    if (checkYear(new_year, actionName)) {
       date.tm_year = new_year - 1900;
-    } else {
-      smsc_log_warn(logger, "%s '%s' action : error year new value %d. Should be: 1900 < year < 2038",
-                    DATETIME_ACTION, actionName, new_year);
     }
   }
   p = properties.GetPtr(dateProperties[DATE_MONTH]);
   if (p) {
     int new_mon = p->getIntValue(context);
-    if (new_mon != 0) {
+    if (new_mon > 0) {
       date.tm_mon = new_mon - 1;
     } else {
       smsc_log_warn(logger, "%s '%s' action : error month new value %d",
@@ -385,19 +385,14 @@ bool DateProperty::change(ActionContext &context, Hash<ActionProperty>& properti
   p = properties.GetPtr(dateProperties[DATE_MDAY]);
   if (p) {
     int new_day = p->getIntValue(context);
-    if (new_day != 0) {
+    if (new_day > 0) {
       date.tm_mday = new_day;
     } else {
       smsc_log_warn(logger, "%s '%s' action : error day new value %d",
                     DATETIME_ACTION, actionName, new_day);
     }
   }
-
-  string dateStr = getDateTime(date, actionName);
-  if (dateStr.empty()) {
-    return false;
-  }
-  property.setStrValue(dateStr, context);
+  setDateTime(actionName, DATE_FORMAT, date, context);
   return true;
 }
 
@@ -421,25 +416,30 @@ bool TimeProperty::getOldDateTime(ActionContext &context, const char* actionName
   return true;
 }
 
-string TimeProperty::getDateTime(struct tm& dateTime, const char* actionName) {
+bool DateTimeModifier::setDateTime(const char* actionName, const char* datetimeFormat,
+                                      struct tm& dateTime, ActionContext& context) {
   if (mktime(&dateTime) == -1) {
     char buf[DATETIME_BUF_SIZE];
-    strftime(buf, DATETIME_BUF_SIZE, "%H:%M:%S", &dateTime);
+    strftime(buf, DATETIME_BUF_SIZE, datetimeFormat, &dateTime);
     smsc_log_warn(logger, "%s '%s' action : error time format. mktime can't normalize struct tm. time: '%s'",
                   DATETIME_ACTION, actionName, buf);
-    return "";
+    return false;
   }
   if (dateTime.tm_isdst == 1) {
     dateTime.tm_hour -= 1;
     if (mktime(&dateTime) == -1) {
       smsc_log_warn(logger, "%s '%s' action : error time format. mktime can't normalize struct tm",
                     DATETIME_ACTION, actionName);
-      return "";
+      return false;
     }
   }
+  if (!checkYear(dateTime.tm_year + 1900, actionName)) {              
+    return false;
+  }
   char buf[DATETIME_BUF_SIZE];
-  strftime(buf, DATETIME_BUF_SIZE, "%H:%M:%S", &dateTime);
-  return buf;
+  strftime(buf, DATETIME_BUF_SIZE, datetimeFormat, &dateTime);
+  property.setStrValue(buf, context);
+  return true;
 }
 
 bool TimeProperty::change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName) {
@@ -460,11 +460,7 @@ bool TimeProperty::change(ActionContext &context, Hash<ActionProperty>& properti
   if (p) {
     time_struct.tm_sec = p->getIntValue(context);
   }
-  string timeStr = getDateTime(time_struct, actionName);
-  if (timeStr.empty()) {
-    return false;
-  }
-  property.setStrValue(timeStr, context);
+  setDateTime(actionName, TIME_FORMAT, time_struct, context);
   return true;
 }
 
@@ -485,11 +481,7 @@ bool TimeProperty::add(ActionContext &context, Hash<ActionProperty>& properties,
   if (p) {
     time_struct.tm_sec += p->getIntValue(context) * sign;
   }
-  string timeStr = getDateTime(time_struct, actionName);
-  if (timeStr.empty()) {
-    return false;
-  }
-  property.setStrValue(timeStr, context);
+  setDateTime(actionName, TIME_FORMAT, time_struct, context);
   return true;
 }
 
@@ -511,9 +503,7 @@ bool DateTimeProperty::getOldDateTime(ActionContext &context, const char* action
                   DATETIME_ACTION, actionName, dateTimeStr.c_str());
     return false;
   }
-  if (!checkYear(old_year)) {
-    smsc_log_warn(logger, "%s '%s' action : error year value %d. Should be: 1900 < year < 2038",
-                  DATETIME_ACTION, actionName, old_year);
+  if (!checkYear(old_year, actionName)) {
     return false;
   }
   dateTime.tm_year = old_year - 1900;
@@ -522,30 +512,9 @@ bool DateTimeProperty::getOldDateTime(ActionContext &context, const char* action
   return true;
 }
 
-string DateTimeProperty::getDateTime(struct tm& dateTime, const char* actionName) {
-  if (mktime(&dateTime) == -1) {
-    char buf[DATETIME_BUF_SIZE];
-    strftime(buf, DATETIME_BUF_SIZE, "%d.%m.%Y %H:%M:%S", &dateTime);
-    smsc_log_warn(logger, "%s '%s' action : error datetime format. mktime can't normalize struct tm. datetime: '%s'",
-                  DATETIME_ACTION, actionName, buf);
-    return "";
-  }
-  if (dateTime.tm_isdst == 1) {
-    dateTime.tm_hour -= 1;
-    if (mktime(&dateTime) == -1) {
-      smsc_log_warn(logger, "%s '%s' action : error time format. mktime can't normalize struct tm",
-                    DATETIME_ACTION, actionName);
-      return "";
-    }
-  }
-  char buf[DATETIME_BUF_SIZE];
-  strftime(buf, DATETIME_BUF_SIZE, "%d.%m.%Y %H:%M:%S", &dateTime);
-  return buf;
-}
-
 bool DateTimeProperty::change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName) {
   struct tm dateTime;
-  if (!getOldDateTime(context,actionName,dateTime)) {
+  if (!getOldDateTime(context, actionName, dateTime)) {
     return false;
   }
   ActionProperty* p = properties.GetPtr(timeProperties[TIME_HOUR]);
@@ -564,18 +533,15 @@ bool DateTimeProperty::change(ActionContext &context, Hash<ActionProperty>& prop
   p = properties.GetPtr(dateProperties[DATE_YEAR]);
   if (p) {
     int new_year = p->getIntValue(context);
-    if (checkYear(new_year)) {
+    if (checkYear(new_year, actionName)) {
       dateTime.tm_year = new_year - 1900;
-    } else {
-      smsc_log_warn(logger, "%s '%s' action : error year new value %d. Should be: 1900 < year < 2038",
-                    DATETIME_ACTION, actionName, new_year);
     }
   }
 
   p = properties.GetPtr(dateProperties[DATE_MONTH]);
   if (p) {
     int new_mon = p->getIntValue(context);
-    if (new_mon != 0) {
+    if (new_mon > 0) {
       dateTime.tm_mon = new_mon - 1;
     } else {
       smsc_log_warn(logger, "%s '%s' action : error month new value %d", DATETIME_ACTION,
@@ -586,18 +552,14 @@ bool DateTimeProperty::change(ActionContext &context, Hash<ActionProperty>& prop
   p = properties.GetPtr(dateProperties[DATE_MDAY]);
   if (p) {
     int new_day = p->getIntValue(context);
-    if (new_day != 0) {
+    if (new_day > 0) {
       dateTime.tm_mday = new_day;
     } else {
       smsc_log_warn(logger, "%s '%s' action : error day new value %d", DATETIME_ACTION,
                     actionName, new_day);
     }
   }
-  string dateTimeStr = getDateTime(dateTime, actionName);
-  if (dateTimeStr.empty()) {
-    return false;
-  }
-  property.setStrValue(dateTimeStr, context);
+  setDateTime(actionName, DATETIME_FORMAT, dateTime, context);
   return true;
 }
 
@@ -630,14 +592,9 @@ bool DateTimeProperty::add(ActionContext &context, Hash<ActionProperty>& propert
   if (p) {
     dateTime.tm_sec += p->getIntValue(context) * sign;
   }
-  string dateTimeStr = getDateTime(dateTime, actionName);
-  if (dateTimeStr.empty()) {
-    return false;
-  }
-  property.setStrValue(dateTimeStr, context);
+  setDateTime(actionName, DATETIME_FORMAT, dateTime, context);
   return true;
 }
-
 
 }
 }

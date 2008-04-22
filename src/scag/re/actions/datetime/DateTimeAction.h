@@ -97,8 +97,8 @@ public:
   virtual ~DateTimeModifier() {};
 protected:
   virtual bool getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime) = 0;
-  virtual string getDateTime(struct tm& dateTime, const char* actionName) = 0;
-  bool checkYear(int year);
+  virtual bool setDateTime(const char* actionName, const char* datetimeFormat, struct tm& dateTime, ActionContext& context);
+  bool checkYear(int year, const char* actionName);
 protected:
   ActionProperty property;
   Logger* logger;
@@ -110,7 +110,6 @@ public:
   bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName);
   bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign);
 protected:
-  virtual string getDateTime(struct tm& dateTime, const char* actionName);
   virtual bool getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime) ;
 };
 
@@ -120,7 +119,6 @@ public:
   bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName);
   bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign);
 protected:
-  virtual string getDateTime(struct tm& dateTime, const char* actionName);
   virtual bool getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime);
 };
 
@@ -130,7 +128,6 @@ public:
   bool change(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName);
   bool add(ActionContext &context, Hash<ActionProperty>& properties, const char* actionName, int sign);
 protected:
-  virtual string getDateTime(struct tm& dateTime, const char* actionName);
   virtual bool getOldDateTime(ActionContext &context, const char* actionName, struct tm& dateTime);
 };
 
@@ -166,6 +163,7 @@ public:
   virtual ~CurrentDateTimeAction() {};
 private:
   CurrentDateTimeAction(const CurrentDateTimeAction&);
+  bool checkTimeZone(int timeZone);
 
 };
 
