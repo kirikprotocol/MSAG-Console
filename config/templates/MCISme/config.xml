@@ -34,6 +34,7 @@
 	<param name="forceInform" type="bool">true</param>
 	<param name="forceNotify" type="bool">true</param>
 	<param name="forceSeparate" type="bool">false</param>
+        <param name="reverseNotifyPolicy" type="bool">false</param>
 
 	<param name="CountryCode" type="string">@mcisme.CountryCode@</param>
         <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>
