@@ -2676,8 +2676,6 @@ StateType StateMachine::forward(Tuple& t)
   bool firstPart=true;
   if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
   {
-    unsigned len;
-    ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
     if(sms.getConcatSeqNum()!=0)
     {
       firstPart=false;
@@ -3534,26 +3532,23 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(sms.billingRequired() && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnDelivery)
   {
+    int statusType=GET_STATUS_TYPE(t.command->get_resp()->get_status());
     bool final=
-      GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK ||
-      GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_PERM ||
+      statusType==CMD_OK ||
+      statusType==CMD_ERR_PERM ||
       (
-       GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_ERR_TEMP &&
+       statusType==CMD_ERR_TEMP &&
        (
         sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)||
         (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2
        )
       );
-    if(GET_STATUS_TYPE(t.command->get_resp()->get_status())==CMD_OK)
+    if(multiPart)
     {
-      if(multiPart)
+      unsigned len;
+      if(sms.getConcatSeqNum()==0)
       {
-        unsigned len;
-        ConcatInfo *ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,&len);
-        if(sms.getConcatSeqNum()==0)
-        {
-          firstPart=true;
-        }
+        firstPart=true;
       }
     }
     smsc_log_debug(smsLog,"multiPart=%s, firstPart=%s, final=%s",multiPart?"true":"false",firstPart?"true":"false",final?"true":"false");
@@ -3577,7 +3572,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
       }
       sms.setLastResult(savedLastResult);
-      if(multiPart && (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x02) && firstPart)
+      if(multiPart && statusType==CMD_OK && (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x02) && firstPart)
       {
         smsc_log_info(smsLog,"Remove billing flag for multipart sms msgId=%lld",t.msgId);
         sms.setBillingRecord(0);
@@ -3637,6 +3632,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           sms.setNextTime(rescheduleSms(sms));
           bool saveNeedArchivate=sms.needArchivate;
           sms.needArchivate=false;
+          int savedBill=sms.billingRecord;
           sms.billingRecord=0;
           store->createSms(sms,t.msgId,smsc::store::CREATE_NEW_NO_CLEAR);
           int dest_proxy_index=smsc->getSmeIndex(sms.getDestinationSmeId());
@@ -3647,6 +3643,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
             store->changeSmsStateToDeleted(t.msgId);
           }
           sms.needArchivate=saveNeedArchivate;
+          sms.billingRecord=savedBill;
         }catch(std::exception& e)
         {
           warn2(smsLog,"Failed to create dpf sms:%s",e.what());
