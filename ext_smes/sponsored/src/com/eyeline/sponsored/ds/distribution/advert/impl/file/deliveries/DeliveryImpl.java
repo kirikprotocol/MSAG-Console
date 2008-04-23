@@ -1,7 +1,6 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries;
 
 import com.eyeline.sponsored.ds.distribution.advert.impl.AbstractDeliveryImpl;
-import com.eyeline.sponsored.ds.distribution.advert.Volume;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 

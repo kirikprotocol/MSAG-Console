@@ -73,7 +73,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     }
   }
 
-  private HashedDeliveriesFile getFile(Date date, boolean create) throws DataSourceException {
+  private HashedDeliveriesFile getAndCacheFile(Date date, boolean create) throws DataSourceException {
     final String id = df.format(date) + ".deliveries";
     try {
       cacheLock.lock();
@@ -83,7 +83,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
         File f = new File(storeDir, id);
         if (!create && !f.exists())
           return null;
-        page = new HashedDeliveriesFile(new DeliveriesFile(this, f, CalendarUtils.getDayStartInMillis(date)));
+        page = new HashedDeliveriesFile(new DeliveriesFileImpl(this, f, CalendarUtils.getDayStartInMillis(date)));
         cache.put(id, page);
       }
 
@@ -96,21 +96,27 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     }
   }
 
-  public DataSourceTransaction createTransaction() throws DataSourceException {
-    return new FakeTransaction();
+  public DataSourceTransaction createTransaction(Date date, String distrName, int volume, TimeZone tz, int size) throws DataSourceException {
+    HashedDeliveriesFile f = null;
+    try {
+      f = getAndCacheFile(date, true);
+      return f.createTransaction(distrName, volume, tz, size);
+    } catch (DeliveriesFileException e) {
+      throw new DataSourceException(e);
+    } finally {
+      if (f != null)
+        f.close();
+    }
   }
 
   public Delivery createDelivery() {
     return new DeliveryImpl(this);
   }
 
-  void saveDelivery(DeliveryImpl d) throws DataSourceException {
+  void saveDelivery(DeliveryImpl d, DataSourceTransaction t) throws DataSourceException {
     HashedDeliveriesFile f = null;
     try {
-      f = getFile(d.getStartDate(), true);
-      f.saveDelivery(d);
-    } catch (DeliveriesFileException e) {
-      throw new DataSourceException(e);
+      ((DeliveriesFileTransaction)t).saveDelivery(d);
     } finally {
       if (f != null)
         f.close();
@@ -120,8 +126,8 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
   void updateDelivery(DeliveryImpl d) throws DataSourceException {
     HashedDeliveriesFile f = null;
     try {
-      f = getFile(d.getStartDate(), true);
-      f.saveDelivery(d);
+      f = getAndCacheFile(d.getStartDate(), true);
+      f.updateDelivery(d);
     } catch (DeliveriesFileException e) {
       throw new DataSourceException(e);
     } finally {
@@ -132,7 +138,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
 
   public void lookupDeliveries(Date end, int limit, Collection<Delivery> result) throws DataSourceException {
     try {
-      HashedDeliveriesFile f = getFile(end, false);
+      HashedDeliveriesFile f = getAndCacheFile(end, false);
       if (f != null) {
         try {
           f.open();
@@ -149,7 +155,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
 
   public void lookupDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException {
     try {
-      HashedDeliveriesFile f = getFile(end, false);
+      HashedDeliveriesFile f = getAndCacheFile(end, false);
       if (f != null) {
         try {
           f.open();
@@ -178,12 +184,12 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
       int count = 0;
 
       // Get current date
-      f = getFile(date, false);
+      f = getAndCacheFile(date, false);
       if (f != null)
         count += f.getDeliveriesCount(date, tz, distrName);
 
       // Get previous date
-      f = getFile(CalendarUtils.getPrevDayStart(date), false);
+      f = getAndCacheFile(CalendarUtils.getPrevDayStart(date), false);
       if (f != null)
         count += f.getDeliveriesCount(date, tz, distrName);
 
@@ -201,37 +207,53 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
     clearCache(true);
   }
 
-  private static class FakeTransaction implements DataSourceTransaction {
 
-    public void commit() throws DataSourceException {
-    }
 
-    public void rollback() throws DataSourceException {
-    }
 
-    public void close() {
-    }
-  }
 
-  private static final class HashedDeliveriesFile {
-    private final DeliveriesFile impl;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  private static final class HashedDeliveriesFile implements DeliveriesFile {
+    private final DeliveriesFileImpl impl;
     private final Lock lock = new ReentrantLock();
 
     private long time;
     private boolean opened;
 
-    public HashedDeliveriesFile(DeliveriesFile f) {
+    public HashedDeliveriesFile(DeliveriesFileImpl f) {
       this.impl = f;
       this.time = System.currentTimeMillis();
       this.opened = false;
       open();
     }
 
-    public void saveDelivery(DeliveryImpl delivery) throws DeliveriesFileException {
+    public void updateDelivery(DeliveryImpl d) throws DeliveriesFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
-        impl.saveDelivery(delivery);
+        impl.updateDelivery(d);
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    public DeliveriesFileTransaction createTransaction(String distrName, int volume, TimeZone tz, int size) throws DeliveriesFileException {
+      try {
+        lock.lock();
+        time = System.currentTimeMillis();
+        return new HashedFileTransaction(impl.createTransaction(distrName, volume, tz, size));
       } finally {
         lock.unlock();
       }
@@ -304,6 +326,56 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
         lock.unlock();
       }
     }
+
+
+    private class HashedFileTransaction implements DeliveriesFileTransaction {
+
+      private final DeliveriesFileTransaction impl;
+
+      public HashedFileTransaction(DeliveriesFileTransaction impl) {
+        this.impl = impl;
+      }
+
+      public void saveDelivery(DeliveryImpl d) throws DataSourceException {
+        try {
+          lock.lock();
+          time = System.currentTimeMillis();
+          impl.saveDelivery(d);
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      public void commit() throws DataSourceException {
+        try {
+          lock.lock();
+          time = System.currentTimeMillis();
+          impl.commit();
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      public void rollback() throws DataSourceException {
+        try {
+          lock.lock();
+          time = System.currentTimeMillis();
+          impl.rollback();
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      public void close() {
+        try {
+          lock.lock();
+          time = System.currentTimeMillis();
+          impl.close();
+        } finally {
+          lock.unlock();
+        }
+      }
+    }
   }
 
 
@@ -323,7 +395,7 @@ public class FileDeliveriesDataSource implements DeliveriesDataSource {
         d = c.getTime();
         c.set(Calendar.MINUTE, c.get(Calendar.MINUTE) + 1);
         long start = System.currentTimeMillis();
-        Collection<Delivery> deliveries = new ArrayBlockingQueue<Delivery>(1000);
+        Collection<Delivery> deliveries = new ArrayBlockingQueue<Delivery>(100000);
         impl.lookupDeliveries(d, c.getTime(), deliveries);
         System.out.println((System.currentTimeMillis() - start) + " : " + deliveries.size());
       }
