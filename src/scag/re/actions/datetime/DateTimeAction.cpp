@@ -241,7 +241,7 @@ bool CurrentDateTimeAction::run(ActionContext &context) {
   }
   p = properties.GetPtr(dateProperties[DATE_WDAY]);
   if (p) {
-    size_t wday = time_struct.tm_wday == 0 ? 1 : time_struct.tm_wday;
+    size_t wday = time_struct.tm_wday == 0 ? 7 : time_struct.tm_wday;
     p->setIntValue(wday, context);
   }
   p = properties.GetPtr(dateProperties[DATE_YDAY]);
