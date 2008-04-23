@@ -839,11 +839,11 @@ public:
       throw ProxyQueueLimitException(MAPSTATS_dialogs[MAPSTAT_DLGINSRI],MapLimits::getInstance().getLimitInSRI());
     }
     MutexGuard g(sync);
+    if ( dialogId_pool.empty() ) {
+      Dump();
+      throw runtime_error("MAP:: POOL is empty");
+    }
     try{
-      if ( dialogId_pool.empty() ) {
-        Dump();
-        throw runtime_error("MAP:: POOL is empty");
-      }
       ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
       MAPSTATS_Update(MAPSTATS_NEWDIALOG_INSRI);
       MapDialog* dlg=newDialog(map_dialog,lssn,2);
@@ -1087,6 +1087,7 @@ public:
         }
         dlgPool[oldssn][did]=swpdlg;
         dlgPool[ssn][dialogid_map]=dlg;
+        dlg->dlgType = MAPSTAT_DLGOUT;
         dlg->dialogid_map = dialogid_map;
         dlg->ssn = ssn;
         dlg->lockedAt = time(NULL);
