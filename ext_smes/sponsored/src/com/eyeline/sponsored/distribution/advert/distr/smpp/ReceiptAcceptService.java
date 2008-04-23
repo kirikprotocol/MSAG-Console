@@ -31,9 +31,8 @@ public class ReceiptAcceptService implements SMPPService {
 
     final Message reqMsg = smppRequest.getInObj().getMessage();
 
-    if (log.isDebugEnabled()) {
+    if (log.isDebugEnabled())
       log.debug("Delivery receipt req: subscr=" + reqMsg.getSourceAddress() + "; state=" + reqMsg.getMessageState());
-    }
 
     if (reqMsg.isReceipt()) {
       if (reqMsg.getMessageState() == Message.MSG_STATE_DELIVERED) {
@@ -43,9 +42,8 @@ public class ReceiptAcceptService implements SMPPService {
           log.error("Handle receipt failed", e);
         }
       }
-    } else {
+    } else
       log.error("Not receipt handled!");
-    }
   }
 
   public void init(OutgoingQueue outgoingQueue, Properties properties) throws SMPPServiceException {    

@@ -92,8 +92,11 @@ public class DeliveriesGenerator {
   }
 
   private void scheduleDeliveries(String distributionName, Date startDate, Date endDate, Map<Integer, VolumeGroup> volumeGroups, TimeZone tz) {
-    DataSourceTransaction stx = null, dtx = null;
+    DataSourceTransaction stx = null;
     ResultSet<SubscriptionRow> rs = null;
+
+    // Create transactions
+    final Map<Integer, DataSourceTransaction> dtxs = new HashMap<Integer, DataSourceTransaction>(10);
 
     try {
       // Create subscriptions data source transaction
@@ -103,7 +106,8 @@ public class DeliveriesGenerator {
       rs = subscriptionDS.lookupFullSubscriptionInfo(distributionName, startDate, tz, stx);
 
       // Create distribution data source transaction
-      dtx = distributionDS.createTransaction();
+      for (VolumeGroup g : volumeGroups.values())
+        dtxs.put(g.volume, distributionDS.createTransaction(startDate, distributionName, g.volume, tz, (int)Math.round(g.numberOfSubscribers)));
 
       Delivery delivery;
       while(rs.next()) {
@@ -123,18 +127,21 @@ public class DeliveriesGenerator {
         g.abonentNumber++;
 
         // Store delivery
-        delivery.save(dtx);
+        delivery.save(dtxs.get(g.volume));
       }                                                                                                 
 
       // Commit distribution DS transaction
-      dtx.commit();
+      for (DataSourceTransaction dtx : dtxs.values())
+        dtx.commit();
+
       System.out.println("Deliveries generated successfully: distr=" + distributionName + "; tz=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);
     } catch (Throwable e) {
       System.out.println("Deliveries creation failed distrName=" + distributionName + "; TZ=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);
       e.printStackTrace();
       // Rollback distribution DS transaction
       try {
-        dtx.rollback();
+        for (DataSourceTransaction dtx : dtxs.values())
+          dtx.rollback();
       } catch (DataSourceException e1) {
         e1.printStackTrace();
       }
@@ -142,7 +149,7 @@ public class DeliveriesGenerator {
       if (stx != null)
         stx.close();
 
-      if (dtx != null)
+      for (DataSourceTransaction dtx : dtxs.values())
         dtx.close();
 
       try {

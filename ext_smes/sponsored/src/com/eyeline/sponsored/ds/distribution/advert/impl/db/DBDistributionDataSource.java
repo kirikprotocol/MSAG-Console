@@ -42,6 +42,10 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     return createDBTransaction(false);
   }
 
+  public DataSourceTransaction createTransaction(Date date, String distrName, int volume, TimeZone tz, int size) throws DataSourceException {
+    return createDBTransaction(false);
+  }
+
   public Delivery createDelivery() {
     return new DeliveryImpl(this);
   }

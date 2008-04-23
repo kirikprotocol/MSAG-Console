@@ -14,7 +14,8 @@ import java.util.Collection;
  */
 
 public interface DeliveriesDataSource {
-  public DataSourceTransaction createTransaction() throws DataSourceException;
+
+  public DataSourceTransaction createTransaction(Date date, String distrName, int volume, TimeZone tz, int size) throws DataSourceException;
 
   public Delivery createDelivery();
 

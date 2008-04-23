@@ -1,6 +1,7 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries;
 
 import com.eyeline.sponsored.ds.distribution.advert.impl.AbstractDeliveryImpl;
+import com.eyeline.sponsored.ds.distribution.advert.Volume;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 
@@ -31,11 +32,11 @@ public class DeliveryImpl extends AbstractDeliveryImpl {
   }
 
   public void save() throws DataSourceException {
-    ds.saveDelivery(this);
+    ds.updateDelivery(this);
   }
 
   public void save(DataSourceTransaction tx) throws DataSourceException {
-    ds.saveDelivery(this);
+    ds.saveDelivery(this, tx);
   }
 
   public void remove() throws DataSourceException {
