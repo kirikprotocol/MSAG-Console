@@ -10,7 +10,8 @@
    xmlns:send="http://www.sibinco.com/SCAG/SEND"
    xmlns:profile="http://www.sibinco.com/SCAG/PROFILE"
    xmlns:log="http://www.sibinco.com/SCAG/LOG"
-   xmlns:http="http://www.sibinco.com/SCAG/HTTP">
+   xmlns:http="http://www.sibinco.com/SCAG/HTTP"
+   xmlns:datetime="http://www.sibinco.com/SCAG/DATETIME">
     
     <annotation>
         <documentation xml:lang="en">
@@ -28,6 +29,7 @@
     <import schemaLocation="log.xsd"        namespace="http://www.sibinco.com/SCAG/LOG"/>
     <import schemaLocation="http.xsd"       namespace="http://www.sibinco.com/SCAG/HTTP"/>
     <import schemaLocation="smpp.xsd" 	    namespace="http://www.sibinco.com/SCAG/SMPP"/>
+    <import schemaLocation="datetime.xsd"   namespace="http://www.sibinco.com/SCAG/DATETIME"/>
 
         
     <!-- General values types definition  -->
@@ -117,6 +119,7 @@
             <group ref="log:Actions" />
             <group ref="http:Actions" />
             <group ref="smpp:Actions" />
+            <group ref="datetime:Actions" />
 
             <element name="set">
                 <complexType>
