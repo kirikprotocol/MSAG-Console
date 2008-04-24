@@ -5,6 +5,7 @@
 #include <malloc.h>
 #include <memory.h>
 #include <time.h>
+#include <pthread.h>
 #include "util/debug.h"
 #include "util/smstext.h"
 #include "sms/sms.h"
@@ -227,6 +228,7 @@ struct MapDialog{
   bool isAllocated:1;
   bool isDropping:1;
   bool needReportMsc:1;
+  bool ussdProcessing:1;
   MapState state;
   int dlgType;
   ET96MAP_DIALOGUE_ID_T dialogid_map;
@@ -263,6 +265,7 @@ struct MapDialog{
   long long maked_at_mks;
   time_t   lockedAt;
   smsc::core::buffers::CyclicQueue<MSG_T> cmdQueue;
+  pthread_cond_t condVar;
 
   MapDialog()
   {
@@ -287,6 +290,7 @@ struct MapDialog{
     isQueryAbonentStatus=false;
     dropChain=false;
     id_opened=false;
+    ussdProcessing=false;
     state=MAPST_START;
     dialogid_map=dialogid;
     dialogid_smsc=0;
@@ -323,6 +327,7 @@ struct MapDialog{
     chain.clear();
     sms = auto_ptr<SMS>(0);
     auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(0);
+    pthread_cond_init(&condVar,0);
   }
 /*
   void CopyFrom(MapDialog& dlg)

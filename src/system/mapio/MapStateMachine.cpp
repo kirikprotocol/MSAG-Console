@@ -10,6 +10,7 @@
 #include <sstream>
 #include <iomanip>
 #include "FraudControl.hpp"
+#include "core/synchronization/EventMonitor.hpp"
 
 using namespace std;
 
@@ -58,9 +59,34 @@ typedef std::map<ET96MAP_ADDRESS_T,XMOMAPLocker,ET96MAP_ADDRESS_LESS> XMOMAP;
 //typedef multimap<string,unsigned> X_MAP;
 //static X_MAP x_map;
 
-static Mutex ussd_map_lock;
+static EventMonitor ussd_map_lock;
 typedef std::map<long long,unsigned> USSD_MAP;
 static USSD_MAP ussd_map;
+
+struct UssdProcessingGuard{
+  MapDialog* dlg;
+  UssdProcessingGuard():dlg(0)
+  {
+  }
+  ~UssdProcessingGuard()
+  {
+    if(dlg)
+    {
+      MutexGuard mg(ussd_map_lock);
+      dlg->ussdProcessing=false;
+      ussd_map_lock.notify(&dlg->condVar);
+    }
+  }
+  void lockProcessing(MapDialog* argDlg)
+  {
+    dlg=argDlg;
+    while(dlg->ussdProcessing)
+    {
+      ussd_map_lock.wait(&dlg->condVar);
+    }
+    dlg->ussdProcessing=true;
+  }
+};
 
 static Mutex x_momap_lock;
 static XMOMAP x_momap;
@@ -1611,6 +1637,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       {
         // USSD dialog already exists on this abonent
         dlg_found = true;
+
       } else {
         ussd_map[dialog->ussdSequence] = (((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
       }
@@ -1718,6 +1745,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   unsigned dialogid_map = 0;
   unsigned dialog_ssn = 0;
   DialogRefGuard dialog;
+  UssdProcessingGuard ussdGuard;
     MAP_TRY {
     if( !isMapBound() || MAP_disconnectDetected )
     {
@@ -1761,6 +1789,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                       FormatText("putCommand: Found dialog is not USSD for smsc_id:0x%x, ussd_seq: %s",dialogid_smsc,s_seq.c_str()));
                   __require__(dialog->ssn == dialog_ssn);
                   dlg_found = true;
+                  ussdGuard.lockProcessing(dialog.get());
                 } else
                 {
                   __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x but no dialog exists, erase ussd lock", __func__,sequence,dialogid_map);
@@ -1791,6 +1820,12 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 MutexGuard mg(dialog->mutex);
                 if(!dialog->isDropping)
                 {
+                  if(!dialog->chain.empty())
+                  {
+                    throw MAPDIALOG_FATAL_ERROR(
+                      FormatText("putCommand: dlgId:0x%x attempt to chain ussd command when already chained something",
+                        dialog->dialogid_map));
+                  }
                   dialog->chain.insert(dialog->chain.begin(), cmd);
                 }else
                 {
@@ -1826,6 +1861,12 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   MutexGuard mg(dialog->mutex);
                   if(!dialog->isDropping)
                   {
+                    if(!dialog->chain.empty())
+                    {
+                      throw MAPDIALOG_FATAL_ERROR(
+                        FormatText("putCommand: dlgId:0x%x attempt to chain ussd command when already chained something",
+                          dialog->dialogid_map));
+                    }
                     dialog->chain.insert(dialog->chain.begin(), cmd);
                   }else
                   {
@@ -1851,17 +1892,24 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 try{
                   if( !dialog2 ) { // not chained dialog
                     try {
+                      MutexGuard mg(ussd_map_lock);
+                      USSD_MAP::iterator it=ussd_map.find(sequence);
+                      if(it!=ussd_map.end())
+                      {
+                        throw MAPDIALOG_FATAL_ERROR(
+                          FormatText("putCommand: dlgId:0x%x ussd_lock %d already exists for NIUSSD",
+                                     dialogid_smsc,sequence));
+                      }
+
                       dialog.assign(MapDialogContainer::getInstance()->
                               createOrAttachSMSCUSSDDialog(
                                 dialogid_smsc,
                                 SSN,
                                 string(cmd->get_sms()->getDestinationAddress().value),
                                 cmd));
-                    } catch (ChainIsVeryLong& e) {
-                      __map_trace2__("%s: %s ",__func__,e.what());
-                      SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::MSGQFUL));
-                      //throw MAPDIALOG_TEMP_ERROR("MAP::PutCommand: can't create dialog");
-                      return;
+                      uint32_t val=(((uint32_t)dialog->ssn)<<16)|dialog->dialogid_map;
+                      ussd_map.insert(USSD_MAP::value_type(sequence,val));
+                      ussdGuard.lockProcessing(dialog.get());
                     } catch (exception& e) {
                       __map_trace2__("%s: %s ",__func__,e.what());
                       SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
@@ -1875,6 +1923,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                     }
                   } else {
                     // command taken from chain
+                    __map_warn__("putCommand: chained command for NIUSSD. Shoudn't happen.");
+                    SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
+                    return;
+
+                    /*
                     dialog_ssn = SSN;
                     dialog.assign(dialog2->AddRef());
                     dialogid_map = dialog->dialogid_map;
@@ -1883,6 +1936,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                     dialog->id_opened = false;
                     dialog->dialogid_smsc = dialogid_smsc;
                     dialog->dropChain = false;
+                    */
                   }
                 }catch(MAPDIALOG_ERROR& e){
                   throw;
@@ -1891,9 +1945,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   throw MAPDIALOG_FATAL_ERROR("putCommand: can't create dialog");
                 }
                 if( dialog.isnull() ) {
-                  __map_trace__("putCommand: can't create SMSC->MS ussd dialog (locked), request has bean attached");
+                  __map_warn__("putCommand: can't create SMSC->MS ussd dialog. Shouldn't happen.");
                   // command has bean attached by dialog container
                 } else {
+                  
                   dialog->dropChain = false;
                   dialog->wasDelivered = false;
                   dialog->hlrWasNotified = false;
