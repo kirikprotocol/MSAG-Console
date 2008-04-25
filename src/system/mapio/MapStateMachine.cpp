@@ -1822,9 +1822,9 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 {
                   if(!dialog->chain.empty())
                   {
-                    throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: dlgId:0x%x attempt to chain ussd command when already chained something",
-                        dialog->dialogid_map));
+                    SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::INVOPTPARAMVAL));
+                    __map_warn2__("Attempt to chain 2nd command(smscid=%d) to ussd dialog dlgId=%x",dialogid_smsc,dialog->dialogid_map);
+                    return;
                   }
                   dialog->chain.insert(dialog->chain.begin(), cmd);
                 }else
@@ -1863,9 +1863,9 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   {
                     if(!dialog->chain.empty())
                     {
-                      throw MAPDIALOG_FATAL_ERROR(
-                        FormatText("putCommand: dlgId:0x%x attempt to chain ussd command when already chained something",
-                          dialog->dialogid_map));
+                      __map_warn2__("Attempt to chain 2nd command(smscid=%d) to ussd dialog dlgId=%x",dialogid_smsc,dialog->dialogid_map);
+                      SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::INVOPTPARAMVAL));
+                      return;
                     }
                     dialog->chain.insert(dialog->chain.begin(), cmd);
                   }else
@@ -1896,9 +1896,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                       USSD_MAP::iterator it=ussd_map.find(sequence);
                       if(it!=ussd_map.end())
                       {
-                        throw MAPDIALOG_FATAL_ERROR(
-                          FormatText("putCommand: dlgId:0x%x ussd_lock %d already exists for NIUSSD",
-                                     dialogid_smsc,sequence));
+                        __map_warn2__("putCommand: dlgId:0x%x ussd_lock %d already exists for NIUSSD",
+                                     dialogid_smsc,sequence);
+                        SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
+                        return;
                       }
 
                       dialog.assign(MapDialogContainer::getInstance()->
