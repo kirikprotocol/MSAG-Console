@@ -6,7 +6,7 @@
 
 namespace sua_messages {
 
-typedef enum { CLASS0_CONNECIONLESS=0, CLASS1_CONNECIONLESS=0,
+typedef enum { CLASS0_CONNECIONLESS=0, CLASS1_CONNECIONLESS=1,
                  CLASS2_CONNECION_ORIENTED=2, CLASS3_CONNECION_ORIENTED=3 } protocol_class_t;
 typedef enum { NO_SPECIAL_OPTION=0, RETURN_MSG_ON_ERROR =1 } ret_on_err_ind_t;
 
