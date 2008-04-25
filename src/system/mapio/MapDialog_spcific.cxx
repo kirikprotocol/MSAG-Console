@@ -130,7 +130,7 @@ inline unsigned ConvertText27bit(
 #undef __pchar
 #undef __escape
   }
-  unsigned _7bit_len = bit7buf-base+(shift?1:0);
+  unsigned _7bit_len = (unsigned)(bit7buf-base+(shift?1:0));
   return _7bit_len;
 }
 
@@ -144,7 +144,7 @@ inline unsigned ConvertSMSC7bit27bit(
   for ( unsigned i=0; i< chars; ++i ){
     PutChar(bit7buf,shift,text[i],bit7buf_end);
   }
-  unsigned _7bit_len = bit7buf-base+(shift?1:0);
+  unsigned _7bit_len = (unsigned)(bit7buf-base+(shift?1:0));
   return _7bit_len;
 }
 
@@ -270,12 +270,12 @@ inline void mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned l
 }
 
 inline void mkIMSIOrMSISDNFromIMSI( ET96MAP_IMSI_OR_MSISDN_T *addr, string &s_imsi ) {
-  int len = s_imsi.length();
-  int sz = (len+1)/2;
-  addr->imsiOrMsisdnLen = sz;
+  size_t len = s_imsi.length();
+  size_t sz = (len+1)/2;
+  addr->imsiOrMsisdnLen = (UCHAR_T)sz;
   const char *value = s_imsi.c_str();
-  for( int i = 0; i < len; i++ ) {
-    int bi = i/2;
+  for( size_t i = 0; i < len; i++ ) {
+    UCHAR_T bi = (UCHAR_T)i/2;
     if( i%2 == 1 ) {
       addr->imsiOrMsisdn[bi] |= ((value[i]-'0')<<4); // fill high octet
     } else {
@@ -415,7 +415,7 @@ inline void ConvAddrIMSI2Smc(const ET96MAP_IMSI_T* ma,Address* sa)
       sa_ptr++;
     }
   }
-  sa->setValue(sa_ptr-sa_val,sa_val);
+  sa->setValue((uint8_t)(sa_ptr-sa_val),sa_val);
 }
 
 extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
