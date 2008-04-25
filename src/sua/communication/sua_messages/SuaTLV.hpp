@@ -279,8 +279,7 @@ private:
 class TLV_AffectedPointCode : public TLV_OctetArrayPrimitive<MAX_OCTET_ARRAY_SIZE> {
 public:
   TLV_AffectedPointCode();
-  explicit TLV_AffectedPointCode(const ANSI_PC& pc);
-  explicit TLV_AffectedPointCode(const ITU_PC& pc);
+  explicit TLV_AffectedPointCode(const PointCode& pc);
 
   virtual std::string toString() const;
 

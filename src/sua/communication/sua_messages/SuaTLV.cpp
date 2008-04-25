@@ -756,13 +756,8 @@ TLV_AffectedPointCode::TLV_AffectedPointCode()
   : TLV_OctetArrayPrimitive(TAG), _nextPCOffset(0)
  {}
 
-TLV_AffectedPointCode::TLV_AffectedPointCode(const ANSI_PC& pc)
+TLV_AffectedPointCode::TLV_AffectedPointCode(const PointCode& pc)
   : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE), 
-    _nextPCOffset(0)
-{}
-
-TLV_AffectedPointCode::TLV_AffectedPointCode(const ITU_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE),
     _nextPCOffset(0)
 {}
 
