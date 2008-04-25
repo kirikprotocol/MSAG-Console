@@ -44,7 +44,6 @@ public class DistributionSme extends Sme {
 
   private DeliveriesDataSource deliveriesDataSource;
   private DeliveryStatsDataSource deliveryStatsDataSource;
-  private AdvertisingClientFactory advertisingClientFactory;
   private DeliveriesGenerator deliveriesGenerator;
   private DBSubscriptionDataSource subscriptionDataSource;
   private ScheduledExecutorService deliveriesGeneratorExecutor;
@@ -83,10 +82,11 @@ public class DistributionSme extends Sme {
       subscriptionDataSource.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
 
       // Init advertising client factory
-      advertisingClientFactory = new AdvertisingClientFactory(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
+      AdvertisingClientFactory advertisingClientFactory = new AdvertisingClientFactory(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
 
       // Init banner map
-      bannerMap = new JNIBannerMapImpl(new File(c.getFileStorageStoreDir(), "banner.bin").getAbsolutePath(), 360, 10000);
+      bannerMap = new JNIBannerMapImpl(new File(c.getFileStorageStoreDir(), "banner.bin").getAbsolutePath(), 500, 20000,
+                                      new File(c.getFileStorageStoreDir(), "banner_keys.bin").getAbsolutePath());
 
       DeliveryStatsProcessor.init(deliveryStatsDataSource, timezones, bannerMap);
 
@@ -99,14 +99,13 @@ public class DistributionSme extends Sme {
         engine.init(c.getDeliveriesSendSpeedLimit(), c.getDeliveriesFetchInterval());
         distrEngine = engine;
       } else if (c.getEngineType().equals("interval")) {
-        IntervalDistributionEngine engine = new IntervalDistributionEngine(outQueue,
-                                                                           deliveriesDataSource,
-                                                                           advertisingClientFactory,
-                                                                           bannerMap,
-                                                                           c.getDeliveriesFetchInterval(),
-                                                                           c.getDeliveriesPrepareInterval(),
-                                                                           c.getPoolSize());        
-        distrEngine = engine;
+        distrEngine = new IntervalDistributionEngine(outQueue,
+                                                     deliveriesDataSource,
+                                                     advertisingClientFactory,
+                                                     bannerMap,
+                                                     c.getDeliveriesFetchInterval(),
+                                                     c.getDeliveriesPrepareInterval(),
+                                                     c.getPoolSize());        
       } else
         throw new InitException("Unknown distribution engine type: " + c.getEngineType());
 
@@ -148,6 +147,7 @@ public class DistributionSme extends Sme {
     deliveryStatsDataSource.shutdown();
     subscriptionDataSource.shutdown();
     deliveriesGeneratorExecutor.shutdown();
+    bannerMap.close();
   }
 
   public static void main(String[] args) {

@@ -1,9 +1,9 @@
 package com.eyeline.sponsored.distribution.advert.distr.core;
 
-import com.eyeline.sponsored.utils.CalendarUtils;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.banner.BannerMap;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import com.eyeline.sponsored.utils.CalendarUtils;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
@@ -18,7 +18,7 @@ import java.util.TimeZone;
 
 public class DeliveryStatsProcessor {
 
-  private static DeliveryStatsProcessor instance;
+  private static DeliveryStatsProcessor instance = null;
 
   private final DeliveryStatsDataSource ds;
   private final SmscTimezonesList timezones;
@@ -57,7 +57,7 @@ public class DeliveryStatsProcessor {
     }
 
     // Get advertiser id from banner map
-    int advertiserId = -1;
+    int advertiserId;
     try {
       advertiserId = bannerMap.get(Long.parseLong(messageId));
     } catch (NumberFormatException e) {
@@ -66,7 +66,10 @@ public class DeliveryStatsProcessor {
 
     // Update delivery stats
     try {
-      ds.addDeliveryStat(subscriberAddress, advertiserId, tzDayStart, deliveryInc, 0);
+      if (advertiserId != Integer.MIN_VALUE)
+        ds.addDeliveryStat(subscriberAddress, advertiserId, tzDayStart, deliveryInc, 0);
+      else
+        throw new ProcessorException("Advertiser id not found for msg = " + messageId);
     } catch (DataSourceException e) {
       throw new ProcessorException(e);
     }

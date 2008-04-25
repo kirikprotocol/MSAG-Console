@@ -1,15 +1,17 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.db;
 
+import com.eyeline.sponsored.ds.AbstractDBResultSetImpl;
 import com.eyeline.sponsored.ds.AbstractDBTransaction;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
-import com.eyeline.sponsored.ds.AbstractDBResultSetImpl;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 
 import java.sql.*;
-import java.util.*;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  *

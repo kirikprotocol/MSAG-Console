@@ -10,5 +10,6 @@ public interface BannerMap {
   public void put(long messageId, int advertiserId);
 
   public int get(long messageId);
-  
+
+  public void close();
 }

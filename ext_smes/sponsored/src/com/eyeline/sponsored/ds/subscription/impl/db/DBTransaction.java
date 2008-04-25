@@ -1,6 +1,9 @@
 package com.eyeline.sponsored.ds.subscription.impl.db;
 
-import com.eyeline.sponsored.ds.*;
+import com.eyeline.sponsored.ds.AbstractDBResultSetImpl;
+import com.eyeline.sponsored.ds.AbstractDBTransaction;
+import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.subscription.Distribution;
 import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
 import com.eyeline.sponsored.ds.subscription.VolumeStat;
@@ -8,7 +11,6 @@ import com.eyeline.sponsored.ds.subscription.impl.AbstractSubscriptionRowImpl;
 import com.eyeline.sponsored.ds.subscription.impl.AbstractVolumeStatImpl;
 
 import java.sql.*;
-import java.sql.ResultSet;
 import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -91,7 +93,7 @@ class DBTransaction extends AbstractDBTransaction implements DataSourceTransacti
     }
   }
 
-  private Distribution.Status getDistributionStatus(int status) {
+  private static Distribution.Status getDistributionStatus(int status) {
     switch (status) {
       case 0:
         return Distribution.Status.OPENED;

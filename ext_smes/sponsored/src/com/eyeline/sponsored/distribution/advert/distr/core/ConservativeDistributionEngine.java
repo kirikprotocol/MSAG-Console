@@ -55,16 +55,14 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   }
 
   public void stop() {
-    started = false;
-    synchronized(worker) {
-      worker.notifyAll();
-    }
+    worker.shutdown();
   }
 
   private class Work extends Thread {
 
     private final long fetchInterval;
-    private final int sendSpeedLimit;     
+    private final int sendSpeedLimit;
+    private boolean started = true;
 
     public Work(long fetchInterval, int sendSpeedLimit) {
       super("ConsDistrEngineThread");
@@ -73,7 +71,7 @@ public class ConservativeDistributionEngine implements DistributionEngine {
     }
 
     private void sendDeliveries(List<Delivery> deliveries, Date end, int totalLimit) {
-      if (deliveries.size() == 0)
+      if (deliveries.isEmpty())
         return;
 
       final long sendDelay = 1000 / sendSpeedLimit;
@@ -141,6 +139,10 @@ public class ConservativeDistributionEngine implements DistributionEngine {
         }
 
       }
+    }
+
+    public void shutdown() {
+      started = false;
     }
 
     public void run() {

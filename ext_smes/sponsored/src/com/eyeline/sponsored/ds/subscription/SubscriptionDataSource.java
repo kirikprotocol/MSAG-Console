@@ -1,6 +1,8 @@
 package com.eyeline.sponsored.ds.subscription;
 
-import com.eyeline.sponsored.ds.*;
+import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.DataSourceTransaction;
+import com.eyeline.sponsored.ds.ResultSet;
 
 import java.util.Date;
 import java.util.TimeZone;

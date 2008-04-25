@@ -1,6 +1,8 @@
 package com.eyeline.sponsored.ds;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 
 /**
  * User: artem
@@ -15,7 +17,7 @@ public class AbstractDBTransaction {
     this.conn = conn;
   }
 
-  public void close(java.sql.ResultSet rs, PreparedStatement ps) {
+  public static void close(java.sql.ResultSet rs, PreparedStatement ps) {
     try {
       if (rs != null) {
         rs.close();

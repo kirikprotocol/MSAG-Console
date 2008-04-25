@@ -10,7 +10,14 @@ package com.eyeline.jstore;
 
 public class JStore4Java {
 
-  
+  static {
+    try {
+      System.loadLibrary("JStore4Java");
+    } catch (UnsatisfiedLinkError e) {
+      System.out.println("JStore4Java library not found");
+      e.printStackTrace();
+    }
+  }
 
   private long swigCPtr;
   protected boolean swigCMemOwn;
@@ -62,6 +69,14 @@ public class JStore4Java {
 
   public void Stop() {
     JStoreJNI.JStore4Java_Stop(swigCPtr, this);
+  }
+
+  public void First() {
+    JStoreJNI.JStore4Java_First(swigCPtr, this);
+  }
+
+  public boolean Next(long[] keyptr) {
+    return JStoreJNI.JStore4Java_Next(swigCPtr, this, keyptr);
   }
 
   public JStore4Java() {

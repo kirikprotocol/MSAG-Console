@@ -1,10 +1,9 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.DeliveryStatImpl;
 
-import java.util.ArrayList;
 import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
 
 /**
  * User: artem

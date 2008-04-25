@@ -1,9 +1,9 @@
 package com.eyeline.sponsored.ds.subscription.impl;
 
-import com.eyeline.sponsored.ds.subscription.Subscription;
-import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
 import com.eyeline.sponsored.ds.subscription.Distribution;
 import com.eyeline.sponsored.ds.subscription.Subscriber;
+import com.eyeline.sponsored.ds.subscription.Subscription;
+import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
 
 /**
  *

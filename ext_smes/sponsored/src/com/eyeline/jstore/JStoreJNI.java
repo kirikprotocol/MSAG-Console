@@ -9,7 +9,6 @@
 package com.eyeline.jstore;
 
 class JStoreJNI {
-
   public final static native void JStore4Java_Init(long jarg1, JStore4Java jarg1_, String jarg2, int jarg3, int jarg4);
   public final static native void JStore4Java_Insert(long jarg1, JStore4Java jarg1_, long jarg2, int jarg3);
   public final static native void JStore4Java_Delete(long jarg1, JStore4Java jarg1_, long jarg2);
@@ -17,6 +16,8 @@ class JStoreJNI {
   public final static native void JStore4Java_setWaitRolling(long jarg1, JStore4Java jarg1_, boolean jarg2);
   public final static native void JStore4Java_forceRoll(long jarg1, JStore4Java jarg1_);
   public final static native void JStore4Java_Stop(long jarg1, JStore4Java jarg1_);
+  public final static native void JStore4Java_First(long jarg1, JStore4Java jarg1_);
+  public final static native boolean JStore4Java_Next(long jarg1, JStore4Java jarg1_, long[] jarg2);
   public final static native long new_JStore4Java();
   public final static native void delete_JStore4Java(long jarg1);
 }

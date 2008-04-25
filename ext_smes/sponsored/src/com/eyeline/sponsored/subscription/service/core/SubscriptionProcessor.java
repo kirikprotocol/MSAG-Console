@@ -4,15 +4,15 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.subscription.Distribution;
 import com.eyeline.sponsored.ds.subscription.Subscriber;
-import com.eyeline.sponsored.ds.subscription.*;
 import com.eyeline.sponsored.ds.subscription.Subscription;
-
-import java.util.Date;
-import java.util.TimeZone;
+import com.eyeline.sponsored.ds.subscription.SubscriptionDataSource;
 import org.apache.log4j.Category;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
+
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  *
@@ -21,7 +21,7 @@ import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
 public class SubscriptionProcessor {
 
   private static final Category log = Category.getInstance("SUBSCRIPTION");
-  private static SubscriptionProcessor instance;
+  private static SubscriptionProcessor instance = null;
   //
   private final SubscriptionDataSource ds;
   private final SmscTimezonesList timezones;
@@ -42,7 +42,7 @@ public class SubscriptionProcessor {
   private Subscriber createSubscriber(String subscriberAddress, DataSourceTransaction t) throws ProcessorException {
     final Subscriber subscriber = ds.createSubscriber();
     subscriber.setAddress(subscriberAddress);
-    SmscTimezone tz = null;
+    SmscTimezone tz;
     try {
       tz = timezones.getTimezoneByAddress(subscriberAddress);
     } catch (SmscTimezonesListException e) {
@@ -93,7 +93,7 @@ public class SubscriptionProcessor {
 
   private Distribution getDistribution(String distributionName, DataSourceTransaction t) throws ProcessorException {
     // Lookup distribution
-    Distribution distribution = null;
+    Distribution distribution;
     try {
       distribution = ds.lookupDistribution(distributionName, t);
     } catch (DataSourceException e) {

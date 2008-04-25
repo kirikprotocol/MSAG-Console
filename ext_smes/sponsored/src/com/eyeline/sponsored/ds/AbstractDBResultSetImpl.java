@@ -1,7 +1,5 @@
 package com.eyeline.sponsored.ds;
 
-import com.eyeline.sponsored.ds.DataSourceException;
-
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;

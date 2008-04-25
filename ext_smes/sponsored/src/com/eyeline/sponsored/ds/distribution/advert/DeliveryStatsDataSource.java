@@ -1,7 +1,6 @@
 package com.eyeline.sponsored.ds.distribution.advert;
 
 import com.eyeline.sponsored.ds.DataSourceException;
-import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.ResultSet;
 
 import java.util.Date;

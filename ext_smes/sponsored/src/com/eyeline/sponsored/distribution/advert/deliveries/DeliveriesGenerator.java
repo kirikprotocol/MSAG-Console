@@ -107,7 +107,7 @@ public class DeliveriesGenerator {
 
       // Create distribution data source transaction
       for (VolumeGroup g : volumeGroups.values())
-        dtxs.put(g.volume, distributionDS.createTransaction(startDate, distributionName, g.volume, tz, (int)Math.round(g.numberOfSubscribers)));
+        dtxs.put(g.volume, distributionDS.createInsertTransaction(startDate, endDate, distributionName, g.volume, tz, (int)Math.round(g.numberOfSubscribers)));
 
       Delivery delivery;
       while(rs.next()) {
@@ -182,17 +182,14 @@ public class DeliveriesGenerator {
         }
 
         // Check deliveries already created
-        int deliveriesCount;
         try {
-          deliveriesCount = distributionDS.getDeliveriesCount(startDate, tz, info.getDistributionName());
+          if (distributionDS.hasDeliveries(startDate, tz, info.getDistributionName())) {
+            System.out.println("Active deliveries found: distr=" + info.getDistributionName() + "; tz=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);
+            continue;
+          }
         } catch (DataSourceException e) {
           e.printStackTrace();
           return;
-        }
-
-        if (deliveriesCount > 0) {
-          System.out.println("Active deliveries found: distr=" + info.getDistributionName() + "; tz=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);
-          continue;
         }
 
         System.out.println("Deliveries generation: distr=" + info.getDistributionName() + "; tz=" + tz.getID() + "; start=" + startDate + "; end=" + endDate);

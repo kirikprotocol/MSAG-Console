@@ -18,6 +18,7 @@ import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
 
 import java.io.File;
+import java.util.concurrent.*;
 
 /**
  * User: artem
@@ -25,7 +26,7 @@ import java.io.File;
  */
 
 public class Sme {
-  
+
 
   public static void main(String[] args) {
 
@@ -58,9 +59,14 @@ public class Sme {
       smppTranceiver.connect();
       handler.start();
 
-      new ConfigUpdater(600000, timezones).start();
+      final ScheduledExecutorService configReloader = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+          return new Thread(r, "ConfigReloader");
+        }
+      });
+      configReloader.scheduleAtFixedRate(new ConfigReloadTask(timezones), 600, 600, TimeUnit.SECONDS);
 
-      Runtime.getRuntime().addShutdownHook(new ShutdownHook(subscriptionSme, distributionSme));
+      Runtime.getRuntime().addShutdownHook(new ShutdownHook(subscriptionSme, distributionSme, configReloader));
 
     } catch (Throwable e) {
       e.printStackTrace();
@@ -74,10 +80,12 @@ public class Sme {
   private static class ShutdownHook extends Thread {
     private final SubscriptionSme subscriptionSme;
     private final DistributionSme distributionSme;
+    private final ExecutorService configReloader;
 
-    public ShutdownHook(SubscriptionSme subscriptionSme, DistributionSme distributionSme) {
+    public ShutdownHook(SubscriptionSme subscriptionSme, DistributionSme distributionSme, ExecutorService configReloader) {
       this.subscriptionSme = subscriptionSme;
       this.distributionSme = distributionSme;
+      this.configReloader = configReloader;
     }
 
     public void run() {
@@ -92,27 +100,20 @@ public class Sme {
       } catch (Throwable e) {
         e.printStackTrace();
       }
+      configReloader.shutdown();
     }
   }
 
-  protected static class ConfigUpdater extends Thread {
+  protected static class ConfigReloadTask implements Runnable {
     private static final Category log = Category.getInstance("DISTRIBUTION");
 
-    private final long delay;
     private final SmscTimezonesList timezones;
 
-    public ConfigUpdater(long delay, SmscTimezonesList timezones) {
-      super("ConfReloadThread");
-      this.delay = delay;
+    public ConfigReloadTask(SmscTimezonesList timezones) {
       this.timezones = timezones;
     }
 
-    public synchronized void run() {
-      try {
-        wait(delay);
-      } catch (InterruptedException e) {
-      }
-
+    public void run() {
       try {
         timezones.reload();
       } catch (SmscTimezonesListException e) {
@@ -159,7 +160,7 @@ public class Sme {
       receipt.setReceipt(true);
       receipt.setReceiptedMessageId(String.valueOf(msgId));
       receipt.setSequenceNumber(count++);
-      handleMessage(receipt);
+      handleMessage(receipt, 1000);
     }
 
     public void connect() throws SMPPException {

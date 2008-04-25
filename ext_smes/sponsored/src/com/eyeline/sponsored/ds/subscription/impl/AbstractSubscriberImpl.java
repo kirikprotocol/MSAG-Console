@@ -1,6 +1,7 @@
 package com.eyeline.sponsored.ds.subscription.impl;
 
 import com.eyeline.sponsored.ds.subscription.Subscriber;
+
 import java.util.TimeZone;
 
 /**

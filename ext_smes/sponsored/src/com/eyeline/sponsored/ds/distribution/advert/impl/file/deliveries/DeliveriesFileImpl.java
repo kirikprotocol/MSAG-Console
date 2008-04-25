@@ -15,21 +15,20 @@ import java.util.concurrent.locks.ReentrantLock;
  * Date: 28.03.2008
  */
 
-public class DeliveriesFileImpl implements DeliveriesFile {
+class DeliveriesFileImpl implements DeliveriesFile {
 
   private static final Category log = Category.getInstance(DeliveriesFileImpl.class);
 
   // Record fields
   private static final int MSISDN_LEN = 21;
-  private static final int START_DATE_LEN = 4;
-  private static final int END_DATE_LEN = 4;
-  private static final int SEND_DATE_LEN = 4;
+  private static final int START_DATE_LEN = 8;
+  private static final int END_DATE_LEN = 8;
+  private static final int SEND_DATE_LEN = 8;
   private static final int SENDED_LEN = 1;
-  private static final int TOTAL_LEN = 1;
   private static final int EOR_LEN = 1;
   private static final byte EOR = (byte)0xFF;
 
-  private static final int RECORD_LEN = MSISDN_LEN + START_DATE_LEN + END_DATE_LEN + SEND_DATE_LEN + SENDED_LEN + TOTAL_LEN + EOR_LEN;
+  private static final int RECORD_LEN = MSISDN_LEN + START_DATE_LEN + END_DATE_LEN + SEND_DATE_LEN + SENDED_LEN + EOR_LEN;
 
   // Volume fields
   private static final int TX_NAME_LEN = 20;
@@ -37,30 +36,26 @@ public class DeliveriesFileImpl implements DeliveriesFile {
   private static final int TX_VOLUME_LEN =1;
   private static final int TX_START_LEN =8;
   private static final int TX_END_LEN =8;
+  private static final int TX_START_DATE_LEN =8;
+  private static final int TX_END_DATE_LEN =8;
 
-  private static final int TX_DESCRIPTION_LEN = TX_NAME_LEN + TX_TZ_LEN + TX_VOLUME_LEN + TX_START_LEN + TX_END_LEN + EOR_LEN;
+  private static final int TX_DESCRIPTION_LEN = TX_NAME_LEN + TX_TZ_LEN + TX_VOLUME_LEN + TX_START_LEN + TX_END_LEN + TX_START_DATE_LEN + TX_END_DATE_LEN + EOR_LEN;
 
   private static final int TX_NUMBER = 100;
-
-  private final long date;
-  private final FileDeliveriesDataSource ds;
 
   private final TransactionManager transactionManager;
 
   private RandomAccessFile f;
   private final Lock rwlock = new ReentrantLock();
 
-  public DeliveriesFileImpl(FileDeliveriesDataSource ds, File file, long date) throws DeliveriesFileException {
-    this.ds = ds;
-    this.date = date;
-
+  public DeliveriesFileImpl(File file) throws DataSourceException {
     try {
       rwlock.lock();
 
       this.f = new RandomAccessFile(file, "rw");
 
     } catch (FileNotFoundException e) {
-      throw new DeliveriesFileException("Can't open file", e);
+      throw new DataSourceException("Can't open file", e);
     } finally {
       rwlock.unlock();
     }
@@ -68,136 +63,58 @@ public class DeliveriesFileImpl implements DeliveriesFile {
     this.transactionManager = new TransactionManager();
   }
 
-  public DeliveriesFileTransaction createTransaction(String distrName, int volume, TimeZone tz, int size) throws DeliveriesFileException {
-    return transactionManager.createTx(distrName, volume, tz, size);
+  public DeliveriesFileTransaction createInsertTransaction(Date startDate, Date endDate, String distrName, int volume, TimeZone tz, int size) throws DataSourceException {
+    return transactionManager.createInsertTransaction(distrName, volume, tz, size, startDate, endDate);
   }
 
-  public void updateDelivery(DeliveryImpl d) throws DeliveriesFileException {
-    if (d.getId() < 0)
-      throw new DeliveriesFileException("Can't update delivery with id < 0");
-
-    final byte[] bytes = new byte[RECORD_LEN];
-    writeDelivery(d, bytes, 0);
-
-    try {
-      rwlock.lock();
-
-      f.seek(d.getId());
-      f.write(bytes);
-
-    } catch (Exception e) {
-      throw new DeliveriesFileException("Can't update delivery", e);
-    } finally {
-      rwlock.unlock();
-    }
+  public void lookupDeliveries(final Date startDate, final Date endDate, Collection<Delivery> result) throws DataSourceException {
+    for (CommitedTransaction tx : transactionManager.commitedTransactions())
+      tx.lookupDeliveries(startDate, endDate, result);
   }
 
-  /**
-   *
-   * @param startDate
-   * @param endDate
-   * @throws DeliveriesFileException
-   */
-  public void readDeliveries(final Date startDate, final Date endDate, Collection<Delivery> result) throws DeliveriesFileException {
-    readDeliveries(new DeliveriesQuery() {
-      public boolean add(DeliveryImpl d) {
-        double a1 = (double)(d.getTotal() - 1) * (startDate.getTime() - d.getStartDate().getTime()) / (d.getEndDate().getTime() - d.getStartDate().getTime());
-        double a2 = (double)(d.getTotal() - 1) * (endDate.getTime() - d.getStartDate().getTime()) / (d.getEndDate().getTime() - d.getStartDate().getTime());
-        return ((Math.ceil(a1)>=0 || a2 > 0) && Math.ceil(a1) < d.getTotal() && Math.ceil(a1) < a2);
-      }
-    }, result);
+  public void lookupDeliveries(final Date date, final int limit, Collection<Delivery> result) throws DataSourceException {
+    for (CommitedTransaction tx : transactionManager.commitedTransactions())
+      tx.lookupDeliveries(date, limit, result);
   }
 
-  /**
-   *
-   * @param date
-   * @param limit
-   * @throws DeliveriesFileException
-   */
-  public void readDeliveries(final Date date, final int limit, Collection<Delivery> result) throws DeliveriesFileException {
-    readDeliveries(new DeliveriesQuery() {
-      int total = 0;
-      public boolean add(DeliveryImpl d) {
-        return (total++ < limit && d.getSended() < d.getTotal() && d.getSendDate().getTime() < date.getTime());
-      }
-    }, result);
+  public boolean hasDeliveries(Date endDate, TimeZone tz, String distrName) throws DataSourceException {
+    for (CommitedTransaction tx : transactionManager.commitedTransactions())
+      if (tx.hasDeliveries(endDate, tz, distrName))
+        return true;
+
+    return false;
   }
 
-  /**
-   *
-   * @param date
-   * @param tz
-   * @param distrName
-   * @return
-   * @throws DeliveriesFileException
-   */
-  public int getDeliveriesCount(final Date date, TimeZone tz, String distrName) throws DeliveriesFileException {
-    int count = 0;
-    try {
-      final DeliveriesQuery ds = new DeliveriesQuery() {
-        public boolean add(DeliveryImpl d) {
-          return d.getEndDate().after(date);
-        }
-      };
-
-      final List<Delivery> lst = new LinkedList<Delivery>();
-      for (FileTransaction tx : transactionManager.commitedTransactions()) {
-        if (tx.distrName.equals(distrName) && tx.tz.equals(tz)) {
-          tx.getDeliveries(ds, lst);
-          count += lst.size();
-          lst.clear();
-        }
-      }
-
-    } catch (EOFException e) {
-    } catch (IOException e) {
-      throw new DeliveriesFileException("Can't read deliveries", e);
-    }
-    return count;
-  }
-
-  private void readDeliveries(DeliveriesQuery st, Collection<Delivery> result) throws DeliveriesFileException {
-    try {
-      for (FileTransaction tx : transactionManager.commitedTransactions())
-        tx.getDeliveries(st, result);
-
-    } catch (EOFException e) {
-    } catch (IOException e) {
-      throw new DeliveriesFileException("Can't read deliveries", e);
-    }
-  }
-
-
-  public void close() throws DeliveriesFileException {
+  public void close() throws DataSourceException {
     transactionManager.close();
 
     try {
       rwlock.lock();
       f.close();
     } catch (IOException e) {
-      throw new DeliveriesFileException("Can't close file", e);
+      throw new DataSourceException("Can't close file", e);
     } finally {
       rwlock.unlock();
     }
   }
 
 
-  private void writeDelivery(DeliveryImpl impl, byte[] bytes, int start) {
+  private static void writeDelivery(DeliveryImpl impl, byte[] bytes, int start) {
     // Record len
     int pos = start;
     // Subscriber address
     writeString(impl.getSubscriberAddress(), bytes, pos, MSISDN_LEN);
-    pos += MSISDN_LEN + 1;
+    pos += MSISDN_LEN;
     // Start date
-    writeInt((int)(impl.getStartDate().getTime() - date), bytes, pos);
+    writeLong(impl.getStartDate().getTime(), bytes, pos);
     // End date
-    writeInt((int)(impl.getEndDate().getTime() - date), bytes, pos + 4);
+    writeLong(impl.getEndDate().getTime(), bytes, pos + 8);
     // Sended
-    bytes[pos + 8] = (byte)impl.getSended();
+    bytes[pos + 16] = (byte)impl.getSended();
     // Send date
-    writeInt((int)(impl.getSendDate().getTime() - date), bytes, pos + 9);
+    writeLong(impl.getSendDate().getTime(), bytes, pos + 17);
     // EOR
-    bytes[pos + 13] = (byte)EOR;
+    bytes[pos + 25] = (byte)EOR;
   }
 
 
@@ -206,6 +123,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
 
   private interface DeliveriesQuery {
     public boolean add(DeliveryImpl d);
+    public String printQuery();
   }
 
 
@@ -215,8 +133,8 @@ public class DeliveriesFileImpl implements DeliveriesFile {
 
   private class TransactionManager {
 
-    private final List<FileTransaction> commitedTransactions = new ArrayList<FileTransaction>(TX_NUMBER);
-    private final List<FileTransaction> newTransactions = new ArrayList<FileTransaction>(TX_NUMBER);
+    private final List<CommitedTransaction> commitedTransactions = new ArrayList<CommitedTransaction>(TX_NUMBER);
+    private final List<InsertTransaction> newTransactions = new ArrayList<InsertTransaction>(TX_NUMBER);
 
     private final Lock lock = new ReentrantLock();
 
@@ -224,7 +142,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
 
 
 
-    public TransactionManager() throws DeliveriesFileException {
+    public TransactionManager() throws DataSourceException {
       actualTxsNumber = 0;
 
       final byte[] bytes = new byte[TX_NUMBER * TX_DESCRIPTION_LEN];
@@ -244,7 +162,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
           return;
         }
       } catch (IOException e) {
-        throw new DeliveriesFileException("Can't read volumes", e);
+        throw new DataSourceException("Can't read volumes", e);
       } finally {
         rwlock.unlock();
       }
@@ -258,42 +176,46 @@ public class DeliveriesFileImpl implements DeliveriesFile {
           break;
         }
 
-        final FileTransaction s = readTx(bytes, pos);
+        final CommitedTransaction s = readTx(bytes, pos);
         if (s != null)
           commitedTransactions.add(s);
       }
     }
 
-    private FileTransaction readTx(byte[] bytes, int startPos) throws DeliveriesFileException {
+    private CommitedTransaction readTx(byte[] bytes, int startPos) throws DataSourceException {
       int pos = startPos;
       String name = readString(bytes, pos, TX_NAME_LEN);
       pos += TX_NAME_LEN;
       String tz = readString(bytes, pos, TX_TZ_LEN);
       pos += TX_TZ_LEN;
       byte volume = bytes[pos];
-      long start = readLong(bytes, pos + 1);
-      long end = readLong(bytes, pos + 9);
-      byte eor = bytes[pos + 17];
+      long txStartPos = readLong(bytes, pos + 1);
+      long txEndPos = readLong(bytes, pos + 9);
+      long txStartDate = readLong(bytes, pos + 17);
+      long txEndDate = readLong(bytes, pos + 25);
+      byte eor = bytes[pos + 33];
       if (eor != EOR) {
         log.error("Section descriptor is crushed: name=" + name + "; vol=" + volume + "; tz=" + tz);
         return null;
       } else
-        return new FileTransaction(name, TimeZone.getTimeZone(tz), volume, start, end, true);
+        return new CommitedTransaction(name, TimeZone.getTimeZone(tz), volume, txStartPos, txEndPos, txStartDate, txEndDate);
     }
 
-    private void writeTx(FileTransaction s, byte[] bytes, int startPos) {
+    private void writeTx(InsertTransaction s, byte[] bytes, int startPos) {
       int pos = startPos;
       writeString(s.distrName, bytes, pos, TX_NAME_LEN);
       pos+=TX_NAME_LEN;
       writeString(s.tz.getID(), bytes, pos, TX_TZ_LEN);
       pos+=TX_TZ_LEN;
       bytes[pos] = (byte)s.volume;
-      writeLong(s.sectionStartPos, bytes, pos + 1);
-      writeLong(s.sectionEndPos, bytes, pos + 9);
-      bytes[pos + 17] = (byte)EOR;
+      writeLong(s.txStartPos, bytes, pos + 1);
+      writeLong(s.txEndPos, bytes, pos + 9);
+      writeLong(s.startDate, bytes, pos + 17);
+      writeLong(s.endDate, bytes, pos + 25);
+      bytes[pos + 33] = (byte)EOR;
     }
 
-    public void commitTx(FileTransaction tx) throws DeliveriesFileException {
+    public void commitTx(InsertTransaction tx) throws DataSourceException {
       byte[] bytes = new byte[TX_DESCRIPTION_LEN];
       writeTx(tx, bytes, 0);
 
@@ -304,7 +226,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
         f.write(bytes);
 
       } catch (IOException e) {
-        throw new DeliveriesFileException("Can't save transaction", e);
+        throw new DataSourceException("Can't save transaction", e);
       } finally {
         rwlock.unlock();
       }
@@ -313,19 +235,19 @@ public class DeliveriesFileImpl implements DeliveriesFile {
         lock.lock();
         actualTxsNumber++;
 
-        commitedTransactions.add(tx);
+        commitedTransactions.add(new CommitedTransaction(tx.distrName, tx.tz, tx.volume, tx.txStartPos, tx.txEndPos, tx.startDate, tx.endDate));
         newTransactions.remove(tx);
       } finally {
         lock.unlock();
       }
     }
 
-    public FileTransaction createTx(String distrName, int volume, TimeZone tz, int size) throws DeliveriesFileException {
+    public InsertTransaction createInsertTransaction(String distrName, int volume, TimeZone tz, int size, Date startDate, Date endDate) throws DataSourceException {
       try {
         lock.lock();
 
         if (actualTxsNumber >= TX_NUMBER)
-          throw new DeliveriesFileException("Max sections number reached.");
+          throw new DataSourceException("Max sections number reached.");
 
         long startPos;
         long endPos;
@@ -340,13 +262,12 @@ public class DeliveriesFileImpl implements DeliveriesFile {
           f.write(0);
 
         } catch (IOException e) {
-          throw new DeliveriesFileException("Can't create section", e);
+          throw new DataSourceException("Can't create section", e);
         } finally {
           rwlock.unlock();
         }
 
-        FileTransaction tx = new FileTransaction(distrName, tz, volume, startPos, endPos, false);
-
+        InsertTransaction tx = new InsertTransaction(distrName, tz, volume, startPos, endPos, startDate.getTime(), endDate.getTime());
 
         newTransactions.add(tx);
         return tx;
@@ -355,11 +276,11 @@ public class DeliveriesFileImpl implements DeliveriesFile {
       }
     }
 
-    public List<FileTransaction> commitedTransactions() {
+    public List<CommitedTransaction> commitedTransactions() {
       try {
         lock.lock();
 
-        return new ArrayList<FileTransaction>(commitedTransactions);
+        return new ArrayList<CommitedTransaction>(commitedTransactions);
       } finally {
         lock.unlock();
       }
@@ -369,7 +290,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
       try {
         lock.lock();
 
-        for (FileTransaction tx : newTransactions)
+        for (InsertTransaction tx : newTransactions)
           tx.close();
 
       } finally {
@@ -397,18 +318,84 @@ public class DeliveriesFileImpl implements DeliveriesFile {
 
 
 
-
-  private class FileTransaction implements DeliveriesFileTransaction {
+  private class InsertTransaction implements DeliveriesFileTransaction {
 
     private final String distrName;
     private final TimeZone tz;
     private final int volume;
+    private final long startDate;
+    private final long endDate;
 
-    private final long sectionStartPos;
-    private long sectionCurPos;
-    private final long sectionEndPos;
+    private final long txStartPos;
+    private long txCurPos;
+    private final long txEndPos;
 
     private boolean closed;
+
+    public InsertTransaction(String distrName, TimeZone timezone, int volume, long startPos, long endPos, long startDate,long endDate) {
+      this.distrName = distrName;
+      this.volume = volume;
+      this.tz = timezone;
+      this.closed = false;
+      this.startDate = startDate;
+      this.endDate = endDate;
+
+      this.txStartPos = startPos;
+      this.txEndPos = endPos;
+
+      txCurPos = txStartPos;
+    }
+
+
+    public void saveDelivery(DeliveryImpl delivery) throws DataSourceException {
+      if (closed)
+        throw new DataSourceException("Tx already closed");
+
+      byte[] bytes = new byte[RECORD_LEN];
+      writeDelivery(delivery, bytes, 0);
+
+      try {
+        rwlock.lock();
+
+        f.seek(txCurPos);
+        f.write(bytes);
+        txCurPos += RECORD_LEN;
+
+      } catch (Exception e) {
+        throw new DataSourceException(e);
+      } finally {
+        rwlock.unlock();
+      }
+    }
+
+    public void commit() throws DataSourceException {
+      transactionManager.commitTx(this);
+      closed = true;
+    }
+
+    public void rollback() throws DataSourceException {
+    }
+
+    public void close() {
+      closed = true;
+    }
+  }
+
+
+
+
+
+
+  private class CommitedTransaction implements DeliveriesFileTransaction {
+
+    private final String distrName;
+    private final TimeZone tz;
+    private final int volume;
+    private final long startDate;
+    private final long endDate;
+
+    private final long txStartPos;
+    private final long txEndPos;
 
     private byte[] buffer;
     private long bufferStartPos;
@@ -416,35 +403,35 @@ public class DeliveriesFileImpl implements DeliveriesFile {
     private int bufferSize;
     private DeliveryImpl curDelivery;
 
-    public FileTransaction(String distrName, TimeZone timezone, int volume, long startPos, long endPos, boolean closed) throws DeliveriesFileException {
+    private final Lock lock = new ReentrantLock();
+
+    public CommitedTransaction(String distrName, TimeZone timezone, int volume, long startPos, long endPos, long startDate, long endDate) throws DataSourceException {
       this.distrName = distrName;
       this.volume = volume;
       this.tz = timezone;
-      this.closed = closed;
+      this.startDate = startDate;
+      this.endDate = endDate;
 
       this.curDelivery = null;
-      this.sectionStartPos = startPos;
-      this.sectionEndPos = endPos;
+      this.txStartPos = startPos;
+      this.txEndPos = endPos;
 
-      this.buffer = new byte[65536];
+      this.buffer = new byte[8192];
       bufferStartPos = startPos;
       bufferPos = 0;
       bufferSize = 0;
 
       try {
-        if (closed)
-          validateAndRepair();
-        else
-          sectionCurPos = sectionStartPos;
+        validateAndRepair();
       } catch (IOException e) {
-        throw new DeliveriesFileException("Can't init section", e);
+        throw new DataSourceException("Can't init section", e);
       }
     }
 
     private void validateAndRepair() throws IOException {
       // Check last byte
-      long endPos = sectionEndPos -1;
-      if (endPos < sectionStartPos)
+      long endPos = txEndPos -1;
+      if (endPos < txStartPos)
         return;
 
       try {
@@ -453,18 +440,16 @@ public class DeliveriesFileImpl implements DeliveriesFile {
         f.seek(endPos);
         byte eor = (byte)f.read();
 
-        sectionCurPos = sectionEndPos;
-
         if (eor != EOR) {
           log.debug("Section is not full: distrName=" + distrName + "; tz=" + tz.getID() + "; vol=" + volume);
 
           long pos = -1;
           int step = 1;
           do {
-            long startPos = sectionEndPos - step * RECORD_LEN;
+            long startPos = txEndPos - step * RECORD_LEN;
 
-            if (startPos < sectionStartPos) {
-              pos = sectionStartPos;
+            if (startPos < txStartPos) {
+              pos = txStartPos;
             } else {
               f.seek(startPos);
               int b;
@@ -476,7 +461,6 @@ public class DeliveriesFileImpl implements DeliveriesFile {
             step++;
           } while (pos == -1);
 
-          sectionCurPos = pos;
         }
 
       } finally {
@@ -485,8 +469,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
     }
 
     private DeliveryImpl readDelivery() throws IOException {
-      final DeliveryImpl d = new DeliveryImpl(ds);
-      d.setId(getFilePointer());
+      final DeliveryImpl d = new DeliveryImpl();
 
       final byte[] bytes = new byte[RECORD_LEN];
       final int l = read(bytes);
@@ -500,15 +483,15 @@ public class DeliveriesFileImpl implements DeliveriesFile {
       int pos = 0;
       // Subscriber address
       d.setSubscriberAddress(readString(bytes, pos, MSISDN_LEN));
-      pos += MSISDN_LEN + 1;
+      pos += MSISDN_LEN;
       // Start date
-      d.setStartDate(new Date(readInt(bytes, pos) + date));
+      d.setStartDate(new Date(readLong(bytes, pos)));
       // End date
-      d.setEndDate(new Date(readInt(bytes, pos + 4) + date));
+      d.setEndDate(new Date(readLong(bytes, pos + 8)));
       // Sended
-      d.setSended(bytes[pos+8]);
+      d.setSended(bytes[pos+16]);
       // Send date
-      d.setSendDate(new Date(readInt(bytes, pos + 9) + date));
+      d.setSendDate(new Date(readInt(bytes, pos + 17)));
       d.setDistributionName(distrName);
       d.setTimezone(tz);
       d.setTotal(volume);
@@ -516,85 +499,104 @@ public class DeliveriesFileImpl implements DeliveriesFile {
     }
 
     public void saveDelivery(DeliveryImpl delivery) throws DataSourceException {
-      if (closed)
-        throw new DataSourceException("Tx already closed");
-
-      byte[] bytes = new byte[RECORD_LEN];
-      writeDelivery(delivery, bytes, 0);
-
-      try {
-        rwlock.lock();
-
-        f.seek(delivery.getId() < 0 ? sectionCurPos : delivery.getId());
-        f.write(bytes);
-        sectionCurPos += RECORD_LEN;
-
-      } catch (Exception e) {
-        throw new DataSourceException(e);
-      } finally {
-        rwlock.unlock();
-      }
+      throw new DataSourceException("Can't insert new deliveries in commited transaction");
     }
 
-    public void getDeliveries(DeliveriesQuery st, Collection<Delivery> result) throws IOException {
-      if (getFilePointer() >= sectionEndPos) {
-        bufferStartPos = sectionStartPos;
-        bufferPos=0;
-        bufferSize = 0;
-      }
+    public void lookupDeliveries(final Date startDate, final Date endDate, Collection<Delivery> result) throws DataSourceException {
+      if (endDate.getTime() < this.startDate || startDate.getTime() > this.endDate)
+        return;
 
-      long startPos = getFilePointer();
-      boolean f1=false, f2=false;
-      do {
+      getDeliveries(new DeliveriesQuery() {
+        public boolean add(DeliveryImpl d) {
+          double totalTime = d.getEndDate().getTime() - d.getStartDate().getTime();
+          double p1 = startDate.getTime() - d.getStartDate().getTime();
+          double p2 = endDate.getTime() - d.getStartDate().getTime();
 
-        if (curDelivery != null) {
-          if (st.add(curDelivery)) {
-            f1=f2=true;
-            result.add(curDelivery);
-            curDelivery = null;
-          } else {
-            f2=false;
-            if (!f1)
+          double a1 = (double)(d.getTotal() - 1) * p1 / totalTime;
+          double a2 = (double)(d.getTotal() - 1) * p2 / totalTime;
+          return ((Math.ceil(a1)>=0 || a2 > 0) && Math.ceil(a1) < d.getTotal() && Math.ceil(a1) < a2);
+        }
+
+        public String printQuery() {
+          return "start=" + startDate + "; end=" + endDate;
+        }
+      }, result);
+    }
+
+    public void lookupDeliveries(final Date date, final int limit, Collection<Delivery> result) throws DataSourceException {
+      if (date.getTime() < this.startDate || date.getTime() > this.endDate)
+        return;
+
+      getDeliveries(new DeliveriesQuery() {
+        int total = 0;
+        public boolean add(DeliveryImpl d) {
+          return (total++ < limit && d.getSended() < d.getTotal() && d.getSendDate().getTime() < date.getTime());
+        }
+
+        public String printQuery() {
+          return "date=" + date + "; limit=" + limit;
+        }
+      }, result);
+    }
+
+    public boolean hasDeliveries(final Date endDate, final TimeZone tz, final String distrName) throws DataSourceException {
+      return (this.tz.equals(tz) && this.distrName.equals(distrName) && endDate.getTime() < this.endDate);
+    }
+
+    public void getDeliveries(DeliveriesQuery st, Collection<Delivery> result) throws DataSourceException {
+
+      try {
+        lock.lock();
+
+        if (getFilePointer() >= txEndPos) {
+          bufferStartPos = txStartPos;
+          bufferPos=0;
+          bufferSize = 0;
+        }
+
+        long startPos = getFilePointer();
+        boolean f1=false, f2=false;
+        boolean s = false;
+        do {
+          if (!s && curDelivery != null) {
+            if (!st.add(curDelivery))
+              System.out.println("skip: " + st.printQuery());
+            s = true;
+          }
+
+          if (curDelivery != null) {
+            if (st.add(curDelivery)) {
+              f1=f2=true;
+              result.add(curDelivery);
               curDelivery = null;
+            } else {
+              f2=false;
+              if (!f1)
+                curDelivery = null;
+            }
           }
-        }
 
-        if (curDelivery == null) {
-          curDelivery = readDelivery();
-          if (getFilePointer() >= sectionEndPos) {
-            bufferStartPos = sectionStartPos;
-            bufferPos=0;
-            bufferSize = 0;
+          if (curDelivery == null) {
+            try {
+              curDelivery = readDelivery();
+              if (getFilePointer() >= txEndPos) {
+                bufferStartPos = txStartPos;
+                bufferPos=0;
+                bufferSize = 0;
+              }
+            } catch (IOException e) {
+              throw new DataSourceException(e);
+            }
           }
-        }
 
-      } while (f1==f2 && getFilePointer() != startPos);
-    }
-
-    public void commit() throws DataSourceException {
-      try {
-        transactionManager.commitTx(this);
-        closed = true;
-      } catch (DeliveriesFileException e) {
-        throw new DataSourceException(e);
+        } while (f1==f2 && getFilePointer() != startPos);
+      } finally {
+        lock.unlock();
       }
-    }
-
-    public void rollback() throws DataSourceException {
-    }
-
-    public void close() {
-      closed = true;
     }
 
     private long getFilePointer() {
       return bufferStartPos + bufferPos;
-    }
-
-    private byte read() throws IOException {
-      if (bufferPos >= bufferSize)
-        fillBuffer();
-      return buffer[bufferPos++];
     }
 
     private int read(byte[] bytes) throws IOException {
@@ -618,7 +620,7 @@ public class DeliveriesFileImpl implements DeliveriesFile {
     private void fillBuffer() throws IOException {
       bufferStartPos += bufferSize;
 
-      int actualSize = (int)Math.min(sectionEndPos - bufferStartPos, buffer.length);
+      int actualSize = (int)Math.min(txEndPos - bufferStartPos, buffer.length);
       if (actualSize == 0)
         throw new EOFException();
 
@@ -633,6 +635,15 @@ public class DeliveriesFileImpl implements DeliveriesFile {
       }
       bufferPos = 0;
       bufferSize = actualSize;
+    }
+
+    public void commit() throws DataSourceException {
+    }
+
+    public void rollback() throws DataSourceException {
+    }
+
+    public void close() {
     }
   }
 

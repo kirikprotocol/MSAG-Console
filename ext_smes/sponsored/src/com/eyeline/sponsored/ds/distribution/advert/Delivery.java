@@ -1,8 +1,7 @@
 package com.eyeline.sponsored.ds.distribution.advert;
 
-import com.eyeline.sponsored.ds.DataSourceTransaction;
-import com.eyeline.sponsored.ds.Storable;
 import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.Storable;
 
 import java.util.Date;
 import java.util.TimeZone;

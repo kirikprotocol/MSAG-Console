@@ -1,21 +1,22 @@
 package com.eyeline.sponsored.subscription.service.smpp;
 
+import com.eyeline.sme.handler.SMPPRequest;
+import com.eyeline.sme.handler.SMPPServiceException;
+import com.eyeline.sme.handler.services.BasicService;
+import com.eyeline.sme.smpp.IncomingObject;
+import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.sponsored.subscription.service.core.ProcessorException;
 import com.eyeline.sponsored.subscription.service.core.SubscriptionProcessor;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
-import com.eyeline.sme.handler.services.BasicService;
-import com.eyeline.sme.handler.SMPPServiceException;
-import com.eyeline.sme.handler.SMPPRequest;
-import com.eyeline.sme.smpp.ShutdownedException;
-import com.eyeline.sme.smpp.IncomingObject;
 import com.logica.smpp.Data;
-import java.util.HashSet;
-import java.util.Properties;
-import java.util.Set;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
+
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  *
@@ -37,11 +38,10 @@ public class SubscriptionService extends BasicService {
       successResponse = conf.getString("successResponse");
       subscriptionClosedResponse = conf.getString("subscriptionClosedResponse");
       invalidVolumeResponse = conf.getString("invalidVolumeResponse");      
-      volumes = new HashSet();
+      volumes = new HashSet<Integer>(10);
       final int[] volumesArray = conf.getIntArray("volumes", ",");
-      for (int i = 0; i < volumesArray.length; i++) {
+      for (int i = 0; i < volumesArray.length; i++)
         volumes.add(volumesArray[i]);
-      }
     } catch (ConfigException e) {
       throw new SMPPServiceException(e);
     }    
@@ -116,7 +116,7 @@ public class SubscriptionService extends BasicService {
     }
   }
 
-  private void respond(IncomingObject inObj, int code) {
+  private static void respond(IncomingObject inObj, int code) {
     try {
       inObj.respond(code);
     } catch (SMPPException ex) {

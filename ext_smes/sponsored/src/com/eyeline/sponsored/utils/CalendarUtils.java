@@ -65,6 +65,17 @@ public class CalendarUtils {
     return c.getTime();
   }
 
+  public static long getNextDayStartInMillis(Date date) {
+    final Calendar c = Calendar.getInstance();
+    c.setTime(date);
+    c.set(Calendar.HOUR_OF_DAY, 0);
+    c.set(Calendar.MINUTE, 0);
+    c.set(Calendar.SECOND, 0);
+    c.set(Calendar.MILLISECOND, 0);
+    c.set(Calendar.DAY_OF_YEAR, c.get(Calendar.DAY_OF_YEAR) + 1);
+    return c.getTimeInMillis();
+  }
+
   public static Date getNextHourStart(Date date) {
     final Calendar c = Calendar.getInstance();
     c.setTime(date);

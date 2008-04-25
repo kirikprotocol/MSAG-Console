@@ -1,16 +1,16 @@
 package com.eyeline.sponsored.ds.subscription.impl.db;
 
-import com.eyeline.sponsored.ds.*;
+import com.eyeline.sponsored.ds.AbstractDBDataSource;
+import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.DataSourceTransaction;
+import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.subscription.*;
 
 import java.sql.Connection;
-import java.sql.Driver;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Date;
 import java.util.Properties;
 import java.util.TimeZone;
-import snaq.db.ConnectionPool;
 
 /**
  *

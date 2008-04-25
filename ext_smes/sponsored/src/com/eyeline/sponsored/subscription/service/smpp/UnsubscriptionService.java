@@ -1,17 +1,18 @@
 package com.eyeline.sponsored.subscription.service.smpp;
 
-import com.eyeline.sme.handler.services.BasicService;
-import com.eyeline.sme.handler.SMPPServiceException;
 import com.eyeline.sme.handler.SMPPRequest;
+import com.eyeline.sme.handler.SMPPServiceException;
+import com.eyeline.sme.handler.services.BasicService;
 import com.eyeline.sme.smpp.IncomingObject;
 import com.eyeline.sme.smpp.ShutdownedException;
 import com.eyeline.sponsored.subscription.service.core.ProcessorException;
 import com.eyeline.sponsored.subscription.service.core.SubscriptionProcessor;
 import com.logica.smpp.Data;
-import java.util.Properties;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.SMPPException;
+
+import java.util.Properties;
 
 /**
  *
@@ -66,7 +67,7 @@ public class UnsubscriptionService extends BasicService {
     }
   }
 
-  private void respond(IncomingObject inObj, int code) {
+  private static void respond(IncomingObject inObj, int code) {
     try {
       inObj.respond(code);
     } catch (SMPPException ex) {

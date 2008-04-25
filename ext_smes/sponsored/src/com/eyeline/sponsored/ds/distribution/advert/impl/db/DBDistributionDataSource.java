@@ -4,14 +4,17 @@ import com.eyeline.sponsored.ds.AbstractDBDataSource;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.ResultSet;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  *
@@ -42,7 +45,7 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     return createDBTransaction(false);
   }
 
-  public DataSourceTransaction createTransaction(Date date, String distrName, int volume, TimeZone tz, int size) throws DataSourceException {
+  public DataSourceTransaction createInsertTransaction(Date startDate, Date endDate, String distrName, int volume, TimeZone tz, int size) throws DataSourceException {
     return createDBTransaction(false);
   }
 
@@ -102,11 +105,11 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     }
   }
 
-  public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException {
+  public boolean hasDeliveries(Date date, TimeZone tz, String distrName) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
-      return tx.getDeliveriesCount(date, tz, distrName);
+      return tx.getDeliveriesCount(date, tz, distrName) > 0;
     } finally {
       if (tx != null) {
         tx.close();

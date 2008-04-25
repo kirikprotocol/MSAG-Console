@@ -59,14 +59,14 @@
 
     <section name="distributions">
 
-      <section name="sponsored">
+      <section name="sponsored1">
         <param name="srcAddress">741</param>
         <param name="startTime">17:37:00</param>
-        <param name="endTime">19:45:02</param>
+        <param name="endTime">23:45:02</param>
         <param name="advServiceName">SPONSORED</param>
       </section>
 
-      <section name="sponsored1">
+      <section name="sponsored3">
         <param name="srcAddress">741</param>
         <param name="startTime">19:00:00</param>
         <param name="endTime">19:20:00</param>

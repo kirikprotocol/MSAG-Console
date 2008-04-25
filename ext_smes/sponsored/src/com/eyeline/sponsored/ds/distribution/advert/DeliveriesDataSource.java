@@ -1,12 +1,11 @@
 package com.eyeline.sponsored.ds.distribution.advert;
 
-import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.DataSourceTransaction;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.Collection;
 
 /**
  * User: artem
@@ -15,7 +14,7 @@ import java.util.Collection;
 
 public interface DeliveriesDataSource {
 
-  public DataSourceTransaction createTransaction(Date date, String distrName, int volume, TimeZone tz, int size) throws DataSourceException;
+  public DataSourceTransaction createInsertTransaction(Date startDate, Date endDate, String distrName, int volume, TimeZone tz, int size) throws DataSourceException;
 
   public Delivery createDelivery();
 
@@ -23,7 +22,7 @@ public interface DeliveriesDataSource {
 
   public void lookupDeliveries(Date start, Date end, Collection<Delivery> result) throws DataSourceException;
 
-  public int getDeliveriesCount(Date date, TimeZone tz, String distrName) throws DataSourceException;
+  public boolean hasDeliveries(Date date, TimeZone tz, String distrName) throws DataSourceException;
 
   public void shutdown();
 }

@@ -1,12 +1,12 @@
 package com.eyeline.sponsored.distribution.advert.distr.core;
 
 import com.eyeline.sme.smpp.OutgoingObject;
-import com.eyeline.sponsored.ds.banner.BannerMap;
 import com.eyeline.sponsored.distribution.advert.distr.adv.BannerWithInfo;
+import com.eyeline.sponsored.ds.banner.BannerMap;
 import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SubmitResponse;
-import ru.aurorisoft.smpp.Message;
 
 /**
  * User: artem

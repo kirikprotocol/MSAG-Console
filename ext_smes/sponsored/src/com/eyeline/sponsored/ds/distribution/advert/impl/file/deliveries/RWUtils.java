@@ -5,7 +5,7 @@ package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries;
  * Date: 23.04.2008
  */
 
-public class RWUtils {
+class RWUtils {
   public static void writeInt(int value, byte[] bytes, int offset) {
     bytes[offset]     = (byte) ((value >> 24) & 0xFF);
     bytes[offset + 1] = (byte) ((value >> 16) & 0xFF);

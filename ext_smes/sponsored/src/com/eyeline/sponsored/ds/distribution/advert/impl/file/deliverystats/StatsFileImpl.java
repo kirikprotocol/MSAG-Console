@@ -1,10 +1,6 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.DeliveryStatImpl;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.IOUtils;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.StatsFile;
-import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.StatsFileException;
 import org.apache.log4j.Category;
 
 import java.io.*;
@@ -24,7 +20,6 @@ class StatsFileImpl implements StatsFile {
   private static final Category log = Category.getInstance(StatsFileImpl.class);
 
   private static final int AGGR_BUFFER_SIZE = 200000;
-  private static final int IO_BUFFER_SIZE = 4096;
   private static final int EOR = 255;
   private static final int MAX_RECORD_SIZE = 15;
 
@@ -33,6 +28,7 @@ class StatsFileImpl implements StatsFile {
 
   public StatsFileImpl(File file) throws IOException {
     this.file = file;
+    this.os = null;
     open(true);
   }
 
@@ -109,7 +105,7 @@ class StatsFileImpl implements StatsFile {
     if (check)
       verifyAndRepairFile(file);
 
-    os = new BufferedOutputStream(new FileOutputStream(file, true), IO_BUFFER_SIZE);
+    os = new BufferedOutputStream(new FileOutputStream(file, true));
   }
 
   public String getName() {
@@ -186,7 +182,7 @@ class StatsFileImpl implements StatsFile {
     ArrayList<DeliveryStatImpl> result = new ArrayList<DeliveryStatImpl>(count);
     InputStream is = null;
     try {
-      is = new BufferedInputStream(new FileInputStream(file), IO_BUFFER_SIZE);
+      is = new BufferedInputStream(new FileInputStream(file));
 
       for (int i=0; i<start; i++)
         skipDeliveryStat(is);
@@ -225,7 +221,7 @@ class StatsFileImpl implements StatsFile {
 
     try {
 
-      compressedFileWriter = new BufferedOutputStream(new FileOutputStream(compressedFile), IO_BUFFER_SIZE);
+      compressedFileWriter = new BufferedOutputStream(new FileOutputStream(compressedFile));
 
       File tmpFile = null, curFile = file;
 
@@ -238,7 +234,7 @@ class StatsFileImpl implements StatsFile {
         OutputStream tmpFileWriter = null;
 
         try {
-          curFileReader = new BufferedInputStream(new FileInputStream(curFile), IO_BUFFER_SIZE);
+          curFileReader = new BufferedInputStream(new FileInputStream(curFile));
 
           // Fill buffer
           // We read file until buffer size < AGGR_BUFFER_SIZE or EOF reached. Every delivery stat we put into buffer.
@@ -257,7 +253,7 @@ class StatsFileImpl implements StatsFile {
           // This mean that there are other delivery stats. We copy them into tmp file
           tmpFile = new File(file.getAbsolutePath() + ".tmp" + iterNo);
 
-          tmpFileWriter = new BufferedOutputStream(new FileOutputStream(tmpFile), IO_BUFFER_SIZE);
+          tmpFileWriter = new BufferedOutputStream(new FileOutputStream(tmpFile));
 
           // Read up to the end of current file
           // Update counters in buffer and write other records to tmp file
@@ -376,12 +372,12 @@ class StatsFileImpl implements StatsFile {
         for (int j=100000; j<900002; j++) {
           final DeliveryStat s = new DeliveryStatImpl();
           s.setSubscriberAddress("+79139" + j);
-          synchronized(o) {
-            try {
-              o.wait(1);
-            } catch (InterruptedException e) {
-            }
-          }
+//          synchronized(o) {
+//            try {
+//              o.wait(1);
+//            } catch (InterruptedException e) {
+//            }
+//          }
           s.setDelivered(1);
           impl.addStat(s);
         }
@@ -389,7 +385,7 @@ class StatsFileImpl implements StatsFile {
       System.out.println("Fill time = " + (System.currentTimeMillis() - time));
 
       time = System.currentTimeMillis();
-      impl.compress();
+//      impl.compress();
       System.out.println("Compress time = " + (System.currentTimeMillis() - time));
 
     } catch (IOException e) {

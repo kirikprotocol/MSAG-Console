@@ -17,7 +17,10 @@ import org.apache.log4j.Category;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * User: artem
@@ -91,9 +94,11 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
   private class DeliveriesFetcherTask implements Runnable {
 
+    private long fetchStartTime = System.currentTimeMillis();
+
     public void run() {
       try {
-        final Date startDate = new Date(System.currentTimeMillis() + prepareInterval);
+        final Date startDate = new Date(fetchStartTime + prepareInterval);
         final Date endDate = new Date(startDate.getTime() + fetchInterval);
 
         deliveriesQueue.setModificator(new DeliveryModificator() {
@@ -118,6 +123,8 @@ public class IntervalDistributionEngine implements DistributionEngine {
         distrDS.lookupDeliveries(startDate, endDate, deliveriesQueue);
         if (log.isInfoEnabled())
           log.info("Deliveries fetch time: " + (System.nanoTime() - startTime) + "; ~size=" + deliveriesQueue.size());
+
+        fetchStartTime += fetchInterval;
 
       } catch (DataSourceException e) {
         log.error("Fetch deliveries failed.", e);

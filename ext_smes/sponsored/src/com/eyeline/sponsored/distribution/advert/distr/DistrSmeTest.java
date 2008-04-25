@@ -1,15 +1,13 @@
 package com.eyeline.sponsored.distribution.advert.distr;
 
-import com.eyeline.sme.smpp.test.TestMultiplexor;
-import com.eyeline.sme.smpp.test.SimpleResponse;
-import com.eyeline.sme.smpp.MessageListener;
-import com.eyeline.sme.smpp.MessageSender;
+import com.eyeline.sme.handler.MessageHandler;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.SMPPTransceiver;
-import com.eyeline.sme.handler.MessageHandler;
+import com.eyeline.sme.smpp.test.SimpleResponse;
+import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sponsored.distribution.advert.config.Config;
-import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 import com.logica.smpp.Data;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;

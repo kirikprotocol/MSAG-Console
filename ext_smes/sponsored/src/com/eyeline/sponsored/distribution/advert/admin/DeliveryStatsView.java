@@ -1,19 +1,19 @@
 package com.eyeline.sponsored.distribution.advert.admin;
 
-import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.sponsored.distribution.advert.config.Config;
+import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.sponsored.ds.ResultSet;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.FileDeliveryStatDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.ResultSet;
-import com.eyeline.sponsored.ds.DataSourceException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * User: artem
@@ -51,7 +51,7 @@ public class DeliveryStatsView {
           while (rs.next()) {
             DeliveryStat stat = rs.get();
             if (a.subscriber == null || a.subscriber.equalsIgnoreCase(stat.getSubscriberAddress()))
-              System.out.println(stat.getSubscriberAddress() + " | " + stat.getDelivered());
+              System.out.println(stat.getSubscriberAddress() + " | " + stat.getDelivered() + " | " + stat.getAdvertiserId());
           }
         }
       } catch (DataSourceException e) {

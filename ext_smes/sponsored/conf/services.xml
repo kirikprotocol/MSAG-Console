@@ -13,7 +13,7 @@
     <service-class>com.eyeline.sponsored.subscription.service.smpp.SubscriptionService</service-class>
     <init-param>
       <param-name>volumes</param-name>
-      <param-value>10,20</param-value>
+      <param-value>10,20,25,15</param-value>
     </init-param>
     <init-param>
       <param-name>successResponse</param-name>
