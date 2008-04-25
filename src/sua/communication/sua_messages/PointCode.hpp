@@ -10,14 +10,16 @@ public:
   explicit PointCode(const uint8_t pcValue[]);
   virtual uint8_t getMask();
 
+  const uint8_t* getValue() const;
+private:
   union aligned_mem_value {
     uint32_t mem_boundary_aligner;
     uint8_t value[4];
   };
 
-  const aligned_mem_value& getValue() const;
-private:
   aligned_mem_value _pcBuf;
+public:
+  static const size_t SIZE = sizeof(aligned_mem_value);
 };
 
 class ANSI_PC : public PointCode {
