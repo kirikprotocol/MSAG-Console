@@ -19,7 +19,7 @@
 #include "CLCOMessageHandlers.hpp"
 #include "SUAManagementMessageHandlers.hpp"
 #include "SignalingNetworkManagementMessageHandlers.hpp"
-
+#include "RCRegistry.hpp"
 #include "LinkSetsRegistry.hpp"
 #include "initializer.hpp"
 
@@ -90,6 +90,8 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   CLCOMessageHandlers::init();
   SUAManagementMessageHandlers::init();
   SignalingNetworkManagementMessageHandlers::init();
+
+  RCRegistry::init();
 
   sua_messages::initialize();
   registerMessageCreators();
