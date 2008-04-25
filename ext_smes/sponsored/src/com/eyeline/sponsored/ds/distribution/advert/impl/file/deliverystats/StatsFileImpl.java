@@ -1,11 +1,11 @@
 package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsQuery;
 import org.apache.log4j.Category;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -138,23 +138,17 @@ class StatsFileImpl implements StatsFile {
     IOUtils.readByte(is);   // EOR
   }
 
-  public void transferTo(WritableByteChannel target) throws StatsFileException {
-    FileInputStream is = null;
+  public void transferTo(DeliveryStatsQuery query, OutputStream target) throws StatsFileException {
+    InputStream is = null;
     try {
       os.flush();
 
-      is = new FileInputStream(file);
+      is = new BufferedInputStream(new FileInputStream(file));
 
-      FileChannel fc = null;
-      try {
-        fc = is.getChannel();
-
-        fc.transferTo(0, fc.size(), target);
-      } catch (IOException e) {
-        throw new StatsFileException(e.getMessage(), e);
-      } finally {
-        if (fc != null)
-          fc.close();
+      while(true) {
+        DeliveryStatImpl s = readDeliveryStat(is);
+        if (query.isAllowed(s))
+          writeDeliveryStat(s, target);
       }
 
     } catch (EOFException e) {

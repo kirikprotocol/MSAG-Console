@@ -4,10 +4,7 @@ import com.eyeline.sponsored.ds.AbstractDBDataSource;
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.ResultSet;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
-import com.eyeline.sponsored.ds.distribution.advert.Delivery;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
-import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.*;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -65,11 +62,11 @@ public class DBDistributionDataSource extends AbstractDBDataSource implements De
     }
   }
 
-  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate) throws DataSourceException {
+  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate, DeliveryStatsQuery query) throws DataSourceException {
     DBTransaction tx = null;
     try {
       tx = createDBTransaction(true);
-      return tx.aggregateDeliveryStats(startDate, endDate);
+      return tx.aggregateDeliveryStats(startDate, endDate, query);
     } finally {
       if (tx != null) {
         tx.close();

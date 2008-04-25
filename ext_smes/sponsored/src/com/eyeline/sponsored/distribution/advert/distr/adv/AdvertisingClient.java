@@ -1,6 +1,7 @@
 package com.eyeline.sponsored.distribution.advert.distr.adv;
 
 import com.lorissoft.advertising.util.Encode;
+import com.lorissoft.advertising.commons.RequestResult;
 import ru.aurorisoft.smpp.Address;
 
 /**
@@ -42,8 +43,6 @@ public class AdvertisingClient {
 
   public BannerWithInfo getBannerWithInfo(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingException {
     try {
-      return new BannerWithInfo("test", 0);
-      /*
       final Address address = new Address(abonentAddress);
       final String abonent = "." + address.getTon() + '.' + address.getNpi() + '.' + address.getAddress();
 
@@ -55,7 +54,6 @@ public class AdvertisingClient {
         return null;
 
       return new BannerWithInfo(Encode.decodeUTF16(banner.getBannerText()), banner.getAdvertiserId());
-      */
     } catch (Throwable e) {
       throw new AdvertisingException(e);
     }

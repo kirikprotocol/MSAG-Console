@@ -6,6 +6,7 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsQuery;
 
 import java.sql.*;
 import java.util.Collection;
@@ -184,7 +185,7 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
 
   }
 
-  public com.eyeline.sponsored.ds.ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate) throws DataSourceException {
+  public com.eyeline.sponsored.ds.ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate, final DeliveryStatsQuery query) throws DataSourceException {
     PreparedStatement ps = null;
     ResultSet rs = null;
 
@@ -197,17 +198,28 @@ public class DBTransaction extends AbstractDBTransaction implements DataSourceTr
       rs = ps.executeQuery();
       return new AbstractDBResultSetImpl<DeliveryStat>(rs, ps) {
 
-        public DeliveryStat get() throws DataSourceException {
+        DeliveryStat curStat = null;
+
+        public boolean next() throws DataSourceException {
           try {
-            final DeliveryStatImpl result = new DeliveryStatImpl();
-            result.setSubscriberAddress(rs.getString(1));
-            result.setAdvertiserId(rs.getInt(2));
-            result.setDelivered(rs.getInt(3));
-            result.setSended(rs.getInt(4));
-            return result;
+            while(rs.next()) {
+              curStat = new DeliveryStatImpl();
+              curStat.setSubscriberAddress(rs.getString(1));
+              curStat.setAdvertiserId(rs.getInt(2));
+              curStat.setDelivered(rs.getInt(3));
+              curStat.setSended(rs.getInt(4));
+
+              if (query.isAllowed(curStat))
+                return true;
+            }
+            return false;
           } catch (SQLException e) {
             throw new DataSourceException(e);
           }
+        }
+
+        public DeliveryStat get() {
+          return curStat;
         }
       };
 

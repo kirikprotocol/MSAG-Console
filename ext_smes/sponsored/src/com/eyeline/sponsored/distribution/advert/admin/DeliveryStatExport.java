@@ -5,6 +5,7 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsQuery;
 import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.FileDeliveryStatDataSource;
 import com.eyeline.sponsored.utils.CalendarUtils;
@@ -27,23 +28,27 @@ import java.util.Date;
 
 public class DeliveryStatExport {
 
-  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, Integer advId, Integer notAdvId, Writer os)  {
+  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, final Integer advId, final Integer notAdvId, Writer os)  {
     ResultSet<DeliveryStat> rs = null;
     try {
 
-      rs = ds.aggregateDeliveryStats(fromDate, toDate);
+      rs = ds.aggregateDeliveryStats(fromDate, toDate, new DeliveryStatsQuery() {
+        public boolean isAllowed(DeliveryStat stat) {
+          if (advId != null && stat.getAdvertiserId() != advId)
+            return false;
+
+          if (notAdvId != null && stat.getAdvertiserId() == notAdvId)
+            return false;
+
+          return true;
+        }
+      });
 
       if (rs == null)
         return;
 
       while(rs.next()) {
         final DeliveryStat stat = rs.get();
-
-        if (advId != null && stat.getAdvertiserId() != advId)
-          continue;
-
-        if (notAdvId != null && stat.getAdvertiserId() == notAdvId)
-          continue;
 
         if (stat.getDelivered() > 0) {
           float cost = stat.getDelivered() * 100000 * coeff / 100000;

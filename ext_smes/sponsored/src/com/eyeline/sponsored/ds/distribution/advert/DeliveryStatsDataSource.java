@@ -14,7 +14,7 @@ public interface DeliveryStatsDataSource {
 
   public void addDeliveryStat(String subscriberAddress, int advertiserId, Date startDate, int deliveredInc, int sendedInc) throws DataSourceException;
 
-  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate) throws DataSourceException;
+  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate, DeliveryStatsQuery query) throws DataSourceException;
 
   public ResultSet<DeliveryStat> getDeliveryStats(Date date) throws DataSourceException;
 

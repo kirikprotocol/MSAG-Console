@@ -4,13 +4,11 @@ import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
+import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsQuery;
 import org.apache.log4j.Category;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -157,7 +155,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     }
   }
 
-  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate) throws DataSourceException {
+  public ResultSet<DeliveryStat> aggregateDeliveryStats(Date startDate, Date endDate, final DeliveryStatsQuery query) throws DataSourceException {
     ArrayList<StatsFile> files = getFiles(startDate, endDate);
 
     if (files.isEmpty())
@@ -165,20 +163,23 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
 
     final File aggregateFile = new File(storeDir, df.format(startDate) + '-' + df.format(endDate) + ".stats");
 
-    // Concat stat files
-    FileOutputStream os = null;
-    try {
-      os = new FileOutputStream(aggregateFile);
-
-      FileChannel fc = null;
-      try {
-        fc = os.getChannel();
-        for (StatsFile file : files)
-          file.transferTo(fc);
-      } finally {
-        if (fc != null)
-          fc.close();
+    final DeliveryStatsQuery query1 = new DeliveryStatsQuery() {
+      public boolean isAllowed(DeliveryStat stat) {
+        if (query.isAllowed(stat)) {
+          stat.setAdvertiserId(0);
+          return true;
+        }
+        return false;
       }
+    };
+
+    // Concat stat files
+    OutputStream os = null;
+    try {
+      os = new BufferedOutputStream(new FileOutputStream(aggregateFile));
+
+      for (StatsFile file : files)
+        file.transferTo(query1, os);
 
     } catch (StatsFileException e) {
       throw new DataSourceException(e);
@@ -275,10 +276,10 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       }
     }
 
-    public void transferTo(WritableByteChannel target) throws StatsFileException {
+    public void transferTo(DeliveryStatsQuery query, OutputStream target) throws StatsFileException {
       try {
         lock.lock();
-        impl.transferTo(target);
+        impl.transferTo(query, target);
         time = System.currentTimeMillis();
       } finally {
         lock.unlock();
