@@ -757,12 +757,12 @@ TLV_AffectedPointCode::TLV_AffectedPointCode()
  {}
 
 TLV_AffectedPointCode::TLV_AffectedPointCode(const ANSI_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue().value, sizeof(PointCode::aligned_mem_value)), 
+  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE), 
     _nextPCOffset(0)
 {}
 
 TLV_AffectedPointCode::TLV_AffectedPointCode(const ITU_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue().value, sizeof(PointCode::aligned_mem_value)),
+  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE),
     _nextPCOffset(0)
 {}
 
@@ -818,7 +818,7 @@ TLV_SSN::TLV_SSN()
   : TLV_IntegerPrimitive(TAG)
 {}
 
-TLV_SSN::TLV_SSN(ssn_t ssnValue)
+TLV_SSN::TLV_SSN(uint8_t ssnValue)
   : TLV_IntegerPrimitive(TAG, ssnValue)
 {}
 
@@ -1181,11 +1181,11 @@ TLV_PointCode::TLV_PointCode()
 {}
 
 TLV_PointCode::TLV_PointCode(const ANSI_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue().value, sizeof(PointCode::aligned_mem_value))
+  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE)
 {}
 
 TLV_PointCode::TLV_PointCode(const ITU_PC& pc)
-  : TLV_OctetArrayPrimitive(TAG, pc.getValue().value, sizeof(PointCode::aligned_mem_value))
+  : TLV_OctetArrayPrimitive(TAG, pc.getValue(), PointCode::SIZE)
 {}
 
 std::string
