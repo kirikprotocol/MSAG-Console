@@ -14,10 +14,10 @@ PointCode::getMask()
   return _pcBuf.value[0];
 }
 
-const PointCode::aligned_mem_value&
+const uint8_t*
 PointCode::getValue() const
 {
-  return _pcBuf;
+  return _pcBuf.value;
 }
 
 ANSI_PC::ANSI_PC(const uint8_t pcValue[])
@@ -30,22 +30,22 @@ ANSI_PC::ANSI_PC(uint8_t mask, uint8_t network, uint8_t cluster, uint8_t member)
 uint8_t
 ANSI_PC::getNetwork() const
 {
-  const aligned_mem_value& value = getValue();
-  return value.value[1];
+  const uint8_t* value = getValue();
+  return value[1];
 }
 
 uint8_t
 ANSI_PC::getCluster() const
 {
-  const aligned_mem_value& value = getValue();
-  return value.value[2];
+  const uint8_t* value = getValue();
+  return value[2];
 }
 
 uint8_t
 ANSI_PC::getMember() const
 {
-  const aligned_mem_value& value = getValue();
-  return value.value[3];
+  const uint8_t* value = getValue();
+  return value[3];
 }
 
 ITU_PC::ITU_PC(const uint8_t pcValue[])
@@ -59,22 +59,22 @@ ITU_PC::ITU_PC(uint8_t mask, uint8_t zone, uint8_t region, uint8_t sp)
 uint8_t
 ITU_PC::getZone() const
 {
-  const aligned_mem_value& value = getValue();
-  return (value.value[2] >> 3) & 0x07;
+  const uint8_t* value = getValue();
+  return (value[2] >> 3) & 0x07;
 }
 
 uint8_t
 ITU_PC::getRegion() const
 {
-  const aligned_mem_value& value = getValue();
-  return (value.value[2] & 0x07) | ((value.value[3] >> 3) & 0x1F);
+  const uint8_t* value = getValue();
+  return (value[2] & 0x07) | ((value[3] >> 3) & 0x1F);
 }
 
 uint8_t
 ITU_PC::getSP() const
 {
-  const aligned_mem_value& value = getValue();
-  return value.value[3] & 0x07;
+  const uint8_t* value = getValue();
+  return value[3] & 0x07;
 }
 
 }
