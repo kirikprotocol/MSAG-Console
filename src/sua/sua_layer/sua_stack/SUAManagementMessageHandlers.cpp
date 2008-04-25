@@ -1,4 +1,5 @@
 #include "SUAManagementMessageHandlers.hpp"
+#include "RCRegistry.hpp"
 #include <sua/communication/sua_messages/InactiveMessage.hpp>
 #include <sua/communication/sua_messages/DownMessage.hpp>
 #include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
@@ -28,6 +29,12 @@ void
 SUAManagementMessageHandlers::handle(const sua_messages::NotifyMessage& message, const communication::LinkId& linkId)
 {
   smsc_log_info(_logger, "SUAManagementMessageHandlers::handle::: handle NotifyMessage [%s]", message.toString().c_str());
+  const sua_messages::TLV_ApplicationStatus& appStatus = message.getStatus();
+  if ( appStatus.getStatusType() == sua_messages::TLV_ApplicationStatus::AS_STATE_CHANGE ) {
+    if ( appStatus.getStatusId() == sua_messages::TLV_ApplicationStatus::ASP_ACTIVE_NOTICE ) {
+      RCRegistry::getInstance().insert(linkId, message.getRoutingContext());
+    }
+  }
 }
 
 }
