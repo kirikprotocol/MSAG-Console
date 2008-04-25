@@ -138,6 +138,9 @@ public:
 
   uint16_t getStatusType() const;
   uint16_t getStatusId() const;
+
+  enum { AS_STATE_CHANGE = 1, OTHER = 2 };
+  enum { ASP_INACTIVE_NOTICE = 2, ASP_ACTIVE_NOTICE = 3, ASP_PENDING_NOTICE = 4 };
 private:
   static const uint16_t TAG = 0x000D;
 };
@@ -291,7 +294,7 @@ private:
 class TLV_SSN : public TLV_IntegerPrimitive {
 public:
   TLV_SSN();
-  explicit TLV_SSN(ssn_t ssnValue);
+  explicit TLV_SSN(uint8_t ssnValue);
 
   virtual std::string toString() const;
 private:
