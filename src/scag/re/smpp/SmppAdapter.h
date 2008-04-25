@@ -93,6 +93,12 @@ namespace scag { namespace re { namespace smpp
             STATUS_PERM_ERROR       = 160,
             STATUS_TEMP_ERROR       = 161,
 
+            SMPP_DELIVERY_FAILURE_REASON     = 162,
+            SMPP_NETWORK_ERROR_CODE          = 163,
+            SMPP_ADDITIONAL_STATUS_INFO_TEXT = 164,
+            SMPP_DPF_RESULT                  = 165,
+
+
             //Binary tags
             OPTIONAL_CHARGING                           = 0x4901,
             OPTIONAL_MESSAGE_TRANSPORT_TYPE             = 0x4902,
@@ -115,7 +121,7 @@ namespace scag { namespace re { namespace smpp
         AdapterProperty * getDeliverProperty(SMS& data,const std::string& name,int FieldId);
         AdapterProperty * getDataSmProperty(SmsCommand& data,const std::string& name,int FieldId);
         AdapterProperty * getRespProperty(SMS& data, const std::string& name,int FieldId);
-
+        AdapterProperty * getDataSmRespProperty(const std::string& name, int fieldId);
 
         AdapterProperty * Get_ESM_BIT_Property(SMS& data, const std::string& name,int FieldId);
         AdapterProperty * Get_RD_BIT_Property(SMS& data, const std::string& name,int FieldId);
@@ -132,7 +138,7 @@ namespace scag { namespace re { namespace smpp
         void WriteDeliveryField(SMS& data,int FieldId,AdapterProperty& property);
         void WriteSubmitField(SMS& data,int FieldId,AdapterProperty& property);
         void WriteDataSmField(SMS& data,int FieldId,AdapterProperty& property);
-
+        void WriteDataSmRespField(int fieldId, AdapterProperty& property);
 
         SmppCommand&    command;
         IntHash<AdapterProperty *>  PropertyPul;
@@ -142,11 +148,13 @@ namespace scag { namespace re { namespace smpp
         static IntHash<AccessType> DeliverFieldsAccess;
         static IntHash<AccessType> DataSmFieldsAccess;
         static IntHash<AccessType> RespFieldsAccess;
+        static IntHash<AccessType> DataSmRespFieldsAccess;
 
         static Hash<int> SubmitFieldNames;
         static Hash<int> DeliverFieldNames;
         static Hash<int> DataSmFieldNames;
         static Hash<int> RespFieldNames;
+        static Hash<int> DataSmRespFieldNames;
 
         static Hash<int> InitSubmitFieldNames();
         static Hash<int> InitDeliverFieldNames();
@@ -154,11 +162,13 @@ namespace scag { namespace re { namespace smpp
         static Hash<int> InitDataSmFieldNames();
 
         static Hash<int> InitRespFieldNames();
+        static Hash<int> InitDataSmRespFieldNames();
 
         static IntHash<AccessType> InitSubmitAccess();
         static IntHash<AccessType> InitDeliverAccess();
         static IntHash<AccessType> InitDataSmAccess();
         static IntHash<AccessType> InitRespAccess();
+        static IntHash<AccessType> InitDataSmRespAccess();
                                                             
     public:
 
