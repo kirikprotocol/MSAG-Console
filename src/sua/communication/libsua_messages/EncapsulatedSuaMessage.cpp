@@ -55,7 +55,7 @@ EncapsulatedSuaMessage::EncapsulatedSuaMessage(uint32_t msgCode, const uint8_t* 
        msgCode > _MAX_MSG_CODE )
     throw smsc::util::Exception("EncapsulatedSuaMessage::EncapsulatedSuaMessage::: unexpected msgCode=[%d]", msgCode);
 
-  if ( suaMessageBodySz > sizeof(_encapsulatedMessageTP.packetBody) - sua_messages::SUAMessage::HEADER_SIZE )
+  if ( suaMessageBodySz > sizeof(_encapsulatedMessageTP.packetBodyMem) - sua_messages::SUAMessage::HEADER_SIZE )
     throw smsc::util::Exception("EncapsulatedSuaMessage::EncapsulatedSuaMessage::: too large message body size=[%d]", suaMessageBodySz);
 
   setLength(_MSGCODE_SZ + suaMessageBodySz);
