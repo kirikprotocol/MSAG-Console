@@ -2,6 +2,8 @@
 # define IO_DISPATCHER_LINKSET_HPP_HEADER_INCLUDED_B87B6FEC
 
 # include <list>
+# include <core/synchronization/RWLock.hpp>
+
 # include <sua/communication/LinkId.hpp>
 # include <sua/communication/Message.hpp>
 # include <sua/communication/TP.hpp>
@@ -44,8 +46,9 @@ private:
   typedef std::list<Connection*> connections_lst_t;
   connections_lst_t _connections;
   connections_lst_t::iterator _lastUsedConnIter;
-  bool _wasConnIterInitilized;
 
+  smsc::core::synchronization::Mutex _currentConnLock;
+  smsc::core::synchronization::RWLock _lock;
   smsc::logger::Logger* _logger;
 
 public:
@@ -57,11 +60,12 @@ public:
     virtual ref getCurrentElement();
     virtual void deleteCurrentElement();
   private:
-    ConnectionIterator(connections_lst_t& container);
+    ConnectionIterator(connections_lst_t& container, smsc::core::synchronization::RWLock& lock);
     friend class LinkSet;
     //friend LinkSetIterator LinkSet::getIterator();
     connections_lst_t& _container;
     connections_lst_t::iterator _iter, _endIter;
+    smsc::core::synchronization::RWLock& _lock;
   };
 };
 
