@@ -1816,7 +1816,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               }
               if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
                 // Seems PSSR_RESP goes earlier than submitResp
-                __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                 MutexGuard mg(dialog->mutex);
                 if(!dialog->isDropping)
                 {
@@ -1826,6 +1825,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                     __map_warn2__("Attempt to chain 2nd command(smscid=%d) to ussd dialog dlgId=%x",dialogid_smsc,dialog->dialogid_map);
                     return;
                   }
+                  __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                   dialog->chain.insert(dialog->chain.begin(), cmd);
                 }else
                 {
@@ -1857,7 +1857,6 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 dialog->dialogid_smsc = dialogid_smsc;
                 if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf ) {
                   // Seems deliver goes earlier than submitResp
-                  __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                   MutexGuard mg(dialog->mutex);
                   if(!dialog->isDropping)
                   {
@@ -1867,6 +1866,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                       SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::INVOPTPARAMVAL));
                       return;
                     }
+                    __map_trace2__("%s: dialogid 0x%x deliver earlier then submit resp for USSD dlg, deliver was chained", __func__,dialog->dialogid_map);
                     dialog->chain.insert(dialog->chain.begin(), cmd);
                   }else
                   {
