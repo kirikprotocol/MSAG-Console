@@ -31,7 +31,6 @@ public class ConservativeDistributionEngine implements DistributionEngine {
   private final Map<String, DistributionInfo> distrInfos;
 
   private Work worker;
-  private boolean started = true;
 
 
   public ConservativeDistributionEngine(OutgoingQueue outQueue, DeliveriesDataSource distrDS, AdvertisingClientFactory advClientFactory, BannerMap bannerMap) {

@@ -556,14 +556,7 @@ class DeliveriesFileImpl implements DeliveriesFile {
 
         long startPos = getFilePointer();
         boolean f1=false, f2=false;
-        boolean s = false;
         do {
-          if (!s && curDelivery != null) {
-            if (!st.add(curDelivery))
-              System.out.println("skip: " + st.printQuery());
-            s = true;
-          }
-
           if (curDelivery != null) {
             if (st.add(curDelivery)) {
               f1=f2=true;
