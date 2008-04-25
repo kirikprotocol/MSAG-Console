@@ -5,6 +5,7 @@
 #include "AspMaintenanceMessageHandlers.hpp"
 #include "SuaConnect.hpp"
 #include "LinkSetsRegistry.hpp"
+#include "RCRegistry.hpp"
 
 namespace sua_stack {
 
@@ -45,6 +46,7 @@ AspMaintenanceMessageHandlers::handle(const sua_messages::InactiveAckMessage& me
 {
   smsc_log_info(_logger, "AspMaintenanceMessageHandlers::handle::: handle InactiveAckMessage [%s]", message.toString().c_str());
   _cMgr.removeLinkFromLinkSets(_cMgr.getLinkSetIds(linkId), linkId);
+  RCRegistry::getInstance().remove(linkId);
   sua_messages::DownMessage downMessage;
   _cMgr.send(linkId, downMessage);
 }
