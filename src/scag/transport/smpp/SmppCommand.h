@@ -86,7 +86,6 @@ enum DataSmDirection{
   dsdSc2Sc
 };
 
-
 /*
 #define MAKE_COMMAND_STATUS(type,code) ((type<<16)|code)
 #define GET_STATUS_TYPE(status) ((status>>16)&7)
@@ -636,6 +635,16 @@ private:
   SmppCommand orgCmd;
   bool bHasOrgCmd;
 
+  bool bHasDeliveryFailureReason;
+  uint8_t deliveryFailureReason;
+  bool bHasAdditionalStatusInfoText;
+  string additionalStatusInfoText;
+  bool bHasDpfResult;
+  uint8_t dpfResult;
+  bool bHasNetworkErrorCode;
+  uint32_t networkErrorCode;
+  Logger* logger;
+
 public:
 
   SmsResp();
@@ -661,6 +670,70 @@ public:
   void set_status(uint32_t st)
   {
     status = st;
+  }
+
+  void setDeliveryFailureReason(uint8_t reason) {
+    if (reason < 4) {
+      bHasDeliveryFailureReason  = true;
+      deliveryFailureReason = reason;
+    } else {
+      smsc_log_warn(logger, "error value for 'delivery_failure_reason' tag: %d. should be >=0 & <=3", reason);
+    }
+  }
+
+  uint8_t getDeliveryFailureReason() const {
+    return deliveryFailureReason;
+  }
+
+  void setAdditionalStatusInfoText(const char* info) {
+    if (strlen(info) <= 255) {
+      bHasAdditionalStatusInfoText = true;
+      additionalStatusInfoText = info;
+    } else {
+      smsc_log_warn(logger, "to long string (should be <= 255) for 'additional_status_info_text' tag: '%s'", info);
+    }
+  }
+
+  const char* getAdditionalStatusInfoText() const {
+    return additionalStatusInfoText.c_str();
+  }
+
+  void setDpfResult(uint8_t result) {
+    if (result < 2) {
+      bHasDpfResult = true;
+      dpfResult = result;
+    } else {
+      smsc_log_warn(logger, "error value for 'dpf_result' tag: %d. should be 0 or 1", result);
+    }
+  }
+
+  uint8_t getDpfResult() const {
+    return dpfResult;
+  }
+
+  bool hasAdditionalStatusInfoText() const {
+    return bHasAdditionalStatusInfoText;
+  }
+
+  bool hasDeliveryFailureReason() const {
+    return bHasDeliveryFailureReason;
+  }
+
+  bool hasDpfResult() const {
+    return bHasDpfResult;
+  }
+
+  bool hasNetworkErrorCode() const {
+    return bHasNetworkErrorCode;
+  }
+
+  void setNetworkErrorCode(uint32_t code) {
+    bHasNetworkErrorCode = true;
+    networkErrorCode = code;
+  }
+
+  uint32_t getNetworkErrorCode() const {
+    return networkErrorCode;
   }
 
   const char* get_messageId()const

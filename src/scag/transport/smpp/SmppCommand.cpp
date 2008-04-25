@@ -140,7 +140,28 @@ _SmppCommand::~_SmppCommand()
       case SmppCommandSet::DATA_SM_RESP:
       {
         _cmd->cmdid = DATASM_RESP;
-        goto sms_resp;
+
+        PduDataSmResp* xsm = reinterpret_cast<PduDataSmResp*>(pdu);
+        _cmd->dta = new SmsResp;
+        ((SmsResp*)_cmd->dta)->set_messageId(xsm->get_messageId());
+        ((SmsResp*)_cmd->dta)->set_status(xsm->header.get_commandStatus());
+        ((SmsResp*)_cmd->dta)->set_dataSm();
+
+        if (xsm->optional.has_additionalStatusInfoText()) {
+          ((SmsResp*)_cmd->dta)->setAdditionalStatusInfoText(xsm->optional.get_additionalStatusInfoText());
+        }
+        if (xsm->optional.has_deliveryFailureReason()) {
+          ((SmsResp*)_cmd->dta)->setDeliveryFailureReason(xsm->optional.get_deliveryFailureReason());
+        }
+        if (xsm->optional.has_dpfResult()) {
+          ((SmsResp*)_cmd->dta)->setDpfResult(xsm->optional.get_dpfResult());
+        }
+        if (xsm->optional.has_networkErrorCode()) {
+          uint32_t nec = 0;
+          memcpy((uint8_t*)&nec + 1, xsm->optional.get_networkErrorCode(), 3);
+          ((SmsResp*)_cmd->dta)->setNetworkErrorCode(ntohl(nec));
+        }
+        goto end_construct;
       }
       case SmppCommandSet::DELIVERY_SM_RESP:
       {
@@ -262,10 +283,12 @@ _SmppCommand::~_SmppCommand()
         }
       }
       */
-      if(pdu->commandId==SmppCommandSet::DATA_SM_RESP)
+      /*
+      if(pdu->commandId == SmppCommandSet::DATA_SM_RESP)
       {
         ((SmsResp*)_cmd->dta)->set_dataSm();
       }
+      */
       goto end_construct;
     }
     end_construct:
@@ -636,6 +659,20 @@ _SmppCommand::~_SmppCommand()
           xsm->header.set_sequenceNumber(c.get_dialogId());
           xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
           xsm->set_messageId(c.get_resp()->get_messageId());
+          SmsResp* resp = c.get_resp();
+          if (resp->hasAdditionalStatusInfoText()) {
+            xsm->optional.set_additionalStatusInfoText(resp->getAdditionalStatusInfoText());
+          }
+          if (resp->hasDeliveryFailureReason()) {
+            xsm->optional.set_deliveryFailureReason(resp->getDeliveryFailureReason());
+          }
+          if (resp->hasDpfResult()) {
+            xsm->optional.set_dpfResult(resp->getDpfResult());
+          }
+          if (resp->hasNetworkErrorCode()) {
+            uint32_t nec = htonl(resp->getNetworkErrorCode());
+            xsm->optional.set_networkErrorCode((uint8_t*)&nec + 1);
+          }
           return reinterpret_cast<SmppHeader*>(xsm.release());
       }
     case GENERIC_NACK:
@@ -831,6 +868,11 @@ _SmppCommand::~_SmppCommand()
     expiredUid = 0;
     expiredResp = false;
     bHasOrgCmd = false;
+    bHasDeliveryFailureReason = false;
+    bHasAdditionalStatusInfoText = false;
+    bHasDpfResult = false;
+    bHasNetworkErrorCode = false;
+    logger = Logger::getInstance("smppResp");
   };
   SmsResp::~SmsResp()
   {
