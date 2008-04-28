@@ -35,6 +35,8 @@ public:
 
   virtual void bufferInputTransportPackets();
 
+  virtual void send(const communication::Message& message);
+
   void up();
 
   void down();

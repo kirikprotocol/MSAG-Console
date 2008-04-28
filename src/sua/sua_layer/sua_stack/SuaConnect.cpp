@@ -6,7 +6,9 @@
 #include <sua/communication/sua_messages/UPMessage.hpp>
 #include <sua/communication/sua_messages/ActiveMessage.hpp>
 #include <sua/communication/sua_messages/InactiveMessage.hpp>
+#include <sua/communication/sua_messages/CLDTMessage.hpp>
 
+#include "RCRegistry.hpp"
 #include "SuaConnect.hpp"
 #include "SctpEstablishInd.hpp"
 #include "SctpReleaseInd.hpp"
@@ -68,6 +70,20 @@ SuaConnect::~SuaConnect()
     sctpRelease();
   } catch (...) {}
   delete _socket;
+}
+
+void
+SuaConnect::send(const communication::Message& message)
+{
+  if ( message.getMsgCode() == sua_messages::CLDTMessage().getMsgCode() ) {
+    sua_messages::TLV_RoutingContext rc = sua_stack::RCRegistry::getInstance().getRoutingContext(getLinkId());
+
+    sua_messages::CLDTMessage modifiableCldtMessage(static_cast<const sua_messages::CLDTMessage&>(message));
+    modifiableCldtMessage.setRoutingContext(rc);
+
+    Link::send(modifiableCldtMessage);
+  } else
+    Link::send(message);
 }
 
 communication::TP*
