@@ -1727,7 +1727,7 @@ StateType StateMachine::submit(Tuple& t)
 
     if( c.ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE)
     {
-      if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO) && c.ri.deliveryMode!=smsc::sms::SMSC_STOREANDFORWARD_MSG_MODE)
       {
         smsc_log_warn(smsLog,"Attempt to send multipart message in forward mode with route '%s'",c.ri.routeId.c_str());
       }else
@@ -2653,7 +2653,7 @@ StateType StateMachine::forward(Tuple& t)
   }
 
   bool firstPart=true;
-  if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
     if(sms.getConcatSeqNum()!=0)
     {
@@ -3577,11 +3577,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
         smsc_log_warn(smsLog,"ReportDelivery for %lld failed:'%s'",t.msgId,e.what());
       }
       sms.setLastResult(savedLastResult);
+      /*
       if(multiPart && statusType==CMD_OK && (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x02) && firstPart)
       {
         smsc_log_info(smsLog,"Remove billing flag for multipart sms msgId=%lld",t.msgId);
         sms.setBillingRecord(0);
       }
+      */
     }
   }
 
@@ -5353,7 +5355,7 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
 bool StateMachine::ExtraProcessing(SbmContext& c)
 {
   bool toSmsx=c.dest_proxy && !strcmp(c.dest_proxy->getSystemId(),"smsx");
-  bool isMultipart=c.sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT);
+  bool isMultipart=c.sms->hasBinProperty(Tag::SMSC_CONCATINFO);
 
   if((((c.fromMap || c.fromDistrList) && c.toMap) || (c.fromMap && toSmsx))&& !isMultipart)
   {
