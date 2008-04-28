@@ -95,6 +95,7 @@ private:
 
   bool _wasInitialized;
   std::string _appId, _trafficMode;
+  unsigned int _hopCountValue;
 
   mutable smsc::core::synchronization::Mutex _lock;
   smsc::core::synchronization::Mutex _receiveSynchronizeLock;
