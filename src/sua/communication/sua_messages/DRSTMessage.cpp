@@ -103,19 +103,6 @@ DRSTMessage::getMsgCodeTextDescription() const
 }
 
 void
-DRSTMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-DRSTMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("DRSTMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 DRSTMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

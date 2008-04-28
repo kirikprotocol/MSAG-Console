@@ -18,9 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode);
   const TLV_AffectedPointCode& getAffectedPointCode() const;
 
@@ -36,7 +33,6 @@ protected:
 private:
   static const uint32_t _MSG_CODE = 0x0205;
 
-  TLV_RoutingContext _routingContext;
   TLV_AffectedPointCode _affectedPointCodes;
   TLV_UserCause _user_cause;
   TLV_InfoString _infoString;

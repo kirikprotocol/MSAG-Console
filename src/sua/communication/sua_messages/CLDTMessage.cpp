@@ -193,19 +193,6 @@ CLDTMessage::getMsgCodeTextDescription() const
 }
 
 void
-CLDTMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-CLDTMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("CLDTMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 CLDTMessage::setProtocolClass(const TLV_ProtocolClass& protocolClass)
 {
   _protocolClass = protocolClass;

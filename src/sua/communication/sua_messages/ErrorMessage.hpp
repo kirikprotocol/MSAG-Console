@@ -21,9 +21,6 @@ public:
   void setErrorCode(const TLV_ErrorCode& errorCode);
   const TLV_ErrorCode& getErrorCode() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode);
   const TLV_AffectedPointCode& getAffectedPointCode() const;
 
@@ -40,7 +37,6 @@ private:
   static const uint32_t _MSG_CODE = 0x0000;
 
   TLV_ErrorCode _errorCode;
-  TLV_RoutingContext _routingContext;
   TLV_AffectedPointCode _affectedPointCodes;
   TLV_NetworkAppearance _networkAppearance;
   TLV_DiagnosticInformation _diagnosticInfo;

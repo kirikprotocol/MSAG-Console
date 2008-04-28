@@ -18,9 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setInfoString(const TLV_InfoString& infoString);
   const TLV_InfoString& getInfoString() const;
 

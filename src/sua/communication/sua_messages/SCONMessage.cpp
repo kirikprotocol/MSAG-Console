@@ -116,19 +116,6 @@ SCONMessage::getMsgCodeTextDescription() const
 }
 
 void
-SCONMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-SCONMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("SCONMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 SCONMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

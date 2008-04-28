@@ -123,19 +123,6 @@ NotifyMessage::getAspIdentifier() const
 }
 
 void
-NotifyMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-NotifyMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("NotifyMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 NotifyMessage::setDiagnosticInfo(const TLV_DiagnosticInformation& diagnosticInfo)
 {
   _diagnosticInfo = diagnosticInfo;

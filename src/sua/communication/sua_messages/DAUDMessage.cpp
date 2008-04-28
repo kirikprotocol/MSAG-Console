@@ -103,19 +103,6 @@ DAUDMessage::getMsgCodeTextDescription() const
 }
 
 void
-DAUDMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-DAUDMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("DAUDMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 DAUDMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

@@ -102,19 +102,6 @@ DAVAMessage::getMsgCodeTextDescription() const
 }
 
 void
-DAVAMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-DAVAMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("DAVAMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 DAVAMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

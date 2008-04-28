@@ -73,19 +73,6 @@ InactiveAckMessage::getMsgCodeTextDescription() const
 }
 
 void
-InactiveAckMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-InactiveAckMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("InactiveAckMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 InactiveAckMessage::setInfoString(const TLV_InfoString& infoString)
 {
   _infoString = infoString;

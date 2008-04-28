@@ -209,19 +209,6 @@ CLDRMessage::getMsgCodeTextDescription() const
 }
 
 void
-CLDRMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-CLDRMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("CLDRMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 CLDRMessage::setSCCPCause(const TLV_SCCP_Cause& sccpCause)
 {
   _sccpCause = sccpCause;

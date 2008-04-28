@@ -20,9 +20,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setSCCPCause(const TLV_SCCP_Cause& sccpCause);
   const TLV_SCCP_Cause& getSCCPCause() const;
 
@@ -54,7 +51,6 @@ protected:
   virtual uint32_t getLength() const;
 
 private:
-  TLV_RoutingContext _routingContext;
   TLV_SCCP_Cause _sccpCause;
   TLV_SS7HopCount _hopCount;
   TLV_Importance _importance;

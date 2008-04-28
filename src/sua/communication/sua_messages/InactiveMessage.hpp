@@ -18,9 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setInfoString(const TLV_InfoString& infoString);
   const TLV_InfoString& getInfoString() const;
 
@@ -28,7 +25,6 @@ protected:
   virtual uint32_t getLength() const;
 
 private:
-  TLV_RoutingContext _routingContext;
   TLV_InfoString _infoString;
 
   static const uint32_t _MSG_CODE = 0x0402;

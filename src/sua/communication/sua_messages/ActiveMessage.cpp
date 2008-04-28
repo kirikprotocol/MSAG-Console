@@ -101,19 +101,6 @@ ActiveMessage::getMsgCodeTextDescription() const
 }
 
 void
-ActiveMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-ActiveMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("ActiveMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 ActiveMessage::setTrafficModyType(const TLV_TrafficModeType& trafficModeType)
 {
   _trafficModeType = trafficModeType;

@@ -66,19 +66,6 @@ InactiveMessage::getMsgCodeTextDescription() const
 }
 
 void
-InactiveMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-InactiveMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("InactiveMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 InactiveMessage::setInfoString(const TLV_InfoString& infoString)
 {
   _infoString = infoString;

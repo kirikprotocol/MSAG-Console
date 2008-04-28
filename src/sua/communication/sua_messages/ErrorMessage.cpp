@@ -119,19 +119,6 @@ ErrorMessage::getErrorCode() const
 }
 
 void
-ErrorMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-ErrorMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("ErrorMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 ErrorMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

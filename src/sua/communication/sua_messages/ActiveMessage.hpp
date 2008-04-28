@@ -18,9 +18,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setTrafficModyType(const TLV_TrafficModeType& trafficModeType);
   const TLV_TrafficModeType& getTrafficModeType() const;
 
@@ -37,7 +34,6 @@ protected:
   virtual uint32_t getLength() const;
 
 private:
-  TLV_RoutingContext _routingContext;
   TLV_TrafficModeType _trafficModeType;
   TLV_TIDLabel _tidLabel;
   TLV_DRNLabel _drnLabel;

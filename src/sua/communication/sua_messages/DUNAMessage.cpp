@@ -102,19 +102,6 @@ DUNAMessage::getMsgCodeTextDescription() const
 }
 
 void
-DUNAMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-DUNAMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("DUNAMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 DUNAMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

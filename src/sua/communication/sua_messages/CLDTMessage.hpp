@@ -17,9 +17,6 @@ public:
 
   virtual const char* getMsgCodeTextDescription() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setProtocolClass(const TLV_ProtocolClass& protocolClass);
   const TLV_ProtocolClass& getProtocolClass() const;
 
@@ -54,7 +51,6 @@ protected:
   virtual uint32_t getLength() const;
 
 private:
-  TLV_RoutingContext _routingContext;
   TLV_ProtocolClass _protocolClass;
   TLV_SequenceControl _sequenceControl;
   TLV_SS7HopCount _hopCount;

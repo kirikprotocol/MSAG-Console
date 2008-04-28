@@ -24,9 +24,6 @@ public:
   void setAspIdentifier(TLV_AspIdentifier aspIdentifier);
   const TLV_AspIdentifier& getAspIdentifier() const;
 
-  void setRoutingContext(const TLV_RoutingContext& routingContext);
-  const TLV_RoutingContext& getRoutingContext() const;
-
   void setDiagnosticInfo(const TLV_DiagnosticInformation& diagnosticInfo);
   const TLV_DiagnosticInformation& getDiagnosticInfo() const;
 
@@ -38,7 +35,6 @@ private:
 
   TLV_ApplicationStatus _status;
   TLV_AspIdentifier _aspIdentifier;
-  TLV_RoutingContext _routingContext;
   TLV_DiagnosticInformation _diagnosticInfo;
 };
 

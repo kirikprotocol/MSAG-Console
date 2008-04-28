@@ -97,19 +97,6 @@ DUPUMessage::getMsgCodeTextDescription() const
 }
 
 void
-DUPUMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-DUPUMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("DUPUMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 DUPUMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode)
 {
   _affectedPointCodes = affectedPointCode;

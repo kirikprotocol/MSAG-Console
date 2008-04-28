@@ -83,19 +83,6 @@ ActiveAckMessage::getMsgCodeTextDescription() const
 }
 
 void
-ActiveAckMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
-{
-  _routingContext = routingContext;
-}
-
-const TLV_RoutingContext&
-ActiveAckMessage::getRoutingContext() const
-{
-  if ( _routingContext.isSetValue() ) return _routingContext;
-  else throw utilx::FieldNotSetException("ActiveAckMessage::getRoutingContext::: routingContext wasn't set");
-}
-
-void
 ActiveAckMessage::setTrafficModyType(const TLV_TrafficModeType& trafficModeType)
 {
   _trafficModeType = trafficModeType;

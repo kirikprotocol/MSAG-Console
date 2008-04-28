@@ -31,7 +31,6 @@ protected:
   virtual uint32_t getLength() const;
 
 private:
-  TLV_RoutingContext _routingContext;
   TLV_TrafficModeType _trafficModeType;
   TLV_InfoString _infoString;
 
