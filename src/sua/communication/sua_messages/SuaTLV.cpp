@@ -4,7 +4,7 @@
 #include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
 
 #include <stdio.h>
-#include <logger/Logger.h>
+//#include <logger/Logger.h>
 #include "SuaTLV.hpp"
 
 extern std::string
@@ -35,12 +35,9 @@ SuaTLVFactory::registerExpectedMandatoryTlv(SuaTLV* expectedTlv)
 void
 SuaTLVFactory::setPositionTo4BytesBoundary(size_t* offset)
 {
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
   int paddingTo4bytes = *offset & 0x03;
-  if ( paddingTo4bytes ) { // if tag length is not a multiple of 4 bytes
+  if ( paddingTo4bytes ) // if tag length is not a multiple of 4 bytes
     *offset += 0x04 - paddingTo4bytes;
-    smsc_log_debug(logger, "SuaTLVFactory::setPositionTo4BytesBoundary::: skip %d bytes for 4 bytes boundary", 0x04 - paddingTo4bytes);
-  }
 }
 
 void
@@ -64,8 +61,6 @@ size_t
 SuaTLVFactory::parseInputBuffer(const communication::TP& packetBuf, size_t offset)
 {
   uint16_t tag, valLen;
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
-  smsc_log_debug(logger, "SuaTLVFactory::parseInputBuffer::: enter it");
 
   while ( offset < packetBuf.packetLen ) {
     setPositionTo4BytesBoundary(&offset);
@@ -76,8 +71,6 @@ SuaTLVFactory::parseInputBuffer(const communication::TP& packetBuf, size_t offse
     offset = communication::extractField(packetBuf, offset, &valLen);
 
     valLen -= sizeof(tag) + sizeof(valLen);
-
-    smsc_log_debug(logger, "SuaTLVFactory::parseInputBuffer::: parse tag=0x%04X,tagLen=%d", tag, valLen);
 
     SuaTLV* suaTLVObject = NULL;
     if ( _numsOfMandatoryTlvObjects ) {
@@ -1276,8 +1269,6 @@ TLV_Address::serialize(communication::TP* packetBuf,
   int paddingTo4bytes = offset & 0x03;
   if ( paddingTo4bytes ) { // if tag length is not a multiple of 4 bytes
     uint8_t padding[4]={0};
-    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
-    smsc_log_debug(logger, "TLV_Address::serialize::: add %d bytes for 4 bytes boundary", 0x04 - paddingTo4bytes);
     offset = communication::addField(packetBuf, offset, padding, 0x04 - paddingTo4bytes);
   }
   return offset;
@@ -1297,9 +1288,6 @@ TLV_Address::deserialize(const communication::TP& packetBuf,
   tlvFactory.registerExpectedOptionalTlv(&_gt);
 
   communication::TP tmpPacketBuf (packetBuf.packetType, valLen - sizeof(_addressIndicator) - sizeof(_addressIndicator), packetBuf.packetBody + offset);
-
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("sua_stack");
-  smsc_log_debug(logger, "TLV_Address::deserialize::: try parse buf=[%s]", hexdmp(tmpPacketBuf.packetBody, tmpPacketBuf.packetLen).c_str());
 
   offset += tlvFactory.parseInputBuffer(tmpPacketBuf, 0);
 
@@ -1456,7 +1444,7 @@ TLV_SCCP_Cause::toString() const
 {
   if ( isSetValue() ) {
     char strBuf[128];
-    snprintf(strBuf, sizeof(strBuf), "causeType=[%d],causeValue=[%d]", getCauseType(), getCauseValue());
+    snprintf(strBuf, sizeof(strBuf), "SCCP_Cause=[causeType=[%d],causeValue=[%d]]", getCauseType(), getCauseValue());
     return std::string(strBuf);
   } else
     return "";
