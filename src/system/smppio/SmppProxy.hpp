@@ -353,7 +353,7 @@ public:
           {
             if(it->second->cmd.IsOk())
             {
-              info1(log,"SmppProxy::session found, delayed response sent");
+              info2(log,"SmppProxy::session %s/%d found, delayed response sent",key.oa.toString().c_str(),key.mr);
               inqueue.Push(it->second->cmd);
               inQueueCount++;
               limitHash.Delete(it->second->cmd->get_dialogId());
@@ -366,7 +366,7 @@ public:
             }
           }else
           {
-            warn1(log,"SmppProxy::session not found!!!");
+            warn2(log,"SmppProxy::session %s/%d not found!!!",key.oa.toString().c_str(),key.mr);
           }
         }
         submitCount++;
