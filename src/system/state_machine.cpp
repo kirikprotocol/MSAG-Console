@@ -1564,6 +1564,9 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&~EXTRA_NICK);
   }
   */
+  /*
+  NO LONGER NEEDED!
+  Sponsored uses another scheme.
 
   if(fromMap && toMap && c.srcprof.sponsored>0)
   {
@@ -1571,6 +1574,7 @@ StateType StateMachine::submit(Tuple& t)
     sms->setIntProperty(Tag::SMSC_EXTRAFLAGS,sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)|EXTRA_SPONSORED);
     smsc->getProfiler()->decrementSponsoredCount(sms->getOriginatingAddress());
   }
+  */
 #endif
 
   if((dstSmeInfo.accessMask&c.srcprof.accessMaskOut)==0)
@@ -2647,7 +2651,17 @@ StateType StateMachine::forward(Tuple& t)
     smsc->getScheduler()->InvalidSms(t.msgId);
     return UNKNOWN_STATE;
   }
-  info2(smsLog,"FWD: id=%lld,oa=%s,da=%s",t.msgId,sms.originatingAddress.toString().c_str(),sms.destinationAddress.toString().c_str());
+
+  bool firstPart=true;
+  if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  {
+    if(sms.getConcatSeqNum()!=0)
+    {
+      firstPart=false;
+    }
+  }
+
+  info2(smsLog,"FWD: id=%lld,oa=%s,da=%s,mp=%c,fp=%c",t.msgId,sms.originatingAddress.toString().c_str(),sms.destinationAddress.toString().c_str(),sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT)?'Y':'N',firstPart?'Y':'N');
 #ifdef SNMP
   SnmpCounter::getInstance().incCounter(SnmpCounter::cntRetried,sms.getDestinationSmeId());
 #endif
@@ -2670,15 +2684,6 @@ StateType StateMachine::forward(Tuple& t)
     }catch(std::exception& e)
     {
       warn2(smsLog,"Failed to replace sms with msgId=%lld in store:%s",t.msgId,e.what());
-    }
-  }
-
-  bool firstPart=true;
-  if(sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
-  {
-    if(sms.getConcatSeqNum()!=0)
-    {
-      firstPart=false;
     }
   }
 
