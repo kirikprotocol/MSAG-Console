@@ -13,6 +13,7 @@ namespace system{
 using smsc::util::Exception;
 using namespace smsc::core::buffers;
 using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
 class RescheduleCalculator{
 public:
@@ -24,6 +25,7 @@ public:
   static time_t calcNextTryTime(time_t lasttry,int code,int attempt);
   static bool isEqualCodes(int c1,int c2)
   {
+    MutexGuard mg(rescheduleMutex);
     return CodesTable.GetPtr(c1)==CodesTable.GetPtr(c2);
   }
 

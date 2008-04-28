@@ -240,17 +240,29 @@ time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt
   if(CodesTable.Exist(code))
   {
     TimeArray *ta=CodesTable.Get(code);
-    if(AttemptsLimits.Get(code)!=-1 && attempt>=AttemptsLimits.Get(code))return (time_t)-1;
+    if(AttemptsLimits.Get(code)!=-1 && attempt>=AttemptsLimits.Get(code))
+    {
+      smsc_log_debug(log,"Reached attempts limit (%d) for code %d",attempt,code);
+      return (time_t)-1;
+    }
     if(ta->Count()==0)
     {
       __warning__("Rescheduling table for error code %d is empty!!!");
       return lasttry+60;
     }
-    if(attempt>=ta->Count())attempt=ta->Count()-1;
-    smsc_log_debug(log,"Retry time increment for code %d,attemt %d=%d",code,attempt,(*ta)[attempt]);
+    int orgAttempt=attempt;
+    if(attempt>=ta->Count())
+    {
+      attempt=ta->Count()-1;
+    }
+    smsc_log_debug(log,"Retry time increment for code %d,attemt %d(%d)=%d",code,attempt,orgAttempt,(*ta)[attempt]);
     return lasttry+(*ta)[attempt];
   }
-  if(DefaultAttemptsLimit!=-1 && attempt>=DefaultAttemptsLimit)return -1;
+  if(DefaultAttemptsLimit!=-1 && attempt>=DefaultAttemptsLimit)
+  {
+    smsc_log_debug(log,"Reached attempts limit (%d) for code %d by default table",attempt,code);
+    return -1;
+  }
   if(RescheduleTable.Count()==0)
   {
     __warning__("Rescheduling table is empty!");
