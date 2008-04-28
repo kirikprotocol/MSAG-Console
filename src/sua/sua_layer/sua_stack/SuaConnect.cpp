@@ -75,15 +75,15 @@ SuaConnect::~SuaConnect()
 void
 SuaConnect::send(const communication::Message& message)
 {
-  if ( message.getMsgCode() == sua_messages::CLDTMessage().getMsgCode() ) {
-    sua_messages::TLV_RoutingContext rc = sua_stack::RCRegistry::getInstance().getRoutingContext(getLinkId());
-
-    sua_messages::CLDTMessage modifiableCldtMessage(static_cast<const sua_messages::CLDTMessage&>(message));
-    modifiableCldtMessage.setRoutingContext(rc);
-
-    Link::send(modifiableCldtMessage);
-  } else
-    Link::send(message);
+  const sua_messages::SUAMessage& suaMessage = static_cast<const sua_messages::SUAMessage&>(message);
+  unsigned int msgClass = suaMessage.getMessageClass();
+  if ( (msgClass == sua_messages::SUAMessage::SUA_MANAGEMENT_MESSAGES /* ERROR or NOTIFY */||
+        msgClass == sua_messages::SUAMessage::SUA_SIGNALING_NETWORK_MANAGEMENT_MESSAGES ||
+        msgClass == sua_messages::SUAMessage::CONNECTIONLESS_MESSAGES ) &&
+       suaMessage.isSetRoutingContext() ) {
+    suaMessage.updateRoutingContext(sua_stack::RCRegistry::getInstance().getRoutingContext(getLinkId()));
+  }
+  Link::send(suaMessage);
 }
 
 communication::TP*
