@@ -15,7 +15,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 namespace libsua {
 
 SuaUser::SuaUser()
-  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua"))
+  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _hopCountValue(0)
 {}
 
 void
@@ -24,7 +24,11 @@ SuaUser::sua_init(smsc::util::config::ConfigView* config)
   if ( !_wasInitialized ) {
     _appId = config->getString("appId", "SuaUser::sua_init::: appId parameter wasn't set");
     _trafficMode = config->getString("traffic-mode", "SuaUser::sua_init::: traffic-mode parameter wasn't set");
-
+    try {
+      _hopCountValue = config->getInt("ss7hop-count");
+    } catch (smsc::util::config::ConfigException& ex) {
+      _hopCountValue = 15;
+    }
     smsc_log_info(_logger, "loading links configuration ...");
 
     std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
@@ -201,7 +205,9 @@ SuaUser::sua_send_cldt(const uint8_t* message,
   // next parameters is optional
   if ( msgProperties.fieldsMask & MessageProperties::SET_HOP_COUNT )
     cldtMessage.setSS7HopCount(sua_messages::TLV_SS7HopCount(msgProperties.hopCount));
-  
+  else
+    cldtMessage.setSS7HopCount(sua_messages::TLV_SS7HopCount(_hopCountValue));
+
   if ( msgProperties.fieldsMask & MessageProperties::SET_IMPORTANCE )
     cldtMessage.setImportance(sua_messages::TLV_Importance(msgProperties.importance));
 
