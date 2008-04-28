@@ -10,6 +10,10 @@ class SUAMessage : public communication::Message {
 public:
   typedef uint32_t msg_code_t;
 
+  typedef enum { SUA_MANAGEMENT_MESSAGES=0, SUA_SIGNALING_NETWORK_MANAGEMENT_MESSAGES=2,
+                 ASPSM_MESSAGES=3, ASPTM_MESSAGES=4, CONNECTIONLESS_MESSAGES=7,
+                 CONNECTION_ORIENTED_MESSAGES=8, RKM_MESSAGES=9 } msg_class_t;
+
   SUAMessage(msg_code_t msgCode);
   // after call to this method will be completed
   // the resultBuf->packetBuf will contain all message data,
@@ -42,7 +46,20 @@ public:
 
   virtual const TLV_Address& getSourceAddress() const;
 
+  unsigned int getMessageClass() const {
+    return (getMsgCode() & 0x0000FF00) >> 8;
+  }
+
+  bool isSetRoutingContext() const;
+
+  void setRoutingContext(const TLV_RoutingContext& routingContext);
+
+  void updateRoutingContext(const TLV_RoutingContext& routingContext) const;
+
+  const TLV_RoutingContext& getRoutingContext() const;
+
 protected:
+  mutable TLV_RoutingContext _routingContext;
   TLV_SourceAddress _sourceAddress;
   TLV_DestinationAddress _destinationAddress;
 

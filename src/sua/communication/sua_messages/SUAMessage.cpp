@@ -134,5 +134,27 @@ SUAMessage::getSourceAddress() const
   return _sourceAddress;
 }
 
+bool
+SUAMessage::isSetRoutingContext() const { return _routingContext.isSetValue(); }
+
+void
+SUAMessage::setRoutingContext(const TLV_RoutingContext& routingContext)
+{
+  _routingContext = routingContext;
+}
+
+const TLV_RoutingContext&
+SUAMessage::getRoutingContext() const
+{
+  if ( _routingContext.isSetValue() ) return _routingContext;
+  else throw utilx::FieldNotSetException("SUAMessage::getRoutingContext::: routingContext wasn't set");
+}
+
+void
+SUAMessage::updateRoutingContext(const TLV_RoutingContext& routingContext) const
+{
+  _routingContext = routingContext;
+}
+
 }
 
