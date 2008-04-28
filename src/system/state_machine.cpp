@@ -2868,7 +2868,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
   }
 
-  if(sms.getLastTime()>sms.getValidTime())
+  if(sms.getLastTime()>sms.getValidTime() || sms.getNextTime()==1)
   {
     sms.setLastResult(Status::EXPIRED);
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
@@ -2879,7 +2879,9 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     {
       __warning__("FWD: failed to change state to expired");
     }
-    info2(smsLog, "FWD: %lld expired lastTry(%u)>valid(%u)",t.msgId,sms.getLastTime(),sms.getValidTime());
+    info2(smsLog, "FWD: %lld expired lastTry(%u)>valid(%u) or max attempts reached(%d:%d)",
+          t.msgId,sms.getLastTime(),sms.getValidTime(),
+          sms.oldResult,sms.getAttemptsCount());
     sendFailureReport(sms,t.msgId,EXPIRED_STATE,"expired");
     try{
       smsc->ReportDelivery(inDlgId,sms,true,Smsc::chargeOnDelivery);
@@ -5171,7 +5173,7 @@ time_t StateMachine::rescheduleSms(SMS& sms)
   time_t basetime=time(NULL);
   time_t nextTryTime=RescheduleCalculator::calcNextTryTime(basetime,sms.getLastResult(),sms.getAttemptsCount());
   if(nextTryTime>sms.getValidTime())nextTryTime=sms.getValidTime();
-  if(nextTryTime==-1)nextTryTime=basetime;
+  if(nextTryTime==-1)nextTryTime=1;
   __trace2__("rescheduleSms: bt=%u ntt=%u",basetime,nextTryTime);
   return nextTryTime;
 }
