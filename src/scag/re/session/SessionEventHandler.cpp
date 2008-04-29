@@ -26,8 +26,10 @@ void SessionEventHandler::_process(Session& session, RuleStatus& rs)
     }
     
     SessionAdapter _command(session);
-    CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, session.getRuleKey().serviceId, 0, (CommandOperations)0);
-
+    Property routeId;
+    routeId.setInt(0);
+    CommandProperty commandProperty(NULL, 0, abonentAddr, providerId, operatorId, session.getRuleKey().serviceId,
+                                     0, (CommandOperations)0, routeId);
     ActionContext* actionContext = 0;
     if(session.getLongCallContext().continueExec) {
 	actionContext = session.getLongCallContext().getActionContext();

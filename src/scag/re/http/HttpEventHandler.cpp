@@ -130,7 +130,10 @@ void HttpEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     smsc_log_debug(logger, "HttpEventHandler: Provider ID found. ID = %d", hc.getProviderId());
 
-    CommandProperty cp(&command, 0, abonentAddr, hc.getProviderId(), operatorId, hc.getServiceId(), -1, CO_HTTP_DELIVERY);
+    Property routeId;
+    routeId.setInt(hc.getRouteId());
+    CommandProperty cp(&command, 0, abonentAddr, hc.getProviderId(), operatorId, hc.getServiceId(),
+                        -1, CO_HTTP_DELIVERY, routeId);
     HttpCommandAdapter _command(hc);
 
     ActionContext* actionContext = 0;

@@ -68,7 +68,10 @@ namespace scag { namespace re { namespace actions
         CommandOperations cmdType;
         DataSmDirection direction;
 
-        CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int ServiceId, int msgRef, CommandOperations CmdType);
+        Property routeId;
+
+        CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId,
+                         int ServiceId, int msgRef, CommandOperations CmdType, const Property& routeId);
     };
 
 
@@ -88,12 +91,14 @@ namespace scag { namespace re { namespace actions
 
         Hash<Property>          variables;
         Hash<Property>*         constants;
+        Hash<Property>          infrastructConstants;
 
         Session*                session;
         CommandAccessor*        command;
 
         CommandProperty*        commandProperty;
         auto_ptr<TariffRec>     m_TariffRec;
+        void setInfrastructureConstants();
     public:
 
         bool isTrueCondition;
@@ -102,6 +107,7 @@ namespace scag { namespace re { namespace actions
 		      CommandAccessor* _command, CommandProperty* _commandProperty, RuleStatus* rs)
             : constants(_constants), session(_session), command(_command), commandProperty(_commandProperty), status(rs)
         {
+          setInfrastructureConstants();   
         };
         ~ActionContext() {};
 

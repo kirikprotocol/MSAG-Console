@@ -217,7 +217,10 @@ void SmppEventHandler::process(SCAGCommand& command, Session& session, RuleStatu
 
     /*uint32_t commandStatus = (smppcommand->cmdid == DELIVERY_RESP || smppcommand->cmdid == SUBMIT_RESP || smppcommand->cmdid == DATASM_RESP) 
 			    ? smppcommand->get_resp()->status : smppcommand->status;*/
-    CommandProperty commandProperty(&command, smppcommand->getCommandStatus(), abonentAddr, providerId, operatorId, smppcommand.getServiceId(), msgRef, smppDiscriptor.cmdType);
+    Property routeId;
+    routeId.setStr(sms.getRouteId());
+    CommandProperty commandProperty(&command, smppcommand->getCommandStatus(), abonentAddr, providerId, operatorId,
+                                     smppcommand.getServiceId(), msgRef, smppDiscriptor.cmdType, routeId);
 
     if(!session.getLongCallContext().continueExec)
         RegisterTrafficEvent(commandProperty, session.getPrimaryKey(), 

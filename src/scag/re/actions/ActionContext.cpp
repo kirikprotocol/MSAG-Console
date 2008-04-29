@@ -10,8 +10,11 @@ namespace scag { namespace re { namespace actions
     using namespace scag::exceptions;
 
 
-CommandProperty::CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr, int ProviderId, int OperatorId, int ServiceId, int MsgRef, CommandOperations CmdType)
-    : abonentAddr(addr), serviceId(-1), protocol(-1), commandId(-1), direction(dsdUnknown)
+CommandProperty::CommandProperty(SCAGCommand* command, int commandStatus, const Address& addr,
+                                 int ProviderId, int OperatorId, int ServiceId, int MsgRef,
+                                 CommandOperations CmdType, const Property& _routeId)
+                                : abonentAddr(addr), serviceId(-1), protocol(-1), commandId(-1),
+                                  direction(dsdUnknown), routeId(_routeId)
 {
     cmdType = CmdType;
 
@@ -68,7 +71,6 @@ Property* ActionContext::getProperty(const std::string& var)
 
     prefix = Separate(var,name);
 
-
     switch (prefix) 
     {
     case ftLocal:
@@ -81,11 +83,10 @@ Property* ActionContext::getProperty(const std::string& var)
             propertyPtr = variables.GetPtr(name);
         }
         return propertyPtr;
-        break;
 
     case ftConst:
-        return constants->GetPtr(name);
-        break;
+        propertyPtr = infrastructConstants.GetPtr(name);
+        return propertyPtr ? propertyPtr : constants->GetPtr(name);
 
     case ftField:
     {
@@ -157,7 +158,23 @@ void ActionContext::resetContext(Hash<Property>* _constants, Session* _session,
     constants = _constants; session = _session; 
     command = _command; commandProperty = _commandProperty; 
     status = rs; isTrueCondition = false; // TODO: ???
+    setInfrastructureConstants();
 };
+
+void ActionContext::setInfrastructureConstants() {
+  if (!commandProperty) {
+    throw SCAGException("ActionContext: commandProperty is not set");
+    return;
+  }
+  Property property;
+  property.setInt(commandProperty->serviceId);
+  infrastructConstants["service_id"] = property;
+  property.setInt(commandProperty->providerId);
+  infrastructConstants["provider_id"] = property;
+  property.setInt(commandProperty->operatorId);
+  infrastructConstants["operator_id"] = property;
+  infrastructConstants["route_id"] = commandProperty->routeId;
+}
 
 
 }}}
