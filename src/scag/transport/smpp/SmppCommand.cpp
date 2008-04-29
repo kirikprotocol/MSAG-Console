@@ -863,7 +863,8 @@ _SmppCommand::~_SmppCommand()
     return 0; // for compiler
   }
 
-  SmsResp::SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown)
+  SmsResp::SmsResp() : messageId(0), status(0),dataSm(false),sms(0), dir(dsdUnknown),
+                       dpfResult(0), networkErrorCode(0), deliveryFailureReason(0)
   {
     expiredUid = 0;
     expiredResp = false;
