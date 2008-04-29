@@ -63,7 +63,6 @@ public class TopMenu extends ArrayList {
             add(new MenuItem("menu.routing", "", routingItems));
 
             Collection profileItems = new ArrayList();
-            profileItems.add(new MenuItem("menu.profiles.list", "/smsc/profiles/index.jsp", MenuItem.VISIBLE_IN_ALL));
             profileItems.add(new MenuItem("menu.profiles.groups", "/smsc/profiles/groups.jsp", MenuItem.VISIBLE_IN_ALL));
             profileItems.add(new MenuItem("menu.profiles.lookup", "/smsc/profiles/lookup.jsp", MenuItem.VISIBLE_IN_ALL));
             if (SupportExtProfile.enabled)
