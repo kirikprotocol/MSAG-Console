@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd ..
+for i in lib/*.jar ; do cls=$cls:$i ; done
+
+java -cp $cls -Xmx128M -Dfile.encoding=windows-1251 com.eyeline.sponsored.subscription.admin.SubscriptionsExport $@

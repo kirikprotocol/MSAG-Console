@@ -7,6 +7,7 @@ import com.eyeline.sponsored.ds.DataSourceTransaction;
 import com.eyeline.sponsored.ds.subscription.Distribution;
 import com.eyeline.sponsored.ds.subscription.SubscriptionRow;
 import com.eyeline.sponsored.ds.subscription.VolumeStat;
+import com.eyeline.sponsored.ds.subscription.Subscription;
 import com.eyeline.sponsored.ds.subscription.impl.AbstractSubscriptionRowImpl;
 import com.eyeline.sponsored.ds.subscription.impl.AbstractVolumeStatImpl;
 
@@ -59,6 +60,9 @@ class DBTransaction extends AbstractDBTransaction implements DataSourceTransacti
       throw new DataSourceException("subscription.remove not found");
     }
     if (!sql.containsKey("subscription.lookupactive")) {
+      throw new DataSourceException("subscription.lookupactive not found");
+    }
+    if (!sql.containsKey("subscription.lookupactives")) {
       throw new DataSourceException("subscription.lookupactive not found");
     }
     if (!sql.containsKey("volumestat.get")) {
@@ -333,6 +337,41 @@ class DBTransaction extends AbstractDBTransaction implements DataSourceTransacti
         }
       };
       
+    } catch (SQLException e) {
+      close(rs,ps);
+      throw new DataSourceException(e);
+    }
+  }
+
+  public com.eyeline.sponsored.ds.ResultSet<Subscription> lookupActiveSubscriptions(String distributionName, Date date) throws DataSourceException {
+    PreparedStatement ps = null;
+    ResultSet rs = null;
+
+    try {
+      ps = conn.prepareStatement(sql.getProperty("subscription.lookupactives"), ResultSet.CONCUR_READ_ONLY);
+      ps.setFetchSize(Integer.MIN_VALUE);
+      ps.setString(1, distributionName);
+      ps.setTimestamp(2, new Timestamp(date.getTime()));
+
+      rs = ps.executeQuery();
+
+      return new AbstractDBResultSetImpl<Subscription>(rs,ps) {
+        public Subscription get() throws DataSourceException {
+          try {
+            final SubscriptionImpl subscription = new SubscriptionImpl(ds);
+            subscription.setId(rs.getInt(1));
+            subscription.setSubscriberAddress(rs.getString(2));
+            subscription.setDistributionName(rs.getString(3));
+            subscription.setVolume(rs.getInt(4));
+            subscription.setStartDate(new Date(rs.getTimestamp(5).getTime()));
+            subscription.setEndDate(rs.getTimestamp(6) == null ? null : new Date(rs.getTimestamp(6).getTime()));
+            return subscription;
+          } catch (SQLException e) {
+            throw new DataSourceException(e);
+          }
+        }
+      };
+
     } catch (SQLException e) {
       close(rs,ps);
       throw new DataSourceException(e);

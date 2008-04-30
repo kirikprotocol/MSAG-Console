@@ -101,6 +101,10 @@ public class DBSubscriptionDataSource extends AbstractDBDataSource implements Su
     return ((DBTransaction) tx).lookupActiveSubscription(subscriberAddress, distributionName, date);
   }
 
+  public ResultSet<Subscription> lookupActiveSubscriptions(String distributionName, Date date, DataSourceTransaction tx) throws DataSourceException {
+    return ((DBTransaction) tx).lookupActiveSubscriptions(distributionName, date);
+  }
+
   public ResultSet<SubscriptionRow> lookupFullSubscriptionInfo(String distributionName, Date date, TimeZone timezone, DataSourceTransaction tx) throws DataSourceException {
     return ((DBTransaction)tx).lookupFullSubscriptionInfo(distributionName, date, timezone);
   }

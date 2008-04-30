@@ -50,6 +50,7 @@
       <fileset file="deliveries"/>
       <fileset file="statexport"/>
       <fileset file="statview"/>
+      <fileset file="subscrexport"/>
     </copy>
   </target>
 
