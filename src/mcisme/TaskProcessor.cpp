@@ -827,7 +827,7 @@ void TaskProcessor::invokeProcessDataSmTimeout(void)
     //		smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) was sent %d sec ago", pInfo->abnt.toString().c_str(), seqNum, curTime - pInfo->sending_time);
     if(curTime > (pInfo->sending_time + responseWaitTime))
     {
-      smsc_log_debug(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
+      smsc_log_info(logger, "SMS for Abonent %s (seqNum %d) is removed from waiting list by timeout", pInfo->abnt.toString().c_str(), seqNum);
 
       statistics->incFailed(pInfo->events.size());
       time_t schedTime = pDeliveryQueue->Reschedule(pInfo->abnt);
