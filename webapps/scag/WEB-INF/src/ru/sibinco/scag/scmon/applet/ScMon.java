@@ -259,16 +259,16 @@ public class ScMon extends Applet implements Runnable, MouseListener, ActionList
 
     class ViewButtonPanel extends JPanel{
 
-        public static final String BUTTON_SMPP_PROPERTIES = "Endpoints filter";
-        public static final String BUTTON_HTTP_PROPERTIES = "Endpoints filter";
-        public static final String BUTTON_SCALE_Y_INC = "Y scale <|>";
-        public static final String BUTTON_SCALE_Y_DEC = "Y scale >|<";
-        public static final String BUTTON_SCALE_X_INC = "Time scale <|>";
-        public static final String BUTTON_SCALE_X_DEC = "Time scale >|< ";
-        public static final String BUTTON_SHOW_GRAPH = "Show graph";
-        public static final String BUTTON_HIDE_GRAPH = "Hide graph";
-        public static final String BUTTON_PAUSE_GRAPH = "Pause graph";
-        public static final String BUTTON_CONTINUE_GRAPH = "Continue graph";
+        public final String BUTTON_SMPP_PROPERTIES = localText.getString("svcmon.smpp.filter");
+        public final String BUTTON_HTTP_PROPERTIES = localText.getString("svcmon.smpp.filter");
+        public static final String BUTTON_SCALE_Y_INC = "Y scale <>";
+        public static final String BUTTON_SCALE_Y_DEC = "Y scale ><";
+        public static final String BUTTON_SCALE_X_INC = "X scale <>";
+        public static final String BUTTON_SCALE_X_DEC = "X scale ><";
+        public final String BUTTON_SHOW_GRAPH = localText.getString("svcmon.showgraph");
+        public final String BUTTON_HIDE_GRAPH = localText.getString("svcmon.hidegraph");
+        public final String BUTTON_PAUSE_GRAPH = localText.getString("svcmon.pause");
+        public final String BUTTON_CONTINUE_GRAPH = localText.getString("svcmon.continue");
 
         public static final int SCALE_STEP_Y = 1;
         public static final int SCALE_STEP_X = 1;
