@@ -376,9 +376,13 @@ int main(int argc, char* argv[])
         Property prop;
         SerialBuffer sb;
         time_t t = time(NULL);
-        int addr_min = client_config.minAddr;
-        int addr_max = client_config.maxAddr;
-        int addr_max_common = client_config.commonAddr;
+        //int addr_min = client_config.minAddr;
+        //int addr_max = client_config.maxAddr;
+        //int addr_max_common = client_config.commonAddr;
+
+        int addr_min = 1;
+        int addr_max = 10;
+        int addr_max_common = 5;
 
         if (addr_min > addr_max) {
           smsc_log_warn(logger, "start address will be %d end address will be %d", addr_max, addr_min);
