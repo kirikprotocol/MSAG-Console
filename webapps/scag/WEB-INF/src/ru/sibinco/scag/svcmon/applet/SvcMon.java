@@ -19,7 +19,7 @@ import java.net.Socket;
 import java.util.Locale;
 import java.util.HashSet;
 import java.io.InputStream;
-
+import java.util.Calendar;
 /**
  * The <code>SvcMon</code> class represents
  * <p><p/>
@@ -47,11 +47,6 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
     SvcSnap svcSnap;
 
-    public static final String BUTTON_SELECT = "Select all";
-    public static final String BUTTON_DESELECT = "Deselect all";
-    public static final String BUTTON_OK = "Ok";
-    public static final String BUTTON_CLOSE = "Close";
-
     public static final String TYPE_SMPP = "SMPP";
     public static final String TYPE_HTTP = "HTTP";
 
@@ -60,18 +55,28 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
     public HashSet smppViewList;
     public HashSet httpViewList;
 
-    public float xScale = 5;
-    public double yScale = 1;
+    public float smppXScale = 5;
+    public double smppYScale = 1;
+    public float httpXScale = 5;
+    public double httpYScale = 1;
 
-    public int SMPP_COUNT = 15;
-    public int HTTP_COUNT = 10;
 
-    private boolean hard = false;
+//    private boolean hard = false;
+    private boolean smppViewGraph = false;
+    private boolean httpViewGraph = false;
+    private boolean smppPauseGraph = false;
+    private boolean httpPauseGraph = false;
+
+    private Calendar smppPauseTime;
+    private Calendar httpPauseTime;
+//    public int SMPP_COUNT = 15;
+//    public int HTTP_COUNT = 10;
 
     public void init() {
 
         System.out.println("Initing..." );
         localText = new RemoteResourceBundle(getCodeBase(),getParameter("resource_servlet_uri"));
+        System.out.println("SvcMon:getCodeBase()=" + getCodeBase() + ".");
         locale=localText.getLocale();
         maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
 //        graphScale = Integer.valueOf(getParameter("graph.scale")).intValue();
@@ -96,20 +101,32 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         public SmppPanel() {
             setLayout(new BorderLayout());
 //        GridBagConstraints gbc = new GridBagConstraints();
-//        gbc.gridy = 1;
-//        gbc.gridx = 1;
-//        gbc.gridwidth = 1;
-//        gbc.gridheight = 4;
-//        gbc.weightx = 1;
-//        gbc.weighty = 1;
-//            System.out.println("add smppTopGraph");
-            add(smppTopGraph, BorderLayout.CENTER );
+            setLayout( new BorderLayout() );
+            ScrollPane sp = new ScrollPane( ScrollPane.SCROLLBARS_AS_NEEDED );
+            sp.add( smppTopGraph );
+            add(sp, BorderLayout.CENTER );
             setFont( new Font("Dialog", Font.BOLD, 12) );
 
             ViewButtonPanel pan = new ViewButtonPanel(TYPE_SMPP);
-            add(pan, BorderLayout.SOUTH);
+            add( pan, BorderLayout.SOUTH );
 
             smppTopGraph.requestFocus();
+        }
+    }
+
+    class HttpPanel extends JPanel {
+        public HttpPanel() {
+            setLayout( new BorderLayout() );
+            ScrollPane sp = new ScrollPane( ScrollPane.SCROLLBARS_AS_NEEDED );
+            sp.add( httpTopGraph );
+//            setLayout( new BorderLayout() );
+            add( sp, BorderLayout.CENTER );
+            setFont(new Font("Dialog", Font.BOLD, 12));
+
+            ViewButtonPanel pan = new ViewButtonPanel(TYPE_HTTP);
+            add( pan, BorderLayout.SOUTH );
+
+            httpTopGraph.requestFocus();
         }
     }
 
@@ -117,10 +134,15 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
         public static final String BUTTON_SMPP_PROPERTIES = "Endpoints filter";
         public static final String BUTTON_HTTP_PROPERTIES = "Endpoints filter";
-        public static final String BUTTON_SCALE_Y_IN = "Y scale +";
-        public static final String BUTTON_SCALE_Y_OUT = "Y scale -";
-        public static final String BUTTON_SCALE_X_IN = "X scale +";
-        public static final String BUTTON_SCALE_X_OUT = "X scale -";
+        public static final String BUTTON_SCALE_Y_INC = "Y scale <>";
+        public static final String BUTTON_SCALE_Y_DEC = "Y scale ><";
+        public static final String BUTTON_SCALE_X_INC = "X scale <>";
+        public static final String BUTTON_SCALE_X_DEC = "X scale ><";
+        public static final String BUTTON_SHOW_GRAPH = "Show graph";
+        public static final String BUTTON_HIDE_GRAPH = "Hide graph";
+        public static final String BUTTON_PAUSE_GRAPH = "Pause graph";
+        public static final String BUTTON_CONTINUE_GRAPH = "Continue graph";
+
         public static final int SCALE_STEP_Y = 1;
         public static final int SCALE_STEP_X = 1;
 
@@ -133,11 +155,12 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
             }else {
                 viewPropertiesButton = new JButton(BUTTON_HTTP_PROPERTIES);
             }
-            final JButton zoomYInPropButton = new JButton(BUTTON_SCALE_Y_IN);
-            final JButton zoomYOutPropButton = new JButton(BUTTON_SCALE_Y_OUT);
-            final JButton zoomXInPropButton = new JButton(BUTTON_SCALE_X_IN);
-            final JButton zoomXOutPropButton = new JButton(BUTTON_SCALE_X_OUT);
-//            JButton hardButton = new JButton("HARD");
+            final JButton incYButton = new JButton(BUTTON_SCALE_Y_INC);
+            final JButton decYButton = new JButton(BUTTON_SCALE_Y_DEC);
+            final JButton incXButton = new JButton(BUTTON_SCALE_X_INC);
+            final JButton decXButton = new JButton(BUTTON_SCALE_X_DEC);
+            final JButton showGraphButton = new JButton(BUTTON_SHOW_GRAPH);
+            final JButton pauseGraphButton = new JButton(BUTTON_PAUSE_GRAPH);
 
 //            HardListener hardListener = new HardListener();
 //            hardButton.addActionListener(hardListener);
@@ -145,28 +168,93 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 //            setLayout( new GridLayout(1,3) );
             setLayout( new GridBagLayout() );
             GridBagConstraints gbc = new GridBagConstraints();
+            gbc.gridheight = 1;
+            gbc.weightx = 1;
+            gbc.fill = GridBagConstraints.BOTH;
+
             gbc.gridy = 1;
             gbc.gridx = 1;
             gbc.gridheight = 2;
-            gbc.weightx =1;
-            gbc.fill = GridBagConstraints.BOTH;
             add(viewPropertiesButton, gbc);
-
             gbc.gridheight = 1;
-
             gbc.gridy = 1;
             gbc.gridx = 2;
-            add(zoomYInPropButton, gbc);
+            add(incYButton, gbc);
             gbc.gridy = 1;
             gbc.gridx = 3;
-            add(zoomYOutPropButton, gbc);
+            add(decYButton, gbc);
 
             gbc.gridy = 2;
             gbc.gridx = 2;
-            add(zoomXInPropButton, gbc);
+            add(incXButton, gbc);
             gbc.gridy = 2;
             gbc.gridx = 3;
-            add(zoomXOutPropButton, gbc);
+            add(decXButton, gbc);
+
+            gbc.gridy = 1;
+            gbc.gridx = 4;
+            gbc.gridheight = 2;
+            add(showGraphButton, gbc);
+
+
+            gbc.gridheight = 2;
+            gbc.gridy = 1;
+            gbc.gridx = 5;
+            add(pauseGraphButton, gbc);
+
+            ActionListener pauseGraphListener = new
+                ActionListener(){
+                    public void actionPerformed(ActionEvent event){
+//                        viewPause = (viewPause == true)? false: true;
+                        if( type.equals(TYPE_SMPP) ){
+                            if( smppPauseGraph == true ){
+                                smppPauseGraph = false;
+                                pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
+                            }else{
+                                smppPauseGraph = true;
+                                smppPauseTime = Calendar.getInstance();
+                                pauseGraphButton.setText( BUTTON_CONTINUE_GRAPH );
+                            }
+                            System.out.println("smpppPauseGraph has set to '" + smppPauseGraph + "'");
+                        }else if( type.equals(TYPE_HTTP) ){
+                            if( httpPauseGraph == true ){
+                                httpPauseGraph = false;
+                                pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
+                            }else{
+                                httpPauseGraph = true;
+                                httpPauseTime = Calendar.getInstance();
+                                pauseGraphButton.setText( BUTTON_CONTINUE_GRAPH );
+                            }
+                            System.out.println("httpPauseGraph has set to '" + httpPauseGraph + "'");
+                        }
+                    }
+                };
+            pauseGraphButton.addActionListener( pauseGraphListener );
+
+            ActionListener viewGraphListener = new
+                ActionListener(){
+                    public void actionPerformed(ActionEvent event){
+                        if( type.equals(TYPE_SMPP) ){
+//                            smppViewGraph = (smppViewGraph == true)? false: true;
+                            if( smppViewGraph == true ){
+                                smppViewGraph = false;
+                                showGraphButton.setText( BUTTON_SHOW_GRAPH );
+                            }else{
+                                smppViewGraph = true;
+                                showGraphButton.setText( BUTTON_HIDE_GRAPH );
+                            }
+                        }else if( type.equals(TYPE_HTTP) ){
+                            if( httpViewGraph == true ){
+                                httpViewGraph = false;
+                                showGraphButton.setText( BUTTON_SHOW_GRAPH );
+                            }else{
+                                httpViewGraph = true;
+                                showGraphButton.setText( BUTTON_HIDE_GRAPH );
+                            }
+                        }
+                    }
+                };
+            showGraphButton.addActionListener( viewGraphListener );
 
 //            add(hardButton);
 
@@ -183,68 +271,62 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                 ActionListener(){
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
-                            yScale = yScale<1? yScale*2: yScale+SCALE_STEP_Y;
-                            System.out.println("SMPP zoomYInListener. new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
+                            smppYScale = smppYScale<1? smppYScale*2: smppYScale + SCALE_STEP_Y;
+                            System.out.println("SMPP zoomYInListener. new is " + smppYScale + " Before " + (smppYScale - SCALE_STEP_Y) );
                         }else if( type.equals(TYPE_HTTP) ){
-//                            graphScale+=SCALE_STEP;
-//                            maxSpeed = 100;
-                            System.out.println("HTTP zoomYInListener new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
+                            httpYScale = httpYScale<1? httpYScale*2: httpYScale + SCALE_STEP_Y;
+                            System.out.println("HTTP zoomYInListener new is " + httpYScale + " Before " + (httpYScale - SCALE_STEP_Y) );
                         }
 //                        smppTopGraph.maxSpeed = 200;
                         smppTopGraph.invalidate();
                     }
                 };
-            zoomYInPropButton.addActionListener(zoomYInListener);
+            incYButton.addActionListener(zoomYInListener);
 
             ActionListener zoomYOutListener = new
                 ActionListener(){
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
                             System.out.println("SMPP zoomYOutListener");
-                            yScale = yScale>1?yScale-SCALE_STEP_Y:yScale>0.125? yScale/2: yScale;
+                            smppYScale = smppYScale>1?smppYScale - SCALE_STEP_Y: smppYScale>0.125? smppYScale/2: smppYScale;
                         }else if( type.equals(TYPE_HTTP) ){
                             System.out.println("HTTP zoomYOutListener");
-//                            if ( graphScale>1) {
-//                                graphScale-=SCALE_STEP;
-//                                maxSpeed = 200;
-//                            }
+                            httpYScale = httpYScale>1?httpYScale - SCALE_STEP_Y: httpYScale>0.125? httpYScale/2: httpYScale;
                         }
-//                        smppTopGraph.maxSpeed = 200;
                         smppTopGraph.invalidate();
                     }
                 };
-            zoomYOutPropButton.addActionListener(zoomYOutListener);
+            decYButton.addActionListener(zoomYOutListener);
 
             ActionListener zoomXInListener = new
                 ActionListener(){
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
-                            xScale += SCALE_STEP_X;
-                            System.out.println("SMPP zoomXInListener new is " + yScale + " Before " + (xScale-SCALE_STEP_X) );
+                            smppXScale += SCALE_STEP_X;
+                            System.out.println("SMPP zoomXInListener new is " + smppYScale + " Before " + (smppXScale-SCALE_STEP_X) );
                         }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomXInListener new is " + yScale + " Before " + (xScale-SCALE_STEP_X) );
+                            httpXScale += SCALE_STEP_X;
+                            System.out.println("HTTP zoomXInListener new is " + httpXScale + " Before " + (httpXScale-SCALE_STEP_X) );
                         }
                         smppTopGraph.invalidate();
                     }
                 };
-            zoomXInPropButton.addActionListener(zoomXInListener);
+            incXButton.addActionListener(zoomXInListener);
 
             ActionListener zoomXOutListener = new
                 ActionListener(){
                     public void actionPerformed(ActionEvent event){
                         if( type.equals(TYPE_SMPP) ){
-                            xScale = xScale>1?xScale-SCALE_STEP_X:xScale;;
+//                            System.out.println("SMPP zoomXOutListener");
+                            smppXScale = smppXScale>1?smppXScale - SCALE_STEP_X: smppXScale;;
                         }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomXOutListener");
-//                            if ( graphScale>1) {
-//                                graphScale-=SCALE_STEP;
-//                                maxSpeed = 200;
-//                            }
+//                            System.out.println("HTTP zoomXOutListener");
+                            httpXScale = httpXScale>1?httpXScale - SCALE_STEP_X: httpXScale;;
                         }
                         smppTopGraph.invalidate();
                     }
                 };
-            zoomXOutPropButton.addActionListener(zoomXOutListener);
+            decXButton.addActionListener(zoomXOutListener);
         }
     }
 
@@ -308,7 +390,13 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
     }
 
+    public static final String BUTTON_OK = "Ok";
+
     class OkCancelPanel extends JPanel{
+
+        public static final String BUTTON_CLOSE = "Close";
+
+
         public OkCancelPanel( final JFrame frame, CheckboxPanel checkPanel, String type ){
             setLayout( new GridLayout(1,3));
 
@@ -319,7 +407,7 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
             add(cancelButton);
 //            add(hardButton);
 
-            HardListener hardListener = new HardListener();
+//            HardListener hardListener = new HardListener();
 //            hardButton.addActionListener(hardListener);
 
             ActionListener exit = new
@@ -334,14 +422,58 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         }
     }
 
-    class HardListener implements ActionListener{
+    class OkListener implements ActionListener{
+        CheckboxPanel panel;
+        String type;
+
+        public OkListener( CheckboxPanel panel, String type ) {
+            this.panel = panel;
+            this.type = type;
+        }
+
         public void actionPerformed(ActionEvent e) {
-            hard = hard?false:true;
-            System.out.println("HARD has been set to '" + hard + "'");
+            if(e.getSource() instanceof JButton ){
+//                SmppSnap[] smppSnaps = svcSnap.smppSnaps;
+                JButton button = (JButton)e.getSource();
+                System.out.println( "BUTTON: " + button.getText() );
+                if( button.getText().equals(BUTTON_OK) ){
+                    HashSet temp = new HashSet();
+                    for( int i = 0; i<panel.getComponentCount(); i++ ){
+                        Component comp = panel.getComponent(i);
+                        if( comp instanceof JCheckBox ){
+                            JCheckBox checkBox = (JCheckBox)comp;
+                            String checkName = checkBox.getText();
+                            System.out.println( "JCheckBox " + checkName );
+                            if( checkBox.isSelected()){
+                                temp.add( checkName );
+                            }
+                        }
+                    }
+                    if(type.equals(TYPE_SMPP)){
+                        smppViewList = temp;
+                        System.out.println("After OK smppViewList='" + smppViewList + "'");
+                    }else if(type.equals(TYPE_HTTP)){
+                        httpViewList = temp;
+                        System.out.println("After OK httpViewList='" + httpViewList + "'");
+                    }
+                }
+            }
+
         }
     }
 
+//    class HardListener implements ActionListener{
+//        public void actionPerformed(ActionEvent e) {
+//            hard = hard?false:true;
+//            System.out.println("HARD has been set to '" + hard + "'");
+//        }
+//    }
+
+    public static final String BUTTON_SELECT = "Select all";
+    public static final String BUTTON_DESELECT = "Deselect all";
+    
     class SelectPanel extends JPanel{
+
         public SelectPanel(CheckboxPanel checkPanel){
             setLayout( new GridLayout(1,2));
             JButton selectAllButton = new JButton(BUTTON_SELECT);
@@ -388,37 +520,37 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
     }
 
-    public SvcSnap initHardSnaps(){
-        SvcSnap snaps = new SvcSnap();
-        snaps.smppCount = SMPP_COUNT;
-        snaps.httpCount = HTTP_COUNT;
-
-        snaps.smppSnaps = new SmppSnap [snaps.smppCount];
-        SmppSnap smppSnap;
-        for( int i= 0; i<snaps.smppCount; i++ ){
-            smppSnap = new SmppSnap();
-            smppSnap.smppId = "smppId"+i;
-            for(int ii=0; ii<SmppSnap.COUNTERS; ii++){
-                smppSnap.smppAvgSpeed[ii]=(short)ii;
-                smppSnap.smppSpeed[ii]=(short)(ii*2);
-            }
-            snaps.smppSnaps[i]= smppSnap;
-        }
-
-        snaps.httpSnaps = new HttpSnap [snaps.httpCount];
-        HttpSnap httpSnap;
-        for( int i=0; i<snaps.httpCount; i++ ){
-            httpSnap = new HttpSnap();
-            httpSnap.httpId = "httpId"+i;
-            for(int ii=0; ii<HttpSnap.COUNTERS; ii++){
-                httpSnap.httpAvgSpeed[ii]=(short)ii;
-                httpSnap.httpSpeed[ii]=(short)(ii*2);
-            }
-            snaps.httpSnaps[i]= httpSnap;
-        }
-
-        return snaps;
-    }
+//    public SvcSnap initHardSnaps(){
+//        SvcSnap snaps = new SvcSnap();
+//        snaps.smppCount = SMPP_COUNT;
+//        snaps.httpCount = HTTP_COUNT;
+//
+//        snaps.smppSnaps = new SmppSnap [snaps.smppCount];
+//        SmppSnap smppSnap;
+//        for( int i= 0; i<snaps.smppCount; i++ ){
+//            smppSnap = new SmppSnap();
+//            smppSnap.smppId = "smppId"+i;
+//            for(int ii=0; ii<SmppSnap.COUNTERS; ii++){
+//                smppSnap.smppAvgSpeed[ii]=(short)ii;
+//                smppSnap.smppSpeed[ii]=(short)(ii*2);
+//            }
+//            snaps.smppSnaps[i]= smppSnap;
+//        }
+//
+//        snaps.httpSnaps = new HttpSnap [snaps.httpCount];
+//        HttpSnap httpSnap;
+//        for( int i=0; i<snaps.httpCount; i++ ){
+//            httpSnap = new HttpSnap();
+//            httpSnap.httpId = "httpId"+i;
+//            for(int ii=0; ii<HttpSnap.COUNTERS; ii++){
+//                httpSnap.httpAvgSpeed[ii]=(short)ii;
+//                httpSnap.httpSpeed[ii]=(short)(ii*2);
+//            }
+//            snaps.httpSnaps[i]= httpSnap;
+//        }
+//
+//        return snaps;
+//    }
 
     class SelectDeSelectAllListeber implements ActionListener{
         CheckboxPanel panel;
@@ -460,82 +592,6 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
         }
     }
 
-    class OkListener implements ActionListener{
-        CheckboxPanel panel;
-        String type;
-//        SvcSnap svcSnap;
-//        HttpSnap[] httpSnaps;
-
-//        public OkListener( CheckboxPanel panel, SvcSnap svcSnap ) {
-//            this.panel = panel;
-//            this.svcSnap = svcSnap;
-//        }
-
-        public OkListener( CheckboxPanel panel, String type ) {
-            this.panel = panel;
-            this.type = type;
-        }
-
-        public void actionPerformed(ActionEvent e) {
-            if(e.getSource() instanceof JButton ){
-//                SmppSnap[] smppSnaps = svcSnap.smppSnaps;
-                JButton button = (JButton)e.getSource();
-                System.out.println( "BUTTON: " + button.getText() );
-                if( button.getText().equals(BUTTON_OK) ){
-                    HashSet temp = new HashSet();
-                    for( int i = 0; i<panel.getComponentCount(); i++ ){
-                        Component comp = panel.getComponent(i);
-                        if( comp instanceof JCheckBox ){
-                            JCheckBox checkBox = (JCheckBox)comp;
-                            String checkName = checkBox.getText();
-                            System.out.println( "JCheckBox " + checkName );
-                            if( checkBox.isSelected()){
-                                temp.add( checkName );
-                            }
-                        }
-                    }
-                    if(type.equals(TYPE_SMPP)){
-                        smppViewList = temp;
-                        System.out.println("After OK smppViewList='" + smppViewList + "'");
-                    }else if(type.equals(TYPE_HTTP)){
-                        httpViewList = temp;
-                        System.out.println("After OK httpViewList='" + httpViewList + "'");
-                    }
-                }
-            }
-
-        }
-    } //end OkListener
-
-    class HttpPanel extends JPanel {
-        public HttpPanel() {
-//            setLayout(new BorderLayout());
-//            add(httpTopGraph, BorderLayout.CENTER);
-//            setFont(new Font("Dialog", Font.BOLD, 12));
-//
-//            final JButton smppPropButton = new JButton( BUTTON_HTTP_PROPERTIES );
-//            add( smppPropButton, BorderLayout.SOUTH );
-//            ActionListener newListener = new
-//                ActionListener(){
-//                    public void actionPerformed( ActionEvent event ){
-//                        ViewPropertyFrame blank = new ViewPropertyFrame(TYPE_HTTP);
-//                        blank.show();
-//                    }
-//                };
-//            smppPropButton.addActionListener( newListener );
-//            httpTopGraph.requestFocus();
-            System.out.println("HttpPanel create");
-            setLayout(new BorderLayout());
-            add(httpTopGraph, BorderLayout.CENTER );
-            setFont(new Font("Dialog", Font.BOLD, 12));
-
-            ViewButtonPanel pan = new ViewButtonPanel(TYPE_HTTP);
-            add( pan, BorderLayout.SOUTH );
-
-            httpTopGraph.requestFocus();
-        }
-    }
-
     class MmsPanel extends JPanel {
         public MmsPanel() {
             setLayout(new BorderLayout());
@@ -571,11 +627,11 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
 
         System.out.println("gotFirstSnap:smppCount=" + snap.smppCount + "\tsmppViewList='" + smppViewList + "'" + "\nmaxSpeed=" + maxSpeed);
         smppTopGraph = new SmppTopGraph(snap, maxSpeed, graphScale, graphGrid,
-                graphHiGrid, graphHead, localText, snapSmppHistory, smppViewList );
+                graphHiGrid, graphHead, localText, snapSmppHistory, smppViewList, smppViewGraph );
 
         System.out.println("gotFirstSnap:httpCount=" + snap.httpCount + "\thttpViewList='" + httpViewList + "'");
         httpTopGraph = new HttpTopGraph(snap, maxSpeed, graphScale, graphGrid,
-                graphHiGrid, graphHead, localText, snapHttpHistory, httpViewList);
+                graphHiGrid, graphHead, localText, snapHttpHistory, httpViewList, httpViewGraph);
 
         JTabbedPane jTabbedPane = new JTabbedPane();
         jTabbedPane.addTab("SMPP", new SmppPanel());
@@ -614,20 +670,26 @@ public class SvcMon extends Applet implements Runnable, MouseListener, ActionLis
                     is = new DataInputStream(is1);
                     SvcSnap snap = new SvcSnap();
                     snap.read(is);
-                    if(hard){
-                        snap = initHardSnaps();
-                    }
+//                    if(hard){
+//                        snap = initHardSnaps();
+//                    }
                     svcSnap = snap;
                     gotFirstSnap(snap);
                     while (!isStopping) {
                         snap.read(is);
-//                        if(hard){
-//                            snap = initHardSnaps();
+//                        if( smppPauseGraph && (Calendar.getInstance().getTimeInMillis() - smppPauseTime.getTimeInMillis()) > 60000 ){
+//                            smppPauseGraph = false;
 //                        }
+                        if( !smppPauseGraph ){
+//                            snap.read(is);
+                            smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, smppXScale, smppYScale, smppViewGraph);
+                        }
+                        if( !httpPauseGraph ){
+//                            snap.read(is);
+                            httpTopGraph.setSnap(snap, httpViewList, graphScale, maxSpeed, httpXScale, httpYScale, httpViewGraph);
+                        }
+
                         svcSnap = snap;
-//                        System.out.println("run():graphScale=" + graphScale);
-                        smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, xScale, yScale);
-                        httpTopGraph.setSnap(snap, httpViewList, graphScale );
                     }
                 } catch (IOException ex) {
                     removeAll();

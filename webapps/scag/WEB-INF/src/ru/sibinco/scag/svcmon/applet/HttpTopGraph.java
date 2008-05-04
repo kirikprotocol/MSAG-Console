@@ -6,7 +6,6 @@ package ru.sibinco.scag.svcmon.applet;
 
 import ru.sibinco.scag.svcmon.SvcSnap;
 import ru.sibinco.scag.svcmon.snap.HttpSnap;
-import ru.sibinco.scag.svcmon.snap.SmppSnap;
 import ru.sibinco.scag.util.RemoteResourceBundle;
 
 import java.awt.*;
@@ -17,6 +16,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Calendar;
+import java.text.SimpleDateFormat;
 
 /**
  * The <code>HttpTopGraph</code> class represents
@@ -54,7 +55,14 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
     private static final Color colorGraphResponsed = Color.green;
     private static final Color colorGraphResponseRejected = Color.cyan;
     private static final Color colorGraphDelivered = Color.orange;
+    private static final Color colorGraphFailed_ = Color.red;
+
+    private static final Color colorGraphAccepted = Color.blue;
+    private static final Color colorGraphRejected = Color.white;
+    private static final Color colorGraphDeliver = Color.green;
+    private static final Color colorGraphGwRejected = Color.cyan;
     private static final Color colorGraphFailed = Color.red;
+
 
     Image offscreen;
     int bottomSpace = pad;
@@ -90,9 +98,14 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 
     Font graphFont;
     int graphTextWidth;
-    int barSeparator = 4;
+    int barSeparator = 2;
 
     HashSet httpViewList;
+    double yScale = 1;
+    int xScale = 10;
+    int rest = 0;
+    public static final int DELIMITER = 2;
+    boolean viewGraph = false;
 
     public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
                         int graphGrid, int graphHiGrid,
@@ -131,9 +144,29 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         addMouseMotionListener(this);
         addKeyListener(this);
         graphFont = new Font("dialog", Font.PLAIN, 10);
-        setSnap(snap);
-
+//        setSnap(snap);
     }
+
+    public HttpTopGraph(SvcSnap snap, int maxSpeed, int graphScale,
+                        int graphGrid, int graphHiGrid,
+                        int graphHead, RemoteResourceBundle localeText,
+                        SnapHttpHistory snapHttpHistory, HashSet httpViewList, boolean viewGraph) {
+        super();
+        this.maxSpeed = maxSpeed;
+        this.localeText = localeText;
+        this.graphScale = graphScale;
+        this.graphGrid = graphGrid;
+        this.graphHiGrid = graphHiGrid;
+        this.graphHead = graphHead;
+        this.snapHttpHistory = snapHttpHistory;
+        this.httpViewList = httpViewList;
+        addMouseListener(this);
+        addMouseMotionListener(this);
+        addKeyListener(this);
+        graphFont = new Font("dialog", Font.PLAIN, 10);
+        this.viewGraph = viewGraph;
+    }
+
     public void setSnap(SvcSnap snap) {
         snapHttpHistory.addSnap(snap);
         this.snap = new SvcSnap(snap);
@@ -161,6 +194,22 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         if (httpComparator != null)
             this.snap.sortHttpSnaps(httpComparator);
 
+        repaint();
+    }
+
+    public void setSnap(SvcSnap snap, HashSet viewList, int scale, int maxSpeed, float xScale, double yScale, boolean viewGraph) {
+        System.out.println( "HttpTopGraph:setSnap() '" + snap + "'\nviewList='" + viewList + "'\t\nscale=" + scale + "\t\nmaxSpeed='" + maxSpeed + "'");
+        snapHttpHistory.addSnap(snap);
+        this.snap = new SvcSnap(snap);
+        this.httpViewList = viewList;
+        this.graphScale = scale;
+        this.maxSpeed = maxSpeed;
+        this.yScale = yScale;
+        this.xScale = (int)xScale;
+        if (httpComparator != null)
+            this.snap.sortHttpSnaps(httpComparator);
+        rest += xScale;
+        this.viewGraph = viewGraph;
         repaint();
     }
 
@@ -195,7 +244,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         super.invalidate();
     }
 
-    public void paint(Graphics gg) {
+    public void paint_(Graphics gg) {
         Dimension size = getSize();
         if (!(size.width > 0 && size.height > 0)) return;
         if (offscreen == null) {
@@ -269,7 +318,88 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.dispose();
     }
 
-    void drawSeparator(Graphics g, Dimension size) {
+    public void paint(Graphics gg) {
+        Dimension size = getSize();
+        if (!(size.width > 0 && size.height > 0)) return;
+        if (offscreen == null) {
+            offscreen = createImage(size.width, size.height);
+        }
+        Graphics g = offscreen.getGraphics();
+        Font font = getFont();
+        FontMetrics fm = getFontMetrics(font);
+        int fh = fm.getHeight();
+        g.setColor(colorBackground);
+        g.fillRect(0, 0, size.width, size.height);
+
+//        g.setClip(0, 0, size.width, size.height - split);
+        g.setClip(0, 0, size.width, size.height);
+        drawSortState(g, fm);
+        // drawing heading
+        g.setColor(SystemColor.control);
+        g.drawLine(pad, pad + fh + 1, size.width - pad, pad + fh + 1);
+
+        int x = 0;
+        g.setColor(headColor);
+        int hpos = pad + fm.getAscent();
+
+        x = httpListStart;
+        g.setColor(smeColor);
+        g.drawString(localeText.getString("snh.smename"), x + pad, hpos);
+        x += smeNameWidth;
+        String avgStr = localeText.getString("snh.count.avg");
+        for (int i = 0; i < HttpSnap.COUNTERS; i++) {
+            g.setColor(columnsColor[i]);
+            drawCounterHead(g, localeText.getString("snh.count." + i), x + pad, hpos, fm);
+            x += pad + counterWidth;
+            drawCounterHead(g, avgStr, x + pad, hpos, fm);
+            x += pad + counterWidth;
+        }
+        // draw graph scale
+        x = httpGraphStart + 1;
+        g.setColor(graphColor);
+        for (int i = graphHead; ; i += graphHead) {
+            int pos = x + (int)(i * graphScale);
+            if (pos >= size.width - pad) break;
+//            String s = String.valueOf(i);
+            String s = String.valueOf(new Float(i/yScale).intValue());
+            g.drawString(s, pos - (fm.stringWidth(s) / 2), hpos);
+        }
+
+        g.setColor(headColor);
+        g.drawLine(pad, pad + fh + 1, size.width - pad, pad + fh + 1);
+
+        // draw counters
+        int y = headerHeight;
+        x = 0;
+        y = pad + fh + 1;
+        x = httpListStart;
+        int ii = 0;
+        for (int i = 0; i < snap.httpCount; i++) {
+            if(  httpViewList == null || httpViewList.contains( ((HttpSnap)snap.httpSnaps[i]).httpId ) ){
+                if ((ii % 2) == 0) {
+                    g.setColor(colorHiBackground);
+                    g.fillRect(x + pad, y, size.width - x - 2 * pad, rowHeight);
+                }
+                drawHttpSnap(g, i, x, y, size, fm);
+                y += rowHeight;
+                ii++;
+            }
+        }
+        g.setClip(0, size.height/DELIMITER, size.width, size.height);
+        if(viewGraph){
+            g.setColor(colorBackground);
+            g.fillRect( 0, size.height/DELIMITER, size.width, size.height );
+            drawSeparator(g, size);
+            g.setClip(0, size.height/DELIMITER+10, size.width, size.height);
+            drawGraph(g, size);
+        }
+        g.setClip(0, 0, size.width, size.height);
+//        System.out.println("paint():maxSpeed='" + maxSpeed + "'\n================================");
+        gg.drawImage(offscreen, 0, 0, null);
+        g.dispose();
+    }
+
+    void drawSeparator_(Graphics g, Dimension size) {
         g.setColor(SystemColor.control);
         g.fillRect(pad, 0, separatorWidth, size.height);
         if (split > 0) g.fillRect(0, size.height - split, size.width, separatorWidth);
@@ -284,7 +414,42 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         if (split > 0) g.drawLine(pad, hp, size.width - pad, hp);
     }
 
-    void drawHttpSnap(Graphics g, int i, int x, int y, Dimension size, FontMetrics fm) {
+    int top_sep=0;
+
+    void drawSeparator(Graphics g, Dimension size) {
+        g.setColor(SystemColor.control);
+        int hp = (int)size.height/DELIMITER;
+        top_sep = hp;
+        g.setColor(SystemColor.controlHighlight);
+        if (split < 0){ g.setColor(SystemColor.controlShadow); }
+        g.drawLine(0, hp, size.width - pad, hp);
+    }
+
+    void drawSeparator_l(Graphics g, Dimension size) {
+        g.setColor(SystemColor.control);
+        int stepUp = 10;
+        g.fillRect(pad, 0, separatorWidth, size.height);
+        if (split > 0) g.fillRect(0, size.height - split - stepUp, size.width, separatorWidth);
+        int sl = (separatorWidth - 2) / 2;
+        //int vp = errListWidth + pad + sl;
+        int vp = pad + sl;
+//        int hp = size.height - split + sl - stepUp;
+        int hp = (int)size.height/DELIMITER;
+        top_sep = hp;
+//        graphScale = size.height*2/3/maxSpeed;
+//        yParam = size.height*2/3/maxSpeed;
+
+        g.setColor(SystemColor.controlHighlight);
+//        g.drawLine(vp + 1, pad + 1, vp + 1, size.height - pad);
+        g.drawLine(vp + 1, pad + 1, vp + 1, top_sep);
+        if (split > 0) g.drawLine(pad + 1, hp + 1, size.width - pad - 1, hp + 1);
+        g.setColor(SystemColor.controlShadow);
+        g.drawLine(vp, pad, vp, size.height - pad - 1);
+        if (split > 0) g.drawLine(pad, hp, size.width - pad, hp);
+    }
+
+
+    void drawHttpSnap_(Graphics g, int i, int x, int y, Dimension size, FontMetrics fm) {
         int hpos = y + fm.getAscent();
         HttpSnap ss = snap.httpSnaps[i];
         if (snapHttpHistory.getCurrentHttp() != null && snapHttpHistory.getCurrentHttp().equals(ss.httpId))
@@ -322,6 +487,44 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         }
     }
 
+    void drawHttpSnap(Graphics g, int i, int x, int y, Dimension size, FontMetrics fm) {
+        int hpos = y + fm.getAscent();
+        HttpSnap ss = snap.httpSnaps[i];
+        if( snapHttpHistory.getCurrentHttp() != null && snapHttpHistory.getCurrentHttp().equals(ss.httpId) )
+            g.setColor(smeHiColor);
+        else
+            g.setColor(smeColor);
+        g.drawString(ss.httpId, x + pad, hpos);
+        x += pad + smeNameWidth;
+        for (int k = 0; k < HttpSnap.COUNTERS; k++) {
+            g.setColor(columnsColor[k]);
+            drawCounter(g, ss.httpSpeed[k], x + pad, hpos, fm);
+            x += pad + counterWidth;
+            drawCounter(g, ss.httpAvgSpeed[k], x + pad, hpos, fm);
+            x += pad + counterWidth;
+        }
+        x += pad + pad;
+        for (int k = 0; k < HttpSnap.COUNTERS; k++) {
+            if (ss.httpSpeed[k] > 0) {
+                g.setColor(columnsColor[k]);
+//                g.fillRect(x + 1, y + 1 + k * 2, (int)(ss.smppSpeed[k] * graphScale), 2);
+                g.fillRect(x + 1, y + 1 + k * 2, (int)(ss.httpSpeed[k] * graphScale * yScale), 2);
+            }
+        }
+        g.setColor(graphColor);
+        g.drawLine(x + pad, y, x + pad, y + rowHeight);
+        x++;
+        for (int k = graphGrid; ; k += graphGrid) {
+            int pos = x + (int)(k * graphScale);
+            if (pos >= (size.width - pad)) break;
+            if ((k % graphHiGrid) == 0) {
+                g.setColor(graphHiGridColor);
+            } else {
+                g.setColor(graphGridColor);
+            }
+            g.drawLine(pos, y, pos, y + rowHeight);
+        }
+    }
 
     void drawCounter(Graphics g, int cnt, int x, int y, FontMetrics fm) {
         String cc = String.valueOf(cnt);
@@ -360,7 +563,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         }
     }
 
-    void drawGraph(Graphics g, Dimension size) {
+    void drawGraph_(Graphics g, Dimension size) {
         g.setColor(graphHiGridColor);
         FontMetrics fm = getFontMetrics(graphFont);
         int fh = fm.getHeight();
@@ -485,12 +688,248 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.setFont(getFont());
     }
 
-    protected void drawGraphLine(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
+    void drawGraph(Graphics g, Dimension size) {
+//        System.out.println("drawGraph():start");
+        g.setColor(graphHiGridColor);
+        FontMetrics fm = getFontMetrics(graphFont);
+        int fh = fm.getHeight();
+        int height = 0;
+        //height = split - separatorWidth - pad;
+//        System.out.println( "size.height=" + size.height + " size.width=" + size.getWidth() );
+        int top = 0;
+        //top = size.height - height;
+        top = top_sep + 10 ;
+//        System.out.println("top="+ top + " | heigth=" + height);
+        int y = size.height - pad - fh - pad;
+        int barwidth = (graphTextWidth - 3 * barSeparator - 5 * pad) / 2;
+        g.setFont(graphFont);
+// draw bars
+        int barx = pad + graphTextWidth + barSeparator + pad + barwidth-2;
+        g.setColor(graphBarBGColor);
+        HttpSnap smesnap = snapHttpHistory.getHttpLast();
+
+        if (smesnap == null) return;
+        if ( !viewGraph ) return;
+
+        int spent = 0;
+
+        g.drawString( "XS=" + xScale, barx-20, y+10);
+        g.drawString( "YS=" + yScale, barx+10, y+10);
+
+// last RequestRejected
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top, barwidth, y - top);
+        g.setColor(colorGraphRequestRejected);
+        int barHeight = new Float(smesnap.httpSpeed[HttpSnap.REQUEST_REJECTED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight, barwidth, barHeight);
+//        spent += barHeight;
+
+// last ResponseRejected
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top, barwidth, y-top);
+        g.setColor(colorGraphRequested);
+        barHeight = new Float(smesnap.httpSpeed[HttpSnap.REQUEST_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+//        spent += barHeight;
+
+// last Requested
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top, barwidth, y-top);
+        g.setColor(colorGraphResponsed);
+        barHeight = new Float(smesnap.httpSpeed[HttpSnap.RESPONSE_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+
+// last Delivered
+        spent = 0;
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top, barwidth, y-top);
+        g.setColor(colorGraphFailed);
+        barHeight = new Float(smesnap.httpSpeed[HttpSnap.FAILED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight, barwidth, barHeight);
+//        spent += barHeight;
+
+// last retry bar
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top, barwidth, y-top);
+        g.setColor(colorGraphDelivered);
+        barHeight = new Float(smesnap.httpSpeed[HttpSnap.DELIVERED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+//        spent += barHeight;
+
+// last submit ok bar
+        barx += barwidth + barSeparator;
+        g.setColor(graphBarBGColor);
+        g.fillRect(barx, top, barwidth, y-top);
+        g.setColor(colorGraphResponseRejected);
+        barHeight = new Float(smesnap.httpSpeed[HttpSnap.RESPONSE_REJECTED_INDEX] * graphScale * yScale).intValue();
+        g.fillRect(barx, y - barHeight - spent, barwidth, barHeight + spent);
+
+//  Y
+        g.setColor(graphColor);
+        for (int i = 0; y - (i * graphScale) >= top; i += graphHead) {
+            String s = String.valueOf( new Float(i/yScale).intValue() );
+            g.drawString(s, graphTextWidth - fm.stringWidth(s), y - (int)(i * graphScale) + fm.getDescent()+5);
+        }
+//  time line
+        int lineLeft = pad + graphTextWidth + pad;
+        g.drawLine(lineLeft, y, size.width - pad - pad, y);
+        y--;
+
+        int graphXLeft = barx + barwidth*3;
+//  horizontal lines
+        for (int i = graphGrid; ; i += graphGrid) {
+            int pos = y - (int)(i * graphScale);
+
+            if( pos <= top ) break;
+
+            g.setColor(graphGridColor);
+            if ((i % graphHiGrid) == 0) {
+                g.setColor(graphHiGridColor);
+            } else {
+                g.setColor(graphGridColor);
+            }
+            g.drawLine(lineLeft, pos, size.width - pad, pos);
+        }
+// draw vertical lines
+        int right = size.width - pad - pad;
+//        int graphStart = 2 * pad + separatorWidth;
+
+        HttpSnap prevsnap = smesnap;
+//        int lastVert = 0 ;
+//  draw separator bars/graph
+        int posX = graphXLeft;
+        g.setColor(colorBackground);
+        for(int ii = 1; ii<=barwidth; ii++){
+            posX = graphXLeft-ii;
+            g.drawLine(posX, top, posX, y+1);
+        }
+
+        int start = right - rest;
+        java.util.Set timePoints = new java.util.TreeSet();
+//        int toLeft = 0;
+        int toRight = 0;
+        for (int i = 0; ; i += graphGrid) {
+            int posToLeft = start - (int)(i * graphScale);
+            int posToRight = start + (int)(i * graphScale);
+            if (posToLeft < graphXLeft && posToRight > right) {
+                break;
+            }
+            boolean add = false;
+            if( (i % graphHiGrid) == 0 ){
+                if( (++toRight % 2)==0 ){
+                    add = true;
+                }
+            }
+            if(posToLeft > graphXLeft){
+                if ((i % graphHiGrid) == 0){
+                    g.setColor(graphHiGridColor);
+                    if( add ){
+                        timePoints.add( new Integer(posToLeft) );
+                    }
+                }
+                else{
+                    g.setColor(graphGridColor);
+                }
+                g.drawLine(posToLeft, top+1, posToLeft, y-1);
+            }
+
+            if( posToRight < right && posToRight > graphXLeft ){
+                if ((i % graphHiGrid) == 0){
+                    g.setColor(graphHiGridColor);
+
+                    if( add ) {
+                        timePoints.add( new Integer(posToRight) );
+                    }
+                }
+                else{
+                    g.setColor(graphGridColor);
+                }
+                g.drawLine(posToRight, top+1, posToRight, y-1);
+            }
+
+        }
+
+//        int gsz = (snapSmppHistory.countSmmp - 1) * graphScale;
+        int gsz = (snapHttpHistory.countHttp - 1) * xScale;
+//  draw graph
+        for (int i = 0; i < gsz; i += xScale) {
+            int pos = right - i;
+            if (pos-xScale < graphXLeft) { break; }
+
+            if (prevsnap != null) {
+                smesnap = snapHttpHistory.getPrevHttp();
+                if (smesnap != null && pos>graphXLeft) {
+
+                    drawGraphLine(g, pos, y, smesnap.httpSpeed[HttpSnap.REQUEST_REJECTED_INDEX],
+                            prevsnap.httpSpeed[HttpSnap.REQUEST_REJECTED_INDEX], 0, 0, colorGraphRequestRejected);
+
+                    drawGraphLine(g, pos, y, smesnap.httpSpeed[HttpSnap.REQUEST_INDEX], prevsnap.httpSpeed[HttpSnap.REQUEST_INDEX],
+//                            smesnap.httpSpeed[HttpSnap.REQUEST_REJECTED_INDEX], prevsnap.httpSpeed[HttpSnap.REQUEST_REJECTED_INDEX], colorGraphRequested);
+                            0, 0, colorGraphRequested);
+
+                    drawGraphLine(g, pos, y, smesnap.httpSpeed[HttpSnap.RESPONSE_INDEX], prevsnap.httpSpeed[HttpSnap.RESPONSE_INDEX],
+//                            smesnap.httpSpeed[HttpSnap.REQUEST_INDEX], prevsnap.httpSpeed[HttpSnap.REQUEST_INDEX], colorGraphResponsed);
+                            0, 0, colorGraphResponsed);
+
+                    drawGraphLine(g, pos, y, smesnap.httpSpeed[HttpSnap.FAILED_INDEX], prevsnap.httpSpeed[HttpSnap.FAILED_INDEX],
+                            0, 0, colorGraphFailed);
+
+                    drawGraphLine(g, pos, y, smesnap.httpSpeed[HttpSnap.RESPONSE_REJECTED_INDEX], prevsnap.httpSpeed[HttpSnap.RESPONSE_REJECTED_INDEX],
+//                            smesnap.httpSpeed[HttpSnap.FAILED_INDEX], prevsnap.httpSpeed[HttpSnap.FAILED_INDEX], colorGraphResponseRejected);
+                            0, 0, colorGraphResponseRejected);
+
+                    drawGraphLine(g, pos, y, smesnap.httpSpeed[HttpSnap.DELIVERED_INDEX], prevsnap.httpSpeed[HttpSnap.DELIVERED_INDEX],
+//                            smesnap.httpSpeed[HttpSnap.RESPONSE_REJECTED_INDEX], prevsnap.httpSpeed[HttpSnap.RESPONSE_REJECTED_INDEX], colorGraphDelivered);
+                            0, 0, colorGraphDelivered);
+                }
+                prevsnap = smesnap;
+            }
+        }
+        g.setColor(graphColor);
+//  draw time
+        Calendar cal = Calendar.getInstance();
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        cal = Calendar.getInstance();
+        g.setColor( new Color(0, 224, 0) );
+        int ty = size.height - pad - fm.getDescent();
+        java.util.Iterator iter = timePoints.iterator();
+        while( iter.hasNext() ){
+            cal = Calendar.getInstance();
+            int val = (int)( (Integer)(iter.next()) ).intValue();
+            int app = (right-val)/xScale;
+            cal.add( Calendar.SECOND, -app );
+            String str = sdf.format( cal.getTime() );
+            int sw = fm.stringWidth( String.valueOf(str) ) / 2;
+            g.drawString( str, val - sw, ty);
+            g.drawLine( val, top, val, y+4 );
+        }
+
+        g.setColor(colorBackground);
+        g.drawLine(0, top - 1, 0, size.height);
+        g.drawLine(separatorWidth + 1, top - 1, separatorWidth + 1, size.height);
+        g.setFont(getFont());
+        System.out.println("drawGraph():end");
+    }
+
+    protected void drawGraphLine_(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
         if (snapVal == 0 && prevSnapVal == 0) return;
         g.setColor(color);
         g.drawLine(x - graphScale, y - (snapVal + underGraphVal) * graphScale, x, y - (prevSnapVal + underGraphPrevVal) * graphScale);
     }
 
+    protected void drawGraphLine(Graphics g, int x, int y, int snapVal, int prevSnapVal, int underGraphVal, int underGraphPrevVal, Color color) {
+        if (snapVal == 0 && prevSnapVal == 0) return;
+        g.setColor(color);
+        int x1 = new Float( (x - xScale) ).intValue();
+        int x2 = new Float(x).intValue();
+        int y1 = (y - (int)( (snapVal + underGraphVal) * yScale) );
+        int y2 = (y - (int)( (prevSnapVal + underGraphPrevVal)*yScale ) );
+        g.drawLine(x1, y1, x2, y2);
+    }
 
     public void update(Graphics gg) {
         paint(gg);
@@ -544,7 +983,8 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
                 int idx = (y - headerHeight) / rowHeight;
                 if (idx < snap.httpCount) {
                     snapHttpHistory.setCurrentHttp(snap.httpSnaps[idx].httpId);
-                    if (split == -1) split = maxSpeed * graphScale + rowHeight + separatorWidth + 2 * pad;
+//                    if (split == -1) split = maxSpeed * graphScale + rowHeight + separatorWidth + 2 * pad;
+                    split  = 1;
                     invalidate();
                     repaint();
                 }
