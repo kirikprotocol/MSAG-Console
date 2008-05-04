@@ -332,6 +332,11 @@ public:
     const std::string& getQueryParameter(const std::string& paramName);
     void setQueryParameter(const std::string& paramName, const std::string& _paramValue);
     void setQueryParameterEncoded(const std::string& paramName, const std::string& _paramValue);
+    void delQueryParameter(const std::string& paramName);
+
+    void delCookie(const std::string& name);
+
+    void delHeaderField(const std::string& name);
 
     const std::string& serialize();
     virtual bool isResponse(); 

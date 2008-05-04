@@ -102,6 +102,17 @@ HttpCommand::~HttpCommand()
         if(*valptr) delete *valptr;
 }
 
+void HttpRequest::delCookie(const std::string& name) {
+  Cookie **c = cookies.GetPtr(name.c_str());
+  if (!c) {
+    return;
+  }
+  if (*c) {
+    delete *c;
+  }
+  cookies.Delete(name.c_str());
+}
+
 Cookie* HttpCommand::getCookie(const std::string& name)
 {
     Cookie **c = cookies.GetPtr(name.c_str());
@@ -244,6 +255,15 @@ const std::string& HttpRequest::getQueryParameter(const std::string& paramName)
         return empty;
     }
 }
+
+void HttpRequest::delQueryParameter(const std::string& paramName) {
+  queryParameters.Delete(paramName.c_str());
+}
+
+void HttpRequest::delHeaderField(const std::string& name) {
+  headerFields.Delete(name.c_str());
+}
+
 
 const std::string& HttpCommand::getMessageText()
 {

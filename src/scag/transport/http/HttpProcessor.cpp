@@ -48,6 +48,9 @@ class HttpProcessorImpl : public HttpProcessor
         bool parsePath(const std::string &path, HttpRequest& cx);
         void registerEvent(int event, HttpCommand& cmd, bool delivery = false);
         bool makeLongCall(HttpCommand& cmd, SessionPtr& se);
+
+        void clearPlaces(const PlacementArray& places, HttpRequest& request);
+
 };
 
 bool  HttpProcessor::inited = false;
@@ -209,6 +212,27 @@ bool HttpProcessorImpl::parsePath(const std::string &path, HttpRequest& cx)
   return true;
 }
 
+void HttpProcessorImpl::clearPlaces(const PlacementArray& places, HttpRequest& request) {
+  for(int i = 0; i < places.Count(); i++)
+  {
+      switch(places[i].type)
+      {
+          case PlacementType::PARAM:
+              smsc_log_debug(logger, "del from param: %s", places[i].name.c_str());
+              request.delQueryParameter(places[i].name);
+              break;
+          case PlacementType::COOKIE:
+              smsc_log_debug(logger, "del from cookie: %s", places[i].name.c_str());
+              request.delCookie(places[i].name);
+              break;
+          case PlacementType::HEADER:
+              smsc_log_debug(logger, "del from header: %s", places[i].name.c_str());
+              request.delHeaderField(places[i].name);
+              break;
+      }
+  }
+}
+
 bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const PlacementArray& places, HttpRequest& request, std::string& url)
 {
     for(int i = 0; i < places.Count(); i++)
@@ -238,7 +262,7 @@ bool HttpProcessorImpl::findPlace(const char* wh, std::string& rs, const Placeme
                 if(!s.length()) break;
                 rs = s;
                 smsc_log_debug(logger, " %s FOUND IN HEADER: %s=%s", wh, places[i].name.c_str(), rs.c_str());
-                return true;;
+                return true;
             }
             case PlacementType::URL:
             {
@@ -309,6 +333,11 @@ void HttpProcessorImpl::setFields(HttpRequest& request, HttpRoute& r)
     std::string URLField;
     char buf[20];
     buf[19] = 0;
+    
+    for (int i = 0; i < PLACEMENT_KIND_COUNT; ++i) {
+      clearPlaces(defInPlaces[i], request);
+    }
+    clearPlaces(r.inPlace[PlacementKind::USR], request);
     
     setPlaces(lltostr(request.getUSR(), buf + 19), getOutPlaces(r, PlacementKind::USR), request, URLField);
     setPlaces(request.getAbonent(), getOutPlaces(r, PlacementKind::ADDR), request, URLField);
