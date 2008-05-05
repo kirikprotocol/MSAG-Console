@@ -543,7 +543,7 @@ public:
     return 1;
   }
 
-  int GetCount(){return _count;}
+  int GetCount() const {return _count;}
   int GetUsage()
   {
     int cnt=0;
