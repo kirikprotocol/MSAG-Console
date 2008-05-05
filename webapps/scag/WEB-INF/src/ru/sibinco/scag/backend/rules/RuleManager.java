@@ -34,9 +34,9 @@ import java.text.DateFormat;
 
 public class RuleManager
 {
-    public static final String SMPP_TRANSPORT_NAME = "SMPP";
-    public static final String HTTP_TRANSPORT_NAME = "HTTP";
-    public static final String MMS_TRANSPORT_NAME = "MMS";
+//    public static final String SMPP_TRANSPORT_NAME = "SMPP";
+//    public static final String HTTP_TRANSPORT_NAME = "HTTP";
+//    public static final String MMS_TRANSPORT_NAME = "MMS";
     public final static int NON_TERM_MODE = 0;
     public final static int TERM_MODE = 1;
     private final RuleManagerWrapper wrapper;
@@ -78,8 +78,7 @@ public class RuleManager
     wrapper = new RuleManagerWrapper(this);
   }
 
-  public void init()
-          throws SibincoException
+  public void init() throws SibincoException
   {
     load();
   }
@@ -188,7 +187,7 @@ public class RuleManager
   }
 
   public void unlockRule(String complexRuleId) {
-      System.out.println("!!!!!unlock rule complexString='" + complexRuleId + "'" );
+    System.out.println("!!!!!unlock rule complexString='" + complexRuleId + "'" );
     String[] id_transport = Rule.getIdAndTransport(complexRuleId);
     unlockRule(id_transport[0], id_transport[1]);
   }
@@ -284,8 +283,8 @@ public class RuleManager
     String fileName=file.getName();
     if (!fileName.endsWith(".xml")) return null;
 
-    logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-    LinkedList body=LoadXml(file.getAbsolutePath());
+    logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")\ntransportdir='" + _transportDir + "'");
+    LinkedList body=LoadXml(file.getAbsolutePath(), _transportDir);
     //long length=file.length();
     //System.out.println("RuleManager.LoadFromFolder file.length= "+length);
     try {
@@ -294,6 +293,7 @@ public class RuleManager
     if (!el.getTagName().equals(Rule.ROOT_ELEMENT))
       throw new SibincoException("Root element "+el.getTagName()+" not math with "+Rule.ROOT_ELEMENT);
     String transport=el.getAttribute("transport");
+    logger.debug( "Rulemanager:LoadRule():transport=" + transport );
     if (transport.equals(""))
       throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'transport'");
     String ruleId=fileName.substring(5,fileName.length()-4);
@@ -327,6 +327,63 @@ public class RuleManager
 }
    return temp;
   }
+
+    private LinkedList LoadXml(final String fileName, String transport)
+     {
+       boolean add = true;
+       LinkedList li=new  LinkedList();
+       InputStream _in=null;
+       BufferedReader in = null;
+       String inputLine;
+       long length=0;
+       try {
+         _in = new FileInputStream(fileName);
+         in = new BufferedReader(new InputStreamReader(_in,"UTF-8"));
+         li.addFirst("ok");
+           add = false;
+           LinkedList ll = null;
+           if( transport.indexOf(Transport.SMPP_TRANSPORT_NAME) != -1 ){
+               ll = Rule.getRuleHeader( Transport.SMPP_TRANSPORT_NAME );
+           }else if( transport.indexOf(Transport.HTTP_TRANSPORT_NAME) != -1 ){
+               ll = Rule.getRuleHeader( Transport.HTTP_TRANSPORT_NAME );
+           }else if( transport.indexOf(Transport.MMS_TRANSPORT_NAME) != -1 ){
+               ll = Rule.getRuleHeader( Transport.MMS_TRANSPORT_NAME );
+           }
+           logger.debug("RuleManager:loadXML():header2='" + ll + "'");
+           Iterator iter = ll.iterator();
+           while( iter.hasNext() ){
+              String str = (String)iter.next();
+//              logger.debug("RuleManager:loadXML():str='" + str + "'");
+              li.add( str ); length+=str.length();
+           }
+//           li.add("\n");
+           while ((inputLine = in.readLine()) != null) {
+             if(add){
+              li.add(inputLine);length+=inputLine.length();
+             }
+//             logger.debug("RuleManager:loadXML():inputLine='" + inputLine + "'");
+             if( (inputLine.indexOf("transport") != -1) && (inputLine.indexOf(">") != -1) ){
+                 add = true;
+             }
+
+           }
+       } catch (FileNotFoundException e) {
+         e.printStackTrace();
+         li.addFirst(e.getMessage());
+       } catch (IOException e) {
+         e.printStackTrace();
+       }
+       finally {
+         try {
+           if (in!=null) in.close();
+           if (_in!=null) _in.close();
+         } catch (IOException e) {
+           e.printStackTrace(); }
+       }
+       logger.debug("RuleManager.LoadXml length= "+length);
+       return li;
+     }
+
 
   private LinkedList LoadXml(final String fileName)
    {
@@ -527,11 +584,11 @@ public class RuleManager
   }
     boolean checkPermission( String transport){
 //        logger.debug( "RuleManager:checkPermission()" );
-        if( transport.equals(SMPP_TRANSPORT_NAME)){
+        if( transport.equals(Transport.SMPP_TRANSPORT_NAME)){
             return savePermissionSMPP;
-        }else if( transport.equals(HTTP_TRANSPORT_NAME) ){
+        }else if( transport.equals(Transport.HTTP_TRANSPORT_NAME) ){
             return savePermissionHTTP;
-        }else if( transport.equals(MMS_TRANSPORT_NAME) ){
+        }else if( transport.equals(Transport.MMS_TRANSPORT_NAME) ){
             return savePermissionMMS;
         }else{
             return false;
