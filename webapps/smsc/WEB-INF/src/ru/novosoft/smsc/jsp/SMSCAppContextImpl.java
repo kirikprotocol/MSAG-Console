@@ -137,6 +137,23 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             if (webappConfig.containsParameter("installation.uid"))
               TopMenu.setInstallationId(webappConfig.getString("installation.uid"));
             System.out.println("SMSC Administration Web Application Started  **************************************************");
+            Set autoStart = webappConfig.getSectionChildParamsNames("autostart");
+            if( autoStart != null && !autoStart.isEmpty() ) {
+              for(Iterator it = autoStart.iterator(); it.hasNext() ) {
+                String svcName = (String) it.next();
+                String svcClass = webappConfig.getString("autostart."+svcName);
+                System.out.println("Try to autostart service "+svcName+" "+svcClass);
+                AutostartService svc = null;
+                try {
+                  svc = (AutostartService) Class.forName(svcClass).newInstance();
+                } catch (Throwable e) {
+                  System.out.println("Failed to create autostart service "+svcClass+" ex: "+e.getMessage());
+                }
+                if( svc != null ) {
+                  svc.start(this);
+                }
+              }
+            }
         }
         catch (Exception e) {
             System.err.println("Exception in initialization:");

@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.jsp;
 
+import java.io.IOException;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makar
@@ -9,5 +11,5 @@ package ru.novosoft.smsc.jsp;
  */
 public interface SMEAppContext
 {
-    public void shutdown();
+    public void shutdown() throws IOException;
 }
