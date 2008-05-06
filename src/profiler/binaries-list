@@ -3,8 +3,8 @@
 
 # binary name source name libraries         
 -migration/profiler_ora2bin ImportFromOracle -L$(SMSC_BUILDDIR)/bin -ldb -llogger -L$(ORACLE_LIB) -lutil-config -lutil-xml $(ORACLE_LIB)/libclntsh.so -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc $(XERCES_LIB) -lcore-threads -lpthread -ldl -lrt
-util/repairProfile repair -L$(SMSC_BUILDDIR)/bin -llogger
+util/repairProfile repair -L$(SMSC_BUILDDIR)/bin -llogger -lrt
 -migration/profile_convert-1_00-1_01 convert-1_00-1_01 -L$(SMSC_BUILDDIR)/bin -ldb -llogger -lcore-threads -lpthread -ldl -lrt -lsms
 migration/profile_convert-1_01-1_0100 convert-1_01-1_0100 -L$(SMSC_BUILDDIR)/bin -ldb -llogger -lcore-threads -lpthread -ldl -lrt -lsms
-util/AllProfilesUpdate AllProfilesUpdate -lutil -lutil-config -lxerces-c -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger
-util/renameProfiles renameProfiles -lsms
+util/AllProfilesUpdate AllProfilesUpdate -lutil -lutil-config -lxerces-c -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger -lrt
+util/renameProfiles renameProfiles -lsms -lrt
