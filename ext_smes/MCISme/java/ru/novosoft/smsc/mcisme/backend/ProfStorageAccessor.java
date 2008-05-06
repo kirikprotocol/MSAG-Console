@@ -62,7 +62,7 @@ public class ProfStorageAccessor
 		InputStream input = null;
 		OutputStream output = null;
 
-		byte[] anw = new byte[40];
+		byte[] anw = new byte[ProfilePacket.PACKET_LEN];
 		int ret=0, len=0;
 		try 
 		{
@@ -71,9 +71,9 @@ public class ProfStorageAccessor
 			input = socket.getInputStream();
 			output = socket.getOutputStream();
 			output.write(packet.getPacket(), 0, packet.getPacketLen());
-			while(len < 40)
+			while(len < ProfilePacket.PACKET_LEN)
 			{
-				ret = input.read(anw, len, 40-len);
+				ret = input.read(anw, len, ProfilePacket.PACKET_LEN-len);
 				len += ret;
 			}
 			input.close();
