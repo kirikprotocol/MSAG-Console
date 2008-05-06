@@ -142,7 +142,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             if( autoStart != null && !autoStart.isEmpty() ) {
               for(Iterator it = autoStart.iterator(); it.hasNext(); ) {
                 String svcName = (String) it.next();
-                String svcClass = webappConfig.getString("autostart."+svcName);
+                String svcClass = webappConfig.getString(svcName);
                 System.out.println("Try to autostart service "+svcName+" "+svcClass);
                 AutostartService svc = null;
                 try {
