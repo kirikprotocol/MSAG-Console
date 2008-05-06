@@ -47,8 +47,12 @@ page_menu_end(out);
   <td><input class=check type=checkbox name=inform id=idInform value=true <%=bean.getInform() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Notify</th>
+  <th>Allow Notifications</th>
   <td><input class=check type=checkbox name=notify id=idNotify value=true <%=bean.getNotify() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Want notifications</th>
+  <td><input class=check type=checkbox name=wantNotifyMe id=idWantNotifyMe value=true <%=bean.getWantNotifyMe() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Inform Template</th>

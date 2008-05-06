@@ -202,7 +202,15 @@ public class Profile extends MCISmeBean
 	{
 		this.profile.notify = value;
 	}
-	public List getInformTemplates() 
+  public boolean getWantNotifyMe()
+  {
+    return profile.wantNotifyMe;
+  }
+  public void setWantNotifyMe(boolean value)
+  {
+    this.profile.wantNotifyMe = value;
+  }
+	public List getInformTemplates()
 	{
 		return informTemplates;
 	}

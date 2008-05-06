@@ -8,8 +8,9 @@ public class ProfileInfo
 {
 	public boolean	inform = true;
 	public boolean	notify = false;
-	
-	public int		informSelectedTemplate = -1;
+  public boolean  wantNotifyMe = false;
+
+  public int		informSelectedTemplate = -1;
 	public int		notifySelectedTemplate = -1;
 	
 	public boolean	busy = false;

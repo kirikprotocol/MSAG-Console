@@ -30,8 +30,9 @@ public class ProfilePacket
 	private final static byte IDX_NOTIFY		= 37;
 	private final static byte IDX_INF_TEMPL_ID	= 38;
 	private final static byte IDX_NOT_TEMPL_ID	= 39;
-	
-	private final static int PACKET_LEN			= 40;
+  private final static byte IDX_WANT_NOTIFY		= 40;
+
+	private final static int PACKET_LEN			= 41;
 
 	private final static int MSG_ID_PROFILE		= 0;
 	private final static int MSG_ID_GETPROF		= 1;
@@ -84,6 +85,7 @@ public class ProfilePacket
 			packet[IDX_NOTIFY]			= (info.notify ? (byte)1:(byte)0);
 			packet[IDX_INF_TEMPL_ID]	= (byte)info.informSelectedTemplate;
 			packet[IDX_NOT_TEMPL_ID]	= (byte)info.notifySelectedTemplate;
+      packet[IDX_WANT_NOTIFY]			= (info.wantNotifyMe ? (byte)1:(byte)0);
 		}
 	}
 
@@ -105,6 +107,7 @@ public class ProfilePacket
 	{
 		info.inform = (packet[IDX_INFORM]==1)?true:false;
 		info.notify = (packet[IDX_NOTIFY]==1)?true:false;
+    info.wantNotifyMe = (packet[IDX_WANT_NOTIFY]==1)?true:false;
 		info.informSelectedTemplate = (int)packet[IDX_INF_TEMPL_ID];
 		info.notifySelectedTemplate = (int)packet[IDX_NOT_TEMPL_ID];
 		if(packet[IDX_STATUS] == STATUS_NO_ABNT)
