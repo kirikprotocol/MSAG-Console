@@ -30,6 +30,7 @@ import ru.novosoft.util.jsp.AppContextImpl;
 import ru.novosoft.util.menu.TopMenu;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 
@@ -139,7 +140,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             System.out.println("SMSC Administration Web Application Started  **************************************************");
             Set autoStart = webappConfig.getSectionChildParamsNames("autostart");
             if( autoStart != null && !autoStart.isEmpty() ) {
-              for(Iterator it = autoStart.iterator(); it.hasNext() ) {
+              for(Iterator it = autoStart.iterator(); it.hasNext(); ) {
                 String svcName = (String) it.next();
                 String svcClass = webappConfig.getString("autostart."+svcName);
                 System.out.println("Try to autostart service "+svcName+" "+svcClass);
@@ -248,7 +249,12 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             for (Iterator it = smeContexts.values().iterator(); it.hasNext();) {
                 Object obj = it.next();
                 if (obj instanceof SMEAppContext) {
+                  try {
                     ((SMEAppContext) obj).shutdown();
+                  } catch (IOException e) {
+                    System.out.println("Exception while shuting down sme context: "+obj.getClass().getName());
+                    e.printStackTrace(System.out);
+                  }
                 }
             }
             smeContexts.clear();
