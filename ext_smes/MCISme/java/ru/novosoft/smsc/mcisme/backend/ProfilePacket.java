@@ -32,7 +32,7 @@ public class ProfilePacket
 	private final static byte IDX_INF_TEMPL_ID	= 39;
 	private final static byte IDX_NOT_TEMPL_ID	= 40;
 
-	private final static int PACKET_LEN			= 41;
+	public  final static int PACKET_LEN			= 41;
 
 	private final static int MSG_ID_PROFILE		= 0;
 	private final static int MSG_ID_GETPROF		= 1;
