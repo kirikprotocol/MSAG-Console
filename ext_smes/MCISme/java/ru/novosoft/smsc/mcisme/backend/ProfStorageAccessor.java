@@ -11,10 +11,13 @@ import java.io.*;
 import java.net.*;
 import ru.novosoft.smsc.mcisme.backend.ProfileInfo;
 import ru.novosoft.smsc.mcisme.backend.ProfilePacket;
+import org.apache.log4j.Logger;
 
 public class ProfStorageAccessor
 {
-	private String host;
+  static Logger logger = Logger.getLogger(ProfStorageAccessor.class);
+
+  private String host;
 	private int port;
 	private ProfilePacket packet=null;
 
@@ -81,10 +84,12 @@ public class ProfStorageAccessor
 		} 
 		catch(UnknownHostException exc) 
 		{
-			return false;
+      logger.error("Could not get MCI profile", exc);
+      return false;
 		} 
 		catch(IOException exc) 
 		{
+      logger.error("Could not get MCI profile", exc);
 			return false;		}
 		//catch(SocketTimeoutException exc) 
 		//{
