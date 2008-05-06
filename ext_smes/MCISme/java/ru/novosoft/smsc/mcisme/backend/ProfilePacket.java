@@ -28,9 +28,9 @@ public class ProfilePacket
 	private final static byte IDX_EVENT_MASK	= 35;
 	private final static byte IDX_INFORM		= 36;
 	private final static byte IDX_NOTIFY		= 37;
-	private final static byte IDX_INF_TEMPL_ID	= 38;
-	private final static byte IDX_NOT_TEMPL_ID	= 39;
-  private final static byte IDX_WANT_NOTIFY		= 40;
+  private final static byte IDX_WANT_NOTIFY		= 38;
+	private final static byte IDX_INF_TEMPL_ID	= 39;
+	private final static byte IDX_NOT_TEMPL_ID	= 40;
 
 	private final static int PACKET_LEN			= 41;
 
@@ -83,9 +83,9 @@ public class ProfilePacket
 			packet[IDX_EVENT_MASK]		= eventMask;
 			packet[IDX_INFORM]			= (info.inform ? (byte)1:(byte)0);
 			packet[IDX_NOTIFY]			= (info.notify ? (byte)1:(byte)0);
+      packet[IDX_WANT_NOTIFY]			= (info.wantNotifyMe ? (byte)1:(byte)0);
 			packet[IDX_INF_TEMPL_ID]	= (byte)info.informSelectedTemplate;
 			packet[IDX_NOT_TEMPL_ID]	= (byte)info.notifySelectedTemplate;
-      packet[IDX_WANT_NOTIFY]			= (info.wantNotifyMe ? (byte)1:(byte)0);
 		}
 	}
 
