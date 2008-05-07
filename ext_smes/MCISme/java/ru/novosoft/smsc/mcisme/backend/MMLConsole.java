@@ -35,13 +35,13 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
 
   // commands format
   // LOGIN: USER='username', PASS='password'
-  Pattern loginPattern = Pattern.compile("(?ix)login: \\s* user=\\'(.*)\\', \\s* pass=\\'(.*)\\'\\;");
+  Pattern loginPattern = Pattern.compile("(?ix)login: \\s* user=\\'(.*)\\' \\s* , \\s* pass=\\'(.*)\\' \\s* \\;");
   // GET: MSISDN='+79...';
-  Pattern getPattern = Pattern.compile("(?ix)get: \\s* msisdn=\\'(.*)\\'\\;");
+  Pattern getPattern = Pattern.compile("(?ix)get: \\s* msisdn=\\'(.*)\\' \\s* \\;");
   // ADD: MSISDN='+79...', SERV_ID='in_network';
-  Pattern addPattern = Pattern.compile("(?ix)add: \\s* msisdn=\\'(.*)\\', \\s* serv_id=\\'(.*)\\'\\;");
+  Pattern addPattern = Pattern.compile("(?ix)add: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv_id=\\'(.*)\\' \\s* \\;");
   // REM: MSISDN='+79...', SERV_ID='in_network';
-  Pattern remPattern = Pattern.compile("(?ix)rem: \\s* msisdn=\\'(.*)\\', \\s* serv_id=\\'(.*)\\'\\;");
+  Pattern remPattern = Pattern.compile("(?ix)rem: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv_id=\\'(.*)\\' \\s* \\;");
 
   static Logger logger = Logger.getLogger(MMLConsole.class);
   int port = 0;
@@ -157,13 +157,19 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
       logger.debug(client+" <- "+answ);
     }
 
-    protected boolean authenticate( String command ) {
+    protected boolean authenticate( String command ) throws IOException {
       Matcher matcher = loginPattern.matcher(command);
       if( matcher.matches() ) {
         String u = command.substring(matcher.start(1), matcher.end(1));
         String p = command.substring(matcher.start(2), matcher.end(2));
-        if( u.equals(user) && p.equals(pass) ) return true;
+        if( u.equals(user) && p.equals(pass) ) {
+          sendAnswer(ERRC_OK);
+          return true;
+        }
+      } else {
+        sendAnswer(ERRC_BADFORMAT_COMMAND);
       }
+      sendAnswer(ERRC_AUTH_FAILED);
       return false;
     }
 
@@ -186,6 +192,8 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
         } else {
           sendAnswer(ERRC_COMMUNICATION_ERROR);
         }
+      } else {
+        sendAnswer(ERRC_BADFORMAT_COMMAND);
       }
     }
 
@@ -213,6 +221,8 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
         } else {
           sendAnswer(ERRC_COMMUNICATION_ERROR);
         }
+      } else {
+        sendAnswer(ERRC_BADFORMAT_COMMAND);
       }
     }
 
@@ -240,6 +250,8 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
         } else {
           sendAnswer(ERRC_COMMUNICATION_ERROR);
         }
+      } else {
+        sendAnswer(ERRC_BADFORMAT_COMMAND);
       }
     }
 
@@ -256,8 +268,6 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
           if( !authenticated ) {
             if( line.startsWith("LOGIN") || line.startsWith("login") ) {
               authenticated = authenticate(line);
-              if( authenticated ) sendAnswer(ERRC_OK);
-              else sendAnswer(ERRC_AUTH_FAILED);
             } else {
               sendAnswer(ERRC_AUTH_REQUIRED);
             }
