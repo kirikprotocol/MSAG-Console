@@ -39,9 +39,9 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
   // GET: MSISDN='+79...';
   Pattern getPattern = Pattern.compile("(?ix)get: \\s* msisdn=\\'(.*)\\' \\s* \\;");
   // ADD: MSISDN='+79...', SERV_ID='in_network';
-  Pattern addPattern = Pattern.compile("(?ix)add: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv_id=\\'(.*)\\' \\s* \\;");
+  Pattern addPattern = Pattern.compile("(?ix)add: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv\\_id=\\'(.*)\\' \\s* \\;");
   // REM: MSISDN='+79...', SERV_ID='in_network';
-  Pattern remPattern = Pattern.compile("(?ix)rem: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv_id=\\'(.*)\\' \\s* \\;");
+  Pattern remPattern = Pattern.compile("(?ix)rem: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv\\_id=\\'(.*)\\' \\s* \\;");
 
   static Logger logger = Logger.getLogger(MMLConsole.class);
   int port = 0;
