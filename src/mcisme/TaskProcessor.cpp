@@ -260,18 +260,25 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   try { forceNotify = config->getBool("forceNotify"); } catch (...){ forceInform = true;
     smsc_log_warn(logger, "Parameter <MCISme.forceNotify> missed. Default value is 'true'.");}
 
-  try { _isReverseNotifyPolicy = config->getBool("reverseNotifyPolicy"); }
+  try { _isUseWantNotifyPolicy = config->getBool("useWantNotifyPolicy"); }
   catch (...){
-    _isReverseNotifyPolicy = false;
-    smsc_log_warn(logger, "Parameter <MCISme.reverseNotifyPolicy> missed. Default value is 'true'.");
+    _isUseWantNotifyPolicy = false;
+    smsc_log_warn(logger, "Parameter <MCISme.useWantNotifyPolicy> missed. Default value is 'false'.");
   }
 
-  bool bDefaultInform, bDefaultNotify;
+  bool bDefaultInform;
   try { bDefaultInform = config->getBool("defaultInform"); } catch (...) { bDefaultInform = true;
-    smsc_log_warn(logger, "Parameter <MCISme.defaultInform> missed. Defaul profile inform flag is on");
+    smsc_log_warn(logger, "Parameter <MCISme.defaultInform> missed. Default profile inform flag is on");
   }
+
+  bool bDefaultNotify;
   try { bDefaultNotify = config->getBool("defaultNotify"); } catch (...) { bDefaultNotify = false;
-    smsc_log_warn(logger, "Parameter <MCISme.defaultNotify> missed. Defaul profile notify flag is off");
+    smsc_log_warn(logger, "Parameter <MCISme.defaultNotify> missed. Default profile notify flag is off");
+  }
+
+  bool bDefaultWantNotifyMe;
+  try { bDefaultWantNotifyMe = config->getBool("defaultWantNotifyMe "); } catch (...) { bDefaultWantNotifyMe = false;
+    smsc_log_warn(logger, "Parameter <MCISme.defaultWantNotifyMe> missed. Default profile wantNotifyMe flag is off");
   }
   int defaultReasonsMask = smsc::misscall::NONE;
   try { defaultReasonsMask = config->getInt("defaultReasonsMask"); } catch (...) { 
@@ -331,7 +338,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   statistics = new StatisticsManager(statDir.c_str());
   if (statistics) statistics->Start();
     
-  AbonentProfiler::init(0, defaultReasonsMask, bDefaultInform, bDefaultNotify);
+  AbonentProfiler::init(0, defaultReasonsMask, bDefaultInform, bDefaultNotify, bDefaultWantNotifyMe);
 
   //	Init Delivery Queue
   std::auto_ptr<ConfigView> schedulingCfgGuard(config->getSubConfig("Scheduling"));
@@ -902,20 +909,19 @@ bool TaskProcessor::GetAbntEvents(const AbntAddr& abnt, vector<MCEvent>&  events
 
 
 bool
-TaskProcessor::noNeedNotify(const AbonentProfile& profile, const sms_info* pInfo) const
+TaskProcessor::needNotify(const AbonentProfile& profile, const sms_info* pInfo) const
 {
-  if ( _isReverseNotifyPolicy ) {
-    if ( profile.notify ) {
-      smsc_log_debug(logger, "Notify prohibition is ON for Abonent %s", pInfo->abnt.toString().c_str());
-      return true;
-    }
-  } else {
-    if(!forceNotify && !profile.notify)
-    {
-      smsc_log_debug(logger, "Notify is off for Abonent %s", pInfo->abnt.toString().c_str());
-      return true;
-    }
-  }
+//   if ( _isReverseNotifyPolicy ) {
+//     if ( profile.notify ) {
+//       smsc_log_debug(logger, "Notify prohibition is ON for Abonent %s", pInfo->abnt.toString().c_str());
+//       return true;
+//     }
+//   } else {
+  if(forceNotify || profile.notify)
+    return true;
+  else
+    smsc_log_debug(logger, "Notify is off for Abonent %s", pInfo->abnt.toString().c_str());
+    //  }
   return false;
 }
 
@@ -928,7 +934,9 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
   smsc_log_debug(logger, "Process Notify message");
   statistics->incNotified();
 
-  if ( noNeedNotify(profile, pInfo) ) return;
+  //  if ( noNeedNotify(profile, pInfo) ) return;
+
+  if ( !needNotify(profile, pInfo) ) return;
 
   vector<AbntAddr>	callers;				// use Hash
   int events_count = pInfo->events.size();
@@ -939,13 +947,24 @@ void TaskProcessor::SendAbntOnlineNotifications(const sms_info* pInfo)
   {
     AbntAddr caller(&(pInfo->events[i].caller));
     exists = false;
-    for(j = 0; j < callers_count; j++)
-      if(caller == callers[j])
-      { exists = true; break;}
+    for(j = 0; j < callers_count; j++) {
+      if(caller == callers[j]) {
+        exists = true; break;
+      }
+    }
     if(!exists)
     {
-      callers.push_back(caller);
-      callers_count++;
+      if ( _isUseWantNotifyPolicy ) {
+        AbonentProfile callerProfile;
+        profileStorage->Get(caller, callerProfile);
+        if ( callerProfile.wantNotifyMe ) {
+          callers.push_back(caller);
+          callers_count++;
+        }
+      } else {
+        callers.push_back(caller);
+        callers_count++;
+      }
     }
   }
 
