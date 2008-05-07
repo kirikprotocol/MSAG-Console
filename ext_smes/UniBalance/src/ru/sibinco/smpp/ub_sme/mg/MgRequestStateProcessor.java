@@ -24,7 +24,6 @@ public class MgRequestStateProcessor implements Runnable {
         String abonent = requestManager.getAbonentMatcher().match(state.getAbonentRequest().getSourceAddress());
         String text = requestManager.getMgRequestFormat().format(new Object[]{abonent});
         message.setMessageString(text);
- //       message.setMessageString(state.getAbonentRequest().getSourceAddress() + "*balance");
         message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
         message.setType(Message.TYPE_SUBMIT);
         state.setMgState(MGState.MG_WAIT_RESP);
