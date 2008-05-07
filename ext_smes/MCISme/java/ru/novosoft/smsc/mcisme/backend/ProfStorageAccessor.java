@@ -29,20 +29,6 @@ public class ProfStorageAccessor
 
 	public int getProfile(String Address, ProfileInfo profile)
 	{
-//		profile.inform = true;
-//		profile.notify = true;
-//	
-//		profile.informSelectedTemplate = 2;
-//		profile.notifySelectedTemplate = 3;
-//	
-//		profile.busy = true;
-//		profile.noReplay = true;
-//		profile.absent = true;
-//		profile.detach = true;
-//		profile.uncond = true;
-//		profile.other = true;
-//		return 0;
-
 		packet.preparePacket(Address, profile, false);
 		if(!executeQuery())	return 1;
 		packet.extractProfileInfo(profile);
@@ -76,9 +62,6 @@ public class ProfStorageAccessor
 				ret = input.read(anw, len, ProfilePacket.PACKET_LEN-len);
 				len += ret;
 			}
-			input.close();
-			output.close();
-			socket.close();
 			packet.setPacket(anw);
 			return true;
 		} 
@@ -90,12 +73,27 @@ public class ProfStorageAccessor
 		catch(IOException exc) 
 		{
       logger.error("Could not get MCI profile", exc);
-			return false;		}
-		//catch(SocketTimeoutException exc) 
-		//{
-		//	logger.warn("ProfileInfo: Query to ProfileStorage");
-		//	throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
-		//}
+			return false;
+    } finally {
+      if( input != null ) {
+        try {
+          input.close();
+        } catch (IOException e) {
+        }
+      }
+      if( output != null ) {
+        try {
+          output.close();
+        } catch (IOException e) {
+        }
+      }
+      if( socket != null ) {
+        try {
+          socket.close();
+        } catch (IOException e) {
+        }
+      }
+    }
 	}
 
 }
