@@ -1,0 +1,24 @@
+       Описание
+Класс SmeEngine отвечает за инфраструктуру приема и отсылки сообщений.
+Класс MgRequestManager прослойка между state машиной и SmeEngine.
+Здесь определяется от кого пришла смс,формируются смс, хранятся запросы к MG и State - messageReference mapping .
+MgRequestMager задается в SmeEngine(сейчас за хардкорен).
+При поступлении запроса от абонента создается MgState и стартует MgState.startProcessing() который
+ запускает несколько StateProcessor'ов .
+При отработке каждого процессора в MgState ставится флаг(типа MG_OK,MG_ERR) и вызывается метод MgState.closeProcessing()
+ в котором рассматриваются флаги и  определяется посылать баланс или сообщение об ошибке или
+  ничего не делать(state уже отработал  и еще не готов).
+
+State процессоры:
+MgRequestProcessor формирует и отправляет запрос к MG.
+(в MgRequestManager сохраняется MgState по ключу  Message.getUserMessageReference())
+ExpireStateProcessor ожидет отрабатки state ,если проходит timeout,
+MgState становится устаревшим и абоненту отсылается сообщение об ошибке.
+
+Запрос баннера происходит в асинхронном режиме методом класса BannerManager
+   public void RequestBanner(String abonent, IAdvertisingResponseHandler handler)
+ответ IAdvertisingResponseHandler.responseBanner(byte[] bytes);
+
+При получении ответа от MG из хеша берется MGState ,если он не устарел,
+то выствляеся флаг что ответ от MG пришел и вызывается closeProcessing()
+
