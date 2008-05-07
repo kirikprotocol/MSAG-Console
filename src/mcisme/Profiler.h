@@ -20,7 +20,7 @@ using smsc::logger::Logger;
 class AbonentProfile;
 class AbonentProfiler
 {
-private: 
+private:
 
   static DataSource*  ds;
   static Logger*  logger;
@@ -28,34 +28,22 @@ private:
 public:
 
   static uint8_t  defaultEventMask;
-  static bool     bDefaultInform, bDefaultNotify;
-  static void     init(DataSource* _ds, uint8_t defaultEventMask=0xFF,
-                       bool defaultInform=true, bool defaultNotify=false);
-
-  static bool delProfile(const char* abonent, Connection* connection=0);
-  static void setProfile(const char* abonent, const AbonentProfile& profile, Connection* connection=0);
-  static AbonentProfile getProfile(const char* abonent, Connection* connection=0);
+  static bool     bDefaultInform, bDefaultNotify, bDefaultWantNotifyMe;
+  static void     init(DataSource* _ds, uint8_t defaultEventMask,
+                       bool defaultInform, bool defaultNotify, bool defaultWantNotifyMe);
 };
 
 struct AbonentProfile
 {
   uint8_t eventMask;
-  bool    inform, notify;
+  bool    inform, notify, wantNotifyMe;
   int8_t informTemplateId, notifyTemplateId; // if -1 => default
-        
-  AbonentProfile() 
-    : eventMask(AbonentProfiler::defaultEventMask), 
+
+  AbonentProfile()
+    : eventMask(AbonentProfiler::defaultEventMask),
       inform(AbonentProfiler::bDefaultInform), notify(AbonentProfiler::bDefaultNotify),
-      informTemplateId(-1), notifyTemplateId(-1) {};
-  AbonentProfile(const AbonentProfile& pro) 
-    : eventMask(pro.eventMask), inform(pro.inform), notify(pro.notify), 
-      informTemplateId(pro.informTemplateId), notifyTemplateId(pro.notifyTemplateId) {};
-  AbonentProfile& operator=(const AbonentProfile& pro) {
-    eventMask = pro.eventMask;
-    inform = pro.inform; notify = pro.notify;
-    informTemplateId = pro.informTemplateId; notifyTemplateId = pro.notifyTemplateId;
-    return (*this);
-  };
+      wantNotifyMe(AbonentProfiler::bDefaultWantNotifyMe),
+      informTemplateId(-1), notifyTemplateId(-1) {}
 };
 
 }}
