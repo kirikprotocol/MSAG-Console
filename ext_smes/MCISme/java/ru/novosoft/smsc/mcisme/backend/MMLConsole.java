@@ -39,9 +39,9 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
   // GET: MSISDN='+79...';
   Pattern getPattern = Pattern.compile("(?ix)get: \\s* msisdn=\\'(.*)\\' \\s* \\;");
   // ADD: MSISDN='+79...', SERV_ID='in_network';
-  Pattern addPattern = Pattern.compile("(?ix)add: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv\\_id=\\'(.*)\\' \\s* \\;");
+  Pattern addPattern = Pattern.compile("(?ix)add: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv_id=\\'(.*)\\' \\s* \\;");
   // REM: MSISDN='+79...', SERV_ID='in_network';
-  Pattern remPattern = Pattern.compile("(?ix)rem: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv\\_id=\\'(.*)\\' \\s* \\;");
+  Pattern remPattern = Pattern.compile("(?ix)rem: \\s* msisdn=\\'(.*)\\' \\s* , \\s* serv_id=\\'(.*)\\' \\s* \\;");
 
   static Logger logger = Logger.getLogger(MMLConsole.class);
   int port = 0;
@@ -198,7 +198,7 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
     }
 
     protected void addService(String command) throws IOException {
-      Matcher matcher = getPattern.matcher(command);
+      Matcher matcher = addPattern.matcher(command);
       if( matcher.matches() ) {
         String msisdn = command.substring(matcher.start(1), matcher.end(1));
         String service = command.substring(matcher.start(2), matcher.end(2));
@@ -227,7 +227,7 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
     }
 
     protected void removeService(String command) throws IOException {
-      Matcher matcher = getPattern.matcher(command);
+      Matcher matcher = remPattern.matcher(command);
       if( matcher.matches() ) {
         String msisdn = command.substring(matcher.start(1), matcher.end(1));
         String service = command.substring(matcher.start(2), matcher.end(2));
