@@ -142,7 +142,9 @@ public class MGRequestManager implements RequestManager {
     public void requestBanner(MGState state) {
         bannerManager.RequestBanner(state.getAbonentRequest().getSourceAddress(), state);
     }
-
+    /*
+    Обработка ответа Mg
+     */
     public void response(MGState state, Message msg) {
         if (state.isExpired()) {
             smeEngine.sendDeliverSmResponse(msg, Data.ESME_RSYSERR);
@@ -155,7 +157,9 @@ public class MGRequestManager implements RequestManager {
         state.setMgState(MGState.MG_OK);
         state.closeProcessing();
     }
-
+    /*
+       Посылается ответ абоненту
+     */
     public void sendResponse(MGState state) {
         boolean sms = false;
         if (state.getMessage().length() > smeEngine.getUssdMaxLength()) {
@@ -183,7 +187,11 @@ public class MGRequestManager implements RequestManager {
         }
 
     }
-
+    /*
+      Здесь происходит обработка воходящего сообщения.
+      Если пришел запрос от абонента то стартуется state машиана.
+      Если пришел ответ от MG, то передаем соотвествующему MgState баланс.
+     */
     public void processIncomingMessage(Message message, long abonentRequestTime) {
         if (message.getSourceAddress().equals(mgAddress)) { // abonent request
             if (logger.isDebugEnabled())
@@ -205,7 +213,9 @@ public class MGRequestManager implements RequestManager {
             state.startProcessing();
         }
     }
-
+    /*
+           Обрабатвается PDU запроса в MG,если у PDU cтатус ошибки ,то соотв. MgState закрывается.
+     */
     public void handleErrorPDU(PDU pdu) {
         MGState state = (MGState) mgRequests.get(new Long(((long) pdu.getConnectionId()) << 32 | pdu.getSequenceNumber()));
         if (state != null && pdu.getStatus() != PDU.STATUS_CLASS_NO_ERROR) {

@@ -90,13 +90,17 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
     public synchronized boolean isExpired() {
         return expired;
     }
-
+    /*
+       Запускается процессор запроса в MG,асинхронный запрос баннера и процессор ожидания.
+     */
     public void startProcessing() {
         pool.execute(new MgRequestStateProcessor(this, requestManager));
         requestManager.requestBanner(this);
         pool.execute(new ExpireStateProcessor(this, requestManager));
     }
-
+  /*
+     Попытка отработать State
+   */
     public synchronized void closeProcessing() {
         if (expired || closed) return;
 
@@ -170,7 +174,9 @@ public class MGState implements StateInterface, IAdvertisingResponseHandler {
         sb.append(" bannerState:" + getBannerState());
         return sb.toString();
     }
-
+    /*
+   Прием баннера
+     */
     public void responseBanner(byte[] bytes) {
 //                state.setBannerState(MGState.BE_RESP_WAIT);
 //        String banner = Sme.getSmeEngine().getBanner(state);

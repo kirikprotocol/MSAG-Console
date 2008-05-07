@@ -290,7 +290,9 @@ public class SmeEngine implements MessageListener, ResponseListener {
         return multiplexor;
     }
 
-
+    /*
+       Передача сообщения RequestManager'у
+     */
     private void processIncomingMessage(Message message, long abonentRequestTime) {
         requestManager.processIncomingMessage(message, abonentRequestTime);
         //TODO  max request
