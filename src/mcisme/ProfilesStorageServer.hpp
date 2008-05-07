@@ -53,6 +53,7 @@ struct ProfileBody
   uint8_t	eventMask;
   uint8_t	inform;
   uint8_t	notify;
+  uint8_t	wantNotifyMe;
   int8_t	informTemplateId;
   int8_t	notifyTemplateId;
 };
@@ -161,6 +162,7 @@ protected:
     smsc_log_info(logger, "msg.body.informTemplateId = %d", msg.body.informTemplateId);
     smsc_log_info(logger, "msg.body.notify = %d", msg.body.notify);
     smsc_log_info(logger, "msg.body.notifyTemplateId = %d", msg.body.notifyTemplateId);
+    smsc_log_info(logger, "msg.body.wantNotifyMe = %d", msg.body.wantNotifyMe);
     smsc_log_info(logger, "------------------------------------------");
 
     if(msg.hdr.msgId == MSG_ID_GETPROF)			// Getting profile
@@ -177,6 +179,7 @@ protected:
       msg.body.informTemplateId = prof.informTemplateId;
       msg.body.notify = prof.notify;
       msg.body.notifyTemplateId = prof.notifyTemplateId;
+      msg.body.wantNotifyMe = prof.wantNotifyMe;
 
       smsc_log_info(logger, "Get:--------------------------------");
       smsc_log_info(logger, "msg.hdr.msgId = %d", msg.hdr.msgId);
@@ -189,6 +192,7 @@ protected:
       smsc_log_info(logger, "msg.body.informTemplateId = %d", msg.body.informTemplateId);
       smsc_log_info(logger, "msg.body.notify = %d", msg.body.notify);
       smsc_log_info(logger, "msg.body.notifyTemplateId = %d", msg.body.notifyTemplateId);
+      smsc_log_info(logger, "msg.body.wantNotifyMe = %d", msg.body.wantNotifyMe);
       smsc_log_info(logger, "------------------------------------------");
 
       sendnbytes((char*)&msg, sizeof(ProfileMessage));
@@ -204,6 +208,7 @@ protected:
       prof.informTemplateId = msg.body.informTemplateId;
       prof.notify = msg.body.notify;
       prof.notifyTemplateId = msg.body.notifyTemplateId;
+      prof.wantNotifyMe = msg.body.wantNotifyMe;
 
       pProfStorage->Set(abnt, prof);
       msg.hdr.msgId = MSG_ID_PROFILE;
