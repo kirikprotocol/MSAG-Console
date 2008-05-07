@@ -115,7 +115,7 @@ private:
   void _Set(const AbntAddr& abnt, const AbonentProfile& prof)
   {
     StrKey<28>	key = abnt.toString().c_str();
-    AbntProfKey	value(prof.eventMask, prof.informTemplateId, prof.notifyTemplateId, prof.inform, prof.notify);
+    AbntProfKey	value(prof.eventMask, prof.informTemplateId, prof.notifyTemplateId, prof.inform, prof.notify, prof.wantNotifyMe);
     profiles.Delete(key);
     profiles.Insert(key, value);
   }
@@ -131,14 +131,7 @@ private:
       prof.notifyTemplateId = value.key.fields.notifyTemplateId;
       prof.inform = value.key.fields.inform;
       prof.notify = value.key.fields.notify;
-    }
-    else
-    {
-      prof.eventMask = 0xFF;
-      prof.informTemplateId = -1;
-      prof.notifyTemplateId = -1;
-      prof.inform = true;
-      prof.notify = false;
+      prof.wantNotifyMe = value.key.fields.wantNotifyMe;
     }
     return res;
   }
