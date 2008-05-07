@@ -8,8 +8,12 @@ import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.Properties;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import sun.misc.Regexp;
 
 /**
  * Created by Serge Lugovoy
@@ -17,6 +21,14 @@ import java.net.Socket;
  * Time: 3:54:48 PM
  */
 public class MMLConsole extends Thread implements AutostartService, SMEAppContext {
+  public final static int ERRC_OK = 0;
+  public final static int ERRC_AUTH_REQUIRED = 1; // session is not authenticated yet, expect LOGIN command
+  public final static int ERRC_AUTH_FAILED = 2;   // invalid user/pass
+
+  // commands format
+  // LOGIN: USER='username', PASS='password'
+  Pattern loginPattern = Pattern.compile("(?ix)login: \\s* user=\\'(.*)\\', \\s* pass=\\'(.*)\\'\\;");
+
   static Logger logger = Logger.getLogger(MMLConsole.class);
   int port = 0;
   String  user;
@@ -109,7 +121,8 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
       client = sock.getInetAddress().getHostAddress()+":"+sock.getPort();
     }
 
-    protected void sendAnswer( String answ ) throws IOException {
+    protected void sendAnswer( int errorCode ) throws IOException {
+      String answ = "EXECUTED: ErrorCode="+errorCode;
       wr.write(answ);
       wr.write('\n');
       wr.flush();
@@ -117,8 +130,16 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
     }
 
     protected boolean authenticate( String command ) {
-      // todo - make auth logic
-      return true;
+      Matcher matcher = loginPattern.matcher(command);
+      if( matcher.matches() ) {
+        logger.debug("Command matched "+matcher.groupCount());
+        String u = command.substring(matcher.start(1), matcher.end(1));
+        String p = command.substring(matcher.start(2), matcher.end(2));
+        if( u.equals(user) && p.equals(pass) ) return true;
+      } else {
+        logger.debug("Command not matched");
+      }
+      return false;
     }
 
     public void run() {
@@ -127,17 +148,19 @@ public class MMLConsole extends Thread implements AutostartService, SMEAppContex
       try {
         while( (line = rd.readLine()) != null ) {
           logger.debug(client+" -> "+line);
+          if( line.equalsIgnoreCase("quit") ) {
+            logger.info(client+" end session");
+            break;
+          }
           if( !authenticated ) {
-            if( line.startsWith("auth") || line.startsWith("AUTH") ) {
+            if( line.startsWith("LOGIN") || line.startsWith("login") ) {
               authenticated = authenticate(line);
+              if( authenticated ) sendAnswer(ERRC_OK);
+              else sendAnswer(ERRC_AUTH_FAILED);
             } else {
-              sendAnswer("EXECUTED: ErrorCode=1");
+              sendAnswer(ERRC_AUTH_REQUIRED);
             }
           } else {
-            if( line.equalsIgnoreCase("quit") ) {
-              logger.info(client+" end session");
-              break;
-            }
           }
         }
       } catch (IOException e) {
