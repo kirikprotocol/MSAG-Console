@@ -31,10 +31,15 @@
 	<param name="outputQueueSize" type="int">1000</param>
 	
 	<param name="maxRowsPerMessage" type="int">5</param>
-	<param name="forceInform" type="bool">true</param>
-	<param name="forceNotify" type="bool">true</param>
-	<param name="forceSeparate" type="bool">false</param>
-        <param name="reverseNotifyPolicy" type="bool">false</param>
+	<param name="defaultInform" type="bool">true</param>
+        <param name="defaultNotify" type="bool">false</param>
+	<param name="defaultWantNotifyMe" type="bool">false</param>
+        <param name="defaultReasonsMask" type="int">31</param>
+        
+	<param name="forceInform" type="bool">false</param>
+        <param name="forceNotify" type="bool">false</param>
+	
+	<param name="useWantNotifyPolicy" type="bool">false</param>
 
 	<param name="CountryCode" type="string">@mcisme.CountryCode@</param>
         <param name="timeZoneFileLocation" type="string">@timeZoneFileLocation@</param>
