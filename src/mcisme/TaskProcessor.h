@@ -130,7 +130,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   CyclicQueue<MissedCallEvent>    inQueue;
   CyclicQueue<Message>            outQueue;
 
-  bool   _groupSmsByCallingAbonent, _isReverseNotifyPolicy;
+  bool   _groupSmsByCallingAbonent, _isUseWantNotifyPolicy;
 
   void openInQueue();
   void closeInQueue();
@@ -150,7 +150,7 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   void SendAbntOnlineNotifications(const sms_info* pInfo);
   void StopProcessEvent4Abnt(const AbntAddr& abnt);
 
-  bool noNeedNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
+  bool needNotify(const AbonentProfile& profile, const sms_info* pInfo) const;
 public:
 
   TaskProcessor(ConfigView* config);
