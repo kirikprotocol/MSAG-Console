@@ -9,53 +9,50 @@
 
 union AbntProf
 {
-	int32_t prof;
-	struct _fields
-	{
-		int8_t eventMask;
-		int8_t informTemplateId;
-		int8_t notifyTemplateId;
-		int8_t inform:1;
-		int8_t notify:1;
-		int8_t reserved:6;
-	} fields;
+  int32_t prof;
+  struct _fields
+  {
+    int8_t eventMask;
+    int8_t informTemplateId;
+    int8_t notifyTemplateId;
+    int8_t inform:1;
+    int8_t notify:1;
+    int8_t wantNotifyMe:1;
+    int8_t reserved:5;
+  } fields;
 };
 
 struct AbntProfKey{
-  
-	AbntProf	key;
+  AbntProf	key;
 
-	AbntProfKey(){key.prof=0;}
-	AbntProfKey(uint32_t _key){key.prof=_key;}
-	AbntProfKey(uint8_t eventMask, uint8_t informTemplateId, uint8_t notifyTemplateId, bool inform,	bool notify)
-	{
-		key.fields.eventMask = eventMask;
-		key.fields.informTemplateId = informTemplateId;
-		key.fields.notifyTemplateId = notifyTemplateId;
-		key.fields.inform = inform;
-		key.fields.notify = notify;
-	}
-  AbntProfKey(const AbntProfKey& src)
+  AbntProfKey(){key.prof=0;}
+
+  AbntProfKey(uint32_t _key){key.prof=_key;}
+
+  AbntProfKey(uint8_t eventMask, uint8_t informTemplateId, uint8_t notifyTemplateId, bool inform, bool notify, bool wantNotifyMe)
   {
-    key.prof=src.key.prof;
+    key.fields.eventMask = eventMask;
+    key.fields.informTemplateId = informTemplateId;
+    key.fields.notifyTemplateId = notifyTemplateId;
+    key.fields.inform = inform;
+    key.fields.notify = notify;
+    key.fields.wantNotifyMe = wantNotifyMe;
   }
-  AbntProfKey& operator=(const AbntProfKey& src)
-  {
-    if(this != &src)
-      key.prof=src.key.prof;
-    return *this;
-  }
+
   uint32_t Get()const{return key.prof;}
 
   static uint32_t Size(){return sizeof(AbntProf);}
+
   void Read(File& f)
   {
     key.prof=f.ReadNetInt32();
   }
+
   void Write(File& f)const
   {
     f.WriteNetInt32(key.prof);
   }
+
   uint32_t HashCode(uint32_t attempt)const
   {
     uint32_t res=0;
@@ -63,6 +60,7 @@ struct AbntProfKey{
     for(;attempt>0;attempt--)res=crc32(res,&key.prof,sizeof(key.prof));
     return res;
   }
+
   bool operator==(const AbntProfKey& cmp)
   {
     return key.prof==cmp.key.prof;
