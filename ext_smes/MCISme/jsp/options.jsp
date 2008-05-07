@@ -105,6 +105,10 @@
   <td>
     <label for=notifyDefault>On in default profile</label>
     <input class=check type=checkbox name=defaultNotify id=notifyDefault value=true <%=bean.isDefaultNotify() ? "checked" : ""%>>
+    <label for=wantNotifyDefault>Caller want notify</label>
+    <input class=check type=checkbox name=defaultWantNotifyMe id=wantNotifyDefault value=true <%=bean.isDefaultWantNotifyMe() ? "checked" : ""%>>
+    <label for=wantNotifyUse>Want notify policy enable</label>
+    <input class=check type=checkbox name=useWantNotifyPolicy id=wantNotifyUse value=true <%=bean.isUseWantNotifyPolicy() ? "checked" : ""%>>
     <label for=informForce>&nbsp;&nbsp;Force</label>
     <input class=check type=checkbox name=forceNotify id=notifyForce value=true <%=bean.isForceNotify() ? "checked" : ""%>>
   </td>

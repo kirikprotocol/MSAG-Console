@@ -37,6 +37,9 @@ public class Options extends MCISmeBean
   private boolean forceNotify = false;
   private boolean defaultInform = false;
   private boolean defaultNotify = false;
+  private boolean defaultWantNotifyMe = false;
+  private boolean useWantNotifyPolicy = false;
+
 
   public final static int NO_CONSTRAINT           = 0;
   public final static int MAX_CALLERS_CONSTRAINT  = 10;
@@ -159,11 +162,15 @@ public class Options extends MCISmeBean
         forceNotify = getConfig().getBool("MCISme.forceNotify");
         try { defaultInform = getConfig().getBool("MCISme.defaultInform"); }  catch (Throwable th) {
           defaultInform = true;
-          logger.warn("Parameter 'MCISme.defaultInform' wasn't specified. Defaul profile inform flag is on");
+          logger.warn("Parameter 'MCISme.defaultInform' wasn't specified. Default profile inform flag is on");
         }
         try { defaultNotify = getConfig().getBool("MCISme.defaultNotify"); }  catch (Throwable th) {
           defaultNotify = false;
-          logger.warn("Parameter 'MCISme.defaultNotify' wasn't specified. Defaul profile notify flag is off");
+          logger.warn("Parameter 'MCISme.defaultNotify' wasn't specified. Default profile notify flag is off");
+        }
+        try { defaultWantNotifyMe = getConfig().getBool("MCISme.defaultWantNotifyMe"); }  catch (Throwable th) {
+          defaultWantNotifyMe = false;
+          logger.warn("Parameter 'MCISme.defaultWantNotifyMe' wasn't specified. Default profile want notify flag is off");
         }
         int defaultReasonsMask;
         try { defaultReasonsMask = getConfig().getInt("MCISme.defaultReasonsMask"); } catch (Throwable th) {
@@ -171,6 +178,11 @@ public class Options extends MCISmeBean
           logger.warn("Parameter 'MCISme.defaultReasonsMask' wasn't specified. Using full profile reasons mask");
         }
         setDefaultReasonsMask(defaultReasonsMask);
+
+        try { useWantNotifyPolicy = getConfig().getBool("MCISme.useWantNotifyPolicy"); }  catch (Throwable th) {
+          useWantNotifyPolicy = false;
+          logger.warn("Parameter 'MCISme.useWantNotifyPolicy' wasn't specified. Want notify policy is off");
+        }
 
         int maxCallersCount;
         try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
@@ -333,7 +345,9 @@ public class Options extends MCISmeBean
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
     getConfig().setBool  ("MCISme.defaultInform", defaultInform);
     getConfig().setBool  ("MCISme.defaultNotify", defaultNotify);
+    getConfig().setBool  ("MCISme.defaultWantNotifyMe", defaultWantNotifyMe);
     getConfig().setInt   ("MCISme.defaultReasonsMask", getDefaultReasonsMask());
+    getConfig().setBool  ("MCISme.useWantNotifyPolicy", useWantNotifyPolicy);
 
     if (constraintType == NO_CONSTRAINT) {
       getConfig().setInt("MCISme.maxCallersCount", -1);
@@ -740,6 +754,22 @@ public class Options extends MCISmeBean
   }
   public void setDefaultNotify(boolean defaultNotify) {
     this.defaultNotify = defaultNotify;
+  }
+
+  public boolean isDefaultWantNotifyMe() {
+    return defaultWantNotifyMe;
+  }
+
+  public void setDefaultWantNotifyMe(boolean defaultWantNotifyMe) {
+    this.defaultWantNotifyMe = defaultWantNotifyMe;
+  }
+
+  public boolean isUseWantNotifyPolicy() {
+    return useWantNotifyPolicy;
+  }
+
+  public void setUseWantNotifyPolicy(boolean useWantNotifyPolicy) {
+    this.useWantNotifyPolicy = useWantNotifyPolicy;
   }
 
   public boolean isDefaultBusy() {
