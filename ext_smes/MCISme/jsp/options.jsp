@@ -65,31 +65,8 @@
   <td><input class=txt name=responceWaitTime value="<%=StringEncoderDecoder.encode(bean.getResponceWaitTime())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Receipt wait time</th>
-  <td><input class=txt name=receiptWaitTime value="<%=StringEncoderDecoder.encode(bean.getReceiptWaitTime())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
   <th>Input queue size</th>
   <td><input class=txt name=inputQueueSize value="<%=StringEncoderDecoder.encode(bean.getInputQueueSize())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Output queue size</th>
-  <td><input class=txt name=outputQueueSize value="<%=StringEncoderDecoder.encode(bean.getOutputQueueSize())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><label for=constraintType>Abonent traffic constraint</label></th>
-  <td>
-  <select name=constraintType id=constraintType onChange="switchConstraint();">
-    <option value="<%= Options.NO_CONSTRAINT%>" <%=
-    (bean.getConstraintType() == Options.NO_CONSTRAINT) ? "selected":""%>>No constraint defined</option>
-    <option value="<%= Options.MAX_MESSAGES_CONSTRAINT%>" <%=
-    (bean.getConstraintType() == Options.MAX_MESSAGES_CONSTRAINT) ? "selected":""%>>Max messages per abonent</option>
-    <option value="<%= Options.MAX_CALLERS_CONSTRAINT%>" <%=
-    (bean.getConstraintType() == Options.MAX_CALLERS_CONSTRAINT) ? "selected":""%>>Max disctinct callers</option>
-  </select>
-  <input class=txt name=constraintValue id=constraintValue maxlength=3 style="width:54px"
-         value="<%=StringEncoderDecoder.encode(bean.getConstraintValue())%>">
-  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Inform abonents</th>
@@ -111,6 +88,12 @@
     <input class=check type=checkbox name=useWantNotifyPolicy id=wantNotifyUse value=true <%=bean.isUseWantNotifyPolicy() ? "checked" : ""%>>
     <label for=informForce>&nbsp;&nbsp;Force</label>
     <input class=check type=checkbox name=forceNotify id=notifyForce value=true <%=bean.isForceNotify() ? "checked" : ""%>>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Use abonent address as source</th>
+  <td>
+    <input class=check type=checkbox name=groupSmsByCallingAbonent id=groupSmsByCallingAbonent value=true <%=bean.isGroupSmsByCallingAbonent() ? "checked" : ""%>>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
@@ -154,15 +137,6 @@
   <td><input class=txt name=routesFileLocation value="<%=StringEncoderDecoder.encode(bean.getRoutesFileLocation())%>"></td>
 </tr>
 </table>
-<script type="text/javascript">
-function switchConstraint()
-{
-  document.getElementById('constraintValue').disabled = (document.getElementById('constraintType').value == <%= Options.NO_CONSTRAINT%>);
-  if (!document.getElementById('constraintValue').disabled) document.getElementById('constraintValue').focus();
-  else document.getElementById('constraintValue').value = '';
-}
-switchConstraint();
-</script>
 <div class=page_subtitle><%= getLocString("mcisme.subtitle.rr_settings")%></div>
 <table class=properties_list cellspacing=0 width="100%" <%rowN=0;%>>
 <col width="40%">

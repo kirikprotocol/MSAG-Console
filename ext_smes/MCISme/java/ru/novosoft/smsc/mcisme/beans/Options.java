@@ -29,9 +29,7 @@ public class Options extends MCISmeBean
   private int unrespondedMessagesSleep = 0;
   private int outgoingSpeedMax = 0;
   private String responceWaitTime = "";
-  private String receiptWaitTime = "";
   private int inputQueueSize=0;
-  private int outputQueueSize=0;
   private int maxRowsPerMessage=0;
   private boolean forceInform = false;
   private boolean forceNotify = false;
@@ -39,13 +37,14 @@ public class Options extends MCISmeBean
   private boolean defaultNotify = false;
   private boolean defaultWantNotifyMe = false;
   private boolean useWantNotifyPolicy = false;
+  private boolean groupSmsByCallingAbonent = false;
 
 
-  public final static int NO_CONSTRAINT           = 0;
+/*  public final static int NO_CONSTRAINT           = 0;
   public final static int MAX_CALLERS_CONSTRAINT  = 10;
   public final static int MAX_MESSAGES_CONSTRAINT = 20;
   private int constraintType  = NO_CONSTRAINT;
-  private int constraintValue = -1;
+  private int constraintValue = -1;*/
 
   private int smppThreadPoolMax = 0;
   private int smppThreadPoolInit = 0;
@@ -154,9 +153,7 @@ public class Options extends MCISmeBean
         unrespondedMessagesSleep = getConfig().getInt("MCISme.unrespondedMessagesSleep");
         outgoingSpeedMax = getConfig().getInt("MCISme.outgoingSpeedMax");
         responceWaitTime = getConfig().getString("MCISme.responceWaitTime");
-        receiptWaitTime = getConfig().getString("MCISme.receiptWaitTime");
         inputQueueSize = getConfig().getInt("MCISme.inputQueueSize");
-        outputQueueSize = getConfig().getInt("MCISme.outputQueueSize");
         maxRowsPerMessage = getConfig().getInt("MCISme.maxRowsPerMessage");
         forceInform = getConfig().getBool("MCISme.forceInform");
         forceNotify = getConfig().getBool("MCISme.forceNotify");
@@ -184,7 +181,11 @@ public class Options extends MCISmeBean
           logger.warn("Parameter 'MCISme.useWantNotifyPolicy' wasn't specified. Want notify policy is off");
         }
 
-        int maxCallersCount;
+        try { groupSmsByCallingAbonent = getConfig().getBool("MCISme.GroupSmsByCallingAbonent"); }  catch (Throwable th) {
+          groupSmsByCallingAbonent = false;
+          logger.warn("Parameter 'MCISme.GroupSmsByCallingAbonent' wasn't specified. Want notify policy is off");
+        }
+/*        int maxCallersCount;
         try { maxCallersCount = getConfig().getInt("MCISme.maxCallersCount"); } catch (Throwable th) {
           maxCallersCount = -1;
           logger.warn("Parameter 'MCISme.maxCallersCount' wasn't specified. Callers check disabled");
@@ -203,7 +204,7 @@ public class Options extends MCISmeBean
         } else if (maxCallersCount >= 0) {
           constraintValue = maxCallersCount; constraintType = MAX_CALLERS_CONSTRAINT;
         }
-
+*/
         try {
           mciProfLocation = getConfig().getString(MCI_PROF_LOCATION_PARAM);
           if (mciProfLocation != null && mciProfLocation.length() > 0) {
@@ -337,9 +338,7 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.unrespondedMessagesSleep", unrespondedMessagesSleep);
     getConfig().setInt   ("MCISme.outgoingSpeedMax", outgoingSpeedMax);
     getConfig().setString("MCISme.responceWaitTime", responceWaitTime);
-    getConfig().setString("MCISme.receiptWaitTime", receiptWaitTime);
     getConfig().setInt   ("MCISme.inputQueueSize", inputQueueSize);
-    getConfig().setInt   ("MCISme.outputQueueSize", outputQueueSize);
     getConfig().setInt   ("MCISme.maxRowsPerMessage", maxRowsPerMessage);
     getConfig().setBool  ("MCISme.forceInform", forceInform);
     getConfig().setBool  ("MCISme.forceNotify", forceNotify);
@@ -348,8 +347,9 @@ public class Options extends MCISmeBean
     getConfig().setBool  ("MCISme.defaultWantNotifyMe", defaultWantNotifyMe);
     getConfig().setInt   ("MCISme.defaultReasonsMask", getDefaultReasonsMask());
     getConfig().setBool  ("MCISme.useWantNotifyPolicy", useWantNotifyPolicy);
+    getConfig().setBool  ("MCISme.GroupSmsByCallingAbonent", groupSmsByCallingAbonent);
 
-    if (constraintType == NO_CONSTRAINT) {
+/*    if (constraintType == NO_CONSTRAINT) {
       getConfig().setInt("MCISme.maxCallersCount", -1);
       getConfig().setInt("MCISme.maxMessagesCount", -1);
     } else if (constraintType == MAX_MESSAGES_CONSTRAINT) {
@@ -359,7 +359,7 @@ public class Options extends MCISmeBean
       getConfig().setInt("MCISme.maxCallersCount", constraintValue);
       getConfig().setInt("MCISme.maxMessagesCount", -1);
     }
-
+*/
     getConfig().setString(MCI_PROF_LOCATION_PARAM, mciProfLocation);
     if (mciProfLocation != null && mciProfLocation.trim().length() > 0) {
       getConfig().setString("MCISme.MSC.host", mciHost);
@@ -695,24 +695,6 @@ public class Options extends MCISmeBean
     }
   }
 
-  public int getOutputQueueSizeInt() {
-    return outputQueueSize;
-  }
-  public void setOutputQueueSizeInt(int outputQueueSize) {
-    this.outputQueueSize = outputQueueSize;
-  }
-  public String getOutputQueueSize() {
-    return String.valueOf(outputQueueSize);
-  }
-  public void setOutputQueueSize(String outputQueueSize)
-  {
-    try {
-      this.outputQueueSize = Integer.decode(outputQueueSize).intValue();
-    } catch (NumberFormatException e) {
-      logger.debug("Invalid int MCISme.outputQueueSize parameter value: " + outputQueueSize + '"', e);
-    }
-  }
-
   public int getMaxRowsPerMessageInt() {
     return maxRowsPerMessage;
   }
@@ -772,6 +754,14 @@ public class Options extends MCISmeBean
     this.useWantNotifyPolicy = useWantNotifyPolicy;
   }
 
+  public boolean isGroupSmsByCallingAbonent() {
+    return groupSmsByCallingAbonent;
+  }
+
+  public void setGroupSmsByCallingAbonent(boolean groupSmsByCallingAbonent) {
+    this.groupSmsByCallingAbonent = groupSmsByCallingAbonent;
+  }
+
   public boolean isDefaultBusy() {
     return defaultBusy;
   }
@@ -808,12 +798,6 @@ public class Options extends MCISmeBean
   }
   public void setResponceWaitTime(String responceWaitTime) {
     this.responceWaitTime = responceWaitTime;
-  }
-  public String getReceiptWaitTime() {
-    return receiptWaitTime;
-  }
-  public void setReceiptWaitTime(String receiptWaitTime) {
-    this.receiptWaitTime = receiptWaitTime;
   }
 
   public int getSmppThreadPoolMaxInt() {
@@ -1135,7 +1119,7 @@ public class Options extends MCISmeBean
     this.mciSmeAddresses = mciSmeAddresses;
   }
 
-  public int getConstraintValueInt() {
+/*  public int getConstraintValueInt() {
     return constraintValue;
   }
   public void setConstraintValueInt(int value) {
@@ -1163,7 +1147,7 @@ public class Options extends MCISmeBean
   public void setConstraintType(int constraintType) {
     this.constraintType = constraintType;
   }
-
+*/
 	public String getCountryCode() 
 	{
 		return countryCode;
