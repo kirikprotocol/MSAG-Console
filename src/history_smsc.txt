@@ -115,3 +115,8 @@ B3006:
     Webadm	mapio task count param fix
     MCISme	disable copying for MCISmeMessageSender class
     MCISme	add reversed notify policy for new requirements
+B3007:
+    SMSC	SMPP proxy session related logs more detailed
+    SMSC	Fix for possible instant rescheduling of receipts on disconnected SME
+    SMSC	Fix for unrequired extra Charge Forward requests for multipart messages
+    
