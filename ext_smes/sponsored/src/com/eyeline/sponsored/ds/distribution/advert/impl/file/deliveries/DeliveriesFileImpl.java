@@ -2,7 +2,7 @@ package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries;
 
 import com.eyeline.sponsored.ds.DataSourceException;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
-import static com.eyeline.sponsored.ds.distribution.advert.impl.file.deliveries.RWUtils.*;
+import static com.eyeline.utils.IOUtils.*;
 import org.apache.log4j.Category;
 
 import java.io.*;

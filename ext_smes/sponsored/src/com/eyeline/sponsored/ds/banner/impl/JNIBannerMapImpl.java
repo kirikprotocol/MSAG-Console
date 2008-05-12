@@ -16,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.eyeline.utils.IOUtils.*;
+
 /**
  * User: artem
  * Date: 11.04.2008
@@ -130,51 +132,16 @@ public final class JNIBannerMapImpl implements BannerMap {
 
   private class KeyLogTask implements Runnable {
 
-    public int readByte(InputStream is) throws IOException {
-      int b = is.read();
-      if (b == -1)
-        throw new EOFException();
-      return b;
-    }
-
-    public long readLong(InputStream is) throws IOException {
-      long ch1 = readByte(is);
-      long ch2 = readByte(is);
-      long ch3 = readByte(is);
-      long ch4 = readByte(is);
-      long ch5 = readByte(is);
-      long ch6 = readByte(is);
-      long ch7 = readByte(is);
-      long ch8 = readByte(is);
-      return (
-              ((ch1 << 56) & 0xFF00000000000000L) |
-              ((ch2 << 48) & 0x00FF000000000000L) |
-              ((ch3 << 40) & 0x0000FF0000000000L) |
-              ((ch4 << 32) & 0x000000FF00000000L) |
-              ((ch5 << 24) & 0x00000000FF000000L) |
-              ((ch6 << 16) & 0x0000000000FF0000L) |
-              ((ch7 << 8)  & 0x000000000000FF00L) |
-              (ch8         & 0x00000000000000FFL)
-      );
-    }
-
-    public void writeLong(long value, OutputStream os) throws IOException {
-      os.write((int)((value >> 56) & 0xFF));
-      os.write((int)((value >> 48) & 0xFF));
-      os.write((int)((value >> 40) & 0xFF));
-      os.write((int)((value >> 32) & 0xFF));
-      os.write((int)((value >> 24) & 0xFF));
-      os.write((int)((value >> 16) & 0xFF));
-      os.write((int)((value >> 8) & 0xFF));
-      os.write((int)((value) & 0xFF));
-    }
-
     public void run() {
 
+      if (log.isInfoEnabled())
+        log.info("Banner map clean started.");
       final ArrayList<Long> keys = new ArrayList<Long>(10);
 
       try {
         // Read keys
+        if (log.isInfoEnabled())
+          log.info("Read keys.");
         InputStream is = null;
         try {
           is = new BufferedInputStream(new FileInputStream(keyStoreFile));
@@ -198,10 +165,16 @@ public final class JNIBannerMapImpl implements BannerMap {
           lock.lock();
           // Clear map
           if (keys.size() >= 3) {
-            clear(keys.get(0));
+            long key = keys.get(0);
+            if (log.isInfoEnabled())
+              log.info("Remove keys less than " + key);
+            clear(key);
             // Remove first key and add last
             keys.remove(0);
           }
+
+          if (log.isInfoEnabled())
+            log.info("Store lask key " + lastKey);
 
           keys.add(lastKey);
         } finally {
@@ -209,6 +182,8 @@ public final class JNIBannerMapImpl implements BannerMap {
         }
 
         // Store keys
+        if (log.isInfoEnabled())
+          log.info("Store keys.");
         OutputStream os = null;
         try {
           os = new BufferedOutputStream(new FileOutputStream(keyStoreFile, false));
@@ -226,6 +201,9 @@ public final class JNIBannerMapImpl implements BannerMap {
           }
         }
 
+        if (log.isInfoEnabled())
+          log.info("Banner map clean finished.");
+
       } catch (Throwable e) {
         log.error(e,e);
       }
@@ -238,35 +216,22 @@ public final class JNIBannerMapImpl implements BannerMap {
     final JNIBannerMapImpl map = new JNIBannerMapImpl("store/banner.bin", 500, 10000, "store/key_log.bin");
     Object o = new Object();
 
-    for (int j=0; j<10; j++) {
+    int i=10000000;
+    for (int k=0; k<10; k++) {
       System.out.println("fill");
-
-      for (int i=0; i<10000; i++) {
-        map.put(i, 0);
-        synchronized(o) {
-          try {
-            o.wait(100);
-          } catch (InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-        if (i % 100 == 0)
-          System.out.println("size = " + map.size());
+      for (int j=0; j<1000000; j++) {
+        i++;
+        map.put(i,j);
       }
-
-//      System.out.println("sizes");
-//      for (int i=0; i<10000; i++) {
-//        synchronized(o) {
-//          try {
-//            o.wait(1000);
-//          } catch (InterruptedException e) {
-//            e.printStackTrace();
-//          }
-//          System.out.println(map.size());
-//        }
-//      }
+      System.out.println("lookup");
+      for (int j=0; j<1000000; j++) {
+        int val = map.get(i-j);
+        if (val == Integer.MIN_VALUE) {
+          System.out.println("Can't find " + (i-j));
+          return;
+        }
+      }
     }
-
     System.out.println("size = " + map.size());
   }
 

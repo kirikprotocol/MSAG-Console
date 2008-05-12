@@ -3,6 +3,7 @@ package com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStat;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsQuery;
 import org.apache.log4j.Category;
+import static com.eyeline.utils.IOUtils.*;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
@@ -114,28 +115,28 @@ class StatsFileImpl implements StatsFile {
 
   private static DeliveryStatImpl readDeliveryStat(InputStream is) throws IOException {
     final DeliveryStatImpl s = new DeliveryStatImpl();
-    s.setSubscriberAddress(IOUtils.readString(is));
-    s.setAdvertiserId(IOUtils.readInt(is));
-    s.setDelivered(IOUtils.readByte(is));
-    s.setSended(IOUtils.readByte(is));
-    IOUtils.readByte(is); // EOR
+    s.setSubscriberAddress(readString8(is));
+    s.setAdvertiserId(readInt(is));
+    s.setDelivered(readByte(is));
+    s.setSended(readByte(is));
+    readByte(is); // EOR
     return s;
   }
 
   private static void writeDeliveryStat(DeliveryStat stat, OutputStream os) throws IOException {
-    IOUtils.writeString(stat.getSubscriberAddress(), os);
-    IOUtils.writeInt(stat.getAdvertiserId(), os);
+    writeString8(stat.getSubscriberAddress(), os);
+    writeInt(stat.getAdvertiserId(), os);
     os.write(stat.getDelivered());
     os.write(stat.getSended());
     os.write(EOR);
   }
 
   private static void skipDeliveryStat(InputStream is) throws IOException {
-    IOUtils.skipString(is); // msisdn
-    IOUtils.readInt(is);    // advertiser id
-    IOUtils.readByte(is);   // delivered
-    IOUtils.readByte(is);   // sended
-    IOUtils.readByte(is);   // EOR
+    readString8(is);// msisdn
+    readInt(is);    // advertiser id
+    readByte(is);   // delivered
+    readByte(is);   // sended
+    readByte(is);   // EOR
   }
 
   public void transferTo(DeliveryStatsQuery query, OutputStream target) throws StatsFileException {
