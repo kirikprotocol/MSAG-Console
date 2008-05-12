@@ -14,8 +14,6 @@ import ru.sibinco.smpp.ub_sme.inbalance.*;
 import java.util.*;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.sql.CallableStatement;
-import java.sql.Statement;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.text.DecimalFormat;
@@ -62,6 +60,10 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String inManInIsdnPattern = null;
   private String medioScpInIsdnPattern = null;
   private String inBalanceInIsdnPattern = null;
+
+  private int cbossMaxThread = 20;
+  private int inManMaxThread = 20;
+  private int medioScpMaxThread = 20;
 
   private String inManHost = "localhost";
   private String inManPort = "5678";
@@ -126,10 +128,15 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private Map mgRequests = new HashMap();
   private Map inManRequests = new HashMap();
   private Map inBalanceRequests = new HashMap();
-
+  /*
   private Map cbossStatements = new HashMap();
   private Map inManStatements = new HashMap();
   private Map medioScpStatements = new HashMap();
+  */
+  private ThreadConroller cbossThreadConroller;
+  private ThreadConroller inManThreadConroller;
+  private ThreadConroller medioScpThreadConroller;
+
 
   private ProductivityControlObject requests;
   private ProductivityControlObject responses;
@@ -227,7 +234,12 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (inManInIsdnPattern != null) {
         inManInIsdnPattern = Utils.aggregateRegexp(inManInIsdnPattern);
       }
-
+      try {
+        inManMaxThread=Integer.parseInt(config.getProperty("inman.max.threads", Integer.toString(inManMaxThread)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal int value: "+config.getProperty("inman.max.threads"), e);
+      }
+      inManThreadConroller = new ThreadConroller(inManMaxThread);
     }
 
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_CBOSS_ORACLE)) {
@@ -248,6 +260,12 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       } catch (IllegalArgumentException e) {
         throw new InitializationException(e.getMessage(), e);
       }
+      try {
+        cbossMaxThread=Integer.parseInt(config.getProperty("cboss.max.threads", Integer.toString(cbossMaxThread)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal int value: "+config.getProperty("cboss.max.threads"), e);
+      }
+      cbossThreadConroller = new ThreadConroller(cbossMaxThread);
     }
 
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_MEDIO_SCP)) {
@@ -273,7 +291,12 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (medioScpInIsdnPattern != null) {
         medioScpInIsdnPattern = Utils.aggregateRegexp(medioScpInIsdnPattern);
       }
-
+      try {
+        medioScpMaxThread=Integer.parseInt(config.getProperty("medioscp.max.threads", Integer.toString(medioScpMaxThread)));
+      } catch (NumberFormatException e) {
+        logger.error("Illegal int value: "+config.getProperty("medioscp.max.threads"), e);
+      }
+      medioScpThreadConroller = new ThreadConroller(medioScpMaxThread);
     }
 
     if (isBillingSystemEnabled(CONTRACT_TYPE_UNKNOWN, BILLING_SYSTEM_FORIS_MG)) {
@@ -1154,7 +1177,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected String getCbossQuery() {
     return cbossQuery;
   }
-
+  /*
   protected CallableStatement getCbossStatement() throws SQLException {
     CallableStatement result;
     synchronized (cbossStatements) {
@@ -1192,7 +1215,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
     }
   }
-
+  */
   protected boolean isCbossConnectionError(Exception e) {
     if (e.toString().matches(cbossConnectionErrorPattern)) {
       return true;
@@ -1204,7 +1227,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected String getInManQuery() {
     return inManQuery;
   }
-
+  /*
   protected CallableStatement getInManStatement() throws SQLException {
     CallableStatement result;
     synchronized (inManStatements) {
@@ -1242,7 +1265,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
     }
   }
-
+  */
   protected boolean isInManConnectionError(Exception e) {
     if (e.toString().matches(inManConnectionErrorPattern)) {
       return true;
@@ -1254,7 +1277,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected String getMedioScpQuery() {
     return medioScpQuery;
   }
-
+  /*
   protected CallableStatement getMedioScpStatement() throws SQLException {
     CallableStatement result;
     synchronized (medioScpStatements) {
@@ -1292,7 +1315,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       }
     }
   }
-
+  */
   protected boolean isMedioScpConnectionError(Exception e) {
     if (e.toString().matches(medioScpConnectionErrorPattern)) {
       return true;
@@ -1301,20 +1324,35 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     }
   }
 
+  protected ThreadConroller getCbossThreadConroller() {
+    return cbossThreadConroller;
+  }
+
+  protected ThreadConroller getInManThreadConroller() {
+    return inManThreadConroller;
+  }
+
+  protected ThreadConroller getMedioScpThreadConroller() {
+    return medioScpThreadConroller;
+  }
+
   protected String getMgAddress() {
     return mgAddress;
   }
 
   protected Connection getCbossConnection() throws SQLException {
-    return connectionManager.getConnection(cbossPoolName);
+    //return connectionManager.getConnection(cbossPoolName);
+    return connectionManager.getConnectionFromPool(cbossPoolName);
   }
 
   protected Connection getInManConnection() throws SQLException {
-    return connectionManager.getConnection(inManPoolName);
+    //return connectionManager.getConnection(inManPoolName);
+    return connectionManager.getConnectionFromPool(inManPoolName);
   }
 
   protected Connection getMedioScpConnection() throws SQLException {
-    return connectionManager.getConnection(medioScpPoolName);
+    //return connectionManager.getConnection(medioScpPoolName);
+    return connectionManager.getConnectionFromPool(medioScpPoolName);
   }
 
   protected String getInManInIsdnPattern() {
