@@ -9,6 +9,7 @@ import com.eyeline.sponsored.subscription.config.Config;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.IOUtils;
 import ru.sibinco.smsc.utils.subjects.SmscSubject;
 import ru.sibinco.smsc.utils.subjects.SmscSubjectsList;
 import ru.sibinco.smsc.utils.subjects.SmscSubjectsListException;
@@ -27,22 +28,43 @@ import java.util.Map;
 
 public class SubscriptionsExport {
 
+  private static void printHelp() {
+    System.out.println("Export subscription info.");
+    System.out.println("Arguments:");
+    System.out.println("-a date (dd-mm-yyyy)");
+    System.out.println("-d distribution name");
+    System.out.println("-f routes file");
+  }
+
   public static void main(String[] args) {
+
+    if (args.length % 2 != 0) {
+      printHelp();
+      return;
+    }
 
     Request req = new Request();
     for (int i=0; i + 1 < args.length; i+=2) {
-      if (args[i].equalsIgnoreCase("-a")) {
-        req.setDate(args[i + 1]);
-      }
-      if (args[i].equalsIgnoreCase("-d")) {
-        req.setDistributionName(args[i + 1]);
-      }
-      if (args[i].equalsIgnoreCase("-f")) {
-        req.setRoutesFile(args[i + 1]);
+      try {
+        if (args[i].equalsIgnoreCase("-a"))
+          req.setDate(args[i + 1]);
+        else if (args[i].equalsIgnoreCase("-d"))
+          req.setDistributionName(args[i + 1]);
+        else if (args[i].equalsIgnoreCase("-f"))
+          req.setRoutesFile(args[i + 1]);
+        else {
+          printHelp();
+          return;
+        }
+      } catch (IllegalArgumentException e) {
+        System.out.println(e.getMessage());
+        printHelp();
+        return;
       }
     }
 
     DBSubscriptionDataSource ds = null;
+    OutputStream os = null;
     BufferedReader r = null;
     try {
       final XmlConfig xmlConfig = new XmlConfig();
@@ -63,19 +85,7 @@ public class SubscriptionsExport {
       final SmscSubjectsList subjects = new SmscSubjectsList();
       subjects.load(req.getRoutesFile());
       final SmscSubject unknownSubject = new SmscSubject("Unknown");
-//      final SmscTimezonesList tz = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
 
-//      SubscriptionProcessor.init(ds, tz);
-//
-//
-//      r = new BufferedReader(new FileReader("spons.txt"));
-//
-//      String s = r.readLine();
-//      while(s != null) {
-//        SubscriptionProcessor.getInstance().subscribe(s, "sponsored2", 10);
-//        s = r.readLine();
-//      }
-////
       final Map<SmscSubject, Counter> stats = new HashMap<SmscSubject, Counter>(subjects.getSubjects().size());
 
       DataSourceTransaction tx = null;
@@ -106,8 +116,10 @@ public class SubscriptionsExport {
           tx.close();
       }
 
+      os = new BufferedOutputStream(System.out);
+
       for (Map.Entry<SmscSubject, Counter> e : stats.entrySet()) {
-        System.out.println(e.getKey().getId() + '|' + e.getValue().getValue());
+        IOUtils.writeString(os, e.getKey().getId() + '|' + e.getValue().getValue() + '\n');
       }
 
     } catch (SmscSubjectsListException e) {
@@ -116,17 +128,17 @@ public class SubscriptionsExport {
       e.printStackTrace();
     } catch (ConfigException e) {
       e.printStackTrace();
-//    } catch (FileNotFoundException e) {
-//      e.printStackTrace();
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    } catch (SmscTimezonesListException e) {
-//      e.printStackTrace();
-//    } catch (ProcessorException e) {
-//      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
     } finally {
       if (ds != null)
         ds.shutdown();
+      if (os != null)
+        try {
+          os.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
     }
   }
 

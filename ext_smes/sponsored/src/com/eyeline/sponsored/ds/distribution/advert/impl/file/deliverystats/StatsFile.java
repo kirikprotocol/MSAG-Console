@@ -5,6 +5,7 @@ import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsQuery;
 
 import java.util.ArrayList;
 import java.io.OutputStream;
+import java.nio.channels.WritableByteChannel;
 
 /**
  * User: artem
@@ -16,6 +17,7 @@ interface StatsFile {
   public void addStat(DeliveryStat stat) throws StatsFileException;
   public ArrayList<DeliveryStatImpl> getRecords(int start, int count) throws StatsFileException;
   public void transferTo(DeliveryStatsQuery query, OutputStream target) throws StatsFileException;
-  public void compress() throws StatsFileException;
+  public void transferTo(WritableByteChannel target) throws StatsFileException;
+  public void compress(DeliveryStatsQuery query) throws StatsFileException;
   public void close() throws StatsFileException;
 }

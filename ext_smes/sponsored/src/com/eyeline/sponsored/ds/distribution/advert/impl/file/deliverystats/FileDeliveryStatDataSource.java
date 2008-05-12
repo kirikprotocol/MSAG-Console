@@ -9,6 +9,7 @@ import org.apache.log4j.Category;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.*;
@@ -174,12 +175,14 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
     };
 
     // Concat stat files
-    OutputStream os = null;
+    FileOutputStream os = null;
+    FileChannel fc = null;
     try {
-      os = new BufferedOutputStream(new FileOutputStream(aggregateFile));
+      os = new FileOutputStream(aggregateFile);
+      fc = os.getChannel();
 
       for (StatsFile file : files)
-        file.transferTo(query1, os);
+        file.transferTo(fc);
 
     } catch (StatsFileException e) {
       throw new DataSourceException(e);
@@ -191,13 +194,18 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
           os.close();
       } catch (IOException e) {
       }
+      try {
+        if (fc != null)
+          fc.close();
+      } catch (IOException e) {
+      }
     }
 
     // Aggregate final file
     StatsFileImpl impl = null;
     try {
       impl = new StatsFileImpl(aggregateFile);
-      impl.compress();
+      impl.compress(query1);
 
       return new ListResultSet(impl) {
         public void close() throws DataSourceException {
@@ -286,11 +294,21 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
       }
     }
 
-    public void compress() throws StatsFileException {
+    public void transferTo(WritableByteChannel target) throws StatsFileException {
+      try {
+        lock.lock();
+        impl.transferTo(target);
+        time = System.currentTimeMillis();
+      } finally {
+        lock.unlock();
+      }
+    }
+
+    public void compress(DeliveryStatsQuery query) throws StatsFileException {
       try {
         lock.lock();
         time = System.currentTimeMillis();
-        this.impl.compress();
+        this.impl.compress(query);
       } finally {
         lock.unlock();
       }
@@ -401,7 +419,7 @@ public class FileDeliveryStatDataSource implements DeliveryStatsDataSource {
 
     public void run() {
       try {
-        file.compress();
+        file.compress(null);
       } catch (StatsFileException e) {
         log.error(e,e);
       }

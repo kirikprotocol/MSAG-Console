@@ -9,8 +9,11 @@ import com.eyeline.sponsored.ds.distribution.advert.impl.db.DBDistributionDataSo
 import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.FileDeliveryStatDataSource;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.IOUtils;
 
 import java.io.File;
+import java.io.OutputStream;
+import java.io.BufferedOutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -21,10 +24,20 @@ import java.util.Date;
  */
 
 public class DeliveryStatsView {
+
+  private static void printHelp() {
+    System.out.println("Show stats file.");
+    System.out.println("Arguments:");
+    System.out.println("-d date (dd-mm-yyyy)");
+    System.out.println("-s subscriber");
+  }
+
   public static void main(String args[]) {
-    // Flags
-    // -d date in format <yyyy-MM-dd>
-    // -s subscriber
+    if (args.length % 2 != 0) {
+      printHelp();
+      return;
+    }
+
     final Args a = new Args(args);
 
     DeliveryStatsDataSource ds = null;
@@ -45,13 +58,15 @@ public class DeliveryStatsView {
       }
 
       ResultSet<DeliveryStat> rs = null;
+      OutputStream os = null;
       try {
+        os = new BufferedOutputStream(System.out);
         rs = ds.getDeliveryStats(a.date);
         if (rs != null) {
           while (rs.next()) {
             DeliveryStat stat = rs.get();
             if (a.subscriber == null || a.subscriber.equalsIgnoreCase(stat.getSubscriberAddress()))
-              System.out.println(stat.getSubscriberAddress() + " | " + stat.getDelivered() + " | " + stat.getAdvertiserId());
+              IOUtils.writeString(os, stat.getSubscriberAddress() + " | " + stat.getDelivered() + " | " + stat.getAdvertiserId() + '\n');
           }
         }
       } catch (DataSourceException e) {
@@ -59,6 +74,8 @@ public class DeliveryStatsView {
       } finally {
         if (rs != null)
           rs.close();
+        if (os != null)
+          os.close();
       }
 
     } catch (Throwable e) {
@@ -70,7 +87,7 @@ public class DeliveryStatsView {
   }
 
   private static class Args {
-    private static final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
     private String subscriber;
     private Date date;
 
@@ -83,7 +100,7 @@ public class DeliveryStatsView {
           try {
             date = df.parse(args[1]);
           } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Should be yyyy-MM-dd");
+            throw new IllegalArgumentException("Invalid date format. Should be dd-MM-yyyy");
           }
         }
         if (args[0].equals("-s")) {
@@ -96,7 +113,7 @@ public class DeliveryStatsView {
           try {
             date = df.parse(args[3]);
           } catch (ParseException e) {
-            throw new IllegalArgumentException("Invalid date format. Should be yyyy-MM-dd");
+            throw new IllegalArgumentException("Invalid date format. Should be dd-MM-yyyy");
           }
         }
         if (args[2].equals("-s")) {

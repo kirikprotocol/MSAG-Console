@@ -11,11 +11,9 @@ import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.File
 import com.eyeline.sponsored.utils.CalendarUtils;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.IOUtils;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -28,7 +26,7 @@ import java.util.Date;
 
 public class DeliveryStatExport {
 
-  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, final Integer advId, final Integer notAdvId, Writer os)  {
+  public static void exportStat(DeliveryStatsDataSource ds, Date fromDate, Date toDate, float coeff, final Integer advId, final Integer notAdvId, OutputStream os)  {
     ResultSet<DeliveryStat> rs = null;
     try {
 
@@ -54,7 +52,7 @@ public class DeliveryStatExport {
           float cost = stat.getDelivered() * 100000 * coeff / 100000;
           final StringBuilder st = new StringBuilder(40);
           st.append(stat.getSubscriberAddress()).append('|').append(cost).append('\n');
-          os.write(st.toString());
+          IOUtils.writeString(os, st.toString(), st.length());
         }
       }
 
@@ -71,6 +69,18 @@ public class DeliveryStatExport {
       }
 
     }
+  }
+
+  private static void printHelp() {
+    System.out.println("Export statistics to file");
+    System.out.println("Arguments:");
+    System.out.println("-f from date (dd-mm-yyyy)");
+    System.out.println("-t to date (dd-mm-yyyy)");
+    System.out.println("-c cost");
+    System.out.println("-i days interval");
+    System.out.println("-d output directory");
+    System.out.println("-a advertiser id");
+    System.out.println("-n advertiser id not equals to");
   }
 
   /**
@@ -102,33 +112,41 @@ public class DeliveryStatExport {
    */
 
   public static void main(String[] args) {
+    if (args.length % 2 != 0) {
+      printHelp();
+      return;
+    }
+
     final Request req = new Request();
 
     DeliveryStatsDataSource ds = null;
-    Writer os = null;
+    OutputStream os = null;
     try {
 
       for (int i=0; i + 1 < args.length; i+=2) {
-        if (args[i].equalsIgnoreCase("-f")) {
-          req.setFromDate(args[i + 1]);
-        }
-        if (args[i].equalsIgnoreCase("-t")) {
-          req.setToDate(args[i + 1]);
-        }
-        if (args[i].equalsIgnoreCase("-c")) {
-          req.setCost(args[i + 1]);
-        }
-        if (args[i].equalsIgnoreCase("-i")) {
-          req.setInterval(args[i + 1]);
-        }
-        if (args[i].equalsIgnoreCase("-d")) {
-          req.setDir(args[i + 1]);
-        }
-        if (args[i].equalsIgnoreCase("-a")) {
-          req.setAdvertiserId(Integer.valueOf(args[i + 1]));
-        }
-        if (args[i].equalsIgnoreCase("-n")) {
-          req.setNotAdvertiserId(Integer.valueOf(args[i + 1]));
+        try {
+          if (args[i].equalsIgnoreCase("-f"))
+            req.setFromDate(args[i + 1]);
+          else if (args[i].equalsIgnoreCase("-t"))
+            req.setToDate(args[i + 1]);
+          else if (args[i].equalsIgnoreCase("-c"))
+            req.setCost(args[i + 1]);
+          else if (args[i].equalsIgnoreCase("-i"))
+            req.setInterval(args[i + 1]);
+          else if (args[i].equalsIgnoreCase("-d"))
+            req.setDir(args[i + 1]);
+          else if (args[i].equalsIgnoreCase("-a"))
+            req.setAdvertiserId(Integer.valueOf(args[i + 1]));
+          else if (args[i].equalsIgnoreCase("-n"))
+            req.setNotAdvertiserId(Integer.valueOf(args[i + 1]));
+          else {
+            printHelp();
+            return;
+          }
+        } catch (IllegalArgumentException e) {
+          System.out.println(e.getMessage());
+          printHelp();
+          return;
         }
       }
 
@@ -161,7 +179,7 @@ public class DeliveryStatExport {
       }
 
       final SimpleDateFormat df = new SimpleDateFormat("dd_MM_yyyy");
-      os = new FileWriter(new File(req.getDir(), "export." + df.format(req.getFromDate()) + '-' + df.format(CalendarUtils.getPrevDayStart(req.getToDate())) + ".csv"));
+      os = new BufferedOutputStream(new FileOutputStream(new File(req.getDir(), "export." + df.format(req.getFromDate()) + '-' + df.format(CalendarUtils.getPrevDayStart(req.getToDate())) + ".csv")));
 
       long time = System.currentTimeMillis();
 
@@ -170,8 +188,7 @@ public class DeliveryStatExport {
       os.flush();
 
       System.out.println("Stats aggregated in " + (System.currentTimeMillis() - time) + " ms");
-    } catch (IllegalArgumentException e) {
-      System.out.println(e.getMessage());
+
     } catch (Throwable e) {
       e.printStackTrace();
     } finally {

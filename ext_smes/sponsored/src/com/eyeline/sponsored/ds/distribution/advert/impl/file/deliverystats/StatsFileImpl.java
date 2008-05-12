@@ -7,6 +7,7 @@ import static com.eyeline.utils.IOUtils.*;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -165,6 +166,37 @@ class StatsFileImpl implements StatsFile {
     }
   }
 
+  public void transferTo(WritableByteChannel target) throws StatsFileException {
+    FileInputStream is = null;
+    try {
+      os.flush();
+
+      is = new FileInputStream(file);
+
+      FileChannel fc = null;
+      try {
+        fc = is.getChannel();
+
+        fc.transferTo(0, fc.size(), target);
+      } catch (IOException e) {
+        throw new StatsFileException(e.getMessage(), e);
+      } finally {
+        if (fc != null)
+          fc.close();
+      }
+
+    } catch (IOException e) {
+      throw new StatsFileException(e.getMessage(), e);
+    } finally {
+      try {
+        if (is != null)
+          is.close();
+      } catch (IOException e) {
+        log.error(e,e);
+      }
+    }
+  }
+
   public void addStat(DeliveryStat stat) throws StatsFileException {
     try {
       writeDeliveryStat(stat, os);
@@ -201,7 +233,40 @@ class StatsFileImpl implements StatsFile {
     return result;
   }
 
-  public void compress() throws StatsFileException {
+  private static void fillBuffer(InputStream curFileReader, Map<DeliveryStat, DeliveryStat> buffer, DeliveryStatsQuery query) throws IOException {
+    // We read file until buffer size < AGGR_BUFFER_SIZE or EOF reached. Every delivery stat we put into buffer.
+    while (buffer.size() < AGGR_BUFFER_SIZE) {
+      DeliveryStat stat = readDeliveryStat(curFileReader);
+      if (query == null || query.isAllowed(stat)) {
+        DeliveryStat oldStat = buffer.get(stat);
+        if (oldStat == null)
+          buffer.put(stat, stat);
+        else {
+          oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
+          oldStat.setSended(oldStat.getSended() + stat.getSended());
+        }
+      }
+    }
+  }
+
+  private static void transferOther(InputStream curFileReader, Map<DeliveryStat, DeliveryStat> buffer, DeliveryStatsQuery query, OutputStream tmpFileWriter) throws IOException {
+    // Read up to the end of current file
+    // Update counters in buffer and write other records to tmp file
+    while(true) {
+      DeliveryStat stat = readDeliveryStat(curFileReader);
+      if (query == null || query.isAllowed(stat)) {
+        DeliveryStat oldStat = buffer.get(stat);
+        if (oldStat == null)
+          writeDeliveryStat(stat, tmpFileWriter);
+        else {
+          oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
+          oldStat.setSended(oldStat.getSended() + stat.getSended());
+        }
+      }
+    }
+  }
+
+  public void compress(DeliveryStatsQuery query) throws StatsFileException {
 
     // Close output stream if it was opened and save status to variable
     final boolean opened = os != null;
@@ -215,7 +280,6 @@ class StatsFileImpl implements StatsFile {
     OutputStream compressedFileWriter = null;
 
     try {
-
       compressedFileWriter = new BufferedOutputStream(new FileOutputStream(compressedFile));
 
       File tmpFile = null, curFile = file;
@@ -232,17 +296,7 @@ class StatsFileImpl implements StatsFile {
           curFileReader = new BufferedInputStream(new FileInputStream(curFile));
 
           // Fill buffer
-          // We read file until buffer size < AGGR_BUFFER_SIZE or EOF reached. Every delivery stat we put into buffer.
-          while (buffer.size() < AGGR_BUFFER_SIZE) {
-            DeliveryStat stat = readDeliveryStat(curFileReader);
-            DeliveryStat oldStat = buffer.get(stat);
-            if (oldStat == null)
-              buffer.put(stat, stat);
-            else {
-              oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
-              oldStat.setSended(oldStat.getSended() + stat.getSended());
-            }
-          }
+          fillBuffer(curFileReader, buffer, iterNo == 0 ? query : null);
 
           // We fill buffer but EOF was not reached
           // This mean that there are other delivery stats. We copy them into tmp file
@@ -250,18 +304,8 @@ class StatsFileImpl implements StatsFile {
 
           tmpFileWriter = new BufferedOutputStream(new FileOutputStream(tmpFile));
 
-          // Read up to the end of current file
-          // Update counters in buffer and write other records to tmp file
-          while(true) {
-            DeliveryStat stat = readDeliveryStat(curFileReader);
-            DeliveryStat oldStat = buffer.get(stat);
-            if (oldStat == null)
-              writeDeliveryStat(stat, tmpFileWriter);
-            else {
-              oldStat.setDelivered(oldStat.getDelivered() + stat.getDelivered());
-              oldStat.setSended(oldStat.getSended() + stat.getSended());
-            }
-          }
+          // Transfer other
+          transferOther(curFileReader, buffer, iterNo == 0 ? query : null, tmpFileWriter);
 
         } catch (EOFException e) {
           // EOF is expected
