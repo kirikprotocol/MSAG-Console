@@ -1629,26 +1629,21 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   __map_trace2__("%s: dialogid 0x%x opened=%s invoke=%d ssn=%d",__func__,dialog->dialogid_map,dialog->id_opened?"true":"false", dialog->invokeId, dialog->ssn);
   if( !dialog->id_opened )
   {
-    bool bad_dlg_found = false;
+    bool dlg_found = false;
     istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
     {
       MutexGuard mg(ussd_map_lock);
       USSD_MAP::iterator it = ussd_map.find(dialog->ussdSequence);
-      uint32_t ussdId=(((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
       if ( it != ussd_map.end() )
       {
         // USSD dialog already exists on this abonent
-        if(it->second!=ussdId)
-        {
-          bad_dlg_found = true;
-        }
-
+        dlg_found = true;
       } else
       {
-        ussd_map[dialog->ussdSequence] = ussdId;
+        ussd_map[dialog->ussdSequence] = (((unsigned)dialog->ssn)<<16)|dialog->dialogid_map;
       }
     }
-    if(bad_dlg_found)
+    if(dlg_found)
     {
       __map_trace2__("%s: dialogid 0x%x, ussd dialog already exists for %s",__func__,dialog->dialogid_map,dialog->abonent.c_str());
       SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SUBSCRBUSYMT));
@@ -1900,6 +1895,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 try{
                   if( !dialog2 ) { // not chained dialog
                     try {
+                      /*
                       MutexGuard mg(ussd_map_lock);
                       USSD_MAP::iterator it=ussd_map.find(sequence);
                       if(it!=ussd_map.end())
@@ -1909,6 +1905,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                         SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SYSERR));
                         return;
                       }
+                      */
 
                       dialog.assign(MapDialogContainer::getInstance()->
                               createOrAttachSMSCUSSDDialog(
@@ -1917,8 +1914,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                                 string(cmd->get_sms()->getDestinationAddress().value),
                                 cmd));
                       uint32_t val=(((uint32_t)dialog->ssn)<<16)|dialog->dialogid_map;
-                      ussd_map.insert(USSD_MAP::value_type(sequence,val));
-                      ussdGuard.lockProcessing(dialog.get());
+                      //ussd_map.insert(USSD_MAP::value_type(sequence,val));
+                      //ussdGuard.lockProcessing(dialog.get());
                     } catch (exception& e) {
                       __map_trace2__("%s: %s ",__func__,e.what());
                       SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::THROTTLED));
