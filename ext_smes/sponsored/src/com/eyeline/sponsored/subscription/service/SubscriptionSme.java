@@ -49,8 +49,8 @@ public class SubscriptionSme extends Sme{
     MessageHandler handler = null;
 
     try {
-      final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
-      xmlConfig.load();
+      final XmlConfig xmlConfig = new XmlConfig();
+      xmlConfig.load(new File("conf/config.xml"));
 
       Config conf = new Config(xmlConfig);
 
@@ -60,7 +60,8 @@ public class SubscriptionSme extends Sme{
 
       handler = new MessageHandler(conf.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
 
-      final SmscTimezonesList timezones = new SmscTimezonesList(conf.getTimezonesFile(), conf.getRoutesFile());
+      final SmscTimezonesList timezones = new SmscTimezonesList();
+      timezones.load(conf.getTimezonesFile(), conf.getRoutesFile());
 
       sme = new SubscriptionSme(xmlConfig, timezones);
 

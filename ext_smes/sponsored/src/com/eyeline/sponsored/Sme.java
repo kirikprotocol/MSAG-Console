@@ -30,18 +30,19 @@ public class Sme {
 
   public static void main(String[] args) {
 
-    MessageHandler handler = null;
-    SMPPTransceiver smppTranceiver = null;
+    MessageHandler handler;
+    SMPPTransceiver smppTranceiver;
     SubscriptionSme subscriptionSme = null;
     DistributionSme distributionSme = null;
 
     try {
-      final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
-      xmlConfig.load();
+      final XmlConfig xmlConfig = new XmlConfig();
+      xmlConfig.load(new File("conf/config.xml"));
 
       final Config conf = new Config(xmlConfig);
 
-      final SmscTimezonesList timezones = new SmscTimezonesList(conf.getTimezonesFile(), conf.getRoutesFile());
+      final SmscTimezonesList timezones = new SmscTimezonesList();
+      timezones.load(conf.getTimezonesFile(), conf.getRoutesFile());
 
       final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
 
@@ -64,7 +65,7 @@ public class Sme {
           return new Thread(r, "ConfigReloader");
         }
       });
-      configReloader.scheduleAtFixedRate(new ConfigReloadTask(timezones), 600, 600, TimeUnit.SECONDS);
+      configReloader.scheduleAtFixedRate(new ConfigReloadTask(timezones, conf.getTimezonesFile(), conf.getRoutesFile()), 600, 600, TimeUnit.SECONDS);
 
       Runtime.getRuntime().addShutdownHook(new ShutdownHook(subscriptionSme, distributionSme, configReloader));
 
@@ -108,14 +109,18 @@ public class Sme {
     private static final Category log = Category.getInstance("DISTRIBUTION");
 
     private final SmscTimezonesList timezones;
+    private final String timezonesFile;
+    private final String routesFile;
 
-    public ConfigReloadTask(SmscTimezonesList timezones) {
+    public ConfigReloadTask(SmscTimezonesList timezones, String timezonesFile, String routesFile) {
       this.timezones = timezones;
+      this.timezonesFile = timezonesFile;
+      this.routesFile = routesFile;
     }
 
     public void run() {
       try {
-        timezones.reload();
+        timezones.load(timezonesFile, routesFile);
       } catch (SmscTimezonesListException e) {
         log.error("Timezones reload failed", e);
       }

@@ -157,8 +157,8 @@ public class DistributionSme extends Sme {
     MessageHandler handler = null;
 
     try {
-      final XmlConfig config = new XmlConfig(new File("conf/config.xml"));
-      config.load();
+      final XmlConfig config = new XmlConfig();
+      config.load(new File("conf/config.xml"));
 
       Config c= new Config(config);
 
@@ -168,7 +168,8 @@ public class DistributionSme extends Sme {
 
       handler = new MessageHandler(c.getHandlerConfigFile(), smppTranceiver.getInQueue(), smppTranceiver.getOutQueue());
 
-      final SmscTimezonesList timezones = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
+      final SmscTimezonesList timezones = new SmscTimezonesList();
+      timezones.load(c.getTimezonesFile(), c.getRoutesFile());
 
       sme = new DistributionSme(config, timezones, smppTranceiver.getOutQueue());
 

@@ -145,8 +145,8 @@ public class DeliveryStatExport {
       if (req.getNotAdvertiserId() != null)
         System.out.println("Advertiser does not equals " + req.getNotAdvertiserId());
 
-      final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
-      xmlConfig.load();
+      final XmlConfig xmlConfig = new XmlConfig();
+      xmlConfig.load(new File("conf/config.xml"));
 
       final Config c = new Config(xmlConfig);
 

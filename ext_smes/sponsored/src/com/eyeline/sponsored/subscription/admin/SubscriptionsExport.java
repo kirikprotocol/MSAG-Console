@@ -45,8 +45,8 @@ public class SubscriptionsExport {
     DBSubscriptionDataSource ds = null;
     BufferedReader r = null;
     try {
-      final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
-      xmlConfig.load();
+      final XmlConfig xmlConfig = new XmlConfig();
+      xmlConfig.load(new File("conf/config.xml"));
 
       Config c = new Config(xmlConfig);
 
@@ -60,7 +60,8 @@ public class SubscriptionsExport {
       ds = new DBSubscriptionDataSource(new PropertiesConfig(c.getSubscriptionSql()));
       ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
 
-      final SmscSubjectsList subjects = new SmscSubjectsList(req.getRoutesFile());
+      final SmscSubjectsList subjects = new SmscSubjectsList();
+      subjects.load(req.getRoutesFile());
       final SmscSubject unknownSubject = new SmscSubject("Unknown");
 //      final SmscTimezonesList tz = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
 

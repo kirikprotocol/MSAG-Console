@@ -29,8 +29,8 @@ public class DeliveryStatsView {
 
     DeliveryStatsDataSource ds = null;
     try {
-      final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
-      xmlConfig.load();
+      final XmlConfig xmlConfig = new XmlConfig();
+      xmlConfig.load(new File("conf/config.xml"));
 
       final Config c = new Config(xmlConfig);
 

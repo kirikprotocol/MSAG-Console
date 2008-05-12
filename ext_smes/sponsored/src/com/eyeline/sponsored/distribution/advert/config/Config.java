@@ -63,7 +63,7 @@ public class Config extends com.eyeline.sponsored.config.Config {
 
 
     XmlConfigSection s;
-    for (Iterator iter = distrSection.sections(); iter.hasNext();) {
+    for (Iterator iter = distrSection.sections().iterator(); iter.hasNext();) {
       s = (XmlConfigSection)iter.next();
       final DistributionInfo info = new DistributionInfo();
       info.setDistributionName(s.getName());

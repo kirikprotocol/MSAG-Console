@@ -239,8 +239,8 @@ public class DeliveriesGenerator {
     DeliveriesDataSource distrDS = null;
     DBSubscriptionDataSource subscrDS = null;
     try {
-      final XmlConfig xmlConfig = new XmlConfig(new File("conf/config.xml"));
-      xmlConfig.load();
+      final XmlConfig xmlConfig = new XmlConfig();
+      xmlConfig.load(new File("conf/config.xml"));
 
       final Config c = new Config(xmlConfig);
 
@@ -257,7 +257,8 @@ public class DeliveriesGenerator {
       subscrDS = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
       subscrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
 
-      final SmscTimezonesList timezones = new SmscTimezonesList(c.getTimezonesFile(), c.getRoutesFile());
+      final SmscTimezonesList timezones = new SmscTimezonesList();
+      timezones.load(c.getTimezonesFile(), c.getRoutesFile());
 
       DeliveriesGenerator generator = new DeliveriesGenerator(distrDS, subscrDS);
       for (Iterator<DistributionInfo> distrs = c.getDistrInfos().iterator(); distrs.hasNext();)
