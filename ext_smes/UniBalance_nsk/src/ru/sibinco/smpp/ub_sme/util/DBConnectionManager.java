@@ -142,6 +142,7 @@ public class DBConnectionManager {
     private static final String userSuffix     = ".jdbc.user";
     private static final String passwordSuffix = ".jdbc.password";
     private static final String dbTypeSuffix   = ".type";
+    private static final String dataSourceClassSuffix = ".data.source.class";
 
     private String name = null;
     private String driver = null;
@@ -149,6 +150,7 @@ public class DBConnectionManager {
     private String user = null;
     private String password = null;
     private String type = null;
+    private String dataSourceClass = null;
 
     public ConnectionData(String name, Properties properties) throws InitializationException, IllegalArgumentException {
       if (name == null || name.trim().length() == 0)
@@ -173,7 +175,7 @@ public class DBConnectionManager {
       }
 
       if ((this.user = properties.getProperty(connectionPrefix+getName()+userSuffix)) == null ||
-          this.user.length() == 0) {
+          this.user.length() ==  0) {
         throw new IllegalArgumentException("Could not prepare connection \""+getName()+"\" with NULL user.");
       }
 
@@ -187,7 +189,8 @@ public class DBConnectionManager {
         throw new IllegalArgumentException("Could not prepare connection \""+getName()+"\" with NULL type.");
       }
 
-      check();
+      this.dataSourceClass = properties.getProperty(connectionPrefix+getName()+dataSourceClassSuffix);
+      //check();
     }
 
     private void check() throws InitializationException, IllegalArgumentException {
@@ -200,8 +203,9 @@ public class DBConnectionManager {
       Connection connection = null;
       try {
         connection = DriverManager.getConnection(getSource(), getUser(), getPassword());
-      } catch (Exception e) {
+      } catch (SQLException e) {
         Logger.error("Could not prepare connection \""+getName()+"\". Illegal connection configuration. Reason: "+e.getMessage(), e);
+      } catch (Exception e) {
         throw new InitializationException("Could not prepare connection \""+getName()+"\". Illegal connection configuration. Reason: "+e.getMessage());
       } finally {
         if (connection != null) {
@@ -238,6 +242,10 @@ public class DBConnectionManager {
       return type;
     }
 
+    public String getDataSourceClass() {
+      return dataSourceClass;
+    }
+
     public Connection getConnection() throws SQLException {
       return DriverManager.getConnection(getSource(), getUser(), getPassword());
     }
@@ -269,6 +277,7 @@ public class DBConnectionManager {
     private static final String userSuffix = ".user";
     private static final String passwordSuffix = ".password";
     private static final String typeSuffix = ".pool.type";
+    private static final String dataSourceClassSuffix = ".data.source.class";
     private static final String maxSizeSuffix = ".max.connections";
     private static final String minSizeSuffix = ".min.connections";
     private static final String idleSuffix = ".max.idle.time";
@@ -400,6 +409,7 @@ public class DBConnectionManager {
       config.setProperty(getName()+suffix+userSuffix, getConnectionData(getConnectionName()).getUser());
       config.setProperty(getName()+suffix+passwordSuffix, getConnectionData(getConnectionName()).getPassword());
       config.setProperty(getName()+suffix+typeSuffix, getConnectionData(getConnectionName()).getType());
+      config.setProperty(getName()+suffix+dataSourceClassSuffix, getConnectionData(getConnectionName()).getDataSourceClass());
       config.setProperty(getName()+suffix+maxSizeSuffix, Integer.toString(getSize()));
       config.setProperty(getName()+suffix+minSizeSuffix, Integer.toString(getMinSize()));
       if (idleTimeout > 0) config.setProperty(getName()+suffix+idleSuffix, Long.toString(getIdleTimeout()));
@@ -438,6 +448,8 @@ public class DBConnectionManager {
     public int getMinSize() {
       return minSize;
     }
+
+
 
     public long getIdleTimeout() {
       return idleTimeout;
