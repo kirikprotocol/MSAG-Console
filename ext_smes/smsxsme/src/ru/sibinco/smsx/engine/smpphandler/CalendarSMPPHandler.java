@@ -11,8 +11,10 @@ import ru.sibinco.smsx.engine.service.ServiceManager;
 import ru.sibinco.smsx.engine.service.CommandObserver;
 import ru.sibinco.smsx.engine.service.Command;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
+import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
 import ru.sibinco.smsx.network.smppnetwork.SMPPMultiplexor;
 import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
+import ru.aurorisoft.smpp.Message;
 
 import java.io.File;
 import java.util.Calendar;
@@ -89,7 +91,20 @@ class CalendarSMPPHandler extends SMPPHandler {
     final long start = System.currentTimeMillis();
 
     try {
-      if (inObj.getIncomingMessage() != null && inObj.getIncomingMessage().getMessageString() != null) {
+      if (inObj.getIncomingMessage() != null && inObj.getIncomingMessage().isReceipt()) {
+
+        sendResponse(inObj.getIncomingMessage(), Data.ESME_ROK);
+
+        final long msgId = Long.parseLong(inObj.getIncomingMessage().getReceiptedMessageId());
+        final boolean delivered = inObj.getIncomingMessage().getMessageState() == Message.MSG_STATE_DELIVERED;
+
+        final CalendarHandleReceiptCmd cmd = new CalendarHandleReceiptCmd();
+        cmd.setSmppMessageId(msgId);
+        cmd.setDelivered(delivered);
+
+        return ServiceManager.getInstance().getCalendarService().execute(cmd);
+
+      } if (inObj.getIncomingMessage() != null && inObj.getIncomingMessage().getMessageString() != null) {
 
         final String msg = inObj.getIncomingMessage().getMessageString().trim();
         final String sourceAddress = inObj.getIncomingMessage().getSourceAddress();

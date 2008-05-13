@@ -4,6 +4,7 @@ import com.eyeline.sme.utils.config.properties.PropertiesConfig;
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
+import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.DBCalendarDataSource;
 import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
@@ -45,6 +46,10 @@ class CalendarServiceImpl implements CalendarService {
 
   public void execute(CalendarCheckMessageStatusCmd cmd) {
     processor.execute(cmd);
+  }
+
+  public boolean execute(CalendarHandleReceiptCmd cmd) {
+    return processor.execute(cmd);
   }
 
   public void startService() {

@@ -5,6 +5,7 @@ import com.eyeline.sme.utils.worker.IterativeWorker;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
+import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
@@ -61,7 +62,7 @@ class CalendarEngine extends IterativeWorker {
       // Change message status
       msg.setStatus(CalendarMessage.STATUS_PROCESSED);
       try {
-        ds.saveCalendarMessage(msg);
+        ds.updateMessageStatus(msg);
       } catch (Throwable e) {
         log.error(e, e);
         log.error("Can't remove msg: ", e);
@@ -80,6 +81,7 @@ class CalendarEngine extends IterativeWorker {
       msg.setMessageString(message.getMessage());
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
       msg.setConnectionName(message.getConnectionName());
+      msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
       final CalendarTransportObject outObj = new CalendarTransportObject(message);
       outObj.setOutgoingMessage(msg);
@@ -111,9 +113,14 @@ class CalendarEngine extends IterativeWorker {
     public void handleResponse(PDU pdu) {
       try {
         if (msg.isSaveDeliveryStatus()) {
-          msg.setStatus(pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR ? CalendarMessage.STATUS_DELIVERED : CalendarMessage.STATUS_DELIVERY_FAILED);
-          msg.setSmppStatus(pdu.getStatus());
-          ds.saveCalendarMessage(msg);
+          if (pdu.getStatusClass() != PDU.STATUS_CLASS_NO_ERROR) {
+            msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
+            msg.setSmppStatus(pdu.getStatus());
+            ds.saveCalendarMessage(msg);
+          } else {
+            msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
+            ds.updateMessageSmppId(msg);
+          }
         }
       } catch (DataSourceException e) {
         log.error("Can't save delivery status!");

@@ -183,6 +183,60 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     }
   }
 
+  public void updateMessageStatus(CalendarMessage calendarMessage) throws DataSourceException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.id"));
+
+      ps.setInt(1, calendarMessage.getStatus());
+      ps.setInt(2, calendarMessage.getId());
+
+      ps.executeUpdate();
+    } catch (SQLException e) {
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
+  public int updateMessageStatus(long smppId, int newStatus) throws DataSourceException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.smppId"));
+
+      ps.setInt(1, newStatus);
+      ps.setLong(2, smppId);
+
+      return ps.executeUpdate();
+    } catch (SQLException e) {
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
+  public void updateMessageSmppId(CalendarMessage calendarMessage) throws DataSourceException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("calendar.message.update.smpp.id"));
+
+      ps.setLong(1, calendarMessage.getSmppId());
+      ps.setInt(2, calendarMessage.getId());
+
+      ps.executeUpdate();
+    } catch (SQLException e) {
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
   public void release() {
     pool.release();
   }

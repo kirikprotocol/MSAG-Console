@@ -4,6 +4,7 @@ import com.eyeline.sme.utils.ds.DataSourceException;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
+import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 import ru.sibinco.smsx.engine.service.Command;
@@ -17,7 +18,7 @@ import java.util.regex.Pattern;
  * Date: 28.06.2007
  */
 
-class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarCheckMessageStatusCmd.Receiver {
+class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarCheckMessageStatusCmd.Receiver, CalendarHandleReceiptCmd.Receiver {
   private static final Category log = Category.getInstance("CALENDAR");
 
   private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}");
@@ -111,5 +112,21 @@ class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarChec
       log.error(e,e);
       cmd.update(CalendarCheckMessageStatusCmd.STATUS_SYSTEM_ERROR);
     }
+  }
+
+  public boolean execute(CalendarHandleReceiptCmd cmd) {
+    try {
+      if (log.isInfoEnabled())
+        log.info("Handle rcpt: id=" + cmd.getSmppMessageId() + "; dlvr=" + cmd.isDelivered());
+
+      int result = ds.updateMessageStatus(cmd.getSmppMessageId(), cmd.isDelivered() ? CalendarMessage.STATUS_DELIVERED : CalendarMessage.STATUS_DELIVERY_FAILED);
+      return result > 0;
+
+    } catch (DataSourceException e) {
+      log.error(e,e);
+      cmd.update(CalendarHandleReceiptCmd.STATUS_SYSTEM_ERROR);
+    }
+
+    return true;
   }
 }

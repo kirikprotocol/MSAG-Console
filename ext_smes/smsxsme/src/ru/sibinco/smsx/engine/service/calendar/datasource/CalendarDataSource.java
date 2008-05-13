@@ -15,5 +15,8 @@ public interface CalendarDataSource {
   public CalendarMessage loadCalendarMessageById(int id) throws DataSourceException;
   public void removeCalendarMessage(CalendarMessage calendarMessage) throws DataSourceException;
   public void saveCalendarMessage(CalendarMessage calendarMessage) throws DataSourceException;
+  public void updateMessageStatus(CalendarMessage calendarMessage) throws DataSourceException;
+  public int updateMessageStatus(long smppId, int newStatus) throws DataSourceException;
+  public void updateMessageSmppId(CalendarMessage calendarMessage) throws DataSourceException;
   public void release();
 }

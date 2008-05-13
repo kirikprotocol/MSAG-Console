@@ -24,6 +24,7 @@ public class CalendarMessage  {
   private int smppStatus = -1;
   private boolean saveDeliveryStatus;
   private String connectionName;
+  private long smppId;
 
 
   CalendarMessage(final int id) {
@@ -112,6 +113,14 @@ public class CalendarMessage  {
 
   public void setConnectionName(String connectionName) {
     this.connectionName = connectionName;
+  }
+
+  public long getSmppId() {
+    return smppId;
+  }
+
+  public void setSmppId(long smppId) {
+    this.smppId = smppId;
   }
 
   public boolean isExists() {

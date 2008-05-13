@@ -10,9 +10,11 @@ CREATE TABLE calendar_messages (
   message TEXT NOT NULL,
   smpp_status INT,
   conn CHAR(10),
+  smpp_id BIGINT,
 
   PRIMARY KEY(id),
-  INDEX(send_time)
+  INDEX(send_time),
+  INDEX(smpp_id)
 ) CHARACTER SET koi8r;
 
 
@@ -35,9 +37,11 @@ CREATE TABLE sec_messages (
   save_delivery_status INT NOT NULL,
   notify_originator INT NOT NULL,
   conn CHAR(10),
+  smpp_id BIGINT,
 
   PRIMARY KEY(id),
-  INDEX(destination_address, status)
+  INDEX(destination_address, status),
+  INDEX(smpp_id)
 ) CHARACTER SET koi8r;
 
 
@@ -45,8 +49,10 @@ CREATE TABLE sec_messages (
 CREATE TABLE smpp_messages (
   id INT NOT NULL,
   smpp_status INT,
+  smpp_id BIGINT,
 
-  PRIMARY KEY(id)
+  PRIMARY KEY(id),
+  INDEX(smpp_id)
 ) CHARACTER SET koi8r;
 
 

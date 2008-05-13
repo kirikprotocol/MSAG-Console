@@ -8,6 +8,7 @@
 # smpp_status                                - smpp return status
 # save_delivery_status int not null          - delivery status save flag: 1- save, 0 - not save
 # message text not null                      - message text
+# smpp_id bigint                             - smpp message id
 
 calendar.message.load.max.id = SELECT max(id) FROM calendar_messages;
 
@@ -15,4 +16,7 @@ calendar.message.load.by.date = SELECT id, source_address, destination_address, 
 calendar.message.load.by.id = SELECT id, source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, conn FROM calendar_messages WHERE id=?
 calendar.message.remove.by.id = DELETE FROM calendar_messages WHERE id=?
 calendar.message.insert = INSERT INTO calendar_messages(source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, conn, id) VALUES(?,?,?,?,?,?,?,?,?,?)
-calendar.message.update = UPDATE calendar_messages set source_address=?, destination_address=?, send_time=?, dest_addr_subunit=?, message=?, status=?, save_delivery_status=?, smpp_status=?, conn=? WHERE id=?
+calendar.message.update = UPDATE calendar_messages SET source_address=?, destination_address=?, send_time=?, dest_addr_subunit=?, message=?, status=?, save_delivery_status=?, smpp_status=?, conn=? WHERE id=?
+calendar.message.update.status.by.id = UPDATE calendar_messages SET status=? WHERE id=?
+calendar.message.update.status.by.smpp_id = UPDATE calendar_messages SET status=? WHERE smpp_id=?
+calendar.message.update.smpp.id = UPDATE calendar_messages SET smpp_id=? WHERE id=?
