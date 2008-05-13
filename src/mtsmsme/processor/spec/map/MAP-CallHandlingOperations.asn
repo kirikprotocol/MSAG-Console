@@ -1,0 +1,99 @@
+-- moddified by VR
+--17.6.3	Call Handling Operations
+MAP-CallHandlingOperations {
+   itu-t identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-CallHandlingOperations (7)
+   version10 (10)}
+
+DEFINITIONS
+
+::=
+
+BEGIN
+
+EXPORTS
+--	sendRoutingInfo,
+	provideRoamingNumber --,
+--	resumeCallHandling,
+--	setReportingState,
+--	statusReport,
+--	remoteUserFree,
+--	ist-Alert,
+--	ist-Command,
+--	releaseResources
+;
+
+IMPORTS
+	OPERATION
+FROM Remote-Operations-Information-Objects {
+joint-iso-itu-t remote-operations(4)
+  informationObjects(5) version1(0)}
+
+	systemFailure,
+	dataMissing,
+	unexpectedDataValue,
+	facilityNotSupported,
+	or-NotAllowed,
+--	unknownSubscriber,
+--	numberChanged,
+--	bearerServiceNotProvisioned,
+--	teleserviceNotProvisioned,
+	noRoamingNumberAvailable,
+	absentSubscriber --,
+--	busySubscriber,
+--	noSubscriberReply,
+--	callBarred,
+--	forwardingViolation,
+--	forwardingFailed,
+--	cug-Reject,
+--	resourceLimitation,
+--	incompatibleTerminal,
+--	unidentifiedSubscriber
+
+FROM MAP-Errors {
+   itu-t (0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-Errors (10) version10 (10)}
+
+--	SendRoutingInfoArg,
+--	SendRoutingInfoRes,
+	ProvideRoamingNumberArg,
+	ProvideRoamingNumberRes --,
+--	ResumeCallHandlingArg,
+--	ResumeCallHandlingRes,
+--	SetReportingStateArg,
+--	SetReportingStateRes,
+--	StatusReportArg,
+--	StatusReportRes,
+--	RemoteUserFreeArg,
+--	RemoteUserFreeRes,
+--	IST-AlertArg,
+--	IST-AlertRes,
+--	IST-CommandArg,
+--	IST-CommandRes,
+--	ReleaseResourcesArg,
+--	ReleaseResourcesRes
+
+FROM MAP-CH-DataTypes {
+   itu-t (0) identified-organization (4) etsi (0) mobileDomain (0)
+   gsm-Network (1) modules (3) map-CH-DataTypes (13) version10 (10)}
+
+;
+
+provideRoamingNumber  OPERATION ::= {				--Timer m
+-- The timer is set to the upper limit of the range if the HLR supports pre-paging.
+	ARGUMENT
+		ProvideRoamingNumberArg
+	RESULT
+		ProvideRoamingNumberRes
+	ERRORS {
+		systemFailure |
+		dataMissing |
+		unexpectedDataValue |
+		facilityNotSupported |
+		or-NotAllowed |
+		absentSubscriber |
+		noRoamingNumberAvailable}
+	CODE
+		local:4
+}
+END

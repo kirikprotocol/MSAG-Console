@@ -1,7 +1,7 @@
 MAP-MobileServiceOperations {
   itu-t identified-organization (4) etsi (0) mobileDomain (0)
   gsm-Network (1) modules (3) map-MobileServiceOperations (5)
-  version9 (9)}
+  version10 (10)}
 DEFINITIONS
 ::=
 BEGIN
@@ -16,7 +16,7 @@ FROM Remote-Operations-Information-Objects {
   InsertSubscriberDataArg
 FROM MAP-MS-DataTypes {
     itu-t identified-organization (4) etsi (0) mobileDomain (0)
-    gsm-Network (1) modules (3) map-MS-DataTypes (11) version9 (9)}
+    gsm-Network (1) modules (3) map-MS-DataTypes (11) version10 (10)}
 
     systemFailure,
     dataMissing,

@@ -1,6 +1,6 @@
 MAP-Errors {
 itu-t identified-organization (4) etsi (0) mobileDomain (0)
-gsm-Network (1) modules (3) map-Errors (10) version9 (9)}
+gsm-Network (1) modules (3) map-Errors (10) version10 (10)}
 DEFINITIONS
 ::=
 BEGIN
@@ -15,9 +15,9 @@ resourceLimitation,
 -- identification and numbering errors
 unknownSubscriber,
 numberChanged,
-unknownMSC,
+--unknownMSC,
 unidentifiedSubscriber,
-unknownEquipment,
+--unknownEquipment,
 -- subscription errors
 roamingNotAllowed,
 illegalSubscriber,
@@ -25,11 +25,11 @@ illegalEquipment,
 bearerServiceNotProvisioned,
 teleserviceNotProvisioned,
 -- handover errors
-noHandoverNumberAvailable,
-subsequentHandoverFailure,
-targetCellOutsideGroupCallArea,
+--noHandoverNumberAvailable,
+--subsequentHandoverFailure,
+--targetCellOutsideGroupCallArea,
 -- operation and maintenance errors
-tracingBufferFull,
+--tracingBufferFull,
 -- call handling errors
 or-NotAllowed,
 noRoamingNumberAvailable,
@@ -38,56 +38,57 @@ noSubscriberReply,
 absentSubscriber,
 callBarred,
 forwardingViolation,
-forwardingFailed,
+--forwardingFailed,
 cug-Reject,
 -- any time interrogation errors
-ati-NotAllowed,
+--ati-NotAllowed,
 -- any time information handling errors
 atsi-NotAllowed,
-atm-NotAllowed,
+--atm-NotAllowed,
 informationNotAvailable,
 -- supplementary service errors
 illegalSS-Operation,
-ss-ErrorStatus,
+--ss-ErrorStatus,
 ss-NotAvailable,
-ss-SubscriptionViolation,
-ss-Incompatibility,
-unknownAlphabet,
-ussd-Busy,
-pw-RegistrationFailure,
-negativePW-Check,
-numberOfPW-AttemptsViolation,
-shortTermDenial,
-longTermDenial,
+--ss-SubscriptionViolation,
+--ss-Incompatibility,
+--unknownAlphabet,
+--ussd-Busy,
+--pw-RegistrationFailure,
+--negativePW-Check,
+--numberOfPW-AttemptsViolation,
+--shortTermDenial,
+--longTermDenial,
 -- short message service errors
 subscriberBusyForMT-SMS,
 sm-DeliveryFailure,
 messageWaitingListFull,
-absentSubscriberSM,
+absentSubscriberSM
 -- Group Call errors
-noGroupCallNumberAvailable,
+--noGroupCallNumberAvailable,
 -- location service errors
-unauthorizedRequestingNetwork,
-unauthorizedLCSClient,
-positionMethodFailure,
-unknownOrUnreachableLCSClient,
+--unauthorizedRequestingNetwork,
+--unauthorizedLCSClient,
+--positionMethodFailure,
+--unknownOrUnreachableLCSClient,
 -- Mobility Management errors
-mm-EventNotSupported,
+--mm-EventNotSupported
 -- Secure transport errors
-secureTransportError
+--secureTransportError
 ;
 IMPORTS
 ERROR
 FROM Remote-Operations-Information-Objects {joint-iso-itu-t remote-operations(4)
 informationObjects(5) version1(0) }
 
+/*
 SS-Status
 FROM MAP-SS-DataTypes {
 itu-t identified-organization (4) etsi (0) mobileDomain (0)
-gsm-Network (1) modules (3) map-SS-DataTypes (14) version9 (9)}
-
-SS-IncompatibilityCause,
-PW-RegistrationFailureCause,
+gsm-Network (1) modules (3) map-SS-DataTypes (14) version10 (10)}
+*/
+--SS-IncompatibilityCause,
+--PW-RegistrationFailureCause,
 SM-DeliveryFailureCause,
 SystemFailureParam,
 DataMissingParam,
@@ -101,7 +102,7 @@ IllegalSubscriberParam,
 IllegalEquipmentParam,
 BearerServNotProvParam,
 TeleservNotProvParam,
-TracingBufferFullParam,
+--TracingBufferFullParam,
 NoRoamingNbParam,
 OR-NotAllowedParam,
 AbsentSubscriberParam,
@@ -109,33 +110,33 @@ BusySubscriberParam,
 NoSubscriberReplyParam,
 CallBarredParam,
 ForwardingViolationParam,
-ForwardingFailedParam,
+--ForwardingFailedParam,
 CUG-RejectParam,
-ATI-NotAllowedParam,
+--ATI-NotAllowedParam,
 SubBusyForMT-SMS-Param,
 MessageWaitListFullParam,
 AbsentSubscriberSM-Param,
 ResourceLimitationParam,
 NoGroupCallNbParam,
 IncompatibleTerminalParam,
-ShortTermDenialParam,
-LongTermDenialParam,
-UnauthorizedRequestingNetwork-Param,
-UnauthorizedLCSClient-Param,
-PositionMethodFailure-Param,
-UnknownOrUnreachableLCSClient-Param,
-MM-EventNotSupported-Param,
+--ShortTermDenialParam,
+--LongTermDenialParam,
+--UnauthorizedRequestingNetwork-Param,
+--UnauthorizedLCSClient-Param,
+--PositionMethodFailure-Param,
+--UnknownOrUnreachableLCSClient-Param,
+--MM-EventNotSupported-Param,
 ATSI-NotAllowedParam,
-ATM-NotAllowedParam,
+--ATM-NotAllowedParam,
 IllegalSS-OperationParam,
 SS-NotAvailableParam,
-SS-SubscriptionViolationParam,
+--SS-SubscriptionViolationParam,
 InformationNotAvailableParam,
-TargetCellOutsideGCA-Param,
-SecureTransportErrorParam
+TargetCellOutsideGCA-Param
+--SecureTransportErrorParam
 FROM MAP-ER-DataTypes {
-itu-t identified-organization (4) etsi (0) mobileDomain (0)
-gsm-Network (1) modules (3) map-ER-DataTypes (17) version9 (9)}
+itu-t (0) identified-organization (4) etsi (0) mobileDomain (0)
+gsm-Network (1) modules (3) map-ER-DataTypes (17) version10 (10)}
 ;
 -- generic errors
 systemFailure ERROR ::= {
@@ -183,21 +184,21 @@ PARAMETER
 NumberChangedParam
 -- optional
 CODE local:44 }
-unknownMSC ERROR ::= {
-CODE local:3 }
 unidentifiedSubscriber ERROR ::= {
 PARAMETER
 UnidentifiedSubParam
 -- optional
 -- UunidentifiedSubParam must not be used in version <3
 CODE local:5 }
-unknownEquipment ERROR ::= {
-CODE local:7 }
+--unknownEquipment ERROR ::= {
+--CODE local:7 }
 -- subscription errors
 roamingNotAllowed ERROR ::= {
 PARAMETER
 RoamingNotAllowedParam
-CODE local:8 }
+--optional
+CODE local:8
+}
 illegalSubscriber ERROR ::= {
 PARAMETER
 IllegalSubscriberParam
@@ -223,21 +224,21 @@ TeleservNotProvParam
 -- TeleservNotProvParam must not be used in version <3
 CODE local:11 }
 -- handover errors
-noHandoverNumberAvailable ERROR ::= {
-CODE local:25 }
-subsequentHandoverFailure ERROR ::= {
-CODE local:26 }
-targetCellOutsideGroupCallArea ERROR ::= {
-PARAMETER
-TargetCellOutsideGCA-Param
+--noHandoverNumberAvailable ERROR ::= {
+--CODE local:25 }
+--subsequentHandoverFailure ERROR ::= {
+--CODE local:26 }
+--targetCellOutsideGroupCallArea ERROR ::= {
+--PARAMETER
+--TargetCellOutsideGCA-Param
 -- optional
-CODE local:42 }
+--CODE local:42 }
 -- operation and maintenance errors
-tracingBufferFull ERROR ::= {
-PARAMETER
-TracingBufferFullParam
+--tracingBufferFull ERROR ::= {
+--PARAMETER
+--TracingBufferFullParam
 -- optional
-CODE local: 40 }
+--CODE local: 40 }
 -- call handling errors
 noRoamingNumberAvailable ERROR ::= {
 PARAMETER
@@ -270,11 +271,11 @@ PARAMETER
 ForwardingViolationParam
 -- optional
 CODE local:14 }
-forwardingFailed ERROR ::= {
-PARAMETER
-ForwardingFailedParam
+--forwardingFailed ERROR ::= {
+--PARAMETER
+--ForwardingFailedParam
 -- optional
-CODE local:47 }
+--CODE local:47 }
 cug-Reject ERROR ::= {
 PARAMETER
 CUG-RejectParam
@@ -286,22 +287,22 @@ OR-NotAllowedParam
 -- optional
 CODE local:48 }
 -- any time interrogation errors
-ati-NotAllowed ERROR ::= {
-PARAMETER
-ATI-NotAllowedParam
+--ati-NotAllowed ERROR ::= {
+--PARAMETER
+--ATI-NotAllowedParam
 -- optional
-CODE local:49 }
+--CODE local:49 }
 -- any time information handling errors
 atsi-NotAllowed ERROR ::= {
 PARAMETER
 ATSI-NotAllowedParam
 -- optional
 CODE local:60 }
-atm-NotAllowed ERROR ::= {
-PARAMETER
-ATM-NotAllowedParam
+--atm-NotAllowed ERROR ::= {
+--PARAMETER
+--ATM-NotAllowedParam
 -- optional
-CODE local:61 }
+--CODE local:61 }
 informationNotAvailable ERROR ::= {
 PARAMETER
 InformationNotAvailableParam
@@ -314,50 +315,50 @@ IllegalSS-OperationParam
 -- optional
 -- IllegalSS-OperationParam must not be used in version <3
 CODE local:16 }
-ss-ErrorStatus ERROR ::= {
-PARAMETER
-SS-Status
+--ss-ErrorStatus ERROR ::= {
+--PARAMETER
+--SS-Status
 -- optional
-CODE local:17 }
+--CODE local:17 }
 ss-NotAvailable ERROR ::= {
 PARAMETER
 SS-NotAvailableParam
 -- optional
 -- SS-NotAvailableParam must not be used in version <3
 CODE local:18 }
-ss-SubscriptionViolation ERROR ::= {
-PARAMETER
-SS-SubscriptionViolationParam
+--ss-SubscriptionViolation ERROR ::= {
+--PARAMETER
+--SS-SubscriptionViolationParam
 -- optional
 -- SS-SubscriptionViolationParam must not be used in version <3
-CODE local:19 }
-ss-Incompatibility ERROR ::= {
-PARAMETER
-SS-IncompatibilityCause
+--CODE local:19 }
+--ss-Incompatibility ERROR ::= {
+--PARAMETER
+--SS-IncompatibilityCause
 -- optional
-CODE local:20 }
-unknownAlphabet ERROR ::= {
-CODE local:71 }
-ussd-Busy ERROR ::= {
-CODE local:72 }
-pw-RegistrationFailure ERROR ::= {
-PARAMETER
-PW-RegistrationFailureCause
-CODE local:37 }
-negativePW-Check ERROR ::= {
-CODE local:38 }
-numberOfPW-AttemptsViolation ERROR ::= {
-CODE local:43 }
-shortTermDenial ERROR ::= {
-PARAMETER
-ShortTermDenialParam
+--CODE local:20 }
+--unknownAlphabet ERROR ::= {
+--CODE local:71 }
+--ussd-Busy ERROR ::= {
+--CODE local:72 }
+--pw-RegistrationFailure ERROR ::= {
+--PARAMETER
+--PW-RegistrationFailureCause
+--CODE local:37 }
+--negativePW-Check ERROR ::= {
+--CODE local:38 }
+--numberOfPW-AttemptsViolation ERROR ::= {
+--CODE local:43 }
+--shortTermDenial ERROR ::= {
+--PARAMETER
+--ShortTermDenialParam
 -- optional
-CODE local:29 }
-longTermDenial ERROR ::= {
-PARAMETER
-LongTermDenialParam
+--CODE local:29 }
+--longTermDenial ERROR ::= {
+--PARAMETER
+--LongTermDenialParam
 -- optional
-CODE local:30 }
+--CODE local:30 }
 -- short message service errors
 subscriberBusyForMT-SMS ERROR ::= {
 PARAMETER
@@ -367,6 +368,7 @@ CODE local:31 }
 sm-DeliveryFailure ERROR ::= {
 PARAMETER
 SM-DeliveryFailureCause
+-- optional
 CODE local:32 }
 messageWaitingListFull ERROR ::= {
 PARAMETER
@@ -379,40 +381,40 @@ AbsentSubscriberSM-Param
 -- optional
 CODE local:6 }
 -- Group Call errors
-noGroupCallNumberAvailable ERROR ::= {
-PARAMETER
-NoGroupCallNbParam
+--noGroupCallNumberAvailable ERROR ::= {
+--PARAMETER
+--NoGroupCallNbParam
 -- optional
-CODE local:50 }
+--CODE local:50 }
 -- location service errors
-unauthorizedRequestingNetwork ERROR ::= {
-PARAMETER
-UnauthorizedRequestingNetwork-Param
+--unauthorizedRequestingNetwork ERROR ::= {
+--PARAMETER
+--UnauthorizedRequestingNetwork-Param
 -- optional
-CODE local:52 }
-unauthorizedLCSClient ERROR ::= {
-PARAMETER
-UnauthorizedLCSClient-Param
+--CODE local:52 }
+--unauthorizedLCSClient ERROR ::= {
+--PARAMETER
+--UnauthorizedLCSClient-Param
 -- optional
-CODE local:53 }
-positionMethodFailure ERROR ::= {
-PARAMETER
-PositionMethodFailure-Param
+--CODE local:53 }
+--positionMethodFailure ERROR ::= {
+--PARAMETER
+--PositionMethodFailure-Param
 -- optional
-CODE local:54 }
-unknownOrUnreachableLCSClient ERROR ::= {
-PARAMETER
-UnknownOrUnreachableLCSClient-Param
+--CODE local:54 }
+--unknownOrUnreachableLCSClient ERROR ::= {
+--PARAMETER
+--UnknownOrUnreachableLCSClient-Param
 -- optional
-CODE local:58 }
-mm-EventNotSupported ERROR ::= {
-PARAMETER
-MM-EventNotSupported-Param
+--CODE local:58 }
+--mm-EventNotSupported ERROR ::= {
+--PARAMETER
+--MM-EventNotSupported-Param
 -- optional
-CODE local:59 }
+--CODE local:59 }
 -- Secure transport errors
-secureTransportError ERROR ::= {
-PARAMETER
-SecureTransportErrorParam
-CODE local:4 }
+--secureTransportError ERROR ::= {
+--PARAMETER
+--SecureTransportErrorParam
+--CODE local:4 }
 END
