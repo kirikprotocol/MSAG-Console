@@ -4,6 +4,7 @@ import com.eyeline.sme.utils.ds.DataSourceException;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
+import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
 import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
@@ -33,6 +34,8 @@ class MessageSender {
     msg.setMessageString(message.getMessage());
     msg.setDestAddrSubunit(message.getDestAddrSubunit());
     msg.setConnectionName(message.getConnectionName());
+    if (message.isStorable())
+      msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
     final SenderSMPPTransportObject outObj = new SenderSMPPTransportObject(message);
     outObj.setOutgoingMessage(msg);
@@ -52,9 +55,14 @@ class MessageSender {
     public void handleResponse(PDU pdu) {
       if (msg.isStorable()) {
         try {
-          msg.setStatus(pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR ? SenderMessage.STATUS_DELIVERED : SenderMessage.STATUS_DELIVERY_FAILED);
-          msg.setSmppStatus(pdu.getStatus());
-          ds.saveSenderMessage(msg);
+          if (pdu.getStatusClass() != PDU.STATUS_CLASS_NO_ERROR) {
+            msg.setStatus(SenderMessage.STATUS_DELIVERY_FAILED);
+            msg.setSmppStatus(pdu.getStatus());
+            ds.saveSenderMessage(msg);
+          } else {
+            msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
+            ds.updateMessageSmppId(msg);
+          }
         } catch (DataSourceException e) {
           log.error("Can't save Sender Message", e);
         }

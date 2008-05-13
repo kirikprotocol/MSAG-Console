@@ -5,6 +5,7 @@ import ru.sibinco.smsx.engine.service.sender.datasource.DBSenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
 import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
 
 import java.io.File;
@@ -39,6 +40,10 @@ class SenderServiceImpl implements SenderService{
 
   public void execute(SenderSendMessageCmd cmd) {
     processor.execute(cmd);
+  }
+
+  public boolean execute(SenderHandleReceiptCmd cmd) {
+    return processor.execute(cmd);
   }
 
   public void startService() {

@@ -132,6 +132,51 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
     }
   }
 
+  public int updateMessageStatus(long smppId, int status) throws DataSourceException {
+    Connection conn = null;
+    PreparedStatement ps = null;
+
+    try {
+      conn = pool.getConnection();
+
+      ps = conn.prepareStatement(getSql("sender.message.update.by.smpp.id"));
+
+      ps.setInt(1, status);
+      ps.setLong(2, smppId);
+
+      return ps.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new DataSourceException(e);
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
+  public void updateMessageSmppId(SenderMessage msg) throws DataSourceException {
+    if (!msg.isExists())
+      return;
+
+    Connection conn = null;
+    PreparedStatement ps = null;
+
+    try {
+      conn = pool.getConnection();
+
+      ps = conn.prepareStatement(getSql("sender.message.update.smpp.id"));
+
+      ps.setLong(1, msg.getSmppId());
+      ps.setInt(2, msg.getId());
+
+      ps.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new DataSourceException(e);
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
   public void release() {
     pool.release();
   }

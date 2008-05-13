@@ -21,6 +21,7 @@ public class SenderMessage {
   private int destAddrSubunit;
   private boolean storable = true;
   private String connectionName;
+  private long smppId;
 
   public SenderMessage() {
   }
@@ -99,6 +100,14 @@ public class SenderMessage {
 
   public void setConnectionName(String connectionName) {
     this.connectionName = connectionName;
+  }
+
+  public long getSmppId() {
+    return smppId;
+  }
+
+  public void setSmppId(long smppId) {
+    this.smppId = smppId;
   }
 
   public boolean isExists() {

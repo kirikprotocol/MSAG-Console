@@ -6,6 +6,7 @@ import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
+import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
 import ru.sibinco.smsx.engine.service.Command;
 
 /**
@@ -13,7 +14,7 @@ import ru.sibinco.smsx.engine.service.Command;
  * Date: 06.07.2007
  */
 
-class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendMessageCmd.Receiver {
+class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendMessageCmd.Receiver, SenderHandleReceiptCmd.Receiver {
 
   private static final Category log = Category.getInstance("SENDER");
 
@@ -72,5 +73,21 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
       log.error(e,e);
       cmd.update(SenderGetMessageStatusCmd.STATUS_SYSTEM_ERROR);
     }
+  }
+
+  public boolean execute(SenderHandleReceiptCmd cmd) {
+    try {
+      if (log.isInfoEnabled())
+        log.info("Handle rcpt: id=" + cmd.getSmppMessageId() + "; dlvr=" + cmd.isDelivered());
+
+      int result = ds.updateMessageStatus(cmd.getSmppMessageId(), cmd.isDelivered() ? SenderMessage.STATUS_DELIVERED : SenderMessage.STATUS_DELIVERY_FAILED);
+      return result > 0;
+
+    } catch (DataSourceException e) {
+      log.error(e,e);
+      cmd.update(SenderHandleReceiptCmd.STATUS_SYSTEM_ERROR);
+    }
+
+    return true;
   }
 }
