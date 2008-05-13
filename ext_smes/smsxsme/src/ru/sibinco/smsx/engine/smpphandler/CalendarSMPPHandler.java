@@ -95,7 +95,8 @@ class CalendarSMPPHandler extends SMPPHandler {
         final String sourceAddress = inObj.getIncomingMessage().getSourceAddress();
         final String destinationAddress = inObj.getIncomingMessage().getDestinationAddress();
 
-        log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
+        if (log.isInfoEnabled())
+          log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
 
         // NOTE: Order is important here
         ParseResult result = null;
@@ -113,11 +114,13 @@ class CalendarSMPPHandler extends SMPPHandler {
           result = parseATF(msg, null);
 
         if (result == null) {
-          log.info("Msg format is unknown");
+          if (log.isInfoEnabled())
+            log.info("Msg format is unknown");
           return false;
         }
 
-        log.info("Senddate=" + result.sendDate);
+        if (log.isInfoEnabled())
+          log.info("Senddate=" + result.sendDate);
 
         final CalendarSendMessageCmd cmd = new CalendarSendMessageCmd();
         cmd.setSourceAddress(sourceAddress);
@@ -165,7 +168,8 @@ class CalendarSMPPHandler extends SMPPHandler {
       return true;
 
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
 
   }
@@ -223,7 +227,8 @@ class CalendarSMPPHandler extends SMPPHandler {
 
       if (tz != null) {
         final String timezone = tz.getName();
-        log.debug("Found timezone: " + timezone);
+        if (log.isDebugEnabled())
+          log.debug("Found timezone: " + timezone);
 
         // Find time difference
         final long d1 = TimeZone.getTimeZone(timezone).getOffset(date.getTime());

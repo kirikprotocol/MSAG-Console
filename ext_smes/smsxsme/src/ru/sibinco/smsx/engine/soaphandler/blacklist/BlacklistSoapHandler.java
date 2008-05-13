@@ -21,7 +21,8 @@ class BlacklistSoapHandler implements BlacklistSoap {
 
   public boolean add(String msisdn) throws java.rmi.RemoteException {
     final long start = System.currentTimeMillis();
-    log.info("Add to black list: msisdn=" + msisdn);
+    if (log.isInfoEnabled())
+      log.info("Add to black list: msisdn=" + msisdn);
     try {
       final BlackListAddCmd cmd = new BlackListAddCmd();
       cmd.setMsisdn(msisdn);
@@ -35,13 +36,16 @@ class BlacklistSoapHandler implements BlacklistSoap {
       log.error(e,e);
       return false;
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public boolean remove(String msisdn) throws java.rmi.RemoteException {
     final long start = System.currentTimeMillis();
-    log.info("Remove from black list: msisdn=" + msisdn);
+    if (log.isInfoEnabled())
+      log.info("Remove from black list: msisdn=" + msisdn);
+
     try {
       final BlackListRemoveCmd cmd = new BlackListRemoveCmd();
       cmd.setMsisdn(msisdn);
@@ -56,7 +60,8 @@ class BlacklistSoapHandler implements BlacklistSoap {
       log.error(e,e);
       return false;
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
   }
 

@@ -83,7 +83,8 @@ class SmsXSenderHandler implements SmsXSender {
   public SmsXSenderResponse sendSms(String msisdn, String message, boolean express, boolean secret, boolean calendar, long calendarTimeUTC, boolean advertising) throws RemoteException {
     final long start = System.currentTimeMillis();
     try {
-      log.info("Send SMS: dstaddr=" + msisdn + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC) + "; advertising=" + advertising);
+      if (log.isInfoEnabled())
+        log.info("Send SMS: dstaddr=" + msisdn + "; msg=" + message + "; express=" + express + "; secret=" + secret + "; calendar=" + calendar + "; time=" + new Date(calendarTimeUTC) + "; advertising=" + advertising);
 
       int status = 0;
       String id_message = null;
@@ -114,7 +115,8 @@ class SmsXSenderHandler implements SmsXSender {
       // Prepare message
       if (advertising && appendAdvertising) {
         final String banner = (advertisingRestriction > 0) ? getBannerForAbonent(msisdn, advertisingRestriction - message.length() - advertisingDelimiter.length()) : getBannerForAbonent(msisdn);
-        log.info("Append banner: " + banner);
+        if (log.isInfoEnabled())
+          log.info("Append banner: " + banner);
         if (banner != null)
           message += advertisingDelimiter + banner;
       }
@@ -203,13 +205,15 @@ class SmsXSenderHandler implements SmsXSender {
       return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
 
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
   }
 
   public SmsXSenderResponse checkStatus(String messageId) throws RemoteException {
     final long start = System.currentTimeMillis();
-    log.info("Check status: msgId=" + messageId);
+    if (log.isInfoEnabled())
+      log.info("Check status: msgId=" + messageId);
 
     if (messageId == null)
       return new SmsXSenderResponse(messageId, 0, STATUS_INVALID_MESSAGE_ID);
@@ -229,7 +233,8 @@ class SmsXSenderHandler implements SmsXSender {
     } catch (Throwable e) {
       messageStatus = STATUS_SYSTEM_ERROR;
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
 
     return new SmsXSenderResponse(messageId, smppStatus, messageStatus);
@@ -398,7 +403,8 @@ class SmsXSenderHandler implements SmsXSender {
         final PropertiesConfig cfg = new PropertiesConfig(configFile);
 
         appendAdvertising = cfg.getBool("append.advertising");
-        log.info("Append advertising = " + appendAdvertising);
+        if (log.isInfoEnabled())
+          log.info("Append advertising = " + appendAdvertising);
 
       } catch (ConfigException e) {
         log.error(e,e);

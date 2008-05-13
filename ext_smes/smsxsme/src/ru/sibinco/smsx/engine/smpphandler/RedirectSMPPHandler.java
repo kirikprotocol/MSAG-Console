@@ -41,14 +41,16 @@ class RedirectSMPPHandler extends SMPPHandler {
         final Message message = inObj.getIncomingMessage();
         final String msg = inObj.getIncomingMessage().getMessageString().trim();
 
-        log.info("Msg srcaddr=" + message.getSourceAddress() + "; dstaddr=" + message.getDestinationAddress());
+        if (log.isInfoEnabled())
+          log.info("Msg srcaddr=" + message.getSourceAddress() + "; dstaddr=" + message.getDestinationAddress());
 
         final Redirect redirect = redirectsList.getRedirectByMessage(msg);
         if (redirect != null) {
           final Matcher matcher = redirect.getPrefix().matcher(msg);
           matcher.find();
           message.setMessageString(redirect.getNewPrefix() + message.getMessageString().substring(matcher.end()));
-          log.info("Redirect dstaddr=" + redirect.getAddress() + "; msg=" + message.getMessageString());
+          if (log.isInfoEnabled())
+            log.info("Redirect dstaddr=" + redirect.getAddress() + "; msg=" + message.getMessageString());
           message.setDestinationAddress(redirect.getAddress());
           sendMessage(new RedirectorOutgoingObject(message));
 
@@ -64,7 +66,8 @@ class RedirectSMPPHandler extends SMPPHandler {
       return true;
 
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
   }
 

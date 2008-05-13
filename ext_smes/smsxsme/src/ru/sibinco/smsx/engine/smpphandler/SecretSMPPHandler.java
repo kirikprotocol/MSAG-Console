@@ -85,7 +85,8 @@ class SecretSMPPHandler extends SMPPHandler {
         final String sourceAddress = inObj.getIncomingMessage().getSourceAddress();
         final String destinationAddress = inObj.getIncomingMessage().getDestinationAddress();
 
-        log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
+        if (log.isInfoEnabled())
+          log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
 
         if (destinationAddress.equalsIgnoreCase(serviceAddress)) {
 
@@ -117,7 +118,8 @@ class SecretSMPPHandler extends SMPPHandler {
           return true;
         }
 
-        log.info("Msg format is unknown");
+        if (log.isInfoEnabled())
+          log.info("Msg format is unknown");
       }
 
       return false;
@@ -128,7 +130,8 @@ class SecretSMPPHandler extends SMPPHandler {
       return true;
 
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
   }
 

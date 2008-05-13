@@ -56,7 +56,8 @@ class NickSMPPHandler extends SMPPHandler {
       final String sourceAddress = inObj.getIncomingMessage().getSourceAddress();
       final String destinationAddress = inObj.getIncomingMessage().getDestinationAddress();
 
-      log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
+      if (log.isInfoEnabled())
+        log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
 
       if (SEND_NICK.matcher(msg).matches() && destinationAddress.equalsIgnoreCase(serviceAddress)) {
         final String nickAndMessage = removePrefix(msg, NICK).trim();
@@ -74,7 +75,8 @@ class NickSMPPHandler extends SMPPHandler {
         return true;
       }
 
-      log.info("Msg format is unknown");
+      if (log.isInfoEnabled())
+        log.info("Msg format is unknown");
       return false;
 
     } catch (Throwable e) {
@@ -83,7 +85,8 @@ class NickSMPPHandler extends SMPPHandler {
       return true;
 
     } finally {
-      log.info("Time=" + (System.currentTimeMillis() - start));
+      if (log.isInfoEnabled())
+        log.info("Time=" + (System.currentTimeMillis() - start));
     }
 
   }
