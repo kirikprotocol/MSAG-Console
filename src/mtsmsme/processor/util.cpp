@@ -1,12 +1,20 @@
 static char const ident[] = "$Id$";
 #include "util.hpp"
 #include <alloca.h>
+#include <vector>
 namespace smsc{
 namespace mtsmsme{
 namespace processor{
 namespace util{
 using namespace std;
+extern "C" int print2vec(const void *buffer, size_t size, void *app_key) {
+  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
+  unsigned char *buf = (unsigned char *)buffer;
 
+  stream->insert(stream->end(),buf, buf + size);
+
+  return 0;
+}
 unsigned packNumString2BCD(unsigned char* bcd, const char* str,
                                   unsigned slen, bool filler)
 {

@@ -2,7 +2,7 @@ static char const ident[] = "$Id$";
 #include "util.hpp"
 #include "MTFTSM.hpp"
 #include "TCO.hpp"
-#include "Message.hpp"
+//#include "mtsmsme/processor/Message.hpp"
 #include "MtForward.hpp"
 #include "MTRequest.hpp"
 #include "logger/Logger.h"
@@ -184,7 +184,6 @@ void MTFTSM::CONTINUE_received(uint8_t cdlen,
     }
   }
 }
-void MTFTSM::BeginTransaction(TsmComletionListener* _listener) { /* there is no action */ }
 void MTFTSM::END_received(Message& msg) { /* there is no action */ }
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

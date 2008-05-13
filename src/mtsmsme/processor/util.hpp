@@ -6,6 +6,7 @@
 extern "C" {
 #include "i96sccpapi.h"
 }
+extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 namespace smsc{
 namespace mtsmsme{
 namespace processor{
@@ -17,6 +18,10 @@ typedef struct
         UCHAR_T addrLen;
         UCHAR_T addr[MAX_SCCP_ADDRESS_LEN];
 } SCCP_ADDRESS_T;
+#define OCTET_STRING_DECL(name, szo) unsigned char name##_buf[szo]; OCTET_STRING_t name
+#define ZERO_OCTET_STRING(name) { memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
+#define Address2OCTET_STRING(octs, addr)        { ZERO_OCTET_STRING(octs); \
+    octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
 
 extern void unpack_addr(char* dst, UCHAR_T* src, int len);
 extern std::string dump(USHORT_T len, UCHAR_T* udp);

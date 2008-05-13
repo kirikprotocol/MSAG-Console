@@ -3,7 +3,7 @@
 #define __SMSC_MTSMSME_PROCESSOR_ENCODE_HPP__
 
 #include <vector>
-#include "Message.hpp"
+#include "mtsmsme/processor/Message.hpp"
 namespace smsc{
 namespace mtsmsme{
 namespace processor{

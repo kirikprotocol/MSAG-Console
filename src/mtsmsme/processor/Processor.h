@@ -77,7 +77,7 @@ namespace smsc { namespace mtsmsme { namespace processor
     public:
 
         static RequestProcessor* getInstance();
-        virtual void configure(int user_id, int ssn, Address& msc, Address& vlr) = 0;
+        virtual void configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr) = 0;
         virtual void setRequestSender(RequestSender* sender) = 0;
         virtual HLROAM* getHLROAM() = 0;
 

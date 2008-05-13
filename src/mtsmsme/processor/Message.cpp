@@ -1,5 +1,5 @@
 static char const ident[] = "$Id$";
-#include "Message.hpp"
+#include "mtsmsme/processor/Message.hpp"
 #include <stdio.h>
 #include <sys/types.h>
 
@@ -299,6 +299,133 @@ string Message::toString() {
   /* Create and return resulting string */
   string result((char*)&stream[0],(char*)&stream[0]+stream.size());
   return result;
+}
+
+ContMsg::ContMsg()
+{
+  cont.present = TCMessage_PR_contiinue;
+  cont.choice.contiinue.dialoguePortion = 0;
+  cont.choice.contiinue.components = 0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.size=0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf=0;
+}
+ContMsg::~ContMsg()
+{
+  if(dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf)
+    free(dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf);
+}
+void ContMsg::setOTID(TrId _otid)
+{
+  memcpy(otid,_otid.buf,_otid.size);
+  cont.choice.contiinue.otid.buf = otid;
+  cont.choice.contiinue.otid.size = _otid.size;
+}
+void ContMsg::setDTID(TrId _dtid)
+{
+  memcpy(dtid,_dtid.buf,_dtid.size);
+  cont.choice.contiinue.dtid.buf = dtid;
+  cont.choice.contiinue.dtid.size = _dtid.size;
+}
+void ContMsg::setDialog(AC& _ac)
+{
+  if(_ac == sm_mt_relay_v1 || _ac == null_ac) return;
+  ac = _ac;
+  dp.direct_reference = &pduoid;
+  dp.indirect_reference = 0;
+  dp.data_value_descriptor = 0;
+  dp.encoding.present = encoding_PR_single_ASN1_type;
+  dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueResponse;
+  AARE_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueResponse;
+  r.protocol_version = &tcapversion;
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  r.result = Associate_result_accepted;
+  r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
+  r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
+  r.aare_user_information = 0;
+//cont.choice.contiinue.dialoguePortion = ( DialoguePortion *)&dp;
+  cont.choice.contiinue.dialoguePortion = ( struct EXT *)&dp;
+}
+void ContMsg::setComponent(int result, int iid)
+{
+  if(result)
+  {
+    comp.present = Component_PR_returnError;
+    comp.choice.returnError.invokeId = iid;
+    comp.choice.returnError.errcode.present = Error_PR_local;
+    comp.choice.returnError.errcode.choice.local = 31;
+    comp.choice.returnError.parameter = 0;
+  }
+  else
+  {
+    comp.present = Component_PR_returnResultLast;
+    comp.choice.returnResultLast.invokeId = iid;
+    comp.choice.returnResultLast.result = 0;
+  }
+  arr[0]= &comp;
+  comps.list.count = 1;
+  comps.list.size = 1;
+  comps.list.array = arr;
+  cont.choice.contiinue.components = &comps;
+}
+EndMsg::EndMsg()
+{
+  end.present = TCMessage_PR_end;
+  end.choice.end.dialoguePortion = 0;
+  end.choice.end.components = 0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.size=0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf=0;
+}
+EndMsg::~EndMsg()
+{
+  if(dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf)
+    free(dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf);
+}
+void EndMsg::setTrId(TrId dtid)
+{
+  memcpy(trid,dtid.buf,dtid.size);
+  end.choice.end.dtid.buf = trid;
+  end.choice.end.dtid.size = dtid.size;
+}
+void EndMsg::setDialog(AC& _ac)
+{
+  if(_ac == sm_mt_relay_v1 || _ac == null_ac) return;
+  ac = _ac;
+  dp.direct_reference = &pduoid;
+  dp.indirect_reference = 0;
+  dp.data_value_descriptor = 0;
+  dp.encoding.present = encoding_PR_single_ASN1_type;
+  dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueResponse;
+  AARE_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueResponse;
+  r.protocol_version = &tcapversion;
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  r.result = Associate_result_accepted;
+  r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
+  r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
+  r.aare_user_information = 0;
+//end.choice.end.dialoguePortion = ( DialoguePortion *)&dp;
+  end.choice.end.dialoguePortion = ( struct EXT *)&dp;
+}
+void EndMsg::setComponent(int result, int iid)
+{
+  if(result)
+  {
+    comp.present = Component_PR_returnError;
+    comp.choice.returnError.invokeId = iid;
+    comp.choice.returnError.errcode.present = Error_PR_local;
+    comp.choice.returnError.errcode.choice.local = 31;
+    comp.choice.returnError.parameter = 0;
+  }
+  else
+  {
+    comp.present = Component_PR_returnResultLast;
+    comp.choice.returnResultLast.invokeId = iid;
+    comp.choice.returnResultLast.result = 0;
+  }
+  arr[0]= &comp;
+  comps.list.count = 1;
+  comps.list.size = 1;
+  comps.list.array = arr;
+  end.choice.end.components = &comps;
 }
 }//namespace processor
 }//namespace mtsmsme

@@ -1,8 +1,65 @@
 static char const ident[] = "$Id$";
-#include "ACRepo.hpp"
+#include "mtsmsme/processor/ACRepo.hpp"
+#include "MTFTSM.hpp"
+#include "ULTSM.hpp"
+#include "SRI4SMTSM.hpp"
+#include "CLTSM.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
+bool TrId::operator==(const TrId& obj)const
+{
+  return size == obj.size && memcmp(&buf[0],&obj.buf[0],sizeof(uint8_t)*size) == 0;
+}
+string TrId::toString()
+{
+  char tmpstr[9];
+  char* text = tmpstr;
+  int k = 0;
+  for ( int i=0; i<size; i++){
+    k+=sprintf(text+k,"%02X",buf[i]);
+  }
+  text[k]=0;
+  return string(text);
+}
+  AC::AC(){}
+  void AC::init(unsigned long *_arcs, int _size)
+  {
+    arcs.clear();
+    arcs.reserve(_size);
+    arcs.insert(arcs.begin(),_arcs,_arcs+_size);
+  }
+  AC::AC(unsigned long *_arcs, int _size)
+  {
+    arcs.reserve(_size);
+    arcs.insert(arcs.begin(),_arcs,_arcs+_size);
+  }
+  bool AC::operator==(const AC& obj)const
+  {
+    return arcs.size()==obj.arcs.size() &&
+           memcmp(&arcs[0],&obj.arcs[0],sizeof(unsigned long)*arcs.size())==0;
+  }
+  bool AC::operator!=(const AC& obj)const
+  {
+    return arcs.size()!=obj.arcs.size() ||
+           memcmp(&arcs[0],&obj.arcs[0],sizeof(unsigned long)*arcs.size())!=0;
+  }
+  string AC::toString()
+  {
+    int k = 0;
+    int len = arcs.size();
+    char text[32] = {0,};
+    std::vector<unsigned char> stream;
+
+    for(int i = 0; i < len; )
+    {
+      k=sprintf(text,"%ld",arcs[i]);
+      stream.insert(stream.end(),text,text+k);
+      if(++i < len) stream.push_back('.');
+    }
+    string result((char*)&stream[0],(char*)&stream[0]+stream.size());
+    return result;
+  }
 static unsigned long           null_buf[] = {0,0,0,0,0,0, 0,0};
 AC null_ac        = AC(null_buf,sizeof(null_buf)/sizeof(unsigned long));
 
@@ -27,6 +84,48 @@ AC net_loc_cancel_v1 = AC(net_loc_cancel_v1_buf,sizeof(net_loc_cancel_v1_buf)/si
 AC net_loc_cancel_v2 = AC(net_loc_cancel_v2_buf,sizeof(net_loc_cancel_v2_buf)/sizeof(unsigned long));
 AC net_loc_cancel_v3 = AC(net_loc_cancel_v3_buf,sizeof(net_loc_cancel_v3_buf)/sizeof(unsigned long));
 
+static unsigned long shortMsgGatewayContext_v1_buf[] = {0,4,0,0,1,0,20,1};
+static unsigned long shortMsgGatewayContext_v2_buf[] = {0,4,0,0,1,0,20,2};
+static unsigned long shortMsgGatewayContext_v3_buf[] = {0,4,0,0,1,0,20,3};
+AC shortMsgGatewayContext_v1 = AC(shortMsgGatewayContext_v1_buf,sizeof(shortMsgGatewayContext_v1_buf)/sizeof(unsigned long));
+AC shortMsgGatewayContext_v2 = AC(shortMsgGatewayContext_v2_buf,sizeof(shortMsgGatewayContext_v2_buf)/sizeof(unsigned long));
+AC shortMsgGatewayContext_v3 = AC(shortMsgGatewayContext_v3_buf,sizeof(shortMsgGatewayContext_v3_buf)/sizeof(unsigned long));
+
+bool isIncomingContextSupported(AC& appcntx)
+{
+  return  (appcntx != sm_mt_relay_v2 ||
+          appcntx != sm_mt_relay_v3  ||
+          appcntx != net_loc_cancel_v2 ||
+          appcntx != net_loc_cancel_v3);
+}
+TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
+{
+  TSM* tsm = 0;
+  if (appcntx == sm_mt_relay_v1 || appcntx == sm_mt_relay_v2 || appcntx == sm_mt_relay_v3 )
+  {
+    tsm = new MTFTSM(ltrid,appcntx,tco);
+  }
+  if (appcntx == net_loc_cancel_v1 || appcntx == net_loc_cancel_v2 || appcntx == net_loc_cancel_v3 )
+  {
+    tsm = new CLTSM(ltrid,appcntx,tco);
+  }
+  if (appcntx == shortMsgGatewayContext_v1 || appcntx == shortMsgGatewayContext_v2 || appcntx == shortMsgGatewayContext_v3)
+  {
+    tsm = new SRI4SMTSM(ltrid,appcntx,tco);
+  }
+  return tsm;
+}
+TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
+{
+  TSM* tsm = 0;
+  if ( appcntx == shortMsgGatewayContext_v3 )
+    tsm = new SRI4SMTSM(ltrid,appcntx,tco);
+  if ( appcntx == shortMsgGatewayContext_v2 )
+    tsm = new SRI4SMTSM(ltrid,appcntx,tco);
+  if ( appcntx == net_loc_upd_v3 )
+    tsm = new ULTSM(ltrid,appcntx,tco);
+  return tsm;
+}
 static uint8_t magic0780[] = {0x80};
 BIT_STRING_t tcapversion = {magic0780,sizeof(magic0780),0x07,};
 

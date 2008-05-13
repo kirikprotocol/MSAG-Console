@@ -8,7 +8,7 @@
 #include "Processor.h"
 #include "decode.hpp"
 #include "encode.hpp"
-#include "Message.hpp"
+//#include "mtsmsme/processor/Message.hpp"
 #include "TSM.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -37,6 +37,7 @@ class TCO
   public:
     TCO(int TrLimit,uint8_t ssn);
     ~TCO();
+    TSM* TC_BEGIN(AC& appcntx);
     TSM* TC_BEGIN(const char* imsi,
                   const char* mcs,
                   const char* vlr,

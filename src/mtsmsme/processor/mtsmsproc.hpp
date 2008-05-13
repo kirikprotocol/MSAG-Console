@@ -5,9 +5,9 @@
 #include <time.h>
 #include <string>
 #include "core/synchronization/Mutex.hpp"
-#include "decode.hpp"
-#include "encode.hpp"
-#include "MTRequest.hpp"
+#include "mtsmsme/processor/decode.hpp"
+#include "mtsmsme/processor/encode.hpp"
+#include "mtsmsme/processor/MTRequest.hpp"
 
 namespace smsc{
 namespace mtsmsme{

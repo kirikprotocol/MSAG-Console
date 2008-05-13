@@ -1,7 +1,7 @@
 static char const ident[] = "$Id$";
 #include <stdio.h>
 #include <sys/types.h>
-
+#include "mtsmsme/processor/util.hpp"
 extern "C" {
 #include <constr_TYPE.h>
 #include <TCMessage.h>
@@ -18,7 +18,7 @@ extern Logger* MtSmsProcessorLogger;
 
 namespace smsc{namespace mtsmsme{namespace processor{namespace encode{
 
-extern "C" static int print2vec(const void *buffer, size_t size, void *app_key);
+using namespace smsc::mtsmsme::processor::util; //for extern "C" static int print2vec(const void *buffer, size_t size, void *app_key);
 static void relMtResponse();
 static void *prepMtResponse();
 static void DialogResp(EXT_t *obj);
@@ -185,14 +185,14 @@ Encoder::~Encoder()
 }
 
 
-static int print2vec(const void *buffer, size_t size, void *app_key) {
-  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
-  unsigned char *buf = (unsigned char *)buffer;
-
-  stream->insert(stream->end(),buf, buf + size);
-
-  return 0;
-}
+//static int print2vec(const void *buffer, size_t size, void *app_key) {
+//  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
+//  unsigned char *buf = (unsigned char *)buffer;
+//
+//  stream->insert(stream->end(),buf, buf + size);
+//
+//  return 0;
+//}
 
 }//namespace encode
 }//namespace processor

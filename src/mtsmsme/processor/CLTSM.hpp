@@ -12,7 +12,6 @@ class CLTSM : public TSM
   public:
     CLTSM(TrId _ltrid,AC& ac,TCO* _tco);
     ~CLTSM();
-    virtual void BeginTransaction(TsmComletionListener* listener);
     virtual void BEGIN_received(
                         uint8_t laddrlen,
                         uint8_t *laddr,
@@ -28,7 +27,6 @@ class CLTSM : public TSM
                                    Message& msg);
 
     virtual void END_received(Message& msg);
-    void sendBegin(){}
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

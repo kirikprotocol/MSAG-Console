@@ -1,5 +1,5 @@
 static char const ident[] = "$Id$";
-#include "TCO.hpp"
+#include "mtsmsme/processor/TCO.hpp"
 #include "CLTSM.hpp"
 #include "util.hpp"
 #include <string>
@@ -48,10 +48,6 @@ void CLTSM::CONTINUE_received(uint8_t cdlen,
   smsc_log_debug(logger,"tsm otid=%s receive CONTINUE, no actions",ltrid.toString().c_str());
 }
 
-void CLTSM::BeginTransaction(TsmComletionListener* _listener)
-{
-  smsc_log_debug(logger,"tsm otid=%s receive BeginTransaction, no actions",ltrid.toString().c_str());
-}
 void CLTSM::END_received(Message& msg)
 {
   smsc_log_debug(logger,"tsm otid=%s receive END, no action",ltrid.toString().c_str());

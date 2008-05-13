@@ -2,13 +2,17 @@ static char const ident[] = "$Id$";
 
 #include "mtsmsme/processor/HLRImpl.hpp"
 #include "mtsmsme/processor/TSM.hpp"
+#include "mtsmsme/comp/UpdateLocation.hpp"
 #include "sms/sms.h"
 #include "logger/Logger.h"
+#include "util.hpp"
 #include <queue>
 
 namespace smsc{namespace mtsmsme{namespace processor{
 using smsc::sms::AddressValue;
 using smsc::logger::Logger;
+using smsc::mtsmsme::processor::util::packSCCPAddress;
+using smsc::mtsmsme::comp::UpdateLocationMessage;
 
 static Logger* logger = 0;
 static TCO* coordinator =  0;                                                                                        
@@ -69,8 +73,25 @@ class UpdateLocationTask: public TsmComletionListener{
       if (coordinator) 
       {
         TSM* tsm;
-        tsm = coordinator->TC_BEGIN(info.imsi.c_str(), msc_digits.c_str(), vlr_digits.c_str(), info.mgt.c_str());
-        if (tsm) tsm->BeginTransaction(this);
+        AC appcntx = net_loc_upd_v3;
+        //tsm = coordinator->TC_BEGIN(info.imsi.c_str(), msc_digits.c_str(), vlr_digits.c_str(), info.mgt.c_str());
+        tsm = coordinator->TC_BEGIN(appcntx);
+        if (tsm)
+        {
+          tsm->setCompletionListener(this);
+
+          UpdateLocationMessage msg;
+          msg.setComponent(info.imsi, msc_digits,vlr_digits);
+          tsm->TInvokeReq( 2 /* updateLocation operation */, msg);
+
+          uint8_t cl[20];
+          uint8_t cllen;
+          uint8_t cd[20];
+          uint8_t cdlen;
+          cllen = packSCCPAddress(cl, 1 /* E.164 */, vlr_digits.c_str() /* VLR E.164 */, 7 /* VLR SSN */);
+          cdlen = packSCCPAddress(cd, 7 /* E.214 */, info.mgt.c_str()   /* MS  E.214 */, 6 /* HLR SSN */);
+          tsm->TBeginReq(cdlen, cd, cllen, cl);
+        }
       }
     }
     bool isCompleted() { return (status == 1); }

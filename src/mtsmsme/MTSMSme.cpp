@@ -385,9 +385,11 @@ class RequestProcessorConfig {
     int ssn,user;
     Address msc;
     Address vlr;
+    Address hlr;
   private:
     char* msc_str;
     char* vlr_str;
+    char* hlr_str;
   public:
     RequestProcessorConfig() { msc_str = NULL; vlr_str = NULL; }
     void read(Manager& manager)
@@ -418,6 +420,11 @@ class RequestProcessorConfig {
       }
       vlr = Address(vlr_str);
 
+      try { hlr_str = sccpConfig.getString("hlr_gt");
+      } catch (ConfigException& exc) {
+        throw ConfigException("\'hlr_gt\' is unknown or missing");
+      }
+      hlr = Address(hlr_str);
     }
 };
 
@@ -548,7 +555,7 @@ int main(void)
 
         RequestProcessorConfig rp_cfg;
         rp_cfg.read(manager);
-        requestProcessor->configure(rp_cfg.user,rp_cfg.ssn,rp_cfg.msc,rp_cfg.vlr);
+        requestProcessor->configure(rp_cfg.user,rp_cfg.ssn,rp_cfg.msc,rp_cfg.vlr,rp_cfg.hlr);
         SubscriberList sm(&manager);
         sm.registerto(requestProcessor->getHLROAM());
 

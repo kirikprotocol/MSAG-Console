@@ -2,10 +2,9 @@
 #ifndef __SMSC_MTSMSME_PROCESSOR_MTFTSM_HPP_
 #define __SMSC_MTSMSME_PROCESSOR_MTFTSM_HPP_
 
-#include "TSM.hpp"
-#include "Message.hpp"
-//#include "TCO.hpp"
-#include "MTRequest.hpp"
+#include "mtsmsme/processor/TSM.hpp"
+//#include "mtsmsme/processor/Message.hpp"
+#include "mtsmsme/processor/MTRequest.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
@@ -14,7 +13,6 @@ class MTFTSM: public TSM
   public:
     MTFTSM(TrId _ltrid,AC& ac,TCO* _tco);
     ~MTFTSM();
-    virtual void BeginTransaction(TsmComletionListener* listener);
     void BEGIN_received(
                         uint8_t laddrlen,
                         uint8_t *laddr,

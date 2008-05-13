@@ -2,15 +2,11 @@
 #ifndef __SMSC_MTSMSME_COMP_UPDATELOCATION_HPP_
 #define __SMSC_MTSMSME_COMP_UPDATELOCATION_HPP_
 
-#include "mtsmsme/processor/Message.hpp"
+#include "mtsmsme/processor/ACRepo.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include "Component.hpp"
 #include "UpdateLocationArg.h"
 #include <string>
-
-#define OCTET_STRING_DECL(name, szo) unsigned char name##_buf[szo]; OCTET_STRING_t name
-#define ZERO_OCTET_STRING(name)	{ memset(&name, 0, sizeof(name)); name.buf = name##_buf; }
-#define Address2OCTET_STRING(octs, addr)	{ ZERO_OCTET_STRING(octs); \
-    octs.size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(octs.buf)); }
 
 namespace smsc{ namespace mtsmsme{ namespace comp{
 

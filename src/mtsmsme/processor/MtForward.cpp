@@ -5,9 +5,9 @@ static char const ident[] = "$Id$";
 
 extern "C" {
 #include <constr_TYPE.h>
-#include <MT-forward.h>
+#include <MT-ForwardSM-Arg.h>
 }
-extern asn_TYPE_descriptor_t asn_DEF_MT_forward;
+extern asn_TYPE_descriptor_t asn_DEF_MT_ForwardSM_Arg;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;
@@ -18,7 +18,7 @@ extern Logger* MtSmsProcessorLogger;
 #include <vector>
 namespace smsc{namespace mtsmsme{namespace processor{
 
-static asn_TYPE_descriptor_t *def = &asn_DEF_MT_forward;
+static asn_TYPE_descriptor_t *def = &asn_DEF_MT_ForwardSM_Arg;
 using std::string;
 using std::vector;
 
@@ -45,7 +45,7 @@ void MtForward::setStructure(void *_structure)
 bool MtForward::isMMS()
 {
   bool res = false;
-  if(structure) res = (((MT_forward_t*)structure)->moreMessagesToSend != 0);
+  if(structure) res = (((MT_ForwardSM_Arg_t*)structure)->moreMessagesToSend != 0);
   return res;
 }
 

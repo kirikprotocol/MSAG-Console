@@ -2,7 +2,7 @@
 #ifndef __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__
 #define __SMSC_MTSMSME_COMP_REPORTSMDELIVERYSTATUS_HPP__
 
-#include "mtsmsme/processor/Message.hpp"
+//#include "mtsmsme/processor/Message.hpp"
 #include "Component.hpp"
 #include "ReportSM-DeliveryStatusArg.h"
 #include <string>

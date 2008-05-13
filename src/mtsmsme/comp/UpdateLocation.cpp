@@ -1,11 +1,9 @@
 static char const ident[] = "$Id$";
 
-#include "UpdateLocation.hpp"
-#include "ACRepo.hpp"
-#include "util.hpp"
+#include "mtsmsme/comp/UpdateLocation.hpp"
+#include "mtsmsme/processor/util.hpp"
 namespace smsc{namespace mtsmsme{namespace comp{
 
-extern "C" static int print2vec(const void *buffer, size_t size, void *app_key);
 using smsc::mtsmsme::processor::net_loc_upd_v3;
 using smsc::mtsmsme::processor::pduoid;
 using smsc::mtsmsme::processor::tcapversion;
@@ -13,8 +11,6 @@ using smsc::mtsmsme::processor::util::packNumString2BCD;
 using smsc::mtsmsme::processor::util::packNumString2BCD91;
 
 
-//extern BIT_STRING_t tcapversion;
-//extern ASN__PRIMITIVE_TYPE_t pduoid;
 
 using std::vector;
 using std::string;
@@ -116,14 +112,14 @@ void UpdateLocationMessage::setComponent(const string& imsi, const string& msc, 
   begin.choice.begin.components = &comps;
 }
 
-static int print2vec(const void *buffer, size_t size, void *app_key) {
-  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
-  unsigned char *buf = (unsigned char *)buffer;
-
-  stream->insert(stream->end(),buf, buf + size);
-
-  return 0;
-}
+//static int print2vec(const void *buffer, size_t size, void *app_key) {
+//  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
+//  unsigned char *buf = (unsigned char *)buffer;
+//
+//  stream->insert(stream->end(),buf, buf + size);
+//
+//  return 0;
+//}
 
 void UpdateLocationMessage::encode(vector<unsigned char>& buf)
 {

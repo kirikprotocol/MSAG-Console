@@ -22,7 +22,7 @@ void ASN_DEBUG_f(const char *fmt, ...) {
 */
 
 extern asn_TYPE_descriptor_t asn_DEF_TCMessage;
-extern asn_TYPE_descriptor_t asn_DEF_MT_forward;
+extern asn_TYPE_descriptor_t asn_DEF_MT_ForwardSM_Arg;
 
 
 namespace smsc{namespace mtsmsme{namespace processor{namespace decode{
@@ -30,7 +30,7 @@ namespace smsc{namespace mtsmsme{namespace processor{namespace decode{
 using std::vector;
 
 static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
-static asn_TYPE_descriptor_t *mtdef = &asn_DEF_MT_forward;
+static asn_TYPE_descriptor_t *mtdef = &asn_DEF_MT_ForwardSM_Arg;
 
 using smsc::logger::Logger;
 static Logger *logger = 0;

@@ -5,7 +5,7 @@ static char const ident[] = "$Id$";
 
 extern "C" {
 #include <constr_TYPE.h>
-#include <MT-forward.h>
+#include <MT-ForwardSM-Arg.h>
 }
 #include "sms/sms.h"
 #include "smeman/smsccmd.h"
@@ -140,8 +140,8 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
     throw runtime_error("MAP::ConvAddrMap2Smc  MAP_SMS_ADDRESS length should be greater than 0");
   }
 }
-inline void ConvAddrMSISDN2Smc( MT_forward_t *msg, Address* sa){
-  if (msg->sm_RP_DA.present != sm_RP_DA_PR_imsi)
+inline void ConvAddrMSISDN2Smc( MT_ForwardSM_Arg_t *msg, Address* sa){
+  if (msg->sm_RP_DA.present != SM_RP_DA_PR_imsi)
     throw runtime_error("MAP::ConvAddrMSISDN2Smc  sm_RP_DA is not IMSI");
   
   OCTET_STRING_t *imsi = &(msg->sm_RP_DA.choice.imsi);
@@ -166,7 +166,7 @@ inline void ConvAddrMSISDN2Smc( MT_forward_t *msg, Address* sa){
 
 void makeSmsToRequest(MtForward* mtf,MTR* req)
 {
-  MT_forward_t *msg = (MT_forward_t*)mtf->potroha();
+  MT_ForwardSM_Arg_t *msg = (MT_ForwardSM_Arg_t*)mtf->potroha();
   SMS& sms = req->sms;
   SMS_DELIVERY_FORMAT_HEADER* ssfh = (SMS_DELIVERY_FORMAT_HEADER*)msg->sm_RP_UI.buf;
   MAP_SMS_ADDRESS* msa = (MAP_SMS_ADDRESS*)(msg->sm_RP_UI.buf+1);

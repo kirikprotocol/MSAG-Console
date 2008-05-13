@@ -27,7 +27,7 @@ using smsc::sms::AddressValue;
 class MtSmsProcessor : public RequestProcessor{
   public:
     virtual void setRequestSender(RequestSender* sender);
-    void configure(int user_id, int ssn,Address& msc, Address& vlr);
+    void configure(int user_id, int ssn,Address& msc, Address& vlr, Address& hlr);
     virtual HLROAM* getHLROAM();
     virtual int Run();
     virtual void Stop();
@@ -60,12 +60,14 @@ static UCHAR_T USER = USER04_ID;
 static UCHAR_T SSN = 191;
 static AddressValue vlrnumber;
 static AddressValue mscnumber;
+static AddressValue hlrnumber;
 
-void MtSmsProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr)
+void MtSmsProcessor::configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr)
 {
   USER = user_id; SSN = ssn;
   msc.getValue(mscnumber);
   vlr.getValue(vlrnumber);
+  hlr.getValue(hlrnumber);
   registrator->configure(msc,vlr);
 }
 
@@ -86,7 +88,7 @@ MtSmsProcessor::MtSmsProcessor()
   MtSmsProcessorLogger = Logger::getInstance("mt.sme.pr");
   //smsc_log_debug(MtSmsProcessorLogger,"\n**********************\n* SIBINCO MT SMS SME *\n**********************");
   sender = 0;
-  coordinator = new TCO(10,SSN);
+  coordinator = new TCO(100,SSN);
   registrator = new SubscriberRegistrator(coordinator);
 }
 HLROAM* MtSmsProcessor::getHLROAM() { return registrator; }
