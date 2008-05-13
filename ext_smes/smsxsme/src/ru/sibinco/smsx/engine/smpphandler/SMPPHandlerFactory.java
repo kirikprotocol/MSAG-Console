@@ -14,17 +14,15 @@ public class SMPPHandlerFactory {
     // Create handlers in chain
     final CalendarSMPPHandler calendarSMPPHandler = new CalendarSMPPHandler(configDir, timezonesList, multiplexor);
     final SecretSMPPHandler secretSMPPHandler = new SecretSMPPHandler(configDir, multiplexor);
-    final SponsoredSMPPHandler sponsoredSMPPHandler = new SponsoredSMPPHandler(configDir, multiplexor);
     final NickSMPPHandler nickSMPPHandler = new NickSMPPHandler(configDir, multiplexor);
     final RedirectSMPPHandler redirectSMPPHandler = new RedirectSMPPHandler(configDir, multiplexor);
 
     // Link handlers
-    sponsoredSMPPHandler.setNextHandler(calendarSMPPHandler);
     calendarSMPPHandler.setNextHandler(secretSMPPHandler);
     secretSMPPHandler.setNextHandler(nickSMPPHandler);
     nickSMPPHandler.setNextHandler(redirectSMPPHandler);
 
     // Return first handler
-    return sponsoredSMPPHandler;
+    return calendarSMPPHandler;
   }
 }
