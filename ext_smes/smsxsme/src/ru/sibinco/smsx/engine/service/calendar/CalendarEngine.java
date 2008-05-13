@@ -81,7 +81,8 @@ class CalendarEngine extends IterativeWorker {
       msg.setMessageString(message.getMessage());
       msg.setDestAddrSubunit(message.getDestAddressSubunit());
       msg.setConnectionName(message.getConnectionName());
-      msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
+      if (message.isSaveDeliveryStatus())
+        msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
       final CalendarTransportObject outObj = new CalendarTransportObject(message);
       outObj.setOutgoingMessage(msg);
@@ -129,8 +130,10 @@ class CalendarEngine extends IterativeWorker {
 
     public void handleSendError() {
       try {
-        msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
-        ds.saveCalendarMessage(msg);
+        if (msg.isSaveDeliveryStatus()) {
+          msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
+          ds.saveCalendarMessage(msg);
+        }
       } catch (DataSourceException e) {
         log.error("Can't save calendar message", e);
       }

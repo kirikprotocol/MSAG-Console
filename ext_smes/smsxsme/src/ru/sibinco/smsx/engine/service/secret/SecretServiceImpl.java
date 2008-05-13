@@ -64,6 +64,10 @@ class SecretServiceImpl implements SecretService {
     processor.execute(cmd);
   }
 
+  public boolean execute(SecretHandleReceiptCmd cmd) {
+    return processor.execute(cmd);
+  }
+
   public void startService() {
   }
 

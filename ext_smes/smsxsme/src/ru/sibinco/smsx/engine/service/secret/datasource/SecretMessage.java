@@ -25,6 +25,7 @@ public class SecretMessage {
   private boolean saveDeliveryStatus;
   private boolean notifyOriginator;
   private String connectionName;
+  private long smppId;
 
   public SecretMessage() {
     this(-1);
@@ -120,6 +121,14 @@ public class SecretMessage {
 
   public void setConnectionName(String connectionName) {
     this.connectionName = connectionName;
+  }
+
+  public long getSmppId() {
+    return smppId;
+  }
+
+  public void setSmppId(long smppId) {
+    this.smppId = smppId;
   }
 
   public boolean isExists() {

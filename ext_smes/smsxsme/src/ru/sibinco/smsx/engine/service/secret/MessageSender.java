@@ -4,6 +4,7 @@ import com.eyeline.sme.utils.ds.DataSourceException;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
+import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
 import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
@@ -69,6 +70,8 @@ class MessageSender {
     outMsg.setDestAddrSubunit(message.getDestAddressSubunit());
     outMsg.setMessageString(message.getMessage());
     outMsg.setConnectionName(message.getConnectionName());
+    if (message.isSaveDeliveryStatus())
+      outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
     final SecretTransportObject outObj = new SecretTransportObject(message);
     outObj.setOutgoingMessage(outMsg);
@@ -117,9 +120,14 @@ class MessageSender {
     public void handleResponse(PDU pdu) {
       try {
         if (msg.isSaveDeliveryStatus()) {
-          msg.setStatus(pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR ? SecretMessage.STATUS_DELIVERED : SecretMessage.STATUS_DELIVERY_FAILED);
-          msg.setSmppStatus(pdu.getStatus());
-          ds.saveSecretMessage(msg);
+          if (pdu.getStatusClass() != PDU.STATUS_CLASS_NO_ERROR) {
+            msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
+            msg.setSmppStatus(pdu.getStatus());
+            ds.saveSecretMessage(msg);
+          } else {
+            msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
+            ds.updateMessageSmppId(msg);
+          }
         }
       } catch (DataSourceException e) {
         log.error("Can't save delivery status!");
@@ -128,8 +136,10 @@ class MessageSender {
 
     public void handleSendError() {
       try {
-        msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
-        ds.saveSecretMessage(msg);
+        if (msg.isSaveDeliveryStatus()) {
+          msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
+          ds.saveSecretMessage(msg);
+        }
       } catch (DataSourceException e) {
         log.error("Can't save secret message", e);
       }

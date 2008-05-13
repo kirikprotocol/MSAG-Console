@@ -12,5 +12,6 @@ import ru.sibinco.smsx.engine.service.secret.commands.*;
 public interface SecretService extends ServiceController, 
                                        SecretChangePasswordCmd.Receiver, SecretGetMessagesCmd.Receiver,
                                        SecretGetMessageStatusCmd.Receiver, SecretRegisterAbonentCmd.Receiver,
-                                       SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver {
+                                       SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver,
+                                       SecretHandleReceiptCmd.Receiver {
 }

@@ -22,7 +22,8 @@ import java.util.regex.Pattern;
 
 class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMessagesCmd.Receiver,
                                  SecretGetMessageStatusCmd.Receiver, SecretRegisterAbonentCmd.Receiver,
-                                 SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver {
+                                 SecretSendMessageCmd.Receiver, SecretUnregisterAbonentCmd.Receiver,
+                                 SecretHandleReceiptCmd.Receiver {
 
   private static final Category log = Category.getInstance("SECRET");
 
@@ -266,4 +267,19 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
     }
   }
 
+  public boolean execute(SecretHandleReceiptCmd cmd) {
+    try {
+      if (log.isInfoEnabled())
+        log.info("Handle rcpt: id=" + cmd.getSmppMessageId() + "; dlvr=" + cmd.isDelivered());
+
+      int result = ds.updateMessageStatus(cmd.getSmppMessageId(), cmd.isDelivered() ? SecretMessage.STATUS_DELIVERED : SecretMessage.STATUS_DELIVERY_FAILED);
+      return result > 0;
+
+    } catch (DataSourceException e) {
+      log.error(e,e);
+      cmd.update(SecretHandleReceiptCmd.STATUS_SYSTEM_ERROR);
+    }
+
+    return true;
+  }
 }

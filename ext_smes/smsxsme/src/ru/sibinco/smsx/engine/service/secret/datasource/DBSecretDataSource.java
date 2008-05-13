@@ -324,6 +324,70 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     }
   }
 
+  public void updateMessageStatus(SecretMessage secretMessage) throws DataSourceException {
+    if (!secretMessage.isExists())
+      return;
+
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("secret.message.update.status.by.id"));
+
+      ps.setInt(1, secretMessage.getStatus());
+      ps.setInt(2, secretMessage.getId());
+
+      ps.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
+  public int updateMessageStatus(long smppId, int status) throws DataSourceException {
+
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("secret.message.update.status.by.smpp.id"));
+
+      ps.setInt(1, status);
+      ps.setLong(2, smppId);
+
+      return ps.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
+  public void updateMessageSmppId(SecretMessage secretMessage) throws DataSourceException {
+    if (!secretMessage.isExists())
+      return;
+
+    Connection conn = null;
+    PreparedStatement ps = null;
+    try {
+      conn = pool.getConnection();
+      ps = conn.prepareStatement(getSql("secret.message.update.smpp.id"));
+
+      ps.setLong(1, secretMessage.getSmppId());
+      ps.setInt(2, secretMessage.getId());
+
+      ps.executeUpdate();
+
+    } catch (SQLException e) {
+      throw new DataSourceException(e.getMessage());
+    } finally {
+      close(null, ps, conn);
+    }
+  }
+
   public SecretUserWithMessages loadSecretUserWithMessages(String address) throws DataSourceException {
 
     Connection conn = null;

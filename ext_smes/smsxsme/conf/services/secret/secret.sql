@@ -29,6 +29,9 @@ secret.message.load.by.id= SELECT id, destination_address, message, source_addre
 secret.message.insert = INSERT INTO sec_messages(destination_address, source_address, message, dest_addr_subunit, status, save_delivery_status, smpp_status, notify_originator, conn, id) VALUES(?,?,?,?,?,?,?,?,?,?)
 secret.message.update = UPDATE sec_messages SET destination_address=?, source_address=?, message=?, dest_addr_subunit=?, status=?, save_delivery_status=?, smpp_status=?, notify_originator=?, conn=? WHERE id=?
 secret.message.remove = DELETE FROM sec_messages WHERE id=?
+secret.message.update.status.by.id = UPDATE sec_messages SET status=? WHERE id=?
+secret.message.update.status.by.smpp.id = UPDATE sec_messages SET status=? WHERE smpp_id=?
+secret.message.update.smpp.id = UPDATE sec_messages SET smpp_id=? WHERE id=?
 
 
 # Common requests
