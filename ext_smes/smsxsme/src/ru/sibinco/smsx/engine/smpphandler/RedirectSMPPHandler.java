@@ -37,7 +37,7 @@ class RedirectSMPPHandler extends SMPPHandler {
     final long start = System.currentTimeMillis();
 
     try {
-      if (inObj.getIncomingMessage() != null && inObj.getIncomingMessage().getMessageString() != null) {
+      if (inObj.getIncomingMessage() != null && !inObj.getIncomingMessage().isReceipt() && inObj.getIncomingMessage().getMessageString() != null) {
         final Message message = inObj.getIncomingMessage();
         final String msg = inObj.getIncomingMessage().getMessageString().trim();
 
