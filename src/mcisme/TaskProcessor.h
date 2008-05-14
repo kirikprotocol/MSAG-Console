@@ -125,10 +125,10 @@ class TaskProcessor : public Thread, public MissedCallListener, public AdminInte
   Mutex   startLock;
   Event   exitedEvent;
   bool    bStarted, bInQueueOpen, bOutQueueOpen, bStopProcessing;
-  int                             maxInQueueSize, maxOutQueueSize;
-  EventMonitor                    inQueueMonitor, outQueueMonitor;
+  int                             maxInQueueSize; //, maxOutQueueSize;
+  EventMonitor                    inQueueMonitor; //, outQueueMonitor;
   CyclicQueue<MissedCallEvent>    inQueue;
-  CyclicQueue<Message>            outQueue;
+//  CyclicQueue<Message>            outQueue;
 
   bool   _groupSmsByCallingAbonent, _isUseWantNotifyPolicy;
 

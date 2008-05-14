@@ -94,7 +94,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     profileStorage(ProfilesStorage::GetInstance()),
     protocolId(0), daysValid(1), advertising(0), useAdvert(false),
     templateManager(0), mciModule(0), messageSender(0),
-    statistics(0), maxInQueueSize(10000), maxOutQueueSize(10000),
+    statistics(0), maxInQueueSize(10000), // maxOutQueueSize(10000),
     bStarted(false), bInQueueOpen(false), bOutQueueOpen(false), bStopProcessing(false), pStorage(0), pDeliveryQueue(0)
 {
   smsc_log_info(logger, "Loading ...");
@@ -253,7 +253,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   //    responcesTracker.init(this, config);
 
   maxInQueueSize  = config->getInt("inputQueueSize");
-  maxOutQueueSize = config->getInt("outputQueueSize");
+//  maxOutQueueSize = config->getInt("outputQueueSize");
 
   try { forceInform = config->getBool("forceInform"); } catch (...){ forceInform = true;
     smsc_log_warn(logger, "Parameter <MCISme.forceInform> missed. Default value is 'true'.");}
@@ -290,7 +290,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   try { rowsPerMessage = config->getInt("maxRowsPerMessage"); } catch (...) { rowsPerMessage = 5;
     smsc_log_warn(logger, "Parameter <MCISme.maxRowsPerMessage> missed. Using default %d", rowsPerMessage);
   }
-  int maxCallersCount = -1;
+/*  int maxCallersCount = -1;
   try { maxCallersCount = config->getInt("maxCallersCount"); } catch (...) { maxCallersCount = -1;
     smsc_log_warn(logger, "Parameter <MCISme.maxCallersCount> missed. Callers check disabled");
   }
@@ -301,7 +301,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
   if (maxCallersCount > 0 && maxMessagesCount > 0)
     throw ConfigException("MCISme supports only one constraint either by messages or callers. "
                           "Use <MCISme.maxCallersCount> or <MCISme.maxMessagesCount> parameter.");
-
+*/
   string timeZoneFileLocation;
   try { timeZoneFileLocation = config->getString("timeZoneFileLocation"); } catch (...)
   {
