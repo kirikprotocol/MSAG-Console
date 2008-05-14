@@ -119,7 +119,7 @@ public class ProfileManager
 
     InputStream isProfStor = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_STORAGE_FILE);
     if (isProfStor == null)
-      throw new ScenarioInitializationException("Failed to locate template properties file");
+      throw new ScenarioInitializationException("Failed to locate profile storage properties file");
 
     Properties ProfStorProp = new Properties();
     try {
@@ -152,15 +152,6 @@ public class ProfileManager
     return (inform ? DEFAULT_PROFILE_INFO.informFormat : DEFAULT_PROFILE_INFO.notifyFormat);
   }
 
-  private final static String GET_PROFILE_SQL =
-      "SELECT inform, notify, inform_id, notify_id, event_mask FROM mcisme_abonents WHERE abonent=?";
-  private final static String SET_PROFILE_SQL =
-      "UPDATE mcisme_abonents SET inform=?, notify=?, inform_id=?, notify_id=?, event_mask=? WHERE abonent=?";
-  private final static String INS_PROFILE_SQL =
-      "INSERT INTO mcisme_abonents (abonent, inform, notify, inform_id, notify_id, event_mask) VALUES (?, ?, ?, ?, ?, ?)";
-  private final static String DEL_PROFILE_SQL =
-      "DELETE FROM mcisme_abonents WHERE abonent=?";
-
 	private byte[] prepareStatement(String abnt, ProfileInfo info, boolean set)
 	{
 		byte[] stmt = new byte[40];
@@ -184,7 +175,6 @@ public class ProfileManager
 
 	private byte[] executeQuery(byte[] stmt) throws ProfileManagerException
 	{
-		ProfileInfo info = new ProfileInfo(DEFAULT_PROFILE_INFO);
 		Socket socket = null;
 		InputStream input = null;
 		OutputStream output = null;
@@ -196,7 +186,6 @@ public class ProfileManager
 			socket.setSoTimeout(15000);
 			input = socket.getInputStream();
 			output = socket.getOutputStream();
-//			logger.error("Query to DB failed");
 			output.write(stmt, 0, 40);
 			while(len < 40)
 			{
@@ -234,84 +223,23 @@ public class ProfileManager
 			logger.warn("ProfileInfo: Query to ProfileStorage");
 			throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
 		}
-//		catch(SocketTimeoutException exc) 
-//		{
-//			logger.warn("ProfileInfo: Query to ProfileStorage");
-//			throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
-//		}
 	}
 
   public ProfileInfo getProfileInfo(String abonent) throws ProfileManagerException
   {
-//    Connection connection  = null;
-//    PreparedStatement stmt = null;
-//    ResultSet rs = null;
-	
-	try
-    {
-//      connection = ConnectionPool.getConnection();
-//      stmt = connection.prepareStatement(GET_PROFILE_SQL);
-//      stmt.setString(1, abonent);
-//      rs = stmt.executeQuery();
-//
-//      if (rs == null || !rs.next())
-//        return new ProfileInfo(DEFAULT_PROFILE_INFO);
-		ProfileInfo i = new ProfileInfo();
-		byte[] stmt = prepareStatement(abonent, i, false);
-		byte[] anw = executeQuery(stmt);
+	  try {
+      ProfileInfo i = new ProfileInfo();
+      byte[] stmt = prepareStatement(abonent, i, false);
+      byte[] anw = executeQuery(stmt);
 
-		ProfileInfo info = new ProfileInfo(getFormatType(anw[38], true), getFormatType(anw[39], false), (anw[36]==0? false: true), (anw[37]==0? false: true), anw[35]);
-//		info.eventMask = anw[35];
-//		info.inform = (anw[36]==0? false: true);
-//		info.notify = (anw[37]==0? false: true);
-//		info.informFormat = getFormatType(anw[38], true);
-//		info.notifyFormat = getFormatType(anw[39], false);
-//		ProfileInfo info = new ProfileInfo(getFormatType(1, true), getFormatType(1, false), true, true, 111);
-
-		return info;
-	
-//		int pos = 1;
-//		String result = rs.getString(pos++);
-//		if (rs.wasNull()) info.inform = DEFAULT_PROFILE_INFO.inform;
-//		else info.inform = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
-//		result = rs.getString(pos++);
-//		if (rs.wasNull()) info.notify = DEFAULT_PROFILE_INFO.notify;
-//		else info.notify = !(result == null || result.length() <= 0 || result.trim().equalsIgnoreCase("N"));
-//		long informId  = rs.getLong(pos++); if (rs.wasNull()) informId = DEFAULT_PROFILE_INFO.informFormat.getId();
-//		long notifyId  = rs.getLong(pos++); if (rs.wasNull()) notifyId = DEFAULT_PROFILE_INFO.notifyFormat.getId();
-//		info.eventMask = rs.getInt (pos++); if (rs.wasNull()) info.eventMask = DEFAULT_PROFILE_INFO.eventMask;
-//		info.informFormat = getFormatType(informId, true);
-//		info.notifyFormat = getFormatType(notifyId, false);
-//		return info;
-    }
-    catch (Exception exc) {
-      logger.error("Query to DB failed", exc);
+      ProfileInfo info = new ProfileInfo(getFormatType(anw[38], true), getFormatType(anw[39], false), anw[36]!=0, anw[37]!=0, anw[35]);
+      return info;
+    } catch (Exception exc) {
+      logger.error("get profile info failed", exc);
       throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
     }
-//	catch (ProfileManagerException exc) 
-//	{
-//		logger.error("Query to DB failed", exc);
-//		throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
-//	}
-
-	finally 
-	{
-//      try { if (rs != null) rs.close(); } catch (Throwable th) { logger.error(th); }
-//      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error(th); }
-//      try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error(th); }
-    }
   }
 
-  private final int bindProfileInfo(PreparedStatement stmt, ProfileInfo info, int pos)
-    throws SQLException
-  {
-    stmt.setString(pos++, info.inform ? "Y":"N");
-    stmt.setString(pos++, info.notify ? "Y":"N");
-    stmt.setLong  (pos++, info.informFormat.getId());
-    stmt.setLong  (pos++, info.notifyFormat.getId());
-    stmt.setInt   (pos++, info.eventMask);
-    return pos;
-  }
   public void setProfileInfo(String abonent, ProfileInfo info) throws ProfileManagerException
   {
 	  try
@@ -324,59 +252,10 @@ public class ProfileManager
 		  logger.error("Query to DB failed", exc);
 		  throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
 	  }
-
-
-//    Connection connection  = null;
-//    PreparedStatement stmt = null;
-//    try
-//    {
-//      connection = ConnectionPool.getConnection();
-//      stmt = connection.prepareStatement(SET_PROFILE_SQL);
-//      int pos = bindProfileInfo(stmt, info, 1);
-//      stmt.setString(pos++, abonent);
-//
-//      if (stmt.executeUpdate() <= 0) {
-//        stmt.close(); stmt = null; pos = 1;
-//        stmt = connection.prepareStatement(INS_PROFILE_SQL);
-//        stmt.setString(pos++, abonent);
-//        bindProfileInfo(stmt, info, pos);
-//        if (stmt.executeUpdate() <= 0)
-//          throw new Exception("Failed to insert new ProfileInfo record");
-//      }
-//      connection.commit();
-//    }
-//    catch (Exception exc) {
-//      try { if (connection != null) connection.rollback(); } catch (Throwable th) { logger.error("", th); }
-//      logger.error("Update/Insert to DB failed", exc);
-//      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
-//    }
-//    finally {
-//      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
-//      try { if (connection != null) connection.close(); }  catch (Throwable th) { logger.error("", th); }
-//    }
   }
 
   public void delProfileInfo(String abonent) throws ProfileManagerException
   {
-/*    Connection connection  = null;
-    PreparedStatement stmt = null;
-    try
-    {
-      connection = ConnectionPool.getConnection();
-      stmt = connection.prepareStatement(DEL_PROFILE_SQL);
-      stmt.setString(1, abonent);
-      stmt.executeUpdate();
-      connection.commit();
-    }
-    catch (Exception exc) {
-      try { if (connection != null) connection.rollback(); } catch (Throwable th) { logger.error("", th); }
-      logger.error("Delete form DB failed", exc);
-      throw new ProfileManagerException(exc, ProfileManagerException.DB_ERROR);
-    }
-    finally {
-      try { if (stmt != null) stmt.close(); } catch (Throwable th) { logger.error("", th); }
-      try { if (connection != null) connection.close(); } catch (Throwable th) { logger.error("", th); }
-    }*/
   }
 
   public Iterator getFormatAlts(boolean inform) {
