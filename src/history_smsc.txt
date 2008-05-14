@@ -119,4 +119,7 @@ B3007:
     SMSC	SMPP proxy session related logs more detailed
     SMSC	Fix for possible instant rescheduling of receipts on disconnected SME
     SMSC	Fix for unrequired extra Charge Forward requests for multipart messages
-    
+B3008:
+    SMSC	Network initiated USSD locking fix
+    MCISme	Remove reversed notify policy
+    MCISme	Add wantNotify support
