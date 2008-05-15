@@ -270,7 +270,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
         //y = pad + fh + 3;
         y = pad + fh + 1;
         x = httpListStart;
-        System.out.println("Sc:snap.httpCount=" + snap.httpCount);
+        System.out.println("Sc:HttpTopGraph:snap.httpCount=" + snap.httpCount);
         for (int i = 0; i < snap.httpCount; i++) {
             if ((i % 2) == 0) {
                 g.setColor(colorHiBackground);
