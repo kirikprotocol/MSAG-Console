@@ -519,6 +519,7 @@ public class HttpTopGraph extends Canvas implements MouseListener, MouseMotionLi
 //        g.setColor(colorGraphDelivered);
 //        barheight = smesnap.httpSpeed[HttpSnap.DELIVERED_INDEX] * graphScale;
 //        }
+// last Response        
 //        if( smesnap.httpSpeed[HttpSnap.RESPONSE_INDEX] != 0 ){
             g.setColor(colorGraphResponsed);
     //        g.fillRect(barx, y - (int)(maxSpeed*yParam), barwidth, (int)(maxSpeed*yParam));
