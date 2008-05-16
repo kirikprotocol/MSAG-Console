@@ -189,141 +189,6 @@ class Pause extends Observable{
         }
     }
 
-    class ViewButtonPanel_ extends JPanel{
-
-        public static final String BUTTON_SMPP_PROPERTIES = "Endpoints filter";
-        public static final String BUTTON_HTTP_PROPERTIES = "Endpoints filter";
-        public static final String BUTTON_SCALE_Y_IN = "Y scale +";
-        public static final String BUTTON_SCALE_Y_OUT = "Y scale -";
-        public static final String BUTTON_SCALE_X_IN = "Time scale +";
-        public static final String BUTTON_SCALE_X_OUT = "Time scale -";
-        public static final int SCALE_STEP_Y = 1;
-        public static final int SCALE_STEP_X = 1;
-        public static final String BUTTON_VIEW_GRAPH = "View/Hide graph";
-
-        public ViewButtonPanel_(final String type){
-            final JButton viewPropertiesButton;
-            if( type.equals(TYPE_SMPP) ){
-                viewPropertiesButton = new JButton(BUTTON_SMPP_PROPERTIES);
-            }else if( type.equals(TYPE_HTTP) ){
-                viewPropertiesButton = new JButton(BUTTON_HTTP_PROPERTIES);
-            }else {
-                viewPropertiesButton = new JButton(BUTTON_HTTP_PROPERTIES);
-            }
-            final JButton zoomYInPropButton = new JButton(BUTTON_SCALE_Y_IN);
-            final JButton zoomYOutPropButton = new JButton(BUTTON_SCALE_Y_OUT);
-            final JButton zoomXInPropButton = new JButton(BUTTON_SCALE_X_IN);
-            final JButton zoomXOutPropButton = new JButton(BUTTON_SCALE_X_OUT);
-//            JButton hardButton = new JButton("HARD");
-
-//            HardListener hardListener = new HardListener();
-//            hardButton.addActionListener(hardListener);
-
-//            setLayout( new GridLayout(1,3) );
-            setLayout( new GridBagLayout() );
-            GridBagConstraints gbc = new GridBagConstraints();
-            gbc.gridy = 1;
-            gbc.gridx = 1;
-            gbc.gridheight = 2;
-            gbc.weightx =1;
-            gbc.fill = GridBagConstraints.BOTH;
-            add(viewPropertiesButton, gbc);
-
-            gbc.gridheight = 1;
-
-            gbc.gridy = 1;
-            gbc.gridx = 2;
-            add(zoomYInPropButton, gbc);
-            gbc.gridy = 1;
-            gbc.gridx = 3;
-            add(zoomYOutPropButton, gbc);
-
-            gbc.gridy = 2;
-            gbc.gridx = 2;
-            add(zoomXInPropButton, gbc);
-            gbc.gridy = 2;
-            gbc.gridx = 3;
-            add(zoomXOutPropButton, gbc);
-//            add(hardButton);
-
-            ActionListener viewPropertiesListener = new
-                ActionListener(){
-                    public void actionPerformed(ActionEvent event){
-                        ViewPropertyFrame blank = new ViewPropertyFrame(type);
-                        blank.setVisible(true);
-                    }
-                };
-            viewPropertiesButton.addActionListener( viewPropertiesListener );
-
-            ActionListener zoomYInListener = new
-                ActionListener(){
-                    public void actionPerformed(ActionEvent event){
-                        if( type.equals(TYPE_SMPP) ){
-                            yScale += SCALE_STEP_Y;
-                            System.out.println("SMPP zoomYInListener. new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
-                        }else if( type.equals(TYPE_HTTP) ){
-//                            graphScale+=SCALE_STEP;
-//                            maxSpeed = 100;
-                            System.out.println("HTTP zoomYInListener new is " + yScale + " Before " + (yScale-SCALE_STEP_Y) );
-                        }
-//                        smppTopGraph.maxSpeed = 200;
-                        smppTopGraph.invalidate();
-                    }
-                };
-            zoomYInPropButton.addActionListener(zoomYInListener);
-
-            ActionListener zoomYOutListener = new
-                ActionListener(){
-                    public void actionPerformed(ActionEvent event){
-                        if( type.equals(TYPE_SMPP) ){
-                            System.out.println("SMPP zoomYOutListener");
-                            yScale = yScale>1?yScale-SCALE_STEP_Y:yScale;
-                        }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomYOutListener");
-//                            if ( graphScale>1) {
-//                                graphScale-=SCALE_STEP;
-//                                maxSpeed = 200;
-//                            }
-                        }
-//                        smppTopGraph.maxSpeed = 200;
-                        smppTopGraph.invalidate();
-                    }
-                };
-            zoomYOutPropButton.addActionListener(zoomYOutListener);
-
-            ActionListener zoomXInListener = new
-                ActionListener(){
-                    public void actionPerformed(ActionEvent event){
-                        if( type.equals(TYPE_SMPP) ){
-                            xScale += SCALE_STEP_X;
-                            System.out.println("SMPP zoomXInListener new is " + yScale + " Before " + (xScale-SCALE_STEP_X) );
-                        }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomXInListener new is " + yScale + " Before " + (xScale-SCALE_STEP_X) );
-                        }
-                        smppTopGraph.invalidate();
-                    }
-                };
-            zoomXInPropButton.addActionListener(zoomXInListener);
-
-            ActionListener zoomXOutListener = new
-                ActionListener(){
-                    public void actionPerformed(ActionEvent event){
-                        if( type.equals(TYPE_SMPP) ){
-                            xScale = xScale>1?xScale-SCALE_STEP_X:xScale;;
-                        }else if( type.equals(TYPE_HTTP) ){
-                            System.out.println("HTTP zoomXOutListener");
-//                            if ( graphScale>1) {
-//                                graphScale-=SCALE_STEP;
-//                                maxSpeed = 200;
-//                            }
-                        }
-                        smppTopGraph.invalidate();
-                    }
-                };
-            zoomXOutPropButton.addActionListener(zoomXOutListener);
-        }
-    }
-
     class ViewButtonPanel extends JPanel implements Observer{
 
         public static final String BUTTON_SCALE_Y_INC = "Y <>";
@@ -377,9 +242,7 @@ class Pause extends Observable{
             }else {
                 viewPropertiesButton = new JButton(BUTTON_HTTP_PROPERTIES);
             }
-            pauseGraphButton.setEnabled( false );
             setButtonsEnabled( false );
-            //            setLayout( new GridLayout(1,3) );
             setLayout( new GridBagLayout() );
             GridBagConstraints gbc = new GridBagConstraints();
             gbc.gridheight = 1;
@@ -442,32 +305,8 @@ class Pause extends Observable{
                             }
                         }
                     }
-                    public void actionPerformed_(ActionEvent event){
-//                        pauseGraph = (pauseGraph == true)? false: true;
-                        if( type.equals(TYPE_SMPP) ){
-                            if( smppPauseGraph == true ){
-                                smppPauseGraph = false;
-                                pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
-                            }else{
-                                smppPauseGraph = true;
-                                pauseGraphButton.setText( BUTTON_CONTINUE_GRAPH );
-                            }
-                            System.out.println("smpppPauseGraph has set to '" + smppPauseGraph + "'");
-                        }else if( type.equals(TYPE_HTTP) ){
-                            if( httpPauseGraph == true ){
-                                httpPauseGraph = false;
-                                pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
-                            }else{
-                                httpPauseGraph = true;
-                                pauseGraphButton.setText( BUTTON_CONTINUE_GRAPH );
-                            }
-                            System.out.println("httpPauseGraph has set to '" + httpPauseGraph + "'");
-                        }
-                    }
                 };
             pauseGraphButton.addActionListener( pauseGraphListener );
-
-//            add(hardButton);
 
             ActionListener viewPropertiesListener = new
                 ActionListener(){
@@ -629,11 +468,6 @@ class Pause extends Observable{
 
     }
 
-//    public final String BUTTON_SELECT_ALL = localText.getString("svcmon.selectframe.button.selectall");
-//    public final String BUTTON_DESELECT_ALL= localText.getString("svcmon.selectframe.button.deselectall");
-//    public final String BUTTON_APPLY = localText.getString("svcmon.selectframe.button.apply");
-//    public final String BUTTON_CLOSE = localText.getString("svcmon.selectframe.button.close");
-
     class SelectPanel extends JPanel{
 
         public SelectPanel(CheckboxPanel checkPanel){
@@ -677,7 +511,6 @@ class Pause extends Observable{
     }
 
     class CheckboxPanel extends JPanel{
-//        public CheckboxPanel( SvcSnap snaps ){
         public CheckboxPanel( String type ){
             if( type.equals(TYPE_SMPP)){
                 int smppCount = centerSnap.smppCount;
@@ -689,7 +522,6 @@ class Pause extends Observable{
                         checkBox.setSelected(true);
                     }
                     add(checkBox);
-    //                checkBox.addActionListener( new CheckBoxListener() );
                 }
             }else if( type.equals(TYPE_HTTP)){
                 int httpCount = centerSnap.httpCount;
@@ -797,7 +629,6 @@ class Pause extends Observable{
         HttpPanel httpPanel = new HttpPanel();
         jTabbedPane.addTab( "HTTP", httpPanel );
         jTabbedPane.addTab("MMS", new MmsPanel());
-        //jTabbedPane.insertTab("SMPP", null, new SmppPanel(), null, 0);
 
         pause.addObserver( smppPanel.viewPanel );
         pause.addObserver( httpPanel.viewPanel );
@@ -833,14 +664,6 @@ class Pause extends Observable{
                     gotFirstSnap(snap);
                     while (!isStopping) {
                         System.out.println("ScMon:run():wihile2");
-//                        snap.read(is);
-//                        if( !smppPauseGraph ){
-//                            smppTopGraph.setSnap(snap, smppViewList, graphScale, maxSpeed, smppXScale, smppYScale, smppViewGraph);
-//                        }
-//                        if( !httpPauseGraph ){
-//                            httpTopGraph.setSnap(snap, httpViewList, graphScale, maxSpeed, httpXScale, httpYScale, httpViewGraph);
-//                        }
-
                         if( pause.getState() ){
                             System.out.println("SvcMon:run():while:while:if1:pause");
                             Thread.sleep( 500 );
@@ -848,9 +671,6 @@ class Pause extends Observable{
                                 System.out.println("SvcMon:run():while:while:if2:pause end");
                                 pause.setState( false );
 //                                pause.notifyObservers();
-//                                ViewButtonPanel.pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
-//                                smppPanel.pan.pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
-//                                httpPanel.pan.pauseGraphButton.setText( BUTTON_PAUSE_GRAPH );
                             }
                         }
 
@@ -863,7 +683,7 @@ class Pause extends Observable{
 //                            snap.read(is);
                             httpTopGraph.setSnap(snap, httpViewList, graphScale, maxSpeed, httpXScale, httpYScale, httpViewGraph);
                         }
-
+//                        }
                     }
                 } catch (IOException ex) {
                     removeAll();
