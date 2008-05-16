@@ -168,8 +168,18 @@ public:
     mainLoopsCount=1;
     mapIOTasksCount=1;
     mapioptr=0;
+    if(instance!=0)
+    {
+      throw smsc::util::Exception("Attempt to init second smsc instance:%p (previous:%p)",this,instance);
+    }
+    instance=this;
   };
   ~Smsc();
+
+  static Smsc& getInstance()
+  {
+    return *instance;
+  }
   void init(const SmscConfigs& cfg, const char * node);
   void run();
   void stop(){stopFlag=true;}
@@ -207,19 +217,19 @@ public:
     return smeman.getSmeInfo(idx);
   }
 
-  smsc::smeman::SmeIndex getSmeIndex(const string& sid)
+  smsc::smeman::SmeIndex getSmeIndex(const string& systemId)
   {
-    return smeman.lookup(sid);
+    return smeman.lookup(systemId);
   }
 
-  smsc::smeman::SmeInfo getSmeInfo(const string& sid)
+  smsc::smeman::SmeInfo getSmeInfo(const string& systemId)
   {
-    return smeman.getSmeInfo(smeman.lookup(sid));
+    return smeman.getSmeInfo(smeman.lookup(systemId));
   }
 
-  SmeProxy* getSmeProxy(const string& sid)
+  SmeProxy* getSmeProxy(const string& systemId)
   {
-    smsc::smeman::SmeIndex idx=smeman.lookup(sid);
+    smsc::smeman::SmeIndex idx=smeman.lookup(systemId);
     if(idx==-1)return 0;
     return smeman.getSmeProxy(idx);
   }
@@ -851,6 +861,8 @@ protected:
   int mainLoopsCount;
   int mapIOTasksCount;
   void* mapioptr;
+
+  static Smsc* instance;
 };
 
 }//system

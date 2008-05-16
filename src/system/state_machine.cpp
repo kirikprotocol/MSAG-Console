@@ -2817,7 +2817,8 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
   //sms in forward mode forwarded. this mean, that sms with set_dpf was sent,
   //but request timed out. need to send alert notification with status unavialable.
   //
-
+  // set_dpf reworked
+/*
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
   {
     SmeProxy* proxy=smsc->getSmeProxy(sms.srcSmeId);
@@ -2858,6 +2859,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     }
     return UNDELIVERABLE_STATE;
   }
+  */
 
   if(sms.getAttemptsCount()==0 && sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
   {
@@ -3634,9 +3636,16 @@ StateType StateMachine::deliveryResp(Tuple& t)
     if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
        sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
     {
-      if(GET_STATUS_CODE(t.command->get_resp()->get_status())==1179 || GET_STATUS_CODE(t.command->get_resp()->get_status())==1044)
+      int status=GET_STATUS_CODE(t.command->get_resp()->get_status());
+      if(status==1179 || status==1044)
       {
         try{
+          smsc->getScheduler()->registerSetDpf(
+            sms.getDealiasedDestinationAddress(),
+            sms.getOriginatingAddress(),
+            status,
+            smsc->getSmeIndex(sms.getSourceSmeId()));
+        /*
           sms.lastTime=time(NULL);
           sms.setNextTime(rescheduleSms(sms));
           bool saveNeedArchivate=sms.needArchivate;
@@ -3653,6 +3662,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }
           sms.needArchivate=saveNeedArchivate;
           sms.billingRecord=savedBill;
+        */
         }catch(std::exception& e)
         {
           warn2(smsLog,"Failed to create dpf sms:%s",e.what());
@@ -5337,6 +5347,11 @@ void StateMachine::finalizeSms(SMSId id,SMS& sms)
                          sms.lastResult,
                          sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
                        );
+      if(sms.hasIntProperty(Tag::SMPP_SET_DPF))
+      {
+        resp->get_resp()->haveDpf=true;
+        resp->get_resp()->dpfResult=sms.getIntProperty(Tag::SMPP_SET_DPF);
+      }
       try{
         src_proxy->putCommand(resp);
       }catch(...)

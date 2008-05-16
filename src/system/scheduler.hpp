@@ -24,6 +24,7 @@
 #include "smeman/smeproxy.h"
 #include "core/buffers/FixedLengthString.hpp"
 #include "store/FileStorage.h"
+#include "system/dpfTracker.hpp"
 
 
 namespace smsc{
@@ -115,6 +116,7 @@ public:
   }
   ~Scheduler()
   {
+    dpfTracker.stop();
     localFileStore.Stop();
     localFileStore.WaitFor();
     for(std::vector<StoreData*>::iterator it=storeDataPool.begin();it!=storeDataPool.end();it++)
@@ -174,15 +176,6 @@ public:
       c=CreateChain(sms.getNextTime(),sms.getDealiasedDestinationAddress(),idx);
     }
     SchedulerData sd(id,sms.getValidTime());
-    if(sms.getIntProperty(Tag::SMPP_SET_DPF))
-    {
-      if(c->dpfPresent)
-      {
-        debug1(log,"AddScheduledSms: attempt to add sms with set_dpf in chain with dpfPresent");
-        throw smsc::util::Exception("AddScheduledSms: attempt to add sms with set_dpf in chain with dpfPresent");
-      }
-      sd.fake=true;
-    }
     ChainAddTimed(c,sms.getNextTime(),sd);
     debug2(log,"AddScheduledSms: time=%d, id=%lld,addr=%s,c=%p",sms.getNextTime(),id,sms.getDealiasedDestinationAddress().toString().c_str(),c);
     UpdateChainChedule(c);
@@ -762,6 +755,16 @@ public:
           }
         }
 
+        void InitDpfTracker(const char* storeLocation,int to1179,int to1044)
+        {
+          dpfTracker.Init(storeLocation,to1179,to1044);
+        }
+
+        void registerSetDpf(const smsc::sms::Address& abonent,const smsc::sms::Address &smeAddr,int errCode,int smeIdx)
+        {
+          dpfTracker.registerSetDpf(abonent,smeAddr,errCode,smeIdx);
+        }
+
 public:
   struct StartupItem{
     SMSId id;
@@ -780,19 +783,17 @@ public:
   Array<SmscCommand> outQueue;
 
   struct SchedulerData{
-    SchedulerData():id(0),expDate(0),resched(false),fake(0){}
+    SchedulerData():id(0),expDate(0),resched(false){}
     SchedulerData(const SchedulerData& d)
     {
       id=d.id;
       resched=d.resched;
       expDate=d.expDate;
-      fake=d.fake;
     }
-    SchedulerData(SMSId argId,time_t argExpDate,bool argRes=false):id(argId),expDate(argExpDate),resched(argRes),fake(false){}
+    SchedulerData(SMSId argId,time_t argExpDate,bool argRes=false):id(argId),expDate(argExpDate),resched(argRes){}
     SMSId id;
     time_t expDate;
     bool resched;
-    bool fake;
 
     bool operator<(const SchedulerData& rhs)const
     {
@@ -872,14 +873,12 @@ public:
 
   struct Chain{
     Address addr;
-    SMSId dpfId;
     time_t headTime;
     time_t lastValidTime;
     time_t inProcMap;
     int smeIndex;
     int queueSize;
     bool inTimeLine;
-    bool dpfPresent;
 
     typedef std::multiset<SchedulerData> ScQueue;
     ScQueue queue;
@@ -901,7 +900,6 @@ public:
       inTimeLine=false;
       inProcMap=0;
       queueSize=0;
-      dpfPresent=false;
     }
 
     bool AddTimed(time_t sctime,const SchedulerData& d)
@@ -910,11 +908,6 @@ public:
       {
         debug2(Scheduler::log,"Chain::AddTimed, id=%lld - already in the chain!!!",d.id);
         return false;
-      }
-      if(d.fake)
-      {
-        dpfPresent=true;
-        dpfId=d.id;
       }
       Iterators its;
       debug2(Scheduler::log,"Chain::AddTimed, time=%d, id=%lld",sctime,d.id);
@@ -997,10 +990,6 @@ public:
           imap.erase(imap.find(d.id));
           queueSize--;
           lastValidTime=d.expDate;
-          if(d.fake)
-          {
-            dpfPresent=false;
-          }
           return true;
         }
       }
@@ -1026,10 +1015,6 @@ public:
         queue.erase(it->second.li);
       }else
       {
-        if(it->second.mi->second.fake)
-        {
-          dpfPresent=false;
-        }
         timedQueue.erase(it->second.mi);
       }
       imap.erase(it);
@@ -1402,7 +1387,7 @@ public:
     return timeLine.headTime();
   }
 
-  void sendAlertNotification(SMSId id,int status);
+  //void sendAlertNotification(SMSId id,int status);
 
   int smsCount;
 
@@ -1416,6 +1401,7 @@ public:
 
   //smsc::store::BillingStorage  billingStorage;
   smsc::store::ArchiveStorage  archiveStorage;
+  DpfTracker dpfTracker;
 
   time_t lastRejectTime;
   time_t lastRejectReschedule;

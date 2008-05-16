@@ -81,12 +81,14 @@ using smsc::cluster::CgmCommandListener;
 
 using smsc::cluster::FakeInterconnect;
 
+Smsc* Smsc::instance=0;
 
 Smsc::~Smsc()
 {
   SaveStats();
   delete totalCounter;
   delete statCounter;
+  instance=0;
 }
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
@@ -468,6 +470,10 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
   // create scheduler here, and start later in run
   scheduler=new Scheduler();
+
+  scheduler->InitDpfTracker(cfg.cfgman->getString("scheduler.setdpfStore"),
+                            cfg.cfgman->getInt("scheduler.timeOut1179"),
+                            cfg.cfgman->getInt("scheduler.timeOut1044"));
 
   schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
   schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");

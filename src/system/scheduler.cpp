@@ -487,6 +487,7 @@ int Scheduler::Execute()
       }else if(cmd->cmdid==HLRALERT)
       {
         info2(log,"HLRALERT: %s",cmd->get_address().toString().c_str());
+        dpfTracker.hlrAlert(cmd->get_address());
         try{
           Chain* c=GetChain(cmd->get_address());
           if(!c)continue;
@@ -510,28 +511,7 @@ int Scheduler::Execute()
               continue;
             }
           }
-          if(c->dpfPresent)
-          {
-            if(c->CancelMsgId(c->dpfId))DecSme(c);
-            SMSId dpfId=c->dpfId;
-            if(c->Count()==0)
-            {
-              debug2(log,"Try to delete chain %p/%s",c,c->addr.toString().c_str());
-              DeleteChain(c);
-            }else
-            {
-              RescheduleChain(c,time(NULL));
-            }
-            mon.Unlock();
-            try{
-              sendAlertNotification(dpfId,0);
-            }catch(...){}
-            mon.Lock();
-            changeSmsStateToDeleted(dpfId);
-          }else
-          {
-            RescheduleChain(c,time(NULL));
-          }
+          RescheduleChain(c,time(NULL));
         }catch(std::exception& e)
         {
           warn2(log,"Exception during HLRALERT:%s",e.what());
@@ -749,7 +729,7 @@ void Scheduler::replaceSms(SMSId id, SMS& sms)
   LocalFileStoreSave(id,*ptr);
 }
 
-
+/*
 void Scheduler::sendAlertNotification(SMSId id,int status)
 {
   SMS sms;
@@ -777,7 +757,7 @@ void Scheduler::sendAlertNotification(SMSId id,int status)
     warn2(log,"Failed to send AlertNotification to sme %s:'%s'",sms.srcSmeId,e.what());
   }
 }
-
+*/
 
 }//system
 }//smsc
