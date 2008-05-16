@@ -227,36 +227,38 @@ public:
 
   class Iterator{
   public:
-    Iterator(const IntHash& owner):idx(0),h(owner){}
+    Iterator(const IntHash& owner):idx(0),h(&owner){}
     Iterator(const Iterator& src):idx(src.idx),h(src.h){}
+
     Iterator& operator=(const Iterator& src)
     {
       idx=src.idx;
       h=src.h;
     }
+
     int Next(int& k,T& v)
     {
-      if(idx>=h.size || h.count==0)return 0;
-      while(idx<h.size && h.refcounts[idx]==0)idx++;
-      if(idx>=h.size)return 0;
-      k=h.keys[idx];
-      v=h.values[idx];
+      if(idx>=h->size || h->count==0)return 0;
+      while(idx<h->size && h->refcounts[idx]==0)idx++;
+      if(idx>=h->size)return 0;
+      k=h->keys[idx];
+      v=h->values[idx];
       idx++;
       return 1;
     }
     int Next(int& k,T*& v)
     {
-      if(idx>=h.size || h.count==0)return 0;
-      while(idx<h.size && h.refcounts[idx]==0)idx++;
-      if(idx>=h.size)return 0;
-      k=h.keys[idx];
-      v=&h.values[idx];
+      if(idx>=h->size || h->count==0)return 0;
+      while(idx<h->size && h->refcounts[idx]==0)idx++;
+      if(idx>=h->size)return 0;
+      k=h->keys[idx];
+      v=&h->values[idx];
       idx++;
       return 1;
     }
     protected:
     int idx;
-    const IntHash& h;
+    const IntHash* h;
   };
   friend class Iterator;
 
