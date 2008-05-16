@@ -35,7 +35,7 @@ static bool ReadFile(const char* fn,string& str)
   FILE* f=fopen(fn,"rb");
   if(!f)return false;
   fseek(f,0,SEEK_END);
-  int sz=ftell(f);
+  size_t sz=ftell(f);
   fseek(f,0,SEEK_SET);
 
   vector<char> v(sz);
@@ -47,7 +47,7 @@ static bool ReadFile(const char* fn,string& str)
 
 static void trim(char* buf)
 {
-  int st=0,fn=strlen(buf)-1;
+  size_t st=0,fn=strlen(buf)-1;
   while(isspace(buf[st]))st++;
   while(fn>=0 && isspace(buf[fn]))fn--;
   if(fn==-1)
@@ -71,7 +71,7 @@ bool ReadLicense(FILE* f,Hash<string>& lic)
   char vl[4096];
   while(!feof(f))
   {
-    if(!fgets(buf,sizeof(buf),f))break;
+    if(!fgets(buf,(int)sizeof(buf),f))break;
     trim(buf);
     if(!buf[0] || buf[0]=='#')continue;
     char *eq=strchr(buf,'=');
@@ -162,7 +162,7 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
   unsigned int mdsz=SHA_DIGEST_LENGTH;
   SHA1((const unsigned char*)msg.c_str(),msg.length(),md);
 
-  if(!RSA_verify(NID_sha1,(unsigned char*)md,mdsz,&signbuf[0],signbuf.size(),rsa))
+  if(!RSA_verify(NID_sha1,(unsigned char*)md,mdsz,&signbuf[0],(unsigned)signbuf.size(),rsa))
   {
     lic.Empty();
     return false;

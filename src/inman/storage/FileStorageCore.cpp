@@ -59,7 +59,7 @@ bool FSEntry::createDir(const std::string& dir)
 void FSEntry::findEntries(const std::string& location, FSEntriesArray& entries,
                               bool files, const char* ext)
 {
-    int extFileLen  = 0;
+    size_t extFileLen  = 0;
     const char* locationStr = location.c_str();
 
     if (files) {
@@ -94,7 +94,7 @@ void FSEntry::findEntries(const std::string& location, FSEntriesArray& entries,
             }
             if (files) {
                 if (!(description.st_mode & S_IFDIR)) {
-                    int fileNameLen = strlen(pentry->d_name);
+                    size_t fileNameLen = strlen(pentry->d_name);
                     if (fileNameLen > extFileLen) {
                         const char* extPos = pentry->d_name + (fileNameLen - extFileLen);
                         if ((*extPos == '.') && !strcmp(extPos + 1, ext))
@@ -213,7 +213,7 @@ void FSEntry::rollFileEnding(std::string& fullPath, const char* newExt, const ch
 
     std::string     fullOldFile = fullPath;
     std::string::size_type fileNameLen = fullPath.length();
-    int oldExtLen = strlen(oldExt);
+    size_t oldExtLen = strlen(oldExt);
     fullPath.erase(fileNameLen - oldExtLen, fullPath.npos);
 //    fullPath += '.';
     fullPath += newExt;

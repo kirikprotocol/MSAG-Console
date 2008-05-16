@@ -112,7 +112,7 @@ SerializablePacketAC* SerialSocket::recvPck(void)
             uint32_t    ui;
             uint8_t     buf[sizeof(uint32_t)];
         } len;
-        if ((n = receive_buf(len.buf, sizeof(uint32_t), sizeof(uint32_t))) <= 0)
+        if ((n = receive_buf(len.buf, (int)sizeof(uint32_t), (int)sizeof(uint32_t))) <= 0)
             return NULL;
         oct2read = ntohl(*(uint32_t*)len.buf);
 
