@@ -18,8 +18,8 @@ namespace buffers{
 #define MM_MAX_PREALLOC_BLOCK_SIZE 1024
 #define MM_PER_POOL_BLOCKS 16
 
-#define MM_BLOCK_HEAP_MAGIC 0x28611adbL
-#define MM_RAW_HEAP_MAGIC 0xd82b3229L
+#define MM_BLOCK_HEAP_MAGIC 0x28611adbU
+#define MM_RAW_HEAP_MAGIC 0xd82b3229U
 
 class MemoryManager;
 
@@ -77,8 +77,8 @@ public:
   //Raw Heap staff
   int rawHeapPageSize;
   struct RawHeapPage{
-    int pageSize;
-    int pageUsage;
+    size_t pageSize;
+    size_t pageUsage;
     char* memPage;
     RawHeapPage *next;
   };
@@ -89,7 +89,7 @@ public:
   friend class RawHeapCheckPoint;
   struct RawHeapCheckPoint{
     MemoryHeap::PRawHeapPage page;
-    int pageUsage;
+    size_t pageUsage;
   };
 
   RawHeapCheckPoint cpStack[MM_MAX_CHECK_POINTS];

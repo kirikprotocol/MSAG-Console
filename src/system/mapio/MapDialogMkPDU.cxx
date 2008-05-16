@@ -300,7 +300,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
 //          __map_trace2__("mkDeliverPDU: udh_len %d text symbols %d bit offset %d",udh_len,symbols,x-(udh_len+1)*8);
           unsigned _7bit_text_len;
           if (encoding == MAP_SMSC7BIT_ENCODING ) {
-            int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+udh_len+1+1-(pdu->signalInfo+1));
+            unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+udh_len+1+1-(pdu->signalInfo+1)));
            _7bit_text_len = ConvertSMSC7bit27bit(
               text+1+udh_len,
               symbols,
@@ -312,7 +312,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
 //            __map_trace2__("MAP::mkDeliverPDU: data length septets %d symbols %d octets %d",x/7+symbols,udh_len+_7bit_text_len);
           } else {
             unsigned escaped_len = 0; // escaped len in 7bit symbols
-            int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+udh_len+1+1-(pdu->signalInfo+1));
+            unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+udh_len+1+1-(pdu->signalInfo+1)));
             _7bit_text_len = ConvertText27bit(
               text+1+udh_len,
               symbols,
@@ -327,13 +327,13 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
         }else{
           if (encoding == MAP_SMSC7BIT_ENCODING ) {
            *pdu_ptr++ = text_len;
-           int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr-(pdu->signalInfo+1));
+           unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr-(pdu->signalInfo+1)));
             pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr,0,maxlen);
           }
           else
           {
             unsigned escaped_len = 0; // escaped length
-            int maxlen=ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1));
+            unsigned maxlen=(unsigned)(ET96MAP_MAX_SIGNAL_INFO_LEN-(pdu_ptr+1-(pdu->signalInfo+1)));
             int _newbuflen = ConvertText27bit(text,text_len,pdu_ptr+1,&escaped_len,0,maxlen);
             *pdu_ptr++ = escaped_len;
             pdu_ptr += _newbuflen;
@@ -364,7 +364,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       pdu_ptr += text_len;
     }
   }
-  pdu->signalInfoLen  = pdu_ptr-(unsigned char*)pdu->signalInfo;
+  pdu->signalInfoLen  = (uint8_t)(pdu_ptr-(unsigned char*)pdu->signalInfo);
   //if ( pdu->signalInfoLen > 140 ) header->uu.s.mms = 1;
   if( MapDialogContainer::loggerMapPdu->isDebugEnabled() ) {
     char text[sizeof(*pdu)*4] = {0,};

@@ -214,14 +214,14 @@ smeErrTable_cache_load(netsnmp_container *container)
     smsc::smeman::SmeManager* smeman=smsc::snmp::smestattable::getSmeMan();
     smsc::stat::SmeStats* smestat=smsc::snmp::smestattable::getSmeStats();
 
-    int cnt=smeman->getSmesCount();
+    size_t cnt=smeman->getSmesCount();
     smsc::smeman::SmeInfo info;
 
 
     for(smeErrIndex=0;smeErrIndex<cnt;smeErrIndex++)
     {
       try{
-        info=smeman->getSmeInfo(smeErrIndex);
+        info=smeman->getSmeInfo((uint32_t)smeErrIndex);
       }catch(...)
       {
         continue;

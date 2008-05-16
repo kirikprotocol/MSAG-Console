@@ -9,7 +9,6 @@ using smsc::core::buffers::Array;
 
 int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeout)
 {
-  int i;
   int mask;
   if(mode==STATE_MODE_READ)
   {
@@ -19,7 +18,7 @@ int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeo
   {
     mask=POLLOUT;
   }
-  for(i=0;i<sockets.Count();i++)
+  for(int i=0;i<sockets.Count();i++)
   {
     fds[i].events=mask;
   }

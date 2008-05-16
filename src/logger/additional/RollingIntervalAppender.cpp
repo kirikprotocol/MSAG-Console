@@ -46,7 +46,7 @@ bool RollingIntervalAppender::findLastFile(time_t dat, std::string& lastFileName
   DIR *dirp = opendir(path.c_str());
   if(!dirp) return false;
   std::string fname_ = fileName + suffixFormat;
-  uint32_t curInterval = interval;
+  long curInterval = interval;
   lastFileName.clear();
   while(dp = readdir(dirp))
   {
@@ -67,7 +67,7 @@ bool RollingIntervalAppender::findLastFile(time_t dat, std::string& lastFileName
     }
   }
   closedir(dirp);
-  return lastFileName.length();
+  return lastFileName.length()!=0;
 }
 
 void RollingIntervalAppender::clearLogDir(time_t curTime)
@@ -173,7 +173,7 @@ void RollingIntervalAppender::log(const char logLevelName, const char * const ca
   time_t dat = tp.tv_sec;
   ::localtime_r(&tp.tv_sec, &ltm);
   pthread_t thrId=::pthread_self();
-  int msec=tp.tv_usec/1000;
+  long msec=tp.tv_usec/1000;
 #endif
 
   smsc::core::synchronization::MutexGuard guard(mutex);

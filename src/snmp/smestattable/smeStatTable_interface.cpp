@@ -208,7 +208,7 @@ _smeStatTable_initialize_interface(smeStatTable_registration_ptr reg_ptr,  u_lon
      *
      * inject row_merge helper with prefix rootoid_len + 2 (entry.col)
      */
-    handler = netsnmp_get_row_merge_handler(reginfo->rootoid_len + 2);
+    handler = netsnmp_get_row_merge_handler((int)reginfo->rootoid_len + 2);
     netsnmp_inject_handler(reginfo, handler);
 
     /*************************************************
@@ -281,7 +281,7 @@ smeStatTable_index_to_oid(netsnmp_index *oid_idx,
 
     unsigned long oidOutLen;
     err = build_oid_noalloc(oid_idx->oids, oid_idx->len, (unsigned long*)&oidOutLen,NULL, 0, &var_smeStatIndex);
-    oid_idx->len=oidOutLen;
+    oid_idx->len=(int)oidOutLen;
 
     if(err)
         snmp_log(LOG_ERR,"error %d converting index to oid\n", err);

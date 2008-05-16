@@ -25,10 +25,10 @@ int Body::getRequiredBufferSize() const
           blength+=6;
           break;
         case SMS_STR_TAG:
-          blength+=prop.properties[i].sValue->length()+1+6;
+          blength+=(int)prop.properties[i].sValue->length()+1+6;
           break;
         case SMS_BIN_TAG:
-          blength+=prop.properties[i].bValue->length()+6;
+          blength+=(int)prop.properties[i].bValue->length()+6;
           break;
       }
     }
@@ -69,11 +69,11 @@ void Body::encode(uint8_t* buffer,int& length) const
           memcpy(buffer+offset,&tag,2);
           offset+=2;
           __require__(offset<length);
-          uint32_t len=htonl(prop.properties[i].sValue->length()+1);
+          uint32_t len=htonl((unsigned)prop.properties[i].sValue->length()+1);
           memcpy(buffer+offset,&len,4);
           offset+=4;
           __require__(offset<length);
-          len=prop.properties[i].sValue->length()+1;
+          len=(unsigned)prop.properties[i].sValue->length()+1;
           memcpy(buffer+offset,prop.properties[i].sValue->c_str(),len);
           offset+=len;
         }break;
@@ -83,10 +83,10 @@ void Body::encode(uint8_t* buffer,int& length) const
           memcpy(buffer+offset,&tag,2);
           offset+=2;
           __require__(offset<length);
-          uint32_t len=htonl(prop.properties[i].bValue->length());
+          uint32_t len=htonl((unsigned)prop.properties[i].bValue->length());
           memcpy(buffer+offset,&len,4);
           offset+=4;
-          len=prop.properties[i].bValue->length();
+          len=(unsigned)prop.properties[i].bValue->length();
           __require__(offset+len<=length);
           memcpy(buffer+offset,prop.properties[i].bValue->c_str(),len);
           offset+=len;
@@ -303,11 +303,11 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
         auto_ptr<char> buffer;
-        unsigned len;
-        const char* orig = prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].getBin(&len);
-        if ( len > 0 ){
+        unsigned rlen;
+        const char* orig = prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].getBin(&rlen);
+        if ( rlen > 0 ){
 
-          buffer = auto_ptr<char>(new char[len]);
+          buffer = auto_ptr<char>(new char[rlen]);
 
           if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet())
           {
@@ -326,7 +326,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
               int dc=dcl?dcl[i]:encoding;
 
               int off=ci->getOff(i);
-              int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+              int partlen=i==ci->num-1?rlen-off:ci->getOff(i+1)-off;
 
               if(dc==8)
               {
@@ -338,14 +338,14 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
               bufptr+=partlen;
             }
 
-            prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),len);
+            prop.properties[unType(Tag::SMSC_RAW_SHORTMESSAGE)].setBin(buffer.get(),rlen);
           }else
           {
-            UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+            UCS_ntohs(buffer.get(),orig,rlen,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
           }
 
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,buffer.get(),len);
-          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].setBin(buffer.get(),len);
+          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].setBin(buffer.get(),rlen);
         }else{
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_SHORT_MESSAGE,"",len);
           const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].setBin("",0);
@@ -363,10 +363,10 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
         auto_ptr<char> buffer;
-        unsigned len;
-        const char* orig = prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].getBin(&len);
-        if ( len > 0 ){
-          buffer = auto_ptr<char>(new char[len]);
+        unsigned rlen;
+        const char* orig = prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].getBin(&rlen);
+        if ( rlen > 0 ){
+          buffer = auto_ptr<char>(new char[rlen]);
           if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet() && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet())
           {
             char *bufptr=buffer.get();
@@ -384,7 +384,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
               int dc=dcl?dcl[i]:encoding;
 
               int off=ci->getOff(i);
-              int partlen=i==ci->num-1?len-off:ci->getOff(i+1)-off;
+              int partlen=i==ci->num-1?rlen-off:ci->getOff(i+1)-off;
 
               if(dc==8)
               {
@@ -396,13 +396,13 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
               bufptr+=partlen;
             }
 
-            prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),len);
+            prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].setBin(buffer.get(),rlen);
           }else
           {
-            UCS_ntohs(buffer.get(),orig,len,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
+            UCS_ntohs(buffer.get(),orig,rlen,prop.properties[unType(Tag::SMPP_ESM_CLASS)].getInt());
           }
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,buffer.get(),len);
-          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin(buffer.get(),len);
+          const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin(buffer.get(),rlen);
         }else{
           //const_cast<Body*>(this)->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,"",len);
           const_cast<Body*>(this)->prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].setBin("",0);

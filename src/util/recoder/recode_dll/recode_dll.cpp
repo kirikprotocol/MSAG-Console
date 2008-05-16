@@ -158,7 +158,7 @@ int Transliterate(const char* buf,size_t len,ConvEncodingEnum encoding,char *des
     }
   }
   dest[j]=0;
-  return j;
+  return (int)j;
 }
 
 int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, size_t ucs2buff_size,char* text, size_t textbuff_size, ConvEncodingEnum encoding)
@@ -175,7 +175,7 @@ int RECODE_DECL ConvertUCS2ToMultibyte(const short* ucs2, size_t ucs2buff_size,c
       text[i] = ConvertW2C(c,encoding);
     }
   }
-  return i;
+  return (int)i;
 }
 
 int RECODE_DECL ConvertMultibyteToUCS2(const char* text, size_t textbuff_size,short* ucs2, size_t ucs2buff_size, ConvEncodingEnum encoding)
@@ -188,7 +188,7 @@ int RECODE_DECL ConvertMultibyteToUCS2(const char* text, size_t textbuff_size,sh
     c = ConvertC2W(text[i],encoding);
     memcpy(ucs2+i,&c,2);
   }
-  return i*2;
+  return (int)i*2;
 }
 
 struct OutBitStream{
@@ -196,12 +196,12 @@ struct OutBitStream{
   unsigned char* start;
   unsigned char* out;
   unsigned char* out_end;
-  OutBitStream(unsigned char* out, size_t size){
+  OutBitStream(unsigned char* argOut, size_t size){
     mask = 1;
-    this->out = out;
-    this->start = out;
-    this->out_end = out+size;
-    memset(out,0,size);
+    this->out = argOut;
+    this->start = argOut;
+    this->out_end = argOut+size;
+    memset(argOut,0,size);
   }
   void PutBit(unsigned char bit){
     XMessage(("mask 0x%x, out 0x%x",mask,out));
@@ -222,7 +222,7 @@ struct OutBitStream{
   }
   int Size(){
     XMessage(("out %x, size %ld",out,(out-start)+((mask>1)?1:0)));
-    return (out-start)+((mask>1)?1:0);
+    return (int)((out-start)+((mask>1)?1:0));
   }
 };
 
@@ -231,11 +231,11 @@ struct InBitStream{
   const unsigned char* start;
   const unsigned char* in;
   const unsigned char* in_end;
-  InBitStream(const unsigned char* in, size_t size){
+  InBitStream(const unsigned char* argIn, size_t size){
     mask = 1;
-    this->in = in;
-    this->start = in;
-    this->in_end = in+size;
+    this->in = argIn;
+    this->start = argIn;
+    this->in_end = argIn+size;
   }
   unsigned GetBit(){
     //XMessage(("mask 0x%x, in 0x%x",mask,in));
@@ -273,7 +273,7 @@ int RECODE_DECL Convert7BitToText(const char* bit7buf, size_t bit7buf_size,char*
   for ( i=0; i < textbuf_size; ++i ){
     text[i] = bstream.Get();
   }
-  return i;
+  return (int)i;
 }
 
 int RECODE_DECL ConvertTextTo7Bit(const char* text, size_t textbuf_size, char* bit7buf, size_t bit7buf_size,ConvEncodingEnum encoding)
@@ -377,7 +377,7 @@ unsigned RECODE_DECL ConvertSMSC7BitToLatin1(const char* in, size_t chars,char* 
       out[k++] = _7bit_2_8bit[in[i]&0x7f];
     }
   }
-  return k;
+  return (unsigned)k;
 }
 
 unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, size_t chars,char* out){
@@ -397,7 +397,7 @@ unsigned RECODE_DECL ConvertLatin1ToSMSC7Bit(const char* in, size_t chars,char* 
       out[k++] = _8bit_2_7bit[in[i]];
     }
   }
-  return k;
+  return (unsigned)k;
 }
 
 #ifdef _WIN32

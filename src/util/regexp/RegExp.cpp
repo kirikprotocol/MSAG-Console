@@ -986,7 +986,7 @@ int RegExp::Compile(const RECHAR* src,int options)
     }
   }else
   {
-    srclength=strlen(src);
+    srclength=(int)strlen(src);
   }
   ignorecase=options&OP_IGNORECASE?1:0;
   relength=CalcLength((const prechar)src+srcstart,srclength);
@@ -1762,7 +1762,7 @@ int RegExp::InnerCompile(const prechar src,int srclength,int options)
 #ifdef UNICODE
           tmpclass->negative=negative;
 #else
-          for(int j=0;j<8;j++)itmpclass[j]^=0xffffffff;
+          for(int jj=0;jj<8;jj++)itmpclass[jj]^=0xffffffff;
 #endif
           //for(int j=0;j<32;j++)op->symbolclass[j]^=0xff;
         }
@@ -2124,72 +2124,72 @@ inline int RegExp::StrCmp(prechar& str,prechar _st,prechar ed)
 
 
 #define MINSKIP(cmp) \
-            { int j; \
+            { int jj; \
             switch(op->next->op) \
             { \
               case opSymbol: \
               { \
-                j=op->next->symbol; \
-                if(*str!=j) \
+                jj=op->next->symbol; \
+                if(*str!=jj) \
                 while(str<end && cmp && st->max--!=0)\
                 {\
                   str++;\
-                  if(str[1]!=j)break;\
+                  if(str[1]!=jj)break;\
                 } \
                 break; \
               } \
               case opNotSymbol: \
               { \
-                j=op->next->symbol; \
-                if(*str==j) \
+                jj=op->next->symbol; \
+                if(*str==jj) \
                 while(str<end && cmp && st->max--!=0)\
                 {\
                   str++;\
-                  if(str[1]==j)break;\
+                  if(str[1]==jj)break;\
                 } \
                 break; \
               } \
               case opSymbolIgnoreCase: \
               { \
-                j=op->next->symbol; \
-                if(TOLOWER(*str)!=j) \
+                jj=op->next->symbol; \
+                if(TOLOWER(*str)!=jj) \
                 while(str<end && cmp && st->max--!=0)\
                 {\
                   str++;\
-                  if(TOLOWER(str[1])!=j)break;\
+                  if(TOLOWER(str[1])!=jj)break;\
                 } \
                 break; \
               } \
               case opNotSymbolIgnoreCase: \
               { \
-                j=op->next->symbol; \
-                if(TOLOWER(*str)==j) \
+                jj=op->next->symbol; \
+                if(TOLOWER(*str)==jj) \
                 while(str<end && cmp && st->max--!=0)\
                 {\
                   str++;\
-                  if(TOLOWER(str[1])==j)break;\
+                  if(TOLOWER(str[1])==jj)break;\
                 } \
                 break; \
               } \
               case opType: \
               { \
-                j=op->next->type; \
-                if(!(ISTYPE(*str,j))) \
+                jj=op->next->type; \
+                if(!(ISTYPE(*str,jj))) \
                 while(str<end && cmp && st->max--!=0)\
                 {\
                   str++;\
-                  if(!(ISTYPE(str[1],j)))break;\
+                  if(!(ISTYPE(str[1],jj)))break;\
                 } \
                 break; \
               } \
               case opNotType: \
               { \
-                j=op->next->type; \
-                if((ISTYPE(*str,j))) \
+                jj=op->next->type; \
+                if((ISTYPE(*str,jj))) \
                 while(str<end && cmp && st->max--!=0)\
                 {\
                   str++;\
-                  if((ISTYPE(str[1],j)))break;\
+                  if((ISTYPE(str[1],jj)))break;\
                 } \
                 break; \
               } \
@@ -2222,7 +2222,7 @@ static void KillMatchList(MatchList *ml)
 #endif
 
 
-int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcount
+int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchcount
 #ifdef NAMEDBRACKETS
   ,PMatchHash hmatch
 #endif
@@ -2274,7 +2274,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
     dpf(("=================\n"));
     dpf(("S:%s\n%*s\n",start,str-start+3,"^"));
     dpf(("R:%s\n%*s\n",resrc,OP.srcpos+3,"^"));
-    if(str<=end)
+    if(str<=strend)
     switch(OP.op)
     {
       case opLineStart:
@@ -2284,7 +2284,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       }
       case opLineEnd:
       {
-        if(str==end)continue;
+        if(str==strend)continue;
         if(str[0]==0x0d || str[0]==0x0a)
         {
           if(str[0]==0x0d)str++;
@@ -2300,7 +2300,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
       }
       case opDataEnd:
       {
-        if(str==end)continue;
+        if(str==strend)continue;
         break;
       }
       case opWordBound:
@@ -2308,7 +2308,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         if((str==start && ISWORD(*str))||
            (!(ISWORD(str[-1])) && ISWORD(*str)) ||
            (!(ISWORD(*str)) && ISWORD(str[-1])) ||
-           (str==end && ISWORD(str[-1])))continue;
+           (str==strend && ISWORD(str[-1])))continue;
         break;
       }
       case opNotWordBound:
@@ -2316,7 +2316,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         if(!((str==start && ISWORD(*str))||
            (!(ISWORD(str[-1])) && ISWORD(*str)) ||
            (!(ISWORD(*str)) && ISWORD(str[-1])) ||
-           (str==end && ISWORD(str[-1]))))continue;
+           (str==strend && ISWORD(str[-1]))))continue;
         break;
       }
       case opType:
@@ -2408,7 +2408,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             st->max=match[OP.bracket.index].end;
             PushState();
           }
-          match[OP.bracket.index].start=str-start;
+          match[OP.bracket.index].start=(int)(str-start);
         }
         if(OP.bracket.nextalt)
         {
@@ -2463,7 +2463,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           {
             if(OP.bracket.index>=0 && OP.bracket.index<matchcount)
             {
-              match[OP.bracket.index].end=str-start;
+              match[OP.bracket.index].end=(int)(str-start);
               if(brhandler)
               {
                 if(
@@ -2502,7 +2502,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             {
               if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
               {
-                match[OP.range.bracket.index].end=str-start;
+                match[OP.range.bracket.index].end=(int)(str-start);
                 if(brhandler)
                 {
                   if(
@@ -2533,7 +2533,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
               PushState();
               if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
               {
-                match[OP.range.bracket.index].start=str-start;
+                match[OP.range.bracket.index].start=(int)(str-start);
                 st->op=opOpenBracket;
                 st->pos=op;
                 st->min=match[OP.range.bracket.index].start;
@@ -2554,7 +2554,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             {
               if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
               {
-                match[OP.range.bracket.index].end=str-start;
+                match[OP.range.bracket.index].end=(int)(str-start);
                 if(brhandler)
                 {
                   if(
@@ -2577,7 +2577,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             }
             if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
             {
-              match[OP.range.bracket.index].end=str-start;
+              match[OP.range.bracket.index].end=(int)(str-start);
               if(brhandler)
               {
                 if(
@@ -2607,7 +2607,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
               st->min=match[OP.range.bracket.index].start;
               st->max=match[OP.range.bracket.index].end;
               PushState();
-              match[OP.range.bracket.index].start=str-start;
+              match[OP.range.bracket.index].start=(int)(str-start);
             }
 
             if(OP.range.bracket.nextalt)
@@ -2643,14 +2643,14 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
                         bhMatch,
                         OP.range.bracket.index,
                         match[OP.range.bracket.index].start,
-                        str-start
+                        (int)(str-start)
                       )
                     )
                   {
                     return -1;
                   }
                 }
-                match[OP.range.bracket.index].start=str-start;
+                match[OP.range.bracket.index].start=(int)(str-start);
                 st->op=opOpenBracket;
                 st->pos=op;
                 st->min=match[OP.range.bracket.index].start;
@@ -2668,7 +2668,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             }
             if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
             {
-              match[OP.range.bracket.index].end=str-start;
+              match[OP.range.bracket.index].end=(int)(str-start);
               if(brhandler)
               {
                 if(
@@ -2761,7 +2761,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           for(i=m->start;i<j;i++,str++)
           {
             if(TOLOWER(start[i])!=TOLOWER(*str))break;
-            if(str>end)break;
+            if(str>strend)break;
           }
           if(i<j)break;
         }else
@@ -2770,7 +2770,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           for(i=m->start;i<j;i++,str++)
           {
             if(start[i]!=*str)break;
-            if(str>end)break;
+            if(str>strend)break;
           }
           if(i<j)break;
         }
@@ -2787,7 +2787,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || *str==0x0d || *str==0x0a)break;
+            if(str>strend || *str==0x0d || *str==0x0a)break;
           }
           if(i<j)
           {
@@ -2796,7 +2796,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && *str!=0x0d && *str!=0x0a && st->max--!=0)str++;
+            while(str<strend && *str!=0x0d && *str!=0x0a && st->max--!=0)str++;
           }else
           {
             MINSKIP(*str!=0x0d && *str!=0x0a);
@@ -2806,24 +2806,24 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           //opCharAnyAll:
           str+=j;
-          if(str>end)break;
+          if(str>strend)break;
           st->startstr=str;
           if(!minimizing)
           {
             if(st->max>=0)
             {
-              if(str+st->max<end)
+              if(str+st->max<strend)
               {
                 str+=st->max;
                 st->max=0;
               }else
               {
-                st->max-=end-str;
-                str=end;
+                st->max-=(int)(strend-str);
+                str=strend;
               }
             }else
             {
-              str=end;
+              str=strend;
             }
           }else
           {
@@ -2848,13 +2848,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || TOLOWER(*str)!=OP.range.symbol)break;
+            if(str>strend || TOLOWER(*str)!=OP.range.symbol)break;
           }
           if(i<j)break;
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && TOLOWER(*str)==OP.range.symbol && st->max--!=0)str++;
+            while(str<strend && TOLOWER(*str)==OP.range.symbol && st->max--!=0)str++;
           }else
           {
             MINSKIP(TOLOWER(*str)==OP.range.symbol);
@@ -2864,13 +2864,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || *str!=OP.range.symbol)break;
+            if(str>strend || *str!=OP.range.symbol)break;
           }
           if(i<j)break;
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && *str==OP.range.symbol && st->max--!=0)str++;
+            while(str<strend && *str==OP.range.symbol && st->max--!=0)str++;
           }else
           {
             MINSKIP(*str==OP.range.symbol);
@@ -2894,13 +2894,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || TOLOWER(*str)==OP.range.symbol)break;
+            if(str>strend || TOLOWER(*str)==OP.range.symbol)break;
           }
           if(i<j)break;
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && TOLOWER(*str)!=OP.range.symbol && st->max--!=0)str++;
+            while(str<strend && TOLOWER(*str)!=OP.range.symbol && st->max--!=0)str++;
           }else
           {
             MINSKIP(TOLOWER(*str)!=OP.range.symbol);
@@ -2910,13 +2910,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         {
           for(i=0;i<j;i++,str++)
           {
-            if(str>end || *str==OP.range.symbol)break;
+            if(str>strend || *str==OP.range.symbol)break;
           }
           if(i<j)break;
           st->startstr=str;
           if(!minimizing)
           {
-            while(str<end && *str!=OP.range.symbol && st->max--!=0)str++;
+            while(str<strend && *str!=OP.range.symbol && st->max--!=0)str++;
           }else
           {
             MINSKIP(*str!=OP.range.symbol);
@@ -2938,13 +2938,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         st->max=OP.range.max-j;
         for(i=0;i<j;i++,str++)
         {
-          if(str>end || !GetBit(OP.range.symbolclass,*str))break;
+          if(str>strend || !GetBit(OP.range.symbolclass,*str))break;
         }
         if(i<j)break;
         st->startstr=str;
         if(!minimizing)
         {
-          while(str<end && GetBit(OP.range.symbolclass,*str) && st->max--!=0)str++;
+          while(str<strend && GetBit(OP.range.symbolclass,*str) && st->max--!=0)str++;
         }else
         {
           MINSKIP(GetBit(OP.range.symbolclass,*str));
@@ -2965,13 +2965,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         st->max=OP.range.max-j;
         for(i=0;i<j;i++,str++)
         {
-          if(str>end || (ISTYPE(*str,OP.range.type))==0)break;
+          if(str>strend || (ISTYPE(*str,OP.range.type))==0)break;
         }
         if(i<j)break;
         st->startstr=str;
         if(!minimizing)
         {
-          while(str<end && (ISTYPE(*str,OP.range.type)) && st->max--!=0)str++;
+          while(str<strend && (ISTYPE(*str,OP.range.type)) && st->max--!=0)str++;
         }else
         {
           MINSKIP((ISTYPE(*str,OP.range.type)));
@@ -2992,13 +2992,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         st->max=OP.range.max-j;
         for(i=0;i<j;i++,str++)
         {
-          if(str>end || (ISTYPE(*str,OP.range.type))!=0)break;
+          if(str>strend || (ISTYPE(*str,OP.range.type))!=0)break;
         }
         if(i<j)break;
         st->startstr=str;
         if(!minimizing)
         {
-          while(str<end && (ISTYPE(*str,OP.range.type))==0 && st->max--!=0)str++;
+          while(str<strend && (ISTYPE(*str,OP.range.type))==0 && st->max--!=0)str++;
         }else
         {
           MINSKIP((ISTYPE(*str,OP.range.type))==0);
@@ -3045,13 +3045,13 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
 
         for(i=0;i<j;i++)
         {
-          if(str>end || StrCmp(str,start+m->start,start+m->end)==0)break;
+          if(str>strend || StrCmp(str,start+m->start,start+m->end)==0)break;
         }
         if(i<j)break;
         st->startstr=str;
         if(!minimizing)
         {
-          while(str<end && StrCmp(str,start+m->start,start+m->end) && st->max--!=0);
+          while(str<strend && StrCmp(str,start+m->start,start+m->end) && st->max--!=0);
         }else
         {
           MINSKIP(StrCmp(str,start+m->start,start+m->end));
@@ -3092,7 +3092,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
         if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
         {
           match[OP.range.bracket.index].start=
-          /*match[OP.range.bracket.index].end=*/str-start;
+          /*match[OP.range.bracket.index].end=*/(int)(str-start);
         }
         if(OP.op==opBracketMinRange && OP.range.min==0)
         {
@@ -3582,7 +3582,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
             str=ps->savestr;
             if(OP.range.bracket.index>=0 && OP.range.bracket.index<matchcount)
             {
-              match[OP.range.bracket.index].start=str-start;
+              match[OP.range.bracket.index].start=(int)(str-start);
               st->op=opOpenBracket;
               st->pos=op;
               st->min=match[OP.range.bracket.index].start;
@@ -4052,7 +4052,7 @@ int RegExp::Search(const RECHAR* textstart,const RECHAR* textend,PMatch match,in
   if(code->bracket.nextalt==0 && code->next->op==opDataEnd && code->next->next->op==opClosingBracket)
   {
     matchcount=1;
-    match[0].start=textend-textstart;
+    match[0].start=(int)(textend-textstart);
     match[0].end=match[0].start;
     return 1;
   }
@@ -4130,7 +4130,7 @@ int RegExp::SearchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHA
   if(code->bracket.nextalt==0 && code->next->op==opDataEnd && code->next->next->op==opClosingBracket)
   {
     matchcount=1;
-    match[0].start=textend-textstart;
+    match[0].start=(int)(textend-textstart);
     match[0].end=match[0].start;
     return 1;
   }
@@ -4185,7 +4185,7 @@ int RegExp::SearchEx(const RECHAR* datastart,const RECHAR* textstart,const RECHA
   return res;
 }
 
-void RegExp::TrimTail(prechar& end)
+void RegExp::TrimTail(prechar& strend)
 {
   if(havelookahead)return;
   if(!code || code->bracket.nextalt)return;
@@ -4196,42 +4196,42 @@ void RegExp::TrimTail(prechar& end)
     if(OP.bracket.pairindex->bracket.nextalt)return;
     op=op->prev;
   }
-  end--;
+  strend--;
   switch(OP.op)
   {
     case opSymbol:
     {
-      while(end>=start && *end!=OP.symbol)end--;
+      while(strend>=start && *strend!=OP.symbol)strend--;
       break;
     }
     case opNotSymbol:
     {
-      while(end>=start && *end==OP.symbol)end--;
+      while(strend>=start && *strend==OP.symbol)strend--;
       break;
     }
     case opSymbolIgnoreCase:
     {
-      while(end>=start && TOLOWER(*end)!=OP.symbol)end--;
+      while(strend>=start && TOLOWER(*strend)!=OP.symbol)strend--;
       break;
     }
     case opNotSymbolIgnoreCase:
     {
-      while(end>=start && TOLOWER(*end)==OP.symbol)end--;
+      while(strend>=start && TOLOWER(*strend)==OP.symbol)strend--;
       break;
     }
     case opType:
     {
-      while(end>=start && !(ISTYPE(*end,OP.type)))end--;
+      while(strend>=start && !(ISTYPE(*strend,OP.type)))strend--;
       break;
     }
     case opNotType:
     {
-      while(end>=start && ISTYPE(*end,OP.type))end--;
+      while(strend>=start && ISTYPE(*strend,OP.type))strend--;
       break;
     }
     case opSymbolClass:
     {
-      while(end>=start && !GetBit(OP.symbolclass,*end))end--;
+      while(strend>=start && !GetBit(OP.symbolclass,*strend))strend--;
       break;
     }
     case opSymbolRange:
@@ -4240,10 +4240,10 @@ void RegExp::TrimTail(prechar& end)
       if(OP.range.min==0)break;
       if(ignorecase)
       {
-        while(end>=start && *end!=OP.range.symbol)end--;
+        while(strend>=start && *strend!=OP.range.symbol)strend--;
       }else
       {
-        while(end>=start && TOLOWER(*end)!=OP.range.symbol)end--;
+        while(strend>=start && TOLOWER(*strend)!=OP.range.symbol)strend--;
       }
       break;
     }
@@ -4253,10 +4253,10 @@ void RegExp::TrimTail(prechar& end)
       if(OP.range.min==0)break;
       if(ignorecase)
       {
-        while(end>=start && *end==OP.range.symbol)end--;
+        while(strend>=start && *strend==OP.range.symbol)strend--;
       }else
       {
-        while(end>=start && TOLOWER(*end)==OP.range.symbol)end--;
+        while(strend>=start && TOLOWER(*strend)==OP.range.symbol)strend--;
       }
       break;
     }
@@ -4264,26 +4264,26 @@ void RegExp::TrimTail(prechar& end)
     case opTypeMinRange:
     {
       if(OP.range.min==0)break;
-      while(end>=start && !(ISTYPE(*end,OP.range.type)))end--;
+      while(strend>=start && !(ISTYPE(*strend,OP.range.type)))strend--;
       break;
     }
     case opNotTypeRange:
     case opNotTypeMinRange:
     {
       if(OP.range.min==0)break;
-      while(end>=start && ISTYPE(*end,OP.range.type))end--;
+      while(strend>=start && ISTYPE(*strend,OP.range.type))strend--;
       break;
     }
     case opClassRange:
     case opClassMinRange:
     {
       if(OP.range.min==0)break;
-      while(end>=start && !GetBit(OP.range.symbolclass,*end))end--;
+      while(strend>=start && !GetBit(OP.range.symbolclass,*strend))strend--;
       break;
     }
     default:break;
   }
-  end++;
+  strend++;
 }
 
 void RegExp::CleanStack()

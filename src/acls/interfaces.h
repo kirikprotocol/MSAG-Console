@@ -23,8 +23,8 @@ typedef uint32_t  AclIdent;
 
 typedef const char*    AclPChar;
 typedef std::pair<AclIdent,AclName> AclNamedIdent;
-inline AclNamedIdent MakeAclNamedIdent(AclIdent ident,const AclName& name)
-{ return AclNamedIdent(ident,name); }
+inline AclNamedIdent MakeAclNamedIdent(AclIdent argIdent,const AclName& name)
+{ return AclNamedIdent(argIdent,name); }
 
 enum AclCacheType {
   ACT_UNKNOWN   = '0',
@@ -41,13 +41,13 @@ struct AclInfo
   AclDescription  desctiption;
   AclCacheType    cache;
 };
-inline AclInfo MakeAclInfo(AclIdent ident,const char * name,const char * desc,AclCacheType cache)
+inline AclInfo MakeAclInfo(AclIdent argIdent,const char * name,const char * desc,AclCacheType cache)
 {
   if (name == NULL)
     name = "";
   if (desc == NULL)
     desc = "";
-  AclInfo aclinfo = { ident, name,desc,cache };
+  AclInfo aclinfo = { argIdent, name,desc,cache };
   return aclinfo;
 }
 

@@ -130,7 +130,7 @@ ResourceManager::ResourceManager() throw ()
       std::string name(dirName);
       name += '/';
       name += entry->d_name;
-      unsigned int localeNameLength = entryLength - (prefixLength + suffixLength);
+      size_t localeNameLength = entryLength - (prefixLength + suffixLength);
       //char localeName[entryLength+1];
       TmpBuf<char,64> localeName(entryLength+1);
       strncpy(localeName, entry->d_name + prefixLength, localeNameLength);

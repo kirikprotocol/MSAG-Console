@@ -77,9 +77,9 @@ void CommandReader::readMessageBody(XMLByte * buf, uint32_t len)
   throw (AdminException)
 {
   buf[len]=0;
-  for (long readed=0; readed<(long)len;)
+  for (uint32_t readed=0; readed<len;)
   {
-    int readed_now = sock->Read((char *)(buf+readed), len-readed);
+    uint32_t readed_now = sock->Read((char *)(buf+readed), len-readed);
     if (readed_now == 0 || readed_now == -1)
       throw AdminException("Connection broken on reading message body");
     readed += readed_now;

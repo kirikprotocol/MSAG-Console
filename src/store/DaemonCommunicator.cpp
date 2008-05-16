@@ -17,16 +17,30 @@ namespace smsc { namespace store
     
 void Message::read(Socket* socket, void* buffer, size_t size)
 {
-    if (!socket) throw CommunicationException("Message read failed. Socket NULL!");
-    int toRead = size; char* readBuffer = (char *)buffer;
-    while (toRead > 0) {
-        int read = socket->canRead(10);
-        if (read == 0) throw CommunicationException("Message read failed. Timeout expired.");
-        else if (read > 0) {
-            read = socket->Read(readBuffer, toRead);
-            if (read > 0) { readBuffer+=read; toRead-=read; continue; }
+    if (!socket)
+    {
+      throw CommunicationException("Message read failed. Socket NULL!");
+    }
+    size_t toRead = size;
+    char* readBuffer = (char *)buffer;
+    while (toRead > 0)
+    {
+      size_t read = socket->canRead(10);
+      if (read == 0)
+      {
+        throw CommunicationException("Message read failed. Timeout expired.");
+      }
+      else if (read > 0)
+      {
+        read = socket->Read(readBuffer, (int)toRead);
+        if (read > 0)
+        { 
+          readBuffer+=read; 
+          toRead-=read; 
+          continue; 
         }
-        throw EOFException("Message read failed. Socket closed. %s", strerror(errno));
+      }
+      throw EOFException("Message read failed. Socket closed. %s", strerror(errno));
     }
     /*
     if (size == 1) printf("Read %d: %d\n", size, *((uint8_t  *)buffer));
@@ -36,16 +50,30 @@ void Message::read(Socket* socket, void* buffer, size_t size)
 }
 void Message::write(Socket* socket, const void* buffer, size_t size)
 {
-    if (!socket) throw CommunicationException("Message send failed. Socket NULL!");
-    int toWrite = size; const char* writeBuffer = (const char *)buffer;
-    while (toWrite > 0) {
-        int write = socket->canWrite(10);
-        if (write == 0) throw CommunicationException("Message send failed. Timeout expired.");
-        else if (write > 0) {
-            write = socket->Write(writeBuffer, toWrite);
-            if (write > 0) { writeBuffer+=write; toWrite-=write; continue; }
+    if (!socket)
+    {
+      throw CommunicationException("Message send failed. Socket NULL!");
+    }
+    size_t toWrite = size;
+    const char* writeBuffer = (const char *)buffer;
+    while (toWrite > 0)
+    {
+      size_t write = socket->canWrite(10);
+      if (write == 0)
+      {
+        throw CommunicationException("Message send failed. Timeout expired.");
+      }
+      else if (write > 0)
+      {
+        write = socket->Write(writeBuffer, (int)toWrite);
+        if (write > 0)
+        { 
+          writeBuffer+=write;
+          toWrite-=write;
+          continue; 
         }
-        throw EOFException("Message send failed. Socket closed. %s", strerror(errno));
+      }
+      throw EOFException("Message send failed. Socket closed. %s", strerror(errno));
     }
     /*
     if (size == 1) printf("Write %d: %d\n", size, *((uint8_t  *)buffer));
@@ -68,7 +96,7 @@ void Message::read(Socket* socket, std::string& str)
 }
 void Message::write(Socket* socket, const std::string& str)
 {
-    int32_t  strLen = str.length();
+    int32_t  strLen = (uint32_t)str.length();
     uint32_t writeLen = htonl(strLen);
     Message::write(socket, &writeLen, sizeof(writeLen));
     if (strLen > 0) {
@@ -228,22 +256,22 @@ void RsSmsMessage::send(Socket* socket)
     std::string oa      = sms.originatingAddress.toString();
     std::string da      = sms.destinationAddress.toString();
     std::string dda     = sms.dealiasedDestinationAddress.toString();
-    int8_t oaSize       = oa.length();
-    int8_t daSize       = da.length();
-    int8_t ddaSize      = dda.length();
+    int8_t oaSize       = (int8_t)oa.length();
+    int8_t daSize       = (int8_t)da.length();
+    int8_t ddaSize      = (int8_t)dda.length();
     
-    int8_t svcSize      = strlen(sms.eServiceType);
-    int8_t odMscSize    = strlen(sms.originatingDescriptor.msc);
-    int8_t odImsiSize   = strlen(sms.originatingDescriptor.imsi);
-    int8_t ddMscSize    = strlen(sms.destinationDescriptor.msc);
-    int8_t ddImsiSize   = strlen(sms.destinationDescriptor.imsi);
-    int8_t routeSize    = strlen(sms.routeId);
-    int8_t srcSmeSize   = strlen(sms.srcSmeId);
-    int8_t dstSmeSize   = strlen(sms.dstSmeId);
+    int8_t svcSize      = (int8_t)strlen(sms.eServiceType);
+    int8_t odMscSize    = (int8_t)strlen(sms.originatingDescriptor.msc);
+    int8_t odImsiSize   = (int8_t)strlen(sms.originatingDescriptor.imsi);
+    int8_t ddMscSize    = (int8_t)strlen(sms.destinationDescriptor.msc);
+    int8_t ddImsiSize   = (int8_t)strlen(sms.destinationDescriptor.imsi);
+    int8_t routeSize    = (int8_t)strlen(sms.routeId);
+    int8_t srcSmeSize   = (int8_t)strlen(sms.srcSmeId);
+    int8_t dstSmeSize   = (int8_t)strlen(sms.dstSmeId);
     
     int32_t bodyBuffLen = sms.messageBody.getBufferLength();
 
-    uint32_t recordSize = sizeof(id)+sizeof(smsState)+
+    uint32_t recordSize = (uint32_t)(sizeof(id)+sizeof(smsState)+
         sizeof(submitTimeSz)+submitTimeSz+sizeof(validTimeSz)+validTimeSz+
         sizeof(lastTimeSz)+lastTimeSz+sizeof(nextTimeSz)+nextTimeSz+
         sizeof(sms.attempts)+sizeof(sms.lastResult)+
@@ -252,11 +280,12 @@ void RsSmsMessage::send(Socket* socket)
         sizeof(odMscSize)+odMscSize+sizeof(odImsiSize)+odImsiSize+sizeof(sms.originatingDescriptor.sme)+
         sizeof(ddMscSize)+ddMscSize+sizeof(ddImsiSize)+ddImsiSize+sizeof(sms.destinationDescriptor.sme)+
         sizeof(routeSize)+routeSize+sizeof(sms.serviceId)+sizeof(sms.priority)+
-        sizeof(srcSmeSize)+srcSmeSize+sizeof(dstSmeSize)+dstSmeSize+sizeof(bodyBuffLen)+bodyBuffLen;
+        sizeof(srcSmeSize)+srcSmeSize+sizeof(dstSmeSize)+dstSmeSize+sizeof(bodyBuffLen)+bodyBuffLen);
 
-    uint32_t sendBufferSize = recordSize+sizeof(recordSize)*2;
+    uint32_t sendBufferSize = recordSize+(uint32_t)sizeof(recordSize)*2;
     TmpBuf<char, 2048> sendBufferGuard(sendBufferSize);
-    char* sendBuffer = sendBufferGuard.get(); char* position = sendBuffer;
+    char* sendBuffer = sendBufferGuard.get();
+    char* position = sendBuffer;
 
     recordSize = htonl(recordSize);
     memcpy(position, &recordSize, sizeof(recordSize)); position+=sizeof(recordSize);

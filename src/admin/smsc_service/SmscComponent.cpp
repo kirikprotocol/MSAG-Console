@@ -749,7 +749,7 @@ StrArray parseStringToStringList(const char * const strlist)
   for (const char * ptr = strchr(str, ','); ptr != 0; ptr = strchr(str, ','))
   {
     while (str[0] == ' ') str++;
-    const int length = ptr-str;
+    size_t length = ptr-str;
     char * value_ = new char[length+1];
     memcpy(value_, str, length*sizeof(char));
     value_[length] = 0;
@@ -1598,30 +1598,30 @@ int SmscComponent::profileDelete(const Arguments & args)
 void fillSmeInfo(SmeInfo & smeInfo, const Arguments & args)
 {
   smeInfo.systemId          = args.Get("id").getStringValue();
-  smeInfo.typeOfNumber      = args.Get("typeOfNumber").getLongValue();
-  smeInfo.numberingPlan     = args.Get("numberingPlan").getLongValue();
-  smeInfo.interfaceVersion  = args.Get("interfaceVersion").getLongValue();
+  smeInfo.typeOfNumber      = (uint8_t)args.Get("typeOfNumber").getLongValue();
+  smeInfo.numberingPlan     = (uint8_t)args.Get("numberingPlan").getLongValue();
+  smeInfo.interfaceVersion  = (uint8_t)args.Get("interfaceVersion").getLongValue();
   smeInfo.rangeOfAddress    = args.Get("addrRange").getStringValue();
   smeInfo.systemType        = args.Get("systemType").getStringValue();
   smeInfo.password          = args.Get("password").getStringValue();
-  smeInfo.priority          = args.Get("priority").getLongValue();
-  smeInfo.SME_N             = args.Get("smeN").getLongValue();
+  smeInfo.priority          = (SmeProxyPriority)args.Get("priority").getLongValue();
+  smeInfo.SME_N             = (SmeNType)args.Get("smeN").getLongValue();
   smeInfo.disabled          = args.Get("disabled").getBooleanValue();
   smeInfo.wantAlias         = args.Get("wantAlias").getBooleanValue();
   smeInfo.forceDC           = args.Get("forceDC").getBooleanValue();
   smeInfo.receiptSchemeName = args.Get("receiptSchemeName").getStringValue();
-  smeInfo.timeout           = args.Get("timeout").getLongValue();
+  smeInfo.timeout           = (uint32_t)args.Get("timeout").getLongValue();
   if(args.Exists("accessMask"))
   {
-    smeInfo.accessMask=args.Get("accessMask").getLongValue();
+    smeInfo.accessMask=(uint32_t)args.Get("accessMask").getLongValue();
   }else
   {
     smeInfo.accessMask=1;
   }
   if (args.Exists("proclimit"))
-    smeInfo.proclimit         = args.Get("proclimit").getLongValue();
+    smeInfo.proclimit         = (uint32_t)args.Get("proclimit").getLongValue();
   if (args.Exists("schedlimit"))
-    smeInfo.schedlimit        = args.Get("schedlimit").getLongValue();
+    smeInfo.schedlimit        = (uint32_t)args.Get("schedlimit").getLongValue();
   const char * const mode = args.Get("mode").getStringValue();
   if (stricmp(mode,  "tx") == 0)
   {
@@ -1908,7 +1908,7 @@ Variant SmscComponent::aclListNames(const Arguments & args) throw (AdminExceptio
 Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
+    AclIdent aclId = (AclIdent)args.Get("id").getLongValue();
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
 
     AclInfo aclInfo = aclmgr->getInfo(aclId);
@@ -1937,7 +1937,7 @@ Variant SmscComponent::aclGet(const Arguments & args) throw (AdminException)
 Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
+    AclIdent aclId = (AclIdent)args.Get("id").getLongValue();
     AclAbstractMgr   *aclmgr = smsc_app_runner->getApp()->getAclMgr();
     try {
       aclmgr->remove(aclId);
@@ -1997,7 +1997,7 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
 Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
+    AclIdent aclId = (AclIdent)args.Get("id").getLongValue();
     const char * const name = args.Get("name").getStringValue();
     const char * const description = args.Get("description").getStringValue();
     const char * const cache_type_str = args.Get("cache_type").getStringValue();
@@ -2027,7 +2027,7 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
 Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
+    AclIdent aclId = (AclIdent)args.Get("id").getLongValue();
     const char * const prefix = args.Get("prefix").getStringValue();
 
     typedef std::vector<AclPhoneNumber> Phones;
@@ -2057,7 +2057,7 @@ Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminEx
 Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
+    AclIdent aclId = (AclIdent)args.Get("id").getLongValue();
     const StringList & addresses(args.Get("addresses").getStringListValue());
 
     try {
@@ -2084,7 +2084,7 @@ Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminEx
 Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminException)
 {
   try {
-    AclIdent aclId = args.Get("id").getLongValue();
+    AclIdent aclId = (AclIdent)args.Get("id").getLongValue();
     const StringList & addresses(args.Get("addresses").getStringListValue());
 
     try {
@@ -2152,11 +2152,11 @@ Variant SmscComponent::dlListPrincipals(const Arguments & args) throw (AdminExce
   {
     Array<Principal> prcs=dladmin->getPrincipals();
     char buf[32];
-    int addrLen=address?strlen(address):0;
+    size_t addrLen=address?strlen(address):0;
     for(int i=0;i<prcs.Count();i++)
     {
       Principal& prc=prcs[i];
-      int bl=prc.address.toString(buf,sizeof(buf));
+      size_t bl=prc.address.toString(buf,sizeof(buf));
       if(addrLen && strncmp(address,buf,std::min(addrLen,bl))!=0)continue;
       prc.address.toString(buf,sizeof(buf));
       result.appendValueToStringList(buf);

@@ -20,8 +20,8 @@ char * getNodeText(const DOMNode &node)
   std::string s;
 
   DOMNodeList *childs = node.getChildNodes();
-  unsigned childsLength = childs->getLength();
-  for (unsigned i=0; i<childsLength; i++)
+  size_t childsLength = childs->getLength();
+  for (size_t i=0; i<childsLength; i++)
   {
     DOMNode * child = childs->item(i);
     if (child->getNodeType() == DOMNode::TEXT_NODE)
@@ -67,7 +67,7 @@ XmlStr::XmlStr(const XMLCh * const str)
   unsigned int srcCount = XMLString::stringLen(str);
   size_t cstrLen =srcCount +16;
   cstr = new char[cstrLen+1];
-  unsigned int dstCount = cstrLen;
+  unsigned int dstCount = (unsigned int)cstrLen;
   unsigned int charsEaten = 0;
   unsigned int res = transcoder->transcodeTo(str, srcCount, (unsigned char * const) cstr, dstCount, charsEaten, XMLTranscoder::UnRep_RepChar);
   if (res == (size_t) -1)
@@ -86,7 +86,7 @@ XmlStr::XmlStr(const char * const str)
   unsigned int srcCount = XMLString::stringLen(str);
   size_t xstrLen =srcCount +16;
   xstr = new XMLCh[xstrLen+1];
-  unsigned int dstCount = xstrLen;
+  unsigned int dstCount = (unsigned int)xstrLen;
   unsigned int bytesEaten = 0;
   std::auto_ptr<unsigned char> charSizes(new unsigned char[xstrLen +1]);
   unsigned int res = transcoder->transcodeFrom((const unsigned char * const) str, srcCount, (XMLCh * const)xstr, dstCount, bytesEaten, (unsigned char * const)charSizes.get());

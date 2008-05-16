@@ -56,8 +56,8 @@ private:
     const size_t prefixLen = strlen(prefixChars);
     const size_t dtdNameLen = XMLString::stringLen(dtdName);
     TmpBuf<XMLCh,128> tmpDtdName(prefixLen + dtdNameLen + 1);
-    XMLString::copyNString(tmpDtdName, XmlStr(prefixChars), prefixLen);
-    XMLString::copyNString(tmpDtdName + prefixLen, dtdName, dtdNameLen);
+    XMLString::copyNString(tmpDtdName, XmlStr(prefixChars), (const unsigned)prefixLen);
+    XMLString::copyNString(tmpDtdName + prefixLen, dtdName, (const unsigned)dtdNameLen);
     tmpDtdName[prefixLen + dtdNameLen] = 0;
 
     std::auto_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));

@@ -119,14 +119,15 @@ public:
     levels[1]["sms.error"] = Logger::LEVEL_ERROR;
 
     int i = 0;
-    while (true) {
+    while (true)
+    {
       {
         MutexGuard guard(mutex);
         if (isStopping)
           return 0;
       }
       Logger::setLogLevels(levels[i]);
-      i = ++i%(sizeof(levels)/sizeof(levels[0]));
+      i = ++i%(int)(sizeof(levels)/sizeof(levels[0]));
       mySleep(500);
     }
   }

@@ -206,7 +206,7 @@ _smeErrTable_initialize_interface(smeErrTable_registration_ptr reg_ptr,  u_long 
      *
      * inject row_merge helper with prefix rootoid_len + 2 (entry.col)
      */
-    handler = netsnmp_get_row_merge_handler(reginfo->rootoid_len + 2);
+    handler = netsnmp_get_row_merge_handler((int)reginfo->rootoid_len + 2);
     netsnmp_inject_handler(reginfo, handler);
 
     /*************************************************
@@ -289,7 +289,7 @@ smeErrTable_index_to_oid(netsnmp_index *oid_idx,
     unsigned long oidLen;
     err = build_oid_noalloc(oid_idx->oids, oid_idx->len, &oidLen,
                            NULL, 0, &var_smeErrIndex);
-    oid_idx->len=oidLen;
+    oid_idx->len=(int)oidLen;
     if(err)
         snmp_log(LOG_ERR,"error %d converting index to oid\n", err);
 

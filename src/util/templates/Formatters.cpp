@@ -357,15 +357,15 @@ void StringFormatter::format(std::string& output,
     const char* length = entity.getOption("length");
     if (align && length)
     {
-        int tmp_len = strlen(str);
-        int str_len = atoi(length);
+        size_t tmp_len = strlen(str);
+        size_t str_len = atoi(length);
         if (str_len < tmp_len || str_len <= 0)
         {
             output += str;
         }
         else if (strcmp(align, "center") == 0)
         {
-            int ind_len = (str_len-tmp_len)/2;
+            size_t ind_len = (str_len-tmp_len)/2;
             output.append(ind_len, ' ');
             output += str;
             output.append(str_len-tmp_len-ind_len, ' ');

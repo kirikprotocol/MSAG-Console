@@ -152,6 +152,9 @@ static inline void DumpPduBuffer(smsc::logger::Logger* log,const char* prefix,co
   log->log(smsc::logger::Logger::LEVEL_DEBUG,"%s",res.c_str());
 }
 
+extern "C" typedef void (*SigFunc)(int);
+
+
 class SmppReader:public SmppThread{
 public:
   SmppReader(SmppPduEventListener *lst,Socket *sock,int it,int dt):
@@ -168,7 +171,7 @@ public:
   static void sigdisp(int sig)
   {
     if(StaticHolder<0>::olddisp && StaticHolder<0>::olddisp!=SIG_HOLD && StaticHolder<0>::olddisp!=SIG_ERR &&
-       StaticHolder<0>::olddisp!=sigdisp)
+       StaticHolder<0>::olddisp!=(SigFunc)sigdisp)
     {
       StaticHolder<0>::olddisp(sig);
     }
@@ -182,7 +185,7 @@ public:
 #ifndef _WIN32
     if(StaticHolder<0>::olddisp==0)
     {
-      StaticHolder<0>::olddisp=sigset(16,sigdisp);
+      StaticHolder<0>::olddisp=sigset(16,(SigFunc)sigdisp);
     }
 #endif
     SmppHeader *pdu;
@@ -234,7 +237,7 @@ protected:
   template <int n>
   struct StaticHolder
   {
-    static void (*olddisp)(int);
+    static SigFunc olddisp;
   };
 #endif
 
@@ -314,7 +317,7 @@ protected:
 
 #ifndef _WIN32
 template <int n>
-void (*SmppReader::StaticHolder<n>::olddisp)(int)=0;
+SigFunc SmppReader::StaticHolder<n>::olddisp=0;
 #endif
 
 class SmppWriter:public SmppThread{

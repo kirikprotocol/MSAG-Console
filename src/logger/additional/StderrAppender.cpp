@@ -35,7 +35,7 @@ void StderrAppender::log(const char logLevelName, const char * const category, c
   ::tm lcltm;
   ::localtime_r(&tp.tv_sec, &lcltm);
   pthread_t thrId=::pthread_self();
-  int msec=tp.tv_usec/1000;
+  long msec=tp.tv_usec/1000;
 #endif
   char timeStr[32];
   const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);

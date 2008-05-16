@@ -41,8 +41,8 @@ void Config::processNode(const DOMElement &element,
   throw (DOMException)
 {
   DOMNodeList *list = element.getChildNodes();
-  unsigned listLength = list->getLength();
-  for (unsigned i=0; i<listLength; i++)
+  size_t listLength = list->getLength();
+  for (size_t i=0; i<listLength; i++)
   {
     DOMNode *n = list->item(i);
     if (n->getNodeType() == DOMNode::ELEMENT_NODE)
@@ -89,7 +89,7 @@ void Config::processParamNode(const DOMElement &element,
   }
   else if (strcmp(type, "int") == 0)
   {
-    setInt(name, strtol(value.get(), 0, 0));
+    setInt(name, atoi(value.get()));
   }
   else if (strcmp(type, "bool") == 0)
   {
@@ -370,7 +370,7 @@ void getRootSectionsFromHash(const _HashType & hash, CStrSet &result)
     for (_HashIteratorType i = hash.getIterator(); i.Next(name, value); ) {
         const char * dotpos = strchr(name, '.');
         if (dotpos) { //parameter from some section
-            int sectionNameLen = dotpos - name;
+            size_t sectionNameLen = dotpos - name;
             TmpBuf<char,64> sectName(sectionNameLen + 1);
             memcpy(sectName, name, sectionNameLen);
             sectName[sectionNameLen] = 0;

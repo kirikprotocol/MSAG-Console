@@ -29,7 +29,7 @@ using smsc::core::synchronization::MutexGuard;
 const char logChars[] = {'*', 'D', 'I', 'W', 'E', 'F'};
 const char* const logNames[] = {"NOTSET", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"};
 
-char * vform(const char* format, va_list args,char* buf,int bufsize)
+char * vform(const char* format, va_list args,char* buf,size_t bufsize)
 {
   size_t size = bufsize;
   char* buffer = buf;//new char[size];

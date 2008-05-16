@@ -68,7 +68,7 @@ uint32_t crc32(uint32_t crc,const void* _buf,size_t len)
 {
   if (!_buf) return crc;
   const unsigned char *buf=(const unsigned char *)_buf;
-  crc = crc ^ 0xffffffffL;
+  crc = crc ^ 0xffffffffU;
   while (len >= 8)
   {
     DO8(buf);
@@ -80,7 +80,7 @@ uint32_t crc32(uint32_t crc,const void* _buf,size_t len)
       DO1(buf);
     }while (--len);
   }
-  return crc ^ 0xffffffffL;
+  return crc ^ 0xffffffffU;
 }
 
 } //namespace util

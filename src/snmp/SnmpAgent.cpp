@@ -143,7 +143,7 @@ static char const ident[] = "$Id$";
             case SnmpAgent::NEW  : poid = smscNewAlertFFMROid; oidlen = OID_LENGTH(smscNewAlertFFMROid); break;
             case SnmpAgent::CLEAR: poid = smscClearAlertFFMROid; oidlen = OID_LENGTH(smscClearAlertFFMROid); break;
           }
-          send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, oidlen, notification_vars);
+          send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1, poid, (int)oidlen, notification_vars);
           snmp_free_varbind(notification_vars);
         }
       }else if(vars->recordType==TrapRecord::rtNotification)
@@ -155,7 +155,7 @@ static char const ident[] = "$Id$";
                                   (u_char *) vars->status, sizeof(vars->status));
         send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
                                   statusNotificationOid,
-                                  OID_LENGTH(statusNotificationOid), notification_vars);
+                                  (int)OID_LENGTH(statusNotificationOid), notification_vars);
         snmp_free_varbind(notification_vars);
       }else if(vars->recordType==TrapRecord::rtStatusChange)
       {
@@ -165,7 +165,7 @@ static char const ident[] = "$Id$";
                                   (u_char *) vars->text.c_str(), vars->text.length());
         send_enterprise_trap_vars(SNMP_TRAP_ENTERPRISESPECIFIC, 1,
                                   alertOid,
-                                  OID_LENGTH(alertOid), notification_vars);
+                                  (int)OID_LENGTH(alertOid), notification_vars);
         snmp_free_varbind(notification_vars);
       }
     }

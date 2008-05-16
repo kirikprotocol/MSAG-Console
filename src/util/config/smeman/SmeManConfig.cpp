@@ -75,8 +75,8 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord"));
-    unsigned listLength = list->getLength();
-    for (unsigned i=0; i<listLength; i++)
+    size_t listLength = list->getLength();
+    for (size_t i=0; i<listLength; i++)
     {
       DOMNode *node = list->item(i);
       DOMNamedNodeMap *attrs = node->getAttributes();
@@ -87,8 +87,8 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
       {
         record->rectype = SMPP_SME;
         DOMNodeList *childs = node->getChildNodes();
-        unsigned childsLength = childs->getLength();
-        for (unsigned j=0; j<childsLength; j++)
+        size_t childsLength = childs->getLength();
+        for (size_t j=0; j<childsLength; j++)
         {
           DOMNode *child = childs->item(j);
           if (child->getNodeType() == DOMNode::ELEMENT_NODE)
@@ -97,13 +97,13 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             XmlStr name(childAttrs->getNamedItem(XmlStr("name"))->getNodeValue());
             XmlStr value(childAttrs->getNamedItem(XmlStr("value"))->getNodeValue());
             if (strcmp(name, "typeOfNumber") == 0) {
-              record->recdata.smppSme.typeOfNumber = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.typeOfNumber = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "priority") == 0) {
-              record->priority = strtoll(value.c_str(), (char**)0, 0);
+              record->priority = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "numberingPlan") == 0) {
-              record->recdata.smppSme.numberingPlan = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.numberingPlan = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "interfaceVersion") == 0) {
-              record->recdata.smppSme.interfaceVersion = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.interfaceVersion = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "systemType") == 0) {
               record->recdata.smppSme.systemType = value.c_release();
             } else if (strcmp(name.c_str(), "password") == 0) {
@@ -111,13 +111,13 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.c_str(), "addrRange") == 0) {
               record->recdata.smppSme.addrRange = value.c_release();
             } else if (strcmp(name.c_str(), "smeN") == 0) {
-              record->recdata.smppSme.smeN = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.smeN = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "timeout") == 0) {
-              record->recdata.smppSme.timeout = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.timeout = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "proclimit") == 0) {
-              record->recdata.smppSme.proclimit = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.proclimit = atoi(value.c_str());
             } else if (strcmp(name.c_str(), "schedlimit") == 0) {
-              record->recdata.smppSme.schedlimit = strtoll(value.c_str(), (char**)0, 0);
+              record->recdata.smppSme.schedlimit = atoi(value.c_str());
             } else if (strcmp(name.c_str(),"forceDC") == 0) {
               record->recdata.smppSme.forceDC=!strcmp(value.c_str(),"true");
             } else if (strcmp(name.c_str(),"wantAlias") == 0) {
@@ -141,7 +141,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.c_str(), "accessMask") == 0) {
               if(sscanf(value.c_str(),"0x%x",&record->recdata.smppSme.accessMask)!=1)
               {
-                record->recdata.smppSme.accessMask = strtoll(value.c_str(), (char**)0, 0);
+                record->recdata.smppSme.accessMask = atoi(value.c_str());
               }
             } else {
               smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());

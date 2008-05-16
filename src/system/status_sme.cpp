@@ -232,9 +232,8 @@ int StatusSme::Execute()
         char buf2[64];
         ctime_r(&c.headTime,buf1);
         ctime_r(&c.lastValidTime,buf2);
-        strprintf(answer,"headTime:%s, validTime=%s, inTL=%s, inPM=%s, dpf=%s, queueSize=%d",
-                  buf1,buf2,c.inTimeLine?"true":"false",c.inProcMap?"true":"false",
-                  c.dpfPresent?"true":"false",c.queueSize);
+        strprintf(answer,"headTime:%s, validTime=%s, inTL=%s, inPM=%s, queueSize=%d",
+                  buf1,buf2,c.inTimeLine?"true":"false",c.inProcMap?"true":"false",c.queueSize);
       }else
       {
         answer="Chain not found or in processing";

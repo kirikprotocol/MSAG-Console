@@ -103,9 +103,11 @@ void ThreadPool::stopNotify()
   Unlock();
 }
 
+extern "C" typedef void (*SignalHandler)(int);
+
 void ThreadPool::shutdown(uint32_t timeout)
 {
-  sigset(16,disp);
+  sigset(SIGUSR1,(SignalHandler)disp);
   Lock();
   if(usedThreads.Count()==0 && freeThreads.Count()==0)
   {

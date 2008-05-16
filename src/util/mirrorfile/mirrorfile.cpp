@@ -34,7 +34,7 @@ bool DirExists(const char* dir)
 
 bool MakePath(const std::string& path)
 {
-  int idx=0;
+  size_t idx=0;
   std::string purePath=path.substr(0,path.rfind('/'));
   if(DirExists(purePath.c_str()))return true;
   for(;;)
@@ -216,6 +216,24 @@ struct DupeGlobalFileEventHandler:smsc::core::buffers::GlobalFileEventHandler{
   {
     if(broken)return;
     unlink(makeMirrorFilename(fileName).c_str());
+  }
+
+  virtual void onMkDir(const char* dirName,int mode)
+  {
+    if(broken)
+    {
+      return;
+    }
+    mkdir(makeMirrorFilename(dirName).c_str(),mode);
+  }
+
+  virtual void onRmDir(const char* dirName)
+  {
+    if(broken)
+    {
+      return;
+    }
+    rmdir(makeMirrorFilename(dirName).c_str());
   }
 
   void DummyMethod(){}

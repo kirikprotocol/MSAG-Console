@@ -193,6 +193,7 @@ int main(int argc,char* argv[])
     printf("Available fields:\n");
     DumpAllFields(allFields);
     printf("\nRemove abonents with specified numbers:\nremoveabonents={filename}\n");
+    printf("Apply changes to abonents with prefix only:\nprefix=addrprefix\n");
     return 0;
   }
   smsc::logger::Logger::Init();
@@ -228,6 +229,7 @@ int main(int argc,char* argv[])
   }catch(std::exception& e)
   {
     printf("Exception:%s\n",e.what());
+    return 0;
   }
   std::set<Address> filter;
 

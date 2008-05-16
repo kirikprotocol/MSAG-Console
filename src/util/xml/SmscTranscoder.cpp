@@ -64,7 +64,7 @@ unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
     size_t ret = iconv(iconvHandlerFrom, (iconvinputarg_t)&inbuf, &inbytesleft, &outbuf, &tmp);
     outbytesleft -= (sizeof(XMLCh)-tmp);
     if (ret != (size_t)-1 || errno == E2BIG) {
-      *(charSizesPtr++)= lastInLeft - inbytesleft;
+      *(charSizesPtr++)= (unsigned char)(lastInLeft - inbytesleft);
       lastInLeft = inbytesleft;
     } else {
       //error
@@ -73,9 +73,9 @@ unsigned int SmscTranscoder::transcodeFrom(const XMLByte *const srcData,
   }
   if (((XMLCh*)outbuf) < toFill + maxChars)
     *(XMLCh*)outbuf = 0;
-  bytesEaten = srcCount - inbytesleft;
+  bytesEaten = (unsigned int)(srcCount - inbytesleft);
   size_t result = maxChars - outbytesleft/sizeof(XMLCh);
-  return result;
+  return (unsigned int)result;
 }
 
 unsigned int SmscTranscoder::transcodeTo(const XMLCh *const srcData,
@@ -93,8 +93,8 @@ unsigned int SmscTranscoder::transcodeTo(const XMLCh *const srcData,
   if (ret != (size_t)-1) {
     if ((XMLByte*)outbuf < toFill + maxBytes)
       *outbuf = 0;
-    charsEaten = srcCount - inbytesleft/sizeof(XMLCh);
-    return maxBytes - outbytesleft;
+    charsEaten = (unsigned int)(srcCount - inbytesleft/sizeof(XMLCh));
+    return (unsigned int)(maxBytes - outbytesleft);
   }
   else
     return 0;

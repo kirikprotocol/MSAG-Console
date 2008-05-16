@@ -61,7 +61,7 @@ public:
   {
     hrtime_t now=gethrtime();
     hrtime_t hrdif=(now-lastTime)/1000000;
-    unsigned int diff=(hrdif+slotRes/2)/slotRes;
+    unsigned int diff=(unsigned int)((hrdif+slotRes/2)/slotRes);
     //diff=(diff+500000)/1000000;
     if(diff==0)
     {

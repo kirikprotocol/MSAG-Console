@@ -37,7 +37,7 @@ void ResponseWriter::writeLength(size_t length)
 	uint8_t buf[4];
 	for (int i=0; i<4; i++)
 	{
-		buf[3-i] = length & 0xFF;
+		buf[3-i] = (uint8_t)(length & 0xFF);
 		length >>= 8;
 	}
 	writeBuf(buf, sizeof(buf));
@@ -48,7 +48,7 @@ void ResponseWriter::writeBuf(const void * const buf, size_t len)
 {
 	for (long writed = 0; writed < (long)len; )
 	{
-		int writed_now = sock->Write((const char *)(buf) + writed, len - writed);
+		int writed_now = sock->Write((const char *)(buf) + writed, (int)(len - writed));
 		if (writed_now == 0 || writed_now == -1)
 		{
 			throw AdminException("Connect broken");

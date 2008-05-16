@@ -181,13 +181,13 @@ smeStatTable_cache_load(netsnmp_container *container)
   smsc::smeman::SmeManager* smeman=getSmeMan();
   smsc::stat::SmeStats* smestat=getSmeStats();
 
-  int cnt=smeman->getSmesCount();
+  size_t smeCnt=smeman->getSmesCount();
   smsc::smeman::SmeInfo info;
 
-  for(smeStatIndex=0;smeStatIndex<cnt; smeStatIndex++)
+  for(smeStatIndex=0;smeStatIndex<smeCnt; smeStatIndex++)
   {
     try{
-      info=smeman->getSmeInfo(smeStatIndex);
+      info=smeman->getSmeInfo((uint32_t)smeStatIndex);
     }catch(...)
     {
       continue;

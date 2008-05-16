@@ -52,7 +52,7 @@ String::String(const String& src)
 String::String(const char* src)
 {
   _nocase=0;
-  _length=strlen(src);
+  _length=(int)strlen(src);
   _size=_length+16;
   _str=new char[_size];
   xmemcpy(_str,src,_length+1);
@@ -108,7 +108,7 @@ void String::operator=(const String& src)
 
 void String::operator=(const char* src)
 {
-  int len=strlen(src);
+  int len=(int)strlen(src);
   SetSize(len);
   _length=len;
   xmemcpy(_str,src,_length+1);
@@ -344,7 +344,7 @@ void String::operator+=(const String& src)
 
 void String::operator+=(const char* src)
 {
-  int srclength=strlen(src);
+  int srclength=(int)strlen(src);
   Resize(_length+srclength);
   xmemcpy(_str+_length,src,srclength+1);
   _length+=srclength;
@@ -425,7 +425,7 @@ String String::Substr(int index,int count)const
 
 void String::Set(const char* src,int index,int count)
 {
-  int srclength=strlen(src);
+  int srclength=(int)strlen(src);
   if(index>=srclength)
   {
     _length=0;
@@ -449,7 +449,7 @@ void String::Set(const char* src,int index,int count)
 
 void String::Concat(const char* src,int index,int count)
 {
-  int srclength=strlen(src);
+  int srclength=(int)strlen(src);
   if(index>=srclength)
   {
     _length=0;
@@ -479,7 +479,7 @@ int String::Index(const String& substr,int pos)const
 
 int String::Index(const char* substr,int pos)const
 {
-  return _Index(substr,strlen(substr),pos);
+  return _Index(substr,(int)strlen(substr),pos);
 }
 
 int String::_Index(const char* substr,int substrlength,int pos)const
@@ -573,7 +573,7 @@ int String::RIndex(const String& substr,int pos)const
 
 int String::RIndex(const char* substr,int pos)const
 {
-  return _RIndex(substr,strlen(substr),pos);
+  return _RIndex(substr,(int)strlen(substr),pos);
 }
 
 
@@ -594,7 +594,7 @@ void String::Insert(int index,const String& ins)
 
 void String::Insert(int index,const char* ins)
 {
-  int inslength=strlen(ins);
+  int inslength=(int)strlen(ins);
   int newlength=_length+inslength;
   if(index<0)index+=_length;
   if(index>_length)
@@ -643,7 +643,7 @@ int String::Replace(const String& src,const String& dst)
 int String::Replace(const char* src,const char* dst)
 {
   String tmp;
-  int srclength=strlen(src);
+  int srclength=(int)strlen(src);
   int i=0,j=0,cnt=0;
   while((i=Index(src,i))!=-1)
   {
@@ -682,7 +682,7 @@ void String::Fill(char src,int num)
 
 int String::Sprintf(const char *fmt,...)
 {
-  SetSize(strlen(fmt)*4);
+  SetSize((int)strlen(fmt)*4);
   va_list arglist;
   int res;
   do{
@@ -705,7 +705,7 @@ int String::Sprintf(const char *fmt,...)
 
 int String::AppendSprintf(const char *fmt,...)
 {
-  Resize(_length+strlen(fmt)*4);
+  Resize(_length+(int)strlen(fmt)*4);
   va_list arglist;
   int res;
   do{
@@ -855,7 +855,7 @@ int String::LoadFromFile(const char* filename)
   FILE *f=fopen(filename,"rb");
   if(!f)return 0;
   fseek(f,0,SEEK_END);
-  int size=ftell(f);
+  int size=(int)ftell(f);
   fseek(f,0,SEEK_SET);
   SetSize(size);
   if(fread(_str,1,size,f)!=size)

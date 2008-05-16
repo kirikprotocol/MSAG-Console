@@ -30,7 +30,7 @@ int main(int argc,char* argv[])
   const uint32_t ver=0x00010001;
 #endif
     //storeFileName=filename;
-    hrtime_t st=gethrtime();
+    //hrtime_t st=gethrtime();
 
     File storeFile;
 

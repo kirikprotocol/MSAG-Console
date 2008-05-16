@@ -150,7 +150,7 @@ smeStatTable_indexes_set(smeStatTable_rowreq_ctx *rowreq_ctx, long smeStatIndex_
     /*
      * convert mib index to oid index
      */
-    rowreq_ctx->oid_idx.len = sizeof(rowreq_ctx->oid_tmp) / sizeof(oid);
+    rowreq_ctx->oid_idx.len = (int)(sizeof(rowreq_ctx->oid_tmp) / sizeof(oid));
     if(0 != smeStatTable_index_to_oid(&rowreq_ctx->oid_idx,
                                     &rowreq_ctx->tbl_idx)) {
         return MFD_ERROR;
@@ -201,7 +201,7 @@ SME system Id.
 int
 smeStatSystemId_map(char **mib_smeStatSystemId_val_ptr_ptr, size_t *mib_smeStatSystemId_val_ptr_len_ptr, char *raw_smeStatSystemId_val_ptr, size_t raw_smeStatSystemId_val_ptr_len, int allow_realloc)
 {
-    int converted_len;
+    size_t converted_len;
 
     netsnmp_assert(NULL != raw_smeStatSystemId_val_ptr);
     netsnmp_assert((NULL != mib_smeStatSystemId_val_ptr_ptr) && (NULL != mib_smeStatSystemId_val_ptr_len_ptr));

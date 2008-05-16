@@ -9,6 +9,7 @@ namespace smsc{
 namespace core{
 namespace threads{
 
+extern "C" typedef void* (*ThreadFunc)(void*);
 
 #ifdef _WIN32
 void Thread::ThreadRunner(void* obj)
@@ -36,7 +37,7 @@ void Thread::Start()
   if ( _beginthread(&Thread::ThreadRunner,0,(void*)this) != -1 )
     while ( !thread ) Sleep(10);
 #else
-  if(pthread_create(&thread,NULL,&Thread::ThreadRunner,this)!=0)
+  if(pthread_create(&thread,NULL,(ThreadFunc)&Thread::ThreadRunner,this)!=0)
   {
     thread=0;
   };
@@ -48,7 +49,7 @@ void Thread::Start(int stacksize)
 #ifdef _WIN32
   thread=(HANDLE)_beginthread(&Thread::ThreadRunner,stacksize,(void*)this);
 #else
-  if(pthread_create(&thread,NULL,&Thread::ThreadRunner,this)!=0)
+  if(pthread_create(&thread,NULL,(ThreadFunc)&Thread::ThreadRunner,this)!=0)
   {
     thread=0;
   };

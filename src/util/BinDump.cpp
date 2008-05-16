@@ -17,15 +17,15 @@ const HexDumpCFG _HexDump_CVCS = { 1, 0, ",", "0x"}; //C Value Comma Separated
 
 static const char _HexChars[] = "0123456789ABCDEF";
 
-unsigned DumpHex(unsigned length, const unsigned char * buf,
+unsigned DumpHex(unsigned long length, const unsigned char * buf,
                 StreamAppenderITF * usr_print,
                 const HexDumpCFG & use_cfg/* = _HexDump_DFLT*/)
 {
     HexDumpCFG      cfg;
-    cfg.grpOcts = !use_cfg.grpOcts ? length : 
-                        ((use_cfg.grpOcts < length) ? use_cfg.grpOcts : length);
-    cfg.lineOcts = !use_cfg.lineOcts ? length : 
-                        ((use_cfg.lineOcts < length) ? use_cfg.lineOcts : length);
+    cfg.grpOcts = (unsigned)(!use_cfg.grpOcts ? length : 
+                        ((use_cfg.grpOcts < length) ? use_cfg.grpOcts : length));
+    cfg.lineOcts = (unsigned)(!use_cfg.lineOcts ? length : 
+                        ((use_cfg.lineOcts < length) ? use_cfg.lineOcts : length));
     cfg.grpSpr   = use_cfg.grpSpr ? use_cfg.grpSpr : _HexDump_DFLT.grpSpr;
     cfg.octPrf   = use_cfg.octPrf ? use_cfg.octPrf : _HexDump_DFLT.octPrf;
 
@@ -103,7 +103,7 @@ inline unsigned typeChar(const char & sym, StreamAppenderITF * &usr_print)
 }
 
 
-unsigned DumpDbg(unsigned length, const unsigned char * buf, StreamAppenderITF * usr_print)
+unsigned DumpDbg(unsigned long length, const unsigned char * buf, StreamAppenderITF * usr_print)
 {
     unsigned    octet = OCTETS_PER_LINE;
     unsigned    offset = 0, byteId = 0, printed = 0;

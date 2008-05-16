@@ -82,16 +82,16 @@ Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
 {
   DOMNodeList *maskElems = elem.getElementsByTagName(XmlStr("mask"));
   MaskVector masks;
-  unsigned maskElemsLength = maskElems->getLength();
-  for (unsigned i=0; i<maskElemsLength; i++)
+  size_t maskElemsLength = maskElems->getLength();
+  for (size_t i=0; i<maskElemsLength; i++)
   {
     DOMElement *mask = (DOMElement *) maskElems->item(i);
     masks.push_back(Mask(XmlStr(mask->getAttribute(XmlStr("value")))));
   }
   MaskVector refs;
   DOMNodeList *subjElems = elem.getElementsByTagName(XmlStr("subject"));
-  unsigned subjElemsLength = subjElems->getLength();
-  for(unsigned i=0;i<subjElemsLength;i++)
+  size_t subjElemsLength = subjElems->getLength();
+  for(size_t i=0;i<subjElemsLength;i++)
   {
     DOMElement *subj = (DOMElement *) subjElems->item(i);
     XmlStr subjId(subj->getAttribute(XmlStr("id")));
@@ -212,7 +212,7 @@ throw (SubjectNotFoundException)
   XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
   XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
-  const AclIdent aclId(atol(XmlStr(elem.getAttribute(XmlStr("aclId")))));
+  const AclIdent aclId(atoi(XmlStr(elem.getAttribute(XmlStr("aclId")))));
   XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
   const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
@@ -251,16 +251,16 @@ throw (SubjectNotFoundException)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
-  unsigned srcsLength = srcs->getLength();
-  for (unsigned i=0; i<srcsLength; i++)
+  size_t srcsLength = srcs->getLength();
+  for (size_t i=0; i<srcsLength; i++)
   {
     DOMElement *srcElem = (DOMElement *)srcs->item(i);
     createRouteSource(*srcElem, subjects, r.get());
   }
 
   DOMNodeList *dsts = elem.getElementsByTagName(XmlStr("destination"));
-  unsigned dstsLength = dsts->getLength();
-  for (unsigned i=0; i<dstsLength; i++)
+  size_t dstsLength = dsts->getLength();
+  for (size_t i=0; i<dstsLength; i++)
   {
     DOMElement *dstElem = (DOMElement *)dsts->item(i);
     createRouteDestination(*dstElem, subjects, r.get());
@@ -303,11 +303,11 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *subj_defs = elem->getElementsByTagName(XmlStr("subject_def"));
     // Subjects
-    unsigned subj_defsLength = subj_defs->getLength();
+    size_t subj_defsLength = subj_defs->getLength();
 
     std::list<Subject*> subjs;
 
-    for (unsigned i=0; i<subj_defsLength; i++)
+    for (size_t i=0; i<subj_defsLength; i++)
     {
       DOMElement *elem2 = (DOMElement *)subj_defs->item(i);
       Subject *s = createSubjectDef(*elem2);
@@ -333,7 +333,7 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       {
         ms.insert(*mit);
       }
-      int before=mv.size();
+      size_t before=mv.size();
       mv.clear();
       for(std::set<Mask>::iterator sit=ms.begin();sit!=ms.end();sit++)
       {
@@ -346,8 +346,8 @@ RouteConfig::status RouteConfig::load(const char * const filename)
 
     // routes
     DOMNodeList *route_list = elem->getElementsByTagName(XmlStr("route"));
-    unsigned route_listLength = route_list->getLength();
-    for (unsigned i=0; i<route_listLength; i++)
+    size_t route_listLength = route_list->getLength();
+    for (size_t i=0; i<route_listLength; i++)
     {
       DOMElement *elem2 = (DOMElement *) route_list->item(i);
       try

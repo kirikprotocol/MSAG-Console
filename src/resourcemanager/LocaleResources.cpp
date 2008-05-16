@@ -37,29 +37,29 @@ void LocaleResources::processParams(const DOMElement &elem, LocaleResources::_st
   {
     XmlStr _name("name");
     DOMNodeList * sectionList = elem.getChildNodes();
-    unsigned sectionListLength = sectionList->getLength();
-    for (int i = 0; i < sectionListLength; i++)
+    size_t sectionListLength = sectionList->getLength();
+    for (size_t i = 0; i < sectionListLength; i++)
     {
       DOMNode * node = sectionList->item(i);
       if (node->getNodeType() == DOMNode::ELEMENT_NODE)
       {
-        DOMElement * elem = (DOMElement*)(node);
-        XmlStr elemName(elem->getNodeName());
+        DOMElement * delem = (DOMElement*)(node);
+        XmlStr elemName(delem->getNodeName());
         if (strcmp(elemName.c_str(), "section") == 0)
         {
           std::string newPrefix = prefix;
           if (!prefix.empty())
             newPrefix += '.';
-          newPrefix += XmlStr(elem->getAttribute(_name));
-          processParams(*elem, _settings, newPrefix);
+          newPrefix += XmlStr(delem->getAttribute(_name));
+          processParams(*delem, _settings, newPrefix);
         }
         else if (strcmp(elemName.c_str(), "param") == 0)
         {
-          XmlStr value(getNodeText(*elem));
+          XmlStr value(getNodeText(*delem));
           std::string paramName = prefix;
           if (!prefix.empty())
             paramName += '.';
-          paramName += XmlStr(elem->getAttribute(_name));
+          paramName += XmlStr(delem->getAttribute(_name));
           _settings[strToLower(paramName)] = value;
         }
       }
@@ -89,16 +89,16 @@ LocaleResources::LocaleResources(const std::string & filename) throw ()
     DOMElement *doc = reader.read(filename.c_str())->getDocumentElement();
 
     DOMNodeList *settingsList = doc->getElementsByTagName(XmlStr("settings"));
-    unsigned settingsListLength = settingsList->getLength();
-    for (unsigned i = 0; i < settingsListLength; i++)
+    size_t settingsListLength = settingsList->getLength();
+    for (size_t i = 0; i < settingsListLength; i++)
     {
       DOMNode *node = settingsList->item(i);
       processParams(*(DOMElement*)(node), settings, "");
     }
 
     DOMNodeList *recourcesList = doc->getElementsByTagName(XmlStr("resources"));
-    unsigned resourcesListLength = recourcesList->getLength();
-    for (unsigned i = 0; i < resourcesListLength; i++)
+    size_t resourcesListLength = recourcesList->getLength();
+    for (size_t i = 0; i < resourcesListLength; i++)
     {
       DOMNode *node = recourcesList->item(i);
       processParams(*(DOMElement*)(node), resources, "");

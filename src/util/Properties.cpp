@@ -17,7 +17,7 @@ Properties::Properties(const char * const filename) throw (Exception)
   char buffer[1024];
   FILE * f = fopen(fn, "r");
   if (f != NULL) {
-    for (char * str = (char*)""; str != NULL; str = fgets(buffer, sizeof(buffer)/sizeof(buffer[0]), f)) {
+    for (char * str = (char*)""; str != NULL; str = fgets(buffer, (int)(sizeof(buffer)/sizeof(buffer[0])), f)) {
       if (str[0] != 0 && str[0] != '#') {
         char * const pos = strchr(str, '=');
         if (pos != NULL) {
@@ -44,7 +44,7 @@ Properties::~Properties()
 
   for (int i = 0; i < count; i++)
   {
-    PropertiesValue val = this->Get(keys[i]);
+    val = this->Get(keys[i]);
     Delete(keys[i]);
     delete [] val;
   }

@@ -33,7 +33,7 @@ __synchronized__
   record->info.internal=false;
   record->proxy = 0;
   record->deleted = false;
-  record->idx = records.size();
+  record->idx = (int)records.size();
   SmeIndex index = internalLookup(info.systemId);
   if ( index != INVALID_SME_INDEX ) throw runtime_error("Already exists");
   records.push_back(record.release());
@@ -461,7 +461,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout,boo
     }
     if(count)info2(log,"total commands in queues:%d",count);
   }
-  if ( !frames.size() ) mon.Wait(timeout);
+  if ( !frames.size() ) mon.Wait((int)timeout);
 }
 
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const

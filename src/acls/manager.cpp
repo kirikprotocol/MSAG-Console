@@ -443,11 +443,11 @@ void AclManager::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclP
   f.Open(getStoreFile(aclident).c_str());
   AclDiskRecord rec;
   char buf[32];
-  unsigned plen = prefix?strlen(prefix):0;
+  size_t plen = prefix?strlen(prefix):0;
   __trace2__("lookupByPrefix(%d):%s",aclident,prefix?prefix:"");
   while(f.Read(rec))
   {
-    int buflen=rec.addr.getText(buf,sizeof(buf));
+    size_t buflen=rec.addr.getText(buf,sizeof(buf));
     __trace2__("read: %s/%d",buf,buflen);
     if(buflen>=plen && (!prefix || memcmp(buf,prefix,plen)==0))
     {

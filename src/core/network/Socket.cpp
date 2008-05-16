@@ -45,7 +45,7 @@ int Socket::Init(const char *host,int port,int timeout)
     char buf[1024];
     int h_err;
     hostent he;
-    lpHostEnt=gethostbyname_r(host, &he, buf, sizeof(buf), &h_err);
+    lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
 #endif
     if(lpHostEnt==NULL)
     {
@@ -69,7 +69,7 @@ int Socket::Connect(bool nb)
 
   if(nb) setNonBlocking(1);
 
-  if(connect(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)) && errno != EINPROGRESS)
+  if(connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)) && errno != EINPROGRESS)
   {
     closesocket(sock);
     sock=INVALID_SOCKET;
@@ -100,7 +100,7 @@ int Socket::ConnectEx(bool nb,const char* bindHost)
     if(BindClient(bindHost)==-1)return -1;
   }
 
-  if(connect(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)) && errno != EINPROGRESS)
+  if(connect(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)) && errno != EINPROGRESS)
   {
     closesocket(sock);
     sock=INVALID_SOCKET;
@@ -139,7 +139,7 @@ void Socket::Abort()
     linger l;
     l.l_onoff=1;
     l.l_linger=0;
-    setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+    setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,(unsigned)sizeof(l));
   }
   Close();
 }
@@ -184,7 +184,7 @@ int Socket::Read(char *buf,int bufsize)
     bufPos+=n;
     return n;
   }
-  return recv(sock,buf,bufsize,0);
+  return (int)recv(sock,buf,bufsize,0);
 }
 
 int Socket::readChar()
@@ -192,7 +192,7 @@ int Socket::readChar()
   if(inBuffer<=0 || bufPos==inBuffer)
   {
     if(canRead()<=0) return -1;
-    inBuffer=Read(buffer,sizeof(buffer));
+    inBuffer=Read(buffer,(int)sizeof(buffer));
     bufPos=0;
   }
   if(inBuffer<=0)return -1;
@@ -202,7 +202,7 @@ int Socket::readChar()
 int Socket::Write(const char *buf,int bufsize)
 {
   if(!connected)return -1;
-  return send(sock,buf,bufsize,0);
+  return (int)send(sock,buf,bufsize,0);
 }
 
 
@@ -247,7 +247,7 @@ int Socket::Printf(const char* fmt,...)
       buf=new char[bufsize];
     }
   }while(res<0);
-  int ret=Write(buf,strlen(buf));
+  int ret=Write(buf,(int)strlen(buf));
   if(buf!=buf_init)delete [] buf;
   va_end (args);
   return ret;
@@ -255,7 +255,7 @@ int Socket::Printf(const char* fmt,...)
 
 int Socket::Puts(const char* str)
 {
-  return Write((char*)str,strlen(str));
+  return Write((char*)str,(int)strlen(str));
 }
 
 int Socket::InitServer(const char *host,int port,int timeout,int lng,bool force)
@@ -268,7 +268,7 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng,bool force)
     int val=1;
     setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,(char*)&val,4);
   }
-  if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))
+  if(bind(sock,(sockaddr*)&sockAddr,(unsigned)sizeof(sockAddr)))
   {
     closesocket(sock);
     return -1;
@@ -276,7 +276,7 @@ int Socket::InitServer(const char *host,int port,int timeout,int lng,bool force)
   linger l;
   l.l_onoff=1;
   l.l_linger=lng;
-  setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,(unsigned)sizeof(l));
   return 0;
 }
 

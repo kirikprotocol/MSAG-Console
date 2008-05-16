@@ -60,7 +60,7 @@ public:
     smeErrors[smeIdx][errCode]++;
   }
 
-  void getErrors(int smeIdx,ErrCntVector& rv)
+  void getErrors(size_t smeIdx,ErrCntVector& rv)
   {
     if(smeIdx<0 || smeIdx>smeStats.size())
     {
@@ -70,7 +70,7 @@ public:
     rv=smeErrors[smeIdx];
   }
 
-  const Counters& getCnt(int smeIdx)
+  const Counters& getCnt(size_t smeIdx)
   {
     if(smeIdx<0 || smeIdx>smeStats.size())
     {

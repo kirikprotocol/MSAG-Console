@@ -628,9 +628,9 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
   buf.WriteNetInt64(profile.offset);
 
   //============= Puts local and divert in buffer =============
-  buf.WriteNetInt32(profile.locale.length());
+  buf.WriteNetInt32((uint32_t)profile.locale.length());
   buf.Write(profile.locale.c_str(),profile.locale.length());
-  buf.WriteNetInt32(profile.divert.length());
+  buf.WriteNetInt32((uint32_t)profile.divert.length());
   buf.Write(profile.divert.c_str(),profile.divert.length());
 
   buf.WriteNetInt32(profile.closedGroupId);
@@ -640,7 +640,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 #ifdef SMSEXTRA
   buf.WriteNetInt32(profile.subscription);
   buf.WriteByte(profile.sponsored);
-  buf.WriteNetInt32(profile.nick.length());
+  buf.WriteNetInt32((uint32_t)profile.nick.length());
   buf.Write(profile.nick.c_str(),profile.nick.length());
 #endif
 
@@ -1107,9 +1107,9 @@ void* SmeAddCommand::serialize(uint32_t &len)
 
   try {
 
-  len = 38 + si.rangeOfAddress.length() + si.systemType.length() +
+  len = (uint32_t)(38 + si.rangeOfAddress.length() + si.systemType.length() +
                 si.password.length() + si.hostname.length() + si.systemId.length() +
-                si.receiptSchemeName.length();
+                si.receiptSchemeName.length());
 
   buffer = new uint8_t[len];
 
@@ -1183,7 +1183,7 @@ void* SmeAddCommand::serialize(uint32_t &len)
 
   memcpy((void*)(buffer + 31), (const void*)&val, 1);
 
-  int sz = 0;
+  size_t sz = 0;
   memcpy((void*)( (uint8_t*)buffer + 32 ),      (const void*)si.rangeOfAddress.c_str(),     si.rangeOfAddress.length() + 1);
   sz += si.rangeOfAddress.length() + 1;
   //printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
@@ -1282,7 +1282,7 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
       break;
   }
 
-  int sz = 0;
+  size_t sz = 0;
   si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false;
   //printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
   si.systemType =           (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemType.length() + 1;       if (32 + sz >= len) return false;
@@ -1594,16 +1594,16 @@ void* AclCreateCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 8 + name.length() + description.length() +
-            cache_type.length() + 3;
+    len = (uint32_t)(8 + name.length() + description.length() +
+            cache_type.length() + 3);
 
     for(std::vector<std::string>::iterator it = phones.begin(); it != phones.end(); ++it){
-        len += it->length() + 1;
+        len += (uint32_t)it->length() + 1;
     }
 
     buffer = new uint8_t[len];
 
-    int sz = 0;
+    size_t sz = 0;
     memcpy((void*)buffer,                       (const void*)name.c_str(),              name.length() + 1);
     //printf("name: '%s', len: %d\n", name.c_str(), name.length());
     sz += name.length() + 1;
@@ -1653,7 +1653,7 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
 
     try {
 
-    int sz = 0;
+    size_t sz = 0;
     name =          (char*)buffer;              sz += name.length() + 1;            if (sz >= len) return false;
     //printf("name: '%s'\n", name.c_str());
     description =   (char*)buffer + sz;         sz += description.length() + 1;     if (sz >= len) return false;
@@ -1661,7 +1661,7 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
     cache_type =    (char*)buffer + sz;         sz += cache_type.length() + 1;      if (sz >= len) return false;
     //printf("cache_type: '%s'\n", cache_type.c_str());
 
-    cache_type_present = cache_type.length();
+    cache_type_present = cache_type.length()!=0;
 
     //================== Gets offset from buffer ======================
 
@@ -1730,8 +1730,8 @@ void* AclUpdateInfoCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 7 + name.length() + description.length() +
-                cache_type.length();
+    len = (uint32_t)(7 + name.length() + description.length() +
+                cache_type.length());
 
     buffer = new uint8_t[len];
 
@@ -1741,7 +1741,7 @@ void* AclUpdateInfoCommand::serialize(uint32_t &len)
     value32 = htonl(aclId);
     memcpy((void*)buffer, (const void*)&value32, 4);
 
-    int sz = 4;
+    size_t sz = 4;
     memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)name.c_str(),         name.length() + 1);
     sz += name.length() + 1;
     //printf("name: '%s', len: %d, sz: %d\n", name.c_str(), name.length(), sz);
@@ -1770,7 +1770,7 @@ bool AclUpdateInfoCommand::deserialize(void *buffer, uint32_t len)
     aclId = ntohl(value32);
     //printf("aclId: %d\n", aclId);
 
-    int sz = 4;
+    size_t sz = 4;
     name =          (char*)buffer + sz;   sz += name.length() + 1;          if(sz >= len) return false;
     //printf("name: '%s', len: %d, sz: %d\n", name.c_str(), name.length(), sz);
     description =   (char*)buffer + sz;   sz += description.length() + 1;   if(sz >= len) return false;
@@ -1813,7 +1813,7 @@ void* AclRemoveAddressesCommand::serialize(uint32_t &len)
     len = 4;
 
     for(std::vector<std::string>::iterator it = addresses.begin(); it != addresses.end(); ++it){
-        len += it->length() + 1;
+        len += (uint32_t)(it->length() + 1);
     }
 
     buffer = new uint8_t[len];
@@ -1823,7 +1823,7 @@ void* AclRemoveAddressesCommand::serialize(uint32_t &len)
     value32 = htonl(aclId);
     memcpy((void*)buffer, (const void*)&value32, 4);
 
-    int sz = 4;
+    size_t sz = 4;
 
     for(std::vector<std::string>::iterator it = addresses.begin(); it != addresses.end(); ++it){
         memcpy((void*)( (char*)buffer + sz ), (const void*)it->c_str(), it->length() + 1);
@@ -1850,7 +1850,7 @@ bool AclRemoveAddressesCommand::deserialize(void *buffer, uint32_t len)
     aclId = ntohl(value32);
     //printf("aclId: %d\n", aclId);
 
-    int sz = 4;
+    size_t sz = 4;
     while(sz < len){
         std::string address = (char*)buffer + sz;     sz += address.length() + 1;
         addresses.push_back(address);
@@ -1898,7 +1898,7 @@ void* AclAddAddressesCommand::serialize(uint32_t &len)
     len = 4;
 
     for(std::vector<std::string>::iterator it = addresses.begin(); it != addresses.end(); ++it){
-        len += it->length();
+        len += (uint32_t)it->length();
     }
 
     buffer = new uint8_t[len];
@@ -1909,7 +1909,7 @@ void* AclAddAddressesCommand::serialize(uint32_t &len)
     memcpy((void*)buffer, (const void*)&value32, 4);
 
 
-    int sz = 4;
+    size_t sz = 4;
 
     for(std::vector<std::string>::iterator it = addresses.begin(); it != addresses.end(); ++it){
         memcpy((void*)( (char*)buffer + sz ), (const void*)it->c_str(), it->length() + 1);
@@ -1935,9 +1935,10 @@ bool AclAddAddressesCommand::deserialize(void *buffer, uint32_t len)
     aclId = ntohl(value32);
     //printf("\naclId: %d\n", aclId);
 
-    int sz = 4;
+    size_t sz = 4;
     while(sz < len){
-        std::string address = (char*)buffer + sz;     sz += address.length() + 1;
+        std::string address = (char*)buffer + sz;
+        sz += address.length() + 1;
         addresses.push_back(address);
         //printf("address: '%s'\n", address.c_str());
     }
@@ -1976,7 +1977,7 @@ void* PrcAddPrincipalCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 17 + address.length();
+    len = (uint32_t)(17 + address.length());
 
     buffer = new uint8_t[len];
 
@@ -2087,7 +2088,7 @@ void* PrcDeletePrincipalCommand::serialize(uint32_t &len)
 
     try {
 
-    len = address.length() + 1;
+    len = (uint32_t)(address.length() + 1);
 
     buffer = new uint8_t[len];
 
@@ -2143,7 +2144,7 @@ void* PrcAlterPrincipalCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 9 + addresses.length();
+    len = (uint32_t)(9 + addresses.length());
 
     buffer = new uint8_t[len];
 
@@ -2213,7 +2214,7 @@ void* MemAddMemberCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 10 + dlname.length() + address.length();
+    len = (uint32_t)(10 + dlname.length() + address.length());
 
     buffer = new uint8_t[len];
 
@@ -2235,7 +2236,7 @@ void* MemAddMemberCommand::serialize(uint32_t &len)
 
     //============== Puts strings params ========================
 
-    int sz = 8;
+    size_t sz = 8;
     memcpy((void*)buffer,                       (const void*)dlname.c_str(),    dlname.length() + 1);
     sz += dlname.length() + 1;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2276,7 +2277,7 @@ bool MemAddMemberCommand::deserialize(void *buffer, uint32_t len)
 
     //=============== Gets strings params ===============
 
-    int sz = 8;
+    size_t sz = 8;
     dlname =    (char*)buffer;          sz += dlname.length() + 1;      if (sz >= len) return false;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     address =   (char*)buffer + sz;
@@ -2311,11 +2312,11 @@ void* MemDeleteMemberCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 2 + dlname.length() + address.length();
+    len = (uint32_t)(2 + dlname.length() + address.length());
 
     buffer = new uint8_t[len];
 
-    int sz = 0;
+    size_t sz = 0;
     memcpy((void*)buffer,                       (const void*)dlname.c_str(),    dlname.length() + 1);
     sz += dlname.length() + 1;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2335,7 +2336,7 @@ bool MemDeleteMemberCommand::deserialize(void *buffer, uint32_t len)
 
     try {
 
-    int sz = 0;
+    size_t sz = 0;
     dlname =    (char*)buffer;          sz += dlname.length() + 1;      if (sz >= len) return false;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     address =   (char*)buffer + sz;
@@ -2372,7 +2373,7 @@ void* SbmAddSubmiterCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 10 + dlname.length() + address.length();
+    len = (uint32_t)(10 + dlname.length() + address.length());
 
     buffer = new uint8_t[len];
 
@@ -2394,7 +2395,7 @@ void* SbmAddSubmiterCommand::serialize(uint32_t &len)
 
     //============== Puts strings params ========================
 
-    int sz = 8;
+    size_t sz = 8;
     memcpy((void*)buffer,                       (const void*)dlname.c_str(),    dlname.length() + 1);
     sz += dlname.length() + 1;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2435,7 +2436,7 @@ bool SbmAddSubmiterCommand::deserialize(void *buffer, uint32_t len)
 
     //=============== Gets strings params =================
 
-    int sz = 8;
+    size_t sz = 8;
     dlname =    (char*)buffer;          sz += dlname.length() + 1;      if (sz >= len) return false;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     address =   (char*)buffer + sz;
@@ -2470,11 +2471,11 @@ void* SbmDeleteSubmiterCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 2 + dlname.length() + address.length();
+    len = (uint32_t)(2 + dlname.length() + address.length());
 
     buffer = new uint8_t[len];
 
-    int sz = 0;
+    size_t sz = 0;
     memcpy((void*)buffer,                       (const void*)dlname.c_str(),    dlname.length() + 1);
     sz += dlname.length() + 1;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2494,7 +2495,7 @@ bool SbmDeleteSubmiterCommand::deserialize(void *buffer, uint32_t len)
 
     try {
 
-    int sz = 0;
+    size_t sz = 0;
     dlname =    (char*)buffer;          sz += dlname.length() + 1;      if (sz >= len) return false;
     //printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     address =   (char*)buffer + sz;
@@ -2535,7 +2536,7 @@ void* DlAddCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 22 + dlname.length() + owner.length();
+    len = (uint32_t)(22 + dlname.length() + owner.length());
 
     buffer = new uint8_t[len];
 
@@ -2544,7 +2545,7 @@ void* DlAddCommand::serialize(uint32_t &len)
     //printf("maxElements: %d\n", maxElements);
     value32 = htonl(maxElements);
     memcpy((void*)buffer, (const void*)&value32, 4);
-    int sz = 4;
+    size_t sz = 4;
 
     //============= Puts offset =================================
 
@@ -2605,7 +2606,7 @@ bool DlAddCommand::deserialize(void *buffer, uint32_t len)
     maxElements = ntohl(value32);
     //printf("maxElements: %d\n", maxElements);
 
-    int sz = 4;
+    size_t sz = 4;
 
     //================= Gtes offset ========================
 
@@ -2678,7 +2679,7 @@ void* DlDeleteCommand::serialize(uint32_t &len)
 
     try {
 
-    len = dlname.length() + 1;
+    len = (uint32_t)(dlname.length() + 1);
 
     buffer = new uint8_t[len];
 
@@ -2730,7 +2731,7 @@ void* DlAlterCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 5 + dlname.length();
+    len = (uint32_t)(5 + dlname.length());
 
     buffer = new uint8_t[len];
 
@@ -2809,7 +2810,7 @@ void ReadString(SerializationBuffer& buf,StringType& str)
 template <class StringType>
 void WriteString(SerializationBuffer& buf,const StringType& str)
 {
-  buf.WriteNetInt32(str.length());
+  buf.WriteNetInt32((uint32_t)str.length());
   buf.Write(str.c_str(),str.length());
 }
 
