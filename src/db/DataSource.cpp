@@ -419,7 +419,7 @@ int WatchDog::Execute()
             TimersIterator it = timers.begin();
             int timer = it->first;
             ConnectionDeadline cd = it->second;
-            int32_t left = cd.deadline - time(NULL);
+            int32_t left = (int32_t)(cd.deadline - time(NULL));
             if (left <=0)
             {
                 smsc_log_warn(log, "DS WatchDog> Timer #%u expired for connection %x. "
