@@ -23,7 +23,12 @@
 #include "util/int.h"
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
 #include <fcntl.h>
+#include <vector>
+#include <string>
+
+#include "core/buffers/TmpBuf.hpp"
 
 #ifdef _WIN32
 # include <winsock2.h>
@@ -54,7 +59,9 @@ public:
   enum{
     errOpenFailed,errReadFailed,errEndOfFile,
     errWriteFailed,errSeekFailed,errFileNotOpened,
-    errRenameFailed,errUnlinkFailed,errFlushFailed
+    errRenameFailed,errUnlinkFailed,errFlushFailed,
+    errMkDirFailed,errRmDirFailed,
+    errOpenDirFailed,errReadDirFailed
   };
   FileException(int err):errCode(err)
   {
@@ -122,6 +129,26 @@ public:
         errbuf+=":";
         errbuf+=strerror(error);
         return errbuf.c_str();
+      case errMkDirFailed:
+        errbuf="Failed to create directory"+errbuf;
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errRmDirFailed:
+        errbuf="Failed to remove directory"+errbuf;
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errOpenDirFailed:
+        errbuf="Failed to open directory"+errbuf;
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
+      case errReadDirFailed:
+        errbuf="Failed to read directory"+errbuf;
+        errbuf+=":";
+        errbuf+=strerror(error);
+        return errbuf.c_str();
       default: return "Unknown error";
     }
   }
@@ -143,6 +170,8 @@ public:
   virtual void onDestroyFileObject(File*)=0;
   virtual void onRename(const char* oldName,const char* newName)=0;
   virtual void onUnlink(const char* fileName)=0;
+  virtual void onMkDir(const char* dirName,int mode)=0;
+  virtual void onRmDir(const char* dirName)=0;
 
   virtual ~GlobalFileEventHandler(){}
   static void setGlobalFileEventHandler(GlobalFileEventHandler* hnd)
@@ -954,12 +983,124 @@ public:
     }
   }
 
+  void RenameExt(const char* newext)
+  {
+    std::string newFileName=filename;
+    std::string::size_type pos=newFileName.rfind('.');
+    if(pos!=std::string::npos)
+    {
+      newFileName.erase(pos);
+    }
+    newFileName+='.';
+    newFileName+=newext;
+    Rename(newFileName.c_str());
+  }
+
   static void Unlink(const char* fn)
   {
     if(unlink(fn)!=0)throw FileException(FileException::errUnlinkFailed,fn);
     if(GlobalFileEventHandler::getGlobalFileEventHandler())
     {
       GlobalFileEventHandler::getGlobalFileEventHandler()->onUnlink(fn);
+    }
+  }
+
+  static void MkDir(const char* dirName,int mode=0755)
+  {
+    if(mkdir(dirName,mode)!=0)throw FileException(FileException::errMkDirFailed,dirName);
+    if(GlobalFileEventHandler::getGlobalFileEventHandler())
+    {
+      GlobalFileEventHandler::getGlobalFileEventHandler()->onMkDir(dirName,mode);
+    }
+  }
+
+  static void RmDir(const char* dirName)
+  {
+    if(rmdir(dirName)!=0)throw FileException(FileException::errRmDirFailed,dirName);
+    if(GlobalFileEventHandler::getGlobalFileEventHandler())
+    {
+      GlobalFileEventHandler::getGlobalFileEventHandler()->onRmDir(dirName);
+    }
+  }
+
+  enum ReadDirFilter{
+    rdfAll,
+    rdfFilesOnly,
+    rdfDirsOnly,
+    rdfFullPath=0x1000,
+    rdfNoDots=0x2000
+  };
+
+  friend File::ReadDirFilter operator|(File::ReadDirFilter a,File::ReadDirFilter b)
+  {
+    return (File::ReadDirFilter)((int)a|(int)b);
+  }
+
+
+  static void ReadDir(const char* dirName,std::vector<std::string>& dirContents,ReadDirFilter flt=rdfAll|rdfNoDots)
+  {
+    DIR* dir=opendir(dirName);
+    TmpBuf<char,512> buf(sizeof(dirent)+pathconf(dirName,_PC_NAME_MAX)+1);
+    dirent* de=(dirent*)buf.get();
+    dirent* ptr;
+    if(readdir_r(dir,de,&ptr)!=0)
+    {
+      throw FileException(FileException::errReadDirFailed,dirName);
+    }
+    bool fullPath=(flt&rdfFullPath)!=0;
+    bool noDots=(flt&rdfNoDots)!=0;
+    flt=(ReadDirFilter)(flt&0xfff);
+    std::string file;
+    while(ptr)
+    {
+      if(noDots && strcmp(ptr->d_name,".")==0 || strcmp(ptr->d_name,"..")==0)
+      {
+        if(readdir_r(dir,de,&ptr)!=0)
+        {
+          throw FileException(FileException::errReadDirFailed,dirName);
+        }
+        continue;
+      }
+      if(flt!=rdfAll)
+      {
+        struct ::stat st;
+        file=dirName;
+        if(file.length() && file[file.length()-1]!='/')file+="/";
+        file+=ptr->d_name;
+        if(::stat(file.c_str(),&st)!=0)
+        {
+          throw FileException(FileException::errReadDirFailed,file.c_str());
+        }
+        if(flt==rdfFilesOnly)
+        {
+          if((st.st_mode&S_IFREG)!=0)
+          {
+            dirContents.push_back(fullPath?file:ptr->d_name);
+          }
+        }else if(flt==rdfDirsOnly)
+        {
+          if((st.st_mode&S_IFDIR)!=0)
+          {
+            dirContents.push_back(fullPath?file:ptr->d_name);
+          }
+        }
+      }else
+      {
+        if(fullPath)
+        {
+          file=dirName;
+          if(file.length() && file[file.length()-1]!='/')file+="/";
+          file+=ptr->d_name;
+          dirContents.push_back(file);
+        }else
+        {
+          dirContents.push_back(ptr->d_name);
+        }
+      }
+      if(readdir_r(dir,de,&ptr)!=0)
+      {
+        throw FileException(FileException::errReadDirFailed,dirName);
+      }
     }
   }
 
