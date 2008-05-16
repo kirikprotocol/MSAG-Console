@@ -386,30 +386,6 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
         g.drawLine(0, hp, size.width - pad, hp);
     }
 
-    void drawSeparator_l(Graphics g, Dimension size) {
-        g.setColor(SystemColor.control);
-        int stepUp = 10;
-        g.fillRect(pad, 0, separatorWidth, size.height);
-        if (split > 0) g.fillRect(0, size.height - split - stepUp, size.width, separatorWidth);
-        int sl = (separatorWidth - 2) / 2;
-        //int vp = errListWidth + pad + sl;
-        int vp = pad + sl;
-//        int hp = size.height - split + sl - stepUp;
-        int hp = (int)size.height/DELIMITER;
-        top_sep = hp;
-//        graphScale = size.height*2/3/maxSpeed;
-//        yParam = size.height*2/3/maxSpeed;
-
-        g.setColor(SystemColor.controlHighlight);
-//        g.drawLine(vp + 1, pad + 1, vp + 1, size.height - pad);
-        g.drawLine(vp + 1, pad + 1, vp + 1, top_sep);
-        if (split > 0) g.drawLine(pad + 1, hp + 1, size.width - pad - 1, hp + 1);
-        g.setColor(SystemColor.controlShadow);
-        g.drawLine(vp, pad, vp, size.height - pad - 1);
-//        if (split > 0) g.drawLine(pad, hp, size.width - pad, hp);
-        g.drawLine(pad, hp, size.width - pad, hp);
-    }
-
     void drawSmppSnap(Graphics g, int i, int x, int y, Dimension size, FontMetrics fm) {
         int hpos = y + fm.getAscent();
         SmppSnap ss = snap.smppSnaps[i];
