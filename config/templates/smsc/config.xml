@@ -9,8 +9,6 @@
   </section>
 
   <section name="core">
-    <param name="schedulerSoftLimit" type="int">900000</param>
-    <param name="schedulerHardLimit" type="int">1000000</param>
     <param name="srcSmeSeparateRouting" type="bool">false</param>
     <param name="state_machines_count" type="int">5</param>
     <param name="mainLoopsCount" type="int">1</param>
@@ -19,7 +17,7 @@
     <param name="service_center_address" type="string">@smsc.sc.address@</param>
     <param name="ussd_center_address" type="string">@smsc.ussd.address@</param>
     <param name="ussd_ssn" type="int">@smsc.ussd.ssn@</param>
-    <param name="add_ussd_ssn" type="int"></param>
+    <param name="add_ussd_ssn" type="string"></param>
     <param name="systemId" type="string">smscsme</param>
     <param name="service_type" type="string">SMSC</param>
     <param name="protocol_id" type="int">34</param>
