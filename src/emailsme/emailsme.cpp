@@ -308,7 +308,7 @@ bool LimitBreak(AbonentProfile& p)
       if(tdate.tm_mday!=tnow.tm_mday)
       {
         p.limitDate=now;
-        p.limitCountEml2Gsm=0
+        p.limitCountEml2Gsm=0;
         p.limitCountGsm2Eml=0;
         return false;
       }
@@ -317,7 +317,7 @@ bool LimitBreak(AbonentProfile& p)
       if((now-p.limitDate)/(60*60*24)>7)
       {
         p.limitDate=now;
-        p.limitCountEml2Gsm=0
+        p.limitCountEml2Gsm=0;
         p.limitCountGsm2Eml=0;
         return false;
       }
@@ -326,7 +326,7 @@ bool LimitBreak(AbonentProfile& p)
       if(tdate.tm_mon!=tnow.tm_mon)
       {
         p.limitDate=now;
-        p.limitCountEml2Gsm=0
+        p.limitCountEml2Gsm=0;
         p.limitCountGsm2Eml=0;
         return false;
       }
