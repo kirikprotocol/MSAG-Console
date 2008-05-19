@@ -29,22 +29,25 @@ int RWMultiplexer::canReadWrite(SockArray& read, SockArray& write, SockArray& er
   write.Empty();
   error.Empty();
 
-  if(poll(&fds[0], fds.Count(), timeout) <= 0)
+  int fdsCount = fds.Count();
+  if(poll(&fds[0], fdsCount, timeout) <= 0)
 	return 0;
 
-  for(int i = 0; i < fds.Count(); i++)
+  for(int i = 0; i < fdsCount; ++i)
   {
-    if(fds[i].revents & (POLLNVAL | POLLERR | POLLHUP))
+    Socket *s = sockets[i];
+    short revents = fds[i].revents;
+    if(revents & (POLLNVAL | POLLERR | POLLHUP))
 	{
-		error.Push(sockets[i]);
+		error.Push(s);
 		continue;
 	}
-    if(fds[i].revents & POLLIN) {
-      read.Push(sockets[i]);
-      smsc_log_debug(logger, "socket: %p ready for Read", sockets[i]);
-    } else if(fds[i].revents & POLLOUT) {
-      write.Push(sockets[i]);
-      smsc_log_debug(logger, "socket: %p ready for Write", sockets[i]);
+    if(revents & POLLIN) {
+      read.Push(s);
+      smsc_log_debug(logger, "socket: %p ready for Read", s);
+    } else if(revents & POLLOUT) {
+      write.Push(s);
+      smsc_log_debug(logger, "socket: %p ready for Write", s);
     }
   }
 
