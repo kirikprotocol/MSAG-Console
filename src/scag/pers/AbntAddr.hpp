@@ -72,42 +72,36 @@ public:
   {
     if(!text || !*text)
     {
-      Clear();
+      throw runtime_error("AbntAddr::AbntAddr(const char* text): bad address NULL");
     }
-    else
+    AddressValue addr_value;
+    int iplan,itype;
+    memset(addr_value,0,sizeof(addr_value));
+    int scaned = sscanf(text,".%d.%d.%15s", &itype, &iplan, addr_value);
+    if (scaned != 3)
     {
-      AddressValue addr_value;
-      int iplan,itype;
-      memset(addr_value,0,sizeof(addr_value));
-      int scaned = sscanf(text,".%d.%d.%15s", &itype, &iplan, addr_value);
-      if ( scaned != 3 )
+      scaned = sscanf(text, "+%15[0123456789?]s", addr_value);
+      if (scaned)
       {
-        scaned = sscanf(text,"+%15[0123456789?]s",addr_value);
-        if ( scaned )
-        {
-          iplan = 1;//ISDN
-          itype = 1;//INTERNATIONAL
-        }
-        else
-        {
-          scaned = sscanf(text,"%15[0123456789?]s",addr_value);
-          if ( !scaned )
-          {
-            Clear();
-            return;
-          }
-          else
-          {
-            iplan = 1;//ISDN
-            itype = 0;//UNKNOWN
-          }
-        }
+        iplan = 1;//ISDN
+        itype = 1;//INTERNATIONAL
       }
-      value.addr_content.type = (uint8_t)itype;
-      value.addr_content.plan = (uint8_t)iplan;
-      value.addr_content.length = strlen(addr_value);
-      setValue(strlen(addr_value), addr_value);
+      else
+      {
+        scaned = sscanf(text, "%15[0123456789?]s", addr_value);
+        if (!scaned)
+        {
+          throw runtime_error(string("AbntAddr::AbntAddr(const char* text): bad address ") + text);
+        }
+        iplan = 1;//ISDN
+        itype = 1;//INTERNATIONAL
+        //itype = 0;//UNKNOWN
+      }
     }
+    value.addr_content.type = (uint8_t)itype;
+    value.addr_content.plan = (uint8_t)iplan;
+    value.addr_content.length = strlen(addr_value);
+    setValue(value.addr_content.length, addr_value);
   }
 
   AbntAddr(const Address& addr)
@@ -145,7 +139,7 @@ public:
 
   inline void setValue(uint8_t _len, const char* _value)
   {
-    if (!_len || !_value || !_value[0]) {
+    if (!_len || !_value || !*_value) {
       throw runtime_error("AbntAddr::setValue: bad address NULL");
     }
     if ((_len >= sizeof(value.addr_content.signals) * 2) || (!isdigit(_value[_len - 1]))) {
@@ -168,7 +162,6 @@ public:
       value.addr_content.signals[i] = 0xF0 | (uint8_t)(_value[i*2] - 0x30);
 
     value.addr_content.length = _len;
-
   };
 
   const uint8_t* getAddrSig(void) const
