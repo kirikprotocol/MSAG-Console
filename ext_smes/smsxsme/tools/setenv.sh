@@ -3,8 +3,8 @@
 # Set classpath
 SMSX_CLASSPATH_HOME=../webapps/smsx/WEB-INF/lib
 SMSX_CONF=../conf
-SMSX_CLASSPATH=$SMSX_CONF
-for i in SMSX_CLASSPATH_HOME/*.jar ; do SMSX_CLASSPATH=$cls:$i ; done
+SMSX_CLASSPATH=""
+for i in $SMSX_CLASSPATH_HOME/*.jar ; do SMSX_CLASSPATH=$SMSX_CLASSPATH:$i ; done
 
 # Set SSL connection options
 SMSX_SSL_OPTS="-Djavax.net.ssl.keyStore=$SMSX_CONF/truststore.jks -Djavax.net.ssl.keyStorePassword=laefeeza -Djavax.net.ssl.trustStore=$SMSX_CONF/keystore.jks -Djavax.net.ssl.trustStorePassword=laefeeza -DtrustAnchors=true"
