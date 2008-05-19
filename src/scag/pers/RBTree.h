@@ -135,6 +135,17 @@ public:
       return true;
     }
 
+    void setNodeValue(RBTreeNode* node, const Value& val) {
+      if (!node || node->value == val) {
+        return;
+      }
+      smsc_log_debug(logger, "Node key=%s value has changed. old=%d new=%d",
+                      node->key.toString().c_str(), (int)node->value, (int)val);
+      node->value = val;
+      changesObserver->nodeChanged(node);
+      changesObserver->completeChanges();
+    }
+
 	bool Get(const Key& k, Value& val)
 	{
 		RBTreeNode*	node = rootNode;
