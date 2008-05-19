@@ -8,7 +8,7 @@ namespace scag{ namespace pers{
 const uint8_t PROPERTIES_COUNT_SIZE = 14; //14 bits for profile properties count
 const uint16_t MAX_PROPERTIES_COUNT = 16383; 
 
-void Profile::Serialize(SerialBuffer& buf, bool toFSDB)
+void Profile::Serialize(SerialBuffer& buf, bool toFSDB) const
 {
     uint16_t cnt = properties.GetCount();
     if (cnt == 0 && toFSDB && state != LOCKED) {
@@ -41,11 +41,11 @@ void Profile::Deserialize(SerialBuffer& buf, bool fromFSDB)
             prop->Deserialize(buf, fromFSDB);
             cnt--;
             if(log && prop->isExpired(cur_time))
-                smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName().c_str());
+                smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), prop->getName());
         }while(prop->isExpired(cur_time) && cnt);
 
         if(!prop->isExpired(cur_time))
-            properties.Insert(prop->getName().c_str(), prop);
+            properties.Insert(prop->getName(), prop);
         else
             delete prop;
     }
@@ -69,35 +69,31 @@ bool Profile::PropertyExists(const char* name)
 
 Property* Profile::GetProperty(const char* name)
 {
-    try{
-        Property *p = properties.Get(name);
-        if(p->isExpired())
-        {
-            if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
-            properties.Delete(name);
-            delete p;
-            return NULL;
-        }
-        return p;
-    } 
-    catch(HashInvalidKeyException &k)
-    {
-        return NULL;
-    }
+  Property **p = properties.GetPtr(name);
+  if (!p) {
+    return NULL;
+  }
+  if(*p && (*p)->isExpired())
+  {
+      if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
+      delete *p;
+      properties.Delete(name);
+      return NULL;
+  }
+  return *p;
 }
 
-bool Profile::DeleteProperty(const char* str)
+bool Profile::DeleteProperty(const char* name)
 {
-    try{
-        Property *prop = properties.Get(str);
-        delete prop;
-        properties.Delete(str);
-        return true;
-    }
-    catch(HashInvalidKeyException& e)
-    {
-        return false;
-    }
+  Property **prop = properties.GetPtr(name);
+  if (!prop) {
+    return false;
+  }
+  if (*prop) {
+    delete *prop;
+  }
+  properties.Delete(name);
+  return true;
 }
 
 void Profile::DeleteExpired()
@@ -134,22 +130,13 @@ void Profile::Empty()
 
 void Profile::AddProperty(Property& prop)
 {
-    try{
-        Property *p = properties.Get(prop.getName().c_str());
-        *p = prop;
-        return;
-    }
-    catch(HashInvalidKeyException& e)
-    {
-      uint16_t cnt = properties.GetCount();
-      if (cnt == MAX_PROPERTIES_COUNT) {
-        smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
-                      prop.getName().c_str(), pkey.c_str(), cnt);
-        return;
-      }
-        if(!prop.isExpired())
-            properties.Insert(prop.getName().c_str(), new Property(prop));
-    }
+  uint16_t cnt = properties.GetCount();
+  if (cnt == MAX_PROPERTIES_COUNT) {
+    smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
+                  prop.getName(), pkey.c_str(), cnt);
+    return;
+  }
+  properties.Insert(prop.getName(), new Property(prop));
 }
 
 Profile& Profile::operator=(const Profile& pf) {
@@ -176,7 +163,7 @@ Profile& Profile::operator=(const Profile& pf) {
 }
 
 void Profile::addNewProperty(Property& prop) {
-  properties.Insert(prop.getName().c_str(),  new Property(prop));
+  properties.Insert(prop.getName(),  new Property(prop));
 }
 
 void Profile::copyPropertiesTo(Profile* pf) const {
@@ -192,4 +179,92 @@ void Profile::copyPropertiesTo(Profile* pf) const {
   }
 }
 
+void Profile::addDataToBackup(long nextBlock) {
+  backup.push_back(nextBlock);
+}
+void Profile::clearBackup() {
+  backup.clear();
+}
+const vector<long>& Profile::getBackup() const {
+  return backup;
+}
+void Profile::setBackup(const vector<long>& _backup) {
+  backup = _backup;
+}
+
+int Profile::getBackupDataSize() const {
+  return dataCopy.length();
+}
+
+const char* Profile::getBackupData() const {
+  return dataCopy.c_ptr();
+}
+
+void Profile::setBackupData(const SerialBuffer& data) {
+  dataCopy.blkcpy(data.c_ptr(), data.length());
+}
+
+void Profile::restoreBackup(const vector<long>& _backup, int backupSize) {
+  clearBackup();
+  backup.assign(_backup.begin(), _backup.begin() + backupSize);
+  dataCopy.setPos(0);
+  Deserialize(dataCopy, true);
+}
+
 }}
+
+/*
+Property* Profile::GetProperty(const char* name)
+{
+    try{
+        Property *p = properties.Get(name);
+        if(p->isExpired())
+        {
+            if(log) smsc_log_info(log, "E key=\"%s\" name=%s", pkey.c_str(), name);
+            properties.Delete(name);
+            delete p;
+            return NULL;
+        }
+        return p;
+    } 
+    catch(HashInvalidKeyException &k)
+    {
+        return NULL;
+    }
+}
+*/
+/*
+void Profile::AddProperty(Property& prop)
+{
+    try{
+        Property *p = properties.Get(prop.getName());
+        *p = prop;
+        return;
+    }
+    catch(HashInvalidKeyException& e)
+    {
+      uint16_t cnt = properties.GetCount();
+      if (cnt == MAX_PROPERTIES_COUNT) {
+        smsc_log_warn(log, "can't add property \'%s\', profile key=%s already has maximum properties count=%d",
+                      prop.getName(), pkey.c_str(), cnt);
+        return;
+      }
+        if(!prop.isExpired())
+            properties.Insert(prop.getName(), new Property(prop));
+    }
+}*/
+/*
+bool Profile::DeleteProperty(const char* str)
+{
+    try{
+        Property *prop = properties.Get(str);
+        delete prop;
+        properties.Delete(str);
+        return true;
+    }
+    catch(HashInvalidKeyException& e)
+    {
+        return false;
+    }
+}*/
+
