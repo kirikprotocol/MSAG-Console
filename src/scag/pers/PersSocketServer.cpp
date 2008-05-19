@@ -191,9 +191,9 @@ void PersSocketServer::removeSocket(Socket* s, int i)
     s = NULL;
 }
 
-void PersSocketServer::checkTimeouts()
+void PersSocketServer::checkTimeouts(time_t curTime)
 {
-	time_t timeBound = time(NULL) - timeout;
+	time_t timeBound = curTime - timeout;
 	int i = 1;
 	smsc_log_debug(log, "Checking timeouts...");
 	while(i < listener.count())
@@ -213,7 +213,7 @@ void PersSocketServer::checkTimeouts()
 int PersSocketServer::Execute()
 {
 	int lastTimeoutCheck = time(NULL);
-    int lastTransactTimeoutCheck = time(NULL);
+    int lastTransactTimeoutCheck = lastTimeoutCheck;
     Multiplexer::SockArray read, write, err;
 
     if(isStopped()) return 1;
@@ -223,16 +223,16 @@ int PersSocketServer::Execute()
 
     while(!isStopped())
     {
-        //bindToCP();
 
         if(listener.canReadWrite(read, write, err, timeout * 1000))
         {
             if(isStopped())
                 break;
-
-            for(int i = 0; i < read.Count(); i++)
+            int readCount = read.Count();
+            for(int i = 0; i < readCount; i++)
             {
-                if(read[i] == &sock)
+                Socket *readSocket = read[i];
+                if(readSocket == &sock)
                 {
                     sockaddr_in addrin;
                     int sz = sizeof(addrin);
@@ -264,20 +264,22 @@ int PersSocketServer::Execute()
                 } 
                 else
 				{
-					if(!((ConnectionContext*)read[i]->getData(0))->wantRead) {	// in the case if we want to write and unexpected data arrive or EOF
-                      smsc_log_error(log, "unexpected data arrive in %p ", read[i]);
-                      removeSocket(read[i]);
+					if(!((ConnectionContext*)readSocket->getData(0))->wantRead) {	// in the case if we want to write and unexpected data arrive or EOF
+                      smsc_log_error(log, "unexpected data arrive in %p ", readSocket);
+                      removeSocket(readSocket);
                     }
 					else {
-                      processReadSocket(read[i]);
+                      processReadSocket(readSocket);
                     }
 				}
             }
 
-            for(int i = 0; i < write.Count(); i++)
+            int writeCount = write.Count();
+            for(int i = 0; i < writeCount; i++)
                 processWriteSocket(write[i]);
 
-            for(int i = 0; i <= err.Count() - 1; i++)
+            int errCount = err.Count();
+            for(int i = 0; i <= errCount - 1; i++)
                 if(err[i] == &sock)
                 {
                     smsc_log_error(log, "Error on listen socket %d : %s", errno, strerror(errno));
@@ -287,15 +289,16 @@ int PersSocketServer::Execute()
                 else
                     removeSocket(err[i]);
         }
-        if (transactTimeout && (lastTransactTimeoutCheck + transactTimeout < time(NULL))) {
-          checkTransactionsTimeouts();
-          lastTransactTimeoutCheck = time(NULL);
+        time_t curTime = time(NULL);
+        if (transactTimeout && (lastTransactTimeoutCheck + transactTimeout < curTime)) {
+          checkTransactionsTimeouts(curTime);
+          lastTransactTimeoutCheck = curTime;
         }
 		
-		if(lastTimeoutCheck + timeout < time(NULL))
+		if(lastTimeoutCheck + timeout < curTime)
 		{
-			checkTimeouts();
-			lastTimeoutCheck = time(NULL);
+			checkTimeouts(curTime);
+			lastTimeoutCheck = curTime;
 		}
     }
 

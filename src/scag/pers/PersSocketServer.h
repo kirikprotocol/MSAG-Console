@@ -51,8 +51,8 @@ protected:
     virtual void processUplinkPacket(ConnectionContext& ctx) {};
     virtual void onDisconnect(ConnectionContext& ctx) {};    
     virtual bool bindToCP() { return true; };
-    virtual void checkTimeouts();
-    virtual void checkTransactionsTimeouts() {};
+    virtual void checkTimeouts(time_t curTime);
+    virtual void checkTransactionsTimeouts(time_t curTime) {};
 
     void processReadSocket(Socket* sock);
     void processWriteSocket(Socket* sock);
