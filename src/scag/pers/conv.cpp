@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
         int i = 0;
         while(AbonentStore.Next(key, data))
         {
-            AbonentStore1.Set(key, data);
+            //AbonentStore1.Set(key, data);
             i++;
         }
         smsc_log_debug(logger, "Records converted: %d", i);
