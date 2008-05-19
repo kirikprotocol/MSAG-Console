@@ -10,12 +10,12 @@ namespace logger {
 class StderrAppender : public Appender
 {
 public:
-	StderrAppender(const char * const name);
+  StderrAppender(const char * const name);
 
-	virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
+  virtual void log(const char logLevelName, const char * const category, const char * const message) throw();
 
 private:
-	smsc::core::synchronization::Mutex mutex;
+  smsc::core::synchronization::Mutex mutex;
 };
 
 }

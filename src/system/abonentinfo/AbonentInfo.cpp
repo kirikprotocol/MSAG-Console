@@ -158,12 +158,12 @@ int AbonentInfoSme::Execute()
         smsc::router::RouteInfo ri;
         int dest_proxy_index;
         SmeProxy *dest_proxy=NULL;
-	int src_proxy_index=-1;
-	if(sms->getSourceSmeId()[0])
-	{
-	  src_proxy_index=smsc->getSmeIndex(sms->getSourceSmeId());
-	}
-	bool has_route = smsc->routeSms(sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri,src_proxy_index);
+        int src_proxy_index=-1;
+        if(sms->getSourceSmeId()[0])
+        {
+          src_proxy_index=smsc->getSmeIndex(sms->getSourceSmeId());
+        }
+        bool has_route = smsc->routeSms(sms->getOriginatingAddress(),d,dest_proxy_index,dest_proxy,&ri,src_proxy_index);
 
         Address oa=sms->getOriginatingAddress();
         Address da=sms->getDestinationAddress();

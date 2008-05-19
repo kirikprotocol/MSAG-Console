@@ -11,40 +11,41 @@ using smsc::util::Properties;
 
 class ConfigReader {
 public:
-	struct AppenderInfo {
-		std::auto_ptr<char> name;
-		std::auto_ptr<char> type;
-		std::auto_ptr<Properties> params;
+  struct AppenderInfo {
+    std::auto_ptr<char> name;
+    std::auto_ptr<char> type;
+    std::auto_ptr<Properties> params;
 
-		AppenderInfo(const char * const name, const char * const type, std::auto_ptr<Properties> params);
-	};
+    AppenderInfo(const char * const name, const char * const type, std::auto_ptr<Properties> params);
+  };
 
-	struct CatInfo {
-		std::auto_ptr<char> name;
-		std::auto_ptr<char> level;
-		std::auto_ptr<char> appender;
+  struct CatInfo {
+    std::auto_ptr<char> name;
+    std::auto_ptr<char> level;
+    std::auto_ptr<char> appender;
 
-		CatInfo(const char * const name, const char * const initStr);
-	};
+    CatInfo(const char * const name, const char * const initStr);
+  };
 
-	ConfigReader(): configReloadInterval(0) {};
-	ConfigReader(Properties const & properties);    
-	~ConfigReader();
-    void init(Properties const & properties);
-    void clear();
-    void serialize(std::string& str);
+  ConfigReader(): configReloadInterval(0) {};
+  ConfigReader(Properties const & properties);    
+  ~ConfigReader();
 
-	typedef smsc::core::buffers::Hash<AppenderInfo*> AppenderInfos;
-	typedef smsc::core::buffers::Hash<CatInfo*> CatInfos;
-	AppenderInfos appenders;
-	CatInfos cats;
+  void init(Properties const & properties);
+  void clear();
+  void serialize(std::string& str);
 
-	std::auto_ptr<char> rootLevel;
-	std::auto_ptr<char> rootAppender;
+  typedef smsc::core::buffers::Hash<AppenderInfo*> AppenderInfos;
+  typedef smsc::core::buffers::Hash<CatInfo*> CatInfos;
+  AppenderInfos appenders;
+  CatInfos cats;
 
-    uint32_t configReloadInterval;	
+  std::auto_ptr<char> rootLevel;
+  std::auto_ptr<char> rootAppender;
+
+  uint32_t configReloadInterval;  
 private:
-	AppenderInfo* createAppender(const char * const name, const Properties & ap);
+  AppenderInfo* createAppender(const char * const name, const Properties & ap);
 };
 
 }

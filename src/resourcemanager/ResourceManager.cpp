@@ -139,7 +139,9 @@ ResourceManager::ResourceManager() throw ()
     }
   }
   if (configDir != 0)
-  	closedir(configDir);
+  {
+    closedir(configDir);
+  }
 }
 
 ResourceManager::~ResourceManager() throw ()

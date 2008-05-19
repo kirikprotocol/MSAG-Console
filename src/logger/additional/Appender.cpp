@@ -8,7 +8,7 @@ namespace logger {
 using namespace smsc::util;
 
 Appender::Appender(const char * const name)
-	:name(cStringCopy(name))
+  :name(cStringCopy(name))
 {
 }
 

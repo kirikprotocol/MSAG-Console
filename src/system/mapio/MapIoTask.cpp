@@ -437,7 +437,7 @@ void MapIoTask::dispatcher()
             warnMapReq( Et96MapOpenResp(lssn,dlgId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
             warnMapReq( Et96MapCloseReq(lssn,dlgId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
             // dailog limit reached - have to drop message
-	          EINSS7CpReleaseMsgBuffer(&message);
+            EINSS7CpReleaseMsgBuffer(&message);
             continue;
           }
         }else
