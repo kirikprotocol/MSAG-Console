@@ -34,19 +34,17 @@ void SerialBuffer::ReadString(std::string &str)
     if(getPos() + len > length())
         throw SerialBufferOutOfBounds();
 
-    str = "";
+    str.clear();
     while(len > 254)
     {
-        Read(scb, 254);
-        scb[254] = 0;
-        str += scb;
+        blkread(scb, 254);
+        str.append(scb, 254);
         len -= 254;
     }
     if(len)
     {
-        Read(scb, len);
-        scb[len] = 0;
-        str += scb;
+        blkread(scb, len);
+        str.append(scb, len);
     }
 }
 
