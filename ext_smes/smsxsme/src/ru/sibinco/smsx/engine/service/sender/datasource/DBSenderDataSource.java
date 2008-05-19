@@ -1,8 +1,5 @@
 package ru.sibinco.smsx.engine.service.sender.datasource;
 
-import com.eyeline.sme.utils.ds.DBDataSource;
-import com.eyeline.sme.utils.ds.DataSourceException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,6 +7,8 @@ import java.sql.SQLException;
 
 import snaq.db.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
+import ru.sibinco.smsx.utils.DBDataSource;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem
@@ -98,7 +97,8 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
 
       ps.setInt(1, msg.getSmppStatus());
       ps.setInt(2, msg.getStatus());
-      ps.setInt(3, msg.getId());
+      ps.setLong(3, msg.getSmppId());
+      ps.setInt(4, msg.getId());
 
       ps.executeUpdate();
 

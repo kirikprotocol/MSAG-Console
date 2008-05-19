@@ -1,8 +1,7 @@
 package ru.sibinco.smsx.utils.operators;
 
-import com.eyeline.sme.utils.config.xml.XmlConfig;
-import com.eyeline.sme.utils.config.xml.XmlConfigSection;
-import com.eyeline.sme.utils.ds.DataSourceException;
+import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.xml.XmlConfigSection;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -10,6 +9,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem
@@ -37,12 +38,12 @@ class OperatorsDataSource {
 
       XmlConfigSection sec;
       Operator oper;
-      for (Iterator iter = cfg.sections(); iter.hasNext();) {
+      for (Iterator iter = cfg.sections().iterator(); iter.hasNext();) {
         sec = (XmlConfigSection)iter.next();
         oper = new Operator(sec.getName());
 
         if (sec.getParam("masks") != null) {
-          final String[] masks = sec.getParam("masks").getStringList(",");
+          final String[] masks = sec.getParam("masks").getStringArray(",");
           for (int i=0; i<masks.length; i++)
             oper.addMask(masks[i]);
         }

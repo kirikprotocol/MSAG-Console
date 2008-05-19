@@ -21,7 +21,7 @@ public class SenderMessage {
   private int destAddrSubunit;
   private boolean storable = true;
   private String connectionName;
-  private long smppId;
+  private long smppId=-1;
 
   public SenderMessage() {
   }

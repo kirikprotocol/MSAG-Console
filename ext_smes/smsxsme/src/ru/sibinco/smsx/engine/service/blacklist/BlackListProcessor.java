@@ -25,7 +25,7 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
 
   private static String prepareMsisdn(String msisdn) throws SMPPAddressException {
     final Address addr = new Address(msisdn);
-    final StringBuffer buffer = new StringBuffer();
+    final StringBuilder buffer = new StringBuilder(msisdn.length()+10);
     buffer.append('.').append(addr.getTon()).append('.').append(addr.getNpi()).append('.').append(addr.getAddress());
     return buffer.toString();
   }

@@ -24,8 +24,7 @@
   </target>
 
   <target name="prepare" description="prepare distr directory">
-    <!-- Create directories -->
-    <mkdir dir="${SME_DISTR_DIR}/tools"/>
+    <!-- Create directories -->    
     <mkdir dir="${SME_DISTR_DIR}/soap"/>
     <mkdir dir="${SME_DISTR_DIR}/conf"/>
     <mkdir dir="${SME_DISTR_DIR}/logs"/>
@@ -40,7 +39,7 @@
     <!-- Copy WEB_INF-->
     <copydir src="${WEB_INF}" dest="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF"/>
     <!-- Copy tools -->
-    <copydir src="${tools}" dest="${SME_DISTR_DIR}/tools"/>
+    <copydir src="${tools}" dest="${SME_DISTR_DIR}/bin"/>
     <!-- Copy Axis files -->
     <copydir src="${soap}" dest="${SME_DISTR_DIR}/soap"/>
     <!-- Copy scripts -->

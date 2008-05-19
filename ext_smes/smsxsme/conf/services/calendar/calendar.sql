@@ -18,5 +18,5 @@ calendar.message.remove.by.id = DELETE FROM calendar_messages WHERE id=?
 calendar.message.insert = INSERT INTO calendar_messages(source_address, destination_address, send_time, dest_addr_subunit, message, status, save_delivery_status, smpp_status, conn, id) VALUES(?,?,?,?,?,?,?,?,?,?)
 calendar.message.update = UPDATE calendar_messages SET source_address=?, destination_address=?, send_time=?, dest_addr_subunit=?, message=?, status=?, save_delivery_status=?, smpp_status=?, conn=? WHERE id=?
 calendar.message.update.status.by.id = UPDATE calendar_messages SET status=? WHERE id=?
-calendar.message.update.status.by.smpp_id = UPDATE calendar_messages SET status=? WHERE smpp_id=?
+calendar.message.update.status.by.smpp.id = UPDATE calendar_messages SET status=? WHERE smpp_id=?
 calendar.message.update.smpp.id = UPDATE calendar_messages SET smpp_id=? WHERE id=?

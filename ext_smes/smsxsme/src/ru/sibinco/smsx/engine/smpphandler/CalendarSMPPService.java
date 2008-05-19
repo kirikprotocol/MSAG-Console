@@ -1,50 +1,43 @@
 package ru.sibinco.smsx.engine.smpphandler;
 
-import com.eyeline.sme.utils.config.ConfigException;
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
+import com.eyeline.sme.handler.SMPPRequest;
+import com.eyeline.sme.handler.SMPPServiceException;
+import com.eyeline.sme.smpp.IncomingObject;
 import com.logica.smpp.Data;
 import org.apache.log4j.Category;
+import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
-import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
-import ru.sibinco.smsx.engine.service.ServiceManager;
-import ru.sibinco.smsx.engine.service.CommandObserver;
+import ru.sibinco.smsx.Context;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandObserver;
+import ru.sibinco.smsx.engine.service.ServiceManager;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
-import ru.sibinco.smsx.network.smppnetwork.SMPPMultiplexor;
-import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
-import ru.aurorisoft.smpp.Message;
 
-import java.io.File;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Properties;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * User: artem
- * Date: 29.06.2007
+ * Date: 14.05.2008
  */
 
-class CalendarSMPPHandler extends SMPPHandler {
+public class CalendarSMPPService extends AbstractSMPPService {
 
   private static final Category log = Category.getInstance("CALENDAR SMPP");
 
-  private final static Pattern AFT = Pattern.compile("(((A|a|\u0410|\u0430)(F|f)(T|t|\u0422|\u0442))|(M|m|\u041C|\u043C))");
-  private static final Pattern AFT_SPACE = Pattern.compile(AFT.pattern() + "\\s+");
   private final static Pattern ONE_OR_MORE_SPACES = Pattern.compile("\\s+");
   private final static Pattern ZERO_OR_MORE_SPACES = Pattern.compile("\\s*");
-  private final static Pattern AT = Pattern.compile("((A|a|\u0410|\u0430)(T|t|\u0422|\u0442)|(D|d|\u0414|\u0434))");
   private final static Pattern ONE_OR_TWO_DIGITS = Pattern.compile("\\d{1,2}");
   private final static Pattern ONE_TO_FOUR_DIGITS = Pattern.compile("\\d{1,4}");
   private final static Pattern DOT = Pattern.compile("\\.");
   private final static Pattern COLON = Pattern.compile(":");
-  private final static Pattern ANY_STRING_AFTER_SPACE = Pattern.compile("(\\s*|\\s+.*)");
-  private final static Pattern ANY_STRING = Pattern.compile(".*");
 
-  // Dates regexes
   private final static Pattern DATE = Pattern.compile(ONE_OR_TWO_DIGITS.pattern() + ZERO_OR_MORE_SPACES.pattern() + DOT.pattern() +
                                                       ZERO_OR_MORE_SPACES.pattern() + ONE_OR_TWO_DIGITS.pattern() + ZERO_OR_MORE_SPACES.pattern() +
                                                       DOT.pattern() + ZERO_OR_MORE_SPACES.pattern() + ONE_TO_FOUR_DIGITS.pattern());
@@ -56,83 +49,71 @@ class CalendarSMPPHandler extends SMPPHandler {
   private final static Pattern DATE_TIME_SEC = Pattern.compile(DATE_TIME_MIN.pattern() + ZERO_OR_MORE_SPACES.pattern() + COLON.pattern() +
                                                                ZERO_OR_MORE_SPACES.pattern() + ONE_OR_TWO_DIGITS.pattern());
 
-  // Messages regexes
-  private final static Pattern AFT_REGEX = Pattern.compile(AFT_SPACE.pattern() + ONE_TO_FOUR_DIGITS.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-  private final static Pattern AT_REGEX_DATE = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-  private final static Pattern AT_REGEX_DATE_TIME_MIN = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE_TIME_MIN.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-  private final static Pattern AT_REGEX_DATE_TIME_SEC = Pattern.compile(AT.pattern() + ONE_OR_MORE_SPACES.pattern() + DATE_TIME_SEC.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-  private final static Pattern AT_REGEX_NOW = Pattern.compile(AT.pattern() + ANY_STRING_AFTER_SPACE.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
-  private final static Pattern AFT_REGEX_NOW = Pattern.compile(AFT.pattern() + ANY_STRING.pattern(), Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+  private String msgSendDateIsWrong;
+  private String serviceAddress;
 
+  protected void init(Properties properties) throws SMPPServiceException {
+    msgSendDateIsWrong = properties.getProperty("send.date.is.wrong");
+    if (msgSendDateIsWrong == null)
+      throw new SMPPServiceException("Can't find property 'send.date.is.wrong'");
 
-  // Properties
-  private final String msgSendDateIsWrong;
-  private final String serviceAddress;
-
-  private final SmscTimezonesList timezonesList;
-
-  CalendarSMPPHandler(String configDir, SmscTimezonesList timezonesList, SMPPMultiplexor multiplexor) {
-    super(multiplexor);
-
-    this.timezonesList = timezonesList;
-
-    try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "smpphandlers/calendarhandler.properties"));
-
-      msgSendDateIsWrong = config.getString("send.date.is.wrong");
-      serviceAddress = config.getString("service.address");
-
-    } catch (ConfigException e) {
-      throw new SMPPHandlerInitializationException(e);
-    }
+    serviceAddress = properties.getProperty("service.address");
+    if (serviceAddress == null)
+      throw new SMPPServiceException("Can't find property 'service.address'");
   }
 
-  protected boolean handleInObj(final SMPPTransportObject inObj) {
-    final long start = System.currentTimeMillis();
+  public boolean serve(SMPPRequest smppRequest) {
+
+    String type = smppRequest.getParameter("type");
+    if (type == null) {
+      log.error("'type' property is empty in request");
+      return false;
+    }
+
+    final IncomingObject inObj = smppRequest.getInObj();
 
     try {
-      if (inObj.getIncomingMessage() != null && inObj.getIncomingMessage().isReceipt()) {
 
-        sendResponse(inObj.getIncomingMessage(), Data.ESME_ROK);
+      if (type.equalsIgnoreCase("receipt")) { // Handle receipt
 
-        final long msgId = Long.parseLong(inObj.getIncomingMessage().getReceiptedMessageId());
-        final boolean delivered = inObj.getIncomingMessage().getMessageState() == Message.MSG_STATE_DELIVERED;
+        final long msgId = Long.parseLong(inObj.getMessage().getReceiptedMessageId());
+        final boolean delivered = inObj.getMessage().getMessageState() == Message.MSG_STATE_DELIVERED;
 
         final CalendarHandleReceiptCmd cmd = new CalendarHandleReceiptCmd();
         cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
 
-        return ServiceManager.getInstance().getCalendarService().execute(cmd);
+        if (ServiceManager.getInstance().getCalendarService().execute(cmd)) {
+          inObj.respond(Data.ESME_ROK);
+          return true;
+        }               
 
-      } if (inObj.getIncomingMessage() != null && inObj.getIncomingMessage().getMessageString() != null) {
+      } else { // Handle usual message
 
-        final String msg = inObj.getIncomingMessage().getMessageString().trim();
-        final String sourceAddress = inObj.getIncomingMessage().getSourceAddress();
-        final String destinationAddress = inObj.getIncomingMessage().getDestinationAddress();
+        final String msg = smppRequest.getParameter("message");
+        final String sourceAddress = inObj.getMessage().getSourceAddress();
+        final String destinationAddress = inObj.getMessage().getDestinationAddress();
 
         if (log.isInfoEnabled())
           log.info("Msg srcaddr=" + sourceAddress + "; dstaddr=" + destinationAddress);
 
-        // NOTE: Order is important here
-        ParseResult result = null;
-        if (AFT_REGEX.matcher(msg).matches())
-          result = parseATF(msg, ONE_TO_FOUR_DIGITS);
-        else if (AT_REGEX_DATE_TIME_SEC.matcher(msg).matches())
-          result = parseAT(sourceAddress, msg, DATE_TIME_SEC);
-        else if (AT_REGEX_DATE_TIME_MIN.matcher(msg).matches())
-          result = parseAT(sourceAddress, msg, DATE_TIME_MIN);
-        else if (AT_REGEX_DATE.matcher(msg).matches())
+        ParseResult result;
+        if (type.equalsIgnoreCase("aft")) {
+          result = parseATF(smppRequest.getParameter("message"));
+        } else if (type.equalsIgnoreCase("at_date")) {
           result = parseAT(sourceAddress, msg, DATE);
-        else if (AT_REGEX_NOW.matcher(msg).matches())
-          result = parseAT(sourceAddress, msg, null);
-        else if (AFT_REGEX_NOW.matcher(msg).matches())
-          result = parseATF(msg, null);
-
-        if (result == null) {
-          if (log.isInfoEnabled())
-            log.info("Msg format is unknown");
+        } else if (type.equalsIgnoreCase("at_date_time_min")) {
+          result = parseAT(sourceAddress, msg, DATE_TIME_MIN);
+        } else if (type.equalsIgnoreCase("at_date_time_sec")) {
+          result = parseAT(sourceAddress, msg, DATE_TIME_SEC);
+        } else if (type.equalsIgnoreCase("now")) {
+          result = new ParseResult(null, msg);
+        } else {
+          log.error("Unknown msg type parameter: " + type);
           return false;
         }
+
+
 
         if (log.isInfoEnabled())
           log.info("Senddate=" + result.sendDate);
@@ -142,30 +123,34 @@ class CalendarSMPPHandler extends SMPPHandler {
         cmd.setDestinationAddress(destinationAddress);
         cmd.setSendDate(result.sendDate);
         cmd.setMessage(result.message);
-        cmd.setDestAddressSubunit(inObj.getIncomingMessage().getDestAddrSubunit());
+        cmd.setDestAddressSubunit(inObj.getMessage().getDestAddrSubunit());
         cmd.setStoreDeliveryStatus(false);
         cmd.setSourceId(Command.SOURCE_SMPP);
         cmd.addExecutionObserver(new CommandObserver() {
           public void update(Command command) {
             final CalendarSendMessageCmd cmd = (CalendarSendMessageCmd)command;
-            switch (cmd.getStatus()) {
-              case CalendarSendMessageCmd.STATUS_SUCCESS:
-                sendResponse(inObj.getIncomingMessage(), Data.ESME_ROK);
-                break;
-              case CalendarSendMessageCmd.STATUS_SYSTEM_ERROR:
-                sendResponse(inObj.getIncomingMessage(), Data.ESME_RSYSERR);
-                break;
-              case CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE:
-                sendResponse(inObj.getIncomingMessage(), Data.ESME_ROK);
-                sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
-                sendMessage(sourceAddress, destinationAddress, cmd.getMessage(), cmd.getDestAddressSubunit());
-                break;
-              case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
-                sendResponse(inObj.getIncomingMessage(), Data.ESME_RINVDSTADR);
-                break;
-              default:
-                sendResponse(inObj.getIncomingMessage(), Data.ESME_RSYSERR);
-                log.error("WARNING: Unknown result type in Calendar Handler");
+            try {
+              switch (cmd.getStatus()) {
+                case CalendarSendMessageCmd.STATUS_SUCCESS:
+                  inObj.respond(Data.ESME_ROK);
+                  break;
+                case CalendarSendMessageCmd.STATUS_SYSTEM_ERROR:
+                  inObj.respond(Data.ESME_RX_P_APPN);
+                  break;
+                case CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE:
+                  inObj.respond(Data.ESME_ROK);
+                  sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
+                  sendMessage(sourceAddress, destinationAddress, cmd.getMessage(), cmd.getDestAddressSubunit());
+                  break;
+                case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
+                  inObj.respond(Data.ESME_RINVDSTADR);
+                  break;
+                default:
+                  inObj.respond(Data.ESME_RX_P_APPN);
+                  log.error("WARNING: Unknown result type in Calendar Handler");
+              }
+            } catch (Throwable e) {
+              log.error(e,e);
             }
           }
         });
@@ -179,28 +164,15 @@ class CalendarSMPPHandler extends SMPPHandler {
 
     } catch (Throwable e) {
       log.error(e,e);
-      sendResponse(inObj.getIncomingMessage(), Data.ESME_RSYSERR);
-      return true;
-
-    } finally {
-      if (log.isInfoEnabled())
-        log.info("Time=" + (System.currentTimeMillis() - start));
+      return false;
     }
-
   }
 
-  private static ParseResult parseATF(String str, Pattern dateRegex) {
-    Matcher matcher = AFT.matcher(str);
+  private static ParseResult parseATF(String str) {
+    Matcher matcher = ONE_TO_FOUR_DIGITS.matcher(str);
     matcher.find();
-    final String dateAndMessage = str.substring(matcher.end());
-
-    if (dateRegex == null)
-      return new ParseResult(null, dateAndMessage);
-
-    matcher = ONE_TO_FOUR_DIGITS.matcher(dateAndMessage);
-    matcher.find();
-    final String dateStr = dateAndMessage.substring(matcher.start(), matcher.end()).trim();
-    final String message = dateAndMessage.substring(matcher.end()).trim();
+    final String dateStr = str.substring(matcher.start(), matcher.end()).trim();
+    final String message = str.substring(matcher.end()).trim();
 
     final Calendar calendar = Calendar.getInstance();
     calendar.setTime(new Date());
@@ -210,17 +182,10 @@ class CalendarSMPPHandler extends SMPPHandler {
   }
 
   private ParseResult parseAT(final String sourceAbonent, final String str, final Pattern dateRegex) {
-    Matcher matcher = AT.matcher(str);
+    Matcher matcher = dateRegex.matcher(str);
     matcher.find();
-
-    final String dateAndMessage = str.substring(matcher.end());
-    if (dateRegex == null)
-      return new ParseResult(null, dateAndMessage);
-
-    matcher = dateRegex.matcher(dateAndMessage);
-    matcher.find();
-    final String dateStr = dateAndMessage.substring(matcher.start(), matcher.end()).trim();
-    final String message = dateAndMessage.substring(matcher.end()).trim();
+    final String dateStr = str.substring(matcher.start(), matcher.end()).trim();
+    final String message = str.substring(matcher.end()).trim();
 
     Date date = null;
     try {
@@ -233,12 +198,12 @@ class CalendarSMPPHandler extends SMPPHandler {
     return new ParseResult(date, message);
   }
 
-  private Date changeDateAccordingTimezone(final String abonent, final Date date) {
+  private static Date changeDateAccordingTimezone(final String abonent, final Date date) {
     if (date == null)
       return null;
 
     try {
-      final SmscTimezone tz = timezonesList.getTimezoneByAddress(abonent);
+      final SmscTimezone tz = Context.getInstance().getTimezones().getTimezoneByAddress(abonent);
 
       if (tz != null) {
         final String timezone = tz.getName();
@@ -324,5 +289,4 @@ class CalendarSMPPHandler extends SMPPHandler {
       this.message = message;
     }
   }
-
 }

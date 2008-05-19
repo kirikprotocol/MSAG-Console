@@ -1,8 +1,5 @@
 package ru.sibinco.smsx.engine.service.blacklist.datasource;
 
-import com.eyeline.sme.utils.ds.DBDataSource;
-import com.eyeline.sme.utils.ds.DataSourceException;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -10,13 +7,15 @@ import java.sql.SQLException;
 
 import snaq.db.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
+import ru.sibinco.smsx.utils.DBDataSource;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem
  * Date: 10.07.2007
  */
 
-public class DBBlackListDataSource extends DBDataSource implements BlackListDataSource{
+public class DBBlackListDataSource extends DBDataSource implements BlackListDataSource {
 
   private final ConnectionPool pool;
 

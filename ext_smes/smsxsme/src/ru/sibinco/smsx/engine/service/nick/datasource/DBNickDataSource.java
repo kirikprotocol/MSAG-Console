@@ -1,9 +1,9 @@
 package ru.sibinco.smsx.engine.service.nick.datasource;
 
-import com.eyeline.sme.utils.ds.DBDataSource;
-import com.eyeline.sme.utils.ds.DataSourceException;
 import snaq.db.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
+import ru.sibinco.smsx.utils.DBDataSource;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

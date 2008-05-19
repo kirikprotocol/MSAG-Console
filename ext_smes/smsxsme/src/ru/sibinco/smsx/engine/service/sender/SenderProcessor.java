@@ -1,6 +1,5 @@
 package ru.sibinco.smsx.engine.service.sender;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
@@ -8,6 +7,7 @@ import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem

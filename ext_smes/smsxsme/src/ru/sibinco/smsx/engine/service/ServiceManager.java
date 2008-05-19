@@ -16,7 +16,7 @@ import ru.sibinco.smsx.engine.service.secret.SecretService;
 import ru.sibinco.smsx.engine.service.secret.SecretServiceFactory;
 import ru.sibinco.smsx.engine.service.sender.SenderService;
 import ru.sibinco.smsx.engine.service.sender.SenderServiceFactory;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingQueue;
 
 public class ServiceManager {
   private static final Category log = Category.getInstance("SERVICES");
@@ -27,7 +27,7 @@ public class ServiceManager {
     return ourInstance;
   }
 
-  public static void init(String configDir, SMPPOutgoingQueue outQueue) {
+  public static void init(String configDir, OutgoingQueue outQueue) {
     ourInstance = new ServiceManager(configDir, outQueue);
   }
 
@@ -37,7 +37,7 @@ public class ServiceManager {
   private final BlackListService blackListService;
   private final NickService nickService;
 
-  private ServiceManager(String configDir, SMPPOutgoingQueue outQueue) {
+  private ServiceManager(String configDir, OutgoingQueue outQueue) {
     senderService = SenderServiceFactory.getSenderService(configDir, outQueue);
     calendarService = CalendarServiceFactory.getCalendarService(configDir, outQueue);
     secretService = SecretServiceFactory.getSecretService(configDir, outQueue);

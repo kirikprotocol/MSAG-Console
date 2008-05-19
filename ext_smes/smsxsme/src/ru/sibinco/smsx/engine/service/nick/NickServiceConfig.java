@@ -1,6 +1,6 @@
 package ru.sibinco.smsx.engine.service.nick;
 
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 
 import java.io.File;
 

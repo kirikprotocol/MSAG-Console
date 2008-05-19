@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.sender;
 
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingQueue;
+
 
 /**
  * User: artem
@@ -10,7 +11,7 @@ import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
 public class SenderServiceFactory {
   private static SenderService impl;
 
-  public static SenderService getSenderService(String configDir, SMPPOutgoingQueue outQueue) {
+  public static SenderService getSenderService(String configDir, OutgoingQueue outQueue) {
     if (impl == null)
       impl = new SenderServiceImpl(configDir, outQueue);
     return impl;

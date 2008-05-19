@@ -1,8 +1,8 @@
 package ru.sibinco.smsx.network.personalization;
 
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 import ru.sibinco.smsx.InitializationException;
 
 import java.io.File;

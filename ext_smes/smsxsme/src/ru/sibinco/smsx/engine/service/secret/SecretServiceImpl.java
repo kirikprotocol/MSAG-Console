@@ -1,13 +1,14 @@
 package ru.sibinco.smsx.engine.service.secret;
 
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.secret.commands.*;
 import ru.sibinco.smsx.engine.service.secret.datasource.DBSecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
 
 import java.io.File;
+
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 
 /**
  * User: artem
@@ -20,7 +21,7 @@ class SecretServiceImpl implements SecretService {
   private final SecretProcessor processor;
   private final MessageSender messageSender;
 
-  SecretServiceImpl(String configDir, SMPPOutgoingQueue outQueue) {
+  SecretServiceImpl(String configDir, OutgoingQueue outQueue) {
 
     try {
       final PropertiesConfig config = new PropertiesConfig(new File(configDir, "services/secret/service.properties"));

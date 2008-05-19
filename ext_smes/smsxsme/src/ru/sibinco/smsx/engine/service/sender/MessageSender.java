@@ -1,14 +1,15 @@
 package ru.sibinco.smsx.engine.service.sender;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.ShutdownedException;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
-import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem
@@ -19,10 +20,10 @@ class MessageSender {
 
   private static final Category log = Category.getInstance("SENDER");
 
-  private final SMPPOutgoingQueue outQueue;
+  private final OutgoingQueue outQueue;
   private final SenderDataSource ds;
 
-  MessageSender(SMPPOutgoingQueue outQueue, SenderDataSource ds) {
+  MessageSender(OutgoingQueue outQueue, SenderDataSource ds) {
     this.outQueue = outQueue;
     this.ds = ds;
   }
@@ -38,14 +39,18 @@ class MessageSender {
       msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
     final SenderSMPPTransportObject outObj = new SenderSMPPTransportObject(message);
-    outObj.setOutgoingMessage(msg);
-    outQueue.addOutgoingObject(outObj);
+    outObj.setMessage(msg);
+    try {
+      outQueue.offer(outObj);
+    } catch (ShutdownedException e) {
+      log.error(e,e);
+    }
 
     message.setStatus(SenderMessage.STATUS_PROCESSED);
   }
 
 
-  private class SenderSMPPTransportObject extends SMPPTransportObject {
+  private class SenderSMPPTransportObject extends OutgoingObject {
     private final SenderMessage msg;
 
     SenderSMPPTransportObject(SenderMessage senderMessage) {
@@ -60,8 +65,9 @@ class MessageSender {
             msg.setSmppStatus(pdu.getStatus());
             ds.saveSenderMessage(msg);
           } else {
+            msg.setStatus(SenderMessage.STATUS_PROCESSED);
             msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
-            ds.updateMessageSmppId(msg);
+            ds.saveSenderMessage(msg);            
           }
         } catch (DataSourceException e) {
           log.error("Can't save Sender Message", e);

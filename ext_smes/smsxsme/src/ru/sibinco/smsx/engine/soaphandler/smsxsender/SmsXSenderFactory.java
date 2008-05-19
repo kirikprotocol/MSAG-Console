@@ -1,6 +1,5 @@
 package ru.sibinco.smsx.engine.soaphandler.smsxsender;
 
-import ru.sibinco.smsx.utils.operators.OperatorsList;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 
 /**
@@ -12,8 +11,8 @@ public class SmsXSenderFactory {
 
   private static SmsXSender sender;
 
-  public static void init(String configDir, OperatorsList operatorsList, AdvertisingClient advertisingClient) {
-    sender = new SmsXSenderHandler(configDir, operatorsList, advertisingClient);
+  public static void init(String configDir, AdvertisingClient advertisingClient) {
+    sender = new SmsXSenderHandler(configDir, advertisingClient);
   }
 
   public static SmsXSender createSmsXSenderHandler() {

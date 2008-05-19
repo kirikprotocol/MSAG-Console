@@ -6,9 +6,10 @@ import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
 
 import java.io.File;
+
+import com.eyeline.sme.smpp.OutgoingQueue;
 
 /**
  * User: artem
@@ -21,7 +22,7 @@ class SenderServiceImpl implements SenderService{
   private final MessageSender senderMessage;
   private final SenderProcessor processor;
 
-  SenderServiceImpl(String configDir, SMPPOutgoingQueue outQueue) {
+  SenderServiceImpl(String configDir, OutgoingQueue outQueue) {
     try {
       dataSource = new DBSenderDataSource(new File(configDir, "services/sender/sender.sql").getAbsolutePath(), "");
 

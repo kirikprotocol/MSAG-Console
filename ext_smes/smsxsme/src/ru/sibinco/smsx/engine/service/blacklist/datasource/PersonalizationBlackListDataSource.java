@@ -1,12 +1,12 @@
 package ru.sibinco.smsx.engine.service.blacklist.datasource;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
 import com.eyelinecom.whoisd.personalization.InfinitTimePolicy;
 import com.eyelinecom.whoisd.personalization.PersonalizationClient;
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.Property;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import ru.sibinco.smsx.network.personalization.PersonalizationClientPoolFactory;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem

@@ -1,6 +1,6 @@
 package ru.sibinco.smsx.engine.service.nick;
 
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingQueue;
 
 /**
  * User: artem
@@ -10,7 +10,7 @@ import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
 public class NickServiceFactory {
   private static NickService impl = null;
 
-  public static NickService getNickService(String configDir, SMPPOutgoingQueue outQueue) {
+  public static NickService getNickService(String configDir, OutgoingQueue outQueue) {
     if (impl == null)
       impl = new NickServiceImpl(configDir, outQueue);
     return impl;

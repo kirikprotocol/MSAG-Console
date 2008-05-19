@@ -1,15 +1,15 @@
 package ru.sibinco.smsx.engine.service.calendar;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
 import com.eyeline.sme.utils.worker.IterativeWorker;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingObject;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
-import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.util.Date;
 import java.util.Iterator;
@@ -26,11 +26,11 @@ class CalendarEngine extends IterativeWorker {
   private final MessagesQueue messagesQueue;
 
   private final Date nextReloadTime = new Date();
-  private final SMPPOutgoingQueue outQueue;
+  private final OutgoingQueue outQueue;
   private final long workingInterval;
   private final CalendarDataSource ds;
 
-  CalendarEngine(SMPPOutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, long workingInterval) {
+  CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, long workingInterval) {
     super(log);
 
     this.outQueue = outQueue;
@@ -85,8 +85,8 @@ class CalendarEngine extends IterativeWorker {
         msg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
       final CalendarTransportObject outObj = new CalendarTransportObject(message);
-      outObj.setOutgoingMessage(msg);
-      outQueue.addOutgoingObject(outObj);
+      outObj.setMessage(msg);
+      outQueue.offer(outObj);
 
     } catch (Throwable e) {
       log.error("Can't send msg: ",e);
@@ -95,8 +95,8 @@ class CalendarEngine extends IterativeWorker {
 
   private void loadList() {
     try {
-      for (Iterator iter = ds.loadCalendarMessages(nextReloadTime, 10000).iterator(); iter.hasNext();)
-        messagesQueue.add((CalendarMessage)iter.next());
+      for (CalendarMessage o : ds.loadCalendarMessages(nextReloadTime, 10000))
+        messagesQueue.add(o);
 
     } catch (Throwable e) {
       log.error("Can't load msgs list: ", e);
@@ -104,7 +104,7 @@ class CalendarEngine extends IterativeWorker {
   }
 
 
-  private class CalendarTransportObject extends SMPPTransportObject {
+  private class CalendarTransportObject extends OutgoingObject {
     private final CalendarMessage msg;
 
     CalendarTransportObject(CalendarMessage msg) {
@@ -132,7 +132,7 @@ class CalendarEngine extends IterativeWorker {
       try {
         if (msg.isSaveDeliveryStatus()) {
           msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
-          ds.saveCalendarMessage(msg);
+          ds.updateMessageStatus(msg);
         }
       } catch (DataSourceException e) {
         log.error("Can't save calendar message", e);

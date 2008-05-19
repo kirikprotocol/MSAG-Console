@@ -1,8 +1,5 @@
 package ru.sibinco.smsx.engine.service.calendar.datasource;
 
-import com.eyeline.sme.utils.ds.DBDataSource;
-import com.eyeline.sme.utils.ds.DataSourceException;
-
 import java.sql.*;
 import java.util.Collection;
 import java.util.Date;
@@ -10,6 +7,8 @@ import java.util.LinkedList;
 
 import snaq.db.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
+import ru.sibinco.smsx.utils.DBDataSource;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem
@@ -54,12 +53,12 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
 
   }
 
-  public Collection loadCalendarMessages(Date toDate, int maxSize) throws DataSourceException {
+  public Collection<CalendarMessage> loadCalendarMessages(Date toDate, int maxSize) throws DataSourceException {
     Connection conn = null;
     PreparedStatement ps = null;
     ResultSet rs = null;
 
-    final Collection messagesList = new LinkedList();
+    final Collection<CalendarMessage> messagesList = new LinkedList<CalendarMessage>();
 
     try {
       conn = pool.getConnection();
@@ -206,7 +205,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
     PreparedStatement ps = null;
     try {
       conn = pool.getConnection();
-      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.smppId"));
+      ps = conn.prepareStatement(getSql("calendar.message.update.status.by.smpp.id"));
 
       ps.setInt(1, newStatus);
       ps.setLong(2, smppId);

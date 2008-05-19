@@ -1,6 +1,5 @@
 package ru.sibinco.smsx.engine.service.calendar;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
@@ -8,6 +7,7 @@ import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarDataSource;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 class CalendarProcessor implements CalendarSendMessageCmd.Receiver, CalendarCheckMessageStatusCmd.Receiver, CalendarHandleReceiptCmd.Receiver {
   private static final Category log = Category.getInstance("CALENDAR");
 
-  private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}");
+  private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}|0012");
 
   // Properties
   private final long maxDate;

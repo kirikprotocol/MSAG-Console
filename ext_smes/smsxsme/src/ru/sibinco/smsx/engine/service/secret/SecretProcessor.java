@@ -1,7 +1,6 @@
 package ru.sibinco.smsx.engine.service.secret;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
-import com.eyeline.sme.utils.encode.MessageEncoder;
+import com.eyeline.utils.encode.MessageEncoder;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.secret.commands.*;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
@@ -9,6 +8,7 @@ import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretUser;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretUserWithMessages;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -27,7 +27,7 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
 
   private static final Category log = Category.getInstance("SECRET");
 
-  private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}");
+  private static final Pattern ALLOWED_DEST_ADDR = Pattern.compile("\\+\\d{11}|0012");
 
   private final SecretDataSource ds;
   private final MessageSender messageSender;
@@ -78,9 +78,9 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
       if (secretUser != null) { // Abonent has been registered in DB
 
         // Remove messages
-        final Collection messages = ds.loadSecretMessagesByAddress(cmd.getAbonentAddress());
-        for (Iterator iter = messages.iterator(); iter.hasNext();)
-          ds.removeSecretMessage((SecretMessage) iter.next());
+        final Collection<SecretMessage> messages = ds.loadSecretMessagesByAddress(cmd.getAbonentAddress());
+        for (SecretMessage message : messages)
+          ds.removeSecretMessage(message);
 
         // Remove user
         ds.removeSecretUser(secretUser);
@@ -155,7 +155,7 @@ class SecretProcessor implements SecretChangePasswordCmd.Receiver, SecretGetMess
         return;
       }
 
-      final Map users = ds.loadSecretUsersByAddresses(new String[]{cmd.getSourceAddress(), cmd.getDestinationAddress()});
+      final Map<String, SecretUser> users = ds.loadSecretUsersByAddresses(new String[]{cmd.getSourceAddress(), cmd.getDestinationAddress()});
 
       if (cmd.isNotifyOriginator() && users.get(cmd.getSourceAddress()) == null) { // sourceAddress has not been registered
         if (log.isInfoEnabled())

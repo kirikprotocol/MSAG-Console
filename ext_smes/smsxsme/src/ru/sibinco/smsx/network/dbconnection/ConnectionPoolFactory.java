@@ -1,14 +1,14 @@
 package ru.sibinco.smsx.network.dbconnection;
 
 import snaq.db.ConnectionPool;
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
-import com.eyeline.sme.utils.config.ConfigException;
 
 import java.io.File;
 import java.sql.DriverManager;
 import java.sql.Driver;
 
 import ru.sibinco.smsx.InitializationException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.ConfigException;
 
 /**
  * User: artem

@@ -1,13 +1,14 @@
 package ru.sibinco.smsx.network.advertising;
 
-import com.eyeline.sme.utils.config.ConfigException;
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
 import ru.sibinco.smsx.InitializationException;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Iterator;
+
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.ConfigException;
 
 /**
  * User: artem

@@ -1,14 +1,15 @@
 package ru.sibinco.smsx.engine.service.secret;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.sme.smpp.ShutdownedException;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
-import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Timestamp;
 
@@ -22,14 +23,14 @@ class MessageSender {
   private static final Category log = Category.getInstance("SECRET");
 
   private final SecretDataSource ds;
-  private final SMPPOutgoingQueue outQueue;
+  private final OutgoingQueue outQueue;
 
   private String serviceAddress;
   private String msgDestinationAbonentInform;
   private String msgDestinationAbonentInvitation;
   private String msgDeliveryReport;
 
-  MessageSender(SecretDataSource ds, SMPPOutgoingQueue outQueue) {
+  MessageSender(SecretDataSource ds, OutgoingQueue outQueue) {
     this.ds = ds;
     this.outQueue = outQueue;
   }
@@ -74,12 +75,17 @@ class MessageSender {
       outMsg.setReceiptRequested(Message.RCPT_MC_FINAL_ALL);
 
     final SecretTransportObject outObj = new SecretTransportObject(message);
-    outObj.setOutgoingMessage(outMsg);
-    outQueue.addOutgoingObject(outObj);
+    outObj.setMessage(outMsg);
+    try {
+      outQueue.offer(outObj);
+    } catch (ShutdownedException e) {
+      log.error(e,e);
+      return;
+    }
 
     message.setStatus(SecretMessage.STATUS_PROCESSED);
     try {
-      ds.saveSecretMessage(message);
+      ds.updateMessageStatus(message);
     } catch (DataSourceException e) {
       log.error("Can't save secret message", e);
     }
@@ -95,9 +101,13 @@ class MessageSender {
     notificationMessage.setDestinationAddress(destinationAddress);
     notificationMessage.setMessageString(msg);
     notificationMessage.setConnectionName(connectionName);
-    final SMPPTransportObject outObj1 = new SMPPTransportObject();
-    outObj1.setOutgoingMessage(notificationMessage);
-    outQueue.addOutgoingObject(outObj1);
+    final OutgoingObject outObj1 = new OutgoingObject();
+    outObj1.setMessage(notificationMessage);
+    try {
+      outQueue.offer(outObj1);
+    } catch (ShutdownedException e) {
+      log.error(e,e);
+    }
   }
 
   private String prepareDeliveryReport(final String toAbonent, final Timestamp sendDate) {
@@ -110,7 +120,7 @@ class MessageSender {
   }
 
 
-  private class SecretTransportObject extends SMPPTransportObject {
+  private class SecretTransportObject extends OutgoingObject {
     private final SecretMessage msg;
 
     SecretTransportObject(SecretMessage msg) {
@@ -138,7 +148,7 @@ class MessageSender {
       try {
         if (msg.isSaveDeliveryStatus()) {
           msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
-          ds.saveSecretMessage(msg);
+          ds.updateMessageStatus(msg);
         }
       } catch (DataSourceException e) {
         log.error("Can't save secret message", e);

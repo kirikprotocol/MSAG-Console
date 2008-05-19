@@ -6,7 +6,7 @@ import ru.aurorisoft.smpp.SMPPAddressException;
 
 import java.util.Iterator;
 
-import com.eyeline.sme.utils.tree.radix.TemplatesRadixTree;
+import com.eyeline.utils.tree.radix.TemplatesRadixTree;
 
 /**
  * User: artem

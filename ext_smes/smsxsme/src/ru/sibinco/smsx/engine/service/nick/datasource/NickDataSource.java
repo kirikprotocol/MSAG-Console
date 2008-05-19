@@ -1,6 +1,6 @@
 package ru.sibinco.smsx.engine.service.nick.datasource;
 
-import com.eyeline.sme.utils.ds.DataSourceException;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem

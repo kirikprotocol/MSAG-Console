@@ -16,7 +16,7 @@ public class SmsxServlet extends AxisServlet {
   public void init() throws ServletException {
     super.init();
     try {
-      sme = new Sme(getServletConfig().getInitParameter("configDir"));
+      sme = new Sme(getServletConfig().getInitParameter("configDir"), System.getProperty("test.mode") != null);
     } catch (Throwable e) {
       throw new ServletException(e);
     }

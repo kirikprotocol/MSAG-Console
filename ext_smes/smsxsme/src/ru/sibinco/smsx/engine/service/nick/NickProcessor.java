@@ -6,8 +6,8 @@ import ru.aurorisoft.smpp.PDU;
 import ru.sibinco.smsx.engine.service.nick.commands.NickRegisterCmd;
 import ru.sibinco.smsx.engine.service.nick.commands.NickSendMessageCmd;
 import ru.sibinco.smsx.engine.service.nick.commands.NickUnregisterCmd;
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
-import ru.sibinco.smsx.network.smppnetwork.SMPPTransportObject;
+import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingObject;
 
 /**
  * User: artem
@@ -19,9 +19,9 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
   private static final Category log = Category.getInstance("NICK");
 
   private final NickServiceConfig config;
-  private final SMPPOutgoingQueue outQueue;
+  private final OutgoingQueue outQueue;
 
-  public NickProcessor(NickServiceConfig config, SMPPOutgoingQueue outQueue) {
+  public NickProcessor(NickServiceConfig config, OutgoingQueue outQueue) {
     this.config = config;
     this.outQueue = outQueue;
   }
@@ -51,7 +51,7 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
       msg.setDestinationAddress(config.getProfilerAddress());
       msg.setMessageString("SETNICK " + cmd.getNick());
 
-      final SMPPTransportObject outObj = new SMPPTransportObject() {
+      final OutgoingObject outObj = new OutgoingObject() {
         public void handleResponse(PDU response) {
           cmd.setSmppStatus(response.getStatus());
           cmd.update(NickRegisterCmd.STATUS_DELIVERED);
@@ -62,10 +62,10 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
         }
       };
 
-      outObj.setOutgoingMessage(msg);
+      outObj.setMessage(msg);
 
       cmd.update(NickRegisterCmd.STATUS_MESSAGE_SENDED);
-      outQueue.addOutgoingObject(outObj);
+      outQueue.offer(outObj);
 
     } catch (Throwable e) {
       log.error("Reg nick erro for " + cmd.getAbonentAddress(), e);
@@ -101,7 +101,7 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
       msg.setImsi(cmd.getImsi());
       msg.setPrivacyIndicator((byte)2);
 
-      final SMPPTransportObject outObj = new SMPPTransportObject() {
+      final OutgoingObject outObj = new OutgoingObject() {
         public void handleResponse(PDU response) {
           cmd.setSmppStatus(response.getStatus());
           cmd.update(NickSendMessageCmd.STATUS_DELIVERED);
@@ -112,10 +112,10 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
         }
       };
 
-      outObj.setOutgoingMessage(msg);
+      outObj.setMessage(msg);
 
       cmd.update(NickSendMessageCmd.STATUS_MESSAGE_SENDED);
-      outQueue.addOutgoingObject(outObj);
+      outQueue.offer(outObj);
 
     } catch (Throwable e) {
       log.error("Send nick err for " + cmd.getSourceAddress(), e);
@@ -136,7 +136,7 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
       msg.setDestinationAddress(config.getProfilerAddress());
       msg.setMessageString("CLEARNICK");
 
-      final SMPPTransportObject outObj = new SMPPTransportObject() {
+      final OutgoingObject outObj = new OutgoingObject() {
         public void handleResponse(PDU response) {
           cmd.setSmppStatus(response.getStatus());
           cmd.update(NickUnregisterCmd.STATUS_DELIVERED);
@@ -147,10 +147,10 @@ class NickProcessor implements NickRegisterCmd.Receiver, NickSendMessageCmd.Rece
         }
       };
 
-      outObj.setOutgoingMessage(msg);
+      outObj.setMessage(msg);
 
       cmd.update(NickRegisterCmd.STATUS_MESSAGE_SENDED);
-      outQueue.addOutgoingObject(outObj);
+      outQueue.offer(outObj);
 
     } catch (Throwable e) {
       log.error("Unreg nick err for " + cmd.getAbonentAddress());

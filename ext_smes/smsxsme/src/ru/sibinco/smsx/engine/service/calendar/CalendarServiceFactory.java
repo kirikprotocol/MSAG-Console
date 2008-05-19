@@ -1,6 +1,6 @@
 package ru.sibinco.smsx.engine.service.calendar;
 
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingQueue;
 
 /**
  * User: artem
@@ -11,7 +11,7 @@ public class CalendarServiceFactory {
 
   private static CalendarServiceImpl impl;
 
-  public static synchronized CalendarService getCalendarService(String configDir, SMPPOutgoingQueue outQueue) {
+  public static synchronized CalendarService getCalendarService(String configDir, OutgoingQueue outQueue) {
     if (impl == null)
       impl = new CalendarServiceImpl(configDir, outQueue);
     return impl;

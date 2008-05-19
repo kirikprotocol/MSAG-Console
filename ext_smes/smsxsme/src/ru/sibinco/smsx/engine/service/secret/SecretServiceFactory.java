@@ -1,6 +1,6 @@
 package ru.sibinco.smsx.engine.service.secret;
 
-import ru.sibinco.smsx.network.smppnetwork.SMPPOutgoingQueue;
+import com.eyeline.sme.smpp.OutgoingQueue;
 
 /**
  * User: artem
@@ -11,7 +11,7 @@ public class SecretServiceFactory {
 
   private static SecretService impl;
 
-  public static synchronized SecretService getSecretService(String configDir, SMPPOutgoingQueue outQueue) {
+  public static synchronized SecretService getSecretService(String configDir, OutgoingQueue outQueue) {
     if (impl == null)
       impl = new SecretServiceImpl(configDir, outQueue);
     return impl;

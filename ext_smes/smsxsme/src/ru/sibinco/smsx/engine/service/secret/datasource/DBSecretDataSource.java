@@ -1,8 +1,5 @@
 package ru.sibinco.smsx.engine.service.secret.datasource;
 
-import com.eyeline.sme.utils.ds.DBDataSource;
-import com.eyeline.sme.utils.ds.DataSourceException;
-
 import java.sql.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -10,6 +7,8 @@ import java.util.regex.Matcher;
 
 import snaq.db.ConnectionPool;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
+import ru.sibinco.smsx.utils.DBDataSource;
+import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
  * User: artem
@@ -133,7 +132,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     }
   }
 
-  public Map loadSecretUsersByAddresses(String[] addresses) throws DataSourceException {
+  public Map<String, SecretUser> loadSecretUsersByAddresses(String[] addresses) throws DataSourceException {
 
     Connection conn = null;
     PreparedStatement ps = null;
@@ -142,8 +141,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     try {
       conn = pool.getConnection();
 
-
-      final StringBuffer buffer = new StringBuffer();
+      final StringBuilder buffer = new StringBuilder(addresses.length*12+addresses.length);
       for (int i=0; i<addresses.length; i++)
         buffer.append(buffer.length() > 0 ? "," : "").append('\'').append(addresses[i]).append('\'');
 
@@ -151,7 +149,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
 
       rs = ps.executeQuery();
 
-      final Map result = new HashMap();
+      final Map<String, SecretUser> result = new HashMap<String, SecretUser>();
 
       while (rs!= null && rs.next())
         result.put(rs.getString(1), new SecretUser(rs.getString(1), rs.getString(2)));
@@ -165,12 +163,12 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
     }
   }
 
-  public Collection loadSecretMessagesByAddress(String address) throws DataSourceException {
+  public Collection<SecretMessage> loadSecretMessagesByAddress(String address) throws DataSourceException {
     Connection conn = null;
     PreparedStatement ps = null;
     ResultSet rs = null;
 
-    final Collection messages = new LinkedList();
+    final Collection<SecretMessage> messages = new LinkedList<SecretMessage>();
 
     try {
       conn = pool.getConnection();

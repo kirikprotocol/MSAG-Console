@@ -1,12 +1,13 @@
 package ru.sibinco.smsx.engine.soaphandler.smsxsender;
 
-import com.eyeline.sme.utils.config.ConfigException;
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
 import com.eyeline.sme.utils.worker.IterativeWorker;
+import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.ConfigException;
 import org.apache.log4j.Category;
+import ru.sibinco.smsx.Context;
 import ru.sibinco.smsx.engine.service.CmdStatusObserver;
-import ru.sibinco.smsx.engine.service.ServiceManager;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.ServiceManager;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListCheckMsisdnCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
@@ -18,7 +19,6 @@ import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientException;
 import ru.sibinco.smsx.utils.operators.Operator;
-import ru.sibinco.smsx.utils.operators.OperatorsList;
 
 import java.io.File;
 import java.rmi.RemoteException;
@@ -56,12 +56,10 @@ class SmsXSenderHandler implements SmsXSender {
   private final String advertisingClientName;
   private boolean appendAdvertising;
 
-  private final OperatorsList operatorsList;
   private final AdvertisingClient advertisingClient;
 
-  SmsXSenderHandler(String configDir, OperatorsList operatorsList, AdvertisingClient advertisingClient) {
+  SmsXSenderHandler(String configDir, AdvertisingClient advertisingClient) {
 
-    this.operatorsList = operatorsList;
     this.advertisingClient = advertisingClient;
 
     final File configFile = new File(configDir, "soaphandlers/smsxsendhandler.properties");
@@ -90,7 +88,7 @@ class SmsXSenderHandler implements SmsXSender {
       String id_message = null;
 
       // Check operator
-      final Operator operator = operatorsList.getOperatorByAddress(msisdn);
+      final Operator operator = Context.getInstance().getOperators().getOperatorByAddress(msisdn);
       if (operator == null || !operator.getName().equals("MTS")) {
         log.error("Unknown or incorrect operator for dstaddr=" + msisdn);
         return new SmsXSenderResponse(null, -1, STATUS_DESTINATION_ABONENT_UNKNOWN);

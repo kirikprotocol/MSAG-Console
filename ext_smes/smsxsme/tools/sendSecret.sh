@@ -1,5 +1,5 @@
 #!/bin/sh
 
-. ./classpath.sh
+. ./setenv.sh
 
-java -cp $CLASSPATH ru.sibinco.smsx.tools.SendSecretMsg  "http://192.168.1.194:8080/smsx/services/SmsXSender" $1 $2 $3 $4 $5
+java -cp $SMSX_CLASSPATH $SMSX_SSL_OPTS ru.sibinco.smsx.tools.SendSecretMsg $SMSX_SENDER_URL $@

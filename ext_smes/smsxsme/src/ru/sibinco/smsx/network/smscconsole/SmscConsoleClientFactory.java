@@ -1,11 +1,11 @@
 package ru.sibinco.smsx.network.smscconsole;
 
-import com.eyeline.sme.utils.config.properties.PropertiesConfig;
-import com.eyeline.sme.utils.config.ConfigException;
 
 import java.io.File;
 
 import ru.sibinco.smsx.InitializationException;
+import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.properties.PropertiesConfig;
 
 /**
  * User: artem
@@ -43,10 +43,6 @@ public class SmscConsoleClientFactory {
     return new SmscConsoleClientImpl(host, port, timeout, login, password);
   }
 
-  /**
-   * Create new instance of SmscConsoleClient
-   * @return
-   */
   public static SmscConsoleClient getSmscConsoleClient() {
     return initClient();
   }
