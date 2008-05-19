@@ -191,7 +191,7 @@ void Property::setDate(const char *nm, time_t t, TimePolicy policy, time_t fd, u
     setTimePolicy(policy, fd, lt);
 }
 
-void Property::Serialize(SerialBuffer& buf, bool toFSDB)
+void Property::Serialize(SerialBuffer& buf, bool toFSDB) const
 {
     buf.WriteInt8((uint8_t)type);
     buf.WriteInt8((uint8_t)time_policy);

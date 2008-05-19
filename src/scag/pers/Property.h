@@ -64,7 +64,7 @@ public:
     void ReadAccess();
     void WriteAccess();
 
-    const std::string& getName() const { return name; };
+    const char* getName() const { return name.c_str(); };
     void setName(const std::string& nm) { name = nm; };
     uint32_t getIntValue() { return i_val; };
     bool getBoolValue() { return b_val; };
@@ -90,7 +90,7 @@ public:
 
     void assign(const char *nm, const char* str, TimePolicy policy, time_t fd, uint32_t lt);
 
-    void Serialize(SerialBuffer& buf, bool fromFSDB = false);
+    void Serialize(SerialBuffer& buf, bool fromFSDB = false) const;
     void Deserialize(SerialBuffer& buf, bool toFSDB = false);
 
     bool convertToInt();
