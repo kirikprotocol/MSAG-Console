@@ -114,12 +114,12 @@ PersServerResponseType PersServer::IncCmdHandler(ProfileType pt, uint32_t int_ke
     int result = 0;
     if(pt == PT_ABONENT)
     {
-        smsc_log_debug(plog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+        smsc_log_debug(plog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName());
         exists = AbonentStore->incProperty(str_key.c_str(), prop, result);
     }
     else if(is = findStore(pt))    
     {
-        smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+        smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName());
         exists = is->incProperty(int_key, prop, result);
     }
     if (exists) {
@@ -139,12 +139,12 @@ PersServerResponseType PersServer::IncResultCmdHandler(ProfileType pt, uint32_t 
     int result = 0;
     if(pt == PT_ABONENT)
     {
-        smsc_log_debug(plog, "IncResultCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+        smsc_log_debug(plog, "IncResultCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName());
         exists = AbonentStore->incProperty(str_key.c_str(), prop, result);
     }
     else if(is = findStore(pt))    
     {
-        smsc_log_debug(plog, "IncResultCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+        smsc_log_debug(plog, "IncResultCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName());
         exists = is->incProperty(int_key, prop, result);
     }
     if (exists) {
@@ -164,12 +164,12 @@ PersServerResponseType PersServer::IncModCmdHandler(ProfileType pt, uint32_t int
     int res = 0;
     if(pt == PT_ABONENT)
     {
-        smsc_log_debug(plog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
+        smsc_log_debug(plog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName(), mod);
         exists = AbonentStore->incModProperty(str_key.c_str(), prop, mod, res);
     }
     else if(is = findStore(pt))    
     {
-        smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
+        smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName(), mod);
         exists = is->incModProperty(int_key, prop, mod, res);
     }
     if(exists) 
@@ -229,7 +229,6 @@ PersServerResponseType PersServer::execCommand(SerialBuffer& isb, SerialBuffer& 
     PersCmd cmd;
     ProfileType pt;
     uint32_t int_key;
-    string str_key;
     string profKey;
     string name;
     Property prop;
@@ -247,8 +246,9 @@ PersServerResponseType PersServer::execCommand(SerialBuffer& isb, SerialBuffer& 
           int_key = isb.ReadInt32();
         }
         else {
-          isb.ReadString(str_key);
-          profKey = getProfileKey(str_key);
+          isb.ReadString(profKey);
+          //isb.ReadString(str_key);
+          //profKey = getProfileKey(str_key);
         }
     }
     switch(cmd)
