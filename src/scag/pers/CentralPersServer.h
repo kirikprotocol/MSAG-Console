@@ -69,7 +69,7 @@ protected:
   bool getProfileInfo(AbntAddr& key, ProfileInfo& pi);
   void reloadRegions(const char* regionsFileName);
   void ParseFile(const char* _xmlFile, HandlerBase* handler);
-  void checkTransactionsTimeouts();
+  void checkTransactionsTimeouts(time_t curTime);
   void onDisconnect(ConnectionContext& ctx);  
 
 private: 

@@ -458,12 +458,12 @@ void CentralPersServer::sendCommand(const CPersCmd &cmd, uint32_t region_id) {
   sendCommand(cmd, ri.ctx);
 }
 
-void CentralPersServer::checkTransactionsTimeouts() {
+void CentralPersServer::checkTransactionsTimeouts(time_t curTime) {
   if (isStopped()) {
     return;
   }
   smsc_log_debug(logger, "Checking transactions timeouts...");
-  time_t time_bound = time(NULL) - transactTimeout;
+  time_t time_bound = curTime - transactTimeout;
   AbntAddr key;
   TransactionInfo tr_info;
   transactions.First();
