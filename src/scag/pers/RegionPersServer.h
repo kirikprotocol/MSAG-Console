@@ -39,7 +39,7 @@ protected:
   //virtual void processUplinkPacket(ConnectionContext &ctx) {
   //}
   virtual bool bindToCP();
-  void checkTimeouts();
+  void checkTimeouts(time_t curTime);
 
 private:
   void connectToCP();
@@ -81,7 +81,7 @@ private:
   PersServerResponseType IncResultCmdHandler(Profile* pf, const string& str_key, Property& prop, SerialBuffer& osb, bool alwaysStore = false);
   PersServerResponseType IncModCmdHandler(Profile* pf, const string& str_key, Property& prop, int mod, SerialBuffer& osb, bool alwaysStore = false);
 
-  void checkTransactionsTimeouts();
+  void checkTransactionsTimeouts(time_t curTime);
   void commandTimeout(const AbntAddr& addr, CmdContext* ctx);
 
   void WriteAllToCP(const char* buf, uint32_t sz);

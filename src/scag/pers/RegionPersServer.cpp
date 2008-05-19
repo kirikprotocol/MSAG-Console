@@ -719,7 +719,7 @@ PersServerResponseType RegionPersServer::IncCmdHandler(ProfileType pt, uint32_t 
   bool exists = false;
   int result = 0;
   if(is = findStore(pt)) {
-    smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+    smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName());
     exists = is->incProperty(int_key, prop, result);
   }
   if (exists) {
@@ -736,7 +736,7 @@ PersServerResponseType RegionPersServer::IncResultCmdHandler(ProfileType pt, uin
   bool exists = false;
   int result = 0;
   if(is = findStore(pt)) {
-    smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName().c_str());
+    smsc_log_debug(plog, "IncCmdHandler store=%d, key=%d, name=%s", pt, int_key, prop.getName());
     exists = is->incProperty(int_key, prop, result);
   }
   if(exists) {
@@ -755,7 +755,7 @@ PersServerResponseType RegionPersServer::IncModCmdHandler(ProfileType pt, uint32
   bool exists = false;
   int res = 0;
   if(is = findStore(pt)) {
-    smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName().c_str(), mod);
+    smsc_log_debug(plog, "IncModCmdHandler store=%d, key=%d, name=%s, mod=%d", pt, int_key, prop.getName(), mod);
     exists = is->incModProperty(int_key, prop, mod, res);
   }
   if(exists) {
@@ -821,7 +821,7 @@ PersServerResponseType RegionPersServer::SetCmdHandler(Profile *pf, const string
 
 PersServerResponseType RegionPersServer::IncCmdHandler(Profile *pf, const string& str_key,
                                 Property& prop, SerialBuffer& osb, bool alwaysStore) {
-  smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+  smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName());
   int result = 0;
   if (getAbonentStore()->incProperty(pf, str_key.c_str(), prop, result)) {
     SendResponse(osb, RESPONSE_OK);
@@ -838,7 +838,7 @@ PersServerResponseType RegionPersServer::IncCmdHandler(Profile *pf, const string
 
 PersServerResponseType RegionPersServer::IncResultCmdHandler(Profile *pf, const string& str_key,
                                 Property& prop, SerialBuffer& osb, bool alwaysStore) {
-  smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName().c_str());
+  smsc_log_debug(rplog, "IncCmdHandler AbonentStore: key=%s, name=%s", str_key.c_str(), prop.getName());
   int result = 0;
   if (getAbonentStore()->incProperty(pf, str_key.c_str(), prop, result)) {
     SendResponse(osb, RESPONSE_OK);
@@ -857,7 +857,7 @@ PersServerResponseType RegionPersServer::IncResultCmdHandler(Profile *pf, const 
 PersServerResponseType RegionPersServer::IncModCmdHandler(Profile *pf, const string& str_key,
                                          Property& prop, int mod, SerialBuffer& osb, bool alwaysStore) {
   int res = 0;
-  smsc_log_debug(rplog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName().c_str(), mod);
+  smsc_log_debug(rplog, "IncModCmdHandler AbonentStore: key=%s, name=%s, mod=%d", str_key.c_str(), prop.getName(), mod);
   if(getAbonentStore()->incModProperty(pf, str_key.c_str(), prop, mod, res)) {
     SendResponse(osb, RESPONSE_OK);
     osb.WriteInt32(res);
@@ -1028,9 +1028,9 @@ void RegionPersServer::commandTimeout(const AbntAddr& addr, CmdContext* ctx) {
   }
 }
 
-void RegionPersServer::checkTimeouts()
+void RegionPersServer::checkTimeouts(time_t curTime)
 {
-	time_t time_bound = time(NULL) - timeout;
+	time_t time_bound = curTime - timeout;
 	int i = 1;
 	smsc_log_debug(rplog, "Checking timeouts...");
 	while(i < listener.count())
@@ -1062,12 +1062,12 @@ void RegionPersServer::checkTimeouts()
     }
 }
 
-void RegionPersServer::checkTransactionsTimeouts() {
+void RegionPersServer::checkTransactionsTimeouts(time_t curTime) {
   if (isStopped()) {
     return;
   }
   smsc_log_debug(rplog, "Checking transactions timeouts...");
-  time_t time_bound = time(NULL) - transactTimeout;
+  time_t time_bound = curTime - transactTimeout;
   AbntAddr key;
   CmdContext *ctx = 0;
   commands.First();
