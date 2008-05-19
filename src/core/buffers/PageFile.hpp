@@ -96,7 +96,7 @@ public:
         {
           File::offset_type next=file.ReadNetInt64();
           //printf("Read::Multi state=%d, pageIdx=%08llx,next=%08llx\n",state,pageIdx,next);
-          int sz=data.size();
+          size_t sz=data.size();
           data.resize(sz+dataSize);
           file.Read(&data[sz],dataSize);
           if(state==pageUsedFinal)

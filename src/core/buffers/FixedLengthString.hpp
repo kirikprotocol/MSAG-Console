@@ -83,16 +83,16 @@ struct FixedLengthString{
     return str;
   }
 
-  char operator[](int index)const
+  char operator[](size_t index)const
   {
     return str[index];
   }
-  char& operator[](int index)
+  char& operator[](size_t index)
   {
     return str[index];
   }
 
-  void assign(const char* argStr,int len)
+  void assign(const char* argStr,size_t len)
   {
     if(len<N)
     {
