@@ -471,9 +471,11 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   // create scheduler here, and start later in run
   scheduler=new Scheduler();
 
-  scheduler->InitDpfTracker(cfg.cfgman->getString("scheduler.setdpfStore"),
-                            cfg.cfgman->getInt("scheduler.timeOut1179"),
-                            cfg.cfgman->getInt("scheduler.timeOut1044"));
+  scheduler->InitDpfTracker(cfg.cfgman->getString("dpf.storeDir"),
+                            cfg.cfgman->getInt("dpf.timeOut1179"),
+                            cfg.cfgman->getInt("dpf.timeOut1044"),
+                            cfg.cfgman->getInt("dpf.maxChanges"),
+                            cfg.cfgman->getInt("dpf.maxTime"));
 
   schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
   schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");

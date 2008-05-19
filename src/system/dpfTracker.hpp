@@ -29,7 +29,7 @@ public:
     isStopping=false;
   }
 
-  void Init(const char* argStoreLocation,int to1179,int to1044);
+  void Init(const char* argStoreLocation,int to1179,int to1044,int mxch,int ctm);
   void registerSetDpf(const Address& abonent,const Address &smeAddr,int errCode,int smeIdx);
   void hlrAlert(const Address& abonent);
 

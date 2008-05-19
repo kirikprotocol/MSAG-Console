@@ -755,9 +755,9 @@ public:
           }
         }
 
-        void InitDpfTracker(const char* storeLocation,int to1179,int to1044)
+        void InitDpfTracker(const char* storeLocation,int to1179,int to1044,int mxch,int mxt)
         {
-          dpfTracker.Init(storeLocation,to1179,to1044);
+          dpfTracker.Init(storeLocation,to1179,to1044,mxch,mxt);
         }
 
         void registerSetDpf(const smsc::sms::Address& abonent,const smsc::sms::Address &smeAddr,int errCode,int smeIdx)
