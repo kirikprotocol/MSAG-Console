@@ -11,6 +11,7 @@
 
 #include <logger/Logger.h>
 #include "core/buffers/File.hpp"
+#include "core/buffers/Hash.hpp"
 
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
@@ -24,12 +25,13 @@ namespace scag{ namespace pers{
 using std::string;
 using std::map;
 using std::vector;
+using smsc::core::buffers::Hash;
+
 
 class Glossary
 {
-	typedef map<string, int> 		GlossaryMap;
-	typedef map<string, int>::iterator	GlossaryMapIterator;
-	typedef vector<string>			GlossaryVector;
+	typedef vector<string>			    GlossaryVector;
+    typedef Hash<int>                   GlossaryHash;
 	
 public:
 	static const int SUCCESS		= 0;
@@ -75,7 +77,6 @@ public:
 			else
 			{
 				glossFile->RWCreate(glossFileName.c_str());
-//				glossFile.Write("UNDEFINED\n", 10);
 			}
 
 			glossFile->SetUnbuffered();
@@ -98,7 +99,8 @@ public:
 			smsc_log_debug(logger, "cancel close - Glossary not opened");
 			return;
 		}
-		glossMap.erase(glossMap.begin(), glossMap.end());
+        glossHash.Empty();
+        
 		glossVector.erase(glossVector.begin(), glossVector.end());
 		glossFile->Close();
         delete glossFile;
@@ -108,7 +110,7 @@ public:
 	
 	static int Add(const string& key)
 	{
-		MutexGuard lock(mutex);
+		//MutexGuard lock(mutex);
 		smsc_log_debug(logger, "add %s", key.c_str());
 		if(!opened)
 		{
@@ -117,15 +119,13 @@ public:
 		}
 		if(!opened) return GLOSSARY_CLOSED;
 		
-		GlossaryMapIterator It;
 
-		It = glossMap.find(key);
-		if(It == glossMap.end())
+		if(!glossHash.Exists(key.c_str()))
 		{
 			char ch = 0x0a;
 			glossFile->Write(key.c_str(), key.length());
 			glossFile->Write(&ch, sizeof(char)); 
-			glossMap.insert(GlossaryMap::value_type(key, currentIndex));
+            glossHash.Insert(key.c_str(), currentIndex);
 			glossVector.push_back(key);
 			currentIndex++;
 			smsc_log_debug(logger, "added %s - %d", key.c_str(), currentIndex - 1);
@@ -137,7 +137,7 @@ public:
 	
 	static int GetValueByKey(const string& key)
 	{
-		MutexGuard lock(mutex);
+		//MutexGuard lock(mutex);
 		smsc_log_debug(logger, "GetValueByKey %s", key.c_str());
 		if(!opened)
 		{
@@ -145,21 +145,19 @@ public:
 			return GLOSSARY_CLOSED;
 		}
 		
-		GlossaryMapIterator It;
-
-		It = glossMap.find(key);
-		if(It == glossMap.end())
+        const int *val = glossHash.GetPtr(key.c_str());
+		if(!val)
 		{
 			smsc_log_debug(logger, "GetValueByKey. No value for %s", key.c_str());
 			return NO_VALUE;
 		}
 		
-		smsc_log_debug(logger, "GetValueByKey %s - %d", key.c_str(), It->second);
-		return It->second;
+		smsc_log_debug(logger, "GetValueByKey %s - %d", key.c_str(), *val);
+        return *val;
 	}
 	static int GetKeyByValue(const int value, string& key)
 	{
-		MutexGuard lock(mutex);
+		//MutexGuard lock(mutex);
 		smsc_log_debug(logger, "GetKeyByValue %d", value);
 		if(!opened)
 		{
@@ -187,12 +185,11 @@ private:
 			while(glossFile->ReadLine(key))
 			{
 				smsc_log_debug(logger, "%s %d", key.c_str(), currentIndex);
-				glossMap.insert(GlossaryMap::value_type(key, currentIndex));
+                glossHash.Insert(key.c_str(), currentIndex);
 				glossVector.push_back(key);
 				currentIndex++;
 			}
-			smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossMap.size(), glossVector.size(), currentIndex);
-			
+            smsc_log_debug(logger, "Glossary size is %d (vec = %d, idx = %d)", glossHash.GetCount(), glossVector.size(), currentIndex);
 			glossFile->SeekEnd(0);
 		}
 		catch(FileException ex)
@@ -206,7 +203,7 @@ protected:
 	static smsc::logger::Logger *logger;
 	
 	static File*		glossFile;
-	static GlossaryMap	glossMap;
+    static GlossaryHash	glossHash;
 	static GlossaryVector	glossVector;
 	static int		currentIndex;
 	static bool		opened;

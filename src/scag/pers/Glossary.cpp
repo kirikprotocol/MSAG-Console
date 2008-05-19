@@ -11,13 +11,13 @@
 
 namespace scag{ namespace pers{
 	
-smsc::logger::Logger* Glossary::logger = 0;
+  smsc::logger::Logger* Glossary::logger = 0;
+  File* Glossary::glossFile = NULL;
+  Glossary::GlossaryHash Glossary::glossHash;
+  Glossary::GlossaryVector Glossary::glossVector;
+  int	Glossary::currentIndex = 0;
+  bool Glossary::opened = false;
+  Mutex Glossary::mutex;
 
-File*				Glossary::glossFile = NULL;
-Glossary::GlossaryMap		Glossary::glossMap;
-Glossary::GlossaryVector	Glossary::glossVector;
-int				Glossary::currentIndex = 0;
-bool				Glossary::opened = false;
-Mutex				Glossary::mutex;
 };
 };
