@@ -17,6 +17,8 @@
 #include "core/buffers/File.hpp"
 
 #include "DataBlock.h"
+#include "SerialBuffer.h"
+#include "Profile.h"
 
 extern int errno;
 
@@ -26,6 +28,7 @@ extern int errno;
 using std::vector;
 using std::string;
 using smsc::logger::Logger;
+using scag::pers::Profile;
 
 const string dfPreambule= "RBTREE_FILE_STORAGE!";
 const int dfVersion_32_1 = 0x01;
@@ -48,10 +51,13 @@ const int DESCR_FILE_MAP_FAILED     = -6;
 const int defaultBlockSize = 56; // in bytes
 const int defaultFileSize = 3; // in blocks 
 const long long BLOCK_USED   = (long long)1 << 63;
-//const long long BLOCK_USED   = static_cast<long long>(1) << 63;
 
 static const uint8_t TRX_COMPLETE   = 0;
 static const uint8_t TRX_INCOMPLETE = 1;
+
+static const size_t WRITE_BUF_SIZE = 10240;
+static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
+                                          
 
 
 struct DescriptionFile   
@@ -66,6 +72,14 @@ struct DescriptionFile
     int blocks_free;
     long first_free_block;
     char Reserved[12];
+};
+
+template<class Key>
+struct templBackupHeader {
+  long blocksCount;
+  long dataSize;
+  long curBlockIndex;
+  Key key;
 };
 
 template<class Key>
@@ -102,11 +116,13 @@ class BlocksHSStorage
 {
 	typedef templDataBlockHeader<Key> DataBlockHeader;
     typedef templDataBlock<Key> CompleteDataBlock; 
+    typedef templBackupHeader<Key> BackupHeader;
 
 public:
 //	static const int SUCCESS			           = 0;
 //	static const int RBTREE_FILE_NOT_SPECIFIED	   = -1;
-	static const int CANNOT_CREATE_DESCR_FILE	   = -2;
+	static const int CANNOT_CREATE_STORAGE	       = -1;
+    static const int CANNOT_CREATE_DESCR_FILE	   = -2;
 	static const int CANNOT_CREATE_DATA_FILE	   = -3;
 	static const int CANNOT_OPEN_DESCR_FILE	       = -4;
 	static const int CANNOT_OPEN_DATA_FILE		   = -5;
@@ -121,11 +137,12 @@ public:
 	static const int defaultBlockSize = 56; // in bytes
 	static const int defaultFileSize = 3; // in blocks 
 	static const long BLOCK_USED	= (long)1 << 63;
-    //static const long BLOCK_USED	= (long)1 << 10;
 
 	BlocksHSStorage():running(false), iterBlockIndex(0)
 	{
         logger = smsc::logger::Logger::getInstance("BlkStore");
+        hdrSize = sizeof(DataBlockHeader);
+
 	}
 	virtual ~BlocksHSStorage()
 	{
@@ -138,17 +155,19 @@ public:
 	{
 		dbName = _dbName;
 		dbPath = _dbPath;
+        if (_blockSize > WRITE_BUF_SIZE) {
+          smsc_log_error(logger, "block size %d too large. max block size = %d", _blockSize, WRITE_BUF_SIZE);
+          return CANNOT_CREATE_STORAGE;
+        }
 		
 		int ret;
-		if(0 != (ret = CreateDescriptionFile(_blockSize + sizeof(DataBlockHeader), _fileSize)))
+		if(0 != (ret = CreateDescriptionFile(_blockSize + hdrSize, _fileSize)))
 			return ret;
         try {
           CreateDataFile();
         } catch (const std::exception& e) {
           return CANNOT_CREATE_DATA_FILE;
         }
-		//if(0 != (ret = CreateDataFile()))
-			//return ret;
         if(0 != (ret = CreateBackupFile()))
             return ret;
 		
@@ -190,96 +209,70 @@ public:
 	
 	}
 
-    bool Add(const DataBlock& data, const Key& key, long& blockIndex) {
-      smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), data.length());
-      if (data.length() <= 0) {
+    bool Add(Profile& profile, const Key& key, long& blockIndex) {
+      //SerialBuffer data;
+      profileData.Empty();
+      profile.Serialize(profileData, true);
+      smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), profileData.length());
+      int dataLength = profileData.length();
+      if (dataLength <= 0) {
         return false;
       }
       long ffb = descrFile.first_free_block;
       DescriptionFile oldDescrFile = descrFile;
-      if (!backUpProfile(-1, data, true)) {
+      backupHeader.key = key;
+      if (!backUpProfile(-1, profile, dataLength, true)) {
         blockIndex = -1;
         smsc_log_error(logger, "Backup profile error");
         return false;
       }
       try {
-        descrFile.first_free_block = addBlocks(ffb, 0, dataBlockBackup.size() - 1, data, key);
+        descrFile.first_free_block = addBlocks(ffb, 0, backupHeader.blocksCount, profileData,
+                                               key, profile);
         changeDescriptionFile();
         clearBackup();
         blockIndex = ffb;
+        profile.setBackupData(profileData);
         return true;
       } catch (const std::exception& e) {
         blockIndex = -1;
-        restoreDataBlocks(oldDescrFile);
+        restoreDataBlocks(oldDescrFile, profile.getBackupData());
+        profile.Empty();
         descrFile = oldDescrFile;
         changeDescriptionFile();
-        exit(-1);
+        //exit(-1);
+        throw;
       }
     }
 
-/*
-	bool Add(const DataBlock& data, const Key& key, long& blockIndex)
-	{
-      smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), data.length());
-      DataBlockHeader hdr;
-      hdr.block_used = BLOCK_USED;
-      hdr.key = key;
-      hdr.head = true;
-      hdr.total_blocks = (data.length() + effectiveBlockSize - 1) / effectiveBlockSize;
-      hdr.data_size = data.length();//effectiveBlockSize;
-
-      try {
-        for(int i = 0; i < hdr.total_blocks; i++)
-        {
-            long curBlockIndex = descrFile.first_free_block;
-            int file_number = curBlockIndex / descrFile.file_size;
-            off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
-            long ffb = getFirstFreeBlock(file_number, offset);
-            if (!ffb) {
-              smsc_log_warn(logger, "Error first free block index %d", ffb);
-              return false;
-            }
-            size_t curBlockSize = (i == hdr.total_blocks - 1) ?
-                                   (data.length() - effectiveBlockSize * i) : effectiveBlockSize;
-            hdr.next_block = (i < hdr.total_blocks - 1) ? ffb : -1;
-            writeDataBlock(file_number, offset, hdr,
-                           (void*)(data.c_ptr() + i * (effectiveBlockSize)), curBlockSize);
-            descrFile.first_free_block = ffb;
-            if (i == 0) blockIndex = curBlockIndex;
-        }
-        changeDescriptionFile();
-        smsc_log_debug(logger, "Data block key='%s' added, index=%d", key.toString().c_str(), blockIndex);
-        return true;
-      } catch (const std::exception& e) {
-        smsc_log_warn(logger, "Error adding data block. std::exception: '%s'", e.what());
-        changeDescriptionFile();
-        exit(-1);
-      }
-	}
-*/
     
-    bool Change(const DataBlock& data, const Key& key, long& blockIndex) {
-      smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
-                      blockIndex, key.toString().c_str(), data.length());
+    bool Change(Profile& profile, const Key& key, long& blockIndex) {
       if (blockIndex == -1) {
-        return Add(data, key, blockIndex);
+        return Add(profile, key, blockIndex);
       }
+      profileData.Empty();
+      profile.Serialize(profileData, true);
+      smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
+                      blockIndex, key.toString().c_str(), profileData.length());
       DescriptionFile oldDescrFile = descrFile;
       long ffb = descrFile.first_free_block;
-      if (!backUpProfile(blockIndex, data, true)) {
+      backupHeader.key = key;
+      int dataLength = profileData.length();
+      if (!backUpProfile(blockIndex, profile, dataLength, true)) {
         smsc_log_error(logger, "Backup profile error");
         return false;
       }
-      int blocksCount = (data.length() + effectiveBlockSize - 1) / effectiveBlockSize;
-      int oldBlocksCount = dataBlockBackup[0].hdr.total_blocks;
+      int blocksCount = (dataLength + effectiveBlockSize - 1) / effectiveBlockSize;
+      int oldBlocksCount = (backupHeader.dataSize + effectiveBlockSize - 1) / effectiveBlockSize;
       int updateBlocksCount = blocksCount <= oldBlocksCount ? blocksCount : oldBlocksCount;
 
       try {
-        long curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, data, key); 
+        profile.clearBackup();
+        long curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, profileData, key, profile); 
         if (blocksCount > oldBlocksCount) {
           smsc_log_debug(logger, "Add new blocks");
-          descrFile.first_free_block = addBlocks(ffb, updateBlocksCount, dataBlockBackup.size() - 1,
-                                             data, key);
+          descrFile.first_free_block = addBlocks(ffb, updateBlocksCount, blocksCount,
+                                                 profileData, key, profile);
         } 
         if (blocksCount < oldBlocksCount) {
           smsc_log_debug(logger, "Remove empty blocks");
@@ -290,86 +283,19 @@ public:
         if (blocksCount == 0) {
           blockIndex = -1;
         }
+        profile.setBackupData(profileData);
         return true;
       } catch (const std::exception& e) {
-        restoreDataBlocks(oldDescrFile);
+        profile.restoreBackup(dataBlockBackup, oldBlocksCount);
+        restoreDataBlocks(oldDescrFile, profile.getBackupData());
         descrFile = oldDescrFile;
         changeDescriptionFile();
-        exit(-1);
+        //exit(-1);
+        throw;
       }
 
     }
     
-/*
-    bool Change(const DataBlock& data, const Key& key, long& blockIndex)
-	{
-        smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
-                        blockIndex, key.toString().c_str(), data.length());
-		//if (blockIndex == -1) {
-          //return _Add(data, key, blockIndex);
-        //}
-        //return _Change(data, key, blockIndex);
-
-		DataBlockHeader hdr;
-		long curBlockIndex = blockIndex;
-		long total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 0;
-		long old_total_blocks = 2;
-		long data_size = data.length();
-		long next_block = blockIndex;
-		size_t curBlockSize = effectiveBlockSize;
-
-        try {
-          for(int i = 0; i < total_blocks; i++)
-          {
-              int file_number = curBlockIndex / descrFile.file_size;
-              off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
-              long ffb = 0;
-              if(i < old_total_blocks)
-              {
-                  File* f = dataFile_f[file_number];
-                  f->Seek(offset, SEEK_SET);
-                  f->Read((void*)&hdr, sizeof(DataBlockHeader));
-                  if( (hdr.block_used != BLOCK_USED) || (hdr.key != key) )
-                      return false;
-                  if(i == 0) old_total_blocks = hdr.total_blocks;
-                  hdr.total_blocks = total_blocks;
-                  hdr.data_size = data_size;
-                  next_block = hdr.next_block;
-              }
-              if( (i >= old_total_blocks - 1) && (i != total_blocks - 1) )
-              {
-                  hdr.next_block = descrFile.first_free_block;
-                  int fn = hdr.next_block / descrFile.file_size;
-                  off_t ofs = (hdr.next_block - fn * descrFile.file_size)*descrFile.block_size;
-                  ffb = getFirstFreeBlock(fn, ofs);
-                  if (!ffb) {
-                    smsc_log_warn(logger, "Error first free block index %d", ffb);
-                    return false;
-                  }
-              }
-              if (i == total_blocks - 1)
-              {
-                  hdr.next_block = -1;
-                  curBlockSize = data_size - effectiveBlockSize * i;
-              }
-              writeDataBlock(file_number, offset, hdr,
-                              (void *)(data.c_ptr()+i*(effectiveBlockSize)), curBlockSize);
-              descrFile.first_free_block = ffb > 0 ? ffb : descrFile.first_free_block;
-              curBlockIndex = hdr.next_block;
-          }
-        } catch (const std::exception& e) {
-          smsc_log_warn(logger, "Error changing data block %d. std::exception: '%s'", blockIndex);
-          changeDescriptionFile();
-          exit(-1);
-        }
-        if (next_block != -1) {
-          Remove(next_block);
-          return true;
-        }
-        changeDescriptionFile();
-		return true;
-	}
-*/
 	bool Get(long blockIndex, DataBlock& data)
 	{
         smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
@@ -385,7 +311,7 @@ public:
 			off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
 			File* f = dataFile_f[file_number];
 			f->Seek(offset, SEEK_SET);
-			f->Read((void*)&hdr, sizeof(DataBlockHeader));
+			f->Read((void*)&hdr, hdrSize);
 			if(hdr.block_used != BLOCK_USED)
 				return false;
 			if(curBlockIndex == blockIndex)
@@ -406,16 +332,55 @@ public:
 		return true;
 	}
 
-    void Remove(long blockIndex) {
+    bool Get(long blockIndex, Profile& profile)
+    {
+        smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
+        if(blockIndex == -1) return false;
+        char* buff;
+        long curBlockIndex = blockIndex;
+        int i = 0;
+        //SerialBuffer data;
+        profileData.Empty();
+        do
+        {
+            DataBlockHeader hdr;
+            int file_number = curBlockIndex / descrFile.file_size;
+            off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
+            File* f = dataFile_f[file_number];
+            f->Seek(offset, SEEK_SET);
+            f->Read((void*)&hdr, hdrSize);
+            if(hdr.block_used != BLOCK_USED) {
+                smsc_log_error(logger, "block index=%d unused", curBlockIndex);
+                return false;
+            }
+            if(curBlockIndex == blockIndex)
+            {
+                profileData.setBuffLength(hdr.data_size);
+                buff = profileData.ptr();
+                profileData.setLength(hdr.data_size);
+            }
+            size_t dataSize = hdr.next_block == -1 ? 
+                              hdr.data_size - effectiveBlockSize*i : effectiveBlockSize;
+            f->Read((void*)(buff+(i*effectiveBlockSize)), dataSize);
+            curBlockIndex = hdr.next_block;
+            ++i;
+            profile.addDataToBackup(hdr.next_block);
+        }
+        while(-1 != curBlockIndex);
+        profile.Deserialize(profileData, true);
+        profile.setBackupData(profileData);
+        return true;
+    }
+
+    void Remove(long blockIndex, const Profile& profile) {
       smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
       if (blockIndex < 0) {
         smsc_log_warn(logger, "Can't remove data block index=%d ", blockIndex);
         return;
       }
-      DataBlock data(0);
       DescriptionFile oldDescrFile = descrFile;
       long ffb = descrFile.first_free_block;
-      if (!backUpProfile(blockIndex, data, true)) {
+      if (!backUpProfile(blockIndex, profile, 0, true)) {
         return;
       }
       try {
@@ -423,44 +388,13 @@ public:
         changeDescriptionFile();
         clearBackup();
       } catch (const std::exception& e) {
-        restoreDataBlocks(oldDescrFile);
+        restoreDataBlocks(oldDescrFile, profile.getBackupData());
         descrFile = oldDescrFile;
         changeDescriptionFile();
         exit(-1);
       }
     }
 
-    /*
-	void Remove(long blockIndex)
-	{
-        smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
-        //_Remove(blockIndex);
-        //return;
-		long next_block = blockIndex;
-		DataBlockHeader hdr;
-        try {
-          while(-1 != next_block)
-          {
-              int file_number = next_block / descrFile.file_size;
-              off_t offset = (next_block - file_number * descrFile.file_size) * descrFile.block_size;
-              File* f = dataFile_f[file_number];
-              f->Seek(offset, SEEK_SET);
-              f->Read((void*)&hdr, sizeof(DataBlockHeader));
-              f->Seek(offset, SEEK_SET);
-              if ((hdr.block_used != BLOCK_USED))
-                  break;
-              f->Write((void*)&(descrFile.first_free_block), sizeof(descrFile.first_free_block));
-              descrFile.first_free_block = next_block;
-              next_block = hdr.next_block;
-          }
-          changeDescriptionFile();
-        } catch (const std::exception& e) {
-          smsc_log_warn(logger, "Error removing data block %d. std::exception: '%s'",
-                         blockIndex, e.what());
-          changeDescriptionFile();
-          exit(-1);
-        }
-	}*/
 
     void Reset()
     {
@@ -478,7 +412,7 @@ public:
 			off_t offset = (iterBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
 			File* f = dataFile_f[file_number];
 			f->Seek(offset, SEEK_SET);
-			f->Read((void*)&hdr, sizeof(DataBlockHeader));
+			f->Read((void*)&hdr, hdrSize);
             blockIndex = iterBlockIndex++;            
             if(hdr.block_used == BLOCK_USED && hdr.head)
             {
@@ -505,7 +439,12 @@ private:
   long iterBlockIndex;
   long effectiveBlockSize;	
 
-  vector<CompleteDataBlock> dataBlockBackup;
+  vector<long> dataBlockBackup;
+  char writeBuf[WRITE_BUF_SIZE];
+  size_t hdrSize;
+  SerialBuffer profileData;
+  CompleteDataBlock completeDataBlock;
+  BackupHeader backupHeader;
 
 private:
 
@@ -519,48 +458,46 @@ private:
     {
       smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
                      offset, curBlockSize);
-      printHdr(hdr);
-      size_t bufSize = sizeof(DataBlockHeader) + curBlockSize;
-      char* buf = new char[bufSize];
-      memcpy(buf, &hdr, sizeof(DataBlockHeader));
-      memcpy(buf + sizeof(DataBlockHeader), data, curBlockSize);
+      //printHdr(hdr);
+      size_t bufSize = hdrSize + curBlockSize;
+      //TODO compare bufSize and WRITE_BUF_SIZE
+      memcpy(writeBuf, &hdr, hdrSize);
+      memcpy(writeBuf + hdrSize, data, curBlockSize);
       try {
         File* f = dataFile_f[fileNumber];
-        //offset = -1;
         f->Seek(offset, SEEK_SET);
-        f->Write((void *)buf, bufSize);
-        delete[] buf;
+        f->Write((void *)writeBuf, bufSize);
       } catch (const std::exception& e) {
         smsc_log_warn(logger, "Error writing block to data file %d. std::exception: '%s'",
                        fileNumber,e.what());
-        delete[] buf;
         throw;
       }
     }
 
     long addBlocks(long curBlockIndex, size_t backupStartIndex, size_t blocksCount,
-                   const DataBlock& data, const Key& key) {
+                   const DataBlock& data, const Key& key, Profile& profile) {
+      int dataLength = data.length();
       DataBlockHeader hdr;
       hdr.block_used = BLOCK_USED;
       hdr.key = key;
       hdr.head = backupStartIndex == 0 ? true : false;
-      hdr.total_blocks = (data.length() + effectiveBlockSize - 1) / effectiveBlockSize;
-      hdr.data_size = data.length();//effectiveBlockSize;
+      hdr.total_blocks = (dataLength + effectiveBlockSize - 1) / effectiveBlockSize;
+      hdr.data_size = dataLength;//effectiveBlockSize;
       size_t curBlockSize = 0;
       for (int i = backupStartIndex; i < blocksCount; ++i) {
         int file_number = curBlockIndex / descrFile.file_size;
         off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
-        curBlockIndex = dataBlockBackup[i].hdr.block_used == BLOCK_USED ?
-                        dataBlockBackup[i].hdr.next_block : dataBlockBackup[i].hdr.next_free_block;
+        curBlockIndex = dataBlockBackup[i];
         if (i == hdr.total_blocks - 1) {
           hdr.next_block =  -1; 
-          curBlockSize = data.length() - effectiveBlockSize * i;
+          curBlockSize = dataLength - effectiveBlockSize * i;
         } else {
           hdr.next_block = curBlockIndex; 
           curBlockSize = effectiveBlockSize;
         }
         writeDataBlock(file_number, offset, hdr,
                        (void*)(data.c_ptr() + i * (effectiveBlockSize)), curBlockSize);
+        profile.addDataToBackup(hdr.next_block);
         hdr.head = false;
       }
       smsc_log_debug(logger, "addBlocks curBlockIndex=%d", curBlockIndex);
@@ -569,7 +506,6 @@ private:
 
     long getFirstFreeBlock(int fileNumber, off_t offset)
     {
-      //offset = -1;
       File* f = dataFile_f[fileNumber];
       f->Seek(offset, SEEK_SET);
       long ffb = 0;
@@ -577,19 +513,15 @@ private:
       if (ffb == -1) {
         ffb = descrFile.files_count * descrFile.file_size;
         CreateDataFile();
-        //if (0 != (ret = CreateDataFile())) {
-          //return 0;
-        //}
       }
       smsc_log_debug(logger, "First free block %d", ffb);
       return ffb;
     }
 
     long removeBlocks(long ffb, long blockIndex, size_t backupIndex) {
-      //long ffb = descrFile.first_free_block;
       smsc_log_debug(logger, "Remove %d blocks start block index=%d", 
-                     dataBlockBackup.size() - 1 - backupIndex, blockIndex);
-      if (backupIndex > dataBlockBackup.size()) {
+                     backupHeader.blocksCount - backupIndex, blockIndex);
+      if (backupIndex >= backupHeader.blocksCount) {
         smsc_log_warn(logger, "Can't remove unbackuped data blocks");
         return ffb;
       }
@@ -601,7 +533,7 @@ private:
         f->Seek(offset);
         f->Write((void*)(&ffb), sizeof(descrFile.first_free_block));
         ffb = blockIndex;
-        blockIndex = dataBlockBackup[backupIndex].hdr.next_block;
+        blockIndex = dataBlockBackup[backupIndex];
         ++backupIndex;
       }
       return ffb;
@@ -745,29 +677,25 @@ private:
         backupFile_f.Seek(0);
         uint8_t trx = backupFile_f.ReadByte();
         if (trx == TRX_COMPLETE) {
-          smsc_log_debug(logger, "Last transaction is complite");
+          smsc_log_debug(logger, "Last transaction is complited");
           return;
         }
-        smsc_log_warn(logger, "Last transaction is incomplite. Load transaction data");
+        smsc_log_warn(logger, "Last transaction is incomplited. Load transaction data");
         backupFile_f.Read((void*)&descrFile, sizeof(DescriptionFile));
-        CompleteDataBlock startDataBlock;
-        backupFile_f.Read((void*)&startDataBlock.hdr, sizeof(DataBlockHeader));
-        printHdr(startDataBlock.hdr);
-        for (int i = 0; i < startDataBlock.hdr.total_blocks; ++i) {
-          CompleteDataBlock dataBlock;
-          backupFile_f.Read((void *)&dataBlock.hdr, sizeof(DataBlockHeader));
-          if (dataBlock.hdr.block_used == BLOCK_USED) {
-            size_t dataSize = dataBlock.hdr.next_block == descrFile.first_free_block ?
-                              dataBlock.hdr.data_size - effectiveBlockSize * i : effectiveBlockSize;
-            dataBlock.data.setBuffLength(dataSize);
-            char* dataBuf = dataBlock.data.ptr();
-            dataBlock.data.setLength(dataSize);
-            backupFile_f.Read((void*)(dataBuf), dataSize);
-          } 
-          dataBlockBackup.push_back(dataBlock);
+        backupFile_f.Read((void*)&backupHeader, sizeof(BackupHeader));
+        for (int i = 0; i < backupHeader.blocksCount; ++i) {
+          long nextBlock;
+          backupFile_f.Read((void *)&nextBlock, sizeof(nextBlock));
+          dataBlockBackup.push_back(nextBlock);
         }
-        dataBlockBackup.push_back(startDataBlock);
-        restoreDataBlocks(descrFile);
+        if (backupHeader.dataSize > 0) {
+          profileData.Empty();
+          profileData.setBuffLength(backupHeader.dataSize);
+          char* dataBuf = profileData.ptr();
+          profileData.setLength(backupHeader.dataSize);
+          backupFile_f.Read((void*)(dataBuf), backupHeader.dataSize);
+        }
+        restoreDataBlocks(descrFile, profileData.c_ptr());
         return;
       } catch (const std::exception& e) {
         smsc_log_error(logger, "Error loading transaction data: '%s'", e.what());
@@ -784,7 +712,7 @@ private:
         loadBackupData();
         return 0;
       } catch (const std::exception& e) {
-        smsc_log_error(logger, "FSStorage: error open backup file: '%s'\n", e.what());
+        smsc_log_warn(logger, "FSStorage: error open backup file: '%s'\n", e.what());
         if (File::Exists(name.c_str())) {
           smsc_log_error(logger, "FSStorage: backup file - exists, but can't be opened correct: '%s'\n", e.what());
           return CANNOT_OPEN_EXISTS_DESCR_FILE;
@@ -846,61 +774,85 @@ private:
 		return 0;
 	}
 
-    void restoreDataBlocks(const DescriptionFile& _descrFile) {
+    void restoreDataBlocks(const DescriptionFile& _descrFile, const char* data) {
       if (dataBlockBackup.size() <= 1) {
         smsc_log_warn(logger, "data blocks backup is empty");
         return;
       }
       try {
         smsc_log_warn(logger, "Restoring data storage...");
-        size_t backupSize = dataBlockBackup.size();
-        long curBlockIndex = dataBlockBackup[backupSize - 1].hdr.next_free_block;
-        for (int i = 0; i < backupSize - 1; ++i) {
+        size_t profileBlocksCount = (backupHeader.dataSize + effectiveBlockSize - 1) / effectiveBlockSize;
+        long curBlockIndex = backupHeader.curBlockIndex;
+        DataBlockHeader hdr;
+        hdr.block_used = BLOCK_USED;
+        hdr.key = backupHeader.key;
+        hdr.head = true;
+        hdr.data_size = backupHeader.dataSize;
+        hdr.total_blocks = profileBlocksCount;
+        int dataSize = 0;
+        for (int i = 0; i < profileBlocksCount; ++i) {
           int file_number = curBlockIndex / descrFile.file_size;
           off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
-          if (dataBlockBackup[i].hdr.block_used == BLOCK_USED) {
-            curBlockIndex = dataBlockBackup[i].hdr.next_block;
-            DataBlockHeader hdr = dataBlockBackup[i].hdr;
-            if (i == dataBlockBackup[i].hdr.total_blocks - 1) {
-              hdr.next_block = -1;
-            }
-            writeDataBlock(file_number,offset, hdr, 
-                           dataBlockBackup[i].data.c_ptr(), dataBlockBackup[i].data.length());
+          curBlockIndex = dataBlockBackup[i];
+          if (i == profileBlocksCount - 1) {
+            hdr.next_block = -1;
+            dataSize = backupHeader.dataSize - effectiveBlockSize * i;
           } else {
-            curBlockIndex = dataBlockBackup[i].hdr.next_free_block;
-            File* f = dataFile_f[file_number];
-            f->Seek(offset);
-            f->Write((void*)(&curBlockIndex), sizeof(dataBlockBackup[i].hdr.next_free_block));
+            hdr.next_block = curBlockIndex;
+            dataSize = effectiveBlockSize;
           }
+          writeDataBlock(file_number,offset, hdr, 
+                         (void*)(data + i * effectiveBlockSize), dataSize);
+        }
+        for (int i = profileBlocksCount; i < backupHeader.blocksCount; ++i) {
+          int file_number = curBlockIndex / descrFile.file_size;
+          off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+          curBlockIndex = dataBlockBackup[i];
+          File* f = dataFile_f[file_number];
+          f->Seek(offset);
+          f->Write((void*)(&curBlockIndex), sizeof(descrFile.first_free_block));
+          smsc_log_debug(logger, "restore next_free_block=%d offset=%d", curBlockIndex, offset);
         }
         clearBackup();
         smsc_log_warn(logger, "Restoring complite");
       } catch (const std::exception& e) {
         smsc_log_warn(logger, "Error restore data storage: '%s'", e.what());
-        saveBackupToFile(_descrFile);
         exit(-1);
       }
     }
 
-    void writeBackup(File& f, const DescriptionFile& _descrFile) {
-      f.Seek(0);
-      f.WriteByte(TRX_INCOMPLETE);
-      f.Write((void*)&_descrFile, sizeof(DescriptionFile));
-      size_t backupSize = dataBlockBackup.size();
-      f.Write((void*)(&dataBlockBackup[backupSize - 1].hdr), sizeof(DataBlockHeader));
-      for (int i = 0; i < backupSize - 1; ++i) {
-        f.Write((void*)(&dataBlockBackup[i].hdr), sizeof(DataBlockHeader));
-        if (dataBlockBackup[i].hdr.block_used == BLOCK_USED) {
-          f.Write((void*)dataBlockBackup[i].data.c_ptr(), dataBlockBackup[i].data.length());
+    void writeBackup(File& f, const DescriptionFile& _descrFile, const char* backupData) {
+      size_t bufSize = sizeof(TRX_INCOMPLETE) + sizeof(DescriptionFile) + sizeof(BackupHeader) +
+                       backupHeader.blocksCount * sizeof(descrFile.first_free_block) + backupHeader.dataSize;
+      char* buf = new char[bufSize];
+      try {
+        memcpy(buf, &TRX_INCOMPLETE, 1);
+        size_t bufOffset = 1;
+        memcpy(buf + bufOffset, &_descrFile, sizeof(DescriptionFile));
+        bufOffset += sizeof(DescriptionFile);
+        memcpy(buf + bufOffset, &backupHeader, sizeof(BackupHeader));
+        bufOffset += sizeof(BackupHeader);
+        for (int i = 0; i < backupHeader.blocksCount; ++i) {
+          memcpy(buf + bufOffset, (void*)(&dataBlockBackup[i]), sizeof(descrFile.first_free_block));
+          bufOffset += sizeof(descrFile.first_free_block);
         }
+        if (backupHeader.dataSize > 0) {
+          memcpy(buf + bufOffset, (void*)backupData, backupHeader.dataSize);
+        }
+        f.Seek(0);
+        f.Write(buf, bufSize);
+        delete[] buf;
+      } catch (...) {
+        delete[] buf;
+        throw;
       }
     }
 
-    void saveBackupToFile(const DescriptionFile& _descrFile) {
+    void saveBackupToFile(const DescriptionFile& _descrFile, const char* backupData) {
       try {
-        smsc_log_debug(logger, "Save transaction data to file");
-        printDescrFile();
-        writeBackup(backupFile_f, _descrFile);
+        //smsc_log_debug(logger, "Save transaction data to file");
+        //printDescrFile();
+        writeBackup(backupFile_f, _descrFile, backupData);
         return;
       } catch (const std::exception& e) {
         smsc_log_error(logger, "Error saving transaction data: '%s'", e.what());
@@ -911,7 +863,7 @@ private:
         File tmpFile;
         tmpFile.RWCreate(tmpName.c_str());
         tmpFile.SetUnbuffered();
-        writeBackup(tmpFile, _descrFile);
+        writeBackup(tmpFile, _descrFile, backupData);
       } catch (const std::exception& e) {
         smsc_log_error(logger, "%s", e.what());
       }
@@ -936,36 +888,138 @@ private:
         int file_number = curBlockIndex / descrFile.file_size;
         off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
         curBlockIndex = getFirstFreeBlock(file_number, offset);
-        CompleteDataBlock dataBlock;
-        dataBlock.hdr.next_free_block = curBlockIndex;
-        dataBlockBackup.push_back(dataBlock);
+        dataBlockBackup.push_back(curBlockIndex);
       }
       return curBlockIndex;
     }
 
-    bool backUpProfile(long blockIndex, const DataBlock& data, bool saveToFile = false) {
-      smsc_log_debug(logger, "Backup profile. block index=%d, data length=%d",
-                     blockIndex, data.length());
-      int blocksCount = (data.length() + effectiveBlockSize - 1) / effectiveBlockSize;
+
+    bool backUpProfile(long blockIndex, const Profile& profile, int dataLength, bool saveToFile = false) {
+      smsc_log_debug(logger, "Backup profile key='%s'. block index=%d, data length=%d",
+                     profile.getKey().c_str(), blockIndex, dataLength);
+      dataBlockBackup.clear();
+      int blocksCount = (dataLength + effectiveBlockSize - 1) / effectiveBlockSize;
       if (blockIndex == -1 && blocksCount == 0) {
         return true;
       }
       DescriptionFile oldDescrFile = descrFile;
       printDescrFile();
       try {
-        CompleteDataBlock lastDataBlock;
-        lastDataBlock.hdr.total_blocks = blocksCount;
         if (blockIndex < 0) {
-          lastDataBlock.hdr.next_free_block = oldDescrFile.first_free_block;
+          backupHeader.blocksCount = blocksCount;
+          backupHeader.dataSize = 0;
+          backupHeader.curBlockIndex = oldDescrFile.first_free_block;
           long curBlockIndex = readFreeBlocks(blocksCount);
-          dataBlockBackup.push_back(lastDataBlock);
           if (saveToFile) {
-            saveBackupToFile(oldDescrFile);
+            saveBackupToFile(oldDescrFile, profile.getBackupData());
           }
           smsc_log_debug(logger, "backup profile size=%d", dataBlockBackup.size());
           return true;
         }
-        lastDataBlock.hdr.next_free_block = blockIndex;
+        backupHeader.curBlockIndex = blockIndex;
+        backupHeader.dataSize = profile.getBackupDataSize(); 
+        dataBlockBackup = profile.getBackup();
+        size_t backupSize = dataBlockBackup.size();
+        backupHeader.blocksCount = blocksCount >= backupSize ? blocksCount : backupSize;
+        if (backupSize == 0) {
+          smsc_log_warn(logger, "Error backup profile key='%s': backup is empty", profile.getKey().c_str());
+          return false;
+        }
+        if (backupSize < blocksCount) {
+          dataBlockBackup[backupSize - 1] = oldDescrFile.first_free_block;
+          readFreeBlocks(blocksCount - backupSize);
+        }
+        smsc_log_debug(logger, "backup profile size=%d", dataBlockBackup.size());
+        if (saveToFile) {
+          saveBackupToFile(oldDescrFile, profile.getBackupData());
+        }
+        return true;
+      } catch (const std::exception& e) {
+        smsc_log_warn(logger, "Error backup profile key='%s'. std::exception: '%s'",
+                       profile.getKey().c_str(), e.what());
+        dataBlockBackup.clear();
+        descrFile = oldDescrFile;
+        changeDescriptionFile();
+        exit(-1);
+      }
+    }
+
+};
+
+#endif
+
+/*
+    bool Change(const DataBlock& data, const Key& key, long& blockIndex)
+	{
+        smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
+                        blockIndex, key.toString().c_str(), data.length());
+		//if (blockIndex == -1) {
+          //return _Add(data, key, blockIndex);
+        //}
+        //return _Change(data, key, blockIndex);
+
+		DataBlockHeader hdr;
+		long curBlockIndex = blockIndex;
+		long total_blocks = (data.length() > 0) ? (data.length() + effectiveBlockSize - 1) / effectiveBlockSize : 0;
+		long old_total_blocks = 2;
+		long data_size = data.length();
+		long next_block = blockIndex;
+		size_t curBlockSize = effectiveBlockSize;
+
+        try {
+          for(int i = 0; i < total_blocks; i++)
+          {
+              int file_number = curBlockIndex / descrFile.file_size;
+              off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
+              long ffb = 0;
+              if(i < old_total_blocks)
+              {
+                  File* f = dataFile_f[file_number];
+                  f->Seek(offset, SEEK_SET);
+                  f->Read((void*)&hdr, sizeof(DataBlockHeader));
+                  if( (hdr.block_used != BLOCK_USED) || (hdr.key != key) )
+                      return false;
+                  if(i == 0) old_total_blocks = hdr.total_blocks;
+                  hdr.total_blocks = total_blocks;
+                  hdr.data_size = data_size;
+                  next_block = hdr.next_block;
+              }
+              if( (i >= old_total_blocks - 1) && (i != total_blocks - 1) )
+              {
+                  hdr.next_block = descrFile.first_free_block;
+                  int fn = hdr.next_block / descrFile.file_size;
+                  off_t ofs = (hdr.next_block - fn * descrFile.file_size)*descrFile.block_size;
+                  ffb = getFirstFreeBlock(fn, ofs);
+                  if (!ffb) {
+                    smsc_log_warn(logger, "Error first free block index %d", ffb);
+                    return false;
+                  }
+              }
+              if (i == total_blocks - 1)
+              {
+                  hdr.next_block = -1;
+                  curBlockSize = data_size - effectiveBlockSize * i;
+              }
+              writeDataBlock(file_number, offset, hdr,
+                              (void *)(data.c_ptr()+i*(effectiveBlockSize)), curBlockSize);
+              descrFile.first_free_block = ffb > 0 ? ffb : descrFile.first_free_block;
+              curBlockIndex = hdr.next_block;
+          }
+        } catch (const std::exception& e) {
+          smsc_log_warn(logger, "Error changing data block %d. std::exception: '%s'", blockIndex);
+          changeDescriptionFile();
+          exit(-1);
+        }
+        if (next_block != -1) {
+          Remove(next_block);
+          return true;
+        }
+        changeDescriptionFile();
+		return true;
+	}
+*/
+
+        /*
         long curBlockIndex = blockIndex;
         int i = 0;
         do {
@@ -994,26 +1048,76 @@ private:
           curBlockIndex = dataBlock.hdr.next_block;
           ++i;
         } while (curBlockIndex != -1);
-        if (i < blocksCount) {
-          dataBlockBackup[i - 1].hdr.next_block = oldDescrFile.first_free_block;
-          curBlockIndex = readFreeBlocks(blocksCount - i);
+        */
+    /*
+	void Remove(long blockIndex)
+	{
+        smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
+        //_Remove(blockIndex);
+        //return;
+		long next_block = blockIndex;
+		DataBlockHeader hdr;
+        try {
+          while(-1 != next_block)
+          {
+              int file_number = next_block / descrFile.file_size;
+              off_t offset = (next_block - file_number * descrFile.file_size) * descrFile.block_size;
+              File* f = dataFile_f[file_number];
+              f->Seek(offset, SEEK_SET);
+              f->Read((void*)&hdr, sizeof(DataBlockHeader));
+              f->Seek(offset, SEEK_SET);
+              if ((hdr.block_used != BLOCK_USED))
+                  break;
+              f->Write((void*)&(descrFile.first_free_block), sizeof(descrFile.first_free_block));
+              descrFile.first_free_block = next_block;
+              next_block = hdr.next_block;
+          }
+          changeDescriptionFile();
+        } catch (const std::exception& e) {
+          smsc_log_warn(logger, "Error removing data block %d. std::exception: '%s'",
+                         blockIndex, e.what());
+          changeDescriptionFile();
+          exit(-1);
         }
-        dataBlockBackup.push_back(lastDataBlock);
-        smsc_log_debug(logger, "backup profile size=%d", dataBlockBackup.size());
-        if (saveToFile) {
-          saveBackupToFile(oldDescrFile);
+	}*/
+/*
+	bool Add(const DataBlock& data, const Key& key, long& blockIndex)
+	{
+      smsc_log_debug(logger, "Add data block key='%s' length=%d", key.toString().c_str(), data.length());
+      DataBlockHeader hdr;
+      hdr.block_used = BLOCK_USED;
+      hdr.key = key;
+      hdr.head = true;
+      hdr.total_blocks = (data.length() + effectiveBlockSize - 1) / effectiveBlockSize;
+      hdr.data_size = data.length();//effectiveBlockSize;
+
+      try {
+        for(int i = 0; i < hdr.total_blocks; i++)
+        {
+            long curBlockIndex = descrFile.first_free_block;
+            int file_number = curBlockIndex / descrFile.file_size;
+            off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
+            long ffb = getFirstFreeBlock(file_number, offset);
+            if (!ffb) {
+              smsc_log_warn(logger, "Error first free block index %d", ffb);
+              return false;
+            }
+            size_t curBlockSize = (i == hdr.total_blocks - 1) ?
+                                   (data.length() - effectiveBlockSize * i) : effectiveBlockSize;
+            hdr.next_block = (i < hdr.total_blocks - 1) ? ffb : -1;
+            writeDataBlock(file_number, offset, hdr,
+                           (void*)(data.c_ptr() + i * (effectiveBlockSize)), curBlockSize);
+            descrFile.first_free_block = ffb;
+            if (i == 0) blockIndex = curBlockIndex;
         }
+        changeDescriptionFile();
+        smsc_log_debug(logger, "Data block key='%s' added, index=%d", key.toString().c_str(), blockIndex);
         return true;
       } catch (const std::exception& e) {
-        smsc_log_warn(logger, "Error backup profile. std::exception: '%s'", e.what());
-        dataBlockBackup.clear();
-        descrFile = oldDescrFile;
+        smsc_log_warn(logger, "Error adding data block. std::exception: '%s'", e.what());
         changeDescriptionFile();
         exit(-1);
       }
-    }
+	}
+*/
 
-};
-
-
-#endif

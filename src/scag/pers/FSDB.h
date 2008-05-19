@@ -24,6 +24,7 @@
 #include "logger/Logger.h"
 
 using std::string;
+using scag::pers::Profile;
 
 const int FSDB_CREATE       = 0x00000001;
 const int FSDB_OPEN         = 0x00000002;
@@ -46,16 +47,16 @@ public:
 
     virtual int Close(void) = 0;
 
-    virtual void Add(const Key& key, const Value& data) = 0;
-    virtual bool Set(const Key& key, const Value& data) = 0;
+    virtual void Add(const Key& key, Value& data) = 0;
+    virtual bool Set(const Key& key, Value& data) = 0;
     virtual bool Get(const Key& key, Value& data) = 0;
-    virtual bool Change(const Key& key, const Value& data) = 0;
-    virtual void Remove(const Key& key) = 0;
+    virtual bool Change(const Key& key, Value& data) = 0;
+    virtual void Remove(const Key& key, Value& data) = 0;
 };
 
 
 template<class Key = char*>
-class FSDBProfiles: public FSDB<Key, DataBlock>
+class FSDBProfiles: public FSDB<Key, Profile>
 {
     typedef RBTreeHSAllocator<Key, long>    IndexAllocator;
     typedef RBTree<Key, long>               IndexStorage;
@@ -134,76 +135,61 @@ public:
         return 0;
     }
 
-    virtual void Add(const Key& key, const DataBlock& data)
+    virtual void Add(const Key& key, Profile& profile)
     {
         long idx;
-        smsc_log_debug(logger, "Add: %s, %d", key.toString().c_str(), data.length());
-        if (!dataStorage.Add(data, key, idx)) {
-          smsc_log_warn(logger, "Error Add: %s, %d", key.toString().c_str(), data.length());
+        smsc_log_debug(logger, "Add: %s", key.toString().c_str());
+        if (!dataStorage.Add(profile, key, idx)) {
+          smsc_log_warn(logger, "Error Add: %s", key.toString().c_str());
           return;
         }
         indexStorage.Insert(key, idx);
     }
-    /*
-    virtual bool Set(const Key& key, const DataBlock& data)
-    {
-    	smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
-        long idx;
-        if(indexStorage.Get(key, idx))
-    	{
-    		//return dataStorage.Change(idx, data, key);
-          if (!dataStorage.Change(idx, data, key)) {
-            dataStorage.Add(data, idx, key);
-            return false;
-          }
-          return true;
-    	}
-        //dataStorage.Add(data, idx, key);
-    	//indexStorage.Insert(key, idx);
-        Add(key, data);
-    	return true;
-    }*/
 
-    virtual bool Set(const Key& key, const DataBlock& data)
+    virtual bool Set(const Key& key, Profile& profile)
     {
-        smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
+        smsc_log_debug(logger, "Set: %s", key.toString().c_str());
         IndexNode* node = indexStorage.Get(key);
         if (node) {
-          bool res = dataStorage.Change(data, key, node->value);
-          smsc_log_debug(logger, "After Set: new_index=%d", node->value);
+          long nodeValue = node->value;
+          bool res = dataStorage.Change(profile, key, nodeValue);
+          if (res) {
+            indexStorage.setNodeValue(node, nodeValue);
+          }
           return res;
         }
-        Add(key, data);
+        smsc_log_debug(logger, "Set: %s, No data", key.toString().c_str());
+        Add(key, profile);
         return true;
     }
 
-    virtual bool Get(const Key& key, DataBlock& data)
+    virtual bool Get(const Key& key, Profile& profile)
     {
         long idx;
 		bool ret;
         if(indexStorage.Get(key, idx))
 		{
-			ret = dataStorage.Get(idx, data);
-			smsc_log_debug(logger, "Get: %s, %d", key.toString().c_str(), data.length());
+			ret = dataStorage.Get(idx, profile);
+            smsc_log_debug(logger, "Get: %s", key.toString().c_str());
             return ret;
 		}
-		smsc_log_debug(logger, "Get: %s, No data", key.toString().c_str(), data.length());
+		smsc_log_debug(logger, "Get: %s, No data", key.toString().c_str());
         return false;
     }
 
-    virtual bool Change(const Key& key, const DataBlock& data)
+    virtual bool Change(const Key& key, Profile& profile)
     {
         long idx;
         if(indexStorage.Get(key, idx))
-            return dataStorage.Change(data, key, idx);
+            return dataStorage.Change(profile, key, idx);
         return false; 
     }
     
-    virtual void Remove(const Key& key)
+    virtual void Remove(const Key& key, Profile& profile)
     {
         long idx;
         if(indexStorage.Get(key, idx)) {
-          dataStorage.Remove(idx);
+          dataStorage.Remove(idx, profile);
         }
     }
 
@@ -327,3 +313,25 @@ private:
 
 
 #endif
+
+    /*
+    virtual bool Set(const Key& key, const DataBlock& data)
+    {
+        smsc_log_debug(logger, "Set: %s, %d", key.toString().c_str(), data.length());
+        long idx;
+        if(indexStorage.Get(key, idx))
+        {
+            //return dataStorage.Change(idx, data, key);
+          if (!dataStorage.Change(idx, data, key)) {
+            dataStorage.Add(data, idx, key);
+            return false;
+          }
+          return true;
+        }
+        //dataStorage.Add(data, idx, key);
+        //indexStorage.Insert(key, idx);
+        Add(key, data);
+        return true;
+    }*/
+
+

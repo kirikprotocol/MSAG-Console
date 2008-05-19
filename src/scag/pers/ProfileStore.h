@@ -209,7 +209,7 @@ public:
         dblog = _log;
         
 		storeName = storageName;
-        if(store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize))
+        if(store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize) != 0)
             throw Exception("Error init abonentstore");
 //		smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
 	};
@@ -218,9 +218,9 @@ public:
     {
         //pf->DeleteExpired();
 		sb.Empty();
-        pf->Serialize(sb, true);
+        //pf->Serialize(sb, true);
 //        delete pf;  
-        store.Set(key, sb);
+        store.Set(key, *pf);
         //if (store.Set(key, sb)) {
           //smsc_log_debug(log, "Set return TRUE");
         //} else {
@@ -233,9 +233,9 @@ public:
       Profile *pf = new Profile(key.toString(), dblog);
       try {
         sb.Empty();
-        if(store.Get(key, sb))
+        if(store.Get(key, *pf))
         {
-            pf->Deserialize(sb, true);
+            //pf->Deserialize(sb, true);
             return pf;
         }
         if(create)
@@ -267,7 +267,7 @@ protected:
     }
 
     void _deleteProfile(const Key &key) {
-      store.Remove(key);
+      //store.Remove(key);
     }
 
 protected:
@@ -404,12 +404,12 @@ public:
   ProfilesStore():needBackup(false) {}; 
 
   void deleteProfile(const Key& key) {
-    MutexGuard mg(mtx);
+    //MutexGuard mg(mtx);
     deleteCachedProfile(key);
   }
 
   Profile* createProfile(const Key &key) {
-    MutexGuard mg(mtx);
+    //MutexGuard mg(mtx);
     return createCachedProfile(key);
   }
 
@@ -438,7 +438,7 @@ public:
 
   void setProperty(RKey rkey, Property& prop)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       if(prop.isExpired()) {
         smsc_log_info(dblog, "E key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
@@ -451,7 +451,7 @@ public:
 
   bool setProperty(Profile* pf, RKey rkey, Property& prop)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       if(prop.isExpired()) {
         smsc_log_info(dblog, "E key=\"%s\" property=%s", key.toString().c_str(), prop.toString().c_str());
@@ -463,7 +463,7 @@ public:
 
   bool delProperty(RKey rkey, const char* nm)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       Profile *pf = getProfile(key, false);
       return _delProperty(pf, key, nm);
@@ -471,14 +471,14 @@ public:
 
   bool delProperty(Profile* pf, RKey rkey, const char* nm)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       return _delProperty(pf, key, nm);
   };
 
   bool getProperty(RKey rkey, const char* nm, Property& prop)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       Profile* pf = getProfile(key, false);
       return _getProperty(pf,key,nm,prop);
@@ -486,14 +486,14 @@ public:
 
   bool getProperty(Profile* pf, RKey rkey, const char* nm, Property& prop)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       return _getProperty(pf,key,nm,prop);
   };
 
   bool incProperty(RKey rkey, Property& prop, int& result)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       Profile* pf = getProfile(key, true);
       return _incModProperty(pf, key, prop, 0, result);
@@ -501,14 +501,14 @@ public:
 
   bool incProperty(Profile* pf, RKey rkey, Property& prop, int& result)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       return _incModProperty(pf, key, prop, 0, result);
   };
 
   bool incModProperty(RKey rkey, Property& prop, uint32_t mod, int& result)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       Profile* pf = getProfile(key, true);
       return _incModProperty(pf, key, prop, mod, result);
@@ -516,7 +516,7 @@ public:
 
   bool incModProperty(Profile *pf, RKey rkey, Property& prop, uint32_t mod, int& result)
   {
-      MutexGuard mt(mtx);
+      //MutexGuard mt(mtx);
       Key key(rkey);
       return _incModProperty(pf, key, prop, mod, result);
   };
@@ -538,20 +538,30 @@ private:
         return;
       }
       switch (cmd_id) {
-      case PROP_SET: 
-        pf->AddProperty(value);
+      case PROP_SET: {
+        //pf->AddProperty(value);
         smsc_log_debug(dblog, "rollback Set property command");
-        smsc_log_info(dblog, "U key=\"%s\" property=%s", key.toString().c_str(), value.toString().c_str());
+        Property *p = pf->GetProperty(value.getName());
+        char action = 0;
+        if (p) {
+          *p = value;
+          action = 'U';
+        } else {
+          pf->AddProperty(value);
+          action = 'A';
+        }
+        smsc_log_info(dblog, "%c key=\"%s\" property=%s", action, key.toString().c_str(), value.toString().c_str());
         break;
+      }
       case PROP_DEL: 
         pf->AddProperty(value);
         smsc_log_debug(dblog, "rollback Del property command");
         smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), value.toString().c_str());
         break;
       case PROP_ADD: 
-        pf->DeleteProperty(value.getName().c_str()); 
+        pf->DeleteProperty(value.getName()); 
         smsc_log_debug(dblog, "rollback Add property command");
-        smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), value.getName().c_str());
+        smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), value.getName());
         break;
       }
     }
@@ -565,7 +575,7 @@ private:
       smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
       return;
     }
-    Property* p = pf->GetProperty(prop.getName().c_str());
+    Property* p = pf->GetProperty(prop.getName());
     if(p != NULL)
     {
       if (needBackup) {
@@ -606,7 +616,7 @@ private:
 
   bool _getProperty(Profile *pf, const Key& key, const char* nm, Property& prop) {
     if (!pf) {
-      smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
+      smsc_log_debug(log, "profile key=%s is NULL", key.toString().c_str());
       return false;
     }
     Property* p = pf->GetProperty(nm);
@@ -629,7 +639,7 @@ private:
       smsc_log_error(log, "profile key=%s is NULL", key.toString().c_str());
       return false;
     }
-    Property* p = pf->GetProperty(prop.getName().c_str());
+    Property* p = pf->GetProperty(prop.getName());
 
     if (!p) {
       if (needBackup) {
@@ -674,7 +684,7 @@ private:
         p->setIntValue(result);
         p->WriteAccess();
         storeProfile(key, pf);
-        smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName().c_str());                
+        smsc_log_info(dblog, "D key=\"%s\" name=\"%s\"", key.toString().c_str(), p->getName());                
         smsc_log_info(dblog, "A key=\"%s\" property=%s", key.toString().c_str(), p->toString().c_str());                
         return true;
     }
