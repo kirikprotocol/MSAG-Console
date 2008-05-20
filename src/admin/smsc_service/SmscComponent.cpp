@@ -1819,7 +1819,7 @@ void SmscComponent::logSetCategories(const Arguments & args)
   Logger::setLogLevels(levels);
 
   if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
-    dynamic_cast<MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
+    dynamic_cast<smsc::system::mapio::MapProxy*>(smsc_app_runner->getApp()->getMapProxy())->checkLogging();
   }
 }
 
