@@ -5,6 +5,7 @@ import com.eyeline.sme.smpp.SMPPTransceiver;
 import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sme.smpp.test.SimpleResponse;
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.aurorisoft.smpp.PDU;
@@ -16,6 +17,8 @@ import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.network.personalization.PersonalizationClientPoolFactory;
+
+import java.io.File;
 
 /**
  * User: artem
@@ -52,10 +55,12 @@ public class Sme {
       } else
         transceiver = new SMPPTransceiver(new PropertiesConfig("conf/smpp.properties"), "");
 
-      handler = new MessageHandler("conf/handler.xml", transceiver.getInQueue(), transceiver.getOutQueue());
+      handler = new MessageHandler("conf/smpphandlers/handler.xml", transceiver.getInQueue(), transceiver.getOutQueue());
 
       // Init services
-      ServiceManager.init(configDir, transceiver.getOutQueue());
+      final XmlConfig config = new XmlConfig();
+      config.load(new File(configDir, "config.xml"));      
+      ServiceManager.init(config, transceiver.getOutQueue());
       ServiceManager.getInstance().startServices();
 
       // Init SOAP

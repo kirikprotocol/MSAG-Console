@@ -17,6 +17,7 @@ import ru.sibinco.smsx.engine.service.secret.SecretServiceFactory;
 import ru.sibinco.smsx.engine.service.sender.SenderService;
 import ru.sibinco.smsx.engine.service.sender.SenderServiceFactory;
 import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 public class ServiceManager {
   private static final Category log = Category.getInstance("SERVICES");
@@ -27,8 +28,8 @@ public class ServiceManager {
     return ourInstance;
   }
 
-  public static void init(String configDir, OutgoingQueue outQueue) {
-    ourInstance = new ServiceManager(configDir, outQueue);
+  public static void init(XmlConfig config, OutgoingQueue outQueue) {
+    ourInstance = new ServiceManager(config, outQueue);
   }
 
   private final CalendarService calendarService;
@@ -37,12 +38,12 @@ public class ServiceManager {
   private final BlackListService blackListService;
   private final NickService nickService;
 
-  private ServiceManager(String configDir, OutgoingQueue outQueue) {
-    senderService = SenderServiceFactory.getSenderService(configDir, outQueue);
-    calendarService = CalendarServiceFactory.getCalendarService(configDir, outQueue);
-    secretService = SecretServiceFactory.getSecretService(configDir, outQueue);
-    blackListService = BlackListServiceFactory.getBlackListService(configDir);
-    nickService = NickServiceFactory.getNickService(configDir, outQueue);
+  private ServiceManager(XmlConfig config, OutgoingQueue outQueue) {
+    senderService = SenderServiceFactory.getSenderService(config, outQueue);
+    calendarService = CalendarServiceFactory.getCalendarService(config, outQueue);
+    secretService = SecretServiceFactory.getSecretService(config, outQueue);
+    blackListService = BlackListServiceFactory.getBlackListService(config);
+    nickService = NickServiceFactory.getNickService(config, outQueue);
   }
 
   public CalendarService getCalendarService() {

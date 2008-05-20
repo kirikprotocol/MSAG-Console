@@ -1,0 +1,603 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<config>
+
+  <service>
+    <service-name>calendar</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.CalendarSMPPService</service-class>
+    <init-param>
+      <param-name>service.address</param-name>
+      <param-value>147</param-value>
+    </init-param>
+    <init-param>
+      <param-name>send.date.is.wrong</param-name>
+      <param-value>Неправильная дата или время отправки. Сообщение будет отправлено немедленно.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>routesFile</param-name>
+      <param-value>conf/routes.xml</param-value>
+    </init-param>
+
+  </service>
+
+  <service>
+    <service-name>secret</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.SecretSMPPService</service-class>
+    <init-param>
+      <param-name>source.abonent.not.registered</param-name>
+      <param-value>Абонент {abonent} не зарегистрирован.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>source.abonent.already.registered</param-name>
+      <param-value>Сервис "Секретные SMS" активирован, неверный пароль.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>unregister.ok</param-name>
+      <param-value>Сервис отключен.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>register.ok</param-name>
+      <param-value>"SMS-Секрет" активирован, пароль установлен. Для получения SMS-Секрет, отправьте Get&lt;пробел&gt;пароль на номер 147.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>change.password.ok</param-name>
+      <param-value>Пароль изменен.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>invalid.password</param-name>
+      <param-value>Неверный пароль.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>no.messages</param-name>
+      <param-value>Для вас нет сообщений.</param-value>
+    </init-param>
+    <init-param>
+      <param-name>service.address</param-name>
+      <param-value>147</param-value>
+    </init-param>
+  </service>
+
+  <service>
+    <service-name>nick</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.NickSMPPService</service-class>
+  </service>
+
+  <service>
+    <service-name>redirector</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.RedirectorSMPPService</service-class>
+  </service>
+
+  <service>
+    <service-name>sender</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.SenderSMPPService</service-class>
+  </service>
+
+  <!-- ========================================== Receipt request ================================================== -->
+
+  <request>
+    <request-name>receipt</request-name>
+    <receipt>true</receipt>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>receipt</param-value>
+    </request-param>
+  </request>
+
+  <!--  ========================================= Calendar requests ================================================ -->
+
+  <!-- NOTE: ORDER IS VERY IMPORTANT HERE -->
+
+  <request>
+    <request-name>calendar_aft</request-name>
+    <message-pattern>((a|а)f(t|т)|(m|м))\s+(((\d{1,4})(\s*|\s+.*)))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>aft</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{5}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>calendar_at_date_time_sec</request-name>
+    <message-pattern>((a|а)(t|т)|(d|д))\s+((\d{1,2}\s*\.\s*\d{1,2}\s*\.\s*\d{1,4})\s+(\d{1,2}\s*:\s*\d{1,2}\s*:\s*\d{1,2})((\s*|\s+.*)))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>at_date_time_sec</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{5}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>calendar_at_date_time_min</request-name>
+    <message-pattern>((a|а)(t|т)|(d|д))\s+((\d{1,2}\s*\.\s*\d{1,2}\s*\.\s*\d{1,4})\s+(\d{1,2}\s*:\s*\d{1,2})((\s*|\s+.*)))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>at_date_time_min</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{5}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>calendar_at_date</request-name>
+    <message-pattern>((a|а)(t|т)|(d|д))\s+((\d{1,2}\s*\.\s*\d{1,2}\s*\.\s*\d{1,4})((\s*|\s+.*)))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>at_date</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{5}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>calendar_now</request-name>
+    <message-pattern>(((a|а)(t|т)|(d|д))|((a|а)f(t|т)|(m|м)))((\s*|\s+.*))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>now</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{10}</param-value>
+    </request-param>
+  </request>
+
+
+  <!-- ============================================ Secret requests ================================================ -->
+
+  <!-- NOTE: ORDER IS VERY IMPORTANT HERE -->
+
+  <request>
+    <request-name>secret_off</request-name>
+    <message-pattern>((s(e|е)(c|с)r(e|е)(t|т)) +n(o|о)n(e|е)|-(p|р|п))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>off</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>secret_change_pwd</request-name>
+    <message-pattern>((s(e|е)(c|с)r(e|е)(t|т))|(p|р|п)) +((\S+)) +((\S+))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>change_pwd</param-value>
+    </request-param>
+    <request-param>
+      <param-name>old_password</param-name>
+      <param-value>{9}</param-value>
+    </request-param>
+    <request-param>
+      <param-name>new_password</param-name>
+      <param-value>{10}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>secret_on</request-name>
+    <message-pattern>((s(e|е)(c|с)r(e|е)(t|т))|(p|р|п)) +((\S+))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>on</param-value>
+    </request-param>
+    <request-param>
+      <param-name>password</param-name>
+      <param-value>{8}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>secret_msg</request-name>
+    <message-pattern>(s(e|е)(c|с)|#)(( *| +.+))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>msg</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>secret_get</request-name>
+    <message-pattern>((g(e|е)(t|т))|(S|s)(m|м)(S|s))(( +\S+))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>get</param-value>
+    </request-param>
+    <request-param>
+      <param-name>password</param-name>
+      <param-value>{8}</param-value>
+    </request-param>
+  </request>
+
+
+  <!-- ================================================ Nic requests =============================================== -->
+
+  <request>
+    <request-name>nick_register</request-name>
+    <message-pattern>(setnick|n)(\s+\S+)(\s*)</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>register</param-value>
+    </request-param>
+    <request-param>
+      <param-name>nick</param-name>
+      <param-value>{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>nick_unregister</request-name>
+    <message-pattern>(clearnick|-n)(\s*)</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>unregister</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>nick_send</request-name>
+    <message-pattern>(nick)\s+(\+{0,1}\d{1,11})((\s+.*))</message-pattern>
+    <request-param>
+      <param-name>type</param-name>
+      <param-value>send</param-value>
+    </request-param>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>{2}</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{3}</param-value>
+    </request-param>
+  </request>
+
+
+  <!-- ================================================= Redirector requests ======================================= -->
+
+  <request>
+    <request-name>redirector_ucs2</request-name>
+    <message-pattern>U(c|с)S2\s*</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>UCS2</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_default</request-name>
+    <message-pattern>D(Е|е|Е)F(A|А|а)UL(Т|т|Т)\s*</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>DEFAULT</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_report</request-name>
+    <message-pattern>(r(e|е)(p|р)(o|о)r(t|т))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>report{6}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_locale</request-name>
+    <message-pattern>(L(O|о|О)(C|С|с)(A|а|А)L(E|Е|е))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>locale{6}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_divert</request-name>
+    <message-pattern>(DIV(E|Е|е)R(T|Т|т))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>divert{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_concat</request-name>
+    <message-pattern>((C|с|С)(O|о|О)N(C|С|с)(A|а|А)(T|Т))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>concat{7}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_flash</request-name>
+    <message-pattern>((FL(A|а|А)S(H|Н|н))|(f|ф))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>flash{6}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_flash_none</request-name>
+    <message-pattern>-(F|Ф|ф)\s*</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>flash none</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_list</request-name>
+    <message-pattern>LIS(T|т|Т)((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>list{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_addm</request-name>
+    <message-pattern>((A|а|А)DD(M|м|М)|\+)((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>addm{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_adds</request-name>
+    <message-pattern>(A|а|А)DDS((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>adds{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_send</request-name>
+    <message-pattern>S(E|Е|е)ND((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>send{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_delm</request-name>
+    <message-pattern>(D(E|Е|е)L(M|М|м)|-)((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>delm{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_dels</request-name>
+    <message-pattern>D(E|Е|е)LS((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>dels{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_add</request-name>
+    <message-pattern>((A|А|а)DD|(G|Г|г))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>add{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_del</request-name>
+    <message-pattern>(D(E|Е|е)L|-(G|Г|г))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>del{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_subscribe</request-name>
+    <message-pattern>(O|О|о)(N|n)\s*</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>684</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>on</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_unsubscribe</request-name>
+    <message-pattern>(O|О|о)(F|f)(F|f)\s*</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>684</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>off</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_send1</request-name>
+    <message-pattern>(S|О|O|о)((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>send{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_list1</request-name>
+    <message-pattern>(K|К|к)(T|Т|т)(O|О|о)((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>list{4}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_adds1</request-name>
+    <message-pattern>((Y|У|у)(E|Е|е)S|(Д|д)(A|а|А))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>adds{6}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_dels1</request-name>
+    <message-pattern>(N(O|О|о)|(H|Н|н)(E|Е|е)(T|Т|т))((.*))</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>0020</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>dels{6}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>redirector_other</request-name>
+    <message-pattern>(.*)</message-pattern>
+    <request-param>
+      <param-name>destination_address</param-name>
+      <param-value>684</param-value>
+    </request-param>
+    <request-param>
+      <param-name>message</param-name>
+      <param-value>{0}</param-value>
+    </request-param>
+  </request>
+
+  <!-- ============================================ Request mapping ================================================ -->
+
+  <request-mapping>
+    <request-name>calendar_*</request-name>
+    <service-name>calendar</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>secret_on, secret_off, secret_change_pwd, secret_msg, secret_get</request-name>
+    <service-name>secret</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>nick_*</request-name>
+    <service-name>nick</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>redirector_*</request-name>
+    <service-name>redirector</service-name>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>receipt</request-name>
+    <service-chain>sender, calendar, secret</service-chain>
+  </request-mapping>
+
+
+  <!-- ========================================== Default ================================================== -->
+
+  <default-service>
+    <service-name>error</service-name>
+  </default-service>
+
+</config>

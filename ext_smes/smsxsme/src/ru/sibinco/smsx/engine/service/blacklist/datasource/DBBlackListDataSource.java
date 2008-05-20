@@ -19,8 +19,9 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
 
   private final ConnectionPool pool;
 
-  public DBBlackListDataSource(String sqlFile, String prefix) throws DataSourceException {
-    super(sqlFile, prefix);
+  public DBBlackListDataSource() throws DataSourceException {
+    super(DBBlackListDataSource.class.getResourceAsStream("blacklist.properties"), "");
+
     pool = ConnectionPoolFactory.createConnectionPool("blackList", 10, 10000);
     pool.init(1);
   }

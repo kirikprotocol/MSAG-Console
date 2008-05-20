@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.nick;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 /**
  * User: artem
@@ -10,9 +11,9 @@ import com.eyeline.sme.smpp.OutgoingQueue;
 public class NickServiceFactory {
   private static NickService impl = null;
 
-  public static NickService getNickService(String configDir, OutgoingQueue outQueue) {
+  public static NickService getNickService(XmlConfig config, OutgoingQueue outQueue) {
     if (impl == null)
-      impl = new NickServiceImpl(configDir, outQueue);
+      impl = new NickServiceImpl(config, outQueue);
     return impl;
   }
 }

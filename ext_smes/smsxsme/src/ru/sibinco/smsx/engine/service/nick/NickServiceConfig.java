@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.nick;
 
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 import java.io.File;
 
@@ -15,12 +16,10 @@ class NickServiceConfig {
   private final String serviceAddress;
   private final String profilerAddress;
 
-  public NickServiceConfig(String configDir) {
+  public NickServiceConfig(XmlConfig config) {
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "services/nick/service.properties"));
-
-      serviceAddress = config.getString("service.address");
-      profilerAddress = config.getString("profiler.address");
+      serviceAddress = config.getSection("nick").getString("service.address");
+      profilerAddress = config.getSection("nick").getString("profiler.address");
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

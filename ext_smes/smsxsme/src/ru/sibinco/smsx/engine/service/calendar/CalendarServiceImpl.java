@@ -2,6 +2,7 @@ package ru.sibinco.smsx.engine.service.calendar;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
@@ -23,17 +24,16 @@ class CalendarServiceImpl implements CalendarService {
   private final MessagesQueue messagesQueue;
   private final CalendarDataSource dataSource;
 
-  CalendarServiceImpl(String configDir, final OutgoingQueue outQueue) {
+  CalendarServiceImpl(XmlConfig config, final OutgoingQueue outQueue) {
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "services/calendar/service.properties"));
 
-      dataSource = new DBCalendarDataSource(new File(configDir, "services/calendar/calendar.sql").getAbsolutePath(), "");
+      dataSource = new DBCalendarDataSource();
 
       messagesQueue = new MessagesQueue();
 
-      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, config.getLong("engine.working.interval"));
+      engine = new CalendarEngine(outQueue, messagesQueue, dataSource, config.getSection("calendar").getLong("engine.working.interval"));
 
-      processor = new CalendarProcessor(messagesQueue, dataSource, config.getInt("send.date.max.year"));
+      processor = new CalendarProcessor(messagesQueue, dataSource, config.getSection("calendar").getInt("send.date.max.year"));
 
     } catch (Throwable e) {
       throw new ServiceInitializationException(e);

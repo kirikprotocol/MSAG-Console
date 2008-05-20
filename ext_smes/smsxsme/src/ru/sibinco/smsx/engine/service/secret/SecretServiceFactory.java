@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.secret;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 /**
  * User: artem
@@ -11,9 +12,9 @@ public class SecretServiceFactory {
 
   private static SecretService impl;
 
-  public static synchronized SecretService getSecretService(String configDir, OutgoingQueue outQueue) {
+  public static synchronized SecretService getSecretService(XmlConfig config, OutgoingQueue outQueue) {
     if (impl == null)
-      impl = new SecretServiceImpl(configDir, outQueue);
+      impl = new SecretServiceImpl(config, outQueue);
     return impl;
   }
 }

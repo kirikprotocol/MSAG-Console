@@ -19,8 +19,8 @@ public class DBNickDataSource extends DBDataSource implements NickDataSource{
 
   private final ConnectionPool pool;
 
-  public DBNickDataSource(String s, String s1) throws DataSourceException {
-    super(s, s1);
+  public DBNickDataSource() throws DataSourceException {
+    super(DBNickDataSource.class.getResourceAsStream("nick.properties"), "");
 
     pool = ConnectionPoolFactory.createConnectionPool("Nick", 5, 60000);
     pool.init(1);

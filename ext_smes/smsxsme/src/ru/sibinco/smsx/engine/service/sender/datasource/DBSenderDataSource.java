@@ -21,8 +21,9 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
   private int id;
   private final ConnectionPool pool;
 
-  public DBSenderDataSource(String sqlFile, String prefix) throws DataSourceException {
-    super(sqlFile, prefix);
+  public DBSenderDataSource() throws DataSourceException {
+    super(DBSenderDataSource.class.getResourceAsStream("sender.properties"), "");
+    
     pool = ConnectionPoolFactory.createConnectionPool("sender", 10, 60000);
     pool.init(1);
 

@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.sender;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 
 /**
@@ -11,9 +12,9 @@ import com.eyeline.sme.smpp.OutgoingQueue;
 public class SenderServiceFactory {
   private static SenderService impl;
 
-  public static SenderService getSenderService(String configDir, OutgoingQueue outQueue) {
+  public static SenderService getSenderService(XmlConfig config, OutgoingQueue outQueue) {
     if (impl == null)
-      impl = new SenderServiceImpl(configDir, outQueue);
+      impl = new SenderServiceImpl(config, outQueue);
     return impl;
   }
 }

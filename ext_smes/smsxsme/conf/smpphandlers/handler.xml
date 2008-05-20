@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<config>
+  <param name="servicesConfig">conf/smpphandlers/services.xml</param>
+
+  <!-- allowed values for requestHandleStrategy: threadPool, greedyConsumer -->
+  <param name="requestHandleStrategy">threadPool</param>
+  <param name="threadsNumber">10</param>
+  
+</config>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="windows-1251"?>
+
+<config>
+  <section name="calendar">
+    <param name="service.address">147</param>
+    <param name="send.date.max.year">2009</param>
+    <param name="engine.working.interval">60000</param>
+  </section>
+
+  <section name="secret">
+    <param name="service.address">147</param>
+    <param name="destination.abonent.inform">У Вас 1 SMS-Секрет. Получить? Отправьте Get&lt;пробел&gt;пароль на номер 147.</param>
+    <param name="destination.abonent.invitation">Вам отправлено секретное сообщение. Для его получения зарегистрируйтесь в сервисе "SMS-ЭКСТРА". Подробнее на *147#</param>
+    <param name="delivery.report">Абоненту {to_abonent} сообщение доставлено.</param>
+  </section>
+
+  <section name="nick">
+    <param name="service.address">147</param>
+    <param name="profiler.address">0</param>
+  </section>
+</config>

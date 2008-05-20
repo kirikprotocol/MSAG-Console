@@ -22,8 +22,8 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
   private final ConnectionPool pool;
   private final Matcher loadUserByAddresses;
 
-  public DBSecretDataSource(String sqlFile, String prefix) throws DataSourceException {
-    super(sqlFile, prefix);
+  public DBSecretDataSource() throws DataSourceException {
+    super(DBSecretDataSource.class.getResourceAsStream("secret.properties"), "");
 
     pool = ConnectionPoolFactory.createConnectionPool("secret", 10, 60000);
     pool.init(1);

@@ -9,6 +9,7 @@ import java.io.File;
 
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 /**
  * User: artem
@@ -21,18 +22,16 @@ class SecretServiceImpl implements SecretService {
   private final SecretProcessor processor;
   private final MessageSender messageSender;
 
-  SecretServiceImpl(String configDir, OutgoingQueue outQueue) {
+  SecretServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
 
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "services/secret/service.properties"));
-
-      dataSource = new DBSecretDataSource(new File(configDir, "services/secret/secret.sql").getAbsolutePath(), "");
+      dataSource = new DBSecretDataSource();
 
       messageSender = new MessageSender(dataSource, outQueue);
-      messageSender.setServiceAddress(config.getString("service.address"));
-      messageSender.setMsgDeliveryReport(config.getString("delivery.report"));
-      messageSender.setMsgDestinationAbonentInform(config.getString("destination.abonent.inform"));
-      messageSender.setMsgDestinationAbonentInvitation(config.getString("destination.abonent.invitation"));
+      messageSender.setServiceAddress(config.getSection("secret").getString("service.address"));
+      messageSender.setMsgDeliveryReport(config.getSection("secret").getString("delivery.report"));
+      messageSender.setMsgDestinationAbonentInform(config.getSection("secret").getString("destination.abonent.inform"));
+      messageSender.setMsgDestinationAbonentInvitation(config.getSection("secret").getString("destination.abonent.invitation"));
 
       processor = new SecretProcessor(dataSource, messageSender);
 
