@@ -87,7 +87,7 @@ std::string& DumpHex(std::string& fstr, unsigned long length, const unsigned cha
   # 00000040:  2F 66 31 3E 3C 74 79 70 ¦ 65 3E 4E 55 4C 4C 3C 2F  /f1><type>NULL</
   # 00000050:  74 79 70 65 3E 3C 2F 54 ¦ 31 3E 20 20 0D 0A        type></T1>  ??
  * ************************************************************************** */
-#define OCTETS_PER_LINE	        16
+#define OCTETS_PER_LINE         16
 #define UNPRINTABLE_CHAR        '?'
 #define PAD_SPACES(oct_remains)     (3*oct_remains + 2 + 1)
 
