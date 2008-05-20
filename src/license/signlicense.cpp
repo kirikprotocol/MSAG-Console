@@ -206,7 +206,7 @@ int main(int argc,char* argv[])
   }*/
 
   string msg;
-  char *lkeys[]=
+  char *smscKeys[]=
   {
 "Organization",
 "Hostids",
@@ -215,7 +215,21 @@ int main(int argc,char* argv[])
 "LicenseType",
 "Product"
   };
-  for(int i=0;i<sizeof(lkeys)/sizeof(char*);i++)
+  char* scagKeys[]=
+  {
+"Organization",
+"Hostids",
+"MaxSmsThroughput",
+"MaxHttpThroughput",
+"MaxMmsThroughput",
+"LicenseExpirationDate",
+"LicenseType",
+"Product"
+  };
+  char** lkeys=strcmp(argv[1],"smsc")==0?smscKeys:strcmp(argv[1],"scag")==0?scagKeys:0;
+  size_t keysCount=strcmp(argv[1],"smsc")==0?sizeof(smscKeys)/sizeof(smscKeys[0]):strcmp(argv[1],"scag")==0?sizeof(scagKeys)/sizeof(scagKeys[0]):1;
+  
+  for(int i=0;i<keysCount;i++)
   {
     msg+=lkeys[i];
     msg+='=';

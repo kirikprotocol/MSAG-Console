@@ -18,7 +18,7 @@ namespace check{
 
 using namespace std;
 using smsc::core::buffers::Hash;
-
+/*
 static const char *lkeys[]=
 {
 "Organization",
@@ -28,6 +28,7 @@ static const char *lkeys[]=
 "LicenseType",
 "Product"
 };
+*/
 
 
 static bool ReadFile(const char* fn,string& str)
@@ -76,9 +77,17 @@ bool ReadLicense(FILE* f,Hash<string>& lic)
     if(!buf[0] || buf[0]=='#')continue;
     char *eq=strchr(buf,'=');
     if(!eq)return false;
+    if(eq-buf>4000)
+    {
+      return false;
+    }
     memcpy(nm,buf,eq-buf);
     nm[eq-buf]=0;
     trim(nm);
+    if(strlen(eq+1)>4000)
+    {
+      return false;
+    }
     strcpy(vl,eq+1);
     trim(vl);
     lic.Insert(nm,vl);
@@ -86,7 +95,7 @@ bool ReadLicense(FILE* f,Hash<string>& lic)
   return true;
 }
 
-bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
+bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic,const char* keys[],size_t keysCount)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.license");
 
@@ -145,16 +154,16 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
 
 
   string msg;
-  for(unsigned i=0;i<sizeof(lkeys)/sizeof(char*);i++)
+  for(size_t i=0;i<keysCount;i++)
   {
-    msg+=lkeys[i];
+    msg+=keys[i];
     msg+='=';
-    if(!lic.Exists(lkeys[i]))
+    if(!lic.Exists(keys[i]))
     {
-      smsc_log_error(log, "Field %s not found in license",lkeys[i]);
+      smsc_log_error(log, "Field %s not found in license",keys[i]);
       return false;
     }
-    msg+=lic[lkeys[i]];
+    msg+=lic[keys[i]];
     msg+=';';
   }
 
