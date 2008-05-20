@@ -54,10 +54,12 @@ void Scag::init()
 {
     smsc::logger::Logger *log=smsc::logger::Logger::getInstance("scag.init");
 
+
     smsc_log_info(log, "SCAG start initialisation...");
 
 
     ConfigManager & cfg = ConfigManager::Instance();
+
 
     //********************************************************
     try {

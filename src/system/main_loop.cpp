@@ -97,6 +97,14 @@ void Smsc::mainLoop(int idx)
 
   time_t lastTimeStatCheck=last_tm;
 
+  int licenseFileCheckHour;
+  time_t lastLicenseCheckTime=0;
+  {
+    struct tm t;
+    localtime_r(&last_tm,&t);
+    licenseFileCheckHour=t.tm_hour;
+  }
+
   while(!stopFlag)
   {
     if(enqueueVector.size())
@@ -194,6 +202,17 @@ void Smsc::mainLoop(int idx)
     {
       stopFlag=true;
       break;
+    }
+
+    if(idx==0 && now-lastLicenseCheckTime>10*60)
+    {
+      struct tm t;
+      localtime_r(&now,&t);
+      if(t.tm_hour!=licenseFileCheckHour)
+      {
+        InitLicense();
+      }
+      lastLicenseCheckTime=now;
     }
 
     int submitCount=0;

@@ -1,6 +1,9 @@
+#include <memory>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <typeinfo>
 #include "system/smsc.hpp"
 #include "system/smppio/SmppAcceptor.hpp"
-#include <memory>
 #include "util/debug.h"
 //#include "store/StoreManager.h"
 #include "system/state_machine.hpp"
@@ -19,9 +22,8 @@
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "mscman/MscManager.h"
 #include "resourcemanager/ResourceManager.hpp"
-#include <typeinfo>
 #include "system/status_sme.hpp"
-#include <util/findConfigFile.h>
+#include "util/findConfigFile.h"
 
 #include "profiler/profile-notifier.hpp"
 #include "cluster/InterconnectManager.h"
@@ -39,6 +41,8 @@
 #include "alias/AliasManImpl.hpp"
 #include "mapio/FraudControl.hpp"
 #include "mapio/MapLimits.hpp"
+#include "license/check/license.hpp"
+
 
 #ifdef SMSEXTRA
 #include "Extra.hpp"
@@ -248,7 +252,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   smsc::util::regexp::RegExp::InitLocale();
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
   try{
-  InitLicense(*cfg.licconfig);
   tp.preCreateThreads(15);
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
@@ -1546,6 +1549,217 @@ void Smsc::reloadReschedule(){
     //RescheduleCalculator::reset();
     RescheduleCalculator::init(findConfigFile("schedule.xml"));
 }
+
+void Smsc::abortSmsc()
+{
+  SaveStats();
+  statMan->flushStatistics();
+#ifdef USE_MAP
+  MapDialogContainer::getInstance()->abort();
+#endif
+  kill(getpid(),9);
+}
+
+void Smsc::dumpSmsc()
+{
+#ifdef USE_MAP
+  MapDialogContainer::getInstance()->abort();
+#endif
+  abort();
+}
+
+void Smsc::registerStatisticalEvent(int eventType, const SMS *sms)
+{
+  using namespace smsc::stat;
+  using namespace StatEvents;
+  switch(eventType)
+  {
+    /*
+      submit/stored
+      submit/error
+      delivered - ok
+      delivered - failed (undeliverable, expired)
+      rescheduled
+    */
+    case etSubmitOk:
+    {
+      statMan->updateAccepted(*sms);
+      MutexGuard g(perfMutex);
+      submitOkCounter++;
+      smePerfMonitor.incAccepted(sms->getSourceSmeId());
+#ifdef SNMP
+      SnmpCounter::getInstance().incCounter(SnmpCounter::cntAccepted,sms->getSourceSmeId());
+      int smeIdx=smeman.lookup(sms->getSourceSmeId());
+      smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntAccepted);
+#endif
+    }break;
+    case etSubmitErr:
+    {
+      statMan->updateRejected(*sms);
+      MutexGuard g(perfMutex);
+      submitErrCounter++;
+      msu_submitErrCounter+=sms->hasIntProperty(Tag::SMSC_ORIGINALPARTSNUM)?sms->getIntProperty(Tag::SMSC_ORIGINALPARTSNUM):1;
+      smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
+#ifdef SNMP
+      SnmpCounter::getInstance().incCounter(SnmpCounter::cntRejected,sms->getSourceSmeId());
+      int smeIdx=smeman.lookup(sms->getSourceSmeId());
+      smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntRejected);
+      smeStats.incError(smeIdx,sms->getLastResult());
+#endif
+    }break;
+    case etDeliveredOk:
+    {
+      statMan->updateChanged(StatInfo(*sms,false));
+      MutexGuard g(perfMutex);
+      deliverOkCounter++;
+      smePerfMonitor.incDelivered(sms->getDestinationSmeId());
+#ifdef SNMP
+      int smeIdx=smeman.lookup(sms->getDestinationSmeId());
+      smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntDelivered);
+      smeStats.incError(smeIdx,0);
+#endif
+    }break;
+    case etDeliverErr:
+    {
+      statMan->updateTemporal(StatInfo(*sms,false));
+      int msuCnt=1;
+      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+      {
+        ConcatInfo* ci=0;
+        unsigned len;
+        ci=(ConcatInfo*)sms->getBinProperty(Tag::SMSC_CONCATINFO,&len);
+        msuCnt=ci->num-sms->getConcatSeqNum();
+      }
+
+      MutexGuard g(perfMutex);
+      deliverErrTempCounter++;
+      msu_deliverErrTempCounter+=msuCnt;
+      smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
+#ifdef SNMP
+      int smeIdx=smeman.lookup(sms->getDestinationSmeId());
+      smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntTempError);
+      smeStats.incError(smeIdx,sms->getLastResult());
+#endif
+    }break;
+    case etUndeliverable:
+    {
+      int msuCnt=1;
+      if(sms->hasBinProperty(Tag::SMSC_CONCATINFO))
+      {
+        ConcatInfo* ci=0;
+        unsigned len;
+        ci=(ConcatInfo*)sms->getBinProperty(Tag::SMSC_CONCATINFO,&len);
+        msuCnt=ci->num-sms->getConcatSeqNum();
+      }
+      statMan->updateChanged(StatInfo(*sms,false));
+      MutexGuard g(perfMutex);
+      deliverErrPermCounter++;
+      msu_deliverErrPermCounter+=msuCnt;
+      smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
+#ifdef SNMP
+      int smeIdx=smeman.lookup(sms->getDestinationSmeId());
+      smeStats.incCounter(smeIdx,smsc::stat::SmeStats::cntFailed);
+      smeStats.incError(smeIdx,sms->getLastResult());
+#endif
+    }break;
+    case etRescheduled:
+    {
+      statMan->updateScheduled(StatInfo(*sms,false));
+      MutexGuard g(perfMutex);
+      rescheduleCounter++;
+      msu_rescheduleCounter++;
+      smePerfMonitor.incRescheduled(sms->getDestinationSmeId());
+#ifdef SNMP
+      smeStats.incCounter(smeman.lookup(sms->getDestinationSmeId()),smsc::stat::SmeStats::cntRetried);
+#endif
+    }break;
+  }
+}
+
+
+
+Smsc::LicenseInfo Smsc::license={0,0};
+std::string Smsc::licenseFile;
+std::string Smsc::licenseSigFile;
+time_t Smsc::licenseFileModTime=0;
+
+
+void Smsc::InitLicense()
+{
+  Hash<string> lic;
+  if(licenseFile.length()==0)
+  {
+    licenseFile=findConfigFile("license.ini");
+    licenseSigFile=findConfigFile("license.sig");
+  }
+
+  struct ::stat st;
+  if(::stat(licenseFile.c_str(),&st)!=0)
+  {
+    throw Exception("Failed to stat '%s'",licenseFile.c_str());
+  }
+  if(st.st_mtime==licenseFileModTime)
+  {
+    return;
+  }
+ 
+  licenseFileModTime=st.st_mtime;
+
+  static const char *lkeys[]=
+  {
+  "Organization",
+  "Hostids",
+  "MaxSmsThroughput",
+  "LicenseExpirationDate",
+  "LicenseType",
+  "Product"
+  };
+
+  if(!smsc::license::check::CheckLicense(licenseFile.c_str(),licenseSigFile.c_str(),lic,lkeys,sizeof(lkeys)/sizeof(lkeys[0])))
+  {
+    throw Exception("Invalid license");
+  }
+
+
+
+  license.maxsms=atoi(lic["MaxSmsThroughput"].c_str());
+  int y,m,d;
+  sscanf(lic["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+  struct tm t={0,};
+  t.tm_year=y-1900;
+  t.tm_mon=m-1;
+  t.tm_mday=d;
+  license.expdate=mktime(&t);
+  long hostid;
+  std::string ids=lic["Hostids"];
+  std::string::size_type pos=0;
+  bool ok=false;
+  do{
+    sscanf(ids.c_str()+pos,"%lx",&hostid);
+    if(hostid==gethostid())
+    {
+      ok=true;break;
+    }
+    pos=ids.find(',',pos);
+    if(pos!=std::string::npos)pos++;
+  }while(pos!=std::string::npos);
+  if(!ok)throw runtime_error("");
+  if(smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x685a3df4)throw runtime_error("");
+  if(license.expdate<time(NULL))
+  {
+    char x[]=
+    {
+    'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
+    };
+    std::string s;
+    for(int i=0;i<sizeof(x);i++)
+    {
+      s+=x[i]^0x4c;
+    }
+    throw runtime_error(s);
+  }
+}
+
 
 }//system
 }//smsc

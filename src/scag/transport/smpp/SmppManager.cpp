@@ -1,4 +1,7 @@
 #include <ctype.h>
+#include <unistd.h>
+#include <signal.h>
+#include <sys/types.h>
 #include "SmppManager.h"
 #include "util/xml/DOMTreeReader.h"
 #include "util/xml/utilFunctions.h"
@@ -345,6 +348,11 @@ protected:
   mutable sync::Mutex regMtx;
   SmppSocketManager sm;
 
+  smsc::util::TimeSlotCounter<> licenseCounter;
+  time_t lastLicenseExpTest;
+  int licenseFileCheckHour;
+
+
   bool running;
 
   buf::CyclicQueue<SmppCommand> queue, lcmQueue, respQueue;
@@ -506,8 +514,8 @@ SmppBindType GetBindType(DOMNamedNodeMap* attr)
 {
   buf::FixedLengthString<16> bindTypeName;
   FillStringValue(attr,bindTypeName);
-  int len=strlen(bindTypeName);
-  for(int i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
+  size_t len=strlen(bindTypeName);
+  for(size_t i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
   if     (!strcmp(bindTypeName,"rx")) return btReceiver;
   else if(!strcmp(bindTypeName,"tx")) return btTransmitter;
   else if(!strcmp(bindTypeName,"trx"))return btTransceiver;
@@ -518,8 +526,8 @@ bool GetBoolValue(DOMNamedNodeMap* attr)
 {
   char bindTypeName[16];
   FillStringValue(attr,bindTypeName);
-  int len=strlen(bindTypeName);
-  for(int i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
+  size_t len=strlen(bindTypeName);
+  for(size_t i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
   if     (!strcmp(bindTypeName,"true")) return true;
   else if(!strcmp(bindTypeName,"false")) return false;
   throw smsc::util::Exception("Invalid value for param 'enabled':%s",bindTypeName);
@@ -613,8 +621,8 @@ static void FillEntity(SmppEntityInfo& entity,DOMNode* record)
 static void ParseTag(SmppManagerImpl* smppMan,DOMNodeList* list,SmppEntityType et)
 {
   using namespace smsc::util::xml;
-  unsigned listLength = list->getLength();
-  for (unsigned i=0; i<listLength; i++)
+  size_t listLength = list->getLength();
+  for (size_t i=0; i<listLength; i++)
   {
     SmppEntityInfo entity;
     entity.type=et;
@@ -675,8 +683,8 @@ static void FillMetaEntity(MetaEntityInfo& entity,DOMNode* record)
 static void ParseMetaTag(SmppManagerImpl* smppMan,DOMNodeList* list,MetaEntityType et)
 {
   using namespace smsc::util::xml;
-  unsigned listLength = list->getLength();
-  for (unsigned i=0; i<listLength; i++)
+  size_t listLength = list->getLength();
+  for (size_t i=0; i<listLength; i++)
   {
     MetaEntityInfo entity;
     entity.type=et;
@@ -687,7 +695,7 @@ static void ParseMetaTag(SmppManagerImpl* smppMan,DOMNodeList* list,MetaEntityTy
 }
 
 
-SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG), testRouter_(0)
+SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG), testRouter_(0),licenseCounter(10,20)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
   limitsLog=smsc::logger::Logger::getInstance("smpp.lmt");
@@ -695,6 +703,8 @@ SmppManagerImpl::SmppManagerImpl():sm(this,this), ConfigListener(SMPPMAN_CFG), t
   lastUid=0;
   lastExpireProcess=0;
   lcmProcessingCount = 0;
+  lastLicenseExpTest=0;
+  licenseFileCheckHour=0;
 }
 
 SmppManagerImpl::~SmppManagerImpl()
@@ -746,8 +756,9 @@ void SmppManagerImpl::Init(const char* cfgFile)
 
   try{
     const char* tags=scag::config::ConfigManager::Instance().getConfig()->getString("smpp.transitOptionalTags");
-    int n=0,i=0;
-    int len=strlen(tags);
+    size_t n=0;
+    int i=0;
+    size_t len=strlen(tags);
     int tag;
     while(n<len)
     {
@@ -798,8 +809,8 @@ bool SmppManagerImpl::LoadEntityFromConfig(SmppEntityInfo& info,const char* sysI
   {
     list = elem->getElementsByTagName(XmlStr("smscrecord"));
   }
-  unsigned listLength = list->getLength();
-  for (unsigned i=0; i<listLength; i++)
+  size_t listLength = list->getLength();
+  for (size_t i=0; i<listLength; i++)
   {
     SmppEntityInfo entity;
     entity.type=et;
@@ -822,8 +833,8 @@ bool SmppManagerImpl::LoadMetaEntityFromConfig(MetaEntityInfo& info,const char* 
   DOMElement *elem = doc->getDocumentElement();
 
   DOMNodeList *list= elem->getElementsByTagName(XmlStr("metasmerecord"));
-  unsigned listLength = list->getLength();
-  for (unsigned i=0; i<listLength; i++)
+  size_t listLength = list->getLength();
+  for (size_t i=0; i<listLength; i++)
   {
     MetaEntityInfo entity;
     entity.type=mtMetaService;
@@ -1196,6 +1207,17 @@ void SmppManagerImpl::unregisterChannel(SmppChannel* ch)
 }
 
 
+static SmppCommand mkErrResp(int cmdId,int dlgId,int errCode)
+{
+  switch(cmdId)
+  {
+    case SUBMIT:return SmppCommand::makeSubmitSmResp("",dlgId,errCode);
+    case DELIVERY:return SmppCommand::makeDeliverySmResp("",dlgId,errCode);
+    case DATASM:return SmppCommand::makeDataSmResp("",dlgId,errCode);
+    default:throw Exception("Unsupported commandId:%d",cmdId);
+  }
+}
+
 void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
 {
   SmppEntity* entPtr=0;
@@ -1216,27 +1238,53 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
     if(!running)
     {
         smsc_log_warn(limitsLog,"Denied %s from '%s' due to shutting down", i == DELIVERY ? "DELIVERY" : (i == SUBMIT ? "SUBMIT" : "DATASM"), entPtr->info.systemId.c_str());
-        SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::SYSERR);
+        SmppCommand resp=mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::SYSERR);
         ct->putCommand(resp);
         return;
     }
+
+    int licLimit=ConfigManager::Instance().getLicense().maxsms;
+    int cntValue=licenseCounter.Get()/10;
+    if(cntValue>licLimit)
+    {
+      bool allow=false;
+      if(i==SUBMIT || i==DELIVERY || i==DATASM)
+      {
+        SMS& sms=*cmd->get_sms();
+        if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+        {
+          if(sms.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)!=USSD_PSSR_IND)
+          {
+            allow=true;
+          }
+        }
+      }
+      if(!allow)
+      {
+        smsc_log_info(limitsLog,"Denied by license limitation:%d/%d",cntValue,licLimit);
+        SmppCommand resp=mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::THROTTLED);
+        ct->putCommand(resp);
+        return;
+      }
+    }
+
     int cnt=entPtr->incCnt.Get();
     if(entPtr->info.sendLimit>0 && cnt/5>=entPtr->info.sendLimit && cmd.getCommandId()==SUBMIT && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
       smsc_log_warn(limitsLog,"Denied submit from '%s' by sendLimit:%d/%d",entPtr->info.systemId.c_str(),cnt/5,entPtr->info.sendLimit);
-      SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+      SmppCommand resp=mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
       ct->putCommand(resp);
     }else if(queue.Count()>=queueLimit && !cmd->get_sms()->hasIntProperty(smsc::sms::Tag::SMPP_USSD_SERVICE_OP))
     {
       smsc_log_warn(limitsLog,"Denied submit from '%s' by queueLimit:%d/%d",entPtr->info.systemId.c_str(),queue.Count(),queueLimit);
-      SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+      SmppCommand resp=mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
       ct->putCommand(resp);
     }else
     {
       if(entPtr->info.inQueueLimit>0 && entPtr->getQueueCount()>=entPtr->info.inQueueLimit)
       {
         smsc_log_warn(limitsLog,"Denied submit from '%s' by inQueueLimit:%d/%d",entPtr->info.systemId.c_str(),entPtr->getQueueCount(),entPtr->info.inQueueLimit);
-        SmppCommand resp=SmppCommand::makeSubmitSmResp("",cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
+        SmppCommand resp=mkErrResp(i,cmd->get_dialogId(),smsc::system::Status::MSGQFUL);
         ct->putCommand(resp);
       }else
       {
@@ -1247,6 +1295,7 @@ void SmppManagerImpl::putCommand(SmppChannel* ct,SmppCommand& cmd)
           //smsc_log_debug(limitsLog,"cnt=%d",entPtr->incCnt.Get());
         }
         entPtr->incQueueCount();
+        licenseCounter.Inc();
       }
     }
   }
@@ -1302,6 +1351,23 @@ bool SmppManagerImpl::getCommand(SmppCommand& cmd)
       lastExpireProcess=now;
       cmd=SmppCommand::makeCommand(PROCESSEXPIREDRESP,0,0,0);
       return true;
+    }
+    if(now-lastLicenseExpTest>10*60)
+    {
+      if(now>ConfigManager::Instance().getLicense().expdate)
+      {
+        smsc_log_error(log,"License expired");
+        kill(getpid(),SIGTERM);
+        return false;
+      }
+      struct tm ltm;
+      localtime_r(&now,&ltm);
+      if(ltm.tm_hour!=licenseFileCheckHour)
+      {
+        ConfigManager::Instance().checkLicenseFile();
+        licenseFileCheckHour=ltm.tm_hour;
+      }
+      lastLicenseExpTest=now;
     }
   }
 

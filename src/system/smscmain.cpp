@@ -18,7 +18,6 @@
 
 #include "system/version.inc"
 
-#include "license/check/license.hpp"
 #include "util/mirrorfile/mirrorfile.h"
 
 class SmscRunner : public smsc::core::threads::Thread
@@ -84,18 +83,8 @@ int main(int argc,char* argv[])
     cfgs.cfgman=&cfgs.cfgman->getInstance();
     smsc::logger::Logger *logger = Logger::getInstance("smscmain");
 
-    Hash<string> lic;
-    {
-      string lf=findConfigFile("license.ini");
-      string sig=findConfigFile("license.sig");
-      if(!smsc::license::check::CheckLicense(lf.c_str(),sig.c_str(),lic))
-      {
-        smsc_log_error(logger, "Invalid license\n");
-        return -1;
-      }
-    }
+    smsc::system::Smsc::InitLicense();
 
-    cfgs.licconfig=&lic;
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
     smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
     smsc_log_info(logger,  "Locale resources loaded" );

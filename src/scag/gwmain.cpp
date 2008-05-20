@@ -13,7 +13,6 @@
 #include <util/findConfigFile.h>
 #include <core/threads/Thread.hpp>
 
-#include "license/check/license.hpp"
 #include "util/mirrorfile/mirrorfile.h"
 
 #include "admin/SCAGSocketListener.h"
@@ -70,6 +69,7 @@ extern "C" void atExitHandler(void)
     //smsc::logger::Logger::Shutdown();
 }
 
+
 int main(int argc,char* argv[])
 {
   Logger::Init();
@@ -85,19 +85,9 @@ int main(int argc,char* argv[])
     scag::config::ConfigManager& cfgs = scag::config::ConfigManager::Instance();
 //    smsc_log_info(logger,  "SCAG configuration is loaded" );
 
-    Hash<std::string> lic;
-    {
-      std::string lf=findConfigFile("license.ini");
-      std::string sig=findConfigFile("license.sig");
-      if (!smsc::license::check::CheckLicense(lf.c_str(),sig.c_str(),lic))
-      {
-        smsc_log_error(logger, "Invalid license\n");
-        return -1;
-      }
-    }
-
-    cfgs.getLicConfig() = &lic;
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
+
+    cfgs.checkLicenseFile();
 
     in_port_t servicePort = 0;
     try {
