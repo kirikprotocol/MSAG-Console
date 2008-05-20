@@ -65,7 +65,7 @@ int main(int argc,char* argv[])
 
 
     char buf[32];
-    fgets(buf,sizeof(buf),stdin);
+    fgets(buf,(int)sizeof(buf),stdin);
     SmppManager::shutdown();
   }catch(std::exception& e)
   {

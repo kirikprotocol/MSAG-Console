@@ -64,14 +64,14 @@ protected:
     }
     static uint32_t Size()
     {
-      return 1+1+sizeof(AddressValue)+2;
+      return (uint32_t)(1+1+sizeof(AddressValue)+2);
     }
     void Read(File& f)
     {
       addr.type=f.ReadByte();
       addr.plan=f.ReadByte();
       f.Read(addr.value,sizeof(addr.value));
-      addr.length=strlen(addr.value);
+      addr.length=(uint8_t)strlen(addr.value);
       umr=f.ReadNetInt16();
     }
     void Write(File& f)const
@@ -101,7 +101,7 @@ protected:
     OffsetValue(File::offset_type argValue):value(argValue){}
     OffsetValue(const OffsetValue& src):value(src.value){}
 
-    static uint32_t Size(){return sizeof(File::offset_type);}
+    static uint32_t Size(){return (uint32_t)sizeof(File::offset_type);}
     void Read(File& f)
     {
       value=f.ReadNetInt64();

@@ -84,7 +84,7 @@ int main(int argc,char* argv[])
     sca->addSmscConnect(info);
 
     char buf[32];
-    fgets(buf,sizeof(buf),stdin);
+    fgets(buf,(int)sizeof(buf),stdin);
     sm.shutdown();
 
   }catch(std::exception& e)

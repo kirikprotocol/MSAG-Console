@@ -76,7 +76,7 @@ namespace scag { namespace sessions {
 
             char tmp[4];
             sprintf(tmp,"%ld",timeVal.tv_usec / 1000);
-            int len = strlen(tmp);
+            size_t len = strlen(tmp);
 
             while (len < 3)
             {
@@ -317,7 +317,7 @@ namespace scag { namespace sessions {
         };
         void pushCommand(SCAGCommand* cmd) { cmdQueue.push_back(cmd); };
         uint32_t commandsEmpty() { return cmdQueue.empty(); };
-        uint32_t commandsCount() { return cmdQueue.size(); };
+        uint32_t commandsCount() { return (uint32_t)cmdQueue.size(); };
 
         LongCallContext lcmCtx;
 
@@ -375,7 +375,7 @@ namespace scag { namespace sessions {
         void setRedirectFlag() {m_bRedirectFlag = true;}
         bool hasRedirectFlag() {return m_bRedirectFlag;}
 
-        int getPendingAmount() {return PendingOperationList.size();}
+        int getPendingAmount() {return (int)PendingOperationList.size();}
         bool getCanOpenSubmitOperation() { return m_CanOpenSubmitOperation;}
 
         bool isNew() { return bIsNew; }

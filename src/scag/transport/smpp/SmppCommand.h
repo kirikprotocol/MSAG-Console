@@ -94,7 +94,7 @@ enum DataSmDirection{
 static inline void fillField(auto_ptr<char>& field,const char* text,int length=-1)
 {
   if(length==0 || text==NULL)return;
-  if(length==-1)length=strlen(text);
+  if(length==-1)length=(int)strlen(text);
   field=auto_ptr<char>(new char[length+1]);
   memcpy(field.get(),text,length);
   field.get()[length]=0;

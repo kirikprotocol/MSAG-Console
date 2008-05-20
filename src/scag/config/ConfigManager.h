@@ -28,6 +28,21 @@ enum ConfigType
     LONGCALLMAN_CFG
 };
 
+struct LicenseInfo{
+  LicenseInfo()
+  {
+    maxsms=0;
+    maxhttp=0;
+    maxmms=0;
+    expdate=0;
+  }
+  int maxsms;
+  int maxhttp;
+  int maxmms;
+  time_t expdate;
+};
+
+
 class ConfigManager
 {
     ConfigManager(const ConfigManager& bm);
@@ -50,7 +65,9 @@ public:
     virtual HttpManagerConfig& getHttpManConfig() = 0;    
     virtual PersClientConfig& getPersClientConfig() = 0;    
     virtual LongCallManagerConfig& getLongCallManConfig() = 0;
-    virtual Hash<std::string>*& getLicConfig() = 0;
+    virtual LicenseInfo& getLicense()=0;
+    virtual void checkLicenseFile()=0;
+    
     virtual Config* getConfig() = 0;
 };
 

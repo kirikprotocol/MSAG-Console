@@ -36,7 +36,7 @@ void stripUnknownSmppOptionals(smsc::sms::SMS& sms,const std::vector<int>& allow
   }
 
   if(newopt.GetPos()!=0)
-    sms.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,newopt.get(),newopt.GetPos());
+    sms.setBinProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS,newopt.get(),(unsigned)newopt.GetPos());
   else
     sms.messageBody.dropProperty(smsc::sms::Tag::SMSC_UNKNOWN_OPTIONALS);
 }

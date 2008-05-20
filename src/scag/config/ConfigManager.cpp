@@ -21,6 +21,9 @@
 #include "ConfigListener.h"
 #include <typeinfo>
 #include "logger/Logger.h"
+#include "util/findConfigFile.h"
+#include "license/check/license.hpp"
+#include "util/crc32.h"
 
 namespace scag   {
 namespace config {
@@ -94,7 +97,8 @@ public:
         static LongCallManagerConfig cfg;
         return cfg;
     };
-    virtual Hash<std::string>*& getLicConfig(){return licconfig;};
+    virtual LicenseInfo& getLicense(){return license;}
+    virtual void checkLicenseFile();
     virtual Config* getConfig(){return &config;};
 
     void save();
@@ -103,7 +107,11 @@ protected:
     Mutex listenerLock;
     smsc::logger::Logger* logger;
 
-    static Hash<std::string> *licconfig;
+    static Hash<std::string> licconfig;
+    static LicenseInfo license;
+    static time_t licenseFileMTime;
+    static std::string licenseFile;
+    static std::string licenseSig;
 
 private:
     static void findConfigFile();
@@ -121,7 +129,13 @@ private:
 };
 
 std::auto_ptr<char> ConfigManagerImpl::config_filename;
-Hash<std::string> * ConfigManagerImpl::licconfig = 0;
+Hash<std::string> ConfigManagerImpl::licconfig;
+LicenseInfo ConfigManagerImpl::license;
+time_t ConfigManagerImpl::licenseFileMTime=0;
+std::string ConfigManagerImpl::licenseFile;
+std::string ConfigManagerImpl::licenseSig;
+
+
 Config ConfigManagerImpl::config;
 
 //==============================================================
@@ -546,6 +560,89 @@ ConfigListener::~ConfigListener()
         throw Exception("ConfigListener exception, Unknown error.");
     }
 }
+
+void ConfigManagerImpl::checkLicenseFile()
+{
+  if(licenseFile.length()==0)
+  {
+    licenseFile=::findConfigFile("license.ini");
+    licenseSig=::findConfigFile("license.sig");
+  }
+  struct stat fst;
+  if(::stat(licenseFile.c_str(),&fst)!=0)
+  {
+    throw Exception("License file not found:'%s'",licenseFile.c_str());
+  }
+  if(fst.st_mtime==licenseFileMTime)
+  {
+    return;
+  }
+  static const char *lkeys[]=
+  {
+  "Organization",
+  "Hostids",
+  "MaxSmsThroughput",
+  "MaxHttpThroughput",
+  "MaxMmsThroughput",
+  "LicenseExpirationDate",
+  "LicenseType",
+  "Product"
+  };
+  if (!smsc::license::check::CheckLicense(licenseFile.c_str(),licenseSig.c_str(),licconfig,lkeys,sizeof(lkeys)/sizeof(lkeys[0])))
+  {
+    smsc_log_error(logger, "Invalid license");
+    throw Exception("Invalid license");
+  }
+  licenseFileMTime=fst.st_mtime;
+
+  license.maxsms=atoi(licconfig["MaxSmsThroughput"].c_str());
+  license.maxhttp=atoi(licconfig["MaxHttpThroughput"].c_str());
+  license.maxmms=atoi(licconfig["MaxMmsThroughput"].c_str());
+  int y,m,d;
+  sscanf(licconfig["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
+  struct tm t={0,};
+  t.tm_year=y-1900;
+  t.tm_mon=m-1;
+  t.tm_mday=d;
+  license.expdate = mktime(&t);
+  long hostid;
+  std::string ids=licconfig["Hostids"];
+  std::string::size_type pos=0;
+  bool ok = false;
+
+  do {
+    sscanf(ids.c_str() + pos,"%lx", &hostid);
+
+    if (hostid == gethostid())
+    {
+      ok = true;
+      break;
+    }
+
+    pos = ids.find(',', pos);
+    if (pos!=std::string::npos) pos++;
+
+  } while(pos!=std::string::npos);
+
+  if (!ok) throw runtime_error("code 1");
+
+  if (smsc::util::crc32(0,licconfig["Product"].c_str(),licconfig["Product"].length())!=0x1D5DA434) throw runtime_error("code 2");
+
+  if(license.expdate < time(NULL))
+  {
+    char x[]=
+    {
+    'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
+    };
+    std::string s;
+    for(int i=0;i<sizeof(x);i++)
+    {
+      s+=x[i]^0x4c;
+    }
+    throw runtime_error(s);
+  }
+}
+
 
 }
 }

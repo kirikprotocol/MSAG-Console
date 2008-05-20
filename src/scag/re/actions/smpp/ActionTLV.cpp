@@ -8,7 +8,7 @@
 namespace scag { namespace re { namespace actions {
 
 const smsc::util::HexDumpCFG HEX_DUMP_CFG = { 1, 0, " ", 0};
-const MAX_INT_SIZE = sizeof(int64_t);
+const int MAX_INT_SIZE = sizeof(int64_t);
 const size_t UINT32_STR_MAX_SIZE = 12;
 
 enum // tlv_types constants
