@@ -2,6 +2,6 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-distrlist/dltolower dltolower -lutil $(XERCES_LIB)
-distrlist/dldump dldump -lutil $(XERCES_LIB) -L$(SMSC_BUILDDIR)/bin -llogger
+distrlist/dltolower dltolower -lutil $(XERCES_LIB) -lrt
+distrlist/dldump dldump -lutil $(XERCES_LIB) -L$(SMSC_BUILDDIR)/bin -llogger -lrt
 #distrlist/dltolower dltolower -ldistrlist -L$(SMSC_BUILDDIR)/bin -llogger $(XERCES_LIB)
