@@ -390,7 +390,8 @@ void StateMachine::processSubmit(SmppCommand& cmd)
         }
         else if (umr < 0)
         {
-            if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST)
+            if (ussd_op == smsc::smpp::UssdServiceOpValue::USSR_REQUEST ||
+                ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST)
             { // New service USSD dialog
                 smsc_log_debug(log, "USSD Submit: Begin service dialog...");
                 session=sm.newSession(key);
