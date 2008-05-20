@@ -478,7 +478,7 @@ int PersAction::batchResult(ActionContext& context, SerialBuffer& sb, bool trans
       if (msgProp) {
         msgProp->setStr(e.what());
       }
-      smsc_log_warn(logger, "PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, error code=%d : %s",
+      smsc_log_debug(logger, "PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, error code=%d : %s",
                      getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(),
                      getKey(context.getCommandProperty(), profile), var.c_str(), e.getType(), e.what());
 		//throw SCAGException("PersClientException: batchResult: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), e.what());
@@ -612,7 +612,7 @@ void PersAction::ContinueRunning(ActionContext& context)
           REProperty *rep = context.getProperty(value_str);
           rep->setStr("");
         }
-        smsc_log_warn(logger, "PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, error code=%d : %s",
+        smsc_log_debug(logger, "PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, error code=%d : %s",
                        getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->error, params->exception.c_str());
         return;
   		//throw SCAGException("PersClientException: continueRunning: cmd=%s profile=%d (skey=%s ikey=%d) var=%s, reason: %s", getStrCmd(), profile, context.getCommandProperty().abonentAddr.toString().c_str(), getKey(context.getCommandProperty(), profile), var.c_str(), params->exception.c_str());

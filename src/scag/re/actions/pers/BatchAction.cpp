@@ -66,7 +66,7 @@ void BatchAction::ContinueRunning(ActionContext& context)
     smsc_log_debug(logger,"ContinueRunning Action 'BatchAction'...");
 	PersCallParams* p = (PersCallParams*)context.getSession().getLongCallContext().getParams();
     if (p->error) {
-      smsc_log_warn(logger, "'BatchAction' abort. Error code=%d : %s", p->error, p->exception.c_str());
+      smsc_log_debug(logger, "'BatchAction' abort. Error code=%d : %s", p->error, p->exception.c_str());
       return;
     }
     int action_idx = 0;
@@ -84,7 +84,7 @@ void BatchAction::ContinueRunning(ActionContext& context)
       setStatus(context, p, result, result == 0 ? "Ok" : strs[result], error_result_idx);
     } catch (const PersClientException& e) {
       setStatus(context, p, e.getType(), e.what(), action_idx);
-      smsc_log_warn(logger, "'BatchAction' abort. Error code=%d : %s in %d action", e.getType(), e.what(), action_idx);
+      smsc_log_debug(logger, "'BatchAction' abort. Error code=%d : %s in %d action", e.getType(), e.what(), action_idx);
     }
 }
 
