@@ -15,11 +15,15 @@ class Region
 {
 public:
   typedef std::vector<std::string> subjects_ids_lst_t;
-  Region(const std::string& id="", const std::string& name="", ulong_t bandwidth=0, subjects_ids_lst_t subjects_ids=subjects_ids_lst_t());
+  Region(const std::string& id="", const std::string& name="", ulong_t bandwidth=0, const std::string& email="",subjects_ids_lst_t subjects_ids=subjects_ids_lst_t());
 
   const std::string& getId() const { return _id; }
   const std::string& getName() const { return _name; }
   ulong_t getBandwidth() const { return _bandwidth; }
+  std::string getEmail()const
+  {
+    return _email;
+  }
 
   std::string toString() const;
 
@@ -27,6 +31,7 @@ public:
 private:
   std::string _id, _name;
   ulong_t _bandwidth;
+  std::string _email;
   subjects_ids_lst_t _subjects_ids;
 
   typedef std::vector<smsc::util::config::route::Subject> subjects_t;
@@ -54,8 +59,8 @@ public:
 class RegionDefault : public Region
 {
 public:
-  RegionDefault(ulong_t bandwidth=0)
-    : Region("regDefault", "default region", bandwidth) {}
+  RegionDefault(ulong_t bandwidth=0,const std::string& email="")
+    : Region("regDefault", "default region", bandwidth,email) {}
 };
 }}}}
 

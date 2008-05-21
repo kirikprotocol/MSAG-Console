@@ -54,15 +54,15 @@ RegionsConfig::status
 RegionsConfig::loadSubjects(xercesc::DOMNodeList *subjects_elements, Region::subjects_ids_lst_t& subjects_ids)
 {
   smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
-  unsigned listLength = subjects_elements->getLength();
+  size_t listLength = subjects_elements->getLength();
   if ( listLength != 1 ) {
     smsc_log_error(logger, "multiple subjects elements");
     return fail;
   }
   xercesc::DOMElement *subjects_element = (xercesc::DOMElement *)subjects_elements->item(0);
   xercesc::DOMNodeList *subjects_list = subjects_element->getElementsByTagName(smsc::util::xml::XmlStr("subject"));
-  unsigned subjectsListLength = subjects_list->getLength();
-  for (unsigned i=0; i<subjectsListLength; i++)
+  size_t subjectsListLength = subjects_list->getLength();
+  for (size_t i=0; i<subjectsListLength; i++)
   {
     xercesc::DOMElement *subject_element = (xercesc::DOMElement *)subjects_list->item(i);
     smsc::util::xml::XmlStr subject_id(subject_element->getAttribute(smsc::util::xml::XmlStr("id")));
@@ -89,22 +89,24 @@ RegionsConfig::load()
     {
       xercesc::DOMElement *elem;
       xercesc::DOMNodeList *region_defs = root_elem->getElementsByTagName(smsc::util::xml::XmlStr("region"));
-      unsigned listLength = region_defs->getLength();
-      for (unsigned i=0; i<listLength; i++)
+      size_t listLength = region_defs->getLength();
+      for (size_t i=0; i<listLength; i++)
       {
         xercesc::DOMElement *region_element = (xercesc::DOMElement *)region_defs->item(i);
 
         smsc::util::xml::XmlStr region_id(region_element->getAttribute(smsc::util::xml::XmlStr("id")));
         smsc::util::xml::XmlStr region_name(region_element->getAttribute(smsc::util::xml::XmlStr("name")));
         smsc::util::xml::XmlStr region_bandwidth(region_element->getAttribute(smsc::util::xml::XmlStr("bandwidth")));
+        smsc::util::xml::XmlStr region_email(region_element->getAttribute(smsc::util::xml::XmlStr("email")));
 
-        smsc_log_info(logger, "RegionsConfig::load::: id=%s name=%s bandwidth=%d", (const char *)region_id, (const char *)region_name, atol(region_bandwidth));
+        smsc_log_info(logger, "RegionsConfig::load::: id=%s name=%s bandwidth=%d email=%s", (const char *)region_id, (const char *)region_name, atol(region_bandwidth),(const char*)region_email);
 
         Region::subjects_ids_lst_t subjects_ids;
         if ( loadSubjects(region_element->getElementsByTagName(smsc::util::xml::XmlStr("subjects")), subjects_ids) != success ) return fail;
         _regions.insert(std::make_pair(std::string(region_id), new Region((const char *)region_id,
                                                                           (const char *)region_name,
                                                                           atol(region_bandwidth),
+                                                                          region_email.c_str(),
                                                                           subjects_ids)));
       }
 
@@ -119,9 +121,11 @@ RegionsConfig::load()
       xercesc::DOMElement *default_region_element = (xercesc::DOMElement *)region_defs->item(0);
 
       smsc::util::xml::XmlStr default_region_bandwidth(default_region_element->getAttribute(smsc::util::xml::XmlStr("bandwidth")));
+      smsc::util::xml::XmlStr default_region_email(default_region_element->getAttribute(smsc::util::xml::XmlStr("email")));
 
-      smsc_log_info(logger, "RegionsConfig::load::: load default region with bandwidth=%d", atol(default_region_bandwidth));
-      _defaultRegion = RegionDefault(atol(default_region_bandwidth));
+
+      smsc_log_info(logger, "RegionsConfig::load::: load default region with bandwidth=%d", atol(default_region_bandwidth),default_region_email.c_str());
+      _defaultRegion = RegionDefault(atol(default_region_bandwidth),default_region_email.c_str());
     } else {
       smsc_log_error(logger, "RegionsConfig::load::: Parse result is null");
       return fail;

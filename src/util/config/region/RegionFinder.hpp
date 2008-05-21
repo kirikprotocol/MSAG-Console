@@ -14,6 +14,9 @@ namespace region {
 
 class RegionFinder : smsc::util::Singleton<RegionFinder> {
 public:
+  RegionFinder():_regionDefault(0)
+  {
+  }
   void registerAddressMask(const std::string& addressMask, const smsc::util::config::region::Region* region);
   void registerDefaultRegion(const smsc::util::config::region::RegionDefault* region);
   const smsc::util::config::region::Region* findRegionByAddress(const std::string& address);
