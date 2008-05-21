@@ -6,7 +6,7 @@ namespace util{
 static const char cb64[]="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 static const char cd64[]="|$$$}rstuvwxyz{$$$$$$$>?@ABCDEFGHIJKLMNOPQRSTUVW$$$$$$XYZ[\\]^_`abcdefghijklmnopq";
 
-inline void encodeblock64( unsigned char in[3], unsigned char out[4], int len )
+inline void encodeblock64( unsigned char in[3], unsigned char out[4], size_t len )
 {
     out[0] = cb64[ in[0] >> 2 ];
     out[1] = cb64[ ((in[0] & 0x03) << 4) | ((in[1] & 0xf0) >> 4) ];
@@ -17,7 +17,7 @@ inline void encodeblock64( unsigned char in[3], unsigned char out[4], int len )
 inline std::string encode64( const std::string& str)
 {
   unsigned char in[3], out[5]={0,};
-  int i=0,len;
+  size_t i=0,len;
   std::string outstr;
 
   while(i<str.length())

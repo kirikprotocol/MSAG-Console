@@ -476,51 +476,59 @@ struct REOpCode{
   }
   ~REOpCode();
   #endif
-  union{
-    struct{
-      union{
-        struct{
-          REOpCode* nextalt;
-          int index;
-          REOpCode* pairindex;
-        }bracket;
-        int op;
-        rechar symbol;
+
+  struct SBracket{
+    REOpCode* nextalt;
+    int index;
+    REOpCode* pairindex;
+  };
+
+  struct SRange{
+    union{
+      SBracket bracket;
+      int op;
+      rechar symbol;
 #ifdef UNICODE
-        UniSet *symbolclass;
+      UniSet *symbolclass;
 #else
-        prechar symbolclass;
+      prechar symbolclass;
 #endif
-        REOpCode* nextalt;
-        int refindex;
+      REOpCode* nextalt;
+      int refindex;
 #ifdef NAMEDBRACKETS
-        prechar refname;
+      prechar refname;
 #endif
-        int type;
-      };
-      int min,max;
-    }range;
-    struct{
-      REOpCode* nextalt;
-      int index;
-      REOpCode* pairindex;
-    }bracket;
+      int type;
+    };
+    int min,max;
+  };
+
+  struct SNamedBracket{
+    REOpCode* nextalt;
+    prechar name;
+    REOpCode* pairindex;
+  };
+
+  struct SAssert{
+    REOpCode* nextalt;
+    int length;
+    REOpCode* pairindex;
+  };
+
+  struct SAlternative{
+    REOpCode* nextalt;
+    REOpCode* endindex;
+  };
+
+
+  union{
+    SRange range;
+    SBracket bracket;
 #ifdef NAMEDBRACKETS
-    struct{
-      REOpCode* nextalt;
-      prechar name;
-      REOpCode* pairindex;
-    }nbracket;
+    SNamedBracket nbracket;
 #endif
-    struct{
-      REOpCode* nextalt;
-      int length;
-      REOpCode* pairindex;
-    }assert;
-    struct{
-      REOpCode* nextalt;
-      REOpCode* endindex;
-    }alternative;
+    SAssert assert;
+    SAlternative alternative;
     rechar symbol;
 #ifdef UNICODE
     UniSet *symbolclass;
@@ -844,11 +852,11 @@ int RegExp::CalcLength(const prechar src,int srclength)
         if(src[i]!='{')
           return SetError(errSyntax,i);
         i++;
-        int save=i;
+        int save2=i;
         while(i<srclength && (ISWORD(src[i]) || ISSPACE(src[i])) && src[i]!='}')
           i++;
         if(i>=srclength)
-          return SetError(errBrackets,save);
+          return SetError(errBrackets,save2);
         if(src[i]!='}' && !(ISWORD(src[i]) || ISSPACE(src[i])))
           return SetError(errSyntax,i);
       }
@@ -2424,26 +2432,26 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
       {
         if(hmatch)
         {
-          PMatch m;
+          PMatch m2;
           if(!hmatch->Exists((char*)OP.nbracket.name))
           {
             tag_Match sm;
             sm.start=-1;
             sm.end=-1;
-            m=hmatch->SetItem((char*)OP.nbracket.name,sm);
+            m2=hmatch->SetItem((char*)OP.nbracket.name,sm);
           }else
           {
-            m=hmatch->GetPtr((char*)OP.nbracket.name);
+            m2=hmatch->GetPtr((char*)OP.nbracket.name);
           }
           if(inrangebracket)
           {
             st->op=opNamedBracket;
             st->pos=op;
-            st->min=m->start;
-            st->max=m->end;
+            st->min=m2->start;
+            st->max=m2->end;
             PushState();
           }
-          m->start=str-start;
+          m2->start=(int)(str-start);
         }
         if(OP.bracket.nextalt)
         {
@@ -2488,8 +2496,8 @@ int RegExp::InnerMatch(prechar str,const prechar strend,PMatch match,int& matchc
           {
             if(hmatch)
             {
-              PMatch m=hmatch->GetPtr((char*)OP.nbracket.name);
-              m->end=str-start;
+              PMatch m2=hmatch->GetPtr((char*)OP.nbracket.name);
+              m2->end=(int)(str-start);
             }
             continue;
           }
