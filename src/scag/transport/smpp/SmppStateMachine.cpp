@@ -665,19 +665,17 @@ void StateMachine::processSubmitResp(SmppCommand& cmd)
     }
   }
 
+  /*
   if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE ||
       ussd_op == smsc::smpp::UssdServiceOpValue::USSN_REQUEST)
-  {
+  */
+  if (ussd_op == smsc::smpp::UssdServiceOpValue::PSSR_RESPONSE) {
     src->delUSRMapping(key.abonentAddr, key.USR); // Empty mapping on USSD dialog end
   }
 
-  if(cmd.hasSession())
-  {
-    cmd.setSession(SessionPtr(NULL));
-  }
+  if(cmd.hasSession()) cmd.setSession(SessionPtr(NULL));
 
-  if (!(cmd->get_resp()->get_messageId()))
-  {
+  if (!(cmd->get_resp()->get_messageId())) {
     smsc_log_warn(log, "SubmitResp: messageId is null");
     cmd->get_resp()->set_messageId("");
   }
@@ -906,10 +904,8 @@ void StateMachine::processDelivery(SmppCommand& cmd)
             src->delUMRMapping(key.abonentAddr, 0); // For service initiated USSD dialog
             key.USR = tmpUSR;
             smsc_log_debug(log, "USSD Delivery: End service dialog, USR=%d", key.USR);
-            if(!sm.getSession(key, session, cmd))
-            {
-              return;
-            }
+            sms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE, key.USR);
+            if(!sm.getSession(key, session, cmd)) return;
             if (!session.Get())
             {
                 smsc_log_warn(log, "USSD Delivery: USR=%d is invalid, no session", key.USR);
@@ -1132,11 +1128,11 @@ void StateMachine::processDeliveryResp(SmppCommand& cmd)
     }
   }
 
-  if(cmd.hasSession())
-  {
-    cmd.setSession(SessionPtr(NULL));
+  if (ussd_op == smsc::smpp::UssdServiceOpValue::USSN_CONFIRM) {
+    dst->delUSRMapping(key.abonentAddr, key.USR); // Empty mapping on sercice USSD dialog end
   }
 
+  if(cmd.hasSession()) cmd.setSession(SessionPtr(NULL));
   cmd->get_resp()->set_messageId("");
 
   if(rs != -2)
