@@ -1,8 +1,7 @@
 #include "initializer.hpp"
-#include "EncapsulatedSuaMessage.hpp"
 #include "BindMessage.hpp"
 #include "UnbindMessage.hpp"
-#include "MErrorMessage.hpp"
+#include "N_UNITDATA_REQ_Message.hpp"
 
 #include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
 
@@ -12,12 +11,7 @@ bool
 initialize ()
 {
   LibsuaMessage::registerMessageCode(BindMessage().getMsgCode());
-
-  for(uint32_t msgCode=EncapsulatedSuaMessage::_MIN_MSG_CODE; msgCode <= EncapsulatedSuaMessage::_MAX_MSG_CODE; ++msgCode)
-    LibsuaMessage::registerMessageCode(msgCode);
-
-  LibsuaMessage::registerMessageCode(MErrorMessage().getMsgCode());
-
+  LibsuaMessage::registerMessageCode(N_UNITDATA_REQ_Message().getMsgCode());
   LibsuaMessage::registerMessageCode(UnbindMessage().getMsgCode());
 
   return true;
