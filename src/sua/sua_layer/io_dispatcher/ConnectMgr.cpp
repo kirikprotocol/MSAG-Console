@@ -269,20 +269,21 @@ ConnectMgr::getEvent()
 }
 
 bool
-ConnectMgr::sendToLinkSet(const communication::LinkId& outLinkId, const communication::Message& message)
+ConnectMgr::sendToLinkSet(const communication::LinkId& outLinkId, const communication::Message& message, communication::LinkId* usedLinkIdInLinkSet)
 {
-  LinkSetPtr foundConnection;
+  LinkSetPtr foundLinkSet;
 
   {
     smsc::core::synchronization::MutexGuard guard(_linkSetLock);
     linksets_t::iterator linksets_iter = _linkSets.find(outLinkId);
     if ( linksets_iter != _linkSets.end() )
-      foundConnection = linksets_iter->second;
+      foundLinkSet = linksets_iter->second;
   }
 
-  if ( foundConnection.Get() ) {
+  if ( foundLinkSet.Get() ) {
     smsc_log_info(_logger, "ConnectMgr::sendToLinkSet::: found LinkSet object for linkSetId value=[%s]", outLinkId.getValue().c_str());
-    foundConnection->send(message);
+    foundLinkSet->send(message);
+    *usedLinkIdInLinkSet = foundLinkSet->getLinkId();
     return true;
   } else {
     smsc_log_info(_logger, "ConnectMgr::sendToLinkSet::: LinkSet object not found for linkSetId value=[%s]", outLinkId.getValue().c_str());
@@ -309,13 +310,34 @@ ConnectMgr::sendToLink(const communication::LinkId& outLinkId, const communicati
     smsc_log_info(_logger, "ConnectMgr::sendToLink::: Link object not found for linkId value=[%s]", outLinkId.getValue().c_str());
 }
 
-void
+communication::LinkId
 ConnectMgr::send(const communication::LinkId& outLinkId, const communication::Message& message)
 {
   smsc_log_info(_logger, "ConnectMgr::send::: try send message=[%s] to link [linkId=%s]", message.toString().c_str(), outLinkId.getValue().c_str());
-  if ( sendToLinkSet(outLinkId, message) ) return;
+  communication::LinkId usedLinkIdInLinkSet;
+  if ( sendToLinkSet(outLinkId, message, &usedLinkIdInLinkSet) ) return usedLinkIdInLinkSet;
 
   sendToLink(outLinkId, message);
+  return outLinkId;
+}
+
+void
+ConnectMgr::sendToLinkSetBroadcast(const communication::LinkId& outLinkSetId, const communication::Message& outputMessage)
+{
+  LinkSetPtr foundLinkSet;
+
+  {
+    smsc::core::synchronization::MutexGuard guard(_linkSetLock);
+    linksets_t::iterator linksets_iter = _linkSets.find(outLinkSetId);
+    if ( linksets_iter != _linkSets.end() )
+      foundLinkSet = linksets_iter->second;
+  }
+
+  if ( foundLinkSet.Get() ) {
+    smsc_log_info(_logger, "ConnectMgr::sendBroadcast::: found LinkSet object for linkSetId value=[%s]", outLinkSetId.getValue().c_str());
+    foundLinkSet->sendBroadcast(outputMessage);
+  } else
+    smsc_log_info(_logger, "ConnectMgr::sendBroadcast::: LinkSet object not found for linkSetId value=[%s]", outLinkSetId.getValue().c_str());
 }
 
 void

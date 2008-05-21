@@ -45,7 +45,9 @@ public:
 
   IOEvent* getEvent();
 
-  void send(const communication::LinkId& outLinkId, const communication::Message& message);
+  communication::LinkId send(const communication::LinkId& outLinkId, const communication::Message& message);
+  void sendToLinkSetBroadcast(const communication::LinkId& outLinkSetId, const communication::Message& outputMessage);
+
   void changeProtocolState(const communication::LinkId& outLinkId, const communication::Message& message);
 
   virtual void notifyShutdownInProgess();
@@ -85,7 +87,7 @@ private:
 
   bool _shutdownInProgress;
 
-  bool sendToLinkSet(const communication::LinkId& outLinkId, const communication::Message& message);
+  bool sendToLinkSet(const communication::LinkId& outLinkId, const communication::Message& message, communication::LinkId* usedLinkIdInLinkSet);
   void sendToLink(const communication::LinkId& outLinkId, const communication::Message& message);
 
   IOEvent* processReadReadyEvent(int* listenStatus);
