@@ -1,5 +1,6 @@
 #include "MessagesRouter.hpp"
 #include <util/Exception.hpp>
+#include <sua/utilx/Exception.hpp>
 
 messages_router::MessagesRouter*
 utilx::Singleton<messages_router::MessagesRouter>::_instance;
@@ -29,7 +30,7 @@ MessagesRouter::getOutLink(const RoutingKey& messageRoutingInfo)
     routeTableIdx = messageRoutingInfo.getDestinationSSN();
 
   if ( !_outRoutingTable[routeTableIdx]->FindPrefix(messageRoutingInfo.getDestinationGT().c_str(), outLinkId) )
-    throw smsc::util::Exception("MessagesRouter::getOutLink::: can't find route to SG for routing key=[%s], wrong configuration", messageRoutingInfo.toString().c_str());
+    throw utilx::NoRouteFound("MessagesRouter::getOutLink::: can't find route to SG for routing key=[%s], wrong configuration", messageRoutingInfo.toString().c_str());
 
   smsc_log_info(_logger, "MessagesRouter::getOutLink::: found route to SG with LinkId=[%s] for routing key=[%s]", outLinkId.getValue().c_str(), messageRoutingInfo.toString().c_str());
   return outLinkId;
