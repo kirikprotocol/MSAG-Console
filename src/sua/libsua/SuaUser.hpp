@@ -26,33 +26,25 @@ public:
 
   virtual void sua_disconnect(unsigned int suaConnectNum);
 
-  virtual void sua_bind(unsigned int suaConnectNum);
+  virtual unsigned int bind(unsigned int suaConnectNum);
 
-  virtual void sua_unbind(unsigned int suaConnectNum);
+  virtual void unbind(unsigned int suaConnectNum);
 
-  virtual void sua_send_cldt(const uint8_t* message,
-                             uint16_t messageSize,
-                             const SCCPAddress& srcAddress,
-                             const SCCPAddress& dstAddress,
-                             const MessageProperties& msgProperties,
-                             unsigned int suaConnectNum);
+  virtual unsigned int unitdata_req(const uint8_t* message,
+                                    uint16_t messageSize,
+                                    const uint8_t* calledAddr,
+                                    uint8_t calledAddrLen,
+                                    const uint8_t* callingAddr,
+                                    uint8_t callingAddrLen,
+                                    const MessageProperties& msgProperties,
+                                    unsigned int suaConnectNum);
 
-  virtual void sua_send_scon(const sua_messages::PointCode& pc,
-                             uint8_t congestionLevel,
-                             unsigned int suaConnectNum);
-
-  virtual void sua_recvmsg(MessageInfo* msgInfo);
+  virtual void msgRecv(MessageInfo* msgInfo);
 
   virtual unsigned int sua_getConnectsCount() const;
 protected:
   virtual unsigned int getConnNumByPolicy();
 private:
-  void sua_sendmsg(const uint8_t* message,
-                   size_t messageSize,
-                   unsigned int suaConnectNum);
-
-  void fillUpMessageProperties(MessageProperties* msgProperties, uint32_t messageType, MessageInfo::msg_buffer_t& msgData);
-
   typedef enum { NOT_CONNECTED, CONNECTED, BINDED } connection_state_t;
 
   class LinkInputStream : public corex::io::InputStream {
