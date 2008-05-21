@@ -7,7 +7,6 @@
 # include <sua/communication/sua_messages/ActiveMessage.hpp>
 # include <sua/communication/sua_messages/CLDTMessage.hpp>
 # include <sua/communication/sua_messages/CLDRMessage.hpp>
-# include <sua/communication/sua_messages/DAUDMessage.hpp>
 # include <sua/communication/sua_messages/DAVAMessage.hpp>
 # include <sua/communication/sua_messages/DRSTMessage.hpp>
 # include <sua/communication/sua_messages/DUNAMessage.hpp>
@@ -55,16 +54,6 @@ public:
 };
 
 class CLDRMessage_HandlingDispatcher : public sua_messages::CLDRMessage,
-                                       public communication::MessageHandlingDispatcherIface {
-public:
-  virtual MessageHandlingDispatcherIface* getHandlingDispatcher() {
-    return this;
-  }
-
-  virtual void dispatch_handle(const communication::LinkId& linkId) const;
-};
-
-class DAUDMessage_HandlingDispatcher : public sua_messages::DAUDMessage,
                                        public communication::MessageHandlingDispatcherIface {
 public:
   virtual MessageHandlingDispatcherIface* getHandlingDispatcher() {
