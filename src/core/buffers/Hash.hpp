@@ -338,6 +338,7 @@ public:
   }
   void Delete(pchashstr key)
   {
+    if(_count==0) return;
     unsigned index=HashFunc(key) % _bucketsnum;
     if(_buckets[index].Remove(key))_count--;
   }
