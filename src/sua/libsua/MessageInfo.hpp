@@ -19,9 +19,6 @@ struct MessageInfo
 
   typedef smsc::core::buffers::TmpBuf<uint8_t, communication::TP::MAX_PACKET_SIZE> msg_buffer_t;
   msg_buffer_t msgData;
-
-  MessageProperties msgProperties;
-
 };
 
 }
