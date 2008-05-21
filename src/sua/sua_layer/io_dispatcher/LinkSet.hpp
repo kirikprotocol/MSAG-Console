@@ -31,6 +31,8 @@ public:
 
   virtual void send(const communication::Message& message);
 
+  void sendBroadcast(const communication::Message& message);
+
   virtual communication::TP* receive();
 
   virtual bool hasReadyTransportPacket();

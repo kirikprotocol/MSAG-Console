@@ -69,6 +69,21 @@ LinkSet::send(const communication::Message& message)
   }
 }
 
+void
+LinkSet::sendBroadcast(const communication::Message& message)
+{
+  smsc::core::synchronization::ReadLockGuard lock(_lock);
+
+  if ( _connections.empty() ) {
+    smsc_log_error(_logger, "LinkSet::send::: there aren't connections in LinkSet");
+    return;
+  }
+
+  for(connections_lst_t::iterator iter = _connections.begin(), end_iter = _connections.end();
+      iter != end_iter; ++iter)
+    (*iter)->send(message);
+}
+
 communication::TP*
 LinkSet::receive()
 {
