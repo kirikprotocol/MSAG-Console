@@ -65,7 +65,8 @@ SuaUserCommunicationSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   while(iterator.hasElement()) {
     const runtime_cfg::Parameter* parameter = iterator.getCurrentElement();
     const std::string& appId =  parameter->getValue();
-    LinkSetInfoRegistry::getInstance().getLinkSet(appId); // throws exception if there isn't registered appId
+    communication::LinkId linkSetId;
+    LinkSetInfoRegistry::getInstance().getLinkSet(appId, &linkSetId); // throws exception if there isn't registered appId
     iterator.next(); // pass to next element
   }
 }
