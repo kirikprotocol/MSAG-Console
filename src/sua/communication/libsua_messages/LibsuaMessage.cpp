@@ -3,7 +3,6 @@
 #include <sua/communication/sua_messages/ErrorMessage.hpp>
 
 #include "LibsuaMessage.hpp"
-#include "EncapsulatedSuaMessage.hpp"
 
 namespace libsua_messages {
 
@@ -44,7 +43,7 @@ std::string
 LibsuaMessage::toString() const
 {
   char buf[32];
-  snprintf(buf, sizeof(buf), "msgcode=[0x%x]", getMsgCode());
+  snprintf(buf, sizeof(buf), "msgcode=[0x%02X]", getMsgCode());
   return std::string(buf);
 }
 
