@@ -776,30 +776,32 @@ TLV_AffectedPointCode::toString() const
     throw smsc::util::Exception("TLV_AffectedPointCode::toString::: value wasn't set");
 }
 
-ANSI_PC
-TLV_AffectedPointCode::getNext_ANSI_PC()
+bool
+TLV_AffectedPointCode::getNextPC(ANSI_PC* pointCode)
 {
   if ( getValueLength() >= _nextPCOffset + sizeof(uint32_t) ) {
     const uint8_t* value = getValue();
     value += _nextPCOffset;
     _nextPCOffset += sizeof(uint32_t);
 
-    return ANSI_PC(value);
+    *pointCode = ANSI_PC(value);
+    return true;
   } else
-    throw smsc::util::Exception("TLV_AffectedPointCode::getNext_ANSI_PC::: no more point codes");
+    return false;
 }
 
-ITU_PC
-TLV_AffectedPointCode::getNext_ITU_PC()
+bool
+TLV_AffectedPointCode::getNextPC(ITU_PC* pointCode)
 {
   if ( getValueLength() >= _nextPCOffset + sizeof(uint32_t) ) {
     const uint8_t* value = getValue();
     value += _nextPCOffset;
     _nextPCOffset += sizeof(uint32_t);
 
-    return ITU_PC(value);
+    *pointCode = ITU_PC(value);
+    return true;
   } else
-    throw smsc::util::Exception("TLV_AffectedPointCode::getNext_ITU_PC:::  no more point codes");
+    return false;
 }
 
 TLV_SSN::TLV_SSN()
@@ -1185,13 +1187,13 @@ TLV_PointCode::toString() const
 }
 
 ANSI_PC
-TLV_PointCode::get_ANSI_PC()
+TLV_PointCode::get_ANSI_PC() const
 {
   return ANSI_PC(getValue());
 }
 
 ITU_PC
-TLV_PointCode::get_ITU_PC()
+TLV_PointCode::get_ITU_PC() const
 {
   return ITU_PC(getValue());
 }

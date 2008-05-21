@@ -283,8 +283,8 @@ public:
 
   virtual std::string toString() const;
 
-  ANSI_PC getNext_ANSI_PC();
-  ITU_PC getNext_ITU_PC();
+  bool getNextPC(ANSI_PC* pointCode);
+  bool getNextPC(ITU_PC* pointCode);
 private:
   size_t _nextPCOffset;
   static const uint16_t TAG = 0x0012;
@@ -437,8 +437,8 @@ public:
 
   virtual std::string toString() const;
 
-  ANSI_PC get_ANSI_PC();
-  ITU_PC get_ITU_PC();
+  ANSI_PC get_ANSI_PC() const;
+  ITU_PC get_ITU_PC() const;
 private:
   static const uint16_t TAG = 0x8002;
 };
