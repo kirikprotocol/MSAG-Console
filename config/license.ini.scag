@@ -1,0 +1,8 @@
+Organization=Test organization
+Hostids=88888888
+MaxSmsThroughput=500
+MaxHttpThroughput=500
+MaxMmsThroughput=500
+LicenseExpirationDate=2008-5-16
+LicenseType=standard
+Product=Scag
