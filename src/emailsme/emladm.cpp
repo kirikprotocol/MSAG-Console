@@ -205,10 +205,10 @@ int main(int argc,char* argv[])
       {
         char* buf=new char[rv];
         s.ReadAll(buf,rv);
-        SerializationBuffer sb;
-        sb.setExternalBuffer(buf,rv);
+        SerializationBuffer sb2;
+        sb2.setExternalBuffer(buf,rv);
         AbonentProfile p;
-        p.Read(sb);
+        p.Read(sb2);
         DumpProfile(p);
       }else
       {
@@ -230,10 +230,10 @@ int main(int argc,char* argv[])
       {
         char* buf=new char[rv];
         s.ReadAll(buf,rv);
-        SerializationBuffer sb;
-        sb.setExternalBuffer(buf,rv);
+        SerializationBuffer sb2;
+        sb2.setExternalBuffer(buf,rv);
         AbonentProfile p;
-        p.Read(sb);
+        p.Read(sb2);
         DumpProfile(p);
       }else
       {

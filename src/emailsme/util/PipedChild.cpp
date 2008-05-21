@@ -16,6 +16,7 @@ static bool brPipe=false;
 
 static bool sigInit=false;
 
+extern "C" typedef void (*SignalHandler)(int);
 static void sig_pipe(int signo)
 {
 //  fprintf(stderr,"broken pipe or sig child\n");
@@ -115,8 +116,8 @@ pid_t ForkPipedCmd(const char *cmd, FILE*& f_in,FILE*& f_out)
 {
   if(!sigInit)
   {
-    if(sigset(SIGPIPE, sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGPIPE error.\n");
-    if(sigset(SIGCHLD, sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGCHILD error.\n");
+    if(sigset(SIGPIPE, (SignalHandler)sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGPIPE error.\n");
+    if(sigset(SIGCHLD, (SignalHandler)sig_pipe) == SIG_ERR)fprintf(stderr, "signal SIGCHILD error.\n");
     sigInit=true;
   }
   std::vector<char*> args;

@@ -54,7 +54,7 @@ struct AbonentProfile{
     WriteString(f,realName);
     f.WriteByte(ltype);
     f.WriteByte(numberMap?1:0);
-    f.WriteNetInt32(limitDate);
+    f.WriteNetInt32((uint32_t)limitDate);
     f.WriteNetInt32(limitValue);
     f.WriteNetInt32(limitCountGsm2Eml);
     f.WriteNetInt32(limitCountEml2Gsm);

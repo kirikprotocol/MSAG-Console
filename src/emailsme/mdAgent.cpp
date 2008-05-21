@@ -57,10 +57,10 @@ bool ReadConfig(const char* cfgfile)
   FILE *f=fopen(cfgfile,"rt");
   if(!f)return false;
   char strbuf[1024];
-  while(fgets(strbuf,sizeof(strbuf),f))
+  while(fgets(strbuf,(int)sizeof(strbuf),f))
   {
     if(strbuf[0]=='#')continue;
-    int l=strlen(strbuf);
+    size_t l=strlen(strbuf);
     while(l>0 && (strbuf[l-1]==0x0a || strbuf[l-1]==0x0d))
     {
       strbuf[l-1]=0;
@@ -117,12 +117,12 @@ int main(int argc,char* argv[])
   }
   String msg;
   char buf[1024];
-  int rd;
+  ssize_t rd;
   LOG(("Start reading\n"));
-  while((rd=read(0,buf,sizeof(buf)))>0)
+  while((rd=read(0,buf,(int)sizeof(buf)))>0)
   {
     LOG(("Read %d bytes\n",rd));
-    msg.Concat(buf,0,rd);
+    msg.Concat(buf,0,(int)rd);
     if(msg.Length()>maxsize)
     {
       LOG(("Too long message\n"));

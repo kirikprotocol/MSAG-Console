@@ -28,6 +28,9 @@
 #include "emailsme/AbonentProfile.hpp"
 #include "util/Base64.hpp"
 #include "core/buffers/TmpBuf.hpp"
+#include "util/config/region/RegionsConfig.hpp"
+#include "util/config/region/RegionFinder.hpp"
+
 
 static const char* cssc_version="@(#)" FILEVER;
 
@@ -91,7 +94,7 @@ bool isValidEmail(const std::string& value)
 std::string trimSpaces(const char* str)
 {
   std::string rv=str;
-  int i=rv.length()-1;
+  size_t i=rv.length()-1;
   while(i>=0 && rv[i]==' ')
   {
     i--;
@@ -414,7 +417,7 @@ public:
     }
     if(rv)
     {
-      buffer.setExternalBuffer(&buf[0],buf.size());
+      buffer.setExternalBuffer(&buf[0],(unsigned)buf.size());
       p.Read(buffer);
       p.offset=off;
       MutexGuard mg(cacheMtx);
@@ -454,7 +457,7 @@ public:
     }
     if(rv)
     {
-      buffer.setExternalBuffer(&buf[0],buf.size());
+      buffer.setExternalBuffer(&buf[0],(int)buf.size());
       p.Read(buffer);
       p.offset=off;
       MutexGuard mg(cacheMtx);
@@ -821,6 +824,8 @@ namespace cfg{
  int defaultLimitValue=10;
  bool sendSuccessAnswer=true;
 
+ std::string helpDeskAddress;
+
  bool useTransformRegexp=false;
  RegExp reTransform;
  std::string transformResult;
@@ -851,7 +856,7 @@ const int OK           =256;
 void CheckCode(Socket& s,int code)
 {
   char buf[1024];
-  if(s.Gets(buf,sizeof(buf))==-1)throw Exception("");
+  if(s.Gets(buf,(int)sizeof(buf))==-1)throw Exception("");
   int retcode;
   if(sscanf(buf,"%d",&retcode)!=1)throw Exception("");;
   if(code<10)retcode/=100;
@@ -867,11 +872,11 @@ string makeFromAddress(const char* fromaddress)
   return (string)fromaddress+"@"+cfg::maildomain;
 }
 
-string ExtractEmail(const string& value,int startPos=0)
+string ExtractEmail(const string& value,size_t startPos=0)
 {
   std::string::size_type pos=value.find('@',startPos);
   if(pos==string::npos)return "";
-  int start=pos,end=pos;
+  size_t start=pos,end=pos;
   while(start>0 && ismailchar(value[start-1]))start--;
   while(end<value.length() && ismailchar(value[end+1]))end++;
   string res(value,start,end-start+1);
@@ -946,9 +951,9 @@ string MapAddressToEmail(const string& address)
 
 void ReplaceString(string& s,const char* what,const char* to)
 {
-  int i=0;
-  int l=strlen(what);
-  int l2=strlen(to);
+  size_t i=0;
+  size_t l=strlen(what);
+  size_t l2=strlen(to);
   while((i=s.find(what,i))!=string::npos)
   {
     s.replace(i,l,to);
@@ -996,7 +1001,7 @@ int SendEMail(const string& from,const Array<string>& to,const string& subj,cons
     if(subj.length())s.Printf("Subject: =?windows-1251?B?%s?=\r\n",encode64(subj).c_str());
     s.Printf("\r\n");
   }
-  if(s.WriteAll(body.c_str(),body.length())==-1)throw Exception("Failed to write body");
+  if(s.WriteAll(body.c_str(),(int)body.length())==-1)throw Exception("Failed to write body");
   s.Puts("\r\n.\r\n");
   CheckCode(s,250);
   s.Puts("QUIT\r\n");
@@ -1023,7 +1028,7 @@ void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName
     sms.destinationAddress.plan=1;
     char msc[]="";
     char imsi[]="";
-    sms.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+    sms.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
     sms.setDeliveryReport(0);
     sms.setArchivationRequested(false);
     sms.setEServiceType(cfg::serviceType.c_str());
@@ -1035,11 +1040,11 @@ void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName
       TmpBuf<short,1024> ucs2(text.length()+1);
       ConvertMultibyteToUCS2(text.c_str(),text.length(),ucs2.get(),(text.length()+1)*2,CONV_ENCODING_CP1251);
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::UCS2);
-      sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),text.length()*2);
+      sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),(unsigned)text.length()*2);
     }else
     {
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-      sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),text.length());
+      sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),(unsigned)text.length());
     }
     PduSubmitSm sm;
     sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
@@ -1051,28 +1056,41 @@ void sendAnswer(const Address& orgAddr,const char* msgName,const char* paramName
   }
 }
 
-int processSms(const char* text,const char* fromaddress)
+int processSms(const char* text,const char* fromaddress,const char* toaddress)
 {
+  __trace2__("sms from %s to %s. hdaddr=%s",fromaddress,toaddress,cfg::helpDeskAddress.c_str());
   try{
-    Hash<SMatch> h;
-    SMatch m[10];
-    int n=10;
-    if(!reParseSms.Match(text,m,n,&h))
-    {
-      __trace2__("RegExp match failed:%d",reParseSms.LastError());
-      sendAnswer(fromaddress,"unknowncommand");
-      return ProcessSmsCodes::INVALIDSMS;
-    }
     string addr,subj,body,from,fromdecor;
-    //getField(text,h,"flag",cf);
-    getField(text,h,"address",addr);
-    //getField(text,h,"realname",rn);
-    getField(text,h,"subj",subj);
-    getField(text,h,"body",body);
-    Socket s;
+    if(cfg::helpDeskAddress.length() && cfg::helpDeskAddress==toaddress)
+    {
+      using namespace smsc::util::config::region;
+      const Region* reg=RegionFinder::getInstance().findRegionByAddress(fromaddress);
+      addr=reg->getEmail();
+      subj="EmailSMS from abonent ";
+      subj+=fromaddress;
+      body=text;
+    }else
+    {
+      Hash<SMatch> h;
+      SMatch m[10];
+      int n=10;
+      if(!reParseSms.Match(text,m,n,&h))
+      {
+        __trace2__("RegExp match failed:%d",reParseSms.LastError());
+        sendAnswer(fromaddress,"unknowncommand");
+        return ProcessSmsCodes::INVALIDSMS;
+      }
+      //getField(text,h,"flag",cf);
+      getField(text,h,"address",addr);
+      //getField(text,h,"realname",rn);
+      getField(text,h,"subj",subj);
+      getField(text,h,"body",body);
 
-    ReplaceString(addr,"*","@");
-    ReplaceString(addr,"$","_");
+      ReplaceString(addr,"*","@");
+      ReplaceString(addr,"$","_");
+    }
+    //Socket s;
+
 
     ReplaceString(body,"\n.\n","\n..\n");
 
@@ -1253,8 +1271,8 @@ int processSms(const char* text,const char* fromaddress)
     }
 
     Array<string> to;
-    int startpos=0;
-    int pos=addr.find(',');
+    size_t startpos=0;
+    size_t pos=addr.find(',');
     if(pos==string::npos)
     {
       to.Push(addr);
@@ -1303,15 +1321,16 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
       char buf[65536];
-      getPduText((PduXSm*)pdu,buf,sizeof(buf));
-      Address addr(
+      PduXSm* xsm=(PduXSm*)pdu;
+      getPduText(xsm,buf,sizeof(buf));
+      /*Address addr(
       ((PduXSm*)pdu)->get_message().get_source().value.size(),
       ((PduXSm*)pdu)->get_message().get_source().get_typeOfNumber(),
       ((PduXSm*)pdu)->get_message().get_source().get_numberingPlan(),
-      ((PduXSm*)pdu)->get_message().get_source().get_value());
+      ((PduXSm*)pdu)->get_message().get_source().get_value());*/
       int code=ProcessSmsCodes::INVALIDSMS;
       try{
-        code=processSms(buf,addr.value);
+        code=processSms(buf,xsm->get_message().get_source().get_value(),xsm->get_message().get_dest().get_value());
       }catch(std::exception& e)
       {
         __warning2__("Exception in processSms:%s",e.what());
@@ -1358,9 +1377,9 @@ protected:
   SmppTransmitter* trans;
 };
 
-bool GetNextLine(const char* text,int maxlen,int& pos,string& line)
+bool GetNextLine(const char* text,size_t maxlen,size_t& pos,string& line)
 {
-  int start=pos;
+  size_t start=pos;
   if(pos>=maxlen)return false;
   do{
     while(pos<maxlen && text[pos]!=0x0d && text[pos]!=0x0a)pos++;
@@ -1508,11 +1527,11 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   __trace2__("write msg size:%d",msglen);
   fprintf(emlOut,"%d\n",msglen);fflush(emlOut);
   __trace__("write msg");
-  int sz=0;
+  size_t sz=0;
   while(sz<msglen)
   {
-    int wr=fwrite(msg+sz,1,msglen-sz,emlOut);fflush(emlOut);
-    if(wr<=0)
+    size_t wr=fwrite(msg+sz,1,msglen-sz,emlOut);fflush(emlOut);
+    if(wr==0)
     {
       __trace__("failed to write data for mailstripper");
       return StatusCodes::STATUS_CODE_TEMPORARYERROR;
@@ -1521,7 +1540,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   }
   __trace__("read resp len");
   char buf[16];
-  if(!fgets(buf,sizeof(buf),emlIn))
+  if(!fgets(buf,(int)sizeof(buf),emlIn))
   {
     __trace__("failed to read data from mailstripper");
     return StatusCodes::STATUS_CODE_TEMPORARYERROR;
@@ -1533,8 +1552,8 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   sz=0;
   while(sz<len)
   {
-    int rv=fread(newmsg.get(),1,len-sz,emlIn);
-    if(rv==0 || rv==-1)
+    size_t rv=fread(newmsg.get(),1,len-sz,emlIn);
+    if(rv==0)
     {
       __trace__("failed to read data from mailstripper");
       return StatusCodes::STATUS_CODE_TEMPORARYERROR;
@@ -1582,7 +1601,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     }
   }
 
-  int pos=0;
+  size_t pos=0;
   string subj;
   GetNextLine(newmsg.get(),len,pos,from);
   GetNextLine(newmsg.get(),len,pos,subj);
@@ -1591,7 +1610,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   ContextEnvironment ce;
   EmptyGetAdapter ga;
 
-  int fldlen=subj.length()+from.length()+to.length();
+  size_t fldlen=subj.length()+from.length()+to.length();
   if(text.length()>cfg::annotationSize-fldlen)
   {
     text=text.substr(0,cfg::annotationSize-fldlen);
@@ -1623,7 +1642,7 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   sms.setDestinationAddress(dst.c_str());
   char msc[]="";
   char imsi[]="";
-  sms.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+  sms.setOriginatingDescriptor((uint8_t)strlen(msc),msc,(uint8_t)strlen(imsi),imsi,1);
   sms.setDeliveryReport(0);
   sms.setArchivationRequested(false);
   sms.setEServiceType(cfg::serviceType.c_str());
@@ -1635,11 +1654,11 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     auto_ptr<short> ucs2(new short[text.length()+1]);
     ConvertMultibyteToUCS2(text.c_str(),text.length(),ucs2.get(),(text.length()+1)*2,CONV_ENCODING_CP1251);
     sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::UCS2);
-    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),text.length()*2);
+    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,(char*)ucs2.get(),(unsigned)text.length()*2);
   }else
   {
     sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::LATIN1);
-    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),text.length());
+    sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),(unsigned)text.length());
   }
   //sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,text.length());
 
@@ -1691,7 +1710,7 @@ int ProcessMessage(const char *msg,int msglen)
   string line,name,value,from,to;
   std::vector<std::string> toarr;
   bool inheader=true;
-  int pos=0;
+  size_t pos=0;
   for(;;)
   {
     if(!GetNextLine(msg,msglen,pos,line))break;
@@ -1702,7 +1721,7 @@ int ProcessMessage(const char *msg,int msglen)
         inheader=false;
         continue;
       }
-      int pos2=line.find(':');
+      size_t pos2=line.find(':');
       if(pos2==string::npos)continue;
       name=line.substr(0,pos2);
       toLower(name);
@@ -1729,7 +1748,7 @@ int ProcessMessage(const char *msg,int msglen)
       }
       if(name=="to" || name=="cc")
       {
-        int emlpos=0;
+        size_t emlpos=0;
         do{
           to=ExtractEmail(value,emlpos);
           if(to.length()>0)
@@ -1838,6 +1857,53 @@ extern "C" void atExitHandler(void)
   smsc::logger::Logger::Shutdown();
 }
 
+void initRegions(const char* regions_xml_file,const char* route_xml_file)
+{
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+  using namespace smsc::util::config::region;
+
+  RegionsConfig* regionsConfig=new RegionsConfig(regions_xml_file);
+
+  RegionsConfig::status st = regionsConfig->load();
+  if ( st == RegionsConfig::success )
+  {
+      smsc_log_info(log, "config file %s has been loaded successful", regions_xml_file);
+  }
+  else
+  {
+      throw smsc::util::config::ConfigException("can't load config file %s", regions_xml_file);
+  }
+
+  smsc::util::config::route::RouteConfig routeConfig;
+  if ( routeConfig.load(route_xml_file) == smsc::util::config::route::RouteConfig::success )
+  {
+    smsc_log_info(log, "config file %s has been loaded successful", route_xml_file);
+  }
+  else
+  {
+    throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file);
+  }
+
+  Region* region;
+  RegionsConfig::RegionsIterator regsIter = regionsConfig->getIterator();
+
+  RegionFinder& rf=RegionFinder::getInstance();
+  while (regsIter.fetchNext(region) == RegionsConfig::success)
+  {
+    region->expandSubjectRefs(routeConfig);
+    Region::MasksIterator maskIter = region->getMasksIterator();
+    std::string addressMask;
+    while(maskIter.fetchNext(addressMask))
+    {
+      Address addr(addressMask.c_str());
+      rf.registerAddressMask(addr.value, region);
+    }
+  }
+
+  rf.registerDefaultRegion(&(regionsConfig->getDefaultRegion()));
+}
+
+
 int main(int argc,char* argv[])
 {
   smsc::logger::Logger::Init();
@@ -1847,7 +1913,7 @@ int main(int argc,char* argv[])
   sigset(SIGINT,ctrlc);
   sigset(SIGTERM,ctrlc);
 
-  if(gethostname(hostName,sizeof(hostName))!=0)
+  if(gethostname(hostName,(int)sizeof(hostName))!=0)
   {
     smsc_log_warn(smsc::logger::Logger::getInstance("emlsme"),"gethostname failed:%d",errno);
     strcpy(hostName,"localhost");
@@ -1923,6 +1989,22 @@ int main(int argc,char* argv[])
     __warning__("admin.allowEml2GsmWithoutProfile not found, disabled by default");
   }
 
+  try
+  {
+    initRegions(cfgman.getString("admin.regionsconfig"),cfgman.getString("admin.routesconfig"));
+  } catch(std::exception& e)
+  {
+    __warning__("regions support disabled");
+  }
+
+  try
+  {
+    cfg::helpDeskAddress=cfgman.getString("admin.helpdeskAddress");
+  } catch(std::exception& e)
+  {
+    __warning__("helpdesk support disabled");
+  }
+
   try{
     const char* lmt=cfgman.getString("admin.defaultLimit");
     int val;
@@ -1968,8 +2050,8 @@ int main(int argc,char* argv[])
 
   {
     std::string validToDomains=cfgman.getString("mail.validToDomains");
-    int pos=0;
-    int comma=0;
+    size_t pos=0;
+    size_t comma=0;
     do{
       pos=comma;
       while(pos<validToDomains.length() && isspace(validToDomains[pos]))
