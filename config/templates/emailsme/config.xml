@@ -29,6 +29,9 @@
     <param name="allowGsm2EmlWithoutProfile" type="bool">false</param>
     <param name="allowEml2GsmWithoutProfile" type="bool">false</param>
     <param name="defaultLimit" type="string">10d</param>
+    <param name="regionsconfig" type="string">../SMSC/conf/regions.xml</param>
+    <param name="routesconfig" type="string">../SMSC/conf/routes.xml</param>
+    <param name="helpdeskAddress" type="string">201</param>
   </section>
 
   <section name="mail">
