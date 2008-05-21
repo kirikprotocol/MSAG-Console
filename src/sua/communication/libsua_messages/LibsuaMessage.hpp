@@ -6,6 +6,13 @@
 
 namespace libsua_messages {
 
+struct variable_data_t {
+  variable_data_t(const uint8_t* aData, uint8_t aDataLen)
+    : data(aData), dataLen(aDataLen) {}
+  const uint8_t* data;
+  uint8_t dataLen;
+};
+
 class LibsuaMessage : public communication::Message {
 public:
   LibsuaMessage(uint32_t msgCode);
@@ -32,9 +39,7 @@ protected:
 
   void setLength(uint32_t msgLen);
 
-  void setEncapsulatedSuaMessage(const sua_messages::SUAMessage* suaMessage);
-
-  enum {MAX_MESSAGE_CODE_VALUE = 0xFF};
+  enum { MAX_MESSAGE_CODE_VALUE = 0xFF };
 
   static unsigned int _messagesCodeToMessageIdx[MAX_MESSAGE_CODE_VALUE];
 
