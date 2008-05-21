@@ -54,6 +54,55 @@ GlobalTitle::GlobalTitle(uint8_t translation_type, numbering_plan_t numPlan, nat
   _gt_buffer.packedDataSz = packGTDigits(gtDigits) + GT_HEADER_SZ;
 }
 
+GlobalTitle::GlobalTitle(uint8_t natureOfAddress, const uint8_t* packedGtDigits, size_t packedGtDigitsSz)
+{
+  if ( packedGtDigitsSz +  GT_HEADER_SZ > sizeof(_gt_buffer.buf) )
+    throw smsc::util::Exception("GlobalTitle::GlobalTitle::: too long input packed gt digits buffer =[%d], max buffer size=[%d]", packedGtDigitsSz, sizeof(_gt_buffer.buf) - GT_HEADER_SZ);
+
+  _gt_buffer.buf[GTI_IDX] = NATURE_OF_ADDRESS_TAKENOVER;
+  _gt_buffer.buf[TRANS_TYPE_IDX] = 0; // Unknown translation type
+  _gt_buffer.buf[NUM_PLAN_IDX] = E164_NUMBERING_PLAN;
+  _gt_buffer.buf[NATURE_OF_ADDR_IDX] = natureOfAddress;
+  memcpy(&_gt_buffer.buf[NATURE_OF_ADDR_IDX+1], packedGtDigits, packedGtDigitsSz);
+  _gt_buffer.packedDataSz = packedGtDigitsSz + GT_HEADER_SZ;
+}
+
+GlobalTitle::GlobalTitle(uint8_t translationType, uint8_t numPlan, uint8_t encScheme, const uint8_t* packedGtDigits, size_t packedGtDigitsSz)
+{
+  if ( packedGtDigitsSz +  GT_HEADER_SZ > sizeof(_gt_buffer.buf) )
+    throw smsc::util::Exception("GlobalTitle::GlobalTitle::: too long input packed gt digits buffer =[%d], max buffer size=[%d]", packedGtDigitsSz, sizeof(_gt_buffer.buf) - GT_HEADER_SZ);
+
+  if ( encScheme != 0x01 /*BCD, odd number of digits*/ &&
+       encScheme != 0x02 /*BCD, even number of digits*/ )
+    throw smsc::util::Exception("GlobalTitle::GlobalTitle::: unsupported encoding scheme=[%d]", encScheme);
+
+  _gt_buffer.buf[GTI_IDX] = NUMPLAN_AND_TRNSLTYPE_TAKENOVER;
+  _gt_buffer.buf[TRANS_TYPE_IDX] = translationType;
+  _gt_buffer.buf[NUM_PLAN_IDX] = numPlan;
+  _gt_buffer.buf[NATURE_OF_ADDR_IDX] = UNKNOWN_NATURE_OF_ADDRESS;
+  memcpy(&_gt_buffer.buf[NATURE_OF_ADDR_IDX+1], packedGtDigits, packedGtDigitsSz);
+  _gt_buffer.packedDataSz = packedGtDigitsSz + GT_HEADER_SZ;
+}
+
+GlobalTitle::GlobalTitle(uint8_t translationType, uint8_t numPlan, uint8_t encScheme, uint8_t natureOfAddress, const uint8_t* packedGtDigits, size_t packedGtDigitsSz)
+{
+  if ( packedGtDigitsSz +  GT_HEADER_SZ > sizeof(_gt_buffer.buf) )
+    throw smsc::util::Exception("GlobalTitle::GlobalTitle::: too long input packed gt digits buffer =[%d], max buffer size=[%d]", packedGtDigitsSz, sizeof(_gt_buffer.buf) - GT_HEADER_SZ);
+
+  if ( encScheme != ENCODING_BCD_ODD_NUMBER_DIGITS &&
+       encScheme != ENCODING_BCD_EVEN_NUMBER_DIGITS )
+    throw smsc::util::Exception("GlobalTitle::GlobalTitle::: unsupported encoding scheme=[%d]", encScheme);
+
+  _gt_buffer.buf[GTI_IDX] = GT_INCLUDE_FULL_INFO;
+  _gt_buffer.buf[TRANS_TYPE_IDX] = translationType;
+  _gt_buffer.buf[NUM_PLAN_IDX] = numPlan;
+  _gt_buffer.buf[NATURE_OF_ADDR_IDX] = natureOfAddress;
+  memcpy(&_gt_buffer.buf[NATURE_OF_ADDR_IDX+1], packedGtDigits, packedGtDigitsSz);
+  _gt_buffer.packedDataSz = packedGtDigitsSz + GT_HEADER_SZ;
+  _gt_buffer.buf[DIGIT_NUM_IDX] = packedGtDigitsSz << 1;
+  if ( encScheme == ENCODING_BCD_ODD_NUMBER_DIGITS ) --_gt_buffer.buf[DIGIT_NUM_IDX];
+}
+
 size_t
 GlobalTitle::packGTDigits(const std::string& gtDigits)
 {
@@ -130,6 +179,12 @@ GlobalTitle::getGlobalTitleDigits() const
   return gtValue;
 }
 
+size_t
+GlobalTitle::getNumOfGlobalTitleDigits() const
+{
+  return _gt_buffer.buf[DIGIT_NUM_IDX];
+}
+
 const uint8_t*
 GlobalTitle::getValue() const
 {
@@ -140,6 +195,18 @@ size_t
 GlobalTitle::getValueSz() const
 {
   return _gt_buffer.packedDataSz;
+}
+
+const uint8_t*
+GlobalTitle::getPackedGTDigits() const
+{
+  return &_gt_buffer.buf[GT_HEADER_SZ];
+}
+
+size_t
+GlobalTitle::getPackedGTDigitsSize() const
+{
+  return _gt_buffer.packedDataSz - GT_HEADER_SZ;
 }
 
 std::string
