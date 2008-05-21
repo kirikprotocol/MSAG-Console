@@ -25,6 +25,9 @@
   <section name="admin">
     <param name="host" type="string">sunfire</param>
     <param name="port" type="int">9018</param>
+    <param name="regionsconfig" type="string">../SMSC/conf/regions.xml</param>
+    <param name="routesconfig" type="string">../SMSC/conf/routes.xml</param>
+    <param name="helpdeskAddress" type="string">201</param>
   </section>
 
   <section name="mail">
