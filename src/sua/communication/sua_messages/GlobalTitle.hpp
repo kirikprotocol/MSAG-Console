@@ -36,12 +36,22 @@ public:
   // gti, translation type, numbering plan and nature of address is taken over in arguments
   GlobalTitle(uint8_t translation_type, numbering_plan_t numPlan, nature_addr_t addrNature, const std::string& gtDigits);
 
+  GlobalTitle(uint8_t natureOfAddress, const uint8_t* packedGtDigits, size_t packedGtDigitsSz);
+
+  GlobalTitle(uint8_t translationType, uint8_t numPlan, uint8_t encScheme, const uint8_t* packedGtDigits, size_t packedGtDigitsSz);
+
+  GlobalTitle(uint8_t translationType, uint8_t numPlan, uint8_t encScheme, uint8_t natureOfAddress, const uint8_t* packedGtDigits, size_t packedGtDigitsSz);
+
   uint8_t getGTI() const;
   uint8_t getTranslationType() const;
   uint8_t getNumberingPlan() const;
   uint8_t getNatureOfAddress() const;
 
   std::string getGlobalTitleDigits() const;
+  size_t getNumOfGlobalTitleDigits() const;
+
+  const uint8_t* getPackedGTDigits() const;
+  size_t getPackedGTDigitsSize() const;
 
   const uint8_t* getValue() const;
   size_t getValueSz() const;
@@ -51,6 +61,7 @@ private:
   const static size_t MAX_NUM_OF_DIGITS = 32;
   const static size_t GT_HEADER_SZ = 5; // GTI (1 octet) + No. Digits (1 octet) + Trans. Type (1 octet) + Num. Plan (1 octet) + Nature of Address (1 octet)
   enum { GTI_IDX=0, DIGIT_NUM_IDX=1, TRANS_TYPE_IDX=2, NUM_PLAN_IDX=3, NATURE_OF_ADDR_IDX=4 };
+  enum { ENCODING_BCD_ODD_NUMBER_DIGITS = 0x01, ENCODING_BCD_EVEN_NUMBER_DIGITS = 0x02 };
   struct gt_buf {
     uint8_t buf[GT_HEADER_SZ + MAX_NUM_OF_DIGITS/2];
     size_t packedDataSz;
