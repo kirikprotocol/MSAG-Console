@@ -10,13 +10,7 @@ BindMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& lin
 }
 
 void
-EncapsulatedSuaMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
-{
-  sua_user_communication::MessageHandlers::getInstance().handle(*this, linkId);
-}
-
-void
-MErrorMessage_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
+N_UNITDATA_REQ_Message_HandlingDispatcher::dispatch_handle(const communication::LinkId& linkId) const
 {
   sua_user_communication::MessageHandlers::getInstance().handle(*this, linkId);
 }
