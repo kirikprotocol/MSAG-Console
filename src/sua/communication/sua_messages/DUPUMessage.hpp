@@ -19,7 +19,7 @@ public:
   virtual const char* getMsgCodeTextDescription() const;
 
   void setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode);
-  const TLV_AffectedPointCode& getAffectedPointCode() const;
+  TLV_AffectedPointCode getAffectedPointCode() const;
 
   void setUserCause(const TLV_UserCause& user_cause);
   const TLV_UserCause& getUserCause() const;

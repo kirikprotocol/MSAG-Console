@@ -107,7 +107,7 @@ DAVAMessage::setAffectedPointCode(const TLV_AffectedPointCode& affectedPointCode
   _affectedPointCodes = affectedPointCode;
 }
 
-const TLV_AffectedPointCode&
+TLV_AffectedPointCode
 DAVAMessage::getAffectedPointCode() const
 {
   if ( _affectedPointCodes.isSetValue() ) return _affectedPointCodes;
