@@ -304,10 +304,13 @@ int DpfTracker::Execute()
         int toSleep=(int)(compactTime-(now-lastCompact))*1000;
         if(toSleep>0)mon.wait(toSleep);
         now=time(NULL);
-        if(now-lastCompact>compactTime && changesCount>0)
+        if(now-lastCompact>compactTime)
         {
-          smsc_log_debug(log,"start compacting by time");
-          StartCompacting();
+          if(changesCount>0)
+          {
+            smsc_log_debug(log,"start compacting by time");
+            StartCompacting();
+          }
           lastCompact=now;
         }
       }
