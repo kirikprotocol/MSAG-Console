@@ -10,8 +10,8 @@
 
 # include <sua/communication/libsua_messages/BindMessage.hpp>
 # include <sua/communication/libsua_messages/UnbindMessage.hpp>
-# include <sua/communication/libsua_messages/MErrorMessage.hpp>
-# include <sua/communication/libsua_messages/EncapsulatedSuaMessage.hpp>
+# include <sua/communication/libsua_messages/N_UNITDATA_REQ_Message.hpp>
+# include <sua/communication/sua_messages/CLDTMessage.hpp>
 
 namespace sua_user_communication {
 
@@ -20,9 +20,10 @@ public:
   MessageHandlers();
   void handle(const libsua_messages::BindMessage& message, const communication::LinkId& linkId);
   void handle(const libsua_messages::UnbindMessage& message, const communication::LinkId& linkId);
-  void handle(const libsua_messages::MErrorMessage& message, const communication::LinkId& linkId);
-  void handle(const libsua_messages::EncapsulatedSuaMessage& message, const communication::LinkId& linkId);
+  void handle(const libsua_messages::N_UNITDATA_REQ_Message& message, const communication::LinkId& linkId);
 private:
+  sua_messages::CLDTMessage createCLDTMessage(const libsua_messages::N_UNITDATA_REQ_Message& message);
+
   smsc::logger::Logger* _logger;
   io_dispatcher::ConnectMgr& _cMgr;
   LinkSetInfoRegistry& _linkSetInfoRegistry;
