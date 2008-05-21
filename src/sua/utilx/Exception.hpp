@@ -32,6 +32,17 @@ public:
   }
 };
 
+class NoRouteFound : public smsc::util::Exception {
+public:
+  NoRouteFound(const char * fmt, ...)
+    : Exception()
+  {
+    SMSC_UTIL_EX_FILL(fmt);
+  }
+
+};
+
+
 }
 
 #endif
