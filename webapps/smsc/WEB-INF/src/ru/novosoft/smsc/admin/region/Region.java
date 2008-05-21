@@ -12,6 +12,7 @@ public class Region {
   private String name;
   private int bandWidth;
   private int id = -1;
+  private String email;
   private final Set subjects = new HashSet();
 
   public Region(String name) {
@@ -44,6 +45,14 @@ public class Region {
 
   public void setBandWidth(int bandWidth) {
     this.bandWidth = bandWidth;
+  }
+
+  public String getEmail() {
+    return email;
+  }
+
+  public void setEmail(String email) {
+    this.email = email;
   }
 
   public int getId() {

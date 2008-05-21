@@ -80,6 +80,11 @@ function addSourceSubj() {
       <td>&nbsp;</td>
     </tr>
     <tr class=row<%=rowN++&1%>>
+      <th><%= getLocString("regions.email")%></th>
+      <td><input type=txt name=email id=email value="<%=bean.getEmail() == null ? "" : bean.getEmail()%>"></td>
+      <td>&nbsp;</td>
+    </tr>
+    <tr class=row<%=rowN++&1%>>
       <td valign=top colspan=2><%rowN = 0;%>
         <div class=page_subtitle><%=getLocString("common.titles.subjects")%></div>
         <table cellspacing=0 cellpadding=0>

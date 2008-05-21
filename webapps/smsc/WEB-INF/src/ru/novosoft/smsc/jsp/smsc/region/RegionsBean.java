@@ -37,6 +37,7 @@ public class RegionsBean extends SmscBean {
   private String edit;
 
   private String defaultBandwidth;
+  private String defaultEmail;
   private QueryResultSet rows = new EmptyResultSet();
   private String sort = "name";
   private int startPosition;
@@ -88,6 +89,8 @@ public class RegionsBean extends SmscBean {
     }
     if (defaultBandwidth == null)
       defaultBandwidth = String.valueOf(rm.getDefaultBandwidth());
+    if (defaultEmail == null)
+      defaultEmail = rm.getDefaultEmail();
 
     checkedSet.addAll(Arrays.asList(checked));
 
@@ -98,6 +101,7 @@ public class RegionsBean extends SmscBean {
     try {
       rm.reset();
       defaultBandwidth = null;
+      defaultEmail = null;
     } catch (AdminException e) {
       logger.error(e,e);
       return error("Can't reset regions", e);
@@ -115,6 +119,8 @@ public class RegionsBean extends SmscBean {
       } catch (NumberFormatException e) {
         return error("Invalid default bandwidth");
       }
+
+      rm.setDefaultEmail(defaultEmail);
 
       rm.save();
     } catch (AdminException e) {
@@ -165,6 +171,14 @@ public class RegionsBean extends SmscBean {
 
   public void setDefaultBandwidth(String defaultBandwidth) {
     this.defaultBandwidth = defaultBandwidth;
+  }
+
+  public String getDefaultEmail() {
+    return defaultEmail;
+  }
+
+  public void setDefaultEmail(String defaultEmail) {
+    this.defaultEmail = defaultEmail;
   }
 
   public String getSort() {

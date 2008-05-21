@@ -28,7 +28,18 @@
   <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
   <input type=hidden name=sort id=sort value="<%=bean.getSort()%>">
   <input type=hidden name=edit id=edit>
-  <%=getLocString("regions.bandwidth")%>: <input class=txt name=defaultBandwidth id=defaultBandwidth value="<%=bean.getDefaultBandwidth() == null ? "" : bean.getDefaultBandwidth()%>">
+  <table>
+    <col width="1%">
+    <col width="49%">
+    <tr>
+      <td><%=getLocString("regions.bandwidth")%>:</td>
+      <td><input class=txt name=defaultBandwidth id=defaultBandwidth value="<%=bean.getDefaultBandwidth() == null ? "" : bean.getDefaultBandwidth()%>"></td>
+    </tr>
+    <tr>
+      <td><%=getLocString("regions.email")%>:</td>
+      <td><input class=txt name=defaultEmail id=defaultEmail value="<%=bean.getDefaultEmail() == null ? "" : bean.getDefaultEmail()%>"></td>
+    </tr>
+  </table>
 </div>
 
 <div class=content>

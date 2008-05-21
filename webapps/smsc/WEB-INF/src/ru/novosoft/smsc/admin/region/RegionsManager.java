@@ -28,6 +28,7 @@ public class RegionsManager {
   private final File regionsFile;
   private final HashMap regions = new HashMap();
   private int defaultBandwidth;
+  private String defaultEmail;
   private int id = 0;
 
   public static RegionsManager getInstance() throws AdminException {
@@ -80,6 +81,7 @@ public class RegionsManager {
         final Region region = new Region(el.getAttribute("name"));
         region.setId(Integer.parseInt(el.getAttribute("id")));
         region.setBandWidth(Integer.parseInt(el.getAttribute("bandwidth")));
+        region.setEmail(el.getAttribute("email"));
 
         NodeList subjects = el.getElementsByTagName("subject");
         for (int j=0; j < subjects.getLength(); j++) {
@@ -89,10 +91,13 @@ public class RegionsManager {
         id = Math.max(id, region.getId());
         this.regions.put(new Integer(region.getId()), region);
       }
-      NodeList defBandwidth = regionsDoc.getElementsByTagName("region_default");
-      if (defBandwidth.getLength() > 0)
-        defaultBandwidth = Integer.parseInt(((Element)defBandwidth.item(0)).getAttribute("bandwidth"));
 
+      NodeList defRegions = regionsDoc.getElementsByTagName("region_default");
+      if (defRegions.getLength() > 0) {
+        Element defRegion = (Element)defRegions.item(0);
+        defaultBandwidth = Integer.parseInt(defRegion.getAttribute("bandwidth"));
+        defaultEmail = defRegion.getAttribute("email");
+      }
 
     } catch (Exception e) {
       log.error(e,e);
@@ -128,14 +133,16 @@ public class RegionsManager {
       for (Iterator iter = regions.entrySet().iterator(); iter.hasNext();) {
         Map.Entry entry = (Map.Entry)iter.next();
         Region region = (Region)entry.getValue();
-        out.println("  <region id=\"" + region.getId() + "\" name=\"" + region.getName() + "\" bandwidth=\"" + region.getBandWidth() + "\">");
+        out.println("  <region id=\"" + region.getId() + "\" name=\"" + region.getName() +
+                                                         "\" bandwidth=\"" + region.getBandWidth() + "\"" +
+                                                        (region.getEmail()==null || region.getEmail().length() == 0 ? "" : " email=\"" + region.getEmail() + "\" ") + ">");
         out.println("    <subjects>");
         for (Iterator subjects = region.getSubjects().iterator(); subjects.hasNext();)
           out.println("      <subject id=\"" + subjects.next() + "\"/>");
         out.println("    </subjects>");
         out.println("  </region>");
       }
-      out.println("  <region_default bandwidth=\"" + defaultBandwidth + "\"/>");
+      out.println("  <region_default bandwidth=\"" + defaultBandwidth + "\"" + (defaultEmail==null || defaultEmail.length() == 0 ? "" : " email=\"" + defaultEmail + "\" ") + "/>");
       Functions.storeConfigFooter(out, "regions");
     } catch (IOException e) {
       log.error(e,e);
@@ -173,5 +180,13 @@ public class RegionsManager {
 
   public synchronized void setDefaultBandwidth(int defaultBandwidth) {
     this.defaultBandwidth = defaultBandwidth;
+  }
+
+  public synchronized String getDefaultEmail() {
+    return defaultEmail;
+  }
+
+  public synchronized void setDefaultEmail(String defaultEmail) {
+    this.defaultEmail = defaultEmail;
   }
 }
