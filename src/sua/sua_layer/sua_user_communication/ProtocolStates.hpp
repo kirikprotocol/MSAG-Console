@@ -35,7 +35,7 @@ private:
   LibSua_State_Unbind(const LibSua_State_Unbind& rhs);
   LibSua_State_Unbind& operator=(const LibSua_State_Unbind& rhs);
 
-  uint32_t _bindMessageCode, _tcpConnectReleasedInd_MessageCode, _MErrorMessageCode;
+  uint32_t _bindMessageCode, _tcpConnectReleasedInd_MessageCode;
 };
 
 class LibSua_State_Bind : public io_dispatcher::ProtocolState,

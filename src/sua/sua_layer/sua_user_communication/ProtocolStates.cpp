@@ -1,7 +1,6 @@
 #include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
 #include <sua/communication/libsua_messages/BindMessage.hpp>
 #include <sua/communication/libsua_messages/UnbindMessage.hpp>
-#include <sua/communication/libsua_messages/MErrorMessage.hpp>
 
 #include "ProtocolStates.hpp"
 #include "TcpEstablishInd.hpp"
@@ -32,15 +31,13 @@ LibSua_State_NoConnection::checkState(io_dispatcher::ProtocolStateController* pr
 
 LibSua_State_Unbind::LibSua_State_Unbind()
   : _bindMessageCode (libsua_messages::BindMessage().getMsgCode()),
-    _tcpConnectReleasedInd_MessageCode(TcpReleaseInd().getIndicationTypeValue()),
-    _MErrorMessageCode(libsua_messages::MErrorMessage().getMsgCode()) {}
+    _tcpConnectReleasedInd_MessageCode(TcpReleaseInd().getIndicationTypeValue())
+{}
 
 void
 LibSua_State_Unbind::checkState(io_dispatcher::ProtocolStateController* protocolController, const communication::Message& message) {
   if (message.getMsgCode() == _bindMessageCode)
     updateProtocolState(protocolController, LibSua_State_Bind::getInstance());
-  else if (message.getMsgCode() != _MErrorMessageCode)
-    throw io_dispatcher::ProtocolException("LibSua_State_Unbind::checkState::: protocol violation - unexpected message  [=%s]", message.getMsgCodeTextDescription());
 }
 
 void
