@@ -568,8 +568,8 @@ public:
     return count;
   }
 
-  template <class OP>
-  void ForEach(OP& op)
+  template <class Functor>
+  void ForEach(Functor& op)
   {
     ForEachRecursive(root,op);
   }
@@ -582,8 +582,8 @@ protected:
   Node* root;
   int count;
 
-  template <class OP>
-  void ForEachRecursive(Node* ptr,OP& op)
+  template <class Functor>
+  void ForEachRecursive(Node* ptr,Functor& op)
   {
     if(ptr->data)op(*ptr->data);
     if(UseHashNode)
