@@ -8,9 +8,10 @@
 # include <sua/libsua/types.hpp>
 # include <sua/libsua/MessageInfo.hpp>
 # include <sua/libsua/MessageProperties.hpp>
-# include <sua/libsua/SCCPAddress.hpp>
 
 namespace libsua {
+
+enum { OK = 0, NOT_CONNECTED = 128, NOT_BINDED = 129, NOT_INITIALIZED = 130, WRONG_CONNECT_NUM = 131, GOT_TOO_LONG_MESSAGE = 132 };
 
 class SuaApi {
 public:
@@ -24,22 +25,20 @@ public:
 
   virtual void sua_disconnect(unsigned int suaConnectNum) = 0;
 
-  virtual void sua_bind(unsigned int suaConnectNum) = 0;
+  virtual unsigned int bind(unsigned int suaConnectNum) = 0;
 
-  virtual void sua_unbind(unsigned int suaConnectNum) = 0;
+  virtual void unbind(unsigned int suaConnectNum) = 0;
 
-  virtual void sua_send_cldt(const uint8_t* message,
-                             uint16_t messageSize,
-                             const SCCPAddress& srcAddress,
-                             const SCCPAddress& dstAddress,
-                             const MessageProperties& msgProperties,
-                             unsigned int suaConnectNum) = 0;
+  virtual unsigned int unitdata_req(const uint8_t* message,
+                                    uint16_t messageSize,
+                                    const uint8_t* calledAddr,
+                                    uint8_t calledAddrLen,
+                                    const uint8_t* callingAddr,
+                                    uint8_t callingAddrLen,
+                                    const MessageProperties& msgProperties,
+                                    unsigned int suaConnectNum) = 0;
 
-  virtual void sua_send_scon(const sua_messages::PointCode& pc,
-                             uint8_t congestionLevel,
-                             unsigned int suaConnectNum) = 0;
-
-  virtual void sua_recvmsg(MessageInfo* msgInfo) = 0;
+  virtual void msgRecv(MessageInfo* msgInfo) = 0;
 
   virtual unsigned int sua_getConnectsCount() const = 0;
 };
