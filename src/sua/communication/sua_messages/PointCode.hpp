@@ -7,6 +7,9 @@ namespace sua_messages {
 
 class PointCode {
 public:
+  PointCode() {
+    _pcBuf.mem_boundary_aligner = 0;
+  }
   explicit PointCode(const uint8_t pcValue[]);
   virtual uint8_t getMask();
 
@@ -24,6 +27,7 @@ public:
 
 class ANSI_PC : public PointCode {
 public:
+  ANSI_PC() {}
   explicit ANSI_PC(const uint8_t pcValue[]);
   ANSI_PC(uint8_t mask, uint8_t network, uint8_t cluster, uint8_t member);
 
@@ -41,6 +45,7 @@ private:
 
 class ITU_PC : public PointCode {
 public:
+  ITU_PC() {}
   explicit ITU_PC(const uint8_t pcValue[]);
   ITU_PC(uint8_t mask, uint8_t zone, uint8_t region, uint8_t sp);
 
