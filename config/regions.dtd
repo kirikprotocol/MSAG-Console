@@ -5,6 +5,7 @@
 	id CDATA #REQUIRED
 	name CDATA #REQUIRED
 	bandwidth CDATA #REQUIRED
+        email CDATA #IMPLIED
 >
 <!ELEMENT subjects (subject*)>
 <!ELEMENT subject EMPTY>
@@ -15,4 +16,5 @@
 <!ELEMENT region_default EMPTY>
 <!ATTLIST region_default
 	bandwidth CDATA #REQUIRED
+        email CDATA #IMPLIED
 >
