@@ -5,12 +5,12 @@
 
 namespace utilx {
 
-template <class T,class MEMMAN=smsc::core::buffers::HeapAllocator<>,bool UseHashNode=false>
+template <class T,class MEMMAN=smsc::core::buffers::HeapAllocator,bool UseHashNode=false>
 class PrefixTree : public smsc::core::buffers::XTree<T,MEMMAN,UseHashNode> {
 public:
   bool FindPrefix(const char* key,T& data)const
   {
-    Node* ptr=root;
+    XTree::Node* ptr=root;
     T* foundData=0;
     while(*key && ptr)
     {
