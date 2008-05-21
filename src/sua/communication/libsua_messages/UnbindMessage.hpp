@@ -18,7 +18,7 @@ public:
 
   const char* getMsgCodeTextDescription() const;
 private:
-  static const uint32_t _MSG_CODE=0x42;
+  static const uint32_t _MSG_CODE=0x02;
 };
 
 } // namespace sua_user_communication
