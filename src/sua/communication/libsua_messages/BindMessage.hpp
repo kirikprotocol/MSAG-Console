@@ -20,12 +20,18 @@ public:
   virtual const char* getMsgCodeTextDescription() const;
 
   std::string getAppId() const;
-
   void setAppId(const std::string& appid);
+
+  uint8_t getProtocolVersion() const;
+
+protected:
+  uint32_t getLength() const;
 
 private:
   char _appId[32+1];
-  static const uint32_t _MSG_CODE=0x41;
+
+  static const uint32_t _MSG_CODE=0x01;
+  enum { PROTOCOL_VERSION = 0x01, VERSION_FIELD_SZ = 0x01 };
 };
 
 } // namespace sua_user_communication

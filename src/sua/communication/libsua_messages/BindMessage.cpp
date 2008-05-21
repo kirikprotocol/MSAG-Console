@@ -19,6 +19,7 @@ size_t
 BindMessage::serialize(communication::TP* resultBuf) const
 {
   size_t offset = LibsuaMessage::serialize(resultBuf);
+  offset = communication::addField(resultBuf, offset, uint8_t(PROTOCOL_VERSION));
   uint16_t strLen = strlen(_appId);
   offset = communication::addField(resultBuf, offset, strLen);
   return communication::addField(resultBuf, offset, (uint8_t*)_appId, strlen(_appId));
@@ -28,9 +29,16 @@ size_t
 BindMessage::deserialize(const communication::TP& packetBuf)
 {
   size_t offset = LibsuaMessage::deserialize(packetBuf);
+  uint8_t protocolVersion;
+  offset = communication::extractField(packetBuf, offset, &protocolVersion);
+  if ( protocolVersion != PROTOCOL_VERSION )
+    throw smsc::util::Exception("BindMessage::deserialize::: wrong protocol version=[%d], expected version=[%d]", protocolVersion, PROTOCOL_VERSION);
+
   uint16_t strLen;
-  offset = extractField(packetBuf, offset, &strLen);
-  if ( strLen + 1 > sizeof(_appId) ) throw smsc::util::Exception("BindMessage::deserialize::: length of appId field [%d] exceeded max size [%d]", strLen, sizeof(_appId) -1);
+  offset = communication::extractField(packetBuf, offset, &strLen);
+  if ( strLen + 1 > sizeof(_appId) )
+    throw smsc::util::Exception("BindMessage::deserialize::: length of appId field [%d] exceeded max size [%d]", strLen, sizeof(_appId) -1);
+
   _appId[strLen] = 0;
   return communication::extractField(packetBuf, offset, (uint8_t*)_appId, strLen);
 }
@@ -38,7 +46,9 @@ BindMessage::deserialize(const communication::TP& packetBuf)
 std::string
 BindMessage::toString() const
 {
-  return LibsuaMessage::toString() + ", appId=[" + _appId + "]";
+  char strBuf[256];
+  snprintf(strBuf, sizeof(strBuf), ",protocolVersion=[%d],appId=[%s]", getProtocolVersion(), _appId);
+  return LibsuaMessage::toString() + strBuf;
 }
 
 const char*
@@ -58,8 +68,18 @@ BindMessage::setAppId(const std::string& appId)
 {
   if ( appId.size() + 1 > sizeof(_appId) ) throw smsc::util::Exception("BindMessage::setAppId::: length of appId value [%d] exceeded max size [%d]", appId.size(), sizeof(_appId)-1);
   strcpy(_appId, appId.c_str());
-  setLength(_MSGCODE_SZ + sizeof(uint16_t) /*sizeof of string len prefix*/ + 
-            strlen(_appId));
+}
+
+uint8_t
+BindMessage::getProtocolVersion() const
+{
+  return PROTOCOL_VERSION;
+}
+
+uint32_t
+BindMessage::getLength() const
+{
+  return LibsuaMessage::getLength() + VERSION_FIELD_SZ + sizeof(uint16_t) /*sizeof of string len prefix*/ + strlen(_appId);
 }
 
 }
