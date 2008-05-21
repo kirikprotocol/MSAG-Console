@@ -1,6 +1,7 @@
 #include "LinkSetInfoRegistry.hpp"
-#include <util/Exception.hpp>
 #include <utility>
+#include <util/Exception.hpp>
+#include <core/synchronization/MutexGuard.hpp>
 
 namespace sua_user_communication {
 
@@ -11,7 +12,10 @@ LinkSetInfoRegistry::LinkSetInfoRegistry()
   : _logger(smsc::logger::Logger::getInstance("sua_usr_cm")) {}
 
 void
-LinkSetInfoRegistry::addAssociation(const communication::LinkId& linkSetId, const std::string& appId) {
+LinkSetInfoRegistry::addAssociation(const communication::LinkId& linkSetId, const std::string& appId)
+{
+  smsc::core::synchronization::MutexGuard synchonize(_lock);
+
   registry_t::iterator iter = _registry.find(linkSetId);
   if ( iter != _registry.end() )
     iter->second->insert(appId);
@@ -23,18 +27,27 @@ LinkSetInfoRegistry::addAssociation(const communication::LinkId& linkSetId, cons
   smsc_log_info(_logger, "LinkSetInfoRegistry::addAssociation::: added association for appId=[%s] to linkSet=[%s]", appId.c_str(), linkSetId.getValue().c_str());
 }
 
-const communication::LinkId&
-LinkSetInfoRegistry::getLinkSet(const std::string& appId) {
+bool
+LinkSetInfoRegistry::getLinkSet(const std::string& appId, communication::LinkId* linkSetId) const
+{
+  smsc::core::synchronization::MutexGuard synchonize(_lock);
+
   for(registry_t::const_iterator iter = _registry.begin(), end_iter = _registry.end(); iter != end_iter; ++iter) {
-    if ( iter->second->find(appId) != iter->second->end() )
-      return iter->first;
+    if ( iter->second->find(appId) != iter->second->end() ) {
+      *linkSetId = iter->first;
+      return true;
+    }
   }
-  throw smsc::util::Exception("LinkSetInfoRegistry::getLinkSet::: there isn't registered linkSetId for appId=[%s]", appId.c_str());
+
+  smsc_log_info(_logger, "LinkSetInfoRegistry::getLinkSet::: there isn't registered linkSetId for appId=[%s]", appId.c_str());
+  return false;
 }
 
 void
 LinkSetInfoRegistry::removeAssociation(const communication::LinkId& linkSetId, const std::string& appId)
 {
+  smsc::core::synchronization::MutexGuard synchonize(_lock);
+
   registry_t::iterator iter = _registry.find(linkSetId);
   if ( iter != _registry.end() )
     if ( iter->second->erase(appId) > 0 && iter->second->empty() ) {
@@ -43,6 +56,19 @@ LinkSetInfoRegistry::removeAssociation(const communication::LinkId& linkSetId, c
       _registry.erase(iter);
       return;
     }
+}
+
+std::set<communication::LinkId>
+LinkSetInfoRegistry::getLinkSetIds() const
+{
+  smsc::core::synchronization::MutexGuard synchonize(_lock);
+
+  std::set<communication::LinkId> result;
+  for(registry_t::const_iterator iter = _registry.begin(), end_iter = _registry.end();
+      iter != end_iter; ++iter)
+    result.insert(iter->first);
+
+  return result;
 }
 
 }
