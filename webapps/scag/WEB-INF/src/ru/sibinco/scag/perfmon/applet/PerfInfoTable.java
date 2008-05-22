@@ -9,6 +9,8 @@ public class PerfInfoTable extends Canvas {
     static final int pad = 1;
     static final int grid = 1;
     static int numHeads = 5;
+    static final int smppNumHeads = 5;
+    static final int httpNumHeads = 6;
     static final int numRows = 3;
     static final int colorShift = 16;
 
@@ -17,8 +19,9 @@ public class PerfInfoTable extends Canvas {
     static final Color lightShadowColor = SystemColor.controlLtHighlight;
     static final Color textColor = SystemColor.textText;
     //smpp
-    static final Color headsColorSmpp[] = null;
+    static Color headsColorSmpp[] = null;
     static {
+        headsColorSmpp = new Color[smppNumHeads];
         try {
             headsColorSmpp[0] = new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift); // accepted
         } catch (Exception e) {
@@ -51,37 +54,38 @@ public class PerfInfoTable extends Canvas {
 //            new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()), // Failed
     };
     //http
-    static final Color headsColorHttp[] = null;
+    static Color headsColorHttp[] = null;
     static{
+        headsColorHttp = new Color[httpNumHeads];
         try {
-            headsColorSmpp[0] = new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift); // request
+            headsColorHttp[0] = new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift); // request
         } catch (Exception e) {
-            headsColorSmpp[0] = bgColor;
+            headsColorHttp[0] = bgColor;
         }
         try {
-            headsColorSmpp[1] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift); // request rejected
+            headsColorHttp[1] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift); // request rejected
         } catch (Exception e) {
-            headsColorSmpp[1] = bgColor;
+            headsColorHttp[1] = bgColor;
         }
         try {
-            headsColorSmpp[2] = new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift); // response
+            headsColorHttp[2] = new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift); // response
         } catch (Exception e) {
-            headsColorSmpp[2] = bgColor;
+            headsColorHttp[2] = bgColor;
         }
         try {
-            headsColorSmpp[3] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()); // response rejected
+            headsColorHttp[3] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue()); // response rejected
         } catch (Exception e) {
-            headsColorSmpp[3] = bgColor;
+            headsColorHttp[3] = bgColor;
         }
         try {
-            headsColorSmpp[4] = new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue()); // deliveredHTTP
+            headsColorHttp[4] = new Color(bgColor.getRed(),              bgColor.getGreen() + colorShift, bgColor.getBlue()); // deliveredHTTP
         } catch (Exception e) {
-            headsColorSmpp[4] = bgColor;
+            headsColorHttp[4] = bgColor;
         }
         try {
-            headsColorSmpp[5] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()); // FailedHTTP
+            headsColorHttp[5] = new Color(bgColor.getRed() + colorShift, bgColor.getGreen(),              bgColor.getBlue()); // FailedHTTP
         } catch (Exception e) {
-            headsColorSmpp[5] = bgColor;
+            headsColorHttp[5] = bgColor;
         }
 //            new Color(bgColor.getRed(),              bgColor.getGreen(),              bgColor.getBlue() + colorShift), // request
 //            new Color(bgColor.getRed() + colorShift, bgColor.getGreen() + colorShift, bgColor.getBlue() + colorShift), // request rejected
