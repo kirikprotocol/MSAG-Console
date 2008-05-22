@@ -1086,9 +1086,9 @@ void StatisticsManager::dumpPerfCounters(SerializationBuffer& buf, Hash<CommonPe
         for (int i = 0; i < counter->count; i++)
         {
                  //uint16_t(2)  xxx counter + avg (hour)
-            buf.WriteNetInt16((counter) ? htons(counter->counters[i]) : 0);
+            buf.WriteNetInt16((counter) ? counter->counters[i]:0);
             TimeSlotCounter<int>* cnt = (counter && counter->slots[i]) ? counter->slots[i] : 0;
-            buf.WriteNetInt16((cnt) ? htons((uint16_t)cnt->Avg()):0);
+            buf.WriteNetInt16((cnt) ? (uint16_t)cnt->Avg():0);
         }
 
         if (counter) counter->clear();
