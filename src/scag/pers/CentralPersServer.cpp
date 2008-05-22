@@ -3,6 +3,7 @@
 #include "CentralPersServer.h"
 #include "scag/exc/SCAGExceptions.h"
 
+#include <xercesc/parsers/SAXParser.hpp>
 #include <xercesc/sax2/SAX2XMLReader.hpp>
 #include <xercesc/sax2/XMLReaderFactory.hpp>
 #include <xercesc/util/OutOfMemoryException.hpp>
