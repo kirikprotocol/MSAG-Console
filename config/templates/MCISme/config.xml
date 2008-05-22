@@ -2,35 +2,28 @@
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
     
-    <section name="StartupLoader">
-        <section name="DataSourceDrivers">
-            <section name="OCIDataSourceDriver">
-                <param name="type" type="string">OCI</param>
-                <param name="loadup" type="string">libdb_oci.so</param>
-            </section>
-        </section>
-    </section>
-    
     <section name="MCISme">
 
         <param name="Address" type="string">@mcisme.orig.address@</param>
+	<param name="CalledMask"  type="string">/^\d{10}$/</param>
+	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
 	<param name="SvcType" type="string">MCISme</param>
         <param name="ProtocolId" type="int">0</param>
+
 	<param name="DaysValid"  type="int">1</param>
-	<param name="CallingMask" type="string">/^(?:\.3\.\d\.\d{10}|\.4\.\d\.\d{1,20})$/</param>
-	<param name="CalledMask"  type="string">/^\d{10}$/</param>
 	
 	<param name="unrespondedMessagesMax" type="int">100</param>
 	<param name="unrespondedMessagesSleep" type="int">20</param>
 	<param name="outgoingSpeedMax" type="int">50</param>
 	
 	<param name="responceWaitTime" type="string">00:00:05</param>
-	<param name="receiptWaitTime" type="string">00:00:05</param>
+	<!-- should be deleted param name="receiptWaitTime" type="string">00:00:05</param-->
 	
 	<param name="inputQueueSize"  type="int">1000</param>
-	<param name="outputQueueSize" type="int">1000</param>
+	<!-- should be deleted param name="outputQueueSize" type="int">1000</param-->
 	
 	<param name="maxRowsPerMessage" type="int">5</param>
+
 	<param name="defaultInform" type="bool">true</param>
         <param name="defaultNotify" type="bool">false</param>
 	<param name="defaultWantNotifyMe" type="bool">false</param>
@@ -73,19 +66,6 @@
 		<param name="hsn" type="int">1</param>
 		<param name="spn" type="int">2</param>
     		<param name="tsm" type="string">123ABC</param>
-	    </section>
-	</section>
-
-	<section name="DataSource">
-    	    <param name="type" type="string">OCI</param>
-            <param name="connections" type="int">10</param>
-            <param name="dbInstance" type="string">@db.instance@</param>
-            <param name="dbUserName" type="string">@db.user@</param>
-            <param name="dbUserPassword" type="string">@db.password@</param>
-	    <param name="watchdog" type="bool">false</param>
-	    <section name="jdbc">
-	        <param name="driver" type="string">@jdbc.driver@</param>
-	        <param name="source" type="string">@jdbc.source@</param>
 	    </section>
 	</section>
 
@@ -140,7 +120,6 @@
 	    <param name="timeout" type="int">@mcisme.Advertising.timeout@</param>
 	</section>
 
-
 	<section name="Statistics">
 	    <param name="statDir" type="string">@mcisme.Stat.statDir@</param> <!-- Type only directory name, not path-->
 	</section>
@@ -169,12 +148,10 @@
 	        <param name="1179" type="string">@mcisme.err1179@</param>
 	        <param name="1184" type="string">@mcisme.err1184@</param>
 	    </section>
-
 	</section>
 
     
         <section name="Templates">
-
 	  <section name="Inform">
     	    <param name="default" type="int">3</param>
 
@@ -230,6 +207,23 @@
       
       </section> <!-- Templates -->
         
+      <section name="MSC">
+        <param name="host" type="string">10.112.2.1</param>
+        <param name="mcisme" type="string">555</param>
+        <param name="nvtIODevice" type="string">220</param>
+        <param name="port" type="int">5010</param>
+        <param name="usercode" type="string">mca</param>
+        <param name="userpassword" type="string">T3JSJkYQ</param>
+        <param name="voicemail" type="string"></param>
+      </section>
     </section> <!-- MCISme -->
     
+    <section name="StartupLoader">
+        <section name="DataSourceDrivers">
+            <section name="OCIDataSourceDriver">
+                <param name="type" type="string">OCI</param>
+                <param name="loadup" type="string">libdb_oci.so</param>
+            </section>
+        </section>
+    </section>
 </config>
