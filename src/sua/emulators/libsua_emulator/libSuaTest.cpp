@@ -68,7 +68,7 @@ int main(int argc, char** argv)
       libsua::MessageInfo msgInfo;
       suaApi.msgRecv(&msgInfo);
 
-      smsc_log_info(logger, "got new message=[%s]", hexdmp(msgInfo.msgData.get(), msgInfo.msgData.GetPos()).c_str());
+      smsc_log_info(logger, "got new message=[%s], messageType=[%d] from connection=[%d]", hexdmp(msgInfo.msgData.get(), msgInfo.msgData.GetPos()).c_str(), msgInfo.messageType, msgInfo.suaConnectNum);
 
       smsc_log_info(logger, "libSuaTest::: call sua_unbind(connectNum=%d)", i);
       suaApi.unbind(i);
