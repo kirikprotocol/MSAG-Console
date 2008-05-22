@@ -26,7 +26,7 @@ protected:
     {
         _numIds = length() ? 2 : 0;
         for (uint16_t i = 1; i < length(); ++i) {
-            if (!_octs[i] & 0x80)
+            if (!(_octs[i] & 0x80))
                 ++_numIds;
         }
     }
@@ -103,6 +103,11 @@ public:
     {
         return _octs < obj2._octs;
     }
+    inline bool operator== (const EncodedOID & obj2) const
+    {
+        return _octs == obj2._octs;
+    }
+
 };
 
 } //comp
