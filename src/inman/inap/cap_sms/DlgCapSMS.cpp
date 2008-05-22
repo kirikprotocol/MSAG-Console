@@ -54,7 +54,8 @@ CapSMSDlg::~CapSMSDlg()
     MutexGuard  grd(_sync);
     ssfHdl = NULL;
     endCapSMS();
-    reportType = MessageType_notification; //do PREARRANED_END if TC dialog is still active
+    //do PREARRANED_END if TC dialog is still active
+    reportType = MessageType_notification;
     endTCap(false);
 }
 
@@ -63,6 +64,8 @@ void CapSMSDlg::abortSMS(void)
     MutexGuard  grd(_sync);
     ssfHdl = NULL;
     endCapSMS();
+    //send U_ABORT to SCF if TC dialog is still active
+    endTCap(true);
 }
 
 RCHash CapSMSDlg::Init(void) _THROWS_NONE
@@ -427,7 +430,10 @@ void CapSMSDlg::onDialogInvoke(Invoke* op, bool lastComp)
     if (doReport && ssfHdl)
         ssfHdl->onDPSMSResult(capId, rPCause, smsParams);
     if (doEnd) {
-        endTCap((bool)(err != 0));
+        {
+            MutexGuard  grd(_sync);
+            endTCap((bool)(err != 0));
+        }
         if (ssfHdl)
             ssfHdl->onEndCapDlg(capId, err);
     }
@@ -495,14 +501,15 @@ RCHash CapSMSDlg::eventReportSMS(bool submitted) _THROWS_NONE
     return 0;
 }
 
-//Forcedly ends CapSMS dialog: sends to SCF either submission failure report or U_ABORT 
+//Forcedly ends CapSMS dialog: sends to SCF either submission failure report or U_ABORT
+//NOTE: _sync MUST BE locked upon entry
 void CapSMSDlg::endCapSMS(void)
 {
     //in monitoring state send submission failure report
     //and wait for T_END_IND or L_CANCEL
     if (_fsmState == SMS_SSF_Fsm::fsmMonitoring) {
         if (eventReportSMS(false))
-            endTCap(true); //send 
+            endTCap(true); //send U_ABORT to SCF
     } else if ((_fsmState == SMS_SSF_Fsm::fsmWaitInstr) && !_capState.s.smsReport)
         endTCap(true); //send U_ABORT to SCF
 }
@@ -528,12 +535,13 @@ void CapSMSDlg::endTCap(bool u_abort/* = false*/)
                     dialog->endDialog(Dialog::endUAbort);
                 } else {
                     _capState.s.smsEnd |= CAPSmsStateS::idSSF;
-                    smsc_log_debug(logger, "%s: T_END_REQ, state %s", _logId,
-                                    State2Str().c_str());
+                    smsc_log_debug(logger, "%s: T_END_REQ{%s}, state %s", _logId,
+                                   (reportType == MessageType_request) ?
+                                    "Basic" : "Prearranged", State2Str().c_str());
                     dialog->endDialog((reportType == MessageType_request) ?
                                     Dialog::endBasic : Dialog::endPrearranged);
                 }
-            } catch (std::exception & exc) {
+            } catch (const std::exception & exc) {
                 smsc_log_error(logger, "%s: %s: %s", _logId, 
                             u_abort ? "U_ABRT_REQ": "T_END_REQ", exc.what());
                 dialog->releaseAllInvokes();
