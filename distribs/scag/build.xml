@@ -56,6 +56,10 @@ Targets:
   <target name="makedeps">
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="deps"/>
   </target>
+  
+  <target name="makemod">
+    <ant dir="${SRC_DIR}" target="mod"/>
+  </target>  
 
   <target name="makegw">
     <echo message="${MAKE_ARGS}"/>
