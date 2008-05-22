@@ -19,7 +19,7 @@ endif
 
 USRLOCLIB := /usr/local/lib
 ifeq ($(B64),YES)
-USRLOCLIB := /usr/local/lib/sparcv9
+USRLOCLIB := /usr/local/lib/64
 endif
 
 
@@ -27,15 +27,15 @@ ifeq ($(SFW),YES)
 SSL_LIB_DIR:=/usr/sfw/lib
 NETSNMP_LIB_DIR:=/usr/sfw/lib
 ifeq ($(B64),YES)
-SSL_LIB_DIR:=/usr/sfw/lib/sparcv9
-NETSNMP_LIB_DIR:=/usr/sfw/lib/sparcv9
+SSL_LIB_DIR:=/usr/sfw/lib/64
+NETSNMP_LIB_DIR:=/usr/sfw/lib/64
 endif
 else
-SSL_LIB_DIR:=/usr/local/ssl/lib
-NETSNMP_LIB_DIR:=/usr/local/lib
+SSL_LIB_DIR:=/usr/lib
+NETSNMP_LIB_DIR:=/usr/lib
 ifeq ($(B64),YES)
-SSL_LIB_DIR:=/usr/lib/sparcv9
-NETSNMP_LIB_DIR:=/usr/local/lib/sparcv9
+SSL_LIB_DIR:=/usr/lib/64
+NETSNMP_LIB_DIR:=/usr/lib/64
 endif
 endif
 
