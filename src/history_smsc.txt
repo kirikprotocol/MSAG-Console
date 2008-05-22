@@ -123,3 +123,7 @@ B3008:
     SMSC	Network initiated USSD locking fix
     MCISme	Remove reversed notify policy
     MCISme	Add wantNotify support
+B3009:
+    Emailsme	Fix for limit counters reset.
+    SMSC	License runtime reloading
+    SMSC	set_dpf now supported from many SMEs to one abonent
