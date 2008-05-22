@@ -115,9 +115,10 @@ public:
   const uint8_t* getValue() const;
 
   virtual bool isSetValue() const;
-protected:
+
   uint16_t getValueLength() const;
 
+protected:
   TLV_OctetArrayPrimitive(uint16_t tag, size_t reservedOctetsOffset, const uint8_t* val, uint16_t valLen);
 private:
   union aligner {
