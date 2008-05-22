@@ -49,7 +49,7 @@ N_UNITDATA_IND_Message::N_UNITDATA_IND_Message(const sua_messages::CLDTMessage& 
     throw smsc::util::Exception("N_UNITDATA_IND_Message::N_UNITDATA_IND_Message::: wrong srcAddress in incoming CLDT message");
   }
   const sua_messages::TLV_Data& userData = cldtMessage.getData();
-  setUserData(userData.getValue(), userData.getLength());
+  setUserData(userData.getValue(), userData.getValueLength());
 }
 
 size_t
