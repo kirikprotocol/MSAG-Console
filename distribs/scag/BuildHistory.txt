@@ -351,4 +351,11 @@ TO ALL: Insert log record for all significant changes & fixes here.
 05.05.2008 12:00 makar [!!! CVS: revision marked by tag BUILD_05_05_2008 !!!]
 1) MSAG Admin CHANGE: Reload rule header template on rule open (to use new rule language features)
 
-
+=================================================================================================================
+22.05.2008 16:00 makar [!!! CVS: revision marked by tag BUILD_22_05_2008 !!!]
+1) PVSS CRITICAL CHANGE: Optimization & fixes
+2) MSAG CRITICAL CHANGE: New license file. License limitation for SMPP & HTTP transports
+3) MSAG CHANGE/FIX: xerces 2.8.0 support
+4) MSAG CHANGE/FIX: Network initiated USSD dialogs fixes. Start dialog by USSN_REQ feature added
+5) MSAG CHANGE: URL encode/decode implemented in HTTP transport
+6) MSAG Admin CHANGE: Performance monitoring for Svcs & Smscs extended & fixed
