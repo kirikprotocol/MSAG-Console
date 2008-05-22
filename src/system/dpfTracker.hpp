@@ -7,6 +7,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "logger/Logger.h"
 #include "core/buffers/File.hpp"
+#include "core/buffers/FixedLengthString.hpp"
 #include <set>
 
 namespace smsc{
@@ -30,7 +31,7 @@ public:
   }
 
   void Init(const char* argStoreLocation,int to1179,int to1044,int mxch,int ctm);
-  void registerSetDpf(const Address& abonent,const Address &smeAddr,int errCode,int smeIdx);
+  void registerSetDpf(const Address& abonent,const Address &smeAddr,int errCode,const char* smeId);
   void hlrAlert(const Address& abonent);
 
   int Execute();
@@ -48,9 +49,11 @@ protected:
   int timeOut1044;
   std::string storeLocation;
 
+  typedef buf::FixedLengthString<32> SystemIdStr;
+
   struct ReqRecord{
     time_t expiration;
-    uint32_t smeIdx;
+    SystemIdStr smeId;
     smsc::sms::Address addr;
 
     static void WriteAddr(File& f,const Address& addr)
@@ -70,16 +73,34 @@ protected:
       addr.value[addr.length]=0;
     }
 
+    static void WriteString(File& f,const SystemIdStr& str)
+    {
+      uint8_t l=(uint8_t)str.length();
+      f.WriteByte(l);
+      f.Write(str.c_str(),l);
+    }
+
+    static void ReadString(File& f,SystemIdStr& str)
+    {
+      uint8_t l=f.ReadByte();
+      if(l>=32)
+      {
+        throw smsc::util::Exception("Corrupted file, systemId.length>32");
+      }
+      f.Read(str.str,l);
+      str.str[l]=0;
+    }
+
     void Write(File& f)const
     {
       f.WriteNetInt64(expiration);
-      f.WriteNetInt32(smeIdx);
+      WriteString(f,smeId);
       WriteAddr(f,addr);
     }
     void Read(File& f)
     {
       expiration=f.ReadNetInt64();
-      smeIdx=f.ReadNetInt32();
+      ReadString(f,smeId);
       ReadAddr(f,addr);
     }
     bool operator<(const ReqRecord& rhs)const
@@ -143,23 +164,23 @@ protected:
     ChangeType ct;
     uint64_t abonent;
     time_t expiration;
-    uint32_t smeIdx;
+    SystemIdStr smeId;
     Address addr;
-    Change(uint64_t argAbonent,time_t argExpiration,uint32_t argSmeIdx,const Address& argAddr):ct(ctRegisterSme),
-      abonent(argAbonent),expiration(argExpiration),smeIdx(argSmeIdx),addr(argAddr)
+    Change(uint64_t argAbonent,time_t argExpiration,SystemIdStr argSmeId,const Address& argAddr):ct(ctRegisterSme),
+      abonent(argAbonent),expiration(argExpiration),smeId(argSmeId),addr(argAddr)
     {
     }
     Change(uint64_t argAbonent):ct(ctRemoveAbonent),abonent(argAbonent)
     {
     }
-    Change(uint64_t argAbonent,uint32_t argSme):ct(ctRemoveSme),abonent(argAbonent),smeIdx(argSme)
+    Change(uint64_t argAbonent,SystemIdStr argSme):ct(ctRemoveSme),abonent(argAbonent),smeId(argSme)
     {
     }
     ReqRecord asReqRecord()const
     {
       ReqRecord req;
       req.expiration=expiration;
-      req.smeIdx=smeIdx;
+      req.smeId=smeId;
       req.addr=addr;
       return req;
     }
@@ -170,7 +191,7 @@ protected:
       {
         f.WriteNetInt64(abonent);
         f.WriteNetInt64(expiration);
-        f.WriteNetInt32(smeIdx);
+        ReqRecord::WriteString(f,smeId);
         ReqRecord::WriteAddr(f,addr);
       }else if(ct==ctRemoveAbonent)
       {
@@ -178,7 +199,7 @@ protected:
       }else if(ct==ctRemoveSme)
       {
         f.WriteNetInt64(abonent);
-        f.WriteNetInt32(smeIdx);
+        ReqRecord::WriteString(f,smeId);
       }
     }
     void Read(File& f)
@@ -188,7 +209,7 @@ protected:
       {
         abonent=f.ReadNetInt64();
         expiration=f.ReadNetInt64();
-        smeIdx=f.ReadNetInt32();
+        ReqRecord::ReadString(f,smeId);
         ReqRecord::ReadAddr(f,addr);
       }else if(ct==ctRemoveAbonent)
       {
@@ -196,7 +217,7 @@ protected:
       }else if(ct==ctRemoveSme)
       {
         abonent=f.ReadNetInt64();
-        smeIdx=f.ReadNetInt32();
+        ReqRecord::ReadString(f,smeId);
       }
     }
   };
@@ -230,7 +251,7 @@ protected:
     struct ReqRequestSmeIdComparator{
       bool operator()(const ReqRecord& a,const ReqRecord& b)const
       {
-        return a.smeIdx<b.smeIdx;
+        return a.smeId<b.smeId;
       }
     };
 
@@ -280,7 +301,7 @@ protected:
     typedef std::set<SmallRecord,SmallRecordComparator> RecSet;
   };
 
-  void sendAlertNotify(uint64_t abonent,const smsc::sms::Address& smeAddr,int smeIdx,int status);
+  void sendAlertNotify(uint64_t abonent,const smsc::sms::Address& smeAddr,const SystemIdStr& smeId,int status);
 
   AbonentsSet abonents;
   ExpirationsSet expirations;

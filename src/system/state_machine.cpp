@@ -3644,7 +3644,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
             sms.getDealiasedDestinationAddress(),
             sms.getOriginatingAddress(),
             status,
-            smsc->getSmeIndex(sms.getSourceSmeId()));
+            sms.getSourceSmeId());
         /*
           sms.lastTime=time(NULL);
           sms.setNextTime(rescheduleSms(sms));

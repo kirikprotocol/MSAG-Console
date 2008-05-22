@@ -142,9 +142,9 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
         bool found=false;
         for(Record::ReqSet::iterator rit=begin;rit!=end;rit++)
         {
-          if(rit->smeIdx==req.smeIdx)
+          if(rit->smeId==req.smeId)
           {
-            smsc_log_debug(log,"replaced record for abonent=%lld, smsId=%d, expiration=%d",c.abonent,req.smeIdx,req.expiration);
+            smsc_log_debug(log,"replaced record for abonent=%lld, smsId=%s, expiration=%d",c.abonent,req.smeId.c_str(),req.expiration);
             expirations.erase(rec->expIter);
             rec->requests.erase(rit);
             rec->requests.insert(req);
@@ -177,14 +177,14 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
       AbonentsSet::iterator it=abonents.find(c.abonent);
       if(it==abonents.end())
       {
-        smsc_log_warn(log,"remove request of abonent %lld sme %d found in journal, but abonent already removed",c.abonent,c.smeIdx);
+        smsc_log_warn(log,"remove request of abonent %lld sme %s found in journal, but abonent already removed",c.abonent,c.smeId.c_str());
       }else
       {
         Record* rec=*it;
         Record::ReqSet::iterator end=rec->requests.end();
         for(Record::ReqSet::iterator rit=rec->requests.begin();rit!=end;rit++)
         {
-          if(rit->smeIdx==c.smeIdx)
+          if(rit->smeId==c.smeId)
           {
             rec->requests.erase(rit);
             break;
@@ -207,9 +207,9 @@ void DpfTracker::ApplyChanges(const std::string &fileName)
 }
 
 
-void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sms::Address &smeAddr, int errCode, int smeIdx)
+void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sms::Address &smeAddr, int errCode, const char* smeId)
 {
-  smsc_log_info(log,"register abonent=%s, errCode=%d, sme=%d",abonent.toString().c_str(),errCode,smeIdx);
+  smsc_log_info(log,"register abonent=%s, errCode=%d, sme=%s",abonent.toString().c_str(),errCode,smeId);
   sync::MutexGuard mg(mon);
   time_t expValue=time(NULL)+errCode==1179?timeOut1179:timeOut1044;
   uint64_t abnId;
@@ -218,9 +218,9 @@ void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
   Record* rec;
   ReqRecord req;
   req.expiration=errCode==1179?time(NULL)+timeOut1179:time(NULL)+timeOut1044;
-  req.smeIdx=smeIdx;
+  req.smeId=smeId;
   req.addr=smeAddr;
-  SaveChange(Change(abnId,req.expiration,smeIdx,smeAddr));
+  SaveChange(Change(abnId,req.expiration,smeId,smeAddr));
   if(it==abonents.end())
   {
     smsc_log_debug(log,"new record for abonent=%lld, expiration=%d",abnId,req.expiration);
@@ -238,9 +238,9 @@ void DpfTracker::registerSetDpf(const smsc::sms::Address &abonent,const smsc::sm
     bool found=false;
     for(Record::ReqSet::iterator rit=begin;rit!=end;rit++)
     {
-      if(rit->smeIdx==smeIdx)
+      if(rit->smeId==smeId)
       {
-        smsc_log_debug(log,"replaced record for abonent=%lld, smsId=%d, expiration=%d",abnId,smeIdx,req.expiration);
+        smsc_log_debug(log,"replaced record for abonent=%lld, smsId=%s, expiration=%d",abnId,smeId,req.expiration);
         expirations.erase(rec->expIter);
         rec->requests.erase(rit);
         rec->requests.insert(req);
@@ -277,8 +277,8 @@ void DpfTracker::hlrAlert(const smsc::sms::Address &abonent)
     Record::ReqSet::iterator end=rec->requests.end();
     for(Record::ReqSet::iterator rit=rec->requests.begin();rit!=end;rit++)
     {
-      smsc_log_debug(log,"sent alert notification for abonent=%lld smeIdx=%d",abnId,rit->smeIdx);
-      sendAlertNotify(rec->abonent,rit->addr,rit->smeIdx,0);
+      smsc_log_debug(log,"sent alert notification for abonent=%lld smeId=%s",abnId,rit->smeId.c_str());
+      sendAlertNotify(rec->abonent,rit->addr,rit->smeId,0);
     }
     abonents.erase(it);
     expirations.erase(rec->expIter);
@@ -348,10 +348,10 @@ int DpfTracker::Execute()
       {
         expirations.erase(rec->expIter);
         Record::ReqSet::iterator it=rec->requests.begin();
-        int smeIdx=it->smeIdx;
-        SaveChange(Change(rec->abonent,smeIdx));
-        smsc_log_info(log,"request for abonent=%lld smeIdx=%d expired",rec->abonent,smeIdx);
-        sendAlertNotify(rec->abonent,it->addr,smeIdx,2);
+        SystemIdStr smeId=it->smeId;
+        SaveChange(Change(rec->abonent,smeId));
+        smsc_log_info(log,"request for abonent=%lld smeIdx=%s expired",rec->abonent,smeId.c_str());
+        sendAlertNotify(rec->abonent,it->addr,smeId,2);
         rec->requests.erase(it);
         if(rec->requests.empty())
         {
@@ -372,13 +372,12 @@ int DpfTracker::Execute()
   return 0;
 }
 
-void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &smeAddr,int smeIdx, int status)
+void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &smeAddr,const SystemIdStr& smeId, int status)
 {
   try{
     Smsc& smsc=Smsc::getInstance();
-    smsc::smeman::SmeInfo smeInfo=smsc.getSmeInfo(smeIdx);
-    SmeProxy* proxy=smsc.getSmeProxy(smeInfo.systemId);
-    smsc_log_debug(log,"Sending AlertNotification for abonent=%lld to sme='%s' status=%d",abonent,smeInfo.systemId.c_str(),status);
+    SmeProxy* proxy=smsc.getSmeProxy(smeId);
+    smsc_log_debug(log,"Sending AlertNotification for abonent=%lld to sme='%s' status=%d",abonent,smeId.c_str(),status);
     if(proxy!=0)
     {
       char buf[32];
@@ -394,11 +393,11 @@ void DpfTracker::sendAlertNotify(uint64_t abonent, const smsc::sms::Address &sme
       );
     }else
     {
-      smsc_log_warn(log,"Sme %s requested dpf, but not connected at the moment",smeInfo.systemId.c_str());
+      smsc_log_warn(log,"Sme %s requested dpf, but not connected at the moment",smeId.c_str());
     }
   }catch(std::exception& e)
   {
-    smsc_log_warn(log,"Failed to send AlertNotification to sme %d:'%s'",smeIdx,e.what());
+    smsc_log_warn(log,"Failed to send AlertNotification to sme %s:'%s'",smeId.c_str(),e.what());
   }
   
 }
@@ -513,7 +512,7 @@ int DpfTracker::CompactingThread::Execute()
           if(it!=rs.end())
           {
             ReqRecord rr;
-            rr.smeIdx=c.smeIdx;
+            rr.smeId=c.smeId;
             SmallRecord::ReqSet::iterator rit=it->requests.find(rr);
             if(rit!=it->requests.end())
             {
