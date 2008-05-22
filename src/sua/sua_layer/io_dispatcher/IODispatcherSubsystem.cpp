@@ -3,11 +3,10 @@
 #include "IOEventProcessor.hpp"
 #include "SuaLayerMessagesFactory.hpp"
 
+io_dispatcher::IODispatcherSubsystem*
+utilx::Singleton<io_dispatcher::IODispatcherSubsystem*>::_instance;
+
 namespace io_dispatcher {
-
-IODispatcherSubsystem*
-utilx::Singleton<IODispatcherSubsystem*>::_instance;
-
 
 IODispatcherSubsystem::IODispatcherSubsystem()
   : _name("IODispatcherSubsystem"), _logger(smsc::logger::Logger::getInstance("io_dsptch")),

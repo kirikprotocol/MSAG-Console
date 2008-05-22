@@ -8,10 +8,10 @@
 
 #include "CLCOMessageHandlers.hpp"
 
-namespace sua_stack {
+sua_stack::CLCOMessageHandlers*
+utilx::Singleton<sua_stack::CLCOMessageHandlers>::_instance;
 
-CLCOMessageHandlers*
-utilx::Singleton<CLCOMessageHandlers>::_instance;
+namespace sua_stack {
 
 CLCOMessageHandlers::CLCOMessageHandlers()
   : _logger(smsc::logger::Logger::getInstance("sua_stack")), _cMgr(io_dispatcher::ConnectMgr::getInstance())

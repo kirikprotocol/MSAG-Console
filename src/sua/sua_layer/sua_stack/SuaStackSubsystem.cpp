@@ -23,10 +23,10 @@
 #include "LinkSetsRegistry.hpp"
 #include "initializer.hpp"
 
-namespace sua_stack {
+sua_stack::SuaStackSubsystem*
+utilx::Singleton<sua_stack::SuaStackSubsystem*>::_instance;
 
-SuaStackSubsystem*
-utilx::Singleton<SuaStackSubsystem*>::_instance;
+namespace sua_stack {
 
 SuaStackSubsystem::SuaStackSubsystem()
   : _name("SuaStackSubsystem"), _logger(smsc::logger::Logger::getInstance("sua_stack")),

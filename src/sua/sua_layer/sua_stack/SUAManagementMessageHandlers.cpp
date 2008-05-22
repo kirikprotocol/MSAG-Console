@@ -5,10 +5,10 @@
 #include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
 #include <sua/communication/sua_messages/ActiveMessage.hpp>
 
-namespace sua_stack {
+sua_stack::SUAManagementMessageHandlers*
+utilx::Singleton<sua_stack::SUAManagementMessageHandlers>::_instance;
 
-SUAManagementMessageHandlers*
-utilx::Singleton<SUAManagementMessageHandlers>::_instance;
+namespace sua_stack {
 
 SUAManagementMessageHandlers::SUAManagementMessageHandlers()
   : _logger(smsc::logger::Logger::getInstance("sua_stack")), _cMgr(io_dispatcher::ConnectMgr::getInstance()) {}

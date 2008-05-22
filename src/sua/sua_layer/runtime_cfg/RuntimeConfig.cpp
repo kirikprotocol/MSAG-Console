@@ -4,10 +4,10 @@
 #include <memory>
 #include <set>
 
-namespace runtime_cfg {
+runtime_cfg::RuntimeConfig*
+utilx::Singleton<runtime_cfg::RuntimeConfig>::_instance;
 
-RuntimeConfig*
-utilx::Singleton<RuntimeConfig>::_instance;
+namespace runtime_cfg {
 
 RuntimeConfig::RuntimeConfig()
   : _config(new CompositeParameter("root")), _wasInitialized(false),

@@ -7,10 +7,10 @@
 #include "LinkSetsRegistry.hpp"
 #include "RCRegistry.hpp"
 
-namespace sua_stack {
+sua_stack::AspMaintenanceMessageHandlers*
+utilx::Singleton<sua_stack::AspMaintenanceMessageHandlers>::_instance;
 
-AspMaintenanceMessageHandlers*
-utilx::Singleton<AspMaintenanceMessageHandlers>::_instance;
+namespace sua_stack {
 
 AspMaintenanceMessageHandlers::AspMaintenanceMessageHandlers()
   : _logger(smsc::logger::Logger::getInstance("sua_stack")), _cMgr(io_dispatcher::ConnectMgr::getInstance()),

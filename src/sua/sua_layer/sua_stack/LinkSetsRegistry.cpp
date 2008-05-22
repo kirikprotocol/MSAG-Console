@@ -2,10 +2,10 @@
 #include <util/Exception.hpp>
 #include "LinkSetsRegistry.hpp"
 
-namespace sua_stack {
+sua_stack::LinkSetsRegistry*
+utilx::Singleton<sua_stack::LinkSetsRegistry>::_instance;
 
-LinkSetsRegistry*
-utilx::Singleton<LinkSetsRegistry>::_instance;
+namespace sua_stack {
 
 static bool
 initialize()

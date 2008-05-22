@@ -7,10 +7,10 @@
 
 #include "MessageHandlers.hpp"
 
-namespace sua_user_communication {
+sua_user_communication::MessageHandlers*
+utilx::Singleton<sua_user_communication::MessageHandlers>::_instance;
 
-MessageHandlers*
-utilx::Singleton<MessageHandlers>::_instance;
+namespace sua_user_communication {
 
 MessageHandlers::MessageHandlers()
   : _logger(smsc::logger::Logger::getInstance("sua_usr_cm")), _cMgr(io_dispatcher::ConnectMgr::getInstance()),

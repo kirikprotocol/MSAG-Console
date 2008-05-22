@@ -11,10 +11,10 @@
 #include "LinkSetInfoRegistry.hpp"
 #include "initializer.hpp"
 
-namespace sua_user_communication {
+sua_user_communication::SuaUserCommunicationSubsystem*
+utilx::Singleton<sua_user_communication::SuaUserCommunicationSubsystem*>::_instance;
 
-SuaUserCommunicationSubsystem*
-utilx::Singleton<SuaUserCommunicationSubsystem*>::_instance;
+namespace sua_user_communication {
 
 SuaUserCommunicationSubsystem::SuaUserCommunicationSubsystem()
   : _name("SuaUserCommunicationSubsystem"), _logger(smsc::logger::Logger::getInstance("sua_usr_cm"))

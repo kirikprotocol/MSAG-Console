@@ -8,10 +8,10 @@
 #include "MessagesRouter.hpp"
 #include "MessagesRouterSubsystem.hpp"
 
-namespace messages_router {
+messages_router::MessagesRouterSubsystem*
+utilx::Singleton<messages_router::MessagesRouterSubsystem*>::_instance;
 
-MessagesRouterSubsystem*
-utilx::Singleton<MessagesRouterSubsystem*>::_instance;
+namespace messages_router {
 
 MessagesRouterSubsystem::MessagesRouterSubsystem()
   : _name("MessagesRouterSubsystem"), _logger(smsc::logger::Logger::getInstance("msg_rout"))

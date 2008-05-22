@@ -3,10 +3,10 @@
 #include <util/Exception.hpp>
 #include <core/synchronization/MutexGuard.hpp>
 
-namespace sua_user_communication {
+sua_user_communication::LinkSetInfoRegistry*
+utilx::Singleton<sua_user_communication::LinkSetInfoRegistry>::_instance;
 
-LinkSetInfoRegistry*
-utilx::Singleton<LinkSetInfoRegistry>::_instance;
+namespace sua_user_communication {
 
 LinkSetInfoRegistry::LinkSetInfoRegistry()
   : _logger(smsc::logger::Logger::getInstance("sua_usr_cm")) {}

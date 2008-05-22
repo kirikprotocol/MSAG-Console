@@ -1,10 +1,10 @@
 #include "SignalingNetworkManagementMessageHandlers.hpp"
 #include <sua/sua_layer/sua_user_communication/LinkSetInfoRegistry.hpp>
 
-namespace sua_stack {
+sua_stack::SignalingNetworkManagementMessageHandlers*
+utilx::Singleton<sua_stack::SignalingNetworkManagementMessageHandlers>::_instance;
 
-SignalingNetworkManagementMessageHandlers*
-utilx::Singleton<SignalingNetworkManagementMessageHandlers>::_instance;
+namespace sua_stack {
 
 SignalingNetworkManagementMessageHandlers::SignalingNetworkManagementMessageHandlers()
   : _logger(smsc::logger::Logger::getInstance("sua_stack")), _cMgr(io_dispatcher::ConnectMgr::getInstance()) {}

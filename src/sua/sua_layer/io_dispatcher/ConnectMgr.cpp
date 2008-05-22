@@ -11,10 +11,10 @@
 #include "ConnectionReleaseEvent.hpp"
 #include "Connection.hpp"
 
-namespace io_dispatcher {
+io_dispatcher::ConnectMgr*
+utilx::Singleton<io_dispatcher::ConnectMgr>::_instance;
 
-ConnectMgr*
-utilx::Singleton<ConnectMgr>::_instance;
+namespace io_dispatcher {
 
 void
 ConnectMgr::addConnectAcceptor(const std::string& acceptorName, ConnectAcceptor* connectAcceptor)

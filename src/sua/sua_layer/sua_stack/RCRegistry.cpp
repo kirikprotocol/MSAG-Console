@@ -1,10 +1,10 @@
 #include "RCRegistry.hpp"
 #include <core/synchronization/MutexGuard.hpp>
 
-namespace sua_stack {
+sua_stack::RCRegistry*
+utilx::Singleton<sua_stack::RCRegistry>::_instance;
 
-RCRegistry*
-utilx::Singleton<RCRegistry>::_instance;
+namespace sua_stack {
 
 RCRegistry::RCRegistry()
   : _logger(smsc::logger::Logger::getInstance("sua_stack"))
