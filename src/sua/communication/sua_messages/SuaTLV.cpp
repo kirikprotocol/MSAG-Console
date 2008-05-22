@@ -1212,7 +1212,8 @@ TLV_GlobalTitle::deserialize(const communication::TP& packetBuf,
                              uint16_t valLen)
 {
   offset = TLV_OctetArrayPrimitive::deserialize(packetBuf, offset, valLen);
-  _globalTitle = GlobalTitle(getValue() + RESERVED_OCTETS, getLength() - RESERVED_OCTETS);
+
+  _globalTitle = GlobalTitle(getValue() + RESERVED_OCTETS, getValueLength() - RESERVED_OCTETS);
   uint8_t gti = _globalTitle.getGTI();
   if ( gti > GlobalTitle::GT_INCLUDE_FULL_INFO )
     throw smsc::util::Exception("TLV_GlobalTitle::deserialize::: wrong gti value=[%d], expected value from range [0x00-0x04]", gti);
