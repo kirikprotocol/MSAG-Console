@@ -5,7 +5,7 @@
 
 #include <sua/communication/libsua_messages/BindMessage.hpp>
 #include <sua/communication/libsua_messages/UnbindMessage.hpp>
-#include <sua/communication/libsua_messages/MErrorMessage.hpp>
+//#include <sua/communication/libsua_messages/MErrorMessage.hpp>
 #include "ProtocolStates.hpp"
 #include "TcpEstablishInd.hpp"
 #include "TcpReleaseInd.hpp"
@@ -80,12 +80,14 @@ LibSuaConnect::receive()
   bufForMsgCode.msgCode = ntohl(bufForMsgCode.msgCode);
   smsc_log_debug(_logger, "LibSuaConnect::receive::: _ringBuf.readArray() returned buf=[%s]", hexdmp(inTp->packetBody,inTp->packetLen).c_str());
 
-  try {
-    changeProtocolState(CheckMessage(bufForMsgCode.msgCode));
-  } catch (const io_dispatcher::ProtocolException& ex) {
-    send(libsua_messages::MErrorMessage(libsua_messages::MErrorMessage::NO_SESSION_ESTABLISHED, inTp));
-    throw;
-  }
+  changeProtocolState(CheckMessage(bufForMsgCode.msgCode));
+  // TODO: FIX IT
+//   try {
+//     changeProtocolState(CheckMessage(bufForMsgCode.msgCode));
+//   } catch (const io_dispatcher::ProtocolException& ex) {
+//     send(libsua_messages::N_NOTICE_Message(libsua_messages::MErrorMessage::NO_SESSION_ESTABLISHED, inTp));
+//     throw;
+//   }
   inTp->packetType = libsua_messages::LibsuaMessage::getMessageIndex(bufForMsgCode.msgCode);
 
   smsc_log_debug(_logger, "LibSuaConnect::receive::: inTp->packetType=%d", inTp->packetType);
