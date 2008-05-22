@@ -25,12 +25,40 @@ public class SmppTopGraph extends Canvas implements MouseListener, MouseMotionLi
     private static final Color tipBackground = SystemColor.control;
     private static final Color tipTextColor = SystemColor.controlText;
     private static final Color colorBackground = Color.black;
-    private static final Color colorHiBackground = new Color(colorBackground.getRed(), colorBackground.getGreen() + 64, colorBackground.getBlue());
+    private static Color colorHiBackground;
+    static{
+        try{
+            colorHiBackground = new Color(colorBackground.getRed(), colorBackground.getGreen() + 64, colorBackground.getBlue());
+        }catch( Exception e ){
+            colorHiBackground = colorBackground;
+        }
+    }
     private static final Color headColor = Color.lightGray;
     private static final Color graphColor = Color.green;
-    private static final Color graphHiGridColor = new Color(colorBackground.getRed(), colorBackground.getGreen() + 128, colorBackground.getBlue());
-    private static final Color graphGridColor = new Color(colorBackground.getRed(), colorBackground.getGreen() + 80, colorBackground.getBlue());
-    private static final Color graphBarBGColor = new Color(colorBackground.getRed(), colorBackground.getGreen() + 96, colorBackground.getBlue());
+    private static Color graphHiGridColor;
+    static{
+        try{
+            graphHiGridColor = new Color(colorBackground.getRed(), colorBackground.getGreen() + 128, colorBackground.getBlue());
+        }catch( Exception e ){
+            graphHiGridColor = colorBackground;
+        }
+    }
+    private static Color graphGridColor;
+    static{
+        try{
+            graphGridColor = new Color(colorBackground.getRed(), colorBackground.getGreen() + 80, colorBackground.getBlue());
+        }catch( Exception e ){
+            graphGridColor = colorBackground;
+        }
+    }
+    private static Color graphBarBGColor;
+    static{
+        try{
+            graphBarBGColor = new Color(colorBackground.getRed(), colorBackground.getGreen() + 96, colorBackground.getBlue());
+        }catch( Exception e ){
+            graphBarBGColor = colorBackground;
+        }
+    }    
     private static final Color smeHiColor = Color.white;
     private static final Color smeColor = Color.lightGray;
 
