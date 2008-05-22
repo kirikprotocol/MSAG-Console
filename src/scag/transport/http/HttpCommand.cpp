@@ -227,7 +227,7 @@ HttpRequest::ParameterIterator& HttpRequest::getQueryParameterNames()
     return queryParametersIterator;
 }
 
-void HttpRequest::setQueryParameter(const std::string& paramName,
+void HttpRequest::setQueryParameterEncoded(const std::string& paramName,
                                 const std::string& _paramValue)
 {
     std::string s = _paramValue;
@@ -235,7 +235,7 @@ void HttpRequest::setQueryParameter(const std::string& paramName,
     queryParameters[paramName.c_str()] = s;
 }
 
-void HttpRequest::setQueryParameterEncoded(const std::string& paramName,
+void HttpRequest::setQueryParameter(const std::string& paramName,
                                 const std::string& _paramValue)
 {
     queryParameters[paramName.c_str()] = _paramValue;
@@ -247,8 +247,8 @@ const std::string& HttpRequest::getQueryParameter(const std::string& paramName)
     
     if (valptr) {
         paramValue.assign(*valptr);
-        if(HttpParser::urlDecode(paramValue) != OK)
-            return empty;
+        //if(HttpParser::urlDecode(paramValue) != OK)
+            //return empty;
         return paramValue;
     }
     else {
@@ -351,11 +351,10 @@ void HttpRequest::serializeQuery(std::string& s)
 {
     bool n = false;
     char *keystr;
-    std::string *valptr;
-    std::string t;
+    std::string val;
 
     queryParameters.First();
-    while (queryParameters.Next(keystr, valptr))
+    while (queryParameters.Next(keystr, val))
     {
         if(n)
             s += "&";
@@ -363,8 +362,8 @@ void HttpRequest::serializeQuery(std::string& s)
             n = true;
         s += keystr;
         s += "=";
-        t = *valptr;
-        s += t;
+        HttpParser::urlEncode(val);
+        s += val;
     }
 }
 
@@ -499,6 +498,10 @@ void HttpResponse::fillFakeResponse(int s)
         sl = "Service Unavailable";
         len = sizeof("Service Unavailable");
         break;  
+    case 404:
+        sl = "Not Found";
+        len = sizeof("Not Found");
+        break;
     default:
         sl = "HTTP Transport Error";
         len = sizeof("HTTP Transport Error");

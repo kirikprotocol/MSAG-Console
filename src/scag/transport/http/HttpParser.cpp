@@ -376,7 +376,7 @@ StatusCode HttpParser::parseQueryParameters(const char *buf, HttpRequest& cx)
     if(urlDecode(value) != OK)
         return ERROR;
 
-    cx.setQueryParameterEncoded(key, value);
+    cx.setQueryParameter(key, value);
 
     start = end + 1;
   } while (end);
