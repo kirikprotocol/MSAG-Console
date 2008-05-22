@@ -40,10 +40,11 @@ void HttpManager::Init(HttpProcessor& p, const HttpManagerConfig& conf)
     }
 }
 
-HttpManagerImpl::HttpManagerImpl() : scags(*this),
-    readers(*this), writers(*this), acceptor(*this), ConfigListener(HTTPMAN_CFG)
+HttpManagerImpl::HttpManagerImpl() : scags(*this), licenseExpired(false), licenseFileCheckHour(0),
+    readers(*this), writers(*this), acceptor(*this), ConfigListener(HTTPMAN_CFG), licenseCounter(10, 20)
 {
     logger = Logger::getInstance("scag.http.manager");
+    lastLicenseExpTest = 0;
 }
 
 void HttpManagerImpl::configChanged()
@@ -85,6 +86,49 @@ void HttpManagerImpl::shutdown()
     writers.shutdown();
     smsc_log_info(logger, "HttpManager shutdown");
 }
+
+bool HttpManagerImpl::isLicenseExpired() {
+  time_t now = time(NULL);
+  if (now - lastLicenseExpTest < 600) {
+    return licenseExpired;
+  }
+  struct tm ltm;
+  localtime_r(&now,&ltm);
+  if (ltm.tm_hour != licenseFileCheckHour) {
+    try {
+      ConfigManager::Instance().checkLicenseFile();
+    } catch (const std::runtime_error& ex) {
+      smsc_log_error(logger, "check license file error: '%s'", ex.what());
+    } catch (const Exception& ex) {
+      smsc_log_error(logger, "check license file error: '%s'", ex.what());
+    }
+    licenseFileCheckHour = ltm.tm_hour;
+  }
+  if (now > ConfigManager::Instance().getLicense().expdate) {
+    smsc_log_error(logger,"License expired");
+    licenseExpired = true;
+  } else {
+    licenseExpired = false;
+  }
+  lastLicenseExpTest = now;
+  return licenseExpired;
+}
+
+bool HttpManagerImpl::licenseThroughputLimitExceed() {
+  int licLimit = ConfigManager::Instance().getLicense().maxhttp;
+  int cntValue = licenseCounter.Get() / 10;
+  if (cntValue > licLimit) {
+    smsc_log_info(logger,"Request denied by license limitation:%d/%d", cntValue, licLimit);
+    return true;
+  }
+  return false;
+}
+
+void HttpManagerImpl::incLicenseCounter() {
+  licenseCounter.Inc();
+}
+
+
 
 ScagTaskManager::ScagTaskManager(HttpManagerImpl& m) : manager(m)
 {

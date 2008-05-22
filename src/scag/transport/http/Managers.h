@@ -12,6 +12,7 @@
 #include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"
 #include "scag/lcm/LongCallManager.h"
+#include "util/timeslotcounter.hpp"
 
 namespace scag { namespace transport { namespace http
 {
@@ -198,6 +199,7 @@ public:
     virtual HttpManagerConfig& getConfig() = 0;
     virtual ScagTaskManager* getScagTaskManager() = 0;
     virtual void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) = 0;
+    virtual bool isLicenseExpired() = 0;
 };
 
 class HttpManagerImpl: public HttpManager, public ConfigListener {
@@ -216,11 +218,20 @@ public:
     ScagTaskManager* getScagTaskManager() { return &scags; };
 
     void getQueueLen(uint32_t& reqLen, uint32_t& respLen, uint32_t& lcmLen) { scags.queueLen(reqLen, respLen, lcmLen); };
+
+    bool isLicenseExpired();
+    bool licenseThroughputLimitExceed();
+    void incLicenseCounter();
     
     HttpManagerConfig cfg;
     ScagTaskManager scags;
     ReaderTaskManager readers;    
     WriterTaskManager writers;
+
+    smsc::util::TimeSlotCounter<> licenseCounter;
+    time_t lastLicenseExpTest;
+    int licenseFileCheckHour;
+    bool licenseExpired;
 
 protected:
     Logger *logger;

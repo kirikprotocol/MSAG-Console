@@ -30,10 +30,16 @@ int HttpAcceptor::Execute()
             smsc_log_error(logger, "failed to accept, error: %s", strerror(errno));
             break;
         }
-
         HttpContext *cx = new HttpContext(user_socket);
         smsc_log_info(logger, "accepted: context %p, socket %p", cx, user_socket);
+        if (manager.isLicenseExpired() || manager.licenseThroughputLimitExceed()) {
+          cx->action = SEND_RESPONSE;
+          cx->createFakeResponse(503);
+          manager.writers.process(cx);
+          continue;
+        }
         manager.readers.process(cx);
+        manager.incLicenseCounter();
     }
 
     if (user_socket)
