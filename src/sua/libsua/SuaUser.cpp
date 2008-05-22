@@ -261,26 +261,27 @@ SuaUser::msgRecv(MessageInfo* msgInfo)
   while ( iStream = _socketPool.getNextReadyInputStream() ) {
     packets_cache_t::iterator iter = _packetsCache.find(iStream);
     if ( iter == _packetsCache.end() ) {
-      std::pair<packets_cache_t::iterator,bool> ins_res =  _packetsCache.insert(std::make_pair(iStream, CacheEntry()));
+      std::pair<packets_cache_t::iterator,bool> ins_res =  _packetsCache.insert(std::make_pair(iStream, new CacheEntry()));
       iter = ins_res.first;
     }
 
-    CacheEntry& cacheEntry = iter->second;
+    CacheEntry* cacheEntry = iter->second;
 
-    if ( cacheEntry.expectedMessageSize == 0 || 
-         cacheEntry.expectedMessageSize > cacheEntry.ringBuf->getSizeOfAvailData() )
-      cacheEntry.ringBuf->load(iStream);
+    if ( cacheEntry->expectedMessageSize == 0 || 
+         cacheEntry->expectedMessageSize > cacheEntry->ringBuf.getSizeOfAvailData() )
+      cacheEntry->ringBuf.load(iStream);
 
-    if ( cacheEntry.expectedMessageSize == 0 )
-      cacheEntry.expectedMessageSize = cacheEntry.ringBuf->readUint32();
+    if ( cacheEntry->expectedMessageSize == 0 )
+      cacheEntry->expectedMessageSize = cacheEntry->ringBuf.readUint32();
 
-    if ( cacheEntry.expectedMessageSize <= cacheEntry.ringBuf->getSizeOfAvailData() ) {
-      msgInfo->msgData.setSize(cacheEntry.expectedMessageSize);
-      msgInfo->messageType = cacheEntry.ringBuf->readUint32();
-      cacheEntry.ringBuf->readArray(msgInfo->msgData.GetCurPtr(), cacheEntry.expectedMessageSize);
-      msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + cacheEntry.expectedMessageSize);
+    if ( cacheEntry->expectedMessageSize <= cacheEntry->ringBuf.getSizeOfAvailData() ) {
+      msgInfo->msgData.setSize(cacheEntry->expectedMessageSize);
+      msgInfo->messageType = cacheEntry->ringBuf.readUint32();
+      cacheEntry->ringBuf.readArray(msgInfo->msgData.GetCurPtr(), cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
+      msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
       msgInfo->suaConnectNum = static_cast<LinkInputStream*>(iStream)->getConnectNum();
 
+      delete cacheEntry;
       _packetsCache.erase(iter);
       return;
     }
@@ -301,7 +302,9 @@ SuaUser::getConnNumByPolicy()
   return 0;
 }
 
-SuaUser::LinkInfo::LinkInfo() : suaLayerPort(0) {}
+SuaUser::LinkInfo::LinkInfo()
+  : suaLayerPort(0),
+    socket(NULL), connectionState(NOT_CONNECTED), inputStream(NULL) {}
 
 SuaUser::LinkInfo::LinkInfo(const std::string& aLinkName, const std::string& aSuaLayerHost, in_port_t aSuaLayerPort)
   : linkName(aLinkName), suaLayerHost(aSuaLayerHost), suaLayerPort(aSuaLayerPort),

@@ -74,15 +74,14 @@ private:
 
   struct CacheEntry {
     CacheEntry()
-      : ringBuf(new utilx::RingBuffer<communication::TP::MAX_PACKET_SIZE>()), expectedMessageSize(0), suaConnectNum(0) {}
-    ~CacheEntry() { delete ringBuf; }
+      : expectedMessageSize(0), suaConnectNum(0) {}
 
-    utilx::RingBuffer<communication::TP::MAX_PACKET_SIZE>* ringBuf;
+    utilx::RingBuffer<communication::TP::MAX_PACKET_SIZE> ringBuf;
     size_t expectedMessageSize;
     unsigned int suaConnectNum;
   };
 
-  typedef std::map<corex::io::InputStream*, CacheEntry> packets_cache_t;
+  typedef std::map<corex::io::InputStream*, CacheEntry*> packets_cache_t;
   packets_cache_t _packetsCache;
 
   bool _wasInitialized;
