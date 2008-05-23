@@ -53,7 +53,7 @@ public:
     return realBuf;
   }
 
-  size_t  getSize(void)
+  size_t  getSize(void) const
   {
       return heapSize ? heapSize : SZ;
   }
@@ -91,7 +91,7 @@ public:
     pos=newpos;
   }
 
-  size_t GetPos()
+  size_t GetPos() const
   {
     return pos;
   }
@@ -121,6 +121,10 @@ public:
     return realBuf+pos;
   }
 
+  const T* GetCurPtr() const
+  {
+    return realBuf+pos;
+  }
 
   ~TmpBuf()
   {
@@ -132,7 +136,17 @@ public:
     return realBuf;
   }
 
+  inline operator const T* () const
+  {
+    return realBuf;
+  }
+
   inline T* get()
+  {
+    return realBuf;
+  }
+
+  inline const T* get() const
   {
     return realBuf;
   }
