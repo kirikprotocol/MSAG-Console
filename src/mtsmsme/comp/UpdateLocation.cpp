@@ -36,35 +36,19 @@ UpdateLocationMessage::UpdateLocationMessage()
   r.aarq_user_information = 0;
   begin.choice.begin.dialoguePortion = ( struct EXT *)&dp;
 }
-
 UpdateLocationMessage::~UpdateLocationMessage()
 {
   if(dp.encoding.choice.single_ASN1_type.choice.dialogueRequest.application_context_name.buf)
     free(dp.encoding.choice.single_ASN1_type.choice.dialogueRequest.application_context_name.buf);
 }
-
 void UpdateLocationMessage::setOTID(TrId _otid)
 {
   memcpy(otid,_otid.buf,_otid.size);
   begin.choice.begin.otid.buf = otid;
   begin.choice.begin.otid.size = _otid.size;
 }
-/*
-    TCMessage_t begin;
-    EXT_t         dp;
-    ComponentPortion_t comps;
-    Component_t *arr[1];
-    Component_t comp;
-    UpdateLocationArg_t arg;
-    VLR_Capability_t vlrcap;
-    BIT_STRING_t phases;
-    uint8_t otid[4];
-    AC ac;
-*/
-
 static uint8_t bits[] = {0x80};
 BIT_STRING_t phases = {bits,sizeof(bits),0x05,};
-
 void UpdateLocationMessage::setComponent(const string& imsi, const string& msc, const string& vlr)
 {
 
@@ -111,16 +95,6 @@ void UpdateLocationMessage::setComponent(const string& imsi, const string& msc, 
   comps.list.array = arr;
   begin.choice.begin.components = &comps;
 }
-
-//static int print2vec(const void *buffer, size_t size, void *app_key) {
-//  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
-//  unsigned char *buf = (unsigned char *)buffer;
-//
-//  stream->insert(stream->end(),buf, buf + size);
-//
-//  return 0;
-//}
-
 void UpdateLocationMessage::encode(vector<unsigned char>& buf)
 {
   vector<unsigned char> arg_buf;
@@ -136,5 +110,44 @@ void UpdateLocationMessage::decode(const vector<unsigned char>& buf)
 {
   return;
 }
+void UpdateLocationReq::setParameters(const string& imsi, const string& msc, const string& vlr)
+{
+	arg.lmsi = 0;
+	arg.extensionContainer = 0;
+	arg.add_info = 0;
+	arg.v_gmlc_Address = 0;
+	arg.cs_LCS_NotSupportedByUE = 0;
+	arg.informPreviousNetworkEntity = 0;
 
+	ZERO_OCTET_STRING(_imsi);
+	_imsi.size = packNumString2BCD(_imsi.buf, imsi.c_str(), imsi.length());
+	arg.imsi = _imsi;
+
+	ZERO_OCTET_STRING(_msc);
+	_msc.size = packNumString2BCD91(_msc.buf, msc.c_str(), msc.length());
+	arg.msc_Number = _msc;
+
+	ZERO_OCTET_STRING(_vlr);
+	_vlr.size = packNumString2BCD91(_vlr.buf, vlr.c_str(), vlr.length());
+	arg.vlr_Number = _vlr;
+
+	vlrcap.supportedCamelPhases = &phases;
+	vlrcap.extensionContainer = 0;
+	vlrcap.solsaSupportIndicator = 0;
+	vlrcap.istSupportIndicator = 0;
+	vlrcap.superChargerSupportedInServingNetworkEntity = 0;
+	vlrcap.longFTN_Supported = 0;
+	vlrcap.supportedLCS_CapabilitySets = 0;
+	vlrcap.offeredCamel4CSIs = 0;
+	arg.vlr_Capability = &vlrcap;
+}
+void UpdateLocationReq::encode(vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er;
+  er = der_encode(&asn_DEF_UpdateLocationArg, &arg, print2vec, &buf);
+}
+void UpdateLocationReq::decode(const vector<unsigned char>& buf)
+{
+  return;
+}
 /* namespace comp */ } /* namespace mtsmsme */ } /* namespace smsc */ }

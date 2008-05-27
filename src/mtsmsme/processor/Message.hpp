@@ -18,6 +18,24 @@ namespace smsc{namespace mtsmsme{namespace processor{
 using std::vector;
 using std::string;
 
+class BeginMsg {
+  public:
+    BeginMsg();
+    ~BeginMsg();
+    void setOTID(TrId _otid);
+    void setDialog(AC& _ac);
+    void setInvokeReq(int iid, uint8_t opcode, vector<unsigned char>& argument);
+    void encode(vector<unsigned char>& buf);
+    
+    TCMessage_t begin;
+    EXT_t         dp;
+    ComponentPortion_t comps;
+    Component_t *arr[1];
+    Component_t comp;
+    ANY_t argument;
+    AC ac;
+    uint8_t otid[4];
+};
 class ContMsg {
   public:
     ContMsg();
@@ -44,12 +62,15 @@ class EndMsg {
     void setTrId(TrId dtid);
     void setDialog(AC& _ac);
     void setComponent(int result, int iid);
+    void setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& argument);
+    void encode(vector<unsigned char>& buf);
 
     TCMessage_t end;
-    EXT_t         dp;
+    EXT_t        dp;
     ComponentPortion_t comps;
     Component_t *arr[1];
     Component_t comp;
+    struct ReturnResult::result res;
     AC ac;
 
     uint8_t trid[4];

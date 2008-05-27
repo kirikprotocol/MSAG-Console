@@ -1,5 +1,6 @@
 static char const ident[] = "$Id$";
 #include "mtsmsme/processor/Message.hpp"
+#include "mtsmsme/processor/util.hpp"
 #include <stdio.h>
 #include <sys/types.h>
 
@@ -181,14 +182,14 @@ void Message::getAppContext(AC& ac)
             int i;
 
             count = OBJECT_IDENTIFIER_get_arcs(oid, arcs,
-              arc_type_size, arc_slots);
+                arc_type_size, arc_slots);
             // If necessary, reallocate arcs array and try again.
             if(count > arc_slots) {
               arc_slots = count;
               arcs = (unsigned long *)malloc(arc_type_size * arc_slots);
               if(!arcs) return;
               count = OBJECT_IDENTIFIER_get_arcs(oid, arcs,
-                arc_type_size, arc_slots);
+                  arc_type_size, arc_slots);
             }
             ac.init(arcs,count);
             // Avoid memory leak.
@@ -212,13 +213,20 @@ void Message::getAppContext(AC& ac)
           if (comp->present == Component_PR_invoke)
           {
             if(comp->choice.invoke.opcode.present == Code_PR_local)
+            {
               if (comp->choice.invoke.opcode.choice.local == 46)
               {
                 unsigned long sm_mt_relay_v1_buf[] = {0,4,0,0,1,0,25,1};
                 ac.init(sm_mt_relay_v1_buf,sizeof(sm_mt_relay_v1_buf)/sizeof(unsigned long));
                 smsc_log_debug(MtSmsProcessorLogger,"derive sm_mt_relay_v1 application context");
-
               }
+              if (comp->choice.invoke.opcode.choice.local == 4)
+              {
+                unsigned long roamingNumberEnquiryContext_v1_buf[] = {0,4,0,0,1,0,3,1};
+                ac.init(roamingNumberEnquiryContext_v1_buf,sizeof(roamingNumberEnquiryContext_v1_buf)/sizeof(unsigned long));
+                smsc_log_debug(MtSmsProcessorLogger,"derive roamingNumberEnquiryContext_v1_buf application context");
+              }
+            }
           }
         }
       }
@@ -273,7 +281,6 @@ vector<unsigned char> Message::getComponent()
   }
   return buf;
 }
-
 /* Dump the data into the specified stdio stream */
 extern "C" static int toStream(const void *buffer, size_t size, void *app_key) {
   std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
@@ -281,7 +288,6 @@ extern "C" static int toStream(const void *buffer, size_t size, void *app_key) {
   stream->insert(stream->end(),buf, buf + size);
   return 0;
 }
-
 string Message::toString() {
   /* Check structure presense */
   if(!structure) {
@@ -300,7 +306,6 @@ string Message::toString() {
   string result((char*)&stream[0],(char*)&stream[0]+stream.size());
   return result;
 }
-
 ContMsg::ContMsg()
 {
   cont.present = TCMessage_PR_contiinue;
@@ -342,7 +347,7 @@ void ContMsg::setDialog(AC& _ac)
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
   r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
   r.aare_user_information = 0;
-//cont.choice.contiinue.dialoguePortion = ( DialoguePortion *)&dp;
+  //cont.choice.contiinue.dialoguePortion = ( DialoguePortion *)&dp;
   cont.choice.contiinue.dialoguePortion = ( struct EXT *)&dp;
 }
 void ContMsg::setComponent(int result, int iid)
@@ -388,7 +393,7 @@ void EndMsg::setTrId(TrId dtid)
 }
 void EndMsg::setDialog(AC& _ac)
 {
-  if(_ac == sm_mt_relay_v1 || _ac == null_ac) return;
+  if(_ac == sm_mt_relay_v1 || _ac == null_ac || _ac == roamingNumberEnquiryContext_v1 ) return;
   ac = _ac;
   dp.direct_reference = &pduoid;
   dp.indirect_reference = 0;
@@ -402,7 +407,7 @@ void EndMsg::setDialog(AC& _ac)
   r.result_source_diagnostic.present = Associate_source_diagnostic_PR_dialogue_service_user;
   r.result_source_diagnostic.choice.dialogue_service_user = dialogue_service_user_null;
   r.aare_user_information = 0;
-//end.choice.end.dialoguePortion = ( DialoguePortion *)&dp;
+  //end.choice.end.dialoguePortion = ( DialoguePortion *)&dp;
   end.choice.end.dialoguePortion = ( struct EXT *)&dp;
 }
 void EndMsg::setComponent(int result, int iid)
@@ -427,6 +432,87 @@ void EndMsg::setComponent(int result, int iid)
   comps.list.array = arr;
   end.choice.end.components = &comps;
 }
-}//namespace processor
-}//namespace mtsmsme
-}//namespace smsc
+void EndMsg::encode(vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er = der_encode(def,&end,print2vec, &buf);
+}
+void EndMsg::setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& argument)
+{
+  //initialize result component
+  res.opcode.present = Code_PR_local;
+  res.opcode.choice.local = opcode;
+  res.result.size = argument.size();
+  res.result.buf = &argument[0];
+
+  // intialize invoke with invokeID and result component
+  comp.present = Component_PR_returnResultLast;
+  comp.choice.returnResultLast.invokeId = iid;
+  comp.choice.returnResultLast.result = &res;
+  //initialize component list
+  arr[0]= &comp;
+  comps.list.count = 1;
+  comps.list.size = 1;
+  comps.list.array = arr;
+  //initialize components portion
+  end.choice.end.components = &comps;
+}
+BeginMsg::BeginMsg()
+{
+  begin.present = TCMessage_PR_begin;
+  begin.choice.begin.dialoguePortion = 0;
+  begin.choice.begin.components = 0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.size=0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf=0;
+}
+BeginMsg::~BeginMsg()
+{
+  if(dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf)
+    free(dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf);
+}
+//
+void BeginMsg::setOTID(TrId _otid)
+{
+  memcpy(otid,_otid.buf,_otid.size);
+  begin.choice.begin.otid.buf = otid;
+  begin.choice.begin.otid.size = _otid.size;
+}
+void BeginMsg::setDialog(AC& _ac)
+{
+  if(_ac == sm_mt_relay_v1 || _ac == null_ac) return;
+  ac = _ac;
+  dp.direct_reference = &pduoid;
+  dp.indirect_reference = 0;
+  dp.data_value_descriptor = 0;
+  dp.encoding.present = encoding_PR_single_ASN1_type;
+  dp.encoding.choice.single_ASN1_type.present = DialoguePDU_PR_dialogueRequest;
+  AARQ_apdu_t& r = dp.encoding.choice.single_ASN1_type.choice.dialogueRequest;
+  r.protocol_version = &tcapversion;
+  OBJECT_IDENTIFIER_set_arcs(&r.application_context_name,&ac.arcs[0],sizeof(unsigned long),ac.arcs.size());
+  r.aarq_user_information = 0;
+  begin.choice.begin.dialoguePortion = ( struct EXT *)&dp;
+}
+void BeginMsg::setInvokeReq(int iid, uint8_t opcode, vector<unsigned char>& _argument)
+{
+  //initialize component argument
+  argument.size = _argument.size();
+  argument.buf = &_argument[0];
+
+  // intialize invoke with invokeID and operation code
+  comp.present = Component_PR_invoke;
+  comp.choice.invoke.invokeId = iid;
+  comp.choice.invoke.linkedId = 0;
+  comp.choice.invoke.opcode.present = Code_PR_local;
+  comp.choice.invoke.opcode.choice.local = opcode;
+  comp.choice.invoke.argument = &argument;
+
+  arr[0]= &comp;
+  comps.list.count = 1;
+  comps.list.size = 1;
+  comps.list.array = arr;
+  begin.choice.begin.components = &comps;
+}
+void BeginMsg::encode(vector<unsigned char>& buf)
+{
+  asn_enc_rval_t er = der_encode(def,&begin,print2vec, &buf);
+}
+/* namespace processor */ } /* namespace mtsmsme */ } /* namespace smsc */}

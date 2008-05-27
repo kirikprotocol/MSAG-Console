@@ -8,8 +8,6 @@ namespace smsc{namespace mtsmsme{namespace processor{
 
 using namespace smsc::mtsmsme::processor::util;
 
-static void SCCPsend(uint8_t cdlen,uint8_t *cd,uint8_t cllen,uint8_t *cl,uint16_t ulen,uint8_t *udp);
-
 static int reqnum = 0;
 using smsc::logger::Logger;
 static Logger *logger = 0;
@@ -64,7 +62,8 @@ void TCO::NUNITDATA(uint8_t cdlen,
       rtrid = msg.getOTID();
       msg.getAppContext(appcntx);
 
-      if (!msg.isDialoguePortionExist() && appcntx != sm_mt_relay_v1)
+//      if (!msg.isDialoguePortionExist() && appcntx != sm_mt_relay_v1)
+      if (!msg.isDialoguePortionExist() && !isMapV1ContextSupported(appcntx))
       {
         smsc_log_debug(logger,"tco receive BEGIN with no dialogue portion, send ABORT(badlyFormattedTransactionPortion)");
         std::vector<unsigned char> rsp;

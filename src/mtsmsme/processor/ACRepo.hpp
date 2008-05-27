@@ -44,6 +44,12 @@ extern AC net_loc_cancel_v3;
 extern AC shortMsgGatewayContext_v1;
 extern AC shortMsgGatewayContext_v2;
 extern AC shortMsgGatewayContext_v3;
+extern AC roamingNumberEnquiryContext_v1;
+extern AC roamingNumberEnquiryContext_v2;
+extern AC roamingNumberEnquiryContext_v3;
+extern AC subscriberDataMngtContext_v1;
+extern AC subscriberDataMngtContext_v2;
+extern AC subscriberDataMngtContext_v3;
 extern BIT_STRING_t tcapversion;
 extern ASN__PRIMITIVE_TYPE_t pduoid;
 
@@ -53,6 +59,7 @@ class TCO;
 extern TSM* createIncomingTSM(TrId ltrid,AC& ac,TCO* tco);
 extern TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco);
 extern bool isIncomingContextSupported(AC& appcntx);
+extern bool isMapV1ContextSupported(AC& appcntx);
 
 /* namespace processor */ } /* namespace mtsmsme */ } /* namespace smsc */ }
 

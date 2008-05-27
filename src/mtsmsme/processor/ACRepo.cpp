@@ -4,6 +4,8 @@ static char const ident[] = "$Id$";
 #include "ULTSM.hpp"
 #include "SRI4SMTSM.hpp"
 #include "CLTSM.hpp"
+#include "PRNTSM.hpp"
+#include "ISD.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
@@ -91,12 +93,39 @@ AC shortMsgGatewayContext_v1 = AC(shortMsgGatewayContext_v1_buf,sizeof(shortMsgG
 AC shortMsgGatewayContext_v2 = AC(shortMsgGatewayContext_v2_buf,sizeof(shortMsgGatewayContext_v2_buf)/sizeof(unsigned long));
 AC shortMsgGatewayContext_v3 = AC(shortMsgGatewayContext_v3_buf,sizeof(shortMsgGatewayContext_v3_buf)/sizeof(unsigned long));
 
+static unsigned long roamingNumberEnquiryContext_v1_buf[] = {0,4,0,0,1,0,3,1};
+static unsigned long roamingNumberEnquiryContext_v2_buf[] = {0,4,0,0,1,0,3,2};
+static unsigned long roamingNumberEnquiryContext_v3_buf[] = {0,4,0,0,1,0,3,3};
+AC roamingNumberEnquiryContext_v1 = AC(roamingNumberEnquiryContext_v1_buf,sizeof(roamingNumberEnquiryContext_v1_buf)/sizeof(unsigned long));
+AC roamingNumberEnquiryContext_v2 = AC(roamingNumberEnquiryContext_v2_buf,sizeof(roamingNumberEnquiryContext_v2_buf)/sizeof(unsigned long));
+AC roamingNumberEnquiryContext_v3 = AC(roamingNumberEnquiryContext_v3_buf,sizeof(roamingNumberEnquiryContext_v3_buf)/sizeof(unsigned long));
+
+static unsigned long subscriberDataMngtContext_v1_buf[] = {0,4,0,0,1,0,16,1};
+static unsigned long subscriberDataMngtContext_v2_buf[] = {0,4,0,0,1,0,16,2};
+static unsigned long subscriberDataMngtContext_v3_buf[] = {0,4,0,0,1,0,16,3};
+AC subscriberDataMngtContext_v1 = AC(subscriberDataMngtContext_v1_buf,sizeof(subscriberDataMngtContext_v1_buf)/sizeof(unsigned long));
+AC subscriberDataMngtContext_v2 = AC(subscriberDataMngtContext_v2_buf,sizeof(subscriberDataMngtContext_v2_buf)/sizeof(unsigned long));
+AC subscriberDataMngtContext_v3 = AC(subscriberDataMngtContext_v3_buf,sizeof(subscriberDataMngtContext_v3_buf)/sizeof(unsigned long));
+
+bool isMapV1ContextSupported(AC& appcntx)
+{
+  return (
+		  appcntx == sm_mt_relay_v1 ||
+		  appcntx == roamingNumberEnquiryContext_v1
+         );
+}
 bool isIncomingContextSupported(AC& appcntx)
 {
-  return  (appcntx != sm_mt_relay_v2 ||
-          appcntx != sm_mt_relay_v3  ||
-          appcntx != net_loc_cancel_v2 ||
-          appcntx != net_loc_cancel_v3);
+  return (
+          appcntx == sm_mt_relay_v2 ||
+          appcntx == sm_mt_relay_v3  ||
+          appcntx == net_loc_cancel_v2 ||
+          appcntx == net_loc_cancel_v3 ||
+          appcntx == roamingNumberEnquiryContext_v2 ||
+          appcntx == roamingNumberEnquiryContext_v3 ||
+          appcntx == subscriberDataMngtContext_v2 ||
+          appcntx == subscriberDataMngtContext_v3
+         );
 }
 TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
 {
@@ -113,6 +142,14 @@ TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
   {
     tsm = new SRI4SMTSM(ltrid,appcntx,tco);
   }
+  if (appcntx == roamingNumberEnquiryContext_v1 || appcntx == roamingNumberEnquiryContext_v2 || appcntx == roamingNumberEnquiryContext_v3)
+  {
+    tsm = new PRNTSM(ltrid,appcntx,tco);
+  }
+  if (appcntx == subscriberDataMngtContext_v2 || appcntx == subscriberDataMngtContext_v3)
+  {
+	  tsm = new ISD(ltrid,appcntx,tco);
+  }
   return tsm;
 }
 TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
@@ -122,7 +159,7 @@ TSM* createOutgoingTSM(TrId ltrid,AC& appcntx,TCO* tco)
     tsm = new SRI4SMTSM(ltrid,appcntx,tco);
   if ( appcntx == shortMsgGatewayContext_v2 )
     tsm = new SRI4SMTSM(ltrid,appcntx,tco);
-  if ( appcntx == net_loc_upd_v3 )
+  if ( appcntx == net_loc_upd_v3 || appcntx == net_loc_upd_v2 )
     tsm = new ULTSM(ltrid,appcntx,tco);
   return tsm;
 }

@@ -12,7 +12,7 @@ namespace smsc{namespace mtsmsme{namespace processor{
 using smsc::sms::AddressValue;
 using smsc::logger::Logger;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
-using smsc::mtsmsme::comp::UpdateLocationMessage;
+using smsc::mtsmsme::comp::UpdateLocationReq;
 
 static Logger* logger = 0;
 static TCO* coordinator =  0;                                                                                        
@@ -73,16 +73,16 @@ class UpdateLocationTask: public TsmComletionListener{
       if (coordinator) 
       {
         TSM* tsm;
-        AC appcntx = net_loc_upd_v3;
+        AC appcntx = net_loc_upd_v2;
         //tsm = coordinator->TC_BEGIN(info.imsi.c_str(), msc_digits.c_str(), vlr_digits.c_str(), info.mgt.c_str());
         tsm = coordinator->TC_BEGIN(appcntx);
         if (tsm)
         {
           tsm->setCompletionListener(this);
 
-          UpdateLocationMessage msg;
-          msg.setComponent(info.imsi, msc_digits,vlr_digits);
-          tsm->TInvokeReq( 2 /* updateLocation operation */, msg);
+          UpdateLocationReq msg;
+          msg.setParameters(info.imsi, msc_digits,vlr_digits);
+          tsm->TInvokeReq( 1 /* invokeId */, 2 /* updateLocation operation */, msg);
 
           uint8_t cl[20];
           uint8_t cllen;

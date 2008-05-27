@@ -61,34 +61,66 @@ void ULTSM::END_received(Message& msg)
   if(listener) listener->complete(1);
   tco->TSMStopped(ltrid);
 }
-void ULTSM::TInvokeReq(uint8_t opcode, CompIF& arg)
+//void ULTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
+//{
+//  /*
+//   * MSC E.164 = 791398699812
+//   * VLR E.164 = 791398699813
+//   * MS  E.164 = 79134632021
+//   * MS  E.212 = 250013903784021
+//   * MS  E.214 = 791603903784021
+//   */
+//  UpdateLocationMessage& msg = static_cast<UpdateLocationMessage&>(arg);
+//  msg.setOTID(ltrid);
+//  msg.encode(ulmsg);
+//}
+void ULTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {
-  /*
-   * MSC E.164 = 791398699812
-   * VLR E.164 = 791398699813
-   * MS  E.164 = 79134632021
-   * MS  E.212 = 250013903784021
-   * MS  E.214 = 791603903784021
-   */
-  UpdateLocationMessage& msg = static_cast<UpdateLocationMessage&>(arg);
-  msg.setOTID(ltrid);
-  msg.encode(ulmsg);
+  arg.encode(temp_arg);
+  temp_opcode = opcode;
+  temp_invokeId = invokeId;
 }
+//void ULTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
+//{
+//  // set SCCP adresses
+//
+//  raddrlen = cdlen;
+//  memcpy(raddr,cd,cdlen);
+//  laddrlen = cllen;
+//  memcpy(laddr,cl,cllen);
+//
+//  smsc_log_error(logger,
+//                 "CALLED[%d]={%s}",raddrlen,dump(raddrlen,raddr).c_str());
+//  smsc_log_error(logger,
+//                 "CALLING[%d]={%s}",laddrlen,dump(laddrlen,laddr).c_str());
+//  smsc_log_error(logger,
+//                 "UpdateLocation[%d]={%s}",ulmsg.size(),dump(ulmsg.size(),&ulmsg[0]).c_str());
+//  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,ulmsg.size(),&ulmsg[0]);
+//}
 void ULTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 {
-  // set SCCP adresses
+	// set SCCP adresses
+	raddrlen = cdlen;
+	memcpy(raddr,cd,cdlen);
+	laddrlen = cllen;
+	memcpy(laddr,cl,cllen);
 
-  raddrlen = cdlen;
-  memcpy(raddr,cd,cdlen);
-  laddrlen = cllen;
-  memcpy(laddr,cl,cllen);
+	BeginMsg begin;
+	begin.setOTID(ltrid);
+	begin.setDialog(appcntx);
+	begin.setInvokeReq(temp_invokeId,temp_opcode,temp_arg);
+	vector<unsigned char> data;
+	begin.encode(data);
 
-  smsc_log_error(logger,
-                 "CALLED[%d]={%s}",raddrlen,dump(raddrlen,raddr).c_str());
-  smsc_log_error(logger,
-                 "CALLING[%d]={%s}",laddrlen,dump(laddrlen,laddr).c_str());
-  smsc_log_error(logger,
-                 "UpdateLocation[%d]={%s}",ulmsg.size(),dump(ulmsg.size(),&ulmsg[0]).c_str());
-  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,ulmsg.size(),&ulmsg[0]);
+	smsc_log_error(logger,
+			"CALLED[%d]={%s}",
+			raddrlen,dump(raddrlen,raddr).c_str());
+	smsc_log_error(logger,
+			"CALLING[%d]={%s}",
+			laddrlen,dump(laddrlen,laddr).c_str());
+	smsc_log_error(logger,
+			"UL[%d]={%s}",
+			data.size(),dump(data.size(),&data[0]).c_str());
+	tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
 }
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

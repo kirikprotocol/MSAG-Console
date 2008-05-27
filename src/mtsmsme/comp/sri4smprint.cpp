@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     if (tsm)
     {
       SendRoutingInfoForSMReq* inv = new SendRoutingInfoForSMReq("79139859489", true, "79139869999");
-      tsm->TInvokeReq(45, *inv);
+      tsm->TInvokeReq(1, 45, *inv);
       tsm->TBeginReq(sizeof(cd)/sizeof(uint8_t), cd, sizeof(cl)/sizeof(uint8_t), cl);
     }
 //  UpdateLocationMessage msg;

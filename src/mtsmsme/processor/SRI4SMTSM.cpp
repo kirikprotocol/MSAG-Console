@@ -75,7 +75,7 @@ void SRI4SMTSM::END_received(Message& msg)
   if(listener) listener->complete(1);
   tco->TSMStopped(ltrid);
 }
-void SRI4SMTSM::TInvokeReq(uint8_t opcode, CompIF& arg)
+void SRI4SMTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);
   temp_opcode = opcode;
