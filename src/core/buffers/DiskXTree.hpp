@@ -47,7 +47,7 @@ public:
     const char* orgkey=key;
     while(*key)
     {
-      if(ptr->chSize==0 && ptr->children==0)
+      if(ptr->chSize==0 && ptr->children==0 && ptr->child==0)
       {
         ptr->nodeType=ntCollapsed;
         size_t l=strlen(key);
@@ -98,15 +98,24 @@ public:
         }
       }else
       {
-        ptr=ptr->FindInsert(*key);
+        Node** pptr;
+        ptr=ptr->FindInsert(*key,pptr);
         key++;
         if(!*key)
         {
+          if(ptr->nodeType==ntCollapsed && ptr->Str() && *ptr->Str())
+          {
+            Node* n=new Node;
+            *pptr=n;
+            n->child=ptr;
+            ptr=n;
+          }
           if(unique && ptr->data)
           {
             throw DuplicateKeyException(orgkey);
           }
           ptr->StoreData(value);
+          return;
         }
       }
     }
@@ -663,11 +672,12 @@ protected:
       if(child)return child;
       return child=new Node;
     }
-    Node* FindInsert(char c)
+    Node* FindInsert(char c,Node**& pptr)
     {
       int idx=BinFind(c);
       if(idx>0 && idx<=chSize && Children()[idx-1]==c)
       {
+        pptr=&childrenArr[idx-1];
         return childrenArr[idx-1];
       }
       if(chSize+1<8)
@@ -695,6 +705,7 @@ protected:
       Children()[idx]=c;
       childrenArr[idx]=new Node();
       chSize++;
+      pptr=&childrenArr[idx];
       return childrenArr[idx];
     }
     int BinFind(char c)
