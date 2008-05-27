@@ -596,7 +596,7 @@ public:
     }
 };
 
-bool FileStorage::load(SMSId& id, SMS& sms, const File::offset_type* pos /*= 0 (no setPos) */)
+bool FileStorage::load(SMSId& id, SMS& sms, File::offset_type* pos /*= 0 (no setPos) */)
 {
     uint8_t  smsState = 0;
     uint32_t recordSize1 = 0; uint32_t recordSize2 = 0;
@@ -608,7 +608,16 @@ bool FileStorage::load(SMSId& id, SMS& sms, const File::offset_type* pos /*= 0 (
 
     UnlockableMutexGuard unlockableGuard(storageFileLock);
     initialize(true); // virtual method call (open for read or create destination file)
-    if (pos) FileStorage::setPos(pos);
+    if (pos) 
+    {
+      if(*pos!=0)
+      {
+        FileStorage::setPos(pos);
+      }else
+      {
+        getPos(pos);
+      }
+    }
 
     try
     {
@@ -847,7 +856,7 @@ void PersistentStorage::writeRecord(SMSId id, SMS& sms, File::offset_type* pos /
 {
     FileStorage::save(id, sms, pos);
 }
-bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const File::offset_type* pos /*= 0 (no setPos) */)
+bool PersistentStorage::readRecord(SMSId& id, SMS& sms, File::offset_type* pos /*= 0 (no setPos) */)
 {
     return FileStorage::load(id, sms, pos);
 }

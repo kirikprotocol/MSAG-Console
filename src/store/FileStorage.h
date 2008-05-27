@@ -80,7 +80,7 @@ namespace smsc { namespace store
         virtual void initialize(bool flag) = 0;
 
         void save(SMSId id, SMS& sms, File::offset_type* pos=0);
-        bool load(SMSId& id, SMS& sms, const File::offset_type* pos=0);
+        bool load(SMSId& id, SMS& sms, File::offset_type* pos=0);
         void bill(SMSId id, SMS& sms, std::string& out);
 
         FileStorage() : log(Logger::getInstance("smsc.store.FileStorage")) {};
@@ -169,7 +169,7 @@ namespace smsc { namespace store
         virtual ~PersistentStorage() {};
 
         void openRead(const File::offset_type* pos=0);
-        bool readRecord(SMSId& id, SMS& sms, const File::offset_type* pos=0);
+        bool readRecord(SMSId& id, SMS& sms, File::offset_type* pos=0);
 
         void openWrite(File::offset_type* pos=0);
         void writeRecord(SMSId id, SMS& sms, File::offset_type* pos=0);
