@@ -2,7 +2,7 @@
 #ifndef __SMSC_MTSMSME_PROCESSOR_DECODE_HPP__
 #define __SMSC_MTSMSME_PROCESSOR_DECODE_HPP__
 
-#include "mtsmsme/processor/Message.hpp"
+#include "Message.hpp"
 #include "MtForward.hpp"
 namespace smsc{namespace mtsmsme{namespace processor{namespace decode{
 

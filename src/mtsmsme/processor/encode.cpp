@@ -2,11 +2,6 @@ static char const ident[] = "$Id$";
 #include <stdio.h>
 #include <sys/types.h>
 #include "mtsmsme/processor/util.hpp"
-extern "C" {
-#include <constr_TYPE.h>
-#include <TCMessage.h>
-}
-extern asn_TYPE_descriptor_t asn_DEF_TCMessage;
 
 #include "logger/Logger.h"
 using smsc::logger::Logger;

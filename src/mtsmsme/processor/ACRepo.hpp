@@ -5,14 +5,10 @@
 //#include "mtsmsme/processor/TSM.hpp"
 #include <vector>
 #include <string>
-extern "C" {
-#include <constr_TYPE.h>
-#include <TCMessage.h>
-}
+#include "TCMessage.h"
 namespace smsc{namespace mtsmsme{namespace processor{
 using std::vector;
 using std::string;
-//using smsc::mtsmsme::processor::TSM;
 
 extern BIT_STRING_t tcapversion;
 extern ASN__PRIMITIVE_TYPE_t pduoid;

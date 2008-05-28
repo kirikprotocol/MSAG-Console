@@ -8,10 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "mtsmsme/processor/ACRepo.hpp"
-extern "C" {
-#include <constr_TYPE.h>
-#include <TCMessage.h>
-}
+#include "TCMessage.h"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 

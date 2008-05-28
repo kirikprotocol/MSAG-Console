@@ -17,11 +17,7 @@
 #include <assert.h> /* for assert(3) */
 #include <sysexits.h> /* for EX_* exit codes */
 
-#include <constr_TYPE.h>
-#include <TCMessage.h>
-#include <Begin.h>
-#include <ComponentPortion.h>
-extern asn_TYPE_descriptor_t asn_DEF; /* ASN.1 type to be decoded */
+#include "TCMessage.h"
 
 /*
  * Open file and parse its BER contens.

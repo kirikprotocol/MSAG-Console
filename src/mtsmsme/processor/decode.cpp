@@ -6,31 +6,9 @@ static char const ident[] = "$Id$";
 #include <vector>
 #include "logger/Logger.h"
 
-extern "C" {
-#include <constr_TYPE.h>
-#include <TCMessage.h>
-}
-
-/*
-extern "C"
-void ASN_DEBUG_f(const char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  smsc_log_debug(logger,fmt,ap);
-  va_end(ap);
-}
-*/
-
-extern asn_TYPE_descriptor_t asn_DEF_TCMessage;
-extern asn_TYPE_descriptor_t asn_DEF_MT_ForwardSM_Arg;
-
-
 namespace smsc{namespace mtsmsme{namespace processor{namespace decode{
 
 using std::vector;
-
-static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
-static asn_TYPE_descriptor_t *mtdef = &asn_DEF_MT_ForwardSM_Arg;
 
 using smsc::logger::Logger;
 static Logger *logger = 0;
@@ -49,7 +27,7 @@ void Decoder::decodemt(void *buf, int buflen,MtForward& msg)
   opt_codec_ctx = &s_codec_ctx;
   asn_dec_rval_t rval;
 
-  rval = ber_decode(0/*opt_codec_ctx*/, mtdef,(void **)&structure, buf, buflen);
+  rval = ber_decode(0/*opt_codec_ctx*/, &asn_DEF_MT_ForwardSM_Arg,(void **)&structure, buf, buflen);
 
   smsc_log_debug(logger,
                  "Decoder::decodemt consumes %d/%d and returns code %d",
@@ -71,7 +49,7 @@ void Decoder::decode(void *buf, int buflen,Message& msg)
   opt_codec_ctx = &s_codec_ctx;
   asn_dec_rval_t rval;
 
-  rval = ber_decode(0/*opt_codec_ctx*/, def,(void **)&structure, buf, buflen);
+  rval = ber_decode(0/*opt_codec_ctx*/, &asn_DEF_TCMessage,(void **)&structure, buf, buflen);
 
 
   if(structure) {
