@@ -43,6 +43,7 @@ public class AdvertisingClient {
 
   public BannerWithInfo getBannerWithInfo(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingException {
     try {
+//      return new BannerWithInfo("test", (int)(Math.random() * 100));
       final Address address = new Address(abonentAddress);
       final String abonent = "." + address.getTon() + '.' + address.getNpi() + '.' + address.getAddress();
 

@@ -22,7 +22,7 @@ public class ReceiptAcceptService implements SMPPService {
 
   private static final Category log = Category.getInstance("RECEIPT");
 
-  public void serve(SMPPRequest smppRequest) {
+  public boolean serve(SMPPRequest smppRequest) {
     try {
       smppRequest.getInObj().respond(Data.ESME_ROK);
     } catch (SMPPException e) {
@@ -44,6 +44,8 @@ public class ReceiptAcceptService implements SMPPService {
       }
     } else
       log.error("Not receipt handled!");
+
+    return true;
   }
 
   public void init(OutgoingQueue outgoingQueue, Properties properties) throws SMPPServiceException {    

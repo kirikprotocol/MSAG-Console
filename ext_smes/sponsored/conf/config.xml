@@ -10,6 +10,11 @@
   <param name="routesFile">conf/routes.xml</param>
   <param name="smppConfigFile">conf/smpp.properties</param>
 
+  <section name="jmx">
+    <param name="port">8123</param>
+    <param name="user">admin</param>
+    <param name="password">admin</param>
+  </section>
 
   <section name="advertising">
     <!--<param name="host">phoenix</param>-->

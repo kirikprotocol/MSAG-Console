@@ -47,20 +47,18 @@ public class SubscriptionService extends BasicService {
     }    
   }
 
-  public void serve(SMPPRequest request) {
+  public boolean serve(SMPPRequest request) {
 
     final String distributionName = request.getParameter("distributionName");
     if (distributionName == null) {
       log.error("Distribution name not specified in request");
-      respond(request.getInObj(), Data.ESME_RX_P_APPN);
-      return;
+      return false;
     }
 
     final String distributionVolume = request.getParameter("distributionVolume");
     if (distributionVolume == null) {
       log.error("Distribution volume not specified in request");
-      respond(request.getInObj(), Data.ESME_RX_P_APPN);
-      return;
+      return false;
     }
 
     int volume;
@@ -68,8 +66,7 @@ public class SubscriptionService extends BasicService {
       volume = Integer.parseInt(distributionVolume);
     } catch (NumberFormatException e) {
       log.error("Invalid value of distribution volume: " + distributionVolume);
-      respond(request.getInObj(), Data.ESME_RX_P_APPN);
-      return;
+      return false;
     }
 
     try {
@@ -112,8 +109,10 @@ public class SubscriptionService extends BasicService {
       respond(request.getInObj(), Data.ESME_ROK);
     } catch (ProcessorException e) {
       log.error("Subscription failed", e);
-      respond(request.getInObj(), Data.ESME_RX_P_APPN);
+      return false;
     }
+
+    return true;
   }
 
   private static void respond(IncomingObject inObj, int code) {

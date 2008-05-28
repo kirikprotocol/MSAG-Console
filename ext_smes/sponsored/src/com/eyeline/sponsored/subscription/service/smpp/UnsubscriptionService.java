@@ -32,12 +32,11 @@ public class UnsubscriptionService extends BasicService {
     }    
   }
 
-  public void serve(SMPPRequest request) {
+  public boolean serve(SMPPRequest request) {
     final String distributionName = request.getParameter("distributionName");
     if (distributionName == null) {
       log.error("Distribution name not specified in request");
-      respond(request.getInObj(), Data.ESME_RX_P_APPN);
-      return;
+      return false;
     }
 
     try {
@@ -63,8 +62,10 @@ public class UnsubscriptionService extends BasicService {
 
     } catch (ProcessorException e) {
       log.error("Unsubscription failed", e);
-      respond(request.getInObj(), Data.ESME_RX_P_APPN);
+      return false;
     }
+
+    return true;
   }
 
   private static void respond(IncomingObject inObj, int code) {

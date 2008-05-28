@@ -46,12 +46,10 @@
     </copy>
 
     <copy todir="${SME_DISTR_DIR}/bin">
-      <fileset file="start"/>
-      <fileset file="deliveries"/>
-      <fileset file="statexport"/>
-      <fileset file="statview"/>
-      <fileset file="subscrexport"/>
+      <fileset dir="bin"/>
     </copy>
+
+    <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*"/>
   </target>
 
   <target name="conf" depends="install">

@@ -68,7 +68,7 @@ public class DistrSmeTest extends DistributionSme {
 
     }
 
-    public void sendMessage(Message message) throws SMPPException {
+    public void _sendMessage(Message message) throws SMPPException {
       if (start == -1)
         start = System.currentTimeMillis();
 

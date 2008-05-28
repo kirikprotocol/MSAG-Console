@@ -6,17 +6,16 @@ import com.eyeline.sponsored.ds.ResultSet;
 import com.eyeline.sponsored.ds.subscription.Subscription;
 import com.eyeline.sponsored.ds.subscription.impl.db.DBSubscriptionDataSource;
 import com.eyeline.sponsored.subscription.config.Config;
+import com.eyeline.utils.IOUtils;
+import com.eyeline.utils.config.Arguments;
 import com.eyeline.utils.config.ConfigException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
-import com.eyeline.utils.IOUtils;
 import ru.sibinco.smsc.utils.subjects.SmscSubject;
 import ru.sibinco.smsc.utils.subjects.SmscSubjectsList;
 import ru.sibinco.smsc.utils.subjects.SmscSubjectsListException;
 
 import java.io.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,32 +36,12 @@ public class SubscriptionsExport {
   }
 
   public static void main(String[] args) {
-
-    if (args.length % 2 != 0) {
+    final Arguments parser = new Arguments(args);
+    if (parser.containsAttr("help")) {
       printHelp();
       return;
     }
-
-    Request req = new Request();
-    for (int i=0; i + 1 < args.length; i+=2) {
-      try {
-        if (args[i].equalsIgnoreCase("-a"))
-          req.setDate(args[i + 1]);
-        else if (args[i].equalsIgnoreCase("-d"))
-          req.setDistributionName(args[i + 1]);
-        else if (args[i].equalsIgnoreCase("-f"))
-          req.setRoutesFile(args[i + 1]);
-        else {
-          printHelp();
-          return;
-        }
-      } catch (IllegalArgumentException e) {
-        System.out.println(e.getMessage());
-        printHelp();
-        return;
-      }
-    }
-
+    
     DBSubscriptionDataSource ds = null;
     OutputStream os = null;
     BufferedReader r = null;
@@ -72,18 +51,12 @@ public class SubscriptionsExport {
 
       Config c = new Config(xmlConfig);
 
-      if (req.getRoutesFile() == null)
-        req.setRoutesFile(c.getRoutesFile());
-
-      if (req.getDate() == null)
-        req.setDate(new Date());
-
       // Init data source
       ds = new DBSubscriptionDataSource(new PropertiesConfig(c.getSubscriptionSql()));
       ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
 
       final SmscSubjectsList subjects = new SmscSubjectsList();
-      subjects.load(req.getRoutesFile());
+      subjects.load(parser.getStringAttr("-f", c.getRoutesFile()));
       final SmscSubject unknownSubject = new SmscSubject("Unknown");
 
       final Map<SmscSubject, Counter> stats = new HashMap<SmscSubject, Counter>(subjects.getSubjects().size());
@@ -92,7 +65,7 @@ public class SubscriptionsExport {
 
       try {
         tx = ds.createTransaction();
-        ResultSet<Subscription> subscriptions = ds.lookupActiveSubscriptions(req.getDistributionName(), req.getDate(), tx);
+        ResultSet<Subscription> subscriptions = ds.lookupActiveSubscriptions(parser.getStringAttr("-d"), parser.getDateAttr("-a", "dd-MM-yyyy", new Date()), tx);
 
         while (subscriptions.next()) {
           String address = subscriptions.get().getSubscriberAddress();
@@ -109,7 +82,7 @@ public class SubscriptionsExport {
           counter.inc();
         }
 
-      } catch (DataSourceException e) {
+      } catch (Exception e) {
         e.printStackTrace();
       } finally {
         if (tx != null)
@@ -139,46 +112,6 @@ public class SubscriptionsExport {
         } catch (IOException e) {
           e.printStackTrace();
         }
-    }
-  }
-
-  private static class Request {
-    private static final SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
-
-    private String distributionName;
-    private Date date;
-    private String routesFile;
-
-    public String getDistributionName() {
-      return distributionName;
-    }
-
-    public void setDistributionName(String distributionName) {
-      this.distributionName = distributionName;
-    }
-
-    public Date getDate() {
-      return date;
-    }
-
-    public void setDate(Date date) {
-      this.date = date;
-    }
-
-    public void setDate(String date) {
-      try {
-        this.date = df.parse(date);
-      } catch (ParseException e) {
-        throw new IllegalArgumentException(e);
-      }
-    }
-
-    public String getRoutesFile() {
-      return routesFile;
-    }
-
-    public void setRoutesFile(String routesFile) {
-      this.routesFile = routesFile;
     }
   }
 

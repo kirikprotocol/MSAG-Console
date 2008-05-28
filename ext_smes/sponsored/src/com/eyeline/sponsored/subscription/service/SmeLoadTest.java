@@ -67,7 +67,7 @@ public class SmeLoadTest extends SubscriptionSme {
       }
     }
 
-    public void sendMessage(Message message) throws SMPPException {
+    public void _sendMessage(Message message) throws SMPPException {
 
       worker.wait = false;
       final SimpleResponse resp = new SimpleResponse(message);
@@ -142,7 +142,7 @@ public class SmeLoadTest extends SubscriptionSme {
         int seqNum = 0;
         for (int i = s; i < e; i++, seqNum++) {
           final Message m = new Message();
-          m.setSourceAddress("+79119" + i);
+          m.setSourceAddress("+79121" + i);
           m.setDestinationAddress("741");
           m.setMessageString("20");
           m.setConnectionName("smsx");

@@ -65,7 +65,7 @@ public class ReceiptTest extends DistributionSme {
 
     }
 
-    public void sendMessage(Message message) throws SMPPException {
+    public void _sendMessage(Message message) throws SMPPException {
     }
 
     public void connect() throws SMPPException {

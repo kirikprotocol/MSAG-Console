@@ -11,6 +11,7 @@ import com.eyeline.sponsored.ds.distribution.advert.impl.file.deliverystats.File
 import com.eyeline.sponsored.utils.CalendarUtils;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.Arguments;
 import com.eyeline.utils.IOUtils;
 
 import java.io.*;
@@ -112,42 +113,26 @@ public class DeliveryStatExport {
    */
 
   public static void main(String[] args) {
-    if (args.length % 2 != 0) {
-      printHelp();
-      return;
-    }
-
     final Request req = new Request();
 
     DeliveryStatsDataSource ds = null;
     OutputStream os = null;
     try {
 
-      for (int i=0; i + 1 < args.length; i+=2) {
-        try {
-          if (args[i].equalsIgnoreCase("-f"))
-            req.setFromDate(args[i + 1]);
-          else if (args[i].equalsIgnoreCase("-t"))
-            req.setToDate(args[i + 1]);
-          else if (args[i].equalsIgnoreCase("-c"))
-            req.setCost(args[i + 1]);
-          else if (args[i].equalsIgnoreCase("-i"))
-            req.setInterval(args[i + 1]);
-          else if (args[i].equalsIgnoreCase("-d"))
-            req.setDir(args[i + 1]);
-          else if (args[i].equalsIgnoreCase("-a"))
-            req.setAdvertiserId(Integer.valueOf(args[i + 1]));
-          else if (args[i].equalsIgnoreCase("-n"))
-            req.setNotAdvertiserId(Integer.valueOf(args[i + 1]));
-          else {
-            printHelp();
-            return;
-          }
-        } catch (IllegalArgumentException e) {
-          System.out.println(e.getMessage());
-          printHelp();
-          return;
-        }
+      final Arguments parser = new Arguments(args);
+
+      req.setFromDate(parser.getStringAttr("-f", null));
+      req.setToDate(parser.getStringAttr("-t", null));
+      req.setCost(parser.getStringAttr("-c", null));
+      req.setInterval(parser.getStringAttr("-i", null));
+      req.setDir(parser.getStringAttr("-d", null));
+      if (parser.containsAttr("-a"))
+        req.setAdvertiserId(parser.getIntAttr("-a"));
+      if (parser.containsAttr("-n"))
+        req.setNotAdvertiserId(parser.getIntAttr("-n"));
+      if (parser.containsAttr("help")) {
+        printHelp();
+        return;
       }
 
       req.validate();

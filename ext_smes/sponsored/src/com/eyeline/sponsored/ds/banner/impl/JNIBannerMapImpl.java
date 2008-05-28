@@ -25,7 +25,7 @@ import static com.eyeline.utils.IOUtils.*;
 
 public final class JNIBannerMapImpl implements BannerMap {
 
-  private static final Category log = Category.getInstance("DS");
+  private static final Category log = Category.getInstance(JNIBannerMapImpl.class);
 
   private final String keyStoreFile;
   private final JStore4Java store;
@@ -40,8 +40,6 @@ public final class JNIBannerMapImpl implements BannerMap {
     this.keyStoreFile = keyStoreFile;
     this.store.Init(storeFile, rollingTime, maxCollizions);
 
-    System.out.println("jstore size=" + size());
-
     this.mapCleaner = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
       public Thread newThread(Runnable r) {
         return new Thread(r, "JNIBannerMapCleaner");
@@ -52,7 +50,6 @@ public final class JNIBannerMapImpl implements BannerMap {
                                         CalendarUtils.getNextDayStartInMillis(new Date()) - System.currentTimeMillis(),
                                         24 * 3600 * 1000,
                                         TimeUnit.MILLISECONDS);
-
   }
 
   public void put(long messageId, int advertiserId) {
@@ -123,6 +120,9 @@ public final class JNIBannerMapImpl implements BannerMap {
 
       for (long k : buffer)
         store.Delete(k);
+
+      if (log.isInfoEnabled())
+        log.info(buffer.size() + " records was removed from map.");
 
     } finally {
       lock.unlock();

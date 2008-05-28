@@ -11,5 +11,7 @@ public interface BannerMap {
 
   public int get(long messageId);
 
+  public int size();
+
   public void close();
 }

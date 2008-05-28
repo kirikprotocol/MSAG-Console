@@ -21,4 +21,11 @@ public class BannerWithInfo {
   public int getAdvertiserId() {
     return advertiserId;
   }
+
+  public String toString() {
+    final StringBuilder sb = new StringBuilder(100);
+    sb.append("AdvertiserId = ").append(advertiserId).append('\n');
+    sb.append("Banner = ").append(bannerText);
+    return sb.toString();
+  }
 }

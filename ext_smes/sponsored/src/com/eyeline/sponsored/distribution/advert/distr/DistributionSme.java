@@ -13,6 +13,7 @@ import com.eyeline.sponsored.distribution.advert.distr.core.DeliveryStatsProcess
 import com.eyeline.sponsored.distribution.advert.distr.core.DistributionEngine;
 import com.eyeline.sponsored.distribution.advert.distr.core.IntervalDistributionEngine;
 import com.eyeline.sponsored.ds.banner.BannerMap;
+import com.eyeline.sponsored.ds.banner.BannerMapMBean;
 import com.eyeline.sponsored.ds.banner.impl.JNIBannerMapImpl;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.DeliveryStatsDataSource;
@@ -139,6 +140,10 @@ public class DistributionSme extends Sme {
     } catch (Exception e) {
       throw new InitException(e);
     }
+  }
+
+  public BannerMapMBean getBannerMapMBean() {
+    return new BannerMapMBean(bannerMap);
   }
 
   public void stop() {
