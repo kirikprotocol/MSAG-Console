@@ -15,6 +15,7 @@
 #include <string>
 #include <string.h>
 #include <errno.h>
+#include <list>
 #include "util/sleep.h"
 #include "logger/Logger.h"
 
@@ -513,11 +514,16 @@ namespace BindType{
 
 class SmppSession{
 protected:
+  struct TOItem{
+    time_t to;
+    int seq;
+  };
+  typedef std::list<TOItem> TOList;
   struct Lock{
-    time_t timeOut;
     Event* event;
     SmppHeader *pdu;
     int error;
+    TOList::iterator toit;
   };
   class InnerListener;
   friend class InnerListener;
@@ -819,10 +825,32 @@ protected:
   smsc::logger::Logger* log;
 
   IntHash<Lock> lock;
+  TOList tolist;
 
   void processTimeouts()
   {
     MutexGuard g(lockMutex);
+    if(tolist.empty())
+    {
+      return;
+    }
+    time_t now=time(NULL);
+    while(tolist.front().to<now)
+    {
+      Lock& l=lock.Get(tolist.front().seq);
+      int key=tolist.front().seq;
+      if(!l.pdu)
+      {
+        listener->handleTimeout(key);
+        lock.Delete(key);
+      }
+      if(l.event)
+      {
+        l.event->Signal();
+      }
+      tolist.erase(tolist.begin());
+    }
+    /*
     IntHash<Lock>::Iterator i=lock.First();
     Lock l;
     int key;
@@ -843,6 +871,7 @@ protected:
         }
       }
     }
+    */
   }
 
   void registerPdu(int seq,Event* event)
@@ -854,8 +883,12 @@ protected:
     {
       throw smsc::util::Exception("Attempt to register pdu with already registered seq=%d",seq);
     }
+    TOItem ti;
+    ti.to=time(NULL)+cfg.smppTimeOut;
+    ti.seq=seq;
     Lock l;
-    l.timeOut=time(NULL)+cfg.smppTimeOut;
+    l.toit=tolist.insert(tolist.end(),ti);
+    //l.timeOut=ti.to;
     l.event=event;
     l.pdu=NULL;
     l.error=0;
@@ -868,10 +901,12 @@ protected:
     const Lock &l=lock.Get(seq);
     if(l.error)
     {
+      tolist.erase(l.toit);
       lock.Delete(seq);
       throw Exception("Unknown error");
     }
     SmppHeader *retval=l.pdu;
+    tolist.erase(l.toit);
     lock.Delete(seq);
     return retval;
   }
@@ -1088,6 +1123,7 @@ protected:
             disposePdu(pdu);
           }else
           {
+            tolist.erase(l.toit);
             lock.Delete(seq);
             lockMutex.Unlock();
             listener->handleEvent(pdu);
@@ -1136,6 +1172,7 @@ protected:
             l.event->Signal();
           }else
           {
+            tolist.erase(l.toit);
             lock.Delete(seq);
             lockMutex.Unlock();
             listener->handleEvent(pdu);
