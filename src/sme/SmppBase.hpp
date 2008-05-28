@@ -837,18 +837,18 @@ protected:
     time_t now=time(NULL);
     while(tolist.front().to<now)
     {
-      Lock& l=lock.Get(tolist.front().seq);
       int key=tolist.front().seq;
-      if(!l.pdu)
+      Lock& l=lock.Get(key);
+      if(!l.pdu) // in synchronous case if l.pdu assigned than it was already received
       {
         listener->handleTimeout(key);
+        tolist.erase(tolist.begin());
         lock.Delete(key);
       }
       if(l.event)
       {
         l.event->Signal();
       }
-      tolist.erase(tolist.begin());
     }
     /*
     IntHash<Lock>::Iterator i=lock.First();
@@ -1167,8 +1167,8 @@ protected:
           Lock &l=lock.Get(seq);
           if(l.event)
           {
-            lockMutex.Unlock();
             l.pdu=pdu;
+            lockMutex.Unlock();
             l.event->Signal();
           }else
           {
