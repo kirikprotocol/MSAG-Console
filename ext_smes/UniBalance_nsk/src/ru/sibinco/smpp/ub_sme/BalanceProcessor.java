@@ -119,7 +119,7 @@ public class BalanceProcessor implements Runnable {
                 smeEngine.getInManThreadConroller().end();
               }
             } else {
-              logger.warn("Max InMan Informix thread limit reached. Abonent "+abonent+" request aborted.");
+              logger.warn("Max InMan Informix thread limit reached. Abonent " + abonent + " request aborted.");
               state.setCurrentBillingSystemIndex(smeEngine.getBillingSystemCount(state.getAbonentContractType()));
               break;
             }
@@ -154,7 +154,7 @@ public class BalanceProcessor implements Runnable {
                 smeEngine.getCbossThreadConroller().end();
               }
             } else {
-              logger.warn("Max CBOSS thread limit reached. Abonent "+abonent+" request aborted.");
+              logger.warn("Max CBOSS thread limit reached. Abonent " + abonent + " request aborted.");
               state.setCurrentBillingSystemIndex(smeEngine.getBillingSystemCount(state.getAbonentContractType()));
               break;
             }
@@ -314,7 +314,7 @@ public class BalanceProcessor implements Runnable {
                 smeEngine.getMedioScpThreadConroller().end();
               }
             } else {
-              logger.warn("Max MedioSCP thread limit reached. Abonent "+abonent+" request aborted.");
+              logger.warn("Max MedioSCP thread limit reached. Abonent " + abonent + " request aborted.");
               state.setCurrentBillingSystemIndex(smeEngine.getBillingSystemCount(state.getAbonentContractType()));
               break;
             }
@@ -371,100 +371,37 @@ public class BalanceProcessor implements Runnable {
     boolean denied = false;
     try {
       con = smeEngine.getCbossConnection();
-      //stmt = smeEngine.getCbossStatement();
       stmt = con.prepareCall(smeEngine.getCbossQuery());
       if (stmt == null) {
         logger.error("Couldn't get CBOSS statement");
         return null;
       }
-      synchronized (stmt) {
-        stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
-        stmt.setString(2, cutAbonentAddress(abonent));
-        stmt.registerOutParameter(3, java.sql.Types.DATE);
-        stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
-        stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
-        stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
-        stmt.execute();
-        String balanceResult = stmt.getString(4);
-        if (balanceResult.equalsIgnoreCase("ACCURATE") || balanceResult.equalsIgnoreCase("CACHED")) {
-          balance = Double.parseDouble(stmt.getString(1));
-          currency = smeEngine.getCurrency(stmt.getString(5));
-          accumulator = new Integer(stmt.getInt(6));
-          if (stmt.wasNull()) {
-            accumulator = null;
-          }
-        } else
-        if (balanceResult.equalsIgnoreCase("BALANCE ACCESS DENIED") && smeEngine.getAccessDeniedMessage() != null) {
-          logger.info("Abonent " + abonent + " CBOSS balance access denied: " + balanceResult);
-          denied = true;
-        } else {
-          logger.warn("Abonent " + abonent + " CBOSS balance corrupted: " + balanceResult);
-          return null;
+      stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+      stmt.setString(2, cutAbonentAddress(abonent));
+      stmt.registerOutParameter(3, java.sql.Types.DATE);
+      stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
+      stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
+      stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
+      stmt.execute();
+      String balanceResult = stmt.getString(4);
+      if (balanceResult.equalsIgnoreCase("ACCURATE") || balanceResult.equalsIgnoreCase("CACHED")) {
+        balance = Double.parseDouble(stmt.getString(1));
+        currency = smeEngine.getCurrency(stmt.getString(5));
+        accumulator = new Integer(stmt.getInt(6));
+        if (stmt.wasNull()) {
+          accumulator = null;
         }
-      }
-    } catch (Exception temporalError) {
-      if (stmt != null) {
-        try {
-          stmt.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Statement: " + e);
-        }
-      }
-      if (con != null) {
-        try {
-          con.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Connection: " + e);
-        }
-      }
-      try {
-        //smeEngine.closeCbossStatement(stmt);
-        if (!smeEngine.isCbossConnectionError(temporalError)) {
-          if (temporalError instanceof SQLException) {
-            throw (SQLException) temporalError;
-          } else {
-            logger.error("Unexpected exception: " + temporalError, temporalError);
-            throw new SQLException(temporalError.getMessage());
-          }
-        }
-        con = smeEngine.getCbossConnection();
-        //stmt = smeEngine.getCbossStatement();
-        stmt = con.prepareCall(smeEngine.getCbossQuery());
-        if (stmt == null) {
-          logger.error("Couldn't get CBOSS statement");
-          return null;
-        }
-        synchronized (stmt) {
-          stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
-          stmt.setString(2, cutAbonentAddress(abonent));
-          stmt.registerOutParameter(3, java.sql.Types.DATE);
-          stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
-          stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
-          stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
-
-          stmt.execute();
-          String balanceResult = stmt.getString(4);
-          if (balanceResult.equalsIgnoreCase("ACCURATE") || balanceResult.equalsIgnoreCase("CACHED")) {
-            balance = Double.parseDouble(stmt.getString(1));
-            currency = smeEngine.getCurrency(stmt.getString(5));
-            accumulator = new Integer(stmt.getInt(6));
-            if (stmt.wasNull()) {
-              accumulator = null;
-            }
-          } else
-          if (balanceResult.equalsIgnoreCase("BALANCE ACCESS DENIED") && smeEngine.getAccessDeniedMessage() != null) {
-            logger.info("Abonent " + abonent + " CBOSS balance access denied: " + balanceResult);
-            denied = true;
-          } else {
-            logger.warn("Abonent " + abonent + " CBOSS balance corrupted: " + balanceResult);
-            return null;
-          }
-        }
-      } catch (SQLException permanentError) {
-        logger.error("Could not get balance from CBOSS database: " + permanentError, permanentError);
-        //smeEngine.closeCbossStatement(stmt);
+      } else
+      if (balanceResult.equalsIgnoreCase("BALANCE ACCESS DENIED") && smeEngine.getAccessDeniedMessage() != null) {
+        logger.info("Abonent " + abonent + " CBOSS balance access denied: " + balanceResult);
+        denied = true;
+      } else {
+        logger.warn("Abonent " + abonent + " CBOSS balance corrupted: " + balanceResult);
         return null;
       }
+    } catch (SQLException permanentError) {
+      logger.error("Could not get balance for abonent "+abonent+" from CBOSS database: " + permanentError, permanentError);
+      return null;
     } finally {
       if (stmt != null) {
         try {
@@ -505,7 +442,6 @@ public class BalanceProcessor implements Runnable {
     ResultSet rs = null;
     try {
       con = smeEngine.getInManConnection();
-      //stmt = smeEngine.getInManStatement();
       stmt = con.prepareCall(smeEngine.getInManQuery());
       if (stmt == null) {
         logger.error("Couldn't get InMan statement");
@@ -522,62 +458,9 @@ public class BalanceProcessor implements Runnable {
           }
         }
       }
-    } catch (SQLException temporalError) {
-      if (rs != null) {
-        try {
-          rs.close();
-          rs = null;
-        } catch (Exception e1) {
-          logger.warn("Could not close ifx ResultSet: " + e1);
-        }
-      }
-      if (stmt != null) {
-        try {
-          stmt.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Statement: " + e);
-        }
-      }
-      if (con != null) {
-        try {
-          con.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Connection: " + e);
-        }
-      }
-      //smeEngine.closeInManStatement(stmt);
-      try {
-        if (!smeEngine.isInManConnectionError(temporalError)) {
-          throw temporalError;
-        }
-        con = smeEngine.getInManConnection();
-        //stmt = smeEngine.getInManStatement();
-        stmt = con.prepareCall(smeEngine.getInManQuery());
-        if (stmt == null) {
-          logger.error("Couldn't get InMan statement");
-          return null;
-        }
-        synchronized (stmt) {
-          stmt.setString(1, cutAbonentAddress(abonent));
-          rs = stmt.executeQuery();
-          if (rs.next()) {
-            BigDecimal r = rs.getBigDecimal(1);
-            if (r != null) {
-              balance = new Double(r.doubleValue());
-              currency = smeEngine.getCurrency(stmt.getString(2));
-            }
-          }
-        }
-      } catch (SQLException permanentError) {
-        logger.error("Could not get balance from database: " + permanentError, permanentError);
-        if (rs != null)
-          try {
-            rs.close();
-          } catch (Exception e1) {
-            logger.warn("Could not close ResultSet: ", e1);
-          }
-        //smeEngine.closeInManStatement(stmt);
-      }
+    } catch (SQLException permanentError) {
+      logger.error("Could not get balance for abonent "+abonent+" from database: " + permanentError, permanentError);
+      return null;
     } finally {
       if (rs != null)
         try {
@@ -618,7 +501,6 @@ public class BalanceProcessor implements Runnable {
     CallableStatement stmt = null;
     try {
       con = smeEngine.getMedioScpConnection();
-      //stmt = smeEngine.getCbossStatement();
       stmt = con.prepareCall(smeEngine.getMedioScpQuery());
       if (stmt == null) {
         logger.error("Couldn't get MedioSCP statement");
@@ -626,84 +508,27 @@ public class BalanceProcessor implements Runnable {
       }
 
       //FUNCTION get_accurate_date_by_num (num VARCHAR2, balance_date OUT date, result_type OUT VARCHAR2, currency_code OUT VARCHAR2, acc_value OUT NUMBER) RETURN NUMBER;
-      synchronized (stmt) {
-        stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
-        stmt.setString(2, cutAbonentAddress(abonent));
-        stmt.registerOutParameter(3, java.sql.Types.DATE);
-        stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
-        stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
-        stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
-        stmt.execute();
-        if ("ACCURATE".equalsIgnoreCase(stmt.getString(4)) || "CACHED".equalsIgnoreCase(stmt.getString(4))) {
-          balance = Double.parseDouble(stmt.getString(1));
-          currency = smeEngine.getCurrency(stmt.getString(5));
-          accumulator = new Integer(stmt.getInt(6));
-          if (stmt.wasNull()) {
-            accumulator = null;
-          }
-        } else {
-          logger.warn("Abonent " + abonent + " MedioSCP balance corrupted: " + stmt.getString(4));
-          return null;
+      stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
+      stmt.setString(2, cutAbonentAddress(abonent));
+      stmt.registerOutParameter(3, java.sql.Types.DATE);
+      stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
+      stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
+      stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
+      stmt.execute();
+      if ("ACCURATE".equalsIgnoreCase(stmt.getString(4)) || "CACHED".equalsIgnoreCase(stmt.getString(4))) {
+        balance = Double.parseDouble(stmt.getString(1));
+        currency = smeEngine.getCurrency(stmt.getString(5));
+        accumulator = new Integer(stmt.getInt(6));
+        if (stmt.wasNull()) {
+          accumulator = null;
         }
-      }
-    } catch (Exception temporalError) {
-      if (stmt != null) {
-        try {
-          stmt.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Statement: " + e);
-        }
-      }
-      if (con != null) {
-        try {
-          con.close();
-        } catch (SQLException e) {
-          logger.warn("Could not close Connection: " + e);
-        }
-      }
-      try {
-        if (!smeEngine.isMedioScpConnectionError(temporalError)) {
-          if (temporalError instanceof SQLException) {
-            throw (SQLException) temporalError;
-          } else {
-            logger.error("Unexpected exception: " + temporalError, temporalError);
-            throw new SQLException(temporalError.getMessage());
-          }
-        }
-        //smeEngine.closeMedioScpStatement(stmt);
-        con = smeEngine.getCbossConnection();
-        //stmt = smeEngine.getCbossStatement();
-        stmt = con.prepareCall(smeEngine.getCbossQuery());
-        //stmt = smeEngine.getMedioScpStatement();
-        if (stmt == null) {
-          logger.error("Couldn't get MedioSCP statement");
-          return null;
-        }
-        synchronized (stmt) {
-          stmt.registerOutParameter(1, java.sql.Types.VARCHAR);
-          stmt.setString(2, cutAbonentAddress(abonent));
-          stmt.registerOutParameter(3, java.sql.Types.DATE);
-          stmt.registerOutParameter(4, java.sql.Types.VARCHAR);
-          stmt.registerOutParameter(5, java.sql.Types.VARCHAR);
-          stmt.registerOutParameter(6, java.sql.Types.NUMERIC);
-          stmt.execute();
-          if ("ACCURATE".equalsIgnoreCase(stmt.getString(4)) || "CACHED".equalsIgnoreCase(stmt.getString(4))) {
-            balance = Double.parseDouble(stmt.getString(1));
-            currency = smeEngine.getCurrency(stmt.getString(5));
-            accumulator = new Integer(stmt.getInt(6));
-            if (stmt.wasNull()) {
-              accumulator = null;
-            }
-          } else {
-            logger.warn("Abonent " + abonent + " MedioSCP balance corrupted: " + stmt.getString(4));
-            return null;
-          }
-        }
-      } catch (SQLException permanentError) {
-        logger.error("Could not get balance from MedioSCP database: " + permanentError, permanentError);
-        //smeEngine.closeMedioScpStatement(stmt);
+      } else {
+        logger.warn("Abonent " + abonent + " MedioSCP balance corrupted: " + stmt.getString(4));
         return null;
       }
+    } catch (SQLException permanentError) {
+      logger.error("Could not get balance for abonent "+abonent+" from MedioSCP database: " + permanentError, permanentError);
+      return null;
     } finally {
       if (stmt != null) {
         try {
