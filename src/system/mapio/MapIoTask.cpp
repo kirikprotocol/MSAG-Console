@@ -156,8 +156,8 @@ void MapIoTask::connect(unsigned timeout) {
   }
   int tries = 0;
   while( tries < 60 ) {
-//    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
-    result = EINSS7CpMsgConnInst(MY_USER_ID, ETSIMAP_ID, 0);
+    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+//    result = EINSS7CpMsgConnInst(MY_USER_ID, ETSIMAP_ID, 0);
     if ( result != MSG_OK ) {
       __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
       sleep(1);
