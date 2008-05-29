@@ -523,6 +523,7 @@ public:
   }
 
   int nodeIndex;
+  int nodesCount;
 
   bool checkSchedulerSoftLimit()
   {

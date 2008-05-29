@@ -268,7 +268,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       if(strcmp(mode, "hs") == 0 || strcmp(mode, "ha") == 0){
 
           ishs = true;
-
+          try{
+            nodesCount=imConfig.get()->getInt("nodesCount");
+          }catch(...)
+          {
+            nodesCount = 1;
+            __warning2__("nodesCount set to default %d",nodesCount);
+          }
+        
           const char* nodes[] = { imConfig.get()->getString("host1"), imConfig.get()->getString("host2")};
           smsc_log_info(log, "host1: %s, host2: %s", nodes[0], nodes[1] );
           int port[] = { imConfig.get()->getInt("port1"), imConfig.get()->getInt("port2") };
@@ -898,7 +905,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     __warning2__("mapIOTasksCount set to default %d",mapIOTasksCount);
   }
 
-  smsc_log_info(log, "MR cache loaded" );
+    smsc_log_info(log, "MR cache loaded" );
 
   {
     performance::PerformanceServer *perfSrv=new performance::PerformanceServer
@@ -1330,7 +1337,9 @@ void Smsc::run()
     __trace__("SMPPIO started");
 #if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,addUssdSSN,
+                                     busyMTDelay,lockedByMODelay,MOLockTimeout,
+                                     allowCallBarred,ussdV1Enabled,ussdV1UseOrigEntityNumber,nodeIndex,nodesCount);
     mapioptr=mapio;
     //tp.startTask(mapio);
     mapio->setMapIoTaskCount(mapIOTasksCount);

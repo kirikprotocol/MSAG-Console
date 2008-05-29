@@ -529,6 +529,8 @@ class MapDialogContainer{
   static bool allowCallBarred;
   static bool ussdV1Enabled;
   static bool ussdV1UseOrigEntityNumber;
+  static int nodeNumber;
+  static int nodesCount;
 
   int    processTimeout;
   int    processLimit;
@@ -643,12 +645,16 @@ public:
       loggerStatDlg = smsc::logger::Logger::getInstance("map.stat.dlg");
       loggerMapPdu = smsc::logger::Logger::getInstance("map.pdu");
       container = new MapDialogContainer();
-      for (unsigned n=1;n<MAX_DIALOGID_POOLED;++n){
+      for (unsigned n=1+nodeNumber;n<MAX_DIALOGID_POOLED;n+=nodesCount){
         container->dialogId_pool.push_back(n);
       }
     }
     return container;
   }
+  static string GetNodeNumber() { return nodeNumber; }
+  static void SetNodeNumber(const int n) { nodeNumber = n; }
+  static string GetNodesCount() { return nodesCount; }
+  static void SetNodesCount(const int n) { nodesCount = n; }
   static string GetSCAdress() { return SC_ADRESS_VALUE; }
   static void SetSCAdress(const string& scAddr) { SC_ADRESS_VALUE = scAddr; }
   static string GetUSSDAdress() { return USSD_ADRESS_VALUE; }
@@ -1233,8 +1239,14 @@ public:
 
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, const string& addUssdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout, bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber) : startevent(startevent)
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, 
+            int ussdSSN, const string& addUssdSSN, 
+            int busyMTDelay, int lockedByMODelay, int MOLockTimeout, 
+            bool allowCallBarred, bool ussdV1Enabled, bool ussdV1UseOrigEntityNumber,
+            int  nodeNumber, int nodesCount) : startevent(startevent)
   {
+    MapDialogContainer::SetNodeNumber( nodeNumber );
+    MapDialogContainer::SetNodesCount( nodesCount );
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
     MapDialogContainer::SetUSSDSSN(ussdSSN, addUssdSSN);
