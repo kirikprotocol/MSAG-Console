@@ -409,7 +409,9 @@ public class DBConnectionManager {
       config.setProperty(getName()+suffix+userSuffix, getConnectionData(getConnectionName()).getUser());
       config.setProperty(getName()+suffix+passwordSuffix, getConnectionData(getConnectionName()).getPassword());
       config.setProperty(getName()+suffix+typeSuffix, getConnectionData(getConnectionName()).getType());
-      config.setProperty(getName()+suffix+dataSourceClassSuffix, getConnectionData(getConnectionName()).getDataSourceClass());
+      if(getConnectionData(getConnectionName()).getDataSourceClass()!=null){
+        config.setProperty(getName()+suffix+dataSourceClassSuffix, getConnectionData(getConnectionName()).getDataSourceClass());
+      }
       config.setProperty(getName()+suffix+maxSizeSuffix, Integer.toString(getSize()));
       config.setProperty(getName()+suffix+minSizeSuffix, Integer.toString(getMinSize()));
       if (idleTimeout > 0) config.setProperty(getName()+suffix+idleSuffix, Long.toString(getIdleTimeout()));

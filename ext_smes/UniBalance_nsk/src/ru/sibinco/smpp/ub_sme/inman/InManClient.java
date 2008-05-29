@@ -217,7 +217,7 @@ public class InManClient {
         } else {
           synchronized (connectMonitor) {
             try {
-              connectMonitor.wait();
+              connectMonitor.wait(1000);
             } catch (InterruptedException e) {
               logger.warn("IncomingPDUController was interrupted: " + e, e);
             }
