@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="nsk_unibalance" default="all">
 
-  <property name="jdk.home.1.4" value="c:/jdk1.4.2/"/>
+  <property name="jdk.home.1.4" value="/usr/java14"/>
 
 
-  <property file="nsk_unibalance.properties"/>
-  <!-- Uncomment the following property if no tests compilation is needed -->
+    <!-- Uncomment the following property if no tests compilation is needed -->
   <!-- 
   <property name="skip.tests" value="true"/>
    -->
