@@ -651,9 +651,9 @@ public:
     }
     return container;
   }
-  static string GetNodeNumber() { return nodeNumber; }
+  static int GetNodeNumber() { return nodeNumber; }
   static void SetNodeNumber(const int n) { nodeNumber = n; }
-  static string GetNodesCount() { return nodesCount; }
+  static int GetNodesCount() { return nodesCount; }
   static void SetNodesCount(const int n) { nodesCount = n; }
   static string GetSCAdress() { return SC_ADRESS_VALUE; }
   static void SetSCAdress(const string& scAddr) { SC_ADRESS_VALUE = scAddr; }

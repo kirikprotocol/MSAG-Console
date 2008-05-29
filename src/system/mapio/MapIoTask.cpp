@@ -148,14 +148,16 @@ extern "C" {
 void MapIoTask::connect(unsigned timeout) {
   USHORT_T result;
   __map_warn__("Connecting to MAP stack");
-  result = MsgOpen(MY_USER_ID);
+//  result = MsgOpen(MY_USER_ID);
+  result = EINSS7CpMsgPortOpen( MY_USER_ID, TRUE);
   if ( result != MSG_OK ) {
     __map_warn2__("Error at MsgOpen, code 0x%hx",result);
     kill(getpid(),17);
   }
   int tries = 0;
   while( tries < 60 ) {
-    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+//    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+    result = EINSS7CpMsgConnInst(MY_USER_ID, ETSIMAP_ID, 0);
     if ( result != MSG_OK ) {
       __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result);
       sleep(1);
@@ -197,7 +199,8 @@ void MapIoTask::init(unsigned timeout)
     MapDialogContainer::getInstance()->InitLSSN(MapDialogContainer::localSSNs[i]);
   }
 //  __pingPongWaitCounter = 0;
-  err = EINSS7CpMsgInitNoSig(MAXENTRIES);
+//  err = EINSS7CpMsgInitNoSig(MAXENTRIES);
+  err = EINSS7CpMsgInitiate( MAXENTRIES, (unsigned byte)MapDialogContainer::GetNodeNumber(), 0 );
   if ( err != MSG_OK ) {
     __map_warn2__("Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
   }
@@ -233,7 +236,8 @@ void MapIoTask::disconnect()
     MapDialogContainer::boundLocalSSNs[i] = 0;
   }
 
-  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
+//  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
+  result = EINSS7CpMsgRelInst( MY_USER_ID, ETSIMAP_ID, 0);
   if ( result != MSG_OK) {
     __map_warn2__("error at MsgRel errcode 0x%hx",result);
 //    if ( !isStopping ) kill(getpid(),17);
@@ -634,6 +638,8 @@ void MapIoTask::Start()
 string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";
 string MapDialogContainer::USSD_ADRESS_VALUE = "79029869998";
 ET96MAP_LOCAL_SSN_T MapDialogContainer::ussdSSN = 6;
+int MapDialogContainer::nodeNumber = 1;
+int MapDialogContainer::nodesCount = 1;
 int MapDialogContainer::busyMTDelay = 10;
 int MapDialogContainer::lockedByMoDelay = 10;
 int MapDialogContainer::MOLockTimeout = 45;
