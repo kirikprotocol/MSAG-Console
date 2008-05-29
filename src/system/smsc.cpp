@@ -264,17 +264,10 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       std::auto_ptr<ConfigView> imConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "cluster"));
 
       char * mode = imConfig.get()->getString("mode");
-
+      nodesCount = 1;
       if(strcmp(mode, "hs") == 0 || strcmp(mode, "ha") == 0){
 
           ishs = true;
-          try{
-            nodesCount=imConfig.get()->getInt("nodesCount");
-          }catch(...)
-          {
-            nodesCount = 1;
-            __warning2__("nodesCount set to default %d",nodesCount);
-          }
         
           const char* nodes[] = { imConfig.get()->getString("host1"), imConfig.get()->getString("host2")};
           smsc_log_info(log, "host1: %s, host2: %s", nodes[0], nodes[1] );
@@ -317,6 +310,28 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       }else if(strcmp(mode, "single") == 0)
       {
           FakeInterconnect::init();
+      }else if(strcmp(mode, "scalable") == 0) {
+        try{
+          nodesCount=imConfig.get()->getInt("nodesCount");
+        }catch(...)
+        {
+          nodesCount = 1;
+          __warning2__("nodesCount set to default %d",nodesCount);
+        }
+
+        const char * p = strchr(node, '=');
+        if( !p )
+          throw Exception("Command line parameter is failed");
+        int num1 = 0;
+        try {
+          smsc_log_info(log, "node: %s, num: %s", node, p+ 1 );
+          num1 = atoi(p + 1);
+        }catch(...){
+          throw Exception("Exception atoi");
+        }
+        
+        nodeIndex=num1;
+        FakeInterconnect::init();
       }
 
       if(mode)
