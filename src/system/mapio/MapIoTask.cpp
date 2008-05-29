@@ -200,7 +200,7 @@ void MapIoTask::init(unsigned timeout)
   }
 //  __pingPongWaitCounter = 0;
 //  err = EINSS7CpMsgInitNoSig(MAXENTRIES);
-  err = EINSS7CpMsgInitiate( MAXENTRIES, (unsigned byte)MapDialogContainer::GetNodeNumber(), 0 );
+  err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::GetNodeNumber(), FALSE );
   if ( err != MSG_OK ) {
     __map_warn2__("Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
   }
