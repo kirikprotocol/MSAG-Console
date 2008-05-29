@@ -1,0 +1,1 @@
+native2ascii -encoding utf-8 response.pattern.properties.utf-8 response.pattern.properties
