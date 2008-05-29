@@ -12,7 +12,9 @@
 
 
 #define MAXENTRIES 8192
-#define MY_USER_ID USER01_ID
+
+USHORT_T MY_USER_ID=USER01_ID;
+
 using namespace std;
 
 Mutex mapMutex;
@@ -200,7 +202,8 @@ void MapIoTask::init(unsigned timeout)
   }
 //  __pingPongWaitCounter = 0;
   if( MapDialogContainer::GetNodesCount() > 1 ) {
-    err = EINSS7CpMsgInitiate( MAXENTRIES, MapDialogContainer::GetNodeNumber(), FALSE );
+    err = EINSS7CpMsgInitiate( MAXENTRIES, 0, FALSE );
+    if( MapDialogContainer::GetNodeNumber() == 2 ) MY_USER_ID = USER06_ID;
   } else {
     err = EINSS7CpMsgInitiate( MAXENTRIES, 0, FALSE );
   }
