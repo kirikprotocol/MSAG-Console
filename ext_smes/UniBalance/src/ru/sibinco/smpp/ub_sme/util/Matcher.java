@@ -19,17 +19,17 @@ public class Matcher {
   }
 
   public Matcher(String match) {
-    if(match.indexOf('#')==-1){
+    if (match.indexOf('#') == -1) {
       throw new IllegalArgumentException("Argument must match \"[regex]#[group index]\"");
     } else {
-      group = Integer.parseInt(match.substring(match.indexOf('#')+1));
+      group = Integer.parseInt(match.substring(match.indexOf('#') + 1));
       this.regex = Pattern.compile(match.substring(0, match.indexOf('#')), Pattern.DOTALL);
     }
   }
 
-  public String match(String input){
+  public String match(String input) {
     java.util.regex.Matcher m = regex.matcher(input);
-    if(m.matches()){
+    if (m.matches()) {
       return m.group(group);
     } else {
       return null;

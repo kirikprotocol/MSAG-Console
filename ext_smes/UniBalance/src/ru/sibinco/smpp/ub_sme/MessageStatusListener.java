@@ -7,7 +7,7 @@ package ru.sibinco.smpp.ub_sme;
  * Time: 1:01:37 PM
  */
 public interface MessageStatusListener {
-    public String getName();
+  public String getName();
 
-    public void statusChanged(int messageId, int status);
+  public void statusChanged(int messageId, int status);
 }

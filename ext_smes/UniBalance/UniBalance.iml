@@ -15,7 +15,9 @@
           <root url="jar://$MODULE_DIR$/lib/tpool.jar!/" />
         </CLASSES>
         <JAVADOC />
-        <SOURCES />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../UniBalance_nsk/lib/log4j.jar!/" />
+        </SOURCES>
       </library>
     </orderEntry>
     <orderEntry type="module-library">
@@ -93,7 +95,7 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/lib/log4j-1.2.8.jar!/" />
+          <root url="jar://$MODULE_DIR$/../UniBalance_nsk/lib/log4j.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

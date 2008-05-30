@@ -6,12 +6,12 @@ package ru.sibinco.smpp.ub_sme.inbalance;
  * All rights reserved.
  */
 public class InBalancePDUException extends Exception {
-    public InBalancePDUException(String message) {
-        super(message);
-    }
+  public InBalancePDUException(String message) {
+    super(message);
+  }
 
-    public InBalancePDUException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public InBalancePDUException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }

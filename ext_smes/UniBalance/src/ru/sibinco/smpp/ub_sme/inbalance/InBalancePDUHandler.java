@@ -9,6 +9,6 @@ package ru.sibinco.smpp.ub_sme.inbalance;
  */
 public interface InBalancePDUHandler {
 
-    public void handleInBalancePDU(InBalancePDU pdu);
+  public void handleInBalancePDU(InBalancePDU pdu);
 
 }

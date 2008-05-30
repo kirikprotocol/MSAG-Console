@@ -9,15 +9,15 @@ package ru.sibinco.smpp.ub_sme.inbalance;
  */
 public class InBalanceClientException extends Exception {
 
-    public InBalanceClientException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public InBalanceClientException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public InBalanceClientException(Throwable cause) {
-        super(cause);
-    }
+  public InBalanceClientException(Throwable cause) {
+    super(cause);
+  }
 
-    public InBalanceClientException(String message) {
-        super(message);
-    }
+  public InBalanceClientException(String message) {
+    super(message);
+  }
 }
