@@ -9,6 +9,6 @@ package ru.sibinco.smpp.ub_sme.inman;
  */
 public interface InManPDUHandler {
 
-    public void handleInManPDU(InManPDU pdu);
+  public void handleInManPDU(InManPDU pdu);
 
 }

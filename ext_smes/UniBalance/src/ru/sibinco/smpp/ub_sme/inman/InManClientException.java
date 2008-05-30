@@ -9,15 +9,15 @@ package ru.sibinco.smpp.ub_sme.inman;
  */
 public class InManClientException extends Exception {
 
-    public InManClientException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public InManClientException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public InManClientException(Throwable cause) {
-        super(cause);
-    }
+  public InManClientException(Throwable cause) {
+    super(cause);
+  }
 
-    public InManClientException(String message) {
-        super(message);
-    }
+  public InManClientException(String message) {
+    super(message);
+  }
 }

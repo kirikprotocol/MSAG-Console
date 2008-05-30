@@ -77,12 +77,12 @@ public class OutgoingQueue implements OutgoingQueueProxy {
     if (Logger.isInfoEnabled()) Logger.info("OutgoingQueue created.");
   }
 
-  public synchronized OutgoingObject getOutgoingObject() { // todo ulock incoming queue by outgoing queue size
+  public synchronized OutgoingObject getOutgoingObject() {
     if (outQueue.size() == 0) return null;
     return (OutgoingObject) outQueue.remove(0);
   }
 
-  public void addOutgoingObject(Response response) { // todo lock incoming queue by outgoing queue size
+  public void addOutgoingObject(Response response) {
     if (response == null)
       return;
     if (response.getMessages() == null)
@@ -100,7 +100,7 @@ public class OutgoingQueue implements OutgoingQueueProxy {
     return messageStatusChangedNotifier.registerMessageStatusListener(listener);
   }
 
-  public synchronized void addOutgoingObject(OutgoingObject obj) { // todo see upper
+  public synchronized void addOutgoingObject(OutgoingObject obj) {
     putOutgoingObject(obj);
   }
 

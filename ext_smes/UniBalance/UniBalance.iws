@@ -33,67 +33,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/ProductivityControlObject.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceRequest.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceRequest.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/AbonentProfileManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingObject.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingObject.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueue.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueue.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/mg/MGState.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/mg/MGState.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/Utils.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/Utils.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/QueueOverflowException.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/test/StressTest.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/test/StressTest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/AbonentContractResult.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/AbonentContractResult.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/mg/MGManager.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/StateInterface.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueProxy.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueProxy.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/Matcher.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/Matcher.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalancePDUException.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalancePDUException.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManClient.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManClient.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/ProductivityController.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManPDUException.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManPDUException.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/DBConnectionManager.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/DBConnectionManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/InitializationException.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/InitializationException.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RequestProcessor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageSender.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageSender.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MTSSouthState.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/ProductivityControllable.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceResult.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceResult.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/VarString.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageStatusListener.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageStatusListener.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManPDUHandler.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManPDUHandler.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/mg/MGRequestManager.java" afterPath="" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UniBalance.iws" afterPath="$PROJECT_DIR$/UniBalance.iws" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/ProfileAbonentManager.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Response.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Response.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BannerManager.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BannerManager.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/SmeEngine.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/State.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceClientException.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceClientException.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MTSSouthRequestProcessor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalancePDU.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalancePDU.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/mg/MgRequestStateProcessor.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Sme.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/Sme.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/VarString.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageStatusChangedNotifier.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/MessageStatusChangedNotifier.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/UniBalance.iml" afterPath="$PROJECT_DIR$/UniBalance.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceClient.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalanceClient.java" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RequestManager.java" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/config/sme.properties" afterPath="$PROJECT_DIR$/config/sme.properties" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/Convertor.java" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/ProductivityControllable.java" afterPath="" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/ProductivityControlObject.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManPDU.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManPDU.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/AbonentContractRequest.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/AbonentContractRequest.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingObjectIndex.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingObjectIndex.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RetryTask.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/RetryTask.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManClientException.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/InManClientException.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/ExpireStateProcessor.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/ExpireStateProcessor.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/test/InManTestServer.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inman/test/InManTestServer.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueController.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/OutgoingQueueController.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalancePDUHandler.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/inbalance/InBalancePDUHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/BannerState.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/SMCXProfileCommandHandler.java" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/SMCXProfileCommandHandler.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/ru/sibinco/smpp/ub_sme/util/ProductivityController.java" />
     </list>
   </component>
   <component name="ChangeListSynchronizer" />
@@ -447,6 +387,24 @@
           <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
         </PATH_ELEMENT>
       </PATH>
+      <PATH>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="UniBalance.ipr" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="UniBalance" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewModuleNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+        <PATH_ELEMENT>
+          <option name="myItemId" value="PsiDirectory:$PROJECT_DIR$/config" />
+          <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+        </PATH_ELEMENT>
+      </PATH>
     </subPane>
   </component>
   <component name="ProjectReloadState">
@@ -735,7 +693,7 @@
     <option name="REFORMAT_BEFORE_FILE_COMMIT" value="false" />
     <option name="FILE_HISTORY_DIALOG_COMMENTS_SPLITTER_PROPORTION" value="0.8" />
     <option name="FILE_HISTORY_DIALOG_SPLITTER_PROPORTION" value="0.5" />
-    <option name="ERROR_OCCURED" value="true" />
+    <option name="ERROR_OCCURED" value="false" />
     <option name="ACTIVE_VCS_NAME" value="CVS" />
     <option name="UPDATE_GROUP_BY_PACKAGES" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />

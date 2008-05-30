@@ -6,12 +6,12 @@ package ru.sibinco.smpp.ub_sme.inman;
  * All rights reserved.
  */
 public class InManPDUException extends Exception {
-    public InManPDUException(String message) {
-        super(message);
-    }
+  public InManPDUException(String message) {
+    super(message);
+  }
 
-    public InManPDUException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public InManPDUException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
 }
