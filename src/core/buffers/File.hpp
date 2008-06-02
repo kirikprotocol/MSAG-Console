@@ -1040,6 +1040,10 @@ public:
   static void ReadDir(const char* dirName,std::vector<std::string>& dirContents,ReadDirFilter flt=rdfAll|rdfNoDots)
   {
     DIR* dir=opendir(dirName);
+    if(!dir)
+    {
+      throw FileException(FileException::errOpenDirFailed,dirName);
+    }
     TmpBuf<char,512> buf(sizeof(dirent)+pathconf(dirName,_PC_NAME_MAX)+1);
     dirent* de=(dirent*)buf.get();
     dirent* ptr;
