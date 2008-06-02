@@ -15,6 +15,11 @@
     <param name="unrespondedMessagesSleep" type="int">5</param><!--sec-->
     <param name="regions_config_filename" type="string">/path_to_infosme_install_dir/conf/regions.xml</param>
     <param name="route_config_filename" type="string">/path_to_infosme_install_dir/conf/routes.xml</param>
+    <param name="statStoreLocation" type="string">stat</param>
+    <param name="storeLocation" type="string">store</param>
+    <param name="mappingMaxChanges" type="int">10000</param>
+    <param name="mappingRollTime" type="int">600</param>
+
 
     <section name="Admin">
       <param name="host" type="string">@listen.host@</param>
