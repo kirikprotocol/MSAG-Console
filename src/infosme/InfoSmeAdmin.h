@@ -17,6 +17,8 @@
 
 #include <core/buffers/Array.hpp>
 
+#include "TaskTypes.hpp"
+
 #include "InfoSme_T_SearchCriterion.hpp"
 #include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
 
@@ -36,57 +38,59 @@ namespace smsc { namespace infosme
 
         virtual void flushStatistics() = 0;
         
-        virtual void addTask(std::string taskId) = 0;
-        virtual void removeTask(std::string taskId) = 0; 
-        virtual void changeTask(std::string taskId) = 0;
+        virtual void addTask(uint32_t taskId) = 0;
+        virtual void removeTask(uint32_t taskId) = 0; 
+        virtual void changeTask(uint32_t taskId) = 0;
+
+        virtual TaskInfo getTaskInfo(uint32_t taskId)=0;
         
-        virtual bool startTask(std::string taskId) = 0;
-        virtual bool stopTask(std::string taskId) = 0; 
+        virtual bool startTask(uint32_t taskId) = 0;
+        virtual bool stopTask(uint32_t taskId) = 0; 
         virtual Array<std::string> getGeneratingTasks() = 0;
         virtual Array<std::string> getProcessingTasks() = 0;
 
-        virtual bool isTaskEnabled(std::string taskId) = 0;
-        virtual bool setTaskEnabled(std::string taskId, bool enabled) = 0;
+        virtual bool isTaskEnabled(uint32_t taskId) = 0;
+        virtual bool setTaskEnabled(uint32_t taskId, bool enabled) = 0;
         
         virtual void addSchedule(std::string scheduleId) = 0;
         virtual void removeSchedule(std::string scheduleId) = 0;
         virtual void changeSchedule(std::string scheduleId) = 0;
-        virtual void addDeliveryMessages(const std::string& taskId,
+        virtual void addDeliveryMessages(uint32_t taskId,
                                          uint8_t msgState,
                                          const std::string& address,
                                          time_t messageDate,
                                          const std::string& msg) = 0;
 
-        virtual void changeDeliveryMessageInfoByRecordId(const std::string& taskId,
+        virtual void changeDeliveryMessageInfoByRecordId(uint32_t taskId,
                                                          uint8_t messageState,
                                                          time_t unixTime,
                                                          const std::string& recordId) = 0;
 
-        virtual void changeDeliveryMessageInfoByCompositCriterion(const std::string& taskId,
+        virtual void changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId,
                                                                   uint8_t messageState,
                                                                   time_t unixTime,
                                                                   const InfoSme_T_SearchCriterion& searchCrit) = 0;
-        virtual void deleteDeliveryMessageByRecordId(const std::string& taskId,
+        virtual void deleteDeliveryMessageByRecordId(uint32_t taskId,
                                                      const std::string& recordId) = 0;
 
-        virtual void deleteDeliveryMessagesByCompositCriterion(const std::string& taskId,
+        virtual void deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
                                                                const InfoSme_T_SearchCriterion& searchCrit) = 0;
 
-        virtual void insertRecordIntoTasksStat(const std::string& taskId,
+        virtual void insertRecordIntoTasksStat(uint32_t taskId,
                                                uint32_t period,
                                                uint32_t generated,
                                                uint32_t delivered,
                                                uint32_t retried,
                                                uint32_t failed) = 0;
 
-        virtual Array<std::string> getTaskMessages(const std::string& taskId,
+        virtual Array<std::string> getTaskMessages(uint32_t taskId,
                                                    const InfoSme_T_SearchCriterion& searchCrit) = 0;
 
-        virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit) = 0;
+        //virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit) = 0;
 
-        virtual void endDeliveryMessagesGeneration(const std::string& taskId) = 0;
+        virtual void endDeliveryMessagesGeneration(uint32_t taskId) = 0;
 
-        virtual void changeDeliveryTextMessageByCompositCriterion(const std::string& taskId,
+        virtual void changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
                                                                   const std::string& newTextMsg,
                                                                   const InfoSme_T_SearchCriterion& searchCrit) = 0;
         InfoSmeAdmin() {};

@@ -4,87 +4,76 @@
 namespace smsc { namespace infosme
 {
 
-StatisticsManager::StatisticsManager(Connection* connection)
+StatisticsManager::StatisticsManager(const std::string& argLocation,InfoSmeAdmin* argAdmin)
     : Statistics(), Thread(), logger(Logger::getInstance("smsc.infosme.StatisticsManager")),
-            connection(connection), currentIndex(0), 
-                bExternalFlush(false), bStarted(false), bNeedExit(false)
+            currentIndex(0), bExternalFlush(false), bStarted(false), bNeedExit(false)
 {
+  admin=argAdmin;
+  storeLocation=argLocation;
+  if(storeLocation.length())
+  {
+    if(storeLocation[storeLocation.length()-1]!='/')storeLocation+='/';
+  }else
+  {
+    storeLocation="./";
+  }
 }
 StatisticsManager::~StatisticsManager()
 {
     Stop();
 }
 
-bool StatisticsManager::getStatistics(std::string taskId, TaskStat& stat)
+bool StatisticsManager::getStatistics(uint32_t taskId, TaskStat& stat)
 {
-    const char* task_id = taskId.c_str();
-    if (task_id && task_id[0])
-    {
-        MutexGuard guard(switchLock);
-        
-        TaskStat* st = statistics[currentIndex].GetPtr(task_id);
-        if (st) {
-            stat = *st;
-            return true;
-        }
-    }
-    return false;
+  MutexGuard guard(switchLock);
+  
+  TaskStat* st = statistics[currentIndex].GetPtr(taskId);
+  if (st)
+  {
+    stat = *st;
+    return true;
+  }
+  return false;
 }
-void StatisticsManager::incGenerated(std::string taskId, unsigned inc)
+void StatisticsManager::incGenerated(uint32_t taskId, unsigned inc)
 {
-    const char* task_id = taskId.c_str();
-    if (task_id && task_id[0])
-    {
-        MutexGuard guard(switchLock);
-        
-        TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
-        if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(inc, 0, 0, 0));
-        else stat->generated += inc;
-        stat = statistics[currentIndex].GetPtr(task_id);
-        smsc_log_debug(logger, "StatisticsManager::incGenerated::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
-    }
+  MutexGuard guard(switchLock);
+  
+  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
+  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(inc, 0, 0, 0));
+  else stat->generated += inc;
+  stat = statistics[currentIndex].GetPtr(taskId);
+  smsc_log_debug(logger, "StatisticsManager::incGenerated::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
-void StatisticsManager::incDelivered(std::string taskId, unsigned inc)
+void StatisticsManager::incDelivered(uint32_t taskId, unsigned inc)
 {
-    const char* task_id = taskId.c_str();
-    if (task_id && task_id[0])
-    {
-        MutexGuard  guard(switchLock);
-        
-        TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
-        if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(0, inc, 0, 0));
-        else stat->delivered += inc;
-        stat = statistics[currentIndex].GetPtr(task_id);
-        smsc_log_debug(logger, "StatisticsManager::incDelivered::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
-    }
+  MutexGuard  guard(switchLock);
+  
+  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
+  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(0, inc, 0, 0));
+  else stat->delivered += inc;
+  stat = statistics[currentIndex].GetPtr(taskId);
+  smsc_log_debug(logger, "StatisticsManager::incDelivered::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
-void StatisticsManager::incRetried(std::string taskId, unsigned inc)
+void StatisticsManager::incRetried(uint32_t taskId, unsigned inc)
 {
-    const char* task_id = taskId.c_str();
-    if (task_id && task_id[0])
-    {
-        MutexGuard guard(switchLock);
-        
-        TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
-        if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(0, 0, inc, 0));
-        else stat->retried += inc;
-        stat = statistics[currentIndex].GetPtr(task_id);
-        smsc_log_debug(logger, "StatisticsManager::incRetried::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
-    }
+  MutexGuard guard(switchLock);
+  
+  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
+  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(0, 0, inc, 0));
+  else stat->retried += inc;
+  stat = statistics[currentIndex].GetPtr(taskId);
+  smsc_log_debug(logger, "StatisticsManager::incRetried::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
-void StatisticsManager::incFailed(std::string taskId, unsigned inc)
+void StatisticsManager::incFailed(uint32_t taskId, unsigned inc)
 {
-    const char* task_id = taskId.c_str();
-    if (task_id && task_id[0])
-    {
-        MutexGuard guard(switchLock);
-        
-        TaskStat* stat = statistics[currentIndex].GetPtr(task_id);
-        if (!stat) statistics[currentIndex].Insert(task_id, TaskStat(0, 0, 0, inc));
-        else stat->failed += inc;
-        stat = statistics[currentIndex].GetPtr(task_id);
-        smsc_log_debug(logger, "StatisticsManager::incFailed::: modify statistic in hash: task_id=%s,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", task_id,stat->generated,stat->delivered,stat->retried,stat->failed);
-    }
+  MutexGuard guard(switchLock);
+  
+  TaskStat* stat = statistics[currentIndex].GetPtr(taskId);
+  if (!stat) statistics[currentIndex].Insert(taskId, TaskStat(0, 0, 0, inc));
+  else stat->failed += inc;
+  stat = statistics[currentIndex].GetPtr(taskId);
+  smsc_log_debug(logger, "StatisticsManager::incFailed::: modify statistic in hash: task_id=%d,stat.generated=%d,stat.delivered=%d,stat.retried=%d,stat.failed=%d", taskId,stat->generated,stat->delivered,stat->retried,stat->failed);
 }
 
 int StatisticsManager::Execute()
@@ -149,9 +138,11 @@ void StatisticsManager::flushStatistics()
 const char* DELETE_TASK_STAT_STATE_SQL = (const char*)
 "DELETE FROM INFOSME_TASKS_STAT WHERE task_id=:task_id";
 
-void StatisticsManager::delStatistics(std::string taskId)
+void StatisticsManager::delStatistics(uint32_t taskId)
 {
-    const char* task_id = taskId.c_str();
+/*
+  char task_id[32];
+  sprintf(task_id,"%u",taskId);
     if (!task_id || task_id[0] == '\0') return;
     
     flushStatistics();
@@ -181,6 +172,7 @@ void StatisticsManager::delStatistics(std::string taskId)
         smsc_log_error(logger, "Error occurred during statistics deleting for task '%s'. "
                      "Details: %s", task_id, exc.what());
     }
+    */
 }
 
 short StatisticsManager::switchCounters()
@@ -222,7 +214,53 @@ void StatisticsManager::flushCounters(short index)
 
     try
     {
-        std::auto_ptr<Statement> statement(connection->createStatement(INSERT_TASK_STAT_STATE_SQL));
+      time_t now=time(NULL);
+      struct tm t;
+      localtime_r(&now,&t);
+      char dirName[64];
+      sprintf(dirName,"%04d%02d%02d",t.tm_year+1900,t.tm_mon+1,t.tm_mday);
+      std::string fullPath=storeLocation;
+      fullPath+=dirName;
+      if(!File::Exists(fullPath.c_str()))
+      {
+        File::MkDir(fullPath.c_str());
+      }
+      char fileName[32];
+      sprintf(fileName,"%02d%02d%02d.csv",t.tm_hour,t.tm_min,t.tm_sec);
+      fullPath+='/';
+      fullPath+=fileName;
+      File f;
+      bool opened=false;
+      int taskId;
+      TaskStat* st;
+      IntHash<TaskStat>::Iterator it=statistics[index].First();
+      char buf[128];
+      std::string line;
+      while(it.Next(taskId,st))
+      {
+        if(!opened)
+        {
+          f.WOpen(fullPath.c_str());
+          const char* header="TASK_ID,TASK_NAME,PERIOD,GENERATED,DELIVERED,RETRIED,FAILED\n";
+          f.Write(header,strlen(header));
+          opened=true;
+        }
+        sprintf(buf,"%u,",taskId);
+        line=buf;
+        line+='"';
+        line+=admin->getTaskInfo(taskId).name;
+        line+="\",";
+        sprintf(buf,"%d,%d,%d,%d,%d\n",period,st->generated,st->delivered,st->retried,st->failed);
+        line+=buf;
+        f.Write(line.c_str(),line.length());
+      }
+      if(opened)
+      {
+        f.Flush();
+      }
+
+/*
+      std::auto_ptr<Statement> statement(connection->createStatement(INSERT_TASK_STAT_STATE_SQL));
         if (!statement.get())
             throw Exception("Failed to obtain statement for statistics update");
         
@@ -244,16 +282,10 @@ void StatisticsManager::flushCounters(short index)
         }
         
         connection->commit();
+        */
     }
-    catch (Exception& exc)
+    catch (std::exception& exc)
     {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction (statistics). "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction (statistics).");
-        }
         smsc_log_error(logger, "Error occurred during statistics flushing. Details: %s", exc.what());
     }
 

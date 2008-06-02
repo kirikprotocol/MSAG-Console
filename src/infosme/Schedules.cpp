@@ -49,7 +49,7 @@ Schedule* Schedule::create(ConfigView* config, std::string id)
     
     return schedule;
 }
-void Schedule::init(ConfigView* config, bool full)
+void Schedule::baseinit(ConfigView* config, bool full)
 {
     startDateTime = parseDateTime(config->getString("startDateTime"));
     if (startDateTime <= 0)
@@ -69,11 +69,10 @@ void Schedule::init(ConfigView* config, bool full)
 
     if (*tasksCur != '\0') do
     {
-        if (*tasksCur == ',' || *tasksCur == '\0') {
-            const char* task_id = taskId.c_str();
-            if (!task_id || task_id[0] == '\0')
-                throw ConfigException("Task id is invalid.");
-            if (!addTask(taskId))
+        if (*tasksCur == ',' || *tasksCur == '\0')
+        {
+            uint32_t task_id = atoi(taskId.c_str());
+            if (!addTask(task_id))
                 throw ConfigException("Task '%s' was already assigned to schedule.",task_id);
             taskId = "";
         } 
@@ -84,7 +83,7 @@ void Schedule::init(ConfigView* config, bool full)
 
 void OnceSchedule::init(ConfigView* config)
 {
-    Schedule::init(config, false);
+    Schedule::baseinit(config, false);
 }
 time_t OnceSchedule::calulateNextTime()
 {
@@ -93,7 +92,7 @@ time_t OnceSchedule::calulateNextTime()
 
 void DailySchedule::init(ConfigView* config)
 {
-    Schedule::init(config, true);
+    Schedule::baseinit(config, true);
 
     everyNDays = config->getInt("everyNDays");
     if (everyNDays <= 0)
@@ -120,7 +119,7 @@ time_t DailySchedule::calulateNextTime()
 
 void WeeklySchedule::init(ConfigView* config)
 {
-    Schedule::init(config, true);
+    Schedule::baseinit(config, true);
 
     everyNWeeks = config->getInt("everyNWeeks");
     if (everyNWeeks <= 0)
@@ -174,7 +173,7 @@ time_t WeeklySchedule::calulateNextTime()
 
 void MonthlySchedule::init(ConfigView* config)
 {
-    Schedule::init(config, true);
+    Schedule::baseinit(config, true);
     
     dayOfMonth = -1;
     try { dayOfMonth = config->getInt("dayOfMonth"); } catch (...) {};
@@ -283,7 +282,7 @@ time_t MonthlySchedule::calulateNextTime()
 
 void IntervalSchedule::init(ConfigView* config)
 {
-    Schedule::init(config, true);
+    Schedule::baseinit(config, true);
     
     intervalTime = parseTime(config->getString("intervalTime"));
     if (intervalTime <= 0) 

@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <set>
 
 #include <core/synchronization/Mutex.hpp>
 
@@ -53,41 +54,44 @@ namespace smsc { namespace infosme
         time_t  deadLine;       // full YYYY.MM.dd HH:mm:ss
         
         Mutex           taskIdsLock;
-        Hash<bool>      taskIds;
+        typedef std::set<uint32_t> IntSet;
+        IntSet taskIds;
         
         virtual ~Schedule() {};
         
         virtual time_t calulateNextTime() = 0;
         
-        virtual bool addTask(std::string taskId)
+        virtual bool addTask(uint32_t taskId)
+        { 
+            MutexGuard guard(taskIdsLock);
+            taskIds.insert(taskId);
+            return true;
+        };
+        virtual bool removeTask(uint32_t taskId)
         { 
             MutexGuard guard(taskIdsLock);
 
-            const char* task_id = taskId.c_str();
-            if (!task_id || task_id[0] == '\0' || taskIds.Exists(task_id)) 
-                return false;
-            else taskIds.Insert(task_id, true);
-            return true;
-        };
-        virtual bool removeTask(std::string taskId)
-        { 
-            MutexGuard guard(taskIdsLock);
-
-            const char* task_id = taskId.c_str();
-            if (!task_id || task_id[0] == '\0' || !taskIds.Exists(task_id)) 
-                return false;
-            else taskIds.Delete(task_id);
+            IntSet::iterator it=taskIds.find(taskId);
+            if (it==taskIds.end()) 
+            {
+              return false;
+            }
+            else
+            {
+              taskIds.erase(it);
+            }
             return true;
         };
 
-        Hash<bool>& getTasks() {
-            MutexGuard guard(taskIdsLock);
-            return taskIds;
+        IntSet getTasks()
+        {
+          MutexGuard guard(taskIdsLock);
+          return taskIds;
         }
     
         static Schedule* create(ConfigView* config, std::string id);
         virtual void init(ConfigView* config) = 0;
-        void init(ConfigView* config, bool full);
+        void baseinit(ConfigView* config, bool full);
 
     protected:
         

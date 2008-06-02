@@ -34,8 +34,8 @@ namespace smsc { namespace infosme
         virtual bool invokeBeginGeneration(Task* task) = 0;
         virtual bool invokeDropAllMessages(Task* task) = 0;
         
-        virtual bool hasTask(std::string taskId) = 0;
-        virtual TaskGuard getTask(std::string taskId) = 0;
+        virtual bool hasTask(uint32_t taskId) = 0;
+        virtual TaskGuard getTask(uint32_t taskId) = 0;
 
         virtual void awakeSignal() = 0;
     
@@ -126,7 +126,7 @@ namespace smsc { namespace infosme
          *
          * @param taskId        task id to be removed
          */
-        void removeTask(std::string taskId);
+        void removeTask(uint32_t taskId);
     };
 
 }}

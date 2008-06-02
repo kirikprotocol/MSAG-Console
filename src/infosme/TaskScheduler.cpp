@@ -97,7 +97,7 @@ int TaskScheduler::Execute()
             if (bChanged) continue;
         }
         
-        Hash<bool> tasks;
+        Schedule::IntSet tasks;
         {
             MutexGuard guard(schedulesLock);
             if (!schedules.Exists(scheduleId.c_str())) continue;
@@ -109,22 +109,26 @@ int TaskScheduler::Execute()
         try 
         {
             time_t currentTime = time(NULL);
-            char* task_id = 0; bool task_key = false; tasks.First();
-            while (tasks.Next(task_id, task_key))
-                if (task_id && task_id[0] != '\0')
-                {
-                    TaskGuard taskGuard = processor->getTask(task_id);
-                    Task* task = taskGuard.get();
-                    if (!task) { 
-                        smsc_log_warn(logger, "Task '%s' not found.", task_id);
-                        continue;
-                    }
-                    if (!task->canGenerateMessages()) continue;
-                    
-                    if (task->isReady(currentTime, false) && !task->isInGeneration())
-                        processor->invokeBeginGeneration(task);
-                }
-        } 
+            for(Schedule::IntSet::iterator it=tasks.begin();it!=tasks.end();it++)
+            {
+              TaskGuard taskGuard = processor->getTask(*it);
+              Task* task = taskGuard.get();
+              if (!task)
+              { 
+                smsc_log_warn(logger, "Task '%d' not found.", *it);
+                continue;
+              }
+              if (!task->canGenerateMessages())
+              {
+                continue;
+              }
+              
+              if (task->isReady(currentTime, false) && !task->isInGeneration())
+              {
+                processor->invokeBeginGeneration(task);
+              }
+            }
+        }
         catch (std::exception& exc) 
         {
             awake.Wait(0);
@@ -241,7 +245,7 @@ bool TaskScheduler::removeSchedule(std::string id)
     return true;
 }
 
-void TaskScheduler::removeTask(std::string taskId)
+void TaskScheduler::removeTask(uint32_t taskId)
 {
     MutexGuard guard(schedulesLock);
 

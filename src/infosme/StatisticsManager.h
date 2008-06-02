@@ -7,11 +7,13 @@
 #include <core/synchronization/Event.hpp>
 #include <core/buffers/IntHash.hpp>
 #include <core/buffers/Hash.hpp>
-
+#include <core/buffers/File.hpp>
 #include <core/threads/Thread.hpp>
 
 #include <db/DataSource.h>
 #include <logger/Logger.h>
+
+#include "InfoSmeAdmin.h"
 
 namespace smsc { namespace infosme
 {
@@ -21,6 +23,7 @@ namespace smsc { namespace infosme
     
     using core::buffers::IntHash;
     using core::buffers::Hash;
+    using core::buffers::File;
     
     using smsc::logger::Logger;
     
@@ -29,9 +32,12 @@ namespace smsc { namespace infosme
     protected:
     
         smsc::logger::Logger *logger;
-        Connection*         connection;
         
-        Hash<TaskStat>      statistics[2];
+        IntHash<TaskStat>      statistics[2];
+
+        std::string storeLocation;
+
+        InfoSmeAdmin* admin;
 
         short   currentIndex;
         bool    bExternalFlush;
@@ -54,15 +60,15 @@ namespace smsc { namespace infosme
         virtual void Stop();
 
         virtual void flushStatistics();
-        virtual bool getStatistics(std::string taskId, TaskStat& stat);
-        virtual void delStatistics(std::string taskId);
+        virtual bool getStatistics(uint32_t taskId, TaskStat& stat);
+        virtual void delStatistics(uint32_t taskId);
 
-        virtual void incGenerated(std::string taskId, unsigned inc=1);
-        virtual void incDelivered(std::string taskId, unsigned inc=1);
-        virtual void incRetried(std::string taskId, unsigned inc=1);
-        virtual void incFailed(std::string taskId, unsigned inc=1);
+        virtual void incGenerated(uint32_t taskId, unsigned inc=1);
+        virtual void incDelivered(uint32_t taskId, unsigned inc=1);
+        virtual void incRetried(uint32_t taskId, unsigned inc=1);
+        virtual void incFailed(uint32_t taskId, unsigned inc=1);
         
-        StatisticsManager(Connection* connection);
+        StatisticsManager(const std::string& argLocation,InfoSmeAdmin* argAdmin);
         virtual ~StatisticsManager();
     };
 

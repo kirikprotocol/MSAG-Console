@@ -1,5 +1,6 @@
 #include "Task.h"
 #include "SQLAdapters.h"
+#include "TaskLock.hpp"
 #include <time.h>
 #include <sstream>
 #include <list>
@@ -55,72 +56,53 @@ const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FRO
 
 const char* DROP_INFOSME_T_INDEX_STATEMENT_SQL = "DROP INDEX ON %s";
 
-Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
-           DataSource* _dsOwn, DataSource* _dsInt)
+Task::Task(ConfigView* config, uint32_t taskId, std::string location, 
+           DataSource* _dsOwn)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
-      usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn), dsInt(_dsInt), 
+      usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(_dsOwn),store(location),
       bInProcess(false), bInGeneration(false), bGenerationSuccess(false),
       infoSme_T_storageWasDestroyed(false), lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
+   
 {
-    init(config, taskId, tablePrefix);
-    formatter = new OutputFormatter(info.msgTemplate.c_str());
-    trackIntegrity(true, true); // delete flag & generated messages
+  store.Init();
+  init(config, taskId);
+  formatter = new OutputFormatter(info.msgTemplate.c_str());
+  trackIntegrity(true, true); // delete flag & generated messages
 }
 Task::~Task()
 {
     if (formatter) delete formatter;
 
-    if (dsInt) 
-    {
-        /* Used externally by other tasks
-        dsInt->closeRegisteredQueries(INSERT_GENERATING_STATEMENT_ID);
-        dsInt->closeRegisteredQueries(DELETE_GENERATING_STATEMENT_ID);
-        */
-        
-        std::string delNewMessagesId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(delNewMessagesId.c_str());
-        std::string newMessageId(prepareSqlCall(NEW_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(newMessageId.c_str());
-        std::string clearMessagesId(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(clearMessagesId.c_str());
-        std::string resetMessagesId(prepareSqlCall(RESET_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(resetMessagesId.c_str());
-        std::string retryMessageId(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(retryMessageId.c_str());
-        std::string deleteMessageId(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(deleteMessageId.c_str());
-        std::string enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(enrouteMessageId.c_str());
-        std::string selectMessageId(prepareSqlCall(SELECT_MESSAGES_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(selectMessageId.c_str());
-        std::string stateMessageId(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_ID));
-        dsInt->closeRegisteredQueries(stateMessageId.c_str());
-    }
     if (dsOwn)
     {
-        std::string userQueryId(prepareSqlCall(USER_QUERY_STATEMENT_ID));
-        dsOwn->closeRegisteredQueries(userQueryId.c_str());
+      char buf[128];
+      char idBuf[32];
+      sprintf(idBuf,"%d",info.uid);
+      sprintf(buf,USER_QUERY_STATEMENT_ID,idBuf);
+      dsOwn->closeRegisteredQueries(buf);
     }
 }
 
-void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
+void Task::init(ConfigView* config, uint32_t taskId)
 {
     __require__(config);
 
     const int MAX_PRIORITY_VALUE = 1000;
 
-    info.id = taskId;
+    info.uid = taskId;
     try { info.name = config->getString("name"); } catch (...) {}
-    info.tablePrefix = tablePrefix;
     info.enabled = config->getBool("enabled");
     info.priority = config->getInt("priority");
     if (info.priority <= 0 || info.priority > MAX_PRIORITY_VALUE)
         throw ConfigException("Task priority should be positive and less than %d.", 
                               MAX_PRIORITY_VALUE);
-    try { info.address = config->getString("address"); }
-    catch (...) { 
-        smsc_log_warn(logger, "<address> parameter missed for task '%s'. "
-                              "Using global definitions", info.id.c_str());
+    try {
+      info.address = config->getString("address"); 
+    }
+    catch (...)
+    { 
+        smsc_log_warn(logger, "<address> parameter missed for task '%d'. "
+                              "Using global definitions", info.uid);
         info.address = "";
     }
     info.retryOnFail = config->getBool("retryOnFail");
@@ -129,7 +111,11 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.trackIntegrity = config->getBool("trackIntegrity");
     info.keepHistory = config->getBool("keepHistory");
     info.endDate = parseDateTime(config->getString("endDate"));
-    if (info.endDate>0 && time(0)>=info.endDate) {
+
+    /*
+    !!TODO!!
+    if (info.endDate>0 && time(0)>=info.endDate)
+    {
       // preload InfoSme_T_ storage without index building
       Connection* connection = 0;
       connection = dsInt->getConnection();
@@ -144,6 +130,7 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
       // and set flag in order to don't try destroy storage needed only for queries execution
       infoSme_T_storageWasDestroyed = true;
     }
+    */
 
     info.retryTime = parseTime(config->getString("retryTime"));
     if (info.retryOnFail && info.retryTime <= 0)
@@ -163,8 +150,8 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     const char* awd = 0;
     try { awd = config->getString("activeWeekDays"); } 
     catch (...) { 
-        smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%s'. "
-                              "Using default: Mon,Tue,Wed,Thu,Fri", info.id.c_str());
+        smsc_log_warn(logger, "<activeWeekDays> parameter missed for task '%d'. "
+                              "Using default: Mon,Tue,Wed,Thu,Fri", info.uid);
         info.activeWeekDays.weekDays = 0x7c; awd = 0;
     }
     if (awd && awd[0]) {
@@ -185,7 +172,8 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
         info.msgTemplate = msg_template;
     }
     info.svcType = "";
-    if (info.replaceIfPresent) {
+    if (info.replaceIfPresent)
+    {
         try         { info.svcType = config->getString("svcType"); } 
         catch (...) { info.svcType = "";}
     }
@@ -206,7 +194,8 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     info.messagesCacheSleep = 1;
     try { info.messagesCacheSleep = config->getInt("messagesCacheSleep"); } catch(...) {}
     if (info.messagesCacheSleep <= 0) info.messagesCacheSleep = 1;
-    try { 
+    try
+    { 
       bGenerationSuccess = config->getBool("messagesHaveLoaded");
       bInGeneration = false;
     } catch (...) {}
@@ -214,7 +203,7 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
 
 void Task::doFinalization()
 {
-  smsc_log_error(logger, "Task::doFinalization::: taskId=%s",getId().c_str());
+  smsc_log_error(logger, "Task::doFinalization::: taskId=%d",getId());
     {
         MutexGuard guard(finalizingLock);
         bFinalizing = true;
@@ -234,254 +223,72 @@ void Task::finalize()
 }
 bool Task::destroy()
 {
-  smsc_log_error(logger, "Task::destroy::: taskId=%s",getId().c_str());
+  smsc_log_error(logger, "Task::destroy::: taskId=%d",getId());
     doFinalization();
     bool result = false;
-    try { dropTable(); result = true;
-    } catch (std::exception& exc) {
-        smsc_log_error(logger, "Drop table failed for task '%s'. Reason: %s",
-                       info.id.c_str(), exc.what());
+    try
+    {
+      store.Delete(false);
+      result = true;
+    } catch (std::exception& exc)
+    {
+        smsc_log_error(logger, "Drop table failed for task '%d'. Reason: %s",
+                       info.uid, exc.what());
     } catch (...) {
-        smsc_log_error(logger, "Drop table failed for task '%s'. Reason is unknown",
-                       info.id.c_str());
+        smsc_log_error(logger, "Drop table failed for task '%d'. Reason is unknown",
+                       info.uid);
     }
     delete this;
     return result;
 }
 bool Task::shutdown()
 {
-  smsc_log_error(logger, "Task::shutdown::: taskId=%s",getId().c_str());
+  smsc_log_error(logger, "Task::shutdown::: taskId=%d",getId());
     doFinalization(); bool result = false;
     try { resetWaiting(); result = true;
     } catch (std::exception& exc) {
-        smsc_log_error(logger, "Reset waiting failed for task '%s'. Reason: %s",
-                       info.id.c_str(), exc.what());
+        smsc_log_error(logger, "Reset waiting failed for task '%d/%s'. Reason: %s",
+                       info.uid, info.name.c_str(),exc.what());
     } catch (...) {
-        smsc_log_error(logger, "Reset waiting failed for task '%s'. Reason is unknown",
-                       info.id.c_str());
+        smsc_log_error(logger, "Reset waiting failed for task '%d/%s'. Reason is unknown",
+                       info.uid,info.name.c_str());
     }
     delete this;
     return result;
 }
 
-std::string Task::prepareSqlCall(const char* sql)
+void Task::trackIntegrity(bool clear, bool del)
 {
-    if (!sql || sql[0] == '\0') return 0;
-    std::string tableName = info.tablePrefix+info.id;
-    char* sqlCall = new char[strlen(sql)+tableName.length()+1];
-    sprintf(sqlCall, sql, tableName.c_str());
-    std::string sqlStatement(sqlCall);
-    delete [] sqlCall;
-    return sqlStatement;
-}
-std::string Task::prepareDoubleSqlCall(const char* sql)
-{
-    if (!sql || sql[0] == '\0') return 0;
-    std::string tableName = info.tablePrefix+info.id;
-    char* sqlCall = new char[strlen(sql)+tableName.length()*2+1];
-    sprintf(sqlCall, sql, tableName.c_str(), tableName.c_str());
-    std::string sqlStatement(sqlCall);
-    delete [] sqlCall;
-    return sqlStatement;
-}
-
-void Task::trackIntegrity(bool clear, bool del, Connection* connection)
-{
-    smsc_log_debug(logger, "trackIntegrity method being called on task '%s'",
-                   info.id.c_str());
+    smsc_log_debug(logger, "trackIntegrity method being called on task '%d/%s'",
+                   info.uid,info.name.c_str());
     
     if (!info.trackIntegrity) return;
 
-    bool connectionInternal = false;
     try
     {
-        if (!connection) {
-            connection = dsInt->getConnection();
-            connectionInternal = true;
-        }
-        if (!connection)
-            throw Exception("Failed to obtain connection to internal data source.");
-
-        if (clear)
+      if (clear)
+      {
+        if (TaskLock::getInstance().Unlock(info.uid) && del)
         {
-            std::auto_ptr<Statement> delGenerating(connection->createStatement(DELETE_GENERATING_STATEMENT_SQL));
-            if (!delGenerating.get()) 
-                throw Exception("Failed to obtain statement for track integrity.");
-            
-            delGenerating->setString(1, info.id.c_str());
-            if (delGenerating->executeUpdate() > 0 && del)
-            {
-                std::string delGeneratedId(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_ID));
-                std::string delGeneratedSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
-                std::auto_ptr<Statement> delGenerated(connection->createStatement(delGeneratedSql.c_str()));
-                if (!delGenerated.get()) 
-                    throw Exception("Failed to obtain statement for track integrity.");
-                delGenerated->setUint8(1, MESSAGE_NEW_STATE);
-                delGenerated->executeUpdate();
-            }
+          store.Delete(true);
         }
-        else
-        {
-            std::auto_ptr<Statement> insGenerating(connection->createStatement(INSERT_GENERATING_STATEMENT_SQL));
-            if (!insGenerating.get()) 
-                throw Exception("Failed to obtain statement for track integrity.");
-            
-            insGenerating->setString(1, info.id.c_str());
-            insGenerating->executeUpdate();
-        }
-        connection->commit();
+      }
+      else
+      {
+        TaskLock::getInstance().Lock(info.uid);
+      }
     } 
     catch (Exception& exc)
     {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Failed to track task integrity. "
-                     "Details: %s", info.id.c_str(), exc.what());
+        smsc_log_error(logger, "Task '%d/%s'. Failed to track task integrity. "
+                     "Details: %s", info.uid,info.name.c_str(), exc.what());
     }
-    catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Failed to track task integrity.",
-                     info.id.c_str());
-    }
-    if (connection && connectionInternal) dsInt->freeConnection(connection);
-}
-
-void Task::createTable()
-{
-    smsc_log_debug(logger, "createTable method being called on task '%s'", info.id.c_str());
-    
-    MutexGuard guard(createTableLock);
-    
-    Connection* connection = 0;
-    try
-    {
-        connection = dsInt->getConnection();
-        if (!connection)
-            throw Exception("Failed to obtain connection to internal data source.");
-
-        {
-            std::string createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
-            std::auto_ptr<Statement> statementGuard(connection->createStatement(createTableSql.c_str()));
-            Statement* statement = statementGuard.get();
-            if (!statement) 
-                throw Exception("Failed to create table statement.");
-            statement->execute();  
-        } 
-        {
-            std::string createIndexSql(prepareDoubleSqlCall(NEW_SD_INDEX_STATEMENT_SQL));
-            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.c_str()));
-            Statement* statement = statementGuard.get();
-            if (!statement) 
-                throw Exception("Failed to create index1 statement.");
-            statement->execute();
-        }
-        {
-            std::string createIndexSql(prepareDoubleSqlCall(NEW_AB_INDEX_STATEMENT_SQL));
-            std::auto_ptr<Statement> statementGuard(connection->createStatement(createIndexSql.c_str()));
-            Statement* statement = statementGuard.get();
-            if (!statement) 
-                throw Exception("Failed to create index2 statement.");
-            statement->execute();
-        }
-
-        connection->commit();
-    } 
-    catch (Exception& exc)
-    {
-        try { 
-            if (connection) { 
-                connection->rollback();
-                dsInt->freeConnection(connection);
-            }
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        Exception eee("Task '%s'. Failed to create internal table. Details: %s",
-                       info.id.c_str(), exc.what());
-        smsc_log_error(logger, "%s", eee.what());
-        throw eee;
-    }
-    catch (...) {
-        try { 
-            if (connection) { 
-                connection->rollback();
-                dsInt->freeConnection(connection);
-            }
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        Exception eee("Task '%s'. Failed to create internal table. Cause is unknown.",
-                       info.id.c_str());
-        smsc_log_error(logger, "%s", eee.what());
-        throw eee;
-    }
-    if (connection) dsInt->freeConnection(connection);
-}
-
-void Task::dropTable()
-{
-    smsc_log_debug(logger, "dropTable method being called on task '%s'", info.id.c_str());
-    
-    MutexGuard guard(createTableLock);
-    
-    Connection* connection = 0;
-    try
-    {
-        connection = dsInt->getConnection();
-        if (!connection)
-            throw Exception("Failed to obtain connection to internal data source.");
-
-        trackIntegrity(true, false, connection); // delete flag only
-
-        std::string dropTableSql(prepareSqlCall(DROP_TABLE_STATEMENT_SQL));
-        std::auto_ptr<Statement> statementGuard(connection->createStatement(dropTableSql.c_str()));
-        Statement* statement = statementGuard.get();
-        if (!statement) 
-            throw Exception("Failed to create table statement.");
-        statement->execute();
-        connection->commit();
-    } 
-    catch (Exception& exc)
-    {
-        try { 
-            if (connection) { 
-                connection->rollback();
-                dsInt->freeConnection(connection);
-            }
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        Exception eee("Task '%s'. Failed to drop internal table. Details: %s",
-                       info.id.c_str(), exc.what());
-        smsc_log_error(logger, "%s", eee.what());
-        throw eee;
-    }
-    catch (...) {
-        try { 
-            if (connection) { 
-                connection->rollback();
-                dsInt->freeConnection(connection);
-            }
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        Exception eee("Task '%s'. Failed to drop internal table. Cause is unknown.",
-                       info.id.c_str());
-        smsc_log_error(logger, "%s", eee.what());
-        throw eee;
-    }
-    if (connection) dsInt->freeConnection(connection);
 }
 
 bool Task::beginGeneration(Statistics* statistics)
 {
-    smsc_log_debug(logger, "beginGeneration method being called on task '%s'",
-                 info.id.c_str());
+    smsc_log_debug(logger, "beginGeneration method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
     uint64_t totalGenerated = 0;
 
@@ -492,41 +299,27 @@ bool Task::beginGeneration(Statistics* statistics)
     }
 
     Connection* ownConnection = 0;
-    Connection* intConnection = 0;
-    int wdTimerId = -1;
 
     try
     {
-        intConnection = dsInt->getConnection();
-        if (!intConnection)
-            throw Exception("Failed to obtain connection to internal data source.");
         ownConnection = dsOwn->getConnection();
         if (!ownConnection)
             throw Exception("Failed to obtain connection to own data source.");
 
-        trackIntegrity(false, false, intConnection); // insert flag
+        trackIntegrity(false, false); // insert flag
 
         std::auto_ptr<Statement> userQuery(ownConnection->createStatement(info.querySql.c_str()));
         if (!userQuery.get())
-            throw Exception("Failed to create user query statement on own data source.");
-
-        std::string newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
-        std::auto_ptr<Statement> newMessage(intConnection->createStatement(newMessageSql.c_str()));
-        if (!newMessage.get())
-            throw Exception("Failed to create statement for message generation.");
-
-        std::auto_ptr<Statement> clearMessages;
-        if (info.replaceIfPresent) {
-            std::string clearMessagesSql(prepareSqlCall(CLEAR_MESSAGES_STATEMENT_SQL));
-            clearMessages.reset(intConnection->createStatement(clearMessagesSql.c_str()));
-            if (!clearMessages.get())
-                throw Exception("Failed to create statement for message(s) replace.");
+        {
+          throw Exception("Failed to create user query statement on own data source.");
         }
-        
+
         std::auto_ptr<ResultSet> rsGuard(userQuery->executeQuery());
         ResultSet* rs = rsGuard.get();
         if (!rs)
-            throw Exception("Failed to obtain result set for message generation.");
+        {
+          throw Exception("Failed to obtain result set for message generation.");
+        }
 
         SQLGetAdapter       getAdapter(rs);
         ContextEnvironment  context;
@@ -535,40 +328,33 @@ bool Task::beginGeneration(Statistics* statistics)
         while (isInGeneration() && rs->fetchNext())
         {
             const char* abonentAddress = rs->getString(1);
-            if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
-                smsc_log_warn(logger, "Task '%s'. Invalid abonent number '%s' selected.", 
-                              info.id.c_str(), abonentAddress ? abonentAddress:"-");
+            if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress))
+            {
+                smsc_log_warn(logger, "Task '%d/%s'. Invalid abonent number '%s' selected.", 
+                              info.uid,info.name.c_str(), abonentAddress ? abonentAddress:"-");
             }
             else
             {
-                std::string message = "";
-                formatter->format(message, getAdapter, context);
-                if (message.length() > 0)
+              std::string message = "";
+              formatter->format(message, getAdapter, context);
+              if (message.length() > 0)
+              {
+                if (info.replaceIfPresent)
                 {
-                    wdTimerId = dsInt->startTimer(intConnection, info.dsTimeout);
-                    if (clearMessages.get()) {
-                        clearMessages->setUint8(1, MESSAGE_NEW_STATE);
-                        clearMessages->setString(2, abonentAddress);
-                        clearMessages->executeUpdate();
-                    }
-                    newMessage->setUint8(1, MESSAGE_NEW_STATE);
-                    newMessage->setString(2, abonentAddress);
-                    newMessage->setDateTime(3, time(NULL));
-                    newMessage->setString(4, message.c_str());
-                    newMessage->executeUpdate();
-                    if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
-
-                    if (statistics) statistics->incGenerated(info.id, 1);
-
-                    if (info.dsUncommitedInGeneration <= 0 || ++uncommited >= info.dsUncommitedInGeneration) {
-                        intConnection->commit();
-                        uncommited = 0;
-                    }
-                    totalGenerated++;
+                  //!!!TODO!!!
                 }
+                Message msg;
+                msg.abonent=abonentAddress;
+                msg.message=message;
+
+                store.createMessage(time(NULL),msg);
+
+                if (statistics) statistics->incGenerated(info.uid, 1);
+
+                totalGenerated++;
+              }
             }
         }
-        if (uncommited > 0) intConnection->commit();
         
         {
             MutexGuard guard(inGenerationLock);
@@ -576,43 +362,18 @@ bool Task::beginGeneration(Statistics* statistics)
             else bGenerationSuccess = true;
         }
 
-        trackIntegrity(true, false, intConnection); // delete flag only
+        trackIntegrity(true, false); // delete flag only
     }
-    catch (Exception& exc)
+    catch (std::exception& exc)
     {
-        try { if (intConnection) intConnection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages generation process failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
+        smsc_log_error(logger, "Task '%d/%s'. Messages generation process failure. "
+                     "Details: %s", info.uid,info.name.c_str(), exc.what());
         
-        trackIntegrity(true, true, intConnection); // delete flag & generated messages
-        MutexGuard guard(inGenerationLock);
-        bGenerationSuccess = false;
-    }
-    catch (...)
-    {
-        try { if (intConnection) intConnection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages generation process failure.",
-                     info.id.c_str());
-
-        trackIntegrity(true, true, intConnection); // delete flag & generated messages
+        trackIntegrity(true, true); // delete flag & generated messages
         MutexGuard guard(inGenerationLock);
         bGenerationSuccess = false;
     }
     
-    if (wdTimerId >= 0) dsInt->stopTimer(wdTimerId);
-    if (intConnection) dsInt->freeConnection(intConnection);
     if (ownConnection) dsOwn->freeConnection(ownConnection);
     
     {
@@ -624,8 +385,8 @@ bool Task::beginGeneration(Statistics* statistics)
 }
 void Task::endGeneration()
 {
-    smsc_log_debug(logger, "endGeneration method being called on task '%s'",
-                 info.id.c_str());
+    smsc_log_debug(logger, "endGeneration method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
     {
         MutexGuard guard(inGenerationLock);
         if (!bInGeneration) return;
@@ -636,313 +397,139 @@ void Task::endGeneration()
 
 void Task::dropNewMessages(Statistics* statistics)
 {
-    smsc_log_debug(logger, "dropAllMessages method being called on task '%s'",
-                   info.id.c_str());
+  smsc_log_debug(logger, "dropAllMessages method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
-    endGeneration();
-    
-    Connection* connection = 0;
-    int wdTimerId = -1;
+  endGeneration();
+  
+  try
+  {
+    uint32_t deleted = store.Delete(true);
+    if (statistics) statistics->incFailed(info.uid, deleted);
+  }
+  catch (std::exception& exc)
+  {
+    smsc_log_error(logger, "Task '%d/%s'. Messages access failure. "
+                 "Details: %s", info.uid,info.name.c_str(), exc.what());
+  }
+  catch (...)
+  {
+    smsc_log_error(logger, "Task '%d/%s'. Messages access failure.", 
+                 info.uid,info.name.c_str());
+  }
+}
+
+void Task::resetWaiting()
+{
+  smsc_log_debug(logger, "resetWaiting method being called on task '%d/%s'",
+               info.uid,info.name.c_str());
+  
+  try
+  {
+    //!!!TODO!!!
+  }
+  catch (std::exception& exc)
+  {
+      smsc_log_error(logger, "Task '%d/%s'. Messages access failure. "
+                   "Details: %s", info.uid,info.name.c_str(), exc.what());
+  }
+  catch (...)
+  {
+      smsc_log_error(logger, "Task '%d/%s'. Messages access failure.", info.uid,info.name.c_str());
+  }
+}
+
+bool Task::retryMessage(uint64_t msgId, time_t nextTime)
+{
+    smsc_log_debug(logger, "retryMessage method being called on task '%d/%s' for id=%lld",
+                 info.uid,info.name.c_str(), msgId);
+
+    bool result = false;
     try
     {
-        connection = dsInt->getConnection();
-        if (!connection)
-            throw Exception("Failed to obtain connection to internal data source.");
-
-        std::string deleteMessagesSql(prepareSqlCall(DELETE_NEW_MESSAGES_STATEMENT_SQL));
-        std::auto_ptr<Statement> deleteMessages(connection->createStatement(deleteMessagesSql.c_str()));
-        if (!deleteMessages.get())
-            throw Exception("Failed to create statement for messages access.");
-
-        deleteMessages->setUint8(1, MESSAGE_NEW_STATE);
-        
-        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-        uint32_t deleted = deleteMessages->executeUpdate();
-        connection->commit();
-        if (statistics) statistics->incFailed(info.id, deleted);
+      Message msg;
+      uint8_t state;
+      store.loadMessage(msgId,msg,state);
+      store.setMsgState(msgId,DELETED);
+      store.createMessage(nextTime,msg);
+      result=true;
     }
-    catch (Exception& exc)
+    catch (std::exception& exc) {
+        smsc_log_error(logger, "Task '%d/%s'. doRetry(): Messages access failure. "
+                     "Details: %s", info.uid,info.name.c_str(), exc.what());
+    }
+    catch (...) {
+        smsc_log_error(logger, "Task '%d/%s'. doRetry(): Messages access failure.", 
+                     info.uid,info.name.c_str());
+    }
+    return result;
+}
+
+bool Task::finalizeMessage(uint64_t msgId, MessageState state)
+{   
+    if (state == NEW || state == WAIT || state == ENROUTE) {
+        smsc_log_warn(logger, "Invalid state=%d to finalize message on task '%d/%s' for id=%lld",
+                      state, info.uid,info.name.c_str(), msgId);
+        return false;
+    } else {
+        smsc_log_debug(logger, "finalizeMessage(%d) method being called on task '%d/%s' for id=%lld",
+                       state, info.uid,info.name.c_str(), msgId);
+    }
+
+    bool result = false;
+    try
     {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
+      if (info.keepHistory)
+      {
+        store.finalizeMsg(msgId,time(NULL),state);
+      }
+      else
+      {
+        store.setMsgState(msgId,DELETED);
+      }
+      
+      result = true;
+    }
+    catch (std::exception& exc) {
+        smsc_log_error(logger, "Task '%d/%s'. finalizeMessage(): Messages access failure. "
+                     "Details: %s", info.uid,info.name.c_str(), exc.what());
+    }
+    catch (...) {
+        smsc_log_error(logger, "Task '%d/%s'. finalizeMessage(): Messages access failure.", 
+                     info.uid,info.name.c_str());
+    }
+    return result;
+}
+
+bool Task::enrouteMessage(uint64_t msgId)
+{
+    smsc_log_debug(logger, "enrouteMessage method being called on task '%d/%s' for id=%lld",
+                 info.uid,info.name.c_str(), msgId);
+
+    bool result = false;
+    try
+    {
+      result=store.enrouteMessage(msgId);
+    }
+    catch (std::exception& exc)
+    {
+        smsc_log_error(logger, "Task '%d/%s'. doEnroute(): Messages access failure. "
+                     "Details: %s", info.uid,info.name.c_str(), exc.what());
     }
     catch (...)
     {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages access failure.", 
-                     info.id.c_str());
-    }
-
-    dsInt->stopTimer(wdTimerId);
-    if (connection) dsInt->freeConnection(connection);
-}
-
-void Task::resetWaiting(Connection* connection)
-{
-    smsc_log_debug(logger, "resetWaiting method being called on task '%s'",
-                 info.id.c_str());
-    
-    bool connectionInternal = false;
-    try
-    {
-        if (!connection) {
-            connection = dsInt->getConnection();
-            connectionInternal = true;
-        }
-        if (!connection) 
-            throw Exception("resetWaiting(): Failed to obtain connection");
-        
-        std::string resetMessagesSql(prepareSqlCall(RESET_MESSAGES_STATEMENT_SQL));
-        std::auto_ptr<Statement> resetMessages(connection->createStatement(resetMessagesSql.c_str()));
-        if (!resetMessages.get())
-            throw Exception("resetWaiting(): Failed to create statement for messages access.");
-        
-        resetMessages->setUint8(1, MESSAGE_NEW_STATE);
-        resetMessages->setUint8(2, MESSAGE_WAIT_STATE);
-
-        resetMessages->executeUpdate();
-        connection->commit();
-    }
-    catch (Exception& exc) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
-    }
-    catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages access failure.", info.id.c_str());
-    }
-
-    if (connectionInternal && connection) dsInt->freeConnection(connection);
-}
-
-bool Task::retryMessage(uint64_t msgId, time_t nextTime, Connection* connection)
-{
-    smsc_log_debug(logger, "retryMessage method being called on task '%s' for id=%lld",
-                 info.id.c_str(), msgId);
-
-    int wdTimerId = -1;
-    bool result = false;
-    bool connectionInternal = false;
-    try
-    {
-        if (!connection) {
-            connection = dsInt->getConnection();
-            connectionInternal = true;
-        }
-        if (!connection) 
-            throw Exception("doRetry(): Failed to obtain connection");
-
-        std::string retryMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-        std::auto_ptr<Statement> retryMessage(connection->createStatement(retryMessageSql.c_str()));
-        if (!retryMessage.get())
-            throw Exception("doRetry(): Failed to create statement for messages access.");
-        
-        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-
-        retryMessage->setUint8   (1, MESSAGE_NEW_STATE);
-        retryMessage->setDateTime(2, nextTime); 
-        retryMessage->setUint64  (3, msgId);
-        
-        result = (retryMessage->executeUpdate() > 0);
-        if (result) connection->commit();
-        else connection->rollback();
-    }
-    catch (Exception& exc) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. doRetry(): Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
-    }
-    catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. doRetry(): Messages access failure.", 
-                     info.id.c_str());
+        smsc_log_error(logger, "Task '%d/%s'. doEnroute(): Messages access failure.", 
+                     info.uid,info.name.c_str());
     }
     
-    dsInt->stopTimer(wdTimerId);
-    if (connectionInternal && connection) dsInt->freeConnection(connection);
-    return result;
-}
-
-bool Task::finalizeMessage(uint64_t msgId, MessageState state, Connection* connection)
-{   
-    if (state == NEW || state == WAIT || state == ENROUTE) {
-        smsc_log_warn(logger, "Invalid state=%d to finalize message on task '%s' for id=%lld",
-                      state, info.id.c_str(), msgId);
-        return false;
-    } else {
-        smsc_log_debug(logger, "finalizeMessage(%d) method being called on task '%s' for id=%lld",
-                       state, info.id.c_str(), msgId);
-    }
-
-    int wdTimerId = -1; 
-    bool result = false;
-    bool connectionInternal = false;
-    try
-    {
-        if (!connection) {
-            connection = dsInt->getConnection();
-            connectionInternal = true;
-        }
-        if (!connection) 
-            throw Exception("finalizeMessage(): Failed to obtain connection");
-
-        std::auto_ptr<Statement> finalizeMessage;
-        if (info.keepHistory)
-        {
-            // Was DO_STATE_MESSAGE_STATEMENT
-            std::string changeStateSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-            finalizeMessage.reset(connection->createStatement(changeStateSql.c_str()));
-            if (finalizeMessage.get()) {
-                finalizeMessage->setUint8   (1, state);
-                finalizeMessage->setDateTime(2, time(NULL));
-                finalizeMessage->setUint64  (3, msgId);
-            }
-        }
-        else
-        {
-            std::string deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
-            finalizeMessage.reset(connection->createStatement(deleteMessageSql.c_str()));
-            if (finalizeMessage.get()) finalizeMessage->setUint64(1, msgId);
-        }
-        
-        if (!finalizeMessage.get())
-            throw Exception("finalizeMessage(): Failed to create statement for messages access.");
-        
-        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-        result = (finalizeMessage->executeUpdate() > 0);
-        if (result) connection->commit();
-        else connection->rollback();
-    }
-    catch (Exception& exc) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. finalizeMessage(): Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
-    }
-    catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. finalizeMessage(): Messages access failure.", 
-                     info.id.c_str());
-    }
-    
-    dsInt->stopTimer(wdTimerId);
-    if (connectionInternal && connection) dsInt->freeConnection(connection);
-    return result;
-}
-
-bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
-{
-    smsc_log_debug(logger, "enrouteMessage method being called on task '%s' for id=%lld",
-                 info.id.c_str(), msgId);
-
-    int wdTimerId = -1;
-    bool result = false;
-    bool connectionInternal = false;
-    try
-    {
-        if (!connection) {
-            connection = dsInt->getConnection();
-            connectionInternal = true;
-        }
-        if (!connection) 
-            throw Exception("enrouteMessage(): Failed to obtain connection");
-        
-        std::string enrouteMessageSql(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_SQL));
-        std::auto_ptr<Statement> enrouteMessage(connection->createStatement(enrouteMessageSql.c_str()));
-        if (!enrouteMessage.get())
-            throw Exception("doEnroute(): Failed to create statement for messages access.");
-        
-        enrouteMessage->setUint8 (1, MESSAGE_ENROUTE_STATE);
-        enrouteMessage->setUint64(2, msgId);
-        enrouteMessage->setUint8 (3, MESSAGE_WAIT_STATE);
-
-        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-        result = (enrouteMessage->executeUpdate() > 0);
-        if (result) connection->commit();
-        else connection->rollback();
-    }
-    catch (Exception& exc) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. doEnroute(): Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
-    }
-    catch (...) {
-        try { if (connection) connection->rollback(); }
-        catch (Exception& exc) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source. "
-                         "Details: %s", exc.what());
-        } catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. doEnroute(): Messages access failure.", 
-                     info.id.c_str());
-    }
-    
-    dsInt->stopTimer(wdTimerId);
-    if (connectionInternal && connection) dsInt->freeConnection(connection);
     return result;
 }
 
 void
 Task::putToSuspendedMessagesQueue(const Message& suspendedMessage)
 {
-  smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%s': exceeded region bandwidth (regionId=%s), return message with id=%d to messagesCache",
-                info.id.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
+  smsc_log_info(logger, "Task::putToSuspendedMessagesQueue:::  task '%d/%s': exceeded region bandwidth (regionId=%s), return message with id=%llx to messagesCache",
+                info.uid,info.name.c_str(), suspendedMessage.regionId.c_str(), suspendedMessage.id);
   MutexGuard guard(messagesCacheLock);
   _suspendedRegions.insert(suspendedMessage.regionId);
   messagesCache.push_back(suspendedMessage);
@@ -959,7 +546,7 @@ Task::fetchMessageFromCache(Message& message)
          _suspendedRegions.find(fetchedMessage.regionId) == _suspendedRegions.end() ) {
       message = fetchedMessage; setInProcess(isEnabled());
       _messagesCacheIter = messagesCache.erase(_messagesCacheIter);
-      smsc_log_debug(logger, "Task::fetchMessageFromCache::: task '%s', fetched next message [id=%ld,abonent=%s,regionId=%s]",info.id.c_str(), message.id, message.abonent.c_str(), message.regionId.c_str());
+      smsc_log_debug(logger, "Task::fetchMessageFromCache::: task '%d/%s', fetched next message [id=%llx,abonent=%s,regionId=%s]",info.uid,info.name.c_str(), message.id, message.abonent.c_str(), message.regionId.c_str());
       return true;
     }
     ++_messagesCacheIter;
@@ -973,16 +560,15 @@ void
 Task::resetSuspendedRegions()
 {
   MutexGuard guard(messagesCacheLock);
-  smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%s'",info.id.c_str());
+  smsc_log_debug(logger, "Task::resetSuspendedRegions::: method being called on task '%d/%s'",info.uid,info.name.c_str());
   _messagesCacheIter = messagesCache.begin();
   _suspendedRegions.clear();
 }
 
-bool Task::getNextMessage(Connection* connection, Message& message)
+bool Task::getNextMessage(Message& message)
 {
-    smsc_log_debug(logger, "getNextMessage method being called on task '%s'",
-                   info.id.c_str());
-    __require__(connection);
+    smsc_log_debug(logger, "getNextMessage method being called on task '%d/%s'",
+                   info.uid,info.name.c_str());
 
     if (!isEnabled())
       return setInProcess(false);
@@ -1008,91 +594,36 @@ bool Task::getNextMessage(Connection* connection, Message& message)
       lastMessagesCacheEmpty = currentTime;   // timeout reached, set new sleep timeout & go to fill cache
     else if (bSelectedAll && !isInGeneration()) 
       return setInProcess(false);             // if all selected from DB (on last time) & no generation => return
-    smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%s'",
-                  info.id.c_str());
+    smsc_log_info(logger, "Selecting messages from DB. getNextMessage method on task '%d/%s'",
+                  info.uid,info.name.c_str());
 
     // Selecting cache from DB
-    int wdTimerId = -1;
     try
     {
-        std::string selectMessageSql(prepareSqlCall(SELECT_MESSAGES_STATEMENT_SQL));
-        std::auto_ptr<Statement> selectMessage(connection->createStatement(selectMessageSql.c_str()));
-        if (!selectMessage.get())
-            throw Exception("Failed to create statement for messages access.");
-
-        selectMessage->setUint8   (1, MESSAGE_NEW_STATE);
-        selectMessage->setDateTime(2, currentTime);
-
-        wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-
-        std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-        ResultSet* rs = rsGuard.get();
-        if (!rs)
-            throw Exception("Failed to obtain result set for message access.");
-        
-        int fetched = 0; int uncommited = 0;
-        while (rs->fetchNext() && ++fetched <= info.messagesCacheSize)
+        int fetched = 0;
+        Message fetchedMessage;
+        bool haveMsg=false;
+        while (fetched < info.messagesCacheSize && (haveMsg=store.getNextMessage(fetchedMessage)))
         {
-            uint64_t    msgId = rs->getUint64(1);
-            const char* msgAbonent = rs->isNull(2) ? 0 : rs->getString(2);
-            const char* msgMessage = rs->isNull(3) ? 0 : rs->getString(3);
-            const char* regionId = rs->getString(4);
-
-            dsInt->stopTimer(wdTimerId);
-            
-            if (!msgAbonent || !msgMessage) {
-                smsc_log_warn(logger, "Selected NULL value for %s", !msgAbonent ? "abonent":"message");
-                wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-                --fetched; continue;
-            }
-            Message fetchedMessage(msgId, msgAbonent, msgMessage, regionId);
-
-            std::string waitMessageSql(prepareSqlCall(DO_STATE_MESSAGE_STATEMENT_SQL));
-            std::auto_ptr<Statement> waitMessage(connection->createStatement(waitMessageSql.c_str()));
-            if (!waitMessage.get())
-                throw Exception("Failed to create statement for messages access.");
-            
-            wdTimerId = dsInt->startTimer(connection, info.dsTimeout);
-            waitMessage->setUint8 (1, MESSAGE_WAIT_STATE);
-            waitMessage->setUint64(2, fetchedMessage.id);
-            if (waitMessage->executeUpdate() <= 0)
-                smsc_log_warn(logger, "Failed to update message in getNextMessage() !!!");
-                // TODO: analyse it !
-            {
-                MutexGuard guard(messagesCacheLock);
-                messagesCache.push_back(fetchedMessage);
-            }
-            
-            if (info.dsUncommitedInProcess <= 0 || ++uncommited >= info.dsUncommitedInProcess) {
-                connection->commit();
-                uncommited = 0;
-            }
+          MutexGuard guard(messagesCacheLock);
+          messagesCache.push_back(fetchedMessage);
+          fetched++;
         }
-        bSelectedAll = (fetched < info.messagesCacheSize);
-        if (uncommited > 0) connection->commit();
+        bSelectedAll = !haveMsg;
     }
-    catch (Exception& exc)
+    catch (std::exception& exc)
     {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages access failure. "
-                     "Details: %s", info.id.c_str(), exc.what());
+        smsc_log_error(logger, "Task '%d/%s'. Messages access failure. "
+                     "Details: %s", info.uid,info.name.c_str(), exc.what());
     }
     catch (...)
     {
-        try { if (connection) connection->rollback(); }
-        catch (...) {
-            smsc_log_error(logger, "Failed to roolback transaction on internal data source.");
-        }
-        smsc_log_error(logger, "Task '%s'. Messages access failure.", 
-                     info.id.c_str());
+        smsc_log_error(logger, "Task '%d/%s'. Messages access failure.", 
+                     info.uid,info.name.c_str());
     }
     
-    dsInt->stopTimer(wdTimerId);
-    smsc_log_debug(logger, "Selected %d messages from DB for task '%s'",
-                   messagesCache.size(), info.id.c_str());
+    smsc_log_debug(logger, "Selected %d messages from DB for task '%d/%s'",
+                   messagesCache.size(), info.uid,info.name.c_str());
 
     // selecting from cache
     if ( fetchMessageFromCache(message) )
@@ -1108,44 +639,46 @@ bool Task::isReady(time_t time, bool checkActivePeriod)
 {
   if ( !isEnabled() || isFinalizing() || 
        (info.endDate>0 && time>=info.endDate) ||
-       (info.validityDate>0 && time>=info.validityDate) ) { 
-    smsc_log_debug(logger, "Task::isReady::: task id =%s,info.endDate=%ld,info.validityDate=%ld,time()=%ld",info.id.c_str(),info.endDate,info.validityDate,::time(0));
+       (info.validityDate>0 && time>=info.validityDate) )
+  { 
+    smsc_log_debug(logger, "Task::isReady::: task id =%d/%s,info.endDate=%ld,info.validityDate=%ld,time()=%ld",info.uid,info.name.c_str(),info.endDate,info.validityDate,::time(0));
     if ( !infoSme_T_storageWasDestroyed && !isInProcess() &&
          ((info.endDate>0 && time>=info.endDate) ||
-          (info.validityDate>0 && time>=info.validityDate)) ) {
+          (info.validityDate>0 && time>=info.validityDate)) )
+    {
       destroy_InfoSme_T_Storage();
       infoSme_T_storageWasDestroyed = true;
     }
     return false;
   }
 
-    if (checkActivePeriod) 
-    {
-        tm dt; localtime_r(&time, &dt);
+  if (checkActivePeriod) 
+  {
+      tm dt; localtime_r(&time, &dt);
 
-        if (!info.activeWeekDays.isWeekDay((dt.tm_wday == 0) ? 6:(dt.tm_wday-1)))
-            return false;
+      if (!info.activeWeekDays.isWeekDay((dt.tm_wday == 0) ? 6:(dt.tm_wday-1)))
+          return false;
 
-        if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
-        {
-            if (info.activePeriodStart > info.activePeriodEnd) return false;
+      if (info.activePeriodStart > 0 && info.activePeriodEnd > 0)
+      {
+          if (info.activePeriodStart > info.activePeriodEnd) return false;
 
-            dt.tm_isdst = -1;
-            dt.tm_hour = info.activePeriodStart/3600;
-            dt.tm_min  = (info.activePeriodStart%3600)/60;
-            dt.tm_sec  = (info.activePeriodStart%3600)%60;
-            time_t apst = mktime(&dt);
+          dt.tm_isdst = -1;
+          dt.tm_hour = info.activePeriodStart/3600;
+          dt.tm_min  = (info.activePeriodStart%3600)/60;
+          dt.tm_sec  = (info.activePeriodStart%3600)%60;
+          time_t apst = mktime(&dt);
 
-            dt.tm_isdst = -1;
-            dt.tm_hour = info.activePeriodEnd/3600;
-            dt.tm_min  = (info.activePeriodEnd%3600)/60;
-            dt.tm_sec  = (info.activePeriodEnd%3600)%60;
-            time_t apet = mktime(&dt);
+          dt.tm_isdst = -1;
+          dt.tm_hour = info.activePeriodEnd/3600;
+          dt.tm_min  = (info.activePeriodEnd%3600)/60;
+          dt.tm_sec  = (info.activePeriodEnd%3600)%60;
+          time_t apet = mktime(&dt);
 
-            if (time < apst || time > apet) return false;
-        }
-    }
-    return true;
+          if (time < apst || time > apet) return false;
+      }
+  }
+  return true;
 }
 
 bool Task::insertDeliveryMessage(uint8_t msgState,
@@ -1153,15 +686,6 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
                                  time_t messageDate,
                                  const std::string& msg)
 {
-  Connection* intConnection = dsInt->getConnection();
-  if (!intConnection)
-    throw Exception("Failed to obtain connection to internal data source.");
-
-  std::string newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
-  std::auto_ptr<Statement> newMessage(intConnection->createStatement(newMessageSql.c_str()));
-  if (!newMessage.get())
-    throw Exception("Failed to create statement for message generation.");
-
   smsc::sms::Address parsedAddr(address.c_str());
   smsc_log_debug(logger, "Task::insertDeliveryMessage::: try map telephone number [%s] to Region", address.c_str());
   const smsc::util::config::region::Region* foundRegion = smsc::util::config::region::RegionFinder::getInstance().findRegionByAddress(parsedAddr.toString());
@@ -1172,15 +696,13 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
 
   if (msg.length() > 0)
   {
-    newMessage->setUint8(1, MESSAGE_NEW_STATE);
-    newMessage->setString(2, address.c_str());
-    newMessage->setDateTime(3, messageDate);
-    newMessage->setString(4, msg.c_str());
-    newMessage->setString(5, foundRegion->getId().c_str());
-
-    newMessage->executeUpdate();
+    Message message;
+    message.abonent=address;
+    message.message=msg;
+    message.date=messageDate;
+    message.regionId=foundRegion->getId();
+    store.createMessage(messageDate,message);
   }
-  intConnection->commit();
 
   return true;
 }
@@ -1189,35 +711,25 @@ bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
                                                const std::string& recordId)
 {
   uint64_t msgId = atol(recordId.c_str());
-  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method being called on task '%s' for id=%lld",
-                 info.id.c_str(), msgId);
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method being called on task '%d/%s' for id=%lld",
+                 info.uid,info.name.c_str(), msgId);
 
   try
   {
-    Connection* intConnection = dsInt->getConnection();
-    if (!intConnection)
-      throw Exception("Failed to obtain connection to internal data source.");
-
-    std::string updateMessageSql(prepareSqlCall(DO_RETRY_MESSAGE_STATEMENT_SQL));
-    std::auto_ptr<Statement> updateMessage(intConnection->createStatement(updateMessageSql.c_str()));
-    if (!updateMessage.get())
-      throw Exception("changeDeliveryMessageInfoByRecordId(): Failed to create statement for messages access.");
-
-    updateMessage->setUint8   (1, msgState);
-    updateMessage->setDateTime(2, unixTime); 
-    updateMessage->setUint64  (3, msgId);
-        
-    updateMessage->executeUpdate();
-
+    Message msg;
+    uint8_t state;
+    store.loadMessage(msgId,msg,state);
+    store.setMsgState(msgId,DELETED);
+    store.createMessage(unixTime,msg,msgState);
     return true;
   }
-  catch (Exception& exc) {
-    smsc_log_error(logger, "Task '%s'. changeDeliveryMessageInfoByRecordId(): Messages access failure. "
-                   "Details: %s", info.id.c_str(), exc.what());
+  catch (std::exception& exc) {
+    smsc_log_error(logger, "Task '%d/%s'. changeDeliveryMessageInfoByRecordId(): Messages access failure. "
+                   "Details: %s", info.uid,info.name.c_str(), exc.what());
   }
   catch (...) {
-    smsc_log_error(logger, "Task '%s'. changeDeliveryMessageInfoByRecordId(): Messages access failure.", 
-                   info.id.c_str());
+    smsc_log_error(logger, "Task '%d/%s'. changeDeliveryMessageInfoByRecordId(): Messages access failure.", 
+                   info.uid,info.name.c_str());
   }
     
   return false;
@@ -1230,30 +742,22 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
                                                         time_t unixTime,
                                                         const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion method being called on task '%s'",
-                 info.id.c_str());
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
-  Connection* intConnection = dsInt->getConnection();
-  if (!intConnection)
-    throw Exception("Failed to obtain connection to internal data source.");
-
-  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  std::auto_ptr<Statement> selectMessage(intConnection->createStatement(fullTableScanMessageSql.c_str()));
-  if (!selectMessage.get())
-    throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
-
-  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-
-  ResultSet* rs = rsGuard.get();
-  if (!rs)
-    throw Exception("Failed to obtain result set for message access.");
-        
   int fetched = 0, numOfRowsProcessed=0;
-  while (rs->fetchNext()) {
+
+  CsvStore::FullScan fs(store);
+
+  uint8_t state;
+  Message msg;
+  while (fs.Next(state,msg))
+  {
     smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion::: check next record");
-    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+    if ( doesMessageConformToCriterion(state,msg, searchCrit) )
+    {
       char recordId[32];
-      sprintf(recordId, "%lld", rs->getUint64(1));
+      sprintf(recordId, "%lld", msg.id);
 
       changeDeliveryMessageInfoByRecordId(msgState,
                                           unixTime,
@@ -1267,26 +771,26 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
   return true;
 }
 
-bool Task::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCriterion& searchCrit)
+bool Task::doesMessageConformToCriterion(uint8_t state,const Message& msg, const InfoSme_T_SearchCriterion& searchCrit)
 {
   if ( searchCrit.isSetAbonentAddress() &&
-       searchCrit.getAbonentAddress() != rs->getString(3) ) {
-    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getAbonentAddress()=%s != rs->getString(3)=%s", searchCrit.getAbonentAddress().c_str(), rs->getString(3));
+       searchCrit.getAbonentAddress() != msg.abonent ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getAbonentAddress()=%s != rs->getString(3)=%s", searchCrit.getAbonentAddress().c_str(), msg.abonent.c_str());
     return false;
   }
   if ( searchCrit.isSetState() &&
-       searchCrit.getState() != rs->getUint8(2) ) {
-    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getState=%d != rs->getUint8(2)=%d", searchCrit.getState(), rs->getUint8(2));
+       searchCrit.getState() != state ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getState=%d != rs->getUint8(2)=%d", searchCrit.getState(), state);
     return false;
   }
   if ( searchCrit.isSetFromDate() && 
-       searchCrit.getFromDate() > rs->getDateTime(4) ) {
-    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getFromDate()=%ld > rs->getDateTime(4)=%ld", searchCrit.getFromDate(), rs->getDateTime(4));
+       searchCrit.getFromDate() > msg.date ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getFromDate()=%ld > rs->getDateTime(4)=%ld", searchCrit.getFromDate(), msg.date);
     return false;
   }
   if ( searchCrit.isSetToDate() && 
-       searchCrit.getToDate() < rs->getDateTime(4) ) {
-    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getToDate()=%ld < rs->getDateTime(4)=%ld", searchCrit.getToDate(), rs->getDateTime(4));
+       searchCrit.getToDate() < msg.date ) {
+    smsc_log_debug(logger, "Task::doesMessageConformToCriterion::: searchCrit.getToDate()=%ld < rs->getDateTime(4)=%ld", searchCrit.getToDate(), msg.date);
     return false;
   }
   return true;
@@ -1294,52 +798,31 @@ bool Task::doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCr
 
 bool Task::deleteDeliveryMessageByRecordId(const std::string& recordId)
 {
-  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId method being called on task '%s'",
-                 info.id.c_str());
+  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
-  Connection* intConnection = dsInt->getConnection();
-  if (!intConnection)
-    throw Exception("Failed to obtain connection to internal data source.");
-
-  std::string deleteMessageSql(prepareSqlCall(DO_DELETE_MESSAGE_STATEMENT_SQL));
-  std::auto_ptr<Statement> deleteMessage(intConnection->createStatement(deleteMessageSql.c_str()));
-
-  if (!deleteMessage.get())
-    throw Exception("deleteDeliveryMessageByRecordId(): Failed to create statement for messages access.");
   uint64_t msgId = atol(recordId.c_str());
-  smsc_log_debug(logger, "Task::deleteDeliveryMessageByRecordId::: call deleteMessage->executeUpdate for msgId=%ld",msgId);
-  deleteMessage->setUint64(1, msgId);
-  deleteMessage->executeUpdate();
+  store.setMsgState(msgId,DELETED);
   return true;
 }
 
 bool Task::deleteDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion method being called on task '%s'",
-                 info.id.c_str());
+  smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
-  Connection* intConnection = dsInt->getConnection();
-  if (!intConnection)
-    throw Exception("Failed to obtain connection to internal data source.");
-
-  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  std::auto_ptr<Statement> selectMessage(intConnection->createStatement(fullTableScanMessageSql.c_str()));
-  if (!selectMessage.get())
-    throw Exception("deleteDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
-
-  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-
-  ResultSet* rs = rsGuard.get();
-  if (!rs)
-    throw Exception("Failed to obtain result set for message access.");
-        
   int fetched = 0, numOfRowsProcessed=0;
   smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion::: search records matching criterion");
-  while (rs->fetchNext()) {
+  CsvStore::FullScan fs(store);
+  uint8_t state;
+  Message msg;
+  while (fs.Next(state,msg))
+  {
     smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion::: check next record");
-    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+    if ( doesMessageConformToCriterion(state,msg, searchCrit) )
+    {
       char recordId[32];
-      sprintf(recordId, "%lld", rs->getUint64(1));
+      sprintf(recordId, "%lld", msg.id);
       smsc_log_debug(logger, "Task::deleteDeliveryMessagesByCompositCriterion: record found[recordId=%s]",recordId);
       deleteDeliveryMessageByRecordId(recordId);
     }
@@ -1357,7 +840,8 @@ struct MessageDescription {
                      const std::string& aMessage)
     : id(anId), state(aState), abonentAddress(anAbonentAddress), sendDate(aSendDate), message(aMessage){}
 
-  std::string toString() {
+  std::string toString()
+  {
     std::ostringstream obuf;
     obuf << "id=[" << id 
          << "],state=[" << uint_t(state)
@@ -1413,22 +897,8 @@ static bool reverseOrderBySendDate(MessageDescription& lhs, MessageDescription& 
 Array<std::string>
 Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion method being called on task '%s'",
-                 info.id.c_str());
-
-  Connection* intConnection = dsInt->getConnection();
-  if (!intConnection)
-    throw Exception("Failed to obtain connection to internal data source.");
-
-  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  std::auto_ptr<Statement> selectMessage(intConnection->createStatement(fullTableScanMessageSql.c_str()));
-  if (!selectMessage.get())
-    throw Exception("selectDeliveryMessagesByCompositCriterion(): Failed to create statement for messages access.");
-
-  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-  ResultSet* rs = rsGuard.get();
-  if (!rs)
-    throw Exception("Failed to obtain result set for message access.");
+  smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
   typedef std::list<MessageDescription> MessagesList_t;
   MessagesList_t messagesList;
@@ -1439,21 +909,28 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
     msgLimit = searchCrit.getMsgLimit();
 
   size_t fetchedCount=0, numOfRowsProcessed=0;
-  while (rs->fetchNext()) {
-    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
+  CsvStore::FullScan fs(store);
+  uint8_t state;
+  Message msg;
+  while (fs.Next(state,msg))
+  {
+    if ( doesMessageConformToCriterion(state,msg, searchCrit) )
+    {
       if ( msgLimit && fetchedCount++ >= msgLimit ) continue;
-      smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%lld,%d,%s,%lld,%s] into messagesList", rs->getUint64(1), rs->getUint8(2), rs->getString(3), rs->getDateTime(4), rs->getString(5));
-      messagesList.push_back(MessageDescription(rs->getUint64(1),
-                                                rs->getUint8(2),
-                                                rs->getString(3),
-                                                rs->getDateTime(4),
-                                                rs->getString(5)));
+      smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%llx,%d,%s,%lld,%s] into messagesList",
+                     msg.id, state, msg.abonent.c_str(), msg.date, msg.message.c_str());
+      messagesList.push_back(MessageDescription(msg.id,
+                                                state,
+                                                msg.abonent,
+                                                msg.date,
+                                                msg.message));
     }
     if ( ++numOfRowsProcessed % 5000 == 0 )
       smsc::util::millisleep(1);
   }
 
-  if ( searchCrit.isSetOrderByCriterion() ) {
+  if ( searchCrit.isSetOrderByCriterion() )
+  {
     smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: try sort taskMessages");
     bool (*predicate)(MessageDescription& lhs, MessageDescription& rhs) = NULL;
 
@@ -1497,8 +974,8 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
 void
 Task::endDeliveryMessagesGeneration()
 {
-  smsc_log_debug(logger, "Task::endDeliveryMessagesGeneration method being called on task '%s'",
-                 info.id.c_str());
+  smsc_log_debug(logger, "Task::endDeliveryMessagesGeneration method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
   MutexGuard guard(inGenerationLock);
   bInGeneration = false; bGenerationSuccess = true;
@@ -1512,22 +989,13 @@ Task::endDeliveryMessagesGeneration()
 void
 Task::destroy_InfoSme_T_Storage()
 {
-  smsc_log_debug(logger, "Task::destroy_InfoSme_T_Storage method being called on task '%s'", info.id.c_str());
+  smsc_log_debug(logger, "Task::destroy_InfoSme_T_Storage method being called on task '%d/%s'", info.uid,info.name.c_str());
 
   try {
-    Connection* connection = 0;
-    connection = dsInt->getConnection();
-
-    std::string dropInfoSme_T_Idx(prepareSqlCall(DROP_INFOSME_T_INDEX_STATEMENT_SQL));
-    std::auto_ptr<Statement> statementGuard(connection->createStatement(dropInfoSme_T_Idx.c_str()));
-    Statement* statement = statementGuard.get();
-    if (!statement) 
-      throw Exception("can' create statement (null pointer value)");
-
-    statement->execute();  
+    store.Delete(false);
   } catch (std::exception& ex) {
-    smsc_log_info(logger, "Task::destroy_InfoSme_T_Storage::: catch exception [%s] for task '%s'",
-                  ex.what(), info.id.c_str());
+    smsc_log_info(logger, "Task::destroy_InfoSme_T_Storage::: catch exception [%s] for task '%d/%s'",
+                  ex.what(), info.uid,info.name.c_str());
   }
 }
 
@@ -1536,37 +1004,20 @@ static const char * CHANGE_DELIVERY_MESSAGE_BY_ID_STATEMENT_SQL = "UPDATE %s SET
 bool Task::changeDeliveryTextMessageByCompositCriterion(const std::string& newTextMsg,
                                                         const InfoSme_T_SearchCriterion& searchCrit)
 {
-  smsc_log_debug(logger, "Task::changeDeliveryTextMessageByCompositCriterion method being called on task '%s'",
-                 info.id.c_str());
+  smsc_log_debug(logger, "Task::changeDeliveryTextMessageByCompositCriterion method being called on task '%d/%s'",
+                 info.uid,info.name.c_str());
 
-  Connection* intConnection = dsInt->getConnection();
-  if (!intConnection)
-    throw Exception("Failed to obtain connection to internal data source.");
-
-  std::string fullTableScanMessageSql(prepareSqlCall(DO_FULL_TABLESCAN_DELIVERYMESSAGE_STATEMENT_SQL));
-  std::auto_ptr<Statement> selectMessage(intConnection->createStatement(fullTableScanMessageSql.c_str()));
-  if (!selectMessage.get())
-    throw Exception("changeDeliveryMessageInfoByCompositCriterion(): Failed to create statement for messages access.");
-
-  std::auto_ptr<ResultSet> rsGuard(selectMessage->executeQuery());
-
-  ResultSet* rs = rsGuard.get();
-  if (!rs)
-    throw Exception("Failed to obtain result set for message access.");
-        
+  CsvStore::FullScan fs(store);
+  uint8_t state;
+  Message msg;
   int fetched = 0, numOfRowsProcessed=0;
-  while (rs->fetchNext()) {
+  while (fs.Next(state,msg))
+  {
     smsc_log_debug(logger, "Task::changeDeliveryTextMessageByCompositCriterion::: check next record");
-    if ( doesMessageConformToCriterion(rs, searchCrit) ) {
-      std::string updateMessageSql(prepareSqlCall(CHANGE_DELIVERY_MESSAGE_BY_ID_STATEMENT_SQL));
-      std::auto_ptr<Statement> updateMessage(intConnection->createStatement(updateMessageSql.c_str()));
-      if (!updateMessage.get())
-        throw Exception("changeDeliveryMessageInfoByRecordId(): Failed to create statement for messages access.");
-
-      updateMessage->setString  (1, newTextMsg.c_str());
-      updateMessage->setUint64  (2, rs->getUint64(1));
-        
-      updateMessage->executeUpdate();
+    if ( doesMessageConformToCriterion(state,msg, searchCrit) )
+    {
+      store.setMsgState(msg.id,DELETED);
+      store.createMessage(msg.date,msg,state);
     }
     if ( ++numOfRowsProcessed % 5000 == 0 )
       smsc::util::millisleep(1);

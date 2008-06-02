@@ -2,6 +2,7 @@
 #define SMSC_INFO_SME_STATISTICS
 
 #include <string>
+#include "util/int.h"
 
 namespace smsc { namespace infosme 
 {
@@ -29,12 +30,12 @@ namespace smsc { namespace infosme
     public:
 
         virtual void flushStatistics() = 0;
-        virtual bool getStatistics(std::string taskId, TaskStat& stat) = 0;
+        virtual bool getStatistics(uint32_t taskId, TaskStat& stat) = 0;
 
-        virtual void incGenerated(std::string taskId, unsigned inc=1) = 0;
-        virtual void incDelivered(std::string taskId, unsigned inc=1) = 0;
-        virtual void incRetried(std::string taskId, unsigned inc=1) = 0;
-        virtual void incFailed(std::string taskId, unsigned inc=1) = 0;
+        virtual void incGenerated(uint32_t taskId, unsigned inc=1) = 0;
+        virtual void incDelivered(uint32_t taskId, unsigned inc=1) = 0;
+        virtual void incRetried(uint32_t taskId, unsigned inc=1) = 0;
+        virtual void incFailed(uint32_t taskId, unsigned inc=1) = 0;
         
         virtual ~Statistics() {};
         

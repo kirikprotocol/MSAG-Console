@@ -7,19 +7,20 @@
 #include <string.h>
 #include <inttypes.h>
 
-#include <logger/Logger.h>
+#include "logger/Logger.h"
 
-#include <util/config/ConfigView.h>
-#include <util/config/ConfigException.h>
+#include "util/config/ConfigView.h"
+#include "util/config/ConfigException.h"
 
-#include <core/buffers/Array.hpp>
-#include <core/buffers/Hash.hpp>
-#include <core/threads/Thread.hpp>
-#include <core/threads/ThreadPool.hpp>
-#include <core/synchronization/Mutex.hpp>
-#include <core/synchronization/Event.hpp>
-#include <util/config/region/Region.hpp>
-#include <db/DataSource.h>
+#include "core/buffers/Array.hpp"
+#include "core/buffers/Hash.hpp"
+#include "core/buffers/IntHash.hpp"
+#include "core/threads/Thread.hpp"
+#include "core/threads/ThreadPool.hpp"
+#include "core/synchronization/Mutex.hpp"
+#include "core/synchronization/Event.hpp"
+#include "util/config/region/Region.hpp"
+#include "db/DataSource.h"
 
 #include "TaskScheduler.h"
 #include "StatisticsManager.h"
@@ -27,6 +28,40 @@
 
 #include "InfoSme_Tasks_Stat_SearchCriterion.hpp"
 #include "TrafficControl.hpp"
+#include "core/buffers/JStore.hpp"
+
+struct TaskIdMsgId{
+  uint64_t msgId;
+  uint32_t taskId;
+};
+
+inline size_t WriteRecord(File& f,uint64_t key,const TaskIdMsgId& val)
+{
+  f.WriteNetInt64(key);
+  f.WriteNetInt64(val.msgId);
+  f.WriteNetInt32(val.taskId);
+  return 8+8+4;
+}
+
+inline size_t ReadRecord(File& f,uint64_t& key,TaskIdMsgId& val)
+{
+  key=f.ReadNetInt64();
+  val.msgId=f.ReadNetInt64();
+  val.taskId=f.ReadNetInt32();
+  return 8+8+4;
+}
+
+inline size_t WriteKey(File& f,uint64_t key)
+{
+  f.WriteNetInt64(key);
+  return 8;
+}
+
+inline size_t ReadKey(File& f,uint64_t& key)
+{
+  key=f.ReadNetInt64();
+  return 8;
+}
 
 namespace smsc { namespace infosme
 {
@@ -148,18 +183,16 @@ namespace smsc { namespace infosme
 
     struct TaskMsgId
     {
-        std::string taskId;
+        uint32_t taskId;
         uint64_t    msgId;
 
-        TaskMsgId(std::string taskId="", uint64_t msgId=0)
-            : taskId(taskId), msgId(msgId) {};
-        TaskMsgId(const TaskMsgId& tmi)
-            : taskId(tmi.taskId), msgId(tmi.msgId) {};
-
-        TaskMsgId& operator=(const TaskMsgId& tmi) {
-            taskId = tmi.taskId; msgId = tmi.msgId;
-            return *this;
+        uint32_t getTaskId()
+        {
+          return taskId;
         }
+
+        TaskMsgId(uint32_t taskId=0, uint64_t msgId=0)
+            : taskId(taskId), msgId(msgId) {};
     };
 
     class ThreadManager : public ThreadPool
@@ -255,6 +288,13 @@ namespace smsc { namespace infosme
         }
     };
 
+    struct Int64HashFunc{
+      static size_t CalcHash(uint64_t key)
+      {
+        return key;
+      }
+    };
+
     class TaskProcessor : public TaskProcessorAdapter, public InfoSmeAdmin, public Thread
     {
     private:
@@ -267,7 +307,7 @@ namespace smsc { namespace infosme
         TaskScheduler scheduler;    // for scheduled messages generation
         DataProvider  provider;     // to obtain registered data source by key
 
-        Hash<Task *>  tasks;
+        IntHash<Task *>  tasks;
         Mutex         tasksLock;
 
         Event       awake, exited;
@@ -275,10 +315,10 @@ namespace smsc { namespace infosme
         Mutex       startLock;
         int         switchTimeout;
 
-        const char* taskTablesPrefix;
-        DataSource* dsInternal;
-        Connection* dsIntConnection;
-        Mutex       dsIntConnectionLock;
+        JStore<uint64_t,TaskIdMsgId,Int64HashFunc> jstore;
+
+        std::string storeLocation;
+        
 
         MessageSender*  messageSender;
         Mutex           messageSenderLock;
@@ -311,7 +351,7 @@ namespace smsc { namespace infosme
         bool processTask(Task* task);
         void resetWaitingTasks();
 
-        virtual void processMessage (Task* task, Connection* connection, uint64_t msgId,
+        virtual void processMessage (Task* task, uint64_t msgId,
                                      bool delivered, bool retry, bool immediate=false);
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry, bool immediate,
@@ -355,10 +395,13 @@ namespace smsc { namespace infosme
 
         virtual bool putTask(Task* task);
         virtual bool addTask(Task* task);
-        virtual bool remTask(std::string taskId);
-        virtual bool delTask(std::string taskId);
-        virtual bool hasTask(std::string taskId);
-        virtual TaskGuard getTask(std::string taskId);
+        virtual bool remTask(uint32_t taskId);
+        virtual bool delTask(uint32_t taskId);
+        virtual bool hasTask(uint32_t taskId);
+        virtual TaskGuard getTask(uint32_t taskId);
+
+        virtual TaskInfo getTaskInfo(uint32_t taskId);
+
 
         virtual bool invokeEndGeneration(Task* task) {
             return taskManager.startThread(new TaskRunner(task, endGenerationMethod,   this));
@@ -386,7 +429,7 @@ namespace smsc { namespace infosme
             awake.Signal();
         };
 
-        bool getStatistics(std::string taskId, TaskStat& stat) {
+        bool getStatistics(uint32_t taskId, TaskStat& stat) {
             return (statistics) ? statistics->getStatistics(taskId, stat):false;
         };
 
@@ -415,58 +458,58 @@ namespace smsc { namespace infosme
             if (statistics) statistics->flushStatistics();
         }
 
-        virtual void addTask(std::string taskId);
-        virtual void removeTask(std::string taskId);
-        virtual void changeTask(std::string taskId);
+        virtual void addTask(uint32_t taskId);
+        virtual void removeTask(uint32_t taskId);
+        virtual void changeTask(uint32_t taskId);
 
-        virtual bool startTask(std::string taskId);
-        virtual bool stopTask(std::string taskId);
+        virtual bool startTask(uint32_t taskId);
+        virtual bool stopTask(uint32_t taskId);
         virtual Array<std::string> getGeneratingTasks();
         virtual Array<std::string> getProcessingTasks();
 
-        virtual bool isTaskEnabled(std::string taskId);
-        virtual bool setTaskEnabled(std::string taskId, bool enabled);
+        virtual bool isTaskEnabled(uint32_t taskId);
+        virtual bool setTaskEnabled(uint32_t taskId, bool enabled);
 
         virtual void addSchedule(std::string scheduleId);
         virtual void removeSchedule(std::string scheduleId);
         virtual void changeSchedule(std::string scheduleId);
 
-        virtual void addDeliveryMessages(const std::string& taskId,
+        virtual void addDeliveryMessages(uint32_t taskId,
                                          uint8_t msgState,
                                          const std::string& address,
                                          time_t messageDate,
                                          const std::string& msg);
 
-        virtual void changeDeliveryMessageInfoByRecordId(const std::string& taskId,
+        virtual void changeDeliveryMessageInfoByRecordId(uint32_t taskId,
                                                          uint8_t messageState,
                                                          time_t unixTime,
                                                          const std::string& recordId);
 
-        virtual void changeDeliveryMessageInfoByCompositCriterion(const std::string& taskId,
+        virtual void changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId,
                                                                   uint8_t messageState,
                                                                   time_t unixTime,
                                                                   const InfoSme_T_SearchCriterion& searchCrit);
-        virtual void deleteDeliveryMessageByRecordId(const std::string& taskId,
+        virtual void deleteDeliveryMessageByRecordId(uint32_t taskId,
                                                      const std::string& recordId);
 
-        virtual void deleteDeliveryMessagesByCompositCriterion(const std::string& taskId,
+        virtual void deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
                                                                const InfoSme_T_SearchCriterion& searchCrit);
 
-        virtual void insertRecordIntoTasksStat(const std::string& taskId,
+        virtual void insertRecordIntoTasksStat(uint32_t taskId,
                                                uint32_t period,
                                                uint32_t generated,
                                                uint32_t delivered,
                                                uint32_t retried,
                                                uint32_t failed);
 
-        virtual Array<std::string> getTaskMessages(const std::string& taskId,
+        virtual Array<std::string> getTaskMessages(uint32_t taskId,
                                                    const InfoSme_T_SearchCriterion& searchCrit);
 
-        virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
+        //virtual Array<std::string> getTasksStatistic(const InfoSme_Tasks_Stat_SearchCriterion& searchCrit);
 
-        virtual void endDeliveryMessagesGeneration(const std::string& taskId);
+        virtual void endDeliveryMessagesGeneration(uint32_t taskId);
 
-        virtual void changeDeliveryTextMessageByCompositCriterion(const std::string& taskId,
+        virtual void changeDeliveryTextMessageByCompositCriterion(uint32_t taskId,
                                                                   const std::string& newTextMsg,
                                                                   const InfoSme_T_SearchCriterion& searchCrit);
     };

@@ -28,151 +28,51 @@
 #include "DataProvider.h"
 #include "Statistics.h"
 #include "DateTime.h"
-
+#include "TaskTypes.hpp"
+#include "CsvStore.hpp"
 #include "InfoSme_T_SearchCriterion.hpp"
 
-namespace smsc { namespace infosme 
+namespace smsc
+{ 
+namespace infosme
 {
     using namespace smsc::core::buffers;
     using namespace smsc::db;
-    
+
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
-    
+
     using smsc::logger::Logger;
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
     using namespace smsc::util::templates;
 
-    static const uint8_t MESSAGE_NEW_STATE          =  0; // Новое или перешедуленное сообщение
-    static const uint8_t MESSAGE_WAIT_STATE         = 10; // Ожидает submitResponce
-    static const uint8_t MESSAGE_ENROUTE_STATE      = 20; // В процессе доставки, ожидает deliveryReciept
-    static const uint8_t MESSAGE_DELIVERED_STATE    = 30; // Доставлено
-    static const uint8_t MESSAGE_EXPIRED_STATE      = 40; // Не доставлено, время жизни истекло
-    static const uint8_t MESSAGE_FAILED_STATE       = 50; // Не доставлено, фатальная ошибка при доставке
-    
-    typedef enum {
-        NEW         = MESSAGE_NEW_STATE, 
-        WAIT        = MESSAGE_WAIT_STATE,
-        ENROUTE     = MESSAGE_ENROUTE_STATE,
-        DELIVERED   = MESSAGE_DELIVERED_STATE,
-        EXPIRED     = MESSAGE_EXPIRED_STATE,
-        FAILED      = MESSAGE_FAILED_STATE
-    } MessageState;
-
-    struct Message
-    {
-        uint64_t    id;
-        std::string abonent;
-        std::string message;
-        std::string regionId;
-
-        Message(uint64_t anId=0, std::string anAbonent="", std::string aMessage="", std::string aRegionId="")
-          : id(anId), abonent(anAbonent), message(aMessage), regionId(aRegionId) {}
-        virtual ~Message() {}
-    };
-
-    struct TaskInfo
-    {
-        std::string id;
-        std::string name;
-        bool        enabled;
-        int         priority;
-
-        bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory;
-
-        time_t  endDate;            // full date/time
-        time_t  retryTime;          // only HH:mm:ss in seconds
-        time_t  validityPeriod;     // only HH:mm:ss in seconds
-        time_t  validityDate;       // full date/time
-        time_t  activePeriodStart;  // only HH:mm:ss in seconds
-        time_t  activePeriodEnd;    // only HH:mm:ss in seconds
-        
-        WeekDaysSet activeWeekDays; // Mon, Tue ...
-
-        std::string tablePrefix;
-        std::string querySql;
-        std::string msgTemplate;
-        std::string svcType;        // specified if replaceIfPresent == true
-        std::string address;
-
-        int     dsTimeout, dsUncommitedInProcess, dsUncommitedInGeneration;
-        int     messagesCacheSize, messagesCacheSleep;
-        
-        TaskInfo()
-            : id(""), name(""), enabled(true), priority(0),
-              retryOnFail(false), replaceIfPresent(false), 
-              trackIntegrity(false), transactionMode(false), keepHistory(false),
-              endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
-              activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
-              tablePrefix(""), querySql(""), msgTemplate(""), svcType(""), address(""),
-              dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
-              messagesCacheSize(100), messagesCacheSleep(0) {};
-        TaskInfo(const TaskInfo& info) 
-            : id(info.id), name(info.name), enabled(info.enabled), priority(info.priority),
-              retryOnFail(info.retryOnFail), replaceIfPresent(info.replaceIfPresent),
-              trackIntegrity(info.trackIntegrity), transactionMode(info.transactionMode), 
-              keepHistory(info.keepHistory), endDate(info.endDate), retryTime(info.retryTime), 
-              validityPeriod(info.validityPeriod), validityDate(info.validityDate),
-              activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
-              activeWeekDays(info.activeWeekDays),
-              tablePrefix(info.tablePrefix), querySql(info.querySql), 
-              msgTemplate(info.msgTemplate), svcType(info.svcType), address(info.address),
-              dsTimeout(info.dsTimeout),
-              dsUncommitedInProcess(info.dsUncommitedInProcess),
-              dsUncommitedInGeneration(info.dsUncommitedInGeneration),
-              messagesCacheSize(info.messagesCacheSize), 
-              messagesCacheSleep(info.messagesCacheSleep) {};
-        
-        virtual ~TaskInfo() {};
-        
-        TaskInfo& operator=(const TaskInfo& info)
-        {
-            id = info.id; name = info.name; enabled = info.enabled; priority = info.priority;
-            retryOnFail = info.retryOnFail; replaceIfPresent = info.replaceIfPresent;
-            trackIntegrity = info.trackIntegrity; transactionMode = info.transactionMode; 
-            keepHistory = info.keepHistory; endDate = info.endDate; retryTime = info.retryTime;
-            validityPeriod = info.validityPeriod; validityDate = info.validityDate;
-            activePeriodStart = info.activePeriodStart; 
-            activePeriodEnd = info.activePeriodEnd;
-            activeWeekDays = info.activeWeekDays;
-            tablePrefix = info.tablePrefix; querySql = info.querySql;
-            msgTemplate = info.msgTemplate; svcType = info.svcType; address = info.address;
-            dsTimeout = info.dsTimeout;
-            dsUncommitedInProcess = info.dsUncommitedInProcess;
-            dsUncommitedInGeneration = info.dsUncommitedInGeneration;
-            messagesCacheSize = info.messagesCacheSize;
-            messagesCacheSleep = info.messagesCacheSleep;
-            return *this;
-        };
-    };
 
     class Task
     {
     friend class TaskGuard;
     protected:
-        
+
         smsc::logger::Logger *logger;
         OutputFormatter*   formatter;
 
-    private:
-        
+
         Event       usersCountEvent;
         Mutex       usersCountLock;
         long        usersCount;
-        
+
         Mutex       finalizingLock;
         bool        bFinalizing, bSelectedAll;
 
-        bool doesMessageConformToCriterion(ResultSet* rs, const InfoSme_T_SearchCriterion& searchCrit);
+        bool doesMessageConformToCriterion(uint8_t state,const Message&, const InfoSme_T_SearchCriterion& searchCrit);
         void destroy_InfoSme_T_Storage();
-    protected:
 
         TaskInfo        info;
         DataSource*     dsOwn;
-        DataSource*     dsInt;
-        
+
+        CsvStore store;
+
         Mutex       createTableLock, enableLock;
         Event       generationEndEvent;
         Mutex       inGenerationLock, inProcessLock;
@@ -180,45 +80,32 @@ namespace smsc { namespace infosme
         bool        infoSme_T_storageWasDestroyed;
 
         Mutex           messagesCacheLock;
-      //Array<Message>  messagesCache;
-      std::list<Message> messagesCache;
+        std::list<Message> messagesCache;
 
-//         struct suspended_msg_inf {
-//           suspended_msg_inf() : lastUseOfTime(::time(0)) {}
-//           std::vector<Message> messages;
-//           time_t lastUseOfTime;
-//         };
-
-      //typedef std::map<std::string /*region id value*/, suspended_msg_inf*>  suspendedMessagesCache_t;
-      typedef std::set<std::string /*region id value*/>  suspendedRegions_t;
-      suspendedRegions_t                                 _suspendedRegions;
-      std::list<Message>::iterator                       _messagesCacheIter;
-      //suspendedMessagesCache_t                           _suspendedMessagesCache;
+        typedef std::set<std::string /*region id value*/>  suspendedRegions_t;
+        suspendedRegions_t                                 _suspendedRegions;
+        std::list<Message>::iterator                       _messagesCacheIter;
         time_t          lastMessagesCacheEmpty;
-        
-        void  doFinalization();
-        std::string prepareSqlCall(const char* sql);
-        std::string prepareDoubleSqlCall(const char* sql);
-        void  trackIntegrity(bool clear=true, bool del=true, Connection* connection=0);
 
-        virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
-        virtual ~Task();
+        void  doFinalization();
+
+        void  trackIntegrity(bool clear=true, bool del=true);
+
+        void init(ConfigView* config, uint32_t taskId);
+        ~Task();
 
         inline bool setInProcess(bool inProcess) {
             MutexGuard guard(inProcessLock);
             bInProcess = inProcess;
             return bInProcess;
         }
-    
+
     public:
-        
+
         int         currentPriorityFrameCounter;
 
-        Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
-             DataSource* dsOwn, DataSource* dsInt);
-        
-        void createTable(); // throws Exception
-        void dropTable();   // throws Exception
+        Task(ConfigView* config, uint32_t taskId, std::string location,
+             DataSource* dsOwn);
 
         void finalize(); // Wait usages & delete task
         bool shutdown(); // Wait usages, cleanup waiting & delete task
@@ -244,8 +131,15 @@ namespace smsc { namespace infosme
             return (!bInGeneration && bGenerationSuccess);
         }
 
-        inline std::string getId() {
-            return info.id;
+        inline uint32_t getId()
+        {
+          return info.uid;
+        }
+        inline std::string getIdStr()
+        {
+          char buf[32];
+          sprintf(buf,"%u",info.uid);
+          return buf;
         }
         inline std::string getName() {
             return info.name;
@@ -268,9 +162,9 @@ namespace smsc { namespace infosme
         inline const TaskInfo& getInfo() {
             return info;
         }
-        
+
         bool isReady(time_t time, bool checkActivePeriod = true);
-        
+
 
         /**
          * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
@@ -284,14 +178,14 @@ namespace smsc { namespace infosme
          * Выставляет Event для завершения beginGeneration() и ждёт завершения.
          */
         void endGeneration();
-        
+
         /**
          * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи
          * посредством endGeneration(). Удаляет все сгенерированные сообщения.
          * Использует connection из внутреннего источника данных.
          */
         void dropNewMessages(Statistics* statistics);
-        
+
         /**
          * Используется для восстановления сообщения из состояния WAIT в случае,
          * если submitResponce не пришёл при обрыве соединения с SMSC.
@@ -300,7 +194,7 @@ namespace smsc { namespace infosme
          * @param connection    основной connection TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизация)
          */
-        void resetWaiting(Connection* connection=0);
+        void resetWaiting();
 
         /**
          * Возвращает следующее сообщение для отправки из спец.таблицы задачи
@@ -312,43 +206,43 @@ namespace smsc { namespace infosme
          * @param message       следующее сообщение для отправки
          * @return              false если сообщений нет.
          */
-        bool getNextMessage(Connection* connection, Message& message);
-        
+        bool getNextMessage(Message& message);
+
         /**
          * Финализирует/удаляет сообщение. Выполняется из TaskProcessor'а
          * Финализация/удаление регулируется флагом info.keepHistory
-         * 
+         *
          * @param msgId         идентификатор сообщения в таблице задачи.
-         * @param state         финальное состояние сообщения              
-         * @param connection    connection от TaskProcessor'а 
+         * @param state         финальное состояние сообщения
+         * @param connection    connection от TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизация)
-         * @return true         если сообщение найдено и финализированно/удалено. 
+         * @return true         если сообщение найдено и финализированно/удалено.
          */
-        bool finalizeMessage(uint64_t msgId, MessageState state, Connection* connection=0);
-        
+        bool finalizeMessage(uint64_t msgId, MessageState state);
+
         /**
          * Переводит сообщение в состояние NEW по получению deliveryReport Failed
          * или submitResponce Failed с временной ошибкой.
-         * 
+         *
          * @param msgId         идентификатор сообщения в таблице задачи.
          * @param nextTime      время следующей попытки доставки.
-         * @param connection    connection от TaskProcessor'а 
+         * @param connection    connection от TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизация)
-         * @return true         если сообщение найдено и изменено 
+         * @return true         если сообщение найдено и изменено
          */
-        bool retryMessage(uint64_t msgId, time_t nextTime, Connection* connection=0);
+        bool retryMessage(uint64_t msgId, time_t nextTime);
 
         /**
          * Переводит сообщение в состояние ENROUTE по получению submitResponce Ok
          * Сообщение должно быть в состоянии WAIT.
          * Выполняется из TaskProcessor'а
-         * 
+         *
          * @param msgId         идентификатор сообщения в таблице задачи.
-         * @param connection    connection от TaskProcessor'а 
+         * @param connection    connection от TaskProcessor'а
          *                      из внутреннего источника данных. (оптимизация)
-         * @return true         если сообщение найдено и изменено 
+         * @return true         если сообщение найдено и изменено
          */
-        bool enrouteMessage(uint64_t msgId, Connection* connection=0);
+        bool enrouteMessage(uint64_t msgId);
 
         bool insertDeliveryMessage(uint8_t msgState,
                                    const std::string& address,
@@ -380,11 +274,11 @@ namespace smsc { namespace infosme
 
         void resetSuspendedRegions();
     };
-    
+
     class TaskGuard
     {
     private:
-        
+
         TaskGuard& operator=(const TaskGuard& tg) {
             changeTaskCounter(false);
             task = tg.task;
@@ -393,9 +287,9 @@ namespace smsc { namespace infosme
         };
 
     protected:
-        
+
         Task* task;
-        
+
         inline void changeTaskCounter(bool increment) {
            if (!task) return;
            MutexGuard guard(task->usersCountLock);
@@ -403,9 +297,9 @@ namespace smsc { namespace infosme
            else task->usersCount--;
            task->usersCountEvent.Signal();
         }
-        
+
     public:
-        
+
         TaskGuard(Task* task=0) : task(task) {
             changeTaskCounter(true);
         }
@@ -415,13 +309,14 @@ namespace smsc { namespace infosme
         virtual ~TaskGuard() {
             changeTaskCounter(false);
         }
-    
+
         inline Task* get() {
             return task;
         }
     };
-    
-}}
+
+}
+}
 
 #endif //SMSC_INFO_SME_TASK_PROCESSOR
 

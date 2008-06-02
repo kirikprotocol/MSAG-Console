@@ -174,10 +174,10 @@ std::string unixTimeToStringFormat(time_t aTime)
 
   std::ostringstream dateStrBuf;
   dateStrBuf << std::setw(2) << std::setfill('0') 
-	     << uint16_t(tmPtr->tm_mday)
+       << uint16_t(tmPtr->tm_mday)
              << std::setw(2)
              << uint16_t(tmPtr->tm_mon + 1)
-	     << std::setw(4)
+       << std::setw(4)
              << uint32_t(tmPtr->tm_year + 1900)
              << std::setw(2)
              << uint16_t(tmPtr->tm_hour)

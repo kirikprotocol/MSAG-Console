@@ -317,7 +317,7 @@ void InfoSmeComponent::addTask(const Arguments& args)
     if (!id || id[0] == '\0')
         error("addTask", ARGUMENT_NAME_ID);
     
-    try { admin.addTask(id);
+    try { admin.addTask(atoi(id));
     } catch (Exception& exc) {
         throw AdminException("Failed to add task '%s'. Cause: %s", id, exc.what());
     } catch (std::exception& exc) {
@@ -335,7 +335,7 @@ void InfoSmeComponent::removeTask(const Arguments& args)
     if (!id || id[0] == '\0')
         error("removeTask", ARGUMENT_NAME_ID);
     
-    try { admin.removeTask(id);
+    try { admin.removeTask(atoi(id));
     } catch (Exception& exc) {
         throw AdminException("Failed to remove task '%s'. Cause: %s", id, exc.what());
     } catch (std::exception& exc) {
@@ -353,7 +353,7 @@ void InfoSmeComponent::changeTask(const Arguments& args)
     if (!id || id[0] == '\0')
         error("changeTask", ARGUMENT_NAME_ID);
     
-    try { admin.changeTask(id);
+    try { admin.changeTask(atoi(id));
     } catch (Exception& exc) {
         throw AdminException("Failed to change task '%s'. Cause: %s", id, exc.what());
     } catch (std::exception& exc) {
@@ -374,7 +374,7 @@ void InfoSmeComponent::startTasks(const Arguments& args)
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
         const char* taskId = *it;
         if (!taskId || taskId[0] == '\0') continue;
-        if (!admin.startTask(taskId))
+        if (!admin.startTask(atoi(taskId)))
             throw AdminException("Failed to start task '%s'", taskId);
     }
 }
@@ -390,7 +390,7 @@ void InfoSmeComponent::stopTasks(const Arguments& args)
     for (StringList::iterator it=list.begin(); it != list.end(); it++) {
         const char* taskId = *it;
         if (!taskId || taskId[0] == '\0') continue;
-        if (!admin.stopTask(taskId))
+        if (!admin.stopTask(atoi(taskId)))
             throw AdminException("Failed to stop task '%s'", taskId);
     }
 }
@@ -419,7 +419,7 @@ bool InfoSmeComponent::isTaskEnabled(const Arguments& args)
     if (!taskId || taskId[0] == '\0')
         error("isTaskEnabled", ARGUMENT_NAME_ID);
     
-    return admin.isTaskEnabled(taskId);
+    return admin.isTaskEnabled(atoi(taskId));
 }
 void InfoSmeComponent::setTaskEnabled(const Arguments& args)
 {
@@ -436,7 +436,7 @@ void InfoSmeComponent::setTaskEnabled(const Arguments& args)
     if (arg.getType() != BooleanType) 
         error("setTaskEnabled", ARGUMENT_NAME_ENABLED);
 
-    if (!admin.setTaskEnabled(taskId, arg.getBooleanValue()))
+    if (!admin.setTaskEnabled(atoi(taskId), arg.getBooleanValue()))
         throw AdminException("Failed to shange enabled state for task '%s'", taskId);
 }
 void InfoSmeComponent::addSchedule(const Arguments& args)
@@ -568,7 +568,7 @@ void InfoSmeComponent::addDeliveryMessages(const Arguments& args)
         error("addDeliveryMessages", ARGUMENT_DATE);
 
       deleteEscapeSymbols(&messageText);
-      admin.addDeliveryMessages(taskId, (uint8_t)messageState, address, unixTime, messageText);
+      admin.addDeliveryMessages(atoi(taskId.c_str()), (uint8_t)messageState, address, unixTime, messageText);
     }
     smsc_log_info(logger, "InfoSmeComponent::addDeliveryMessages::: messages have been loaded");
   } catch (std::exception& exc) {
@@ -628,7 +628,7 @@ void InfoSmeComponent::changeDeliveryMessageInfo(const Arguments& args)
 
     std::string recordId;
     if ( getParameterIfExistsAndNotNull(args, ARGUMENT_RECORD_ID, recordId) )
-      admin.changeDeliveryMessageInfoByRecordId(taskId, messageState, unixTime, recordId);
+      admin.changeDeliveryMessageInfoByRecordId(atoi(taskId.c_str()), messageState, unixTime, recordId);
     else {
       InfoSme_T_SearchCriterion searchCrit;
 
@@ -658,7 +658,7 @@ void InfoSmeComponent::changeDeliveryMessageInfo(const Arguments& args)
 
         searchCrit.setToDate(toDateAsUnixTime);
       }
-      admin.changeDeliveryMessageInfoByCompositCriterion(taskId, messageState, unixTime, searchCrit);
+      admin.changeDeliveryMessageInfoByCompositCriterion(atoi(taskId.c_str()), messageState, unixTime, searchCrit);
     }
   } catch (std::exception& exc) {
     throw AdminException("Failed to change delivery message info. Cause: %s", exc.what());
@@ -683,7 +683,7 @@ void InfoSmeComponent::deleteDeliveryMessages(const Arguments& args)
 
   std::string recordId;
   if ( getParameterIfExistsAndNotNull(args, ARGUMENT_RECORD_ID, recordId) )
-    admin.deleteDeliveryMessageByRecordId(taskId, recordId);
+    admin.deleteDeliveryMessageByRecordId(atoi(taskId.c_str()), recordId);
   else {
     InfoSme_T_SearchCriterion searchCrit;
 
@@ -711,7 +711,7 @@ void InfoSmeComponent::deleteDeliveryMessages(const Arguments& args)
     if ( getParameterIfExistsAndNotNull(args, ARGUMENT_ADDRESS, address) )
       searchCrit.setAbonentAddress(address);
 
-    admin.deleteDeliveryMessagesByCompositCriterion(taskId, searchCrit);
+    admin.deleteDeliveryMessagesByCompositCriterion(atoi(taskId.c_str()), searchCrit);
   }
 }
 
@@ -766,7 +766,7 @@ void InfoSmeComponent::addStatisticRecord(const Arguments& args)
     failed = arg.getLongValue();
   }
 
-  admin.insertRecordIntoTasksStat(taskId, period, generated, delivered, retried, failed);
+  admin.insertRecordIntoTasksStat(atoi(taskId.c_str()), period, generated, delivered, retried, failed);
 }
 
 Variant InfoSmeComponent::selectTaskMessages(const Arguments& args)
@@ -823,7 +823,7 @@ Variant InfoSmeComponent::selectTaskMessages(const Arguments& args)
   }
 
   Variant result(StringListType);
-  Array<std::string> taskMessagesList = admin.getTaskMessages(taskId, searchCrit);
+  Array<std::string> taskMessagesList = admin.getTaskMessages(atoi(taskId.c_str()), searchCrit);
   for (int i=0; i<taskMessagesList.Count(); i++)
     result.appendValueToStringList(taskMessagesList[i].c_str());
   return result;
@@ -831,7 +831,7 @@ Variant InfoSmeComponent::selectTaskMessages(const Arguments& args)
 
 Variant InfoSmeComponent::selectTasksStatistic(const Arguments& args)
 {
-  InfoSme_Tasks_Stat_SearchCriterion searchCrit;
+  /*InfoSme_Tasks_Stat_SearchCriterion searchCrit;
 
   std::string taskId;
   if ( getParameterIfExistsAndNotNull(args, ARGUMENT_NAME_ID, taskId ) )
@@ -850,7 +850,10 @@ Variant InfoSmeComponent::selectTasksStatistic(const Arguments& args)
   Variant result(StringListType);
   Array<std::string> tasksStatList = admin.getTasksStatistic(searchCrit);
   for (int i=0; i<tasksStatList.Count(); i++)
-    result.appendValueToStringList(tasksStatList[i].c_str());
+    result.appendValueToStringList(tasksStatList[i].c_str());*/
+
+  Variant result(StringListType);
+  result.appendValueToStringList("not implemented");
   return result;
 }
 
@@ -863,7 +866,7 @@ void InfoSmeComponent::endDeliveryMessagesGeneration(const Arguments& args)
     if (!id || id[0] == '\0')
         error("endDeliveryMessagesGeneration", ARGUMENT_NAME_ID);
     
-    try { admin.endDeliveryMessagesGeneration(id);
+    try { admin.endDeliveryMessagesGeneration(atoi(id));
     } catch (Exception& exc) {
         throw AdminException("Failed to add task '%s'. Cause: %s", id, exc.what());
     } catch (std::exception& exc) {
@@ -915,7 +918,7 @@ void InfoSmeComponent::changeDeliveryTextMessage(const Arguments& args)
   if ( getParameterIfExistsAndNotNull(args, ARGUMENT_ADDRESS, address) )
     searchCrit.setAbonentAddress(address);
 
-  admin.changeDeliveryTextMessageByCompositCriterion(taskId, newTextMsg, searchCrit);
+  admin.changeDeliveryTextMessageByCompositCriterion(atoi(taskId.c_str()), newTextMsg, searchCrit);
   //}
 }
 

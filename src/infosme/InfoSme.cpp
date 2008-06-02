@@ -38,6 +38,7 @@
 #include <util/config/region/RegionsConfig.hpp>
 #include <util/config/region/Region.hpp>
 #include <util/config/region/RegionFinder.hpp>
+#include "infosme/TaskLock.hpp"
 
 #include "version.inc"
 
@@ -93,21 +94,21 @@ static bool isNeedStop() {
 
 static void setNeedReconnect() {
     MutexGuard gauard(needReconnectLock);
-    smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+    smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
     smsc_log_info(logger, "setNeedReconnect:: Enter it");
     if ( bInfoSmeIsConnected ) {
       bInfoSmeIsConnected = false;
       unsigned char oneByte=0;
-      smsc_log_info(logger, "setNeedReconnect:: write to reconnect_WriteFd");
+      smsc_log_info(log, "setNeedReconnect:: write to reconnect_WriteFd");
       write(reconnect_WriteFd, &oneByte, sizeof(oneByte));
     }
 }
 
 static void setConnected() {
-  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
   MutexGuard gauard(needReconnectLock);
   bInfoSmeIsConnected=true;
-  smsc_log_info(logger, "setConnected:: bInfoSmeIsConnected=true");
+  smsc_log_info(log, "setConnected:: bInfoSmeIsConnected=true");
 }
 
 extern bool isMSISDNAddress(const char* string)
@@ -437,13 +438,13 @@ public:
 
         bool immediate = (status == Status::MSGQFUL   ||
                           status == Status::THROTTLED ||
-			  status == Status::LICENSELIMITREJECT
-			  /*|| commented for Lugovoj's request
+        status == Status::LICENSELIMITREJECT
+        /*|| commented for Lugovoj's request
                                                         status == Status::SUBSCRBUSYMT*/);
 
         bool trafficst = (status == Status::MSGQFUL                   ||
                           status == Status::THROTTLED                 ||
-			  status == Status::LICENSELIMITREJECT        ||
+        status == Status::LICENSELIMITREJECT        ||
                           status == Status::MAP_RESOURCE_LIMITATION   ||
                           status == Status::MAP_NO_RESPONSE_FROM_PEER ||
                           status == Status::SMENOTCONNECTED           ||
@@ -516,19 +517,19 @@ extern "C" static void atExitHandler(void)
 static void
 doRegionsInitilization(const char* regions_xml_file, const char* route_xml_file)
 {
-  smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.infosme.InfoSme");
 
   regionsConfig = new smsc::util::config::region::RegionsConfig(regions_xml_file);
 
   smsc::util::config::region::RegionsConfig::status st = regionsConfig->load();
   if ( st == smsc::util::config::region::RegionsConfig::success )
-    smsc_log_info(logger, "config file %s has been loaded successful", regions_xml_file);
+    smsc_log_info(log, "config file %s has been loaded successful", regions_xml_file);
   else
     throw smsc::util::config::ConfigException("can't load config file %s", regions_xml_file);
 
   smsc::util::config::route::RouteConfig routeConfig;
   if ( routeConfig.load(route_xml_file) == smsc::util::config::route::RouteConfig::success )
-    smsc_log_info(logger, "config file %s has been loaded successful", route_xml_file);
+    smsc_log_info(log, "config file %s has been loaded successful", route_xml_file);
   else
     throw smsc::util::config::ConfigException("can't load config file %s", route_xml_file);
 
@@ -602,6 +603,16 @@ int main(int argc, char** argv)
 
         const char* route_xml_file = tpConfig.getString("route_config_filename");
         const char* regions_xml_file = tpConfig.getString("regions_config_filename");
+
+        {
+          std::string fn=tpConfig.getString("storeLocation");
+          if(fn.length() && *fn.rbegin()!='/')
+          {
+            fn+='/';
+          }
+          fn+="taskslock.bin";
+          TaskLock::Init(fn.c_str());
+        }
 
         doRegionsInitilization(regions_xml_file, route_xml_file);
 
