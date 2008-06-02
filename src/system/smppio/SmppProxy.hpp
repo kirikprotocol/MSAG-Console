@@ -154,11 +154,12 @@ public:
           }
         }
       }
-      if(!ussdSession && cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=totalLimit)
+      bool outOfLimitCmd=cmd->get_commandId()==SUBMIT_RESP || cmd->get_commandId()==ALERT_NOTIFICATION;
+      if(!ussdSession && !outOfLimitCmd && outqueue.Count()>=totalLimit)
       {
         throw ProxyQueueLimitException(outqueue.Count(),totalLimit);
       }
-      if(!ussdSession && cmd->get_commandId()!=SUBMIT_RESP && shapeLimit>0 && shapeCounterOut.Get()>shapeLimit)
+      if(!ussdSession && !outOfLimitCmd && shapeLimit>0 && shapeCounterOut.Get()>shapeLimit)
       {
         throw ProxyQueueLimitException(shapeCounterOut.Get(),shapeLimit);
       }
