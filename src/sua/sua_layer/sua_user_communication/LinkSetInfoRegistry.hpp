@@ -23,6 +23,8 @@ public:
   void removeAssociation(const communication::LinkId& linkSetId, const std::string& appId);
 
   std::set<communication::LinkId> getLinkSetIds() const;
+
+  bool getAppId(const communication::LinkId& linkSetId, std::string* appId);
 private:
   smsc::logger::Logger* _logger;
   typedef std::map<communication::LinkId, std::set<std::string>* /*appIds*/> registry_t;
