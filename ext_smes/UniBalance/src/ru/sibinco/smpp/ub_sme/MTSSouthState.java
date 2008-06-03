@@ -10,21 +10,8 @@ import java.util.Date;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
-/**
- * Created by Serge Lugovoy
- * Date: Nov 22, 2007
- * Time: 3:33:49 PM
- */
-public class MTSSouthState implements BannerState, MGState {
+public class MTSSouthState extends AbstractState implements BannerState, MGState {
   private final static Category logger = Category.getInstance(MTSSouthState.class);
-
-  protected Message abonentRequest;
-  protected long abonentRequestTime;
-
-  protected boolean closed = false;
-  protected boolean expired = false;
-
-  protected String encoding;
 
   protected int mgState;
   protected String mgBalance;
@@ -38,22 +25,9 @@ public class MTSSouthState implements BannerState, MGState {
   protected MGManager mgManager;
   protected BannerManager bannerManager;
 
-  protected final Object expireObject = new Object();
-
   public MTSSouthState(Message message, MGManager mgManager, BannerManager bannerManager) {
-    abonentRequestTime = System.currentTimeMillis();
-    abonentRequest = message;
-    if (abonentRequest.hasCodeSet()) {
-      if (abonentRequest.getCodeset() == 0) {
-        encoding = "tr";
-      }
-      if (abonentRequest.getCodeset() == 8) {
-        encoding = "rus";
-      }
-      if (logger.isDebugEnabled()) {
-        logger.debug("Set abonent message encoding:" + encoding);
-      }
-    }
+    super(message);
+    
     this.mgManager = mgManager;
     this.bannerManager = bannerManager;
   }
@@ -141,52 +115,11 @@ public class MTSSouthState implements BannerState, MGState {
 
   }
 
-  public Message getAbonentRequest() {
-    return abonentRequest;
-  }
-
-  public synchronized void expire() {
-    expired = true;
-  }
-
-  public synchronized boolean isExpired() {
-    return expired;
-  }
-
-  public synchronized boolean isClosed() {
-    return closed;
-  }
-
-  public synchronized void close() {
-    this.closed = true;
-    synchronized (expireObject) {
-      expireObject.notify();
-    }
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public void setMessage(String message) {
-    this.message = message;
-  }
-
-  public Object getExpireObject() {
-    return expireObject;
-  }
-
-  private final static DateFormat dateFormat=new SimpleDateFormat("HH:mm:ss.SSS");
-
   public String toString() {
     StringBuffer sb = new StringBuffer();
     sb.append(abonentRequest.getSourceAddress());
     sb.append(" request: ");
-    String date;
-    synchronized(dateFormat){
-      date=dateFormat.format(new Date(abonentRequestTime));
-    }
-    sb.append(date);
+    sb.append(formatDate(abonentRequestTime));
     sb.append("; mg:");
     sb.append(mgState);
     sb.append("; banner: ");
