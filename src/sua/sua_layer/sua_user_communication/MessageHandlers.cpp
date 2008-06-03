@@ -1,14 +1,15 @@
 #include <sua/communication/LinkId.hpp>
 #include <sua/communication/libsua_messages/BindConfirmMessage.hpp>
 #include <sua/communication/libsua_messages/N_NOTICE_IND_Message.hpp>
+#include <sua/communication/libsua_messages/N_UNITDATA_IND_Message.hpp>
 #include <sua/communication/sua_messages/SCCPAddress.hpp>
-#include <sua/sua_layer/messages_router/MessagesRouter.hpp>
-#include <sua/sua_layer/messages_router/RoutingKey.hpp>
+#include <sua/sua_layer/messages_router/GTTranslator.hpp>
 
+#include "LinkSetInfoRegistry.hpp"
 #include "MessageHandlers.hpp"
 
-sua_user_communication::MessageHandlers*
-utilx::Singleton<sua_user_communication::MessageHandlers>::_instance;
+// sua_user_communication::MessageHandlers*
+// utilx::Singleton<sua_user_communication::MessageHandlers>::_instance;
 
 namespace sua_user_communication {
 
@@ -90,23 +91,24 @@ MessageHandlers::handle(const libsua_messages::N_UNITDATA_REQ_Message& message,
   smsc_log_info(_logger, "MessageHandlers::handle::: handle N_UNITDATA_REQ_Message [%s]", message.toString().c_str());
 
   try {
-    const sua_messages::CLDTMessage& messageForSending = createCLDTMessage(message);
+    const sua_messages::CLDTMessage& cldtMmessage = createCLDTMessage(message);
 
-    const sua_messages::TLV_GlobalTitle& tlvGT = messageForSending.getDestinationAddress().getGlobalTitle();
-    const sua_messages::GlobalTitle& gt = tlvGT.getGlobalTitle();
-    const std::string& gtStringValue = gt.getGlobalTitleDigits();
+    communication::LinkId outLinkSetId = messages_router::GTTranslator::getInstance().translate(cldtMmessage.getDestinationAddress());
 
-    messages_router::RoutingKey routingKey;
-    routingKey.setDestinationGT(gtStringValue);
-    routingKey.setIncomingLinkId(linkId);
+    std::string appId;
+    if ( LinkSetInfoRegistry::getInstance().getAppId(outLinkSetId, &appId) ) {
+      libsua_messages::N_UNITDATA_IND_Message n_unitdata_ind_message(message);
+      smsc_log_info(_logger, "MessageHandlers::handle::: send N_UNITDATA_IND_Message [%s] to link with linkid=[%s]", n_unitdata_ind_message.toString().c_str(), outLinkSetId.getValue().c_str());
 
-    communication::LinkId outLinkId = messages_router::MessagesRouter::getInstance().getOutLink(routingKey);
-    smsc_log_info(_logger, "MessageHandlers::handle::: send CLDT [%s] to link with linkid=[%s]", message.toString().c_str(), outLinkId.getValue().c_str());
+      _cMgr.send(outLinkSetId, n_unitdata_ind_message);
+    } else {
+      smsc_log_info(_logger, "MessageHandlers::handle::: send CLDT [%s] to link with linkid=[%s]", message.toString().c_str(), outLinkSetId.getValue().c_str());
 
-    communication::LinkId linkIdUsedForSending = _cMgr.send(outLinkId, messageForSending);
-  } catch (utilx::NoRouteFound& ex) {
+      _cMgr.send(outLinkSetId, cldtMmessage);
+    }
+  } catch (utilx::TranslationFailure& ex) {
     smsc_log_error(_logger, "MessageHandlers::handle::: catched exception [%s], send N_NOTICE_IND_Message to messages's originator", ex.what());
-    _cMgr.send(linkId, libsua_messages::N_NOTICE_IND_Message(message, libsua_messages::N_NOTICE_IND_Message::NO_TRANSLATION_FOR_THIS_SPECIFIC_ADDRESS));
+    _cMgr.send(linkId, libsua_messages::N_NOTICE_IND_Message(message, ex.getFailureCode()));
   } catch (smsc::util::Exception& ex) {
     smsc_log_error(_logger, "MessageHandlers::handle::: catched unexpected exception [%s], send N_NOTICE_IND_Message to messages's originator", ex.what());
     _cMgr.send(linkId, libsua_messages::N_NOTICE_IND_Message(message, libsua_messages::N_NOTICE_IND_Message::UNQUALIFIED));
