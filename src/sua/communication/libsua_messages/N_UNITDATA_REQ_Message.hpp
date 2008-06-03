@@ -24,6 +24,7 @@ public:
   virtual const char* getMsgCodeTextDescription() const;
 
   void setSequenceControl(uint32_t sequenceControl);
+  bool isSetSequenceControl() const;
   uint32_t getSequenceControl() const;
 
   // on_off == true --> return message on error, else discard message
@@ -31,9 +32,11 @@ public:
   bool getReturnOption() const;
 
   void setImportance(uint8_t importance);
+  bool isSetImportance() const;
   uint8_t getImportance() const;
 
   void setHopCounter(uint8_t hopCounter);
+  bool isSetHopCounter() const;
   uint8_t getHopCounter() const;
 
   void setCalledAddress(const uint8_t* address, uint8_t addressLen);

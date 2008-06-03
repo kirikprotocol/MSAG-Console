@@ -131,6 +131,12 @@ N_UNITDATA_REQ_Message::getSequenceControl() const
     throw utilx::FieldNotSetException("N_UNITDATA_REQ_Message::getSequenceControl::: sequenceControl wasn't set");
 }
 
+bool
+N_UNITDATA_REQ_Message::isSetSequenceControl() const
+{
+  return _fieldsMask & SET_SEQUENCE_CONTROL;
+}
+
 void
 N_UNITDATA_REQ_Message::setReturnOption(bool on_off)
 {
@@ -150,6 +156,12 @@ N_UNITDATA_REQ_Message::setImportance(uint8_t importance)
   _fieldsMask |= SET_IMPORTANCE;
 }
 
+bool
+N_UNITDATA_REQ_Message::isSetImportance() const
+{
+  return _fieldsMask & SET_IMPORTANCE;
+}
+
 uint8_t
 N_UNITDATA_REQ_Message::getImportance() const
 {
@@ -164,6 +176,12 @@ N_UNITDATA_REQ_Message::setHopCounter(uint8_t hopCounter)
 {
   _hopCounter = hopCounter;
   _fieldsMask |= SET_HOP_COUNTER;
+}
+
+bool
+N_UNITDATA_REQ_Message::isSetHopCounter() const
+{
+  return _fieldsMask & SET_HOP_COUNTER;
 }
 
 uint8_t
