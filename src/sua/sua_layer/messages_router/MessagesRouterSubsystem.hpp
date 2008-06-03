@@ -20,12 +20,24 @@ public:
   virtual void waitForCompletion();
   virtual const std::string& getName() const;
 private:
-  void initializeOutcomingLinkSets(runtime_cfg::CompositeParameter& outcomingRoutingKeysParameter);
-  void initializeIncomingLinkSets(runtime_cfg::CompositeParameter& incomingRoutingKeysParameter);
+  void initializeLinkSets(runtime_cfg::CompositeParameter& routingKeysParameter);
 
-  void removeAsteriskFromPrefix(std::string* wildCardStr);
-  io_dispatcher::LinkSet::linkset_mode_t convertStringToTrafficModeValue(const std::string& trafficMode, const std::string& where);
-  bool extractAddrPrefixAndSSN(const std::string& gt, std::string* destinationGTMask, uint8_t* destinationSSN, const char* where);
+  bool processApplicationLinkSets(const runtime_cfg::CompositeParameter* routingEntryCompositeParameter,
+                                  const communication::LinkId& linkSetId,
+                                  io_dispatcher::LinkSet::linkset_mode_t linkSetMode);
+
+  bool processSgpLinkSets(const runtime_cfg::CompositeParameter* routingEntryCompositeParameter,
+                          const communication::LinkId& linkSetId,
+                          io_dispatcher::LinkSet::linkset_mode_t linkSetMode);
+
+  void fillUpRouteTable(const runtime_cfg::CompositeParameter* routingEntryCompositeParameter,
+                        const communication::LinkId& linkSetId);
+
+  io_dispatcher::LinkSet::linkset_mode_t convertStringToTrafficModeValue(const std::string& trafficMode,
+                                                                         const std::string& where);
+
+  std::string makeAddressFamilyPrefix(unsigned int gti,
+                                      const std::string& gtMaskValue) const;
 
   std::string _name;
   smsc::logger::Logger* _logger;
