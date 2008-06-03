@@ -1,9 +1,6 @@
 #include "SignalingNetworkManagementMessageHandlers.hpp"
 #include <sua/sua_layer/sua_user_communication/LinkSetInfoRegistry.hpp>
 
-sua_stack::SignalingNetworkManagementMessageHandlers*
-utilx::Singleton<sua_stack::SignalingNetworkManagementMessageHandlers>::_instance;
-
 namespace sua_stack {
 
 SignalingNetworkManagementMessageHandlers::SignalingNetworkManagementMessageHandlers()
