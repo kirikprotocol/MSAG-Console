@@ -7,9 +7,6 @@
 
 namespace utilx {
 
-SubsystemsManager*
-Singleton<SubsystemsManager*>::_instance;
-
 SubsystemsManager::SubsystemsManager()
   : _logger(smsc::logger::Logger::getInstance("susbsysmgr")), _initialized(false)
 {}
