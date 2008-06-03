@@ -6,8 +6,9 @@ import ru.sibinco.util.threads.ThreadsPool;
 
 public interface MGState extends State {
 
-  public static final byte MG_WAIT_RESP = 1;
-  public static final byte MG_ERR = 2;
+  public static final byte UNKNOWN = 0;
+  public static final byte MG_REQUEST_SENT = 1;
+  public static final byte MG_ERROR = 2;
   public static final byte MG_OK = 3;
 
   public String getMGBalance();

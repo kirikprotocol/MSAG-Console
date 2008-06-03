@@ -44,6 +44,9 @@ public abstract class AbstractState implements State {
   }
 
   public synchronized void expire() {
+    if(closed){
+      return;
+    }
     expired = true;
     if(logger.isInfoEnabled())
       logger.info("Expired: "+this.toString());

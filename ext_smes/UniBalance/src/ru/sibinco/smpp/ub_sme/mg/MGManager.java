@@ -87,7 +87,7 @@ public class MGManager {
         logger.debug("MSG sent. ConnID #" + msg.getConnectionId() + "; SeqN #" + msg.getSequenceNumber() + "; USSD #" + msg.getUssdServiceOp() + "; destination #" + msg.getDestinationAddress() + "; source #" + msg.getSourceAddress() + "; UserMessageReference:  " + msg.getUserMessageReference() + "; msg: " + msg.getMessageString());
     } catch (SMPPException e) {
       logger.error("Could not send MG request", e);
-      state.setMGState(MGState.MG_ERR);
+      state.setMGState(MGState.MG_ERROR);
       removeMGRequest(msg);
       state.closeProcessing(smeEngine);
     }
@@ -108,7 +108,7 @@ public class MGManager {
     } else {
       if (state.isExpired()) {
         smeEngine.sendDeliverSmResponse(message, Data.ESME_RSYSERR);
-        state.setMGState(MGState.MG_ERR);
+        state.setMGState(MGState.MG_ERROR);
         state.closeProcessing(threadsPool, smeEngine);
         return;
       }
@@ -126,7 +126,7 @@ public class MGManager {
     MGState state = (MGState) statesBySN.get(new Long(((long) pdu.getConnectionId()) << 32 | pdu.getSequenceNumber()));
     if (state != null && pdu.getStatus() != PDU.STATUS_CLASS_NO_ERROR) {
       statesBySN.remove(new Long(((long) pdu.getConnectionId()) << 32 | pdu.getSequenceNumber()));
-      state.setMGState(MGState.MG_ERR);
+      state.setMGState(MGState.MG_ERROR);
       state.closeProcessing(threadsPool, smeEngine);
     }
   }
@@ -155,7 +155,7 @@ public class MGManager {
       message.setMessageString(text);
       message.setEsmClass((byte) (Data.SM_FORWARD_MODE));
       message.setType(Message.TYPE_SUBMIT);
-      state.setMGState(MGState.MG_WAIT_RESP);
+      state.setMGState(MGState.MG_REQUEST_SENT);
       sendMGRequest(message, state);
       state.closeProcessing(smeEngine);
     }

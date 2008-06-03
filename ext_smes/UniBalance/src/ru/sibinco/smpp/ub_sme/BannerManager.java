@@ -106,7 +106,6 @@ public class BannerManager {
     String abonent;
     BannerState state;
 
-
     public BannerRequestThread(String abonent, BannerState state) {
       this.abonent = abonent;
       this.state = state;
@@ -123,6 +122,7 @@ public class BannerManager {
         transactionId = bannerEngineTransactionId++;
       }
       bannerEngineClient.requestLikelyBanner(abonent.getBytes(), abonent.getBytes().length, bannerEngineServiceName.getBytes(), bannerEngineTransportType, 140, bannerEngineCharSet, bannerEngineClientID, transactionId, new AdvertisingResponseHandler(state));
+      state.setBannerState(BannerState.BE_REQUEST_SENT);
     }
   }
 
@@ -141,17 +141,19 @@ public class BannerManager {
           banner = new String(response, encoding);
         } catch (UnsupportedEncodingException e) {
           logger.error("Unsupported encoding: " + encoding, e);
+          state.setBannerState(BannerState.BE_ERROR);
+          return;
         }
       }
       if (logger.isDebugEnabled()) {
-        logger.debug("Got banner:" + banner);
+        logger.debug("Got banner for abonent "+state.getAbonentRequest().getSourceAddress()+":" + banner);
       }
 
       if (null == banner) {
-        state.setBannerState(BannerState.BE_RESP_ERR);
+        state.setBannerState(BannerState.BE_ERROR);
       } else {
         state.setBanner(banner);
-        state.setBannerState(BannerState.BE_RESP_OK);
+        state.setBannerState(BannerState.BE_OK);
       }
       state.closeProcessing(threadsPool, smeEngine);
 

@@ -6,10 +6,6 @@ import ru.sibinco.util.threads.ThreadsPool;
 import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
-import java.util.Date;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-
 public class MTSSouthState extends AbstractState implements BannerState, MGState {
   private final static Category logger = Category.getInstance(MTSSouthState.class);
 
@@ -45,16 +41,16 @@ public class MTSSouthState extends AbstractState implements BannerState, MGState
 
   public synchronized void setMGState(int mgState) {
     this.mgState = mgState;
-    if(mgState==MGState.MG_OK || mgState == MG_ERR){
+    if(mgState==MGState.MG_OK || mgState == MG_ERROR){
       mgResponseTime = System.currentTimeMillis();
     }
   }
 
-  public synchronized String getBanner() {
+  public String getBanner() {
     return banner;
   }
 
-  public synchronized void setBanner(String banner) {
+  public void setBanner(String banner) {
     this.banner = banner;
   }
 
@@ -64,7 +60,7 @@ public class MTSSouthState extends AbstractState implements BannerState, MGState
 
   public synchronized void setBannerState(int bannerState) {
     this.bannerState = bannerState;
-    if(bannerState==BannerState.BE_RESP_OK || bannerState==BannerState.BE_RESP_ERR){
+    if(bannerState==BannerState.BE_OK || bannerState==BannerState.BE_ERROR){
       bannerResponseTime = System.currentTimeMillis();
     }
   }
@@ -78,7 +74,7 @@ public class MTSSouthState extends AbstractState implements BannerState, MGState
     pool.execute(new ExpireStateProcessor(this, smeEngine));
   }
 
-  public synchronized void closeProcessing(ThreadsPool pool, SmeEngine smeEngine) {
+  public void closeProcessing(ThreadsPool pool, SmeEngine smeEngine) {
     pool.execute(new MTSSouthState.closeProcessingThread(smeEngine));
   }
 
@@ -101,13 +97,13 @@ public class MTSSouthState extends AbstractState implements BannerState, MGState
   public synchronized void closeProcessing(SmeEngine smeEngine) {
     if (expired || closed) return;
 
-    if (mgState == MG_OK && (bannerState == BE_RESP_ERR || bannerState == BE_RESP_OK)) {
+    if (mgState == MG_OK && (bannerState == BE_ERROR || bannerState == BE_OK)) {
       String message = smeEngine.prepareBalanceMessage(getMGBalance(), getBanner(), encoding);
       setMessage(message);
       smeEngine.sendResponse(this);
       close();
     }
-    if (mgState == MG_ERR) {
+    if (mgState == MG_ERROR) {
       smeEngine.sendErrorSmsMessage(this);
       close();
     }

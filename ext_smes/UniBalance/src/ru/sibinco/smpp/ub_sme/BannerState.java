@@ -9,9 +9,10 @@ import ru.sibinco.util.threads.ThreadsPool;
  * Time: 3:32:27 PM
  */
 public interface BannerState extends State {
-  public static final byte BE_RESP_WAIT = 4;
-  public static final byte BE_RESP_ERR = 5;
-  public static final byte BE_RESP_OK = 6;
+  public static final byte UNKNOWN = 0;
+  public static final byte BE_REQUEST_SENT = 1;
+  public static final byte BE_ERROR = 2;
+  public static final byte BE_OK = 3;
 
   public String getBanner();
 
