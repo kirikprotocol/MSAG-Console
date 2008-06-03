@@ -52,6 +52,24 @@ N_UNITDATA_IND_Message::N_UNITDATA_IND_Message(const sua_messages::CLDTMessage& 
   setUserData(userData.getValue(), userData.getValueLength());
 }
 
+N_UNITDATA_IND_Message::N_UNITDATA_IND_Message(const N_UNITDATA_REQ_Message& n_unitdata_req_message)
+  : LibsuaMessage(_MSG_CODE),
+    _fieldsMask(0), _sequenceControl(0),
+    _calledAddrLen(0), _callingAddrLen(0), _userDataLen(0)
+{
+  if ( n_unitdata_req_message.isSetSequenceControl() )
+    setSequenceControl(n_unitdata_req_message.getSequenceControl());
+
+  variable_data_t v_data = n_unitdata_req_message.getCalledAddress();
+  setCalledAddress(v_data.data, v_data.dataLen);
+
+  v_data = n_unitdata_req_message.getCallingAddress();
+  setCallingAddress(v_data.data, v_data.dataLen);
+
+  v_data = n_unitdata_req_message.getUserData();
+  setUserData(v_data.data, v_data.dataLen);
+}
+
 size_t
 N_UNITDATA_IND_Message::serialize(communication::TP* resultBuf) const
 {

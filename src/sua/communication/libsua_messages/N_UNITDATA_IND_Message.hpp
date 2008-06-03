@@ -6,7 +6,7 @@
 # include <sua/communication/sua_messages/CLDTMessage.hpp>
 # include <sua/communication/sua_messages/SCCPAddress.hpp>
 # include <sua/communication/libsua_messages/LibsuaMessage.hpp>
-# include <sua/communication/libsua_messages/N_UNITDATA_IND_Message.hpp>
+# include <sua/communication/libsua_messages/N_UNITDATA_REQ_Message.hpp>
 # include <sua/communication/TP.hpp>
 # include <core/buffers/TmpBuf.hpp>
 
@@ -16,6 +16,7 @@ class N_UNITDATA_IND_Message : public LibsuaMessage {
 public:
   N_UNITDATA_IND_Message();
   N_UNITDATA_IND_Message(const sua_messages::CLDTMessage& cldtMessage);
+  N_UNITDATA_IND_Message(const N_UNITDATA_REQ_Message& n_unitdata_req_message);
 
   virtual size_t serialize(communication::TP* resultBuf) const;
 
