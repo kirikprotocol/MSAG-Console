@@ -13,9 +13,16 @@ namespace sua_stack {
 class CLCOMessageHandlers : public utilx::Singleton<CLCOMessageHandlers> {
 public:
   CLCOMessageHandlers();
-  void handle(const sua_messages::CLDTMessage& message, const communication::LinkId& linkId);
-  void handle(const sua_messages::CLDRMessage& message, const communication::LinkId& linkId);
+  void handle(const sua_messages::CLDTMessage& message,
+              const communication::LinkId& linkId);
+
+  void handle(const sua_messages::CLDRMessage& message,
+              const communication::LinkId& linkId);
 private:
+  void prepareAndSendCLDRMessage(const sua_messages::CLDTMessage& cldtMessage,
+                                 const communication::LinkId& linkId,
+                                 communication::return_cause_value_t returnCause);
+
   smsc::logger::Logger* _logger;
   io_dispatcher::ConnectMgr& _cMgr;
 };
