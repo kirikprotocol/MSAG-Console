@@ -89,11 +89,45 @@ inline void Convert7BitToText(
 {
   if (chars>255) throw runtime_error("Convert7BitToSMSC7Bit invalid chars value");
   unsigned shift = offset;
+  bool     escape = false;
+  int      symbols = 0;
   for ( unsigned i=0; i< chars; ++i ){
-    text->bytes[i] = lll_7bit_2_8bit[GetChar(bit7buf,shift)&0x7f];
+    unsigned char b = GetChar(bit7buf,shift)&0x7f;
+    if( escape ) {
+      switch(b){
+        case 0x0a: // page break
+          b = '\f'; break;
+        case 0x14: //
+          b = '^'; break;
+        case 0x1b: // ??? national
+          b = '?'; break;
+        case 0x40:
+          b = '|'; break;
+        case 0x28: // {
+          b = '{'; break;
+        case 0x29: // }
+          b = '}'; break;
+        case 0x3c: // [
+          b = '['; break;
+        case 0x3d: // ~
+          b = '~'; break;
+        case 0x3e: // ]
+          b = ']'; break;
+        case 0x2f:
+          b = '\\'; break;
+        default:
+          b = '?'; break;
+      }
+      escape = false;
+    }
+    if( b == 0x1b ) { // escape symbol
+      escape = true;
+      continue;
+    }
+    text->bytes[symbols++] = lll_7bit_2_8bit[b];
   }
-  text->len = chars;
-  text->bytes[chars] = 0;
+  text->len = symbols;
+  text->bytes[symbols] = 0;
 }
 
 inline unsigned ConvertText27bit(
@@ -428,8 +462,8 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   if ( ma->st.ton == 5 )
   {
     MicroString text;
-    Convert7BitToText(ma->val,(ma->len*4)/7,&text,0);
-    if ( text.len == 0 ) throw runtime_error("MAP::ConvAddrMap2Smc: zero address");
+    Convert7BitToText(ma->val,(ma->len*8)/7,&text,0);
+    if ( text.len == 0 || text.bytes[0] == 0 ) throw runtime_error("MAP::ConvAddrMap2Smc: zero address");
     if( text.bytes[text.len-1]==0x0d ) {
       text.len--;
       text.bytes[text.len]=0;
