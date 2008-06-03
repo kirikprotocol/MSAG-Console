@@ -15,7 +15,6 @@ public class MTSSouthState extends AbstractState implements BannerState, MGState
 
   protected int mgState;
   protected String mgBalance;
-  protected String message;
   protected long mgResponseTime;
 
   protected String banner;

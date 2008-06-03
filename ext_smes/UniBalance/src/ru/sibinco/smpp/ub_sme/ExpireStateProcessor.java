@@ -29,9 +29,6 @@ public class ExpireStateProcessor implements Runnable {
     if (!state.isClosed()) {
       state.expire();
       smeEngine.sendErrorSmsMessage(state);
-      if (logger.isDebugEnabled()) {
-        logger.debug("Expire state: " + state);
-      }
     }
 
   }

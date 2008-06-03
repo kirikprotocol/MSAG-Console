@@ -16,23 +16,11 @@ public abstract class AbstractState implements State {
   protected Message abonentRequest;
   protected long abonentRequestTime;
 
-  protected boolean closed = false;
-  protected boolean expired = false;
-
   protected String encoding;
-
-  protected int mgState;
-  protected String mgBalance;
   protected String message;
-  protected long mgResponseTime;
 
-  protected String banner;
-  protected int bannerState;
-  protected long bannerResponseTime;
-
-  protected MGManager mgManager;
-  protected BannerManager bannerManager;
-
+  protected boolean closed = false;
+  protected boolean expired = false;  
   protected final Object expireObject = new Object();
 
   public AbstractState(Message message) {
@@ -107,10 +95,6 @@ public abstract class AbstractState implements State {
     sb.append("; resp=");
     long delay=System.currentTimeMillis()-abonentRequestTime;
     sb.append(delay);
-    if(logger.isDebugEnabled()){
-      sb.append(" ms; SME clean delay=");
-      sb.append(delay-(Math.max(mgResponseTime-abonentRequestTime, bannerResponseTime-abonentRequestTime)));
-    }
     sb.append(" ms");
     return sb.toString();
   }
