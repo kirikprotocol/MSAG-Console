@@ -3,9 +3,6 @@
 #include "IOEventProcessor.hpp"
 #include "SuaLayerMessagesFactory.hpp"
 
-io_dispatcher::IODispatcherSubsystem*
-utilx::Singleton<io_dispatcher::IODispatcherSubsystem*>::_instance;
-
 namespace io_dispatcher {
 
 IODispatcherSubsystem::IODispatcherSubsystem()
