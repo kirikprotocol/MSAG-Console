@@ -23,9 +23,6 @@
 #include "LinkSetsRegistry.hpp"
 #include "initializer.hpp"
 
-sua_stack::SuaStackSubsystem*
-utilx::Singleton<sua_stack::SuaStackSubsystem*>::_instance;
-
 namespace sua_stack {
 
 SuaStackSubsystem::SuaStackSubsystem()
