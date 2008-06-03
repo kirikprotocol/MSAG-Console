@@ -8,9 +8,11 @@ namespace utilx {
 template <class T,class MEMMAN=smsc::core::buffers::HeapAllocator,bool UseHashNode=false>
 class PrefixTree : public smsc::core::buffers::XTree<T,MEMMAN,UseHashNode> {
 public:
+  typedef smsc::core::buffers::XTree<T,MEMMAN,UseHashNode> BaseClass;
   bool FindPrefix(const char* key,T& data)const
   {
-    XTree::Node* ptr=root;
+    typename BaseClass::Node* ptr=BaseClass::root;
+
     T* foundData=0;
     while(*key && ptr)
     {
@@ -18,8 +20,13 @@ public:
       {
         foundData=ptr->data;
       }
+
       ptr=ptr->Find(*key++);
     }
+
+    if(ptr && ptr->data)
+      foundData=ptr->data;
+
     if(foundData)
     {
       data=*foundData;
