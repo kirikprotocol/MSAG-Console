@@ -7,9 +7,6 @@
 #include "LinkSetsRegistry.hpp"
 #include "RCRegistry.hpp"
 
-sua_stack::AspMaintenanceMessageHandlers*
-utilx::Singleton<sua_stack::AspMaintenanceMessageHandlers>::_instance;
-
 namespace sua_stack {
 
 AspMaintenanceMessageHandlers::AspMaintenanceMessageHandlers()
