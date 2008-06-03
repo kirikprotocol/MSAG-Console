@@ -11,9 +11,6 @@
 #include "LinkSetInfoRegistry.hpp"
 #include "initializer.hpp"
 
-sua_user_communication::SuaUserCommunicationSubsystem*
-utilx::Singleton<sua_user_communication::SuaUserCommunicationSubsystem*>::_instance;
-
 namespace sua_user_communication {
 
 SuaUserCommunicationSubsystem::SuaUserCommunicationSubsystem()
