@@ -5,9 +5,6 @@
 #include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
 #include <sua/communication/sua_messages/ActiveMessage.hpp>
 
-sua_stack::SUAManagementMessageHandlers*
-utilx::Singleton<sua_stack::SUAManagementMessageHandlers>::_instance;
-
 namespace sua_stack {
 
 SUAManagementMessageHandlers::SUAManagementMessageHandlers()
