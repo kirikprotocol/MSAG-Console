@@ -45,6 +45,7 @@ public:
 
   IOEvent* getEvent();
 
+  // return LinkId used for sending of output message
   communication::LinkId send(const communication::LinkId& outLinkId, const communication::Message& message);
   void sendToLinkSetBroadcast(const communication::LinkId& outLinkSetId, const communication::Message& outputMessage);
 
