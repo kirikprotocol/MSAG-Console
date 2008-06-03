@@ -2,6 +2,7 @@
 # define __SUA_UTILX_EXCEPTION_HPP__ 1
 
 # include <util/Exception.hpp>
+# include <sua/communication/types.hpp>
 
 namespace utilx {
 
@@ -32,16 +33,20 @@ public:
   }
 };
 
-class NoRouteFound : public smsc::util::Exception {
+class TranslationFailure : public smsc::util::Exception {
 public:
-  NoRouteFound(const char * fmt, ...)
-    : Exception()
+  TranslationFailure(communication::return_cause_value_t retCauseVal, const char * fmt, ...)
+    : Exception(), _retCauseVal(retCauseVal)
   {
     SMSC_UTIL_EX_FILL(fmt);
   }
 
+  communication::return_cause_value_t getFailureCode() const {
+    return _retCauseVal;
+  }
+private:
+  communication::return_cause_value_t _retCauseVal;
 };
-
 
 }
 
