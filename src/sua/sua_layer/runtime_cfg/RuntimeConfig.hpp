@@ -25,10 +25,8 @@ private:
   CompositeParameter& findLastNodeParameter(const std::string& parameterName, std::string* leafParameterName);
   void processRoutingKeysSection(smsc::util::config::ConfigView* suaLayerCfg,
                                  const char* rkSectionName, // e.g. "incoming-routing-keys"
-                                 const char* linksParamNameInRKSection, // e.g. "sua_applications"
-                                 const char* linkRTCfgParamName, // e.g. "application_id";
                                  CompositeParameter* suaConfigCompositeParameter);
-
+  void addParameter(CompositeParameter* compositeParameter, const std::string& paramName, const std::string& paramValue);
 
   CompositeParameter* _config;
   typedef std::map<std::string, ParameterObserver*> registeredParameterHandlers_t;

@@ -4,8 +4,8 @@
 #include <memory>
 #include <set>
 
-runtime_cfg::RuntimeConfig*
-utilx::Singleton<runtime_cfg::RuntimeConfig>::_instance;
+// runtime_cfg::RuntimeConfig*
+// utilx::Singleton<runtime_cfg::RuntimeConfig>::_instance;
 
 namespace runtime_cfg {
 
@@ -82,59 +82,101 @@ void
 RuntimeConfig::dispatchHandle(const Parameter& modifiedParameter)
 {
   registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(modifiedParameter.getFullName());
-  //  std::cout << "RuntimeConfig::registerParameterObserver::: get handler for parameter name = " << modifiedParameter.getFullName() << std::endl;
+
   if ( iter != _registredParameterHandlers.end() ) {
     iter->second->handle(modifiedParameter);
   }
 }
 
 void
+RuntimeConfig::addParameter(CompositeParameter* compositeParameter, const std::string& paramName, const std::string& paramValue)
+{
+  std::string::size_type pos, old_pos=0;
+  while( (pos=paramValue.find_first_of(", ", old_pos)) != std::string::npos) {
+    const std::string& nextValue = paramValue.substr(old_pos, pos - old_pos);
+
+    compositeParameter->addParameter(new Parameter(paramName, nextValue));
+    ++pos;
+    while (paramValue[pos] == ' ') pos++;
+    old_pos = pos;
+  }
+  const std::string& nextValue = paramValue.substr(old_pos);
+  compositeParameter->addParameter(new Parameter(paramName, nextValue));
+}
+
+void
 RuntimeConfig::processRoutingKeysSection(smsc::util::config::ConfigView* suaLayerCfg,
-                                         const char* rkSectionName, // e.g. "incoming-routing-keys"
-                                         const char* linksParamNameInRKSection,// e.g. "sua_applications"
-                                         const char* linkRTCfgParamName, // e.g. "application_id"
+                                         const char* rkSectionName, // e.g. "routing-keys"
                                          CompositeParameter* suaConfigCompositeParameter
                                          )
 {
   std::auto_ptr<smsc::util::config::ConfigView> rksCfg(suaLayerCfg->getSubConfig(rkSectionName));
   CompositeParameter* rkCompositeParameter = suaConfigCompositeParameter->addParameter(new CompositeParameter(rkSectionName));
 
-  std::auto_ptr<std::set<std::string> > gtSet(rksCfg->getShortSectionNames());
+  std::auto_ptr<std::set<std::string> > topLevelSubSections(rksCfg->getShortSectionNames());
 
-  for (std::set<std::string>::iterator i=gtSet->begin(), end_iter=gtSet->end();
+  for (std::set<std::string>::iterator i=topLevelSubSections->begin(), end_iter=topLevelSubSections->end();
        i != end_iter; i++) {
-    const char* gt = (*i).c_str();
-    std::auto_ptr<smsc::util::config::ConfigView> gtConfig(rksCfg->getSubConfig(gt));
-    CompositeParameter* gtCompositeParameter = rkCompositeParameter->addParameter(new CompositeParameter("GT", gt));
+    const char* routeEntry = (*i).c_str();
 
-    std::string rk_linksParam = gtConfig->getString(linksParamNameInRKSection);
-    std::string::size_type pos, old_pos=0;
-    while( (pos=rk_linksParam.find_first_of(", ", old_pos)) != std::string::npos) {
-      const std::string& paramName = rk_linksParam.substr(old_pos, pos - old_pos);
-      gtCompositeParameter->addParameter(new Parameter(linkRTCfgParamName, paramName));
-      ++pos;
-      while (rk_linksParam[pos] == ' ') pos++;
-      old_pos = pos;
+    CompositeParameter* routingEntryCompositeParameter = rkCompositeParameter->addParameter(new CompositeParameter("routingEntry", routeEntry));
+    std::auto_ptr<smsc::util::config::ConfigView> topLevelSubSection(rksCfg->getSubConfig(routeEntry));
+    std::auto_ptr<std::set<std::string> > nestedSubSections(topLevelSubSection->getShortSectionNames());
+    for (std::set<std::string>::iterator j=nestedSubSections->begin(), nested_end_iter=nestedSubSections->end();
+         j != nested_end_iter; j++) {
+      const char* routeName = (*j).c_str();
+      if ( !strcmp(routeName, "overwrite") ) continue;
+
+      CompositeParameter* routeDescriptionCompositeParameter = routingEntryCompositeParameter->addParameter(new CompositeParameter("route", routeName));
+      std::auto_ptr<smsc::util::config::ConfigView> routeDescription(topLevelSubSection->getSubConfig(routeName));
+
+      std::string gt = routeDescription->getString("gt");
+      routeDescriptionCompositeParameter->addParameter(new Parameter("gt", gt));
+
+      try {
+        int32_t gti = routeDescription->getInt("gti");
+        if ( gti > 4 || gti == 0 )
+          throw smsc::util::Exception("RuntimeConfig::processRoutingKeysSection::: invalid gti value=[%d]", gti);
+
+        routeDescriptionCompositeParameter->addParameter(new Parameter("gti", gti));
+      } catch (smsc::util::config::ConfigException& ex) {}
+
+      try {
+        int32_t ssn = routeDescription->getInt("ssn");
+        char ssnValue[128];
+        sprintf(ssnValue, "%d", ssn);
+        routeDescriptionCompositeParameter->addParameter(new Parameter("ssn", ssnValue));
+      } catch (smsc::util::config::ConfigException& ex) {}
     }
-    const std::string& paramName = rk_linksParam.substr(old_pos);
-    gtCompositeParameter->addParameter(new Parameter(linkRTCfgParamName, paramName));
-    //    smsc_log_info(_logger, "added Parameter('%s', '%s')", linkRTCfgParamName, paramName.c_str());
+    CompositeParameter* routeDestinationCompositeParameter = routingEntryCompositeParameter->addParameter(new CompositeParameter("destination"));
+    std::string suaApplications;
+    try {
+      suaApplications = topLevelSubSection->getString("sua_applications");
+      addParameter(routingEntryCompositeParameter, "application", suaApplications);
+    } catch (smsc::util::config::ConfigException& ex) {}
 
-    std::string rk_traffic_mode = gtConfig->getString("traffic-mode");
-    gtCompositeParameter->addParameter(new Parameter("traffic_mode", rk_traffic_mode));
-    //    smsc_log_info(_logger, "added Parameter('traffic_mode', '%s')", rk_traffic_mode.c_str());
+    std::string sgpLinks;
+    try {
+      sgpLinks = topLevelSubSection->getString("sgp_links");
+      addParameter(routingEntryCompositeParameter, "sgp_link", sgpLinks);
+    } catch (smsc::util::config::ConfigException& ex) {}
+
+    std::string trafficMode;
+    try {
+      trafficMode = topLevelSubSection->getString("traffic-mode");
+      routingEntryCompositeParameter->addParameter(new Parameter("traffic-mode", trafficMode));
+    } catch (smsc::util::config::ConfigException& ex) {}
   }
 }
 /*
 ** config.local_ip
 ** config.local_port
 ** config.state_machines_count
-** [config.sua_applications.application]1..*
-** [config.sgp_links.remote_address]1..*
-** config.sgp_links.remote_port
-** [incoming-routing-keys.GT.application_id]1..*
-** incoming-routing-keys.GT.traffic_mode
-** [outcoming-routing-keys.GT.link_id]1..*
+** [config.routing-keys.routingEntry]1..*
+** [config.routing-keys.routingEntry.route]1..*
+** [config.routing-keys.routingEntry.route.destination]1..*
+** [config.routing-keys.routingEntry.route.destination.applications.application]1..*
+** [config.routing-keys.routingEntry.route.destination.links.sgp_link]1..*
 ** outcoming-routing-keys.GT.traffic_mode
 */
 void
@@ -216,8 +258,7 @@ RuntimeConfig::initialize(smsc::util::config::ConfigView* suaLayerCfg)
     }
   }
 
-  processRoutingKeysSection(suaLayerCfg, "incoming-routing-keys", "sua_applications", "application_id", suaConfigCompositeParameter);
-  processRoutingKeysSection(suaLayerCfg, "outcoming-routing-keys", "sgp_links", "link_id", suaConfigCompositeParameter);
+  processRoutingKeysSection(suaLayerCfg, "routing-keys", suaConfigCompositeParameter);
 
   initialize(suaConfigCompositeParameter);
 }
