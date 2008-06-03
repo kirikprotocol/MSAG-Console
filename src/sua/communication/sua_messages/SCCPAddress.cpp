@@ -12,7 +12,7 @@ SCCPAddress::setGtIndicatorInAddressIndicator(uint8_t gti)
 void
 SCCPAddress::transformGT2ITUFormat(const sua_messages::TLV_GlobalTitle& gt)
 {
-  const GlobalTitle& gtValue = gt.getGlobalTitle();
+  const GlobalTitle& gtValue = gt.getGlobalTitleValue();
   uint8_t gti = gtValue.getGTI();
   if ( gti == GlobalTitle::NATURE_OF_ADDRESS_TAKENOVER )
     parseGtForGTI_0001(gtValue);
@@ -74,7 +74,7 @@ SCCPAddress::parseGtForGTI_0100(const GlobalTitle& gtValue)
 SCCPAddress::SCCPAddress(const sua_messages::TLV_GlobalTitle& gt)
   : _addressIndicator(0), _address(MAX_ESTIMATED_ADDRESS_SZ)
 {
-  setGtIndicatorInAddressIndicator(gt.getGlobalTitle().getGTI());
+  setGtIndicatorInAddressIndicator(gt.getGlobalTitleValue().getGTI());
   _address.Append(&_addressIndicator, sizeof(_addressIndicator));
 
   uint8_t ssnValue=0;
@@ -100,7 +100,7 @@ SCCPAddress::SCCPAddress(const sua_messages::TLV_PointCode& pc, const sua_messag
 SCCPAddress::SCCPAddress(const sua_messages::TLV_GlobalTitle& gt, const sua_messages::TLV_SSN& ssn)
   : _addressIndicator(SSN_INDICATOR), _address(MAX_ESTIMATED_ADDRESS_SZ)
 {
-  setGtIndicatorInAddressIndicator(gt.getGlobalTitle().getGTI());
+  setGtIndicatorInAddressIndicator(gt.getGlobalTitleValue().getGTI());
   _address.Append(&_addressIndicator, sizeof(_addressIndicator));
 
   uint8_t ssnValue = static_cast<uint8_t>(ssn.getValue());
