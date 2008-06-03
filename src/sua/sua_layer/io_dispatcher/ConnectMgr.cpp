@@ -11,9 +11,6 @@
 #include "ConnectionReleaseEvent.hpp"
 #include "Connection.hpp"
 
-io_dispatcher::ConnectMgr*
-utilx::Singleton<io_dispatcher::ConnectMgr>::_instance;
-
 namespace io_dispatcher {
 
 void
