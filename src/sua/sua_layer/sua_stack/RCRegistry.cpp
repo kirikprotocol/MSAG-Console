@@ -1,9 +1,6 @@
 #include "RCRegistry.hpp"
 #include <core/synchronization/MutexGuard.hpp>
 
-sua_stack::RCRegistry*
-utilx::Singleton<sua_stack::RCRegistry>::_instance;
-
 namespace sua_stack {
 
 RCRegistry::RCRegistry()
