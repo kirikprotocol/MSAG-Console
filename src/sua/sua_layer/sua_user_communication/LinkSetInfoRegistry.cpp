@@ -3,9 +3,6 @@
 #include <util/Exception.hpp>
 #include <core/synchronization/MutexGuard.hpp>
 
-sua_user_communication::LinkSetInfoRegistry*
-utilx::Singleton<sua_user_communication::LinkSetInfoRegistry>::_instance;
-
 namespace sua_user_communication {
 
 LinkSetInfoRegistry::LinkSetInfoRegistry()
@@ -69,6 +66,17 @@ LinkSetInfoRegistry::getLinkSetIds() const
     result.insert(iter->first);
 
   return result;
+}
+
+bool
+LinkSetInfoRegistry::getAppId(const communication::LinkId& linkSetId, std::string* appId)
+{
+  registry_t::iterator iter = _registry.find(linkSetId);
+  if ( iter != _registry.end() ) {
+    *appId = *(iter->second->begin());
+    return true;
+  } else
+    return false;
 }
 
 }
