@@ -342,6 +342,7 @@ public:
   TLV_ProtocolClass();
   TLV_ProtocolClass(const ProtocolClass& protocolClass);
 
+  ProtocolClass getProtocolClassValue() const;
   virtual std::string toString() const;
 private:
   static const uint16_t TAG = 0x0115;
@@ -456,7 +457,7 @@ public:
                              uint16_t valLen);
   virtual std::string toString() const;
 
-  const GlobalTitle& getGlobalTitle() const;
+  const GlobalTitle& getGlobalTitleValue() const;
 private:
   GlobalTitle _globalTitle;
 

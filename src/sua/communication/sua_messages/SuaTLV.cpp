@@ -956,6 +956,12 @@ TLV_ProtocolClass::toString() const
     throw smsc::util::Exception("TLV_ProtocolClass::toString::: value wasn't set");
 }
 
+ProtocolClass
+TLV_ProtocolClass::getProtocolClassValue() const
+{
+  return ProtocolClass(getValue());
+}
+
 TLV_SequenceControl::TLV_SequenceControl()
   : TLV_IntegerPrimitive(TAG)
 {}
@@ -1227,7 +1233,7 @@ TLV_GlobalTitle::toString() const
 }
 
 const GlobalTitle&
-TLV_GlobalTitle::getGlobalTitle() const
+TLV_GlobalTitle::getGlobalTitleValue() const
 {
   return _globalTitle;
 }
