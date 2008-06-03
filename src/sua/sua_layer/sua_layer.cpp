@@ -15,72 +15,6 @@
 
 #include <iostream>
 
-static void
-printRuntimeConfig(runtime_cfg::RuntimeConfig& rconfig)
-{
-  runtime_cfg::Parameter& localIpParam = rconfig.find<runtime_cfg::Parameter>("config.local_ip");
-  std::cout << localIpParam.getName() << "=" << localIpParam.getValue() << std::endl;
-  runtime_cfg::Parameter& localPortParam = rconfig.find<runtime_cfg::Parameter>("config.local_port");
-  std::cout << localPortParam.getName() << "=" << localPortParam.getValue() << std::endl;
-  runtime_cfg::Parameter& stateMachinesCountParam = rconfig.find<runtime_cfg::Parameter>("config.state_machines_count");
-  std::cout << stateMachinesCountParam.getName() << "=" << stateMachinesCountParam.getValue() << std::endl;
-
-  runtime_cfg::CompositeParameter& suaApplicationsParameter = rconfig.find<runtime_cfg::CompositeParameter>("config.sua_applications");
-  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::Parameter> applicationIterator = suaApplicationsParameter.getIterator<runtime_cfg::Parameter>("application");
-  while(applicationIterator.hasElement()) {
-    runtime_cfg::Parameter* param = applicationIterator.getCurrentElement();
-    std::cout << param->getName() << "=" << param->getValue() << std::endl;
-
-    applicationIterator.next(); // pass to next element
-  }
-
-  runtime_cfg::CompositeParameter& sgpLinksParameter = rconfig.find<runtime_cfg::CompositeParameter>("config.sgp_links");
-  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::CompositeParameter> linksIterator = sgpLinksParameter.getIterator<runtime_cfg::CompositeParameter>("link");
-  std::cout << "!!!!! Bypass sgp_links" << std::endl;
-  while(linksIterator.hasElement()) {
-    const runtime_cfg::CompositeParameter* linkParam = linksIterator.getCurrentElement();
-    std::cout << "!!!!! " << linkParam->getName() << "=" << linkParam->getValue() << std::endl;
-    runtime_cfg::CompositeParameter::Iterator<runtime_cfg::Parameter> rhostsIterator = linkParam->getIterator<runtime_cfg::Parameter>("remote_address");
-    while(rhostsIterator.hasElement()) {
-      std::cout << "remote_address=" << rhostsIterator.getCurrentElement()->getValue()
-                << " remote_port="  << linkParam->getParameter<runtime_cfg::Parameter>("remote_port")->getValue()
-                << std::endl;
-      rhostsIterator.next(); // pass to next element
-    }
-    linksIterator.next(); // pass to next element
-  }
-
-  runtime_cfg::CompositeParameter& incomingRoutingKeysParameter = rconfig.find<runtime_cfg::CompositeParameter>("config.incoming-routing-keys");
-  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::CompositeParameter> incomingGTIterator = incomingRoutingKeysParameter.getIterator<runtime_cfg::CompositeParameter>("GT");
-  std::cout << "!!!!! Bypass incoming_routing_keys" << std::endl;
-  while(incomingGTIterator.hasElement()) {
-    const runtime_cfg::CompositeParameter* gtParams = incomingGTIterator.getCurrentElement();
-    std::cout << "GT=" << gtParams->getValue() << std::endl;
-    runtime_cfg::CompositeParameter::Iterator<runtime_cfg::Parameter> appIdIterator = gtParams->getIterator<runtime_cfg::Parameter>("application_id");
-    while (appIdIterator.hasElement()) {
-      std::cout << "sua_application_id = " << appIdIterator.getCurrentElement()->getValue() << std::endl;
-      appIdIterator.next();
-    }
-    std::cout << "traffic_mode = " << gtParams->getParameter<runtime_cfg::Parameter>("traffic_mode")->getValue() << std::endl;
-    incomingGTIterator.next();
-  }
-
-  runtime_cfg::CompositeParameter& outcomingRoutingKeysParameter = rconfig.find<runtime_cfg::CompositeParameter>("config.outcoming-routing-keys");
-  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::CompositeParameter> outcomingGTIterator = outcomingRoutingKeysParameter.getIterator<runtime_cfg::CompositeParameter>("GT");
-  std::cout << "!!!!! Bypass outcoming_routing_keys" << std::endl;
-  while(outcomingGTIterator.hasElement()) {
-    const runtime_cfg::CompositeParameter* gtParams = outcomingGTIterator.getCurrentElement();
-    std::cout << "GT=" << gtParams->getValue() << std::endl;
-    runtime_cfg::CompositeParameter::Iterator<runtime_cfg::Parameter> sgpLinkIdIterator = gtParams->getIterator<runtime_cfg::Parameter>("link_id");
-    while (sgpLinkIdIterator.hasElement()) {
-      std::cout << "sgp_link_id = " << sgpLinkIdIterator.getCurrentElement()->getValue() << std::endl;
-      sgpLinkIdIterator.next();
-    }
-    std::cout << "traffic_mode = " << gtParams->getParameter<runtime_cfg::Parameter>("traffic_mode")->getValue() << std::endl;
-    outcomingGTIterator.next();
-  }
-}
-
 int main(int argc, char** argv)
 {
   smsc::logger::Logger::Init();
@@ -101,9 +35,6 @@ int main(int argc, char** argv)
     runtime_cfg::RuntimeConfig::init();
     runtime_cfg::RuntimeConfig& rconfig = runtime_cfg::RuntimeConfig::getInstance();
     rconfig.initialize(&suaConfigView);
-
-    //    printRuntimeConfig(rconfig);
-    //    return 0;
 
     utilx::SubsystemsManager::init();
 
