@@ -14,7 +14,7 @@ public interface MGState extends State {
 
   public void setMGBalance(String mgBalance);
 
-  public int getMgState();
+  public int getMGState();
 
   public void setMGState(int mgState);
 

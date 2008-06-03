@@ -6,6 +6,10 @@ import ru.sibinco.util.threads.ThreadsPool;
 import ru.aurorisoft.smpp.Message;
 import org.apache.log4j.Category;
 
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 /**
  * Created by Serge Lugovoy
  * Date: Nov 22, 2007
@@ -14,24 +18,22 @@ import org.apache.log4j.Category;
 public class MTSSouthState implements BannerState, MGState {
   private final static Category logger = Category.getInstance(MTSSouthState.class);
 
-  public static final byte MG_WAIT_RESP = 1;
-  public static final byte MG_ERR = 2;
-  public static final byte MG_OK = 3;
-
   protected Message abonentRequest;
-  protected long requestTime;
-
-  protected int mgState;
-  protected String mgBalance;
-  protected String message;
-
-  protected String banner;
-  protected int bannerState;
+  protected long abonentRequestTime;
 
   protected boolean closed = false;
   protected boolean expired = false;
 
   protected String encoding;
+
+  protected int mgState;
+  protected String mgBalance;
+  protected String message;
+  protected long mgResponseTime;
+
+  protected String banner;
+  protected int bannerState;
+  protected long bannerResponseTime;
 
   protected MGManager mgManager;
   protected BannerManager bannerManager;
@@ -39,7 +41,7 @@ public class MTSSouthState implements BannerState, MGState {
   protected final Object expireObject = new Object();
 
   public MTSSouthState(Message message, MGManager mgManager, BannerManager bannerManager) {
-    requestTime = System.currentTimeMillis();
+    abonentRequestTime = System.currentTimeMillis();
     abonentRequest = message;
     if (abonentRequest.hasCodeSet()) {
       if (abonentRequest.getCodeset() == 0) {
@@ -64,12 +66,15 @@ public class MTSSouthState implements BannerState, MGState {
     this.mgBalance = mgBalance;
   }
 
-  public synchronized int getMgState() {
+  public synchronized int getMGState() {
     return mgState;
   }
 
   public synchronized void setMGState(int mgState) {
     this.mgState = mgState;
+    if(mgState==MGState.MG_OK || mgState == MG_ERR){
+      mgResponseTime = System.currentTimeMillis();
+    }
   }
 
   public synchronized String getBanner() {
@@ -86,10 +91,13 @@ public class MTSSouthState implements BannerState, MGState {
 
   public synchronized void setBannerState(int bannerState) {
     this.bannerState = bannerState;
+    if(bannerState==BannerState.BE_RESP_OK || bannerState==BannerState.BE_RESP_ERR){
+      bannerResponseTime = System.currentTimeMillis();
+    }
   }
 
   /*
-    Запускается процессор запроса в MG, асинхронный запрос баннера и процессор ожидания.
+    Запускается процессор запроса в MG, параллельно запрос баннера и процессор ожидания.
   */
   public void startProcessing(ThreadsPool pool, SmeEngine smeEngine) {
     mgManager.requestMGBalance(this);
@@ -115,7 +123,7 @@ public class MTSSouthState implements BannerState, MGState {
   }
 
   /*
-    Попытка отработать State
+    Попытка закрыть State
   */
   public synchronized void closeProcessing(SmeEngine smeEngine) {
     if (expired || closed) return;
@@ -168,16 +176,30 @@ public class MTSSouthState implements BannerState, MGState {
     return expireObject;
   }
 
+  private final static DateFormat dateFormat=new SimpleDateFormat("HH:mm:ss.SSS");
+
   public String toString() {
     StringBuffer sb = new StringBuffer();
-    sb.append("request src:");
     sb.append(abonentRequest.getSourceAddress());
-    sb.append(" dst:");
-    sb.append(abonentRequest.getDestinationAddress());
-    sb.append(" mgState:");
-    sb.append(getMgState());
-    sb.append(" bannerState:");
-    sb.append(getBannerState());
+    sb.append(" request: ");
+    String date;
+    synchronized(dateFormat){
+      date=dateFormat.format(new Date(abonentRequestTime));
+    }
+    sb.append(date);
+    sb.append("; mg:");
+    sb.append(mgState);
+    sb.append("; banner: ");
+    sb.append(bannerState);
+
+    sb.append("; resp=");
+    long delay=System.currentTimeMillis()-abonentRequestTime;
+    sb.append(delay);
+    if(logger.isDebugEnabled()){
+      sb.append(" ms; SME clean delay=");
+      sb.append(delay-(Math.max(mgResponseTime-abonentRequestTime, bannerResponseTime-abonentRequestTime)));
+    }
+    sb.append(" ms");
     return sb.toString();
   }
 
