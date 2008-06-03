@@ -119,11 +119,20 @@ public class MTSSouthState extends AbstractState implements BannerState, MGState
     sb.append(abonentRequest.getSourceAddress());
     sb.append(" request: ");
     sb.append(formatDate(abonentRequestTime));
-    sb.append("; mg:");
+    sb.append("; mg: ");
     sb.append(mgState);
+    if(mgResponseTime>0){
+      sb.append(" (");
+      sb.append(mgResponseTime-abonentRequestTime);
+      sb.append(" ms)");
+    }
     sb.append("; banner: ");
     sb.append(bannerState);
-
+    if(bannerResponseTime>0){
+      sb.append(" (");
+      sb.append(bannerResponseTime-abonentRequestTime);      
+      sb.append(" ms)");
+    }
     sb.append("; resp=");
     long delay=System.currentTimeMillis()-abonentRequestTime;
     sb.append(delay);
