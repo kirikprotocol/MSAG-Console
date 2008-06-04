@@ -697,12 +697,14 @@ static void SendRInfo(MapDialog* dialog)
   SMS *sms = dialog->sms.get();
 
   if ( !dialog->isQueryAbonentStatus ) {
-    if( sms != 0 ) {
+    if( dialog->state == MAPST_ImsiWaitOpenConf ) {
+      hiPrior = true;
+    } else if( sms != 0 ) {
       if( sms->getIntProperty(Tag::SMPP_PRIORITY) == 3 ) {
         hiPrior = true;
       } else {
         if( sms->getLastResult() != Status::ABSENTSUBSCR &&
-            sms->getLastResult() != Status::SMDELIFERYFAILURE ) {
+            sms->getLastResult() != Status::MSMEMCAPACITYFULL ) {
           hiPrior = true;
         } else if( (sms->getAttemptsCount())%4 == 0 ) {
           hiPrior = true;
