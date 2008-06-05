@@ -128,11 +128,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private Map mgRequests = new HashMap();
   private Map inManRequests = new HashMap();
   private Map inBalanceRequests = new HashMap();
-  /*
-  private Map cbossStatements = new HashMap();
-  private Map inManStatements = new HashMap();
-  private Map medioScpStatements = new HashMap();
-  */
+
   private ThreadConroller cbossThreadConroller;
   private ThreadConroller inManThreadConroller;
   private ThreadConroller medioScpThreadConroller;
@@ -1177,45 +1173,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected String getCbossQuery() {
     return cbossQuery;
   }
-  /*
-  protected CallableStatement getCbossStatement() throws SQLException {
-    CallableStatement result;
-    synchronized (cbossStatements) {
-      result = (CallableStatement) cbossStatements.get(Thread.currentThread().getName());
-    }
-    if (result == null) {
-      logger.debug("Creating CBOSS statement for " + Thread.currentThread().getName());
-      result = getCbossConnection().prepareCall(getCbossQuery());
-      synchronized (cbossStatements) {
-        cbossStatements.put(Thread.currentThread().getName(), result);
-      }
-    }
-    return result;
-  }
 
-  protected void closeCbossStatement(Statement stmt) {
-    synchronized (cbossStatements) {
-      cbossStatements.remove(Thread.currentThread().getName());
-    }
-    if (stmt != null) {
-      try {
-        stmt.close();
-      } catch (SQLException e1) {
-        logger.warn("Could not close oracle CallableStatement: " + e1);
-      }
-      Connection connection = null;
-      try {
-        connection = stmt.getConnection();
-        if (connection != null) {
-          connection.close();
-          connection = null;
-        }
-      } catch (SQLException e1) {
-        logger.warn("Could not close oracle Connection: " + e1);
-      }
-    }
-  }
-  */
   protected boolean isCbossConnectionError(Exception e) {
     if (e.toString().matches(cbossConnectionErrorPattern)) {
       return true;
@@ -1227,95 +1185,7 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   protected String getInManQuery() {
     return inManQuery;
   }
-  /*
-  protected CallableStatement getInManStatement() throws SQLException {
-    CallableStatement result;
-    synchronized (inManStatements) {
-      result = (CallableStatement) inManStatements.get(Thread.currentThread().getName());
-    }
-    if (result == null) {
-      logger.debug("Creating InMan statement for " + Thread.currentThread().getName());
-      result = getInManConnection().prepareCall(getInManQuery());
-      synchronized (inManStatements) {
-        inManStatements.put(Thread.currentThread().getName(), result);
-      }
-    }
-    return result;
-  }
 
-  protected void closeInManStatement(Statement stmt) {
-    synchronized (inManStatements) {
-      inManStatements.remove(Thread.currentThread().getName());
-    }
-    if (stmt != null) {
-      try {
-        stmt.close();
-      } catch (SQLException e1) {
-        logger.warn("Could not close oracle CallableStatement: " + e1);
-      }
-      Connection connection = null;
-      try {
-        connection = stmt.getConnection();
-        if (connection != null) {
-          connection.close();
-          connection = null;
-        }
-      } catch (SQLException e1) {
-        logger.warn("Could not close ifx Connection: " + e1);
-      }
-    }
-  }
-  */
-  protected boolean isInManConnectionError(Exception e) {
-    if (e.toString().matches(inManConnectionErrorPattern)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  protected String getMedioScpQuery() {
-    return medioScpQuery;
-  }
-  /*
-  protected CallableStatement getMedioScpStatement() throws SQLException {
-    CallableStatement result;
-    synchronized (medioScpStatements) {
-      result = (CallableStatement) medioScpStatements.get(Thread.currentThread().getName());
-    }
-    if (result == null) {
-      logger.debug("Creating MedioSCP statement for " + Thread.currentThread().getName());
-      result = getMedioScpConnection().prepareCall(getMedioScpQuery());
-      synchronized (medioScpStatements) {
-        medioScpStatements.put(Thread.currentThread().getName(), result);
-      }
-    }
-    return result;
-  }
-
-  protected void closeMedioScpStatement(Statement stmt) {
-    synchronized (medioScpStatements) {
-      medioScpStatements.remove(Thread.currentThread().getName());
-    }
-    if (stmt != null) {
-      try {
-        stmt.close();
-      } catch (SQLException e1) {
-        logger.warn("Could not close MedioSCP CallableStatement: " + e1);
-      }
-      Connection connection = null;
-      try {
-        connection = stmt.getConnection();
-        if (connection != null) {
-          connection.close();
-          connection = null;
-        }
-      } catch (SQLException e1) {
-        logger.warn("Could not close MedioSCP Connection: " + e1);
-      }
-    }
-  }
-  */
   protected boolean isMedioScpConnectionError(Exception e) {
     if (e.toString().matches(medioScpConnectionErrorPattern)) {
       return true;

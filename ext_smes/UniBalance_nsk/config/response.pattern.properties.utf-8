@@ -1,0 +1,17 @@
+balance.response.pattern=Баланс {0} {1}
+#balance.negative.response.pattern=Задолженность {0} {1}
+
+balance.with.accumulator.response.pattern=Ваш баланс: {0} {1} Использовано минут: {2}
+#balance.with.accumulator.negative.response.pattern=Задолженность: {0} {1} Использовано минут: {2}
+
+balance.wait.for.sms.response.pattern=Баланс будет выслан вам СМС сообщением через несколько минут
+balance.error.pattern=Ошибка получения баланса
+access.denied.pattern=Получение баланса запрещено
+
+balance.currency.default=у.е.
+
+balance.currency.1.code=810
+balance.currency.1.name=руб.
+
+balance.currency.2.code=840
+balance.currency.2.name=у.е.
