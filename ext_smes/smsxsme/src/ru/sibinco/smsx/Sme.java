@@ -6,19 +6,27 @@ import com.eyeline.sme.smpp.test.TestMultiplexor;
 import com.eyeline.sme.smpp.test.SimpleResponse;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.jmx.log4j.LoggingMBean;
+import com.sun.jdmk.comm.HtmlAdaptorServer;
+import com.sun.jdmk.comm.AuthInfo;
 import org.apache.log4j.Category;
+import org.apache.log4j.LogManager;
 import ru.aurorisoft.smpp.SMPPException;
 import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoapFactory;
 import ru.sibinco.smsx.engine.soaphandler.smsxsender.SmsXSenderFactory;
 import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.service.ServiceManagerMBean;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
 import ru.sibinco.smsx.network.dbconnection.ConnectionPoolFactory;
 import ru.sibinco.smsx.network.personalization.PersonalizationClientPoolFactory;
 
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import java.io.File;
+import java.lang.management.ManagementFactory;
 
 /**
  * User: artem
@@ -33,7 +41,7 @@ public class Sme {
   private MessageHandler handler;
   private AdvertisingClient senderAdvertisingClient;
 
-  public Sme(String configDir, boolean testMode) throws SmeException {
+  public Sme(String configDir, boolean testMode, int jmxPort) throws SmeException {
 
     try {
       // Init DB connection pool
@@ -71,6 +79,29 @@ public class Sme {
 
       transceiver.connect();
       handler.start();
+
+
+      if (jmxPort != -1) {
+        System.out.println("SMSX started in JMX mode");
+        final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+        // SMPPTransceiver MBeans
+        mbs.registerMBean(transceiver.getInQueueMonitor(), new ObjectName("SMSX.smpp:mbean=inQueue"));
+        mbs.registerMBean(transceiver.getOutQueueMonitor(), new ObjectName("SMSX.smpp:mbean=outQueue"));
+
+        //MessageHandler MBeans
+        mbs.registerMBean(handler.getHandlerMBean(), new ObjectName("SMSX.sme:mbean=handler"));
+
+        final LoggingMBean lb = new LoggingMBean("SMSX", LogManager.getLoggerRepository());
+        mbs.registerMBean(lb, new ObjectName("SMSX:mbean=logging"));
+
+        final ServiceManagerMBean servicesMBean = ServiceManager.getInstance().getMBean("SMSX");
+        mbs.registerMBean(servicesMBean, new ObjectName("SMSX:mbean=services"));
+
+        // Load JMX configuration        
+        HtmlAdaptorServer adapter = new HtmlAdaptorServer(jmxPort, new AuthInfo[] {new AuthInfo("admin", "laefeeza")});        
+        mbs.registerMBean(adapter, new ObjectName("SMSX:mbean=htmlAdaptor"));
+        adapter.start();
+      }
 
     } catch (Throwable e) {
       log.error(e,e);

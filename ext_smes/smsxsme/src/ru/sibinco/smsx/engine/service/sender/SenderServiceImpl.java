@@ -54,4 +54,8 @@ class SenderServiceImpl implements SenderService{
   public void stopService() {
     dataSource.release();
   }
+
+  public Object getMBean(String domain) {
+    return new SenderMBean(senderMessage);
+  }
 }

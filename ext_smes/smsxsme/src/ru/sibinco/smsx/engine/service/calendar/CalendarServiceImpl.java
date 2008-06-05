@@ -61,5 +61,9 @@ class CalendarServiceImpl implements CalendarService {
     dataSource.release();
   }
 
+  public Object getMBean(String domain) {
+    return new CalendarMBean(engine);
+  }
+
 
 }

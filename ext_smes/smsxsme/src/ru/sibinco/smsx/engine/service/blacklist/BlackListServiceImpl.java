@@ -39,6 +39,10 @@ class BlackListServiceImpl implements BlackListService {
     ds.release();
   }
 
+  public Object getMBean(String domain) {
+    return null;
+  }
+
   public void execute(BlackListAddCmd cmd) {
     processor.execute(cmd);
   }

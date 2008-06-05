@@ -3,6 +3,7 @@ package ru.sibinco.smsx.engine.service.calendar;
 import com.eyeline.sme.utils.worker.IterativeWorker;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
+import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
@@ -13,6 +14,9 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.util.Date;
 import java.util.Iterator;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 /**
  * User: artem
@@ -29,6 +33,7 @@ class CalendarEngine extends IterativeWorker {
   private final OutgoingQueue outQueue;
   private final long workingInterval;
   private final CalendarDataSource ds;
+  private final ThreadPoolExecutor executor;
 
   CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, long workingInterval) {
     super(log);
@@ -37,10 +42,12 @@ class CalendarEngine extends IterativeWorker {
     this.workingInterval = workingInterval;
     this.ds = ds;
     this.messagesQueue = messagesQueue;
+    this.executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10, new ThreadFactoryWithCounter("CalEngine-Executor-"));
   }
 
   protected void stopCurrentWork() {
     messagesQueue.notifyWaiters();
+    executor.shutdown();
   }
 
   public void iterativeWork() {
@@ -68,6 +75,30 @@ class CalendarEngine extends IterativeWorker {
         log.error("Can't remove msg: ", e);
       }
     }
+  }
+
+  public Date getEndDate() {
+    return nextReloadTime;
+  }
+
+  public int getQueueSize() {
+    return messagesQueue.size();
+  }
+
+  public int getExecutorActiveCount() {
+    return executor.getActiveCount();
+  }
+
+  public int getExecutorPoolSize() {
+    return executor.getPoolSize();
+  }
+
+  public int getExecutorMaxPoolSize() {
+    return executor.getMaximumPoolSize();
+  }
+
+  public void setExecutorMaxPoolSize(int size) {
+    executor.setMaximumPoolSize(size);
   }
 
   private void sendMessage(final CalendarMessage message) {
@@ -111,31 +142,61 @@ class CalendarEngine extends IterativeWorker {
       this.msg = msg;
     }
 
-    public void handleResponse(PDU pdu) {
-      try {
-        if (msg.isSaveDeliveryStatus()) {
-          if (pdu.getStatusClass() != PDU.STATUS_CLASS_NO_ERROR) {
-            msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
-            msg.setSmppStatus(pdu.getStatus());
-            ds.saveCalendarMessage(msg);
-          } else {
-            msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
-            ds.updateMessageSmppId(msg);
+    @Override
+    public void handleResponse(final PDU pdu) {
+      if (msg.isSaveDeliveryStatus()) {
+        if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+          try {
+            executor.execute(new UpdateMessageStatusTask());
+          } catch (Throwable e) {
+            log.error("Can't execute UpdateMessageStatusTask", e);
+          }
+        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+          try {
+            executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
+          } catch (Throwable e) {
+            log.error("Can't execute UpdateSMPPIdTask", e);
           }
         }
-      } catch (DataSourceException e) {
-        log.error("Can't save delivery status!");
       }
     }
 
+    @Override
     public void handleSendError() {
-      try {
-        if (msg.isSaveDeliveryStatus()) {
+      if (msg.isSaveDeliveryStatus()) {
+        try {
+          executor.execute(new UpdateMessageStatusTask());
+        } catch (Throwable e) {
+          log.error("Can't execute UpdateMessageStatusTask", e);
+        }
+      }
+    }
+
+    private class UpdateMessageStatusTask implements Runnable {
+      public void run() {
+        try {
           msg.setStatus(CalendarMessage.STATUS_DELIVERY_FAILED);
           ds.updateMessageStatus(msg);
+        } catch (Throwable e) {
+          log.error("Update msg status err:",e);
         }
-      } catch (DataSourceException e) {
-        log.error("Can't save calendar message", e);
+      }
+    }
+
+    private class UpdateSMPPIdTask implements Runnable {
+      private final long messageId;
+
+      private UpdateSMPPIdTask(long messageId) {
+        this.messageId = messageId;
+      }
+
+      public void run() {
+        msg.setSmppId(messageId);
+        try {
+          ds.updateMessageSmppId(msg);
+        } catch (Throwable e) {
+          log.error("Can't update smpp id: ", e);
+        }
       }
     }
   }

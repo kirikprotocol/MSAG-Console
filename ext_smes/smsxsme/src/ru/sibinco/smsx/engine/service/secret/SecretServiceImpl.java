@@ -74,4 +74,8 @@ class SecretServiceImpl implements SecretService {
   public void stopService() {
     dataSource.release();
   }
+
+  public Object getMBean(String domain) {
+    return new SecretMBean(messageSender);
+  }
 }

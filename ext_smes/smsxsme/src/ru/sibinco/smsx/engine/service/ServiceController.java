@@ -8,4 +8,5 @@ package ru.sibinco.smsx.engine.service;
 public interface ServiceController {
   public void startService();
   public void stopService();
+  public Object getMBean(String domain);
 }

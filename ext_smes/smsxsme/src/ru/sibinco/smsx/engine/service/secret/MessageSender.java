@@ -3,6 +3,7 @@ package ru.sibinco.smsx.engine.service.secret;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.ShutdownedException;
+import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
@@ -12,6 +13,8 @@ import ru.sibinco.smsx.engine.service.secret.datasource.SecretMessage;
 import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.sql.Timestamp;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executors;
 
 /**
  * User: artem
@@ -24,15 +27,34 @@ class MessageSender {
 
   private final SecretDataSource ds;
   private final OutgoingQueue outQueue;
+  private final ThreadPoolExecutor executor;
 
   private String serviceAddress;
   private String msgDestinationAbonentInform;
   private String msgDestinationAbonentInvitation;
   private String msgDeliveryReport;
 
+
   MessageSender(SecretDataSource ds, OutgoingQueue outQueue) {
     this.ds = ds;
     this.outQueue = outQueue;
+    this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10, new ThreadFactoryWithCounter("SecMsgSender-Executor-"));
+  }
+
+  public int getExecutorActiveCount() {
+    return executor.getActiveCount();
+  }
+
+  public int getExecutorPoolSize() {
+    return executor.getPoolSize();
+  }
+
+  public int getExecutorMaxPoolSize() {
+    return executor.getMaximumPoolSize();
+  }
+
+  public void setExecutorMaxPoolSize(int size) {
+    executor.setMaximumPoolSize(size);
   }
 
   public void setMsgDestinationAbonentInform(String msgDestinationAbonentInform) {
@@ -115,7 +137,6 @@ class MessageSender {
   }
 
   private String prepareInformMessage(final String toAbonent, final String fromAbonent) throws DataSourceException {
-//    return msgDestinationAbonentInform.replaceAll("\\{from_abonent}", fromAbonent).replaceAll("\\{messages_count}", String.valueOf(ds.loadMessagesCountByAddress(toAbonent)));
     return msgDestinationAbonentInform;
   }
 
@@ -127,31 +148,61 @@ class MessageSender {
       this.msg = msg;
     }
 
+    @Override
     public void handleResponse(PDU pdu) {
-      try {
-        if (msg.isSaveDeliveryStatus()) {
-          if (pdu.getStatusClass() != PDU.STATUS_CLASS_NO_ERROR) {
-            msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
-            msg.setSmppStatus(pdu.getStatus());
-            ds.saveSecretMessage(msg);
-          } else {
-            msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
-            ds.updateMessageSmppId(msg);
+      if (msg.isSaveDeliveryStatus()) {
+        if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+          try {
+            executor.execute(new UpdateMessageStatusTask());
+          } catch (Throwable e) {
+            log.error("Can't execute UpdateMessageStatusTask", e);
+          }
+        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+          try {
+            executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
+          } catch (Throwable e) {
+            log.error("Can't execute UpdateSMPPIdTask", e);
           }
         }
-      } catch (DataSourceException e) {
-        log.error("Can't save delivery status!");
       }
     }
 
+    @Override
     public void handleSendError() {
-      try {
-        if (msg.isSaveDeliveryStatus()) {
+      if (msg.isSaveDeliveryStatus()) {
+        try {
+          executor.execute(new UpdateMessageStatusTask());
+        } catch (Throwable e) {
+          log.error("Can't execute UpdateMessageStatusTask", e);
+        }
+      }
+    }
+
+    private class UpdateMessageStatusTask implements Runnable {
+      public void run() {
+        try {
           msg.setStatus(SecretMessage.STATUS_DELIVERY_FAILED);
           ds.updateMessageStatus(msg);
+        } catch (Throwable e) {
+          log.error("Update msg status err:",e);
         }
-      } catch (DataSourceException e) {
-        log.error("Can't save secret message", e);
+      }
+    }
+
+    private class UpdateSMPPIdTask implements Runnable {
+      private final long messageId;
+
+      private UpdateSMPPIdTask(long messageId) {
+        this.messageId = messageId;
+      }
+
+      public void run() {
+        msg.setSmppId(messageId);
+        try {
+          ds.updateMessageSmppId(msg);
+        } catch (Throwable e) {
+          log.error("Can't update smpp id: ", e);
+        }
       }
     }
   }

@@ -39,5 +39,9 @@ class NickServiceImpl implements NickService {
   public void stopService() {
   }
 
+  public Object getMBean(String domain) {
+    return null;
+  }
+
 
 }

@@ -16,7 +16,24 @@ public class SmsxServlet extends AxisServlet {
   public void init() throws ServletException {
     super.init();
     try {
-      sme = new Sme(getServletConfig().getInitParameter("configDir"), System.getProperty("test.mode") != null);
+      boolean testMode = System.getProperty("test.mode") != null;
+
+      int jmxPort;
+
+      if (System.getProperty("portJMX") == null) {
+        System.out.println("portJMX = null");
+        jmxPort = -1;
+      } else {
+        try {
+          jmxPort = Integer.parseInt(System.getProperty("portJMX"));
+        } catch (Throwable e) {
+          e.printStackTrace();
+          jmxPort = -1;
+        }
+      }
+
+      sme = new Sme(getServletConfig().getInitParameter("configDir"), testMode, jmxPort);
+
     } catch (Throwable e) {
       throw new ServletException(e);
     }

@@ -38,12 +38,20 @@ public class ServiceManager {
   private final BlackListService blackListService;
   private final NickService nickService;
 
+  private ServiceManagerMBean mbean = null;
+
   private ServiceManager(XmlConfig config, OutgoingQueue outQueue) {
     senderService = SenderServiceFactory.getSenderService(config, outQueue);
     calendarService = CalendarServiceFactory.getCalendarService(config, outQueue);
     secretService = SecretServiceFactory.getSecretService(config, outQueue);
     blackListService = BlackListServiceFactory.getBlackListService(config);
     nickService = NickServiceFactory.getNickService(config, outQueue);
+  }
+
+  public ServiceManagerMBean getMBean(String domain) {
+    if (mbean == null)
+      mbean = new ServiceManagerMBean(domain);
+    return mbean;
   }
 
   public CalendarService getCalendarService() {

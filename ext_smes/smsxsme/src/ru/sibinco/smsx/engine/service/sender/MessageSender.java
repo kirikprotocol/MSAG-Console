@@ -3,6 +3,7 @@ package ru.sibinco.smsx.engine.service.sender;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.sme.smpp.OutgoingObject;
 import com.eyeline.sme.smpp.ShutdownedException;
+import com.eyeline.utils.ThreadFactoryWithCounter;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
 import ru.aurorisoft.smpp.PDU;
@@ -10,6 +11,9 @@ import ru.aurorisoft.smpp.SubmitResponse;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
 import ru.sibinco.smsx.utils.DataSourceException;
+
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.Executors;
 
 /**
  * User: artem
@@ -22,10 +26,12 @@ class MessageSender {
 
   private final OutgoingQueue outQueue;
   private final SenderDataSource ds;
+  private final ThreadPoolExecutor executor;
 
   MessageSender(OutgoingQueue outQueue, SenderDataSource ds) {
     this.outQueue = outQueue;
     this.ds = ds;
+    this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10, new ThreadFactoryWithCounter("SenderMsgSender-Executor-"));
   }
 
   public void sendMessage(SenderMessage message) {
@@ -49,6 +55,22 @@ class MessageSender {
     message.setStatus(SenderMessage.STATUS_PROCESSED);
   }
 
+  public int getExecutorActiveCount() {
+    return executor.getActiveCount();
+  }
+
+  public int getExecutorPoolSize() {
+    return executor.getPoolSize();
+  }
+
+  public int getExecutorMaxPoolSize() {
+    return executor.getMaximumPoolSize();
+  }
+
+  public void setExecutorMaxPoolSize(int size) {
+    executor.setMaximumPoolSize(size);
+  }
+
 
   private class SenderSMPPTransportObject extends OutgoingObject {
     private final SenderMessage msg;
@@ -57,31 +79,60 @@ class MessageSender {
       this.msg = senderMessage;
     }
 
+    @Override
     public void handleResponse(PDU pdu) {
       if (msg.isStorable()) {
-        try {
-          if (pdu.getStatusClass() != PDU.STATUS_CLASS_NO_ERROR) {
-            msg.setStatus(SenderMessage.STATUS_DELIVERY_FAILED);
-            msg.setSmppStatus(pdu.getStatus());
-            ds.saveSenderMessage(msg);
-          } else {
-            msg.setStatus(SenderMessage.STATUS_PROCESSED);
-            msg.setSmppId(Long.parseLong(((SubmitResponse)pdu).getMessageId()));
-            ds.saveSenderMessage(msg);            
+        if (pdu.getStatusClass() == PDU.STATUS_CLASS_PERM_ERROR) {
+          try {
+            executor.execute(new UpdateMessageStatusTask());
+          } catch (Throwable e) {
+            log.error("Can't execute UpdateMessageStatusTask", e);
           }
-        } catch (DataSourceException e) {
-          log.error("Can't save Sender Message", e);
+        } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
+          try {
+            executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
+          } catch (Throwable e) {
+            log.error("Can't execute UpdateSMPPIdTask", e);
+          }
         }
       }
     }
 
+    @Override
     public void handleSendError() {
       if (msg.isStorable()) {
         try {
+          executor.execute(new UpdateMessageStatusTask());
+        } catch (Throwable e) {
+          log.error("Can't execute UpdateMessageStatusTask", e);
+        }
+      }
+    }
+
+    private class UpdateMessageStatusTask implements Runnable {
+      public void run() {
+        try {
           msg.setStatus(SenderMessage.STATUS_DELIVERY_FAILED);
           ds.saveSenderMessage(msg);
-        } catch (DataSourceException e) {
-          log.error("Can't save Sender Message", e);
+        } catch (Throwable e) {
+          log.error("Update msg status err:",e);
+        }
+      }
+    }
+
+    private class UpdateSMPPIdTask implements Runnable {
+      private final long messageId;
+
+      private UpdateSMPPIdTask(long messageId) {
+        this.messageId = messageId;
+      }
+
+      public void run() {
+        msg.setSmppId(messageId);
+        try {
+          ds.updateMessageSmppId(msg);
+        } catch (Throwable e) {
+          log.error("Can't update smpp id: ", e);
         }
       }
     }
