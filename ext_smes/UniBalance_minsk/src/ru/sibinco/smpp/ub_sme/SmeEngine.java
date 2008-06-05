@@ -317,11 +317,12 @@ public class SmeEngine implements MessageListener, ResponseListener {
       if (logger.isDebugEnabled()) {
         logger.debug(responseType + " handled. ConnID #" + pdu.getConnectionId() + "; SeqN #" + pdu.getSequenceNumber() + "; Status #" + pdu.getStatus());
       }
-
-      if (pdu.getStatusClass() == PDU.STATUS_CLASS_TEMP_ERROR) {
-        outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
-      } else {
-        outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+      if( outgoingQueue != null ) {
+        if (pdu.getStatusClass() == PDU.STATUS_CLASS_TEMP_ERROR) {
+          outgoingQueue.updateOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatus());
+        } else {
+          outgoingQueue.removeOutgoingObject(pdu.getConnectionId(), pdu.getSequenceNumber(), pdu.getStatusClass());
+        }
       }
     }
 

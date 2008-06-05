@@ -17,7 +17,8 @@ Date       | Author    | Version | Message
 2007/11/23 | serge     | 1.07    | Add more request times info
 -----------|-----------|---------|--------------------------------------------------------------------------------
 2007/11/26 | kpv       | 1.08    | Added more times info, removed some syncs, optimized syncs of SmeEngine
-           |           |         |
+-----------|-----------|---------|--------------------------------------------------------------------------------
+2008/06/05 | serge     | 1.09    | Fixed uncheked access to outQueue in handleResp, cause NullPointer exception
            |           |         |
            |           |         |
            |           |         |

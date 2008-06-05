@@ -98,23 +98,6 @@ public class MessageSender extends Thread implements ProductivityControllable {
           if (connector == null)
             throw new SMPPUserException(Data.ESME_RINVADR, "No route found for message: source #" + msg.getSourceAddress() + "; destination #" + msg.getDestinationAddress());
 
-          // try to get connector by new source address of outgoing message
-          if (connector == null) {
-            String connectorName = msg.getSourceAddress();
-            if (connectorName.lastIndexOf(":") > -1) {
-              connectorName = connectorName.substring(connectorName.lastIndexOf(":") + 1);
-            }
-            connector = multiplexor.lookupConnectorByName(connectorName);
-          }
-          // if connector not defined lookup connector by destination address
-          if (connector == null &&
-              msg.getDestinationAddress() != null) {
-            connector = multiplexor.lookupConnector(msg.getDestinationAddress());
-          }
-          // connector SHOULD be defined here !!!
-          if (connector == null)
-            throw new SMPPUserException(Data.ESME_RINVADR, "No route found for message: source #" + msg.getSourceAddress() + "; destination #" + msg.getDestinationAddress());
-
           multiplexor.assingSequenceNumber(msg, connector.getName());
           outQueue.messageSubmitted(obj);
           if (Logger.isInfoEnabled())

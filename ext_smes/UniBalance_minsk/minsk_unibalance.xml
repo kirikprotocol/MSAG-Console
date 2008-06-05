@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <project name="nsk_unibalance" default="all">
-
-  <property name="jdk.home.1.4" value="c:/jdk1.4.2/"/>
-
-
   <property file="nsk_unibalance.properties"/>
   <!-- Uncomment the following property if no tests compilation is needed -->
   <!-- 
@@ -46,28 +42,6 @@
     <include name="**/?*.jpg"/>
   </patternset>
 
-  <!-- JDK definitions -->
-  <path id="jdk.classpath.1.4">
-    <fileset dir="${jdk.home.1.4}">
-      <include name="../Classes/dt.jar"/>
-      <include name="lib/jaws.jar"/>
-      <include name="../Classes/jce.jar"/>
-      <include name="lib/netscape.jar"/>
-      <include name="../Classes/charsets.jar"/>
-      <include name="../Classes/classes.jar"/>
-      <include name="../Classes/jsse.jar"/>
-      <include name="../Classes/laf.jar"/>
-      <include name="../Classes/sunrsasign.jar"/>
-      <include name="../Classes/ui.jar"/>
-      <include name="lib/ext/apple_provider.jar"/>
-      <include name="lib/ext/ldapsec.jar"/>
-      <include name="lib/ext/localedata.jar"/>
-      <include name="lib/ext/sunjce_provider.jar"/>
-    </fileset>
-  </path>
-
-  <property name="project.jdk.home" value="${jdk.home.1.4}"/>
-  <property name="project.jdk.classpath" value="jdk.classpath.1.4"/>
 
   <!-- Modules -->
 
@@ -76,9 +50,6 @@
 
   <dirname property="module.unibalance.basedir" file="${ant.file}"/>
 
-
-  <property name="module.jdk.home.unibalance" value="${project.jdk.home}"/>
-  <property name="module.jdk.classpath.unibalance" value="${project.jdk.classpath}"/>
 
   <property name="compiler.args.unibalance" value="${compiler.args}"/>
 
@@ -90,19 +61,7 @@
   </path>
 
   <path id="unibalance.module.classpath">
-    <path refid="${module.jdk.classpath.unibalance}"/>
-    <pathelement location="${module.unibalance.basedir}/lib/log4j.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/saxpath.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/connpool.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/jaxen-core.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/jcharset.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/adv-core.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/classes12.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/ifxjdbc.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/jsmppapi.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/jaxen-dom.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/tpool.jar"/>
-    <pathelement location="${module.unibalance.basedir}/lib/yguard.jar"/>
+    <fileset dir="${module.unibalance.basedir}/lib/" includes="*.jar"/>
   </path>
 
 
@@ -157,8 +116,7 @@
   <target name="compile.module.unibalance.production" description="Compile module unibalance; production classes">
     <mkdir dir="${unibalance.output.dir}"/>
     <javac destdir="${unibalance.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}"
-           memoryMaximumSize="${compiler.max.memory}" fork="true" executable="${module.jdk.home.unibalance}/bin/javac">
-      <compilerarg line="${compiler.args.unibalance}"/>
+           source="1.5" target="1.5">
       <bootclasspath refid="unibalance.module.bootclasspath"/>
       <classpath refid="unibalance.module.classpath"/>
       <src refid="unibalance.module.sourcepath"/>
