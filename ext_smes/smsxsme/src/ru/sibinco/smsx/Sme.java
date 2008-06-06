@@ -104,6 +104,7 @@ public class Sme {
       }
 
     } catch (Throwable e) {
+      e.printStackTrace();
       log.error(e,e);
       throw new SmeException(e);
     }

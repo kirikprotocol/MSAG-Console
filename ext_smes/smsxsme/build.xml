@@ -5,6 +5,7 @@
   <property name="SMSC_DIR" value="../.." />
   <property file="${SMSC_DIR}/webapps/build.properties"/>
   <property name="java_src" location="src"/>
+  <property name="java_test" location="test"/>
   <property name="config" location="conf"/>
   <property name="java_out" location="${BUILD_DIR}/classes/${esme_name}"/>
   <property name="java_lib" location="lib"/>
@@ -61,6 +62,10 @@
     </path>
 
     <javac srcdir="${java_src}" destdir="${java_out}" debug="yes" >
+      <classpath refid="classpath"/>
+    </javac>
+
+    <javac srcdir="${java_test}" destdir="${java_out}" debug="yes" >
       <classpath refid="classpath"/>
     </javac>
   </target>

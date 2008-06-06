@@ -1,4 +1,4 @@
-package ru.sibinco.smsx.tools;
+package ru.sibinco.smsx;
 
 import org.apache.axis.AxisFault;
 import ru.sibinco.smsx.engine.soaphandler.smsxsender.SmsXSenderResponse;
@@ -12,8 +12,7 @@ import java.net.URL;
  * Date: 10.07.2007
  */
 
-public class SendCalendarMsg {
-
+public class SendSecretMsg {
   public static void main(String[] args) {
     if (args.length < 3) {
       System.out.println("Usage:");
@@ -29,7 +28,7 @@ public class SendCalendarMsg {
       final SmsXSenderStub client = new SmsXSenderStub(new URL(args[0]), null);
       client.setMaintainSession(true);
 
-      SmsXSenderResponse resp = client.sendSms(args[1], args[2], args.length >=4 && args[3].equals("1"), false, true, System.currentTimeMillis() + 60000, args.length >=5 && args[4].equals("1"));
+      SmsXSenderResponse resp = client.sendSms(args[1], args[2], args.length >=4 && args[3].equals("1"), true, false, 0, args.length >=5 && args[4].equals("1"));
       System.out.println("status = " + Statuses.getStatus(resp.getStatus()));
       System.out.println("id = " + resp.getId_message());
       System.out.println("smpp = " + resp.getSmpp_code());

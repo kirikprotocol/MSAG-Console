@@ -35,6 +35,7 @@ public class SmsxServlet extends AxisServlet {
       sme = new Sme(getServletConfig().getInitParameter("configDir"), testMode, jmxPort);
 
     } catch (Throwable e) {
+      e.printStackTrace();;
       throw new ServletException(e);
     }
   }

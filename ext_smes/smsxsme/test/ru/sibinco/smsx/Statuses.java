@@ -1,4 +1,4 @@
-package ru.sibinco.smsx.tools;
+package ru.sibinco.smsx;
 
 import java.util.HashMap;
 

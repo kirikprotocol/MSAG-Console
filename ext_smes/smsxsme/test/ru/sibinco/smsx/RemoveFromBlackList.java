@@ -1,4 +1,4 @@
-package ru.sibinco.smsx.tools;
+package ru.sibinco.smsx;
 
 import org.apache.axis.AxisFault;
 import ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoapStub;
@@ -11,7 +11,7 @@ import java.net.URL;
  * Date: 10.07.2007
  */
 
-public class AddToBlackList {
+public class RemoveFromBlackList {
   public static void main(String[] args) {
     if (args.length < 2) {
       System.out.println("Usage:");
@@ -24,7 +24,7 @@ public class AddToBlackList {
       final BlacklistSoapStub client = new BlacklistSoapStub(new URL(args[0]), null);
       client.setMaintainSession(true);
 
-      boolean resp = client.add(args[1]);
+      boolean resp = client.remove(args[1]);
       System.out.println("result=" + resp);
 
     } catch (MalformedURLException e) {
