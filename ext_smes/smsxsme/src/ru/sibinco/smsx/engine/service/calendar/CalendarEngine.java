@@ -35,6 +35,8 @@ class CalendarEngine extends IterativeWorker {
   private final CalendarDataSource ds;
   private final ThreadPoolExecutor executor;
 
+  private volatile int rejectedTasks;
+
   CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, long workingInterval) {
     super(log);
 
@@ -52,9 +54,6 @@ class CalendarEngine extends IterativeWorker {
 
   public void iterativeWork() {
     nextReloadTime.setTime(System.currentTimeMillis() + workingInterval);
-
-    if (log.isInfoEnabled())
-      log.info("New period: enddate=" + nextReloadTime);
 
     messagesQueue.setMaxDate(nextReloadTime);
     loadList();
@@ -99,6 +98,10 @@ class CalendarEngine extends IterativeWorker {
 
   public void setExecutorMaxPoolSize(int size) {
     executor.setMaximumPoolSize(size);
+  }
+
+  public int getExecutorRejectedTasks() {
+    return rejectedTasks;
   }
 
   private void sendMessage(final CalendarMessage message) {
@@ -150,12 +153,14 @@ class CalendarEngine extends IterativeWorker {
             executor.execute(new UpdateMessageStatusTask());
           } catch (Throwable e) {
             log.error("Can't execute UpdateMessageStatusTask", e);
+            rejectedTasks++;
           }
         } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
           try {
             executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
           } catch (Throwable e) {
             log.error("Can't execute UpdateSMPPIdTask", e);
+            rejectedTasks++;
           }
         }
       }
@@ -168,6 +173,7 @@ class CalendarEngine extends IterativeWorker {
           executor.execute(new UpdateMessageStatusTask());
         } catch (Throwable e) {
           log.error("Can't execute UpdateMessageStatusTask", e);
+          rejectedTasks++;
         }
       }
     }

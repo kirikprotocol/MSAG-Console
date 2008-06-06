@@ -20,6 +20,7 @@ class SecretMBean extends AbstractDynamicMBean {
     attributes.add(new MBeanAttributeInfo("ExecutorActiveCount", "java.util.Integer", "Response handler active count", true, false, false));
     attributes.add(new MBeanAttributeInfo("ExecutorPoolSize", "java.util.Integer", "Actual handler pool size", true, false, false));
     attributes.add(new MBeanAttributeInfo("ExecutorMaxPoolSize", "java.util.Integer", "Response handler max pool size", true, true, false));
+    attributes.add(new MBeanAttributeInfo("ExecutorRejectedTasksCount", "java.util.Integer", "Response handler rejected tasks count", true, true, false));
   }
 
   public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
@@ -29,6 +30,8 @@ class SecretMBean extends AbstractDynamicMBean {
       return messageSender.getExecutorPoolSize();
     else if (attribute.equals("ExecutorMaxPoolSize"))
       return messageSender.getExecutorMaxPoolSize();
+    else if (attribute.equals("ExecutorRejectedTasksCount"))
+      return messageSender.getExecutorRejectedTasks();
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }
 

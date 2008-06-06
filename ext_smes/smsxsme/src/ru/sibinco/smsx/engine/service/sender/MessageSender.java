@@ -28,6 +28,8 @@ class MessageSender {
   private final SenderDataSource ds;
   private final ThreadPoolExecutor executor;
 
+  private volatile int rejectedTasks;
+
   MessageSender(OutgoingQueue outQueue, SenderDataSource ds) {
     this.outQueue = outQueue;
     this.ds = ds;
@@ -71,6 +73,10 @@ class MessageSender {
     executor.setMaximumPoolSize(size);
   }
 
+  public int getExecutorRejectedTasks() {
+    return rejectedTasks;
+  }
+
 
   private class SenderSMPPTransportObject extends OutgoingObject {
     private final SenderMessage msg;
@@ -87,12 +93,14 @@ class MessageSender {
             executor.execute(new UpdateMessageStatusTask());
           } catch (Throwable e) {
             log.error("Can't execute UpdateMessageStatusTask", e);
+            rejectedTasks++;
           }
         } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
           try {
             executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
           } catch (Throwable e) {
             log.error("Can't execute UpdateSMPPIdTask", e);
+            rejectedTasks++;
           }
         }
       }
@@ -105,6 +113,7 @@ class MessageSender {
           executor.execute(new UpdateMessageStatusTask());
         } catch (Throwable e) {
           log.error("Can't execute UpdateMessageStatusTask", e);
+          rejectedTasks++;
         }
       }
     }

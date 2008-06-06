@@ -34,6 +34,8 @@ class MessageSender {
   private String msgDestinationAbonentInvitation;
   private String msgDeliveryReport;
 
+  private volatile int rejectedTasks;
+
 
   MessageSender(SecretDataSource ds, OutgoingQueue outQueue) {
     this.ds = ds;
@@ -55,6 +57,10 @@ class MessageSender {
 
   public void setExecutorMaxPoolSize(int size) {
     executor.setMaximumPoolSize(size);
+  }
+
+  public int getExecutorRejectedTasks() {
+    return rejectedTasks;
   }
 
   public void setMsgDestinationAbonentInform(String msgDestinationAbonentInform) {
@@ -156,12 +162,14 @@ class MessageSender {
             executor.execute(new UpdateMessageStatusTask());
           } catch (Throwable e) {
             log.error("Can't execute UpdateMessageStatusTask", e);
+            rejectedTasks++;
           }
         } else if (pdu.getStatusClass() == PDU.STATUS_CLASS_NO_ERROR) {
           try {
             executor.execute(new UpdateSMPPIdTask(Long.parseLong(((SubmitResponse)pdu).getMessageId())));
           } catch (Throwable e) {
             log.error("Can't execute UpdateSMPPIdTask", e);
+            rejectedTasks++;
           }
         }
       }
@@ -174,6 +182,7 @@ class MessageSender {
           executor.execute(new UpdateMessageStatusTask());
         } catch (Throwable e) {
           log.error("Can't execute UpdateMessageStatusTask", e);
+          rejectedTasks++;
         }
       }
     }
