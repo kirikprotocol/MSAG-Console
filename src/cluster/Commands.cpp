@@ -1468,7 +1468,7 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
   si.internal =     val & 8;
 
 
-  val>>=val;
+  val>>=4;
   //printf("bindMode: ");
   switch(val)
   {
