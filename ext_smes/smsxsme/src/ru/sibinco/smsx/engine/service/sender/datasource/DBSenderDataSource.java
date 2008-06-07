@@ -24,7 +24,7 @@ public class DBSenderDataSource extends DBDataSource implements SenderDataSource
   public DBSenderDataSource() throws DataSourceException {
     super(DBSenderDataSource.class.getResourceAsStream("sender.properties"), "");
     
-    pool = ConnectionPoolFactory.createConnectionPool("sender", 10, 60000);
+    pool = ConnectionPoolFactory.createConnectionPool("sender", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
     synchronized (idLock) {

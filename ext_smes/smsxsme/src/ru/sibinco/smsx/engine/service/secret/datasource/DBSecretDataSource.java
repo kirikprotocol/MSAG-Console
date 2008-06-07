@@ -25,7 +25,7 @@ public class DBSecretDataSource extends DBDataSource implements SecretDataSource
   public DBSecretDataSource() throws DataSourceException {
     super(DBSecretDataSource.class.getResourceAsStream("secret.properties"), "");
 
-    pool = ConnectionPoolFactory.createConnectionPool("secret", 10, 60000);
+    pool = ConnectionPoolFactory.createConnectionPool("secret", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
     synchronized (idLock) {

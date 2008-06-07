@@ -22,7 +22,7 @@ public class DBBlackListDataSource extends DBDataSource implements BlackListData
   public DBBlackListDataSource() throws DataSourceException {
     super(DBBlackListDataSource.class.getResourceAsStream("blacklist.properties"), "");
 
-    pool = ConnectionPoolFactory.createConnectionPool("blackList", 10, 10000);
+    pool = ConnectionPoolFactory.createConnectionPool("blackList", Integer.MAX_VALUE, 10000);
     pool.init(1);
   }
 

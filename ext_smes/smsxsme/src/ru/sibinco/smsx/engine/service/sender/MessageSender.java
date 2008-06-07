@@ -14,6 +14,8 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * User: artem
@@ -33,7 +35,7 @@ class MessageSender {
   MessageSender(OutgoingQueue outQueue, SenderDataSource ds) {
     this.outQueue = outQueue;
     this.ds = ds;
-    this.executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10, new ThreadFactoryWithCounter("SenderMsgSender-Executor-"));
+    this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(1000), new ThreadFactoryWithCounter("SenderMsgSender-Executor-"));
   }
 
   public void sendMessage(SenderMessage message) {

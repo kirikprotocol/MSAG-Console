@@ -24,7 +24,7 @@ public class DBCalendarDataSource extends DBDataSource implements CalendarDataSo
   public DBCalendarDataSource() throws DataSourceException {
     super(DBCalendarDataSource.class.getResourceAsStream("calendar.properties"), "");
 
-    pool = ConnectionPoolFactory.createConnectionPool("calendar", 10, 60000);
+    pool = ConnectionPoolFactory.createConnectionPool("calendar", Integer.MAX_VALUE, 60000);
     pool.init(1);
 
     synchronized (idLock) {

@@ -41,6 +41,7 @@
     <copydir src="${WEB_INF}" dest="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF"/>
     <!-- Copy tools -->
     <copydir src="${tools}" dest="${SME_DISTR_DIR}/bin"/>
+    <chmod dir="${SME_DISTR_DIR}/bin" perm="ugo+rx" includes="*.sh"/>
     <!-- Copy Axis files -->
     <copydir src="${soap}" dest="${SME_DISTR_DIR}/soap"/>
     <!-- Copy scripts -->

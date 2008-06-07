@@ -19,6 +19,7 @@ class CalendarMBean extends AbstractDynamicMBean {
 
     attributes.add(new MBeanAttributeInfo("QueueSize", "java.lang.Integer", "Size of CalendarEngine messages queue", true, false, false));
     attributes.add(new MBeanAttributeInfo("EndDate", "java.util.Date", "Active period end", true, false, false));
+    attributes.add(new MBeanAttributeInfo("CurrentDate", "java.util.Date", "Current date", true, false, false));
     attributes.add(new MBeanAttributeInfo("ExecutorActiveCount", "java.util.Integer", "Response handler active count", true, false, false));
     attributes.add(new MBeanAttributeInfo("ExecutorPoolSize", "java.util.Integer", "Actual handler pool size", true, false, false));
     attributes.add(new MBeanAttributeInfo("ExecutorMaxPoolSize", "java.util.Integer", "Response handler max pool size", true, true, false));
@@ -30,6 +31,8 @@ class CalendarMBean extends AbstractDynamicMBean {
       return calendarEngine.getQueueSize();
     else if (attribute.equals("EndDate"))
       return calendarEngine.getEndDate();
+    else if (attribute.equals("CurrentDate"))
+      return calendarEngine.getCurrentDate();
     else if (attribute.equals("ExecutorActiveCount"))
       return calendarEngine.getExecutorActiveCount();
     else if (attribute.equals("ExecutorPoolSize"))

@@ -17,7 +17,7 @@ class MessagesQueue extends DelayedQueue {
   public void setMaxDate(Date maxDate) {
     synchronized(this.maxDate) {
       this.maxDate.setTime(maxDate.getTime());
-    }
+    }    
   }
 
   public boolean add(final CalendarMessage obj) {

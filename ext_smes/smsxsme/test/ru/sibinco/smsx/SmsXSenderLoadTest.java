@@ -40,7 +40,7 @@ public class SmsXSenderLoadTest {
                 for (int i=100000; i<1000000; i++) {
                   String msisdn = "+79139" + i;
 
-                  client.sendSms(msisdn, "test", false, false, calendarTest, System.currentTimeMillis() + 30000, false);
+                  client.sendSms(msisdn, "test", false, false, calendarTest, System.currentTimeMillis() + 10000, false);
 
                   synchronized(o) {
                     o.wait(delay);

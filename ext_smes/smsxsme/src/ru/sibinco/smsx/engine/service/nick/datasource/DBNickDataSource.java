@@ -22,7 +22,7 @@ public class DBNickDataSource extends DBDataSource implements NickDataSource{
   public DBNickDataSource() throws DataSourceException {
     super(DBNickDataSource.class.getResourceAsStream("nick.properties"), "");
 
-    pool = ConnectionPoolFactory.createConnectionPool("Nick", 5, 60000);
+    pool = ConnectionPoolFactory.createConnectionPool("Nick", Integer.MAX_VALUE, 60000);
     pool.init(1);
   }
 

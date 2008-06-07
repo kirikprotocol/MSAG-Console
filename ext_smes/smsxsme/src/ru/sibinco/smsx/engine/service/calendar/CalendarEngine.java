@@ -14,9 +14,7 @@ import ru.sibinco.smsx.utils.DataSourceException;
 
 import java.util.Date;
 import java.util.Iterator;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.*;
 
 /**
  * User: artem
@@ -35,7 +33,7 @@ class CalendarEngine extends IterativeWorker {
   private final CalendarDataSource ds;
   private final ThreadPoolExecutor executor;
 
-  private volatile int rejectedTasks;
+  private volatile int rejectedTasks;  
 
   CalendarEngine(OutgoingQueue outQueue, MessagesQueue messagesQueue, CalendarDataSource ds, long workingInterval) {
     super(log);
@@ -44,7 +42,7 @@ class CalendarEngine extends IterativeWorker {
     this.workingInterval = workingInterval;
     this.ds = ds;
     this.messagesQueue = messagesQueue;
-    this.executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(10, new ThreadFactoryWithCounter("CalEngine-Executor-"));
+    this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
   }
 
   protected void stopCurrentWork() {
@@ -59,7 +57,7 @@ class CalendarEngine extends IterativeWorker {
     loadList();
 
     CalendarMessage msg;
-    while (System.currentTimeMillis() < nextReloadTime.getTime() && isStarted()) {
+    while ((messagesQueue.size() > 0 || System.currentTimeMillis() < nextReloadTime.getTime()) && isStarted()) {
       if ((msg = messagesQueue.getNext()) == null)
         continue;
 
@@ -78,6 +76,10 @@ class CalendarEngine extends IterativeWorker {
 
   public Date getEndDate() {
     return nextReloadTime;
+  }
+
+  public Date getCurrentDate() {
+    return new Date();
   }
 
   public int getQueueSize() {
