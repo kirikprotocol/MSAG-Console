@@ -34,7 +34,7 @@ public class CountersSet
     failed = f;
   }
 
-  void increment(CountersSet set)
+  public void increment(CountersSet set)
   {
     generated += set.generated;
     delivered += set.delivered;

@@ -37,26 +37,21 @@
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_id")%></th>
-  <td><%if (bean.isSmeRunning()) {
-    %><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>" maxlength="10" validation="id" onkeyup="resetValidation(this)"><%
-  } else {
-    %><%=StringEncoderDecoder.encode(bean.getId())%><%
-  }%>
-  </td>
+  <td><%=StringEncoderDecoder.encode(bean.getId())%></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_name")%></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"><%
+    %><input class=txt id=name name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getName())%><%
-  }%>
+    }%>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Originating address</th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=txt name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"><%
+    %><input class=txt id=address name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"><%
   } else {
     %><%=StringEncoderDecoder.encode(bean.getAddress())%><%
   }%>
@@ -82,7 +77,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=enabled>Enabled</label></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=check type=checkbox id=enabled name=enabled value=true <%=bean.isEnabled() ? "checked" : ""%>><%
+    %><input class=check type=checkbox id=enabled name=enabled <%=bean.isEnabled() ? "checked" : ""%>><%
   } else {
     %><%=bean.isEnabled()%><%
   }%>
@@ -91,7 +86,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=transactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>><%
+    %><input class=check type=checkbox id=transactionMode name=transactionMode <%=bean.isTransactionMode() ? "checked" : ""%>><%
   } else {
     %><%=bean.isTransactionMode() ? "enabled" : "disabled"%><%
   }%>
@@ -200,13 +195,13 @@
 <%if (bean.isSmeRunning()) {%>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.transliterate_text")%></th>
-  <td><input class=check type=checkbox id=transliterate name=transliterate value=true <%=bean.isTransliterate() ? "checked" : ""%>></td>
+  <td><input class=check type=checkbox id=transliterate name=transliterate <%=bean.isTransliterate() ? "checked" : ""%>></td>
 </tr>
 <%}}%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry on fail (time)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
-    <input class=check type=checkbox id=retryOnFail name=retryOnFail value=true <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !this.checked;">
+    <input class=check type=checkbox id=retryOnFail name=retryOnFail <%=bean.isRetryOnFail() ? "checked" : ""%> onClick="document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !this.checked;">
     <input class=timeField id=retryTime name=retryTime value="<%=StringEncoderDecoder.encode(bean.getRetryTime())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button id=retryTimeButton onclick="return showTime(retryTime, false, true);">...</button>
     <script>document.getElementById('retryTime').disabled = document.getElementById('retryTimeButton').disabled = !document.getElementById('retryOnFail').checked;</script><%
   } else {
@@ -221,7 +216,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=replaceMessage>Replace message (service type)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
-    <input class=check type=checkbox id=replaceMessage name=replaceMessage value=true <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="document.getElementById('svcType').disabled = !this.checked;">
+    <input class=check type=checkbox id=replaceMessage name=replaceMessage <%=bean.isReplaceMessage() ? "checked" : ""%> onClick="document.getElementById('svcType').disabled = !this.checked;">
     <input class=txt id=svcType name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>" maxlength=5 validation="id" onkeyup="resetValidation(this)">
     <script>document.getElementById('svcType').disabled = !document.getElementById('replaceMessage').checked;</script><%
   } else {
@@ -237,7 +232,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=trackIntegrity>track integrity</label></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=check type=checkbox id=trackIntegrity name=trackIntegrity value=true <%=bean.isTrackIntegrity() ? "checked" : ""%>><%
+    %><input class=check type=checkbox id=trackIntegrity name=trackIntegrity <%=bean.isTrackIntegrity() ? "checked" : ""%>><%
   } else {
     %><%=bean.isTrackIntegrity() ? "enabled" : "disabled"%><%
   }%>
@@ -247,7 +242,7 @@
 <tr class=row<%=rowN++&1%>>
   <th><label for=keepHistory>keep messages history</label></th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=check type=checkbox id=keepHistory name=keepHistory value=true <%=bean.isKeepHistory() ? "checked" : ""%>><%
+    %><input class=check type=checkbox id=keepHistory name=keepHistory <%=bean.isKeepHistory() ? "checked" : ""%>><%
   } else {
     %><%=bean.isKeepHistory() ? "enabled" : "disabled"%><%
   }%>
@@ -298,6 +293,15 @@
   } else {
     %><%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%><%
   }%>
+  </td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>flash</th>
+  <td><%if (bean.isSmeRunning()) {
+    %><input class=check type=checkbox id=flash name=flash <%=bean.isFlash() ? "checked" : ""%>"><%
+  } else {
+    %><%=bean.isFlash() ? "enabled" : "disabled"%><%
+    }%>
   </td>
 </tr>
 </table>

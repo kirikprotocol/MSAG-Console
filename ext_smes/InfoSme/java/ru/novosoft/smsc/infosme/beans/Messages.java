@@ -4,8 +4,11 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.InfoSmeTransport;
 import ru.novosoft.smsc.infosme.backend.tables.messages.MessageFilter;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageQuery;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
-import ru.novosoft.smsc.jsp.SMSCJspException;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
@@ -16,8 +19,6 @@ import javax.servlet.jsp.JspWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.io.UnsupportedEncodingException;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 
 /**
@@ -43,7 +44,7 @@ public class Messages extends InfoSmeBean
 
   private MessageFilter  msgFilter = new MessageFilter();
   private String message2update;
-  private Collection messages = null;
+  private QueryResultSet messages = null;
 
   private String mbQuery     = null;
   private String mbResend    = null;
@@ -63,6 +64,8 @@ public class Messages extends InfoSmeBean
 
   private boolean processed = false;
 
+  private MessageDataSource ds;
+
   protected int init(List errors)
   {
     int result = super.init(errors);
@@ -79,6 +82,14 @@ public class Messages extends InfoSmeBean
       msgFilter.setFromDate(Functions.truncateTime(new Date()));
       msgFilter.setFromDateEnabled(true);
     }
+
+    try {
+        String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
+        String statsStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.storeLocation"); 
+        ds = new MessageDataSource(serviceFolder + '/' + statsStoreDir);
+      } catch (Exception e) {
+        return error("Can't init dataa source", e);
+      }
 
     return result;
   }
@@ -126,28 +137,28 @@ public class Messages extends InfoSmeBean
 
     try {
       out.clear();
-      final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
-      final Collection messages = result.getMessages();
+//      final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+//                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), 5000000);
+//      final Collection messages = result.getMessages();
+
+      QueryResultSet messages = ds.query(new MessageQuery(5000000, msgFilter, sort, 0));
 
       StringBuffer buffer = new StringBuffer();
-      Message msg;
+      MessageDataItem msg;
       for (Iterator iter = messages.iterator(); iter.hasNext();) {
 
-        msg = (Message)iter.next();
-        buffer.append(StringEncoderDecoder.encode(msg.getTaskId())).append(",")
-            .append(StringEncoderDecoder.encode(msg.getAbonent())).append(",")
-            .append(StringEncoderDecoder.encode(getStateName(msg.getState()))).append(",")
-            .append(StringEncoderDecoder.encode(convertDateToString(msg.getSendDate()))).append(",")
-            .append(StringEncoderDecoder.encode(msg.getMessage())).append('\n');
+        msg = (MessageDataItem)iter.next();
+        buffer.append(StringEncoderDecoder.encode((String)msg.getValue("taskId"))).append(",")
+            .append(StringEncoderDecoder.encode((String)msg.getValue("msisdn"))).append(",")
+            .append(StringEncoderDecoder.encode(getStateName((Message.State)msg.getValue("state")))).append(",")
+            .append(StringEncoderDecoder.encode(convertDateToString((Date)msg.getValue("date")))).append(",")
+            .append(StringEncoderDecoder.encode((String)msg.getValue("message"))).append('\n');
         out.print(buffer);
         buffer.setLength(0);
       }
 
       out.flush();
     } catch (IOException e) {
-      e.printStackTrace();
-    } catch (AdminException e) {
       e.printStackTrace();
     }
   }
@@ -183,6 +194,8 @@ public class Messages extends InfoSmeBean
       return "EXPIRED";
     else if (state == Message.State.FAILED)
       return "FAILED";
+    else if (state == Message.State.DELETED)
+      return "DELETED";
 
     return "";
   }
@@ -190,19 +203,19 @@ public class Messages extends InfoSmeBean
 
   private int processQuery() throws AdminException {
     if (mbQuery != null) { startPosition = 0; mbQuery = null; }
-    if (messages != null)
-      messages.clear();
 
-    final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
-                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), getInfoSmeContext().getMaxMessagesTotalSize()+1);
+//    final InfoSmeTransport.GetMessagesResult result = getInfoSme().getMessages(msgFilter.getTaskId(), msgFilter.getStatus(), msgFilter.getFromDate(), msgFilter.getTillDate(), msgFilter.getAddress(),
+//                                   (sort != null && sort.startsWith("-")) ? sort.substring(1) : sort, (sort == null || !sort.startsWith("-")), getInfoSmeContext().getMaxMessagesTotalSize()+1);
+//
+//    messages = result.getMessages();
 
-    messages = result.getMessages();
+      messages = ds.query(new MessageQuery(getInfoSmeContext().getMaxMessagesTotalSize()+1, msgFilter, sort, startPosition));
 
 //    if (messages.size() > getInfoSmeContext().getMaxMessagesTotalSize())
 //      return _error(new SMSCJspException("Messages size is more than " + getInfoSmeContext().getMaxMessagesTotalSize() + ", show first " + getInfoSmeContext().getMaxMessagesTotalSize() + " messages",
 //                    SMSCJspException.ERROR_CLASS_MESSAGE));
 
-    return message("Total messages count: " + result.getTotalCount());
+    return message("Total messages count: " + messages.getTotalSize());
   }
 
   private int processDelete() throws AdminException {
@@ -231,7 +244,7 @@ public class Messages extends InfoSmeBean
       return error("infosme.error.ds_msg_del_failed", e);
     }
 
-    return message(""+deleted+" messages have been deleted");
+    return message(deleted + " messages have been deleted");
   }
 
   private int deleteAll() {
@@ -289,7 +302,7 @@ public class Messages extends InfoSmeBean
     checkedSet = new HashSet(Arrays.asList(checked));
   }
 
-  public Collection getMessages() {
+  public QueryResultSet getMessages() {
     return messages;
   }
   public int getTotalSize() {

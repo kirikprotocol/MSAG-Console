@@ -79,8 +79,13 @@ public class MessageFilter implements Filter
     return false;
   }
   public boolean isItemAllowed(DataItem item) {
-    // TODO: ???
-    return false;
+    if (!item.getValue("taskId").equals(taskId))
+      return false;
+    if (address != null && !item.getValue("msisdn").equals(address))
+      return false;
+    if (status != Message.State.UNDEFINED && !item.getValue("state").equals(status))
+      return false;
+    return true;
   }
 
 }

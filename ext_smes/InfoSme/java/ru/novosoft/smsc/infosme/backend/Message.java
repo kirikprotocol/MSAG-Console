@@ -80,11 +80,12 @@ public class Message
 
     public final static State UNDEFINED  = new State(-1);
     public final static State NEW        = new State(0);
-    public final static State WAIT       = new State(10);
-    public final static State ENROUTE    = new State(20);
-    public final static State DELIVERED  = new State(30);
-    public final static State EXPIRED    = new State(40);
-    public final static State FAILED     = new State(50);
+    public final static State WAIT       = new State(1);
+    public final static State ENROUTE    = new State(2);
+    public final static State DELIVERED  = new State(3);
+    public final static State EXPIRED    = new State(4);
+    public final static State FAILED     = new State(5);
+    public final static State DELETED    = new State(6);
 
     private final int id;
 

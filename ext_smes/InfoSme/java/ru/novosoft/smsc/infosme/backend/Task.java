@@ -6,6 +6,8 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.*;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,9 +18,14 @@ import java.util.*;
 public class Task
 {
   private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
+  private final static SimpleDateFormat df = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+  private static final SimpleDateFormat activePeriodDateFormat = new SimpleDateFormat("hh:mm:ss");
+
   public static final String INFOSME_EXT_PROVIDER = "EXTERNAL";
 
-  private String id = "";
+
+
+  private final String id;
   private String name = "";
   private String address = "";
   private String provider = "";
@@ -44,13 +51,17 @@ public class Task
   private int messagesCacheSleep = 0;
   private boolean transactionMode = false;
   private boolean keepHistory = false;
+  private boolean flash = false;
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
   private boolean trackIntegrity;
   private boolean delivery = false;
+  // for new deliveries
+  private String subject;
+  private int actualRecordsSize;
 
-  public Task()
-  {
+  public Task(String id) {
+    this.id = id;
     activeWeekDays = new ArrayList();
     Functions.addValuesToCollection(this.activeWeekDays, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
     activeWeekDaysSet = new HashSet(activeWeekDays);
@@ -59,9 +70,8 @@ public class Task
 
   public Task(Config config, String id) throws Config.WrongParamTypeException, Config.ParamNotFoundException
   {
-    this();
+    this(id);
     final String prefix = TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id);
-    this.id = id;
     name = config.getString(prefix + ".name");
     try { address = config.getString(prefix + ".address"); }
     catch (Throwable th) { address = ""; }
@@ -69,6 +79,8 @@ public class Task
     enabled = config.getBool(prefix + ".enabled");
     priority = config.getInt(prefix + ".priority");
     retryOnFail = config.getBool(prefix + ".retryOnFail");
+    if (config.containsParameter(prefix + ".flash"))
+      flash = config.getBool(prefix + ".flash");
     replaceMessage = config.getBool(prefix + ".replaceMessage");
     svcType = config.getString(prefix + ".svcType");
     endDate = config.getString(prefix + ".endDate");
@@ -134,6 +146,7 @@ public class Task
     config.setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
     config.setBool(prefix + ".trackIntegrity", trackIntegrity);
     config.setBool(prefix + ".keepHistory", keepHistory);
+    config.setBool(prefix + ".flash", flash);
     config.setString(prefix + ".activeWeekDays", Functions.collectionToString(activeWeekDays, ","));
   }
 
@@ -205,9 +218,6 @@ public class Task
   public String getId() {
     return id;
   }
-  public void setId(String id) {
-    this.id = id;
-  }
 
   public String getName() {
     return name;
@@ -275,6 +285,15 @@ public class Task
   public String getEndDate() {
     return endDate;
   }
+
+  public Date getEndDateDate() {
+    try {
+      return df.parse(endDate);
+    } catch (Throwable e) {
+      return null;
+    }
+  }
+
   public void setEndDate(String endDate) {
     this.endDate = endDate;
   }
@@ -283,8 +302,20 @@ public class Task
     return startDate;
   }
 
+  public Date getStartDateDate() {
+    try {
+      return df.parse(startDate);
+    } catch (Throwable e) {
+      return null;
+    }
+  }
+
   public void setStartDate(String startDate) {
     this.startDate = startDate;
+  }
+
+  public void setStartDate(Date date) {    
+    this.startDate = df.format(date);
   }
 
   public String getRetryTime() {
@@ -311,6 +342,15 @@ public class Task
   public String getActivePeriodStart() {
     return activePeriodStart;
   }
+
+  public Date getActivePeriodStartDate() {
+    try {
+      return activePeriodDateFormat.parse(activePeriodStart);
+    } catch (ParseException e) {
+      return null;
+    }
+  }
+
   public void setActivePeriodStart(String activePeriodStart) {
     this.activePeriodStart = activePeriodStart;
   }
@@ -318,6 +358,15 @@ public class Task
   public String getActivePeriodEnd() {
     return activePeriodEnd;
   }
+
+  public Date getActivePeriodEndDate() {
+    try {
+      return activePeriodDateFormat.parse(activePeriodEnd);
+    } catch (ParseException e) {
+      return null;
+    }
+  }
+
   public void setActivePeriodEnd(String activePeriodEnd) {
     this.activePeriodEnd = activePeriodEnd;
   }
@@ -406,4 +455,35 @@ public class Task
     return activeWeekDaysSet.contains(weekday);
   }
 
+  public String getSubject() {
+    return subject;
+  }
+
+  public void setSubject(String subject) {
+    this.subject = subject;
+  }
+
+  public int getActualRecordsSize() {
+    return actualRecordsSize;
+  }
+
+  public void setActualRecordsSize(int actualRecordsSize) {
+    this.actualRecordsSize = actualRecordsSize;
+  }
+
+  public Collection getActiveWeekDaysSet() {
+    return activeWeekDaysSet;
+  }
+
+  public void setActiveWeekDaysSet(Collection activeWeekDaysSet) {
+    this.activeWeekDaysSet = activeWeekDaysSet;
+  }
+
+  public boolean isFlash() {
+    return flash;
+  }
+
+  public void setFlash(boolean flash) {
+    this.flash = flash;
+  }
 }

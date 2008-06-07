@@ -48,6 +48,8 @@ public class Options extends InfoSmeBean
   private String systemDataSourceJdbcDriver = "";
   private String systemDataSourceJdbcSource = "";
 
+  private String storeLocation;
+  private String statStoreLocation;
 
   private boolean initialized = false;
 
@@ -87,6 +89,9 @@ public class Options extends InfoSmeBean
         smscPassword = getConfig().getString("InfoSme.SMSC.password");
         tasksSwitchTimeout = getConfig().getInt("InfoSme.tasksSwitchTimeout");
         tasksTaskTablesPrefix = getConfig().getString("InfoSme.tasksTablesPrefix");
+
+        storeLocation = getConfig().getString("InfoSme.storeLocation");
+        statStoreLocation = getConfig().getString("InfoSme.statStoreLocation");
 
         systemDataSourceType = getConfig().getString("InfoSme.systemDataSource.type");
         systemDataSourceConnections = getConfig().getInt("InfoSme.systemDataSource.connections");
@@ -177,6 +182,9 @@ public class Options extends InfoSmeBean
     getConfig().setBool("InfoSme.systemDataSource.watchdog", systemDataSourceWatchdog);
     getConfig().setString("InfoSme.systemDataSource.jdbc.driver", systemDataSourceJdbcDriver);
     getConfig().setString("InfoSme.systemDataSource.jdbc.source", systemDataSourceJdbcSource);
+
+    getConfig().setString("InfoSme.storeLocation", storeLocation);
+    getConfig().setString("InfoSme.statStoreLocation", statStoreLocation);
     getInfoSmeContext().setChangedOptions(true);
     return RESULT_DONE;
   }
@@ -538,5 +546,21 @@ public class Options extends InfoSmeBean
   }
   public void setSystemDataSourceJdbcSource(String systemDataSourceJdbcSource) {
     this.systemDataSourceJdbcSource = systemDataSourceJdbcSource;
+  }
+
+  public String getStoreLocation() {
+    return storeLocation;
+  }
+
+  public void setStoreLocation(String storeLocation) {
+    this.storeLocation = storeLocation;
+  }
+
+  public String getStatStoreLocation() {
+    return statStoreLocation;
+  }
+
+  public void setStatStoreLocation(String statStoreLocation) {
+    this.statStoreLocation = statStoreLocation;
   }
 }

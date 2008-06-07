@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.util.*;
 import java.sql.SQLException;
 
+import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
+
 /**
  * Created by igork
  * Date: Jul 31, 2003
@@ -37,6 +39,7 @@ public class InfoSmeContext implements SMEAppContext
   }
 
   private final SMSCAppContext appContext;
+  private final TaskManager taskManager;
   private Config config = null;
   private InfoSme infoSme = null;
   private String providersSort = "provider";
@@ -55,6 +58,7 @@ public class InfoSmeContext implements SMEAppContext
   private boolean changedTasks = false;
   private boolean changedSchedules = false;
   private ConnectionPool dataSource = null;
+  private BlackListManager blackListManager;
   private String smeId = "InfoSme";
   //private Long appContextId = null;
 
@@ -70,6 +74,8 @@ public class InfoSmeContext implements SMEAppContext
     this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId),
         config.getString("InfoSme.Admin.host"),
         config.getInt("InfoSme.Admin.port"));
+    this.taskManager = new TaskManager(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder().getAbsolutePath());
+    this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
   }
 
   private void shutdownDataSource()
@@ -274,6 +280,14 @@ public class InfoSmeContext implements SMEAppContext
 
   public int getMaxMessagesTotalSize() {
     return maxMessagesTotalSize;
+  }
+
+  public TaskManager getTaskManager() {
+    return taskManager;
+  }
+
+  public BlackListManager getBlackListManager() {
+    return blackListManager;
   }
 
 }

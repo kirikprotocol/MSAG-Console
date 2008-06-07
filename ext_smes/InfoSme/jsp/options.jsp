@@ -103,6 +103,15 @@
   <th>SMSC connection password</th>
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Store location</th>
+  <td><input class=txt name=storeLocation value="<%=StringEncoderDecoder.encode(bean.getStoreLocation())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Statistics store location</th>
+  <td><input class=txt name=statStoreLocation value="<%=StringEncoderDecoder.encode(bean.getStatStoreLocation())%>"></td>
+</tr>
+
 </table>
 <div class=page_subtitle>System data source</div>
 <table class=properties_list <%rowN=0;%>>

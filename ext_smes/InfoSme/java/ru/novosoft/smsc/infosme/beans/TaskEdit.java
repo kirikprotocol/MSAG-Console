@@ -23,7 +23,8 @@ public class TaskEdit extends InfoSmeBean
   private String oldTask = null;
   private String oldTaskName = null;
 
-  private Task task = new Task();
+  private Task task;
+  private String taskId;
 
   protected int init(List errors)
   {
@@ -65,6 +66,8 @@ public class TaskEdit extends InfoSmeBean
 
     if (mbDone != null)      return done();
     if (mbCancel != null)    return RESULT_DONE;
+
+    taskId = task.getId();
 
     return result;
   }
@@ -125,10 +128,10 @@ public class TaskEdit extends InfoSmeBean
   }
 
   public String getId() {
-    return task.getId();
+    return taskId;
   }
   public void setId(String sectionName) {
-    this.task.setId(sectionName);
+    this.taskId = sectionName;
   }
 
   public String getAddress() {
@@ -157,17 +160,12 @@ public class TaskEdit extends InfoSmeBean
     this.task.setDelivery(delivery);
   }
 
-  public int getPriorityInt() {
-    return task.getPriority();
-  }
-  public void setPriorityInt(int priority) {
-    this.task.setPriority(priority);
-  }
+
   public String getPriority() {
     return String.valueOf(task.getPriority());
   }
-  public void setPriority(String priority)
-  {
+
+  public void setPriority(String priority) {
     try {
       this.task.setPriority(Integer.decode(priority).intValue());
     } catch (Throwable e) {
@@ -178,6 +176,7 @@ public class TaskEdit extends InfoSmeBean
   public boolean isRetryOnFail() {
     return task.isRetryOnFail();
   }
+
   public void setRetryOnFail(boolean retryOnFail) {
     this.task.setRetryOnFail(retryOnFail);
   }
@@ -185,6 +184,7 @@ public class TaskEdit extends InfoSmeBean
   public boolean isReplaceMessage() {
     return task.isReplaceMessage();
   }
+
   public void setReplaceMessage(boolean replaceMessage) {
     this.task.setReplaceMessage(replaceMessage);
   }
@@ -192,6 +192,7 @@ public class TaskEdit extends InfoSmeBean
   public String getSvcType() {
     return task.getSvcType();
   }
+
   public void setSvcType(String svcType) {
     this.task.setSvcType(svcType);
   }
@@ -199,6 +200,7 @@ public class TaskEdit extends InfoSmeBean
   public String getEndDate() {
     return task.getEndDate();
   }
+
   public void setEndDate(String endDate) {
     this.task.setEndDate(endDate);
   }
@@ -214,6 +216,7 @@ public class TaskEdit extends InfoSmeBean
   public String getRetryTime() {
     return task.getRetryTime();
   }
+
   public void setRetryTime(String retryTime) {
     this.task.setRetryTime(retryTime);
   }
@@ -221,6 +224,7 @@ public class TaskEdit extends InfoSmeBean
   public String getValidityPeriod() {
     return task.getValidityPeriod();
   }
+
   public void setValidityPeriod(String validityPeriod) {
     this.task.setValidityPeriod(validityPeriod);
   }
@@ -228,6 +232,7 @@ public class TaskEdit extends InfoSmeBean
   public String getValidityDate() {
     return task.getValidityDate();
   }
+
   public void setValidityDate(String validityDate) {
     this.task.setValidityDate(validityDate);
   }
@@ -242,6 +247,7 @@ public class TaskEdit extends InfoSmeBean
   public String getActivePeriodEnd() {
     return task.getActivePeriodEnd();
   }
+
   public void setActivePeriodEnd(String activePeriodEnd) {
     this.task.setActivePeriodEnd(activePeriodEnd);
   }
@@ -254,9 +260,11 @@ public class TaskEdit extends InfoSmeBean
     for(int i=0; i<activeWeekDays.length; i++) awd.add(activeWeekDays[i]);
     this.task.setActiveWeekDays(awd);
   }
+
   public boolean isWeekDayActive(String weekday) {
     return this.task.isWeekDayActive(weekday);
   }
+
   public String getActiveWeekDaysString()
   {
     String str = "";
@@ -278,6 +286,7 @@ public class TaskEdit extends InfoSmeBean
   public String getQuery() {
     return task.getQuery();
   }
+
   public void setQuery(String query) {
     this.task.setQuery(query);
   }
@@ -285,6 +294,7 @@ public class TaskEdit extends InfoSmeBean
   public String getTemplate() {
     return task.getTemplate();
   }
+
   public void setTemplate(String template) {
     this.task.setTemplate(template);
   }
@@ -316,9 +326,11 @@ public class TaskEdit extends InfoSmeBean
   public void setDsTimeoutInt(int dsTimeout) {
     this.task.setDsTimeout(dsTimeout);
   }
+
   public String getDsTimeout() {
     return String.valueOf(task.getDsTimeout());
   }
+
   public void setDsTimeout(String dsTimeout)
   {
     try {
@@ -414,6 +426,7 @@ public class TaskEdit extends InfoSmeBean
   public boolean isTrackIntegrity() {
     return task.isTrackIntegrity();
   }
+
   public void setTrackIntegrity(boolean trackIntegrity) {
     task.setTrackIntegrity(trackIntegrity);
   }
@@ -421,6 +434,7 @@ public class TaskEdit extends InfoSmeBean
   public boolean isKeepHistory() {
     return task.isKeepHistory();
   }
+
   public void setKeepHistory(boolean keepHistory) {
     task.setKeepHistory(keepHistory);
   }
@@ -428,7 +442,18 @@ public class TaskEdit extends InfoSmeBean
   public boolean isTransliterate() {
     return transliterate;
   }
+
   public void setTransliterate(boolean transliterate) {
     this.transliterate = transliterate;
   }
+
+  public boolean isFlash() {
+    return this.task.isFlash();
+  }
+
+  public void setFlash(boolean flash) {
+    this.task.setFlash(flash);
+  }
+
+
 }

@@ -8,9 +8,12 @@ package ru.novosoft.smsc.infosme.backend;
  * To change this template use Options | File Templates.
  */
 
+import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
+
 import java.util.Date;
 
-public class StatQuery
+public class StatQuery implements Filter
 {
   private String taskId = null;
 
@@ -58,4 +61,13 @@ public class StatQuery
     return tillDateEnabled;
   }
 
+  public boolean isEmpty() {
+    return false;
+  }
+
+  public boolean isItemAllowed(DataItem item) {
+    if (!item.getValue("taskId").equals(taskId))
+      return false;
+    return true;
+  }
 }

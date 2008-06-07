@@ -26,7 +26,8 @@ public class InfoSmeBean extends PageBean
   public static final int RESULT_MESSAGES   = PageBean.PRIVATE_RESULT + 8;
   public static final int RESULT_DELIVERIES = PageBean.PRIVATE_RESULT + 9;
   public static final int RESULT_DLSTAT     = PageBean.PRIVATE_RESULT + 10;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 11;
+  public static final int RESULT_BLACK_LIST = PageBean.PRIVATE_RESULT + 11;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 12;
 
   private String mbMenu = null;
 
@@ -81,6 +82,7 @@ public class InfoSmeBean extends PageBean
     else if ("shedules".equals(mbMenu))   result = RESULT_SHEDULES;
     else if ("messages".equals(mbMenu))   result = RESULT_MESSAGES;
     else if ("deliveries".equals(mbMenu)) result = RESULT_DELIVERIES;
+    else if ("black_list".equals(mbMenu)) result = RESULT_BLACK_LIST;
 
       mbMenu = null;
       return result;

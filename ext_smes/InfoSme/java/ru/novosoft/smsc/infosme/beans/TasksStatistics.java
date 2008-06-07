@@ -3,9 +3,15 @@ package ru.novosoft.smsc.infosme.beans;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.*;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticsDataSource;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticsQuery;
+import ru.novosoft.smsc.infosme.backend.tables.stat.StatisticDataItem;
+import ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataSource;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.jsp.JspWriter;
@@ -29,12 +35,12 @@ public class TasksStatistics extends InfoSmeBean
     private Statistics statistics = null;
     private StatQuery  query = new StatQuery();
 
-//    private InfoSme infoSme = null;
-
     private String exportFilePath = null;
 
     private String mbQuery = null;
     private String mbCancel = null;
+
+    private StatisticsDataSource ds;
 
     private boolean initialized = false;
 
@@ -43,17 +49,18 @@ public class TasksStatistics extends InfoSmeBean
         if (result != RESULT_OK)
             return result;
 
-        try {
-//          this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo("InfoSme"),
-//                                     appContext.getConfig().getString("InfoSme.Admin.host"),
-//                                     appContext.getConfig().getInt("InfoSme.Admin.port"));
-        } catch (Exception e) {
-          logger.error("Can't init InfoSme", e);
-          return RESULT_ERROR;
-        }
+      try {
+        String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
+        String statsStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.statStoreLocation");
+        ds = new StatisticsDataSource(serviceFolder + '/' + statsStoreDir);
+      } catch (Exception e) {
+        return error("Can't init dataa source", e);
+      }
 
-        if (!initialized)
-            query.setFromDate(Functions.truncateTime(new Date()));
+      if (!initialized) {
+          query.setFromDate(Functions.truncateTime(new Date()));
+          query.setFromDateEnabled(true);
+      }
 
         return RESULT_OK;
     }
@@ -89,25 +96,45 @@ public class TasksStatistics extends InfoSmeBean
       statistics = null;
       statistics = new Statistics();
 
-      final List stats =  getInfoSme().getTaskStatistics(query.getTaskId(),
-                                                    (query.isFromDateEnabled()) ? query.getFromDate() : null,
-                                                    (query.isTillDateEnabled()) ? query.getTillDate() : null);
+//      final List stats =  getInfoSme().getTaskStatistics(query.getTaskId(),
+//                                                    (query.isFromDateEnabled()) ? query.getFromDate() : null,
+//                                                    (query.isTillDateEnabled()) ? query.getTillDate() : null);
+
+      final QueryResultSet stats = ds.query(new StatisticsQuery(query));
+
+      final HashMap hourCounterSets = new HashMap();
 
       for (Iterator iter = stats.iterator(); iter.hasNext();) {
-        Statistic st = (Statistic)iter.next();
-        final Calendar newPeriod =Calendar.getInstance();
-        newPeriod.setTime(st.getPeriod());
+        StatisticDataItem st = (StatisticDataItem)iter.next();
+
+        final Calendar newPeriod = Calendar.getInstance();
+
+        newPeriod.setTime((Date)st.getValue("period"));
 
         int hour = newPeriod.get(Calendar.HOUR_OF_DAY);
 
-        HourCountersSet hourCounters = new HourCountersSet(st.getGenerated(), st.getDelivered(), st.getRetried(), st.getFailed(), hour);
-        if (dateCounters == null) { // on first iteration
-          dateCounters = new DateCountersSet(newPeriod.getTime());
-        } else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
-          statistics.addDateStat(dateCounters);
-          dateCounters = new DateCountersSet(newPeriod.getTime());
+        HourCountersSet s = new HourCountersSet(((Integer)st.getValue("generated")).intValue(),
+                                             ((Integer)st.getValue("delivered")).intValue(),
+                                             ((Integer)st.getValue("retried")).intValue(),
+                                             ((Integer)st.getValue("failed")).intValue(),hour);
+
+        HourCountersSet hourCounters = (HourCountersSet)hourCounterSets.get(newPeriod.getTime());
+        if (hourCounters == null) {
+          hourCounters = s;
+          hourCounterSets.put(newPeriod.getTime(), s);
+
+          if (dateCounters == null) { // on first iteration
+            dateCounters = new DateCountersSet(newPeriod.getTime());
+          } else if (needChangeDate(oldPeriod, newPeriod)) { // on date changed
+            statistics.addDateStat(dateCounters);
+            dateCounters = new DateCountersSet(newPeriod.getTime());
+          }
+          dateCounters.addHourStat(hourCounters);
+        } else {
+          dateCounters.increment(s);
+          hourCounters.increment(s);
         }
-        dateCounters.addHourStat(hourCounters);
+
         oldPeriod = newPeriod;
       }
 

@@ -40,7 +40,10 @@
       response.sendRedirect("index.jsp");
       return;
     case InfoSmeBean.RESULT_DELIVERIES:
-      response.sendRedirect("deliveries.jsp");
+      response.sendRedirect("deliveries_new.jsp");
+      return;
+    case InfoSmeBean.RESULT_BLACK_LIST:
+      response.sendRedirect("black_list.jsp");
       return;
     default:
       defaultError = true;

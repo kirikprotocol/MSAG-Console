@@ -63,7 +63,7 @@ public class Deliveries extends InfoSmeBean
 
 //    private Config backup = null;
 
-    private Task task = new Task();
+    private Task task;
 
     protected int init(List errors)
     {
@@ -133,7 +133,11 @@ public class Deliveries extends InfoSmeBean
       incomingFile = null;
 
       transliterate = false;
-      task = new Task();
+      try {
+        task = getInfoSmeContext().getTaskManager().createTask();
+      } catch (AdminException e) {
+        e.printStackTrace();
+      }
       resetTask(request);
     }
 
@@ -592,10 +596,10 @@ public class Deliveries extends InfoSmeBean
         errors.clear();
 
         String taskId = task.getId();
-        if (taskId == null || (taskId = taskId.trim()).length() <= 0) {
-            task.setId(""); error("infosme.error.task_id_undefined");
-        }
-        else task.setId(taskId);
+//        if (taskId == null || (taskId = taskId.trim()).length() <= 0) {
+//            task.setId(""); error("infosme.error.task_id_undefined");
+//        }
+//        else task.setId(taskId);
 
         String taskName = task.getName();
         if (taskName == null || (taskName = taskName.trim()).length() <= 0) {
@@ -667,9 +671,9 @@ public class Deliveries extends InfoSmeBean
     public String getId() {
       return task.getId();
     }
-    public void setId(String sectionName) {
-      this.task.setId(sectionName);
-    }
+//    public void setId(String sectionName) {
+//      this.task.setId(sectionName);
+//    }
 
     public String getName() {
       return task.getName();

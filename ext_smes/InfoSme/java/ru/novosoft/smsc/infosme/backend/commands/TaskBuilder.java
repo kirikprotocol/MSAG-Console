@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.Message;
 import ru.novosoft.smsc.infosme.backend.Task;
+import ru.novosoft.smsc.infosme.backend.BlackListManager;
 import ru.novosoft.smsc.util.Transliterator;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
@@ -53,11 +54,18 @@ public class TaskBuilder extends Thread {
     System.out.println("Task builder started");
     final String fileName = new File(file).getName();
 
-    final Task task = new Task();
+    final Task task;
+    try {
+      task = smeContext.getTaskManager().createTask();
+    } catch (AdminException e) {
+      e.printStackTrace();
+      return;
+    }
+
     int i = fileName.lastIndexOf('.');
     String taskName = (i >= 0) ? fileName.substring(0, i) : fileName;
     System.out.println("Task name=" + taskName);
-    task.setId(taskName);
+//    task.setId(taskName);
     task.setName(taskName);
 
     System.out.println("Copy file: " + file);
@@ -167,16 +175,20 @@ public class TaskBuilder extends Thread {
     return (sb.length() == 0) ? null : sb.toString().trim();
   }
 
-  public List getMessages(Task task, InputStreamReader is, int limit, Date sendDate) throws IOException {
+  public List getMessages(Task task, InputStreamReader is, int limit, Date sendDate) throws IOException, AdminException {
     final List list = new ArrayList();
     try {
       String line;
+      BlackListManager blm = smeContext.getBlackListManager();
       for (int i=0; i < limit && ((line = readLine(is)) != null); i++) {
 
         StringTokenizer st = new StringTokenizer(line, "|");
         if (st.hasMoreTokens()) {
           final Message msg = new Message();
-          msg.setAbonent(st.nextToken());
+          String msisdn = st.nextToken();
+          if (blm.contains(msisdn))
+            continue;
+          msg.setAbonent(msisdn);
           msg.setMessage(st.hasMoreTokens() ? st.nextToken() : task.getText());
           msg.setState(Message.State.NEW);
           msg.setSendDate(sendDate);
@@ -212,11 +224,11 @@ public class TaskBuilder extends Thread {
   public Collection checkAndPrepareTask(Task task, InfoSmeContext smeContext, long contentCount, boolean transliterate, boolean admin) throws AdminException {
     ArrayList errors = new ArrayList();
     String taskId = task.getId();
-    if (taskId == null || (taskId = taskId.trim()).length() <= 0) {
-      task.setId("");
-      errors.add("infosme.error.task_id_undefined");
-    } else
-      task.setId(taskId);
+//    if (taskId == null || (taskId = taskId.trim()).length() <= 0) {
+//      task.setId("");
+//      errors.add("infosme.error.task_id_undefined");
+//    } else
+//      task.setId(taskId);
 
     String taskName = task.getName();
     if (taskName == null || (taskName = taskName.trim()).length() <= 0) {

@@ -4,6 +4,7 @@
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
                  ru.novosoft.smsc.infosme.beans.Messages,
                  java.io.*"%>
+<%@ page import="ru.novosoft.smsc.infosme.backend.tables.messages.MessageDataItem"%>
 <jsp:useBean id="bean" scope="request" class="ru.novosoft.smsc.infosme.beans.Messages" />
 <% if (!bean.isProcessed()) {%>
   <jsp:setProperty name="bean" property="*"/>
@@ -97,7 +98,7 @@ page_menu_space(out);
 page_menu_end(out);
 if (bean.isInitialized()) {
 %><div class=content><%
-Collection allMessages = bean.getMessages();
+QueryResultSet allMessages = bean.getMessages();
 if (allMessages == null || allMessages.size() == 0)
 {%><span style='color:blue;'><%= getLocString("infosme.msg.no_messages_matched")%></span><%}
 else
@@ -123,15 +124,15 @@ else
   int end = start + bean.getPageSizeInt();
   int pos = 0;
   for (Iterator i=allMessages.iterator(); i.hasNext() && pos < end; pos++) {
-    Message message = (Message)i.next();
+    MessageDataItem message = (MessageDataItem)i.next();
     if (pos >= start) {
     %><tr class=row<%=rowN++&1%>>
-      <td><input class=check type=checkbox name=checked value="<%=message.getTaskId()%>" <%=bean.isMessageChecked(message.getTaskId()) ? "checked" : ""%>></td>
-      <td><%=StringEncoderDecoder.encode(message.getTaskId())%></td>
-      <td><%=StringEncoderDecoder.encode(message.getAbonent())%></td>
-      <td><%=StringEncoderDecoder.encode(bean.getStateName(message.getState()))%></td>
-      <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString(message.getSendDate()))%></td>
-      <td><%=StringEncoderDecoder.encode(message.getMessage())%></td>
+      <td><input class=check type=checkbox name=checked value="<%=message.getValue("id")%>" <%=bean.isMessageChecked(String.valueOf(message.getValue("id"))) ? "checked" : ""%>></td>
+      <td><%=StringEncoderDecoder.encode(String.valueOf(message.getValue("id")))%></td>
+      <td><%=StringEncoderDecoder.encode((String)message.getValue("msisdn"))%></td>
+      <td><%=StringEncoderDecoder.encode(bean.getStateName((Message.State)message.getValue("state")))%></td>
+      <td nowrap><%=StringEncoderDecoder.encode(bean.convertDateToString((Date)message.getValue("date")))%></td>
+      <td><%=StringEncoderDecoder.encode((String)message.getValue("message"))%></td>
     </tr>
 <%  }
   }%>
