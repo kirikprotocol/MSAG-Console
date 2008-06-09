@@ -209,7 +209,7 @@ uint32_t InfrastructureImpl::GetOperatorID(Address addr)
     uint8_t mask_ptr = a.length();
 
     bool found;
-    while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 6)
+    while(!(found = mask_hash->Exists(a.c_str())) && mask_ptr > 5)
     {
 //        smsc_log_debug(logger, "Trying mask: %s", a.c_str());
         a[--mask_ptr] = '?';
