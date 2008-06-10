@@ -495,6 +495,7 @@ int SmppInputThread::Execute()
                     case SmppCommandSet::BIND_RECIEVER:
                       if(!(si.bindMode==smeRX || si.bindMode==smeTRX))
                       {
+                        info2(log,"SmppProxy: '%s' wrong bind mode %d",si.systemId.c_str(),si.bindMode);
                         resppdu.get_header().
                           set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
@@ -505,6 +506,7 @@ int SmppInputThread::Execute()
                         {
                           if(proxy->getBindMode()!=proxyTransmitter)
                           {
+                            info2(log,"SmppProxy: '%s' rebind->already bound",si.systemId.c_str());
                             resppdu.get_header().
                               set_commandStatus(SmppStatusSet::ESME_RALYBND);
                             err=true;
@@ -527,6 +529,7 @@ int SmppInputThread::Execute()
                     case SmppCommandSet::BIND_TRANSMITTER:
                       if(!(si.bindMode==smeTX || si.bindMode==smeTRX))
                       {
+                        info2(log,"SmppProxy: '%s' wrong bind mode %d",si.systemId.c_str(),si.bindMode);
                         resppdu.get_header().
                           set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
@@ -537,6 +540,7 @@ int SmppInputThread::Execute()
                         {
                           if(proxy->getBindMode()!=proxyReceiver)
                           {
+                            info2(log,"SmppProxy: '%s' rebind->already bound",si.systemId.c_str());
                             resppdu.get_header().
                               set_commandStatus(SmppStatusSet::ESME_RALYBND);
                             err=true;
@@ -559,12 +563,14 @@ int SmppInputThread::Execute()
                     case SmppCommandSet::BIND_TRANCIEVER:
                       if(si.bindMode!=smeTRX)
                       {
+                        info2(log,"SmppProxy: '%s' wrong bind mode %d",si.systemId.c_str(),si.bindMode);
                         resppdu.get_header().
                           set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
                       }
                       if(rebindproxy && proxy->isDualChannel())
                       {
+                        info2(log,"SmppProxy: '%s' transceiver rebind->dual channel",si.systemId.c_str());
                         err=true;
                         resppdu.get_header().
                           set_commandStatus(SmppStatusSet::ESME_RALYBND);
