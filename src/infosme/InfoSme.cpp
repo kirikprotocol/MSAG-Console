@@ -305,6 +305,11 @@ public:
         sms.setIntProperty(Tag::SMPP_PRIORITY, 0);
         sms.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 1);
 
+        if(info.flash)
+        {
+          sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
+        }
+
         const char* out = message.c_str();
         int outLen = message.length();
         char* msgBuf = 0;

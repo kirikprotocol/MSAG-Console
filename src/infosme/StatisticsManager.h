@@ -14,6 +14,7 @@
 #include <logger/Logger.h>
 
 #include "InfoSmeAdmin.h"
+#include "core/buffers/File.hpp"
 
 namespace smsc { namespace infosme
 {
@@ -38,6 +39,9 @@ namespace smsc { namespace infosme
         std::string storeLocation;
 
         InfoSmeAdmin* admin;
+
+        File currentFile;
+        int currentHour;
 
         short   currentIndex;
         bool    bExternalFlush;

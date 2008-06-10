@@ -495,12 +495,12 @@ namespace smsc { namespace infosme
         virtual void deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
                                                                const InfoSme_T_SearchCriterion& searchCrit);
 
-        virtual void insertRecordIntoTasksStat(uint32_t taskId,
+        /*virtual void insertRecordIntoTasksStat(uint32_t taskId,
                                                uint32_t period,
                                                uint32_t generated,
                                                uint32_t delivered,
                                                uint32_t retried,
-                                               uint32_t failed);
+                                               uint32_t failed);*/
 
         virtual Array<std::string> getTaskMessages(uint32_t taskId,
                                                    const InfoSme_T_SearchCriterion& searchCrit);

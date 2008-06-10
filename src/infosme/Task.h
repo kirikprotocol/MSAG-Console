@@ -251,7 +251,8 @@ namespace infosme
 
         bool changeDeliveryMessageInfoByRecordId(uint8_t msgState,
                                                  time_t unixTime,
-                                                 const std::string& recordId);
+                                                 const std::string& recordId,
+                                                 uint64_t& newMsgId);
 
         bool changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
                                                           time_t unixTime,

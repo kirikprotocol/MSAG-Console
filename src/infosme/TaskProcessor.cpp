@@ -375,6 +375,34 @@ TaskProcessor::controlTrafficSpeedByRegion(Task* task, Message& message)
   }
 }
 
+struct MessageGuard{
+  MessageGuard(Task* argTask,uint64_t argMsgId):task(argTask),msgId(argMsgId),messageProcessed(false)
+  {
+  }
+
+  ~MessageGuard()
+  {
+    if(!messageProcessed)
+    {
+      time_t retryTime=task->getInfo().retryTime;
+      if(retryTime==0)
+      {
+        retryTime=60*60;
+      }
+      task->retryMessage(msgId,time(NULL)+retryTime);
+    }
+  }
+
+  void processed()
+  {
+    messageProcessed=true;
+  }
+
+  Task* task;
+  uint64_t msgId;
+  bool messageProcessed;
+};
+
 bool TaskProcessor::processTask(Task* task)
 {
     __require__(task);
@@ -387,14 +415,15 @@ bool TaskProcessor::processTask(Task* task)
         return false;
     }
 
+    MessageGuard msguard(task,message.id);
+
     MutexGuard msGuard(messageSenderLock);
     if (messageSender)
     {
         if ( controlTrafficSpeedByRegion(task, message) != TRAFFIC_SUSPENDED ) {
           int seqNum = messageSender->getSequenceNumber();
-          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%lld,sq=%d for '%s': %s", 
+          smsc_log_debug(logger, "TaskId=[%d/%s]: Sending message #%llx,sq=%d for '%s': %s", 
                          info.uid,info.name.c_str(), message.id, seqNum, message.abonent.c_str(), message.message.c_str());
-
           {
             {
               MutexGuard snGuard(taskIdsBySeqNumMonitor);
@@ -418,16 +447,18 @@ bool TaskProcessor::processTask(Task* task)
         
           if (!messageSender->send(message.abonent, message.message, info, seqNum))
           {
-            smsc_log_error(logger, "Failed to send message #%lld for '%s'", 
+            smsc_log_error(logger, "Failed to send message #%llx for '%s'", 
                            message.id, message.abonent.c_str());
 
             MutexGuard snGuard(taskIdsBySeqNumMonitor);
-            if (taskIdsBySeqNum.Exist(seqNum)) {
+            if (taskIdsBySeqNum.Exist(seqNum))
+            {
               taskIdsBySeqNum.Delete(seqNum);
               taskIdsBySeqNumMonitor.notifyAll();
             }
             return false;
           }
+          msguard.processed();
           smsc_log_info(logger, "TaskId=[%d/%s]: Sent message #%llx sq=%d for '%s'", 
                         info.uid,info.name.c_str(), message.id, seqNum, message.abonent.c_str());
         } else {
@@ -455,21 +486,30 @@ void TaskProcessor::processWaitingEvents(time_t time)
         ResponceTimer timer;
         {
             MutexGuard respGuard(responceWaitQueueLock);
-            if (responceWaitQueue.Count() > 0) {
+            if (responceWaitQueue.Count() > 0)
+            {
                 timer = responceWaitQueue[0];
-                if (timer.timer > time) break;
+                if (timer.timer > time)
+                {
+                  break;
+                }
                 responceWaitQueue.Shift(timer);
             }
-            else break;
+            else
+            {
+              break;
+            }
         }
 
         bool needProcess = false;
         {
-            MutexGuard guard(taskIdsBySeqNumMonitor);
-            needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
+          MutexGuard guard(taskIdsBySeqNumMonitor);
+          needProcess = taskIdsBySeqNum.Exist(timer.seqNum);
         }
         if (needProcess)
-            processResponce(timer.seqNum, false, true, true, "", true);
+        {
+          processResponce(timer.seqNum, false, true, true, "", true);
+        }
         
         {
             MutexGuard respGuard(responceWaitQueueLock);
@@ -1064,6 +1104,7 @@ void TaskProcessor::addDeliveryMessages(uint32_t taskId,
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::addDeliveryMessages::: can't get task by taskId='%d'", taskId);
   task->insertDeliveryMessage(msgState, abonentAddress, messageDate, msg);
+  statistics->incGenerated(taskId);
 }
 
 void TaskProcessor::changeDeliveryMessageInfoByRecordId(uint32_t taskId,
@@ -1074,7 +1115,14 @@ void TaskProcessor::changeDeliveryMessageInfoByRecordId(uint32_t taskId,
   TaskGuard taskGuard = getTask(taskId);
   Task* task = taskGuard.get();
   if (!task) throw Exception("TaskProcessor::changeDeliveryMessageInfoByRecordId::: can't get task by taskId='%d'", taskId);
-  task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId);
+  uint64_t newMsgId;
+  if(task->changeDeliveryMessageInfoByRecordId(msgState, unixTime, recordId,newMsgId))
+  {
+    smsc_log_debug(logger,"msgId=#%s changed to #%llx",recordId.c_str(),newMsgId);
+  }else
+  {
+    smsc_log_debug(logger,"changeDeliveryMessageInfoByRecordId failed msgId=#%s",recordId.c_str());
+  }
 }
 
 void TaskProcessor::changeDeliveryMessageInfoByCompositCriterion(uint32_t taskId,
@@ -1109,6 +1157,8 @@ void TaskProcessor::deleteDeliveryMessagesByCompositCriterion(uint32_t taskId,
 extern const char* INSERT_TASK_STAT_STATE_SQL;
 extern const char* INSERT_TASK_STAT_STATE_ID;
 
+
+/*
 void TaskProcessor::insertRecordIntoTasksStat(uint32_t taskId,
                                               uint32_t period,
                                               uint32_t generated,
@@ -1116,7 +1166,6 @@ void TaskProcessor::insertRecordIntoTasksStat(uint32_t taskId,
                                               uint32_t retried,
                                               uint32_t failed)
 {
-/*
   std::auto_ptr<Statement> statement(dsIntConnection->createStatement(INSERT_TASK_STAT_STATE_SQL));
   if (!statement.get())
     throw Exception("Failed to obtain statement for statistics update");
@@ -1133,9 +1182,9 @@ void TaskProcessor::insertRecordIntoTasksStat(uint32_t taskId,
 
   statement->executeUpdate();
   !!TODO!! STATS! :(
-  */
   
 }
+  */
 
 Array<std::string> TaskProcessor::getTaskMessages(const uint32_t taskId,
                                                   const InfoSme_T_SearchCriterion& searchCrit)

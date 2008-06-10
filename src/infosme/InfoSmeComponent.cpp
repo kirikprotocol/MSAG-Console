@@ -121,7 +121,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
                                     delete_delivery_messages_params, StringType);
 
     // intrerface to add statistic record
-    Parameters add_statistic_record_params;
+    /*Parameters add_statistic_record_params;
     add_statistic_record_params[ARGUMENT_NAME_ID]      = Parameter(ARGUMENT_NAME_ID, StringType);
     add_statistic_record_params[ARGUMENT_PERIOD]       = Parameter(ARGUMENT_PERIOD, LongType);
     add_statistic_record_params[ARGUMENT_GENERATED]    = Parameter(ARGUMENT_GENERATED, LongType);
@@ -129,7 +129,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     add_statistic_record_params[ARGUMENT_RETRIED]      = Parameter(ARGUMENT_RETRIED, LongType);
     add_statistic_record_params[ARGUMENT_FAILED]       = Parameter(ARGUMENT_FAILED, LongType);
     Method add_statistic_record ((unsigned)addStatisticRecordMethod, "addStatisticRecord",
-                                 add_statistic_record_params, StringType);
+                                 add_statistic_record_params, StringType);*/
 
     // interface for select delivery messages
     Parameters message_criterion_params;
@@ -187,7 +187,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[add_delivery_message.getName()]         = add_delivery_message;
     methods[change_delivery_message_info.getName()] = change_delivery_message_info;
     methods[delete_delivery_messages.getName()]     = delete_delivery_messages;
-    methods[add_statistic_record.getName()]         = add_statistic_record;
+    //methods[add_statistic_record.getName()]         = add_statistic_record;
     methods[select_task_messages.getName()]         = select_task_messages;
     methods[select_tasks_statistic.getName()]       = select_tasks_statistic;
     methods[end_delivery_messages_generation.getName()] = end_delivery_messages_generation;
@@ -268,9 +268,9 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case deleteDeliveryMessagesMethod:
           deleteDeliveryMessages(args);
           break;
-        case addStatisticRecordMethod:
-          addStatisticRecord(args);
-          break;
+        //case addStatisticRecordMethod:
+          //addStatisticRecord(args);
+          //break;
         case selectTaskMessagesMethod:
           return selectTaskMessages(args);
         case selectTasksStatisticMethod:
@@ -715,7 +715,7 @@ void InfoSmeComponent::deleteDeliveryMessages(const Arguments& args)
   }
 }
 
-void InfoSmeComponent::addStatisticRecord(const Arguments& args)
+/*void InfoSmeComponent::addStatisticRecord(const Arguments& args)
 {
   uint32_t period, generated, delivered, retried, failed;
 
@@ -767,7 +767,7 @@ void InfoSmeComponent::addStatisticRecord(const Arguments& args)
   }
 
   admin.insertRecordIntoTasksStat(atoi(taskId.c_str()), period, generated, delivered, retried, failed);
-}
+}*/
 
 Variant InfoSmeComponent::selectTaskMessages(const Arguments& args)
 {

@@ -34,8 +34,12 @@ namespace infosme{
       std::string message;
       std::string regionId;
 
-      Message(uint64_t anId=0, std::string anAbonent="", std::string aMessage="", std::string aRegionId="")
-        : id(anId), date(0),abonent(anAbonent), message(aMessage), regionId(aRegionId) {}
+      Message():id(0),date(0)
+      {
+      }
+
+      //Message(uint64_t anId=0, std::string anAbonent="", std::string aMessage="", std::string aRegionId="")
+      //  : id(anId), date(0),abonent(anAbonent), message(aMessage), regionId(aRegionId) {}
   };
 
   struct TaskInfo
@@ -46,6 +50,7 @@ namespace infosme{
       int         priority;
 
       bool    retryOnFail, replaceIfPresent, trackIntegrity, transactionMode, keepHistory;
+      bool    flash;
 
       time_t  endDate;            // full date/time
       time_t  retryTime;          // only HH:mm:ss in seconds
@@ -66,12 +71,11 @@ namespace infosme{
       int     messagesCacheSize, messagesCacheSleep;
 
       TaskInfo()
-          : uid(0), name(""), enabled(true), priority(0),
+          : uid(0), enabled(true), priority(0),
             retryOnFail(false), replaceIfPresent(false),
-            trackIntegrity(false), transactionMode(false), keepHistory(false),
+            trackIntegrity(false), transactionMode(false), keepHistory(false),flash(false),
             endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
             activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
-            tablePrefix(""), querySql(""), msgTemplate(""), svcType(""), address(""),
             dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1),
             messagesCacheSize(100), messagesCacheSleep(0) {};
   };

@@ -110,10 +110,16 @@ void Task::init(ConfigView* config, uint32_t taskId)
     info.transactionMode = config->getBool("transactionMode");
     info.trackIntegrity = config->getBool("trackIntegrity");
     info.keepHistory = config->getBool("keepHistory");
+    try
+    {
+      info.flash = config->getBool("flash");
+    } catch(std::exception& e)
+    {
+    }
     info.endDate = parseDateTime(config->getString("endDate"));
 
     /*
-    !!TODO!!
+    !!TODO!!??
     if (info.endDate>0 && time(0)>=info.endDate)
     {
       // preload InfoSme_T_ storage without index building
@@ -324,7 +330,24 @@ bool Task::beginGeneration(Statistics* statistics)
         SQLGetAdapter       getAdapter(rs);
         ContextEnvironment  context;
 
+        typedef std::map<std::string,uint64_t> AbntMap;
+        AbntMap abntMap;
+
+        CsvStore::FullScan fs(store);
+        {
+          Message msg;
+          uint8_t state;
+          while(fs.Next(state,msg))
+          {
+            if(state<ENROUTE)
+            {
+              abntMap.insert(AbntMap::value_type(msg.abonent,msg.id));
+            }
+          }
+        }
+
         int uncommited = 0;
+        time_t sendTime=time(NULL)+60;
         while (isInGeneration() && rs->fetchNext())
         {
             const char* abonentAddress = rs->getString(1);
@@ -341,17 +364,25 @@ bool Task::beginGeneration(Statistics* statistics)
               {
                 if (info.replaceIfPresent)
                 {
-                  //!!!TODO!!!
+                  AbntMap::iterator it=abntMap.find(abonentAddress);
+                  if(it!=abntMap.end())
+                  {
+                    store.setMsgState(it->second,DELETED);
+                  }
                 }
                 Message msg;
                 msg.abonent=abonentAddress;
                 msg.message=message;
 
-                store.createMessage(time(NULL),msg);
+                store.createMessage(sendTime,msg);
 
                 if (statistics) statistics->incGenerated(info.uid, 1);
 
                 totalGenerated++;
+                if(totalGenerated%500==0)
+                {
+                  sendTime++;
+                }
               }
             }
         }
@@ -381,6 +412,7 @@ bool Task::beginGeneration(Statistics* statistics)
         bInGeneration = false;
     }
     generationEndEvent.Signal();
+    store.closeAllFiles();
     return (bGenerationSuccess && totalGenerated > 0);
 }
 void Task::endGeneration()
@@ -441,10 +473,15 @@ void Task::resetWaiting()
 
 bool Task::retryMessage(uint64_t msgId, time_t nextTime)
 {
-    smsc_log_debug(logger, "retryMessage method being called on task '%d/%s' for id=%lld",
+    smsc_log_debug(logger, "retryMessage method being called on task '%d/%s' for id=%llx",
                  info.uid,info.name.c_str(), msgId);
 
     bool result = false;
+    time_t now=time(NULL);
+    if(nextTime<now+60)
+    {
+      nextTime=now+60;
+    }
     try
     {
       Message msg;
@@ -468,11 +505,11 @@ bool Task::retryMessage(uint64_t msgId, time_t nextTime)
 bool Task::finalizeMessage(uint64_t msgId, MessageState state)
 {   
     if (state == NEW || state == WAIT || state == ENROUTE) {
-        smsc_log_warn(logger, "Invalid state=%d to finalize message on task '%d/%s' for id=%lld",
+        smsc_log_warn(logger, "Invalid state=%d to finalize message on task '%d/%s' for id=%llx",
                       state, info.uid,info.name.c_str(), msgId);
         return false;
     } else {
-        smsc_log_debug(logger, "finalizeMessage(%d) method being called on task '%d/%s' for id=%lld",
+        smsc_log_debug(logger, "finalizeMessage(%d) method being called on task '%d/%s' for id=%llx",
                        state, info.uid,info.name.c_str(), msgId);
     }
 
@@ -503,13 +540,14 @@ bool Task::finalizeMessage(uint64_t msgId, MessageState state)
 
 bool Task::enrouteMessage(uint64_t msgId)
 {
-    smsc_log_debug(logger, "enrouteMessage method being called on task '%d/%s' for id=%lld",
+    smsc_log_debug(logger, "enrouteMessage method being called on task '%d/%s' for id=%llx",
                  info.uid,info.name.c_str(), msgId);
 
     bool result = false;
     try
     {
-      result=store.enrouteMessage(msgId);
+      store.enrouteMessage(msgId);
+      result=true;
     }
     catch (std::exception& exc)
     {
@@ -696,6 +734,11 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
 
   if (msg.length() > 0)
   {
+    time_t now=time(NULL);
+    if(messageDate<now+60)
+    {
+      messageDate=now+60;
+    }
     Message message;
     message.abonent=address;
     message.message=msg;
@@ -708,19 +751,24 @@ bool Task::insertDeliveryMessage(uint8_t msgState,
 }
 bool Task::changeDeliveryMessageInfoByRecordId(uint8_t msgState,
                                                time_t unixTime,
-                                               const std::string& recordId)
+                                               const std::string& recordId,uint64_t& newMsgId)
 {
   uint64_t msgId = atol(recordId.c_str());
-  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method being called on task '%d/%s' for id=%lld",
+  smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByRecordId method being called on task '%d/%s' for id=%llx",
                  info.uid,info.name.c_str(), msgId);
 
   try
   {
     Message msg;
     uint8_t state;
+    time_t now=time(NULL);
+    if(unixTime<now+60)
+    {
+      unixTime=now+60;
+    }
     store.loadMessage(msgId,msg,state);
     store.setMsgState(msgId,DELETED);
-    store.createMessage(unixTime,msg,msgState);
+    newMsgId=store.createMessage(unixTime,msg,msgState);
     return true;
   }
   catch (std::exception& exc) {
@@ -749,6 +797,8 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
 
   CsvStore::FullScan fs(store);
 
+  std::set<uint64_t> processedMsgs;
+
   uint8_t state;
   Message msg;
   while (fs.Next(state,msg))
@@ -756,17 +806,29 @@ bool Task::changeDeliveryMessageInfoByCompositCriterion(uint8_t msgState,
     smsc_log_debug(logger, "Task::changeDeliveryMessageInfoByCompositCriterion::: check next record");
     if ( doesMessageConformToCriterion(state,msg, searchCrit) )
     {
+      if(processedMsgs.find(msg.id)!=processedMsgs.end())
+      {
+        continue;
+      }
       char recordId[32];
       sprintf(recordId, "%lld", msg.id);
 
+      uint64_t newMsgId;
       changeDeliveryMessageInfoByRecordId(msgState,
                                           unixTime,
-                                          recordId);
+                                          recordId,
+                                          newMsgId);
+      processedMsgs.insert(newMsgId);
     }
-    if ( ++numOfRowsProcessed % 5000 == 0 )
-      smsc::util::millisleep(1);
+    numOfRowsProcessed++;
+    if ( numOfRowsProcessed % 5000 == 0 )
+    {
+        smsc::util::millisleep(1);
+    }
     if ( numOfRowsProcessed % 100 == 0 )
-      --unixTime;
+    {
+        unixTime++;
+    }
   }
   return true;
 }
@@ -917,7 +979,7 @@ Task::selectDeliveryMessagesByCompositCriterion(const InfoSme_T_SearchCriterion&
     if ( doesMessageConformToCriterion(state,msg, searchCrit) )
     {
       if ( msgLimit && fetchedCount++ >= msgLimit ) continue;
-      smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%llx,%d,%s,%lld,%s] into messagesList",
+      smsc_log_debug(logger, "Task::selectDeliveryMessagesByCompositCriterion::: add message [%llx,%d,%s,%ld,%s] into messagesList",
                      msg.id, state, msg.abonent.c_str(), msg.date, msg.message.c_str());
       messagesList.push_back(MessageDescription(msg.id,
                                                 state,
@@ -979,6 +1041,7 @@ Task::endDeliveryMessagesGeneration()
 
   MutexGuard guard(inGenerationLock);
   bInGeneration = false; bGenerationSuccess = true;
+  store.closeAllFiles();
   /*  Manager& configManager = Manager::getInstance();
 
   configManager.setBool(("InfoSme.Tasks."+info.id+".taskLoaded").c_str(), true);
@@ -989,6 +1052,10 @@ Task::endDeliveryMessagesGeneration()
 void
 Task::destroy_InfoSme_T_Storage()
 {
+  if(info.keepHistory)
+  {
+    return;
+  }
   smsc_log_debug(logger, "Task::destroy_InfoSme_T_Storage method being called on task '%d/%s'", info.uid,info.name.c_str());
 
   try {
@@ -1011,16 +1078,32 @@ bool Task::changeDeliveryTextMessageByCompositCriterion(const std::string& newTe
   uint8_t state;
   Message msg;
   int fetched = 0, numOfRowsProcessed=0;
+  time_t date=time(NULL)+60;
+  std::set<uint64_t> processedMsgs;
   while (fs.Next(state,msg))
   {
     smsc_log_debug(logger, "Task::changeDeliveryTextMessageByCompositCriterion::: check next record");
     if ( doesMessageConformToCriterion(state,msg, searchCrit) )
     {
+      if(processedMsgs.find(msg.id)!=processedMsgs.end())
+      {
+        continue;
+      }
       store.setMsgState(msg.id,DELETED);
-      store.createMessage(msg.date,msg,state);
+      msg.date=date;
+      msg.message=newTextMsg;
+      processedMsgs.insert(store.createMessage(msg.date,msg,state));
     }
-    if ( ++numOfRowsProcessed % 5000 == 0 )
+    numOfRowsProcessed++;
+    if(numOfRowsProcessed%500==0)
+    {
+      date++;
+    }
+
+    if ( numOfRowsProcessed % 5000 == 0 )
+    {
       smsc::util::millisleep(1);
+    }
   }
   return true;
 }

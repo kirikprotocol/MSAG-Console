@@ -209,8 +209,8 @@ const char* INSERT_TASK_STAT_STATE_SQL = (const char*)
 
 void StatisticsManager::flushCounters(short index)
 {
-    uint32_t period = calculatePeriod();
-    smsc_log_debug(logger, "Flushing statistics for period: period=%lu / time=%lu, index=%d", period, time(NULL),index);
+    //uint32_t period = calculatePeriod();
+    smsc_log_debug(logger, "Flushing statistics for period: time=%lu, index=%d", time(NULL),index);
 
     try
     {
@@ -226,11 +226,9 @@ void StatisticsManager::flushCounters(short index)
         File::MkDir(fullPath.c_str());
       }
       char fileName[32];
-      sprintf(fileName,"%02d%02d%02d.csv",t.tm_hour,t.tm_min,t.tm_sec);
+      sprintf(fileName,"%02d.csv",t.tm_hour);
       fullPath+='/';
       fullPath+=fileName;
-      File f;
-      bool opened=false;
       int taskId;
       TaskStat* st;
       IntHash<TaskStat>::Iterator it=statistics[index].First();
@@ -238,25 +236,35 @@ void StatisticsManager::flushCounters(short index)
       std::string line;
       while(it.Next(taskId,st))
       {
-        if(!opened)
+        if(!currentFile.isOpened())
         {
-          f.WOpen(fullPath.c_str());
-          const char* header="TASK_ID,TASK_NAME,PERIOD,GENERATED,DELIVERED,RETRIED,FAILED\n";
-          f.Write(header,strlen(header));
-          opened=true;
+          if(File::Exists(fullPath.c_str()))
+          {
+            currentFile.Append(fullPath.c_str());
+          }else
+          {
+            currentFile.WOpen(fullPath.c_str());
+            const char* header="TASK_ID,TASK_NAME,MINUTE,GENERATED,DELIVERED,RETRIED,FAILED\n";
+            currentFile.Write(header,strlen(header));
+          }
+          currentHour=t.tm_hour;
         }
         sprintf(buf,"%u,",taskId);
         line=buf;
         line+='"';
         line+=admin->getTaskInfo(taskId).name;
         line+="\",";
-        sprintf(buf,"%d,%d,%d,%d,%d\n",period,st->generated,st->delivered,st->retried,st->failed);
+        sprintf(buf,"%d,%d,%d,%d,%d\n",t.tm_min,st->generated,st->delivered,st->retried,st->failed);
         line+=buf;
-        f.Write(line.c_str(),line.length());
+        currentFile.Write(line.c_str(),line.length());
       }
-      if(opened)
+      if(currentFile.isOpened())
       {
-        f.Flush();
+        currentFile.Flush();
+      }
+      if(currentHour!=t.tm_hour && currentFile.isOpened())
+      {
+        currentFile.Close();
       }
 
 /*

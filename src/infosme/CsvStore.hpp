@@ -32,7 +32,7 @@ public:
     }
     log=smsc::logger::Logger::getInstance("csvstore");
     unknownDirs=false;
-    currentReadFile=0;
+    curDir=dirs.end();
   }
   ~CsvStore();
   void Init();
@@ -40,23 +40,95 @@ public:
 
   bool getNextMessage(Message& message);
   void setMsgState(uint64_t msgId,uint8_t state);
-  void createMessage(time_t date,const Message& message,uint8_t state=NEW);
-  bool enrouteMessage(uint64_t msgId);
+  uint64_t createMessage(time_t date,const Message& message,uint8_t state=NEW);
+  void enrouteMessage(uint64_t msgId);
   void loadMessage(uint64_t msgId,Message& message,uint8_t& state);
   void finalizeMsg(uint64_t msgId,time_t date,uint8_t state);
 
-  typedef std::list<std::string> StrList;
+  void closeAllFiles();
 
+  struct Directory;
+  struct CsvFile{
+    CsvFile(int argDate,int argHour,Directory* argDir):readAll(false),processed(false),date(argDate),hour(argHour),dir(argDir)
+    {
+      openMessages=0;
+      curMsg=msgMap.end();
+    }
+    bool readAll;
+    bool processed;
+    int date;//0xYYmmdd00
+    int hour;//0xhh
+    Directory* dir;
+    buf::File f;
+
+    struct Record{
+      Message msg;
+      uint8_t state;
+    };
+
+    typedef std::map<uint64_t,Record> MessageMap;
+
+    MessageMap msgMap;
+    MessageMap::iterator curMsg;
+    int openMessages;
+
+    bool isOpened()
+    {
+      return f.isOpened();
+    }
+
+    bool haveMessages()
+    {
+      return curMsg!=msgMap.end();
+    }
+
+    std::string fileName()
+    {
+      char buf[32];
+      sprintf(buf,"%02x%s.csv",hour,processed?"processed":"");
+      return buf;
+    }
+
+    std::string fullPath()
+    {
+      return dir->dirPath+'/'+fileName();
+    }
+
+    enum GetRecordResult{
+      grrNoMoreMessages,
+      grrRecordOk,
+      grrRecordNotReady
+    };
+
+    bool Open(bool cancreate=false);
+    void Close(bool processed=true);
+    GetRecordResult getNextRecord(Record& rec,time_t date,bool onlyNew=true);
+    void ReadRecord(Record& rec);
+    static void ReadRecord(buf::File& f,Record& rec);
+    Record& findRecord(uint64_t msgId);
+    uint64_t AppendRecord(uint8_t state,time_t date,const Message& message);
+    void setState(uint64_t msgId,uint8_t state);
+    void setStateAndDate(uint64_t msgId,uint8_t state,time_t date);
+    uint8_t getState(uint64_t msgId);
+  };
+
+  typedef std::map<int,CsvFile*> FileMap;
   struct Directory{
     Directory()
     {
       unknownFiles=false;
     }
+    ~Directory()
+    {
+      FileMap::iterator end=files.end();
+      for(FileMap::iterator it=files.begin();it!=end;it++)
+      {
+        delete it->second;
+      }
+    }
     int date;
     std::string dirPath;
-    StrList files;
-    StrList opened;
-    StrList arcFiles;
+    FileMap files;
     bool unknownFiles;
   };
 
@@ -67,31 +139,10 @@ protected:
 
   smsc::logger::Logger* log;
 
-  typedef std::map<std::string,Directory*> DirMap;
-  DirMap dirs,pdirs;
-
-  struct CsvFile{
-    CsvFile():readAll(false)
-    {
-    }
-    int date;//0xYYmmdd00
-    int hour;//0xhh
-    buf::File f;
-    uint64_t fileSize;
-    uint64_t readOff;
-    std::string fileName;
-
-    typedef std::set<uint64_t> OffSet;
-    OffSet openMessages;
-    bool readAll;
-
-    bool Open(const char* argFileName,bool cancreate=true);
-    uint64_t ReadRecord(uint8_t& state,Message& message);
-    void AppendRecord(uint8_t state,time_t date,const Message& message);
-    bool setState(uint64_t off,uint8_t state);
-    bool setStateAndDate(uint64_t off,uint8_t state,time_t date);
-    uint8_t getState(uint64_t off);
-  };
+  typedef std::map<int,Directory*> DirMap;
+  DirMap dirs;
+  DirMap::iterator curDir;
+  FileMap::iterator curFile;
 
 
   uint32_t mkFileKey(CsvFile* f)
@@ -102,30 +153,31 @@ protected:
     return rv;
   }
 
-  void closeFile(uint32_t fk);
+  typedef std::set<uint32_t> CloseSet;
+  CloseSet closeSet;
 
-  typedef std::map<uint32_t,CsvFile*> OpenedFilesMap;
-  OpenedFilesMap ofMap;
+  CsvFile& findFile(const char* func,uint64_t msgId,uint64_t& off);
 
-  CsvFile* currentReadFile;
+  void canClose(CsvFile& file);
+  void removeCanClose(CsvFile& file);
 public:
 
   friend struct FullScan;
   class FullScan{
   protected:
     CsvStore& store;
-    int didx;
-    int fidx;
     CsvStore::DirMap::iterator dit;
-    CsvStore::StrList::iterator fit;
+    CsvStore::FileMap::iterator fit;
     CsvFile f;
-    bool first;
+    FullScan(const FullScan&);
   public:
-    FullScan(CsvStore& argStore):store(argStore)
+    FullScan(CsvStore& argStore):store(argStore),f(0,0,0)
     {
-      didx=0;
-      fidx=0;
-      first=true;
+      dit=store.dirs.begin();
+      if(dit!=store.dirs.end())
+      {
+        fit=dit->second->files.begin();
+      }
     }
     bool Next(uint8_t& state,Message& msg);
   };

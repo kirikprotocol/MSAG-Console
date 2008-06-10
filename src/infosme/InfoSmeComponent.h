@@ -72,7 +72,7 @@ namespace smsc { namespace infosme
         void addDeliveryMessages(const Arguments& args);
         void changeDeliveryMessageInfo(const Arguments& args);
         void deleteDeliveryMessages(const Arguments& args);
-        void addStatisticRecord(const Arguments& args);
+        //void addStatisticRecord(const Arguments& args);
         Variant selectTaskMessages(const Arguments& args);
         Variant selectTasksStatistic(const Arguments& args);
         void endDeliveryMessagesGeneration(const Arguments& args);
