@@ -34,21 +34,29 @@ char * vform(const char* format, va_list args,char* buf,size_t bufsize)
   size_t size = bufsize;
   char* buffer = buf;//new char[size];
 
-  while (1) {
-    int n = ::vsnprintf(buffer, size, format, args);
+  try
+  {
 
-    // If that worked, return a string.
-    if ((n > -1) && (static_cast<size_t>(n) < size)) {
-      return buffer;
+    while (1) {
+      int n = ::vsnprintf(buffer, size, format, args);
+  
+      // If that worked, return a string.
+      if ((n > -1) && (static_cast<size_t>(n) < size)) {
+        return buffer;
+      }
+  
+      // Else try again with more space.
+      size = (n > -1) ?
+        n + 1 :   // ISO/IEC 9899:1999
+      size * 2; // twice the old size
+  
+      if(buffer!=buf)delete [] buffer;
+      buffer = new char[size];
     }
-
-    // Else try again with more space.
-    size = (n > -1) ?
-      n + 1 :   // ISO/IEC 9899:1999
-    size * 2; // twice the old size
-
-    if(buffer!=buf)delete [] buffer;
-    buffer = new char[size];
+  } catch(std::exception& e)
+  {
+    sprintf(buf,"out of memory");
+    return buf;
   }
 }
 
