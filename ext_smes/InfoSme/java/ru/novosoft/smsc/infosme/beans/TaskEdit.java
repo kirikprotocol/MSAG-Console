@@ -1,8 +1,11 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.infosme.backend.Task;
+import ru.novosoft.smsc.infosme.backend.TaskManager;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.Transliterator;
+import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.admin.AdminException;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -23,8 +26,35 @@ public class TaskEdit extends InfoSmeBean
   private String oldTask = null;
   private String oldTaskName = null;
 
-  private Task task;
-  private String taskId;
+  private String taskId = "";
+  private String name = "";
+  private String address = "";
+  private String provider = "";
+  private boolean enabled = false;
+  private boolean delivery = false;
+  private int priority = 0;
+  private boolean retryOnFail = false;
+  private boolean replaceMessage = false;
+  private String svcType = "";
+  private String endDate = "";
+  private String startDate = "";
+  private String retryTime = "";
+  private String validityPeriod = "";
+  private String validityDate = "";
+  private String activePeriodStart = "";
+  private String activePeriodEnd = "";
+  private String[] activeWeekDays = new String[0];
+  private String query = "";
+  private String template = "";
+  private int dsTimeout = 0;
+  private int messagesCacheSize = 0;
+  private int messagesCacheSleep = 0;
+  private boolean transactionMode = false;
+  private int uncommitedInGeneration = 0;
+  private int uncommitedInProcess = 0;
+  private boolean trackIntegrity = false;
+  private boolean keepHistory = false;
+  private boolean flash = false;
 
   protected int init(List errors)
   {
@@ -33,24 +63,15 @@ public class TaskEdit extends InfoSmeBean
       return result;
 
     if (!initialized) {
-      if (!create) {
-        if (getId() == null || getId().length() == 0)
-          return error("infosme.error.task_id_undefined");
-        oldTask = getId();
 
-        try {
-          task = new Task(getConfig(), getId());
-          oldTaskName = getName();
-        } catch (Exception e) {
-          logger.error(e);
-          return error("infosme.error.config_param", e.getMessage());
-        }
-      } else {
-        task.setPriority(1);
-        task.setMessagesCacheSize(100);
-        task.setMessagesCacheSleep(1);
-        task.setUncommitedInGeneration(1);
-        task.setUncommitedInProcess(1);
+      try {
+        Task task = getTask();
+        oldTaskName = task.getName();
+        oldTask = task.getId();
+        taskToPage(task);
+      } catch (Exception e) {
+        logger.error(e);
+        return error("infosme.error.config_param", e.getMessage());
       }
     }
     if (oldTask == null) oldTask = "";
@@ -59,23 +80,109 @@ public class TaskEdit extends InfoSmeBean
     return result;
   }
 
+  private Task getTask() throws Config.WrongParamTypeException, Config.ParamNotFoundException, AdminException {
+    if (!create)
+      return new Task(getConfig(), getId());
+    else {
+      Task task = getInfoSmeContext().getTaskManager().createTask();
+      task.setPriority(1);
+      task.setMessagesCacheSize(100);
+      task.setMessagesCacheSleep(1);
+      task.setUncommitedInGeneration(1);
+      task.setUncommitedInProcess(1);
+      return task;
+    }
+  }
+
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
 
-    if (mbDone != null)      return done();
-    if (mbCancel != null)    return RESULT_DONE;
-
-    taskId = task.getId();
+    if (mbDone != null) result = done();
+    else if (mbCancel != null) result = RESULT_DONE;
 
     return result;
+  }
+
+  private void taskToPage(Task task) {
+    taskId = task.getId();
+    name = task.getName();
+    address = task.getAddress();
+    provider = task.getProvider();
+    enabled = task.isEnabled();
+    delivery = task.isDelivery();
+    priority = task.getPriority();
+    retryOnFail = task.isRetryOnFail();
+    replaceMessage = task.isReplaceMessage();
+    svcType = task.getSvcType();
+    endDate = task.getEndDate();
+    startDate = task.getStartDate();
+    retryTime = task.getRetryTime();
+    validityPeriod = task.getValidityPeriod();
+    validityDate = task.getValidityDate();
+    activePeriodStart = task.getActivePeriodStart();
+    activePeriodEnd = task.getActivePeriodEnd();
+    activeWeekDays = new String[task.getActiveWeekDays().size()];
+    int i=0;
+    for (Iterator iter = task.getActiveWeekDays().iterator(); iter.hasNext();) {
+      activeWeekDays[i] = (String)iter.next();
+      i++;
+    }
+    query = task.getQuery();
+    template = task.getTemplate();
+    dsTimeout = task.getDsTimeout();
+    messagesCacheSize = task.getMessagesCacheSize();
+    messagesCacheSleep = task.getMessagesCacheSleep();
+    transactionMode = task.isTransactionMode();
+    uncommitedInGeneration = task.getUncommitedInGeneration();
+    uncommitedInProcess = task.getUncommitedInProcess();
+    trackIntegrity = task.isTrackIntegrity();
+    keepHistory = task.isKeepHistory();
+    flash = task.isFlash();
+    System.out.println("Load flash = " + flash);
+  }
+
+  private void pageToTask(Task task) {
+    task.setName(name);
+    task.setAddress(address);
+    task.setProvider(provider);
+    task.setEnabled(enabled);
+    task.setDelivery(delivery);
+    task.setPriority(priority);
+    task.setRetryOnFail(retryOnFail);
+    task.setReplaceMessage(replaceMessage);
+    task.setSvcType(svcType);
+    task.setEndDate(endDate);
+    task.setStartDate(startDate);
+    task.setRetryTime(retryTime);
+    task.setValidityPeriod(validityPeriod);
+    task.setValidityDate(validityDate);
+    task.setActivePeriodStart(activePeriodStart);
+    task.setActivePeriodEnd(activePeriodEnd);
+    Collection awd = new ArrayList();
+    for(int i=0; i<activeWeekDays.length; i++) awd.add(activeWeekDays[i]);
+    task.setActiveWeekDays(awd);
+    task.setQuery(query);
+    task.setTemplate(template);
+    task.setDsTimeout(dsTimeout);
+    task.setMessagesCacheSize(messagesCacheSize);
+    task.setMessagesCacheSleep(messagesCacheSleep);
+    task.setTransactionMode(transactionMode);
+
+    task.setUncommitedInGeneration(uncommitedInGeneration);
+    task.setUncommitedInProcess(uncommitedInProcess);
+    task.setTrackIntegrity(trackIntegrity);
+    task.setKeepHistory(keepHistory);
+    task.setFlash(flash);
   }
 
   protected int done()
   {
     if (getId() == null || getId().length() == 0)
       return error("infosme.error.task_id_undefined");
+    final Task task = new Task(getId());
+    pageToTask(task);
     if (!create) { // Edit task
         if (!oldTaskName.equals(getName()) && task.isContainsInConfigByName(getConfig()))
           return error("Task with name='"+getName()+"' already exists. Please specify another name");
@@ -91,6 +198,7 @@ public class TaskEdit extends InfoSmeBean
           return error("Task with name='"+getName()+"' already exists. Please specify another name");
     }
     if (transliterate) task.setTemplate(Transliterator.translit(task.getTemplate()));
+    System.out.println("Save flash = " + task.isFlash());
     task.storeToConfig(getConfig());
     getInfoSmeContext().setChangedTasks(true);
     return RESULT_DONE;
@@ -130,173 +238,173 @@ public class TaskEdit extends InfoSmeBean
   public String getId() {
     return taskId;
   }
-  public void setId(String sectionName) {
-    this.taskId = sectionName;
+  public void setId(String id) {
+    this.taskId = id;
   }
 
   public String getAddress() {
-    return task.getAddress();
+    return address;
   }
   public void setAddress(String address) {
-    this.task.setAddress(address);
+    this.address = address;
   }
   public String getProvider() {
-    return task.getProvider();
+    return provider;
   }
   public void setProvider(String provider) {
-    this.task.setProvider(provider);
+    this.provider = provider;
   }
 
   public boolean isEnabled() {
-    return task.isEnabled();
+    return enabled;
   }
   public void setEnabled(boolean enabled) {
-    this.task.setEnabled(enabled);
+    this.enabled = enabled;
   }
   public boolean isDelivery() {
-    return task.isDelivery();
+    return delivery;
   }
   public void setDelivery(boolean delivery) {
-    this.task.setDelivery(delivery);
+    this.delivery = delivery;
   }
 
 
   public String getPriority() {
-    return String.valueOf(task.getPriority());
+    return String.valueOf(priority);
   }
 
   public void setPriority(String priority) {
     try {
-      this.task.setPriority(Integer.decode(priority).intValue());
+      this.priority = Integer.decode(priority).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set priority to value \"" + priority + "\"", e);
     }
   }
 
   public boolean isRetryOnFail() {
-    return task.isRetryOnFail();
+    return retryOnFail;
   }
 
   public void setRetryOnFail(boolean retryOnFail) {
-    this.task.setRetryOnFail(retryOnFail);
+    this.retryOnFail = retryOnFail;
   }
 
   public boolean isReplaceMessage() {
-    return task.isReplaceMessage();
+    return replaceMessage;
   }
 
   public void setReplaceMessage(boolean replaceMessage) {
-    this.task.setReplaceMessage(replaceMessage);
+    this.replaceMessage = replaceMessage;
   }
 
   public String getSvcType() {
-    return task.getSvcType();
+    return svcType;
   }
 
   public void setSvcType(String svcType) {
-    this.task.setSvcType(svcType);
+    this.svcType = svcType;
   }
 
   public String getEndDate() {
-    return task.getEndDate();
+    return endDate;
   }
 
   public void setEndDate(String endDate) {
-    this.task.setEndDate(endDate);
+    this.endDate = endDate;
   }
 
   public String getStartDate() {
-    return task.getStartDate();
+    return startDate;
   }
 
   public void setStartDate(String startDate) {
-    this.task.setStartDate(startDate);
+    this.startDate = startDate;
   }
 
   public String getRetryTime() {
-    return task.getRetryTime();
+    return retryTime;
   }
 
   public void setRetryTime(String retryTime) {
-    this.task.setRetryTime(retryTime);
+    this.retryTime = retryTime;
   }
 
   public String getValidityPeriod() {
-    return task.getValidityPeriod();
+    return validityPeriod;
   }
 
   public void setValidityPeriod(String validityPeriod) {
-    this.task.setValidityPeriod(validityPeriod);
+    this.validityPeriod = validityPeriod;
   }
 
   public String getValidityDate() {
-    return task.getValidityDate();
+    return validityDate;
   }
 
   public void setValidityDate(String validityDate) {
-    this.task.setValidityDate(validityDate);
+    this.validityDate = validityDate;
   }
 
   public String getActivePeriodStart() {
-    return task.getActivePeriodStart();
+    return activePeriodStart;
   }
   public void setActivePeriodStart(String activePeriodStart) {
-    this.task.setActivePeriodStart(activePeriodStart);
+    this.activePeriodStart = activePeriodStart;
   }
 
   public String getActivePeriodEnd() {
-    return task.getActivePeriodEnd();
+    return activePeriodEnd;
   }
 
   public void setActivePeriodEnd(String activePeriodEnd) {
-    this.task.setActivePeriodEnd(activePeriodEnd);
+    this.activePeriodEnd = activePeriodEnd;
   }
 
   public String[] getActiveWeekDays() {
-    return (String[])(this.task.getActiveWeekDays().toArray());
+    return activeWeekDays;
   }
   public void setActiveWeekDays(String[] activeWeekDays) {
-    Collection awd = new ArrayList();
-    for(int i=0; i<activeWeekDays.length; i++) awd.add(activeWeekDays[i]);
-    this.task.setActiveWeekDays(awd);
+    this.activeWeekDays = activeWeekDays;
   }
 
   public boolean isWeekDayActive(String weekday) {
-    return this.task.isWeekDayActive(weekday);
+    for(int i=0; i<activeWeekDays.length; i++)
+      if (activeWeekDays[i].equals(weekday))
+        return true;
+    return false;
   }
 
   public String getActiveWeekDaysString()
   {
     String str = "";
-    Collection awd = this.task.getActiveWeekDays();
-    int total = (awd == null) ? 0:awd.size();
+    int total = activeWeekDays.length;
     if (total > 0) {
       int added=0;
-      if (task.isWeekDayActive("Mon")) { str += "Monday";    if (++added < total) str += ", "; }
-      if (task.isWeekDayActive("Tue")) { str += "Tuesday";   if (++added < total) str += ", "; }
-      if (task.isWeekDayActive("Wed")) { str += "Wednesday"; if (++added < total) str += ", "; }
-      if (task.isWeekDayActive("Thu")) { str += "Thursday";  if (++added < total) str += ", "; }
-      if (task.isWeekDayActive("Fri")) { str += "Friday";    if (++added < total) str += ", "; }
-      if (task.isWeekDayActive("Sat")) { str += "Saturday";  if (++added < total) str += ", "; }
-      if (task.isWeekDayActive("Sun"))   str += "Sunday";
+      if (isWeekDayActive("Mon")) { str += "Monday";    if (++added < total) str += ", "; }
+      if (isWeekDayActive("Tue")) { str += "Tuesday";   if (++added < total) str += ", "; }
+      if (isWeekDayActive("Wed")) { str += "Wednesday"; if (++added < total) str += ", "; }
+      if (isWeekDayActive("Thu")) { str += "Thursday";  if (++added < total) str += ", "; }
+      if (isWeekDayActive("Fri")) { str += "Friday";    if (++added < total) str += ", "; }
+      if (isWeekDayActive("Sat")) { str += "Saturday";  if (++added < total) str += ", "; }
+      if (isWeekDayActive("Sun"))   str += "Sunday";
     }
     return str;
   }
 
   public String getQuery() {
-    return task.getQuery();
+    return query;
   }
 
   public void setQuery(String query) {
-    this.task.setQuery(query);
+    this.query = query;
   }
 
   public String getTemplate() {
-    return task.getTemplate();
+    return template;
   }
 
   public void setTemplate(String template) {
-    this.task.setTemplate(template);
+    this.template = template;
   }
 
   public String getMbDone() {
@@ -314,129 +422,129 @@ public class TaskEdit extends InfoSmeBean
   }
 
   public String getName() {
-    return task.getName();
+    return name;
   }
   public void setName(String name) {
-    this.task.setName(name);
+    this.name = name;
   }
 
   public int getDsTimeoutInt() {
-    return task.getDsTimeout();
+    return dsTimeout;
   }
   public void setDsTimeoutInt(int dsTimeout) {
-    this.task.setDsTimeout(dsTimeout);
+    this.dsTimeout = dsTimeout;
   }
 
   public String getDsTimeout() {
-    return String.valueOf(task.getDsTimeout());
+    return String.valueOf(dsTimeout);
   }
 
   public void setDsTimeout(String dsTimeout)
   {
     try {
-      this.task.setDsTimeout(Integer.decode(dsTimeout).intValue());
+      this.dsTimeout = Integer.decode(dsTimeout).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set dsOwnTimeout to value \"" + dsTimeout + "\"", e);
     }
   }
 
   public int getMessagesCacheSizeInt() {
-    return task.getMessagesCacheSize();
+    return messagesCacheSize;
   }
   public void setMessagesCacheSizeInt(int messagesCacheSize) {
-    this.task.setMessagesCacheSize(messagesCacheSize);
+    this.messagesCacheSize = messagesCacheSize;
   }
 
   public int getMessagesCacheSleepInt() {
-    return task.getMessagesCacheSleep();
+    return messagesCacheSleep;
   }
   public void setMessagesCacheSleepInt(int messagesCacheSleep) {
-    this.task.setMessagesCacheSleep(messagesCacheSleep);
+    this.messagesCacheSleep = messagesCacheSleep;
   }
 
   public boolean isTransactionMode() {
-    return task.isTransactionMode();
+    return transactionMode;
   }
   public void setTransactionMode(boolean transactionMode) {
-    this.task.setTransactionMode(transactionMode);
+    this.transactionMode = transactionMode;
   }
 
   public int getUncommitedInGenerationInt() {
-    return task.getUncommitedInGeneration();
+    return uncommitedInGeneration;
   }
   public void setUncommitedInGenerationInt(int uncommitedInGeneration) {
-    this.task.setUncommitedInGeneration(uncommitedInGeneration);
+    this.uncommitedInGeneration = uncommitedInGeneration;
   }
 
   public int getUncommitedInProcessInt() {
-    return task.getUncommitedInProcess();
+    return uncommitedInProcess;
   }
   public void setUncommitedInProcessInt(int uncommitedInProcess) {
-    this.task.setUncommitedInProcess(uncommitedInProcess);
+    this.uncommitedInProcess = uncommitedInProcess;
   }
 
   public String getMessagesCacheSize() {
-    return String.valueOf(task.getMessagesCacheSize());
+    return String.valueOf(messagesCacheSize);
   }
   public void setMessagesCacheSize(String messagesCacheSize)
   {
     try {
-      this.task.setMessagesCacheSize(Integer.decode(messagesCacheSize).intValue());
+      this.messagesCacheSize = Integer.decode(messagesCacheSize).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set messagesCacheSize to value \"" + messagesCacheSize + "\"", e);
     }
   }
 
   public String getMessagesCacheSleep() {
-    return String.valueOf(task.getMessagesCacheSleep());
+    return String.valueOf(messagesCacheSleep);
   }
   public void setMessagesCacheSleep(String messagesCacheSleep)
   {
     try {
-      this.task.setMessagesCacheSleep(Integer.decode(messagesCacheSleep).intValue());
+      this.messagesCacheSleep = Integer.decode(messagesCacheSleep).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set messagesCacheSleep to value \"" + messagesCacheSleep + "\"", e);
     }
   }
 
   public String getUncommitedInGeneration() {
-    return String.valueOf(task.getUncommitedInGeneration());
+    return String.valueOf(uncommitedInGeneration);
   }
   public void setUncommitedInGeneration(String uncommitedInGeneration)
   {
     try {
-      this.task.setUncommitedInGeneration(Integer.decode(uncommitedInGeneration).intValue());
+      this.uncommitedInGeneration = Integer.decode(uncommitedInGeneration).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
     }
   }
 
   public String getUncommitedInProcess() {
-    return String.valueOf(task.getUncommitedInProcess());
+    return String.valueOf(uncommitedInProcess);
   }
   public void setUncommitedInProcess(String uncommitedInProcess)
   {
     try {
-      this.task.setUncommitedInProcess(Integer.decode(uncommitedInProcess).intValue());
+      this.uncommitedInProcess = Integer.decode(uncommitedInProcess).intValue();
     } catch (Throwable e) {
       logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInProcess + "\"", e);
     }
   }
 
   public boolean isTrackIntegrity() {
-    return task.isTrackIntegrity();
+    return trackIntegrity;
   }
 
   public void setTrackIntegrity(boolean trackIntegrity) {
-    task.setTrackIntegrity(trackIntegrity);
+    this.trackIntegrity = trackIntegrity;
   }
 
   public boolean isKeepHistory() {
-    return task.isKeepHistory();
+    return keepHistory;
   }
 
   public void setKeepHistory(boolean keepHistory) {
-    task.setKeepHistory(keepHistory);
+    this.keepHistory = keepHistory;
   }
 
   public boolean isTransliterate() {
@@ -448,12 +556,10 @@ public class TaskEdit extends InfoSmeBean
   }
 
   public boolean isFlash() {
-    return this.task.isFlash();
+    return flash;
   }
 
   public void setFlash(boolean flash) {
-    this.task.setFlash(flash);
+    this.flash = flash;
   }
-
-
 }

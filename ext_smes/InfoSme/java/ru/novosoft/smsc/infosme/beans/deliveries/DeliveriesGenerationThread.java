@@ -155,8 +155,10 @@ public class DeliveriesGenerationThread extends Thread {
               i++;
             }
 
-            if (started && messages.size() > 0)
+            if (started && messages.size() > 0) {
               infoSmeContext.getInfoSme().addDeliveryMessages(t.getId(), messages);
+              curTime = new Date(curTime.getTime() + 1000);
+            }
 
             if (msisdn == null)
               break;

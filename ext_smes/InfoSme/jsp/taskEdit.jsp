@@ -37,7 +37,7 @@
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_id")%></th>
-  <td><%=StringEncoderDecoder.encode(bean.getId())%></td>
+  <td><input class=txt id=id name=id readonly value="<%=StringEncoderDecoder.encode(bean.getId())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.task_name")%></th>
@@ -298,7 +298,7 @@
 <tr class=row<%=rowN++&1%>>
   <th>flash</th>
   <td><%if (bean.isSmeRunning()) {
-    %><input class=check type=checkbox id=flash name=flash <%=bean.isFlash() ? "checked" : ""%>"><%
+    %><input class=check type=checkbox id=flash name=flash <%=bean.isFlash() ? "checked" : ""%>><%
   } else {
     %><%=bean.isFlash() ? "enabled" : "disabled"%><%
     }%>
