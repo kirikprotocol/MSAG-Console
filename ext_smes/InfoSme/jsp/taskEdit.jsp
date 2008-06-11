@@ -162,7 +162,11 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.start_date")%></th>
+  <% if (bean.isCreate()) {%>
+  <td nowrap><input class=calendarField id=startDate name=startDate value="<%=bean.getStartDate()%>"><button class=calendarButton type=button onclick="return showCalendar(startDate, false, true);">...</button></td>
+  <% } else {%>
   <td nowrap><input class=calendarField id=startDate name=startDate value="<%=bean.getStartDate()%>" readonly></td>
+  <% } %>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><%= getLocString("infosme.label.end_date")%></th>
