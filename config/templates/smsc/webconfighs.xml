@@ -110,4 +110,18 @@
     <param name="csvFileDir" type="string">@localstore.dir@/snmp</param>
     <param name="csvFileRollInterval" type="int">60</param>
   </section>
+  
+  <section name="personalization">
+    <param name="host" type="string">@host</param>
+    <param name="port" type="string">@port</param>
+    <param name="timeout" type="string">@timeout</param>
+    <param name="minConnections" type="string">@minConnections</param>
+    <param name="maxConnections" type="string">@maxConnections</param>
+    <param name="checkConnections" type="string">@checkConnections</param>
+    <param name="backgroundConnectMode" type="string">@backgroundConnectMode</param>
+    <param name="maxIdleTime" type="string">@maxIdleTime</param>
+    <param name="maxClientConnectTime" type="string">@maxClientConnectMode</param>
+    <param name="poolControllerInterval" type="string">@poolControllerInterval</param>
+    <param name="maxShutdownTime" type="string">@maxShutdownTime</param>
+  </section>
 </config>
