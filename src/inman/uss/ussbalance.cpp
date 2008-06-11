@@ -15,6 +15,7 @@ using smsc::inman::uss::USSSrvCfgReader;
 
 #include "USSManService.hpp"
 #include "UssURCRegInit.hpp"
+#include "USSManConnect.hpp"
 
 static smsc::inman::uss::USSManService* service = 0;
 
@@ -61,6 +62,7 @@ int main(int argc, char** argv)
       exit(-1);
   }
 
+  smsc::inman::uss::DuplicateRequestChecker::getInstance(); // initialize Singleton
   try {
     sigset_t allBlockedSigs, oldMask;
     sigfillset(&allBlockedSigs);
