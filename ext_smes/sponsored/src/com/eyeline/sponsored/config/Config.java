@@ -25,7 +25,6 @@ public class Config {
   private String storageLogin;
   private String storagePwd;
   private int storageConnTimeout;
-  private int storagePoolSize;
 
   private String fileStorageStoreDir;
 
@@ -53,7 +52,6 @@ public class Config {
     storageLogin = storage.getString("login");
     storagePwd = storage.getString("password");
     storageConnTimeout = storage.getInt("connectionTimeout");
-    storagePoolSize = storage.getInt("poolSize");
 
     final XmlConfigSection fileStorage = config.getSection("file_storage");
     if (fileStorage == null)
@@ -108,10 +106,6 @@ public class Config {
 
   public int getStorageConnTimeout() {
     return storageConnTimeout;
-  }
-
-  public int getStoragePoolSize() {
-    return storagePoolSize;
   }
 
   public String getFileStorageStoreDir() {

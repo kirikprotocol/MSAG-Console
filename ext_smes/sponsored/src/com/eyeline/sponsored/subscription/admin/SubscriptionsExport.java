@@ -53,7 +53,7 @@ public class SubscriptionsExport {
 
       // Init data source
       ds = new DBSubscriptionDataSource(new PropertiesConfig(c.getSubscriptionSql()));
-      ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       final SmscSubjectsList subjects = new SmscSubjectsList();
       subjects.load(parser.getStringAttr("-f", c.getRoutesFile()));

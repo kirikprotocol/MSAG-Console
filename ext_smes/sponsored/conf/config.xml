@@ -29,8 +29,7 @@
     <param name="url">jdbc:mysql://localhost/sponsored?useUnicode=true&amp;characterEncoding=UTF-8&amp;autoReconnect=true</param>
     <param name="login">root</param>
     <param name="password">laefeeza</param>
-    <param name="connectionTimeout">60000</param>
-    <param name="poolSize">10</param>
+    <param name="connectionTimeout">60000</param>    
   </section>
 
   <section name="file_storage">

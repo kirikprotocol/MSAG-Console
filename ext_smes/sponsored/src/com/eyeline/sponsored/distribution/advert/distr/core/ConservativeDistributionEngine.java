@@ -14,6 +14,7 @@ import com.eyeline.sponsored.ds.distribution.advert.DeliveriesDataSource;
 import com.eyeline.sponsored.ds.distribution.advert.Delivery;
 import org.apache.log4j.Category;
 
+import javax.management.DynamicMBean;
 import java.util.*;
 
 /**
@@ -43,6 +44,10 @@ public class ConservativeDistributionEngine implements DistributionEngine {
 
   public void addDistribution(DistributionInfo distr) {
     this.distrInfos.put(distr.getDistributionName(), distr);
+  }
+
+  public DynamicMBean getMBean() {
+    return null;
   }
 
   public void init(int limit, int interval) {

@@ -27,6 +27,7 @@ import com.eyeline.utils.config.xml.XmlConfig;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesList;
 
+import javax.management.DynamicMBean;
 import java.io.File;
 import java.util.Date;
 import java.util.Iterator;
@@ -59,7 +60,7 @@ public class DistributionSme extends Sme {
       // Init distr data source
       if (c.getDeliveriesDataSource().equals("db")) {
         deliveriesDataSource = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
-        ((DBDistributionDataSource)deliveriesDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+        ((DBDistributionDataSource)deliveriesDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
       } else if (c.getDeliveriesDataSource().equals("file")) {
         deliveriesDataSource = new FileDeliveriesDataSource(c.getFileStorageStoreDir());
       } else
@@ -71,7 +72,7 @@ public class DistributionSme extends Sme {
           deliveryStatsDataSource = (DBDistributionDataSource)deliveriesDataSource;
         else {
           deliveryStatsDataSource = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
-          ((DBDistributionDataSource)deliveryStatsDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+          ((DBDistributionDataSource)deliveryStatsDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
         }
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
         deliveryStatsDataSource = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());
@@ -80,7 +81,7 @@ public class DistributionSme extends Sme {
 
       // Init subscription data source
       subscriptionDataSource = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
-      subscriptionDataSource.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      subscriptionDataSource.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       // Init advertising client factory
       AdvertisingClientFactory advertisingClientFactory = new AdvertisingClientFactory(c.getAdvertisingHost(), c.getAdvertisingPort(), c.getAdvertisingConnTimeout());
@@ -140,6 +141,10 @@ public class DistributionSme extends Sme {
     } catch (Exception e) {
       throw new InitException(e);
     }
+  }
+
+  public DynamicMBean getMBean() {
+    return distrEngine.getMBean();
   }
 
   public BannerMapMBean getBannerMapMBean() {

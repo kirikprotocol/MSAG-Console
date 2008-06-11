@@ -246,7 +246,7 @@ public class DeliveriesGenerator {
 
       if (c.getDeliveriesDataSource().equals("db")) {
         distrDS = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
-        ((DBDistributionDataSource)distrDS).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+        ((DBDistributionDataSource)distrDS).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
       } else if (c.getDeliveriesDataSource().equals("file")) {
         distrDS = new FileDeliveriesDataSource(c.getFileStorageStoreDir());
       } else {
@@ -255,7 +255,7 @@ public class DeliveriesGenerator {
       }
 
       subscrDS = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
-      subscrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      subscrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       final SmscTimezonesList timezones = new SmscTimezonesList();
       timezones.load(c.getTimezonesFile(), c.getRoutesFile());

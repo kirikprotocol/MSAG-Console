@@ -16,14 +16,14 @@ public abstract class AbstractDBDataSource {
 
   private ConnectionPool pool;  
 
-  public void init(String driver, String url, String login, String pwd, int connectionTimeout, int poolSize) throws DataSourceException {
+  public void init(String driver, String url, String login, String pwd, int connectionTimeout) throws DataSourceException {
     try {
       DriverManager.registerDriver((Driver) Class.forName(driver).newInstance());
     } catch (Exception e) {
       throw new DataSourceException("Can't register JDBC driver", e);
     }
 
-    pool = new ConnectionPool("pool", poolSize, poolSize, connectionTimeout, url, login, pwd);
+    pool = new ConnectionPool("pool", Integer.MAX_VALUE, Integer.MAX_VALUE, connectionTimeout, url, login, pwd);
     pool.init(5);
     pool.setCaching(false, true, false);
   }

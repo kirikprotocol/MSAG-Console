@@ -27,7 +27,7 @@ public class SubscriptionSme extends Sme{
 
       // Init data source
       ds = new DBSubscriptionDataSource(new PropertiesConfig(c.getSubscriptionSql()));
-      ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout(), c.getStoragePoolSize());
+      ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       // Init processor
       SubscriptionProcessor.init(ds, timezones);

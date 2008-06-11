@@ -42,6 +42,12 @@ public class IntervalDistributionEngine implements DistributionEngine {
   private long fetchInterval;
   private long prepareInterval;
 
+  private IntervalDistributionEngineMBean mbean;
+
+  private volatile long deliveriesFetchTime;
+  private volatile int overflows;
+  private volatile int nullBannerCounter;
+
   public IntervalDistributionEngine(OutgoingQueue outQueue,
                                     DeliveriesDataSource distrDS,
                                     AdvertisingClientFactory advClientFactory,
@@ -70,6 +76,32 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
   public void addDistribution(DistributionInfo distr) {
     this.distrInfos.put(distr.getDistributionName(), distr);
+  }
+
+  public IntervalDistributionEngineMBean getMBean() {
+    if (mbean == null)
+      mbean = new IntervalDistributionEngineMBean(this);
+    return mbean;
+  }
+
+  public int getOverflows() {
+    return overflows;
+  }
+
+  public int getThreadsNumber() {
+    return senders.length;
+  }
+
+  public int getDeliveriesQueueSize() {
+    return deliveriesQueue.size();
+  }
+
+  public long getDeliveriesFetchTime() {
+    return deliveriesFetchTime;
+  }
+
+  public int getNullBannerCounter() {
+    return nullBannerCounter;
   }
 
   public void start() {
@@ -116,13 +148,18 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
         if (log.isInfoEnabled())
           log.info("Fetch deliveries: from=" + startDate + "; to=" + endDate);
-        if (!deliveriesQueue.isEmpty())
-          log.error("Deliveries queue is not empty. But new deliveries loaded");
+        
+        if (!deliveriesQueue.isEmpty()) {
+          log.error("Deliveries queue is not empty. But new deliveries loaded.");
+          overflows++;
 
-        long startTime = System.nanoTime();
-        distrDS.lookupDeliveries(startDate, endDate, deliveriesQueue);
-        if (log.isInfoEnabled())
-          log.info("Deliveries fetch time: " + (System.nanoTime() - startTime) + "; ~size=" + deliveriesQueue.size());
+        } else {
+          long startTime = System.nanoTime();
+          distrDS.lookupDeliveries(startDate, endDate, deliveriesQueue);
+          deliveriesFetchTime = System.nanoTime() - startTime;
+          if (log.isInfoEnabled())
+            log.info("Deliveries fetch time: " + deliveriesFetchTime + "; ~size=" + deliveriesQueue.size());
+        }
 
         fetchStartTime += fetchInterval;
 
@@ -189,6 +226,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
 
               } else {
                 log.warn("Banner is null: subscr=" + d.getSubscriberAddress());
+                nullBannerCounter++;
               }
 
             } else {

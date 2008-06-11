@@ -71,7 +71,7 @@ public class Sme {
 
       // Check JMX mode
       if (startArgs.containsAttr("-jmx"))
-        startJMX(xmlConfig, smppTranceiver, distributionSme);
+        startJMX(xmlConfig, smppTranceiver, distributionSme, handler);
 
       final ScheduledExecutorService configReloader = startConfigReloader(timezones, conf);
 
@@ -96,12 +96,23 @@ public class Sme {
     return configReloader;
   }
 
-  private static void startJMX(XmlConfig xmlConfig, SMPPTransceiver smppTranceiver, DistributionSme distrSme) throws Exception {
+  private static void startJMX(XmlConfig xmlConfig, SMPPTransceiver smppTranceiver, DistributionSme distrSme, MessageHandler handler) throws Exception {
     System.out.println("Sponsored started in JMX mode");
     final MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
+    // SMPPTransceiver MBeans
     mbs.registerMBean(smppTranceiver.getInQueueMonitor(), new ObjectName("Sponsored:mbean=inQueue"));
     mbs.registerMBean(smppTranceiver.getOutQueueMonitor(), new ObjectName("Sponsored:mbean=outQueue"));
+
+    //MessageHandler MBeans
+    mbs.registerMBean(handler.getHandlerMBean(), new ObjectName("Sponsored:mbean=handler"));
+
+    //DS MBeans
     mbs.registerMBean(distrSme.getBannerMapMBean(), new ObjectName("Sponsored:mbean=bannerMap"));
+
+    //Distr engine MBean
+    DynamicMBean distrMBean = distrSme.getMBean();
+    if (distrMBean != null)
+      mbs.registerMBean(distrMBean, new ObjectName("Sponsored:mbean=distribution"));
 
     final LoggingMBean lb = new LoggingMBean("Sponsored", LogManager.getLoggerRepository());
     mbs.registerMBean(lb, new ObjectName("Sponsored:mbean=logging"));
@@ -181,7 +192,7 @@ public class Sme {
 
   private static class Multiplexor extends TestMultiplexor {
 
-    private volatile long msgId;
+    private volatile long msgId;    
 
     public void sendResponse(PDU pdu) {
     }
