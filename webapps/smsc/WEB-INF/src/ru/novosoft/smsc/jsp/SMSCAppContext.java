@@ -29,6 +29,8 @@ import java.util.Locale;
 import java.util.Set;
 import java.security.Principal;
 
+import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
+
 
 public interface SMSCAppContext extends AppContext {
     Config getConfig();
@@ -84,4 +86,6 @@ public interface SMSCAppContext extends AppContext {
     Long registerSMEContext(SMEAppContext smeContext);
 
     void unregisterSMEContext(Long contextId);
+
+    public PersonalizationClientPool getPersonalizationClientPool();
 }

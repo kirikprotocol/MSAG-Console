@@ -7,6 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import org.apache.axis.transport.http.AxisServlet;
+
 
 public class SMSCJspController extends JspController
 {
@@ -24,7 +26,8 @@ public class SMSCJspController extends JspController
     if (System.getProperty("file.encoding") != null) {
       defaultEncoding = System.getProperty("file.encoding");
     }
-    appContext = new SMSCAppContextImpl(getInitParameter("config"));
+    SMSCAppContextImpl.init(getInitParameter("config"));
+    appContext = SMSCAppContextImpl.getInstance();
     return appContext;
   }
 

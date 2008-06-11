@@ -30,11 +30,24 @@ import ru.novosoft.util.jsp.AppContextImpl;
 import ru.novosoft.util.menu.TopMenu;
 
 import java.io.File;
-import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 
+import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
+import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
+
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext {
+
+    private static SMSCAppContextImpl instance = null;
+
+    public static void init(String configFileName) {
+      instance = new SMSCAppContextImpl(configFileName);
+    }
+
+    public static SMSCAppContextImpl getInstance() {
+      return instance;
+    }
+
     private Config webappConfig = null;
     private WebXml webXmlConfig = null;
     private HostsManager hostsManager = null;
@@ -51,6 +64,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     private AclManager aclManager = null;
     private ServiceManager serviceManager = null;
     private ClosedGroupManager closedGroupManager = null;
+    private PersonalizationClientPool persClientPool = null;
 
     private Smsc smsc = null;
     private SmscList smscList = null;
@@ -137,24 +151,22 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             startConsole();
             if (webappConfig.containsParameter("installation.uid"))
               TopMenu.setInstallationId(webappConfig.getString("installation.uid"));
+
+            // Create personalization client pool
+            final Properties persProps = new Properties();
+            persProps.setProperty("personalization.host", webappConfig.getString("personalization.host"));
+            persProps.setProperty("personalization.port", webappConfig.getString("personalization.port"));
+            persProps.setProperty("personalization.timeout", webappConfig.getString("personalization.timeout"));
+            persProps.setProperty("personalization.min.connections", webappConfig.getString("personalization.minConnections"));
+            persProps.setProperty("personalization.max.connections", webappConfig.getString("personalization.maxConnections"));
+            persProps.setProperty("personalization.check.connections", webappConfig.getString("personalization.checkConnections"));
+            persProps.setProperty("personalization.background.connect.mode", webappConfig.getString("personalization.backgroundConnectMode"));
+            persProps.setProperty("personalization.max.client.connect.time", webappConfig.getString("personalization.maxClientConnectTime"));
+            persProps.setProperty("personalization.pool.controller.interval", webappConfig.getString("personalization.poolControllerInterval"));
+            persProps.setProperty("personalization.max.shutdown.time", webappConfig.getString("personalization.maxShutdownTime"));
+
+            persClientPool = new PersonalizationClientPool(persProps);
             System.out.println("SMSC Administration Web Application Started  **************************************************");
-            Set autoStart = webappConfig.getSectionChildParamsNames("autostart");
-            if( autoStart != null && !autoStart.isEmpty() ) {
-              for(Iterator it = autoStart.iterator(); it.hasNext(); ) {
-                String svcName = (String) it.next();
-                String svcClass = webappConfig.getString(svcName);
-                System.out.println("Try to autostart service "+svcName+" "+svcClass);
-                AutostartService svc = null;
-                try {
-                  svc = (AutostartService) Class.forName(svcClass).newInstance();
-                } catch (Throwable e) {
-                  System.out.println("Failed to create autostart service "+svcClass+" ex: "+e.getMessage());
-                }
-                if( svc != null ) {
-                  svc.start(this);
-                }
-              }
-            }
         }
         catch (Exception e) {
             System.err.println("Exception in initialization:");
@@ -243,18 +255,19 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
         if (console != null) console.close();
         if (perfServer != null) perfServer.shutdown();
         if (topServer != null) topServer.shutdown();
-
+        if (persClientPool != null) {
+          try {
+            persClientPool.shutdown();
+          } catch (PersonalizationClientException e) {
+            e.printStackTrace();
+          }
+        }
         synchronized (smeContextsLock) // shutdown all smeContexts
         {
             for (Iterator it = smeContexts.values().iterator(); it.hasNext();) {
                 Object obj = it.next();
                 if (obj instanceof SMEAppContext) {
-                  try {
                     ((SMEAppContext) obj).shutdown();
-                  } catch (IOException e) {
-                    System.out.println("Exception while shuting down sme context: "+obj.getClass().getName());
-                    e.printStackTrace(System.out);
-                  }
                 }
             }
             smeContexts.clear();
@@ -329,6 +342,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
     public FraudConfigManager getFraudConfigManager() {
       return fraudConfigManager;
+    }
+
+    public PersonalizationClientPool getPersonalizationClientPool() {
+      return persClientPool;
     }
 }
 

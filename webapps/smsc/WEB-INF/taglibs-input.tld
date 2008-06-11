@@ -11,7 +11,7 @@
   <jspversion>1.1</jspversion>
   <shortname>input</shortname>
   <uri>http://jakarta.apache.org/taglibs/input-1.0</uri>
-  <info>
+  <data>
 				The "input" tag extension library lets you present HTML
 				&lt;form&gt; elements that are tied to the
 				ServletRequest that caused the current JSP page to run,
@@ -30,7 +30,7 @@
 				logic.
 			
 				What is the "Input" tag library?
-				Read more.</info>
+				Read more.</data>
   <tag>
     <name>form</name>
     <tagclass>org.apache.taglibs.input.Form</tagclass>
