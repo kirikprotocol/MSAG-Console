@@ -20,7 +20,7 @@
 #include "SerialBuffer.h"
 #include "Profile.h"
 
-extern int errno;
+#include <cerrno>
 
 #ifndef ___BLOCKS_HS_STORAGE_H
 #define ___BLOCKS_HS_STORAGE_H
@@ -136,7 +136,7 @@ public:
 
 	static const int defaultBlockSize = 56; // in bytes
 	static const int defaultFileSize = 3; // in blocks 
-	static const long BLOCK_USED	= (long)1 << 63;
+	static const long BLOCK_USED	= long(1) << 63;
 
 	BlocksHSStorage():running(false), iterBlockIndex(0)
 	{
