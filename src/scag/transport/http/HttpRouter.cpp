@@ -8,6 +8,7 @@
 
 #include "HttpCommand.h"
 #include "HttpRouter.h"
+#include "scag/util/lltostr.h"
 
 namespace scag { namespace transport { namespace http {
 

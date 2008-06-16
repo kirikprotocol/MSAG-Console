@@ -14,6 +14,7 @@
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/config/ConfigListener.h"
 #include "scag/stat/Statistics.h"
+#include "scag/util/lltostr.h"
 
 namespace scag { namespace bill {
 

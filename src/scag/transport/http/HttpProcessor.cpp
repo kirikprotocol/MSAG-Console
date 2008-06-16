@@ -12,6 +12,7 @@
 #include "Managers.h"
 
 #include "logger/Logger.h"
+#include "scag/util/lltostr.h"
 
 namespace scag { namespace transport { namespace http {
 

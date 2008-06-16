@@ -1,5 +1,6 @@
 #include "BillActionInfo.h"
 #include "scag/re/CommandAdapter.h"
+#include "scag/util/lltostr.h"
 
 namespace scag { namespace re { namespace actions {
 

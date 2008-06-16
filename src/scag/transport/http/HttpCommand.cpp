@@ -5,6 +5,7 @@
 #include "HttpParser.h"
 #include "scag/util/encodings/Encodings.h"
 #include "scag/exc/SCAGExceptions.h"
+#include "scag/util/lltostr.h"
 
 #define ICONV_BLOCK_SIZE 32
 #define CRLF "\r\n"
