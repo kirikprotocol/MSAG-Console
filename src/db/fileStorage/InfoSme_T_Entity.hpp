@@ -31,7 +31,7 @@ public:
   std::string toString() const {
     std::ostringstream obuf;
     obuf << "id=[" << _id
-         << "],state=[" << (uint_t)_state
+         << "],state=[" << static_cast<unsigned int>(_state)
          << "],abonentAddress=[" << _abonentAddress
          << "],sendDate=[" << _sendDate
          << "],message=[" << _message
