@@ -154,18 +154,20 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
             // Create personalization client pool
             final Properties persProps = new Properties();
-            persProps.setProperty("personalization.host", webappConfig.getString("personalization.host"));
-            persProps.setProperty("personalization.port", webappConfig.getString("personalization.port"));
-            persProps.setProperty("personalization.timeout", webappConfig.getString("personalization.timeout"));
-            persProps.setProperty("personalization.min.connections", webappConfig.getString("personalization.minConnections"));
-            persProps.setProperty("personalization.max.connections", webappConfig.getString("personalization.maxConnections"));
-            persProps.setProperty("personalization.check.connections", webappConfig.getString("personalization.checkConnections"));
-            persProps.setProperty("personalization.background.connect.mode", webappConfig.getString("personalization.backgroundConnectMode"));
-            persProps.setProperty("personalization.max.client.connect.time", webappConfig.getString("personalization.maxClientConnectTime"));
-            persProps.setProperty("personalization.pool.controller.interval", webappConfig.getString("personalization.poolControllerInterval"));
-            persProps.setProperty("personalization.max.shutdown.time", webappConfig.getString("personalization.maxShutdownTime"));
+            if (webappConfig.containsParameter("personalization.host")) {
+              persProps.setProperty("personalization.host", webappConfig.getString("personalization.host"));
+              persProps.setProperty("personalization.port", webappConfig.getString("personalization.port"));
+              persProps.setProperty("personalization.timeout", webappConfig.getString("personalization.timeout"));
+              persProps.setProperty("personalization.min.connections", webappConfig.getString("personalization.minConnections"));
+              persProps.setProperty("personalization.max.connections", webappConfig.getString("personalization.maxConnections"));
+              persProps.setProperty("personalization.check.connections", webappConfig.getString("personalization.checkConnections"));
+              persProps.setProperty("personalization.background.connect.mode", webappConfig.getString("personalization.backgroundConnectMode"));
+              persProps.setProperty("personalization.max.client.connect.time", webappConfig.getString("personalization.maxClientConnectTime"));
+              persProps.setProperty("personalization.pool.controller.interval", webappConfig.getString("personalization.poolControllerInterval"));
+              persProps.setProperty("personalization.max.shutdown.time", webappConfig.getString("personalization.maxShutdownTime"));
 
-            persClientPool = new PersonalizationClientPool(persProps);
+              persClientPool = new PersonalizationClientPool(persProps);
+            }
             System.out.println("SMSC Administration Web Application Started  **************************************************");
         }
         catch (Exception e) {
