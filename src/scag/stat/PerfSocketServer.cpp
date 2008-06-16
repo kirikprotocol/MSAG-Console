@@ -41,7 +41,7 @@ int PerfSocketServer::Execute()
                 if(ready[i] == &genSocket){
                     smsc_log_info(logger, "General Stat Socket is ready");
                     sockaddr_in addrin;
-                    int sz=sizeof(addrin);
+                    socklen_t sz=sizeof(addrin);
                     SOCKET s=accept(genSocket.getSocket(),(sockaddr*)&addrin,&sz);
                     if(s != -1){
                         Socket * sock = new Socket(s,addrin);
@@ -51,7 +51,7 @@ int PerfSocketServer::Execute()
                 if(ready[i] == &svcSocket){
                     smsc_log_info(logger, "Servives Stat Socket is ready");
                     sockaddr_in addrin;
-                    int sz=sizeof(addrin);
+                    socklen_t sz=sizeof(addrin);
                     SOCKET s=accept(svcSocket.getSocket(),(sockaddr*)&addrin,&sz);
                     if(s != -1){
                         Socket * sock = new Socket(s,addrin);
@@ -61,7 +61,7 @@ int PerfSocketServer::Execute()
                 if(ready[i] == &scSocket){
                     smsc_log_info(logger, "Srvice center Socket is ready");
                     sockaddr_in addrin;
-                    int sz=sizeof(addrin);
+                    socklen_t sz=sizeof(addrin);
                     SOCKET s=accept(scSocket.getSocket(),(sockaddr*)&addrin,&sz);
                     if(s != -1){
                         Socket * sock = new Socket(s,addrin);

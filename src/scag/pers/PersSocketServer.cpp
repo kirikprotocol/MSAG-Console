@@ -235,7 +235,7 @@ int PersSocketServer::Execute()
                 if(readSocket == &sock)
                 {
                     sockaddr_in addrin;
-                    int sz = sizeof(addrin);
+                    socklen_t sz = sizeof(addrin);
                     SOCKET s = accept(sock.getSocket(), (sockaddr*)&addrin, &sz);
                     if(s != -1)
                     {
