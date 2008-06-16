@@ -30,6 +30,7 @@ import ru.novosoft.util.jsp.AppContextImpl;
 import ru.novosoft.util.menu.TopMenu;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.Principal;
 import java.util.*;
 
@@ -269,7 +270,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
             for (Iterator it = smeContexts.values().iterator(); it.hasNext();) {
                 Object obj = it.next();
                 if (obj instanceof SMEAppContext) {
+                  try {
                     ((SMEAppContext) obj).shutdown();
+                  } catch (IOException e) {
+                    e.printStackTrace();
+                  }
                 }
             }
             smeContexts.clear();
