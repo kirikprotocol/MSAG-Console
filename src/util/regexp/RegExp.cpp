@@ -136,7 +136,11 @@ rechar* RegExp::charbits=(rechar*)RegExp::icharbits;
 #endif
 
 #ifdef UNICODE
+#ifdef __GNUC__   // bukind: or should it check for linux ?
+#include <wctype.h>
+#else
 #include <wchar.h>
+#endif
 #define ISDIGIT(c) iswdigit(c)
 #define ISSPACE(c) iswspace(c)
 #define ISWORD(c)  (iswalnum(c) || c=='_')
