@@ -11,9 +11,9 @@ InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage (DataStor
   smsc_log_debug(logger, "InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DBEntityStorage::: It is creating an index");
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   InfoSme_Tasks_Stat_Entity_Adapter record;
-  typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid, nextRid;
+  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid, nextRid;
 
-  typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::operation_status_t
+  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::operation_status_t
     opResult =_storage->extractFirstRecord(&record, &rid, &nextRid);
 
   while ( opResult == DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::OPERATION_OK ) {
@@ -35,7 +35,7 @@ bool
 InfoSme_Tasks_Stat_DBEntityStorage::findFirstValue(const InfoSme_Tasks_Stat_Entity::TaskId_Period_Key& key, InfoSme_Tasks_Stat_Entity* resultValue)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid;
   InfoSme_Tasks_Stat_Entity_Adapter record;
   if ( _nonuniq_index_by_taskid_and_period_key.findFirstIndexedValueByKey(key, &rid) &&
        _storage->extractRecord(&record, rid) ==
@@ -50,7 +50,7 @@ bool
 InfoSme_Tasks_Stat_DBEntityStorage::findNextValue(const InfoSme_Tasks_Stat_Entity::TaskId_Period_Key& key, InfoSme_Tasks_Stat_Entity* resultValue)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid;
   InfoSme_Tasks_Stat_Entity_Adapter record;
   if ( _nonuniq_index_by_taskid_and_period_key.findNextIndexedValueByKey(key, &rid) &&
        _storage->extractRecord(&record, rid) ==
@@ -68,7 +68,7 @@ InfoSme_Tasks_Stat_DBEntityStorage::putValue(const InfoSme_Tasks_Stat_Entity& va
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   InfoSme_Tasks_Stat_Entity::TaskId_Period_Key nonuniqKey(value);
 
-  typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity>::rid_t rid;
   _storage->addRecord(value, &rid);
 
   _nonuniq_index_by_taskid_and_period_key.insertIndexedValue(nonuniqKey, rid);
@@ -106,7 +106,7 @@ InfoSme_Tasks_Stat_DBEntityStorage::InfoSme_Tasks_Stat_DbIterator::nextValue(Inf
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::operation_status_t status;
 
-  typename DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Tasks_Stat_Entity_Adapter>::rid_t rid;
   InfoSme_Tasks_Stat_Entity_Adapter record;
   if ( _beginIteration ) {
     status = _storage->extractFirstRecord(&record, &rid, &_ridForSequentialBypass);

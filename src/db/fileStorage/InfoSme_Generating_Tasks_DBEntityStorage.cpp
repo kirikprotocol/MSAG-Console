@@ -10,9 +10,9 @@ InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStora
   smsc_log_debug(logger, "InfoSme_Generating_Tasks_DBEntityStorage::InfoSme_Generating_Tasks_DBEntityStorage::: It is creating an index");
 
   InfoSme_Generating_Tasks_Entity_Adapter record;
-  typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid, nextRid;
+  DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid, nextRid;
 
-  typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::operation_status_t
+  DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::operation_status_t
     opResult =_storage->extractFirstRecord(&record, &rid, &nextRid);
 
   while ( opResult == DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::OPERATION_OK ) {
@@ -34,7 +34,7 @@ bool
 InfoSme_Generating_Tasks_DBEntityStorage::findValue(const InfoSme_Generating_Tasks_Entity::TaskId_Key& key, InfoSme_Generating_Tasks_Entity* result)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
 
   InfoSme_Generating_Tasks_Entity_Adapter record;
   if ( !_uniq_index_by_taskid_key.findIndexedValueByKey(key, &rid) ||
@@ -54,7 +54,7 @@ InfoSme_Generating_Tasks_DBEntityStorage::putValue(const InfoSme_Generating_Task
   InfoSme_Generating_Tasks_Entity::TaskId_Key primaryKey(value);
 
   if ( !_uniq_index_by_taskid_key.isExist(primaryKey) ) {
-    typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
+    DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
     _storage->addRecord(value, &rid);
 
     _uniq_index_by_taskid_key.insertIndexedValue(primaryKey, rid);
@@ -67,7 +67,7 @@ int
 InfoSme_Generating_Tasks_DBEntityStorage::eraseValue(const InfoSme_Generating_Tasks_Entity::TaskId_Key& key)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Generating_Tasks_Entity_Adapter>::rid_t rid;
 
   if ( _uniq_index_by_taskid_key.findIndexedValueByKey(key, &rid) ) {
     _uniq_index_by_taskid_key.eraseIndexedValue(key);

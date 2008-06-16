@@ -7,9 +7,9 @@ InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DBEntityStorage(DataStora
   smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("dbgStrg");
   smsc_log_debug(logger, "InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DBEntityStorage::: It is creating indexes");
   InfoSme_Id_Mapping_Entity_Adapter record;
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid, nextRid;
+  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid, nextRid;
 
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::operation_status_t
+  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::operation_status_t
     opResult =_storage->extractFirstRecord(&record, &rid, &nextRid);
 
   while ( opResult == DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::OPERATION_OK ) {
@@ -51,7 +51,7 @@ bool
 InfoSme_Id_Mapping_DBEntityStorage::findValue(const InfoSme_Id_Mapping_Entity::Id_Key& key, InfoSme_Id_Mapping_Entity* result)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
 
   InfoSme_Id_Mapping_Entity_Adapter record;
   if ( !_uniq_index_by_id_key.findIndexedValueByKey(key, &rid) ||
@@ -71,7 +71,7 @@ InfoSme_Id_Mapping_DBEntityStorage::putValue(const InfoSme_Id_Mapping_Entity& va
   InfoSme_Id_Mapping_Entity::Id_Key primaryKey(value);
 
   if ( !_uniq_index_by_id_key.isExist(primaryKey ) ) {
-    typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
+    DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
     _storage->addRecord(value, &rid);
 
     _uniq_index_by_id_key.insertIndexedValue(primaryKey, rid);
@@ -84,7 +84,7 @@ InfoSme_Id_Mapping_DBEntityStorage::putValue(const InfoSme_Id_Mapping_Entity& va
 int
 InfoSme_Id_Mapping_DBEntityStorage::eraseValue(const InfoSme_Id_Mapping_Entity::Id_Key& key)
 {
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity>::rid_t rid;
 
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
   if ( _uniq_index_by_id_key.findIndexedValueByKey(key, &rid) ) {
@@ -124,7 +124,7 @@ InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator::sequentialByp
   smsc::core::synchronization::MutexGuard lockGuard(_dbIteratorCreator->_storageLock);
   DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::operation_status_t status;
 
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid;
   InfoSme_Id_Mapping_Entity_Adapter record;
   if ( _beginIteration ) {
     status = _dbIteratorCreator->_storage->extractFirstRecord(&record, &rid, &_ridForSequentialBypass);
@@ -148,7 +148,7 @@ InfoSme_Id_Mapping_DBEntityStorage::InfoSme_Id_Mapping_DbIterator::indexedBypass
   smsc_log_debug(logger, "InfoSme_Id_Mapping_DbIterator::indexedBypass::: _smscIdKey=[%s]",_smscIdKey.toString().c_str());
 
   smsc::core::synchronization::MutexGuard lockGuard(_dbIteratorCreator->_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_Id_Mapping_Entity_Adapter>::rid_t rid;
   InfoSme_Id_Mapping_Entity_Adapter record;
   InfoSme_Id_Mapping_Entity::SmscId_Key foundKey("");
   bool searchRes;

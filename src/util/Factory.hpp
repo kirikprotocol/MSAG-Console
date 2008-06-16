@@ -13,7 +13,7 @@ namespace util {
 template <typename KeyTypeNm, class ProductType>
 class FactoryT {
 public:
-    typedef typename KeyTypeNm KeyType;
+    typedef KeyTypeNm KeyType;
 
     struct Producer
     {
@@ -34,27 +34,27 @@ protected:
 public:
     bool registerProduct(KeyType key, Producer* producer)
     {
-        std::pair<ProductsMap::iterator, bool> res =
-            producers.insert(ProductsMap::value_type(key, producer));
+        std::pair<typename ProductsMap::iterator, bool> res =
+            producers.insert(typename ProductsMap::value_type(key, producer));
         return res.second;
     }
     //
     ProductType* create(KeyType key) const
     {
-        ProductsMap::const_iterator it = producers.find(key);
+        typename ProductsMap::const_iterator it = producers.find(key);
         return (it == producers.end()) ? NULL : it->second->create();
     }
     //usefull for determining wether the product is registered or not
     Producer * getProducer(KeyType key) const
     {
-        ProductsMap::const_iterator it = producers.find(key);
+        typename ProductsMap::const_iterator it = producers.find(key);
         return (it == producers.end()) ? NULL : it->second;
     }
 
     //destroys all producers
     void eraseAll(void)
     {
-        for (ProductsMap::iterator it = producers.begin(); it != producers.end(); ++it)
+        for (typename ProductsMap::iterator it = producers.begin(); it != producers.end(); ++it)
             delete it->second;
         producers.clear();
     }
@@ -67,7 +67,7 @@ public:
 template <typename _KeyTArg, class _ProductAC_TArg, class _ArgTArg>
 class FactoryXArg_T {
 public:
-    typedef typename _KeyTArg KeyType;
+    typedef _KeyTArg KeyType;
 
     struct ProducerITF
     {
@@ -93,28 +93,28 @@ public:
 
     bool registerProduct(KeyType key, ProducerITF * producer)
     {
-        std::pair<ProductsMap::iterator, bool> res =
-            producers.insert(ProductsMap::value_type(key, producer));
+        std::pair<typename ProductsMap::iterator, bool> res =
+            producers.insert(typename ProductsMap::value_type(key, producer));
         return res.second;
     }
 
     _ProductAC_TArg * create(KeyType key, _ArgTArg * use_arg = NULL) const
     {
-        ProductsMap::const_iterator it = producers.find(key);
+        typename ProductsMap::const_iterator it = producers.find(key);
         return (it == producers.end()) ? NULL : it->second->create(use_arg);
     }
 
     //usefull for determining wether the product is registered or not
     ProducerITF * getProducer(KeyType key) const
     {
-        ProductsMap::const_iterator it = producers.find(key);
+        typename ProductsMap::const_iterator it = producers.find(key);
         return (it == producers.end()) ? NULL : it->second;
     }
 
     //destroys all producers
     void eraseAll(void)
     {
-        for (ProductsMap::iterator it = producers.begin(); it != producers.end(); ++it)
+        for (typename ProductsMap::iterator it = producers.begin(); it != producers.end(); ++it)
             delete it->second;
         producers.clear();
     }

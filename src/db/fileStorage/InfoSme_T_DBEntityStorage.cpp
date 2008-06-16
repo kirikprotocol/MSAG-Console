@@ -12,9 +12,9 @@ InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage(DataStorage_FileDispatcher<
     smsc_log_debug(logger, "InfoSme_T_DBEntityStorage::InfoSme_T_DBEntityStorage::: It is creating indexes");
 
     InfoSme_T_Entity_Adapter record;
-    typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid, nextRid;
+    DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid, nextRid;
 
-    typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::operation_status_t
+    DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::operation_status_t
       opResult =_storage->extractFirstRecord(&record, &rid, &nextRid);
 
     while ( opResult == DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK ) {
@@ -54,7 +54,7 @@ InfoSme_T_DBEntityStorage::putValue(const InfoSme_T_Entity& value)
   InfoSme_T_Entity::Id_Key primaryKey(value);
 
   if ( !_uniq_index_by_id_key.isExist(primaryKey) ) {
-    typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
+    DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
     if ( _storage->addRecord(value, &rid) != 
          DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::OPERATION_OK )
       return false;
@@ -76,7 +76,7 @@ InfoSme_T_DBEntityStorage::findValue(const InfoSme_T_Entity::Id_Key& key,
                                        InfoSme_T_Entity* result)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
 
   InfoSme_T_Entity_Adapter record;
   if ( !_uniq_index_by_id_key.findIndexedValueByKey(key, &rid) ||
@@ -93,7 +93,7 @@ int
 InfoSme_T_DBEntityStorage::eraseValue(const InfoSme_T_Entity::Id_Key& key)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
 
   if ( _uniq_index_by_id_key.findIndexedValueByKey(key, &rid) ) {
     InfoSme_T_Entity_Adapter record;
@@ -111,7 +111,7 @@ int
 InfoSme_T_DBEntityStorage::updateValue(const InfoSme_T_Entity::Id_Key& key, const InfoSme_T_Entity& oldValue , const InfoSme_T_Entity& newValue)
 {
   smsc::core::synchronization::MutexGuard lockGuard(_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
 
   InfoSme_T_Entity_Adapter* record;
   if ( _uniq_index_by_id_key.findIndexedValueByKey(key, &rid) ) {
@@ -143,7 +143,7 @@ InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator::InfoSme_T_DbIterator(InfoSme_T_
   : _dbIteratorCreator(dbIteratorCreator), _ridForSequentialBypass(0), _beginIteration(true), _searchStateCriterionIsSet(false), _fromKey(0,0), _toKey(0,0) {}
 
 void
-InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator::setIndexSearchCrit(InfoSme_T_Entity::StateANDSDate_key& fromKey,InfoSme_T_Entity::StateANDSDate_key& toKey)
+InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator::setIndexSearchCrit(const InfoSme_T_Entity::StateANDSDate_key& fromKey,const InfoSme_T_Entity::StateANDSDate_key& toKey)
 {
   _searchStateCriterionIsSet = true;
   _fromKey = fromKey;
@@ -165,7 +165,7 @@ InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator::sequentialBypass(InfoSme_T_Enti
   smsc::core::synchronization::MutexGuard lockGuard(_dbIteratorCreator->_storageLock);
   DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::operation_status_t status;
 
-  typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
   InfoSme_T_Entity_Adapter record;
   if ( _beginIteration ) {
     status = _dbIteratorCreator->_storage->extractFirstRecord(&record, &rid, &_ridForSequentialBypass);
@@ -189,7 +189,7 @@ InfoSme_T_DBEntityStorage::InfoSme_T_DbIterator::indexedBypass(InfoSme_T_Entity*
   smsc_log_debug(logger, "InfoSme_T_DbIterator::indexedBypass::: _fromKey=[%s],_toKey=[%s]",_fromKey.toString().c_str(), _toKey.toString().c_str());
 
   smsc::core::synchronization::MutexGuard lockGuard(_dbIteratorCreator->_storageLock);
-  typename DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
+  DataStorage_FileDispatcher<InfoSme_T_Entity_Adapter>::rid_t rid;
   InfoSme_T_Entity_Adapter record;
   InfoSme_T_Entity::StateANDSDate_key foundKey(0,0);
   InfoSme_T_Entity::StateANDSDate_key searchKey(0,0);

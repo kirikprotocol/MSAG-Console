@@ -30,6 +30,10 @@ using namespace std;
 template<class Key=long, class Value=long>
 class RBTreeHSAllocator: public RBTreeAllocator<Key, Value>, public RBTreeChangesObserver<Key, Value>
 {
+protected:
+  typedef typename RBTreeAllocator<Key,Value>::RBTreeNode RBTreeNode;
+private:
+
 	struct rbtFileHeader
 	{
 		char preamble[20];
@@ -397,7 +401,7 @@ private:
 	int startTransaction(void)
 	{
 		transFileHeader		hdr;
-		list<RBTreeNode*>::iterator It;
+		typename list<RBTreeNode*>::iterator It;
 		long			nodeAddr;
 		
 		hdr.status = STAT_WRITE_TRX;
@@ -428,7 +432,7 @@ private:
 	    trans_f.Seek(0, SEEK_SET);
 	    trans_f.Write((char*)&stat, sizeof(int));
 
-	    list<RBTreeNode*>::iterator It;
+	    typename list<RBTreeNode*>::iterator It;
 	    rbtree_f.Seek(0, SEEK_SET);
 	    rbtree_f.Write((char*)header, sizeof(rbtFileHeader));
 
