@@ -71,10 +71,11 @@ namespace smsc { namespace mscman
 
         static int Size()
         {
-          return (int)sizeof(MscInfo::mscNum)+1+1+4;
+          return (int)mscNum_len+1+1+4;
         }
 
-        char    mscNum[22];
+        static const size_t mscNum_len = 22;
+        char    mscNum[mscNum_len];
         bool    manualLock;
         bool    automaticLock;
         uint32_t     failureCount;
