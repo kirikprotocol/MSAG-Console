@@ -8,7 +8,9 @@ PACKAGE := core.network
 
 CXXFLAGS := $(CXXFLAGS) -DDISABLE_ANY_CHECKS
 
-LDFLAGS=$(LDGLAGS) -lsocket
+ifneq ($(shell uname),Linux)
+LDFLAGS = $(LDFLAGS) -lsocket
+endif
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
