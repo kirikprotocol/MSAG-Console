@@ -94,7 +94,11 @@ public:
       char buf[1024];
       int h_err;
       hostent he;
+#ifdef __GNUC__
+      gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
+#else
       lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
+#endif // __GNUC__
   #endif
       if(lpHostEnt==NULL)
       {

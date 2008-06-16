@@ -45,7 +45,11 @@ int Socket::Init(const char *host,int port,int timeout)
     char buf[1024];
     int h_err;
     hostent he;
-    lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
+#ifdef __GNUC__
+      gethostbyname_r( host, &he, buf, sizeof(buf), &lpHostEnt, &h_err );
+#else
+      lpHostEnt=gethostbyname_r(host, &he, buf, (int)sizeof(buf), &h_err);
+#endif // __GNUC__
 #endif
     if(lpHostEnt==NULL)
     {
