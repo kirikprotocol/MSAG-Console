@@ -11,6 +11,7 @@
 #include <logger/Logger.h>
 
 #include "Encodings.h"
+#include "scag/util/strlcpy.h"
 
 namespace scag { namespace util { namespace encodings {
 
@@ -193,7 +194,13 @@ void ConvertorImpl::convert(const char* inCharset, const char* outCharset,
       outbufptr = (char*)buf.GetCurPtr();
       //unsigned long inLenLong=inLen;
 //    smsc_log_debug(smsc::logger::Logger::getInstance("conv.conv"), "in=%s, out=%s, inbuf=%d, inbuflen=%d, outbutesleft=%d", inCharset, outCharset, in, inLen, outbytesleft);
-      if(iconv(cd, &in, &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
+      if(iconv(cd,
+#ifdef __GNUC__
+               const_cast<char**>(&in), // the problem in iconv definition
+#else
+               &in,
+#endif
+               &inLen, &outbufptr, &outbytesleft) == (size_t)(-1) && errno != E2BIG)
           error=true;
 
       buf.SetPos(i - outbytesleft);
