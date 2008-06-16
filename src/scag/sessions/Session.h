@@ -102,7 +102,8 @@ namespace scag { namespace sessions {
             this->Read((char*)&len,1);
             char scb[256];
 
-            if (len>255) throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
+          // the following is always TRUE!
+          //  if (len>255) throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
 
             this->Read(scb,len);
             scb[len] = 0;
@@ -416,15 +417,15 @@ namespace scag { namespace sessions {
         Operation * setOperationFromPending(SCAGCommand& cmd, int operationType);
         uint64_t getCurrentOperationId();
 
-        time_t Session::getWakeUpTime();
+        time_t getWakeUpTime();
         void Serialize(SessionBuffer& buff);
         void Deserialize(SessionBuffer& buff);
         CSessionPrimaryKey& getPrimaryKey() {return m_SessionPrimaryKey;}
         uint16_t getUSR() { return m_SessionKey.USR; }
 
         static int getOperationType(std::string& str);
-        static Hash<int> Session::InitOperationTypesHash();
-        static Hash<int> Session::InitReadOnlyPropertiesHash();
+        static Hash<int> InitOperationTypesHash();
+        static Hash<int> InitReadOnlyPropertiesHash();
         static bool isReadOnlyProperty(const char * name);
 
         smsc::core::buffers::File::offset_type& getOffsetRef()

@@ -133,7 +133,7 @@ namespace scag { namespace re { namespace actions
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);
-        static bool ActionContext::StrToPeriod(CheckTrafficPeriod& period, std::string& str);
+        static bool StrToPeriod(CheckTrafficPeriod& period, std::string& str);
 
         CommandAccessor* getCommand() {
             if(!command) throw SCAGException("ActionContext: command is not set");

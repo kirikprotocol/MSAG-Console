@@ -32,7 +32,7 @@ class ActionReceipt : public Action
     uint8_t state;
 
     static Hash<uint8_t> stateHash;
-    static Hash<uint8_t> ActionReceipt::initHash();
+    static Hash<uint8_t> initHash();
     uint8_t getMsgState(const char* st);
     bool getStrProperty(ActionContext& context, const std::string& str, const char *field_name, std::string& val);
 protected:
