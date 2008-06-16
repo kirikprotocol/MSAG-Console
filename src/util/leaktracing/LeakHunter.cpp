@@ -177,9 +177,11 @@ public:
 static LeakHunter* lh=NULL;
 static pthread_mutex_t mtx=PTHREAD_MUTEX_INITIALIZER;
 
-static void sigcheckpoint(int param)
+extern "C" {
+  static void sigcheckpoint(int param)
 {
   lh->CheckPoint();
+}
 }
 
 
@@ -343,10 +345,12 @@ int LeakHunter::RegisterDealloc(void* ptr)
   //throw "DELETE UNALLOCATED BLOCK";
 }
 
+extern "C" {
 static void deletelh()
 {
   lh->~LeakHunter();
   free(lh);
+}
 }
 
 static void initlh()
@@ -438,7 +442,7 @@ static void xfree(void* ptr)
   free(orgmem);
 }
 
-void* operator new(size_t size)
+void* operator new(size_t size) throw (std::bad_alloc)
 {
   smsc::util::leaktracing::initlh();
   void* mem=xmalloc(size);
@@ -446,26 +450,26 @@ void* operator new(size_t size)
   if(!mem)
   {
     fprintf(stderr,"OUT OF MEMORY!\n");
-    throw "OUT OF MEMORY!\n";
+    throw std::bad_alloc(); // "OUT OF MEMORY!\n";
   }
   smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
   return mem;
 }
 
-void* operator new[](size_t size)
+void* operator new[](size_t size) throw (std::bad_alloc)
 {
   smsc::util::leaktracing::initlh();
   void* mem=xmalloc(size);
   if(!mem)
   {
     fprintf(stderr,"OUT OF MEMORY!\n");
-    throw "OUT OF MEMORY!\n";
+    throw std::bad_alloc(); //"OUT OF MEMORY!\n";
   }
   smsc::util::leaktracing::lh->RegisterAlloc(mem,size);
   return mem;
 }
 
-void operator delete(void* mem)
+void operator delete(void* mem) throw()
 {
   smsc::util::leaktracing::initlh();
   if(mem)
@@ -477,7 +481,7 @@ void operator delete(void* mem)
   }
 }
 
-void operator delete[](void* mem)
+void operator delete[](void* mem) throw()
 {
   smsc::util::leaktracing::initlh();
   if(mem)
