@@ -8,6 +8,9 @@
 #include "core/buffers/PageFile.hpp"
 #include "core/buffers/TmpBuf.hpp"
 #include "SerialBuffer.h"
+#include <vector>
+
+using std::vector;
 
 namespace scag{ namespace pers{
 
