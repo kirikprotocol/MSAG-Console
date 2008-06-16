@@ -73,8 +73,8 @@ protected:
 
         GRDIterator findNode(const _GuardedTArg * ref_lstr)
         {
-            GRDIterator it = begin();
-            while (it != end()) {
+            GRDIterator it = this->begin();
+            while (it != this->end()) {
                 GRDIterator cit = it++;
                 if (cit->isFreed() && !cit->isMarked())
                     erase(cit);
@@ -86,7 +86,7 @@ protected:
 
         void cleanUp(GRDIterator & up_to)
         {
-            GRDIterator it = begin();
+            GRDIterator it = this->begin();
             while (it != up_to) {
                 GRDIterator cit = it++;
                 if (cit->isFreed() && !cit->isMarked())
@@ -97,9 +97,9 @@ protected:
         void cleanAll(void)
         {
             if (!empty()) {
-                GRDIterator it = --end();
+                GRDIterator it = -- this->end();
                 it->release();
-                cleanUp(end());
+                cleanUp(this->end());
             }
         }
 
@@ -128,14 +128,14 @@ public:
     void removeListener(_GuardedTArg * use_lstr)
     {
         MutexGuard tmp(Sync());
-        GRDNodeList::GRDIterator it = listeners.findNode(use_lstr);
+        typename GRDNodeList::GRDIterator it = listeners.findNode(use_lstr);
         if ((it != listeners.end()) && listeners.releaseNode(it))
             listeners.erase(it);
     }
     void folowUp(_GuardedTArg * use_lstr, _GuardedTArg *next_lstr)
     {
         MutexGuard tmp(Sync());
-        GRDNodeList::GRDIterator it = listeners.findNode(use_lstr);
+        typename GRDNodeList::GRDIterator it = listeners.findNode(use_lstr);
         if (it != listeners.end()) {
             listeners.insert(++it, GRDNode(next_lstr));
         } else {
@@ -159,7 +159,7 @@ public:
     GRDNode * begin(void)
     {
         MutexGuard tmp(Sync());
-        GRDNodeList::GRDIterator it = listeners.begin();
+        typename GRDNodeList::GRDIterator it = listeners.begin();
         if (it != listeners.end()) {
             it->mark();
             return it.operator->();
@@ -172,7 +172,7 @@ public:
     {
         MutexGuard tmp(Sync());
         prev->unmark();
-        GRDNodeList::GRDIterator it = listeners.findNode(prev->val);
+        typename GRDNodeList::GRDIterator it = listeners.findNode(prev->val);
         if ((++it) != listeners.end()) {
             it->mark();
             return it.operator->();
