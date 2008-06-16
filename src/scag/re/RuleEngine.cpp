@@ -54,7 +54,7 @@ struct HashFunc{
 };
 
 
-class RuleEngineImpl : RuleEngine
+class RuleEngineImpl : public RuleEngine
 {
     typedef XHash <RuleKey, Rule*, HashFunc> CRulesHash;
 
