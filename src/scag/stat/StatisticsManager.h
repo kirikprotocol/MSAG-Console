@@ -219,12 +219,12 @@ namespace stat {
 //        void incSvcSmppCounter(const char* systemId, int index);
         void incSvcWapCounter(const char*  systemId, int index);
         void incSvcMmsCounter(const char*  systemId, int index);
-        void StatisticsManager::dumpSvcCounters(SerializationBuffer& buf);
+        void dumpSvcCounters(SerializationBuffer& buf);
 
 //        void incScSmppCounter(const char* systemId, int index);
         void incScWapCounter(const char*  systemId, int index);
         void incScMmsCounter(const char*  systemId, int index);
-        void StatisticsManager::dumpScCounters(SerializationBuffer& buf);
+        void dumpScCounters(SerializationBuffer& buf);
 
         int indexByCounter(int counter);
         int indexByHttpCounter(int event);

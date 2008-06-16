@@ -179,7 +179,7 @@ public:
   void mainLoop(int);
   void shutdown();
   TaskContainer tasks;
-  bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
+  bool routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
