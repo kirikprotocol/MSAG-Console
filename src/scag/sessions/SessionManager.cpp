@@ -360,7 +360,7 @@ bool SessionManagerImpl::processDeleteSession(SessionPtr& session)
             lcmCtx.stateMachineContext = new SessionPtr(session);
             lcmCtx.initiator = this;
             if(!LongCallManager::Instance().call(&lcmCtx))
-                delete lcmCtx.stateMachineContext;
+                delete static_cast<SessionPtr*>(lcmCtx.stateMachineContext);
             else
                 return false;
         }
