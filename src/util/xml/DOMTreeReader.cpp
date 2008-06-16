@@ -3,6 +3,7 @@
 #include <xercesc/dom/DOM.hpp>
 #include <xercesc/sax/SAXException.hpp>
 
+#include <iostream>
 #include <logger/Logger.h>
 #include <util/xml/DOMErrorLogger.h>
 #include <util/xml/init.h>
