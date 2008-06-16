@@ -4,7 +4,12 @@
 #
 #
 
+ifeq ($(CXX),CC)
 CXXFLAGS := -g -xtarget=ultra3 -xarch=v9 -xmemalign=8s -xcode=pic32 $(CXXFLAGS) -I.
+else
+# gcc
+CXXFLAGS := -g -fPIC $(CXXFLAGS) -I.
+endif
 
 PACKAGE := db.fileStorage
 
