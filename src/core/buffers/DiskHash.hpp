@@ -308,7 +308,8 @@ public:
 
   void Flush(int maxSpeed=0)
   {
-    f.MemoryFlush(maxSpeed);
+    // f.MemoryFlush(maxSpeed);
+    f.MemoryFlush();
     isChanged=false;
   }
 
