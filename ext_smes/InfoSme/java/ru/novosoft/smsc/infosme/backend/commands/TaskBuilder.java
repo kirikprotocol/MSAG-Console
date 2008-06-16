@@ -39,13 +39,19 @@ public class TaskBuilder extends Thread {
 
   private synchronized void removeTask(Task task) {
     try {
+      oldConfig.save();
+      try {
+          smeContext.getInfoSme().removeTask(task.getId());
+        } catch (Throwable e) {
+          e.printStackTrace();
+        }
 //      smeContext.resetConfig();
 //      if (task != null) {
 //        task.removeFromConfig(smeContext.getConfig());
 //        smeContext.getConfig().save();
 //        smeContext.getInfoSme().removeTask(task.getId());
 //      }
-      oldConfig.save();
+
     } catch (Throwable e) {
     }
   }
@@ -82,8 +88,6 @@ public class TaskBuilder extends Thread {
 
     InputStreamReader is = null;
 
-
-
     try {
       System.out.println("Create task...");
       resetTask(task, false);
@@ -108,7 +112,7 @@ public class TaskBuilder extends Thread {
         messages = getMessages(task, is, 1000,  new Date(currentTime));
       }
 
-      smeContext.getInfoSme().addStatisticRecord(task.getId(), new Date(), count, 0, 0, 0);
+//      smeContext.getInfoSme().addStatisticRecord(task.getId(), new Date(), count, 0, 0, 0);
       smeContext.getInfoSme().endDeliveryMessageGeneration(task.getId());
       System.out.println("Task generation ok");
     } catch (Exception e) {

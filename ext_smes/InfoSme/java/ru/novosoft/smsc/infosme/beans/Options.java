@@ -39,15 +39,6 @@ public class Options extends InfoSmeBean
   private String smscPassword = "";
 
 
-  private String systemDataSourceType = "";
-  private int systemDataSourceConnections = 0;
-  private String systemDataSourceDbInstance = "";
-  private String systemDataSourceDbUserName = "";
-  private String systemDataSourceDbUserPassword = "";
-  private boolean systemDataSourceWatchdog = false;
-  private String systemDataSourceJdbcDriver = "";
-  private String systemDataSourceJdbcSource = "";
-
   private String storeLocation;
   private String statStoreLocation;
 
@@ -93,14 +84,6 @@ public class Options extends InfoSmeBean
         storeLocation = getConfig().getString("InfoSme.storeLocation");
         statStoreLocation = getConfig().getString("InfoSme.statStoreLocation");
 
-        systemDataSourceType = getConfig().getString("InfoSme.systemDataSource.type");
-        systemDataSourceConnections = getConfig().getInt("InfoSme.systemDataSource.connections");
-        systemDataSourceDbInstance = getConfig().getString("InfoSme.systemDataSource.dbInstance");
-        systemDataSourceDbUserName = getConfig().getString("InfoSme.systemDataSource.dbUserName");
-        systemDataSourceDbUserPassword = getConfig().getString("InfoSme.systemDataSource.dbUserPassword");
-        systemDataSourceWatchdog = getConfig().getBool("InfoSme.systemDataSource.watchdog");
-        systemDataSourceJdbcDriver = getConfig().getString("InfoSme.systemDataSource.jdbc.driver");
-        systemDataSourceJdbcSource = getConfig().getString("InfoSme.systemDataSource.jdbc.source");
       } catch (Exception e) {
         checkForNulls();
         logger.error(e);
@@ -173,15 +156,6 @@ public class Options extends InfoSmeBean
     getConfig().setString("InfoSme.SMSC.password", smscPassword);
     getConfig().setInt("InfoSme.tasksSwitchTimeout", tasksSwitchTimeout);
     getConfig().setString("InfoSme.tasksTablesPrefix", tasksTaskTablesPrefix);
-
-    getConfig().setString("InfoSme.systemDataSource.type", systemDataSourceType);
-    getConfig().setInt("InfoSme.systemDataSource.connections", systemDataSourceConnections);
-    getConfig().setString("InfoSme.systemDataSource.dbInstance", systemDataSourceDbInstance);
-    getConfig().setString("InfoSme.systemDataSource.dbUserName", systemDataSourceDbUserName);
-    getConfig().setString("InfoSme.systemDataSource.dbUserPassword", systemDataSourceDbUserPassword);
-    getConfig().setBool("InfoSme.systemDataSource.watchdog", systemDataSourceWatchdog);
-    getConfig().setString("InfoSme.systemDataSource.jdbc.driver", systemDataSourceJdbcDriver);
-    getConfig().setString("InfoSme.systemDataSource.jdbc.source", systemDataSourceJdbcSource);
 
     getConfig().setString("InfoSme.storeLocation", storeLocation);
     getConfig().setString("InfoSme.statStoreLocation", statStoreLocation);
@@ -480,72 +454,6 @@ public class Options extends InfoSmeBean
     } catch (NumberFormatException e) {
       logger.debug("Invalid int InfoSme.Admin.port parameter value: \"" + adminPort + '"', e);
     }
-  }
-
-  public String getSystemDataSourceType() {
-    return systemDataSourceType;
-  }
-  public void setSystemDataSourceType(String systemDataSourceType) {
-    this.systemDataSourceType = systemDataSourceType;
-  }
-
-  public int getSystemDataSourceConnectionsInt() {
-    return systemDataSourceConnections;
-  }
-  public void setSystemDataSourceConnectionsInt(int systemDataSourceConnections) {
-    this.systemDataSourceConnections = systemDataSourceConnections;
-  }
-  public String getSystemDataSourceConnections() {
-    return String.valueOf(systemDataSourceConnections);
-  }
-  public void setSystemDataSourceConnections(String systemDataSourceConnections) {
-    try {
-      this.systemDataSourceConnections = Integer.decode(systemDataSourceConnections).intValue();
-    } catch (NumberFormatException e) {
-      logger.debug("Invalid int InfoSme.systemDataSource.connections parameter value: \"" + systemDataSourceConnections + '"', e);
-    }
-  }
-
-  public String getSystemDataSourceDbInstance() {
-    return systemDataSourceDbInstance;
-  }
-  public void setSystemDataSourceDbInstance(String systemDataSourceDbInstance) {
-    this.systemDataSourceDbInstance = systemDataSourceDbInstance;
-  }
-
-  public String getSystemDataSourceDbUserName() {
-    return systemDataSourceDbUserName;
-  }
-  public void setSystemDataSourceDbUserName(String systemDataSourceDbUserName) {
-    this.systemDataSourceDbUserName = systemDataSourceDbUserName;
-  }
-
-  public String getSystemDataSourceDbUserPassword() {
-    return systemDataSourceDbUserPassword;
-  }
-  public void setSystemDataSourceDbUserPassword(String systemDataSourceDbUserPassword) {
-    this.systemDataSourceDbUserPassword = systemDataSourceDbUserPassword;
-  }
-
-  public boolean isSystemDataSourceWatchdog() {
-    return systemDataSourceWatchdog;
-  }
-  public void setSystemDataSourceWatchdog(boolean systemDataSourceWatchdog) {
-    this.systemDataSourceWatchdog = systemDataSourceWatchdog;
-  }
-
-  public String getSystemDataSourceJdbcDriver() {
-    return systemDataSourceJdbcDriver;
-  }
-  public void setSystemDataSourceJdbcDriver(String systemDataSourceJdbcDriver) {
-    this.systemDataSourceJdbcDriver = systemDataSourceJdbcDriver;
-  }
-
-  public String getSystemDataSourceJdbcSource() {
-    return systemDataSourceJdbcSource;
-  }
-  public void setSystemDataSourceJdbcSource(String systemDataSourceJdbcSource) {
-    this.systemDataSourceJdbcSource = systemDataSourceJdbcSource;
   }
 
   public String getStoreLocation() {

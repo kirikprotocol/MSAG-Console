@@ -155,9 +155,6 @@ public class Index extends IndexProperties
     getInfoSmeContext().setChangedOptions(false);
     getInfoSmeContext().setChangedDrivers(false);
     getInfoSmeContext().setChangedProviders(false);
-    getInfoSmeContext().reloadDataSource(oldConfig, config);
-    if (getInfoSmeContext().getDataSource() == null)
-      warning("infosme.warn.jdbc");
     return message("infosme.prompt.restart");
   }
 

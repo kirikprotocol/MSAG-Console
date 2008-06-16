@@ -57,7 +57,6 @@ public class InfoSmeContext implements SMEAppContext
   private boolean changedProviders = false;
   private boolean changedTasks = false;
   private boolean changedSchedules = false;
-  private ConnectionPool dataSource = null;
   private BlackListManager blackListManager;
   private String smeId = "InfoSme";
   //private Long appContextId = null;
@@ -78,19 +77,11 @@ public class InfoSmeContext implements SMEAppContext
     this.blackListManager = new BlackListManager(appContext.getPersonalizationClientPool());
   }
 
-  private void shutdownDataSource()
-  {
-    try {
-      if (dataSource != null) dataSource.shutdown();
-      dataSource = null;
-    } catch (SQLException ex) {
-      logger.error("ConnectionPool shutdown failed", ex);
-    }
-  }
+
 
   public void shutdown()
   {
-    shutdownDataSource();
+
   }
 
   public Config loadCurrentConfig()
@@ -148,33 +139,7 @@ public class InfoSmeContext implements SMEAppContext
   public void resetConfig() throws AdminException, SAXException, ParserConfigurationException, IOException
   {
     Config newConfig = loadCurrentConfig();
-    reloadDataSource(config, newConfig);
     config = newConfig;
-  }
-
-  public void reloadDataSource(Config oldConfig, Config newConfig)
-  {
-    try {
-      if (oldConfig == null
-          || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.jdbc.source")
-          || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.jdbc.driver")
-          || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.dbUserName")
-          || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.dbUserPassword")) 
-      {
-        shutdownDataSource();
-        Properties properties = new Properties();
-        properties.setProperty("jdbc.source", newConfig.getString("InfoSme.systemDataSource.jdbc.source"));
-        properties.setProperty("jdbc.driver", newConfig.getString("InfoSme.systemDataSource.jdbc.driver"));
-        properties.setProperty("jdbc.user", newConfig.getString("InfoSme.systemDataSource.dbUserName"));
-        properties.setProperty("jdbc.pass", newConfig.getString("InfoSme.systemDataSource.dbUserPassword"));
-        properties.setProperty("jdbc.min.connections", "0");
-        properties.setProperty("jdbc.max.idle.time", "240");
-        properties.setProperty("jdbc.pool.name", "infosme");
-        dataSource = new ConnectionPool(properties);
-      }
-    } catch (Throwable e) {
-      logger.error("Could not init datasource", e);
-    }
   }
 
 
@@ -251,11 +216,6 @@ public class InfoSmeContext implements SMEAppContext
   public void setChangedSchedules(boolean changedSchedules)
   {
     this.changedSchedules = changedSchedules;
-  }
-
-  public DataSource getDataSource()
-  {
-    return dataSource;
   }
 
   public String getMessagesSort()

@@ -113,42 +113,7 @@
 </tr>
 
 </table>
-<div class=page_subtitle>System data source</div>
-<table class=properties_list <%rowN=0;%>>
-<col width="10%">
-<tr class=row<%=rowN++&1%>>
-  <th>Data source type</th>
-  <td><input class=txt name=systemDataSourceType value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceType())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>Connections</th>
-  <td><input class=txt name=systemDataSourceConnections value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceConnections())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>DB instance</th>
-  <td><input class=txt name=systemDataSourceDbInstance value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceDbInstance())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>DB user name</th>
-  <td><input class=txt name=systemDataSourceDbUserName value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceDbUserName())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>DB user password</th>
-  <td><input class=txt name=systemDataSourceDbUserPassword value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceDbUserPassword())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th><label for=watchdog>Watchdog</label></th>
-  <td><input class=check type=checkbox name=systemDataSourceWatchdog id=watchdog value=true <%=bean.isSystemDataSourceWatchdog() ? "checked" : ""%>></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>JDBC driver</th>
-  <td><input class=txt name=systemDataSourceJdbcDriver value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceJdbcDriver())%>"></td>
-</tr>
-<tr class=row<%=rowN++&1%>>
-  <th>JDBC source</th>
-  <td><input class=txt name=systemDataSourceJdbcSource value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceJdbcSource())%>"></td>
-</tr>
-</table>
+
 </div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbDone",   "common.buttons.done",  "infosme.hint.done_editing");
