@@ -64,7 +64,7 @@ static PersThread rp1_thread("RegionPersRP1");
 
 static int stop_signal = 0;
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     Logger* logger = Logger::getInstance("pers");
     smsc_log_debug(logger, "Signal %d handled !", sig);
@@ -83,7 +83,7 @@ extern "C" static void appSignalHandler(int sig)
     }
 }
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     smsc::logger::Logger::Shutdown();
 }

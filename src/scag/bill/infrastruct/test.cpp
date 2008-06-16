@@ -16,7 +16,7 @@ using namespace smsc::logger;
 
 static Logger *logger;
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     smsc_log_debug(logger, "Signal %d handled !", sig);
     if (sig==SIGTERM || sig==SIGINT)
@@ -25,7 +25,7 @@ extern "C" static void appSignalHandler(int sig)
     }
 }
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     smsc::logger::Logger::Shutdown();
 }

@@ -22,7 +22,7 @@ using namespace smsc::util::config;
 const int ITER_CNT = 10;
 const int BATCH_COUNT = 6;
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     Logger::Shutdown();
 }

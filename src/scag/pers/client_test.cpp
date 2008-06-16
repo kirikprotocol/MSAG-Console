@@ -20,7 +20,7 @@ using namespace scag::config;
 
 #define ITER_CNT 100
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     Logger::Shutdown();
 }

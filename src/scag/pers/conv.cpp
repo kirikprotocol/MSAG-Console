@@ -25,7 +25,7 @@ using std::string;
 using namespace scag::pers;
 using namespace smsc::util::config;
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     smsc::logger::Logger::Shutdown();
 }

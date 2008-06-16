@@ -31,7 +31,7 @@ using namespace smsc::util::config;
 using namespace scag::pers::client;
 using scag::config::ConfigManager;
 
-extern "C" static void appSignalHandler(int sig)
+extern "C" void appSignalHandler(int sig)
 {
     Logger* logger = Logger::getInstance("pers");
     smsc_log_debug(logger, "Signal %d handled !", sig);
@@ -46,7 +46,7 @@ extern "C" static void appSignalHandler(int sig)
     }
 }
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     smsc::logger::Logger::Shutdown();
 }

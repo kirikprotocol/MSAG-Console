@@ -37,7 +37,7 @@ Mutex mtx;
 uint32_t req_cnt = 0, resp_cnt = 0, st_resp_cnt = 0;
 
 
-extern "C" static void atExitHandler(void)
+extern "C" void atExitHandler(void)
 {
     Logger::Shutdown();
 }
