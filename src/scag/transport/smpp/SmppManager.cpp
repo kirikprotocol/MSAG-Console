@@ -125,10 +125,10 @@ public:
     return rv;
   }
 
-  virtual SmppEntity* getSmppEntity(const char* systemId)const
+  virtual SmppEntity* getSmppEntity(const char* systemId) const
   {
     MutexGuard mg(regMtx);
-    SmppEntity** ptr=registry.GetPtr(systemId);
+    SmppEntity* const *ptr=registry.GetPtr(systemId);
     return ptr ? (*ptr)->info.enabled?*ptr:0 : 0;
   }
 
@@ -1321,7 +1321,7 @@ void SmppManagerImpl::sendReceipt(Address& from, Address& to, int state, const c
       sms.setIntProperty(Tag::SMPP_NETWORK_ERROR_CODE, netErrCode);
     }
 
-    SmppCommand& cmd = SmppCommand::makeDeliverySm(sms, 0);
+    SmppCommand cmd = SmppCommand::makeDeliverySm(sms, 0);
     cmd->setFlag(SmppCommandFlags::NOTIFICATION_RECEIPT);
     {
         MutexGuard regmg(regMtx);
