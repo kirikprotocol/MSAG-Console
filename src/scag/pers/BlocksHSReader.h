@@ -205,6 +205,10 @@ private:
   string				dbPath;
   PersClient& pc;
 
+  // bukind: IT SEEMS THAT THIS CODE IS NEVER USED.
+  // it did not have the following declaration!
+  std::vector<File*>                    dataFile_f;
+
 };
 
 }//pers
