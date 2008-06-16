@@ -14,7 +14,7 @@ namespace scag { namespace re
 using scag::transport::SCAGCommand;
 using namespace scag::re::actions;
 using smsc::logger::Logger;
-using scag::lcm;
+using namespace scag::lcm;
 
 
 class EventHandler : public IParserHandler, ComplexActionLongCallHelper

@@ -16,7 +16,7 @@ namespace service {
 namespace test {
 
 using smsc::admin::AdminException;
-using smsc::admin::service;
+using namespace smsc::admin::service;
 using smsc::util::config::Config;
 using smsc::logger::Logger;
 

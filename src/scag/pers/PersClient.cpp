@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <poll.h>
 #include "logger/Logger.h"
 #include <core/threads/Thread.hpp>
 #include <core/synchronization/EventMonitor.hpp>
@@ -17,7 +18,7 @@ using smsc::util::Exception;
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 using namespace scag::lcm;
-using scag::pers;
+using namespace scag::pers;
 
 bool  PersClient::inited = false;
 Mutex PersClient::initLock;

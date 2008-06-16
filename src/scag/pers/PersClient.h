@@ -14,7 +14,7 @@
 namespace scag { namespace pers { namespace client {
 
 using smsc::core::network::Socket;
-using scag::pers;
+using namespace scag::pers;
 using scag::lcm::LongCallParams;
 using scag::lcm::LongCallContext;
 

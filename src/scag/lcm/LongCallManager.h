@@ -17,7 +17,7 @@ namespace scag { namespace lcm {
 
 using smsc::logger::Logger;
 using namespace scag::config;
-using smsc::core::synchronization;
+using namespace smsc::core::synchronization;
 using scag::re::actions::ActionContext;
 
 enum LongCallCommandId{
