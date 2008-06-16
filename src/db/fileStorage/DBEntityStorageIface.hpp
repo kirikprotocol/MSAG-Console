@@ -28,6 +28,8 @@ public:
   virtual bool putValue(const V& value) = 0;
 };
 
+template <typename V> class DbIterator;
+
 /*
 ** It's inteface for bypassing of all DB records
 */

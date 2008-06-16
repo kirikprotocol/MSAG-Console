@@ -84,7 +84,20 @@ typedef struct {
 
 extern const ConnectParms _ConnectParms_DFLT;
 
-class ConnectListenerITF;
+class Connect;
+
+//NOTE: it's assumed that if Connect has exception set upon return from these callbacks,
+//the controlling TCP server destroys this Connect.
+class ConnectListenerITF {
+public:
+    //NOTE: if listener takes ownership of packet, remaining listeners will not be notified.
+    virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
+                     /*throw(std::exception) */= 0;
+    //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
+    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc) = 0;
+};
+
+
 //NOTE: Connect methods, in case of error, create SystemError or SerializerException
 //(returned by hasException(), but instead of throwing it, passes latter to listeners.
 //Listeners are expected to either reset exception in order to continue Connect
@@ -127,7 +140,7 @@ protected:
     void notifyByExc(void);
     void notifyByMsg(std::auto_ptr<SerializablePacketAC>& p_msg);
 
-    Mutex           sndSync;
+    smsc::core::synchronization::Mutex           sndSync;
     ConnectParms    _parms;
     SerializerITF * _objSerializer;
     PckAcquirer     pckAcq;
@@ -135,18 +148,6 @@ protected:
     char            _logId[sizeof("Connect[%u]") + sizeof(unsigned)*3 + 1];
     Logger*         logger;
 };
-
-//NOTE: it's assumed that if Connect has exception set upon return from these callbacks,
-//the controlling TCP server destroys this Connect.
-class ConnectListenerITF {
-public:
-    //NOTE: if listener takes ownership of packet, remaining listeners will not be notified.
-    virtual void onPacketReceived(Connect* conn, std::auto_ptr<SerializablePacketAC>& recv_cmd)
-                     /*throw(std::exception) */= 0;
-    //NOTE: it's recommended to reset exception if it doesn't prevent entire Connect to function
-    virtual void onConnectError(Connect* conn, std::auto_ptr<CustomException>& p_exc) = 0;
-};
-
 
 } //interaction
 } //inman

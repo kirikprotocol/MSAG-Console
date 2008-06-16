@@ -10,6 +10,8 @@ using namespace smsc::db;
 extern "C" 
 DataSourceFactory*  getDataSourceFactory(void);
 
+class DBEntityStorageDataSource;
+
 class DBEntityStorageDataSourceFactory : public DataSourceFactory
 {
 public:
@@ -19,6 +21,7 @@ public:
 
 protected:
   virtual DataSource* createDataSource();
+  friend class DBEntityStorageDataSource; // is necessary to declare createDataSource() as a friend
 
 private:
   smsc::logger::Logger *_logger;
