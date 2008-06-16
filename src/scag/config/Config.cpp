@@ -362,7 +362,7 @@ template<class _HashType, class _HashIteratorType, class _ValueType, void(*colle
                           const char * const ,
                           const size_t ,
                           const char * const)>
-void getChildSectionsFromHash(_HashType &hash,
+void getChildSectionsFromHash(const _HashType &hash,
                 const char * const sectionName,
                 size_t sectionNameLen,
                 CStrSet &result)
@@ -376,7 +376,7 @@ void getChildSectionsFromHash(_HashType &hash,
 }
 
 template<class _HashType, class _HashIteratorType, class _ValueType>
-void getChildParamsFromHash(_HashType &hash,
+void getChildParamsFromHash(const _HashType &hash,
               const char * const sectionName,
               size_t sectionNameLen,
               CStrSet &result)
@@ -399,7 +399,7 @@ template<void(*collect_func)(CStrSet &,
                const char * const ,
                const size_t ,
                const char * const)>
-CStrSet* Config::_getChildSectionNames(const char * const sectionName)
+CStrSet* Config::_getChildSectionNames(const char * const sectionName) const
 {
   CStrSet *result = new CStrSet;
   const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
@@ -418,17 +418,17 @@ CStrSet* Config::_getChildSectionNames(const char * const sectionName)
   return result;
 }
 
-CStrSet* Config::getChildSectionNames(const char * const sectionName)
+CStrSet* Config::getChildSectionNames(const char * const sectionName) const
 {
   return _getChildSectionNames<collect_section_names_into_set>(sectionName);
 }
 
-CStrSet* Config::getChildShortSectionNames(const char * const sectionName)
+CStrSet* Config::getChildShortSectionNames(const char * const sectionName) const
 {
   return _getChildSectionNames<collect_short_section_names_into_set>(sectionName);
 }
 
-CStrSet * Config::getChildIntParamNames(const char * const sectionName)
+CStrSet * Config::getChildIntParamNames(const char * const sectionName) const
 {
   std::auto_ptr<CStrSet> result(new CStrSet);
   const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
@@ -441,7 +441,7 @@ CStrSet * Config::getChildIntParamNames(const char * const sectionName)
   return result.release();
 }
 
-CStrSet * Config::getChildBoolParamNames(const char * const sectionName)
+CStrSet * Config::getChildBoolParamNames(const char * const sectionName) const
 {
   std::auto_ptr<CStrSet> result(new CStrSet);
   const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'
@@ -454,7 +454,7 @@ CStrSet * Config::getChildBoolParamNames(const char * const sectionName)
   return result.release();
 }
 
-CStrSet * Config::getChildStrParamNames(const char * const sectionName)
+CStrSet * Config::getChildStrParamNames(const char * const sectionName) const
 {
   std::auto_ptr<CStrSet> result(new CStrSet);
   const size_t sectionNameLen = sectionName[strlen(sectionName)-1] == '.'

@@ -140,7 +140,7 @@ protected:
     unsigned    lastId;
 
     void adjustRanges(void);
-    const URCSpace * insertSpace(std::string & name, URCSpace & space);
+    const URCSpace * insertSpace(const std::string & name, const URCSpace & space);
     const URCSpace * lookUp(RCHash rc_hash) const;
 
     URCRegistry() : lastId(0)

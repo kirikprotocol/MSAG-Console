@@ -44,7 +44,7 @@ StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,i
 }
 #endif
 
-StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
+StatManConfig::StatManConfig(const ConfigView& cv)  throw(ConfigException)
 {
     try{
         std::auto_ptr<char> dir_( cv.getString("statisticsDir") );
@@ -79,7 +79,7 @@ StatManConfig::StatManConfig(ConfigView& cv)  throw(ConfigException)
     }
 }
 
-void StatManConfig::init(ConfigView& cv) throw(ConfigException)
+void StatManConfig::init(const ConfigView& cv) throw(ConfigException)
 {
     try {
         std::auto_ptr<char> dir_( cv.getString("statisticsDir") );
@@ -110,7 +110,7 @@ void StatManConfig::init(ConfigView& cv) throw(ConfigException)
     }
 }
 
-bool StatManConfig::check(ConfigView& cv)  throw(ConfigException)
+bool StatManConfig::check(const ConfigView& cv)  throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> dir_( cv.getString("statisticsDir") );

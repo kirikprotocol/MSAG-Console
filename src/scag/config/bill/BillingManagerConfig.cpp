@@ -3,11 +3,12 @@
 namespace scag {
 namespace config {
 
-BillingManagerConfig::BillingManagerConfig(ConfigView& cv) throw(ConfigException)
+BillingManagerConfig::BillingManagerConfig(const ConfigView& cv) throw(ConfigException)
 {
+  init(cv);
 }
 
-void BillingManagerConfig::init(ConfigView& cv) throw(ConfigException)
+void BillingManagerConfig::init(const ConfigView& cv) throw(ConfigException)
 {
     try {
         std::auto_ptr<char> cfg_dir_( cv.getString("configDir") );
@@ -34,7 +35,7 @@ void BillingManagerConfig::init(ConfigView& cv) throw(ConfigException)
 
 }
 
-bool BillingManagerConfig::check(ConfigView& cv) throw(ConfigException)
+bool BillingManagerConfig::check(const ConfigView& cv) throw(ConfigException)
 {   
     try {
         //std::auto_ptr<char> cfg_dir_( cv.getString("configDir") );

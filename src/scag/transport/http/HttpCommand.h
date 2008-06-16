@@ -209,7 +209,7 @@ public:
     }
 
     SessionPtr getSession() { return session; };
-    void setSession(SessionPtr& s) { session = s; };
+    void setSession(const SessionPtr& s) { session = s; };
     bool hasSession() { return session.Get(); }
     
     // ---------- Command context methods (end) ----------    

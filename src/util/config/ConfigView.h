@@ -25,41 +25,41 @@ namespace config {
         
         smsc::logger::Logger *log;
 
-        Config &    config;
+        const Config& config;
         char*       category;
     
-        char* prepareSubSection(const char* sub);
+        char* prepareSubSection(const char* sub) const;
 
     public:
 
         ConfigView(Manager & manager, const char* cat = 0);
-        ConfigView(Config & use_config, const char* cat = 0);
+        ConfigView(const Config & use_config, const char* cat = 0);
         virtual ~ConfigView();
         
         inline const char* getInstance() {
             return category;
         };
 
-        bool    findSubSection(const char * const subsectionName);
-        ConfigView* getSubConfig(const char* sub, bool full=false);
+        bool    findSubSection(const char * const subsectionName) const;
+        ConfigView* getSubConfig(const char* sub, bool full=false) const;
         
-        CStrSet* getSectionNames()
+        CStrSet* getSectionNames() const
             throw (ConfigException);
-        CStrSet* getShortSectionNames()
+        CStrSet* getShortSectionNames() const
             throw (ConfigException);
 
-        CStrSet* getIntParamNames()
+        CStrSet* getIntParamNames() const
             throw (ConfigException);
-        CStrSet* getBoolParamNames()
+        CStrSet* getBoolParamNames() const
             throw (ConfigException);
-        CStrSet* getStrParamNames()
+        CStrSet* getStrParamNames() const
             throw (ConfigException);
         
-        char* getString(const char* param, const char* error=0, bool check=true)
+        char* getString(const char* param, const char* error=0, bool check=true) const
             throw (ConfigException);
-        int32_t getInt(const char* param, const char* error=0)
+        int32_t getInt(const char* param, const char* error=0) const
             throw (ConfigException);
-        bool getBool(const char* param, const char* error=0)
+        bool getBool(const char* param, const char* error=0) const
             throw (ConfigException);
     };
 

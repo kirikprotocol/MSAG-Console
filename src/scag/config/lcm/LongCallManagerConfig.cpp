@@ -2,12 +2,12 @@
 
 namespace scag { namespace config {
 
-LongCallManagerConfig::LongCallManagerConfig(ConfigView& cv) throw(ConfigException)
+LongCallManagerConfig::LongCallManagerConfig(const ConfigView& cv) throw(ConfigException)
 {
     init(cv);
 }
 
-void LongCallManagerConfig::init(ConfigView& cv)   throw(ConfigException)
+void LongCallManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
 {
     try {
         maxThreads = cv.getInt("maxTasks", NULL);        
@@ -18,7 +18,7 @@ void LongCallManagerConfig::init(ConfigView& cv)   throw(ConfigException)
     }
 }
 
-bool LongCallManagerConfig::check(ConfigView& cv)   throw(ConfigException)
+bool LongCallManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
         return maxThreads != cv.getInt("maxTasks", NULL);

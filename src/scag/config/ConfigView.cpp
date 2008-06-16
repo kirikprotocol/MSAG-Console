@@ -7,23 +7,30 @@ using smsc::logger::Logger;
 
 /* ----------------------- Tree Configuration Management ------------------- */
 
-char* ConfigView::prepareSubSection(const char* sub)
+char* ConfigView::prepareSubSection(const char* sub) const
 {
     char* section = 0;
-    if (!sub || sub[0] == '\0') return category;
-    if (category)
-    {
-        section = new char[strlen(category)+strlen(sub)+2];
-        sprintf(section, "%s.%s", category, sub);
-    }
-    else
-    {
+    do { // fake loop
+
+      if ( category && category[0] != '\0' ) {
+        if ( sub && sub[0] != '\0' ) {
+          // %s.%s
+          section = new char[strlen(category) + strlen(sub) + 2];
+          sprintf(section, "%s.%s", category, sub );
+          break;
+        }
+        sub = category;
+      }
+
+      if ( sub && sub[0] != '\0' ) {
         section = new char[strlen(sub)+1];
         strcpy(section, sub);
-    }
+      }
+
+    } while ( false );
     return section;
 }
-ConfigView::ConfigView(Config& config_, const char* cat)
+ConfigView::ConfigView(const Config& config_, const char* cat)
     : log(Logger::getInstance("scag.onfig.ConfigView")),
         config(config_), category(0)
 {
@@ -37,7 +44,7 @@ ConfigView::~ConfigView()
     if (category) delete category;
 }
 
-ConfigView* ConfigView::getSubConfig(const char* sub, bool full)
+ConfigView* ConfigView::getSubConfig(const char* sub, bool full) const
 {
     ConfigView* dsc = 0;
     if (full)
@@ -53,33 +60,33 @@ ConfigView* ConfigView::getSubConfig(const char* sub, bool full)
     return dsc;
 }
 
-CStrSet* ConfigView::getSectionNames()
+CStrSet* ConfigView::getSectionNames() const
     throw (ConfigException)
 {
     return config.getChildSectionNames(category);
 }
-CStrSet* ConfigView::getShortSectionNames()
+CStrSet* ConfigView::getShortSectionNames() const
     throw (ConfigException)
 {
     return config.getChildShortSectionNames(category);
 }
-CStrSet* ConfigView::getIntParamNames()
+CStrSet* ConfigView::getIntParamNames() const
     throw (ConfigException)
 {
     return config.getChildIntParamNames(category);
 }
-CStrSet* ConfigView::getBoolParamNames()
+CStrSet* ConfigView::getBoolParamNames() const
     throw (ConfigException)
 {
     return config.getChildBoolParamNames(category);
 }
-CStrSet* ConfigView::getStrParamNames()
+CStrSet* ConfigView::getStrParamNames() const
     throw (ConfigException)
 {
     return config.getChildStrParamNames(category);
 }
 
-int32_t ConfigView::getInt(const char* param, const char* error)
+int32_t ConfigView::getInt(const char* param, const char* error) const
     throw (ConfigException)
 {
     char* section = prepareSubSection(param);
@@ -104,7 +111,7 @@ int32_t ConfigView::getInt(const char* param, const char* error)
     if (section) delete section;
     return result;
 }
-char* ConfigView::getString(const char* param, const char* error, bool check)
+char* ConfigView::getString(const char* param, const char* error, bool check) const
     throw (ConfigException)
 {
     char* section = prepareSubSection(param);
@@ -132,7 +139,7 @@ char* ConfigView::getString(const char* param, const char* error, bool check)
     if (section) delete section;
     return result;
 }
-bool ConfigView::getBool(const char* param, const char* error)
+bool ConfigView::getBool(const char* param, const char* error) const
     throw (ConfigException)
 {
     char* section = prepareSubSection(param);

@@ -9,7 +9,7 @@ SessionManagerConfig::SessionManagerConfig()
     dir = "";
 }
 
-SessionManagerConfig::SessionManagerConfig(ConfigView& cv) throw(ConfigException)
+SessionManagerConfig::SessionManagerConfig(const ConfigView& cv) throw(ConfigException)
 {
     init(cv);
 }
@@ -19,7 +19,7 @@ SessionManagerConfig::SessionManagerConfig(const std::string& dir_)   throw(Conf
 {
 }
 
-void SessionManagerConfig::init(ConfigView& cv)   throw(ConfigException)
+void SessionManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
 {
     try {
         std::auto_ptr<char> dir_( cv.getString("location") );
@@ -35,7 +35,7 @@ void SessionManagerConfig::init(ConfigView& cv)   throw(ConfigException)
     }
 }
 
-bool SessionManagerConfig::check(ConfigView& cv)   throw(ConfigException)
+bool SessionManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> dir_( cv.getString("location") );

@@ -54,7 +54,7 @@ private:
 class SelectInfoSme_T_stateAndSendDate_criterion : public DBEntityStorageStatement
 {
 public:
-  SelectInfoSme_T_stateAndSendDate_criterion(StorageHelper::InfoSme_T_storage_ref_t& dataSource)
+  SelectInfoSme_T_stateAndSendDate_criterion(const StorageHelper::InfoSme_T_storage_ref_t& dataSource)
     : _dataSource(dataSource), _logger(Logger::getInstance("dbStrg")) {}
 
   virtual void setUint8(int pos, uint8_t val, bool null=false) throw(SQLException);

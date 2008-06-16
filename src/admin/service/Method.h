@@ -53,7 +53,7 @@ public:
     }
   }
 
-  Method(Method &copy)
+  Method(const Method &copy)
   {
     init(copy.id, copy.name, copy.params, copy.returnType);
   }

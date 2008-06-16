@@ -16,9 +16,9 @@ public:
     {
     }
 
-    LongCallManagerConfig(ConfigView& cv)  throw(ConfigException);
-    void init(ConfigView& cv)  throw(ConfigException);   
-    bool check(ConfigView& cv)  throw(ConfigException);
+    LongCallManagerConfig(const ConfigView& cv)  throw(ConfigException);
+    void init(const ConfigView& cv)  throw(ConfigException);   
+    bool check(const ConfigView& cv)  throw(ConfigException);
     
     uint32_t maxThreads;
 };

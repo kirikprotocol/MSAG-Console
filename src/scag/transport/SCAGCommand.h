@@ -32,7 +32,7 @@ using scag::sessions::SessionPtr;
       virtual uint8_t getCommandId() const = 0;
       
       virtual SessionPtr getSession() = 0;
-      virtual void setSession(SessionPtr&) = 0;
+      virtual void setSession(const SessionPtr&) = 0;
       virtual bool hasSession() = 0;
 
       virtual ~SCAGCommand() {};

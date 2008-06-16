@@ -21,9 +21,9 @@ public:
     {
     }
 
-    PersClientConfig(ConfigView& cv)  throw(ConfigException);
-    void init(ConfigView& cv)  throw(ConfigException);   
-    bool check(ConfigView& cv)  throw(ConfigException);
+    PersClientConfig(const ConfigView& cv)  throw(ConfigException);
+    void init(const ConfigView& cv)  throw(ConfigException);   
+    bool check(const ConfigView& cv)  throw(ConfigException);
 
     std::string host;
     int port, timeout, pingTimeout;    

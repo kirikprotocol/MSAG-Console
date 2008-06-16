@@ -619,7 +619,7 @@ public:
    }
 
    SessionPtr getSession() { return cmd->session; };
-   void setSession(SessionPtr& s) { cmd->session = s; };
+   void setSession(const SessionPtr& s) { cmd->session = s; };
    bool hasSession() { return cmd->session.Get(); }
 
 };

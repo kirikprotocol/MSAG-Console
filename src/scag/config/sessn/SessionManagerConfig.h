@@ -13,9 +13,9 @@ class SessionManagerConfig
 public:
     SessionManagerConfig();
     SessionManagerConfig(const std::string& dir_)  throw(ConfigException);
-    SessionManagerConfig(ConfigView& cv)  throw(ConfigException);
-    void init(ConfigView& cv)  throw(ConfigException);   
-    bool check(ConfigView& cv)  throw(ConfigException);
+    SessionManagerConfig(const ConfigView& cv)  throw(ConfigException);
+    void init(const ConfigView& cv)  throw(ConfigException);   
+    bool check(const ConfigView& cv)  throw(ConfigException);
 
     std::string dir;
 };

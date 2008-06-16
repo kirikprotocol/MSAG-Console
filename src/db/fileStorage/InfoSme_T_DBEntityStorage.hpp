@@ -43,8 +43,8 @@ public:
     InfoSme_T_DbIterator(InfoSme_T_DBEntityStorage* dbIteratorCreator);
 
     virtual bool nextValue(InfoSme_T_Entity* resultValue);
-    void setIndexSearchCrit(InfoSme_T_Entity::StateANDSDate_key& fromKey,
-                            InfoSme_T_Entity::StateANDSDate_key& toKey);
+    void setIndexSearchCrit(const InfoSme_T_Entity::StateANDSDate_key& fromKey,
+                            const InfoSme_T_Entity::StateANDSDate_key& toKey);
   private:
     bool sequentialBypass(InfoSme_T_Entity* resultValue);
     bool indexedBypass(InfoSme_T_Entity* resultValue);

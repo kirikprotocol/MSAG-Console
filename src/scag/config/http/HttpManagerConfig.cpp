@@ -2,12 +2,12 @@
 
 namespace scag { namespace config {
 
-HttpManagerConfig::HttpManagerConfig(ConfigView& cv) throw(ConfigException)
+HttpManagerConfig::HttpManagerConfig(const ConfigView& cv) throw(ConfigException)
 {
     init(cv);
 }
 
-void HttpManagerConfig::init(ConfigView& cv)   throw(ConfigException)
+void HttpManagerConfig::init(const ConfigView& cv)   throw(ConfigException)
 {
     try {
         std::auto_ptr <char> h(cv.getString("host", NULL, false));
@@ -28,7 +28,7 @@ void HttpManagerConfig::init(ConfigView& cv)   throw(ConfigException)
     }
 }
 
-bool HttpManagerConfig::check(ConfigView& cv)   throw(ConfigException)
+bool HttpManagerConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> h( cv.getString("host") );

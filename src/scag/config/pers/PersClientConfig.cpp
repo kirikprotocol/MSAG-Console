@@ -2,12 +2,12 @@
 
 namespace scag { namespace config {
 
-PersClientConfig::PersClientConfig(ConfigView& cv) throw(ConfigException)
+PersClientConfig::PersClientConfig(const ConfigView& cv) throw(ConfigException)
 {
     init(cv);
 }
 
-void PersClientConfig::init(ConfigView& cv)   throw(ConfigException)
+void PersClientConfig::init(const ConfigView& cv)   throw(ConfigException)
 {
     try {
         std::auto_ptr <char> h(cv.getString("host", NULL, false));
@@ -22,7 +22,7 @@ void PersClientConfig::init(ConfigView& cv)   throw(ConfigException)
     }
 }
 
-bool PersClientConfig::check(ConfigView& cv)   throw(ConfigException)
+bool PersClientConfig::check(const ConfigView& cv)   throw(ConfigException)
 {   
     try {
         std::auto_ptr<char> h( cv.getString("host") );

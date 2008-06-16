@@ -23,12 +23,12 @@ namespace util {
 class Exception: public std::exception {
 public:
     Exception() { }
-    Exception(const char* fmt,...)
+    Exception(const char* const fmt,...)
     {
         SMSC_UTIL_EX_FILL(fmt);
     }
 
-    inline void fill(const char* &fmt, va_list &arglist)
+    inline void fill(const char* const &fmt, va_list &arglist)
     {
         smsc::util::vformat(message, fmt, arglist);
     }

@@ -9,9 +9,9 @@ namespace config {
 class StatManConfig {
 public:    
     StatManConfig();
-    StatManConfig(ConfigView& cv)  throw(ConfigException);
-    void init(ConfigView& cv)  throw(ConfigException);   
-    bool check(ConfigView& cv)  throw(ConfigException);
+    StatManConfig(const ConfigView& cv)  throw(ConfigException);
+    void init(const ConfigView& cv)  throw(ConfigException);   
+    bool check(const ConfigView& cv)  throw(ConfigException);
     
 #ifdef TESTING    
     StatManConfig::StatManConfig(std::string& directory,std::string& host,int genp,int svcp,int scp)  throw(ConfigException);
