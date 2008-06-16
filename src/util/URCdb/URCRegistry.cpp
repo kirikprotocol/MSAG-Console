@@ -80,7 +80,7 @@ void URCRegistry::adjustRanges(void)
     }
 }
 
-const URCRegistry::URCSpace * URCRegistry::insertSpace(std::string & name, URCSpace & space)
+const URCRegistry::URCSpace * URCRegistry::insertSpace(const std::string & name, const URCSpace & space)
 {
     RValsDb::iterator it =
         rvalDb.insert(RValsDb::value_type(++lastId, space)).first;
