@@ -414,12 +414,16 @@ public:
   */
   #ifndef RE_EXTERNAL_CTYPE
   LOCALEDEF void InitLocale();
+  #else
+  LOCALEDEF void InitLocale() {}
   #endif
   LOCALEDEF void SetLocaleInfo(prechar newlc,prechar newuc,prechar newchartypes
   #if defined(RE_EXTERNAL_CTYPE) && defined(RE_SPINOZA_MODE)
      , prechar newcharbits
   #endif
     );
+#else // ifdef UNICODE
+  LOCALEDEF void InitLocale() {}
 #endif
 
 #ifdef RELIB

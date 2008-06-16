@@ -3,6 +3,10 @@
 #include <stdexcept>
 #include <assert.h>
 
+#ifdef __GNUC__
+typedef unsigned char uchar_t;
+#endif
+
 // for debug 
 extern std::string
 hexdmp(uchar_t* buf, uint32_t bufSz);
