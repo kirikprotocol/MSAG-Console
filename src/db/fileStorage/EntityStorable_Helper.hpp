@@ -1,7 +1,7 @@
 #ifndef __DBENTITYSTORAGE_ENTITYSTORABLE_HELPER_HPP__
 # define __DBENTITYSTORAGE_ENTITYSTORABLE_HELPER_HPP__
 
-# include <sys/types.h>
+# include <inttypes.h>
 
 class EntityStorable_Helper {
 public:

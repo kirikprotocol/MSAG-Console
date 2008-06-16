@@ -2,6 +2,7 @@
 #define TrafficRecord_dot_h
 
 #include <time.h>
+#include <inttypes.h>
 
 namespace scag {
 namespace stat {
