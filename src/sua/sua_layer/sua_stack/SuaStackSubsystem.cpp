@@ -14,6 +14,8 @@
 
 #include <sua/utilx/SubsystemsManager.hpp>
 
+#include <sua/sua_layer/runtime_cfg/RuntimeConfig.hpp>
+
 #include "ProtocolStates.hpp"
 #include "AspMaintenanceMessageHandlers.hpp"
 #include "CLCOMessageHandlers.hpp"
@@ -26,12 +28,8 @@
 namespace sua_stack {
 
 SuaStackSubsystem::SuaStackSubsystem()
-  : _name("SuaStackSubsystem"), _logger(smsc::logger::Logger::getInstance("sua_stack")),
-    _establishedLinks(0)
+  : sua_layer::ApplicationSubsystem("SuaStackSubsystem", "sua_stack"), _establishedLinks(0)
 {}
-
-void
-SuaStackSubsystem::start() {}
 
 void
 SuaStackSubsystem::stop()
@@ -57,8 +55,8 @@ SuaStackSubsystem::stop()
 
 void
 SuaStackSubsystem::extractAddressParameters(std::vector<std::string>* addrs,
-                                            const runtime_cfg::CompositeParameter* nextParameter,
-                                            const std::string paramName)
+                                            runtime_cfg::CompositeParameter* nextParameter,
+                                            const std::string& paramName)
 {
   runtime_cfg::CompositeParameter::Iterator<runtime_cfg::Parameter> addrIterator = nextParameter->getIterator<runtime_cfg::Parameter>(paramName);
   while (addrIterator.hasElement()) {
@@ -93,6 +91,13 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   sua_messages::initialize();
   registerMessageCreators();
 
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.traffic-mode-for-sgp", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.local_address", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.local_port", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.remote_address", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sgp_links.link.remote_port", this);
+
   try {
     runtime_cfg::Parameter& trafficModeForSGP = rconfig.find<runtime_cfg::Parameter>("config.traffic-mode-for-sgp");
     AspMaintenanceMessageHandlers::getInstance().setSGPTrafficMode(trafficModeForSGP.getValue());
@@ -102,7 +107,7 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
 
   runtime_cfg::CompositeParameter::Iterator<runtime_cfg::CompositeParameter> linkIterator = sgpLinksParameter.getIterator<runtime_cfg::CompositeParameter>("link");
   while (linkIterator.hasElement()) {
-    const runtime_cfg::CompositeParameter* nextParameter = linkIterator.getCurrentElement();
+    runtime_cfg::CompositeParameter* nextParameter = linkIterator.getCurrentElement();
 
     communication::LinkId linkIdToSgp(nextParameter->getValue());
 
@@ -143,10 +148,42 @@ SuaStackSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   }
 }
 
-const std::string&
-SuaStackSubsystem::getName() const
+void
+SuaStackSubsystem::changeParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                               const runtime_cfg::Parameter& modifiedParameter)
 {
-  return _name;
+  if ( context.getFullName() == "config" ) {
+    runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
+    runtime_cfg::CompositeParameter& rootConfigParam = runtimeConfig.find<runtime_cfg::CompositeParameter>("config");
+
+    if ( modifiedParameter.getFullName() == "traffic-mode-for-sgp" ) {
+      smsc_log_debug(_logger, "SuaStackSubsystem::handle::: handle modified 'config.traffic-mode-for-sgp' parameter=[%s]", modifiedParameter.getValue().c_str());
+      runtime_cfg::Parameter* trafficModeParam = rootConfigParam.getParameter<runtime_cfg::Parameter>("traffic-mode-for-sgp");
+      if ( trafficModeParam )
+        trafficModeParam->setValue(modifiedParameter.getValue());
+    }
+  }
+}
+
+void
+SuaStackSubsystem::addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                            runtime_cfg::Parameter* addedParameter)
+{
+  if ( context.getFullName() == "config.sgp_links.link" ) {
+    runtime_cfg::CompositeParameter* linkParam = findContexParentParameter(context);
+
+    if ( !linkParam ) return;
+
+    if ( addedParameter->getName() != "local_address" &&
+         addedParameter->getName() != "local_port" &&
+         addedParameter->getName() != "remote_address" &&
+         addedParameter->getName() != "remote_port" ) return;
+
+    smsc_log_debug(_logger, "SuaStackSubsystem::handle::: handle added parameter '%s'='%s' for Link=[%s]", addedParameter->getName().c_str(), addedParameter->getValue().c_str(), context.getValue().c_str());
+
+    if ( !checkParameterExist(linkParam, addedParameter) )
+      linkParam->addParameter(addedParameter);
+  }
 }
 
 void
