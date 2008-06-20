@@ -1,5 +1,6 @@
 #include <sua/corex/io/network/TCPSocket.hpp>
 #include <sua/sua_layer/runtime_cfg/RuntimeConfig.hpp>
+
 #include "InputCommandProcessor.hpp"
 #include "TelnetInteraction.hpp"
 
@@ -8,10 +9,10 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 namespace lm_subsystem {
 
 TelnetInteraction::TelnetInteraction(const std::string& host, in_port_t port)
-  : _logger(smsc::logger::Logger::getInstance("lm_subsys"))
-{
-  _serverSocket = new corex::io::network::TCPServerSocket(host, port);
-}
+  : _logger(smsc::logger::Logger::getInstance("lm_subsys")), 
+    _serverSocket(new corex::io::network::TCPServerSocket(host, port)),
+    _socket(NULL)
+{}
 
 TelnetInteraction::~TelnetInteraction()
 {
@@ -42,9 +43,11 @@ TelnetInteraction::Execute()
       } catch (corex::io::BrokenPipe& ex) {
         smsc_log_info(_logger, "Broken pipe");
       } catch (...) {
+        smsc::core::synchronization::MutexGuard synchronize(_socketLock);
         delete _socket; _socket = NULL;
         throw;
       }
+      smsc::core::synchronization::MutexGuard synchronize(_socketLock);
       delete _socket; _socket = NULL;
     }
   } catch (std::exception& ex) {
@@ -93,7 +96,10 @@ TelnetInteraction::processUserInput(const std::string& inputString)
 void
 TelnetInteraction::stop()
 {
-  if ( _socket ) _socket->close();
+  {
+    smsc::core::synchronization::MutexGuard synchronize(_socketLock);
+    if ( _socket ) _socket->close();
+  }
   if ( _serverSocket )_serverSocket->close();
 }
 
