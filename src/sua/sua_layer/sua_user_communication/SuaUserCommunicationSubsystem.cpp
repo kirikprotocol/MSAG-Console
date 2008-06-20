@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <netinet/in.h>
 #include <util/Exception.hpp>
 #include <sua/sua_layer/io_dispatcher/ConnectMgr.hpp>
 #include <sua/communication/libsua_messages/initializer.hpp>
@@ -14,11 +15,7 @@
 namespace sua_user_communication {
 
 SuaUserCommunicationSubsystem::SuaUserCommunicationSubsystem()
-  : _name("SuaUserCommunicationSubsystem"), _logger(smsc::logger::Logger::getInstance("sua_usr_cm"))
-{}
-
-void
-SuaUserCommunicationSubsystem::start()
+  : sua_layer::ApplicationSubsystem("SuaUserCommunicationSubsystem", "sua_usr_cm")
 {}
 
 void
@@ -41,6 +38,11 @@ SuaUserCommunicationSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
 
   libsua_messages::initialize();
   registerMessageCreators();
+
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.local_ip", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.local_port", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sua_applications", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.sua_applications.application", this);
 
   runtime_cfg::Parameter& listeningHostParameter = rconfig.find<runtime_cfg::Parameter>("config.local_ip");
   runtime_cfg::Parameter& listeningPortParameter = rconfig.find<runtime_cfg::Parameter>("config.local_port");
@@ -68,14 +70,48 @@ SuaUserCommunicationSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   }
 }
 
-const std::string&
-SuaUserCommunicationSubsystem::getName() const
+void
+SuaUserCommunicationSubsystem::addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                                        runtime_cfg::Parameter* addedParameter)
 {
-  return _name;
+  if ( context.getFullName() == "config.sua_applications" ) {
+    runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
+    runtime_cfg::CompositeParameter& suaApplicationsParam = runtimeConfig.find<runtime_cfg::CompositeParameter>("config.sua_applications");
+
+    if ( addedParameter->getName() == "application" ) {
+      smsc_log_debug(_logger, "SuaUserCommunicationSubsystem::handle::: handle added parameter 'config.sua_applications.application'='%s'", addedParameter->getValue().c_str());
+
+      if ( !checkParameterExist(&suaApplicationsParam, addedParameter) )
+        suaApplicationsParam.addParameter(addedParameter);
+    }
+  }
 }
 
 void
-SuaUserCommunicationSubsystem::waitForCompletion()
-{}
+SuaUserCommunicationSubsystem::changeParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                                      const runtime_cfg::Parameter& modifiedParameter)
+{
+  if ( context.getFullName() == "config" ) {
+    runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
+    runtime_cfg::CompositeParameter& rootConfigParam = runtimeConfig.find<runtime_cfg::CompositeParameter>("config");
+
+    if ( modifiedParameter.getName() != "local_ip" &&
+         modifiedParameter.getName() != "local_port" )
+      return;
+
+    smsc_log_debug(_logger, "SuaUserCommunicationSubsystem::handle::: handle modified parameter 'config.%s'='%s'", modifiedParameter.getName().c_str(), modifiedParameter.getValue().c_str());
+    runtime_cfg::Parameter* foundParam = rootConfigParam.getParameter<runtime_cfg::Parameter>(modifiedParameter.getName());
+    if ( foundParam )
+      foundParam->setValue(modifiedParameter.getValue());
+  }
+}
+
+// void
+// SuaUserCommunicationSubsystem::removeParameterHandler(const runtime_cfg::Parameter& removedParameter)
+// {
+//   if ( removedParameter.getFullName() == "config.sua_applications.application" ) {
+//     smsc_log_debug(_logger, "SuaUserCommunicationSubsystem::handle::: handle removed 'config.sua_applications.application' parameter=[%s]", removedParameter.getValue().c_str());
+//   }
+// }
 
 }
