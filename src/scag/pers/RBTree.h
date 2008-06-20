@@ -12,10 +12,6 @@
 #ifndef ___RBTREE_H
 #define ___RBTREE_H
 
-
-const char RED = 1;
-const char BLACK = 0;
-			
 template<class Key, class Value>
 struct templRBTreeNode
 {

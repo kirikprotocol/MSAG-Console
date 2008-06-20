@@ -9,6 +9,10 @@
 #ifndef ___RBTREE_ALLOCATOR_H
 #define ___RBTREE_ALLOCATOR_H
 
+const char RED = 1;
+const char BLACK = 0;
+			
+template < class Key, class Value > class templRBTreeNode;
 
 template<class Key=long, class Value=long>
 class RBTreeAllocator
@@ -49,6 +53,9 @@ public:
 template<class Key=long, class Value=long>
 class SimpleAllocator: public RBTreeAllocator<Key, Value>
 {
+protected:
+  typedef typename RBTreeAllocator< Key, Value >::RBTreeNode  RBTreeNode;
+
 	long count;
 	RBTreeNode*	nilNode;
 	RBTreeNode*	rootNode;
@@ -89,6 +96,8 @@ public:
 template<class Key=long, class Value=long>
 class EmptyChangesObserver: public RBTreeChangesObserver<Key, Value>
 {
+protected:
+  typedef typename RBTreeChangesObserver<Key,Value>::RBTreeNode RBTreeNode;
 public:
 	void startChanges(RBTreeNode* node, int operation){};
 	void nodeChanged(RBTreeNode* node){};
