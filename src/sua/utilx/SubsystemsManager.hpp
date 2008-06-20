@@ -13,7 +13,7 @@
 
 namespace utilx {
 
-class SubsystemsManager : utilx::Singleton<SubsystemsManager*> {
+class SubsystemsManager : public utilx::Singleton<SubsystemsManager*> {
 public:
   SubsystemsManager();
 
