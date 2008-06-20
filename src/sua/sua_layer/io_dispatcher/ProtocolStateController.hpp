@@ -14,6 +14,7 @@ public:
   virtual void checkState(ProtocolStateController* protocolStateController, const IndicationPrimitive& indication) = 0;
 protected:
   void updateProtocolState(ProtocolStateController* protocolStateController, ProtocolState* newState);
+  friend class ProtocolStateController;
 };
 
 class ProtocolStateController {
