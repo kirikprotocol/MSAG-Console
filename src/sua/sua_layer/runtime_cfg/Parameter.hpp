@@ -1,36 +1,44 @@
-#ifndef PARAMETER_HPP_HEADER_INCLUDED_B8C7F6D0
-# define PARAMETER_HPP_HEADER_INCLUDED_B8C7F6D0
+#ifndef __SUA_SUALAYER_RUNTIMECFG_PARAMETER_HPP__
+# define __SUA_SUALAYER_RUNTIMECFG_PARAMETER_HPP__
 
 # include <string>
 # include <map>
 
 namespace runtime_cfg {
 
-class Parameter {
-private:
-  std::string _name, _fullName, _value;
+class CompositeParameter;
 
-  Parameter(const Parameter& rhs);
-  Parameter& operator=(const Parameter& rhs);
+class Parameter {
 public:
-  void setParameterPrefix(const std::string& parameterPrefix);
-  //##ModelId=4737DFCC0081
   Parameter(const std::string& name, const std::string& value);
   Parameter(const std::string& name, unsigned int value);
 
   virtual ~Parameter() {}
 
-  //##ModelId=4737DFB50227
   const std::string& getName() const;
 
-  //##ModelId=4737DFA60289
   const std::string& getValue() const;
+
+  void setValue(const std::string& value);
 
   const std::string& getFullName() const;
 
+  bool isSetValue() const;
+
   virtual bool isComposite() const { return false; }
 
-  typedef std::multimap<std::string, Parameter*>::const_iterator iterator_trait_t;
+  typedef std::multimap<std::string, Parameter*>::iterator iterator_type_t;
+
+  std::string printParamaterValue() const;
+protected:
+  explicit Parameter(const std::string& name);
+
+  void setParameterPrefix(const std::string& parameterPrefix);
+  friend class CompositeParameter; // to grant access to setParameterPrefix() from CompositeParameter::addParameter methods
+
+private:
+  std::string _name, _fullName, _value;
+  bool _isSetValue;
 };
 
 }
