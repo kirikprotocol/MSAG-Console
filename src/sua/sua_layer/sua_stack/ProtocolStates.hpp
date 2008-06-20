@@ -155,9 +155,6 @@ private:
   uint32_t _inactiveAckMessageCode, _sctpConnectReleasedInd_MessageCode;
 };
 
-template<class T>
-T* utilx::Singleton<T*>::_instance;
-
 }
 
 #endif
