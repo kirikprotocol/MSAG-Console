@@ -18,9 +18,19 @@ public:
   void initialize(CompositeParameter* fullConfiguration);
   void initialize(smsc::util::config::ConfigView* xmlConfig);
   template <class PARAMETER_TYPE> PARAMETER_TYPE& find(const std::string& parameterName);
-
   void registerParameterObserver(const std::string& parameterName, ParameterObserver* handler);
-  void dispatchHandle(const Parameter& modifiedParameter);
+
+  void notifyAddParameterEvent(const CompositeParameter& context, Parameter* addedParameter);
+  CompositeParameter* notifyAddParameterEvent(const CompositeParameter& context, CompositeParameter* addedParameter);
+  void notifyAddParameterEvent(CompositeParameter* context, Parameter* addedParameter);
+
+  void notifyChangeParameterEvent(const CompositeParameter& context, const Parameter& modifiedParameter);
+  void notifyChangeParameterEvent(CompositeParameter* context, const Parameter& modifiedParameter);
+
+  void notifyRemoveParameterEvent(const Parameter& modifiedParameter);
+  void notifyRemoveParameterEvent(const CompositeParameter& context, const Parameter& modifiedParameter);
+
+  std::string printConfig() const;
 private:
   CompositeParameter& findLastNodeParameter(const std::string& parameterName, std::string* leafParameterName);
   void processRoutingKeysSection(smsc::util::config::ConfigView* suaLayerCfg,
@@ -36,6 +46,8 @@ private:
   bool _wasInitialized;
   smsc::logger::Logger* _logger;
 };
+
+# include <sua/sua_layer/runtime_cfg/RuntimeConfig_impl.hpp>
 
 }
 

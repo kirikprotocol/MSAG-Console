@@ -4,9 +4,6 @@
 #include <memory>
 #include <set>
 
-// runtime_cfg::RuntimeConfig*
-// utilx::Singleton<runtime_cfg::RuntimeConfig>::_instance;
-
 namespace runtime_cfg {
 
 RuntimeConfig::RuntimeConfig()
@@ -30,7 +27,6 @@ RuntimeConfig::findLastNodeParameter(const std::string& parameterName, std::stri
   while (end_token_idx != std::string::npos) {
     std::string token = parameterName.substr(start_token_idx, end_token_idx - start_token_idx);
 
-    //    std::cout << "RuntimeConfig::findLastNodeParameter::: call nodeParameter.getParameter(" << token << ")" << std::endl;
     nodeParameter = nodeParameter->getParameter<CompositeParameter>(token);
     if ( !nodeParameter )
       throw std::runtime_error(std::string("RuntimeConfig::findLastNodeParameter::: node parameter ") + parameterName + std::string(" is not found"));
@@ -41,50 +37,90 @@ RuntimeConfig::findLastNodeParameter(const std::string& parameterName, std::stri
   return *nodeParameter;
 }
 
-template <> CompositeParameter&
-RuntimeConfig::find<CompositeParameter>(const std::string& parameterName) {
-  std::string leafParameterName;
-  CompositeParameter& nodeParameter = findLastNodeParameter(parameterName, &leafParameterName);
-
-  CompositeParameter* nodeParameterPtr = nodeParameter.getParameter<CompositeParameter>(leafParameterName);
-  if (  !nodeParameterPtr )
-    throw std::runtime_error(std::string("C::find<CompositeParameter>::: node parameter ") + parameterName + std::string(" is not found"));
-
-  return *nodeParameterPtr;
-
-}
-
-template <> Parameter&
-RuntimeConfig::find<Parameter>(const std::string& parameterName) {
-  std::string leafParameterName;
-  CompositeParameter& nodeParameter = findLastNodeParameter(parameterName, &leafParameterName);
-
-  Parameter* childParameterPtr = nodeParameter.getParameter<Parameter>(leafParameterName);
-  if (  !childParameterPtr )
-    throw std::runtime_error(std::string("C::find<Parameter>::: leaf parameter ") + parameterName + std::string(" is not found"));
-
-  return *childParameterPtr;
-}
-
 void
 RuntimeConfig::registerParameterObserver(const std::string& fullParameterName, ParameterObserver* handler)
 {
-  std::string fullParameterName_with_rootPrefix = std::string("root.") + fullParameterName;
-  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullParameterName_with_rootPrefix);
-  //  std::cout << "RuntimeConfig::registerParameterObserver::: register handler for parameter name = " << fullParameterName_with_rootPrefix << std::endl;
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullParameterName);
+  smsc_log_info(_logger, "RuntimeConfig::registerParameterObserver::: register handler for parameter '%s'", fullParameterName.c_str());
   if ( iter == _registredParameterHandlers.end() )
-    _registredParameterHandlers.insert(std::make_pair(fullParameterName_with_rootPrefix, handler));
+    _registredParameterHandlers.insert(std::make_pair(fullParameterName/*_with_rootPrefix*/, handler));
   else
     iter->second = handler;
 }
 
 void
-RuntimeConfig::dispatchHandle(const Parameter& modifiedParameter)
+RuntimeConfig::notifyAddParameterEvent(const CompositeParameter& context, Parameter* addedParameter)
 {
-  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(modifiedParameter.getFullName());
+  std::string fullAddedParameterName = context.getFullName() + "." + addedParameter->getName();
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullAddedParameterName);
 
   if ( iter != _registredParameterHandlers.end() ) {
-    iter->second->handle(modifiedParameter);
+    iter->second->addParameterEventHandler(context, addedParameter);
+  }
+}
+
+CompositeParameter*
+RuntimeConfig::notifyAddParameterEvent(const CompositeParameter& context, CompositeParameter* addedParameter)
+{
+  std::string fullAddedParameterName = context.getFullName() + "." + addedParameter->getName();
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullAddedParameterName);
+
+  if ( iter != _registredParameterHandlers.end() ) {
+    return iter->second->addParameterEventHandler(context, addedParameter);
+  }
+}
+
+void
+RuntimeConfig::notifyAddParameterEvent(CompositeParameter* context, Parameter* addedParameter)
+{
+  std::string fullAddedParameterName = context->getFullName() + "." + addedParameter->getName();
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullAddedParameterName);
+
+  if ( iter != _registredParameterHandlers.end() ) {
+    iter->second->addParameterEventHandler(context, addedParameter);
+  }
+}
+
+void
+RuntimeConfig::notifyChangeParameterEvent(const CompositeParameter& context, const Parameter& modifiedParameter)
+{
+  std::string fullModifiedParameterName = context.getFullName() + "." + modifiedParameter.getName();
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullModifiedParameterName);
+
+  if ( iter != _registredParameterHandlers.end() ) {
+    iter->second->changeParameterEventHandler(context, modifiedParameter);
+  }
+}
+
+void
+RuntimeConfig::notifyChangeParameterEvent(CompositeParameter* context, const Parameter& modifiedParameter)
+{
+  std::string fullModifiedParameterName = context->getFullName() + "." + modifiedParameter.getName();
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullModifiedParameterName);
+
+  if ( iter != _registredParameterHandlers.end() ) {
+    iter->second->changeParameterEventHandler(context, modifiedParameter);
+  }
+}
+
+void
+RuntimeConfig::notifyRemoveParameterEvent(const Parameter& removedParameter)
+{
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(removedParameter.getFullName());
+
+  if ( iter != _registredParameterHandlers.end() ) {
+    iter->second->removeParameterEventHandler(removedParameter);
+  }
+}
+
+void
+RuntimeConfig::notifyRemoveParameterEvent(const CompositeParameter& context, const Parameter& removedParameter)
+{
+  std::string fullRemovedParameterName = context.getFullName() + "." + removedParameter.getName();
+  registeredParameterHandlers_t::iterator iter = _registredParameterHandlers.find(fullRemovedParameterName);
+
+  if ( iter != _registredParameterHandlers.end() ) {
+    iter->second->removeParameterEventHandler(context, removedParameter);
   }
 }
 
@@ -168,17 +204,7 @@ RuntimeConfig::processRoutingKeysSection(smsc::util::config::ConfigView* suaLaye
     } catch (smsc::util::config::ConfigException& ex) {}
   }
 }
-/*
-** config.local_ip
-** config.local_port
-** config.state_machines_count
-** [config.routing-keys.routingEntry]1..*
-** [config.routing-keys.routingEntry.route]1..*
-** [config.routing-keys.routingEntry.route.destination]1..*
-** [config.routing-keys.routingEntry.route.destination.applications.application]1..*
-** [config.routing-keys.routingEntry.route.destination.links.sgp_link]1..*
-** outcoming-routing-keys.GT.traffic_mode
-*/
+
 void
 RuntimeConfig::initialize(smsc::util::config::ConfigView* suaLayerCfg)
 {
@@ -261,6 +287,12 @@ RuntimeConfig::initialize(smsc::util::config::ConfigView* suaLayerCfg)
   processRoutingKeysSection(suaLayerCfg, "routing-keys", suaConfigCompositeParameter);
 
   initialize(suaConfigCompositeParameter);
+}
+
+std::string
+RuntimeConfig::printConfig() const
+{
+  return _config->printParamaterValue();
 }
 
 }
