@@ -3,35 +3,42 @@
 
 # include <vector>
 # include <string>
-# include <sua/utilx/Subsystem.hpp>
+# include <core/synchronization/EventMonitor.hpp>
+
 # include <sua/utilx/Singleton.hpp>
 # include <sua/communication/LinkId.hpp>
-# include <util/config/ConfigView.h>
-# include <logger/Logger.h>
-# include <core/synchronization/EventMonitor.hpp>
+# include <sua/sua_layer/ApplicationSubsystem.hpp>
+# include <sua/sua_layer/runtime_cfg/RuntimeConfig.hpp>
+# include <sua/sua_layer/runtime_cfg/ParameterObserver.hpp>
 
 namespace sua_stack {
 
-class SuaStackSubsystem : public utilx::Subsystem,
+class SuaStackSubsystem : public sua_layer::ApplicationSubsystem,
+                          public runtime_cfg::ParameterObserver,
                           public utilx::Singleton<SuaStackSubsystem*> {
 public:
   SuaStackSubsystem();
-  virtual void start();
   virtual void stop();
   virtual void initialize(runtime_cfg::RuntimeConfig& rconfig);
-  virtual const std::string& getName() const;
   virtual void waitForCompletion();
+
+  using ParameterObserver::addParameterEventHandler;
+  using ParameterObserver::changeParameterEventHandler;
+  using ParameterObserver::removeParameterEventHandler;
+
+  virtual void changeParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                           const runtime_cfg::Parameter& modifiedParameter);
+  virtual void addParameterEventHandler(const runtime_cfg::CompositeParameter& context, runtime_cfg::Parameter* addedParameter);
+
   void notifyLinkShutdownCompletion();
 private:
-  std::string _name;
-  smsc::logger::Logger *_logger;
   std::vector<communication::LinkId> _sgpLinkIds;
   smsc::core::synchronization::EventMonitor _allLinksShutdownMonitor;
   volatile int _establishedLinks;
 
   void extractAddressParameters(std::vector<std::string>* addrs,
-                                const runtime_cfg::CompositeParameter* nextParameter,
-                                const std::string paramName);
+                                runtime_cfg::CompositeParameter* nextParameter,
+                                const std::string& paramName);
 };
 
 }
