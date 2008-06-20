@@ -4,6 +4,7 @@
 # include <string>
 # include <netinet/in.h>
 # include <logger/Logger.h>
+# include <core/synchronization/Mutex.hpp>
 # include <sua/corex/io/IOStreams.hpp>
 # include <sua/corex/io/network/TCPServerSocket.hpp>
 # include <sua/sua_layer/lm_subsystem/UserInteractionProcessor.hpp>
@@ -31,6 +32,7 @@ private:
   smsc::logger::Logger* _logger;
   corex::io::network::TCPServerSocket* _serverSocket;
   corex::io::network::TCPSocket* _socket;
+  smsc::core::synchronization::Mutex _socketLock;
 };
 
 }
