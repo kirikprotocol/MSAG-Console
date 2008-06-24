@@ -12,6 +12,7 @@ class InputCommandProcessor : public utilx::Singleton<InputCommandProcessor> {
 public:
   InputCommandProcessor();
   std::string process(const std::string& inputCommandLine);
+  std::string getUserPrompt();
 private:
   smsc::logger::Logger* _logger;
 
