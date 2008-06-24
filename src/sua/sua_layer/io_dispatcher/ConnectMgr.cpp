@@ -28,7 +28,7 @@ ConnectMgr::addConnectAcceptor(const std::string& acceptorName, ConnectAcceptor*
 }
 
 ConnectAcceptor*
-ConnectMgr::removeConnectAcceptor(const std::string& acceptorName)
+ConnectMgr::removeConnectAcceptor(const std::string& acceptorName, bool closeAllEstablishedConnects)
 {
   ConnectAcceptor* result=NULL;
   smsc_log_debug(_logger, "ConnectMgr::removeConnectAcceptor::: try remove ConnectAcceptor with acceptorName=[%s]", acceptorName.c_str());
@@ -40,23 +40,27 @@ ConnectMgr::removeConnectAcceptor(const std::string& acceptorName)
       result=iter->second;
       _socket2connectAcceptor.erase(result->getServerSocket()->toString());
 
-      accptrs_to_connects_t::iterator accptr2connIter = _acceptor2establishedConnects.find(acceptorName);
-      if ( accptr2connIter != _acceptor2establishedConnects.end() ) {
-        std::set<communication::LinkId>* acceptedConnections = accptr2connIter->second;
-        while ( !acceptedConnections->empty() ) {
-          std::set<communication::LinkId>::iterator set_iter = acceptedConnections->begin();
-          communication::LinkId linkId = *set_iter;
-          acceptedConnections->erase(set_iter);
-          removeLink(linkId, false);
+      if ( closeAllEstablishedConnects ) {
+        accptrs_to_connects_t::iterator accptr2connIter = _acceptor2establishedConnects.find(acceptorName);
+        if ( accptr2connIter != _acceptor2establishedConnects.end() ) {
+          std::set<communication::LinkId>* acceptedConnections = accptr2connIter->second;
+          while ( !acceptedConnections->empty() ) {
+            std::set<communication::LinkId>::iterator set_iter = acceptedConnections->begin();
+            communication::LinkId linkId = *set_iter;
+            acceptedConnections->erase(set_iter);
+            removeLink(linkId, false);
+          }
+          delete acceptedConnections;
         }
-        delete acceptedConnections;
       }
       _connectAcceptors.erase(iter);
-      smsc_log_info(_logger, "ConnectMgr::removeConnectAcceptor::: ConnectAcceptor with acceptorName=[%s] has been remove; corresponding server socket=[%s]", acceptorName.c_str(), result->getServerSocket()->toString().c_str());
+      smsc_log_info(_logger, "ConnectMgr::removeConnectAcceptor::: ConnectAcceptor with acceptorName=[%s] has been removed; corresponding server socket=[%s]", acceptorName.c_str(), result->getServerSocket()->toString().c_str());
     }
   }
 
-  _ioObjectsPool.remove(result->getServerSocket());
+  if ( result )
+    _ioObjectsPool.remove(result->getServerSocket());
+
   return result;
 }
 
