@@ -4,17 +4,19 @@
 
 namespace lm_subsystem {
 
-std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t>
+LM_CommandsInterpreter::interpretation_result
 RootLayerCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& stringTokenizer)
 {
-  std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL));
+  interpretation_result parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL), false);
 
   if ( stringTokenizer.hasNextToken() ) {
     const std::string& tokenValue = utilx::toLowerCaseString(stringTokenizer.nextToken());
     if ( tokenValue == "sua-layer" ) {
-      parseResult.second = create_CommandsInterpreter<SuaLayerCommandsInterpreter>(stringTokenizer);
+      parseResult.interpreter = create_CommandsInterpreter<SuaLayerCommandsInterpreter>(stringTokenizer);
     } else if ( tokenValue != "exit" && tokenValue != "quit" )
       throw InvalidCommandLineException("SuaLayerCommandsInterpreter::interpretCommandLine::: invalid input=[%s]", tokenValue.c_str());
+    else
+      parseResult.popUpCurrentInterpreter = true;
 
     return parseResult;
   } else

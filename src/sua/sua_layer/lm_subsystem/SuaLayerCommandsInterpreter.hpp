@@ -7,7 +7,7 @@ namespace lm_subsystem {
 
 class SuaLayerCommandsInterpreter : public LM_CommandsInterpreter {
 public:
-  virtual std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> interpretCommandLine(utilx::StringTokenizer& stringTokenizer);
+  virtual interpretation_result interpretCommandLine(utilx::StringTokenizer& stringTokenizer);
   virtual std::string getPromptString() const;
 };
 

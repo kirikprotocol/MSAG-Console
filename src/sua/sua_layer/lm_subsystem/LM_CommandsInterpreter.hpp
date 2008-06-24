@@ -22,7 +22,20 @@ typedef smsc::core::buffers::RefPtr<lm_commands::LM_Command,smsc::core::synchron
 class LM_CommandsInterpreter {
 public:
   virtual ~LM_CommandsInterpreter() {}
-  virtual std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> interpretCommandLine(utilx::StringTokenizer& stringTokenizer) = 0;
+
+  struct interpretation_result {
+    interpretation_result(lm_commands_refptr_t& aCommand,
+                          lm_commands_interpreter_refptr_t& anInterpreter,
+                          bool popUpFlag)
+      : command(aCommand), interpreter(anInterpreter), popUpCurrentInterpreter(popUpFlag)
+    {}
+
+    lm_commands_refptr_t command;
+    lm_commands_interpreter_refptr_t interpreter;
+    bool popUpCurrentInterpreter;
+  };
+
+  virtual interpretation_result interpretCommandLine(utilx::StringTokenizer& stringTokenizer) = 0;
   virtual std::string getPromptString() const = 0;
 
 protected:
