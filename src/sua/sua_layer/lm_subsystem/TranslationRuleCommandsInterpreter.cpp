@@ -13,10 +13,10 @@ TranslationRuleCommandsInterpreter::TranslationRuleCommandsInterpreter(const std
   : _ruleName(ruleName)
 {}
 
-std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t>
+LM_CommandsInterpreter::interpretation_result
 TranslationRuleCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& stringTokenizer)
 {
-  std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL));
+  interpretation_result parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL), false);
 
   if ( stringTokenizer.hasNextToken() ) {
     const std::string& command = utilx::toLowerCaseString(stringTokenizer.nextToken());
@@ -25,11 +25,11 @@ TranslationRuleCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer&
         const std::string& subCommand = utilx::toLowerCaseString(stringTokenizer.nextToken());
 
         if ( subCommand == "application" )
-          parseResult.first = create_addApplicationCommand(stringTokenizer);
+          parseResult.command = create_addApplicationCommand(stringTokenizer);
         else if ( subCommand == "link" )
-          parseResult.first = create_addLinkCommand(stringTokenizer);
+          parseResult.command = create_addLinkCommand(stringTokenizer);
         else if ( subCommand == "translation-entry" )
-          parseResult.first = create_addTranslationEntryCommand(stringTokenizer);
+          parseResult.command = create_addTranslationEntryCommand(stringTokenizer);
         else
           throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: invalid input");
       } else
@@ -39,11 +39,14 @@ TranslationRuleCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer&
         const std::string& trafficModeValue = utilx::toLowerCaseString(stringTokenizer.nextToken());
         lm_commands::LM_TranslationRule_TrafficModeCommand* trafficModeCommand = new lm_commands::LM_TranslationRule_TrafficModeCommand(trafficModeValue);
         trafficModeCommand->setTranslationRuleName(_ruleName);
-        parseResult.first = trafficModeCommand;
+        parseResult.command = trafficModeCommand;
       } else
         throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: invalid input");
     } else if ( command != "exit" && command != "quit" )
       throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: invalid input");
+    else
+      parseResult.popUpCurrentInterpreter = true;
+
   } else
     throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: empty input");
 

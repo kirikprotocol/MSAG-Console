@@ -5,10 +5,10 @@
 
 namespace lm_subsystem {
 
-std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t>
+LM_CommandsInterpreter::interpretation_result
 TranslationTableCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& stringTokenizer)
 {
-  std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL));
+  interpretation_result parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL), false);
   if ( stringTokenizer.hasNextToken() ) {
     const std::string& tokenValue = utilx::toLowerCaseString(stringTokenizer.nextToken());
     if ( tokenValue == "add" ) {
@@ -16,12 +16,14 @@ TranslationTableCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer
            utilx::toLowerCaseString(stringTokenizer.nextToken()) == "translation-rule" &&
            stringTokenizer.hasNextToken() ) {
         const std::string& ruleName = stringTokenizer.nextToken();
-        parseResult.first = new lm_commands::LM_TranslationTable_AddTranslationRuleCommand(ruleName);
-        parseResult.second = new TranslationRuleCommandsInterpreter(ruleName);
+        parseResult.command = new lm_commands::LM_TranslationTable_AddTranslationRuleCommand(ruleName);
+        parseResult.interpreter = new TranslationRuleCommandsInterpreter(ruleName);
       } else
         throw InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: invalid 'add' command's arguments");
     } else if ( tokenValue != "exit" && tokenValue != "quit" )
       throw InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: invalid input");
+    else
+      parseResult.popUpCurrentInterpreter = true;
   } else
     throw InvalidCommandLineException("TranslationTableCommandsInterpreter::interpretCommandLine::: empty input");
   return parseResult;

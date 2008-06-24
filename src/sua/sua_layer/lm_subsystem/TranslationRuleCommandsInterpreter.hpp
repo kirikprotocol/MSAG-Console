@@ -12,7 +12,7 @@ class TranslationRuleCommandsInterpreter : public LM_CommandsInterpreter {
 public:
   explicit TranslationRuleCommandsInterpreter(const std::string& ruleName);
 
-  virtual std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> interpretCommandLine(utilx::StringTokenizer& stringTokenizer);
+  virtual interpretation_result interpretCommandLine(utilx::StringTokenizer& stringTokenizer);
   virtual std::string getPromptString() const;
 private:
   lm_commands::LM_TranslationRule_AddApplicationCommand* create_addApplicationCommand(utilx::StringTokenizer& stringTokenizer);
