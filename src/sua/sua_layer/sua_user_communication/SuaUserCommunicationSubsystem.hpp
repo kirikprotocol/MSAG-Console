@@ -4,6 +4,7 @@
 # include <string>
 
 # include <sua/utilx/Singleton.hpp>
+# include <sua/utilx/ThreadSpecificData.hpp>
 # include <sua/sua_layer/ApplicationSubsystem.hpp>
 # include <sua/sua_layer/runtime_cfg/RuntimeConfig.hpp>
 # include <sua/sua_layer/runtime_cfg/ParameterObserver.hpp>
@@ -26,8 +27,15 @@ public:
                                         runtime_cfg::Parameter* addedParameter);
   virtual void changeParameterEventHandler(const runtime_cfg::CompositeParameter& context,
                                            const runtime_cfg::Parameter& modifiedParameter);
+
   //  virtual void removeParameterEventHandler(const runtime_cfg::Parameter& removedParameter);
 private:
+  void applyParametersChange();
+  void initializeConnectAcceptor(const std::string& localHost,
+                                 in_port_t localPort);
+
+  static utilx::ThreadSpecificData<bool> _threadScopeModificationFlag;
+
   char _acceptorName[128];
 };
 
