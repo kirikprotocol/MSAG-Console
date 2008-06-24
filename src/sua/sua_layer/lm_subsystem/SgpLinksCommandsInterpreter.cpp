@@ -2,18 +2,19 @@
 #include <sua/utilx/toLowerCaseString.hpp>
 #include "SgpLinksCommandsInterpreter.hpp"
 #include "lm_commands/LM_Applications_RemoveApplicationCommand.hpp"
+#include "lm_commands/LM_SGPLinks_Commit.hpp"
 
 namespace lm_subsystem {
 
-std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t>
+LM_CommandsInterpreter::interpretation_result
 SgpLinksCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& stringTokenizer)
 {
-  std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL));
+  interpretation_result parseResult(lm_commands_refptr_t(NULL), lm_commands_interpreter_refptr_t(NULL), false);
 
   if ( stringTokenizer.hasNextToken() ) {
     const std::string& tokenValue = utilx::toLowerCaseString(stringTokenizer.nextToken());
     if ( tokenValue == "add" ) {
-      parseResult.first = create_addLinkCommand(stringTokenizer);
+      parseResult.command = create_addLinkCommand(stringTokenizer);
     } else if ( tokenValue == "remove" ) {
       if ( stringTokenizer.hasNextToken() &&
            utilx::toLowerCaseString(stringTokenizer.nextToken()) == "link" &&
@@ -22,9 +23,12 @@ SgpLinksCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer& string
         if ( stringTokenizer.hasNextToken() )
           throw InvalidCommandLineException("SgpLinksCommandsInterpreter::interpretCommandLine::: invalid input");
 
-        parseResult.first = new lm_commands::LM_Applications_RemoveApplicationCommand(linkIdValue);
+        parseResult.command = new lm_commands::LM_Applications_RemoveApplicationCommand(linkIdValue);
       }
-    } else if ( tokenValue != "exit" && tokenValue != "quit" )
+    } else if ( tokenValue == "exit" || tokenValue == "quit" ) {
+      parseResult.command = new lm_commands::LM_SGPLinks_Commit();
+      parseResult.popUpCurrentInterpreter = true;
+    } else
       throw InvalidCommandLineException("SgpLinksCommandsInterpreter::interpretCommandLine::: invalid input=[%s]", tokenValue.c_str());
 
     return parseResult;
