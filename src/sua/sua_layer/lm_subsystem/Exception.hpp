@@ -14,6 +14,10 @@ public:
   }
 };
 
+class UserTerminateSessionException : public smsc::util::Exception {
+public:
+};
+
 }
 
 #endif
