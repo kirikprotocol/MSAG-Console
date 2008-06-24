@@ -29,6 +29,8 @@ private:
 
   std::string processUserInput(const std::string& inputString);
 
+  int threadSafeCloseSocket();
+
   smsc::logger::Logger* _logger;
   corex::io::network::TCPServerSocket* _serverSocket;
   corex::io::network::TCPSocket* _socket;
