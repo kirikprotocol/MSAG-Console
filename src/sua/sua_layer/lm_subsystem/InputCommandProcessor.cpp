@@ -12,9 +12,21 @@ InputCommandProcessor::InputCommandProcessor()
 }
 
 std::string
+InputCommandProcessor::getUserPrompt()
+{
+  if ( _commandInterpreters.empty() )
+    return "";
+  else
+    return _commandInterpreters.front()->getPromptString();
+}
+
+std::string
 InputCommandProcessor::process(const std::string& inputCommandLine) {
   utilx::StringTokenizer stringTokenizer(inputCommandLine);
   stringTokenizer.setDelimeterSymbols(" ");
+
+  if ( _commandInterpreters.empty() )
+    throw UserTerminateSessionException();
 
   lm_commands_interpreter_refptr_t commandInterpreter = _commandInterpreters.back();
 
@@ -22,23 +34,26 @@ InputCommandProcessor::process(const std::string& inputCommandLine) {
     if ( !commandInterpreter.Get() )
       throw smsc::util::Exception("InputCommandProcessor::process::: command's interpreter wasn't set");
 
-    std::pair<lm_commands_refptr_t, lm_commands_interpreter_refptr_t> parseResult = commandInterpreter->interpretCommandLine(stringTokenizer);
-    if ( !parseResult.first.Get() && !parseResult.second.Get() ) {
-      if ( !_commandInterpreters.empty() ) {
-        _commandInterpreters.pop_back();
-        if ( !_commandInterpreters.empty() )
-          return _commandInterpreters.back()->getPromptString();
-      }
-      return "";
-    } else if ( parseResult.first.Get() && parseResult.second.Get() ) {
-      _commandInterpreters.push_back(parseResult.second);
-      return parseResult.first->executeCommand() + "\n" + parseResult.second->getPromptString();
-    } else if ( parseResult.second.Get() ) {
-      _commandInterpreters.push_back(parseResult.second);
-      return parseResult.second->getPromptString();
-    } else {
-      return parseResult.first->executeCommand() + "\n" + commandInterpreter->getPromptString();
+    LM_CommandsInterpreter::interpretation_result parseResult = commandInterpreter->interpretCommandLine(stringTokenizer);
+    if ( parseResult.popUpCurrentInterpreter &&
+         !_commandInterpreters.empty() ) {
+      _commandInterpreters.pop_back();
+      if ( !_commandInterpreters.empty() )
+        commandInterpreter = _commandInterpreters.back();
     }
+
+    std::string userPromptString;
+
+    if ( parseResult.command.Get() )
+      userPromptString = parseResult.command->executeCommand() + "\n";
+
+    if ( parseResult.interpreter.Get() ) {
+      _commandInterpreters.push_back(parseResult.interpreter);
+      userPromptString += parseResult.interpreter->getPromptString();
+    } else
+      userPromptString += commandInterpreter->getPromptString();
+
+    return userPromptString;
   } catch(InvalidCommandLineException& ex) {
     smsc_log_error(_logger, "InputCommandProcessor::process::: catched exception=[%s]", ex.what());
     return std::string("Error: Invalid input\n") + commandInterpreter->getPromptString();
