@@ -32,7 +32,7 @@ public:
   ConnectMgr();
 
   void addConnectAcceptor(const std::string& acceptorName, ConnectAcceptor* connectAcceptor);
-  ConnectAcceptor* removeConnectAcceptor(const std::string& acceptorName);
+  ConnectAcceptor* removeConnectAcceptor(const std::string& acceptorName, bool closeAllEstablishedConnects);
 
   void addLink(const communication::LinkId& linkId, Link* link);
   LinkPtr removeLink(const communication::LinkId& linkId, bool cleanUpAcceptorEstablishedConns=true);
