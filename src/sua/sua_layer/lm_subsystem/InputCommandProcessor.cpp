@@ -25,9 +25,6 @@ InputCommandProcessor::process(const std::string& inputCommandLine) {
   utilx::StringTokenizer stringTokenizer(inputCommandLine);
   stringTokenizer.setDelimeterSymbols(" ");
 
-  if ( _commandInterpreters.empty() )
-    throw UserTerminateSessionException();
-
   lm_commands_interpreter_refptr_t commandInterpreter = _commandInterpreters.back();
 
   try {
@@ -40,6 +37,10 @@ InputCommandProcessor::process(const std::string& inputCommandLine) {
       _commandInterpreters.pop_back();
       if ( !_commandInterpreters.empty() )
         commandInterpreter = _commandInterpreters.back();
+      else {
+        _commandInterpreters.push_back(lm_commands_interpreter_refptr_t(new RootLayerCommandsInterpreter()));
+        throw UserTerminateSessionException();
+      }
     }
 
     std::string userPromptString;
