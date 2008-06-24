@@ -52,16 +52,15 @@ TelnetInteraction::Execute()
         }
       } catch(UserTerminateSessionException& ex) {
         smsc_log_info(_logger, "User has terminated the session");
-        return threadSafeCloseSocket();
+        threadSafeCloseSocket();
       } catch (corex::io::EOFException& ex) {
         smsc_log_info(_logger, "Connection closed by remote side");
       } catch (corex::io::BrokenPipe& ex) {
         smsc_log_info(_logger, "Broken pipe");
-      } catch (std::exception& ex) {
-        smsc_log_error(_logger, "TelnetInteraction::Execute::: catched unexpected exception=[%s]", ex.what());
-        return threadSafeCloseSocket();
+      } catch (...) {
+        threadSafeCloseSocket();
       }
-      return threadSafeCloseSocket();
+      threadSafeCloseSocket();
     }
   } catch (std::exception& ex) {
     smsc_log_error(_logger, "TelnetInteraction::Execute::: catched exception=[%s]", ex.what());
