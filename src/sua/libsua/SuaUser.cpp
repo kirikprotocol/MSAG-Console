@@ -239,8 +239,9 @@ SuaUser::unitdata_req(const uint8_t* message,
   LinkInfo& linkInfo = _knownLinks[suaConnectNum];
 
   if ( linkInfo.connectionState == BINDED ) {
-    smsc_log_info(_logger, "send message=[%s] to link=[%s], linkId=%d", hexdmp(tp.packetBody, tp.packetLen).c_str(), linkInfo.toString().c_str(), suaConnectNum);
     linkInfo.socket->getOutputStream()->write(tp.packetBody, tp.packetLen);
+    smsc_log_info(_logger, "send message=[%s] to link=[%s], linkId=%d", hexdmp(tp.packetBody, tp.packetLen).c_str(), linkInfo.toString().c_str(), suaConnectNum);
+    return OK;
   } else {
     smsc_log_error(_logger, "SuaUser::unitdata_req::: connection for link=[%s] hasn't been binded, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
     return NOT_BINDED;
