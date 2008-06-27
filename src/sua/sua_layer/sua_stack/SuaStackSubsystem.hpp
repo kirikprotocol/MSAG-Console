@@ -28,7 +28,11 @@ public:
 
   virtual void changeParameterEventHandler(const runtime_cfg::CompositeParameter& context,
                                            const runtime_cfg::Parameter& modifiedParameter);
-  virtual void addParameterEventHandler(const runtime_cfg::CompositeParameter& context, runtime_cfg::Parameter* addedParameter);
+  virtual void addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                        runtime_cfg::Parameter* addedParameter);
+  virtual runtime_cfg::CompositeParameter*
+  addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                           runtime_cfg::CompositeParameter* addedParameter);
 
   void notifyLinkShutdownCompletion();
 private:
