@@ -86,16 +86,27 @@ private:
   packets_cache_t _packetsCache;
 
   bool _wasInitialized;
-  std::string _appId, _trafficMode;
+
+  typedef enum {OVERRIDE=1, LOADSHARE=2} traffic_mode_t;
+
+  std::string _appId;
+  traffic_mode_t _trafficMode;
+
   unsigned int _hopCountValue;
+
+  unsigned int _lastUsedConnIdx;
 
   mutable smsc::core::synchronization::Mutex _lock;
   smsc::core::synchronization::Mutex _receiveSynchronizeLock;
+  smsc::core::synchronization::Mutex _lastUsedConnIdxLock;
 
   std::vector<LinkInfo> _knownLinks;
   smsc::logger::Logger* _logger;
 
   corex::io::IOObjectsPool _socketPool;
+
+  traffic_mode_t convertStringToTrafficModeValue(const std::string& trafficMode,
+                                                 const std::string& where);
 };
 
 }
