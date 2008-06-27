@@ -1,3 +1,6 @@
+#include <sua/utilx/strtol.hpp>
+#include <sua/sua_layer/runtime_cfg/Parameter.hpp>
+#include <sua/sua_layer/runtime_cfg/RuntimeConfig.hpp>
 #include "LMSubsystem.hpp"
 #include "TelnetInteraction.hpp"
 #include "InputCommandProcessor.hpp"
@@ -31,8 +34,22 @@ LMSubsystem::waitForCompletion()
 void
 LMSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
 {
-  _host = "niagara";
-  _port = 3377;
+  try {
+    runtime_cfg::Parameter& lmHostParameter = rconfig.find<runtime_cfg::Parameter>("config.lm_ip");
+    _host = lmHostParameter.getValue();
+  } catch (std::runtime_error& ex) {
+    _host = "niagara";
+  }
+
+  try {
+    runtime_cfg::Parameter& lmPortParameter = rconfig.find<runtime_cfg::Parameter>("config.lm_port");
+    _port = (in_port_t)utilx::strtol(lmPortParameter.getValue().c_str(), (char **)NULL, 10);
+    if ( _port == 0 && errno )
+      throw smsc::util::Exception("LMSubsystem::initialize::: invalid config.lm_port value");
+  } catch (std::runtime_error& ex) {
+    _port = 5555;
+  }
+
   InputCommandProcessor::init();
 }
 
