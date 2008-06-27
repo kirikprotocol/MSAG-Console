@@ -6,6 +6,7 @@
 #include "lm_commands/LM_TranslationRule_AddApplicationCommand.hpp"
 #include "lm_commands/LM_TranslationRule_AddLinkCommand.hpp"
 #include "lm_commands/LM_TranslationRule_AddTranslationEntryCommand.hpp"
+#include "lm_commands/LM_TranslationRule_Commit.hpp"
 
 namespace lm_subsystem {
 
@@ -42,11 +43,13 @@ TranslationRuleCommandsInterpreter::interpretCommandLine(utilx::StringTokenizer&
         parseResult.command = trafficModeCommand;
       } else
         throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: invalid input");
-    } else if ( command != "exit" && command != "quit" )
-      throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: invalid input");
-    else
+    } else if ( command == "exit" || command == "quit" ) {
+      lm_commands::LM_TranslationRule_Commit* commitCommand = new lm_commands::LM_TranslationRule_Commit();
+      commitCommand->setTranslationRuleName(_ruleName);
+      parseResult.command = commitCommand;
       parseResult.popUpCurrentInterpreter = true;
-
+    } else
+      throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: invalid input");
   } else
     throw InvalidCommandLineException("TranslationRuleCommandsInterpreter::interpretCommandLine::: empty input");
 
