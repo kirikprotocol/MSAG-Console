@@ -70,8 +70,7 @@ ApplicationSubsystem::generateExceptionAndForcePopUpCurrentInterpreter(const std
 }
 
 runtime_cfg::CompositeParameter*
-ApplicationSubsystem::findContexParentParameter(//const std::string& contextParentParameterName,
-                                                const runtime_cfg::CompositeParameter& context)
+ApplicationSubsystem::findContexParentParameter(const runtime_cfg::CompositeParameter& context)
 {
   runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
 
@@ -79,9 +78,9 @@ ApplicationSubsystem::findContexParentParameter(//const std::string& contextPare
   std::string::size_type idx = contextName.rfind(".");
   const std::string& contextParentParameterName = contextName.substr(0, idx);
   const std::string& contextParameterName = contextName.substr(idx+1);
-  runtime_cfg::CompositeParameter& contextParentParam = runtimeConfig.find<runtime_cfg::CompositeParameter>(contextParentParameterName/*"config.routing-keys"*/);
+  runtime_cfg::CompositeParameter& contextParentParam = runtimeConfig.find<runtime_cfg::CompositeParameter>(contextParentParameterName);
 
-  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::CompositeParameter> contextParamIterator = contextParentParam.getIterator<runtime_cfg::CompositeParameter>(contextParameterName/*"routingEntry"*/);
+  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::CompositeParameter> contextParamIterator = contextParentParam.getIterator<runtime_cfg::CompositeParameter>(contextParameterName);
 
   while (contextParamIterator.hasElement()) {
     runtime_cfg::CompositeParameter* contextParam = contextParamIterator.getCurrentElement();
