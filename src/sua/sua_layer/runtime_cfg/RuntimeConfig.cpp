@@ -212,6 +212,15 @@ RuntimeConfig::initialize(smsc::util::config::ConfigView* suaLayerCfg)
 
   suaConfigCompositeParameter->addParameter(new Parameter("local_ip",suaLayerCfg->getString("LocalAddress")));
   suaConfigCompositeParameter->addParameter(new Parameter("local_port",suaLayerCfg->getInt("LocalPort")));
+
+  try {
+    suaConfigCompositeParameter->addParameter(new Parameter("lm_ip",suaLayerCfg->getString("LMAddress")));
+  } catch (smsc::util::config::ConfigException& ex) {}
+
+  try {
+    suaConfigCompositeParameter->addParameter(new Parameter("lm_port",suaLayerCfg->getInt("LMPort")));
+  } catch (smsc::util::config::ConfigException& ex) {}
+
   suaConfigCompositeParameter->addParameter(new Parameter("state_machines_count",suaLayerCfg->getInt("state_machines_count")));
   try {
     suaConfigCompositeParameter->addParameter(new Parameter("traffic-mode-for-sgp",suaLayerCfg->getString("traffic-mode-for-sgp")));
