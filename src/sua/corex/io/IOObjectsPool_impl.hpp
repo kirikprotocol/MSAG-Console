@@ -25,7 +25,7 @@ IOObjectsPool_tmpl<LOCK>::IOObjectsPool_tmpl(int maxPoolSize) {
 
 template <class LOCK>
 int
-IOObjectsPool_tmpl<LOCK>::listen()
+IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
 {
   int retVal = OK_NO_EVENTS;
 
@@ -47,30 +47,20 @@ IOObjectsPool_tmpl<LOCK>::listen()
     memcpy(reinterpret_cast<uint8_t*>(_snaphots_fds), reinterpret_cast<uint8_t*>(_fds), _maxPoolSize * sizeof(struct pollfd));
     _lock.Unlock();
   }
-  int fd, idx=0;
 
-  // REMOVE DEBUG OUTPUT
-  //smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("poll");
-  //   smsc_log_info(logger, "IOObjectsPool::listen::: call to poll");
-  //   errno = 0;
-  //   {
-  //     char strBuf[1024];
-  //     int strBufOffset = 0;
-  //     for(int i=0;i<_socketsCount;++i) {
-  //       strBufOffset += sprintf(strBuf + strBufOffset, "%d:event=%d,", _snaphots_fds[i].fd, _snaphots_fds[i].events);
-  //     }
-  //     strBuf[strlen(strBuf)-1]=0;
-  //     smsc_log_debug(logger, "IOObjectsPool::listen::: _socketsCount=%d, socketsFdList=[%s]", _socketsCount, strBuf);
-  //   }
-  // END DEBUG
-  int st = ::poll(_snaphots_fds, _socketsCount, INFTIM);
-  //smsc_log_info(logger, "IOObjectsPool::listen::: poll returned, st=%d, errno=%d; _socketsCount=%d", st, errno, _socketsCount);
+  int st;
+  if ( timeout )
+    st = ::poll(_snaphots_fds, _socketsCount, timeout);
+  else
+    st = ::poll(_snaphots_fds, _socketsCount, INFTIM);
+
   if ( st < 0 ) {
     if ( errno == EINTR )
       throw utilx::InterruptedException("IOObjectsPool_tmpl::listen::: poll() was interrupted");
     else
       throw smsc::util::SystemError("IOObjectsPool_tmpl::listen::: call to poll() failed");
-  }
+  } else if ( !st )
+    return TIMEOUT;
 
   smsc::core::synchronization::MutexGuard guard(_lock);
   for (int j=0; j<_socketsCount; ++j) {

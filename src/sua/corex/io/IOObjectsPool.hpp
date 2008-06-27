@@ -19,7 +19,7 @@ public:
   typedef enum {WAIT_READ=1, WAIT_WRITE=2} wait_type_t;
 
   explicit IOObjectsPool_tmpl(int maxPoolSize=OPEN_MAX);
-  int listen();
+  int listen(uint32_t timeout=0);
 
   void insert(InputStream* iStream);
   void insert(OutputStream* oStream);
