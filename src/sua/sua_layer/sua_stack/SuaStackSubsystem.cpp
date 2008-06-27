@@ -186,6 +186,27 @@ SuaStackSubsystem::addParameterEventHandler(const runtime_cfg::CompositeParamete
   }
 }
 
+runtime_cfg::CompositeParameter*
+SuaStackSubsystem::addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
+                                            runtime_cfg::CompositeParameter* addedParameter)
+{
+  if ( context.getFullName() == "config.sgp_links" ) {
+    // this condition is true when called LM_SGPLinks_AddLinkCommand::executeCommand()
+    runtime_cfg::CompositeParameter& sgpLinksParameter = 
+      runtime_cfg::RuntimeConfig::getInstance().find<runtime_cfg::CompositeParameter>("config.sgp_links");
+
+    if ( addedParameter->getName() != "link" ) 
+      generateExceptionAndForcePopUpCurrentInterpreter("Error: Invalid input", "SuaStackSubsystem::addParameterEventHandler::: invalid parameter '%s' for context '%s'", addedParameter->getName().c_str(), context.getName().c_str());
+
+    if ( checkParameterExist(&sgpLinksParameter, addedParameter) )
+      generateExceptionAndForcePopUpCurrentInterpreter("Inconsistent config modification request - link with such value already exists", "SuaStackSubsystem::addParameterEventHandler::: can't process parameter '%s'='%s' - the parameter with such value already exist", addedParameter->getName().c_str(), addedParameter->getValue().c_str());
+
+    sgpLinksParameter.addParameter(addedParameter);
+    return addedParameter;
+  } else
+    generateExceptionAndForcePopUpCurrentInterpreter("Error: Invalid input", "SuaStackSubsystem::addParameterEventHandler::: invalid parameter '%s' for context '%s'", addedParameter->getName().c_str(), context.getName().c_str());
+}
+
 void
 SuaStackSubsystem::waitForCompletion()
 {
