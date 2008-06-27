@@ -2,6 +2,7 @@
 #include "Exception.hpp"
 #include <core/synchronization/MutexGuard.hpp>
 #include <utility>
+#include <sua/utilx/toLowerCaseString.hpp>
 #include <sua/communication/TP.hpp>
 #include <sua/communication/libsua_messages/BindMessage.hpp>
 #include <sua/communication/libsua_messages/BindConfirmMessage.hpp>
@@ -13,7 +14,7 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 namespace libsua {
 
 SuaUser::SuaUser()
-  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _hopCountValue(0)
+  : _wasInitialized(false), _logger(smsc::logger::Logger::getInstance("libsua")), _hopCountValue(0), _lastUsedConnIdx(0)
 {}
 
 int
@@ -21,38 +22,39 @@ SuaUser::sua_init(smsc::util::config::ConfigView* config)
 {
   if ( !_wasInitialized ) {
     try {
-    _appId = config->getString("appId", "SuaUser::sua_init::: appId parameter wasn't set");
-    _trafficMode = config->getString("traffic-mode", "SuaUser::sua_init::: traffic-mode parameter wasn't set");
-    try {
-      _hopCountValue = config->getInt("ss7hop-count");
-    } catch (smsc::util::config::ConfigException& ex) {
-      _hopCountValue = 15;
-    }
-    smsc_log_info(_logger, "loading links configuration ...");
+      _appId = config->getString("appId", "SuaUser::sua_init::: appId parameter wasn't set");
+      std::string trafficMode = config->getString("traffic-mode", "SuaUser::sua_init::: traffic-mode parameter wasn't set");
+      _trafficMode = convertStringToTrafficModeValue(utilx::toLowerCaseString(trafficMode), "SuaUser::sua_init");
+      try {
+        _hopCountValue = config->getInt("ss7hop-count");
+      } catch (smsc::util::config::ConfigException& ex) {
+        _hopCountValue = 15;
+      }
+      smsc_log_info(_logger, "loading links configuration ...");
 
-    std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
+      std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
 
-    unsigned int linkIdx=0;
-    for (std::set<std::string>::iterator i=setGuard->begin(), end_iter = setGuard->end();
-         i!=end_iter;i++)
-    {
-      try
+      unsigned int linkIdx=0;
+      for (std::set<std::string>::iterator i=setGuard->begin(), end_iter = setGuard->end();
+           i!=end_iter;i++)
       {
-        const std::string& linkName = *i;
-        smsc_log_info(_logger, "loading link '%s' ...", linkName.c_str());
+        try
+        {
+          const std::string& linkName = *i;
+          smsc_log_info(_logger, "loading link '%s' ...", linkName.c_str());
 
-        std::auto_ptr<smsc::util::config::ConfigView> linkConfigGuard(config->getSubConfig(linkName.c_str()));
+          std::auto_ptr<smsc::util::config::ConfigView> linkConfigGuard(config->getSubConfig(linkName.c_str()));
 
-        LinkInfo linkInfo(linkName,
-                          linkConfigGuard->getString("suaLayerHost", "suaLayerHost parameter wasn't set"),
-                          linkConfigGuard->getInt("suaLayerPort", "suaLayerPort parameter wasn't set"));
+          LinkInfo linkInfo(linkName,
+                            linkConfigGuard->getString("suaLayerHost", "suaLayerHost parameter wasn't set"),
+                            linkConfigGuard->getInt("suaLayerPort", "suaLayerPort parameter wasn't set"));
 
-        _knownLinks.push_back(linkInfo);
-        smsc_log_info(_logger, "registered link=[%s], linkId=%d", linkInfo.toString().c_str(), linkIdx);
-        ++linkIdx;
-      } catch (smsc::util::config::ConfigException& ce) {}
-    }
-    _wasInitialized = true;
+          _knownLinks.push_back(linkInfo);
+          smsc_log_info(_logger, "registered link=[%s], linkId=%d", linkInfo.toString().c_str(), linkIdx);
+          ++linkIdx;
+        } catch (smsc::util::config::ConfigException& ce) {}
+      }
+      _wasInitialized = true;
     } catch (std::exception& ex) {
       smsc_log_error(_logger, "SuaUser::sua_init::: catched unexpected exception=[%s]", ex.what());
       return SYSTEM_MALFUNCTION;
@@ -64,6 +66,24 @@ SuaUser::sua_init(smsc::util::config::ConfigView* config)
 int
 SuaUser::sua_close()
 {
+  try {
+    while ( !_knownLinks.empty() ) {
+      LinkInfo& linkInfo = _knownLinks[0];
+      if ( linkInfo.inputStream )
+        _socketPool.remove(linkInfo.inputStream);
+      if ( linkInfo.socket ) {
+        linkInfo.socket->close();
+        delete linkInfo.socket;
+      }
+    }
+  } catch (smsc::util::SystemError& ex) {
+    smsc_log_error(_logger, "SuaUser::sua_close::: catched SystemError exception=[%s]", ex.what());
+    return SYSTEM_ERROR;
+  } catch (smsc::util::Exception& ex) {
+    smsc_log_error(_logger, "SuaUser::sua_close::: catched unexpected exception=[%s]", ex.what());
+    return SYSTEM_MALFUNCTION;
+  }
+
   return OK;
 }
 
@@ -372,7 +392,13 @@ SuaUser::sua_getConnectsCount() const
 int
 SuaUser::getConnNumByPolicy()
 {
-  return 0;
+  if ( _trafficMode == OVERRIDE) {
+    return _lastUsedConnIdx;
+  } else if ( _trafficMode = LOADSHARE ) {
+    smsc::core::synchronization::MutexGuard synchronize(_lastUsedConnIdxLock);
+    _lastUsedConnIdx = (_lastUsedConnIdx + 1) % _knownLinks.size();
+    return _lastUsedConnIdx;
+  }
 }
 
 SuaUser::LinkInfo::LinkInfo()
@@ -415,6 +441,19 @@ unsigned int
 SuaUser::LinkInputStream::getConnectNum() const
 {
   return _connectNum;
+}
+
+SuaUser::traffic_mode_t
+SuaUser::convertStringToTrafficModeValue(const std::string& trafficMode, const std::string& where)
+{
+  if ( trafficMode == "loadshare" )
+    return LOADSHARE;
+  else if ( trafficMode == "override" )
+    return OVERRIDE;
+  else {
+    const std::string fmtStr = where + "convertStringToTrafficModeValue::: wrong traffic-mode parameter value=[%s]";
+    throw smsc::util::Exception(fmtStr.c_str(), trafficMode.c_str());
+  }
 }
 
 }
