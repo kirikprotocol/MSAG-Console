@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <utility>
 #include <util/Exception.hpp>
 #include <util/vformat.hpp>
 #include <sua/communication/LinkId.hpp>
@@ -104,6 +105,38 @@ MessagesRouterSubsystem::makeAddressFamilyPrefix(unsigned int gti,
 }
 
 void
+MessagesRouterSubsystem::addRouteEntry(runtime_cfg::CompositeParameter* routeDescriptionCompositeParameter,
+                                       const communication::LinkId& linkSetId)
+{
+  runtime_cfg::Parameter* gtiConfigParameter = routeDescriptionCompositeParameter->getParameter<runtime_cfg::Parameter>("gti");
+  unsigned int gti = 4;
+  if ( gtiConfigParameter )
+    gti = atoi(gtiConfigParameter->getValue().c_str());
+
+  std::string gtMaskValue = routeDescriptionCompositeParameter->getParameter<runtime_cfg::Parameter>("gt")->getValue();
+
+  const std::string& gtAddressFamilyPrefix = makeAddressFamilyPrefix(gti, gtMaskValue);
+
+  uint8_t destinationSSN = 0;
+  const runtime_cfg::Parameter* ssnConfigParam = routeDescriptionCompositeParameter->getParameter<runtime_cfg::Parameter>("ssn");
+  if ( ssnConfigParam ) {
+    const std::string& ssnValue = ssnConfigParam->getValue();
+
+    destinationSSN = static_cast<uint8_t>(utilx::strtol(ssnValue.c_str(), (char **)NULL, 10));
+    if ( destinationSSN == 0 && errno )
+      throw smsc::util::Exception("MessagesRouterSubsystem::addRouteEntry::: wrong SSN value format [%s]", ssnValue.c_str());
+  }
+
+  smsc_log_debug(_logger, "MessagesRouterSubsystem::addRouteEntry::: gtMask=[%s],ssn=[%d]", gtMaskValue.c_str(), destinationSSN);
+
+  GTTranslationTable* translationTable = GTTranslationTablesRegistry::getInstance().getGTTranslationTable(gtAddressFamilyPrefix);
+  if ( !translationTable )
+    throw smsc::util::Exception("MessagesRouterSubsystem::addRouteEntry::: translation table not found for address family=[%s]", gtAddressFamilyPrefix.c_str());
+
+  translationTable->addTranslationEntry(gtMaskValue, destinationSSN, linkSetId);
+}
+
+void
 MessagesRouterSubsystem::fillUpRouteTable(runtime_cfg::CompositeParameter* routingEntryCompositeParameter,
                                           const communication::LinkId& linkSetId)
 {
@@ -112,33 +145,7 @@ MessagesRouterSubsystem::fillUpRouteTable(runtime_cfg::CompositeParameter* routi
     GTTranslationTable::addDefaultTranslationEntry(linkSetId);
   } else
     while(routeInfoIterator.hasElement()) {
-      runtime_cfg::CompositeParameter* routeDescriptionCompositeParameter = routeInfoIterator.getCurrentElement();
-      runtime_cfg::Parameter* gtiConfigParameter = routeDescriptionCompositeParameter->getParameter<runtime_cfg::Parameter>("gti");
-      unsigned int gti = 4;
-      if ( gtiConfigParameter )
-        gti = atoi(gtiConfigParameter->getValue().c_str());
-
-      std::string gtMaskValue = routeDescriptionCompositeParameter->getParameter<runtime_cfg::Parameter>("gt")->getValue();
-
-      const std::string& gtAddressFamilyPrefix = makeAddressFamilyPrefix(gti, gtMaskValue);
-
-      smsc_log_debug(_logger, "MessagesRouterSubsystem::fillUpRouteTable::: process next route entry, gtMask=[%s]", gtMaskValue.c_str());
-      uint8_t destinationSSN = 0;
-      const runtime_cfg::Parameter* ssnConfigParam = routeDescriptionCompositeParameter->getParameter<runtime_cfg::Parameter>("ssn");
-      if ( ssnConfigParam ) {
-        const std::string& ssnValue = ssnConfigParam->getValue();
-
-        destinationSSN = static_cast<uint8_t>(utilx::strtol(ssnValue.c_str(), (char **)NULL, 10));
-        if ( destinationSSN == 0 && errno )
-          throw smsc::util::Exception("MessagesRouterSubsystem::fillUpRouteTable::: wrong SSN value format [%s]", ssnValue.c_str());
-      }
-
-      GTTranslationTable* translationTable = GTTranslationTablesRegistry::getInstance().getGTTranslationTable(gtAddressFamilyPrefix);
-      if ( !translationTable )
-        throw smsc::util::Exception("MessagesRouterSubsystem::fillUpRouteTable::: translation table not found for address family=[%s]", gtAddressFamilyPrefix.c_str());
-
-      translationTable->addTranslationEntry(gtMaskValue, destinationSSN, linkSetId);
-
+      addRouteEntry(routeInfoIterator.getCurrentElement(), linkSetId);
       routeInfoIterator.next();
     }
 }
@@ -182,6 +189,7 @@ MessagesRouterSubsystem::initialize(runtime_cfg::RuntimeConfig& rconfig)
   initializeLinkSets(rconfig.find<runtime_cfg::CompositeParameter>("config.routing-keys"));
 
   runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.routing-keys.routingEntry", this);
+  runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.routing-keys.routingEntry.commit", this);
   runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.routing-keys.routingEntry.route", this);
   runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.routing-keys.routingEntry.route.gt", this);
   runtime_cfg::RuntimeConfig::getInstance().registerParameterObserver("config.routing-keys.routingEntry.route.gti", this);
@@ -202,19 +210,28 @@ MessagesRouterSubsystem::addParameterEventHandler(const runtime_cfg::CompositePa
 
     if ( !routingEntryParam ) return;
 
-    smsc_log_debug(_logger, "MessagesRouterSubsystem::addParameterHandler::: !!! routingEntryParam->getName()=%s, routingEntryParam->getValue()=%s", routingEntryParam->getName().c_str(), routingEntryParam->getValue().c_str());
-
     smsc_log_debug(_logger, "MessagesRouterSubsystem::addParameterHandler::: handle added parameter '%s'='%s' for context '%s'='%s'", addedParameter->getName().c_str(), addedParameter->getValue().c_str(), context.getFullName().c_str(), context.getValue().c_str());
 
     if ( addedParameter->getName() != "application" &&
          addedParameter->getName() != "sgp_link" ) return;
 
     if ( !checkParameterExist(routingEntryParam, addedParameter) ) {
-      if ( addedParameter->getName() == "application" )
+      if ( addedParameter->getName() == "application" ) {
         checkConsistentRuntimeCommand(routingEntryParam, "application", "sgp_link");
-      else
+
+        if ( !checkParameterValueIsPresentInConfig<runtime_cfg::Parameter>("config.sua_applications", "application", addedParameter->getValue()) ) {
+          std::string messageToUser("Inconsistent config modification request - application wasn't registered");
+          throw runtime_cfg::InconsistentConfigCommandException(messageToUser, "MessagesRouterSubsystem::addParameterEventHandler::: can't process parameter '%s'='%s' - such application wasn't registered", addedParameter->getName().c_str(), addedParameter->getValue().c_str());
+        }
+
+      } else {
         checkConsistentRuntimeCommand(routingEntryParam, "sgp_link", "application");
 
+        if ( !checkParameterValueIsPresentInConfig<runtime_cfg::CompositeParameter>("config.sgp_links", "link", addedParameter->getValue()) ) {
+          std::string messageToUser("Inconsistent config modification request - link wasn't registered");
+          throw runtime_cfg::InconsistentConfigCommandException(messageToUser, "MessagesRouterSubsystem::addParameterEventHandler::: can't process parameter '%s'='%s' - such link wasn't registered", addedParameter->getName().c_str(), addedParameter->getValue().c_str());
+        }
+      }
       routingEntryParam->addParameter(addedParameter);
     } else {
       std::string messageToUser("Inconsistent config modification request - the parameter with such value already exist");
@@ -248,6 +265,8 @@ MessagesRouterSubsystem::addParameterEventHandler(const runtime_cfg::CompositePa
     if ( routingEntryParam ) {
       if ( !checkParameterExist(routingEntryParam, addedParameter) ) {
         routingEntryParam->addParameter(addedParameter);
+        communication::LinkId linkSetId(routingEntryParam->getValue());
+        _uncommitedRoutesCache.addUncommitedRoute(linkSetId, addedParameter);
         return addedParameter;
       } else {
         std::string messageToUser("Inconsistent config modification request - such 'route' already exist");
@@ -262,9 +281,9 @@ void
 MessagesRouterSubsystem::addParameterEventHandler(runtime_cfg::CompositeParameter* context,
                                                   runtime_cfg::Parameter* addedParameter)
 {
-  if ( !checkParameterExist(context, addedParameter) )
+  if ( !checkParameterExist(context, addedParameter) ) {
     context->addParameter(addedParameter);
-  else {
+  } else {
     std::string messageToUser("Inconsistent config modification request - the parameter with such value already exist");
     throw runtime_cfg::InconsistentConfigCommandException(messageToUser, "MessagesRouterSubsystem::addParameterEventHandler::: can't process parameter '%s'='%s' - the parameter with such value already exist", addedParameter->getName().c_str(), addedParameter->getValue().c_str());
   }
@@ -276,18 +295,75 @@ MessagesRouterSubsystem::changeParameterEventHandler(const runtime_cfg::Composit
 {
   if ( context.getFullName() == "config.routing-keys.routingEntry" ) {
     runtime_cfg::CompositeParameter* routingEntryParam = findContexParentParameter(context);
-
     if ( !routingEntryParam ) return;
 
-    if ( modifiedParameter.getFullName() == "traffic-mode" ) {
-      smsc_log_debug(_logger, "MessagesRouterSubsystem::handle::: handle modified parameter 'config.routing-keys.routingEntry.traffic-mode'=[%s] for routingEntry=[%s]", modifiedParameter.getValue().c_str(), context.getValue().c_str());
+    if ( modifiedParameter.getName() == "commit" ) {
       runtime_cfg::Parameter* trafficModeParam = routingEntryParam->getParameter<runtime_cfg::Parameter>("traffic-mode");
+      io_dispatcher::LinkSet::linkset_mode_t linkSetMode = io_dispatcher::LinkSet::OVERRIDE;
       if ( trafficModeParam )
-        trafficModeParam->setValue(modifiedParameter.getValue());
-      else
-        routingEntryParam->addParameter(new runtime_cfg::Parameter("traffic-mode", modifiedParameter.getValue()));
+        linkSetMode = convertStringToTrafficModeValue(trafficModeParam->getValue(), "MessagesRouterSubsystem::changeParameterEventHandler: ");
+      applyParametersChange(communication::LinkId(context.getValue()), linkSetMode, routingEntryParam);
+    } else {
+      if ( modifiedParameter.getFullName() == "traffic-mode" ) {
+        smsc_log_debug(_logger, "MessagesRouterSubsystem::handle::: handle modified parameter 'config.routing-keys.routingEntry.traffic-mode'=[%s] for routingEntry=[%s]", modifiedParameter.getValue().c_str(), context.getValue().c_str());
+        runtime_cfg::Parameter* trafficModeParam = routingEntryParam->getParameter<runtime_cfg::Parameter>("traffic-mode");
+        if ( trafficModeParam )
+          trafficModeParam->setValue(modifiedParameter.getValue());
+        else
+          routingEntryParam->addParameter(new runtime_cfg::Parameter("traffic-mode", modifiedParameter.getValue()));
+      }
     }
   }
+}
+
+void
+MessagesRouterSubsystem::applyParametersChange(const communication::LinkId& linkSetId,
+                                               io_dispatcher::LinkSet::linkset_mode_t linkSetMode,
+                                               runtime_cfg::CompositeParameter* routingEntryCompositeParameter)
+{
+  smsc_log_debug(_logger, "MessagesRouterSubsystem::applyParametersChange::: Enter it");
+
+  io_dispatcher::ConnectMgr::getInstance().registerLinkSet(linkSetId, linkSetMode);
+
+  runtime_cfg::CompositeParameter::Iterator<runtime_cfg::Parameter> appIdIterator = routingEntryCompositeParameter->getIterator<runtime_cfg::Parameter>("application");
+
+  runtime_cfg::RuntimeConfig& runtimeConfig = runtime_cfg::RuntimeConfig::getInstance();
+
+  runtime_cfg::CompositeParameter& suaApplicationsParam = runtimeConfig.find<runtime_cfg::CompositeParameter>("config.sua_applications");
+
+  while (appIdIterator.hasElement()) {
+    const std::string& appId = appIdIterator.getCurrentElement()->getValue();
+
+    sua_user_communication::LinkSetInfoRegistry::getInstance().addAssociation(linkSetId, appId);
+
+    appIdIterator.next();
+  }
+
+  processSgpLinkSets(routingEntryCompositeParameter, linkSetId, linkSetMode);
+
+  communication::LinkId newRouteLinkSetId;
+  runtime_cfg::CompositeParameter* newRouteEntry;
+  while(_uncommitedRoutesCache.fetchNextUncommitedRoute(&newRouteLinkSetId, &newRouteEntry))
+    addRouteEntry(newRouteEntry, newRouteLinkSetId);
+}
+
+void
+MessagesRouterSubsystem::UncommitedRouteEntries::addUncommitedRoute(const communication::LinkId& linkSetId,
+                                                                    runtime_cfg::CompositeParameter* routeEntry)
+{
+  _uncommitedRouteModificactionRequests.insert(std::make_pair(linkSetId, routeEntry));
+}
+
+bool
+MessagesRouterSubsystem::UncommitedRouteEntries::fetchNextUncommitedRoute(communication::LinkId* linkSetId,
+                                                                          runtime_cfg::CompositeParameter** routeEntry)
+{
+  if ( _uncommitedRouteModificactionRequests.empty() ) return false;
+  route_entry_cache_t::iterator iter = _uncommitedRouteModificactionRequests.begin();
+  *linkSetId = iter->first;
+  *routeEntry = iter->second;
+  _uncommitedRouteModificactionRequests.erase(iter);
+  return true;
 }
 
 }
