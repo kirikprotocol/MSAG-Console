@@ -314,7 +314,12 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
   smsc::core::synchronization::MutexGuard synchronize(_receiveSynchronizeLock);
 
   try {
-    int res = _socketPool.listen();
+    if ( timeout ) {
+      int res = _socketPool.listen(timeout);
+      if ( res == corex::io::IOObjectsPool::TIMEOUT )
+        return SOCKET_TIMEOUT;
+    } else
+      _socketPool.listen();
 
     corex::io::InputStream* iStream;
     while ( iStream = _socketPool.getNextReadyInputStream() ) {
