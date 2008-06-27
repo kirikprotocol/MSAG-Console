@@ -20,6 +20,9 @@ LM_SGPLinks_AddLinkCommand::executeCommand()
   std::ostringstream oBuf;
 
   oBuf << "linkId=[" << _linkId << "],";
+
+  runtime_cfg::RuntimeConfig::getInstance().notifyAddParameterEvent(runtime_cfg::CompositeParameter("config.sgp_links"), new runtime_cfg::CompositeParameter("link", _linkId));
+
   for(std::vector<std::string>::const_iterator iter = _localAddressList.begin(), end_iter = _localAddressList.end();
       iter != end_iter; ++iter) {
     oBuf << "local_address=[" << *iter << "],";
