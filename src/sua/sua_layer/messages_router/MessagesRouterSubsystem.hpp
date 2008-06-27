@@ -27,14 +27,14 @@ public:
                                            const runtime_cfg::Parameter& modifiedParameter);
 
   virtual void addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
-                                        runtime_cfg::Parameter* addedParameter); // ok!
+                                        runtime_cfg::Parameter* addedParameter);
 
   virtual runtime_cfg::CompositeParameter*
   addParameterEventHandler(const runtime_cfg::CompositeParameter& context,
-                           runtime_cfg::CompositeParameter* addedParameter); // ok!
+                           runtime_cfg::CompositeParameter* addedParameter);
 
   virtual void addParameterEventHandler(runtime_cfg::CompositeParameter* context,
-                                        runtime_cfg::Parameter* addedParameter); // ok!
+                                        runtime_cfg::Parameter* addedParameter);
 
 private:
   void initializeLinkSets(runtime_cfg::CompositeParameter& routingKeysParameter);
@@ -56,8 +56,34 @@ private:
   std::string makeAddressFamilyPrefix(unsigned int gti,
                                       const std::string& gtMaskValue) const;
 
-  //  runtime_cfg::CompositeParameter* findRoutingEntryParameter(const runtime_cfg::CompositeParameter& context);
+  void applyParametersChange(const communication::LinkId& linkSetId,
+                             io_dispatcher::LinkSet::linkset_mode_t linkSetMode,
+                             runtime_cfg::CompositeParameter* routingEntryCompositeParameter);
+
+  template<class LOOKED_FOR_PARAMETER_TYPE>
+  bool checkParameterValueIsPresentInConfig(const std::string& parentParamName,
+                                            const std::string& interestedParamName,
+                                            const std::string& valueToCompare);
+
+  void addRouteEntry(runtime_cfg::CompositeParameter* routeDescriptionCompositeParameter,
+                     const communication::LinkId& linkSetId);
+
+  class UncommitedRouteEntries {
+  public:
+    void addUncommitedRoute(const communication::LinkId& linkSetId,
+                            runtime_cfg::CompositeParameter* routeEntry);
+
+    bool fetchNextUncommitedRoute(communication::LinkId* linkSetId,
+                                  runtime_cfg::CompositeParameter** routeEntry);
+  private:
+    typedef std::map<communication::LinkId, runtime_cfg::CompositeParameter*> route_entry_cache_t;
+    route_entry_cache_t _uncommitedRouteModificactionRequests;
+  };
+
+  UncommitedRouteEntries _uncommitedRoutesCache;
 };
+
+# include "MessagesRouterSubsystem_impl.hpp"
 
 }
 
