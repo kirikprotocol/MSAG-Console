@@ -2,10 +2,11 @@
 # define __SUA_LIBSUA_SUAUSER_HPP__ 1
 
 # include <map>
+# include <sys/types.h>
+# include <netinet/in.h>
 # include <logger/Logger.h>
 # include <sua/libsua/SuaApi.hpp>
 # include <util/config/ConfigView.h>
-# include <netinet/in.h>
 # include <sua/corex/io/network/TCPSocket.hpp>
 # include <sua/corex/io/IOObjectsPool.hpp>
 # include <sua/utilx/RingBuffer.hpp>
@@ -18,19 +19,19 @@ class SuaUser : public SuaApi {
 public:
   SuaUser(/*smsc::util::config::ConfigView* config*/);
 
-  virtual void sua_init(smsc::util::config::ConfigView* config);
+  virtual int sua_init(smsc::util::config::ConfigView* config);
 
-  virtual void sua_close();
+  virtual int sua_close();
 
-  virtual void sua_connect(unsigned int suaConnectNum);
+  virtual int sua_connect(unsigned int suaConnectNum);
 
-  virtual void sua_disconnect(unsigned int suaConnectNum);
+  virtual int sua_disconnect(unsigned int suaConnectNum);
 
-  virtual unsigned int bind(unsigned int suaConnectNum);
+  virtual int bind(unsigned int suaConnectNum);
 
-  virtual void unbind(unsigned int suaConnectNum);
+  virtual int unbind(unsigned int suaConnectNum);
 
-  virtual unsigned int unitdata_req(const uint8_t* message,
+  virtual int unitdata_req(const uint8_t* message,
                                     uint16_t messageSize,
                                     const uint8_t* calledAddr,
                                     uint8_t calledAddrLen,
@@ -39,11 +40,11 @@ public:
                                     const MessageProperties& msgProperties,
                                     unsigned int suaConnectNum);
 
-  virtual void msgRecv(MessageInfo* msgInfo);
+  virtual int msgRecv(MessageInfo* msgInfo, uint32_t timeout=0);
 
-  virtual unsigned int sua_getConnectsCount() const;
+  virtual int sua_getConnectsCount() const;
 protected:
-  virtual unsigned int getConnNumByPolicy();
+  virtual int getConnNumByPolicy();
 private:
   typedef enum { NOT_CONNECTED, CONNECTED, BINDED } connection_state_t;
 
