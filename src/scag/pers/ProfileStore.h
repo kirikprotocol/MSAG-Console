@@ -330,7 +330,12 @@ public:
 
     void storeProfile(const Key& key, Profile *pf)
     {
+      if (!pf) {
+        smsc_log_error(this->log, "storeProfile: profile key=%s is NULL.", key.toString().c_str());
+        throw Exception("storeProfile: profile is NULL");
+      }
         //pf->DeleteExpired();
+
 		sb.Empty();
         //pf->Serialize(sb, true);
 //        delete pf;  
@@ -598,7 +603,8 @@ private:
 
   bool _delProperty(Profile *pf, const Key& key, const char* nm) {
     if (!pf) {
-      smsc_log_error(this->log, "profile key=%s is NULL", key.toString().c_str());
+      //smsc_log_error(this->log, "profile key=%s is NULL", key.toString().c_str());
+      smsc_log_debug(this->log, "profile key=%s not found", key.toString().c_str());
       return false;
     }
     if (needBackup) {
@@ -618,7 +624,8 @@ private:
 
   bool _getProperty(Profile *pf, const Key& key, const char* nm, Property& prop) {
     if (!pf) {
-      smsc_log_debug(this->log, "profile key=%s is NULL", key.toString().c_str());
+      //smsc_log_debug(this->log, "profile key=%s is NULL", key.toString().c_str());
+      smsc_log_debug(this->log, "profile key=%s not found", key.toString().c_str());
       return false;
     }
     Property* p = pf->GetProperty(nm);
