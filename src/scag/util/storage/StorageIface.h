@@ -1,7 +1,8 @@
 #ifndef _SCAG_UTIL_STORAGE_STORAGEIFACE_H
 #define _SCAG_UTIL_STORAGE_STORAGEIFACE_H
 
-#include <exception>
+#include <memory>
+#include <stdexcept>
 
 namespace scag {
 namespace util {
@@ -79,6 +80,7 @@ public:
 #endif
 
 
+#if 0
 template < typename Idx, class Val >
 class DataStorageIface
 {
@@ -104,13 +106,14 @@ public:
     /// @return true if successfully deserialized, otherwise v is broken
     virtual bool deserialize( value_type& v ) const = 0;
 
-    /// delete data from the store
-    virtual void delete( index_type i ) = 0;
+    /// remove data from the store
+    virtual void remove( index_type i ) = 0;
 
     /// copy internal buffer from another storage
     virtual void copyBuffer( const DataStorageIface<Idx,Val>& s ) = 0;
 
 };
+#endif
 
 
 template < class IStorage, class DStorage > class IndexedStorageIterator;
@@ -131,7 +134,7 @@ protected:
         if ( !is || !ds ) {
             delete is;
             delete ds;
-            throw std::runtime_exception("IndexedStorage: both storages should be provided!");
+            throw std::runtime_error("IndexedStorage: both storages should be provided!");
         }
     }
     ~IndexedStorageBase() {
@@ -163,7 +166,7 @@ public:
 
     bool remove( const key_type& k ) {
         index_type i = index_->removeIndex( k );
-        if ( i != 0 ) data_->delete( i );
+        if ( i != 0 ) data_->remove( i );
     }
 
 
@@ -304,11 +307,11 @@ public:
 
     CachedDiskStorage( MemStorage* ms,
                        DiskStorage* ds ) :
-    cache_( ms ), disk_( ds.get() ), spare_(NULL) {
+    cache_( ms ), disk_( ds ), spare_(NULL) {
         if ( !ms || !ds ) {
             delete ms;
             delete ds;
-            throw std::runtime_exception("CachedDiskStorage: both storages should be provided!");
+            throw std::runtime_error("CachedDiskStorage: both storages should be provided!");
         }
     }
 
@@ -334,17 +337,23 @@ public:
 
     value_type* get( const key_type& k ) const {
         value_type* v = cache_->get( k );
-        if ( ! v ) v = faultHandler( k );
-        if ( v ) cache_->set( k, v );
+        if ( !v ) v = faultHandler( k );
         return v;
     }
 
+    /// NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k ) {
-        value_type* v = cache_->release( k );
+        std::auto_ptr<value_type> v( cache_->release( k ) );
         // should we remove the item from disk?
         // the answer is yes, as otherwise we could leak disk resources.
         disk_->remove( k );
-        return v;
+        return v.release();
+    }
+
+    /// purge element from cache only
+    /// NOTE: it is your responsibility to delete the return value.
+    value_type* purge( const key_type& k ) {
+        return cache_->release( k );
     }
 
     /// flush all cached data to disk
@@ -353,7 +362,7 @@ public:
         value_type* v;
         for ( iterator_type i = this->begin();
               i.next(k,v); ) {
-            if (v) disk_->set( k, static_cast< const DiskStorage::value_type& >( *v ) );
+            if (v) disk_->set( k, static_cast< const typename DiskStorage::value_type& >( *v ) );
         }
     }
 
@@ -366,10 +375,11 @@ protected:
 private:
     value_type* faultHandler( const key_type& k ) const
     {
-        if ( !spare_ ) spare_ = new DiskStorage::value_type( k );
+        if ( !spare_ ) spare_ = new typename DiskStorage::value_type( k );
         if ( disk_->get( k, *spare_ ) ) {
-            DiskStorage::value_type* v = spare_;
+            value_type* v = spare_;
             spare_ = NULL;
+            cache_->set( k, v );
             return v;
         }
         return NULL;
@@ -378,13 +388,13 @@ private:
 private:
     CachedDiskStorage( const CachedDiskStorage& );
 
-    MemStorage*  cache_;
+    mutable MemStorage*  cache_;
     DiskStorage* disk_;
 
     // NOTE: for optimization purposes we store a pointer to a temporary instance.
     //  it is used only in faultHandler to avoid unnecessary new/delete
     //  when item is not found.
-    typename DiskStorage::value_type*  spare_;
+    mutable typename DiskStorage::value_type*  spare_;
 };
 
 

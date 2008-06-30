@@ -1,11 +1,8 @@
-// #include "scag/sessions/Session.h"
-// #include "scag/store/SerialBuffer.h"
-// #include "scag/store/FSDB.h"
-// #include "scag/store/DataBlockBackup.h"
-
 #include <string>
 #include <list>
+#include <cstdlib>  // random
 #include <string.h> // memcpy
+#include <memory>
 #include "Storage.h"
 
 // for __require__
@@ -18,275 +15,9 @@
 
 using namespace scag::util::storage;
 
-
-#if 0
-template <class Key, class Profile>
-class CacheItem
-{
-public:
-    Key key;
-    Profile *pf;
-
-    CacheItem(const Key& k, Profile *p) { key = k; pf = p; };
-    ~CacheItem() {
-      if (pf) {
-        delete pf; 
-      }
-    }
-};
-
-
-template <class Key, class Profile>
-class CachedStore
-{
-public:
-    CachedStore(): cache(NULL) {};
-
-    virtual ~CachedStore()
-    {
-        if(cache != NULL)
-        {
-            for(int i = 0; i < max_cache_size; i++)
-                if(cache[i] != NULL)
-                {
-//                    _storeProfile(cache[i]->key, cache[i]->pf);
-//                    delete cache[i]->pf;
-                    delete cache[i];
-                }
-            delete[] cache;
-        }
-//              smsc_log_debug(log, "Shutdown cached store %s....", storeName.c_str());         
-    };
-        
-    void init(uint32_t _max_cache_size = 1000)
-    {
-        max_cache_size = _max_cache_size;
-        cache = new CacheItem<Key,Profile>*[_max_cache_size];
-        memset(cache, 0, sizeof(CacheItem<Key,Profile>*) * _max_cache_size);
-        cache_log = smsc::logger::Logger::getInstance("cachestore");
-    };
-
-    Profile* getProfile(const Key& key, bool create)
-    {
-        uint32_t i = key.HashCode(0) % max_cache_size;
-        if(cache[i] != NULL)
-        {
-            if(cache[i]->key == key) {
-              return cache[i]->pf;
-            }
-
-            Profile* pf = _getProfile(key, create);
-            if(pf)
-            {
-              if (cache[i]->pf) {
-                delete cache[i]->pf;
-              } else {
-                smsc_log_warn(cache_log, "getProfile: cache[%d] profile already deleted, key=%s ",
-                               i, cache[i]->key.toString().c_str());
-              }
-                cache[i]->key = key;
-                cache[i]->pf = pf;
-                return pf;
-            }
-            return NULL;
-        }
-        else
-        {
-            Profile* pf = _getProfile(key, create);
-            if(pf)
-                cache[i] = new CacheItem<Key,Profile>(key, pf);
-            return pf;
-        }
-            
-    };
-
-    Profile* createCachedProfile(const Key& key) {
-      uint32_t i = key.HashCode(0) % max_cache_size;
-      Profile* pf = _createProfile(key);
-      if (!pf) {
-        return NULL;
-      }
-      if(cache[i] != NULL) {
-        if (cache[i]->pf) {
-          delete cache[i]->pf;
-        } else {
-          smsc_log_warn(cache_log, "createCachedProfile: cache[%d] profile already deleted, key=%s ",
-                         i, cache[i]->key.toString().c_str());
-        }
-        cache[i]->key = key;
-        cache[i]->pf = pf;
-      } else {
-        cache[i] = new CacheItem<Key,Profile>(key, pf);
-      }
-      return pf;
-    }
-
-    void deleteCachedProfile(const Key& key) {
-      uint32_t i = key.HashCode(0) % max_cache_size;
-      if(cache[i] != NULL && cache[i]->key == key) {
-        if (!cache[i]->pf) {
-          smsc_log_warn(cache_log, "deleteCachedProfile: cache[%d] profile already deleted, key=%s",
-                         i, cache[i]->key.toString().c_str());
-        }
-          delete cache[i];
-          cache[i] = NULL;
-      }
-      _deleteProfile(key);
-    }
-
-    virtual Profile* _getProfile(const Key& key, bool create) = 0;
-
-protected:
-    virtual Profile* _createProfile(const Key& key) = 0;
-    virtual void _deleteProfile(const Key& key) = 0;
-    //virtual void Reset() = 0;
-    //virtual bool Next(Key& key, uint8_t& profile_state) = 0;
-        
-protected:
-    uint32_t max_cache_size;
-    CacheItem<Key,Profile> **cache;
-    smsc::logger::Logger* cache_log;
-};
-
-
-
-template <class Key, class Profile>
-    class TreeStore : public CachedStore<Key, Profile>
-{
-public:
-    TreeStore() { };
-    ~TreeStore() { smsc_log_debug(log, "Shutdown store %s", storeName.c_str()); };
-
-    void init(  const string& storageName, const string& storagePath,
-                                int indexGrowth, int blocksInFile, int dataBlockSize, int cacheSize,  smsc::logger::Logger *_log)
-    {
-       CachedStore<Key,Profile>::init(cacheSize);
-                
-        log = smsc::logger::Logger::getInstance("treestore");;
-        dblog = _log;
-        
-        storeName = storageName;
-        if(store.Init(storageName, storagePath, indexGrowth, blocksInFile, dataBlockSize) != 0)
-            throw Exception("Error init abonentstore");
-//              smsc_log_info(log, "Inited: cacheSize = %d", cacheSize);
-        };
-
-    void storeProfile(const Key& key, Profile *pf)
-    {
-        //pf->DeleteExpired();
-        //        sb.Empty();
-        //pf->Serialize(sb, true);
-//        delete pf;  
-        store.Set(key, *pf);
-        //if (store.Set(key, sb)) {
-          //smsc_log_debug(log, "Set return TRUE");
-        //} else {
-          //smsc_log_debug(log, "Set return FALSE");
-        //}
-    }
-
-    Profile* _getProfile(const Key& key, bool create)
-    {
-      Profile *pf = new Profile(key, dblog);
-      try {
-        sb.Empty();
-        if(store.Get(key, *pf))
-        {
-            //pf->Deserialize(sb, true);
-            return pf;
-        }
-        if(create)
-            return pf;
-        delete pf;
-        return NULL;
-      } catch (...) {
-        delete pf;
-        throw;
-      }
-    };
-
-    void Reset() {
-      store.resetStorage();
-    }
-
-    bool Next(Key& key, uint16_t& state_cnt) {
-      sb.Empty();
-      if (store.dataStorageNext(key, sb)) {
-        state_cnt = sb.ReadInt16();
-        return true;
-      }
-      return false;
-    }
-
-protected:
-    Profile* _createProfile(const Key& key) {
-      return new Profile(key, dblog);
-    }
-
-    void _deleteProfile(const Key &key) {
-      //store.Remove(key);
-    }
-
-protected:
-    std::string storeName;
-    smsc::logger::Logger* log;
-    smsc::logger::Logger *dblog;    
-    FSDBT<Key,Profile> store;
-    SerialBuffer sb;
-};
-
-
-class _FakeSession : public Session, public Serializable
-{
-
-public:
-    _FakeSession( const CSessionKey& key, Logger* ) :
-    Session( key )
-    {
-    }
-
-    void Serialize( SerialBuffer& buf, bool toFSDB = false ) const;
-    void Deserialize( SerialBuffer& buf, bool fromFSDB = false );
-
-    /// clean up the state
-    void Empty();
-
-    std::string getKey() const;
-};
-
-
-typedef DataBlockBackup< CSessionKey, _FakeSession >  MySession;
-
-typedef TreeStore< CSessionKey, MySession > SessionStore;
-
-void _FakeSession::Serialize( SerialBuffer& buf, bool ) const
-{
-    SessionBuffer sb;
-    const_cast< _FakeSession* >(this)->Session::Serialize( sb );
-    buf.blkcpy( sb.get(), sb.GetPos() );
-}
-
-void _FakeSession::Deserialize( SerialBuffer& buf, bool )
-{
-    SessionBuffer sb( const_cast<char*>(buf.c_ptr()), buf.length() );
-    this->Session::Deserialize( sb );
-}
-
-void _FakeSession::Empty()
-{
-    ClearOperations();
-}
-
-std::string _FakeSession::getKey() const
-{
-    return getSessionKey().toString();
-}
-
-#endif
-
+static smsc::logger::Logger* cachelog = NULL;
 
 namespace {
-
 
     template < class Key, class Val > class SimpleMemoryStorageIterator;
 
@@ -307,7 +38,7 @@ namespace {
         cachesize_( cachesize ),
         array_(0) {
             if ( cachesize_ == 0 ) {
-                throw std::runtime_exception( "SimpleMemoryStorage: cannot create a storage with zero size" );
+                throw std::runtime_error( "SimpleMemoryStorage: cannot create a storage with zero size" );
             }
             array_ = new Itemlist[ cachesize_ ];
         }
@@ -319,20 +50,24 @@ namespace {
     public:
 
         bool set( const key_type& k, value_type* v ) {
+            smsc_log_debug( cachelog, "set: %s", k.toString().c_str() );
             return array_[hash(k)].set(k,v);
         }
         
         value_type* get( const key_type& k ) const {
-            return array_[hash(k)].get(k);
+            value_type* v = array_[hash(k)].get(k);
+            smsc_log_debug( cachelog, "get: %s %s", k.toString().c_str(), v ? "hit" : "miss" );
+            return v;
         }
 
         value_type* release( const key_type& k ) {
+            smsc_log_debug( cachelog, "clr: %s", k.toString().c_str() );
             return array_[hash(k)].release(k);
         }
 
     private:
         inline uint32_t hash( const key_type& k ) const {
-            return k.CalcHash() % cachesize_;
+            return key_type::CalcHash(k) % cachesize_;
         }
 
         struct Itemlist // : public MemoryStorage< key_type, value_type > 
@@ -342,16 +77,19 @@ namespace {
             Itemlist() {}
 
             ~Itemlist() {
-                for ( SList::iterator i = SList::begin();
-                      i != SList::end();
+                smsc_log_debug( cachelog, "delete itemlist: size=%d", list_.size() );
+                for ( typename SList::iterator i = list_.begin();
+                      i != list_.end();
                       ++i ) {
+                    smsc_log_debug( cachelog, "del: %s", i->first.toString().c_str() );
                     delete i->second;
+                    i->second = NULL;
                 }
             }
 
 
             bool set( const key_type& k, value_type* v ) {
-                SList::iterator i = list_.begin();
+                typename SList::iterator i = list_.begin();
                 for ( ; i != list_.end(); ++i ) {
                     if ( i->first == k ) break;
                 }
@@ -359,8 +97,10 @@ namespace {
                     // found
                     if ( i->second ) {
                         if ( v ) {
-                            // FIXME: replace with warning
-                            throw std::runtime_exception
+                            delete v; // to avoid memleak
+
+                            // FIXME: should we replace with warning?
+                            throw std::runtime_error
                                 ( "Itemlist: two items with the same keys found\n"
                                   "It may mean that you issue set() w/o prior get()" );
                         }
@@ -374,7 +114,7 @@ namespace {
             }
 
             value_type* get( const key_type& k ) const {
-                for ( SList::const_iterator i = list_.begin();
+                for ( typename SList::const_iterator i = list_.begin();
                       i != list_.end();
                       ++i ) {
                     if ( i->first == k ) return i->second;
@@ -383,7 +123,7 @@ namespace {
             }
 
             value_type* release( const key_type& k )  {
-                for ( SList::const_iterator i = list_.begin();
+                for ( typename SList::iterator i = list_.begin();
                       i != list_.end();
                       ++i ) {
                     if ( i->first == k ) {
@@ -395,8 +135,6 @@ namespace {
                 return NULL;
             }
 
-
-        private:
             SList  list_;
         };
 
@@ -413,8 +151,8 @@ namespace {
     class SimpleMemoryStorageIterator
     {
     private:
-        friend class SimpleMemoryStorage< class Key, class Val >;
-        typedef SimpleMemoryStorage< class Key, class Val > Base;
+        friend class SimpleMemoryStorage< Key, Val >;
+        typedef SimpleMemoryStorage< Key, Val >  Base;
         typedef typename Base::Itemlist  Itemlist;
         typedef typename Itemlist::SList SList;
 
@@ -424,14 +162,14 @@ namespace {
 
         void reset() {
             pos_ = 0;
-            i_ = base_.array_[pos_].begin();
+            i_ = base_->array_[pos_].list_.begin();
         }
         bool next( key_type& k, value_type*& v ) {
-            if ( pos_ < base_.cachesize_ ) {
-                while ( i_ == base_.array_[pos_].end() ) {
+            if ( pos_ < base_->cachesize_ ) {
+                while ( i_ == base_->array_[pos_].list_.end() ) {
                     ++pos_;
-                    if ( pos_ >= base_.cachesize_ ) return false;
-                    i_ = base_.array_[pos_].begin();
+                    if ( pos_ >= base_->cachesize_ ) return false;
+                    i_ = base_->array_[pos_].list_.begin();
                 }
                 k = i_->first;
                 v = i_->second;
@@ -452,9 +190,9 @@ namespace {
         }
         
     private:
-        Base*                                base_;
+        const Base*                          base_;
         unsigned int                         pos_;
-        typename SList::iterator             i_;
+        typename SList::const_iterator       i_;
     };
 
     
@@ -480,6 +218,15 @@ namespace {
 // test classes
 namespace {
 
+/**
+* Р¤Р°Р№Р» СЃРѕРґРµСЂР¶РёС‚ РѕРїРёСЃР°РЅРёРµ РІРЅСѓС‚СЂРµРЅРЅРµР№ СЃС‚СЂСѓРєС‚СѓСЂС‹ РґР°РЅРЅС‹С… РґР»СЏ РїСЂРµРґСЃС‚Р°РІР»РµРЅРёСЏ SMS
+* РІ СЃРёСЃС‚РµРјРµ SMS С†РµРЅС‚СЂР°. РСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ СЃРёСЃС‚РµРјРѕР№ С…СЂР°РЅРµРЅРёСЏ.
+*
+* @author Victor V. Makarov
+* @version 1.0
+* @see MessageStore
+*/
+
 const int MAX_ADDRESS_VALUE_LENGTH = 20;
 typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
 
@@ -489,7 +236,7 @@ struct Address
   AddressValue value;
 
   /**
-  * Default конструктор, просто инициализирует некоторые поля нулями
+  * Default РєРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ, РїСЂРѕСЃС‚Рѕ РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ РЅРµРєРѕС‚РѕСЂС‹Рµ РїРѕР»СЏ РЅСѓР»СЏРјРё
   */
   Address() : length(1), type(0), plan(0)
   {
@@ -497,13 +244,13 @@ struct Address
   };
 
   /**
-  * Конструктор для Address, инициализирует поля структуры реальными данными.
-  * Копирует даннуе из буфера к себе
+  * РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РґР»СЏ Address, РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµС‚ РїРѕР»СЏ СЃС‚СЂСѓРєС‚СѓСЂС‹ СЂРµР°Р»СЊРЅС‹РјРё РґР°РЅРЅС‹РјРё.
+  * РљРѕРїРёСЂСѓРµС‚ РґР°РЅРЅСѓРµ РёР· Р±СѓС„РµСЂР° Рє СЃРµР±Рµ
   *
-  * @param _len   длинна буфера _value
-  * @param _type  тип адреса
-  * @param _plan  план нумерации
-  * @param _value значение адреса
+  * @param _len   РґР»РёРЅРЅР° Р±СѓС„РµСЂР° _value
+  * @param _type  С‚РёРї Р°РґСЂРµСЃР°
+  * @param _plan  РїР»Р°РЅ РЅСѓРјРµСЂР°С†РёРё
+  * @param _value Р·РЅР°С‡РµРЅРёРµ Р°РґСЂРµСЃР°
   */
   Address(uint8_t _len, uint8_t _type, uint8_t _plan, const char* _value)
     : length(_len), type(_type), plan(_plan)
@@ -512,9 +259,9 @@ struct Address
   };
 
   /**
-  * Конструктор копирования, используется для создания адреса по образцу
+  * РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РєРѕРїРёСЂРѕРІР°РЅРёСЏ, РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ Р°РґСЂРµСЃР° РїРѕ РѕР±СЂР°Р·С†Сѓ
   *
-  * @param addr   образец адреса.
+  * @param addr   РѕР±СЂР°Р·РµС† Р°РґСЂРµСЃР°.
   */
   Address(const Address& addr)
     : length(addr.length), type(addr.type), plan(addr.plan)
@@ -563,11 +310,11 @@ struct Address
   }
 
   /**
-  * Переопределённый оператор '=',
-  * используется для копирования адресов друг в друга
+  * РџРµСЂРµРѕРїСЂРµРґРµР»С‘РЅРЅС‹Р№ РѕРїРµСЂР°С‚РѕСЂ '=',
+  * РёСЃРїРѕР»СЊР·СѓРµС‚СЃСЏ РґР»СЏ РєРѕРїРёСЂРѕРІР°РЅРёСЏ Р°РґСЂРµСЃРѕРІ РґСЂСѓРі РІ РґСЂСѓРіР°
   *
-  * @param addr   Правая часть оператора '='
-  * @return Ссылку на себя
+  * @param addr   РџСЂР°РІР°СЏ С‡Р°СЃС‚СЊ РѕРїРµСЂР°С‚РѕСЂР° '='
+  * @return РЎСЃС‹Р»РєСѓ РЅР° СЃРµР±СЏ
   */
   Address& operator =(const Address& addr)
   {
@@ -597,11 +344,11 @@ struct Address
 
 
   /**
-  * Метод устанавливает значение адреса и его длинну.
-  * Длинна адреса должна быть меньше MAX_ADDRESS_VALUE_LENGTH.
+  * РњРµС‚РѕРґ СѓСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ Р·РЅР°С‡РµРЅРёРµ Р°РґСЂРµСЃР° Рё РµРіРѕ РґР»РёРЅРЅСѓ.
+  * Р”Р»РёРЅРЅР° Р°РґСЂРµСЃР° РґРѕР»Р¶РЅР° Р±С‹С‚СЊ РјРµРЅСЊС€Рµ MAX_ADDRESS_VALUE_LENGTH.
   *
-  * @param _len   длинна нового адреса
-  * @param _value значение нового адреса
+  * @param _len   РґР»РёРЅРЅР° РЅРѕРІРѕРіРѕ Р°РґСЂРµСЃР°
+  * @param _value Р·РЅР°С‡РµРЅРёРµ РЅРѕРІРѕРіРѕ Р°РґСЂРµСЃР°
   */
   inline void setValue(uint8_t _len, const char* _value)
   {
@@ -613,12 +360,12 @@ struct Address
   };
 
   /**
-  * Метод копирует значение адреса и возвращает его длинну
+  * РњРµС‚РѕРґ РєРѕРїРёСЂСѓРµС‚ Р·РЅР°С‡РµРЅРёРµ Р°РґСЂРµСЃР° Рё РІРѕР·РІСЂР°С‰Р°РµС‚ РµРіРѕ РґР»РёРЅРЅСѓ
   *
-  * @param _value указатель на буфер куда будет скопированно значение адреса
-  *               буфер должен иметь размер не меньше
-  *               MAX_ADDRESS_VALUE_LENGTH+1, чтобы принять любое значение
-  * @return длинна адреса
+  * @param _value СѓРєР°Р·Р°С‚РµР»СЊ РЅР° Р±СѓС„РµСЂ РєСѓРґР° Р±СѓРґРµС‚ СЃРєРѕРїРёСЂРѕРІР°РЅРЅРѕ Р·РЅР°С‡РµРЅРёРµ Р°РґСЂРµСЃР°
+  *               Р±СѓС„РµСЂ РґРѕР»Р¶РµРЅ РёРјРµС‚СЊ СЂР°Р·РјРµСЂ РЅРµ РјРµРЅСЊС€Рµ
+  *               MAX_ADDRESS_VALUE_LENGTH+1, С‡С‚РѕР±С‹ РїСЂРёРЅСЏС‚СЊ Р»СЋР±РѕРµ Р·РЅР°С‡РµРЅРёРµ
+  * @return РґР»РёРЅРЅР° Р°РґСЂРµСЃР°
   */
   inline uint8_t getValue(char* _value) const
   {
@@ -633,9 +380,9 @@ struct Address
   }
 
   /**
-  * Возвращает длинну адреса
+  * Р’РѕР·РІСЂР°С‰Р°РµС‚ РґР»РёРЅРЅСѓ Р°РґСЂРµСЃР°
   *
-  * @return длинна адреса
+  * @return РґР»РёРЅРЅР° Р°РґСЂРµСЃР°
   */
   inline uint8_t getLength() const
   {
@@ -643,9 +390,9 @@ struct Address
   };
 
   /**
-  * Устанавливает тип адреса
+  * РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ С‚РёРї Р°РґСЂРµСЃР°
   *
-  * @param _type  тип адреса
+  * @param _type  С‚РёРї Р°РґСЂРµСЃР°
   */
   inline void setTypeOfNumber(uint8_t _type)
   {
@@ -653,9 +400,9 @@ struct Address
   };
 
   /**
-  * Возвращает тип адреса
+  * Р’РѕР·РІСЂР°С‰Р°РµС‚ С‚РёРї Р°РґСЂРµСЃР°
   *
-  * @param _type  тип адреса
+  * @param _type  С‚РёРї Р°РґСЂРµСЃР°
   */
   inline uint8_t getTypeOfNumber() const
   {
@@ -663,9 +410,9 @@ struct Address
   };
 
   /**
-  * Устанавливает план нумерации адреса
+  * РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїР»Р°РЅ РЅСѓРјРµСЂР°С†РёРё Р°РґСЂРµСЃР°
   *
-  * @param _plan  план нумерации адреса
+  * @param _plan  РїР»Р°РЅ РЅСѓРјРµСЂР°С†РёРё Р°РґСЂРµСЃР°
   */
   inline void setNumberingPlan(uint8_t _plan)
   {
@@ -673,9 +420,9 @@ struct Address
   };
 
   /**
-  * Возвращает план нумерации адреса
+  * Р’РѕР·РІСЂР°С‰Р°РµС‚ РїР»Р°РЅ РЅСѓРјРµСЂР°С†РёРё Р°РґСЂРµСЃР°
   *
-  * @return план нумерации адреса
+  * @return РїР»Р°РЅ РЅСѓРјРµСЂР°С†РёРё Р°РґСЂРµСЃР°
   */
   inline uint8_t getNumberingPlan() const
   {
@@ -791,35 +538,77 @@ struct Address
     typedef Session SerializableSession;
 
 
+    void Session::serialize( PageFileBuffer& pfb ) const
+    {
+        Serializer ss( pfb.buffer() );
+        // const size_t pos1 = ss.size();
+        const std::string s = sessionKey.toString();
+        ss << s << uint32_t(lastAccessTime) << somedata;
+        // const uint32_t chksum = ss.checksum( pos1, ss.size() );
+        // ss << chksum;
+    }
+
+
+    void Session::deserialize( PageFileBuffer& pfb )
+    {
+        Serializer ss( pfb.buffer() );
+        // const size_t pos1 = ss.rpos();
+        std::string s;
+        uint32_t tm;
+        ss >> s >> tm >> somedata;
+        // const uint32_t oldsum = ss.checksum( pos1, ss.rpos() );
+        // uint32_t chksum;
+        // ss >> chksum;
+        // if ( oldsum != chksum )
+        // throw std::runtime_error( "checksum failed" );
+        sessionKey = CSessionKey(Address(s.c_str()));
+        lastAccessTime = time_t(tm);
+    }
+
+
 } // namespace
 
 
-
-int main()
+int main( int argc, char** argv )
 {
     smsc::logger::Logger::Init();
     smsc::logger::Logger* log = smsc::logger::Logger::getInstance("sessions");
 
+    cachelog = smsc::logger::Logger::getInstance("cache");
+
     smsc_log_info( log, "Starting up testrb" );
+
+    int initrand = 11;
+    if ( argc > 1 ) {
+        initrand = atoi( argv[1] );
+    }
+    srandom( initrand );
+    for ( size_t i = 0; i < 10; ++i )
+        smsc_log_info( log, "a random: %ld", random() );
 
     // configs
     const std::string storagename = "sessions";
     const std::string storagepath = ".";
-    const int indexgrowth = 0;
+    const int indexgrowth = 100;
     // const int datablocksz = 0;
     // const int blocksinfile = 0;
-    const int cachesize = 10000;
+    const int cachesize = 100;
     const int pagesize = 1024;
     const int preallocate = 1024;
+    const unsigned int interval = 1000;
 
     typedef SimpleMemoryStorage< CSessionKey, Session > MemStorage;
     typedef PageFileDiskStorage< SerializableSession > DiskDataStorage;
     typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
-    std::auto_ptr< SessionStorage > store;
+
+    std::auto_ptr< SessionStorage > store( NULL );
+#if 0
+
     {
         std::auto_ptr< MemStorage > ms( new MemStorage( cachesize ) );
+        smsc_log_debug( log, "memory storage created" );
         std::auto_ptr< PageFile > pf( new PageFile );
         std::string fn( storagepath + '/' + storagename + '/' + storagename + "-data" );
         try {
@@ -827,45 +616,59 @@ int main()
         } catch (...) {
             pf->Create( fn, pagesize, preallocate );
         }
+        smsc_log_debug( log, "pagefile storage created" );
         std::auto_ptr< DiskDataStorage > dds( new DiskDataStorage( pf.release() ) );
+        smsc_log_debug( log, "data disk storage created" );
         std::auto_ptr< DiskIndexStorage > dis( new DiskIndexStorage( storagename,
                                                                      storagepath,
                                                                      indexgrowth ));
+        smsc_log_debug( log, "data index storage created" );
         std::auto_ptr< DiskStorage > ds( new DiskStorage( dis.release(), dds.release() ) );
+        smsc_log_debug( log, "disk storage assembled" );
         store.reset( new SessionStorage( ms.release(), ds.release() ) );
+        smsc_log_debug( log, "session storage assembled" );
     }
 
+    for ( size_t i = 0; i < 1000; ++i ) {
 
-    for ( size_t i = 0; i < 100000; ++i ) {
+        if ( i % 100 == 0 )
+            smsc_log_debug( log, "pass #%d", i );
 
         uint8_t ton = random() ? 0 : 1;
         uint8_t npi = 1;
         char buf[20];
-        int len = sprintf( buf, "8913765%04d", random() % 10000 );
+        int len = sprintf( buf, "8913765%04d", random() % interval );
 
         const CSessionKey sk( Address(len,ton,npi,buf) );
         Session* v = store->get( sk );
         if ( ! v ) {
-            smsc_log_info( log, "miss: %s", sk.toString().c_str() );
+            smsc_log_debug( log, "mis: %s ... added to cache", sk.toString().c_str() );
             store->set( sk, new Session( sk ) );
         } else {
-            smsc_log_info( log, "hit: %s", sk.toString().c_str() );
+            smsc_log_debug( log, "hit: %s", sk.toString().c_str() );
         }
 
 
         if ( random() % 100 < 5 ) {
             // 5% flushing probability
+            smsc_log_debug( log, "STARTING FLUSHING CACHE" );
             store->flush();
             // remove all cached objects
+            smsc_log_debug( log, "FLUSH FINISHED" );
             CSessionKey k;
             Session* dummy;
             for ( SessionStorage::iterator_type j( store->begin() ); j.next( k, dummy ); ) {
-                smsc_log_info( log, "delete: %s", sk.toString().c_str() );
-                store->set( k, NULL );
+                smsc_log_debug( log, "delete: %s", k.toString().c_str() );
+                dummy = store->purge( k );
+                delete dummy;
             }
+            smsc_log_debug( log, "CACHE CLEANED" );
         }
 
     }
+    store.release();
+
+#endif
 
     return 0;
 }

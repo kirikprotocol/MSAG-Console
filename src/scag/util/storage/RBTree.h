@@ -8,6 +8,7 @@
 
 #include "RBTreeAllocator.h"
 #include "unistd.h"
+#include "logger/Logger.h"
 
 #ifndef _SCAG_UTIL_STORAGE_RBTREE_H
 #define _SCAG_UTIL_STORAGE_RBTREE_H
