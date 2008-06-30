@@ -15,6 +15,8 @@
 #include "sys/mman.h"
 
 #include "core/buffers/File.hpp"
+#include "util/Exception.hpp"
+
 
 #include "DataBlock.h"
 #include "SerialBuffer.h"
@@ -29,6 +31,7 @@ using std::vector;
 using std::string;
 using smsc::logger::Logger;
 using scag::pers::Profile;
+using smsc::util::Exception;
 
 const string dfPreambule= "RBTREE_FILE_STORAGE!";
 const int dfVersion_32_1 = 0x01;
@@ -308,6 +311,10 @@ public:
 			DataBlockHeader hdr;
 
 			int file_number = curBlockIndex / descrFile.file_size;
+            if (file_number >= descrFile.files_count) {
+              smsc_log_error(logger, "Invalid file number %d, max file number %d", file_number, descrFile.files_count - 1);
+              return false;
+            }
 			off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
 			File* f = dataFile_f[file_number];
 			f->Seek(offset, SEEK_SET);
@@ -340,11 +347,16 @@ public:
         long curBlockIndex = blockIndex;
         int i = 0;
         //SerialBuffer data;
+        //TODO: catch file exceptions
         profileData.Empty();
         do
         {
             DataBlockHeader hdr;
             int file_number = curBlockIndex / descrFile.file_size;
+            if (file_number >= descrFile.files_count) {
+              smsc_log_error(logger, "Invalid file number %d, max file number %d", file_number, descrFile.files_count - 1);
+              return false;
+            }
             off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
@@ -459,6 +471,9 @@ private:
       smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
                      offset, curBlockSize);
       //printHdr(hdr);
+      if (fileNumber >= descrFile.files_count) {
+        throw Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count - 1);
+      }
       size_t bufSize = hdrSize + curBlockSize;
       //TODO compare bufSize and WRITE_BUF_SIZE
       memcpy(writeBuf, &hdr, hdrSize);
@@ -506,6 +521,9 @@ private:
 
     long getFirstFreeBlock(int fileNumber, off_t offset)
     {
+      if (fileNumber >= descrFile.files_count) {
+        throw Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count - 1);
+      }
       File* f = dataFile_f[fileNumber];
       f->Seek(offset, SEEK_SET);
       long ffb = 0;
@@ -528,6 +546,9 @@ private:
       while (blockIndex != -1) {
         smsc_log_debug(logger, "Remove %d block, ffb=%d", blockIndex, ffb); 
         int file_number = blockIndex / descrFile.file_size;
+        if (file_number >= descrFile.files_count) {
+          throw Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count - 1);
+        }
         off_t offset = (blockIndex - file_number * descrFile.file_size) * descrFile.block_size;
         File* f = dataFile_f[file_number];
         f->Seek(offset);
@@ -806,6 +827,9 @@ private:
         }
         for (int i = profileBlocksCount; i < backupHeader.blocksCount; ++i) {
           int file_number = curBlockIndex / descrFile.file_size;
+          if (file_number >= descrFile.files_count) {
+            throw Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count - 1);
+          }
           off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
           curBlockIndex = dataBlockBackup[i];
           File* f = dataFile_f[file_number];
