@@ -1,1 +1,1 @@
-scag/testrb	testrb	-lscag-util-storage -lcore-buffers -L$(SMSC_BUILDDIR)/bin -lutil -llogger
+scag/testrb	testrb	-lscag-util-storage -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl

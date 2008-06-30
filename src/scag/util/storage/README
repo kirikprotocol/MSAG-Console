@@ -1,0 +1,4 @@
+NOTE: this package is for generic template storage classes.
+So, please do not place here your code dependent on packages other than:
+logger
+core/*

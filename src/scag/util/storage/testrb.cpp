@@ -603,8 +603,7 @@ int main( int argc, char** argv )
     typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
     typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
 
-    std::auto_ptr< SessionStorage > store( NULL );
-#if 0
+    std::auto_ptr< SessionStorage > store;
 
     {
         std::auto_ptr< MemStorage > ms( new MemStorage( cachesize ) );
@@ -666,9 +665,5 @@ int main( int argc, char** argv )
         }
 
     }
-    store.release();
-
-#endif
-
     return 0;
 }

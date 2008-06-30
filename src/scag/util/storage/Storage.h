@@ -159,12 +159,13 @@ public:
     /// serialize the value into an internal buffer
     void serialize( const value_type& v ) {
         buf.reset();
-        v.serialize( buf );
+        Serializer s( buf );
+        s << v;
     }
         
     /// append data from internal buffer to the storage
     index_type append() {
-        pf_->Append( buf.data(), buf.size() );
+        return pf_->Append( buf.data(), buf.size() );
     }
 
     /// update data from internal buffer to the storage
@@ -181,7 +182,13 @@ public:
     /// deserialize value from internal buffer
     /// @return true if successfully deserialized, otherwise v is broken
     bool deserialize( value_type& v ) const {
-        v.deserialize( buf );
+        try {
+            Serializer s( buf );
+            s >> v;
+        } catch ( Serializer::BufferUnderrunException& ) {
+            return false;
+        }
+        return true;
     }
 
     /// delete data from the store
@@ -237,9 +244,11 @@ public:
         IndexNode* node = getNode( k );
         if ( node ) {
             index_.setNodeValue( node, i );
+            return false;
         } else {
             index_.Insert( k, i );
-            cache_ = 0; // may be reallocated
+            cache_ = NULL; // the pointer may be invalidated by reallocation
+            return true;
         }
     }
 
