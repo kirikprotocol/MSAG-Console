@@ -48,14 +48,14 @@ namespace storage {
     }
 
 
-    Serializer& Serializer::operator >> ( uint8_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint8_t& i ) throw ( BufferUnderrunException )
     {
         readbuf( & static_cast<unsigned char&>(i), 1 ); 
         return *this;
     }
 
 
-    Serializer& Serializer::operator >> ( uint16_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint16_t& i ) throw ( BufferUnderrunException )
     {
         readbuf( cvt.bytes, 2 );
         i = ntohs( cvt.words[0] );
@@ -63,7 +63,7 @@ namespace storage {
     }
 
     
-    Serializer& Serializer::operator >> ( uint32_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint32_t& i ) throw ( BufferUnderrunException )
     {
         readbuf( cvt.bytes, 4 );
         i = ntohl( cvt.longs[0] );
@@ -71,7 +71,7 @@ namespace storage {
     }
 
     
-    Serializer& Serializer::operator >> ( uint64_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint64_t& i ) throw ( BufferUnderrunException )
     {
         readbuf( cvt.bytes, 8 );
         i = (uint64_t(ntohl(cvt.longs[0])) << 32) + ntohl(cvt.longs[1]);
@@ -79,7 +79,7 @@ namespace storage {
     }
 
 
-    Serializer& Serializer::operator >> ( std::string& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( std::string& i ) throw ( BufferUnderrunException )
     {
         uint32_t sz;
         *this >> sz;
@@ -90,7 +90,7 @@ namespace storage {
     }
 
 
-    Serializer& Serializer::operator >> ( Buf& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( Buf& i ) throw ( BufferUnderrunException )
     {
         uint32_t sz;
         *this >> sz;
@@ -101,10 +101,10 @@ namespace storage {
     }
 
 
-    uint32_t Serializer::checksum( size_t pos1, size_t pos2 ) const
+    uint32_t SerializerBase::dochecksum( const Buf& buf, size_t pos1, size_t pos2 ) const
     {
-        assert( (pos1 <= pos2) && (pos2 <= buf_.size()) );
-        return smsc::util::crc32( 0, &(buf_[pos1]), pos2 - pos1 );
+        assert( (pos1 <= pos2) && (pos2 <= buf.size()) );
+        return smsc::util::crc32( 0, &(buf[pos1]), pos2 - pos1 );
     }
 
 
@@ -120,7 +120,7 @@ namespace storage {
     }
 
 
-    void Serializer::readbuf( unsigned char* ptr, size_t sz ) throw ( BufferUnderrunException )
+    void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( BufferUnderrunException )
     {
         rcheck( sz );
         std::copy( &(buf_[rpos_]), &(buf_[rpos_]) + sz, ptr );

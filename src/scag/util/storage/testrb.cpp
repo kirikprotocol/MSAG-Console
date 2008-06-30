@@ -520,11 +520,13 @@ struct Address
     {
 
     public:
-        Session( const CSessionKey& sk ) : sessionKey(sk), lastAccessTime(-1), somedata("data") {}
+        Session( const CSessionKey& sk ) :
+        sessionKey(sk), lastAccessTime(-1), somedata("sessionData") {}
 
     public:
-        void serialize( PageFileBuffer& pfb ) const;
-        void deserialize( PageFileBuffer& pfb );
+        void serialize( Serializer& pfb ) const;
+        void deserialize( Deserializer& pfb );
+        const CSessionKey& getKey() const { return sessionKey; }
 
     private:
         Session( const Session& );
@@ -538,33 +540,30 @@ struct Address
     typedef Session SerializableSession;
 
 
-    void Session::serialize( PageFileBuffer& pfb ) const
+    void Session::serialize( Serializer& pfb ) const
     {
-        Serializer ss( pfb.buffer() );
-        // const size_t pos1 = ss.size();
-        const std::string s = sessionKey.toString();
-        ss << s << uint32_t(lastAccessTime) << somedata;
-        // const uint32_t chksum = ss.checksum( pos1, ss.size() );
-        // ss << chksum;
+        pfb << sessionKey.toString() << uint32_t(lastAccessTime) << somedata;
     }
 
 
-    void Session::deserialize( PageFileBuffer& pfb )
+    void Session::deserialize( Deserializer& pfb )
     {
-        Serializer ss( pfb.buffer() );
-        // const size_t pos1 = ss.rpos();
         std::string s;
         uint32_t tm;
-        ss >> s >> tm >> somedata;
-        // const uint32_t oldsum = ss.checksum( pos1, ss.rpos() );
-        // uint32_t chksum;
-        // ss >> chksum;
-        // if ( oldsum != chksum )
-        // throw std::runtime_error( "checksum failed" );
+        pfb >> s >> tm >> somedata;
         sessionKey = CSessionKey(Address(s.c_str()));
         lastAccessTime = time_t(tm);
     }
 
+    Serializer& operator << ( Serializer& s, const Session& ss ) {
+        ss.serialize( s );
+        return s;
+    }
+
+    Deserializer& operator >> ( Deserializer& s, Session& ss ) {
+        ss.deserialize( s );
+        return s;
+    }
 
 } // namespace
 
@@ -589,13 +588,13 @@ int main( int argc, char** argv )
     // configs
     const std::string storagename = "sessions";
     const std::string storagepath = ".";
-    const int indexgrowth = 100;
+    const int indexgrowth = 1000;
     // const int datablocksz = 0;
     // const int blocksinfile = 0;
-    const int cachesize = 100;
+    const int cachesize = 1000;
     const int pagesize = 1024;
     const int preallocate = 1024;
-    const unsigned int interval = 1000;
+    const unsigned int interval = 3000;
 
     typedef SimpleMemoryStorage< CSessionKey, Session > MemStorage;
     typedef PageFileDiskStorage< SerializableSession > DiskDataStorage;
@@ -628,7 +627,7 @@ int main( int argc, char** argv )
         smsc_log_debug( log, "session storage assembled" );
     }
 
-    for ( size_t i = 0; i < 1000; ++i ) {
+    for ( size_t i = 0; i < 20000; ++i ) {
 
         if ( i % 100 == 0 )
             smsc_log_debug( log, "pass #%d", i );
@@ -645,23 +644,40 @@ int main( int argc, char** argv )
             store->set( sk, new Session( sk ) );
         } else {
             smsc_log_debug( log, "hit: %s", sk.toString().c_str() );
+            if ( v->getKey() != sk ) {
+                throw std::runtime_error( "different key found " + sk.toString() +
+                                          " != " + v->getKey().toString() );
+            }
         }
 
 
         if ( random() % 100 < 5 ) {
+
             // 5% flushing probability
             smsc_log_debug( log, "STARTING FLUSHING CACHE" );
             store->flush();
+            smsc_log_debug( log, "FLUSH FINISHED, STARTING CLEANING" );
+
             // remove all cached objects
-            smsc_log_debug( log, "FLUSH FINISHED" );
+            // 10 % chance of clean objects even from disk
+            const bool fromdisk = ( random() % 100 < 10 );
+            if ( fromdisk ) {
+                smsc_log_debug( log, "CLEAN ALSO WILL AFFECT DISK" );
+            }
+
             CSessionKey k;
             Session* dummy;
             for ( SessionStorage::iterator_type j( store->begin() ); j.next( k, dummy ); ) {
                 smsc_log_debug( log, "delete: %s", k.toString().c_str() );
-                dummy = store->purge( k );
+                if ( ! fromdisk ) {
+                    dummy = store->purge( k );
+                } else {
+                    dummy = store->release( k );
+                }
                 delete dummy;
             }
             smsc_log_debug( log, "CACHE CLEANED" );
+
         }
 
     }

@@ -254,7 +254,7 @@ private:
         }
         else {
             smsc_log_info(logger, "RBTree index realloc from %ld to %ld bytes", rbtFileLen, newRbtFileLen );
-            smsc_log_info(logger, "RBTree address range is [%x..%x)", newMem, newMem + newRbtFileLen );
+            smsc_log_debug(logger, "RBTree address range is [%x..%x)", newMem, newMem + newRbtFileLen );
         }
 
         if(rbtree_addr)

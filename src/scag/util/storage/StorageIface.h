@@ -8,7 +8,7 @@ namespace scag {
 namespace util {
 namespace storage {
 
-
+#if 0
 template < class Key, class Val >
 class StorageIface
 {
@@ -41,7 +41,6 @@ public:
 
 };
 
-
 template < typename Key, typename Val >
 struct InplaceIterator
 {
@@ -53,9 +52,7 @@ public:
     virtual bool next( key_type& k, value_type& v ) = 0;
 };
 
-
 // interface of the index storage
-#if 0
 template < class Key, typename Idx >
 class IndexStorageIface
 {
@@ -77,10 +74,8 @@ public:
     virtual index_type removeIndex( const key_type& k ) = 0;
 
 };
-#endif
 
 
-#if 0
 template < typename Idx, class Val >
 class DataStorageIface
 {
@@ -166,7 +161,11 @@ public:
 
     bool remove( const key_type& k ) {
         index_type i = index_->removeIndex( k );
-        if ( i != 0 ) data_->remove( i );
+        if ( i != 0 ) {
+            data_->remove( i );
+            return true;
+        }
+        return false;
     }
 
 
@@ -259,8 +258,6 @@ public:
     }
 
 };
-
-
 
 
 #if 0

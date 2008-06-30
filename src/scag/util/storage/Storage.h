@@ -55,11 +55,39 @@ private:
 
 
 
-class Serializer
+class BufferUnderrunException : public std::exception {
+public:
+    BufferUnderrunException() {}
+    virtual ~BufferUnderrunException() throw () {}
+    virtual const char* what() const throw () { return "Deserializer has not enough data in buffer"; }
+};
+
+
+class SerializerBase
 {
 public:
     typedef std::vector< unsigned char > Buf;
-    Serializer( Buf& b ) : buf_(b), rpos_(0) {}
+
+protected:
+    SerializerBase() {}
+
+    uint32_t dochecksum( const Buf& buf, size_t pos1, size_t pos2 ) const;
+
+    // converter
+    union {
+        uint8_t  bytes[8];
+        uint16_t words[4];
+        uint32_t longs[2];
+        uint64_t quads[1];
+    } cvt;
+
+};
+
+
+class Serializer : public SerializerBase
+{
+public:
+    Serializer( Buf& b ) : buf_(b) {}
 
     Serializer& operator << ( uint8_t );
     Serializer& operator << ( uint16_t );
@@ -68,19 +96,34 @@ public:
     Serializer& operator << ( const std::string& );
     Serializer& operator << ( const Buf& );
 
-    class BufferUnderrunException : public std::exception {
-    public:
-        BufferUnderrunException() {}
-        virtual ~BufferUnderrunException() throw () {}
-        virtual const char* what() const throw () { return "Serializer has not enough data in buffer"; }
-    };
+    size_t size() const {
+        return buf_.size();
+    }
+    
+    uint32_t checksum( size_t pos1, size_t pos2 ) const {
+        return dochecksum( buf_, pos1, pos2 );
+    }
 
-    Serializer& operator >> ( uint8_t& ) throw ( BufferUnderrunException );
-    Serializer& operator >> ( uint16_t& ) throw ( BufferUnderrunException );
-    Serializer& operator >> ( uint32_t& ) throw ( BufferUnderrunException );
-    Serializer& operator >> ( uint64_t& ) throw ( BufferUnderrunException );
-    Serializer& operator >> ( std::string& ) throw ( BufferUnderrunException );
-    Serializer& operator >> ( Buf& ) throw ( BufferUnderrunException );
+private:
+    // returns an iterator to a chunk of given size
+    Buf::iterator ensure( uint32_t chunk );
+
+private:
+    Buf& buf_;  // NOTE the reference
+};
+
+
+class Deserializer : public SerializerBase
+{
+public:
+    Deserializer( const Buf& buf ) : buf_(buf), rpos_(0) {}
+
+    Deserializer& operator >> ( uint8_t& ) throw ( BufferUnderrunException );
+    Deserializer& operator >> ( uint16_t& ) throw ( BufferUnderrunException );
+    Deserializer& operator >> ( uint32_t& ) throw ( BufferUnderrunException );
+    Deserializer& operator >> ( uint64_t& ) throw ( BufferUnderrunException );
+    Deserializer& operator >> ( std::string& ) throw ( BufferUnderrunException );
+    Deserializer& operator >> ( Buf& ) throw ( BufferUnderrunException );
 
     size_t size() const {
         return buf_.size();
@@ -90,12 +133,11 @@ public:
         return rpos_;
     }
 
-    uint32_t checksum( size_t pos1, size_t pos2 ) const;
+    uint32_t checksum( size_t pos1, size_t pos2 ) const {
+        return dochecksum( buf_, pos1, pos2 );
+    }
 
 private:
-    // returns an iterator to a chunk of given size
-    Buf::iterator ensure( uint32_t chunk );
-
     /// read from buffer into \ptr.
     void readbuf( unsigned char* ptr, size_t size ) throw ( BufferUnderrunException );
     
@@ -107,15 +149,7 @@ private:
     }
 
 private:
-    // converter
-    union {
-        uint8_t  bytes[8];
-        uint16_t words[4];
-        uint32_t longs[2];
-        uint64_t quads[1];
-    } cvt;
-
-    Buf&   buf_;  // NOTE the reference
+    const Buf&   buf_;  // NOTE the reference
     size_t rpos_;
 };
 
@@ -159,7 +193,7 @@ public:
     /// serialize the value into an internal buffer
     void serialize( const value_type& v ) {
         buf.reset();
-        Serializer s( buf );
+        Serializer s( buf.buffer() );
         s << v;
     }
         
@@ -183,9 +217,9 @@ public:
     /// @return true if successfully deserialized, otherwise v is broken
     bool deserialize( value_type& v ) const {
         try {
-            Serializer s( buf );
+            Deserializer s( buf.buffer() );
             s >> v;
-        } catch ( Serializer::BufferUnderrunException& ) {
+        } catch ( BufferUnderrunException& ) {
             return false;
         }
         return true;
