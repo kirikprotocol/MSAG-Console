@@ -261,6 +261,8 @@ private:
         {
             memcpy(newMem, rbtree_addr, rbtFileLen);
             delete rbtree_addr;
+        } else {
+            memset(newMem, 0, rbtFileLen);
         }
             
         header = (rbtFileHeader*)newMem;

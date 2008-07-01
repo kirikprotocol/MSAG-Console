@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <memory>
 #include <vector>
+#include <string>
+#include <iostream>
 
 #include "StorageIface.h"
 #include "RBTree.h"
@@ -186,7 +188,7 @@ public:
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
-        // disklog_ = smsc::logger::Logger::getInstance( "disk" );
+        disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 
     ~PageFileDiskStorage() {
@@ -198,31 +200,30 @@ public:
         buf.reset();
         Serializer s( buf.buffer() );
         s << v;
-        key_ = v.getKey().toString();
+        this->key_ = v.getKey().toString();
     }
         
     /// append data from internal buffer to the storage
     index_type append() {
         index_type i = pf_->Append( buf.data(), buf.size() );
-        // const char* kk = key_.c_str();
-        // fprintf( stderr, "append: index=%d, val=%s\n", i, kk );
-        // smsc_log_debug( disklog_, "append: index=%d, val=%s", i, kk );
-        key_ = "destroyed";
+        std::cout << this->key_.c_str() << std::endl;
+        smsc_log_debug( disklog_, "append: index=%d, val=%s", i, this->key_.c_str() );
+        this->key_ = "destroyed";
         return i;
     }
 
     /// update data from internal buffer to the storage
     void update( index_type i ) {
-        // smsc_log_debug( disklog_, "update: index=%d, val=%s", i, key_.c_str() );
+        smsc_log_debug( disklog_, "update: index=%d, val=%s", i, this->key_.c_str() );
         pf_->Update( i, buf.data(), buf.size() );
-        key_ = "destroyed";
+        this->key_ = "destroyed";
     }
 
     /// read data from storage into internal (mutable) buffer
     void read( index_type i ) const {
         buf.reset();
         pf_->Read( i, buf.buffer(), NULL );
-        key_ = "destroyed";
+        this->key_ = "destroyed";
     }
 
     /// deserialize value from internal buffer
@@ -231,7 +232,7 @@ public:
         try {
             Deserializer s( buf.buffer() );
             s >> v;
-            key_ = "destroyed";
+            this->key_ = "destroyed";
         } catch ( BufferUnderrunException& ) {
             return false;
         }
@@ -240,7 +241,7 @@ public:
 
     /// delete data from the store
     void remove( index_type i ) {
-        key_ = "destroyed";
+        this->key_ = "destroyed";
         pf_->Delete( i );
     }
 
