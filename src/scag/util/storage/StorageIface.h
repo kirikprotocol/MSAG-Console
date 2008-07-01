@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include "logger/Logger.h"
 
 namespace scag {
 namespace util {
@@ -224,8 +225,14 @@ public:
     void reset() { iter_ = s_->index_->begin(); }
     bool next( key_type& k, value_type& v ) {
         index_type i;
-        if ( ! iter_->next( k, i ) ) return false;
-        return s_->data_->get( i, v );
+        while ( iter_.next(k,i) ) {
+            if ( i ) {
+                s_->data_->read(i);
+                s_->data_->deserialize( v );
+                return true;
+            }
+        }
+        return false;
     }
 
 private:
@@ -304,12 +311,14 @@ public:
 
     CachedDiskStorage( MemStorage* ms,
                        DiskStorage* ds ) :
-    cache_( ms ), disk_( ds ), spare_(NULL) {
+    cache_( ms ), disk_( ds ), spare_(NULL), hitcount_(0) 
+    {
         if ( !ms || !ds ) {
             delete ms;
             delete ds;
             throw std::runtime_error("CachedDiskStorage: both storages should be provided!");
         }
+        cachelog = smsc::logger::Logger::getInstance("memcache");
     }
 
     ~CachedDiskStorage() {
@@ -334,7 +343,10 @@ public:
 
     value_type* get( const key_type& k ) const {
         value_type* v = cache_->get( k );
-        if ( !v ) v = faultHandler( k );
+        if ( v ) 
+            ++this->hitcount_;
+        else
+            v = faultHandler( k );
         return v;
     }
 
@@ -354,13 +366,26 @@ public:
     }
 
     /// flush all cached data to disk
-    void flush() {
+    /// @return number of flushed items
+    unsigned int flush() {
         key_type k;
         value_type* v;
+        unsigned int count = 0;
+        smsc_log_debug( cachelog, "FLUSH STARTED" );
         for ( iterator_type i = this->begin();
               i.next(k,v); ) {
-            if (v) disk_->set( k, static_cast< const typename DiskStorage::value_type& >( *v ) );
+            if ( v ) {
+                ++count;
+                smsc_log_debug( cachelog, "item: key=%s valkey=%s",
+                                k.toString().c_str(),
+                                v->getKey().toString().c_str() );
+                if ( k != v->getKey() )
+                    smsc_log_debug( cachelog, "WARNING: key mismatch!" );
+                disk_->set( k, static_cast< const typename DiskStorage::value_type& >( *v ) );
+            }
         }
+        smsc_log_debug( cachelog, "FLUSH FINISHED, count=%d", count );
+        return count;
     }
 
     /// NOTE: iterator is only for cached data
@@ -368,7 +393,22 @@ public:
         return cache_->begin();
     }
 
+
+    /// iterator on the disk data.
+    /// FIXME: should we allow this one?
+    typename DiskStorage::iterator_type dataBegin() const {
+        return disk_->begin();
+    }
+
+
+    /// for statistics
+    unsigned int hitcount() const {
+        return hitcount_;
+    }
+
 protected:
+    static smsc::logger::Logger* cachelog;
+
 private:
     value_type* faultHandler( const key_type& k ) const
     {
@@ -392,8 +432,12 @@ private:
     //  it is used only in faultHandler to avoid unnecessary new/delete
     //  when item is not found.
     mutable typename DiskStorage::value_type*  spare_;
+    mutable unsigned int hitcount_;
 };
 
+
+template < class MemStorage, class DiskStorage >
+        smsc::logger::Logger* CachedDiskStorage< MemStorage, DiskStorage >::cachelog = NULL;
 
 } // namespace storage
 } // namespace util

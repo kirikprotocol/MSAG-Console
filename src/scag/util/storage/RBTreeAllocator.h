@@ -31,8 +31,8 @@ public:
 	virtual RBTreeNode* getRootNode(void) = 0;
 	virtual void setRootNode(RBTreeNode* node) = 0;
 	virtual RBTreeNode* getNilNode(void) = 0;
-	virtual long getSize(void) = 0;
-	virtual long getOffset(void) = 0;
+	virtual long getSize(void) const = 0;
+	virtual long getOffset(void) const = 0;
 
 	//virtual void resetChanges(void) = 0;
 	//virtual void nodeChanged(RBTreeNode* node) = 0;
@@ -92,8 +92,8 @@ public:
 	virtual RBTreeNode* getRootNode(void){return rootNode;}
 	virtual void setRootNode(RBTreeNode* node){rootNode = node;}
 	virtual RBTreeNode* getNilNode(void){return nilNode;};
-	virtual long getSize(void){return count;};
-	virtual long getOffset(void){return 0;}
+	virtual long getSize(void) const {return count;};
+	virtual long getOffset(void) const {return 0;}
 };
 
 template<class Key=long, class Value=long>

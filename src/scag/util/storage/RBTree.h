@@ -146,6 +146,8 @@ public:
       node->value = val;
       changesObserver->nodeChanged(node);
       changesObserver->completeChanges();
+      smsc_log_debug( logger, "Node key=%s setNodeValue finished",
+                      node->key.toString().c_str() );
     }
 
 	bool Get(const Key& k, Value& val)
@@ -184,33 +186,80 @@ public:
 
     void Reset()
     {
-        iterNode = nilNode;
+        // iterNode = nilNode;
+        // move the the far left end
+        iterNode = rootNode;
+        if ( rootNode != nilNode ) moveLeft();
     }
-	bool Next(Key& k, Value& val)
-	{
-        if(rootNode == nilNode || iterNode == rootNode) return false;
-        if(iterNode == nilNode) iterNode = rootNode;
-        
+
+    bool Next(Key& k, Value& val)
+    {
+        if ( iterNode == nilNode ) return false;
         k = iterNode->key;
         val = iterNode->value;
 
-        RBTreeNode *left = realAddr(iterNode->left);
+        // shownode( "iter at Next", iterNode );
+
         RBTreeNode *right = realAddr(iterNode->right);
-        if(left != nilNode)
-            iterNode = realAddr(iterNode->left);
-        else if(right != nilNode)
-            iterNode = realAddr(iterNode->right);
-        else
-        {
-            while(iterNode != rootNode && realAddr(realAddr(iterNode->parent)->right) == iterNode)
-                iterNode = realAddr(iterNode->parent);
-            if(iterNode != rootNode)
-                iterNode = realAddr(realAddr(iterNode->parent)->right);
+        // shownode( "iter->right", right );
+        if (right != nilNode) {
+            iterNode = right;
+            moveLeft();
+        } else {
+            while ( true ) {
+                RBTreeNode* parent = realAddr(iterNode->parent);
+                // shownode( "iter->parent", parent );
+                if ( realAddr(parent->left) == iterNode ) {
+                    // smsc_log_debug( logger, "right parent found" );
+                    iterNode = parent;
+                    break;
+                }
+                if ( parent == rootNode ) {
+                    // smsc_log_debug( logger, "iteration finished" );
+                    iterNode = nilNode;
+                    break;
+                }
+                iterNode = parent;
+                // smsc_log_debug( logger, "move up" );
+            }
         }
         return true;
-	}
+    }
 
 protected:
+
+    void moveLeft()
+    {
+        while ( true ) {
+            // shownode( "moving left", iterNode );
+            RBTreeNode* left = realAddr( iterNode->left );
+            if ( left == nilNode ) break;
+            iterNode = left;
+        }
+        // shownode( "after moveLeft", iterNode );
+    }
+    /*
+    void shownode( const char* text, const RBTreeNode* node )
+    {
+        if ( node == nilNode ) {
+            smsc_log_debug( logger, "%s: nilnode" );
+        } else {
+            smsc_log_debug( logger, "%s: key=%s left=%s right=%s parent=%s",
+                            text,
+                            nodekey(node).c_str(),
+                            nodekey(realAddr(node->left)).c_str(),
+                            nodekey(realAddr(node->right)).c_str(),
+                            nodekey(realAddr(node->parent)).c_str() );
+        }
+    }
+    std::string nodekey( const RBTreeNode* node ) const
+    {
+        if ( node == nilNode ) return "nil";
+        return node->key.toString();
+    }
+     */
+
+
     smsc::logger::Logger* logger;
 	RBTreeAllocator<Key, Value>*	allocator;
 	RBTreeChangesObserver<Key, Value>*	changesObserver;

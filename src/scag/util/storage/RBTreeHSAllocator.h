@@ -180,12 +180,12 @@ public:
 		if(!running) return 0;
 		return (RBTreeNode*)(rbtree_body + header->nil_cell);
 	}
-	virtual long getSize(void)
+	virtual long getSize(void) const
 	{
 		if(!running) return 0;
 		return header->cells_used;
 	}
-	virtual long getOffset(void)
+	virtual long getOffset(void) const
 	{
 		if(!running) return 0;
 		return (long)rbtree_body;

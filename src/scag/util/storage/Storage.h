@@ -9,6 +9,7 @@
 #include "RBTree.h"
 #include "RBTreeHSAllocator.h"
 #include "core/buffers/PageFile.hpp"
+#include "logger/Logger.h"
 
 namespace scag {
 namespace util {
@@ -181,9 +182,11 @@ public:
     typedef File::offset_type         index_type;
     typedef Val                       value_type;
 
-    PageFileDiskStorage( PageFile* pf ) : pf_(pf) {
+    PageFileDiskStorage( PageFile* pf ) : pf_(pf), key_(""), disklog_(NULL)
+    {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
+        // disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 
     ~PageFileDiskStorage() {
@@ -195,22 +198,31 @@ public:
         buf.reset();
         Serializer s( buf.buffer() );
         s << v;
+        key_ = v.getKey().toString();
     }
         
     /// append data from internal buffer to the storage
     index_type append() {
-        return pf_->Append( buf.data(), buf.size() );
+        index_type i = pf_->Append( buf.data(), buf.size() );
+        // const char* kk = key_.c_str();
+        // fprintf( stderr, "append: index=%d, val=%s\n", i, kk );
+        // smsc_log_debug( disklog_, "append: index=%d, val=%s", i, kk );
+        key_ = "destroyed";
+        return i;
     }
 
     /// update data from internal buffer to the storage
     void update( index_type i ) {
+        // smsc_log_debug( disklog_, "update: index=%d, val=%s", i, key_.c_str() );
         pf_->Update( i, buf.data(), buf.size() );
+        key_ = "destroyed";
     }
 
     /// read data from storage into internal (mutable) buffer
     void read( index_type i ) const {
         buf.reset();
         pf_->Read( i, buf.buffer(), NULL );
+        key_ = "destroyed";
     }
 
     /// deserialize value from internal buffer
@@ -219,6 +231,7 @@ public:
         try {
             Deserializer s( buf.buffer() );
             s >> v;
+            key_ = "destroyed";
         } catch ( BufferUnderrunException& ) {
             return false;
         }
@@ -227,11 +240,14 @@ public:
 
     /// delete data from the store
     void remove( index_type i ) {
+        key_ = "destroyed";
         pf_->Delete( i );
     }
 
 private:
-    PageFile* pf_;     // owned
+    PageFile* pf_;               // owned
+    mutable std::string key_;
+    smsc::logger::Logger* disklog_;
 };
 
 
@@ -296,6 +312,44 @@ public:
             return i;
         }
         return 0;
+    }
+
+
+    class Iterator {
+    public:
+        void reset() {
+            if (s_) s_->index_.Reset();
+        }
+        bool next( key_type& k, index_type& i ) {
+            return (s_ ? s_->index_.Next( k, i ) : false);
+        }
+        Iterator() : s_(NULL) {}
+        Iterator( const Iterator& s ) : s_(s.s_) {
+            const_cast<Iterator&>(s).s_ = NULL;
+        }
+        Iterator& operator = ( const Iterator& s ) {
+            if ( &s != this ) {
+                Iterator& ss = const_cast< Iterator& >( s );
+                s_ = ss.s_;
+                ss.s_ = NULL;
+            }
+            return *this;
+        }
+
+    private:
+        friend class RBTreeIndexStorage<Key,Idx>;
+
+        Iterator( RBTreeIndexStorage<Key,Idx>* s ) :
+        s_(s) { reset(); }
+
+    private:
+        RBTreeIndexStorage<Key,Idx>* s_;
+    };
+    typedef Iterator iterator_type;
+    friend struct Iterator;
+
+    Iterator begin() {
+        return Iterator( const_cast< RBTreeIndexStorage<Key,Idx>* >( this ) );
     }
 
 private:

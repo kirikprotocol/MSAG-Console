@@ -447,10 +447,10 @@ struct Address
     vl[length]=0;
     return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
   }
-  inline std::string toString()const
+  inline const std::string toString()const
   {
     if(length>32)abort();
-    char vl[32];
+    char vl[33];
     char buf[48];
     memcpy(vl,value,length);
     vl[length]=0;
@@ -503,7 +503,7 @@ struct Address
             return retval;
         }
 
-        std::string toString() const {
+        const std::string toString() const {
             // char buf[30];
             // snprintf(buf,sizeof(buf),":%d",USR);
             return abonentAddr.toString();
@@ -520,6 +520,7 @@ struct Address
     {
 
     public:
+        Session() : lastAccessTime(-1), somedata("sessionData") {}
         Session( const CSessionKey& sk ) :
         sessionKey(sk), lastAccessTime(-1), somedata("sessionData") {}
 
@@ -568,6 +569,17 @@ struct Address
 } // namespace
 
 
+typedef SimpleMemoryStorage< CSessionKey, Session > MemStorage;
+typedef PageFileDiskStorage< SerializableSession > DiskDataStorage;
+typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
+typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
+typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
+
+
+unsigned int checkStorage( SessionStorage*       store,
+                           smsc::logger::Logger* log );
+
+
 int main( int argc, char** argv )
 {
     smsc::logger::Logger::Init();
@@ -575,7 +587,9 @@ int main( int argc, char** argv )
 
     cachelog = smsc::logger::Logger::getInstance("cache");
 
-    smsc_log_info( log, "Starting up testrb" );
+    smsc_log_info( log, "============================================================" );
+    smsc_log_info( log, "===    STARTING UP TESTRB    ===============================" );
+    smsc_log_info( log, "============================================================" );
 
     int initrand = 11;
     if ( argc > 1 ) {
@@ -594,15 +608,26 @@ int main( int argc, char** argv )
     const int cachesize = 1000;
     const int pagesize = 1024;
     const int preallocate = 1024;
-    const unsigned int interval = 3000;
 
-    typedef SimpleMemoryStorage< CSessionKey, Session > MemStorage;
-    typedef PageFileDiskStorage< SerializableSession > DiskDataStorage;
-    typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
-    typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
-    typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
+    unsigned int interval = 1000000;
+    if ( getenv("interval") ) {
+        interval = strtoul(getenv("interval"), NULL, 10 );
+    }
+    unsigned int totalpasses = 10;
+    if ( getenv("totalpasses") ) {
+        totalpasses = strtoul(getenv("totalpasses"), NULL, 10 );
+    }
+
+    const unsigned int flushprob = 3;
+    const unsigned int cleanprob = 10;
 
     std::auto_ptr< SessionStorage > store;
+
+    unsigned int totalflushes = 0;
+    unsigned int totalflushsessions = 0;
+    unsigned int totalcleans = 0;
+    unsigned int totalcleansessions = 0;
+    unsigned int totalmisses = 0;
 
     {
         std::auto_ptr< MemStorage > ms( new MemStorage( cachesize ) );
@@ -627,7 +652,13 @@ int main( int argc, char** argv )
         smsc_log_debug( log, "session storage assembled" );
     }
 
-    for ( size_t i = 0; i < 20000; ++i ) {
+    fprintf( stderr, "STARTING STORAGE CHECK\n" );
+    smsc_log_debug( log, "STARTING STORAGE CHECK" );
+    unsigned int precount = checkStorage( store.get(), log );
+    fprintf( stderr, "STORAGE CHECK FINISHED\n" );
+    smsc_log_debug( log, "STORAGE CHECK FINISHED" );
+
+    for ( size_t i = 0; i < totalpasses; ++i ) {
 
         if ( i % 100 == 0 )
             smsc_log_debug( log, "pass #%d", i );
@@ -635,33 +666,43 @@ int main( int argc, char** argv )
         uint8_t ton = random() ? 0 : 1;
         uint8_t npi = 1;
         char buf[20];
-        int len = sprintf( buf, "8913765%04d", random() % interval );
+        int len = sprintf( buf, "8913%07d", random() % interval );
 
         const CSessionKey sk( Address(len,ton,npi,buf) );
         Session* v = store->get( sk );
         if ( ! v ) {
             smsc_log_debug( log, "mis: %s ... added to cache", sk.toString().c_str() );
-            store->set( sk, new Session( sk ) );
+            v = new Session( sk );
+            store->set( sk, v );
+            ++totalmisses;
         } else {
-            smsc_log_debug( log, "hit: %s", sk.toString().c_str() );
+            smsc_log_debug( log, "hit: %s, session key: %s", sk.toString().c_str(), v->getKey().toString().c_str() );
             if ( v->getKey() != sk ) {
-                throw std::runtime_error( "different key found " + sk.toString() +
-                                          " != " + v->getKey().toString() );
+                
+                fprintf( stderr, "WARNING: different key found %s != %s\n",
+                         sk.toString().c_str(), v->getKey().toString().c_str() );
+                smsc_log_error( log, "WARNING: different key found %s != %s",
+                                sk.toString().c_str(), v->getKey().toString().c_str() );
+                delete store->purge( sk );
+                v = new Session( sk );
+                store->set( sk, v );
             }
         }
 
 
-        if ( random() % 100 < 5 ) {
+        if ( random() % 100 < flushprob ) {
 
-            // 5% flushing probability
+            // flushing
             smsc_log_debug( log, "STARTING FLUSHING CACHE" );
-            store->flush();
+            ++totalflushes;
+            totalflushsessions += store->flush();
             smsc_log_debug( log, "FLUSH FINISHED, STARTING CLEANING" );
 
             // remove all cached objects
             // 10 % chance of clean objects even from disk
-            const bool fromdisk = ( random() % 100 < 10 );
+            const bool fromdisk = ( random() % 100 < cleanprob );
             if ( fromdisk ) {
+                ++totalcleans;
                 smsc_log_debug( log, "CLEAN ALSO WILL AFFECT DISK" );
             }
 
@@ -673,6 +714,7 @@ int main( int argc, char** argv )
                     dummy = store->purge( k );
                 } else {
                     dummy = store->release( k );
+                    ++totalcleansessions;
                 }
                 delete dummy;
             }
@@ -681,5 +723,69 @@ int main( int argc, char** argv )
         }
 
     }
+
+    store->flush();
+
+    // printout the statistics
+    printf( "total accesses      : %d\n", totalpasses );
+    printf( "total cache hits    : %d\n", store->hitcount() );
+    printf( "total disk hits     : %d\n", totalpasses - store->hitcount() - totalmisses );
+    printf( "total misses        : %d\n", totalmisses );
+    printf( "total flushes       : %d\n", totalflushes );
+    printf( "total flushed items : %d\n", totalflushsessions );
+    printf( "total cleans        : %d\n", totalcleans );
+    printf( "total cleaned items : %d\n", totalcleansessions );
+    printf( "cache size          : %d\n", cachesize );
+    printf( "number interval     : %d\n", interval );
+
+    fprintf( stderr, "STARTING STORAGE CHECK\n" );
+    smsc_log_debug( log, "STARTING STORAGE CHECK" );
+    unsigned int postcount = checkStorage( store.get(), log );
+    fprintf( stderr, "STORAGE CHECK FINISHED\n" );
+    smsc_log_debug( log, "STORAGE CHECK FINISHED" );
+
+    printf( "items on disk (pre) : %d\n", precount );
+    printf( "items on disk (post): %d\n", postcount );
     return 0;
+}
+
+
+
+unsigned int checkStorage( SessionStorage* store, smsc::logger::Logger* log )
+{
+    CSessionKey prevk;
+    CSessionKey k;
+    Session s;
+    unsigned int count = 0;
+    for ( DiskStorage::iterator_type i = store->dataBegin();
+          i.next(k,s);
+          ) {
+        ++count;
+        if ( count > 50000 ) {
+            fprintf( stderr, "store check failed\n" );
+            break;
+        }
+        if ( ( count > 1 ) && ( k < prevk ) ) {
+            fprintf( stderr, "WARNING: keys out of order: %s >= %s\n",
+                     prevk.toString().c_str(),
+                     k.toString().c_str() );
+            smsc_log_error( log, "WARNING: keys out of order: %s >= %s\n",
+                            prevk.toString().c_str(),
+                            k.toString().c_str() );
+        }
+        prevk = k;
+        // if ( count % 100 == 0 ) {
+        // fprintf( stderr, "store check pass #%d, key=%s\n", count, k.toString().c_str() );
+        smsc_log_debug( log, "store check pass #%d, key=%s", count, k.toString().c_str() );
+        // }
+        if ( k != s.getKey() ) {
+            fprintf( stderr, "WARNING: key mismatch: %s != %s\n",
+                     k.toString().c_str(),
+                     s.getKey().toString().c_str() );
+            smsc_log_error( log, "WARNING: key mismatch: %s != %s",
+                            k.toString().c_str(),
+                            s.getKey().toString().c_str() );
+        }
+    }
+    return count;
 }
