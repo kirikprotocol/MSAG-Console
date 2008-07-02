@@ -207,14 +207,14 @@ public:
     index_type append() {
         index_type i = pf_->Append( buf.data(), buf.size() );
         std::cout << this->key_.c_str() << std::endl;
-        smsc_log_debug( disklog_, "append: index=%d, val=%s", i, this->key_.c_str() );
+        smsc_log_debug( this->disklog_, "append: index=%d, val=%s", i, this->key_.c_str() );
         this->key_ = "destroyed";
         return i;
     }
 
     /// update data from internal buffer to the storage
     void update( index_type i ) {
-        smsc_log_debug( disklog_, "update: index=%d, val=%s", i, this->key_.c_str() );
+        smsc_log_debug( this->disklog_, "update: index=%d, val=%s", i, this->key_.c_str() );
         pf_->Update( i, buf.data(), buf.size() );
         this->key_ = "destroyed";
     }
