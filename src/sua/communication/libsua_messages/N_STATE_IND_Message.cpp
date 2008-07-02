@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <sua/utilx/Exception.hpp>
 #include "N_STATE_IND_Message.hpp"
 
 namespace libsua_messages {
