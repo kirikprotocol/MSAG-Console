@@ -8,7 +8,6 @@
 # include <sua/communication/libsua_messages/LibsuaMessage.hpp>
 # include <sua/communication/libsua_messages/N_UNITDATA_REQ_Message.hpp>
 # include <sua/communication/TP.hpp>
-# include <core/buffers/TmpBuf.hpp>
 
 namespace libsua_messages {
 

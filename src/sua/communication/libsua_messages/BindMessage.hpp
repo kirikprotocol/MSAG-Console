@@ -3,7 +3,6 @@
 
 # include <string>
 # include <sua/communication/libsua_messages/LibsuaMessage.hpp>
-# include <sua/communication/LinkId.hpp>
 
 namespace libsua_messages {
 

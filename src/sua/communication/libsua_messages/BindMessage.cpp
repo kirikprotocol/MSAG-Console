@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <logger/Logger.h>
-#include <sua/sua_layer/io_dispatcher/SuaLayerMessagesFactory.hpp>
 
 #include "BindMessage.hpp"
 

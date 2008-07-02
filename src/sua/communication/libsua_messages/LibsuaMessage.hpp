@@ -2,7 +2,6 @@
 # define __SUA_COMMUNICATION_LIBSUAMESSAGES_LIBSUAMESSAGE_HPP__
 
 # include <sua/communication/Message.hpp>
-# include <sua/communication/sua_messages/SUAMessage.hpp>
 
 namespace libsua_messages {
 

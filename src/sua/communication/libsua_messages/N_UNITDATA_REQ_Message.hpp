@@ -7,7 +7,6 @@
 # include <sua/communication/sua_messages/SCCPAddress.hpp>
 # include <sua/communication/libsua_messages/LibsuaMessage.hpp>
 # include <sua/communication/TP.hpp>
-# include <core/buffers/TmpBuf.hpp>
 
 namespace libsua_messages {
 
