@@ -1,17 +1,16 @@
 #ifndef _SCAG_UTIL_STORAGE_STORAGE_H
 #define _SCAG_UTIL_STORAGE_STORAGE_H
 
-#include <stdexcept>
-#include <memory>
-#include <vector>
-#include <string>
-#include <iostream>
-
 #include "StorageIface.h"
 #include "RBTree.h"
 #include "RBTreeHSAllocator.h"
 #include "core/buffers/PageFile.hpp"
 #include "logger/Logger.h"
+
+#include <stdexcept>
+#include <memory>
+#include <vector>
+#include <string>
 
 namespace scag {
 namespace util {
@@ -188,7 +187,7 @@ public:
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
-        disklog_ = smsc::logger::Logger::getInstance( "disk" );
+        this->disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 
     ~PageFileDiskStorage() {
@@ -204,17 +203,18 @@ public:
     }
         
     /// append data from internal buffer to the storage
-    index_type append() {
-        index_type i = pf_->Append( buf.data(), buf.size() );
-        std::cout << this->key_.c_str() << std::endl;
-        smsc_log_debug( this->disklog_, "append: index=%d, val=%s", i, this->key_.c_str() );
+    index_type append( ) {
+        const index_type i = pf_->Append( buf.data(), buf.size() );
+        smsc_log_debug( this->disklog_, "append: index=%llu val=%s",
+                        static_cast<unsigned long long>(i), this->key_.c_str() );
         this->key_ = "destroyed";
         return i;
     }
 
     /// update data from internal buffer to the storage
     void update( index_type i ) {
-        smsc_log_debug( this->disklog_, "update: index=%d, val=%s", i, this->key_.c_str() );
+        smsc_log_debug( this->disklog_, "update: index=%llu val=%s",
+                        static_cast<unsigned long long>(i), this->key_.c_str() );
         pf_->Update( i, buf.data(), buf.size() );
         this->key_ = "destroyed";
     }

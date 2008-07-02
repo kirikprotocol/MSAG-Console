@@ -538,8 +538,6 @@ struct Address
         std::string somedata;
     };
 
-    typedef Session SerializableSession;
-
 
     void Session::serialize( Serializer& pfb ) const
     {
@@ -570,7 +568,7 @@ struct Address
 
 
 typedef SimpleMemoryStorage< CSessionKey, Session > MemStorage;
-typedef PageFileDiskStorage< SerializableSession > DiskDataStorage;
+typedef PageFileDiskStorage< Session > DiskDataStorage;
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
 typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
 typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
@@ -630,9 +628,6 @@ int main( int argc, char** argv )
     std::auto_ptr< SessionStorage > store;
 
     {
-        std::auto_ptr< MemStorage > ms( new MemStorage( cachesize ) );
-        smsc_log_debug( slog, "memory storage created" );
-
         std::auto_ptr< PageFile > pf( new PageFile );
         std::string fn( storagepath + '/' + storagename + '/' + storagename + "-data" );
         try {
@@ -644,13 +639,17 @@ int main( int argc, char** argv )
 
         std::auto_ptr< DiskDataStorage > dds( new DiskDataStorage( pf.release() ) );
         smsc_log_debug( slog, "data disk storage created" );
-
+        
         std::auto_ptr< DiskIndexStorage > dis( new DiskIndexStorage( storagename,
                                                                      storagepath,
                                                                      indexgrowth ));
         smsc_log_debug( slog, "data index storage created" );
         std::auto_ptr< DiskStorage > ds( new DiskStorage( dis.release(), dds.release() ) );
         smsc_log_debug( slog, "disk storage assembled" );
+
+        std::auto_ptr< MemStorage > ms( new MemStorage( cachesize ) );
+        smsc_log_debug( slog, "memory storage created" );
+
         store.reset( new SessionStorage( ms.release(), ds.release() ) );
         smsc_log_debug( slog, "session storage assembled" );
     }
