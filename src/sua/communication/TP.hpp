@@ -6,16 +6,19 @@
 namespace communication {
 
 struct TP {
-  TP()
-    : packetType(0), packetLen(0), packetBody(packetBodyMem) {}
+  enum { MAX_PACKET_SIZE = 64*1024 };
 
-  TP(int aPacketType, size_t aPacketLen, uint8_t* packetBodyPtr)
-    : packetType(aPacketType), packetLen(aPacketLen), packetBody(packetBodyPtr) {}
+  TP()
+    : packetType(0), packetLen(0), packetBody(packetBodyMem), maxPacketLen(MAX_PACKET_SIZE) {}
+
+  TP(int aPacketType, size_t aPacketLen, uint8_t* packetBodyPtr, size_t maxPcktLen)
+    : packetType(aPacketType), packetLen(aPacketLen), packetBody(packetBodyPtr), maxPacketLen(maxPcktLen) {}
 
   int packetType; // class of transport packet contained message, eg. packet contained SUA messages, or packet contained Libsua messages.
 
   size_t packetLen; // length of data in packetBody array
-  enum { MAX_PACKET_SIZE = 64*1024 };
+  size_t maxPacketLen; // max possible size of data in packetBody array
+
   uint8_t* packetBody;
   uint8_t packetBodyMem[MAX_PACKET_SIZE]; // contains all packet data including length field
 
