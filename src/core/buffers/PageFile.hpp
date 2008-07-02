@@ -112,7 +112,7 @@ public:
     }
     return pageIdx+pageSize;
   }
-  File::offset_type Append(void* data,unsigned size)
+  File::offset_type Append(const void* data,unsigned size)
   {
     FileFlushGuard fg(file);
     File::offset_type firstPage=0;
@@ -184,7 +184,7 @@ public:
     }while(status!=pageUsedFinal && status!=pageUsedSingle);
   }
 
-  void Update(File::offset_type pageIdx,void* data,unsigned size)
+  void Update(File::offset_type pageIdx,const void* data,unsigned size)
   {
     FileFlushGuard fg(file);
     if((pageIdx-headerSize)%pageSize!=0)
