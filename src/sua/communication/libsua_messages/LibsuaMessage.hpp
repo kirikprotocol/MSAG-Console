@@ -27,15 +27,11 @@ public:
 
   virtual uint16_t getStreamNo() const;
 
-  virtual const sua_messages::SUAMessage* getContainedSuaMessage() const;
-
   static unsigned int getMessageIndex(uint32_t msgCode);
   static void registerMessageCode(uint32_t msgCode);
 
 protected:
   virtual uint32_t getLength() const;
-
-  bool isLengthGotFromMessageBuffer() const;
 
   void setLength(uint32_t msgLen);
 
@@ -45,7 +41,6 @@ protected:
 
   static const size_t _MSGCODE_SZ = sizeof(uint32_t), _MSGLEN_SZ = sizeof(uint32_t);
 private:
-  const sua_messages::SUAMessage* _suaMessage;
   uint32_t _msgLen;
   uint32_t _msgCode;
 };
