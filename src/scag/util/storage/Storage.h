@@ -187,7 +187,7 @@ public:
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
-        this->disklog_ = smsc::logger::Logger::getInstance( "disk" );
+        disklog_ = smsc::logger::Logger::getInstance( "disk" );
     }
 
     ~PageFileDiskStorage() {
@@ -199,31 +199,31 @@ public:
         buf.reset();
         Serializer s( buf.buffer() );
         s << v;
-        this->key_ = v.getKey().toString();
+        key_ = v.getKey().toString();
     }
         
     /// append data from internal buffer to the storage
     index_type append( ) {
         const index_type i = pf_->Append( buf.data(), buf.size() );
-        smsc_log_debug( this->disklog_, "append: index=%llu val=%s",
-                        static_cast<unsigned long long>(i), this->key_.c_str() );
-        this->key_ = "destroyed";
+        smsc_log_debug( disklog_, "append: index=%llu val=%s",
+                        static_cast<unsigned long long>(i), key_.c_str() );
+        key_ = "destroyed";
         return i;
     }
 
     /// update data from internal buffer to the storage
     void update( index_type i ) {
-        smsc_log_debug( this->disklog_, "update: index=%llu val=%s",
-                        static_cast<unsigned long long>(i), this->key_.c_str() );
+        smsc_log_debug( disklog_, "update: index=%llu val=%s",
+                        static_cast<unsigned long long>(i), key_.c_str() );
         pf_->Update( i, buf.data(), buf.size() );
-        this->key_ = "destroyed";
+        key_ = "destroyed";
     }
 
     /// read data from storage into internal (mutable) buffer
     void read( index_type i ) const {
         buf.reset();
         pf_->Read( i, buf.buffer(), NULL );
-        this->key_ = "destroyed";
+        key_ = "destroyed";
     }
 
     /// deserialize value from internal buffer
@@ -232,7 +232,7 @@ public:
         try {
             Deserializer s( buf.buffer() );
             s >> v;
-            this->key_ = "destroyed";
+            key_ = "destroyed";
         } catch ( BufferUnderrunException& ) {
             return false;
         }
@@ -241,7 +241,7 @@ public:
 
     /// delete data from the store
     void remove( index_type i ) {
-        this->key_ = "destroyed";
+        key_ = "destroyed";
         pf_->Delete( i );
     }
 
