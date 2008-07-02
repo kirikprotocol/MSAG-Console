@@ -9,12 +9,6 @@ namespace libsua_messages {
 LibsuaMessage::LibsuaMessage(uint32_t msgCode)
   : _msgLen(0), _msgCode(msgCode) { setLength(_MSGCODE_SZ); }
 
-const sua_messages::SUAMessage*
-LibsuaMessage::getContainedSuaMessage() const
-{
-  return NULL;
-}
-
 size_t
 LibsuaMessage::serialize(communication::TP* resultBuf) const
 {
