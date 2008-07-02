@@ -25,9 +25,8 @@ public:
 
   virtual uint32_t getMsgCode() const;
 
-  virtual uint16_t getStreamNo() const;
-
   static unsigned int getMessageIndex(uint32_t msgCode);
+
   static void registerMessageCode(uint32_t msgCode);
 
 protected:

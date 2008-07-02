@@ -47,9 +47,6 @@ LibsuaMessage::getMsgCode() const
   return _msgCode;
 }
 
-uint16_t
-LibsuaMessage::getStreamNo() const { throw smsc::util::Exception("LibsuaMessage::getStreamNo::: SCTP streams not supported"); }
-
 unsigned int
 LibsuaMessage::getMessageIndex(uint32_t msgCode)
 {

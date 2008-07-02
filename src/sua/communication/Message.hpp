@@ -20,8 +20,6 @@ public:
 
   virtual std::string toString() const = 0;
 
-  virtual uint16_t getStreamNo() const = 0;
-
   virtual uint32_t getMsgCode() const = 0;
 
   virtual const char* getMsgCodeTextDescription() const = 0;
