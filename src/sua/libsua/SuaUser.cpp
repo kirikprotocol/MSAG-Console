@@ -188,14 +188,11 @@ SuaUser::bind(unsigned int suaConnectNum)
       uint32_t offset=0;
       do {
         offset += iStream->read(tp.packetBody + offset, tp.packetLen);
-        printf("after first iStream->read offset=%d\n", offset);
         tp.packetLen -= offset;
       } while ( tp.packetLen > 0 );
-      printf("after do{}while() offset=%d\n", offset);
       uint32_t tmpValue;
       memcpy(reinterpret_cast<uint8_t*>(&tmpValue), tp.packetBody, sizeof(tmpValue));
       tp.packetLen = ntohl(tmpValue);
-      printf("got packetLen=%d\n", tp.packetLen);
       if ( tp.packetLen > communication::TP::MAX_PACKET_SIZE ) {
         smsc_log_error(_logger, "SuaUser::bind::: value of packetLen=[%d] excedeed max permited value=[%d]", tp.packetLen, communication::TP::MAX_PACKET_SIZE);
         return GOT_TOO_LONG_MESSAGE;
@@ -203,8 +200,6 @@ SuaUser::bind(unsigned int suaConnectNum)
       uint32_t numBytesToRead = tp.packetLen, bytesWasRead = 0;
       tp.packetLen += sizeof(uint32_t);
       do {
-        printf("SuaUser::bind::: offset=%d,numBytesToRead=%d,tp.packetBody=%p,tp.packetBody+offset=%p\n", offset, numBytesToRead, tp.packetBody, tp.packetBody + offset);
-
         bytesWasRead = iStream->read(tp.packetBody + offset, numBytesToRead);
         numBytesToRead -= bytesWasRead;
       } while ( numBytesToRead > 0 );
@@ -359,8 +354,19 @@ SuaUser::msgRecv(MessageInfo* msgInfo, uint32_t timeout)
         cacheEntry->expectedMessageSize = cacheEntry->ringBuf.readUint32();
 
       if ( cacheEntry->expectedMessageSize <= cacheEntry->ringBuf.getSizeOfAvailData() ) {
-        msgInfo->msgData.setSize(cacheEntry->expectedMessageSize);
+        uint32_t lenField = htonl(cacheEntry->expectedMessageSize);
+
+        msgInfo->msgData.setSize(cacheEntry->expectedMessageSize + sizeof(cacheEntry->expectedMessageSize));
         msgInfo->messageType = cacheEntry->ringBuf.readUint32();
+
+        uint32_t msgTypeField = htonl(msgInfo->messageType);
+
+        memcpy(msgInfo->msgData.GetCurPtr(), reinterpret_cast<uint8_t*>(&lenField), sizeof(lenField));
+        msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + sizeof(lenField));
+
+        memcpy(msgInfo->msgData.GetCurPtr(), reinterpret_cast<uint8_t*>(&msgTypeField), sizeof(msgTypeField));
+        msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + sizeof(msgTypeField));
+
         cacheEntry->ringBuf.readArray(msgInfo->msgData.GetCurPtr(), cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
         msgInfo->msgData.SetPos(msgInfo->msgData.GetPos() + cacheEntry->expectedMessageSize - sizeof(msgInfo->messageType));
         msgInfo->suaConnectNum = static_cast<LinkInputStream*>(iStream)->getConnectNum();
