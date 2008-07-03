@@ -27,6 +27,8 @@ public:
 
   virtual uint16_t getLength() const = 0;
 
+  virtual uint16_t getActualLength() const { return getLength(); }
+
   uint16_t getTag() const { return _tag; }
 
   virtual bool isSetValue() const = 0;
@@ -112,6 +114,8 @@ public:
 
   virtual uint16_t getLength() const;
 
+  virtual uint16_t getActualLength() const;
+
   const uint8_t* getValue() const;
 
   virtual bool isSetValue() const;
@@ -128,6 +132,7 @@ private:
 
   uint16_t _valLen;
   bool _isValueSet;
+  uint16_t _paddingLen;
 };
 
 class TLV_ApplicationStatus : public TLV_IntegerPrimitive {
