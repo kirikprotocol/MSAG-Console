@@ -1,6 +1,10 @@
 #include <sua/libsua/SuaApiFactory.hpp>
 #include <sua/libsua/MessageProperties.hpp>
 #include <sua/libsua/MessageInfo.hpp>
+#include <sua/libsua/messages/N_NOTICE_IND_Message.hpp>
+#include <sua/libsua/messages/N_PCSTATE_IND_Message.hpp>
+#include <sua/libsua/messages/N_STATE_IND_Message.hpp>
+#include <sua/libsua/messages/N_UNITDATA_IND_Message.hpp>
 
 extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 
@@ -69,6 +73,23 @@ int main(int argc, char** argv)
       suaApi.msgRecv(&msgInfo);
 
       smsc_log_info(logger, "got new message=[%s], messageType=[%d] from connection=[%d]", hexdmp(msgInfo.msgData.get(), msgInfo.msgData.GetPos()).c_str(), msgInfo.messageType, msgInfo.suaConnectNum);
+
+      libsua::LibsuaMessage *parsedMsg=NULL;
+      if (msgInfo.messageType == libsua::N_NOTICE_IND_Message().getMsgCode())
+        parsedMsg = new libsua::N_NOTICE_IND_Message();
+      else if (msgInfo.messageType == libsua::N_PCSTATE_IND_Message().getMsgCode())
+        parsedMsg = new libsua::N_PCSTATE_IND_Message();
+      else if (msgInfo.messageType == libsua::N_STATE_IND_Message().getMsgCode())
+        parsedMsg = new libsua::N_STATE_IND_Message();
+      else if (msgInfo.messageType == libsua::N_UNITDATA_IND_Message().getMsgCode())
+        parsedMsg = new libsua::N_UNITDATA_IND_Message();
+
+      if ( parsedMsg ) {
+        parsedMsg->deserialize(msgInfo.msgData.get(), msgInfo.msgData.GetPos());
+        smsc_log_info(logger, "Parsed message=[%s]", parsedMsg->toString().c_str());
+        delete parsedMsg;
+      } else
+        smsc_log_info(logger, "Message object not found");
 
       smsc_log_info(logger, "libSuaTest::: call sua_unbind(connectNum=%d)", i);
       suaApi.unbind(i);
