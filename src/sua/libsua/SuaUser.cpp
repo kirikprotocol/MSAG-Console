@@ -212,7 +212,9 @@ SuaUser::bind(unsigned int suaConnectNum)
       }
 
       return bindConfirmMessage.getStatus();
-    } else {
+    } else if ( linkInfo.connectionState == BINDED )
+      return ALREADY_BINDED;
+    else {
       smsc_log_error(_logger, "SuaUser::bind::: connection for link=[%s] hasn't been established, linkId=%d", linkInfo.toString().c_str(), suaConnectNum);
       return NOT_CONNECTED;
     }
