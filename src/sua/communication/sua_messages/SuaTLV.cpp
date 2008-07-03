@@ -4,7 +4,6 @@
 #include <sua/sua_layer/io_dispatcher/Exceptions.hpp>
 
 #include <stdio.h>
-//#include <logger/Logger.h>
 #include "SuaTLV.hpp"
 
 extern std::string
@@ -112,7 +111,7 @@ SuaTLV::serialize(communication::TP* packetBuf,
                   size_t offset /*position inside buffer where TLV object will be stored*/) const
 {
   offset = communication::addField(packetBuf, offset, _tag);
-  return communication::addField(packetBuf, offset, getLength());
+  return communication::addField(packetBuf, offset, getActualLength());
 }
 
 uint32_t
@@ -229,56 +228,76 @@ TLV_StringPrimitive<SZ>::getLength() const
 
 template <size_t SZ>
 TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag)
-  : SuaTLV(tag), _valLen(0), _isValueSet(false)
+  : SuaTLV(tag), _valLen(0), _isValueSet(false), _paddingLen(0)
 {
   memset(_valueBuffer._value, 0, sizeof(_valueBuffer));
 }
 
 template <size_t SZ>
 TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag, const uint8_t* val, uint16_t valLen)
-  : SuaTLV(tag), _valLen(valLen), _isValueSet(true)
+  : SuaTLV(tag), _valLen(valLen), _isValueSet(true), _paddingLen(0)
 {
   if ( _valLen > sizeof(_valueBuffer) )
     throw smsc::util::Exception("TLV_OctetArrayPrimitive::TLV_OctetArrayPrimitive::: argument size [%d] is too large [max size=%d]", _valLen, sizeof(_valueBuffer));
-  else
-    memcpy(_valueBuffer._value, val, _valLen);
+
+  memcpy(_valueBuffer._value, val, _valLen);
+  int paddingTo4bytes = _valLen & 0x03;
+  if ( paddingTo4bytes )
+    _paddingLen = 0x04 - paddingTo4bytes;
 }
 
 template <size_t SZ>
 TLV_OctetArrayPrimitive<SZ>::TLV_OctetArrayPrimitive(uint16_t tag, size_t reservedOctetsOffset, const uint8_t* val, uint16_t valLen)
-  : SuaTLV(tag), _valLen(reservedOctetsOffset+valLen), _isValueSet(true)
+  : SuaTLV(tag), _valLen(reservedOctetsOffset+valLen), _isValueSet(true), _paddingLen(0)
 {
   if ( _valLen > sizeof(_valueBuffer) )
     throw smsc::util::Exception("TLV_OctetArrayPrimitive::TLV_OctetArrayPrimitive::: argument size [%d] is too large [max size=%d]", _valLen, sizeof(_valueBuffer));
   else {
     memset(_valueBuffer._value, 0, reservedOctetsOffset);
     memcpy(_valueBuffer._value + reservedOctetsOffset, val, valLen);
+
+    int paddingTo4bytes = _valLen & 0x03;
+    if ( paddingTo4bytes )
+      _paddingLen = 0x04 - paddingTo4bytes;
   }
 }
 
 template <size_t SZ>
 size_t
 TLV_OctetArrayPrimitive<SZ>::serialize(communication::TP* packetBuf,
-                                   size_t offset /*position inside buffer where TLV object will be stored*/) const
+                                       size_t offset /*position inside buffer where TLV object will be stored*/) const
 {
   if ( !_isValueSet )
     throw utilx::FieldNotSetException("TLV_StringPrimitive::serialize::: value isn't set");
 
   offset = SuaTLV::serialize(packetBuf, offset);
-  return communication::addField(packetBuf, offset, _valueBuffer._value, _valLen);
+  offset = communication::addField(packetBuf, offset, _valueBuffer._value, _valLen);
+
+  if ( _paddingLen ) {
+    uint8_t padding[4]={0};
+    offset = communication::addField(packetBuf, offset, padding, _paddingLen);
+  }
+  return offset;
 }
 
 template <size_t SZ>
 size_t
 TLV_OctetArrayPrimitive<SZ>::deserialize(const communication::TP& packetBuf,
-                                     size_t offset /*position inside buffer where tag's data started*/,
-                                     uint16_t valLen)
+                                         size_t offset /*position inside buffer where tag's data started*/,
+                                         uint16_t valLen)
 {
   if ( valLen > sizeof(_valueBuffer) )
     throw smsc::util::Exception("TLV_OctetArrayPrimitive::deserialize::: value length [=%d] exceeded max. allowable value [=%d]", valLen, sizeof(_valueBuffer));
 
   offset = communication::extractField(packetBuf, offset, _valueBuffer._value, valLen);
+
+  int paddingTo4bytes = offset & 0x03;
+  if ( paddingTo4bytes ) {
+    _paddingLen = 0x04 - paddingTo4bytes;
+    offset += _paddingLen;
+  }
   _valLen = valLen; _isValueSet = true;
+
   return offset;
 }
 
@@ -299,7 +318,7 @@ template <size_t SZ>
 uint16_t
 TLV_OctetArrayPrimitive<SZ>::getLength() const
 {
-  return HEADER_SZ + _valLen;
+  return HEADER_SZ + _valLen + _paddingLen;
 }
 
 template <size_t SZ>
@@ -307,6 +326,13 @@ uint16_t
 TLV_OctetArrayPrimitive<SZ>::getValueLength() const
 {
   return _valLen;
+}
+
+template <size_t SZ>
+uint16_t
+TLV_OctetArrayPrimitive<SZ>::getActualLength() const
+{
+  return HEADER_SZ + _valLen;
 }
 
 TLV_ApplicationStatus::TLV_ApplicationStatus()
@@ -1296,7 +1322,7 @@ TLV_Address::deserialize(const communication::TP& packetBuf,
   tlvFactory.registerExpectedOptionalTlv(&_ssn);
   tlvFactory.registerExpectedOptionalTlv(&_gt);
 
-  communication::TP tmpPacketBuf (packetBuf.packetType, valLen - sizeof(_addressIndicator) - sizeof(_addressIndicator), packetBuf.packetBody + offset);
+  communication::TP tmpPacketBuf (packetBuf.packetType, valLen - sizeof(_addressIndicator) - sizeof(_addressIndicator), packetBuf.packetBody + offset, communication::TP::MAX_PACKET_SIZE - offset);
 
   offset += tlvFactory.parseInputBuffer(tmpPacketBuf, 0);
 
