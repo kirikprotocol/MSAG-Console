@@ -6,7 +6,8 @@ extern std::string hexdmp(const uchar_t* buf, uint32_t bufSz);
 namespace io_dispatcher {
 
 Link::Link(ProtocolState* initialState)
-  : _whole(NULL), _protocolStateCtrl(initialState), _queue(100), _flag(false) {}
+  : _whole(NULL), _protocolStateCtrl(initialState), _queue(100), _flag(false),
+    _logger(smsc::logger::Logger::getInstance("io_dsptch")) {}
 
 Link::~Link() {}
 
@@ -76,8 +77,7 @@ Link::genericSend(corex::io::OutputStream* oStream, const communication::TP* pac
 void
 Link::sendToStream(corex::io::OutputStream* oStream, const communication::TP* packetToSend)
 {
-  smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("io_dsptch");
-  smsc_log_debug(logger, "Link::sendToStream::: next buffer will be written to oStream [%s]", hexdmp(packetToSend->packetBody, packetToSend->packetLen).c_str());
+  smsc_log_debug(_logger, "Link::sendToStream::: next buffer will be written to oStream [%s]", hexdmp(packetToSend->packetBody, packetToSend->packetLen).c_str());
   const uint8_t* bufPositionPtr = packetToSend->packetBody;
   size_t leftToSend = packetToSend->packetLen;
   while (leftToSend > 0) {

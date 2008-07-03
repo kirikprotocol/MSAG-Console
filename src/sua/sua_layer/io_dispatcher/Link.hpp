@@ -1,6 +1,7 @@
 #ifndef __SUA_SUALAYER_IODISPATCHER_LINK_HPP__
 # define __SUA_SUALAYER_IODISPATCHER_LINK_HPP__
 
+# include <logger/Logger.h>
 # include <core/synchronization/Mutex.hpp>
 
 # include <sua/corex/io/network/Socket.hpp>
@@ -37,7 +38,7 @@ public:
   LinkSet* getWhole() const;
 
 protected:
-  Link(ProtocolState* initialState);
+  explicit Link(ProtocolState* initialState);
 
   void changeProtocolState(const communication::Message& message);
   void changeProtocolState(const IndicationPrimitive& indication);
@@ -63,6 +64,7 @@ private:
   volatile bool _flag;
 
   LinkSet* _whole;
+  smsc::logger::Logger* _logger;
 };
 
 } // namespace io_dispatcher
