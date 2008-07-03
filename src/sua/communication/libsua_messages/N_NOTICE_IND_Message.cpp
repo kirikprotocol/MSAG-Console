@@ -69,8 +69,7 @@ N_NOTICE_IND_Message::N_NOTICE_IND_Message(const sua_messages::CLDRMessage& cldr
   setReasonForReturn(sccpCause.getCauseValue());
 
   const sua_messages::TLV_Data& userData = cldrMessage.getData();
-  setUserData(userData.getValue(), userData.getLength());
-
+  setUserData(userData.getValue(), userData.getValueLength());
 }
 
 size_t
