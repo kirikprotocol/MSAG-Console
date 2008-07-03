@@ -1,7 +1,7 @@
 #include <algorithm>
 #include <util/Exception.hpp>
 #include <sua/utilx/Exception.hpp>
-#include <logger/Logger.h>
+//#include <logger/Logger.h>
 
 namespace corex {
 namespace io {
@@ -40,19 +40,21 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
   if ( !_newConnectionEventsReady.empty() )
     retVal |= OK_ACCEPT_READY;
 
-  if ( retVal ) {
+  int socketsCount=0;
+  if ( retVal != OK_NO_EVENTS ) {
     _lock.Unlock();
     return retVal;
   } else {
     memcpy(reinterpret_cast<uint8_t*>(_snaphots_fds), reinterpret_cast<uint8_t*>(_fds), _maxPoolSize * sizeof(struct pollfd));
+    socketsCount = _socketsCount;
     _lock.Unlock();
   }
 
   int st;
   if ( timeout )
-    st = ::poll(_snaphots_fds, _socketsCount, timeout);
+    st = ::poll(_snaphots_fds, socketsCount, timeout);
   else
-    st = ::poll(_snaphots_fds, _socketsCount, INFTIM);
+    st = ::poll(_snaphots_fds, socketsCount, INFTIM);
 
   if ( st < 0 ) {
     if ( errno == EINTR )
@@ -65,28 +67,21 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
   smsc::core::synchronization::MutexGuard guard(_lock);
   for (int j=0; j<_socketsCount; ++j) {
     int readyFd;
-    //    smsc_log_info(logger, "IOObjectsPool::listen::: check descriptor %d", j);
     if ( (readyFd = _snaphots_fds[j].fd) > -1 && _snaphots_fds[j].revents ) {
-      // bypass each ready fd
       if ( _snaphots_fds[j].revents & POLLRDNORM ) {
         in_mask_t::iterator in_iter = _inMask.find(readyFd);
-        if ( in_iter != _inMask.end() ) {
+        if ( in_iter != _inMask.end() )
           _inputEventsReady.push_back(in_iter->second);
-          //          smsc_log_info(logger, "IOObjectsPool::listen::: added input ready event");
-        } else {
+        else {
           accept_mask_t::iterator accept_iter = _acceptMask.find(readyFd);
-          if ( accept_iter != _acceptMask.end() ) {
+          if ( accept_iter != _acceptMask.end() )
             _newConnectionEventsReady.push_back(accept_iter->second);
-            //            smsc_log_info(logger, "IOObjectsPool::listen::: added accept ready event");
-          }
         }
       }
       if ( _snaphots_fds[j].revents & POLLWRNORM ) {
         out_mask_t::iterator out_iter = _outMask.find(readyFd);
-        if ( out_iter != _outMask.end() ) {
+        if ( out_iter != _outMask.end() )
           _outputEventsReady.push_back(out_iter->second);
-          //          smsc_log_info(logger, "IOObjectsPool::listen::: added output ready event");
-        }
       }
       --st;
     }
@@ -101,7 +96,7 @@ IOObjectsPool_tmpl<LOCK>::listen(uint32_t timeout)
 
   if ( !_newConnectionEventsReady.empty() )
     retVal |= OK_ACCEPT_READY;
-  //  smsc_log_info(logger, "IOObjectsPool::listen::: we have bypassed all events, retVal = 0x%x", retVal);
+
   return retVal;
 }
 
@@ -118,9 +113,6 @@ IOObjectsPool_tmpl<LOCK>::insert(InputStream* iStream)
       throw smsc::util::Exception("IOObjectsPool_tmpl::insert(iStream=%p)::: exceeded max pool size", iStream);
     _fds[_socketsCount].events = POLLRDNORM;
     _fds[_socketsCount].fd = fd;
-
-//     smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("poll");
-//     smsc_log_debug(logger, "IOObjectsPool::insert(InputStream)::: insert fd=%d,event=%d", _fds[_socketsCount].fd, _fds[_socketsCount].events);
 
     _used_fds[fd] = _socketsCount++;
     _inMask.insert(std::make_pair(fd, iStream));
@@ -175,7 +167,7 @@ IOObjectsPool_tmpl<LOCK>::updatePollIndexes(int fd)
     _fds[idx].fd = -1;
     _fds[idx].events = 0;
     --_socketsCount;
-    _used_fds[idx] = -1;
+    _used_fds[fd] = -1;
   } else {
     _used_fds[fd] = -1;
     _fds[idx] = _fds[_socketsCount-1];
