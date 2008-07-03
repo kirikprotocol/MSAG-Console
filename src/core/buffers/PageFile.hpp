@@ -439,8 +439,7 @@ protected:
       file.WriteNetInt64(firstFreePage);
       if(!firstFreePage) {
           lastFreePage=0;
-          // writing lastpage is not needed (see the recovery code in Open)
-          // file.WriteNetInt64(lastFreePage);
+          file.WriteNetInt64(lastFreePage);
       }
     }else
     {
