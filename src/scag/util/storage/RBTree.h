@@ -251,6 +251,7 @@ protected:
                     const std::string& path = "" ) const
     {
         if ( node == nilNode ) return;
+        if ( depth > 200 ) return; // anti-loop
         if ( logger->isDebugEnabled() && depth < 5 ) {
             char buf[100];
             snprintf( buf, sizeof(buf), "%d ", depth );
