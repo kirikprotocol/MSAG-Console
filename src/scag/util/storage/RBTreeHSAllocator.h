@@ -244,6 +244,9 @@ private:
         {
             rbtFileLen = sizeof(rbtFileHeader);
             _growth--;
+        } else {
+            // we have to make sure that no pending nodes are on the list
+            completeChanges();
         }
         
         uint32_t newRbtFileLen = rbtFileLen + growth * sizeof(RBTreeNode);
@@ -299,9 +302,13 @@ private:
         header->cells_free = _growth;
         rbtree_f.Seek(rbtFileLen, SEEK_SET);
         rbtree_f.Write(rbtree_addr + rbtFileLen, newRbtFileLen - rbtFileLen);
-        rbtree_f.Seek(0, SEEK_SET);
-        rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
-        rbtFileLen = newRbtFileLen;        
+        rbtree_f.Flush();
+        // should be in transactional manner
+        // rbtree_f.Seek(0, SEEK_SET);
+        // rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
+        rbtFileLen = newRbtFileLen;
+        startChanges( getRootNode(), OPER_CHANGE );
+        completeChanges();
         smsc_log_debug(logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, rbtFileLen %lld",
                        long(header->cells_used), long(header->cells_free),
                        long(header->cells_count), long(header->first_free_cell),
