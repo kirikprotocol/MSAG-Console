@@ -131,14 +131,21 @@ public:
                              static_cast<long long>(lastFreePage),
                              statusstring(status) );
 #endif
-              file.SeekCur(4);
-              File::offset_type nextPage = file.ReadNetInt64();
+              File::offset_type startPage = lastFreePage;
+              File::offset_type nextPage = 0;
               for (;;) {
+                  file.Seek( lastFreePage + 1 + 4 );
+                  nextPage = file.ReadNetInt64();
+                  if ( nextPage == startPage ) {
+                      smsc_log_debug( log_, "looping at page=%llx, last free page forced",
+                                      static_cast<long long>(lastFreePage) );
+                      nextPage = 0; // looping
+                  }
                   status = ( nextPage ? pageFree : pageFreeLast );
-                  file.Seek( lastFreePage );
 #ifdef PAGEFILEDEBUG
                   if ( log_->isDebugEnabled() ) showpage( "open fix", lastFreePage, status, 0, nextPage );
 #endif
+                  file.Seek( lastFreePage );
                   file.WriteByte( status );
                   file.WriteNetInt32(0);
                   file.WriteNetInt64( nextPage );
