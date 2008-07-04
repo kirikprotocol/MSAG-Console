@@ -291,10 +291,10 @@ void MapCHSRIDlg::unRefHdl(void)
 //NOTE: _sync MUST BE locked upon entry
 void MapCHSRIDlg::endTCap(void)
 {
-    if (dialog) {
-        while (!dialog->unbindUser()) //TCDlg refers this object
-            _sync.wait();
+    while (dialog && !dialog->unbindUser()) //TCDlg refers this object
+        _sync.wait();
 
+    if (dialog) {
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {  // do TC_PREARRANGED if still active
                 dialog->endDialog((_sriState.s.ctrInited < MapCHSRIDlg::operDone) ?

@@ -367,10 +367,10 @@ void MapUSSDlg::initSSDialog(ProcessUSSRequestArg & arg,
 //ends TC dialog, releases Dialog()
 void MapUSSDlg::endTCap(void)
 {
-    if (dialog) {
-        while (!dialog->unbindUser()) //TCDlg refers this object
-            _sync.wait();
+    while (dialog && !dialog->unbindUser()) //TCDlg refers this object
+        _sync.wait();
 
+    if (dialog) {
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             try {   // do TC_PREARRANGED if still active
                 dialog->endDialog((dlgState.s.ctrInited < MapUSSDlg::operDone) ?
@@ -391,4 +391,5 @@ void MapUSSDlg::endTCap(void)
 } //inap
 } //inman
 } //smsc
+
 

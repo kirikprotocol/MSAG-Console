@@ -518,13 +518,14 @@ void CapSMSDlg::endCapSMS(void)
 //NOTE: _sync MUST BE locked upon entry
 void CapSMSDlg::endTCap(bool u_abort/* = false*/)
 {
+    while (dialog && !dialog->unbindUser()) //TCDlg refers this object
+        _sync.wait();
+
     _fsmState = SMS_SSF_Fsm::fsmDone;
     _relation = SMS_SSF_Fsm::relNone;
     _timer = 0;
-    if (dialog) {
-        while (!dialog->unbindUser()) //TCDlg refers this object
-            _sync.wait();
 
+    if (dialog) {
         if (!(dialog->getState().value & TC_DLG_CLOSED_MASK)) {
             //see 3GPP 29.078 14.1.2 smsSSF-to-gsmSCF SMS related messages
             try {
