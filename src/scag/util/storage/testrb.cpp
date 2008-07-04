@@ -832,9 +832,11 @@ int testDiskIndexStorage( const Config& cfg, DiskIndexStorage* dis )
                          prevk.toString().c_str(),
                          k.toString().c_str() );
                 ok = false;
+                break;
             }
 
         }
+        prevk = k;
 
         // index is cleared
         if ( idx == 0 ) continue;
