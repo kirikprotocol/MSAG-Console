@@ -307,7 +307,7 @@ private:
         // rbtree_f.Seek(0, SEEK_SET);
         // rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
         rbtFileLen = newRbtFileLen;
-        startChanges( getRootNode(), OPER_CHANGE );
+        startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
         completeChanges();
         smsc_log_debug(logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, rbtFileLen %lld",
                        long(header->cells_used), long(header->cells_free),
