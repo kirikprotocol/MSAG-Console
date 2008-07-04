@@ -196,7 +196,9 @@ private:
             index_->setIndex( k, i );
             return true;
         } else {
-            data_->update( i ); // from internal buffer
+            index_type j = data_->append();
+            index_->setIndex( k, j );
+            data_->remove( i );
             return false;
         }
     }
@@ -223,8 +225,9 @@ public:
     typedef typename Base::value_type value_type;
 
     void reset() { iter_ = s_->index_->begin(); }
-    bool next( key_type& k, value_type& v ) {
-        index_type i;
+    // FIXME: index_type return is temporary
+    bool next( key_type& k, index_type& i, value_type& v ) {
+        // index_type i;
         while ( iter_.next(k,i) ) {
             if ( i ) {
                 s_->data_->read(i);

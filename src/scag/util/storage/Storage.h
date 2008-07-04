@@ -11,6 +11,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <cassert>
 
 namespace scag {
 namespace util {
@@ -199,31 +200,41 @@ public:
         buf.reset();
         Serializer s( buf.buffer() );
         s << v;
+        assert( (buf.size() < 10000) && (buf.buffer().capacity() < 10000) );
         key_ = v.getKey().toString();
     }
         
     /// append data from internal buffer to the storage
     index_type append( ) {
         const index_type i = pf_->Append( buf.data(), buf.size() );
-        smsc_log_debug( disklog_, "append: index=%llu val=%s",
+        smsc_log_debug( disklog_, "append: index=%llx val=%s",
                         static_cast<unsigned long long>(i), key_.c_str() );
         key_ = "destroyed";
         return i;
     }
 
     /// update data from internal buffer to the storage
-    void update( index_type i ) {
-        smsc_log_debug( disklog_, "update: index=%llu val=%s",
+    index_type update( index_type i ) {
+        smsc_log_debug( disklog_, "update: index=%llx val=%s",
                         static_cast<unsigned long long>(i), key_.c_str() );
+        // pf_->Delete( i );
+        // i = pf_->Append( buf.data(), buf.size() );
         pf_->Update( i, buf.data(), buf.size() );
         key_ = "destroyed";
+        return i;
     }
 
     /// read data from storage into internal (mutable) buffer
     void read( index_type i ) const {
         buf.reset();
-        pf_->Read( i, buf.buffer(), NULL );
-        key_ = "destroyed";
+        index_type j;
+        pf_->Read( i, buf.buffer(), &j );
+        if ( i != j ) {
+            smsc_log_warn( disklog_, "read: different index read: was=%llx is=%llx",
+                           static_cast< unsigned long long >( i ),
+                           static_cast< unsigned long long >( j ) );
+        }
+        assert( buf.size() < 10000 && buf.buffer().capacity() < 10000 );
     }
 
     /// deserialize value from internal buffer
@@ -297,8 +308,9 @@ public:
             index_.setNodeValue( node, i );
             return false;
         } else {
+            // the tree may be changed by reallocation
+            invalidateCache();
             index_.Insert( k, i );
-            cache_ = NULL; // the pointer may be invalidated by reallocation
             return true;
         }
     }
@@ -358,18 +370,29 @@ private:
     {
         if ( cache_ && cache_->key == k ) {
             return cache_;
+        } else if ( negativekey_ == k ) {
+            return NULL;
         } else {
             IndexNode* node = const_cast< IndexStorage& >(index_).Get( k );
-            if ( node ) cache_ = node;
+            if ( node )
+                cache_ = node;
+            else
+                negativekey_ = k;
             return node;
         }
     }
 
+    inline void invalidateCache() const {
+        cache_ = NULL;
+        key_type k;
+        negativekey_ = k;
+    }
 
 private:
     IndexStorage                    index_;
     std::auto_ptr< IndexAllocator > allocator_;
-    mutable IndexNode*              cache_;  // for successive get/set
+    mutable IndexNode*              cache_;       // for successive get/set
+    mutable key_type                negativekey_; // for absent key
 };
 
 
