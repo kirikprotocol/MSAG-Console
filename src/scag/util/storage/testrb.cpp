@@ -3,6 +3,7 @@
 #include <cstdlib>  // random
 #include <string.h> // memcpy
 #include <memory>
+#include <time.h>   // nanosleep
 #include "Storage.h"
 #include "core/threads/Thread.hpp"
 
@@ -691,7 +692,7 @@ class SelfKiller : public smsc::core::threads::Thread
 {
 public:
     SelfKiller( int mainid, int sectowait ) :
-    Thread(), mainid_(mainid), wait_(sectowait) {}
+    mainid_(mainid), wait_(sectowait) {}
     virtual ~SelfKiller() {
         // main has finished early
         printf( "main has finished early\n" );
@@ -709,9 +710,11 @@ int SelfKiller::Execute()
     struct timespec req;
     req.tv_sec = wait_;
     req.tv_nsec = 0;
+    fprintf( stderr, "going to nanosleep for %d seconds\n", wait_ );
     nanosleep( &req, NULL );
     fprintf( stderr, "awoken from nanosleep\n" );
     pthread_kill( mainid_, SIGKILL );
+    return 0;
 }
 
 

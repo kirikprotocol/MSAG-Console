@@ -143,7 +143,7 @@ public:
         if(!header->cells_free && ReallocRBTreeFile() != SUCCESS)
             abort();
 		newNode = (RBTreeNode*)((long)rbtree_body + header->first_free_cell);
-        smsc_log_debug(logger, "allocateNode rbtree_body = %p, header->first_free_cell = %d", rbtree_body, header->first_free_cell, newNode);
+        smsc_log_debug(logger, "allocateNode rbtree_body = %p, header->first_free_cell = %d", rbtree_body, header->first_free_cell);
 		header->first_free_cell = ((free_cell_list*)newNode)->next_free_cell;
 		newNode->parent = newNode->left = newNode->right = 0;
 		header->cells_used++;
@@ -169,7 +169,7 @@ public:
 		if(!running) return;
 		header->root_cell = (long)node - (long)rbtree_body;
 		
-	    smsc_log_debug(logger, "SetRoot (long)node = (%d)%p, header->root_cell=%d", (long)node - (long)rbtree_body, (long)node, header->root_cell);
+	    smsc_log_debug(logger, "SetRoot (long)node = (%d)%p, header->root_cell=%d", (long)node - (long)rbtree_body, node, header->root_cell);
 		//printf("SetRoot (long)node = %X", (long)node);
 		//printf("(long)rbtree_body = %X", (long)rbtree_body);
 		//printf("((long)node - (long)rbtree_body) = %d", ((long)node - (long)rbtree_body));
@@ -257,7 +257,7 @@ private:
             smsc_log_info(logger, "RBTree index realloc from %lld to %lld bytes",
                           static_cast<long long>(rbtFileLen),
                           static_cast<long long>(newRbtFileLen) );
-            // smsc_log_debug(logger, "RBTree address range is [%x..%x)", newMem, newMem + newRbtFileLen );
+            // smsc_log_debug(logger, "RBTree address range is [%p..%p)", newMem, newMem + newRbtFileLen );
         }
 
         if(rbtree_addr)
@@ -288,8 +288,8 @@ private:
         free_cell_list* cell = (free_cell_list*)(rbtree_addr + sizeof(rbtFileHeader) + header->cells_count * sizeof(RBTreeNode));
         for( long i = header->cells_count + 1; i < header->cells_count + _growth; i++ )
         {
-            if ( growth < 100 )
-                smsc_log_debug( logger, "RBTree cell #%d has address [%x..%x)", i-1, (caddr_t)cell, (caddr_t)cell + sizeof(RBTreeNode) );
+            // if ( growth < 100 )
+            // smsc_log_debug( logger, "RBTree cell #%d has address [%x..%x)", i-1, (caddr_t)cell, (caddr_t)cell + sizeof(RBTreeNode) );
             cell->next_free_cell = i * sizeof(RBTreeNode);
             cell = (free_cell_list*)((caddr_t)cell + sizeof(RBTreeNode));
         }
@@ -302,7 +302,10 @@ private:
         rbtree_f.Seek(0, SEEK_SET);
         rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
         rbtFileLen = newRbtFileLen;        
-        smsc_log_debug(logger, "ReallocRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %lld", header->cells_used, header->cells_free, header->cells_count, header->first_free_cell, header->root_cell, header->nil_cell,
+        smsc_log_debug(logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, rbtFileLen %lld",
+                       long(header->cells_used), long(header->cells_free),
+                       long(header->cells_count), long(header->first_free_cell),
+                       long(header->root_cell), long(header->nil_cell),
                        static_cast<long long>(rbtFileLen) );
         return SUCCESS;
     }
