@@ -137,8 +137,10 @@ public:
                   file.Seek( lastFreePage + 1 + 4 );
                   nextPage = file.ReadNetInt64();
                   if ( nextPage == startPage ) {
+#ifdef PAGEFILEDEBUG
                       smsc_log_debug( log_, "looping at page=%llx, last free page forced",
                                       static_cast<long long>(lastFreePage) );
+#endif
                       nextPage = 0; // looping
                   }
                   status = ( nextPage ? pageFree : pageFreeLast );
