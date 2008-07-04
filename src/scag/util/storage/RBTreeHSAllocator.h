@@ -417,6 +417,7 @@ private:
 		transFileHeader		hdr;
 		typename list<RBTreeNode*>::iterator It;
 		long			nodeAddr;
+            FileFlushGuard fg( trans_f );
 		
 		hdr.status = STAT_WRITE_TRX;
 		hdr.version = TRX_VER_1;
@@ -445,7 +446,9 @@ private:
 	    int stat = STAT_WRITE_RBT;
 	    trans_f.Seek(0, SEEK_SET);
 	    trans_f.Write((char*)&stat, sizeof(int));
+            trans_f.Flush();
 
+            FileFlushGuard fg(rbtree_f);
 	    typename list<RBTreeNode*>::iterator It;
 	    rbtree_f.Seek(0, SEEK_SET);
 	    rbtree_f.Write((char*)header, sizeof(rbtFileHeader));
@@ -464,6 +467,7 @@ private:
 		int stat = STAT_OK;
 		trans_f.Seek(0, SEEK_SET);
 		trans_f.Write((char*)&stat, sizeof(int));
+            trans_f.Flush();
 		return 0;
 	}
 	int repairRBTreeFile(void)
@@ -489,6 +493,7 @@ private:
 			rbtree_f.Seek(nodeAddr, SEEK_SET);
 			rbtree_f.Write((char*)&curNode, sizeof(RBTreeNode));
 		}
+            rbtree_f.Flush();
 		return 0;
 	}
 };
