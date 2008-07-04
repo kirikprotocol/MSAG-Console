@@ -284,6 +284,7 @@ private:
             header->version = version_64_1;
             memcpy(header->preamble, "RBTREE_FILE_STORAGE!", sizeof("RBTREE_FILE_STORAGE!"));            
         }
+        bool newfile = (!rbtree_addr);
         
         rbtree_addr = newMem;
         memset(rbtree_addr + rbtFileLen, 0x00, growth * sizeof(RBTreeNode));
@@ -302,13 +303,17 @@ private:
         header->cells_free = _growth;
         rbtree_f.Seek(rbtFileLen, SEEK_SET);
         rbtree_f.Write(rbtree_addr + rbtFileLen, newRbtFileLen - rbtFileLen);
-        rbtree_f.Flush();
         // should be in transactional manner
-        // rbtree_f.Seek(0, SEEK_SET);
-        // rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
         rbtFileLen = newRbtFileLen;
-        startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
-        completeChanges();
+        if ( newfile ) {
+            rbtree_f.Seek(0, SEEK_SET);
+            rbtree_f.Write(rbtree_addr, sizeof(rbtFileHeader));
+            rbtree_f.Flush();
+        } else {
+            rbtree_f.Flush();
+            startChanges( getRootNode(), RBTreeChangesObserver<Key,Value>::OPER_CHANGE );
+            completeChanges();
+        }
         smsc_log_debug(logger, "ReallocRBTree: cells_used %ld, cells_free %ld, cells_count %ld, first_free_cell %ld, root_cell %ld, nil_cell %ld, rbtFileLen %lld",
                        long(header->cells_used), long(header->cells_free),
                        long(header->cells_count), long(header->first_free_cell),
@@ -331,10 +336,6 @@ private:
 		}
 
         rbtree_addr = NULL;
-        
-        uint32_t i;
-        if((i = ReallocRBTreeFile()) != SUCCESS)
-            return i;
 
 		try
 		{
@@ -350,7 +351,12 @@ private:
         
 		int status = STAT_OK;
 		trans_f.Write((char*)&status, sizeof(int));
-		return SUCCESS;
+
+            uint32_t i;
+            if((i = ReallocRBTreeFile()) != SUCCESS)
+                return i;
+            return SUCCESS;
+
 	}
     
 	int OpenRBTreeFile(void)

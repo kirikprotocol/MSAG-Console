@@ -5,6 +5,8 @@
 #include <memory>
 #include <time.h>   // nanosleep
 #include "Storage.h"
+#include "core/synchronization/EventMonitor.hpp"
+#include "core/synchronization/MutexGuard.hpp"
 #include "core/threads/Thread.hpp"
 
 // for __require__
@@ -16,6 +18,8 @@
 
 
 using namespace scag::util::storage;
+using smsc::core::synchronization::EventMonitor;
+using smsc::core::synchronization::MutexGuard;
 
     template < class Key, class Val > class SimpleMemoryStorageIterator;
 
@@ -618,7 +622,7 @@ struct Config {
         if ( getenv("cachesize") ) {
             cachesize = strtoul(getenv("cachesize"), NULL, 10 );
         }
-        pagesize = 1024;
+        pagesize = 256;
         if ( getenv("pagesize") ) {
             pagesize = strtoul(getenv("pagesize"), NULL, 10 );
         }
@@ -650,8 +654,8 @@ struct Config {
         if ( getenv("maxkilltime") ) {
             maxkilltime = strtoul(getenv("maxkilltime"), NULL, 10 );
         }
-        if ( maxkilltime <= minkilltime ) {
-            maxkilltime = minkilltime + 1;
+        if ( maxkilltime < minkilltime ) {
+            maxkilltime = minkilltime;
         }
 
         totalflushes = 0;
@@ -696,24 +700,47 @@ public:
     virtual ~SelfKiller() {
         // main has finished early
         printf( "main has finished early\n" );
-        Kill(16);
+        MutexGuard mg(mtx_);
+        if ( running ) {
+            printf( "thread is running\n" );
+            running = false;
+            Kill(16);
+            mtx_.wait();
+        }
+        printf( "leaving dtor\n" );
     }
     virtual int Execute();
 private:
-    int mainid_;
-    int wait_;
+    EventMonitor mtx_;
+    bool running;
+    int  mainid_;
+    int  wait_;
 };
 
 
 int SelfKiller::Execute()
 {
+    {
+        printf( "set running state\n" );
+        MutexGuard mg(mtx_);
+        running = true;
+    }
     struct timespec req;
     req.tv_sec = wait_;
     req.tv_nsec = 0;
     fprintf( stderr, "going to nanosleep for %d seconds\n", wait_ );
-    nanosleep( &req, NULL );
-    fprintf( stderr, "awoken from nanosleep\n" );
-    pthread_kill( mainid_, SIGKILL );
+    int ret;
+    if ( ( ret = nanosleep( &req, NULL ) == EINTR ) ) {
+        printf( "nanosleep has been killed\n" );
+        return 1;
+    }
+    printf( "awoken from nanosleep\n" );
+
+    MutexGuard mg(mtx_);
+    if ( running ) {
+        printf( "going to kill main\n" );
+        pthread_kill( mainid_, SIGKILL );
+    }
     return 0;
 }
 
@@ -753,7 +780,7 @@ int main( int argc, char** argv )
                                          cfg.storagepath,
                                          cfg.indexgrowth ));
         smsc_log_debug( slog, "data index storage created" );
-        return testDiskIndexStorage( cfg, dis.get() );
+        // return testDiskIndexStorage( cfg, dis.get() );
 
 
 
@@ -769,7 +796,6 @@ int main( int argc, char** argv )
 
         dds.reset( new DiskDataStorage( pf.release() ) );
         smsc_log_debug( slog, "data disk storage created" );
-        
 
         ds.reset( new DiskStorage( dis.release(), dds.release() ) );
         smsc_log_debug( slog, "disk storage assembled" );
@@ -868,9 +894,13 @@ int testDiskIndexStorage( const Config& cfg, DiskIndexStorage* dis )
     if ( ! ok ) return 1;
 
     // start self killer
-    SelfKiller selfkill( pthread_self(),
-                         random() % (cfg.maxkilltime-cfg.minkilltime) + cfg.minkilltime );
-    selfkill.Start();
+    std::auto_ptr< SelfKiller > selfkill;
+    if ( cfg.minkilltime != cfg.maxkilltime ) {
+        selfkill.reset( new SelfKiller
+                        ( pthread_self(),
+                          random() % (cfg.maxkilltime-cfg.minkilltime) + cfg.minkilltime ) );
+        selfkill->Start();
+    }
 
     // adding, and removing indices
     unsigned totalinserts = 0;
@@ -922,11 +952,17 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
     fprintf( stderr, "STORAGE CHECK FINISHED\n" );
     smsc_log_debug( slog, "STORAGE CHECK FINISHED" );
     if ( ! ok ) return 1;
+    
+    // start self killer
+    std::auto_ptr< SelfKiller > selfkill;
+    if ( cfg.minkilltime != cfg.maxkilltime ) {
+        selfkill.reset( new SelfKiller
+                        ( pthread_self(),
+                          random() % (cfg.maxkilltime-cfg.minkilltime) + cfg.minkilltime ) );
+        selfkill->Start();
+    }
 
-    for ( size_t i = 0; i < cfg.totalpasses; ++i ) {
-
-        if ( i % 100 == 0 )
-            smsc_log_debug( slog, "pass #%d", i );
+    for ( size_t i = 1; i <= cfg.totalpasses; ++i ) {
 
         const CSessionKey sk( genKey( cfg ) );
         Session* v = store->get( sk );
@@ -943,12 +979,23 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
                          sk.toString().c_str(), v->getKey().toString().c_str() );
                 smsc_log_error( slog, "WARNING: different key found %s != %s",
                                 sk.toString().c_str(), v->getKey().toString().c_str() );
+                return 1;
+
                 delete store->purge( sk );
                 v = new Session( sk );
                 store->set( sk, v );
             }
         }
 
+
+        if ( i % 100 == 0 ) {
+            fprintf( stderr, "pass #%d, inserts=%d, removes=%d, size=%d\n",
+                     i, cfg.totalmisses, cfg.totalcleansessions,
+                     precount+cfg.totalmisses-cfg.totalcleansessions );
+            smsc_log_debug( slog, "pass #%d, inserts=%d, removes=%d, size=%d",
+                            i, cfg.totalmisses, cfg.totalcleansessions,
+                            precount+cfg.totalmisses-cfg.totalcleansessions );
+        }
 
         if ( random() % 100 < cfg.flushprob ) {
 
@@ -984,6 +1031,7 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
 
     }
 
+    /*
     store->flush();
 
     // clean all items from cache
@@ -996,6 +1044,7 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
             delete dummy;
         }
     }
+     */
 
     // printout the statistics
     printf( "total cache hits    : %d\n", store->hitcount() );
@@ -1008,15 +1057,8 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
     printf( "total cleaned items : %d\n", cfg.totalcleansessions );
     printf( "cache size          : %d\n", cfg.cachesize );
     printf( "number interval     : %d\n", cfg.interval );
-
-    fprintf( stderr, "STARTING STORAGE CHECK\n" );
-    smsc_log_debug( slog, "STARTING STORAGE CHECK" );
-    unsigned int postcount = checkStorage( cfg, store, ok );
-    fprintf( stderr, "STORAGE CHECK FINISHED\n" );
-    smsc_log_debug( slog, "STORAGE CHECK FINISHED" );
     printf( "items on disk (pre) : %d\n", precount );
-    printf( "items on disk (post): %d\n", postcount );
-    if ( ! ok ) return 1;
+    printf( "items on disk (post): %d\n", precount+cfg.totalmisses-cfg.totalcleansessions );
 
     return 0;
 }
@@ -1040,7 +1082,7 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
 
         ++count;
 
-        if ( count > 50000 ) {
+        if ( count > 5000000 ) {
             fprintf( stderr, "store check failed\n" );
             break;
         }
@@ -1055,14 +1097,15 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             ok = false;
         }
         prevk = k;
-        // if ( count % 100 == 0 ) {
-        // fprintf( stderr, "store check pass #%d, key=%s\n", count, k.toString().c_str() );
-        smsc_log_debug( slog, "store check #%d, key=%s, hash=%u, idx=%llx",
-                        count,
-                        k.toString().c_str(),
-                        CSessionKey::CalcHash(k),
-                        static_cast<unsigned long long>( idx ) );
-        // }
+        if ( count % 100 == 0 ) {
+            // fprintf( stderr, "store check pass #%d, key=%s\n",
+            // count, k.toString().c_str() );
+            smsc_log_debug( slog, "store check #%d, key=%s, hash=%u, idx=%llx",
+                            count,
+                            k.toString().c_str(),
+                            CSessionKey::CalcHash(k),
+                            static_cast<unsigned long long>( idx ) );
+        }
         if ( k != s.getKey() ) {
             fprintf( stderr, "WARNING: key mismatch: %s(%u) != %s(%u)\n",
                      k.toString().c_str(),
@@ -1077,5 +1120,11 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             ok = false;
         }
     }
+
+    smsc_log_info( slog, "total items : %d", count );
+
+    fprintf( stderr, "total items      : %lu\n", (unsigned long)count );
+    fprintf( stderr, "total indices    : %lu\n", (unsigned long)store->dataSize() );
+    // fprintf( stderr, "total data items : %d\n", count );
     return count;
 }

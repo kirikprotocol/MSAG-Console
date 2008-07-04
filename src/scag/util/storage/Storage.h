@@ -294,6 +294,13 @@ public:
     ~RBTreeIndexStorage() {
     }
 
+
+    /// number of items
+    unsigned long size() const {
+        return allocator_->getSize();
+    }
+
+
     /// @return the index of the key, or 0 if not found
     index_type getIndex( const key_type& k ) const {
         IndexNode* node = getNode( k );

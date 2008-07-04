@@ -140,6 +140,11 @@ protected:
 
 public:
 
+    unsigned long size() const {
+        return index_->size();
+    }
+
+
     bool set( const key_type& k, const value_type& v ) {
         data_->serialize( v ); // into internal buffer
         return do_set( k );
@@ -401,6 +406,12 @@ public:
     /// FIXME: should we allow this one?
     typename DiskStorage::iterator_type dataBegin() const {
         return disk_->begin();
+    }
+
+
+    /// return the number of items on disk
+    unsigned long dataSize() const {
+        return disk_->size();
     }
 
 

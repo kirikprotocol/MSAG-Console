@@ -49,7 +49,7 @@ public:
 		    allocator = _allocator;
         rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
-		size = allocator->getSize();
+		// size = allocator->getSize();
 		
 		if(!_changesObserver)
 		{
@@ -78,8 +78,8 @@ public:
 		allocator = _allocator;
 		rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
-		offset = allocator->getOffset();
-		size = allocator->getSize();
+		// offset = allocator->getOffset();
+		// size = allocator->getSize();
                 if ( ! rootNode || ! nilNode ) {
                     smsc_log_error( logger, "SetAllocator: rootNode=%p, nilNode=%p", rootNode, nilNode );
                 }
@@ -107,7 +107,7 @@ public:
 		RBTreeNode* newNode = allocator->allocateNode();
 		rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
-		offset = allocator->getOffset();
+                // offset = allocator->getOffset();
 		newNode->key = k;
 		newNode->value = v;
         smsc_log_debug(logger, "Insert: %s val=%lld", k.toString().c_str(), (long long)v);
@@ -325,9 +325,9 @@ protected:
 	RBTreeChangesObserver<Key, Value>*	changesObserver;
 	RBTreeNode*		rootNode;
 	RBTreeNode*		nilNode;
-    RBTreeNode*     iterNode;
-	long			offset;
-	long			size;
+        RBTreeNode*     iterNode;
+        // long			offset;
+        // long			size;
 	bool			defaultAllocator;
 	bool			defaultChangesObserver;
 inline
