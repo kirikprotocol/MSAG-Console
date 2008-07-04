@@ -83,7 +83,7 @@ public:
                 if ( ! rootNode || ! nilNode ) {
                     smsc_log_error( logger, "SetAllocator: rootNode=%p, nilNode=%p", rootNode, nilNode );
                 }
-                if ( logger->isDebugEnabled() ) dump( rootNode, 0, "" );
+                dumpcheck( rootNode, nilNode, 0, "" );
 	}
 	void SetChangesObserver(RBTreeChangesObserver<Key, Value>* _changesObserver)
 	{
@@ -245,20 +245,34 @@ protected:
     }
 
 
-    void dump( const RBTreeNode* node,
-               int depth = 0,
-               const std::string& path = "" ) const
+    void dumpcheck( const RBTreeNode* node,
+                    const RBTreeNode* parent,
+                    int depth = 0,
+                    const std::string& path = "" ) const
     {
-        if ( depth > 4 ) return;
-        if ( !node || node == nilNode ) return;
-        char buf[100];
-        snprintf( buf, sizeof(buf), "%d ", depth );
-        shownode( (std::string(buf) + path).c_str(), node );
+        if ( node == nilNode ) return;
+        if ( logger->isDebugEnabled() && depth < 5 ) {
+            char buf[100];
+            snprintf( buf, sizeof(buf), "%d ", depth );
+            shownode( (std::string(buf) + path).c_str(), node );
+        }
+        RBTreeNode* realparent = realAddr(node->parent);
+        if ( realparent != parent ) {
+            smsc_log_error( logger,
+                            "ERROR: RBTree corruption at depth=%d path=%s node=%p(%s) parent=%p(%s) node->parent=%p(%s)",
+                            depth,
+                            path.c_str(),
+                            node, nodekey(node).c_str(),
+                            parent, nodekey(parent).c_str(),
+                            realparent, nodekey(realparent).c_str() );
+            throw std::runtime_error("RBTree structure corrupted");
+        }
+        
         ++depth;
         RBTreeNode* left = realAddr(node->left);
-        dump( left, depth, path + "l" );
+        dumpcheck( left, node, depth, path + "l" );
         RBTreeNode* right = realAddr(node->right);
-        dump( right, depth, path + "r" );
+        dumpcheck( right, node, depth, path + "r" );
     }
     void shownode( const char* text, const RBTreeNode* node ) const
     {
