@@ -249,9 +249,9 @@ protected:
 
 
     int dumpcheck( RBTreeNode* node,
-                    RBTreeNode* parent,
-                    int depth = 0,
-                    const std::string& path = "" ) const
+                   RBTreeNode* parent,
+                   int depth = 0,
+                   const std::string& path = "" ) const
     {
         if ( node == nilNode ) return 0;
         if ( depth > 200 ) {

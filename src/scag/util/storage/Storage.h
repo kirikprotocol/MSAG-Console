@@ -225,7 +225,7 @@ public:
     }
 
     /// read data from storage into internal (mutable) buffer
-    void read( index_type i ) const {
+    bool read( index_type i ) const {
         buf.reset();
         index_type j;
         pf_->Read( i, buf.buffer(), &j );
@@ -235,6 +235,7 @@ public:
                            static_cast< unsigned long long >( j ) );
         }
         assert( buf.size() < 10000 && buf.buffer().capacity() < 10000 );
+        return true;
     }
 
     /// deserialize value from internal buffer

@@ -9,7 +9,7 @@ namespace scag {
 namespace util {
 namespace storage {
 
-#if 0
+/*
 template < class Key, class Val >
 class StorageIface
 {
@@ -109,23 +109,74 @@ public:
     virtual void copyBuffer( const DataStorageIface<Idx,Val>& s ) = 0;
 
 };
-#endif
+*/
 
 
-template < class IStorage, class DStorage > class IndexedStorageIterator;
-
+/// Indexed storage template class.
+/// Template parameters are IStorage -- a storage for indices
+/// and DStorage -- a storage for data.
+/// Requirements on the template parameters:
+/// IStorage {
+///     key_type;
+///     index_type = POD integral type (?);
+///     iterator_type {
+///       bool next( key_type&, index_type& );
+///     }
+///     ~IStorage();
+///     iterator_type begin() const;
+///     unsigned long size() const;
+///     index_type getIndex( const key_type& ) const;
+///     index_type removeIndex( const key_type& );
+///     void setIndex( const key_type&, index_type);
+/// };
+/// DStorage {
+///     index_type = POD integral type (?);
+///     value_type;
+///     bool read( index_type ) const;         // into internal (mutable) buffer
+///     bool deserialize( value_type& ) const; // from intern. buffer
+///     ~DStorage();
+///     serialize( const value_type& );
+///     remove( index_type );
+///     copyBuffer( OtherDStorage& );          // copy internal buffer
+///     index_type append();                   // internal buffer
+///     remove( index_type );
+/// };
 template < class IStorage, class DStorage >
-class IndexedStorageBase
+class IndexedStorage
 {
 public:
-    friend class IndexedStorageIterator< IStorage, DStorage >;
-
     typedef typename IStorage::key_type          key_type;
     typedef typename IStorage::index_type        index_type;
     typedef typename DStorage::value_type        value_type;
 
-protected:
-    IndexedStorageBase( IStorage* is, DStorage* ds ) :
+    class Iterator {
+        friend class IndexedStorage< IStorage, DStorage >;
+    public:
+        void reset() { iter_ = s_->index_->begin(); }
+        // FIXME: index_type return is temporary
+        bool next( key_type& k, index_type& i, value_type& v ) {
+            // index_type i;
+            while ( iter_.next(k,i) ) {
+                if ( i && s_->data_->read(i) && s_->data_->deserialize(v) ) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+    private:
+        Iterator( const IndexedStorage< IStorage, DStorage >& s ) :
+        s_(&s), iter_(s.index_->begin()) {}
+        Iterator() {}
+    private:
+        const IndexedStorage< IStorage, DStorage >* s_;
+        typename IStorage::iterator_type            iter_;
+    };
+    friend class Iterator;
+    typedef Iterator                             iterator_type;
+
+public:
+    IndexedStorage( IStorage* is, DStorage* ds ) :
     index_(is), data_(ds) {
         if ( !is || !ds ) {
             delete is;
@@ -133,12 +184,13 @@ protected:
             throw std::runtime_error("IndexedStorage: both storages should be provided!");
         }
     }
-    ~IndexedStorageBase() {
+
+
+    ~IndexedStorage() {
         delete index_;
         delete data_;
     }
 
-public:
 
     unsigned long size() const {
         return index_->size();
@@ -153,10 +205,9 @@ public:
 
     bool get( const key_type& k, value_type& v ) const {
         index_type i = index_->getIndex( k );
-        if ( i == 0 ) return false;
-        data_->read( i ); // into internal buffer
-        data_->deserialize( v );
-        return true;
+        if ( i && data_->read(i) && data_->deserialize(v) )
+            return true;
+        return false;
     }
 
 
@@ -179,16 +230,20 @@ public:
     /// by avoiding extra deserialization/serialization steps.
     template < class IS, class DS > bool copy
         ( const key_type& k,
-          const IndexedStorageBase<IS,DS>& s )
+          const IndexedStorage<IS,DS>& s )
     {
         if ( &s != this ) {
             index_type i = s.index_->getIndex( k );
-            if ( i == 0 ) return false;
-            s.data_->read( i );
-            data_->copyBuffer( s );
+            if ( i == 0 || !s.data_->read(i) ) return false;
+            data_->copyBuffer( s.data_ );
             do_set( k );
         }
         return false;
+    }
+
+    // iteration
+    iterator_type begin() const {
+        return iterator_type( *this );
     }
 
 private:
@@ -214,68 +269,7 @@ private:
 };
 
 
-template < class IStorage, class DStorage > class IndexedStorage;
-
-template < class IStorage, class DStorage >
-class IndexedStorageIterator 
-{
-public:
-    friend class IndexedStorage< IStorage, DStorage >;
-
-private:
-    typedef IndexedStorageBase< IStorage, DStorage >  Base;
-public:
-    typedef typename Base::key_type   key_type;
-    typedef typename Base::index_type index_type;
-    typedef typename Base::value_type value_type;
-
-    void reset() { iter_ = s_->index_->begin(); }
-    // FIXME: index_type return is temporary
-    bool next( key_type& k, index_type& i, value_type& v ) {
-        // index_type i;
-        while ( iter_.next(k,i) ) {
-            if ( i ) {
-                s_->data_->read(i);
-                s_->data_->deserialize( v );
-                return true;
-            }
-        }
-        return false;
-    }
-
-private:
-    IndexedStorageIterator( const IndexedStorageBase< IStorage, DStorage >& s ) :
-    s_(&s), iter_(s.index_->begin()) {}
-    IndexedStorageIterator() {}
-
-private:
-    const IndexedStorageBase< IStorage, DStorage >* s_;
-    typename IStorage::iterator_type  iter_;
-};
-
-
-template < class IStorage, class DStorage >
-class IndexedStorage : public IndexedStorageBase< IStorage, DStorage >
-{
-public:
-    typedef typename IStorage::key_type                  key_type;
-    typedef typename IStorage::index_type                index_type;
-    typedef typename DStorage::value_type                value_type;
-    typedef IndexedStorageIterator< IStorage, DStorage > iterator_type;
-
-    IndexedStorage( IStorage* is, DStorage* ds ) :
-    IndexedStorageBase< IStorage, DStorage >(is,ds)
-    {
-    }
-
-    iterator_type begin() const {
-        return iterator_type( *this );
-    }
-
-};
-
-
-#if 0
+/*
 /// class storing transient objects in memory.
 /// access is provided by key only.
 /// it owns all its objects!
@@ -301,8 +295,7 @@ public:
     /// release the item
     virtual value_type* release( const key_type& k ) = 0;
 };
-#endif
-
+*/
 
 
 template < class MemStorage, class DiskStorage >
@@ -319,14 +312,14 @@ public:
 
     CachedDiskStorage( MemStorage* ms,
                        DiskStorage* ds ) :
-    cache_( ms ), disk_( ds ), spare_(NULL), hitcount_(0) 
+    cache_( ms ), disk_( ds ), spare_(NULL), hitcount_(0), cachelog_(NULL)
     {
         if ( !ms || !ds ) {
             delete ms;
             delete ds;
             throw std::runtime_error("CachedDiskStorage: both storages should be provided!");
         }
-        cachelog = smsc::logger::Logger::getInstance("memcache");
+        cachelog_ = smsc::logger::Logger::getInstance("memcache");
     }
 
     ~CachedDiskStorage() {
@@ -379,20 +372,20 @@ public:
         key_type k;
         value_type* v;
         unsigned int count = 0;
-        smsc_log_debug( cachelog, "FLUSH STARTED" );
+        smsc_log_debug( cachelog_, "FLUSH STARTED" );
         for ( iterator_type i = this->begin();
               i.next(k,v); ) {
             if ( v ) {
                 ++count;
-                smsc_log_debug( cachelog, "item: key=%s valkey=%s",
+                smsc_log_debug( cachelog_, "item: key=%s valkey=%s",
                                 k.toString().c_str(),
                                 v->getKey().toString().c_str() );
                 if ( k != v->getKey() )
-                    smsc_log_debug( cachelog, "WARNING: key mismatch!" );
+                    smsc_log_debug( cachelog_, "WARNING: key mismatch!" );
                 disk_->set( k, static_cast< const typename DiskStorage::value_type& >( *v ) );
             }
         }
-        smsc_log_debug( cachelog, "FLUSH FINISHED, count=%d", count );
+        smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count );
         return count;
     }
 
@@ -420,9 +413,6 @@ public:
         return hitcount_;
     }
 
-protected:
-    static smsc::logger::Logger* cachelog;
-
 private:
     value_type* faultHandler( const key_type& k ) const
     {
@@ -447,11 +437,12 @@ private:
     //  when item is not found.
     mutable typename DiskStorage::value_type*  spare_;
     mutable unsigned int hitcount_;
+    smsc::logger::Logger* cachelog_;
 };
 
 
-template < class MemStorage, class DiskStorage >
-        smsc::logger::Logger* CachedDiskStorage< MemStorage, DiskStorage >::cachelog = NULL;
+// template < class MemStorage, class DiskStorage >
+//        smsc::logger::Logger* CachedDiskStorage< MemStorage, DiskStorage >::cachelog = NULL;
 
 } // namespace storage
 } // namespace util
