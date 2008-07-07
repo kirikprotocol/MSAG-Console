@@ -214,6 +214,48 @@ public:
 	    changedNodes.erase(changedNodes.begin(), changedNodes.end());
 	}
 
+
+    // FIXME: temporary
+    virtual std::vector< RBTreeNode* > freenodes()
+    {
+        // check header integrity
+        if ( header->cells_count != header->cells_used + header->cells_free ) {
+            throw smsc::util::Exception("RBTreeAlloc: cells_count != cells_used + cells_free");
+        }
+        if ( rbtFileLen != sizeof(rbtFileHeader) + header->cells_count * sizeof(RBTreeNode) ) {
+            throw smsc::util::Exception("RBTreeAlloc: rbtFileLen mismatch (!= cells_count * sizeof(RBTreeNode))");
+        }
+
+        // check free cells integrity
+        long celladdr = header->first_free_cell;
+        std::vector< RBTreeNode* > fnl;
+        fnl.reserve( header->cells_free );
+        for ( int cf = 0; cf < header->cells_free; ++cf ) {
+            if ( cf < 20 )
+                smsc_log_debug( logger, "free cell #%d has address %ld", cf, celladdr );
+            if ( celladdr >= rbtFileLen ) {
+                smsc_log_error( logger, "free cell #d address is too big=%ld filelen=%lld", cf, celladdr, (long long)rbtFileLen );
+                // fprintf( stderr, "free cell #d address is too big=%ld filelen=%lld\n", cf, celladdr, (long long)rbtFileLen );
+                throw smsc::util::Exception( "RBTreeAlloc: free cell %d address is too big %ld filelen=%lld", cf, celladdr, (long long)rbtFileLen );
+                break;
+            }
+            free_cell_list* cell = (free_cell_list*)((long)rbtree_body + celladdr);
+            fnl.push_back( (RBTreeNode*) cell );
+            celladdr = cell->next_free_cell;
+        }
+        std::sort( fnl.begin(), fnl.end() );
+        const size_t fnc = fnl.size();
+        fnl.erase( std::unique( fnl.begin(), fnl.end() ),
+                         fnl.end() );
+        if ( fnc != fnl.size() ) {
+            smsc_log_error( logger, "non-unique nodes have been found!" );
+            // fprintf( stderr, "non-unique nodes have been found!\n" );
+            throw smsc::util::Exception( "RBTreeAlloc: %d non-unique nodes have been found!", fnc - fnl.size() );
+        }
+        return fnl;
+    }
+
+
 private:
 	string			rbtree_file;
 	string			trans_file;
@@ -244,7 +286,7 @@ private:
         {
             rbtFileLen = sizeof(rbtFileHeader);
             _growth--;
-        } else {
+        } else if ( changedNodes.size() > 0 ) {
             // we have to make sure that no pending nodes are on the list
             completeChanges();
         }
@@ -303,6 +345,7 @@ private:
         header->cells_free = _growth;
         rbtree_f.Seek(rbtFileLen, SEEK_SET);
         rbtree_f.Write(rbtree_addr + rbtFileLen, newRbtFileLen - rbtFileLen);
+
         // should be in transactional manner
         rbtFileLen = newRbtFileLen;
         if ( newfile ) {
@@ -319,6 +362,8 @@ private:
                        long(header->cells_count), long(header->first_free_cell),
                        long(header->root_cell), long(header->nil_cell),
                        static_cast<long long>(rbtFileLen) );
+        // check nodes
+        freenodes();
         return SUCCESS;
     }
     
@@ -424,11 +469,16 @@ private:
 		rbtree_f.Read(rbtree_addr, len);
 		header = (rbtFileHeader*)rbtree_addr;
 		rbtree_body = rbtree_addr + sizeof(rbtFileHeader);
-        rbtFileLen = len;
+            // NOTE: file len should be calculated from cells_count
+            rbtFileLen = off_t(sizeof(rbtFileHeader)) + header->cells_count * sizeof(RBTreeNode);
+            if ( len != rbtFileLen ) {
+                smsc_log_warn(logger, "OpenRBTree: file size has been fixed from %lld to %lld", len, rbtFileLen );
+            }
 		smsc_log_debug(logger, "OpenRBTree: cells_used %d, cells_free %d, cells_count %d, first_free_cell %d, root_cell %d, nil_cell %d, rbtFileLen %d", header->cells_used, header->cells_free, header->cells_count, header->first_free_cell, header->root_cell, header->nil_cell, rbtFileLen);
-		return ret;
+            return ret;
 	}
     
+
 	int startTransaction(void)
 	{
 		transFileHeader		hdr;

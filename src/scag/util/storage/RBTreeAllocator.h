@@ -9,6 +9,8 @@
 #ifndef _SCAG_UTIL_STORAGE_RBTREEALLOCATOR_H
 #define _SCAG_UTIL_STORAGE_RBTREEALLOCATOR_H
 
+#include <vector>
+
 namespace scag {
 namespace util {
 namespace storage {
@@ -33,6 +35,9 @@ public:
 	virtual RBTreeNode* getNilNode(void) = 0;
 	virtual long getSize(void) const = 0;
 	virtual long getOffset(void) const = 0;
+
+    // FIXME: temporary
+    virtual std::vector< RBTreeNode* > freenodes() = 0;
 
 	//virtual void resetChanges(void) = 0;
 	//virtual void nodeChanged(RBTreeNode* node) = 0;
@@ -94,6 +99,11 @@ public:
 	virtual RBTreeNode* getNilNode(void){return nilNode;};
 	virtual long getSize(void) const {return count;};
 	virtual long getOffset(void) const {return 0;}
+
+    virtual std::vector< RBTreeNode* > freenodes() {
+        return std::vector< RBTreeNode* >();
+    }
+
 };
 
 template<class Key=long, class Value=long>

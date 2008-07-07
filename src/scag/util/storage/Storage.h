@@ -284,9 +284,11 @@ public:
     cache_(0)
     {
         allocator_.reset( new IndexAllocator() );
-        allocator_->Init( dbpath + '/' + dbname + '/' + dbname + "-index",
-                          indexGrowth,
-                          cleanup );
+        if ( allocator_->Init( dbpath + '/' + dbname + '/' + dbname + "-index",
+                               indexGrowth,
+                               cleanup ) < 0 ) {
+            throw smsc::util::Exception( "cannot initialize RBTreeAllocator" );
+        }
 
         index_.SetAllocator( allocator_.get() );
         index_.SetChangesObserver( allocator_.get() );

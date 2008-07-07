@@ -81,9 +81,11 @@ public:
 		// offset = allocator->getOffset();
 		// size = allocator->getSize();
                 if ( ! rootNode || ! nilNode ) {
+                    fprintf( stderr, "SetAllocator: rootNode=%ld, nilNode=%ld\n", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
                     smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
                 }
-                int cnt = dumpcheck( rootNode, nilNode, 0, "" ) + 1; // for nilNode
+                const std::vector< RBTreeNode* > freenodes = allocator->freenodes();
+                int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" ) + 1; // for nilNode
                 smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
 	}
 	void SetChangesObserver(RBTreeChangesObserver<Key, Value>* _changesObserver)
@@ -248,20 +250,14 @@ protected:
     }
 
 
-    int dumpcheck( RBTreeNode* node,
+    int dumpcheck( const std::vector< RBTreeNode* >& freenodes,
+                   RBTreeNode* node,
                    RBTreeNode* parent,
                    int depth = 0,
                    const std::string& path = "" ) const
     {
         if ( node == nilNode ) return 0;
-        if ( depth > 200 ) {
-            static bool printed = false;
-            if ( ! printed ) {
-                printed = true;
-                smsc_log_error( logger, "ERROR: depth has reached %d, deeper check aborted", depth );
-            }
-            return 0; // anti-loop
-        }
+
         int res = 0;
         if ( logger->isDebugEnabled() && depth < 6 ) {
             char buf[100];
@@ -274,24 +270,36 @@ protected:
         const char* fail = NULL;
         do {
 
+            if ( depth > 500 ) {
+                fail = "too deep";
+                break;
+            }
+
             if ( realparent != parent ) {
                 fail = "parentlink";
                 break;
             }
+
+            // check if the node is in the list of free nodes
+            if ( binary_search( freenodes.begin(), freenodes.end(), node ) ) {
+                fail = "used freecell";
+                break;
+            }
+
             ++depth;
             if ( left != nilNode ) {
                 if ( ! (left->key < node->key) ) {
                     fail = "order/left";
                     break;
                 }
-                res += dumpcheck( left, node, depth, path + "l" );
+                res += dumpcheck( freenodes, left, node, depth, path + "l" );
             }
             if ( right != nilNode ) {
                 if ( ! (node->key < right->key) ) {
                     fail = "order/right";
                     break;
                 }
-                res += dumpcheck( right, node, depth, path + "r" );
+                res += dumpcheck( freenodes, right, node, depth, path + "r" );
             }
             
         } while ( false );
