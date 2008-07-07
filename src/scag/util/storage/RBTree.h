@@ -81,9 +81,10 @@ public:
 		// offset = allocator->getOffset();
 		// size = allocator->getSize();
                 if ( ! rootNode || ! nilNode ) {
-                    smsc_log_error( logger, "SetAllocator: rootNode=%p, nilNode=%p", rootNode, nilNode );
+                    smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
                 }
-                dumpcheck( rootNode, nilNode, 0, "" );
+                int cnt = dumpcheck( rootNode, nilNode, 0, "" ) + 1; // for nilNode
+                smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
 	}
 	void SetChangesObserver(RBTreeChangesObserver<Key, Value>* _changesObserver)
 	{
@@ -103,21 +104,21 @@ public:
 
 	int Insert(const Key& k, const Value& v)
 	{
-        smsc_log_debug(logger, "Start Insert: %s val=%lld", k.toString().c_str(), (long long)v);
+        smsc_log_debug(logger, "Start Insert: k=%s val=%lld", k.toString().c_str(), (long long)v);
 		RBTreeNode* newNode = allocator->allocateNode();
 		rootNode = allocator->getRootNode();
 		nilNode = allocator->getNilNode();
                 // offset = allocator->getOffset();
 		newNode->key = k;
 		newNode->value = v;
-        smsc_log_debug(logger, "Insert: %s val=%lld", k.toString().c_str(), (long long)v);
+        smsc_log_debug(logger, "Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
 		changesObserver->startChanges(newNode, RBTreeChangesObserver<Key, Value>::OPER_INSERT);
 		bstInsert(newNode);
 		newNode->color = RED;
 		changesObserver->nodeChanged(newNode);
 		rbtRecovery(newNode);
 		changesObserver->completeChanges();
-        smsc_log_debug(logger, "End Insert: %s val=%lld", k.toString().c_str(), (long long)v);
+        smsc_log_debug(logger, "End Insert: %ld k=%s val=%lld", (long)relativeAddr(newNode), k.toString().c_str(), (long long)v);
 		return 1;
     }
 
@@ -145,8 +146,10 @@ public:
       if (!node || node->value == val) {
         return;
       }
-      smsc_log_debug(logger, "Node key=%s value has changed. old=%lld new=%lld",
-                      node->key.toString().c_str(), (long long)node->value, (long long)val);
+      smsc_log_debug(logger, "Node %ld k=%s value has changed. old=%lld new=%lld",
+                     (long)relativeAddr(node),
+                     node->key.toString().c_str(),
+                     (long long)node->value, (long long)val);
       node->value = val;
       changesObserver->startChanges(node, RBTreeChangesObserver<Key, Value>::OPER_CHANGE);
       // changesObserver->nodeChanged(node);
@@ -167,11 +170,11 @@ public:
 		}
 		
 		if(node == nilNode) {
-          smsc_log_debug(logger, "Get: %s. Index not found", k.toString().c_str());
+          smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
           return false;
         } 
 		val = node->value;
-        smsc_log_debug(logger, "Get: %s val=%lld", k.toString().c_str(), (long long)val);
+        smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)val);
 		return true;
 	}
 
@@ -181,10 +184,10 @@ public:
         node = node->key < k ? realAddr(node->right) : realAddr(node->left);
       }
       if(node == nilNode) {
-        smsc_log_debug(logger, "Get: %s. Index not found", k.toString().c_str());
+        smsc_log_debug(logger, "Get: k=%s. Index not found", k.toString().c_str());
         return 0;
       } 
-      smsc_log_debug(logger, "Get: %s val=%lld", k.toString().c_str(), (long long)node->value);
+      smsc_log_debug(logger, "Get: %ld k=%s val=%lld", (long)relativeAddr(node), k.toString().c_str(), (long long)node->value);
       return node;
     }
 
@@ -245,14 +248,22 @@ protected:
     }
 
 
-    void dumpcheck( const RBTreeNode* node,
-                    const RBTreeNode* parent,
+    int dumpcheck( RBTreeNode* node,
+                    RBTreeNode* parent,
                     int depth = 0,
                     const std::string& path = "" ) const
     {
-        if ( node == nilNode ) return;
-        if ( depth > 200 ) return; // anti-loop
-        if ( logger->isDebugEnabled() && depth < 5 ) {
+        if ( node == nilNode ) return 0;
+        if ( depth > 200 ) {
+            static bool printed = false;
+            if ( ! printed ) {
+                printed = true;
+                smsc_log_error( logger, "ERROR: depth has reached %d, deeper check aborted", depth );
+            }
+            return 0; // anti-loop
+        }
+        int res = 0;
+        if ( logger->isDebugEnabled() && depth < 6 ) {
             char buf[100];
             snprintf( buf, sizeof(buf), "%d ", depth );
             shownode( (std::string(buf) + path).c_str(), node );
@@ -273,45 +284,46 @@ protected:
                     fail = "order/left";
                     break;
                 }
-                dumpcheck( left, node, depth, path + "l" );
+                res += dumpcheck( left, node, depth, path + "l" );
             }
             if ( right != nilNode ) {
                 if ( ! (node->key < right->key) ) {
                     fail = "order/right";
                     break;
                 }
-                dumpcheck( right, node, depth, path + "r" );
+                res += dumpcheck( right, node, depth, path + "r" );
             }
             
         } while ( false );
 
         if ( fail ) {
             smsc_log_error( logger,
-                            "ERROR: corruption (%s) at depth=%d path=%s node=%p(%s) parent=%p(%s) node->parent=%p(%s) node->left=%p(%s) node->right=%p(%s)",
+                            "ERROR: corruption (%s) at depth=%d path=%s node=(%ld:%s) parent=(%ld:%s) node->parent=(%ld:%s) node->left=(%ld:%s) node->right=(%ld:%s)",
                             fail,
                             depth,
                             path.c_str(),
-                            node, nodekey(node).c_str(),
-                            parent, nodekey(parent).c_str(),
-                            realparent, nodekey(realparent).c_str(),
-                            left, nodekey(left).c_str(),
-                            right, nodekey(right).c_str() );
+                            (long)relativeAddr(node), nodekey(node).c_str(),
+                            (long)relativeAddr(parent), nodekey(parent).c_str(),
+                            (long)relativeAddr(realparent), nodekey(realparent).c_str(),
+                            (long)relativeAddr(left), nodekey(left).c_str(),
+                            (long)relativeAddr(right), nodekey(right).c_str() );
             throw std::runtime_error("RBTree structure corrupted");
         }
+        return res+1;
     }
 
 
-    void shownode( const char* text, const RBTreeNode* node ) const
+    void shownode( const char* text, RBTreeNode* node ) const
     {
         if ( node == nilNode ) {
             smsc_log_debug( logger, "%s: nilnode" );
         } else {
-            smsc_log_debug( logger, "%s: key=%s left=%s right=%s parent=%s",
+            smsc_log_debug( logger, "%s: (%ld:%s) left=(%ld:%s) right=(%ld:%s) parent=(%ld:%s)",
                             text,
-                            nodekey(node).c_str(),
-                            nodekey(realAddr(node->left)).c_str(),
-                            nodekey(realAddr(node->right)).c_str(),
-                            nodekey(realAddr(node->parent)).c_str() );
+                            (long)relativeAddr(node), nodekey(node).c_str(),
+                            (long)node->left, nodekey(realAddr(node->left)).c_str(),
+                            (long)node->right, nodekey(realAddr(node->right)).c_str(),
+                            (long)node->parent, nodekey(realAddr(node->parent)).c_str() );
         }
     }
     std::string nodekey( const RBTreeNode* node ) const

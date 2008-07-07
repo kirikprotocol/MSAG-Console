@@ -404,6 +404,7 @@ private:
 			trans_f.Seek(0, SEEK_SET);
 			status = STAT_OK;
 			trans_f.Write((char*)&status, sizeof(int));
+                    trans_f.Flush();
 			ret = SUCCESS_PREV_OPER_FAILED;
 		}
 		else if(status == STAT_WRITE_RBT)
