@@ -1,7 +1,7 @@
 
 #include <ctype.h>
 #include <util/debug.h>
-
+#include <locale.h>
 #include "Entities.h"
 #include "core/buffers/TmpBuf.hpp"
 
@@ -10,6 +10,60 @@ namespace smsc { namespace util { namespace templates
 
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::TmpBuf;
+
+    const char*  ioFullMonthesNames[12] = {
+        "January", "February", "March", "April",
+        "May", "June", "July", "August", "September",
+        "October", "November", "December"
+    };
+    const char*  ioShortMonthesNames[12] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+    const char*  ioFullWeekDays[7] = {
+        "Sunday", "Monday", "Tuesday", "Wednesday",
+        "Thursday", "Friday", "Saturday"
+    };
+    const char*  ioShortWeekDays[7] = {
+        "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+    };
+
+struct InitLocaleDataDummy{
+  InitLocaleDataDummy()
+  {
+    const char *oldLocale=setlocale(LC_TIME,0);
+    const char *newLocale=setlocale(LC_TIME,"");
+    if(newLocale==0)
+    {
+      fprintf(stderr,"Failed to set LC_TIME from environment\n");
+      return;
+    };
+    fprintf(stderr,"setlocale for LC_TIME to %s",newLocale);
+    tm t;
+    static char mon1[12][32];
+    static char mon2[12][32];
+    static char week1[7][32];
+    static char week2[7][32];
+    for(int i=0;i<12;i++)
+    {
+      t.tm_mon=i;
+      strftime(mon1[i],32,"%b",&t);
+      strftime(mon2[i],32,"%B",&t);
+      ioShortMonthesNames[i]=mon1[i];
+      ioFullMonthesNames[i]=mon2[i];
+    }
+    for(int i=0;i<7;i++)
+    {
+      t.tm_wday=i;
+      strftime(week1[i],32,"%a",&t);
+      strftime(week2[i],32,"%A",&t);
+      ioShortWeekDays[i]=week1[i];
+      ioFullWeekDays[i]=week2[i];
+    }
+    setlocale(LC_TIME,oldLocale);
+  }
+}initLocaleDummy;
+
 
 static bool ENTITY_TRACE = false;
 

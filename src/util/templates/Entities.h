@@ -62,7 +62,11 @@ namespace smsc { namespace util { namespace templates
     static const char* SMSC_DBSME_IO_DEFAULT_FORMAT_PATTERN  = "dd.MM.yyyy HH:mm:ss";
     static const char* SMSC_DBSME_IO_DEFAULT_PARSE_PATTERN   = "%d.%d.%d %d:%d:%d %n";
 
-    static const char*  ioFullMonthesNames[12] = {
+    extern const char*  ioFullMonthesNames[];
+    extern const char*  ioShortMonthesNames[];
+    extern const char*  ioFullWeekDays[];
+    extern const char*  ioShortWeekDays[];
+/*    static const char*  ioFullMonthesNames[12] = {
         "January", "February", "March", "April",
         "May", "June", "July", "August", "September",
         "October", "November", "December"
@@ -77,7 +81,8 @@ namespace smsc { namespace util { namespace templates
     };
     static const char*  ioShortWeekDays[7] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-    };
+    };*/
+    
     static const char*  ioDayTimeParts[2] = {
         "AM", "PM"
     };
