@@ -44,7 +44,7 @@ protected:
     void killSocket(Socket *s);
     void removeSocket(Multiplexer::SockArray &error);
     inline void removeSocket(Socket *s);
-    inline static void deleteSocket(Socket *s, char *buf, int how);
+    inline static void deleteSocket(Socket *s, int how);
      
     HttpMultiplexer multiplexer;
     EventMonitor sockMon;
