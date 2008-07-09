@@ -176,7 +176,7 @@ protected:
 
 
 /// implementation of storage ifaces
-template < class Val >
+template < class Val, class PF = PageFile >
 class PageFileDiskStorage : public MutableBufferHolder // : public DataStorageIface< File::offset_type, Val >
 {
 public:
@@ -184,7 +184,7 @@ public:
     typedef File::offset_type         index_type;
     typedef Val                       value_type;
 
-    PageFileDiskStorage( PageFile* pf ) : pf_(pf), key_(""), disklog_(NULL)
+    PageFileDiskStorage( PF* pf ) : pf_(pf), key_(""), disklog_(NULL)
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
@@ -258,7 +258,7 @@ public:
     }
 
 private:
-    PageFile* pf_;               // owned
+    PF* pf_;                            // owned
     mutable std::string key_;
     smsc::logger::Logger* disklog_;
 };

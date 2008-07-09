@@ -298,8 +298,21 @@ public:
 */
 
 
-template < class MemStorage, class DiskStorage >
-class CachedDiskStorage
+template < class Key, class Val >
+class SimpleCachedStorageAllocator
+{
+protected:
+    ~SimpleCachedStorageAllocator() {}
+    inline Val* alloc( const Key& k ) const { return new Val(k); }
+};
+
+
+template < class MemStorage, class DiskStorage,
+        template <class,class> class Allocator = SimpleCachedStorageAllocator >
+class CachedDiskStorage :
+protected Allocator<
+        typename MemStorage::key_type,
+        typename MemStorage::value_type >
 {
 public:
     // typedef MemStorage                   memstorage_type;
@@ -307,24 +320,25 @@ public:
     // typedef MemoryStorage< typename MemStorage::key_type, typename MemStorage::value_type >  Base;
     typedef typename MemStorage::key_type       key_type;
     typedef typename MemStorage::value_type     value_type;
-    typedef typename MemStorage::iterator_type  iterator_type;
-    // typedef typename DiskStorage::iterator_type store_iterator_type;
+    typedef typename MemStorage::stored_type    stored_type;
 
     CachedDiskStorage( MemStorage* ms,
                        DiskStorage* ds ) :
-    cache_( ms ), disk_( ds ), spare_(NULL), hitcount_(0), cachelog_(NULL)
+    cache_( ms ), disk_( ds ), hitcount_(0), cachelog_(NULL)
     {
         if ( !ms || !ds ) {
             delete ms;
             delete ds;
             throw std::runtime_error("CachedDiskStorage: both storages should be provided!");
         }
+        spare_ = cache_->val2store(NULL);
         cachelog_ = smsc::logger::Logger::getInstance("memcache");
     }
 
     ~CachedDiskStorage() {
         flush();
-        delete spare_;
+        cache_->dealloc(spare_);
+        cache_->clean();
         delete disk_;
         delete cache_;
     }
@@ -339,23 +353,23 @@ public:
 
 
     bool set( const key_type& k, value_type* v ) {
-        return cache_->set(k,v);
+        return cache_->set(k, cache_->val2store(v) );
     }
 
     value_type* get( const key_type& k ) const {
-        value_type* v = cache_->get( k );
-        if ( v ) 
+        stored_type v = cache_->get( k );
+        if ( cache_->store2val(v) ) 
             ++this->hitcount_;
-        else
+        else {
             v = faultHandler( k );
-        return v;
+            if ( cache_->store2val(v) ) cache_->set(k,v);
+        }
+        return cache_->store2val(v);
     }
 
     /// NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k ) {
-        std::auto_ptr<value_type> v( cache_->release( k ) );
-        // should we remove the item from disk?
-        // the answer is yes, as otherwise we could leak disk resources.
+        std::auto_ptr<value_type> v( cache_->release(k) );
         disk_->remove( k );
         return v.release();
     }
@@ -363,35 +377,64 @@ public:
     /// purge element from cache only
     /// NOTE: it is your responsibility to delete the return value.
     value_type* purge( const key_type& k ) {
-        return cache_->release( k );
+        return cache_->release(k);
     }
 
     /// flush all cached data to disk
     /// @return number of flushed items
     unsigned int flush() {
         key_type k;
-        value_type* v;
+        stored_type v;
         unsigned int count = 0;
         smsc_log_debug( cachelog_, "FLUSH STARTED" );
         for ( iterator_type i = this->begin();
               i.next(k,v); ) {
-            if ( v ) {
+            if ( cache_->store2val(v) ) {
                 ++count;
+                /*
                 smsc_log_debug( cachelog_, "item: key=%s valkey=%s",
                                 k.toString().c_str(),
                                 v->getKey().toString().c_str() );
                 if ( k != v->getKey() )
-                    smsc_log_debug( cachelog_, "WARNING: key mismatch!" );
-                disk_->set( k, static_cast< const typename DiskStorage::value_type& >( *v ) );
+                    smsc_log_warn( cachelog_, "WARNING: key mismatch!" );
+                 */
+                disk_->set(k,cache_->store2ref(v));
+                // tatic_cast< const typename DiskStorage::value_type& >( *v ) );
             }
         }
         smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count );
         return count;
     }
 
+
+    /// clean cache only, it will destroy all items
+    void clean() {
+        cache_->clean();
+    }
+
+
+    class Iterator {
+    protected:
+        Iterator( const MemStorage& cache ) : cache_(&cache), iter_(cache.begin()) {}
+        friend class CachedDiskStorage< MemStorage, DiskStorage, Allocator >;
+    public:
+        ~Iterator() {}
+        void reset() { iter_ = cache_->begin(); }
+        bool next( key_type& k, value_type*& v ) {
+            stored_type x;
+            bool res = iter_.next(k,x);
+            if ( res ) v = cache_->store2val(x);
+            return res;
+        }
+    private:
+        const MemStorage*                  cache_;
+        typename MemStorage::iterator_type iter_;
+    };
+    typedef Iterator iterator_type;
+
     /// NOTE: iterator is only for cached data
     iterator_type begin() const {
-        return cache_->begin();
+        return iterator_type(*cache_);
     }
 
 
@@ -414,16 +457,16 @@ public:
     }
 
 private:
-    value_type* faultHandler( const key_type& k ) const
+    stored_type faultHandler( const key_type& k ) const
     {
-        if ( !spare_ ) spare_ = new typename DiskStorage::value_type( k );
-        if ( disk_->get( k, *spare_ ) ) {
-            value_type* v = spare_;
-            spare_ = NULL;
-            cache_->set( k, v );
+        if (!cache_->store2val(spare_)) spare_ = cache_->val2store( alloc(k) );
+        // new typename DiskStorage::value_type( k );
+        if ( disk_->get(k,cache_->store2ref(spare_)) ) {
+            stored_type v = spare_;
+            spare_ = cache_->val2store(NULL);
             return v;
         }
-        return NULL;
+        return cache_->val2store(NULL);
     }
 
 private:
@@ -435,7 +478,7 @@ private:
     // NOTE: for optimization purposes we store a pointer to a temporary instance.
     //  it is used only in faultHandler to avoid unnecessary new/delete
     //  when item is not found.
-    mutable typename DiskStorage::value_type*  spare_;
+    mutable stored_type spare_;
     mutable unsigned int hitcount_;
     smsc::logger::Logger* cachelog_;
 };

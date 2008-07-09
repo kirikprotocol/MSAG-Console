@@ -1,2 +1,3 @@
 scag/testrb	testrb	-lscag-util-storage -lcore-buffers -lcore-threads -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lpthread -lrt -ldl
 scag/testlogger	testlogger	-lscag-util-storage -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl
+scag/pagefilecleanup pagefilecleanup -lscag-util-storage -lcore-buffers -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil -lrt -ldl

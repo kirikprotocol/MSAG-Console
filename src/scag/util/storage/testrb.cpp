@@ -5,13 +5,15 @@
 #include <memory>
 #include <time.h>   // nanosleep
 #include "Storage.h"
+#include "HashedMemoryCache.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/MutexGuard.hpp"
 #include "core/threads/Thread.hpp"
+#include "logger/Logger.h"
 
 // for __require__
 #ifndef NOLOGGERPLEASE
-#include <util/debug.h>
+#include "util/debug.h"
 #else
 #define __require__(x)
 #endif
@@ -21,6 +23,7 @@ using namespace scag::util::storage;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::MutexGuard;
 
+/*
     template < class Key, class Val > class SimpleMemoryStorageIterator;
 
     template < class Key, class Val >
@@ -216,7 +219,7 @@ using smsc::core::synchronization::MutexGuard;
             return iterator_type(*this);
         }
     };
-
+*/
 
 
 /**
@@ -575,9 +578,9 @@ struct Address
     void Session::init()
     {
         const std::string s = "0123456789abcdefghijklmnopqrstuvwxyz";
-        // const std::string ss = s + s + s + s + s + s + s + s;
-        // somedata = "sessionData[" + ss + ss + ss + ss + ss + "]";
-        somedata = "sessionData[" + s + "]";
+        const std::string ss = s + s + s + s + s + s + s + s;
+        somedata = "sessionData[" + ss + ss + ss + ss + ss + "]";
+        // somedata = "sessionData[" + s + "]";
     }
 
 
@@ -593,8 +596,59 @@ struct Address
 
 
 
-typedef SimpleMemoryStorage< CSessionKey, Session > MemStorage;
-typedef PageFileDiskStorage< Session > DiskDataStorage;
+class DelayedPageFile : public smsc::core::buffers::PageFile
+{
+public:
+    DelayedPageFile( unsigned delayusec ) :
+    smsc::core::buffers::PageFile(), delay_(delayusec) {}
+    ~DelayedPageFile() {
+        // we have to delete file event handler
+        delete file.GetEventHandler();
+    }
+    void Create( const std::string& fn, int psz, int prealloc = 1024 )
+    {
+        smsc::core::buffers::PageFile::Create( fn, psz, prealloc );
+        setFEH();
+    }
+    void Open( const std::string& fn )
+    {
+        PageFile::Open( fn );
+        setFEH();
+    }
+protected:
+    class WriteDelayEventHandler : public smsc::core::buffers::FileEventHandler 
+    {
+    public:
+        WriteDelayEventHandler( unsigned delayusec ) {
+            delay_.tv_sec = delayusec/1000000;
+            delay_.tv_nsec = (delayusec%1000000)*1000;
+        }
+        virtual ~WriteDelayEventHandler() {}
+        virtual void onOpen( int, const char* ) {}
+        virtual void onRead( const void*, size_t ) {}
+        virtual void onWrite( const void*, size_t ) {
+            // make a delay
+            nanosleep( &delay_, NULL );
+        }
+        virtual void onSeek( int, int64_t ) {}
+        virtual void onRename( const char* ) {}
+    private:
+        struct timespec delay_;
+    };
+
+    void setFEH() {
+        smsc::core::buffers::FileEventHandler* prev = file.GetEventHandler();
+        file.SetEventHandler( new WriteDelayEventHandler( delay_ ) );
+        delete prev;
+    }
+
+protected:
+    unsigned delay_;  // in microseconds
+};
+
+
+typedef HashedMemoryCache< CSessionKey, Session > MemStorage;
+typedef PageFileDiskStorage< Session, DelayedPageFile > DiskDataStorage;
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
 typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
 typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
@@ -633,6 +687,10 @@ struct Config {
         interval = 1000000;
         if ( getenv("interval") ) {
             interval = strtoul(getenv("interval"), NULL, 10 );
+        }
+        pfdelay = 1000;
+        if ( getenv("pfdelay") ) {
+            pfdelay = strtoul(getenv("pfdelay"), NULL, 10 );
         }
         totalpasses = 10;
         if ( getenv("totalpasses") ) {
@@ -675,6 +733,7 @@ public:
     unsigned    pagesize;
     unsigned    preallocate;
     unsigned    interval;
+    unsigned    pfdelay;
     unsigned    totalpasses;
     unsigned    flushprob;
     unsigned    cleanprob;
@@ -769,7 +828,7 @@ int main( int argc, char** argv )
 
     do {
 
-        std::auto_ptr< PageFile > pf;
+        std::auto_ptr< DelayedPageFile > pf;
         std::auto_ptr< DiskDataStorage > dds;
         std::auto_ptr< DiskIndexStorage > dis;
         std::auto_ptr< DiskStorage > ds;
@@ -784,7 +843,7 @@ int main( int argc, char** argv )
 
 
 
-        pf.reset( new PageFile );
+        pf.reset( new DelayedPageFile(cfg.pfdelay) );
         std::string fn( cfg.storagepath + '/' + cfg.storagename + '/' + cfg.storagename + "-data" );
         try {
             pf->Open( fn );
