@@ -19,6 +19,7 @@
 
 #include "core/buffers/File.hpp"
 #include "SerialBuffer.h"
+#include "util/Exception.hpp"
 
 namespace scag {
 namespace util {
@@ -312,6 +313,7 @@ public:
             DataBlockHeader hdr;
 
             int file_number = curBlockIndex / descrFile.file_size;
+            if (!checkfn( file_number )) return false;
             off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
@@ -345,11 +347,13 @@ public:
         long curBlockIndex = blockIndex;
         int i = 0;
         //SerialBuffer data;
+        //TODO: catch file exceptions
         profileData.Empty();
         do
         {
             DataBlockHeader hdr;
             int file_number = curBlockIndex / descrFile.file_size;
+            if ( !checkfn(file_number) ) return false;
             off_t offset = (curBlockIndex - file_number * descrFile.file_size)*descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset, SEEK_SET);
@@ -468,6 +472,9 @@ private:
         smsc_log_debug(logger, "write data block fn=%d, offset=%d, blockSize=%d", fileNumber,
                        offset, curBlockSize);
         //printHdr(hdr);
+        if ( !checkfn(fileNumber) ) {
+            throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
+        }
         size_t bufSize = hdrSize + curBlockSize;
         //TODO compare bufSize and WRITE_BUF_SIZE
         memcpy(writeBuf, &hdr, hdrSize);
@@ -515,6 +522,9 @@ private:
 
     long getFirstFreeBlock(int fileNumber, off_t offset)
     {
+        if (!checkfn(fileNumber)) {
+            throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
+        }
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
         long ffb = 0;
@@ -537,6 +547,9 @@ private:
         while (blockIndex != -1) {
             smsc_log_debug(logger, "Remove %d block, ffb=%d", blockIndex, ffb); 
             int file_number = blockIndex / descrFile.file_size;
+            if (!checkfn(file_number)) {
+                throw smsc::util::Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count-1);
+            }
             off_t offset = (blockIndex - file_number * descrFile.file_size) * descrFile.block_size;
             File* f = dataFile_f[file_number];
             f->Seek(offset);
@@ -807,6 +820,9 @@ private:
             int dataSize = 0;
             for (int i = 0; i < profileBlocksCount; ++i) {
                 int file_number = curBlockIndex / descrFile.file_size;
+                if (!checkfn(file_number)) {
+                    throw Exception(...);
+                }
                 off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
                 curBlockIndex = dataBlockBackup[i];
                 if (i == profileBlocksCount - 1) {
@@ -963,6 +979,13 @@ private:
         }
     }
 
+
+    /// check file number
+    inline bool checkfn( int fn ) const {
+        if ( fn < descrFile.files_count ) return true;
+        smsc_log_error(logger, "Invalid file number %d, max file number %d", fn, descrFile.files_count-1 );
+        return false;
+    }
 };
 
 } // namespace storage
