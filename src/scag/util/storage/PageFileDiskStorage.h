@@ -30,11 +30,13 @@ protected:
 
 
 /// implementation of storage ifaces
-template < class Val, class PF = smsc::core::buffers::PageFile >
+template < class Key, class Val, class PF = smsc::core::buffers::PageFile >
 class PageFileDiskStorage : public MutableBufferHolder
 {
 public:
+    typedef PF                                        storage_type;
     typedef smsc::core::buffers::File::offset_type    index_type;
+    typedef Key                                       key_type;
     typedef Val                                       value_type;
 
     PageFileDiskStorage( PF* pf ) : pf_(pf), disklog_(NULL)
@@ -47,6 +49,12 @@ public:
     ~PageFileDiskStorage() {
         delete pf_;
     }
+
+
+    bool setKey( const key_type& ) {
+        return true;
+    }
+
 
     /// serialize the value into an internal buffer
     void serialize( const value_type& v ) {

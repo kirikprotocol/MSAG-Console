@@ -14,11 +14,11 @@
 #include "StorageIface.h"
 
 // please comment out for BHS
-#define USEPAGEFILE
+// #define USEPAGEFILE
 #ifdef USEPAGEFILE
 #include "PageFileDiskStorage.h"
 #else
-#include "BlocksHSStorage.h"
+#include "BHDiskStorage.h"
 #endif
 
 
@@ -42,85 +42,6 @@ namespace {
     const std::string storagesuffix("-bhs");
 #endif
 }
-
-
-/**
- * BlocksHSStorage wrapper
- */
-template < class Key, class Val >
-class BHStorage
-{
-public:
-    typedef BlocksHSStorage< Key, Val >       storage_type;
-    typedef Key                               key_type;
-    typedef typename storage_type::index_type index_type;
-    typedef DataBlockBackup< Val >            value_type;
-
-    BHStorage( storage_type* hs ) : store_(hs), i_(0), v_(NULL)
-    {
-        if ( !hs ) {
-            throw std::runtime_error("BlocksHSStorage should be provided" );
-        }
-    }
-
-
-    ~BHStorage() { delete store_; }
-
-
-    inline bool setKey( const key_type& k ) const 
-    {
-        key_ = k;
-        return true;
-    }
-
-
-    void serialize( const value_type& v )
-    {
-        // no serialization is done here, we just store ptr to v
-        i_ = 0;
-        v_ = const_cast<value_type*>(&v);
-    }
-
-
-    index_type append() 
-    {
-        index_type blockIndex;
-        if ( !v_ || !store_->Add( *v_, key_, blockIndex ) ) return 0;
-        return ++blockIndex;
-    }
-    
-
-    bool read( index_type i ) const
-    {
-        i_ = i;
-        v_ = NULL;
-        return true;
-    }
-
-
-    bool deserialize( value_type& v ) const
-    {
-        if ( !i_ || !store_->Get(i_-1, v) ) return false;
-        return true;
-    }
-
-
-    void remove( index_type i )
-    {
-        typename value_type::value_type vv;
-        typename value_type::backup_type bb;
-        value_type v(&vv,&bb);
-        --i;
-        if ( store_->Get(i,v) ) store_->Remove(key_,i,v);
-    }
-
-private:
-    storage_type*       store_;
-    mutable key_type    key_;
-    mutable index_type  i_;
-    mutable value_type* v_;
-};
-
 
 
 /**
@@ -450,9 +371,11 @@ struct Address
         void deserialize( Deserializer& pfb );
         const CSessionKey& getKey() const { return sessionKey; }
 
+#ifndef USEPAGEFILE
         // FIXME: for BlocksHSStorage
         void Serialize( SerialBuffer& buf, bool = false ) const;
         void Deserialize( SerialBuffer& buf, bool = false );
+#endif
     
     private:
         Session( const Session& );
@@ -481,6 +404,7 @@ struct Address
     }
 
 
+#ifndef USEPAGEFILE
 void Session::Serialize( SerialBuffer& buf, bool ) const
 {
     std::vector< unsigned char > v;
@@ -496,7 +420,7 @@ void Session::Deserialize( SerialBuffer& buf, bool )
     Deserializer d( v );
     deserialize( d );
 }
-
+#endif
 
     void Session::init()
     {
@@ -561,9 +485,11 @@ protected:
     };
 
     void setFEH() {
-        smsc::core::buffers::FileEventHandler* prev = file.GetEventHandler();
-        file.SetEventHandler( new WriteDelayEventHandler( delay_ ) );
-        delete prev;
+        if ( delay_ > 0 ) {
+            smsc::core::buffers::FileEventHandler* prev = file.GetEventHandler();
+            file.SetEventHandler( new WriteDelayEventHandler( delay_ ) );
+            delete prev;
+        }
     }
 
 protected:
@@ -572,9 +498,13 @@ protected:
 #endif
 
 
+#ifdef USEPAGEFILE
+typedef HashedMemoryCache< CSessionKey, Session > MemStorage;
+typedef PageFileDiskStorage< CSessionKey, Session, DelayedPageFile > DiskDataStorage;
+#else
 typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
-// typedef PageFileDiskStorage< Session, DelayedPageFile > DiskDataStorage;
-typedef BHStorage< CSessionKey, Session > DiskDataStorage;
+typedef BHDiskStorage< CSessionKey, Session > DiskDataStorage;
+#endif
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
 typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
 typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
@@ -769,15 +699,15 @@ int main( int argc, char** argv )
         // return testDiskIndexStorage( cfg, dis.get() );
 
 
-        /*
-        std::string fn( cfg.storagepath + '/' + cfg.storagename + '/' + cfg.storagename + "-data" );
+#ifdef USEPAGEFILE
+        const std::string fn( cfg.storagepath + "/" + cfg.storagename + storagesuffix + "-data" );
         pf.reset( new DelayedPageFile(cfg.pfdelay) );
         try {
             pf->Open( fn );
         } catch (...) {
             pf->Create( fn, cfg.pagesize, cfg.preallocate );
         }
-         */
+#else
         pf.reset( new DiskDataStorage::storage_type );
         int ret = -1;
         const std::string fn( cfg.storagename + storagesuffix + "-data" );
@@ -790,6 +720,7 @@ int main( int argc, char** argv )
         if ( ret < 0 ) pf->Create( fn,
                                    cfg.storagepath,
                                    cfg.preallocate, cfg.pagesize );
+#endif
         smsc_log_debug( slog, "pagefile storage created" );
 
 
@@ -1072,10 +1003,14 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
     CSessionKey k;
     Session s;
 
+#ifdef USEPAGEFILE
+    Session& ss = s;
+#else
     BlocksHSBackupData sd;
     DataBlockBackup< Session > ss;
     ss.value = &s;
     ss.backup = &sd;
+#endif
 
     unsigned int count = 0;
     DiskStorage::index_type idx;

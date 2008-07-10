@@ -3,6 +3,8 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
+#include <netinet/in.h>
 
 namespace scag {
 namespace util {
