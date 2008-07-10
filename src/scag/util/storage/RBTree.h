@@ -6,6 +6,8 @@
 //	���� �������� �������� ������ RBTreee.
 //
 
+#include <stdexcept>
+
 #include "RBTreeAllocator.h"
 #include "unistd.h"
 #include "logger/Logger.h"

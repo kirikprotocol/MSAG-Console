@@ -1,5 +1,5 @@
 #include <cassert>
-#include "Storage.h"
+#include "Serializer.h"
 #include "util/crc32.h"
 
 namespace scag {

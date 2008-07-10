@@ -626,16 +626,39 @@ private:
     }
 
 
+    std::string makeDataFileName( int num, int backnum = -1 ) const
+    {
+        char	buff[60];
+        int pos = snprintf(buff, sizeof(buff), "-%.7d", num );
+        if ( backnum >= 0 ) {
+            snprintf( buff+pos, sizeof(buff)-pos, ".%07d.backup", backnum );
+        }
+        return dbPath + '/' + dbName + buff;
+    }
+
+
     int CreateDataFile(void)
     {
-        char	buff[16];
-        snprintf(buff, 16, "-%.7d", descrFile.files_count);
-        string name = dbPath + '/' + dbName + buff;
+        const std::string name = makeDataFileName(descrFile.files_count);
         smsc_log_debug(logger, "Create data file: '%s'", name.c_str());
         if (File::Exists(name.c_str())) {
-            smsc_log_error(logger, "FSStorage: error create data file: file '%s' already exists",
-                           name.c_str());
-            throw FileException(FileException::errOpenFailed, name.c_str());
+            // we move the old file and create a new one
+            for ( int backnum = 0;; ++backnum ) {
+                const std::string backname = 
+                    makeDataFileName( descrFile.files_count, backnum );
+                if ( File::Exists(backname.c_str()) ) {
+                    if ( backnum < 10 ) continue;
+                    smsc_log_error(logger, "FSStorage: error create data file: file '%s' already exists",
+                                   name.c_str());
+                    throw FileException(FileException::errOpenFailed, name.c_str());
+                }
+
+                smsc_log_debug( logger, "Renaming unregistered data file %s into %s", name.c_str(), backname.c_str() );
+                File::Rename( name.c_str(), backname.c_str() );
+                smsc_log_info( logger, "unregisterd data file %s is renamed into %s",
+                               name.c_str(), backname.c_str() );
+                break;
+            }
         }
 	
         dataFile_f.push_back(new File());

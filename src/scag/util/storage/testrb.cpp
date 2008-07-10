@@ -4,14 +4,23 @@
 #include <string.h> // memcpy
 #include <memory>
 #include <time.h>   // nanosleep
-#include "Storage.h"
+#include "RBTreeIndexStorage.h"
 #include "HashedMemoryCache.h"
-#include "BlocksHSStorage.h"
-#include "DataBlockBackup.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/MutexGuard.hpp"
 #include "core/threads/Thread.hpp"
 #include "logger/Logger.h"
+#include "Serializer.h"
+#include "StorageIface.h"
+
+// please comment out for BHS
+#define USEPAGEFILE
+#ifdef USEPAGEFILE
+#include "PageFileDiskStorage.h"
+#else
+#include "BlocksHSStorage.h"
+#endif
+
 
 // for __require__
 #ifndef NOLOGGERPLEASE
@@ -24,6 +33,15 @@
 using namespace scag::util::storage;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::MutexGuard;
+
+
+namespace {
+#ifdef USEPAGEFILE    
+    const std::string storagesuffix("-pgf");
+#else
+    const std::string storagesuffix("-bhs");
+#endif
+}
 
 
 /**
@@ -501,6 +519,7 @@ void Session::Deserialize( SerialBuffer& buf, bool )
 
 
 
+#ifdef USEPAGEFILE
 class DelayedPageFile : public smsc::core::buffers::PageFile
 {
 public:
@@ -550,6 +569,7 @@ protected:
 protected:
     unsigned delay_;  // in microseconds
 };
+#endif
 
 
 typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
@@ -573,7 +593,7 @@ struct Config {
             smsc_log_info( slog, "a random: %ld", random() );
 
         storagename = "sessions";
-        storagepath = ".";
+        storagepath = "./sessions";
         indexgrowth = 1000;
         if ( getenv("indexgrowth") ) {
             indexgrowth = strtoul(getenv("indexgrowth"), NULL, 10 );
@@ -742,7 +762,7 @@ int main( int argc, char** argv )
         std::auto_ptr< MemStorage > ms;
 
         // --- setup is here
-        dis.reset( new DiskIndexStorage( cfg.storagename,
+        dis.reset( new DiskIndexStorage( cfg.storagename + storagesuffix,
                                          cfg.storagepath,
                                          cfg.indexgrowth ));
         smsc_log_debug( slog, "data index storage created" );
@@ -760,7 +780,7 @@ int main( int argc, char** argv )
          */
         pf.reset( new DiskDataStorage::storage_type );
         int ret = -1;
-        const std::string fn( cfg.storagename + "/sessions-bhstore" );
+        const std::string fn( cfg.storagename + storagesuffix + "-data" );
         try {
             ret = pf->Open( fn, cfg.storagepath );
         } catch (...) {
