@@ -57,23 +57,45 @@ typedef PolledMonitor ProxyMonitor;
 
 struct SmeInfo;
 
-class ProxyQueueLimitException : public std::exception
+class ProxyLimitException : public std::exception
 {
 protected:
-  int cur,mx;
-  mutable char msg[32];
+  char msg[32];
 public:
-  ProxyQueueLimitException():cur(-1),mx(-1)
+  ProxyLimitException(const char* extype)
   {
-
+    sprintf(msg,"%.31s",extype);
   }
-  ProxyQueueLimitException(int c,int m):cur(c),mx(m)
+  ProxyLimitException(const char* extype,int cur,int mx)
   {
+    sprintf(msg,"%.11s:%d/%d",extype,cur,mx);
   }
   virtual const char* what() const throw()
   {
-    sprintf(msg,"PXLimit:%d/%d",cur,mx);
     return msg;
+  }
+};
+
+
+class ProxyQueueLimitException : public ProxyLimitException
+{
+public:
+  ProxyQueueLimitException():ProxyLimitException("PXQLimit")
+  {
+  }
+  ProxyQueueLimitException(int c,int m):ProxyLimitException("PXQLimit",c,m)
+  {
+  }
+};
+
+class ProxyShapeLimitException:public ProxyLimitException
+{
+public:
+  ProxyShapeLimitException():ProxyLimitException("PXSLimit")
+  {
+  }
+  ProxyShapeLimitException(int c,int m):ProxyLimitException("PXSLimit",c,m)
+  {
   }
 };
 

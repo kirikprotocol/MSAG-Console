@@ -922,7 +922,7 @@ int SmppInputThread::Execute()
                       {
                         SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
                       }
-                    }catch(ProxyQueueLimitException& e)
+                    }catch(ProxyLimitException& e)
                     {
                       __warning2__("SmppInput: exception in putCommand[%s]:%s",ss->getProxy()?ss->getProxy()->getSystemId():"unknown",e.what());
                       SmscCommand answer;
@@ -935,7 +935,7 @@ int SmppInputThread::Execute()
                                  (
                                    "",
                                    cmd->get_dialogId(),
-                                   Status::MSGQFUL,
+                                   Status::THROTTLED,
                                    cmd->get_sms()->getIntProperty(Tag::SMPP_DATA_SM)
                                  );
                         }break;
@@ -944,7 +944,7 @@ int SmppInputThread::Execute()
                           answer=SmscCommand::makeQuerySmResp
                                  (
                                    cmd->get_dialogId(),
-                                   Status::MSGQFUL,
+                                   Status::THROTTLED,
                                    0,0,0,0
                                  );
                         }break;
@@ -953,7 +953,7 @@ int SmppInputThread::Execute()
                           answer=SmscCommand::makeReplaceSmResp
                                  (
                                    cmd->get_dialogId(),
-                                   Status::MSGQFUL
+                                   Status::THROTTLED
                                  );
                         }break;
                         case CANCEL:
@@ -961,7 +961,7 @@ int SmppInputThread::Execute()
                           answer=SmscCommand::makeCancelSmResp
                                  (
                                    cmd->get_dialogId(),
-                                   Status::MSGQFUL
+                                   Status::THROTTLED
                                  );
                         }break;
                         case SUBMIT_MULTI_SM:
@@ -970,7 +970,7 @@ int SmppInputThread::Execute()
                                  (
                                    "",
                                    cmd->get_dialogId(),
-                                   Status::MSGQFUL
+                                   Status::THROTTLED
                                  );
                         }break;
                         default:haveAnswer=false;break;

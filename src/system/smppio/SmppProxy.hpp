@@ -337,7 +337,7 @@ public:
         if(!ussdSession && shapeLimit>0 && shapeCounterIn.Get()>shapeLimit)
         {
           debug2(log,"Shaping limit exceeded for sme '%s' - %d/%d",id.c_str(),shapeCounterIn.Get(),shapeLimit);
-          throw ProxyQueueLimitException(shapeCounterIn.Get(),shapeLimit);
+          throw ProxyShapeLimitException(shapeCounterIn.Get(),shapeLimit);
         }
         if(shapeLimit>0)
         {
