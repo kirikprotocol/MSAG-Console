@@ -197,15 +197,17 @@ public:
     }
 
 
+    // return true if successful
     bool set( const key_type& k, const value_type& v ) {
-        data_->serialize( v ); // into internal buffer
+        data_->setKey(k);
+        data_->serialize(v); // into internal buffer
         return do_set( k );
     }
 
 
     bool get( const key_type& k, value_type& v ) const {
         index_type i = index_->getIndex( k );
-        if ( i && data_->read(i) && data_->deserialize(v) )
+        if ( i && data_->setKey(k) && data_->read(i) && data_->deserialize(v) )
             return true;
         return false;
     }
@@ -219,6 +221,7 @@ public:
     bool remove( const key_type& k ) {
         index_type i = index_->removeIndex( k );
         if ( i != 0 ) {
+            data_->setKey( k );
             data_->remove( i );
             return true;
         }
@@ -233,10 +236,12 @@ public:
           const IndexedStorage<IS,DS>& s )
     {
         if ( &s != this ) {
-            index_type i = s.index_->getIndex( k );
-            if ( i == 0 || !s.data_->read(i) ) return false;
-            data_->copyBuffer( s.data_ );
-            do_set( k );
+            index_type i = s.index_->getIndex(k);
+            if ( i != 0 && s.data_->setKey(k) && s.data_->read(i) ) {
+                data_->setKey(k);
+                data_->copyBuffer( s.data_ );
+                return do_set(k);
+            }
         }
         return false;
     }
@@ -251,16 +256,17 @@ private:
     /// set internal buffer to the data storage
     bool do_set( const key_type& k ) {
         index_type i = index_->getIndex( k );
-        if ( i == 0 ) {
-            i = data_->append(); // from internal buffer
-            index_->setIndex( k, i );
-            return true;
-        } else {
+        if ( i ) {
             index_type j = data_->append();
-            index_->setIndex( k, j );
-            data_->remove( i );
-            return false;
+            if ( j && index_->setIndex(k,j) ) {
+                data_->remove( i );
+                return true;
+            }
+        } else {
+            i = data_->append(); // from internal buffer
+            if ( i ) return index_->setIndex(k,i);
         }
+        return false;
     }
 
 private:
@@ -383,13 +389,14 @@ public:
     /// flush all cached data to disk
     /// @return number of flushed items
     unsigned int flush() {
-        key_type k;
-        stored_type v;
+        // key_type k;
+        // stored_type v;
         unsigned int count = 0;
         smsc_log_debug( cachelog_, "FLUSH STARTED" );
-        for ( iterator_type i = this->begin();
-              i.next(k,v); ) {
-            if ( cache_->store2val(v) ) {
+        // cache_->preflush();
+        for ( typename MemStorage::iterator_type i = cache_->begin();
+              i.next(); ) {
+            if ( cache_->store2val(i.value()) ) {
                 ++count;
                 /*
                 smsc_log_debug( cachelog_, "item: key=%s valkey=%s",
@@ -398,8 +405,7 @@ public:
                 if ( k != v->getKey() )
                     smsc_log_warn( cachelog_, "WARNING: key mismatch!" );
                  */
-                disk_->set(k,cache_->store2ref(v));
-                // tatic_cast< const typename DiskStorage::value_type& >( *v ) );
+                disk_->set( i.key(), cache_->store2ref(i.value()) );
             }
         }
         smsc_log_debug( cachelog_, "FLUSH FINISHED, count=%d", count );
@@ -419,11 +425,14 @@ public:
         friend class CachedDiskStorage< MemStorage, DiskStorage, Allocator >;
     public:
         ~Iterator() {}
-        void reset() { iter_ = cache_->begin(); }
+        // void reset() { iter_ = cache_->begin(); }
         bool next( key_type& k, value_type*& v ) {
-            stored_type x;
-            bool res = iter_.next(k,x);
-            if ( res ) v = cache_->store2val(x);
+            // stored_type x;
+            bool res = iter_.next();
+            if ( res ) {
+                k = iter_.key();
+                v = cache_->store2val(iter_.value());
+            }
             return res;
         }
     private:

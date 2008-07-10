@@ -19,6 +19,7 @@
 
 #include "core/buffers/File.hpp"
 #include "SerialBuffer.h"
+#include "DataBlockBackup.h"
 #include "util/Exception.hpp"
 
 namespace scag {
@@ -61,6 +62,7 @@ static const size_t PROFILE_MAX_BLOCKS_COUNT = 10;
 
 struct DescriptionFile   
 {
+    typedef long index_type;
     char preamble[20];
     int version;
 
@@ -69,15 +71,16 @@ struct DescriptionFile
     int file_size;          // in blocks
     int blocks_used;
     int blocks_free;
-    long first_free_block;
+    index_type first_free_block;
     char Reserved[12];
 };
 
 template<class Key>
 struct templBackupHeader {
+    typedef DescriptionFile::index_type index_type;
   long blocksCount;
   long dataSize;
-  long curBlockIndex;
+  index_type curBlockIndex;
   Key key;
 };
 
@@ -85,15 +88,16 @@ struct templBackupHeader {
 template<class Key>
 struct templDataBlockHeader
 {
+    typedef DescriptionFile::index_type index_type;
     union
     {
-        long next_free_block;
+        index_type next_free_block;
         long block_used;
     };
     Key     key;
     long    total_blocks;
     long    data_size;
-    long    next_block;
+    index_type    next_block;
     bool    head;
 };
 
@@ -114,6 +118,10 @@ struct templDataBlock {
 template<class Key, class Profile>
 class BlocksHSStorage
 {
+public:
+    typedef DescriptionFile::index_type index_type;
+
+private:
     typedef templDataBlockHeader<Key> DataBlockHeader;
     typedef templDataBlock<Key> CompleteDataBlock; 
     typedef templBackupHeader<Key> BackupHeader;
@@ -213,7 +221,9 @@ public:
     }
 
 
-    bool Add(Profile& profile, const Key& key, long& blockIndex) {
+    bool Add( DataBlockBackup<Profile>& prof, const Key& key, index_type& blockIndex) {
+        Profile& profile = *prof.value;
+        BlocksHSBackupData& bkp = *prof.backup;
         //SerialBuffer data;
         profileData.Empty();
         profile.Serialize(profileData, true);
@@ -222,26 +232,27 @@ public:
         if (dataLength <= 0) {
             return false;
         }
-        long ffb = descrFile.first_free_block;
+        index_type ffb = descrFile.first_free_block;
         DescriptionFile oldDescrFile = descrFile;
         backupHeader.key = key;
-        if (!backUpProfile(-1, profile, dataLength, true)) {
+        if (!backUpProfile(key, -1, bkp, dataLength, true)) {
             blockIndex = -1;
             smsc_log_error(logger, "Backup profile error");
             return false;
         }
         try {
             descrFile.first_free_block = addBlocks(ffb, 0, backupHeader.blocksCount, profileData,
-                                                   key, profile);
+                                                   key, bkp);
             changeDescriptionFile();
             clearBackup();
             blockIndex = ffb;
-            profile.setBackupData(profileData);
+            bkp.setBackupData(profileData.c_ptr(), profileData.length());
             return true;
         } catch (const std::exception& e) {
             blockIndex = -1;
-            restoreDataBlocks(oldDescrFile, profile.getBackupData());
-            profile.Empty();
+            restoreDataBlocks(oldDescrFile, bkp.getBackupData());
+            // FIXME: profile cleanup is its own responsibility
+            // profile.Empty();
             descrFile = oldDescrFile;
             changeDescriptionFile();
             //exit(-1);
@@ -250,7 +261,7 @@ public:
     }
 
     
-    bool Change(Profile& profile, const Key& key, long& blockIndex) {
+    bool Change(Profile& profile, const Key& key, index_type& blockIndex) {
         if (blockIndex == -1) {
             return Add(profile, key, blockIndex);
         }
@@ -259,10 +270,10 @@ public:
         smsc_log_debug(logger, "Change data block index=%d key='%s' length=%d",
                        blockIndex, key.toString().c_str(), profileData.length());
         DescriptionFile oldDescrFile = descrFile;
-        long ffb = descrFile.first_free_block;
+        index_type ffb = descrFile.first_free_block;
         backupHeader.key = key;
         int dataLength = profileData.length();
-        if (!backUpProfile(blockIndex, profile, dataLength, true)) {
+        if (!backUpProfile(key, blockIndex, profile, dataLength, true)) {
             smsc_log_error(logger, "Backup profile error");
             return false;
         }
@@ -272,7 +283,7 @@ public:
 
         try {
             profile.clearBackup();
-            long curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, profileData, key, profile); 
+            index_type curBlockIndex = addBlocks(blockIndex, 0, updateBlocksCount, profileData, key, profile); 
             if (blocksCount > oldBlocksCount) {
                 smsc_log_debug(logger, "Add new blocks");
                 descrFile.first_free_block = addBlocks(ffb, updateBlocksCount, blocksCount,
@@ -301,12 +312,12 @@ public:
     }
     
 
-    bool Get(long blockIndex, DataBlock& data)
+    bool Get(index_type blockIndex, DataBlock& data)
     {
         smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
         if(blockIndex == -1) return false;
         char* buff;
-        long curBlockIndex = blockIndex;
+        index_type curBlockIndex = blockIndex;
         int i = 0;
         do
         {
@@ -339,12 +350,14 @@ public:
     }
 
 
-    bool Get(long blockIndex, Profile& profile)
+    bool Get(index_type blockIndex, DataBlockBackup<Profile>& prof )
     {
+        Profile& profile = *prof.value;
+        BlocksHSBackupData& bkp = *prof.backup;
         smsc_log_debug(logger, "Get data block index=%d ", blockIndex);
         if(blockIndex == -1) return false;
         char* buff;
-        long curBlockIndex = blockIndex;
+        index_type curBlockIndex = blockIndex;
         int i = 0;
         //SerialBuffer data;
         //TODO: catch file exceptions
@@ -373,24 +386,26 @@ public:
             f->Read((void*)(buff+(i*effectiveBlockSize)), dataSize);
             curBlockIndex = hdr.next_block;
             ++i;
-            profile.addDataToBackup(hdr.next_block);
+            bkp.addDataToBackup(hdr.next_block);
         }
         while(-1 != curBlockIndex);
         profile.Deserialize(profileData, true);
-        profile.setBackupData(profileData);
+        bkp.setBackupData(profileData.c_ptr(), profileData.length());
         return true;
     }
 
 
-    void Remove(long blockIndex, const Profile& profile) {
+    void Remove(const Key& key, index_type blockIndex, const DataBlockBackup<Profile>& prof) {
+        Profile& profile = *prof.value;
+        BlocksHSBackupData& bkp = *prof.backup;
         smsc_log_debug(logger, "Remove data block index=%d ", blockIndex);
         if (blockIndex < 0) {
             smsc_log_warn(logger, "Can't remove data block index=%d ", blockIndex);
             return;
         }
         DescriptionFile oldDescrFile = descrFile;
-        long ffb = descrFile.first_free_block;
-        if (!backUpProfile(blockIndex, profile, 0, true)) {
+        index_type ffb = descrFile.first_free_block;
+        if (!backUpProfile(key, blockIndex, bkp, 0, true)) {
             return;
         }
         try {
@@ -398,7 +413,7 @@ public:
             changeDescriptionFile();
             clearBackup();
         } catch (const std::exception& e) {
-            restoreDataBlocks(oldDescrFile, profile.getBackupData());
+            restoreDataBlocks(oldDescrFile, bkp.getBackupData());
             descrFile = oldDescrFile;
             changeDescriptionFile();
             exit(-1);
@@ -412,7 +427,7 @@ public:
     }
 
     
-    bool Next(long& blockIndex, DataBlock& data, Key& key)
+    bool Next(index_type& blockIndex, DataBlock& data, Key& key)
     {
         uint64_t cnt = descrFile.files_count * descrFile.file_size;
         DataBlockHeader hdr;
@@ -448,10 +463,10 @@ private:
   File descrFile_f;
   File backupFile_f;
   vector<File*> dataFile_f;
-  long iterBlockIndex;
+  index_type iterBlockIndex;
   long effectiveBlockSize;	
 
-  vector<long> dataBlockBackup;
+  vector<index_type> dataBlockBackup;
   char writeBuf[WRITE_BUF_SIZE];
   size_t hdrSize;
   SerialBuffer profileData;
@@ -490,8 +505,9 @@ private:
         }
     }
 
-    long addBlocks(long curBlockIndex, size_t backupStartIndex, size_t blocksCount,
-                   const DataBlock& data, const Key& key, Profile& profile) {
+    index_type addBlocks( index_type curBlockIndex, size_t backupStartIndex, size_t blocksCount,
+                          const DataBlock& data, const Key& key, BlocksHSBackupData& bkp )
+    {
         int dataLength = data.length();
         DataBlockHeader hdr;
         hdr.block_used = BLOCK_USED;
@@ -513,21 +529,22 @@ private:
             }
             writeDataBlock(file_number, offset, hdr,
                            (void*)(data.c_ptr() + i * (effectiveBlockSize)), curBlockSize);
-            profile.addDataToBackup(hdr.next_block);
+            bkp.addDataToBackup(hdr.next_block);
             hdr.head = false;
         }
         smsc_log_debug(logger, "addBlocks curBlockIndex=%d", curBlockIndex);
         return curBlockIndex;
     }
 
-    long getFirstFreeBlock(int fileNumber, off_t offset)
+
+    index_type getFirstFreeBlock(int fileNumber, off_t offset)
     {
         if (!checkfn(fileNumber)) {
             throw smsc::util::Exception("Invalid file number %d, max file number %d", fileNumber, descrFile.files_count-1);
         }
         File* f = dataFile_f[fileNumber];
         f->Seek(offset, SEEK_SET);
-        long ffb = 0;
+        index_type ffb = 0;
         f->Read((void*)&(ffb), sizeof(descrFile.first_free_block));
         if (ffb == -1) {
             ffb = descrFile.files_count * descrFile.file_size;
@@ -537,7 +554,7 @@ private:
         return ffb;
     }
 
-    long removeBlocks(long ffb, long blockIndex, size_t backupIndex) {
+    index_type removeBlocks(index_type ffb, index_type blockIndex, size_t backupIndex) {
         smsc_log_debug(logger, "Remove %d blocks start block index=%d", 
                        backupHeader.blocksCount - backupIndex, blockIndex);
         if (backupIndex >= backupHeader.blocksCount) {
@@ -602,6 +619,7 @@ private:
         descrFile.blocks_free = 0;
         descrFile.blocks_used = 0;
         descrFile.first_free_block = 0;
+        memset((void*)descrFile.Reserved, 0, sizeof(descrFile.Reserved));
         effectiveBlockSize = descrFile.block_size - sizeof(DataBlockHeader);
         changeDescriptionFile();
         return 0;
@@ -623,7 +641,7 @@ private:
         dataFile_f.push_back(new File());
         smsc_log_debug(logger, "Alloc: %p, %d", dataFile_f[descrFile.files_count], descrFile.files_count);
         char* emptyBlock = 0;
-        long startBlock = descrFile.files_count * descrFile.file_size;
+        index_type startBlock = descrFile.files_count * descrFile.file_size;
         try
         {
             dataFile_f[descrFile.files_count]->RWCreate(name.c_str());
@@ -632,11 +650,11 @@ private:
 
             //	create list of free blocks
             emptyBlock = new char[descrFile.block_size];
-            long* next_block = (long*)emptyBlock;
-            long endBlock = (descrFile.files_count + 1) * descrFile.file_size;
+            index_type* next_block = (index_type*)emptyBlock;
+            index_type endBlock = (descrFile.files_count + 1) * descrFile.file_size;
 
             memset(emptyBlock, 0x00, descrFile.block_size);
-            for(long i = startBlock + 1; i < endBlock; i++)
+            for(index_type i = startBlock + 1; i < endBlock; i++)
             {
                 *next_block = i;
                 data_f->Write(emptyBlock, descrFile.block_size);
@@ -710,7 +728,7 @@ private:
             backupFile_f.Read((void*)&descrFile, sizeof(DescriptionFile));
             backupFile_f.Read((void*)&backupHeader, sizeof(BackupHeader));
             for (int i = 0; i < backupHeader.blocksCount; ++i) {
-                long nextBlock;
+                index_type nextBlock;
                 backupFile_f.Read((void *)&nextBlock, sizeof(nextBlock));
                 dataBlockBackup.push_back(nextBlock);
             }
@@ -810,7 +828,7 @@ private:
         try {
             smsc_log_warn(logger, "Restoring data storage...");
             size_t profileBlocksCount = (backupHeader.dataSize + effectiveBlockSize - 1) / effectiveBlockSize;
-            long curBlockIndex = backupHeader.curBlockIndex;
+            index_type curBlockIndex = backupHeader.curBlockIndex;
             DataBlockHeader hdr;
             hdr.block_used = BLOCK_USED;
             hdr.key = backupHeader.key;
@@ -821,7 +839,7 @@ private:
             for (int i = 0; i < profileBlocksCount; ++i) {
                 int file_number = curBlockIndex / descrFile.file_size;
                 if (!checkfn(file_number)) {
-                    throw Exception(...);
+                    throw smsc::util::Exception("Invalid file number %d, max file number %d", file_number, descrFile.files_count-1);
                 }
                 off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
                 curBlockIndex = dataBlockBackup[i];
@@ -916,9 +934,9 @@ private:
     }
 
 
-    long readFreeBlocks(int blocksCount) {
+    index_type readFreeBlocks(int blocksCount) {
         smsc_log_debug(logger, "Read %d free blocks", blocksCount);
-        long curBlockIndex = descrFile.first_free_block;
+        index_type curBlockIndex = descrFile.first_free_block;
         for (int i = 0; i < blocksCount; ++i) {
             int file_number = curBlockIndex / descrFile.file_size;
             off_t offset = (curBlockIndex - file_number * descrFile.file_size) * descrFile.block_size;
@@ -929,9 +947,10 @@ private:
     }
 
 
-    bool backUpProfile(long blockIndex, const Profile& profile, int dataLength, bool saveToFile = false) {
-        smsc_log_debug(logger, "Backup profile key='%s'. block index=%d, data length=%d",
-                       profile.getKey().c_str(), blockIndex, dataLength);
+    bool backUpProfile(const Key& key, index_type blockIndex, const BlocksHSBackupData& profile, int dataLength, bool saveToFile = false) 
+    {
+        smsc_log_debug(logger, "backup profile key=%s block index=%d, data length=%d",
+                       key.toString().c_str(), blockIndex, dataLength);
         dataBlockBackup.clear();
         int blocksCount = (dataLength + effectiveBlockSize - 1) / effectiveBlockSize;
         if (blockIndex == -1 && blocksCount == 0) {
@@ -944,7 +963,7 @@ private:
                 backupHeader.blocksCount = blocksCount;
                 backupHeader.dataSize = 0;
                 backupHeader.curBlockIndex = oldDescrFile.first_free_block;
-                long curBlockIndex = readFreeBlocks(blocksCount);
+                index_type curBlockIndex = readFreeBlocks(blocksCount);
                 if (saveToFile) {
                     saveBackupToFile(oldDescrFile, NULL ); // profile.getBackupData());
                 }
@@ -957,21 +976,21 @@ private:
             size_t backupSize = dataBlockBackup.size();
             backupHeader.blocksCount = blocksCount >= backupSize ? blocksCount : backupSize;
             if (backupSize == 0) {
-                smsc_log_warn(logger, "Error backup profile key='%s': backup is empty", profile.getKey().c_str());
+                smsc_log_warn(logger, "Error backup profile: key=%s backup is empty", key.toString().c_str() );
                 return false;
             }
             if (backupSize < blocksCount) {
                 dataBlockBackup[backupSize - 1] = oldDescrFile.first_free_block;
                 readFreeBlocks(blocksCount - backupSize);
             }
-            smsc_log_debug(logger, "backup profile size=%d", dataBlockBackup.size());
+            smsc_log_debug(logger, "backup profile key=%s size=%d", key.toString().c_str(), dataBlockBackup.size());
             if (saveToFile) {
                 saveBackupToFile(oldDescrFile, profile.getBackupData());
             }
             return true;
         } catch (const std::exception& e) {
-            smsc_log_warn(logger, "Error backup profile key='%s'. std::exception: '%s'",
-                          profile.getKey().c_str(), e.what());
+            smsc_log_warn(logger, "Error backup profile key=%s. std::exception: '%s'",
+                          key.toString().c_str(), e.what());
             dataBlockBackup.clear();
             descrFile = oldDescrFile;
             changeDescriptionFile();
@@ -987,6 +1006,7 @@ private:
         return false;
     }
 };
+
 
 } // namespace storage
 } // namespace util

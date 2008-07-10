@@ -184,7 +184,7 @@ public:
     typedef File::offset_type         index_type;
     typedef Val                       value_type;
 
-    PageFileDiskStorage( PF* pf ) : pf_(pf), key_(""), disklog_(NULL)
+    PageFileDiskStorage( PF* pf ) : pf_(pf), disklog_(NULL)
     {
         if ( ! pf_ )
             throw std::runtime_error( "PageFileDiskStorage: pagefile should be provided!" );
@@ -201,28 +201,30 @@ public:
         Serializer s( buf.buffer() );
         s << v;
         assert( (buf.size() < 10000) && (buf.buffer().capacity() < 10000) );
-        key_ = v.getKey().toString();
+        // key_ = v.getKey().toString();
     }
         
     /// append data from internal buffer to the storage
     index_type append( ) {
         const index_type i = pf_->Append( buf.data(), buf.size() );
-        smsc_log_debug( disklog_, "append: index=%llx val=%s",
-                        static_cast<unsigned long long>(i), key_.c_str() );
-        key_ = "destroyed";
+        // smsc_log_debug( disklog_, "append: index=%llx val=%s",
+        // static_cast<unsigned long long>(i), key_.c_str() );
+        // key_ = "destroyed";
         return i;
     }
 
-    /// update data from internal buffer to the storage
+    // update data from internal buffer to the storage
+    /*
     index_type update( index_type i ) {
-        smsc_log_debug( disklog_, "update: index=%llx val=%s",
-                        static_cast<unsigned long long>(i), key_.c_str() );
+        // smsc_log_debug( disklog_, "update: index=%llx val=%s",
+        // static_cast<unsigned long long>(i), key_.c_str() );
         // pf_->Delete( i );
         // i = pf_->Append( buf.data(), buf.size() );
         pf_->Update( i, buf.data(), buf.size() );
-        key_ = "destroyed";
+        // key_ = "destroyed";
         return i;
     }
+     */
 
     /// read data from storage into internal (mutable) buffer
     bool read( index_type i ) const {
@@ -244,7 +246,7 @@ public:
         try {
             Deserializer s( buf.buffer() );
             s >> v;
-            key_ = "destroyed";
+            // key_ = "destroyed";
         } catch ( BufferUnderrunException& ) {
             return false;
         }
@@ -253,13 +255,13 @@ public:
 
     /// delete data from the store
     void remove( index_type i ) {
-        key_ = "destroyed";
+        // key_ = "destroyed";
         pf_->Delete( i );
     }
 
 private:
     PF* pf_;                            // owned
-    mutable std::string key_;
+    // mutable std::string key_;
     smsc::logger::Logger* disklog_;
 };
 
@@ -300,7 +302,7 @@ public:
 
     /// number of items
     unsigned long size() const {
-        return allocator_->getSize();
+        return allocator_->getSize() - 1; // for nilnode
     }
 
 
@@ -311,18 +313,16 @@ public:
     }
     
     /// set the index of the key with possible replacement.
-    /// @return false if previous value was replaced.
     bool setIndex( const key_type& k, index_type i ) {
         IndexNode* node = getNode( k );
         if ( node ) {
             index_.setNodeValue( node, i );
-            return false;
         } else {
             // the tree may be changed by reallocation
             invalidateCache();
             index_.Insert( k, i );
-            return true;
         }
+        return true;
     }
 
     /// remove index from the storage.

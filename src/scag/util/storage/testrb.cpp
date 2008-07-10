@@ -6,6 +6,8 @@
 #include <time.h>   // nanosleep
 #include "Storage.h"
 #include "HashedMemoryCache.h"
+#include "BlocksHSStorage.h"
+#include "DataBlockBackup.h"
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/MutexGuard.hpp"
 #include "core/threads/Thread.hpp"
@@ -23,203 +25,84 @@ using namespace scag::util::storage;
 using smsc::core::synchronization::EventMonitor;
 using smsc::core::synchronization::MutexGuard;
 
-/*
-    template < class Key, class Val > class SimpleMemoryStorageIterator;
 
-    template < class Key, class Val >
-        class SimpleMemoryStorageBase // : MemoryStorage< Key, Val >
+/**
+ * BlocksHSStorage wrapper
+ */
+template < class Key, class Val >
+class BHStorage
+{
+public:
+    typedef BlocksHSStorage< Key, Val >       storage_type;
+    typedef Key                               key_type;
+    typedef typename storage_type::index_type index_type;
+    typedef DataBlockBackup< Val >            value_type;
+
+    BHStorage( storage_type* hs ) : store_(hs), i_(0), v_(NULL)
     {
-    public:
-        friend class SimpleMemoryStorageIterator< Key, Val >;
-
-        // typedef MemoryStorage< Key, Val >  Base;
-        // typedef typename Base::key_type             key_type;
-        // typedef typename Base::value_type           value_type;
-        typedef Key key_type;
-        typedef Val value_type;
-
-    protected:
-        SimpleMemoryStorageBase( unsigned int cachesize = 10000 ) :
-        cachesize_( cachesize ),
-        array_(0),
-        cachelog_(NULL) {
-            if ( cachesize_ == 0 ) {
-                throw std::runtime_error( "SimpleMemoryStorage: cannot create a storage with zero size" );
-            }
-            array_ = new Itemlist[ cachesize_ ];
-            cachelog_ = smsc::logger::Logger::getInstance("cache");
+        if ( !hs ) {
+            throw std::runtime_error("BlocksHSStorage should be provided" );
         }
-        ~SimpleMemoryStorageBase() {
-            // we have to delete all elements
-            delete[] array_;
-        }
-
-    public:
-
-        bool set( const key_type& k, value_type* v ) {
-            smsc_log_debug( cachelog_, "set: %s", k.toString().c_str() );
-            return array_[hash(k)].set(k,v);
-        }
-        
-        value_type* get( const key_type& k ) const {
-            value_type* v = array_[hash(k)].get(k);
-            smsc_log_debug( cachelog_, "get: %s %s", k.toString().c_str(), v ? "hit" : "miss" );
-            return v;
-        }
-
-        value_type* release( const key_type& k ) {
-            smsc_log_debug( cachelog_, "clr: %s", k.toString().c_str() );
-            return array_[hash(k)].release(k);
-        }
-
-    private:
-        inline uint32_t hash( const key_type& k ) const {
-            return key_type::CalcHash(k) % cachesize_;
-        }
-
-        struct Itemlist // : public MemoryStorage< key_type, value_type > 
-        {
-            typedef std::list< std::pair< key_type, value_type* > >  SList;
-
-            Itemlist() {}
-
-            ~Itemlist() {
-                // smsc_log_debug( cachelog_, "delete itemlist: size=%d", list_.size() );
-                for ( typename SList::iterator i = list_.begin();
-                      i != list_.end();
-                      ++i ) {
-                    // smsc_log_debug( cachelog_, "del: %s", i->first.toString().c_str() );
-                    delete i->second;
-                    i->second = NULL;
-                }
-            }
+    }
 
 
-            bool set( const key_type& k, value_type* v ) {
-                typename SList::iterator i = list_.begin();
-                for ( ; i != list_.end(); ++i ) {
-                    if ( i->first == k ) break;
-                }
-                if ( i != list_.end() ) {
-                    // found
-                    if ( i->second ) {
-                        if ( v ) {
-                            delete v; // to avoid memleak
-
-                            // FIXME: should we replace with warning?
-                            throw std::runtime_error
-                                ( "Itemlist: two items with the same keys found\n"
-                                  "It may mean that you issue set() w/o prior get()" );
-                        }
-                        delete i->second;
-                    }
-                    i->second = v;
-                    return true;
-                }
-                list_.push_back( std::make_pair(k,v) );
-                return false;
-            }
-
-            value_type* get( const key_type& k ) const {
-                for ( typename SList::const_iterator i = list_.begin();
-                      i != list_.end();
-                      ++i ) {
-                    if ( i->first == k ) return i->second;
-                }
-                return NULL;
-            }
-
-            value_type* release( const key_type& k )  {
-                for ( typename SList::iterator i = list_.begin();
-                      i != list_.end();
-                      ++i ) {
-                    if ( i->first == k ) {
-                        value_type* v = i->second;
-                        list_.erase( i );
-                        return v;
-                    }
-                }
-                return NULL;
-            }
-
-            SList  list_;
-        };
+    ~BHStorage() { delete store_; }
 
 
-    private:
-        unsigned int          cachesize_;
-        Itemlist*             array_;
-        smsc::logger::Logger* cachelog_;
-    };
-
-
-    template < class Key, class Val > class SimpleMemoryStorage;
-
-    template < class Key, class Val >
-    class SimpleMemoryStorageIterator
+    inline bool setKey( const key_type& k ) const 
     {
-    private:
-        friend class SimpleMemoryStorage< Key, Val >;
-        typedef SimpleMemoryStorage< Key, Val >  Base;
-        typedef typename Base::Itemlist  Itemlist;
-        typedef typename Itemlist::SList SList;
+        key_ = k;
+        return true;
+    }
 
-    public:
-        typedef Key key_type;
-        typedef Val value_type;
 
-        void reset() {
-            pos_ = 0;
-            i_ = base_->array_[pos_].list_.begin();
-        }
-        bool next( key_type& k, value_type*& v ) {
-            if ( pos_ < base_->cachesize_ ) {
-                while ( i_ == base_->array_[pos_].list_.end() ) {
-                    ++pos_;
-                    if ( pos_ >= base_->cachesize_ ) return false;
-                    i_ = base_->array_[pos_].list_.begin();
-                }
-                k = i_->first;
-                v = i_->second;
-                // move to the next element
-                ++i_;
-                return true;
-            }
-            return false;
-        }
+    void serialize( const value_type& v )
+    {
+        // no serialization is done here, we just store ptr to v
+        i_ = 0;
+        v_ = const_cast<value_type*>(&v);
+    }
 
-    private:
-        SimpleMemoryStorageIterator();
-        // SimpleMemoryStorageIterator( const SimpleMemoryStorageIterator< Key, Val >& );
-        SimpleMemoryStorageIterator
-            ( const Base& base ) :
-        base_(&base) {
-            reset(); 
-        }
-        
-    private:
-        const Base*                          base_;
-        unsigned int                         pos_;
-        typename SList::const_iterator       i_;
-    };
 
+    index_type append() 
+    {
+        index_type blockIndex;
+        if ( !v_ || !store_->Add( *v_, key_, blockIndex ) ) return 0;
+        return ++blockIndex;
+    }
     
-    template < class Key, class Val >
-        class SimpleMemoryStorage : public SimpleMemoryStorageBase< Key, Val >
+
+    bool read( index_type i ) const
     {
-    public:
-        typedef Key key_type;
-        typedef Val value_type;
-        typedef SimpleMemoryStorageIterator<Key,Val> iterator_type;
+        i_ = i;
+        v_ = NULL;
+        return true;
+    }
 
-        SimpleMemoryStorage( unsigned int cachesize ) :
-        SimpleMemoryStorageBase< Key, Val >( cachesize ) {}
 
-        iterator_type begin() const {
-            return iterator_type(*this);
-        }
-    };
-*/
+    bool deserialize( value_type& v ) const
+    {
+        if ( !i_ || !store_->Get(i_-1, v) ) return false;
+        return true;
+    }
+
+
+    void remove( index_type i )
+    {
+        typename value_type::value_type vv;
+        typename value_type::backup_type bb;
+        value_type v(&vv,&bb);
+        --i;
+        if ( store_->Get(i,v) ) store_->Remove(key_,i,v);
+    }
+
+private:
+    storage_type*       store_;
+    mutable key_type    key_;
+    mutable index_type  i_;
+    mutable value_type* v_;
+};
+
 
 
 /**
@@ -549,6 +432,10 @@ struct Address
         void deserialize( Deserializer& pfb );
         const CSessionKey& getKey() const { return sessionKey; }
 
+        // FIXME: for BlocksHSStorage
+        void Serialize( SerialBuffer& buf, bool = false ) const;
+        void Deserialize( SerialBuffer& buf, bool = false );
+    
     private:
         Session( const Session& );
         void init();
@@ -574,6 +461,24 @@ struct Address
         sessionKey = CSessionKey(Address(s.c_str()));
         lastAccessTime = time_t(tm);
     }
+
+
+void Session::Serialize( SerialBuffer& buf, bool ) const
+{
+    std::vector< unsigned char > v;
+    Serializer s( v );
+    serialize( s );
+    buf.blkcpy( reinterpret_cast<const char*>(&(v[0])), v.size() );
+}
+
+void Session::Deserialize( SerialBuffer& buf, bool )
+{
+    const unsigned char* bp = reinterpret_cast<const unsigned char*>(buf.c_ptr());
+    std::vector< unsigned char > v( bp, bp + buf.length() );
+    Deserializer d( v );
+    deserialize( d );
+}
+
 
     void Session::init()
     {
@@ -647,8 +552,9 @@ protected:
 };
 
 
-typedef HashedMemoryCache< CSessionKey, Session > MemStorage;
-typedef PageFileDiskStorage< Session, DelayedPageFile > DiskDataStorage;
+typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > MemStorage;
+// typedef PageFileDiskStorage< Session, DelayedPageFile > DiskDataStorage;
+typedef BHStorage< CSessionKey, Session > DiskDataStorage;
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
 typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
 typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
@@ -680,7 +586,7 @@ struct Config {
         if ( getenv("pagesize") ) {
             pagesize = strtoul(getenv("pagesize"), NULL, 10 );
         }
-        preallocate = 100;
+        preallocate = 100000;
         if ( getenv("preallocate") ) {
             preallocate = strtoul(getenv("preallocate"), NULL, 10 );
         }
@@ -828,7 +734,8 @@ int main( int argc, char** argv )
 
     do {
 
-        std::auto_ptr< DelayedPageFile > pf;
+        // std::auto_ptr< DelayedPageFile > pf;
+        std::auto_ptr< DiskDataStorage::storage_type > pf;
         std::auto_ptr< DiskDataStorage > dds;
         std::auto_ptr< DiskIndexStorage > dis;
         std::auto_ptr< DiskStorage > ds;
@@ -842,14 +749,27 @@ int main( int argc, char** argv )
         // return testDiskIndexStorage( cfg, dis.get() );
 
 
-
-        pf.reset( new DelayedPageFile(cfg.pfdelay) );
+        /*
         std::string fn( cfg.storagepath + '/' + cfg.storagename + '/' + cfg.storagename + "-data" );
+        pf.reset( new DelayedPageFile(cfg.pfdelay) );
         try {
             pf->Open( fn );
         } catch (...) {
             pf->Create( fn, cfg.pagesize, cfg.preallocate );
         }
+         */
+        pf.reset( new DiskDataStorage::storage_type );
+        int ret = -1;
+        const std::string fn( cfg.storagename + "/sessions-bhstore" );
+        try {
+            ret = pf->Open( fn, cfg.storagepath );
+        } catch (...) {
+            ret = -1;
+        }
+
+        if ( ret < 0 ) pf->Create( fn,
+                                   cfg.storagepath,
+                                   cfg.preallocate, cfg.pagesize );
         smsc_log_debug( slog, "pagefile storage created" );
 
 
@@ -1131,12 +1051,18 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
     CSessionKey prevk;
     CSessionKey k;
     Session s;
+
+    BlocksHSBackupData sd;
+    DataBlockBackup< Session > ss;
+    ss.value = &s;
+    ss.backup = &sd;
+
     unsigned int count = 0;
     DiskStorage::index_type idx;
     ok = true;
 
     for ( DiskStorage::iterator_type i = store->dataBegin();
-          i.next(k,idx,s);
+          i.next(k,idx,ss);
           ) {
 
         ++count;

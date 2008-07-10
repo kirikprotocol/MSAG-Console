@@ -363,7 +363,7 @@ private:
                        long(header->root_cell), long(header->nil_cell),
                        static_cast<long long>(rbtFileLen) );
         // check nodes
-        freenodes();
+        // freenodes();
         return SUCCESS;
     }
     

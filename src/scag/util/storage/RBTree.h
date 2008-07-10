@@ -85,7 +85,7 @@ public:
                     smsc_log_error( logger, "SetAllocator: rootNode=%ld, nilNode=%ld", (long)relativeAddr(rootNode), (long)relativeAddr(nilNode) );
                 }
                 const std::vector< RBTreeNode* > freenodes = allocator->freenodes();
-                int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" ) + 1; // for nilNode
+                int cnt = dumpcheck( freenodes, rootNode, nilNode, 0, "" );
                 smsc_log_info( logger, "SetAllocator: rbtree nodes=%d", cnt );
 	}
 	void SetChangesObserver(RBTreeChangesObserver<Key, Value>* _changesObserver)
