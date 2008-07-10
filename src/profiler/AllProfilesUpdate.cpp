@@ -12,7 +12,11 @@ using namespace smsc::core::buffers;
 using namespace smsc::profiler;
 
 const char sig[]="SMSCPROF";
+#ifdef SMSEXTRA
+const uint32_t ver=0x00010100;
+#else
 const uint32_t ver=0x00010001;
+#endif
 static char profileMagic[]="SmScPrOf";
 
 typedef std::pair<std::string,std::string> NameValue;
@@ -194,11 +198,13 @@ int main(int argc,char* argv[])
     DumpAllFields(allFields);
     printf("\nRemove abonents with specified numbers:\nremoveabonents={filename}\n");
     printf("Apply changes to abonents with prefix only:\nprefix=addrprefix\n");
+    printf("Apply changes or create profile for abonents in file:\nabonents={filename}\n");
     return 0;
   }
   smsc::logger::Logger::Init();
   ArgsVector argsVector;
   std::string filterFileName;
+  std::string abonentsFile;
   std::string prefix;
   std::string n,v;
   try{
@@ -224,6 +230,11 @@ int main(int argc,char* argv[])
         prefix=a.toString();
         continue;
       }
+      if(n=="abonents")
+      {
+        abonentsFile=v;
+        continue;
+      }
       argsVector.push_back(NameValue(n,v));
     }
   }catch(std::exception& e)
@@ -232,6 +243,7 @@ int main(int argc,char* argv[])
     return 0;
   }
   std::set<Address> filter;
+  std::set<Address> abonents;
 
   std::string inFileName=argv[1];
   std::string outFileName=argv[2];
@@ -243,10 +255,31 @@ int main(int argc,char* argv[])
       std::string addr;
       while(f.ReadLine(addr))
       {
-        if(addr.length()>0 && addr[0]=='7')addr='+'+addr;
+        if(addr.length()==0)
+        {
+          continue;
+        }
+        if(addr.length()>5 && addr[0]=='7')addr='+'+addr;
         filter.insert(addr.c_str());
       }
     }
+
+    if(abonentsFile.length())
+    {
+      File f;
+      f.ROpen(abonentsFile.c_str());
+      std::string addr;
+      while(f.ReadLine(addr))
+      {
+        if(addr.length()==0)
+        {
+          continue;
+        }
+        if(addr.length()>5 && addr[0]=='7')addr='+'+addr;
+        abonents.insert(addr.c_str());
+      }
+    }
+
     smsc::util::config::Manager::init(findConfigFile("config.xml"));
     smsc::util::config::Manager* cfg=&smsc::util::config::Manager::getInstance();
 
@@ -298,10 +331,6 @@ int main(int argc,char* argv[])
         ReadAddress(inFile,addr);
         p.Read(inFile);
 
-        if(isDefault(p))
-        {
-          skip++;
-        }else
         if(filter.find(addr)!=filter.end())
         {
           filtered++;
@@ -312,31 +341,56 @@ int main(int argc,char* argv[])
           {
             if(addr.toString().find(prefix)==0)
             {
-              PatchProfile(p,argsVector);
-              patched++;
+              if(!argsVector.empty())
+              {
+                PatchProfile(p,argsVector);
+                patched++;
+              }
+            }
+          }else if(!abonents.empty())
+          {
+            std::set<Address>::iterator it=abonents.find(addr);
+            if(it!=abonents.end())
+            {
+              if(!argsVector.empty())
+              {
+                PatchProfile(p,argsVector);
+                abonents.erase(it);
+                patched++;
+              }
             }
           }else
           {
-            PatchProfile(p,argsVector);
-            patched++;
+            if(!argsVector.empty())
+            {
+              PatchProfile(p,argsVector);
+              patched++;
+            }
           }
 
-
-          ProfilesMap::iterator it=pmap.find(addr);
-          if(it!=pmap.end())
+          if(isDefault(p))
           {
-            outFile.Seek(it->second);
-            dup++;
+            skip++;
+            inFile.SeekCur(8+AddressSize()+Profile::Size());
           }else
           {
-            pmap.insert(ProfilesMap::value_type(addr,outFile.Pos()));
+  
+            ProfilesMap::iterator it=pmap.find(addr);
+            if(it!=pmap.end())
+            {
+              outFile.Seek(it->second);
+              dup++;
+            }else
+            {
+              pmap.insert(ProfilesMap::value_type(addr,outFile.Pos()));
+            }
+            cnt++;
+            outFile.WriteByte(1);
+            outFile.Write(profileMagic,8);
+            WriteAddress(outFile,addr);
+            p.Write(outFile);
+            outFile.SeekEnd(0);
           }
-          cnt++;
-          outFile.WriteByte(1);
-          outFile.Write(profileMagic,8);
-          WriteAddress(outFile,addr);
-          p.Write(outFile);
-          outFile.SeekEnd(0);
         }
       }else
       {
@@ -348,8 +402,28 @@ int main(int argc,char* argv[])
         break;
       }
     }
+
+    int created=0;
+    {
+      p=defProfile;
+      PatchProfile(p,argsVector);
+      if(!isDefault(p))
+      {
+        for(std::set<Address>::iterator it=abonents.begin();it!=abonents.end();it++)
+        {
+          outFile.WriteByte(1);
+          outFile.Write(profileMagic,8);
+          WriteAddress(outFile,*it);
+          p.Write(outFile);
+          outFile.SeekEnd(0);
+          created++;
+        }
+      }
+    }
+
     outFile.Flush();
-    printf("%d profiles processed, %d patched, %d duplicates found, %d matched default and skipped, %d removed by request\n",cnt,patched,dup,skip,filtered);
+    printf("%d profiles processed\n%d updated\n%d duplicates found\n%d matched default and skipped\n"
+           "%d removed by request\n%d created\n",cnt,patched,dup,skip,filtered,created);
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());
