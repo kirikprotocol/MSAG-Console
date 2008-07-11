@@ -1,3 +1,4 @@
+#include <cassert>
 #include <string>
 #include <list>
 #include <cstdlib>  // random
@@ -12,6 +13,7 @@
 #include "logger/Logger.h"
 #include "Serializer.h"
 #include "StorageIface.h"
+#include "StorageNumbering.h"
 
 // please comment out for BHS
 // #define USEPAGEFILE
@@ -21,6 +23,11 @@
 #include "BHDiskStorage.h"
 #endif
 
+// please comment out for single storage
+//#define USECOMPOSITE
+#ifdef USECOMPOSITE
+#include "CompositeDiskStorage.h"
+#endif
 
 // for __require__
 #ifndef NOLOGGERPLEASE
@@ -506,14 +513,29 @@ typedef HashedMemoryCache< CSessionKey, Session, DataBlockBackupTypeJuggling > M
 typedef BHDiskStorage< CSessionKey, Session > DiskDataStorage;
 #endif
 typedef RBTreeIndexStorage< CSessionKey, DiskDataStorage::index_type > DiskIndexStorage;
+#ifdef USECOMPOSITE
+typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > EltDiskStorage;
+typedef CompositeDiskStorage< EltDiskStorage > DiskStorage;
+#else
 typedef IndexedStorage< DiskIndexStorage, DiskDataStorage > DiskStorage;
+#endif
 typedef CachedDiskStorage< MemStorage, DiskStorage > SessionStorage;
 
 
 struct Config {
 
     Config( smsc::logger::Logger* slogg ) {
+
         slog = slogg;
+
+        StorageNumbering::setInstance( /* nodes */ 5 );
+
+        mynode = 0;
+        if ( getenv("mynode") ) {
+            mynode = strtoul(getenv("mynode"), NULL, 10 );
+        }
+        assert( mynode < StorageNumbering::instance().nodes() );
+
         initrand = 0;
         if ( getenv("initrand") ) {
             initrand = strtol(getenv("initrand"), NULL, 10 );
@@ -584,6 +606,7 @@ public:
     int         initrand;
     std::string storagename;
     std::string storagepath;
+    unsigned    mynode;
     unsigned    indexgrowth;
     unsigned    cachesize;
     unsigned    pagesize;
@@ -684,57 +707,84 @@ int main( int argc, char** argv )
 
     do {
 
-        // std::auto_ptr< DelayedPageFile > pf;
-        std::auto_ptr< DiskDataStorage::storage_type > pf;
-        std::auto_ptr< DiskDataStorage > dds;
-        std::auto_ptr< DiskIndexStorage > dis;
         std::auto_ptr< DiskStorage > ds;
         std::auto_ptr< MemStorage > ms;
 
-        // --- setup is here
-        dis.reset( new DiskIndexStorage( cfg.storagename + storagesuffix,
-                                         cfg.storagepath,
-                                         cfg.indexgrowth ));
-        smsc_log_debug( slog, "data index storage created" );
-        // return testDiskIndexStorage( cfg, dis.get() );
+#ifdef USECOMPOSITE
+        ds.reset( new DiskStorage() );
+        smsc_log_debug( slog, "disk storage is created" );
+
+        for ( unsigned idx = 0; idx < StorageNumbering::instance().storages(); ++idx ) {
+
+            if ( cfg.mynode != StorageNumbering::instance().node(idx) ) continue;
+
+            char buf[10];
+            snprintf( buf, sizeof(buf), "%03u", idx );
+            const std::string idxstr(buf);
+#else
+            unsigned idx = 0;
+            const std::string idxstr;
+#endif
+            
+            // std::auto_ptr< DelayedPageFile > pf;
+            std::auto_ptr< DiskDataStorage::storage_type > pf;
+            std::auto_ptr< DiskDataStorage > dds;
+            std::auto_ptr< DiskIndexStorage > dis;
+
+            // --- setup is here
+            dis.reset( new DiskIndexStorage( cfg.storagename + storagesuffix + idxstr,
+                                             cfg.storagepath,
+                                             cfg.indexgrowth ));
+            smsc_log_debug( slog, "data index %u storage is created", idx );
+            // return testDiskIndexStorage( cfg, dis.get() );
 
 
 #ifdef USEPAGEFILE
-        const std::string fn( cfg.storagepath + "/" + cfg.storagename + storagesuffix + "-data" );
-        pf.reset( new DelayedPageFile(cfg.pfdelay) );
-        try {
-            pf->Open( fn );
-        } catch (...) {
-            pf->Create( fn, cfg.pagesize, cfg.preallocate );
+            const std::string fn( cfg.storagepath + "/" + cfg.storagename + storagesuffix + idxstr + "-data" );
+            pf.reset( new DelayedPageFile(cfg.pfdelay) );
+            try {
+                pf->Open( fn );
+            } catch (...) {
+                pf->Create( fn, cfg.pagesize, cfg.preallocate );
+            }
+#else
+            pf.reset( new DiskDataStorage::storage_type );
+            int ret = -1;
+            const std::string fn( cfg.storagename + storagesuffix + idxstr + "-data" );
+            try {
+                ret = pf->Open( fn, cfg.storagepath );
+            } catch (...) {
+                ret = -1;
+            }
+
+            if ( ret < 0 ) pf->Create( fn,
+                                       cfg.storagepath,
+                                       cfg.preallocate, cfg.pagesize );
+#endif
+            smsc_log_debug( slog, "pagefile storage %u is created", idx );
+
+
+            dds.reset( new DiskDataStorage( pf.release() ) );
+            smsc_log_debug( slog, "data disk storage %u is created" );
+
+            
+#ifdef USECOMPOSITE
+            std::auto_ptr< EltDiskStorage > 
+                eds( new EltDiskStorage( dis.release(), dds.release() ) );
+            smsc_log_debug( slog, "elt disk storage %u is assembled" );
+
+            ds->addStorage( idx, eds.release() );
         }
 #else
-        pf.reset( new DiskDataStorage::storage_type );
-        int ret = -1;
-        const std::string fn( cfg.storagename + storagesuffix + "-data" );
-        try {
-            ret = pf->Open( fn, cfg.storagepath );
-        } catch (...) {
-            ret = -1;
-        }
-
-        if ( ret < 0 ) pf->Create( fn,
-                                   cfg.storagepath,
-                                   cfg.preallocate, cfg.pagesize );
+        ds.reset( new DiskStorage(dis.release(), dds.release()) );
 #endif
-        smsc_log_debug( slog, "pagefile storage created" );
-
-
-        dds.reset( new DiskDataStorage( pf.release() ) );
-        smsc_log_debug( slog, "data disk storage created" );
-
-        ds.reset( new DiskStorage( dis.release(), dds.release() ) );
-        smsc_log_debug( slog, "disk storage assembled" );
+        smsc_log_debug( slog, "disk storage is assembled" );
 
         ms.reset( new MemStorage( cfg.cachesize ) );
-        smsc_log_debug( slog, "memory storage created" );
+        smsc_log_debug( slog, "memory storage is created" );
 
         store.reset( new SessionStorage( ms.release(), ds.release() ) );
-        smsc_log_debug( slog, "session storage assembled" );
+        smsc_log_debug( slog, "session storage is assembled" );
 
     } while ( false );
 
@@ -750,7 +800,11 @@ CSessionKey genKey( const Config& cfg )
     uint8_t ton = random() ? 0 : 1;
     uint8_t npi = 1;
     char buf[20];
-    int len = sprintf( buf, "8913%07d", random() % cfg.interval );
+    unsigned long long number;
+    do {
+        number = 89130000000ULL + random() % cfg.interval;
+    } while ( StorageNumbering::instance().nodeByNumber(number) != cfg.mynode );
+    int len = sprintf( buf, "%011llu", number );
     return CSessionKey( Address(len,ton,npi,buf) );
 }
 
@@ -1013,11 +1067,11 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
 #endif
 
     unsigned int count = 0;
-    DiskStorage::index_type idx;
+    // DiskStorage::index_type idx;
     ok = true;
 
     for ( DiskStorage::iterator_type i = store->dataBegin();
-          i.next(k,idx,ss);
+          i.next(k,ss);
           ) {
 
         ++count;
@@ -1027,6 +1081,7 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             break;
         }
 
+        /*
         if ( ( count > 1 ) && ( k < prevk ) ) {
             fprintf( stderr, "WARNING: keys out of order: %s >= %s\n",
                      prevk.toString().c_str(),
@@ -1037,14 +1092,15 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
             ok = false;
         }
         prevk = k;
+         */
         if ( count % 100 == 0 ) {
             // fprintf( stderr, "store check pass #%d, key=%s\n",
             // count, k.toString().c_str() );
-            smsc_log_debug( slog, "store check #%d, key=%s, hash=%u, idx=%llx",
+            smsc_log_debug( slog, "store check #%d, key=%s, hash=%u",
                             count,
                             k.toString().c_str(),
-                            CSessionKey::CalcHash(k),
-                            static_cast<unsigned long long>( idx ) );
+                            CSessionKey::CalcHash(k) );
+            // static_cast<unsigned long long>( idx ) );
         }
         if ( k != s.getKey() ) {
             fprintf( stderr, "WARNING: key mismatch: %s(%u) != %s(%u)\n",

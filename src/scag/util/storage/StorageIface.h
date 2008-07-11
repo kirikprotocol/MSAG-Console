@@ -144,18 +144,20 @@ public:
 template < class IStorage, class DStorage >
 class IndexedStorage
 {
+private:
+    typedef typename IStorage::index_type        index_type;
 public:
     typedef typename IStorage::key_type          key_type;
-    typedef typename IStorage::index_type        index_type;
     typedef typename DStorage::value_type        value_type;
+
 
     class Iterator {
         friend class IndexedStorage< IStorage, DStorage >;
     public:
-        void reset() { iter_ = s_->index_->begin(); }
-        // FIXME: index_type return is temporary
-        bool next( key_type& k, index_type& i, value_type& v ) {
-            // index_type i;
+        void reset() { if (s_) iter_ = s_->index_->begin(); }
+        bool next( key_type& k, value_type& v ) {
+            if ( !s_ ) return false;
+            index_type i;
             while ( iter_.next(k,i) ) {
                 if ( i && s_->data_->read(i) && s_->data_->deserialize(v) ) {
                     return true;
@@ -164,10 +166,10 @@ public:
             return false;
         }
 
+        Iterator() : s_(NULL) {}
     private:
         Iterator( const IndexedStorage< IStorage, DStorage >& s ) :
         s_(&s), iter_(s.index_->begin()) {}
-        Iterator() {}
     private:
         const IndexedStorage< IStorage, DStorage >* s_;
         typename IStorage::iterator_type            iter_;
