@@ -24,7 +24,7 @@
 #endif
 
 // please comment out for single storage
-//#define USECOMPOSITE
+// #define USECOMPOSITE
 #ifdef USECOMPOSITE
 #include "CompositeDiskStorage.h"
 #endif
@@ -566,7 +566,7 @@ struct Config {
         if ( getenv("interval") ) {
             interval = strtoul(getenv("interval"), NULL, 10 );
         }
-        pfdelay = 1000;
+        pfdelay = 0;
         if ( getenv("pfdelay") ) {
             pfdelay = strtoul(getenv("pfdelay"), NULL, 10 );
         }
@@ -582,11 +582,11 @@ struct Config {
         if ( getenv("cleanprob") ) {
             cleanprob = strtoul(getenv("cleanprob"), NULL, 10 );
         }
-        minkilltime = 2;
+        minkilltime = 1;
         if ( getenv("minkilltime") ) {
             minkilltime = strtoul(getenv("minkilltime"), NULL, 10 );
         }
-        maxkilltime = 5;
+        maxkilltime = 0;
         if ( getenv("maxkilltime") ) {
             maxkilltime = strtoul(getenv("maxkilltime"), NULL, 10 );
         }
