@@ -84,11 +84,11 @@ public:
     }
 
 
-    stored_type get( const key_type& k ) const {
+    const stored_type* get( const key_type& k ) const {
         const stored_type* vv = hash_.GetPtr(k);
-        stored_type v( vv ? *vv : this->val2store(NULL) );
-        smsc_log_debug( cachelog_, "get: %s %s", k.toString().c_str(), store2val(v) ? "hit" : "miss" );
-        return v;
+        // stored_type v( vv ? *vv : this->val2store(NULL) );
+        smsc_log_debug( cachelog_, "get: %s %s", k.toString().c_str(), ( vv && store2val(*vv) ) ? "hit" : "miss" );
+        return vv;
     }
 
 

@@ -344,7 +344,7 @@ public:
     }
 
     ~CachedDiskStorage() {
-        flush();
+        flushAll();
         cache_->dealloc(spare_);
         cache_->clean();
         delete disk_;
@@ -365,15 +365,25 @@ public:
     }
 
     value_type* get( const key_type& k ) const {
-        stored_type v = cache_->get( k );
-        if ( cache_->store2val(v) ) 
+        const stored_type* vv = cache_->get( k );
+        if ( vv && cache_->store2val(*vv) ) {
             ++this->hitcount_;
-        else {
-            v = faultHandler( k );
-            if ( cache_->store2val(v) ) cache_->set(k,v);
+            return cache_->store2val(*vv);
         }
+        stored_type v = faultHandler( k );
+        if ( cache_->store2val(v) ) cache_->set(k,v);
         return cache_->store2val(v);
     }
+
+
+    /// flush item to disk
+    bool flush( const key_type& k ) {
+        const stored_type* vv = cache_->get(k);
+        if ( vv && cache_->store2val(*vv) )
+            return disk_->set( k, cache_->store2ref(*vv) );
+        return false;
+    }
+
 
     /// NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k ) {
@@ -390,7 +400,7 @@ public:
 
     /// flush all cached data to disk
     /// @return number of flushed items
-    unsigned int flush() {
+    unsigned int flushAll() {
         // key_type k;
         // stored_type v;
         unsigned int count = 0;

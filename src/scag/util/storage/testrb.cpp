@@ -986,7 +986,7 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
             // flushing
             smsc_log_debug( slog, "STARTING FLUSHING CACHE" );
             ++cfg.totalflushes;
-            cfg.totalflushsessions += store->flush();
+            cfg.totalflushsessions += store->flushAll();
             smsc_log_debug( slog, "FLUSH FINISHED, STARTING CLEANING" );
 
             // remove all cached objects
