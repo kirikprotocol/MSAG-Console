@@ -2045,7 +2045,7 @@ int main(int argc,char* argv[])
   try
   {
     cfg.systemType=cfgman.getString("smpp.systemType");
-  } catch()
+  } catch(...)
   {
   }
 
