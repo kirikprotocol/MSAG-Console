@@ -67,7 +67,7 @@ public:
         
     /// append data from internal buffer to the storage
     index_type append( ) {
-        const index_type i = pf_->Append( buf.data(), buf.size() );
+        const index_type i = pf_->Append( &(buf[0]), buf.size() );
         // smsc_log_debug( disklog_, "append: index=%llx val=%s",
         // static_cast<unsigned long long>(i), key_.c_str() );
         // key_ = "destroyed";
