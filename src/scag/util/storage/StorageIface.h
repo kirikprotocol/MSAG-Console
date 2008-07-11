@@ -343,6 +343,7 @@ public:
         cachelog_ = smsc::logger::Logger::getInstance("memcache");
     }
 
+
     ~CachedDiskStorage() {
         flushAll();
         cache_->dealloc(spare_);
@@ -386,17 +387,12 @@ public:
 
 
     /// NOTE: it is your responsibility to delete the return value.
-    value_type* release( const key_type& k ) {
+    value_type* release( const key_type& k, bool fromdiskalso = false ) {
         std::auto_ptr<value_type> v( cache_->release(k) );
-        disk_->remove( k );
+        if ( fromdiskalso ) disk_->remove( k );
         return v.release();
     }
 
-    /// purge element from cache only
-    /// NOTE: it is your responsibility to delete the return value.
-    value_type* purge( const key_type& k ) {
-        return cache_->release(k);
-    }
 
     /// flush all cached data to disk
     /// @return number of flushed items

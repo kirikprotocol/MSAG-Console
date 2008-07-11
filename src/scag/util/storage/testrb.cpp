@@ -964,10 +964,6 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
                 smsc_log_error( slog, "WARNING: different key found %s != %s",
                                 sk.toString().c_str(), v->getKey().toString().c_str() );
                 return 1;
-
-                delete store->purge( sk );
-                v = new Session( sk );
-                store->set( sk, v );
             }
         }
 
@@ -1001,12 +997,8 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
             Session* dummy;
             for ( SessionStorage::iterator_type j( store->begin() ); j.next( k, dummy ); ) {
                 smsc_log_debug( slog, "delete: %s", k.toString().c_str() );
-                if ( ! fromdisk ) {
-                    dummy = store->purge( k );
-                } else {
-                    dummy = store->release( k );
-                    ++cfg.totalcleansessions;
-                }
+                dummy = store->release( k, fromdisk );
+                ++cfg.totalcleansessions;
                 delete dummy;
             }
             smsc_log_debug( slog, "CACHE CLEANED" );
