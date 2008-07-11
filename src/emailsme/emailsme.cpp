@@ -2042,6 +2042,12 @@ int main(int argc,char* argv[])
   cfg.timeOut=cfgman.getInt("smpp.timeout");
   cfg.password=cfgman.getString("smpp.password");
   cfg.origAddr=cfgman.getString("smpp.sourceAddress");
+  try
+  {
+    cfg.systemType=cfgman.getString("smpp.systemType");
+  } catch()
+  {
+  }
 
   cfg::serviceType=cfgman.getString("smpp.serviceType");
   cfg::protocolId=cfgman.getInt("smpp.protocolId");
