@@ -311,11 +311,6 @@ struct Address
             return ( this->abonentAddr == sk.abonentAddr );
         }
 
-        inline bool operator != ( const CSessionKey& sk ) const
-        {
-            return ! operator==(sk);
-        }
-
         bool operator < ( const CSessionKey& sk ) const
         {
             if ( abonentAddr < sk.abonentAddr ) return true;
@@ -957,7 +952,7 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
             ++cfg.totalmisses;
         } else {
             smsc_log_debug( slog, "hit: %s, session key: %s", sk.toString().c_str(), v->getKey().toString().c_str() );
-            if ( v->getKey() != sk ) {
+            if ( ! (v->getKey() == sk) ) {
                 
                 fprintf( stderr, "WARNING: different key found %s != %s\n",
                          sk.toString().c_str(), v->getKey().toString().c_str() );
@@ -1094,7 +1089,7 @@ unsigned int checkStorage( const Config& cfg, SessionStorage* store, bool& ok )
                             CSessionKey::CalcHash(k) );
             // static_cast<unsigned long long>( idx ) );
         }
-        if ( k != s.getKey() ) {
+        if ( !(k == s.getKey()) ) {
             fprintf( stderr, "WARNING: key mismatch: %s(%u) != %s(%u)\n",
                      k.toString().c_str(),
                      CSessionKey::CalcHash(k),

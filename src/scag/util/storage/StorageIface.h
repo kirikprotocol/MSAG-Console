@@ -307,20 +307,17 @@ public:
 
 
 template < class Key, class Val >
-class SimpleCachedStorageAllocator
+class HeapAllocator
 {
 protected:
-    ~SimpleCachedStorageAllocator() {}
+    ~HeapAllocator() {}
     inline Val* alloc( const Key& k ) const { return new Val(k); }
 };
 
 
 template < class MemStorage, class DiskStorage,
-        template <class,class> class Allocator = SimpleCachedStorageAllocator >
-class CachedDiskStorage :
-protected Allocator<
-        typename MemStorage::key_type,
-        typename MemStorage::value_type >
+        class Allocator = HeapAllocator< typename MemStorage::key_type, typename MemStorage::value_type > >
+class CachedDiskStorage : protected Allocator
 {
 public:
     // typedef MemStorage                   memstorage_type;

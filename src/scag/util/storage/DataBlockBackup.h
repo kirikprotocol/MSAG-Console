@@ -24,8 +24,8 @@ struct DataBlockBackup
     DataBlockBackup(value_type* v = NULL, backup_type* b = NULL) : value(v), backup(b) {}
 
 public:
-    Val*                value;
-    BlocksHSBackupData* backup;
+    Val*                        value;
+    mutable BlocksHSBackupData* backup;
 };
 
 
@@ -46,6 +46,10 @@ public:
 
     inline stored_type val2store( value_type* v ) const {
         return stored_type(v);
+    }
+
+    inline const stored_type& store2ref( const stored_type& v ) const {
+        return store2ref( const_cast<stored_type&>(v) );
     }
 
     inline stored_type& store2ref( stored_type& v ) const {

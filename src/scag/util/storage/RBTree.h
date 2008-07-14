@@ -129,7 +129,7 @@ public:
     bool Set(const Key& k, const Value& val) {
 
       RBTreeNode*	node = rootNode;
-      while( (node != nilNode) && (node->key != k) )
+      while( (node != nilNode) && !(node->key == k) )
       {
           if(node->key < k)
               node = realAddr(node->right);
@@ -165,7 +165,7 @@ public:
 	bool Get(const Key& k, Value& val)
 	{
 		RBTreeNode*	node = rootNode;
-		while( (node != nilNode) && (node->key != k) )
+		while( (node != nilNode) && !(node->key == k) )
 		{
 			if(node->key < k)
 				node = realAddr(node->right);
@@ -184,7 +184,7 @@ public:
 
     RBTreeNode* Get(const Key& k) {
       RBTreeNode* node = rootNode;
-      while ((node != nilNode) && (node->key != k)) {
+      while ((node != nilNode) && !(node->key == k)) {
         node = node->key < k ? realAddr(node->right) : realAddr(node->left);
       }
       if(node == nilNode) {
