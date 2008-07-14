@@ -541,6 +541,12 @@ struct Config {
 
         storagename = "sessions";
         storagepath = "./sessions";
+
+        nocheck = 0;
+        if ( getenv("nocheck") ) {
+            nocheck = strtoul(getenv("nocheck"), NULL, 10 );
+        }
+
         indexgrowth = 1000;
         if ( getenv("indexgrowth") ) {
             indexgrowth = strtoul(getenv("indexgrowth"), NULL, 10 );
@@ -602,6 +608,7 @@ public:
     std::string storagename;
     std::string storagepath;
     unsigned    mynode;
+    unsigned    nocheck;
     unsigned    indexgrowth;
     unsigned    cachesize;
     unsigned    pagesize;
@@ -924,13 +931,17 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
 {
     smsc::logger::Logger* slog = cfg.slog;
 
-    fprintf( stderr, "STARTING STORAGE CHECK\n" );
-    smsc_log_debug( slog, "STARTING STORAGE CHECK" );
     bool ok = true;
-    unsigned int precount = checkStorage( cfg, store, ok );
-    fprintf( stderr, "STORAGE CHECK FINISHED\n" );
-    smsc_log_debug( slog, "STORAGE CHECK FINISHED" );
-    if ( ! ok ) return 1;
+    unsigned int precount = 0;
+    if ( ! cfg.nocheck ) {
+
+        fprintf( stderr, "STARTING STORAGE CHECK\n" );
+        smsc_log_debug( slog, "STARTING STORAGE CHECK" );
+        precount = checkStorage( cfg, store, ok );
+        fprintf( stderr, "STORAGE CHECK FINISHED\n" );
+        smsc_log_debug( slog, "STORAGE CHECK FINISHED" );
+        if ( ! ok ) return 1;
+    }
     
     // start self killer
     std::auto_ptr< SelfKiller > selfkill;
@@ -993,7 +1004,7 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
             for ( SessionStorage::iterator_type j( store->begin() ); j.next( k, dummy ); ) {
                 smsc_log_debug( slog, "delete: %s", k.toString().c_str() );
                 dummy = store->release( k, fromdisk );
-                ++cfg.totalcleansessions;
+                if ( fromdisk ) ++cfg.totalcleansessions;
                 delete dummy;
             }
             smsc_log_debug( slog, "CACHE CLEANED" );
@@ -1018,6 +1029,13 @@ int testSessionStorage( const Config& cfg, SessionStorage* store )
      */
 
     // printout the statistics
+    {
+        const Session s( genKey( cfg ) );
+        std::vector< unsigned char > buf;
+        Serializer ss( buf );
+        s.serialize( ss );
+        printf( "object size         : %u\n", buf.size() );
+    }
     printf( "total cache hits    : %d\n", store->hitcount() );
     printf( "total disk hits     : %d\n", cfg.totalpasses - store->hitcount() - cfg.totalmisses );
     printf( "total accesses      : %d\n", cfg.totalpasses );
