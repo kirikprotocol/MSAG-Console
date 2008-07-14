@@ -19,6 +19,11 @@ const int USSD_PSSR_RESP  = 17;
 const int USSD_USSR_CONF  = 18;
 const int USSD_USSN_CONF  = 19;
 
+const int BILLING_NONE     = 0;
+const int BILLING_NORMAL   = 1;
+const int BILLING_MT       = 2;
+const int BILLING_FINALREP = 3;
+
 const int MAX_ESERVICE_TYPE_LENGTH = 5;
 const int MAX_SMESYSID_TYPE_LENGTH = 15;
 const int MAX_SMEPASSWD_TYPE_LENGTH = 8;

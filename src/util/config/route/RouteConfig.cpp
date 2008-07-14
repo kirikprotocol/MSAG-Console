@@ -187,10 +187,10 @@ const char * const replyPathToStr(const smsc::router::ReplyPath replyPath)
 
 uint8_t StrToBill(const char* str)
 {
-  if(strcmp(str,"true")==0)return 1;
-  if(strcmp(str,"mt")==0)return 2;
-  if(strcmp(str,"fr")==0)return 3;
-  return 0;
+  if(strcmp(str,"true")==0)return smsc::sms::BILLING_NORMAL;
+  if(strcmp(str,"mt")==0)return smsc::sms::BILLING_MT;
+  if(strcmp(str,"fr")==0)return smsc::sms::BILLING_FINALREP;
+  return smsc::sms::BILLING_NONE;
 }
 
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)

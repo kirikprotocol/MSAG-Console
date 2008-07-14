@@ -1644,7 +1644,7 @@ StateType StateMachine::submit(Tuple& t)
 #ifdef SMSEXTRA
   if(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_FAKE)
   {
-    sms->setBillingRecord(0);
+    sms->setBillingRecord(BILLING_NONE);
   }
   if(!(sms->getIntProperty(Tag::SMSC_EXTRAFLAGS)&EXTRA_NICK))
   {
@@ -2092,7 +2092,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   }
 
 #ifdef SMSEXTRA
-  if(sms->billingRecord==2 && resp->contractType!=smsc::inman::cdr::CDRRecord::abtPrepaid)
+  if(sms->billingRecord==BILLING_MT && resp->contractType!=smsc::inman::cdr::CDRRecord::abtPrepaid)
   {
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x3))|0x2);
     sms->setIntProperty(Tag::SMSC_CHARGINGPOLICY,Smsc::chargeOnDelivery);
@@ -3780,7 +3780,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
         smsc->getScheduler()->InvalidSms(t.msgId);
 
 #ifdef SMSEXTRA
-        if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==3)
+        if((sms.billingRecord!=BILLING_NONE && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
+        {
+          smsc->FullReportDelivery(t.msgId,sms);
+        }
+#else
+        if(sms.billingRecord==BILLING_FINALREP)
         {
           smsc->FullReportDelivery(t.msgId,sms);
         }
@@ -4344,7 +4349,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
 
 #ifdef SMSEXTRA
-    if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==3)
+    if((sms.billingRecord && sms.getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit) || sms.billingRecord==BILLING_FINALREP)
+    {
+      smsc->FullReportDelivery(t.msgId,sms);
+    }
+#else
+    if(sms.billingRecord==BILLING_FINALREP)
     {
       smsc->FullReportDelivery(t.msgId,sms);
     }
@@ -5426,7 +5436,7 @@ bool StateMachine::ExtraProcessing(SbmContext& c)
       }
       c.sms->setDealiasedDestinationAddress(daaddr);
       c.dst=daaddr;
-      c.sms->setBillingRecord(1);
+      c.sms->setBillingRecord(BILLING_NORMAL);
     }
 
 
