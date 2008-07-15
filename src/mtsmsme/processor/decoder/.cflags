@@ -1,0 +1,1 @@
+-I$(SMSC_SRCDIR)/mtsmsme/codec/ros -I$(SMSC_SRCDIR)/mtsmsme/codec/tcap -I$(SMSC_SRCDIR)/mtsmsme/processor/asn1rt -Dasn_DEF=asn_DEF_TCMessage

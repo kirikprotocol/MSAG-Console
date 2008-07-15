@@ -1,0 +1,1 @@
+-I$(SMSC_SRCDIR)/mtsmsme/processor/asn1rt  -I$(SMSC_SRCDIR)/mtsmsme/codec/ros

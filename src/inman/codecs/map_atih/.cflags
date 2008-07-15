@@ -1,0 +1,1 @@
+-Iinman/codecs/map_atih -Iinman/codec_inc/ros -Iinman/codec_inc/map -Iinman/asn1rt -DASN1_XER_NOT_USED

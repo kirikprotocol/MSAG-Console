@@ -11,6 +11,8 @@
 namespace smsc { namespace store
 {
 
+#if 0
+
 #ifndef SPARC
 #define UINT64_SWAP_LE_BE_CONSTANT(val)   ((uint64_t) (\
      (((uint64_t) (val) << 32) | ((uint64_t) (val) >> 32))))
@@ -1309,5 +1311,7 @@ bool DestroyBodyStatement::destroyBody()
     check(execute(OCI_DEFAULT, 1, 0));
     return (getRowsAffectedCount() ? true:false);
 }
+
+#endif //0
 
 }}

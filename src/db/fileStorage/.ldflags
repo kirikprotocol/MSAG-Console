@@ -1,0 +1,1 @@
+-L$(SMSC_BUILDDIR)/bin/db/exceptions -L$(SMSC_BUILDDIR)/bin -llogger

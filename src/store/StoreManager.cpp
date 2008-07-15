@@ -25,6 +25,8 @@ using smsc::util::config::Manager;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
+#if 0
+
 Mutex        StoreManager::mutex;
 RemoteStore* StoreManager::instance  = 0;
 
@@ -1922,6 +1924,8 @@ void CachedStore::changeSmsStateToDeleted(SMSId id)
     MutexGuard cacheGuard(cacheMutex);
     cache->delSms(id);
 }
+
+#endif //0
 
 /* ------------------------------ Cached Store ------------------------------ */
 }}

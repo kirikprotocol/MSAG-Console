@@ -1,4 +1,5 @@
 smeman	"sme man manager"
-test	"config test"
+#test	"config test"
 route	"route config"
 alias
+region

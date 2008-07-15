@@ -1,0 +1,1 @@
+-Iinman/comp/cap_sms -Iinman/asn1rt -Iinman/codec_inc/ros -Iinman/codec_inc/in_cs -Iinman/codec_inc/map -Iinman/codec_inc/cap  -DURCREGISTRY_GLOBAL_INIT

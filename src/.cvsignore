@@ -8,3 +8,4 @@ build.properties
 modules-list
 mk
 smsc.v*
+makefile.inc

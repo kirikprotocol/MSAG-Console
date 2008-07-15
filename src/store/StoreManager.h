@@ -52,7 +52,8 @@ namespace smsc { namespace store
     using smsc::util::config::ConfigException;
 
     using smsc::system::SchedTimer;
-
+    
+#if 0
     class RemoteStore : public MessageStore, public Thread
     {
     private:
@@ -583,6 +584,7 @@ namespace smsc { namespace store
                 throw(StorageException, NoSuchMessageException);
 
     };
+#endif //0
 
 }}
 

@@ -9,6 +9,14 @@ CXX:=CC
 endif
 export CXX
 
+export CC=cc
+
+ifndef WARNINGS
+WARNINGS=YES
+endif
+
+export WARNINGS
+
 ifeq ($(CXX),CC)
 AR:=/usr/ccs/bin/ar
 export AR
@@ -149,8 +157,8 @@ CXXFLAGS := $(CXXFLAGS) -DNOMAPPROXY
 endif
 
 ifeq ($(SNMP),YES)
-CXXFLAGS := $(CXXFLAGS) -DSNMP
 SNMP_LIBS := -lnetsnmpagent -lnetsnmphelpers -lnetsnmpmibs -lnetsnmp -lkstat -lsnmp -ladm -lsnmp-smestattable -lsnmp-smeerrtable
+CXXFLAGS := $(CXXFLAGS) -DSNMP
 ifeq ($(SFW),YES)
 SNMP_LIBS := $(SNMP_LIBS) -lpkcs11
 endif
@@ -161,7 +169,7 @@ ifeq ($(SMSX),YES)
 CXXFLAGS := $(CXXFLAGS) -DSMSEXTRA
 endif
 
-ifdef WARNINGS
+ifeq ($(WARNINGS),YES)
 ifeq ($(CXX),CC)
 COMPFLAGS := $(COMPFLAGS) +w
 else
@@ -239,74 +247,91 @@ export LDFLAGS
 export COMPFLAGS
 export MAP_LIBRARIES
 
-MODULES := $(shell cat modules-list | awk '/^[^\#]./{print $$1}' )
-SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
+#MODULES := $(shell cat modules-list | awk '/^[^\#]./{print $$1}' )
+
+SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj deps,$(SMSC_BUILDDIR)/$(x))
 
 #$(warning $(MODULES))
 
-all:  build
-	@echo >> /dev/null
+#all:  build
+#	@echo >> /dev/null
 
-__.empty.__:
-	@echo >> /dev/null
+#__.empty.__:
+#	@echo >> /dev/null
 
-commit:
-	@echo "commit cources into CVS"
-	cvs -ecat commit
+#commit:
+#	@echo "commit cources into CVS"
+#	cvs -ecat commit
 
-update:
-	@echo "updating sources from CVS"
-	cvs update -d
+#update:
+#	@echo "updating sources from CVS"
+#	cvs update -d
 
-docs:
-	@echo Generating docs
-	@mkdir -p $(SMSC_BUILDDIR)/doc/html
-	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/doc/html!;print;}' <Doxyfile.tmpl >Doxyfile
-	@doxygen Doxyfile
-	@rm Doxyfile
+#docs:
+#	@echo Generating docs
+#	@mkdir -p $(SMSC_BUILDDIR)/doc/html
+#	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/doc/html!;print;}' <Doxyfile.tmpl >Doxyfile
+#	@doxygen Doxyfile
+#	@rm Doxyfile
 
 
-__build_message__:
-	@echo "build in SMSC"
+#__build_message__:
+#	@echo "build in SMSC"
 
-build: __build_message__ $(SMSC_BUILDDIR_LIST)
-	@if [ -n "$(MODULES)" ]; then \
-	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rbuild ; done; \
-	fi
+#build: __build_message__ $(SMSC_BUILDDIR_LIST)
+#	@if [ -n "$(MODULES)" ]; then \
+#	    XXXX="$(MODULES)"; \
+#	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rbuild ; done; \
+#	fi
 
-ubuild: .update .build
-	@echo >> /dev/null
+#ubuild: .update .build
+#	@echo >> /dev/null
 
-clean:
-	@echo "clean all"
-	@rm -rf $(SMSC_BUILDDIR)/deps
-	@if [ -n "$(MODULES)" ]; then \
-	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rclean ; done; \
-	fi
+#clean:
+#	@echo "clean all"
+#	@rm -rf $(SMSC_BUILDDIR)/deps
+#	@if [ -n "$(MODULES)" ]; then \
+#	    XXXX="$(MODULES)"; \
+#	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rclean ; done; \
+#	fi
 
-deps:
-	@echo "build dependencies"
-	@if [ -n "$(MODULES)" ]; then \
-	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.deps ; done; \
-	fi
+#deps:
+#	@echo "build dependencies"
+#	@if [ -n "$(MODULES)" ]; then \
+#	    XXXX="$(MODULES)"; \
+#	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.deps ; done; \
+#	fi
 
-$(SMSC_BUILDDIR): $(SMSC_BUILDDIR_LIST)
+
+#$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ $(SMSC_BUILDDIR_LIST)
+#override _modules = $(subst ., ,$@)
+#override _module = $(firstword $(_modules))
+#override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
+#	@if [ -d $(_module) ]; then \
+#	    cd $(_module); $(MAKE) -s $(_subtarget); \
+#	else \
+#	    echo "'$(_module)' is not module"; exit 1;\
+#	fi
+
+all: build
+
+webapp.newbuild:
+	@cd ../webapps/smsc;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
+
 
 $(SMSC_BUILDDIR_LIST):
 	@mkdir -p $(SMSC_BUILDDIR_LIST)
 
-$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ $(SMSC_BUILDDIR_LIST)
-override _modules = $(subst ., ,$@)
-override _module = $(firstword $(_modules))
-override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
-	@if [ -d $(_module) ]; then \
-	    cd $(_module); $(MAKE) -s $(_subtarget); \
-	else \
-	    echo "'$(_module)' is not module"; exit 1;\
-	fi
+export USECOLORS
 
-webapp.newbuild:
-	@cd ../webapps/smsc;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
+gen: $(SMSC_BUILDDIR_LIST)
+	@echo Generating makefile.inc
+	@perl conf/genmake.pl
+        
+deps:
+	@echo make deps is depricated. use make gen instead
+	@echo Generating makefile.inc
+	@perl conf/genmake.pl
+        
+-include makefile.inc
+

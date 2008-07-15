@@ -1,0 +1,1 @@
+-I. -I../../asn1rt -I../../codec_inc/ros -I../../codec_inc/in_cs -I../../codec_inc/map -I../../codec_inc/cap  -DURCREGISTRY_GLOBAL_INIT

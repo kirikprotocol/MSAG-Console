@@ -3,6 +3,6 @@
 
 # binary name        source name	libraries
 emailsme/mdAgent mdAgent -lcore-buffers -lcore-network $(SOCKETLIB) -lnsl
-emailsme/emailsme emailsme -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -lutil-config -lutil-config-region -lutil-config-route -lutil-xml $(__LIBRARIES) $(XERCES_LIB) -lemailsme-util -lutil-templates -lnsl
-emailsme/emladm emladm -lcore-network -lsocket -lnsl $(__LIBRARIES)
+emailsme/emailsme emailsme -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -lutil-config -lutil-config-region -lutil-config-route -lutil-xml -L$(SMSC_BUILDDIR)/bin -llogger $(XERCES_LIB) -lemailsme-util -lutil-templates -lnsl @liblogger.so
+emailsme/emladm emladm -lcore-network -lsocket -lnsl -L$(SMSC_BUILDDIR)/bin -llogger @liblogger.so
 -emailsme/retest retest

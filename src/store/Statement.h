@@ -1,8 +1,8 @@
 #ifndef STATEMENT_DECLARATIONS
 #define STATEMENT_DECLARATIONS
 
-#include <oci.h>
-#include <orl.h>
+//#include <oci.h>
+//#include <orl.h>
 
 #include <sms/sms.h>
 #include "StoreExceptions.h"
@@ -10,6 +10,8 @@
 namespace smsc { namespace store
 {
     using namespace smsc::sms;
+
+#if 0
 
     static inline void convertAddressToString(const Address& address, char* string)
     {
@@ -632,6 +634,7 @@ namespace smsc { namespace store
         bool destroyBody()
             throw(StorageException);
     };
+#endif //0
 
 }}
 

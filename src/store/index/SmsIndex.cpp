@@ -451,10 +451,12 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
       }
     }
     //fromdate tilldate!!!
-    __trace__("loaded:");    
-    for(LookupVector::iterator it=lvtmp.begin();it!=lvtmp.end();it++)
     {
-      __trace2__("%d,%d",it->off,it->ltt);
+      __trace__("loaded:");    
+      for(LookupVector::iterator lit=lvtmp.begin();lit!=lvtmp.end();lit++)
+      {
+        __trace2__("%d,%d",lit->off,lit->ltt);
+      }
     }
     DataFilter df(fromDate,tillDate);
     lvtmp2.clear();
@@ -464,10 +466,12 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
     lvtmp.clear();
     std::insert_iterator<LookupVector> ins2(lvtmp,lvtmp.begin());
     std::unique_copy(lvtmp2.begin(),lvtmp2.end(),ins2);
-    __trace__("filtered and sorted:");    
-    for(LookupVector::iterator it=lvtmp.begin();it!=lvtmp.end();it++)
     {
-      __trace2__("%d,%d",it->off,it->ltt);
+      __trace__("filtered and sorted:");    
+      for(LookupVector::iterator lit=lvtmp.begin();lit!=lvtmp.end();lit++)
+      {
+        __trace2__("%d,%d",lit->off,lit->ltt);
+      }
     }
     if(firstFK)
     {
@@ -481,9 +485,11 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
       lv.clear();
       std::insert_iterator<LookupVector> ins3(lv,lv.begin());
       std::set_intersection(lvtmp.begin(),lvtmp.end(),lvtmp2.begin(),lvtmp2.end(),ins3);
-      for(LookupVector::iterator it=lv.begin();it!=lv.end();it++)
       {
-        __trace2__("%d,%d",it->off,it->ltt);
+        for(LookupVector::iterator lit=lv.begin();lit!=lv.end();lit++)
+        {
+          __trace2__("%d,%d",lit->off,lit->ltt);
+        }
       }
     }
   }

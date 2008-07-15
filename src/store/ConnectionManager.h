@@ -15,8 +15,8 @@
  */
 
 #include <unistd.h>
-#include <oci.h>
-#include <orl.h>
+//#include <oci.h>
+//#include <orl.h>
 
 
 #include <core/synchronization/EventMonitor.hpp>
@@ -39,7 +39,7 @@ namespace smsc { namespace store
 
     using namespace smsc::core::synchronization;
     using namespace smsc::sms;
-    
+#if 0
     class ConnectionPool;
     
     /**
@@ -640,7 +640,7 @@ namespace smsc { namespace store
          */
         virtual ~StorageConnectionPool() {}; 
     };
-
+#endif //0
 }}
 
 #endif
