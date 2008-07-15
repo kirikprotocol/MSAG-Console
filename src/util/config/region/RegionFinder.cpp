@@ -36,7 +36,7 @@ RegionFinder::getRegionById(const std::string& regionId)
 {
   regions_hash_t::const_iterator iter = _regionsHash.find(regionId);
   if ( iter != _regionsHash.end() ) return iter->second;
-  else NULL;
+  else return NULL;
 }
 
 }}}}
