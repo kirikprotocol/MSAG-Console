@@ -492,6 +492,7 @@ struct SmeConfig{
     smppTimeOut=120;
     idleTimeout=60;
     disconnectTimeout=300;
+    interfaceVersion = 0x34;
   }
   std::string host;
   int port;
@@ -501,6 +502,8 @@ struct SmeConfig{
   std::string password;
   std::string systemType;
   std::string origAddr;
+  int interfaceVersion;
+  std::string addressRange;
 
   int idleTimeout;
   int disconnectTimeout;
@@ -738,6 +741,14 @@ public:
     pdu.set_systemId(cfg.sid.c_str());
     pdu.set_password(cfg.password.c_str());
     pdu.set_systemType(cfg.systemType.c_str());
+    pdu.set_interfaceVersion(cfg.interfaceVersion);
+    if(cfg.addressRange.length())
+    {
+      Address addrRange(cfg.addressRange.c_str());
+      pdu.get_addressRange().set_typeOfNumber(addrRange.type);
+      pdu.get_addressRange().set_numberingPlan(addrRange.plan);
+      pdu.get_addressRange().set_value(addrRange.value);
+    }
     int seq=getNextSeq();
     pdu.get_header().set_sequenceNumber(seq);
 
