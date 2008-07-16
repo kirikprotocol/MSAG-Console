@@ -192,6 +192,12 @@ int DistrListProcess::Execute()
       lowercase(cmdstr);
       lowercase(arg);
 
+      bool smeMode=false;
+      if(originatingAddressForSme.length() && sms.getDestinationAddress().toString()==originatingAddressForSme)
+      {
+        smeMode=true;
+      }
+
       string answer;
       string tmpl="dl.unknowncommand";
       string reason;
@@ -518,9 +524,20 @@ int DistrListProcess::Execute()
         reason="unknown";
       }
 
+      if(smeMode && tmpl.length())
+      {
+        tmpl.insert(2,".sme");
+      }
+
       if(reason.length())
       {
-        reason="dl.reason."+reason;
+        if(smeMode)
+        {
+          reason="dl.sme.reason."+reason;
+        }else
+        {
+          reason="dl.reason."+reason;
+        }
         smsc::profiler::Profile p=profiler->lookup(sms.getOriginatingAddress());
         try{
           reason=smsc::resourcemanager::ResourceManager::getInstance()->getString(p.locale,reason);

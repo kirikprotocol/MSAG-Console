@@ -812,6 +812,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     //optional parameter
   }
 
+  try{
+    distlstsme->originatingAddressForSme=cfg.cfgman->getString("distrList.originatingAddressForSme");
+  }catch(...)
+  {
+    //optional parameter
+  }
+
   smsc_log_info(log, "Profiler configured" );
   profiler->load(cfg.cfgman->getString("profiler.storeFile"));
   smsc_log_info(log, "Profiler data loaded" );

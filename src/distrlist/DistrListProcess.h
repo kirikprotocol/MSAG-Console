@@ -118,6 +118,7 @@ public:
   int protocolId;
 
   std::string originatingAddress;
+  std::string originatingAddressForSme;
 
   bool autoCreatePrincipal;
   int defaultMaxLists;
