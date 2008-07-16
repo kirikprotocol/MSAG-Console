@@ -97,11 +97,12 @@ function validateField_mask(elem)
     //var special_pattern2 = RegExp(special_pattern_header + "([ _\\-0-9A-Za-z]|\\?){1,20}$");
     var special_pattern1 = /^\.5\.[0-6]\.[ _\-:\.\,0-9A-Za-z]{0,11}\?{0,11}$/;
     var special_pattern2 = /^\.5\.[0-6]\.([ _\-:\.\,0-9A-Za-z]|\?){1,11}$/;
-
+    var special_pattern3 = /^\.5\.[0-6]\.ussd:([ _\-:\.\,0-9A-Za-z]|\?){1,11}$/;
     return elem.value == null
             || (
             (elem.value.match(pattern1) == null || elem.value.match(pattern2) == null)
-                    && (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null)
+                    && (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null )
+		    && elem.value.match(special_pattern3) == null
             )
     //? validationError(elem, "Invalid mask")
             ? validationError(elem, maskErrorMsg)

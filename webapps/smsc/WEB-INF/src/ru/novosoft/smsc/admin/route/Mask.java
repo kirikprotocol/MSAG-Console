@@ -19,6 +19,7 @@ public class Mask
   private static final String special_pattern_header = "^\\.5\\.[0-6]\\.";
   private static final String special_pattern1 = special_pattern_header + "[ _\\-:\\.\\,0-9A-Za-z]{0,20}\\?{0,11}$";
   private static final String special_pattern2 = special_pattern_header + "([ _\\-:\\.\\,0-9A-Za-z]|\\?){1,11}$";
+  private static final String special_pattern3 = special_pattern_header + "ussd:([ _\\-:\\.\\,0-9A-Za-z]|\\?){1,11}$";
 
   private byte tone = 0;
   private byte npi = 0;
@@ -112,7 +113,8 @@ public class Mask
 
     return maskStr != null && maskStr.trim().length() > 0
             && ((maskStr.matches(pattern1) && maskStr.matches(pattern2))
-            || (maskStr.matches(special_pattern1) && maskStr.matches(special_pattern2)));
+            || (maskStr.matches(special_pattern1) && maskStr.matches(special_pattern2))
+	    || maskStr.matches(special_pattern3));
   }
 
   public int getQuestionsCount()
