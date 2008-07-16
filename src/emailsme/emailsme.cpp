@@ -829,6 +829,7 @@ namespace cfg{
  bool useTransformRegexp=false;
  RegExp reTransform;
  std::string transformResult;
+ bool partitionSms=false;
 };
 
 int stopped=0;
@@ -1461,6 +1462,8 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
   AbonentProfile p;
   bool noProfile=true;
 
+  static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("sendSms");
+
   string dstUser=to.substr(0,to.find('@'));
   toLower(dstUser);
 
@@ -1661,11 +1664,48 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
     sms.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,text.c_str(),(unsigned)text.length());
   }
   //sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,text.length());
-
   PduSubmitSm sm;
   sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-  fillSmppPduFromSms(&sm,&sms);
-  PduSubmitSmResp *resp=cfg::tr->submit(sm);
+  PduSubmitSmResp *resp=0;
+
+  if(cfg::partitionSms)
+  {
+    sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,DataCoding::UCS2);
+    int pres=partitionSms(&sms);
+    if(pres==psSingle)
+    {
+      fillSmppPduFromSms(&sm,&sms);
+      resp=cfg::tr->submit(sm);
+    }else if(pres==psMultiple)
+    {
+      ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
+      for(int i=0;i<ci->num;i++)
+      {
+        SMS psms=sms;
+        extractSmsPart(&psms,i);
+        fillSmppPduFromSms(&sm,&psms);
+        resp=cfg::tr->submit(sm);
+        if(!resp || resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
+        {
+          break;
+        }
+        if(i!=ci->num-1)
+        {
+          disposePdu((SmppHeader*)resp);
+        }
+      }
+    }else
+    {
+      smsc_log_warn(log,"Failed to partition sms %s->%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str());
+      return StatusCodes::STATUS_CODE_INVALIDMSG;
+    }
+
+  }
+  else
+  {
+    fillSmppPduFromSms(&sm,&sms);
+    resp=cfg::tr->submit(sm);
+  }
   int rc=StatusCodes::STATUS_CODE_TEMPORARYERROR;
   if(resp)
   {
@@ -1701,7 +1741,10 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
       }
     }
   }
-  if(resp)disposePdu((SmppHeader*)resp);
+  if(resp)
+  {
+    disposePdu((SmppHeader*)resp);
+  }
   return rc;
 }
 
@@ -2045,6 +2088,13 @@ int main(int argc,char* argv[])
   try
   {
     cfg.systemType=cfgman.getString("smpp.systemType");
+  } catch(...)
+  {
+  }
+
+  try
+  {
+    cfg::partitionSms=cfgman.getBool("smpp.partitionSms");
   } catch(...)
   {
   }
