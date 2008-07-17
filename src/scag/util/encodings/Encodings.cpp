@@ -76,7 +76,7 @@ void Convertor::UCS2ToUTF8(const unsigned short * ucs2buff, unsigned int ucs2len
                 ch = ((ucs2ch & 63) + 128);
                 ptr[pos+2-j] = ch;
 
-                ucs2ch >> 6;
+                ucs2ch >>= 6;
             }
 
             ch = ucs2ch + 224;
