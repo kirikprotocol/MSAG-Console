@@ -4311,6 +4311,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
           }
         }
       }
+      if(sms.billingRecord==BILLING_FINALREP)
+      {
+        smsc->FullReportDelivery(t.msgId,sms);
+      }
       try{
         store->createFinalizedSms(t.msgId,sms);
       }catch(...)
