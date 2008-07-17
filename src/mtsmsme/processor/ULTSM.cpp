@@ -10,7 +10,6 @@ namespace smsc{namespace mtsmsme{namespace processor{
 
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
-using smsc::mtsmsme::comp::UpdateLocationMessage;
 using std::string;
 
 ULTSM::ULTSM(TrId _ltrid,AC& ac,TCO* _tco):TSM(_ltrid,ac,_tco)
@@ -61,19 +60,6 @@ void ULTSM::END_received(Message& msg)
   if(listener) listener->complete(1);
   tco->TSMStopped(ltrid);
 }
-//void ULTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
-//{
-//  /*
-//   * MSC E.164 = 791398699812
-//   * VLR E.164 = 791398699813
-//   * MS  E.164 = 79134632021
-//   * MS  E.212 = 250013903784021
-//   * MS  E.214 = 791603903784021
-//   */
-//  UpdateLocationMessage& msg = static_cast<UpdateLocationMessage&>(arg);
-//  msg.setOTID(ltrid);
-//  msg.encode(ulmsg);
-//}
 void ULTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);

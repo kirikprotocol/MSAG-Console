@@ -5,13 +5,14 @@
 //#include "mtsmsme/processor/TSM.hpp"
 #include <vector>
 #include <string>
-#include "TCMessage.h"
+//#include "TCMessage.h"
+#include "BIT_STRING.h"
+#include "asn_codecs_prim.h"
+
 namespace smsc{namespace mtsmsme{namespace processor{
 using std::vector;
 using std::string;
 
-extern BIT_STRING_t tcapversion;
-extern ASN__PRIMITIVE_TYPE_t pduoid;
 struct TrId{
   uint8_t buf[4];
   int size;

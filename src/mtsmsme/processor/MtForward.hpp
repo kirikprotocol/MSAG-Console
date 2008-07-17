@@ -3,7 +3,6 @@
 #define __SMSC_MTSMSME_PROCESSOR_MTFORWARD_HPP_
 
 #include <string>
-#include "MT-ForwardSM-Arg.h"
 namespace smsc{namespace mtsmsme{namespace processor{
 
 using std::string;

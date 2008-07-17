@@ -49,7 +49,19 @@ unsigned packNumString2BCD91(unsigned char* dst, const char* str,
 
     return bcdLen + 1;
 }
-
+unsigned unpackBCD912NumString(char* dst, const unsigned char* src, unsigned srclen)
+{
+    unsigned i, k = 0;
+    for (i = 1; i < srclen; i++) { // starting from index 1 to skip TON,NPI
+        dst[k++] = '0' + (char)(src[i] & 0x0F); // low semioctet
+        // high semioctet, check for possible filler
+        if ((dst[k] = (char)((src[i] >> 4) & 0x0F)) == 0x0F)
+            break;
+        dst[k++] += '0';
+    }
+    dst[k] = 0;
+    return k;
+}
 unsigned packSCCPAddress(unsigned char* dst, unsigned char npi, const char *saddr, unsigned char ssn)
 {
     unsigned len = strlen(saddr);

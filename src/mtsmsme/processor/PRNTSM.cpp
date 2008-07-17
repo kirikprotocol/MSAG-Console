@@ -100,26 +100,28 @@ void PRNTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 }
 void PRNTSM::TEndReq()
 {
-	EndMsg end;
-	end.setTrId(rtrid);
-	end.setDialog(appcntx);
-	end.setReturnResultL(temp_invokeId,temp_opcode,temp_arg);
-	vector<unsigned char> data;
-	end.encode(data);
+  //TO DO insert checking of empty components
+  // TO DO insert checking of component type RESULT_L and ERROR
+  EndMsg end;
+  end.setTrId(rtrid);
+  end.setDialog(appcntx);
+  end.setReturnResultL(temp_invokeId, temp_opcode, temp_arg);
+  vector<unsigned char> data;
+  end.encode(data);
 
-	smsc_log_debug(logger,
+  smsc_log_debug(logger,
                    "tsm.prn otid=%s receive BEGIN, END sent",
                    ltrid.toString().c_str());
-	smsc_log_error(logger,
+  smsc_log_error(logger,
                    "CALLED[%d]={%s}",
                    raddrlen,dump(raddrlen,raddr).c_str());
-	smsc_log_error(logger,
+  smsc_log_error(logger,
                    "CALLING[%d]={%s}",
                    laddrlen,dump(laddrlen,laddr).c_str());
-	smsc_log_error(logger,
-	               "PRN[%d]={%s}",
-	               data.size(),dump(data.size(),&data[0]).c_str());
-	tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
+  smsc_log_error(logger,
+                 "PRN[%d]={%s}",
+                 data.size(),dump(data.size(),&data[0]).c_str());
+  tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
 }
 void PRNTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 {

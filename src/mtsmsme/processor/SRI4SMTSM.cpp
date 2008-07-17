@@ -1,9 +1,10 @@
 static char const ident[] = "$Id$";
 #include "TCO.hpp"
 #include "SRI4SMTSM.hpp"
-#include "util.hpp"
-#include "mtsmsme/comp/UpdateLocation.hpp"
+#include "mtsmsme/processor/util.hpp"
+#include "mtsmsme/comp/SendRoutingInfoForSM.hpp"
 #include <string>
+#include "sms/sms.h"
 #include <asn_application.h>
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -11,13 +12,18 @@ namespace smsc{namespace mtsmsme{namespace processor{
 
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::processor::util::dump;
-using smsc::mtsmsme::comp::UpdateLocationMessage;
+using smsc::mtsmsme::comp::SendRoutingInfoForSMResp;
+using smsc::mtsmsme::comp::EmptyComp;
+using smsc::mtsmsme::processor::util::getAddressDescription;
+using smsc::mtsmsme::comp::SendRoutingInfoForSMInd;
+using smsc::sms::Address;
 using std::string;
 
 SRI4SMTSM::SRI4SMTSM(TrId _ltrid,AC& ac,TCO* _tco):TSM(_ltrid,ac,_tco)
 {
   logger = Logger::getInstance("mt.sme.sri4sm");
   smsc_log_debug(logger,"tsm otid=%s create SendRoutingInfoForSM",ltrid.toString().c_str());
+  temp_errcode = 0;
 }
 SRI4SMTSM::SRI4SMTSM(TrId _ltrid,AC& ac,TCO* _tco, const char* _imsi, const char* _msc,const char* _vlr, const char* _mgt):TSM(_ltrid,ac,_tco)
 {
@@ -34,11 +40,54 @@ SRI4SMTSM::SRI4SMTSM(TrId _ltrid,AC& ac,TCO* _tco, const char* _imsi, const char
 
 SRI4SMTSM::~SRI4SMTSM()
 {
-  smsc_log_debug(logger,"tsm otid=%s delete UpdateLocation",ltrid.toString().c_str());
+  smsc_log_debug(logger,"tsm otid=%s delete SendRoutingInfoForSM",ltrid.toString().c_str());
 }
-void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr, uint8_t _raddrlen, uint8_t *_raddr, TrId _rtrid,Message& msg)
+static int SRI4SMCOUNT = 0;
+void SRI4SMTSM::BEGIN_received(uint8_t _laddrlen, uint8_t *_laddr,
+                               uint8_t _raddrlen, uint8_t *_raddr,
+                               TrId _rtrid,Message& msg)
 {
-  smsc_log_debug(logger,"tsm otid=%s receive BEGIN with component, handling is NOT IMPLEMENTED YET",ltrid.toString().c_str());
+  smsc_log_debug(logger,
+                 "tsm otid=%s receive BEGIN with component, send END with SendRoutingInfoForSM",ltrid.toString().c_str());
+  laddrlen = packSCCPAddress(laddr, 1 /* E.164 */, tco->hlrnumber /* HLR E.164 */, 6 /* HLR SSN */);
+  //laddrlen = _laddrlen;
+  //memcpy(&laddr[0],_laddr,_laddrlen);
+  smsc_log_debug(logger,
+                      "SRI4SMTSM's modified Cd(%s)",
+                      getAddressDescription(laddrlen,laddr).c_str());
+  raddrlen = _raddrlen;
+  memcpy(&raddr[0],_raddr,_raddrlen);
+  rtrid = _rtrid;
+
+  int iid = 1;
+  if( msg.isComponentPresent() )
+  {
+    iid = msg.getInvokeId();
+    std::vector<unsigned char> sri4smbuf;
+    sri4smbuf = msg.getComponent();
+    SendRoutingInfoForSMInd sri4sm(logger);
+    sri4sm.decode(sri4smbuf);
+    HLROAM* hlr = tco->getHLROAM();
+    if ( hlr )
+    {
+      Address msisdn;
+      Address _imsi;
+      msisdn.setValue(strlen(sri4sm.getMSISDN()),sri4sm.getMSISDN());
+      if ( hlr->lookup(msisdn,_imsi) )
+      {
+        SendRoutingInfoForSMResp resp(_imsi.value, tco->mscnumber);
+        TResultLReq( iid /* invokeId */, 45 /* sendRoutingInfoForSM operation */, resp);
+      }
+      else
+      {
+        EmptyComp err;
+        TUErrorReq(iid /* invokeId */, 1 /* unknownSubscriber ERROR */, err);
+      }
+      //TO DO Map V1
+    }
+  }
+  TEndReq();
+  tco->TSMStopped(ltrid);
 }
 void SRI4SMTSM::CONTINUE_received(uint8_t cdlen,
                               uint8_t *cd, /* called party address */
@@ -79,6 +128,51 @@ void SRI4SMTSM::TInvokeReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
 {
   arg.encode(temp_arg);
   temp_opcode = opcode;
+}
+void SRI4SMTSM::TResultLReq(uint8_t invokeId, uint8_t opcode, CompIF& arg)
+{
+  arg.encode(temp_arg);
+  temp_opcode = opcode;
+  temp_invokeId = invokeId;
+}
+void SRI4SMTSM::TUErrorReq(int invokeId, uint8_t errcode, CompIF& arg)
+{
+  arg.encode(temp_arg);
+  temp_errcode = errcode;
+  temp_invokeId = invokeId;
+}
+void SRI4SMTSM::TEndReq()
+{
+  EndMsg end(logger);
+   end.setTrId(rtrid);
+   end.setDialog(appcntx);
+   //TODO remove ugly code of choice between result and error
+   if (temp_errcode)
+   {
+     smsc_log_debug(logger,"tsm.sri4sm otid=%s setting unknown sibscriber ERROR",
+                         ltrid.toString().c_str());
+     end.setError(temp_invokeId,temp_errcode,temp_arg);
+   }
+   else
+   {
+     end.setReturnResultL(temp_invokeId, temp_opcode, temp_arg);
+   }
+   vector<unsigned char> data;
+   end.encode(data);
+
+   smsc_log_debug(logger,
+                    "tsm.prn otid=%s receive BEGIN, END sent",
+                    ltrid.toString().c_str());
+   smsc_log_error(logger,
+                    "CALLED[%d]={%s}",
+                    raddrlen,dump(raddrlen,raddr).c_str());
+   smsc_log_error(logger,
+                    "CALLING[%d]={%s}",
+                    laddrlen,dump(laddrlen,laddr).c_str());
+   smsc_log_error(logger,
+                  "PRN[%d]={%s}",
+                  data.size(),dump(data.size(),&data[0]).c_str());
+   tco->SCCPsend(raddrlen,raddr,laddrlen,laddr,data.size(),&data[0]);
 }
 void SRI4SMTSM::TBeginReq(uint8_t  cdlen, uint8_t* cd, uint8_t  cllen, uint8_t* cl)
 {

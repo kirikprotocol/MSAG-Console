@@ -4,22 +4,23 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/util.hpp"
 
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-namespace smsc{namespace mtsmsme{namespace processor{
-extern Logger* MtSmsProcessorLogger;
-}}}
 
 #include "encode.hpp"
 
 namespace smsc{namespace mtsmsme{namespace processor{namespace encode{
+using smsc::logger::Logger;
 
 using namespace smsc::mtsmsme::processor::util; //for extern "C" static int print2vec(const void *buffer, size_t size, void *app_key);
 static void relMtResponse();
 static void *prepMtResponse();
 static void DialogResp(EXT_t *obj);
 static std::vector<unsigned char> sample_encode_mt_resp();
+static Logger* logger = 0;
 
 static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
+
+Encoder::Encoder() { logger = Logger::getInstance("mt.sme.enc"); }
+Encoder::~Encoder() {}
 
 int Encoder::encodeACNotSupported(TrId dtid,AC& ac,vector<unsigned char>& buf)
 {
@@ -60,7 +61,7 @@ int Encoder::encodeACNotSupported(TrId dtid,AC& ac,vector<unsigned char>& buf)
   er = der_encode(def, &abort,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
@@ -89,7 +90,7 @@ int Encoder::encodeBadTrPortion(TrId dtid,vector<unsigned char>& buf)
   er = der_encode(def, &abort,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
@@ -115,7 +116,7 @@ int Encoder::encodeResourceLimitation(TrId dtid,vector<unsigned char>& buf)
   er = der_encode(def, &abort,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
@@ -127,7 +128,7 @@ int Encoder::encode_mt_resp(EndMsg& msg,vector<unsigned char>& buf)
   er = der_encode(def, &msg.end,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
@@ -139,7 +140,7 @@ int Encoder::encode_resp(ContMsg& msg,vector<unsigned char>& buf)
   er = der_encode(def, &msg.cont,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
@@ -151,7 +152,7 @@ int Encoder::encode_resp(EndMsg& msg,vector<unsigned char>& buf)
   er = der_encode(def, &msg.end,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
@@ -164,30 +165,12 @@ int Encoder::encode_mt_resp(ContMsg& msg,vector<unsigned char>& buf)
   er = der_encode(def, &msg.cont,print2vec, &buf);
 
   if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
+    smsc_log_error(logger,
                    "Cannot encode %s",
                    er.failed_type->name);
   }
   return (er.encoded == -1);
 }
-
-Encoder::Encoder()
-{
-}
-
-Encoder::~Encoder()
-{
-}
-
-
-//static int print2vec(const void *buffer, size_t size, void *app_key) {
-//  std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
-//  unsigned char *buf = (unsigned char *)buffer;
-//
-//  stream->insert(stream->end(),buf, buf + size);
-//
-//  return 0;
-//}
 
 }//namespace encode
 }//namespace processor

@@ -10,6 +10,7 @@ namespace processor{
 namespace encode{
 
 using std::vector;
+using smsc::logger::Logger;
 
 class Encoder {
   public:

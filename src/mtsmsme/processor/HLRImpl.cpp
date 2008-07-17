@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
 #include "sms/sms.h"
 #include "logger/Logger.h"
 #include "util.hpp"
+#include "TCO.hpp"
 #include <queue>
 
 namespace smsc{namespace mtsmsme{namespace processor{
@@ -13,17 +14,18 @@ using smsc::sms::AddressValue;
 using smsc::logger::Logger;
 using smsc::mtsmsme::processor::util::packSCCPAddress;
 using smsc::mtsmsme::comp::UpdateLocationReq;
+using smsc::mtsmsme::processor::TCO;
 
 static Logger* logger = 0;
-static TCO* coordinator =  0;                                                                                        
-static string msc_digits;                                                                                            
-static string vlr_digits;                                                                                            
+static TCO* coordinator =  0;
+static string msc_digits;
+static string vlr_digits;
 // list of registration tasks
 class SubscriberRegistrationTask;
-class SubscriberRegistrationTaskComparator { public: bool operator()(SubscriberRegistrationTask*,SubscriberRegistrationTask*);};                                                                                        
-static std::priority_queue<SubscriberRegistrationTask*,std::vector<SubscriberRegistrationTask*>,SubscriberRegistrationTaskComparator> tqueue;                                                      
+class SubscriberRegistrationTaskComparator { public: bool operator()(SubscriberRegistrationTask*,SubscriberRegistrationTask*);};
+static std::priority_queue<SubscriberRegistrationTask*,std::vector<SubscriberRegistrationTask*>,SubscriberRegistrationTaskComparator> tqueue;
 // list of pending update location invokations
-class UpdateLocationTask;                                                                       
+class UpdateLocationTask;
 static std::queue<UpdateLocationTask*> pqueue;
 
 class SubscriberRegistrationTask {
@@ -55,22 +57,22 @@ class UpdateLocationTask: public TsmComletionListener{
   public:
     UpdateLocationTask(SubscriberRegistrationTask& _info):status(0),info(_info){}
     SubscriberRegistrationTask info;
-    void changeStatus(int _status)                                                                                   
-    {                                                                                                                
-      status = _status;                                                                                              
-      if (status == 1)                                                                                               
-        smsc_log_debug(logger,                                                                                       
-                 "COMPLETED UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());                                  
+    void changeStatus(int _status)
+    {
+      status = _status;
+      if (status == 1)
+        smsc_log_debug(logger,
+                 "COMPLETED UPDATELOCATION imsi=\'%s\'",info.imsi.c_str());
     }
     void process(TCO* coordinator)
     {
-      smsc_log_debug(logger,                                                                                             
-                 "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds" 
-                 " serving by msc=\'%s\', vlr=\'%s\'",                                                               
-                 info.imsi.c_str(), info.msisdn.c_str(), info.mgt.c_str(), info.period,                                                     
+      smsc_log_debug(logger,
+                 "FAKE UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"
+                 " serving by msc=\'%s\', vlr=\'%s\'",
+                 info.imsi.c_str(), info.msisdn.c_str(), info.mgt.c_str(), info.period,
                  msc_digits.c_str(), vlr_digits.c_str());
       //changeStatus(1);
-      if (coordinator) 
+      if (coordinator)
       {
         TSM* tsm;
         AC appcntx = net_loc_upd_v2;
@@ -84,10 +86,7 @@ class UpdateLocationTask: public TsmComletionListener{
           msg.setParameters(info.imsi, msc_digits,vlr_digits);
           tsm->TInvokeReq( 1 /* invokeId */, 2 /* updateLocation operation */, msg);
 
-          uint8_t cl[20];
-          uint8_t cllen;
-          uint8_t cd[20];
-          uint8_t cdlen;
+          uint8_t cl[20]; uint8_t cllen; uint8_t cd[20]; uint8_t cdlen;
           cllen = packSCCPAddress(cl, 1 /* E.164 */, vlr_digits.c_str() /* VLR E.164 */, 7 /* VLR SSN */);
           cdlen = packSCCPAddress(cd, 7 /* E.214 */, info.mgt.c_str()   /* MS  E.214 */, 6 /* HLR SSN */);
           tsm->TBeginReq(cdlen, cd, cllen, cl);
@@ -110,23 +109,46 @@ void SubscriberRegistrator::configure(Address& _msc, Address& _vlr)
   _msc.getValue(mscnumber); msc_digits = mscnumber;
   _vlr.getValue(vlrnumber); vlr_digits = vlrnumber;
 }
-
+int SubscriberRegistrator::update(Address& imsi, Address& msisdn, Address& mgt)
+{
+  smsc_log_debug(logger,
+                 "register MSISDN in INTRERNAL HLR "
+                 "imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\'"
+                 " serving by msc=\'%s\', vlr=\'%s\'",
+                 imsi.toString().c_str(), msisdn.toString().c_str(),
+                 mgt.toString().c_str(), msc_digits.c_str(), vlr_digits.c_str());
+  hlr.insert(pair<const string,string>(msisdn.value,imsi.value));
+  return 0;
+}
+typedef map<string,string>::iterator hlriter;
+bool SubscriberRegistrator::lookup(Address& msisdn, Address& imsi)
+{
+  hlriter pos = hlr.find(msisdn.value);
+  if ( pos != hlr.end())
+  {
+    imsi.setValue(pos->second.size(),pos->second.c_str());
+    smsc_log_debug(logger,"hlr::lookup for %s succeded with %s",msisdn.toString().c_str(),imsi.toString().c_str());
+    return true;
+  }
+  smsc_log_debug(logger,"hlr::lookup for %s failed",msisdn.toString().c_str());
+  return false;
+}
 /**
- * request to register specified info to HLR on periodical basis specified by period.                         
- * if 'period' parameter equals zero then register info only once                                             
+ * request to register specified info to HLR on periodical basis specified by period.
+ * if 'period' parameter equals zero then register info only once
  */
 void SubscriberRegistrator::registerSubscriber(Address& imsi, Address& msisdn, Address& mgt, int period)
 {
-  AddressValue imsi_digits;  imsi.getValue(imsi_digits); 
+  AddressValue imsi_digits;  imsi.getValue(imsi_digits);
   AddressValue msisdn_digits; msisdn.getValue(msisdn_digits);
   AddressValue mgt_digits; mgt.getValue(mgt_digits);
   SubscriberRegistrationTask* info;
- 
+
   info = new  SubscriberRegistrationTask(imsi_digits,msisdn_digits,mgt_digits,msc_digits,vlr_digits,period);
   info->setDelay(60); //additional delay on starting update location
-  tqueue.push(info);                                                                                                 
-  smsc_log_debug(logger,                                                                                             
-                 "register update location task for imsi=\'%s\' with period=%d seconds",                             
+  tqueue.push(info);
+  smsc_log_debug(logger,
+                 "register update location task for imsi=\'%s\' with period=%d seconds",
                  info->imsi.c_str(),info->period);
   //smsc_log_debug(logger,
   //               "register request for UPDATELOCATION imsi=\'%s\', msisdn=\'%s\', mgt=\'%s\' with period=%d seconds"

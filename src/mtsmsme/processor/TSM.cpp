@@ -17,10 +17,8 @@ TSM::~TSM()
 {
 }
 
-void TSM::TBeginReq(uint8_t  cdlen, 
-                           uint8_t* cd,        /* called party address */
-                           uint8_t  cllen,
-                           uint8_t* cl        /* calling party address */)
+void TSM::TBeginReq(uint8_t cdlen, uint8_t* cd, /* called party address */
+                    uint8_t cllen, uint8_t* cl /* calling party address */)
 {
   smsc_log_debug(logger,"TSM::TBeginReq() is NOT IMPLEMENTED");
   return;

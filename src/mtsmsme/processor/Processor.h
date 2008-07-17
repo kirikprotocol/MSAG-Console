@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string>
 #include <sms/sms.h>
 
 #include <sms/sms.h>
@@ -64,10 +63,28 @@ namespace smsc { namespace mtsmsme { namespace processor
    class HLROAM
    {
      public:
+       // REGISTRATION ON EXTERNAL(REAL) HLR
        // request to register specified info to HLR on periodical basis specified by period.
-       // if 'period' parameter equals zero then register info only once 
+       // if 'period' parameter equals zero then register info only once
        virtual void registerSubscriber(Address& imsi, Address& msisdn, Address& mgt, int period) = 0;
+       // REGISTRATION ON INTERNAL HLR
+       // find or create subscriber record in internal database then update it
+       // return operation status
+       virtual int update(Address& imsi, Address& msisdn, Address& mgt) = 0;
+       virtual bool lookup(Address& msisdn, Address& imsi) = 0;
    };
+   class RequestProcessor;
+   /*
+    * Interface for Request Processor Factory
+    */
+    class RequestProcessorFactory
+    {
+      public:
+        static RequestProcessorFactory* getInstance();
+        virtual RequestProcessor* createRequestProcessor(const char* type) = 0;
+      protected:
+        RequestProcessorFactory() {};
+    };
     /**
      * Interface for request manager
      * Note: Need to be implemnted by lower layer.
@@ -75,19 +92,13 @@ namespace smsc { namespace mtsmsme { namespace processor
     class RequestProcessor
     {
     public:
-
-        static RequestProcessor* getInstance();
         virtual void configure(int user_id, int ssn, Address& msc, Address& vlr, Address& hlr) = 0;
         virtual void setRequestSender(RequestSender* sender) = 0;
         virtual HLROAM* getHLROAM() = 0;
-
         virtual int Run() = 0;
         virtual void Stop() = 0;
-
         virtual ~RequestProcessor() {};
-
     protected:
-
         RequestProcessor() {};
     };
 }}}

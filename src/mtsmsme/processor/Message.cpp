@@ -3,23 +3,18 @@ static char const ident[] = "$Id$";
 #include "mtsmsme/processor/util.hpp"
 #include <stdio.h>
 #include <sys/types.h>
-
 #include "logger/Logger.h"
-using smsc::logger::Logger;
-namespace smsc{namespace mtsmsme{namespace processor{
-extern Logger* MtSmsProcessorLogger;
-}}}
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
 static asn_TYPE_descriptor_t *def = &asn_DEF_TCMessage;
 using std::vector;
 using std::string;
+using smsc::logger::Logger;
 /*
  * Constructor
  */
-Message::Message(void *_structure){structure = _structure;}
-Message::Message(){structure = 0;}
+Message::Message(Logger* _logger){structure = 0; logger = _logger; }
 void Message::setStructure(void *_structure)
 {
   if(structure)
@@ -212,13 +207,20 @@ void Message::getAppContext(AC& ac)
               {
                 unsigned long sm_mt_relay_v1_buf[] = {0,4,0,0,1,0,25,1};
                 ac.init(sm_mt_relay_v1_buf,sizeof(sm_mt_relay_v1_buf)/sizeof(unsigned long));
-                smsc_log_debug(MtSmsProcessorLogger,"derive sm_mt_relay_v1 application context");
+                smsc_log_debug(logger,"derive sm_mt_relay_v1 application context");
+              }
+              // SRI4SM operation
+              if (comp->choice.invoke.opcode.choice.local == 45)
+              {
+                unsigned long shortMsgGatewayContext_v1_buf[] = {0,4,0,0,1,0,20,1};
+                ac.init(shortMsgGatewayContext_v1_buf,sizeof(shortMsgGatewayContext_v1_buf)/sizeof(unsigned long));
+                smsc_log_debug(logger,"derive shortMsgGatewayContext_v1 application context");
               }
               if (comp->choice.invoke.opcode.choice.local == 4)
               {
                 unsigned long roamingNumberEnquiryContext_v1_buf[] = {0,4,0,0,1,0,3,1};
                 ac.init(roamingNumberEnquiryContext_v1_buf,sizeof(roamingNumberEnquiryContext_v1_buf)/sizeof(unsigned long));
-                smsc_log_debug(MtSmsProcessorLogger,"derive roamingNumberEnquiryContext_v1_buf application context");
+                smsc_log_debug(logger,"derive roamingNumberEnquiryContext_v1_buf application context");
               }
             }
           }
@@ -366,7 +368,16 @@ void ContMsg::setComponent(int result, int iid)
   comps.list.array = arr;
   cont.choice.contiinue.components = &comps;
 }
-EndMsg::EndMsg()
+EndMsg::EndMsg(): logger(0)
+{
+//  logger = 0;
+  end.present = TCMessage_PR_end;
+  end.choice.end.dialoguePortion = 0;
+  end.choice.end.components = 0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.size=0;
+  dp.encoding.choice.single_ASN1_type.choice.dialogueResponse.application_context_name.buf=0;
+}
+EndMsg::EndMsg(Logger* _logger): logger(_logger)
 {
   end.present = TCMessage_PR_end;
   end.choice.end.dialoguePortion = 0;
@@ -387,7 +398,11 @@ void EndMsg::setTrId(TrId dtid)
 }
 void EndMsg::setDialog(AC& _ac)
 {
-  if(_ac == sm_mt_relay_v1 || _ac == null_ac || _ac == roamingNumberEnquiryContext_v1 ) return;
+  if(_ac == sm_mt_relay_v1 ||
+     _ac == null_ac ||
+     _ac == roamingNumberEnquiryContext_v1 ||
+     _ac == shortMsgGatewayContext_v1)
+    return;
   ac = _ac;
   dp.direct_reference = &pduoid;
   dp.indirect_reference = 0;
@@ -420,15 +435,22 @@ void EndMsg::setComponent(int result, int iid)
     comp.choice.returnResultLast.invokeId = iid;
     comp.choice.returnResultLast.result = 0;
   }
-  arr[0]= &comp;
-  comps.list.count = 1;
-  comps.list.size = 1;
-  comps.list.array = arr;
-  end.choice.end.components = &comps;
+  fillComponentList();
+  //arr[0]= &comp;
+  //comps.list.count = 1;
+  //comps.list.size = 1;
+  //comps.list.array = arr;
+  //end.choice.end.components = &comps;
 }
 void EndMsg::encode(vector<unsigned char>& buf)
 {
   asn_enc_rval_t er = der_encode(def,&end,print2vec, &buf);
+  if(er.encoded == -1 && logger)
+  {
+    smsc_log_error(logger,
+                   "EndMsg::encode() fails, encode %d bytes, can't encode %s",
+                   er.encoded, er.failed_type->name);
+  }
 }
 void EndMsg::setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& argument)
 {
@@ -442,6 +464,26 @@ void EndMsg::setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& ar
   comp.present = Component_PR_returnResultLast;
   comp.choice.returnResultLast.invokeId = iid;
   comp.choice.returnResultLast.result = &res;
+  fillComponentList();
+  //initialize component list
+  //arr[0]= &comp;
+  //comps.list.count = 1;
+  //comps.list.size = 1;
+  //comps.list.array = arr;
+  //initialize components portion
+  //end.choice.end.components = &comps;
+}
+void EndMsg::setError(int iid, uint8_t errcode, vector<unsigned char>& argument)
+{
+  comp.present = Component_PR_returnError;
+  comp.choice.returnError.invokeId = iid;
+  comp.choice.returnError.errcode.present = Error_PR_local;
+  comp.choice.returnError.errcode.choice.local = errcode;
+  comp.choice.returnError.parameter = 0;
+  fillComponentList();
+}
+void EndMsg::fillComponentList()
+{
   //initialize component list
   arr[0]= &comp;
   comps.list.count = 1;

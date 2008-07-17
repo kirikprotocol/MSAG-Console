@@ -5,6 +5,7 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <vector>
 #include "logger/Logger.h"
+#include "MT-ForwardSM-Arg.h"
 
 namespace smsc{namespace mtsmsme{namespace processor{namespace decode{
 

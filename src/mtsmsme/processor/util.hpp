@@ -38,6 +38,7 @@ extern const char* getModuleName(USHORT_T moduleId);
 extern const char* getSccpBindStatusDescription(UCHAR_T result);
 extern unsigned packNumString2BCD(unsigned char* bcd, const char* str,unsigned slen, bool filler = true);
 extern unsigned packNumString2BCD91(unsigned char* bcd, const char* str,unsigned slen, bool filler = true);
+extern unsigned unpackBCD912NumString(char* dst, const unsigned char* src, unsigned srclen);
 extern unsigned packSCCPAddress(unsigned char* dst, unsigned char npi, const char *saddr, unsigned char ssn);
 extern bool modifyssn(UCHAR_T* src, UCHAR_T len, const char* pattern, UCHAR_T newssn);
 }//namespace util

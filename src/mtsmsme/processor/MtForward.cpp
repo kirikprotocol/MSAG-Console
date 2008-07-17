@@ -2,19 +2,7 @@ static char const ident[] = "$Id$";
 #include "MtForward.hpp"
 #include <stdio.h>
 #include <sys/types.h>
-//#include "MT-ForwardSM-Arg.h"
-//extern "C" {
-//#include <constr_TYPE.h>
-//#include <MT-ForwardSM-Arg.h>
-//}
-//extern asn_TYPE_descriptor_t asn_DEF_MT_ForwardSM_Arg;
-
-#include "logger/Logger.h"
-using smsc::logger::Logger;
-namespace smsc{namespace mtsmsme{namespace processor{
-extern Logger* MtSmsProcessorLogger;
-}}}
-
+#include "MT-ForwardSM-Arg.h"
 #include <vector>
 namespace smsc{namespace mtsmsme{namespace processor{
 

@@ -8,10 +8,12 @@
 #include <string.h>
 #include <stdio.h>
 #include "mtsmsme/processor/ACRepo.hpp"
+#include "logger/Logger.h"
 #include "TCMessage.h"
 
 namespace smsc{namespace mtsmsme{namespace processor{
 
+using smsc::logger::Logger;
 using std::vector;
 using std::string;
 
@@ -23,7 +25,7 @@ class BeginMsg {
     void setDialog(AC& _ac);
     void setInvokeReq(int iid, uint8_t opcode, vector<unsigned char>& argument);
     void encode(vector<unsigned char>& buf);
-    
+
     TCMessage_t begin;
     EXT_t         dp;
     ComponentPortion_t comps;
@@ -55,11 +57,13 @@ class ContMsg {
 class EndMsg {
   public:
     EndMsg();
+    EndMsg(Logger *logger);
     ~EndMsg();
     void setTrId(TrId dtid);
     void setDialog(AC& _ac);
     void setComponent(int result, int iid);
     void setReturnResultL(int iid, uint8_t opcode, vector<unsigned char>& argument);
+    void setError(int iid, uint8_t errcode, vector<unsigned char>& argument);
     void encode(vector<unsigned char>& buf);
 
     TCMessage_t end;
@@ -71,6 +75,9 @@ class EndMsg {
     AC ac;
 
     uint8_t trid[4];
+  private:
+    void fillComponentList();
+    Logger* logger;
 };
 class Message {
   public:
@@ -85,12 +92,12 @@ class Message {
     void getAppContext(AC& ac);
     string toString();
     vector<unsigned char> getComponent();
-    Message(void *structure);
-    Message();
+    Message(Logger *logger);
     void setStructure(void *structure);
     ~Message();
   private:
     void *structure;
+    Logger* logger;
 };
 
 }/*namespace processor*/}/*namespace mtsmsme*/}/*namespace smsc*/

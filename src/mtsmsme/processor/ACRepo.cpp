@@ -124,7 +124,10 @@ bool isIncomingContextSupported(AC& appcntx)
           appcntx == roamingNumberEnquiryContext_v2 ||
           appcntx == roamingNumberEnquiryContext_v3 ||
           appcntx == subscriberDataMngtContext_v2 ||
-          appcntx == subscriberDataMngtContext_v3
+          appcntx == subscriberDataMngtContext_v3 ||
+          appcntx == shortMsgGatewayContext_v1 ||
+          appcntx == shortMsgGatewayContext_v2 ||
+          appcntx == shortMsgGatewayContext_v3
          );
 }
 TSM* createIncomingTSM(TrId ltrid,AC& appcntx,TCO* tco)
