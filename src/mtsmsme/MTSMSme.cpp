@@ -251,9 +251,9 @@ public:
 
         int seqNum = session->getNextSeq();
         sm.get_header().set_sequenceNumber(seqNum);
-        sm.get_message().get_dest()  .set_typeOfNumber(da.type);
-        sm.get_message().get_dest()  .set_numberingPlan(da.plan);
-        sm.get_message().get_dest()  .set_value(da.value);
+        sm.get_message().get_dest().set_typeOfNumber(da.type);
+        sm.get_message().get_dest().set_numberingPlan(da.plan);
+        sm.get_message().get_dest().set_value(da.value);
 
         smsc_log_info(logger, "Sending sms to smsc oa=%s da=%s imsi=%s",
                       sms->originatingAddress.toString().c_str(),
@@ -386,18 +386,36 @@ class RequestProcessorConfig {
     Address msc;
     Address vlr;
     Address hlr;
+    const char* sccpprv;
   private:
     char* msc_str;
     char* vlr_str;
     char* hlr_str;
+    Logger* logger;
   public:
-    RequestProcessorConfig() { msc_str = NULL; vlr_str = NULL; }
+    RequestProcessorConfig(Logger* _logger)
+    { 
+      msc_str = NULL;
+      vlr_str = NULL;
+      sccpprv = NULL;
+      hlr_str = NULL;
+      logger = _logger;
+    }
     void read(Manager& manager)
     {
       if (!manager.findSection("MTSMSme.SCCP"))
         throw ConfigException("\'SCCP\' section is missed");
 
       ConfigView sccpConfig(manager, "MTSMSme.SCCP");
+      
+      try {
+        sccpprv = sccpConfig.getString("sccp_provider");
+      }
+      catch (ConfigException& exc)
+      {
+          smsc_log_debug(logger, "\'sccp_provider\' is not defined, \"tietoenator\" will be used");
+          sccpprv = "tietoenator";
+      }
       try { user = sccpConfig.getInt("user_id");
       } catch (ConfigException& exc) {
         throw ConfigException("\'user_id\' is unknown or missing");
@@ -465,7 +483,23 @@ public:
       } catch (ConfigException& exc) {
             throw ConfigException("\'period\' param is empty or wasn't specified for section %s", section);
       }
-      hlr->registerSubscriber(Address(imsi), Address(msisdn), Address(mgt), period);
+      const char* reg_type = subscriber_cfg->getString("reg_type");
+      if (!reg_type || !reg_type[0])
+      {
+        smsc_log_warn(logger,
+                      "\'reg_type\' param is empty or wasn't specified "
+                      "for section %s, \'external\' type is assumed", section);
+        reg_type = "external";
+      }
+      if (strcmp(reg_type, "external") == 0)
+        hlr->registerSubscriber(Address(imsi), Address(msisdn), Address(mgt),
+                                period);
+      else if (strcmp(reg_type, "internal") == 0)
+        hlr->update(Address(imsi), Address(msisdn), Address(mgt));
+      else
+          throw ConfigException("\'reg_type\' param has wrong value for "
+                                "section %s, \'external\' or \'internal\' "
+                                "only applied", section);
     }
     //smsc_log_info(logger, "Registering subscribers IMSI to database has been completed");
   }
@@ -550,11 +584,16 @@ int main(void)
         ConfigView aliasConfig(manager, "MTSMSme.Aliases");
         AliasManager aliaser(&aliasConfig);
 
-        requestProcessor = RequestProcessor::getInstance();
+        RequestProcessorConfig rp_cfg(logger);
+        rp_cfg.read(manager);
+
+        RequestProcessorFactory* factory = 0;
+        factory = RequestProcessorFactory::getInstance();
+        if (!factory) throw Exception("RequestProcessorFactory is undefined");
+        
+        requestProcessor = factory->createRequestProcessor(rp_cfg.sccpprv);
         if (!requestProcessor) throw Exception("RequestProcessor is undefined");
 
-        RequestProcessorConfig rp_cfg;
-        rp_cfg.read(manager);
         requestProcessor->configure(rp_cfg.user,rp_cfg.ssn,rp_cfg.msc,rp_cfg.vlr,rp_cfg.hlr);
         SubscriberList sm(&manager);
         sm.registerto(requestProcessor->getHLROAM());

@@ -6,6 +6,7 @@
 #include "mtsmsme/processor/util.hpp"
 #include "Component.hpp"
 #include "UpdateLocationArg.h"
+#include "TCMessage.h"
 #include <string>
 
 namespace smsc{ namespace mtsmsme{ namespace comp{
@@ -20,7 +21,6 @@ class UpdateLocationMessage: public  CompIF {
     ~UpdateLocationMessage();
     void setOTID(TrId _otid);
     void setComponent(const string& imsi, const string& msc,const string& vlr);
-
     virtual void encode(vector<unsigned char>& buf);
     virtual void decode(const vector<unsigned char>& buf);
 private:
@@ -37,13 +37,12 @@ private:
     OCTET_STRING_DECL(_vlr, 20);
     OCTET_STRING_DECL(_msc, 20);
 };
-class UpdateLocationReq: public  CompIF {
+class UpdateLocationReq : public CompIF {
   public:
-    void setParameters(const string& imsi, const string& msc,const string& vlr);
-
+    void setParameters(const string& imsi, const string& msc, const string& vlr);
     virtual void encode(vector<unsigned char>& buf);
     virtual void decode(const vector<unsigned char>& buf);
-private:
+  private:
     UpdateLocationArg_t arg;
     VLR_Capability_t vlrcap;
     OCTET_STRING_DECL(_imsi,20);

@@ -15,7 +15,11 @@ public:
     virtual void encode(vector<unsigned char>& buf) = 0;
     virtual void decode(const vector<unsigned char>& buf) = 0;
 };
-
+class EmptyComp: public CompIF {
+  public:
+    void encode(vector<unsigned char>& buf) {}
+    void decode(const vector<unsigned char>& buf) {}
+};
 /* namespace comp */ } /* namespace mtsmsme */ } /* namespace smsc */ }
 
 #endif /* __SMSC_MTSMSME_COMP_COMP_HPP__  */
