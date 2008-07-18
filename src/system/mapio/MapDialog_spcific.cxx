@@ -462,7 +462,7 @@ inline void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   if ( ma->st.ton == 5 )
   {
     MicroString text;
-    Convert7BitToText(ma->val,(ma->len*8)/7,&text,0);
+    Convert7BitToText(ma->val,(ma->len*4)/7,&text,0); // len originally specified in usefull semioctets
     if ( text.len == 0 || text.bytes[0] == 0 ) throw runtime_error("MAP::ConvAddrMap2Smc: zero address");
     if( text.bytes[text.len-1]==0x0d ) {
       text.len--;
