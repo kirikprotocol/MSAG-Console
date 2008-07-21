@@ -10,11 +10,25 @@ namespace scag {
 namespace util {
 namespace storage {
 
-class BufferUnderrunException : public std::exception {
+class DeserializerException : public std::exception {
+private:
+    DeserializerException();
+    // make sure w lives enough
+    DeserializerException( const char* w ) : what_(w) {}
+
 public:
-    BufferUnderrunException() {}
-    virtual ~BufferUnderrunException() throw () {}
-    virtual const char* what() const throw () { return "Deserializer has not enough data in buffer"; }
+    inline static DeserializerException bufferUnderrun() {
+        return DeserializerException("Deserializer: buffer underrun");
+    }
+    inline static DeserializerException stringMismatch() {
+        return DeserializerException("Deserializer: c-string mismatch");
+    }
+
+    virtual ~DeserializerException() throw () {}
+    virtual const char* what() const throw () { return what_; }
+
+private:
+    const char* what_;
 };
 
 
@@ -48,6 +62,7 @@ public:
     Serializer& operator << ( uint16_t );
     Serializer& operator << ( uint32_t );
     Serializer& operator << ( uint64_t );
+    Serializer& operator << ( const char* );
     Serializer& operator << ( const std::string& );
     Serializer& operator << ( const Buf& );
 
@@ -73,19 +88,25 @@ class Deserializer : public SerializerBase
 public:
     Deserializer( const Buf& buf ) : buf_(buf), rpos_(0) {}
 
-    Deserializer& operator >> ( uint8_t& ) throw ( BufferUnderrunException );
-    Deserializer& operator >> ( uint16_t& ) throw ( BufferUnderrunException );
-    Deserializer& operator >> ( uint32_t& ) throw ( BufferUnderrunException );
-    Deserializer& operator >> ( uint64_t& ) throw ( BufferUnderrunException );
-    Deserializer& operator >> ( std::string& ) throw ( BufferUnderrunException );
-    Deserializer& operator >> ( Buf& ) throw ( BufferUnderrunException );
+    Deserializer& operator >> ( uint8_t& ) throw ( DeserializerException );
+    Deserializer& operator >> ( uint16_t& ) throw ( DeserializerException );
+    Deserializer& operator >> ( uint32_t& ) throw ( DeserializerException );
+    Deserializer& operator >> ( uint64_t& ) throw ( DeserializerException );
+    Deserializer& operator >> ( const char* ) throw ( DeserializerException );
+    Deserializer& operator >> ( std::string& ) throw ( DeserializerException );
+    Deserializer& operator >> ( Buf& ) throw ( DeserializerException );
 
-    size_t size() const {
+    inline size_t size() const {
         return buf_.size();
     }
     
-    size_t rpos() const {
+    inline size_t rpos() const {
         return rpos_;
+    }
+
+    inline void setrpos( size_t r ) throw ( DeserializerException ) {
+        if ( r > size() ) throw DeserializerException::bufferUnderrun();
+        rpos_ = r;
     }
 
     uint32_t checksum( size_t pos1, size_t pos2 ) const {
@@ -94,13 +115,13 @@ public:
 
 private:
     /// read from buffer into \ptr.
-    void readbuf( unsigned char* ptr, size_t size ) throw ( BufferUnderrunException );
+    void readbuf( unsigned char* ptr, size_t size ) throw ( DeserializerException );
     
     /// 1. checks that buffer has enough data to read;
     /// 2. if not raise an exception.
-    inline void rcheck( size_t sz ) const throw ( BufferUnderrunException ) {
+    inline void rcheck( size_t sz ) const throw ( DeserializerException ) {
         if ( rpos_ + sz > buf_.size() )
-            throw BufferUnderrunException();
+            throw DeserializerException::bufferUnderrun();
     }
 
 private:

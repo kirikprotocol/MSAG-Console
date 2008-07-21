@@ -5,6 +5,7 @@
 // template class parameter MemStorage of CachedDiskStorage
 // interface.
 
+#include <stdexcept>
 #include "logger/Logger.h"
 #include "core/buffers/XHash.hpp"
 
@@ -52,6 +53,9 @@ public:
     typedef typename TypeJuggling< Val >::value_type  value_type;
     typedef typename TypeJuggling< Val >::stored_type stored_type;
 
+private:
+    typedef smsc::core::buffers::XHash<key_type,stored_type,HF>  hash_type;
+
 public:
     HashedMemoryCache( unsigned int cachesize = 10000 ) :
     hash_(cachesize),
@@ -62,7 +66,6 @@ public:
     ~HashedMemoryCache() {
         clean();
     }
-
 
     bool set( const key_type& k, stored_type v ) {
         smsc_log_debug( cachelog_, "set: %s", k.toString().c_str() );
@@ -84,8 +87,8 @@ public:
     }
 
 
-    const stored_type* get( const key_type& k ) const {
-        const stored_type* vv = hash_.GetPtr(k);
+    stored_type* get( const key_type& k ) const {
+        stored_type* vv = const_cast<hash_type&>(hash_).GetPtr( k );
         // stored_type v( vv ? *vv : this->val2store(NULL) );
         smsc_log_debug( cachelog_, "get: %s %s", k.toString().c_str(), ( vv && store2val(*vv) ) ? "hit" : "miss" );
         return vv;
@@ -129,7 +132,6 @@ public:
      */
 
 private:
-    typedef smsc::core::buffers::XHash<key_type,stored_type,HF>  hash_type;
 
 public:
     class Iterator 

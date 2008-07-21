@@ -108,7 +108,8 @@ public:
             Deserializer s( buf );
             s >> v;
             // key_ = "destroyed";
-        } catch ( BufferUnderrunException& ) {
+        } catch ( DeserializerException& e ) {
+            smsc_log_error( disklog_, "exception occurred: %s", e.what() );
             return false;
         }
         return true;

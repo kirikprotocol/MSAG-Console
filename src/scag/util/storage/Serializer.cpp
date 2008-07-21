@@ -31,6 +31,13 @@ namespace storage {
         return *this;
     }
 
+    Serializer& Serializer::operator << ( const char* str ) {
+        const uint32_t sz(str ? strlen(str) : 0);
+        cvt.longs[0] = htonl(sz);
+        std::copy( str, str+sz, std::copy( cvt.bytes, cvt.bytes+4, ensure(sz+4)) );
+        return *this;
+    }
+
     Serializer& Serializer::operator << ( const std::string& i ) {
         const uint32_t sz( i.size() );
         cvt.longs[0] = htonl(sz);
@@ -48,14 +55,14 @@ namespace storage {
     }
 
 
-    Deserializer& Deserializer::operator >> ( uint8_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint8_t& i ) throw (DeserializerException )
     {
         readbuf( & static_cast<unsigned char&>(i), 1 ); 
         return *this;
     }
 
 
-    Deserializer& Deserializer::operator >> ( uint16_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint16_t& i ) throw ( DeserializerException )
     {
         readbuf( cvt.bytes, 2 );
         i = ntohs( cvt.words[0] );
@@ -63,7 +70,7 @@ namespace storage {
     }
 
     
-    Deserializer& Deserializer::operator >> ( uint32_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint32_t& i ) throw ( DeserializerException )
     {
         readbuf( cvt.bytes, 4 );
         i = ntohl( cvt.longs[0] );
@@ -71,7 +78,7 @@ namespace storage {
     }
 
     
-    Deserializer& Deserializer::operator >> ( uint64_t& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( uint64_t& i ) throw ( DeserializerException )
     {
         readbuf( cvt.bytes, 8 );
         i = (uint64_t(ntohl(cvt.longs[0])) << 32) + ntohl(cvt.longs[1]);
@@ -79,7 +86,21 @@ namespace storage {
     }
 
 
-    Deserializer& Deserializer::operator >> ( std::string& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( const char* str ) throw (DeserializerException) {
+        uint32_t sz;
+        *this >> sz;
+        rcheck(sz);
+        if ( !str ) {
+            if (sz) throw DeserializerException::stringMismatch();
+            return *this;
+        }
+        if ( strncmp( str, reinterpret_cast<const char*>(&(buf_[rpos_])), sz ) )
+            throw DeserializerException::stringMismatch();
+        return *this;
+    }
+
+
+    Deserializer& Deserializer::operator >> ( std::string& i ) throw ( DeserializerException )
     {
         uint32_t sz;
         *this >> sz;
@@ -90,7 +111,7 @@ namespace storage {
     }
 
 
-    Deserializer& Deserializer::operator >> ( Buf& i ) throw ( BufferUnderrunException )
+    Deserializer& Deserializer::operator >> ( Buf& i ) throw ( DeserializerException )
     {
         uint32_t sz;
         *this >> sz;
@@ -120,7 +141,7 @@ namespace storage {
     }
 
 
-    void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( BufferUnderrunException )
+    void Deserializer::readbuf( unsigned char* ptr, size_t sz ) throw ( DeserializerException )
     {
         rcheck( sz );
         std::copy( &(buf_[rpos_]), &(buf_[rpos_]) + sz, ptr );

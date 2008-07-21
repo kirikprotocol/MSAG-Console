@@ -54,8 +54,9 @@ public:
     typedef Iterator iterator_type;
 
 
-    CompositeDiskStorage()
+    CompositeDiskStorage() : log_(0)
     {
+        log_ = smsc::logger::Logger::getInstance("compstore");
         const StorageNumbering& n = StorageNumbering::instance();
         storages_.resize( n.storages(), NULL );
     }
@@ -64,12 +65,14 @@ public:
     // store gets owned
     void addStorage( unsigned idx, DStorage* store )
     {
+        if ( ! store ) return;
         std::auto_ptr< DStorage > x(store);
         if ( idx >= storages_.size() ) {
             throw smsc::util::Exception( "CompositeDiskStorage: idx=%u is too big", idx );
         } else if ( storages_[idx] ) {
             throw smsc::util::Exception( "CompositeDiskStorage: storage replacement is not allowed (idx=%u)", idx );
         }
+        smsc_log_info(log_, "storage #%u added: %p", idx, store );
         storages_[idx] = x.release();
     }
 
@@ -79,8 +82,11 @@ public:
         for ( typename std::vector< DStorage* >::iterator i = storages_.begin();
               i != storages_.end();
               ++i ) {
-            delete *i;
-            *i = NULL;
+            if ( *i ) {
+                smsc_log_info(log_, "storage #%u deleted: %p", i-storages_.begin(), *i );
+                delete *i;
+                *i = NULL;
+            }
         }
     }
 
@@ -99,7 +105,7 @@ public:
     bool set( const key_type& k, const value_type& v ) {
         return storage(k)->set(k,v);
     }
-        
+
 
     bool get( const key_type& k, value_type& v ) const {
         return storage(k)->get(k,v);
@@ -128,10 +134,12 @@ private:
             throw smsc::util::Exception
                 ( "CompositeDiskStorage: storage not found key=%s number=%llu idx=%u", k.toString().c_str(), k.toIndex(), n );
         }
+        smsc_log_debug(log_,"storage for key=%s is %u at %p", k.toString().c_str(), n, ret);
         return ret;
     }
 
 private:
+    smsc::logger::Logger*     log_;
     std::vector< DStorage* >  storages_;  // owned
 };
 

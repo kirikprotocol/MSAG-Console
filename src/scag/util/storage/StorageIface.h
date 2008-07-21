@@ -112,6 +112,36 @@ public:
 */
 
 
+class EmptyMutex {
+public:
+    inline void Lock() {}
+    inline void Unlock() {}
+};
+
+
+template < class T >
+class MutexCopyGuardTmpl
+{
+public:
+    MutexCopyGuardTmpl() : lock_(0) {}
+    MutexCopyGuardTmpl( T& l ) : lock_(&l) { lock_->Lock(); }
+    ~MutexCopyGuardTmpl() { if (lock_) lock_->Unlock(); }
+    MutexCopyGuardTmpl< T >& operator = ( const MutexCopyGuardTmpl< T >& o ) {
+        if ( this != &o ) {
+            if ( lock_ ) lock_->Unlock();
+            lock_ = o.lock_;
+            o.lock_ = 0;
+        }
+        return *this;
+    }
+
+    MutexCopyGuardTmpl( const MutexCopyGuardTmpl< T >& o ) : lock_(o.lock_) {
+        o.lock_ = 0;
+    }
+protected:
+    mutable T* lock_;
+};
+
 /// Indexed storage template class.
 /// Template parameters are IStorage -- a storage for indices
 /// and DStorage -- a storage for data.
@@ -141,7 +171,7 @@ public:
 ///     index_type append();                   // internal buffer
 ///     remove( index_type );
 /// };
-template < class IStorage, class DStorage >
+template < class IStorage, class DStorage, class LockType = EmptyMutex >
 class IndexedStorage
 {
 private:
@@ -149,8 +179,9 @@ private:
 public:
     typedef typename IStorage::key_type          key_type;
     typedef typename DStorage::value_type        value_type;
+    typedef MutexCopyGuardTmpl< LockType >       mutexguard_type;
 
-
+    /// NOTE: please use external locking for iteration!
     class Iterator {
         friend class IndexedStorage< IStorage, DStorage >;
     public:
@@ -195,12 +226,14 @@ public:
 
 
     unsigned long size() const {
+        mutexguard_type mg(lock_);
         return index_->size();
     }
 
 
     // return true if successful
     bool set( const key_type& k, const value_type& v ) {
+        mutexguard_type mg(lock_);
         data_->setKey(k);
         data_->serialize(v); // into internal buffer
         return do_set( k );
@@ -208,6 +241,7 @@ public:
 
 
     bool get( const key_type& k, value_type& v ) const {
+        mutexguard_type mg(lock_);
         index_type i = index_->getIndex( k );
         if ( i && data_->setKey(k) && data_->read(i) && data_->deserialize(v) )
             return true;
@@ -216,11 +250,13 @@ public:
 
 
     bool has( const key_type& k ) const {
+        mutexguard_type mg(lock_);
         return ( index_->getIndex( k ) != 0 );
     }
 
 
     bool remove( const key_type& k ) {
+        mutexguard_type mg(lock_);
         index_type i = index_->removeIndex( k );
         if ( i != 0 ) {
             data_->setKey( k );
@@ -233,6 +269,7 @@ public:
 
     /// NOTE: this method gives some optimization
     /// by avoiding extra deserialization/serialization steps.
+    /// NOTE: use external locking for this method!
     template < class IS, class DS > bool copy
         ( const key_type& k,
           const IndexedStorage<IS,DS>& s )
@@ -251,6 +288,13 @@ public:
     // iteration
     iterator_type begin() const {
         return iterator_type( *this );
+    }
+
+
+    /// obtain lock on the storage for iteration, copying, etc.
+    mutexguard_type getLock() const
+    {
+        return mutexguard_type(lock_);
     }
 
 private:
@@ -272,6 +316,7 @@ private:
     }
 
 private:
+    mutable LockType   lock_;
     IStorage*  index_;
     DStorage*  data_;
 };
@@ -362,14 +407,18 @@ public:
         return cache_->set(k, cache_->val2store(v) );
     }
 
-    value_type* get( const key_type& k ) const {
-        const stored_type* vv = cache_->get( k );
-        if ( vv && cache_->store2val(*vv) ) {
-            ++this->hitcount_;
+    value_type* get( const key_type& k, bool create = false ) const {
+        stored_type* const vv = cache_->get( k );
+        if ( vv ) {
+            if ( cache_->store2val(*vv) ) ++this->hitcount_;
+            // NOTE: we won't invoke faultHandler if we already
+            // have something (even NULL) with this key in cache.
+            // This is to remember the negative hit.
             return cache_->store2val(*vv);
         }
-        stored_type v = faultHandler( k );
-        if ( cache_->store2val(v) ) cache_->set(k,v);
+        stored_type v = faultHandler(k, create);
+        // if ( cache_->store2val(v) )
+        cache_->set(k,v);
         return cache_->store2val(v);
     }
 
@@ -386,7 +435,7 @@ public:
     /// NOTE: it is your responsibility to delete the return value.
     value_type* release( const key_type& k, bool fromdiskalso = false ) {
         std::auto_ptr<value_type> v( cache_->release(k) );
-        if ( fromdiskalso ) disk_->remove( k );
+        if ( v.get() && fromdiskalso ) disk_->remove( k );
         return v.release();
     }
 
@@ -471,11 +520,11 @@ public:
     }
 
 private:
-    stored_type faultHandler( const key_type& k ) const
+    stored_type faultHandler( const key_type& k, bool create ) const
     {
         if (!cache_->store2val(spare_)) spare_ = cache_->val2store( alloc(k) );
         // new typename DiskStorage::value_type( k );
-        if ( disk_->get(k,cache_->store2ref(spare_)) ) {
+        if ( disk_->get(k,cache_->store2ref(spare_)) || create ) {
             stored_type v = spare_;
             spare_ = cache_->val2store(NULL);
             return v;

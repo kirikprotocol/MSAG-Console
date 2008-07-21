@@ -91,7 +91,7 @@ public:
 	static const int ATTEMPT_INIT_RUNNING_PROC	= -20;
 
 	RBTreeHSAllocator():
-		rbtree_addr(0), rbtFileLen(0), growth(100000000), running(false)
+        rbtree_addr(0), growth(100000000), rbtFileLen(0), running(false)
 	{
             logger = smsc::logger::Logger::getInstance("RBTAlloc");
 	}
@@ -332,7 +332,7 @@ private:
         memset(rbtree_addr + rbtFileLen, 0x00, growth * sizeof(RBTreeNode));
         
         free_cell_list* cell = (free_cell_list*)(rbtree_addr + sizeof(rbtFileHeader) + header->cells_count * sizeof(RBTreeNode));
-        for( long i = header->cells_count + 1; i < header->cells_count + _growth; i++ )
+        for( unsigned long i = header->cells_count + 1; i < header->cells_count + _growth; i++ )
         {
             // if ( growth < 100 )
             // smsc_log_debug( logger, "RBTree cell #%d has address [%x..%x)", i-1, (caddr_t)cell, (caddr_t)cell + sizeof(RBTreeNode) );
@@ -398,7 +398,7 @@ private:
 		trans_f.Write((char*)&status, sizeof(int));
 
             uint32_t i;
-            if((i = ReallocRBTreeFile()) != SUCCESS)
+            if((i = ReallocRBTreeFile()) != uint32_t(SUCCESS))
                 return i;
             return SUCCESS;
 
