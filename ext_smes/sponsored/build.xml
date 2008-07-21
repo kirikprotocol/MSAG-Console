@@ -31,7 +31,6 @@
     </jar>
   </target>
 
-
   <target name="install" depends="build">
     <mkdir dir="${SME_DISTR_DIR}/bin"/>
     <mkdir dir="${SME_DISTR_DIR}/conf"/>

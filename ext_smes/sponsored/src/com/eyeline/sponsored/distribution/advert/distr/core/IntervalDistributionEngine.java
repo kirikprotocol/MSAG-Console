@@ -196,7 +196,7 @@ public class IntervalDistributionEngine implements DistributionEngine {
       while(started) {
         try {
 
-          Delivery d = deliveriesQueue.poll(3, TimeUnit.SECONDS);
+          Delivery d = deliveriesQueue.poll(1, TimeUnit.SECONDS);
           if (d == null)
             continue;
 
@@ -218,7 +218,9 @@ public class IntervalDistributionEngine implements DistributionEngine {
                   if (log.isDebugEnabled())
                     log.debug("Send msg: distr=" + d.getDistributionName() + "; subscr=" + d.getSubscriberAddress() + "; msg=" + banner.getBannerText() + "; advId=" + banner.getAdvertiserId() + "; time=" + d.getSendDate());
 
-                  outQueue.offer(o, d.getSendDate().getTime());
+                  if (!outQueue.offer(o, d.getSendDate().getTime()))
+                    log.error("Send msg failed: Outgoing queue overflow.");
+                    
                 } catch (ShutdownedException e) {
                   log.error("Out queue shutdowned", e);
                   return;

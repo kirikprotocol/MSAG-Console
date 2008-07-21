@@ -126,6 +126,7 @@ public class DeliveryStatExport {
       req.setCost(parser.getStringAttr("-c", null));
       req.setInterval(parser.getStringAttr("-i", null));
       req.setDir(parser.getStringAttr("-d", null));
+
       if (parser.containsAttr("-a"))
         req.setAdvertiserId(parser.getIntAttr("-a"));
       if (parser.containsAttr("-n"))
@@ -214,7 +215,7 @@ public class DeliveryStatExport {
 
     public void setFromDate(String fromDate) {
       try {
-        this.fromDate = CalendarUtils.getDayStart(df.parse(fromDate));
+        this.fromDate = fromDate == null ? null : CalendarUtils.getDayStart(df.parse(fromDate));
       } catch (ParseException e) {
         throw new IllegalArgumentException("Invalid start date. Format is dd-mm-yyyy");
       }
@@ -226,7 +227,7 @@ public class DeliveryStatExport {
 
     public void setToDate(String toDate) {
       try {
-        this.toDate = CalendarUtils.getNextDayStart(df.parse(toDate));
+        this.toDate = toDate == null ? null : CalendarUtils.getNextDayStart(df.parse(toDate));
       } catch (ParseException e) {
         throw new IllegalArgumentException("Invalid end date. Format is dd-mm-yyyy");
       }
@@ -250,7 +251,7 @@ public class DeliveryStatExport {
 
     public void setInterval(String interval) {
       try {
-      this.interval = Integer.parseInt(interval);
+        this.interval = interval == null ? null : Integer.parseInt(interval);
       } catch (NumberFormatException e) {
         throw new IllegalArgumentException("Invalid interval");
       }
