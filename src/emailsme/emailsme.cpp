@@ -2304,7 +2304,6 @@ int main(int argc,char* argv[])
     int sendSpeed=cfgman.getInt("smpp.partsSendSpeedPerHour");
     int sendDelay=3600*1000/sendSpeed;
     multiPartSendQueue.Init(cfgman.getString("store.queueDir"),sendDelay);
-    multiPartSendQueue.Start();
   }
 
   cfg::serviceType=cfgman.getString("smpp.serviceType");
@@ -2437,6 +2436,11 @@ int main(int argc,char* argv[])
       break;
     }
     if(cfg::stopSme)break;
+    if(cfg::partitionSms)
+    {
+      multiPartSendQueue.Start();
+    }
+    
     reconnectFlag=false;
     while(!cfg::stopSme)
     {
