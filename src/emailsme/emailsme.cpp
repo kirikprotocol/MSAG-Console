@@ -1527,6 +1527,7 @@ public:
   int Execute()
   {
     MutexGuard mg(mon);
+    smsc_log_info("Starting MultipartSendQueue");
     while(!needToStop)
     {
       while(!needToStop && smsQueue.empty())
@@ -1590,7 +1591,7 @@ public:
         sms.concatSeqNum++;
         if(sms.concatSeqNum>=ci->num)
         {
-          smsc_log_warn(log,"SMS delivery successfully completed:%s->%s",sms.getOriginatingAddress().toString().c_str(),
+          smsc_log_info(log,"SMS delivery successfully completed:%s->%s",sms.getOriginatingAddress().toString().c_str(),
                         sms.getDestinationAddress().toString().c_str());
           DeleteSms(*it);
           smsQueue.erase(it);
@@ -1599,6 +1600,8 @@ public:
         SaveSms(*it);
       }
     }
+    smsc_log_info(log,"Exiting MultipartSendQueue");
+    needToStop=false;
     return 0;
   }
 
@@ -2278,6 +2281,7 @@ int main(int argc,char* argv[])
 
 
   SmeConfig cfg;
+  cfg.idleTimeout=0;
   cfg.host=cfgman.getString("smpp.host");
   cfg.port=cfgman.getInt("smpp.port");
   cfg.sid=cfgman.getString("smpp.systemId");
