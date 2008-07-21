@@ -30,6 +30,9 @@
 #include "core/buffers/TmpBuf.hpp"
 #include "util/config/region/RegionsConfig.hpp"
 #include "util/config/region/RegionFinder.hpp"
+#include "sms/sms_serializer.h"
+#include "core/buffers/File.hpp"
+#include "system/status.h"
 
 
 static const char* cssc_version="@(#)" FILEVER;
@@ -830,6 +833,7 @@ namespace cfg{
  RegExp reTransform;
  std::string transformResult;
  bool partitionSms=false;
+ int maxUdhParts=10;
 };
 
 int stopped=0;
@@ -1457,6 +1461,194 @@ bool CheckDomain(const std::string eml)
   return false;
 }
 
+class MultipartSendQueue:public smsc::core::threads::Thread{
+public:
+  MultipartSendQueue()
+  {
+    needToStop=false;
+    nextFileIdx=0;
+    sendDelay=30000;
+  }
+  void Init(const std::string& storeDir,int argSendDelay)
+  {
+    log=smsc::logger::Logger::getInstance("msqueue");
+    sendDelay=argSendDelay;
+    storeLocation=storeDir;
+    if(storeLocation.length() && *storeLocation.rbegin()!='/')
+    {
+      storeLocation+='/';
+    }
+    std::vector<std::string> dirContent;
+    File::ReadDir(storeLocation.c_str(),dirContent,File::rdfFilesOnly);
+    for(std::vector<std::string>::iterator it=dirContent.begin();it!=dirContent.end();it++)
+    {
+      char ext[8];
+      int idx;
+      if(sscanf(it->c_str(),"sms%d.%3s",&idx,ext)==2)
+      {
+        if(strcmp(ext,"bin")!=0)
+        {
+          smsc_log_info(log,"Skipped unrecognized file:'%s'",it->c_str());
+          continue;
+        }
+        SmsInfo info;
+        info.fileIdx=idx;
+        if(idx>nextFileIdx)
+        {
+          nextFileIdx=idx+1;
+        }
+        File f;
+        std::string fileName=mkFileName(info);
+        if(!File::Exists(fileName.c_str()))
+        {
+          smsc_log_info(log,"Skipped file with wrong filename format:'%s'",it->c_str());
+          continue;
+        }
+        f.ROpen(fileName.c_str());
+        File::offset_type sz=f.Size();
+        BufOps::SmsBuffer buf(sz);
+        f.Read(buf.get(),sz);
+        info.sms=new SMS;
+        Deserialize(buf,*info.sms,0x10001);
+        smsQueue.push_back(info);
+        smsc_log_info(log,"Loaded file:'%s'",fileName.c_str());
+      }else
+      {
+        smsc_log_info(log,"Skipped unrecognized file:'%s'",it->c_str());
+      }
+    }
+  }
+
+  int Execute()
+  {
+    MutexGuard mg(mon);
+    while(!needToStop)
+    {
+      while(!needToStop && smsQueue.empty())
+      {
+        mon.wait();
+      }
+      if(needToStop)
+      {
+        break;
+      }
+      if(smsQueue.empty())
+      {
+        continue;
+      }
+      SmsQueue::iterator it=smsQueue.begin();
+      SMS& sms=*it->sms;
+      ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
+      PduSubmitSm sm;
+      sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+      PduSubmitSmResp *resp=0;
+      while(!needToStop)
+      {
+        mon.wait(sendDelay);
+        SMS psms=sms;
+        if(ci->num<=cfg::maxUdhParts)
+        {
+          psms.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
+        }
+        extractSmsPart(&psms,psms.concatSeqNum);
+        fillSmppPduFromSms(&sm,&psms);
+        try
+        {
+          mon.Unlock();
+          resp=0;
+          smsc_log_info(log,"Send part %s->%s %d/%d",sms.getOriginatingAddress().toString().c_str(),
+                        sms.getDestinationAddress().toString().c_str(),sms.concatSeqNum,ci->num);
+          resp=cfg::tr->submit(sm);
+          mon.Lock();
+        } catch(...)
+        {
+          mon.Lock();
+        }
+        if(!resp || resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
+        {
+          if(resp && smsc::system::Status::isErrorPermanent(resp->get_header().get_commandStatus()))
+          {
+            smsc_log_warn(log,"SMS delivery failed with permanent error:%s->%s:%d",sms.getOriginatingAddress().toString().c_str(),
+                          sms.getDestinationAddress().toString().c_str(),resp->get_header().get_commandStatus());
+            smsQueue.erase(it);
+            disposePdu((SmppHeader*)resp);
+            break;
+          }
+          if(resp)disposePdu((SmppHeader*)resp);
+          continue;
+        }
+        disposePdu((SmppHeader*)resp);
+        sms.concatSeqNum++;
+        if(sms.concatSeqNum>=ci->num)
+        {
+          smsc_log_warn(log,"SMS delivery successfully completed:%s->%s",sms.getOriginatingAddress().toString().c_str(),
+                        sms.getDestinationAddress().toString().c_str());
+          DeleteSms(*it);
+          smsQueue.erase(it);
+          break;
+        }
+        SaveSms(*it);
+      }
+    }
+    return 0;
+  }
+
+  void Stop()
+  {
+    MutexGuard mg(mon);
+    needToStop=true;
+    mon.notify();
+  }
+
+  void enqueue(const SMS& sms)
+  {
+    MutexGuard mg(mon);
+    bool wasEmpty=smsQueue.empty();
+    SmsInfo info;
+    info.fileIdx=nextFileIdx++;
+    info.sms=new SMS(sms);
+    smsQueue.push_back(info);
+    SaveSms(info);
+    if(wasEmpty)
+    {
+      mon.notify();
+    }
+  }
+
+protected:
+  struct SmsInfo{
+    SMS* sms;
+    int fileIdx;
+  };
+  typedef std::list<SmsInfo> SmsQueue;
+  SmsQueue smsQueue;
+  smsc::core::synchronization::EventMonitor mon;
+  bool needToStop;
+  int nextFileIdx;
+  std::string storeLocation;
+  int sendDelay;
+  smsc::logger::Logger* log;
+
+  std::string mkFileName(const SmsInfo& info)
+  {
+    return storeLocation+smsc::util::format("sms%08d.bin",info.fileIdx);
+  }
+  void SaveSms(const SmsInfo& info)
+  {
+    smsc::sms::BufOps::SmsBuffer buf(0);
+    smsc::sms::Serialize(*info.sms,buf);
+    std::string fileName=mkFileName(info);
+    smsc::core::buffers::File f;
+    f.RWCreate(fileName.c_str());
+    f.Write(buf.get(),buf.GetPos());
+    f.Flush();
+  }
+  void DeleteSms(const SmsInfo& info)
+  {
+    smsc::core::buffers::File::Unlink(mkFileName(info).c_str());
+  }
+}multiPartSendQueue;
+
 int sendSms(std::string from,const std::string to,const char* msg,int msglen)
 {
   AbonentProfile p;
@@ -1678,21 +1870,19 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
       resp=cfg::tr->submit(sm);
     }else if(pres==psMultiple)
     {
+      SMS psms=sms;
       ConcatInfo* ci=(ConcatInfo*)sms.getBinProperty(Tag::SMSC_CONCATINFO,0);
-      for(int i=0;i<ci->num;i++)
+      if(ci->num<=cfg::maxUdhParts)
       {
-        SMS psms=sms;
-        extractSmsPart(&psms,i);
-        fillSmppPduFromSms(&sm,&psms);
-        resp=cfg::tr->submit(sm);
-        if(!resp || resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
-        {
-          break;
-        }
-        if(i!=ci->num-1)
-        {
-          disposePdu((SmppHeader*)resp);
-        }
+        psms.setIntProperty(Tag::SMSC_UDH_CONCAT,1);
+      }
+      extractSmsPart(&psms,0);
+      fillSmppPduFromSms(&sm,&psms);
+      resp=cfg::tr->submit(sm);
+      if(resp && resp->get_header().get_commandStatus()==SmppStatusSet::ESME_ROK)
+      {
+        sms.concatSeqNum=1;
+        multiPartSendQueue.enqueue(sms);
       }
     }else
     {
@@ -2095,8 +2285,17 @@ int main(int argc,char* argv[])
   try
   {
     cfg::partitionSms=cfgman.getBool("smpp.partitionSms");
+    cfg::maxUdhParts=cfgman.getInt("smpp.maxUdhParts");
   } catch(...)
   {
+  }
+
+  if(cfg::partitionSms)
+  {
+    int sendSpeed=cfgman.getInt("smpp.partsSendSpeedPerHour");
+    int sendDelay=3600*1000/sendSpeed;
+    multiPartSendQueue.Init(cfgman.getString("store.queueDir"),sendDelay);
+    multiPartSendQueue.Start();
   }
 
   cfg::serviceType=cfgman.getString("smpp.serviceType");
@@ -2275,6 +2474,10 @@ int main(int argc,char* argv[])
   }
   __trace__("exiting");
   //srv.Close();
+  if(cfg::partitionSms)
+  {
+    multiPartSendQueue.Stop();
+  }
   srv.Abort();
   }catch(exception& e)
   {
