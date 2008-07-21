@@ -1545,6 +1545,10 @@ public:
       while(!needToStop)
       {
         mon.wait(sendDelay);
+        if(needToStop)
+        {
+          break;
+        }
         SMS psms=sms;
         if(ci->num<=cfg::maxUdhParts)
         {
@@ -2470,14 +2474,15 @@ int main(int argc,char* argv[])
       }
     }
     __trace__("exiting loop, closing session");
+    if(cfg::partitionSms)
+    {
+      multiPartSendQueue.Stop();
+      multiPartSendQueue.WaitFor();
+    }
     ss.close();
   }
   __trace__("exiting");
   //srv.Close();
-  if(cfg::partitionSms)
-  {
-    multiPartSendQueue.Stop();
-  }
   srv.Abort();
   }catch(exception& e)
   {
