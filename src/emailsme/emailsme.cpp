@@ -1373,6 +1373,11 @@ public:
     __warning2__("SMPP::Error:%d",errorCode);
     pthread_kill(cfg::mainId,16);
   }
+  
+  bool handleIdle() 
+  {
+    return false;
+  }
 
   void setTrans(SmppTransmitter *t)
   {
