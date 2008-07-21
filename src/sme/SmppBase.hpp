@@ -262,7 +262,7 @@ protected:
           socket->Close();
           return true;
         }
-        if(time(NULL)-now>idleTimeout)
+        if(time(NULL)-lastUpdate>idleTimeout)
         {
           listener->handleIdle();
         }
