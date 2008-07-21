@@ -1,4 +1,5 @@
 #include <cassert>
+#include <string.h>    // for strlen
 #include "Serializer.h"
 #include "util/crc32.h"
 
