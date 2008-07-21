@@ -54,9 +54,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   private String inManQuery = null;
   private String medioScpQuery = null;
 
-  private String cbossConnectionErrorPattern = "Connection,NullPointerException";
-  private String inManConnectionErrorPattern = "System or internal error,already closed";
-  private String medioScpConnectionErrorPattern = "Connection,NullPointerException";
   private String inManInIsdnPattern = null;
   private String medioScpInIsdnPattern = null;
   private String inBalanceInIsdnPattern = null;
@@ -216,15 +213,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (inManQuery.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"inman.query\" is missed");
       }
-      inManConnectionErrorPattern = config.getProperty("inman.connection.error.pattern", inManConnectionErrorPattern);
-      if (inManConnectionErrorPattern.length() == 0) {
-        throw new InitializationException("Mandatory config parameter \"inman.connection.error.pattern\" is missed");
-      }
-      try {
-        inManConnectionErrorPattern = Utils.aggregateRegexp(inManConnectionErrorPattern);
-      } catch (IllegalArgumentException e) {
-        throw new InitializationException(e.getMessage(), e);
-      }
 
       inManInIsdnPattern = config.getProperty("inman.in.isdn", inManInIsdnPattern);
       if (inManInIsdnPattern != null) {
@@ -247,15 +235,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       if (cbossQuery.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"cboss.query\" is missed");
       }
-      cbossConnectionErrorPattern = config.getProperty("cboss.connection.error.pattern", cbossConnectionErrorPattern);
-      if (cbossConnectionErrorPattern.length() == 0) {
-        throw new InitializationException("Mandatory config parameter \"cboss.connection.error.pattern\" is missed");
-      }
-      try {
-        cbossConnectionErrorPattern = Utils.aggregateRegexp(cbossConnectionErrorPattern);
-      } catch (IllegalArgumentException e) {
-        throw new InitializationException(e.getMessage(), e);
-      }
       try {
         cbossMaxThread=Integer.parseInt(config.getProperty("cboss.max.threads", Integer.toString(cbossMaxThread)));
       } catch (NumberFormatException e) {
@@ -272,15 +251,6 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
       medioScpQuery = config.getProperty("medioscp.query", "");
       if (medioScpQuery.length() == 0) {
         throw new InitializationException("Mandatory config parameter \"medioscp.query\" is missed");
-      }
-      medioScpConnectionErrorPattern = config.getProperty("medioscp.connection.error.pattern", medioScpConnectionErrorPattern);
-      if (medioScpConnectionErrorPattern.length() == 0) {
-        throw new InitializationException("Mandatory config parameter \"medioscp.connection.error.pattern\" is missed");
-      }
-      try {
-        medioScpConnectionErrorPattern = Utils.aggregateRegexp(medioScpConnectionErrorPattern);
-      } catch (IllegalArgumentException e) {
-        throw new InitializationException(e.getMessage(), e);
       }
 
       medioScpInIsdnPattern = config.getProperty("medioscp.in.isdn", medioScpInIsdnPattern);
@@ -1174,24 +1144,12 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
     return cbossQuery;
   }
 
-  protected boolean isCbossConnectionError(Exception e) {
-    if (e.toString().matches(cbossConnectionErrorPattern)) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
   protected String getInManQuery() {
     return inManQuery;
   }
 
-  protected boolean isMedioScpConnectionError(Exception e) {
-    if (e.toString().matches(medioScpConnectionErrorPattern)) {
-      return true;
-    } else {
-      return false;
-    }
+  protected String getMedioScpQuery() {
+    return medioScpQuery;
   }
 
   protected ThreadConroller getCbossThreadConroller() {
@@ -1211,17 +1169,14 @@ public class SmeEngine implements MessageListener, ResponseListener, InManPDUHan
   }
 
   protected Connection getCbossConnection() throws SQLException {
-    //return connectionManager.getConnection(cbossPoolName);
     return connectionManager.getConnectionFromPool(cbossPoolName);
   }
 
   protected Connection getInManConnection() throws SQLException {
-    //return connectionManager.getConnection(inManPoolName);
     return connectionManager.getConnectionFromPool(inManPoolName);
   }
 
   protected Connection getMedioScpConnection() throws SQLException {
-    //return connectionManager.getConnection(medioScpPoolName);
     return connectionManager.getConnectionFromPool(medioScpPoolName);
   }
 
