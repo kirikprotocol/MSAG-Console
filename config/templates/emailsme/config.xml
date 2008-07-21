@@ -4,6 +4,9 @@
 
   <section name="store">
     <param name="dir" type="string">@emailsme.store.dir@</param>
+    <!-- for partitionSms only
+        <param name="queueDir" type="string">queue</param>
+    -->
   </section>
 
   <section name="smpp">
@@ -16,6 +19,11 @@
       <param name="serviceType" type="string">email</param>
       <param name="protocolId" type="int">34</param>
       <param name="retryTime" type="int">5</param>
+      <!-- for partition sms only
+      <param name="partitionSms" type="bool">true</param>
+      <param name="partsSendSpeedPerHour" type="int">60</param>
+      <param name="maxUdhParts" type="int">3</param>
+      -->
   </section>
 
   <section name="listener">
