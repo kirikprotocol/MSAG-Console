@@ -1527,7 +1527,7 @@ public:
   int Execute()
   {
     MutexGuard mg(mon);
-    smsc_log_info("Starting MultipartSendQueue");
+    smsc_log_info(log,"Starting MultipartSendQueue");
     while(!needToStop)
     {
       while(!needToStop && smsQueue.empty())
@@ -2281,7 +2281,6 @@ int main(int argc,char* argv[])
 
 
   SmeConfig cfg;
-  cfg.idleTimeout=0;
   cfg.host=cfgman.getString("smpp.host");
   cfg.port=cfgman.getInt("smpp.port");
   cfg.sid=cfgman.getString("smpp.systemId");
