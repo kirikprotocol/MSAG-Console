@@ -6,6 +6,7 @@
 #include "core/buffers/XHash.hpp"
 #include "cluster/Interconnect.h"
 #include "core/threads/Thread.hpp"
+#include "util/vformat.hpp"
 
 namespace smsc{
 namespace system{
@@ -63,7 +64,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   LoadUpHash luHash;
   LoadUpVector luVector;
   vector<string> toDelete;
-
+  /*
   if(File::Exists((mainFileName+".bak").c_str()) ||
      File::Exists((rolFileName+".bak").c_str()))
   {
@@ -78,6 +79,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     smsc->stop();
     return;
   }
+  */
 
   bool delayInit=sched.delayInit;
 
@@ -90,18 +92,47 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   try{
     if(File::Exists(mainFileName.c_str()))
     {
-
-      File *f=new File();
-      f->ROpen(mainFileName.c_str());
-      f->Rename((mainFileName+".bak").c_str());
       vector<File*> files;
+      int mainIdx=0;
+      File *f;
+      for(;;)
+      {
+        std::string backFile=mainFileName+format(".%03d",mainIdx);
+
+        if(!File::Exists(backFile.c_str()))
+        {
+          break;
+        }
+        f=new File();
+        f->ROpen(backFile.c_str());
+        files.push_back(f);
+        mainIdx++;
+      }
+
+      f=new File();
+      f->ROpen(mainFileName.c_str());
+      f->Rename((mainFileName+format(".%03d",mainIdx)).c_str());
       files.push_back(f);
+
+      int rolIdx=0;
+      for(;;)
+      {
+        std::string backFile=rolFileName+format(".%03d",rolIdx);
+        if(!File::Exists(backFile.c_str()))
+        {
+          break;
+        }
+        f=new File();
+        f->ROpen(backFile.c_str());
+        files.push_back(f);
+        rolIdx++;
+      }
 
       if(File::Exists(rolFileName.c_str()))
       {
         f=new File();
         f->ROpen(rolFileName.c_str());
-        f->Rename((rolFileName+".bak").c_str());
+        f->Rename((rolFileName+format(".%03d",rolIdx)).c_str());
         files.push_back(f);
       }
 
