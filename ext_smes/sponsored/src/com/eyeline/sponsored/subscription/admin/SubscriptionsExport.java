@@ -52,7 +52,9 @@ public class SubscriptionsExport {
       Config c = new Config(xmlConfig);
 
       // Init data source
-      ds = new DBSubscriptionDataSource(new PropertiesConfig(c.getSubscriptionSql()));
+      PropertiesConfig sql = new PropertiesConfig();
+      sql.load(new File(c.getSubscriptionSql()));
+      ds = new DBSubscriptionDataSource(sql);
       ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       final SmscSubjectsList subjects = new SmscSubjectsList();

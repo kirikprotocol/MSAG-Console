@@ -26,7 +26,9 @@ public class SubscriptionSme extends Sme{
       Config c = new Config(config);
 
       // Init data source
-      ds = new DBSubscriptionDataSource(new PropertiesConfig(c.getSubscriptionSql()));
+      PropertiesConfig sql = new PropertiesConfig();
+      sql.load(new File(c.getSubscriptionSql()));
+      ds = new DBSubscriptionDataSource(sql);
       ds.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       // Init processor
@@ -54,7 +56,8 @@ public class SubscriptionSme extends Sme{
 
       Config conf = new Config(xmlConfig);
 
-      final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
+      final PropertiesConfig smppProps = new PropertiesConfig();
+      smppProps.load(new File(conf.getSmppConfigFile()));
 
       smppTranceiver = new SMPPTransceiver(smppProps, "");
 

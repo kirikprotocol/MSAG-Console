@@ -53,7 +53,8 @@ public class Sme {
       final SmscTimezonesList timezones = new SmscTimezonesList();
       timezones.load(conf.getTimezonesFile(), conf.getRoutesFile());
 
-      final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
+      final PropertiesConfig smppProps = new PropertiesConfig();
+      smppProps.load(new File(conf.getSmppConfigFile()));
 
       // Check test mode
       if (startArgs.containsAttr("-t"))

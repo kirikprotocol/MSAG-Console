@@ -45,7 +45,9 @@ public class DeliveryStatsView {
       final Config c = new Config(xmlConfig);
 
       if (c.getDeliveryStatsDataSource().equals("db")) {
-        ds = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        PropertiesConfig config = new PropertiesConfig();
+        config.load(new File(c.getStorageDistributionSql()));
+        ds = new DBDistributionDataSource(config);
         ((DBDistributionDataSource)ds).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
         ds = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());

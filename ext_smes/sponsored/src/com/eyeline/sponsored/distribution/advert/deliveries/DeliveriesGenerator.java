@@ -245,7 +245,9 @@ public class DeliveriesGenerator {
       final Config c = new Config(xmlConfig);
 
       if (c.getDeliveriesDataSource().equals("db")) {
-        distrDS = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        PropertiesConfig config = new PropertiesConfig();
+        config.load(new File(c.getStorageDistributionSql()));
+        distrDS = new DBDistributionDataSource(config);
         ((DBDistributionDataSource)distrDS).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
       } else if (c.getDeliveriesDataSource().equals("file")) {
         distrDS = new FileDeliveriesDataSource(c.getFileStorageStoreDir());
@@ -254,7 +256,9 @@ public class DeliveriesGenerator {
         return;
       }
 
-      subscrDS = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
+      PropertiesConfig subscrSql = new PropertiesConfig();
+      subscrSql.load(new File(c.getStorageSubscriptionSql()));
+      subscrDS = new DBSubscriptionDataSource(subscrSql);
       subscrDS.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       final SmscTimezonesList timezones = new SmscTimezonesList();

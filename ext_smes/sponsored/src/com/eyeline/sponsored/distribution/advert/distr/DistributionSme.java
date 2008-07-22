@@ -59,7 +59,9 @@ public class DistributionSme extends Sme {
 
       // Init distr data source
       if (c.getDeliveriesDataSource().equals("db")) {
-        deliveriesDataSource = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        PropertiesConfig sql = new PropertiesConfig();
+        sql.load(new File(c.getStorageDistributionSql()));
+        deliveriesDataSource = new DBDistributionDataSource(sql);
         ((DBDistributionDataSource)deliveriesDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
       } else if (c.getDeliveriesDataSource().equals("file")) {
         deliveriesDataSource = new FileDeliveriesDataSource(c.getFileStorageStoreDir());
@@ -71,7 +73,9 @@ public class DistributionSme extends Sme {
         if (c.getDeliveriesDataSource().equals("db"))
           deliveryStatsDataSource = (DBDistributionDataSource)deliveriesDataSource;
         else {
-          deliveryStatsDataSource = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+          PropertiesConfig sql = new PropertiesConfig();
+          sql.load(new File(c.getStorageDistributionSql()));
+          deliveryStatsDataSource = new DBDistributionDataSource(sql);
           ((DBDistributionDataSource)deliveryStatsDataSource).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
         }
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
@@ -80,7 +84,9 @@ public class DistributionSme extends Sme {
         throw new InitException("Unknown delivery stats storage type: " + c.getDeliveryStatsDataSource());
 
       // Init subscription data source
-      subscriptionDataSource = new DBSubscriptionDataSource(new PropertiesConfig(c.getStorageSubscriptionSql()));
+      PropertiesConfig subscrSql = new PropertiesConfig();
+      subscrSql.load(new File(c.getStorageSubscriptionSql()));
+      subscriptionDataSource = new DBSubscriptionDataSource(subscrSql);
       subscriptionDataSource.init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
 
       // Init advertising client factory
@@ -172,7 +178,8 @@ public class DistributionSme extends Sme {
 
       Config c= new Config(config);
 
-      final PropertiesConfig smppProps = new PropertiesConfig(c.getSmppConfigFile());
+      final PropertiesConfig smppProps = new PropertiesConfig();
+      smppProps.load(new File(c.getSmppConfigFile()));
 
       smppTranceiver = new SMPPTransceiver(smppProps, "");
 

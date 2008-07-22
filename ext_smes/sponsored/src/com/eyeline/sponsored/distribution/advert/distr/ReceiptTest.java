@@ -36,7 +36,8 @@ public class ReceiptTest extends DistributionSme {
 
       Config c= new Config(config);
 
-      final PropertiesConfig smppProps = new PropertiesConfig(c.getSmppConfigFile());
+      final PropertiesConfig smppProps = new PropertiesConfig();
+      smppProps.load(new File(c.getSmppConfigFile()));
 
       smppTranceiver = new SMPPTransceiver(new Multiplexor(), smppProps, "");
 

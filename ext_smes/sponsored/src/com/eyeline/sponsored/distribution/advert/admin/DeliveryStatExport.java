@@ -155,7 +155,9 @@ public class DeliveryStatExport {
       final Config c = new Config(xmlConfig);
 
       if (c.getDeliveryStatsDataSource().equals("db")) {
-        ds = new DBDistributionDataSource(new PropertiesConfig(c.getStorageDistributionSql()));
+        PropertiesConfig sql = new PropertiesConfig();
+        sql.load(new File(c.getStorageDistributionSql()));
+        ds = new DBDistributionDataSource(sql);
         ((DBDistributionDataSource)ds).init(c.getStorageDriver(), c.getStorageUrl(), c.getStorageLogin(), c.getStoragePwd(), c.getStorageConnTimeout());
       } else if (c.getDeliveryStatsDataSource().equals("file")) {
         ds = new FileDeliveryStatDataSource(c.getFileStorageStoreDir());

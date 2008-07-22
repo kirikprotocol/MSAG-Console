@@ -36,7 +36,8 @@ public class SmeLoadTest extends SubscriptionSme {
 
       Config conf = new Config(xmlConfig);
 
-      final PropertiesConfig smppProps = new PropertiesConfig(conf.getSmppConfigFile());
+      final PropertiesConfig smppProps = new PropertiesConfig();
+      smppProps.load(new File(conf.getSmppConfigFile()));
 
       smppTranceiver = new SMPPTransceiver(new Multiplexor(), smppProps, "");
 
