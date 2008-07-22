@@ -9,3 +9,4 @@ modules-list
 mk
 smsc.v*
 makefile.inc
+makefile.flags

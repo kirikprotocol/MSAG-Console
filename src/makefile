@@ -4,6 +4,9 @@
 #
 #
 # to compile with sun compiler, use CXX=CC
+
+-include makefile.flags
+
 ifndef CXX
 CXX:=CC
 endif
@@ -28,6 +31,12 @@ endif
 USRLOCLIB := /usr/local/lib
 ifeq ($(B64),YES)
 USRLOCLIB := /usr/local/lib/64
+
+ifndef ORACLE_LIB
+ORACLE_LIB=$(ORACLE_HOME)/lib
+export ORACLE_LIB
+endif
+
 endif
 
 
