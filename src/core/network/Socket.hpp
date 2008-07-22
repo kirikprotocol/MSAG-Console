@@ -33,12 +33,13 @@ protected:
   sockaddr_in sockAddr;
   fd_set fd;
   timeval tv;
-  int connected;
   char buffer[256];
+  int connected;
   int inBuffer;
   int bufPos;
-  SOCKET sock;
   int timeOut;
+  int connectTimeout;
+  SOCKET sock;
   void *data[SOCKET_MAX_KEY];
 public:
 
@@ -48,6 +49,7 @@ public:
     inBuffer=0;
     bufPos=0;
     sock=(SOCKET)-1;
+    connectTimeout=0;
     memset(data,0,sizeof(data));
   }
   Socket(SOCKET s,const sockaddr_in& saddrin )
@@ -58,12 +60,18 @@ public:
     timeOut=60;
     sock=s;
     sockAddr=saddrin;
+    connectTimeout=0;
     memset(data,0,sizeof(data));
   }
 
   virtual ~Socket()
   {
     Close();
+  }
+
+  void setConnectTimeout(int to)
+  {
+    connectTimeout=to;
   }
 
   SOCKET getSocket(){return sock;}

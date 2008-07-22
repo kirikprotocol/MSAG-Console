@@ -64,6 +64,10 @@ int Socket::Init(const char *host,int port,int timeout)
 int Socket::Connect(bool nb)
 {
   Close();
+  if(connectTimeout)
+  {
+    nb=true;
+  }
   sock=socket(AF_INET,SOCK_STREAM,0);
 
   if(sock==INVALID_SOCKET)
@@ -83,6 +87,28 @@ int Socket::Connect(bool nb)
   //l.l_onoff=1;
   //l.l_linger=0;
   //setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  if(connectTimeout)
+  {
+    fd_set rd,wr;
+    FD_ZERO(&rd);
+    FD_ZERO(&wr);
+    FD_SET(sock,&rd);
+    FD_SET(sock,&wr);
+    tv.tv_sec=connectTimeout;
+    tv.tv_usec=0;
+    if(select(sock+1,&rd,&wr,0,&tv)<=0)
+    {
+      closesocket(sock);
+      sock=INVALID_SOCKET;
+      return -1;
+    }
+    if(FD_ISSET(sock,&rd))
+    {
+      closesocket(sock);
+      sock=INVALID_SOCKET;
+      return -1;
+    }
+  }
 
   connected=1;
   return 0;
@@ -159,7 +185,7 @@ int Socket::canRead(int to)
   FD_SET(sock,&fd);
   tv.tv_sec=to;
   tv.tv_usec=0;
-  int retval=select(FD_SETSIZE,&fd,NULL,NULL,&tv);
+  int retval=select(sock+1,&fd,NULL,NULL,&tv);
   return retval;
 }
 
@@ -172,7 +198,7 @@ int Socket::canWrite(int to)
   FD_SET(sock,&fd);
   tv.tv_sec=to;
   tv.tv_usec=0;
-  return select(FD_SETSIZE,NULL,&fd,NULL,&tv);
+  return select(sock+1,NULL,&fd,NULL,&tv);
 }
 
 

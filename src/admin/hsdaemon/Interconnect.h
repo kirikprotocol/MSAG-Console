@@ -43,6 +43,7 @@ public:
     {
       throw Exception("Failed to init interconnect client socket at %s:%d",otherHost.c_str(),otherPort);
     }
+    clntSck.setConnectTimeout(5);
   }
   int Execute();
 
