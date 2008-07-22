@@ -87,6 +87,11 @@ public:
     }
 
 
+    unsigned size() const {
+        return unsigned(hash_.Count());
+    }
+
+
     stored_type* get( const key_type& k ) const {
         stored_type* vv = const_cast<hash_type&>(hash_).GetPtr( k );
         // stored_type v( vv ? *vv : this->val2store(NULL) );
