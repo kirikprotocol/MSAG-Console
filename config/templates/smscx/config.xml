@@ -1,7 +1,8 @@
 <config>
   <section name="smsx">
     <section name="nick">
-      <param name="prefix" type="string">@</param>
+      <param name="prefix" type="string">nick</param>
+      <param name="divertNumber" type="string">777005</param>
     </section>
     <section name="flash">
       <param name="prefix" type="string">*</param>
@@ -20,5 +21,10 @@
     <param name="autocreatePrincipal" type="bool">true</param>
     <param name="defaultMaxLists" type="int">10</param>
     <param name="defaultMaxElements" type="int">10</param>
+    <!--param name="originatingAddressForSme" type="string">12345</param-->
+  </section>
+  <section name="profiler">
+    <param name="blackListCheckPeriod" type="int">300</param>
+    <param name="blackListFile" type="string">conf/blacklist.txt</param>
   </section>
 </config>
