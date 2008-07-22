@@ -3,6 +3,7 @@
 
 #include "util/int.h"
 #include <core/buffers/Hash.hpp>
+#include "TransportType.h"
 #include "scag/sessions/Session.h"
 
 namespace scag { namespace transport
@@ -11,11 +12,6 @@ namespace scag { namespace transport
 using smsc::core::buffers::Hash;
 using scag::sessions::SessionPtr;
 
-    enum TransportType
-    {
-        SMPP = 1, HTTP = 2, MMS = 3
-    };
-    
     class SCAGCommand
     {
     public:
