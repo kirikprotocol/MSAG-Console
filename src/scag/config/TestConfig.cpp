@@ -32,9 +32,9 @@ namespace config {
             __trace__("config readed");
             cfg_.reset( new Config(*elem) );
             __trace2__("parsed %u ints, %u booleans, %u strings\n",
-                       cfg_->.intParams.GetCount(),
-                       cfg_->.boolParams.GetCount(),
-                       cfg_->.strParams.GetCount());
+                       cfg_->intParams.GetCount(),
+                       cfg_->boolParams.GetCount(),
+                       cfg_->strParams.GetCount());
         } else {
             throw ConfigException("Parse result is null");
         }
