@@ -179,7 +179,7 @@ std::string ResourceManager::getSetting(const std::string& key) const throw ()
   if (l != locales.end())
     return (l->second)->getSetting(key);
   else
-    return "";
+    return key;
 }
 
 // возвращает строку из ресурса для определленой локали и ключа.
@@ -197,7 +197,7 @@ std::string ResourceManager::getString(const std::string& locale, const std::str
     else
     {
       __trace2__("RM: string not found for locale=%s, key=%s",locale.c_str(),key.c_str());
-      return "";
+      return key;
     }
   }
 }

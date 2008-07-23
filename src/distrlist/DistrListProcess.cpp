@@ -540,7 +540,11 @@ int DistrListProcess::Execute()
         }
         smsc::profiler::Profile p=profiler->lookup(sms.getOriginatingAddress());
         try{
-          reason=smsc::resourcemanager::ResourceManager::getInstance()->getString(p.locale,reason);
+          std::string reasontxt=smsc::resourcemanager::ResourceManager::getInstance()->getString(p.locale,reason);
+          if(reasontxt.length())
+          {
+            reason=reasontxt;
+          }
         }catch(...)
         {
           __warning2__("failed to get resource %s for locale %s",reason.c_str(),p.locale.c_str());

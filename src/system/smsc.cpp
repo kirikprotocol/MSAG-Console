@@ -806,14 +806,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   distlstsme->assignAliaser(aliaser);
 
   try{
-    distlstsme->originatingAddress=cfg.cfgman->getString("distrList.originatingAddress");
+    distlstsme->originatingAddress=Address(cfg.cfgman->getString("distrList.originatingAddress")).toString();
   }catch(...)
   {
     //optional parameter
   }
 
   try{
-    distlstsme->originatingAddressForSme=cfg.cfgman->getString("distrList.originatingAddressForSme");
+    distlstsme->originatingAddressForSme=Address(cfg.cfgman->getString("distrList.originatingAddressForSme")).toString();
   }catch(...)
   {
     //optional parameter
