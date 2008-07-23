@@ -6,7 +6,8 @@
 namespace scag {
 namespace sessions {
 
-    class ActiveSession;
+    class Session2;
+    class SessionStore2;
     
 } // namespace sessions
 
@@ -14,6 +15,8 @@ namespace transport {
 
 class SCAGCommand2
 {
+    friend class scag::sessions::SessionStore2;
+
 private:
     SCAGCommand2( const SCAGCommand2& c );
     SCAGCommand2& operator = ( const SCAGCommand2& c );
@@ -36,14 +39,14 @@ public:
     virtual bool hasSession() = 0;
      */
 
-    /// NOTE: pass/return by value
-    virtual scag::sessions::ActiveSession getSession() = 0;
-    virtual void setSession( scag::sessions::ActiveSession as ) = 0;
-    virtual bool hasSession() const = 0;
-
     virtual ~SCAGCommand2() {};
 
 protected:
+    /// session stuff is accessed from SessionStore to determine
+    /// if the command has locked the session.
+    virtual scag::sessions::Session2* getSession() = 0;
+    virtual void setSession( scag::sessions::Session2* as ) = 0;
+
     SCAGCommand2() {}
 };
 
@@ -59,10 +62,16 @@ public:
 
     /// return queue size after command is added to queue or
     ///   unsigned(-1) if cmd cannot be added.
-    virtual unsigned pushCommand( scag::transport::SCAGCommand2* cmd ) = 0;
+    /// \param count -- do count the command.
+    virtual unsigned pushCommand( scag::transport::SCAGCommand2* cmd,
+                                  bool count = true ) = 0;
 
     /// return 0 if the queue is stopped
     virtual scag::transport::SCAGCommand2* popCommand() = 0;
+
+    /// don't push the command but increment the count of commands
+    virtual void incrementCount( scag::transport::SCAGCommand2* cmd ) = 0;
+
 };
 
 } // namespace transport
