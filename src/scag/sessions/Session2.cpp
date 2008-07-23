@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdlib>      // for abort
 #include <sys/time.h>
 

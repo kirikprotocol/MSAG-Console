@@ -1,3 +1,4 @@
+#include <cassert>
 #include <time.h>
 #include "SessionStore2.h"
 #include "core/buffers/CyclicQueue.hpp"
@@ -198,7 +199,7 @@ public:
                 if ( stopping_ ) break;
                 lock_.Unlock();
                 {
-                    MutexGuard mg(waitlock_);
+                    MutexGuard wmg(waitlock_);
                     waitlock_.wait(100);
                 }
                 lock_.Lock();
@@ -312,7 +313,7 @@ int main( int argc, char** argv )
                                        ( mynode, * df.get(), * cq.get() ) );
     ss->init( ConfigView( *cfg, "sessions" ) );
 
-    unsigned machines = 50;
+    const unsigned machines = 50;
     std::auto_ptr<StateMach> machs[machines];
 
     for ( unsigned i = 0; i < machines; ++i ) {
