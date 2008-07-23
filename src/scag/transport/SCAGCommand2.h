@@ -4,22 +4,25 @@
 #include "TransportType.h"
 
 namespace scag {
-namespace sessions {
+namespace sessions2 {
 
-    class Session2;
-    class SessionStore2;
+    class Session;
+    class SessionStore;
     
 } // namespace sessions
 
-namespace transport {
+namespace transport2 {
 
-class SCAGCommand2
+using namespace scag::transport;
+using namespace scag::sessions2;
+
+class SCAGCommand
 {
-    friend class scag::sessions::SessionStore2;
+    friend class scag::sessions2::SessionStore;
 
 private:
-    SCAGCommand2( const SCAGCommand2& c );
-    SCAGCommand2& operator = ( const SCAGCommand2& c );
+    SCAGCommand( const SCAGCommand& c );
+    SCAGCommand& operator = ( const SCAGCommand& c );
 public:
     // static const uint8_t SESSIONDESTROY = 255;
 
@@ -39,15 +42,15 @@ public:
     virtual bool hasSession() = 0;
      */
 
-    virtual ~SCAGCommand2() {};
+    virtual ~SCAGCommand() {};
+
+    virtual Session* getSession() = 0;
 
 protected:
-    /// session stuff is accessed from SessionStore to determine
-    /// if the command has locked the session.
-    virtual scag::sessions::Session2* getSession() = 0;
-    virtual void setSession( scag::sessions::Session2* as ) = 0;
+    /// session is set from session store when the command is locking the session.
+    virtual void setSession( Session* as ) = 0;
 
-    SCAGCommand2() {}
+    SCAGCommand() {}
 };
 
 
@@ -78,15 +81,15 @@ public:
     /// \param cmd -- command, \param action -- what to do (see above).
     /// return queue size after command is added to queue or
     ///   unsigned(-1) if cmd cannot be added.
-    virtual unsigned pushCommand( scag::transport::SCAGCommand2* cmd,
+    virtual unsigned pushCommand( SCAGCommand* cmd,
                                   int action = PUSH ) = 0;
 
     /// return 0 if the queue is stopped
-    virtual scag::transport::SCAGCommand2* popCommand() = 0;
+    virtual SCAGCommand* popCommand() = 0;
 
 };
 
-} // namespace transport
+} // namespace transport2
 } // namespace scag
 
 #endif /* !_SCAG_TRANSPORT_SCAGCOMMAND2_H */
