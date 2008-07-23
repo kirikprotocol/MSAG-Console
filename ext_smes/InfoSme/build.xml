@@ -21,12 +21,10 @@
 
   <target name="distr" depends="build" description="installs the webapp">
     <ant antfile="../make_esme.xml" target="distr"/>
-    <copy toDir="${DISTR_DIR}/webapps/smsc/WEB-INF" file="${TEMPL_DIR}/${esme_name}/server-config.wsdd"/>
   </target>
 
   <target name="update" depends="build" description="update existing installation">
     <ant antfile="../make_esme.xml" target="update"/>
-    <copy toDir="${DISTR_DIR}/webapps/smsc/WEB-INF" file="${TEMPL_DIR}/${esme_name}/server-config.wsdd"/>
   </target>
 
   <target name="clean" description="clean up">

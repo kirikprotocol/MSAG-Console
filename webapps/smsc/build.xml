@@ -99,6 +99,7 @@
       <fileset refid="common_libs" />
       <fileset refid="webapps_libs" />
     </copy>
+    <copy todir="${exploded}/WEB-INF" file="${TEMPL_DIR}/smsx/server-config.wsdd"/>
   </target>
 
   <target name="copy_docs">

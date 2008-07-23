@@ -110,7 +110,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("address", "");
-    final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
     list = res instanceof List ? (List) res : null;
     return parsePrincipalList(list);
@@ -121,7 +121,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("address", address);
-    final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
     list = res instanceof List ? (List) res : null;
     return parsePrincipalList(list);
@@ -135,7 +135,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     args.put("address", prc.getAddress());
     args.put("maxLists", prc.getMaxListsInteger());
     args.put("maxElements", prc.getMaxElementsInteger());
-    call(SMSC_COMPONENT_ID, ADD_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, ADD_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void deletePrincipal(String address) throws AdminException, PrincipalNotExistsException, PrincipalInUseException {
@@ -148,7 +148,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("address", address);
-    call(SMSC_COMPONENT_ID, DELETE_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, DELETE_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized Principal getPrincipal(String address) throws AdminException, PrincipalNotExistsException {
@@ -157,7 +157,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
 
     final Map args = new HashMap();
     args.put("address", address);
-    final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPAL_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, GET_PRINCIPAL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list == null) throw new AdminException("Unsupported return type for commmand " + GET_PRINCIPAL_METHOD_ID);
     String addr = (String) list.get(0);
@@ -177,7 +177,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     args.put("maxElements", prc.getMaxElementsInteger());
     args.put("altLists", new Boolean(altLists));
     args.put("altElements", new Boolean(altElements));
-    call(SMSC_COMPONENT_ID, ALT_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, ALT_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void addMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberAlreadyExistsException {
@@ -185,7 +185,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
-    call(SMSC_COMPONENT_ID, ADD_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, ADD_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void deleteMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberNotExistsException {
@@ -193,7 +193,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
-    call(SMSC_COMPONENT_ID, DELETE_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, DELETE_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized List members(String dlname) throws AdminException, ListNotExistsException {
@@ -201,7 +201,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    final Object res = call(SMSC_COMPONENT_ID, GET_MEMBERS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, GET_MEMBERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list == null) throw new AdminException("Unsupported return type for commmand " + GET_MEMBERS_METHOD_ID);
     return list;
@@ -213,7 +213,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     args.put("dlname", dlname);
     args.put("address", submitter);
     try {
-      call(SMSC_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
+      _call(SMSC_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
     } catch (AdminException e) {
       if (e.getMessage().equals("SubmitterAlreadyExistsException")) {
         logger.warn("Submitter "+submitter+" already exists in list "+dlname);
@@ -227,7 +227,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
-    call(SMSC_COMPONENT_ID, DELETE_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, DELETE_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized List submitters(String dlname) throws AdminException, ListNotExistsException {
@@ -235,7 +235,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    final Object res = call(SMSC_COMPONENT_ID, SUBMITTERS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, SUBMITTERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list == null) throw new AdminException("Unsupported return type for commmand " + SUBMITTERS_METHOD_ID);
     return parsePrincipalList(list);
@@ -247,14 +247,14 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     args.put("dlname", dl.getName());
     args.put("owner", dl.getOwner());
     args.put("maxElements", new Integer(dl.getMaxElements()));
-    call(SMSC_COMPONENT_ID, ADD_DL_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, ADD_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void deleteDistributionList(String dlname) throws AdminException, ListNotExistsException {
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    call(SMSC_COMPONENT_ID, DELETE_DL_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, DELETE_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized DistributionList getDistributionList(String dlname) throws AdminException, ListNotExistsException {
@@ -263,7 +263,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    final Object res = call(SMSC_COMPONENT_ID, GET_DL_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, GET_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list == null) throw new AdminException("Unsupported return type for commmand " + GET_DL_METHOD_ID);
     String name = (String) list.get(0);
@@ -306,7 +306,7 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
         args.put("owners", owners);
       }
     }
-    final Object res = call(SMSC_COMPONENT_ID, LIST_DL_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = _call(SMSC_COMPONENT_ID, LIST_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list == null) throw new AdminException("Unsupported return type for commmand " + LIST_DL_METHOD_ID);
     return parseDistributionList(list /*,filter*/);
@@ -374,12 +374,43 @@ private final static String GET_MAX_MEMBERS_COUNT_FOR_OWNER_SQL = "SELECT NVL(MA
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("maxElements", new Integer(maxElements));
-    call(SMSC_COMPONENT_ID, ALT_DL_METHOD_ID, Type.Types[Type.StringType], args);
+    _call(SMSC_COMPONENT_ID, ALT_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void checkSmscIsRunning() throws AdminException {
     if (!getInfo().isOnline())
       throw new AdminException("SMSC is not running.");
+  }
+
+  private Object _call(String componentId, String methodId, Type returnType, Map arguments) throws AdminException {
+    try {
+      return call(componentId, methodId, returnType, arguments);
+    } catch (AdminException e) {
+      if (e.getMessage().indexOf("SubmitterAlreadyExistsException") > 0) {
+        throw new SubmitterAlreadyExistsException(null,null);
+      } else if (e.getMessage().indexOf("SubmitterNotExistsException") > 0) {
+        throw new SubmitterNotExistsException(null,null);
+      } else if (e.getMessage().indexOf("PrincipalAlreadyExistsException") > 0) {
+        throw new PrincipalAlreadyExistsException(null);
+      } else if (e.getMessage().indexOf("PrincipalNotExistsException") > 0) {
+        throw new PrincipalNotExistsException(null);
+      } else if (e.getMessage().indexOf("PrincipalInUseException") > 0) {
+        throw new PrincipalInUseException(null);
+      } else if (e.getMessage().indexOf("ListNotExistsException") > 0) {
+        throw new ListNotExistsException(null);
+      } else if (e.getMessage().indexOf("ListAlreadyExistsException") > 0) {
+        throw new ListAlreadyExistsException(null);
+      } else if (e.getMessage().indexOf("ListCountExceededException") > 0) {
+        throw new ListsCountExceededException(null);
+      } else if (e.getMessage().indexOf("MemberNotExistsException") > 0) {
+        throw new MemberNotExistsException(null,null);
+      } else if (e.getMessage().indexOf("MemberAlreadyExistsException") > 0) {
+        throw new MemberAlreadyExistsException(null,null);
+      } else if (e.getMessage().indexOf("MemberCountExceededException") > 0) {
+        throw new MembersCountExceededException(null, 0, 0);
+      }
+      throw new AdminException(e.getMessage());
+    }
   }
 
   ////////////////////////////////////////////////////

@@ -25,6 +25,8 @@
 <script type="text/javascript">
   function checkCreateButton() {
     document.getElementById('mbNext').disabled = (document.getElementById('<%=DeliveriesPageData.ABONENTS_FILE_PARAM%>').value.length <= 0);
+    window.setTimeout(checkCreateButton, 5000);
   }
+  checkCreateButton();
 </script>
 
