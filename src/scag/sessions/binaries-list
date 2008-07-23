@@ -1,0 +1,5 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name        source name    libraries         
+scag/teststorage     teststorage    $(XERCES_LIB) -lscag-sessions -lscag-config -llicense-check -lutil-xml -lscag-config-bill -lscag-config-http -lscag-config-lcm -lscag-config-pers -lscag-config-route -lscag-config-sessn -lscag-config-stat -lscag-util-properties -lscag-exc -lscag-util-singleton -lscag-util-storage -lcore-buffers -lcore-threads -lnsl -L$(SMSC_BUILDDIR)/bin -llogger -lutil $(SSL_LIB) -lpthread -lrt -ldl
