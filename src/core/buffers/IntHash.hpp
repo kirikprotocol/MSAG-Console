@@ -267,7 +267,7 @@ public:
     return Iterator(*this);
   }
 
-  int Count(){return count;}
+  int Count() const {return count;}
 
   void Empty()
   {

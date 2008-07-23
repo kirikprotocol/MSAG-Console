@@ -510,7 +510,7 @@ public:
     return 1;
   }
 
-  int Count(){return _count;}
+  int Count() const {return _count;}
   int Usage()
   {
     int cnt=0;
