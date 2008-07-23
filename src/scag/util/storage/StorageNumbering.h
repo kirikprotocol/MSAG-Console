@@ -25,7 +25,7 @@ public:
     
     /// return the number of elementary storage by the entity number
     inline unsigned storage( unsigned long long entity ) const {
-        return entity % storages(); 
+        return unsigned(entity % storages());
     }
 
     /// return the number of responsible node by the storage number
