@@ -6,6 +6,16 @@
 
 <web-app>
 
+  <filter>
+    <filter-name>soap</filter-name>
+    <filter-class>ru.novosoft.smsc.util.soap.SOAPFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>soap</filter-name>
+    <servlet-name>axis</servlet-name>
+  </filter-mapping>
+
   <servlet>
     <servlet-name>smsc</servlet-name>
     <servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
