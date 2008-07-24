@@ -496,11 +496,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   // create scheduler here, and start later in run
   scheduler=new Scheduler();
 
-  scheduler->InitDpfTracker(cfg.cfgman->getString("dpf.storeDir"),
-                            cfg.cfgman->getInt("dpf.timeOut1179"),
-                            cfg.cfgman->getInt("dpf.timeOut1044"),
-                            cfg.cfgman->getInt("dpf.maxChanges"),
-                            cfg.cfgman->getInt("dpf.maxTime"));
+  if(!ishs)
+  {
+    scheduler->InitDpfTracker(cfg.cfgman->getString("dpf.storeDir"),
+                              cfg.cfgman->getInt("dpf.timeOut1179"),
+                              cfg.cfgman->getInt("dpf.timeOut1044"),
+                              cfg.cfgman->getInt("dpf.maxChanges"),
+                              cfg.cfgman->getInt("dpf.maxTime"));
+  }
 
   schedulerSoftLimit=cfg.cfgman->getInt("core.schedulerSoftLimit");
   schedulerHardLimit=cfg.cfgman->getInt("core.schedulerHardLimit");
@@ -1391,6 +1394,13 @@ void Smsc::run()
 
   // start rescheduler created in init
   // start on thread pool 2 to shutdown it after state machines
+  smsc::util::config::Config& cfg=smsc::util::config::Manager::getInstance().getConfig();
+  scheduler->InitDpfTracker(cfg.getString("dpf.storeDir"),
+                            cfg.getInt("dpf.timeOut1179"),
+                            cfg.getInt("dpf.timeOut1044"),
+                            cfg.getInt("dpf.maxChanges"),
+                            cfg.getInt("dpf.maxTime"));
+ 
   scheduler->InitMsgId(&smsc::util::config::Manager::getInstance());
   tp2.startTask(scheduler);
 
