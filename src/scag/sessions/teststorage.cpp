@@ -195,14 +195,16 @@ public:
                 return count_;
             }
 
-            while ( count_ >= waitsize_ ) {
-                if ( stopping_ ) break;
-                lock_.Unlock();
-                {
-                    MutexGuard wmg(waitlock_);
-                    waitlock_.wait(100);
+            if ( action == PUSH ) {
+                // only for fresh commands
+                while ( count_ >= waitsize_ && ! stopping_ ) {
+                    lock_.Unlock();
+                    {
+                        MutexGuard wmg(waitlock_);
+                        waitlock_.wait(1000);
+                    }
+                    lock_.Lock();
                 }
-                lock_.Lock();
             }
 
             if ( stopping_ ) {

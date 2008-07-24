@@ -228,8 +228,15 @@ public:
     void setFlush( bool f ) { flush_ = f; }
     bool getFlush() const { return flush_; }
 
+
     /// explcitly release current session
     void release();
+
+
+    /// leave session locked.
+    /// Typically invoked after successfull call to longcallmanager
+    /// to make sure the session is locked for processing the command.
+    void leaveLocked() { s_ = 0; }
 
 private:
     inline void copy( const ActiveSession& as ) {
