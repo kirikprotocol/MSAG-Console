@@ -239,17 +239,91 @@ Array<DistrList> DistrListManager::list(const Address& dlOwner)
 Array<DistrList> DistrListManager::list()
     throw(smsc::core::buffers::FileException)
 {
-    MutexGuard mg(mtx);
-    Array<DistrList> rv(lists.GetCount());
+  MutexGuard mg(mtx);
+  Array<DistrList> rv(lists.GetCount());
 
-    char* key;DistrListRecord* val;
-    lists.First();
-    while(lists.Next(key,val))
-    {
-      rv.Push(*val);
-    }
-    return rv;
+  char* key;DistrListRecord* val;
+  lists.First();
+  while(lists.Next(key,val))
+  {
+    rv.Push(*val);
+  }
+  return rv;
 }
+
+void DistrListManager::copyDistrList(const std::string& dlName,const std::string& newDlName)
+{
+  MutexGuard mg(mtx);
+  DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+  if(!lstPtr)
+  {
+    throw ListNotExistsException("ListNotExistsException:%s",dlName.c_str());
+  }
+  if(lists.Exists(newDlName.c_str()))
+  {
+    throw ListAlreadyExistsException("ListAlreadyExistsException:%s",newDlName.c_str());
+  }
+  DistrListRecord& lst=**lstPtr;
+  PrincipalRecord* prcPtr=principals.GetPtr(lst.owner.toString().c_str());
+  if(prcPtr)
+  {
+    if(prcPtr->lstCount>=prcPtr->maxLst)
+    {
+      throw ListCountExceededException();
+    }
+    prcPtr->lstCount++;
+  }else
+  {
+    smsc_log_warn(logger,"Principal not found for list '%s'",lst.name);
+  }
+
+  std::auto_ptr<DistrListRecord> newList(new DistrListRecord(lst.owner,newDlName.c_str(),lst.maxEl));
+  DistrListRecord& newLst=*newList.get();
+  newLst.offset=lstFile.Append(newLst);
+  lists.Insert(newLst.name,newList.release());
+  for(DistrListRecord::SubmittersContainer::iterator it=lst.submitters.begin();it!=lst.submitters.end();it++)
+  {
+    SubmitterRecord sbm(newLst,it->addr);
+    sbm.offset=sbmFile.Append(sbm);
+    newLst.submitters.insert(sbm);
+  }
+  for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
+  {
+    MemberRecord mem(newLst,it->addr);
+    mem.offset=memFile.Append(mem);
+    newLst.members.insert(mem);
+  }
+}
+
+void DistrListManager::renameDistrList(const std::string& dlName,const std::string& newDlName)
+{
+  MutexGuard mg(mtx);
+  DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+  if(!lstPtr)
+  {
+    throw ListNotExistsException("ListNotExistsException:%s",dlName.c_str());
+  }
+  if(lists.Exists(newDlName.c_str()))
+  {
+    throw ListAlreadyExistsException("ListAlreadyExistsException:%s",newDlName.c_str());
+  }
+  DistrListRecord& lst=**lstPtr;
+  lst.setName(newDlName.c_str());
+  for(DistrListRecord::SubmittersContainer::iterator it=lst.submitters.begin();it!=lst.submitters.end();it++)
+  {
+    it->setList(lst.name);
+    sbmFile.Write(it->offset,*it);
+  }
+  for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
+  {
+    it->setList(lst.name);
+    memFile.Write(it->offset,*it);
+  }
+  lstFile.Write(lst.offset,lst);
+  lists.Delete(dlName.c_str());
+  lists.Insert(newDlName.c_str(),&lst);
+}
+
 
 Array<Address> DistrListManager::members(string dlName)
             throw(smsc::core::buffers::FileException, ListNotExistsException)

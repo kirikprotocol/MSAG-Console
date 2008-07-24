@@ -184,6 +184,10 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   dl_list_params["names"] = Parameter("names", StringListType);
   dl_list_params["owners"] = Parameter("owners", StringListType);
 
+  Parameters dl_copyandrename_params;
+  dl_copyandrename_params["dlname"]=Parameter("dlname",StringType);
+  dl_copyandrename_params["newdlname"]=Parameter("newdlname",StringType);
+
   Parameters dl_alter_params;
   dl_alter_params["dlname"] = Parameter("dlname", StringType);
   dl_alter_params["maxElements"] = Parameter("maxElements", LongType);
@@ -309,6 +313,9 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   Method dl_get          ((unsigned)dlGetMethod,               "dl_get",             dl_get_params,                StringListType);
   Method dl_list         ((unsigned)dlListMethod,              "dl_list",            dl_list_params,               StringListType);
   Method dl_alter        ((unsigned)dlAlterMethod,             "dl_alter",           dl_alter_params,              StringType);
+  Method dl_copy         ((unsigned)dlCopyMethod,              "dl_copy",            dl_copyandrename_params,      StringType);
+  Method dl_rename       ((unsigned)dlRenameMethod,            "dl_rename",          dl_copyandrename_params,      StringType);
+
 
   // Interconnect manager methods
 
@@ -408,6 +415,8 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
   methods[dl_get.getName()] = dl_get;
   methods[dl_list.getName()] = dl_list;
   methods[dl_alter.getName()] = dl_alter;
+  methods[dl_copy.getName()] = dl_copy;
+  methods[dl_rename.getName()] = dl_rename;
 
   methods[cgm_addgroup.getName()] = cgm_addgroup;
   methods[cgm_deletegroup.getName()] = cgm_deletegroup;
@@ -598,6 +607,10 @@ throw (AdminException)
         return dlListLists(args);
       case dlAlterMethod:
         return dlAlterList(args);
+      case dlCopyMethod:
+        return dlCopyList(args);
+      case dlRenameMethod:
+        return dlRenameList(args);
 
       case cgmAddGroupMethod:
         return cgmAddGroup(args);
@@ -2465,6 +2478,35 @@ Variant SmscComponent::dlAlterList(const Arguments & args) throw (AdminException
     return Variant("list altered");
   EPILOGUE
 }
+
+Variant SmscComponent::dlCopyList(const Arguments& args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(newdlname);
+  BEGINMETHOD
+  {
+    dladmin->copyDistrList(dlname,newdlname);
+  }
+  ENDMETHOD
+    return Variant("copy ok");
+  EPILOGUE
+}
+
+Variant SmscComponent::dlRenameList(const Arguments& args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(newdlname);
+  BEGINMETHOD
+  {
+    dladmin->renameDistrList(dlname,newdlname);
+  }
+  ENDMETHOD
+    return Variant("rename ok");
+  EPILOGUE
+}
+
 
 Variant SmscComponent::setRole(const Arguments & args) throw (AdminException)
 {

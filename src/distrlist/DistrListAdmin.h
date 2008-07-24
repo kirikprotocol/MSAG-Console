@@ -92,6 +92,9 @@ namespace smsc { namespace distrlist
             throw(smsc::core::buffers::FileException, PrincipalNotExistsException) = 0;
         virtual Array<DistrList> list()
             throw(smsc::core::buffers::FileException) = 0;
+        virtual void copyDistrList(const std::string& dlName,const std::string& newDlName)=0;
+        virtual void renameDistrList(const std::string& dlName,const std::string& newDlName)=0;
+
 
         virtual void changeDistrList(const string& dlName,int maxElements)
           throw(smsc::core::buffers::FileException,ListNotExistsException) = 0;
@@ -143,6 +146,8 @@ namespace smsc { namespace distrlist
 
         virtual bool checkPermission(string dlName, const Address& submitter)
             throw(smsc::core::buffers::FileException, ListNotExistsException) = 0;
+
+
     };
 
 }}

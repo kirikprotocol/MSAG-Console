@@ -314,6 +314,51 @@ int DistrListProcess::Execute()
             }
           }
         }else
+        if(cmdstr=="copy")
+        {
+          tmpl="dl.copyerr";
+          try
+          {
+            std::string newListName=addr;
+            newListName+='/';
+            newListName+=arg2;
+            if(arg2.length()==0 || newListName.length()>30)
+            {
+              reason="invalid_list_name";
+            }else
+            {
+              admin->copyDistrList(fullarg,newListName);
+              tmpl="dl.copyok";
+            }
+          }catch(ListCountExceededException& e)
+          {
+            reason="list_count_exceeded";
+          }catch(ListAlreadyExistsException& e)
+          {
+            reason="list_already_exists";
+          }
+        }else
+        if(cmdstr=="rename")
+        {
+          tmpl="dl.renameerr";
+          try
+          {
+            std::string newListName=addr;
+            newListName+='/';
+            newListName+=arg2;
+            if(arg2.length()==0 || newListName.length()>30)
+            {
+              reason="invalid_list_name";
+            }else
+            {
+              admin->renameDistrList(fullarg,newListName);
+              tmpl="dl.renameok";
+            }
+          } catch(ListAlreadyExistsException& e)
+          {
+            reason="list_already_exists";
+          }
+        }else
         if(cmdstr=="addm")
         {
           tmpl="dl.madderr";

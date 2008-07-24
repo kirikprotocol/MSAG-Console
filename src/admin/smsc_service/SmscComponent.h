@@ -126,6 +126,9 @@ protected:
   Variant dlGetList(const Arguments & args) throw (AdminException);
   Variant dlListLists(const Arguments & args) throw (AdminException);
   Variant dlAlterList(const Arguments & args) throw (AdminException);
+  Variant dlCopyList(const Arguments & args) throw (AdminException);
+  Variant dlRenameList(const Arguments & args) throw (AdminException);
+
 
   Variant setRole(const Arguments & args) throw (AdminException);
   Variant getRole() throw (AdminException);
@@ -169,7 +172,9 @@ protected:
     prcListPrincipalsMethod, prcAddPrincipalMethod, prcDeletePrincipalMethod, prcGetPrincipalMethod, prcAlterPrincipalMethod,
     memAddMemberMethod, memDeleteMemberMethod, memGetMemberMethod, sbmAddSubmiterMethod,
     sbmDeleteSubmiterMethod, sbmListSubmitersMethod,
-    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod, setRoleMethod, getRoleMethod,
+    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod,
+    dlCopyMethod,dlRenameMethod,
+    setRoleMethod, getRoleMethod,
     cgmAddGroupMethod,cgmDeleteGroupMethod,cgmAddAddrMethod,cgmCheckMethod,
     cgmDelAddrMethod,cgmAddAbonentMethod,cgmDelAbonentMethod,cgmListAbonentsMethod,
     aliasAddMethod,aliasDelMethod

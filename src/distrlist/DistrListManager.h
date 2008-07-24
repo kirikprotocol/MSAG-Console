@@ -73,6 +73,18 @@ namespace smsc { namespace distrlist
         offset=0;
       }
 
+      /*
+      This is ugly hack.
+      This structures are stored in an std::set.
+      Iterator of std::set disallow modification of item.
+      */
+      void setList(const char* newLstName)const
+      {
+        char* ptr=const_cast<char*>(list);
+        strncpy(ptr,newLstName,31);
+        ptr[31]=0;
+      }
+
       bool operator<(const MemberRecord& rhs)const
       {
         return addr<rhs.addr;
@@ -182,6 +194,10 @@ namespace smsc { namespace distrlist
             throw(smsc::core::buffers::FileException, PrincipalNotExistsException);
         virtual Array<DistrList> list()
             throw(smsc::core::buffers::FileException);
+        virtual void copyDistrList(const std::string& dlName,const std::string& newDlName);
+        virtual void renameDistrList(const std::string& dlName,const std::string& newDlName);
+
+
 
         virtual void changeDistrList(const string& dlName,int maxElements)
           throw(smsc::core::buffers::FileException,ListNotExistsException);
