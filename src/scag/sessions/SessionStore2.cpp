@@ -321,6 +321,7 @@ namespace {
         std::auto_ptr< SCAGCommand > cmd(command);
         MemStorage::stored_type* v;
         Session* session;
+        SCAGCommand* prev = 0;
         {
             MutexGuard mg(cacheLock_);
             if ( stopping_ ) return ActiveSession();
@@ -363,9 +364,10 @@ namespace {
             if ( sz > maxcachesize_ ) maxcachesize_ = sz;
 
             session = cache_->store2val(*v);
-            session->setCurrentCommand( cmd.release() );
+            prev = session->setCurrentCommand( cmd.release() );
             // release lock
         }
+        delete prev;
 
         disk_->get( key, cache_->store2ref(*v) );
 
@@ -392,6 +394,7 @@ namespace {
         time_t expiration;
         time_t curtime = time(0);
 
+        SCAGCommand* prevcmd = 0;
         SCAGCommand* nextcmd = 0;
         {
             MemStorage::stored_type* v;
@@ -415,12 +418,13 @@ namespace {
             }
             
             nextcmd = session.popCommand();
-            session.setCurrentCommand( nextcmd );
             if ( nextcmd ) setCommandSession( *nextcmd, &session );
-            smsc_log_debug( log_, "released key=%s session=%p, nextcmd=%p",
-                            key.toString().c_str(), &session, nextcmd );
+            prevcmd = session.setCurrentCommand( nextcmd );
+            smsc_log_debug( log_, "released key=%s session=%p, prevcmd=%p nextcmd=%p",
+                            key.toString().c_str(), &session, prevcmd, nextcmd );
             // release lock
         }
+        delete prevcmd;
 
         do { // fake loop
 
@@ -431,6 +435,7 @@ namespace {
                 if ( sz != unsigned(-1) ) break; // success
 
                 std::vector< SCAGCommand* > comlist;
+                prevcmd = 0;
                 {
                     // queue is stopped, delete all remaining commands
                     MutexGuard mg(cacheLock_);
@@ -439,8 +444,10 @@ namespace {
                         comlist.push_back( com );
                     }
                     // reset the state
-                    session.setCurrentCommand(0);
+                    prevcmd = session.setCurrentCommand(0);
                 }
+                delete prevcmd;
+
                 smsc_log_info( log_, "queue is stopped: session=%p deletes %u commands", &session, comlist.size() );
                 for ( std::vector< SCAGCommand* >::iterator i = comlist.begin();
                       i != comlist.end();
@@ -468,7 +475,8 @@ namespace {
         Session* olds = getCommandSession(c);
         SCAGCommand* oldc = s.currentCommand();
         setCommandSession(c,&s);
-        s.setCurrentCommand(&c);
+        // should be already set
+        // s.setCurrentCommand(&c);
         if ( olds && olds != &s ) {
             smsc_log_error(log_, "logic error in makeAS: cmd->session=%p session=%p", olds, &s );
             ::abort();

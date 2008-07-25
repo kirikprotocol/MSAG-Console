@@ -102,11 +102,22 @@ public:
 
     // === the following methods should be invoked from session store only
 
-    /// current processing command (owned)
+    /// current processing command (owned).
     /// the presence of a command tells that session is locked.
-    inline void setCurrentCommand( SCAGCommand* cmd ) {
-        if ( command_ && command_ != cmd ) delete command_;
+    /// \return the previous owned command.
+    /// It gives the possibility to destroy it after unlocking.
+    inline SCAGCommand* setCurrentCommand( SCAGCommand* cmd ) {
+        SCAGCommand* prev = command_;
+        if ( command_ ) {
+            if ( command_ != cmd ) {
+                if ( cmd )
+                    smsc_log_warn(log_,"session %p has changed command: session->cmd=%p cmd=%p", this, command_, cmd );
+            } else {
+                prev = 0;
+            }
+        }
         command_ = cmd;
+        return prev;
     }
 
     inline SCAGCommand* currentCommand() {

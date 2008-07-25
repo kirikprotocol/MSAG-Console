@@ -357,7 +357,7 @@ int StateMach::Execute()
     smsc_log_info( mlog,"state machine started");
     while ( true ) {
 
-        SKCommand* cmd =  static_cast< SKCommand* >( queue_->popCommand() );
+        SKCommand* cmd( static_cast< SKCommand* >( queue_->popCommand() ) );
         if ( ! cmd ) break;
 
         const SessionKey& key = cmd->sessionKey();
@@ -367,6 +367,7 @@ int StateMach::Execute()
         smsc_log_debug( mlog, "trying to get session for key=%s cmd=%p", key.toString().c_str(), cmd );
         ActiveSession as = store_->fetchSession( key, cmd );
         if ( ! as.get() ) {
+            // cmd is pushed to session
             smsc_log_debug( mlog, "session for key=%s is LOCKED", key.toString().c_str() );
             continue;
         }
