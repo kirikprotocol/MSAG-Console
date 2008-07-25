@@ -836,6 +836,124 @@ namespace cfg{
  int maxUdhParts=10;
 };
 
+class StatisticsCollector:public smsc::core::threads::Thread{
+public:
+  StatisticsCollector()
+  {
+    needToStop=false;
+    sms2emlok=0;
+    sms2emlerr=0;
+    eml2smsok=0;
+    eml2smserr=0;
+  }
+  void Init(const std::string& store,int argFlushPeriod)
+  {
+    flushPeriod=argFlushPeriod*1000;
+    lastHour=9999999;
+    storeLocation=store;
+    if(storeLocation.length() && *storeLocation.rbegin()!='/')
+    {
+      storeLocation+='/';
+    }
+    if(storeLocation.length() && !File::Exists(storeLocation.c_str()))
+    {
+      File::MkDir(storeLocation.c_str());
+    }
+  }
+  int Execute()
+  {
+    MutexGuard mg(mon);
+    while(!needToStop)
+    {
+      mon.wait(flushPeriod);
+      try
+      {
+        FlushStats();
+      } catch(std::exception& e)
+      {
+        smsc_log_warn(smsc::logger::Logger::getInstance("stats"),"Exception during FlushStats:'%s'",e.what());
+      }
+    }
+    f.Close();
+    return 0;
+  }
+  void Stop()
+  {
+    MutexGuard mg(mon);
+    needToStop=true;
+    mon.notify();
+  }
+  void FlushStats()
+  {
+    time_t now=time(NULL);
+    tm t;
+    gmtime_r(&now,&t);
+    if(t.tm_hour!=lastHour)
+    {
+      f.Close();
+      char buf[32];
+      sprintf(buf,"%04d%02d%02d",t.tm_year+1900,t.tm_mon+1,t.tm_mday);
+      std::string fullPath=storeLocation;
+      fullPath+=buf;
+      if(!File::Exists(fullPath.c_str()))
+      {
+        File::MkDir(fullPath.c_str());
+      }
+      sprintf(buf,"%02d.txt",t.tm_hour);
+      fullPath+='/';
+      fullPath+=buf;
+      f.Append(fullPath.c_str());
+      lastHour=t.tm_hour;
+    }
+    char buf[64];
+    int len=sprintf(buf,"%04d-%02d-%02d %02d:%02d\n",t.tm_year+1900,t.tm_mon+1,t.tm_mday,t.tm_hour,t.tm_min);
+    f.Write(buf,len);
+    len=sprintf(buf,"sms_received_ok,%d\nsms_transmitted_ok,%d\n",sms2emlok,eml2smsok);
+    f.Write(buf,len);
+    len=sprintf(buf,"sms_received_fail,%d\nsms_transmitted_fail,%d\n",sms2emlerr,eml2smserr);
+    f.Write(buf,len);
+    f.Flush();
+    sms2emlok=0;
+    sms2emlerr=0;
+    eml2smsok=0;
+    eml2smserr=0;
+  }
+  void IncSms2Eml(bool ok=true)
+  {
+    MutexGuard mg(mon);
+    if(ok)
+    {
+      sms2emlok++;
+    }else
+    {
+      sms2emlerr++;
+    }
+  }
+  void IncEml2Sms(bool ok=true)
+  {
+    MutexGuard mg(mon);
+    if(ok)
+    {
+      eml2smsok++;
+    }else
+    {
+      eml2smserr++;
+    }
+  }
+protected:
+  bool needToStop;
+  EventMonitor mon;
+  int flushPeriod;
+
+  File f;
+  std::string storeLocation;
+  int lastHour;
+  int sms2emlok;
+  int sms2emlerr;
+  int eml2smsok;
+  int eml2smserr;
+}statCollector;
+
 int stopped=0;
 
 RegExp reParseSms;
@@ -1297,8 +1415,12 @@ int processSms(const char* text,const char* fromaddress,const char* toaddress)
       if(haveprofile)storage.incGsm2EmlLimit(fromaddress);
       if(rv!=ProcessSmsCodes::OK)
       {
+        statCollector.IncSms2Eml(false);
         sendAnswer(fromaddress,"messagefailedsendmail");
         return rv;
+      }else
+      {
+        statCollector.IncSms2Eml();
       }
       if(cfg::sendSuccessAnswer)
       {
@@ -1943,6 +2065,13 @@ int sendSms(std::string from,const std::string to,const char* msg,int msglen)
       }
     }
   }
+  if(rc==StatusCodes::STATUS_CODE_OK)
+  {
+    statCollector.IncEml2Sms();
+  }else
+  {
+    statCollector.IncEml2Sms(false);
+  }
   if(resp)
   {
     disposePdu((SmppHeader*)resp);
@@ -2250,6 +2379,18 @@ int main(int argc,char* argv[])
     __warning__("helpdesk support disabled");
   }
 
+  bool haveStats=false;
+  try
+  {
+    statCollector.Init(cfgman.getString("stat.storeLocation"),cfgman.getInt("stat.flushPeriodInSec"));
+    haveStats=true;
+    statCollector.Start();
+
+  } catch(std::exception&e)
+  {
+    __warning2__("stats disabled:%s",e.what());
+  }
+
   try{
     const char* lmt=cfgman.getString("admin.defaultLimit");
     int val;
@@ -2492,6 +2633,11 @@ int main(int argc,char* argv[])
       multiPartSendQueue.WaitFor();
     }
     ss.close();
+  }
+  if(haveStats)
+  {
+    statCollector.Stop();
+    statCollector.WaitFor();
   }
   __trace__("exiting");
   //srv.Close();
