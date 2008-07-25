@@ -1,9 +1,9 @@
 <!-- Use this file to undeploy some handlers/chains and services    -->
 <!-- Two ways to do this:                                           -->
-<!--   java org.apache.axis.client.AdminClient undeploy.wsdd        -->
+<!--   java org.apache.axis.client.AdminClient groupeditundeploy.wsdd        -->
 <!--      after the axis server is running                          -->
 <!-- or                                                             -->
-<!--   java org.apache.axis.utils.Admin client|server undeploy.wsdd -->
+<!--   java org.apache.axis.utils.Admin client|server groupeditundeploy.wsdd -->
 <!--      from the same directory that the Axis messageSender runs         -->
 
 <undeployment

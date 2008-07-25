@@ -6,6 +6,16 @@
 
 <web-app>
   <display-name>Apache-Axis</display-name>
+
+  <filter>
+    <filter-name>SOAPFilter</filter-name>
+    <filter-class>ru.sibinco.smsx.engine.soaphandler.SOAPFilter</filter-class>
+  </filter>
+
+  <filter-mapping>
+    <filter-name>SOAPFilter</filter-name>
+    <servlet-name>AxisServlet</servlet-name>
+  </filter-mapping>
   
   <listener>
     <listener-class>org.apache.axis.transport.http.AxisHTTPSessionListener</listener-class>
@@ -21,11 +31,6 @@
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
-
-  <filter>
-    <filter-name>SOAPFilter</filter-name>
-    <filter-class>ru.sibinco.smsx.engine.soaphandler.SOAPFilter</filter-class>
-  </filter>
 
   <servlet-mapping>
     <servlet-name>AxisServlet</servlet-name>
@@ -46,11 +51,6 @@
     <!-- Default to 5 minute session timeouts -->
     <session-timeout>5</session-timeout>
   </session-config>
-
-  <filter-mapping>
-    <filter-name>SOAPFilter</filter-name>
-    <servlet-name>AxisServlet</servlet-name>
-  </filter-mapping>
 
   <!-- currently the W3C havent settled on a media type for WSDL;
   http://www.w3.org/TR/2003/WD-wsdl12-20030303/#ietf-draft
@@ -84,5 +84,15 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>Protected Context 1</web-resource-name>
+      <url-pattern>/services/GroupSend</url-pattern>
+      <http-method>POST</http-method>
+    </web-resource-collection>
+    <user-data-constraint>
+      <transport-guarantee>CONFIDENTIAL</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
 
 </web-app>

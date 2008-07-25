@@ -1,13 +1,13 @@
 package ru.sibinco.smsx.engine.service.nick.commands;
 
-import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 
 /**
  * User: artem
  * Date: Sep 10, 2007
  */
 
-public class NickSendMessageCmd extends Command {
+public class NickSendMessageCmd extends AsyncCommand {
 
   public static final int STATUS_INVALID_SOURCE_ADDRESS = STATUS_INT + 1;
   public static final int STATUS_INVALID_DESTINATION_ADDRESS = STATUS_INT + 2;

@@ -7,29 +7,37 @@ package ru.sibinco.smsx.engine.service;
 
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.blacklist.BlackListService;
-import ru.sibinco.smsx.engine.service.blacklist.BlackListServiceFactory;
+import ru.sibinco.smsx.engine.service.blacklist.BlackListServiceImpl;
 import ru.sibinco.smsx.engine.service.calendar.CalendarService;
-import ru.sibinco.smsx.engine.service.calendar.CalendarServiceFactory;
+import ru.sibinco.smsx.engine.service.calendar.CalendarServiceImpl;
 import ru.sibinco.smsx.engine.service.nick.NickService;
-import ru.sibinco.smsx.engine.service.nick.NickServiceFactory;
+import ru.sibinco.smsx.engine.service.nick.NickServiceImpl;
 import ru.sibinco.smsx.engine.service.secret.SecretService;
-import ru.sibinco.smsx.engine.service.secret.SecretServiceFactory;
+import ru.sibinco.smsx.engine.service.secret.SecretServiceImpl;
 import ru.sibinco.smsx.engine.service.sender.SenderService;
-import ru.sibinco.smsx.engine.service.sender.SenderServiceFactory;
+import ru.sibinco.smsx.engine.service.sender.SenderServiceImpl;
+import ru.sibinco.smsx.engine.service.group.GroupService;
+import ru.sibinco.smsx.engine.service.group.GroupServiceImpl;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.ThreadFactoryWithCounter;
 
-public class ServiceManager {
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ArrayBlockingQueue;
+
+public class Services {
   private static final Category log = Category.getInstance("SERVICES");
 
-  private static ServiceManager ourInstance;
+  private static Services ourInstance;
 
-  public static ServiceManager getInstance() {
+  public static Services getInstance() {
     return ourInstance;
   }
 
   public static void init(XmlConfig config, OutgoingQueue outQueue) {
-    ourInstance = new ServiceManager(config, outQueue);
+    ourInstance = new Services(config, outQueue);
   }
 
   private final CalendarService calendarService;
@@ -37,15 +45,19 @@ public class ServiceManager {
   private final SenderService senderService;
   private final BlackListService blackListService;
   private final NickService nickService;
+  private final GroupService groupService;
 
   private ServiceManagerMBean mbean = null;
 
-  private ServiceManager(XmlConfig config, OutgoingQueue outQueue) {
-    senderService = SenderServiceFactory.getSenderService(config, outQueue);
-    calendarService = CalendarServiceFactory.getCalendarService(config, outQueue);
-    secretService = SecretServiceFactory.getSecretService(config, outQueue);
-    blackListService = BlackListServiceFactory.getBlackListService(config);
-    nickService = NickServiceFactory.getNickService(config, outQueue);
+
+
+  private Services(XmlConfig config, OutgoingQueue outQueue) {
+    senderService = new SenderServiceImpl(config, outQueue);
+    calendarService = new CalendarServiceImpl(config, outQueue);
+    secretService = new SecretServiceImpl(config, outQueue);
+    blackListService = new BlackListServiceImpl(config);
+    nickService = new NickServiceImpl(config, outQueue);
+    groupService = new GroupServiceImpl(config, outQueue);
   }
 
   public ServiceManagerMBean getMBean(String domain) {
@@ -74,6 +86,10 @@ public class ServiceManager {
     return nickService;
   }
 
+  public GroupService getGroupService() {
+    return groupService;
+  }
+
   public void startServices() {
     log.info("Starting: sender...");
     senderService.startService();
@@ -94,6 +110,10 @@ public class ServiceManager {
     log.info("Starting: nick...");
     nickService.startService();
     log.info("Started: nick.");
+
+    log.info("Starting: group...");
+    groupService.startService();
+    log.info("Started: group.");
   }
 
   public void stopServices() {
@@ -116,5 +136,9 @@ public class ServiceManager {
     log.info("Stopping: nick...");
     nickService.stopService();
     log.info("Stopped: nick.");
+
+    log.info("Stopping: group...");
+    groupService.stopService();
+    log.info("Stopped: group.");
   }
 }

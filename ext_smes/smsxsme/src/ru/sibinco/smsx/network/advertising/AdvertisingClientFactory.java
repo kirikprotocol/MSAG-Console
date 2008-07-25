@@ -3,12 +3,10 @@ package ru.sibinco.smsx.network.advertising;
 import ru.sibinco.smsx.InitializationException;
 
 import java.io.File;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Iterator;
 
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 /**
  * User: artem
@@ -30,7 +28,9 @@ public class AdvertisingClientFactory {
    */
   public static void init(String configDir) {
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "advertising.properties").getAbsolutePath());
+      final XmlConfig c = new XmlConfig();
+      c.load(new File(configDir, "config.xml"));
+      final PropertiesConfig config = new PropertiesConfig(c.getSection("advertising").toProperties("."));            
 
       host = config.getString("host");
       port = config.getInt("port");

@@ -13,25 +13,25 @@
   <!-- Services from blacklist WSDL service -->
 
   <service name="blacklistSoap" provider="java:RPC" style="wrapped" use="literal">
-      <parameter name="wsdlTargetNamespace" value="http://mts.qmobile.ru/api/"/>
-      <parameter name="wsdlServiceElement" value="blacklist"/>
-      <parameter name="schemaQualified" value="http://mts.qmobile.ru/api/"/>
-      <parameter name="wsdlServicePort" value="blacklistSoap"/>
-      <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoapService"/>
-      <parameter name="wsdlPortType" value="blacklistSoap"/>
-      <parameter name="typeMappingVersion" value="1.2"/>
-      <parameter name="allowedMethods" value="*"/>
-
+    <parameter name="wsdlTargetNamespace" value="http://mts.qmobile.ru/api/"/>
+    <parameter name="wsdlServiceElement" value="blacklist"/>
+    <parameter name="schemaQualified" value="http://mts.qmobile.ru/api/"/>
+    <parameter name="wsdlServicePort" value="blacklistSoap"/>
+    <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoapService"/>
+    <parameter name="wsdlPortType" value="blacklistSoap"/>
+    <parameter name="typeMappingVersion" value="1.2"/>
+    <parameter name="allowedMethods" value="*"/>
   </service>
+
   <service name="blacklistSoap12" provider="java:RPC" style="wrapped" use="literal">
-      <parameter name="wsdlTargetNamespace" value="http://mts.qmobile.ru/api/"/>
-      <parameter name="wsdlServiceElement" value="blacklist"/>
-      <parameter name="schemaQualified" value="http://mts.qmobile.ru/api/"/>
-      <parameter name="wsdlServicePort" value="blacklistSoap12"/>
-      <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoap12Service"/>
-      <parameter name="wsdlPortType" value="blacklistSoap"/>
-      <parameter name="typeMappingVersion" value="1.2"/>
-      <parameter name="allowedMethods" value="*"/>
+    <parameter name="wsdlTargetNamespace" value="http://mts.qmobile.ru/api/"/>
+    <parameter name="wsdlServiceElement" value="blacklist"/>
+    <parameter name="schemaQualified" value="http://mts.qmobile.ru/api/"/>
+    <parameter name="wsdlServicePort" value="blacklistSoap12"/>
+    <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoap12Service"/>
+    <parameter name="wsdlPortType" value="blacklistSoap"/>
+    <parameter name="typeMappingVersion" value="1.2"/>
+    <parameter name="allowedMethods" value="*"/>
   </service>
 
 </deployment>

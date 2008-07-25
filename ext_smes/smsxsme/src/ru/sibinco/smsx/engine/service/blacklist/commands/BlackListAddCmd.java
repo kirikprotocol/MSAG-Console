@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.blacklist.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -20,6 +22,6 @@ public class BlackListAddCmd extends Command {
   }
 
   public interface Receiver {
-    public void execute(BlackListAddCmd cmd);
+    public void execute(BlackListAddCmd cmd) throws CommandExecutionException;
   }
 }

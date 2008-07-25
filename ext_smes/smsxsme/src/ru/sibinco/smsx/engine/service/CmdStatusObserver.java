@@ -10,19 +10,23 @@ public class CmdStatusObserver implements CommandObserver {
   private final int[] statuses;
   private boolean shouldWait = true;
 
+  public CmdStatusObserver() {
+    this(null);
+  }
+
   public CmdStatusObserver(int[] statuses) {
     this.statuses = statuses;
   }
 
-  public synchronized void update(Command command) {
+  public synchronized void update(AsyncCommand command) {
     if (statuses == null) {
       shouldWait = false;
       notifyAll();
       return;
     }
-    
-    for (int i=0; i<statuses.length; i++)
-      if (command.getStatus() == statuses[i]) {
+
+    for (int status : statuses)
+      if (command.getStatus() == status) {
         shouldWait = false;
         notifyAll();
       }

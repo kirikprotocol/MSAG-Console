@@ -1,13 +1,13 @@
 package ru.sibinco.smsx.engine.service.nick.commands;
 
-import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 
 /**
  * User: artem
  * Date: Sep 13, 2007
  */
 
-public class NickUnregisterCmd extends Command {
+public class NickUnregisterCmd extends AsyncCommand {
 
   public static final int STATUS_DELIVERED = STATUS_INT + 1;
 

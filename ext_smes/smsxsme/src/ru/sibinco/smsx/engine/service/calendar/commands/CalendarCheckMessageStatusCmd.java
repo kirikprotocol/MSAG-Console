@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.calendar.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.calendar.datasource.CalendarMessage;
 
 /**
@@ -17,9 +19,6 @@ public class CalendarCheckMessageStatusCmd extends Command {
   public static final int MESSAGE_STATUS_DELIVERY_FAILED = CalendarMessage.STATUS_DELIVERY_FAILED;
 
   private int msgId;
-  private int messageStatus;
-  private int smppStatus;
-  private boolean saveDeliveryStatus;
 
   public int getMsgId() {
     return msgId;
@@ -29,31 +28,7 @@ public class CalendarCheckMessageStatusCmd extends Command {
     this.msgId = msgId;
   }
 
-  public int getMessageStatus() {
-    return messageStatus;
-  }
-
-  public void setMessageStatus(int messageStatus) {
-    this.messageStatus = messageStatus;
-  }
-
-  public int getSmppStatus() {
-    return smppStatus;
-  }
-
-  public void setSmppStatus(int smppStatus) {
-    this.smppStatus = smppStatus;
-  }
-
-  public boolean isSaveDeliveryStatus() {
-    return saveDeliveryStatus;
-  }
-
-  public void setSaveDeliveryStatus(boolean saveDeliveryStatus) {
-    this.saveDeliveryStatus = saveDeliveryStatus;
-  }
-
   public interface Receiver {
-    public void execute(CalendarCheckMessageStatusCmd cmd);
+    public int execute(CalendarCheckMessageStatusCmd cmd) throws CommandExecutionException;
   }
 }

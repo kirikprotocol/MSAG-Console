@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.sender;
 
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.sender.datasource.DBSenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderDataSource;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
@@ -17,13 +18,13 @@ import com.eyeline.utils.config.xml.XmlConfig;
  * Date: 06.07.2007
  */
 
-class SenderServiceImpl implements SenderService{
+public class SenderServiceImpl implements SenderService{
 
   private final SenderDataSource dataSource;
   private final MessageSender senderMessage;
   private final SenderProcessor processor;
 
-  SenderServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
+  public SenderServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
     try {
       dataSource = new DBSenderDataSource();
 
@@ -36,15 +37,15 @@ class SenderServiceImpl implements SenderService{
     }
   }
 
-  public void execute(SenderGetMessageStatusCmd cmd) {
-    processor.execute(cmd);
+  public int execute(SenderGetMessageStatusCmd cmd) throws CommandExecutionException {
+    return processor.execute(cmd);
   }
 
   public void execute(SenderSendMessageCmd cmd) {
     processor.execute(cmd);
   }
 
-  public boolean execute(SenderHandleReceiptCmd cmd) {
+  public boolean execute(SenderHandleReceiptCmd cmd) throws CommandExecutionException {
     return processor.execute(cmd);
   }
 

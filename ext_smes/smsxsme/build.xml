@@ -36,7 +36,10 @@
     <mkdir dir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF"/>
     <mkdir dir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib"/>
     <!-- Copy libs -->
-    <copydir src="${java_lib}" dest="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib"/>
+    <copy todir="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF/lib">
+      <fileset dir="${java_lib}" includes="*.jar"/>
+    </copy>
+    <copydir src="${java_lib}/platform" dest="${SME_DISTR_DIR}/common/lib/platform"/>
     <!-- Copy WEB_INF-->
     <copydir src="${WEB_INF}" dest="${SME_DISTR_DIR}/webapps/${esme_name}/WEB-INF"/>
     <!-- Copy tools -->

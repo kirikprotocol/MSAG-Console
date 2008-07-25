@@ -17,7 +17,6 @@
       <param-name>routesFile</param-name>
       <param-value>conf/routes.xml</param-value>
     </init-param>
-
   </service>
 
   <service>
@@ -70,6 +69,11 @@
   <service>
     <service-name>sender</service-name>
     <service-class>ru.sibinco.smsx.engine.smpphandler.SenderSMPPService</service-class>
+  </service>
+
+  <service>
+    <service-name>group</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.GroupSMPPService</service-class>
   </service>
 
   <!-- ========================================== Receipt request ================================================== -->
@@ -264,6 +268,31 @@
     </request-param>
   </request>
 
+  <!-- ================================================ Group requests ============================================= -->
+
+  <request>
+    <request-name>group_delivery_ok</request-name>
+    <source-address>011</source-address>
+    <message-pattern>SendOK:(\d+) (\d+)</message-pattern>
+    <request-param>
+      <param-name>actual_sended</param-name>
+      <param-value>{1}</param-value>
+    </request-param>
+    <request-param>
+      <param-name>total</param-name>
+      <param-value>{2}</param-value>
+    </request-param>
+  </request>
+
+  <request>
+    <request-name>group_delivery_failed</request-name>
+    <source-address>011</source-address>
+    <message-pattern>SendErr:(.*)</message-pattern>
+    <request-param>
+      <param-name>reason</param-name>
+      <param-value>{1}</param-value>
+    </request-param>    
+  </request>
 
   <!-- ================================================= Redirector requests ======================================= -->
 
@@ -591,6 +620,11 @@
   <request-mapping>
     <request-name>receipt</request-name>
     <service-chain>sender, calendar, secret</service-chain>
+  </request-mapping>
+
+  <request-mapping>
+    <request-name>group_*</request-name>
+    <service-name>group</service-name>
   </request-mapping>
 
 

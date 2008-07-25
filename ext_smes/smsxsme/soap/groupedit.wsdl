@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wsdl:definitions targetNamespace="http://sibinco.ru/groupedit" xmlns:apachesoap="http://xml.apache.org/xml-soap" 
+                  xmlns:impl="http://sibinco.ru/groupedit" 
+                  xmlns:intf="http://sibinco.ru/groupedit"
+                  xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:wsdlsoap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <schema elementFormDefault="qualified" targetNamespace="http://sibinco.ru/groupedit" xmlns="http://www.w3.org/2001/XMLSchema">
+      <element name="groupList">
+        <complexType>
+          <sequence>
+            <element name="owner" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="groupListResponse">
+        <complexType>
+          <sequence>
+            <element name="groupListReturn" type="impl:GroupListResp"/>
+          </sequence>
+        </complexType>
+      </element>
+      <complexType name="ArrayOf_xsd_string">
+        <sequence>
+          <element maxOccurs="unbounded" minOccurs="0" name="item" type="xsd:string"/>
+        </sequence>
+      </complexType>
+      <complexType name="GroupListResp">
+        <sequence>
+          <element name="groups" nillable="true" type="impl:ArrayOf_xsd_string"/>
+          <element name="status" type="xsd:int"/>
+        </sequence>
+      </complexType>
+      <element name="addGroup">
+        <complexType>
+          <sequence>
+            <element name="groupName" type="xsd:string"/>
+            <element name="owner" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="addGroupResponse">
+        <complexType>
+          <sequence>
+            <element name="addGroupReturn" type="xsd:int"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="removeGroup">
+        <complexType>
+          <sequence>
+            <element name="groupName" type="xsd:string"/>
+            <element name="owner" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="removeGroupResponse">
+        <complexType>
+          <sequence>
+            <element name="removeGroupReturn" type="xsd:int"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="groupInfo">
+        <complexType>
+          <sequence>
+            <element name="groupName" type="xsd:string"/>
+            <element name="owner" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="groupInfoResponse">
+        <complexType>
+          <sequence>
+            <element name="groupInfoReturn" type="impl:GroupInfoResp"/>
+          </sequence>
+        </complexType>
+      </element>
+      <complexType name="GroupInfoResp">
+        <sequence>
+          <element name="members" nillable="true" type="impl:ArrayOf_xsd_string"/>
+          <element name="name" nillable="true" type="xsd:string"/>
+          <element name="owner" nillable="true" type="xsd:string"/>
+          <element name="status" type="xsd:int"/>
+        </sequence>
+      </complexType>
+      <element name="addMember">
+        <complexType>
+          <sequence>
+            <element name="groupName" type="xsd:string"/>
+            <element name="owner" type="xsd:string"/>
+            <element name="member" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="addMemberResponse">
+        <complexType>
+          <sequence>
+            <element name="addMemberReturn" type="xsd:int"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="removeMember">
+        <complexType>
+          <sequence>
+            <element name="groupName" type="xsd:string"/>
+            <element name="owner" type="xsd:string"/>
+            <element name="member" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="removeMemberResponse">
+        <complexType>
+          <sequence>
+            <element name="removeMemberReturn" type="xsd:int"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="renameGroup">
+        <complexType>
+          <sequence>
+            <element name="groupName" type="xsd:string"/>
+            <element name="owner" type="xsd:string"/>
+            <element name="member" type="xsd:string"/>
+          </sequence>
+        </complexType>
+      </element>
+      <element name="renameGroupResponse">
+        <complexType>
+          <sequence>
+            <element name="renameGroupReturn" type="xsd:int"/>
+          </sequence>
+        </complexType>
+      </element>
+    </schema>
+  </wsdl:types>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="renameGroupResponse">
+    <wsdl:part element="impl:renameGroupResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="groupListRequest">
+    <wsdl:part element="impl:groupList" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="removeMemberResponse">
+    <wsdl:part element="impl:removeMemberResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="groupInfoResponse">
+    <wsdl:part element="impl:groupInfoResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="groupInfoRequest">
+    <wsdl:part element="impl:groupInfo" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="removeMemberRequest">
+    <wsdl:part element="impl:removeMember" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="addMemberResponse">
+    <wsdl:part element="impl:addMemberResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="addMemberRequest">
+    <wsdl:part element="impl:addMember" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="removeGroupResponse">
+    <wsdl:part element="impl:removeGroupResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="addGroupResponse">
+    <wsdl:part element="impl:addGroupResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="removeGroupRequest">
+    <wsdl:part element="impl:removeGroup" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="renameGroupRequest">
+    <wsdl:part element="impl:renameGroup" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:message name="groupListResponse">
+    <wsdl:part element="impl:groupListResponse" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            
+  <wsdl:message name="addGroupRequest">
+    <wsdl:part element="impl:addGroup" name="parameters"/>
+  </wsdl:message>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:portType name="GroupEdit">
+    <wsdl:operation name="groupList">
+      <wsdl:input message="impl:groupListRequest" name="groupListRequest"/>
+      <wsdl:output message="impl:groupListResponse" name="groupListResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="addGroup">
+      <wsdl:input message="impl:addGroupRequest" name="addGroupRequest"/>
+      <wsdl:output message="impl:addGroupResponse" name="addGroupResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="removeGroup">
+      <wsdl:input message="impl:removeGroupRequest" name="removeGroupRequest"/>
+      <wsdl:output message="impl:removeGroupResponse" name="removeGroupResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="groupInfo">
+      <wsdl:input message="impl:groupInfoRequest" name="groupInfoRequest"/>
+      <wsdl:output message="impl:groupInfoResponse" name="groupInfoResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="addMember">
+      <wsdl:input message="impl:addMemberRequest" name="addMemberRequest"/>
+      <wsdl:output message="impl:addMemberResponse" name="addMemberResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="removeMember">
+      <wsdl:input message="impl:removeMemberRequest" name="removeMemberRequest"/>
+      <wsdl:output message="impl:removeMemberResponse" name="removeMemberResponse"/>
+    </wsdl:operation>
+    <wsdl:operation name="renameGroup">
+      <wsdl:input message="impl:renameGroupRequest" name="renameGroupRequest"/>
+      <wsdl:output message="impl:renameGroupResponse" name="renameGroupResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+  <wsdl:binding name="GroupEditSoapBinding" type="impl:GroupEdit">
+    <wsdlsoap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="groupList">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="groupListRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="groupListResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="addGroup">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="addGroupRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="addGroupResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="removeGroup">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="removeGroupRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="removeGroupResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="groupInfo">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="groupInfoRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="groupInfoResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="addMember">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="addMemberRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="addMemberResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="removeMember">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="removeMemberRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="removeMemberResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="renameGroup">
+      <wsdlsoap:operation soapAction=""/>
+      <wsdl:input name="renameGroupRequest">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="renameGroupResponse">
+        <wsdlsoap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+  <wsdl:service name="GroupEditService">
+    <wsdl:port binding="impl:GroupEditSoapBinding" name="GroupEdit">
+      <wsdlsoap:address location="http://localhost:8080/GroupEdit"/>
+    </wsdl:port>
+  </wsdl:service>
+
+</wsdl:definitions>

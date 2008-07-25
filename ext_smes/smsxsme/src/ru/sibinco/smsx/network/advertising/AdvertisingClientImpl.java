@@ -42,7 +42,7 @@ class AdvertisingClientImpl implements AdvertisingClient {
   public String getBanner(String serviceName, String abonentAddress, int transportType, int maxBannerLength, int charSet, int clientId, int transactionId) throws AdvertisingClientException {
     try {
       final Address address = new Address(abonentAddress);
-      final String abonent = "." + address.getTon() + "." + address.getNpi() + "." + address.getAddress();
+      final String abonent = "." + address.getTon() + '.' + address.getNpi() + '.' + address.getAddress();
 
       final byte[] banner = impl.getLikelyBanner(abonent.getBytes("ISO8859-1"), abonent.length(),
                                                  serviceName.getBytes("ISO8859-1"),

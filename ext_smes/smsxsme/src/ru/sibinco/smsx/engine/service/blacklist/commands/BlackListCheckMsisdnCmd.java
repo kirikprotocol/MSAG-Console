@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.blacklist.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -10,7 +12,6 @@ import ru.sibinco.smsx.engine.service.Command;
 public class BlackListCheckMsisdnCmd extends Command {
 
   private String msisdn;
-  private boolean inBlackList;
 
   public String getMsisdn() {
     return msisdn;
@@ -20,15 +21,8 @@ public class BlackListCheckMsisdnCmd extends Command {
     this.msisdn = msisdn;
   }
 
-  public boolean isInBlackList() {
-    return inBlackList;
-  }
-
-  public void setInBlackList(boolean inBlackList) {
-    this.inBlackList = inBlackList;
-  }
 
   public interface Receiver {
-    public void execute(BlackListCheckMsisdnCmd cmd);
+    public boolean execute(BlackListCheckMsisdnCmd cmd) throws CommandExecutionException;
   }
 }

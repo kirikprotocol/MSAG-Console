@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.calendar.commands;
 
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 import java.util.Date;
 
@@ -11,8 +12,8 @@ import java.util.Date;
 
 public class CalendarSendMessageCmd extends Command {
 
-  public static final int STATUS_WRONG_SEND_DATE = STATUS_INT + 1;
-  public static final int STATUS_WRONG_DESTINATION_ADDRESS = STATUS_INT + 2;
+  public static final int ERR_WRONG_SEND_DATE = ERR_INT + 1;
+  public static final int ERR_WRONG_DESTINATION_ADDRESS = ERR_INT + 2;
 
   // fields
   private String sourceAddress;
@@ -21,9 +22,6 @@ public class CalendarSendMessageCmd extends Command {
   private Date sendDate;
   private int destAddressSubunit;
   private boolean storeDeliveryStatus;
-
-  // result fields
-  private long msgId;
 
   public String getSourceAddress() {
     return sourceAddress;
@@ -73,15 +71,7 @@ public class CalendarSendMessageCmd extends Command {
     this.storeDeliveryStatus = storeDeliveryStatus;
   }
 
-  public long getMsgId() {
-    return msgId;
-  }
-
-  public void setMsgId(long msgId) {
-    this.msgId = msgId;
-  }
-
   public interface Receiver {
-    public void execute(CalendarSendMessageCmd cmd);
+    public long execute(CalendarSendMessageCmd cmd) throws CommandExecutionException;
   }
 }

@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.calendar.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -29,6 +31,6 @@ public class CalendarHandleReceiptCmd extends Command {
   }
 
   public interface Receiver {
-    public boolean execute(CalendarHandleReceiptCmd cmd);
+    public boolean execute(CalendarHandleReceiptCmd cmd) throws CommandExecutionException;
   }
 }

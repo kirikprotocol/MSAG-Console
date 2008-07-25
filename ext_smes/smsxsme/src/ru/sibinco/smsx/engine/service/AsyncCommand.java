@@ -1,19 +1,15 @@
 package ru.sibinco.smsx.engine.service;
 
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.Iterator;
+import java.util.ArrayList;
 
 /**
  * User: artem
  * Date: Sep 10, 2007
  */
 
-public class Command {
+public class AsyncCommand extends Command {
 
-  // Sources
-  public static final int SOURCE_SMPP = 0;
-  public static final int SOURCE_SOAP = 1;
   // Statuses
   public static final int STATUS_SUCCESS = 0;
   public static final int STATUS_SYSTEM_ERROR = 1;
@@ -21,11 +17,10 @@ public class Command {
 
   private int status = STATUS_SUCCESS;
 
-  private final Collection observers;
-  private int sourceId;
+  private final Collection<CommandObserver> observers;
 
-  protected Command() {
-    observers = new LinkedList();
+  protected AsyncCommand() {
+    observers = new ArrayList<CommandObserver>(10);
   }
 
   public int getStatus() {
@@ -37,8 +32,7 @@ public class Command {
   }
 
   protected void notifyObservers() {
-    for (Iterator iter = observers.iterator(); iter.hasNext();)
-      ((CommandObserver)iter.next()).update(this);
+    for (CommandObserver observer : observers) observer.update(this);
   }
 
   public void update(int status) {
@@ -46,12 +40,7 @@ public class Command {
     notifyObservers();
   }
 
-  public int getSourceId() {
-    return sourceId;
+  public interface AsyncCommandReceiver<CommandClass extends AsyncCommand> {
+    public void execute(CommandClass cmd) throws CommandExecutionException;
   }
-
-  public void setSourceId(int sourceId) {
-    this.sourceId = sourceId;
-  }
-
 }

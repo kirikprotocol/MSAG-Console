@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.secret.commands;
 
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -8,9 +9,8 @@ import ru.sibinco.smsx.engine.service.Command;
  */
 
 public class SecretSendMessageCmd extends Command {
-  public static final int STATUS_SOURCE_ABONENT_NOT_REGISTERED = STATUS_INT + 1;
-  public static final int STATUS_DESTINATION_ABONENT_NOT_REGISTERED = STATUS_INT + 2;
-  public static final int STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED = STATUS_INT + 3;
+  public static final int ERR_SOURCE_ABONENT_NOT_REGISTERED = ERR_INT + 1;
+  public static final int ERR_DESTINATION_ADDRESS_IS_NOT_ALLOWED = ERR_INT + 3;
 
   private String sourceAddress;
   private String destinationAddress;
@@ -18,7 +18,7 @@ public class SecretSendMessageCmd extends Command {
   private int destAddressSubunit;
   private boolean saveDeliveryStatus;
   private boolean notifyOriginator;
-  private long msgId;
+
 
   public String getSourceAddress() {
     return sourceAddress;
@@ -68,15 +68,7 @@ public class SecretSendMessageCmd extends Command {
     this.notifyOriginator = notifyOriginator;
   }
 
-  public long getMsgId() {
-    return msgId;
-  }
-
-  public void setMsgId(long msgId) {
-    this.msgId = msgId;
-  }
-
   public interface Receiver {
-    public void execute(SecretSendMessageCmd cmd);
+    public long execute(SecretSendMessageCmd cmd) throws CommandExecutionException;
   }
 }

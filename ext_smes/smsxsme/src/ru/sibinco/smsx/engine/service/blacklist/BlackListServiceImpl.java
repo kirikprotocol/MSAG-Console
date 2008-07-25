@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.blacklist;
 
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.blacklist.datasource.BlackListDataSource;
 import ru.sibinco.smsx.engine.service.blacklist.datasource.DBBlackListDataSource;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListAddCmd;
@@ -16,12 +17,12 @@ import com.eyeline.utils.config.xml.XmlConfig;
  * Date: 10.07.2007
  */
 
-class BlackListServiceImpl implements BlackListService {
+public class BlackListServiceImpl implements BlackListService {
 
   private final BlackListDataSource ds;
   private final BlackListProcessor processor;
 
-  BlackListServiceImpl(XmlConfig config) {
+  public BlackListServiceImpl(XmlConfig config) {
     try {
       ds = new DBBlackListDataSource();
 //      ds = new PersonalizationBlackListDataSource();
@@ -43,15 +44,15 @@ class BlackListServiceImpl implements BlackListService {
     return null;
   }
 
-  public void execute(BlackListAddCmd cmd) {
+  public void execute(BlackListAddCmd cmd) throws CommandExecutionException {
     processor.execute(cmd);
   }
 
-  public void execute(BlackListRemoveCmd cmd) {
+  public void execute(BlackListRemoveCmd cmd) throws CommandExecutionException {
     processor.execute(cmd);
   }
 
-  public void execute(BlackListCheckMsisdnCmd cmd) {
-    processor.execute(cmd);
+  public boolean execute(BlackListCheckMsisdnCmd cmd) throws CommandExecutionException {
+    return processor.execute(cmd);
   }
 }

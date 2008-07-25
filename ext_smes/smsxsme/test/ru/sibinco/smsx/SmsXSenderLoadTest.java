@@ -24,7 +24,7 @@ public class SmsXSenderLoadTest {
 
       final int delay = 1000 / sendSpeed;
 
-      final String url = args.getParam(0);
+      final String url = args.getStringParam(0);
 
       for (int i=0; i < threadCount; i++) {
         new Thread(new Runnable() {

@@ -7,6 +7,7 @@ import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListAddCmd;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListCheckMsisdnCmd;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListRemoveCmd;
 import ru.sibinco.smsx.engine.service.blacklist.datasource.BlackListDataSource;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -30,10 +31,7 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
     return buffer.toString();
   }
 
-  public void execute(BlackListAddCmd cmd) {
-    if (cmd == null)
-      return;
-
+  public void execute(BlackListAddCmd cmd) throws CommandExecutionException {
     String msisdn = cmd.getMsisdn();
 
     try {
@@ -44,18 +42,13 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
       if (!ds.isMsisdnInBlackList(msisdn))
         ds.addMsisdnToBlackList(msisdn);
 
-      cmd.update(BlackListAddCmd.STATUS_SUCCESS);
-
     } catch (Throwable e) {
       log.error("Can't add msisdn " + msisdn + " into black list",e);
-      cmd.update(BlackListAddCmd.STATUS_SYSTEM_ERROR);
+      throw new CommandExecutionException("Error: " + e.getMessage(), BlackListAddCmd.ERR_SYS_ERROR);
     }
   }
 
-  public void execute(BlackListRemoveCmd cmd) {
-    if (cmd == null)
-      return;
-
+  public void execute(BlackListRemoveCmd cmd) throws CommandExecutionException {
     String msisdn = cmd.getMsisdn();
 
     try {
@@ -65,18 +58,13 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
 
       ds.removeMsisdnFromBlackList(msisdn);
 
-      cmd.update(BlackListRemoveCmd.STATUS_SUCCESS);
-
     } catch (Throwable e) {
       log.error("Can't remove msisdn " + msisdn + " into black list",e);
-      cmd.update(BlackListRemoveCmd.STATUS_SYSTEM_ERROR);
+      throw new CommandExecutionException("Error: " + e.getMessage(), BlackListCheckMsisdnCmd.ERR_SYS_ERROR);
     }
   }
 
-  public void execute(BlackListCheckMsisdnCmd cmd) {
-    if (cmd == null)
-      return;
-
+  public boolean execute(BlackListCheckMsisdnCmd cmd) throws CommandExecutionException {
     String msisdn = cmd.getMsisdn();
 
     try {
@@ -84,13 +72,11 @@ class BlackListProcessor implements BlackListAddCmd.Receiver, BlackListRemoveCmd
         log.info("Chk msisdn=" + msisdn);
       msisdn = prepareMsisdn(msisdn);
 
-      cmd.setInBlackList(ds.isMsisdnInBlackList(msisdn));
-
-      cmd.update(BlackListRemoveCmd.STATUS_SUCCESS);
+      return ds.isMsisdnInBlackList(msisdn);
 
     } catch (Throwable e) {
       log.error("Can't check msisdn " + msisdn,e);
-      cmd.update(BlackListRemoveCmd.STATUS_SYSTEM_ERROR);
+      throw new CommandExecutionException("Error: " + e.getMessage(), BlackListCheckMsisdnCmd.ERR_SYS_ERROR);
     }
   }
 }

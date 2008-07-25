@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.sender.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
 
 /**
@@ -17,8 +19,6 @@ public class SenderGetMessageStatusCmd extends Command {
   public static final int MESSAGE_STATUS_DELIVERY_FAILED = SenderMessage.STATUS_DELIVERY_FAILED;
 
   private int msgId = -1;
-  private int smppStatus = -1;
-  private int messageStatus = -1;
 
   public int getMsgId() {
     return msgId;
@@ -28,23 +28,7 @@ public class SenderGetMessageStatusCmd extends Command {
     this.msgId = msgId;
   }
 
-  public int getSmppStatus() {
-    return smppStatus;
-  }
-
-  public void setSmppStatus(int smppStatus) {
-    this.smppStatus = smppStatus;
-  }
-
-  public int getMessageStatus() {
-    return messageStatus;
-  }
-
-  public void setMessageStatus(int messageStatus) {
-    this.messageStatus = messageStatus;
-  }
-
   public interface Receiver {
-    public void execute(SenderGetMessageStatusCmd cmd);
+    public int execute(SenderGetMessageStatusCmd cmd) throws CommandExecutionException;
   }
 }

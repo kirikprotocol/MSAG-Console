@@ -6,5 +6,5 @@ package ru.sibinco.smsx.engine.service;
  */
 
 public interface CommandObserver {
-  public void update(Command command);
+  public void update(AsyncCommand command);
 }

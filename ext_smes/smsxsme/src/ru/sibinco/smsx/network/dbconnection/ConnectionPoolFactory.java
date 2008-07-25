@@ -9,6 +9,7 @@ import java.sql.Driver;
 import ru.sibinco.smsx.InitializationException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.xml.XmlConfig;
 
 /**
  * User: artem
@@ -23,7 +24,9 @@ public class ConnectionPoolFactory {
 
   public static void init(final String configDir) {
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "dbpool.properties").getAbsolutePath());
+      final XmlConfig c = new XmlConfig();
+      c.load(new File(configDir, "config.xml"));
+      final PropertiesConfig config = new PropertiesConfig(c.getSection("dbpool").toProperties("."));
 
       // Read main parameters
       url = config.getString("jdbc.source");

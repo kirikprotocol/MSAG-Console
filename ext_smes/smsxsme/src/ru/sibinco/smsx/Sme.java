@@ -16,7 +16,9 @@ import ru.aurorisoft.smpp.PDU;
 import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoapFactory;
 import ru.sibinco.smsx.engine.soaphandler.smsxsender.SmsXSenderFactory;
-import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.soaphandler.groupsend.GroupSendFactory;
+import ru.sibinco.smsx.engine.soaphandler.groupedit.GroupEditFactory;
+import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.ServiceManagerMBean;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
 import ru.sibinco.smsx.network.advertising.AdvertisingClient;
@@ -57,25 +59,29 @@ public class Sme {
       Context.init();
 
       // Init SMPP multiplexor
+      PropertiesConfig smppProperties = new PropertiesConfig();
+      smppProperties.load(new File("conf/smpp.properties"));
       if (testMode) {
         System.out.println("SMSX started in test mode");
-        transceiver = new SMPPTransceiver(new Multiplexor(), new PropertiesConfig("conf/smpp.properties"), "");
+        transceiver = new SMPPTransceiver(new Multiplexor(), smppProperties, "");
       } else
-        transceiver = new SMPPTransceiver(new PropertiesConfig("conf/smpp.properties"), "");
+        transceiver = new SMPPTransceiver(smppProperties, "");
 
       handler = new MessageHandler("conf/smpphandlers/handler.xml", transceiver.getInQueue(), transceiver.getOutQueue());
 
       // Init services
       final XmlConfig config = new XmlConfig();
       config.load(new File(configDir, "config.xml"));      
-      ServiceManager.init(config, transceiver.getOutQueue());
-      ServiceManager.getInstance().startServices();
+      Services.init(config, transceiver.getOutQueue());
+      Services.getInstance().startServices();
 
       // Init SOAP
       BlacklistSoapFactory.init(configDir);
       senderAdvertisingClient = AdvertisingClientFactory.createAdvertisingClient();
       senderAdvertisingClient.connect();
       SmsXSenderFactory.init(configDir, senderAdvertisingClient);
+      GroupSendFactory.init(configDir);
+      GroupEditFactory.init(configDir);
 
       transceiver.connect();
       handler.start();
@@ -94,7 +100,7 @@ public class Sme {
         final LoggingMBean lb = new LoggingMBean("SMSX", LogManager.getLoggerRepository());
         mbs.registerMBean(lb, new ObjectName("SMSX:mbean=logging"));
 
-        final ServiceManagerMBean servicesMBean = ServiceManager.getInstance().getMBean("SMSX");
+        final ServiceManagerMBean servicesMBean = Services.getInstance().getMBean("SMSX");
         mbs.registerMBean(servicesMBean, new ObjectName("SMSX:mbean=services"));
 
         // Load JMX configuration        
@@ -128,7 +134,7 @@ public class Sme {
 
     log.error("Stopping sme engine...");
     log.info("Stopping services...");
-    ServiceManager.getInstance().stopServices();
+    Services.getInstance().stopServices();
     log.info("Services stopped.");
 
     log.info("Close sender advertising client...");

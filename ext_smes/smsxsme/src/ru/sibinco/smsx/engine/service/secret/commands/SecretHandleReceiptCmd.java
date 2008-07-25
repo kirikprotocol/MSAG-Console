@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.secret.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -8,6 +10,7 @@ import ru.sibinco.smsx.engine.service.Command;
  */
 
 public class SecretHandleReceiptCmd extends Command {
+  
   private boolean delivered;
   private long smppMessageId;
 
@@ -28,6 +31,6 @@ public class SecretHandleReceiptCmd extends Command {
   }
 
   public interface Receiver {
-    public boolean execute(SecretHandleReceiptCmd cmd);
+    public boolean execute(SecretHandleReceiptCmd cmd) throws CommandExecutionException;
   }
 }

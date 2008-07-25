@@ -4,6 +4,7 @@ import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
@@ -17,19 +18,18 @@ import java.io.File;
  * Date: Jul 1, 2007
  */
 
-class CalendarServiceImpl implements CalendarService {
+public class CalendarServiceImpl implements CalendarService {
 
   private final CalendarProcessor processor;
   private final CalendarEngine engine;
-  private final MessagesQueue messagesQueue;
   private final CalendarDataSource dataSource;
 
-  CalendarServiceImpl(XmlConfig config, final OutgoingQueue outQueue) {
+  public CalendarServiceImpl(XmlConfig config, final OutgoingQueue outQueue) {
     try {
 
       dataSource = new DBCalendarDataSource();
 
-      messagesQueue = new MessagesQueue();
+      MessagesQueue messagesQueue = new MessagesQueue();
 
       engine = new CalendarEngine(outQueue, messagesQueue, dataSource, config.getSection("calendar").getLong("engine.working.interval"));
 
@@ -40,15 +40,15 @@ class CalendarServiceImpl implements CalendarService {
     }
   }
 
-  public void execute(CalendarSendMessageCmd cmd) {
-    processor.execute(cmd);
+  public long execute(CalendarSendMessageCmd cmd) throws CommandExecutionException {
+    return processor.execute(cmd);
   }
 
-  public void execute(CalendarCheckMessageStatusCmd cmd) {
-    processor.execute(cmd);
+  public int execute(CalendarCheckMessageStatusCmd cmd) throws CommandExecutionException {
+    return processor.execute(cmd);
   }
 
-  public boolean execute(CalendarHandleReceiptCmd cmd) {
+  public boolean execute(CalendarHandleReceiptCmd cmd) throws CommandExecutionException {
     return processor.execute(cmd);
   }
 

@@ -6,6 +6,7 @@ import com.eyeline.utils.config.ConfigException;
 import java.sql.SQLException;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.File;
 
 /**
  * User: artem
@@ -37,7 +38,8 @@ public class DBDataSource {
 
   protected DBDataSource(String sqlFile, String prefix) throws DataSourceException {
     try {
-      this.sql = new PropertiesConfig(sqlFile);
+      this.sql = new PropertiesConfig();
+      this.sql.load(new File(sqlFile));
 
     } catch (ConfigException e) {
       throw new DataSourceException(e);

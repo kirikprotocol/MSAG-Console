@@ -30,7 +30,7 @@ public class OperatorsList {
   public Operator getOperatorByAddress(String address) {
     try {
       final Address addr = new Address(address);
-      return (Operator) operatorsTree.getValue("." + addr.getTon() + "." + addr.getNpi() + "." + addr.getAddress());
+      return (Operator) operatorsTree.getValue("." + addr.getTon() + '.' + addr.getNpi() + '.' + addr.getAddress());
     } catch (SMPPAddressException e) {
       log.error(e,e);
       return null;

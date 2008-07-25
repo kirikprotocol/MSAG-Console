@@ -42,7 +42,7 @@ class CalendarEngine extends IterativeWorker {
     this.workingInterval = workingInterval;
     this.ds = ds;
     this.messagesQueue = messagesQueue;
-    this.executor = new ThreadPoolExecutor(3, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
+    this.executor = new ThreadPoolExecutor(1, 10, 60L, TimeUnit.SECONDS, new ArrayBlockingQueue(100), new ThreadFactoryWithCounter("CalEngine-Executor-"));
   }
 
   protected void stopCurrentWork() {
@@ -76,10 +76,6 @@ class CalendarEngine extends IterativeWorker {
 
   public Date getEndDate() {
     return nextReloadTime;
-  }
-
-  public Date getCurrentDate() {
-    return new Date();
   }
 
   public int getQueueSize() {

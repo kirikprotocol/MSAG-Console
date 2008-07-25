@@ -8,9 +8,10 @@ import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.logica.smpp.Data;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
-import ru.sibinco.smsx.engine.service.Command;
-import ru.sibinco.smsx.engine.service.CommandObserver;
-import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.aurorisoft.smpp.SMPPException;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
+import ru.sibinco.smsx.engine.service.Services;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.secret.commands.*;
 
 import java.util.Properties;
@@ -34,6 +35,7 @@ public class SecretSMPPService extends AbstractSMPPService {
   private String msgNoMessages;
 
   protected void init(Properties props) throws SMPPServiceException {
+    super.init(props);
     try {
       final PropertiesConfig config = new PropertiesConfig(props);
 
@@ -72,7 +74,7 @@ public class SecretSMPPService extends AbstractSMPPService {
         cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
 
-        if (ServiceManager.getInstance().getSecretService().execute(cmd)) {
+        if (Services.getInstance().getSecretService().execute(cmd)) {
           inObj.respond(Data.ESME_ROK);
           return true;
         }
@@ -107,109 +109,87 @@ public class SecretSMPPService extends AbstractSMPPService {
     }
   }
 
-  private void handleOffRequest(final String sourceAddress, final IncomingObject inObj) {
+  private void handleOffRequest(final String sourceAddress, final IncomingObject inObj) throws SMPPException {
     final SecretUnregisterAbonentCmd cmd = new SecretUnregisterAbonentCmd();
     cmd.setAbonentAddress(sourceAddress);
-    cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
-        final SecretUnregisterAbonentCmd cmd = (SecretUnregisterAbonentCmd)command;
-        try {
-          switch (cmd.getStatus()) {
-            case SecretUnregisterAbonentCmd.STATUS_SUCCESS:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgUnregisterOk);
-              break;
-            case SecretUnregisterAbonentCmd.STATUS_SOURCE_ABONENT_NOT_REGISTERED:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
-              break;
-            case SecretUnregisterAbonentCmd.STATUS_SYSTEM_ERROR:
-              inObj.respond(Data.ESME_RX_P_APPN);
-              break;
-            default:
-              inObj.respond(Data.ESME_ROK);
-              log.error("Unknown response code for Off request: " + cmd.getStatus());
-          }
-        } catch (Throwable e) {
-          log.error(e,e);
-        }
+    try {
+      Services.getInstance().getSecretService().execute(cmd);
+      inObj.respond(Data.ESME_ROK);
+      sendMessage(serviceAddress, sourceAddress, msgUnregisterOk);
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case SecretUnregisterAbonentCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
+          break;
+        case SecretUnregisterAbonentCmd.ERR_SYS_ERROR:
+          inObj.respond(Data.ESME_RX_P_APPN);
+          break;
+        default:
+          inObj.respond(Data.ESME_ROK);
+          log.error("Unknown response code for Off request: " + e.getErrCode());
       }
-    });
-    ServiceManager.getInstance().getSecretService().execute(cmd);
+    }
   }
 
 
 
-  private void handleOnRequest(final String sourceAddress, String password, final IncomingObject inObj) {
+  private void handleOnRequest(final String sourceAddress, String password, final IncomingObject inObj) throws SMPPException {
     final SecretRegisterAbonentCmd cmd = new SecretRegisterAbonentCmd();
     cmd.setAbonentAddress(sourceAddress);
     cmd.setPassword(password);
-    cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
-        final SecretRegisterAbonentCmd cmd = (SecretRegisterAbonentCmd)command;
-        try {
-          switch (cmd.getStatus()) {
-            case SecretRegisterAbonentCmd.STATUS_SUCCESS:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgRegisterOk);
-              break;
-            case SecretRegisterAbonentCmd.STATUS_SOURCE_ABONENT_ALREADY_REGISTERED:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgSourceAbonentAlreadyRegistered.replaceAll("\\{abonent}", sourceAddress));
-              break;
-            case SecretRegisterAbonentCmd.STATUS_SYSTEM_ERROR:
-              inObj.respond(Data.ESME_RX_P_APPN);
-              break;
-            default:
-              inObj.respond(Data.ESME_ROK);
-              log.error("Unknown response code for On request: " + cmd.getStatus());
-          }
-        } catch (Throwable e) {
-          log.error(e,e);
-        }
+
+    try {
+      Services.getInstance().getSecretService().execute(cmd);
+      inObj.respond(Data.ESME_ROK);
+      sendMessage(serviceAddress, sourceAddress, msgRegisterOk);
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case SecretRegisterAbonentCmd.ERR_SOURCE_ABONENT_ALREADY_REGISTERED:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentAlreadyRegistered.replaceAll("\\{abonent}", sourceAddress));
+          break;
+        case SecretRegisterAbonentCmd.ERR_SYS_ERROR:
+          inObj.respond(Data.ESME_RX_P_APPN);
+          break;
+        default:
+          inObj.respond(Data.ESME_ROK);
+          log.error("Unknown response code for On request: " + e.getErrCode());
       }
-    });
-    ServiceManager.getInstance().getSecretService().execute(cmd);
+    }
   }
 
-  private void handleChangePasswordRequest(final String sourceAddress, String oldPwd, String newPwd, final IncomingObject inObj) {
+  private void handleChangePasswordRequest(final String sourceAddress, String oldPwd, String newPwd, final IncomingObject inObj) throws SMPPException {
     final SecretChangePasswordCmd cmd = new SecretChangePasswordCmd();
     cmd.setAbonentAddress(sourceAddress);
     cmd.setOldPassword(oldPwd);
     cmd.setNewPassword(newPwd);
-    cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
-        final SecretChangePasswordCmd cmd = (SecretChangePasswordCmd)command;
-        try {
-          switch (cmd.getStatus()) {
-            case SecretChangePasswordCmd.STATUS_SUCCESS:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgChangePwdOk);
-              break;
-            case SecretChangePasswordCmd.STATUS_SOURCE_ABONENT_NOT_REGISTERED:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
-              break;
-            case SecretChangePasswordCmd.STATUS_INVALID_PASSWORD:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgInvalidPassword);
-              break;
-            case SecretChangePasswordCmd.STATUS_SYSTEM_ERROR:
-              inObj.respond(Data.ESME_RX_P_APPN);
-              break;
-            default:
-              inObj.respond(Data.ESME_ROK);
-              log.error("Unknown response code for ChPwd request: " + cmd.getStatus());
-          }
-        } catch (Throwable e) {
-          log.error(e,e);
-        }
+
+    try {
+      Services.getInstance().getSecretService().execute(cmd);
+      inObj.respond(Data.ESME_ROK);
+      sendMessage(serviceAddress, sourceAddress, msgChangePwdOk);
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case SecretChangePasswordCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
+          break;
+        case SecretChangePasswordCmd.ERR_INVALID_PASSWORD:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgInvalidPassword);
+          break;
+        case SecretChangePasswordCmd.ERR_SYS_ERROR:
+          inObj.respond(Data.ESME_RX_P_APPN);
+          break;
+        default:
+          inObj.respond(Data.ESME_ROK);
+          log.error("Unknown response code for ChPwd request: " + e.getErrCode());
       }
-    });
-    ServiceManager.getInstance().getSecretService().execute(cmd);
+    }
   }
 
-  private static void handleSecretMessage(final String sourceAddress, final String destinationAddress, String message, final IncomingObject inObj) {
+  private static void handleSecretMessage(final String sourceAddress, final String destinationAddress, String message, final IncomingObject inObj) throws SMPPException {
     final SecretSendMessageCmd cmd = new SecretSendMessageCmd();
     cmd.setSourceAddress(sourceAddress);
     cmd.setDestinationAddress(destinationAddress);
@@ -217,83 +197,66 @@ public class SecretSMPPService extends AbstractSMPPService {
     cmd.setDestAddressSubunit(inObj.getMessage().getDestAddrSubunit());
     cmd.setSaveDeliveryStatus(false);
     cmd.setNotifyOriginator(true);
-    cmd.setSourceId(Command.SOURCE_SMPP);
-    cmd.addExecutionObserver(new CommandObserver(){
-      public void update(Command command) {
-        final SecretSendMessageCmd cmd = (SecretSendMessageCmd)command;
-        try {
-          switch (cmd.getStatus()) {
-            case SecretSendMessageCmd.STATUS_SUCCESS:
-            case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
-              inObj.respond(Data.ESME_ROK);
-              break;
+    cmd.setSourceId(AsyncCommand.SOURCE_SMPP);
 
-            case SecretSendMessageCmd.STATUS_SOURCE_ABONENT_NOT_REGISTERED:
-              inObj.respond(Data.ESME_RX_P_APPN);
-              break;
+    try {
+      Services.getInstance().getSecretService().execute(cmd);
+      inObj.respond(Data.ESME_ROK);
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case SecretSendMessageCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
+          inObj.respond(Data.ESME_RX_P_APPN);
+          break;
 
-            case SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
-              inObj.respond(Data.ESME_RINVDSTADR);
-              break;
+        case SecretSendMessageCmd.ERR_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
+          inObj.respond(Data.ESME_RINVDSTADR);
+          break;
 
-            case SecretSendMessageCmd.STATUS_SYSTEM_ERROR:
-              inObj.respond(Data.ESME_RX_P_APPN);
-              break;
+        case SecretSendMessageCmd.ERR_SYS_ERROR:
+          inObj.respond(Data.ESME_RX_P_APPN);
+          break;
 
-            default:
-              inObj.respond(Data.ESME_ROK);
-              log.error("Unknown response code for SecMsg request: " + cmd.getStatus());
-          }
-        } catch (Throwable e) {
-          log.error(e,e);
-        }
+        default:
+          inObj.respond(Data.ESME_ROK);
+          log.error("Unknown response code for SecMsg request: " + e.getErrCode());
       }
-    });
-    ServiceManager.getInstance().getSecretService().execute(cmd);
+    }
   }
 
 
-  private void handleGetRequest(final String sourceAddress, String password, final IncomingObject inObj) {
+  private void handleGetRequest(final String sourceAddress, String password, final IncomingObject inObj) throws SMPPException {
     final SecretGetMessagesCmd cmd = new SecretGetMessagesCmd();
     cmd.setAbonentAddress(sourceAddress);
     cmd.setPassword(password);
-    cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
-        final SecretGetMessagesCmd cmd = (SecretGetMessagesCmd)command;
-        try {
-          switch (cmd.getStatus()) {
-            case SecretGetMessagesCmd.STATUS_SUCCESS:
-              inObj.respond(Data.ESME_ROK);
-              break;
 
-            case SecretGetMessagesCmd.STATUS_SOURCE_ABONENT_NOT_REGISTERED:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
-              break;
+    try {
+      Services.getInstance().getSecretService().execute(cmd);
+      inObj.respond(Data.ESME_ROK);
+    } catch (CommandExecutionException e) {
+      switch (e.getErrCode()) {
+        case SecretGetMessagesCmd.ERR_SOURCE_ABONENT_NOT_REGISTERED:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgSourceAbonentNotRegistered.replaceAll("\\{abonent}", sourceAddress));
+          break;
 
-            case SecretGetMessagesCmd.STATUS_INVALID_PASSWORD:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgInvalidPassword);
-              break;
+        case SecretGetMessagesCmd.ERR_INVALID_PASSWORD:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgInvalidPassword);
+          break;
 
-            case SecretGetMessagesCmd.STATUS_NO_MESSAGES:
-              inObj.respond(Data.ESME_ROK);
-              sendMessage(serviceAddress, sourceAddress, msgNoMessages);
-              break;
+        case SecretGetMessagesCmd.ERR_NO_MESSAGES:
+          inObj.respond(Data.ESME_ROK);
+          sendMessage(serviceAddress, sourceAddress, msgNoMessages);
+          break;
 
-            case SecretGetMessagesCmd.STATUS_SYSTEM_ERROR:
-              inObj.respond(Data.ESME_RX_P_APPN);
-              break;
+        case SecretGetMessagesCmd.ERR_SYS_ERROR:
+          inObj.respond(Data.ESME_RX_P_APPN);
+          break;
 
-            default:
-              inObj.respond(Data.ESME_ROK);
-              log.error("Unknown response code for SecMsg request: " + cmd.getStatus());
-          }
-        } catch (Throwable e) {
-          log.error(e,e);
-        }
+        default:
+          inObj.respond(Data.ESME_ROK);
+          log.error("Unknown response code for SecMsg request: " + e.getErrCode());
       }
-    });
-    ServiceManager.getInstance().getSecretService().execute(cmd);
+    }
   }
 }

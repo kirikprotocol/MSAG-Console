@@ -6,7 +6,8 @@ import ru.sibinco.smsx.engine.service.sender.datasource.SenderMessage;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderGetMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderSendMessageCmd;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
-import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.utils.DataSourceException;
 
 /**
@@ -36,7 +37,7 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
       msg.setMessage(cmd.getMessage());
       msg.setDestAddrSubunit(cmd.getDestAddressSubunit());
       msg.setStorable(cmd.isStorable());
-      msg.setConnectionName(cmd.getSourceId() == Command.SOURCE_SMPP ? "smsx" : "websms");
+      msg.setConnectionName(cmd.getSourceId() == AsyncCommand.SOURCE_SMPP ? "smsx" : "websms");
 
       if (cmd.isStorable())
         ds.saveSenderMessage(msg);
@@ -52,30 +53,28 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
     }
   }
 
-  public void execute(SenderGetMessageStatusCmd cmd) {
+  public int execute(SenderGetMessageStatusCmd cmd) throws CommandExecutionException {
     try {
       if (log.isInfoEnabled())
         log.info("Get msg status: id=" + cmd.getMsgId());
       final SenderMessage senderMessage = ds.loadSenderMessageById(cmd.getMsgId());
 
       if (senderMessage != null && senderMessage.isStorable()) {
-        cmd.setMessageStatus(senderMessage.getStatus());
-        cmd.setSmppStatus(senderMessage.getSmppStatus());
+        return senderMessage.getStatus();
       } else {
         if (log.isInfoEnabled())
           log.info("Msg with id=" + cmd.getMsgId() + " not found");
-        cmd.setMessageStatus(SenderGetMessageStatusCmd.MESSAGE_STATUS_UNKNOWN);
+        return SenderGetMessageStatusCmd.MESSAGE_STATUS_UNKNOWN;
       }
 
-      cmd.update(SenderGetMessageStatusCmd.STATUS_SUCCESS);
 
     } catch (DataSourceException e) {
       log.error(e,e);
-      cmd.update(SenderGetMessageStatusCmd.STATUS_SYSTEM_ERROR);
+      throw new CommandExecutionException("Error: " + e.getMessage(), SenderGetMessageStatusCmd.ERR_SYS_ERROR);
     }
   }
 
-  public boolean execute(SenderHandleReceiptCmd cmd) {
+  public boolean execute(SenderHandleReceiptCmd cmd) throws CommandExecutionException {
     try {
       if (log.isInfoEnabled())
         log.info("Handle rcpt: id=" + cmd.getSmppMessageId() + "; dlvr=" + cmd.isDelivered());
@@ -85,9 +84,7 @@ class SenderProcessor implements SenderGetMessageStatusCmd.Receiver, SenderSendM
 
     } catch (DataSourceException e) {
       log.error(e,e);
-      cmd.update(SenderHandleReceiptCmd.STATUS_SYSTEM_ERROR);
+      throw new CommandExecutionException("Error: " + e.getMessage(), SenderHandleReceiptCmd.ERR_SYS_ERROR);
     }
-
-    return true;
   }
 }

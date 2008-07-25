@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.service.secret.commands;
 
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -8,9 +10,9 @@ import ru.sibinco.smsx.engine.service.Command;
  */
 
 public class SecretGetMessagesCmd extends Command {
-  public static final int STATUS_SOURCE_ABONENT_NOT_REGISTERED = STATUS_INT + 1;
-  public static final int STATUS_NO_MESSAGES = STATUS_INT + 2;
-  public static final int STATUS_INVALID_PASSWORD = STATUS_INT + 3;
+  public static final int ERR_SOURCE_ABONENT_NOT_REGISTERED = ERR_INT + 1;
+  public static final int ERR_NO_MESSAGES = ERR_INT + 2;
+  public static final int ERR_INVALID_PASSWORD = ERR_INT + 3;
 
   private String abonentAddress;
   private String password;
@@ -32,6 +34,6 @@ public class SecretGetMessagesCmd extends Command {
   }
 
   public interface Receiver {
-    public void execute(SecretGetMessagesCmd cmd);
+    public void execute(SecretGetMessagesCmd cmd) throws CommandExecutionException;
   }
 }

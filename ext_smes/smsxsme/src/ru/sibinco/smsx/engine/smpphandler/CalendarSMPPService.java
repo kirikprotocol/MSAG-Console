@@ -9,9 +9,9 @@ import ru.aurorisoft.smpp.Message;
 import ru.sibinco.smsc.utils.timezones.SmscTimezone;
 import ru.sibinco.smsc.utils.timezones.SmscTimezonesListException;
 import ru.sibinco.smsx.Context;
-import ru.sibinco.smsx.engine.service.Command;
-import ru.sibinco.smsx.engine.service.CommandObserver;
-import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
+import ru.sibinco.smsx.engine.service.Services;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarHandleReceiptCmd;
 
@@ -53,6 +53,7 @@ public class CalendarSMPPService extends AbstractSMPPService {
   private String serviceAddress;
 
   protected void init(Properties properties) throws SMPPServiceException {
+    super.init(properties);
     msgSendDateIsWrong = properties.getProperty("send.date.is.wrong");
     if (msgSendDateIsWrong == null)
       throw new SMPPServiceException("Can't find property 'send.date.is.wrong'");
@@ -83,7 +84,7 @@ public class CalendarSMPPService extends AbstractSMPPService {
         cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
 
-        if (ServiceManager.getInstance().getCalendarService().execute(cmd)) {
+        if (Services.getInstance().getCalendarService().execute(cmd)) {
           inObj.respond(Data.ESME_ROK);
           return true;
         }               
@@ -113,8 +114,6 @@ public class CalendarSMPPService extends AbstractSMPPService {
           return false;
         }
 
-
-
         if (log.isInfoEnabled())
           log.info("Senddate=" + result.sendDate);
 
@@ -125,37 +124,29 @@ public class CalendarSMPPService extends AbstractSMPPService {
         cmd.setMessage(result.message);
         cmd.setDestAddressSubunit(inObj.getMessage().getDestAddrSubunit());
         cmd.setStoreDeliveryStatus(false);
-        cmd.setSourceId(Command.SOURCE_SMPP);
-        cmd.addExecutionObserver(new CommandObserver() {
-          public void update(Command command) {
-            final CalendarSendMessageCmd cmd = (CalendarSendMessageCmd)command;
-            try {
-              switch (cmd.getStatus()) {
-                case CalendarSendMessageCmd.STATUS_SUCCESS:
-                  inObj.respond(Data.ESME_ROK);
-                  break;
-                case CalendarSendMessageCmd.STATUS_SYSTEM_ERROR:
-                  inObj.respond(Data.ESME_RX_P_APPN);
-                  break;
-                case CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE:
-                  inObj.respond(Data.ESME_ROK);
-                  sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
-                  sendMessage(sourceAddress, destinationAddress, cmd.getMessage(), cmd.getDestAddressSubunit());
-                  break;
-                case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
-                  inObj.respond(Data.ESME_RINVDSTADR);
-                  break;
-                default:
-                  inObj.respond(Data.ESME_RX_P_APPN);
-                  log.error("WARNING: Unknown result type in Calendar Handler");
-              }
-            } catch (Throwable e) {
-              log.error(e,e);
-            }
-          }
-        });
+        cmd.setSourceId(AsyncCommand.SOURCE_SMPP);
 
-        ServiceManager.getInstance().getCalendarService().execute(cmd);
+        try {
+          Services.getInstance().getCalendarService().execute(cmd);
+          inObj.respond(Data.ESME_ROK);
+        } catch (CommandExecutionException e) {
+          switch (e.getErrCode()) {
+            case CalendarSendMessageCmd.ERR_SYS_ERROR:
+              inObj.respond(Data.ESME_RX_P_APPN);
+              break;
+            case CalendarSendMessageCmd.ERR_WRONG_SEND_DATE:
+              inObj.respond(Data.ESME_ROK);
+              sendMessage(serviceAddress, sourceAddress, msgSendDateIsWrong);
+              sendMessage(sourceAddress, destinationAddress, cmd.getMessage(), cmd.getDestAddressSubunit());
+              break;
+            case CalendarSendMessageCmd.ERR_WRONG_DESTINATION_ADDRESS:
+              inObj.respond(Data.ESME_RINVDSTADR);
+              break;
+            default:
+              inObj.respond(Data.ESME_RX_P_APPN);
+              log.error("WARNING: Unknown result type in Calendar Handler");
+          }
+        }
 
         return true;
       }
@@ -181,7 +172,7 @@ public class CalendarSMPPService extends AbstractSMPPService {
     return new ParseResult(calendar.getTime(), message);
   }
 
-  private ParseResult parseAT(final String sourceAbonent, final String str, final Pattern dateRegex) {
+  private static ParseResult parseAT(final String sourceAbonent, final String str, final Pattern dateRegex) {
     Matcher matcher = dateRegex.matcher(str);
     matcher.find();
     final String dateStr = str.substring(matcher.start(), matcher.end()).trim();

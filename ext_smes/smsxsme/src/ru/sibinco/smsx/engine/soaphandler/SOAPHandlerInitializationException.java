@@ -7,7 +7,7 @@ import ru.sibinco.smsx.InitializationException;
  * Date: 10.07.2007
  */
 
-public class SOAPHandlerInitializationException extends InitializationException {
+public class SOAPHandlerInitializationException extends Exception {
 
   public SOAPHandlerInitializationException() {
   }

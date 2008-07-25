@@ -39,7 +39,7 @@ public class ServiceManagerMBean extends AbstractDynamicMBean {
     super.postRegister(registrationDone);
     try {
       { // Register calendar MBean
-        Object calendarMBean = ServiceManager.getInstance().getCalendarService().getMBean(domain + ",service=calendar");
+        Object calendarMBean = Services.getInstance().getCalendarService().getMBean(domain + ",service=calendar");
         if (calendarMBean != null) {
           attributes.add(new MBeanAttributeInfo("calendarService", ObjectName.class.getName(), "Calendar service monitor", true, false, false));
 
@@ -51,7 +51,7 @@ public class ServiceManagerMBean extends AbstractDynamicMBean {
       }
 
       { // Register secret MBean
-        Object secretMBean = ServiceManager.getInstance().getSecretService().getMBean(domain + ",service=secret");
+        Object secretMBean = Services.getInstance().getSecretService().getMBean(domain + ",service=secret");
         if (secretMBean != null) {
           attributes.add(new MBeanAttributeInfo("secretService", ObjectName.class.getName(), "Secret service monitor", true, false, false));
 
@@ -63,7 +63,7 @@ public class ServiceManagerMBean extends AbstractDynamicMBean {
       }
 
       { // Register sender MBean
-        Object senderMBean = ServiceManager.getInstance().getSenderService().getMBean(domain + ",service=sender");
+        Object senderMBean = Services.getInstance().getSenderService().getMBean(domain + ",service=sender");
         if (senderMBean != null) {
           attributes.add(new MBeanAttributeInfo("senderService", ObjectName.class.getName(), "Sender service monitor", true, false, false));
 
@@ -71,6 +71,18 @@ public class ServiceManagerMBean extends AbstractDynamicMBean {
           getMBeanServer().registerMBean(senderMBean, name);
 
           servicesMBeans.put("senderService", name);
+        }
+      }
+
+      { // Register group MBean
+        Object groupMBean = Services.getInstance().getGroupService().getMBean(domain + ",service=group");
+        if (groupMBean != null) {
+          attributes.add(new MBeanAttributeInfo("groupService", ObjectName.class.getName(), "Group service monitor", true, false, false));
+
+          final ObjectName name = new ObjectName(domain + ".services:name=group");
+          getMBeanServer().registerMBean(groupMBean, name);
+
+          servicesMBeans.put("groupService", name);
         }
       }
 

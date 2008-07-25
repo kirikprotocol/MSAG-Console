@@ -1,13 +1,13 @@
 package ru.sibinco.smsx.engine.service.sender.commands;
 
-import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 
 /**
  * User: artem
  * Date: Sep 11, 2007
  */
 
-public class SenderSendMessageCmd extends Command {
+public class SenderSendMessageCmd extends AsyncCommand {
 
   private String sourceAddress;
   private String destinationAddress;

@@ -5,7 +5,7 @@ package ru.sibinco.smsx.engine.service;
  * Date: 05.07.2007
  */
 
-public interface ServiceController {
+public interface Service {
   public void startService();
   public void stopService();
   public Object getMBean(String domain);

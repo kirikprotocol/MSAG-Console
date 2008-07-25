@@ -4,9 +4,9 @@ import com.eyeline.sme.handler.SMPPRequest;
 import com.eyeline.sme.smpp.IncomingObject;
 import com.logica.smpp.Data;
 import org.apache.log4j.Category;
-import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
 import ru.sibinco.smsx.engine.service.CommandObserver;
-import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.nick.commands.NickRegisterCmd;
 import ru.sibinco.smsx.engine.service.nick.commands.NickSendMessageCmd;
 import ru.sibinco.smsx.engine.service.nick.commands.NickUnregisterCmd;
@@ -54,9 +54,9 @@ public class NickSMPPService extends AbstractSMPPService {
   private static void unregisterNick(String sourceAddress, final IncomingObject inObj) {
     final NickUnregisterCmd cmd = new NickUnregisterCmd();
     cmd.setAbonentAddress(sourceAddress);
-    cmd.setSourceId(Command.SOURCE_SMPP);
+    cmd.setSourceId(AsyncCommand.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
+      public void update(AsyncCommand command) {
         final NickUnregisterCmd cmd = (NickUnregisterCmd)command;
         try {
           switch (cmd.getStatus()) {
@@ -71,16 +71,16 @@ public class NickSMPPService extends AbstractSMPPService {
         }
       }
     });
-    ServiceManager.getInstance().getNickService().execute(cmd);
+    Services.getInstance().getNickService().execute(cmd);
   }
 
   private static void registerNick(String sourceAddress, String nick, final IncomingObject inObj) {
     final NickRegisterCmd cmd = new NickRegisterCmd();
     cmd.setAbonentAddress(sourceAddress);
     cmd.setNick(nick);
-    cmd.setSourceId(Command.SOURCE_SMPP);
+    cmd.setSourceId(AsyncCommand.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
+      public void update(AsyncCommand command) {
         final NickRegisterCmd cmd = (NickRegisterCmd)command;
         try {
           switch (cmd.getStatus()) {
@@ -100,7 +100,7 @@ public class NickSMPPService extends AbstractSMPPService {
         }
       }
     });
-    ServiceManager.getInstance().getNickService().execute(cmd);
+    Services.getInstance().getNickService().execute(cmd);
   }
 
   private static void sendNickMessage(String sourceAddress, String destinationAddress, String message, final IncomingObject inObj) {
@@ -110,9 +110,9 @@ public class NickSMPPService extends AbstractSMPPService {
     cmd.setMessage(message);
     cmd.setMscAddress(inObj.getMessage().getMscAddress());
     cmd.setImsi(inObj.getMessage().getImsi());
-    cmd.setSourceId(Command.SOURCE_SMPP);
+    cmd.setSourceId(AsyncCommand.SOURCE_SMPP);
     cmd.addExecutionObserver(new CommandObserver() {
-      public void update(Command command) {
+      public void update(AsyncCommand command) {
         final NickSendMessageCmd cmd = (NickSendMessageCmd)command;
         try {
           switch (cmd.getStatus()) {
@@ -132,6 +132,6 @@ public class NickSMPPService extends AbstractSMPPService {
         }
       }
     });
-    ServiceManager.getInstance().getNickService().execute(cmd);
+    Services.getInstance().getNickService().execute(cmd);
   }
 }

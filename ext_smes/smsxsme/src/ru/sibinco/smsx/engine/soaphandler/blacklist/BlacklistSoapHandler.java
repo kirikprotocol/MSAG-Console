@@ -26,12 +26,10 @@ class BlacklistSoapHandler implements BlacklistSoap {
     try {
       final BlackListAddCmd cmd = new BlackListAddCmd();
       cmd.setMsisdn(msisdn);
-      final CmdStatusObserver observer = new CmdStatusObserver(new int[] {BlackListAddCmd.STATUS_SUCCESS, BlackListAddCmd.STATUS_SYSTEM_ERROR});
-      cmd.addExecutionObserver(observer);
-      ServiceManager.getInstance().getBlackListService().execute(cmd);
-      observer.waitStatus();
 
-      return cmd.getStatus() == BlackListAddCmd.STATUS_SUCCESS;
+      Services.getInstance().getBlackListService().execute(cmd);
+
+      return true;
     } catch (Throwable e) {
       log.error(e,e);
       return false;
@@ -49,12 +47,9 @@ class BlacklistSoapHandler implements BlacklistSoap {
     try {
       final BlackListRemoveCmd cmd = new BlackListRemoveCmd();
       cmd.setMsisdn(msisdn);
-      final CmdStatusObserver observer = new CmdStatusObserver(new int[] {BlackListRemoveCmd.STATUS_SUCCESS, BlackListRemoveCmd.STATUS_SYSTEM_ERROR});
-      cmd.addExecutionObserver(observer);
-      ServiceManager.getInstance().getBlackListService().execute(cmd);
-      observer.waitStatus();
+      Services.getInstance().getBlackListService().execute(cmd);
 
-      return cmd.getStatus() == BlackListRemoveCmd.STATUS_SUCCESS;
+      return true;
 
     } catch (Throwable e) {
       log.error(e,e);

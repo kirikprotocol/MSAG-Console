@@ -3,6 +3,7 @@ package ru.sibinco.smsx.network.personalization;
 import com.eyelinecom.whoisd.personalization.PersonalizationClientPool;
 import com.eyelinecom.whoisd.personalization.exceptions.PersonalizationClientException;
 import com.eyeline.utils.config.properties.PropertiesConfig;
+import com.eyeline.utils.config.xml.XmlConfig;
 import ru.sibinco.smsx.InitializationException;
 
 import java.io.File;
@@ -25,7 +26,9 @@ public class PersonalizationClientPoolFactory {
    */
   public static void init(String configDir) {
     try {
-      cfg = new PropertiesConfig(new File(configDir, "personalization.properties").getAbsolutePath());
+      final XmlConfig c = new XmlConfig();
+      c.load(new File(configDir, "config.xml"));
+      cfg = new PropertiesConfig(c.getSection("personalization").toProperties("personalization.", "."));      
     } catch (Throwable e) {
       throw new InitializationException(e);
     }

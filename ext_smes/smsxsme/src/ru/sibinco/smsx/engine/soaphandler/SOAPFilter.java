@@ -21,7 +21,7 @@ public class SOAPFilter implements Filter {
   public void destroy() {
   }
 
-  private static class MyServletRequest extends HttpServletRequestWrapper {
+  public static class MyServletRequest extends HttpServletRequestWrapper {
 
     public MyServletRequest(HttpServletRequest httpServletRequest) {
       super(httpServletRequest);

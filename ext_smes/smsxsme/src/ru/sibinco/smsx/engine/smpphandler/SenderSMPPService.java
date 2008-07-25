@@ -5,7 +5,7 @@ import com.eyeline.sme.smpp.IncomingObject;
 import com.logica.smpp.Data;
 import org.apache.log4j.Category;
 import ru.aurorisoft.smpp.Message;
-import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.sender.commands.SenderHandleReceiptCmd;
 
 /**
@@ -36,7 +36,7 @@ public class SenderSMPPService extends AbstractSMPPService {
         cmd.setSmppMessageId(msgId);
         cmd.setDelivered(delivered);
 
-        if (ServiceManager.getInstance().getSenderService().execute(cmd)) {
+        if (Services.getInstance().getSenderService().execute(cmd)) {
           inObj.respond(Data.ESME_ROK);
           return true;
         }

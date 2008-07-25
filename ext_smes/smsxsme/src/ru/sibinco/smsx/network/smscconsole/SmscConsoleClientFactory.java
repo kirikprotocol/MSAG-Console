@@ -5,6 +5,7 @@ import java.io.File;
 
 import ru.sibinco.smsx.InitializationException;
 import com.eyeline.utils.config.ConfigException;
+import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 
 /**
@@ -28,7 +29,10 @@ public class SmscConsoleClientFactory {
    */
   public static void init(String configDir) {
     try {
-      final PropertiesConfig config = new PropertiesConfig(new File(configDir, "smscconsole.properties").getAbsolutePath());
+      final XmlConfig c = new XmlConfig();
+      c.load(new File(configDir, "config.xml"));
+      final PropertiesConfig config = new PropertiesConfig(c.getSection("smscconsole").toProperties("."));
+      
       host = config.getString("host");
       port = config.getInt("port");
       login = config.getString("login");

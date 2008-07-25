@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.secret.commands;
 
 import ru.sibinco.smsx.engine.service.Command;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 
 /**
  * User: artem
@@ -8,8 +9,8 @@ import ru.sibinco.smsx.engine.service.Command;
  */
 
 public class SecretChangePasswordCmd extends Command {
-  public static final int STATUS_SOURCE_ABONENT_NOT_REGISTERED = STATUS_INT + 1;
-  public static final int STATUS_INVALID_PASSWORD = STATUS_INT + 2;
+  public static final int ERR_SOURCE_ABONENT_NOT_REGISTERED = ERR_INT + 1;
+  public static final int ERR_INVALID_PASSWORD = ERR_INT + 2;
 
   private String abonentAddress;
   private String oldPassword;
@@ -40,6 +41,6 @@ public class SecretChangePasswordCmd extends Command {
   }
 
   public interface Receiver {
-    public void execute(SecretChangePasswordCmd cmd);
+    public void execute(SecretChangePasswordCmd cmd) throws CommandExecutionException;
   }
 }

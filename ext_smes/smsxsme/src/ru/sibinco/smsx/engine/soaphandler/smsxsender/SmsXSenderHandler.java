@@ -6,8 +6,9 @@ import com.eyeline.utils.config.ConfigException;
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.Context;
 import ru.sibinco.smsx.engine.service.CmdStatusObserver;
-import ru.sibinco.smsx.engine.service.Command;
-import ru.sibinco.smsx.engine.service.ServiceManager;
+import ru.sibinco.smsx.engine.service.AsyncCommand;
+import ru.sibinco.smsx.engine.service.Services;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListCheckMsisdnCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarCheckMessageStatusCmd;
 import ru.sibinco.smsx.engine.service.calendar.commands.CalendarSendMessageCmd;
@@ -33,7 +34,6 @@ class SmsXSenderHandler implements SmsXSender {
   private static final String SENDER_MSG_ID_PREFIX = "2";
 
   // Secret service errors
-  private static final int STATUS_SECRET_DESTINATION_ABONENT_NOT_REGISTERED = -200;
   private static final int STATUS_SECRET_WRONG_DESTINATION_ADDRESS = -201;
 
   // Calendar service errors
@@ -58,14 +58,15 @@ class SmsXSenderHandler implements SmsXSender {
 
   private final AdvertisingClient advertisingClient;
 
-  SmsXSenderHandler(String configDir, AdvertisingClient advertisingClient) {
+  SmsXSenderHandler(String configDir, AdvertisingClient advertisingClient) throws SOAPHandlerInitializationException {
 
     this.advertisingClient = advertisingClient;
 
     final File configFile = new File(configDir, "soaphandlers/smsxsendhandler.properties");
 
     try {
-      final PropertiesConfig config = new PropertiesConfig(configFile);
+      final PropertiesConfig config = new PropertiesConfig();
+      config.load(configFile);
       serviceAddress = config.getString("service.address");
       appendAdvertising = config.getBool("append.advertising");
       advertisingClientName = config.getString("advertising.service.name");
@@ -97,15 +98,9 @@ class SmsXSenderHandler implements SmsXSender {
       // Check black list
       final BlackListCheckMsisdnCmd cmd = new BlackListCheckMsisdnCmd();
       cmd.setMsisdn(msisdn);
-      final CmdStatusObserver statusObserver = new CmdStatusObserver(new int[] {BlackListCheckMsisdnCmd.STATUS_SUCCESS, BlackListCheckMsisdnCmd.STATUS_SYSTEM_ERROR});
-      cmd.addExecutionObserver(statusObserver);
-      ServiceManager.getInstance().getBlackListService().execute(cmd);
-      statusObserver.waitStatus();
+      boolean inBlackList = Services.getInstance().getBlackListService().execute(cmd);
 
-      if (cmd.getStatus() == BlackListCheckMsisdnCmd.STATUS_SYSTEM_ERROR) {
-        log.error("Can't check dstaddr in blacklist. dstaddr=" + msisdn);
-        return new SmsXSenderResponse(null, -1, STATUS_SYSTEM_ERROR);
-      } else if (cmd.isInBlackList()) {
+      if (inBlackList) {
         log.error("Dstaddr=" + msisdn + " is in black list");
         return new SmsXSenderResponse(null, -1, STATUS_DESTINATION_ABONENT_IN_BLACK_LIST);
       }
@@ -127,30 +122,27 @@ class SmsXSenderHandler implements SmsXSender {
         c.setMessage(message);
         c.setDestAddressSubunit(express ? 1 : -1);
         c.setStoreDeliveryStatus(true);
-        c.setSourceId(Command.SOURCE_SOAP);
-        final CmdStatusObserver observer = new CmdStatusObserver(null);
-        c.addExecutionObserver(observer);
+        c.setSourceId(AsyncCommand.SOURCE_SOAP);
 
-        ServiceManager.getInstance().getCalendarService().execute(c);
-        observer.waitStatus();
-
-        switch(c.getStatus()) {
-          case CalendarSendMessageCmd.STATUS_SUCCESS:
-            status = STATUS_ACCEPTED;
-            id_message = CALENDAR_MSG_ID_PREFIX + c.getMsgId();
-            break;
-          case CalendarSendMessageCmd.STATUS_WRONG_SEND_DATE:
+        try {
+          long msgId = Services.getInstance().getCalendarService().execute(c);
+          status = STATUS_ACCEPTED;
+          id_message = CALENDAR_MSG_ID_PREFIX + msgId;
+        } catch (CommandExecutionException e) {
+          switch (e.getErrCode()) {
+            case CalendarSendMessageCmd.ERR_WRONG_SEND_DATE:
             status = STATUS_CALENDAR_WRONG_SEND_DATE;
             break;
-          case CalendarSendMessageCmd.STATUS_WRONG_DESTINATION_ADDRESS:
+          case CalendarSendMessageCmd.ERR_WRONG_DESTINATION_ADDRESS:
             status = STATUS_CALENDAR_WRONG_DESTINATION_ADDRESS;
             break;
           default:
             status = STATUS_SYSTEM_ERROR;
-
+          }
         }
 
       } else if (secret) {
+
         final SecretSendMessageCmd c = new SecretSendMessageCmd();
         c.setSourceAddress(serviceAddress);
         c.setDestinationAddress(msisdn);
@@ -158,22 +150,20 @@ class SmsXSenderHandler implements SmsXSender {
         c.setDestAddressSubunit(express ? 1 : -1);
         c.setSaveDeliveryStatus(true);
         c.setNotifyOriginator(false);
-        c.setSourceId(Command.SOURCE_SOAP);
-        final CmdStatusObserver observer = new CmdStatusObserver(null);
-        c.addExecutionObserver(observer);
-        ServiceManager.getInstance().getSecretService().execute(c);
-        observer.waitStatus();
-        switch(c.getStatus()) {
-          case SecretSendMessageCmd.STATUS_SUCCESS:
-          case SecretSendMessageCmd.STATUS_DESTINATION_ABONENT_NOT_REGISTERED:
-            status = STATUS_ACCEPTED;
-            id_message = SECRET_MSG_ID_PREFIX + c.getMsgId();
-            break;
-          case SecretSendMessageCmd.STATUS_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
-            status = STATUS_SECRET_WRONG_DESTINATION_ADDRESS;
-            break;
-          default:
-            status = STATUS_SYSTEM_ERROR;
+        c.setSourceId(AsyncCommand.SOURCE_SOAP);
+
+        try {
+          long msgId = Services.getInstance().getSecretService().execute(c);
+          status = STATUS_ACCEPTED;
+          id_message = SECRET_MSG_ID_PREFIX + msgId;
+        } catch (CommandExecutionException e) {
+          switch(e.getErrCode()) {
+            case SecretSendMessageCmd.ERR_DESTINATION_ADDRESS_IS_NOT_ALLOWED:
+              status = STATUS_SECRET_WRONG_DESTINATION_ADDRESS;
+              break;
+            default:
+              status = STATUS_SYSTEM_ERROR;
+          }
         }
 
       } else {
@@ -183,10 +173,10 @@ class SmsXSenderHandler implements SmsXSender {
         c.setMessage(message);
         c.setDestAddressSubunit(express ? 1 : -1);
         c.setStorable(true);
-        c.setSourceId(Command.SOURCE_SOAP);
+        c.setSourceId(AsyncCommand.SOURCE_SOAP);
         final CmdStatusObserver observer = new CmdStatusObserver(null);
         c.addExecutionObserver(observer);
-        ServiceManager.getInstance().getSenderService().execute(c);
+        Services.getInstance().getSenderService().execute(c);
         observer.waitStatus();
         switch (c.getStatus()) {
           case SenderSendMessageCmd.STATUS_SUCCESS:
@@ -248,37 +238,34 @@ class SmsXSenderHandler implements SmsXSender {
       return new SmsXSenderResponse(messageId, 0, STATUS_INVALID_MESSAGE_ID);
     }
 
-    int messageStatus = STATUS_SYSTEM_ERROR;
-    int smppStatus = -1;
-
     final CalendarCheckMessageStatusCmd cmd = new CalendarCheckMessageStatusCmd();
     cmd.setMsgId(msgId);
-    final CmdStatusObserver o = new CmdStatusObserver(null);
-    cmd.addExecutionObserver(o);
-    ServiceManager.getInstance().getCalendarService().execute(cmd);
-    o.waitStatus();
 
-    if (cmd.getStatus() == CalendarCheckMessageStatusCmd.STATUS_SUCCESS) {
-      switch (cmd.getMessageStatus()) {
+    try {
+      int result = Services.getInstance().getCalendarService().execute(cmd);
+
+      int messageStatus;
+      switch (result) {
         case CalendarCheckMessageStatusCmd.MESSAGE_STATUS_NEW:
         case CalendarCheckMessageStatusCmd.MESSAGE_STATUS_PROCESSED:
           messageStatus = STATUS_ACCEPTED;
           break;
         case CalendarCheckMessageStatusCmd.MESSAGE_STATUS_DELIVERED:
           messageStatus = STATUS_DELIVERED;
-          smppStatus = cmd.getSmppStatus();
           break;
         case CalendarCheckMessageStatusCmd.MESSAGE_STATUS_DELIVERY_FAILED:
           messageStatus = STATUS_DELIVERY_ERROR;
-          smppStatus = cmd.getSmppStatus();
           break;
         default:
           messageStatus = STATUS_MESSAGE_NOT_FOUND;
       }
 
-    }
+      return new SmsXSenderResponse(messageId, -1, messageStatus);
 
-    return new SmsXSenderResponse(messageId, smppStatus, messageStatus);
+    } catch (Throwable e) {
+      log.error(e,e);
+      return new SmsXSenderResponse(messageId, -1, STATUS_SYSTEM_ERROR);
+    }
   }
 
   private static SmsXSenderResponse getSecretMessageStatus(String messageId) {
@@ -290,37 +277,31 @@ class SmsXSenderHandler implements SmsXSender {
       return new SmsXSenderResponse(messageId, 0, STATUS_INVALID_MESSAGE_ID);
     }
 
-    int messageStatus = STATUS_SYSTEM_ERROR;
-    int smppStatus = -1;
+    int messageStatus;
 
     final SecretGetMessageStatusCmd cmd = new SecretGetMessageStatusCmd();
     cmd.setMsgId(msgId);
-    final CmdStatusObserver o = new CmdStatusObserver(null);
-    cmd.addExecutionObserver(o);
-    ServiceManager.getInstance().getSecretService().execute(cmd);
-    o.waitStatus();
-    if (cmd.getStatus() == SecretGetMessageStatusCmd.STATUS_SUCCESS) {
-
-      switch (cmd.getMessageStatus()) {
+    try {
+      int status = Services.getInstance().getSecretService().execute(cmd);
+      switch (status) {
         case SecretGetMessageStatusCmd.MESSAGE_STATUS_NEW:
         case SecretGetMessageStatusCmd.MESSAGE_STATUS_PROCESSED:
           messageStatus = STATUS_ACCEPTED;
           break;
         case SecretGetMessageStatusCmd.MESSAGE_STATUS_DELIVERED:
           messageStatus = STATUS_DELIVERED;
-          smppStatus = cmd.getSmppStatus();
           break;
         case SecretGetMessageStatusCmd.MESSAGE_STATUS_DELIVERY_FAILED:
           messageStatus = STATUS_DELIVERY_ERROR;
-          smppStatus = cmd.getSmppStatus();
           break;
         default:
           messageStatus = STATUS_MESSAGE_NOT_FOUND;
       }
-
+    } catch (CommandExecutionException e) {
+      messageStatus = STATUS_SYSTEM_ERROR;
     }
 
-    return new SmsXSenderResponse(messageId, smppStatus, messageStatus);
+    return new SmsXSenderResponse(messageId, -1, messageStatus);
   }
 
   private static SmsXSenderResponse getSenderMessageStatus(String messageId) {
@@ -332,38 +313,30 @@ class SmsXSenderHandler implements SmsXSender {
       return new SmsXSenderResponse(messageId, 0, STATUS_INVALID_MESSAGE_ID);
     }
 
-    int messageStatus = STATUS_SYSTEM_ERROR;
-    int smppStatus = -1;
-
     final SenderGetMessageStatusCmd cmd = new SenderGetMessageStatusCmd();
     cmd.setMsgId(msgId);
-    final CmdStatusObserver o = new CmdStatusObserver(null);
-    cmd.addExecutionObserver(o);
-    ServiceManager.getInstance().getSenderService().execute(cmd);
-    o.waitStatus();
-
-    if (cmd.getStatus() == SenderGetMessageStatusCmd.STATUS_SUCCESS) {
-
-      switch (cmd.getMessageStatus()) {
+    int messageStatus;
+    try {
+      int status = Services.getInstance().getSenderService().execute(cmd);
+      switch (status) {
         case SenderGetMessageStatusCmd.MESSAGE_STATUS_NEW:
         case SenderGetMessageStatusCmd.MESSAGE_STATUS_PROCESSED:
           messageStatus = STATUS_ACCEPTED;
           break;
         case SenderGetMessageStatusCmd.MESSAGE_STATUS_DELIVERED:
           messageStatus = STATUS_DELIVERED;
-          smppStatus = cmd.getSmppStatus();
           break;
         case SenderGetMessageStatusCmd.MESSAGE_STATUS_DELIVERY_FAILED:
           messageStatus = STATUS_DELIVERY_ERROR;
-          smppStatus = cmd.getSmppStatus();
           break;
         default:
           messageStatus = STATUS_MESSAGE_NOT_FOUND;
       }
-
+    } catch (CommandExecutionException e) {
+      messageStatus = STATUS_SYSTEM_ERROR;
     }
 
-    return new SmsXSenderResponse(messageId, smppStatus, messageStatus);
+    return new SmsXSenderResponse(messageId, -1, messageStatus);
   }
 
 
@@ -398,8 +371,8 @@ class SmsXSenderHandler implements SmsXSender {
 
     public void iterativeWork() {
       try {
-        final PropertiesConfig cfg = new PropertiesConfig(configFile);
-
+        final PropertiesConfig cfg = new PropertiesConfig();
+        cfg.load(configFile);
         appendAdvertising = cfg.getBool("append.advertising");
         if (log.isInfoEnabled())
           log.info("Append advertising = " + appendAdvertising);

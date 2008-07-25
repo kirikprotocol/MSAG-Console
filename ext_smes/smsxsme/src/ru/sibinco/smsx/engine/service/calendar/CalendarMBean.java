@@ -3,6 +3,7 @@ package ru.sibinco.smsx.engine.service.calendar;
 import com.eyeline.utils.jmx.mbeans.AbstractDynamicMBean;
 
 import javax.management.*;
+import java.util.Date;
 
 /**
  * User: artem
@@ -32,7 +33,7 @@ class CalendarMBean extends AbstractDynamicMBean {
     else if (attribute.equals("EndDate"))
       return calendarEngine.getEndDate();
     else if (attribute.equals("CurrentDate"))
-      return calendarEngine.getCurrentDate();
+      return new Date();
     else if (attribute.equals("ExecutorActiveCount"))
       return calendarEngine.getExecutorActiveCount();
     else if (attribute.equals("ExecutorPoolSize"))

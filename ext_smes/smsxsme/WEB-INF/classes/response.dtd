@@ -1,0 +1,4 @@
+<?xml encoding="ISO-8859-1"?>
+
+<!ELEMENT response (#PCDATA)>
+    <!ATTLIST response status CDATA #REQUIRED>

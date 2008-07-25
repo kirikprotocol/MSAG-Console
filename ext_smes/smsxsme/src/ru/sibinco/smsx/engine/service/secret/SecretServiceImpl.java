@@ -1,6 +1,7 @@
 package ru.sibinco.smsx.engine.service.secret;
 
 import ru.sibinco.smsx.engine.service.ServiceInitializationException;
+import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.secret.commands.*;
 import ru.sibinco.smsx.engine.service.secret.datasource.DBSecretDataSource;
 import ru.sibinco.smsx.engine.service.secret.datasource.SecretDataSource;
@@ -10,28 +11,31 @@ import java.io.File;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.properties.PropertiesConfig;
 import com.eyeline.utils.config.xml.XmlConfig;
+import com.eyeline.utils.config.xml.XmlConfigSection;
 
 /**
  * User: artem
  * Date: Jul 1, 2007
  */
 
-class SecretServiceImpl implements SecretService {
+public class SecretServiceImpl implements SecretService {
 
   private final SecretDataSource dataSource;
   private final SecretProcessor processor;
   private final MessageSender messageSender;
 
-  SecretServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
+  public SecretServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
 
     try {
       dataSource = new DBSecretDataSource();
 
+      XmlConfigSection sec = config.getSection("secret");
+
       messageSender = new MessageSender(dataSource, outQueue);
-      messageSender.setServiceAddress(config.getSection("secret").getString("service.address"));
-      messageSender.setMsgDeliveryReport(config.getSection("secret").getString("delivery.report"));
-      messageSender.setMsgDestinationAbonentInform(config.getSection("secret").getString("destination.abonent.inform"));
-      messageSender.setMsgDestinationAbonentInvitation(config.getSection("secret").getString("destination.abonent.invitation"));
+      messageSender.setServiceAddress(sec.getString("service.address"));
+      messageSender.setMsgDeliveryReport(sec.getString("delivery.report"));
+      messageSender.setMsgDestinationAbonentInform(sec.getString("destination.abonent.inform"));
+      messageSender.setMsgDestinationAbonentInvitation(sec.getString("destination.abonent.invitation"));
 
       processor = new SecretProcessor(dataSource, messageSender);
 
@@ -40,31 +44,31 @@ class SecretServiceImpl implements SecretService {
     }
   }
 
-  public void execute(SecretChangePasswordCmd cmd) {
+  public void execute(SecretChangePasswordCmd cmd) throws CommandExecutionException {
     processor.execute(cmd);
   }
 
-  public void execute(SecretGetMessagesCmd cmd) {
+  public void execute(SecretGetMessagesCmd cmd) throws CommandExecutionException {
     processor.execute(cmd);
   }
 
-  public void execute(SecretGetMessageStatusCmd cmd) {
+  public int execute(SecretGetMessageStatusCmd cmd) throws CommandExecutionException {
+    return processor.execute(cmd);
+  }
+
+  public void execute(SecretRegisterAbonentCmd cmd) throws CommandExecutionException {
     processor.execute(cmd);
   }
 
-  public void execute(SecretRegisterAbonentCmd cmd) {
+  public long execute(SecretSendMessageCmd cmd) throws CommandExecutionException {
+    return processor.execute(cmd);
+  }
+
+  public void execute(SecretUnregisterAbonentCmd cmd) throws CommandExecutionException {
     processor.execute(cmd);
   }
 
-  public void execute(SecretSendMessageCmd cmd) {
-    processor.execute(cmd);
-  }
-
-  public void execute(SecretUnregisterAbonentCmd cmd) {
-    processor.execute(cmd);
-  }
-
-  public boolean execute(SecretHandleReceiptCmd cmd) {
+  public boolean execute(SecretHandleReceiptCmd cmd) throws CommandExecutionException {
     return processor.execute(cmd);
   }
 

@@ -11,13 +11,12 @@ import com.eyeline.utils.config.xml.XmlConfig;
  * Date: Sep 10, 2007
  */
 
-class NickServiceImpl implements NickService {
+public class NickServiceImpl implements NickService {
 
-  private final NickServiceConfig conf;
   private final NickProcessor processor;
 
   public NickServiceImpl(XmlConfig config, OutgoingQueue outQueue) {
-    this.conf = new NickServiceConfig(config);
+    NickServiceConfig conf = new NickServiceConfig(config);
     this.processor = new NickProcessor(conf, outQueue);
   }
 
