@@ -146,7 +146,16 @@ class GroupEditSoapHandler implements GroupEdit {
   }
 
   public int copyGroup(String groupName, String owner, String newName) throws RemoteException {
-    return 0;  //To change body of implemented methods use File | Settings | File Templates.
+    try {
+      GroupCopyCmd c = new GroupCopyCmd();
+      c.setGroupName(groupName);
+      c.setOwner(owner);
+      c.setNewGroupName(newName);
+      Services.getInstance().getGroupService().execute(c);
+      return RESULT_OK;
+    } catch (CommandExecutionException e) {
+      return getStatus(e.getErrCode());
+    }
   }
 
   private static int getStatus(int errcode) {

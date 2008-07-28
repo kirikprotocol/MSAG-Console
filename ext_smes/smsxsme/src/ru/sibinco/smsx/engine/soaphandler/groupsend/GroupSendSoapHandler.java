@@ -12,7 +12,6 @@ class GroupSendSoapHandler implements GroupSend {
 
   private static final int STATUS_ACCEPTED = 0;
   private static final int STATUS_DELIVERED = 1;
-  private static final int STATUS_DELIVERY_ERROR = 2;
   private static final int STATUS_SYSTEM_ERROR = -1;
   private static final int STATUS_UNKNOWN_OWNER = -2;
   private static final int STATUS_UNKNOWN_GROUP = -3;
