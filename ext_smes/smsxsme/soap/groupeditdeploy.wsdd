@@ -17,7 +17,7 @@
       <parameter name="wsdlServiceElement" value="GroupEditService"/>
       <parameter name="schemaQualified" value="http://sibinco.ru/groupedit"/>
       <parameter name="wsdlServicePort" value="GroupEdit"/>
-      <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.groupedit.GroupEditSoapBindingSkeleton"/>
+      <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.groupedit.GroupEditSoapService"/>
       <parameter name="wsdlPortType" value="GroupEdit"/>
       <parameter name="typeMappingVersion" value="1.2"/>
       <parameter name="allowedMethods" value="*"/>

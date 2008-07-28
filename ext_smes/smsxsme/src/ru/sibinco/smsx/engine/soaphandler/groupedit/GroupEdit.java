@@ -8,4 +8,5 @@ public interface GroupEdit extends java.rmi.Remote {
   public int addMember(String groupName, String owner, String member) throws java.rmi.RemoteException;
   public int removeMember(String groupName, String owner, String member) throws java.rmi.RemoteException;
   public int renameGroup(String groupName, String owner, String newName) throws java.rmi.RemoteException;
+  public int copyGroup(String groupName, String owner, String newName) throws java.rmi.RemoteException;
 }

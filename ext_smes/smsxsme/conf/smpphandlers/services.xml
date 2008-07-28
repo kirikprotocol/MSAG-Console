@@ -78,7 +78,23 @@
 
   <service>
     <service-name>group_edit</service-name>
-    <service-class>ru.sibinco.smsx.engine.smpphandler.GroupEditSMPPService</service-class>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.GroupEditSMPPService</service-class>    
+    <init-param>
+      <param-name>edit.lock</param-name>
+      <param-value>#template#=edit.lock#</param-value>
+    </init-param>
+    <init-param>
+      <param-name>edit.unlock</param-name>
+      <param-value>#template#=edit.unlock#</param-value>
+    </init-param>
+    <init-param>
+      <param-name>edit.alert.on</param-name>
+      <param-value>#template#=edit.alert.on#</param-value>
+    </init-param>
+    <init-param>
+      <param-name>edit.alert.off</param-name>
+      <param-value>#template#=edit.alert.off#</param-value>
+    </init-param>
   </service>
 
   <!-- ========================================== Receipt request ================================================== -->

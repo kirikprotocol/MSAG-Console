@@ -1,6 +1,8 @@
 package ru.sibinco.smsx.engine.soaphandler.groupedit;
 
-public class GroupEditSoapBindingSkeleton implements GroupEdit, org.apache.axis.wsdl.Skeleton {
+import java.rmi.RemoteException;
+
+public class GroupEditSoapService implements GroupEdit, org.apache.axis.wsdl.Skeleton {
   private GroupEdit impl;
   private static java.util.Map _myOperations = new java.util.Hashtable();
   private static java.util.Collection _myOperationsList = new java.util.ArrayList();
@@ -115,14 +117,23 @@ public class GroupEditSoapBindingSkeleton implements GroupEdit, org.apache.axis.
     if (_myOperations.get("renameGroup") == null) {
       _myOperations.put("renameGroup", new java.util.ArrayList());
     }
-    ((java.util.List)_myOperations.get("renameGroup")).add(_oper);
+    ((java.util.List)_myOperations.get("copyGroup")).add(_oper);
+    _oper = new org.apache.axis.description.OperationDesc("copyGroup", _params, new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "copyGroupReturn"));
+    _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
+    _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "copyGroup"));
+    _oper.setSoapAction("");
+    _myOperationsList.add(_oper);
+    if (_myOperations.get("copyGroup") == null) {
+      _myOperations.put("copyGroup", new java.util.ArrayList());
+    }
+    ((java.util.List)_myOperations.get("copyGroup")).add(_oper);
   }
 
-  public GroupEditSoapBindingSkeleton() {
+  public GroupEditSoapService() {
     this.impl = GroupEditFactory.createGroupEdit();
   }
 
-  public GroupEditSoapBindingSkeleton(GroupEdit impl) {
+  public GroupEditSoapService(GroupEdit impl) {
     this.impl = impl;
   }
   public GroupListResp groupList(java.lang.String owner) throws java.rmi.RemoteException
@@ -164,6 +175,11 @@ public class GroupEditSoapBindingSkeleton implements GroupEdit, org.apache.axis.
   public int renameGroup(java.lang.String groupName, java.lang.String owner, java.lang.String member) throws java.rmi.RemoteException
   {
     int ret = impl.renameGroup(groupName, owner, member);
+    return ret;
+  }
+
+  public int copyGroup(String groupName, String owner, String newName) throws RemoteException {
+    int ret = impl.copyGroup(groupName, owner, newName);
     return ret;
   }
 

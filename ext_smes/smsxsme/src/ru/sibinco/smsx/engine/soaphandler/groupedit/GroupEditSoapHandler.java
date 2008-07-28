@@ -27,7 +27,7 @@ class GroupEditSoapHandler implements GroupEdit {
   private static final int RESULT_MEMBER_NOT_EXISTS = -9;
   private static final int RESULT_INVALID_OWNER = -10;
   private static final int RESULT_MEMBER_ALREADY_EXISTS = -11;
-  private static final int RESULT_LOCKUD_BY_OWNER = -12;
+  private static final int RESULT_LOCKED_BY_OWNER = -12;
 
   GroupEditSoapHandler(String configDir) {
 
@@ -145,6 +145,10 @@ class GroupEditSoapHandler implements GroupEdit {
     }
   }
 
+  public int copyGroup(String groupName, String owner, String newName) throws RemoteException {
+    return 0;  //To change body of implemented methods use File | Settings | File Templates.
+  }
+
   private static int getStatus(int errcode) {
     switch (errcode) {
       case GroupEditCommand.ERR_GROUP_ALREADY_EXISTS: return RESULT_GROUP_ALREADY_EXISTS;
@@ -157,7 +161,7 @@ class GroupEditSoapHandler implements GroupEdit {
       case GroupEditCommand.ERR_MEMBER_COUNT_EXCEEDED: return RESULT_MEMBERS_COUNT_EXCEEDED;
       case GroupEditCommand.ERR_OWNER_NOT_EXISTS: return RESULT_OWNER_NOT_EXISTS;
       case GroupEditCommand.ERR_MEMBER_NOT_EXISTS: return RESULT_MEMBER_NOT_EXISTS;
-      case GroupEditCommand.ERR_LOCKED_BY_OWNER: return RESULT_LOCKUD_BY_OWNER;
+      case GroupEditCommand.ERR_LOCKED_BY_OWNER: return RESULT_LOCKED_BY_OWNER;
       default: return RESULT_SYSTEM_ERROR;
     }
   }
