@@ -11,12 +11,12 @@ import javax.management.*;
 
 class GroupMBean extends AbstractDynamicMBean {
 
-  private final GroupProcessor processor;
+  private final GroupSendProcessor sendProcessor;
 
-  GroupMBean(GroupProcessor processor) {
+  GroupMBean(GroupSendProcessor sendProcessor) {
     super(GroupMBean.class, "Group service monitor");
 
-    this.processor = processor;
+    this.sendProcessor = sendProcessor;
 
     attributes.add(new MBeanAttributeInfo("ExecutorActiveCount", "java.util.Integer", "Response handler active count", true, false, false));
     attributes.add(new MBeanAttributeInfo("ExecutorPoolSize", "java.util.Integer", "Actual handler pool size", true, false, false));
@@ -26,13 +26,13 @@ class GroupMBean extends AbstractDynamicMBean {
 
   public Object getAttribute(String attribute) throws AttributeNotFoundException, MBeanException, ReflectionException {
     if (attribute.equals("ExecutorActiveCount"))
-      return processor.getExecutorActiveCount();
+      return sendProcessor.getExecutorActiveCount();
     else if (attribute.equals("ExecutorPoolSize"))
-      return processor.getExecutorPoolSize();
+      return sendProcessor.getExecutorPoolSize();
     else if (attribute.equals("ExecutorMaxPoolSize"))
-      return processor.getExecutorMaxPoolSize();
+      return sendProcessor.getExecutorMaxPoolSize();
     else if (attribute.equals("ExecutorRejectedTasksCount"))
-      return processor.getExecutorRejectedTasks();
+      return sendProcessor.getExecutorRejectedTasks();
     throw new AttributeNotFoundException("Attribute " + attribute + " not found");
   }
 
@@ -40,7 +40,7 @@ class GroupMBean extends AbstractDynamicMBean {
     if (attribute.getName().equals("ExecutorMaxPoolSize")) {
       int value = (Integer)attribute.getValue();
       if (value > 1)
-        processor.setExecutorMaxPoolSize(value);
+        sendProcessor.setExecutorMaxPoolSize(value);
     }
   }
 

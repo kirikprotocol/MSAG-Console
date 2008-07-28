@@ -7,7 +7,7 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
  * Date: 23.07.2008
  */
 
-public class GroupRenameCmd extends GroupCommand {
+public class GroupRenameCmd extends GroupEditCommand {
 
   private String newGroupName;
 

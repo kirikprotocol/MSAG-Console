@@ -2,9 +2,7 @@ package ru.sibinco.smsx.engine.soaphandler.groupedit;
 
 import java.rmi.RemoteException;
 import java.util.List;
-import java.util.Iterator;
 
-import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.group.commands.*;
@@ -148,16 +146,16 @@ class GroupEditSoapHandler implements GroupEdit {
 
   private static int getStatus(int errcode) {
     switch (errcode) {
-      case GroupCommand.ERR_GROUP_ALREADY_EXISTS: return RESULT_GROUP_ALREADY_EXISTS;
-      case GroupCommand.ERR_GROUP_NOT_EXISTS: return RESULT_GROUP_NOT_EXISTS;
-      case GroupCommand.ERR_GROUPS_COUNT_EXCEEDED: return RESULT_GROUPS_LIMIT_EXCEEDED;
-      case GroupCommand.ERR_INV_GROUP_NAME: return RESULT_INVALID_GROUPNAME;
-      case GroupCommand.ERR_INV_MEMBER: return RESULT_INVALID_MEMBER;
-      case GroupCommand.ERR_INV_OWNER: return RESULT_INVALID_OWNER;
-      case GroupCommand.ERR_MEMBER_ALREADY_EXISTS: return RESULT_MEMBER_ALREADY_EXISTS;
-      case GroupCommand.ERR_MEMBER_COUNT_EXCEEDED: return RESULT_MEMBERS_COUNT_EXCEEDED;
-      case GroupCommand.ERR_OWNER_NOT_EXISTS: return RESULT_OWNER_NOT_EXISTS;
-      case GroupCommand.ERR_MEMBER_NOT_EXISTS: return RESULT_MEMBER_NOT_EXISTS;
+      case GroupEditCommand.ERR_GROUP_ALREADY_EXISTS: return RESULT_GROUP_ALREADY_EXISTS;
+      case GroupEditCommand.ERR_GROUP_NOT_EXISTS: return RESULT_GROUP_NOT_EXISTS;
+      case GroupEditCommand.ERR_GROUPS_COUNT_EXCEEDED: return RESULT_GROUPS_LIMIT_EXCEEDED;
+      case GroupEditCommand.ERR_INV_GROUP_NAME: return RESULT_INVALID_GROUPNAME;
+      case GroupEditCommand.ERR_INV_MEMBER: return RESULT_INVALID_MEMBER;
+      case GroupEditCommand.ERR_INV_OWNER: return RESULT_INVALID_OWNER;
+      case GroupEditCommand.ERR_MEMBER_ALREADY_EXISTS: return RESULT_MEMBER_ALREADY_EXISTS;
+      case GroupEditCommand.ERR_MEMBER_COUNT_EXCEEDED: return RESULT_MEMBERS_COUNT_EXCEEDED;
+      case GroupEditCommand.ERR_OWNER_NOT_EXISTS: return RESULT_OWNER_NOT_EXISTS;
+      case GroupEditCommand.ERR_MEMBER_NOT_EXISTS: return RESULT_MEMBER_NOT_EXISTS;
       default: return RESULT_SYSTEM_ERROR;
     }
   }

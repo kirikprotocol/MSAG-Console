@@ -7,7 +7,7 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
  * Date: 23.07.2008
  */
 
-public class GroupRemoveCmd extends GroupCommand {
+public class GroupRemoveCmd extends GroupEditCommand {
 
   public interface Receiver {
     public void execute(GroupRemoveCmd cmd) throws CommandExecutionException;

@@ -18,6 +18,8 @@ import ru.sibinco.smsx.engine.service.sender.SenderService;
 import ru.sibinco.smsx.engine.service.sender.SenderServiceImpl;
 import ru.sibinco.smsx.engine.service.group.GroupService;
 import ru.sibinco.smsx.engine.service.group.GroupServiceImpl;
+import ru.sibinco.smsx.engine.service.subscription.SubscriptionService;
+import ru.sibinco.smsx.engine.service.subscription.SubscriptionServiceImpl;
 import com.eyeline.sme.smpp.OutgoingQueue;
 import com.eyeline.utils.config.xml.XmlConfig;
 import com.eyeline.utils.ThreadFactoryWithCounter;
@@ -46,6 +48,7 @@ public class Services {
   private final BlackListService blackListService;
   private final NickService nickService;
   private final GroupService groupService;
+  private final SubscriptionService subscriptionService;
 
   private ServiceManagerMBean mbean = null;
 
@@ -58,6 +61,7 @@ public class Services {
     blackListService = new BlackListServiceImpl(config);
     nickService = new NickServiceImpl(config, outQueue);
     groupService = new GroupServiceImpl(config, outQueue);
+    subscriptionService = new SubscriptionServiceImpl(config);
   }
 
   public ServiceManagerMBean getMBean(String domain) {
@@ -90,6 +94,10 @@ public class Services {
     return groupService;
   }
 
+  public SubscriptionService getSubscriptionService() {
+    return subscriptionService;
+  }
+
   public void startServices() {
     log.info("Starting: sender...");
     senderService.startService();
@@ -114,6 +122,10 @@ public class Services {
     log.info("Starting: group...");
     groupService.startService();
     log.info("Started: group.");
+
+    log.info("Starting: subscription...");
+    subscriptionService.startService();
+    log.info("Started: subscription.");
   }
 
   public void stopServices() {
@@ -140,5 +152,9 @@ public class Services {
     log.info("Stopping: group...");
     groupService.stopService();
     log.info("Stopped: group.");
+
+    log.info("Stopping: subscription...");
+    subscriptionService.stopService();
+    log.info("Stopped: subscription.");
   }
 }

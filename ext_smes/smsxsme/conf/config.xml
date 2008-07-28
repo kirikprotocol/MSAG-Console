@@ -25,6 +25,15 @@
     <param name="store.data.life.time">1800000</param>
     <param name="smsc.host">phoenix</param>
     <param name="smsc.port">37811</param>
+    <param name="source.address">147</param>
+
+    <section name="notifications">
+      <param name="add.group">#template#=add.group#</param>
+      <param name="remove.group">#template#=remove.group#</param>
+      <param name="rename.group">#template#=rename.group#</param>
+      <param name="add.member">#template#=add.member#</param>
+      <param name="remove.member">#template#=remove.member#</param>
+    </section>
   </section>
 
   <section name="advertising">

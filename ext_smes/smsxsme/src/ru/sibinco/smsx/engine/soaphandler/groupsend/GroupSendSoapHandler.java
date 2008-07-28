@@ -2,7 +2,7 @@ package ru.sibinco.smsx.engine.soaphandler.groupsend;
 
 import org.apache.log4j.Category;
 import ru.sibinco.smsx.engine.service.group.commands.GroupSendCmd;
-import ru.sibinco.smsx.engine.service.group.commands.CheckStatusCmd;
+import ru.sibinco.smsx.engine.service.group.commands.GroupSendStatusCmd;
 import ru.sibinco.smsx.engine.service.*;
 import ru.sibinco.smsx.engine.soaphandler.SOAPHandlerInitializationException;
 
@@ -52,7 +52,7 @@ class GroupSendSoapHandler implements GroupSend {
     if (log.isDebugEnabled())
       log.debug("CheckStatus: msgId=" + msgId);
 
-    final CheckStatusCmd cmd = new CheckStatusCmd();
+    final GroupSendStatusCmd cmd = new GroupSendStatusCmd();
     final GroupSendResp resp = new GroupSendResp();
     resp.setMsgId(msgId);
     try {
@@ -64,7 +64,7 @@ class GroupSendSoapHandler implements GroupSend {
     }
 
     try {
-      CheckStatusCmd.MessageStatus status = Services.getInstance().getGroupService().execute(cmd);
+      GroupSendStatusCmd.MessageStatus status = Services.getInstance().getGroupService().execute(cmd);
       resp.setStatus(getStatus(status));
     } catch (CommandExecutionException e) {
       log.error("Check status err.", e);
@@ -74,7 +74,7 @@ class GroupSendSoapHandler implements GroupSend {
     return resp;
   }
 
-  private static int getStatus(CheckStatusCmd.MessageStatus cmdStatus) {
+  private static int getStatus(GroupSendStatusCmd.MessageStatus cmdStatus) {
     switch (cmdStatus) {
       case ACCEPTED: return STATUS_ACCEPTED;
       case DELIVERED: return STATUS_DELIVERED;

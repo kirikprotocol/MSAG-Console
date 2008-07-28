@@ -7,7 +7,7 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
  * Date: 25.07.2008
  */
 
-public class GroupInfoCmd extends GroupCommand {
+public class GroupInfoCmd extends GroupEditCommand {
   public interface Receiver {
     public GroupInfo execute(GroupInfoCmd cmd) throws CommandExecutionException;
   }

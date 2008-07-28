@@ -7,7 +7,7 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
  * Date: 23.07.2008
  */
 
-public class GroupAddMemberCmd extends GroupCommand {
+public class GroupAddMemberCmd extends GroupEditCommand {
   private String member;
 
   public String getMember() {

@@ -7,7 +7,7 @@ import ru.sibinco.smsx.utils.DataSourceException;
  * Date: 15.07.2008
  */
 
-public interface GroupDataSource {
+public interface GroupSendDataSource {
 
   public void setStatus(long msgKey, MessageStatus status) throws DataSourceException;
   public boolean containsStatus(long msgKey) throws DataSourceException;

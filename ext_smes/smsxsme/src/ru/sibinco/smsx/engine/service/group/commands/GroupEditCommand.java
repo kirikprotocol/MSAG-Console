@@ -7,7 +7,7 @@ import ru.sibinco.smsx.engine.service.Command;
  * Date: 25.07.2008
  */
 
-public class GroupCommand extends Command {
+public class GroupEditCommand extends Command {
 
   public static final int ERR_INV_GROUP_NAME        = ERR_INT + 1;
   public static final int ERR_INV_OWNER             = ERR_INT + 2;
@@ -19,6 +19,7 @@ public class GroupCommand extends Command {
   public static final int ERR_OWNER_NOT_EXISTS      = ERR_INT + 8;
   public static final int ERR_INV_MEMBER            = ERR_INT + 9;
   public static final int ERR_MEMBER_NOT_EXISTS     = ERR_INT + 10;
+  public static final int ERR_LOCKED_BY_OWNER       = ERR_INT + 11;
 
   private String groupName;
   private String owner;

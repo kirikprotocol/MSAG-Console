@@ -9,7 +9,7 @@ import ru.sibinco.smsx.engine.service.group.commands.*;
  */
 
 public interface GroupService extends Service, GroupSendCmd.Receiver,
-                                CheckStatusCmd.Receiver,
+                                GroupSendStatusCmd.Receiver,
                                 GroupDeliveryReportCmd.Receiver,
                                 GroupAddCmd.Receiver,
                                 GroupRemoveCmd.Receiver,
@@ -17,6 +17,7 @@ public interface GroupService extends Service, GroupSendCmd.Receiver,
                                 GroupAddMemberCmd.Receiver,
                                 GroupRemoveMemberCmd.Receiver,
                                 GroupInfoCmd.Receiver,
-                                GroupListCmd.Receiver {
+                                GroupListCmd.Receiver,
+                                GroupEditAlterProfileCmd.Receiver {
     
 }

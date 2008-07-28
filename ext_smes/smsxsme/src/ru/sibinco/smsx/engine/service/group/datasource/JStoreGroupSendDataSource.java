@@ -14,9 +14,9 @@ import org.apache.log4j.Category;
  * Date: 16.07.2008
  */
 
-public class JStoreGroupDataSource implements GroupDataSource {
+public class JStoreGroupSendDataSource implements GroupSendDataSource {
 
-  private static final Category log = Category.getInstance(JStoreGroupDataSource.class);
+  private static final Category log = Category.getInstance(JStoreGroupSendDataSource.class);
 
   private final Lock lock = new ReentrantLock();
 
@@ -25,7 +25,7 @@ public class JStoreGroupDataSource implements GroupDataSource {
   private final int dataLifeTime;
   private final StoreCleanThread cleaner;
 
-  public JStoreGroupDataSource(String storeFile, int dataLifeTime) {
+  public JStoreGroupSendDataSource(String storeFile, int dataLifeTime) {
     this.store = new JStore(-1);
     this.store.init(storeFile, 10000, 1000);
     this.queue = new XDelayedQueue<Long, Long>();

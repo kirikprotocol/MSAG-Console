@@ -122,6 +122,26 @@
       />
   </service>
 
+  <service name="SmsXSubscription" provider="java:RPC" style="wrapped" use="literal">
+      <parameter name="wsdlTargetNamespace" value="http://sibinco.ru/smsxsubscription"/>
+      <parameter name="wsdlServiceElement" value="SmsXSubscriptionService"/>
+      <parameter name="schemaQualified" value="http://sibinco.ru/smsxsubscription"/>
+      <parameter name="wsdlServicePort" value="SmsXSubscription"/>
+      <parameter name="className" value="ru.sibinco.smsx.engine.soaphandler.smsxsubscription.SmsXSubscriptionSoapService"/>
+      <parameter name="wsdlPortType" value="SmsXSubscription"/>
+      <parameter name="typeMappingVersion" value="1.2"/>
+      <parameter name="allowedMethods" value="*"/>
+
+      <typeMapping
+        xmlns:ns="http://sibinco.ru/smsxsubscription"
+        qname="ns:CheckSubscriptionResp"
+        type="java:ru.sibinco.smsx.engine.soaphandler.smsxsubscription.CheckSubscriptionResp"
+        serializer="org.apache.axis.encoding.ser.BeanSerializerFactory"
+        deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory"
+        encodingStyle=""
+      />
+  </service>
+
   <transport name="http">
     <requestFlow>
       <handler type="URLMapper"/>

@@ -72,8 +72,13 @@
   </service>
 
   <service>
-    <service-name>group</service-name>
-    <service-class>ru.sibinco.smsx.engine.smpphandler.GroupSMPPService</service-class>
+    <service-name>group_send</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.GroupSendSMPPService</service-class>
+  </service>
+
+  <service>
+    <service-name>group_edit</service-name>
+    <service-class>ru.sibinco.smsx.engine.smpphandler.GroupEditSMPPService</service-class>
   </service>
 
   <!-- ========================================== Receipt request ================================================== -->
@@ -271,7 +276,7 @@
   <!-- ================================================ Group requests ============================================= -->
 
   <request>
-    <request-name>group_delivery_ok</request-name>
+    <request-name>group_send_delivery_ok</request-name>
     <source-address>011</source-address>
     <message-pattern>SendOK:(\d+) (\d+)</message-pattern>
     <request-param>
@@ -285,13 +290,33 @@
   </request>
 
   <request>
-    <request-name>group_delivery_failed</request-name>
+    <request-name>group_send_delivery_failed</request-name>
     <source-address>011</source-address>
     <message-pattern>SendErr:(.*)</message-pattern>
     <request-param>
       <param-name>reason</param-name>
       <param-value>{1}</param-value>
     </request-param>    
+  </request>
+
+  <request>
+    <request-name>group_edit_off</request-name>
+    <message-pattern>group off</message-pattern>
+  </request>
+
+  <request>
+    <request-name>group_edit_on</request-name>
+    <message-pattern>group on</message-pattern>
+  </request>
+
+  <request>
+    <request-name>group_edit_notification_off</request-name>
+    <message-pattern>groupalert off</message-pattern>
+  </request>
+
+  <request>
+    <request-name>group_edit_notification_on</request-name>
+    <message-pattern>groupalert on</message-pattern>
   </request>
 
   <!-- ================================================= Redirector requests ======================================= -->
@@ -623,10 +648,14 @@
   </request-mapping>
 
   <request-mapping>
-    <request-name>group_*</request-name>
-    <service-name>group</service-name>
+    <request-name>group_send*</request-name>
+    <service-name>group_send</service-name>
   </request-mapping>
 
+  <request-mapping>
+    <request-name>group_edit*</request-name>
+    <service-name>group_edit</service-name>
+  </request-mapping>
 
   <!-- ========================================== Default ================================================== -->
 

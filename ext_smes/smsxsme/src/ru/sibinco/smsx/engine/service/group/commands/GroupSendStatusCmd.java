@@ -8,7 +8,7 @@ import ru.sibinco.smsx.engine.service.Command;
  * Date: 15.07.2008
  */
 
-public class CheckStatusCmd extends Command {
+public class GroupSendStatusCmd extends Command {
 
   private long msgId;
 
@@ -16,13 +16,13 @@ public class CheckStatusCmd extends Command {
     return msgId;
   }
 
-  public CheckStatusCmd setMsgId(long msgId) {
+  public GroupSendStatusCmd setMsgId(long msgId) {
     this.msgId = msgId;
     return this;
   }  
 
   public interface Receiver {
-    public MessageStatus execute(CheckStatusCmd cmd) throws CommandExecutionException;
+    public MessageStatus execute(GroupSendStatusCmd cmd) throws CommandExecutionException;
   }
 
   public enum MessageStatus {
