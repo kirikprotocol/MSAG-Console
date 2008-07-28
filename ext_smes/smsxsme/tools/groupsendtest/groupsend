@@ -1,0 +1,32 @@
+#!/bin/bash
+
+GROUP_SEND_URL="http://localhost:8080/smsx/services/GroupSend"
+
+SCRIPT_NAME=""
+
+if [[ $1 == "groupsend" ]]; then
+    SCRIPT_NAME="groupsend"
+elif [[ $1 == "checkstatus" ]]; then
+    SCRIPT_NAME="checkstatus"
+else
+    echo -e "Usage: \n groupsend\n checkstatus\n"
+    exit 1
+fi
+
+shift
+
+`./req/$SCRIPT_NAME $@ > req.txt`
+
+if [[ $? -eq 0 ]]; then
+    wget --post-file=req.txt -O resp.txt --no-check-certificate $GROUP_SEND_URL
+
+    echo -e "RESULT:\n"
+    cat resp.txt
+    echo -e "\n"
+
+    rm resp.txt
+else
+    cat req.txt
+fi
+
+rm req.txt

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+SUBSCRIPTION_URL="http://localhost:8080/smsx/services/SmsXSubscription"
+
+SCRIPT_NAME=""
+
+if [[ $1 == "check" ]]; then
+    SCRIPT_NAME="check"
+else
+    echo -e "Usage: \n check\n"
+    exit 1
+fi
+
+shift
+
+`./req/$SCRIPT_NAME $@ > req.txt`
+
+if [[ $? -eq 0 ]]; then
+    wget --post-file=req.txt -O resp.txt --no-check-certificate $SUBSCRIPTION_URL
+
+    echo -e "RESULT:\n"
+    cat resp.txt
+    echo -e "\n"
+
+    rm resp.txt
+else
+    cat req.txt
+fi
+
+rm req.txt
