@@ -3,15 +3,19 @@
 function mkdeps()
 {
   if [ $ext == '.cpp' ] ; then
-  $CXX $CXXFLAGS $COMPFLAGS -xM1 $file.cpp | perl -e 'print "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_"for(<>)' > $SMSC_BUILDDIR/deps/$file.depx
+  $CXX $CXXFLAGS $COMPFLAGS $depflags $file.cpp | perl -e 'print (index($_,":")>-1 ? "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_" : "$_") for(<>)' > $SMSC_BUILDDIR/deps/$file.depx
   else
-  $CC $CFLAGS $C_COMPFLAGS -xM1 $file.c | perl -e 'print "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_"for(<>)' > $SMSC_BUILDDIR/deps/$file.depx
+  $CC $CFLAGS $C_COMPFLAGS $depflags $file.c | perl -e 'print (index($_,":")>-1 ? "$ENV{SMSC_BUILDDIR}/obj/$ENV{dir}/$_" : "$_") for(<>)' > $SMSC_BUILDDIR/deps/$file.depx
   fi
 }
 
 export dir=$1
 export file=$2
 export ext=$3
+export depflags=-xM1
+if [ $CXX != "gcc" -o $CXX = "g++" ] ; then
+   export depflags=-MM
+fi
 if mkdeps ; then
 mv $SMSC_BUILDDIR/deps/$file.depx $SMSC_BUILDDIR/deps/$file.dep
 else
