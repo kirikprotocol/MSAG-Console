@@ -14,7 +14,7 @@ import ru.sibinco.smsx.engine.service.blacklist.commands.BlackListRemoveCmd;
 
 class BlacklistSoapHandler implements BlacklistSoap {
 
-  private static final Category log = Category.getInstance("BLACKLIST SOAP");
+  private static final Category log = Category.getInstance(BlacklistSoapHandler.class);
 
   BlacklistSoapHandler() {
   }

@@ -7,6 +7,7 @@ import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.group.commands.*;
 import ru.sibinco.smsc.utils.admin.dl.DistributionList;
+import org.apache.log4j.Category;
 
 /**
  * User: artem
@@ -14,6 +15,8 @@ import ru.sibinco.smsc.utils.admin.dl.DistributionList;
  */
 
 class GroupEditSoapHandler implements GroupEdit {
+
+  private static final Category log = Category.getInstance(GroupEditSoapHandler.class);
 
   private static final int RESULT_OK = 0;
   private static final int RESULT_SYSTEM_ERROR = -1;
@@ -30,10 +33,12 @@ class GroupEditSoapHandler implements GroupEdit {
   private static final int RESULT_LOCKED_BY_OWNER = -12;
 
   GroupEditSoapHandler(String configDir) {
-
   }
 
   public GroupListResp groupList(String owner) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("GroupList req: owner=" + owner);
+
     GroupListResp response = new GroupListResp();
 
     try {
@@ -49,7 +54,7 @@ class GroupEditSoapHandler implements GroupEdit {
       response.setGroups(names);
       response.setStatus(RESULT_OK);
     } catch (CommandExecutionException e) {
-      e.printStackTrace();
+      log.error("Group list failed", e);
       response.setStatus(getStatus(e.getErrCode()));
     }
 
@@ -57,6 +62,9 @@ class GroupEditSoapHandler implements GroupEdit {
   }
 
   public int addGroup(String groupName, String owner) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group add req: group=" + groupName + "; owner=" + owner);
+
     try {
       GroupAddCmd c = new GroupAddCmd();
       c.setGroupName(groupName);
@@ -64,11 +72,15 @@ class GroupEditSoapHandler implements GroupEdit {
       Services.getInstance().getGroupService().execute(c);
       return RESULT_OK;
     } catch (CommandExecutionException e) {
+      log.error("Group add failed", e);
       return getStatus(e.getErrCode());
     }
   }
 
   public int removeGroup(String groupName, String owner) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group remove req: group=" + groupName + "; owner=" + owner);
+
     try {
       GroupRemoveCmd c = new GroupRemoveCmd();
       c.setGroupName(groupName);
@@ -76,11 +88,15 @@ class GroupEditSoapHandler implements GroupEdit {
       Services.getInstance().getGroupService().execute(c);
       return RESULT_OK;
     } catch (CommandExecutionException e) {
+      log.error("Group remove failed", e);
       return getStatus(e.getErrCode());
     }
   }
 
   public GroupInfoResp groupInfo(String groupName, String owner) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group info req: group=" + groupName + "; owner=" + owner);
+
     GroupInfoResp resp = new GroupInfoResp();
     resp.setName(groupName);
     resp.setOwner(owner);
@@ -100,6 +116,7 @@ class GroupEditSoapHandler implements GroupEdit {
       resp.setStatus(RESULT_OK);
 
     } catch (CommandExecutionException e) {
+      log.error("Group info failed", e);
       resp.setStatus(getStatus(e.getErrCode()));
     }
 
@@ -107,6 +124,9 @@ class GroupEditSoapHandler implements GroupEdit {
   }
 
   public int addMember(String groupName, String owner, String member) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group add member req: groupName=" + groupName + "; owner=" + owner + "; member=" + member);
+
     try {
       GroupAddMemberCmd c = new GroupAddMemberCmd();
       c.setGroupName(groupName);
@@ -115,11 +135,15 @@ class GroupEditSoapHandler implements GroupEdit {
       Services.getInstance().getGroupService().execute(c);
       return RESULT_OK;
     } catch (CommandExecutionException e) {
+      log.error("Group add member failed", e);
       return getStatus(e.getErrCode());
     }
   }
 
   public int removeMember(String groupName, String owner, String member) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group remove member req: group=" + groupName + "; owner=" + owner + "; member=" + member);
+
     try {
       GroupRemoveMemberCmd c = new GroupRemoveMemberCmd();
       c.setGroupName(groupName);
@@ -128,11 +152,15 @@ class GroupEditSoapHandler implements GroupEdit {
       Services.getInstance().getGroupService().execute(c);
       return RESULT_OK;
     } catch (CommandExecutionException e) {
+      log.error("Group remove member failed", e);
       return getStatus(e.getErrCode());
     }
   }
 
   public int renameGroup(String groupName, String owner, String newName) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group rename req: group=" + groupName + "; owner=" + owner + "; newName=" + newName);
+
     try {
       GroupRenameCmd c = new GroupRenameCmd();
       c.setGroupName(groupName);
@@ -141,11 +169,15 @@ class GroupEditSoapHandler implements GroupEdit {
       Services.getInstance().getGroupService().execute(c);
       return RESULT_OK;
     } catch (CommandExecutionException e) {
+      log.error("Group rename failed", e);
       return getStatus(e.getErrCode());
     }
   }
 
   public int copyGroup(String groupName, String owner, String newName) throws RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Group copy req: group=" + groupName + "; owner=" + owner + "; newName=" + newName);
+
     try {
       GroupCopyCmd c = new GroupCopyCmd();
       c.setGroupName(groupName);
@@ -154,6 +186,7 @@ class GroupEditSoapHandler implements GroupEdit {
       Services.getInstance().getGroupService().execute(c);
       return RESULT_OK;
     } catch (CommandExecutionException e) {
+      log.error("Group copy failed", e);
       return getStatus(e.getErrCode());
     }
   }

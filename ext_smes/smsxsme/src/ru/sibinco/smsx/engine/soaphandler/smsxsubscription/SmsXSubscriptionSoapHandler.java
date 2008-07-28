@@ -3,8 +3,11 @@ package ru.sibinco.smsx.engine.soaphandler.smsxsubscription;
 import ru.sibinco.smsx.engine.service.subscription.commands.SubscriptionCheckCmd;
 import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
+import org.apache.log4j.Category;
 
 class SmsXSubscriptionSoapHandler implements SmsXSubscription{
+
+  private static final Category log = Category.getInstance(SmsXSubscription.class);
 
   private static final int STATUS_OK = 0;
   private static final int STATUS_SYS_ERROR = -1;
@@ -14,6 +17,9 @@ class SmsXSubscriptionSoapHandler implements SmsXSubscription{
   }
 
   public CheckSubscriptionResp checkSubscription(String msisdn) throws java.rmi.RemoteException {
+    if (log.isDebugEnabled())
+      log.debug("Subscr check req: msisdn=" + msisdn);
+
     CheckSubscriptionResp resp = new CheckSubscriptionResp();
 
     try {
@@ -24,6 +30,7 @@ class SmsXSubscriptionSoapHandler implements SmsXSubscription{
       resp.setStatus(STATUS_OK);
       resp.setSubscribed(res);
     } catch (CommandExecutionException e) {
+      log.error("Subscr check failed.", e);
       if (e.getErrCode() == SubscriptionCheckCmd.ERR_INV_MSISDN)
         resp.setStatus(STATUS_INVALID_MSISDN);
       else

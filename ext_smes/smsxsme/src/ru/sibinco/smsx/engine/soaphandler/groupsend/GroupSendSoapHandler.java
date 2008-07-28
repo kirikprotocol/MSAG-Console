@@ -41,6 +41,7 @@ class GroupSendSoapHandler implements GroupSend {
       r.setMsgId(String.valueOf(msgId));
       r.setStatus(STATUS_ACCEPTED);
     } catch (CommandExecutionException e) {
+      log.error("Send sms err.", e);
       r.setStatus(STATUS_SYSTEM_ERROR);
     }
 

@@ -27,7 +27,7 @@ import java.util.Date;
 
 class SmsXSenderHandler implements SmsXSender {
 
-  private static final Category log = Category.getInstance("SMSXSENDER SOAP");
+  private static final Category log = Category.getInstance(SmsXSenderHandler.class);
 
   private static final String CALENDAR_MSG_ID_PREFIX = "0";
   private static final String SECRET_MSG_ID_PREFIX = "1";
