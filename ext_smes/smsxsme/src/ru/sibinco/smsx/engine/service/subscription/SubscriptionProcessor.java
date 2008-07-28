@@ -4,6 +4,7 @@ import ru.sibinco.smsx.engine.service.subscription.commands.SubscriptionCheckCmd
 import ru.sibinco.smsx.engine.service.subscription.datasource.SubscriptionDataSource;
 import ru.sibinco.smsx.engine.service.CommandExecutionException;
 import ru.sibinco.smsx.utils.DataSourceException;
+import org.apache.log4j.Category;
 
 /**
  * User: artem
@@ -11,6 +12,8 @@ import ru.sibinco.smsx.utils.DataSourceException;
  */
 
 class SubscriptionProcessor implements SubscriptionCheckCmd.Receiver {
+
+  private static final Category log = Category.getInstance(SubscriptionProcessor.class);
 
   private final SubscriptionDataSource ds;
 
@@ -25,6 +28,7 @@ class SubscriptionProcessor implements SubscriptionCheckCmd.Receiver {
     try {
       return ds.checkSubscription(cmd.getAddress());
     } catch (DataSourceException e) {
+      log.error(e, e);
       throw new CommandExecutionException(e.getMessage(), SubscriptionCheckCmd.ERR_SYS_ERROR);
     }
   }
