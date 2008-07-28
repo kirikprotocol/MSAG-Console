@@ -99,4 +99,8 @@ public class GroupServiceImpl implements Service, GroupService {
   public void execute(GroupEditAlterProfileCmd cmd) throws CommandExecutionException {
     editProcessor.execute(cmd);
   }
+
+  public void execute(GroupCopyCmd cmd) throws CommandExecutionException {
+    editProcessor.execute(cmd);
+  }
 }
