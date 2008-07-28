@@ -1,0 +1,42 @@
+#!/bin/bash
+
+GROUP_EDIT_URL="http://localhost:8080/smsx/services/GroupEdit"
+
+SCRIPT_NAME=""
+
+if [[ $1 == "groupadd" ]]; then
+    SCRIPT_NAME="groupadd"
+elif [[ $1 == "grouplist" ]]; then
+    SCRIPT_NAME="grouplist"
+elif [[ $1 == "groupremove" ]]; then
+    SCRIPT_NAME="groupremove"
+elif [[ $1 == "grouprename" ]]; then
+    SCRIPT_NAME="grouprename"
+elif [[ $1 == "groupview" ]]; then
+    SCRIPT_NAME="groupview"
+elif [[ $1 == "recipientremove" ]]; then
+    SCRIPT_NAME="recipientremove"
+elif [[ $1 == "recipientadd" ]]; then
+    SCRIPT_NAME="recipientadd"
+else
+    echo -e "Usage: \n groupadd\n grouplist\n groupremove\n grouprename\n groupview\n recipientremove\n recipientadd\n"
+    exit 1
+fi
+
+shift
+
+`./req/$SCRIPT_NAME $@ > req.txt`
+
+if [[ $? -eq 0 ]]; then
+    wget --post-file=req.txt -O resp.txt --no-check-certificate $GROUP_EDIT_URL
+
+    echo -e "RESULT:\n"
+    cat resp.txt
+    echo -e "\n"
+
+    rm resp.txt
+else
+    cat req.txt
+fi
+
+rm req.txt
