@@ -117,7 +117,7 @@ public class GroupEditSoapService implements GroupEdit, org.apache.axis.wsdl.Ske
     if (_myOperations.get("renameGroup") == null) {
       _myOperations.put("renameGroup", new java.util.ArrayList());
     }
-    ((java.util.List)_myOperations.get("copyGroup")).add(_oper);
+    ((java.util.List)_myOperations.get("renameGroup")).add(_oper);
     _oper = new org.apache.axis.description.OperationDesc("copyGroup", _params, new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "copyGroupReturn"));
     _oper.setReturnType(new javax.xml.namespace.QName("http://www.w3.org/2001/XMLSchema", "int"));
     _oper.setElementQName(new javax.xml.namespace.QName("http://sibinco.ru/groupedit", "copyGroup"));
