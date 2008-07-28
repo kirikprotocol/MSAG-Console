@@ -28,12 +28,12 @@
     <param name="source.address">147</param>
 
     <section name="notifications">
-      <param name="add.group">#template#=add.group# {1}</param>
-      <param name="remove.group">#template#=remove.group# {1}</param>
-      <param name="rename.group">#template#=rename.group# {1} {2}</param>
-      <param name="copy.group">#template#=copy.group# {1} {2}</param>
-      <param name="add.member">#template#=add.member# {1} {2}</param>
-      <param name="remove.member">#template#=remove.member# {1} {2}</param>      
+      <param name="add.group">#template=smsx.groupadd# {group}={1}</param>
+      <param name="remove.group">#template=smsx.groupremove# {group}={1}</param>
+      <param name="rename.group">#template=smsx.grouprename# {group}={1} {newgroup}={2}</param>
+      <param name="copy.group">#template=smsx.groupcopy# {group}={1} {newgroup}={2}</param>
+      <param name="add.member">#template=smsx.groupaddmember# {group}={1} {member}={2}</param>
+      <param name="remove.member">#template=smsx.groupremovemember# {group}={1} {member}={2}</param>      
     </section>
   </section>
 

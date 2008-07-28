@@ -83,7 +83,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
       try {
         dlmanager.addDistributionList(list);
         if (profile == null || profile.isSendSmsNotification())
-          sendMessage(cmd.getOwner(), notifications.getProperty("add.group").replace("{1}", '{' + cmd.getGroupName() + '}'));
+          sendMessage(cmd.getOwner(), notifications.getProperty("add.group").replace("{1}", '"' + cmd.getGroupName() + '"'));
         return;
 
       } catch (PrincipalNotExistsException e) { // If principal does not exists, create it
@@ -112,7 +112,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
     try {
       dlmanager.deleteDistributionList(cmd.getGroupName(), cmd.getOwner());
       if (profile == null || profile.isSendSmsNotification())
-          sendMessage(cmd.getOwner(), notifications.getProperty("remove.group").replace("{1}", '{' + cmd.getGroupName() + '}'));
+          sendMessage(cmd.getOwner(), notifications.getProperty("remove.group").replace("{1}", '"' + cmd.getGroupName() + '"'));
     } catch (AdminException e) {
       catchGroupException(e, cmd);
     }
@@ -127,7 +127,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
     try {
       dlmanager.renameDistributionList(cmd.getGroupName(), cmd.getOwner(), cmd.getNewGroupName());
       if (profile == null || profile.isSendSmsNotification())
-        sendMessage(cmd.getOwner(), notifications.getProperty("rename.group").replace("{1}", '{' + cmd.getGroupName() + '}').replace("{2}", '{' + cmd.getNewGroupName() + '}'));
+        sendMessage(cmd.getOwner(), notifications.getProperty("rename.group").replace("{1}", '"' + cmd.getGroupName() + '"').replace("{2}", '"' + cmd.getNewGroupName() + '"'));
     } catch (AdminException e) {
       catchGroupException(e, cmd);
     }
@@ -142,7 +142,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
     try {
       dlmanager.copyDistributionList(cmd.getGroupName(), cmd.getOwner(), cmd.getNewGroupName());
       if (profile == null || profile.isSendSmsNotification())
-        sendMessage(cmd.getOwner(), notifications.getProperty("copy.group").replace("{1}", '{' + cmd.getGroupName() + '}').replace("{2}", '{' + cmd.getNewGroupName() + '}'));
+        sendMessage(cmd.getOwner(), notifications.getProperty("copy.group").replace("{1}", '"' + cmd.getGroupName() + '"').replace("{2}", '"' + cmd.getNewGroupName() + '"'));
     } catch (AdminException e) {
       catchGroupException(e, cmd);
     }
@@ -158,7 +158,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
     try {
       dlmanager.addMember(cmd.getGroupName(), cmd.getOwner(), cmd.getMember());
       if (profile == null || profile.isSendSmsNotification())
-          sendMessage(cmd.getOwner(), notifications.getProperty("add.member").replace("{1}", '{' + cmd.getGroupName() + '}').replace("{2}", '{' + cmd.getMember() + '}'));
+          sendMessage(cmd.getOwner(), notifications.getProperty("add.member").replace("{1}", '"' + cmd.getGroupName() + '"').replace("{2}", '"' + cmd.getMember() + '"'));
     } catch (AdminException e) {
       catchGroupException(e, cmd);
     }
@@ -174,7 +174,7 @@ class GroupEditProcessor implements GroupAddCmd.Receiver,
     try {
       dlmanager.deleteMember(cmd.getGroupName(), cmd.getOwner(), cmd.getMember());
       if (profile == null || profile.isSendSmsNotification())
-          sendMessage(cmd.getOwner(), notifications.getProperty("remove.member").replace("{1}", '{' + cmd.getGroupName() + '}').replace("{2}", '{' + cmd.getMember() + '}'));
+          sendMessage(cmd.getOwner(), notifications.getProperty("remove.member").replace("{1}", '"' + cmd.getGroupName() + '"').replace("{2}", '"' + cmd.getMember() + '"'));
     } catch (AdminException e) {
       catchGroupException(e, cmd);
     }

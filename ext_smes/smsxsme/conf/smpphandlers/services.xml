@@ -81,19 +81,19 @@
     <service-class>ru.sibinco.smsx.engine.smpphandler.GroupEditSMPPService</service-class>    
     <init-param>
       <param-name>edit.lock</param-name>
-      <param-value>#template#=edit.lock#</param-value>
+      <param-value>#template=smsx.groupeditlock#</param-value>
     </init-param>
     <init-param>
       <param-name>edit.unlock</param-name>
-      <param-value>#template#=edit.unlock#</param-value>
+      <param-value>#template=smsx.groupeditunlock#</param-value>
     </init-param>
     <init-param>
       <param-name>edit.alert.on</param-name>
-      <param-value>#template#=edit.alert.on#</param-value>
+      <param-value>#template=smsx.groupeditalerton#</param-value>
     </init-param>
     <init-param>
       <param-name>edit.alert.off</param-name>
-      <param-value>#template#=edit.alert.off#</param-value>
+      <param-value>#template=smsx.groupeditalertoff#</param-value>
     </init-param>
   </service>
 
