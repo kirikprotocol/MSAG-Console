@@ -38,7 +38,7 @@ public class SmsXSubscriptionSoapService implements SmsXSubscription, org.apache
   }
 
   public SmsXSubscriptionSoapService() {
-    this.impl = new SmsXSubscriptionSoapHandler();
+    this.impl = SmsXSubscriptionFactory.createGroupEdit();
   }
 
   public SmsXSubscriptionSoapService(SmsXSubscription impl) {

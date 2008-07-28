@@ -18,6 +18,7 @@ import ru.sibinco.smsx.engine.soaphandler.blacklist.BlacklistSoapFactory;
 import ru.sibinco.smsx.engine.soaphandler.smsxsender.SmsXSenderFactory;
 import ru.sibinco.smsx.engine.soaphandler.groupsend.GroupSendFactory;
 import ru.sibinco.smsx.engine.soaphandler.groupedit.GroupEditFactory;
+import ru.sibinco.smsx.engine.soaphandler.smsxsubscription.SmsXSubscriptionFactory;
 import ru.sibinco.smsx.engine.service.Services;
 import ru.sibinco.smsx.engine.service.ServiceManagerMBean;
 import ru.sibinco.smsx.network.advertising.AdvertisingClientFactory;
@@ -82,6 +83,7 @@ public class Sme {
       SmsXSenderFactory.init(configDir, senderAdvertisingClient);
       GroupSendFactory.init(configDir);
       GroupEditFactory.init(configDir);
+      SmsXSubscriptionFactory.init(configDir);
 
       transceiver.connect();
       handler.start();
