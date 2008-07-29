@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name source name libraries         
-db/oci/libdb_oci.so  OCIDataSource $(SHARED_OPT) -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lpthread $(__LIBRARIES) -lrt
+db/oci/libdb_oci.so  OCIDataSource $(SHARED_OPT) -ldl -ldb -lutil-config -lutil-xml -lutil -lcore-threads -lpthread -L$(ORACLE_LIB) -lclntsh -L$(SMSC_BUILDDIR)/bin/db/exceptions -ldb_exc -L$(SMSC_BUILDDIR)/bin -llogger -lrt
