@@ -217,7 +217,8 @@ public class Messages extends InfoSmeBean
 //      return _error(new SMSCJspException("Messages size is more than " + getInfoSmeContext().getMaxMessagesTotalSize() + ", show first " + getInfoSmeContext().getMaxMessagesTotalSize() + " messages",
 //                    SMSCJspException.ERROR_CLASS_MESSAGE));
 
-    return message("Total messages count: " + messages.getTotalSize());
+//    return message("Total messages count: " + messages.getTotalSize());
+    return RESULT_OK;
   }
 
   private int processDelete() throws AdminException {
