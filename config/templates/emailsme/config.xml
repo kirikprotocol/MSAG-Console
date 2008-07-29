@@ -25,6 +25,12 @@
       <param name="maxUdhParts" type="int">3</param>
       -->
   </section>
+  
+  <!--section name="stat">
+    <param name="storeLocation" type="string">stats</param>
+    <param name="flushPeriodInSec" type="int">5</param>
+  </section-->
+  
 
   <section name="listener">
     <param name="host" type="string">@listen.host@</param>
