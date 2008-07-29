@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.infosme.beans.deliveries;
 
 import ru.novosoft.smsc.admin.route.Subject;
-import ru.novosoft.smsc.admin.route.SubjectList;
+import ru.novosoft.smsc.admin.region.Region;
 import ru.novosoft.smsc.infosme.backend.BlackListManager;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.infosme.backend.radixtree.TemplatesRadixTree;
@@ -10,10 +10,7 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 /**
  * User: artem
@@ -78,15 +75,23 @@ public class SplitDeliveriesFileThread extends Thread {
   }
 
   private TemplatesRadixTree initRadixTree() {
-    final TemplatesRadixTree subjectsTree = new TemplatesRadixTree();
-    // Fill subjects tree
-    SubjectList subjects = appContext.getRouteSubjectManager().getSubjects();
-    Subject s;
-    for (Iterator iter = subjects.iterator(); iter.hasNext();) {
-      s = (Subject)iter.next();
-      subjectsTree.add(s.getMasks().getNames(), new SubjectOutputFile(s.getName(), Functions.createNewFilenameForSave(new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents." + s.getName() + ".list"))));
+    final TemplatesRadixTree regionsTree = new TemplatesRadixTree();
+    // Fill regions tree
+    Collection regions = appContext.getRegionsManager().getRegions();
+    Region r;
+    for (Iterator regionsIter = regions.iterator(); regionsIter.hasNext();) {
+      r = (Region)regionsIter.next();
+
+      RegionOutputFile outFile = new RegionOutputFile(r.getName(), Functions.createNewFilenameForSave(new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents." + r.getName() + ".list")));
+
+      for (Iterator subjectsIter = r.getSubjects().iterator(); subjectsIter.hasNext();) {
+        String subjectName = (String)subjectsIter.next();
+        Subject s = appContext.getRouteSubjectManager().getSubjects().get(subjectName);
+        regionsTree.add(s.getMasks().getNames(), outFile);
+      }
+
     }
-    return subjectsTree;
+    return regionsTree;
   }
 
   public void run() {
@@ -104,7 +109,7 @@ public class SplitDeliveriesFileThread extends Thread {
       is = new BufferedInputStream(new FileInputStream(inputFile));
 
       String msisdn;
-      SubjectOutputFile outputFile;
+      RegionOutputFile outputFile;
       while ((msisdn = readLine(is)) != null && started) {
         progress.recordsProcessed++;
 
@@ -113,12 +118,12 @@ public class SplitDeliveriesFileThread extends Thread {
           continue;
         }
 
-        outputFile = (SubjectOutputFile)radixTree.getValue(msisdn);
+        outputFile = (RegionOutputFile)radixTree.getValue(msisdn);
         if (outputFile != null) {
           // Add MSISDN to file
           outputFile.addMsisdn(msisdn);
-          if (!outputFiles.containsKey(outputFile.subject)) {
-            outputFiles.put(outputFile.subject, outputFile);
+          if (!outputFiles.containsKey(outputFile.region)) {
+            outputFiles.put(outputFile.region, outputFile);
             progress.subjectsFound++;
           }
         } else {
@@ -142,24 +147,24 @@ public class SplitDeliveriesFileThread extends Thread {
 
       for (Iterator iter = outputFiles.values().iterator(); iter.hasNext();) {
         try {
-          ((SubjectOutputFile)iter.next()).close();
+          ((RegionOutputFile)iter.next()).close();
         } catch (IOException e) {
         }
       }
     }
   }
 
-  public class SubjectOutputFile {
+  public class RegionOutputFile {
 
-    private final String subject;
+    private final String region;
     private final File file;
     private OutputStream os;
     private final ArrayList buffer;
 
     private int totalSize;
 
-    private SubjectOutputFile(String subject, File file) {
-      this.subject = subject;
+    private RegionOutputFile(String region, File file) {
+      this.region = region;
       this.file = file;
       this.os = null;
       this.buffer = new ArrayList(1000);
@@ -201,8 +206,8 @@ public class SplitDeliveriesFileThread extends Thread {
       return file;
     }
 
-    public String getSubject() {
-      return subject;
+    public String getRegion() {
+      return region;
     }
   }
 

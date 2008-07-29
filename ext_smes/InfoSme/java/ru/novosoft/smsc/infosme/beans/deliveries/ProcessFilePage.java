@@ -39,20 +39,20 @@ public class ProcessFilePage extends DeliveriesPage {
         Map.Entry e;
         for (Iterator iter = outputFiles.entrySet().iterator(); iter.hasNext();) {
           e = (Map.Entry)iter.next();
-          String subject = (String)e.getKey();
-          SplitDeliveriesFileThread.SubjectOutputFile outputFile = (SplitDeliveriesFileThread.SubjectOutputFile)e.getValue();
+          String region = (String)e.getKey();
+          SplitDeliveriesFileThread.RegionOutputFile outputFile = (SplitDeliveriesFileThread.RegionOutputFile)e.getValue();
 
           final Task t = pageData.getInfoSmeContext().getTaskManager().createTask();
           resetTask(t, request);
-          t.setSubject(subject);
+          t.setSubject(region);
           t.setActualRecordsSize(outputFile.getTotalSize());
 
-          task.addTask(subject, t);
+          task.addTask(region, t);
 
-          inputFiles.put(subject, outputFile.getFile());
+          inputFiles.put(region, outputFile.getFile());
 
           if (pageData.activeTaskSubject == null)
-            pageData.activeTaskSubject = subject;
+            pageData.activeTaskSubject = region;
         }
 
         pageData.setInputFiles(inputFiles);
