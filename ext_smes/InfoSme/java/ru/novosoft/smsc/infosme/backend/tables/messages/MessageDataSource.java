@@ -66,7 +66,8 @@ public class MessageDataSource extends AbstractDataSourceImpl {
         long h2 = cal.get(Calendar.HOUR_OF_DAY) / 10;
 
         long idbase = y2 << 60 | y1 << 56 | m2 << 52 | m1 << 48 | d2 << 44 | d1 << 40 | h2 << 36 | h1 << 32;
-
+	String encoding = System.getProperty("file.encoding");
+			    
         for (int i=0; i< files.length; i++) {
           File file = files[i];          
 
@@ -81,6 +82,13 @@ public class MessageDataSource extends AbstractDataSourceImpl {
               line = is.readLine();
               if (line == null)
                 break;
+	      // recode read line accourding to file.encoding
+              byte[] buff = new byte[line.length()];
+	      int lsz = line.length();
+              for( int k = 0; k < lsz; k++)
+	        buff[k] = (byte)line.charAt(k);
+	      line = new String(buff, encoding);
+			  		
               StringTokenizer st = new StringTokenizer(line, ",");
               int state = Integer.parseInt(st.nextToken().trim());
               if (state == Message.State.DELETED.getId())
