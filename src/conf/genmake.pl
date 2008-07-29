@@ -108,7 +108,7 @@ sub generate{
     }
     
     opendir(my $dir,$dirname);
-    my @dirlist=grep/\.c(?:pp)?$/,readdir($dir);
+    my @dirlist=grep/^[^.].*\.c(?:pp)?$/,readdir($dir);
     @dirlist=grep{!exists($binsrc{$_})}@dirlist;
     closedir($dir);
     
