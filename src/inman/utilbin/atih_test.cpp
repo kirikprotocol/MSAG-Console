@@ -9,6 +9,7 @@ static char const ident[] = "$Id$";
 #include "inman/common/console.hpp"
 using smsc::inman::common::Console;
 
+#include "inman/utilbin/URCInitMAP.hpp"
 #include "inman/utilbin/atih_srv.hpp"
 using smsc::inman::ATCSIListener;
 using smsc::inman::ServiceATIH;
@@ -168,6 +169,7 @@ int main(int argc, char** argv)
     const char *  cfgFile = "config.maptst.xml";
 
     tzset();
+    URCRegistryInit4MAP();
     Logger::Init();
     Logger * rootLogger = Logger::getInstance("smsc.inman");
     
