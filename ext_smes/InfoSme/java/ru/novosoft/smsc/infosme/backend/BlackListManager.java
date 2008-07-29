@@ -51,9 +51,11 @@ public class BlackListManager {
   }
 
   public boolean contains(String msisdn) throws AdminException {
+    if( pool == null ) return false;
     PersonalizationClient client = null;
     try {
       client = pool.getClient();
+      if( client == null ) return false;
 
       return client.getProperty(msisdn, INFOSME_BLACK_LIST) != null;
 
