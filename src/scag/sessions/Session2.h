@@ -77,6 +77,9 @@ public:
         return key_;
     }
 
+    /// destroy current operation
+    void closeCurrentOperation();
+
     /// --- property Scopes, for use from ActionContext
 
     /// create context Scope.
@@ -240,9 +243,13 @@ public:
     bool getFlush() const { return flush_; }
 
 
-    /// explcitly release current session
+    /// explcitly release current session.
     void release();
 
+    /// move lock of the session to the specified command.
+    /// An example: when processSubmit failed we would like to
+    /// pass lock on the session immediately to processSubmitResp.
+    void moveLock( SCAGCommand* cmd );
 
     /// leave session locked.
     /// Typically invoked after successfull call to longcallmanager

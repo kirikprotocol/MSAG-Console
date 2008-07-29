@@ -1,6 +1,7 @@
 #include <cassert>
 #include <time.h>
-#include "SessionStore2.h"
+#include "SessionFinalizer.h"
+#include "SessionManager2.h"
 #include "core/buffers/CyclicQueue.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -8,13 +9,13 @@
 #include "logger/Logger.h"
 #include "scag/config/Config.h"
 #include "scag/config/ConfigView.h"
-#include "scag/config/TestConfig.h"
+#include "scag/config/ConfigManager2.h"
+#include "scag/config/ConfigManager.h"
 #include "scag/util/storage/StorageNumbering.h"
 #include "scag/transport/SCAGCommand2.h"
 
 using namespace scag::sessions2;
 using namespace scag::transport2;
-using namespace scag::config;
 
 SessionKey genKey( unsigned node )
 {
@@ -57,16 +58,16 @@ class StateMach : public smsc::core::threads::Thread
 {
 public:
     StateMach( unsigned          mynode,
-               SessionStore*     store,
+               // SessionStore*     store,
                SCAGCommandQueue* queue ) :
-    node_(mynode), store_(store), queue_(queue) {}
+    node_(mynode), queue_(queue) {}
 
     virtual ~StateMach() {}
     virtual int Execute();
 
 private:
     unsigned          node_;
-    SessionStore*     store_;
+    // SessionStore*     store_;
     SCAGCommandQueue* queue_;
 };
 
@@ -298,28 +299,33 @@ int main( int argc, char** argv )
     smsc_log_info(slog, "===  TESTSTORAGE IS STARTED  ======");
     smsc_log_info(slog, "===================================");
 
-    TestConfig tc;
-    tc.init();
+    // TestConfig tc;
+    // tc.init();
+    // const Config* cfg = tc.getConfig();
+    // if ( !cfg ) {
+    // smsc_log_error( slog, "cannot get config" );
+    // }
 
-    const Config* cfg = tc.getConfig();
-    if ( !cfg ) {
-        smsc_log_error( slog, "cannot get config" );
-    }
+    scag::config2::ConfigManager::Init();
+    scag::config::ConfigManager::Init();
 
     // set the number of nodes
     scag::util::storage::StorageNumbering::setInstance( 5 );
 
     std::auto_ptr< DummySessionFinalizer > df( new DummySessionFinalizer );
     std::auto_ptr< SCAGCommandQueueImpl > cq( new SCAGCommandQueueImpl( 2000 ) );
-    std::auto_ptr< SessionStore > ss( SessionStore::create
-                                       ( mynode, * df.get(), * cq.get() ) );
-    ss->init( ConfigView( *cfg, "sessions" ) );
+    // std::auto_ptr< SessionStore > ss( SessionStore::create
+    // ( mynode, * df.get(), * cq.get() ) );
+    // SessionManager& sm = SessionManager::Instance();
+    SessionManager::Init( 0,
+                          scag::config2::ConfigManager::Instance().getSessionManConfig(),
+                          *cq.get() );
 
     const unsigned machines = 50;
     std::auto_ptr<StateMach> machs[machines];
 
     for ( unsigned i = 0; i < machines; ++i ) {
-        machs[i].reset( new StateMach(mynode, ss.get(), cq.get()) );
+        machs[i].reset( new StateMach(mynode, cq.get()) );
         machs[i]->Start();
     }
     
@@ -357,15 +363,15 @@ int StateMach::Execute()
     smsc_log_info( mlog,"state machine started");
     while ( true ) {
 
-        SKCommand* cmd( static_cast< SKCommand* >( queue_->popCommand() ) );
-        if ( ! cmd ) break;
+        std::auto_ptr<SKCommand> cmd( static_cast< SKCommand* >( queue_->popCommand() ) );
+        if ( ! cmd.get() ) break;
 
         const SessionKey& key = cmd->sessionKey();
-        smsc_log_debug( mlog, "got command %p, key=%s", cmd, key.toString().c_str() );
+        // smsc_log_debug( mlog, "got command %p, key=%s", cmd.get(), key.toString().c_str() );
 
         /// cmd gets owned
-        smsc_log_debug( mlog, "trying to get session for key=%s cmd=%p", key.toString().c_str(), cmd );
-        ActiveSession as = store_->fetchSession( key, cmd );
+        smsc_log_debug( mlog, "trying to get session for key=%s cmd=%p", key.toString().c_str(), cmd.get() );
+        ActiveSession as = SessionManager::Instance().getSession( key, cmd.get() );
         if ( ! as.get() ) {
             // cmd is pushed to session
             smsc_log_debug( mlog, "session for key=%s is LOCKED", key.toString().c_str() );

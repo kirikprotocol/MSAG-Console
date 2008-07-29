@@ -309,5 +309,10 @@ namespace sessions2 {
         s_ = 0;
     }
 
+    void ActiveSession::moveLock( SCAGCommand* cmd )
+    {
+        if ( s_ ) store_->moveLock( *s_, cmd );
+    }
+
 } // namespace sessions
 } // namespace scag
