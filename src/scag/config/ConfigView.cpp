@@ -1,8 +1,8 @@
-
 #include "ConfigView.h"
+#include "Config.h"
 
-namespace scag { namespace config
-{
+namespace scag {
+namespace config {
 using smsc::logger::Logger;
 
 /* ----------------------- Tree Configuration Management ------------------- */

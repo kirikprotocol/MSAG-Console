@@ -7,10 +7,11 @@
 #include <util/debug.h>
 #include <logger/Logger.h>
 
-#include <scag/config/Config.h>
+#include "Config.h"
 
-namespace scag { namespace config
-{
+namespace scag {
+namespace config {
+
     using smsc::logger::Logger;
     //using scag::config::ConfigException;
 

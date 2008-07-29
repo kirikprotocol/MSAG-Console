@@ -1,10 +1,12 @@
-#ifndef ConfigListener_dot_h
-#define ConfigListener_dot_h
+#ifndef ConfigListener2_dot_h
+#define ConfigListener2_dot_h
 
 #include "ConfigType.h"
 
 namespace scag {
-namespace config {
+namespace config2 {
+
+using namespace scag::config;
 
 class ConfigListener {
 private:

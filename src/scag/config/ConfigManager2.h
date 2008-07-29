@@ -1,12 +1,12 @@
-#ifndef ConfigManager_dot_h
-#define ConfigManager_dot_h
+#ifndef ConfigManager2_dot_h
+#define ConfigManager2_dot_h
 
 #include "ConfigType.h"
 #include "scag/config/smpp/SmppManConfig.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/stat/StatManConfig.h"
 #include "scag/config/bill/BillingManagerConfig.h"
-#include "scag/config/sessn/SessionManagerConfig.h"
+#include "scag/config/sessn/SessionManagerConfig2.h"
 #include "scag/config/http/HttpManagerConfig.h"
 #include "scag/config/pers/PersClientConfig.h"
 #include "scag/config/lcm/LongCallManagerConfig.h"
@@ -14,7 +14,9 @@
 #include <string>
 
 namespace scag {
-namespace config {
+namespace config2 {
+
+    using namespace scag::config;
 
 struct LicenseInfo{
   LicenseInfo()
