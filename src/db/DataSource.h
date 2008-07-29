@@ -360,7 +360,7 @@ namespace smsc { namespace db
         Mutex   startLock, timersLock;
 
         TimersMap   		timers;
-	smsc::logger::Logger   *log;
+	      smsc::logger::Logger   *log;
 
     public:
 
@@ -370,7 +370,7 @@ namespace smsc { namespace db
         virtual ~WatchDog() { Stop(); };
 
         virtual int Execute();
-        void Start();
+        void StartWD();
         void Stop();
 
         int startTimer(Connection* connection, uint32_t timeout);
@@ -508,7 +508,7 @@ namespace smsc { namespace db
         void closeRegisteredQueries(const char* id);
 
         virtual int Execute();
-        void Start();
+        void StartPool();
         void Stop();
     };
 
@@ -525,8 +525,8 @@ namespace smsc { namespace db
         {
             DataSource::init(config);
             pool = new ConnectionPool(*((DataSource *)this), config);
-            if (pool) pool->Start();
-            if (watchDog) watchDog->Start();
+            if (pool) pool->StartPool();
+            if (watchDog) watchDog->StartWD();
         };
 
     public:

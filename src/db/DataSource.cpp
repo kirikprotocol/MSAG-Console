@@ -227,13 +227,14 @@ ConnectionPool::~ConnectionPool()
     closeConnections();
 }
 
-void ConnectionPool::Start()
+void ConnectionPool::StartPool()
 {
-    MutexGuard guard(pingStartLock);
-    if (needPing && !pingStarted) {
-        pingStarted = true;
-        Thread::Start();
-    }
+  MutexGuard guard(pingStartLock);
+  if (needPing && !pingStarted)
+  {
+    pingStarted = true;
+    Thread::Start();
+  }
 }
 void ConnectionPool::Stop()
 {
@@ -375,7 +376,7 @@ void DataSource::init(ConfigView* config)
     if (bWdIsNeeded) watchDog = new WatchDog();
 }
 
-void WatchDog::Start()
+void WatchDog::StartWD()
 {
     MutexGuard  guard(startLock);
     
