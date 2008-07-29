@@ -12,12 +12,16 @@ import ru.novosoft.smsc.util.WebAppFolders;
 import java.io.*;
 import java.util.*;
 
+import org.apache.log4j.Category;
+
 /**
  * User: artem
  * Date: 04.06.2008
  */
 
 public class SplitDeliveriesFileThread extends Thread {
+
+  private static final Category log = Category.getInstance(SplitDeliveriesFileThread.class);
 
   public static final int STATUS_INITIALIZATION = 0;
   public static final int STATUS_PROCESSING = 1;
@@ -113,6 +117,9 @@ public class SplitDeliveriesFileThread extends Thread {
       while ((msisdn = readLine(is)) != null && started) {
         progress.recordsProcessed++;
 
+        if (!msisdn.startsWith("+"))
+          msisdn = '+' + msisdn;
+
         if (blm.contains(msisdn)) {
           progress.inblackList++;
           continue;
@@ -128,6 +135,7 @@ public class SplitDeliveriesFileThread extends Thread {
           }
         } else {
           progress.unrecognized++;
+          log.warn("No region found for " + msisdn);
         }
       }
 
