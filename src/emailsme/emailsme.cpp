@@ -33,6 +33,7 @@
 #include "sms/sms_serializer.h"
 #include "core/buffers/File.hpp"
 #include "system/status.h"
+#include "util/sleep.h"
 
 
 static const char* cssc_version="@(#)" FILEVER;
@@ -848,7 +849,11 @@ public:
   }
   void Init(const std::string& store,int argFlushPeriod)
   {
-    flushPeriod=argFlushPeriod*1000;
+    flushPeriod=argFlushPeriod;
+    if((3600%flushPeriod)!=0)
+    {
+      throw Exception("Invalid flush period value(3600 mod period != 0):%d",flushPeriod);
+    }
     lastHour=9999999;
     storeLocation=store;
     if(storeLocation.length() && *storeLocation.rbegin()!='/')
@@ -865,10 +870,17 @@ public:
     MutexGuard mg(mon);
     while(!needToStop)
     {
-      mon.wait(flushPeriod);
+      time_t now=time(NULL);
+      tm t;
+      gmtime_r(&now,&t);
+      int secs=t.tm_hour*3600+t.tm_min*60+t.tm_sec;
+      int toSleep=flushPeriod-(secs%flushPeriod);
+      toSleep*=1000;
+      mon.wait(toSleep);
       try
       {
         FlushStats();
+        smsc::util::millisleep(1000);
       } catch(std::exception& e)
       {
         smsc_log_warn(smsc::logger::Logger::getInstance("stats"),"Exception during FlushStats:'%s'",e.what());
