@@ -66,9 +66,9 @@ public:
 
         TDPScfMap::const_iterator it = find(tdp_type);
         if (it != end())
-            n += it->second.toString(buf + n, true, sizeof(buf)-1-n);
+            n += it->second.toString(buf + n, true, (unsigned)sizeof(buf)-1-n);
         else
-            n += snprintf(buf + n, sizeof(buf)-1-n, "<none>");
+            n += snprintf(buf + n, (unsigned)sizeof(buf)-1-n, "<none>");
         buf[n++] = '}';
         buf[n] = 0;
         return buf;

@@ -45,7 +45,7 @@ struct TCAPUsr_CFG { //TCAP User configuration
     TCAPUsr_CFG()
     { maxDlgId = rosTimeout = ownSsn = fakeSsn = 0; }
 
-    int toString(char* buf, int buflen = TCAPUsr_CFG::_strSZ) const
+    int toString(char* buf, unsigned buflen = TCAPUsr_CFG::_strSZ) const
     {
         int n = 0;
         if (fakeSsn)
@@ -61,7 +61,7 @@ struct TCAPUsr_CFG { //TCAP User configuration
     inline std::string toString(void) const
     {
         char buf[TCAPUsr_CFG::_strSZ];
-        toString(buf, sizeof(buf));
+        toString(buf, (unsigned)sizeof(buf));
         return buf;
     }
 };

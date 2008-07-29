@@ -1,4 +1,4 @@
-#ident "$Id$"
+#pragma ident "$Id$"
 /* ************************************************************************** *
  * Helper classes for operations with RPCauses (Reject Processing Cause)
  * ************************************************************************** */
@@ -23,7 +23,7 @@ namespace common {
 class RPCList : public std::list<unsigned char> {
 public:
     //format: "C1, C2, ..., Cn"
-    int init(const char * str) throw(CustomException)
+    size_type init(const char * str) throw(CustomException)
     {
         if (!str || !str[0])
             RPCList::clear();
@@ -43,9 +43,9 @@ public:
         }
         return RPCList::size();
     }
-    int print(std::string & ostr)
+    size_type print(std::string & ostr)
     {
-        int i = 0;
+        size_type i = 0;
         for (RPCList::iterator it = RPCList::begin(); it != RPCList::end(); ++it, ++i)
             format(ostr, "%s%u", i ? ", ":"", (*it));
         return i;
@@ -67,7 +67,7 @@ typedef std::pair<unsigned char, unsigned> RPCauseATT;
 class RPCListATT : public std::list<RPCauseATT> {
 public:
     //format: "C1:A1, C2:A2, ..., Cn:An"
-    int init(const char * str) throw(CustomException)
+    size_type init(const char * str) throw(CustomException)
     {
         if (!str || !str[0])
             RPCListATT::clear();
@@ -98,9 +98,9 @@ public:
         }
         return RPCListATT::size();
     }
-    int print(std::string & ostr)
+    size_type print(std::string & ostr)
     {
-        int i = 0;
+        size_type i = 0;
         for (RPCListATT::iterator it = RPCListATT::begin(); it != RPCListATT::end(); ++it, ++i)
             format(ostr, "%s%u:%u", i ? ", ":"", it->first, it->second);
         return i;

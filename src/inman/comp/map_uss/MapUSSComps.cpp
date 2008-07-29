@@ -32,7 +32,7 @@ bool  MAPUSS2CompAC::getUSSDataAsLatin1Text(std::string & str) const
     CBS_DCS    parsedDCS;
 
     if (parseCBS_DCS(_dCS, parsedDCS) == CBS_DCS::dcGSM7Bit) {
-        unsigned ussdLen = unpack7BitPadded2Text(&_uSSData[0], _uSSData.size(), str);
+        unsigned ussdLen = unpack7BitPadded2Text(&_uSSData[0], (unsigned)_uSSData.size(), str);
         //skip language prefix
         if (parsedDCS.lngPrefix == CBS_DCS::lng4GSM7Bit)
             str.erase(0, 3);
@@ -44,7 +44,7 @@ bool  MAPUSS2CompAC::getUSSDataAsLatin1Text(std::string & str) const
 void MAPUSS2CompAC::setUSSData(const unsigned char * data, unsigned size/* = 0*/) throw(CustomException)
 {
     if (!size) 
-        size = strlen((const char*)data);
+        size = (unsigned)strlen((const char*)data);
     unsigned ussdStrSz = estimateTextAs7Bit((const char*)data, size, NULL);
     if (ussdStrSz > MAP_MAX_USSD_StringLength)
         throw CustomException("MAPUSS2CompAC: ussdStrSz is too large: %u", ussdStrSz);
@@ -151,7 +151,7 @@ void ProcessUSSRequestArg::encode(std::vector<unsigned char>& buf) const throw(C
         throw CustomException("USSReqArg: ussdata size is too large: %u",
                               _uSSData.size());
 
-    cmd.ussd_String.size = _uSSData.size();
+    cmd.ussd_String.size = (int)_uSSData.size();
     cmd.ussd_String.buf = &fussdsbuf[0];
     memcpy(cmd.ussd_String.buf, &_uSSData[0], cmd.ussd_String.size);
 
@@ -218,7 +218,7 @@ void ProcessUSSRequestRes::encode(std::vector<unsigned char>& buf) const throw(C
         throw CustomException("USSReqRes: ussdata size is too large: %u",
                               _uSSData.size());
 
-    cmd.ussd_String.size = _uSSData.size();
+    cmd.ussd_String.size = (int)_uSSData.size();
     cmd.ussd_String.buf = &fussdsbuf[0];
     memcpy(cmd.ussd_String.buf, &_uSSData[0], cmd.ussd_String.size);
 

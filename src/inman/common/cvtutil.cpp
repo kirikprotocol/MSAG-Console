@@ -160,7 +160,7 @@ unsigned packTextAs7BitSafe(const char* text, unsigned tlen, unsigned char* b7bu
     }
     if (_7bit_chars)
 	*_7bit_chars = num7ch;
-    return (b7buf - base + (shift ? 1 : 0));
+    return ((unsigned)(b7buf - base) + (shift ? 1 : 0));
 }
 
 unsigned packTextAs7Bit(const char* text, unsigned tlen, unsigned char* b7buf,
@@ -190,7 +190,7 @@ unsigned packTextAs7Bit(const char* text, unsigned tlen, unsigned char* b7buf,
     }
     if (_7bit_chars)
 	*_7bit_chars = num7ch;
-    return (b7buf - base + (shift ? 1 : 0));
+    return ((unsigned)(b7buf - base) + (shift ? 1 : 0));
 }
 
 
@@ -468,7 +468,7 @@ void packTimeSTZ2BCD8(unsigned char (*bcd)[8], struct tm &tms, int &qtz)
 /* TZ for Nsk is GMT-6, timezone is -21600 => gtz is 24 */
 #define cvtUTCTimeT2TimeSTZ(tmVal, ltms, qtz) \
 {   if (!localtime_r(tmVal, &ltms)) return _SMSC_CVT_BAD_TIME; \
-    qtz = -timezone/(15*60); }
+    qtz = (int)(-timezone/(15*60)); }
 
 int packTimeT2BCD7(unsigned char (*bcd)[7], time_t tmVal)
 {

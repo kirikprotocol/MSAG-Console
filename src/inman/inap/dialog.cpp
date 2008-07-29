@@ -58,7 +58,7 @@ void Dialog::clearInvokes(void)
 void Dialog::reset(USHORT_T new_id, const SCCP_ADDRESS_T * rmt_addr/* = NULL*/)
 {
     MutexGuard dtmp(dlgGrd);
-    unsigned cnt = invMap.size();
+    unsigned cnt = (unsigned)invMap.size();
     if (cnt || pUser.get()) {
         smsc_log_error(logger, "%s: resetting to 0x%X, %u invokes pending",
                       _logId, (unsigned)new_id, cnt, pUser.get() ? ", user refs exist":"");
@@ -249,7 +249,7 @@ UCHAR_T /*inv_id*/ Dialog::sendInvoke(UCHAR_T opcode, const Component *p_arg,
                 linked ? EINSS7_I97TCAP_LINKED_ID_USED : EINSS7_I97TCAP_LINKED_ID_NOT_USED,
                 linked ? linked->getId() : 0,
                 EINSS7_I97TCAP_OP_CLASS_1, inv->getTimeout(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
-                op.size(), &op[0], params.size(), params.empty() ? NULL : &params[0]);
+                (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), params.empty() ? NULL : &params[0]);
         if (!result) {
             smsc_log_debug(logger, "%s: initiated %s", _logId, inv->strStatus().c_str());
             invMap.insert(InvokeMap::value_type(inv->getId(), InvokeRFP(inv.get())));
@@ -278,7 +278,7 @@ void Dialog::sendResultLast(TcapEntity* res) throw (CustomException)
     USHORT_T result =
         EINSS7_I97TResultLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
-        op.size(), &op[0], params.size(), &params[0]);
+        (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), &params[0]);
 
     checkSS7res("ResultLReq failed", result);
 }
@@ -301,7 +301,7 @@ void Dialog::sendResultNotLast(TcapEntity* res) throw (CustomException)
     USHORT_T result =
         EINSS7_I97TResultNLReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
-        op.size(), &op[0], params.size(), &params[0]);
+        (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), &params[0]);
 
     checkSS7res("ResultNLReq failed", result); //throws
 }
@@ -325,7 +325,7 @@ void Dialog::sendResultError(TcapEntity* res) throw (CustomException)
     USHORT_T result =
         EINSS7_I97TUErrorReq(dSSN, msgUserId, TCAP_INSTANCE_ID, _dId,
         res->getId(), EINSS7_I97TCAP_OPERATION_TAG_LOCAL,
-        op.size(), &op[0], params.size(), &params[0]);
+        (USHORT_T)op.size(), &op[0], (USHORT_T)params.size(), &params[0]);
 
     checkSS7res("UErrorReq failed", result);
 }

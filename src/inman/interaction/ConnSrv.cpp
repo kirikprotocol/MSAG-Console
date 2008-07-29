@@ -72,7 +72,7 @@ ConnectAC * ConnectSrv::rlseConnection(unsigned conn_id)
 unsigned ConnectSrv::numOfConnects(void)
 {
     MutexGuard  tmp(_Sync);
-    return connects.size();
+    return (unsigned)connects.size();
 }
 
 

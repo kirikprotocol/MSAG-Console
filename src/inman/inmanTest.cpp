@@ -488,7 +488,7 @@ int main(int argc, char** argv)
     Logger::Init();
     Logger * _logger = Logger::getInstance("smsc.InTST");
 
-    AbonentsDB::Init(PRE_ABONENTS_NUM, _abonents);
+    AbonentsDB::Init((unsigned)PRE_ABONENTS_NUM, _abonents);
 
     std::auto_ptr<ConnectSrv> _connServ(new ConnectSrv(ConnectSrv::POLL_TIMEOUT_ms, _logger));
     try {

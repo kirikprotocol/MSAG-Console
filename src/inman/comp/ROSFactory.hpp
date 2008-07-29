@@ -99,7 +99,7 @@ public:
     inline unsigned hasErrors(unsigned opcode) const
     {
         ROSErrors::const_iterator it = errMap.find(opcode);
-        return (it == errMap.end()) ? 0 : it->second->size();
+        return (it == errMap.end()) ? 0 : (unsigned)(it->second->size());
     }
     //returns TRUE if ERROR identified by errcode is defined for OPERATION
     bool hasError(unsigned opcode, unsigned errcode) const

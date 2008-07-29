@@ -200,7 +200,7 @@ public:
     {
         MutexGuard  tmp(dlgGrd);
         if (p_invNum) 
-            *p_invNum = invMap.size();
+            *p_invNum = (unsigned)invMap.size();
         return ((_state.value & TC_DLG_CLOSED_MASK)
                 && invMap.empty() && !pUser.get()) ? true : false;
     }
@@ -208,7 +208,7 @@ public:
     unsigned  pendingInvokes(void) const
     {
         MutexGuard  tmp(dlgGrd);
-        return invMap.size();
+        return (unsigned)invMap.size();
     }
 
     //Returns the default timeout for Invokes

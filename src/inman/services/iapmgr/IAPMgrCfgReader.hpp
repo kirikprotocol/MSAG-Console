@@ -163,6 +163,7 @@ private:
             bool res = readSKeyMap(alg.get(), *xltCfg.get());
             return (res && alg->size()) ? alg.release() : NULL;
         }
+        return NULL;
     }
 
     unsigned readSrvKeys(XConfigView & scf_cfg, SKAlgorithmMAP & sk_alg)
@@ -188,7 +189,7 @@ private:
             } else
                 smsc_log_warn(logger, " %s service key is unknown/unsupported", sit->c_str());
         }
-        return sk_alg.size();
+        return (unsigned)sk_alg.size();
     }
 
     //Reads IN-platform configuration (not 'aliasFor' form)

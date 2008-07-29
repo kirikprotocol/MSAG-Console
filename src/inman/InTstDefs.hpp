@@ -289,7 +289,7 @@ public:
         if (!min_id || (min_id > registry.size()))
             min_id = 1;
         if (!max_id || (max_id > registry.size()))
-            max_id = registry.size();
+            max_id = (unsigned)registry.size();
 
         AbonentsMAP::const_iterator it = registry.find(min_id);
         while (min_id <= max_id) {

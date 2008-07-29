@@ -67,7 +67,7 @@ unsigned packMAPAddress2LocationOCTS(const TonNpiAddress& addr, LOCATION_ADDRESS
 //according to Q.713 clause 3.4.2 (3.4.2.3.4) (with GT & SSN)
 unsigned packSCCPAddress(SCCP_ADDRESS_T* dst, const char *saddr, unsigned char ssn)
 {
-    unsigned len = strlen(saddr);
+    unsigned len = (unsigned)strlen(saddr);
     dst->addrLen = 5 + (len + 1)/2;             // length in octets
     dst->addr[0] = 0x12;                        // GlobTitle(0100) & SSN indicator
     dst->addr[1] = ssn;                         // SSN

@@ -110,7 +110,7 @@ static bool parse_O_CSI(O_CSI_t *csi, GsmSCFinfo *scf_inf) throw(CustomException
 {
     if (csi->o_BcsmCamelTDPDataList.list.count) {
         O_BcsmCamelTDPData_t *root_elem = csi->o_BcsmCamelTDPDataList.list.array[0];
-        scf_inf->serviceKey = root_elem->serviceKey;
+        scf_inf->serviceKey = (uint32_t)root_elem->serviceKey;
            
         if (!OCTET_STRING_2_Address(&(root_elem->gsmSCF_Address), scf_inf->scfAddress))
             throw CustomException(-11, "O_CSI: bad gsmSCF_Adr", NULL);

@@ -31,21 +31,21 @@ int main (void)
 
     printf("Initial ASCII Text: <%s>\n", _tstr);
 
-    len = smsc::cvtutil::packTextAs7BitPadded(_tstr, sizeof(_tstr)-1, _buffer);
+    len = smsc::cvtutil::packTextAs7BitPadded(_tstr, (unsigned)sizeof(_tstr)-1, _buffer);
     printf("Packed 7-Bit GSM text (%d bytes): ", len);
     printHex(_buffer, len);
     printf("\n");
 
     memset(_buffer, 0, sizeof(_buffer));
-    printf("Packed 7-Bit GSM text (%d bytes): ", len = sizeof(_res));
+    printf("Packed 7-Bit GSM text (%d bytes): ", len = (unsigned)sizeof(_res));
     printHex(&_res[0], len);
 
-    len = smsc::cvtutil::unpack7BitPadded2Text(&_res[0], sizeof(_res), &_buffer[0]);
+    len = smsc::cvtutil::unpack7BitPadded2Text(&_res[0], (unsigned)sizeof(_res), &_buffer[0]);
     _buffer[len] = 0;
     printf("\nInitial ASCII Text: <%s>\n", _buffer);
 
     std::string  txt;
-    len = smsc::cvtutil::unpack7BitPadded2Text(&_res[0], sizeof(_res), txt);
+    len = smsc::cvtutil::unpack7BitPadded2Text(&_res[0], (unsigned)sizeof(_res), txt);
     printf("\nInitial ASCII Text: <%s>\n", txt.c_str());
 
     return 0;
