@@ -355,7 +355,7 @@ public class Deliveries extends InfoSmeBean
                 messages.clear();
               }
 
-                getInfoSmeContext().getInfoSme().addStatisticRecord(task.getId(), new Date(), (int)getMessages(), 0, 0 ,0);
+//                getInfoSmeContext().getInfoSme().addStatisticRecord(task.getId(), new Date(), (int)getMessages(), 0, 0 ,0);
 
                 statusStr = STATUS_STR_DONE;
                 status = STATUS_DONE;

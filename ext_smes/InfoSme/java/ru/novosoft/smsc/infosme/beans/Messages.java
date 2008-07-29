@@ -85,8 +85,10 @@ public class Messages extends InfoSmeBean
 
     try {
         String serviceFolder = appContext.getHostsManager().getServiceInfo("InfoSme").getServiceFolder().getAbsolutePath();
-        String statsStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.storeLocation"); 
-        ds = new MessageDataSource(serviceFolder + '/' + statsStoreDir);
+        String msgStoreDir = getInfoSmeContext().getConfig().getString("InfoSme.storeLocation"); 
+	if( msgStoreDir.length() > 0 && msgStoreDir.charAt(0) != '/' ) 
+	  msgStoreDir = serviceFolder + '/' + msgStoreDir;
+        ds = new MessageDataSource(msgStoreDir);
       } catch (Exception e) {
         return error("Can't init dataa source", e);
       }
