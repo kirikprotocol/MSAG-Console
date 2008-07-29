@@ -13,7 +13,7 @@ export dir=$1
 export file=$2
 export ext=$3
 export depflags=-xM1
-if [ $CXX != "gcc" -o $CXX = "g++" ] ; then
+if [ "x$CXX" == "xgcc" -o "x$CXX" == "xg++" ] ; then
    export depflags=-MM
 fi
 if mkdeps ; then
